@@ -1,5 +1,6 @@
+
 /**
- * index.js_v1.0.4
+ * index.js_v1.0.5
  */
 
 const express = require('express');
@@ -132,25 +133,11 @@ app.get('/test-sheets', async (req, res) => {
   }
 });
 
-// 端口佔用檢查並自動切換端口
-let port = process.env.PORT || 3000;
+// 設定端口和啟動服務器
+const port = process.env.PORT || 5000;
 
-function startServer() {
-  const server = app.listen(port, () => {
-    console.log(`🚀 Server is running on port ${port}`);
-    console.log(`📅 啟動時間: ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
-  });
-
-  server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.warn(`⚠️ Port ${port} is already in use. Trying port ${port + 1}...`);
-      port += 1;
-      startServer();
-    } else {
-      console.error(`❌ Unexpected error: ${err.message}`);
-      process.exit(1);
-    }
-  });
-}
-
-startServer();
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 Server is running on port ${port}`);
+  console.log(`📅 啟動時間: ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
+  console.log(`🌐 Server is accessible at http://0.0.0.0:${port}`);
+});
