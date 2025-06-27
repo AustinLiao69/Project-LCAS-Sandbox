@@ -2674,52 +2674,20 @@ function calculateLevenshteinDistance(str1, str2) {
   return matrix[len1][len2];
 }
 
-// 替代 Google Apps Script 的 Utilities 物件
-const Utilities = {
-  getUuid: () => uuidv4(),
-  formatDate: (date, timezone, format) => {
-    if (format === "yyyy/MM/dd") {
-      return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")}`;
-    } else if (format === "HH:mm") {
-      return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-    }
-    return date.toString();
-  },
-};
-
-// 替代 Google Apps Script 的 SpreadsheetApp
-const SpreadsheetApp = {
-  openById: (id) => ({
-    getSheetByName: (name) => ({
-      getLastRow: () =>
-        spreadsheetData[name] ? spreadsheetData[name].length : 0,
-      getRange: (row, col, numRows, numCols) => ({
-        getValues: () => spreadsheetData[name] || [],
-        setValue: (value) => {
-          if (!spreadsheetData[name]) spreadsheetData[name] = [];
-          // 簡化的setValue實作
-        },
-      }),
-      getDataRange: () => ({
-        getValues: () => spreadsheetData[name] || [],
-      }),
+// 更新現有的 SpreadsheetApp 物件
+if (typeof SpreadsheetApp !== 'undefined') {
+  // 擴充現有的 SpreadsheetApp 功能
+  if (!SpreadsheetApp.insertSheet) {
+    SpreadsheetApp.insertSheet = (name) => ({
       appendRow: (rowData) => {
         if (!spreadsheetData[name]) {
           spreadsheetData[name] = [];
         }
         spreadsheetData[name].push(rowData);
       },
-    }),
-    insertSheet: (name) => ({
-      appendRow: (rowData) => {
-        if (!spreadsheetData[name]) {
-          spreadsheetData[name] = [];
-        }
-        spreadsheetData[name].push(rowData);
-      },
-    }),
-  }),
-};
+    });
+  }
+}
 
 /**
  * 39. 用戶偏好記憶管理
@@ -3980,49 +3948,26 @@ function DD_parseInputFormat(text, processId) {
   }
 }
 
-// 替代 Google Apps Script 的 Utilities 物件
-const Utilities = {
-  getUuid: () => uuidv4(),
-  formatDate: (date, timezone, format) => {
+// 更新現有的 Utilities 物件，添加缺少的方法
+if (typeof Utilities !== 'undefined' && !Utilities.formatDate) {
+  Utilities.formatDate = (date, timezone, format) => {
     if (format === "yyyy/MM/dd HH:mm") {
       return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
     }
     return date.toString();
-  },
-};
+  };
+}
 
-// 替代 Google Apps Script 的 SpreadsheetApp
-const SpreadsheetApp = {
-  getActive: () => ({
+// 更新現有的 SpreadsheetApp 物件，添加 getActive 方法
+if (typeof SpreadsheetApp !== 'undefined' && !SpreadsheetApp.getActive) {
+  SpreadsheetApp.getActive = () => ({
     getSheetByName: (name) => ({
       getDataRange: () => ({
         getValues: () => spreadsheetData[name] || [],
       }),
     }),
-  }),
-  openById: (id) => ({
-    getSheetByName: (name) => ({
-      getLastRow: () =>
-        spreadsheetData[name] ? spreadsheetData[name].length : 0,
-      getRange: (row, col, numRows, numCols) => ({
-        getValues: () => spreadsheetData[name] || [],
-        setValue: (value) => {
-          if (!spreadsheetData[name]) spreadsheetData[name] = [];
-          // 簡化的setValue實作
-        },
-      }),
-      getDataRange: () => ({
-        getValues: () => spreadsheetData[name] || [],
-      }),
-      appendRow: (rowData) => {
-        if (!spreadsheetData[name]) {
-          spreadsheetData[name] = [];
-        }
-        spreadsheetData[name].push(rowData);
-      },
-    }),
-  }),
-};
+  });
+}
 
 /**
  * 52. 記帳備註生成與格式化

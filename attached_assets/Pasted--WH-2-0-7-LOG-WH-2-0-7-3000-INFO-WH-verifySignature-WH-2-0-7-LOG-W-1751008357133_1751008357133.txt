@@ -1,0 +1,277 @@
+[WH 2.0.7 LOG] WH 2.0.7: 服務器啟動成功，監聽端口 3000 (INFO)
+WH_verifySignature: 測試模式，跳過簽章驗證
+[WH 2.0.7 LOG] WH 2.0.7: 收到LINE Webhook請求 [0e584684] (INFO)
+開始非同步處理請求 [0e584684]
+[WH 2.0.7 LOG] WH 2.0.7: 開始非同步處理請求 [0e584684] (INFO)
+[WH 2.0.7 LOG] WH 2.0.3: 開始處理事件: message [0e584684] (INFO)
+處理消息事件: text [0e584684]
+收到文本消息: "禮物5555555" [0e584684]
+[WH 2.0.7 LOG] WH 2.0.3: 收到文本消息: "禮物5555555" [0e584684] (INFO)
+準備訊息數據: {"text":"禮物5555555","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1751008186916,"replyToken":"70d8e7b3139e4f979671357f5078eafd"} [0e584684]
+準備調用DD_distributeData [0e584684]
+[WH 2.0.7 LOG] WH 2.0.3: 準備調用DD_distributeData [0e584684] (INFO)
+=== DD_distributeData執行初始檢查 ===
+DD_MAX_RETRIES: 3
+DD_RETRY_DELAY: 1000
+DD_TARGET_MODULE_BK: BK
+DD_TARGET_MODULE_WH: WH
+DD_distributeData被調用，數據源: LINE, 用戶ID: Uae47d9d496e4596d70ed724a7d6e2948, 時間: 2025-06-27T07:09:48.915Z
+處理ID: c16003cd
+[INFO] [DD] 開始處理數據 [c16003cd]
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 開始處理數據 [c16003cd]
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logInfo (/home/runner/workspace/Modules/2031. DD.js:1985:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:132:3)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+標準化用戶ID: userId -> user_id = Uae47d9d496e4596d70ed724a7d6e2948
+調整數據來源從「LINE」到「使用者訊息」
+處理數據: {"text":"禮物5555555","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1751008186916,"replyTok..., 來源: 使用者訊息
+[DEBUG] [DD] 處理數據: {"text":"禮物5555555","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1751008186916,"replyTok..., 來源: 使用者訊息
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 處理數據: {"text":"禮物5555555","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1751008186916,"replyTok..., 來源: 使用者訊息
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logDebug (/home/runner/workspace/Modules/2031. DD.js:1975:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:162:5)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+處理時間戳: 1751008186916
+[DEBUG] [DD] 處理時間戳: 1751008186916
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 處理時間戳: 1751008186916
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logDebug (/home/runner/workspace/Modules/2031. DD.js:1975:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:173:7)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+開始轉換時間戳: 1751008186916 [4cc4784e]
+時間戳轉換結果: 2025/6/27 07:09 [4cc4784e]
+時間戳轉換結果: 2025/6/27 07:09
+[DEBUG] [DD] 時間戳轉換結果: 2025/6/27 07:09
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 時間戳轉換結果: 2025/6/27 07:09
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logDebug (/home/runner/workspace/Modules/2031. DD.js:1975:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:188:9)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+處理用戶訊息: "禮物5555555"
+[INFO] [DD] 處理用戶訊息: "禮物5555555"
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 處理用戶訊息: "禮物5555555"
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logInfo (/home/runner/workspace/Modules/2031. DD.js:1985:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:210:7)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+[INFO] [DD] 處理用戶消息: "禮物5555555"
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 處理用戶消息: "禮物5555555"
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logInfo (/home/runner/workspace/Modules/2031. DD.js:1985:3)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1109:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+DD_processUserMessage: 開始處理用戶訊息 "禮物5555555" [1d5df6ea]
+DD_CONFIG 初始化完成
+[DEBUG] [DD] DD_CONFIG.SYNONYM檢查: FUZZY_MATCH_THRESHOLD=0.7, ENABLE_COMPOUND_WORDS=true
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: DD_CONFIG.SYNONYM檢查: FUZZY_MATCH_THRESHOLD=0.7, ENABLE_COMPOUND_WORDS=true
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logDebug (/home/runner/workspace/Modules/2031. DD.js:1975:3)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1115:5)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+DD_processUserMessage: 清理後訊息: "禮物5555555" [1d5df6ea]
+DD_processUserMessage: 調用DD_parseInputFormat [1d5df6ea]
+DD_parseInputFormat: 開始解析文本「禮物5555555」[1d5df6ea]
+DD_parseInputFormat: 識別標準格式 - 科目:「禮物」, 金額:5555555, 支付方式:「預設」 [1d5df6ea]
+DD_processUserMessage: DD_parseInputFormat回傳結果: {"subject":"禮物","amount":5555555,"rawAmount":"5555555","paymentMethod":"預設"} [1d5df6ea]
+DD_processUserMessage: 成功解析基本資訊 - 科目="禮物", 金額=5555555, 支付方式=預設 [1d5df6ea]
+DD_processUserMessage: 開始科目匹配階段 [1d5df6ea]
+DD_processUserMessage: 嘗試用戶偏好匹配 [1d5df6ea]
+查詢用戶偏好: userId=Uae47d9d496e4596d70ed724a7d6e2948, term="禮物" [8d129ab6]
+用戶偏好管理錯誤: TypeError: prefSheet.getDataRange is not a function [8d129ab6]
+錯誤堆疊: TypeError: prefSheet.getDataRange is not a function
+    at DD_userPreferenceManager (/home/runner/workspace/Modules/2031. DD.js:2737:34)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1289:28)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+[ERROR] [DD] 用戶偏好管理錯誤: TypeError: prefSheet.getDataRange is not a function
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 用戶偏好管理錯誤: TypeError: prefSheet.getDataRange is not a function
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logError (/home/runner/workspace/Modules/2031. DD.js:2007:3)
+    at DD_userPreferenceManager (/home/runner/workspace/Modules/2031. DD.js:2837:5)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1289:28)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+DD_processUserMessage: 嘗試精確匹配 [1d5df6ea]
+[INFO] [DD] 嘗試查詢科目代碼: "禮物" [1d5df6ea]
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 嘗試查詢科目代碼: "禮物" [1d5df6ea]
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logInfo (/home/runner/workspace/Modules/2031. DD.js:1985:3)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1308:9)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+### 使用2025-04-30-V4.1.5增強版DD_getSubjectCode ###
+查詢科目代碼: "禮物", ID=238b01a5
+標準化後的輸入: "禮物" [238b01a5]
+科目表為空或只有標題行 [238b01a5]
+[ERROR] [DD] 科目表為空或只有標題行 [238b01a5]
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 科目表為空或只有標題行 [238b01a5]
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logError (/home/runner/workspace/Modules/2031. DD.js:2007:3)
+    at DD_getSubjectCode (/home/runner/workspace/Modules/2031. DD.js:1636:7)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1311:25)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+DD_processUserMessage: 精確匹配失敗 [1d5df6ea]
+[WARNING] [DD] 精確匹配失敗: "禮物" [1d5df6ea]
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 精確匹配失敗: "禮物" [1d5df6ea]
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logWarning (/home/runner/workspace/Modules/2031. DD.js:1995:3)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1320:13)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+DD_processUserMessage: 嘗試模糊匹配 [1d5df6ea]
+[INFO] [DD] 嘗試模糊匹配: "禮物" [1d5df6ea]
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 嘗試模糊匹配: "禮物" [1d5df6ea]
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logInfo (/home/runner/workspace/Modules/2031. DD.js:1985:3)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1330:9)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+DD_CONFIG 初始化完成
+【模糊匹配】開始處理: "禮物", 閾值: 0.6
+【模糊匹配】無法獲取科目列表
+DD_processUserMessage: 模糊匹配失敗或分數低於閾值 [1d5df6ea]
+[WARNING] [DD] 模糊匹配失敗或分數低於閾值: "禮物" [1d5df6ea]
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 模糊匹配失敗或分數低於閾值: "禮物" [1d5df6ea]
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logWarning (/home/runner/workspace/Modules/2031. DD.js:1995:3)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1344:13)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+DD_processUserMessage: 科目匹配失敗 [1d5df6ea]
+[WARNING] [DD] 科目匹配失敗: "禮物"
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 科目匹配失敗: "禮物"
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logWarning (/home/runner/workspace/Modules/2031. DD.js:1995:3)
+    at DD_processUserMessage (/home/runner/workspace/Modules/2031. DD.js:1436:9)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:218:29)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+DD_processUserMessage返回: {"type":"記帳","processed":false,"reason":"無法識別科目: \"禮物\"","processId":"1d5df6ea","errorType":"UNKNOWN_SUBJECT","errorData":{"success":false,"error":"無法識別科目: \"禮物\"","errorType":"UNKNOWN_SUBJECT","message":"記帳失敗: 無法識別科目: \"禮物\"","errorDetails":{"processId":"1d5df6ea","errorType":"VALIDATION_ERROR","module":"BK"},"isRetryable":true,"partialData":{"subject":"禮物","amount":5555555,"rawAmount":"5555555","paymentMethod":"預設","timestamp":1751008188921}}}
+訊息解析失敗: 無法識別科目: "禮物"
+[WARNING] [DD] 訊息解析失敗: 無法識別科目: "禮物"
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 訊息解析失敗: 無法識別科目: "禮物"
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logWarning (/home/runner/workspace/Modules/2031. DD.js:1995:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:290:9)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+DD_formatSystemReplyMessage: 開始格式化訊息 [c16003cd], 模組: DD
+DD_formatSystemReplyMessage: 輸入數據: {"success":false,"error":"無法識別科目: \"禮物\"","errorType":"MESSAGE_PARSE_ERROR"}...
+DD_formatSystemReplyMessage: 構建錯誤訊息，錯誤類型: MESSAGE_PARSE_ERROR [c16003cd]
+DD_formatSystemReplyMessage: 找到錯誤訊息: 無法識別科目: "禮物" [c16003cd]
+DD_formatSystemReplyMessage: 已構建錯誤訊息: 記帳失敗！
+金額：0元
+支付方式：未指定支付方式
+時間：Fri Jun 27 2025 07:09:... [c16003cd]
+DD_formatSystemReplyMessage: 完成訊息格式化 [c16003cd]
+DD_distributeData處理完成，結果預覽: {"hasResponseMessage":false,"responseMsgLength":0,"errorType":"無","moduleCode":"無","hasPartialData":false} [0e584684]
+準備回覆訊息 [0e584684]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: []
+WH_replyMessage: 訊息對象預覽: {}...
+WH_replyMessage: 將對象轉換為字符串: {}...
+WH_replyMessage: 開始回覆訊息: {}
+[WH 2.0.7 LOG] WH 2.0.3: 開始回覆訊息: {} (INFO)
+[WH 2.0.7 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+訊息回覆結果: {} [0e584684]
+非同步處理完成，已清理數據 [0e584684]
+[WH 2.0.7 LOG] WH 2.0.7: 非同步處理完成 [0e584684] (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.7 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+^C🛑 收到SIGINT信號，正在關閉服務器...
+[WH 2.0.7 LOG] WH 2.0.7: 收到SIGINT信號，正在關閉服務器 (INFO)

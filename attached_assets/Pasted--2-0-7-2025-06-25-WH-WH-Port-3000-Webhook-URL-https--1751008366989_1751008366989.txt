@@ -1,0 +1,67 @@
+本: 2.0.7 (2025-06-25)
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+📡 預期 Webhook URL: https://your-repl-url.replit.dev/webhook
+🎉 LCAS LINE Bot 啟動完成！
+💡 提示: 服務器會每5分鐘輸出心跳，每25分鐘自我 ping 以保持活躍狀態
+📱 現在可以用 LINE 發送訊息測試了！
+🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對外服務
+🚀 WH Webhook Server is running on port 3000
+📅 啟動時間: 2025-06-27 15:08:55
+🌐 Server is accessible at http://0.0.0.0:3000
+📡 Webhook endpoint: http://0.0.0.0:3000/webhook
+[WH 2.0.7 LOG] WH 2.0.7: 服務器啟動成功，監聽端口 3000 (INFO)
+WH_verifySignature: 測試模式，跳過簽章驗證
+[WH 2.0.7 LOG] WH 2.0.7: 收到LINE Webhook請求 [0e584684] (INFO)
+開始非同步處理請求 [0e584684]
+[WH 2.0.7 LOG] WH 2.0.7: 開始非同步處理請求 [0e584684] (INFO)
+[WH 2.0.7 LOG] WH 2.0.3: 開始處理事件: message [0e584684] (INFO)
+處理消息事件: text [0e584684]
+收到文本消息: "禮物5555555" [0e584684]
+[WH 2.0.7 LOG] WH 2.0.3: 收到文本消息: "禮物5555555" [0e584684] (INFO)
+準備訊息數據: {"text":"禮物5555555","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1751008186916,"replyToken":"70d8e7b3139e4f979671357f5078eafd"} [0e584684]
+準備調用DD_distributeData [0e584684]
+[WH 2.0.7 LOG] WH 2.0.3: 準備調用DD_distributeData [0e584684] (INFO)
+=== DD_distributeData執行初始檢查 ===
+DD_MAX_RETRIES: 3
+DD_RETRY_DELAY: 1000
+DD_TARGET_MODULE_BK: BK
+DD_TARGET_MODULE_WH: WH
+DD_distributeData被調用，數據源: LINE, 用戶ID: Uae47d9d496e4596d70ed724a7d6e2948, 時間: 2025-06-27T07:09:48.915Z
+處理ID: c16003cd
+[INFO] [DD] 開始處理數據 [c16003cd]
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 開始處理數據 [c16003cd]
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logInfo (/home/runner/workspace/Modules/2031. DD.js:1985:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:132:3)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+標準化用戶ID: userId -> user_id = Uae47d9d496e4596d70ed724a7d6e2948
+調整數據來源從「LINE」到「使用者訊息」
+處理數據: {"text":"禮物5555555","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1751008186916,"replyTok..., 來源: 使用者訊息
+[DEBUG] [DD] 處理數據: {"text":"禮物5555555","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1751008186916,"replyTok..., 來源: 使用者訊息
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 處理數據: {"text":"禮物5555555","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1751008186916,"replyTok..., 來源: 使用者訊息
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logDebug (/home/runner/workspace/Modules/2031. DD.js:1975:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:162:5)
+    at WH_processEventAsync (/home/runner/workspace/Modules/2020. WH.js:1012:23)
+    at processWebhookAsync (/home/runner/workspace/Modules/2020. WH.js:244:13)
+    at Timeout._onTimeout (/home/runner/workspace/Modules/2020. WH.js:120:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+處理時間戳: 1751008186916
+[DEBUG] [DD] 處理時間戳: 1751008186916
+寫入日誌失敗: TypeError: logSheet.appendRow is not a function. 原始消息: 處理時間戳: 1751008186916
+錯誤堆疊: TypeError: logSheet.appendRow is not a function
+    at DD_writeToLogSheet (/home/runner/workspace/Modules/2031. DD.js:2070:16)
+    at DD_log (/home/runner/workspace/Modules/2031. DD.js:1953:3)
+    at DD_logDebug (/home/runner/workspace/Modules/2031. DD.js:1975:3)
+    at Object.DD_distributeData (/home/runner/workspace/Modules/2031. DD.js:173:7)
+    at WH_processEventAsync (/ho
