@@ -1,5 +1,5 @@
 /**
- * DD_資料分配模組_2.0.10
+ * DD_資料分配模組_2.0.11
  * @module 資料分配模組
  * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
  * @author AustinLiao69
@@ -24,18 +24,109 @@ const Utilities = {
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 };
 
-// 替代 Google Apps Script 的 SpreadsheetApp
+// 使用真實的 Google Sheets API
+const { google } = require("googleapis");
+
+let sheetsAPI = null;
+
+// 初始化 Google Sheets API
+async function initGoogleSheets() {
+  if (sheetsAPI) return sheetsAPI;
+
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "{}"),
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+
+    const authClient = await auth.getClient();
+    sheetsAPI = google.sheets({ version: "v4", auth: authClient });
+    return sheetsAPI;
+  } catch (error) {
+    console.log(`Google Sheets API 初始化失敗: ${error}`);
+    // 回退到模擬模式
+    return createMockSheetsAPI();
+  }
+}
+
+// 創建相容的 SpreadsheetApp 介面
 const SpreadsheetApp = {
   openById: (id) => ({
     getSheetByName: (name) => ({
-      getLastRow: () =>
-        spreadsheetData[name] ? spreadsheetData[name].length : 0,
+      getLastRow: async () => {
+        try {
+          const sheets = await initGoogleSheets();
+          const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: id,
+            range: `${name}!A:A`,
+          });
+          return response.data.values ? response.data.values.length : 0;
+        } catch (error) {
+          console.log(`獲取行數失敗: ${error}`);
+          return 0;
+        }
+      },
       getRange: (row, col, numRows, numCols) => ({
-        getValues: () => spreadsheetData[name] || [],
+        getValues: async () => {
+          try {
+            const sheets = await initGoogleSheets();
+            const range = `${name}!${String.fromCharCode(64 + col)}${row}:${String.fromCharCode(64 + col + numCols - 1)}${row + numRows - 1}`;
+            const response = await sheets.spreadsheets.values.get({
+              spreadsheetId: id,
+              range: range,
+            });
+            return response.data.values || [];
+          } catch (error) {
+            console.log(`獲取數據失敗: ${error}`);
+            return [];
+          }
+        },
       }),
+      getDataRange: () => ({
+        getValues: async () => {
+          try {
+            const sheets = await initGoogleSheets();
+            const response = await sheets.spreadsheets.values.get({
+              spreadsheetId: id,
+              range: name,
+            });
+            return response.data.values || [];
+          } catch (error) {
+            console.log(`獲取全部數據失敗: ${error}`);
+            return [];
+          }
+        },
+      }),
+      appendRow: async (rowData) => {
+        try {
+          const sheets = await initGoogleSheets();
+          await sheets.spreadsheets.values.append({
+            spreadsheetId: id,
+            range: `${name}!A:A`,
+            valueInputOption: "RAW",
+            resource: {
+              values: [rowData],
+            },
+          });
+        } catch (error) {
+          console.log(`新增行失敗: ${error}`);
+        }
+      },
     }),
   }),
 };
+
+// 模擬模式回退函數
+function createMockSheetsAPI() {
+  return {
+    spreadsheets: {
+      values: {
+        get: () => ({ data: { values: [] } }),
+        append: () => Promise.resolve(),
+      },
+    },
+  };
+}
 
 // 替代 getScriptProperty 函數
 function getScriptProperty(key) {
@@ -1106,17 +1197,37 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
   const msgId = Utilities.getUuid().substring(0, 8);
 
   // 2. 開始日誌記錄
-  DD_logInfo(`處理用戶消息: "${message}"`, "訊息處理", userId, "DD_processUserMessage", "DD_processUserMessage");
-  console.log(`DD_processUserMessage: 開始處理用戶訊息 "${message}" [${msgId}]`);
+  DD_logInfo(
+    `處理用戶消息: "${message}"`,
+    "訊息處理",
+    userId,
+    "DD_processUserMessage",
+    "DD_processUserMessage",
+  );
+  console.log(
+    `DD_processUserMessage: 開始處理用戶訊息 "${message}" [${msgId}]`,
+  );
 
   try {
     // 3. 確保配置初始化
     DD_initConfig();
-    DD_logDebug(`DD_CONFIG.SYNONYM檢查: FUZZY_MATCH_THRESHOLD=${DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.FUZZY_MATCH_THRESHOLD || "未設置"}, ENABLE_COMPOUND_WORDS=${DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.ENABLE_COMPOUND_WORDS || "未設置"}`, "訊息處理", userId, "DD_processUserMessage", "DD_processUserMessage");
+    DD_logDebug(
+      `DD_CONFIG.SYNONYM檢查: FUZZY_MATCH_THRESHOLD=${(DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.FUZZY_MATCH_THRESHOLD) || "未設置"}, ENABLE_COMPOUND_WORDS=${(DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.ENABLE_COMPOUND_WORDS) || "未設置"}`,
+      "訊息處理",
+      userId,
+      "DD_processUserMessage",
+      "DD_processUserMessage",
+    );
 
     // 4. 檢查空訊息
     if (!message || message.trim() === "") {
-      DD_logWarning(`空訊息 [${msgId}]`, "訊息處理", userId, "DD_processUserMessage", "DD_processUserMessage");
+      DD_logWarning(
+        `空訊息 [${msgId}]`,
+        "訊息處理",
+        userId,
+        "DD_processUserMessage",
+        "DD_processUserMessage",
+      );
       console.log(`DD_processUserMessage: 檢測到空訊息 [${msgId}]`);
 
       // 4.1 建立標準錯誤資料結構，與BK模組格式相容
@@ -1128,7 +1239,7 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
         errorDetails: {
           processId: msgId,
           errorType: "VALIDATION_ERROR",
-          module: "BK"
+          module: "BK",
         },
         isRetryable: true,
         partialData: {
@@ -1136,19 +1247,20 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
           amount: 0,
           rawAmount: "0",
           paymentMethod: "", // 不設置預設值，由BK處理
-          timestamp: new Date().getTime()
+          timestamp: new Date().getTime(),
         },
-        userFriendlyMessage: "記帳處理失敗 (VALIDATION_ERROR)：訊息為空\n請重新嘗試或聯繫管理員。"
+        userFriendlyMessage:
+          "記帳處理失敗 (VALIDATION_ERROR)：訊息為空\n請重新嘗試或聯繫管理員。",
       };
 
       // 4.3 回傳統一格式的錯誤結果
-      return { 
-        type: '記帳',
-        processed: false, 
-        reason: '空訊息',
+      return {
+        type: "記帳",
+        processed: false,
+        reason: "空訊息",
         processId: msgId,
         errorType: "EMPTY_MESSAGE",
-        errorData: errorData
+        errorData: errorData,
       };
     }
 
@@ -1159,12 +1271,22 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
     // 6. 使用DD_parseInputFormat解析輸入格式
     console.log(`DD_processUserMessage: 調用DD_parseInputFormat [${msgId}]`);
     const parseResult = DD_parseInputFormat(message, msgId);
-    console.log(`DD_processUserMessage: DD_parseInputFormat回傳結果: ${JSON.stringify(parseResult)} [${msgId}]`);
+    console.log(
+      `DD_processUserMessage: DD_parseInputFormat回傳結果: ${JSON.stringify(parseResult)} [${msgId}]`,
+    );
 
     // 7. 檢查解析結果 - 快速攔截錯誤
     if (!parseResult) {
-      DD_logWarning(`DD_parseInputFormat回傳null，無法解析訊息格式: "${message}" [${msgId}]`, "訊息處理", userId, "DD_processUserMessage", "DD_processUserMessage");
-      console.log(`DD_processUserMessage: DD_parseInputFormat回傳null [${msgId}]`);
+      DD_logWarning(
+        `DD_parseInputFormat回傳null，無法解析訊息格式: "${message}" [${msgId}]`,
+        "訊息處理",
+        userId,
+        "DD_processUserMessage",
+        "DD_processUserMessage",
+      );
+      console.log(
+        `DD_processUserMessage: DD_parseInputFormat回傳null [${msgId}]`,
+      );
 
       // 7.1 建立標準錯誤資料結構，與BK模組格式相容
       const errorData = {
@@ -1175,7 +1297,7 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
         errorDetails: {
           processId: msgId,
           errorType: "VALIDATION_ERROR",
-          module: "BK"
+          module: "BK",
         },
         isRetryable: true,
         partialData: {
@@ -1183,24 +1305,30 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
           amount: 0,
           rawAmount: "0",
           paymentMethod: "", // 不設置預設值，由BK處理
-          timestamp: new Date().getTime()
-        }
+          timestamp: new Date().getTime(),
+        },
       };
 
       // 7.3 回傳統一格式的錯誤結果
-      return { 
-        type: '記帳', 
-        processed: false, 
-        reason: '無法識別記帳意圖',
+      return {
+        type: "記帳",
+        processed: false,
+        reason: "無法識別記帳意圖",
         processId: msgId,
         errorType: "FORMAT_NOT_RECOGNIZED",
-        errorData: errorData
+        errorData: errorData,
       };
     }
 
     // 8. 處理回傳的格式錯誤
     if (parseResult._formatError || parseResult._missingSubject) {
-      DD_logWarning(`輸入格式錯誤: "${message}" [${msgId}]`, "訊息處理", userId, "DD_processUserMessage", "DD_processUserMessage");
+      DD_logWarning(
+        `輸入格式錯誤: "${message}" [${msgId}]`,
+        "訊息處理",
+        userId,
+        "DD_processUserMessage",
+        "DD_processUserMessage",
+      );
       console.log(`DD_processUserMessage: 檢測到格式錯誤 [${msgId}]`);
 
       // 8.1 使用提供的errorData
@@ -1213,19 +1341,24 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
         }
 
         // 8.1.3 回傳統一格式的錯誤結果
-        return { 
-          type: '記帳', 
-          processed: false, 
-          reason: parseResult.errorData.error || parseResult._errorDetail || "輸入格式問題",
+        return {
+          type: "記帳",
+          processed: false,
+          reason:
+            parseResult.errorData.error ||
+            parseResult._errorDetail ||
+            "輸入格式問題",
           processId: msgId,
           errorType: parseResult.errorData.errorType || "FORMAT_ERROR",
-          errorData: parseResult.errorData
+          errorData: parseResult.errorData,
         };
       }
 
       // 8.2 自行建構符合BK模組格式的錯誤資料
       console.log(`DD_processUserMessage: 自行建構errorData [${msgId}]`);
-      const errorType = parseResult._missingSubject ? "MISSING_SUBJECT" : "FORMAT_ERROR";
+      const errorType = parseResult._missingSubject
+        ? "MISSING_SUBJECT"
+        : "FORMAT_ERROR";
       const errorMsg = parseResult._errorDetail || "輸入格式錯誤";
 
       const errorData = {
@@ -1236,7 +1369,7 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
         errorDetails: {
           processId: msgId,
           errorType: "VALIDATION_ERROR",
-          module: "BK"
+          module: "BK",
         },
         isRetryable: true,
         partialData: {
@@ -1244,18 +1377,18 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
           amount: parseResult.amount || 0,
           rawAmount: parseResult.rawAmount || "0",
           paymentMethod: parseResult.paymentMethod || "", // 不設預設值
-          timestamp: new Date().getTime()
-        }
+          timestamp: new Date().getTime(),
+        },
       };
 
       // 8.2.2 回傳統一格式的錯誤結果
-      return { 
-        type: '記帳', 
-        processed: false, 
+      return {
+        type: "記帳",
+        processed: false,
         reason: errorMsg,
         processId: msgId,
         errorType: errorType,
-        errorData: errorData
+        errorData: errorData,
       };
     }
 
@@ -1267,13 +1400,18 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
 
     // 9.1 記錄解析結果，包括支付方式
     if (paymentMethod) {
-      console.log(`DD_processUserMessage: 成功解析基本資訊 - 科目="${subject}", 金額=${amount}, 支付方式=${paymentMethod} [${msgId}]`);
+      console.log(
+        `DD_processUserMessage: 成功解析基本資訊 - 科目="${subject}", 金額=${amount}, 支付方式=${paymentMethod} [${msgId}]`,
+      );
     } else {
-      console.log(`DD_processUserMessage: 成功解析基本資訊 - 科目="${subject}", 金額=${amount}, 未指定支付方式 [${msgId}]`);
+      console.log(
+        `DD_processUserMessage: 成功解析基本資訊 - 科目="${subject}", 金額=${amount}, 未指定支付方式 [${msgId}]`,
+      );
     }
 
     // 10. 科目匹配處理 - 繼續現有流程
-    if (subject) {  // 只檢查科目是否存在
+    if (subject) {
+      // 只檢查科目是否存在
       console.log(`DD_processUserMessage: 開始科目匹配階段 [${msgId}]`);
 
       // 10.1 同義詞系統整合 - 多層匹配策略
@@ -1293,19 +1431,35 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
               subjectInfo = prefSubject;
               matchMethod = "user_preference";
               confidence = 0.9;
-              console.log(`DD_processUserMessage: 用戶偏好匹配成功 "${subject}" -> ${prefSubject.subName} [${msgId}]`);
-              DD_logDebug(`用戶偏好匹配: "${subject}" -> ${prefSubject.subName}, 科目代碼=${userPref.subjectCode}`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+              console.log(
+                `DD_processUserMessage: 用戶偏好匹配成功 "${subject}" -> ${prefSubject.subName} [${msgId}]`,
+              );
+              DD_logDebug(
+                `用戶偏好匹配: "${subject}" -> ${prefSubject.subName}, 科目代碼=${userPref.subjectCode}`,
+                "科目匹配",
+                userId,
+                "DD_processUserMessage",
+                "DD_processUserMessage",
+              );
             }
           }
         } catch (prefError) {
-          console.log(`DD_processUserMessage: 用戶偏好匹配錯誤 ${prefError.toString()} [${msgId}]`);
+          console.log(
+            `DD_processUserMessage: 用戶偏好匹配錯誤 ${prefError.toString()} [${msgId}]`,
+          );
         }
       }
 
       // 10.3 嘗試精確匹配
       if (!subjectInfo) {
         console.log(`DD_processUserMessage: 嘗試精確匹配 [${msgId}]`);
-        DD_logInfo(`嘗試查詢科目代碼: "${subject}" [${msgId}]`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+        DD_logInfo(
+          `嘗試查詢科目代碼: "${subject}" [${msgId}]`,
+          "科目匹配",
+          userId,
+          "DD_processUserMessage",
+          "DD_processUserMessage",
+        );
 
         try {
           subjectInfo = DD_getSubjectCode(subject);
@@ -1313,38 +1467,80 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
           if (subjectInfo) {
             matchMethod = "exact_match";
             confidence = 1.0;
-            console.log(`DD_processUserMessage: 精確匹配成功 "${subject}" -> ${subjectInfo.subName} [${msgId}]`);
-            DD_logInfo(`精確匹配成功: "${subject}" -> ${subjectInfo.subName}, 科目代碼=${subjectInfo.majorCode}-${subjectInfo.subCode}`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+            console.log(
+              `DD_processUserMessage: 精確匹配成功 "${subject}" -> ${subjectInfo.subName} [${msgId}]`,
+            );
+            DD_logInfo(
+              `精確匹配成功: "${subject}" -> ${subjectInfo.subName}, 科目代碼=${subjectInfo.majorCode}-${subjectInfo.subCode}`,
+              "科目匹配",
+              userId,
+              "DD_processUserMessage",
+              "DD_processUserMessage",
+            );
           } else {
             console.log(`DD_processUserMessage: 精確匹配失敗 [${msgId}]`);
-            DD_logWarning(`精確匹配失敗: "${subject}" [${msgId}]`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+            DD_logWarning(
+              `精確匹配失敗: "${subject}" [${msgId}]`,
+              "科目匹配",
+              userId,
+              "DD_processUserMessage",
+              "DD_processUserMessage",
+            );
           }
         } catch (matchError) {
-          console.log(`DD_processUserMessage: 精確匹配發生錯誤 ${matchError.toString()} [${msgId}]`);
+          console.log(
+            `DD_processUserMessage: 精確匹配發生錯誤 ${matchError.toString()} [${msgId}]`,
+          );
         }
       }
 
       // 10.4 嘗試模糊匹配
       if (!subjectInfo) {
         console.log(`DD_processUserMessage: 嘗試模糊匹配 [${msgId}]`);
-        DD_logInfo(`嘗試模糊匹配: "${subject}" [${msgId}]`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+        DD_logInfo(
+          `嘗試模糊匹配: "${subject}" [${msgId}]`,
+          "科目匹配",
+          userId,
+          "DD_processUserMessage",
+          "DD_processUserMessage",
+        );
 
         try {
-          const fuzzyThreshold = (DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.FUZZY_MATCH_THRESHOLD) || 0.7;
+          const fuzzyThreshold =
+            (DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.FUZZY_MATCH_THRESHOLD) ||
+            0.7;
           const fuzzyMatch = DD_fuzzyMatch(subject);
 
           if (fuzzyMatch && fuzzyMatch.score >= fuzzyThreshold) {
             subjectInfo = fuzzyMatch;
             matchMethod = "fuzzy_match";
             confidence = fuzzyMatch.score;
-            console.log(`DD_processUserMessage: 模糊匹配成功 "${subject}" -> ${fuzzyMatch.subName}, 相似度=${fuzzyMatch.score.toFixed(2)} [${msgId}]`);
-            DD_logInfo(`模糊匹配成功: "${subject}" -> ${fuzzyMatch.subName}, 相似度=${fuzzyMatch.score.toFixed(2)}`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+            console.log(
+              `DD_processUserMessage: 模糊匹配成功 "${subject}" -> ${fuzzyMatch.subName}, 相似度=${fuzzyMatch.score.toFixed(2)} [${msgId}]`,
+            );
+            DD_logInfo(
+              `模糊匹配成功: "${subject}" -> ${fuzzyMatch.subName}, 相似度=${fuzzyMatch.score.toFixed(2)}`,
+              "科目匹配",
+              userId,
+              "DD_processUserMessage",
+              "DD_processUserMessage",
+            );
           } else {
-            console.log(`DD_processUserMessage: 模糊匹配失敗或分數低於閾值 [${msgId}]`);
-            DD_logWarning(`模糊匹配失敗或分數低於閾值: "${subject}" [${msgId}]`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+            console.log(
+              `DD_processUserMessage: 模糊匹配失敗或分數低於閾值 [${msgId}]`,
+            );
+            DD_logWarning(
+              `模糊匹配失敗或分數低於閾值: "${subject}" [${msgId}]`,
+              "科目匹配",
+              userId,
+              "DD_processUserMessage",
+              "DD_processUserMessage",
+            );
           }
         } catch (fuzzyError) {
-          console.log(`DD_processUserMessage: 模糊匹配發生錯誤 ${fuzzyError.toString()} [${msgId}]`);
+          console.log(
+            `DD_processUserMessage: 模糊匹配發生錯誤 ${fuzzyError.toString()} [${msgId}]`,
+          );
         }
       }
 
@@ -1355,27 +1551,56 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
         try {
           const multiMap = DD_checkMultipleMapping(subject);
           if (multiMap && multiMap.length > 1) {
-            console.log(`DD_processUserMessage: 檢測到多重映射: "${subject}" 可能屬於 ${multiMap.length} 個類別 [${msgId}]`);
-            DD_logDebug(`檢測到多重映射: "${subject}" 可能屬於 ${multiMap.length} 個類別`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+            console.log(
+              `DD_processUserMessage: 檢測到多重映射: "${subject}" 可能屬於 ${multiMap.length} 個類別 [${msgId}]`,
+            );
+            DD_logDebug(
+              `檢測到多重映射: "${subject}" 可能屬於 ${multiMap.length} 個類別`,
+              "科目匹配",
+              userId,
+              "DD_processUserMessage",
+              "DD_processUserMessage",
+            );
 
-            const contextMatch = DD_timeAwareClassification(multiMap, timestamp);
+            const contextMatch = DD_timeAwareClassification(
+              multiMap,
+              timestamp,
+            );
             if (contextMatch) {
               subjectInfo = contextMatch;
               matchMethod = "time_context";
               confidence = contextMatch.confidence || 0.8;
-              console.log(`DD_processUserMessage: 時間上下文匹配: "${subject}" -> ${contextMatch.subName} [${msgId}]`);
-              DD_logDebug(`時間上下文匹配: "${subject}" -> ${contextMatch.subName}`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+              console.log(
+                `DD_processUserMessage: 時間上下文匹配: "${subject}" -> ${contextMatch.subName} [${msgId}]`,
+              );
+              DD_logDebug(
+                `時間上下文匹配: "${subject}" -> ${contextMatch.subName}`,
+                "科目匹配",
+                userId,
+                "DD_processUserMessage",
+                "DD_processUserMessage",
+              );
             }
           }
         } catch (multiError) {
-          console.log(`DD_processUserMessage: 多重映射檢查發生錯誤 ${multiError.toString()} [${msgId}]`);
+          console.log(
+            `DD_processUserMessage: 多重映射檢查發生錯誤 ${multiError.toString()} [${msgId}]`,
+          );
         }
       }
 
       // 11. 準備回傳結果
       if (subjectInfo) {
-        console.log(`DD_processUserMessage: 科目匹配完成，準備回傳結果 [${msgId}]`);
-        DD_logInfo(`科目匹配完成: "${subject}" -> ${subjectInfo.subName} (${matchMethod})`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+        console.log(
+          `DD_processUserMessage: 科目匹配完成，準備回傳結果 [${msgId}]`,
+        );
+        DD_logInfo(
+          `科目匹配完成: "${subject}" -> ${subjectInfo.subName} (${matchMethod})`,
+          "科目匹配",
+          userId,
+          "DD_processUserMessage",
+          "DD_processUserMessage",
+        );
 
         // 11.1 決定收支類型 - 修正邏輯!
         let action = "支出"; // 預設為支出
@@ -1383,17 +1608,31 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
         // 修改：處理負數金額，仍設定為支出但保留負號
         if (amount < 0) {
           action = "支出";
-          console.log(`DD_processUserMessage: 檢測到負數金額: ${amount}，設定為支出類型 [${msgId}]`);
-          DD_logInfo(`檢測到負數金額: ${amount}，設定為支出類型`, "金額處理", userId, "DD_processUserMessage", "DD_processUserMessage");
-        } 
-        else {
+          console.log(
+            `DD_processUserMessage: 檢測到負數金額: ${amount}，設定為支出類型 [${msgId}]`,
+          );
+          DD_logInfo(
+            `檢測到負數金額: ${amount}，設定為支出類型`,
+            "金額處理",
+            userId,
+            "DD_processUserMessage",
+            "DD_processUserMessage",
+          );
+        } else {
           // 根據科目大類判斷收支類型 - 修正：以8開頭的為收入，其他為支出
-          if (subjectInfo.majorCode && subjectInfo.majorCode.toString().startsWith('8')) {
+          if (
+            subjectInfo.majorCode &&
+            subjectInfo.majorCode.toString().startsWith("8")
+          ) {
             action = "收入";
-            console.log(`DD_processUserMessage: 根據科目代碼 ${subjectInfo.majorCode} 判斷為收入 [${msgId}]`);
+            console.log(
+              `DD_processUserMessage: 根據科目代碼 ${subjectInfo.majorCode} 判斷為收入 [${msgId}]`,
+            );
           } else {
             action = "支出";
-            console.log(`DD_processUserMessage: 根據科目代碼 ${subjectInfo.majorCode} 判斷為支出 [${msgId}]`);
+            console.log(
+              `DD_processUserMessage: 根據科目代碼 ${subjectInfo.majorCode} 判斷為支出 [${msgId}]`,
+            );
           }
         }
 
@@ -1403,7 +1642,7 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
 
         // 11.3 建構完整回傳結果
         const result = {
-          type: '記帳',
+          type: "記帳",
           processed: true,
           subject: subject,
           subjectName: subjectInfo.subName,
@@ -1418,22 +1657,34 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
           matchMethod: matchMethod,
           text: remarkText, // 移除金額後的文字作為備註
           originalSubject: originalSubject,
-          processId: msgId
+          processId: msgId,
         };
 
         // 記錄支付方式狀態
         if (paymentMethod) {
-          console.log(`DD_processUserMessage: 用戶指定了支付方式: ${paymentMethod} [${msgId}]`);
+          console.log(
+            `DD_processUserMessage: 用戶指定了支付方式: ${paymentMethod} [${msgId}]`,
+          );
         } else {
-          console.log(`DD_processUserMessage: 用戶未指定支付方式，保留為空 [${msgId}]`);
+          console.log(
+            `DD_processUserMessage: 用戶未指定支付方式，保留為空 [${msgId}]`,
+          );
         }
 
-        console.log(`DD_processUserMessage: 回傳結果: ${JSON.stringify(result)} [${msgId}]`);
+        console.log(
+          `DD_processUserMessage: 回傳結果: ${JSON.stringify(result)} [${msgId}]`,
+        );
         return result;
       } else {
         // 11.3 科目匹配失敗處理
         console.log(`DD_processUserMessage: 科目匹配失敗 [${msgId}]`);
-        DD_logWarning(`科目匹配失敗: "${subject}"`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+        DD_logWarning(
+          `科目匹配失敗: "${subject}"`,
+          "科目匹配",
+          userId,
+          "DD_processUserMessage",
+          "DD_processUserMessage",
+        );
 
         // 建構標準錯誤資料結構
         const errorData = {
@@ -1444,7 +1695,7 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
           errorDetails: {
             processId: msgId,
             errorType: "VALIDATION_ERROR",
-            module: "BK"
+            module: "BK",
           },
           isRetryable: true,
           partialData: {
@@ -1452,24 +1703,30 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
             amount: amount,
             rawAmount: rawAmount,
             paymentMethod: paymentMethod, // 不設預設值
-            timestamp: new Date().getTime()
-          }
+            timestamp: new Date().getTime(),
+          },
         };
 
         // 回傳統一格式的錯誤結果
         return {
-          type: '記帳',
+          type: "記帳",
           processed: false,
           reason: `無法識別科目: "${subject}"`,
           processId: msgId,
           errorType: "UNKNOWN_SUBJECT",
-          errorData: errorData
+          errorData: errorData,
         };
       }
     } else {
       // 12. 科目缺失處理
       console.log(`DD_processUserMessage: 科目為空 [${msgId}]`);
-      DD_logWarning(`科目為空`, "科目匹配", userId, "DD_processUserMessage", "DD_processUserMessage");
+      DD_logWarning(
+        `科目為空`,
+        "科目匹配",
+        userId,
+        "DD_processUserMessage",
+        "DD_processUserMessage",
+      );
 
       // 建構標準錯誤資料結構
       const errorData = {
@@ -1480,7 +1737,7 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
         errorDetails: {
           processId: msgId,
           errorType: "VALIDATION_ERROR",
-          module: "BK"
+          module: "BK",
         },
         isRetryable: true,
         partialData: {
@@ -1488,27 +1745,34 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
           amount: amount,
           rawAmount: rawAmount,
           paymentMethod: paymentMethod, // 不設預設值
-          timestamp: new Date().getTime()
-        }
+          timestamp: new Date().getTime(),
+        },
       };
 
       // 回傳統一格式的錯誤結果
       return {
-        type: '記帳',
+        type: "記帳",
         processed: false,
         reason: "未指定科目",
         processId: msgId,
         errorType: "MISSING_SUBJECT",
-        errorData: errorData
+        errorData: errorData,
       };
     }
-
   } catch (error) {
     // 13. 異常處理
     console.log(`DD_processUserMessage異常: ${error.toString()} [${msgId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
 
-    DD_logError(`處理用戶消息時發生異常: ${error.toString()}`, "訊息處理", userId, "PROCESS_ERROR", error.toString(), "DD_processUserMessage", "DD_processUserMessage");
+    DD_logError(
+      `處理用戶消息時發生異常: ${error.toString()}`,
+      "訊息處理",
+      userId,
+      "PROCESS_ERROR",
+      error.toString(),
+      "DD_processUserMessage",
+      "DD_processUserMessage",
+    );
 
     // 建構標準錯誤資料結構
     const errorData = {
@@ -1519,26 +1783,26 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
       errorDetails: {
         processId: msgId,
         errorType: "SYSTEM_ERROR",
-        module: "BK"
+        module: "BK",
       },
-      isRetryable: false
+      isRetryable: false,
     };
 
     // 回傳統一格式的錯誤結果
-    return { 
-      type: '記帳',
-      processed: false, 
+    return {
+      type: "記帳",
+      processed: false,
       reason: error.toString(),
       processId: msgId,
       errorType: "PROCESS_ERROR",
-      errorData: errorData
+      errorData: errorData,
     };
   }
 }
 
 // 修改：不再重複宣告Utilities和SpreadsheetApp物件，改用擴充方式
 // 擴充Utilities物件的方法
-if (typeof Utilities === 'object') {
+if (typeof Utilities === "object") {
   // 只有在Utilities已存在時才擴充
   if (!Utilities.getUuid) {
     Utilities.getUuid = () => uuidv4();
@@ -1547,12 +1811,12 @@ if (typeof Utilities === 'object') {
   if (!Utilities.formatDate) {
     Utilities.formatDate = (date, timezone, format) => {
       // 基本的日期格式化，保持與原始GAS功能相同
-      if (format === 'yyyy/M/d') {
+      if (format === "yyyy/M/d") {
         return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-      } else if (format === 'HH:mm') {
-        return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-      } else if (format === 'yyyy-MM-dd HH:mm:ss') {
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+      } else if (format === "HH:mm") {
+        return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+      } else if (format === "yyyy-MM-dd HH:mm:ss") {
+        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
       }
       return date.toString();
     };
@@ -1560,25 +1824,26 @@ if (typeof Utilities === 'object') {
 }
 
 // 擴充SpreadsheetApp物件的方法
-if (typeof SpreadsheetApp === 'object') {
+if (typeof SpreadsheetApp === "object") {
   // 只有在SpreadsheetApp已存在時才擴充
   if (!SpreadsheetApp.openById) {
     SpreadsheetApp.openById = (id) => ({
       getSheetByName: (name) => ({
-        getLastRow: () => spreadsheetData[name] ? spreadsheetData[name].length : 0,
+        getLastRow: () =>
+          spreadsheetData[name] ? spreadsheetData[name].length : 0,
         getRange: (row, col, numRows, numCols) => ({
-          getValues: () => spreadsheetData[name] || []
+          getValues: () => spreadsheetData[name] || [],
         }),
         getDataRange: () => ({
-          getValues: () => spreadsheetData[name] || []
+          getValues: () => spreadsheetData[name] || [],
         }),
         appendRow: (rowData) => {
           if (!spreadsheetData[name]) {
             spreadsheetData[name] = [];
           }
           spreadsheetData[name].push(rowData);
-        }
-      })
+        },
+      }),
     });
   }
 }
@@ -2675,7 +2940,7 @@ function calculateLevenshteinDistance(str1, str2) {
 }
 
 // 更新現有的 SpreadsheetApp 物件
-if (typeof SpreadsheetApp !== 'undefined') {
+if (typeof SpreadsheetApp !== "undefined") {
   // 擴充現有的 SpreadsheetApp 功能
   if (!SpreadsheetApp.insertSheet) {
     SpreadsheetApp.insertSheet = (name) => ({
@@ -3949,7 +4214,7 @@ function DD_parseInputFormat(text, processId) {
 }
 
 // 更新現有的 Utilities 物件，添加缺少的方法
-if (typeof Utilities !== 'undefined' && !Utilities.formatDate) {
+if (typeof Utilities !== "undefined" && !Utilities.formatDate) {
   Utilities.formatDate = (date, timezone, format) => {
     if (format === "yyyy/MM/dd HH:mm") {
       return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
@@ -3959,7 +4224,7 @@ if (typeof Utilities !== 'undefined' && !Utilities.formatDate) {
 }
 
 // 更新現有的 SpreadsheetApp 物件，添加 getActive 方法
-if (typeof SpreadsheetApp !== 'undefined' && !SpreadsheetApp.getActive) {
+if (typeof SpreadsheetApp !== "undefined" && !SpreadsheetApp.getActive) {
   SpreadsheetApp.getActive = () => ({
     getSheetByName: (name) => ({
       getDataRange: () => ({
