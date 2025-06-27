@@ -1103,15 +1103,6 @@ function BK_getPaymentMethods() {
   return ["現金", "刷卡", "轉帳", "行動支付", "其他"];
 }
 
-        console.log(`BK_validatePaymentMethod: 科目代碼 ${majorCode} 為8或9開頭，使用默認支付方式"現金"`);
-        return "現金";
-      } else {
-        // 其他科目默認用刷卡
-        console.log(`BK_validatePaymentMethod: 未指定支付方式或值為"預設"，使用默認支付方式"刷卡"`);
-        return "刷卡";
-      }
-    }
-
 /**
  * 9. 確認並標準化支付方式
  * @version 2025-06-27-V3.0.0
@@ -1123,6 +1114,8 @@ function BK_getPaymentMethods() {
  * @returns {string} 標準化後的支付方式
  * @throws {Error} 當支付方式不匹配四種有效值時拋出錯誤
  */
+This change removes a duplicate code block within the `BK_validatePaymentMethod` function, resolving a syntax error.
+```javascript
 function BK_validatePaymentMethod(method, majorCode) {
   try {
     console.log(`BK_validatePaymentMethod: 驗證支付方式 "${method}" 對應科目代碼 ${majorCode}`);
