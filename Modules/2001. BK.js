@@ -1114,8 +1114,6 @@ function BK_getPaymentMethods() {
  * @returns {string} 標準化後的支付方式
  * @throws {Error} 當支付方式不匹配四種有效值時拋出錯誤
  */
-This change removes a duplicate code block within the `BK_validatePaymentMethod` function, resolving a syntax error.
-```javascript
 function BK_validatePaymentMethod(method, majorCode) {
   try {
     console.log(`BK_validatePaymentMethod: 驗證支付方式 "${method}" 對應科目代碼 ${majorCode}`);
