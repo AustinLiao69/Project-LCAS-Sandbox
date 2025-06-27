@@ -1,0 +1,274 @@
+/**
+ * 58. 格式化系統回覆訊息
+ * @version 2025-06-16-V3.7.0
+ * @author AustinLiao69
+ * @date 2025-06-16 02:13:23
+ * @update: 修復負數金額和支付方式處理問題，確保多層調用數據一致性
+ * @param {Object} resultData - 處理結果數據
+ * @param {string} moduleCode - 模組代碼
+ * @param {Object} options - 附加選項
+ * @returns {Object} 格式化後的回覆訊息
+ */
+function DD_formatSystemReplyMessage(resultData, moduleCode, options = {}) {
+  // 1. 初始化處理 - 核心變數移到頂層，確保在所有程式路徑中都可用
+  const userId = options.userId || "";
+  const processId = options.processId || Utilities.getUuid().substring(0, 8);
+  let errorMsg = "未知錯誤"; // 關鍵：移到頂層定義
+  const currentDateTime = Utilities.formatDate(new Date(), DD_CONFIG.TIMEZONE || "Asia/Taipei", "yyyy/MM/dd HH:mm"); // 關鍵：移到頂層定義
+  
+  console.log(`DD_formatSystemReplyMessage: 開始格式化訊息 [${processId}], 模組: ${moduleCode}`);
+  console.log(`DD_formatSystemReplyMessage: 輸入數據: ${JSON.stringify(resultData).substring(0, 300)}...`);
+  
+  try {
+    // 2. 檢查resultData是否已經包含完整的responseMessage，如有則優先使用
+    if (resultData && resultData.responseMessage) {
+      console.log(`DD_formatSystemReplyMessage: 檢測到完整responseMessage，將直接使用 [${processId}]`);
+      
+      // 深度複製，確保不影響原始對象
+      const returnObject = {
+        success: resultData.success === true ? true : false,
+        responseMessage: resultData.responseMessage,
+        originalResult: resultData.originalResult || resultData,
+        processId: processId,
+        errorType: resultData.errorType || null,
+        moduleCode: moduleCode,
+        partialData: resultData.partialData || {},
+        error: resultData.error || (resultData.success === true ? undefined : errorMsg)
+      };
+      
+      console.log(`DD_formatSystemReplyMessage: 直接返回現有訊息，長度=${returnObject.responseMessage.length} [${processId}]`);
+      return returnObject;
+    }
+    
+    // 3. 確保resultData存在
+    if (!resultData) {
+      console.log(`DD_formatSystemReplyMessage: resultData為空，使用默認值 [${processId}]`);
+      resultData = { 
+        success: false, 
+        error: "無處理結果資料", 
+        errorType: "MISSING_RESULT_DATA",
+        message: "無處理結果資料",
+        errorDetails: {
+          processId: processId,
+          errorType: "SYSTEM_ERROR",
+          module: moduleCode || "BK"
+        },
+        partialData: {
+          subject: "",
+          amount: 0,
+          rawAmount: "0",
+          paymentMethod: "支付方式未指定",
+          timestamp: new Date().getTime()
+        }
+      };
+    }
+    
+    // 4. 處理結果數據
+    let responseMessage = "";
+    const isSuccess = resultData.success === true;
+    
+    // 5. 從resultData中提取資料 - 支持更多嵌套結構 (最關鍵修改點)
+    let partialData = null;
+    
+    // 5.1 查找partialData的各種可能位置（按優先順序）
+    const dataSources = [
+      resultData.parsedData,                       // DD_parseInputFormat 直接返回
+      resultData.partialData,                      // 一般partialData
+      resultData.errorData?.partialData,           // 錯誤數據中的部分數據
+      resultData.originalResult?.partialData,      // 嵌套結果中的部分數據
+      resultData._partialData,                     // 舊版格式
+      resultData.data                              // 成功結果中的完整數據
+    ];
+    
+    // 查找第一個非空的數據源
+    for (let source of dataSources) {
+      if (source && typeof source === 'object' && Object.keys(source).length > 0) {
+        partialData = source;
+        console.log(`DD_formatSystemReplyMessage: 找到數據源: ${JSON.stringify(partialData).substring(0, 100)}... [${processId}]`);
+        break;
+      }
+    }
+    
+    // 如果都未找到，嘗試從responseMessage解析
+    if (!partialData && resultData.responseMessage) {
+      try {
+        console.log(`DD_formatSystemReplyMessage: 嘗試從responseMessage解析數據 [${processId}]`);
+        const msgLines = resultData.responseMessage.split('\n');
+        partialData = {};
+        
+        for (const line of msgLines) {
+          if (line.startsWith('金額：')) {
+            const amountMatch = line.match(/金額：([-\d,]+)元/);
+            if (amountMatch && amountMatch[1]) {
+              // 保留原始金額值，包括負數
+              partialData.rawAmount = amountMatch[1].replace(/,/g, '');
+              partialData.amount = parseFloat(partialData.rawAmount);
+              console.log(`從訊息解析金額: ${partialData.rawAmount}`);
+            }
+          } else if (line.startsWith('科目：')) {
+            partialData.subject = line.replace('科目：', '').trim();
+            console.log(`從訊息解析科目: ${partialData.subject}`);
+          } else if (line.startsWith('備註：')) {
+            partialData.remark = line.replace('備註：', '').trim();
+            console.log(`從訊息解析備註: ${partialData.remark}`);
+          } else if (line.startsWith('支付方式：') || line.startsWith('付款方式：')) {
+            partialData.paymentMethod = line.replace(/[支付|付款]方式：/, '').trim();
+            console.log(`從訊息解析支付方式: ${partialData.paymentMethod}`);
+          }
+        }
+      } catch (e) {
+        console.log(`DD_formatSystemReplyMessage: 嘗試解析responseMessage失敗: ${e.toString()} [${processId}]`);
+      }
+    }
+    
+    // 如果仍未找到partialData，創建一個空對象
+    if (!partialData) {
+      partialData = {};
+    }
+    
+    // 6. 依照成功或失敗格式化訊息
+    if (isSuccess) {
+      // 6.1 成功訊息模板
+      if (resultData.responseMessage) {
+        // 6.1.1 如果已經有格式化的回覆訊息，直接使用
+        responseMessage = resultData.responseMessage;
+        console.log(`DD_formatSystemReplyMessage: 使用現有回覆訊息 [${processId}]`);
+      } else if (resultData.data) {
+        // 6.1.2 如果有詳細的回覆數據，根據數據構建訊息
+        console.log(`DD_formatSystemReplyMessage: 基於回覆數據構建成功訊息 [${processId}]`);
+        
+        // 從resultData.data提取數據
+        const data = resultData.data;
+        const subjectName = data.subjectName || partialData.subject || "";
+        // 優先使用rawAmount保留格式
+        const amount = data.rawAmount || partialData.rawAmount || data.amount || 0;
+        const action = data.action || resultData.action || "支出";
+        const paymentMethod = data.paymentMethod || partialData.paymentMethod || "";
+        const date = data.date || currentDateTime;
+        const remark = data.remark || partialData.remark || "無";
+        const userType = data.userType || "J";
+        
+        // 構建標準成功模板
+        responseMessage = `記帳成功！\n` +
+                          `金額：${amount}元 (${action})\n` +
+                          `付款方式：${paymentMethod}\n` +
+                          `時間：${date}\n` +
+                          `科目：${subjectName}\n` +
+                          `備註：${remark}\n` +
+                          `使用者類型：${userType}`;
+      } else {
+        // 6.1.3 如果沒有詳細數據，構建簡易成功訊息
+        console.log(`DD_formatSystemReplyMessage: 構建簡易成功訊息 [${processId}]`);
+        responseMessage = `操作成功！\n處理ID: ${processId}`;
+      }
+      
+      // 6.1.4 記錄成功訊息
+      console.log(`DD_formatSystemReplyMessage: 格式化成功訊息完成 [${processId}]`);
+    } else {
+      // 6.2 失敗訊息模板
+      console.log(`DD_formatSystemReplyMessage: 構建錯誤訊息，錯誤類型: ${resultData.errorType || "未指定"} [${processId}]`);
+      
+      // 6.2.1 收集錯誤訊息 - 增強版本，優先級更清晰
+      errorMsg = "未知錯誤"; // 重新初始化，確保有預設值
+      
+      // 提取各種可能的錯誤訊息來源 (優先順序)
+      const possibleErrorSources = [
+        resultData.error,
+        resultData.message,
+        resultData.errorData?.error,
+        resultData.originalResult?.error,
+        resultData.originalResult?.message,
+        resultData._errorDetail,
+      ];
+      
+      // 尋找第一個非空的錯誤訊息
+      for (const source of possibleErrorSources) {
+        if (source) {
+          errorMsg = source;
+          console.log(`DD_formatSystemReplyMessage: 找到錯誤訊息: ${errorMsg} [${processId}]`);
+          break;
+        }
+      }
+      
+      // 如果仍未找到錯誤訊息，嘗試從responseMessage提取
+      if (errorMsg === "未知錯誤" && resultData.responseMessage && resultData.responseMessage.includes("錯誤原因：")) {
+        try {
+          errorMsg = resultData.responseMessage.split("錯誤原因：")[1].trim();
+          console.log(`DD_formatSystemReplyMessage: 從responseMessage提取錯誤信息: ${errorMsg} [${processId}]`);
+        } catch (e) {
+          errorMsg = "無法提取錯誤原因";
+        }
+      }
+      
+      // 6.2.2 準備顯示數據 - 關鍵修改：保留負數金額和原始科目
+      // 取得科目名稱 - 維持優先順序
+      const subject = partialData.subject || 
+                     resultData.errorData?.parsedData?.subject || 
+                     resultData.originalSubject || 
+                     resultData.text?.split('-')?.[0]?.trim() || 
+                     "未知科目";
+      
+      // 保留原始金額，包括負數 (關鍵修改：確保從partialData提取值)
+      const displayAmount = partialData.rawAmount || 
+                          (partialData.amount !== undefined ? String(partialData.amount) : "0");
+      
+      // 確保支付方式被保留
+      const paymentMethod = partialData.paymentMethod || 
+                           resultData.paymentMethod || 
+                           resultData.errorData?.parsedData?.paymentMethod || 
+                           "未指定支付方式";
+      
+      // 從原始輸入擷取備註
+      const remark = partialData.remark || 
+                    resultData.text?.split('-')?.[0]?.trim() || 
+                    "無";
+      
+      // 6.2.3 構建標準錯誤訊息模板
+      responseMessage = `記帳失敗！\n` +
+                        `金額：${displayAmount}元\n` +
+                        `支付方式：${paymentMethod}\n` +
+                        `時間：${currentDateTime}\n` +
+                        `科目：${subject}\n` +
+                        `備註：${remark}\n` +
+                        `使用者類型：J\n` +
+                        `錯誤原因：${errorMsg}`;
+      
+      console.log(`DD_formatSystemReplyMessage: 已構建錯誤訊息: ${responseMessage.substring(0, 50)}... [${processId}]`);
+    }
+    
+    // 7. 最終日誌記錄
+    console.log(`DD_formatSystemReplyMessage: 完成訊息格式化 [${processId}]`);
+    
+    // 8. 返回完整結果，確保保留所有原始數據
+    return {
+      success: isSuccess,
+      responseMessage: responseMessage,
+      originalResult: resultData,
+      processId: processId,
+      errorType: resultData.errorType || null,
+      moduleCode: moduleCode,
+      // 關鍵：確保保留原始的partialData
+      partialData: partialData,
+      // 保留原始錯誤信息，確保多級調用不丟失
+      error: isSuccess ? undefined : errorMsg
+    };
+    
+  } catch (error) {
+    // 9. 處理格式化過程中的錯誤
+    console.error(`DD_formatSystemReplyMessage: 格式化過程出錯: ${error.toString()} [${processId}]`);
+    if (error.stack) console.error(`錯誤堆疊: ${error.stack}`);
+    
+    // 9.1 預設的錯誤回覆訊息
+    const fallbackMessage = `記帳失敗！\n時間：${currentDateTime}\n科目：未知科目\n金額：0元\n支付方式：未指定支付方式\n備註：無\n使用者類型：J\n錯誤原因：訊息格式化失敗\n處理ID: ${processId}`;
+    
+    // 9.2 返回基本錯誤訊息
+    return {
+      success: false,
+      responseMessage: fallbackMessage,
+      processId: processId,
+      errorType: "FORMAT_ERROR",
+      moduleCode: moduleCode,
+      error: error.toString()
+    };
+  }
+}
