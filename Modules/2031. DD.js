@@ -24,18 +24,109 @@ const Utilities = {
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 };
 
-// 替代 Google Apps Script 的 SpreadsheetApp
+// 使用真實的 Google Sheets API
+const { google } = require('googleapis');
+
+let sheetsAPI = null;
+
+// 初始化 Google Sheets API
+async function initGoogleSheets() {
+  if (sheetsAPI) return sheetsAPI;
+  
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || '{}'),
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    });
+    
+    const authClient = await auth.getClient();
+    sheetsAPI = google.sheets({ version: 'v4', auth: authClient });
+    return sheetsAPI;
+  } catch (error) {
+    console.log(`Google Sheets API 初始化失敗: ${error}`);
+    // 回退到模擬模式
+    return createMockSheetsAPI();
+  }
+}
+
+// 創建相容的 SpreadsheetApp 介面
 const SpreadsheetApp = {
   openById: (id) => ({
     getSheetByName: (name) => ({
-      getLastRow: () =>
-        spreadsheetData[name] ? spreadsheetData[name].length : 0,
+      getLastRow: async () => {
+        try {
+          const sheets = await initGoogleSheets();
+          const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: id,
+            range: `${name}!A:A`
+          });
+          return response.data.values ? response.data.values.length : 0;
+        } catch (error) {
+          console.log(`獲取行數失敗: ${error}`);
+          return 0;
+        }
+      },
       getRange: (row, col, numRows, numCols) => ({
-        getValues: () => spreadsheetData[name] || [],
+        getValues: async () => {
+          try {
+            const sheets = await initGoogleSheets();
+            const range = `${name}!${String.fromCharCode(64 + col)}${row}:${String.fromCharCode(64 + col + numCols - 1)}${row + numRows - 1}`;
+            const response = await sheets.spreadsheets.values.get({
+              spreadsheetId: id,
+              range: range
+            });
+            return response.data.values || [];
+          } catch (error) {
+            console.log(`獲取數據失敗: ${error}`);
+            return [];
+          }
+        }
       }),
-    }),
-  }),
+      getDataRange: () => ({
+        getValues: async () => {
+          try {
+            const sheets = await initGoogleSheets();
+            const response = await sheets.spreadsheets.values.get({
+              spreadsheetId: id,
+              range: name
+            });
+            return response.data.values || [];
+          } catch (error) {
+            console.log(`獲取全部數據失敗: ${error}`);
+            return [];
+          }
+        }
+      }),
+      appendRow: async (rowData) => {
+        try {
+          const sheets = await initGoogleSheets();
+          await sheets.spreadsheets.values.append({
+            spreadsheetId: id,
+            range: `${name}!A:A`,
+            valueInputOption: 'RAW',
+            resource: {
+              values: [rowData]
+            }
+          });
+        } catch (error) {
+          console.log(`新增行失敗: ${error}`);
+        }
+      }
+    })
+  })
 };
+
+// 模擬模式回退函數
+function createMockSheetsAPI() {
+  return {
+    spreadsheets: {
+      values: {
+        get: () => ({ data: { values: [] } }),
+        append: () => Promise.resolve()
+      }
+    }
+  };
+}
 
 // 替代 getScriptProperty 函數
 function getScriptProperty(key) {
