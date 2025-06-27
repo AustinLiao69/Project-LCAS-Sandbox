@@ -1,32 +1,31 @@
 /**
- * DL_診斷與日誌模組_3_0_0
+ * DL_診斷與日誌模組_3.0.2
  * 提供統一的日誌記錄和系統診斷功能
- * @update: V3.0.0 - 從 GAS 轉換為 Node.js/Firebase
+ * @update: V3.0.1 - 從Firebase改為Google Sheets存儲（完整功能版）
  * @author: AustinLiao69
- * @lastUpdate: 2025-06-19
+ * @lastUpdate: 2025-06-25
  */
 
-const admin = require('firebase-admin');
-const functions = require('firebase-functions');
+const { google } = require('googleapis');
 const { v4: uuidv4 } = require('uuid');
-const { format } = require('date-fns');
-const { zhTW } = require('date-fns/locale');
+const moment = require('moment-timezone');
 
 // 1. 配置參數
 const DL_CONFIG = {
   // 1.1 日誌記錄基本設置
   enableConsoleLog: true,          // 是否啟用控制台日誌
-  enableFirestoreLog: true,        // 是否啟用 Firestore 日誌
+  enableSheetsLog: true,           // 改為Google Sheets日誌
   consoleLogLevel: 0,              // 控制台日誌級別 (0=DEBUG, 1=INFO, 2=WARNING, 3=ERROR)
-  firestoreLogLevel: 0,            // Firestore 日誌級別
+  sheetsLogLevel: 0,               // Google Sheets日誌級別
 
   // 1.2 日誌存儲位置
-  collectionName: process.env.LOG_COLLECTION_NAME || 'logs',  // 從環境變數獲取日誌集合名稱
+  spreadsheetId: process.env.SPREADSHEET_ID,
+  logSheetName: process.env.LOG_SHEET_NAME || '03. log',
   timezone: "Asia/Taipei",         // 時區設置
 
   // 1.3 緩衝區設置
-  logBufferSize: 50,               // 緩衝區大小 (多少條日誌批量寫入一次)
-  bufferFlushInterval: 60000,      // 緩衝區刷新間隔 (毫秒)
+  logBufferSize: 10,               // 緩衝區大小 (減少到10條，更快寫入)
+  bufferFlushInterval: 30000,      // 緩衝區刷新間隔 (30秒)
   logBuffer: [],                   // 日誌緩衝區
   lastBufferFlush: 0,              // 上次緩衝區刷新時間
 
@@ -39,6 +38,9 @@ const DL_CONFIG = {
   // 1.5 模式設置
   mode: "NORMAL",                  // 日誌模式: NORMAL, EMERGENCY
   emergencyReason: "",             // 緊急模式原因
+
+  // 1.6 Google Sheets 認證
+  authClient: null                 // Google API 認證客戶端
 };
 
 // 2. 嚴重等級定義
@@ -51,69 +53,127 @@ const DL_SEVERITY_LEVELS = {
 };
 
 // 3. 常量定義
-const DL_MAX_LOGS_PER_COLLECTION = 50000;  // 每個日誌集合的最大文檔數
+const DL_MAX_LOGS_PER_SHEET = 10000;  // 每個日誌表的最大行數
 
 /**
  * 獲取配置屬性 - 模擬 GAS 的 getScriptProperty 函數
- * @param {string} key - 屬性鍵名
- * @returns {string} - 屬性值
  */
 function getScriptProperty(key) {
   return process.env[key] || null;
 }
 
 /**
+ * 初始化Google API認證
+ */
+async function initializeGoogleAuth() {
+  try {
+    if (DL_CONFIG.authClient) return DL_CONFIG.authClient;
+
+    const credentialsPath = process.env.GOOGLE_SHEETS_CREDENTIALS;
+    if (!credentialsPath) {
+      throw new Error('未設置GOOGLE_SHEETS_CREDENTIALS環境變數');
+    }
+
+    const auth = new google.auth.GoogleAuth({
+      keyFilename: credentialsPath,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    });
+
+    const authClient = await auth.getClient();
+    DL_CONFIG.authClient = authClient;
+    return authClient;
+  } catch (error) {
+    console.error('Google API認證初始化失敗:', error);
+    throw error;
+  }
+}
+
+/**
  * 3.1 初始化日誌模組
- * @returns {Promise<boolean>} - 初始化是否成功
  */
 async function DL_initialize() {
   try {
-    // 3.1.0 首先從 Firestore 中恢復模式設置
+    // 從本地設置中恢復模式設置（如果有的話）
     try {
-      const settingsRef = admin.firestore().collection('settings').doc('logger');
-      const settingsDoc = await settingsRef.get();
-
-      if (settingsDoc.exists) {
-        const data = settingsDoc.data();
-        if (data.mode) {
-          DL_CONFIG.mode = data.mode;
-          DL_CONFIG.emergencyReason = data.reason || "";
-          console.log(`DL模組從 Firestore 恢復模式設置: ${data.mode}`);
-        }
+      const storedMode = process.env.DL_MODE || "NORMAL";
+      const storedReason = process.env.DL_EMERGENCY_REASON || "";
+      if (storedMode) {
+        DL_CONFIG.mode = storedMode;
+        DL_CONFIG.emergencyReason = storedReason;
+        console.log(`DL模組從環境變數恢復模式設置: ${storedMode}`);
       }
     } catch (e) {
-      console.warn(`無法從 Firestore 恢復模式設置: ${e.toString()}`);
+      console.warn(`無法從環境變數恢復模式設置: ${e.toString()}`);
     }
 
-    // 3.1.1 檢查是否已有日誌集合
-    const logSnapshot = await admin.firestore().collection(DL_CONFIG.collectionName).limit(1).get();
+    console.log("DL模組初始化開始 - Google Sheets版本");
 
-    // 3.1.2 如果日誌集合不存在，則創建第一條初始化日誌
-    if (logSnapshot.empty) {
-      console.log(`DL_initialize: 創建日誌集合 ${DL_CONFIG.collectionName}`);
+    // 初始化Google認證
+    await initializeGoogleAuth();
 
-      // 3.1.3 創建初始化日誌
-      await admin.firestore().collection(DL_CONFIG.collectionName).add({
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        message: "日誌模組初始化",
-        operation: "系統初始化",
-        userId: "",
-        errorCode: "",
-        source: "DL",
-        details: "",
-        retryCount: 0,
-        location: "DL_initialize",
-        severity: "INFO",
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+    // 檢查日誌表是否存在
+    const sheets = google.sheets({ version: 'v4', auth: DL_CONFIG.authClient });
+
+    try {
+      // 嘗試讀取日誌表的標題行
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: DL_CONFIG.spreadsheetId,
+        range: `${DL_CONFIG.logSheetName}!A1:J1`
       });
+
+      // 如果表為空或沒有標題行，創建標題行
+      if (!response.data.values || response.data.values.length === 0) {
+        console.log(`DL_initialize: 創建日誌表標題行 ${DL_CONFIG.logSheetName}`);
+
+        const headers = [
+          '時間戳記', '訊息', '操作類型', '使用者ID', '錯誤代碼', 
+          '來源', '錯誤詳情', '重試次數', '程式碼位置', '嚴重等級'
+        ];
+
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: DL_CONFIG.spreadsheetId,
+          range: `${DL_CONFIG.logSheetName}!A1:J1`,
+          valueInputOption: 'RAW',
+          resource: {
+            values: [headers]
+          }
+        });
+
+        // 創建初始化日誌
+        const initLogRow = [
+          moment().tz(DL_CONFIG.timezone).format('YYYY-MM-DD HH:mm:ss'),
+          "日誌模組初始化",
+          "系統初始化",
+          "",
+          "",
+          "DL",
+          "",
+          0,
+          "DL_initialize",
+          "INFO"
+        ];
+
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: DL_CONFIG.spreadsheetId,
+          range: `${DL_CONFIG.logSheetName}!A:J`,
+          valueInputOption: 'RAW',
+          resource: {
+            values: [initLogRow]
+          }
+        });
+
+        console.log(`已創建日誌表標題行和初始化記錄: ${DL_CONFIG.logSheetName}`);
+      }
+    } catch (sheetError) {
+      console.error(`無法訪問日誌表 ${DL_CONFIG.logSheetName}:`, sheetError);
+      return false;
     }
 
-    // 3.6 初始化緩衝區
+    // 初始化緩衝區
     DL_CONFIG.logBuffer = [];
     DL_CONFIG.lastBufferFlush = Date.now();
 
-    // 3.7 記錄初始化成功
-    console.log("DL模組初始化成功");
+    console.log("DL模組初始化成功 - Google Sheets版本");
     return true;
 
   } catch (error) {
@@ -124,14 +184,10 @@ async function DL_initialize() {
 
 /**
  * 3.8 檢查緩衝區是否需要刷新
- * @returns {Promise<void>}
  */
 async function DL_checkAndFlushBuffer() {
   const currentTime = Date.now();
 
-  // 滿足以下條件之一時刷新緩衝區:
-  // 1. 緩衝區大小達到配置的閾值
-  // 2. 距離上次刷新超過配置的時間間隔
   if (DL_CONFIG.logBuffer.length >= DL_CONFIG.logBufferSize || 
       (currentTime - DL_CONFIG.lastBufferFlush) >= DL_CONFIG.bufferFlushInterval) {
     await DL_flushLogBuffer();
@@ -139,35 +195,39 @@ async function DL_checkAndFlushBuffer() {
 }
 
 /**
- * 3.9 強制刷新日誌緩衝區
- * @returns {Promise<void>}
+ * 3.9 強制刷新日誌緩衝區到Google Sheets
  */
 async function DL_flushLogBuffer() {
   if (DL_CONFIG.logBuffer.length === 0) return;
 
   try {
-    const batch = admin.firestore().batch();
-    const logsCollection = admin.firestore().collection(DL_CONFIG.collectionName);
+    const sheets = google.sheets({ version: 'v4', auth: DL_CONFIG.authClient });
+
+    // 準備要寫入的數據
+    const values = DL_CONFIG.logBuffer.map(logData => [
+      logData[0],   // 時間戳記
+      logData[1],   // 訊息
+      logData[2],   // 操作類型
+      logData[3],   // 使用者ID
+      logData[4],   // 錯誤代碼
+      logData[5],   // 來源
+      logData[6],   // 錯誤詳情
+      logData[7],   // 重試次數
+      logData[8],   // 程式碼位置
+      logData[9]    // 嚴重等級
+    ]);
 
     // 批量寫入日誌
-    for (const logData of DL_CONFIG.logBuffer) {
-      const docRef = logsCollection.doc();
-      batch.set(docRef, {
-        timestamp: new Date(logData[0]),        // 1. 時間戳記
-        message: logData[1] || '',              // 2. 訊息
-        operation: logData[2] || '',            // 3. 操作類型
-        userId: logData[3] || '',               // 4. 使用者ID
-        errorCode: logData[4] || '',            // 5. 錯誤代碼
-        source: logData[5] || '',               // 6. 來源
-        details: logData[6] || '',              // 7. 錯誤詳情
-        retryCount: logData[7] || 0,            // 8. 重試次數
-        location: logData[8] || '',             // 9. 程式碼位置
-        severity: logData[9] || 'INFO',         // 10. 嚴重等級
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-    }
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: DL_CONFIG.spreadsheetId,
+      range: `${DL_CONFIG.logSheetName}!A:J`,
+      valueInputOption: 'RAW',
+      resource: {
+        values: values
+      }
+    });
 
-    await batch.commit();
+    console.log(`成功寫入 ${values.length} 條日誌到 Google Sheets`);
 
     // 清空緩衝區並更新最後刷新時間
     DL_CONFIG.logBuffer = [];
@@ -182,37 +242,78 @@ async function DL_flushLogBuffer() {
 }
 
 /**
- * 3.10 輪換日誌集合（當日誌數量超過限制時）
- * @returns {Promise<boolean>}
+ * 3.10 輪換日誌表（當日誌數量超過限制時）- 適配Google Sheets
  */
-async function DL_rotateLogCollection() {
+async function DL_rotateLogSheet() {
   try {
-    // 獲取當前時間戳以創建新集合名
-    const timestamp = new Date();
-    const archiveCollectionName = `${DL_CONFIG.collectionName}_${timestamp.getFullYear()}${(timestamp.getMonth()+1).toString().padStart(2, '0')}${timestamp.getDate().toString().padStart(2, '0')}`;
+    const sheets = google.sheets({ version: 'v4', auth: DL_CONFIG.authClient });
 
-    // 在 Firestore 創建新的存檔集合
-    await admin.firestore().collection(archiveCollectionName).add({
-      message: "日誌集合輪換初始化",
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      source: "DL",
-      severity: "INFO"
+    // 檢查當前日誌表的行數
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: DL_CONFIG.spreadsheetId,
+      range: `${DL_CONFIG.logSheetName}!A:A`
     });
 
-    console.log(`DL_rotateLogCollection: 日誌集合輪換完成，新集合名稱: ${archiveCollectionName}`);
-    return true;
+    const currentRowCount = response.data.values ? response.data.values.length : 0;
+
+    if (currentRowCount >= DL_MAX_LOGS_PER_SHEET) {
+      // 獲取當前時間戳以創建新表名
+      const timestamp = new Date();
+      const archiveSheetName = `${DL_CONFIG.logSheetName}_${timestamp.getFullYear()}${(timestamp.getMonth()+1).toString().padStart(2, '0')}${timestamp.getDate().toString().padStart(2, '0')}`;
+
+      // 創建新的工作表
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: DL_CONFIG.spreadsheetId,
+        resource: {
+          requests: [
+            {
+              addSheet: {
+                properties: {
+                  title: archiveSheetName
+                }
+              }
+            }
+          ]
+        }
+      });
+
+      // 在原表格中記錄輪換信息
+      const rotateLogRow = [
+        moment().tz(DL_CONFIG.timezone).format('YYYY-MM-DD HH:mm:ss'),
+        `日誌表輪換完成，新表名稱: ${archiveSheetName}`,
+        "日誌輪換",
+        "",
+        "",
+        "DL",
+        "",
+        0,
+        "DL_rotateLogSheet",
+        "INFO"
+      ];
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: DL_CONFIG.spreadsheetId,
+        range: `${DL_CONFIG.logSheetName}!A:J`,
+        valueInputOption: 'RAW',
+        resource: {
+          values: [rotateLogRow]
+        }
+      });
+
+      console.log(`DL_rotateLogSheet: 日誌表輪換完成，新表名稱: ${archiveSheetName}`);
+      return true;
+    }
+
+    return false; // 不需要輪換
 
   } catch (error) {
-    console.error(`DL_rotateLogCollection錯誤: ${error.toString()}`);
+    console.error(`DL_rotateLogSheet錯誤: ${error.toString()}`);
     return false;
   }
 }
 
 /**
- * 3.11 設置緊急模式 - 增加持久化存儲
- * @param {boolean} enabled - 是否啟用緊急模式
- * @param {string} reason - 啟用緊急模式的原因
- * @returns {Promise<void>}
+ * 3.11 設置緊急模式 - 適配環境變數存儲
  */
 async function DL_toggleMode(enabled, reason = "") {
   const prevMode = DL_CONFIG.mode;
@@ -221,16 +322,9 @@ async function DL_toggleMode(enabled, reason = "") {
     DL_CONFIG.mode = "EMERGENCY";
     DL_CONFIG.emergencyReason = reason || "未指定原因";
 
-    // 持久化存儲模式設置到 Firestore
-    try {
-      await admin.firestore().collection('settings').doc('logger').set({
-        mode: "EMERGENCY",
-        reason: DL_CONFIG.emergencyReason,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-    } catch (e) {
-      console.error(`無法保存緊急模式設置: ${e.toString()}`);
-    }
+    // 持久化存儲模式設置到環境變數（僅在記憶體中）
+    process.env.DL_MODE = "EMERGENCY";
+    process.env.DL_EMERGENCY_REASON = DL_CONFIG.emergencyReason;
 
     if (prevMode !== "EMERGENCY") {
       await DL_warning(`已切換到緊急模式 - ${DL_CONFIG.emergencyReason}`, "模式切換");
@@ -239,16 +333,9 @@ async function DL_toggleMode(enabled, reason = "") {
     DL_CONFIG.mode = "NORMAL";
     DL_CONFIG.emergencyReason = "";
 
-    // 持久化存儲模式設置到 Firestore
-    try {
-      await admin.firestore().collection('settings').doc('logger').set({
-        mode: "NORMAL",
-        reason: "",
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-    } catch (e) {
-      console.error(`無法保存正常模式設置: ${e.toString()}`);
-    }
+    // 持久化存儲模式設置到環境變數（僅在記憶體中）
+    process.env.DL_MODE = "NORMAL";
+    process.env.DL_EMERGENCY_REASON = "";
 
     if (prevMode !== "NORMAL") {
       await DL_info("已恢復到正常模式", "模式切換");
@@ -258,8 +345,6 @@ async function DL_toggleMode(enabled, reason = "") {
 
 /**
  * 3.12 開啟普通模式
- * 過濾非必要日誌，只記錄符合條件的日誌
- * @returns {Promise<boolean>} - 切換成功返回true
  */
 async function DL_enableNormalMode() {
   try {
@@ -274,9 +359,6 @@ async function DL_enableNormalMode() {
 
 /**
  * 3.13 開啟緊急模式
- * 記錄所有日誌，不進行過濾
- * @param {string} reason - 緊急模式原因，例如"系統故障排查"或"BK模組測試"
- * @returns {Promise<boolean>} - 切換成功返回true
  */
 async function DL_enableEmergencyMode(reason = "未指定原因") {
   try {
@@ -290,8 +372,7 @@ async function DL_enableEmergencyMode(reason = "未指定原因") {
 }
 
 /**
- * 3.14 強制重置緊急模式 - 新增函數，用於緊急情況下強制切換到正常模式
- * @returns {Promise<boolean>} - 重置成功返回true
+ * 3.14 強制重置緊急模式
  */
 async function DL_resetEmergencyMode() {
   try {
@@ -299,13 +380,9 @@ async function DL_resetEmergencyMode() {
     DL_CONFIG.mode = "NORMAL";
     DL_CONFIG.emergencyReason = "";
 
-    // 強制持久化存儲到 Firestore
-    await admin.firestore().collection('settings').doc('logger').set({
-      mode: "NORMAL",
-      reason: "",
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      resetBy: "DL_resetEmergencyMode"
-    });
+    // 強制持久化存儲
+    process.env.DL_MODE = "NORMAL";
+    process.env.DL_EMERGENCY_REASON = "";
 
     // 記錄重置操作
     await DL_info("已強制重置緊急模式到正常模式", "模式重置");
@@ -319,26 +396,22 @@ async function DL_resetEmergencyMode() {
 
 /**
  * 3.15 設置日誌級別
- * @param {string} consoleLevel - 控制台日誌級別 (DEBUG/INFO/WARNING/ERROR)
- * @param {string} firestoreLevel - Firestore 日誌級別 (DEBUG/INFO/WARNING/ERROR)
  */
-function DL_setLogLevels(consoleLevel, firestoreLevel) {
+function DL_setLogLevels(consoleLevel, sheetsLevel) {
   if (consoleLevel && DL_SEVERITY_LEVELS.hasOwnProperty(consoleLevel.toUpperCase())) {
     DL_CONFIG.consoleLogLevel = DL_SEVERITY_LEVELS[consoleLevel.toUpperCase()];
   }
 
-  if (firestoreLevel && DL_SEVERITY_LEVELS.hasOwnProperty(firestoreLevel.toUpperCase())) {
-    DL_CONFIG.firestoreLogLevel = DL_SEVERITY_LEVELS[firestoreLevel.toUpperCase()];
+  if (sheetsLevel && DL_SEVERITY_LEVELS.hasOwnProperty(sheetsLevel.toUpperCase())) {
+    DL_CONFIG.sheetsLogLevel = DL_SEVERITY_LEVELS[sheetsLevel.toUpperCase()];
   }
 }
 
 /**
- * 4. 記錄日誌的統一函數 - 修正來源欄位問題
- * @param {Object} logData - 日誌數據對象
- * @returns {Promise<boolean>} - 日誌記錄是否成功
+ * 4. 記錄日誌的統一函數
  */
 async function DL_log(logData) {
-  // 4.1 檢查必要參數
+  // 檢查必要參數
   if (!logData.message) {
     console.error('DL_log錯誤: 缺少必要參數 message');
     return false;
@@ -346,7 +419,6 @@ async function DL_log(logData) {
 
   if (!logData.operation) {
     console.error('DL_log錯誤: 缺少必要參數 operation');
-    return false;
   }
 
   // 修改這部分：尊重傳入的source參數
@@ -359,17 +431,17 @@ async function DL_log(logData) {
     logData.severity = 'INFO';
   }
 
-  // 4.2 標準化嚴重等級
+  // 標準化嚴重等級
   logData.severity = logData.severity.toUpperCase();
   if (!Object.keys(DL_SEVERITY_LEVELS).includes(logData.severity)) {
     console.error(`DL_log錯誤: 無效的嚴重等級 ${logData.severity}`);
     logData.severity = 'INFO';
   }
 
-  // 4.3 獲取當前時間戳
+  // 獲取當前時間戳
   const timestamp = new Date();
 
-  // 4.4 自動獲取位置（如果未提供）- 修改為優先使用函數名
+  // 自動獲取位置（如果未提供）- 修改為優先使用函數名
   if (!logData.location) {
     try {
       throw new Error();
@@ -393,7 +465,7 @@ async function DL_log(logData) {
     }
   }
 
-  // 4.5 檢查模組和函數過濾
+  // 檢查模組和函數過濾
   const source = logData.source;
   const func = logData.function || '';
 
@@ -425,10 +497,10 @@ async function DL_log(logData) {
     }
   }
 
-  // 4.6 獲取嚴重等級數值
+  // 獲取嚴重等級數值
   const severityLevel = DL_SEVERITY_LEVELS[logData.severity];
 
-  // 4.7 控制台日誌
+  // 控制台日誌
   if (DL_CONFIG.enableConsoleLog && severityLevel >= DL_CONFIG.consoleLogLevel) {
     let consoleMessage = `[${timestamp.toISOString()}] [${logData.severity}] [${logData.source}] ${logData.message}`;
 
@@ -464,13 +536,13 @@ async function DL_log(logData) {
     }
   }
 
-  // 4.8 Firestore 日誌
-  if (DL_CONFIG.enableFirestoreLog && severityLevel >= DL_CONFIG.firestoreLogLevel) {
+  // Google Sheets 日誌
+  if (DL_CONFIG.enableSheetsLog && severityLevel >= DL_CONFIG.sheetsLogLevel) {
     try {
-      // 4.8.1 格式化時間戳
-      const formattedTimestamp = format(timestamp, 'yyyy-MM-dd HH:mm:ss', { locale: zhTW });
+      // 格式化時間戳
+      const formattedTimestamp = moment(timestamp).tz(DL_CONFIG.timezone).format('YYYY-MM-DD HH:mm:ss');
 
-      // 4.8.2 準備日誌數據行 - 確保使用正確的source欄位
+      // 準備日誌數據行 - 確保使用正確的source欄位
       const logRow = [
         formattedTimestamp,            // 1. 時間戳記
         logData.message || '',         // 2. 訊息
@@ -484,10 +556,10 @@ async function DL_log(logData) {
         logData.severity || 'INFO'     // 10. 嚴重等級
       ];
 
-      // 4.8.3 將日誌添加到緩衝區
+      // 將日誌添加到緩衝區
       DL_CONFIG.logBuffer.push(logRow);
 
-      // 4.8.4 檢查緩衝區是否需要刷新
+      // 檢查緩衝區是否需要刷新
       await DL_checkAndFlushBuffer();
 
       return true;
@@ -502,7 +574,6 @@ async function DL_log(logData) {
 
 /**
  * 5. 檢測調用當前函數的模組名稱 - 改進版本
- * @returns {string} - 模組名稱或'DL'
  */
 function DL_detectCallerModule() {
   try {
@@ -538,34 +609,39 @@ function DL_detectCallerModule() {
 }
 
 /**
- * 6. 輔助函數 - 將日誌直接寫入 Firestore（緊急情況下使用，繞過緩衝區）
- * @param {Object} logData - 日誌數據
- * @param {Date} timestamp - 時間戳
- * @returns {Promise<boolean>} - 操作是否成功
+ * 6. 輔助函數 - 將日誌直接寫入 Google Sheets（緊急情況下使用，繞過緩衝區）
  */
-async function DL_writeToFirestore(logData, timestamp) {
+async function DL_writeToGoogleSheets(logData, timestamp) {
   try {
-    const formattedTimestamp = timestamp ? format(timestamp, 'yyyy-MM-dd HH:mm:ss', { locale: zhTW }) : 
-                                          format(new Date(), 'yyyy-MM-dd HH:mm:ss', { locale: zhTW });
+    const formattedTimestamp = timestamp ? moment(timestamp).tz(DL_CONFIG.timezone).format('YYYY-MM-DD HH:mm:ss') : 
+                                          moment().tz(DL_CONFIG.timezone).format('YYYY-MM-DD HH:mm:ss');
 
-    // 直接寫入 Firestore
-    await admin.firestore().collection(DL_CONFIG.collectionName).add({
-      timestamp: formattedTimestamp,
-      message: logData.message || '',
-      operation: logData.operation || '',
-      userId: logData.userId || '',
-      errorCode: logData.errorCode || '',
-      source: logData.source || '',
-      details: logData.details || '',
-      retryCount: logData.retryCount || 0,
-      location: logData.location || '',
-      severity: logData.severity || 'INFO',
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    const sheets = google.sheets({ version: 'v4', auth: DL_CONFIG.authClient });
+
+    // 直接寫入 Google Sheets
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: DL_CONFIG.spreadsheetId,
+      range: `${DL_CONFIG.logSheetName}!A:J`,
+      valueInputOption: 'RAW',
+      resource: {
+        values: [[
+          formattedTimestamp,
+          logData.message || '',
+          logData.operation || '',
+          logData.userId || '',
+          logData.errorCode || '',
+          logData.source || '',
+          logData.details || '',
+          logData.retryCount || 0,
+          logData.location || '',
+          logData.severity || 'INFO'
+        ]]
+      }
     });
 
     return true;
   } catch (error) {
-    console.error(`DL_writeToFirestore錯誤: ${error.toString()}`);
+    console.error(`DL_writeToGoogleSheets錯誤: ${error.toString()}`);
     return false;
   }
 }
@@ -685,8 +761,7 @@ async function DL_critical(message, operation, userId, errorCode, details, retry
 }
 
 /**
- * 8. 系統診斷功能
- * @returns {Promise<Object>} - 診斷結果對象
+ * 8. 系統診斷功能 - 適配Google Sheets
  */
 async function DL_diagnose() {
   try {
@@ -698,43 +773,60 @@ async function DL_diagnose() {
     // 8.1 檢查DL模組配置
     const dlConfigStatus = {
       enableConsoleLog: DL_CONFIG.enableConsoleLog,
-      enableFirestoreLog: DL_CONFIG.enableFirestoreLog,
+      enableSheetsLog: DL_CONFIG.enableSheetsLog,
       consoleLogLevel: DL_CONFIG.consoleLogLevel,
-      firestoreLogLevel: DL_CONFIG.firestoreLogLevel,
+      sheetsLogLevel: DL_CONFIG.sheetsLogLevel,
       mode: DL_CONFIG.mode,
       bufferSize: DL_CONFIG.logBuffer.length,
       lastFlushTime: new Date(DL_CONFIG.lastBufferFlush).toISOString()
     };
 
-    // 8.2 檢查 Firestore 連接
-    let firestoreStatus = "未檢查";
-    let logCollectionStatus = "未檢查";
+    // 8.2 檢查 Google Sheets 連接
+    let sheetsStatus = "未檢查";
+    let logSheetStatus = "未檢查";
 
     try {
-      // 嘗試連接 Firestore
-      const testDoc = await admin.firestore().collection('test').doc('connectivity').set({
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        message: "連接測試"
+      // 嘗試連接 Google Sheets
+      const sheets = google.sheets({ version: 'v4', auth: DL_CONFIG.authClient });
+      const testResponse = await sheets.spreadsheets.get({
+        spreadsheetId: DL_CONFIG.spreadsheetId
       });
-      firestoreStatus = "連接成功";
+      sheetsStatus = "連接成功";
 
-      // 檢查日誌集合
-      const logQuery = await admin.firestore().collection(DL_CONFIG.collectionName).limit(1).get();
-      logCollectionStatus = logQuery.empty ? "集合為空" : "集合存在";
+      // 檢查日誌表
+      const logResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId: DL_CONFIG.spreadsheetId,
+        range: `${DL_CONFIG.logSheetName}!A:A`
+      });
+      logSheetStatus = logResponse.data.values ? `${logResponse.data.values.length} 行` : "表格為空";
 
       // 8.3 分析最近日誌
       const recentLogs = [];
 
       // 獲取最近50條日誌
-      const logsSnapshot = await admin.firestore()
-        .collection(DL_CONFIG.collectionName)
-        .orderBy('createdAt', 'desc')
-        .limit(50)
-        .get();
-
-      logsSnapshot.forEach(doc => {
-        recentLogs.push(doc.data());
+      const logsResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId: DL_CONFIG.spreadsheetId,
+        range: `${DL_CONFIG.logSheetName}!A2:J51`  // 跳過標題行，取50行
       });
+
+      if (logsResponse.data.values) {
+        logsResponse.data.values.forEach(row => {
+          if (row.length >= 10) {
+            recentLogs.push({
+              timestamp: row[0],
+              message: row[1],
+              operation: row[2],
+              userId: row[3],
+              errorCode: row[4],
+              source: row[5],
+              details: row[6],
+              retryCount: row[7],
+              location: row[8],
+              severity: row[9]
+            });
+          }
+        });
+      }
 
       // 8.4 統計嚴重程度分布
       const severityCounts = {
@@ -784,8 +876,8 @@ async function DL_diagnose() {
         timestamp: diagnoseEndTime.toISOString(),
         duration: diagnoseDuration,
         config: dlConfigStatus,
-        firestore: firestoreStatus,
-        logCollection: logCollectionStatus,
+        googleSheets: sheetsStatus,
+        logSheet: logSheetStatus,
         recentLogs: {
           count: recentLogs.length,
           severityCounts: severityCounts,
@@ -794,7 +886,7 @@ async function DL_diagnose() {
         }
       };
     } catch (error) {
-      firestoreStatus = `連接錯誤: ${error.toString()}`;
+      sheetsStatus = `連接錯誤: ${error.toString()}`;
     }
 
     return {
@@ -802,8 +894,8 @@ async function DL_diagnose() {
       diagnoseId: diagnoseId,
       timestamp: new Date().toISOString(),
       config: dlConfigStatus,
-      firestore: firestoreStatus,
-      logCollection: logCollectionStatus,
+      googleSheets: sheetsStatus,
+      logSheet: logSheetStatus,
       error: "診斷過程中斷"
     };
 
@@ -819,15 +911,13 @@ async function DL_diagnose() {
 }
 
 /**
- * 9. 獲取當前模式狀態 - 新增函數，方便診斷使用
- * @returns {Promise<Object>} - 模式狀態信息
+ * 9. 獲取當前模式狀態 - 適配環境變數存儲
  */
 async function DL_getModeStatus() {
   try {
-    // 從 Firestore 讀取持久化存儲的模式
-    const settingsDoc = await admin.firestore().collection('settings').doc('logger').get();
-    const storedMode = settingsDoc.exists ? settingsDoc.data().mode : "未設置";
-    const storedReason = settingsDoc.exists ? settingsDoc.data().reason : "";
+    // 從環境變數讀取持久化存儲的模式
+    const storedMode = process.env.DL_MODE || "NORMAL";
+    const storedReason = process.env.DL_EMERGENCY_REASON || "";
 
     return {
       success: true,
@@ -847,6 +937,20 @@ async function DL_getModeStatus() {
   }
 }
 
+/**
+ * 10. 依賴注入函數 - 用於支持從 index.js 設置依賴
+ * 雖然DL模組通常是基礎模組，但保留此函數以保持模組接口一致性
+ * @param {Object} whModule - Webhook模組
+ * @param {Object} bkModule - 記帳處理模組
+ * @param {Object} ddModule - 資料分配模組
+ */
+function setDependencies(whModule, bkModule, ddModule) {
+  console.log("DL模組設置依賴關係");
+
+  // DL作為基礎模組通常不依賴其他模組，但為了架構一致性保留此函數
+  // 未來如有需要可以在此處設置模組間依賴
+}
+
 // 導出所有函數
 module.exports = {
   DL_initialize,
@@ -862,5 +966,10 @@ module.exports = {
   DL_setLogLevels,
   DL_diagnose,
   DL_getModeStatus,
-  DL_SEVERITY_LEVELS
+  DL_SEVERITY_LEVELS,
+  DL_rotateLogSheet,  // 保留但改為適用於Google Sheets
+  DL_writeToGoogleSheets,  // 新增，替代原來的DL_writeToFirestore
+
+  // 新增依賴注入函數
+  setDependencies
 };

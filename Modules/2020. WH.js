@@ -1,8 +1,13 @@
 /**
- * WH_Webhook處理模組_2_0_6
+ * WH_Webhook處理模組_2.0.12
  * @module Webhook模組
- * @description LINE Webhook處理模組
+ * @description LINE Webhook處理模組 - 最小修改版本（僅用於連通測試）
 */
+
+// 首先引入其他模組
+const DD = require('./2031. DD.js');
+const BK = require('./2001. BK.js'); 
+const DL = require('./2010. DL.js');
 
 // 引入必要的 Node.js 模組
 const express = require('express');
@@ -39,7 +44,7 @@ const WH_CONFIG = {
 };
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.0.6 (2025-06-19)");
+console.log("WH模組初始化，版本: 2.0.7 (2025-06-25)");
 
 // 創建 Express 應用
 const app = express();
@@ -93,7 +98,7 @@ function doPost(req, res) {
     // 記錄請求接收
     WH_directLogWrite([
       WH_formatDateTime(new Date()),
-      `WH 2.0.0: 收到LINE Webhook請求 [${requestId}]`,
+      `WH 2.0.7: 收到LINE Webhook請求 [${requestId}]`,
       "請求接收",
       "",
       "",
@@ -134,7 +139,7 @@ function doPost(req, res) {
     // 記錄錯誤
     WH_directLogWrite([
       WH_formatDateTime(new Date()),
-      `WH 2.0.0: 處理請求時出錯: ${error.toString()} [${requestId}]`,
+      `WH 2.0.7: 處理請求時出錯: ${error.toString()} [${requestId}]`,
       "請求處理",
       "",
       "REQUEST_ERROR",
@@ -166,7 +171,7 @@ function processWebhookAsync(e) {
     // 使用直接日誌寫入
     WH_directLogWrite([
       WH_formatDateTime(new Date()),
-      `WH 2.0.0: 開始非同步處理請求 [${requestId}]`,
+      `WH 2.0.7: 開始非同步處理請求 [${requestId}]`,
       "非同步處理",
       "",
       "",
@@ -184,7 +189,7 @@ function processWebhookAsync(e) {
       console.log(`無法獲取請求數據 [${requestId}]`);
       WH_directLogWrite([
         WH_formatDateTime(new Date()),
-        `WH 2.0.0: 無法獲取請求數據 [${requestId}]`,
+        `WH 2.0.7: 無法獲取請求數據 [${requestId}]`,
         "非同步處理",
         "",
         "DATA_MISSING",
@@ -220,7 +225,7 @@ function processWebhookAsync(e) {
             if (isDuplicate) {
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.0.0: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
+                `WH 2.0.7: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
                 "消息去重",
                 userId,
                 "",
@@ -241,7 +246,7 @@ function processWebhookAsync(e) {
             // 記錄其他類型事件
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
-              `WH 2.0.0: 收到${event.type}事件 [${requestId}]`,
+              `WH 2.0.7: 收到${event.type}事件 [${requestId}]`,
               "事件處理",
               userId,
               "",
@@ -256,7 +261,7 @@ function processWebhookAsync(e) {
           console.log(`處理事件錯誤: ${eventError} [${requestId}]`);
           WH_directLogWrite([
             WH_formatDateTime(new Date()),
-            `WH 2.0.0: 處理事件錯誤 [${requestId}]`,
+            `WH 2.0.7: 處理事件錯誤 [${requestId}]`,
             "事件處理",
             "",
             "",
@@ -271,7 +276,7 @@ function processWebhookAsync(e) {
     } else {
       WH_directLogWrite([
         WH_formatDateTime(new Date()),
-        `WH 2.0.0: 請求中沒有事件 [${requestId}]`,
+        `WH 2.0.7: 請求中沒有事件 [${requestId}]`,
         "事件處理",
         "",
         "",
@@ -290,7 +295,7 @@ function processWebhookAsync(e) {
     // 記錄處理完成
     WH_directLogWrite([
       WH_formatDateTime(new Date()),
-      `WH 2.0.0: 非同步處理完成 [${requestId}]`,
+      `WH 2.0.7: 非同步處理完成 [${requestId}]`,
       "非同步處理",
       "",
       "",
@@ -305,7 +310,7 @@ function processWebhookAsync(e) {
     console.log(`非同步處理主錯誤: ${error} [${requestId}]`);
     WH_directLogWrite([
       WH_formatDateTime(new Date()),
-      `WH 2.0.0: 非同步處理錯誤 [${requestId}]`,
+      `WH 2.0.7: 非同步處理錯誤 [${requestId}]`,
       "非同步處理",
       "",
       "ASYNC_ERROR",
@@ -356,8 +361,8 @@ function WH_processEvent(event) {
           replyToken: replyToken // 重要：保存回覆令牌
         };
 
-        // 調用 DD 分發處理數據並獲取結果
-        const result = DD_distributeData(data, "LINE");
+        // 使用模組引用调用函数
+        const result = DD.DD_distributeData(data, "LINE");
 
         // 判斷結果是否包含回應訊息並回覆用戶
         if (result && result.responseMessage) {
@@ -411,96 +416,8 @@ function WH_checkDuplicateMessage(messageId, requestId) {
 }
 
 /**
- * 5. 向LINE用戶發送回覆消息
- * @deprecated 請使用 WH_replyMessage 代替
- */
-function WH_replyToUser(replyToken, message, eventId) {
-  if (!replyToken) return { success: false, error: "缺少回覆令牌" };
-
-  try {
-    // 準備LINE消息API請求數據
-    const payload = {
-      "replyToken": replyToken,
-      "messages": [{ "type": "text", "text": message }]
-    };
-
-    // 設置API請求選項
-    const options = {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN
-      }
-    };
-
-    // 發送請求到LINE API
-    return axios.post("https://api.line.me/v2/bot/message/reply", payload, options)
-      .then(response => {
-        // 檢查回應狀態
-        if (response.status === 200) {
-          WH_directLogWrite([
-            WH_formatDateTime(new Date()),
-            `WH 2.0.0: 成功發送回覆 [${eventId}]`,
-            "用戶回覆",
-            "",
-            "",
-            "WH",
-            "",
-            0,
-            "WH_replyToUser",
-            "INFO"
-          ]);
-          return { success: true };
-        } else {
-          WH_directLogWrite([
-            WH_formatDateTime(new Date()),
-            `WH 2.0.0: LINE API回應異常，狀態碼: ${response.status} [${eventId}]`,
-            "用戶回覆",
-            "",
-            "",
-            "WH",
-            JSON.stringify(response.data),
-            0,
-            "WH_replyToUser",
-            "WARNING"
-          ]);
-          return { success: false, error: `API回應異常 (${response.status})` };
-        }
-      })
-      .catch(error => {
-        WH_directLogWrite([
-          WH_formatDateTime(new Date()),
-          `WH 2.0.0: 發送LINE回覆失敗 [${eventId}]`,
-          "用戶回覆",
-          "",
-          "",
-          "WH",
-          error.toString(),
-          0,
-          "WH_replyToUser",
-          "ERROR"
-        ]);
-        return { success: false, error: error.toString() };
-      });
-  } catch (error) {
-    WH_directLogWrite([
-      WH_formatDateTime(new Date()),
-      `WH 2.0.0: 發送LINE回覆失敗 [${eventId}]`,
-      "用戶回覆",
-      "",
-      "",
-      "WH",
-      error.toString(),
-      0,
-      "WH_replyToUser",
-      "ERROR"
-    ]);
-    return { success: false, error: error.toString() };
-  }
-}
-
-/**
  * 直接寫入日誌到日誌文件，不使用緩衝區
- * @version 2.0.0 (2025-05-16)
+ * @version 2.0.7 (2025-06-25)
  * @param {Array} logData - 日誌數據行
  */
 function WH_directLogWrite(logData) {
@@ -509,7 +426,7 @@ function WH_directLogWrite(logData) {
     logData[5] = "WH";
 
     // 直接向控制台輸出完整日誌
-    console.log(`[WH 2.0.0 LOG] ${logData[1]} (${logData[9]})`);
+    console.log(`[WH 2.0.7 LOG] ${logData[1]} (${logData[9]})`);
 
     // 寫入日誌文件
     const logDir = path.join(__dirname, 'logs');
@@ -959,6 +876,24 @@ function WH_replyMessage(replyToken, message) {
   }
 }
 
+// 依賴注入函數 - 用於支持從 index.js 設置依賴
+function setDependencies(ddModule, bkModule, dlModule) {
+  // 可以替換全局引用，或設置內部變數
+  global.DD_distributeData = ddModule.DD_distributeData;
+  global.DD_generateIntelligentRemark = ddModule.DD_generateIntelligentRemark;
+  global.DD_userPreferenceManager = ddModule.DD_userPreferenceManager;
+  global.DD_learnInputPatterns = ddModule.DD_learnInputPatterns;
+
+  global.BK_processBookkeeping = bkModule.BK_processBookkeeping;
+  global.BK_validatePaymentMethod = bkModule.BK_validatePaymentMethod;
+
+  global.DL_initialize = dlModule.DL_initialize;
+  global.DL_info = dlModule.DL_info;
+  global.DL_warning = dlModule.DL_warning;
+  global.DL_error = dlModule.DL_error;
+  global.DL_debug = dlModule.DL_debug;
+}
+
 /**
  * 7. 處理事件 (非同步版) - 修正訊息處理和數據傳遞問題
  * @version 2.0.3 (2025-06-16 03:18:55)
@@ -1074,7 +1009,9 @@ function WH_processEventAsync(event, requestId, userId) {
           ]);
 
           // 關鍵：調用DD_distributeData並保留完整結果
-          result = DD_distributeData(messageData, 'LINE', 0);
+          result = DD.DD_distributeData(messageData, 'LINE', 0);
+
+
 
           // 記錄DD_distributeData處理結果預覽
           if (result) {
@@ -1328,7 +1265,7 @@ function WH_processEventAsync(event, requestId, userId) {
 
 /**
  * 8. 驗證 LINE 平台簽章 - 增強安全性
- * @version 2.0.5 (2025-06-19)
+ * @version 2.0.7 (2025-06-25)
  * @author AustinLiao69
  * @param {string} signature - LINE 平台簽章
  * @param {string} body - 請求主體
@@ -1374,365 +1311,104 @@ function WH_verifySignature(signature, body) {
   }
 }
 
-/**
- * 9. 向 LINE 用戶推送訊息（主動推送）
- * @version 2.0.5 (2025-06-19)
- * @author AustinLiao69
- * @param {string} userId - LINE 用戶 ID
- * @param {string|Object} message - 要發送的訊息內容
- * @returns {Promise<Object>} 發送結果
- */
-function WH_pushMessage(userId, message) {
-  return new Promise((resolve, reject) => {
-    try {
-      // 檢查用戶ID是否有效
-      if (!userId || userId.trim() === '') {
-        console.log("WH_pushMessage: 無效的用戶ID");
-        return resolve({ success: false, error: "無效的用戶ID" });
-      }
+// 測試端點 - 檢查服務狀態和HTTPS支持
+app.get('/', (req, res) => {
+  const isHTTPS = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https';
 
-      // 處理訊息內容
-      let textMessage = "";
+  res.send(`
+    <h1>LCAS Webhook Service is running! 🤖</h1>
+    <p>版本: 2.0.7 (2025-06-25)</p>
+    <p>協議: ${req.protocol.toUpperCase()} ${isHTTPS ? '✅ 支持HTTPS' : '❌ 僅HTTP'}</p>
+    <p>Webhook URL: <code>${req.protocol}://${req.get('host')}/webhook</code></p>
+    <p>建議的LINE Webhook URL: <code>https://${req.get('host')}/webhook</code></p>
+    <p>時間: ${WH_formatDateTime(new Date())}</p>
+    <hr>
+    <h2>配置狀態:</h2>
+    <ul>
+      <li>LINE_CHANNEL_SECRET: ${WH_CONFIG.LINE.CHANNEL_SECRET ? '✅ 已設置' : '❌ 未設置'}</li>
+      <li>LINE_CHANNEL_ACCESS_TOKEN: ${WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN ? '✅ 已設置' : '❌ 未設置'}</li>
+      <li>SPREADSHEET_ID: ${WH_CONFIG.SHEET.ID ? '✅ 已設置' : '❌ 未設置'}</li>
+      <li>測試模式: ${WH_CONFIG.TEST_MODE ? '🟡 開啟 (跳過簽章驗證)' : '🔴 關閉'}</li>
+      <li>調試模式: ${WH_CONFIG.DEBUG ? '🟡 開啟' : '🔴 關閉'}</li>
+    </ul>
+    ${!isHTTPS ? '<p style="color:red;font-weight:bold;">⚠️ 警告：LINE Webhook需要HTTPS！請確認您的Replit支持HTTPS訪問。</p>' : ''}
+    <hr>
+    <p><strong>⚠️ 注意：這是連通測試版本</strong></p>
+    <p>由於DD_distributeData函數未載入，在LINE中發送訊息會導致錯誤，但可以測試webhook連接。</p>
+    <p>💡 在LINE Bot中發送任意訊息進行webhook連接測試</p>
+    <p>📋 訪問 <a href="/test-wh">/test-wh</a> 查看詳細狀態</p>
+    <p>🔍 訪問 <a href="/check-https">/check-https</a> 檢查HTTPS支持</p>
+  `);
+});
 
-      if (typeof message === 'object' && message !== null) {
-        if (message.responseMessage && typeof message.responseMessage === 'string') {
-          textMessage = message.responseMessage;
-        } else if (message.message && typeof message.message === 'string') {
-          textMessage = message.message;
-        } else {
-          try {
-            textMessage = JSON.stringify(message);
-          } catch (jsonError) {
-            textMessage = "系統訊息";
-            console.log(`WH_pushMessage: 轉換訊息失敗: ${jsonError}`);
-          }
-        }
-      } else if (typeof message === 'string') {
-        textMessage = message;
-      } else {
-        textMessage = "系統訊息";
-      }
+// 測試WH模組功能
+app.get('/test-wh', async (req, res) => {
+  try {
+    const testResults = {
+      success: true,
+      timestamp: WH_formatDateTime(new Date()),
+      server: {
+        status: "運行中",
+        port: process.env.PORT || 5000,
+        protocol: req.protocol
+      },
+      config: {
+        lineChannelSecret: !!WH_CONFIG.LINE.CHANNEL_SECRET,
+        lineChannelAccessToken: !!WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN,
+        spreadsheetId: !!WH_CONFIG.SHEET.ID,
+        testMode: WH_CONFIG.TEST_MODE,
+        debugMode: WH_CONFIG.DEBUG
+      },
+      webhook: {
+        endpoint: `${req.protocol}://${req.get('host')}/webhook`,
+        httpsSupported: req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https'
+      },
+      note: "⚠️ 連通測試版本 - DD_distributeData函數未載入，發送訊息會出錯但可測試連接"
+    };
 
-      // 確保訊息長度不超過限制
-      const maxLength = 5000;
-      if (textMessage.length > maxLength) {
-        textMessage = textMessage.substring(0, maxLength - 3) + '...';
-      }
+    // 測試日誌寫入
+    WH_logInfo("WH模組測試執行", "測試", "", "test-wh");
 
-      // LINE Messaging API URL
-      const url = 'https://api.line.me/v2/bot/message/push';
+    res.json(testResults);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: WH_formatDateTime(new Date())
+    });
+  }
+});
 
-      // 獲取 Channel Access Token
-      const channelAccessToken = WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN;
-      if (!channelAccessToken) {
-        console.log("WH_pushMessage: 缺少 Channel Access Token");
-        return resolve({ success: false, error: "缺少 Channel Access Token" });
-      }
+// HTTPS支持檢查端點
+app.get('/check-https', (req, res) => {
+  const protocol = req.protocol;
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const isHTTPS = protocol === 'https' || forwardedProto === 'https';
 
-      // 設置請求
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${channelAccessToken}`
-      };
-
-      const payload = {
-        to: userId,
-        messages: [{
-          type: 'text',
-          text: textMessage
-        }]
-      };
-
-      // 發送 HTTP 請求
-      console.log(`WH_pushMessage: 開始向用戶 ${userId} 推送訊息`);
-
-      // 記錄推送嘗試
-      WH_directLogWrite([
-        WH_formatDateTime(new Date()),
-        `WH 2.0.5: 開始向用戶推送訊息`,
-        "訊息推送",
-        userId,
-        "",
-        "WH",
-        "",
-        0,
-        "WH_pushMessage",
-        "INFO"
-      ]);
-
-      // 使用 axios 發送請求
-      axios.post(url, payload, { headers: headers })
-        .then(response => {
-          if (response.status === 200) {
-            console.log(`WH_pushMessage: 成功推送訊息給用戶 ${userId}`);
-
-            // 記錄推送成功
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 2.0.5: 成功推送訊息給用戶`,
-              "訊息推送",
-              userId,
-              "",
-              "WH",
-              "",
-              0,
-              "WH_pushMessage",
-              "INFO"
-            ]);
-
-            resolve({ success: true });
-          } else {
-            console.log(`WH_pushMessage: API回應異常 ${response.status}`);
-
-            // 記錄推送失敗
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 2.0.5: API回應異常 ${response.status}`,
-              "訊息推送",
-              userId,
-              "API_ERROR",
-              "WH",
-              JSON.stringify(response.data),
-              0,
-              "WH_pushMessage",
-              "ERROR"
-            ]);
-
-            resolve({ 
-              success: false, 
-              error: `API回應異常 (${response.status})`,
-              details: response.data
-            });
-          }
-        })
-        .catch(error => {
-          console.log(`WH_pushMessage: 推送訊息錯誤 ${error}`);
-
-          // 記錄推送錯誤
-          WH_directLogWrite([
-            WH_formatDateTime(new Date()),
-            `WH 2.0.5: 推送訊息錯誤`,
-            "訊息推送",
-            userId,
-            "PUSH_ERROR",
-            "WH",
-            error.toString(),
-            0,
-            "WH_pushMessage",
-            "ERROR"
-          ]);
-
-          resolve({ 
-            success: false, 
-            error: error.toString() 
-          });
-        });
-
-    } catch (error) {
-      console.log(`WH_pushMessage: 主錯誤 ${error}`);
-
-      // 記錄函數級錯誤
-      WH_directLogWrite([
-        WH_formatDateTime(new Date()),
-        `WH 2.0.5: 推送訊息主錯誤`,
-        "訊息推送",
-        userId,
-        "FUNCTION_ERROR",
-        "WH",
-        error.toString(),
-        0,
-        "WH_pushMessage",
-        "ERROR"
-      ]);
-
-      resolve({ 
-        success: false, 
-        error: error.toString() 
-      });
-    }
+  res.json({
+    protocol: protocol,
+    forwardedProto: forwardedProto,
+    isHTTPS: isHTTPS,
+    recommendedWebhookURL: isHTTPS 
+      ? `https://${req.get('host')}/webhook`
+      : `⚠️ HTTPS不可用，LINE Webhook無法使用`,
+    testURLs: {
+      http: `http://${req.get('host')}/`,
+      https: `https://${req.get('host')}/`
+    },
+    headers: {
+      host: req.get('host'),
+      'x-forwarded-proto': req.headers['x-forwarded-proto'],
+      'x-forwarded-for': req.headers['x-forwarded-for']
+    },
+    lineWebhookCompatible: isHTTPS,
+    message: isHTTPS ? 
+      "✅ 支持HTTPS，可以用於LINE Webhook" : 
+      "❌ 僅支持HTTP，無法用於LINE Webhook"
   });
-}
+});
 
-/**
- * 10. 批次向多個 LINE 用戶推送相同訊息
- * @version 2.0.5 (2025-06-19)
- * @author AustinLiao69
- * @param {Array<string>} userIds - LINE 用戶 ID 陣列
- * @param {string|Object} message - 要發送的訊息內容
- * @returns {Promise<Object>} 發送結果
- */
-function WH_multicastMessage(userIds, message) {
-  return new Promise((resolve, reject) => {
-    try {
-      // 檢查用戶ID陣列是否有效
-      if (!Array.isArray(userIds) || userIds.length === 0) {
-        console.log("WH_multicastMessage: 無效的用戶ID陣列");
-        return resolve({ success: false, error: "無效的用戶ID陣列" });
-      }
-
-      // 處理訊息內容
-      let textMessage = "";
-
-      if (typeof message === 'object' && message !== null) {
-        if (message.responseMessage && typeof message.responseMessage === 'string') {
-          textMessage = message.responseMessage;
-        } else if (message.message && typeof message.message === 'string') {
-          textMessage = message.message;
-        } else {
-          try {
-            textMessage = JSON.stringify(message);
-          } catch (jsonError) {
-            textMessage = "系統訊息";
-            console.log(`WH_multicastMessage: 轉換訊息失敗: ${jsonError}`);
-          }
-        }
-      } else if (typeof message === 'string') {
-        textMessage = message;
-      } else {
-        textMessage = "系統訊息";
-      }
-
-      // 確保訊息長度不超過限制
-      const maxLength = 5000;
-      if (textMessage.length > maxLength) {
-        textMessage = textMessage.substring(0, maxLength - 3) + '...';
-      }
-
-      // LINE Messaging API URL
-      const url = 'https://api.line.me/v2/bot/message/multicast';
-
-      // 獲取 Channel Access Token
-      const channelAccessToken = WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN;
-      if (!channelAccessToken) {
-        console.log("WH_multicastMessage: 缺少 Channel Access Token");
-        return resolve({ success: false, error: "缺少 Channel Access Token" });
-      }
-
-      // 設置請求
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${channelAccessToken}`
-      };
-
-      const payload = {
-        to: userIds,
-        messages: [{
-          type: 'text',
-          text: textMessage
-        }]
-      };
-
-      // 發送 HTTP 請求
-      console.log(`WH_multicastMessage: 開始向 ${userIds.length} 個用戶推送訊息`);
-
-      // 記錄批次推送嘗試
-      WH_directLogWrite([
-        WH_formatDateTime(new Date()),
-        `WH 2.0.5: 開始向 ${userIds.length} 個用戶批次推送訊息`,
-        "批次推送",
-        userIds.slice(0, 3).join(',') + (userIds.length > 3 ? '...' : ''),
-        "",
-        "WH",
-        "",
-        0,
-        "WH_multicastMessage",
-        "INFO"
-      ]);
-
-      // 使用 axios 發送請求
-      axios.post(url, payload, { headers: headers })
-        .then(response => {
-          if (response.status === 200) {
-            console.log(`WH_multicastMessage: 成功批次推送訊息給 ${userIds.length} 個用戶`);
-
-            // 記錄批次推送成功
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 2.0.5: 成功批次推送訊息給 ${userIds.length} 個用戶`,
-              "批次推送",
-              userIds.slice(0, 3).join(',') + (userIds.length > 3 ? '...' : ''),
-              "",
-              "WH",
-              "",
-              0,
-              "WH_multicastMessage",
-              "INFO"
-            ]);
-
-            resolve({ success: true, count: userIds.length });
-          } else {
-            console.log(`WH_multicastMessage: API回應異常 ${response.status}`);
-
-            // 記錄批次推送失敗
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 2.0.5: 批次推送API回應異常 ${response.status}`,
-              "批次推送",
-              userIds.slice(0, 3).join(',') + (userIds.length > 3 ? '...' : ''),
-              "API_ERROR",
-              "WH",
-              JSON.stringify(response.data),
-              0,
-              "WH_multicastMessage",
-              "ERROR"
-            ]);
-
-            resolve({ 
-              success: false, 
-              error: `API回應異常 (${response.status})`,
-              details: response.data
-            });
-          }
-        })
-        .catch(error => {
-          console.log(`WH_multicastMessage: 批次推送訊息錯誤 ${error}`);
-
-          // 記錄批次推送錯誤
-          WH_directLogWrite([
-            WH_formatDateTime(new Date()),
-            `WH 2.0.5: 批次推送訊息錯誤`,
-            "批次推送",
-            userIds.slice(0, 3).join(',') + (userIds.length > 3 ? '...' : ''),
-            "MULTICAST_ERROR",
-            "WH",
-            error.toString(),
-            0,
-            "WH_multicastMessage",
-            "ERROR"
-          ]);
-
-          resolve({ 
-            success: false, 
-            error: error.toString() 
-          });
-        });
-
-    } catch (error) {
-      console.log(`WH_multicastMessage: 主錯誤 ${error}`);
-
-      // 記錄函數級錯誤
-      WH_directLogWrite([
-        WH_formatDateTime(new Date()),
-        `WH 2.0.5: 批次推送主錯誤`,
-        "批次推送",
-        userIds ? (userIds.slice(0, 3).join(',') + (userIds.length > 3 ? '...' : '')) : 'unknown',
-        "FUNCTION_ERROR",
-        "WH",
-        error.toString(),
-        0,
-        "WH_multicastMessage",
-        "ERROR"
-      ]);
-
-      resolve({ 
-        success: false, 
-        error: error.toString() 
-      });
-    }
-  });
-}
-
-// 更新 Express 路由處理以包含簽章驗證
+// 更新 Express 路由處理以包含簽章驗證（保持原版本）
 app.post('/webhook', (req, res) => {
   // 獲取 LINE 平台簽章
   const signature = req.headers['x-line-signature'];
@@ -1746,7 +1422,7 @@ app.post('/webhook', (req, res) => {
     console.log("簽章驗證失敗");
     WH_directLogWrite([
       WH_formatDateTime(new Date()),
-      "WH 2.0.5: 簽章驗證失敗",
+      "WH 2.0.7: 簽章驗證失敗",
       "安全檢查",
       "",
       "INVALID_SIGNATURE",
@@ -1767,7 +1443,103 @@ app.post('/webhook', (req, res) => {
   doPost(req, res);
 });
 
-// 導出更多函數供其他模組使用
+// 設定端口和啟動服務器
+const port = process.env.PORT || 3000;
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 WH Webhook Server is running on port ${port}`);
+  console.log(`📅 啟動時間: ${WH_formatDateTime(new Date())}`);
+  console.log(`🌐 Server is accessible at http://0.0.0.0:${port}`);
+  console.log(`📡 Webhook endpoint: http://0.0.0.0:${port}/webhook`);
+
+  // 記錄服務器啟動
+  WH_directLogWrite([
+    WH_formatDateTime(new Date()),
+    `WH 2.0.7: 服務器啟動成功，監聽端口 ${port}`,
+    "服務器啟動",
+    "",
+    "",
+    "WH",
+    "",
+    0,
+    "app.listen",
+    "INFO"
+  ]);
+});
+
+// 優雅關閉處理
+process.on('SIGTERM', () => {
+  console.log('🛑 收到SIGTERM信號，正在關閉服務器...');
+  WH_directLogWrite([
+    WH_formatDateTime(new Date()),
+    "WH 2.0.7: 收到SIGTERM信號，正在關閉服務器",
+    "服務器關閉",
+    "",
+    "",
+    "WH",
+    "",
+    0,
+    "process.SIGTERM",
+    "INFO"
+  ]);
+
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 收到SIGINT信號，正在關閉服務器...');
+  WH_directLogWrite([
+    WH_formatDateTime(new Date()),
+    "WH 2.0.7: 收到SIGINT信號，正在關閉服務器",
+    "服務器關閉",
+    "",
+    "",
+    "WH",
+    "",
+    0,
+    "process.SIGINT",
+    "INFO"
+  ]);
+
+  process.exit(0);
+});
+
+// 未捕獲異常處理
+process.on('uncaughtException', (error) => {
+  console.error('💥 未捕獲的異常:', error);
+  WH_directLogWrite([
+    WH_formatDateTime(new Date()),
+    `WH 2.0.7: 未捕獲的異常: ${error.toString()}`,
+    "系統異常",
+    "",
+    "UNCAUGHT_EXCEPTION",
+    "WH",
+    error.stack || error.toString(),
+    0,
+    "process.uncaughtException",
+    "CRITICAL"
+  ]);
+
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 未處理的Promise拒絕:', reason);
+  WH_directLogWrite([
+    WH_formatDateTime(new Date()),
+    `WH 2.0.7: 未處理的Promise拒絕: ${reason}`,
+    "系統異常",
+    "",
+    "UNHANDLED_REJECTION",
+    "WH",
+    reason.toString(),
+    0,
+    "process.unhandledRejection",
+    "CRITICAL"
+  ]);
+});
+
+// 更新模組導出，添加 setDependencies 函數
 module.exports = {
   // 已有的導出
   WH_processEvent,
@@ -1783,7 +1555,106 @@ module.exports = {
   // 新增的導出
   WH_processEventAsync,
   WH_verifySignature,
-  WH_pushMessage,
-  WH_multicastMessage,
-  doPost  // 導出主要處理函數
+  doPost,  // 導出主要處理函數
+  processWebhookAsync,
+  WH_directLogWrite,
+  WH_ReceiveDDdata,
+
+  // 新增依賴注入函數
+  setDependencies,
+
+  // 配置導出
+  WH_CONFIG
 };
+
+/**
+ * 9. 接收DD模組處理後需WH執行的具體操作
+ * @version 1.0.0 (2025-06-27)
+ * @author AustinLiao69
+ * @param {Object} data - 需處理的數據
+ * @param {string} action - 需執行的操作類型(如"reply"、"push"等)
+ * @returns {Object} 執行結果
+ */
+function WH_ReceiveDDdata(data, action) {
+  // 記錄接收請求
+  console.log(`WH_ReceiveDDdata: 收到DD模組請求，執行${action}操作`);
+
+  // 記錄操作日誌
+  WH_directLogWrite([
+    WH_formatDateTime(new Date()),
+    `WH 2.0.7: 從DD模組接收數據，執行${action}操作`,
+    "DD交互",
+    data.userId || "",
+    "",
+    "WH",
+    "",
+    0,
+    "WH_ReceiveDDdata",
+    "INFO"
+  ]);
+
+  try {
+    // 根據操作類型執行不同功能
+    switch(action) {
+      case "reply":
+        // 直接調用reply功能，而非入口函數
+        if (data && data.replyToken) {
+          console.log(`執行回覆訊息操作，Token: ${data.replyToken.substring(0, 6)}...`);
+          return WH_replyMessage(data.replyToken, data.message || data);
+        } else {
+          const error = "回覆操作缺少replyToken或消息內容";
+          console.log(error);
+          return { success: false, error: error };
+        }
+
+      case "push":
+        // 如果需要實現消息推送功能
+        console.log(`推送訊息功能尚未實現`);
+        return { success: false, error: "推送訊息功能尚未實現，請在WH模組中添加此功能" };
+
+      case "multicast":
+        // 如果需要實現群發功能
+        console.log(`群發訊息功能尚未實現`);
+        return { success: false, error: "群發訊息功能尚未實現，請在WH模組中添加此功能" };
+
+      default:
+        const errorMsg = `未知操作類型: ${action}`;
+        console.log(errorMsg);
+
+        // 記錄未知操作錯誤
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.7: 接收到未知操作請求: ${action}`,
+          "DD交互錯誤",
+          data.userId || "",
+          "UNKNOWN_ACTION",
+          "WH",
+          errorMsg,
+          0,
+          "WH_ReceiveDDdata",
+          "ERROR"
+        ]);
+
+        return { success: false, error: errorMsg };
+    }
+  } catch (error) {
+    // 捕獲處理錯誤
+    console.log(`WH_ReceiveDDdata錯誤: ${error}`);
+
+    // 記錄操作錯誤
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.7: 執行DD請求操作時發生錯誤`,
+      "DD交互錯誤",
+      data.userId || "",
+      "OPERATION_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      "WH_ReceiveDDdata",
+      "ERROR"
+    ]);
+
+    return { success: false, error: error.toString() };
+  }
+}

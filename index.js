@@ -1,156 +1,70 @@
 /**
- * index.js_v1.0.4
+ * index.js_v2.0.4 - WH 模組啟動器 + 心跳檢查
+ * 專門為 WH 模組提供心跳檢查，防止 Replit 睡眠
  */
 
-const express = require('express');
-const line = require('@line/bot-sdk');
-const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { JWT } = require('google-auth-library');
+console.log('🚀 LCAS LINE Bot 啟動中...');
+console.log('📅 啟動時間:', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
 
-const app = express();
+// 全域錯誤處理
+process.on('uncaughtException', (error) => {
+  console.error('💥 未捕獲的異常:', error);
+});
 
-// 設定解析 JSON 請求
-app.use(express.json());
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 未處理的 Promise 拒絕:', reason);
+});
 
-// LINE Bot 設定
-const config = {
-  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
-  channelSecret: process.env.LINE_CHANNEL_SECRET,
-};
+// 引入並啟動 WH 模組 (它會自己建立服務器)
+console.log('📦 載入 WH 模組...');
+const WH = require('./Modules/2020. WH.js');
 
-const client = new line.Client(config);
+console.log('✅ WH 模組已載入並啟動服務器');
+console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
+console.log('📡 預期 Webhook URL: https://your-repl-url.replit.dev/webhook');
 
-// Google Sheets 設定
-async function getGoogleSheet() {
-  try {
-    const creds = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+// 💓 心跳檢查 - 防止 Replit 睡眠
+setInterval(() => {
+  const currentTime = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+  const uptime = Math.floor(process.uptime() / 60);
+  console.log(`💓 服務器心跳 - ${currentTime} | 運行時間: ${uptime} 分鐘`);
 
-    const serviceAccountAuth = new JWT({
-      email: creds.client_email,
-      key: creds.private_key.replace(/\\n/g, '\n'),
-      scopes: [
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive.file',
-      ],
-    });
-
-    const doc = new GoogleSpreadsheet(process.env.SPREADSHEET_ID, serviceAccountAuth);
-    await doc.loadInfo();
-
-    console.log('成功連接到 Google Sheets:', doc.title);
-
-    return doc.sheetsByIndex[0];
-  } catch (error) {
-    console.error('Google Sheets 連接錯誤:', error);
-    throw new Error(`Google Sheets API 錯誤: ${error.message}`);
+  // 使用 WH 模組的日誌功能
+  if (typeof WH.WH_logInfo === 'function') {
+    WH.WH_logInfo(`服務器心跳檢查`, "系統狀態", "", "HEARTBEAT", `運行時間: ${uptime} 分鐘`, "index.js");
   }
-}
+}, 5 * 60 * 1000); // 每5分鐘
 
-// 處理 LINE 訊息
-async function handleEvent(event) {
-  if (event.type !== 'message' || event.message.type !== 'text') {
-    return Promise.resolve(null);
-  }
+// 💓 自我 ping 機制 (如果在 Replit 環境)
+if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
+  setInterval(async () => {
+    try {
+      // ping WH 模組的主頁 (Port 3000 由 WH 處理，但通過 Replit 的 HTTPS 代理)
+      const pingUrl = `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/`;
 
-  const userMessage = event.message.text;
-  const userId = event.source.userId;
-  const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+      // 使用 node-fetch 或者原生 fetch
+      const fetch = require('node-fetch'); // 需要安裝: npm install node-fetch
+      const response = await fetch(pingUrl);
 
-  console.log(`收到訊息: ${userMessage} 來自用戶: ${userId}`);
+      if (response.ok) {
+        const pingTime = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+        console.log(`🔄 自我 ping 成功 - ${pingTime}`);
 
-  try {
-    const sheet = await getGoogleSheet();
-
-    const rows = await sheet.getRows();
-    if (rows.length === 0) {
-      await sheet.setHeaderRow(['時間', '用戶ID', '訊息']);
+        // 記錄到 WH 日誌系統
+        if (typeof WH.WH_logInfo === 'function') {
+          WH.WH_logInfo(`自我 ping 成功`, "系統保活", "", "SELF_PING", pingUrl, "index.js");
+        }
+      }
+    } catch (error) {
+      console.log(`⚠️ 自我 ping 失敗: ${error.message}`);
+      if (typeof WH.WH_logWarning === 'function') {
+        WH.WH_logWarning(`自我 ping 失敗: ${error.message}`, "系統保活", "", "SELF_PING_FAILED", error.toString(), "index.js");
+      }
     }
-
-    await sheet.addRow({
-      '時間': timestamp,
-      '用戶ID': userId,
-      '訊息': userMessage,
-    });
-
-    console.log('成功寫入 Google Sheets');
-
-    const allRows = await sheet.getRows();
-
-    const replyText = `✅ 已收到您的訊息：${userMessage}\n📊 目前共有 ${allRows.length} 筆記錄\n⏰ 記錄時間：${timestamp}`;
-
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: replyText,
-    });
-
-  } catch (error) {
-    console.error('處理訊息錯誤:', error);
-
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `❌ 發生錯誤，請稍後再試\n錯誤訊息：${error.message}`,
-    });
-  }
+  }, 25 * 60 * 1000); // 每25分鐘
 }
 
-// Webhook 端點
-app.post('/webhook', line.middleware(config), (req, res) => {
-  Promise
-    .all(req.body.events.map(handleEvent))
-    .then((result) => res.json(result))
-    .catch((err) => {
-      console.error('Webhook 錯誤:', err);
-      res.status(500).send('Webhook 錯誤');
-    });
-});
-
-// 測試端點
-app.get('/', (req, res) => {
-  res.send(`
-    <h1>LINE Bot is running! 🤖</h1>
-    <p>Webhook URL: <code>${req.protocol}://${req.get('host')}/webhook</code></p>
-    <p>時間: ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</p>
-  `);
-});
-
-// 測試 Google Sheets 連接
-app.get('/test-sheets', async (req, res) => {
-  try {
-    const sheet = await getGoogleSheet();
-    const rows = await sheet.getRows();
-    res.json({
-      success: true,
-      sheetTitle: sheet.title,
-      rowCount: rows.length,
-      message: 'Google Sheets 連接成功！',
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
-
-// 端口佔用檢查並自動切換端口
-let port = process.env.PORT || 3000;
-
-function startServer() {
-  const server = app.listen(port, () => {
-    console.log(`🚀 Server is running on port ${port}`);
-    console.log(`📅 啟動時間: ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
-  });
-
-  server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.warn(`⚠️ Port ${port} is already in use. Trying port ${port + 1}...`);
-      port += 1;
-      startServer();
-    } else {
-      console.error(`❌ Unexpected error: ${err.message}`);
-      process.exit(1);
-    }
-  });
-}
-
-startServer();
+console.log('🎉 LCAS LINE Bot 啟動完成！');
+console.log('💡 提示: 服務器會每5分鐘輸出心跳，每25分鐘自我 ping 以保持活躍狀態');
+console.log('📱 現在可以用 LINE 發送訊息測試了！');
+console.log('🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對外服務');
