@@ -1,7 +1,10 @@
 /**
- * 記帳處理模組_1_6_5
+ * 記帳處理模組_1.6.8
  * 處理用戶的記帳操作，接收來自DD的記帳指令，並將整理後的數據存儲至Google Sheets
  */
+
+// BK.js 頂部引入 DL 模組
+const DL = require('./2010. DL.js');
 
 // 引入所需模組
 const fs = require('fs');
@@ -693,7 +696,7 @@ async function BK_processBookkeeping(bookkeepingData) {
       time: formattedTime,
       majorCode: bookkeepingData.majorCode,
       minorCode: bookkeepingData.subCode,
-      paymentMethod: bookkeepingData.paymentMethod, // 不設置默認值，由BK_validatePaymentMethod處理
+      paymentMethod: bookkeepingData.paymentMethod, // 不設置默認值
       minorName: bookkeepingData.subjectName,
       userId: userId,
       remark: remark,
@@ -1100,15 +1103,25 @@ function BK_getPaymentMethods() {
   return ["現金", "刷卡", "轉帳", "行動支付", "其他"];
 }
 
+        console.log(`BK_validatePaymentMethod: 科目代碼 ${majorCode} 為8或9開頭，使用默認支付方式"現金"`);
+        return "現金";
+      } else {
+        // 其他科目默認用刷卡
+        console.log(`BK_validatePaymentMethod: 未指定支付方式或值為"預設"，使用默認支付方式"刷卡"`);
+        return "刷卡";
+      }
+    }
+
 /**
  * 9. 確認並標準化支付方式
- * @version 2025-06-17-V2.0.0
+ * @version 2025-06-27-V3.0.0
  * @author AustinLiao69
- * @date 2025-06-17 01:03:01
- * @update: 重構為主要負責支付方式處理的函數，統一處理邏輯和默認值
+ * @date 2025-06-27 02:05:30
+ * @update: 改為嚴格檢查支付方式，對不匹配支付方式拋出錯誤而非默認為刷卡
  * @param {string|null} method - 輸入的支付方式，可能為空/null/undefined
  * @param {string} majorCode - 科目大類代碼，用於判斷某些科目特定的默認支付方式 
  * @returns {string} 標準化後的支付方式
+ * @throws {Error} 當支付方式不匹配四種有效值時拋出錯誤
  */
 function BK_validatePaymentMethod(method, majorCode) {
   try {
@@ -1127,56 +1140,21 @@ function BK_validatePaymentMethod(method, majorCode) {
       }
     }
 
-    // 2. 支付方式標準化 (處理不同表達但相同意義的支付方式)
-    const paymentMethodMap = {
-      "cash": "現金",
-      "現": "現金",
-      "card": "刷卡",
-      "信用卡": "刷卡",
-      "信用": "刷卡",
-      "信": "刷卡",
-      "debit": "刷卡",
-      "金融卡": "刷卡",
-      "储蓄卡": "刷卡",
-      "transfer": "轉帳",
-      "bank": "轉帳",
-      "atm": "轉帳",
-      "mobile": "行動支付",
-      "app": "行動支付",
-      "qr": "行動支付",
-      "linepay": "行動支付",
-      "applepay": "行動支付",
-      "googlepay": "行動支付",
-      "街口": "行動支付",
-      "支付寶": "行動支付",
-      "alipay": "行動支付",
-      "wechat": "行動支付",
-      "微信支付": "行動支付"
-    };
+    // 2. 嚴格支付方式檢查 - 僅允許四種精確支付方式名稱
+    const validPaymentMethods = ["現金", "刷卡", "轉帳", "行動支付"];
 
-    // 轉為小寫並去除空格進行標準化比對
-    const normalizedMethod = method.toLowerCase().replace(/\s+/g, '');
-    if (paymentMethodMap[normalizedMethod]) {
-      console.log(`BK_validatePaymentMethod: 將 "${method}" 標準化為 "${paymentMethodMap[normalizedMethod]}"`);
-      return paymentMethodMap[normalizedMethod];
+    if (validPaymentMethods.includes(method)) {
+      console.log(`BK_validatePaymentMethod: 使用有效支付方式 "${method}"`);
+      return method;
     }
 
-    // 3. 支付方式有效性檢查
-    const validPaymentMethods = [
-      "現金", "刷卡", "轉帳", "行動支付", "微信支付", "支付寶", "LINE Pay", "Apple Pay", "Google Pay", "其他"
-    ];
-
-    if (!validPaymentMethods.includes(method)) {
-      console.log(`BK_validatePaymentMethod: 未知支付方式 "${method}"，使用默認支付方式"刷卡"`);
-      return "刷卡";
-    }
-
-    // 4. 支付方式符合格式，直接返回
-    console.log(`BK_validatePaymentMethod: 使用原始支付方式 "${method}"`);
-    return method;
+    // 3. 不支援的支付方式 - 拋出錯誤而非默認為刷卡
+    const errorMessage = `不支援的支付方式: "${method}"，僅支援 "現金"、"刷卡"、"轉帳"、"行動支付"`;
+    console.error(`BK_validatePaymentMethod: ${errorMessage}`);
+    throw new Error(errorMessage);
 
   } catch (error) {
-    // 5. 異常處理 - 當系統處理出錯時，確保返回默認支付方式
+    // 4. 異常處理 - 重新拋出錯誤以供上層函數處理
     console.error(`BK_validatePaymentMethod 發生錯誤: ${error.toString()}`);
 
     // 記錄到BK日誌系統(如果可用)
@@ -1186,12 +1164,8 @@ function BK_validatePaymentMethod(method, majorCode) {
       // 日誌記錄失敗也不影響主流程
     }
 
-    // 最終防禦：如果科目代碼是8或9開頭，默認為現金，否則為刷卡
-    if (majorCode && (String(majorCode).startsWith('8') || String(majorCode).startsWith('9'))) {
-      return "現金";
-    } else {
-      return "刷卡";
-    }
+    // 關鍵變更：將錯誤向上拋出，而不是返回默認值
+    throw error;
   }
 }
 
@@ -1672,7 +1646,7 @@ async function BK_getEnabledSubjectCategories() {
   }
 }
 
-// 緩存相關輔助函数
+// 緩存相關輔助函數
 const _cache = new Map();
 
 function getCachedData(key) {
