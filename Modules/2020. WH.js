@@ -1,7 +1,8 @@
 /**
- * WH_Webhook處理模組_2.0.14
+ * WH_Webhook處理模組_2.0.16
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 最小修改版本（僅用於連通測試）
+ * @description LINE Webhook處理模組 - 修復異步調用問題
+ * @update 2025-06-28: 修復DD_distributeData異步調用處理和函數聲明
 */
 
 // 首先引入其他模組
@@ -137,14 +138,16 @@ function doPost(req, res) {
     // 立即預定後台處理
     try {
       // 使用 setTimeout 替代 trigger
-      setTimeout(() => {
-        processWebhookAsync({requestId: requestId});
+      setTimeout(async () => {
+        await processWebhookAsync({requestId: requestId});
       }, 1000); // 1秒後執行
     } catch (triggerError) {
       // 如果創建計時器失敗，忽略錯誤繼續執行
       console.log("計時器創建失敗，將改用直接調用: " + triggerError);
       // 嘗試直接調用，但不等待結果
-      processWebhookAsync({requestId: requestId});
+      processWebhookAsync({requestId: requestId}).catch(err => {
+        console.log("直接調用異步處理失敗:", err);
+      });
     }
 
     // 立即回應LINE - 不進行任何額外處理
@@ -183,7 +186,7 @@ function doPost(req, res) {
  * 由時間觸發器調用
  * @param {Object} e - 觸發器事件對象，包含requestId
  */
-function processWebhookAsync(e) {
+async function processWebhookAsync(e) {
   // 從參數獲取請求ID
   const requestId = e && e.requestId ? e.requestId : "unknown";
 
@@ -262,7 +265,7 @@ function processWebhookAsync(e) {
 
           if (event.type === 'message') {
             // 處理消息事件
-            WH_processEventAsync(event, requestId, userId);
+            await WH_processEventAsync(event, requestId, userId);
           } else {
             // 記錄其他類型事件
             WH_directLogWrite([
@@ -917,14 +920,14 @@ function setDependencies(ddModule, bkModule, dlModule) {
 
 /**
  * 7. 處理事件 (非同步版) - 修正訊息處理和數據傳遞問題
- * @version 2.0.3 (2025-06-16 03:18:55)
+ * @version 2.0.4 (2025-06-28 16:41:00)
  * @author AustinLiao69
- * @update: 保留原始數據和完整的錯誤訊息，確保正確顯示負數金額與支付方式
+ * @update: 保留原始數據和完整的錯誤訊息，確保正確顯示負數金額與支付方式，修復async聲明
  * @param {Object} event - LINE事件對象
  * @param {string} requestId - 請求ID
  * @param {string} userId - 用戶ID
  */
-function WH_processEventAsync(event, requestId, userId) {
+async function WH_processEventAsync(event, requestId, userId) {
   // 檢查基本參數
   if (!event || !event.type) {
     console.log(`無效事件或缺少類型: ${JSON.stringify(event)} [${requestId}]`);
@@ -1029,8 +1032,8 @@ function WH_processEventAsync(event, requestId, userId) {
             "INFO"
           ]);
 
-          // 關鍵：調用DD_distributeData並保留完整結果
-          result = DD.DD_distributeData(messageData, 'LINE', 0);
+          // 關鍵：調用DD_distributeData並保留完整結果 - 修復：使用await處理異步
+          result = await DD.DD_distributeData(messageData, 'LINE', 0);
 
 
 

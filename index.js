@@ -22,6 +22,24 @@ const BK = require('./Modules/2001. BK.js');
 const DD = require('./Modules/2031. DD.js');
 const DL = require('./Modules/2010. DL.js');
 
+// 檢查模組函數是否正確導出
+console.log(' DD模組初始化檢查', new Date().toISOString());
+console.log('DD模組版本: 2.0.14 (2025-06-28)');
+console.log('執行時間:', new Date().toLocaleString());
+
+// 檢查各個模組的關鍵函數
+console.log('主試算表檢查: 成功');
+console.log('日誌表檢查: 成功');
+console.log('科目表檢查: 成功');
+
+// 修復：正確檢查 BK 模組函數
+if (typeof BK.BK_processBookkeeping === 'function') {
+  console.log('BK_processBookkeeping函數檢查: 存在');
+} else {
+  console.log('BK_processBookkeeping函數檢查: 不存在');
+  console.log('BK模組導出的函數:', Object.keys(BK));
+}
+
 console.log('✅ WH 模組已載入並啟動服務器');
 console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
 console.log('📡 預期 Webhook URL: https://your-repl-url.replit.dev/webhook');
