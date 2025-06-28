@@ -1,8 +1,9 @@
 /**
- * DD_資料分配模組_2.0.12
+ * DD_資料分配模組_2.0.13
  * @module 資料分配模組
  * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
  * @author AustinLiao69
+ * @update 2025-06-28: 修復科目表讀取異步問題和模糊匹配函數
  */
 
 // 首先引入其他模組
@@ -306,7 +307,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
         "DD_distributeData",
       );
 
-      const processedData = DD_processUserMessage(
+      const processedData = await DD_processUserMessage(
         data.text,
         data.userId || data.user_id,
         data.timestamp,
@@ -1192,7 +1193,7 @@ module.exports = {
  * @param {string} timestamp - 時間戳 (可選)
  * @return {Object} 處理結果
  */
-function DD_processUserMessage(message, userId = "", timestamp = "") {
+async function DD_processUserMessage(message, userId = "", timestamp = "") {
   // 1. 生成處理ID
   const msgId = Utilities.getUuid().substring(0, 8);
 
@@ -1462,7 +1463,7 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
         );
 
         try {
-          subjectInfo = DD_getSubjectCode(subject);
+          subjectInfo = await DD_getSubjectCode(subject);
 
           if (subjectInfo) {
             matchMethod = "exact_match";
@@ -1509,7 +1510,7 @@ function DD_processUserMessage(message, userId = "", timestamp = "") {
           const fuzzyThreshold =
             (DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.FUZZY_MATCH_THRESHOLD) ||
             0.7;
-          const fuzzyMatch = DD_fuzzyMatch(subject);
+          const fuzzyMatch = await DD_fuzzyMatch(subject);
 
           if (fuzzyMatch && fuzzyMatch.score >= fuzzyThreshold) {
             subjectInfo = fuzzyMatch;
@@ -1897,8 +1898,8 @@ function DD_getSubjectCode(subjectName) {
       return null;
     }
 
-    // 讀取所有數據
-    const lastRow = sheet.getLastRow();
+    // 讀取所有數據 - 修復：正確處理異步調用
+    const lastRow = await sheet.getLastRow();
     if (lastRow <= 1) {
       console.log(`科目表為空或只有標題行 [${scId}]`);
       DD_logError(
@@ -1912,8 +1913,8 @@ function DD_getSubjectCode(subjectName) {
       return null;
     }
 
-    // 擴展讀取範圍以包含同義詞欄位 (假設為第5列)
-    const values = sheet.getRange(1, 1, lastRow, 5).getValues();
+    // 擴展讀取範圍以包含同義詞欄位 (假設為第5列) - 修復：正確處理異步調用
+    const values = await sheet.getRange(1, 1, lastRow, 5).getValues();
     console.log(`讀取科目表: ${values.length}行數據 [${scId}]`);
 
     // 詳細診斷日誌 - 記錄查詢過程
@@ -2475,14 +2476,14 @@ function DD_removeAmountFromText(text, amount, paymentMethod) {
 }
 
 /**
- * 35. 修復版模糊匹配函數 - 優化複合詞處理
- * @version 2025-04-30-V4.1.3
+ * 35. 修復版模糊匹配函數 - 優化複合詞處理，支持異步調用
+ * @version 2025-06-28-V4.2.0
  * @author AustinLiao69
  * @param {string} input - 用戶輸入的字符串
  * @param {number} threshold - 匹配閾值
  * @return {Object|null} 匹配結果或null
  */
-function DD_fuzzyMatch(input, threshold = 0.6) {
+async function DD_fuzzyMatch(input, threshold = 0.6) {
   // 確保配置初始化
   DD_initConfig();
 
@@ -2493,8 +2494,8 @@ function DD_fuzzyMatch(input, threshold = 0.6) {
 
   const inputLower = input.toLowerCase().trim();
 
-  // 獲取所有科目
-  const allSubjects = DD_getAllSubjects();
+  // 獲取所有科目 - 修復：使用await等待異步完成
+  const allSubjects = await DD_getAllSubjects();
   if (!allSubjects || !allSubjects.length) {
     console.log(`【模糊匹配】無法獲取科目列表`);
     return null;
@@ -4435,22 +4436,32 @@ function DD_processParseResult(parseResult, options = {}) {
 }
 
 /**
- * 55. 獲取所有科目列表（包括同義詞）
- * 注意：這是一個模擬函數，實際實現需要從資料表獲取數據
+ * 55. 獲取所有科目列表（包括同義詞）- 修復異步調用問題
  * @return {Array} 科目列表
  */
-function DD_getAllSubjects() {
+async function DD_getAllSubjects() {
   try {
+    console.log("【模糊匹配】開始獲取科目列表");
+    
     // 獲取科目資料表
-    const sheet =
-      SpreadsheetApp.getActive().getSheetByName("997. 科目代碼_測試");
+    const ss = SpreadsheetApp.openById(DD_CONFIG.SPREADSHEET_ID);
+    const sheet = ss.getSheetByName("997. 科目代碼_測試");
     if (!sheet) {
       console.log("【模糊匹配】無法找到科目表");
       return [];
     }
 
-    const dataRange = sheet.getDataRange();
-    const values = dataRange.getValues();
+    // 修復：正確等待異步操作完成
+    const lastRow = await sheet.getLastRow();
+    console.log(`【模糊匹配】科目表行數: ${lastRow}`);
+    
+    if (lastRow <= 1) {
+      console.log("【模糊匹配】科目表為空或只有標題行");
+      return [];
+    }
+
+    const values = await sheet.getRange(1, 1, lastRow, 5).getValues();
+    console.log(`【模糊匹配】成功讀取 ${values.length} 行數據`);
 
     // 跳過標題行
     const subjects = [];
@@ -4467,6 +4478,7 @@ function DD_getAllSubjects() {
       }
     }
 
+    console.log(`【模糊匹配】處理完成，共 ${subjects.length} 個科目`);
     return subjects;
   } catch (error) {
     console.log(`【模糊匹配】獲取科目列表失敗: ${error}`);

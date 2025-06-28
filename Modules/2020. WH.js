@@ -1,7 +1,8 @@
 /**
- * WH_Webhook處理模組_2.0.14
+ * WH_Webhook處理模組_2.0.15
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 最小修改版本（僅用於連通測試）
+ * @description LINE Webhook處理模組 - 修復異步調用問題
+ * @update 2025-06-28: 修復DD_distributeData異步調用處理
 */
 
 // 首先引入其他模組
@@ -1029,8 +1030,8 @@ function WH_processEventAsync(event, requestId, userId) {
             "INFO"
           ]);
 
-          // 關鍵：調用DD_distributeData並保留完整結果
-          result = DD.DD_distributeData(messageData, 'LINE', 0);
+          // 關鍵：調用DD_distributeData並保留完整結果 - 修復：使用await處理異步
+          result = await DD.DD_distributeData(messageData, 'LINE', 0);
 
 
 
