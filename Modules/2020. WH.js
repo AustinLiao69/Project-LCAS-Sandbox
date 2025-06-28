@@ -1,5 +1,5 @@
 /**
- * WH_Webhook處理模組_2.0.13
+ * WH_Webhook處理模組_2.0.14
  * @module Webhook模組
  * @description LINE Webhook處理模組 - 最小修改版本（僅用於連通測試）
 */
@@ -72,6 +72,27 @@ const WH_PROPS = {
 // 從環境變量獲取腳本屬性 (模擬 getScriptProperty)
 function getScriptProperty(key) {
   return process.env[key];
+}
+
+// Google Sheets 認證初始化（如果 WH 模組需要存取 Google Sheets）
+async function WH_initializeGoogleAuth() {
+  try {
+    const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
+    if (!credentialsJson) {
+      throw new Error('未設置GOOGLE_SHEETS_CREDENTIALS環境變數');
+    }
+
+    const { google } = require('googleapis');
+    const auth = new google.auth.GoogleAuth({
+      credentials: JSON.parse(credentialsJson),
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    });
+
+    return await auth.getClient();
+  } catch (error) {
+    console.error('WH Google API認證初始化失敗:', error);
+    throw error;
+  }
 }
 
 // 日期時間格式化

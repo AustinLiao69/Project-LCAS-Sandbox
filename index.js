@@ -15,9 +15,12 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('💥 未處理的 Promise 拒絕:', reason);
 });
 
-// 引入並啟動 WH 模組 (它會自己建立服務器)
-console.log('📦 載入 WH 模組...');
+// 引入並啟動模組
+console.log('📦 載入模組...');
 const WH = require('./Modules/2020. WH.js');
+const BK = require('./Modules/2001. BK.js');
+const DD = require('./Modules/2031. DD.js');
+const DL = require('./Modules/2010. DL.js');
 
 console.log('✅ WH 模組已載入並啟動服務器');
 console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
