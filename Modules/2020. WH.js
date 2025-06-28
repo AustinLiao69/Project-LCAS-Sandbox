@@ -1,47 +1,47 @@
 /**
- * WH_Webhook處理模組_2.0.8
+ * WH_Webhook處理模組_2.0.14
  * @module Webhook模組
  * @description LINE Webhook處理模組 - 修復異步調用問題
  * @update 2025-06-28: 升級版本，修復DD_distributeData異步調用處理和函數聲明
-*/
+ */
 
 // 首先引入其他模組
-const DD = require('./2031. DD.js');
-const BK = require('./2001. BK.js'); 
-const DL = require('./2010. DL.js');
+const DD = require("./2031. DD.js");
+const BK = require("./2001. BK.js");
+const DL = require("./2010. DL.js");
 
 // 引入必要的 Node.js 模組
-const express = require('express');
-const axios = require('axios');
-const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
-const path = require('path');
-const moment = require('moment-timezone');
-const NodeCache = require('node-cache');
+const express = require("express");
+const axios = require("axios");
+const crypto = require("crypto");
+const { v4: uuidv4 } = require("uuid");
+const fs = require("fs");
+const path = require("path");
+const moment = require("moment-timezone");
+const NodeCache = require("node-cache");
 
 // 1. 配置參數
 const WH_CONFIG = {
   DEBUG: true,
-  TEST_MODE: true,           // 測試模式：跳過簽章驗證
+  TEST_MODE: true, // 測試模式：跳過簽章驗證
   LOG_MESSAGE_CONTENT: true, // 提前記錄訊息內容
   MESSAGE_DEDUPLICATION: true, // 啟用消息去重
   MESSAGE_RETENTION_HOURS: 24, // 消息ID保留時間(小時)
-  ASYNC_PROCESSING: true,    // 啟用異步處理（快速回應）
+  ASYNC_PROCESSING: true, // 啟用異步處理（快速回應）
   SHEET: {
     ID: process.env.SPREADSHEET_ID, // 從環境變數獲取試算表 ID
     NAME: "999. Test ledger",
-    LOG_SHEET_NAME: process.env.LOG_SHEET_NAME // 從環境變數獲取日誌表名
+    LOG_SHEET_NAME: process.env.LOG_SHEET_NAME, // 從環境變數獲取日誌表名
   },
   LINE: {
     CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET, // 從環境變數獲取 LINE Channel Secret
-    CHANNEL_ACCESS_TOKEN: process.env.LINE_CHANNEL_ACCESS_TOKEN // 從環境變數獲取 LINE Channel Access Token
+    CHANNEL_ACCESS_TOKEN: process.env.LINE_CHANNEL_ACCESS_TOKEN, // 從環境變數獲取 LINE Channel Access Token
   },
   RETRY: {
-    MAX_COUNT: 2,            // 減少重試次數
-    DELAY_MS: 1000
+    MAX_COUNT: 2, // 減少重試次數
+    DELAY_MS: 1000,
   },
-  TIMEZONE: "Asia/Taipei" // 台灣時區
+  TIMEZONE: "Asia/Taipei", // 台灣時區
 };
 
 // 初始化檢查 - 在全局執行一次
@@ -57,17 +57,17 @@ const cache = new NodeCache({ stdTTL: 600 }); // 10分鐘緩存
 // 創建持久化存儲 (模擬 PropertiesService)
 const WH_PROPS = {
   properties: {},
-  getProperty: function(key) {
+  getProperty: function (key) {
     return this.properties[key];
   },
-  setProperty: function(key, value) {
+  setProperty: function (key, value) {
     this.properties[key] = value;
     return this;
   },
-  deleteProperty: function(key) {
+  deleteProperty: function (key) {
     delete this.properties[key];
     return this;
-  }
+  },
 };
 
 // 從環境變量獲取腳本屬性 (模擬 getScriptProperty)
@@ -80,18 +80,18 @@ async function WH_initializeGoogleAuth() {
   try {
     const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
     if (!credentialsJson) {
-      throw new Error('未設置GOOGLE_SHEETS_CREDENTIALS環境變數');
+      throw new Error("未設置GOOGLE_SHEETS_CREDENTIALS環境變數");
     }
 
-    const { google } = require('googleapis');
+    const { google } = require("googleapis");
     const auth = new google.auth.GoogleAuth({
       credentials: JSON.parse(credentialsJson),
-      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
     return await auth.getClient();
   } catch (error) {
-    console.error('WH Google API認證初始化失敗:', error);
+    console.error("WH Google API認證初始化失敗:", error);
     throw error;
   }
 }
@@ -112,7 +112,7 @@ function doPost(req, res) {
   // 快速錯誤檢查
   if (!req || !req.body) {
     return res.status(400).json({
-      error: "無效的請求格式"
+      error: "無效的請求格式",
     });
   }
 
@@ -128,34 +128,33 @@ function doPost(req, res) {
       "",
       0,
       "doPost",
-      "INFO"
+      "INFO",
     ]);
 
     // 極速儲存請求
     // 使用 NodeCache 替代 CacheService
-    cache.set('WH_REQ_' + requestId, JSON.stringify(req.body), 600); // 緩存10分鐘
+    cache.set("WH_REQ_" + requestId, JSON.stringify(req.body), 600); // 緩存10分鐘
 
     // 立即預定後台處理
     try {
       // 使用 setTimeout 替代 trigger
       setTimeout(async () => {
-        await processWebhookAsync({requestId: requestId});
+        await processWebhookAsync({ requestId: requestId });
       }, 1000); // 1秒後執行
     } catch (triggerError) {
       // 如果創建計時器失敗，忽略錯誤繼續執行
       console.log("計時器創建失敗，將改用直接調用: " + triggerError);
       // 嘗試直接調用，但不等待結果
-      processWebhookAsync({requestId: requestId}).catch(err => {
+      processWebhookAsync({ requestId: requestId }).catch((err) => {
         console.log("直接調用異步處理失敗:", err);
       });
     }
 
     // 立即回應LINE - 不進行任何額外處理
     return res.status(200).json({
-      status: "ok", 
-      request_id: requestId
+      status: "ok",
+      request_id: requestId,
     });
-
   } catch (error) {
     // 即使發生錯誤，也確保返回響應
     console.log("發生錯誤，但仍快速回應: " + error);
@@ -171,12 +170,12 @@ function doPost(req, res) {
       error.toString(),
       0,
       "doPost",
-      "ERROR"
+      "ERROR",
     ]);
 
     return res.status(200).json({
       status: "received",
-      error: "請求已接收但處理可能出錯"
+      error: "請求已接收但處理可能出錯",
     });
   }
 }
@@ -203,11 +202,11 @@ async function processWebhookAsync(e) {
       "",
       0,
       "processWebhookAsync",
-      "INFO"
+      "INFO",
     ]);
 
     // 從緩存獲取請求數據
-    const rawData = cache.get('WH_REQ_' + requestId);
+    const rawData = cache.get("WH_REQ_" + requestId);
 
     if (!rawData) {
       console.log(`無法獲取請求數據 [${requestId}]`);
@@ -221,7 +220,7 @@ async function processWebhookAsync(e) {
         "",
         0,
         "processWebhookAsync",
-        "ERROR"
+        "ERROR",
       ]);
       return;
     }
@@ -241,11 +240,17 @@ async function processWebhookAsync(e) {
           }
 
           // 檢查消息去重
-          if (WH_CONFIG.MESSAGE_DEDUPLICATION && 
-              event.type === 'message' && event.message && event.message.id) {
-
+          if (
+            WH_CONFIG.MESSAGE_DEDUPLICATION &&
+            event.type === "message" &&
+            event.message &&
+            event.message.id
+          ) {
             // 在非同步處理中檢查重複
-            const isDuplicate = WH_checkDuplicateMessage(event.message.id, requestId);
+            const isDuplicate = WH_checkDuplicateMessage(
+              event.message.id,
+              requestId,
+            );
             if (isDuplicate) {
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
@@ -257,13 +262,13 @@ async function processWebhookAsync(e) {
                 "",
                 0,
                 "processWebhookAsync",
-                "INFO"
+                "INFO",
               ]);
               continue; // 跳過此消息的處理
             }
           }
 
-          if (event.type === 'message') {
+          if (event.type === "message") {
             // 處理消息事件
             await WH_processEventAsync(event, requestId, userId);
           } else {
@@ -278,7 +283,7 @@ async function processWebhookAsync(e) {
               "",
               0,
               "processWebhookAsync",
-              "INFO"
+              "INFO",
             ]);
           }
         } catch (eventError) {
@@ -293,7 +298,7 @@ async function processWebhookAsync(e) {
             eventError.toString(),
             0,
             "processWebhookAsync",
-            "ERROR"
+            "ERROR",
           ]);
         }
       }
@@ -308,12 +313,12 @@ async function processWebhookAsync(e) {
         "",
         0,
         "processWebhookAsync",
-        "WARNING"
+        "WARNING",
       ]);
     }
 
     // 清理緩存
-    cache.del('WH_REQ_' + requestId);
+    cache.del("WH_REQ_" + requestId);
     console.log(`非同步處理完成，已清理數據 [${requestId}]`);
 
     // 記錄處理完成
@@ -327,9 +332,8 @@ async function processWebhookAsync(e) {
       "",
       0,
       "processWebhookAsync",
-      "INFO"
+      "INFO",
     ]);
-
   } catch (error) {
     console.log(`非同步處理主錯誤: ${error} [${requestId}]`);
     WH_directLogWrite([
@@ -342,7 +346,7 @@ async function processWebhookAsync(e) {
       error.toString(),
       0,
       "processWebhookAsync",
-      "ERROR"
+      "ERROR",
     ]);
   }
 }
@@ -364,25 +368,27 @@ function WH_processEvent(event) {
     }
 
     // 處理訊息事件
-    if (event.type === 'message' && event.message) {
+    if (event.type === "message" && event.message) {
       // 提取用戶ID和回覆Token
       const userId = event.source.userId;
       const replyToken = event.replyToken;
 
       // 處理不同類型的訊息
-      if (event.message.type === 'text') {
+      if (event.message.type === "text") {
         // 處理文字訊息
         const messageText = event.message.text;
 
         // 添加時間戳記錄
-        console.log(`接收訊息: "${messageText}" 從用戶: ${userId}, 時間: ${new Date().toISOString()}`);
+        console.log(
+          `接收訊息: "${messageText}" 從用戶: ${userId}, 時間: ${new Date().toISOString()}`,
+        );
 
         // 創建發送到 DD 模組的數據對象
         const data = {
           text: messageText,
           userId: userId,
           timestamp: event.timestamp,
-          replyToken: replyToken // 重要：保存回覆令牌
+          replyToken: replyToken, // 重要：保存回覆令牌
         };
 
         // 使用模組引用调用函数
@@ -399,7 +405,6 @@ function WH_processEvent(event) {
       // 可以處理其他類型的訊息 (圖片、影片等)
     }
     // 處理其他類型事件 (follow, unfollow, join 等)
-
   } catch (error) {
     console.log(`WH_processEvent 錯誤: ${error}`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
@@ -453,21 +458,16 @@ function WH_directLogWrite(logData) {
     console.log(`[WH 2.0.7 LOG] ${logData[1]} (${logData[9]})`);
 
     // 寫入日誌文件
-    const logDir = path.join(__dirname, 'logs');
+    const logDir = path.join(__dirname, "logs");
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
 
-    const today = moment().format('YYYY-MM-DD');
+    const today = moment().format("YYYY-MM-DD");
     const logFile = path.join(logDir, `webhook-${today}.log`);
 
     // 將日誌數據寫入文件
-    fs.appendFileSync(
-      logFile, 
-      logData.join('\t') + '\n', 
-      { encoding: 'utf8' }
-    );
-
+    fs.appendFileSync(logFile, logData.join("\t") + "\n", { encoding: "utf8" });
   } catch (error) {
     console.log(`WH_directLogWrite 錯誤: ${error.toString()}`);
   }
@@ -481,16 +481,16 @@ function WH_logDebug(message, operationType = "", userId = "", location = "") {
   // 使用try-catch包裹日誌寫入，確保不會影響主要流程
   try {
     const logData = [
-      WH_formatDateTime(new Date()),  // 1. 時間戳記
-      message,                        // 2. 訊息
-      operationType,                  // 3. 操作類型
-      userId,                         // 4. 使用者ID
-      "",                             // 5. 錯誤代碼
-      "WH",                           // 6. 來源 - 明確標記為WH
-      "",                             // 7. 錯誤詳情
-      0,                              // 8. 重試次數
-      location || "",                 // 9. 程式碼位置
-      "DEBUG"                         // 10. 嚴重等級
+      WH_formatDateTime(new Date()), // 1. 時間戳記
+      message, // 2. 訊息
+      operationType, // 3. 操作類型
+      userId, // 4. 使用者ID
+      "", // 5. 錯誤代碼
+      "WH", // 6. 來源 - 明確標記為WH
+      "", // 7. 錯誤詳情
+      0, // 8. 重試次數
+      location || "", // 9. 程式碼位置
+      "DEBUG", // 10. 嚴重等級
     ];
 
     // 直接寫入日誌
@@ -505,16 +505,16 @@ function WH_logInfo(message, operationType = "", userId = "", location = "") {
 
   try {
     const logData = [
-      WH_formatDateTime(new Date()),  // 1. 時間戳記
-      message,                        // 2. 訊息
-      operationType,                  // 3. 操作類型
-      userId,                         // 4. 使用者ID
-      "",                             // 5. 錯誤代碼
-      "WH",                           // 6. 來源 - 明確標記為WH
-      "",                             // 7. 錯誤詳情
-      0,                              // 8. 重試次數
-      location || "",                 // 9. 程式碼位置
-      "INFO"                          // 10. 嚴重等級
+      WH_formatDateTime(new Date()), // 1. 時間戳記
+      message, // 2. 訊息
+      operationType, // 3. 操作類型
+      userId, // 4. 使用者ID
+      "", // 5. 錯誤代碼
+      "WH", // 6. 來源 - 明確標記為WH
+      "", // 7. 錯誤詳情
+      0, // 8. 重試次數
+      location || "", // 9. 程式碼位置
+      "INFO", // 10. 嚴重等級
     ];
 
     // 直接寫入日誌
@@ -524,21 +524,27 @@ function WH_logInfo(message, operationType = "", userId = "", location = "") {
   }
 }
 
-function WH_logWarning(message, operationType = "", userId = "", errorDetails = "", location = "") {
+function WH_logWarning(
+  message,
+  operationType = "",
+  userId = "",
+  errorDetails = "",
+  location = "",
+) {
   console.log(`[WH-WARNING] ${message}`);
 
   try {
     const logData = [
-      WH_formatDateTime(new Date()),  // 1. 時間戳記
-      message,                        // 2. 訊息
-      operationType,                  // 3. 操作類型
-      userId,                         // 4. 使用者ID
-      "",                             // 5. 錯誤代碼
-      "WH",                           // 6. 來源 - 明確標記為WH
-      errorDetails,                   // 7. 錯誤詳情
-      0,                              // 8. 重試次數
-      location || "",                 // 9. 程式碼位置
-      "WARNING"                       // 10. 嚴重等級
+      WH_formatDateTime(new Date()), // 1. 時間戳記
+      message, // 2. 訊息
+      operationType, // 3. 操作類型
+      userId, // 4. 使用者ID
+      "", // 5. 錯誤代碼
+      "WH", // 6. 來源 - 明確標記為WH
+      errorDetails, // 7. 錯誤詳情
+      0, // 8. 重試次數
+      location || "", // 9. 程式碼位置
+      "WARNING", // 10. 嚴重等級
     ];
 
     // 直接寫入日誌
@@ -548,21 +554,28 @@ function WH_logWarning(message, operationType = "", userId = "", errorDetails = 
   }
 }
 
-function WH_logError(message, operationType = "", userId = "", errorCode = "", errorDetails = "", location = "") {
+function WH_logError(
+  message,
+  operationType = "",
+  userId = "",
+  errorCode = "",
+  errorDetails = "",
+  location = "",
+) {
   console.log(`[WH-ERROR] ${message}`);
 
   try {
     const logData = [
-      WH_formatDateTime(new Date()),  // 1. 時間戳記
-      message,                        // 2. 訊息
-      operationType,                  // 3. 操作類型
-      userId,                         // 4. 使用者ID
-      errorCode,                      // 5. 錯誤代碼
-      "WH",                           // 6. 來源 - 明確標記為WH
-      errorDetails,                   // 7. 錯誤詳情
-      0,                              // 8. 重試次數
-      location || "",                 // 9. 程式碼位置
-      "ERROR"                         // 10. 嚴重等級
+      WH_formatDateTime(new Date()), // 1. 時間戳記
+      message, // 2. 訊息
+      operationType, // 3. 操作類型
+      userId, // 4. 使用者ID
+      errorCode, // 5. 錯誤代碼
+      "WH", // 6. 來源 - 明確標記為WH
+      errorDetails, // 7. 錯誤詳情
+      0, // 8. 重試次數
+      location || "", // 9. 程式碼位置
+      "ERROR", // 10. 嚴重等級
     ];
 
     // 直接寫入日誌
@@ -572,21 +585,28 @@ function WH_logError(message, operationType = "", userId = "", errorCode = "", e
   }
 }
 
-function WH_logCritical(message, operationType = "", userId = "", errorCode = "", errorDetails = "", location = "") {
+function WH_logCritical(
+  message,
+  operationType = "",
+  userId = "",
+  errorCode = "",
+  errorDetails = "",
+  location = "",
+) {
   console.log(`[WH-CRITICAL] ${message}`);
 
   try {
     const logData = [
-      WH_formatDateTime(new Date()),  // 1. 時間戳記
-      message,                        // 2. 訊息
-      operationType,                  // 3. 操作類型
-      userId,                         // 4. 使用者ID
-      errorCode,                      // 5. 錯誤代碼
-      "WH",                           // 6. 來源 - 明確標記為WH
-      errorDetails,                   // 7. 錯誤詳情
-      0,                              // 8. 重試次數
-      location || "",                 // 9. 程式碼位置
-      "CRITICAL"                      // 10. 嚴重等級
+      WH_formatDateTime(new Date()), // 1. 時間戳記
+      message, // 2. 訊息
+      operationType, // 3. 操作類型
+      userId, // 4. 使用者ID
+      errorCode, // 5. 錯誤代碼
+      "WH", // 6. 來源 - 明確標記為WH
+      errorDetails, // 7. 錯誤詳情
+      0, // 8. 重試次數
+      location || "", // 9. 程式碼位置
+      "CRITICAL", // 10. 嚴重等級
     ];
 
     // 直接寫入日誌
@@ -612,8 +632,10 @@ function WH_replyMessage(replyToken, message) {
 
     // 記錄收到的訊息類型，包括預覽
     console.log(`WH_replyMessage: 收到類型 ${typeof message} 的訊息對象`);
-    if (typeof message === 'object' && message !== null) {
-      console.log(`WH_replyMessage: 訊息對象結構: ${JSON.stringify(Object.keys(message))}`);
+    if (typeof message === "object" && message !== null) {
+      console.log(
+        `WH_replyMessage: 訊息對象結構: ${JSON.stringify(Object.keys(message))}`,
+      );
 
       // 物件內容預覽
       const preview = JSON.stringify(message).substring(0, 200);
@@ -621,30 +643,46 @@ function WH_replyMessage(replyToken, message) {
     }
 
     // 2. 根據不同類型的訊息對象提取文本
-    if (typeof message === 'object' && message !== null) {
+    if (typeof message === "object" && message !== null) {
       // 詳細記錄各種可能的屬性
       if (message.responseMessage) {
-        console.log(`WH_replyMessage: 發現responseMessage屬性 (${typeof message.responseMessage}), 長度=${message.responseMessage.length || 0}`);
+        console.log(
+          `WH_replyMessage: 發現responseMessage屬性 (${typeof message.responseMessage}), 長度=${message.responseMessage.length || 0}`,
+        );
       }
       if (message.message) {
-        console.log(`WH_replyMessage: 發現message屬性 (${typeof message.message})`);
+        console.log(
+          `WH_replyMessage: 發現message屬性 (${typeof message.message})`,
+        );
       }
       if (message.userFriendlyMessage) {
-        console.log(`WH_replyMessage: 發現userFriendlyMessage屬性 (${typeof message.userFriendlyMessage})`);
+        console.log(
+          `WH_replyMessage: 發現userFriendlyMessage屬性 (${typeof message.userFriendlyMessage})`,
+        );
       }
 
       // 階層式提取優先順序
-      if (message.responseMessage && typeof message.responseMessage === 'string') {
+      if (
+        message.responseMessage &&
+        typeof message.responseMessage === "string"
+      ) {
         textMessage = message.responseMessage;
-        console.log(`WH_replyMessage: 使用responseMessage屬性 (${textMessage.substring(0, 30)}...)`);
-      } 
-      else if (message.message && typeof message.message === 'string') {
+        console.log(
+          `WH_replyMessage: 使用responseMessage屬性 (${textMessage.substring(0, 30)}...)`,
+        );
+      } else if (message.message && typeof message.message === "string") {
         textMessage = message.message;
-        console.log(`WH_replyMessage: 使用message屬性 (${textMessage.substring(0, 30)}...)`);
-      }
-      else if (message.userFriendlyMessage && typeof message.userFriendlyMessage === 'string') {
+        console.log(
+          `WH_replyMessage: 使用message屬性 (${textMessage.substring(0, 30)}...)`,
+        );
+      } else if (
+        message.userFriendlyMessage &&
+        typeof message.userFriendlyMessage === "string"
+      ) {
         textMessage = message.userFriendlyMessage;
-        console.log(`WH_replyMessage: 使用userFriendlyMessage屬性 (${textMessage.substring(0, 30)}...)`);
+        console.log(
+          `WH_replyMessage: 使用userFriendlyMessage屬性 (${textMessage.substring(0, 30)}...)`,
+        );
       }
       // 嘗試自行構建訊息 - 如果有partialData
       else if (message.partialData) {
@@ -653,13 +691,16 @@ function WH_replyMessage(replyToken, message) {
           const pd = message.partialData;
           const isSuccess = message.success === true;
           const errorMsg = message.error || "未知錯誤";
-          const currentDateTime = moment().tz(WH_CONFIG.TIMEZONE || "Asia/Taipei").format("YYYY/MM/DD HH:mm");
+          const currentDateTime = moment()
+            .tz(WH_CONFIG.TIMEZONE || "Asia/Taipei")
+            .format("YYYY/MM/DD HH:mm");
 
           // 提取並記錄關鍵屬性
           const subject = pd.subject || "未知科目";
           console.log(`WH_replyMessage: 使用科目=${subject}`);
 
-          const displayAmount = pd.rawAmount || (pd.amount !== undefined ? String(pd.amount) : "0");
+          const displayAmount =
+            pd.rawAmount || (pd.amount !== undefined ? String(pd.amount) : "0");
           console.log(`WH_replyMessage: 使用金額=${displayAmount}`);
 
           const paymentMethod = pd.paymentMethod || "未指定支付方式";
@@ -670,58 +711,73 @@ function WH_replyMessage(replyToken, message) {
 
           // 構建標準訊息格式
           if (isSuccess) {
-            textMessage = `記帳成功！\n` +
-                         `金額：${displayAmount}元\n` +
-                         `付款方式：${paymentMethod}\n` +
-                         `時間：${currentDateTime}\n` +
-                         `科目：${subject}\n` +
-                         `備註：${remark}\n` +
-                         `使用者類型：J`;
+            textMessage =
+              `記帳成功！\n` +
+              `金額：${displayAmount}元\n` +
+              `付款方式：${paymentMethod}\n` +
+              `時間：${currentDateTime}\n` +
+              `科目：${subject}\n` +
+              `備註：${remark}\n` +
+              `使用者類型：J`;
           } else {
-            textMessage = `記帳失敗！\n` +
-                         `金額：${displayAmount}元\n` +
-                         `支付方式：${paymentMethod}\n` +
-                         `時間：${currentDateTime}\n` +
-                         `科目：${subject}\n` +
-                         `備註：${remark}\n` +
-                         `使用者類型：J\n` +
-                         `錯誤原因：${errorMsg}`;
+            textMessage =
+              `記帳失敗！\n` +
+              `金額：${displayAmount}元\n` +
+              `支付方式：${paymentMethod}\n` +
+              `時間：${currentDateTime}\n` +
+              `科目：${subject}\n` +
+              `備註：${remark}\n` +
+              `使用者類型：J\n` +
+              `錯誤原因：${errorMsg}`;
           }
-          console.log(`WH_replyMessage: 自行構建的訊息: ${textMessage.substring(0, 50)}...`);
+          console.log(
+            `WH_replyMessage: 自行構建的訊息: ${textMessage.substring(0, 50)}...`,
+          );
         } catch (formatError) {
           console.log(`WH_replyMessage: 自行構建訊息失敗: ${formatError}`);
           textMessage = `處理您的請求時發生錯誤，請稍後再試。(Error: FORMAT_MESSAGE)`;
         }
-      }
-      else {
+      } else {
         // 最後嘗試將整個對象轉為字符串
         try {
           textMessage = JSON.stringify(message);
-          console.log(`WH_replyMessage: 將對象轉換為字符串: ${textMessage.substring(0, 50)}...`);
+          console.log(
+            `WH_replyMessage: 將對象轉換為字符串: ${textMessage.substring(0, 50)}...`,
+          );
         } catch (jsonError) {
-          textMessage = "處理您的請求時發生錯誤，請稍後再試。(Error: JSON_CONVERSION)";
-          console.log(`WH_replyMessage: 對象轉換為JSON失敗，使用預設訊息: ${jsonError}`);
+          textMessage =
+            "處理您的請求時發生錯誤，請稍後再試。(Error: JSON_CONVERSION)";
+          console.log(
+            `WH_replyMessage: 對象轉換為JSON失敗，使用預設訊息: ${jsonError}`,
+          );
         }
       }
-    } else if (typeof message === 'string') {
+    } else if (typeof message === "string") {
       // 直接使用字符串
       textMessage = message;
-      console.log(`WH_replyMessage: 使用直接傳入的字符串訊息 (${textMessage.substring(0, 30)}...)`);
+      console.log(
+        `WH_replyMessage: 使用直接傳入的字符串訊息 (${textMessage.substring(0, 30)}...)`,
+      );
     } else {
       // 未知類型，使用預設訊息
-      textMessage = "您的請求已收到，但處理過程中出現未知錯誤。(Error: UNKNOWN_TYPE)";
+      textMessage =
+        "您的請求已收到，但處理過程中出現未知錯誤。(Error: UNKNOWN_TYPE)";
       console.log(`WH_replyMessage: 未知訊息類型: ${typeof message}`);
     }
 
     // 3. 確保消息不超過LINE的最大長度
     const maxLength = 5000; // LINE消息最大長度
     if (textMessage.length > maxLength) {
-      console.log(`WH_replyMessage: 訊息太長 (${textMessage.length}字符)，截斷至${maxLength}字符`);
-      textMessage = textMessage.substring(0, maxLength - 3) + '...';
+      console.log(
+        `WH_replyMessage: 訊息太長 (${textMessage.length}字符)，截斷至${maxLength}字符`,
+      );
+      textMessage = textMessage.substring(0, maxLength - 3) + "...";
     }
 
     // 4. 記錄準備發送的訊息
-    console.log(`WH_replyMessage: 開始回覆訊息: ${textMessage.substring(0, 50)}${textMessage.length > 50 ? '...' : ''}`);
+    console.log(
+      `WH_replyMessage: 開始回覆訊息: ${textMessage.substring(0, 50)}${textMessage.length > 50 ? "..." : ""}`,
+    );
 
     // 使用直接寫入記錄開始回覆請求
     WH_directLogWrite([
@@ -734,7 +790,7 @@ function WH_replyMessage(replyToken, message) {
       "",
       0,
       "WH_replyMessage",
-      "INFO"
+      "INFO",
     ]);
 
     // 5. 檢查回覆令牌是否有效
@@ -751,7 +807,7 @@ function WH_replyMessage(replyToken, message) {
         "回覆令牌無效或為測試令牌",
         0,
         "WH_replyMessage",
-        "ERROR"
+        "ERROR",
       ]);
 
       return { success: false, error: "無效的回覆令牌" };
@@ -776,7 +832,7 @@ function WH_replyMessage(replyToken, message) {
         "配置中缺少 CHANNEL_ACCESS_TOKEN",
         0,
         "WH_replyMessage",
-        "ERROR"
+        "ERROR",
       ]);
 
       return { success: false, error: "找不到 CHANNEL_ACCESS_TOKEN" };
@@ -785,16 +841,18 @@ function WH_replyMessage(replyToken, message) {
     // 設置請求頭
     const headers = {
       "Content-Type": "application/json",
-      "Authorization": "Bearer " + CHANNEL_ACCESS_TOKEN
+      Authorization: "Bearer " + CHANNEL_ACCESS_TOKEN,
     };
 
     // 設置請求體
     const payload = {
-      "replyToken": replyToken,
-      "messages": [{
-        "type": "text",
-        "text": textMessage
-      }]
+      replyToken: replyToken,
+      messages: [
+        {
+          type: "text",
+          text: textMessage,
+        },
+      ],
     };
 
     WH_directLogWrite([
@@ -807,12 +865,13 @@ function WH_replyMessage(replyToken, message) {
       "",
       0,
       "WH_replyMessage",
-      "INFO"
+      "INFO",
     ]);
 
     // 使用 axios 發送 HTTP 請求
-    return axios.post(url, payload, { headers: headers })
-      .then(response => {
+    return axios
+      .post(url, payload, { headers: headers })
+      .then((response) => {
         // 記錄回覆結果
         console.log(`LINE API 回覆結果: ${response.status}`);
 
@@ -831,7 +890,7 @@ function WH_replyMessage(replyToken, message) {
             "",
             0,
             "WH_replyMessage",
-            "INFO"
+            "INFO",
           ]);
 
           return { success: true };
@@ -849,13 +908,13 @@ function WH_replyMessage(replyToken, message) {
             JSON.stringify(response.data),
             0,
             "WH_replyMessage",
-            "ERROR"
+            "ERROR",
           ]);
 
           return { success: false, error: JSON.stringify(response.data) };
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.log(`WH_replyMessage 錯誤: ${error}`);
         if (error.response) {
           console.log(`錯誤響應: ${JSON.stringify(error.response.data)}`);
@@ -872,12 +931,11 @@ function WH_replyMessage(replyToken, message) {
           error.toString(),
           0,
           "WH_replyMessage",
-          "ERROR"
+          "ERROR",
         ]);
 
         return { success: false, error: error.toString() };
       });
-
   } catch (error) {
     console.log(`WH_replyMessage 錯誤: ${error}`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
@@ -893,7 +951,7 @@ function WH_replyMessage(replyToken, message) {
       error.toString(),
       0,
       "WH_replyMessage",
-      "ERROR"
+      "ERROR",
     ]);
 
     return { success: false, error: error.toString() };
@@ -941,7 +999,7 @@ async function WH_processEventAsync(event, requestId, userId) {
       JSON.stringify(event),
       0,
       "WH_processEventAsync",
-      "ERROR"
+      "ERROR",
     ]);
     return;
   }
@@ -958,11 +1016,11 @@ async function WH_processEventAsync(event, requestId, userId) {
       "",
       0,
       "WH_processEventAsync",
-      "INFO"
+      "INFO",
     ]);
 
     // 確保設置了預處理的replyToken屬性
-    if (!event.replyToken && event.type === 'message') {
+    if (!event.replyToken && event.type === "message") {
       const errorMsg = `缺少replyToken: ${JSON.stringify(event)} [${requestId}]`;
       console.log(errorMsg);
       WH_directLogWrite([
@@ -975,25 +1033,29 @@ async function WH_processEventAsync(event, requestId, userId) {
         "",
         0,
         "WH_processEventAsync",
-        "ERROR"
+        "ERROR",
       ]);
       return;
     }
 
     // 根據事件類型處理
-    if (event.type === 'message') {
+    if (event.type === "message") {
       // 處理消息類型的事件
-      console.log(`處理消息事件: ${event.message ? event.message.type : 'unknown'} [${requestId}]`);
+      console.log(
+        `處理消息事件: ${event.message ? event.message.type : "unknown"} [${requestId}]`,
+      );
       let result;
 
-      if (event.message.type === 'text') {
+      if (event.message.type === "text") {
         // 安全提取和記錄文本內容
-        const text = event.message.text || '';
-        console.log(`收到文本消息: "${text.substr(0, 50)}${text.length > 50 ? '...' : ''}" [${requestId}]`);
+        const text = event.message.text || "";
+        console.log(
+          `收到文本消息: "${text.substr(0, 50)}${text.length > 50 ? "..." : ""}" [${requestId}]`,
+        );
 
         WH_directLogWrite([
           WH_formatDateTime(new Date()),
-          `WH 2.0.3: 收到文本消息: "${text.substr(0, 50)}${text.length > 50 ? '...' : ''}" [${requestId}]`,
+          `WH 2.0.3: 收到文本消息: "${text.substr(0, 50)}${text.length > 50 ? "..." : ""}" [${requestId}]`,
           "訊息接收",
           userId,
           "",
@@ -1001,7 +1063,7 @@ async function WH_processEventAsync(event, requestId, userId) {
           "",
           0,
           "WH_processEventAsync",
-          "INFO"
+          "INFO",
         ]);
 
         // 準備分發參數 - 明確包含replyToken
@@ -1009,11 +1071,13 @@ async function WH_processEventAsync(event, requestId, userId) {
           text: text,
           userId: userId,
           timestamp: event.timestamp,
-          replyToken: event.replyToken // 確保replyToken被傳遞
+          replyToken: event.replyToken, // 確保replyToken被傳遞
         };
 
         // 記錄完整的消息數據
-        console.log(`準備訊息數據: ${JSON.stringify(messageData)} [${requestId}]`);
+        console.log(
+          `準備訊息數據: ${JSON.stringify(messageData)} [${requestId}]`,
+        );
 
         // 調用分發函數
         try {
@@ -1029,13 +1093,11 @@ async function WH_processEventAsync(event, requestId, userId) {
             "",
             0,
             "WH_processEventAsync",
-            "INFO"
+            "INFO",
           ]);
 
           // 關鍵：調用DD_distributeData並保留完整結果 - 修復：使用await處理異步
-          result = await DD.DD_distributeData(messageData, 'LINE', 0);
-
-
+          result = await DD.DD_distributeData(messageData, "LINE", 0);
 
           // 記錄DD_distributeData處理結果預覽
           if (result) {
@@ -1043,17 +1105,23 @@ async function WH_processEventAsync(event, requestId, userId) {
             const resultPreview = {
               success: result.success,
               hasResponseMessage: !!result.responseMessage,
-              responseMsgLength: result.responseMessage ? result.responseMessage.length : 0,
+              responseMsgLength: result.responseMessage
+                ? result.responseMessage.length
+                : 0,
               errorType: result.errorType || "無",
               moduleCode: result.moduleCode || "無",
-              hasPartialData: !!result.partialData
+              hasPartialData: !!result.partialData,
             };
 
-            console.log(`DD_distributeData處理完成，結果預覽: ${JSON.stringify(resultPreview)} [${requestId}]`);
+            console.log(
+              `DD_distributeData處理完成，結果預覽: ${JSON.stringify(resultPreview)} [${requestId}]`,
+            );
 
             // 詳細記錄partialData內容，這對於診斷負數金額和支付方式問題很關鍵
             if (result.partialData) {
-              console.log(`partialData內容: ${JSON.stringify(result.partialData)} [${requestId}]`);
+              console.log(
+                `partialData內容: ${JSON.stringify(result.partialData)} [${requestId}]`,
+              );
             }
           } else {
             console.log(`DD_distributeData返回空結果 [${requestId}]`);
@@ -1069,8 +1137,8 @@ async function WH_processEventAsync(event, requestId, userId) {
                 subject: "未知科目",
                 amount: 0,
                 rawAmount: "0",
-                paymentMethod: "未指定支付方式"
-              }
+                paymentMethod: "未指定支付方式",
+              },
             };
 
             WH_directLogWrite([
@@ -1083,7 +1151,7 @@ async function WH_processEventAsync(event, requestId, userId) {
               "",
               0,
               "WH_processEventAsync",
-              "ERROR"
+              "ERROR",
             ]);
           }
 
@@ -1092,17 +1160,19 @@ async function WH_processEventAsync(event, requestId, userId) {
             // 從partialData中嘗試提取有用資訊
             const subject = result.partialData?.subject || "未知科目";
             const amount = result.partialData?.rawAmount || "0";
-            const paymentMethod = result.partialData?.paymentMethod || "未指定支付方式";
+            const paymentMethod =
+              result.partialData?.paymentMethod || "未指定支付方式";
             const errorMsg = result.error || result.message || "未知錯誤";
 
-            result.responseMessage = `記帳失敗！\n` +
-                                    `金額：${amount}元\n` +
-                                    `支付方式：${paymentMethod}\n` +
-                                    `時間：${WH_formatDateTime(new Date())}\n` +
-                                    `科目：${subject}\n` +
-                                    `備註：無\n` +
-                                    `使用者類型：J\n` +
-                                    `錯誤原因：${errorMsg}`;
+            result.responseMessage =
+              `記帳失敗！\n` +
+              `金額：${amount}元\n` +
+              `支付方式：${paymentMethod}\n` +
+              `時間：${WH_formatDateTime(new Date())}\n` +
+              `科目：${subject}\n` +
+              `備註：無\n` +
+              `使用者類型：J\n` +
+              `錯誤原因：${errorMsg}`;
 
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
@@ -1114,7 +1184,7 @@ async function WH_processEventAsync(event, requestId, userId) {
               "",
               0,
               "WH_processEventAsync",
-              "INFO"
+              "INFO",
             ]);
           }
 
@@ -1123,17 +1193,20 @@ async function WH_processEventAsync(event, requestId, userId) {
           const replyResult = WH_replyMessage(event.replyToken, result);
 
           // 記錄回覆結果
-          console.log(`訊息回覆結果: ${JSON.stringify(replyResult)} [${requestId}]`);
-
+          console.log(
+            `訊息回覆結果: ${JSON.stringify(replyResult)} [${requestId}]`,
+          );
         } catch (ddError) {
           // 異常捕獲處理 - 保留所有可用資訊
-          console.log(`DD_distributeData調用失敗: ${ddError.toString()} [${requestId}]`);
+          console.log(
+            `DD_distributeData調用失敗: ${ddError.toString()} [${requestId}]`,
+          );
           if (ddError.stack) {
             console.log(`錯誤堆疊: ${ddError.stack} [${requestId}]`);
           }
 
           // 提取可能的原始輸入信息
-          const originalInput = text.split('-');
+          const originalInput = text.split("-");
           const possibleSubject = originalInput[0]?.trim() || "未知科目";
           let possibleAmount = originalInput[1]?.trim() || "0";
           let possiblePaymentMethod = "未指定支付方式";
@@ -1144,7 +1217,7 @@ async function WH_processEventAsync(event, requestId, userId) {
             if (text.includes(method)) {
               possiblePaymentMethod = method;
               // 從possibleAmount中移除支付方式
-              possibleAmount = possibleAmount.replace(method, '').trim();
+              possibleAmount = possibleAmount.replace(method, "").trim();
               break;
             }
           }
@@ -1156,11 +1229,11 @@ async function WH_processEventAsync(event, requestId, userId) {
             error: ddError.toString(),
             partialData: {
               subject: possibleSubject,
-              amount: possibleAmount.replace(/[^\d-]/g, ''),
-              rawAmount: possibleAmount.replace(/[^\d-]/g, ''),
+              amount: possibleAmount.replace(/[^\d-]/g, ""),
+              rawAmount: possibleAmount.replace(/[^\d-]/g, ""),
               paymentMethod: possiblePaymentMethod,
-              remark: possibleSubject
-            }
+              remark: possibleSubject,
+            },
           };
 
           WH_directLogWrite([
@@ -1173,14 +1246,13 @@ async function WH_processEventAsync(event, requestId, userId) {
             ddError.toString(),
             0,
             "WH_processEventAsync",
-            "ERROR"
+            "ERROR",
           ]);
 
           // 仍然嘗試回覆用戶 - 使用完整的result對象
           WH_replyMessage(event.replyToken, result);
         }
-      }
-      else if (event.message.type === 'location') {
+      } else if (event.message.type === "location") {
         console.log(`收到位置消息 [${requestId}]`);
         WH_directLogWrite([
           WH_formatDateTime(new Date()),
@@ -1192,12 +1264,11 @@ async function WH_processEventAsync(event, requestId, userId) {
           "",
           0,
           "WH_processEventAsync",
-          "INFO"
+          "INFO",
         ]);
 
         // 位置消息處理 (如需要可在此處添加)
-      }
-      else {
+      } else {
         // 其他類型消息處理
         console.log(`收到其他類型消息: ${event.message.type} [${requestId}]`);
         WH_directLogWrite([
@@ -1210,13 +1281,13 @@ async function WH_processEventAsync(event, requestId, userId) {
           "",
           0,
           "WH_processEventAsync",
-          "INFO"
+          "INFO",
         ]);
 
         // 發送簡單提示訊息
         WH_replyMessage(event.replyToken, {
           success: false,
-          responseMessage: "很抱歉，目前僅支援文字訊息處理。"
+          responseMessage: "很抱歉，目前僅支援文字訊息處理。",
         });
       }
     } else {
@@ -1232,31 +1303,30 @@ async function WH_processEventAsync(event, requestId, userId) {
         "",
         0,
         "WH_processEventAsync",
-        "INFO"
+        "INFO",
       ]);
 
       // 處理特定非消息事件類型
-      if (event.type === 'follow') {
+      if (event.type === "follow") {
         // 處理用戶關注事件
         WH_replyMessage(event.replyToken, {
           success: true,
-          responseMessage: "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。"
+          responseMessage:
+            "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
         });
-      }
-      else if (event.type === 'unfollow') {
+      } else if (event.type === "unfollow") {
         // 處理用戶取消關注事件 - 無法回覆
         console.log(`用戶 ${userId} 取消關注 [${requestId}]`);
-      }
-      else if (event.type === 'join') {
+      } else if (event.type === "join") {
         // 處理加入群組事件
         WH_replyMessage(event.replyToken, {
           success: true,
-          responseMessage: "感謝邀請記帳助手加入！\n輸入 '幫助' 或 '?' 可獲取使用說明。"
+          responseMessage:
+            "感謝邀請記帳助手加入！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
         });
       }
       // 可處理其他事件類型...
     }
-
   } catch (error) {
     // 捕獲所有處理錯誤
     console.log(`事件處理主錯誤: ${error} [${requestId}]`);
@@ -1270,7 +1340,7 @@ async function WH_processEventAsync(event, requestId, userId) {
       error.toString(),
       0,
       "WH_processEventAsync",
-      "ERROR"
+      "ERROR",
     ]);
 
     // 嘗試回覆用戶錯誤信息（如果可能）
@@ -1278,7 +1348,7 @@ async function WH_processEventAsync(event, requestId, userId) {
       if (event && event.replyToken) {
         WH_replyMessage(event.replyToken, {
           success: false,
-          responseMessage: "處理您的請求時發生系統錯誤，請稍後再試。"
+          responseMessage: "處理您的請求時發生系統錯誤，請稍後再試。",
         });
       }
     } catch (replyError) {
@@ -1315,9 +1385,9 @@ function WH_verifySignature(signature, body) {
     }
 
     // 使用 crypto 模組計算簽章
-    const hmac = crypto.createHmac('sha256', channelSecret);
+    const hmac = crypto.createHmac("sha256", channelSecret);
     hmac.update(body);
-    const calculatedSignature = hmac.digest('base64');
+    const calculatedSignature = hmac.digest("base64");
 
     // 比較計算出的簽章與收到的簽章
     const isValid = signature === calculatedSignature;
@@ -1336,26 +1406,27 @@ function WH_verifySignature(signature, body) {
 }
 
 // 測試端點 - 檢查服務狀態和HTTPS支持
-app.get('/', (req, res) => {
-  const isHTTPS = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https';
+app.get("/", (req, res) => {
+  const isHTTPS =
+    req.protocol === "https" || req.headers["x-forwarded-proto"] === "https";
 
   res.send(`
     <h1>LCAS Webhook Service is running! 🤖</h1>
     <p>版本: 2.0.7 (2025-06-25)</p>
-    <p>協議: ${req.protocol.toUpperCase()} ${isHTTPS ? '✅ 支持HTTPS' : '❌ 僅HTTP'}</p>
-    <p>Webhook URL: <code>${req.protocol}://${req.get('host')}/webhook</code></p>
-    <p>建議的LINE Webhook URL: <code>https://${req.get('host')}/webhook</code></p>
+    <p>協議: ${req.protocol.toUpperCase()} ${isHTTPS ? "✅ 支持HTTPS" : "❌ 僅HTTP"}</p>
+    <p>Webhook URL: <code>${req.protocol}://${req.get("host")}/webhook</code></p>
+    <p>建議的LINE Webhook URL: <code>https://${req.get("host")}/webhook</code></p>
     <p>時間: ${WH_formatDateTime(new Date())}</p>
     <hr>
     <h2>配置狀態:</h2>
     <ul>
-      <li>LINE_CHANNEL_SECRET: ${WH_CONFIG.LINE.CHANNEL_SECRET ? '✅ 已設置' : '❌ 未設置'}</li>
-      <li>LINE_CHANNEL_ACCESS_TOKEN: ${WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN ? '✅ 已設置' : '❌ 未設置'}</li>
-      <li>SPREADSHEET_ID: ${WH_CONFIG.SHEET.ID ? '✅ 已設置' : '❌ 未設置'}</li>
-      <li>測試模式: ${WH_CONFIG.TEST_MODE ? '🟡 開啟 (跳過簽章驗證)' : '🔴 關閉'}</li>
-      <li>調試模式: ${WH_CONFIG.DEBUG ? '🟡 開啟' : '🔴 關閉'}</li>
+      <li>LINE_CHANNEL_SECRET: ${WH_CONFIG.LINE.CHANNEL_SECRET ? "✅ 已設置" : "❌ 未設置"}</li>
+      <li>LINE_CHANNEL_ACCESS_TOKEN: ${WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN ? "✅ 已設置" : "❌ 未設置"}</li>
+      <li>SPREADSHEET_ID: ${WH_CONFIG.SHEET.ID ? "✅ 已設置" : "❌ 未設置"}</li>
+      <li>測試模式: ${WH_CONFIG.TEST_MODE ? "🟡 開啟 (跳過簽章驗證)" : "🔴 關閉"}</li>
+      <li>調試模式: ${WH_CONFIG.DEBUG ? "🟡 開啟" : "🔴 關閉"}</li>
     </ul>
-    ${!isHTTPS ? '<p style="color:red;font-weight:bold;">⚠️ 警告：LINE Webhook需要HTTPS！請確認您的Replit支持HTTPS訪問。</p>' : ''}
+    ${!isHTTPS ? '<p style="color:red;font-weight:bold;">⚠️ 警告：LINE Webhook需要HTTPS！請確認您的Replit支持HTTPS訪問。</p>' : ""}
     <hr>
     <p><strong>⚠️ 注意：這是連通測試版本</strong></p>
     <p>由於DD_distributeData函數未載入，在LINE中發送訊息會導致錯誤，但可以測試webhook連接。</p>
@@ -1366,7 +1437,7 @@ app.get('/', (req, res) => {
 });
 
 // 測試WH模組功能
-app.get('/test-wh', async (req, res) => {
+app.get("/test-wh", async (req, res) => {
   try {
     const testResults = {
       success: true,
@@ -1374,20 +1445,22 @@ app.get('/test-wh', async (req, res) => {
       server: {
         status: "運行中",
         port: process.env.PORT || 5000,
-        protocol: req.protocol
+        protocol: req.protocol,
       },
       config: {
         lineChannelSecret: !!WH_CONFIG.LINE.CHANNEL_SECRET,
         lineChannelAccessToken: !!WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN,
         spreadsheetId: !!WH_CONFIG.SHEET.ID,
         testMode: WH_CONFIG.TEST_MODE,
-        debugMode: WH_CONFIG.DEBUG
+        debugMode: WH_CONFIG.DEBUG,
       },
       webhook: {
-        endpoint: `${req.protocol}://${req.get('host')}/webhook`,
-        httpsSupported: req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https'
+        endpoint: `${req.protocol}://${req.get("host")}/webhook`,
+        httpsSupported:
+          req.protocol === "https" ||
+          req.headers["x-forwarded-proto"] === "https",
       },
-      note: "⚠️ 連通測試版本 - DD_distributeData函數未載入，發送訊息會出錯但可測試連接"
+      note: "⚠️ 連通測試版本 - DD_distributeData函數未載入，發送訊息會出錯但可測試連接",
     };
 
     // 測試日誌寫入
@@ -1398,44 +1471,44 @@ app.get('/test-wh', async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: WH_formatDateTime(new Date())
+      timestamp: WH_formatDateTime(new Date()),
     });
   }
 });
 
 // HTTPS支持檢查端點
-app.get('/check-https', (req, res) => {
+app.get("/check-https", (req, res) => {
   const protocol = req.protocol;
-  const forwardedProto = req.headers['x-forwarded-proto'];
-  const isHTTPS = protocol === 'https' || forwardedProto === 'https';
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const isHTTPS = protocol === "https" || forwardedProto === "https";
 
   res.json({
     protocol: protocol,
     forwardedProto: forwardedProto,
     isHTTPS: isHTTPS,
-    recommendedWebhookURL: isHTTPS 
-      ? `https://${req.get('host')}/webhook`
+    recommendedWebhookURL: isHTTPS
+      ? `https://${req.get("host")}/webhook`
       : `⚠️ HTTPS不可用，LINE Webhook無法使用`,
     testURLs: {
-      http: `http://${req.get('host')}/`,
-      https: `https://${req.get('host')}/`
+      http: `http://${req.get("host")}/`,
+      https: `https://${req.get("host")}/`,
     },
     headers: {
-      host: req.get('host'),
-      'x-forwarded-proto': req.headers['x-forwarded-proto'],
-      'x-forwarded-for': req.headers['x-forwarded-for']
+      host: req.get("host"),
+      "x-forwarded-proto": req.headers["x-forwarded-proto"],
+      "x-forwarded-for": req.headers["x-forwarded-for"],
     },
     lineWebhookCompatible: isHTTPS,
-    message: isHTTPS ? 
-      "✅ 支持HTTPS，可以用於LINE Webhook" : 
-      "❌ 僅支持HTTP，無法用於LINE Webhook"
+    message: isHTTPS
+      ? "✅ 支持HTTPS，可以用於LINE Webhook"
+      : "❌ 僅支持HTTP，無法用於LINE Webhook",
   });
 });
 
 // 更新 Express 路由處理以包含簽章驗證（保持原版本）
-app.post('/webhook', (req, res) => {
+app.post("/webhook", (req, res) => {
   // 獲取 LINE 平台簽章
-  const signature = req.headers['x-line-signature'];
+  const signature = req.headers["x-line-signature"];
 
   // 獲取請求主體
   const body = JSON.stringify(req.body);
@@ -1454,12 +1527,12 @@ app.post('/webhook', (req, res) => {
       "",
       0,
       "app.post(/webhook)",
-      "ERROR"
+      "ERROR",
     ]);
 
     return res.status(403).json({
       status: "error",
-      error: "簽章驗證失敗"
+      error: "簽章驗證失敗",
     });
   }
 
@@ -1470,7 +1543,7 @@ app.post('/webhook', (req, res) => {
 // 設定端口和啟動服務器
 const port = process.env.PORT || 3000;
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, "0.0.0.0", () => {
   console.log(`🚀 WH Webhook Server is running on port ${port}`);
   console.log(`📅 啟動時間: ${WH_formatDateTime(new Date())}`);
   console.log(`🌐 Server is accessible at http://0.0.0.0:${port}`);
@@ -1487,13 +1560,13 @@ app.listen(port, '0.0.0.0', () => {
     "",
     0,
     "app.listen",
-    "INFO"
+    "INFO",
   ]);
 });
 
 // 優雅關閉處理
-process.on('SIGTERM', () => {
-  console.log('🛑 收到SIGTERM信號，正在關閉服務器...');
+process.on("SIGTERM", () => {
+  console.log("🛑 收到SIGTERM信號，正在關閉服務器...");
   WH_directLogWrite([
     WH_formatDateTime(new Date()),
     "WH 2.0.7: 收到SIGTERM信號，正在關閉服務器",
@@ -1504,14 +1577,14 @@ process.on('SIGTERM', () => {
     "",
     0,
     "process.SIGTERM",
-    "INFO"
+    "INFO",
   ]);
 
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
-  console.log('🛑 收到SIGINT信號，正在關閉服務器...');
+process.on("SIGINT", () => {
+  console.log("🛑 收到SIGINT信號，正在關閉服務器...");
   WH_directLogWrite([
     WH_formatDateTime(new Date()),
     "WH 2.0.7: 收到SIGINT信號，正在關閉服務器",
@@ -1522,15 +1595,15 @@ process.on('SIGINT', () => {
     "",
     0,
     "process.SIGINT",
-    "INFO"
+    "INFO",
   ]);
 
   process.exit(0);
 });
 
 // 未捕獲異常處理
-process.on('uncaughtException', (error) => {
-  console.error('💥 未捕獲的異常:', error);
+process.on("uncaughtException", (error) => {
+  console.error("💥 未捕獲的異常:", error);
   WH_directLogWrite([
     WH_formatDateTime(new Date()),
     `WH 2.0.7: 未捕獲的異常: ${error.toString()}`,
@@ -1541,14 +1614,14 @@ process.on('uncaughtException', (error) => {
     error.stack || error.toString(),
     0,
     "process.uncaughtException",
-    "CRITICAL"
+    "CRITICAL",
   ]);
 
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 未處理的Promise拒絕:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("💥 未處理的Promise拒絕:", reason);
   WH_directLogWrite([
     WH_formatDateTime(new Date()),
     `WH 2.0.7: 未處理的Promise拒絕: ${reason}`,
@@ -1559,7 +1632,7 @@ process.on('unhandledRejection', (reason, promise) => {
     reason.toString(),
     0,
     "process.unhandledRejection",
-    "CRITICAL"
+    "CRITICAL",
   ]);
 });
 
@@ -1579,7 +1652,7 @@ module.exports = {
   // 新增的導出
   WH_processEventAsync,
   WH_verifySignature,
-  doPost,  // 導出主要處理函數
+  doPost, // 導出主要處理函數
   processWebhookAsync,
   WH_directLogWrite,
   WH_ReceiveDDdata,
@@ -1588,7 +1661,7 @@ module.exports = {
   setDependencies,
 
   // 配置導出
-  WH_CONFIG
+  WH_CONFIG,
 };
 
 /**
@@ -1614,16 +1687,18 @@ function WH_ReceiveDDdata(data, action) {
     "",
     0,
     "WH_ReceiveDDdata",
-    "INFO"
+    "INFO",
   ]);
 
   try {
     // 根據操作類型執行不同功能
-    switch(action) {
+    switch (action) {
       case "reply":
         // 直接調用reply功能，而非入口函數
         if (data && data.replyToken) {
-          console.log(`執行回覆訊息操作，Token: ${data.replyToken.substring(0, 6)}...`);
+          console.log(
+            `執行回覆訊息操作，Token: ${data.replyToken.substring(0, 6)}...`,
+          );
           return WH_replyMessage(data.replyToken, data.message || data);
         } else {
           const error = "回覆操作缺少replyToken或消息內容";
@@ -1634,12 +1709,18 @@ function WH_ReceiveDDdata(data, action) {
       case "push":
         // 如果需要實現消息推送功能
         console.log(`推送訊息功能尚未實現`);
-        return { success: false, error: "推送訊息功能尚未實現，請在WH模組中添加此功能" };
+        return {
+          success: false,
+          error: "推送訊息功能尚未實現，請在WH模組中添加此功能",
+        };
 
       case "multicast":
         // 如果需要實現群發功能
         console.log(`群發訊息功能尚未實現`);
-        return { success: false, error: "群發訊息功能尚未實現，請在WH模組中添加此功能" };
+        return {
+          success: false,
+          error: "群發訊息功能尚未實現，請在WH模組中添加此功能",
+        };
 
       default:
         const errorMsg = `未知操作類型: ${action}`;
@@ -1656,7 +1737,7 @@ function WH_ReceiveDDdata(data, action) {
           errorMsg,
           0,
           "WH_ReceiveDDdata",
-          "ERROR"
+          "ERROR",
         ]);
 
         return { success: false, error: errorMsg };
@@ -1676,7 +1757,7 @@ function WH_ReceiveDDdata(data, action) {
       error.toString(),
       0,
       "WH_ReceiveDDdata",
-      "ERROR"
+      "ERROR",
     ]);
 
     return { success: false, error: error.toString() };
