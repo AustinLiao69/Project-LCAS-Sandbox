@@ -10,6 +10,9 @@
 const BK = require("./2001. BK.js");
 const DL = require("./2010. DL.js");
 
+// 確保BK函數正確引用
+const { BK_processBookkeeping } = BK;
+
 // Node.js 模組依賴
 const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
@@ -179,10 +182,10 @@ const DD_SUBJECT_CODE_SYNONYMS_COLUMN = 5; // 新增：同義詞列（第5列）
 const DD_USER_PREF_SHEET_NAME = "09. 使用者偏好"; // 新增：用戶偏好表名稱
 const DD_MODULE_PREFIX = "DD_";
 const DD_CONFIG = {
-  DEBUG: true,
+  DEBUG: false,                // 關閉DEBUG模式減少日誌輸出
   LOG_SHEET_NAME: getScriptProperty("LOG_SHEET_NAME"),
   SPREADSHEET_ID: getScriptProperty("SPREADSHEET_ID"),
-  TIMEZONE: "Asia/Taipei",
+  TIMEZONE: "Asia/Taipei",     // GMT+8 台灣時區
   DEFAULT_SUBJECT: "其他支出",
 };
 
@@ -885,7 +888,7 @@ function DD_processForWH(data) {
  * @param {Object} data - 來自DD_processUserMessage或其他來源的數據
  * @return {Object} 處理結果
  */
-function DD_processForBK(data) {
+async function DD_processForBK(data) {
   try {
     // 確保處理ID存在
     const processId = data.processId || Utilities.getUuid().substring(0, 8);
@@ -1016,7 +1019,7 @@ function DD_processForBK(data) {
       "DD_processForBK",
       "DD_processForBK",
     );
-    const result = BK_processBookkeeping(bookkeepingData);
+    const result = await BK.BK_processBookkeeping(bookkeepingData);
     DD_logInfo(
       `BK_processBookkeeping調用完成，結果: ${result.success ? "成功" : "失敗"} [${processId}]`,
       "模組調用",
@@ -1977,9 +1980,9 @@ async function DD_getSubjectCode(subjectName) {
           const normalizedSynonym = synonyms[j].trim();
           const synonymLower = normalizedSynonym.toLowerCase();
 
-          // 如果同義詞包含空格，特別記錄
-          if (synonymLower.includes(" ")) {
-            console.log(`處理含空格同義詞: "${synonymLower}"`);
+          // 如果同義詞包含空格，只在找到匹配時記錄
+          if (synonymLower.includes(" ") && synonymLower === inputLower) {
+            console.log(`匹配含空格同義詞: "${synonymLower}"`);
           }
 
           // 精確比較(區分大小寫)
