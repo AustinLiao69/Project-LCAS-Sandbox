@@ -1810,13 +1810,16 @@ if (typeof Utilities === "object") {
 
   if (!Utilities.formatDate) {
     Utilities.formatDate = (date, timezone, format) => {
-      // 基本的日期格式化，保持與原始GAS功能相同
+      // 增強的日期格式化，支援更多格式
       if (format === "yyyy/M/d") {
         return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
       } else if (format === "HH:mm") {
         return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
       } else if (format === "yyyy-MM-dd HH:mm:ss") {
         return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
+      } else if (format === "yyyy/MM/dd HH:mm") {
+        // 關鍵修復：支援58號函數使用的格式
+        return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
       }
       return date.toString();
     };
