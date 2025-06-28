@@ -1,5 +1,5 @@
 /**
- * DL_診斷與日誌模組_3.0.2
+ * DL_診斷與日誌模組_3.0.3
  * 提供統一的日誌記錄和系統診斷功能
  * @update: V3.0.1 - 從Firebase改為Google Sheets存儲（完整功能版）
  * @author: AustinLiao69
@@ -69,13 +69,13 @@ async function initializeGoogleAuth() {
   try {
     if (DL_CONFIG.authClient) return DL_CONFIG.authClient;
 
-    const credentialsPath = process.env.GOOGLE_SHEETS_CREDENTIALS;
-    if (!credentialsPath) {
+    const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
+    if (!credentialsJson) {
       throw new Error('未設置GOOGLE_SHEETS_CREDENTIALS環境變數');
     }
 
     const auth = new google.auth.GoogleAuth({
-      keyFilename: credentialsPath,
+      credentials: JSON.parse(credentialsJson),
       scopes: ['https://www.googleapis.com/auth/spreadsheets']
     });
 

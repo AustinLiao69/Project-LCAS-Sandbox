@@ -1,5 +1,5 @@
 /**
- * DD_資料分配模組_2.0.11
+ * DD_資料分配模組_2.0.12
  * @module 資料分配模組
  * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
  * @author AustinLiao69
@@ -35,7 +35,7 @@ async function initGoogleSheets() {
 
   try {
     const auth = new google.auth.GoogleAuth({
-      credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "{}"),
+      credentials: JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS || "{}"),
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
