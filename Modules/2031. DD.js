@@ -1035,8 +1035,8 @@ async function DD_processForBK(data) {
     // 構建回覆訊息
     let responseMessage = "";
     if (result.success) {
-      // 成功回覆 - 修正"付款方式"為"支付方式"，並添加收支ID
-      responseMessage = `記帳成功！\n金額：${bookkeepingData.amount}元 (${bookkeepingData.action})\n支付方式：${result.data.paymentMethod}\n時間：${result.data.date}\n科目：${bookkeepingData.subjectName}\n收支ID：${result.data.id || "未知"}`;
+      // 成功回覆 - 修正"付款方式"為"支付方式"，並添加收支ID、備註和使用者類型
+      responseMessage = `記帳成功！\n金額：${bookkeepingData.amount}元 (${bookkeepingData.action})\n支付方式：${result.data.paymentMethod}\n時間：${result.data.date}\n科目：${bookkeepingData.subjectName}\n備註：${result.data.remark || "無"}\n收支ID：${result.data.id || "未知"}\n使用者類型：${result.data.userType || userType || "J"}`;
 
       // 記錄成功訊息
       DD_logInfo(
