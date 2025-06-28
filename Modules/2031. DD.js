@@ -1,9 +1,9 @@
 /**
- * DD_資料分配模組_2.0.14
+ * DD_資料分配模組_2.0.15
  * @module 資料分配模組
  * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
  * @author AustinLiao69
- * @update 2025-06-28: 修復 DD_getAllSubjects 函數異步聲明問題
+ * @update 2025-06-28: 修復 DD_processForBK 函數中 userId 變數作用域問題
  */
 
 // 首先引入其他模組
@@ -1075,11 +1075,14 @@ function DD_processForBK(data) {
       userType: result.data ? result.data.userType : userType, // 包含userType以便追蹤
     };
   } catch (error) {
+    // 安全獲取 userId（在 catch 區塊中重新定義以確保作用域）
+    const userId = data && (data.userId || data.user_id) ? (data.userId || data.user_id) : "";
+    
     // 記錄錯誤
     DD_logError(
       `處理BK數據時出錯: ${error}`,
       "數據處理",
-      userId || "",
+      userId,
       "BK_PROCESS_ERROR",
       error.toString(),
       "DD_processForBK",
