@@ -1,9 +1,9 @@
 /**
- * DD_資料分配模組_2.0.15
+ * DD_資料分配模組_2.0.16
  * @module 資料分配模組
  * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
  * @author AustinLiao69
- * @update 2025-06-28: 修復 DD_processForBK 函數中 userId 變數作用域問題
+ * @update 2025-06-28: 修復 DD_processForBK 異步調用問題，確保正確返回記帳結果
  */
 
 // 首先引入其他模組
@@ -142,7 +142,7 @@ function getScriptProperty(key) {
  */
 try {
   console.log(`DD模組初始化檢查 [${new Date().toISOString()}]`);
-  console.log(`DD模組版本: 2.0.2 (2025-06-19)`);
+  console.log(`DD模組版本: 2.0.16 (2025-06-28)`);
   console.log(`執行時間: ${new Date().toLocaleString()}`);
 
   const ss = SpreadsheetApp.openById(getScriptProperty("SPREADSHEET_ID"));
@@ -1019,7 +1019,11 @@ async function DD_processForBK(data) {
       "DD_processForBK",
       "DD_processForBK",
     );
+    
+    console.log(`[${processId}] 即將調用 BK.BK_processBookkeeping，數據: ${JSON.stringify(bookkeepingData).substring(0, 200)}...`);
     const result = await BK.BK_processBookkeeping(bookkeepingData);
+    console.log(`[${processId}] BK.BK_processBookkeeping 返回結果: ${JSON.stringify(result).substring(0, 300)}...`);
+    
     DD_logInfo(
       `BK_processBookkeeping調用完成，結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`,
       "模組調用",

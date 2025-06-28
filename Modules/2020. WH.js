@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.0.16
+ * WH_Webhook處理模組_2.0.8
  * @module Webhook模組
  * @description LINE Webhook處理模組 - 修復異步調用問題
- * @update 2025-06-28: 修復DD_distributeData異步調用處理和函數聲明
+ * @update 2025-06-28: 升級版本，修復DD_distributeData異步調用處理和函數聲明
 */
 
 // 首先引入其他模組
@@ -45,7 +45,7 @@ const WH_CONFIG = {
 };
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.0.7 (2025-06-25)");
+console.log("WH模組初始化，版本: 2.0.8 (2025-06-28)");
 
 // 創建 Express 應用
 const app = express();
