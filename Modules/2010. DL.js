@@ -1,5 +1,5 @@
 /**
- * DL_診斷與日誌模組_3.0.2
+ * DL_診斷與日誌模組_3.0.3
  * 提供統一的日誌記錄和系統診斷功能
  * @update: V3.0.1 - 從Firebase改為Google Sheets存儲（完整功能版）
  * @author: AustinLiao69
