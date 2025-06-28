@@ -438,7 +438,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
       "DD_distributeData",
     );
 
-    const dispatchResult = DD_dispatchData(data, category);
+    const dispatchResult = await DD_dispatchData(data, category);
     console.log(`數據分發完成，結果: ${JSON.stringify(dispatchResult)}`);
     DD_logInfo(
       `數據分發完成，結果: ${JSON.stringify(dispatchResult)}`,
@@ -614,7 +614,7 @@ function DD_classifyData(data, source) {
  * @param {string} targetModule - 目標模組的名稱
  * @returns {object} - 處理結果
  */
-function DD_dispatchData(data, targetModule) {
+async function DD_dispatchData(data, targetModule) {
   const dispatchId = Utilities.getUuid().substring(0, 8);
   const userId = data.user_id || data.userId || "";
 
@@ -670,7 +670,7 @@ function DD_dispatchData(data, targetModule) {
         } else {
           try {
             console.log(`開始調用DD_processForBK [${dispatchId}]`);
-            result = DD_processForBK(data);
+            result = await DD_processForBK(data);
             console.log(
               `DD_processForBK調用完成，結果: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
             );
@@ -1021,7 +1021,7 @@ async function DD_processForBK(data) {
     );
     const result = await BK.BK_processBookkeeping(bookkeepingData);
     DD_logInfo(
-      `BK_processBookkeeping調用完成，結果: ${result.success ? "成功" : "失敗"} [${processId}]`,
+      `BK_processBookkeeping調用完成，結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`,
       "模組調用",
       userId,
       "DD_processForBK",
