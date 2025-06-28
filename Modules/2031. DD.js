@@ -1,9 +1,9 @@
 /**
- * DD_資料分配模組_2.0.13
+ * DD_資料分配模組_2.0.14
  * @module 資料分配模組
  * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
  * @author AustinLiao69
- * @update 2025-06-28: 修復科目表讀取異步問題和模糊匹配函數
+ * @update 2025-06-28: 修復 DD_getAllSubjects 函數異步聲明問題
  */
 
 // 首先引入其他模組
@@ -1854,12 +1854,12 @@ if (typeof SpreadsheetApp === "object") {
 
 /**
  * 16. 查詢科目代碼表的函數 - 增強版，支持複合詞匹配與空格同義詞
- * @version 2025-04-30-V4.1.5
+ * @version 2025-04-30-V4.1.6
  * @author AustinLiao69
  * @param {string} subjectName - 要查詢的科目名稱
  * @returns {object|null} - 如果找到，返回包含 {majorCode, majorName, subCode, subName} 的物件，否則返回 null
  */
-function DD_getSubjectCode(subjectName) {
+async function DD_getSubjectCode(subjectName) {
   const scId = Utilities.getUuid().substring(0, 8);
   console.log(`### 使用2025-04-30-V4.1.5增強版DD_getSubjectCode ###`);
   console.log(`查詢科目代碼: "${subjectName}", ID=${scId}`);
