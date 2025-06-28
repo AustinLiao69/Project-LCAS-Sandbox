@@ -74,6 +74,27 @@ function getScriptProperty(key) {
   return process.env[key];
 }
 
+// Google Sheets 認證初始化（如果 WH 模組需要存取 Google Sheets）
+async function WH_initializeGoogleAuth() {
+  try {
+    const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
+    if (!credentialsJson) {
+      throw new Error('未設置GOOGLE_SHEETS_CREDENTIALS環境變數');
+    }
+
+    const { google } = require('googleapis');
+    const auth = new google.auth.GoogleAuth({
+      credentials: JSON.parse(credentialsJson),
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    });
+
+    return await auth.getClient();
+  } catch (error) {
+    console.error('WH Google API認證初始化失敗:', error);
+    throw error;
+  }
+}
+
 // 日期時間格式化
 function WH_formatDateTime(date) {
   return moment(date).tz(WH_CONFIG.TIMEZONE).format("YYYY-MM-DD HH:mm:ss");

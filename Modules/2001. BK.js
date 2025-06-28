@@ -86,13 +86,14 @@ async function initializeGoogleAuth() {
     // 如果已經初始化過，直接返回
     if (BK_INIT_STATUS.authClient) return BK_INIT_STATUS.authClient;
 
-    // 讀取憑證文件
-    const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    if (!credentialsPath) {
-      throw new Error('未設置GOOGLE_APPLICATION_CREDENTIALS環境變數');
+    // 讀取憑證 JSON 內容
+    const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
+    if (!credentialsJson) {
+      throw new Error('未設置GOOGLE_SHEETS_CREDENTIALS環境變數');
     }
 
     const auth = new google.auth.GoogleAuth({
+      credentials: JSON.parse(credentialsJson),
       scopes: ['https://www.googleapis.com/auth/spreadsheets']
     });
 
