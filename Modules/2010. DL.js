@@ -69,13 +69,13 @@ async function initializeGoogleAuth() {
   try {
     if (DL_CONFIG.authClient) return DL_CONFIG.authClient;
 
-    const credentialsPath = process.env.GOOGLE_SHEETS_CREDENTIALS;
-    if (!credentialsPath) {
+    const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
+    if (!credentialsJson) {
       throw new Error('未設置GOOGLE_SHEETS_CREDENTIALS環境變數');
     }
 
     const auth = new google.auth.GoogleAuth({
-      keyFilename: credentialsPath,
+      credentials: JSON.parse(credentialsJson),
       scopes: ['https://www.googleapis.com/auth/spreadsheets']
     });
 

@@ -35,7 +35,7 @@ async function initGoogleSheets() {
 
   try {
     const auth = new google.auth.GoogleAuth({
-      credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "{}"),
+      credentials: JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS || "{}"),
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
