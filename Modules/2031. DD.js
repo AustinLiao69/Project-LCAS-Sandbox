@@ -1,9 +1,9 @@
 /**
- * DD_資料分配模組_2.0.18
+ * DD_資料分配模組_2.0.19
  * @module 資料分配模組
  * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
  * @author AustinLiao69
- * @update 2025-06-28: 修復 DD_processForBK 異步調用問題，確保正確返回記帳結果
+ * @update 2025-06-28: 升級版本，優化字符串處理邏輯和錯誤處理機制
  */
 
 // 首先引入其他模組
@@ -142,7 +142,7 @@ function getScriptProperty(key) {
  */
 try {
   console.log(`DD模組初始化檢查 [${new Date().toISOString()}]`);
-  console.log(`DD模組版本: 2.0.16 (2025-06-28)`);
+  console.log(`DD模組版本: 2.0.19 (2025-06-28)`);
   console.log(`執行時間: ${new Date().toLocaleString()}`);
 
   const ss = SpreadsheetApp.openById(getScriptProperty("SPREADSHEET_ID"));
@@ -1118,11 +1118,12 @@ function extractNumberFromString(str) {
 
 /**
  * 14. 從文字中移除金額部分
- * @version 2.0.1 (2025-06-28)
+ * @version 2.0.3 (2025-06-28)
  * @author AustinLiao69
- * @param {string} text - 原始文字 (例如 "禮物5555555")
- * @param {number|string} amount - 要移除的金額 (例如 "5555555")
- * @returns {string} - 移除金額後的文字 (例如 "禮物")
+ * @param {string} text - 原始文字 (例如 "測試支出99999")
+ * @param {number|string} amount - 要移除的金額 (例如 99999)
+ * @param {string} paymentMethod - 支付方式 (可選)
+ * @returns {string} - 移除金額後的文字 (例如 "測試支出")
  */
 function DD_removeAmountFromText(text, amount) {
   // 檢查參數
