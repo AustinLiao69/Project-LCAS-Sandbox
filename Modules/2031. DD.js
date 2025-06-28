@@ -1,9 +1,9 @@
 /**
- * DD_資料分配模組_2.0.15
+ * DD_資料分配模組_2.0.16
  * @module 資料分配模組
  * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
  * @author AustinLiao69
- * @update 2025-06-28: 修復 DD_processForBK 函數中 userId 變數作用域問題
+ * @update 2025-06-28: 修復 DD_processForBK 異步調用問題，確保正確返回記帳結果
  */
 
 // 首先引入其他模組
@@ -142,7 +142,7 @@ function getScriptProperty(key) {
  */
 try {
   console.log(`DD模組初始化檢查 [${new Date().toISOString()}]`);
-  console.log(`DD模組版本: 2.0.2 (2025-06-19)`);
+  console.log(`DD模組版本: 2.0.16 (2025-06-28)`);
   console.log(`執行時間: ${new Date().toLocaleString()}`);
 
   const ss = SpreadsheetApp.openById(getScriptProperty("SPREADSHEET_ID"));
@@ -438,7 +438,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
       "DD_distributeData",
     );
 
-    const dispatchResult = DD_dispatchData(data, category);
+    const dispatchResult = await DD_dispatchData(data, category);
     console.log(`數據分發完成，結果: ${JSON.stringify(dispatchResult)}`);
     DD_logInfo(
       `數據分發完成，結果: ${JSON.stringify(dispatchResult)}`,
@@ -614,7 +614,7 @@ function DD_classifyData(data, source) {
  * @param {string} targetModule - 目標模組的名稱
  * @returns {object} - 處理結果
  */
-function DD_dispatchData(data, targetModule) {
+async function DD_dispatchData(data, targetModule) {
   const dispatchId = Utilities.getUuid().substring(0, 8);
   const userId = data.user_id || data.userId || "";
 
@@ -670,7 +670,7 @@ function DD_dispatchData(data, targetModule) {
         } else {
           try {
             console.log(`開始調用DD_processForBK [${dispatchId}]`);
-            result = DD_processForBK(data);
+            result = await DD_processForBK(data);
             console.log(
               `DD_processForBK調用完成，結果: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
             );
@@ -1019,9 +1019,13 @@ async function DD_processForBK(data) {
       "DD_processForBK",
       "DD_processForBK",
     );
+    
+    console.log(`[${processId}] 即將調用 BK.BK_processBookkeeping，數據: ${JSON.stringify(bookkeepingData).substring(0, 200)}...`);
     const result = await BK.BK_processBookkeeping(bookkeepingData);
+    console.log(`[${processId}] BK.BK_processBookkeeping 返回結果: ${JSON.stringify(result).substring(0, 300)}...`);
+    
     DD_logInfo(
-      `BK_processBookkeeping調用完成，結果: ${result.success ? "成功" : "失敗"} [${processId}]`,
+      `BK_processBookkeeping調用完成，結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`,
       "模組調用",
       userId,
       "DD_processForBK",
