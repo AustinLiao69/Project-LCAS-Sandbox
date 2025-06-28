@@ -24,7 +24,7 @@ const DL = require('./Modules/2010. DL.js');
 
 // 檢查模組函數是否正確導出
 console.log(' DD模組初始化檢查', new Date().toISOString());
-console.log('DD模組版本: 2.0.17 (2025-06-28)');
+console.log('DD模組版本: 2.0.18 (2025-06-28)');
 console.log('執行時間:', new Date().toLocaleString());
 
 // 檢查各個模組的關鍵函數

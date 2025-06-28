@@ -1118,11 +1118,11 @@ function extractNumberFromString(str) {
 
 /**
  * 14. 從文字中移除金額部分
- * @version 1.0.0 (2025-04-28)
+ * @version 2.0.1 (2025-06-28)
  * @author AustinLiao69
- * @param {string} text - 原始文字 (例如 "薪資 588")
- * @param {number|string} amount - 要移除的金額 (例如 "588")
- * @returns {string} - 移除金額後的文字 (例如 "薪資")
+ * @param {string} text - 原始文字 (例如 "禮物5555555")
+ * @param {number|string} amount - 要移除的金額 (例如 "5555555")
+ * @returns {string} - 移除金額後的文字 (例如 "禮物")
  */
 function DD_removeAmountFromText(text, amount) {
   // 檢查參數
@@ -1131,35 +1131,62 @@ function DD_removeAmountFromText(text, amount) {
   // 記錄處理前文字
   console.log(`處理文字移除金額: 原始文字="${text}", 金額=${amount}`);
 
-  // 將金額轉為字符串
-  const amountStr = String(amount);
+  // 將金額轉為字符串，並轉義正則表達式特殊字符
+  const amountStr = String(amount).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   let result = text;
 
   try {
     // 1. 處理 "科目 金額" 格式 (含空格)
-    if (text.includes(" " + amountStr)) {
-      result = text.replace(" " + amountStr, "").trim();
+    const spacePattern = new RegExp(`\\s+${amountStr}(?:\\s|$)`, 'g');
+    if (spacePattern.test(text)) {
+      result = text.replace(spacePattern, '').trim();
       console.log(`使用空格格式匹配: "${result}"`);
       return result;
     }
 
-    // 2. 處理 "科目金額" 格式 (無空格，但金額在尾部)
-    if (text.endsWith(amountStr)) {
-      result = text.substring(0, text.length - amountStr.length).trim();
+    // 2. 處理 "科目金額" 格式 (無空格，數字直接連接)
+    const endPattern = new RegExp(`${amountStr}$`);
+    if (endPattern.test(text)) {
+      result = text.replace(endPattern, '').trim();
       console.log(`使用尾部匹配: "${result}"`);
       return result;
     }
 
     // 3. 處理 "科目金額元" 或 "科目金額塊" 格式
-    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓|NT|USD)?$`, "i");
-    const match = text.match(amountEndRegex);
-    if (match && match.index > 0) {
+    const currencyPattern = new RegExp(`${amountStr}(元|塊|圓|NT|USD)?$`, "i");
+    const match = text.match(currencyPattern);
+    if (match) {
       result = text.substring(0, match.index).trim();
       console.log(`使用貨幣單位匹配: "${result}"`);
       return result;
     }
 
-    // 4. 無法確定金額位置，保留原始文字
+    // 4. 通用數字移除：移除任何連續的數字（如果與金額匹配）
+    const generalNumberPattern = new RegExp(`\\d{${amountStr.length},}`, 'g');
+    const numberMatches = text.match(generalNumberPattern);
+    if (numberMatches) {
+      for (const match of numberMatches) {
+        if (match === String(amount)) {
+          result = text.replace(match, '').trim();
+          console.log(`使用通用數字匹配: "${result}"`);
+          return result;
+        }
+      }
+    }
+
+    // 5. 清理多餘的空格和標點符號
+    result = text.replace(/\s+/g, ' ').replace(/[，。！？；：、]/g, '').trim();
+    
+    // 6. 如果結果與原文差不多，嘗試提取非數字部分
+    if (result === text) {
+      const nonDigitMatch = text.match(/^[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\w\s]+/);
+      if (nonDigitMatch) {
+        result = nonDigitMatch[0].replace(/\d+/g, '').trim();
+        console.log(`提取非數字部分: "${result}"`);
+        return result;
+      }
+    }
+
     console.log(`無法確定金額位置，保留原始文字: "${text}"`);
     return text;
   } catch (error) {
