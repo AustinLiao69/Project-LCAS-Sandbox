@@ -338,6 +338,9 @@ async function DD_distributeData(data, source, retryCount = 0) {
         data.action = processedData.action;
         data.processed = processedData.processed;
         data.type = processedData.type;
+        
+        // 關鍵修正：使用處理過的文字作為備註
+        data.text = processedData.text || processedData.subjectName;
 
         // 新增：傳遞支付方式
         if (processedData.paymentMethod) {
@@ -982,7 +985,7 @@ async function DD_processForBK(data) {
       // 可選但重要字段
       majorName: data.majorName || "", // 主科目名稱
       paymentMethod: data.paymentMethod, // 支付方式 - 移除默認值
-      text: data.text || "", // 原始輸入文本
+      text: data.text || "", // 使用DD處理過的文字（已移除金額）
       formatId: data.formatId || "", // 匹配的格式ID
       originalSubject: data.originalSubject || "", // 用戶輸入的原始科目
       userId: userId, // 用戶ID
