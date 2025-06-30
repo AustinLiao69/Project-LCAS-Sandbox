@@ -131,3 +131,6 @@ dist
 
 # Replit debugger
 .breakpoints
+
+# Firebase 金鑰
+FB_Serviceaccountkey.json
