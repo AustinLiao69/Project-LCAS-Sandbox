@@ -49,7 +49,7 @@ const DL = require('./Modules/2010. DL.js');    // 數據記錄模組
  * @description 檢查DD模組的初始化狀態和版本資訊
  */
 console.log('🔍 DD模組初始化檢查', new Date().toISOString());
-console.log('📋 DD模組版本: 2.0.19 (2025-06-28)');
+console.log(`📋 DD模組版本: ${DD.DD_MODULE_VERSION || "版本讀取失敗"}`);
 console.log('⏰ 執行時間:', new Date().toLocaleString());
 
 /**
