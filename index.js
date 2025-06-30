@@ -1,5 +1,5 @@
 /**
- * index.js_v2.1.0 - WH 模組啟動器 (簡化版)
+ * index.js_v2.1.1 - WH 模組啟動器
  * 專門為 WH 模組提供基本啟動功能
  */
 
@@ -42,7 +42,7 @@ if (typeof BK.BK_processBookkeeping === 'function') {
 
 console.log('✅ WH 模組已載入並啟動服務器');
 console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
-console.log('📡 預期 Webhook URL: https://your-repl-url.replit.dev/webhook');
+console.log('📡 Webhook URL: http://46edf8e3-c202-4cda-bf80-112dd40c124b-00-11q1eb3p2m1tv.sisko.replit.dev/webhook');
 
 console.log('🎉 LCAS LINE Bot 啟動完成！');
 console.log('📱 現在可以用 LINE 發送訊息測試了！');
