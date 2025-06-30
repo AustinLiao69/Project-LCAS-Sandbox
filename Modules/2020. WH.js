@@ -692,7 +692,7 @@ function WH_replyMessage(replyToken, message) {
           const isSuccess = message.success === true;
           const errorMsg = message.error || "未知錯誤";
           const currentDateTime = moment()
-            .tz(WH_CONFIG.TIMEZONE || "Asia/Taipei")
+            .tz("Asia/Taipei")
             .format("YYYY/MM/DD HH:mm");
 
           // 提取並記錄關鍵屬性
