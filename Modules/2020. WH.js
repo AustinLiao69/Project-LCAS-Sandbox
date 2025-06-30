@@ -1,5 +1,5 @@
 /**
- * WH_Webhook處理模組_2.0.14
+ * WH_Webhook處理模組_2.0.15
  * @module Webhook模組
  * @description LINE Webhook處理模組 - 修復異步調用問題
  * @update 2025-06-28: 升級版本，修復DD_distributeData異步調用處理和函數聲明
@@ -692,7 +692,7 @@ function WH_replyMessage(replyToken, message) {
           const isSuccess = message.success === true;
           const errorMsg = message.error || "未知錯誤";
           const currentDateTime = moment()
-            .tz(WH_CONFIG.TIMEZONE || "Asia/Taipei")
+            .tz("Asia/Taipei")
             .format("YYYY/MM/DD HH:mm");
 
           // 提取並記錄關鍵屬性
