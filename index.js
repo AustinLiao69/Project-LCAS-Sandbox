@@ -1,15 +1,13 @@
 
 /**
- * index.js_主啟動器模組_2.1.2
+ * index.js_主啟動器模組_2.1.3
  * @module 主啟動器模組
  * @description LCAS LINE Bot 主啟動器 - 移除心跳檢查機制，專注於模組載入和初始化
  * @update 2025-06-30: 移除心跳檢查和自我ping機制，按照0099規範重構代碼結構
- * @author AustinLiao69
- * @version 2.1.2
  * @date 2025-06-30
  */
 
-console.log('🚀 LCAS LINE Bot 啟動中...');
+console.log('🚀 LCAS Webhook 啟動中...');
 console.log('📅 啟動時間:', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
 
 /**
@@ -85,7 +83,6 @@ if (typeof BK.BK_processBookkeeping === 'function') {
  */
 console.log('✅ WH 模組已載入並啟動服務器');
 console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
-console.log('📡 Webhook URL: https://your-repl-url.replit.dev/webhook');
 
 console.log('🎉 LCAS LINE Bot 啟動完成！');
 console.log('📱 現在可以用 LINE 發送訊息測試了！');
