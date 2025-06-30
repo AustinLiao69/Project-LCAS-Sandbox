@@ -4259,9 +4259,6 @@ function DD_parseInputFormat(text, processId) {
   }
 }
 
-// 引入 moment-timezone 以確保時間格式化一致性
-const moment = require("moment-timezone");
-
 // 更新現有的 Utilities 物件，添加缺少的方法
 if (typeof Utilities !== "undefined" && !Utilities.formatDate) {
   Utilities.formatDate = (date, timezone, format) => {
