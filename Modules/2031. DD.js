@@ -17,6 +17,7 @@ const { BK_processBookkeeping } = BK;
 const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const path = require("path");
+const moment = require("moment-timezone");
 
 // 全域變數替代 Google Apps Script 的內建函數
 let spreadsheetData = {};
@@ -4258,13 +4259,25 @@ function DD_parseInputFormat(text, processId) {
   }
 }
 
+// 引入 moment-timezone 以確保時間格式化一致性
+const moment = require("moment-timezone");
+
 // 更新現有的 Utilities 物件，添加缺少的方法
 if (typeof Utilities !== "undefined" && !Utilities.formatDate) {
   Utilities.formatDate = (date, timezone, format) => {
+    // 使用 moment-timezone 確保時區正確處理
+    const momentDate = moment(date).tz(timezone || "Asia/Taipei");
+    
     if (format === "yyyy/MM/dd HH:mm") {
-      return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+      return momentDate.format("YYYY/MM/DD HH:mm");
+    } else if (format === "yyyy/M/d") {
+      return momentDate.format("YYYY/M/D");
+    } else if (format === "HH:mm") {
+      return momentDate.format("HH:mm");
+    } else if (format === "yyyy-MM-dd HH:mm:ss") {
+      return momentDate.format("YYYY-MM-DD HH:mm:ss");
     }
-    return date.toString();
+    return momentDate.format();
   };
 }
 
