@@ -1,5 +1,5 @@
 /**
- * DD_資料分配模組_2.0.21
+ * DD_資料分配模組_2.0.22
  * @module 資料分配模組
  * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
  * @author AustinLiao69
@@ -4258,9 +4258,6 @@ function DD_parseInputFormat(text, processId) {
     };
   }
 }
-
-// 引入 moment-timezone 以確保時間格式化一致性
-const moment = require("moment-timezone");
 
 // 更新現有的 Utilities 物件，添加缺少的方法
 if (typeof Utilities !== "undefined" && !Utilities.formatDate) {
