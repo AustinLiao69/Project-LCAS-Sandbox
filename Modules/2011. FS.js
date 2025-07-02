@@ -1,25 +1,18 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.0.3
+* FS_FirestoreStructure_資料庫結構模組_1.0.4
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整欄位架構
-* @update 2025-07-02: 簡化結構，修正命名規範，移除不必要欄位
+* @update 2025-07-02: 修正Firebase重複初始化衝突，統一使用FB_Serviceaccountkey模組
 */
 
-const admin = require('firebase-admin');
-const serviceAccount = require('./FB_Serviceaccountkey.js');
-
-// Firebase 初始化
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-
-const db = admin.firestore();
+// 使用已初始化的 Firebase 實例
+const { admin, db } = require('./FB_Serviceaccountkey.js');
 
 /**
 * 01. 初始化資料庫結構主函數
-* @version 2025-07-02-V1.0.2
-* @date 2025-07-02 02:39:48
-* @update: 簡化結構，修正命名規範，移除settings和statistics
+* @version 2025-07-02-V1.0.3
+* @date 2025-07-02 03:34:16
+* @update: 修正Firebase重複初始化問題，使用統一的Firebase實例
 */
 async function initDatabaseStructure() {
   const lineUID = process.env.UID_TEST;
@@ -57,9 +50,9 @@ async function initDatabaseStructure() {
 
 /**
 * 02. 建立使用者集合結構
-* @version 2025-07-02-V1.0.2
-* @date 2025-07-02 02:39:48
-* @update: 保持簡化的用戶資料結構
+* @version 2025-07-02-V1.0.3
+* @date 2025-07-02 03:34:16
+* @update: 使用統一的Firebase實例
 */
 async function createUserCollection(lineUID) {
   await db.collection('users').doc(lineUID).set({
@@ -76,8 +69,8 @@ async function createUserCollection(lineUID) {
 
 /**
 * 03. 建立帳本集合結構
-* @version 2025-07-02-V1.0.2
-* @date 2025-07-02 02:39:48
+* @version 2025-07-02-V1.0.3
+* @date 2025-07-02 03:34:16
 * @update: 修正欄位命名，移除settings和statistics
 */
 async function createLedgerCollection(ledgerId, lineUID) {
@@ -94,8 +87,8 @@ async function createLedgerCollection(ledgerId, lineUID) {
 
 /**
 * 04. 建立科目代碼集合結構
-* @version 2025-07-02-V1.0.2
-* @date 2025-07-02 02:39:48
+* @version 2025-07-02-V1.0.3
+* @date 2025-07-02 03:34:16
 * @update: 保持科目代碼結構不變
 */
 async function createSubjectsCollection(ledgerId) {
@@ -115,12 +108,12 @@ async function createSubjectsCollection(ledgerId) {
 
 /**
 * 05. 建立帳本紀錄集合結構
-* @version 2025-07-02-V1.0.2
-* @date 2025-07-02 02:39:48
-* @update: 修改幣別預設值為NTD，保留日期/時間與timestamp的差異說明
+* @version 2025-07-02-V1.0.3
+* @date 2025-07-02 03:34:16
+* @update: 修改為範本文件建立，使用.doc('template').set()而非.add()
 */
 async function createEntriesCollection(ledgerId, lineUID) {
-  await db.collection('ledgers').doc(ledgerId).collection('entries').add({
+  await db.collection('ledgers').doc(ledgerId).collection('entries').doc('template').set({
     收支ID: '',                                // YYYYMMDD-序號格式
     使用者類型: '',                            // M/S/J (多人/單人/訪客)
     日期: '',                                  // YYYY/MM/DD 格式 (用戶輸入的顯示日期)
@@ -142,8 +135,8 @@ async function createEntriesCollection(ledgerId, lineUID) {
 
 /**
 * 06. 建立系統日誌集合結構
-* @version 2025-07-02-V1.0.2
-* @date 2025-07-02 02:39:48
+* @version 2025-07-02-V1.0.3
+* @date 2025-07-02 03:34:16
 * @update: 簡化log結構，統一使用UID
 */
 async function createLogCollection(ledgerId, lineUID, currentTime) {
@@ -151,12 +144,12 @@ async function createLogCollection(ledgerId, lineUID, currentTime) {
     時間: admin.firestore.Timestamp.now(),      // 自動記錄當前時間
     訊息: 'LCAS 2.0 資料庫結構初始化完成',      // 日誌訊息
     操作類型: '結構建立',                        // 操作類型分類
-    UID: '',                                   // 操作者 LINE UID (統一使用UID)
+    UID: lineUID,                              // 操作者 LINE UID (統一使用UID)
     錯誤代碼: null,                            // 錯誤代碼 (無錯誤時為null)
     來源: 'Replit',                            // 來源系統
     錯誤詳情: `執行者: AustinLiao69, UTC時間: ${currentTime.toISOString()}`, // 詳細資訊
     重試次數: 0,                               // 重試次數
-    程式碼位置: 'initUserData.js:createLogCollection', // 程式碼位置
+    程式碼位置: '2011. FS.js:createLogCollection', // 修正程式碼位置
     嚴重等級: 'INFO'                           // DEBUG/INFO/WARNING/ERROR/CRITICAL
   });
   console.log('✅ Log Sub-Collection 結構建立完成');
@@ -164,8 +157,8 @@ async function createLogCollection(ledgerId, lineUID, currentTime) {
 
 /**
 * 07. 錯誤處理與日誌記錄
-* @version 2025-07-02-V1.0.2
-* @date 2025-07-02 02:39:48
+* @version 2025-07-02-V1.0.3
+* @date 2025-07-02 03:34:16
 * @update: 統一使用UID，簡化錯誤處理
 */
 async function logError(ledgerId, lineUID, error, currentTime) {
@@ -179,7 +172,7 @@ async function logError(ledgerId, lineUID, error, currentTime) {
       來源: 'Replit',
       錯誤詳情: `錯誤訊息: ${error.message}, 執行者: AustinLiao69, UTC時間: ${currentTime.toISOString()}`,
       重試次數: 0,
-      程式碼位置: 'initUserData.js:logError',
+      程式碼位置: '2011. FS.js:logError',      // 修正程式碼位置
       嚴重等級: 'ERROR'
     });
   } catch (logError) {
