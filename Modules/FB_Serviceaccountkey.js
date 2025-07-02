@@ -9,7 +9,7 @@ const serviceAccount = {
   client_id: process.env.FB_CLIENT_ID,
   auth_uri: process.env.FB_AUTH_URI || "https://accounts.google.com/o/oauth2/auth",
   token_uri: process.env.FB_TOKEN_URI || "https://oauth2.googleapis.com/token",
-  auth_provider_x509_cert_url: process.env.AUTH_PROVIDE_X509_CERT_URL || "https://www.googleapis.com/oauth2/v1/certs",
+  auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL || "https://www.googleapis.com/oauth2/v1/certs",
   client_x509_cert_url: process.env.FB_CLIENT_X509_CERT_URL,
   universe_domain: process.env.FB_UNIVERSE_DOMAIN || "googleapis.com"
 };
