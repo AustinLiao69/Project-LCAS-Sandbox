@@ -1,7 +1,7 @@
 /**
- * 記帳處理模組_1.6.13
+ * 記帳處理模組_1.7.0
  * 處理用戶的記帳操作，接收來自DD的記帳指令，並將整理後的數據存儲至Google Sheets
- * @update 2025-06-28: 版本升級到1.6.13，確保與DD模組完全相容，修復時區設置
+ * @update 2025-07-03: 版本升級到1.7.0，統一日誌管理系統，替換所有console調用為BK統一日誌函數
  */
 
 // BK.js 頂部引入 DL 模組
@@ -58,7 +58,7 @@ function getDLSeverity(level, defaultValue) {
       return DL_SEVERITY_LEVELS[level];
     }
   } catch (e) {
-    console.warn("無法訪問 DL_SEVERITY_LEVELS." + level + ": " + e);
+    BK_logWarning("無法訪問 DL_SEVERITY_LEVELS." + level, "系統初始化", "", "getBKSeverityLevel");
   }
   return defaultValue;
 }
@@ -102,7 +102,7 @@ async function initializeGoogleAuth() {
     BK_INIT_STATUS.authClient = authClient;
     return authClient;
   } catch (error) {
-    console.error('Google API認證初始化失敗:', error);
+    BK_logError('Google API認證初始化失敗', "認證初始化", "", "AUTH_INIT_ERROR", error.toString(), "initializeGoogleAuth");
     throw error;
   }
 }
@@ -111,17 +111,17 @@ async function initializeGoogleAuth() {
  * 1. 診斷函數 - 測試日誌映射
  */
 function BK_testLogMapping() {
-  console.log("===BK診斷=== 開始測試日誌映射 ===BK診斷===");
+  BK_logDebug("===BK診斷=== 開始測試日誌映射 ===BK診斷===", "診斷測試", "", "BK_testLogMapping");
 
   try {
     if (typeof DL_info === 'function') {
-      console.log("測試DL_info直接調用");
+      BK_logDebug("測試DL_info直接調用", "診斷測試", "", "BK_testLogMapping");
       // 修正：確保函數名稱以BK_開頭
       DL_info("測試訊息", "測試操作", "測試用戶", "", "", 0, "BK_testLogMapping", "BK_testLogMapping");
     }
 
     if (typeof DL_log === 'function') {
-      console.log("測試DL_log對象調用");
+      BK_logDebug("測試DL_log對象調用", "診斷測試", "", "BK_testLogMapping");
       DL_log({
         message: "對象測試訊息",
         operation: "對象測試操作",
@@ -136,10 +136,10 @@ function BK_testLogMapping() {
       });
     }
   } catch (e) {
-    console.error("診斷測試失敗: " + e.toString());
+    BK_logError("診斷測試失敗", "診斷測試", "", "TEST_ERROR", e.toString(), "BK_testLogMapping");
   }
 
-  console.log("===BK診斷=== 日誌映射測試完成 ===BK診斷===");
+  BK_logDebug("===BK診斷=== 日誌映射測試完成 ===BK診斷===", "診斷測試", "", "BK_testLogMapping");
 }
 
 // 初始化檢查 - 使用緩存機制避免頻繁初始化
@@ -178,7 +178,7 @@ async function BK_initialize() {
         // 執行日誌映射測試
         BK_testLogMapping();
       } else {
-        console.log("警告: DL模組未找到，將使用原生日誌系統");
+        BK_logWarning("DL模組未找到，將使用原生日誌系統", "系統初始化", "", "BK_initialize");
         initMessages.push("DL模組初始化: 失敗 (未找到DL模組)");
       }
     }
@@ -538,13 +538,11 @@ async function BK_processBookkeeping(bookkeepingData) {
 
   try {
     // 2. 記錄流程開始
-    console.log(`${logPrefix} 開始處理記帳請求`);
-    BK_logInfo(`開始處理記帳請求 [${processId}]`, "記帳處理", bookkeepingData.userId || "", "BK_processBookkeeping");
+    BK_logInfo(`${logPrefix} 開始處理記帳請求`, "記帳處理", bookkeepingData.userId || "", "BK_processBookkeeping");
 
     // 3. 數據驗證
     if (!bookkeepingData) {
-      console.log(`${logPrefix} 記帳數據為空`);
-      BK_logError(`記帳數據為空 [${processId}]`, "數據驗證", "", "DATA_EMPTY", "記帳數據為空", "BK_processBookkeeping");
+      BK_logError(`${logPrefix} 記帳數據為空`, "數據驗證", "", "DATA_EMPTY", "記帳數據為空", "BK_processBookkeeping");
       throw new Error("記帳數據為空");
     }
 
@@ -553,8 +551,7 @@ async function BK_processBookkeeping(bookkeepingData) {
     const missingFields = requiredFields.filter(field => !bookkeepingData[field]);
 
     if (missingFields.length > 0) {
-      console.log(`${logPrefix} 缺少必要欄位: ${missingFields.join(', ')}`);
-      BK_logError(`缺少必要欄位: ${missingFields.join(', ')} [${processId}]`, "數據驗證", bookkeepingData.userId || "", "MISSING_FIELDS", "缺少必要欄位", "BK_processBookkeeping");
+      BK_logError(`${logPrefix} 缺少必要欄位: ${missingFields.join(', ')}`, "數據驗證", bookkeepingData.userId || "", "MISSING_FIELDS", "缺少必要欄位", "BK_processBookkeeping");
 
       // 增強：返回部分資料，即使缺少欄位
       return {
@@ -582,8 +579,7 @@ async function BK_processBookkeeping(bookkeepingData) {
       : bookkeepingData.amount;
 
     if (numericAmount < 0) {
-      console.log(`${logPrefix} 檢測到負數金額: ${numericAmount}`);
-      BK_logError(`金額不可為負數: ${numericAmount} [${processId}]`, "數據驗證", bookkeepingData.userId || "", "NEGATIVE_AMOUNT", `金額: ${numericAmount}`, "BK_processBookkeeping");
+      BK_logError(`${logPrefix} 檢測到負數金額: ${numericAmount}`, "數據驗證", bookkeepingData.userId || "", "NEGATIVE_AMOUNT", `金額: ${numericAmount}`, "BK_processBookkeeping");
 
       // 返回錯誤信息，但保留所有原始資料用於顯示
       return {
@@ -610,11 +606,11 @@ async function BK_processBookkeeping(bookkeepingData) {
     const formattedDate = moment(today).tz(BK_CONFIG.TIMEZONE).format("YYYY/MM/DD HH:mm");
     const formattedTime = moment(today).tz(BK_CONFIG.TIMEZONE).format("HH:mm");
     const formattedDay = moment(today).tz(BK_CONFIG.TIMEZONE).format("YYYY/MM/DD");
-    console.log(`${logPrefix} 格式化日期: ${formattedDate}, 時間: ${formattedTime}`);
+    BK_logDebug(`${logPrefix} 格式化日期: ${formattedDate}, 時間: ${formattedTime}`, "記帳處理", bookkeepingData.userId || "", "BK_processBookkeeping");
 
     // 6. 生成ID
     const bookkeepingId = await BK_generateBookkeepingId(processId);
-    console.log(`${logPrefix} 生成記帳ID: ${bookkeepingId}`);
+    BK_logInfo(`${logPrefix} 生成記帳ID: ${bookkeepingId}`, "記帳處理", bookkeepingData.userId || "", "BK_processBookkeeping");
 
     // 7. 確定金額與收支類型
     let income = '', expense = '';
@@ -623,10 +619,10 @@ async function BK_processBookkeeping(bookkeepingData) {
 
     if (bookkeepingData.action === "收入") {
       income = numericAmount.toString();
-      console.log(`${logPrefix} 處理收入金額: ${income}，原始格式: ${rawAmount}`);
+      BK_logInfo(`${logPrefix} 處理收入金額: ${income}，原始格式: ${rawAmount}`, "記帳處理", bookkeepingData.userId || "", "BK_processBookkeeping");
     } else {
       expense = numericAmount.toString();
-      console.log(`${logPrefix} 處理支出金額: ${expense}，原始格式: ${rawAmount}`);
+      BK_logInfo(`${logPrefix} 處理支出金額: ${expense}，原始格式: ${rawAmount}`, "記帳處理", bookkeepingData.userId || "", "BK_processBookkeeping");
     }
 
     // 8. 使用智能備註生成（如果可用）
@@ -634,15 +630,14 @@ async function BK_processBookkeeping(bookkeepingData) {
     try {
       if (typeof DD_generateIntelligentRemark === 'function') {
         remark = DD_generateIntelligentRemark(bookkeepingData);
-        console.log(`${logPrefix} 使用智能備註生成: "${remark}"`);
+        BK_logInfo(`${logPrefix} 使用智能備註生成: "${remark}"`, "備註處理", bookkeepingData.userId || "", "BK_processBookkeeping");
       } else {
         // 備用方案：直接使用text作為備註，如無則使用originalSubject
         remark = bookkeepingData.text || bookkeepingData.originalSubject || "";
-        console.log(`${logPrefix} 使用原始文本作為備註: "${remark}"`);
+        BK_logInfo(`${logPrefix} 使用原始文本作為備註: "${remark}"`, "備註處理", bookkeepingData.userId || "", "BK_processBookkeeping");
       }
     } catch (remarkError) {
-      console.warn(`${logPrefix} 備註生成失敗: ${remarkError}, 使用原始文本`);
-      BK_logWarning(`備註生成失敗: ${remarkError}, 使用原始文本 [${processId}]`, "備註處理", bookkeepingData.userId || "", "BK_processBookkeeping");
+      BK_logWarning(`${logPrefix} 備註生成失敗: ${remarkError}, 使用原始文本`, "備註處理", bookkeepingData.userId || "", "BK_processBookkeeping");
       remark = bookkeepingData.text || bookkeepingData.originalSubject || "";
     }
 
@@ -652,22 +647,21 @@ async function BK_processBookkeeping(bookkeepingData) {
       // 嘗試獲取活動使用者
       try {
         userId = process.env.USER || process.env.USERNAME || "";
-        console.log(`${logPrefix} 使用系統環境使用者: ${userId}`);
+        BK_logInfo(`${logPrefix} 使用系統環境使用者: ${userId}`, "使用者處理", userId, "BK_processBookkeeping");
       } catch (e) {
-        console.warn(`${logPrefix} 無法獲取系統環境使用者: ${e}`);
-        BK_logWarning(`無法獲取系統環境使用者: ${e} [${processId}]`, "使用者處理", "", "GET_USER_ERROR", e.toString(), "BK_processBookkeeping");
+        BK_logWarning(`${logPrefix} 無法獲取系統環境使用者: ${e}`, "使用者處理", "", "BK_processBookkeeping");
       }
 
       // 如果仍然沒有，使用預設值
       if (!userId || userId === "") {
         userId = "AustinLiao691"; // 使用預設使用者
-        console.log(`${logPrefix} 使用預設使用者ID: ${userId}`);
+        BK_logInfo(`${logPrefix} 使用預設使用者ID: ${userId}`, "使用者處理", userId, "BK_processBookkeeping");
       }
 
       // 最後的備用方案：使用時間戳生成唯一ID
       if (!userId || userId === "") {
         userId = "SYSTEM_" + new Date().getTime();
-        console.log(`${logPrefix} 使用系統生成的使用者ID: ${userId}`);
+        BK_logInfo(`${logPrefix} 使用系統生成的使用者ID: ${userId}`, "使用者處理", userId, "BK_processBookkeeping");
       }
 
       // 記錄缺少使用者ID的情況
@@ -686,8 +680,7 @@ async function BK_processBookkeeping(bookkeepingData) {
         userType = "J"; // 加入主帳本之成員(Joined)
       }
 
-      console.log(`${logPrefix} 設定使用者類型: ${userType} 給使用者: ${userId}`);
-      BK_logInfo(`設定使用者類型: ${userType} 給使用者: ${userId} [${processId}]`, "使用者分類", userId, "BK_processBookkeeping");
+      BK_logInfo(`${logPrefix} 設定使用者類型: ${userType} 給使用者: ${userId}`, "使用者分類", userId, "BK_processBookkeeping");
     }
 
     // 11. 準備記帳數據 - 移除支付方式默認值，由BK_validatePaymentMethod處理
@@ -707,19 +700,18 @@ async function BK_processBookkeeping(bookkeepingData) {
       rawAmount: rawAmount, // 新增: 保存原始金額格式
       synonym: bookkeepingData.originalSubject || ""
     };
-    console.log(`${logPrefix} 準備記帳數據: ID=${bookkeepingId}, 使用者=${userId}, 類型=${userType}, 支付方式=${bookkeepingData.paymentMethod || "未設置"}` + 
-              `, 原始金額=${rawAmount}`);
+    BK_logInfo(`${logPrefix} 準備記帳數據: ID=${bookkeepingId}, 使用者=${userId}, 類型=${userType}, 支付方式=${bookkeepingData.paymentMethod || "未設置"}` + 
+              `, 原始金額=${rawAmount}`, "記帳處理", userId, "BK_processBookkeeping");
 
     // 12. 準備記帳數據數組
     const bookkeepingDataArray = BK_prepareBookkeepingData(bookkeepingId, adaptedData, processId);
 
     // 13. 執行記帳操作（插入到試算表）
-    console.log(`${logPrefix} 開始保存數據到試算表`);
+    BK_logInfo(`${logPrefix} 開始保存數據到試算表`, "數據存儲", userId, "BK_processBookkeeping");
     const result = await BK_saveToSpreadsheet(bookkeepingDataArray, processId);
 
     if (!result.success) {
-      console.error(`${logPrefix} 儲存數據失敗: ${result.error}`);
-      BK_logError(`儲存數據失敗: ${result.error} [${processId}]`, "數據存儲", userId, "SAVE_ERROR", result.error, "BK_processBookkeeping");
+      BK_logError(`${logPrefix} 儲存數據失敗: ${result.error}`, "數據存儲", userId, "SAVE_ERROR", result.error, "BK_processBookkeeping");
 
       return {
         success: false,
@@ -740,22 +732,22 @@ async function BK_processBookkeeping(bookkeepingData) {
         userFriendlyMessage: `記帳處理失敗 (STORAGE_ERROR)：${result.error || "儲存數據失敗"}\n請重新嘗試或聯繫管理員。`
       };
     }
-    console.log(`${logPrefix} 數據成功保存到試算表，行號: ${result.row}`);
+    BK_logInfo(`${logPrefix} 數據成功保存到試算表，行號: ${result.row}`, "數據存儲", userId, "BK_processBookkeeping");
 
     // 處理用戶偏好學習（如果啟用）
     if (bookkeepingData.originalSubject && 
         userId &&
         typeof DD_userPreferenceManager === 'function') {
       try {
-        console.log(`${logPrefix} 開始處理用戶偏好學習`);
+        BK_logInfo(`${logPrefix} 開始處理用戶偏好學習`, "用戶偏好學習", userId, "BK_processBookkeeping");
         DD_userPreferenceManager(
           userId, 
           bookkeepingData.originalSubject, 
           `${bookkeepingData.majorCode}-${bookkeepingData.subCode}`
         );
-        console.log(`${logPrefix} 用戶偏好學習處理完成`);
+        BK_logInfo(`${logPrefix} 用戶偏好學習處理完成`, "用戶偏好學習", userId, "BK_processBookkeeping");
       } catch (prefError) {
-        console.log(`${logPrefix} 用戶偏好記錄失敗: ${prefError}`);
+        BK_logWarning(`${logPrefix} 用戶偏好記錄失敗: ${prefError}`, "用戶偏好學習", userId, "BK_processBookkeeping");
         BK_logWarning(`用戶偏好記錄失敗: ${prefError} [${processId}]`, "偏好學習", userId, "PREF_LEARN_ERROR", prefError.toString(), "BK_processBookkeeping");
       }
     }
@@ -765,26 +757,24 @@ async function BK_processBookkeeping(bookkeepingData) {
         userId &&
         typeof DD_learnInputPatterns === 'function') {
       try {
-        console.log(`${logPrefix} 開始處理格式學習`);
+        BK_logInfo(`${logPrefix} 開始處理格式學習`, "格式學習", userId, "BK_processBookkeeping");
         DD_learnInputPatterns(
           userId,
           bookkeepingData.formatId,
           bookkeepingData.text
         );
-        console.log(`${logPrefix} 格式學習處理完成`);
+        BK_logInfo(`${logPrefix} 格式學習處理完成`, "格式學習", userId, "BK_processBookkeeping");
       } catch (formatError) {
-        console.log(`${logPrefix} 格式學習失敗: ${formatError}`);
-        BK_logWarning(`格式學習失敗: ${formatError} [${processId}]`, "格式學習", userId, "FORMAT_LEARN_ERROR", formatError.toString(), "BK_processBookkeeping");
+        BK_logWarning(`${logPrefix} 格式學習失敗: ${formatError}`, "格式學習", userId, "BK_processBookkeeping");
       }
     }
 
     // 16. 從BK_prepareBookkeepingData獲取經過驗證的支付方式
     const finalPaymentMethod = bookkeepingDataArray[6]; // 索引6是支付方式
-    console.log(`${logPrefix} 最終確認的支付方式: ${finalPaymentMethod}`);
+    BK_logInfo(`${logPrefix} 最終確認的支付方式: ${finalPaymentMethod}`, "記帳處理", userId, "BK_processBookkeeping");
 
     // 格式化回傳結果
-    console.log(`${logPrefix} 記帳處理成功: ${bookkeepingId}, 使用者類型: ${userType}, 原始金額: ${rawAmount}, 支付方式: ${finalPaymentMethod}`);
-    BK_logInfo(`記帳處理成功: ${bookkeepingId}, 支付方式: ${finalPaymentMethod}, 使用者: ${userId}, 類型: ${userType} [${processId}]`, "記帳完成", userId, "BK_processBookkeeping");
+    BK_logInfo(`${logPrefix} 記帳處理成功: ${bookkeepingId}, 使用者類型: ${userType}, 原始金額: ${rawAmount}, 支付方式: ${finalPaymentMethod}`, "記帳完成", userId, "BK_processBookkeeping");
 
     return {
       success: true,
@@ -805,8 +795,7 @@ async function BK_processBookkeeping(bookkeepingData) {
 
   } catch (error) {
     // 17. 記錄錯誤
-    console.error(`${logPrefix} 記帳處理失敗: ${error.toString()}`);
-    BK_logError(`記帳處理失敗: ${error.toString()} [${processId}]`, "記帳處理", bookkeepingData ? bookkeepingData.userId : "", "PROCESS_ERROR", error.toString(), "BK_processBookkeeping");
+    BK_logError(`${logPrefix} 記帳處理失敗: ${error.toString()}`, "記帳處理", bookkeepingData ? bookkeepingData.userId : "", "PROCESS_ERROR", error.toString(), "BK_processBookkeeping");
 
     // 識別特定類型的錯誤
     let errorType = "GENERAL_ERROR";
@@ -857,8 +846,7 @@ async function BK_processBookkeeping(bookkeepingData) {
         }
       });
     } catch (e) {
-      console.error(`${logPrefix} 無法提取部分數據: ${e.toString()}`);
-      BK_logError(`無法提取部分數據: ${e.toString()} [${processId}]`, "錯誤處理", "", "PARTIAL_DATA_ERROR", e.toString(), "BK_processBookkeeping");
+      BK_logError(`${logPrefix} 無法提取部分數據: ${e.toString()}`, "錯誤處理", "", "PARTIAL_DATA_ERROR", e.toString(), "BK_processBookkeeping");
     }
 
     // 確保partialData有合理默認值
@@ -1118,17 +1106,17 @@ function BK_getPaymentMethods() {
  */
 function BK_validatePaymentMethod(method, majorCode) {
   try {
-    console.log(`BK_validatePaymentMethod: 驗證支付方式 "${method}" 對應科目代碼 ${majorCode}`);
+    BK_logDebug(`BK_validatePaymentMethod: 驗證支付方式 "${method}" 對應科目代碼 ${majorCode}`, "支付方式驗證", "", "BK_validatePaymentMethod");
 
     // 1. 空值處理 - 如果輸入為空/null/undefined/預設
     if (!method || method === "" || method === "預設") {
       if (majorCode && (String(majorCode).startsWith('8') || String(majorCode).startsWith('9'))) {
         // 8或9開頭的科目默認用現金
-        console.log(`BK_validatePaymentMethod: 科目代碼 ${majorCode} 為8或9開頭，使用默認支付方式"現金"`);
+        BK_logDebug(`BK_validatePaymentMethod: 科目代碼 ${majorCode} 為8或9開頭，使用默認支付方式"現金"`, "支付方式驗證", "", "BK_validatePaymentMethod");
         return "現金";
       } else {
         // 其他科目默認用刷卡
-        console.log(`BK_validatePaymentMethod: 未指定支付方式或值為"預設"，使用默認支付方式"刷卡"`);
+        BK_logDebug(`BK_validatePaymentMethod: 未指定支付方式或值為"預設"，使用默認支付方式"刷卡"`, "支付方式驗證", "", "BK_validatePaymentMethod");
         return "刷卡";
       }
     }
@@ -1137,18 +1125,18 @@ function BK_validatePaymentMethod(method, majorCode) {
     const validPaymentMethods = ["現金", "刷卡", "轉帳", "行動支付"];
 
     if (validPaymentMethods.includes(method)) {
-      console.log(`BK_validatePaymentMethod: 使用有效支付方式 "${method}"`);
+      BK_logDebug(`BK_validatePaymentMethod: 使用有效支付方式 "${method}"`, "支付方式驗證", "", "BK_validatePaymentMethod");
       return method;
     }
 
     // 3. 不支援的支付方式 - 拋出錯誤而非默認為刷卡
     const errorMessage = `不支援的支付方式: "${method}"，僅支援 "現金"、"刷卡"、"轉帳"、"行動支付"`;
-    console.error(`BK_validatePaymentMethod: ${errorMessage}`);
+    BK_logError(`BK_validatePaymentMethod: ${errorMessage}`, "支付方式驗證", "", "INVALID_PAYMENT_METHOD", errorMessage, "BK_validatePaymentMethod");
     throw new Error(errorMessage);
 
   } catch (error) {
     // 4. 異常處理 - 重新拋出錯誤以供上層函數處理
-    console.error(`BK_validatePaymentMethod 發生錯誤: ${error.toString()}`);
+    BK_logError(`BK_validatePaymentMethod 發生錯誤: ${error.toString()}`, "支付方式驗證", "", "PAYMENT_VALIDATION_ERROR", error.toString(), "BK_validatePaymentMethod");
 
     // 記錄到BK日誌系統(如果可用)
     try {
@@ -1237,7 +1225,6 @@ function BK_smartTextParsing(text, processId) {
   } catch (error) {
     // 發生錯誤時返回原始文本
     BK_logError(`智能文本解析錯誤: ${error.toString()} [${processId}]`, "文本解析", "", "PARSE_ERROR", error.toString(), "BK_smartTextParsing");
-    console.error(`智能文本解析錯誤: ${error.toString()}, 堆疊: ${error.stack || "無堆疊信息"}`);
     return { detected: false, remark: text, amount: 0 };
   }
 }
