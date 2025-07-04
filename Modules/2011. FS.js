@@ -1,18 +1,51 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.0.4
+* FS_FirestoreStructure_資料庫結構模組_1.0.5
 * @module 資料庫結構模組
-* @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整欄位架構
-* @update 2025-07-02: 修正Firebase重複初始化衝突，統一使用FB_Serviceaccountkey模組
+* @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
+* @update 2025-07-03: 新增Database層級初始化，完善資料庫結構建立
 */
 
 // 使用已初始化的 Firebase 實例
 const { admin, db } = require('./FB_Serviceaccountkey.js');
 
 /**
-* 01. 初始化資料庫結構主函數
-* @version 2025-07-02-V1.0.3
-* @date 2025-07-02 03:34:16
-* @update: 修正Firebase重複初始化問題，使用統一的Firebase實例
+* 00. 檢查並初始化 Firestore Database
+* @version 2025-07-03-V1.0.1
+* @date 2025-07-03 05:35:35
+* @description 確保 Firestore Database 層級存在並可正常運作
+*/
+async function initFirestoreDatabase() {
+  try {
+    console.log('🔍 檢查 Firestore Database 連接狀態...');
+
+    // 檢查 Database 連接
+    const testRef = db.collection('_health_check').doc('connection_test');
+    await testRef.set({
+      timestamp: admin.firestore.Timestamp.now(),
+      status: 'database_initialized',
+      message: 'Database connection verified',
+      project_id: process.env.FB_PROJECT_ID
+    });
+
+    // 立即刪除測試文件
+    await testRef.delete();
+
+    console.log('✅ Firestore Database 連接正常');
+    console.log(`📊 Database Project ID: ${process.env.FB_PROJECT_ID}`);
+    console.log(`🌐 Universe Domain: ${process.env.FB_UNIVERSE_DOMAIN || 'googleapis.com'}`);
+
+    return true;
+  } catch (error) {
+    console.error('❌ Firestore Database 初始化失敗:', error);
+    throw error;
+  }
+}
+
+/**
+* 01. 初始化完整資料庫結構主函數
+* @version 2025-07-03-V1.0.1
+* @date 2025-07-03 05:35:35
+* @update: 新增Database層級檢查，確保完整資料庫架構
 */
 async function initDatabaseStructure() {
   const lineUID = process.env.UID_TEST;
@@ -25,22 +58,28 @@ async function initDatabaseStructure() {
   const currentTime = new Date();
 
   try {
-    console.log(`🚀 開始建立 LCAS 2.0 資料庫結構... (執行者: AustinLiao69)`);
+    console.log(`🚀 開始建立 LCAS 2.0 完整資料庫結構... (執行者: AustinLiao69)`);
     console.log(`⏰ 當前 UTC 時間: ${currentTime.toISOString()}`);
 
-    // 依序建立各項資料庫結構
+    // 步驟 0：初始化 Database 層級
+    await initFirestoreDatabase();
+
+    // 步驟 1-5：依序建立各項資料庫結構
     await createUserCollection(lineUID);
     await createLedgerCollection(ledgerId, lineUID);
     await createSubjectsCollection(ledgerId);
     await createEntriesCollection(ledgerId, lineUID);
     await createLogCollection(ledgerId, lineUID, currentTime);
 
-    console.log('✅ LCAS 2.0 資料庫結構建立完成！');
+    // 步驟 6：建立系統層級的 metadata
+    await createSystemMetadata(currentTime);
+
+    console.log('✅ LCAS 2.0 完整資料庫結構建立完成！');
     console.log(`✅ UTC 時間: ${currentTime.toISOString()}`);
     console.log(`✅ 執行者: AustinLiao69`);
     console.log(`✅ 使用者 ID: ${lineUID}`);
     console.log(`✅ 帳本 ID: ${ledgerId}`);
-    console.log('🎉 所有 Collection 欄位結構已準備就緒！');
+    console.log('🎉 Database → Collections → Documents → Fields 完整架構已建立！');
 
   } catch (error) {
     console.error('❌ 資料庫結構建立失敗:', error);
@@ -142,21 +181,49 @@ async function createEntriesCollection(ledgerId, lineUID) {
 async function createLogCollection(ledgerId, lineUID, currentTime) {
   await db.collection('ledgers').doc(ledgerId).collection('log').add({
     時間: admin.firestore.Timestamp.now(),      // 自動記錄當前時間
-    訊息: 'LCAS 2.0 資料庫結構初始化完成',      // 日誌訊息
-    操作類型: '結構建立',                        // 操作類型分類
+    訊息: 'LCAS 2.0 完整資料庫結構初始化完成',  // 日誌訊息
+    操作類型: '完整結構建立',                    // 操作類型分類
     UID: lineUID,                              // 操作者 LINE UID (統一使用UID)
     錯誤代碼: null,                            // 錯誤代碼 (無錯誤時為null)
     來源: 'Replit',                            // 來源系統
     錯誤詳情: `執行者: AustinLiao69, UTC時間: ${currentTime.toISOString()}`, // 詳細資訊
     重試次數: 0,                               // 重試次數
-    程式碼位置: '2011. FS.js:createLogCollection', // 修正程式碼位置
+    程式碼位置: '2011-FS-Enhanced.js:createLogCollection', // 程式碼位置
     嚴重等級: 'INFO'                           // DEBUG/INFO/WARNING/ERROR/CRITICAL
   });
   console.log('✅ Log Sub-Collection 結構建立完成');
 }
 
 /**
-* 07. 錯誤處理與日誌記錄
+* 07. 建立系統級 Metadata（新增）
+* @version 2025-07-03-V1.0.1
+* @date 2025-07-03 05:35:35
+* @description 建立系統層級的metadata，記錄資料庫結構版本等資訊
+*/
+async function createSystemMetadata(currentTime) {
+  await db.collection('_system').doc('metadata').set({
+    database_version: '2.0',                   // 資料庫版本
+    structure_version: '1.0.5',               // 結構版本
+    last_structure_update: admin.firestore.Timestamp.now(), // 最後結構更新時間
+    creator: 'AustinLiao69',                   // 建立者
+    project_id: process.env.FB_PROJECT_ID,    // Firebase 專案 ID
+    environment: 'production',                // 環境標識
+    lcas_version: '2.0',                      // LCAS 版本
+    structure_modules: [                       // 結構模組清單
+      'users',
+      'ledgers',
+      'subjects',
+      'entries', 
+      'log'
+    ],
+    created_utc: currentTime.toISOString(),    // UTC 建立時間
+    notes: 'Complete Firestore structure with Database → Collections → Documents → Fields hierarchy'
+  });
+  console.log('✅ System Metadata 建立完成');
+}
+
+/**
+* 08. 錯誤處理與日誌記錄
 * @version 2025-07-02-V1.0.3
 * @date 2025-07-02 03:34:16
 * @update: 統一使用UID，簡化錯誤處理
@@ -165,14 +232,14 @@ async function logError(ledgerId, lineUID, error, currentTime) {
   try {
     await db.collection('ledgers').doc(ledgerId).collection('log').add({
       時間: admin.firestore.Timestamp.now(),
-      訊息: '資料庫結構建立過程發生錯誤',
-      操作類型: '結構建立',
+      訊息: '完整資料庫結構建立過程發生錯誤',
+      操作類型: '完整結構建立',
       UID: lineUID || 'unknown',               // 統一使用UID
       錯誤代碼: error.code || 'UNKNOWN_ERROR',
       來源: 'Replit',
       錯誤詳情: `錯誤訊息: ${error.message}, 執行者: AustinLiao69, UTC時間: ${currentTime.toISOString()}`,
       重試次數: 0,
-      程式碼位置: '2011. FS.js:logError',      // 修正程式碼位置
+      程式碼位置: '2011-FS-Enhanced.js:logError', // 修正程式碼位置
       嚴重等級: 'ERROR'
     });
   } catch (logError) {
@@ -180,5 +247,5 @@ async function logError(ledgerId, lineUID, error, currentTime) {
   }
 }
 
-// 執行資料庫結構初始化
+// 執行完整資料庫結構初始化
 initDatabaseStructure();
