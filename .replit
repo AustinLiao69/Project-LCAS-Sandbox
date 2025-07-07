@@ -7,6 +7,7 @@ requiredFiles = [".replit", "replit.nix", "package.json", "package-lock.json"]
 
 [nix]
 channel = "stable-24_11"
+packages = ["undollar"]
 
 [deployment]
 run = ["node", "index.js"]
@@ -29,3 +30,11 @@ localPort = 8000
 
 [[ports]]
 localPort = 9005
+
+[[ports]]
+localPort = 9006
+externalPort = 3000
+
+[[ports]]
+localPort = 9007
+externalPort = 3001
