@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.0.5
+* FS_FirestoreStructure_資料庫結構模組_1.0.6
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
-* @update 2025-07-03: 新增Database層級初始化，完善資料庫結構建立
+* @update 2025-07-08: 升級至1.0.6版本，嚴格依賴Secrets中的UID_TEST環境變數
 */
 
 // 使用已初始化的 Firebase 實例
