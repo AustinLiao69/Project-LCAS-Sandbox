@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.0.7
+* FS_FirestoreStructure_資料庫結構模組_1.0.9
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
-* @update 2025-07-08: 升級至1.0.7版本，直接使用serviceaccountkey.json初始化Firebase
+* @update 2025-07-08: 升級至1.0.9版本，修正project_id undefined問題，加入UTC+8時區支援
 */
 
 // 直接使用 Firebase Admin SDK 和 serviceaccountkey.json
@@ -20,11 +20,18 @@ if (!admin.apps.length) {
 // 取得 Firestore 實例
 const db = admin.firestore();
 
+// 從 serviceAccount 取得專案資訊，並處理可能的 undefined 情況
+const PROJECT_ID = serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'default-project';
+const UNIVERSE_DOMAIN = 'googleapis.com';
+
+// 設定時區為 UTC+8 (Asia/Taipei)
+const TIMEZONE = 'Asia/Taipei';
+
 /**
 * 00. 檢查並初始化 Firestore Database
-* @version 2025-07-03-V1.0.1
-* @date 2025-07-03 05:35:35
-* @description 確保 Firestore Database 層級存在並可正常運作
+* @version 2025-07-08-V1.0.2
+* @date 2025-07-08 14:55:00
+* @description 確保 Firestore Database 層級存在並可正常運作，修正project_id取得方式
 */
 async function initFirestoreDatabase() {
   try {
@@ -32,19 +39,28 @@ async function initFirestoreDatabase() {
 
     // 檢查 Database 連接
     const testRef = db.collection('_health_check').doc('connection_test');
-    await testRef.set({
+    
+    // 建立測試資料，避免 undefined 值
+    const testData = {
       timestamp: admin.firestore.Timestamp.now(),
       status: 'database_initialized',
       message: 'Database connection verified',
-      project_id: process.env.FB_PROJECT_ID
-    });
+      test_id: `test_${Date.now()}`
+    };
+    
+    // 只有在 PROJECT_ID 有值時才加入
+    if (PROJECT_ID && PROJECT_ID !== 'default-project') {
+      testData.project_id = PROJECT_ID;
+    }
+    
+    await testRef.set(testData);
 
     // 立即刪除測試文件
     await testRef.delete();
 
     console.log('✅ Firestore Database 連接正常');
-    console.log(`📊 Database Project ID: ${process.env.FB_PROJECT_ID}`);
-    console.log(`🌐 Universe Domain: ${process.env.FB_UNIVERSE_DOMAIN || 'googleapis.com'}`);
+    console.log(`📊 Database Project ID: ${PROJECT_ID}`);
+    console.log(`🌐 Universe Domain: ${UNIVERSE_DOMAIN}`);
 
     return true;
   } catch (error) {
@@ -55,9 +71,9 @@ async function initFirestoreDatabase() {
 
 /**
 * 01. 初始化完整資料庫結構主函數
-* @version 2025-07-08-V1.0.7
-* @date 2025-07-08 14:50:00
-* @update: 直接使用serviceaccountkey.json初始化Firebase，移除FB_Serviceaccountkey.js依賴
+* @version 2025-07-08-V1.0.9
+* @date 2025-07-08 15:00:00
+* @update: 修正project_id undefined問題，加入UTC+8時區支援和完整錯誤處理
 */
 async function initDatabaseStructure() {
   const lineUID = process.env.UID_TEST;
@@ -71,10 +87,12 @@ async function initDatabaseStructure() {
 
   const ledgerId = 'ledger_structure_001';
   const currentTime = new Date();
+  const utcPlus8Time = new Date(currentTime.getTime() + (8 * 60 * 60 * 1000));
 
   try {
     console.log(`🚀 開始建立 LCAS 2.0 完整資料庫結構... (執行者: AustinLiao69)`);
     console.log(`⏰ 當前 UTC 時間: ${currentTime.toISOString()}`);
+    console.log(`🇹🇼 當前 UTC+8 時間: ${utcPlus8Time.toISOString()}`);
 
     // 步驟 0：初始化 Database 層級
     await initFirestoreDatabase();
@@ -211,19 +229,22 @@ async function createLogCollection(ledgerId, lineUID, currentTime) {
 
 /**
 * 07. 建立系統級 Metadata（新增）
-* @version 2025-07-03-V1.0.1
-* @date 2025-07-03 05:35:35
-* @description 建立系統層級的metadata，記錄資料庫結構版本等資訊
+* @version 2025-07-08-V1.0.2
+* @date 2025-07-08 14:55:00
+* @description 建立系統層級的metadata，記錄資料庫結構版本等資訊，修正project_id取得方式
 */
 async function createSystemMetadata(currentTime) {
-  await db.collection('_system').doc('metadata').set({
+  // 取得 UTC+8 時間
+  const utcPlus8Time = new Date(currentTime.getTime() + (8 * 60 * 60 * 1000));
+  
+  const metadataDoc = {
     database_version: '2.0',                   // 資料庫版本
-    structure_version: '1.0.5',               // 結構版本
+    structure_version: '1.0.8',               // 結構版本（更新至當前版本）
     last_structure_update: admin.firestore.Timestamp.now(), // 最後結構更新時間
     creator: 'AustinLiao69',                   // 建立者
-    project_id: process.env.FB_PROJECT_ID,    // Firebase 專案 ID
     environment: 'production',                // 環境標識
     lcas_version: '2.0',                      // LCAS 版本
+    timezone: TIMEZONE,                       // 時區設定
     structure_modules: [                       // 結構模組清單
       'users',
       'ledgers',
@@ -232,8 +253,16 @@ async function createSystemMetadata(currentTime) {
       'log'
     ],
     created_utc: currentTime.toISOString(),    // UTC 建立時間
+    created_local: utcPlus8Time.toISOString(), // UTC+8 建立時間
     notes: 'Complete Firestore structure with Database → Collections → Documents → Fields hierarchy'
-  });
+  };
+  
+  // 只有在 PROJECT_ID 有效時才加入
+  if (PROJECT_ID && PROJECT_ID !== 'default-project') {
+    metadataDoc.project_id = PROJECT_ID;
+  }
+  
+  await db.collection('_system').doc('metadata').set(metadataDoc);
   console.log('✅ System Metadata 建立完成');
 }
 
