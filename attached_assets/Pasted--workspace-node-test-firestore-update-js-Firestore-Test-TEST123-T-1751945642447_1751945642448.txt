@@ -1,0 +1,43 @@
+~/workspace$ node test_firestore_update.js
+🔧 開始執行 Firestore 欄位新增操作...
+🚀 開始在 Test/TEST123 文件中新增 TEST456 欄位...
+(node:7103) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+❌ 新增 TEST456 欄位時發生錯誤: Error: 5 NOT_FOUND: 
+    at callErrorFromStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/call.js:32:19)
+    at Object.onReceiveStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client.js:359:73)
+    at Object.onReceiveStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:324:181)
+    at /home/runner/workspace/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeServerStreamRequest (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client.js:342:32)
+    at ServiceClientImpl.<anonymous> (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/v1/firestore_client.js:237:29
+    at /home/runner/workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:38:28
+    at /home/runner/workspace/node_modules/google-gax/build/src/normalCalls/timeout.js:44:16
+    at Object.request (/home/runner/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:234:40)
+    at makeRequest (/home/runner/workspace/node_modules/retry-request/index.js:159:28)
+    at retryRequest (/home/runner/workspace/node_modules/retry-request/index.js:119:5)
+    at StreamProxy.setStream (/home/runner/workspace/node_modules/google-gax/build/src/streamingCalls/streaming.js:225:37)
+    at StreamingApiCaller.call (/home/runner/workspace/node_modules/google-gax/build/src/streamingCalls/streamingApiCaller.js:54:16)
+Caused by: Error
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/index.js:1040:27
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30
+    at NoopContextManager.with (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+    at ContextAPI.with (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+    at NoopTracer.startActiveSpan (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+    at ProxyTracer.startActiveSpan (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+    at EnabledTraceUtil.startActiveSpan (/home/runner/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:102:28)
+    at Firestore.getAll (/home/runner/workspace/node_modules/@google-cloud/firestore/build/src/index.js:1031:32)
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/reference/document-reference.js:182:36
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30 {
+  code: 5,
+  details: '',
+  metadata: Metadata {
+    internalRepr: Map(1) { 'x-debug-tracking-id' => [Array] },
+    options: {}
+  }
+}
+錯誤詳情: 5 NOT_FOUND: 
+❌ 操作失敗！
+~/workspace$ 
