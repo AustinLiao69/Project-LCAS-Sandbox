@@ -19,8 +19,14 @@ if (admin.apps.length === 0) {
 }
 
 // 連接到 test00000 資料庫
+// 注意：Firestore 在同一專案中通常只有一個預設資料庫 (default)
+// 如果您在 Firebase Console 中建立的是預設資料庫，請直接使用 db
 const db = admin.firestore();
-const testDb = db.database('test00000');
+
+// 如果確實需要連接到特定名稱的資料庫，需要使用不同的初始化方式
+// 但通常 Firestore 專案只有一個預設資料庫
+console.log('📊 使用預設 Firestore 資料庫實例');
+console.log('💡 注意：Firestore 通常使用預設資料庫，而非多個具名資料庫');
 
 /**
  * 01. 在 test00000 資料庫中建立 test 集合和 test123 文件
@@ -30,13 +36,13 @@ const testDb = db.database('test00000');
  */
 async function createTestCollectionAndDocument() {
   try {
-    console.log('🚀 開始在 test00000 資料庫中建立 test 集合和 test123 文件...');
-    console.log('📊 目標資料庫: test00000');
+    console.log('🚀 開始在預設 Firestore 資料庫中建立 test 集合和 test123 文件...');
+    console.log('📊 目標資料庫: default (預設資料庫)');
     console.log('📁 目標集合: test');
     console.log('📄 目標文件: test123');
     
-    // 取得 test00000 資料庫中 test 集合的 test123 文件引用
-    const docRef = testDb.collection('test').doc('test123');
+    // 取得預設資料庫中 test 集合的 test123 文件引用
+    const docRef = db.collection('test').doc('test123');
     
     // 檢查文件是否存在
     const docSnapshot = await docRef.get();
@@ -47,10 +53,10 @@ async function createTestCollectionAndDocument() {
       // 建立測試資料
       const testData = {
         name: 'test123',
-        description: '測試文件 - 在 test00000 資料庫中建立',
+        description: '測試文件 - 在預設 Firestore 資料庫中建立',
         createdAt: admin.firestore.Timestamp.now(),
         updatedAt: admin.firestore.Timestamp.now(),
-        database: 'test00000',
+        database: 'default',
         collection: 'test',
         status: 'active',
         testField: 'Hello from test00000 database!',
@@ -92,7 +98,7 @@ async function createTestCollectionAndDocument() {
       console.log(`📁 集合: ${data.collection || '未設定'}`);
       console.log(`📅 建立時間: ${data.createdAt ? data.createdAt.toDate().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) : '未設定'}`);
       console.log(`🔄 更新時間: ${data.updatedAt ? data.updatedAt.toDate().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) : '未設定'}`);
-      console.log('🔗 完整路徑: /databases/test00000/documents/test/test123');
+      console.log('🔗 完整路徑: /databases/(default)/documents/test/test123');
     } else {
       console.log('❌ 無法讀取文件資料');
     }
@@ -106,10 +112,10 @@ async function createTestCollectionAndDocument() {
     
     if (error.code === 5) {
       console.log('💡 可能的問題：');
-      console.log('1. test00000 資料庫可能尚未在 Firebase Console 中建立');
-      console.log('2. 資料庫名稱可能不正確');
-      console.log('3. Service Account 權限可能不足');
-      console.log('4. 請確認在 Firebase Console 中已建立 test00000 資料庫');
+      console.log('1. Firestore 資料庫可能尚未在 Firebase Console 中啟用');
+      console.log('2. Service Account 權限可能不足');
+      console.log('3. 請確認在 Firebase Console 中已啟用 Firestore 資料庫');
+      console.log('4. 檢查專案 ID 是否正確');
     }
     
     return false;
@@ -124,10 +130,10 @@ async function createTestCollectionAndDocument() {
  */
 async function main() {
   try {
-    console.log('🎯 開始執行 test00000 資料庫測試資料建立操作...');
+    console.log('🎯 開始執行預設 Firestore 資料庫測試資料建立操作...');
     console.log('=' * 60);
     console.log(`📊 專案 ID: ${serviceAccount.project_id}`);
-    console.log(`🔧 目標資料庫: test00000`);
+    console.log(`🔧 目標資料庫: default (預設資料庫)`);
     console.log(`📁 目標集合: test`);
     console.log(`📄 目標文件: test123`);
     console.log('=' * 60);
@@ -137,10 +143,10 @@ async function main() {
     if (result) {
       console.log('✅ 測試資料建立操作完成！');
       console.log('🎉 您現在可以在 Firebase Console 中查看建立的資料：');
-      console.log('📍 路徑: Firebase Console → Firestore Database → test00000 → test → test123');
+      console.log('📍 路徑: Firebase Console → Firestore Database → (default) → test → test123');
     } else {
       console.log('❌ 測試資料建立操作失敗！');
-      console.log('💡 請檢查 Firebase Console 中是否已建立 test00000 資料庫');
+      console.log('💡 請檢查 Firebase Console 中是否已啟用 Firestore 資料庫');
     }
     
   } catch (error) {
