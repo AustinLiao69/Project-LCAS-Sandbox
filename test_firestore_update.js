@@ -6,8 +6,19 @@
  * @update 2025-07-08: 初版建立，新增指定欄位到現有文件
  */
 
-// 使用已初始化的 Firebase 實例
-const { admin, db } = require('./Modules/FB_Serviceaccountkey.js');
+// 直接使用 Firebase Admin SDK 和 Serviceaccountkey.json
+const admin = require('firebase-admin');
+const serviceAccount = require('./Serviceaccountkey.json');
+
+// 初始化 Firebase Admin SDK
+if (admin.apps.length === 0) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    projectId: serviceAccount.project_id
+  });
+}
+
+const db = admin.firestore();
 
 /**
  * 01. 新增 TEST456 欄位到 TEST123 文件
