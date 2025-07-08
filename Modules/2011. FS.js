@@ -43,16 +43,19 @@ async function initFirestoreDatabase() {
 
 /**
 * 01. 初始化完整資料庫結構主函數
-* @version 2025-07-03-V1.0.1
-* @date 2025-07-03 05:35:35
-* @update: 新增Database層級檢查，確保完整資料庫架構
+* @version 2025-07-08-V1.0.6
+* @date 2025-07-08 14:30:00
+* @update: 嚴格依賴Secrets中的UID_TEST，移除預設值處理
 */
 async function initDatabaseStructure() {
   const lineUID = process.env.UID_TEST;
   if (!lineUID) {
     console.error('❌ 找不到 UID_TEST 環境變數，請在 Replit Secrets 中設定');
+    console.error('💡 請至 Tools > Secrets 新增 UID_TEST 變數');
     return;
   }
+
+  console.log(`📱 使用 Secrets 中的 LINE UID: ${lineUID}`);
 
   const ledgerId = 'ledger_structure_001';
   const currentTime = new Date();
