@@ -14,18 +14,28 @@ const moment = require('moment-timezone');
 const { google } = require('googleapis');
 const sheets = google.sheets('v4');
 
+// 引入 Firestore 模組
+const FS = require('./2011. FS.js');
+
 // 配置參數
 const BK_CONFIG = {
   DEBUG: true,                            // 調試模式開關 - 設置為true以顯示所有日誌
   LOG_LEVEL: "DEBUG",                     // 日誌級別: DEBUG, INFO, WARNING, ERROR, CRITICAL
   SPREADSHEET_ID: getEnvVar('SPREADSHEET_ID'), // 從環境變數獲取試算表ID
   LEDGER_SHEET_NAME: getEnvVar('LEDGER_SHEET_NAME'), // 從環境變數獲取記帳表名稱
+  FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED') || 'true', // 是否啟用 Firestore
+  DEFAULT_LEDGER_ID: getEnvVar('DEFAULT_LEDGER_ID') || 'ledger_structure_001', // 預設帳本ID
   TIMEZONE: "Asia/Taipei",                // 時區設置
   INITIALIZATION_INTERVAL: 300000,        // 初始化間隔(毫秒)，5分鐘
   TEXT_PROCESSING: {
     ENABLE_SMART_PARSING: true,           // 是否啟用智能文本解析
     MIN_AMOUNT_DIGITS: 3,                 // 金額最小位數(避免誤判)
     MAX_REMARK_LENGTH: 20                 // 備註最大長度(避免過長)
+  },
+  STORAGE: {
+    USE_HYBRID: true,                     // 使用混合存儲（Sheets + Firestore）
+    FIRESTORE_ONLY: false,                // 僅使用 Firestore（將來可切換）
+    SHEETS_ONLY: false                    // 僅使用 Google Sheets
   }
 };
 
@@ -706,33 +716,45 @@ async function BK_processBookkeeping(bookkeepingData) {
     // 12. 準備記帳數據數組
     const bookkeepingDataArray = BK_prepareBookkeepingData(bookkeepingId, adaptedData, processId);
 
-    // 13. 執行記帳操作（插入到試算表）
-    BK_logInfo(`${logPrefix} 開始保存數據到試算表`, "數據存儲", userId, "BK_processBookkeeping");
-    const result = await BK_saveToSpreadsheet(bookkeepingDataArray, processId);
+    // 13. 執行記帳操作（混合存儲：試算表 + Firestore）
+    BK_logInfo(`${logPrefix} 開始保存數據到混合存儲（Sheets + Firestore）`, "數據存儲", userId, "BK_processBookkeeping");
+    const result = await BK_saveToHybridStorage(bookkeepingDataArray, processId);
 
-    if (!result.success) {
-      BK_logError(`${logPrefix} 儲存數據失敗: ${result.error}`, "數據存儲", userId, "SAVE_ERROR", result.error, "BK_processBookkeeping");
+    if (!result.overall.success) {
+      const errorMsg = `Sheets: ${result.sheets.error || 'Unknown'}, Firestore: ${result.firestore.error || 'Unknown'}`;
+      BK_logError(`${logPrefix} 混合存儲全部失敗: ${errorMsg}`, "數據存儲", userId, "SAVE_ERROR", errorMsg, "BK_processBookkeeping");
 
       return {
         success: false,
-        error: result.error || "儲存數據失敗",
+        error: "混合存儲全部失敗",
         errorDetails: {
           processId: processId,
           errorTime: BK_formatDateTime(new Date()),
           errorType: "STORAGE_ERROR",
-          module: "BK"
+          module: "BK",
+          storageResults: result
         },
         partialData: {
           subject: bookkeepingData.subjectName,
           amount: numericAmount,
           rawAmount: rawAmount, 
-          paymentMethod: bookkeepingData.paymentMethod, // 不設置默認值
+          paymentMethod: bookkeepingData.paymentMethod,
           remark: remark
         },
-        userFriendlyMessage: `記帳處理失敗 (STORAGE_ERROR)：${result.error || "儲存數據失敗"}\n請重新嘗試或聯繫管理員。`
+        userFriendlyMessage: `記帳處理失敗 (STORAGE_ERROR)：混合存儲全部失敗\n請重新嘗試或聯繫管理員。`
       };
     }
-    BK_logInfo(`${logPrefix} 數據成功保存到試算表，行號: ${result.row}`, "數據存儲", userId, "BK_processBookkeeping");
+    
+    // 記錄存儲成功詳情
+    const storageStatus = `Sheets: ${result.sheets.success ? '✅' : '❌'}, Firestore: ${result.firestore.success ? '✅' : '❌'}`;
+    BK_logInfo(`${logPrefix} 混合存儲成功 - ${storageStatus}`, "數據存儲", userId, "BK_processBookkeeping");
+    
+    if (result.sheets.success) {
+      BK_logInfo(`${logPrefix} Google Sheets 存儲成功，行號: ${result.sheets.row}`, "數據存儲", userId, "BK_processBookkeeping");
+    }
+    if (result.firestore.success) {
+      BK_logInfo(`${logPrefix} Firestore 存儲成功，文檔ID: ${result.firestore.docId}`, "數據存儲", userId, "BK_processBookkeeping");
+    }
 
     // 處理用戶偏好學習（如果啟用）
     if (bookkeepingData.originalSubject && 
@@ -844,6 +866,157 @@ async function BK_processBookkeeping(bookkeepingData) {
         if (partialData[key] === undefined) {
           delete partialData[key];
         }
+
+/**
+ * 16. 儲存數據到 Firestore（新增函數）
+ * @version 2025-07-08-V1.0.0
+ * @author AustinLiao69
+ * @date 2025-07-08 15:30:00
+ * @description 將記帳數據存儲到 Firestore，作為 Google Sheets 的替代方案
+ * @param {Array} bookkeepingData - 記帳數據數組
+ * @param {string} processId - 處理ID
+ * @param {string} ledgerId - 帳本ID（預設使用環境變數）
+ * @returns {Object} 儲存結果
+ */
+async function BK_saveToFirestore(bookkeepingData, processId, ledgerId = 'ledger_structure_001') {
+  BK_logDebug(`開始儲存數據到 Firestore [${processId}]`, "Firestore存儲", "", "BK_saveToFirestore");
+
+  try {
+    // 準備 Firestore 文檔數據
+    const firestoreData = {
+      收支ID: bookkeepingData[0],           // 收支ID
+      使用者類型: bookkeepingData[1],       // 使用者類型
+      日期: bookkeepingData[2],             // 日期
+      時間: bookkeepingData[3],             // 時間
+      大項代碼: bookkeepingData[4],         // 大項代碼
+      子項代碼: bookkeepingData[5],         // 子項代碼
+      支付方式: bookkeepingData[6],         // 支付方式
+      子項名稱: bookkeepingData[7],         // 子項名稱
+      UID: bookkeepingData[8],              // 使用者ID
+      備註: bookkeepingData[9],             // 備註
+      收入: bookkeepingData[10] || null,    // 收入（如果為空則設為null）
+      支出: bookkeepingData[11] || null,    // 支出（如果為空則設為null）
+      同義詞: bookkeepingData[12] || '',    // 同義詞
+      currency: 'NTD',                      // 幣別
+      timestamp: new Date()                 // 系統時間戳
+    };
+
+    // 使用 FS 模組的 Firebase 實例存儲數據
+    const admin = require('firebase-admin');
+    const db = admin.firestore();
+    
+    // 存儲到 ledgers/{ledgerId}/entries 集合
+    const docRef = await db
+      .collection('ledgers')
+      .doc(ledgerId)
+      .collection('entries')
+      .add(firestoreData);
+
+    BK_logInfo(`數據成功儲存到 Firestore，文檔ID: ${docRef.id} [${processId}]`, "Firestore存儲", "", "BK_saveToFirestore");
+
+    // 記錄到日誌集合
+    await db
+      .collection('ledgers')
+      .doc(ledgerId)
+      .collection('log')
+      .add({
+        時間: new Date(),
+        訊息: `BK模組成功新增記帳記錄: ${bookkeepingData[0]}`,
+        操作類型: '記帳新增',
+        UID: bookkeepingData[8],
+        錯誤代碼: null,
+        來源: 'BK',
+        錯誤詳情: `處理ID: ${processId}`,
+        重試次數: 0,
+        程式碼位置: 'BK_saveToFirestore',
+        嚴重等級: 'INFO'
+      });
+
+    return {
+      success: true,
+      docId: docRef.id,
+      firestoreData: firestoreData
+    };
+
+  } catch (error) {
+    BK_logError(`儲存到 Firestore 失敗 [${processId}]`, "Firestore存儲", "", "FIRESTORE_ERROR", error.toString(), "BK_saveToFirestore");
+
+    // 詳細錯誤分析
+    let detailedError = error.toString();
+    if (error.message && error.message.includes("Permission denied")) {
+      detailedError = "無權限存取 Firestore，請檢查服務帳戶權限";
+    } else if (error.message && error.message.includes("Collection")) {
+      detailedError = "Firestore 集合結構錯誤，請檢查資料庫結構";
+    }
+
+    return {
+      success: false,
+      error: "儲存到 Firestore 失敗: " + detailedError
+    };
+  }
+}
+
+/**
+ * 17. 混合存儲策略（Google Sheets + Firestore）
+ * @version 2025-07-08-V1.0.0
+ * @author AustinLiao69
+ * @date 2025-07-08 15:35:00
+ * @description 同時存儲到 Google Sheets 和 Firestore，提供雙重備份
+ * @param {Array} bookkeepingData - 記帳數據數組
+ * @param {string} processId - 處理ID
+ * @returns {Object} 儲存結果
+ */
+async function BK_saveToHybridStorage(bookkeepingData, processId) {
+  BK_logDebug(`開始混合存儲（Sheets + Firestore）[${processId}]`, "混合存儲", "", "BK_saveToHybridStorage");
+
+  const results = {
+    sheets: { success: false },
+    firestore: { success: false },
+    overall: { success: false }
+  };
+
+  try {
+    // 並行執行兩種存儲方式
+    const [sheetsResult, firestoreResult] = await Promise.allSettled([
+      BK_saveToSpreadsheet(bookkeepingData, processId),
+      BK_saveToFirestore(bookkeepingData, processId)
+    ]);
+
+    // 處理 Google Sheets 結果
+    if (sheetsResult.status === 'fulfilled') {
+      results.sheets = sheetsResult.value;
+    } else {
+      results.sheets = { success: false, error: sheetsResult.reason.toString() };
+    }
+
+    // 處理 Firestore 結果
+    if (firestoreResult.status === 'fulfilled') {
+      results.firestore = firestoreResult.value;
+    } else {
+      results.firestore = { success: false, error: firestoreResult.reason.toString() };
+    }
+
+    // 判斷整體成功狀態（至少一個成功即為成功）
+    results.overall.success = results.sheets.success || results.firestore.success;
+
+    if (results.overall.success) {
+      BK_logInfo(`混合存儲成功 - Sheets: ${results.sheets.success ? '✅' : '❌'}, Firestore: ${results.firestore.success ? '✅' : '❌'} [${processId}]`, 
+                "混合存儲", "", "BK_saveToHybridStorage");
+    } else {
+      BK_logError(`混合存儲全部失敗 [${processId}]`, "混合存儲", "", "HYBRID_STORAGE_ERROR", 
+                 `Sheets: ${results.sheets.error || 'Unknown'}, Firestore: ${results.firestore.error || 'Unknown'}`, "BK_saveToHybridStorage");
+    }
+
+    return results;
+
+  } catch (error) {
+    BK_logError(`混合存儲異常 [${processId}]`, "混合存儲", "", "HYBRID_STORAGE_EXCEPTION", error.toString(), "BK_saveToHybridStorage");
+    
+    results.overall = { success: false, error: error.toString() };
+    return results;
+  }
+}
+
       });
     } catch (e) {
       BK_logError(`${logPrefix} 無法提取部分數據: ${e.toString()}`, "錯誤處理", "", "PARTIAL_DATA_ERROR", e.toString(), "BK_processBookkeeping");
