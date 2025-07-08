@@ -1,12 +1,24 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.0.5
+* FS_FirestoreStructure_資料庫結構模組_1.0.7
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
-* @update 2025-07-03: 新增Database層級初始化，完善資料庫結構建立
+* @update 2025-07-08: 升級至1.0.7版本，直接使用serviceaccountkey.json初始化Firebase
 */
 
-// 使用已初始化的 Firebase 實例
-const { admin, db } = require('./FB_Serviceaccountkey.js');
+// 直接使用 Firebase Admin SDK 和 serviceaccountkey.json
+const admin = require('firebase-admin');
+const serviceAccount = require('./Serviceaccountkey.json');
+
+// 初始化 Firebase Admin
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+  });
+}
+
+// 取得 Firestore 實例
+const db = admin.firestore();
 
 /**
 * 00. 檢查並初始化 Firestore Database
@@ -43,16 +55,19 @@ async function initFirestoreDatabase() {
 
 /**
 * 01. 初始化完整資料庫結構主函數
-* @version 2025-07-03-V1.0.1
-* @date 2025-07-03 05:35:35
-* @update: 新增Database層級檢查，確保完整資料庫架構
+* @version 2025-07-08-V1.0.7
+* @date 2025-07-08 14:50:00
+* @update: 直接使用serviceaccountkey.json初始化Firebase，移除FB_Serviceaccountkey.js依賴
 */
 async function initDatabaseStructure() {
   const lineUID = process.env.UID_TEST;
   if (!lineUID) {
     console.error('❌ 找不到 UID_TEST 環境變數，請在 Replit Secrets 中設定');
+    console.error('💡 請至 Tools > Secrets 新增 UID_TEST 變數');
     return;
   }
+
+  console.log(`📱 使用 Secrets 中的 LINE UID: ${lineUID}`);
 
   const ledgerId = 'ledger_structure_001';
   const currentTime = new Date();

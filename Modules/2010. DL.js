@@ -1,13 +1,25 @@
 /**
- * DL_診斷與日誌模組_3.0.4
+ * DL_診斷與日誌模組_3.0.5
  * 提供統一的日誌記錄和系統診斷功能
- * @update: V3.0.4 - 從Google Sheets改為Firestore存儲（遵循FS.js資料結構）
+ * @update: V3.0.5 - 直接使用serviceaccountkey.json初始化Firebase，移除FB_Serviceaccountkey.js依賴
  * @author: AustinLiao69
- * @lastUpdate: 2025-07-03
+ * @lastUpdate: 2025-07-08
  */
 
-// 使用已初始化的 Firebase 實例
-const { admin, db } = require("./FB_Serviceaccountkey.js");
+// 直接使用 Firebase Admin SDK 和 serviceaccountkey.json
+const admin = require('firebase-admin');
+const serviceAccount = require('./Serviceaccountkey.json');
+
+// 初始化 Firebase Admin（防重複初始化）
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+  });
+}
+
+// 取得 Firestore 實例
+const db = admin.firestore();
 const { v4: uuidv4 } = require("uuid");
 const moment = require("moment-timezone");
 
