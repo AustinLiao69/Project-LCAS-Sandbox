@@ -9,6 +9,7 @@
 const DD = require("./2031. DD.js");
 const BK = require("./2001. BK.js");
 const DL = require("./2010. DL.js");
+const AM = require("./2009. AM.js");
 
 // 引入必要的 Node.js 模組
 const express = require("express");
@@ -1308,12 +1309,87 @@ async function WH_processEventAsync(event, requestId, userId) {
 
       // 處理特定非消息事件類型
       if (event.type === "follow") {
-        // 處理用戶關注事件
-        WH_replyMessage(event.replyToken, {
-          success: true,
-          responseMessage:
-            "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
-        });
+        // 處理用戶關注事件 - 自動建立帳號
+        try {
+          console.log(`處理用戶關注事件: ${userId} [${requestId}]`);
+          
+          // 調用AM模組建立LINE帳號
+          const createResult = await AM.AM_createLineAccount(userId, null, 'J');
+          
+          if (createResult.success) {
+            console.log(`成功為用戶 ${userId} 建立帳號 [${requestId}]`);
+            
+            // 記錄成功日誌
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.3: 用戶關注事件 - 成功建立帳號 ${userId} [${requestId}]`,
+              "用戶關注",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO",
+            ]);
+
+            // 回覆歡迎訊息
+            WH_replyMessage(event.replyToken, {
+              success: true,
+              responseMessage:
+                "🎉 感謝您加入LCAS記帳助手！\n\n您的帳號已自動建立完成。\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
+            });
+            
+          } else {
+            // 帳號建立失敗的處理
+            console.log(`用戶 ${userId} 帳號建立失敗: ${createResult.error} [${requestId}]`);
+            
+            // 記錄失敗日誌
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.3: 用戶關注事件 - 帳號建立失敗 ${userId}: ${createResult.error} [${requestId}]`,
+              "用戶關注",
+              userId,
+              "ACCOUNT_CREATE_FAILED",
+              "WH",
+              createResult.error,
+              0,
+              "WH_processEventAsync",
+              "ERROR",
+            ]);
+
+            // 即使建立失敗，仍然歡迎用戶（可能是重複加入）
+            WH_replyMessage(event.replyToken, {
+              success: true,
+              responseMessage:
+                "感謝您加入LCAS記帳助手！\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
+            });
+          }
+          
+        } catch (followError) {
+          console.log(`處理用戶關注事件錯誤: ${followError} [${requestId}]`);
+          
+          // 記錄錯誤日誌
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.3: 處理用戶關注事件錯誤 ${userId}: ${followError.toString()} [${requestId}]`,
+            "用戶關注",
+            userId,
+            "FOLLOW_EVENT_ERROR",
+            "WH",
+            followError.toString(),
+            0,
+            "WH_processEventAsync",
+            "ERROR",
+          ]);
+
+          // 發送簡化的歡迎訊息
+          WH_replyMessage(event.replyToken, {
+            success: true,
+            responseMessage:
+              "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
+          });
+        }
       } else if (event.type === "unfollow") {
         // 處理用戶取消關注事件 - 無法回覆
         console.log(`用戶 ${userId} 取消關注 [${requestId}]`);

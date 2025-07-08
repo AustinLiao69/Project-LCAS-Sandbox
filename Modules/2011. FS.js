@@ -97,12 +97,13 @@ async function initDatabaseStructure() {
     // 步驟 0：初始化 Database 層級
     await initFirestoreDatabase();
 
-    // 步驟 1-5：依序建立各項資料庫結構
+    // 步驟 1-6：依序建立各項資料庫結構
     await createUserCollection(lineUID);
     await createLedgerCollection(ledgerId, lineUID);
     await createSubjectsCollection(ledgerId);
     await createEntriesCollection(ledgerId, lineUID);
     await createLogCollection(ledgerId, lineUID, currentTime);
+    await createAccountMappingsCollection();
 
     // 步驟 6：建立系統層級的 metadata
     await createSystemMetadata(currentTime);
@@ -228,6 +229,28 @@ async function createLogCollection(ledgerId, lineUID, currentTime) {
 }
 
 /**
+* 07. 建立跨平台帳號映射集合結構（新增）
+* @version 2025-01-09-V1.0.0
+* @date 2025-01-09 00:34:00
+* @description 建立account_mappings collection，記錄跨平台帳號關聯
+*/
+async function createAccountMappingsCollection() {
+  await db.collection('account_mappings').doc('template').set({
+    primary_UID: '',                           // 主要用戶ID
+    platform_accounts: {                      // 平台帳號對應
+      LINE: '',                               // LINE UID
+      iOS: '',                                // iOS UID  
+      Android: ''                             // Android UID
+    },
+    email: '',                                // 用於關聯的Email（可選）
+    created_at: admin.firestore.Timestamp.now(), // 建立時間
+    updated_at: admin.firestore.Timestamp.now(), // 更新時間
+    status: 'active'                          // 狀態: active/suspended/deactivated
+  });
+  console.log('✅ Account Mappings Collection 結構建立完成');
+}
+
+/**
 * 07. 建立系統級 Metadata（新增）
 * @version 2025-07-08-V1.0.2
 * @date 2025-07-08 14:55:00
@@ -250,7 +273,8 @@ async function createSystemMetadata(currentTime) {
       'ledgers',
       'subjects',
       'entries', 
-      'log'
+      'log',
+      'account_mappings'
     ],
     created_utc: currentTime.toISOString(),    // UTC 建立時間
     created_local: utcPlus8Time.toISOString(), // UTC+8 建立時間
