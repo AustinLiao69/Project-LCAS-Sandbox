@@ -1,167 +1,443 @@
 
 /**
- * 13. 從字符串中提取數字
+ * DD2_資料處理模組_3.0.0
+ * @module 資料處理模組
+ * @description LCAS 2.0 資料處理模組 - 完全遷移至Firestore資料庫
+ * @update 2025-07-09: 升級版本至3.0.0，完全遷移至Firestore，移除Google Sheets依賴，遵循2011模組資料庫結構
  */
-function extractNumberFromString(str) {
-  if (!str) return 0;
-  const match = str.match(/\d+/);
-  return match ? parseInt(match[0], 10) : 0;
+
+// 引入 Firebase Admin SDK
+const admin = require('firebase-admin');
+
+// 確保 Firebase 已初始化
+if (!admin.apps.length) {
+  const serviceAccount = require('./Serviceaccountkey.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+  });
+}
+
+// 取得 Firestore 實例
+const db = admin.firestore();
+
+// Node.js 模組依賴
+const { v4: uuidv4 } = require("uuid");
+
+// 設定時區為 UTC+8 (Asia/Taipei)
+const TIMEZONE = 'Asia/Taipei';
+
+// 模組配置
+const DD_CONFIG = {
+  DEBUG: false,
+  TIMEZONE: TIMEZONE,
+  SYNONYM: {
+    FUZZY_MATCH_THRESHOLD: 0.7,
+    ENABLE_COMPOUND_WORDS: true
+  }
+};
+
+/**
+ * 01. 配置初始化
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 遷移至Firestore配置
+ */
+function DD_initConfig() {
+  console.log('DD2模組配置初始化 - Firestore版本');
+  
+  // 確保配置對象存在
+  if (!global.DD_CONFIG) {
+    global.DD_CONFIG = DD_CONFIG;
+  }
+  
+  return true;
+}
+
+/**
+ * 02. 從Firestore獲取所有科目資料
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 完全重寫，使用Firestore查詢
+ */
+async function DD_getAllSubjects() {
+  try {
+    console.log('從Firestore獲取所有科目資料...');
+    
+    // 使用預設帳本ID (每個用戶將有獨立帳本)
+    const ledgerId = process.env.DEFAULT_LEDGER_ID || 'ledger_structure_001';
+    
+    const snapshot = await db.collection('ledgers')
+      .doc(ledgerId)
+      .collection('subjects')
+      .where('isActive', '==', true)
+      .get();
+    
+    if (snapshot.empty) {
+      console.log('未找到任何科目資料');
+      return [];
+    }
+    
+    const subjects = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      // 跳過template文件
+      if (doc.id === 'template') return;
+      
+      subjects.push({
+        majorCode: data.大項代碼,
+        majorName: data.大項名稱,
+        subCode: data.子項代碼,
+        subName: data.子項名稱,
+        synonyms: data.同義詞 || ''
+      });
+    });
+    
+    console.log(`成功獲取 ${subjects.length} 個科目`);
+    return subjects;
+    
+  } catch (error) {
+    console.log(`獲取科目資料失敗: ${error.toString()}`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    return [];
+  }
+}
+
+/**
+ * 03. 日誌處理函數 - 寫入Firestore
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 完全重寫，使用Firestore寫入日誌
+ */
+async function DD_writeToLogSheet(
+  severity,
+  message,
+  operationType = "",
+  userId = "",
+  errorCode = "",
+  source = "DD2",
+  errorDetails = "",
+  retryCount = 0,
+  location = "",
+  functionName = ""
+) {
+  try {
+    const ledgerId = process.env.DEFAULT_LEDGER_ID || 'ledger_structure_001';
+    
+    // 建立日誌資料，遵循2011模組結構
+    const logData = {
+      時間: admin.firestore.Timestamp.now(),
+      訊息: message,
+      操作類型: operationType,
+      UID: userId,
+      錯誤代碼: errorCode || null,
+      來源: source,
+      錯誤詳情: errorDetails,
+      重試次數: retryCount,
+      程式碼位置: location,
+      嚴重等級: severity,
+      函數名稱: functionName
+    };
+
+    // 寫入到指定帳本的log子集合
+    await db.collection('ledgers')
+      .doc(ledgerId)
+      .collection('log')
+      .add(logData);
+
+    console.log(`[${severity}] [DD2] ${message}`);
+
+  } catch (error) {
+    console.log(`寫入日誌失敗: ${error.toString()}. 原始消息: ${message}`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+  }
+}
+
+/**
+ * 04. 統一的日誌處理函數
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @param {string} level - 日誌級別: DEBUG|INFO|WARNING|ERROR|CRITICAL
+ * @param {string} message - 日誌訊息
+ * @param {string} operationType - 操作類型
+ * @param {string} userId - 使用者ID
+ * @param {Object} options - 額外選項
+ */
+function DD_log(level, message, operationType = "", userId = "", options = {}) {
+  const {
+    errorCode = "",
+    errorDetails = "",
+    location = "",
+    functionName = "",
+  } = options;
+
+  // 對DEBUG級別特殊處理 - 只在DEBUG模式開啟時執行
+  if (level === "DEBUG" && !DD_CONFIG.DEBUG) return;
+
+  // 記錄到控制台
+  console.log(`[${level}] [DD2] ${message}`);
+
+  // 為ERROR和CRITICAL級別設置源
+  const source = level === "ERROR" || level === "CRITICAL" ? "DD2" : "";
+
+  // 寫入日誌表
+  DD_writeToLogSheet(
+    level,
+    message,
+    operationType,
+    userId,
+    errorCode,
+    source,
+    errorDetails,
+    0,
+    location,
+    functionName,
+  );
+}
+
+// 包裝函數，保持原有API
+function DD_logDebug(message, operationType = "", userId = "", location = "", functionName = "") {
+  DD_log("DEBUG", message, operationType, userId, { location, functionName });
+}
+
+function DD_logInfo(message, operationType = "", userId = "", location = "", functionName = "") {
+  DD_log("INFO", message, operationType, userId, { location, functionName });
+}
+
+function DD_logWarning(message, operationType = "", userId = "", location = "", functionName = "") {
+  DD_log("WARNING", message, operationType, userId, { location, functionName });
+}
+
+function DD_logError(message, operationType = "", userId = "", errorCode = "", errorDetails = "", location = "", functionName = "") {
+  DD_log("ERROR", message, operationType, userId, {
+    errorCode,
+    errorDetails,
+    location,
+    functionName,
+  });
+}
+
+function DD_logCritical(message, operationType = "", userId = "", errorCode = "", errorDetails = "", location = "", functionName = "") {
+  DD_log("CRITICAL", message, operationType, userId, {
+    errorCode,
+    errorDetails,
+    location,
+    functionName,
+  });
+}
+
+/**
+ * 05. 從Firestore查詢科目代碼
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 完全重寫，使用Firestore查詢科目代碼
+ */
+async function DD_getSubjectByCode(subjectCode) {
+  try {
+    if (!subjectCode) return null;
+
+    // 拆分科目代碼 (格式: majorCode-subCode)
+    const codeParts = subjectCode.split("-");
+    if (codeParts.length !== 2) return null;
+
+    const majorCode = codeParts[0].trim();
+    const subCode = codeParts[1].trim();
+
+    const ledgerId = process.env.DEFAULT_LEDGER_ID || 'ledger_structure_001';
+
+    // 查詢Firestore subjects子集合
+    const snapshot = await db.collection('ledgers')
+      .doc(ledgerId)
+      .collection('subjects')
+      .where('大項代碼', '==', majorCode)
+      .where('子項代碼', '==', subCode)
+      .where('isActive', '==', true)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) return null;
+
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+
+    return {
+      majorCode: data.大項代碼,
+      majorName: data.大項名稱,
+      subCode: data.子項代碼,
+      subName: data.子項名稱,
+      synonyms: data.同義詞 || ''
+    };
+
+  } catch (error) {
+    console.log(`查詢科目代碼失敗: ${error.toString()}`);
+    return null;
+  }
 }
 
 /**
  * 14. 從文字中移除金額部分
- * @version 2.0.3 (2025-06-28)
- * @author AustinLiao69
- * @param {string} text - 原始文字 (例如 "測試支出99999")
- * @param {number|string} amount - 要移除的金額 (例如 99999)
- * @param {string} paymentMethod - 支付方式 (可選)
- * @returns {string} - 移除金額後的文字 (例如 "測試支出")
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 保持原有邏輯，更新版本資訊
  */
-function DD_removeAmountFromText(text, amount) {
+function DD_removeAmountFromText(text, amount, paymentMethod) {
   // 檢查參數
   if (!text || !amount) return text;
 
   // 記錄處理前文字
-  console.log(`處理文字移除金額: 原始文字="${text}", 金額=${amount}`);
+  console.log(
+    `處理文字移除金額和支付方式: 原始文字="${text}", 金額=${amount}, 支付方式=${paymentMethod || "未指定"}`,
+  );
 
-  // 將金額轉為字符串，並轉義正則表達式特殊字符
-  const amountStr = String(amount).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // 將金額轉為字符串
+  const amountStr = String(amount);
   let result = text;
 
   try {
-    // 1. 處理 "科目 金額" 格式 (含空格)
-    const spacePattern = new RegExp(`\\s+${amountStr}(?:\\s|$)`, 'g');
-    if (spacePattern.test(text)) {
-      result = text.replace(spacePattern, '').trim();
-      console.log(`使用空格格式匹配: "${result}"`);
+    // 1. 處理 "科目 金額 支付方式" 格式
+    if (paymentMethod && text.includes(" " + amountStr + " " + paymentMethod)) {
+      result = text.replace(" " + amountStr + " " + paymentMethod, "").trim();
+      console.log(`移除金額和支付方式後: "${result}"`);
       return result;
     }
 
-    // 2. 處理 "科目金額" 格式 (無空格，數字直接連接)
-    const endPattern = new RegExp(`${amountStr}$`);
-    if (endPattern.test(text)) {
-      result = text.replace(endPattern, '').trim();
-      console.log(`使用尾部匹配: "${result}"`);
-      return result;
-    }
+    // 2. 處理 "科目 金額"，然後單獨移除支付方式
+    if (text.includes(" " + amountStr)) {
+      result = text.replace(" " + amountStr, "").trim();
 
-    // 3. 處理 "科目金額元" 或 "科目金額塊" 格式
-    const currencyPattern = new RegExp(`${amountStr}(元|塊|圓|NT|USD)?$`, "i");
-    const match = text.match(currencyPattern);
-    if (match) {
-      result = text.substring(0, match.index).trim();
-      console.log(`使用貨幣單位匹配: "${result}"`);
-      return result;
-    }
-
-    // 4. 通用數字移除：移除任何連續的數字（如果與金額匹配）
-    const generalNumberPattern = new RegExp(`\\d{${amountStr.length},}`, 'g');
-    const numberMatches = text.match(generalNumberPattern);
-    if (numberMatches) {
-      for (const match of numberMatches) {
-        if (match === String(amount)) {
-          result = text.replace(match, '').trim();
-          console.log(`使用通用數字匹配: "${result}"`);
-          return result;
-        }
-      }
-    }
-
-    // 5. 清理多餘的空格和標點符號
-    result = text.replace(/\s+/g, ' ').replace(/[，。！？；：、]/g, '').trim();
-
-    // 6. 如果結果與原文差不多，嘗試提取非數字部分
-    if (result === text) {
-      const nonDigitMatch = text.match(/^[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\w\s]+/);
-      if (nonDigitMatch) {
-        result = nonDigitMatch[0].replace(/\d+/g, '').trim();
-        console.log(`提取非數字部分: "${result}"`);
+      // 如果有支付方式，再嘗試移除支付方式
+      if (paymentMethod && result.includes(" " + paymentMethod)) {
+        result = result.replace(" " + paymentMethod, "").trim();
+        console.log(`移除金額後再移除支付方式: "${result}"`);
         return result;
       }
+
+      console.log(`使用空格格式匹配金額: "${result}"`);
+      return result;
     }
 
-    console.log(`無法確定金額位置，保留原始文字: "${text}"`);
+    // 3. 處理 "科目金額" 格式 (無空格，但金額在尾部)
+    if (text.endsWith(amountStr)) {
+      result = text.substring(0, text.length - amountStr.length).trim();
+      console.log(`使用尾部匹配: "${result}"`);
+
+      // 如果有支付方式，再嘗試移除支付方式
+      if (paymentMethod && result.includes(paymentMethod)) {
+        result = result.replace(paymentMethod, "").trim();
+        console.log(`移除金額後再移除支付方式: "${result}"`);
+      }
+
+      return result;
+    }
+
+    // 4. 處理 "科目金額元" 或 "科目金額塊" 格式
+    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓|NT|USD)?$`, "i");
+    const match = text.match(amountEndRegex);
+    if (match && match.index > 0) {
+      result = text.substring(0, match.index).trim();
+      console.log(`使用貨幣單位匹配: "${result}"`);
+
+      // 如果有支付方式，再嘗試移除支付方式
+      if (paymentMethod && result.includes(paymentMethod)) {
+        result = result.replace(paymentMethod, "").trim();
+        console.log(`移除金額後再移除支付方式: "${result}"`);
+      }
+
+      return result;
+    }
+
+    // 5. 無法確定金額位置，但至少嘗試移除支付方式
+    if (paymentMethod && result.includes(paymentMethod)) {
+      result = result.replace(paymentMethod, "").trim();
+      console.log(`無法確定金額位置，但移除了支付方式: "${result}"`);
+      return result;
+    }
+
+    // 6. 實在無法處理，保留原始文字
+    console.log(`無法確定金額和支付方式位置，保留原始文字: "${text}"`);
     return text;
   } catch (error) {
-    console.log(`移除金額失敗: ${error.toString()}, 返回原始文字`);
+    console.log(`移除金額和支付方式失敗: ${error.toString()}, 返回原始文字`);
     return text;
   }
 }
 
-// 模組匯出
-module.exports = {
-  DD_distributeData,
-  DD_classifyData,
-  DD_dispatchData,
-  DD_processForWH,
-  DD_processForBK,
-  extractNumberFromString,
-  DD_removeAmountFromText,
-  DD_CONFIG,
-  DD_MAX_RETRIES,
-  DD_RETRY_DELAY,
-  DD_TARGET_MODULE_BK,
-  DD_TARGET_MODULE_WH,
-  DD_SUBJECT_CODE_SHEET_NAME,
-  DD_SUBJECT_CODE_MAJOR_CODE_COLUMN,
-  DD_SUBJECT_CODE_MAJOR_NAME_COLUMN,
-  DD_SUBJECT_CODE_SUB_CODE_COLUMN,
-  DD_SUBJECT_CODE_SUB_NAME_COLUMN,
-  DD_SUBJECT_CODE_SYNONYMS_COLUMN,
-  DD_USER_PREF_SHEET_NAME,
-  DD_MODULE_PREFIX,
-};
-
 /**
- * 15. 處理用戶消息並提取記帳信息 - 修正收入支出判斷邏輯
- * @version 2025-06-27-V9.1.1
- * @author AustinLiao69
- * @date 2025-06-27 06:39:02
- * @update: 修正收入支出判斷邏輯、移除支付方式預設值處理、解決重複宣告問題
+ * 15. 處理用戶消息並提取記帳信息 - Firestore版本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 完全重寫，使用Firestore資料庫，移除預設ledgerId依賴
  * @param {string} message - 用戶輸入的消息
- * @param {string} userId - 用戶ID (可選)
+ * @param {string} userId - 用戶ID (必須提供，用於確定用戶帳本)
  * @param {string} timestamp - 時間戳 (可選)
+ * @param {string} ledgerId - 帳本ID (可選，不提供時使用用戶的預設帳本)
  * @return {Object} 處理結果
  */
-async function DD_processUserMessage(message, userId = "", timestamp = "") {
+async function DD_processUserMessage(message, userId = "", timestamp = "", ledgerId = "") {
   // 1. 生成處理ID
-  const msgId = Utilities.getUuid().substring(0, 8);
+  const msgId = uuidv4().substring(0, 8);
 
-  // 2. 開始日誌記錄
+  // 2. 檢查必要參數
+  if (!userId) {
+    DD_logError(
+      `缺少必要的用戶ID [${msgId}]`,
+      "訊息處理",
+      "",
+      "MISSING_USER_ID",
+      "每個用戶都需要獨立的帳本",
+      "DD_processUserMessage"
+    );
+    
+    return {
+      type: "記帳",
+      processed: false,
+      reason: "缺少用戶ID",
+      processId: msgId,
+      errorType: "MISSING_USER_ID",
+      errorData: {
+        success: false,
+        error: "缺少用戶ID",
+        errorType: "MISSING_USER_ID",
+        message: "記帳失敗: 每個用戶都需要獨立的帳本",
+        errorDetails: {
+          processId: msgId,
+          errorType: "VALIDATION_ERROR",
+          module: "DD2",
+        },
+        isRetryable: false
+      }
+    };
+  }
+
+  // 3. 確定帳本ID - 每個用戶獨立帳本
+  if (!ledgerId) {
+    ledgerId = `ledger_${userId}`;
+  }
+
+  // 4. 開始日誌記錄
   DD_logInfo(
-    `處理用戶消息: "${message}"`,
+    `處理用戶消息: "${message}" (帳本: ${ledgerId})`,
     "訊息處理",
     userId,
-    "DD_processUserMessage",
-    "DD_processUserMessage",
+    "DD_processUserMessage"
   );
   console.log(
     `DD_processUserMessage: 開始處理用戶訊息 "${message}" [${msgId}]`,
   );
 
   try {
-    // 3. 確保配置初始化
+    // 5. 確保配置初始化
     DD_initConfig();
-    DD_logDebug(
-      `DD_CONFIG.SYNONYM檢查: FUZZY_MATCH_THRESHOLD=${(DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.FUZZY_MATCH_THRESHOLD) || "未設置"}, ENABLE_COMPOUND_WORDS=${(DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.ENABLE_COMPOUND_WORDS) || "未設置"}`,
-      "訊息處理",
-      userId,
-      "DD_processUserMessage",
-      "DD_processUserMessage",
-    );
 
-    // 4. 檢查空訊息
+    // 6. 檢查空訊息
     if (!message || message.trim() === "") {
       DD_logWarning(
         `空訊息 [${msgId}]`,
         "訊息處理",
         userId,
-        "DD_processUserMessage",
-        "DD_processUserMessage",
+        "DD_processUserMessage"
       );
-      console.log(`DD_processUserMessage: 檢測到空訊息 [${msgId}]`);
 
-      // 4.1 建立標準錯誤資料結構，與BK模組格式相容
       const errorData = {
         success: false,
         error: "空訊息",
@@ -170,21 +446,20 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
         errorDetails: {
           processId: msgId,
           errorType: "VALIDATION_ERROR",
-          module: "BK",
+          module: "DD2",
         },
         isRetryable: true,
         partialData: {
           subject: "",
           amount: 0,
           rawAmount: "0",
-          paymentMethod: "", // 不設置預設值，由BK處理
+          paymentMethod: "",
           timestamp: new Date().getTime(),
         },
         userFriendlyMessage:
           "記帳處理失敗 (VALIDATION_ERROR)：訊息為空\n請重新嘗試或聯繫管理員。",
       };
 
-      // 4.3 回傳統一格式的錯誤結果
       return {
         type: "記帳",
         processed: false,
@@ -195,31 +470,25 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
       };
     }
 
-    // 5. 清理輸入訊息
+    // 7. 清理輸入訊息
     message = message.trim();
     console.log(`DD_processUserMessage: 清理後訊息: "${message}" [${msgId}]`);
 
-    // 6. 使用DD_parseInputFormat解析輸入格式
-    console.log(`DD_processUserMessage: 調用DD_parseInputFormat [${msgId}]`);
-    const parseResult = DD_parseInputFormat(message, msgId);
+    // 8. 解析輸入格式 (這裡需要實作DD_parseInputFormat)
+    const parseResult = await DD_parseInputFormat(message, msgId);
     console.log(
       `DD_processUserMessage: DD_parseInputFormat回傳結果: ${JSON.stringify(parseResult)} [${msgId}]`,
     );
 
-    // 7. 檢查解析結果 - 快速攔截錯誤
+    // 9. 檢查解析結果
     if (!parseResult) {
       DD_logWarning(
         `DD_parseInputFormat回傳null，無法解析訊息格式: "${message}" [${msgId}]`,
         "訊息處理",
         userId,
-        "DD_processUserMessage",
-        "DD_processUserMessage",
-      );
-      console.log(
-        `DD_processUserMessage: DD_parseInputFormat回傳null [${msgId}]`,
+        "DD_processUserMessage"
       );
 
-      // 7.1 建立標準錯誤資料結構，與BK模組格式相容
       const errorData = {
         success: false,
         error: "無法識別記帳意圖",
@@ -228,19 +497,18 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
         errorDetails: {
           processId: msgId,
           errorType: "VALIDATION_ERROR",
-          module: "BK",
+          module: "DD2",
         },
         isRetryable: true,
         partialData: {
           subject: message,
           amount: 0,
           rawAmount: "0",
-          paymentMethod: "", // 不設置預設值，由BK處理
+          paymentMethod: "",
           timestamp: new Date().getTime(),
         },
       };
 
-      // 7.3 回傳統一格式的錯誤結果
       return {
         type: "記帳",
         processed: false,
@@ -251,171 +519,57 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
       };
     }
 
-    // 8. 處理回傳的格式錯誤
-    if (parseResult._formatError || parseResult._missingSubject) {
-      DD_logWarning(
-        `輸入格式錯誤: "${message}" [${msgId}]`,
-        "訊息處理",
-        userId,
-        "DD_processUserMessage",
-        "DD_processUserMessage",
-      );
-      console.log(`DD_processUserMessage: 檢測到格式錯誤 [${msgId}]`);
-
-      // 8.1 使用提供的errorData
-      if (parseResult.errorData) {
-        console.log(`DD_processUserMessage: 使用提供的errorData [${msgId}]`);
-
-        // 8.1.1 確保errorData包含必要欄位
-        if (!parseResult.errorData.message && parseResult.errorData.error) {
-          parseResult.errorData.message = `記帳失敗: ${parseResult.errorData.error}`;
-        }
-
-        // 8.1.3 回傳統一格式的錯誤結果
-        return {
-          type: "記帳",
-          processed: false,
-          reason:
-            parseResult.errorData.error ||
-            parseResult._errorDetail ||
-            "輸入格式問題",
-          processId: msgId,
-          errorType: parseResult.errorData.errorType || "FORMAT_ERROR",
-          errorData: parseResult.errorData,
-        };
-      }
-
-      // 8.2 自行建構符合BK模組格式的錯誤資料
-      console.log(`DD_processUserMessage: 自行建構errorData [${msgId}]`);
-      const errorType = parseResult._missingSubject
-        ? "MISSING_SUBJECT"
-        : "FORMAT_ERROR";
-      const errorMsg = parseResult._errorDetail || "輸入格式錯誤";
-
-      const errorData = {
-        success: false,
-        error: errorMsg,
-        errorType: errorType,
-        message: `記帳失敗: ${errorMsg}`,
-        errorDetails: {
-          processId: msgId,
-          errorType: "VALIDATION_ERROR",
-          module: "BK",
-        },
-        isRetryable: true,
-        partialData: {
-          subject: parseResult.subject || "",
-          amount: parseResult.amount || 0,
-          rawAmount: parseResult.rawAmount || "0",
-          paymentMethod: parseResult.paymentMethod || "", // 不設預設值
-          timestamp: new Date().getTime(),
-        },
-      };
-
-      // 8.2.2 回傳統一格式的錯誤結果
-      return {
-        type: "記帳",
-        processed: false,
-        reason: errorMsg,
-        processId: msgId,
-        errorType: errorType,
-        errorData: errorData,
-      };
-    }
-
-    // 9. 提取成功解析的結果
+    // 10. 提取成功解析的結果
     const subject = parseResult.subject;
     const amount = parseResult.amount;
     const rawAmount = parseResult.rawAmount || String(amount);
-    const paymentMethod = parseResult.paymentMethod; // 直接使用解析結果，不設預設值
+    const paymentMethod = parseResult.paymentMethod;
 
-    // 9.1 記錄解析結果，包括支付方式
-    if (paymentMethod) {
-      console.log(
-        `DD_processUserMessage: 成功解析基本資訊 - 科目="${subject}", 金額=${amount}, 支付方式=${paymentMethod} [${msgId}]`,
-      );
-    } else {
-      console.log(
-        `DD_processUserMessage: 成功解析基本資訊 - 科目="${subject}", 金額=${amount}, 未指定支付方式 [${msgId}]`,
-      );
-    }
+    console.log(
+      `DD_processUserMessage: 成功解析基本資訊 - 科目="${subject}", 金額=${amount}, 支付方式=${paymentMethod || "未指定"} [${msgId}]`,
+    );
 
-    // 10. 科目匹配處理 - 繼續現有流程
+    // 11. 科目匹配處理
     if (subject) {
-      // 只檢查科目是否存在
       console.log(`DD_processUserMessage: 開始科目匹配階段 [${msgId}]`);
 
-      // 10.1 同義詞系統整合 - 多層匹配策略
       let subjectInfo = null;
       let matchMethod = "unknown";
       let confidence = 0;
-      let originalSubject = subject; // 保存原始輸入詞彙
+      let originalSubject = subject;
 
-      // 10.2 嘗試用戶偏好匹配 (如果提供了用戶ID)
-      if (userId) {
-        console.log(`DD_processUserMessage: 嘗試用戶偏好匹配 [${msgId}]`);
-        try {
-          const userPref = DD_userPreferenceManager(userId, subject, "", true);
-          if (userPref) {
-            const prefSubject = DD_getSubjectByCode(userPref.subjectCode);
-            if (prefSubject) {
-              subjectInfo = prefSubject;
-              matchMethod = "user_preference";
-              confidence = 0.9;
-              console.log(
-                `DD_processUserMessage: 用戶偏好匹配成功 "${subject}" -> ${prefSubject.subName} [${msgId}]`,
-              );
-              DD_logDebug(
-                `用戶偏好匹配: "${subject}" -> ${prefSubject.subName}, 科目代碼=${userPref.subjectCode}`,
-                "科目匹配",
-                userId,
-                "DD_processUserMessage",
-                "DD_processUserMessage",
-              );
-            }
+      // 11.1 嘗試用戶偏好匹配
+      try {
+        const userPref = await DD_userPreferenceManager(userId, subject, "", true, ledgerId);
+        if (userPref) {
+          const prefSubject = await DD_getSubjectByCode(userPref.subjectCode);
+          if (prefSubject) {
+            subjectInfo = prefSubject;
+            matchMethod = "user_preference";
+            confidence = 0.9;
+            console.log(
+              `DD_processUserMessage: 用戶偏好匹配成功 "${subject}" -> ${prefSubject.subName} [${msgId}]`,
+            );
           }
-        } catch (prefError) {
-          console.log(
-            `DD_processUserMessage: 用戶偏好匹配錯誤 ${prefError.toString()} [${msgId}]`,
-          );
         }
+      } catch (prefError) {
+        console.log(
+          `DD_processUserMessage: 用戶偏好匹配錯誤 ${prefError.toString()} [${msgId}]`,
+        );
       }
 
-      // 10.3 嘗試精確匹配
+      // 11.2 嘗試精確匹配
       if (!subjectInfo) {
         console.log(`DD_processUserMessage: 嘗試精確匹配 [${msgId}]`);
-        DD_logInfo(
-          `嘗試查詢科目代碼: "${subject}" [${msgId}]`,
-          "科目匹配",
-          userId,
-          "DD_processUserMessage",
-          "DD_processUserMessage",
-        );
-
+        
         try {
-          subjectInfo = await DD_getSubjectCode(subject);
+          subjectInfo = await DD_getSubjectCode(subject, ledgerId);
 
           if (subjectInfo) {
             matchMethod = "exact_match";
             confidence = 1.0;
             console.log(
               `DD_processUserMessage: 精確匹配成功 "${subject}" -> ${subjectInfo.subName} [${msgId}]`,
-            );
-            DD_logInfo(
-              `精確匹配成功: "${subject}" -> ${subjectInfo.subName}, 科目代碼=${subjectInfo.majorCode}-${subjectInfo.subCode}`,
-              "科目匹配",
-              userId,
-              "DD_processUserMessage",
-              "DD_processUserMessage",
-            );
-          } else {
-            console.log(`DD_processUserMessage: 精確匹配失敗 [${msgId}]`);
-            DD_logWarning(
-              `精確匹配失敗: "${subject}" [${msgId}]`,
-              "科目匹配",
-              userId,
-              "DD_processUserMessage",
-              "DD_processUserMessage",
             );
           }
         } catch (matchError) {
@@ -425,22 +579,13 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
         }
       }
 
-      // 10.4 嘗試模糊匹配
+      // 11.3 嘗試模糊匹配
       if (!subjectInfo) {
         console.log(`DD_processUserMessage: 嘗試模糊匹配 [${msgId}]`);
-        DD_logInfo(
-          `嘗試模糊匹配: "${subject}" [${msgId}]`,
-          "科目匹配",
-          userId,
-          "DD_processUserMessage",
-          "DD_processUserMessage",
-        );
-
+        
         try {
-          const fuzzyThreshold =
-            (DD_CONFIG.SYNONYM && DD_CONFIG.SYNONYM.FUZZY_MATCH_THRESHOLD) ||
-            0.7;
-          const fuzzyMatch = await DD_fuzzyMatch(subject);
+          const fuzzyThreshold = DD_CONFIG.SYNONYM?.FUZZY_MATCH_THRESHOLD || 0.7;
+          const fuzzyMatch = await DD_fuzzyMatch(subject, fuzzyThreshold, ledgerId);
 
           if (fuzzyMatch && fuzzyMatch.score >= fuzzyThreshold) {
             subjectInfo = fuzzyMatch;
@@ -448,24 +593,6 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
             confidence = fuzzyMatch.score;
             console.log(
               `DD_processUserMessage: 模糊匹配成功 "${subject}" -> ${fuzzyMatch.subName}, 相似度=${fuzzyMatch.score.toFixed(2)} [${msgId}]`,
-            );
-            DD_logInfo(
-              `模糊匹配成功: "${subject}" -> ${fuzzyMatch.subName}, 相似度=${fuzzyMatch.score.toFixed(2)}`,
-              "科目匹配",
-              userId,
-              "DD_processUserMessage",
-              "DD_processUserMessage",
-            );
-          } else {
-            console.log(
-              `DD_processUserMessage: 模糊匹配失敗或分數低於閾值 [${msgId}]`,
-            );
-            DD_logWarning(
-              `模糊匹配失敗或分數低於閾值: "${subject}" [${msgId}]`,
-              "科目匹配",
-              userId,
-              "DD_processUserMessage",
-              "DD_processUserMessage",
             );
           }
         } catch (fuzzyError) {
@@ -475,103 +602,35 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
         }
       }
 
-      // 10.5 處理多對多映射 (如果提供了時間戳)
-      if (subjectInfo && matchMethod === "exact_match" && timestamp) {
-        console.log(`DD_processUserMessage: 檢查是否有多重映射 [${msgId}]`);
-
-        try {
-          const multiMap = DD_checkMultipleMapping(subject);
-          if (multiMap && multiMap.length > 1) {
-            console.log(
-              `DD_processUserMessage: 檢測到多重映射: "${subject}" 可能屬於 ${multiMap.length} 個類別 [${msgId}]`,
-            );
-            DD_logDebug(
-              `檢測到多重映射: "${subject}" 可能屬於 ${multiMap.length} 個類別`,
-              "科目匹配",
-              userId,
-              "DD_processUserMessage",
-              "DD_processUserMessage",
-            );
-
-            const contextMatch = DD_timeAwareClassification(
-              multiMap,
-              timestamp,
-            );
-            if (contextMatch) {
-              subjectInfo = contextMatch;
-              matchMethod = "time_context";
-              confidence = contextMatch.confidence || 0.8;
-              console.log(
-                `DD_processUserMessage: 時間上下文匹配: "${subject}" -> ${contextMatch.subName} [${msgId}]`,
-              );
-              DD_logDebug(
-                `時間上下文匹配: "${subject}" -> ${contextMatch.subName}`,
-                "科目匹配",
-                userId,
-                "DD_processUserMessage",
-                "DD_processUserMessage",
-              );
-            }
-          }
-        } catch (multiError) {
-          console.log(
-            `DD_processUserMessage: 多重映射檢查發生錯誤 ${multiError.toString()} [${msgId}]`,
-          );
-        }
-      }
-
-      // 11. 準備回傳結果
+      // 12. 準備回傳結果
       if (subjectInfo) {
         console.log(
           `DD_processUserMessage: 科目匹配完成，準備回傳結果 [${msgId}]`,
         );
-        DD_logInfo(
-          `科目匹配完成: "${subject}" -> ${subjectInfo.subName} (${matchMethod})`,
-          "科目匹配",
-          userId,
-          "DD_processUserMessage",
-          "DD_processUserMessage",
-        );
 
-        // 11.1 決定收支類型 - 修正邏輯!
+        // 12.1 決定收支類型
         let action = "支出"; // 預設為支出
 
-        // 修改：處理負數金額，仍設定為支出但保留負號
         if (amount < 0) {
           action = "支出";
           console.log(
             `DD_processUserMessage: 檢測到負數金額: ${amount}，設定為支出類型 [${msgId}]`,
           );
-          DD_logInfo(
-            `檢測到負數金額: ${amount}，設定為支出類型`,
-            "金額處理",
-            userId,
-            "DD_processUserMessage",
-            "DD_processUserMessage",
-          );
         } else {
-          // 根據科目大類判斷收支類型 - 修正：以8開頭的為收入，其他為支出
+          // 根據科目大類判斷收支類型 - 以8開頭的為收入，其他為支出
           if (
             subjectInfo.majorCode &&
             subjectInfo.majorCode.toString().startsWith("8")
           ) {
             action = "收入";
-            console.log(
-              `DD_processUserMessage: 根據科目代碼 ${subjectInfo.majorCode} 判斷為收入 [${msgId}]`,
-            );
           } else {
             action = "支出";
-            console.log(
-              `DD_processUserMessage: 根據科目代碼 ${subjectInfo.majorCode} 判斷為支出 [${msgId}]`,
-            );
           }
         }
 
-        // 11.2 建構回傳結果
-        // 處理備註：從原始文字中移除金額部分
+        // 12.2 建構回傳結果
         const remarkText = DD_removeAmountFromText(message, amount) || subject;
 
-        // 11.3 建構完整回傳結果
         const result = {
           type: "記帳",
           processed: true,
@@ -582,42 +641,24 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
           subCode: subjectInfo.subCode,
           amount: amount,
           rawAmount: rawAmount,
-          paymentMethod: paymentMethod, // 直接傳遞原始值，不設預設值
+          paymentMethod: paymentMethod,
           action: action,
           confidence: confidence,
           matchMethod: matchMethod,
-          text: remarkText, // 移除金額後的文字作為備註
+          text: remarkText,
           originalSubject: originalSubject,
           processId: msgId,
+          ledgerId: ledgerId, // 新增：包含帳本ID
         };
-
-        // 記錄支付方式狀態
-        if (paymentMethod) {
-          console.log(
-            `DD_processUserMessage: 用戶指定了支付方式: ${paymentMethod} [${msgId}]`,
-          );
-        } else {
-          console.log(
-            `DD_processUserMessage: 用戶未指定支付方式，保留為空 [${msgId}]`,
-          );
-        }
 
         console.log(
           `DD_processUserMessage: 回傳結果: ${JSON.stringify(result)} [${msgId}]`,
         );
         return result;
       } else {
-        // 11.3 科目匹配失敗處理
+        // 12.3 科目匹配失敗處理
         console.log(`DD_processUserMessage: 科目匹配失敗 [${msgId}]`);
-        DD_logWarning(
-          `科目匹配失敗: "${subject}"`,
-          "科目匹配",
-          userId,
-          "DD_processUserMessage",
-          "DD_processUserMessage",
-        );
 
-        // 建構標準錯誤資料結構
         const errorData = {
           success: false,
           error: `無法識別科目: "${subject}"`,
@@ -626,19 +667,18 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
           errorDetails: {
             processId: msgId,
             errorType: "VALIDATION_ERROR",
-            module: "BK",
+            module: "DD2",
           },
           isRetryable: true,
           partialData: {
             subject: subject,
             amount: amount,
             rawAmount: rawAmount,
-            paymentMethod: paymentMethod, // 不設預設值
+            paymentMethod: paymentMethod,
             timestamp: new Date().getTime(),
           },
         };
 
-        // 回傳統一格式的錯誤結果
         return {
           type: "記帳",
           processed: false,
@@ -649,17 +689,9 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
         };
       }
     } else {
-      // 12. 科目缺失處理
+      // 13. 科目缺失處理
       console.log(`DD_processUserMessage: 科目為空 [${msgId}]`);
-      DD_logWarning(
-        `科目為空`,
-        "科目匹配",
-        userId,
-        "DD_processUserMessage",
-        "DD_processUserMessage",
-      );
 
-      // 建構標準錯誤資料結構
       const errorData = {
         success: false,
         error: "未指定科目",
@@ -668,19 +700,18 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
         errorDetails: {
           processId: msgId,
           errorType: "VALIDATION_ERROR",
-          module: "BK",
+          module: "DD2",
         },
         isRetryable: true,
         partialData: {
           subject: "",
           amount: amount,
           rawAmount: rawAmount,
-          paymentMethod: paymentMethod, // 不設預設值
+          paymentMethod: paymentMethod,
           timestamp: new Date().getTime(),
         },
       };
 
-      // 回傳統一格式的錯誤結果
       return {
         type: "記帳",
         processed: false,
@@ -691,7 +722,7 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
       };
     }
   } catch (error) {
-    // 13. 異常處理
+    // 14. 異常處理
     console.log(`DD_processUserMessage異常: ${error.toString()} [${msgId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
 
@@ -701,11 +732,9 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
       userId,
       "PROCESS_ERROR",
       error.toString(),
-      "DD_processUserMessage",
-      "DD_processUserMessage",
+      "DD_processUserMessage"
     );
 
-    // 建構標準錯誤資料結構
     const errorData = {
       success: false,
       error: error.toString(),
@@ -714,12 +743,11 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
       errorDetails: {
         processId: msgId,
         errorType: "SYSTEM_ERROR",
-        module: "BK",
+        module: "DD2",
       },
       isRetryable: false,
     };
 
-    // 回傳統一格式的錯誤結果
     return {
       type: "記帳",
       processed: false,
@@ -731,67 +759,18 @@ async function DD_processUserMessage(message, userId = "", timestamp = "") {
   }
 }
 
-// 修改：不再重複宣告Utilities和SpreadsheetApp物件，改用擴充方式
-// 擴充Utilities物件的方法
-if (typeof Utilities === "object") {
-  // 只有在Utilities已存在時才擴充
-  if (!Utilities.getUuid) {
-    Utilities.getUuid = () => uuidv4();
-  }
-
-  if (!Utilities.formatDate) {
-    Utilities.formatDate = (date, timezone, format) => {
-      // 增強的日期格式化，支援更多格式
-      if (format === "yyyy/M/d") {
-        return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-      } else if (format === "HH:mm") {
-        return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-      } else if (format === "yyyy-MM-dd HH:mm:ss") {
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
-      } else if (format === "yyyy/MM/dd HH:mm") {
-        // 關鍵修復：支援58號函數使用的格式
-        return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-      }
-      return date.toString();
-    };
-  }
-}
-
-// 擴充SpreadsheetApp物件的方法
-if (typeof SpreadsheetApp === "object") {
-  // 只有在SpreadsheetApp已存在時才擴充
-  if (!SpreadsheetApp.openById) {
-    SpreadsheetApp.openById = (id) => ({
-      getSheetByName: (name) => ({
-        getLastRow: () =>
-          spreadsheetData[name] ? spreadsheetData[name].length : 0,
-        getRange: (row, col, numRows, numCols) => ({
-          getValues: () => spreadsheetData[name] || [],
-        }),
-        getDataRange: () => ({
-          getValues: () => spreadsheetData[name] || [],
-        }),
-        appendRow: (rowData) => {
-          if (!spreadsheetData[name]) {
-            spreadsheetData[name] = [];
-          }
-          spreadsheetData[name].push(rowData);
-        },
-      }),
-    });
-  }
-}
-
 /**
- * 16. 查詢科目代碼表的函數 - 增強版，支持複合詞匹配與空格同義詞
- * @version 2025-04-30-V4.1.6
- * @author AustinLiao69
+ * 16. 查詢科目代碼表的函數 - Firestore版本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 完全重寫，使用Firestore查詢科目代碼表
  * @param {string} subjectName - 要查詢的科目名稱
- * @returns {object|null} - 如果找到，返回包含 {majorCode, majorName, subCode, subName} 的物件，否則返回 null
+ * @param {string} ledgerId - 帳本ID (可選)
+ * @returns {object|null} - 如果找到，返回包含科目資訊的物件，否則返回 null
  */
-async function DD_getSubjectCode(subjectName) {
-  const scId = Utilities.getUuid().substring(0, 8);
-  console.log(`### 使用2025-04-30-V4.1.5增強版DD_getSubjectCode ###`);
+async function DD_getSubjectCode(subjectName, ledgerId = "") {
+  const scId = uuidv4().substring(0, 8);
+  console.log(`### 使用Firestore版本DD_getSubjectCode ###`);
   console.log(`查詢科目代碼: "${subjectName}", ID=${scId}`);
 
   try {
@@ -802,77 +781,75 @@ async function DD_getSubjectCode(subjectName) {
         `科目名稱為空，無法查詢科目代碼 [${scId}]`,
         "科目查詢",
         "",
-        "DD_getSubjectCode",
+        "DD_getSubjectCode"
       );
       return null;
     }
 
-    // 標準化輸入科目名稱 (只移除前後空格，保留內部空格)
+    // 使用預設帳本ID (如果未提供)
+    if (!ledgerId) {
+      ledgerId = process.env.DEFAULT_LEDGER_ID || 'ledger_structure_001';
+    }
+
+    // 標準化輸入科目名稱
     const normalizedInput = String(subjectName).trim();
-    const inputLower = normalizedInput.toLowerCase(); // 轉為小寫便於比較
+    const inputLower = normalizedInput.toLowerCase();
     console.log(`標準化後的輸入: "${normalizedInput}" [${scId}]`);
 
-    // 直接從試算表讀取科目表
-    const ss = SpreadsheetApp.openById(DD_CONFIG.SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(DD_SUBJECT_CODE_SHEET_NAME);
-    if (!sheet) {
-      console.log(`找不到科目表: ${DD_SUBJECT_CODE_SHEET_NAME} [${scId}]`);
-      DD_logError(
-        `找不到科目表: ${DD_SUBJECT_CODE_SHEET_NAME} [${scId}]`,
-        "科目查詢",
-        "",
-        "SHEET_NOT_FOUND",
-        "找不到科目代碼表",
-        "DD_getSubjectCode",
-      );
-      return null;
-    }
+    // 從Firestore查詢科目表
+    const snapshot = await db.collection('ledgers')
+      .doc(ledgerId)
+      .collection('subjects')
+      .where('isActive', '==', true)
+      .get();
 
-    // 讀取所有數據 - 修復：正確處理異步調用
-    const lastRow = await sheet.getLastRow();
-    if (lastRow <= 1) {
-      console.log(`科目表為空或只有標題行 [${scId}]`);
+    if (snapshot.empty) {
+      console.log(`科目表為空 [${scId}]`);
       DD_logError(
-        `科目表為空或只有標題行 [${scId}]`,
+        `科目表為空 [${scId}]`,
         "科目查詢",
         "",
-        "EMPTY_SHEET",
+        "EMPTY_SUBJECTS",
         "科目代碼表無數據",
-        "DD_getSubjectCode",
+        "DD_getSubjectCode"
       );
       return null;
     }
 
-    // 擴展讀取範圍以包含同義詞欄位 (假設為第5列) - 修復：正確處理異步調用
-    const values = await sheet.getRange(1, 1, lastRow, 5).getValues();
-    console.log(`讀取科目表: ${values.length}行數據 [${scId}]`);
+    console.log(`讀取科目表: ${snapshot.size}筆數據 [${scId}]`);
 
-    // 詳細診斷日誌 - 記錄查詢過程
+    // 詳細診斷日誌
     console.log(`---科目查詢診斷信息開始---[${scId}]`);
     console.log(`尋找科目: "${normalizedInput}"`);
 
-    // ===== 第一階段：進行精確匹配，保留內部空格 =====
-    console.log(`正在進行精確匹配查詢，支持內部空格...`);
+    // ===== 第一階段：進行精確匹配 =====
+    console.log(`正在進行精確匹配查詢...`);
 
-    for (let i = 1; i < values.length; i++) {
-      const majorCode = values[i][DD_SUBJECT_CODE_MAJOR_CODE_COLUMN - 1];
-      const majorName = values[i][DD_SUBJECT_CODE_MAJOR_NAME_COLUMN - 1];
-      const subCode = values[i][DD_SUBJECT_CODE_SUB_CODE_COLUMN - 1];
-      const subName = values[i][DD_SUBJECT_CODE_SUB_NAME_COLUMN - 1];
-      const synonymsStr = values[i][4] || ""; // 同義詞在第5列
+    let docCount = 0;
+    for (const doc of snapshot.docs) {
+      if (doc.id === 'template') continue; // 跳過template文件
+      
+      const data = doc.data();
+      docCount++;
+      
+      const majorCode = data.大項代碼;
+      const majorName = data.大項名稱;
+      const subCode = data.子項代碼;
+      const subName = data.子項名稱;
+      const synonymsStr = data.同義詞 || "";
 
       // 標準化表內科目名稱
       const normalizedSubName = String(subName).trim();
       const subNameLower = normalizedSubName.toLowerCase();
 
       // 記錄查詢過程（前10行及關鍵行）
-      if (i < 10 || normalizedSubName === normalizedInput) {
+      if (docCount < 10 || normalizedSubName === normalizedInput) {
         console.log(
-          `科目表項目 #${i}: 代碼=${majorCode}-${subCode}, 名稱="${normalizedSubName}"`,
+          `科目表項目 #${docCount}: 代碼=${majorCode}-${subCode}, 名稱="${normalizedSubName}"`,
         );
       }
 
-      // 精確匹配檢查 (使用標準化後的字串)
+      // 精確匹配檢查
       if (subNameLower === inputLower) {
         console.log(`找到精確匹配: "${subNameLower}" === "${inputLower}"`);
 
@@ -880,11 +857,10 @@ async function DD_getSubjectCode(subjectName) {
           `成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`,
           "科目查詢",
           "",
-          "DD_getSubjectCode",
+          "DD_getSubjectCode"
         );
         console.log(`---科目查詢診斷信息結束---[${scId}]`);
 
-        // 返回原始數據
         return {
           majorCode: String(majorCode),
           majorName: String(majorName),
@@ -893,23 +869,14 @@ async function DD_getSubjectCode(subjectName) {
         };
       }
 
-      // ===== 特別處理空格同義詞 =====
-      // 改進: 慎重處理同義詞字符串的分割
+      // 同義詞匹配
       if (synonymsStr) {
-        // 使用逗號分割同義詞，然後對每個同義詞單獨處理
         const synonyms = synonymsStr.split(",");
 
         for (let j = 0; j < synonyms.length; j++) {
-          // 保留同義詞中的空格，只去除前後空格
           const normalizedSynonym = synonyms[j].trim();
           const synonymLower = normalizedSynonym.toLowerCase();
 
-          // 如果同義詞包含空格，只在找到匹配時記錄
-          if (synonymLower.includes(" ") && synonymLower === inputLower) {
-            console.log(`匹配含空格同義詞: "${synonymLower}"`);
-          }
-
-          // 精確比較(區分大小寫)
           if (synonymLower === inputLower) {
             console.log(
               `通過同義詞匹配成功: "${synonymLower}" === "${inputLower}"`,
@@ -919,7 +886,7 @@ async function DD_getSubjectCode(subjectName) {
               `通過同義詞成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`,
               "科目查詢",
               "",
-              "DD_getSubjectCode",
+              "DD_getSubjectCode"
             );
             console.log(`---科目查詢診斷信息結束---[${scId}]`);
 
@@ -935,17 +902,19 @@ async function DD_getSubjectCode(subjectName) {
     }
 
     // ===== 第二階段: 複合詞匹配 =====
-    console.log(`精確匹配失敗，嘗試複合詞匹配(如"家鄉便當"→"便當")...`);
+    console.log(`精確匹配失敗，嘗試複合詞匹配...`);
 
-    // 複合詞匹配邏輯
     const matches = [];
 
-    for (let i = 1; i < values.length; i++) {
-      const majorCode = values[i][DD_SUBJECT_CODE_MAJOR_CODE_COLUMN - 1];
-      const majorName = values[i][DD_SUBJECT_CODE_MAJOR_NAME_COLUMN - 1];
-      const subCode = values[i][DD_SUBJECT_CODE_SUB_CODE_COLUMN - 1];
-      const subName = values[i][DD_SUBJECT_CODE_SUB_NAME_COLUMN - 1];
-      const synonymsStr = values[i][4] || "";
+    for (const doc of snapshot.docs) {
+      if (doc.id === 'template') continue;
+      
+      const data = doc.data();
+      const majorCode = data.大項代碼;
+      const majorName = data.大項名稱;
+      const subCode = data.子項代碼;
+      const subName = data.子項名稱;
+      const synonymsStr = data.同義詞 || "";
       const subNameLower = String(subName).toLowerCase().trim();
 
       // 檢查科目名是否包含在輸入中
@@ -964,14 +933,12 @@ async function DD_getSubjectCode(subjectName) {
         });
       }
 
-      // 檢查同義詞是否包含在輸入中 - 改進處理含空格同義詞
+      // 檢查同義詞是否包含在輸入中
       if (synonymsStr) {
         const synonyms = synonymsStr.split(",");
         for (const syn of synonyms) {
-          // 正確處理同義詞，保留內部空格
           const synonym = syn.trim().toLowerCase();
 
-          // 檢查同義詞是否足夠長且包含在輸入中
           if (synonym.length >= 2 && inputLower.includes(synonym)) {
             const score = synonym.length / inputLower.length;
             console.log(
@@ -986,29 +953,12 @@ async function DD_getSubjectCode(subjectName) {
               matchType: "compound_synonym",
             });
           }
-
-          // 特殊情況: 輸入是含空格同義詞的一部分
-          if (synonym.includes(" ") && synonym.includes(inputLower)) {
-            const score = inputLower.length / synonym.length;
-            console.log(
-              `輸入詞是含空格同義詞的一部分: 輸入="${inputLower}" 是同義詞"${synonym}"的一部分, 分數=${score.toFixed(2)}`,
-            );
-            matches.push({
-              majorCode: String(majorCode),
-              majorName: String(majorName),
-              subCode: String(subCode),
-              subName: String(subName),
-              score: score,
-              matchType: "partial_spacey_synonym",
-            });
-          }
         }
       }
     }
 
     // 如果找到複合詞匹配，返回最佳匹配
     if (matches.length > 0) {
-      // 按分數排序(大到小)
       matches.sort((a, b) => b.score - a.score);
       const bestMatch = matches[0];
 
@@ -1019,7 +969,7 @@ async function DD_getSubjectCode(subjectName) {
         `複合詞匹配成功: "${normalizedInput}" -> "${bestMatch.subName}", 分數=${bestMatch.score.toFixed(2)}`,
         "複合詞匹配",
         "",
-        "DD_getSubjectCode",
+        "DD_getSubjectCode"
       );
 
       return {
@@ -1036,7 +986,7 @@ async function DD_getSubjectCode(subjectName) {
       `科目代碼查詢失敗: "${normalizedInput}" [${scId}]`,
       "科目查詢",
       "",
-      "DD_getSubjectCode",
+      "DD_getSubjectCode"
     );
     console.log(`---科目查詢診斷信息結束---[${scId}]`);
     return null;
@@ -1049,32 +999,510 @@ async function DD_getSubjectCode(subjectName) {
       "",
       "QUERY_ERROR",
       error.toString(),
-      "DD_getSubjectCode",
+      "DD_getSubjectCode"
     );
     return null;
   }
 }
 
 /**
- * 17. 將 Unix 時間戳轉換為台灣時區的日期和時間
- * @param {number|string} timestamp - Unix 時間戳（毫秒級）
- * @returns {object|null} - 包含 date (YYYY/M/D) 和 time (HH:MM) 的物件，或在轉換失敗時返回 null
+ * 17. 用戶偏好記憶管理 - Firestore版本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 完全重寫，使用Firestore存儲用戶偏好
+ * @param {string} userId - 用戶ID
+ * @param {string} inputTerm - 輸入詞彙
+ * @param {string} selectedSubjectCode - 用戶選擇的科目代碼
+ * @param {boolean} isQuery - 是否為查詢操作
+ * @param {string} ledgerId - 帳本ID (可選)
+ * @returns {object|null} 查詢操作時返回偏好信息，存儲操作時返回null
  */
-function DD_convertTimestamp(timestamp) {
-  const tsId = Utilities.getUuid().substring(0, 8);
-  console.log(`開始轉換時間戳: ${timestamp} [${tsId}]`);
+async function DD_userPreferenceManager(
+  userId,
+  inputTerm,
+  selectedSubjectCode,
+  isQuery = false,
+  ledgerId = ""
+) {
+  const upId = uuidv4().substring(0, 8);
+  console.log(
+    `${isQuery ? "查詢" : "存儲"}用戶偏好: userId=${userId}, term="${inputTerm}" [${upId}]`,
+  );
 
   try {
-    // TC-025測試的特定時間戳處理
-    if (timestamp === 1625665242211) {
-      console.log(`檢測到TC-025特定時間戳 [${tsId}]`);
+    if (!userId || !inputTerm) {
+      console.log(`用戶ID或輸入詞彙為空 [${upId}]`);
+      return null;
+    }
+
+    if (!ledgerId) {
+      ledgerId = `ledger_${userId}`;
+    }
+
+    const normalizedTerm = inputTerm.toLowerCase().trim();
+
+    // 查詢模式
+    if (isQuery) {
+      // 從users collection查詢用戶偏好
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await userRef.get();
+
+      if (!userDoc.exists) {
+        console.log(`用戶不存在 [${upId}]`);
+        return null;
+      }
+
+      const userData = userDoc.data();
+      const preferences = userData.preferences || {};
+      const termPrefs = preferences[normalizedTerm];
+
+      if (termPrefs && termPrefs.length > 0) {
+        // 按使用次數排序
+        const sortedPrefs = termPrefs.sort((a, b) => b.count - a.count);
+        const bestPref = sortedPrefs[0];
+        
+        console.log(
+          `找到用戶偏好: ${bestPref.subjectCode}, 使用次數=${bestPref.count} [${upId}]`,
+        );
+        
+        return {
+          subjectCode: bestPref.subjectCode,
+          count: bestPref.count,
+          lastUse: bestPref.lastUse,
+        };
+      }
+
+      console.log(`未找到用戶偏好 [${upId}]`);
+      return null;
+    }
+    // 存儲模式
+    else {
+      if (!selectedSubjectCode) {
+        console.log(`科目代碼為空，無法存儲 [${upId}]`);
+        return null;
+      }
+
+      const now = admin.firestore.Timestamp.now();
+      const userRef = db.collection('users').doc(userId);
+
+      // 使用事務來更新用戶偏好
+      await db.runTransaction(async (transaction) => {
+        const userDoc = await transaction.get(userRef);
+        
+        let userData = {};
+        if (userDoc.exists) {
+          userData = userDoc.data();
+        }
+
+        const preferences = userData.preferences || {};
+        const termPrefs = preferences[normalizedTerm] || [];
+
+        // 找到現有記錄
+        const existingIndex = termPrefs.findIndex(
+          pref => pref.subjectCode === selectedSubjectCode
+        );
+
+        if (existingIndex >= 0) {
+          // 更新現有記錄
+          termPrefs[existingIndex].count += 1;
+          termPrefs[existingIndex].lastUse = now;
+          console.log(
+            `更新用戶偏好: "${inputTerm}" -> ${selectedSubjectCode}, 新計數=${termPrefs[existingIndex].count} [${upId}]`,
+          );
+        } else {
+          // 添加新記錄
+          termPrefs.push({
+            subjectCode: selectedSubjectCode,
+            count: 1,
+            lastUse: now,
+          });
+          console.log(
+            `新增用戶偏好: "${inputTerm}" -> ${selectedSubjectCode} [${upId}]`,
+          );
+        }
+
+        preferences[normalizedTerm] = termPrefs;
+        userData.preferences = preferences;
+        userData.lastActive = now;
+
+        transaction.set(userRef, userData, { merge: true });
+      });
+
+      return null;
+    }
+  } catch (error) {
+    console.log(`用戶偏好管理錯誤: ${error} [${upId}]`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    DD_logError(
+      `用戶偏好管理錯誤: ${error}`,
+      "用戶偏好",
+      userId,
+      "USER_PREF_ERROR",
+      error.toString(),
+      "DD_userPreferenceManager"
+    );
+    return null;
+  }
+}
+
+/**
+ * 18. 模糊匹配函數 - Firestore版本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 完全重寫，使用Firestore查詢科目資料
+ * @param {string} input - 用戶輸入的字符串
+ * @param {number} threshold - 匹配閾值
+ * @param {string} ledgerId - 帳本ID (可選)
+ * @return {Object|null} 匹配結果或null
+ */
+async function DD_fuzzyMatch(input, threshold = 0.6, ledgerId = "") {
+  // 確保配置初始化
+  DD_initConfig();
+
+  if (!input) return null;
+
+  if (!ledgerId) {
+    ledgerId = process.env.DEFAULT_LEDGER_ID || 'ledger_structure_001';
+  }
+
+  console.log(`【模糊匹配】開始處理: "${input}", 閾值: ${threshold}, 帳本: ${ledgerId}`);
+
+  const inputLower = input.toLowerCase().trim();
+
+  // 獲取所有科目
+  const allSubjects = await DD_getAllSubjects();
+  if (!allSubjects || !allSubjects.length) {
+    console.log(`【模糊匹配】無法獲取科目列表`);
+    return null;
+  }
+
+  console.log(`【模糊匹配】科目列表項目數: ${allSubjects.length}`);
+
+  // 優先處理複合詞
+  const containsMatches = [];
+
+  allSubjects.forEach((subject) => {
+    // 檢查是否包含科目名
+    const subNameLower = subject.subName.toLowerCase();
+    if (subNameLower.length >= 2 && inputLower.includes(subNameLower)) {
+      const score = (subNameLower.length / inputLower.length) * 0.9;
+      containsMatches.push({
+        ...subject,
+        score: Math.min(0.9, score),
+        matchType: "input_contains_subject_name",
+        matchedTerm: subNameLower,
+      });
+      console.log(
+        `【模糊匹配】輸入包含科目名: ${inputLower} 包含 ${subNameLower}, 分數=${score.toFixed(2)}`,
+      );
+    }
+
+    // 檢查是否包含同義詞
+    if (subject.synonyms) {
+      const synonymsList = subject.synonyms
+        .split(",")
+        .map((syn) => syn.trim().toLowerCase());
+
+      for (const synonym of synonymsList) {
+        if (synonym.length >= 2 && inputLower.includes(synonym)) {
+          const score = (synonym.length / inputLower.length) * 0.95;
+          containsMatches.push({
+            ...subject,
+            score: Math.min(0.95, score),
+            matchType: "input_contains_synonym",
+            matchedTerm: synonym,
+          });
+          console.log(
+            `【模糊匹配】輸入包含同義詞: ${inputLower} 包含 ${synonym}, 分數=${score.toFixed(2)}`,
+          );
+        }
+      }
+    }
+  });
+
+  // 如果找到輸入包含科目名或同義詞的匹配
+  if (containsMatches.length > 0) {
+    containsMatches.sort((a, b) => b.score - a.score);
+    const bestMatch = containsMatches[0];
+
+    console.log(
+      `【模糊匹配】複合詞最佳匹配: "${input}" -> "${bestMatch.subName}", 包含詞: "${bestMatch.matchedTerm}", 分數: ${bestMatch.score.toFixed(2)}`,
+    );
+
+    return {
+      majorCode: bestMatch.majorCode,
+      majorName: bestMatch.majorName,
+      subCode: bestMatch.subCode,
+      subName: bestMatch.subName,
+      synonyms: bestMatch.synonyms,
+      score: bestMatch.score,
+      matchType: bestMatch.matchType,
+    };
+  }
+
+  // 標準匹配邏輯
+  const matches = [];
+
+  // 1. 直接包含關係匹配
+  allSubjects.forEach((subject) => {
+    const subNameLower = subject.subName.toLowerCase();
+
+    // 科目名稱包含輸入詞
+    if (subNameLower.includes(inputLower)) {
+      const score = (inputLower.length / subNameLower.length) * 0.95;
+      matches.push({
+        ...subject,
+        score: Math.min(0.95, score),
+        matchType: "contains_match",
+      });
+    }
+
+    // 檢查同義詞
+    if (subject.synonyms) {
+      const synonymsList = subject.synonyms
+        .split(",")
+        .map((s) => s.trim().toLowerCase());
+
+      for (const synonym of synonymsList) {
+        // 同義詞包含輸入
+        if (synonym.includes(inputLower)) {
+          const score = (inputLower.length / synonym.length) * 0.98;
+          matches.push({
+            ...subject,
+            score: Math.min(0.98, score),
+            matchType: "synonym_contains",
+            matchedSynonym: synonym,
+          });
+        }
+      }
+    }
+  });
+
+  // 2. Levenshtein距離匹配
+  if (matches.length === 0) {
+    allSubjects.forEach((subject) => {
+      const subNameLower = subject.subName.toLowerCase();
+
+      const distance = calculateLevenshteinDistance(inputLower, subNameLower);
+      const maxLength = Math.max(inputLower.length, subNameLower.length);
+      const similarityScore = 1 - distance / maxLength;
+
+      if (similarityScore >= threshold) {
+        matches.push({
+          ...subject,
+          score: similarityScore * 0.9,
+          matchType: "levenshtein_name",
+        });
+      }
+
+      // 同樣檢查同義詞的相似度
+      if (subject.synonyms) {
+        const synonymsList = subject.synonyms
+          .split(",")
+          .map((s) => s.trim().toLowerCase());
+
+        for (const synonym of synonymsList) {
+          const synDistance = calculateLevenshteinDistance(inputLower, synonym);
+          const synMaxLength = Math.max(inputLower.length, synonym.length);
+          const synSimilarity = 1 - synDistance / synMaxLength;
+
+          if (synSimilarity >= threshold) {
+            matches.push({
+              ...subject,
+              score: synSimilarity * 0.95,
+              matchType: "levenshtein_synonym",
+              matchedSynonym: synonym,
+            });
+          }
+        }
+      }
+    });
+  }
+
+  // 如果有匹配結果，返回最佳匹配
+  if (matches.length > 0) {
+    matches.sort((a, b) => b.score - a.score);
+    const bestMatch = matches[0];
+    bestMatch.score = parseFloat(bestMatch.score.toFixed(2));
+
+    console.log(
+      `【模糊匹配】標準匹配成功: "${input}" -> "${bestMatch.subName}" (分數: ${bestMatch.score}, 類型: ${bestMatch.matchType})`,
+    );
+    return bestMatch;
+  }
+
+  console.log(`【模糊匹配】無匹配結果: "${input}"`);
+  return null;
+}
+
+// Levenshtein距離計算函數
+function calculateLevenshteinDistance(str1, str2) {
+  const len1 = str1.length;
+  const len2 = str2.length;
+  let matrix = [];
+
+  for (let i = 0; i <= len1; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= len2; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      const cost = str1.charAt(i - 1) === str2.charAt(j - 1) ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost,
+      );
+    }
+  }
+
+  return matrix[len1][len2];
+}
+
+/**
+ * 19. 輸入格式解析函數 - 簡化版本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 16:00:00
+ * @update: 簡化版本，基本解析輸入格式
+ * @param {string} message - 用戶輸入訊息
+ * @param {string} msgId - 訊息ID
+ * @returns {object|null} 解析結果
+ */
+async function DD_parseInputFormat(message, msgId) {
+  console.log(`DD_parseInputFormat: 開始解析 "${message}" [${msgId}]`);
+
+  try {
+    // 基本格式: "科目 金額 [支付方式]"
+    // 例如: "午餐 150" 或 "午餐 150 現金"
+    
+    const parts = message.trim().split(/\s+/);
+    
+    if (parts.length < 2) {
+      console.log(`DD_parseInputFormat: 格式不正確，至少需要科目和金額 [${msgId}]`);
       return {
-        date: "2021/7/7",
-        time: "22:54",
+        _formatError: true,
+        _errorDetail: "格式不正確，至少需要科目和金額",
+        errorData: {
+          success: false,
+          error: "格式不正確",
+          errorType: "FORMAT_ERROR",
+          message: "記帳失敗: 格式不正確，至少需要科目和金額",
+          errorDetails: {
+            processId: msgId,
+            errorType: "VALIDATION_ERROR",
+            module: "DD2",
+          },
+          isRetryable: true
+        }
       };
     }
 
-    // 檢查時間戳是否為空
+    // 提取金額 (假設最後的數字是金額)
+    let amount = 0;
+    let amountIndex = -1;
+    let paymentMethod = "";
+
+    // 從後往前找數字
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const part = parts[i];
+      const num = parseFloat(part);
+      if (!isNaN(num)) {
+        amount = num;
+        amountIndex = i;
+        break;
+      }
+    }
+
+    if (amountIndex === -1) {
+      console.log(`DD_parseInputFormat: 找不到有效金額 [${msgId}]`);
+      return {
+        _formatError: true,
+        _errorDetail: "找不到有效金額",
+        errorData: {
+          success: false,
+          error: "找不到有效金額",
+          errorType: "INVALID_AMOUNT",
+          message: "記帳失敗: 找不到有效金額",
+          errorDetails: {
+            processId: msgId,
+            errorType: "VALIDATION_ERROR",
+            module: "DD2",
+          },
+          isRetryable: true
+        }
+      };
+    }
+
+    // 提取科目 (金額前面的部分)
+    const subjectParts = parts.slice(0, amountIndex);
+    if (subjectParts.length === 0) {
+      console.log(`DD_parseInputFormat: 找不到科目 [${msgId}]`);
+      return {
+        _formatError: true,
+        _missingSubject: true,
+        _errorDetail: "找不到科目",
+        errorData: {
+          success: false,
+          error: "找不到科目",
+          errorType: "MISSING_SUBJECT",
+          message: "記帳失敗: 找不到科目",
+          errorDetails: {
+            processId: msgId,
+            errorType: "VALIDATION_ERROR",
+            module: "DD2",
+          },
+          isRetryable: true
+        }
+      };
+    }
+
+    const subject = subjectParts.join(" ");
+
+    // 提取支付方式 (金額後面的部分)
+    if (amountIndex < parts.length - 1) {
+      const paymentParts = parts.slice(amountIndex + 1);
+      paymentMethod = paymentParts.join(" ");
+    }
+
+    const result = {
+      subject: subject,
+      amount: amount,
+      rawAmount: String(amount),
+      paymentMethod: paymentMethod || undefined // 如果沒有支付方式就不設置
+    };
+
+    console.log(`DD_parseInputFormat: 解析成功 ${JSON.stringify(result)} [${msgId}]`);
+    return result;
+
+  } catch (error) {
+    console.log(`DD_parseInputFormat: 解析異常 ${error.toString()} [${msgId}]`);
+    return null;
+  }
+}
+
+// 格式化時間函數
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${year}/${month}/${day}`;
+}
+
+function formatTime(date) {
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+// 時間戳轉換函數
+function DD_convertTimestamp(timestamp) {
+  const tsId = uuidv4().substring(0, 8);
+  console.log(`開始轉換時間戳: ${timestamp} [${tsId}]`);
+
+  try {
     if (timestamp === null || timestamp === undefined) {
       console.log(`時間戳為空 [${tsId}]`);
       return null;
@@ -1082,31 +1510,26 @@ function DD_convertTimestamp(timestamp) {
 
     let date;
 
-    // 處理多種時間戳格式
     if (typeof timestamp === "number" || /^\d+$/.test(timestamp)) {
-      // 數字型時間戳（毫秒）
       date = new Date(Number(timestamp));
     } else if (typeof timestamp === "string" && timestamp.includes("T")) {
-      // ISO格式時間戳 (如 "2025-04-21T03:05:46.640Z")
       date = new Date(timestamp);
     } else {
-      // 其他格式嘗試
       date = new Date(timestamp);
     }
 
-    // 驗證轉換結果是否有效
     if (isNaN(date.getTime())) {
       console.log(`無法轉換為有效日期: ${timestamp} [${tsId}]`);
       return null;
     }
 
-    // 使用Utilities.formatDate以確保正確的時區處理
-    const taiwanDate = Utilities.formatDate(date, "Asia/Taipei", "yyyy/M/d");
-    const taiwanTime = Utilities.formatDate(date, "Asia/Taipei", "HH:mm");
+    // 轉換為台灣時區
+    const taiwanDate = formatDate(date);
+    const taiwanTime = formatTime(date);
 
     const result = {
       date: taiwanDate,
-      time: taiwanTime, // 直接使用24小時制格式，不含上午/下午前綴
+      time: taiwanTime,
     };
 
     console.log(`時間戳轉換結果: ${taiwanDate} ${taiwanTime} [${tsId}]`);
@@ -1117,3 +1540,26 @@ function DD_convertTimestamp(timestamp) {
     return null;
   }
 }
+
+// 模組匯出
+module.exports = {
+  DD_processUserMessage,
+  DD_getSubjectCode,
+  DD_removeAmountFromText,
+  DD_getAllSubjects,
+  DD_userPreferenceManager,
+  DD_fuzzyMatch,
+  DD_convertTimestamp,
+  DD_parseInputFormat,
+  DD_initConfig,
+  DD_log,
+  DD_logDebug,
+  DD_logInfo,
+  DD_logWarning,
+  DD_logError,
+  DD_logCritical,
+  formatDate,
+  formatTime,
+  calculateLevenshteinDistance,
+  DD_CONFIG
+};
