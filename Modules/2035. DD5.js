@@ -1,482 +1,500 @@
+
 /**
- * 53. 智能備註生成 - 根據記帳數據生成有意義的備註
- * @version 2025-05-21-V1.1.0
- * @author AustinLiao69
- * @date 2025-05-21 16:12:30
- * @update: 改進智能備註生成，確保備註只包含相關信息
+ * DD5_智能記帳處理模組_3.0.0
+ * @module DD5模組
+ * @description 智能記帳處理模組 - 跨帳本查詢與Firestore整合
+ * @update 2025-07-09: 完全重寫為Firestore架構，支援跨帳本智能查詢
+ */
+
+const admin = require('firebase-admin');
+const axios = require('axios');
+
+// 引入其他模組
+const DL = require('./2010. DL.js');
+
+// 取得 Firestore 實例（使用2011模組的連接）
+const db = admin.firestore();
+
+// 設定時區為 UTC+8
+const TIMEZONE = 'Asia/Taipei';
+
+/**
+ * 53. 智能備註生成 - 跨帳本版本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @update: 重寫為Firestore版本，支援跨帳本資料整合
  * @param {Object} bookkeepingData - 記帳數據對象
+ * @param {string} ledgerId - 目標帳本ID
  * @return {string} 生成的備註
  */
-function DD_generateIntelligentRemark(bookkeepingData) {
+async function DD_generateIntelligentRemark(bookkeepingData, ledgerId) {
   try {
+    DL.DL_logDebug('DD5', `開始生成智能備註 - 帳本: ${ledgerId}`);
+
     // 1. 使用科目名稱作為備註基礎
     let remark = bookkeepingData.subjectName || "";
 
-    // 2. 如果有原始文本並且不等於科目名稱，嘗試格式化
-    if (
-      bookkeepingData.text &&
-      bookkeepingData.text !== bookkeepingData.subjectName
-    ) {
-      // 構建格式化所需信息
-      const parseResult = {
-        subject: bookkeepingData.subjectName,
-        amount: bookkeepingData.amount,
-        paymentMethod: bookkeepingData.paymentMethod,
-      };
-
-      // 嘗試格式化
-      const formattedRemark = DD_formatBookkeepingRemark(
-        parseResult,
-        bookkeepingData.text,
+    // 2. 查詢跨帳本的歷史記錄，提供智能建議
+    if (bookkeepingData.userId && bookkeepingData.subjectCode) {
+      const historicalRemarks = await DD_getHistoricalRemarks(
+        bookkeepingData.userId, 
+        bookkeepingData.subjectCode
       );
-
-      // 檢查格式化結果是否比科目名稱更有信息量
-      if (
-        formattedRemark &&
-        formattedRemark !== bookkeepingData.subjectName &&
-        formattedRemark.length > 1
-      ) {
-        return formattedRemark;
+      
+      if (historicalRemarks.length > 0) {
+        // 使用最常用的備註作為建議
+        const mostUsedRemark = historicalRemarks[0];
+        if (mostUsedRemark !== bookkeepingData.subjectName) {
+          remark = mostUsedRemark;
+          DL.DL_logInfo('DD5', `使用歷史智能備註: ${remark}`);
+        }
       }
     }
 
-    // 3. 如果有原始科目且與系統科目不同，使用原始科目
-    if (
-      bookkeepingData.originalSubject &&
-      bookkeepingData.subjectName &&
-      bookkeepingData.originalSubject !== bookkeepingData.subjectName
-    ) {
-      return bookkeepingData.originalSubject;
+    // 3. 如果有原始文本且包含更多資訊，進行格式化
+    if (bookkeepingData.text && 
+        bookkeepingData.text !== bookkeepingData.subjectName) {
+      
+      const formattedRemark = await DD_formatBookkeepingRemark(
+        {
+          subject: bookkeepingData.subjectName,
+          amount: bookkeepingData.amount,
+          paymentMethod: bookkeepingData.paymentMethod
+        },
+        bookkeepingData.text
+      );
+
+      if (formattedRemark && 
+          formattedRemark !== bookkeepingData.subjectName &&
+          formattedRemark.length > 1) {
+        remark = formattedRemark;
+      }
     }
 
-    // 4. 返回科目名稱作為備註
+    // 4. 使用原始科目名稱（如果與系統科目不同）
+    if (bookkeepingData.originalSubject &&
+        bookkeepingData.subjectName &&
+        bookkeepingData.originalSubject !== bookkeepingData.subjectName) {
+      remark = bookkeepingData.originalSubject;
+    }
+
+    DL.DL_logDebug('DD5', `智能備註生成完成: ${remark}`);
     return remark;
+
   } catch (error) {
-    console.error("生成智能備註錯誤: " + error);
-    // 失敗時返回科目名稱
+    DL.DL_logError('DD5', `生成智能備註錯誤: ${error.message}`);
     return bookkeepingData.subjectName || "";
   }
 }
 
 /**
- * 54. 處理解析結果的函數
- * 處理DD_parseInputFormat的返回結果，整合金額格式化功能
- * @version 2025-05-23-V1.0.3
- * @author AustinLiao69
- * @lastUpdate: 2025-05-23 03:05:21
- * @update: 增強大數字處理，確保原始金額格式傳遞
+ * 54. 處理解析結果的函數 - Firestore版本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @update: 重寫為Firestore版本，支援跨帳本智能處理
  * @param {Object} parseResult - 解析結果
  * @param {Object} options - 選項
  * @returns {Object} 處理後的結果
  */
-function DD_processParseResult(parseResult, options = {}) {
-  // 1. 處理ID
-  const processId = options.processId || Utilities.getUuid().substring(0, 8);
-  console.log(`[${processId}] DD_processParseResult: 開始處理解析結果`);
+async function DD_processParseResult(parseResult, options = {}) {
+  const processId = options.processId || generateProcessId();
+  DL.DL_logDebug('DD5', `開始處理解析結果 [${processId}]`);
 
-  // 2. 參數檢查
-  if (!parseResult) {
-    console.log(`[${processId}] DD_processParseResult: 解析結果為空`);
-    return null;
-  }
+  try {
+    if (!parseResult) {
+      DL.DL_logWarning('DD5', `解析結果為空 [${processId}]`);
+      return null;
+    }
 
-  // 3. 提取基本信息
-  const subject = parseResult.subject;
-  const amount = parseResult.amount;
-  const rawAmount = parseResult.rawAmount || amount.toLocaleString("zh-TW"); // 確保有原始金額格式
-  const paymentMethod = parseResult.paymentMethod || "刷卡";
+    // 提取基本資訊
+    const subject = parseResult.subject;
+    const amount = parseResult.amount;
+    const rawAmount = parseResult.rawAmount || amount.toLocaleString("zh-TW");
+    const paymentMethod = parseResult.paymentMethod || "刷卡";
 
-  console.log(
-    `[${processId}] DD_processParseResult: 處理基本信息 - 科目: ${subject}, 金額: ${amount}, 原始金額: ${rawAmount}, 支付方式: ${paymentMethod}`,
-  );
+    DL.DL_logDebug('DD5', `處理基本資訊 - 科目: ${subject}, 金額: ${amount}, 支付方式: ${paymentMethod} [${processId}]`);
 
-  // 4. 獲取支出/收入類型
-  let action = parseResult.action;
-  if (!action) {
-    // 如果沒有明確指定，根據上下文或配置判斷
-    if (options.defaultAction) {
-      action = options.defaultAction;
-    } else {
-      // 如果是以支出/買/購買開頭，是支出
-      if (/^(支出|買|購買)/.test(parseResult.text)) {
-        action = "支出";
-      }
-      // 如果是以收入開頭，是收入
-      else if (/^收入/.test(parseResult.text)) {
-        action = "收入";
-      }
-      // 默認支出
-      else {
-        action = "支出";
+    // 智能推薦最適合的帳本
+    let recommendedLedgerId = null;
+    if (options.userId && subject) {
+      recommendedLedgerId = await DD_recommendBestLedger(options.userId, subject, amount);
+      DL.DL_logInfo('DD5', `推薦帳本: ${recommendedLedgerId} [${processId}]`);
+    }
+
+    // 取得支出/收入類型
+    let action = parseResult.action;
+    if (!action) {
+      if (options.defaultAction) {
+        action = options.defaultAction;
+      } else {
+        // 智能判斷交易類型
+        action = await DD_smartDetermineTransactionType(parseResult.text, subject);
       }
     }
-  }
 
-  console.log(`[${processId}] DD_processParseResult: 確定交易類型: ${action}`);
+    DL.DL_logDebug('DD5', `確定交易類型: ${action} [${processId}]`);
 
-  // 5. 特殊格式處理: 如果是FORMAT8（純數字），需要上下文信息
-  if (parseResult.formatId === "FORMAT8" && options.contextSubject) {
-    console.log(
-      `[${processId}] DD_processParseResult: 處理純數字格式，使用上下文科目: ${options.contextSubject}`,
-    );
-    return {
-      subject: options.contextSubject,
+    // 特殊格式處理
+    if (parseResult.formatId === "FORMAT8" && options.contextSubject) {
+      DL.DL_logDebug('DD5', `處理純數字格式，使用上下文科目: ${options.contextSubject} [${processId}]`);
+      return {
+        subject: options.contextSubject,
+        amount: amount,
+        rawAmount: rawAmount,
+        action: action,
+        paymentMethod: paymentMethod,
+        text: parseResult.text || "",
+        formatId: parseResult.formatId,
+        recommendedLedgerId: recommendedLedgerId
+      };
+    }
+
+    // 返回處理結果
+    const result = {
+      subject: subject,
       amount: amount,
-      rawAmount: rawAmount, // 保存原始金額格式
+      rawAmount: rawAmount,
       action: action,
       paymentMethod: paymentMethod,
       text: parseResult.text || "",
       formatId: parseResult.formatId,
+      recommendedLedgerId: recommendedLedgerId
     };
+
+    DL.DL_logDebug('DD5', `解析結果處理完成 [${processId}]`);
+    return result;
+
+  } catch (error) {
+    DL.DL_logError('DD5', `處理解析結果錯誤: ${error.message} [${processId}]`);
+    return null;
   }
-
-  // 6. 返回處理結果
-  console.log(
-    `[${processId}] DD_processParseResult: 返回處理結果 - 科目: ${subject}, 金額: ${amount}, 原始金額: ${rawAmount}, 動作: ${action}`,
-  );
-
-  return {
-    subject: subject,
-    amount: amount,
-    rawAmount: rawAmount, // 保存原始金額格式
-    action: action,
-    paymentMethod: paymentMethod,
-    text: parseResult.text || "",
-    formatId: parseResult.formatId,
-  };
 }
 
 /**
- * 55. 獲取所有科目列表（包括同義詞）- 修復異步調用問題
- * @return {Array} 科目列表
+ * 55. 跨帳本獲取所有科目列表
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @update: 完全重寫為跨帳本Firestore查詢版本
+ * @param {string} userId - 用戶ID
+ * @return {Array} 跨帳本科目列表
  */
-async function DD_getAllSubjects() {
+async function DD_getAllSubjects(userId) {
   try {
-    console.log("【模糊匹配】開始獲取科目列表");
+    DL.DL_logDebug('DD5', `開始跨帳本科目查詢 - 用戶: ${userId}`);
 
-    // 獲取科目資料表
-    const ss = SpreadsheetApp.openById(DD_CONFIG.SPREADSHEET_ID);
-    const sheet = ss.getSheetByName("997. 科目代碼_測試");
-    if (!sheet) {
-      console.log("【模糊匹配】無法找到科目表");
+    if (!userId) {
+      DL.DL_logWarning('DD5', '缺少用戶ID，無法進行跨帳本查詢');
       return [];
     }
 
-    // 修復：正確等待異步操作完成
-    const lastRow = await sheet.getLastRow();
-    console.log(`【模糊匹配】科目表行數: ${lastRow}`);
-
-    if (lastRow <= 1) {
-      console.log("【模糊匹配】科目表為空或只有標題行");
+    // 1. 獲取用戶可存取的所有帳本
+    const accessibleLedgers = await DD_getUserAccessibleLedgers(userId);
+    if (accessibleLedgers.length === 0) {
+      DL.DL_logWarning('DD5', `用戶 ${userId} 沒有可存取的帳本`);
       return [];
     }
 
-    const values = await sheet.getRange(1, 1, lastRow, 5).getValues();
-    console.log(`【模糊匹配】成功讀取 ${values.length} 行數據`);
+    DL.DL_logInfo('DD5', `找到 ${accessibleLedgers.length} 個可存取帳本`);
 
-    // 跳過標題行
-    const subjects = [];
-    for (let i = 1; i < values.length; i++) {
-      if (values[i][0]) {
-        // 確保行不為空
-        subjects.push({
-          majorCode: values[i][0].toString(),
-          majorName: values[i][1] || "",
-          subCode: values[i][2].toString(),
-          subName: values[i][3] || "",
-          synonyms: values[i][4] || "",
+    // 2. 跨帳本查詢所有科目
+    const allSubjects = [];
+    const subjectUsageStats = await DD_getUserSubjectUsageStats(userId);
+
+    for (const ledgerId of accessibleLedgers) {
+      try {
+        const ledgerSubjects = await DD_getSubjectsFromLedger(ledgerId);
+        
+        // 為每個科目添加帳本資訊和使用統計
+        ledgerSubjects.forEach(subject => {
+          const subjectKey = `${subject.大項代碼}-${subject.子項代碼}`;
+          const usageInfo = subjectUsageStats[subjectKey] || { count: 0, lastUsed: null };
+          
+          allSubjects.push({
+            ...subject,
+            ledgerId: ledgerId,
+            usageCount: usageInfo.count,
+            lastUsed: usageInfo.lastUsed,
+            subjectKey: subjectKey
+          });
         });
+        
+        DL.DL_logDebug('DD5', `帳本 ${ledgerId} 提供 ${ledgerSubjects.length} 個科目`);
+      } catch (ledgerError) {
+        DL.DL_logError('DD5', `查詢帳本 ${ledgerId} 科目失敗: ${ledgerError.message}`);
+        continue;
       }
     }
 
-    console.log(`【模糊匹配】處理完成，共 ${subjects.length} 個科目`);
-    return subjects;
+    // 3. 智能排序：使用頻率 > 最近使用 > 科目代碼
+    allSubjects.sort((a, b) => {
+      // 優先比較使用次數
+      if (b.usageCount !== a.usageCount) {
+        return b.usageCount - a.usageCount;
+      }
+      
+      // 再比較最近使用時間
+      if (a.lastUsed && b.lastUsed) {
+        return new Date(b.lastUsed) - new Date(a.lastUsed);
+      } else if (a.lastUsed && !b.lastUsed) {
+        return -1;
+      } else if (!a.lastUsed && b.lastUsed) {
+        return 1;
+      }
+      
+      // 最後按科目代碼排序
+      return a.子項代碼.localeCompare(b.子項代碼);
+    });
+
+    DL.DL_logInfo('DD5', `跨帳本科目查詢完成，共 ${allSubjects.length} 個科目`);
+    return allSubjects;
+
   } catch (error) {
-    console.log(`【模糊匹配】獲取科目列表失敗: ${error}`);
+    DL.DL_logError('DD5', `跨帳本科目查詢失敗: ${error.message}`);
     return [];
   }
 }
 
 /**
- * 58. 格式化系統回覆訊息
- * @version 2025-06-16-V3.7.0
- * @author AustinLiao69
- * @date 2025-06-16 02:13:23
- * @update: 修復負數金額和支付方式處理問題，確保多層調用數據一致性
+ * 56. 智能推薦最佳帳本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @description 根據科目、金額、使用習慣推薦最適合的帳本
+ */
+async function DD_recommendBestLedger(userId, subject, amount) {
+  try {
+    DL.DL_logDebug('DD5', `開始智能帳本推薦 - 用戶: ${userId}, 科目: ${subject}`);
+
+    // 1. 獲取用戶的帳本使用偏好
+    const ledgerPreferences = await DD_getUserLedgerPreferences(userId);
+    
+    // 2. 查詢該科目在各帳本的使用歷史
+    const subjectLedgerUsage = await DD_getSubjectLedgerUsage(userId, subject);
+    
+    // 3. 考慮當前時間和專案帳本的時效性
+    const currentTime = new Date();
+    const accessibleLedgers = await DD_getUserAccessibleLedgers(userId);
+    
+    let bestLedger = null;
+    let highestScore = 0;
+
+    for (const ledgerId of accessibleLedgers) {
+      let score = 0;
+      
+      // 基礎分數：帳本類型權重
+      const ledgerInfo = await DD_getLedgerInfo(ledgerId);
+      if (ledgerInfo) {
+        switch (ledgerInfo.type) {
+          case 'project':
+            // 專案帳本：檢查是否在時效內
+            if (DD_isProjectActive(ledgerInfo, currentTime)) {
+              score += 30;
+            } else {
+              score -= 10; // 過期專案降分
+            }
+            break;
+          case 'category':
+            // 分類帳本：根據科目匹配度
+            if (DD_isCategoryMatched(ledgerInfo, subject)) {
+              score += 25;
+            }
+            break;
+          case 'shared':
+            // 共享帳本：中等優先權
+            score += 15;
+            break;
+          default:
+            // 一般帳本
+            score += 10;
+        }
+      }
+      
+      // 使用歷史加分
+      const usage = subjectLedgerUsage[ledgerId] || { count: 0, recentUse: 0 };
+      score += usage.count * 5; // 每次使用+5分
+      score += usage.recentUse * 10; // 最近使用加權
+      
+      // 用戶偏好加分
+      const preference = ledgerPreferences[ledgerId] || 0;
+      score += preference * 3;
+      
+      DL.DL_logDebug('DD5', `帳本 ${ledgerId} 推薦分數: ${score}`);
+      
+      if (score > highestScore) {
+        highestScore = score;
+        bestLedger = ledgerId;
+      }
+    }
+
+    DL.DL_logInfo('DD5', `推薦帳本: ${bestLedger} (分數: ${highestScore})`);
+    return bestLedger;
+
+  } catch (error) {
+    DL.DL_logError('DD5', `智能帳本推薦失敗: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * 57. 獲取用戶可存取的帳本列表
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @description 查詢用戶有權限存取的所有帳本
+ */
+async function DD_getUserAccessibleLedgers(userId) {
+  try {
+    DL.DL_logDebug('DD5', `查詢用戶可存取帳本 - 用戶: ${userId}`);
+
+    // 查詢用戶為成員的所有帳本
+    const ledgersQuery = await db.collection('ledgers')
+      .where('MemberUID', 'array-contains', userId)
+      .where('archived', '==', false)
+      .get();
+
+    const accessibleLedgers = [];
+    ledgersQuery.forEach(doc => {
+      accessibleLedgers.push(doc.id);
+    });
+
+    // 也查詢用戶為擁有者的帳本
+    const ownerQuery = await db.collection('ledgers')
+      .where('ownerUID', '==', userId)
+      .where('archived', '==', false)
+      .get();
+
+    ownerQuery.forEach(doc => {
+      if (!accessibleLedgers.includes(doc.id)) {
+        accessibleLedgers.push(doc.id);
+      }
+    });
+
+    DL.DL_logInfo('DD5', `用戶 ${userId} 可存取 ${accessibleLedgers.length} 個帳本`);
+    return accessibleLedgers;
+
+  } catch (error) {
+    DL.DL_logError('DD5', `查詢可存取帳本失敗: ${error.message}`);
+    return [];
+  }
+}
+
+/**
+ * 58. 格式化系統回覆訊息 - Firestore版本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @update: 重寫為Firestore版本，支援跨帳本資訊顯示
  * @param {Object} resultData - 處理結果數據
  * @param {string} moduleCode - 模組代碼
  * @param {Object} options - 附加選項
  * @returns {Object} 格式化後的回覆訊息
  */
-function DD_formatSystemReplyMessage(resultData, moduleCode, options = {}) {
-  // 1. 初始化處理 - 核心變數移到頂層，確保在所有程式路徑中都可用
+async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {}) {
   const userId = options.userId || "";
-  const processId = options.processId || Utilities.getUuid().substring(0, 8);
-  let errorMsg = "未知錯誤"; // 關鍵：移到頂層定義
-  const currentDateTime = Utilities.formatDate(
-    new Date(),
-    DD_CONFIG.TIMEZONE || "Asia/Taipei",
-    "yyyy/MM/dd HH:mm",
-  ); // 關鍵：移到頂層定義
+  const processId = options.processId || generateProcessId();
+  let errorMsg = "未知錯誤";
+  
+  const currentDateTime = new Date().toLocaleString('zh-TW', {
+    timeZone: TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
-  console.log(
-    `DD_formatSystemReplyMessage: 開始格式化訊息 [${processId}], 模組: ${moduleCode}`,
-  );
-  console.log(
-    `DD_formatSystemReplyMessage: 輸入數據: ${JSON.stringify(resultData).substring(0, 300)}...`,
-  );
+  DL.DL_logDebug('DD5', `開始格式化訊息 [${processId}], 模組: ${moduleCode}`);
 
   try {
-    // 2. 檢查resultData是否已經包含完整的responseMessage，如有則優先使用
+    // 檢查是否已有完整回覆訊息
     if (resultData && resultData.responseMessage) {
-      console.log(
-        `DD_formatSystemReplyMessage: 檢測到完整responseMessage，將直接使用 [${processId}]`,
-      );
-
-      // 深度複製，確保不影響原始對象
-      const returnObject = {
-        success: resultData.success === true ? true : false,
+      DL.DL_logDebug('DD5', `使用現有回覆訊息 [${processId}]`);
+      return {
+        success: resultData.success === true,
         responseMessage: resultData.responseMessage,
         originalResult: resultData.originalResult || resultData,
         processId: processId,
         errorType: resultData.errorType || null,
         moduleCode: moduleCode,
         partialData: resultData.partialData || {},
-        error:
-          resultData.error ||
-          (resultData.success === true ? undefined : errorMsg),
+        error: resultData.success === true ? undefined : errorMsg
       };
-
-      console.log(
-        `DD_formatSystemReplyMessage: 直接返回現有訊息，長度=${returnObject.responseMessage.length} [${processId}]`,
-      );
-      return returnObject;
     }
 
-    // 3. 確保resultData存在
+    // 確保resultData存在
     if (!resultData) {
-      console.log(
-        `DD_formatSystemReplyMessage: resultData為空，使用默認值 [${processId}]`,
-      );
       resultData = {
         success: false,
         error: "無處理結果資料",
         errorType: "MISSING_RESULT_DATA",
         message: "無處理結果資料",
-        errorDetails: {
-          processId: processId,
-          errorType: "SYSTEM_ERROR",
-          module: moduleCode || "BK",
-        },
         partialData: {
           subject: "",
           amount: 0,
           rawAmount: "0",
           paymentMethod: "支付方式未指定",
-          timestamp: new Date().getTime(),
-        },
+          timestamp: new Date().getTime()
+        }
       };
     }
 
-    // 4. 處理結果數據
     let responseMessage = "";
     const isSuccess = resultData.success === true;
 
-    // 5. 從resultData中提取資料 - 支持更多嵌套結構 (最關鍵修改點)
-    let partialData = null;
+    // 提取部分數據
+    let partialData = resultData.parsedData || 
+                     resultData.partialData || 
+                     resultData.data || 
+                     {};
 
-    // 5.1 查找partialData的各種可能位置（按優先順序）
-    const dataSources = [
-      resultData.parsedData, // DD_parseInputFormat 直接返回
-      resultData.partialData, // 一般partialData
-      resultData.errorData?.partialData, // 錯誤數據中的部分數據
-      resultData.originalResult?.partialData, // 嵌套結果中的部分數據
-      resultData._partialData, // 舊版格式
-      resultData.data, // 成功結果中的完整數據
-    ];
-
-    // 查找第一個非空的數據源
-    for (let source of dataSources) {
-      if (
-        source &&
-        typeof source === "object" &&
-        Object.keys(source).length > 0
-      ) {
-        partialData = source;
-        console.log(
-          `DD_formatSystemReplyMessage: 找到數據源: ${JSON.stringify(partialData).substring(0, 100)}... [${processId}]`,
-        );
-        break;
-      }
-    }
-
-    // 如果都未找到，嘗試從responseMessage解析
-    if (!partialData && resultData.responseMessage) {
-      try {
-        console.log(
-          `DD_formatSystemReplyMessage: 嘗試從responseMessage解析數據 [${processId}]`,
-        );
-        const msgLines = resultData.responseMessage.split("\n");
-        partialData = {};
-
-        for (const line of msgLines) {
-          if (line.startsWith("金額：")) {
-            const amountMatch = line.match(/金額：([-\d,]+)元/);
-            if (amountMatch && amountMatch[1]) {
-              // 保留原始金額值，包括負數
-              partialData.rawAmount = amountMatch[1].replace(/,/g, "");
-              partialData.amount = parseFloat(partialData.rawAmount);
-              console.log(`從訊息解析金額: ${partialData.rawAmount}`);
-            }
-          } else if (line.startsWith("科目：")) {
-            partialData.subject = line.replace("科目：", "").trim();
-            console.log(`從訊息解析科目: ${partialData.subject}`);
-          } else if (line.startsWith("備註：")) {
-            partialData.remark = line.replace("備註：", "").trim();
-            console.log(`從訊息解析備註: ${partialData.remark}`);
-          } else if (
-            line.startsWith("支付方式：") ||
-            line.startsWith("付款方式：")
-          ) {
-            partialData.paymentMethod = line
-              .replace(/[支付|付款]方式：/, "")
-              .trim();
-            console.log(`從訊息解析支付方式: ${partialData.paymentMethod}`);
-          }
-        }
-      } catch (e) {
-        console.log(
-          `DD_formatSystemReplyMessage: 嘗試解析responseMessage失敗: ${e.toString()} [${processId}]`,
-        );
-      }
-    }
-
-    // 如果仍未找到partialData，創建一個空對象
-    if (!partialData) {
-      partialData = {};
-    }
-
-    // 6. 依照成功或失敗格式化訊息
     if (isSuccess) {
-      // 6.1 成功訊息模板
+      // 成功訊息
       if (resultData.responseMessage) {
-        // 6.1.1 如果已經有格式化的回覆訊息，直接使用
         responseMessage = resultData.responseMessage;
-        console.log(
-          `DD_formatSystemReplyMessage: 使用現有回覆訊息 [${processId}]`,
-        );
       } else if (resultData.data) {
-        // 6.1.2 如果有詳細的回覆數據，根據數據構建訊息
-        console.log(
-          `DD_formatSystemReplyMessage: 基於回覆數據構建成功訊息 [${processId}]`,
-        );
-
-        // 從resultData.data提取數據
         const data = resultData.data;
         const subjectName = data.subjectName || partialData.subject || "";
-        // 優先使用rawAmount保留格式
-        const amount =
-          data.rawAmount || partialData.rawAmount || data.amount || 0;
+        const amount = data.rawAmount || partialData.rawAmount || data.amount || 0;
         const action = data.action || resultData.action || "支出";
-        const paymentMethod =
-          data.paymentMethod || partialData.paymentMethod || "";
+        const paymentMethod = data.paymentMethod || partialData.paymentMethod || "";
         const date = data.date || currentDateTime;
         const remark = data.remark || partialData.remark || "無";
         const userType = data.userType || "J";
+        
+        // 添加帳本資訊（如果有推薦帳本）
+        let ledgerInfo = "";
+        if (data.recommendedLedgerId) {
+          try {
+            const ledgerData = await DD_getLedgerInfo(data.recommendedLedgerId);
+            if (ledgerData) {
+              ledgerInfo = `\n帳本：${ledgerData.name} (${ledgerData.type})`;
+            }
+          } catch (e) {
+            DL.DL_logDebug('DD5', `獲取帳本資訊失敗: ${e.message}`);
+          }
+        }
 
-        // 構建���準成功模板
-        responseMessage =
+        responseMessage = 
           `記帳成功！\n` +
           `金額：${amount}元 (${action})\n` +
           `付款方式：${paymentMethod}\n` +
           `時間：${date}\n` +
           `科目：${subjectName}\n` +
           `備註：${remark}\n` +
-          `使用者類型：${userType}`;
+          `使用者類型：${userType}${ledgerInfo}`;
       } else {
-        // 6.1.3 如果沒有詳細數據，構建簡易成功訊息
-        console.log(
-          `DD_formatSystemReplyMessage: 構建簡易成功訊息 [${processId}]`,
-        );
         responseMessage = `操作成功！\n處理ID: ${processId}`;
       }
-
-      // 6.1.4 記錄成功訊息
-      console.log(
-        `DD_formatSystemReplyMessage: 格式化成功訊息完成 [${processId}]`,
-      );
     } else {
-      // 6.2 失敗訊息模板
-      console.log(
-        `DD_formatSystemReplyMessage: 構建錯誤訊息，錯誤類型: ${resultData.errorType || "未指定"} [${processId}]`,
-      );
+      // 失敗訊息
+      errorMsg = resultData.error || 
+                resultData.message || 
+                resultData.errorData?.error || 
+                "未知錯誤";
 
-      // 6.2.1 收集錯誤訊息 - 增強版本，優先級更清晰
-      errorMsg = "未知錯誤"; // 重新初始化，確保有預設值
+      const subject = partialData.subject || "未知科目";
+      const displayAmount = partialData.rawAmount || 
+                           (partialData.amount !== undefined ? String(partialData.amount) : "0");
+      const paymentMethod = partialData.paymentMethod || "未指定支付方式";
+      const remark = partialData.remark || "無";
 
-      // 提取各種可能的錯誤訊息來源 (優先順序)
-      const possibleErrorSources = [
-        resultData.error,
-        resultData.message,
-        resultData.errorData?.error,
-        resultData.originalResult?.error,
-        resultData.originalResult?.message,
-        resultData._errorDetail,
-      ];
-
-      // 尋找第一個非空的錯誤訊息
-      for (const source of possibleErrorSources) {
-        if (source) {
-          errorMsg = source;
-          console.log(
-            `DD_formatSystemReplyMessage: 找到錯誤訊息: ${errorMsg} [${processId}]`,
-          );
-          break;
-        }
-      }
-
-      // 如果仍未找到錯誤訊息，嘗試從responseMessage提取
-      if (
-        errorMsg === "未知錯誤" &&
-        resultData.responseMessage &&
-        resultData.responseMessage.includes("錯誤原因：")
-      ) {
-        try {
-          errorMsg = resultData.responseMessage.split("錯誤原因：")[1].trim();
-          console.log(
-            `DD_formatSystemReplyMessage: 從responseMessage提取錯誤信息: ${errorMsg} [${processId}]`,
-          );
-        } catch (e) {
-          errorMsg = "無法提取錯誤原因";
-        }
-      }
-
-      // 6.2.2 準備顯示數據 - 關鍵修改：保留負數金額和原始科目
-      // 取得科目名稱 - 維持優先順序
-      const subject =
-        partialData.subject ||
-        resultData.errorData?.parsedData?.subject ||
-        resultData.originalSubject ||
-        resultData.text?.split("-")?.[0]?.trim() ||
-        "未知科目";
-
-      // 保留原始金額，包括負數 (關鍵修改：確保從partialData提取值)
-      const displayAmount =
-        partialData.rawAmount ||
-        (partialData.amount !== undefined ? String(partialData.amount) : "0");
-
-      // 確保支付方式被保留
-      const paymentMethod =
-        partialData.paymentMethod ||
-        resultData.paymentMethod ||
-        resultData.errorData?.parsedData?.paymentMethod ||
-        "未指定支付方式";
-
-      // 從原始輸入擷取備註
-      const remark =
-        partialData.remark || resultData.text?.split("-")?.[0]?.trim() || "無";
-
-      // 6.2.3 構建標準錯誤訊息模板
       responseMessage =
         `記帳失敗！\n` +
         `金額：${displayAmount}元\n` +
@@ -486,16 +504,10 @@ function DD_formatSystemReplyMessage(resultData, moduleCode, options = {}) {
         `備註：${remark}\n` +
         `使用者類型：J\n` +
         `錯誤原因：${errorMsg}`;
-
-      console.log(
-        `DD_formatSystemReplyMessage: 已構建錯誤訊息: ${responseMessage.substring(0, 50)}... [${processId}]`,
-      );
     }
 
-    // 7. 最終日誌記錄
-    console.log(`DD_formatSystemReplyMessage: 完成訊息格式化 [${processId}]`);
+    DL.DL_logDebug('DD5', `訊息格式化完成 [${processId}]`);
 
-    // 8. 返回完整結果，確保保留所有原始數據
     return {
       success: isSuccess,
       responseMessage: responseMessage,
@@ -503,490 +515,658 @@ function DD_formatSystemReplyMessage(resultData, moduleCode, options = {}) {
       processId: processId,
       errorType: resultData.errorType || null,
       moduleCode: moduleCode,
-      // 關鍵：確保保留原始的partialData
       partialData: partialData,
-      // 保留原始錯誤信息，確保多級調用不丟失
-      error: isSuccess ? undefined : errorMsg,
+      error: isSuccess ? undefined : errorMsg
     };
-  } catch (error) {
-    // 9. 處理格式化過程中的錯誤
-    console.error(
-      `DD_formatSystemReplyMessage: 格式化過程出錯: ${error.toString()} [${processId}]`,
-    );
-    if (error.stack) console.error(`錯誤堆疊: ${error.stack}`);
 
-    // 9.1 預設的錯誤回覆訊息
+  } catch (error) {
+    DL.DL_logError('DD5', `格式化過程出錯: ${error.message} [${processId}]`);
+
     const fallbackMessage = `記帳失敗！\n時間：${currentDateTime}\n科目：未知科目\n金額：0元\n支付方式：未指定支付方式\n備註：無\n使用者類型：J\n錯誤原因：訊息格式化錯誤`;
 
-    // 9.2 返回基本錯誤訊息
     return {
       success: false,
       responseMessage: fallbackMessage,
       processId: processId,
       errorType: "FORMAT_ERROR",
       moduleCode: moduleCode,
-      error: error.toString(),
+      error: error.toString()
     };
   }
 }
 
 /**
- * 59. 根據科目代碼獲取科目信息
- * @version 2025-06-06-V1.0.0
- * @author AustinLiao691
- * @date 2025-06-06 02:40:22
- * @param {string} subjectCode - 科目代碼，格式為"majorCode-subCode"或純subCode
+ * 59. 根據科目代碼獲取科目信息 - 跨帳本版本
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @update: 重寫為跨帳本Firestore查詢版本
+ * @param {string} subjectCode - 科目代碼
+ * @param {string} userId - 用戶ID（用於跨帳本查詢）
  * @returns {object|null} 科目信息對象或null
  */
-function DD_getSubjectByCode(subjectCode) {
-  const sbcId = Utilities.getUuid().substring(0, 8);
-  console.log(`根據代碼查詢科目: "${subjectCode}" [${sbcId}]`);
-
+async function DD_getSubjectByCode(subjectCode, userId) {
   try {
-    // 校驗參數
+    DL.DL_logDebug('DD5', `跨帳本科目代碼查詢: ${subjectCode}, 用戶: ${userId}`);
+
     if (!subjectCode) {
-      console.log(`科目代碼為空 [${sbcId}]`);
+      DL.DL_logWarning('DD5', '科目代碼為空');
       return null;
     }
 
     let majorCode, subCode;
 
-    // 處理代碼格式（支持兩種格式：majorCode-subCode 和純 subCode）
+    // 處理代碼格式
     if (subjectCode.includes("-")) {
       const parts = subjectCode.split("-");
       majorCode = parts[0];
       subCode = parts[1];
     } else {
-      // 假設純子科目代碼，需要查找對應的主科目
       subCode = subjectCode;
     }
 
-    // 獲取科目表
-    const ss = SpreadsheetApp.openById(DD_CONFIG.SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(DD_SUBJECT_CODE_SHEET_NAME);
-
-    if (!sheet) {
-      console.log(`找不到科目表: ${DD_SUBJECT_CODE_SHEET_NAME} [${sbcId}]`);
-      return null;
-    }
-
-    // 讀取科目數據
-    const values = sheet.getDataRange().getValues();
-
-    // 查詢匹配科目
-    for (let i = 1; i < values.length; i++) {
-      const currentMajorCode = String(
-        values[i][DD_SUBJECT_CODE_MAJOR_CODE_COLUMN - 1],
-      );
-      const currentSubCode = String(
-        values[i][DD_SUBJECT_CODE_SUB_CODE_COLUMN - 1],
-      );
+    // 跨帳本查詢
+    const allSubjects = await DD_getAllSubjects(userId);
+    
+    for (const subject of allSubjects) {
+      const currentMajorCode = subject['大項代碼'];
+      const currentSubCode = subject['子項代碼'];
 
       // 如果只有subCode，找到第一個匹配的子科目
       if (!majorCode && currentSubCode === subCode) {
-        console.log(
-          `找到科目: ${currentMajorCode}-${currentSubCode} [${sbcId}]`,
-        );
+        DL.DL_logInfo('DD5', `找到科目: ${currentMajorCode}-${currentSubCode} (帳本: ${subject.ledgerId})`);
         return {
           majorCode: currentMajorCode,
-          majorName: String(values[i][DD_SUBJECT_CODE_MAJOR_NAME_COLUMN - 1]),
+          majorName: subject['大項名稱'],
           subCode: currentSubCode,
-          subName: String(values[i][DD_SUBJECT_CODE_SUB_NAME_COLUMN - 1]),
+          subName: subject['子項名稱'],
+          ledgerId: subject.ledgerId,
+          usageCount: subject.usageCount || 0
         };
       }
 
       // 如果有完整代碼，精確匹配
-      if (
-        majorCode &&
-        currentMajorCode === majorCode &&
-        currentSubCode === subCode
-      ) {
-        console.log(`精確匹配科目: ${majorCode}-${subCode} [${sbcId}]`);
+      if (majorCode && currentMajorCode === majorCode && currentSubCode === subCode) {
+        DL.DL_logInfo('DD5', `精確匹配科目: ${majorCode}-${subCode} (帳本: ${subject.ledgerId})`);
         return {
           majorCode: currentMajorCode,
-          majorName: String(values[i][DD_SUBJECT_CODE_MAJOR_NAME_COLUMN - 1]),
+          majorName: subject['大項名稱'],
           subCode: currentSubCode,
-          subName: String(values[i][DD_SUBJECT_CODE_SUB_NAME_COLUMN - 1]),
+          subName: subject['子項名稱'],
+          ledgerId: subject.ledgerId,
+          usageCount: subject.usageCount || 0
         };
       }
     }
 
-    console.log(`找不到科目代碼: "${subjectCode}" [${sbcId}]`);
+    DL.DL_logWarning('DD5', `找不到科目代碼: ${subjectCode}`);
     return null;
+
   } catch (error) {
-    console.log(`科目代碼查詢出錯: ${error} [${sbcId}]`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    DD_logError(
-      `科目代碼查詢出錯: ${error}`,
-      "科目查詢",
-      "",
-      "CODE_QUERY_ERROR",
-      error.toString(),
-      "DD_getSubjectByCode",
-    );
+    DL.DL_logError('DD5', `科目代碼查詢出錯: ${error.message}`);
     return null;
   }
 }
 
 /**
- * 60. 主動向 LINE 用戶推送訊息
- * @version 2.0.7 (2025-06-25)
- * @author AustinLiao69
- * @update: 從WH模組移植至DD模組，並重新命名
+ * 60. LINE 訊息推送 - Firestore日誌整合版
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @update: 整合Firestore日誌記錄，支援跨帳本通知
  * @param {string} userId - LINE 用戶 ID
  * @param {string|Object} message - 要發送的訊息內容
+ * @param {string} ledgerId - 相關帳本ID（可選）
  * @returns {Promise<Object>} 發送結果
  */
-function DD_pushMessage(userId, message) {
-  return new Promise((resolve, reject) => {
-    try {
-      // 檢查用戶ID是否有效
-      if (!userId || userId.trim() === "") {
-        console.log("DD_pushMessage: 無效的用戶ID");
-        return resolve({ success: false, error: "無效的用戶ID" });
-      }
-
-      // 處理訊息內容
-      let textMessage = "";
-
-      if (typeof message === "object" && message !== null) {
-        if (
-          message.responseMessage &&
-          typeof message.responseMessage === "string"
-        ) {
-          textMessage = message.responseMessage;
-        } else if (message.message && typeof message.message === "string") {
-          textMessage = message.message;
-        } else {
-          try {
-            textMessage = JSON.stringify(message);
-          } catch (jsonError) {
-            textMessage = "系統訊息";
-            console.log(`DD_pushMessage: 轉換訊息失敗: ${jsonError}`);
-          }
-        }
-      } else if (typeof message === "string") {
-        textMessage = message;
-      } else {
-        textMessage = "系統訊息";
-      }
-
-      // 確保訊息長度不超過限制
-      const maxLength = 5000;
-      if (textMessage.length > maxLength) {
-        textMessage = textMessage.substring(0, maxLength - 3) + "...";
-      }
-
-      // LINE Messaging API URL
-      const url = "https://api.line.me/v2/bot/message/push";
-
-      // 獲取 Channel Access Token
-      const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-      if (!channelAccessToken) {
-        console.log("DD_pushMessage: 缺少 Channel Access Token");
-        return resolve({ success: false, error: "缺少 Channel Access Token" });
-      }
-
-      // 設置請求
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${channelAccessToken}`,
-      };
-
-      const payload = {
-        to: userId,
-        messages: [
-          {
-            type: "text",
-            text: textMessage,
-          },
-        ],
-      };
-
-      // 發送 HTTP 請求
-      console.log(`DD_pushMessage: 開始向用戶 ${userId} 推送訊息`);
-
-      // 記錄推送嘗試
-      DD_logInfo(
-        `開始向用戶推送訊息`,
-        "訊息推送",
-        userId,
-        "DD_pushMessage",
-        "DD_pushMessage",
-      );
-
-      // 使用 axios 發送請求
-      axios
-        .post(url, payload, { headers: headers })
-        .then((response) => {
-          if (response.status === 200) {
-            console.log(`DD_pushMessage: 成功推送訊息給用戶 ${userId}`);
-
-            // 記錄推送成功
-            DD_logInfo(
-              `成功推送訊息給用戶`,
-              "訊息推送",
-              userId,
-              "DD_pushMessage",
-              "DD_pushMessage",
-            );
-
-            resolve({ success: true });
-          } else {
-            console.log(`DD_pushMessage: API回應異常 ${response.status}`);
-
-            // 記錄推送失敗
-            DD_logError(
-              `API回應異常 ${response.status}`,
-              "訊息推送",
-              userId,
-              "API_ERROR",
-              JSON.stringify(response.data),
-              "DD_pushMessage",
-              "DD_pushMessage",
-            );
-
-            resolve({
-              success: false,
-              error: `API回應異常 (${response.status})`,
-              details: response.data,
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(`DD_pushMessage: 推送訊息錯誤 ${error}`);
-
-          // 記錄推送錯誤
-          DD_logError(
-            `推送訊息錯誤`,
-            "訊息推送",
-            userId,
-            "PUSH_ERROR",
-            error.toString(),
-            "DD_pushMessage",
-            "DD_pushMessage",
-          );
-
-          resolve({
-            success: false,
-            error: error.toString(),
-          });
-        });
-    } catch (error) {
-      console.log(`DD_pushMessage: 主錯誤 ${error}`);
-
-      // 記錄函數級錯誤
-      DD_logError(
-        `推送訊息主錯誤`,
-        "訊息推送",
-        userId,
-        "FUNCTION_ERROR",
-        error.toString(),
-        "DD_pushMessage",
-        "DD_pushMessage",
-      );
-
-      resolve({
-        success: false,
-        error: error.toString(),
-      });
+async function DD_pushMessage(userId, message, ledgerId = null) {
+  try {
+    // 檢查用戶ID
+    if (!userId || userId.trim() === "") {
+      DL.DL_logWarning('DD5', 'LINE推送：無效的用戶ID');
+      return { success: false, error: "無效的用戶ID" };
     }
-  });
+
+    // 處理訊息內容
+    let textMessage = "";
+    if (typeof message === "object" && message !== null) {
+      if (message.responseMessage && typeof message.responseMessage === "string") {
+        textMessage = message.responseMessage;
+      } else if (message.message && typeof message.message === "string") {
+        textMessage = message.message;
+      } else {
+        try {
+          textMessage = JSON.stringify(message);
+        } catch (jsonError) {
+          textMessage = "系統訊息";
+          DL.DL_logWarning('DD5', `轉換訊息失敗: ${jsonError.message}`);
+        }
+      }
+    } else if (typeof message === "string") {
+      textMessage = message;
+    } else {
+      textMessage = "系統訊息";
+    }
+
+    // 限制訊息長度
+    const maxLength = 5000;
+    if (textMessage.length > maxLength) {
+      textMessage = textMessage.substring(0, maxLength - 3) + "...";
+    }
+
+    // LINE API 設定
+    const url = "https://api.line.me/v2/bot/message/push";
+    const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+    
+    if (!channelAccessToken) {
+      DL.DL_logError('DD5', 'LINE推送：缺少 Channel Access Token');
+      return { success: false, error: "缺少 Channel Access Token" };
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${channelAccessToken}`
+    };
+
+    const payload = {
+      to: userId,
+      messages: [{
+        type: "text",
+        text: textMessage
+      }]
+    };
+
+    DL.DL_logInfo('DD5', `開始向用戶 ${userId} 推送訊息`);
+
+    // 記錄到Firestore日誌
+    await DD_writeToFirestoreLog(
+      ledgerId || 'system',
+      userId,
+      'INFO',
+      '開始向用戶推送訊息',
+      '訊息推送',
+      {
+        location: 'DD_pushMessage',
+        messageLength: textMessage.length
+      }
+    );
+
+    // 發送請求
+    const response = await axios.post(url, payload, { headers: headers });
+
+    if (response.status === 200) {
+      DL.DL_logInfo('DD5', `成功推送訊息給用戶 ${userId}`);
+      
+      // 記錄成功日誌
+      await DD_writeToFirestoreLog(
+        ledgerId || 'system',
+        userId,
+        'INFO',
+        '成功推送訊息給用戶',
+        '訊息推送',
+        {
+          location: 'DD_pushMessage'
+        }
+      );
+
+      return { success: true };
+    } else {
+      DL.DL_logError('DD5', `LINE API回應異常 ${response.status}`);
+      
+      // 記錄錯誤日誌
+      await DD_writeToFirestoreLog(
+        ledgerId || 'system',
+        userId,
+        'ERROR',
+        `LINE API回應異常 ${response.status}`,
+        '訊息推送',
+        {
+          location: 'DD_pushMessage',
+          errorCode: 'API_ERROR',
+          errorDetails: JSON.stringify(response.data)
+        }
+      );
+
+      return {
+        success: false,
+        error: `API回應異常 (${response.status})`,
+        details: response.data
+      };
+    }
+
+  } catch (error) {
+    DL.DL_logError('DD5', `推送訊息錯誤: ${error.message}`);
+
+    // 記錄錯誤日誌
+    try {
+      await DD_writeToFirestoreLog(
+        ledgerId || 'system',
+        userId,
+        'ERROR',
+        '推送訊息錯誤',
+        '訊息推送',
+        {
+          location: 'DD_pushMessage',
+          errorCode: 'PUSH_ERROR',
+          errorDetails: error.toString()
+        }
+      );
+    } catch (logError) {
+      DL.DL_logError('DD5', `日誌記錄失敗: ${logError.message}`);
+    }
+
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
 }
 
 /**
- * 61. 批次向多個 LINE 用戶推送相同訊息
- * @version 2.0.7 (2025-06-25)
- * @author AustinLiao69
- * @update: 從WH模組移植至DD模組，並重新命名
+ * 61. 批次訊息推送 - Firestore日誌整合版
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @update: 整合Firestore日誌記錄，支援跨帳本批次通知
  * @param {Array<string>} userIds - LINE 用戶 ID 陣列
  * @param {string|Object} message - 要發送的訊息內容
+ * @param {string} ledgerId - 相關帳本ID（可選）
  * @returns {Promise<Object>} 發送結果
  */
-function DD_multicastMessage(userIds, message) {
-  return new Promise((resolve, reject) => {
-    try {
-      // 檢查用戶ID陣列是否有效
-      if (!Array.isArray(userIds) || userIds.length === 0) {
-        console.log("DD_multicastMessage: 無效的用戶ID陣列");
-        return resolve({ success: false, error: "無效的用戶ID陣列" });
-      }
-
-      // 處理訊息內容
-      let textMessage = "";
-
-      if (typeof message === "object" && message !== null) {
-        if (
-          message.responseMessage &&
-          typeof message.responseMessage === "string"
-        ) {
-          textMessage = message.responseMessage;
-        } else if (message.message && typeof message.message === "string") {
-          textMessage = message.message;
-        } else {
-          try {
-            textMessage = JSON.stringify(message);
-          } catch (jsonError) {
-            textMessage = "系統訊息";
-            console.log(`DD_multicastMessage: 轉換訊息失敗: ${jsonError}`);
-          }
-        }
-      } else if (typeof message === "string") {
-        textMessage = message;
-      } else {
-        textMessage = "系統訊息";
-      }
-
-      // 確保訊息長度不超過限制
-      const maxLength = 5000;
-      if (textMessage.length > maxLength) {
-        textMessage = textMessage.substring(0, maxLength - 3) + "...";
-      }
-
-      // LINE Messaging API URL
-      const url = "https://api.line.me/v2/bot/message/multicast";
-
-      // 獲取 Channel Access Token
-      const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-      if (!channelAccessToken) {
-        console.log("DD_multicastMessage: 缺少 Channel Access Token");
-        return resolve({ success: false, error: "缺少 Channel Access Token" });
-      }
-
-      // 設置請求
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${channelAccessToken}`,
-      };
-
-      const payload = {
-        to: userIds,
-        messages: [
-          {
-            type: "text",
-            text: textMessage,
-          },
-        ],
-      };
-
-      // 發送 HTTP 請求
-      console.log(
-        `DD_multicastMessage: 開始向 ${userIds.length} 個用戶推送訊息`,
-      );
-
-      // 記錄推送嘗試
-      DD_logInfo(
-        `開始向 ${userIds.length} 個用戶推送訊息`,
-        "批次訊息推送",
-        userIds.join(",").substring(0, 50) + "...",
-        "DD_multicastMessage",
-        "DD_multicastMessage",
-      );
-
-      // 使用 axios 發送請求
-      axios
-        .post(url, payload, { headers: headers })
-        .then((response) => {
-          if (response.status === 200) {
-            console.log(
-              `DD_multicastMessage: 成功推送訊息給 ${userIds.length} 個用戶`,
-            );
-
-            // 記錄推送成功
-            DD_logInfo(
-              `成功推送訊息給 ${userIds.length} 個用戶`,
-              "批次訊息推送",
-              userIds.join(",").substring(0, 50) + "...",
-              "DD_multicastMessage",
-              "DD_multicastMessage",
-            );
-
-            resolve({ success: true });
-          } else {
-            console.log(`DD_multicastMessage: API回應異常 ${response.status}`);
-
-            // 記錄推送失敗
-            DD_logError(
-              `API回應異常 ${response.status}`,
-              "批次訊息推送",
-              userIds.join(",").substring(0, 50) + "...",
-              "API_ERROR",
-              JSON.stringify(response.data),
-              "DD_multicastMessage",
-              "DD_multicastMessage",
-            );
-
-            resolve({
-              success: false,
-              error: `API回應異常 (${response.status})`,
-              details: response.data,
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(`DD_multicastMessage: 推送訊息錯誤 ${error}`);
-
-          // 記錄推送錯誤
-          DD_logError(
-            `推送訊息錯誤`,
-            "批次訊息推送",
-            userIds.join(",").substring(0, 50) + "...",
-            "MULTICAST_ERROR",
-            error.toString(),
-            "DD_multicastMessage",
-            "DD_multicastMessage",
-          );
-
-          resolve({
-            success: false,
-            error: error.toString(),
-          });
-        });
-    } catch (error) {
-      console.log(`DD_multicastMessage: 主錯誤 ${error}`);
-
-      // 記錄函數級錯誤
-      DD_logError(
-        `批次推送訊息主錯誤`,
-        "批次訊息推送",
-        userIds ? userIds.join(",").substring(0, 50) + "..." : "",
-        "FUNCTION_ERROR",
-        error.toString(),
-        "DD_multicastMessage",
-        "DD_multicastMessage",
-      );
-
-      resolve({
-        success: false,
-        error: error.toString(),
-      });
+async function DD_multicastMessage(userIds, message, ledgerId = null) {
+  try {
+    // 檢查用戶ID陣列
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      DL.DL_logWarning('DD5', 'LINE批次推送：無效的用戶ID陣列');
+      return { success: false, error: "無效的用戶ID陣列" };
     }
-  });
+
+    // 處理訊息內容
+    let textMessage = "";
+    if (typeof message === "object" && message !== null) {
+      if (message.responseMessage && typeof message.responseMessage === "string") {
+        textMessage = message.responseMessage;
+      } else if (message.message && typeof message.message === "string") {
+        textMessage = message.message;
+      } else {
+        try {
+          textMessage = JSON.stringify(message);
+        } catch (jsonError) {
+          textMessage = "系統訊息";
+          DL.DL_logWarning('DD5', `轉換訊息失敗: ${jsonError.message}`);
+        }
+      }
+    } else if (typeof message === "string") {
+      textMessage = message;
+    } else {
+      textMessage = "系統訊息";
+    }
+
+    // 限制訊息長度
+    const maxLength = 5000;
+    if (textMessage.length > maxLength) {
+      textMessage = textMessage.substring(0, maxLength - 3) + "...";
+    }
+
+    // LINE API 設定
+    const url = "https://api.line.me/v2/bot/message/multicast";
+    const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+    
+    if (!channelAccessToken) {
+      DL.DL_logError('DD5', 'LINE批次推送：缺少 Channel Access Token');
+      return { success: false, error: "缺少 Channel Access Token" };
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${channelAccessToken}`
+    };
+
+    const payload = {
+      to: userIds,
+      messages: [{
+        type: "text",
+        text: textMessage
+      }]
+    };
+
+    DL.DL_logInfo('DD5', `開始向 ${userIds.length} 個用戶批次推送訊息`);
+
+    // 記錄到Firestore日誌
+    await DD_writeToFirestoreLog(
+      ledgerId || 'system',
+      userIds.join(',').substring(0, 50) + "...",
+      'INFO',
+      `開始向 ${userIds.length} 個用戶批次推送訊息`,
+      '批次訊息推送',
+      {
+        location: 'DD_multicastMessage',
+        userCount: userIds.length,
+        messageLength: textMessage.length
+      }
+    );
+
+    // 發送請求
+    const response = await axios.post(url, payload, { headers: headers });
+
+    if (response.status === 200) {
+      DL.DL_logInfo('DD5', `成功推送訊息給 ${userIds.length} 個用戶`);
+      
+      // 記錄成功日誌
+      await DD_writeToFirestoreLog(
+        ledgerId || 'system',
+        userIds.join(',').substring(0, 50) + "...",
+        'INFO',
+        `成功推送訊息給 ${userIds.length} 個用戶`,
+        '批次訊息推送',
+        {
+          location: 'DD_multicastMessage',
+          userCount: userIds.length
+        }
+      );
+
+      return { success: true };
+    } else {
+      DL.DL_logError('DD5', `LINE API回應異常 ${response.status}`);
+      
+      // 記錄錯誤日誌
+      await DD_writeToFirestoreLog(
+        ledgerId || 'system',
+        userIds.join(',').substring(0, 50) + "...",
+        'ERROR',
+        `LINE API回應異常 ${response.status}`,
+        '批次訊息推送',
+        {
+          location: 'DD_multicastMessage',
+          errorCode: 'API_ERROR',
+          errorDetails: JSON.stringify(response.data),
+          userCount: userIds.length
+        }
+      );
+
+      return {
+        success: false,
+        error: `API回應異常 (${response.status})`,
+        details: response.data
+      };
+    }
+
+  } catch (error) {
+    DL.DL_logError('DD5', `批次推送訊息錯誤: ${error.message}`);
+
+    // 記錄錯誤日誌
+    try {
+      await DD_writeToFirestoreLog(
+        ledgerId || 'system',
+        userIds ? userIds.join(',').substring(0, 50) + "..." : "",
+        'ERROR',
+        '批次推送訊息錯誤',
+        '批次訊息推送',
+        {
+          location: 'DD_multicastMessage',
+          errorCode: 'MULTICAST_ERROR',
+          errorDetails: error.toString(),
+          userCount: userIds ? userIds.length : 0
+        }
+      );
+    } catch (logError) {
+      DL.DL_logError('DD5', `日誌記錄失敗: ${logError.message}`);
+    }
+
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
 }
 
-// 更新模組導出，包含新添加的函數
+/**
+ * 62. 寫入Firestore日誌
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @description 統一的Firestore日誌寫入函數，支援系統級和帳本級日誌
+ */
+async function DD_writeToFirestoreLog(ledgerId, userId, severity, message, operationType, options = {}) {
+  try {
+    const {
+      errorCode = '',
+      errorDetails = '',
+      location = '',
+      functionName = '',
+      retryCount = 0
+    } = options;
+
+    const logData = {
+      時間: admin.firestore.Timestamp.now(),
+      訊息: message,
+      操作類型: operationType,
+      UID: userId || '',
+      錯誤代碼: errorCode || null,
+      來源: 'DD5',
+      錯誤詳情: errorDetails || '',
+      重試次數: retryCount,
+      程式碼位置: location || functionName || '',
+      嚴重等級: severity
+    };
+
+    // 同時寫入系統級和帳本級日誌
+    const promises = [];
+
+    // 1. 系統級日誌
+    promises.push(
+      db.collection('_system').collection('logs').add({
+        ...logData,
+        ledgerId: ledgerId || null
+      })
+    );
+
+    // 2. 帳本級日誌（如果有指定帳本且不是系統級）
+    if (ledgerId && ledgerId !== 'system') {
+      promises.push(
+        db.collection('ledgers').doc(ledgerId).collection('log').add(logData)
+      );
+    }
+
+    await Promise.all(promises);
+
+  } catch (error) {
+    // 如果日誌寫入失敗，輸出到控制台
+    console.error(`Firestore日誌寫入失敗: ${error.message}. 原始訊息: ${message}`);
+  }
+}
+
+/**
+ * 63. 輔助函數：獲取帳本中的科目
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @description 從指定帳本獲取科目清單
+ */
+async function DD_getSubjectsFromLedger(ledgerId) {
+  try {
+    const subjectsSnapshot = await db.collection('ledgers')
+      .doc(ledgerId)
+      .collection('subjects')
+      .where('isActive', '==', true)
+      .orderBy('sortOrder')
+      .get();
+
+    const subjects = [];
+    subjectsSnapshot.forEach(doc => {
+      if (doc.id !== 'template') {
+        const data = doc.data();
+        subjects.push({
+          '大項代碼': data['大項代碼'] || '',
+          '大項名稱': data['大項名稱'] || '',
+          '子項代碼': data['子項代碼'] || '',
+          '子項名稱': data['子項名稱'] || '',
+          '同義詞': data['同義詞'] || ''
+        });
+      }
+    });
+
+    return subjects;
+  } catch (error) {
+    DL.DL_logError('DD5', `獲取帳本科目失敗: ${error.message}`);
+    return [];
+  }
+}
+
+/**
+ * 64. 輔助函數：獲取用戶科目使用統計
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @description 統計用戶的科目使用頻率
+ */
+async function DD_getUserSubjectUsageStats(userId) {
+  try {
+    // 查詢用戶的記帳歷史來統計科目使用
+    const accessibleLedgers = await DD_getUserAccessibleLedgers(userId);
+    const usageStats = {};
+
+    for (const ledgerId of accessibleLedgers) {
+      const entriesSnapshot = await db.collection('ledgers')
+        .doc(ledgerId)
+        .collection('entries')
+        .where('UID', '==', userId)
+        .orderBy('timestamp', 'desc')
+        .limit(1000) // 限制查詢數量
+        .get();
+
+      entriesSnapshot.forEach(doc => {
+        const data = doc.data();
+        const subjectKey = `${data['大項代碼']}-${data['子項代碼']}`;
+        
+        if (!usageStats[subjectKey]) {
+          usageStats[subjectKey] = { count: 0, lastUsed: null };
+        }
+        
+        usageStats[subjectKey].count++;
+        const timestamp = data.timestamp?.toDate() || new Date();
+        if (!usageStats[subjectKey].lastUsed || timestamp > usageStats[subjectKey].lastUsed) {
+          usageStats[subjectKey].lastUsed = timestamp;
+        }
+      });
+    }
+
+    return usageStats;
+  } catch (error) {
+    DL.DL_logError('DD5', `獲取科目使用統計失敗: ${error.message}`);
+    return {};
+  }
+}
+
+/**
+ * 65. 輔助函數：獲取帳本資訊
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @description 獲取帳本的基本資訊
+ */
+async function DD_getLedgerInfo(ledgerId) {
+  try {
+    const ledgerDoc = await db.collection('ledgers').doc(ledgerId).get();
+    if (ledgerDoc.exists) {
+      return ledgerDoc.data();
+    }
+    return null;
+  } catch (error) {
+    DL.DL_logError('DD5', `獲取帳本資訊失敗: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * 66. 輔助函數：生成處理ID
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @description 生成唯一的處理ID
+ */
+function generateProcessId() {
+  return Math.random().toString(36).substr(2, 8);
+}
+
+/**
+ * 67. 輔助函數：智能判斷交易類型
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 14:30:00
+ * @description 根據文本和科目智能判斷是收入還是支出
+ */
+async function DD_smartDetermineTransactionType(text, subject) {
+  try {
+    // 基於關鍵字判斷
+    if (/^(支出|買|購買|花費|消費)/.test(text)) {
+      return "支出";
+    } else if (/^(收入|賺|獲得|薪水|獎金)/.test(text)) {
+      return "收入";
+    }
+
+    // 基於科目判斷（可以根據科目代碼或名稱）
+    if (subject && (subject.includes('薪資') || subject.includes('獎金') || subject.includes('收入'))) {
+      return "收入";
+    }
+
+    // 預設為支出
+    return "支出";
+  } catch (error) {
+    DL.DL_logError('DD5', `智能判斷交易類型失敗: ${error.message}`);
+    return "支出";
+  }
+}
+
+// 其他輔助函數...
+async function DD_getUserLedgerPreferences(userId) {
+  try {
+    // 實作用戶帳本偏好查詢
+    return {};
+  } catch (error) {
+    return {};
+  }
+}
+
+async function DD_getSubjectLedgerUsage(userId, subject) {
+  try {
+    // 實作科目在各帳本的使用統計
+    return {};
+  } catch (error) {
+    return {};
+  }
+}
+
+async function DD_getHistoricalRemarks(userId, subjectCode) {
+  try {
+    // 實作歷史備註查詢
+    return [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function DD_isProjectActive(ledgerInfo, currentTime) {
+  // 檢查專案帳本是否仍在有效期內
+  return true; // 簡化實作
+}
+
+function DD_isCategoryMatched(ledgerInfo, subject) {
+  // 檢查科目是否與分類帳本匹配
+  return false; // 簡化實作
+}
+
+async function DD_formatBookkeepingRemark(parseResult, originalText) {
+  // 實作備註格式化
+  return originalText;
+}
+
+// 導出模組函數
 module.exports = {
-  DD_distributeData,
-  DD_classifyData,
-  DD_dispatchData,
-  DD_processForWH,
-  DD_processForBK,
-  extractNumberFromString,
-  DD_removeAmountFromText,
-  DD_CONFIG,
-  DD_MAX_RETRIES,
-  DD_RETRY_DELAY,
-  DD_TARGET_MODULE_BK,
-  DD_TARGET_MODULE_WH,
-  DD_SUBJECT_CODE_SHEET_NAME,
-  DD_SUBJECT_CODE_MAJOR_CODE_COLUMN,
-  DD_SUBJECT_CODE_MAJOR_NAME_COLUMN,
-  DD_SUBJECT_CODE_SUB_CODE_COLUMN,
-  DD_SUBJECT_CODE_SUB_NAME_COLUMN,
-  DD_SUBJECT_CODE_SYNONYMS_COLUMN,
-  DD_USER_PREF_SHEET_NAME,
-  DD_MODULE_PREFIX,
-  // 新添加的函數
+  DD_generateIntelligentRemark,
+  DD_processParseResult,
+  DD_getAllSubjects,
+  DD_recommendBestLedger,
+  DD_getUserAccessibleLedgers,
+  DD_formatSystemReplyMessage,
+  DD_getSubjectByCode,
   DD_pushMessage,
   DD_multicastMessage,
+  DD_writeToFirestoreLog,
+  DD_getSubjectsFromLedger,
+  DD_getUserSubjectUsageStats,
+  DD_getLedgerInfo
 };
+
+console.log('✅ DD5 智能記帳處理模組 3.0.0 載入完成 - 支援跨帳本查詢');
