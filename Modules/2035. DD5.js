@@ -178,7 +178,7 @@ async function DD_processParseResult(parseResult, options = {}) {
  * @param {string} userId - 用戶ID
  * @return {Array} 跨帳本科目列表
  */
-async function DD_getAllSubjects(userId) {
+async function DD_getAllSubjectsCrossLedger(userId) {
   try {
     DL.DL_logDebug('DD5', `開始跨帳本科目查詢 - 用戶: ${userId}`);
 
@@ -565,7 +565,7 @@ async function DD_getSubjectByCode(subjectCode, userId) {
     }
 
     // 跨帳本查詢
-    const allSubjects = await DD_getAllSubjects(userId);
+    const allSubjects = await DD_getAllSubjectsCrossLedger(userId);
 
     for (const subject of allSubjects) {
       const currentMajorCode = subject['大項代碼'];
@@ -1156,7 +1156,7 @@ async function DD_formatBookkeepingRemark(parseResult, originalText) {
 module.exports = {
   DD_generateIntelligentRemark,
   DD_processParseResult,
-  DD_getAllSubjects,
+  DD_getAllSubjectsCrossLedger,
   DD_recommendBestLedger,
   DD_getUserAccessibleLedgers,
   DD_formatSystemReplyMessage,
