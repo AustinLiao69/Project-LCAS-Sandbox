@@ -1,8 +1,8 @@
 /**
- * BK_記帳處理模組_1.8.0
+ * BK_記帳處理模組_1.9.0
  * @module 記帳處理模組
  * @description LCAS 記帳處理模組 - 移除Google Sheets依賴，改用純Firestore存儲
- * @update 2025-07-08: 升級至1.8.0版本，移除所有Google Sheets相關代碼，改用純Firestore存儲
+ * @update 2025-01-03: 升級至1.9.0版本，完善函數版本管理和時間戳記更新
  */
 
 // 引入所需模組
@@ -52,8 +52,8 @@ const BK_SEVERITY_DEFAULTS = {
 
 /**
  * 01. 安全獲取DL級別函數
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 安全獲取DL模組的日誌級別函數
  */
 function getDLSeverity(level, defaultValue) {
@@ -79,8 +79,8 @@ const BK_LOG_LEVEL_MAP = {
 
 /**
  * 02. 從環境變數獲取配置
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 安全獲取環境變數配置
  */
 function getEnvVar(key) {
@@ -89,8 +89,8 @@ function getEnvVar(key) {
 
 /**
  * 03. 初始化Firestore連接
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 初始化Firestore數據庫連接
  */
 async function initializeFirestore() {
@@ -111,8 +111,8 @@ async function initializeFirestore() {
 
 /**
  * 04. 診斷函數 - 測試日誌映射
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 診斷BK模組的日誌映射功能
  */
 function BK_testLogMapping() {
@@ -148,8 +148,8 @@ function BK_testLogMapping() {
 
 /**
  * 05. BK模組初始化
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 初始化BK模組，建立Firestore連接
  */
 async function BK_initialize() {
@@ -205,8 +205,8 @@ async function BK_initialize() {
 
 /**
  * 06. 日期時間格式化
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 格式化日期時間為台北時區
  */
 function BK_formatDateTime(date) {
@@ -215,8 +215,8 @@ function BK_formatDateTime(date) {
 
 /**
  * 07. 統一日誌處理函數
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 完全重構的日誌處理函數
  */
 function BK_log(level, message, operationType = "", userId = "", options = {}) {
@@ -320,8 +320,8 @@ function BK_logCritical(message, operationType = "", userId = "", errorCode = ""
 
 /**
  * 08. 生成唯一的收支ID
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 使用Firestore查詢生成唯一收支ID
  */
 async function BK_generateBookkeepingId(processId) {
@@ -385,8 +385,8 @@ async function BK_generateBookkeepingId(processId) {
 
 /**
  * 09. 驗證記帳數據
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 驗證記帳數據的完整性
  */
 function BK_validateData(data) {
@@ -419,9 +419,9 @@ function BK_validateData(data) {
 
 /**
  * 10. 處理記帳操作的主函數
- * @version 2025-07-08-V1.8.0
- * @date 2025-07-08 15:00:00
- * @update: 移除Google Sheets相關代碼，改用純Firestore存儲
+ * @version 2025-01-03-V1.9.0
+ * @date 2025-01-03 17:30:00
+ * @update: 移除Google Sheets相關代碼，改用純Firestore存儲，完善版本管理
  */
 async function BK_processBookkeeping(bookkeepingData) {
   const processId = bookkeepingData.processId || require('crypto').randomUUID().substring(0, 8);
@@ -728,8 +728,8 @@ async function BK_processBookkeeping(bookkeepingData) {
 
 /**
  * 11. 準備記帳數據
- * @version 2025-07-08-V1.8.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.9.0
+ * @date 2025-01-03 17:30:00
  * @description 準備記帳數據，移除Google Sheets格式，改為Firestore格式
  */
 function BK_prepareBookkeepingData(bookkeepingId, data, processId) {
@@ -815,8 +815,8 @@ function BK_prepareBookkeepingData(bookkeepingId, data, processId) {
 
 /**
  * 12. 儲存數據到Firestore
- * @version 2025-07-08-V1.8.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.9.0
+ * @date 2025-01-03 17:30:00
  * @description 將記帳數據存儲到Firestore
  */
 async function BK_saveToFirestore(bookkeepingData, processId, ledgerId = null) {
@@ -894,8 +894,8 @@ async function BK_saveToFirestore(bookkeepingData, processId, ledgerId = null) {
 
 /**
  * 13. 獲取支付方式列表
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 獲取支援的支付方式列表
  */
 function BK_getPaymentMethods() {
@@ -904,8 +904,8 @@ function BK_getPaymentMethods() {
 
 /**
  * 14. 確認並標準化支付方式
- * @version 2025-07-08-V1.8.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.9.0
+ * @date 2025-01-03 17:30:00
  * @description 驗證並標準化支付方式
  */
 function BK_validatePaymentMethod(method, majorCode) {
@@ -948,8 +948,8 @@ function BK_validatePaymentMethod(method, majorCode) {
 
 /**
  * 15. 智能文本解析
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 分離文本中的備註和金額
  */
 function BK_smartTextParsing(text, processId) {
@@ -1011,8 +1011,8 @@ function BK_smartTextParsing(text, processId) {
 
 /**
  * 16. 從Firestore獲取記帳數據
- * @version 2025-07-08-V1.8.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.9.0
+ * @date 2025-01-03 17:30:00
  * @description 從Firestore獲取指定日期範圍的記帳數據
  */
 async function BK_getBookkeepingData(startDate, endDate, userId = null, ledgerId = null) {
@@ -1093,8 +1093,8 @@ async function BK_getBookkeepingData(startDate, endDate, userId = null, ledgerId
 
 /**
  * 17. 依科目代碼從Firestore獲取記帳數據
- * @version 2025-07-08-V1.8.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.9.0
+ * @date 2025-01-03 17:30:00
  * @description 從Firestore獲取指定科目代碼的記帳數據
  */
 async function BK_getDataBySubjectCode(startDate, endDate, majorCode, minorCode = null, userId = null, ledgerId = null) {
@@ -1128,8 +1128,8 @@ async function BK_getDataBySubjectCode(startDate, endDate, majorCode, minorCode 
 
 /**
  * 18. 生成記帳摘要報告
- * @version 2025-07-08-V1.8.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.9.0
+ * @date 2025-01-03 17:30:00
  * @description 從Firestore數據生成記帳摘要報告
  */
 async function BK_generateSummaryReport(startDate, endDate, userId = null, ledgerId = null) {
@@ -1246,8 +1246,8 @@ async function BK_generateSummaryReport(startDate, endDate, userId = null, ledge
 
 /**
  * 19. 判斷模組是否已初始化
- * @version 2025-07-08-V1.0.0
- * @date 2025-07-08 15:00:00
+ * @version 2025-01-03-V1.1.0
+ * @date 2025-01-03 17:30:00
  * @description 檢查BK模組初始化狀態
  */
 function BK_isInitialized() {
