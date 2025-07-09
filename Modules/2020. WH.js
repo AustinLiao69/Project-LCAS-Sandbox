@@ -255,7 +255,7 @@ async function processWebhookAsync(e) {
             if (isDuplicate) {
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.0.7: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
+                `WH 2.0.16: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
                 "消息去重",
                 userId,
                 "",
@@ -264,7 +264,7 @@ async function processWebhookAsync(e) {
                 0,
                 "processWebhookAsync",
                 "INFO",
-              ]);
+              ], userId);
               continue; // 跳過此消息的處理
             }
           }
@@ -939,7 +939,8 @@ function WH_replyMessage(replyToken, message) {
       });
   } catch (error) {
     console.log(`WH_replyMessage 錯誤: ${error}`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    ```text
+if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
 
     // 異常日誌
     WH_directLogWrite([
@@ -1312,13 +1313,13 @@ async function WH_processEventAsync(event, requestId, userId) {
         // 處理用戶關注事件 - 自動建立帳號
         try {
           console.log(`處理用戶關注事件: ${userId} [${requestId}]`);
-          
+
           // 調用AM模組建立LINE帳號
           const createResult = await AM.AM_createLineAccount(userId, null, 'J');
-          
+
           if (createResult.success) {
             console.log(`成功為用戶 ${userId} 建立帳號 [${requestId}]`);
-            
+
             // 記錄成功日誌
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
@@ -1339,11 +1340,11 @@ async function WH_processEventAsync(event, requestId, userId) {
               responseMessage:
                 "🎉 感謝您加入LCAS記帳助手！\n\n您的帳號已自動建立完成。\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
             });
-            
+
           } else {
             // 帳號建立失敗的處理
             console.log(`用戶 ${userId} 帳號建立失敗: ${createResult.error} [${requestId}]`);
-            
+
             // 記錄失敗日誌
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
@@ -1365,10 +1366,10 @@ async function WH_processEventAsync(event, requestId, userId) {
                 "感謝您加入LCAS記帳助手！\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
             });
           }
-          
+
         } catch (followError) {
           console.log(`處理用戶關注事件錯誤: ${followError} [${requestId}]`);
-          
+
           // 記錄錯誤日誌
           WH_directLogWrite([
             WH_formatDateTime(new Date()),
@@ -1712,7 +1713,7 @@ process.on("unhandledRejection", (reason, promise) => {
   ]);
 });
 
-// 更新模組導出，添加 setDependencies 函數
+// 更新模組導出，添加 setDependencies 函數 
 module.exports = {
   // 已有的導出
   WH_processEvent,
