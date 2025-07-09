@@ -1,0 +1,1112 @@
+/**
+ * DD_資料分配模組_2.0.22
+ * @module 資料分配模組
+ * @description 根據預定義的規則將數據分配到不同的工作表或數據庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息。
+ * @author AustinLiao69
+ * @update 2025-06-28: 升級版本，優化字符串處理邏輯和錯誤處理機制
+ */
+
+// 首先引入其他模組
+const BK = require("./2001. BK.js");
+const DL = require("./2010. DL.js");
+
+// 確保BK函數正確引用
+const { BK_processBookkeeping } = BK;
+
+// Node.js 模組依賴
+const { v4: uuidv4 } = require("uuid");
+const fs = require("fs");
+const path = require("path");
+const moment = require("moment-timezone");
+
+// 全域變數替代 Google Apps Script 的內建函數
+let spreadsheetData = {};
+let scriptProperties = {};
+
+// 替代 Google Apps Script 的 Utilities 物件
+const Utilities = {
+  getUuid: () => uuidv4(),
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+};
+
+// 使用真實的 Google Sheets API
+const { google } = require("googleapis");
+
+let sheetsAPI = null;
+
+// 初始化 Google Sheets API
+async function initGoogleSheets() {
+  if (sheetsAPI) return sheetsAPI;
+
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS || "{}"),
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+
+    const authClient = await auth.getClient();
+    sheetsAPI = google.sheets({ version: "v4", auth: authClient });
+    return sheetsAPI;
+  } catch (error) {
+    console.log(`Google Sheets API 初始化失敗: ${error}`);
+    // 回退到模擬模式
+    return createMockSheetsAPI();
+  }
+}
+
+// 創建相容的 SpreadsheetApp 介面
+const SpreadsheetApp = {
+  openById: (id) => ({
+    getSheetByName: (name) => ({
+      getLastRow: async () => {
+        try {
+          const sheets = await initGoogleSheets();
+          const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: id,
+            range: `${name}!A:A`,
+          });
+          return response.data.values ? response.data.values.length : 0;
+        } catch (error) {
+          console.log(`獲取行數失敗: ${error}`);
+          return 0;
+        }
+      },
+      getRange: (row, col, numRows, numCols) => ({
+        getValues: async () => {
+          try {
+            const sheets = await initGoogleSheets();
+            const range = `${name}!${String.fromCharCode(64 + col)}${row}:${String.fromCharCode(64 + col + numCols - 1)}${row + numRows - 1}`;
+            const response = await sheets.spreadsheets.values.get({
+              spreadsheetId: id,
+              range: range,
+            });
+            return response.data.values || [];
+          } catch (error) {
+            console.log(`獲取數據失敗: ${error}`);
+            return [];
+          }
+        },
+      }),
+      getDataRange: () => ({
+        getValues: async () => {
+          try {
+            const sheets = await initGoogleSheets();
+            const response = await sheets.spreadsheets.values.get({
+              spreadsheetId: id,
+              range: name,
+            });
+            return response.data.values || [];
+          } catch (error) {
+            console.log(`獲取全部數據失敗: ${error}`);
+            return [];
+          }
+        },
+      }),
+      appendRow: async (rowData) => {
+        try {
+          const sheets = await initGoogleSheets();
+          await sheets.spreadsheets.values.append({
+            spreadsheetId: id,
+            range: `${name}!A:A`,
+            valueInputOption: "RAW",
+            resource: {
+              values: [rowData],
+            },
+          });
+        } catch (error) {
+          console.log(`新增行失敗: ${error}`);
+        }
+      },
+    }),
+  }),
+};
+
+// 模擬模式回退函數
+function createMockSheetsAPI() {
+  return {
+    spreadsheets: {
+      values: {
+        get: () => ({ data: { values: [] } }),
+        append: () => Promise.resolve(),
+      },
+    },
+  };
+}
+
+// 替代 getScriptProperty 函數
+function getScriptProperty(key) {
+  return scriptProperties[key] || process.env[key];
+}
+
+/**
+ * 99. 初始化檢查 - 在模組載入時執行，確保關鍵資源可用
+ */
+try {
+  console.log(`DD模組初始化檢查 [${new Date().toISOString()}]`);
+  console.log(`DD模組版本: 2.0.19 (2025-06-28)`);
+  console.log(`執行時間: ${new Date().toLocaleString()}`);
+
+  const ss = SpreadsheetApp.openById(getScriptProperty("SPREADSHEET_ID"));
+  console.log(`主試算表檢查: ${ss ? "成功" : "失敗"}`);
+
+  const logSheet = ss.getSheetByName(getScriptProperty("LOG_SHEET_NAME"));
+  console.log(`日誌表檢查: ${logSheet ? "成功" : "失敗"}`);
+
+  const subjectSheet = ss.getSheetByName("997. 科目代碼_測試");
+  console.log(`科目表檢查: ${subjectSheet ? "成功" : "失敗"}`);
+
+  // 檢查科目表是否有數據
+  if (subjectSheet) {
+    const lastRow = subjectSheet.getLastRow();
+    console.log(`科目表有 ${lastRow} 行數據`);
+  }
+
+  console.log(
+    `BK_processBookkeeping函數檢查: ${typeof BK_processBookkeeping === "function" ? "存在" : "不存在"}`,
+  );
+} catch (error) {
+  console.log(`DD模組初始化錯誤: ${error.toString()}`);
+  if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+}
+
+/**
+ * 1. 各種定義
+ */
+const DD_TARGET_MODULE_BK = "BK"; // 記帳處理模組
+const DD_TARGET_MODULE_WH = "WH"; // Webhook 模組
+const DD_SUBJECT_CODE_SHEET_NAME = "997. 科目代碼_測試";
+const DD_SUBJECT_CODE_MAJOR_CODE_COLUMN = 1; // 大項代碼
+const DD_SUBJECT_CODE_MAJOR_NAME_COLUMN = 2; // 大項名稱
+const DD_SUBJECT_CODE_SUB_CODE_COLUMN = 3; // 子項代碼
+const DD_SUBJECT_CODE_SUB_NAME_COLUMN = 4; // 子項名稱
+const DD_SUBJECT_CODE_SYNONYMS_COLUMN = 5; // 新增：同義詞列（第5列）
+const DD_USER_PREF_SHEET_NAME = "09. 使用者偏好"; // 新增：用戶偏好表名稱
+const DD_MODULE_PREFIX = "DD_";
+const DD_CONFIG = {
+  DEBUG: false,                // 關閉DEBUG模式減少日誌輸出
+  LOG_SHEET_NAME: getScriptProperty("LOG_SHEET_NAME"),
+  SPREADSHEET_ID: getScriptProperty("SPREADSHEET_ID"),
+  TIMEZONE: "Asia/Taipei",     // GMT+8 台灣時區
+  DEFAULT_SUBJECT: "其他支出",
+};
+
+/**
+ *4. 定義重試配置
+ */
+const DD_MAX_RETRIES = 3; // 最大重試次數
+const DD_RETRY_DELAY = 1000; // 重試延遲時間（毫秒）
+
+/**
+ * 5. 主要的資料分配函數（支援重試機制）
+ * @version 2025-06-02-V3.0.0
+ * @author AustinLiao691
+ * @update: 整合DD_formatSystemReplyMessage統一處理訊息
+ * @param {object} data - 需要分配的原始數據
+ * @param {string} source - 數據來源 (例如: 'Rich menu', '使用者訊息')
+ * @param {number} retryCount - 當前重試次數（內部使用）
+ * @returns {object} - 處理結果
+ */
+async function DD_distributeData(data, source, retryCount = 0) {
+  // 模組初始化檢查
+  try {
+    console.log("=== DD_distributeData執行初始檢查 ===");
+    console.log(`DD_MAX_RETRIES: ${DD_MAX_RETRIES}`);
+    console.log(`DD_RETRY_DELAY: ${DD_RETRY_DELAY}`);
+    console.log(`DD_TARGET_MODULE_BK: ${DD_TARGET_MODULE_BK}`);
+    console.log(`DD_TARGET_MODULE_WH: ${DD_TARGET_MODULE_WH}`);
+  } catch (e) {
+    console.log(`初始化檢查錯誤: ${e.toString()}`);
+  }
+
+  // 直接控制台日誌，確保無論日誌系統是否正常都會記錄
+  console.log(
+    `DD_distributeData被調用，數據源: ${source}, 用戶ID: ${data.user_id || data.userId || "未知"}, 時間: ${new Date().toISOString()}`,
+  );
+
+  const processId = Utilities.getUuid().substring(0, 8);
+  console.log(`處理ID: ${processId}`);
+  DD_logInfo(
+    `開始處理數據 [${processId}]`,
+    "數據分配",
+    data.user_id || data.userId || "",
+    "DD_distributeData",
+    "DD_distributeData",
+  );
+
+  try {
+    // ===== 標準化數據 =====
+    // 確保用戶ID格式一致
+    if (data.userId && !data.user_id) {
+      data.user_id = data.userId;
+      console.log(`標準化用戶ID: userId -> user_id = ${data.user_id}`);
+    } else if (data.user_id && !data.userId) {
+      data.userId = data.user_id;
+      console.log(`標準化用戶ID: user_id -> userId = ${data.userId}`);
+    }
+
+    // ===== 來源適配 =====
+    if (!source || source === "LINE" || source === "Webhook") {
+      console.log(`調整數據來源從「${source}」到「使用者訊息」`);
+      source = "使用者訊息";
+    }
+
+    // 記錄處理的數據和來源
+    const dataPreview =
+      JSON.stringify(data).substring(0, 100) +
+      (JSON.stringify(data).length > 100 ? "..." : "");
+    console.log(`處理數據: ${dataPreview}, 來源: ${source}`);
+    DD_logDebug(
+      `處理數據: ${dataPreview}, 來源: ${source}`,
+      "數據接收",
+      data.user_id || data.userId || "",
+      "DD_distributeData",
+      "DD_distributeData",
+    );
+
+    // 處理時間戳（如果存在）
+    if (data && data.timestamp) {
+      console.log(`處理時間戳: ${data.timestamp}`);
+      DD_logDebug(
+        `處理時間戳: ${data.timestamp}`,
+        "數據處理",
+        data.user_id || data.userId || "",
+        "DD_distributeData",
+        "DD_distributeData",
+      );
+
+      const convertedTime = DD_convertTimestamp(data.timestamp);
+      if (convertedTime) {
+        data.convertedDate = convertedTime.date;
+        data.convertedTime = convertedTime.time;
+        console.log(
+          `時間戳轉換結果: ${data.convertedDate} ${data.convertedTime}`,
+        );
+        DD_logDebug(
+          `時間戳轉換結果: ${data.convertedDate} ${data.convertedTime}`,
+          "數據處理",
+          data.user_id || data.userId || "",
+          "DD_distributeData",
+          "DD_distributeData",
+        );
+      } else {
+        console.log(`警告: 時間戳轉換失敗: ${data.timestamp}`);
+        DD_logWarning(
+          `時間戳轉換失敗: ${data.timestamp}`,
+          "數據處理",
+          data.user_id || data.userId || "",
+          "DD_distributeData",
+          "DD_distributeData",
+        );
+      }
+    }
+
+    // 如果是使用者訊息，先處理訊息內容
+    if (source === "使用者訊息" && data && data.text) {
+      console.log(`處理用戶訊息: "${data.text}"`);
+      DD_logInfo(
+        `處理用戶訊息: "${data.text}"`,
+        "訊息處理",
+        data.user_id || data.userId || "",
+        "DD_distributeData",
+        "DD_distributeData",
+      );
+
+      const processedData = await DD_processUserMessage(
+        data.text,
+        data.userId || data.user_id,
+        data.timestamp,
+      );
+      console.log(
+        `DD_processUserMessage返回: ${JSON.stringify(processedData)}`,
+      );
+
+      if (processedData && processedData.processed) {
+        // 保留原始資料，並添加處理後的資訊
+        console.log(
+          `成功解析訊息: 科目=${processedData.subjectName}, 金額=${processedData.amount}, 支付方式=${processedData.paymentMethod || "預設"}`,
+        );
+        DD_logInfo(
+          `成功解析訊息: 科目=${processedData.subjectName}, 金額=${processedData.amount}, 支付方式=${processedData.paymentMethod || "預設"}`,
+          "訊息處理",
+          data.user_id || data.userId || "",
+          "DD_distributeData",
+          "DD_distributeData",
+        );
+
+        // 更新：使用subjectName而不是subject
+        data.subjectName = processedData.subjectName;
+        data.amount = processedData.amount;
+        data.action = processedData.action;
+        data.processed = processedData.processed;
+        data.type = processedData.type;
+        
+        // 關鍵修正：使用處理過的文字作為備註
+        data.text = processedData.text || processedData.subjectName;
+
+        // 新增：傳遞支付方式
+        if (processedData.paymentMethod) {
+          data.paymentMethod = processedData.paymentMethod;
+          console.log(`設置支付方式: ${data.paymentMethod}`);
+        }
+
+        // 複製科目代碼信息
+        if (processedData.majorCode) data.majorCode = processedData.majorCode;
+        if (processedData.subCode) data.subCode = processedData.subCode;
+
+        console.log(
+          `訊息解析成功: 科目=${processedData.subjectName}, 金額=${processedData.amount}, 支付方式=${data.paymentMethod || "預設"}`,
+        );
+      } else if (processedData && processedData.errorMessage) {
+        // 處理失敗但有錯誤訊息，直接返回錯誤訊息
+        console.log(`訊息解析失敗但有錯誤訊息: ${processedData.errorMessage}`);
+        DD_logWarning(
+          `訊息解析失敗但有錯誤訊息: ${processedData.errorMessage}`,
+          "訊息處理",
+          data.user_id || data.userId || "",
+          "DD_distributeData",
+          "DD_distributeData",
+        );
+
+        return DD_formatSystemReplyMessage(
+          {
+            success: false,
+            error: processedData.reason || "訊息解析失敗",
+            errorType: processedData.errorType || "MESSAGE_PARSE_ERROR",
+            userFriendlyMessage: processedData.errorMessage,
+          },
+          "DD",
+          {
+            userId: data.userId || data.user_id,
+            replyToken: data.replyToken,
+            processId: processId,
+          },
+        );
+      } else {
+        // 處理失敗的情況
+        console.log(
+          `訊息解析失敗: ${processedData ? processedData.reason : "未知原因"}`,
+        );
+        DD_logWarning(
+          `訊息解析失敗: ${processedData ? processedData.reason : "未知原因"}`,
+          "訊息處理",
+          data.user_id || data.userId || "",
+          "DD_distributeData",
+          "DD_distributeData",
+        );
+
+        // 直接返回格式化的錯誤訊息
+        return DD_formatSystemReplyMessage(
+          {
+            success: false,
+            error: processedData ? processedData.reason : "無法解析訊息",
+            errorType: "MESSAGE_PARSE_ERROR",
+          },
+          "DD",
+          {
+            userId: data.userId || data.user_id,
+            replyToken: data.replyToken,
+            processId: processId,
+            errorMessage: "無法解析您的記帳信息，請檢查格式後重試。",
+          },
+        );
+      }
+    }
+
+    // 6. 根據數據屬性進行分類
+    console.log(`開始分類數據`);
+    DD_logInfo(
+      `開始分類數據`,
+      "數據分類",
+      data.user_id || data.userId || "",
+      "DD_distributeData",
+      "DD_distributeData",
+    );
+
+    const category = DD_classifyData(data, source);
+    console.log(`數據分類結果: ${category}`);
+    DD_logInfo(
+      `數據分類結果: ${category}`,
+      "數據分類",
+      data.user_id || data.userId || "",
+      "DD_distributeData",
+      "DD_distributeData",
+    );
+
+    // 7. 根據分類結果分發數據
+    console.log(`開始分發數據至 ${category}`);
+    DD_logInfo(
+      `開始分發數據至 ${category}`,
+      "數據分發",
+      data.user_id || data.userId || "",
+      "DD_distributeData",
+      "DD_distributeData",
+    );
+
+    const dispatchResult = await DD_dispatchData(data, category);
+    console.log(`數據分發完成，結果: ${JSON.stringify(dispatchResult)}`);
+    DD_logInfo(
+      `數據分發完成，結果: ${JSON.stringify(dispatchResult)}`,
+      "數據分發",
+      data.user_id || data.userId || "",
+      "DD_distributeData",
+      "DD_distributeData",
+    );
+
+    // 使用統一消息格式化處理結果
+    return DD_formatSystemReplyMessage(
+      dispatchResult || {
+        success: true,
+        category: category,
+        processId: processId,
+      },
+      dispatchResult ? dispatchResult.module || "DD" : "DD",
+      {
+        userId: data.userId || data.user_id,
+        replyToken: data.replyToken,
+        processId: processId,
+      },
+    );
+  } catch (error) {
+    // 記錄原始錯誤
+    const userId =
+      data && (data.user_id || data.userId) ? data.user_id || data.userId : "";
+    console.log(`數據處理錯誤: ${error.toString()}`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    DD_logError(
+      `數據處理錯誤: ${error.toString()}`,
+      "數據處理",
+      userId,
+      "ERROR",
+      error.toString(),
+      "DD_distributeData",
+      "DD_distributeData",
+    );
+
+    // 8. 重試機制
+    if (retryCount < DD_MAX_RETRIES) {
+      // 使用指數退避策略延遲重試
+      const delayTime = DD_RETRY_DELAY * Math.pow(2, retryCount);
+      console.log(
+        `準備重試 (${retryCount + 1}/${DD_MAX_RETRIES})，延遲 ${delayTime}ms`,
+      );
+      DD_logWarning(
+        `準備重試 (${retryCount + 1}/${DD_MAX_RETRIES})，延遲 ${delayTime}ms`,
+        "錯誤重試",
+        userId,
+        "DD_distributeData",
+        "DD_distributeData",
+      );
+
+      await Utilities.sleep(delayTime);
+      return DD_distributeData(data, source, retryCount + 1);
+    } else {
+      // 重試次數耗盡，使用統一錯誤處理函數生成錯誤訊息
+      return DD_formatSystemReplyMessage(
+        {
+          success: false,
+          error: `超過最大重試次數 ${DD_MAX_RETRIES}，放棄處理`,
+          errorType: "MAX_RETRY",
+          context: { retryCount: DD_MAX_RETRIES },
+        },
+        "DD",
+        {
+          userId: userId,
+          replyToken: data.replyToken,
+          processId: processId,
+          isRetryable: false,
+        },
+      );
+    }
+  }
+}
+
+/**
+ * 9. 數據分類函數
+ * @param {object} data - 需要分類的數據
+ * @param {string} source - 數據來源
+ * @returns {string} - 數據的類別 (用於決定分發到哪個模組)
+ */
+function DD_classifyData(data, source) {
+  let category = "default";
+
+  // 獲取進程ID用於日誌追蹤
+  const classifyId = Utilities.getUuid().substring(0, 8);
+  console.log(`開始分類，來源: ${source} [${classifyId}]`);
+  DD_logDebug(
+    `開始分類，來源: ${source} [${classifyId}]`,
+    "數據分類",
+    data.user_id || data.userId || "",
+    "DD_classifyData",
+    "DD_classifyData",
+  );
+
+  try {
+    // 規則 1：處理來自 Rich menu 的各種按鈕
+    if (source === "Rich menu" && data) {
+      if (data.action === "記帳" || data.postback === "記帳") {
+        category = DD_TARGET_MODULE_BK;
+        console.log(`檢測到記帳按鈕操作`);
+        DD_logDebug(
+          `檢測到記帳按鈕操作`,
+          "數據分類",
+          data.user_id || data.userId || "",
+          "DD_classifyData",
+          "DD_classifyData",
+        );
+      }
+    }
+    // 規則 2：處理來自使用者訊息
+    else if (source === "使用者訊息" && data) {
+      // 只檢查由DD_processUserMessage標記的數據
+      if (data.type === "記帳" && data.processed) {
+        category = DD_TARGET_MODULE_BK;
+        console.log(`檢測到已處理的記帳訊息`);
+        DD_logDebug(
+          `檢測到已處理的記帳訊息`,
+          "數據分類",
+          data.user_id || data.userId || "",
+          "DD_classifyData",
+          "DD_classifyData",
+        );
+      }
+    }
+    // 規則 3：來自 Webhook 的請求
+    else if (source === "Webhook" && data) {
+      category = DD_TARGET_MODULE_WH;
+      console.log(`檢測到Webhook請求`);
+      DD_logDebug(
+        `檢測到Webhook請求`,
+        "數據分類",
+        data.user_id || data.userId || "",
+        "DD_classifyData",
+        "DD_classifyData",
+      );
+    }
+
+    console.log(`分類結果: ${category} [${classifyId}]`);
+    DD_logDebug(
+      `分類結果: ${category} [${classifyId}]`,
+      "數據分類",
+      data.user_id || data.userId || "",
+      "DD_classifyData",
+      "DD_classifyData",
+    );
+    return category;
+  } catch (error) {
+    console.log(`分類過程出錯: ${error.toString()} [${classifyId}]`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    DD_logError(
+      `分類過程出錯: ${error.toString()}`,
+      "數據分類",
+      data.user_id || data.userId || "",
+      "ERROR",
+      error.toString(),
+      "DD_classifyData",
+      "DD_classifyData",
+    );
+    return "ERROR";
+  }
+}
+
+/**
+ * 10. 數據分發函數
+ * @version 2025-06-11-V3.0.0
+ * @author AustinLiao691
+ * @date 2025-06-11 07:42:24
+ * @update: 統一使用58號函數(DD_formatSystemReplyMessage)處理系統回覆訊息
+ * @param {object} data - 需要分發的數據
+ * @param {string} targetModule - 目標模組的名稱
+ * @returns {object} - 處理結果
+ */
+async function DD_dispatchData(data, targetModule) {
+  const dispatchId = Utilities.getUuid().substring(0, 8);
+  const userId = data.user_id || data.userId || "";
+
+  console.log(`開始分發數據至 ${targetModule} [${dispatchId}]`);
+  DD_logInfo(
+    `開始分發數據至 ${targetModule} [${dispatchId}]`,
+    "數據分發",
+    userId,
+    "DD_dispatchData",
+    "DD_dispatchData",
+  );
+
+  try {
+    let result = { success: false, module: targetModule };
+
+    switch (targetModule) {
+      case DD_TARGET_MODULE_BK:
+        console.log(`轉發到BK模組 [${dispatchId}]`);
+        DD_logInfo(
+          `轉發到BK模組 [${dispatchId}]`,
+          "數據分發",
+          userId,
+          "DD_dispatchData",
+          "DD_dispatchData",
+        );
+
+        // 檢查DD_processForBK函數是否存在
+        if (typeof DD_processForBK !== "function") {
+          console.log(`DD_processForBK函數不存在 [${dispatchId}]`);
+          DD_logError(
+            `DD_processForBK函數不存在 [${dispatchId}]`,
+            "數據分發",
+            userId,
+            "FUNCTION_NOT_FOUND",
+            "函數不存在",
+            "DD_dispatchData",
+          );
+
+          // 使用58號函數統一處理錯誤訊息
+          return DD_formatSystemReplyMessage(
+            {
+              success: false,
+              error: "DD_processForBK函數不存在",
+              errorType: "FUNCTION_NOT_FOUND",
+            },
+            "DD",
+            {
+              userId: userId,
+              context: { functionName: "DD_processForBK" },
+              processId: dispatchId,
+            },
+          );
+        } else {
+          try {
+            console.log(`開始調用DD_processForBK [${dispatchId}]`);
+            result = await DD_processForBK(data);
+            console.log(
+              `DD_processForBK調用完成，結果: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
+            );
+          } catch (bkError) {
+            // 增強錯誤日誌
+            console.log(
+              `調用DD_processForBK時出錯: ${bkError.toString()} [${dispatchId}]`,
+            );
+            if (bkError.stack) console.log(`錯誤堆疊: ${bkError.stack}`);
+            DD_logError(
+              `調用DD_processForBK時出錯: ${bkError.toString()}\n堆疊: ${bkError.stack || "n/a"}`,
+              "數據分發",
+              userId,
+              "BK_ERROR",
+              bkError.toString(),
+              "DD_dispatchData",
+            );
+
+            // 使用58號函數統一處理錯誤訊息
+            return DD_formatSystemReplyMessage(
+              {
+                success: false,
+                error: bkError.toString(),
+                errorType: "BK_ERROR",
+              },
+              "BK",
+              {
+                userId: userId,
+                processId: dispatchId,
+              },
+            );
+          }
+        }
+        break;
+
+      case DD_TARGET_MODULE_WH:
+        console.log(`轉發到WH模組 [${dispatchId}]`);
+        DD_logInfo(
+          `轉發到WH模組 [${dispatchId}]`,
+          "數據分發",
+          userId,
+          "DD_dispatchData",
+          "DD_dispatchData",
+        );
+
+        // 檢查DD_processForWH函數是否存在
+        if (typeof DD_processForWH !== "function") {
+          console.log(`DD_processForWH函數不存在 [${dispatchId}]`);
+          DD_logError(
+            `DD_processForWH函數不存在 [${dispatchId}]`,
+            "數據分發",
+            userId,
+            "FUNCTION_NOT_FOUND",
+            "函數不存在",
+            "DD_dispatchData",
+          );
+
+          // 使用58號函數統一處理錯誤訊息
+          return DD_formatSystemReplyMessage(
+            {
+              success: false,
+              error: "DD_processForWH函數不存在",
+              errorType: "FUNCTION_NOT_FOUND",
+            },
+            "DD",
+            {
+              userId: userId,
+              context: { functionName: "DD_processForWH" },
+              processId: dispatchId,
+            },
+          );
+        } else {
+          try {
+            console.log(`開始調用DD_processForWH [${dispatchId}]`);
+            result = DD_processForWH(data);
+            console.log(
+              `DD_processForWH調用完成，結果: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
+            );
+          } catch (whError) {
+            // 增強錯誤日誌
+            console.log(
+              `調用DD_processForWH時出錯: ${whError.toString()} [${dispatchId}]`,
+            );
+            if (whError.stack) console.log(`錯誤堆疊: ${whError.stack}`);
+            DD_logError(
+              `調用DD_processForWH時出錯: ${whError.toString()}\n堆疊: ${whError.stack || "n/a"}`,
+              "數據分發",
+              userId,
+              "WH_ERROR",
+              whError.toString(),
+              "DD_dispatchData",
+            );
+
+            // 使用58號函數統一處理錯誤訊息
+            return DD_formatSystemReplyMessage(
+              {
+                success: false,
+                error: whError.toString(),
+                errorType: "WH_ERROR",
+              },
+              "WH",
+              {
+                userId: userId,
+                processId: dispatchId,
+              },
+            );
+          }
+        }
+        break;
+
+      default:
+        console.log(`未知的目標模組: ${targetModule} [${dispatchId}]`);
+        DD_logError(
+          `未知的目標模組: ${targetModule} [${dispatchId}]`,
+          "數據分發",
+          userId,
+          "UNKNOWN_MODULE",
+          "模組未知",
+          "DD_dispatchData",
+        );
+
+        // 使用58號函數統一處理錯誤訊息
+        return DD_formatSystemReplyMessage(
+          {
+            success: false,
+            error: `未知的目標模組: ${targetModule}`,
+            errorType: "UNKNOWN_MODULE",
+          },
+          "DD",
+          {
+            userId: userId,
+            context: { moduleName: targetModule },
+            processId: dispatchId,
+          },
+        );
+    }
+
+    console.log(
+      `數據分發完成: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
+    );
+    DD_logInfo(
+      `數據分發完成，結果: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
+      "數據分發",
+      userId,
+      "DD_dispatchData",
+      "DD_dispatchData",
+    );
+
+    // 重要：直接返回結果，不再使用DD_formatUserErrorFeedback
+    return result;
+  } catch (error) {
+    // 增強錯誤日誌
+    console.log(`分發數據出錯: ${error.toString()} [${dispatchId}]`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    DD_logError(
+      `分發數據出錯: ${error.toString()}\n堆疊: ${error.stack || "n/a"}`,
+      "數據分發",
+      userId,
+      "DISPATCH_ERROR",
+      error.toString(),
+      "DD_dispatchData",
+    );
+
+    // 使用58號函數統一處理錯誤訊息
+    return DD_formatSystemReplyMessage(
+      {
+        success: false,
+        error: error.toString(),
+        errorType: "DISPATCH_ERROR",
+      },
+      "DD",
+      {
+        userId: userId,
+        processId: dispatchId,
+      },
+    );
+  }
+}
+
+/**
+ * 11. 處理 Webhook 模組 (WH) 的數st�
+ * @param {object} data - 需要處理的數據
+ * @returns {object} - 處理結果
+ */
+function DD_processForWH(data) {
+  const whId = Utilities.getUuid().substring(0, 8);
+  console.log(`開始處理WH數據 [${whId}]`);
+
+  // 在此處理轉發給 Webhook 模組的邏輯
+  // 檢查WH模組函數是否存在
+  if (typeof WH_processEvent === "function") {
+    try {
+      console.log(`調用WH_processEvent [${whId}]`);
+      WH_processEvent(data);
+      console.log(`成功轉發到WH模組 [${whId}]`);
+      return { success: true, module: "WH" };
+    } catch (error) {
+      console.log(
+        `轉發到WH_processEvent時發生錯誤 [${whId}]: ${error.toString()}`,
+      );
+      return { success: false, error: error.toString(), module: "WH" };
+    }
+  } else {
+    console.log(`WH_processEvent函數不存在 [${whId}]`);
+    return { success: false, error: "WH_processEvent函數不存在", module: "WH" };
+  }
+}
+
+/**
+ * 12. 處理數據並傳遞給BK模組記帳 - 修正回复消息和支付方式处理
+ * @version 2025-06-17-V6.0.1
+ * @author AustinLiao69
+ * @date 2025-06-17 02:51:50
+ * @update: 修正用词"付款方式"为"支付方式"，移除支付方式默認值，增加收支ID显示
+ * @param {Object} data - 來自DD_processUserMessage或其他來源的數據
+ * @return {Object} 處理結果
+ */
+async function DD_processForBK(data) {
+  try {
+    // 確保處理ID存在
+    const processId = data.processId || Utilities.getUuid().substring(0, 8);
+
+    // 正確獲取userId - 修復：從data物件中提取userId
+    const userId = data.userId || data.user_id || "";
+
+    // 記錄開始處理
+    DD_logInfo(
+      `開始處理記帳數據 [${processId}]`,
+      "記帳處理",
+      userId,
+      "DD_processForBK",
+      "DD_processForBK",
+    );
+
+    // 檢查必要字段
+    if (!data.action) {
+      DD_logWarning(
+        `缺少必要字段: action [${processId}]`,
+        "數據驗證",
+        userId,
+        "DD_processForBK",
+        "DD_processForBK",
+      );
+      throw new Error("缺少必要字段: action");
+    }
+    if (!data.subjectName) {
+      DD_logWarning(
+        `缺少必要字段: subjectName [${processId}]`,
+        "數據驗證",
+        userId,
+        "DD_processForBK",
+        "DD_processForBK",
+      );
+      throw new Error("缺少必要字段: subjectName");
+    }
+    if (!data.amount || data.amount <= 0) {
+      DD_logWarning(
+        `無效的金額: ${data.amount} [${processId}]`,
+        "數據驗證",
+        userId,
+        "DD_processForBK",
+        "DD_processForBK",
+      );
+      throw new Error("無效的金額");
+    }
+    if (!data.majorCode) {
+      DD_logWarning(
+        `缺少必要字段: majorCode [${processId}]`,
+        "數據驗證",
+        userId,
+        "DD_processForBK",
+        "DD_processForBK",
+      );
+      throw new Error("缺少必要字段: majorCode");
+    }
+    if (!data.subCode) {
+      DD_logWarning(
+        `缺少必要字段: subCode [${processId}]`,
+        "數據驗證",
+        userId,
+        "DD_processForBK",
+        "DD_processForBK",
+      );
+      throw new Error("缺少必要字段: subCode");
+    }
+
+    // 提前處理使用者類型 (可讓BK模組接收已處理的類型)
+    let userType = data.userType;
+    if (!userType) {
+      // 使用者類型設為M、S、J三種 (系統預設類型)
+      if (userId === "AustinLiao69") {
+        userType = "M"; // 管理員類型(Manager)
+      } else if (userId && userId.includes("SYSTEM_")) {
+        userType = "S"; // 系統類型(System)
+      } else {
+        userType = "J"; // 一般使用者類型(Junior)
+      }
+    }
+
+    // 建立記帳數據對象，確保字段名稱與BK_processBookkeeping期望的完全一致
+    const bookkeepingData = {
+      // 必需字段
+      action: data.action, // 收入/支出
+      subjectName: data.subjectName, // 科目名稱
+      amount: data.amount, // 金額
+      majorCode: data.majorCode, // 主科目代碼
+      subCode: data.subCode, // 子科目代碼
+
+      // 可選但重要字段
+      majorName: data.majorName || "", // 主科目名稱
+      paymentMethod: data.paymentMethod, // 支付方式 - 移除默認值
+      text: data.text || "", // 使用DD處理過的文字（已移除金額）
+      formatId: data.formatId || "", // 匹配的格式ID
+      originalSubject: data.originalSubject || "", // 用戶輸入的原始科目
+      userId: userId, // 用戶ID
+      userType: userType, // 用戶類型
+      processId: processId, // 處理ID
+    };
+
+    // 記錄完整數據
+    DD_logDebug(
+      `【BK調用前數據完整檢查】
+      - action=${bookkeepingData.action}
+      - subjectName=${bookkeepingData.subjectName}
+      - amount=${bookkeepingData.amount}
+      - majorCode=${bookkeepingData.majorCode}
+      - subCode=${bookkeepingData.subCode}
+      - majorName=${bookkeepingData.majorName}
+      - paymentMethod=${bookkeepingData.paymentMethod || "未設定，將由BK模組決定"}
+      - formatId=${bookkeepingData.formatId || "未指定"}
+      - text=${bookkeepingData.text}
+      - userId=${bookkeepingData.userId || "未指定"}
+      - userType=${bookkeepingData.userType || "未指定"}
+    `,
+      "調用準備",
+      userId,
+      "DD_processForBK",
+      "DD_processForBK",
+    );
+
+    // 調用BK_processBookkeeping處理記帳
+    DD_logInfo(
+      `開始調用BK_processBookkeeping [${processId}]`,
+      "模組調用",
+      userId,
+      "DD_processForBK",
+      "DD_processForBK",
+    );
+    
+    console.log(`[${processId}] 即將調用 BK.BK_processBookkeeping，數據: ${JSON.stringify(bookkeepingData).substring(0, 200)}...`);
+    const result = await BK.BK_processBookkeeping(bookkeepingData);
+    console.log(`[${processId}] BK.BK_processBookkeeping 返回結果: ${JSON.stringify(result).substring(0, 300)}...`);
+    
+    DD_logInfo(
+      `BK_processBookkeeping調用完成，結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`,
+      "模組調用",
+      userId,
+      "DD_processForBK",
+      "DD_processForBK",
+    );
+
+    // 構建回覆訊息
+    let responseMessage = "";
+    if (result.success) {
+      // 成功回覆 - 修正"付款方式"為"支付方式"，並添加收支ID、備註和使用者類型
+      responseMessage = `記帳成功！\n金額：${bookkeepingData.amount}元 (${bookkeepingData.action})\n支付方式：${result.data.paymentMethod}\n時間：${result.data.date}\n科目：${bookkeepingData.subjectName}\n備註：${result.data.remark || "無"}\n收支ID：${result.data.id || "未知"}\n使用者類型：${result.data.userType || userType || "J"}`;
+
+      // 記錄成功訊息
+      DD_logInfo(
+        `記帳成功: ID=${result.data.id}, 金額=${bookkeepingData.amount}, 科目=${bookkeepingData.subjectName}, 使用者類型=${result.data.userType || userType || "未知"} [${processId}]`,
+        "記帳結果",
+        userId,
+        "DD_processForBK",
+        "DD_processForBK",
+      );
+    } else {
+      // 失敗回覆
+      responseMessage = `記帳失敗！\n原因：${result.error || result.message}\n請重新嘗試或聯繫管理員。`;
+
+      // 記錄失敗訊息
+      DD_logWarning(
+        `記帳失敗: ${result.error || result.message} [${processId}]`,
+        "記帳結果",
+        userId,
+        "DD_processForBK",
+        "DD_processForBK",
+      );
+    }
+
+    DD_logInfo(
+      `生成回覆訊息: ${responseMessage.substring(0, 50)}...`,
+      "訊息生成",
+      userId,
+      "DD_processForBK",
+      "DD_processForBK",
+    );
+
+    // 返回結果
+    return {
+      success: result.success,
+      result: result,
+      module: "BK",
+      isIncome: bookkeepingData.action === "收入",
+      majorCode: bookkeepingData.majorCode,
+      action: bookkeepingData.action,
+      responseMessage: responseMessage,
+      processId: processId,
+      userId: userId, // 包含userId以便追蹤
+      userType: result.data ? result.data.userType : userType, // 包含userType以便追蹤
+    };
+  } catch (error) {
+    // 安全獲取 userId（在 catch 區塊中重新定義以確保作用域）
+    const userId = data && (data.userId || data.user_id) ? (data.userId || data.user_id) : "";
+    
+    // 記錄錯誤
+    DD_logError(
+      `處理BK數據時出錯: ${error}`,
+      "數據處理",
+      userId,
+      "BK_PROCESS_ERROR",
+      error.toString(),
+      "DD_processForBK",
+      "DD_processForBK",
+    );
+
+    // 返回錯誤結果
+    return {
+      success: false,
+      error: error.toString(),
+      module: "BK",
+      responseMessage: `記帳處理發生錯誤：${error.message}\n請重新嘗試或聯繫管理員。`,
+      processId: Utilities.getUuid().substring(0, 8),
+    };
+  }
+}
