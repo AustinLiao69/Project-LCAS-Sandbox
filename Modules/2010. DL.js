@@ -1,9 +1,8 @@
 /**
- * DL_診斷與日誌模組_3.0.5
- * 提供統一的日誌記錄和系統診斷功能
- * @update: V3.0.5 - 直接使用serviceaccountkey.json初始化Firebase，移除FB_Serviceaccountkey.js依賴
- * @author: AustinLiao69
- * @lastUpdate: 2025-07-08
+ * DL_診斷與日誌模組_3.0.6
+ * @module DL模組
+ * @description 提供統一的日誌記錄和系統診斷功能 - Firestore完整整合版本
+ * @update 2025-07-09: 升級至3.0.6版本，優化函數編號規範和版本資訊完整性
  */
 
 // 直接使用 Firebase Admin SDK 和 serviceaccountkey.json
@@ -100,7 +99,10 @@ function DL_initializeFirestore() {
 }
 
 /**
- * 3.1 初始化日誌模組
+ * 01. 初始化日誌模組
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 初始化DL模組，建立Firestore連接並創建初始化日誌記錄
  */
 async function DL_initialize() {
   try {
@@ -156,7 +158,10 @@ async function DL_initialize() {
 }
 
 /**
- * 3.8 檢查緩衝區是否需要刷新
+ * 02. 檢查緩衝區是否需要刷新
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 檢查日誌緩衝區大小和時間間隔，自動觸發刷新機制
  */
 async function DL_checkAndFlushBuffer() {
   const currentTime = Date.now();
@@ -170,7 +175,10 @@ async function DL_checkAndFlushBuffer() {
 }
 
 /**
- * 3.9 強制刷新日誌緩衝區到Firestore
+ * 03. 強制刷新日誌緩衝區到Firestore
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 使用Firestore批次寫入將緩衝區日誌強制寫入資料庫
  */
 async function DL_flushLogBuffer() {
   if (DL_CONFIG.logBuffer.length === 0) return;
@@ -252,7 +260,10 @@ async function DL_rotateLogSheet() {
 }
 
 /**
- * 3.11 設置緊急模式 - 適配環境變數存儲
+ * 04. 設置緊急模式 - 適配環境變數存儲
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 切換系統運行模式（正常/緊急），並持久化儲存到環境變數
  */
 async function DL_toggleMode(enabled, reason = "") {
   const prevMode = DL_CONFIG.mode;
@@ -337,7 +348,10 @@ async function DL_resetEmergencyMode() {
 }
 
 /**
- * 3.15 設置日誌級別
+ * 05. 設置日誌級別
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 動態設置控制台和Firestore的日誌記錄級別
  */
 function DL_setLogLevels(consoleLevel, firestoreLevel) {
   if (
@@ -357,7 +371,10 @@ function DL_setLogLevels(consoleLevel, firestoreLevel) {
 }
 
 /**
- * 4. 記錄日誌的統一函數
+ * 06. 記錄日誌的統一函數
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 統一日誌記錄接口，支援控制台和Firestore雙重輸出
  */
 async function DL_log(logData) {
   // 檢查必要參數
@@ -530,7 +547,10 @@ async function DL_log(logData) {
 }
 
 /**
- * 5. 檢測調用當前函數的模組名稱 - 改進版本
+ * 07. 檢測調用當前函數的模組名稱 - 改進版本
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 智慧分析呼叫堆疊，自動識別調用者模組前綴
  */
 function DL_detectCallerModule() {
   try {
@@ -566,7 +586,10 @@ function DL_detectCallerModule() {
 }
 
 /**
- * 6. 輔助函數 - 將日誌直接寫入 Firestore（緊急情況下使用，繞過緩衝區）
+ * 08. 輔助函數 - 將日誌直接寫入 Firestore（緊急情況下使用，繞過緩衝區）
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 緊急情況下直接寫入Firestore，繞過緩衝區機制
  */
 async function DL_writeToFirestore(logData, timestamp) {
   try {
@@ -598,10 +621,13 @@ async function DL_writeToFirestore(logData, timestamp) {
 }
 
 /**
- * 7. 創建各種級別的日誌記錄函數
+ * 09. 創建各種級別的日誌記錄函數
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 提供DEBUG、INFO、WARNING、ERROR、CRITICAL五種級別的日誌函數
  */
 
-// 7.1 DEBUG級別日誌
+// 09.1 DEBUG級別日誌
 async function DL_debug(
   message,
   operation,
@@ -757,7 +783,10 @@ async function DL_critical(
 }
 
 /**
- * 8. 系統診斷功能 - 適配Firestore
+ * 10. 系統診斷功能 - 適配Firestore
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 完整系統診斷，檢查Firestore連接、日誌統計和錯誤分析
  */
 async function DL_diagnose() {
   try {
@@ -926,7 +955,10 @@ async function DL_diagnose() {
 }
 
 /**
- * 9. 獲取當前模式狀態 - 適配環境變數存儲
+ * 11. 獲取當前模式狀態 - 適配環境變數存儲
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 取得當前運行模式狀態和環境變數儲存狀態
  */
 async function DL_getModeStatus() {
   try {
@@ -953,8 +985,10 @@ async function DL_getModeStatus() {
 }
 
 /**
- * 10. 依賴注入函數 - 用於支持從 index.js 設置依賴
- * 雖然DL模組通常是基礎模組，但保留此函數以保持模組接口一致性
+ * 12. 依賴注入函數 - 用於支持從 index.js 設置依賴
+ * @version 2025-07-09-V3.0.6
+ * @date 2025-07-09 17:30:00
+ * @description 雖然DL模組通常是基礎模組，但保留此函數以保持模組接口一致性
  * @param {Object} whModule - Webhook模組
  * @param {Object} bkModule - 記帳處理模組
  * @param {Object} ddModule - 資料分配模組

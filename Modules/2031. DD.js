@@ -339,7 +339,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
         data.action = processedData.action;
         data.processed = processedData.processed;
         data.type = processedData.type;
-        
+
         // 關鍵修正：使用處理過的文字作為備註
         data.text = processedData.text || processedData.subjectName;
 
@@ -1023,11 +1023,11 @@ async function DD_processForBK(data) {
       "DD_processForBK",
       "DD_processForBK",
     );
-    
+
     console.log(`[${processId}] 即將調用 BK.BK_processBookkeeping，數據: ${JSON.stringify(bookkeepingData).substring(0, 200)}...`);
     const result = await BK.BK_processBookkeeping(bookkeepingData);
     console.log(`[${processId}] BK.BK_processBookkeeping 返回結果: ${JSON.stringify(result).substring(0, 300)}...`);
-    
+
     DD_logInfo(
       `BK_processBookkeeping調用完成，結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`,
       "模組調用",
@@ -1088,7 +1088,7 @@ async function DD_processForBK(data) {
   } catch (error) {
     // 安全獲取 userId（在 catch 區塊中重新定義以確保作用域）
     const userId = data && (data.userId || data.user_id) ? (data.userId || data.user_id) : "";
-    
+
     // 記錄錯誤
     DD_logError(
       `處理BK數據時出錯: ${error}`,
@@ -1181,7 +1181,7 @@ function DD_removeAmountFromText(text, amount) {
 
     // 5. 清理多餘的空格和標點符號
     result = text.replace(/\s+/g, ' ').replace(/[，。！？；：、]/g, '').trim();
-    
+
     // 6. 如果結果與原文差不多，嘗試提取非數字部分
     if (result === text) {
       const nonDigitMatch = text.match(/^[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\w\s]+/);
@@ -4264,7 +4264,7 @@ if (typeof Utilities !== "undefined" && !Utilities.formatDate) {
   Utilities.formatDate = (date, timezone, format) => {
     // 使用 moment-timezone 確保時區正確處理
     const momentDate = moment(date).tz(timezone || "Asia/Taipei");
-    
+
     if (format === "yyyy/MM/dd HH:mm") {
       return momentDate.format("YYYY/MM/DD HH:mm");
     } else if (format === "yyyy/M/d") {
@@ -4493,7 +4493,7 @@ function DD_processParseResult(parseResult, options = {}) {
 async function DD_getAllSubjects() {
   try {
     console.log("【模糊匹配】開始獲取科目列表");
-    
+
     // 獲取科目資料表
     const ss = SpreadsheetApp.openById(DD_CONFIG.SPREADSHEET_ID);
     const sheet = ss.getSheetByName("997. 科目代碼_測試");
@@ -4505,7 +4505,7 @@ async function DD_getAllSubjects() {
     // 修復：正確等待異步操作完成
     const lastRow = await sheet.getLastRow();
     console.log(`【模糊匹配】科目表行數: ${lastRow}`);
-    
+
     if (lastRow <= 1) {
       console.log("【模糊匹配】科目表為空或只有標題行");
       return [];

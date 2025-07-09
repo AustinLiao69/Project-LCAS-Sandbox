@@ -1,14 +1,15 @@
 /**
- * WH_Webhook處理模組_2.0.15
+ * WH_Webhook處理模組_2.0.16
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 修復異步調用問題
- * @update 2025-06-28: 升級版本，修復DD_distributeData異步調用處理和函數聲明
+ * @description LINE Webhook處理模組 - 遷移至Firestore資料庫
+ * @update 2025-07-09: 遷移至Firestore，移除Google Sheets依賴，修復語法錯誤
  */
 
 // 首先引入其他模組
 const DD = require("./2031. DD.js");
 const BK = require("./2001. BK.js");
 const DL = require("./2010. DL.js");
+const AM = require("./2009. AM.js");
 
 // 引入必要的 Node.js 模組
 const express = require("express");
@@ -20,6 +21,24 @@ const path = require("path");
 const moment = require("moment-timezone");
 const NodeCache = require("node-cache");
 
+// 引入Firebase Admin SDK
+const admin = require("firebase-admin");
+
+// 初始化Firebase（如果尚未初始化）
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = require("./Serviceaccountkey.json");
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    console.log("WH模組：Firebase初始化成功");
+  } catch (error) {
+    console.error("WH模組：Firebase初始化失敗:", error);
+  }
+}
+
+const db = admin.firestore();
+
 // 1. 配置參數
 const WH_CONFIG = {
   DEBUG: true,
@@ -28,10 +47,9 @@ const WH_CONFIG = {
   MESSAGE_DEDUPLICATION: true, // 啟用消息去重
   MESSAGE_RETENTION_HOURS: 24, // 消息ID保留時間(小時)
   ASYNC_PROCESSING: true, // 啟用異步處理（快速回應）
-  SHEET: {
-    ID: process.env.SPREADSHEET_ID, // 從環境變數獲取試算表 ID
-    NAME: "999. Test ledger",
-    LOG_SHEET_NAME: process.env.LOG_SHEET_NAME, // 從環境變數獲取日誌表名
+  FIRESTORE: {
+    COLLECTION: "ledgers", // Firestore集合名稱
+    LOG_SUBCOLLECTION: "log", // 日誌子集合名稱
   },
   LINE: {
     CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET, // 從環境變數獲取 LINE Channel Secret
@@ -45,7 +63,7 @@ const WH_CONFIG = {
 };
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.0.8 (2025-06-28)");
+console.log("WH模組初始化，版本: 2.0.16 (2025-07-09)");
 
 // 創建 Express 應用
 const app = express();
@@ -75,26 +93,7 @@ function getScriptProperty(key) {
   return process.env[key];
 }
 
-// Google Sheets 認證初始化（如果 WH 模組需要存取 Google Sheets）
-async function WH_initializeGoogleAuth() {
-  try {
-    const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
-    if (!credentialsJson) {
-      throw new Error("未設置GOOGLE_SHEETS_CREDENTIALS環境變數");
-    }
 
-    const { google } = require("googleapis");
-    const auth = new google.auth.GoogleAuth({
-      credentials: JSON.parse(credentialsJson),
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-
-    return await auth.getClient();
-  } catch (error) {
-    console.error("WH Google API認證初始化失敗:", error);
-    throw error;
-  }
-}
 
 // 日期時間格式化
 function WH_formatDateTime(date) {
@@ -102,8 +101,10 @@ function WH_formatDateTime(date) {
 }
 
 /**
- * 1. 主要的POST處理函數 - 極速回應版本
- * 目標：<1秒內完成回應
+ * 01. 主要的POST處理函數 - 極速回應版本
+ * @version 2025-07-09-V2.0.16
+ * @date 2025-07-09 10:48:00
+ * @update: 遷移至Firestore，目標：<1秒內完成回應
  */
 function doPost(req, res) {
   // 生成請求ID
@@ -181,8 +182,10 @@ function doPost(req, res) {
 }
 
 /**
- * 2. 非同步處理Webhook請求
- * 由時間觸發器調用
+ * 02. 非同步處理Webhook請求
+ * @version 2025-07-09-V2.0.16
+ * @date 2025-07-09 10:48:00
+ * @update: 遷移至Firestore，由時間觸發器調用
  * @param {Object} e - 觸發器事件對象，包含requestId
  */
 async function processWebhookAsync(e) {
@@ -254,7 +257,7 @@ async function processWebhookAsync(e) {
             if (isDuplicate) {
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.0.7: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
+                `WH 2.0.16: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
                 "消息去重",
                 userId,
                 "",
@@ -263,7 +266,7 @@ async function processWebhookAsync(e) {
                 0,
                 "processWebhookAsync",
                 "INFO",
-              ]);
+              ], userId);
               continue; // 跳過此消息的處理
             }
           }
@@ -352,8 +355,10 @@ async function processWebhookAsync(e) {
 }
 
 /**
- * 3. 處理來自 LINE 的 Webhook 事件
- * @version 2.0.0 (2025-05-16)
+ * 03. 處理來自 LINE 的 Webhook 事件
+ * @version 2025-07-09-V2.0.16
+ * @date 2025-07-09 10:48:00
+ * @update: 遷移至Firestore
  * @param {Object} event - LINE Webhook 事件對象
  */
 function WH_processEvent(event) {
@@ -412,7 +417,10 @@ function WH_processEvent(event) {
 }
 
 /**
- * 4. 檢查消息是否已處理過（使用 NodeCache 以提高速度）
+ * 04. 檢查消息是否已處理過（使用 NodeCache 以提高速度）
+ * @version 2025-07-09-V2.0.16
+ * @date 2025-07-09 10:48:00
+ * @update: 遷移至Firestore
  */
 function WH_checkDuplicateMessage(messageId, requestId) {
   if (!messageId) return false;
@@ -445,19 +453,22 @@ function WH_checkDuplicateMessage(messageId, requestId) {
 }
 
 /**
- * 直接寫入日誌到日誌文件，不使用緩衝區
- * @version 2.0.7 (2025-06-25)
+ * 05. 直接寫入日誌到Firestore，不使用緩衝區
+ * @version 2025-07-09-V2.0.16
+ * @date 2025-07-09 10:48:00
+ * @update: 遷移至Firestore資料庫
  * @param {Array} logData - 日誌數據行
+ * @param {string} userId - 用戶ID，用於確定寫入哪個帳本
  */
-function WH_directLogWrite(logData) {
+async function WH_directLogWrite(logData, userId = null) {
   try {
     // 確保來源欄位為WH
     logData[5] = "WH";
 
     // 直接向控制台輸出完整日誌
-    console.log(`[WH 2.0.7 LOG] ${logData[1]} (${logData[9]})`);
+    console.log(`[WH 2.0.16 LOG] ${logData[1]} (${logData[9]})`);
 
-    // 寫入日誌文件
+    // 寫入本地日誌文件作為備援
     const logDir = path.join(__dirname, "logs");
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
@@ -465,9 +476,34 @@ function WH_directLogWrite(logData) {
 
     const today = moment().format("YYYY-MM-DD");
     const logFile = path.join(logDir, `webhook-${today}.log`);
-
-    // 將日誌數據寫入文件
     fs.appendFileSync(logFile, logData.join("\t") + "\n", { encoding: "utf8" });
+
+    // 寫入Firestore（如果有用戶ID）
+    if (userId && db) {
+      try {
+        const logDoc = {
+          timestamp: logData[0],
+          message: logData[1],
+          operationType: logData[2],
+          userId: logData[3],
+          errorCode: logData[4],
+          source: logData[5],
+          errorDetails: logData[6],
+          retryCount: logData[7],
+          location: logData[8],
+          severity: logData[9],
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection(WH_CONFIG.FIRESTORE.COLLECTION)
+                .doc(userId)
+                .collection(WH_CONFIG.FIRESTORE.LOG_SUBCOLLECTION)
+                .add(logDoc);
+
+      } catch (firestoreError) {
+        console.log(`Firestore寫入失敗，已保存至本地: ${firestoreError.toString()}`);
+      }
+    }
   } catch (error) {
     console.log(`WH_directLogWrite 錯誤: ${error.toString()}`);
   }
@@ -617,10 +653,10 @@ function WH_logCritical(
 }
 
 /**
- * 6. 回覆訊息給 LINE 用戶 - 智能訊息處理版本
- * @version 2.0.3 (2025-06-16 02:13:23)
- * @author AustinLiao69
- * @update: 深度強化對複雜訊息對象的處理能力，確保負數金額和支付方式正確顯示
+ * 06. 回覆訊息給 LINE 用戶 - 智能訊息處理版本
+ * @version 2025-07-09-V2.0.16
+ * @date 2025-07-09 10:48:00
+ * @update: 遷移至Firestore，深度強化對複雜訊息對象的處理能力，確保負數金額和支付方式正確顯示
  * @param {string} replyToken - LINE 回覆令牌
  * @param {string|Object} message - 要發送的訊息內容或包含訊息的對象
  * @returns {Object} 發送結果
@@ -977,10 +1013,10 @@ function setDependencies(ddModule, bkModule, dlModule) {
 }
 
 /**
- * 7. 處理事件 (非同步版) - 修正訊息處理和數據傳遞問題
- * @version 2.0.4 (2025-06-28 16:41:00)
- * @author AustinLiao69
- * @update: 保留原始數據和完整的錯誤訊息，確保正確顯示負數金額與支付方式，修復async聲明
+ * 07. 處理事件 (非同步版) - 修正訊息處理和數據傳遞問題
+ * @version 2025-07-09-V2.0.16
+ * @date 2025-07-09 10:48:00
+ * @update: 遷移至Firestore，保留原始數據和完整的錯誤訊息，確保正確顯示負數金額與支付方式
  * @param {Object} event - LINE事件對象
  * @param {string} requestId - 請求ID
  * @param {string} userId - 用戶ID
@@ -1308,12 +1344,87 @@ async function WH_processEventAsync(event, requestId, userId) {
 
       // 處理特定非消息事件類型
       if (event.type === "follow") {
-        // 處理用戶關注事件
-        WH_replyMessage(event.replyToken, {
-          success: true,
-          responseMessage:
-            "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
-        });
+        // 處理用戶關注事件 - 自動建立帳號
+        try {
+          console.log(`處理用戶關注事件: ${userId} [${requestId}]`);
+
+          // 調用AM模組建立LINE帳號
+          const createResult = await AM.AM_createLineAccount(userId, null, 'J');
+
+          if (createResult.success) {
+            console.log(`成功為用戶 ${userId} 建立帳號 [${requestId}]`);
+
+            // 記錄成功日誌
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.3: 用戶關注事件 - 成功建立帳號 ${userId} [${requestId}]`,
+              "用戶關注",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO",
+            ]);
+
+            // 回覆歡迎訊息
+            WH_replyMessage(event.replyToken, {
+              success: true,
+              responseMessage:
+                "🎉 感謝您加入LCAS記帳助手！\n\n您的帳號已自動建立完成。\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
+            });
+
+          } else {
+            // 帳號建立失敗的處理
+            console.log(`用戶 ${userId} 帳號建立失敗: ${createResult.error} [${requestId}]`);
+
+            // 記錄失敗日誌
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.3: 用戶關注事件 - 帳號建立失敗 ${userId}: ${createResult.error} [${requestId}]`,
+              "用戶關注",
+              userId,
+              "ACCOUNT_CREATE_FAILED",
+              "WH",
+              createResult.error,
+              0,
+              "WH_processEventAsync",
+              "ERROR",
+            ]);
+
+            // 即使建立失敗，仍然歡迎用戶（可能是重複加入）
+            WH_replyMessage(event.replyToken, {
+              success: true,
+              responseMessage:
+                "感謝您加入LCAS記帳助手！\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
+            });
+          }
+
+        } catch (followError) {
+          console.log(`處理用戶關注事件錯誤: ${followError} [${requestId}]`);
+
+          // 記錄錯誤日誌
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.3: 處理用戶關注事件錯誤 ${userId}: ${followError.toString()} [${requestId}]`,
+            "用戶關注",
+            userId,
+            "FOLLOW_EVENT_ERROR",
+            "WH",
+            followError.toString(),
+            0,
+            "WH_processEventAsync",
+            "ERROR",
+          ]);
+
+          // 發送簡化的歡迎訊息
+          WH_replyMessage(event.replyToken, {
+            success: true,
+            responseMessage:
+              "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
+          });
+        }
       } else if (event.type === "unfollow") {
         // 處理用戶取消關注事件 - 無法回覆
         console.log(`用戶 ${userId} 取消關注 [${requestId}]`);
@@ -1358,9 +1469,10 @@ async function WH_processEventAsync(event, requestId, userId) {
 }
 
 /**
- * 8. 驗證 LINE 平台簽章 - 增強安全性
- * @version 2.0.7 (2025-06-25)
- * @author AustinLiao69
+ * 08. 驗證 LINE 平台簽章 - 增強安全性
+ * @version 2025-07-09-V2.0.16
+ * @date 2025-07-09 10:48:00
+ * @update: 遷移至Firestore
  * @param {string} signature - LINE 平台簽章
  * @param {string} body - 請求主體
  * @returns {boolean} 驗證結果
@@ -1636,7 +1748,7 @@ process.on("unhandledRejection", (reason, promise) => {
   ]);
 });
 
-// 更新模組導出，添加 setDependencies 函數
+// 更新模組導出，添加 setDependencies 函數 
 module.exports = {
   // 已有的導出
   WH_processEvent,
@@ -1665,9 +1777,10 @@ module.exports = {
 };
 
 /**
- * 9. 接收DD模組處理後需WH執行的具體操作
- * @version 1.0.0 (2025-06-27)
- * @author AustinLiao69
+ * 09. 接收DD模組處理後需WH執行的具體操作
+ * @version 2025-07-09-V2.0.16
+ * @date 2025-07-09 10:48:00
+ * @update: 遷移至Firestore
  * @param {Object} data - 需處理的數據
  * @param {string} action - 需執行的操作類型(如"reply"、"push"等)
  * @returns {Object} 執行結果
