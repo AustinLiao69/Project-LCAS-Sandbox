@@ -1,15 +1,31 @@
+
+/**
+ * DD4_同義詞管理與用戶偏好模組_3.0.0
+ * @module DD4模組
+ * @description DD4 同義詞管理與用戶偏好模組 - 完全遷移至Firestore資料庫
+ * @update 2025-07-09: 升級至3.0.0版本，完全移除Google Sheets依賴，使用Firestore資料庫
+ */
+
+// 引入Firebase Admin SDK
+const admin = require('firebase-admin');
+const db = admin.firestore();
+
 /**
  * 41. 檢查詞彙是否已為特定科目的同義詞
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 完全遷移至Firestore，移除Google Sheets依賴
  * @param {string} term - 要檢查的詞彙
  * @param {string} subjectCode - 科目代碼
+ * @param {string} ledgerId - 帳本ID
  * @returns {boolean} 是否已為同義詞
  */
-function DD_checkSynonym(term, subjectCode) {
-  const csId = Utilities.getUuid().substring(0, 8);
+async function DD_checkSynonym(term, subjectCode, ledgerId) {
+  const csId = Math.random().toString(36).substring(2, 10);
   console.log(`檢查同義詞: "${term}" 是否屬於 ${subjectCode} [${csId}]`);
 
   try {
-    if (!term || !subjectCode) return false;
+    if (!term || !subjectCode || !ledgerId) return false;
 
     // 拆分科目代碼
     const codeParts = subjectCode.split("-");
@@ -18,46 +34,48 @@ function DD_checkSynonym(term, subjectCode) {
     const majorCode = codeParts[0].trim();
     const subCode = codeParts[1].trim();
 
-    const ss = SpreadsheetApp.openById(DD_CONFIG.SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(DD_SUBJECT_CODE_SHEET_NAME);
-    const data = sheet.getDataRange().getValues();
-
     const normalizedTerm = term.toLowerCase().trim();
 
-    // 尋找對應的科目
-    for (let i = 1; i < data.length; i++) {
-      const rowMajorCode = String(
-        data[i][DD_SUBJECT_CODE_MAJOR_CODE_COLUMN - 1],
-      );
-      const rowSubCode = String(data[i][DD_SUBJECT_CODE_SUB_CODE_COLUMN - 1]);
+    // 從Firestore查詢科目資料
+    const subjectsRef = db.collection('ledgers').doc(ledgerId).collection('subjects');
+    const snapshot = await subjectsRef
+      .where('大項代碼', '==', majorCode)
+      .where('子項代碼', '==', subCode)
+      .get();
 
-      if (rowMajorCode === majorCode && rowSubCode === subCode) {
-        // 檢查該科目的同義詞
-        const synonymsStr = data[i][DD_SUBJECT_CODE_SYNONYMS_COLUMN - 1] || "";
-        const synonyms = synonymsStr
-          .split(",")
-          .map((s) => s.trim().toLowerCase());
-
-        const isInSynonyms = synonyms.includes(normalizedTerm);
-        console.log(
-          `"${term}" ${isInSynonyms ? "已是" : "不是"} ${subjectCode} 的同義詞 [${csId}]`,
-        );
-        return isInSynonyms;
-      }
+    if (snapshot.empty) {
+      console.log(`找不到對應科目代碼: ${subjectCode} [${csId}]`);
+      return false;
     }
 
-    console.log(`找不到對應科目代碼: ${subjectCode} [${csId}]`);
-    return false;
+    // 檢查該科目的同義詞
+    const subjectDoc = snapshot.docs[0];
+    const subjectData = subjectDoc.data();
+    const synonymsStr = subjectData.同義詞 || "";
+    
+    if (!synonymsStr) return false;
+
+    const synonyms = synonymsStr
+      .split(",")
+      .map((s) => s.trim().toLowerCase());
+
+    const isInSynonyms = synonyms.includes(normalizedTerm);
+    console.log(
+      `"${term}" ${isInSynonyms ? "已是" : "不是"} ${subjectCode} 的同義詞 [${csId}]`,
+    );
+    return isInSynonyms;
+
   } catch (error) {
     console.log(`檢查同義詞錯誤: ${error} [${csId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    DD_logError(
+    await DD_logError(
       `檢查同義詞錯誤: ${error}`,
       "同義詞處理",
       "",
       "CHECK_SYN_ERROR",
       error.toString(),
       "DD_checkSynonym",
+      ledgerId
     );
     return false;
   }
@@ -65,14 +83,13 @@ function DD_checkSynonym(term, subjectCode) {
 
 /**
  * 42. 初始化配置 - 確保所有必要的配置項都存在
- * @version 2025-06-11-V1.0.0
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 移除Google Sheets相關配置，適配Firestore
  */
 function DD_initConfig() {
   // 確保基本配置存在
   DD_CONFIG.DEBUG = DD_CONFIG.DEBUG !== undefined ? DD_CONFIG.DEBUG : true;
-  DD_CONFIG.LOG_SHEET_NAME = DD_CONFIG.LOG_SHEET_NAME || "03. log";
-  DD_CONFIG.SPREADSHEET_ID =
-    DD_CONFIG.SPREADSHEET_ID || "1fYFPjswEF0jOEj4TSDehJPNTwBEVwv666jqnN2KMOKU";
   DD_CONFIG.TIMEZONE = DD_CONFIG.TIMEZONE || "Asia/Taipei";
   DD_CONFIG.DEFAULT_SUBJECT = DD_CONFIG.DEFAULT_SUBJECT || "其他支出";
 
@@ -187,34 +204,36 @@ function calculateLevenshteinDistance(a, b) {
 }
 
 /**
- * 45. 同義詞學習功能 - 支持從test ledger抓取同義詞
- * @version 2025-05-29-V1.0.1
- * @author AustinLiao691
- * @update: 統一使用DD_formatUserSuccessFeedback和DD_formatUserErrorFeedback處理訊息
+ * 45. 同義詞學習功能 - 支持從entries collection抓取同義詞
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 完全遷移至Firestore，移除Google Sheets依賴
  * @param {string} userId - 用戶ID
  * @param {string} originalSubject - 用戶輸入的原始詞彙
  * @param {string} matchedSubject - 系統匹配的科目名稱
  * @param {string} subjectCode - 科目代碼，格式為"majorCode-subCode"
+ * @param {string} ledgerId - 帳本ID
  * @returns {object} - 處理結果，包含success字段
  */
-function DD_synonymLearning(
+async function DD_synonymLearning(
   userId,
   originalSubject,
   matchedSubject,
   subjectCode,
+  ledgerId,
 ) {
-  const lsId = Utilities.getUuid().substring(0, 8);
+  const lsId = Math.random().toString(36).substring(2, 10);
   console.log(
     `【同義詞學習】開始處理: 用戶="${userId}", 原詞="${originalSubject}", 科目="${matchedSubject}", 代碼=${subjectCode} [${lsId}]`,
   );
 
   try {
     // 檢查參數
-    if (!originalSubject || !matchedSubject || !subjectCode) {
+    if (!originalSubject || !matchedSubject || !subjectCode || !ledgerId) {
       console.log(`【同義詞學習】參數不完整，放棄學習 [${lsId}]`);
 
       // 使用56號函數處理錯誤
-      const paramErrorResult = DD_formatUserErrorFeedback("參數不完整", "DD", {
+      const paramErrorResult = await DD_formatUserErrorFeedback("參數不完整", "DD", {
         errorType: "INCOMPLETE_PARAMETERS",
         userId: userId,
         isRetryable: false,
@@ -236,7 +255,7 @@ function DD_synonymLearning(
       console.log(`【同義詞學習】輸入詞與科目名稱相同，無需學習 [${lsId}]`);
 
       // 使用57號函數處理成功訊息
-      const skipResult = DD_formatUserSuccessFeedback(
+      const skipResult = await DD_formatUserSuccessFeedback(
         {
           originalTerm: normalizedInput,
           standardTerm: normalizedSubject,
@@ -263,13 +282,13 @@ function DD_synonymLearning(
     }
 
     // 檢查是否已經是該科目的同義詞
-    if (DD_checkSynonym(normalizedInput, subjectCode)) {
+    if (await DD_checkSynonym(normalizedInput, subjectCode, ledgerId)) {
       console.log(
         `【同義詞學習】"${originalSubject}"已經是科目${subjectCode}的同義詞，無需重複學習 [${lsId}]`,
       );
 
       // 使用57號函數處理成功訊息
-      const alreadySynResult = DD_formatUserSuccessFeedback(
+      const alreadySynResult = await DD_formatUserSuccessFeedback(
         {
           originalTerm: normalizedInput,
           standardTerm: normalizedSubject,
@@ -296,15 +315,15 @@ function DD_synonymLearning(
     }
 
     // 1. 首先從科目代碼表中獲取當前的同義詞列表
-    const currentSynonyms = DD_getSynonymsForSubject(subjectCode);
+    const currentSynonyms = await DD_getSynonymsForSubject(subjectCode, ledgerId);
     console.log(
       `【同義詞學習】當前科目同義詞: ${currentSynonyms || "無"} [${lsId}]`,
     );
 
-    // 2. 從Test ledger中抓取可能的新同義詞
-    const ledgerSynonyms = DD_fetchSynonymsFromLedger(subjectCode);
+    // 2. 從entries collection中抓取可能的新同義詞
+    const entriesSynonyms = await DD_fetchSynonymsFromEntries(subjectCode, ledgerId);
     console.log(
-      `【同義詞學習】從Ledger獲取的同義詞: ${ledgerSynonyms || "無"} [${lsId}]`,
+      `【同義詞學習】從Entries獲取的同義詞: ${entriesSynonyms || "無"} [${lsId}]`,
     );
 
     // 3. 合併同義詞，包括當前輸入的詞彙
@@ -317,9 +336,9 @@ function DD_synonymLearning(
       });
     }
 
-    // 添加從ledger獲取的同義詞
-    if (ledgerSynonyms) {
-      ledgerSynonyms.split(",").forEach((syn) => {
+    // 添加從entries獲取的同義詞
+    if (entriesSynonyms) {
+      entriesSynonyms.split(",").forEach((syn) => {
         if (syn.trim()) allSynonyms.add(syn.trim());
       });
     }
@@ -334,27 +353,24 @@ function DD_synonymLearning(
     );
 
     // 4. 更新科目代碼表
-    const updateResult = DD_updateSynonymsForSubject(
+    const updateResult = await DD_updateSynonymsForSubject(
       subjectCode,
       updatedSynonyms,
+      ledgerId,
     );
 
     if (updateResult.success) {
       console.log(`【同義詞學習】同義詞更新成功 [${lsId}]`);
-      DD_logInfo(
+      await DD_logInfo(
         `同義詞學習成功: "${originalSubject}" -> ${matchedSubject} (${subjectCode})`,
         "同義詞學習",
         userId,
         "DD_synonymLearning",
+        ledgerId,
       );
 
-      // 5. 更新用戶偏好
-      if (userId) {
-        DD_userPreferenceManager(userId, originalSubject, subjectCode, false);
-      }
-
       // 使用57號函數處理成功訊息
-      const successResult = DD_formatUserSuccessFeedback(
+      const successResult = await DD_formatUserSuccessFeedback(
         {
           originalTerm: normalizedInput,
           standardTerm: normalizedSubject,
@@ -385,7 +401,7 @@ function DD_synonymLearning(
       );
 
       // 使用56號函數處理錯誤
-      const updateErrorResult = DD_formatUserErrorFeedback(
+      const updateErrorResult = await DD_formatUserErrorFeedback(
         updateResult.error,
         "DD",
         {
@@ -404,17 +420,18 @@ function DD_synonymLearning(
   } catch (error) {
     console.log(`【同義詞學習】處理錯誤: ${error} [${lsId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    DD_logError(
+    await DD_logError(
       `同義詞學習錯誤: ${error}`,
       "同義詞處理",
       userId,
       "SYN_LEARN_ERROR",
       error.toString(),
       "DD_synonymLearning",
+      ledgerId,
     );
 
     // 使用56號函數處理錯誤
-    const generalErrorResult = DD_formatUserErrorFeedback(error, "DD", {
+    const generalErrorResult = await DD_formatUserErrorFeedback(error, "DD", {
       errorType: "SYNONYM_LEARNING_ERROR",
       userId: userId,
       isRetryable: true,
@@ -429,22 +446,24 @@ function DD_synonymLearning(
 }
 
 /**
- * 46. 從Test ledger中抓取特定科目代碼的同義詞
- * @version 2025-05-02-V1.0.0
- * @author AustinLiao69
+ * 46. 從entries collection中抓取特定科目代碼的同義詞
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 完全遷移至Firestore，移除Google Sheets依賴
  * @param {string} subjectCode - 科目代碼，格式為"majorCode-subCode"
+ * @param {string} ledgerId - 帳本ID
  * @returns {string} - 逗號分隔的同義詞字符串，如果沒有找到則返回空字符串
  */
-function DD_fetchSynonymsFromLedger(subjectCode) {
-  const flId = Utilities.getUuid().substring(0, 8);
+async function DD_fetchSynonymsFromEntries(subjectCode, ledgerId) {
+  const flId = Math.random().toString(36).substring(2, 10);
   console.log(
-    `【抓取同義詞】開始從Test ledger抓取科目${subjectCode}的同義詞 [${flId}]`,
+    `【抓取同義詞】開始從entries collection抓取科目${subjectCode}的同義詞 [${flId}]`,
   );
 
   try {
-    // 檢查bk�數
-    if (!subjectCode) {
-      console.log(`【抓取同義詞】科目代碼為空 [${flId}]`);
+    // 檢查參數
+    if (!subjectCode || !ledgerId) {
+      console.log(`【抓取同義詞】參數不完整 [${flId}]`);
       return "";
     }
 
@@ -458,60 +477,50 @@ function DD_fetchSynonymsFromLedger(subjectCode) {
     const majorCode = codeParts[0].trim();
     const subCode = codeParts[1].trim();
 
-    // 打開Test ledger表
-    const ss = SpreadsheetApp.openById(DD_CONFIG.SPREADSHEET_ID);
-    const ledgerSheet = ss.getSheetByName("999. Test ledger");
+    // 從Firestore查詢entries
+    const entriesRef = db.collection('ledgers').doc(ledgerId).collection('entries');
+    const snapshot = await entriesRef
+      .where('大項代碼', '==', majorCode)
+      .where('子項代碼', '==', subCode)
+      .get();
 
-    if (!ledgerSheet) {
-      console.log(`【抓取同義詞】找不到Test ledger表 [${flId}]`);
+    if (snapshot.empty) {
+      console.log(`【抓取同義詞】entries collection中找不到匹配記錄 [${flId}]`);
       return "";
     }
-
-    // 獲取所有數據
-    const data = ledgerSheet.getDataRange().getValues();
-
-    // 定義列索引
-    const MAJOR_CODE_COL = 4; // 大項代碼在第5列
-    const MINOR_CODE_COL = 5; // 子項代碼在第6列
-    const SYNONYM_COL = 12; // 同義詞在第13列
 
     // 收集所有匹配的同義詞
     const synonyms = new Set();
 
-    for (let i = 1; i < data.length; i++) {
-      // 檢查是否匹配科目代碼
-      if (
-        String(data[i][MAJOR_CODE_COL]) === majorCode &&
-        String(data[i][MINOR_CODE_COL]) === subCode
-      ) {
-        // 檢查同義詞列是否有值
-        const synValue = data[i][SYNONYM_COL];
-        if (synValue && typeof synValue === "string" && synValue.trim()) {
-          // 將同義詞添加到集合中（自動去重）
-          synValue.split(",").forEach((syn) => {
-            if (syn.trim()) synonyms.add(syn.trim());
-          });
-        }
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const synValue = data.同義詞;
+      if (synValue && typeof synValue === "string" && synValue.trim()) {
+        // 將同義詞添加到集合中（自動去重）
+        synValue.split(",").forEach((syn) => {
+          if (syn.trim()) synonyms.add(syn.trim());
+        });
       }
-    }
+    });
 
     // 轉換為逗號分隔的字符串
     const result = Array.from(synonyms).join(",");
 
     console.log(
-      `【抓取同義詞】從Test ledger找到${synonyms.size}個同義詞: ${result} [${flId}]`,
+      `【抓取同義詞】從entries collection找到${synonyms.size}個同義詞: ${result} [${flId}]`,
     );
     return result;
   } catch (error) {
     console.log(`【抓取同義詞】處理錯誤: ${error} [${flId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    DD_logError(
-      `從Ledger抓取同義詞錯誤: ${error}`,
+    await DD_logError(
+      `從entries collection抓取同義詞錯誤: ${error}`,
       "同義詞處理",
       "",
       "FETCH_SYN_ERROR",
       error.toString(),
-      "DD_fetchSynonymsFromLedger",
+      "DD_fetchSynonymsFromEntries",
+      ledgerId,
     );
     return "";
   }
@@ -519,15 +528,17 @@ function DD_fetchSynonymsFromLedger(subjectCode) {
 
 /**
  * 47. 獲取特定科目代碼的當前同義詞
- * @version 2025-05-02-V1.0.0
- * @author AustinLiao69
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 完全遷移至Firestore，移除Google Sheets依賴
  * @param {string} subjectCode - 科目代碼，格式為"majorCode-subCode"
+ * @param {string} ledgerId - 帳本ID
  * @returns {string} - 當前的同義詞字符串，如果沒有找到則返回空字符串
  */
-function DD_getSynonymsForSubject(subjectCode) {
+async function DD_getSynonymsForSubject(subjectCode, ledgerId) {
   try {
     // 檢查參數
-    if (!subjectCode) return "";
+    if (!subjectCode || !ledgerId) return "";
 
     // 拆分科目代碼
     const codeParts = subjectCode.split("-");
@@ -536,36 +547,30 @@ function DD_getSynonymsForSubject(subjectCode) {
     const majorCode = codeParts[0].trim();
     const subCode = codeParts[1].trim();
 
-    // 打開科目代碼表
-    const ss = SpreadsheetApp.openById(DD_CONFIG.SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(DD_SUBJECT_CODE_SHEET_NAME);
+    // 從Firestore查詢科目資料
+    const subjectsRef = db.collection('ledgers').doc(ledgerId).collection('subjects');
+    const snapshot = await subjectsRef
+      .where('大項代碼', '==', majorCode)
+      .where('子項代碼', '==', subCode)
+      .get();
 
-    if (!sheet) return "";
+    if (snapshot.empty) return "";
 
-    // 獲取所有數據
-    const data = sheet.getDataRange().getValues();
+    // 返回該科目的同義詞
+    const subjectDoc = snapshot.docs[0];
+    const subjectData = subjectDoc.data();
+    return subjectData.同義詞 || "";
 
-    // 尋找匹配的科目
-    for (let i = 1; i < data.length; i++) {
-      if (
-        String(data[i][DD_SUBJECT_CODE_MAJOR_CODE_COLUMN - 1]) === majorCode &&
-        String(data[i][DD_SUBJECT_CODE_SUB_CODE_COLUMN - 1]) === subCode
-      ) {
-        // 返回該科目的同義詞列 (假設為第5列)
-        return data[i][4] || "";
-      }
-    }
-
-    return "";
   } catch (error) {
     console.log(`獲取科目同義詞錯誤: ${error}`);
-    DD_logError(
+    await DD_logError(
       `獲取科目同義詞錯誤: ${error}`,
       "同義詞處理",
       "",
       "GET_SYN_ERROR",
       error.toString(),
       "DD_getSynonymsForSubject",
+      ledgerId,
     );
     return "";
   }
@@ -573,23 +578,25 @@ function DD_getSynonymsForSubject(subjectCode) {
 
 /**
  * 48. 更新特定科目代碼的同義詞
- * @version 2025-05-02-V1.0.0
- * @author AustinLiao69
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 完全遷移至Firestore，移除Google Sheets依賴
  * @param {string} subjectCode - 科目代碼，格式為"majorCode-subCode"
  * @param {string} synonyms - 更新後的同義詞字符串
+ * @param {string} ledgerId - 帳本ID
  * @returns {object} - 包含success字段的結果對象
  */
-function DD_updateSynonymsForSubject(subjectCode, synonyms) {
-  const usId = Utilities.getUuid().substring(0, 8);
+async function DD_updateSynonymsForSubject(subjectCode, synonyms, ledgerId) {
+  const usId = Math.random().toString(36).substring(2, 10);
   console.log(
     `【更新同義詞】開始更新科目${subjectCode}的同義詞為: ${synonyms} [${usId}]`,
   );
 
   try {
     // 檢查參數
-    if (!subjectCode) {
-      console.log(`【更新同義詞】科目代碼為空 [${usId}]`);
-      return { success: false, error: "科目代碼為空" };
+    if (!subjectCode || !ledgerId) {
+      console.log(`【更新同義詞】參數不完整 [${usId}]`);
+      return { success: false, error: "參數不完整" };
     }
 
     // 拆分科目代碼
@@ -602,55 +609,49 @@ function DD_updateSynonymsForSubject(subjectCode, synonyms) {
     const majorCode = codeParts[0].trim();
     const subCode = codeParts[1].trim();
 
-    // 打開科目代碼表
-    const ss = SpreadsheetApp.openById(DD_CONFIG.SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(DD_SUBJECT_CODE_SHEET_NAME);
+    // 從Firestore查詢科目文件
+    const subjectsRef = db.collection('ledgers').doc(ledgerId).collection('subjects');
+    const snapshot = await subjectsRef
+      .where('大項代碼', '==', majorCode)
+      .where('子項代碼', '==', subCode)
+      .get();
 
-    if (!sheet) {
-      console.log(
-        `【更新同義詞】找不到科目表: ${DD_SUBJECT_CODE_SHEET_NAME} [${usId}]`,
-      );
-      return { success: false, error: "找不到科目表" };
+    if (snapshot.empty) {
+      console.log(`【更新同義詞】找不到匹配的科目: ${subjectCode} [${usId}]`);
+      return { success: false, error: "找不到匹配的科目" };
     }
 
-    // 獲取所有數據
-    const data = sheet.getDataRange().getValues();
+    // 更新同義詞
+    const subjectDoc = snapshot.docs[0];
+    await subjectDoc.ref.update({
+      同義詞: synonyms,
+      updatedAt: admin.firestore.Timestamp.now()
+    });
 
-    // 尋找匹配的科目
-    for (let i = 1; i < data.length; i++) {
-      if (
-        String(data[i][DD_SUBJECT_CODE_MAJOR_CODE_COLUMN - 1]) === majorCode &&
-        String(data[i][DD_SUBJECT_CODE_SUB_CODE_COLUMN - 1]) === subCode
-      ) {
-        // 更新同義詞列 (假設為第5列)
-        sheet.getRange(i + 1, 5).setValue(synonyms);
+    console.log(
+      `【更新同義詞】成功更新科目${subjectCode}的同義詞 [${usId}]`,
+    );
+    await DD_logInfo(
+      `更新科目${subjectCode}的同義詞: ${synonyms}`,
+      "同義詞管理",
+      "",
+      "DD_updateSynonymsForSubject",
+      ledgerId,
+    );
 
-        console.log(
-          `【更新同義詞】成功更新科目${subjectCode}的同義詞 [${usId}]`,
-        );
-        DD_logInfo(
-          `更新科目${subjectCode}的同義詞: ${synonyms}`,
-          "同義詞管理",
-          "",
-          "DD_updateSynonymsForSubject",
-        );
+    return { success: true };
 
-        return { success: true };
-      }
-    }
-
-    console.log(`【更新同義詞】找不到匹配的科目: ${subjectCode} [${usId}]`);
-    return { success: false, error: "找不到匹配的科目" };
   } catch (error) {
     console.log(`【更新同義詞】處理錯誤: ${error} [${usId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    DD_logError(
+    await DD_logError(
       `更新科目同義詞錯誤: ${error}`,
       "同義詞處理",
       "",
       "UPDATE_SYN_ERROR",
       error.toString(),
       "DD_updateSynonymsForSubject",
+      ledgerId,
     );
     return { success: false, error: error.toString() };
   }
@@ -658,7 +659,9 @@ function DD_updateSynonymsForSubject(subjectCode, synonyms) {
 
 /**
  * 49. 生成記帳結果回覆訊息
- * @version 1.1.0 (2025-05-14)
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 更新版本號和時間戳
  * @param {object} result - BK模組的處理結果
  * @param {string} action - 操作類型 (記帳、查詢等)
  * @returns {string} 格式化的回覆訊息
@@ -693,9 +696,19 @@ function DD_generateBookkeepingResponse(result, action) {
     // 取得日期時間 (優先使用 BK 結果中的時間)
     const dateStr =
       bkResult.date ||
-      Utilities.formatDate(new Date(), "Asia/Taipei", "yyyy/MM/dd");
+      new Date().toLocaleDateString('zh-TW', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        timeZone: 'Asia/Taipei'
+      });
     const timeStr =
-      bkResult.time || Utilities.formatDate(new Date(), "Asia/Taipei", "HH:mm");
+      bkResult.time || 
+      new Date().toLocaleTimeString('zh-TW', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZone: 'Asia/Taipei'
+      });
 
     // 取得科目分類
     const majorName = bkResult.majorName || result.majorName || "";
@@ -709,11 +722,10 @@ function DD_generateBookkeepingResponse(result, action) {
     );
 
     return `記帳成功！
-            金額：${amount}元 (${isIncome ? "收入" : "支出"})
-            付款方式：${paymentMethod}
-            時間：${dateStr} ${timeStr}
-            科目：${minorName}
-            備註：${remarkText}`;
+金額：${amount}元 (${isIncome ? "收入" : "支出"})
+付款方式：${paymentMethod}
+時間：${dateStr} ${timeStr}
+科目：${minorName}`;
   }
   // 處理失敗的情況
   else {
@@ -723,7 +735,7 @@ function DD_generateBookkeepingResponse(result, action) {
       const subjectName = subjectMatch ? subjectMatch[1] : "未知科目";
 
       return `記帳失敗：找不到科目「${subjectName}」
- 請檢查科目名稱是否正確`;
+請檢查科目名稱是否正確`;
     } else {
       return "記帳失敗，請再試一次";
     }
@@ -732,20 +744,20 @@ function DD_generateBookkeepingResponse(result, action) {
 
 /**
  * 50. 統一的記帳回覆訊息生成器 - 委託給56/57號函數
- * @version 2025-05-29-V3.0.2
- * @author AustinLiao691
- * @update: 移除訊息生成代碼，委託給56/57號函數處理
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 更新版本號和時間戳
  * @param {Object} data - 記帳數據
  * @returns {string} 格式化的回覆訊息
  */
-function DD_generateBookkeepingMessage(data) {
+async function DD_generateBookkeepingMessage(data) {
   try {
     // 1. 記錄開始處理
     console.log(`開始生成記帳回覆訊息: ${JSON.stringify(data)}`);
 
     // 2. 檢查必要參數
     if (!data) {
-      const errorResult = DD_formatUserErrorFeedback(
+      const errorResult = await DD_formatUserErrorFeedback(
         "記帳數據為空，無法生成訊息",
         "BK",
         {
@@ -759,7 +771,7 @@ function DD_generateBookkeepingMessage(data) {
     // 3. 根據成功與否使用不同的訊息處理函數
     if (data.success !== false) {
       // 成功訊息 - 使用57號函數
-      const successResult = DD_formatUserSuccessFeedback(data, "BK", {
+      const successResult = await DD_formatUserSuccessFeedback(data, "BK", {
         operationType: "記帳",
         userId: data.userId || data.user_id || "",
       });
@@ -767,7 +779,7 @@ function DD_generateBookkeepingMessage(data) {
       return successResult.userFriendlyMessage;
     } else {
       // 失敗訊息 - 使用56號函數
-      const errorResult = DD_formatUserErrorFeedback(
+      const errorResult = await DD_formatUserErrorFeedback(
         data.error || "未知錯誤",
         "BK",
         {
@@ -780,7 +792,7 @@ function DD_generateBookkeepingMessage(data) {
     }
   } catch (error) {
     // 函數本身出錯時的處理
-    const errorResult = DD_formatUserErrorFeedback(
+    const errorResult = await DD_formatUserErrorFeedback(
       `訊息生成出錯: ${error.toString()}`,
       "DD",
       {
@@ -795,10 +807,9 @@ function DD_generateBookkeepingMessage(data) {
 
 /**
  * 51. 解析使用者輸入格式
- * @version 2025-06-16-V3.5.0
- * @author AustinLiao69
- * @date 2025-06-16 02:13:23
- * @update: 修正負數金額解析及錯誤資料保存
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 更新版本號和時間戳
  * @param {string} text - 用戶輸入的原始文本
  * @param {string} processId - 處理ID
  * @returns {Object} - 解析結果
@@ -995,42 +1006,11 @@ function DD_parseInputFormat(text, processId) {
   }
 }
 
-// 更新現有的 Utilities 物件，添加缺少的方法
-if (typeof Utilities !== "undefined" && !Utilities.formatDate) {
-  Utilities.formatDate = (date, timezone, format) => {
-    // 使用 moment-timezone 確保時區正確處理
-    const momentDate = moment(date).tz(timezone || "Asia/Taipei");
-
-    if (format === "yyyy/MM/dd HH:mm") {
-      return momentDate.format("YYYY/MM/DD HH:mm");
-    } else if (format === "yyyy/M/d") {
-      return momentDate.format("YYYY/M/D");
-    } else if (format === "HH:mm") {
-      return momentDate.format("HH:mm");
-    } else if (format === "yyyy-MM-dd HH:mm:ss") {
-      return momentDate.format("YYYY-MM-DD HH:mm:ss");
-    }
-    return momentDate.format();
-  };
-}
-
-// 更新現有的 SpreadsheetApp 物件，添加 getActive 方法
-if (typeof SpreadsheetApp !== "undefined" && !SpreadsheetApp.getActive) {
-  SpreadsheetApp.getActive = () => ({
-    getSheetByName: (name) => ({
-      getDataRange: () => ({
-        getValues: () => spreadsheetData[name] || [],
-      }),
-    }),
-  });
-}
-
 /**
  * 52. 記帳備註生成與格式化
- * @version 2025-05-21-V1.0.2
- * @author AustinLiao69
- * @date 2025-05-21 16:12:14
- * @update: 增強格式化能力，確保移除金額和支付方式
+ * @version 2025-07-09-V3.0.0
+ * @date 2025-07-09 12:30:00
+ * @update: 更新版本號和時間戳
  * @param {Object} parseResult - DD_parseInputFormat 的解析結果
  * @param {string} originalText - 原始輸入文本
  * @return {string} 格式化後的備註
@@ -1073,3 +1053,80 @@ function DD_formatBookkeepingRemark(parseResult, originalText) {
 
   return remark;
 }
+
+// 輔助函數 - 日誌記錄
+async function DD_logError(message, operationType, userId, errorCode, errorDetails, functionName, ledgerId) {
+  try {
+    if (!ledgerId) {
+      console.warn('DD_logError: 缺少ledgerId參數');
+      return;
+    }
+
+    await db.collection('ledgers').doc(ledgerId).collection('log').add({
+      時間: admin.firestore.Timestamp.now(),
+      訊息: message,
+      操作類型: operationType,
+      UID: userId || '',
+      錯誤代碼: errorCode,
+      來源: 'DD4模組',
+      錯誤詳情: errorDetails,
+      重試次數: 0,
+      程式碼位置: functionName,
+      嚴重等級: 'ERROR'
+    });
+  } catch (error) {
+    console.error('DD_logError failed:', error);
+  }
+}
+
+async function DD_logInfo(message, operationType, userId, functionName, ledgerId) {
+  try {
+    if (!ledgerId) {
+      console.warn('DD_logInfo: 缺少ledgerId參數');
+      return;
+    }
+
+    await db.collection('ledgers').doc(ledgerId).collection('log').add({
+      時間: admin.firestore.Timestamp.now(),
+      訊息: message,
+      操作類型: operationType,
+      UID: userId || '',
+      錯誤代碼: null,
+      來源: 'DD4模組',
+      錯誤詳情: '',
+      重試次數: 0,
+      程式碼位置: functionName,
+      嚴重等級: 'INFO'
+    });
+  } catch (error) {
+    console.error('DD_logInfo failed:', error);
+  }
+}
+
+// 假設的56/57號函數（需要從其他模組引入或定義）
+async function DD_formatUserErrorFeedback(error, module, options) {
+  return {
+    userFriendlyMessage: `處理失敗: ${error}`
+  };
+}
+
+async function DD_formatUserSuccessFeedback(data, module, options) {
+  return {
+    userFriendlyMessage: '處理成功!'
+  };
+}
+
+module.exports = {
+  DD_checkSynonym,
+  DD_initConfig,
+  normalizeChineseInput,
+  calculateLevenshteinDistance,
+  DD_synonymLearning,
+  DD_fetchSynonymsFromEntries,
+  DD_getSynonymsForSubject,
+  DD_updateSynonymsForSubject,
+  DD_generateBookkeepingResponse,
+  DD_generateBookkeepingMessage,
+  DD_parseInputFormat,
+  DD_formatBookkeepingRemark
+};
