@@ -14,9 +14,6 @@ try {
   console.log(`DD模組版本: 3.0.0 (2025-01-09) - 完全Firestore版本`);
   console.log(`執行時間 (UTC+8): ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
 
-  // 延遲載入模組並檢查函數
-  loadModules();
-  
   // 檢查 Firestore 連接
   console.log(`Firestore 連接檢查: ${db ? "成功" : "失敗"}`);
   
@@ -61,12 +58,9 @@ if (!admin.apps.length) {
 // 取得 Firestore 實例
 const db = admin.firestore();
 
-// 延遲載入其他模組以避免循環依賴
-let BK, DL;
-function loadModules() {
-  if (!BK) BK = require("./2001. BK.js");
-  if (!DL) DL = require("./2010. DL.js");
-}
+// 直接載入模組
+const BK = require("./2001. BK.js");
+const DL = require("./2010. DL.js");
 
 // 替代 Google Apps Script 的 Utilities 物件
 const Utilities = {
@@ -1065,7 +1059,6 @@ async function DD_processForBK(data) {
     );
 
     // 調用BK_processBookkeeping處理記帳
-    loadModules(); // 確保模組已載入
     await DD_logInfo(
       `開始調用BK_processBookkeeping [${processId}]`,
       "模組調用",
