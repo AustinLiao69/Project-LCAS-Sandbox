@@ -1,9 +1,9 @@
 /**
- * DD_資料分配模組_2.1.0
- * @module 資料分配模組
+ * DD1_核心協調模組_2.2.0
+ * @module 核心協調模組
  * @description 根據預定義的規則將數據分配到不同的資料庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息 - Firestore版本
  * @author AustinLiao69
- * @update 2025-07-09: 升級版本至2.1.0，完全遷移至Firestore資料庫，移除Google Sheets依賴
+ * @update 2025-07-09: 升級版本至2.120，完全遷移至Firestore資料庫，移除Google Sheets依賴
  */
 
 /**

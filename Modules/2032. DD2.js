@@ -1,9 +1,8 @@
-
 /**
- * DD2_資料處理模組_3.0.0
- * @module 資料處理模組
- * @description LCAS 2.0 資料處理模組 - 完全遷移至Firestore資料庫
- * @update 2025-07-09: 升級版本至3.0.0，完全遷移至Firestore，移除Google Sheets依賴，遵循2011模組資料庫結構
+ * DD2_智慧處理模組_3.1.0
+ * @module 智慧處理模組
+ * @description LCAS 2.0 智慧處理模組 - 完全遷移至Firestore資料庫
+ * @update 2025-07-09: 升級版本至3.1.0，完全遷移至Firestore，移除Google Sheets依賴，遵循2011模組資料庫結構
  */
 
 /**
@@ -1004,50 +1003,6 @@ function formatTime(date) {
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
   return `${hours}:${minutes}`;
-}
-
-// 時間戳轉換函數
-function DD_convertTimestamp(timestamp) {
-  const tsId = uuidv4().substring(0, 8);
-  console.log(`開始轉換時間戳: ${timestamp} [${tsId}]`);
-
-  try {
-    if (timestamp === null || timestamp === undefined) {
-      console.log(`時間戳為空 [${tsId}]`);
-      return null;
-    }
-
-    let date;
-
-    if (typeof timestamp === "number" || /^\d+$/.test(timestamp)) {
-      date = new Date(Number(timestamp));
-    } else if (typeof timestamp === "string" && timestamp.includes("T")) {
-      date = new Date(timestamp);
-    } else {
-      date = new Date(timestamp);
-    }
-
-    if (isNaN(date.getTime())) {
-      console.log(`無法轉換為有效日期: ${timestamp} [${tsId}]`);
-      return null;
-    }
-
-    // 轉換為台灣時區
-    const taiwanDate = formatDate(date);
-    const taiwanTime = formatTime(date);
-
-    const result = {
-      date: taiwanDate,
-      time: taiwanTime,
-    };
-
-    console.log(`時間戳轉換結果: ${taiwanDate} ${taiwanTime} [${tsId}]`);
-    return result;
-  } catch (error) {
-    console.log(`時間戳轉換錯誤: ${error.toString()} [${tsId}]`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    return null;
-  }
 }
 
 /**
