@@ -1,0 +1,40 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/7/10 下午3:52:30
+📦 載入模組...
+DD模組初始化檢查 [2025-07-10T07:52:30.970Z]
+DD模組版本: 3.0.0 (2025-01-09) - 完全Firestore版本
+執行時間: 7/10/2025, 7:52:30 AM
+DD模組初始化錯誤: ReferenceError: Cannot access 'db' before initialization
+錯誤堆疊: ReferenceError: Cannot access 'db' before initialization
+    at Object.<anonymous> (/home/runner/workspace/Modules/2031. DD1.js:18:34)
+    at Module._compile (node:internal/modules/cjs/loader:1546:14)
+    at Object..js (node:internal/modules/cjs/loader:1689:10)
+    at Module.load (node:internal/modules/cjs/loader:1318:32)
+    at Function._load (node:internal/modules/cjs/loader:1128:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:218:24)
+    at Module.require (node:internal/modules/cjs/loader:1340:12)
+    at require (node:internal/modules/helpers:141:16)
+    at Object.<anonymous> (/home/runner/workspace/Modules/2020. WH.js:9:12)
+💥 未捕獲的異常: ReferenceError: DD_log is not defined
+    at Object.<anonymous> (/home/runner/workspace/Modules/2032. DD2.js:1661:3)
+    at Module._compile (node:internal/modules/cjs/loader:1546:14)
+    at Object..js (node:internal/modules/cjs/loader:1689:10)
+    at Module.load (node:internal/modules/cjs/loader:1318:32)
+    at Function._load (node:internal/modules/cjs/loader:1128:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:218:24)
+    at Module.require (node:internal/modules/cjs/loader:1340:12)
+    at require (node:internal/modules/helpers:141:16)
+    at Object.<anonymous> (/home/runner/workspace/Modules/2031. DD1.js:1371:13)
+(node:4550) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:4550) Warning: Accessing non-existent property 'DD_writeToLogSheet' of module exports inside circular dependency
+(node:4550) Warning: Accessing non-existent property 'DD_getAllSubjects' of module exports inside circular dependency
+(node:4550) Warning: Accessing non-existent property 'DD_getLedgerInfo' of module exports inside circular dependency
+(node:4550) Warning: Accessing non-existent property 'DD_logDebug' of module exports inside circular dependency
+(node:4550) Warning: Accessing non-existent property 'DD_logInfo' of module exports inside circular dependency
+(node:4550) Warning: Accessing non-existent property 'DD_logWarning' of module exports inside circular dependency
+(node:4550) Warning: Accessing non-existent property 'DD_logError' of module exports inside circular dependency
+(node:4550) Warning: Accessing non-existent property 'DD_logCritical' of module exports inside circular dependency
+(node:4550) Warning: Accessing non-existent property 'DD_convertTimestamp' of module exports inside circular dependency
