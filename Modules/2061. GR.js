@@ -1,8 +1,9 @@
+
 /**
- * GR_報表生成模組_2.0.0
+ * GR_報表生成模組_2.0.1
  * @module 報表生成模組
- * @description LINE 記帳機器人報表生成模組 - 遷移至Firestore資料庫
- * @update 2025-01-09: 版本升級，從Google Sheets遷移至Firestore，移除預設ledgerID
+ * @description LINE 記帳機器人報表生成模組 - 完全遷移至Firestore資料庫，遵循2011模組資料庫結構
+ * @update 2025-01-09: 版本升級至2.0.1，修正資料庫欄位對應，移除預設ledgerID，整合2031模組功能
  */
 
 const admin = require('firebase-admin');
@@ -16,6 +17,10 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+
+// 引入DD1模組以獲取ledgerID
+const DD1 = require('./2031. DD1.js');
+const { DD_getLedgerInfo } = DD1;
 
 /**
  * 配置參數
@@ -82,79 +87,124 @@ function GR_logError(message, category = "", userId = "", errorCode = "", errorD
 }
 
 /**
- * 04. 從Firestore獲取帳本資料
+ * 04. 從Firestore獲取帳本資料 - 修正版本
  * @version 2025-01-09-V2.0.4
  * @date 2025-01-09 15:30:00
- * @description 從Firestore讀取指定帳本的記帳資料
+ * @description 從Firestore讀取指定帳本的記帳資料，使用2011模組定義的欄位結構
  */
-async function GR_fetchLedgerData(ledgerId, filters = {}) {
+async function GR_fetchLedgerData(userId, filters = {}) {
   const functionName = "GR_fetchLedgerData";
 
   try {
-    GR_logDebug(`開始獲取帳本資料，帳本ID: ${ledgerId}`, "資料獲取", "", functionName);
-
-    if (!ledgerId) {
-      throw new Error("ledgerId 參數為必填");
+    if (!userId) {
+      throw new Error("userId 參數為必填，每個使用者都需要獨立的帳本");
     }
 
-    // 檢查帳本是否存在
-    const ledgerDoc = await db.collection(GR_CONFIG.COLLECTION_LEDGERS).doc(ledgerId).get();
-    if (!ledgerDoc.exists) {
-      throw new Error(`找不到指定的帳本: ${ledgerId}`);
+    // 透過2031模組獲取ledgerID
+    const ledgerInfo = await DD_getLedgerInfo(userId);
+    if (!ledgerInfo) {
+      const errorMsg = `找不到使用者 ${userId} 的帳本`;
+      GR_logError(errorMsg, "資料獲取", userId, "LEDGER_NOT_FOUND", "", functionName);
+      return {
+        success: false,
+        error: errorMsg,
+        errorType: "LEDGER_NOT_FOUND"
+      };
     }
 
-    // 建立查詢
+    const ledgerId = ledgerInfo.id;
+    GR_logDebug(`開始獲取帳本資料，帳本ID: ${ledgerId}`, "資料獲取", userId, functionName);
+
+    // 建立查詢 - 使用2011模組定義的欄位名稱
     let query = db.collection(GR_CONFIG.COLLECTION_LEDGERS)
                    .doc(ledgerId)
                    .collection(GR_CONFIG.COLLECTION_ENTRIES);
 
-    // 套用篩選條件
+    // 套用篩選條件 - 使用2011模組的欄位名稱
     if (filters.startDate) {
-      query = query.where('date', '>=', new Date(filters.startDate));
+      // 將日期字串轉換為可比較的格式
+      const startDateStr = filters.startDate.toISOString().split('T')[0].replace(/-/g, '/');
+      query = query.where('日期', '>=', startDateStr);
     }
     if (filters.endDate) {
-      query = query.where('date', '<=', new Date(filters.endDate));
+      const endDateStr = filters.endDate.toISOString().split('T')[0].replace(/-/g, '/');
+      query = query.where('日期', '<=', endDateStr);
     }
-    if (filters.category) {
-      query = query.where('category', '==', filters.category);
+    if (filters.majorCode) {
+      query = query.where('大項代碼', '==', filters.majorCode);
     }
-    if (filters.type) {
-      query = query.where('type', '==', filters.type);
+    if (filters.subCode) {
+      query = query.where('子項代碼', '==', filters.subCode);
+    }
+    if (filters.paymentMethod) {
+      query = query.where('支付方式', '==', filters.paymentMethod);
     }
 
-    // 執行查詢
-    const snapshot = await query.orderBy('date', 'desc').limit(GR_CONFIG.MAX_RESULTS).get();
+    // 執行查詢，按時間戳排序
+    const snapshot = await query.orderBy('timestamp', 'desc').limit(GR_CONFIG.MAX_RESULTS).get();
 
     const entries = [];
     snapshot.forEach(doc => {
       const data = doc.data();
-      entries.push({
+      
+      // 跳過template文件
+      if (doc.id === 'template') return;
+
+      // 轉換為統一格式，遵循2011模組結構
+      const entry = {
         id: doc.id,
-        date: data.date.toDate(),
-        amount: data.amount,
-        category: data.category,
-        description: data.description,
-        type: data.type,
-        paymentMethod: data.paymentMethod,
-        createdAt: data.createdAt ? data.createdAt.toDate() : null,
-        updatedAt: data.updatedAt ? data.updatedAt.toDate() : null
-      });
+        收支ID: data.收支ID || doc.id,
+        日期: data.日期,
+        時間: data.時間,
+        大項代碼: data.大項代碼,
+        子項代碼: data.子項代碼,
+        子項名稱: data.子項名稱,
+        支付方式: data.支付方式,
+        收入: data.收入,
+        支出: data.支出,
+        備註: data.備註,
+        UID: data.UID,
+        使用者類型: data.使用者類型,
+        timestamp: data.timestamp ? data.timestamp.toDate() : null,
+        
+        // 計算衍生欄位以向後相容
+        amount: data.收入 || data.支出 || 0,
+        type: data.收入 > 0 ? '收入' : '支出',
+        category: data.子項名稱,
+        description: data.備註,
+        paymentMethod: data.支付方式,
+        date: data.timestamp ? data.timestamp.toDate() : new Date()
+      };
+
+      entries.push(entry);
     });
 
-    GR_logInfo(`成功獲取 ${entries.length} 筆記帳資料`, "資料獲取", "", functionName);
-    return entries;
+    GR_logInfo(`成功獲取 ${entries.length} 筆記帳資料`, "資料獲取", userId, functionName);
+    
+    return {
+      success: true,
+      data: entries,
+      count: entries.length
+    };
 
   } catch (error) {
-    GR_logError(`獲取帳本資料失敗: ${error.message}`, "資料獲取", "", "FETCH_ERROR", error.toString(), functionName);
-    throw error;
+    const errorMsg = `獲取帳本資料失敗: ${error.message}`;
+    GR_logError(errorMsg, "資料獲取", userId, "FETCH_ERROR", error.toString(), functionName);
+    
+    return {
+      success: false,
+      error: errorMsg,
+      errorType: "FETCH_ERROR",
+      details: error.toString()
+    };
   }
 }
 
 /**
- * 05. 生成月報表
+ * 05. 生成月報表 - 修正版本
  * @version 2025-01-09-V2.0.5
  * @date 2025-01-09 15:30:00
- * @description 生成指定年月的詳細記帳報表
+ * @description 生成指定年月的詳細記帳報表，遵循2011模組欄位結構
  */
 async function GR_generateMonthlyReport(options = {}) {
   const functionName = "GR_generateMonthlyReport";
@@ -167,7 +217,7 @@ async function GR_generateMonthlyReport(options = {}) {
   }
 
   if (GR_requestDepth.depth > GR_requestDepth.maxDepth) {
-    GR_logError(`檢測到可能的遞迴調用，當前深度: ${GR_requestDepth.depth}，調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`, "報表生成", options.userId || "", "GR_generateMonthlyReport");
+    GR_logError(`檢測到可能的遞迴調用，當前深度: ${GR_requestDepth.depth}，調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`, "報表生成", options.userId || "", "RECURSIVE_CALL", "", functionName);
 
     if (!options.isRecursiveCall) {
       GR_requestDepth.depth--;
@@ -178,13 +228,14 @@ async function GR_generateMonthlyReport(options = {}) {
       success: false,
       type: "月報表",
       error: `請求深度超過最大限制(${GR_requestDepth.maxDepth})，可能存在遞迴調用`,
+      errorType: "RECURSIVE_CALL",
       details: `調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`
     };
   }
 
   try {
-    if (!options.ledgerId || !options.year || !options.month) {
-      throw new Error("缺少必要的參數: ledgerId, year, month");
+    if (!options.userId || !options.year || !options.month) {
+      throw new Error("缺少必要的參數: userId, year, month");
     }
 
     const year = parseInt(options.year);
@@ -195,12 +246,18 @@ async function GR_generateMonthlyReport(options = {}) {
     GR_logInfo(`開始生成月報表 ${year}年${month}月 [${processId}]`, "報表生成", options.userId || "", functionName);
 
     // 獲取該月份的記帳資料
-    const entries = await GR_fetchLedgerData(options.ledgerId, {
+    const fetchResult = await GR_fetchLedgerData(options.userId, {
       startDate: startDate,
       endDate: endDate
     });
 
-    // 計算統計資料
+    if (!fetchResult.success) {
+      throw new Error(fetchResult.error || "無法獲取帳本資料");
+    }
+
+    const entries = fetchResult.data || [];
+
+    // 計算統計資料 - 使用2011模組欄位
     const stats = {
       totalIncome: 0,
       totalExpense: 0,
@@ -212,50 +269,55 @@ async function GR_generateMonthlyReport(options = {}) {
     };
 
     entries.forEach(entry => {
-      const amount = parseFloat(entry.amount) || 0;
+      const income = parseFloat(entry.收入) || 0;
+      const expense = parseFloat(entry.支出) || 0;
 
-      if (entry.type === '收入') {
-        stats.totalIncome += amount;
-      } else if (entry.type === '支出') {
-        stats.totalExpense += amount;
+      if (income > 0) {
+        stats.totalIncome += income;
+      }
+      if (expense > 0) {
+        stats.totalExpense += expense;
       }
 
-      // 分類統計
-      if (!stats.categories[entry.category]) {
-        stats.categories[entry.category] = { income: 0, expense: 0, count: 0 };
+      // 分類統計 - 使用子項名稱
+      const categoryName = entry.子項名稱 || '未知科目';
+      if (!stats.categories[categoryName]) {
+        stats.categories[categoryName] = { income: 0, expense: 0, count: 0 };
       }
 
-      if (entry.type === '收入') {
-        stats.categories[entry.category].income += amount;
-      } else if (entry.type === '支出') {
-        stats.categories[entry.category].expense += amount;
+      if (income > 0) {
+        stats.categories[categoryName].income += income;
       }
-      stats.categories[entry.category].count++;
+      if (expense > 0) {
+        stats.categories[categoryName].expense += expense;
+      }
+      stats.categories[categoryName].count++;
 
       // 支付方式統計
-      if (entry.paymentMethod) {
-        if (!stats.paymentMethods[entry.paymentMethod]) {
-          stats.paymentMethods[entry.paymentMethod] = { income: 0, expense: 0, count: 0 };
-        }
-
-        if (entry.type === '收入') {
-          stats.paymentMethods[entry.paymentMethod].income += amount;
-        } else if (entry.type === '支出') {
-          stats.paymentMethods[entry.paymentMethod].expense += amount;
-        }
-        stats.paymentMethods[entry.paymentMethod].count++;
+      const paymentMethod = entry.支付方式 || '未知支付方式';
+      if (!stats.paymentMethods[paymentMethod]) {
+        stats.paymentMethods[paymentMethod] = { income: 0, expense: 0, count: 0 };
       }
 
-      // 每日統計
-      const dateKey = entry.date.toISOString().split('T')[0];
+      if (income > 0) {
+        stats.paymentMethods[paymentMethod].income += income;
+      }
+      if (expense > 0) {
+        stats.paymentMethods[paymentMethod].expense += expense;
+      }
+      stats.paymentMethods[paymentMethod].count++;
+
+      // 每日統計 - 使用日期欄位
+      const dateKey = entry.日期 || 'unknown';
       if (!stats.dailyData[dateKey]) {
         stats.dailyData[dateKey] = { income: 0, expense: 0, count: 0 };
       }
 
-      if (entry.type === '收入') {
-        stats.dailyData[dateKey].income += amount;
-      } else if (entry.type === '支出') {
-        stats.dailyData[dateKey].expense += amount;
+      if (income > 0) {
+        stats.dailyData[dateKey].income += income;
+      }
+      if (expense > 0) {
+        stats.dailyData[dateKey].expense += expense;
       }
       stats.dailyData[dateKey].count++;
     });
@@ -268,7 +330,7 @@ async function GR_generateMonthlyReport(options = {}) {
       period: `${year}年${month}月`,
       year: year,
       month: month,
-      ledgerId: options.ledgerId,
+      userId: options.userId,
       generatedAt: new Date(),
       statistics: stats,
       entries: entries
@@ -295,16 +357,17 @@ async function GR_generateMonthlyReport(options = {}) {
       success: false,
       type: "月報表",
       error: `生成月報表失敗: ${error.message}`,
+      errorType: "REPORT_ERROR",
       details: error.toString()
     };
   }
 }
 
 /**
- * 06. 生成年報表
+ * 06. 生成年報表 - 修正版本
  * @version 2025-01-09-V2.0.6
  * @date 2025-01-09 15:30:00
- * @description 生成指定年份的年度記帳報表
+ * @description 生成指定年份的年度記帳報表，遵循2011模組欄位結構
  */
 async function GR_generateYearlyReport(options = {}) {
   const functionName = "GR_generateYearlyReport";
@@ -317,7 +380,7 @@ async function GR_generateYearlyReport(options = {}) {
   }
 
   if (GR_requestDepth.depth > GR_requestDepth.maxDepth) {
-    GR_logError(`檢測到可能的遞迴調用，當前深度: ${GR_requestDepth.depth}，調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`, "報表生成", options.userId || "", "GR_generateYearlyReport");
+    GR_logError(`檢測到可能的遞迴調用，當前深度: ${GR_requestDepth.depth}，調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`, "報表生成", options.userId || "", "RECURSIVE_CALL", "", functionName);
 
     if (!options.isRecursiveCall) {
       GR_requestDepth.depth--;
@@ -328,13 +391,14 @@ async function GR_generateYearlyReport(options = {}) {
       success: false,
       type: "年報表",
       error: `請求深度超過最大限制(${GR_requestDepth.maxDepth})，可能存在遞迴調用`,
+      errorType: "RECURSIVE_CALL",
       details: `調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`
     };
   }
 
   try {
-    if (!options.ledgerId || !options.year) {
-      throw new Error("缺少必要的參數: ledgerId, year");
+    if (!options.userId || !options.year) {
+      throw new Error("缺少必要的參數: userId, year");
     }
 
     const year = parseInt(options.year);
@@ -344,12 +408,18 @@ async function GR_generateYearlyReport(options = {}) {
     GR_logInfo(`開始生成年報表 ${year}年 [${processId}]`, "報表生成", options.userId || "", functionName);
 
     // 獲取整年的記帳資料
-    const entries = await GR_fetchLedgerData(options.ledgerId, {
+    const fetchResult = await GR_fetchLedgerData(options.userId, {
       startDate: startDate,
       endDate: endDate
     });
 
-    // 計算統計資料
+    if (!fetchResult.success) {
+      throw new Error(fetchResult.error || "無法獲取帳本資料");
+    }
+
+    const entries = fetchResult.data || [];
+
+    // 計算統計資料 - 使用2011模組欄位
     const stats = {
       totalIncome: 0,
       totalExpense: 0,
@@ -361,50 +431,62 @@ async function GR_generateYearlyReport(options = {}) {
     };
 
     entries.forEach(entry => {
-      const amount = parseFloat(entry.amount) || 0;
+      const income = parseFloat(entry.收入) || 0;
+      const expense = parseFloat(entry.支出) || 0;
 
-      if (entry.type === '收入') {
-        stats.totalIncome += amount;
-      } else if (entry.type === '支出') {
-        stats.totalExpense += amount;
+      if (income > 0) {
+        stats.totalIncome += income;
+      }
+      if (expense > 0) {
+        stats.totalExpense += expense;
       }
 
       // 分類統計
-      if (!stats.categories[entry.category]) {
-        stats.categories[entry.category] = { income: 0, expense: 0, count: 0 };
+      const categoryName = entry.子項名稱 || '未知科目';
+      if (!stats.categories[categoryName]) {
+        stats.categories[categoryName] = { income: 0, expense: 0, count: 0 };
       }
 
-      if (entry.type === '收入') {
-        stats.categories[entry.category].income += amount;
-      } else if (entry.type === '支出') {
-        stats.categories[entry.category].expense += amount;
+      if (income > 0) {
+        stats.categories[categoryName].income += income;
       }
-      stats.categories[entry.category].count++;
+      if (expense > 0) {
+        stats.categories[categoryName].expense += expense;
+      }
+      stats.categories[categoryName].count++;
 
       // 支付方式統計
-      if (entry.paymentMethod) {
-        if (!stats.paymentMethods[entry.paymentMethod]) {
-          stats.paymentMethods[entry.paymentMethod] = { income: 0, expense: 0, count: 0 };
-        }
-
-        if (entry.type === '收入') {
-          stats.paymentMethods[entry.paymentMethod].income += amount;
-        } else if (entry.type === '支出') {
-          stats.paymentMethods[entry.paymentMethod].expense += amount;
-        }
-        stats.paymentMethods[entry.paymentMethod].count++;
+      const paymentMethod = entry.支付方式 || '未知支付方式';
+      if (!stats.paymentMethods[paymentMethod]) {
+        stats.paymentMethods[paymentMethod] = { income: 0, expense: 0, count: 0 };
       }
 
-      // 每月統計
-      const monthKey = `${year}-${String(entry.date.getMonth() + 1).padStart(2, '0')}`;
+      if (income > 0) {
+        stats.paymentMethods[paymentMethod].income += income;
+      }
+      if (expense > 0) {
+        stats.paymentMethods[paymentMethod].expense += expense;
+      }
+      stats.paymentMethods[paymentMethod].count++;
+
+      // 每月統計 - 從日期欄位解析月份
+      let monthKey = 'unknown';
+      if (entry.日期 && typeof entry.日期 === 'string') {
+        const dateParts = entry.日期.split('/');
+        if (dateParts.length >= 2) {
+          monthKey = `${year}-${String(dateParts[1]).padStart(2, '0')}`;
+        }
+      }
+
       if (!stats.monthlyData[monthKey]) {
         stats.monthlyData[monthKey] = { income: 0, expense: 0, count: 0 };
       }
 
-      if (entry.type === '收入') {
-        stats.monthlyData[monthKey].income += amount;
-      } else if (entry.type === '支出') {
-        stats.monthlyData[monthKey].expense += amount;
+      if (income > 0) {
+        stats.monthlyData[monthKey].income += income;
+      }
+      if (expense > 0) {
+        stats.monthlyData[monthKey].expense += expense;
       }
       stats.monthlyData[monthKey].count++;
     });
@@ -416,7 +498,7 @@ async function GR_generateYearlyReport(options = {}) {
       type: "年報表",
       period: `${year}年`,
       year: year,
-      ledgerId: options.ledgerId,
+      userId: options.userId,
       generatedAt: new Date(),
       statistics: stats,
       entries: entries
@@ -443,66 +525,53 @@ async function GR_generateYearlyReport(options = {}) {
       success: false,
       type: "年報表",
       error: `生成年報表失敗: ${error.message}`,
+      errorType: "REPORT_ERROR",
       details: error.toString()
     };
   }
 }
 
 /**
- * 07. 生成分類報表
+ * 07. 生成分類報表 - 修正版本
  * @version 2025-01-09-V2.0.7
  * @date 2025-01-09 15:30:00
- * @description 生成指定期間的分類統計報表
+ * @description 生成指定期間的分類統計報表，遵循2011模組欄位結構
  */
 async function GR_generateCategoryReport(options = {}) {
   const functionName = "GR_generateCategoryReport";
   const processId = `CATEGORY_${Date.now()}`;
 
-  // 深度檢查
-  if (!options.isRecursiveCall) {
-    GR_requestDepth.depth++;
-    GR_requestDepth.stack.push(functionName);
-  }
-
-  if (GR_requestDepth.depth > GR_requestDepth.maxDepth) {
-    GR_logError(`檢測到可能的遞迴調用，當前深度: ${GR_requestDepth.depth}，調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`, "報表生成", options.userId || "", "GR_generateCategoryReport");
-
-    if (!options.isRecursiveCall) {
-      GR_requestDepth.depth--;
-      GR_requestDepth.stack.pop();
-    }
-
-    return {
-      success: false,
-      type: "分類報表",
-      error: `請求深度超過最大限制(${GR_requestDepth.maxDepth})，可能存在遞迴調用`,
-      details: `調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`
-    };
-  }
-
   try {
-    if (!options.ledgerId || !options.startDate || !options.endDate) {
-      throw new Error("缺少必要的參數: ledgerId, startDate, endDate");
+    if (!options.userId || !options.startDate || !options.endDate) {
+      throw new Error("缺少必要的參數: userId, startDate, endDate");
     }
 
     GR_logInfo(`開始生成分類報表 [${processId}]`, "報表生成", options.userId || "", functionName);
 
     // 獲取指定期間的記帳資料
-    const entries = await GR_fetchLedgerData(options.ledgerId, {
+    const fetchResult = await GR_fetchLedgerData(options.userId, {
       startDate: new Date(options.startDate),
       endDate: new Date(options.endDate)
     });
 
-    // 計算分類統計
+    if (!fetchResult.success) {
+      throw new Error(fetchResult.error || "無法獲取帳本資料");
+    }
+
+    const entries = fetchResult.data || [];
+
+    // 計算分類統計 - 使用2011模組欄位
     const categoryStats = {};
     let totalIncome = 0;
     let totalExpense = 0;
 
     entries.forEach(entry => {
-      const amount = parseFloat(entry.amount) || 0;
+      const income = parseFloat(entry.收入) || 0;
+      const expense = parseFloat(entry.支出) || 0;
+      const categoryName = entry.子項名稱 || '未知科目';
 
-      if (!categoryStats[entry.category]) {
-        categoryStats[entry.category] = {
+      if (!categoryStats[categoryName]) {
+        categoryStats[categoryName] = {
           income: 0,
           expense: 0,
           count: 0,
@@ -510,16 +579,17 @@ async function GR_generateCategoryReport(options = {}) {
         };
       }
 
-      if (entry.type === '收入') {
-        categoryStats[entry.category].income += amount;
-        totalIncome += amount;
-      } else if (entry.type === '支出') {
-        categoryStats[entry.category].expense += amount;
-        totalExpense += amount;
+      if (income > 0) {
+        categoryStats[categoryName].income += income;
+        totalIncome += income;
+      }
+      if (expense > 0) {
+        categoryStats[categoryName].expense += expense;
+        totalExpense += expense;
       }
 
-      categoryStats[entry.category].count++;
-      categoryStats[entry.category].entries.push(entry);
+      categoryStats[categoryName].count++;
+      categoryStats[categoryName].entries.push(entry);
     });
 
     // 計算百分比
@@ -534,7 +604,7 @@ async function GR_generateCategoryReport(options = {}) {
       success: true,
       type: "分類報表",
       period: `${options.startDate} 至 ${options.endDate}`,
-      ledgerId: options.ledgerId,
+      userId: options.userId,
       startDate: options.startDate,
       endDate: options.endDate,
       generatedAt: new Date(),
@@ -549,66 +619,34 @@ async function GR_generateCategoryReport(options = {}) {
     };
 
     GR_logInfo(`分類報表生成完成 [${processId}]`, "報表生成", options.userId || "", functionName);
-
-    if (!options.isRecursiveCall) {
-      GR_requestDepth.depth--;
-      GR_requestDepth.stack.pop();
-    }
-
     return result;
 
   } catch (error) {
     GR_logError(`生成分類報表失敗: ${error.message} [${processId}]`, "報表生成", options.userId || "", "REPORT_ERROR", error.toString(), functionName);
 
-    if (!options.isRecursiveCall) {
-      GR_requestDepth.depth--;
-      GR_requestDepth.stack.pop();
-    }
-
     return {
       success: false,
       type: "分類報表",
       error: `生成分類報表失敗: ${error.message}`,
+      errorType: "REPORT_ERROR",
       details: error.toString()
     };
   }
 }
 
 /**
- * 08. 生成同比報表
+ * 08. 生成同比報表 - 修正版本
  * @version 2025-01-09-V2.0.8
  * @date 2025-01-09 15:30:00
- * @description 生成去年同期比較報表
+ * @description 生成去年同期比較報表，遵循2011模組欄位結構
  */
 async function GR_generateYoYReport(options = {}) {
   const functionName = "GR_generateYoYReport";
   const processId = `YOY_${Date.now()}`;
 
-  // 深度檢查
-  if (!options.isRecursiveCall) {
-    GR_requestDepth.depth++;
-    GR_requestDepth.stack.push(functionName);
-  }
-
-  if (GR_requestDepth.depth > GR_requestDepth.maxDepth) {
-    GR_logError(`檢測到可能的遞迴調用，當前深度: ${GR_requestDepth.depth}，調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`, "報表生成", options.userId || "", "GR_generateYoYReport");
-
-    if (!options.isRecursiveCall) {
-      GR_requestDepth.depth--;
-      GR_requestDepth.stack.pop();
-    }
-
-    return {
-      success: false,
-      type: "同比報表",
-      error: `請求深度超過最大限制(${GR_requestDepth.maxDepth})，可能存在遞迴調用`,
-      details: `調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`
-    };
-  }
-
   try {
-    if (!options.ledgerId || !options.year || !options.month) {
-      throw new Error("缺少必要的參數: ledgerId, year, month");
+    if (!options.userId || !options.year || !options.month) {
+      throw new Error("缺少必要的參數: userId, year, month");
     }
 
     const year = parseInt(options.year);
@@ -676,7 +714,7 @@ async function GR_generateYoYReport(options = {}) {
       success: true,
       type: "同比報表",
       period: `${year}年${month}月 vs ${lastYear}年${month}月`,
-      ledgerId: options.ledgerId,
+      userId: options.userId,
       currentPeriod: currentReport,
       lastYearPeriod: lastYearReport,
       comparison: comparison,
@@ -684,66 +722,34 @@ async function GR_generateYoYReport(options = {}) {
     };
 
     GR_logInfo(`同比報表生成完成 [${processId}]`, "報表生成", options.userId || "", functionName);
-
-    if (!options.isRecursiveCall) {
-      GR_requestDepth.depth--;
-      GR_requestDepth.stack.pop();
-    }
-
     return result;
 
   } catch (error) {
     GR_logError(`生成同比報表失敗: ${error.message} [${processId}]`, "報表生成", options.userId || "", "REPORT_ERROR", error.toString(), functionName);
 
-    if (!options.isRecursiveCall) {
-      GR_requestDepth.depth--;
-      GR_requestDepth.stack.pop();
-    }
-
     return {
       success: false,
       type: "同比報表",
       error: `生成同比報表失敗: ${error.message}`,
+      errorType: "REPORT_ERROR",
       details: error.toString()
     };
   }
 }
 
 /**
- * 09. 生成自訂報表
+ * 09. 生成自訂報表 - 修正版本
  * @version 2025-01-09-V2.0.9
  * @date 2025-01-09 15:30:00
- * @description 根據自訂條件生成報表
+ * @description 根據自訂條件生成報表，遵循2011模組欄位結構
  */
 async function GR_generateCustomReport(options = {}) {
   const functionName = "GR_generateCustomReport";
   const processId = `CUSTOM_${Date.now()}`;
 
-  // 深度檢查
-  if (!options.isRecursiveCall) {
-    GR_requestDepth.depth++;
-    GR_requestDepth.stack.push(functionName);
-  }
-
-  if (GR_requestDepth.depth > GR_requestDepth.maxDepth) {
-    GR_logError(`檢測到可能的遞迴調用，當前深度: ${GR_requestDepth.depth}，調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`, "報表生成", options.userId || "", "GR_generateCustomReport");
-
-    if (!options.isRecursiveCall) {
-      GR_requestDepth.depth--;
-      GR_requestDepth.stack.pop();
-    }
-
-    return {
-      success: false,
-      type: "自訂報表",
-      error: `請求深度超過最大限制(${GR_requestDepth.maxDepth})，可能存在遞迴調用`,
-      details: `調用堆疊: ${GR_requestDepth.stack.join(' -> ')}`
-    };
-  }
-
   try {
-    if (!options.ledgerId || !options.startDate || !options.endDate) {
-      throw new Error("缺少必要的參數: ledgerId, startDate, endDate");
+    if (!options.userId || !options.startDate || !options.endDate) {
+      throw new Error("缺少必要的參數: userId, startDate, endDate");
     }
 
     GR_logInfo(`開始生成自訂報表 [${processId}]`, "報表生成", options.userId || "", functionName);
@@ -755,11 +761,11 @@ async function GR_generateCustomReport(options = {}) {
     };
 
     if (options.filters) {
-      if (options.filters.category) {
-        filters.category = options.filters.category;
+      if (options.filters.majorCode) {
+        filters.majorCode = options.filters.majorCode;
       }
-      if (options.filters.type) {
-        filters.type = options.filters.type;
+      if (options.filters.subCode) {
+        filters.subCode = options.filters.subCode;
       }
       if (options.filters.paymentMethod) {
         filters.paymentMethod = options.filters.paymentMethod;
@@ -767,9 +773,15 @@ async function GR_generateCustomReport(options = {}) {
     }
 
     // 獲取篩選後的記帳資料
-    const entries = await GR_fetchLedgerData(options.ledgerId, filters);
+    const fetchResult = await GR_fetchLedgerData(options.userId, filters);
 
-    // 計算統計資料
+    if (!fetchResult.success) {
+      throw new Error(fetchResult.error || "無法獲取帳本資料");
+    }
+
+    const entries = fetchResult.data || [];
+
+    // 計算統計資料 - 使用2011模組欄位
     const stats = {
       totalIncome: 0,
       totalExpense: 0,
@@ -782,39 +794,43 @@ async function GR_generateCustomReport(options = {}) {
     };
 
     entries.forEach(entry => {
-      const amount = parseFloat(entry.amount) || 0;
+      const income = parseFloat(entry.收入) || 0;
+      const expense = parseFloat(entry.支出) || 0;
 
-      if (entry.type === '收入') {
-        stats.totalIncome += amount;
-      } else if (entry.type === '支出') {
-        stats.totalExpense += amount;
+      if (income > 0) {
+        stats.totalIncome += income;
+      }
+      if (expense > 0) {
+        stats.totalExpense += expense;
       }
 
       // 分類統計
-      if (!stats.categories[entry.category]) {
-        stats.categories[entry.category] = { income: 0, expense: 0, count: 0 };
+      const categoryName = entry.子項名稱 || '未知科目';
+      if (!stats.categories[categoryName]) {
+        stats.categories[categoryName] = { income: 0, expense: 0, count: 0 };
       }
 
-      if (entry.type === '收入') {
-        stats.categories[entry.category].income += amount;
-      } else if (entry.type === '支出') {
-        stats.categories[entry.category].expense += amount;
+      if (income > 0) {
+        stats.categories[categoryName].income += income;
       }
-      stats.categories[entry.category].count++;
+      if (expense > 0) {
+        stats.categories[categoryName].expense += expense;
+      }
+      stats.categories[categoryName].count++;
 
       // 支付方式統計
-      if (entry.paymentMethod) {
-        if (!stats.paymentMethods[entry.paymentMethod]) {
-          stats.paymentMethods[entry.paymentMethod] = { income: 0, expense: 0, count: 0 };
-        }
-
-        if (entry.type === '收入') {
-          stats.paymentMethods[entry.paymentMethod].income += amount;
-        } else if (entry.type === '支出') {
-          stats.paymentMethods[entry.paymentMethod].expense += amount;
-        }
-        stats.paymentMethods[entry.paymentMethod].count++;
+      const paymentMethod = entry.支付方式 || '未知支付方式';
+      if (!stats.paymentMethods[paymentMethod]) {
+        stats.paymentMethods[paymentMethod] = { income: 0, expense: 0, count: 0 };
       }
+
+      if (income > 0) {
+        stats.paymentMethods[paymentMethod].income += income;
+      }
+      if (expense > 0) {
+        stats.paymentMethods[paymentMethod].expense += expense;
+      }
+      stats.paymentMethods[paymentMethod].count++;
     });
 
     stats.netAmount = stats.totalIncome - stats.totalExpense;
@@ -828,7 +844,7 @@ async function GR_generateCustomReport(options = {}) {
       success: true,
       type: "自訂報表",
       period: `${options.startDate} 至 ${options.endDate}`,
-      ledgerId: options.ledgerId,
+      userId: options.userId,
       startDate: options.startDate,
       endDate: options.endDate,
       generatedAt: new Date(),
@@ -838,36 +854,26 @@ async function GR_generateCustomReport(options = {}) {
     };
 
     GR_logInfo(`自訂報表生成完成 [${processId}]`, "報表生成", options.userId || "", functionName);
-
-    if (!options.isRecursiveCall) {
-      GR_requestDepth.depth--;
-      GR_requestDepth.stack.pop();
-    }
-
     return result;
 
   } catch (error) {
     GR_logError(`生成自訂報表失敗: ${error.message} [${processId}]`, "報表生成", options.userId || "", "REPORT_ERROR", error.toString(), functionName);
 
-    if (!options.isRecursiveCall) {
-      GR_requestDepth.depth--;
-      GR_requestDepth.stack.pop();
-    }
-
     return {
       success: false,
       type: "自訂報表",
       error: `生成自訂報表失敗: ${error.message}`,
+      errorType: "REPORT_ERROR",
       details: error.toString()
     };
   }
 }
 
 /**
- * 19. 處理報表請求 - 主要入口函數
+ * 19. 處理報表請求 - 主要入口函數 - 修正版本
  * @version 2025-01-09-V2.0.19
  * @date 2025-01-09 15:30:00
- * @description 根據請求類型分發到對應的報表生成函數
+ * @description 根據請求類型分發到對應的報表生成函數，移除ledgerId依賴，使用userId
  */
 async function GR_handleReportRequest(request) {
   const functionName = "GR_handleReportRequest";
@@ -875,8 +881,13 @@ async function GR_handleReportRequest(request) {
   try {
     GR_logInfo(`收到報表請求: ${request.type}`, "報表處理", request.userId || "", functionName);
 
-    if (!request.ledgerId) {
-      throw new Error("請求中缺少 ledgerId 參數");
+    if (!request.userId) {
+      const errorMsg = "請求中缺少 userId 參數，每個使用者都需要獨立的帳本";
+      return {
+        success: false,
+        error: errorMsg,
+        errorType: "MISSING_USER_ID"
+      };
     }
 
     let result;
@@ -884,46 +895,41 @@ async function GR_handleReportRequest(request) {
     switch (request.type) {
       case 'monthly':
         result = await GR_generateMonthlyReport({
-          ledgerId: request.ledgerId,
+          userId: request.userId,
           year: request.year,
-          month: request.month,
-          userId: request.userId
+          month: request.month
         });
         break;
 
       case 'yearly':
         result = await GR_generateYearlyReport({
-          ledgerId: request.ledgerId,
-          year: request.year,
-          userId: request.userId
+          userId: request.userId,
+          year: request.year
         });
         break;
 
       case 'category':
         result = await GR_generateCategoryReport({
-          ledgerId: request.ledgerId,
+          userId: request.userId,
           startDate: request.startDate,
-          endDate: request.endDate,
-          userId: request.userId
+          endDate: request.endDate
         });
         break;
 
       case 'yoy':
         result = await GR_generateYoYReport({
-          ledgerId: request.ledgerId,
+          userId: request.userId,
           year: request.year,
-          month: request.month,
-          userId: request.userId
+          month: request.month
         });
         break;
 
       case 'custom':
         result = await GR_generateCustomReport({
-          ledgerId: request.ledgerId,
+          userId: request.userId,
           startDate: request.startDate,
           endDate: request.endDate,
-          filters: request.filters,
-          userId: request.userId
+          filters: request.filters
         });
         break;
 
@@ -941,6 +947,7 @@ async function GR_handleReportRequest(request) {
       success: false,
       type: request.type || "未知",
       error: `處理報表請求失敗: ${error.message}`,
+      errorType: "REQUEST_ERROR",
       details: error.toString()
     };
   }
