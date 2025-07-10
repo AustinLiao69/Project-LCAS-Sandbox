@@ -355,7 +355,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
         "DD_distributeData",
       );
 
-      const processedData = await DD_processUserMessage(
+      const processedData = await DD2.DD_processUserMessage(
         data.text,
         userId,
         data.timestamp,
@@ -1365,6 +1365,10 @@ function formatTime(date) {
 // 引入DD3模組的格式化函數
 const DD3 = require("./2033. DD3.js");
 const { DD_formatSystemReplyMessage } = DD3;
+
+// 引入其他模組
+const WH = require('./2020. WH.js');
+const DD2 = require('./2032. DD2.js');
 
 // 導出需要的函數
 module.exports = {
