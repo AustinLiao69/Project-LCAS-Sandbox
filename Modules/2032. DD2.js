@@ -250,18 +250,19 @@ async function DD_learnSynonym(term, subjectCode, userId) {
 
     if (snapshot.empty) {
       console.log(`找不到對應科目代碼: ${subjectCode} [${lsId}]`);
-      await DD1.DD_writeToLogSheet(
-        "WARNING",
-        `找不到對應科目代碼: ${subjectCode}`,
-        "同義詞學習",
-        userId,
-        "",
-        "DD",
-        "",
-        0,
-        "DD_learnSynonym",
-        "DD_learnSynonym",
-      );
+      const { DD_writeToLogSheet } = getDD1Functions();
+    await DD_writeToLogSheet(
+      "WARNING",
+      `找不到對應科目代碼: ${subjectCode}`,
+      "同義詞學習",
+      userId,
+      "",
+      "DD",
+      "",
+      0,
+      "DD_learnSynonym",
+      "DD_learnSynonym",
+    );
       return false;
     }
 
@@ -296,7 +297,8 @@ async function DD_learnSynonym(term, subjectCode, userId) {
     });
 
     console.log(`成功添加同義詞: "${term}" -> ${subjectCode} [${lsId}]`);
-    await DD1.DD_writeToLogSheet(
+    const { DD_writeToLogSheet } = getDD1Functions();
+    await DD_writeToLogSheet(
       "INFO",
       `成功添加同義詞: "${term}" -> ${subjectCode}`,
       "同義詞學習",
