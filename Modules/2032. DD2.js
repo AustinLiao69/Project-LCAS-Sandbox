@@ -1226,42 +1226,7 @@ function DD_parseInputFormat(message, processId) {
   }
 }
 
-/**
- * 18. 從Firestore獲取帳本資訊
- * @version 2025-01-09-V1.0.0
- * @date 2025-01-09 16:00:00
- * @param {string} userId - 使用者ID
- * @returns {Object|null} 帳本資訊或null
- */
-async function DD_getLedgerInfo(userId) {
-  try {
-    if (!userId) {
-      throw new Error("缺少使用者ID");
-    }
 
-    const ledgerId = `user_${userId}`;
-    const ledgerDoc = await db.collection("ledgers").doc(ledgerId).get();
-
-    if (!ledgerDoc.exists) {
-      console.log(`使用者 ${userId} 的帳本不存在`);
-      return null;
-    }
-
-    const data = ledgerDoc.data();
-    return {
-      id: ledgerId,
-      name: data.name || `${userId}的帳本`,
-      type: data.type || "個人帳本",
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-      isActive: data.isActive || true,
-    };
-  } catch (error) {
-    console.log(`獲取帳本資訊失敗: ${error.toString()}`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    return null;
-  }
-}
 
 /**
  * 19. 從文字中移除金額
@@ -1691,7 +1656,6 @@ module.exports = {
   DD_fuzzyMatch,
   DD_convertTimestamp,
   DD_parseInputFormat,
-  DD_getLedgerInfo,
   DD_removeAmountFromText,
   DD_initConfig,
   DD_log,
