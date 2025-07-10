@@ -1340,6 +1340,10 @@ function formatTime(date) {
   return `${hours}:${minutes}`;
 }
 
+// 引入DD3模組的格式化函數
+const DD3 = require('./2033. DD3.js');
+const { DD_formatSystemReplyMessage } = DD3;
+
 // 導出需要的函數
 module.exports = {
   DD_distributeData,
@@ -1347,6 +1351,7 @@ module.exports = {
   DD_writeToLogSheet,
   DD_getLedgerInfo,
   DD_convertTimestamp,
+  DD_formatSystemReplyMessage,
   DD_logDebug,
   DD_logInfo,
   DD_logWarning,

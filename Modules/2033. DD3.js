@@ -1,9 +1,46 @@
 /**
- * DD3_資料服務模組_1.1.0
+ * DD3_資料服務模組_2.0.0
  * @module 資料服務模組
- * @description LCAS 2.0 資料服務模組 
- * @update 2025-07-09: 升級版本至1.1.0，完全遷移至Firestore，移除Google Sheets依賴，遵循2011模組資料庫結構
+ * @description LCAS 2.0 資料服務模組 - 完全遷移至Firestore資料庫，每個使用者獨立帳本
+ * @update 2025-01-09: 升級版本至2.0.0，完全遷移至Firestore，移除Google Sheets依賴，遵循2011模組資料庫結構，移除預設ledgerID
  */
+
+// 引入 Firebase Admin SDK
+const admin = require('firebase-admin');
+
+// 確保 Firebase 已初始化
+if (!admin.apps.length) {
+  const serviceAccount = require('./Serviceaccountkey.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+  });
+}
+
+// 取得 Firestore 實例
+const db = admin.firestore();
+
+// Node.js 模組依賴
+const { v4: uuidv4 } = require("uuid");
+
+// 設定時區為 UTC+8 (Asia/Taipei)
+const TIMEZONE = 'Asia/Taipei';
+
+// 引入DD1模組的日誌函數
+const DD1 = require('./2031. DD1.js');
+const { 
+  DD_writeToLogSheet,
+  DD_getLedgerInfo,
+  DD_logDebug,
+  DD_logInfo,
+  DD_logWarning,
+  DD_logError,
+  DD_logCritical,
+  generateProcessId
+} = DD1;
+
+// 引入DL模組
+const DL = require('./2010. DL.js');
 
 /**
  * 32. 格式化日期為 'YYYY/MM/DD'
@@ -28,96 +65,7 @@ function formatTime(date) {
   return `${hours}:${minutes}`;
 }
 
-/**
- * 34. 從文字中移除金額和支付方式
- * @version 2025-04-29-V2.0
- * @author AustinLiao69
- * @param {string} text - 原始文字 (例如 "測試支出 25365 刷卡")
- * @param {number|string} amount - 要移除的金額 (例如 "25365")
- * @param {string} paymentMethod - 要移除的支付方式 (例如 "刷卡")
- * @returns {string} - 移除金額和支付方式後的文字 (例如 "測試支出")
- */
-function DD_removeAmountFromText(text, amount, paymentMethod) {
-  // 檢查參數
-  if (!text || !amount) return text;
 
-  // 記錄處理前文字
-  console.log(
-    `處理文字移除金額和支付方式: 原始文字="${text}", 金額=${amount}, 支付方式=${paymentMethod || "未指定"}`,
-  );
-
-  // 將金額轉為字符串
-  const amountStr = String(amount);
-  let result = text;
-
-  try {
-    // 1. 處理 "科目 金額 支付方式" 格式
-    if (paymentMethod && text.includes(" " + amountStr + " " + paymentMethod)) {
-      result = text.replace(" " + amountStr + " " + paymentMethod, "").trim();
-      console.log(`移除金額和支付方式後: "${result}"`);
-      return result;
-    }
-
-    // 2. 處理 "科目 金額"，然後單獨移除支付方式
-    if (text.includes(" " + amountStr)) {
-      result = text.replace(" " + amountStr, "").trim();
-
-      // 如果有支付方式，再嘗試移除支付方式
-      if (paymentMethod && result.includes(" " + paymentMethod)) {
-        result = result.replace(" " + paymentMethod, "").trim();
-        console.log(`移除金額後再移除支付方式: "${result}"`);
-        return result;
-      }
-
-      console.log(`使用空格格式匹配金額: "${result}"`);
-      return result;
-    }
-
-    // 3. 處理 "科目金額" 格式 (無空格，但金額在尾部)
-    if (text.endsWith(amountStr)) {
-      result = text.substring(0, text.length - amountStr.length).trim();
-      console.log(`使用尾部匹配: "${result}"`);
-
-      // 如果有支付方式，再嘗試移除支付方式
-      if (paymentMethod && result.includes(paymentMethod)) {
-        result = result.replace(paymentMethod, "").trim();
-        console.log(`移除金額後再移除支付方式: "${result}"`);
-      }
-
-      return result;
-    }
-
-    // 4. 處理 "科目金額元" 或 "科目金額塊" 格式
-    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓|NT|USD)?$`, "i");
-    const match = text.match(amountEndRegex);
-    if (match && match.index > 0) {
-      result = text.substring(0, match.index).trim();
-      console.log(`使用貨幣單位匹配: "${result}"`);
-
-      // 如果有支付方式，再嘗試移除支付方式
-      if (paymentMethod && result.includes(paymentMethod)) {
-        result = result.replace(paymentMethod, "").trim();
-        console.log(`移除金額後再移除支付方式: "${result}"`);
-      }
-
-      return result;
-    }
-
-    // 5. 無法確定金額位置，但至少嘗試移除支付方式
-    if (paymentMethod && result.includes(paymentMethod)) {
-      result = result.replace(paymentMethod, "").trim();
-      console.log(`無法確定金額位置，但移除了支付方式: "${result}"`);
-      return result;
-    }
-
-    // 6. 實在無法處理，保留原始文字
-    console.log(`無法確定金額和支付方式位置，保留原始文字: "${text}"`);
-    return text;
-  } catch (error) {
-    console.log(`移除金額和支付方式失敗: ${error.toString()}, 返回原始文字`);
-    return text;
-  }
-}
 
 /**
  * 36 計算兩個字符串的相似度 (使用Levenshtein距離)
@@ -367,3 +315,12 @@ function DD_convertTimestamp(timestamp) {
     return null;
   }
 }
+
+// 模組匯出
+module.exports = {
+  formatDate,
+  formatTime,
+  DD_calculateSimilarity,
+  DD_formatSystemReplyMessage,
+  DD_convertTimestamp
+};

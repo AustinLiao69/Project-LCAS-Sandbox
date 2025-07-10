@@ -41,6 +41,18 @@ const DD_CONFIG = {
   }
 };
 
+// 引入DD1模組的日誌函數
+const DD1 = require('./2031. DD1.js');
+const { 
+  DD_writeToLogSheet,
+  DD_getAllSubjects,
+  DD_logDebug,
+  DD_logInfo,
+  DD_logWarning,
+  DD_logError,
+  DD_logCritical
+} = DD1;
+
 /**
  * 01. 配置初始化
  * @version 2025-01-09-V4.0.0
@@ -1228,6 +1240,97 @@ async function DD_getLedgerInfo(userId) {
   }
 }
 
+/**
+ * 19. 從文字中移除金額
+ * @version 2025-01-09-V4.0.0
+ * @date 2025-01-09 16:00:00
+ * @param {string} text - 原始文字 (例如 "測試支出 25365 刷卡")
+ * @param {number|string} amount - 要移除的金額 (例如 "25365")
+ * @param {string} paymentMethod - 要移除的支付方式 (例如 "刷卡")
+ * @returns {string} - 移除金額和支付方式後的文字 (例如 "測試支出")
+ */
+function DD_removeAmountFromText(text, amount, paymentMethod) {
+  // 檢查參數
+  if (!text || !amount) return text;
+
+  // 記錄處理前文字
+  console.log(
+    `處理文字移除金額和支付方式: 原始文字="${text}", 金額=${amount}, 支付方式=${paymentMethod || "未指定"}`,
+  );
+
+  // 將金額轉為字符串
+  const amountStr = String(amount);
+  let result = text;
+
+  try {
+    // 1. 處理 "科目 金額 支付方式" 格式
+    if (paymentMethod && text.includes(" " + amountStr + " " + paymentMethod)) {
+      result = text.replace(" " + amountStr + " " + paymentMethod, "").trim();
+      console.log(`移除金額和支付方式後: "${result}"`);
+      return result;
+    }
+
+    // 2. 處理 "科目 金額"，然後單獨移除支付方式
+    if (text.includes(" " + amountStr)) {
+      result = text.replace(" " + amountStr, "").trim();
+
+      // 如果有支付方式，再嘗試移除支付方式
+      if (paymentMethod && result.includes(" " + paymentMethod)) {
+        result = result.replace(" " + paymentMethod, "").trim();
+        console.log(`移除金額後再移除支付方式: "${result}"`);
+        return result;
+      }
+
+      console.log(`使用空格格式匹配金額: "${result}"`);
+      return result;
+    }
+
+    // 3. 處理 "科目金額" 格式 (無空格，但金額在尾部)
+    if (text.endsWith(amountStr)) {
+      result = text.substring(0, text.length - amountStr.length).trim();
+      console.log(`使用尾部匹配: "${result}"`);
+
+      // 如果有支付方式，再嘗試移除支付方式
+      if (paymentMethod && result.includes(paymentMethod)) {
+        result = result.replace(paymentMethod, "").trim();
+        console.log(`移除金額後再移除支付方式: "${result}"`);
+      }
+
+      return result;
+    }
+
+    // 4. 處理 "科目金額元" 或 "科目金額塊" 格式
+    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓|NT|USD)?$`, "i");
+    const match = text.match(amountEndRegex);
+    if (match && match.index > 0) {
+      result = text.substring(0, match.index).trim();
+      console.log(`使用貨幣單位匹配: "${result}"`);
+
+      // 如果有支付方式，再嘗試移除支付方式
+      if (paymentMethod && result.includes(paymentMethod)) {
+        result = result.replace(paymentMethod, "").trim();
+        console.log(`移除金額後再移除支付方式: "${result}"`);
+      }
+
+      return result;
+    }
+
+    // 5. 無法確定金額位置，但至少嘗試移除支付方式
+    if (paymentMethod && result.includes(paymentMethod)) {
+      result = result.replace(paymentMethod, "").trim();
+      console.log(`無法確定金額位置，但移除了支付方式: "${result}"`);
+      return result;
+    }
+
+    // 6. 實在無法處理，保留原始文字
+    console.log(`無法確定金額和支付方式位置，保留原始文字: "${text}"`);
+    return text;
+  } catch (error) {
+    console.log(`移除金額和支付方式失敗: ${error.toString()}, 返回原始文字`);
+    return text;
+  }
+}
+
 // 格式化時間函數
 function formatDate(date) {
   const year = date.getFullYear();
@@ -1561,6 +1664,7 @@ module.exports = {
   DD_convertTimestamp,
   DD_parseInputFormat,
   DD_getLedgerInfo,
+  DD_removeAmountFromText,
   DD_initConfig,
   DD_log,
   DD_logDebug,
