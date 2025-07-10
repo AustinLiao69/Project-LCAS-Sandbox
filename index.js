@@ -39,7 +39,7 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('📦 載入模組...');
 const WH = require('./Modules/2020. WH.js');    // Webhook處理模組
 const BK = require('./Modules/2001. BK.js');    // 記帳處理模組
-const DD = require('./Modules/2031. DD.js');    // 數據分發模組
+const DD = require('./Modules/2031. DD1.js');    // 數據分發模組
 const DL = require('./Modules/2010. DL.js');    // 數據記錄模組
 const AM = require('./Modules/2009. AM.js');    // 帳號管理模組
 

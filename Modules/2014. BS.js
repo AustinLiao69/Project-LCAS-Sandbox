@@ -1,4 +1,3 @@
-
 /**
  * BS_備份服務模組_2.0.0
  * @module BS模組 
@@ -25,11 +24,12 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 // 引入依賴模組
-let DL, BK, CM;
+let DL, BK, CM, DD1;
 try {
   DL = require('./2010. DL.js');
   BK = require('./2001. BK.js');
   CM = require('./2013. CM.js');
+  DD1 = require('./2031. DD1.js');
 } catch (error) {
   console.warn('BS模組依賴載入警告:', error.message);
 }
@@ -125,10 +125,10 @@ async function BS_createManualBackup(userId, backupScope, backupOptions = {}) {
 
     // 生成備份ID
     const backupId = `backup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // 收集備份資料（遵循2011模組結構）
     const backupData = await BS_collectBackupData(userId, backupScope);
-    
+
     // 建立備份檔案
     const archiveResult = await BS_createBackupArchive(backupId, backupData, userId);
     if (!archiveResult.success) {
@@ -170,7 +170,7 @@ async function BS_createManualBackup(userId, backupScope, backupOptions = {}) {
           BS_logWarning(`雲端上傳失敗 ${provider}: ${uploadError.message}`, "建立備份", userId, "CLOUD_UPLOAD_ERROR", uploadError.toString(), functionName);
         }
       }
-      
+
       // 更新雲端檔案ID
       await db.collection('backups').doc(backupId).update({
         cloudFileIds: backupRecord.cloudFileIds
@@ -178,7 +178,7 @@ async function BS_createManualBackup(userId, backupScope, backupOptions = {}) {
     }
 
     BS_logInfo(`手動備份建立成功: ${backupId}`, "建立備份", userId, "", "", functionName);
-    
+
     return {
       success: true,
       backupId,
@@ -220,10 +220,10 @@ async function BS_setupBackupSchedule(userId, scheduleConfig) {
 
     // 生成排程ID
     const scheduleId = `schedule_${Date.now()}_${userId}`;
-    
+
     // 計算下次備份時間
     const nextBackupTime = BS_calculateNextBackupTime(scheduleConfig.frequency, scheduleConfig.time);
-    
+
     // 建立排程記錄
     const scheduleRecord = {
       scheduleId,
@@ -249,7 +249,7 @@ async function BS_setupBackupSchedule(userId, scheduleConfig) {
     });
 
     BS_logInfo(`備份排程設定成功: ${scheduleId}`, "設定排程", userId, "", "", functionName);
-    
+
     return {
       success: true,
       scheduleId,
@@ -350,7 +350,7 @@ async function BS_setupCloudAuth(userId, cloudProvider, authCredentials) {
 
     // 驗證認證資訊
     let authResult = { valid: false, expiresAt: null };
-    
+
     switch (cloudProvider) {
       case BS_CLOUD_PROVIDERS.GOOGLE_DRIVE:
         authResult = await BS_validateGoogleDriveAuth(authCredentials);
@@ -366,7 +366,7 @@ async function BS_setupCloudAuth(userId, cloudProvider, authCredentials) {
 
     // 儲存認證資訊 (加密存儲)
     const encryptedCredentials = BS_encryptCredentials(authCredentials, userId);
-    
+
     await db.collection('cloud_credentials').doc(userId).set({
       [cloudProvider]: {
         encrypted: true,
@@ -380,7 +380,7 @@ async function BS_setupCloudAuth(userId, cloudProvider, authCredentials) {
     BS_INIT_STATUS.cloudProvidersEnabled[cloudProvider.replace('_', '')] = true;
 
     BS_logInfo(`雲端認證設定成功: ${cloudProvider}`, "設定認證", userId, "", "", functionName);
-    
+
     return {
       authenticated: true,
       provider: cloudProvider,
@@ -432,7 +432,7 @@ async function BS_uploadToCloud(backupId, cloudProvider, uploadOptions) {
 
     // 根據雲端服務上傳
     let uploadResult = { success: false, cloudFileId: null };
-    
+
     switch (cloudProvider) {
       case BS_CLOUD_PROVIDERS.GOOGLE_DRIVE:
         uploadResult = await BS_uploadToGoogleDrive(encryptedFilePath, backupData);
@@ -450,9 +450,9 @@ async function BS_uploadToCloud(backupId, cloudProvider, uploadOptions) {
 
     // 記錄上傳時間
     const uploadTime = Date.now();
-    
+
     BS_logInfo(`雲端上傳成功: ${uploadResult.cloudFileId}`, "雲端上傳", backupData.userId, "", "", functionName);
-    
+
     return {
       uploaded: true,
       cloudFileId: uploadResult.cloudFileId,
@@ -488,17 +488,17 @@ async function BS_downloadFromCloud(backupId, cloudProvider, downloadPath) {
 
     const backupData = backupDoc.data();
     const cloudFileId = backupData.cloudFileIds[cloudProvider];
-    
+
     if (!cloudFileId) {
       throw new Error(`在 ${cloudProvider} 中找不到備份檔案`);
     }
 
     // 設定下載路徑
     const localPath = downloadPath || path.join(BS_CONFIG.BACKUP_TEMP_DIR, `downloaded_${backupData.fileName}`);
-    
+
     // 根據雲端服務下載
     let downloadResult = { success: false, filePath: null };
-    
+
     switch (cloudProvider) {
       case BS_CLOUD_PROVIDERS.GOOGLE_DRIVE:
         downloadResult = await BS_downloadFromGoogleDrive(cloudFileId, localPath);
@@ -557,29 +557,29 @@ async function BS_getBackupHistory(userId, filterOptions = {}, sortOrder = 'desc
 
     // 建立查詢條件
     let query = db.collection('backups').where('userId', '==', userId);
-    
+
     // 套用過濾條件
     if (filterOptions.backupType) {
       query = query.where('backupType', '==', filterOptions.backupType);
     }
-    
+
     if (filterOptions.startDate) {
       query = query.where('createdAt', '>=', admin.firestore.Timestamp.fromDate(new Date(filterOptions.startDate)));
     }
-    
+
     if (filterOptions.endDate) {
       query = query.where('createdAt', '<=', admin.firestore.Timestamp.fromDate(new Date(filterOptions.endDate)));
     }
 
     // 排序和限制
     query = query.orderBy('createdAt', sortOrder).limit(filterOptions.limit || 50);
-    
+
     // 執行查詢
     const snapshot = await query.get();
-    
+
     const backups = [];
     let totalStorageUsed = 0;
-    
+
     snapshot.forEach(doc => {
       const data = doc.data();
       backups.push({
@@ -593,7 +593,7 @@ async function BS_getBackupHistory(userId, filterOptions = {}, sortOrder = 'desc
         expiresAt: data.expiresAt.toDate().toISOString(),
         status: data.status
       });
-      
+
       totalStorageUsed += data.fileSize;
     });
 
@@ -641,7 +641,7 @@ async function BS_deleteBackupVersion(backupId, userId, confirmationToken) {
     }
 
     const backupData = backupDoc.data();
-    
+
     // 驗證擁有者
     if (backupData.userId !== userId) {
       throw new Error("權限不足：只能刪除自己的備份");
@@ -676,7 +676,7 @@ async function BS_deleteBackupVersion(backupId, userId, confirmationToken) {
     const remainingVersions = remainingSnapshot.size;
 
     BS_logWarning(`備份版本已刪除: ${backupId}`, "刪除備份", userId, "", "", functionName);
-    
+
     return {
       deleted: true,
       freedSpace,
@@ -799,7 +799,7 @@ async function BS_restoreFromBackup(backupId, userId, restoreOptions = {}) {
     }
 
     const backupData = backupDoc.data();
-    
+
     // 驗證擁有者
     if (backupData.userId !== userId) {
       throw new Error("權限不足：只能還原自己的備份");
@@ -807,7 +807,7 @@ async function BS_restoreFromBackup(backupId, userId, restoreOptions = {}) {
 
     // 下載備份檔案
     let downloadResult = null;
-    
+
     // 優先從本地查找
     const localPath = path.join(BS_CONFIG.BACKUP_TEMP_DIR, backupData.fileName);
     try {
@@ -819,7 +819,7 @@ async function BS_restoreFromBackup(backupId, userId, restoreOptions = {}) {
       if (cloudProviders.length === 0) {
         throw new Error("無可用的備份來源");
       }
-      
+
       downloadResult = await BS_downloadFromCloud(backupId, cloudProviders[0], localPath);
       if (!downloadResult.downloaded) {
         throw new Error("下載備份檔案失敗");
@@ -828,7 +828,7 @@ async function BS_restoreFromBackup(backupId, userId, restoreOptions = {}) {
 
     // 解析備份檔案
     const restoredData = await BS_parseBackupArchive(downloadResult.localPath, userId);
-    
+
     const restoredItems = [];
     const failedItems = [];
 
@@ -851,7 +851,7 @@ async function BS_restoreFromBackup(backupId, userId, restoreOptions = {}) {
           const ledgerId = entryData.ledgerId;
           const entryId = entryData.收支ID;
           delete entryData.ledgerId; // 移除ledgerId，因為它不應該存在於entry文件中
-          
+
           await db.collection('ledgers').doc(ledgerId).collection('entries').doc(entryId).set(entryData, { merge: true });
         }
         restoredItems.push({ type: 'entries', count: restoredData.entries.length });
@@ -867,7 +867,7 @@ async function BS_restoreFromBackup(backupId, userId, restoreOptions = {}) {
           const ledgerId = subjectData.ledgerId;
           const subjectId = subjectData.子項代碼;
           delete subjectData.ledgerId; // 移除ledgerId
-          
+
           await db.collection('ledgers').doc(ledgerId).collection('subjects').doc(subjectId).set(subjectData, { merge: true });
         }
         restoredItems.push({ type: 'subjects', count: restoredData.subjects.length });
@@ -887,11 +887,11 @@ async function BS_restoreFromBackup(backupId, userId, restoreOptions = {}) {
     }
 
     const restored = restoredItems.length > 0;
-    
+
     if (restored) {
       BS_logInfo(`資料還原完成: ${restoredItems.length} 項成功`, "資料還原", userId, "", "", functionName);
     }
-    
+
     if (failedItems.length > 0) {
       BS_logWarning(`部分資料還原失敗: ${failedItems.length} 項`, "資料還原", userId, "PARTIAL_RESTORE_FAILURE", JSON.stringify(failedItems), functionName);
     }
@@ -942,13 +942,13 @@ async function BS_validateRestoredData(userId, restoreId, validationLevel = 'bas
     try {
       const ledgersSnapshot = await db.collection('ledgers').where('ownerUID', '==', userId).get();
       const ledgerCount = ledgersSnapshot.size;
-      
+
       validationReport.checks.ledgers = {
         valid: ledgerCount > 0,
         count: ledgerCount,
         issues: []
       };
-      
+
       if (ledgerCount === 0) {
         issues.push('沒有找到任何帳本資料');
       }
@@ -961,12 +961,12 @@ async function BS_validateRestoredData(userId, restoreId, validationLevel = 'bas
     try {
       const userLedgers = await db.collection('ledgers').where('ownerUID', '==', userId).get();
       let totalEntries = 0;
-      
+
       for (const ledgerDoc of userLedgers.docs) {
         const entriesSnapshot = await ledgerDoc.ref.collection('entries').get();
         totalEntries += entriesSnapshot.size;
       }
-      
+
       validationReport.checks.entries = {
         valid: true,
         count: totalEntries,
@@ -981,12 +981,12 @@ async function BS_validateRestoredData(userId, restoreId, validationLevel = 'bas
     try {
       const userLedgers = await db.collection('ledgers').where('ownerUID', '==', userId).get();
       let totalSubjects = 0;
-      
+
       for (const ledgerDoc of userLedgers.docs) {
         const subjectsSnapshot = await ledgerDoc.ref.collection('subjects').get();
         totalSubjects += subjectsSnapshot.size;
       }
-      
+
       validationReport.checks.subjects = {
         valid: true,
         count: totalSubjects,
@@ -1005,7 +1005,7 @@ async function BS_validateRestoredData(userId, restoreId, validationLevel = 'bas
         count: userDoc.exists ? 1 : 0,
         issues: []
       };
-      
+
       if (!userDoc.exists) {
         issues.push('用戶資料不存在');
       }
@@ -1072,7 +1072,7 @@ async function BS_encryptBackupData(backupData, userId, encryptionKey) {
 
     // 生成初始化向量
     const iv = crypto.randomBytes(16);
-    
+
     // 建立加密器 (使用GCM模式)
     const cipher = crypto.createCipher('aes-256-gcm', key);
     cipher.setAAD(Buffer.from(userId)); // 使用用戶ID作為額外認證資料
@@ -1085,24 +1085,24 @@ async function BS_encryptBackupData(backupData, userId, encryptionKey) {
       const inputData = await fs.readFile(backupData);
       encrypted = Buffer.concat([cipher.update(inputData), cipher.final()]);
       authTag = cipher.getAuthTag();
-      
+
       // 寫入加密檔案
       const encryptedPath = backupData + '.encrypted';
       const encryptedPackage = Buffer.concat([iv, authTag, encrypted]);
       await fs.writeFile(encryptedPath, encryptedPackage);
-      
+
       BS_logInfo(`檔案加密完成: ${encryptedPath}`, "加密資料", userId, "", "", functionName);
-      
+
       return encryptedPath;
-      
+
     } else {
       // 處理資料物件
       const dataString = JSON.stringify(backupData);
       encrypted = Buffer.concat([cipher.update(Buffer.from(dataString)), cipher.final()]);
       authTag = cipher.getAuthTag();
-      
+
       const encryptedPackage = Buffer.concat([iv, authTag, encrypted]);
-      
+
       return {
         encrypted: true,
         encryptedSize: encryptedPackage.length,
@@ -1164,15 +1164,15 @@ async function BS_decryptBackupData(encryptedData, userId, decryptionKey) {
     if (decryptedFilePath) {
       // 寫入解密檔案
       await fs.writeFile(decryptedFilePath, decrypted);
-      
+
       BS_logInfo(`檔案解密完成: ${decryptedFilePath}`, "解密資料", userId, "", "", functionName);
-      
+
       return decryptedFilePath;
-      
+
     } else {
       // 回傳解密的資料物件
       const decryptedData = JSON.parse(decrypted.toString());
-      
+
       return decryptedData;
     }
 
@@ -1198,7 +1198,7 @@ async function BS_handleBackupError(errorType, errorData, operationContext) {
     BS_logError(`備份錯誤: ${errorType}`, "錯誤處理", operationContext.userId || "", errorCode, JSON.stringify(errorData), functionName);
 
     let retryAction = "none";
-    
+
     // 根據錯誤類型執行恢復操作
     switch (errorType) {
       case "storage_full":
@@ -1208,7 +1208,7 @@ async function BS_handleBackupError(errorType, errorData, operationContext) {
           await BS_cleanupExpiredBackups({ userId: operationContext.userId });
         }
         break;
-        
+
       case "cloud_upload_failed":
         retryAction = "retry_upload";
         // 3秒後重試上傳
@@ -1218,19 +1218,19 @@ async function BS_handleBackupError(errorType, errorData, operationContext) {
           }, 3000);
         }
         break;
-        
+
       case "encryption_failed":
         retryAction = "regenerate_keys";
         break;
-        
+
       case "file_corruption":
         retryAction = "restore_from_cloud";
         break;
-        
+
       case "permission_denied":
         retryAction = "check_credentials";
         break;
-        
+
       default:
         retryAction = "manual_intervention_required";
     }
@@ -1361,20 +1361,20 @@ async function BS_cleanupExpiredBackups(retentionPolicy = {}) {
     // 查詢過期備份
     let query = db.collection('backups')
       .where('expiresAt', '<=', admin.firestore.Timestamp.fromDate(cutoffDate));
-    
+
     // 如果指定用戶，限制範圍
     if (retentionPolicy.userId) {
       query = query.where('userId', '==', retentionPolicy.userId);
     }
 
     const expiredSnapshot = await query.get();
-    
+
     let deletedCount = 0;
     let freedSpace = 0;
 
     for (const doc of expiredSnapshot.docs) {
       const backupData = doc.data();
-      
+
       try {
         // 使用內部刪除函數
         const deleteResult = await BS_deleteBackupVersionInternal(backupData.backupId, backupData.userId);
@@ -1388,7 +1388,7 @@ async function BS_cleanupExpiredBackups(retentionPolicy = {}) {
     }
 
     BS_logInfo(`過期備份清理完成: 刪除 ${deletedCount} 個備份，釋放 ${Math.round(freedSpace / 1024 / 1024)} MB`, "清理備份", "", "", "", functionName);
-    
+
     return {
       cleaned: true,
       deletedCount,
@@ -1430,7 +1430,7 @@ async function BS_collectBackupData(userId, backupScope) {
       const ledgersSnapshot = await db.collection('ledgers')
         .where('ownerUID', '==', userId)
         .get();
-      
+
       const ledgers = [];
       ledgersSnapshot.forEach(doc => {
         ledgers.push({
@@ -1438,7 +1438,7 @@ async function BS_collectBackupData(userId, backupScope) {
           ...doc.data()
         });
       });
-      
+
       backupData.data.ledgers = ledgers;
     } catch (error) {
       BS_logWarning(`收集帳本資料失敗: ${error.message}`, "收集備份", userId, "COLLECT_LEDGERS_ERROR", error.toString(), "BS_collectBackupData");
@@ -1451,7 +1451,7 @@ async function BS_collectBackupData(userId, backupScope) {
       const userLedgers = await db.collection('ledgers')
         .where('ownerUID', '==', userId)
         .get();
-      
+
       const entries = [];
       for (const ledgerDoc of userLedgers.docs) {
         const entriesSnapshot = await ledgerDoc.ref.collection('entries').get();
@@ -1464,7 +1464,7 @@ async function BS_collectBackupData(userId, backupScope) {
           }
         });
       }
-      
+
       backupData.data.entries = entries;
     } catch (error) {
       BS_logWarning(`收集記帳資料失敗: ${error.message}`, "收集備份", userId, "COLLECT_ENTRIES_ERROR", error.toString(), "BS_collectBackupData");
@@ -1477,7 +1477,7 @@ async function BS_collectBackupData(userId, backupScope) {
       const userLedgers = await db.collection('ledgers')
         .where('ownerUID', '==', userId)
         .get();
-      
+
       const subjects = [];
       for (const ledgerDoc of userLedgers.docs) {
         const subjectsSnapshot = await ledgerDoc.ref.collection('subjects').get();
@@ -1490,7 +1490,7 @@ async function BS_collectBackupData(userId, backupScope) {
           }
         });
       }
-      
+
       backupData.data.subjects = subjects;
     } catch (error) {
       BS_logWarning(`收集科目資料失敗: ${error.message}`, "收集備份", userId, "COLLECT_SUBJECTS_ERROR", error.toString(), "BS_collectBackupData");
@@ -1503,7 +1503,7 @@ async function BS_collectBackupData(userId, backupScope) {
       const userLedgers = await db.collection('ledgers')
         .where('ownerUID', '==', userId)
         .get();
-      
+
       const logs = [];
       for (const ledgerDoc of userLedgers.docs) {
         const logsSnapshot = await ledgerDoc.ref.collection('log').get();
@@ -1515,7 +1515,7 @@ async function BS_collectBackupData(userId, backupScope) {
           });
         });
       }
-      
+
       backupData.data.logs = logs;
     } catch (error) {
       BS_logWarning(`收集日誌資料失敗: ${error.message}`, "收集備份", userId, "COLLECT_LOGS_ERROR", error.toString(), "BS_collectBackupData");
@@ -1540,7 +1540,7 @@ async function BS_collectBackupData(userId, backupScope) {
       const mappingsSnapshot = await db.collection('account_mappings')
         .where('primary_UID', '==', userId)
         .get();
-      
+
       const mappings = [];
       mappingsSnapshot.forEach(doc => {
         if (doc.id !== 'template') { // 跳過template文件
@@ -1550,7 +1550,7 @@ async function BS_collectBackupData(userId, backupScope) {
           });
         }
       });
-      
+
       backupData.data.accountMappings = mappings;
     } catch (error) {
       BS_logWarning(`收集帳號映射失敗: ${error.message}`, "收集備份", userId, "COLLECT_MAPPINGS_ERROR", error.toString(), "BS_collectBackupData");
@@ -1567,7 +1567,7 @@ async function BS_createBackupArchive(backupId, backupData, userId) {
   try {
     // 設定備份ID
     backupData.metadata.backup_id = backupId;
-    
+
     // 產生檢查碼
     const dataString = JSON.stringify(backupData.data);
     const checksum = crypto.createHash('sha256').update(dataString).digest('hex');
@@ -1609,7 +1609,7 @@ async function BS_parseBackupArchive(filePath, userId) {
   try {
     // 讀取檔案
     const compressed = await fs.readFile(filePath);
-    
+
     // 解壓縮
     const decompressed = zlib.gunzipSync(compressed);
     const backupData = JSON.parse(decompressed.toString());
@@ -1617,7 +1617,7 @@ async function BS_parseBackupArchive(filePath, userId) {
     // 驗證檢查碼
     const dataString = JSON.stringify(backupData.data);
     const checksum = crypto.createHash('sha256').update(dataString).digest('hex');
-    
+
     if (checksum !== backupData.checksum) {
       throw new Error("備份檔案檢查碼不符，可能已損壞");
     }
@@ -1677,10 +1677,10 @@ function BS_encryptCredentials(credentials, userId) {
     const key = crypto.createHash('sha256').update(`${userId}_credentials_key_v2`).digest();
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipher('aes-256-cbc', key);
-    
+
     let encrypted = cipher.update(JSON.stringify(credentials), 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     return {
       iv: iv.toString('hex'),
       data: encrypted
@@ -1768,6 +1768,7 @@ async function BS_deleteCloudFile(provider, cloudFileId, userId) {
       // 實際應該呼叫 OneDrive API 刪除檔案
       return { deleted: true };
     default:
+      ```javascript
       throw new Error(`不支援的雲端服務: ${provider}`);
   }
 }
@@ -1790,47 +1791,47 @@ async function BS_checkCloudServiceStatus(provider) {
 async function BS_checkDataConsistency(userId) {
   try {
     const issues = [];
-    
+
     // 檢查用戶是否存在於users collection
     const userDoc = await db.collection('users').doc(userId).get();
     if (!userDoc.exists) {
       issues.push('用戶資料不存在於users collection');
     }
-    
+
     // 檢查帳本結構一致性
     const ledgersSnapshot = await db.collection('ledgers').where('ownerUID', '==', userId).get();
-    
+
     for (const ledgerDoc of ledgersSnapshot.docs) {
       const ledgerData = ledgerDoc.data();
-      
+
       // 檢查必要欄位
       if (!ledgerData.ledgername) {
         issues.push(`帳本 ${ledgerDoc.id} 缺少 ledgername 欄位`);
       }
-      
+
       if (!ledgerData.ownerUID) {
         issues.push(`帳本 ${ledgerDoc.id} 缺少 ownerUID 欄位`);
       }
-      
+
       // 檢查子集合是否存在
       const entriesSnapshot = await ledgerDoc.ref.collection('entries').limit(1).get();
       const subjectsSnapshot = await ledgerDoc.ref.collection('subjects').limit(1).get();
       const logsSnapshot = await ledgerDoc.ref.collection('log').limit(1).get();
-      
+
       if (entriesSnapshot.empty) {
         issues.push(`帳本 ${ledgerDoc.id} 的 entries 子集合為空`);
       }
-      
+
       if (subjectsSnapshot.empty) {
         issues.push(`帳本 ${ledgerDoc.id} 的 subjects 子集合為空`);
       }
     }
-    
+
     return {
       consistent: issues.length === 0,
       issues
     };
-    
+
   } catch (error) {
     return {
       consistent: false,
@@ -1884,7 +1885,7 @@ async function BS_initialize() {
   const functionName = "BS_initialize";
   try {
     console.log('💾 BS 備份服務模組初始化中... (v2.0.0 - Firestore版本)');
-    
+
     // 檢查 Firestore 連線
     if (!admin.apps.length) {
       throw new Error("Firebase Admin 未初始化");
@@ -1897,13 +1898,13 @@ async function BS_initialize() {
     try {
       // 檢查 backups collection
       await db.collection('backups').limit(1).get();
-      
+
       // 檢查 backup_schedules collection
       await db.collection('backup_schedules').limit(1).get();
-      
+
       // 檢查 cloud_credentials collection
       await db.collection('cloud_credentials').limit(1).get();
-      
+
       BS_logInfo("Firestore collections 驗證成功", "模組初始化", "", "", "", functionName);
     } catch (firestoreError) {
       BS_logWarning(`Firestore collections 檢查警告: ${firestoreError.message}`, "模組初始化", "", "FIRESTORE_CHECK_WARNING", firestoreError.toString(), functionName);
@@ -1916,7 +1917,7 @@ async function BS_initialize() {
 
     BS_logInfo("BS 備份服務模組初始化完成 (v2.0.0 - Firestore版本)", "模組初始化", "", "", "", functionName);
     console.log('✅ BS 備份服務模組已成功啟動 (遵循2011模組資料庫結構)');
-    
+
     return true;
   } catch (error) {
     BS_logError(`BS 模組初始化失敗: ${error.message}`, "模組初始化", "", "BS_INIT_ERROR", error.toString(), functionName);
@@ -1931,33 +1932,33 @@ module.exports = {
   BS_createManualBackup,
   BS_setupBackupSchedule,
   BS_executeScheduledBackup,
-  
+
   // 雲端儲存整合函數
   BS_setupCloudAuth,
   BS_uploadToCloud,
   BS_downloadFromCloud,
-  
+
   // 備份版本管理函數
   BS_getBackupHistory,
   BS_deleteBackupVersion,
   BS_compareBackupVersions,
-  
+
   // 資料還原函數
   BS_restoreFromBackup,
   BS_validateRestoredData,
-  
+
   // 備份加密與安全函數
   BS_encryptBackupData,
   BS_decryptBackupData,
-  
+
   // 錯誤處理與監控函數
   BS_handleBackupError,
   BS_monitorBackupService,
   BS_cleanupExpiredBackups,
-  
+
   // 模組初始化
   BS_initialize,
-  
+
   // 常數與配置
   BS_CONFIG,
   BS_BACKUP_TYPES,
