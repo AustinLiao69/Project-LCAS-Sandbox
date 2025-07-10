@@ -323,6 +323,13 @@ function DD_convertTimestamp(timestamp) {
   }
 }
 
+// 延遲載入其他模組以避免循環依賴
+let DD1;
+function loadDD1() {
+  if (!DD1) DD1 = require("./2031. DD1.js");
+  return DD1;
+}
+
 // 模組匯出
 module.exports = {
   formatDate,
@@ -330,4 +337,8 @@ module.exports = {
   DD_calculateSimilarity,
   DD_formatSystemReplyMessage,
   DD_convertTimestamp,
+  DD_log: function(...args) {
+    const dd1 = loadDD1();
+    return dd1.DD_log(...args);
+  },
 };
