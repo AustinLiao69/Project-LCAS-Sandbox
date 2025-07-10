@@ -14,11 +14,12 @@ try {
   console.log(`DD模組版本: 3.0.0 (2025-01-09) - 完全Firestore版本`);
   console.log(`執行時間: ${new Date().toLocaleString()}`);
 
-  // 檢查 Firestore 連接
-  console.log(`Firestore 連接檢查: ${db ? "成功" : "失敗"}`);
-
   // 延遲載入模組並檢查函數
   loadModules();
+  
+  // 檢查 Firestore 連接
+  console.log(`Firestore 連接檢查: ${db ? "成功" : "失敗"}`);
+  
   console.log(
     `BK_processBookkeeping函數檢查: ${BK && typeof BK.BK_processBookkeeping === "function" ? "存在" : "不存在"}`,
   );
@@ -57,14 +58,12 @@ if (!admin.apps.length) {
   });
 }
 
-// 取得 Firestore 實例
-const db = admin.firestore();
-
 // 延遲載入其他模組以避免循環依賴
-let BK, DL;
+let BK, DL, db;
 function loadModules() {
   if (!BK) BK = require("./2001. BK.js");
   if (!DL) DL = require("./2010. DL.js");
+  if (!db) db = admin.firestore();
 }
 
 // 替代 Google Apps Script 的 Utilities 物件
@@ -87,6 +86,9 @@ const DD_RETRY_DELAY = 1000; // 重試延遲時間（毫秒）
  */
 async function DD_getAllSubjects(userId) {
   try {
+    // 確保模組已載入
+    loadModules();
+    
     // 檢查必要參數
     if (!userId) {
       throw new Error("缺少使用者ID，每個使用者都需要獨立的帳本");
@@ -160,6 +162,9 @@ async function DD_writeToLogSheet(
   functionName = "",
 ) {
   try {
+    // 確保模組已載入
+    loadModules();
+    
     // 檢查必要參數
     if (!userId) {
       throw new Error("缺少使用者ID，每個使用者都需要獨立的帳本");
@@ -201,6 +206,9 @@ async function DD_writeToLogSheet(
  */
 async function DD_getLedgerInfo(userId) {
   try {
+    // 確保模組已載入
+    loadModules();
+    
     if (!userId) {
       throw new Error("缺少使用者ID");
     }
