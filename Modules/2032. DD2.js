@@ -1658,7 +1658,6 @@ module.exports = {
   DD_parseInputFormat,
   DD_removeAmountFromText,
   DD_initConfig,
-  DD_log,
   DD_logDebug,
   DD_logInfo,
   DD_logWarning,
