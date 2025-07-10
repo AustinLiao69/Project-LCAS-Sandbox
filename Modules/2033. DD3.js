@@ -27,9 +27,10 @@ const { v4: uuidv4 } = require("uuid");
 const TIMEZONE = "Asia/Taipei";
 
 // 延遲載入模組以避免循環依賴
-let DD1, DL;
+let DD1, DD2, DL;
 function loadModules() {
   if (!DD1) DD1 = require("./2031. DD1.js");
+  if (!DD2) DD2 = require("./2032. DD2.js");
   if (!DL) DL = require("./2010. DL.js");
 }
 

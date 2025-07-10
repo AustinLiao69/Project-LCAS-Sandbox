@@ -45,6 +45,7 @@ const DD1 = require("./2031. DD1.js");
 const {
   DD_writeToLogSheet,
   DD_getAllSubjects,
+  DD_getLedgerInfo,
   DD_logDebug,
   DD_logInfo,
   DD_logWarning,
