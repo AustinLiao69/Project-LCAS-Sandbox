@@ -17,8 +17,10 @@ try {
   // 檢查 Firestore 連接
   console.log(`Firestore 連接檢查: ${db ? "成功" : "失敗"}`);
 
+  // 延遲載入模組並檢查函數
+  loadModules();
   console.log(
-    `BK_processBookkeeping函數檢查: ${typeof BK_processBookkeeping === "function" ? "存在" : "不存在"}`,
+    `BK_processBookkeeping函數檢查: ${BK && typeof BK.BK_processBookkeeping === "function" ? "存在" : "不存在"}`,
   );
 } catch (error) {
   console.log(`DD模組初始化錯誤: ${error.toString()}`);
@@ -37,21 +39,14 @@ const DD_CONFIG = {
   DEFAULT_SUBJECT: "其他支出",
 };
 
-// 引入其他模組
-const BK = require("./2001. BK.js");
-const DL = require("./2010. DL.js");
-
-// 引入 Firebase Admin SDK
-const admin = require("firebase-admin");
-
-// 確保BK函數正確引用
-const { BK_processBookkeeping } = BK;
-
 // Node.js 模組依賴
 const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const path = require("path");
 const moment = require("moment-timezone");
+
+// 引入 Firebase Admin SDK
+const admin = require("firebase-admin");
 
 // 初始化 Firebase（如果尚未初始化）
 if (!admin.apps.length) {
@@ -64,6 +59,13 @@ if (!admin.apps.length) {
 
 // 取得 Firestore 實例
 const db = admin.firestore();
+
+// 延遲載入其他模組以避免循環依賴
+let BK, DL;
+function loadModules() {
+  if (!BK) BK = require("./2001. BK.js");
+  if (!DL) DL = require("./2010. DL.js");
+}
 
 // 替代 Google Apps Script 的 Utilities 物件
 const Utilities = {
@@ -1062,6 +1064,7 @@ async function DD_processForBK(data) {
     );
 
     // 調用BK_processBookkeeping處理記帳
+    loadModules(); // 確保模組已載入
     await DD_logInfo(
       `開始調用BK_processBookkeeping [${processId}]`,
       "模組調用",

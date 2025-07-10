@@ -26,21 +26,12 @@ const { v4: uuidv4 } = require("uuid");
 // 設定時區為 UTC+8 (Asia/Taipei)
 const TIMEZONE = "Asia/Taipei";
 
-// 引入DD1模組的日誌函數
-const DD1 = require("./2031. DD1.js");
-const {
-  DD_writeToLogSheet,
-  DD_getLedgerInfo,
-  DD_logDebug,
-  DD_logInfo,
-  DD_logWarning,
-  DD_logError,
-  DD_logCritical,
-  generateProcessId,
-} = DD1;
-
-// 引入DL模組
-const DL = require("./2010. DL.js");
+// 延遲載入模組以避免循環依賴
+let DD1, DL;
+function loadModules() {
+  if (!DD1) DD1 = require("./2031. DD1.js");
+  if (!DL) DL = require("./2010. DL.js");
+}
 
 /**
  * 32. 格式化日期為 'YYYY/MM/DD'
@@ -134,12 +125,17 @@ async function DD_formatSystemReplyMessage(
     minute: "2-digit",
   });
 
-  DL.DL_logDebug("DD5", `開始格式化訊息 [${processId}], 模組: ${moduleCode}`);
+  loadModules(); // 確保模組已載入
+    if (DL && DL.DL_logDebug) {
+      DL.DL_logDebug("DD5", `開始格式化訊息 [${processId}], 模組: ${moduleCode}`);
+    }
 
   try {
     // 檢查是否已有完整回覆訊息
     if (resultData && resultData.responseMessage) {
-      DL.DL_logDebug("DD5", `使用現有回覆訊息 [${processId}]`);
+      if (DL && DL.DL_logDebug) {
+        DL.DL_logDebug("DD5", `使用現有回覆訊息 [${processId}]`);
+      }
       return {
         success: resultData.success === true,
         responseMessage: resultData.responseMessage,
@@ -196,12 +192,15 @@ async function DD_formatSystemReplyMessage(
         let ledgerInfo = "";
         if (data.recommendedLedgerId) {
           try {
-            const ledgerData = await DD_getLedgerInfo(data.recommendedLedgerId);
+            loadModules();
+            const ledgerData = DD1 && DD1.DD_getLedgerInfo ? await DD1.DD_getLedgerInfo(data.recommendedLedgerId) : null;
             if (ledgerData) {
               ledgerInfo = `\n帳本：${ledgerData.name} (${ledgerData.type})`;
             }
           } catch (e) {
-            DL.DL_logDebug("DD5", `獲取帳本資訊失敗: ${e.message}`);
+            if (DL && DL.DL_logDebug) {
+              DL.DL_logDebug("DD5", `獲取帳本資訊失敗: ${e.message}`);
+            }
           }
         }
 
@@ -242,7 +241,9 @@ async function DD_formatSystemReplyMessage(
         `錯誤原因：${errorMsg}`;
     }
 
-    DL.DL_logDebug("DD5", `訊息格式化完成 [${processId}]`);
+    if (DL && DL.DL_logDebug) {
+      DL.DL_logDebug("DD5", `訊息格式化完成 [${processId}]`);
+    }
 
     return {
       success: isSuccess,
@@ -255,7 +256,9 @@ async function DD_formatSystemReplyMessage(
       error: isSuccess ? undefined : errorMsg,
     };
   } catch (error) {
-    DL.DL_logError("DD5", `格式化過程出錯: ${error.message} [${processId}]`);
+    if (DL && DL.DL_logError) {
+      DL.DL_logError("DD5", `格式化過程出錯: ${error.message} [${processId}]`);
+    }
 
     const fallbackMessage = `記帳失敗！\n時間：${currentDateTime}\n科目：未知科目\n金額：0元\n支付方式：未指定支付方式\n備註：無\n使用者類型：J\n錯誤原因：訊息格式化錯誤`;
 
