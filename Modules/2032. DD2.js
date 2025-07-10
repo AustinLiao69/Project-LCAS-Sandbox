@@ -1445,6 +1445,239 @@ function calculateLevenshteinDistance(str1, str2) {
   return matrix[len1][len2];
 }
 
+/**
+ * 51. 解析使用者輸入格式
+ * @version 2025-06-16-V3.5.0
+ * @author AustinLiao69
+ * @date 2025-06-16 02:13:23
+ * @update: 修正負數金額解析及錯誤資料保存
+ * @param {string} text - 用戶輸入的原始文本
+ * @param {string} processId - 處理ID
+ * @returns {Object} - 解析結果
+ */
+function DD_parseInputFormat(text, processId) {
+  console.log(`DD_parseInputFormat: 開始解析文本「${text}」[${processId}]`);
+
+  if (!text || text.trim() === "") {
+    console.log(`DD_parseInputFormat: 空文本 [${processId}]`);
+    return {
+      _formatError: true,
+      _errorDetail: "文本為空",
+      _missingSubject: true,
+      errorData: {
+        success: false,
+        error: "文本為空",
+        errorType: "EMPTY_TEXT",
+        partialData: {
+          subject: "",
+          amount: 0,
+          rawAmount: "0",
+          paymentMethod: "預設",
+        },
+      },
+    };
+  }
+
+  // 移除空白
+  text = text.trim();
+
+  try {
+    // 檢測負數模式 (改進版)
+    const negativePattern = /^(.+?)(-\d+)(.*)$/;
+    const negativeMatch = text.match(negativePattern);
+
+    if (negativeMatch) {
+      const subject = negativeMatch[1].trim();
+      const rawAmount = negativeMatch[2]; // 保留負號
+      const amount = parseFloat(rawAmount);
+
+      // 支付方式提取
+      let paymentMethod = "預設";
+      const remainingText = negativeMatch[3].trim();
+
+      // 更詳細地檢查支付方式
+      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳", "信用卡"];
+      for (const method of paymentMethods) {
+        if (remainingText.includes(method)) {
+          paymentMethod = method;
+          break;
+        }
+      }
+
+      // 如果沒有匹配到列出的支付方式，但有剩餘文本，使用整個剩餘文本作為支付方式
+      if (paymentMethod === "預設" && remainingText) {
+        paymentMethod = remainingText;
+      }
+
+      console.log(
+        `DD_parseInputFormat: 識別負數格式 - 科目:「${subject}」, 金額:${rawAmount}, 支付方式:「${paymentMethod}」 [${processId}]`,
+      );
+
+      // 負數金額檢查 (關鍵部分：改為在這裡處理錯誤，同時保留原始數據)
+      if (amount < 0) {
+        console.log(
+          `DD_parseInputFormat: 檢測到負數金額 ${amount} [${processId}]`,
+        );
+
+        // 構造包含完整信息的錯誤數據
+        return {
+          _formatError: true,
+          _errorDetail: "金額不可為負數",
+          subject: subject,
+          amount: amount,
+          rawAmount: rawAmount,
+          paymentMethod: paymentMethod,
+          // 包含完整的錯誤數據
+          errorData: {
+            success: false,
+            error: "金額不可為負數",
+            errorType: "NEGATIVE_AMOUNT",
+            partialData: {
+              subject: subject,
+              amount: amount,
+              rawAmount: rawAmount,
+              paymentMethod: paymentMethod,
+              remark: subject, // 將科目保存為備註
+            },
+          },
+        };
+      }
+
+      // 這裡正常情況不會執行到，因為上面已經返回了
+      return {
+        subject: subject,
+        amount: Math.abs(amount),
+        rawAmount: String(Math.abs(amount)),
+        paymentMethod: paymentMethod,
+      };
+    }
+
+    // 標準格式處理 (未修改部分)
+    const regex = /^(.+?)(\d+)(.*)$/;
+    const match = text.match(regex);
+
+    if (match) {
+      const subject = match[1].trim();
+      const amount = parseInt(match[2], 10);
+      const rawAmount = match[2];
+
+      // 支付方式提取 (與負數格式相同邏輯)
+      let paymentMethod = "預設";
+      const remainingText = match[3].trim();
+
+      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳", "信用卡"];
+      for (const method of paymentMethods) {
+        if (remainingText.includes(method)) {
+          paymentMethod = method;
+          break;
+        }
+      }
+
+      if (paymentMethod === "預設" && remainingText) {
+        paymentMethod = remainingText;
+      }
+
+      console.log(
+        `DD_parseInputFormat: 識別標準格式 - 科目:「${subject}」, 金額:${amount}, 支付方式:「${paymentMethod}」 [${processId}]`,
+      );
+
+      if (subject === "") {
+        return {
+          _formatError: true,
+          _errorDetail: "未明確指定科目名稱",
+          _missingSubject: true,
+          amount: amount,
+          rawAmount: rawAmount,
+          paymentMethod: paymentMethod,
+          errorData: {
+            success: false,
+            error: "未明確指定科目名稱",
+            errorType: "MISSING_SUBJECT",
+            partialData: {
+              subject: "未知科目",
+              amount: amount,
+              rawAmount: rawAmount,
+              paymentMethod: paymentMethod,
+            },
+          },
+        };
+      }
+
+      return {
+        subject: subject,
+        amount: amount,
+        rawAmount: rawAmount,
+        paymentMethod: paymentMethod,
+      };
+    } else {
+      console.log(`DD_parseInputFormat: 無法解析格式 [${processId}]`);
+      return {
+        _formatError: true,
+        _errorDetail: "無法識別輸入格式",
+        errorData: {
+          success: false,
+          error: "無法識別輸入格式",
+          errorType: "UNRECOGNIZED_FORMAT",
+          partialData: {
+            subject: text,
+            amount: 0,
+            rawAmount: "0",
+            paymentMethod: "預設",
+          },
+        },
+      };
+    }
+  } catch (error) {
+    console.log(`DD_parseInputFormat: 解析錯誤 ${error} [${processId}]`);
+    return {
+      _formatError: true,
+      _errorDetail: `解析錯誤: ${error.toString()}`,
+      errorData: {
+        success: false,
+        error: `解析錯誤: ${error.toString()}`,
+        errorType: "PARSE_ERROR",
+        partialData: {
+          subject: text,
+          amount: 0,
+          rawAmount: "0",
+          paymentMethod: "預設",
+        },
+      },
+    };
+  }
+}
+
+// 更新現有的 Utilities 物件，添加缺少的方法
+if (typeof Utilities !== "undefined" && !Utilities.formatDate) {
+  Utilities.formatDate = (date, timezone, format) => {
+    // 使用 moment-timezone 確保時區正確處理
+    const momentDate = moment(date).tz(timezone || "Asia/Taipei");
+
+    if (format === "yyyy/MM/dd HH:mm") {
+      return momentDate.format("YYYY/MM/DD HH:mm");
+    } else if (format === "yyyy/M/d") {
+      return momentDate.format("YYYY/M/D");
+    } else if (format === "HH:mm") {
+      return momentDate.format("HH:mm");
+    } else if (format === "yyyy-MM-dd HH:mm:ss") {
+      return momentDate.format("YYYY-MM-DD HH:mm:ss");
+    }
+    return momentDate.format();
+  };
+}
+
+// 更新現有的 SpreadsheetApp 物件，添加 getActive 方法
+if (typeof SpreadsheetApp !== "undefined" && !SpreadsheetApp.getActive) {
+  SpreadsheetApp.getActive = () => ({
+    getSheetByName: (name) => ({
+      getDataRange: () => ({
+        getValues: () => spreadsheetData[name] || [],
+      }),
+    }),
+  });
+}
+
+
 
 // 模組匯出
 module.exports = {
