@@ -26,10 +26,13 @@ const { v4: uuidv4 } = require("uuid");
 // 設定時區為 UTC+8 (Asia/Taipei)
 const TIMEZONE = "Asia/Taipei";
 
-// 直接載入模組
-const DD1 = require("./2031. DD1.js");
-const DD2 = require("./2032. DD2.js");
-const DL = require("./2010. DL.js");
+// 延遲載入模組以避免循環依賴
+let DD1, DD2, DL;
+function loadModules() {
+  if (!DD1) DD1 = require("./2031. DD1.js");
+  if (!DD2) DD2 = require("./2032. DD2.js");
+  if (!DL) DL = require("./2010. DL.js");
+}
 
 /**
  * 32. 格式化日期為 'YYYY/MM/DD'
@@ -123,7 +126,7 @@ async function DD_formatSystemReplyMessage(
     minute: "2-digit",
   });
 
-  //loadModules(); // 確保模組已載入
+  loadModules(); // 確保模組已載入
     if (DL && DL.DL_logDebug) {
       DL.DL_logDebug("DD5", `開始格式化訊息 [${processId}], 模組: ${moduleCode}`);
     }
@@ -190,7 +193,7 @@ async function DD_formatSystemReplyMessage(
         let ledgerInfo = "";
         if (data.recommendedLedgerId) {
           try {
-            //loadModules();
+            loadModules();
             const ledgerData = DD1 && DD1.DD_getLedgerInfo ? await DD1.DD_getLedgerInfo(data.recommendedLedgerId) : null;
             if (ledgerData) {
               ledgerInfo = `\n帳本：${ledgerData.name} (${ledgerData.type})`;
@@ -320,10 +323,6 @@ function DD_convertTimestamp(timestamp) {
   }
 }
 
-// 延遲載入其他模組以避免循環依賴
-// 直接載入模組
-
-
 // 模組匯出
 module.exports = {
   formatDate,
@@ -332,6 +331,7 @@ module.exports = {
   DD_formatSystemReplyMessage,
   DD_convertTimestamp,
   DD_log: function(...args) {
+    loadModules();
     return DD1.DD_log(...args);
   },
 };

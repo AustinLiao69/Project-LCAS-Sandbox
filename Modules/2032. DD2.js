@@ -40,19 +40,28 @@ const DD_CONFIG = {
   },
 };
 
-// 引入DD1模組的日誌函數
-const DD1 = require("./2031. DD1.js");
-const {
-  DD_writeToLogSheet,
-  DD_getAllSubjects,
-  DD_getLedgerInfo,
-  DD_logDebug,
-  DD_logInfo,
-  DD_logWarning,
-  DD_logError,
-  DD_logCritical,
-  DD_convertTimestamp,
-} = DD1;
+// 延遲載入DD1模組以避免循環依賴
+let DD1;
+function loadDD1() {
+  if (!DD1) DD1 = require("./2031. DD1.js");
+  return DD1;
+}
+
+// 延遲獲取DD1函數
+function getDD1Functions() {
+  const dd1 = loadDD1();
+  return {
+    DD_writeToLogSheet: dd1.DD_writeToLogSheet,
+    DD_getAllSubjects: dd1.DD_getAllSubjects,
+    DD_getLedgerInfo: dd1.DD_getLedgerInfo,
+    DD_logDebug: dd1.DD_logDebug,
+    DD_logInfo: dd1.DD_logInfo,
+    DD_logWarning: dd1.DD_logWarning,
+    DD_logError: dd1.DD_logError,
+    DD_logCritical: dd1.DD_logCritical,
+    DD_convertTimestamp: dd1.DD_convertTimestamp,
+  };
+}
 
 /**
  * 01. 配置初始化
@@ -389,7 +398,8 @@ async function DD_processUserMessage(
 
   // 2. 檢查必要參數
   if (!userId) {
-    DD1.DD_logError(
+    const { DD_logError } = getDD1Functions();
+    DD_logError(
     `缺少必要的用戶ID [${msgId}]`,
     "訊息處理",
     "",
@@ -425,6 +435,7 @@ async function DD_processUserMessage(
   }
 
   // 4. 開始日誌記錄
+  const { DD_logInfo } = getDD1Functions();
   DD_logInfo(
     `處理用戶消息: "${message}" (帳本: ${ledgerId})`,
     "訊息處理",
@@ -441,6 +452,7 @@ async function DD_processUserMessage(
 
     // 6. 檢查空訊息
     if (!message || message.trim() === "") {
+      const { DD_logWarning } = getDD1Functions();
       DD_logWarning(
         `空訊息 [${msgId}]`,
         "訊息處理",
@@ -1354,6 +1366,7 @@ async function DD_fuzzyMatch(input, threshold = 0.6, userId = null) {
   const inputLower = input.toLowerCase().trim();
 
   // 獲取所有科目 - 使用用戶專屬帳本
+  const { DD_getAllSubjects } = getDD1Functions();
   const allSubjects = await DD_getAllSubjects(userId);
   if (!allSubjects || !allSubjects.length) {
     console.log(`【模糊匹配】無法獲取科目列表`);
