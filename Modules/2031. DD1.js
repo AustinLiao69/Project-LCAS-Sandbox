@@ -1,9 +1,10 @@
+
 /**
- * DD1_核心協調模組_2.2.0
+ * DD1_核心協調模組_3.0.0
  * @module 核心協調模組
- * @description 根據預定義的規則將數據分配到不同的資料庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息 - Firestore版本
+ * @description 根據預定義的規則將數據分配到不同的資料庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息 - 完全Firestore版本
  * @author AustinLiao69
- * @update 2025-07-09: 升級版本至2.120，完全遷移至Firestore資料庫，移除Google Sheets依賴
+ * @update 2025-01-09: 升級版本至3.0.0，完全遷移至Firestore資料庫，移除Google Sheets依賴，每個使用者獨立帳本
  */
 
 /**
@@ -11,7 +12,7 @@
  */
 try {
   console.log(`DD模組初始化檢查 [${new Date().toISOString()}]`);
-  console.log(`DD模組版本: 2.1.0 (2025-07-09) - Firestore版本`);
+  console.log(`DD模組版本: 3.0.0 (2025-01-09) - 完全Firestore版本`);
   console.log(`執行時間: ${new Date().toLocaleString()}`);
 
   // 檢查 Firestore 連接
@@ -77,24 +78,28 @@ const DD_RETRY_DELAY = 1000; // 重試延遲時間（毫秒）
 
 /**
  * 01. 獲取所有科目資料 - Firestore版本
- * @version 2025-07-09-V2.1.0
- * @date 2025-07-09 11:30:00
- * @update: 完全遷移至Firestore，移除Google Sheets依賴
- * @param {string} ledgerId - 帳本ID，預設使用用戶獨立帳本
+ * @version 2025-01-09-V3.0.0
+ * @date 2025-01-09 16:00:00
+ * @update: 完全重寫，移除預設ledgerID，每個使用者獨立帳本
+ * @param {string} userId - 使用者ID (必須提供)
  * @returns {Array} 科目陣列
  */
-async function DD_getAllSubjects(ledgerId = null) {
+async function DD_getAllSubjects(userId) {
   try {
-    // 如果沒有指定ledgerId，使用預設結構帳本
-    const targetLedgerId = ledgerId || 'ledger_structure_001';
+    // 檢查必要參數
+    if (!userId) {
+      throw new Error("缺少使用者ID，每個使用者都需要獨立的帳本");
+    }
 
-    console.log(`開始從Firestore獲取科目資料，帳本ID: ${targetLedgerId}`);
+    // 使用用戶獨立帳本
+    const ledgerId = `user_${userId}`;
+    console.log(`開始從Firestore獲取科目資料，使用者帳本: ${ledgerId}`);
 
-    const subjectsRef = db.collection('ledgers').doc(targetLedgerId).collection('subjects');
+    const subjectsRef = db.collection('ledgers').doc(ledgerId).collection('subjects');
     const snapshot = await subjectsRef.where('isActive', '==', true).get();
 
     if (snapshot.empty) {
-      console.log('沒有找到任何科目資料');
+      console.log(`使用者 ${userId} 沒有找到任何科目資料`);
       return [];
     }
 
@@ -113,25 +118,25 @@ async function DD_getAllSubjects(ledgerId = null) {
       });
     });
 
-    console.log(`成功獲取 ${subjects.length} 個科目`);
+    console.log(`成功獲取使用者 ${userId} 的 ${subjects.length} 個科目`);
     return subjects;
 
   } catch (error) {
     console.log(`獲取科目資料失敗: ${error.toString()}`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    return [];
+    throw error;
   }
 }
 
 /**
  * 02. 寫入日誌到Firestore - 完全重寫版本
- * @version 2025-07-09-V2.1.0
- * @date 2025-07-09 11:35:00
- * @update: 完全遷移至Firestore，移除Google Sheets依賴
+ * @version 2025-01-09-V3.0.0
+ * @date 2025-01-09 16:00:00
+ * @update: 完全重寫，移除預設ledgerID，每個使用者獨立帳本
  * @param {string} severity - 嚴重等級
  * @param {string} message - 日誌訊息
  * @param {string} operationType - 操作類型
- * @param {string} userId - 使用者ID
+ * @param {string} userId - 使用者ID (必須提供)
  * @param {string} errorCode - 錯誤代碼
  * @param {string} source - 來源模組，預設為"DD"
  * @param {string} errorDetails - 錯誤詳情
@@ -152,8 +157,13 @@ async function DD_writeToLogSheet(
   functionName = "",
 ) {
   try {
-    // 確定使用者的帳本ID
-    const ledgerId = userId ? `user_${userId}` : 'ledger_structure_001';
+    // 檢查必要參數
+    if (!userId) {
+      throw new Error("缺少使用者ID，每個使用者都需要獨立的帳本");
+    }
+
+    // 使用用戶獨立帳本
+    const ledgerId = `user_${userId}`;
 
     // 建立日誌資料
     const logData = {
@@ -181,16 +191,65 @@ async function DD_writeToLogSheet(
 }
 
 /**
+ * 03. 從Firestore獲取帳本資訊
+ * @version 2025-01-09-V1.0.0
+ * @date 2025-01-09 16:00:00
+ * @param {string} userId - 使用者ID
+ * @returns {Object|null} 帳本資訊或null
+ */
+async function DD_getLedgerInfo(userId) {
+  try {
+    if (!userId) {
+      throw new Error("缺少使用者ID");
+    }
+
+    const ledgerId = `user_${userId}`;
+    const ledgerDoc = await db.collection('ledgers').doc(ledgerId).get();
+
+    if (!ledgerDoc.exists) {
+      console.log(`使用者 ${userId} 的帳本不存在`);
+      return null;
+    }
+
+    const data = ledgerDoc.data();
+    return {
+      id: ledgerId,
+      name: data.name || `${userId}的帳本`,
+      type: data.type || "個人帳本",
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      isActive: data.isActive || true
+    };
+
+  } catch (error) {
+    console.log(`獲取帳本資訊失敗: ${error.toString()}`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    return null;
+  }
+}
+
+/**
  * 05. 主要的資料分配函數（支援重試機制）
- * @version 2025-07-09-V3.1.0
+ * @version 2025-01-09-V3.0.0
  * @author AustinLiao691
- * @update: 整合DD_formatSystemReplyMessage統一處理訊息，適配Firestore異步操作
+ * @update: 整合DD_formatSystemReplyMessage統一處理訊息，適配Firestore異步操作，移除預設ledgerID
  * @param {object} data - 需要分配的原始數據
  * @param {string} source - 數據來源 (例如: 'Rich menu', '使用者訊息')
  * @param {number} retryCount - 當前重試次數（內部使用）
  * @returns {object} - 處理結果
  */
 async function DD_distributeData(data, source, retryCount = 0) {
+  // 檢查必要參數
+  const userId = data.user_id || data.userId;
+  if (!userId) {
+    console.log("DD_distributeData: 缺少使用者ID");
+    return {
+      success: false,
+      error: "缺少使用者ID，每個使用者都需要獨立的帳本",
+      errorType: "MISSING_USER_ID"
+    };
+  }
+
   // 模組初始化檢查
   try {
     console.log("=== DD_distributeData執行初始檢查 ===");
@@ -204,7 +263,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
 
   // 直接控制台日誌，確保無論日誌系統是否正常都會記錄
   console.log(
-    `DD_distributeData被調用，數據源: ${source}, 用戶ID: ${data.user_id || data.userId || "未知"}, 時間: ${new Date().toISOString()}`,
+    `DD_distributeData被調用，數據源: ${source}, 用戶ID: ${userId}, 時間: ${new Date().toISOString()}`,
   );
 
   const processId = Utilities.getUuid().substring(0, 8);
@@ -212,7 +271,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
   await DD_logInfo(
     `開始處理數據 [${processId}]`,
     "數據分配",
-    data.user_id || data.userId || "",
+    userId,
     "DD_distributeData",
     "DD_distributeData",
   );
@@ -242,7 +301,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
     await DD_logDebug(
       `處理數據: ${dataPreview}, 來源: ${source}`,
       "數據接收",
-      data.user_id || data.userId || "",
+      userId,
       "DD_distributeData",
       "DD_distributeData",
     );
@@ -253,7 +312,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
       await DD_logDebug(
         `處理時間戳: ${data.timestamp}`,
         "數據處理",
-        data.user_id || data.userId || "",
+        userId,
         "DD_distributeData",
         "DD_distributeData",
       );
@@ -268,7 +327,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
         await DD_logDebug(
           `時間戳轉換結果: ${data.convertedDate} ${data.convertedTime}`,
           "數據處理",
-          data.user_id || data.userId || "",
+          userId,
           "DD_distributeData",
           "DD_distributeData",
         );
@@ -277,7 +336,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
         await DD_logWarning(
           `時間戳轉換失敗: ${data.timestamp}`,
           "數據處理",
-          data.user_id || data.userId || "",
+          userId,
           "DD_distributeData",
           "DD_distributeData",
         );
@@ -290,14 +349,14 @@ async function DD_distributeData(data, source, retryCount = 0) {
       await DD_logInfo(
         `處理用戶訊息: "${data.text}"`,
         "訊息處理",
-        data.user_id || data.userId || "",
+        userId,
         "DD_distributeData",
         "DD_distributeData",
       );
 
       const processedData = await DD_processUserMessage(
         data.text,
-        data.userId || data.user_id,
+        userId,
         data.timestamp,
       );
       console.log(
@@ -312,7 +371,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
         await DD_logInfo(
           `成功解析訊息: 科目=${processedData.subjectName}, 金額=${processedData.amount}, 支付方式=${processedData.paymentMethod || "預設"}`,
           "訊息處理",
-          data.user_id || data.userId || "",
+          userId,
           "DD_distributeData",
           "DD_distributeData",
         );
@@ -346,7 +405,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
         await DD_logWarning(
           `訊息解析失敗但有錯誤訊息: ${processedData.errorMessage}`,
           "訊息處理",
-          data.user_id || data.userId || "",
+          userId,
           "DD_distributeData",
           "DD_distributeData",
         );
@@ -360,7 +419,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
           },
           "DD",
           {
-            userId: data.userId || data.user_id,
+            userId: userId,
             replyToken: data.replyToken,
             processId: processId,
           },
@@ -373,7 +432,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
         await DD_logWarning(
           `訊息解析失敗: ${processedData ? processedData.reason : "未知原因"}`,
           "訊息處理",
-          data.user_id || data.userId || "",
+          userId,
           "DD_distributeData",
           "DD_distributeData",
         );
@@ -387,7 +446,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
           },
           "DD",
           {
-            userId: data.userId || data.user_id,
+            userId: userId,
             replyToken: data.replyToken,
             processId: processId,
             errorMessage: "無法解析您的記帳信息，請檢查格式後重試。",
@@ -401,7 +460,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
     await DD_logInfo(
       `開始分類數據`,
       "數據分類",
-      data.user_id || data.userId || "",
+      userId,
       "DD_distributeData",
       "DD_distributeData",
     );
@@ -411,7 +470,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
     await DD_logInfo(
       `數據分類結果: ${category}`,
       "數據分類",
-      data.user_id || data.userId || "",
+      userId,
       "DD_distributeData",
       "DD_distributeData",
     );
@@ -421,7 +480,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
     await DD_logInfo(
       `開始分發數據至 ${category}`,
       "數據分發",
-      data.user_id || data.userId || "",
+      userId,
       "DD_distributeData",
       "DD_distributeData",
     );
@@ -431,7 +490,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
     await DD_logInfo(
       `數據分發完成，結果: ${JSON.stringify(dispatchResult)}`,
       "數據分發",
-      data.user_id || data.userId || "",
+      userId,
       "DD_distributeData",
       "DD_distributeData",
     );
@@ -445,15 +504,13 @@ async function DD_distributeData(data, source, retryCount = 0) {
       },
       dispatchResult ? dispatchResult.module || "DD" : "DD",
       {
-        userId: data.userId || data.user_id,
+        userId: userId,
         replyToken: data.replyToken,
         processId: processId,
       },
     );
   } catch (error) {
     // 記錄原始錯誤
-    const userId =
-      data && (data.user_id || data.userId) ? data.user_id || data.userId : "";
     console.log(`數據處理錯誤: ${error.toString()}`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
     await DD_logError(
@@ -512,6 +569,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
  */
 function DD_classifyData(data, source) {
   let category = "default";
+  const userId = data.user_id || data.userId;
 
   // 獲取進程ID用於日誌追蹤
   const classifyId = Utilities.getUuid().substring(0, 8);
@@ -519,7 +577,7 @@ function DD_classifyData(data, source) {
   DD_logDebug(
     `開始分類，來源: ${source} [${classifyId}]`,
     "數據分類",
-    data.user_id || data.userId || "",
+    userId,
     "DD_classifyData",
     "DD_classifyData",
   );
@@ -533,7 +591,7 @@ function DD_classifyData(data, source) {
         DD_logDebug(
           `檢測到記帳按鈕操作`,
           "數據分類",
-          data.user_id || data.userId || "",
+          userId,
           "DD_classifyData",
           "DD_classifyData",
         );
@@ -548,7 +606,7 @@ function DD_classifyData(data, source) {
         DD_logDebug(
           `檢測到已處理的記帳訊息`,
           "數據分類",
-          data.user_id || data.userId || "",
+          userId,
           "DD_classifyData",
           "DD_classifyData",
         );
@@ -561,7 +619,7 @@ function DD_classifyData(data, source) {
       DD_logDebug(
         `檢測到Webhook請求`,
         "數據分類",
-        data.user_id || data.userId || "",
+        userId,
         "DD_classifyData",
         "DD_classifyData",
       );
@@ -571,7 +629,7 @@ function DD_classifyData(data, source) {
     DD_logDebug(
       `分類結果: ${category} [${classifyId}]`,
       "數據分類",
-      data.user_id || data.userId || "",
+      userId,
       "DD_classifyData",
       "DD_classifyData",
     );
@@ -582,7 +640,7 @@ function DD_classifyData(data, source) {
     DD_logError(
       `分類過程出錯: ${error.toString()}`,
       "數據分類",
-      data.user_id || data.userId || "",
+      userId,
       "ERROR",
       error.toString(),
       "DD_classifyData",
@@ -594,9 +652,9 @@ function DD_classifyData(data, source) {
 
 /**
  * 10. 數據分發函數
- * @version 2025-07-09-V3.1.0
+ * @version 2025-01-09-V3.0.0
  * @author AustinLiao691
- * @date 2025-07-09 12:10:00
+ * @date 2025-01-09 16:00:00
  * @update: 統一使用58號函數(DD_formatSystemReplyMessage)處理系統回覆訊息，適配Firestore異步操作
  * @param {object} data - 需要分發的數據
  * @param {string} targetModule - 目標模組的名稱
@@ -869,9 +927,9 @@ function DD_processForWH(data) {
 
 /**
  * 12. 處理數據並傳遞給BK模組記帳 - 修正回复消息和支付方式处理
- * @version 2025-07-09-V6.1.0
+ * @version 2025-01-09-V3.0.0
  * @author AustinLiao69
- * @date 2025-07-09 12:15:00
+ * @date 2025-01-09 16:00:00
  * @update: 修正用词"付款方式"为"支付方式"，移除支付方式默認值，增加收支ID显示，適配Firestore異步操作
  * @param {Object} data - 來自DD_processUserMessage或其他來源的數據
  * @return {Object} 處理結果
@@ -883,6 +941,11 @@ async function DD_processForBK(data) {
 
     // 正確獲取userId - 修復：從data物件中提取userId
     const userId = data.userId || data.user_id || "";
+
+    // 檢查必要參數
+    if (!userId) {
+      throw new Error("缺少使用者ID，每個使用者都需要獨立的帳本");
+    }
 
     // 記錄開始處理
     await DD_logInfo(
@@ -1205,18 +1268,89 @@ async function DD_logCritical(
   });
 }
 
+/**
+ * 60. 產生處理ID
+ * @version 2025-01-09-V1.0.0
+ * @date 2025-01-09 16:00:00
+ */
+function generateProcessId() {
+  return uuidv4().substring(0, 8);
+}
+
+/**
+ * 61. 時間戳轉換函數 - Firestore版本
+ * @version 2025-01-09-V3.0.0
+ * @date 2025-01-09 16:00:00
+ * @update: 完全重寫，使用Firestore資料庫
+ */
+function DD_convertTimestamp(timestamp) {
+  const tsId = uuidv4().substring(0, 8);
+  console.log(`開始轉換時間戳: ${timestamp} [${tsId}]`);
+
+  try {
+    if (timestamp === null || timestamp === undefined) {
+      console.log(`時間戳為空 [${tsId}]`);
+      return null;
+    }
+
+    let date;
+
+    if (typeof timestamp === "number" || /^\d+$/.test(timestamp)) {
+      date = new Date(Number(timestamp));
+    } else if (typeof timestamp === "string" && timestamp.includes("T")) {
+      date = new Date(timestamp);
+    } else {
+      date = new Date(timestamp);
+    }
+
+    if (isNaN(date.getTime())) {
+      console.log(`無法轉換為有效日期: ${timestamp} [${tsId}]`);
+      return null;
+    }
+
+    // 轉換為台灣時區
+    const taiwanDate = formatDate(date);
+    const taiwanTime = formatTime(date);
+
+    const result = {
+      date: taiwanDate,
+      time: taiwanTime,
+    };
+
+    console.log(`時間戳轉換結果: ${taiwanDate} ${taiwanTime} [${tsId}]`);
+    return result;
+  } catch (error) {
+    console.log(`時間戳轉換錯誤: ${error.toString()} [${tsId}]`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    return null;
+  }
+}
+
+// 格式化時間函數
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${year}/${month}/${day}`;
+}
+
+function formatTime(date) {
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
 // 導出需要的函數
 module.exports = {
   DD_distributeData,
   DD_getAllSubjects,
   DD_writeToLogSheet,
-  DD_userPreferenceManager,
-  DD_learnSynonym,
-  DD_fuzzyMatch,
-  DD_checkMultipleMapping,
+  DD_getLedgerInfo,
+  DD_convertTimestamp,
   DD_logDebug,
   DD_logInfo,
   DD_logWarning,
   DD_logError,
-  DD_logCritical
+  DD_logCritical,
+  generateProcessId
 };
