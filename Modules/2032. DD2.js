@@ -9,6 +9,14 @@
  * 99. 定義配置
  */
 
+// 在函數開始處統一獲取所有需要的 DD1 函數
+const { 
+  DD_logDebug, 
+  DD_logInfo, 
+  DD_logWarning, 
+  DD_logError 
+} = getDD1Functions();
+
 // 引入 Firebase Admin SDK
 const admin = require("firebase-admin");
 
