@@ -7,33 +7,6 @@
  */
 
 /**
- * 99. 初始化檢查 - 在模組載入時執行，確保關鍵資源可用
- */
-try {
-  console.log(`DD模組初始化檢查 [${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}]`);
-  console.log(`DD模組版本: 3.0.0 (2025-01-09) - 完全Firestore版本`);
-  console.log(`執行時間 (UTC+8): ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
-
-  // 檢查 Firestore 連接 - 確保db已初始化
-  if (typeof db !== 'undefined' && db) {
-    console.log(`Firestore 連接檢查: 成功`);
-  } else {
-    console.log(`Firestore 連接檢查: 失敗`);
-  }
-  
-  // 延遲檢查BK模組以避免循環依賴
-  setTimeout(() => {
-    loadModules();
-    console.log(
-      `BK_processBookkeeping函數檢查: ${BK && typeof BK.BK_processBookkeeping === "function" ? "存在" : "不存在"}`,
-    );
-  }, 100);
-} catch (error) {
-  console.log(`DD模組初始化錯誤: ${error.toString()}`);
-  if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-}
-
-/**
  * 98. 各種定義
  */
 const DD_TARGET_MODULE_BK = "BK"; // 記帳處理模組
@@ -65,6 +38,33 @@ if (!admin.apps.length) {
 
 // 取得 Firestore 實例
 const db = admin.firestore();
+
+/**
+ * 99. 初始化檢查 - 在模組載入時執行，確保關鍵資源可用
+ */
+try {
+  console.log(`DD模組初始化檢查 [${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}]`);
+  console.log(`DD模組版本: 3.0.0 (2025-01-09) - 完全Firestore版本`);
+  console.log(`執行時間 (UTC+8): ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
+
+  // 檢查 Firestore 連接 - 現在db已經初始化
+  if (typeof db !== 'undefined' && db) {
+    console.log(`Firestore 連接檢查: 成功`);
+  } else {
+    console.log(`Firestore 連接檢查: 失敗`);
+  }
+  
+  // 延遲檢查BK模組以避免循環依賴
+  setTimeout(() => {
+    loadModules();
+    console.log(
+      `BK_processBookkeeping函數檢查: ${BK && typeof BK.BK_processBookkeeping === "function" ? "存在" : "不存在"}`,
+    );
+  }, 100);
+} catch (error) {
+  console.log(`DD模組初始化錯誤: ${error.toString()}`);
+  if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+}
 
 // 延遲載入模組以避免循環依賴
 let BK, DL;

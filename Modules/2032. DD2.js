@@ -1665,13 +1665,19 @@ function calculateLevenshteinDistance(str1, str2) {
 module.exports = {
   DD_processUserMessage,
   DD_getSubjectCode,
-  DD_getAllSubjects,
+  DD_getAllSubjects: function(userId) {
+    const { DD_getAllSubjects } = getDD1Functions();
+    return DD_getAllSubjects(userId);
+  },
   DD_userPreferenceManager,
   DD_fuzzyMatch,
   DD_parseInputFormat,
   DD_removeAmountFromText,
   DD_initConfig,
-  DD_log: DD1.DD_log,
+  DD_log: function(...args) {
+    const dd1 = loadDD1();
+    return dd1.DD_log(...args);
+  },
   DD_logDebug,
   DD_logInfo,
   DD_logWarning,

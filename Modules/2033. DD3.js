@@ -332,6 +332,6 @@ module.exports = {
   DD_convertTimestamp,
   DD_log: function(...args) {
     loadModules();
-    return DD1.DD_log(...args);
+    return DD1 ? DD1.DD_log(...args) : console.log(...args);
   },
 };
