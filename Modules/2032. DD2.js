@@ -186,7 +186,8 @@ async function DD_userPreferenceManager(
   } catch (error) {
     console.log(`用戶偏好管理錯誤: ${error} [${upId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    await DD1.DD_writeToLogSheet(
+    const { DD_writeToLogSheet } = getDD1Functions();
+    await DD_writeToLogSheet(
       "ERROR",
       `用戶偏好管理錯誤: ${error}`,
       "同義詞處理",
@@ -251,18 +252,18 @@ async function DD_learnSynonym(term, subjectCode, userId) {
     if (snapshot.empty) {
       console.log(`找不到對應科目代碼: ${subjectCode} [${lsId}]`);
       const { DD_writeToLogSheet } = getDD1Functions();
-    await DD_writeToLogSheet(
-      "WARNING",
-      `找不到對應科目代碼: ${subjectCode}`,
-      "同義詞學習",
-      userId,
-      "",
-      "DD",
-      "",
-      0,
-      "DD_learnSynonym",
-      "DD_learnSynonym",
-    );
+      await DD_writeToLogSheet(
+        "WARNING",
+        `找不到對應科目代碼: ${subjectCode}`,
+        "同義詞學習",
+        userId,
+        "",
+        "DD",
+        "",
+        0,
+        "DD_learnSynonym",
+        "DD_learnSynonym",
+      );
       return false;
     }
 
@@ -314,13 +315,13 @@ async function DD_learnSynonym(term, subjectCode, userId) {
   } catch (error) {
     console.log(`同義詞學習錯誤: ${error} [${lsId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    await DD1.DD_writeToLogSheet(
+    const { DD_writeToLogSheet } = getDD1Functions();
+    await DD_writeToLogSheet(
       "ERROR",
       `同義詞學習錯誤: ${error}`,
       "同義詞處理",
       userId,
       "SYN_LEARN_ERROR",
-      "DD",
       error.toString(),
       0,
       "DD_learnSynonym",
@@ -402,13 +403,13 @@ async function DD_processUserMessage(
   if (!userId) {
     const { DD_logError } = getDD1Functions();
     DD_logError(
-    `缺少必要的用戶ID [${msgId}]`,
-    "訊息處理",
-    "",
-    "MISSING_USER_ID",
-    "每個用戶都需要獨立的帳本",
-    "DD_processUserMessage",
-  );
+      `缺少必要的用戶ID [${msgId}]`,
+      "訊息處理",
+      "",
+      "MISSING_USER_ID",
+      "每個用戶都需要獨立的帳本",
+      "DD_processUserMessage",
+    );
 
     return {
       type: "記帳",
@@ -506,6 +507,7 @@ async function DD_processUserMessage(
 
     // 9. 檢查解析結果
     if (!parseResult) {
+      const { DD_logWarning } = getDD1Functions();
       DD_logWarning(
         `DD_parseInputFormat回傳null，無法解析訊息格式: "${message}" [${msgId}]`,
         "訊息處理",
@@ -763,7 +765,8 @@ async function DD_processUserMessage(
     console.log(`DD_processUserMessage異常: ${error.toString()} [${msgId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
 
-    DD1.DD_logError(
+    const { DD_logError } = getDD1Functions();
+    DD_logError(
       `處理用戶消息時發生異常: ${error.toString()}`,
       "訊息處理",
       userId,
@@ -814,6 +817,7 @@ async function DD_getSubjectCode(subjectName, userId) {
     // 檢查參數
     if (!subjectName || !userId) {
       console.log(`科目名稱或用戶ID為空 [${scId}]`);
+      const { DD_logWarning } = getDD1Functions();
       DD_logWarning(
         `科目名稱或用戶ID為空，無法查詢科目代碼 [${scId}]`,
         "科目查詢",
@@ -841,7 +845,8 @@ async function DD_getSubjectCode(subjectName, userId) {
 
     if (snapshot.empty) {
       console.log(`用戶 ${userId} 科目表為空 [${scId}]`);
-      DD1.DD_logError(
+      const { DD_logError } = getDD1Functions();
+      DD_logError(
         `用戶 ${userId} 科目表為空 [${scId}]`,
         "科目查詢",
         userId,
@@ -889,6 +894,7 @@ async function DD_getSubjectCode(subjectName, userId) {
       if (subNameLower === inputLower) {
         console.log(`找到精確匹配: "${subNameLower}" === "${inputLower}"`);
 
+        const { DD_logInfo } = getDD1Functions();
         DD_logInfo(
           `成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`,
           "科目查詢",
@@ -918,6 +924,7 @@ async function DD_getSubjectCode(subjectName, userId) {
               `通過同義詞匹配成功: "${synonymLower}" === "${inputLower}"`,
             );
 
+            const { DD_logInfo } = getDD1Functions();
             DD_logInfo(
               `通過同義詞成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`,
               "科目查詢",
@@ -943,9 +950,7 @@ async function DD_getSubjectCode(subjectName, userId) {
     const matches = [];
 
     for (const doc of snapshot.docs) {
-      if (doc.id === "template") continue;
-
-      const data = doc.data();
+      if (doc.id === "template") continue;      const data = doc.data();
       const majorCode = data.大項代碼;
       const majorName = data.大項名稱;
       const subCode = data.子項代碼;
@@ -1001,6 +1006,7 @@ async function DD_getSubjectCode(subjectName, userId) {
       console.log(
         `複合詞匹配成功: "${normalizedInput}" -> "${bestMatch.subName}", 分數=${bestMatch.score.toFixed(2)}, 匹配類型=${bestMatch.matchType}`,
       );
+      const { DD_logInfo } = getDD1Functions();
       DD_logInfo(
         `複合詞匹配成功: "${normalizedInput}" -> "${bestMatch.subName}", 分數=${bestMatch.score.toFixed(2)}`,
         "複合詞匹配",
@@ -1018,6 +1024,7 @@ async function DD_getSubjectCode(subjectName, userId) {
 
     // 如果所有匹配都失敗，才返回null
     console.log(`找不到科目: "${normalizedInput}" [${scId}]`);
+    const { DD_logWarning } = getDD1Functions();
     DD_logWarning(
       `科目代碼查詢失敗: "${normalizedInput}" [${scId}]`,
       "科目查詢",
@@ -1029,7 +1036,8 @@ async function DD_getSubjectCode(subjectName, userId) {
   } catch (error) {
     console.log(`科目查詢出錯: ${error} [${scId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    DD1.DD_logError(
+    const { DD_logError } = getDD1Functions();
+    DD_logError(
       `科目查詢出錯: ${error} [${scId}]`,
       "科目查詢",
       userId,
@@ -1610,6 +1618,7 @@ async function DD_checkMultipleMapping(term, userId) {
 
     if (matches.length > 0) {
       console.log(`詞彙 "${term}" 有 ${matches.length} 個映射 [${mmId}]`);
+      const { DD_logInfo } = getDD1Functions();
       await DD_logInfo(
         `詞彙 "${term}" 有 ${matches.length} 個映射`,
         "多重映射",
@@ -1624,7 +1633,9 @@ async function DD_checkMultipleMapping(term, userId) {
   } catch (error) {
     console.log(`檢查多重映射錯誤: ${error} [${mmId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    await DD1.DD_logError(
+    const { DD_writeToLogSheet } = getDD1Functions();
+    await DD_writeToLogSheet(
+      "ERROR",
       `檢查多重映射錯誤: ${error}`,
       "同義詞處理",
       userId,
