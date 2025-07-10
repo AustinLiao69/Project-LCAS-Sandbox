@@ -1367,7 +1367,6 @@ const DD3 = require("./2033. DD3.js");
 const { DD_formatSystemReplyMessage } = DD3;
 
 // 引入其他模組
-const BK = require('./2001. BK.js');
 const WH = require('./2020. WH.js');
 const DD2 = require('./2032. DD2.js');
 
