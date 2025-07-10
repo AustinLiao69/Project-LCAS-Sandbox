@@ -9,14 +9,6 @@
  * 99. 定義配置
  */
 
-// 在函數開始處統一獲取所有需要的 DD1 函數
-const { 
-  DD_logDebug, 
-  DD_logInfo, 
-  DD_logWarning, 
-  DD_logError 
-} = getDD1Functions();
-
 // 引入 Firebase Admin SDK
 const admin = require("firebase-admin");
 
@@ -1699,11 +1691,26 @@ module.exports = {
     const dd1 = loadDD1();
     return dd1.DD_log(...args);
   },
-  DD_logDebug,
-  DD_logInfo,
-  DD_logWarning,
-  DD_logError,
-  DD_logCritical,
+  DD_logDebug: function(...args) {
+    const { DD_logDebug } = getDD1Functions();
+    return DD_logDebug(...args);
+  },
+  DD_logInfo: function(...args) {
+    const { DD_logInfo } = getDD1Functions();
+    return DD_logInfo(...args);
+  },
+  DD_logWarning: function(...args) {
+    const { DD_logWarning } = getDD1Functions();
+    return DD_logWarning(...args);
+  },
+  DD_logError: function(...args) {
+    const { DD_logError } = getDD1Functions();
+    return DD_logError(...args);
+  },
+  DD_logCritical: function(...args) {
+    const { DD_logCritical } = getDD1Functions();
+    return DD_logCritical(...args);
+  },
   formatDate,
   formatTime,
   calculateLevenshteinDistance,
