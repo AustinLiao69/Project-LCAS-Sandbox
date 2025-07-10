@@ -1,4 +1,3 @@
-
 /**
  * DD2_智慧處理模組_4.0.0
  * @module 智慧處理模組
@@ -11,14 +10,14 @@
  */
 
 // 引入 Firebase Admin SDK
-const admin = require('firebase-admin');
+const admin = require("firebase-admin");
 
 // 確保 Firebase 已初始化
 if (!admin.apps.length) {
-  const serviceAccount = require('./Serviceaccountkey.json');
+  const serviceAccount = require("./Serviceaccountkey.json");
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`,
   });
 }
 
@@ -29,7 +28,7 @@ const db = admin.firestore();
 const { v4: uuidv4 } = require("uuid");
 
 // 設定時區為 UTC+8 (Asia/Taipei)
-const TIMEZONE = 'Asia/Taipei';
+const TIMEZONE = "Asia/Taipei";
 
 // 模組配置
 const DD_CONFIG = {
@@ -37,20 +36,20 @@ const DD_CONFIG = {
   TIMEZONE: TIMEZONE,
   SYNONYM: {
     FUZZY_MATCH_THRESHOLD: 0.7,
-    ENABLE_COMPOUND_WORDS: true
-  }
+    ENABLE_COMPOUND_WORDS: true,
+  },
 };
 
 // 引入DD1模組的日誌函數
-const DD1 = require('./2031. DD1.js');
-const { 
+const DD1 = require("./2031. DD1.js");
+const {
   DD_writeToLogSheet,
   DD_getAllSubjects,
   DD_logDebug,
   DD_logInfo,
   DD_logWarning,
   DD_logError,
-  DD_logCritical
+  DD_logCritical,
 } = DD1;
 
 /**
@@ -60,7 +59,7 @@ const {
  * @update: 遷移至Firestore配置
  */
 function DD_initConfig() {
-  console.log('DD2模組配置初始化 - Firestore版本');
+  console.log("DD2模組配置初始化 - Firestore版本");
 
   // 確保配置對象存在
   if (!global.DD_CONFIG) {
@@ -101,13 +100,16 @@ async function DD_userPreferenceManager(
     const normalizedTerm = inputTerm.toLowerCase().trim();
 
     // 使用 users collection 下的 preferences subcollection
-    const preferencesRef = db.collection('users').doc(userId).collection('preferences');
+    const preferencesRef = db
+      .collection("users")
+      .doc(userId)
+      .collection("preferences");
 
     // 查詢模式
     if (isQuery) {
       const snapshot = await preferencesRef
-        .where('inputText', '==', normalizedTerm)
-        .orderBy('count', 'desc')
+        .where("inputText", "==", normalizedTerm)
+        .orderBy("count", "desc")
         .limit(1)
         .get();
 
@@ -120,7 +122,7 @@ async function DD_userPreferenceManager(
         return {
           subjectCode: data.selectedCategory,
           count: data.count,
-          lastUse: data.lastUse
+          lastUse: data.lastUse,
         };
       }
 
@@ -136,8 +138,8 @@ async function DD_userPreferenceManager(
 
       // 查找是否已存在記錄
       const existingSnapshot = await preferencesRef
-        .where('inputText', '==', normalizedTerm)
-        .where('selectedCategory', '==', selectedSubjectCode)
+        .where("inputText", "==", normalizedTerm)
+        .where("selectedCategory", "==", selectedSubjectCode)
         .limit(1)
         .get();
 
@@ -149,7 +151,7 @@ async function DD_userPreferenceManager(
         const currentData = doc.data();
         await doc.ref.update({
           count: (currentData.count || 0) + 1,
-          lastUse: now
+          lastUse: now,
         });
         console.log(
           `更新用戶偏好: "${inputTerm}" -> ${selectedSubjectCode}, 新計數=${(currentData.count || 0) + 1} [${upId}]`,
@@ -161,7 +163,7 @@ async function DD_userPreferenceManager(
           selectedCategory: selectedSubjectCode,
           count: 1,
           lastUse: now,
-          context: ""
+          context: "",
         });
         console.log(
           `新增用戶偏好: "${inputTerm}" -> ${selectedSubjectCode} [${upId}]`,
@@ -183,7 +185,7 @@ async function DD_userPreferenceManager(
       error.toString(),
       0,
       "DD_userPreferenceManager",
-      "DD_userPreferenceManager"
+      "DD_userPreferenceManager",
     );
     return null;
   }
@@ -225,10 +227,13 @@ async function DD_learnSynonym(term, subjectCode, userId) {
     const ledgerId = `user_${userId}`;
 
     // 查找對應的科目
-    const subjectsRef = db.collection('ledgers').doc(ledgerId).collection('subjects');
+    const subjectsRef = db
+      .collection("ledgers")
+      .doc(ledgerId)
+      .collection("subjects");
     const snapshot = await subjectsRef
-      .where('大項代碼', '==', majorCode)
-      .where('子項代碼', '==', subCode)
+      .where("大項代碼", "==", majorCode)
+      .where("子項代碼", "==", subCode)
       .limit(1)
       .get();
 
@@ -244,7 +249,7 @@ async function DD_learnSynonym(term, subjectCode, userId) {
         "",
         0,
         "DD_learnSynonym",
-        "DD_learnSynonym"
+        "DD_learnSynonym",
       );
       return false;
     }
@@ -276,7 +281,7 @@ async function DD_learnSynonym(term, subjectCode, userId) {
     // 更新科目文檔
     await doc.ref.update({
       同義詞: newSynonyms,
-      updatedAt: admin.firestore.Timestamp.now()
+      updatedAt: admin.firestore.Timestamp.now(),
     });
 
     console.log(`成功添加同義詞: "${term}" -> ${subjectCode} [${lsId}]`);
@@ -290,10 +295,9 @@ async function DD_learnSynonym(term, subjectCode, userId) {
       "",
       0,
       "DD_learnSynonym",
-      "DD_learnSynonym"
+      "DD_learnSynonym",
     );
     return true;
-
   } catch (error) {
     console.log(`同義詞學習錯誤: ${error} [${lsId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
@@ -307,7 +311,7 @@ async function DD_learnSynonym(term, subjectCode, userId) {
       error.toString(),
       0,
       "DD_learnSynonym",
-      "DD_learnSynonym"
+      "DD_learnSynonym",
     );
     return false;
   }
@@ -333,12 +337,13 @@ async function DD_getSubjectByCode(subjectCode, userId) {
     const ledgerId = `user_${userId}`;
 
     // 查詢Firestore subjects子集合
-    const snapshot = await db.collection('ledgers')
+    const snapshot = await db
+      .collection("ledgers")
       .doc(ledgerId)
-      .collection('subjects')
-      .where('大項代碼', '==', majorCode)
-      .where('子項代碼', '==', subCode)
-      .where('isActive', '==', true)
+      .collection("subjects")
+      .where("大項代碼", "==", majorCode)
+      .where("子項代碼", "==", subCode)
+      .where("isActive", "==", true)
       .limit(1)
       .get();
 
@@ -352,9 +357,8 @@ async function DD_getSubjectByCode(subjectCode, userId) {
       majorName: data.大項名稱,
       subCode: data.子項代碼,
       subName: data.子項名稱,
-      synonyms: data.同義詞 || ''
+      synonyms: data.同義詞 || "",
     };
-
   } catch (error) {
     console.log(`查詢科目代碼失敗: ${error.toString()}`);
     return null;
@@ -372,7 +376,12 @@ async function DD_getSubjectByCode(subjectCode, userId) {
  * @param {string} ledgerId - 帳本ID (可選，不提供時使用用戶的預設帳本)
  * @return {Object} 處理結果
  */
-async function DD_processUserMessage(message, userId = "", timestamp = "", ledgerId = "") {
+async function DD_processUserMessage(
+  message,
+  userId = "",
+  timestamp = "",
+  ledgerId = "",
+) {
   // 1. 生成處理ID
   const msgId = uuidv4().substring(0, 8);
 
@@ -384,7 +393,7 @@ async function DD_processUserMessage(message, userId = "", timestamp = "", ledge
       "",
       "MISSING_USER_ID",
       "每個用戶都需要獨立的帳本",
-      "DD_processUserMessage"
+      "DD_processUserMessage",
     );
 
     return {
@@ -403,8 +412,8 @@ async function DD_processUserMessage(message, userId = "", timestamp = "", ledge
           errorType: "VALIDATION_ERROR",
           module: "DD2",
         },
-        isRetryable: false
-      }
+        isRetryable: false,
+      },
     };
   }
 
@@ -418,7 +427,7 @@ async function DD_processUserMessage(message, userId = "", timestamp = "", ledge
     `處理用戶消息: "${message}" (帳本: ${ledgerId})`,
     "訊息處理",
     userId,
-    "DD_processUserMessage"
+    "DD_processUserMessage",
   );
   console.log(
     `DD_processUserMessage: 開始處理用戶訊息 "${message}" [${msgId}]`,
@@ -434,7 +443,7 @@ async function DD_processUserMessage(message, userId = "", timestamp = "", ledge
         `空訊息 [${msgId}]`,
         "訊息處理",
         userId,
-        "DD_processUserMessage"
+        "DD_processUserMessage",
       );
 
       const errorData = {
@@ -485,7 +494,7 @@ async function DD_processUserMessage(message, userId = "", timestamp = "", ledge
         `DD_parseInputFormat回傳null，無法解析訊息格式: "${message}" [${msgId}]`,
         "訊息處理",
         userId,
-        "DD_processUserMessage"
+        "DD_processUserMessage",
       );
 
       const errorData = {
@@ -539,9 +548,17 @@ async function DD_processUserMessage(message, userId = "", timestamp = "", ledge
 
       // 11.1 嘗試用戶偏好匹配
       try {
-        const userPref = await DD_userPreferenceManager(userId, subject, "", true);
+        const userPref = await DD_userPreferenceManager(
+          userId,
+          subject,
+          "",
+          true,
+        );
         if (userPref) {
-          const prefSubject = await DD_getSubjectByCode(userPref.subjectCode, userId);
+          const prefSubject = await DD_getSubjectByCode(
+            userPref.subjectCode,
+            userId,
+          );
           if (prefSubject) {
             subjectInfo = prefSubject;
             matchMethod = "user_preference";
@@ -583,8 +600,13 @@ async function DD_processUserMessage(message, userId = "", timestamp = "", ledge
         console.log(`DD_processUserMessage: 嘗試模糊匹配 [${msgId}]`);
 
         try {
-          const fuzzyThreshold = DD_CONFIG.SYNONYM?.FUZZY_MATCH_THRESHOLD || 0.7;
-          const fuzzyMatch = await DD_fuzzyMatch(subject, fuzzyThreshold, userId);
+          const fuzzyThreshold =
+            DD_CONFIG.SYNONYM?.FUZZY_MATCH_THRESHOLD || 0.7;
+          const fuzzyMatch = await DD_fuzzyMatch(
+            subject,
+            fuzzyThreshold,
+            userId,
+          );
 
           if (fuzzyMatch && fuzzyMatch.score >= fuzzyThreshold) {
             subjectInfo = fuzzyMatch;
@@ -731,7 +753,7 @@ async function DD_processUserMessage(message, userId = "", timestamp = "", ledge
       userId,
       "PROCESS_ERROR",
       error.toString(),
-      "DD_processUserMessage"
+      "DD_processUserMessage",
     );
 
     const errorData = {
@@ -780,7 +802,7 @@ async function DD_getSubjectCode(subjectName, userId) {
         `科目名稱或用戶ID為空，無法查詢科目代碼 [${scId}]`,
         "科目查詢",
         userId,
-        "DD_getSubjectCode"
+        "DD_getSubjectCode",
       );
       return null;
     }
@@ -794,10 +816,11 @@ async function DD_getSubjectCode(subjectName, userId) {
     console.log(`標準化後的輸入: "${normalizedInput}" [${scId}]`);
 
     // 從Firestore查詢科目表
-    const snapshot = await db.collection('ledgers')
+    const snapshot = await db
+      .collection("ledgers")
       .doc(ledgerId)
-      .collection('subjects')
-      .where('isActive', '==', true)
+      .collection("subjects")
+      .where("isActive", "==", true)
       .get();
 
     if (snapshot.empty) {
@@ -808,7 +831,7 @@ async function DD_getSubjectCode(subjectName, userId) {
         userId,
         "EMPTY_SUBJECTS",
         "科目代碼表無數據",
-        "DD_getSubjectCode"
+        "DD_getSubjectCode",
       );
       return null;
     }
@@ -824,7 +847,7 @@ async function DD_getSubjectCode(subjectName, userId) {
 
     let docCount = 0;
     for (const doc of snapshot.docs) {
-      if (doc.id === 'template') continue; // 跳過template文件
+      if (doc.id === "template") continue; // 跳過template文件
 
       const data = doc.data();
       docCount++;
@@ -854,7 +877,7 @@ async function DD_getSubjectCode(subjectName, userId) {
           `成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`,
           "科目查詢",
           userId,
-          "DD_getSubjectCode"
+          "DD_getSubjectCode",
         );
         console.log(`---科目查詢診斷信息結束---[${scId}]`);
 
@@ -883,7 +906,7 @@ async function DD_getSubjectCode(subjectName, userId) {
               `通過同義詞成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`,
               "科目查詢",
               userId,
-              "DD_getSubjectCode"
+              "DD_getSubjectCode",
             );
             console.log(`---科目查詢診斷信息結束---[${scId}]`);
 
@@ -904,7 +927,7 @@ async function DD_getSubjectCode(subjectName, userId) {
     const matches = [];
 
     for (const doc of snapshot.docs) {
-      if (doc.id === 'template') continue;
+      if (doc.id === "template") continue;
 
       const data = doc.data();
       const majorCode = data.大項代碼;
@@ -966,7 +989,7 @@ async function DD_getSubjectCode(subjectName, userId) {
         `複合詞匹配成功: "${normalizedInput}" -> "${bestMatch.subName}", 分數=${bestMatch.score.toFixed(2)}`,
         "複合詞匹配",
         userId,
-        "DD_getSubjectCode"
+        "DD_getSubjectCode",
       );
 
       return {
@@ -983,7 +1006,7 @@ async function DD_getSubjectCode(subjectName, userId) {
       `科目代碼查詢失敗: "${normalizedInput}" [${scId}]`,
       "科目查詢",
       userId,
-      "DD_getSubjectCode"
+      "DD_getSubjectCode",
     );
     console.log(`---科目查詢診斷信息結束---[${scId}]`);
     return null;
@@ -996,7 +1019,7 @@ async function DD_getSubjectCode(subjectName, userId) {
       userId,
       "QUERY_ERROR",
       error.toString(),
-      "DD_getSubjectCode"
+      "DD_getSubjectCode",
     );
     return null;
   }
@@ -1216,7 +1239,7 @@ async function DD_getLedgerInfo(userId) {
     }
 
     const ledgerId = `user_${userId}`;
-    const ledgerDoc = await db.collection('ledgers').doc(ledgerId).get();
+    const ledgerDoc = await db.collection("ledgers").doc(ledgerId).get();
 
     if (!ledgerDoc.exists) {
       console.log(`使用者 ${userId} 的帳本不存在`);
@@ -1230,9 +1253,8 @@ async function DD_getLedgerInfo(userId) {
       type: data.type || "個人帳本",
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
-      isActive: data.isActive || true
+      isActive: data.isActive || true,
     };
-
   } catch (error) {
     console.log(`獲取帳本資訊失敗: ${error.toString()}`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
@@ -1358,7 +1380,9 @@ async function DD_fuzzyMatch(input, threshold = 0.6, userId = null) {
   if (!input || !userId) return null;
 
   // 日誌記錄
-  console.log(`【模糊匹配】開始處理: "${input}", 閾值: ${threshold}, 用戶: ${userId}`);
+  console.log(
+    `【模糊匹配】開始處理: "${input}", 閾值: ${threshold}, 用戶: ${userId}`,
+  );
 
   const inputLower = input.toLowerCase().trim();
 
@@ -1556,8 +1580,11 @@ async function DD_checkMultipleMapping(term, userId) {
     // 使用用戶獨立帳本
     const ledgerId = `user_${userId}`;
 
-    const subjectsRef = db.collection('ledgers').doc(ledgerId).collection('subjects');
-    const snapshot = await subjectsRef.where('isActive', '==', true).get();
+    const subjectsRef = db
+      .collection("ledgers")
+      .doc(ledgerId)
+      .collection("subjects");
+    const snapshot = await subjectsRef.where("isActive", "==", true).get();
 
     if (snapshot.empty) {
       console.log(`沒有找到任何科目資料 [${mmId}]`);
@@ -1567,9 +1594,9 @@ async function DD_checkMultipleMapping(term, userId) {
     let matches = [];
 
     // 檢查每個科目
-    snapshot.forEach(doc => {
+    snapshot.forEach((doc) => {
       // 跳過template文件
-      if (doc.id === 'template') return;
+      if (doc.id === "template") return;
 
       const data = doc.data();
       const majorCode = data.大項代碼;
@@ -1675,5 +1702,5 @@ module.exports = {
   formatDate,
   formatTime,
   calculateLevenshteinDistance,
-  DD_CONFIG
+  DD_CONFIG,
 };

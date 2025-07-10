@@ -1,4 +1,3 @@
-
 /**
  * DD1_核心協調模組_3.0.0
  * @module 核心協調模組
@@ -33,8 +32,8 @@ const DD_TARGET_MODULE_BK = "BK"; // 記帳處理模組
 const DD_TARGET_MODULE_WH = "WH"; // Webhook 模組
 const DD_MODULE_PREFIX = "DD_";
 const DD_CONFIG = {
-  DEBUG: false,                // 關閉DEBUG模式減少日誌輸出
-  TIMEZONE: "Asia/Taipei",     // GMT+8 台灣時區
+  DEBUG: false, // 關閉DEBUG模式減少日誌輸出
+  TIMEZONE: "Asia/Taipei", // GMT+8 台灣時區
   DEFAULT_SUBJECT: "其他支出",
 };
 
@@ -43,7 +42,7 @@ const BK = require("./2001. BK.js");
 const DL = require("./2010. DL.js");
 
 // 引入 Firebase Admin SDK
-const admin = require('firebase-admin');
+const admin = require("firebase-admin");
 
 // 確保BK函數正確引用
 const { BK_processBookkeeping } = BK;
@@ -56,10 +55,10 @@ const moment = require("moment-timezone");
 
 // 初始化 Firebase（如果尚未初始化）
 if (!admin.apps.length) {
-  const serviceAccount = require('./Serviceaccountkey.json');
+  const serviceAccount = require("./Serviceaccountkey.json");
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`,
   });
 }
 
@@ -95,8 +94,11 @@ async function DD_getAllSubjects(userId) {
     const ledgerId = `user_${userId}`;
     console.log(`開始從Firestore獲取科目資料，使用者帳本: ${ledgerId}`);
 
-    const subjectsRef = db.collection('ledgers').doc(ledgerId).collection('subjects');
-    const snapshot = await subjectsRef.where('isActive', '==', true).get();
+    const subjectsRef = db
+      .collection("ledgers")
+      .doc(ledgerId)
+      .collection("subjects");
+    const snapshot = await subjectsRef.where("isActive", "==", true).get();
 
     if (snapshot.empty) {
       console.log(`使用者 ${userId} 沒有找到任何科目資料`);
@@ -104,23 +106,22 @@ async function DD_getAllSubjects(userId) {
     }
 
     const subjects = [];
-    snapshot.forEach(doc => {
+    snapshot.forEach((doc) => {
       const data = doc.data();
       // 跳過template文件
-      if (doc.id === 'template') return;
+      if (doc.id === "template") return;
 
       subjects.push({
         majorCode: data.大項代碼,
         majorName: data.大項名稱,
         subCode: data.子項代碼,
         subName: data.子項名稱,
-        synonyms: data.同義詞 || ''
+        synonyms: data.同義詞 || "",
       });
     });
 
     console.log(`成功獲取使用者 ${userId} 的 ${subjects.length} 個科目`);
     return subjects;
-
   } catch (error) {
     console.log(`獲取科目資料失敗: ${error.toString()}`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
@@ -177,12 +178,11 @@ async function DD_writeToLogSheet(
       重試次數: retryCount,
       程式碼位置: location,
       嚴重等級: severity,
-      函數名稱: functionName
+      函數名稱: functionName,
     };
 
     // 寫入 Firestore
-    await db.collection('ledgers').doc(ledgerId).collection('log').add(logData);
-
+    await db.collection("ledgers").doc(ledgerId).collection("log").add(logData);
   } catch (error) {
     // 如果寫入日誌失敗，只能在控制台輸出
     console.log(`寫入日誌失敗: ${error.toString()}. 原始消息: ${message}`);
@@ -204,7 +204,7 @@ async function DD_getLedgerInfo(userId) {
     }
 
     const ledgerId = `user_${userId}`;
-    const ledgerDoc = await db.collection('ledgers').doc(ledgerId).get();
+    const ledgerDoc = await db.collection("ledgers").doc(ledgerId).get();
 
     if (!ledgerDoc.exists) {
       console.log(`使用者 ${userId} 的帳本不存在`);
@@ -218,9 +218,8 @@ async function DD_getLedgerInfo(userId) {
       type: data.type || "個人帳本",
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
-      isActive: data.isActive || true
+      isActive: data.isActive || true,
     };
-
   } catch (error) {
     console.log(`獲取帳本資訊失敗: ${error.toString()}`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
@@ -246,7 +245,7 @@ async function DD_distributeData(data, source, retryCount = 0) {
     return {
       success: false,
       error: "缺少使用者ID，每個使用者都需要獨立的帳本",
-      errorType: "MISSING_USER_ID"
+      errorType: "MISSING_USER_ID",
     };
   }
 
@@ -1071,9 +1070,13 @@ async function DD_processForBK(data) {
       "DD_processForBK",
     );
 
-    console.log(`[${processId}] 即將調用 BK.BK_processBookkeeping，數據: ${JSON.stringify(bookkeepingData).substring(0, 200)}...`);
+    console.log(
+      `[${processId}] 即將調用 BK.BK_processBookkeeping，數據: ${JSON.stringify(bookkeepingData).substring(0, 200)}...`,
+    );
     const result = await BK.BK_processBookkeeping(bookkeepingData);
-    console.log(`[${processId}] BK.BK_processBookkeeping 返回結果: ${JSON.stringify(result).substring(0, 300)}...`);
+    console.log(
+      `[${processId}] BK.BK_processBookkeeping 返回結果: ${JSON.stringify(result).substring(0, 300)}...`,
+    );
 
     await DD_logInfo(
       `BK_processBookkeeping調用完成，結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`,
@@ -1134,7 +1137,8 @@ async function DD_processForBK(data) {
     };
   } catch (error) {
     // 安全獲取 userId（在 catch 區塊中重新定義以確保作用域）
-    const userId = data && (data.userId || data.user_id) ? (data.userId || data.user_id) : "";
+    const userId =
+      data && (data.userId || data.user_id) ? data.userId || data.user_id : "";
 
     // 記錄錯誤
     await DD_logError(
@@ -1170,7 +1174,13 @@ async function DD_processForBK(data) {
  * @param {string} options.location - 程式碼位置
  * @param {string} options.functionName - 函數名稱
  */
-async function DD_log(level, message, operationType = "", userId = "", options = {}) {
+async function DD_log(
+  level,
+  message,
+  operationType = "",
+  userId = "",
+  options = {},
+) {
   // 預設值設定
   const {
     errorCode = "",
@@ -1211,7 +1221,10 @@ async function DD_logDebug(
   location = "",
   functionName = "",
 ) {
-  await DD_log("DEBUG", message, operationType, userId, { location, functionName });
+  await DD_log("DEBUG", message, operationType, userId, {
+    location,
+    functionName,
+  });
 }
 
 async function DD_logInfo(
@@ -1221,7 +1234,10 @@ async function DD_logInfo(
   location = "",
   functionName = "",
 ) {
-  await DD_log("INFO", message, operationType, userId, { location, functionName });
+  await DD_log("INFO", message, operationType, userId, {
+    location,
+    functionName,
+  });
 }
 
 async function DD_logWarning(
@@ -1231,7 +1247,10 @@ async function DD_logWarning(
   location = "",
   functionName = "",
 ) {
-  await DD_log("WARNING", message, operationType, userId, { location, functionName });
+  await DD_log("WARNING", message, operationType, userId, {
+    location,
+    functionName,
+  });
 }
 
 async function DD_logError(
@@ -1341,7 +1360,7 @@ function formatTime(date) {
 }
 
 // 引入DD3模組的格式化函數
-const DD3 = require('./2033. DD3.js');
+const DD3 = require("./2033. DD3.js");
 const { DD_formatSystemReplyMessage } = DD3;
 
 // 導出需要的函數
@@ -1357,5 +1376,5 @@ module.exports = {
   DD_logWarning,
   DD_logError,
   DD_logCritical,
-  generateProcessId
+  generateProcessId,
 };

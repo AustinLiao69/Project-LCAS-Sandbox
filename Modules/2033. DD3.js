@@ -6,14 +6,14 @@
  */
 
 // 引入 Firebase Admin SDK
-const admin = require('firebase-admin');
+const admin = require("firebase-admin");
 
 // 確保 Firebase 已初始化
 if (!admin.apps.length) {
-  const serviceAccount = require('./Serviceaccountkey.json');
+  const serviceAccount = require("./Serviceaccountkey.json");
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`,
   });
 }
 
@@ -24,11 +24,11 @@ const db = admin.firestore();
 const { v4: uuidv4 } = require("uuid");
 
 // 設定時區為 UTC+8 (Asia/Taipei)
-const TIMEZONE = 'Asia/Taipei';
+const TIMEZONE = "Asia/Taipei";
 
 // 引入DD1模組的日誌函數
-const DD1 = require('./2031. DD1.js');
-const { 
+const DD1 = require("./2031. DD1.js");
+const {
   DD_writeToLogSheet,
   DD_getLedgerInfo,
   DD_logDebug,
@@ -36,11 +36,11 @@ const {
   DD_logWarning,
   DD_logError,
   DD_logCritical,
-  generateProcessId
+  generateProcessId,
 } = DD1;
 
 // 引入DL模組
-const DL = require('./2010. DL.js');
+const DL = require("./2010. DL.js");
 
 /**
  * 32. 格式化日期為 'YYYY/MM/DD'
@@ -64,8 +64,6 @@ function formatTime(date) {
   const minutes = date.getMinutes().toString().padStart(2, "0");
   return `${hours}:${minutes}`;
 }
-
-
 
 /**
  * 36 計算兩個字符串的相似度 (使用Levenshtein距離)
@@ -118,26 +116,30 @@ function DD_calculateSimilarity(str1, str2) {
  * @param {Object} options - 附加選項
  * @returns {Object} 格式化後的回覆訊息
  */
-async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {}) {
+async function DD_formatSystemReplyMessage(
+  resultData,
+  moduleCode,
+  options = {},
+) {
   const userId = options.userId || "";
   const processId = options.processId || generateProcessId();
   let errorMsg = "未知錯誤";
 
-  const currentDateTime = new Date().toLocaleString('zh-TW', {
+  const currentDateTime = new Date().toLocaleString("zh-TW", {
     timeZone: TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
-  DL.DL_logDebug('DD5', `開始格式化訊息 [${processId}], 模組: ${moduleCode}`);
+  DL.DL_logDebug("DD5", `開始格式化訊息 [${processId}], 模組: ${moduleCode}`);
 
   try {
     // 檢查是否已有完整回覆訊息
     if (resultData && resultData.responseMessage) {
-      DL.DL_logDebug('DD5', `使用現有回覆訊息 [${processId}]`);
+      DL.DL_logDebug("DD5", `使用現有回覆訊息 [${processId}]`);
       return {
         success: resultData.success === true,
         responseMessage: resultData.responseMessage,
@@ -146,7 +148,7 @@ async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {})
         errorType: resultData.errorType || null,
         moduleCode: moduleCode,
         partialData: resultData.partialData || {},
-        error: resultData.success === true ? undefined : errorMsg
+        error: resultData.success === true ? undefined : errorMsg,
       };
     }
 
@@ -162,8 +164,8 @@ async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {})
           amount: 0,
           rawAmount: "0",
           paymentMethod: "支付方式未指定",
-          timestamp: new Date().getTime()
-        }
+          timestamp: new Date().getTime(),
+        },
       };
     }
 
@@ -171,10 +173,8 @@ async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {})
     const isSuccess = resultData.success === true;
 
     // 提取部分數據
-    let partialData = resultData.parsedData || 
-                     resultData.partialData || 
-                     resultData.data || 
-                     {};
+    let partialData =
+      resultData.parsedData || resultData.partialData || resultData.data || {};
 
     if (isSuccess) {
       // 成功訊息
@@ -183,9 +183,11 @@ async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {})
       } else if (resultData.data) {
         const data = resultData.data;
         const subjectName = data.subjectName || partialData.subject || "";
-        const amount = data.rawAmount || partialData.rawAmount || data.amount || 0;
+        const amount =
+          data.rawAmount || partialData.rawAmount || data.amount || 0;
         const action = data.action || resultData.action || "支出";
-        const paymentMethod = data.paymentMethod || partialData.paymentMethod || "";
+        const paymentMethod =
+          data.paymentMethod || partialData.paymentMethod || "";
         const date = data.date || currentDateTime;
         const remark = data.remark || partialData.remark || "無";
         const userType = data.userType || "J";
@@ -199,11 +201,11 @@ async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {})
               ledgerInfo = `\n帳本：${ledgerData.name} (${ledgerData.type})`;
             }
           } catch (e) {
-            DL.DL_logDebug('DD5', `獲取帳本資訊失敗: ${e.message}`);
+            DL.DL_logDebug("DD5", `獲取帳本資訊失敗: ${e.message}`);
           }
         }
 
-        responseMessage = 
+        responseMessage =
           `記帳成功！\n` +
           `金額：${amount}元 (${action})\n` +
           `付款方式：${paymentMethod}\n` +
@@ -216,14 +218,16 @@ async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {})
       }
     } else {
       // 失敗訊息
-      errorMsg = resultData.error || 
-                resultData.message || 
-                resultData.errorData?.error || 
-                "未知錯誤";
+      errorMsg =
+        resultData.error ||
+        resultData.message ||
+        resultData.errorData?.error ||
+        "未知錯誤";
 
       const subject = partialData.subject || "未知科目";
-      const displayAmount = partialData.rawAmount || 
-                           (partialData.amount !== undefined ? String(partialData.amount) : "0");
+      const displayAmount =
+        partialData.rawAmount ||
+        (partialData.amount !== undefined ? String(partialData.amount) : "0");
       const paymentMethod = partialData.paymentMethod || "未指定支付方式";
       const remark = partialData.remark || "無";
 
@@ -238,7 +242,7 @@ async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {})
         `錯誤原因：${errorMsg}`;
     }
 
-    DL.DL_logDebug('DD5', `訊息格式化完成 [${processId}]`);
+    DL.DL_logDebug("DD5", `訊息格式化完成 [${processId}]`);
 
     return {
       success: isSuccess,
@@ -248,11 +252,10 @@ async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {})
       errorType: resultData.errorType || null,
       moduleCode: moduleCode,
       partialData: partialData,
-      error: isSuccess ? undefined : errorMsg
+      error: isSuccess ? undefined : errorMsg,
     };
-
   } catch (error) {
-    DL.DL_logError('DD5', `格式化過程出錯: ${error.message} [${processId}]`);
+    DL.DL_logError("DD5", `格式化過程出錯: ${error.message} [${processId}]`);
 
     const fallbackMessage = `記帳失敗！\n時間：${currentDateTime}\n科目：未知科目\n金額：0元\n支付方式：未指定支付方式\n備註：無\n使用者類型：J\n錯誤原因：訊息格式化錯誤`;
 
@@ -262,7 +265,7 @@ async function DD_formatSystemReplyMessage(resultData, moduleCode, options = {})
       processId: processId,
       errorType: "FORMAT_ERROR",
       moduleCode: moduleCode,
-      error: error.toString()
+      error: error.toString(),
     };
   }
 }
@@ -322,5 +325,5 @@ module.exports = {
   formatTime,
   DD_calculateSimilarity,
   DD_formatSystemReplyMessage,
-  DD_convertTimestamp
+  DD_convertTimestamp,
 };
