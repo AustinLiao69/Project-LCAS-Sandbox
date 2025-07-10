@@ -6,7 +6,7 @@
  */
 
 // 首先引入其他模組
-const DD = require("./2031. DD.js");
+const DD = require("./2031. DD1.js");
 const BK = require("./2001. BK.js");
 const DL = require("./2010. DL.js");
 const AM = require("./2009. AM.js");
