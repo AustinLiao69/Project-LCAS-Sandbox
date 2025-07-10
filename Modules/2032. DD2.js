@@ -51,6 +51,7 @@ const {
   DD_logWarning,
   DD_logError,
   DD_logCritical,
+  DD_convertTimestamp,
 } = DD1;
 
 /**
@@ -1654,7 +1655,6 @@ module.exports = {
   DD_getAllSubjects,
   DD_userPreferenceManager,
   DD_fuzzyMatch,
-  DD_convertTimestamp,
   DD_parseInputFormat,
   DD_removeAmountFromText,
   DD_initConfig,
