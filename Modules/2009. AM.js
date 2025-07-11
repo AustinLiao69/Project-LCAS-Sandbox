@@ -19,9 +19,9 @@ const DL = require('./2010. DL.js');
 
 /**
  * 01. 創建LINE OA用戶帳號
- * @version 2025-01-09-V1.0.0
- * @date 2025-01-09 00:34:00
- * @description 透過LINE OAuth創建用戶帳號並建立基礎資料結構
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 18:00:00
+ * @description 透過LINE OAuth創建用戶帳號並建立基礎資料結構，包含科目初始化
  */
 async function AM_createLineAccount(lineUID, lineProfile, userType = 'S') {
   try {
@@ -78,15 +78,20 @@ async function AM_createLineAccount(lineUID, lineProfile, userType = 'S') {
 
     await db.collection('account_mappings').doc(lineUID).set(mappingData);
 
+    // 初始化用戶科目數據
+    const subjectInit = await AM_initializeUserSubjects(lineUID);
+    
     // 記錄操作日誌
-    await DL.DL_log('AM', 'createLineAccount', 'INFO', `LINE帳號創建成功: ${lineUID}`, lineUID);
+    await DL.DL_log('AM', 'createLineAccount', 'INFO', `LINE帳號創建成功: ${lineUID}, 科目初始化: ${subjectInit.success ? '成功' : '失敗'}`, lineUID);
 
     return {
       success: true,
       UID: lineUID,
       accountId: lineUID,
       userType: userType,
-      message: 'LINE帳號創建成功'
+      message: 'LINE帳號創建成功',
+      subjectInitialized: subjectInit.success,
+      subjectCount: subjectInit.importCount || 0
     };
 
   } catch (error) {
@@ -792,6 +797,112 @@ async function AM_resolveDataConflict(conflictData, resolutionStrategy = 'latest
  * @description 統一處理帳號管理過程中的各種錯誤
  */
 async function AM_handleAccountError(errorType, errorData, context, retryCount = 0) {
+
+
+/**
+ * 17. 初始化用戶科目數據
+ * @version 2025-07-11-V1.0.0
+ * @date 2025-07-11 18:00:00
+ * @description 為新用戶初始化預設科目數據
+ */
+async function AM_initializeUserSubjects(UID, ledgerIdPrefix = 'user_') {
+  try {
+    console.log(`🔄 AM模組開始為用戶 ${UID} 初始化科目數據...`);
+    
+    const userLedgerId = `${ledgerIdPrefix}${UID}`;
+    
+    // 導入完整科目資料
+    const subjectData = require('../Miscellaneous/9999. Subject_code.json');
+    const batch = db.batch();
+    
+    console.log(`📋 準備導入 ${subjectData.length} 筆科目資料到 ${userLedgerId}...`);
+    
+    let importCount = 0;
+    for (const subject of subjectData) {
+      const docId = `${subject.大項代碼}_${subject.子項代碼}`;
+      const subjectRef = db.collection('ledgers').doc(userLedgerId).collection('subjects').doc(docId);
+      
+      batch.set(subjectRef, {
+        大項代碼: String(subject.大項代碼),
+        大項名稱: subject.大項名稱 || '',
+        子項代碼: String(subject.子項代碼),
+        子項名稱: subject.子項名稱 || '',
+        同義詞: subject.同義詞 || '',
+        isActive: true,
+        sortOrder: importCount,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now()
+      });
+      
+      importCount++;
+      
+      // 每 400 筆提交一次 batch
+      if (importCount % 400 === 0) {
+        await batch.commit();
+        console.log(`📦 已提交 ${importCount} 筆科目資料到用戶帳本...`);
+      }
+    }
+    
+    // 提交剩餘的資料
+    if (importCount % 400 !== 0) {
+      await batch.commit();
+    }
+    
+    // 記錄操作日誌
+    await DL.DL_log('AM', 'initializeUserSubjects', 'INFO', `用戶 ${UID} 科目初始化完成，共導入 ${importCount} 筆科目`, UID);
+    
+    console.log(`✅ 用戶 ${UID} 科目初始化完成，共導入 ${importCount} 筆科目`);
+    return {
+      success: true,
+      importCount: importCount,
+      userLedgerId: userLedgerId
+    };
+    
+  } catch (error) {
+    console.error(`❌ 用戶 ${UID} 科目初始化失敗:`, error);
+    await DL.DL_error('AM', 'initializeUserSubjects', error.message, UID);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * 18. 檢查並補充用戶科目數據
+ * @version 2025-07-11-V1.0.0
+ * @date 2025-07-11 18:00:00
+ * @description 檢查用戶科目是否存在，不存在則自動初始化
+ */
+async function AM_ensureUserSubjects(UID) {
+  try {
+    const userLedgerId = `user_${UID}`;
+    
+    // 檢查用戶是否有科目數據
+    const subjectsQuery = await db.collection('ledgers').doc(userLedgerId).collection('subjects').limit(1).get();
+    
+    if (subjectsQuery.empty) {
+      console.log(`🔄 用戶 ${UID} 沒有科目數據，開始自動初始化...`);
+      return await AM_initializeUserSubjects(UID);
+    } else {
+      console.log(`✅ 用戶 ${UID} 已有科目數據，無需初始化`);
+      return {
+        success: true,
+        message: '用戶科目已存在',
+        userLedgerId: userLedgerId
+      };
+    }
+    
+  } catch (error) {
+    console.error(`❌ 檢查用戶 ${UID} 科目失敗:`, error);
+    await DL.DL_error('AM', 'ensureUserSubjects', error.message, UID);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
   try {
     const maxRetries = 3;
     const shouldRetry = retryCount < maxRetries && ['NETWORK_ERROR', 'TIMEOUT'].includes(errorType);
@@ -983,7 +1094,9 @@ module.exports = {
   AM_syncCrossPlatformData,
   AM_resolveDataConflict,
   AM_handleAccountError,
-  AM_monitorSystemHealth
+  AM_monitorSystemHealth,
+  AM_initializeUserSubjects,
+  AM_ensureUserSubjects
 };
 
 console.log('AM 帳號管理模組載入完成 v1.0.0');
