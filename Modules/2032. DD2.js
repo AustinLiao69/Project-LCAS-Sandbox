@@ -80,128 +80,7 @@ function DD_initConfig() {
   return true;
 }
 
-/**
- * 03. 用戶偏好記憶管理 - Firestore版本
- * @version 2025-01-09-V4.0.0
- * @date 2025-01-09 16:00:00
- * @update: 完全遷移至Firestore，移除Google Sheets依賴，移除預設ledgerID
- * @param {string} userId - 用戶ID (必須提供)
- * @param {string} inputTerm - 輸入詞彙
- * @param {string} selectedSubjectCode - 用戶選擇的科目代碼
- * @param {boolean} isQuery - 是否為查詢操作
- * @returns {object|null} 查詢操作時返回偏好信息，存儲操作時返回null
- */
-async function DD_userPreferenceManager(
-  userId,
-  inputTerm,
-  selectedSubjectCode,
-  isQuery = false,
-) {
-  const upId = uuidv4().substring(0, 8);
-  console.log(
-    `${isQuery ? "查詢" : "存儲"}用戶偏好: userId=${userId}, term="${inputTerm}" [${upId}]`,
-  );
 
-  try {
-    if (!userId || !inputTerm) {
-      console.log(`用戶ID或輸入詞彙為空 [${upId}]`);
-      return null;
-    }
-
-    const normalizedTerm = inputTerm.toLowerCase().trim();
-
-    // 使用 users collection 下的 preferences subcollection
-    const preferencesRef = db
-      .collection("users")
-      .doc(userId)
-      .collection("preferences");
-
-    // 查詢模式
-    if (isQuery) {
-      const snapshot = await preferencesRef
-        .where("inputText", "==", normalizedTerm)
-        .orderBy("count", "desc")
-        .limit(1)
-        .get();
-
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
-        const data = doc.data();
-        console.log(
-          `找到用戶偏好: ${data.selectedCategory}, 使用次數=${data.count} [${upId}]`,
-        );
-        return {
-          subjectCode: data.selectedCategory,
-          count: data.count,
-          lastUse: data.lastUse,
-        };
-      }
-
-      console.log(`未找到用戶偏好 [${upId}]`);
-      return null;
-    }
-    // 存儲模式
-    else {
-      if (!selectedSubjectCode) {
-        console.log(`科目代碼為空，無法存儲 [${upId}]`);
-        return null;
-      }
-
-      // 查找是否已存在記錄
-      const existingSnapshot = await preferencesRef
-        .where("inputText", "==", normalizedTerm)
-        .where("selectedCategory", "==", selectedSubjectCode)
-        .limit(1)
-        .get();
-
-      const now = admin.firestore.Timestamp.now();
-
-      if (!existingSnapshot.empty) {
-        // 更新現有記錄
-        const doc = existingSnapshot.docs[0];
-        const currentData = doc.data();
-        await doc.ref.update({
-          count: (currentData.count || 0) + 1,
-          lastUse: now,
-        });
-        console.log(
-          `更新用戶偏好: "${inputTerm}" -> ${selectedSubjectCode}, 新計數=${(currentData.count || 0) + 1} [${upId}]`,
-        );
-      } else {
-        // 添加新記錄
-        await preferencesRef.add({
-          inputText: inputTerm,
-          selectedCategory: selectedSubjectCode,
-          count: 1,
-          lastUse: now,
-          context: "",
-        });
-        console.log(
-          `新增用戶偏好: "${inputTerm}" -> ${selectedSubjectCode} [${upId}]`,
-        );
-      }
-
-      return null;
-    }
-  } catch (error) {
-    console.log(`用戶偏好管理錯誤: ${error} [${upId}]`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    const { DD_writeToLogSheet } = getDD1Functions();
-    await DD_writeToLogSheet(
-      "ERROR",
-      `用戶偏好管理錯誤: ${error}`,
-      "同義詞處理",
-      userId,
-      "USER_PREF_ERROR",
-      "DD",
-      error.toString(),
-      0,
-      "DD_userPreferenceManager",
-      "DD_userPreferenceManager",
-    );
-    return null;
-  }
-}
 
 /**
  * 04. 同義詞學習函數 - Firestore版本
@@ -564,33 +443,7 @@ async function DD_processUserMessage(
       let confidence = 0;
       let originalSubject = subject;
 
-      // 11.1 嘗試用戶偏好匹配
-      try {
-        const userPref = await DD_userPreferenceManager(
-          userId,
-          subject,
-          "",
-          true,
-        );
-        if (userPref) {
-          const prefSubject = await DD_getSubjectByCode(
-            userPref.subjectCode,
-            userId,
-          );
-          if (prefSubject) {
-            subjectInfo = prefSubject;
-            matchMethod = "user_preference";
-            confidence = 0.9;
-            console.log(
-              `DD_processUserMessage: 用戶偏好匹配成功 "${subject}" -> ${prefSubject.subName} [${msgId}]`,
-            );
-          }
-        }
-      } catch (prefError) {
-        console.log(
-          `DD_processUserMessage: 用戶偏好匹配錯誤 ${prefError.toString()} [${msgId}]`,
-        );
-      }
+      // 11.1 用戶偏好匹配已移除
 
       // 11.2 嘗試精確匹配
       if (!subjectInfo) {
@@ -817,14 +670,18 @@ async function DD_getSubjectCode(subjectName, userId) {
     // 檢查參數
     if (!subjectName || !userId) {
       console.log(`科目名稱或用戶ID為空 [${scId}]`);
-      const { DD_logWarning } = getDD1Functions();
-      DD_logWarning(
+      const { DD_logError } = getDD1Functions();
+      DD_logError(
         `科目名稱或用戶ID為空，無法查詢科目代碼 [${scId}]`,
         "科目查詢",
         userId,
+        "MISSING_PARAMS",
+        "缺少必要參數",
         "DD_getSubjectCode",
       );
-      return null;
+      
+      // 返回友善錯誤訊息給DD3處理
+      throw new Error("找不到科目「" + (subjectName || "未知") + "」，請確認科目名稱或使用其他相近詞彙");
     }
 
     // 使用用戶獨立帳本
@@ -854,7 +711,9 @@ async function DD_getSubjectCode(subjectName, userId) {
         "科目代碼表無數據",
         "DD_getSubjectCode",
       );
-      return null;
+      
+      // 返回友善錯誤訊息給DD3處理
+      throw new Error("系統科目表暫時無法使用，請稍後再試");
     }
 
     console.log(`讀取用戶 ${userId} 科目表: ${snapshot.size}筆數據 [${scId}]`);
@@ -1032,7 +891,9 @@ async function DD_getSubjectCode(subjectName, userId) {
       "DD_getSubjectCode",
     );
     console.log(`---科目查詢診斷信息結束---[${scId}]`);
-    return null;
+    
+    // 返回友善錯誤訊息給DD3處理
+    throw new Error("找不到科目「" + normalizedInput + "」，請確認科目名稱或使用其他相近詞彙");
   } catch (error) {
     console.log(`科目查詢出錯: ${error} [${scId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
@@ -1045,7 +906,14 @@ async function DD_getSubjectCode(subjectName, userId) {
       error.toString(),
       "DD_getSubjectCode",
     );
-    return null;
+    
+    // 如果是我們自己拋出的友善錯誤，直接重新拋出
+    if (error.message.includes("找不到科目") || error.message.includes("系統科目表暫時無法使用")) {
+      throw error;
+    }
+    
+    // 其他系統錯誤，統一處理
+    throw new Error("資料處理發生問題，已記錄錯誤並通知管理員");
   }
 }
 
@@ -1682,7 +1550,6 @@ module.exports = {
     const { DD_getAllSubjects } = getDD1Functions();
     return DD_getAllSubjects(userId);
   },
-  DD_userPreferenceManager,
   DD_fuzzyMatch,
   DD_parseInputFormat,
   DD_removeAmountFromText,

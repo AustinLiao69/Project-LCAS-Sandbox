@@ -159,24 +159,70 @@ async function createLedgerCollection(ledgerId, lineUID) {
 }
 
 /**
-* 04. 建立科目代碼集合結構
-* @version 2025-07-02-V1.0.3
-* @date 2025-07-02 03:34:16
-* @update: 保持科目代碼結構不變
+* 04. 建立科目代碼集合結構並導入完整科目資料
+* @version 2025-07-11-V1.0.4
+* @date 2025-07-11 16:00:00
+* @update: 從 9999. Subject_code.json 導入完整科目資料
 */
 async function createSubjectsCollection(ledgerId) {
-  await db.collection('ledgers').doc(ledgerId).collection('subjects').doc('template').set({
-    大項代碼: '',                              // 3碼大項代碼 (如: 100)
-    大項名稱: '',                              // 大項名稱 (如: 食物飲料)
-    子項代碼: '',                              // 5碼完整代碼 (如: 10001)
-    子項名稱: '',                              // 子項名稱 (如: 早餐)
-    同義詞: '',                                // 同義詞字串，逗號分隔
-    isActive: true,                            // 是否啟用
-    sortOrder: 0,                              // 排序順序
-    createdAt: admin.firestore.Timestamp.now(), // 自動記錄建立時間
-    updatedAt: admin.firestore.Timestamp.now()  // 最後更新時間
-  });
-  console.log('✅ Subjects Sub-Collection 結構建立完成');
+  try {
+    // 先建立 template 文件
+    await db.collection('ledgers').doc(ledgerId).collection('subjects').doc('template').set({
+      大項代碼: '',                              // 3碼大項代碼 (如: 100)
+      大項名稱: '',                              // 大項名稱 (如: 食物飲料)
+      子項代碼: '',                              // 5碼完整代碼 (如: 10001)
+      子項名稱: '',                              // 子項名稱 (如: 早餐)
+      同義詞: '',                                // 同義詞字串，逗號分隔
+      isActive: true,                            // 是否啟用
+      sortOrder: 0,                              // 排序順序
+      createdAt: admin.firestore.Timestamp.now(), // 自動記錄建立時間
+      updatedAt: admin.firestore.Timestamp.now()  // 最後更新時間
+    });
+
+    // 導入完整科目資料
+    const subjectData = require('../Miscellaneous/9999. Subject_code.json');
+    const batch = db.batch();
+    
+    console.log(`🔄 開始導入 ${subjectData.length} 筆科目資料...`);
+    
+    let importCount = 0;
+    for (const subject of subjectData) {
+      const docId = `${subject.大項代碼}_${subject.子項代碼}`;
+      const subjectRef = db.collection('ledgers').doc(ledgerId).collection('subjects').doc(docId);
+      
+      batch.set(subjectRef, {
+        大項代碼: String(subject.大項代碼),
+        大項名稱: subject.大項名稱 || '',
+        子項代碼: String(subject.子項代碼),
+        子項名稱: subject.子項名稱 || '',
+        同義詞: subject.同義詞 || '',
+        isActive: true,
+        sortOrder: importCount,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now()
+      });
+      
+      importCount++;
+      
+      // 每 400 筆提交一次 batch（Firestore 限制 500 筆）
+      if (importCount % 400 === 0) {
+        await batch.commit();
+        console.log(`📦 已提交 ${importCount} 筆科目資料...`);
+      }
+    }
+    
+    // 提交剩餘的資料
+    if (importCount % 400 !== 0) {
+      await batch.commit();
+    }
+    
+    console.log(`✅ 科目資料導入完成，共 ${importCount} 筆`);
+    console.log('✅ Subjects Sub-Collection 結構建立完成');
+    
+  } catch (error) {
+    console.error('❌ 科目表初始化失敗:', error);
+    console.log('✅ Subjects Sub-Collection 結構建立完成（僅 template）');
+  }
 }
 
 /**
