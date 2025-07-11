@@ -1,0 +1,55 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/7/11 下午12:09:56
+📦 載入模組...
+DD模組初始化檢查 [2025/7/11 下午12:09:56]
+DD模組版本: 3.0.0 (2025-01-09) - 完全Firestore版本
+執行時間 (UTC+8): 2025/7/11 下午12:09:56
+Firestore 連接檢查: 成功
+📱 使用 Secrets 中的 LINE UID: Uae47d9d496e4596d70ed724a7d6e2948
+🚀 開始建立 LCAS 2.0 完整資料庫結構... (執行者: AustinLiao69)
+⏰ 當前 UTC 時間: 2025-07-11T04:09:56.658Z
+🇹🇼 當前 UTC+8 時間: 2025-07-11T12:09:56.658Z
+🔍 檢查 Firestore Database 連接狀態...
+🔧 開始修復測試用戶 Uae47d9d496e4596d70ed724a7d6e2948 的科目數據...
+🔄 開始為用戶 Uae47d9d496e4596d70ed724a7d6e2948 初始化科目數據...
+📋 準備導入 63 筆科目資料到 user_Uae47d9d496e4596d70ed724a7d6e2948...
+💥 未捕獲的異常: /home/runner/workspace/Modules/2009. AM.js:962
+      console.log(`🔄 用戶 ${UID} 沒有科目數據，開始自動初始化...`);
+                   ^
+
+SyntaxError: Invalid or unexpected token
+    at wrapSafe (node:internal/modules/cjs/loader:1469:18)
+    at Module._compile (node:internal/modules/cjs/loader:1491:20)
+    at Object..js (node:internal/modules/cjs/loader:1689:10)
+    at Module.load (node:internal/modules/cjs/loader:1318:32)
+    at Function._load (node:internal/modules/cjs/loader:1128:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:218:24)
+    at Module.require (node:internal/modules/cjs/loader:1340:12)
+    at require (node:internal/modules/helpers:141:16)
+    at Object.<anonymous> (/home/runner/workspace/Modules/2020. WH.js:12:12)
+(node:3859) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+BK_processBookkeeping函數檢查: 存在
+✅ 用戶 Uae47d9d496e4596d70ed724a7d6e2948 科目初始化完成，共導入 63 筆科目
+🎉 測試用戶科目修復完成！
+📊 帳本 ID: user_Uae47d9d496e4596d70ed724a7d6e2948
+📋 導入科目數量: 63
+✅ Firestore Database 連接正常
+📊 Database Project ID: spheric-crow-352809
+🌐 Universe Domain: googleapis.com
+✅ Users Collection 結構建立完成
+✅ Ledgers Collection 結構建立完成
+🔄 開始導入 63 筆科目資料...
+✅ 科目資料導入完成，共 63 筆
+✅ Subjects Sub-Collection 結構建立完成
+✅ Entries Sub-Collection 結構建立完成
+✅ Log Sub-Collection 結構建立完成
+✅ Account Mappings Collection 結構建立完成
+✅ System Metadata 建立完成
+✅ LCAS 2.0 完整資料庫結構建立完成！
+✅ UTC 時間: 2025-07-11T04:09:56.658Z
+✅ 執行者: AustinLiao69
+✅ 使用者 ID: Uae47d9d496e4596d70ed724a7d6e2948
+✅ 帳本 ID: ledger_structure_001
+🎉 Database → Collections → Documents → Fields 完整架構已建立！
