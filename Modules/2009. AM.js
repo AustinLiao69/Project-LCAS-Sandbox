@@ -1,4 +1,3 @@
-
 /**
  * AM_帳號管理模組_1.0.0
  * @module AM模組 
@@ -80,7 +79,7 @@ async function AM_createLineAccount(lineUID, lineProfile, userType = 'S') {
 
     // 初始化用戶科目數據
     const subjectInit = await AM_initializeUserSubjects(lineUID);
-    
+
     // 記錄操作日誌
     await DL.DL_log('AM', 'createLineAccount', 'INFO', `LINE帳號創建成功: ${lineUID}, 科目初始化: ${subjectInit.success ? '成功' : '失敗'}`, lineUID);
 
@@ -193,7 +192,7 @@ async function AM_linkCrossPlatformAccounts(primaryUID, linkedAccountInfo) {
     }
 
     const userData = userDoc.data();
-    
+
     // 更新關聯帳號資訊
     const updatedLinkedAccounts = {
       ...userData.linkedAccounts,
@@ -346,7 +345,7 @@ async function AM_deactivateAccount(UID, deactivationReason, transferData) {
     }
 
     const userData = userDoc.data();
-    
+
     // 更新帳號狀態為停用
     await db.collection('users').doc(UID).update({
       status: 'deactivated',
@@ -448,7 +447,7 @@ async function AM_getUserInfo(UID, requesterId, includeLinkedAccounts = true) {
 async function AM_validateAccountExists(identifier, platform = 'LINE') {
   try {
     let userDoc;
-    
+
     if (platform === 'LINE') {
       userDoc = await db.collection('users').doc(identifier).get();
     } else {
@@ -457,7 +456,7 @@ async function AM_validateAccountExists(identifier, platform = 'LINE') {
         .where(`platform_accounts.${platform}`, '==', identifier)
         .limit(1)
         .get();
-      
+
       if (!mappingQuery.empty) {
         const mappingDoc = mappingQuery.docs[0];
         const primaryUID = mappingDoc.data().primary_UID;
@@ -468,7 +467,7 @@ async function AM_validateAccountExists(identifier, platform = 'LINE') {
     if (userDoc && userDoc.exists) {
       const userData = userDoc.data();
       const accountStatus = userData.status || 'active';
-      
+
       await DL.DL_info('AM', 'validateAccountExists', `帳號存在性驗證: ${identifier} (${platform})`, '');
 
       return {
@@ -762,12 +761,12 @@ async function AM_resolveDataConflict(conflictData, resolutionStrategy = 'latest
           return current.timestamp > latest.timestamp ? current : latest;
         });
         break;
-      
+
       case 'merge':
         // 合併所有資料
         finalData = Object.assign({}, ...conflictData.map(d => d.data));
         break;
-      
+
       default:
         finalData = conflictData[0];
     }
@@ -808,20 +807,20 @@ async function AM_handleAccountError(errorType, errorData, context, retryCount =
 async function AM_initializeUserSubjects(UID, ledgerIdPrefix = 'user_') {
   try {
     console.log(`🔄 AM模組開始為用戶 ${UID} 初始化科目數據...`);
-    
+
     const userLedgerId = `${ledgerIdPrefix}${UID}`;
-    
+
     // 導入完整科目資料
     const subjectData = require('../Miscellaneous/9999. Subject_code.json');
     const batch = db.batch();
-    
+
     console.log(`📋 準備導入 ${subjectData.length} 筆科目資料到 ${userLedgerId}...`);
-    
+
     let importCount = 0;
     for (const subject of subjectData) {
       const docId = `${subject.大項代碼}_${subject.子項代碼}`;
       const subjectRef = db.collection('ledgers').doc(userLedgerId).collection('subjects').doc(docId);
-      
+
       batch.set(subjectRef, {
         大項代碼: String(subject.大項代碼),
         大項名稱: subject.大項名稱 || '',
@@ -833,31 +832,31 @@ async function AM_initializeUserSubjects(UID, ledgerIdPrefix = 'user_') {
         createdAt: admin.firestore.Timestamp.now(),
         updatedAt: admin.firestore.Timestamp.now()
       });
-      
+
       importCount++;
-      
+
       // 每 400 筆提交一次 batch
       if (importCount % 400 === 0) {
         await batch.commit();
         console.log(`📦 已提交 ${importCount} 筆科目資料到用戶帳本...`);
       }
     }
-    
+
     // 提交剩餘的資料
     if (importCount % 400 !== 0) {
       await batch.commit();
     }
-    
+
     // 記錄操作日誌
     await DL.DL_log('AM', 'initializeUserSubjects', 'INFO', `用戶 ${UID} 科目初始化完成，共導入 ${importCount} 筆科目`, UID);
-    
+
     console.log(`✅ 用戶 ${UID} 科目初始化完成，共導入 ${importCount} 筆科目`);
     return {
       success: true,
       importCount: importCount,
       userLedgerId: userLedgerId
     };
-    
+
   } catch (error) {
     console.error(`❌ 用戶 ${UID} 科目初始化失敗:`, error);
     await DL.DL_error('AM', 'initializeUserSubjects', error.message, UID);
@@ -877,10 +876,10 @@ async function AM_initializeUserSubjects(UID, ledgerIdPrefix = 'user_') {
 async function AM_ensureUserSubjects(UID) {
   try {
     const userLedgerId = `user_${UID}`;
-    
+
     // 檢查用戶是否有科目數據
     const subjectsQuery = await db.collection('ledgers').doc(userLedgerId).collection('subjects').limit(1).get();
-    
+
     if (subjectsQuery.empty) {
       console.log(`🔄 用戶 ${UID} 沒有科目數據，開始自動初始化...`);
       return await AM_initializeUserSubjects(UID);
@@ -892,7 +891,7 @@ async function AM_ensureUserSubjects(UID) {
         userLedgerId: userLedgerId
       };
     }
-    
+
   } catch (error) {
     console.error(`❌ 檢查用戶 ${UID} 科目失敗:`, error);
     await DL.DL_error('AM', 'ensureUserSubjects', error.message, UID);
@@ -1038,7 +1037,7 @@ async function AM_updateStoredToken(UID, accessToken, expiresIn) {
 async function AM_validateUpdatePermission(UID, operatorId) {
   // 簡化權限檢查：用戶可以更新自己的資料，或管理員可以更新任何資料
   if (UID === operatorId) return true;
-  
+
   try {
     const operatorDoc = await db.collection('users').doc(operatorId).get();
     if (operatorDoc.exists) {
@@ -1048,7 +1047,7 @@ async function AM_validateUpdatePermission(UID, operatorId) {
   } catch (error) {
     console.error('權限驗證失敗:', error);
   }
-  
+
   return false;
 }
 
@@ -1073,7 +1072,7 @@ async function AM_validateSearchPermission(requesterId) {
   } catch (error) {
     console.error('搜尋權限驗證失敗:', error);
   }
-  
+
   return false;
 }
 
@@ -1099,4 +1098,4 @@ module.exports = {
   AM_ensureUserSubjects
 };
 
-console.log('AM 帳號管理模組載入完成 v1.0.0');
+console.log('AM 帳號管理模組載入完成 v1.0.1');
