@@ -796,7 +796,85 @@ async function AM_resolveDataConflict(conflictData, resolutionStrategy = 'latest
  * @description 統一處理帳號管理過程中的各種錯誤
  */
 async function AM_handleAccountError(errorType, errorData, context, retryCount = 0) {
+  try {
+    const maxRetries = 3;
+    const shouldRetry = retryCount < maxRetries && ['NETWORK_ERROR', 'TIMEOUT'].includes(errorType);
 
+    await DL.DL_error('AM', 'handleAccountError', `錯誤類型: ${errorType}, 重試次數: ${retryCount}`, context.UID || '');
+
+    if (shouldRetry) {
+      // 排程重試（簡化實作）
+      setTimeout(() => {
+        console.log(`將在 ${Math.pow(2, retryCount)} 秒後重試...`);
+      }, Math.pow(2, retryCount) * 1000);
+    }
+
+    return {
+      handled: true,
+      errorCode: errorType,
+      retryScheduled: shouldRetry
+    };
+
+  } catch (error) {
+    console.error('錯誤處理器本身發生錯誤:', error);
+    return {
+      handled: false,
+      errorCode: 'AM_ERROR_HANDLER_FAILED',
+      retryScheduled: false
+    };
+  }
+}
+
+/**
+ * 16. 監控帳號系統健康狀態
+ * @version 2025-01-09-V1.0.0
+ * @date 2025-01-09 00:34:00
+ * @description 即時監控帳號管理系統的運行狀態
+ */
+async function AM_monitorSystemHealth() {
+  try {
+    // 檢查資料庫連線
+    const healthCheck = await db.collection('_health_check').doc('am_health').set({
+      timestamp: admin.firestore.Timestamp.now(),
+      status: 'healthy'
+    });
+
+    // 統計活躍用戶數
+    const activeUsersQuery = await db.collection('users')
+      .where('lastActive', '>', admin.firestore.Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000)))
+      .get();
+
+    const activeUsers = activeUsersQuery.size;
+
+    // 檢查 LINE API 狀態（簡化）
+    const apiStatus = {
+      line_messaging: 'healthy',
+      line_login: 'healthy'
+    };
+
+    const performance = {
+      responseTime: Date.now() % 100, // 模擬回應時間
+      memoryUsage: process.memoryUsage(),
+      uptime: process.uptime()
+    };
+
+    return {
+      healthy: true,
+      activeUsers: activeUsers,
+      apiStatus: apiStatus,
+      performance: performance
+    };
+
+  } catch (error) {
+    await DL.DL_error('AM', 'monitorSystemHealth', error.message, '');
+    return {
+      healthy: false,
+      activeUsers: 0,
+      apiStatus: { error: error.message },
+      performance: null
+    };
+  }
+}
 
 /**
  * 17. 初始化用戶科目數據
@@ -875,7 +953,7 @@ async function AM_initializeUserSubjects(UID, ledgerIdPrefix = 'user_') {
  */
 async function AM_ensureUserSubjects(UID) {
   try {
-    const userLedgerId = `user_${UID}`;
+    const userLedgerId = `user_${UID}`;```text
 
     // 檢查用戶是否有科目數據
     const subjectsQuery = await db.collection('ledgers').doc(userLedgerId).collection('subjects').limit(1).get();
@@ -898,86 +976,6 @@ async function AM_ensureUserSubjects(UID) {
     return {
       success: false,
       error: error.message
-    };
-  }
-}
-
-  try {
-    const maxRetries = 3;
-    const shouldRetry = retryCount < maxRetries && ['NETWORK_ERROR', 'TIMEOUT'].includes(errorType);
-
-    await DL.DL_error('AM', 'handleAccountError', `錯誤類型: ${errorType}, 重試次數: ${retryCount}`, context.UID || '');
-
-    if (shouldRetry) {
-      // 排程重試（簡化實作）
-      setTimeout(() => {
-        console.log(`將在 ${Math.pow(2, retryCount)} 秒後重試...`);
-      }, Math.pow(2, retryCount) * 1000);
-    }
-
-    return {
-      handled: true,
-      errorCode: errorType,
-      retryScheduled: shouldRetry
-    };
-
-  } catch (error) {
-    console.error('錯誤處理器本身發生錯誤:', error);
-    return {
-      handled: false,
-      errorCode: 'AM_ERROR_HANDLER_FAILED',
-      retryScheduled: false
-    };
-  }
-}
-
-/**
- * 16. 監控帳號系統健康狀態
- * @version 2025-01-09-V1.0.0
- * @date 2025-01-09 00:34:00
- * @description 即時監控帳號管理系統的運行狀態
- */
-async function AM_monitorSystemHealth() {
-  try {
-    // 檢查資料庫連線
-    const healthCheck = await db.collection('_health_check').doc('am_health').set({
-      timestamp: admin.firestore.Timestamp.now(),
-      status: 'healthy'
-    });
-
-    // 統計活躍用戶數
-    const activeUsersQuery = await db.collection('users')
-      .where('lastActive', '>', admin.firestore.Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000)))
-      .get();
-
-    const activeUsers = activeUsersQuery.size;
-
-    // 檢查 LINE API 狀態（簡化）
-    const apiStatus = {
-      line_messaging: 'healthy',
-      line_login: 'healthy'
-    };
-
-    const performance = {
-      responseTime: Date.now() % 100, // 模擬回應時間
-      memoryUsage: process.memoryUsage(),
-      uptime: process.uptime()
-    };
-
-    return {
-      healthy: true,
-      activeUsers: activeUsers,
-      apiStatus: apiStatus,
-      performance: performance
-    };
-
-  } catch (error) {
-    await DL.DL_error('AM', 'monitorSystemHealth', error.message, '');
-    return {
-      healthy: false,
-      activeUsers: 0,
-      apiStatus: { error: error.message },
-      performance: null
     };
   }
 }
