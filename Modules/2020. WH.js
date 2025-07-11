@@ -101,10 +101,10 @@ function WH_formatDateTime(date) {
 }
 
 /**
- * 01. 主要的POST處理函數 - 極速回應版本
- * @version 2025-07-09-V2.0.16
- * @date 2025-07-09 10:48:00
- * @update: 遷移至Firestore，目標：<1秒內完成回應
+ * 01. 主要的POST處理函數 - 智慧處理版本
+ * @version 2025-07-11-V2.0.17
+ * @date 2025-07-11 12:20:00
+ * @update: 智慧處理機制 - 對需要回覆的訊息使用同步處理，確保 replyToken 有效性
  */
 function doPost(req, res) {
   // 生成請求ID
@@ -136,19 +136,59 @@ function doPost(req, res) {
     // 使用 NodeCache 替代 CacheService
     cache.set("WH_REQ_" + requestId, JSON.stringify(req.body), 600); // 緩存10分鐘
 
-    // 立即預定後台處理
-    try {
-      // 使用 setTimeout 替代 trigger
-      setTimeout(async () => {
-        await processWebhookAsync({ requestId: requestId });
-      }, 1000); // 1秒後執行
-    } catch (triggerError) {
-      // 如果創建計時器失敗，忽略錯誤繼續執行
-      console.log("計時器創建失敗，將改用直接調用: " + triggerError);
-      // 嘗試直接調用，但不等待結果
-      processWebhookAsync({ requestId: requestId }).catch((err) => {
-        console.log("直接調用異步處理失敗:", err);
-      });
+    // 智慧處理：檢查是否為需要回覆的訊息事件
+    const postData = req.body;
+    let needsReply = false;
+
+    if (postData && postData.events && postData.events.length > 0) {
+      for (const event of postData.events) {
+        if (event.type === "message" && event.message && event.replyToken) {
+          needsReply = true;
+          break;
+        }
+      }
+    }
+
+    if (needsReply) {
+      // 需要回覆的訊息：立即同步處理以確保 replyToken 有效
+      console.log(`檢測到需要回覆的訊息，啟用同步處理 [${requestId}]`);
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [${requestId}]`,
+        "同步處理",
+        "",
+        "",
+        "WH",
+        "",
+        0,
+        "doPost",
+        "INFO",
+      ]);
+
+      // 立即處理，不延遲
+      try {
+        processWebhookAsync({ requestId: requestId }).catch((err) => {
+          console.log("同步處理失敗:", err);
+        });
+      } catch (syncError) {
+        console.log("同步處理異常:", syncError);
+      }
+    } else {
+      // 不需要回覆的事件：使用非同步處理
+      console.log(`非回覆事件，使用非同步處理 [${requestId}]`);
+      try {
+        // 使用 setTimeout 替代 trigger
+        setTimeout(async () => {
+          await processWebhookAsync({ requestId: requestId });
+        }, 1000); // 1秒後執行
+      } catch (triggerError) {
+        // 如果創建計時器失敗，忽略錯誤繼續執行
+        console.log("計時器創建失敗，將改用直接調用: " + triggerError);
+        // 嘗試直接調用，但不等待結果
+        processWebhookAsync({ requestId: requestId }).catch((err) => {
+          console.log("直接調用異步處理失敗:", err);
+        });
+      }
     }
 
     // 立即回應LINE - 不進行任何額外處理
@@ -182,10 +222,10 @@ function doPost(req, res) {
 }
 
 /**
- * 02. 非同步處理Webhook請求
- * @version 2025-07-09-V2.0.16
- * @date 2025-07-09 10:48:00
- * @update: 遷移至Firestore，由時間觸發器調用
+ * 02. 智慧處理Webhook請求（同步/非同步）
+ * @version 2025-07-11-V2.0.17
+ * @date 2025-07-11 12:20:00
+ * @update: 支援同步處理以確保 replyToken 有效性
  * @param {Object} e - 觸發器事件對象，包含requestId
  */
 async function processWebhookAsync(e) {
@@ -653,7 +693,7 @@ function WH_logCritical(
 }
 
 /**
- * 06. 回覆訊息給 LINE 用戶 - 智能訊息處理版本
+ * 06. 回覆訊息給 LINE 用戶 - 智慧訊息處理版本
  * @version 2025-07-09-V2.0.16
  * @date 2025-07-09 10:48:00
  * @update: 遷移至Firestore，深度強化對複雜訊息對象的處理能力，確保負數金額和支付方式正確顯示
@@ -663,7 +703,7 @@ function WH_logCritical(
  */
 function WH_replyMessage(replyToken, message) {
   try {
-    // 1. 智能訊息提取 - 檢查輸入類型並從對象中提取訊息
+    // 1. 智慧訊息提取 - 檢查輸入類型並從對象中提取訊息
     let textMessage = "";
 
     // 記錄收到的訊息類型，包括預覽
@@ -904,7 +944,7 @@ function WH_replyMessage(replyToken, message) {
       "INFO",
     ]);
 
-    // 使用 axios 發送 HTTP 請求
+    // 使用 axios 發送 HTTP 請求 
     return axios
       .post(url, payload, { headers: headers })
       .then((response) => {
@@ -998,7 +1038,7 @@ function WH_replyMessage(replyToken, message) {
 function setDependencies(ddModule, bkModule, dlModule) {
   // 可以替換全局引用，或設置內部變數
   global.DD_distributeData = ddModule.DD_distributeData;
-  global.DD_generateIntelligentRemark = ddModule.DD_generateIntelligentRemark;
+  global.DD_generateIntelligentRemark = ddModule.DD_generate智慧Remark;
   global.DD_userPreferenceManager = ddModule.DD_userPreferenceManager;
   global.DD_learnInputPatterns = ddModule.DD_learnInputPatterns;
 
