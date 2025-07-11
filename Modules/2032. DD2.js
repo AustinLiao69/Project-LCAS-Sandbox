@@ -679,7 +679,7 @@ async function DD_getSubjectCode(subjectName, userId) {
         "缺少必要參數",
         "DD_getSubjectCode",
       );
-      
+
       // 返回友善錯誤訊息給DD3處理
       throw new Error("找不到科目「" + (subjectName || "未知") + "」，請確認科目名稱或使用其他相近詞彙");
     }
@@ -711,9 +711,9 @@ async function DD_getSubjectCode(subjectName, userId) {
         "科目代碼表無數據",
         "DD_getSubjectCode",
       );
-      
+
       // 返回友善錯誤訊息給DD3處理
-      throw new Error("系統科目表暫時無法使用，請稍後再試");
+      throw new Error("系統科目表暫時無法使用，請留言給客服人員。");
     }
 
     console.log(`讀取用戶 ${userId} 科目表: ${snapshot.size}筆數據 [${scId}]`);
@@ -891,7 +891,7 @@ async function DD_getSubjectCode(subjectName, userId) {
       "DD_getSubjectCode",
     );
     console.log(`---科目查詢診斷信息結束---[${scId}]`);
-    
+
     // 返回友善錯誤訊息給DD3處理
     throw new Error("找不到科目「" + normalizedInput + "」，請確認科目名稱或使用其他相近詞彙");
   } catch (error) {
@@ -906,14 +906,14 @@ async function DD_getSubjectCode(subjectName, userId) {
       error.toString(),
       "DD_getSubjectCode",
     );
-    
+
     // 如果是我們自己拋出的友善錯誤，直接重新拋出
     if (error.message.includes("找不到科目") || error.message.includes("系統科目表暫時無法使用")) {
       throw error;
     }
-    
+
     // 其他系統錯誤，統一處理
-    throw new Error("資料處理發生問題，已記錄錯誤並通知管理員");
+    throw new Error("系統科目表暫時無法使用，請留言給客服人員。");
   }
 }
 
