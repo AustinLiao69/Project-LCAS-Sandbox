@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.0.16
+ * WH_Webhook處理模組_2.0.17
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 遷移至Firestore資料庫
- * @update 2025-07-09: 遷移至Firestore，移除Google Sheets依賴，修復語法錯誤
+ * @description LINE Webhook處理模組 - 實現 BR-0007 簡化記帳路徑
+ * @update 2025-07-11: 實現 BR-0007 簡化記帳路徑，WH → BK 2.0 → Firestore
  */
 
 // 首先引入其他模組
@@ -1155,25 +1155,50 @@ async function WH_processEventAsync(event, requestId, userId) {
           `準備訊息數據: ${JSON.stringify(messageData)} [${requestId}]`,
         );
 
-        // 調用分發函數
+        // 調用分發函數 - 根據 BR-0007 實現簡化路徑
         try {
-          console.log(`準備調用DD_distributeData [${requestId}]`);
+          // 檢查是否為簡單記帳格式
+          const isSimpleBookkeeping = /^[\u4e00-\u9fff\w\s]+\s*\d+(\.\d+)?/.test(text.trim());
+          
+          if (isSimpleBookkeeping) {
+            // 簡化路徑：WH → BK 2.0 → Firestore
+            console.log(`檢測到簡單記帳格式，使用 BK 2.0 直連路徑 [${requestId}]`);
+            
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.17: 使用 BK 2.0 簡化路徑處理簡單記帳 [${requestId}]`,
+              "簡化路徑",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO",
+            ]);
 
-          WH_directLogWrite([
-            WH_formatDateTime(new Date()),
-            `WH 2.0.3: 準備調用DD_distributeData [${requestId}]`,
-            "數據分發",
-            userId,
-            "",
-            "WH",
-            "",
-            0,
-            "WH_processEventAsync",
-            "INFO",
-          ]);
+            // 直接調用 BK 2.0 處理
+            result = await BK.BK_processDirectBookkeeping(event);
+          } else {
+            // 標準路徑：WH → DD → BK → Firestore
+            console.log(`使用標準路徑處理複雜訊息 [${requestId}]`);
 
-          // 關鍵：調用DD_distributeData並保留完整結果 - 修復：使用await處理異步
-          result = await DD.DD_distributeData(messageData, "LINE", 0);
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.17: 使用標準路徑調用DD_distributeData [${requestId}]`,
+              "標準路徑",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO",
+            ]);
+
+            // 關鍵：調用DD_distributeData並保留完整結果 - 修復：使用await處理異步
+            result = await DD.DD_distributeData(messageData, "LINE", 0);
+          }
 
           // 記錄DD_distributeData處理結果預覽
           if (result) {

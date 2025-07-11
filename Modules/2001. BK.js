@@ -1,8 +1,8 @@
 /**
- * BK_記帳處理模組_1.9.0
+ * BK_記帳處理模組_2.0.0
  * @module 記帳處理模組
- * @description LCAS 記帳處理模組 - 移除Google Sheets依賴，改用純Firestore存儲
- * @update 2025-01-03: 升級至1.9.0版本，完善函數版本管理和時間戳記更新
+ * @description LCAS 記帳處理模組 - 實現 BK 2.0 版本，支援簡化記帳路徑
+ * @update 2025-07-11: 升級至2.0.0版本，實現 BR-0007 簡化記帳路徑，整合 DD 核心函數
  */
 
 // 引入所需模組
@@ -1254,6 +1254,872 @@ function BK_isInitialized() {
   return BK_INIT_STATUS.initialized;
 }
 
+/**
+ * 20. 處理用戶消息並提取記帳信息 - 從 DD2 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ */
+async function BK_processUserMessage(message, userId = "", timestamp = "", ledgerId = "") {
+  const msgId = require('crypto').randomUUID().substring(0, 8);
+
+  if (!userId) {
+    BK_logError(`缺少必要的用戶ID [${msgId}]`, "訊息處理", "", "MISSING_USER_ID", "每個用戶都需要獨立的帳本", "BK_processUserMessage");
+    return {
+      type: "記帳",
+      processed: false,
+      reason: "缺少用戶ID",
+      processId: msgId,
+      errorType: "MISSING_USER_ID"
+    };
+  }
+
+  if (!ledgerId) {
+    ledgerId = `user_${userId}`;
+  }
+
+  BK_logInfo(`處理用戶消息: "${message}" (帳本: ${ledgerId})`, "訊息處理", userId, "BK_processUserMessage");
+
+  try {
+    if (!message || message.trim() === "") {
+      BK_logWarning(`空訊息 [${msgId}]`, "訊息處理", userId, "BK_processUserMessage");
+      return {
+        type: "記帳",
+        processed: false,
+        reason: "空訊息",
+        processId: msgId,
+        errorType: "EMPTY_MESSAGE"
+      };
+    }
+
+    message = message.trim();
+
+    const parseResult = await BK_parseInputFormat(message, msgId);
+    if (!parseResult) {
+      BK_logWarning(`無法解析訊息格式: "${message}" [${msgId}]`, "訊息處理", userId, "BK_processUserMessage");
+      return {
+        type: "記帳",
+        processed: false,
+        reason: "無法識別記帳意圖",
+        processId: msgId,
+        errorType: "FORMAT_NOT_RECOGNIZED"
+      };
+    }
+
+    const subject = parseResult.subject;
+    const amount = parseResult.amount;
+    const rawAmount = parseResult.rawAmount || String(amount);
+    const paymentMethod = parseResult.paymentMethod;
+
+    if (subject) {
+      let subjectInfo = null;
+      let matchMethod = "unknown";
+      let confidence = 0;
+      let originalSubject = subject;
+
+      try {
+        subjectInfo = await BK_getSubjectCode(subject, userId);
+        if (subjectInfo) {
+          matchMethod = "exact_match";
+          confidence = 1.0;
+          BK_logInfo(`精確匹配成功 "${subject}" -> ${subjectInfo.subName} [${msgId}]`, "科目匹配", userId, "BK_processUserMessage");
+        }
+      } catch (matchError) {
+        BK_logWarning(`精確匹配發生錯誤 ${matchError.toString()} [${msgId}]`, "科目匹配", userId, "BK_processUserMessage");
+      }
+
+      if (!subjectInfo) {
+        try {
+          const fuzzyThreshold = 0.7;
+          const fuzzyMatch = await BK_fuzzyMatch(subject, fuzzyThreshold, userId);
+          if (fuzzyMatch && fuzzyMatch.score >= fuzzyThreshold) {
+            subjectInfo = fuzzyMatch;
+            matchMethod = "fuzzy_match";
+            confidence = fuzzyMatch.score;
+            BK_logInfo(`模糊匹配成功 "${subject}" -> ${fuzzyMatch.subName}, 相似度=${fuzzyMatch.score.toFixed(2)} [${msgId}]`, "科目匹配", userId, "BK_processUserMessage");
+          }
+        } catch (fuzzyError) {
+          BK_logWarning(`模糊匹配發生錯誤 ${fuzzyError.toString()} [${msgId}]`, "科目匹配", userId, "BK_processUserMessage");
+        }
+      }
+
+      if (subjectInfo) {
+        let action = "支出";
+        if (amount < 0) {
+          action = "支出";
+        } else {
+          if (subjectInfo.majorCode && subjectInfo.majorCode.toString().startsWith("8")) {
+            action = "收入";
+          } else {
+            action = "支出";
+          }
+        }
+
+        const remarkText = BK_removeAmountFromText(message, amount) || subject;
+
+        const result = {
+          type: "記帳",
+          processed: true,
+          subject: subject,
+          subjectName: subjectInfo.subName,
+          majorCode: subjectInfo.majorCode,
+          majorName: subjectInfo.majorName,
+          subCode: subjectInfo.subCode,
+          amount: amount,
+          rawAmount: rawAmount,
+          paymentMethod: paymentMethod,
+          action: action,
+          confidence: confidence,
+          matchMethod: matchMethod,
+          text: remarkText,
+          originalSubject: originalSubject,
+          processId: msgId,
+          ledgerId: ledgerId,
+        };
+
+        return result;
+      } else {
+        BK_logWarning(`科目匹配失敗 [${msgId}]`, "科目匹配", userId, "BK_processUserMessage");
+        return {
+          type: "記帳",
+          processed: false,
+          reason: `無法識別科目: "${subject}"`,
+          processId: msgId,
+          errorType: "UNKNOWN_SUBJECT"
+        };
+      }
+    } else {
+      BK_logWarning(`科目為空 [${msgId}]`, "科目匹配", userId, "BK_processUserMessage");
+      return {
+        type: "記帳",
+        processed: false,
+        reason: "未指定科目",
+        processId: msgId,
+        errorType: "MISSING_SUBJECT"
+      };
+    }
+  } catch (error) {
+    BK_logError(`處理用戶消息時發生異常: ${error.toString()}`, "訊息處理", userId, "PROCESS_ERROR", error.toString(), "BK_processUserMessage");
+    return {
+      type: "記帳",
+      processed: false,
+      reason: error.toString(),
+      processId: msgId,
+      errorType: "PROCESS_ERROR"
+    };
+  }
+}
+
+/**
+ * 21. 解析輸入格式 - 從 DD2 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ */
+function BK_parseInputFormat(message, processId) {
+  BK_logDebug(`開始解析文本「${message}」[${processId}]`, "文本解析", "", "BK_parseInputFormat");
+
+  if (!message || message.trim() === "") {
+    BK_logDebug(`空文本 [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+    return null;
+  }
+
+  message = message.trim();
+
+  try {
+    // 檢測負數模式
+    const negativePattern = /^(.+?)(-\d+)(.*)$/;
+    const negativeMatch = message.match(negativePattern);
+
+    if (negativeMatch) {
+      const subject = negativeMatch[1].trim();
+      const rawAmount = negativeMatch[2];
+      const amount = parseFloat(rawAmount);
+
+      let paymentMethod = "預設";
+      const remainingText = negativeMatch[3].trim();
+
+      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳", "信用卡"];
+      for (const method of paymentMethods) {
+        if (remainingText.includes(method)) {
+          paymentMethod = method;
+          break;
+        }
+      }
+
+      if (paymentMethod === "預設" && remainingText) {
+        paymentMethod = remainingText;
+      }
+
+      BK_logInfo(`識別負數格式 - 科目:「${subject}」, 金額:${rawAmount}, 支付方式:「${paymentMethod}」 [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+
+      if (amount < 0) {
+        BK_logWarning(`檢測到負數金額 ${amount} [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+        return null; // 返回 null 表示格式錯誤
+      }
+
+      return {
+        subject: subject,
+        amount: Math.abs(amount),
+        rawAmount: String(Math.abs(amount)),
+        paymentMethod: paymentMethod,
+      };
+    }
+
+    // 標準格式處理
+    const regex = /^(.+?)(\d+)(.*)$/;
+    const match = message.match(regex);
+
+    if (match) {
+      const subject = match[1].trim();
+      const amount = parseInt(match[2], 10);
+      const rawAmount = match[2];
+
+      let paymentMethod = "預設";
+      const remainingText = match[3].trim();
+
+      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳", "信用卡"];
+      for (const method of paymentMethods) {
+        if (remainingText.includes(method)) {
+          paymentMethod = method;
+          break;
+        }
+      }
+
+      if (paymentMethod === "預設" && remainingText) {
+        paymentMethod = remainingText;
+      }
+
+      BK_logInfo(`識別標準格式 - 科目:「${subject}」, 金額:${amount}, 支付方式:「${paymentMethod}」 [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+
+      if (subject === "") {
+        BK_logWarning(`未明確指定科目名稱 [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+        return null;
+      }
+
+      return {
+        subject: subject,
+        amount: amount,
+        rawAmount: rawAmount,
+        paymentMethod: paymentMethod,
+      };
+    } else {
+      BK_logDebug(`無法解析格式 [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+      return null;
+    }
+  } catch (error) {
+    BK_logError(`解析錯誤 ${error} [${processId}]`, "文本解析", "", "PARSE_ERROR", error.toString(), "BK_parseInputFormat");
+    return null;
+  }
+}
+
+/**
+ * 22. 從文字中移除金額 - 從 DD2 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ */
+function BK_removeAmountFromText(text, amount, paymentMethod) {
+  if (!text || !amount) return text;
+
+  BK_logDebug(`處理文字移除金額和支付方式: 原始文字="${text}", 金額=${amount}, 支付方式=${paymentMethod || "未指定"}`, "文本處理", "", "BK_removeAmountFromText");
+
+  const amountStr = String(amount);
+  let result = text;
+
+  try {
+    if (paymentMethod && text.includes(" " + amountStr + " " + paymentMethod)) {
+      result = text.replace(" " + amountStr + " " + paymentMethod, "").trim();
+      return result;
+    }
+
+    if (text.includes(" " + amountStr)) {
+      result = text.replace(" " + amountStr, "").trim();
+      if (paymentMethod && result.includes(" " + paymentMethod)) {
+        result = result.replace(" " + paymentMethod, "").trim();
+      }
+      return result;
+    }
+
+    if (text.endsWith(amountStr)) {
+      result = text.substring(0, text.length - amountStr.length).trim();
+      if (paymentMethod && result.includes(paymentMethod)) {
+        result = result.replace(paymentMethod, "").trim();
+      }
+      return result;
+    }
+
+    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓|NT|USD)?$`, "i");
+    const match = text.match(amountEndRegex);
+    if (match && match.index > 0) {
+      result = text.substring(0, match.index).trim();
+      if (paymentMethod && result.includes(paymentMethod)) {
+        result = result.replace(paymentMethod, "").trim();
+      }
+      return result;
+    }
+
+    if (paymentMethod && result.includes(paymentMethod)) {
+      result = result.replace(paymentMethod, "").trim();
+      return result;
+    }
+
+    return text;
+  } catch (error) {
+    BK_logError(`移除金額和支付方式失敗: ${error.toString()}, 返回原始文字`, "文本處理", "", "TEXT_PROCESS_ERROR", error.toString(), "BK_removeAmountFromText");
+    return text;
+  }
+}
+
+/**
+ * 23. 獲取科目代碼 - 從 DD2 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ */
+async function BK_getSubjectCode(subjectName, userId) {
+  const scId = require('crypto').randomUUID().substring(0, 8);
+  BK_logInfo(`查詢科目代碼: "${subjectName}", 用戶ID: ${userId}, ID=${scId}`, "科目查詢", userId, "BK_getSubjectCode");
+
+  try {
+    if (!subjectName || !userId) {
+      BK_logError(`科目名稱或用戶ID為空，無法查詢科目代碼 [${scId}]`, "科目查詢", userId, "MISSING_PARAMS", "缺少必要參數", "BK_getSubjectCode");
+      throw new Error("找不到科目「" + (subjectName || "未知") + "」，請確認科目名稱或使用其他相近詞彙");
+    }
+
+    const ledgerId = `user_${userId}`;
+    const normalizedInput = String(subjectName).trim();
+    const inputLower = normalizedInput.toLowerCase();
+
+    const snapshot = await db.collection("ledgers").doc(ledgerId).collection("subjects").where("isActive", "==", true).get();
+
+    if (snapshot.empty) {
+      BK_logError(`用戶 ${userId} 科目表為空 [${scId}]`, "科目查詢", userId, "EMPTY_SUBJECTS", "科目代碼表無數據", "BK_getSubjectCode");
+      throw new Error("系統科目表暫時無法使用，請留言給客服人員。");
+    }
+
+    BK_logInfo(`讀取用戶 ${userId} 科目表: ${snapshot.size}筆數據 [${scId}]`, "科目查詢", userId, "BK_getSubjectCode");
+
+    let docCount = 0;
+    for (const doc of snapshot.docs) {
+      if (doc.id === "template") continue;
+
+      const data = doc.data();
+      docCount++;
+
+      const majorCode = data.大項代碼;
+      const majorName = data.大項名稱;
+      const subCode = data.子項代碼;
+      const subName = data.子項名稱;
+      const synonymsStr = data.同義詞 || "";
+
+      const normalizedSubName = String(subName).trim();
+      const subNameLower = normalizedSubName.toLowerCase();
+
+      // 精確匹配檢查
+      if (subNameLower === inputLower) {
+        BK_logInfo(`成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`, "科目查詢", userId, "BK_getSubjectCode");
+        return {
+          majorCode: String(majorCode),
+          majorName: String(majorName),
+          subCode: String(subCode),
+          subName: String(subName),
+        };
+      }
+
+      // 同義詞匹配
+      if (synonymsStr) {
+        const synonyms = synonymsStr.split(",");
+        for (let j = 0; j < synonyms.length; j++) {
+          const normalizedSynonym = synonyms[j].trim();
+          const synonymLower = normalizedSynonym.toLowerCase();
+          if (synonymLower === inputLower) {
+            BK_logInfo(`通過同義詞成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`, "科目查詢", userId, "BK_getSubjectCode");
+            return {
+              majorCode: String(majorCode),
+              majorName: String(majorName),
+              subCode: String(subCode),
+              subName: String(subName),
+            };
+          }
+        }
+      }
+    }
+
+    // 複合詞匹配
+    const matches = [];
+    for (const doc of snapshot.docs) {
+      if (doc.id === "template") continue;
+      const data = doc.data();
+      const majorCode = data.大項代碼;
+      const majorName = data.大項名稱;
+      const subCode = data.子項代碼;
+      const subName = data.子項名稱;
+      const synonymsStr = data.同義詞 || "";
+      const subNameLower = String(subName).toLowerCase().trim();
+
+      if (subNameLower.length >= 2 && inputLower.includes(subNameLower)) {
+        const score = subNameLower.length / inputLower.length;
+        matches.push({
+          majorCode: String(majorCode),
+          majorName: String(majorName),
+          subCode: String(subCode),
+          subName: String(subName),
+          score: score,
+          matchType: "compound_name",
+        });
+      }
+
+      if (synonymsStr) {
+        const synonyms = synonymsStr.split(",");
+        for (const syn of synonyms) {
+          const synonym = syn.trim().toLowerCase();
+          if (synonym.length >= 2 && inputLower.includes(synonym)) {
+            const score = synonym.length / inputLower.length;
+            matches.push({
+              majorCode: String(majorCode),
+              majorName: String(majorName),
+              subCode: String(subCode),
+              subName: String(subName),
+              score: score,
+              matchType: "compound_synonym",
+            });
+          }
+        }
+      }
+    }
+
+    if (matches.length > 0) {
+      matches.sort((a, b) => b.score - a.score);
+      const bestMatch = matches[0];
+      BK_logInfo(`複合詞匹配成功: "${normalizedInput}" -> "${bestMatch.subName}", 分數=${bestMatch.score.toFixed(2)}`, "複合詞匹配", userId, "BK_getSubjectCode");
+      return {
+        majorCode: bestMatch.majorCode,
+        majorName: bestMatch.majorName,
+        subCode: bestMatch.subCode,
+        subName: bestMatch.subName,
+      };
+    }
+
+    BK_logWarning(`科目代碼查詢失敗: "${normalizedInput}" [${scId}]`, "科目查詢", userId, "BK_getSubjectCode");
+    throw new Error("找不到科目「" + normalizedInput + "」，請確認科目名稱或使用其他相近詞彙");
+  } catch (error) {
+    BK_logError(`科目查詢出錯: ${error} [${scId}]`, "科目查詢", userId, "QUERY_ERROR", error.toString(), "BK_getSubjectCode");
+    if (error.message.includes("找不到科目") || error.message.includes("系統科目表暫時無法使用")) {
+      throw error;
+    }
+    throw new Error("系統科目表暫時無法使用，請留言給客服人員。");
+  }
+}
+
+/**
+ * 24. 模糊匹配函數 - 從 DD2 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ */
+async function BK_fuzzyMatch(input, threshold = 0.6, userId = null) {
+  if (!input || !userId) return null;
+
+  BK_logDebug(`【模糊匹配】開始處理: "${input}", 閾值: ${threshold}, 用戶: ${userId}`, "模糊匹配", userId, "BK_fuzzyMatch");
+
+  const inputLower = input.toLowerCase().trim();
+  const allSubjects = await BK_getAllSubjects(userId);
+  if (!allSubjects || !allSubjects.length) {
+    BK_logWarning(`【模糊匹配】無法獲取科目列表`, "模糊匹配", userId, "BK_fuzzyMatch");
+    return null;
+  }
+
+  const containsMatches = [];
+  allSubjects.forEach((subject) => {
+    const subNameLower = subject.subName.toLowerCase();
+    if (subNameLower.length >= 2 && inputLower.includes(subNameLower)) {
+      const score = (subNameLower.length / inputLower.length) * 0.9;
+      containsMatches.push({
+        ...subject,
+        score: Math.min(0.9, score),
+        matchType: "input_contains_subject_name",
+        matchedTerm: subNameLower,
+      });
+    }
+
+    if (subject.synonyms) {
+      const synonymsList = subject.synonyms.split(",").map((syn) => syn.trim().toLowerCase());
+      for (const synonym of synonymsList) {
+        if (synonym.length >= 2 && inputLower.includes(synonym)) {
+          const score = (synonym.length / inputLower.length) * 0.95;
+          containsMatches.push({
+            ...subject,
+            score: Math.min(0.95, score),
+            matchType: "input_contains_synonym",
+            matchedTerm: synonym,
+          });
+        }
+      }
+    }
+  });
+
+  if (containsMatches.length > 0) {
+    containsMatches.sort((a, b) => b.score - a.score);
+    const bestMatch = containsMatches[0];
+    BK_logInfo(`【模糊匹配】複合詞最佳匹配: "${input}" -> "${bestMatch.subName}", 包含詞: "${bestMatch.matchedTerm}", 分數: ${bestMatch.score.toFixed(2)}`, "模糊匹配", userId, "BK_fuzzyMatch");
+    return {
+      majorCode: bestMatch.majorCode,
+      majorName: bestMatch.majorName,
+      subCode: bestMatch.subCode,
+      subName: bestMatch.subName,
+      synonyms: bestMatch.synonyms,
+      score: bestMatch.score,
+      matchType: bestMatch.matchType,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * 25. 獲取所有科目資料 - 從 DD1 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD1 模組複製，支援 BK 2.0 直連路徑
+ */
+async function BK_getAllSubjects(userId) {
+  try {
+    if (!userId) {
+      throw new Error("缺少使用者ID，每個使用者都需要獨立的帳本");
+    }
+
+    const ledgerId = `user_${userId}`;
+    BK_logInfo(`開始從Firestore獲取科目資料，使用者帳本: ${ledgerId}`, "科目查詢", userId, "BK_getAllSubjects");
+
+    const subjectsRef = db.collection("ledgers").doc(ledgerId).collection("subjects");
+    const snapshot = await subjectsRef.where("isActive", "==", true).get();
+
+    if (snapshot.empty) {
+      BK_logWarning(`使用者 ${userId} 沒有找到任何科目資料`, "科目查詢", userId, "BK_getAllSubjects");
+      return [];
+    }
+
+    const subjects = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (doc.id === "template") return;
+
+      subjects.push({
+        majorCode: data.大項代碼,
+        majorName: data.大項名稱,
+        subCode: data.子項代碼,
+        subName: data.子項名稱,
+        synonyms: data.同義詞 || "",
+      });
+    });
+
+    BK_logInfo(`成功獲取使用者 ${userId} 的 ${subjects.length} 個科目`, "科目查詢", userId, "BK_getAllSubjects");
+    return subjects;
+  } catch (error) {
+    BK_logError(`獲取科目資料失敗: ${error.toString()}`, "科目查詢", userId, "SUBJECTS_ERROR", error.toString(), "BK_getAllSubjects");
+    throw error;
+  }
+}
+
+/**
+ * 26. 格式化系統回覆訊息 - 從 DD3 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD3 模組複製，支援 BK 2.0 直連路徑
+ */
+async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {}) {
+  const userId = options.userId || "";
+  const processId = options.processId || require('crypto').randomUUID().substring(0, 8);
+  let errorMsg = "未知錯誤";
+
+  const currentDateTime = new Date().toLocaleString("zh-TW", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  BK_logDebug(`開始格式化訊息 [${processId}], 模組: ${moduleCode}`, "訊息格式化", userId, "BK_formatSystemReplyMessage");
+
+  try {
+    if (resultData && resultData.responseMessage) {
+      BK_logDebug(`使用現有回覆訊息 [${processId}]`, "訊息格式化", userId, "BK_formatSystemReplyMessage");
+      return {
+        success: resultData.success === true,
+        responseMessage: resultData.responseMessage,
+        originalResult: resultData.originalResult || resultData,
+        processId: processId,
+        errorType: resultData.errorType || null,
+        moduleCode: moduleCode,
+        partialData: resultData.partialData || {},
+        error: resultData.success === true ? undefined : errorMsg,
+      };
+    }
+
+    if (!resultData) {
+      resultData = {
+        success: false,
+        error: "無處理結果資料",
+        errorType: "MISSING_RESULT_DATA",
+        message: "無處理結果資料",
+        partialData: {
+          subject: "",
+          amount: 0,
+          rawAmount: "0",
+          paymentMethod: "支付方式未指定",
+          timestamp: new Date().getTime(),
+        },
+      };
+    }
+
+    let responseMessage = "";
+    const isSuccess = resultData.success === true;
+    let partialData = resultData.parsedData || resultData.partialData || resultData.data || {};
+
+    if (isSuccess) {
+      if (resultData.responseMessage) {
+        responseMessage = resultData.responseMessage;
+      } else if (resultData.data) {
+        const data = resultData.data;
+        const subjectName = data.subjectName || partialData.subject || "";
+        const amount = data.rawAmount || partialData.rawAmount || data.amount || 0;
+        const action = data.action || resultData.action || "支出";
+        const paymentMethod = data.paymentMethod || partialData.paymentMethod || "";
+        const date = data.date || currentDateTime;
+        const remark = data.remark || partialData.remark || "無";
+        const userType = data.userType || "J";
+
+        responseMessage =
+          `記帳成功！\n` +
+          `金額：${amount}元 (${action})\n` +
+          `支付方式：${paymentMethod}\n` +
+          `時間：${date}\n` +
+          `科目：${subjectName}\n` +
+          `備註：${remark}\n` +
+          `使用者類型：${userType}`;
+      } else {
+        responseMessage = `操作成功！\n處理ID: ${processId}`;
+      }
+    } else {
+      errorMsg = resultData.error || resultData.message || resultData.errorData?.error || "未知錯誤";
+      const subject = partialData.subject || "未知科目";
+      const displayAmount = partialData.rawAmount || (partialData.amount !== undefined ? String(partialData.amount) : "0");
+      const paymentMethod = partialData.paymentMethod || "未指定支付方式";
+      const remark = partialData.remark || "無";
+
+      responseMessage =
+        `記帳失敗！\n` +
+        `金額：${displayAmount}元\n` +
+        `支付方式：${paymentMethod}\n` +
+        `時間：${currentDateTime}\n` +
+        `科目：${subject}\n` +
+        `備註：${remark}\n` +
+        `使用者類型：J\n` +
+        `錯誤原因：${errorMsg}`;
+    }
+
+    BK_logDebug(`訊息格式化完成 [${processId}]`, "訊息格式化", userId, "BK_formatSystemReplyMessage");
+
+    return {
+      success: isSuccess,
+      responseMessage: responseMessage,
+      originalResult: resultData,
+      processId: processId,
+      errorType: resultData.errorType || null,
+      moduleCode: moduleCode,
+      partialData: partialData,
+      error: isSuccess ? undefined : errorMsg,
+    };
+  } catch (error) {
+    BK_logError(`格式化過程出錯: ${error.message} [${processId}]`, "訊息格式化", userId, "FORMAT_ERROR", error.toString(), "BK_formatSystemReplyMessage");
+
+    const fallbackMessage = `記帳失敗！\n時間：${currentDateTime}\n科目：未知科目\n金額：0元\n支付方式：未指定支付方式\n備註：無\n使用者類型：J\n錯誤原因：訊息格式化錯誤`;
+
+    return {
+      success: false,
+      responseMessage: fallbackMessage,
+      processId: processId,
+      errorType: "FORMAT_ERROR",
+      moduleCode: moduleCode,
+      error: error.toString(),
+    };
+  }
+}
+
+/**
+ * 27. 轉換時間戳 - 從 DD1 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD1 模組複製，支援 BK 2.0 直連路徑
+ */
+function BK_convertTimestamp(timestamp) {
+  const tsId = require('crypto').randomUUID().substring(0, 8);
+  BK_logDebug(`開始轉換時間戳: ${timestamp} [${tsId}]`, "時間處理", "", "BK_convertTimestamp");
+
+  try {
+    if (timestamp === null || timestamp === undefined) {
+      BK_logDebug(`時間戳為空 [${tsId}]`, "時間處理", "", "BK_convertTimestamp");
+      return null;
+    }
+
+    let date;
+    if (typeof timestamp === "number" || /^\d+$/.test(timestamp)) {
+      date = new Date(Number(timestamp));
+    } else if (typeof timestamp === "string" && timestamp.includes("T")) {
+      date = new Date(timestamp);
+    } else {
+      date = new Date(timestamp);
+    }
+
+    if (isNaN(date.getTime())) {
+      BK_logDebug(`無法轉換為有效日期: ${timestamp} [${tsId}]`, "時間處理", "", "BK_convertTimestamp");
+      return null;
+    }
+
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const taiwanDate = `${year}/${month}/${day}`;
+
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const taiwanTime = `${hours}:${minutes}`;
+
+    const result = { date: taiwanDate, time: taiwanTime };
+    BK_logDebug(`時間戳轉換結果: ${taiwanDate} ${taiwanTime} [${tsId}]`, "時間處理", "", "BK_convertTimestamp");
+    return result;
+  } catch (error) {
+    BK_logError(`時間戳轉換錯誤: ${error.toString()} [${tsId}]`, "時間處理", "", "TIMESTAMP_ERROR", error.toString(), "BK_convertTimestamp");
+    return null;
+  }
+}
+
+/**
+ * 28. 處理簡單記帳的主函數 - BK 2.0 核心函數
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 實現 BK 2.0 直連路徑，WH → BK 2.0 → Firestore
+ */
+async function BK_processDirectBookkeeping(event) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  BK_logInfo(`BK 2.0: 開始處理簡單記帳 [${processId}]`, "簡單記帳", event.source?.userId || "", "BK_processDirectBookkeeping");
+
+  try {
+    // 1. 提取用戶資訊
+    const userId = event.source?.userId;
+    const replyToken = event.replyToken;
+    const messageText = event.message?.text;
+
+    if (!userId) {
+      BK_logError(`BK 2.0: 缺少用戶ID [${processId}]`, "簡單記帳", "", "MISSING_USER_ID", "缺少用戶ID", "BK_processDirectBookkeeping");
+      return {
+        success: false,
+        error: "缺少用戶ID",
+        errorType: "MISSING_USER_ID"
+      };
+    }
+
+    if (!messageText) {
+      BK_logError(`BK 2.0: 缺少訊息文字 [${processId}]`, "簡單記帳", userId, "MISSING_MESSAGE", "缺少訊息文字", "BK_processDirectBookkeeping");
+      return {
+        success: false,
+        error: "缺少訊息文字",
+        errorType: "MISSING_MESSAGE"
+      };
+    }
+
+    BK_logInfo(`BK 2.0: 處理用戶 ${userId} 的訊息: "${messageText}" [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
+
+    // 2. 處理用戶訊息
+    const messageData = {
+      text: messageText,
+      userId: userId,
+      timestamp: event.timestamp,
+      replyToken: replyToken,
+    };
+
+    const processedData = await BK_processUserMessage(messageText, userId, event.timestamp);
+    BK_logInfo(`BK 2.0: 訊息處理結果: ${JSON.stringify(processedData)} [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
+
+    if (processedData && processedData.processed) {
+      // 3. 建立記帳數據
+      const bookkeepingData = {
+        action: processedData.action,
+        subjectName: processedData.subjectName,
+        amount: processedData.amount,
+        majorCode: processedData.majorCode,
+        subCode: processedData.subCode,
+        majorName: processedData.majorName,
+        paymentMethod: processedData.paymentMethod,
+        text: processedData.text,
+        originalSubject: processedData.originalSubject,
+        userId: userId,
+        userType: "J",
+        processId: processId,
+        rawAmount: processedData.rawAmount,
+      };
+
+      BK_logInfo(`BK 2.0: 準備調用 BK_processBookkeeping [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
+
+      // 4. 執行記帳
+      const result = await BK_processBookkeeping(bookkeepingData);
+      BK_logInfo(`BK 2.0: 記帳結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
+
+      // 5. 格式化回覆訊息
+      let responseMessage = "";
+      if (result.success) {
+        responseMessage = `記帳成功！\n金額：${bookkeepingData.rawAmount}元 (${bookkeepingData.action})\n支付方式：${result.data.paymentMethod}\n時間：${result.data.date}\n科目：${bookkeepingData.subjectName}\n備註：${result.data.remark || "無"}\n收支ID：${result.data.id || "未知"}\n使用者類型：${result.data.userType || "J"}`;
+      } else {
+        responseMessage = `記帳失敗！\n原因：${result.error || result.message}\n請重新嘗試或聯繫管理員。`;
+      }
+
+      return {
+        success: result.success,
+        result: result,
+        module: "BK",
+        responseMessage: responseMessage,
+        processId: processId,
+        userId: userId,
+        replyToken: replyToken
+      };
+
+    } else {
+      // 處理失敗
+      BK_logWarning(`BK 2.0: 訊息解析失敗 [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
+      
+      const errorMessage = processedData?.reason || "無法解析記帳訊息";
+      const responseMessage = `記帳失敗！\n原因：${errorMessage}\n請檢查格式後重試。`;
+
+      return {
+        success: false,
+        error: errorMessage,
+        errorType: processedData?.errorType || "MESSAGE_PARSE_ERROR",
+        responseMessage: responseMessage,
+        processId: processId,
+        userId: userId,
+        replyToken: replyToken
+      };
+    }
+  } catch (error) {
+    BK_logError(`BK 2.0: 處理簡單記帳時發生錯誤: ${error.toString()} [${processId}]`, "簡單記帳", event.source?.userId || "", "PROCESS_ERROR", error.toString(), "BK_processDirectBookkeeping");
+
+    const responseMessage = `記帳處理發生錯誤：${error.message}\n請重新嘗試或聯繫管理員。`;
+
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "PROCESS_ERROR",
+      responseMessage: responseMessage,
+      processId: processId,
+      userId: event.source?.userId || "",
+      replyToken: event.replyToken
+    };
+  }
+}
+
 // 導出需要被外部使用的函數
 module.exports = {
   BK_processBookkeeping,
@@ -1264,5 +2130,15 @@ module.exports = {
   BK_validatePaymentMethod,
   BK_smartTextParsing,
   BK_isInitialized,
-  BK_initialize
+  BK_initialize,
+  // BK 2.0 新增函數
+  BK_processUserMessage,
+  BK_parseInputFormat,
+  BK_removeAmountFromText,
+  BK_getSubjectCode,
+  BK_fuzzyMatch,
+  BK_getAllSubjects,
+  BK_formatSystemReplyMessage,
+  BK_convertTimestamp,
+  BK_processDirectBookkeeping
 };
