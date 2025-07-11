@@ -1,0 +1,1328 @@
+/**
+ * WH_Webhook 模組_2_0_1
+ * @module Webhook模組
+ * @description LINE Webhook處理模組
+*/
+
+// 1. 配置參數
+const WH_CONFIG = {
+  DEBUG: true,
+  TEST_MODE: true,           // 測試模式：跳過簽章驗證
+  LOG_MESSAGE_CONTENT: true, // 提前記錄訊息內容
+  MESSAGE_DEDUPLICATION: true, // 啟用消息去重
+  MESSAGE_RETENTION_HOURS: 24, // 消息ID保留時間(小時)
+  ASYNC_PROCESSING: true,    // 啟用異步處理（快速回應）
+  SHEET: {
+    ID: "1TSn-X-8B_PDUseZZPbbc0AhK55E80DBXJqkPRtStOUY", // 試算表 ID
+    NAME: "01. Master ledger",
+    LOG_SHEET_NAME: "03. log"
+  },
+  LINE: {
+    CHANNEL_SECRET: "e137bf2f264e9b6b80f46350fb1605b6", // LINE Channel Secret
+    CHANNEL_ACCESS_TOKEN: "i4VbfhUY5mV5PRT5U/nFxodLSiPSsrMB3QPkuhjstgG0aqmI1bZxxuyXHD/MGx8n9wS6WNgUBrPgn2YtGKj2OmyuO3Bmd5Ubue5zN/s+ogCpasGD0jl5sKdxYywoxO2rsbKC/UTbCnqxliqePIph8wdB04t89/1O/w1cDnyilFU=" // 替換為您的訪問令牌
+  },
+  RETRY: {
+    MAX_COUNT: 2,            // 減少重試次數
+    DELAY_MS: 1000
+  },
+  TIMEZONE: "Asia/Taipei" // 台灣時區
+};
+
+// 初始化檢查 - 在全局執行一次
+console.log("WH模組初始化，版本: 2.0.0 (2025-05-16) - 新增回覆功能，直接日誌寫入");
+
+// 日期時間格式化
+function WH_formatDateTime(date) {
+  return Utilities.formatDate(date, WH_CONFIG.TIMEZONE, "yyyy-MM-dd HH:mm:ss");
+}
+
+// 創建全局的PropertiesService對象
+const WH_PROPS = PropertiesService.getScriptProperties();
+
+/**
+ * 1. 主要的POST處理函數 - 極速回應版本
+ * 目標：<1秒內完成回應
+ */
+function doPost(e) {
+  // 生成請求ID
+  const requestId = Utilities.getUuid().substring(0, 8);
+  
+  // 快速錯誤檢查
+  if (!e || !e.postData || !e.postData.contents) {
+    return ContentService.createTextOutput(JSON.stringify({
+      error: "無效的請求格式"
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  try {
+    // 記錄請求接收
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.0: 收到LINE Webhook請求 [${requestId}]`,
+      "請求接收",
+      "",
+      "",
+      "WH",
+      "",
+      0,
+      "doPost",
+      "INFO"
+    ]);
+    
+    // 極速儲存請求
+    // 使用較輕量級的CacheService替代PropertiesService以提升速度
+    const cache = CacheService.getScriptCache();
+    cache.put('WH_REQ_' + requestId, e.postData.contents, 600); // 緩存10分鐘
+    
+    // 立即預定後台處理
+    try {
+      // 使用trigger而不是setTimeout
+      ScriptApp.newTrigger("processWebhookAsync")
+        .timeBased()
+        .after(1000) // 1秒後執行
+        .create()
+        .setData({requestId: requestId});
+    } catch (triggerError) {
+      // 如果創建觸發器失敗，忽略錯誤繼續執行
+      console.log("觸發器創建失敗，將改用直接調用: " + triggerError);
+      // 嘗試直接調用，但不等待結果
+      processWebhookAsync({requestId: requestId});
+    }
+    
+    // 立即回應LINE - 不進行任何額外處理
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "ok", 
+      request_id: requestId
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    // 即使發生錯誤，也確保返回響應
+    console.log("發生錯誤，但仍快速回應: " + error);
+    
+    // 記錄錯誤
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.0: 處理請求時出錯: ${error.toString()} [${requestId}]`,
+      "請求處理",
+      "",
+      "REQUEST_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      "doPost",
+      "ERROR"
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "received",
+      error: "請求已接收但處理可能出錯"
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * 2. 非同步處理Webhook請求
+ * 由時間觸發器調用
+ * @param {Object} e - 觸發器事件對象，包含requestId
+ */
+function processWebhookAsync(e) {
+  // 從參數獲取請求ID
+  const requestId = e && e.requestId ? e.requestId : "unknown";
+  
+  try {
+    // 清理當前的觸發器
+    if (e && e.triggerUid) {
+      try {
+        ScriptApp.deleteTrigger(ScriptApp.getProjectTriggers().find(t => t.getUniqueId() === e.triggerUid));
+      } catch (cleanError) {
+        console.log("清理觸發器失敗: " + cleanError);
+      }
+    }
+    
+    console.log(`開始非同步處理請求 [${requestId}]`);
+    // 使用直接日誌寫入
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.0: 開始非同步處理請求 [${requestId}]`,
+      "非同步處理",
+      "",
+      "",
+      "WH",
+      "",
+      0,
+      "processWebhookAsync",
+      "INFO"
+    ]);
+    
+    // 從緩存獲取請求數據
+    const cache = CacheService.getScriptCache();
+    const rawData = cache.get('WH_REQ_' + requestId);
+    
+    if (!rawData) {
+      console.log(`無法獲取請求數據 [${requestId}]`);
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.0: 無法獲取請求數據 [${requestId}]`,
+        "非同步處理",
+        "",
+        "DATA_MISSING",
+        "WH",
+        "",
+        0,
+        "processWebhookAsync",
+        "ERROR"
+      ]);
+      return;
+    }
+    
+    // 解析數據
+    const postData = JSON.parse(rawData);
+    
+    // 記錄基本信息
+    if (postData.events && postData.events.length > 0) {
+      // 處理每個事件
+      for (const event of postData.events) {
+        try {
+          // 獲取用戶ID
+          let userId = "";
+          if (event.source) {
+            userId = event.source.userId || "";
+          }
+          
+          // 檢查消息去重
+          if (WH_CONFIG.MESSAGE_DEDUPLICATION && 
+              event.type === 'message' && event.message && event.message.id) {
+            
+            // 在非同步處理中檢查重複
+            const isDuplicate = WH_checkDuplicateMessage(event.message.id, requestId);
+            if (isDuplicate) {
+              WH_directLogWrite([
+                WH_formatDateTime(new Date()),
+                `WH 2.0.0: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
+                "消息去重",
+                userId,
+                "",
+                "WH",
+                "",
+                0,
+                "processWebhookAsync",
+                "INFO"
+              ]);
+              continue; // 跳過此消息的處理
+            }
+          }
+          
+          if (event.type === 'message') {
+            // 處理消息事件
+            WH_processEventAsync(event, requestId, userId);
+          } else {
+            // 記錄其他類型事件
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.0: 收到${event.type}事件 [${requestId}]`,
+              "事件處理",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "processWebhookAsync",
+              "INFO"
+            ]);
+          }
+        } catch (eventError) {
+          console.log(`處理事件錯誤: ${eventError} [${requestId}]`);
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.0: 處理事件錯誤 [${requestId}]`,
+            "事件處理",
+            "",
+            "",
+            "WH",
+            eventError.toString(),
+            0,
+            "processWebhookAsync",
+            "ERROR"
+          ]);
+        }
+      }
+    } else {
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.0: 請求中沒有事件 [${requestId}]`,
+        "事件處理",
+        "",
+        "",
+        "WH",
+        "",
+        0,
+        "processWebhookAsync",
+        "WARNING"
+      ]);
+    }
+    
+    // 清理緩存
+    cache.remove('WH_REQ_' + requestId);
+    console.log(`非同步處理完成，已清理數據 [${requestId}]`);
+    
+    // 記錄處理完成
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.0: 非同步處理完成 [${requestId}]`,
+      "非同步處理",
+      "",
+      "",
+      "WH",
+      "",
+      0,
+      "processWebhookAsync",
+      "INFO"
+    ]);
+    
+  } catch (error) {
+    console.log(`非同步處理主錯誤: ${error} [${requestId}]`);
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.0: 非同步處理錯誤 [${requestId}]`,
+      "非同步處理",
+      "",
+      "ASYNC_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      "processWebhookAsync",
+      "ERROR"
+    ]);
+  }
+}
+
+/**
+ * 3. 處理來自 LINE 的 Webhook 事件
+ * @version 2.0.0 (2025-05-16)
+ * @param {Object} event - LINE Webhook 事件對象
+ */
+function WH_processEvent(event) {
+  try {
+    // 記錄事件類型和來源
+    console.log(`收到 LINE 事件: ${event.type}, 來源: ${event.source.type}`);
+    
+    // 確保 event 包含必要屬性
+    if (!event || !event.type) {
+      console.log("無效事件物件");
+      return;
+    }
+    
+    // 處理訊息事件
+    if (event.type === 'message' && event.message) {
+      // 提取用戶ID和回覆Token
+      const userId = event.source.userId;
+      const replyToken = event.replyToken;
+      
+      // 處理不同類型的訊息
+      if (event.message.type === 'text') {
+        // 處理文字訊息
+        const messageText = event.message.text;
+        
+        // 添加時間戳記錄
+        console.log(`接收訊息: "${messageText}" 從用戶: ${userId}, 時間: ${new Date().toISOString()}`);
+        
+        // 創建發送到 DD 模組的數據對象
+        const data = {
+          text: messageText,
+          userId: userId,
+          timestamp: event.timestamp,
+          replyToken: replyToken // 重要：保存回覆令牌
+        };
+        
+        // 調用 DD 分發處理數據並獲取結果
+        const result = DD_distributeData(data, "LINE");
+        
+        // 判斷結果是否包含回應訊息並回覆用戶
+        if (result && result.responseMessage) {
+          console.log(`發現回應訊息，準備回覆用戶: ${result.responseMessage}`);
+          WH_replyMessage(replyToken, result.responseMessage);
+        } else {
+          console.log("結果中沒有回應訊息，不回覆用戶");
+        }
+      }
+      // 可以處理其他類型的訊息 (圖片、影片等)
+    }
+    // 處理其他類型事件 (follow, unfollow, join 等)
+    
+  } catch (error) {
+    console.log(`WH_processEvent 錯誤: ${error}`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+  }
+}
+
+/**
+ * 4. 檢查消息是否已處理過（使用CacheService以提高速度）
+ */
+function WH_checkDuplicateMessage(messageId, requestId) {
+  if (!messageId) return false;
+  
+  try {
+    // 使用CacheService替代PropertiesService以提高速度
+    const cache = CacheService.getScriptCache();
+    const cacheKey = "WH_MSG_" + messageId;
+    
+    // 檢查消息是否已處理
+    const existingValue = cache.get(cacheKey);
+    if (existingValue) {
+      return true;
+    }
+    
+    // 標記消息為已處理
+    cache.put(cacheKey, new Date().toISOString(), 86400); // 24小時
+    
+    // 同時在PropertiesService中記錄 (用於長期存儲)
+    try {
+      WH_PROPS.setProperty(cacheKey, new Date().toISOString());
+    } catch (propError) {
+      // 如果PropertiesService失敗，僅記錄錯誤但繼續處理
+      console.log(`PropertiesService設置失敗: ${propError}`);
+    }
+    
+    return false;
+  } catch (error) {
+    console.log(`消息去重檢查出錯: ${error}`);
+    return false; // 如果檢查失敗，假設不是重複消息
+  }
+}
+
+/**
+ * 5. 向LINE用戶發送回覆消息
+ * @deprecated 請使用 WH_replyMessage 代替
+ */
+function WH_replyToUser(replyToken, message, eventId) {
+  if (!replyToken) return { success: false, error: "缺少回覆令牌" };
+  
+  try {
+    // 準備LINE消息API請求數據
+    const payload = {
+      "replyToken": replyToken,
+      "messages": [{ "type": "text", "text": message }]
+    };
+    
+    // 設置API請求選項
+    const options = {
+      "method": "post",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN
+      },
+      "payload": JSON.stringify(payload)
+    };
+    
+    // 發送請求到LINE API
+    const response = UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply", options);
+    
+    // 檢查回應狀態
+    const responseCode = response.getResponseCode();
+    if (responseCode === 200) {
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.0: 成功發送回覆 [${eventId}]`,
+        "用戶回覆",
+        "",
+        "",
+        "WH",
+        "",
+        0,
+        "WH_replyToUser",
+        "INFO"
+      ]);
+      return { success: true };
+    } else {
+      const responseText = response.getContentText();
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.0: LINE API回應異常，狀態碼: ${responseCode} [${eventId}]`,
+        "用戶回覆",
+        "",
+        "",
+        "WH",
+        responseText,
+        0,
+        "WH_replyToUser",
+        "WARNING"
+      ]);
+      return { success: false, error: `API回應異常 (${responseCode})` };
+    }
+  } catch (error) {
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.0: 發送LINE回覆失敗 [${eventId}]`,
+      "用戶回覆",
+      "",
+      "",
+      "WH",
+      error.toString(),
+      0,
+      "WH_replyToUser",
+      "ERROR"
+    ]);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * 直接寫入日誌到試算表，不使用緩衝區
+ * @version 2.0.0 (2025-05-16)
+ * @param {Array} logData - 日誌數據行
+ */
+function WH_directLogWrite(logData) {
+  try {
+    // 確保來源欄位為WH
+    logData[5] = "WH";
+    
+    // 直接向控制台輸出完整日誌
+    console.log(`[WH 2.0.0 LOG] ${logData[1]} (${logData[9]})`);
+    
+    const spreadsheet = SpreadsheetApp.openById(WH_CONFIG.SHEET.ID);
+    const logSheet = spreadsheet.getSheetByName(WH_CONFIG.SHEET.LOG_SHEET_NAME);
+    
+    if (logSheet) {
+      // 直接添加一行到日誌表
+      logSheet.appendRow(logData);
+    } else {
+      console.log("無法找到日誌表！");
+    }
+    
+  } catch (error) {
+    console.log(`WH_directLogWrite 錯誤: ${error.toString()}`);
+  }
+}
+
+// 日誌函數（使用直接寫入）
+function WH_logDebug(message, operationType = "", userId = "", location = "") {
+  if (!WH_CONFIG.DEBUG) return;
+  console.log(`[WH-DEBUG] ${message}`);
+  
+  // 使用try-catch包裹日誌寫入，確保不會影響主要流程
+  try {
+    const logData = [
+      WH_formatDateTime(new Date()),  // 1. 時間戳記
+      message,                        // 2. 訊息
+      operationType,                  // 3. 操作類型
+      userId,                         // 4. 使用者ID
+      "",                             // 5. 錯誤代碼
+      "WH",                           // 6. 來源 - 明確標記為WH
+      "",                             // 7. 錯誤詳情
+      0,                              // 8. 重試次數
+      location || "",                 // 9. 程式碼位置
+      "DEBUG"                         // 10. 嚴重等級
+    ];
+    
+    // 直接寫入日誌
+    WH_directLogWrite(logData);
+  } catch (e) {
+    console.log("日誌記錄失敗: " + e);
+  }
+}
+
+function WH_logInfo(message, operationType = "", userId = "", location = "") {
+  console.log(`[WH-INFO] ${message}`);
+  
+  try {
+    const logData = [
+      WH_formatDateTime(new Date()),  // 1. 時間戳記
+      message,                        // 2. 訊息
+      operationType,                  // 3. 操作類型
+      userId,                         // 4. 使用者ID
+      "",                             // 5. 錯誤代碼
+      "WH",                           // 6. 來源 - 明確標記為WH
+      "",                             // 7. 錯誤詳情
+      0,                              // 8. 重試次數
+      location || "",                 // 9. 程式碼位置
+      "INFO"                          // 10. 嚴重等級
+    ];
+    
+    // 直接寫入日誌
+    WH_directLogWrite(logData);
+  } catch (e) {
+    console.log("日誌記錄失敗: " + e);
+  }
+}
+
+function WH_logWarning(message, operationType = "", userId = "", errorDetails = "", location = "") {
+  console.log(`[WH-WARNING] ${message}`);
+  
+  try {
+    const logData = [
+      WH_formatDateTime(new Date()),  // 1. 時間戳記
+      message,                        // 2. 訊息
+      operationType,                  // 3. 操作類型
+      userId,                         // 4. 使用者ID
+      "",                             // 5. 錯誤代碼
+      "WH",                           // 6. 來源 - 明確標記為WH
+      errorDetails,                   // 7. 錯誤詳情
+      0,                              // 8. 重試次數
+      location || "",                 // 9. 程式碼位置
+      "WARNING"                       // 10. 嚴重等級
+    ];
+    
+    // 直接寫入日誌
+    WH_directLogWrite(logData);
+  } catch (e) {
+    console.log("日誌記錄失敗: " + e);
+  }
+}
+
+function WH_logError(message, operationType = "", userId = "", errorCode = "", errorDetails = "", location = "") {
+  console.log(`[WH-ERROR] ${message}`);
+  
+  try {
+    const logData = [
+      WH_formatDateTime(new Date()),  // 1. 時間戳記
+      message,                        // 2. 訊息
+      operationType,                  // 3. 操作類型
+      userId,                         // 4. 使用者ID
+      errorCode,                      // 5. 錯誤代碼
+      "WH",                           // 6. 來源 - 明確標記為WH
+      errorDetails,                   // 7. 錯誤詳情
+      0,                              // 8. 重試次數
+      location || "",                 // 9. 程式碼位置
+      "ERROR"                         // 10. 嚴重等級
+    ];
+    
+    // 直接寫入日誌
+    WH_directLogWrite(logData);
+  } catch (e) {
+    console.log("日誌記錄失敗: " + e);
+  }
+}
+
+function WH_logCritical(message, operationType = "", userId = "", errorCode = "", errorDetails = "", location = "") {
+  console.log(`[WH-CRITICAL] ${message}`);
+  
+  try {
+    const logData = [
+      WH_formatDateTime(new Date()),  // 1. 時間戳記
+      message,                        // 2. 訊息
+      operationType,                  // 3. 操作類型
+      userId,                         // 4. 使用者ID
+      errorCode,                      // 5. 錯誤代碼
+      "WH",                           // 6. 來源 - 明確標記為WH
+      errorDetails,                   // 7. 錯誤詳情
+      0,                              // 8. 重試次數
+      location || "",                 // 9. 程式碼位置
+      "CRITICAL"                      // 10. 嚴重等級
+    ];
+    
+    // 直接寫入日誌
+    WH_directLogWrite(logData);
+  } catch (e) {
+    console.log("日誌記錄失敗: " + e);
+  }
+}
+
+/**
+ * 6. 回覆訊息給 LINE 用戶
+ * @version 2.0.0 (2025-05-16) - 直接寫入日誌
+ * @author AustinLiao69
+ * @param {string} replyToken - LINE 回覆令牌
+ * @param {string} message - 要發送的訊息內容
+ * @returns {Object} 發送結果
+ */
+function WH_replyMessage(replyToken, message) {
+  try {
+    // 使用直接寫入記錄開始回覆請求
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.0: 開始回覆訊息: ${message.substring(0, 50)}${message.length > 50 ? "..." : ""}`,
+      "訊息回覆",
+      "",
+      "",
+      "WH",
+      "",
+      0,
+      "WH_replyMessage",
+      "INFO"
+    ]);
+    
+    // 檢查回覆令牌是否有效
+    if (!replyToken || replyToken === "00000000000000000000000000000000") {
+      console.log("無效的回覆令牌，跳過回覆");
+      
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.0: 無效的回覆令牌，跳過回覆`,
+        "訊息回覆",
+        "",
+        "INVALID_TOKEN",
+        "WH",
+        "回覆令牌無效或為測試令牌",
+        0,
+        "WH_replyMessage",
+        "ERROR"
+      ]);
+      
+      return { success: false, error: "無效的回覆令牌" };
+    }
+    
+    // LINE Messaging API URL
+    const url = "https://api.line.me/v2/bot/message/reply";
+    
+    // 使用配置中定義的 Channel Access Token
+    const CHANNEL_ACCESS_TOKEN = WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN;
+    
+    if (!CHANNEL_ACCESS_TOKEN) {
+      console.log("找不到 CHANNEL_ACCESS_TOKEN，無法回覆訊息");
+      
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.0: 找不到 CHANNEL_ACCESS_TOKEN，無法回覆訊息`,
+        "訊息回覆",
+        "",
+        "MISSING_TOKEN",
+        "WH",
+        "配置中缺少 CHANNEL_ACCESS_TOKEN",
+        0,
+        "WH_replyMessage",
+        "ERROR"
+      ]);
+      
+      return { success: false, error: "找不到 CHANNEL_ACCESS_TOKEN" };
+    }
+    
+    // 設置請求頭
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + CHANNEL_ACCESS_TOKEN
+    };
+    
+    // 設置請求體
+    const payload = {
+      "replyToken": replyToken,
+      "messages": [{
+        "type": "text",
+        "text": message
+      }]
+    };
+    
+    // 發送 HTTP 請求
+    const options = {
+      "method": "post",
+      "headers": headers,
+      "payload": JSON.stringify(payload),
+      "muteHttpExceptions": true
+    };
+    
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.0: 發送API請求到LINE平台`,
+      "訊息回覆",
+      "",
+      "",
+      "WH",
+      "",
+      0,
+      "WH_replyMessage",
+      "INFO"
+    ]);
+    
+    // 執行請求並獲取響應
+    const response = UrlFetchApp.fetch(url, options);
+    const responseCode = response.getResponseCode();
+    
+    // 記錄回覆結果
+    console.log(`LINE API 回覆結果: ${responseCode}`);
+    
+    // 檢查響應是否成功
+    if (responseCode === 200) {
+      console.log("回覆訊息成功");
+      
+      // 回覆成功日誌
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        "WH 2.0.0: 回覆訊息成功發送",
+        "訊息回覆",
+        "",
+        "",
+        "WH",
+        "",
+        0,
+        "WH_replyMessage",
+        "INFO"
+      ]);
+      
+      return { success: true };
+    } else {
+      const errorResponse = response.getContentText();
+      console.log(`回覆訊息失敗: ${errorResponse}`);
+      
+      // 回覆失敗日誌
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.0: 回覆訊息失敗: ${responseCode} - ${errorResponse}`,
+        "訊息回覆",
+        "",
+        "API_ERROR",
+        "WH",
+        errorResponse,
+        0,
+        "WH_replyMessage",
+        "ERROR"
+      ]);
+      
+      return { success: false, error: errorResponse };
+    }
+    
+  } catch (error) {
+    console.log(`WH_replyMessage 錯誤: ${error}`);
+    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    
+    // 異常日誌
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.0: 回覆訊息異常: ${error.toString()}`,
+      "訊息回覆",
+      "",
+      "EXCEPTION",
+      "WH",
+      error.toString(),
+      0,
+      "WH_replyMessage",
+      "ERROR"
+    ]);
+    
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * 7. 處理事件 (非同步版) - 修正版本
+ * @version 2.0.1 (2025-05-29) - 增強錯誤處理，確保總是有回覆
+ * @author AustinLiao69
+ * @param {Object} event - LINE事件對象
+ * @param {string} requestId - 請求ID
+ * @param {string} userId - 用戶ID
+ */
+function WH_processEventAsync(event, requestId, userId) {
+  // 檢查基本參數
+  if (!event || !event.type) {
+    console.log(`無效事件或缺少類型: ${JSON.stringify(event)} [${requestId}]`);
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.1: 無效事件或缺少類型 [${requestId}]`,
+      "事件處理",
+      userId,
+      "INVALID_EVENT",
+      "WH",
+      JSON.stringify(event),
+      0,
+      "WH_processEventAsync",
+      "ERROR"
+    ]);
+    return;
+  }
+  
+  try {
+    // 記錄開始處理事件
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.1: 開始處理事件: ${event.type} [${requestId}]`,
+      "事件處理",
+      userId,
+      "",
+      "WH",
+      "",
+      0,
+      "WH_processEventAsync",
+      "INFO"
+    ]);
+    
+    // 確保設置了預處理的replyToken屬性
+    if (!event.replyToken && event.type === 'message') {
+      const errorMsg = `缺少replyToken: ${JSON.stringify(event)} [${requestId}]`;
+      console.log(errorMsg);
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        errorMsg,
+        "事件處理",
+        userId,
+        "MISSING_REPLY_TOKEN",
+        "WH",
+        "",
+        0,
+        "WH_processEventAsync",
+        "ERROR"
+      ]);
+      return;
+    }
+    
+    // 根據事件類型處理
+    if (event.type === 'message') {
+      // 處理消息類型的事件
+      console.log(`處理消息事件: ${event.message ? event.message.type : 'unknown'} [${requestId}]`);
+      let result;
+      
+      if (event.message.type === 'text') {
+        // 安全提取和記錄文本內容
+        const text = event.message.text || '';
+        console.log(`收到文本消息: "${text.substr(0, 50)}${text.length > 50 ? '...' : ''}" [${requestId}]`);
+        
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.1: 收到文本消息: "${text.substr(0, 50)}${text.length > 50 ? '...' : ''}" [${requestId}]`,
+          "訊息接收",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          "WH_processEventAsync",
+          "INFO"
+        ]);
+        
+        // 準備分發參數
+        const messageData = {
+          text: text,
+          userId: userId,
+          timestamp: event.timestamp,
+          // 添加其他必要的屬性...
+        };
+        
+        // 調用分發函數
+        try {
+          console.log(`準備調用DD_distributeData [${requestId}]`);
+          
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.1: 準備調用DD_distributeData [${requestId}]`,
+            "數據分發",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO"
+          ]);
+          
+          result = DD_distributeData(messageData, 'LINE', 0);
+          console.log(`DD_distributeData處理完成，結果: ${JSON.stringify(result)} [${requestId}]`);
+          
+          // 修改：處理空結果或缺少responseMessage的情況
+          if (!result) {
+            result = {
+              success: false,
+              responseMessage: "處理您的請求時發生錯誤，請稍後再試。",
+              error: "返回空結果"
+            };
+            
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.1: DD_distributeData返回空結果 [${requestId}]`,
+              "處理異常",
+              userId,
+              "EMPTY_RESULT",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "ERROR"
+            ]);
+          }
+          
+          // 修改：確保失敗時也有回覆訊息
+          if (result.success === false && !result.responseMessage) {
+            result.responseMessage = `記帳失敗！\n原因：${result.error || result.message || "未知錯誤"}\n請重新嘗試或聯繫管理員。`;
+            
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.1: 生成失敗回覆訊息 [${requestId}]`,
+              "訊息生成",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO"
+            ]);
+          }
+          
+          if (!result.success || result.error) {
+            console.log(`DD_distributeData處理失敗: ${result.error || '未知錯誤'} [${requestId}]`);
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.1: 數據分發失敗: ${result.error || '未知錯誤'} [${requestId}]`,
+              "事件處理",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "WARNING"
+            ]);
+          }
+        } catch (ddError) {
+          // 修改：異常捕獲後生成預設回覆訊息
+          result = {
+            success: false,
+            responseMessage: "處理記帳時發生系統錯誤，請稍後再試或聯繫管理員。",
+            error: ddError.toString()
+          };
+          
+          console.log(`DD_distributeData調用失敗: ${ddError.toString()} [${requestId}]`);
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.1: 捕獲DD_distributeData異常，生成預設回覆 [${requestId}]`,
+            "異常處理",
+            userId,
+            "DD_ERROR",
+            "WH",
+            ddError.toString(),
+            0,
+            "WH_processEventAsync",
+            "ERROR"
+          ]);
+        }
+      }
+      else if (event.message.type === 'location') {
+        console.log(`收到位置消息 [${requestId}]`);
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.1: 收到位置消息 [${requestId}]`,
+          "事件處理",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          "WH_processEventAsync",
+          "INFO"
+        ]);
+        
+        // 這裡可以添加對位置消息的特殊處理
+      }
+      else {
+        console.log(`不支持的消息類型: ${event.message.type} [${requestId}]`);
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.1: 不支持的消息類型: ${event.message.type} [${requestId}]`,
+          "事件處理",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          "WH_processEventAsync",
+          "WARNING"
+        ]);
+      }
+      
+      // 判斷結果是否包含回應訊息
+      if (result && result.responseMessage) {
+        // 記錄準備發送回覆
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.1: 準備發送回覆訊息: ${result.responseMessage.substring(0, 50)}${result.responseMessage.length > 50 ? "..." : ""} [${requestId}]`,
+          "訊息回覆",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          "WH_processEventAsync",
+          "INFO"
+        ]);
+        
+        console.log(`WH 2.0.1: 發現回應訊息，準備回覆用戶: ${result.responseMessage} [${requestId}]`);
+        
+        // 使用回覆令牌發送訊息
+        const replyResult = WH_replyMessage(event.replyToken, result.responseMessage);
+        
+        // 記錄發送結果
+        if (replyResult && replyResult.success) {
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.1: 訊息回覆成功發送 [${requestId}]`,
+            "訊息回覆",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO"
+          ]);
+        } else {
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.1: 訊息回覆發送失敗: ${replyResult ? replyResult.error : "未知錯誤"} [${requestId}]`,
+            "訊息回覆",
+            userId,
+            "REPLY_ERROR",
+            "WH",
+            (replyResult ? replyResult.error : ""),
+            0,
+            "WH_processEventAsync",
+            "ERROR"
+          ]);
+        }
+      } else {
+        // 新增：確保總是有回覆
+        let defaultMessage = "您的請求已處理，但系統無法提供詳細結果。";
+        if (result && result.success === false) {
+          defaultMessage = "記帳處理失敗，請稍後再試。";
+        }
+        
+        console.log(`WH 2.0.1: 未收到正常回應訊息，使用預設訊息回覆 [${requestId}]`);
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.1: 使用預設回覆機制 [${requestId}]`,
+          "預設回覆",
+          userId,
+          "NO_RESPONSE_MSG",
+          "WH",
+          "",
+          0,
+          "WH_processEventAsync",
+          "WARNING"
+        ]);
+        
+        const replyResult = WH_replyMessage(event.replyToken, defaultMessage);
+        
+        // 記錄預設回覆結果
+        if (replyResult && replyResult.success) {
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.1: 預設訊息回覆成功發送 [${requestId}]`,
+            "訊息回覆",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO"
+          ]);
+        } else {
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.1: 預設訊息回覆發送失敗: ${replyResult ? replyResult.error : "未知錯誤"} [${requestId}]`,
+            "訊息回覆",
+            userId,
+            "REPLY_ERROR",
+            "WH",
+            (replyResult ? replyResult.error : ""),
+            0,
+            "WH_processEventAsync",
+            "ERROR"
+          ]);
+        }
+      }
+    } 
+    else if (event.type === 'postback') {
+      console.log(`處理POSTBACK事件 [${requestId}]`);
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.1: 處理POSTBACK事件: ${event.postback ? event.postback.data : 'no data'} [${requestId}]`,
+        "事件處理",
+        userId,
+        "",
+        "WH",
+        "",
+        0,
+        "WH_processEventAsync",
+        "INFO"
+      ]);
+      
+      // 解析postback數據
+      const postbackData = event.postback ? event.postback.data : '';
+      
+      // 準備postback數據對象
+      const pbData = {
+        userId: userId,
+        postback: postbackData,
+        timestamp: event.timestamp
+      };
+      
+      // 調用分發函數處理postback
+      try {
+        const result = DD_distributeData(pbData, 'Rich menu', 0);
+        
+        // 判斷結果是否包含回應訊息
+        if (result && result.responseMessage) {
+          // 記錄準備發送回覆
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.1: 準備發送POSTBACK回覆訊息: ${result.responseMessage.substring(0, 50)}${result.responseMessage.length > 50 ? "..." : ""} [${requestId}]`,
+            "訊息回覆",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO"
+          ]);
+          
+          console.log(`WH 2.0.1: POSTBACK處理生成回應，準備回覆: ${result.responseMessage} [${requestId}]`);
+          
+          // 使用回覆令牌發送訊息
+          const replyResult = WH_replyMessage(event.replyToken, result.responseMessage);
+          
+          // 記錄發送結果
+          if (replyResult && replyResult.success) {
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.1: POSTBACK回覆成功發送 [${requestId}]`,
+              "訊息回覆",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO"
+            ]);
+          } else {
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.1: POSTBACK回覆發送失敗: ${replyResult ? replyResult.error : "未知錯誤"} [${requestId}]`,
+              "訊息回覆",
+              userId,
+              "REPLY_ERROR",
+              "WH",
+              (replyResult ? replyResult.error : ""),
+              0,
+              "WH_processEventAsync",
+              "ERROR"
+            ]);
+          }
+        } else {
+          // 新增：確保POSTBACK也有回覆
+          let defaultMessage = "您的請求已處理";
+          if (result && result.success === false) {
+            defaultMessage = "處理您的請求時出現問題，請稍後再試。";
+          }
+          
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.1: POSTBACK無回應訊息，使用預設回覆 [${requestId}]`,
+            "預設回覆",
+            userId,
+            "NO_POSTBACK_RESPONSE",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "WARNING"
+          ]);
+          
+          const replyResult = WH_replyMessage(event.replyToken, defaultMessage);
+          
+          if (replyResult && replyResult.success) {
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.1: POSTBACK預設回覆成功發送 [${requestId}]`,
+              "訊息回覆",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO"
+            ]);
+          }
+        }
+      } catch (dpError) {
+        // 新增：POSTBACK處理捕獲錯誤時也發送回覆
+        console.log(`POSTBACK處理失敗: ${dpError.toString()} [${requestId}]`);
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.1: POSTBACK處理失敗: ${dpError.toString()} [${requestId}]`,
+          "事件處理",
+          userId,
+          "POSTBACK_ERROR",
+          "WH",
+          dpError.toString(),
+          0,
+          "WH_processEventAsync",
+          "ERROR"
+        ]);
+        
+        // 發送錯誤回覆
+        const errorMessage = "處理您的請求時發生錯誤，請稍後再試。";
+        const replyResult = WH_replyMessage(event.replyToken, errorMessage);
+      }
+    }
+    else {
+      console.log(`未處理的事件類型: ${event.type} [${requestId}]`);
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.1: 未處理的事件類型: ${event.type} [${requestId}]`,
+        "事件處理",
+        userId,
+        "",
+        "WH",
+        "",
+        0,
+        "WH_processEventAsync",
+        "WARNING"
+      ]);
+    }
+    
+    // 記錄處理完成
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.1: 事件處理完成: ${event.type} [${requestId}]`,
+      "事件處理",
+      userId,
+      "",
+      "WH",
+      "",
+      0,
+      "WH_processEventAsync",
+      "INFO"
+    ]);
+    
+  } catch (error) {
+    console.log(`處理事件時出錯: ${error.toString()} [${requestId}]`);
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.1: 處理事件時出錯: ${error.toString()} [${requestId}]`,
+      "事件處理",
+      userId,
+      "PROCESS_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      "WH_processEventAsync",
+      "ERROR"
+    ]);
+    
+    if (error.stack) {
+      console.log(`錯誤堆疊: ${error.stack}`);
+    }
+    
+    // 新增：處理事件總體異常時也發送回覆
+    if (event.replyToken) {
+      const systemErrorMsg = "系統處理您的請求時發生錯誤，請稍後再試。";
+      try {
+        WH_replyMessage(event.replyToken, systemErrorMsg);
+        
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.1: 發送系統錯誤回覆 [${requestId}]`,
+          "系統錯誤",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          "WH_processEventAsync",
+          "WARNING"
+        ]);
+      } catch (replyError) {
+        console.log(`發送系統錯誤回覆失敗: ${replyError} [${requestId}]`);
+      }
+    }
+  }
+}
