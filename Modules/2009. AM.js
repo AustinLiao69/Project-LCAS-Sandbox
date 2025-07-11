@@ -953,7 +953,7 @@ async function AM_initializeUserSubjects(UID, ledgerIdPrefix = 'user_') {
  */
 async function AM_ensureUserSubjects(UID) {
   try {
-    const userLedgerId = `user_${UID}`;```text
+    const userLedgerId = `user_${UID}`;
 
     // 檢查用戶是否有科目數據
     const subjectsQuery = await db.collection('ledgers').doc(userLedgerId).collection('subjects').limit(1).get();
