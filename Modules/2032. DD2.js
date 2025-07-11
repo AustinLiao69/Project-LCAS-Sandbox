@@ -40,19 +40,28 @@ const DD_CONFIG = {
   },
 };
 
-// 引入DD1模組的日誌函數
-const DD1 = require("./2031. DD1.js");
-const {
-  DD_writeToLogSheet,
-  DD_getAllSubjects,
-  DD_getLedgerInfo,
-  DD_logDebug,
-  DD_logInfo,
-  DD_logWarning,
-  DD_logError,
-  DD_logCritical,
-  DD_convertTimestamp,
-} = DD1;
+// 延遲載入DD1模組以避免循環依賴
+let DD1;
+function loadDD1() {
+  if (!DD1) DD1 = require("./2031. DD1.js");
+  return DD1;
+}
+
+// 延遲獲取DD1函數
+function getDD1Functions() {
+  const dd1 = loadDD1();
+  return {
+    DD_writeToLogSheet: dd1.DD_writeToLogSheet,
+    DD_getAllSubjects: dd1.DD_getAllSubjects,
+    DD_getLedgerInfo: dd1.DD_getLedgerInfo,
+    DD_logDebug: dd1.DD_logDebug,
+    DD_logInfo: dd1.DD_logInfo,
+    DD_logWarning: dd1.DD_logWarning,
+    DD_logError: dd1.DD_logError,
+    DD_logCritical: dd1.DD_logCritical,
+    DD_convertTimestamp: dd1.DD_convertTimestamp,
+  };
+}
 
 /**
  * 01. 配置初始化
@@ -71,127 +80,7 @@ function DD_initConfig() {
   return true;
 }
 
-/**
- * 03. 用戶偏好記憶管理 - Firestore版本
- * @version 2025-01-09-V4.0.0
- * @date 2025-01-09 16:00:00
- * @update: 完全遷移至Firestore，移除Google Sheets依賴，移除預設ledgerID
- * @param {string} userId - 用戶ID (必須提供)
- * @param {string} inputTerm - 輸入詞彙
- * @param {string} selectedSubjectCode - 用戶選擇的科目代碼
- * @param {boolean} isQuery - 是否為查詢操作
- * @returns {object|null} 查詢操作時返回偏好信息，存儲操作時返回null
- */
-async function DD_userPreferenceManager(
-  userId,
-  inputTerm,
-  selectedSubjectCode,
-  isQuery = false,
-) {
-  const upId = uuidv4().substring(0, 8);
-  console.log(
-    `${isQuery ? "查詢" : "存儲"}用戶偏好: userId=${userId}, term="${inputTerm}" [${upId}]`,
-  );
 
-  try {
-    if (!userId || !inputTerm) {
-      console.log(`用戶ID或輸入詞彙為空 [${upId}]`);
-      return null;
-    }
-
-    const normalizedTerm = inputTerm.toLowerCase().trim();
-
-    // 使用 users collection 下的 preferences subcollection
-    const preferencesRef = db
-      .collection("users")
-      .doc(userId)
-      .collection("preferences");
-
-    // 查詢模式
-    if (isQuery) {
-      const snapshot = await preferencesRef
-        .where("inputText", "==", normalizedTerm)
-        .orderBy("count", "desc")
-        .limit(1)
-        .get();
-
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
-        const data = doc.data();
-        console.log(
-          `找到用戶偏好: ${data.selectedCategory}, 使用次數=${data.count} [${upId}]`,
-        );
-        return {
-          subjectCode: data.selectedCategory,
-          count: data.count,
-          lastUse: data.lastUse,
-        };
-      }
-
-      console.log(`未找到用戶偏好 [${upId}]`);
-      return null;
-    }
-    // 存儲模式
-    else {
-      if (!selectedSubjectCode) {
-        console.log(`科目代碼為空，無法存儲 [${upId}]`);
-        return null;
-      }
-
-      // 查找是否已存在記錄
-      const existingSnapshot = await preferencesRef
-        .where("inputText", "==", normalizedTerm)
-        .where("selectedCategory", "==", selectedSubjectCode)
-        .limit(1)
-        .get();
-
-      const now = admin.firestore.Timestamp.now();
-
-      if (!existingSnapshot.empty) {
-        // 更新現有記錄
-        const doc = existingSnapshot.docs[0];
-        const currentData = doc.data();
-        await doc.ref.update({
-          count: (currentData.count || 0) + 1,
-          lastUse: now,
-        });
-        console.log(
-          `更新用戶偏好: "${inputTerm}" -> ${selectedSubjectCode}, 新計數=${(currentData.count || 0) + 1} [${upId}]`,
-        );
-      } else {
-        // 添加新記錄
-        await preferencesRef.add({
-          inputText: inputTerm,
-          selectedCategory: selectedSubjectCode,
-          count: 1,
-          lastUse: now,
-          context: "",
-        });
-        console.log(
-          `新增用戶偏好: "${inputTerm}" -> ${selectedSubjectCode} [${upId}]`,
-        );
-      }
-
-      return null;
-    }
-  } catch (error) {
-    console.log(`用戶偏好管理錯誤: ${error} [${upId}]`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    await DD_writeToLogSheet(
-      "ERROR",
-      `用戶偏好管理錯誤: ${error}`,
-      "同義詞處理",
-      userId,
-      "USER_PREF_ERROR",
-      "DD",
-      error.toString(),
-      0,
-      "DD_userPreferenceManager",
-      "DD_userPreferenceManager",
-    );
-    return null;
-  }
-}
 
 /**
  * 04. 同義詞學習函數 - Firestore版本
@@ -241,6 +130,7 @@ async function DD_learnSynonym(term, subjectCode, userId) {
 
     if (snapshot.empty) {
       console.log(`找不到對應科目代碼: ${subjectCode} [${lsId}]`);
+      const { DD_writeToLogSheet } = getDD1Functions();
       await DD_writeToLogSheet(
         "WARNING",
         `找不到對應科目代碼: ${subjectCode}`,
@@ -287,6 +177,7 @@ async function DD_learnSynonym(term, subjectCode, userId) {
     });
 
     console.log(`成功添加同義詞: "${term}" -> ${subjectCode} [${lsId}]`);
+    const { DD_writeToLogSheet } = getDD1Functions();
     await DD_writeToLogSheet(
       "INFO",
       `成功添加同義詞: "${term}" -> ${subjectCode}`,
@@ -303,13 +194,13 @@ async function DD_learnSynonym(term, subjectCode, userId) {
   } catch (error) {
     console.log(`同義詞學習錯誤: ${error} [${lsId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    const { DD_writeToLogSheet } = getDD1Functions();
     await DD_writeToLogSheet(
       "ERROR",
       `同義詞學習錯誤: ${error}`,
       "同義詞處理",
       userId,
       "SYN_LEARN_ERROR",
-      "DD",
       error.toString(),
       0,
       "DD_learnSynonym",
@@ -389,6 +280,7 @@ async function DD_processUserMessage(
 
   // 2. 檢查必要參數
   if (!userId) {
+    const { DD_logError } = getDD1Functions();
     DD_logError(
       `缺少必要的用戶ID [${msgId}]`,
       "訊息處理",
@@ -425,6 +317,7 @@ async function DD_processUserMessage(
   }
 
   // 4. 開始日誌記錄
+  const { DD_logInfo } = getDD1Functions();
   DD_logInfo(
     `處理用戶消息: "${message}" (帳本: ${ledgerId})`,
     "訊息處理",
@@ -441,6 +334,7 @@ async function DD_processUserMessage(
 
     // 6. 檢查空訊息
     if (!message || message.trim() === "") {
+      const { DD_logWarning } = getDD1Functions();
       DD_logWarning(
         `空訊息 [${msgId}]`,
         "訊息處理",
@@ -492,6 +386,7 @@ async function DD_processUserMessage(
 
     // 9. 檢查解析結果
     if (!parseResult) {
+      const { DD_logWarning } = getDD1Functions();
       DD_logWarning(
         `DD_parseInputFormat回傳null，無法解析訊息格式: "${message}" [${msgId}]`,
         "訊息處理",
@@ -548,33 +443,7 @@ async function DD_processUserMessage(
       let confidence = 0;
       let originalSubject = subject;
 
-      // 11.1 嘗試用戶偏好匹配
-      try {
-        const userPref = await DD_userPreferenceManager(
-          userId,
-          subject,
-          "",
-          true,
-        );
-        if (userPref) {
-          const prefSubject = await DD_getSubjectByCode(
-            userPref.subjectCode,
-            userId,
-          );
-          if (prefSubject) {
-            subjectInfo = prefSubject;
-            matchMethod = "user_preference";
-            confidence = 0.9;
-            console.log(
-              `DD_processUserMessage: 用戶偏好匹配成功 "${subject}" -> ${prefSubject.subName} [${msgId}]`,
-            );
-          }
-        }
-      } catch (prefError) {
-        console.log(
-          `DD_processUserMessage: 用戶偏好匹配錯誤 ${prefError.toString()} [${msgId}]`,
-        );
-      }
+      // 11.1 用戶偏好匹配已移除
 
       // 11.2 嘗試精確匹配
       if (!subjectInfo) {
@@ -749,6 +618,7 @@ async function DD_processUserMessage(
     console.log(`DD_processUserMessage異常: ${error.toString()} [${msgId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
 
+    const { DD_logError } = getDD1Functions();
     DD_logError(
       `處理用戶消息時發生異常: ${error.toString()}`,
       "訊息處理",
@@ -800,13 +670,18 @@ async function DD_getSubjectCode(subjectName, userId) {
     // 檢查參數
     if (!subjectName || !userId) {
       console.log(`科目名稱或用戶ID為空 [${scId}]`);
-      DD_logWarning(
+      const { DD_logError } = getDD1Functions();
+      DD_logError(
         `科目名稱或用戶ID為空，無法查詢科目代碼 [${scId}]`,
         "科目查詢",
         userId,
+        "MISSING_PARAMS",
+        "缺少必要參數",
         "DD_getSubjectCode",
       );
-      return null;
+
+      // 返回友善錯誤訊息給DD3處理
+      throw new Error("找不到科目「" + (subjectName || "未知") + "」，請確認科目名稱或使用其他相近詞彙");
     }
 
     // 使用用戶獨立帳本
@@ -827,6 +702,7 @@ async function DD_getSubjectCode(subjectName, userId) {
 
     if (snapshot.empty) {
       console.log(`用戶 ${userId} 科目表為空 [${scId}]`);
+      const { DD_logError } = getDD1Functions();
       DD_logError(
         `用戶 ${userId} 科目表為空 [${scId}]`,
         "科目查詢",
@@ -835,7 +711,9 @@ async function DD_getSubjectCode(subjectName, userId) {
         "科目代碼表無數據",
         "DD_getSubjectCode",
       );
-      return null;
+
+      // 返回友善錯誤訊息給DD3處理
+      throw new Error("系統科目表暫時無法使用，請留言給客服人員。");
     }
 
     console.log(`讀取用戶 ${userId} 科目表: ${snapshot.size}筆數據 [${scId}]`);
@@ -875,6 +753,7 @@ async function DD_getSubjectCode(subjectName, userId) {
       if (subNameLower === inputLower) {
         console.log(`找到精確匹配: "${subNameLower}" === "${inputLower}"`);
 
+        const { DD_logInfo } = getDD1Functions();
         DD_logInfo(
           `成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`,
           "科目查詢",
@@ -904,6 +783,7 @@ async function DD_getSubjectCode(subjectName, userId) {
               `通過同義詞匹配成功: "${synonymLower}" === "${inputLower}"`,
             );
 
+            const { DD_logInfo } = getDD1Functions();
             DD_logInfo(
               `通過同義詞成功查詢科目代碼: ${majorCode}-${subCode} ${normalizedSubName} [${scId}]`,
               "科目查詢",
@@ -929,9 +809,7 @@ async function DD_getSubjectCode(subjectName, userId) {
     const matches = [];
 
     for (const doc of snapshot.docs) {
-      if (doc.id === "template") continue;
-
-      const data = doc.data();
+      if (doc.id === "template") continue;      const data = doc.data();
       const majorCode = data.大項代碼;
       const majorName = data.大項名稱;
       const subCode = data.子項代碼;
@@ -987,6 +865,7 @@ async function DD_getSubjectCode(subjectName, userId) {
       console.log(
         `複合詞匹配成功: "${normalizedInput}" -> "${bestMatch.subName}", 分數=${bestMatch.score.toFixed(2)}, 匹配類型=${bestMatch.matchType}`,
       );
+      const { DD_logInfo } = getDD1Functions();
       DD_logInfo(
         `複合詞匹配成功: "${normalizedInput}" -> "${bestMatch.subName}", 分數=${bestMatch.score.toFixed(2)}`,
         "複合詞匹配",
@@ -1004,6 +883,7 @@ async function DD_getSubjectCode(subjectName, userId) {
 
     // 如果所有匹配都失敗，才返回null
     console.log(`找不到科目: "${normalizedInput}" [${scId}]`);
+    const { DD_logWarning } = getDD1Functions();
     DD_logWarning(
       `科目代碼查詢失敗: "${normalizedInput}" [${scId}]`,
       "科目查詢",
@@ -1011,10 +891,13 @@ async function DD_getSubjectCode(subjectName, userId) {
       "DD_getSubjectCode",
     );
     console.log(`---科目查詢診斷信息結束---[${scId}]`);
-    return null;
+
+    // 返回友善錯誤訊息給DD3處理
+    throw new Error("找不到科目「" + normalizedInput + "」，請確認科目名稱或使用其他相近詞彙");
   } catch (error) {
     console.log(`科目查詢出錯: ${error} [${scId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    const { DD_logError } = getDD1Functions();
     DD_logError(
       `科目查詢出錯: ${error} [${scId}]`,
       "科目查詢",
@@ -1023,7 +906,14 @@ async function DD_getSubjectCode(subjectName, userId) {
       error.toString(),
       "DD_getSubjectCode",
     );
-    return null;
+
+    // 如果是我們自己拋出的友善錯誤，直接重新拋出
+    if (error.message.includes("找不到科目") || error.message.includes("系統科目表暫時無法使用")) {
+      throw error;
+    }
+
+    // 其他系統錯誤，統一處理
+    throw new Error("系統科目表暫時無法使用，請留言給客服人員。");
   }
 }
 
@@ -1354,6 +1244,7 @@ async function DD_fuzzyMatch(input, threshold = 0.6, userId = null) {
   const inputLower = input.toLowerCase().trim();
 
   // 獲取所有科目 - 使用用戶專屬帳本
+  const { DD_getAllSubjects } = getDD1Functions();
   const allSubjects = await DD_getAllSubjects(userId);
   if (!allSubjects || !allSubjects.length) {
     console.log(`【模糊匹配】無法獲取科目列表`);
@@ -1595,6 +1486,7 @@ async function DD_checkMultipleMapping(term, userId) {
 
     if (matches.length > 0) {
       console.log(`詞彙 "${term}" 有 ${matches.length} 個映射 [${mmId}]`);
+      const { DD_logInfo } = getDD1Functions();
       await DD_logInfo(
         `詞彙 "${term}" 有 ${matches.length} 個映射`,
         "多重映射",
@@ -1609,7 +1501,9 @@ async function DD_checkMultipleMapping(term, userId) {
   } catch (error) {
     console.log(`檢查多重映射錯誤: ${error} [${mmId}]`);
     if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    await DD_logError(
+    const { DD_writeToLogSheet } = getDD1Functions();
+    await DD_writeToLogSheet(
+      "ERROR",
       `檢查多重映射錯誤: ${error}`,
       "同義詞處理",
       userId,
@@ -1652,17 +1546,38 @@ function calculateLevenshteinDistance(str1, str2) {
 module.exports = {
   DD_processUserMessage,
   DD_getSubjectCode,
-  DD_getAllSubjects,
-  DD_userPreferenceManager,
+  DD_getAllSubjects: function(userId) {
+    const { DD_getAllSubjects } = getDD1Functions();
+    return DD_getAllSubjects(userId);
+  },
   DD_fuzzyMatch,
   DD_parseInputFormat,
   DD_removeAmountFromText,
   DD_initConfig,
-  DD_logDebug,
-  DD_logInfo,
-  DD_logWarning,
-  DD_logError,
-  DD_logCritical,
+  DD_log: function(...args) {
+    const dd1 = loadDD1();
+    return dd1.DD_log(...args);
+  },
+  DD_logDebug: function(...args) {
+    const { DD_logDebug } = getDD1Functions();
+    return DD_logDebug(...args);
+  },
+  DD_logInfo: function(...args) {
+    const { DD_logInfo } = getDD1Functions();
+    return DD_logInfo(...args);
+  },
+  DD_logWarning: function(...args) {
+    const { DD_logWarning } = getDD1Functions();
+    return DD_logWarning(...args);
+  },
+  DD_logError: function(...args) {
+    const { DD_logError } = getDD1Functions();
+    return DD_logError(...args);
+  },
+  DD_logCritical: function(...args) {
+    const { DD_logCritical } = getDD1Functions();
+    return DD_logCritical(...args);
+  },
   formatDate,
   formatTime,
   calculateLevenshteinDistance,

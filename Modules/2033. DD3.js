@@ -330,4 +330,8 @@ module.exports = {
   DD_calculateSimilarity,
   DD_formatSystemReplyMessage,
   DD_convertTimestamp,
+  DD_log: function(...args) {
+    loadModules();
+    return DD1 ? DD1.DD_log(...args) : console.log(...args);
+  },
 };
