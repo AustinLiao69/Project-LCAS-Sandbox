@@ -1591,6 +1591,7 @@ async function BK_getSubjectCode(subjectName, userId) {
     const normalizedInput = String(subjectName).trim();
     const inputLower = normalizedInput.toLowerCase();
 
+    const db = BK_INIT_STATUS.firestore_db;
     const snapshot = await db.collection("ledgers").doc(ledgerId).collection("subjects").where("isActive", "==", true).get();
 
     if (snapshot.empty) {
@@ -1792,6 +1793,7 @@ async function BK_getAllSubjects(userId) {
     const ledgerId = `user_${userId}`;
     BK_logInfo(`開始從Firestore獲取科目資料，使用者帳本: ${ledgerId}`, "科目查詢", userId, "BK_getAllSubjects");
 
+    const db = BK_INIT_STATUS.firestore_db;
     const subjectsRef = db.collection("ledgers").doc(ledgerId).collection("subjects");
     const snapshot = await subjectsRef.where("isActive", "==", true).get();
 
@@ -1998,7 +2000,275 @@ function BK_convertTimestamp(timestamp) {
 }
 
 /**
- * 28. 處理簡單記帳的主函數 - BK 2.0 核心函數
+ * 28. 檢查多重映射 - 從 DD2 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ */
+async function BK_checkMultipleMapping(subjectName, userId) {
+  const cmdId = require('crypto').randomUUID().substring(0, 8);
+  BK_logDebug(`檢查多重映射: "${subjectName}", 用戶: ${userId} [${cmdId}]`, "多重映射檢查", userId, "BK_checkMultipleMapping");
+
+  try {
+    if (!subjectName || !userId) {
+      BK_logWarning(`檢查多重映射缺少參數 [${cmdId}]`, "多重映射檢查", userId, "BK_checkMultipleMapping");
+      return null;
+    }
+
+    const ledgerId = `user_${userId}`;
+    const normalizedInput = String(subjectName).trim().toLowerCase();
+
+    const db = BK_INIT_STATUS.firestore_db;
+    const snapshot = await db.collection("ledgers").doc(ledgerId).collection("subjects").where("isActive", "==", true).get();
+
+    if (snapshot.empty) {
+      BK_logWarning(`用戶 ${userId} 科目表為空 [${cmdId}]`, "多重映射檢查", userId, "BK_checkMultipleMapping");
+      return null;
+    }
+
+    const matches = [];
+    
+    snapshot.forEach(doc => {
+      if (doc.id === "template") return;
+      
+      const data = doc.data();
+      const subName = String(data.子項名稱).trim().toLowerCase();
+      const synonymsStr = data.同義詞 || "";
+      
+      // 檢查科目名稱匹配
+      if (subName === normalizedInput) {
+        matches.push({
+          majorCode: data.大項代碼,
+          majorName: data.大項名稱,
+          subCode: data.子項代碼,
+          subName: data.子項名稱,
+          matchType: "exact_name"
+        });
+      }
+      
+      // 檢查同義詞匹配
+      if (synonymsStr) {
+        const synonyms = synonymsStr.split(",");
+        for (const synonym of synonyms) {
+          const normalizedSynonym = synonym.trim().toLowerCase();
+          if (normalizedSynonym === normalizedInput) {
+            matches.push({
+              majorCode: data.大項代碼,
+              majorName: data.大項名稱,
+              subCode: data.子項代碼,
+              subName: data.子項名稱,
+              matchType: "exact_synonym"
+            });
+          }
+        }
+      }
+    });
+
+    if (matches.length > 1) {
+      BK_logWarning(`檢測到多重映射: "${subjectName}" 匹配到 ${matches.length} 個科目 [${cmdId}]`, "多重映射檢查", userId, "BK_checkMultipleMapping");
+      return {
+        hasMultipleMatches: true,
+        matches: matches,
+        count: matches.length
+      };
+    } else if (matches.length === 1) {
+      BK_logDebug(`科目映射唯一: "${subjectName}" [${cmdId}]`, "多重映射檢查", userId, "BK_checkMultipleMapping");
+      return {
+        hasMultipleMatches: false,
+        matches: matches,
+        count: 1
+      };
+    } else {
+      BK_logDebug(`無匹配科目: "${subjectName}" [${cmdId}]`, "多重映射檢查", userId, "BK_checkMultipleMapping");
+      return null;
+    }
+  } catch (error) {
+    BK_logError(`檢查多重映射錯誤: ${error.toString()} [${cmdId}]`, "多重映射檢查", userId, "MULTIPLE_MAPPING_ERROR", error.toString(), "BK_checkMultipleMapping");
+    return null;
+  }
+}
+
+/**
+ * 29. 獲取帳本資訊 - 從 DD1 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD1 模組複製，支援 BK 2.0 直連路徑
+ */
+async function BK_getLedgerInfo(userId) {
+  const lgiId = require('crypto').randomUUID().substring(0, 8);
+  BK_logDebug(`獲取帳本資訊，用戶: ${userId} [${lgiId}]`, "帳本查詢", userId, "BK_getLedgerInfo");
+
+  try {
+    if (!userId) {
+      BK_logError(`缺少用戶ID [${lgiId}]`, "帳本查詢", "", "MISSING_USER_ID", "缺少用戶ID", "BK_getLedgerInfo");
+      throw new Error("缺少用戶ID");
+    }
+
+    const ledgerId = `user_${userId}`;
+    
+    const db = BK_INIT_STATUS.firestore_db;
+    
+    // 獲取帳本基本資訊
+    const ledgerDoc = await db.collection("ledgers").doc(ledgerId).get();
+    
+    if (!ledgerDoc.exists) {
+      BK_logWarning(`用戶 ${userId} 帳本不存在 [${lgiId}]`, "帳本查詢", userId, "BK_getLedgerInfo");
+      return {
+        exists: false,
+        ledgerId: ledgerId,
+        userId: userId
+      };
+    }
+
+    const ledgerData = ledgerDoc.data();
+    
+    // 獲取科目數量
+    const subjectsSnapshot = await db.collection("ledgers").doc(ledgerId).collection("subjects").where("isActive", "==", true).get();
+    
+    // 獲取記帳記錄數量（最近30天）
+    const thirtyDaysAgo = moment().subtract(30, 'days').format("YYYY/MM/DD");
+    const entriesSnapshot = await db.collection("ledgers").doc(ledgerId).collection("entries")
+      .where("日期", ">=", thirtyDaysAgo)
+      .get();
+
+    const ledgerInfo = {
+      exists: true,
+      ledgerId: ledgerId,
+      userId: userId,
+      createdAt: ledgerData.createdAt || null,
+      lastModified: ledgerData.lastModified || null,
+      userType: ledgerData.userType || "J",
+      subjectsCount: subjectsSnapshot.size,
+      entriesCount30Days: entriesSnapshot.size,
+      metadata: ledgerData.metadata || {}
+    };
+
+    BK_logInfo(`獲取帳本資訊成功: ${subjectsSnapshot.size}個科目, ${entriesSnapshot.size}條記錄(30天) [${lgiId}]`, "帳本查詢", userId, "BK_getLedgerInfo");
+    return ledgerInfo;
+
+  } catch (error) {
+    BK_logError(`獲取帳本資訊失敗: ${error.toString()} [${lgiId}]`, "帳本查詢", userId, "LEDGER_INFO_ERROR", error.toString(), "BK_getLedgerInfo");
+    throw error;
+  }
+}
+
+/**
+ * 30. 寫入日誌表 - 從 DD1 複製並適配 Firestore
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD1 模組複製，改用 Firestore 存儲
+ */
+async function BK_writeToLogSheet(logData, userId = null) {
+  const wlsId = require('crypto').randomUUID().substring(0, 8);
+  BK_logDebug(`寫入日誌表 [${wlsId}]`, "日誌寫入", userId || "", "BK_writeToLogSheet");
+
+  try {
+    if (!logData || !Array.isArray(logData) || logData.length < 10) {
+      BK_logError(`無效的日誌數據格式 [${wlsId}]`, "日誌寫入", userId || "", "INVALID_LOG_DATA", "日誌數據格式錯誤", "BK_writeToLogSheet");
+      return false;
+    }
+
+    // 準備 Firestore 日誌文檔
+    const logDoc = {
+      時間戳記: logData[0] || admin.firestore.Timestamp.now().toDate().toISOString(),
+      訊息: logData[1] || "",
+      操作類型: logData[2] || "",
+      使用者ID: logData[3] || userId || "",
+      錯誤代碼: logData[4] || "",
+      來源: logData[5] || "BK",
+      錯誤詳情: logData[6] || "",
+      重試次數: logData[7] || 0,
+      程式碼位置: logData[8] || "",
+      嚴重等級: logData[9] || "INFO",
+      createdAt: admin.firestore.Timestamp.now()
+    };
+
+    const db = BK_INIT_STATUS.firestore_db;
+    let collectionPath;
+
+    // 決定寫入位置
+    if (userId) {
+      // 寫入用戶專屬日誌
+      collectionPath = db.collection('ledgers').doc(`user_${userId}`).collection('log');
+    } else {
+      // 寫入系統日誌
+      collectionPath = db.collection('system_logs');
+    }
+
+    const docRef = await collectionPath.add(logDoc);
+
+    BK_logDebug(`日誌寫入成功，文檔ID: ${docRef.id} [${wlsId}]`, "日誌寫入", userId || "", "BK_writeToLogSheet");
+    return true;
+
+  } catch (error) {
+    BK_logError(`寫入日誌表失敗: ${error.toString()} [${wlsId}]`, "日誌寫入", userId || "", "LOG_WRITE_ERROR", error.toString(), "BK_writeToLogSheet");
+    return false;
+  }
+}
+
+/**
+ * 31. 計算字串相似度 - 從 DD2 複製
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 16:00:00
+ * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ */
+function BK_calculateLevenshteinDistance(str1, str2) {
+  const cldId = require('crypto').randomUUID().substring(0, 8);
+  BK_logDebug(`計算字串相似度: "${str1}" vs "${str2}" [${cldId}]`, "相似度計算", "", "BK_calculateLevenshteinDistance");
+
+  try {
+    if (!str1 || !str2) {
+      BK_logWarning(`字串為空，返回最大距離 [${cldId}]`, "相似度計算", "", "BK_calculateLevenshteinDistance");
+      return Math.max(str1 ? str1.length : 0, str2 ? str2.length : 0);
+    }
+
+    const s1 = String(str1).toLowerCase().trim();
+    const s2 = String(str2).toLowerCase().trim();
+
+    if (s1 === s2) {
+      BK_logDebug(`字串完全相同，距離為0 [${cldId}]`, "相似度計算", "", "BK_calculateLevenshteinDistance");
+      return 0;
+    }
+
+    const len1 = s1.length;
+    const len2 = s2.length;
+
+    // 創建距離矩陣
+    const matrix = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
+
+    // 初始化第一行和第一列
+    for (let i = 0; i <= len1; i++) {
+      matrix[i][0] = i;
+    }
+    for (let j = 0; j <= len2; j++) {
+      matrix[0][j] = j;
+    }
+
+    // 填充矩陣
+    for (let i = 1; i <= len1; i++) {
+      for (let j = 1; j <= len2; j++) {
+        const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,     // 刪除
+          matrix[i][j - 1] + 1,     // 插入
+          matrix[i - 1][j - 1] + cost // 替換
+        );
+      }
+    }
+
+    const distance = matrix[len1][len2];
+    BK_logDebug(`計算完成，編輯距離: ${distance} [${cldId}]`, "相似度計算", "", "BK_calculateLevenshteinDistance");
+    
+    return distance;
+
+  } catch (error) {
+    BK_logError(`計算字串相似度錯誤: ${error.toString()} [${cldId}]`, "相似度計算", "", "LEVENSHTEIN_ERROR", error.toString(), "BK_calculateLevenshteinDistance");
+    return Math.max(str1 ? str1.length : 0, str2 ? str2.length : 0);
+  }
+}
+
+/**
+ * 32. 處理簡單記帳的主函數 - BK 2.0 核心函數
  * @version 2025-07-11-V2.0.0
  * @date 2025-07-11 16:00:00
  * @update: 實現 BK 2.0 直連路徑，WH → BK 2.0 → Firestore
@@ -2131,7 +2401,7 @@ module.exports = {
   BK_smartTextParsing,
   BK_isInitialized,
   BK_initialize,
-  // BK 2.0 新增函數
+  // BK 2.0 新增函數（從 DD 複製的 16 個函數）
   BK_processUserMessage,
   BK_parseInputFormat,
   BK_removeAmountFromText,
@@ -2140,5 +2410,10 @@ module.exports = {
   BK_getAllSubjects,
   BK_formatSystemReplyMessage,
   BK_convertTimestamp,
-  BK_processDirectBookkeeping
+  BK_processDirectBookkeeping,
+  // BR-0007 補齊的 4 個函數
+  BK_checkMultipleMapping,
+  BK_getLedgerInfo,
+  BK_writeToLogSheet,
+  BK_calculateLevenshteinDistance
 };
