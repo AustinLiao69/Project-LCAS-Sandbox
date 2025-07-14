@@ -9,6 +9,20 @@
 const moment = require('moment-timezone');
 const admin = require('firebase-admin');
 
+// 確保 Firebase Admin 在模組載入時就初始化
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = require('./Serviceaccountkey.json');
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+    });
+    console.log('🔥 BK模組: Firebase Admin 自動初始化完成');
+  } catch (error) {
+    console.error('❌ BK模組: Firebase Admin 自動初始化失敗:', error);
+  }
+}
+
 // 引入DL和FS模組
 const DL = require('./2010. DL.js');
 const FS = require('./2011. FS.js');
@@ -89,16 +103,43 @@ function getEnvVar(key) {
 
 /**
  * 03. 初始化Firestore連接
- * @version 2025-01-03-V1.1.0
- * @date 2025-01-03 17:30:00
- * @description 初始化Firestore數據庫連接
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 18:30:00
+ * @description 初始化Firestore數據庫連接，確保 Firebase Admin 正確初始化
  */
 async function initializeFirestore() {
   try {
     if (BK_INIT_STATUS.firestore_db) return BK_INIT_STATUS.firestore_db;
 
-    // 使用FS模組的Firebase實例
+    // 檢查 Firebase Admin 是否已初始化
+    if (!admin.apps.length) {
+      console.log('🔄 BK模組: Firebase Admin 尚未初始化，開始初始化...');
+      
+      // 載入服務帳號金鑰
+      const serviceAccount = require('./Serviceaccountkey.json');
+      
+      // 初始化 Firebase Admin
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+      });
+      
+      console.log('✅ BK模組: Firebase Admin 初始化完成');
+    }
+
+    // 取得 Firestore 實例
     const db = admin.firestore();
+    
+    // 測試連線
+    await db.collection('_health_check').doc('bk_init_test').set({
+      timestamp: admin.firestore.Timestamp.now(),
+      module: 'BK',
+      status: 'initialized'
+    });
+    
+    // 刪除測試文檔
+    await db.collection('_health_check').doc('bk_init_test').delete();
+    
     BK_INIT_STATUS.firestore_db = db;
 
     BK_logInfo("Firestore連接初始化成功", "系統初始化", "", "initializeFirestore");
@@ -815,15 +856,26 @@ function BK_prepareBookkeepingData(bookkeepingId, data, processId) {
 
 /**
  * 12. 儲存數據到Firestore
- * @version 2025-01-03-V1.9.0
- * @date 2025-01-03 17:30:00
- * @description 將記帳數據存儲到Firestore
+ * @version 2025-07-11-V2.0.0
+ * @date 2025-07-11 18:30:00
+ * @description 將記帳數據存儲到Firestore，增強連線檢查
  */
 async function BK_saveToFirestore(bookkeepingData, processId, ledgerId = null) {
   const actualLedgerId = ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
   BK_logDebug(`開始儲存數據到 Firestore [${processId}]`, "Firestore存儲", "", "BK_saveToFirestore");
 
   try {
+    // 確保 Firestore 已初始化
+    if (!BK_INIT_STATUS.firestore_db) {
+      BK_logWarning(`Firestore 未初始化，嘗試重新初始化 [${processId}]`, "Firestore存儲", "", "BK_saveToFirestore");
+      await initializeFirestore();
+    }
+
+    // 檢查 db 是否為 null
+    if (!BK_INIT_STATUS.firestore_db) {
+      BK_logError(`Firestore 實例為 null，無法存儲數據 [${processId}]`, "Firestore存儲", "", "FIRESTORE_NULL", "Firestore 實例為 null", "BK_saveToFirestore");
+      throw new Error("資料庫連接失敗，無法儲存記帳數據");
+    }
     const firestoreData = {
       收支ID: bookkeepingData[0],
       使用者類型: bookkeepingData[1],
@@ -1280,6 +1332,22 @@ async function BK_processUserMessage(message, userId = "", timestamp = "", ledge
 
   BK_logInfo(`處理用戶消息: "${message}" (帳本: ${ledgerId})`, "訊息處理", userId, "BK_processUserMessage");
 
+  // 檢查並確保用戶有科目數據
+  try {
+    const AM = require('./2009. AM.js');
+    if (typeof AM.AM_ensureUserSubjects === 'function') {
+      BK_logInfo(`檢查用戶 ${userId} 科目數據 [${msgId}]`, "科目檢查", userId, "BK_processUserMessage");
+      const subjectCheckResult = await AM.AM_ensureUserSubjects(userId);
+      if (!subjectCheckResult.success) {
+        BK_logWarning(`用戶 ${userId} 科目數據檢查失敗: ${subjectCheckResult.error} [${msgId}]`, "科目檢查", userId, "BK_processUserMessage");
+      } else {
+        BK_logInfo(`用戶 ${userId} 科目數據檢查完成 [${msgId}]`, "科目檢查", userId, "BK_processUserMessage");
+      }
+    }
+  } catch (amError) {
+    BK_logWarning(`調用 AM 模組檢查科目失敗: ${amError.toString()} [${msgId}]`, "科目檢查", userId, "BK_processUserMessage");
+  }
+
   try {
     if (!message || message.trim() === "") {
       BK_logWarning(`空訊息 [${msgId}]`, "訊息處理", userId, "BK_processUserMessage");
@@ -1575,7 +1643,7 @@ function BK_removeAmountFromText(text, amount, paymentMethod) {
  * 23. 獲取科目代碼 - 從 DD2 複製
  * @version 2025-07-11-V2.0.0
  * @date 2025-07-11 16:00:00
- * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑，增強 Firestore 連線檢查
  */
 async function BK_getSubjectCode(subjectName, userId) {
   const scId = require('crypto').randomUUID().substring(0, 8);
@@ -1591,7 +1659,19 @@ async function BK_getSubjectCode(subjectName, userId) {
     const normalizedInput = String(subjectName).trim();
     const inputLower = normalizedInput.toLowerCase();
 
+    // 確保 Firestore 已初始化
+    if (!BK_INIT_STATUS.firestore_db) {
+      BK_logWarning(`Firestore 未初始化，嘗試重新初始化 [${scId}]`, "科目查詢", userId, "BK_getSubjectCode");
+      await initializeFirestore();
+    }
+
     const db = BK_INIT_STATUS.firestore_db;
+    
+    // 再次檢查 db 是否為 null
+    if (!db) {
+      BK_logError(`Firestore 實例為 null，無法查詢科目 [${scId}]`, "科目查詢", userId, "FIRESTORE_NULL", "Firestore 實例為 null", "BK_getSubjectCode");
+      throw new Error("系統科目表暫時無法使用，請留言給客服人員。");
+    }
     const snapshot = await db.collection("ledgers").doc(ledgerId).collection("subjects").where("isActive", "==", true).get();
 
     if (snapshot.empty) {
@@ -1782,7 +1862,7 @@ async function BK_fuzzyMatch(input, threshold = 0.6, userId = null) {
  * 25. 獲取所有科目資料 - 從 DD1 複製
  * @version 2025-07-11-V2.0.0
  * @date 2025-07-11 16:00:00
- * @update: 從 DD1 模組複製，支援 BK 2.0 直連路徑
+ * @update: 從 DD1 模組複製，支援 BK 2.0 直連路徑，增強 Firestore 連線檢查
  */
 async function BK_getAllSubjects(userId) {
   try {
@@ -1793,7 +1873,19 @@ async function BK_getAllSubjects(userId) {
     const ledgerId = `user_${userId}`;
     BK_logInfo(`開始從Firestore獲取科目資料，使用者帳本: ${ledgerId}`, "科目查詢", userId, "BK_getAllSubjects");
 
+    // 確保 Firestore 已初始化
+    if (!BK_INIT_STATUS.firestore_db) {
+      BK_logWarning(`Firestore 未初始化，嘗試重新初始化`, "科目查詢", userId, "BK_getAllSubjects");
+      await initializeFirestore();
+    }
+
     const db = BK_INIT_STATUS.firestore_db;
+    
+    // 檢查 db 是否為 null
+    if (!db) {
+      BK_logError(`Firestore 實例為 null，無法獲取科目資料`, "科目查詢", userId, "FIRESTORE_NULL", "Firestore 實例為 null", "BK_getAllSubjects");
+      throw new Error("系統科目表暫時無法使用，請留言給客服人員。");
+    }
     const subjectsRef = db.collection("ledgers").doc(ledgerId).collection("subjects");
     const snapshot = await subjectsRef.where("isActive", "==", true).get();
 
