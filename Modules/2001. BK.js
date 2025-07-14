@@ -1,8 +1,8 @@
 /**
- * BK_記帳處理模組_2.0.1
+ * BK_記帳處理模組_2.0.2
  * @module 記帳處理模組
  * @description LCAS 記帳處理模組 - 實現 BK 2.0 版本，支援簡化記帳路徑
- * @update 2025-07-11: 升級至2.0.0版本，實現 BR-0007 簡化記帳路徑，整合 DD 核心函數
+ * @update 2025-07-14: 升級至2.0.2版本，移除支付方式別名映射，強化金額格式驗證
  */
 
 // 引入所需模組
@@ -956,9 +956,9 @@ function BK_getPaymentMethods() {
 
 /**
  * 14. 確認並標準化支付方式
- * @version 2025-01-03-V1.9.0
- * @date 2025-01-03 17:30:00
- * @description 驗證並標準化支付方式
+ * @version 2025-07-14-V2.0.2
+ * @date 2025-07-14 12:00:00
+ * @description 驗證並標準化支付方式，僅支援四種標準支付方式，移除別名映射
  */
 function BK_validatePaymentMethod(method, majorCode) {
   try {
@@ -974,6 +974,7 @@ function BK_validatePaymentMethod(method, majorCode) {
       }
     }
 
+    // 支付方式只允許四種標準格式，不接受任何別名
     const validPaymentMethods = ["現金", "刷卡", "轉帳", "行動支付"];
 
     if (validPaymentMethods.includes(method)) {
@@ -1479,10 +1480,10 @@ async function BK_processUserMessage(message, userId = "", timestamp = "", ledge
 }
 
 /**
- * 21. 解析輸入格式 - 從 DD2 複製
- * @version 2025-07-11-V2.0.0
- * @date 2025-07-11 16:00:00
- * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ * 21. 解析輸入格式 - 從 DD2 複製並強化金額驗證
+ * @version 2025-07-14-V2.0.2
+ * @date 2025-07-14 12:00:00
+ * @update: 強化金額格式驗證，拒絕前導零和無效格式，限制幣別單位
  */
 function BK_parseInputFormat(message, processId) {
   BK_logDebug(`開始解析文本「${message}」[${processId}]`, "文本解析", "", "BK_parseInputFormat");
@@ -1507,7 +1508,7 @@ function BK_parseInputFormat(message, processId) {
       let paymentMethod = "預設";
       const remainingText = negativeMatch[3].trim();
 
-      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳", "信用卡"];
+      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
       for (const method of paymentMethods) {
         if (remainingText.includes(method)) {
           paymentMethod = method;
@@ -1534,19 +1535,44 @@ function BK_parseInputFormat(message, processId) {
       };
     }
 
-    // 標準格式處理
+    // 標準格式處理 - 強化金額驗證
     const regex = /^(.+?)(\d+)(.*)$/;
     const match = message.match(regex);
 
     if (match) {
       const subject = match[1].trim();
-      const amount = parseInt(match[2], 10);
       const rawAmount = match[2];
+      
+      // 檢查前導零 - 拒絕以0開頭的多位數金額
+      if (rawAmount.length > 1 && rawAmount.startsWith('0')) {
+        BK_logWarning(`金額格式錯誤：前導零不被允許 "${rawAmount}" [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+        return null;
+      }
+      
+      const amount = parseInt(rawAmount, 10);
+      
+      // 檢查金額是否為0或負數
+      if (amount <= 0) {
+        BK_logWarning(`金額錯誤：金額必須大於0 "${amount}" [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+        return null;
+      }
 
       let paymentMethod = "預設";
-      const remainingText = match[3].trim();
+      let remainingText = match[3].trim();
 
-      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳", "信用卡"];
+      // 移除不支援的幣別單位（只接受元、塊、圓）
+      const supportedUnits = /(元|塊|圓)$/i;
+      const unsupportedUnits = /(NT|USD|\$)$/i;
+      
+      if (unsupportedUnits.test(remainingText)) {
+        BK_logWarning(`不支援的幣別單位 "${remainingText}" [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+        return null;
+      }
+      
+      // 移除支援的幣別單位
+      remainingText = remainingText.replace(supportedUnits, '').trim();
+
+      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
       for (const method of paymentMethods) {
         if (remainingText.includes(method)) {
           paymentMethod = method;
@@ -1582,10 +1608,10 @@ function BK_parseInputFormat(message, processId) {
 }
 
 /**
- * 22. 從文字中移除金額 - 從 DD2 複製
- * @version 2025-07-11-V2.0.0
- * @date 2025-07-11 16:00:00
- * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ * 22. 從文字中移除金額 - 限制幣別單位
+ * @version 2025-07-14-V2.0.2
+ * @date 2025-07-14 12:00:00
+ * @update: 限制幣別單位為元、塊、圓，移除NT、USD、$支援
  */
 function BK_removeAmountFromText(text, amount, paymentMethod) {
   if (!text || !amount) return text;
@@ -1617,7 +1643,8 @@ function BK_removeAmountFromText(text, amount, paymentMethod) {
       return result;
     }
 
-    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓|NT|USD)?$`, "i");
+    // 金額+單位的模式 - 只接受元、塊、圓
+    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓)$`, "i");
     const match = text.match(amountEndRegex);
     if (match && match.index > 0) {
       result = text.substring(0, match.index).trim();
@@ -1917,10 +1944,10 @@ async function BK_getAllSubjects(userId) {
 }
 
 /**
- * 26. 格式化系統回覆訊息 - 從 DD3 複製
- * @version 2025-07-11-V2.0.0
- * @date 2025-07-11 16:00:00
- * @update: 從 DD3 模組複製，支援 BK 2.0 直連路徑
+ * 26. 格式化系統回覆訊息 - 統一錯誤格式
+ * @version 2025-07-14-V2.0.2
+ * @date 2025-07-14 12:00:00
+ * @update: 統一錯誤訊息格式，所有錯誤都使用標準格式回覆
  */
 async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {}) {
   const userId = options.userId || "";
@@ -1998,12 +2025,25 @@ async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {})
         responseMessage = `操作成功！\n處理ID: ${processId}`;
       }
     } else {
+      // 統一錯誤格式處理
       errorMsg = resultData.error || resultData.message || resultData.errorData?.error || "未知錯誤";
+      
+      // 特殊錯誤訊息標準化
+      let standardErrorMsg = errorMsg;
+      if (errorMsg.includes("不支援的支付方式")) {
+        standardErrorMsg = "不支援的支付方式";
+      } else if (errorMsg.includes("金額錯誤") || errorMsg.includes("前導零") || errorMsg.includes("金額必須大於0")) {
+        standardErrorMsg = "金額錯誤";
+      } else if (errorMsg.includes("找不到科目")) {
+        standardErrorMsg = "找不到科目";
+      }
+      
       const subject = partialData.subject || "未知科目";
       const displayAmount = partialData.rawAmount || (partialData.amount !== undefined ? String(partialData.amount) : "0");
       const paymentMethod = partialData.paymentMethod || "未指定支付方式";
       const remark = partialData.remark || "無";
 
+      // 統一的錯誤回覆格式
       responseMessage =
         `記帳失敗！\n` +
         `金額：${displayAmount}元\n` +
@@ -2012,7 +2052,7 @@ async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {})
         `科目：${subject}\n` +
         `備註：${remark}\n` +
         `使用者類型：J\n` +
-        `錯誤原因：${errorMsg}`;
+        `錯誤原因：${standardErrorMsg}`;
     }
 
     BK_logDebug(`訊息格式化完成 [${processId}]`, "訊息格式化", userId, "BK_formatSystemReplyMessage");
