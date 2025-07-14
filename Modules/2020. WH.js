@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.0.19
+ * WH_Webhook處理模組_2.0.20
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 實現 BR-0007 簡化記帳路徑
- * @update 2025-07-14: 升級至2.0.19版本，修正訊息格式驗證問題，確保BK模組回覆正確處理
+ * @description LINE Webhook處理模組 - 實現 BR-0007 簡化記帳路徑，完全分離LINE文字訊息處理
+ * @update 2025-07-14: 升級至2.0.20版本，實現LINE文字訊息與DD模組完全分離，所有LINE文字訊息強制走BK 2.0路徑
  */
 
 // 首先引入其他模組
@@ -1075,10 +1075,10 @@ function setDependencies(ddModule, bkModule, dlModule) {
 }
 
 /**
- * 07. 處理事件 (非同步版) - 強制集中式錯誤處理
- * @version 2025-07-14-V2.0.17
- * @date 2025-07-14 13:00:00
- * @update: 實施強制集中式錯誤處理，只接受來自 BK_formatSystemReplyMessage 的格式化訊息
+ * 07. 處理事件 (非同步版) - LINE文字訊息完全分離處理
+ * @version 2025-07-14-V2.0.20
+ * @date 2025-07-14 15:00:00
+ * @update: 實現LINE文字訊息與DD模組完全分離，所有LINE文字訊息強制走BK 2.0直連路徑，不經過DD模組
  * @param {Object} event - LINE事件對象
  * @param {string} requestId - 請求ID
  * @param {string} userId - 用戶ID
@@ -1177,50 +1177,26 @@ async function WH_processEventAsync(event, requestId, userId) {
           `準備訊息數據: ${JSON.stringify(messageData)} [${requestId}]`,
         );
 
-        // 調用分發函數 - 根據 BR-0007 實現簡化路徑
+        // 根據事件類型實現完全路徑分離
         try {
-          // 檢查是否為簡單記帳格式
-          const isSimpleBookkeeping = /^[\u4e00-\u9fff\w\s]+\s*\d+(\.\d+)?/.test(text.trim());
+          // 強制路徑分離：所有 LINE 文字訊息走 BK 2.0 直連路徑
+          console.log(`LINE文字訊息強制走BK 2.0路徑 [${requestId}]`);
 
-          if (isSimpleBookkeeping) {
-            // 簡化路徑：WH → BK 2.0 → Firestore
-            console.log(`檢測到簡單記帳格式，使用 BK 2.0 直連路徑 [${requestId}]`);
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.20: LINE文字訊息強制走BK 2.0直連路徑 [${requestId}]`,
+            "簡化路徑",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO",
+          ]);
 
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 2.0.17: 使用 BK 2.0 簡化路徑處理簡單記帳 [${requestId}]`,
-              "簡化路徑",
-              userId,
-              "",
-              "WH",
-              "",
-              0,
-              "WH_processEventAsync",
-              "INFO",
-            ]);
-
-            // 直接調用 BK 2.0 處理
-            result = await BK.BK_processDirectBookkeeping(event);
-          } else {
-            // 標準路徑：WH → DD → BK → Firestore
-            console.log(`使用標準路徑處理複雜訊息 [${requestId}]`);
-
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 2.0.17: 使用標準路徑調用DD_distributeData [${requestId}]`,
-              "標準路徑",
-              userId,
-              "",
-              "WH",
-              "",
-              0,
-              "WH_processEventAsync",
-              "INFO",
-            ]);
-
-            // 關鍵：調用DD_distributeData並保留完整結果 - 修復：使用await處理異步
-            result = await DD.DD_distributeData(messageData, "LINE", 0);
-          }
+          // 直接調用 BK 2.0 處理，不經過 DD 模組
+          result = await BK.BK_processDirectBookkeeping(event);
 
           // 記錄DD_distributeData處理結果預覽
           if (result) {

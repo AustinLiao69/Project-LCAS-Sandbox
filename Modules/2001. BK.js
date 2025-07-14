@@ -1,8 +1,8 @@
 /**
- * BK_記帳處理模組_2.0.4
+ * BK_記帳處理模組_2.0.5
  * @module 記帳處理模組
  * @description LCAS 記帳處理模組 - 實現 BK 2.0 版本，支援簡化記帳路徑
- * @update 2025-07-14: 升級至2.0.4版本，修正BK_processDirectBookkeeping回覆格式問題
+ * @update 2025-07-14: 升級至2.0.5版本，修正BK_removeAmountFromText參數處理、BK_formatSystemReplyMessage收支ID顯示和moduleCode問題
  */
 
 // 引入所需模組
@@ -1431,7 +1431,7 @@ async function BK_processUserMessage(message, userId = "", timestamp = "", ledge
           }
         }
 
-        const remarkText = BK_removeAmountFromText(message, amount) || subject;
+        const remarkText = BK_removeAmountFromText(message, amount, processedData.paymentMethod) || subject;
 
         const result = {
           type: "記帳",
@@ -2019,9 +2019,11 @@ async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {})
         const date = data.date || currentDateTime;
         const remark = data.remark || partialData.remark || "無";
         const userType = data.userType || "J";
+        const bookkeepingId = data.id || ""; // 新增收支ID顯示
 
         responseMessage =
           `記帳成功！\n` +
+          (bookkeepingId ? `收支ID：${bookkeepingId}\n` : "") +
           `金額：${amount}元 (${action})\n` +
           `支付方式：${paymentMethod}\n` +
           `時間：${date}\n` +
@@ -2070,7 +2072,7 @@ async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {})
       originalResult: resultData,
       processId: processId,
       errorType: resultData.errorType || null,
-      moduleCode: moduleCode,
+      moduleCode: "BK", // 強制設為BK，確保WH_replyMessage接受
       partialData: partialData,
       error: isSuccess ? undefined : errorMsg,
     };
