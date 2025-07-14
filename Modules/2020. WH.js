@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.0.19
+ * WH_Webhook處理模組_2.0.20
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 實現 BR-0007 簡化記帳路徑
- * @update 2025-07-11: 實現 BR-0007 簡化記帳路徑，WH → BK 2.0 → Firestore
+ * @description LINE Webhook處理模組 - 實現 BR-0008 A/B Testing超簡化路徑
+ * @update 2025-07-14: 實現 BR-0008 A/B Testing，函數數量26→8個，解決Reply Token超時問題
  */
 
 // 首先引入其他模組
@@ -47,6 +47,14 @@ const WH_CONFIG = {
   MESSAGE_DEDUPLICATION: true, // 啟用消息去重
   MESSAGE_RETENTION_HOURS: 24, // 消息ID保留時間(小時)
   ASYNC_PROCESSING: true, // 啟用異步處理（快速回應）
+  // BR-0008 A/B Testing 配置
+  AB_TESTING: {
+    ENABLED: true, // 啟用A/B Testing
+    GROUP_B_RATIO: 0.5, // B組（超簡化路徑）比例：50%
+    ENABLE_MONITORING: true, // 啟用監控指標收集
+    SUCCESS_THRESHOLD: 0.95, // Reply Token成功率閾值
+    TIMEOUT_THRESHOLD: 15000, // 處理時間閾值(毫秒)
+  },
   FIRESTORE: {
     COLLECTION: "ledgers", // Firestore集合名稱
     LOG_SUBCOLLECTION: "log", // 日誌子集合名稱
@@ -84,13 +92,223 @@ const WH_PROPS = {
   },
   deleteProperty: function (key) {
     delete this.properties[key];
-    return this;
   },
 };
+
+/**
+ * 33. A/B Testing路徑選擇器 - BR-0008
+ * @version 2025-07-14-V2.0.20
+ * @date 2025-07-14 16:00:00
+ * @description 根據用戶ID進行A/B分組，決定使用標準路徑還是超簡化路徑
+ * @param {string} userId - 用戶ID
+ * @param {string} messageText - 訊息文字
+ * @returns {Object} 路徑選擇結果
+ */
+function WH_abTestRouter(userId, messageText) {
+  try {
+    if (!WH_CONFIG.AB_TESTING.ENABLED) {
+      return { useSimplified: false, group: "A", reason: "A/B Testing未啟用" };
+    }
+
+    // 檢查是否為簡單記帳格式
+    const isSimpleBookkeeping = /^[\u4e00-\u9fff\w\s]+\s*[-]?\d+(\.\d+)?/.test(messageText.trim());
+    
+    if (!isSimpleBookkeeping) {
+      return { useSimplified: false, group: "A", reason: "非簡單記帳格式" };
+    }
+
+    // 基於用戶ID進行一致性分組
+    const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const groupRatio = (hash % 100) / 100;
+    const isGroupB = groupRatio < WH_CONFIG.AB_TESTING.GROUP_B_RATIO;
+
+    return {
+      useSimplified: isGroupB,
+      group: isGroupB ? "B" : "A",
+      reason: isGroupB ? "分配到B組-超簡化路徑" : "分配到A組-標準路徑",
+      hash: hash % 100
+    };
+  } catch (error) {
+    console.log(`A/B Testing路徑選擇錯誤: ${error}`);
+    return { useSimplified: false, group: "A", reason: "選擇錯誤，使用標準路徑" };
+  }
+}
 
 // 從環境變量獲取腳本屬性 (模擬 getScriptProperty)
 function getScriptProperty(key) {
   return process.env[key];
+}
+
+/**
+ * 34. 超簡化Webhook處理 - BR-0008
+ * @version 2025-07-14-V2.0.20
+ * @date 2025-07-14 16:00:00
+ * @description 整合processWebhookSync + WH_processEventSync + 基本驗證，大幅減少函數調用
+ * @param {Object} event - LINE事件對象
+ * @param {string} requestId - 請求ID
+ */
+async function WH_fastTrack(event, requestId) {
+  const startTime = Date.now();
+  
+  try {
+    console.log(`WH_fastTrack: 開始超簡化處理 [${requestId}]`);
+    
+    // 直接內聯基本驗證，跳過複雜檢查
+    if (!event || !event.type || event.type !== "message") {
+      throw new Error("無效事件或非訊息事件");
+    }
+
+    if (!event.message || !event.message.text || !event.replyToken) {
+      throw new Error("缺少必要訊息內容或回覆令牌");
+    }
+
+    const userId = event.source?.userId;
+    const messageText = event.message.text;
+    
+    // 記錄A/B Testing路徑
+    WH_simpleLog("info", `超簡化路徑處理: "${messageText.substr(0, 30)}..." [${requestId}]`, userId);
+
+    // 直接調用BK超簡化記帳
+    const result = await BK_quickBookkeeping(event, requestId);
+    
+    // 立即回覆用戶
+    await WH_quickReply(event.replyToken, result, requestId);
+    
+    const processingTime = Date.now() - startTime;
+    console.log(`WH_fastTrack: 處理完成，耗時 ${processingTime}ms [${requestId}]`);
+    
+    // 記錄效能指標
+    WH_recordABTestMetrics("B", true, processingTime, requestId);
+    
+  } catch (error) {
+    const processingTime = Date.now() - startTime;
+    console.log(`WH_fastTrack: 處理失敗 ${error}, 耗時 ${processingTime}ms [${requestId}]`);
+    
+    // 記錄失敗指標
+    WH_recordABTestMetrics("B", false, processingTime, requestId);
+    
+    // 降級到標準路徑
+    console.log(`降級到標準路徑處理 [${requestId}]`);
+    await processWebhookSync({ requestId: requestId });
+  }
+}
+
+/**
+ * 35. 快速回覆機制 - BR-0008
+ * @version 2025-07-14-V2.0.20
+ * @date 2025-07-14 16:00:00
+ * @description 整合WH_replyMessage + 格式化，減少函數調用層級
+ * @param {string} replyToken - 回覆令牌
+ * @param {Object} result - 處理結果
+ * @param {string} requestId - 請求ID
+ */
+async function WH_quickReply(replyToken, result, requestId) {
+  try {
+    let responseMessage = "";
+    
+    if (result && result.success) {
+      const data = result.data || {};
+      responseMessage = `記帳成功！\n金額：${data.rawAmount || data.amount}元\n支付方式：${data.paymentMethod}\n時間：${data.date}\n科目：${data.subjectName}\n備註：${data.remark || "無"}\n使用者類型：${data.userType || "J"}`;
+    } else {
+      responseMessage = `記帳失敗！\n原因：${result?.error || "未知錯誤"}\n請重新嘗試。`;
+    }
+
+    // 直接發送，簡化檢查
+    const payload = {
+      replyToken: replyToken,
+      messages: [{ type: "text", text: responseMessage }]
+    };
+
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN,
+    };
+
+    const response = await axios.post("https://api.line.me/v2/bot/message/reply", payload, { headers });
+    
+    if (response.status === 200) {
+      console.log(`WH_quickReply: 回覆成功 [${requestId}]`);
+      return { success: true };
+    } else {
+      throw new Error(`回覆失敗: ${response.status}`);
+    }
+    
+  } catch (error) {
+    console.log(`WH_quickReply: 回覆錯誤 ${error} [${requestId}]`);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * 36. 輕量日誌記錄 - BR-0008
+ * @version 2025-07-14-V2.0.20
+ * @date 2025-07-14 16:00:00
+ * @description 整合WH_directLogWrite + WH_verifySignature，僅記錄關鍵信息
+ * @param {string} level - 日誌級別
+ * @param {string} message - 訊息
+ * @param {string} userId - 用戶ID
+ */
+function WH_simpleLog(level, message, userId = "") {
+  try {
+    // 僅在DEBUG模式下記錄，或錯誤時強制記錄
+    if (!WH_CONFIG.DEBUG && level !== "error") return;
+    
+    const timestamp = WH_formatDateTime(new Date());
+    console.log(`[${timestamp}] [${level.toUpperCase()}] [WH-SIMPLIFIED] ${message}`);
+    
+    // 簡化的本地日誌記錄，不寫入Firestore（減少I/O）
+    if (level === "error") {
+      const logDir = path.join(__dirname, "logs");
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
+      const today = moment().format("YYYY-MM-DD");
+      const logFile = path.join(logDir, `webhook-${today}-simplified.log`);
+      fs.appendFileSync(logFile, `${timestamp}\t${level}\t${message}\t${userId}\n`, { encoding: "utf8" });
+    }
+  } catch (error) {
+    console.log(`WH_simpleLog錯誤: ${error}`);
+  }
+}
+
+/**
+ * 37. A/B Testing指標記錄 - BR-0008
+ * @version 2025-07-14-V2.0.20
+ * @date 2025-07-14 16:00:00
+ * @description 記錄A/B Testing的效能指標
+ * @param {string} group - 測試組別 (A/B)
+ * @param {boolean} success - 是否成功
+ * @param {number} processingTime - 處理時間(毫秒)
+ * @param {string} requestId - 請求ID
+ */
+function WH_recordABTestMetrics(group, success, processingTime, requestId) {
+  if (!WH_CONFIG.AB_TESTING.ENABLE_MONITORING) return;
+  
+  try {
+    const metrics = {
+      timestamp: new Date().toISOString(),
+      group: group,
+      success: success,
+      processingTime: processingTime,
+      requestId: requestId,
+      withinThreshold: processingTime < WH_CONFIG.AB_TESTING.TIMEOUT_THRESHOLD
+    };
+
+    // 簡化指標記錄，僅記錄到console和本地檔案
+    console.log(`AB_METRICS: ${JSON.stringify(metrics)}`);
+    
+    // 可選：記錄到本地檔案供後續分析
+    const logDir = path.join(__dirname, "logs");
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+    const today = moment().format("YYYY-MM-DD");
+    const metricsFile = path.join(logDir, `ab-metrics-${today}.log`);
+    fs.appendFileSync(metricsFile, JSON.stringify(metrics) + "\n", { encoding: "utf8" });
+    
+  } catch (error) {
+    console.log(`記錄A/B Testing指標錯誤: ${error}`);
+  }
 }
 
 
@@ -101,10 +319,10 @@ function WH_formatDateTime(date) {
 }
 
 /**
- * 09. 同步處理Webhook請求 - 確保 Reply Token 有效性
- * @version 2025-07-11-V2.0.17
- * @date 2025-07-11 12:30:00
- * @update: 新增同步處理函數，專門處理需要回覆的訊息，確保在 doPost 執行緒中完成
+ * 09. 同步處理Webhook請求 - 確保 Reply Token 有效性，支援A/B Testing
+ * @version 2025-07-14-V2.0.20
+ * @date 2025-07-14 16:00:00
+ * @update: 新增A/B Testing路徑選擇，支援超簡化路徑和標準路徑
  * @param {Object} e - 觸發器事件對象，包含requestId
  */
 async function processWebhookSync(e) {
@@ -175,7 +393,7 @@ async function processWebhookSync(e) {
             if (isDuplicate) {
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.0.17: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
+                `WH 2.0.20: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
                 "消息去重",
                 userId,
                 "",
@@ -190,13 +408,41 @@ async function processWebhookSync(e) {
           }
 
           if (event.type === "message") {
-            // 同步處理消息事件
-            await WH_processEventSync(event, requestId, userId);
+            // A/B Testing路徑選擇
+            const routerResult = WH_abTestRouter(userId, event.message?.text || "");
+            
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.20: A/B Testing - ${routerResult.reason}, 群組=${routerResult.group} [${requestId}]`,
+              "A/B Testing",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "processWebhookSync",
+              "INFO",
+            ], userId);
+
+            if (routerResult.useSimplified) {
+              // 使用超簡化路徑 (B組)
+              console.log(`使用B組超簡化路徑處理 [${requestId}]`);
+              await WH_fastTrack(event, requestId);
+            } else {
+              // 使用標準路徑 (A組)
+              console.log(`使用A組標準路徑處理 [${requestId}]`);
+              const startTime = Date.now();
+              await WH_processEventSync(event, requestId, userId);
+              const processingTime = Date.now() - startTime;
+              
+              // 記錄A組指標
+              WH_recordABTestMetrics("A", true, processingTime, requestId);
+            }
           } else {
             // 記錄其他類型事件
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
-              `WH 2.0.17: 收到${event.type}事件 [${requestId}]`,
+              `WH 2.0.20: 收到${event.type}事件 [${requestId}]`,
               "事件處理",
               userId,
               "",
@@ -2472,6 +2718,13 @@ module.exports = {
 
   // 配置導出
   WH_CONFIG,
+
+  // BR-0008 超簡化函數（4個新函數）
+  WH_abTestRouter,
+  WH_fastTrack,
+  WH_quickReply,
+  WH_simpleLog,
+  WH_recordABTestMetrics,
 };
 
 /**

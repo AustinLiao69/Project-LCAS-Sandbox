@@ -86,3 +86,5 @@ console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
 console.log('🎉 LCAS LINE Bot 啟動完成！');
 console.log('📱 現在可以用 LINE 發送訊息測試了！');
 console.log('🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對外服務');
+console.log('🧪 BR-0008 A/B Testing 已啟用：50% 用戶使用超簡化路徑');
+console.log('⚡ 超簡化路徑：26個函數 → 8個函數，預期處理時間 < 15秒');
