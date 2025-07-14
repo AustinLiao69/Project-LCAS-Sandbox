@@ -106,7 +106,7 @@ function WH_formatDateTime(date) {
  * @date 2025-07-11 12:20:00
  * @update: 智慧處理機制 - 對需要回覆的訊息使用同步處理，確保 replyToken 有效性
  */
-function doPost(req, res) {
+async function doPost(req, res) {
   // 生成請求ID
   const requestId = uuidv4().substring(0, 8);
 
@@ -151,10 +151,10 @@ function doPost(req, res) {
 
     if (needsReply) {
       // 需要回覆的訊息：立即同步處理以確保 replyToken 有效
-      console.log(`檢測到需要回覆的訊息，啟用同步處理 [${requestId}]`);
+      console.log(`檢測到需要回覆的訊息，啟用真正同步處理 [${requestId}]`);
       WH_directLogWrite([
         WH_formatDateTime(new Date()),
-        `WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [${requestId}]`,
+        `WH 2.0.17: 檢測到需要回覆的訊息，啟用真正同步處理 [${requestId}]`,
         "同步處理",
         "",
         "",
@@ -165,13 +165,24 @@ function doPost(req, res) {
         "INFO",
       ]);
 
-      // 立即處理，不延遲
+      // 真正的同步處理：直接在 doPost 中處理，不調用異步函數
       try {
-        processWebhookAsync({ requestId: requestId }).catch((err) => {
-          console.log("同步處理失敗:", err);
-        });
+        await processWebhookSync({ requestId: requestId });
+        console.log(`同步處理完成 [${requestId}]`);
       } catch (syncError) {
-        console.log("同步處理異常:", syncError);
+        console.log(`同步處理異常: ${syncError} [${requestId}]`);
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.17: 同步處理異常: ${syncError.toString()} [${requestId}]`,
+          "同步處理",
+          "",
+          "SYNC_ERROR",
+          "WH",
+          syncError.toString(),
+          0,
+          "doPost",
+          "ERROR",
+        ]);
       }
     } else {
       // 不需要回覆的事件：使用非同步處理
@@ -476,6 +487,628 @@ function WH_checkDuplicateMessage(messageId, requestId) {
 
     // 標記消息為已處理
     cache.set(cacheKey, new Date().toISOString(), 86400); // 24小時
+
+/**
+ * 09. 同步處理Webhook請求 - 確保 Reply Token 有效性
+ * @version 2025-07-11-V2.0.17
+ * @date 2025-07-11 12:30:00
+ * @update: 新增同步處理函數，專門處理需要回覆的訊息，確保在 doPost 執行緒中完成
+ * @param {Object} e - 觸發器事件對象，包含requestId
+ */
+async function processWebhookSync(e) {
+  // 從參數獲取請求ID
+  const requestId = e && e.requestId ? e.requestId : "unknown";
+
+  try {
+    console.log(`開始同步處理請求 [${requestId}]`);
+    // 使用直接日誌寫入
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.17: 開始同步處理請求 [${requestId}]`,
+      "同步處理",
+      "",
+      "",
+      "WH",
+      "",
+      0,
+      "processWebhookSync",
+      "INFO",
+    ]);
+
+    // 從緩存獲取請求數據
+    const rawData = cache.get("WH_REQ_" + requestId);
+
+    if (!rawData) {
+      console.log(`無法獲取請求數據 [${requestId}]`);
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.17: 無法獲取請求數據 [${requestId}]`,
+        "同步處理",
+        "",
+        "DATA_MISSING",
+        "WH",
+        "",
+        0,
+        "processWebhookSync",
+        "ERROR",
+      ]);
+      return;
+    }
+
+    // 解析數據
+    const postData = JSON.parse(rawData);
+
+    // 記錄基本信息
+    if (postData.events && postData.events.length > 0) {
+      // 處理每個事件
+      for (const event of postData.events) {
+        try {
+          // 獲取用戶ID
+          let userId = "";
+          if (event.source) {
+            userId = event.source.userId || "";
+          }
+
+          // 檢查消息去重（在同步處理中也需要）
+          if (
+            WH_CONFIG.MESSAGE_DEDUPLICATION &&
+            event.type === "message" &&
+            event.message &&
+            event.message.id
+          ) {
+            const isDuplicate = WH_checkDuplicateMessage(
+              event.message.id,
+              requestId,
+            );
+            if (isDuplicate) {
+              WH_directLogWrite([
+                WH_formatDateTime(new Date()),
+                `WH 2.0.17: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
+                "消息去重",
+                userId,
+                "",
+                "WH",
+                "",
+                0,
+                "processWebhookSync",
+                "INFO",
+              ], userId);
+              continue; // 跳過此消息的處理
+            }
+          }
+
+          if (event.type === "message") {
+            // 同步處理消息事件
+            await WH_processEventSync(event, requestId, userId);
+          } else {
+            // 記錄其他類型事件
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.17: 收到${event.type}事件 [${requestId}]`,
+              "事件處理",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "processWebhookSync",
+              "INFO",
+            ]);
+          }
+        } catch (eventError) {
+          console.log(`處理事件錯誤: ${eventError} [${requestId}]`);
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.17: 處理事件錯誤 [${requestId}]`,
+            "事件處理",
+            "",
+            "",
+            "WH",
+            eventError.toString(),
+            0,
+            "processWebhookSync",
+            "ERROR",
+          ]);
+        }
+      }
+    } else {
+
+/**
+ * 10. 處理事件 (同步版) - 確保 Reply Token 在有效期內使用
+ * @version 2025-07-11-V2.0.17
+ * @date 2025-07-11 12:30:00
+ * @update: 新增同步版本的事件處理，專門處理需要回覆的訊息事件
+ * @param {Object} event - LINE事件對象
+ * @param {string} requestId - 請求ID
+ * @param {string} userId - 用戶ID
+ */
+async function WH_processEventSync(event, requestId, userId) {
+  // 檢查基本參數
+  if (!event || !event.type) {
+    console.log(`無效事件或缺少類型: ${JSON.stringify(event)} [${requestId}]`);
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.17: 無效事件或缺少類型 [${requestId}]`,
+      "同步事件處理",
+      userId,
+      "INVALID_EVENT",
+      "WH",
+      JSON.stringify(event),
+      0,
+      "WH_processEventSync",
+      "ERROR",
+    ]);
+    return;
+  }
+
+  try {
+    // 記錄開始處理事件
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.17: 開始同步處理事件: ${event.type} [${requestId}]`,
+      "同步事件處理",
+      userId,
+      "",
+      "WH",
+      "",
+      0,
+      "WH_processEventSync",
+      "INFO",
+    ]);
+
+    // 確保設置了預處理的replyToken屬性
+    if (!event.replyToken && event.type === "message") {
+      const errorMsg = `缺少replyToken: ${JSON.stringify(event)} [${requestId}]`;
+      console.log(errorMsg);
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        errorMsg,
+        "同步事件處理",
+        userId,
+        "MISSING_REPLY_TOKEN",
+        "WH",
+        "",
+        0,
+        "WH_processEventSync",
+        "ERROR",
+      ]);
+      return;
+    }
+
+    // 根據事件類型處理
+    if (event.type === "message") {
+      // 處理消息類型的事件
+      console.log(
+        `同步處理消息事件: ${event.message ? event.message.type : "unknown"} [${requestId}]`,
+      );
+      let result;
+
+      if (event.message.type === "text") {
+        // 安全提取和記錄文本內容
+        const text = event.message.text || "";
+        console.log(
+          `收到文本消息（同步）: "${text.substr(0, 50)}${text.length > 50 ? "..." : ""}" [${requestId}]`,
+        );
+
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.17: 收到文本消息（同步）: "${text.substr(0, 50)}${text.length > 50 ? "..." : ""}" [${requestId}]`,
+          "同步訊息接收",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          "WH_processEventSync",
+          "INFO",
+        ]);
+
+        // 準備分發參數 - 明確包含replyToken
+        const messageData = {
+          text: text,
+          userId: userId,
+          timestamp: event.timestamp,
+          replyToken: event.replyToken, // 確保replyToken被傳遞
+        };
+
+        // 記錄完整的消息數據
+        console.log(
+          `準備訊息數據（同步）: ${JSON.stringify(messageData)} [${requestId}]`,
+        );
+
+        // 調用分發函數 - 根據 BR-0007 實現簡化路徑
+        try {
+          // 檢查是否為簡單記帳格式
+          const isSimpleBookkeeping = /^[\u4e00-\u9fff\w\s]+\s*\d+(\.\d+)?/.test(text.trim());
+          
+          if (isSimpleBookkeeping) {
+            // 簡化路徑：WH → BK 2.0 → Firestore（同步版本）
+            console.log(`檢測到簡單記帳格式，使用 BK 2.0 同步直連路徑 [${requestId}]`);
+            
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.17: 使用 BK 2.0 同步簡化路徑處理簡單記帳 [${requestId}]`,
+              "同步簡化路徑",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventSync",
+              "INFO",
+            ]);
+
+            // 直接調用 BK 2.0 處理（同步版本）
+            result = await BK.BK_processDirectBookkeeping(event);
+          } else {
+            // 標準路徑：WH → DD → BK → Firestore（同步版本）
+            console.log(`使用標準同步路徑處理複雜訊息 [${requestId}]`);
+
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.17: 使用標準同步路徑調用DD_distributeData [${requestId}]`,
+              "同步標準路徑",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventSync",
+              "INFO",
+            ]);
+
+            // 關鍵：調用DD_distributeData並保留完整結果 - 使用await處理異步
+            result = await DD.DD_distributeData(messageData, "LINE", 0);
+          }
+
+          // 記錄處理結果預覽
+          if (result) {
+            const resultPreview = {
+              success: result.success,
+              hasResponseMessage: !!result.responseMessage,
+              responseMsgLength: result.responseMessage
+                ? result.responseMessage.length
+                : 0,
+              errorType: result.errorType || "無",
+              moduleCode: result.moduleCode || "無",
+              hasPartialData: !!result.partialData,
+            };
+
+            console.log(
+              `同步處理完成，結果預覽: ${JSON.stringify(resultPreview)} [${requestId}]`,
+            );
+          } else {
+            console.log(`同步處理返回空結果 [${requestId}]`);
+          }
+
+          // 處理空結果或缺少responseMessage的情況
+          if (!result) {
+            result = {
+              success: false,
+              responseMessage: "處理您的請求時發生錯誤，請稍後再試。",
+              error: "返回空結果",
+              partialData: {
+                subject: "未知科目",
+                amount: 0,
+                rawAmount: "0",
+                paymentMethod: "未指定支付方式",
+              },
+            };
+
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.17: 同步處理返回空結果 [${requestId}]`,
+              "同步處理異常",
+              userId,
+              "EMPTY_RESULT",
+              "WH",
+              "",
+              0,
+              "WH_processEventSync",
+              "ERROR",
+            ]);
+          }
+
+          // 確保失敗時也有回覆訊息
+          if (result.success === false && !result.responseMessage) {
+            const subject = result.partialData?.subject || "未知科目";
+            const amount = result.partialData?.rawAmount || "0";
+            const paymentMethod =
+              result.partialData?.paymentMethod || "未指定支付方式";
+            const errorMsg = result.error || result.message || "未知錯誤";
+
+            result.responseMessage =
+              `記帳失敗！\n` +
+              `金額：${amount}元\n` +
+              `支付方式：${paymentMethod}\n` +
+              `時間：${WH_formatDateTime(new Date())}\n` +
+              `科目：${subject}\n` +
+              `備註：無\n` +
+              `使用者類型：J\n` +
+              `錯誤原因：${errorMsg}`;
+
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.17: 生成同步失敗回覆訊息 [${requestId}]`,
+              "同步訊息生成",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventSync",
+              "INFO",
+            ]);
+          }
+
+          // 關鍵：立即同步回覆用戶
+          console.log(`準備立即回覆訊息（同步） [${requestId}]`);
+          const replyResult = await WH_replyMessage(event.replyToken, result);
+
+          // 記錄回覆結果
+          console.log(
+            `同步訊息回覆結果: ${JSON.stringify(replyResult)} [${requestId}]`,
+          );
+          
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.17: 同步回覆完成，結果: ${replyResult.success ? "成功" : "失敗"} [${requestId}]`,
+            "同步回覆",
+            userId,
+            replyResult.success ? "" : "REPLY_FAILED",
+            "WH",
+            replyResult.error || "",
+            0,
+            "WH_processEventSync",
+            replyResult.success ? "INFO" : "ERROR",
+          ]);
+
+        } catch (ddError) {
+          // 異常捕獲處理 - 但仍要確保回覆用戶
+          console.log(
+            `同步處理調用失敗: ${ddError.toString()} [${requestId}]`,
+          );
+
+          // 建立錯誤回覆
+          const errorResult = {
+            success: false,
+            responseMessage: "處理記帳時發生系統錯誤，請稍後再試或聯繫管理員。",
+            error: ddError.toString(),
+            partialData: {
+              subject: "未知科目",
+              amount: 0,
+              rawAmount: "0",
+              paymentMethod: "未指定支付方式",
+            },
+          };
+
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.17: 捕獲同步處理異常，生成錯誤回覆 [${requestId}]`,
+            "同步異常處理",
+            userId,
+            "DD_ERROR",
+            "WH",
+            ddError.toString(),
+            0,
+            "WH_processEventSync",
+            "ERROR",
+          ]);
+
+          // 仍然嘗試回覆用戶
+          await WH_replyMessage(event.replyToken, errorResult);
+        }
+      } else {
+        // 其他類型消息的同步處理
+        console.log(`收到其他類型消息（同步）: ${event.message.type} [${requestId}]`);
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.0.17: 收到其他類型消息（同步）: ${event.message.type} [${requestId}]`,
+          "同步事件處理",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          "WH_processEventSync",
+          "INFO",
+        ]);
+
+        // 發送簡單提示訊息
+        await WH_replyMessage(event.replyToken, {
+          success: false,
+          responseMessage: "很抱歉，目前僅支援文字訊息處理。",
+        });
+      }
+    } else {
+      // 處理非消息事件（同步版本）
+      console.log(`收到非消息事件（同步）: ${event.type} [${requestId}]`);
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.17: 收到非消息事件（同步）: ${event.type} [${requestId}]`,
+        "同步事件處理",
+        userId,
+        "",
+        "WH",
+        "",
+        0,
+        "WH_processEventSync",
+        "INFO",
+      ]);
+
+      // 處理特定非消息事件類型
+      if (event.type === "follow") {
+        // 處理用戶關注事件 - 同步版本
+        try {
+          console.log(`處理用戶關注事件（同步）: ${userId} [${requestId}]`);
+
+          // 調用AM模組建立LINE帳號
+          const createResult = await AM.AM_createLineAccount(userId, null, 'J');
+
+          if (createResult.success) {
+            console.log(`成功為用戶 ${userId} 建立帳號（同步） [${requestId}]`);
+
+            // 記錄成功日誌
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.17: 用戶關注事件（同步） - 成功建立帳號 ${userId} [${requestId}]`,
+              "同步用戶關注",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventSync",
+              "INFO",
+            ]);
+
+            // 回覆歡迎訊息
+            await WH_replyMessage(event.replyToken, {
+              success: true,
+              responseMessage:
+                "🎉 感謝您加入LCAS記帳助手！\n\n您的帳號已自動建立完成。\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
+            });
+
+          } else {
+            // 帳號建立失敗的處理
+            console.log(`用戶 ${userId} 帳號建立失敗（同步）: ${createResult.error} [${requestId}]`);
+
+            // 記錄失敗日誌
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.0.17: 用戶關注事件（同步） - 帳號建立失敗 ${userId}: ${createResult.error} [${requestId}]`,
+              "同步用戶關注",
+              userId,
+              "ACCOUNT_CREATE_FAILED",
+              "WH",
+              createResult.error,
+              0,
+              "WH_processEventSync",
+              "ERROR",
+            ]);
+
+            // 即使建立失敗，仍然歡迎用戶
+            await WH_replyMessage(event.replyToken, {
+              success: true,
+              responseMessage:
+                "感謝您加入LCAS記帳助手！\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
+            });
+          }
+
+        } catch (followError) {
+          console.log(`處理用戶關注事件錯誤（同步）: ${followError} [${requestId}]`);
+
+          // 記錄錯誤日誌
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.17: 處理用戶關注事件錯誤（同步） ${userId}: ${followError.toString()} [${requestId}]`,
+            "同步用戶關注",
+            userId,
+            "FOLLOW_EVENT_ERROR",
+            "WH",
+            followError.toString(),
+            0,
+            "WH_processEventSync",
+            "ERROR",
+          ]);
+
+          // 發送簡化的歡迎訊息
+          await WH_replyMessage(event.replyToken, {
+            success: true,
+            responseMessage:
+              "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
+          });
+        }
+      } else if (event.type === "join") {
+        // 處理加入群組事件（同步版本）
+        await WH_replyMessage(event.replyToken, {
+          success: true,
+          responseMessage:
+            "感謝邀請記帳助手加入！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
+        });
+      }
+      // 可處理其他事件類型...
+    }
+  } catch (error) {
+    // 捕獲所有處理錯誤
+    console.log(`同步事件處理主錯誤: ${error} [${requestId}]`);
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.17: 同步事件處理錯誤: ${error.toString()} [${requestId}]`,
+      "同步事件處理",
+      userId,
+      "EVENT_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      "WH_processEventSync",
+      "ERROR",
+    ]);
+
+    // 嘗試回覆用戶錯誤信息（如果可能）
+    try {
+      if (event && event.replyToken) {
+        await WH_replyMessage(event.replyToken, {
+          success: false,
+          responseMessage: "處理您的請求時發生系統錯誤，請稍後再試。",
+        });
+      }
+    } catch (replyError) {
+      console.log(`回覆錯誤訊息失敗（同步）: ${replyError} [${requestId}]`);
+    }
+  }
+}
+
+
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.17: 請求中沒有事件 [${requestId}]`,
+        "事件處理",
+        "",
+        "",
+        "WH",
+        "",
+        0,
+        "processWebhookSync",
+        "WARNING",
+      ]);
+    }
+
+    // 清理緩存
+    cache.del("WH_REQ_" + requestId);
+    console.log(`同步處理完成，已清理數據 [${requestId}]`);
+
+    // 記錄處理完成
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.17: 同步處理完成 [${requestId}]`,
+      "同步處理",
+      "",
+      "",
+      "WH",
+      "",
+      0,
+      "processWebhookSync",
+      "INFO",
+    ]);
+  } catch (error) {
+    console.log(`同步處理主錯誤: ${error} [${requestId}]`);
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.17: 同步處理錯誤 [${requestId}]`,
+      "同步處理",
+      "",
+      "SYNC_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      "processWebhookSync",
+      "ERROR",
+    ]);
+  }
+}
+
+
 
     // 同時在持久化存儲中記錄
     try {
