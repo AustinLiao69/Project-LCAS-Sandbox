@@ -1431,7 +1431,7 @@ async function BK_processUserMessage(message, userId = "", timestamp = "", ledge
           }
         }
 
-        const remarkText = BK_removeAmountFromText(message, amount, processedData.paymentMethod) || subject;
+        const remarkText = BK_removeAmountFromText(message, amount, paymentMethod) || subject;
 
         const result = {
           type: "記帳",
