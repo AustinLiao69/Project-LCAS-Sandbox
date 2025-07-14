@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.0.18
+ * WH_Webhook處理模組_2.0.19
  * @module Webhook模組
  * @description LINE Webhook處理模組 - 實現 BR-0007 簡化記帳路徑
- * @update 2025-07-11: 實現 BR-0007 簡化記帳路徑，WH → BK 2.0 → Firestore
+ * @update 2025-07-14: 升級至2.0.19版本，修正訊息格式驗證問題，確保BK模組回覆正確處理
  */
 
 // 首先引入其他模組
@@ -704,11 +704,15 @@ function WH_logCritical(
 function WH_replyMessage(replyToken, message) {
   try {
     // 強制驗證：只接受 BK_formatSystemReplyMessage 格式化的訊息
-    if (!message || typeof message !== 'object' || !message.responseMessage || message.moduleCode !== 'BK') {
+    // 修正：同時檢查 moduleCode 為 'BK' 或來自 BK 模組的訊息
+    const isValidFormat = message && typeof message === 'object' && message.responseMessage && 
+                         (message.moduleCode === 'BK' || message.module === 'BK');
+    
+    if (!isValidFormat) {
       console.error('WH_replyMessage: 拒絕未經 BK_formatSystemReplyMessage 格式化的訊息');
       WH_directLogWrite([
         WH_formatDateTime(new Date()),
-        `WH 2.0.17: 拒絕未經格式化的訊息，moduleCode=${message?.moduleCode || "未定義"}`,
+        `WH 2.0.19: 拒絕未經格式化的訊息，moduleCode=${message?.moduleCode || "未定義"}, module=${message?.module || "未定義"}`,
         "訊息驗證",
         "",
         "INVALID_MESSAGE_FORMAT",

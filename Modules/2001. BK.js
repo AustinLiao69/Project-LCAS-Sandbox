@@ -1,8 +1,8 @@
 /**
- * BK_記帳處理模組_2.0.3
+ * BK_記帳處理模組_2.0.4
  * @module 記帳處理模組
  * @description LCAS 記帳處理模組 - 實現 BK 2.0 版本，支援簡化記帳路徑
- * @update 2025-07-14: 升級至2.0.2版本，移除支付方式別名映射，強化金額格式驗證
+ * @update 2025-07-14: 升級至2.0.4版本，修正BK_processDirectBookkeeping回覆格式問題
  */
 
 // 引入所需模組
@@ -2477,36 +2477,52 @@ async function BK_processDirectBookkeeping(event) {
       const result = await BK_processBookkeeping(bookkeepingData);
       BK_logInfo(`BK 2.0: 記帳結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
 
-      // 5. 格式化回覆訊息
-      let responseMessage = "";
-      if (result.success) {
-        responseMessage = `記帳成功！\n金額：${bookkeepingData.rawAmount}元 (${bookkeepingData.action})\n支付方式：${result.data.paymentMethod}\n時間：${result.data.date}\n科目：${bookkeepingData.subjectName}\n備註：${result.data.remark || "無"}\n收支ID：${result.data.id || "未知"}\n使用者類型：${result.data.userType || "J"}`;
-      } else {
-        responseMessage = `記帳失敗！\n原因：${result.error || result.message}\n請重新嘗試或聯繫管理員。`;
-      }
+      // 5. 使用 BK_formatSystemReplyMessage 統一格式化回覆
+      const formattedResult = await BK_formatSystemReplyMessage(result, "BK", {
+        userId: userId,
+        processId: processId
+      });
+
+      BK_logInfo(`BK 2.0: 記帳結果格式化完成，模組代碼: ${formattedResult.moduleCode} [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
 
       return {
-        success: result.success,
+        success: formattedResult.success,
         result: result,
         module: "BK",
-        responseMessage: responseMessage,
+        responseMessage: formattedResult.responseMessage,
+        moduleCode: "BK", // 確保模組代碼為 BK
         processId: processId,
         userId: userId,
         replyToken: replyToken
       };
 
     } else {
-      // 處理失敗
+      // 處理失敗 - 使用統一格式化
       BK_logWarning(`BK 2.0: 訊息解析失敗 [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
 
-      const errorMessage = processedData?.reason || "無法解析記帳訊息";
-      const responseMessage = `記帳失敗！\n原因：${errorMessage}\n請檢查格式後重試。`;
+      const errorData = {
+        success: false,
+        error: processedData?.reason || "無法解析記帳訊息",
+        errorType: processedData?.errorType || "MESSAGE_PARSE_ERROR",
+        partialData: {
+          subject: "未知科目",
+          amount: 0,
+          rawAmount: "0",
+          paymentMethod: "未指定支付方式"
+        }
+      };
+
+      const formattedError = await BK_formatSystemReplyMessage(errorData, "BK", {
+        userId: userId,
+        processId: processId
+      });
 
       return {
         success: false,
-        error: errorMessage,
-        errorType: processedData?.errorType || "MESSAGE_PARSE_ERROR",
-        responseMessage: responseMessage,
+        error: errorData.error,
+        errorType: errorData.errorType,
+        responseMessage: formattedError.responseMessage,
+        moduleCode: "BK", // 確保模組代碼為 BK
         processId: processId,
         userId: userId,
         replyToken: replyToken
@@ -2515,13 +2531,29 @@ async function BK_processDirectBookkeeping(event) {
   } catch (error) {
     BK_logError(`BK 2.0: 處理簡單記帳時發生錯誤: ${error.toString()} [${processId}]`, "簡單記帳", event.source?.userId || "", "PROCESS_ERROR", error.toString(), "BK_processDirectBookkeeping");
 
-    const responseMessage = `記帳處理發生錯誤：${error.message}\n請重新嘗試或聯繫管理員。`;
+    const errorData = {
+      success: false,
+      error: error.toString(),
+      errorType: "PROCESS_ERROR",
+      partialData: {
+        subject: "系統錯誤",
+        amount: 0,
+        rawAmount: "0",
+        paymentMethod: "未指定支付方式"
+      }
+    };
+
+    const formattedError = await BK_formatSystemReplyMessage(errorData, "BK", {
+      userId: event.source?.userId || "",
+      processId: processId
+    });
 
     return {
       success: false,
       error: error.toString(),
       errorType: "PROCESS_ERROR",
-      responseMessage: responseMessage,
+      responseMessage: formattedError.responseMessage,
+      moduleCode: "BK", // 確保模組代碼為 BK
       processId: processId,
       userId: event.source?.userId || "",
       replyToken: event.replyToken
