@@ -703,6 +703,24 @@ function WH_logCritical(
  */
 function WH_replyMessage(replyToken, message) {
   try {
+    // 強制驗證：只接受 BK_formatSystemReplyMessage 格式化的訊息
+    if (!message || typeof message !== 'object' || !message.responseMessage || message.moduleCode !== 'BK') {
+      console.error('WH_replyMessage: 拒絕未經 BK_formatSystemReplyMessage 格式化的訊息');
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.17: 拒絕未經格式化的訊息，moduleCode=${message?.moduleCode || "未定義"}`,
+        "訊息驗證",
+        "",
+        "INVALID_MESSAGE_FORMAT",
+        "WH",
+        "訊息格式不符合規範",
+        0,
+        "WH_replyMessage",
+        "ERROR",
+      ]);
+      return { success: false, error: "訊息格式不符合規範" };
+    }
+
     // 1. 智慧訊息提取 - 檢查輸入類型並從對象中提取訊息
     let textMessage = "";
 
@@ -1053,10 +1071,10 @@ function setDependencies(ddModule, bkModule, dlModule) {
 }
 
 /**
- * 07. 處理事件 (非同步版) - 修正訊息處理和數據傳遞問題
- * @version 2025-07-09-V2.0.16
- * @date 2025-07-09 10:48:00
- * @update: 遷移至Firestore，保留原始數據和完整的錯誤訊息，確保正確顯示負數金額與支付方式
+ * 07. 處理事件 (非同步版) - 強制集中式錯誤處理
+ * @version 2025-07-14-V2.0.17
+ * @date 2025-07-14 13:00:00
+ * @update: 實施強制集中式錯誤處理，只接受來自 BK_formatSystemReplyMessage 的格式化訊息
  * @param {Object} event - LINE事件對象
  * @param {string} requestId - 請求ID
  * @param {string} userId - 用戶ID
@@ -1228,69 +1246,53 @@ async function WH_processEventAsync(event, requestId, userId) {
             console.log(`DD_distributeData返回空結果 [${requestId}]`);
           }
 
-          // 處理空結果或缺少responseMessage的情況
-          if (!result) {
-            result = {
-              success: false,
-              responseMessage: "處理您的請求時發生錯誤，請稍後再試。",
-              error: "返回空結果",
+          // 驗證結果是否經過 BK_formatSystemReplyMessage 格式化
+          if (!result || !result.responseMessage || result.moduleCode !== 'BK') {
+            // 如果未格式化，強制通過 BK 格式化
+            console.log(`檢測到未格式化的結果，強制使用 BK_formatSystemReplyMessage [${requestId}]`);
+            
+            const errorData = result || { 
+              success: false, 
+              error: "處理失敗",
               partialData: {
                 subject: "未知科目",
                 amount: 0,
                 rawAmount: "0",
                 paymentMethod: "未指定支付方式",
-              },
+              }
             };
 
+            try {
+              result = await BK.BK_formatSystemReplyMessage(errorData, "WH", { 
+                userId: userId, 
+                processId: requestId 
+              });
+            } catch (formatError) {
+              console.log(`強制格式化失敗: ${formatError} [${requestId}]`);
+              result = {
+                success: false,
+                responseMessage: "處理您的請求時發生錯誤，請稍後再試。",
+                moduleCode: "WH",
+                error: "格式化失敗"
+              };
+            }
+
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
-              `WH 2.0.3: DD_distributeData返回空結果 [${requestId}]`,
-              "處理異常",
+              `WH 2.0.17: 強制格式化未驗證的訊息 [${requestId}]`,
+              "訊息格式化",
               userId,
-              "EMPTY_RESULT",
+              "FORCE_FORMAT",
               "WH",
               "",
               0,
               "WH_processEventAsync",
-              "ERROR",
+              "WARNING",
             ]);
           }
 
-          // 確保失敗時也有回覆訊息 - 但保留所有原始數據
-          if (result.success === false && !result.responseMessage) {
-            // 從partialData中嘗試提取有用資訊
-            const subject = result.partialData?.subject || "未知科目";
-            const amount = result.partialData?.rawAmount || "0";
-            const paymentMethod =
-              result.partialData?.paymentMethod || "未指定支付方式";
-            const errorMsg = result.error || result.message || "未知錯誤";
-
-            result.responseMessage =
-              `記帳失敗！\n` +
-              `金額：${amount}元\n` +
-              `支付方式：${paymentMethod}\n` +
-              `時間：${WH_formatDateTime(new Date())}\n` +
-              `科目：${subject}\n` +
-              `備註：無\n` +
-              `使用者類型：J\n` +
-              `錯誤原因：${errorMsg}`;
-
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 2.0.3: 生成失敗回覆訊息 [${requestId}]`,
-              "訊息生成",
-              userId,
-              "",
-              "WH",
-              "",
-              0,
-              "WH_processEventAsync",
-              "INFO",
-            ]);
-          }
-
-          // 關鍵：將完整result對象傳給WH_replyMessage，而非僅傳responseMessage
-          console.log(`準備回覆訊息 [${requestId}]`);
+          // 只有經過驗證的訊息才能回覆
+          console.log(`準備回覆已驗證的訊息 [${requestId}]`);
           const replyResult = WH_replyMessage(event.replyToken, result);
 
           // 記錄回覆結果

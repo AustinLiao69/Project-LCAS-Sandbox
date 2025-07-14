@@ -826,10 +826,12 @@ function BK_prepareBookkeepingData(bookkeepingId, data, processId) {
       paymentMethod = "現金";
       BK_logInfo(`科目代碼${majorCode}為8或9開頭，預設支付方式為現金 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
     } else {
-      paymentMethod = BK_validatePaymentMethod(paymentMethod, data.majorCode);
+      const validationResult = BK_validatePaymentMethod(paymentMethod, data.majorCode);
+      paymentMethod = validationResult.success ? validationResult.paymentMethod : validationResult.validMethod;
     }
   } else {
-    paymentMethod = BK_validatePaymentMethod(paymentMethod, data.majorCode);
+    const validationResult = BK_validatePaymentMethod(paymentMethod, data.majorCode);
+    paymentMethod = validationResult.success ? validationResult.paymentMethod : validationResult.validMethod;
   }
 
   BK_logInfo(`記帳數據準備完成: 收入=${income}, 支出=${expense}, 支付方式=${paymentMethod}, 備註="${remarkContent}" [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
@@ -956,9 +958,9 @@ function BK_getPaymentMethods() {
 
 /**
  * 14. 確認並標準化支付方式
- * @version 2025-07-14-V2.0.2
+ * @version 2025-07-14-V2.0.3
  * @date 2025-07-14 12:00:00
- * @description 驗證並標準化支付方式，僅支援四種標準支付方式，移除別名映射
+ * @description 驗證並標準化支付方式，返回結果對象而非拋出異常，統一錯誤處理
  */
 function BK_validatePaymentMethod(method, majorCode) {
   try {
@@ -967,10 +969,10 @@ function BK_validatePaymentMethod(method, majorCode) {
     if (!method || method === "" || method === "預設") {
       if (majorCode && (String(majorCode).startsWith('8') || String(majorCode).startsWith('9'))) {
         BK_logDebug(`BK_validatePaymentMethod: 科目代碼 ${majorCode} 為8或9開頭，使用默認支付方式"現金"`, "支付方式驗證", "", "BK_validatePaymentMethod");
-        return "現金";
+        return { success: true, paymentMethod: "現金" };
       } else {
         BK_logDebug(`BK_validatePaymentMethod: 未指定支付方式或值為"預設"，使用默認支付方式"刷卡"`, "支付方式驗證", "", "BK_validatePaymentMethod");
-        return "刷卡";
+        return { success: true, paymentMethod: "刷卡" };
       }
     }
 
@@ -979,23 +981,28 @@ function BK_validatePaymentMethod(method, majorCode) {
 
     if (validPaymentMethods.includes(method)) {
       BK_logDebug(`BK_validatePaymentMethod: 使用有效支付方式 "${method}"`, "支付方式驗證", "", "BK_validatePaymentMethod");
-      return method;
+      return { success: true, paymentMethod: method };
     }
 
     const errorMessage = `不支援的支付方式: "${method}"，僅支援 "現金"、"刷卡"、"轉帳"、"行動支付"`;
     BK_logError(`BK_validatePaymentMethod: ${errorMessage}`, "支付方式驗證", "", "INVALID_PAYMENT_METHOD", errorMessage, "BK_validatePaymentMethod");
-    throw new Error(errorMessage);
+    
+    return {
+      success: false,
+      error: errorMessage,
+      errorType: "INVALID_PAYMENT_METHOD",
+      validMethod: "刷卡" // 提供預設值
+    };
 
   } catch (error) {
     BK_logError(`BK_validatePaymentMethod 發生錯誤: ${error.toString()}`, "支付方式驗證", "", "PAYMENT_VALIDATION_ERROR", error.toString(), "BK_validatePaymentMethod");
 
-    try {
-      BK_logError(`支付方式驗證失敗: ${error}`, "支付方式處理", "", "PAYMENT_ERROR", error.toString(), "BK_validatePaymentMethod", "BK_validatePaymentMethod");
-    } catch(e) {
-      // 日誌記錄失敗也不影響主流程
-    }
-
-    throw error;
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "PAYMENT_VALIDATION_ERROR",
+      validMethod: "刷卡"
+    };
   }
 }
 
