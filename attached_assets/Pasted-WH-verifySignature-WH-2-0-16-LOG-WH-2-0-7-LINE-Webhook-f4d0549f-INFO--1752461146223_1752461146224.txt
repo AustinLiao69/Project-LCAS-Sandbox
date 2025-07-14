@@ -1,0 +1,81 @@
+WH_verifySignature: 測試模式，跳過簽章驗證
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [f4d0549f] (INFO)
+檢測到需要回覆的訊息，啟用真正同步處理 [f4d0549f]
+[WH 2.0.16 LOG] WH 2.0.17: 檢測到需要回覆的訊息，啟用真正同步處理 [f4d0549f] (INFO)
+開始同步處理請求 [f4d0549f]
+[WH 2.0.16 LOG] WH 2.0.17: 開始同步處理請求 [f4d0549f] (INFO)
+[WH 2.0.16 LOG] WH 2.0.17: 開始同步處理事件: message [f4d0549f] (INFO)
+同步處理消息事件: text [f4d0549f]
+收到文本消息（同步）: "早餐444444" [f4d0549f]
+[WH 2.0.16 LOG] WH 2.0.17: 收到文本消息（同步）: "早餐444444" [f4d0549f] (INFO)
+準備訊息數據（同步）: {"text":"早餐444444","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1752461072551,"replyToken":"67c0559207a641ffb8102dfb3d6a2c88"} [f4d0549f]
+檢測到簡單記帳格式，使用 BK 2.0 同步直連路徑 [f4d0549f]
+[WH 2.0.16 LOG] WH 2.0.17: 使用 BK 2.0 同步簡化路徑處理簡單記帳 [f4d0549f] (INFO)
+[2025-07-14T02:44:33.467Z] [INFO] [BK] BK 2.0: 開始處理簡單記帳 [a60b1b02] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+[2025-07-14T02:44:33.467Z] [INFO] [BK] BK 2.0: 處理用戶 Uae47d9d496e4596d70ed724a7d6e2948 的訊息: "早餐444444" [a60b1b02] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+[2025-07-14T02:44:33.467Z] [INFO] [BK] 處理用戶消息: "早餐444444" (帳本: user_Uae47d9d496e4596d70ed724a7d6e2948) | 訊息處理 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processUserMessage
+[2025-07-14T02:44:33.467Z] [INFO] [BK] 檢查用戶 Uae47d9d496e4596d70ed724a7d6e2948 科目數據 [b40a76c3] | 科目檢查 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processUserMessage
+✅ 用戶 Uae47d9d496e4596d70ed724a7d6e2948 已有科目數據，無需初始化
+[2025-07-14T02:44:33.618Z] [INFO] [BK] 用戶 Uae47d9d496e4596d70ed724a7d6e2948 科目數據檢查完成 [b40a76c3] | 科目檢查 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processUserMessage
+[2025-07-14T02:44:33.619Z] [DEBUG] [BK] 開始解析文本「早餐444444」[b40a76c3] | 文本解析 |  | BK_parseInputFormat
+[2025-07-14T02:44:33.619Z] [INFO] [BK] 識別標準格式 - 科目:「早餐」, 金額:444444, 支付方式:「預設」 [b40a76c3] | 文本解析 |  | BK_parseInputFormat
+[2025-07-14T02:44:33.619Z] [INFO] [BK] 查詢科目代碼: "早餐", 用戶ID: Uae47d9d496e4596d70ed724a7d6e2948, ID=dd9df20a | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getSubjectCode
+[2025-07-14T02:44:33.826Z] [INFO] [BK] 讀取用戶 Uae47d9d496e4596d70ed724a7d6e2948 科目表: 62筆數據 [dd9df20a] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getSubjectCode
+[2025-07-14T02:44:33.828Z] [INFO] [BK] 通過同義詞成功查詢科目代碼: 103-10301 餐飲 [dd9df20a] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getSubjectCode
+[2025-07-14T02:44:33.828Z] [INFO] [BK] 精確匹配成功 "早餐" -> 餐飲 [b40a76c3] | 科目匹配 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processUserMessage
+[2025-07-14T02:44:33.828Z] [DEBUG] [BK] 處理文字移除金額和支付方式: 原始文字="早餐444444", 金額=444444, 支付方式=未指定 | 文本處理 |  | BK_removeAmountFromText
+[2025-07-14T02:44:33.828Z] [INFO] [BK] BK 2.0: 訊息處理結果: {"type":"記帳","processed":true,"subject":"早餐","subjectName":"餐飲","majorCode":"103","majorName":"餐飲費用","subCode":"10301","amount":444444,"rawAmount":"444444","paymentMethod":"預設","action":"支出","confidence":1,"matchMethod":"exact_match","text":"早餐","originalSubject":"早餐","processId":"b40a76c3","ledgerId":"user_Uae47d9d496e4596d70ed724a7d6e2948"} [a60b1b02] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+[2025-07-14T02:44:33.828Z] [INFO] [BK] BK 2.0: 準備調用 BK_processBookkeeping [a60b1b02] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+[2025-07-14T02:44:33.828Z] [INFO] [BK] BK 2.0: 準備完整記帳數據，action=支出, income=, expense=444444 [a60b1b02] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+[2025-07-14T02:44:33.829Z] [INFO] [BK] [a60b1b02] BK_processBookkeeping: 開始處理記帳請求 | 記帳處理 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:33.829Z] [DEBUG] [BK] [a60b1b02] BK_processBookkeeping: 格式化日期: 2025/07/14 10:44, 時間: 10:44 | 記帳處理 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:33.830Z] [DEBUG] [BK] 開始生成收支ID [a60b1b02] | ID生成 |  | BK_generateBookkeepingId
+[2025-07-14T02:44:33.975Z] [INFO] [BK] 生成收支ID: 20250714-00003 [a60b1b02] | ID生成 |  | BK_generateBookkeepingId
+[2025-07-14T02:44:33.976Z] [INFO] [BK] [a60b1b02] BK_processBookkeeping: 生成記帳ID: 20250714-00003 | 記帳處理 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:33.976Z] [INFO] [BK] [a60b1b02] BK_processBookkeeping: 處理支出金額: 444444，原始格式: 444444 | 記帳處理 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:33.976Z] [INFO] [BK] [a60b1b02] BK_processBookkeeping: 使用原始文本作為備註: "早餐" | 備註處理 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:33.976Z] [INFO] [BK] [a60b1b02] BK_processBookkeeping: 準備記帳數據: ID=20250714-00003, 使用者=Uae47d9d496e4596d70ed724a7d6e2948, 類型=J, 支付方式=預設, 原始金額=444444 | 記帳處理 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:33.976Z] [INFO] [BK] 準備記帳數據 [a60b1b02] | 數據準備 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_prepareBookkeepingData
+[2025-07-14T02:44:33.976Z] [INFO] [BK] 收到數據: {"id":"20250714-00003","userType":"J","date":"2025/07/14","time":"10:44","majorCode":"103","minorCod... | 數據準備 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_prepareBookkeepingData
+[2025-07-14T02:44:33.976Z] [INFO] [BK] 備註內容: "早餐" [a60b1b02] | 數據準備 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_prepareBookkeepingData
+[2025-07-14T02:44:33.976Z] [WARNING] [BK] 未設置action (undefined)，退回到傳統判斷方式 [a60b1b02] | 數據準備 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_prepareBookkeepingData
+[2025-07-14T02:44:33.976Z] [INFO] [BK] 傳統方式：使用支出金額: 444444 [a60b1b02] | 數據準備 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_prepareBookkeepingData
+[2025-07-14T02:44:33.976Z] [DEBUG] [BK] BK_validatePaymentMethod: 驗證支付方式 "預設" 對應科目代碼 103 | 支付方式驗證 |  | BK_validatePaymentMethod
+[2025-07-14T02:44:33.976Z] [DEBUG] [BK] BK_validatePaymentMethod: 未指定支付方式或值為"預設"，使用默認支付方式"刷卡" | 支付方式驗證 |  | BK_validatePaymentMethod
+[2025-07-14T02:44:33.976Z] [INFO] [BK] 記帳數據準備完成: 收入=, 支出=444444, 支付方式=刷卡, 備註="早餐" [a60b1b02] | 數據準備 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_prepareBookkeepingData
+[2025-07-14T02:44:33.976Z] [INFO] [BK] [a60b1b02] BK_processBookkeeping: 開始保存數據到Firestore | 數據存儲 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:33.976Z] [DEBUG] [BK] 開始儲存數據到 Firestore [a60b1b02] | Firestore存儲 |  | BK_saveToFirestore
+[2025-07-14T02:44:34.100Z] [INFO] [BK] 數據成功儲存到 Firestore，文檔ID: N0JwjrauePBifhj7xKoA [a60b1b02] | Firestore存儲 |  | BK_saveToFirestore
+[2025-07-14T02:44:34.234Z] [INFO] [BK] [a60b1b02] BK_processBookkeeping: Firestore存儲成功，文檔ID: N0JwjrauePBifhj7xKoA | 數據存儲 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:34.234Z] [INFO] [BK] [a60b1b02] BK_processBookkeeping: 最終確認的支付方式: 刷卡 | 記帳處理 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:34.234Z] [INFO] [BK] [a60b1b02] BK_processBookkeeping: 記帳處理成功: 20250714-00003, 使用者類型: J, 原始金額: 444444, 支付方式: 刷卡 | 記帳完成 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processBookkeeping
+[2025-07-14T02:44:34.234Z] [INFO] [BK] BK 2.0: 記帳結果: 成功 [a60b1b02] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+同步處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":89,"errorType":"無","moduleCode":"無","hasPartialData":false} [f4d0549f]
+準備立即回覆訊息（同步） [f4d0549f]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","result","module","responseMessage","processId","userId","replyToken"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"result":{"success":true,"message":"記帳成功！","data":{"id":"20250714-00003","date":"2025/07/14 10:44","subjectName":"餐飲","amount":444444,"rawAmount":"444444","action":"支出","paymentMethod"...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=89
+WH_replyMessage: 使用responseMessage屬性 (記帳成功！
+金額：444444元 (支出)
+支付方式：刷卡
+...)
+WH_replyMessage: 開始回覆訊息: 記帳成功！
+金額：444444元 (支出)
+支付方式：刷卡
+時間：2025/07/14 10:44
+...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳成功！
+金額：444444元 (支出)
+支付方式：刷卡
+時間：2025/07/14 10:44
+... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+WH_replyMessage 錯誤: AxiosError: Request failed with status code 400
+錯誤響應: {"message":"Invalid reply token"}
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息異常: AxiosError: Request failed with status code 400 (ERROR)
+同步訊息回覆結果: {"success":false,"error":"AxiosError: Request failed with status code 400"} [f4d0549f]
+[WH 2.0.16 LOG] WH 2.0.17: 同步回覆完成，結果: 失敗 [f4d0549f] (ERROR)
+同步處理完成，已清理數據 [f4d0549f]
+[WH 2.0.16 LOG] WH 2.0.17: 同步處理完成 [f4d0549f] (INFO)
+同步處理完成 [f4d0549f]
