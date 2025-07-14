@@ -1,8 +1,8 @@
 /**
  * BK_記帳處理模組_2.0.3
  * @module 記帳處理模組
- * @description LCAS 記帳處理模組 - 實現 BR-0008 A/B Testing超簡化記帳路徑
- * @update 2025-07-14: 升級至2.0.3版本，實現 BR-0008 超簡化函數，26→8個函數
+ * @description LCAS 記帳處理模組 - 實現 BK 2.0 版本，支援簡化記帳路徑
+ * @update 2025-07-14: 升級至2.0.2版本，移除支付方式別名映射，強化金額格式驗證
  */
 
 // 引入所需模組
@@ -114,32 +114,32 @@ async function initializeFirestore() {
     // 檢查 Firebase Admin 是否已初始化
     if (!admin.apps.length) {
       console.log('🔄 BK模組: Firebase Admin 尚未初始化，開始初始化...');
-      
+
       // 載入服務帳號金鑰
       const serviceAccount = require('./Serviceaccountkey.json');
-      
+
       // 初始化 Firebase Admin
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
       });
-      
+
       console.log('✅ BK模組: Firebase Admin 初始化完成');
     }
 
     // 取得 Firestore 實例
     const db = admin.firestore();
-    
+
     // 測試連線
     await db.collection('_health_check').doc('bk_init_test').set({
       timestamp: admin.firestore.Timestamp.now(),
       module: 'BK',
       status: 'initialized'
     });
-    
+
     // 刪除測試文檔
     await db.collection('_health_check').doc('bk_init_test').delete();
-    
+
     BK_INIT_STATUS.firestore_db = db;
 
     BK_logInfo("Firestore連接初始化成功", "系統初始化", "", "initializeFirestore");
@@ -783,25 +783,23 @@ function BK_prepareBookkeepingData(bookkeepingId, data, processId) {
 
   let income = '', expense = '';
 
-  // 優先使用 action 參數進行判斷
   if (data.action === "收入") {
-    income = data.income || data.amount || '';
+    income = data.income || '';
     expense = '';
     BK_logInfo(`根據action判定為收入，金額=${income} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
   } 
   else if (data.action === "支出") {
-    expense = data.expense || data.amount || '';
+    expense = data.expense || '';
     income = '';
     BK_logInfo(`根據action判定為支出，金額=${expense} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
   }
   else {
-    BK_logWarn(`未設置action (${data.action})，退回到傳統判斷方式 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
+    BK_logWarn(`未設置action，退回到傳統判斷方式 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
 
-    // 傳統判斷方式：依序檢查 income/expense 參數
     if (data.income !== undefined && data.income !== '') {
       income = data.income;
       expense = '';
-      BK_logInfo(`傳統方式：使用收入金額: ${income} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
+      BK_logInfo(`使用收入金額: ${income} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
 
       if (data.expense !== undefined && data.expense !== '') {
         BK_logWarn(`收到同時設置income和expense的矛盾數據，優先使用income [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
@@ -809,21 +807,14 @@ function BK_prepareBookkeepingData(bookkeepingId, data, processId) {
     } else if (data.expense !== undefined && data.expense !== '') {
       expense = data.expense;
       income = '';
-      BK_logInfo(`傳統方式：使用支出金額: ${expense} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
-    } else if (data.amount !== undefined && data.amount !== '') {
-      // 如果只有 amount，根據科目代碼判斷收入/支出
-      const majorCode = data.majorCode;
-      if (majorCode && String(majorCode).startsWith('8')) {
-        income = data.amount;
-        expense = '';
-        BK_logInfo(`根據科目代碼${majorCode}判定為收入，金額=${income} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
-      } else {
-        expense = data.amount;
-        income = '';
-        BK_logInfo(`根據科目代碼${majorCode}判定為支出，金額=${expense} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
-      }
+      BK_logInfo(`使用支出金額: ${expense} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
     } else {
-      BK_logWarn(`未收到任何金額信息 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
+      if (data.amount !== undefined && data.amount !== '') {
+        BK_logCritical(`收到未處理的amount=${data.amount}，但BK模組不處理amount! DD模組應負責轉換 [${processId}]`, 
+                      "數據錯誤", data.userId || "", "DD_ERROR", "DD模組未正確轉換amount", "BK_prepareBookkeepingData");
+      } else {
+        BK_logWarn(`未收到任何金額信息 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
+      }
     }
   }
 
@@ -835,10 +826,12 @@ function BK_prepareBookkeepingData(bookkeepingId, data, processId) {
       paymentMethod = "現金";
       BK_logInfo(`科目代碼${majorCode}為8或9開頭，預設支付方式為現金 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
     } else {
-      paymentMethod = BK_validatePaymentMethod(paymentMethod, data.majorCode);
+      const validationResult = BK_validatePaymentMethod(paymentMethod, data.majorCode);
+      paymentMethod = validationResult.success ? validationResult.paymentMethod : validationResult.validMethod;
     }
   } else {
-    paymentMethod = BK_validatePaymentMethod(paymentMethod, data.majorCode);
+    const validationResult = BK_validatePaymentMethod(paymentMethod, data.majorCode);
+    paymentMethod = validationResult.success ? validationResult.paymentMethod : validationResult.validMethod;
   }
 
   BK_logInfo(`記帳數據準備完成: 收入=${income}, 支出=${expense}, 支付方式=${paymentMethod}, 備註="${remarkContent}" [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
@@ -965,9 +958,9 @@ function BK_getPaymentMethods() {
 
 /**
  * 14. 確認並標準化支付方式
- * @version 2025-01-03-V1.9.0
- * @date 2025-01-03 17:30:00
- * @description 驗證並標準化支付方式
+ * @version 2025-07-14-V2.0.3
+ * @date 2025-07-14 12:00:00
+ * @description 驗證並標準化支付方式，返回結果對象而非拋出異常，統一錯誤處理
  */
 function BK_validatePaymentMethod(method, majorCode) {
   try {
@@ -976,34 +969,40 @@ function BK_validatePaymentMethod(method, majorCode) {
     if (!method || method === "" || method === "預設") {
       if (majorCode && (String(majorCode).startsWith('8') || String(majorCode).startsWith('9'))) {
         BK_logDebug(`BK_validatePaymentMethod: 科目代碼 ${majorCode} 為8或9開頭，使用默認支付方式"現金"`, "支付方式驗證", "", "BK_validatePaymentMethod");
-        return "現金";
+        return { success: true, paymentMethod: "現金" };
       } else {
         BK_logDebug(`BK_validatePaymentMethod: 未指定支付方式或值為"預設"，使用默認支付方式"刷卡"`, "支付方式驗證", "", "BK_validatePaymentMethod");
-        return "刷卡";
+        return { success: true, paymentMethod: "刷卡" };
       }
     }
 
+    // 支付方式只允許四種標準格式，不接受任何別名
     const validPaymentMethods = ["現金", "刷卡", "轉帳", "行動支付"];
 
     if (validPaymentMethods.includes(method)) {
       BK_logDebug(`BK_validatePaymentMethod: 使用有效支付方式 "${method}"`, "支付方式驗證", "", "BK_validatePaymentMethod");
-      return method;
+      return { success: true, paymentMethod: method };
     }
 
     const errorMessage = `不支援的支付方式: "${method}"，僅支援 "現金"、"刷卡"、"轉帳"、"行動支付"`;
     BK_logError(`BK_validatePaymentMethod: ${errorMessage}`, "支付方式驗證", "", "INVALID_PAYMENT_METHOD", errorMessage, "BK_validatePaymentMethod");
-    throw new Error(errorMessage);
+    
+    return {
+      success: false,
+      error: errorMessage,
+      errorType: "INVALID_PAYMENT_METHOD",
+      validMethod: "刷卡" // 提供預設值
+    };
 
   } catch (error) {
     BK_logError(`BK_validatePaymentMethod 發生錯誤: ${error.toString()}`, "支付方式驗證", "", "PAYMENT_VALIDATION_ERROR", error.toString(), "BK_validatePaymentMethod");
 
-    try {
-      BK_logError(`支付方式驗證失敗: ${error}`, "支付方式處理", "", "PAYMENT_ERROR", error.toString(), "BK_validatePaymentMethod", "BK_validatePaymentMethod");
-    } catch(e) {
-      // 日誌記錄失敗也不影響主流程
-    }
-
-    throw error;
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "PAYMENT_VALIDATION_ERROR",
+      validMethod: "刷卡"
+    };
   }
 }
 
@@ -1488,10 +1487,10 @@ async function BK_processUserMessage(message, userId = "", timestamp = "", ledge
 }
 
 /**
- * 21. 解析輸入格式 - 從 DD2 複製
- * @version 2025-07-11-V2.0.0
- * @date 2025-07-11 16:00:00
- * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ * 21. 解析輸入格式 - 從 DD2 複製並強化金額驗證
+ * @version 2025-07-14-V2.0.2
+ * @date 2025-07-14 12:00:00
+ * @update: 強化金額格式驗證，拒絕前導零和無效格式，限制幣別單位
  */
 function BK_parseInputFormat(message, processId) {
   BK_logDebug(`開始解析文本「${message}」[${processId}]`, "文本解析", "", "BK_parseInputFormat");
@@ -1516,7 +1515,7 @@ function BK_parseInputFormat(message, processId) {
       let paymentMethod = "預設";
       const remainingText = negativeMatch[3].trim();
 
-      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳", "信用卡"];
+      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
       for (const method of paymentMethods) {
         if (remainingText.includes(method)) {
           paymentMethod = method;
@@ -1543,19 +1542,44 @@ function BK_parseInputFormat(message, processId) {
       };
     }
 
-    // 標準格式處理
+    // 標準格式處理 - 強化金額驗證
     const regex = /^(.+?)(\d+)(.*)$/;
     const match = message.match(regex);
 
     if (match) {
       const subject = match[1].trim();
-      const amount = parseInt(match[2], 10);
       const rawAmount = match[2];
+      
+      // 檢查前導零 - 拒絕以0開頭的多位數金額
+      if (rawAmount.length > 1 && rawAmount.startsWith('0')) {
+        BK_logWarning(`金額格式錯誤：前導零不被允許 "${rawAmount}" [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+        return null;
+      }
+      
+      const amount = parseInt(rawAmount, 10);
+      
+      // 檢查金額是否為0或負數
+      if (amount <= 0) {
+        BK_logWarning(`金額錯誤：金額必須大於0 "${amount}" [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+        return null;
+      }
 
       let paymentMethod = "預設";
-      const remainingText = match[3].trim();
+      let remainingText = match[3].trim();
 
-      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳", "信用卡"];
+      // 移除不支援的幣別單位（只接受元、塊、圓）
+      const supportedUnits = /(元|塊|圓)$/i;
+      const unsupportedUnits = /(NT|USD|\$)$/i;
+      
+      if (unsupportedUnits.test(remainingText)) {
+        BK_logWarning(`不支援的幣別單位 "${remainingText}" [${processId}]`, "文本解析", "", "BK_parseInputFormat");
+        return null;
+      }
+      
+      // 移除支援的幣別單位
+      remainingText = remainingText.replace(supportedUnits, '').trim();
+
+      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
       for (const method of paymentMethods) {
         if (remainingText.includes(method)) {
           paymentMethod = method;
@@ -1591,10 +1615,10 @@ function BK_parseInputFormat(message, processId) {
 }
 
 /**
- * 22. 從文字中移除金額 - 從 DD2 複製
- * @version 2025-07-11-V2.0.0
- * @date 2025-07-11 16:00:00
- * @update: 從 DD2 模組複製，支援 BK 2.0 直連路徑
+ * 22. 從文字中移除金額 - 限制幣別單位
+ * @version 2025-07-14-V2.0.2
+ * @date 2025-07-14 12:00:00
+ * @update: 限制幣別單位為元、塊、圓，移除NT、USD、$支援
  */
 function BK_removeAmountFromText(text, amount, paymentMethod) {
   if (!text || !amount) return text;
@@ -1626,7 +1650,8 @@ function BK_removeAmountFromText(text, amount, paymentMethod) {
       return result;
     }
 
-    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓|NT|USD)?$`, "i");
+    // 金額+單位的模式 - 只接受元、塊、圓
+    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓)$`, "i");
     const match = text.match(amountEndRegex);
     if (match && match.index > 0) {
       result = text.substring(0, match.index).trim();
@@ -1675,7 +1700,7 @@ async function BK_getSubjectCode(subjectName, userId) {
     }
 
     const db = BK_INIT_STATUS.firestore_db;
-    
+
     // 再次檢查 db 是否為 null
     if (!db) {
       BK_logError(`Firestore 實例為 null，無法查詢科目 [${scId}]`, "科目查詢", userId, "FIRESTORE_NULL", "Firestore 實例為 null", "BK_getSubjectCode");
@@ -1889,7 +1914,7 @@ async function BK_getAllSubjects(userId) {
     }
 
     const db = BK_INIT_STATUS.firestore_db;
-    
+
     // 檢查 db 是否為 null
     if (!db) {
       BK_logError(`Firestore 實例為 null，無法獲取科目資料`, "科目查詢", userId, "FIRESTORE_NULL", "Firestore 實例為 null", "BK_getAllSubjects");
@@ -1926,10 +1951,10 @@ async function BK_getAllSubjects(userId) {
 }
 
 /**
- * 26. 格式化系統回覆訊息 - 從 DD3 複製
- * @version 2025-07-11-V2.0.0
- * @date 2025-07-11 16:00:00
- * @update: 從 DD3 模組複製，支援 BK 2.0 直連路徑
+ * 26. 格式化系統回覆訊息 - 統一錯誤格式
+ * @version 2025-07-14-V2.0.2
+ * @date 2025-07-14 12:00:00
+ * @update: 統一錯誤訊息格式，所有錯誤都使用標準格式回覆
  */
 async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {}) {
   const userId = options.userId || "";
@@ -2007,12 +2032,25 @@ async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {})
         responseMessage = `操作成功！\n處理ID: ${processId}`;
       }
     } else {
+      // 統一錯誤格式處理
       errorMsg = resultData.error || resultData.message || resultData.errorData?.error || "未知錯誤";
+      
+      // 特殊錯誤訊息標準化
+      let standardErrorMsg = errorMsg;
+      if (errorMsg.includes("不支援的支付方式")) {
+        standardErrorMsg = "不支援的支付方式";
+      } else if (errorMsg.includes("金額錯誤") || errorMsg.includes("前導零") || errorMsg.includes("金額必須大於0")) {
+        standardErrorMsg = "金額錯誤";
+      } else if (errorMsg.includes("找不到科目")) {
+        standardErrorMsg = "找不到科目";
+      }
+      
       const subject = partialData.subject || "未知科目";
       const displayAmount = partialData.rawAmount || (partialData.amount !== undefined ? String(partialData.amount) : "0");
       const paymentMethod = partialData.paymentMethod || "未指定支付方式";
       const remark = partialData.remark || "無";
 
+      // 統一的錯誤回覆格式
       responseMessage =
         `記帳失敗！\n` +
         `金額：${displayAmount}元\n` +
@@ -2021,7 +2059,7 @@ async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {})
         `科目：${subject}\n` +
         `備註：${remark}\n` +
         `使用者類型：J\n` +
-        `錯誤原因：${errorMsg}`;
+        `錯誤原因：${standardErrorMsg}`;
     }
 
     BK_logDebug(`訊息格式化完成 [${processId}]`, "訊息格式化", userId, "BK_formatSystemReplyMessage");
@@ -2128,14 +2166,14 @@ async function BK_checkMultipleMapping(subjectName, userId) {
     }
 
     const matches = [];
-    
+
     snapshot.forEach(doc => {
       if (doc.id === "template") return;
-      
+
       const data = doc.data();
       const subName = String(data.子項名稱).trim().toLowerCase();
       const synonymsStr = data.同義詞 || "";
-      
+
       // 檢查科目名稱匹配
       if (subName === normalizedInput) {
         matches.push({
@@ -2146,7 +2184,7 @@ async function BK_checkMultipleMapping(subjectName, userId) {
           matchType: "exact_name"
         });
       }
-      
+
       // 檢查同義詞匹配
       if (synonymsStr) {
         const synonyms = synonymsStr.split(",");
@@ -2206,12 +2244,12 @@ async function BK_getLedgerInfo(userId) {
     }
 
     const ledgerId = `user_${userId}`;
-    
+
     const db = BK_INIT_STATUS.firestore_db;
-    
+
     // 獲取帳本基本資訊
     const ledgerDoc = await db.collection("ledgers").doc(ledgerId).get();
-    
+
     if (!ledgerDoc.exists) {
       BK_logWarning(`用戶 ${userId} 帳本不存在 [${lgiId}]`, "帳本查詢", userId, "BK_getLedgerInfo");
       return {
@@ -2222,10 +2260,10 @@ async function BK_getLedgerInfo(userId) {
     }
 
     const ledgerData = ledgerDoc.data();
-    
+
     // 獲取科目數量
     const subjectsSnapshot = await db.collection("ledgers").doc(ledgerId).collection("subjects").where("isActive", "==", true).get();
-    
+
     // 獲取記帳記錄數量（最近30天）
     const thirtyDaysAgo = moment().subtract(30, 'days').format("YYYY/MM/DD");
     const entriesSnapshot = await db.collection("ledgers").doc(ledgerId).collection("entries")
@@ -2359,7 +2397,7 @@ function BK_calculateLevenshteinDistance(str1, str2) {
 
     const distance = matrix[len1][len2];
     BK_logDebug(`計算完成，編輯距離: ${distance} [${cldId}]`, "相似度計算", "", "BK_calculateLevenshteinDistance");
-    
+
     return distance;
 
   } catch (error) {
@@ -2435,30 +2473,8 @@ async function BK_processDirectBookkeeping(event) {
 
       BK_logInfo(`BK 2.0: 準備調用 BK_processBookkeeping [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
 
-      // 4. 準備完整的記帳數據，確保 action 參數正確傳遞
-      const completeBookkeepingData = {
-        action: bookkeepingData.action,
-        subjectName: bookkeepingData.subjectName,
-        amount: bookkeepingData.amount,
-        majorCode: bookkeepingData.majorCode,
-        subCode: bookkeepingData.subCode,
-        majorName: bookkeepingData.majorName,
-        paymentMethod: bookkeepingData.paymentMethod,
-        text: bookkeepingData.text,
-        originalSubject: bookkeepingData.originalSubject,
-        userId: bookkeepingData.userId,
-        userType: bookkeepingData.userType,
-        processId: processId,
-        rawAmount: bookkeepingData.rawAmount,
-        // 明確設置 income 和 expense 參數
-        income: bookkeepingData.action === "收入" ? bookkeepingData.amount : '',
-        expense: bookkeepingData.action === "支出" ? bookkeepingData.amount : ''
-      };
-
-      BK_logInfo(`BK 2.0: 準備完整記帳數據，action=${completeBookkeepingData.action}, income=${completeBookkeepingData.income}, expense=${completeBookkeepingData.expense} [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
-
-      // 5. 執行記帳
-      const result = await BK_processBookkeeping(completeBookkeepingData);
+      // 4. 執行記帳
+      const result = await BK_processBookkeeping(bookkeepingData);
       BK_logInfo(`BK 2.0: 記帳結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
 
       // 5. 格式化回覆訊息
@@ -2482,7 +2498,7 @@ async function BK_processDirectBookkeeping(event) {
     } else {
       // 處理失敗
       BK_logWarning(`BK 2.0: 訊息解析失敗 [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
-      
+
       const errorMessage = processedData?.reason || "無法解析記帳訊息";
       const responseMessage = `記帳失敗！\n原因：${errorMessage}\n請檢查格式後重試。`;
 
@@ -2513,252 +2529,6 @@ async function BK_processDirectBookkeeping(event) {
   }
 }
 
-/**
- * 33. 一站式記帳處理 - BR-0008超簡化函數
- * @version 2025-07-14-V2.0.3
- * @date 2025-07-14 16:00:00
- * @description 整合解析、匹配、處理，大幅減少函數調用
- * @param {Object} event - LINE事件對象
- * @param {string} requestId - 請求ID
- */
-async function BK_quickBookkeeping(event, requestId) {
-  const startTime = Date.now();
-  
-  try {
-    const userId = event.source?.userId;
-    const messageText = event.message?.text;
-    
-    BK_logInfo(`BK_quickBookkeeping: 開始一站式處理 [${requestId}]`, "超簡化記帳", userId, "BK_quickBookkeeping");
-
-    // 快速解析（內聯BK_parseInputFormat邏輯）
-    const parseResult = BK_fastParse(messageText, requestId);
-    if (!parseResult) {
-      throw new Error("無法解析記帳格式");
-    }
-
-    // 精確匹配科目（簡化版，跳過模糊匹配）
-    const subjectInfo = await BK_getSubjectCode(parseResult.subject, userId);
-    if (!subjectInfo) {
-      throw new Error(`找不到科目「${parseResult.subject}」`);
-    }
-
-    // 決定收入/支出
-    let action = "支出";
-    if (subjectInfo.majorCode && subjectInfo.majorCode.toString().startsWith("8")) {
-      action = "收入";
-    }
-
-    // 準備完整記帳數據
-    const bookkeepingData = {
-      action: action,
-      subjectName: subjectInfo.subName,
-      amount: parseResult.amount,
-      majorCode: subjectInfo.majorCode,
-      subCode: subjectInfo.subCode,
-      majorName: subjectInfo.majorName,
-      paymentMethod: parseResult.paymentMethod || "刷卡",
-      text: parseResult.subject,
-      originalSubject: parseResult.subject,
-      userId: userId,
-      userType: "J",
-      processId: requestId,
-      rawAmount: parseResult.rawAmount,
-      income: action === "收入" ? parseResult.amount : '',
-      expense: action === "支出" ? parseResult.amount : ''
-    };
-
-    // 直接儲存（內聯處理邏輯）
-    const result = await BK_directSave(bookkeepingData, requestId);
-    
-    const processingTime = Date.now() - startTime;
-    BK_logInfo(`BK_quickBookkeeping: 處理完成，耗時 ${processingTime}ms [${requestId}]`, "超簡化記帳", userId, "BK_quickBookkeeping");
-
-    return {
-      success: true,
-      data: result.data,
-      processingTime: processingTime
-    };
-
-  } catch (error) {
-    const processingTime = Date.now() - startTime;
-    BK_logError(`BK_quickBookkeeping: 失敗 ${error}, 耗時 ${processingTime}ms [${requestId}]`, "超簡化記帳", event.source?.userId || "", "QUICK_BOOKING_ERROR", error.toString(), "BK_quickBookkeeping");
-    
-    return {
-      success: false,
-      error: error.toString(),
-      processingTime: processingTime
-    };
-  }
-}
-
-/**
- * 34. 快速解析與匹配 - BR-0008超簡化函數
- * @version 2025-07-14-V2.0.3
- * @date 2025-07-14 16:00:00
- * @description 整合解析和精確匹配邏輯，跳過複雜驗證
- * @param {string} messageText - 訊息文字
- * @param {string} requestId - 請求ID
- */
-function BK_fastParse(messageText, requestId) {
-  try {
-    if (!messageText || messageText.trim() === "") {
-      return null;
-    }
-
-    const message = messageText.trim();
-
-    // 簡化正則，支援標準格式：科目+金額
-    const regex = /^(.+?)(\d+)(.*)$/;
-    const match = message.match(regex);
-
-    if (match) {
-      const subject = match[1].trim();
-      const amount = parseInt(match[2], 10);
-      const rawAmount = match[2];
-      
-      let paymentMethod = "刷卡"; // 預設值
-      const remainingText = match[3].trim();
-      
-      // 簡化支付方式識別
-      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
-      for (const method of paymentMethods) {
-        if (remainingText.includes(method)) {
-          paymentMethod = method;
-          break;
-        }
-      }
-
-      if (subject === "") {
-        return null;
-      }
-
-      BK_logDebug(`BK_fastParse: 解析成功 - 科目:「${subject}」, 金額:${amount}, 支付方式:「${paymentMethod}」 [${requestId}]`, "快速解析", "", "BK_fastParse");
-
-      return {
-        subject: subject,
-        amount: amount,
-        rawAmount: rawAmount,
-        paymentMethod: paymentMethod,
-      };
-    } else {
-      return null;
-    }
-  } catch (error) {
-    BK_logError(`BK_fastParse: 解析錯誤 ${error} [${requestId}]`, "快速解析", "", "FAST_PARSE_ERROR", error.toString(), "BK_fastParse");
-    return null;
-  }
-}
-
-/**
- * 35. 直接儲存到Firestore - BR-0008超簡化函數
- * @version 2025-07-14-V2.0.3
- * @date 2025-07-14 16:00:00
- * @description 整合記帳處理和Firestore儲存，跳過複雜驗證
- * @param {Object} bookkeepingData - 記帳數據
- * @param {string} requestId - 請求ID
- */
-async function BK_directSave(bookkeepingData, requestId) {
-  try {
-    const processId = requestId;
-    
-    // 快速生成ID
-    const bookkeepingId = await BK_generateBookkeepingId(processId);
-    
-    // 快速時間格式化
-    const today = new Date();
-    const formattedDate = moment(today).tz(BK_CONFIG.TIMEZONE).format("YYYY/MM/DD HH:mm");
-    const formattedTime = moment(today).tz(BK_CONFIG.TIMEZONE).format("HH:mm");
-    const formattedDay = moment(today).tz(BK_CONFIG.TIMEZONE).format("YYYY/MM/DD");
-
-    let income = '', expense = '';
-    if (bookkeepingData.action === "收入") {
-      income = bookkeepingData.amount.toString();
-    } else {
-      expense = bookkeepingData.amount.toString();
-    }
-
-    // 簡化備註處理
-    const remark = bookkeepingData.text || bookkeepingData.originalSubject || "";
-
-    // 準備Firestore數據
-    const firestoreData = {
-      收支ID: bookkeepingId,
-      使用者類型: bookkeepingData.userType,
-      日期: formattedDay,
-      時間: formattedTime,
-      大項代碼: bookkeepingData.majorCode,
-      子項代碼: bookkeepingData.subCode,
-      支付方式: bookkeepingData.paymentMethod,
-      子項名稱: bookkeepingData.subjectName,
-      UID: bookkeepingData.userId,
-      備註: remark,
-      收入: income || null,
-      支出: expense || null,
-      同義詞: bookkeepingData.originalSubject || '',
-      currency: 'NTD',
-      timestamp: admin.firestore.Timestamp.now()
-    };
-
-    // 直接寫入Firestore
-    const db = BK_INIT_STATUS.firestore_db;
-    const ledgerId = `user_${bookkeepingData.userId}`;
-    
-    const docRef = await db
-      .collection('ledgers')
-      .doc(ledgerId)
-      .collection('entries')
-      .add(firestoreData);
-
-    BK_logInfo(`BK_directSave: 成功儲存 ${bookkeepingId}, 文檔ID: ${docRef.id} [${requestId}]`, "直接儲存", bookkeepingData.userId, "BK_directSave");
-
-    return {
-      success: true,
-      data: {
-        id: bookkeepingId,
-        date: formattedDate,
-        subjectName: bookkeepingData.subjectName,
-        amount: bookkeepingData.amount,
-        rawAmount: bookkeepingData.rawAmount,
-        action: bookkeepingData.action,
-        paymentMethod: bookkeepingData.paymentMethod,
-        remark: remark,
-        userId: bookkeepingData.userId,
-        userType: bookkeepingData.userType
-      }
-    };
-
-  } catch (error) {
-    BK_logError(`BK_directSave: 儲存失敗 ${error} [${requestId}]`, "直接儲存", bookkeepingData.userId || "", "DIRECT_SAVE_ERROR", error.toString(), "BK_directSave");
-    
-    return {
-      success: false,
-      error: error.toString()
-    };
-  }
-}
-
-/**
- * 36. 簡化回覆格式 - BR-0008超簡化函數
- * @version 2025-07-14-V2.0.3
- * @date 2025-07-14 16:00:00
- * @description 快速格式化回覆訊息，減少處理時間
- * @param {Object} result - 處理結果
- * @param {string} requestId - 請求ID
- */
-function BK_simpleFormat(result, requestId) {
-  try {
-    if (result && result.success && result.data) {
-      const data = result.data;
-      return `記帳成功！\n金額：${data.rawAmount || data.amount}元 (${data.action})\n支付方式：${data.paymentMethod}\n時間：${data.date}\n科目：${data.subjectName}\n備註：${data.remark || "無"}\n使用者類型：${data.userType || "J"}`;
-    } else {
-      return `記帳失敗！\n原因：${result?.error || "未知錯誤"}\n請重新嘗試。`;
-    }
-  } catch (error) {
-    BK_logError(`BK_simpleFormat: 格式化錯誤 ${error} [${requestId}]`, "簡化格式", "", "SIMPLE_FORMAT_ERROR", error.toString(), "BK_simpleFormat");
-    return `記帳處理發生錯誤，請重新嘗試。`;
-  }
-}
-
 // 導出需要被外部使用的函數
 module.exports = {
   BK_processBookkeeping,
@@ -2784,10 +2554,5 @@ module.exports = {
   BK_checkMultipleMapping,
   BK_getLedgerInfo,
   BK_writeToLogSheet,
-  BK_calculateLevenshteinDistance,
-  // BR-0008 超簡化函數（4個新函數）
-  BK_quickBookkeeping,
-  BK_fastParse,
-  BK_directSave,
-  BK_simpleFormat
+  BK_calculateLevenshteinDistance
 };

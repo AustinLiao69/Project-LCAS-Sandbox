@@ -1,5 +1,5 @@
 /**
- * DD1_核心協調模組_3.0.0
+ * DD1_核心協調模組_3.0.1
  * @module 核心協調模組
  * @description 根據預定義的規則將數據分配到不同的資料庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息 - 完全Firestore版本
  * @author AustinLiao69
@@ -933,11 +933,11 @@ function DD_processForWH(data) {
 }
 
 /**
- * 12. 處理數據並傳遞給BK模組記帳 - 修正回复消息和支付方式处理
- * @version 2025-01-09-V3.0.0
+ * 12. 處理數據並傳遞給BK模組記帳 - 統一錯誤處理和回覆格式
+ * @version 2025-07-14-V3.0.1
  * @author AustinLiao69
- * @date 2025-01-09 16:00:00
- * @update: 修正用词"付款方式"为"支付方式"，移除支付方式默認值，增加收支ID显示，適配Firestore異步操作
+ * @date 2025-07-14 13:00:00
+ * @update: 統一所有錯誤處理通過 BK_formatSystemReplyMessage 格式化，確保訊息格式一致
  * @param {Object} data - 來自DD_processUserMessage或其他來源的數據
  * @return {Object} 處理結果
  */
@@ -1095,27 +1095,24 @@ async function DD_processForBK(data) {
       "DD_processForBK",
     );
 
-    // 構建回覆訊息
-    let responseMessage = "";
-    if (result.success) {
-      // 成功回覆 - 修正"付款方式"為"支付方式"，並添加收支ID、備註和使用者類型
-      responseMessage = `記帳成功！\n金額：${bookkeepingData.amount}元 (${bookkeepingData.action})\n支付方式：${result.data.paymentMethod}\n時間：${result.data.date}\n科目：${bookkeepingData.subjectName}\n備註：${result.data.remark || "無"}\n收支ID：${result.data.id || "未知"}\n使用者類型：${result.data.userType || userType || "J"}`;
+    // 統一使用 BK_formatSystemReplyMessage 格式化回覆
+    const formattedResult = await BK.BK_formatSystemReplyMessage(result, "BK", {
+      userId: userId,
+      processId: processId,
+    });
 
-      // 記錄成功訊息
+    // 記錄格式化後的結果
+    if (formattedResult.success) {
       await DD_logInfo(
-        `記帳成功: ID=${result.data.id}, 金額=${bookkeepingData.amount}, 科目=${bookkeepingData.subjectName}, 使用者類型=${result.data.userType || userType || "未知"} [${processId}]`,
+        `記帳成功，已格式化回覆訊息 [${processId}]`,
         "記帳結果",
         userId,
         "DD_processForBK",
         "DD_processForBK",
       );
     } else {
-      // 失敗回覆
-      responseMessage = `記帳失敗！\n原因：${result.error || result.message}\n請重新嘗試或聯繫管理員。`;
-
-      // 記錄失敗訊息
       await DD_logWarning(
-        `記帳失敗: ${result.error || result.message} [${processId}]`,
+        `記帳失敗，已格式化錯誤訊息 [${processId}]`,
         "記帳結果",
         userId,
         "DD_processForBK",
@@ -1123,26 +1120,19 @@ async function DD_processForBK(data) {
       );
     }
 
-    await DD_logInfo(
-      `生成回覆訊息: ${responseMessage.substring(0, 50)}...`,
-      "訊息生成",
-      userId,
-      "DD_processForBK",
-      "DD_processForBK",
-    );
-
-    // 返回結果
+    // 返回統一格式化的結果
     return {
-      success: result.success,
+      success: formattedResult.success,
       result: result,
       module: "BK",
       isIncome: bookkeepingData.action === "收入",
       majorCode: bookkeepingData.majorCode,
       action: bookkeepingData.action,
-      responseMessage: responseMessage,
+      responseMessage: formattedResult.responseMessage,
       processId: processId,
-      userId: userId, // 包含userId以便追蹤
-      userType: result.data ? result.data.userType : userType, // 包含userType以便追蹤
+      userId: userId,
+      userType: result.data ? result.data.userType : userType,
+      moduleCode: "BK", // 標記來源模組
     };
   } catch (error) {
     // 安全獲取 userId（在 catch 區塊中重新定義以確保作用域）
@@ -1160,13 +1150,31 @@ async function DD_processForBK(data) {
       "DD_processForBK",
     );
 
-    // 返回錯誤結果
+    // 使用統一錯誤格式化
+    const errorResult = {
+      success: false,
+      error: error.toString(),
+      errorType: "BK_PROCESS_ERROR",
+      partialData: {
+        subject: data ? data.subjectName : "未知科目",
+        amount: data ? data.amount : 0,
+        rawAmount: data ? data.rawAmount : "0",
+        paymentMethod: data ? data.paymentMethod : "未指定支付方式",
+      },
+    };
+
+    const formattedError = await BK.BK_formatSystemReplyMessage(errorResult, "DD", {
+      userId: userId,
+      processId: processId,
+    });
+
     return {
       success: false,
       error: error.toString(),
       module: "BK",
-      responseMessage: `記帳處理發生錯誤：${error.message}\n請重新嘗試或聯繫管理員。`,
-      processId: Utilities.getUuid().substring(0, 8),
+      responseMessage: formattedError.responseMessage,
+      processId: processId,
+      moduleCode: "DD", // 標記來源模組
     };
   }
 }
