@@ -169,7 +169,7 @@ async function WH_fastTrack(event, requestId) {
     WH_simpleLog("info", `超簡化路徑處理: "${messageText.substr(0, 30)}..." [${requestId}]`, userId);
 
     // 直接調用BK超簡化記帳
-    const result = await BK_quickBookkeeping(event, requestId);
+    const result = await BK.BK_quickBookkeeping(event, requestId);
     
     // 立即回覆用戶
     await WH_quickReply(event.replyToken, result, requestId);
@@ -210,7 +210,7 @@ async function WH_quickReply(replyToken, result, requestId) {
       const data = result.data || {};
       responseMessage = `記帳成功！\n金額：${data.rawAmount || data.amount}元\n支付方式：${data.paymentMethod}\n時間：${data.date}\n科目：${data.subjectName}\n備註：${data.remark || "無"}\n使用者類型：${data.userType || "J"}`;
     } else {
-      responseMessage = `記帳失敗！\n原因：${result?.error || "未知錯誤"}\n請重新嘗試。`;
+      responseMessage = BK.BK_simpleFormat(result, requestId);
     }
 
     // 直接發送，簡化檢查
