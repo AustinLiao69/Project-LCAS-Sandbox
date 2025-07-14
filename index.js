@@ -43,6 +43,14 @@ const DD = require('./Modules/2031. DD1.js');    // 數據分發模組
 const DL = require('./Modules/2010. DL.js');    // 數據記錄模組
 const AM = require('./Modules/2009. AM.js');    // 帳號管理模組
 
+// 預先初始化 BK 模組
+console.log('🔧 初始化 BK 模組...');
+BK.BK_initialize().then(() => {
+  console.log('✅ BK 模組初始化完成');
+}).catch((error) => {
+  console.log('❌ BK 模組初始化失敗:', error);
+});
+
 /**
  * 05. Google Sheets連線狀態驗證
  * @version 2025-06-30-V1.0.0
