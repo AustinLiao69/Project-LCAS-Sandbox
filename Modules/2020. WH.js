@@ -1,5 +1,5 @@
 /**
- * WH_Webhook處理模組_2.0.18
+ * WH_Webhook處理模組_2.0.19
  * @module Webhook模組
  * @description LINE Webhook處理模組 - 實現 BR-0007 簡化記帳路徑
  * @update 2025-07-11: 實現 BR-0007 簡化記帳路徑，WH → BK 2.0 → Firestore
