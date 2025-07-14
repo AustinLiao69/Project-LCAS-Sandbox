@@ -1,5 +1,5 @@
 /**
- * DD1_核心協調模組_3.0.0
+ * DD1_核心協調模組_3.0.1
  * @module 核心協調模組
  * @description 根據預定義的規則將數據分配到不同的資料庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息 - 完全Firestore版本
  * @author AustinLiao69
