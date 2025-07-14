@@ -1,8 +1,8 @@
 /**
- * BK_記帳處理模組_2.0.2
+ * BK_記帳處理模組_2.0.3
  * @module 記帳處理模組
- * @description LCAS 記帳處理模組 - 實現 BK 2.0 版本，支援簡化記帳路徑
- * @update 2025-07-11: 升級至2.0.0版本，實現 BR-0007 簡化記帳路徑，整合 DD 核心函數
+ * @description LCAS 記帳處理模組 - 實現 BR-0008 A/B Testing超簡化記帳路徑
+ * @update 2025-07-14: 升級至2.0.3版本，實現 BR-0008 超簡化函數，26→8個函數
  */
 
 // 引入所需模組
@@ -2513,6 +2513,252 @@ async function BK_processDirectBookkeeping(event) {
   }
 }
 
+/**
+ * 33. 一站式記帳處理 - BR-0008超簡化函數
+ * @version 2025-07-14-V2.0.3
+ * @date 2025-07-14 16:00:00
+ * @description 整合解析、匹配、處理，大幅減少函數調用
+ * @param {Object} event - LINE事件對象
+ * @param {string} requestId - 請求ID
+ */
+async function BK_quickBookkeeping(event, requestId) {
+  const startTime = Date.now();
+  
+  try {
+    const userId = event.source?.userId;
+    const messageText = event.message?.text;
+    
+    BK_logInfo(`BK_quickBookkeeping: 開始一站式處理 [${requestId}]`, "超簡化記帳", userId, "BK_quickBookkeeping");
+
+    // 快速解析（內聯BK_parseInputFormat邏輯）
+    const parseResult = BK_fastParse(messageText, requestId);
+    if (!parseResult) {
+      throw new Error("無法解析記帳格式");
+    }
+
+    // 精確匹配科目（簡化版，跳過模糊匹配）
+    const subjectInfo = await BK_getSubjectCode(parseResult.subject, userId);
+    if (!subjectInfo) {
+      throw new Error(`找不到科目「${parseResult.subject}」`);
+    }
+
+    // 決定收入/支出
+    let action = "支出";
+    if (subjectInfo.majorCode && subjectInfo.majorCode.toString().startsWith("8")) {
+      action = "收入";
+    }
+
+    // 準備完整記帳數據
+    const bookkeepingData = {
+      action: action,
+      subjectName: subjectInfo.subName,
+      amount: parseResult.amount,
+      majorCode: subjectInfo.majorCode,
+      subCode: subjectInfo.subCode,
+      majorName: subjectInfo.majorName,
+      paymentMethod: parseResult.paymentMethod || "刷卡",
+      text: parseResult.subject,
+      originalSubject: parseResult.subject,
+      userId: userId,
+      userType: "J",
+      processId: requestId,
+      rawAmount: parseResult.rawAmount,
+      income: action === "收入" ? parseResult.amount : '',
+      expense: action === "支出" ? parseResult.amount : ''
+    };
+
+    // 直接儲存（內聯處理邏輯）
+    const result = await BK_directSave(bookkeepingData, requestId);
+    
+    const processingTime = Date.now() - startTime;
+    BK_logInfo(`BK_quickBookkeeping: 處理完成，耗時 ${processingTime}ms [${requestId}]`, "超簡化記帳", userId, "BK_quickBookkeeping");
+
+    return {
+      success: true,
+      data: result.data,
+      processingTime: processingTime
+    };
+
+  } catch (error) {
+    const processingTime = Date.now() - startTime;
+    BK_logError(`BK_quickBookkeeping: 失敗 ${error}, 耗時 ${processingTime}ms [${requestId}]`, "超簡化記帳", event.source?.userId || "", "QUICK_BOOKING_ERROR", error.toString(), "BK_quickBookkeeping");
+    
+    return {
+      success: false,
+      error: error.toString(),
+      processingTime: processingTime
+    };
+  }
+}
+
+/**
+ * 34. 快速解析與匹配 - BR-0008超簡化函數
+ * @version 2025-07-14-V2.0.3
+ * @date 2025-07-14 16:00:00
+ * @description 整合解析和精確匹配邏輯，跳過複雜驗證
+ * @param {string} messageText - 訊息文字
+ * @param {string} requestId - 請求ID
+ */
+function BK_fastParse(messageText, requestId) {
+  try {
+    if (!messageText || messageText.trim() === "") {
+      return null;
+    }
+
+    const message = messageText.trim();
+
+    // 簡化正則，支援標準格式：科目+金額
+    const regex = /^(.+?)(\d+)(.*)$/;
+    const match = message.match(regex);
+
+    if (match) {
+      const subject = match[1].trim();
+      const amount = parseInt(match[2], 10);
+      const rawAmount = match[2];
+      
+      let paymentMethod = "刷卡"; // 預設值
+      const remainingText = match[3].trim();
+      
+      // 簡化支付方式識別
+      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
+      for (const method of paymentMethods) {
+        if (remainingText.includes(method)) {
+          paymentMethod = method;
+          break;
+        }
+      }
+
+      if (subject === "") {
+        return null;
+      }
+
+      BK_logDebug(`BK_fastParse: 解析成功 - 科目:「${subject}」, 金額:${amount}, 支付方式:「${paymentMethod}」 [${requestId}]`, "快速解析", "", "BK_fastParse");
+
+      return {
+        subject: subject,
+        amount: amount,
+        rawAmount: rawAmount,
+        paymentMethod: paymentMethod,
+      };
+    } else {
+      return null;
+    }
+  } catch (error) {
+    BK_logError(`BK_fastParse: 解析錯誤 ${error} [${requestId}]`, "快速解析", "", "FAST_PARSE_ERROR", error.toString(), "BK_fastParse");
+    return null;
+  }
+}
+
+/**
+ * 35. 直接儲存到Firestore - BR-0008超簡化函數
+ * @version 2025-07-14-V2.0.3
+ * @date 2025-07-14 16:00:00
+ * @description 整合記帳處理和Firestore儲存，跳過複雜驗證
+ * @param {Object} bookkeepingData - 記帳數據
+ * @param {string} requestId - 請求ID
+ */
+async function BK_directSave(bookkeepingData, requestId) {
+  try {
+    const processId = requestId;
+    
+    // 快速生成ID
+    const bookkeepingId = await BK_generateBookkeepingId(processId);
+    
+    // 快速時間格式化
+    const today = new Date();
+    const formattedDate = moment(today).tz(BK_CONFIG.TIMEZONE).format("YYYY/MM/DD HH:mm");
+    const formattedTime = moment(today).tz(BK_CONFIG.TIMEZONE).format("HH:mm");
+    const formattedDay = moment(today).tz(BK_CONFIG.TIMEZONE).format("YYYY/MM/DD");
+
+    let income = '', expense = '';
+    if (bookkeepingData.action === "收入") {
+      income = bookkeepingData.amount.toString();
+    } else {
+      expense = bookkeepingData.amount.toString();
+    }
+
+    // 簡化備註處理
+    const remark = bookkeepingData.text || bookkeepingData.originalSubject || "";
+
+    // 準備Firestore數據
+    const firestoreData = {
+      收支ID: bookkeepingId,
+      使用者類型: bookkeepingData.userType,
+      日期: formattedDay,
+      時間: formattedTime,
+      大項代碼: bookkeepingData.majorCode,
+      子項代碼: bookkeepingData.subCode,
+      支付方式: bookkeepingData.paymentMethod,
+      子項名稱: bookkeepingData.subjectName,
+      UID: bookkeepingData.userId,
+      備註: remark,
+      收入: income || null,
+      支出: expense || null,
+      同義詞: bookkeepingData.originalSubject || '',
+      currency: 'NTD',
+      timestamp: admin.firestore.Timestamp.now()
+    };
+
+    // 直接寫入Firestore
+    const db = BK_INIT_STATUS.firestore_db;
+    const ledgerId = `user_${bookkeepingData.userId}`;
+    
+    const docRef = await db
+      .collection('ledgers')
+      .doc(ledgerId)
+      .collection('entries')
+      .add(firestoreData);
+
+    BK_logInfo(`BK_directSave: 成功儲存 ${bookkeepingId}, 文檔ID: ${docRef.id} [${requestId}]`, "直接儲存", bookkeepingData.userId, "BK_directSave");
+
+    return {
+      success: true,
+      data: {
+        id: bookkeepingId,
+        date: formattedDate,
+        subjectName: bookkeepingData.subjectName,
+        amount: bookkeepingData.amount,
+        rawAmount: bookkeepingData.rawAmount,
+        action: bookkeepingData.action,
+        paymentMethod: bookkeepingData.paymentMethod,
+        remark: remark,
+        userId: bookkeepingData.userId,
+        userType: bookkeepingData.userType
+      }
+    };
+
+  } catch (error) {
+    BK_logError(`BK_directSave: 儲存失敗 ${error} [${requestId}]`, "直接儲存", bookkeepingData.userId || "", "DIRECT_SAVE_ERROR", error.toString(), "BK_directSave");
+    
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 36. 簡化回覆格式 - BR-0008超簡化函數
+ * @version 2025-07-14-V2.0.3
+ * @date 2025-07-14 16:00:00
+ * @description 快速格式化回覆訊息，減少處理時間
+ * @param {Object} result - 處理結果
+ * @param {string} requestId - 請求ID
+ */
+function BK_simpleFormat(result, requestId) {
+  try {
+    if (result && result.success && result.data) {
+      const data = result.data;
+      return `記帳成功！\n金額：${data.rawAmount || data.amount}元 (${data.action})\n支付方式：${data.paymentMethod}\n時間：${data.date}\n科目：${data.subjectName}\n備註：${data.remark || "無"}\n使用者類型：${data.userType || "J"}`;
+    } else {
+      return `記帳失敗！\n原因：${result?.error || "未知錯誤"}\n請重新嘗試。`;
+    }
+  } catch (error) {
+    BK_logError(`BK_simpleFormat: 格式化錯誤 ${error} [${requestId}]`, "簡化格式", "", "SIMPLE_FORMAT_ERROR", error.toString(), "BK_simpleFormat");
+    return `記帳處理發生錯誤，請重新嘗試。`;
+  }
+}
+
 // 導出需要被外部使用的函數
 module.exports = {
   BK_processBookkeeping,
@@ -2538,5 +2784,10 @@ module.exports = {
   BK_checkMultipleMapping,
   BK_getLedgerInfo,
   BK_writeToLogSheet,
-  BK_calculateLevenshteinDistance
+  BK_calculateLevenshteinDistance,
+  // BR-0008 超簡化函數（4個新函數）
+  BK_quickBookkeeping,
+  BK_fastParse,
+  BK_directSave,
+  BK_simpleFormat
 };

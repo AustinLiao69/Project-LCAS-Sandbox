@@ -1,0 +1,25 @@
+WH_verifySignature: 測試模式，跳過簽章驗證
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [a134b31f] (INFO)
+檢測到需要回覆的訊息，啟用真正同步處理 [a134b31f]
+[WH 2.0.16 LOG] WH 2.0.17: 檢測到需要回覆的訊息，啟用真正同步處理 [a134b31f] (INFO)
+開始同步處理請求 [a134b31f]
+[WH 2.0.16 LOG] WH 2.0.17: 開始同步處理請求 [a134b31f] (INFO)
+[WH 2.0.16 LOG] WH 2.0.20: A/B Testing - 分配到B組-超簡化路徑, 群組=B [a134b31f] (INFO)
+使用B組超簡化路徑處理 [a134b31f]
+WH_fastTrack: 開始超簡化處理 [a134b31f]
+[2025-07-14 11:33:02] [INFO] [WH-SIMPLIFIED] 超簡化路徑處理: "早餐666666..." [a134b31f]
+[2025-07-14T03:33:02.742Z] [INFO] [BK] BK_quickBookkeeping: 開始一站式處理 [a134b31f] | 超簡化記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_quickBookkeeping
+[2025-07-14T03:33:02.742Z] [DEBUG] [BK] BK_fastParse: 解析成功 - 科目:「早餐」, 金額:666666, 支付方式:「刷卡」 [a134b31f] | 快速解析 |  | BK_fastParse
+[2025-07-14T03:33:02.743Z] [INFO] [BK] 查詢科目代碼: "早餐", 用戶ID: Uae47d9d496e4596d70ed724a7d6e2948, ID=c2ed7db6 | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getSubjectCode
+[2025-07-14T03:33:02.955Z] [INFO] [BK] 讀取用戶 Uae47d9d496e4596d70ed724a7d6e2948 科目表: 62筆數據 [c2ed7db6] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getSubjectCode
+[2025-07-14T03:33:02.956Z] [INFO] [BK] 通過同義詞成功查詢科目代碼: 103-10301 餐飲 [c2ed7db6] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getSubjectCode
+[2025-07-14T03:33:02.956Z] [DEBUG] [BK] 開始生成收支ID [a134b31f] | ID生成 |  | BK_generateBookkeepingId
+[2025-07-14T03:33:03.102Z] [INFO] [BK] 生成收支ID: 20250714-00004 [a134b31f] | ID生成 |  | BK_generateBookkeepingId
+[2025-07-14T03:33:03.225Z] [INFO] [BK] BK_directSave: 成功儲存 20250714-00004, 文檔ID: sUqIbt5CxjI4sDeuFPk9 [a134b31f] | 直接儲存 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_directSave
+[2025-07-14T03:33:03.225Z] [INFO] [BK] BK_quickBookkeeping: 處理完成，耗時 483ms [a134b31f] | 超簡化記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_quickBookkeeping
+WH_quickReply: 回覆錯誤 AxiosError: Request failed with status code 400 [a134b31f]
+WH_fastTrack: 處理完成，耗時 824ms [a134b31f]
+AB_METRICS: {"timestamp":"2025-07-14T03:33:03.566Z","group":"B","success":true,"processingTime":824,"requestId":"a134b31f","withinThreshold":true}
+同步處理完成，已清理數據 [a134b31f]
+[WH 2.0.16 LOG] WH 2.0.17: 同步處理完成 [a134b31f] (INFO)
+同步處理完成 [a134b31f]
