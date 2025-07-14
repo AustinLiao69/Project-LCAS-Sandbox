@@ -1,0 +1,51 @@
+！
+WH_verifySignature: 測試模式，跳過簽章驗證
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [8c0da260] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [8c0da260]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [8c0da260] (INFO)
+開始非同步處理請求 [8c0da260]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [8c0da260] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [8c0da260] (INFO)
+處理消息事件: text [8c0da260]
+收到文本消息: "晚餐77777" [8c0da260]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "晚餐77777" [8c0da260] (INFO)
+準備訊息數據: {"text":"晚餐77777","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1752222850811,"replyToken":"bf983695d6df409694a621e366331472"} [8c0da260]
+檢測到簡單記帳格式，使用 BK 2.0 直連路徑 [8c0da260]
+[WH 2.0.16 LOG] WH 2.0.17: 使用 BK 2.0 簡化路徑處理簡單記帳 [8c0da260] (INFO)
+[2025-07-11T08:34:11.478Z] [INFO] [BK] BK 2.0: 開始處理簡單記帳 [20489feb] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+[2025-07-11T08:34:11.478Z] [INFO] [BK] BK 2.0: 處理用戶 Uae47d9d496e4596d70ed724a7d6e2948 的訊息: "晚餐77777" [20489feb] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+[2025-07-11T08:34:11.479Z] [INFO] [BK] 處理用戶消息: "晚餐77777" (帳本: user_Uae47d9d496e4596d70ed724a7d6e2948) | 訊息處理 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processUserMessage
+[2025-07-11T08:34:11.479Z] [DEBUG] [BK] 開始解析文本「晚餐77777」[32e7ccdf] | 文本解析 |  | BK_parseInputFormat
+[2025-07-11T08:34:11.479Z] [INFO] [BK] 識別標準格式 - 科目:「晚餐」, 金額:77777, 支付方式:「預設」 [32e7ccdf] | 文本解析 |  | BK_parseInputFormat
+[2025-07-11T08:34:11.483Z] [INFO] [BK] 查詢科目代碼: "晚餐", 用戶ID: Uae47d9d496e4596d70ed724a7d6e2948, ID=18686586 | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getSubjectCode
+[2025-07-11T08:34:11.483Z] [ERROR] [BK] 科目查詢出錯: TypeError: Cannot read properties of null (reading 'collection') [18686586] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getSubjectCode
+[2025-07-11T08:34:11.483Z] [WARNING] [BK] 精確匹配發生錯誤 Error: 系統科目表暫時無法使用，請留言給客服人員。 [32e7ccdf] | 科目匹配 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processUserMessage
+[2025-07-11T08:34:11.484Z] [DEBUG] [BK] 【模糊匹配】開始處理: "晚餐", 閾值: 0.7, 用戶: Uae47d9d496e4596d70ed724a7d6e2948 | 模糊匹配 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_fuzzyMatch
+[2025-07-11T08:34:11.484Z] [INFO] [BK] 開始從Firestore獲取科目資料，使用者帳本: user_Uae47d9d496e4596d70ed724a7d6e2948 | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getAllSubjects
+[2025-07-11T08:34:11.484Z] [ERROR] [BK] 獲取科目資料失敗: TypeError: Cannot read properties of null (reading 'collection') | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_getAllSubjects
+[2025-07-11T08:34:11.484Z] [WARNING] [BK] 模糊匹配發生錯誤 TypeError: Cannot read properties of null (reading 'collection') [32e7ccdf] | 科目匹配 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processUserMessage
+[2025-07-11T08:34:11.484Z] [WARNING] [BK] 科目匹配失敗 [32e7ccdf] | 科目匹配 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processUserMessage
+[2025-07-11T08:34:11.484Z] [INFO] [BK] BK 2.0: 訊息處理結果: {"type":"記帳","processed":false,"reason":"無法識別科目: \"晚餐\"","processId":"32e7ccdf","errorType":"UNKNOWN_SUBJECT"} [20489feb] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+[2025-07-11T08:34:11.484Z] [WARNING] [BK] BK 2.0: 訊息解析失敗 [20489feb] | 簡單記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | BK_processDirectBookkeeping
+DD_distributeData處理完成，結果預覽: {"success":false,"hasResponseMessage":true,"responseMsgLength":31,"errorType":"UNKNOWN_SUBJECT","moduleCode":"無","hasPartialData":false} [8c0da260]
+準備回覆訊息 [8c0da260]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","error","errorType","responseMessage","processId","userId","replyToken"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"error":"無法識別科目: \"晚餐\"","errorType":"UNKNOWN_SUBJECT","responseMessage":"記帳失敗！\n原因：無法識別科目: \"晚餐\"\n請檢查格式後重試。","processId":"20489feb","userId":"Uae47d9d496e4596d70ed724a7d6e2948","rep...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=31
+WH_replyMessage: 使用responseMessage屬性 (記帳失敗！
+原因：無法識別科目: "晚餐"
+請檢查格式後重試...)
+WH_replyMessage: 開始回覆訊息: 記帳失敗！
+原因：無法識別科目: "晚餐"
+請檢查格式後重試。
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳失敗！
+原因：無法識別科目: "晚餐"
+請檢查格式後重試。 (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+訊息回覆結果: {} [8c0da260]
+非同步處理完成，已清理數據 [8c0da260]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [8c0da260] (INFO)
+WH_replyMessage 錯誤: AxiosError: Request failed with status code 400
+錯誤響應: {"message":"Invalid reply token"}
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息異常: AxiosError: Request failed with status code 400 (ERROR)
