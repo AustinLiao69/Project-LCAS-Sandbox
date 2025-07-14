@@ -783,23 +783,25 @@ function BK_prepareBookkeepingData(bookkeepingId, data, processId) {
 
   let income = '', expense = '';
 
+  // 優先使用 action 參數進行判斷
   if (data.action === "收入") {
-    income = data.income || '';
+    income = data.income || data.amount || '';
     expense = '';
     BK_logInfo(`根據action判定為收入，金額=${income} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
   } 
   else if (data.action === "支出") {
-    expense = data.expense || '';
+    expense = data.expense || data.amount || '';
     income = '';
     BK_logInfo(`根據action判定為支出，金額=${expense} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
   }
   else {
-    BK_logWarn(`未設置action，退回到傳統判斷方式 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
+    BK_logWarn(`未設置action (${data.action})，退回到傳統判斷方式 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
 
+    // 傳統判斷方式：依序檢查 income/expense 參數
     if (data.income !== undefined && data.income !== '') {
       income = data.income;
       expense = '';
-      BK_logInfo(`使用收入金額: ${income} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
+      BK_logInfo(`傳統方式：使用收入金額: ${income} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
 
       if (data.expense !== undefined && data.expense !== '') {
         BK_logWarn(`收到同時設置income和expense的矛盾數據，優先使用income [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
@@ -807,14 +809,21 @@ function BK_prepareBookkeepingData(bookkeepingId, data, processId) {
     } else if (data.expense !== undefined && data.expense !== '') {
       expense = data.expense;
       income = '';
-      BK_logInfo(`使用支出金額: ${expense} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
-    } else {
-      if (data.amount !== undefined && data.amount !== '') {
-        BK_logCritical(`收到未處理的amount=${data.amount}，但BK模組不處理amount! DD模組應負責轉換 [${processId}]`, 
-                      "數據錯誤", data.userId || "", "DD_ERROR", "DD模組未正確轉換amount", "BK_prepareBookkeepingData");
+      BK_logInfo(`傳統方式：使用支出金額: ${expense} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
+    } else if (data.amount !== undefined && data.amount !== '') {
+      // 如果只有 amount，根據科目代碼判斷收入/支出
+      const majorCode = data.majorCode;
+      if (majorCode && String(majorCode).startsWith('8')) {
+        income = data.amount;
+        expense = '';
+        BK_logInfo(`根據科目代碼${majorCode}判定為收入，金額=${income} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
       } else {
-        BK_logWarn(`未收到任何金額信息 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
+        expense = data.amount;
+        income = '';
+        BK_logInfo(`根據科目代碼${majorCode}判定為支出，金額=${expense} [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
       }
+    } else {
+      BK_logWarn(`未收到任何金額信息 [${processId}]`, "數據準備", data.userId || "", "BK_prepareBookkeepingData");
     }
   }
 
@@ -2426,8 +2435,30 @@ async function BK_processDirectBookkeeping(event) {
 
       BK_logInfo(`BK 2.0: 準備調用 BK_processBookkeeping [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
 
-      // 4. 執行記帳
-      const result = await BK_processBookkeeping(bookkeepingData);
+      // 4. 準備完整的記帳數據，確保 action 參數正確傳遞
+      const completeBookkeepingData = {
+        action: bookkeepingData.action,
+        subjectName: bookkeepingData.subjectName,
+        amount: bookkeepingData.amount,
+        majorCode: bookkeepingData.majorCode,
+        subCode: bookkeepingData.subCode,
+        majorName: bookkeepingData.majorName,
+        paymentMethod: bookkeepingData.paymentMethod,
+        text: bookkeepingData.text,
+        originalSubject: bookkeepingData.originalSubject,
+        userId: bookkeepingData.userId,
+        userType: bookkeepingData.userType,
+        processId: processId,
+        rawAmount: bookkeepingData.rawAmount,
+        // 明確設置 income 和 expense 參數
+        income: bookkeepingData.action === "收入" ? bookkeepingData.amount : '',
+        expense: bookkeepingData.action === "支出" ? bookkeepingData.amount : ''
+      };
+
+      BK_logInfo(`BK 2.0: 準備完整記帳數據，action=${completeBookkeepingData.action}, income=${completeBookkeepingData.income}, expense=${completeBookkeepingData.expense} [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
+
+      // 5. 執行記帳
+      const result = await BK_processBookkeeping(completeBookkeepingData);
       BK_logInfo(`BK 2.0: 記帳結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`, "簡單記帳", userId, "BK_processDirectBookkeeping");
 
       // 5. 格式化回覆訊息
