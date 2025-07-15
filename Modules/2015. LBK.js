@@ -776,9 +776,9 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
 
 /**
  * 13. 格式化回覆訊息
- * @version 2025-07-15-V1.0.4
+ * @version 2025-07-15-V1.0.5
  * @date 2025-07-15 16:30:00
- * @description 格式化成功或失敗的回覆訊息，強化錯誤處理支援，調整顯示順序和備註內容
+ * @description 格式化成功或失敗的回覆訊息，統一所有錯誤格式為7行標準格式
  */
 function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
   try {
@@ -806,32 +806,75 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
              `收支ID：${resultData.id}\n` +
              `使用者類型：J`;
     } else {
-      // 處理錯誤情況
+      // 處理錯誤情況 - 統一使用7行詳細格式
       const errorMessage = options.error || "處理失敗";
       const originalInput = options.originalInput || "";
-
-      // 如果有部分解析資料，顯示更詳細的錯誤訊息
+      
+      // 嘗試從partialData提取資訊
+      let amount = "未知";
+      let paymentMethod = "未指定";
+      let subject = "未知科目";
+      
       if (options.partialData) {
-        const partialData = options.partialData;
-        return `記帳失敗！\n` +
-               `金額：${partialData.amount || '未知'}元\n` +
-               `支付方式：${partialData.paymentMethod || '未指定'}\n` +
-               `時間：${currentDateTime}\n` +
-               `科目：${partialData.subject || '未知科目'}\n` +
-               `備註：${originalInput}\n` +
-               `使用者類型：J\n` +
-               `錯誤原因：${errorMessage}`;
+        amount = options.partialData.amount || "未知";
+        paymentMethod = options.partialData.paymentMethod || "未指定";
+        subject = options.partialData.subject || "未知科目";
       } else {
-        // 簡單錯誤訊息
-        return `記帳失敗！\n` +
-               `時間：${currentDateTime}\n` +
-               `輸入內容：${originalInput}\n` +
-               `錯誤原因：${errorMessage}`;
+        // 即使沒有partialData，也嘗試從originalInput中提取資訊
+        if (originalInput) {
+          // 嘗試提取金額
+          const amountMatch = originalInput.match(/(\d+)/);
+          if (amountMatch) {
+            amount = amountMatch[1];
+          }
+          
+          // 嘗試識別支付方式
+          const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
+          for (const method of paymentMethods) {
+            if (originalInput.includes(method)) {
+              paymentMethod = method;
+              break;
+            }
+          }
+          
+          // 嘗試提取科目（移除數字和支付方式後的文字）
+          const subjectMatch = originalInput.replace(/\d+/g, '').replace(/(現金|刷卡|行動支付|轉帳|元|塊|圓)/g, '').trim();
+          if (subjectMatch) {
+            subject = subjectMatch;
+          }
+        }
       }
+
+      // 統一的7行錯誤格式
+      return `記帳失敗！\n` +
+             `金額：${amount}元\n` +
+             `支付方式：${paymentMethod}\n` +
+             `時間：${currentDateTime}\n` +
+             `科目：${subject}\n` +
+             `備註：${originalInput}\n` +
+             `使用者類型：J\n` +
+             `錯誤原因：${errorMessage}`;
     }
 
   } catch (error) {
-    return `記帳失敗！\n時間：${new Date().toLocaleString('zh-TW', {timeZone: 'Asia/Taipei'})}\n錯誤原因：訊息格式化錯誤`;
+    // 即使格式化過程出錯，也要保持統一格式
+    const currentDateTime = new Date().toLocaleString("zh-TW", {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    
+    return `記帳失敗！\n` +
+           `金額：未知元\n` +
+           `支付方式：未指定\n` +
+           `時間：${currentDateTime}\n` +
+           `科目：未知科目\n` +
+           `備註：${options.originalInput || ''}\n` +
+           `使用者類型：J\n` +
+           `錯誤原因：訊息格式化錯誤`;
   }
 }
 
@@ -851,8 +894,6 @@ function LBK_removeAmountFromText(text, amount, paymentMethod, processId) {
     // 移除金額
     if (text.includes(" " + amountStr)) {
       result = text.replace(" " + amountStr, "").trim();
-    }```text
-
     } else if (text.endsWith(amountStr)) {
       result = text.substring(0, text.length - amountStr.length).trim();
     }
@@ -863,7 +904,7 @@ function LBK_removeAmountFromText(text, amount, paymentMethod, processId) {
     }
 
     // 移除幣別單位
-    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓)$`, "i");
+    const amountEndRegex = new RegExp(amountStr + "(元|塊|圓)$", "i");
     const match = result.match(amountEndRegex);
     if (match && match.index > 0) {
       result = result.substring(0, match.index).trim();
