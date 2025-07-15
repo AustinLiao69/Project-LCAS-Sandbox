@@ -79,7 +79,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.0.6",
+        moduleVersion: "1.1.0",
         errorType: parseResult.errorType || "PARSE_ERROR"
       };
     }
@@ -104,7 +104,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.0.6",
+        moduleVersion: "1.1.0",
         errorType: bookkeepingResult.errorType || "BOOKING_ERROR"
       };
     }
@@ -124,7 +124,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       module: "LBK",
       data: bookkeepingResult.data,
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.0.6"
+      moduleVersion: "1.1.0"
     };
 
   } catch (error) {
@@ -144,7 +144,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       moduleCode: "LBK",
       module: "LBK",
       processingTime: 0,
-      moduleVersion: "1.0.6",
+      moduleVersion: "1.1.0",
       errorType: "SYSTEM_ERROR"
     };
   }
@@ -809,12 +809,12 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
       // 處理錯誤情況 - 統一使用7行詳細格式
       const errorMessage = options.error || "處理失敗";
       const originalInput = options.originalInput || "";
-      
+
       // 嘗試從partialData提取資訊
       let amount = "未知";
       let paymentMethod = "未指定";
       let subject = "未知科目";
-      
+
       if (options.partialData) {
         amount = options.partialData.amount || "未知";
         paymentMethod = options.partialData.paymentMethod || "未指定";
@@ -827,7 +827,7 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
           if (amountMatch) {
             amount = amountMatch[1];
           }
-          
+
           // 嘗試識別支付方式
           const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
           for (const method of paymentMethods) {
@@ -836,7 +836,7 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
               break;
             }
           }
-          
+
           // 嘗試提取科目（移除數字和支付方式後的文字）
           const subjectMatch = originalInput.replace(/\d+/g, '').replace(/(現金|刷卡|行動支付|轉帳|元|塊|圓)/g, '').trim();
           if (subjectMatch) {
@@ -852,6 +852,7 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
              `時間：${currentDateTime}\n` +
              `科目：${subject}\n` +
              `備註：${originalInput}\n` +
+```
              `使用者類型：J\n` +
              `錯誤原因：${errorMessage}`;
     }
@@ -866,7 +867,7 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
       hour: "2-digit",
       minute: "2-digit"
     });
-    
+
     return `記帳失敗！\n` +
            `金額：未知元\n` +
            `支付方式：未指定\n` +
