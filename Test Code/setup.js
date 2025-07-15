@@ -1,10 +1,10 @@
 
 /**
- * 測試環境設定_1.1.2
+ * 測試環境設定_1.1.3
  * @module 測試環境設定
- * @description 測試前的全域設定與準備 - 加入動態測試資料生成工具支援
- * @version 1.1.2
- * @update 2025-07-15: 版次升級，加入動態測試資料生成工具函數，強化Firestore測試支援
+ * @description 測試前的全域設定與準備 - 移除 Firestore 依賴，建立純靜態資料管理機制
+ * @version 1.1.3
+ * @update 2025-07-15: 移除 Firestore 測試工具，建立基於 9999.json 的純靜態測試資料管理
  * @date 2025-07-15 16:00:00
  */
 
@@ -17,17 +17,17 @@ global.console = {
   info: jest.fn(console.info)
 };
 
-// 測試資料庫設定
+// 純靜態測試資料庫
 const testDatabase = {
   ledgers: new Map(),
   activities: new Map(),
   users: new Map(),
-  dynamicSubjects: new Map(), // 動態科目快取
+  staticSubjects: new Map(), // 靜態科目快取
   testCaseHistory: new Map()  // 測試案例歷史
 };
 
-// 動態測試資料生成工具
-global.dynamicTestUtils = {
+// 基於 9999.json 的靜態測試工具
+global.staticTestUtils = {
   /**
    * 生成隨機用戶ID
    * @returns {string} 隨機用戶ID
@@ -52,19 +52,27 @@ global.dynamicTestUtils = {
   },
 
   /**
-   * 生成隨機科目名稱
-   * @param {string} category - 科目分類
-   * @returns {string} 隨機科目名稱
+   * 從 9999.json 載入科目（靜態）
+   * @returns {Array} 科目陣列
    */
-  generateRandomSubject: (category = 'general') => {
-    const subjects = {
-      general: ['測試科目', '隨機項目', '動態測試'],
-      food: ['午餐', '晚餐', '早餐', '咖啡', '下午茶'],
-      transport: ['捷運', '公車', '計程車', '油費', '停車費'],
-      income: ['薪水', '獎金', '兼職', '投資收益', '利息']
-    };
-    const subjectList = subjects[category] || subjects.general;
-    return subjectList[Math.floor(Math.random() * subjectList.length)];
+  loadSubjectsFrom9999: () => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const jsonPath = path.join(__dirname, '../Miscellaneous/9999. Subject_code.json');
+      const subjectData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      
+      return subjectData.map(item => ({
+        name: item.子項名稱,
+        code: item.子項代碼,
+        majorCode: item.大項代碼,
+        category: item.大項名稱,
+        synonyms: item.同義詞 ? item.同義詞.split(',').map(s => s.trim()) : []
+      }));
+    } catch (error) {
+      console.error(`❌ 載入 9999.json 失敗: ${error.message}`);
+      return [];
+    }
   },
 
   /**
@@ -87,7 +95,8 @@ global.dynamicTestUtils = {
     }
     testDatabase.testCaseHistory.get(testCase).push({
       timestamp: new Date().toISOString(),
-      data: data
+      data: data,
+      dataSource: '9999.json'
     });
   },
 
@@ -144,42 +153,35 @@ global.testUtils = {
   }),
   
   /**
-   * 動態創建測試科目
+   * 創建靜態測試科目（基於 9999.json）
    * @param {string} userId - 用戶ID
    * @param {number} count - 科目數量
    * @returns {Array} 測試科目陣列
    */
-  createDynamicTestSubjects: (userId, count = 10) => {
-    const subjects = [];
-    const categories = ['餐飲', '交通', '娛樂', '購物', '醫療'];
+  createStaticTestSubjects: (userId, count = 10) => {
+    const allSubjects = global.staticTestUtils.loadSubjectsFrom9999();
     
-    for (let i = 0; i < count; i++) {
-      const category = categories[Math.floor(Math.random() * categories.length)];
-      const subject = {
-        id: `subject_${userId}_${i}`,
-        name: `${category}${i + 1}`,
-        code: `${4000 + i}001`,
-        majorCode: `${4000 + i}`,
-        category: category,
-        userId: userId,
-        createdAt: new Date(),
-        active: true
-      };
-      subjects.push(subject);
+    if (allSubjects.length === 0) {
+      console.warn('⚠️ 無法載入 9999.json，使用預設科目');
+      return [];
     }
     
+    // 隨機選取指定數量的科目
+    const shuffled = allSubjects.sort(() => 0.5 - Math.random());
+    const selectedSubjects = shuffled.slice(0, Math.min(count, allSubjects.length));
+    
     // 儲存到快取
-    testDatabase.dynamicSubjects.set(userId, subjects);
-    return subjects;
+    testDatabase.staticSubjects.set(userId, selectedSubjects);
+    return selectedSubjects;
   },
 
   /**
-   * 獲取動態測試科目
+   * 獲取靜態測試科目
    * @param {string} userId - 用戶ID
    * @returns {Array} 科目陣列
    */
-  getDynamicTestSubjects: (userId) => {
-    return testDatabase.dynamicSubjects.get(userId) || [];
+  getStaticTestSubjects: (userId) => {
+    return testDatabase.staticSubjects.get(userId) || [];
   },
 
   /**
@@ -191,8 +193,10 @@ global.testUtils = {
       totalUsers: testDatabase.users.size,
       totalLedgers: testDatabase.ledgers.size,
       totalActivities: testDatabase.activities.size,
-      dynamicSubjects: Array.from(testDatabase.dynamicSubjects.values()).flat().length,
+      staticSubjects: Array.from(testDatabase.staticSubjects.values()).flat().length,
       testCaseHistory: testDatabase.testCaseHistory.size,
+      dataSource: '9999.json',
+      firestoreRemoved: true,
       timestamp: new Date().toISOString()
     };
     
@@ -203,70 +207,99 @@ global.testUtils = {
     testDatabase.ledgers.clear();
     testDatabase.activities.clear();
     testDatabase.users.clear();
-    testDatabase.dynamicSubjects.clear();
+    testDatabase.staticSubjects.clear();
     testDatabase.testCaseHistory.clear();
   }
 };
 
-// Firestore 測試支援工具
-global.firestoreTestUtils = {
+// 9999.json 驗證工具
+global.subject9999Utils = {
   /**
-   * 模擬 Firestore 查詢結果
-   * @param {Array} data - 模擬資料
-   * @returns {Object} 模擬 Firestore 查詢結果
+   * 驗證 9999.json 檔案存在
+   * @returns {boolean} 檔案是否存在
    */
-  mockFirestoreQuery: (data) => ({
-    docs: data.map(item => ({
-      id: item.id || Math.random().toString(36),
-      data: () => item
-    })),
-    forEach: (callback) => {
-      data.forEach((item, index) => {
-        callback({
-          id: item.id || Math.random().toString(36),
-          data: () => item
-        });
-      });
-    },
-    size: data.length,
-    empty: data.length === 0
-  }),
-
-  /**
-   * 生成模擬 Firestore 文檔
-   * @param {string} id - 文檔ID
-   * @param {Object} data - 文檔資料
-   * @returns {Object} 模擬文檔
-   */
-  mockFirestoreDoc: (id, data) => ({
-    id: id,
-    data: () => data,
-    exists: true,
-    ref: {
-      id: id,
-      collection: () => ({
-        doc: () => ({ id: Math.random().toString(36) })
-      })
-    }
-  }),
-
-  /**
-   * 驗證 Firestore 連接狀態
-   * @returns {boolean} 連接狀態
-   */
-  validateFirestoreConnection: () => {
+  validate9999JsonExists: () => {
     try {
-      const admin = require('firebase-admin');
-      return admin.apps.length > 0;
+      const fs = require('fs');
+      const path = require('path');
+      const jsonPath = path.join(__dirname, '../Miscellaneous/9999. Subject_code.json');
+      return fs.existsSync(jsonPath);
     } catch (error) {
       return false;
     }
+  },
+
+  /**
+   * 驗證 9999.json 資料完整性
+   * @returns {Object} 驗證結果
+   */
+  validate9999JsonIntegrity: () => {
+    try {
+      const subjects = global.staticTestUtils.loadSubjectsFrom9999();
+      
+      const validation = {
+        fileExists: true,
+        totalSubjects: subjects.length,
+        categoriesCount: new Set(subjects.map(s => s.category)).size,
+        subjectsWithSynonyms: subjects.filter(s => s.synonyms.length > 0).length,
+        validationPassed: subjects.length === 63, // 預期63筆科目
+        timestamp: new Date().toISOString()
+      };
+      
+      return validation;
+    } catch (error) {
+      return {
+        fileExists: false,
+        error: error.message,
+        validationPassed: false,
+        timestamp: new Date().toISOString()
+      };
+    }
+  },
+
+  /**
+   * 獲取 9999.json 統計摘要
+   * @returns {Object} 統計摘要
+   */
+  get9999JsonSummary: () => {
+    const subjects = global.staticTestUtils.loadSubjectsFrom9999();
+    const categories = new Map();
+    
+    subjects.forEach(subject => {
+      if (!categories.has(subject.category)) {
+        categories.set(subject.category, []);
+      }
+      categories.get(subject.category).push(subject);
+    });
+    
+    return {
+      totalSubjects: subjects.length,
+      categories: Array.from(categories.keys()),
+      categorySubjectCount: Object.fromEntries(
+        Array.from(categories.entries()).map(([cat, subs]) => [cat, subs.length])
+      ),
+      dataSource: '9999.json',
+      loadTime: new Date().toISOString()
+    };
   }
 };
 
 // 測試前準備
 beforeAll(async () => {
-  console.log('🔧 全域測試環境準備中...');
+  console.log('🔧 全域測試環境準備中（9999.json版本）...');
+  
+  // 驗證 9999.json 檔案
+  const fileExists = global.subject9999Utils.validate9999JsonExists();
+  console.log(`📋 9999.json 檔案檢查: ${fileExists ? '存在' : '不存在'}`);
+  
+  if (fileExists) {
+    const validation = global.subject9999Utils.validate9999JsonIntegrity();
+    console.log(`📊 9999.json 驗證結果:`);
+    console.log(`   總科目數: ${validation.totalSubjects}`);
+    console.log(`   分類數量: ${validation.categoriesCount}`);
+    console.log(`   有同義詞科目: ${validation.subjectsWithSynonyms}`);
+    console.log(`   驗證通過: ${validation.validationPassed ? '是' : '否'}`);
+  }
   
   // 建立測試用戶
   const testUsers = ['test_owner_1', 'test_owner_2', 'test_admin_1', 'test_admin_2', 
@@ -276,22 +309,19 @@ beforeAll(async () => {
     testDatabase.users.set(userId, global.testUtils.createTestUser(userId));
   });
   
-  // 初始化動態測試資料
-  console.log('🎲 初始化動態測試資料生成器...');
+  // 初始化靜態測試資料
+  console.log('🎲 初始化靜態測試資料生成器...');
   
-  // 為主要測試用戶準備動態科目
+  // 為主要測試用戶準備靜態科目
   const mainTestUsers = ['test_lbk_user_001', 'test_lbk_user_002'];
   mainTestUsers.forEach(userId => {
-    global.testUtils.createDynamicTestSubjects(userId, 15);
+    global.testUtils.createStaticTestSubjects(userId, 15);
   });
   
-  // 驗證 Firestore 連接
-  const firestoreConnected = global.firestoreTestUtils.validateFirestoreConnection();
-  console.log(`📊 Firestore 連接狀態: ${firestoreConnected ? '已連接' : '未連接'}`);
-  
   console.log('✅ 全域測試環境準備完成');
-  console.log('🎯 動態測試資料生成器已啟用');
-  console.log('🔍 每次測試執行將使用不同的隨機測試資料');
+  console.log('🎯 靜態測試資料生成器已啟用（基於 9999.json）');
+  console.log('🚫 Firestore 依賴已完全移除');
+  console.log('📋 每次測試執行使用 9999.json 中的真實科目資料');
 });
 
 // 測試後清理
@@ -301,16 +331,25 @@ afterAll(async () => {
   // 生成測試統計報告
   const stats = global.testUtils.generateTestStatistics();
   console.log('📊 測試執行統計:');
-  console.log(`   動態科目生成: ${stats.dynamicSubjects} 個`);
+  console.log(`   靜態科目使用: ${stats.staticSubjects} 個`);
   console.log(`   測試案例記錄: ${stats.testCaseHistory} 個`);
+  console.log(`   資料來源: ${stats.dataSource}`);
+  console.log(`   Firestore移除: ${stats.firestoreRemoved ? '是' : '否'}`);
   console.log(`   測試執行時間: ${stats.timestamp}`);
+  
+  // 獲取 9999.json 使用摘要
+  const summary = global.subject9999Utils.get9999JsonSummary();
+  console.log('📋 9999.json 使用摘要:');
+  console.log(`   使用科目總數: ${summary.totalSubjects}`);
+  console.log(`   使用分類: ${summary.categories.join(', ')}`);
   
   // 清理測試資料
   global.testUtils.cleanupTestData();
-  global.dynamicTestUtils.clearTestCaseHistory();
+  global.staticTestUtils.clearTestCaseHistory();
   
   console.log('✅ 全域測試環境清理完成');
-  console.log('🎲 動態測試資料生成器已重置');
+  console.log('🎲 靜態測試資料生成器已重置');
+  console.log('📋 9999.json 資料源驗證完成');
 });
 
 // 每個測試案例前的準備
