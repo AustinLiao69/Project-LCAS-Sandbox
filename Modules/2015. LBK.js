@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.0.6
+ * LBK_快速記帳模組_1.0.7
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 修正收支ID流水號邏輯，確保查詢儲存路徑一致性
- * @update 2025-07-15: 升級至v1.0.6，修正收支ID查詢邏輯，統一查詢和儲存路徑為user_${userId}
+ * @description LINE OA 專用快速記帳處理模組 - 修復語法錯誤，確保Jest測試正常執行
+ * @update 2025-07-15: 升級至v1.0.7，修復LBK_formatReplyMessage函數語法錯誤，移除無效markdown標記
  */
 
 // 引入所需模組
@@ -50,9 +50,9 @@ let LBK_INIT_STATUS = {
 
 /**
  * 01. 處理快速記帳的主函數
- * @version 2025-07-15-V1.0.4
- * @date 2025-07-15 16:30:00
- * @description 接收WH模組的記帳請求，執行完整的記帳處理流程 - 修正變數引用錯誤，強化錯誤處理機制
+ * @version 2025-07-15-V1.0.5
+ * @date 2025-07-15 16:45:00
+ * @description 接收WH模組的記帳請求，執行完整的記帳處理流程 - 修復語法錯誤，確保模組正常載入
  */
 async function LBK_processQuickBookkeeping(inputData) {
   const processId = inputData.processId || crypto.randomUUID().substring(0, 8);
@@ -776,9 +776,9 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
 
 /**
  * 13. 格式化回覆訊息
- * @version 2025-07-15-V1.0.5
- * @date 2025-07-15 16:30:00
- * @description 格式化成功或失敗的回覆訊息，統一所有錯誤格式為7行標準格式
+ * @version 2025-07-15-V1.0.6
+ * @date 2025-07-15 16:45:00
+ * @description 格式化成功或失敗的回覆訊息，統一所有錯誤格式為7行標準格式 - 修復語法錯誤
  */
 function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
   try {
@@ -852,7 +852,6 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
              `時間：${currentDateTime}\n` +
              `科目：${subject}\n` +
              `備註：${originalInput}\n` +
-```
              `使用者類型：J\n` +
              `錯誤原因：${errorMessage}`;
     }
