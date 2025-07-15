@@ -20,6 +20,7 @@ global.console = {
 // 模擬 Firebase Admin
 jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
+  apps: [], // 新增 apps 屬性，初始化為空陣列
   credential: {
     cert: jest.fn()
   },
