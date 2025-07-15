@@ -1,0 +1,37 @@
+WH_verifySignature: 測試模式，跳過簽章驗證
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [3ae231f7] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [3ae231f7]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [3ae231f7] (INFO)
+開始非同步處理請求 [3ae231f7]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [3ae231f7] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [3ae231f7] (INFO)
+處理消息事件: text [3ae231f7]
+收到文本消息: "早餐444444" [3ae231f7]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "早餐444444" [3ae231f7] (INFO)
+準備訊息數據: {"text":"早餐444444","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":1752547613140,"replyToken":"c3799c5e5859415a88d81c3495a49bb1"} [3ae231f7]
+LINE文字訊息強制走LBK直連路徑 [3ae231f7]
+[WH 2.0.16 LOG] WH 2.0.20: LINE文字訊息強制走LBK直連路徑，不經過DD模組 [3ae231f7] (INFO)
+[INFO] [LBK] 開始處理快速記帳 [3ae231f7] | 快速記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_processQuickBookkeeping
+[DEBUG] [LBK] 解析用戶訊息: "早餐444444" [3ae231f7] | 訊息解析 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_parseUserMessage
+[DEBUG] [LBK] 開始解析格式: "早餐444444" [3ae231f7] | 格式解析 |  | LBK_parseInputFormat
+[DEBUG] [LBK] 提取金額: "早餐444444" [3ae231f7] | 金額提取 |  | LBK_extractAmount
+[DEBUG] [LBK] 查詢科目代碼: "早餐" [3ae231f7] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_getSubjectCode
+[DEBUG] [LBK] 執行記帳操作 [3ae231f7] | 記帳執行 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_executeBookkeeping
+[ERROR] [LBK] 快速記帳處理失敗: ReferenceError: bookkeepingData is not defined [3ae231f7] | 快速記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | PROCESS_ERROR | ReferenceError: bookkeepingData is not defined | LBK_processQuickBookkeeping
+DD_distributeData處理完成，結果預覽: {"success":false,"hasResponseMessage":true,"responseMsgLength":10,"errorType":"SYSTEM_ERROR","moduleCode":"LBK","hasPartialData":false} [3ae231f7]
+準備回覆已驗證的訊息 [3ae231f7]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","processingTime","moduleVersion","errorType"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"message":"系統錯誤，請稍後再試","responseMessage":"系統錯誤，請稍後再試","moduleCode":"LBK","module":"LBK","processingTime":0,"moduleVersion":"1.0.2","errorType":"SYSTEM_ERROR"}...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=10
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (系統錯誤，請稍後再試...)
+WH_replyMessage: 開始回覆訊息: 系統錯誤，請稍後再試
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 系統錯誤，請稍後再試 (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+訊息回覆結果: {} [3ae231f7]
+非同步處理完成，已清理數據 [3ae231f7]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [3ae231f7] (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
