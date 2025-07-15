@@ -1,11 +1,11 @@
 
 /**
- * Jest測試配置檔案_1.1.0
+ * Jest測試配置檔案_1.2.0
  * @module Jest測試配置
- * @description Jest測試環境配置 - Markdown專用報告器，移除HTML格式
- * @version 1.1.0
- * @update 2025-07-15: 移除HTML報告器，新增Markdown專用報告器，整合動態檔名生成
- * @date 2025-07-15 16:45:00
+ * @description Jest測試環境配置 - 簡化架構，移除冗餘設定，純Markdown報告
+ * @version 1.2.0
+ * @update 2025-07-15: 移除testResultsProcessor，簡化為單一markdown-reporter架構
+ * @date 2025-07-15 17:00:00
  */
 
 // 生成動態檔名的時間戳記
@@ -122,6 +122,5 @@ module.exports = {
   // 最大工作程序數 - 避免併發問題，確保 Firebase Mock 穩定性
   maxWorkers: 1,
 
-  // 測試結果處理器
-  testResultsProcessor: "<rootDir>/Test Code/results-processor.js"
+  
 };
