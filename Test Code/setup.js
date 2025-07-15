@@ -1,11 +1,11 @@
 
 /**
- * 測試環境設定_1.1.0
+ * 測試環境設定_1.1.1
  * @module 測試環境設定
- * @description 測試前的全域設定與準備 - 增強錯誤處理機制
- * @version 1.1.0
- * @update 2025-07-15: 增強測試環境設定，改善錯誤處理與版本追蹤
- * @date 2025-07-15 11:46:00
+ * @description 測試前的全域設定與準備 - 移除Firebase Mock，使用真實Firebase
+ * @version 1.1.1
+ * @update 2025-07-15: 移除Firebase Admin Mock，直接使用真實Firebase進行測試
+ * @date 2025-07-15 15:30:00
  */
 
 // 全域測試設定
@@ -17,86 +17,8 @@ global.console = {
   info: jest.fn(console.info)
 };
 
-// 模擬 Firebase Admin - 專為 LBK 模組測試優化
-jest.mock('firebase-admin', () => ({
-  initializeApp: jest.fn(),
-  apps: [], // 支援 admin.apps.length 檢查
-  credential: {
-    cert: jest.fn()
-  },
-  firestore: jest.fn(() => ({
-    collection: jest.fn(() => ({
-      doc: jest.fn(() => ({
-        collection: jest.fn(() => ({
-          where: jest.fn(() => ({
-            get: jest.fn(() => Promise.resolve({
-              empty: false,
-              docs: [
-                {
-                  id: 'test_subject_1',
-                  data: () => ({
-                    大項代碼: '4001',
-                    大項名稱: '餐飲',
-                    子項代碼: '4001001',
-                    子項名稱: '午餐',
-                    同義詞: '用餐,吃飯',
-                    isActive: true
-                  })
-                },
-                {
-                  id: 'test_subject_2', 
-                  data: () => ({
-                    大項代碼: '8001',
-                    大項名稱: '薪資',
-                    子項代碼: '8001001',
-                    子項名稱: '薪水',
-                    同義詞: '工資,收入',
-                    isActive: true
-                  })
-                }
-              ]
-            }))
-          })),
-          orderBy: jest.fn(() => ({
-            limit: jest.fn(() => ({
-              get: jest.fn(() => Promise.resolve({
-                empty: true,
-                docs: []
-              }))
-            }))
-          })),
-          add: jest.fn(() => Promise.resolve({ id: 'test_entry_id' }))
-        })),
-        get: jest.fn(() => Promise.resolve({
-          exists: true,
-          data: () => ({
-            id: 'test_ledger',
-            name: 'test_ledger'
-          })
-        })),
-        set: jest.fn(() => Promise.resolve()),
-        update: jest.fn(() => Promise.resolve()),
-        delete: jest.fn(() => Promise.resolve())
-      })),
-      where: jest.fn(() => ({
-        get: jest.fn(() => Promise.resolve({
-          docs: []
-        }))
-      })),
-      add: jest.fn(() => Promise.resolve({ id: 'test_doc_id' }))
-    }))
-  })),
-  FieldValue: {
-    serverTimestamp: jest.fn(() => ({ seconds: Date.now() / 1000, nanoseconds: 0 }))
-  },
-  // 新增 Timestamp 支援 LBK 模組
-  firestore: {
-    Timestamp: {
-      now: jest.fn(() => ({ seconds: Date.now() / 1000, nanoseconds: 0 })),
-      fromDate: jest.fn((date) => ({ seconds: date.getTime() / 1000, nanoseconds: 0 }))
-    }
-  }
-}));
+// Firebase Admin Mock 已移除 - 直接使用真實 Firebase Admin
+// 測試環境將使用實際的 Firestore 連接進行測試
 
 // 測試資料庫設定
 const testDatabase = {
