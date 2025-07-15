@@ -1,11 +1,11 @@
 
 /**
- * 測試環境設定_1.1.3
+ * 測試環境設定_1.2.0
  * @module 測試環境設定
- * @description 測試前的全域設定與準備 - 移除 Firestore 依賴，建立純靜態資料管理機制
- * @version 1.1.3
- * @update 2025-07-15: 移除 Firestore 測試工具，建立基於 9999.json 的純靜態測試資料管理
- * @date 2025-07-15 16:00:00
+ * @description 測試前的全域設定與準備 - 整合 Markdown 報告支援，純靜態資料管理機制
+ * @version 1.2.0
+ * @update 2025-07-15: 新增 Markdown 報告支援，整合測試報告生成工具
+ * @date 2025-07-15 16:45:00
  */
 
 // 全域測試設定
@@ -122,6 +122,42 @@ global.staticTestUtils = {
   }
 };
 
+// Markdown 報告工具
+global.markdownReportUtils = {
+  /**
+   * 生成測試案例 Markdown 報告片段
+   * @param {string} testName - 測試案例名稱
+   * @param {Object} result - 測試結果
+   * @returns {string} Markdown 格式的報告片段
+   */
+  generateTestCaseMarkdown: (testName, result) => {
+    const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    const status = result.passed ? '✅ 通過' : '❌ 失敗';
+    
+    return `### ${status} ${testName}
+- **執行時間**: ${timestamp}
+- **耗時**: ${result.duration || 0}ms
+- **狀態**: ${result.passed ? 'PASSED' : 'FAILED'}
+${result.error ? `- **錯誤**: \`${result.error}\`` : ''}
+
+`;
+  },
+
+  /**
+   * 記錄測試案例到 Markdown 歷史
+   * @param {string} testCase - 測試案例名稱
+   * @param {Object} data - 測試資料
+   */
+  recordTestCaseMarkdown: (testCase, data) => {
+    const markdown = global.markdownReportUtils.generateTestCaseMarkdown(testCase, data);
+    global.staticTestUtils.recordTestCase(`${testCase}_markdown`, {
+      markdown: markdown,
+      timestamp: new Date().toISOString(),
+      format: 'markdown'
+    });
+  }
+};
+
 // 測試工具函數
 global.testUtils = {
   createTestUser: (id, role = 'member') => ({
@@ -197,6 +233,8 @@ global.testUtils = {
       testCaseHistory: testDatabase.testCaseHistory.size,
       dataSource: '9999.json',
       firestoreRemoved: true,
+      markdownReportEnabled: true,
+      reportFormats: ['markdown'],
       timestamp: new Date().toISOString()
     };
     
@@ -322,6 +360,8 @@ beforeAll(async () => {
   console.log('🎯 靜態測試資料生成器已啟用（基於 9999.json）');
   console.log('🚫 Firestore 依賴已完全移除');
   console.log('📋 每次測試執行使用 9999.json 中的真實科目資料');
+  console.log('📊 Markdown 報告生成器已啟用');
+  console.log('📁 報告格式: 純 Markdown (.md)');
 });
 
 // 測試後清理
