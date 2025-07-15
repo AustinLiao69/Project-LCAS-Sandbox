@@ -1,28 +1,21 @@
 
 /**
- * Jest測試配置檔案_1.0.2
+ * Jest測試配置檔案_1.0.3
  * @module Jest測試配置
- * @description Jest測試環境配置 - 強化測試檔案匹配規則與路徑解析
- * @version 1.0.2
- * @update 2025-07-15: 強化testMatch規則，支援多種測試檔案命名格式，解決檔案識別問題
- * @date 2025-07-15 14:30:00
+ * @description Jest測試環境配置 - 修正配置錯誤，解決testMatch與testRegex衝突
+ * @version 1.0.3
+ * @update 2025-07-15: 修正moduleNameMapper選項名稱，移除runInBand，解決testMatch與testRegex衝突
+ * @date 2025-07-15 15:15:00
  */
 
 module.exports = {
-  // 測試檔案匹配模式 - 強化版本
+  // 測試檔案匹配模式 - 強化版本（移除testRegex避免衝突）
   testMatch: [
     "**/Test Code/**/*.js",           // 原有規則：Test Code 目錄下所有 .js 檔案
     "**/Test Code/**/TC_*.js",        // TC_ 開頭的測試檔案
     "**/Test Code/**/*. TC_*.js",     // 包含空格的 TC_ 檔案
     "**/Test Code/**/[0-9]*. *.js",   // 數字開頭加空格的檔案格式
     "**/Test Code/**/[0-9]*.*.js"     // 數字開頭加點的檔案格式
-  ],
-
-  // 備用測試檔案正則表達式（雙重保障）
-  testRegex: [
-    "Test Code/.*\\.js$",             // Test Code 目錄下所有 .js 檔案
-    "Test Code/.*TC_.*\\.js$",        // TC_ 相關檔案
-    "Test Code/[0-9]+\\..+\\.js$"     // 數字開頭的特殊格式
   ],
 
   // 測試環境設定
@@ -45,7 +38,7 @@ module.exports = {
   ],
 
   // 模組路徑映射
-  moduleNameMapping: {
+  moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
     "^~/(.*)$": "<rootDir>/$1"
   },
@@ -103,9 +96,6 @@ module.exports = {
     }]
   ],
 
-  // 最大工作程序數 - 避免併發問題
-  maxWorkers: 1,
-
-  // 測試序列執行 - 確保 Firebase Mock 穩定性
-  runInBand: true
+  // 最大工作程序數 - 避免併發問題，確保 Firebase Mock 穩定性
+  maxWorkers: 1
 };
