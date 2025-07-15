@@ -15,15 +15,13 @@ module.exports = {
   // 設定 Jest 根目錄
   rootDir: '../',
   
-  // 測試檔案匹配模式 - 支援數字開頭和空格的檔案名稱
-  testMatch: [
-    '**/Test Code/**/*.test.js',
-    '**/Test Code/**/*.spec.js',
-    '**/Test Code/**/*_test.js',
-    '**/Test Code/**/TC_*.js',
-    '**/Test Code/**/*.TC_*.js',
-    '**/Test Code/**/*. TC_*.js',
-    '**/Test Code/**/[0-9]*. TC_*.js'
+  // 使用 testRegex 支援複雜檔案名稱格式（數字開頭、空格、TC_ 等）
+  testRegex: [
+    'Test Code/.*\\.test\\.js$',
+    'Test Code/.*\\.spec\\.js$', 
+    'Test Code/.*_test\\.js$',
+    'Test Code/.*TC_.*\\.js$',
+    'Test Code/\\d+\\. TC_.*\\.js$'
   ],
   
   // 測試覆蓋率設定
