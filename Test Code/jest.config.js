@@ -18,11 +18,9 @@ module.exports = {
     '**/Test Code/**/*.spec.js',
     '**/Test Code/**/*_test.js',
     '**/Test Code/**/TC_*.js',
-    '**/Test Code/**/*.TC_*.js'
+    '**/Test Code/**/*.TC_*.js',
+    '**/Test Code/**/*. TC_*.js'
   ],
-  
-  // 另一種方法：使用 testRegex 更靈活匹配
-  testRegex: 'Test Code/.*\\.(test|spec|TC_).*\\.js$',
   
   // 測試覆蓋率設定
   collectCoverage: true,
