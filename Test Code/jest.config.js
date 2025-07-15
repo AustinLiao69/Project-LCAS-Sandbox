@@ -8,7 +8,7 @@
  * @date 2025-07-15 17:00:00
  */
 
-// 生成動態檔名的時間戳記 - UTC+8時區，格式：YYYY-MMDD-HHMM
+// 生成動態檔名的時間戳記 - UTC+8時區，格式：YYYYMMDD-HHMM
 const generateTimestamp = () => {
   const now = new Date();
   // 轉換為UTC+8時區 (台灣時間)
@@ -20,7 +20,7 @@ const generateTimestamp = () => {
   const hour = String(utc8Time.getUTCHours()).padStart(2, '0');
   const minute = String(utc8Time.getUTCMinutes()).padStart(2, '0');
   
-  return `${year}-${month}${day}-${hour}${minute}`;
+  return `${year}${month}${day}-${hour}${minute}`;
 };
 
 // 動態檔名生成
