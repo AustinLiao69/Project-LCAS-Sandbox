@@ -1,5 +1,5 @@
 /**
- * WH_Webhook處理模組_2.0.20
+ * WH_Webhook處理模組_2.0.21
  * @module Webhook模組
  * @description LINE Webhook處理模組 - 實現 BR-0007 簡化記帳路徑，完全分離LINE文字訊息處理
  * @update 2025-07-14: 升級至2.0.20版本，實現LINE文字訊息與DD模組完全分離，所有LINE文字訊息強制走BK 2.0路徑
