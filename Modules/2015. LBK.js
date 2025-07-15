@@ -65,9 +65,13 @@ async function LBK_processQuickBookkeeping(inputData) {
     const parseResult = await LBK_parseUserMessage(inputData.messageText, inputData.userId, processId);
     
     if (!parseResult.success) {
+      const errorMessage = parseResult.error || "解析失敗";
       return {
         success: false,
-        message: parseResult.error || "解析失敗",
+        message: errorMessage,
+        responseMessage: errorMessage,
+        moduleCode: "LBK",
+        module: "LBK",
         processingTime: 0,
         moduleVersion: "1.0.1",
         errorType: parseResult.errorType || "PARSE_ERROR"
@@ -78,9 +82,13 @@ async function LBK_processQuickBookkeeping(inputData) {
     const bookkeepingResult = await LBK_executeBookkeeping(parseResult.data, processId);
     
     if (!bookkeepingResult.success) {
+      const errorMessage = bookkeepingResult.error || "記帳失敗";
       return {
         success: false,
-        message: bookkeepingResult.error || "記帳失敗",
+        message: errorMessage,
+        responseMessage: errorMessage,
+        moduleCode: "LBK",
+        module: "LBK",
         processingTime: 0,
         moduleVersion: "1.0.1",
         errorType: bookkeepingResult.errorType || "BOOKING_ERROR"
@@ -95,6 +103,9 @@ async function LBK_processQuickBookkeeping(inputData) {
     return {
       success: true,
       message: replyMessage,
+      responseMessage: replyMessage,
+      moduleCode: "LBK",
+      module: "LBK",
       data: bookkeepingResult.data,
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
       moduleVersion: "1.0.1"
@@ -106,6 +117,9 @@ async function LBK_processQuickBookkeeping(inputData) {
     return {
       success: false,
       message: "系統錯誤，請稍後再試",
+      responseMessage: "系統錯誤，請稍後再試",
+      moduleCode: "LBK",
+      module: "LBK",
       processingTime: 0,
       moduleVersion: "1.0.1",
       errorType: "SYSTEM_ERROR"
