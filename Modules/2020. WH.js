@@ -709,7 +709,7 @@ function WH_replyMessage(replyToken, message) {
     const isValidFormat = message && typeof message === 'object' && message.responseMessage && 
                          (message.moduleCode === 'BK' || message.moduleCode === 'LBK' || 
                           message.module === 'BK' || message.module === 'LBK');
-    
+
     if (!isValidFormat) {
       console.error('WH_replyMessage: 拒絕未經正確格式化的訊息');
       WH_directLogWrite([
@@ -1239,58 +1239,21 @@ async function WH_processEventAsync(event, requestId, userId) {
 
           // 驗證結果是否正確格式化（支援 LBK 和 BK 模組）
           if (!result || !result.message) {
-            // 如果未格式化，使用 LBK 或 BK 格式化
-            console.log(`檢測到未格式化的結果，嘗試格式化 [${requestId}]`);
-            
-            const errorData = result || { 
-              success: false, 
-              error: "處理失敗",
-              partialData: {
-                subject: "未知科目",
-                amount: 0,
-                rawAmount: "0",
-                paymentMethod: "未指定支付方式",
-              }
-            };
+            // LBK 模組已經提供格式化的結果，WH 模組不再自行格式化
+          console.log(`信任 LBK 模組的格式化結果 [${requestId}]`);
 
-            try {
-              // 先嘗試使用 LBK 格式化，如果失敗則使用 BK
-              if (typeof LBK.LBK_formatReplyMessage === 'function') {
-                const formattedMessage = LBK.LBK_formatReplyMessage(errorData, "LBK");
-                result = {
-                  success: errorData.success,
-                  responseMessage: formattedMessage,
-                  moduleCode: "LBK",
-                  error: errorData.error
-                };
-              } else {
-                result = await BK.BK_formatSystemReplyMessage(errorData, "WH", { 
-                  userId: userId, 
-                  processId: requestId 
-                });
-              }
-            } catch (formatError) {
-              console.log(`格式化失敗: ${formatError} [${requestId}]`);
-              result = {
-                success: false,
-                responseMessage: "處理您的請求時發生錯誤，請稍後再試。",
-                moduleCode: "WH",
-                error: "格式化失敗"
-              };
-            }
-
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 2.0.20: 格式化LBK處理結果 [${requestId}]`,
-              "訊息格式化",
-              userId,
-              "LBK_FORMAT",
-              "WH",
-              "",
-              0,
-              "WH_processEventAsync",
-              "INFO",
-            ]);
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.0.23: 信任並使用LBK模組的格式化結果 [${requestId}]`,
+            "訊息處理",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO",
+          ]);
           }
 
           // 只有經過驗證的訊息才能回覆
@@ -1851,6 +1814,7 @@ module.exports = {
  * @date 2025-07-09 10:48:00
  * @update: 遷移至Firestore
  * @param {Object} data - 需處理的數據
+ * @param {string} action - 需處理的數據
  * @param {string} action - 需執行的操作類型(如"reply"、"push"等)
  * @returns {Object} 執行結果
  */
