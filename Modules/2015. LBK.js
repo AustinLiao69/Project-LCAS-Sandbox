@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.0.7
+ * LBK_快速記帳模組_1.0.8
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 修復語法錯誤，確保Jest測試正常執行
- * @update 2025-07-15: 升級至v1.0.7，修復LBK_formatReplyMessage函數語法錯誤，移除無效markdown標記
+ * @description LINE OA 專用快速記帳處理模組 - 全面優化解決測試失敗問題
+ * @update 2025-07-15: 升級至v1.0.8，優化科目匹配精準度、ID生成唯一性、併發處理機制、錯誤訊息格式統一
  */
 
 // 引入所需模組
@@ -350,10 +350,10 @@ function LBK_extractAmount(text, processId) {
 }
 
 /**
- * 05. 獲取科目代碼
- * @version 2025-07-15-V1.0.0
- * @date 2025-07-15 09:30:00
- * @description 根據科目名稱查詢對應的科目代碼
+ * 05. 獲取科目代碼 - 優化匹配精準度
+ * @version 2025-07-15-V1.0.1
+ * @date 2025-07-15 19:10:00
+ * @description 根據科目名稱查詢對應的科目代碼，強化匹配算法精準度
  */
 async function LBK_getSubjectCode(subjectName, userId, processId) {
   try {
@@ -375,38 +375,75 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
       throw new Error("科目表為空");
     }
 
-    // 精確匹配
+    // 優化的匹配算法
+    let exactMatch = null;
+    let synonymMatch = null;
+    let partialMatches = [];
+
     for (const doc of snapshot.docs) {
       if (doc.id === "template") continue;
 
       const data = doc.data();
       const subName = String(data.子項名稱).trim().toLowerCase();
 
+      // 1. 精確匹配 - 最高優先級
       if (subName === normalizedInput) {
-        return {
+        exactMatch = {
           majorCode: String(data.大項代碼),
           majorName: String(data.大項名稱),
           subCode: String(data.子項代碼),
           subName: String(data.子項名稱)
         };
+        break;
       }
 
-      // 同義詞匹配
+      // 2. 同義詞精確匹配 - 第二優先級
       const synonymsStr = data.同義詞 || "";
       if (synonymsStr) {
         const synonyms = synonymsStr.split(",");
         for (const synonym of synonyms) {
           const synonymLower = synonym.trim().toLowerCase();
           if (synonymLower === normalizedInput) {
-            return {
+            synonymMatch = {
               majorCode: String(data.大項代碼),
               majorName: String(data.大項名稱),
               subCode: String(data.子項代碼),
               subName: String(data.子項名稱)
             };
+            break;
           }
         }
       }
+
+      // 3. 部分匹配 - 包含關係
+      if (subName.includes(normalizedInput) || normalizedInput.includes(subName)) {
+        partialMatches.push({
+          majorCode: String(data.大項代碼),
+          majorName: String(data.大項名稱),
+          subCode: String(data.子項代碼),
+          subName: String(data.子項名稱),
+          score: subName.length === normalizedInput.length ? 1.0 : 0.8
+        });
+      }
+    }
+
+    // 按優先級返回結果
+    if (exactMatch) {
+      return exactMatch;
+    }
+    if (synonymMatch) {
+      return synonymMatch;
+    }
+    if (partialMatches.length > 0) {
+      // 返回評分最高的部分匹配
+      partialMatches.sort((a, b) => b.score - a.score);
+      const bestMatch = partialMatches[0];
+      return {
+        majorCode: bestMatch.majorCode,
+        majorName: bestMatch.majorName,
+        subCode: bestMatch.subCode,
+        subName: bestMatch.subName
+      };
     }
 
     throw new Error(`找不到科目: ${subjectName}`);
@@ -418,10 +455,10 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
 }
 
 /**
- * 06. 模糊匹配科目
- * @version 2025-07-15-V1.0.0
- * @date 2025-07-15 09:30:00
- * @description 當精確匹配失敗時，使用模糊匹配尋找最相似的科目
+ * 06. 模糊匹配科目 - 優化匹配算法
+ * @version 2025-07-15-V1.0.1
+ * @date 2025-07-15 19:10:00
+ * @description 當精確匹配失敗時，使用優化的模糊匹配尋找最相似的科目
  */
 async function LBK_fuzzyMatch(input, threshold, userId, processId) {
   if (!input || !userId) return null;
@@ -436,40 +473,100 @@ async function LBK_fuzzyMatch(input, threshold, userId, processId) {
       return null;
     }
 
-    const containsMatches = [];
+    const matches = [];
 
     allSubjects.forEach((subject) => {
       const subNameLower = subject.subName.toLowerCase();
 
-      // 包含匹配
-      if (subNameLower.length >= 2 && inputLower.includes(subNameLower)) {
-        const score = (subNameLower.length / inputLower.length) * 0.9;
-        containsMatches.push({
+      // 1. 精確匹配（最高分）
+      if (subNameLower === inputLower) {
+        matches.push({
           ...subject,
-          score: Math.min(0.9, score),
-          matchType: "input_contains_subject_name"
+          score: 1.0,
+          matchType: "exact_match"
+        });
+        return;
+      }
+
+      // 2. 包含匹配
+      if (subNameLower.includes(inputLower)) {
+        const score = (inputLower.length / subNameLower.length) * 0.95;
+        matches.push({
+          ...subject,
+          score: Math.min(0.95, score),
+          matchType: "subject_contains_input"
         });
       }
 
-      // 同義詞包含匹配
+      if (inputLower.includes(subNameLower) && subNameLower.length >= 2) {
+        const score = (subNameLower.length / inputLower.length) * 0.9;
+        matches.push({
+          ...subject,
+          score: Math.min(0.9, score),
+          matchType: "input_contains_subject"
+        });
+      }
+
+      // 3. 同義詞匹配
       if (subject.synonyms) {
         const synonymsList = subject.synonyms.split(",").map(syn => syn.trim().toLowerCase());
         for (const synonym of synonymsList) {
-          if (synonym.length >= 2 && inputLower.includes(synonym)) {
-            const score = (synonym.length / inputLower.length) * 0.95;
-            containsMatches.push({
+          if (synonym === inputLower) {
+            matches.push({
               ...subject,
-              score: Math.min(0.95, score),
+              score: 0.98,
+              matchType: "synonym_exact_match"
+            });
+          } else if (synonym.includes(inputLower) && inputLower.length >= 2) {
+            const score = (inputLower.length / synonym.length) * 0.85;
+            matches.push({
+              ...subject,
+              score: Math.min(0.85, score),
+              matchType: "synonym_contains_input"
+            });
+          } else if (inputLower.includes(synonym) && synonym.length >= 2) {
+            const score = (synonym.length / inputLower.length) * 0.8;
+            matches.push({
+              ...subject,
+              score: Math.min(0.8, score),
               matchType: "input_contains_synonym"
             });
           }
         }
       }
+
+      // 4. 字符相似度匹配
+      const similarity = LBK_calculateStringSimilarity(inputLower, subNameLower);
+      if (similarity > 0.6) {
+        matches.push({
+          ...subject,
+          score: similarity * 0.75,
+          matchType: "string_similarity"
+        });
+      }
     });
 
-    if (containsMatches.length > 0) {
-      containsMatches.sort((a, b) => b.score - a.score);
-      const bestMatch = containsMatches[0];
+    if (matches.length > 0) {
+      // 去重並按分數排序
+      const uniqueMatches = [];
+      const seen = new Set();
+      
+      matches.forEach(match => {
+        const key = `${match.majorCode}-${match.subCode}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueMatches.push(match);
+        } else {
+          // 如果已存在，保留分數更高的
+          const existingIndex = uniqueMatches.findIndex(m => `${m.majorCode}-${m.subCode}` === key);
+          if (existingIndex >= 0 && match.score > uniqueMatches[existingIndex].score) {
+            uniqueMatches[existingIndex] = match;
+          }
+        }
+      });
+
+      uniqueMatches.sort((a, b) => b.score - a.score);
+      const bestMatch = uniqueMatches[0];
 
       if (bestMatch.score >= threshold) {
         return bestMatch;
@@ -530,70 +627,95 @@ async function LBK_getAllSubjects(userId, processId) {
 }
 
 /**
- * 08. 執行記帳操作
- * @version 2025-07-15-V1.0.0
- * @date 2025-07-15 09:30:00
- * @description 執行實際的記帳操作，包含資料驗證和儲存
+ * 08. 執行記帳操作 - 加入重試機制
+ * @version 2025-07-15-V1.0.1
+ * @date 2025-07-15 19:10:00
+ * @description 執行實際的記帳操作，包含資料驗證、儲存和重試機制
  */
 async function LBK_executeBookkeeping(bookkeepingData, processId) {
-  try {
-    LBK_logDebug(`執行記帳操作 [${processId}]`, "記帳執行", bookkeepingData.userId, "LBK_executeBookkeeping");
+  const maxRetries = 3;
+  let lastError = null;
 
-    // 驗證資料
-    const validationResult = LBK_validateBookkeepingData(bookkeepingData, processId);
-    if (!validationResult.success) {
-      return {
-        success: false,
-        error: validationResult.error,
-        errorType: "VALIDATION_ERROR"
-      };
-    }
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      LBK_logDebug(`執行記帳操作 [${processId}] (嘗試 ${attempt}/${maxRetries})`, "記帳執行", bookkeepingData.userId, "LBK_executeBookkeeping");
 
-    // 生成記帳ID
-    const bookkeepingId = await LBK_generateBookkeepingId(bookkeepingData.userId, processId);
-
-    // 準備記帳資料
-    const preparedData = LBK_prepareBookkeepingData(bookkeepingId, bookkeepingData, processId);
-
-    // 儲存到Firestore
-    const saveResult = await LBK_saveToFirestore(preparedData, processId);
-
-    if (!saveResult.success) {
-      return {
-        success: false,
-        error: saveResult.error,
-        errorType: "STORAGE_ERROR"
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        id: bookkeepingId,
-        amount: bookkeepingData.amount,
-        type: bookkeepingData.action === "收入" ? "income" : "expense",
-        subject: bookkeepingData.subjectName,
-        paymentMethod: bookkeepingData.paymentMethod,
-        timestamp: new Date().toISOString()
+      // 驗證資料
+      const validationResult = LBK_validateBookkeepingData(bookkeepingData, processId);
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: validationResult.error,
+          errorType: "VALIDATION_ERROR"
+        };
       }
-    };
 
-  } catch (error) {
-    LBK_logError(`執行記帳操作失敗: ${error.toString()} [${processId}]`, "記帳執行", bookkeepingData.userId, "EXECUTE_ERROR", error.toString(), "LBK_executeBookkeeping");
+      // 生成記帳ID
+      const bookkeepingId = await LBK_generateBookkeepingId(bookkeepingData.userId, processId);
 
-    return {
-      success: false,
-      error: error.toString(),
-      errorType: "EXECUTE_ERROR"
-    };
+      // 準備記帳資料
+      const preparedData = LBK_prepareBookkeepingData(bookkeepingId, bookkeepingData, processId);
+
+      // 儲存到Firestore（帶重試）
+      const saveResult = await LBK_saveToFirestore(preparedData, processId);
+
+      if (!saveResult.success) {
+        lastError = saveResult.error;
+        
+        if (attempt < maxRetries) {
+          // 等待遞增延遲後重試
+          const delay = Math.pow(2, attempt - 1) * 1000; // 指數退避
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+
+        return {
+          success: false,
+          error: `儲存失敗 (${maxRetries}次重試後): ${lastError}`,
+          errorType: "STORAGE_ERROR"
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          id: bookkeepingId,
+          amount: bookkeepingData.amount,
+          type: bookkeepingData.action === "收入" ? "income" : "expense",
+          subject: bookkeepingData.subjectName,
+          paymentMethod: bookkeepingData.paymentMethod,
+          timestamp: new Date().toISOString()
+        }
+      };
+
+    } catch (error) {
+      lastError = error.toString();
+      
+      if (attempt < maxRetries) {
+        LBK_logWarning(`記帳操作嘗試 ${attempt} 失敗，準備重試: ${error.toString()} [${processId}]`, "記帳執行", bookkeepingData.userId, "LBK_executeBookkeeping");
+        
+        // 等待後重試
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      LBK_logError(`執行記帳操作失敗 (${maxRetries}次重試後): ${error.toString()} [${processId}]`, "記帳執行", bookkeepingData.userId, "EXECUTE_ERROR", error.toString(), "LBK_executeBookkeeping");
+    }
   }
+
+  return {
+    success: false,
+    error: `記帳操作失敗 (${maxRetries}次重試後): ${lastError}`,
+    errorType: "EXECUTE_ERROR"
+  };
 }
 
 /**
- * 09. 生成唯一記帳ID - 修正查詢路徑一致性
- * @version 2025-07-15-V1.0.6
- * @date 2025-07-15 16:45:00
- * @description 生成格式為YYYYMMDD-NNNNN的唯一記帳ID，統一查詢和儲存路徑
+ * 09. 生成唯一記帳ID - 強化唯一性保證
+ * @version 2025-07-15-V1.0.7
+ * @date 2025-07-15 19:10:00
+ * @description 生成格式為YYYYMMDD-NNNNN的唯一記帳ID，加強併發安全性和唯一性保證
  */
 async function LBK_generateBookkeepingId(userId, processId) {
   try {
@@ -606,44 +728,71 @@ async function LBK_generateBookkeepingId(userId, processId) {
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
 
-    // 查詢當天的所有記錄 - 修正：統一查詢和儲存路徑為user_${userId}
-    const todayQuery = await db
-      .collection('ledgers')
-      .doc(`user_${userId}`)
-      .collection('entries')
-      .where('收支ID', '>=', dateStr + '-00000')
-      .where('收支ID', '<=', dateStr + '-99999')
-      .orderBy('收支ID', 'desc')
-      .limit(1)
-      .get();
+    // 使用事務確保併發安全性
+    const result = await db.runTransaction(async (transaction) => {
+      // 查詢當天的所有記錄
+      const todayQuery = await db
+        .collection('ledgers')
+        .doc(`user_${userId}`)
+        .collection('entries')
+        .where('收支ID', '>=', dateStr + '-00000')
+        .where('收支ID', '<=', dateStr + '-99999')
+        .orderBy('收支ID', 'desc')
+        .limit(1)
+        .get();
 
-    let maxSerialNumber = 0;
+      let maxSerialNumber = 0;
 
-    if (!todayQuery.empty) {
-      const lastDoc = todayQuery.docs[0];
-      const lastId = lastDoc.data().收支ID;
-      if (lastId && lastId.startsWith(dateStr + '-')) {
-        const serialPart = lastId.split('-')[1];
-        if (serialPart) {
-          const serialNumber = parseInt(serialPart, 10);
-          if (!isNaN(serialNumber)) {
-            maxSerialNumber = serialNumber;
+      if (!todayQuery.empty) {
+        const lastDoc = todayQuery.docs[0];
+        const lastId = lastDoc.data().收支ID;
+        if (lastId && lastId.startsWith(dateStr + '-')) {
+          const serialPart = lastId.split('-')[1];
+          if (serialPart) {
+            const serialNumber = parseInt(serialPart, 10);
+            if (!isNaN(serialNumber)) {
+              maxSerialNumber = serialNumber;
+            }
           }
         }
       }
-    }
 
-    const nextSerialNumber = maxSerialNumber + 1;
-    const formattedNumber = nextSerialNumber.toString().padStart(5, '0');
-    const bookkeepingId = `${dateStr}-${formattedNumber}`;
+      // 生成新的序列號
+      const nextSerialNumber = maxSerialNumber + 1;
+      const formattedNumber = nextSerialNumber.toString().padStart(5, '0');
+      const bookkeepingId = `${dateStr}-${formattedNumber}`;
 
-    return bookkeepingId;
+      // 加入微秒時間戳確保唯一性
+      const microTimestamp = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+      const uniqueId = `${bookkeepingId}-${microTimestamp.toString(36)}`;
+
+      // 檢查ID是否已存在（雙重驗證）
+      const existingDoc = await db
+        .collection('ledgers')
+        .doc(`user_${userId}`)
+        .collection('entries')
+        .where('收支ID', '==', bookkeepingId)
+        .limit(1)
+        .get();
+
+      if (!existingDoc.empty) {
+        // 如果ID已存在，使用帶時間戳的唯一ID
+        return uniqueId;
+      }
+
+      return bookkeepingId;
+    });
+
+    return result;
 
   } catch (error) {
     LBK_logError(`生成記帳ID失敗: ${error.toString()} [${processId}]`, "ID生成", userId, "ID_GEN_ERROR", error.toString(), "LBK_generateBookkeepingId");
 
-    const timestamp = new Date().getTime();
-    const fallbackId = `F${timestamp}`;
+    // 強化的備用ID生成
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
+    const processHash = processId ? processId.slice(-4) : '0000';
+    const fallbackId = `F${timestamp}-${random}-${processHash}`;
     return fallbackId;
   }
 }
@@ -680,54 +829,94 @@ function LBK_validateBookkeepingData(data, processId) {
 }
 
 /**
- * 11. 儲存記帳資料至Firestore
- * @version 2025-07-15-V1.0.0
- * @date 2025-07-15 09:30:00
- * @description 將記帳資料儲存至Firestore，確保資料一致性
+ * 11. 儲存記帳資料至Firestore - 加入併發處理優化
+ * @version 2025-07-15-V1.0.1
+ * @date 2025-07-15 19:10:00
+ * @description 將記帳資料儲存至Firestore，確保資料一致性和併發安全性
  */
 async function LBK_saveToFirestore(bookkeepingData, processId) {
-  try {
-    await LBK_initializeFirestore();
-    const db = LBK_INIT_STATUS.firestore_db;
+  const maxRetries = 3;
+  let lastError = null;
 
-    const firestoreData = {
-      收支ID: bookkeepingData[0],
-      使用者類型: bookkeepingData[1],
-      日期: bookkeepingData[2],
-      時間: bookkeepingData[3],
-      大項代碼: bookkeepingData[4],
-      子項代碼: bookkeepingData[5],
-      支付方式: bookkeepingData[6],
-      子項名稱: bookkeepingData[7],
-      UID: bookkeepingData[8],
-      備註: bookkeepingData[9],
-      收入: bookkeepingData[10] || null,
-      支出: bookkeepingData[11] || null,
-      同義詞: bookkeepingData[12] || '',
-      currency: 'NTD',
-      timestamp: admin.firestore.Timestamp.now()
-    };
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await LBK_initializeFirestore();
+      const db = LBK_INIT_STATUS.firestore_db;
 
-    const docRef = await db
-      .collection('ledgers')
-      .doc(`user_${bookkeepingData[8]}`)
-      .collection('entries')
-      .add(firestoreData);
+      const firestoreData = {
+        收支ID: bookkeepingData[0],
+        使用者類型: bookkeepingData[1],
+        日期: bookkeepingData[2],
+        時間: bookkeepingData[3],
+        大項代碼: bookkeepingData[4],
+        子項代碼: bookkeepingData[5],
+        支付方式: bookkeepingData[6],
+        子項名稱: bookkeepingData[7],
+        UID: bookkeepingData[8],
+        備註: bookkeepingData[9],
+        收入: bookkeepingData[10] || null,
+        支出: bookkeepingData[11] || null,
+        同義詞: bookkeepingData[12] || '',
+        currency: 'NTD',
+        timestamp: admin.firestore.Timestamp.now(),
+        processId: processId || '',
+        attempt: attempt
+      };
 
-    return {
-      success: true,
-      docId: docRef.id,
-      firestoreData: firestoreData
-    };
+      // 使用事務確保併發安全性
+      const result = await db.runTransaction(async (transaction) => {
+        // 檢查是否已存在相同的收支ID
+        const existingQuery = await db
+          .collection('ledgers')
+          .doc(`user_${bookkeepingData[8]}`)
+          .collection('entries')
+          .where('收支ID', '==', bookkeepingData[0])
+          .limit(1)
+          .get();
 
-  } catch (error) {
-    LBK_logError(`儲存到Firestore失敗: ${error.toString()} [${processId}]`, "資料儲存", "", "SAVE_ERROR", error.toString(), "LBK_saveToFirestore");
+        if (!existingQuery.empty) {
+          throw new Error(`收支ID已存在: ${bookkeepingData[0]}`);
+        }
 
-    return {
-      success: false,
-      error: "儲存失敗: " + error.toString()
-    };
+        // 新增文檔
+        const docRef = db
+          .collection('ledgers')
+          .doc(`user_${bookkeepingData[8]}`)
+          .collection('entries')
+          .doc();
+
+        transaction.set(docRef, firestoreData);
+        return docRef;
+      });
+
+      return {
+        success: true,
+        docId: result.id,
+        firestoreData: firestoreData,
+        attempt: attempt
+      };
+
+    } catch (error) {
+      lastError = error.toString();
+      
+      if (attempt < maxRetries) {
+        LBK_logWarning(`Firestore儲存嘗試 ${attempt} 失敗，準備重試: ${error.toString()} [${processId}]`, "資料儲存", "", "LBK_saveToFirestore");
+        
+        // 指數退避延遲
+        const delay = Math.pow(2, attempt - 1) * 500 + Math.random() * 500;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      LBK_logError(`儲存到Firestore失敗 (${maxRetries}次重試後): ${error.toString()} [${processId}]`, "資料儲存", "", "SAVE_ERROR", error.toString(), "LBK_saveToFirestore");
+    }
   }
+
+  return {
+    success: false,
+    error: `儲存失敗 (${maxRetries}次重試後): ${lastError}`,
+    totalAttempts: maxRetries
+  };
 }
 
 /**
@@ -1165,6 +1354,49 @@ function LBK_validateDataInternal(data, validationType, rules, processId) {
   }
 }
 
+/**
+ * 21. 字符串相似度計算 - 新增輔助函數
+ * @version 2025-07-15-V1.0.0
+ * @date 2025-07-15 19:10:00
+ * @description 計算兩個字符串的相似度，用於提升模糊匹配精準度
+ */
+function LBK_calculateStringSimilarity(str1, str2) {
+  if (str1 === str2) return 1.0;
+  if (str1.length === 0 || str2.length === 0) return 0.0;
+
+  const len1 = str1.length;
+  const len2 = str2.length;
+  const maxLen = Math.max(len1, len2);
+  
+  // 計算編輯距離
+  const matrix = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(null));
+  
+  for (let i = 0; i <= len1; i++) {
+    matrix[i][0] = i;
+  }
+  
+  for (let j = 0; j <= len2; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,     // deletion
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j - 1] + 1  // substitution
+        );
+      }
+    }
+  }
+  
+  const editDistance = matrix[len1][len2];
+  return 1 - (editDistance / maxLen);
+}
+
 // 輔助函數：識別科目
 async function LBK_identifySubject(subject, userId, processId) {
   try {
@@ -1298,5 +1530,6 @@ module.exports = {
   LBK_initialize,
   LBK_handleError,
   LBK_processAmountInternal,
-  LBK_validateDataInternal
+  LBK_validateDataInternal,
+  LBK_calculateStringSimilarity
 };
