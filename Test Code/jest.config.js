@@ -42,8 +42,8 @@ module.exports = {
   // 測試超時設定
   testTimeout: 30000,
   
-  // 設定檔案 - 修正為當前目錄相對路徑
-  setupFilesAfterEnv: ['./setup.js'],
+  // 設定檔案 - 指向Test Code目錄下的setup.js
+  setupFilesAfterEnv: ['./Test Code/setup.js'],
   
   // 忽略模式
   testPathIgnorePatterns: [
