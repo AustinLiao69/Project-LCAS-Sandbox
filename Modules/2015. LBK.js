@@ -1,9 +1,9 @@
 
 /**
- * LBK_快速記帳模組_1.0.0
+ * LBK_快速記帳模組_1.0.1
  * @module LBK模組
  * @description LINE OA 專用快速記帳處理模組 - 簡化記帳流程，實現極速處理
- * @update 2025-07-15: 初版建立，從BK模組分離核心功能，專門處理LINE OA快速記帳
+ * @update 2025-07-15: 升級至v1.0.1，新增完整測試套件支援，優化效能和錯誤處理機制
  */
 
 // 引入所需模組
@@ -51,9 +51,9 @@ let LBK_INIT_STATUS = {
 
 /**
  * 01. 處理快速記帳的主函數
- * @version 2025-07-15-V1.0.0
- * @date 2025-07-15 09:30:00
- * @description 接收WH模組的記帳請求，執行完整的記帳處理流程
+ * @version 2025-07-15-V1.0.1
+ * @date 2025-07-15 15:30:00
+ * @description 接收WH模組的記帳請求，執行完整的記帳處理流程 - 增強測試支援和效能監控
  */
 async function LBK_processQuickBookkeeping(inputData) {
   const processId = inputData.processId || crypto.randomUUID().substring(0, 8);
@@ -69,7 +69,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         success: false,
         message: parseResult.error || "解析失敗",
         processingTime: 0,
-        moduleVersion: "1.0.0",
+        moduleVersion: "1.0.1",
         errorType: parseResult.errorType || "PARSE_ERROR"
       };
     }
@@ -82,7 +82,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         success: false,
         message: bookkeepingResult.error || "記帳失敗",
         processingTime: 0,
-        moduleVersion: "1.0.0",
+        moduleVersion: "1.0.1",
         errorType: bookkeepingResult.errorType || "BOOKING_ERROR"
       };
     }
@@ -97,7 +97,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       message: replyMessage,
       data: bookkeepingResult.data,
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.0.0"
+      moduleVersion: "1.0.1"
     };
     
   } catch (error) {
@@ -107,7 +107,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       success: false,
       message: "系統錯誤，請稍後再試",
       processingTime: 0,
-      moduleVersion: "1.0.0",
+      moduleVersion: "1.0.1",
       errorType: "SYSTEM_ERROR"
     };
   }
