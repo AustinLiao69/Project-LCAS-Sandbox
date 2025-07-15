@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.0.1
+ * LBK_快速記帳模組_1.0.3
  * @module LBK模組
  * @description LINE OA 專用快速記帳處理模組 - 簡化記帳流程，實現極速處理
- * @update 2025-07-15: 升級至v1.0.1，新增完整測試套件支援，優化效能和錯誤處理機制
+ * @update 2025-07-15: 升級至v1.0.3，修正收入/支出判斷邏輯，移除正負號邏輯，調整回覆訊息格式
  */
 
 // 引入所需模組
@@ -94,8 +94,10 @@ async function LBK_processQuickBookkeeping(inputData) {
       };
     }
 
-    // 格式化回覆訊息
-    const replyMessage = LBK_formatReplyMessage(bookkeepingResult.data, "LBK");
+    // 格式化回覆訊息，傳遞原始輸入作為參考
+    const replyMessage = LBK_formatReplyMessage(bookkeepingResult.data, "LBK", {
+      originalInput: bookkeepingData.subject
+    });
 
     LBK_logInfo(`快速記帳完成 [${processId}]`, "快速記帳", inputData.userId || "", "LBK_processQuickBookkeeping");
 
@@ -169,17 +171,22 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
       };
     }
 
+    // 根據科目代碼判斷收支類型，並設定正確的支付方式
+    const isIncome = subjectResult.data.isIncome;
+    const finalPaymentMethod = parseResult.paymentMethod === "刷卡" ? 
+      subjectResult.data.defaultPaymentMethod : parseResult.paymentMethod;
+
     return {
       success: true,
       data: {
         subject: parseResult.subject,
         amount: parseResult.amount,
         rawAmount: parseResult.rawAmount,
-        paymentMethod: parseResult.paymentMethod,
+        paymentMethod: finalPaymentMethod,
         subjectCode: subjectResult.data.subjectCode,
         subjectName: subjectResult.data.subjectName,
         majorCode: subjectResult.data.majorCode,
-        action: parseResult.amount > 0 ? "收入" : "支出",
+        action: isIncome ? "收入" : "支出",
         userId: userId
       }
     };
@@ -197,9 +204,9 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
 
 /**
  * 03. 解析輸入格式
- * @version 2025-07-15-V1.0.0
+ * @version 2025-07-15-V1.0.3
  * @date 2025-07-15 09:30:00
- * @description 解析各種輸入格式，支援正負號、金額、科目識別
+ * @description 解析標準輸入格式，移除正負號邏輯，基於科目代碼判斷收支類型
  */
 function LBK_parseInputFormat(message, processId) {
   LBK_logDebug(`開始解析格式: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
@@ -211,36 +218,7 @@ function LBK_parseInputFormat(message, processId) {
   message = message.trim();
 
   try {
-    // 檢測負數模式 (午餐-100)
-    const negativePattern = /^(.+?)(-\d+)(.*)$/;
-    const negativeMatch = message.match(negativePattern);
-
-    if (negativeMatch) {
-      const subject = negativeMatch[1].trim();
-      const rawAmount = negativeMatch[2];
-      const amount = Math.abs(parseFloat(rawAmount));
-
-      let paymentMethod = "現金";
-      const remainingText = negativeMatch[3].trim();
-
-      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
-      for (const method of paymentMethods) {
-        if (remainingText.includes(method)) {
-          paymentMethod = method;
-          break;
-        }
-      }
-
-      return {
-        subject: subject,
-        amount: amount,
-        rawAmount: String(amount),
-        paymentMethod: paymentMethod,
-        isNegative: true
-      };
-    }
-
-    // 標準格式處理 (午餐100)
+    // 只支援標準格式處理 (早餐33333)
     const standardPattern = /^(.+?)(\d+)(.*)$/;
     const standardMatch = message.match(standardPattern);
 
@@ -260,6 +238,7 @@ function LBK_parseInputFormat(message, processId) {
         return null;
       }
 
+      // 預設支付方式為刷卡（後續會根據科目代碼調整）
       let paymentMethod = "刷卡";
       let remainingText = standardMatch[3].trim();
 
@@ -274,6 +253,7 @@ function LBK_parseInputFormat(message, processId) {
 
       remainingText = remainingText.replace(supportedUnits, '').trim();
 
+      // 檢查是否指定支付方式
       const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
       for (const method of paymentMethods) {
         if (remainingText.includes(method)) {
@@ -286,8 +266,7 @@ function LBK_parseInputFormat(message, processId) {
         subject: subject,
         amount: amount,
         rawAmount: rawAmount,
-        paymentMethod: paymentMethod,
-        isNegative: false
+        paymentMethod: paymentMethod
       };
     }
 
@@ -775,9 +754,9 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
 
 /**
  * 13. 格式化回覆訊息
- * @version 2025-07-15-V1.0.0
+ * @version 2025-07-15-V1.0.3
  * @date 2025-07-15 09:30:00
- * @description 格式化成功或失敗的回覆訊息
+ * @description 格式化成功或失敗的回覆訊息，調整顯示順序和備註內容
  */
 function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
   try {
@@ -791,13 +770,17 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
     });
 
     if (resultData && resultData.id) {
+      // 從原始資料中提取用戶輸入的備註（去除金額後的部分）
+      const originalInput = options.originalInput || resultData.subject;
+      const remark = LBK_removeAmountFromText(originalInput, resultData.amount, resultData.paymentMethod);
+
       return `記帳成功！\n` +
-             `收支ID：${resultData.id}\n` +
              `金額：${resultData.amount}元 (${resultData.type === 'income' ? '收入' : '支出'})\n` +
              `支付方式：${resultData.paymentMethod}\n` +
              `時間：${currentDateTime}\n` +
              `科目：${resultData.subject}\n` +
-             `備註：${resultData.subject}\n` +
+             `備註：${remark}\n` +
+             `收支ID：${resultData.id}\n` +
              `使用者類型：J`;
     } else {
       return `記帳失敗！\n` +
@@ -1103,12 +1086,18 @@ async function LBK_identifySubject(subject, userId, processId) {
     // 首先嘗試精確匹配
     const exactMatch = await LBK_getSubjectCode(subject, userId, processId);
 
+    // 判斷收支類型：8和9開頭為收入，其他為支出
+    const majorCode = exactMatch.majorCode;
+    const isIncome = String(majorCode).startsWith('8') || String(majorCode).startsWith('9');
+
     return {
       success: true,
       data: {
         subjectCode: exactMatch.subCode,
         subjectName: exactMatch.subName,
-        majorCode: exactMatch.majorCode
+        majorCode: exactMatch.majorCode,
+        isIncome: isIncome,
+        defaultPaymentMethod: isIncome ? "現金" : "刷卡"
       }
     };
 
@@ -1117,12 +1106,18 @@ async function LBK_identifySubject(subject, userId, processId) {
     const fuzzyMatch = await LBK_fuzzyMatch(subject, 0.7, userId, processId);
 
     if (fuzzyMatch) {
+      // 判斷收支類型
+      const majorCode = fuzzyMatch.majorCode;
+      const isIncome = String(majorCode).startsWith('8') || String(majorCode).startsWith('9');
+
       return {
         success: true,
         data: {
           subjectCode: fuzzyMatch.subCode,
           subjectName: fuzzyMatch.subName,
-          majorCode: fuzzyMatch.majorCode
+          majorCode: fuzzyMatch.majorCode,
+          isIncome: isIncome,
+          defaultPaymentMethod: isIncome ? "現金" : "刷卡"
         }
       };
     }
