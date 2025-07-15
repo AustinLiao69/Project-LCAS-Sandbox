@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.0.5
+ * LBK_快速記帳模組_1.0.6
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 簡化記帳流程，實現極速處理
- * @update 2025-07-15: 升級至v1.0.4，修正bookkeepingData變數引用錯誤，強化錯誤處理機制
+ * @description LINE OA 專用快速記帳處理模組 - 修正收支ID流水號邏輯，確保查詢儲存路徑一致性
+ * @update 2025-07-15: 升級至v1.0.6，修正收支ID查詢邏輯，統一查詢和儲存路徑為user_${userId}
  */
 
 // 引入所需模組
@@ -79,7 +79,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.0.5",
+        moduleVersion: "1.0.6",
         errorType: parseResult.errorType || "PARSE_ERROR"
       };
     }
@@ -104,7 +104,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.0.5",
+        moduleVersion: "1.0.6",
         errorType: bookkeepingResult.errorType || "BOOKING_ERROR"
       };
     }
@@ -124,7 +124,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       module: "LBK",
       data: bookkeepingResult.data,
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.0.5"
+      moduleVersion: "1.0.6"
     };
 
   } catch (error) {
@@ -144,7 +144,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       moduleCode: "LBK",
       module: "LBK",
       processingTime: 0,
-      moduleVersion: "1.0.5",
+      moduleVersion: "1.0.6",
       errorType: "SYSTEM_ERROR"
     };
   }
@@ -550,7 +550,7 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
     }
 
     // 生成記帳ID
-    const bookkeepingId = await LBK_generateBookkeepingId(processId);
+    const bookkeepingId = await LBK_generateBookkeepingId(bookkeepingData.userId, processId);
 
     // 準備記帳資料
     const preparedData = LBK_prepareBookkeepingData(bookkeepingId, bookkeepingData, processId);
@@ -590,12 +590,12 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
 }
 
 /**
- * 09. 生成唯一記帳ID
- * @version 2025-07-15-V1.0.0
- * @date 2025-07-15 09:30:00
- * @description 生成格式為YYYYMMDD-NNNNN的唯一記帳ID
+ * 09. 生成唯一記帳ID - 修正查詢路徑一致性
+ * @version 2025-07-15-V1.0.6
+ * @date 2025-07-15 16:45:00
+ * @description 生成格式為YYYYMMDD-NNNNN的唯一記帳ID，統一查詢和儲存路徑
  */
-async function LBK_generateBookkeepingId(processId) {
+async function LBK_generateBookkeepingId(userId, processId) {
   try {
     const today = new Date();
     const year = today.getFullYear();
@@ -606,10 +606,10 @@ async function LBK_generateBookkeepingId(processId) {
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
 
-    // 查詢當天的所有記錄
+    // 查詢當天的所有記錄 - 修正：統一查詢和儲存路徑為user_${userId}
     const todayQuery = await db
       .collection('ledgers')
-      .doc('ledger_structure_001')
+      .doc(`user_${userId}`)
       .collection('entries')
       .where('收支ID', '>=', dateStr + '-00000')
       .where('收支ID', '<=', dateStr + '-99999')
@@ -640,7 +640,7 @@ async function LBK_generateBookkeepingId(processId) {
     return bookkeepingId;
 
   } catch (error) {
-    LBK_logError(`生成記帳ID失敗: ${error.toString()} [${processId}]`, "ID生成", "", "ID_GEN_ERROR", error.toString(), "LBK_generateBookkeepingId");
+    LBK_logError(`生成記帳ID失敗: ${error.toString()} [${processId}]`, "ID生成", userId, "ID_GEN_ERROR", error.toString(), "LBK_generateBookkeepingId");
 
     const timestamp = new Date().getTime();
     const fallbackId = `F${timestamp}`;
