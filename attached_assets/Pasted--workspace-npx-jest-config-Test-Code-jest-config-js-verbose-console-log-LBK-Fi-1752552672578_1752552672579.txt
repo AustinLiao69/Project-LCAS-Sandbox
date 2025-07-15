@@ -1,0 +1,905 @@
+~/workspace$ npx jest --config="Test Code/jest.config.js" --verbose
+  console.log
+    🔥 LBK模組: Firebase Admin 自動初始化完成
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    🔧 全域測試環境準備...
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    ✅ 測試環境準備完成
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    🔧 LBK測試環境準備中...
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+ FAIL  Test Code/3151. TC_MLS.js
+  ● Test suite failed to run
+
+    Cannot find module './2031. DD.js' from 'Modules/2051. MLS.js'
+
+    Require stack:
+      Modules/2051. MLS.js
+      Test Code/3151. TC_MLS.js
+
+       9 | const admin = require('firebase-admin');
+      10 | const DL = require('./2010. DL.js');
+    > 11 | const DD = require('./2031. DD.js');
+         |            ^
+      12 |
+      13 | // Firestore 資料庫引用
+      14 | const db = admin.firestore();
+
+      at Resolver._throwModNotFoundError (node_modules/jest-resolve/build/index.js:863:11)
+      at Object.require (Modules/2051. MLS.js:11:12)
+      at Object.require (Test Code/3151. TC_MLS.js:10:13)
+
+  console.log
+    🔧 LBK模組初始化開始...
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    DL模組從環境變數恢復模式設置: NORMAL
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    DL模組初始化開始 - Firestore版本
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.error
+    Firestore連接初始化失敗: Error: Firebase Admin未初始化，請檢查FB_Serviceaccountkey.js
+        at DL_initializeFirestore (/home/runner/workspace/Modules/2010. DL.js:85:13)
+        at Object.DL_initializeFirestore [as DL_initialize] (/home/runner/workspace/Modules/2010. DL.js:125:5)
+        at Object.DL_initialize [as LBK_initialize] (/home/runner/workspace/Modules/2015. LBK.js:988:12)
+        at Object.LBK_initialize (/home/runner/workspace/Test Code/3115. TC_LBK.js:37:34)
+        at Promise.finally.completed (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:1559:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:1499:10)
+        at _callCircusHook (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:978:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTestsForDescribeBlock (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:775:7)
+        at _runTestsForDescribeBlock (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at run (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+        at runAndTransformResultsToJestFormat (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:1920:21)
+        at jestAdapter (/home/runner/workspace/node_modules/jest-circus/build/runner.js:101:19)
+        at runTestInternal (/home/runner/workspace/node_modules/jest-runner/build/testWorker.js:272:16)
+        at runTest (/home/runner/workspace/node_modules/jest-runner/build/testWorker.js:340:7)
+        at Object.worker (/home/runner/workspace/node_modules/jest-runner/build/testWorker.js:494:12)
+
+      94 |     return true;
+      95 |   } catch (error) {
+    > 96 |     console.error("Firestore連接初始化失敗:", error);
+         |             ^
+      97 |     throw error;
+      98 |   }
+      99 | }
+
+      at node_modules/jest-mock/build/index.js:305:39
+      at error (Modules/2010. DL.js:96:13)
+      at Object.DL_initializeFirestore [as DL_initialize] (Modules/2010. DL.js:125:5)
+      at Object.DL_initialize [as LBK_initialize] (Modules/2015. LBK.js:988:12)
+      at Object.LBK_initialize (Test Code/3115. TC_LBK.js:37:34)
+
+  console.error
+    DL_initialize錯誤: Error: Firebase Admin未初始化，請檢查FB_Serviceaccountkey.js
+
+      153 |     return true;
+      154 |   } catch (error) {
+    > 155 |     console.error(`DL_initialize錯誤: ${error.toString()}`);
+          |             ^
+      156 |     return false;
+      157 |   }
+      158 | }
+
+      at node_modules/jest-mock/build/index.js:305:39
+      at Object.error [as DL_initialize] (Modules/2010. DL.js:155:13)
+      at Object.DL_initialize [as LBK_initialize] (Modules/2015. LBK.js:988:12)
+      at Object.LBK_initialize (Test Code/3115. TC_LBK.js:37:34)
+
+  console.log
+    ✅ DL模組初始化成功
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    🔄 LBK模組: Firebase Admin 尚未初始化，開始初始化...
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    ✅ LBK模組: Firebase Admin 初始化完成
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.error
+    ❌ LBK模組: Firestore初始化失敗: TypeError: Cannot read properties of undefined (reading 'now')
+        at now (/home/runner/workspace/Modules/2015. LBK.js:1243:44)
+        at Object.LBK_initializeFirestore [as LBK_initialize] (/home/runner/workspace/Modules/2015. LBK.js:995:11)
+        at Object.LBK_initialize (/home/runner/workspace/Test Code/3115. TC_LBK.js:37:34)
+        at Promise.finally.completed (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:1559:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:1499:10)
+        at _callCircusHook (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:978:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTestsForDescribeBlock (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:775:7)
+        at _runTestsForDescribeBlock (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at run (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+        at runAndTransformResultsToJestFormat (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:1920:21)
+        at jestAdapter (/home/runner/workspace/node_modules/jest-circus/build/runner.js:101:19)
+        at runTestInternal (/home/runner/workspace/node_modules/jest-runner/build/testWorker.js:272:16)
+        at runTest (/home/runner/workspace/node_modules/jest-runner/build/testWorker.js:340:7)
+        at Object.worker (/home/runner/workspace/node_modules/jest-runner/build/testWorker.js:494:12)
+
+      1254 |
+      1255 |   } catch (error) {
+    > 1256 |     console.error('❌ LBK模組: Firestore初始化失敗:', error);
+           |             ^
+      1257 |     throw error;
+      1258 |   }
+      1259 | }
+
+      at node_modules/jest-mock/build/index.js:305:39
+      at error (Modules/2015. LBK.js:1256:13)
+      at Object.LBK_initializeFirestore [as LBK_initialize] (Modules/2015. LBK.js:995:11)
+      at Object.LBK_initialize (Test Code/3115. TC_LBK.js:37:34)
+
+  console.error
+    ❌ LBK模組初始化失敗: TypeError: Cannot read properties of undefined (reading 'now')
+        at now (/home/runner/workspace/Modules/2015. LBK.js:1243:44)
+        at Object.LBK_initializeFirestore [as LBK_initialize] (/home/runner/workspace/Modules/2015. LBK.js:995:11)
+        at Object.LBK_initialize (/home/runner/workspace/Test Code/3115. TC_LBK.js:37:34)
+        at Promise.finally.completed (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:1559:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:1499:10)
+        at _callCircusHook (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:978:40)
+        at processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at _runTestsForDescribeBlock (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:775:7)
+        at _runTestsForDescribeBlock (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+        at run (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+        at runAndTransformResultsToJestFormat (/home/runner/workspace/node_modules/jest-circus/build/jestAdapterInit.js:1920:21)
+        at jestAdapter (/home/runner/workspace/node_modules/jest-circus/build/runner.js:101:19)
+        at runTestInternal (/home/runner/workspace/node_modules/jest-runner/build/testWorker.js:272:16)
+        at runTest (/home/runner/workspace/node_modules/jest-runner/build/testWorker.js:340:7)
+        at Object.worker (/home/runner/workspace/node_modules/jest-runner/build/testWorker.js:494:12)
+
+      1002 |
+      1003 |   } catch (error) {
+    > 1004 |     console.error('❌ LBK模組初始化失敗:', error);
+           |             ^
+      1005 |     return false;
+      1006 |   }
+      1007 | }
+
+      at node_modules/jest-mock/build/index.js:305:39
+      at Object.error [as LBK_initialize] (Modules/2015. LBK.js:1004:13)
+      at Object.<anonymous> (Test Code/3115. TC_LBK.js:37:24)
+
+  console.log
+    🧹 LBK測試環境清理中...
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    ✅ LBK測試環境清理完成
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    🧹 全域測試環境清理...
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+  console.log
+    ✅ 測試環境清理完成
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+ FAIL  Test Code/3115. TC_LBK.js
+  LBK 快速記帳模組測試
+    TC-001: 文字解析功能驗證
+      ✕ 1.1 負數格式解析 (4 ms)
+      ✕ 1.2 標準格式解析
+      ✕ 1.3 不支援格式拒絕
+      ✕ 1.4 解析準確率統計
+    TC-002: 科目匹配與模糊搜尋
+      ✕ 2.1 精確匹配測試 (1 ms)
+      ✕ 2.2 模糊匹配測試
+      ✕ 2.3 科目不存在處理
+      ✕ 2.4 科目匹配效能測試 (1 ms)
+    TC-003: 金額處理與驗證
+      ✕ 3.1 各種金額格式提取
+      ✕ 3.2 邊界值測試
+      ✕ 3.3 無效金額處理
+      ✕ 3.4 不支援幣別處理
+    TC-004: 記帳ID生成與唯一性
+      ✕ 4.1 ID格式驗證
+      ✕ 4.2 ID唯一性測試
+      ✕ 4.3 併發ID生成測試
+    TC-005: Firestore資料儲存一致性
+      ✕ 5.1 資料結構一致性
+      ✕ 5.2 Firestore儲存測試
+      ✕ 5.3 時區處理驗證
+    TC-006: 效能與回應時間驗證
+      ✕ 6.1 單筆記帳處理時間
+      ✕ 6.2 批量處理效能測試
+      ✕ 6.3 記憶體使用監控
+    TC-007: 錯誤處理與回覆機制
+      ✕ 7.1 解析錯誤處理
+      ✕ 7.2 科目不存在錯誤處理
+      ✕ 7.3 系統異常處理
+      ✕ 7.4 回覆訊息格式化
+    TC-008: WH模組整合測試
+      ✕ 8.1 介面規格驗證 (1 ms)
+      ✕ 8.2 處理時間回報準確性
+    TC-009: 日誌記錄與除錯資訊
+      ✕ 9.1 日誌記錄完整性
+      ✕ 9.2 ProcessId追蹤功能
+    TC-010: 邊界與壓力測試
+      ✕ 10.1 極端輸入測試
+      ✕ 10.2 大量併發請求測試
+      ✕ 10.3 長時間運行穩定性
+    LBK測試摘要
+      ✕ 生成測試報告
+
+  ● LBK 快速記帳模組測試 › TC-001: 文字解析功能驗證 › 1.1 負數格式解析
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-001: 文字解析功能驗證 › 1.2 標準格式解析
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-001: 文字解析功能驗證 › 1.3 不支援格式拒絕
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-001: 文字解析功能驗證 › 1.4 解析準確率統計
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-002: 科目匹配與模糊搜尋 › 2.1 精確匹配測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-002: 科目匹配與模糊搜尋 › 2.2 模糊匹配測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-002: 科目匹配與模糊搜尋 › 2.3 科目不存在處理
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-002: 科目匹配與模糊搜尋 › 2.4 科目匹配效能測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-003: 金額處理與驗證 › 3.1 各種金額格式提取
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-003: 金額處理與驗證 › 3.2 邊界值測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-003: 金額處理與驗證 › 3.3 無效金額處理
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-003: 金額處理與驗證 › 3.4 不支援幣別處理
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-004: 記帳ID生成與唯一性 › 4.1 ID格式驗證
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-004: 記帳ID生成與唯一性 › 4.2 ID唯一性測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-004: 記帳ID生成與唯一性 › 4.3 併發ID生成測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-005: Firestore資料儲存一致性 › 5.1 資料結構一致性
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-005: Firestore資料儲存一致性 › 5.2 Firestore儲存測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-005: Firestore資料儲存一致性 › 5.3 時區處理驗證
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-006: 效能與回應時間驗證 › 6.1 單筆記帳處理時間
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-006: 效能與回應時間驗證 › 6.2 批量處理效能測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-006: 效能與回應時間驗證 › 6.3 記憶體使用監控
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-007: 錯誤處理與回覆機制 › 7.1 解析錯誤處理
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-007: 錯誤處理與回覆機制 › 7.2 科目不存在錯誤處理
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-007: 錯誤處理與回覆機制 › 7.3 系統異常處理
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-007: 錯誤處理與回覆機制 › 7.4 回覆訊息格式化
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-008: WH模組整合測試 › 8.1 介面規格驗證
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-008: WH模組整合測試 › 8.2 處理時間回報準確性
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-009: 日誌記錄與除錯資訊 › 9.1 日誌記錄完整性
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-009: 日誌記錄與除錯資訊 › 9.2 ProcessId追蹤功能
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-010: 邊界與壓力測試 › 10.1 極端輸入測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-010: 邊界與壓力測試 › 10.2 大量併發請求測試
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › TC-010: 邊界與壓力測試 › 10.3 長時間運行穩定性
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+  ● LBK 快速記帳模組測試 › LBK測試摘要 › 生成測試報告
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      36 |     // 初始化LBK模組
+      37 |     const initResult = await LBK.LBK_initialize();
+    > 38 |     expect(initResult).toBe(true);
+         |                        ^
+      39 |     
+      40 |     // 確保測試用戶有完整的科目資料
+      41 |     console.log('📋 準備測試科目資料...');
+
+      at Object.toBe (Test Code/3115. TC_LBK.js:38:24)
+
+📦 report is created on: /home/runner/workspace/coverage/test-report.html
+Running coverage on untested files...Failed to collect coverage from /home/runner/workspace/Modules/2014. BS.js
+ERROR: /home/runner/workspace/Modules/2014. BS.js: Missing semicolon. (1772:23)
+
+  1770 |     default:
+  1771 |       ```javascript
+> 1772 |       throw new Error(`不支援的雲端服務: ${provider}`);
+       |                        ^
+  1773 |   }
+  1774 | }
+  1775 | 
+STACK: SyntaxError: /home/runner/workspace/Modules/2014. BS.js: Missing semicolon. (1772:23)
+
+  1770 |     default:
+  1771 |       ```javascript
+> 1772 |       throw new Error(`不支援的雲端服務: ${provider}`);
+       |                        ^
+  1773 |   }
+  1774 | }
+  1775 | 
+    at constructor (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:367:19)
+    at Parser.raise (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:6627:19)
+    at Parser.semicolon (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:6923:10)
+    at Parser.parseExpressionStatement (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13285:10)
+    at Parser.parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12899:19)
+    at Parser.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12767:17)
+    at Parser.parseStatementListItem (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12747:17)
+    at Parser.parseSwitchStatement (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13174:36)
+    at Parser.parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12800:21)
+    at Parser.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12767:17)
+    at Parser.parseStatementListItem (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12747:17)
+    at Parser.parseBlockOrModuleBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13316:61)
+    at Parser.parseBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13309:10)
+    at Parser.parseBlock (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13297:10)
+    at Parser.parseFunctionBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12101:24)
+    at Parser.parseFunctionBodyAndFinish (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12087:10)
+    at /home/runner/workspace/node_modules/@babel/parser/lib/index.js:13445:12
+    at Parser.withSmartMixTopicForbiddingContext (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12404:14)
+    at Parser.parseFunction (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13444:10)
+    at Parser.parseFunctionStatement (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13125:17)
+    at Parser.parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12890:25)
+    at Parser.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12767:17)
+    at Parser.parseModuleItem (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12744:17)
+    at Parser.parseBlockOrModuleBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13316:36)
+    at Parser.parseBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13309:10)
+    at Parser.parseProgram (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12625:10)
+    at Parser.parseTopLevel (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12615:25)
+    at Parser.parse (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:14492:10)
+    at parse (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:14526:38)
+    at parser (/home/runner/workspace/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (/home/runner/workspace/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (/home/runner/workspace/node_modules/@babel/core/lib/transformation/index.js:22:50)
+    at run.next (<anonymous>)
+    at transform (/home/runner/workspace/node_modules/@babel/core/lib/transform.js:22:33)
+    at transform.next (<anonymous>)
+    at step (/home/runner/workspace/node_modules/gensync/index.js:261:32)
+    at /home/runner/workspace/node_modules/gensync/index.js:273:13
+    at async.call.result.err.err (/home/runner/workspace/node_modules/gensync/index.js:223:11)
+    at /home/runner/workspace/node_modules/gensync/index.js:189:28
+    at /home/runner/workspace/node_modules/@babel/core/lib/gensync-utils/async.js:67:7
+    at /home/runner/workspace/node_modules/gensync/index.js:113:33
+    at step (/home/runner/workspace/node_modules/gensync/index.js:287:14)
+    at /home/runner/workspace/node_modules/gensync/index.js:273:13
+    at async.call.result.err.err (/home/runner/workspace/node_modules/gensync/index.js:223:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+-|---------|----------|---------|---------|-------------------
+ | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-|---------|----------|---------|---------|-------------------
+ |    1.14 |     0.32 |       1 |    1.16 |                   
+  |       0 |        0 |       0 |       0 | 9-1943            
+  |       0 |        0 |       0 |       0 | 9-1099            
+  |    10.7 |     4.06 |       8 |   11.02 | ...28-153,167-997 
+  |       0 |        0 |       0 |       0 | 9-472             
+  |       0 |        0 |       0 |       0 | 9-1156            
+  |       0 |        0 |       0 |       0 | 8-1199            
+  |    8.04 |     1.84 |    6.45 |     8.2 | ...1253,1263-1277 
+  |       0 |        0 |       0 |       0 | 9-1909            
+  |       0 |        0 |       0 |       0 | 12-1388           
+  |       0 |        0 |       0 |       0 | 13-1579           
+  |       0 |        0 |       0 |       0 | 9-335             
+  |       0 |        0 |       0 |       0 | 6-2562            
+  |       0 |        0 |       0 |       0 | 9-1142            
+  |       0 |        0 |       0 |       0 | 8-956             
+-|---------|----------|---------|---------|-------------------
+Test Suites: 2 failed, 2 total
+Tests:       33 failed, 33 total
+Snapshots:   0 total
+Time:        6.561 s
+Ran all test suites.
+~/workspace$ 
