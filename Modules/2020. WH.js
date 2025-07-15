@@ -8,6 +8,7 @@
 // 首先引入其他模組
 const DD = require("./2031. DD1.js");
 const BK = require("./2001. BK.js");
+const LBK = require("./2015. LBK.js");  // 新增 LBK 模組引入
 const DL = require("./2010. DL.js");
 const AM = require("./2009. AM.js");
 
@@ -1179,13 +1180,13 @@ async function WH_processEventAsync(event, requestId, userId) {
 
         // 根據事件類型實現完全路徑分離
         try {
-          // 強制路徑分離：所有 LINE 文字訊息走 BK 2.0 直連路徑
-          console.log(`LINE文字訊息強制走BK 2.0路徑 [${requestId}]`);
+          // 強制路徑分離：所有 LINE 文字訊息走 LBK 直連路徑
+          console.log(`LINE文字訊息強制走LBK直連路徑 [${requestId}]`);
 
           WH_directLogWrite([
             WH_formatDateTime(new Date()),
-            `WH 2.0.20: LINE文字訊息強制走BK 2.0直連路徑 [${requestId}]`,
-            "簡化路徑",
+            `WH 2.0.20: LINE文字訊息強制走LBK直連路徑，不經過DD模組 [${requestId}]`,
+            "LBK簡化路徑",
             userId,
             "",
             "WH",
@@ -1195,8 +1196,17 @@ async function WH_processEventAsync(event, requestId, userId) {
             "INFO",
           ]);
 
-          // 直接調用 BK 2.0 處理，不經過 DD 模組
-          result = await BK.BK_processDirectBookkeeping(event);
+          // 準備 LBK 處理所需的數據
+          const lbkInputData = {
+            userId: userId,
+            messageText: text,
+            replyToken: event.replyToken,
+            timestamp: event.timestamp,
+            processId: requestId
+          };
+
+          // 直接調用 LBK 處理，完全跳過 DD 模組
+          result = await LBK.LBK_processQuickBookkeeping(lbkInputData);
 
           // 記錄DD_distributeData處理結果預覽
           if (result) {
@@ -1226,10 +1236,10 @@ async function WH_processEventAsync(event, requestId, userId) {
             console.log(`DD_distributeData返回空結果 [${requestId}]`);
           }
 
-          // 驗證結果是否經過 BK_formatSystemReplyMessage 格式化
-          if (!result || !result.responseMessage || result.moduleCode !== 'BK') {
-            // 如果未格式化，強制通過 BK 格式化
-            console.log(`檢測到未格式化的結果，強制使用 BK_formatSystemReplyMessage [${requestId}]`);
+          // 驗證結果是否正確格式化（支援 LBK 和 BK 模組）
+          if (!result || !result.message) {
+            // 如果未格式化，使用 LBK 或 BK 格式化
+            console.log(`檢測到未格式化的結果，嘗試格式化 [${requestId}]`);
             
             const errorData = result || { 
               success: false, 
@@ -1243,12 +1253,23 @@ async function WH_processEventAsync(event, requestId, userId) {
             };
 
             try {
-              result = await BK.BK_formatSystemReplyMessage(errorData, "WH", { 
-                userId: userId, 
-                processId: requestId 
-              });
+              // 先嘗試使用 LBK 格式化，如果失敗則使用 BK
+              if (typeof LBK.LBK_formatReplyMessage === 'function') {
+                const formattedMessage = LBK.LBK_formatReplyMessage(errorData, "LBK");
+                result = {
+                  success: errorData.success,
+                  responseMessage: formattedMessage,
+                  moduleCode: "LBK",
+                  error: errorData.error
+                };
+              } else {
+                result = await BK.BK_formatSystemReplyMessage(errorData, "WH", { 
+                  userId: userId, 
+                  processId: requestId 
+                });
+              }
             } catch (formatError) {
-              console.log(`強制格式化失敗: ${formatError} [${requestId}]`);
+              console.log(`格式化失敗: ${formatError} [${requestId}]`);
               result = {
                 success: false,
                 responseMessage: "處理您的請求時發生錯誤，請稍後再試。",
@@ -1259,15 +1280,15 @@ async function WH_processEventAsync(event, requestId, userId) {
 
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
-              `WH 2.0.17: 強制格式化未驗證的訊息 [${requestId}]`,
+              `WH 2.0.20: 格式化LBK處理結果 [${requestId}]`,
               "訊息格式化",
               userId,
-              "FORCE_FORMAT",
+              "LBK_FORMAT",
               "WH",
               "",
               0,
               "WH_processEventAsync",
-              "WARNING",
+              "INFO",
             ]);
           }
 
