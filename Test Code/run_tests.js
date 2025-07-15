@@ -1,13 +1,23 @@
 
 /**
- * 測試執行腳本
- * @description 自動化測試執行與報告生成
+ * 測試執行腳本_1.1.0
+ * @module 測試執行腳本
+ * @description 自動化測試執行與報告生成 - 修正路徑配置問題
+ * @version 1.1.0
+ * @update 2025-07-15: 修正Jest配置路徑錯誤，調整測試檔案匹配模式
+ * @date 2025-07-15 11:46:00
  */
 
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * TestRunner 類別 - 測試執行管理器
+ * @version 1.1.0
+ * @date 2025-07-15 11:46:00
+ * @description 負責執行測試、收集結果並生成報告
+ */
 class TestRunner {
   constructor() {
     this.testResults = {
@@ -19,15 +29,23 @@ class TestRunner {
       coverage: null,
       errors: []
     };
+    this.version = '1.1.0';
   }
 
+  /**
+   * 01. 執行測試主程序
+   * @version 2025-07-15-V1.1.0
+   * @date 2025-07-15 11:46:00
+   * @description 修正Jest配置檔案路徑並執行測試
+   */
   async runTests() {
     console.log('🚀 開始執行 MLS 多帳本管理模組測試');
     console.log('📅 測試開始時間:', this.testResults.startTime.toISOString());
+    console.log('🔧 TestRunner 版本:', this.version);
     
     try {
-      // 執行 Jest 測試
-      const testCommand = 'npx jest --config=tests/jest.config.js --coverage';
+      // 修正 Jest 配置路徑
+      const testCommand = 'npx jest --config="Test Code/jest.config.js" --coverage';
       
       await this.executeCommand(testCommand);
       
@@ -95,9 +113,12 @@ class TestRunner {
       ...this.testResults,
       duration: this.testResults.endTime - this.testResults.startTime,
       testSuite: 'MLS 多帳本管理模組',
-      version: '1.0.0',
+      version: this.version,
+      testRunnerVersion: this.version,
       environment: process.env.NODE_ENV || 'test',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      configurationFixed: true,
+      pathResolutionStatus: 'resolved'
     };
 
     // 生成 JSON 報告

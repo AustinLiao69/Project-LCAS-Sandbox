@@ -1,0 +1,126 @@
+~/workspace$ npx jest --config="Test Code/jest.config.js" --verbose
+ FAIL  Test Code/3115. TC_LBK.js
+  ● Test suite failed to run
+
+    TypeError: Cannot read properties of undefined (reading 'length')
+
+      12 |
+      13 | // 確保 Firebase Admin 在模組載入時就初始化
+    > 14 | if (!admin.apps.length) {
+         |                 ^
+      15 |   try {
+      16 |     const serviceAccount = require('./Serviceaccountkey.json');
+      17 |     admin.initializeApp({
+
+      at Object.length (Modules/2015. LBK.js:14:17)
+      at Object.require (Test Code/3115. TC_LBK.js:12:13)
+
+ FAIL  Test Code/3151. TC_MLS.js
+  ● Test suite failed to run
+
+    TypeError: Cannot read properties of undefined (reading 'length')
+
+      11 |
+      12 | // 初始化 Firebase Admin（防重複初始化）
+    > 13 | if (!admin.apps.length) {
+         |                 ^
+      14 |   admin.initializeApp({
+      15 |     credential: admin.credential.cert(serviceAccount),
+      16 |     databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
+
+      at Object.length (Modules/2010. DL.js:13:17)
+      at Object.require (Modules/2051. MLS.js:10:12)
+      at Object.require (Test Code/3151. TC_MLS.js:10:13)
+
+📦 report is created on: /home/runner/workspace/coverage/test-report.html
+Running coverage on untested files...Failed to collect coverage from /home/runner/workspace/Modules/2014. BS.js
+ERROR: /home/runner/workspace/Modules/2014. BS.js: Missing semicolon. (1772:23)
+
+  1770 |     default:
+  1771 |       ```javascript
+> 1772 |       throw new Error(`不支援的雲端服務: ${provider}`);
+       |                        ^
+  1773 |   }
+  1774 | }
+  1775 | 
+STACK: SyntaxError: /home/runner/workspace/Modules/2014. BS.js: Missing semicolon. (1772:23)
+
+  1770 |     default:
+  1771 |       ```javascript
+> 1772 |       throw new Error(`不支援的雲端服務: ${provider}`);
+       |                        ^
+  1773 |   }
+  1774 | }
+  1775 | 
+    at constructor (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:367:19)
+    at Parser.raise (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:6627:19)
+    at Parser.semicolon (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:6923:10)
+    at Parser.parseExpressionStatement (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13285:10)
+    at Parser.parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12899:19)
+    at Parser.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12767:17)
+    at Parser.parseStatementListItem (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12747:17)
+    at Parser.parseSwitchStatement (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13174:36)
+    at Parser.parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12800:21)
+    at Parser.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12767:17)
+    at Parser.parseStatementListItem (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12747:17)
+    at Parser.parseBlockOrModuleBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13316:61)
+    at Parser.parseBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13309:10)
+    at Parser.parseBlock (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13297:10)
+    at Parser.parseFunctionBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12101:24)
+    at Parser.parseFunctionBodyAndFinish (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12087:10)
+    at /home/runner/workspace/node_modules/@babel/parser/lib/index.js:13445:12
+    at Parser.withSmartMixTopicForbiddingContext (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12404:14)
+    at Parser.parseFunction (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13444:10)
+    at Parser.parseFunctionStatement (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13125:17)
+    at Parser.parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12890:25)
+    at Parser.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12767:17)
+    at Parser.parseModuleItem (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12744:17)
+    at Parser.parseBlockOrModuleBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13316:36)
+    at Parser.parseBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13309:10)
+    at Parser.parseProgram (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12625:10)
+    at Parser.parseTopLevel (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12615:25)
+    at Parser.parse (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:14492:10)
+    at parse (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:14526:38)
+    at parser (/home/runner/workspace/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (/home/runner/workspace/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (/home/runner/workspace/node_modules/@babel/core/lib/transformation/index.js:22:50)
+    at run.next (<anonymous>)
+    at transform (/home/runner/workspace/node_modules/@babel/core/lib/transform.js:22:33)
+    at transform.next (<anonymous>)
+    at step (/home/runner/workspace/node_modules/gensync/index.js:261:32)
+    at /home/runner/workspace/node_modules/gensync/index.js:273:13
+    at async.call.result.err.err (/home/runner/workspace/node_modules/gensync/index.js:223:11)
+    at /home/runner/workspace/node_modules/gensync/index.js:189:28
+    at /home/runner/workspace/node_modules/@babel/core/lib/gensync-utils/async.js:67:7
+    at /home/runner/workspace/node_modules/gensync/index.js:113:33
+    at step (/home/runner/workspace/node_modules/gensync/index.js:287:14)
+    at /home/runner/workspace/node_modules/gensync/index.js:273:13
+    at async.call.result.err.err (/home/runner/workspace/node_modules/gensync/index.js:223:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+-|---------|----------|---------|---------|-------------------
+ | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-|---------|----------|---------|---------|-------------------
+ |       0 |        0 |       0 |       0 |                   
+  |       0 |        0 |       0 |       0 | 9-1943            
+  |       0 |        0 |       0 |       0 | 9-1099            
+  |       0 |        0 |       0 |       0 | 9-1004            
+  |       0 |        0 |       0 |       0 | 9-472             
+  |       0 |        0 |       0 |       0 | 9-1156            
+  |       0 |        0 |       0 |       0 | 8-1199            
+  |       0 |        0 |       0 |       0 | 9-1281            
+  |       0 |        0 |       0 |       0 | 9-1909            
+  |       0 |        0 |       0 |       0 | 12-1388           
+  |       0 |        0 |       0 |       0 | 13-1579           
+  |       0 |        0 |       0 |       0 | 9-335             
+  |       0 |        0 |       0 |       0 | 6-2562            
+  |       0 |        0 |       0 |       0 | 9-1142            
+  |       0 |        0 |       0 |       0 | 8-956             
+-|---------|----------|---------|---------|-------------------
+Test Suites: 2 failed, 2 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        5.564 s
+Ran all test suites.
+~/workspace$ 

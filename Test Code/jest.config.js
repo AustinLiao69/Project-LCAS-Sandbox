@@ -1,18 +1,30 @@
 
 /**
- * Jest 測試配置
- * @description MLS 多帳本管理模組測試配置
+ * Jest測試配置_1.1.0
+ * @module Jest測試配置
+ * @description MLS 多帳本管理模組測試配置 - 修正檔案匹配模式
+ * @version 1.1.0
+ * @update 2025-07-15: 修正測試檔案匹配模式，調整為Test Code目錄結構
+ * @date 2025-07-15 11:46:00
  */
 
 module.exports = {
   // 測試環境
   testEnvironment: 'node',
   
-  // 測試檔案匹配模式
-  testMatch: [
-    '**/tests/**/*.test.js',
-    '**/tests/**/*.spec.js',
-    '**/tests/**/*_test.js'
+  // 設定 Jest 根目錄
+  rootDir: '../',
+  
+  // 明確清除預設 testMatch 以使用 testRegex
+  testMatch: null,
+  
+  // 使用 testRegex 支援複雜檔案名稱格式（數字開頭、空格、TC_ 等）
+  testRegex: [
+    'Test Code/.*\\.test\\.js$',
+    'Test Code/.*\\.spec\\.js$', 
+    'Test Code/.*_test\\.js$',
+    'Test Code/.*TC_.*\\.js$',
+    'Test Code/\\d+\\. TC_.*\\.js$'
   ],
   
   // 測試覆蓋率設定
@@ -30,8 +42,8 @@ module.exports = {
   // 測試超時設定
   testTimeout: 30000,
   
-  // 設定檔案
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  // 設定檔案 - 指向Test Code目錄下的setup.js
+  setupFilesAfterEnv: ['./Test Code/setup.js'],
   
   // 忽略模式
   testPathIgnorePatterns: [
