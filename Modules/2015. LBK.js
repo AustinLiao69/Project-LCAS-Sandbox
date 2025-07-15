@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.0.3
+ * LBK_快速記帳模組_1.0.5
  * @module LBK模組
  * @description LINE OA 專用快速記帳處理模組 - 簡化記帳流程，實現極速處理
- * @update 2025-07-15: 升級至v1.0.3，修正收入/支出判斷邏輯，移除正負號邏輯，調整回覆訊息格式
+ * @update 2025-07-15: 升級至v1.0.4，修正bookkeepingData變數引用錯誤，強化錯誤處理機制
  */
 
 // 引入所需模組
@@ -50,9 +50,9 @@ let LBK_INIT_STATUS = {
 
 /**
  * 01. 處理快速記帳的主函數
- * @version 2025-07-15-V1.0.1
- * @date 2025-07-15 15:30:00
- * @description 接收WH模組的記帳請求，執行完整的記帳處理流程 - 增強測試支援和效能監控
+ * @version 2025-07-15-V1.0.4
+ * @date 2025-07-15 16:30:00
+ * @description 接收WH模組的記帳請求，執行完整的記帳處理流程 - 修正變數引用錯誤，強化錯誤處理機制
  */
 async function LBK_processQuickBookkeeping(inputData) {
   const processId = inputData.processId || crypto.randomUUID().substring(0, 8);
@@ -65,14 +65,21 @@ async function LBK_processQuickBookkeeping(inputData) {
 
     if (!parseResult.success) {
       const errorMessage = parseResult.error || "解析失敗";
+      // 使用LBK_formatReplyMessage統一格式化錯誤回覆
+      const formattedErrorMessage = LBK_formatReplyMessage(null, "LBK", {
+        originalInput: inputData.messageText,
+        error: errorMessage,
+        success: false
+      });
+
       return {
         success: false,
-        message: errorMessage,
-        responseMessage: errorMessage,
+        message: formattedErrorMessage,
+        responseMessage: formattedErrorMessage,
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.0.2",
+        moduleVersion: "1.0.5",
         errorType: parseResult.errorType || "PARSE_ERROR"
       };
     }
@@ -82,21 +89,29 @@ async function LBK_processQuickBookkeeping(inputData) {
 
     if (!bookkeepingResult.success) {
       const errorMessage = bookkeepingResult.error || "記帳失敗";
+      // 使用LBK_formatReplyMessage統一格式化錯誤回覆
+      const formattedErrorMessage = LBK_formatReplyMessage(null, "LBK", {
+        originalInput: parseResult.data.subject,
+        error: errorMessage,
+        success: false,
+        partialData: parseResult.data
+      });
+
       return {
         success: false,
-        message: errorMessage,
-        responseMessage: errorMessage,
+        message: formattedErrorMessage,
+        responseMessage: formattedErrorMessage,
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.0.2",
+        moduleVersion: "1.0.5",
         errorType: bookkeepingResult.errorType || "BOOKING_ERROR"
       };
     }
 
     // 格式化回覆訊息，傳遞原始輸入作為參考
     const replyMessage = LBK_formatReplyMessage(bookkeepingResult.data, "LBK", {
-      originalInput: bookkeepingData.subject
+      originalInput: parseResult.data.subject
     });
 
     LBK_logInfo(`快速記帳完成 [${processId}]`, "快速記帳", inputData.userId || "", "LBK_processQuickBookkeeping");
@@ -109,20 +124,27 @@ async function LBK_processQuickBookkeeping(inputData) {
       module: "LBK",
       data: bookkeepingResult.data,
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.0.2"
+      moduleVersion: "1.0.5"
     };
 
   } catch (error) {
     LBK_logError(`快速記帳處理失敗: ${error.toString()} [${processId}]`, "快速記帳", inputData.userId || "", "PROCESS_ERROR", error.toString(), "LBK_processQuickBookkeeping");
 
+    // 使用LBK_formatReplyMessage統一格式化系統錯誤回覆
+    const formattedErrorMessage = LBK_formatReplyMessage(null, "LBK", {
+      originalInput: inputData.messageText,
+      error: "系統錯誤，請稍後再試",
+      success: false
+    });
+
     return {
       success: false,
-      message: "系統錯誤，請稍後再試",
-      responseMessage: "系統錯誤，請稍後再試",
+      message: formattedErrorMessage,
+      responseMessage: formattedErrorMessage,
       moduleCode: "LBK",
       module: "LBK",
       processingTime: 0,
-      moduleVersion: "1.0.2",
+      moduleVersion: "1.0.5",
       errorType: "SYSTEM_ERROR"
     };
   }
@@ -754,9 +776,9 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
 
 /**
  * 13. 格式化回覆訊息
- * @version 2025-07-15-V1.0.3
- * @date 2025-07-15 09:30:00
- * @description 格式化成功或失敗的回覆訊息，調整顯示順序和備註內容
+ * @version 2025-07-15-V1.0.5
+ * @date 2025-07-15 16:30:00
+ * @description 格式化成功或失敗的回覆訊息，統一所有錯誤格式為7行標準格式
  */
 function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
   try {
@@ -769,6 +791,7 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
       minute: "2-digit"
     });
 
+    // 檢查是否為成功的記帳結果
     if (resultData && resultData.id) {
       // 從原始資料中提取用戶輸入的備註（去除金額後的部分）
       const originalInput = options.originalInput || resultData.subject;
@@ -783,13 +806,75 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
              `收支ID：${resultData.id}\n` +
              `使用者類型：J`;
     } else {
+      // 處理錯誤情況 - 統一使用7行詳細格式
+      const errorMessage = options.error || "處理失敗";
+      const originalInput = options.originalInput || "";
+      
+      // 嘗試從partialData提取資訊
+      let amount = "未知";
+      let paymentMethod = "未指定";
+      let subject = "未知科目";
+      
+      if (options.partialData) {
+        amount = options.partialData.amount || "未知";
+        paymentMethod = options.partialData.paymentMethod || "未指定";
+        subject = options.partialData.subject || "未知科目";
+      } else {
+        // 即使沒有partialData，也嘗試從originalInput中提取資訊
+        if (originalInput) {
+          // 嘗試提取金額
+          const amountMatch = originalInput.match(/(\d+)/);
+          if (amountMatch) {
+            amount = amountMatch[1];
+          }
+          
+          // 嘗試識別支付方式
+          const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
+          for (const method of paymentMethods) {
+            if (originalInput.includes(method)) {
+              paymentMethod = method;
+              break;
+            }
+          }
+          
+          // 嘗試提取科目（移除數字和支付方式後的文字）
+          const subjectMatch = originalInput.replace(/\d+/g, '').replace(/(現金|刷卡|行動支付|轉帳|元|塊|圓)/g, '').trim();
+          if (subjectMatch) {
+            subject = subjectMatch;
+          }
+        }
+      }
+
+      // 統一的7行錯誤格式
       return `記帳失敗！\n` +
+             `金額：${amount}元\n` +
+             `支付方式：${paymentMethod}\n` +
              `時間：${currentDateTime}\n` +
-             `錯誤原因：處理失敗`;
+             `科目：${subject}\n` +
+             `備註：${originalInput}\n` +
+             `使用者類型：J\n` +
+             `錯誤原因：${errorMessage}`;
     }
 
   } catch (error) {
-    return `記帳失敗！\n時間：${new Date().toLocaleString('zh-TW', {timeZone: 'Asia/Taipei'})}\n錯誤原因：訊息格式化錯誤`;
+    // 即使格式化過程出錯，也要保持統一格式
+    const currentDateTime = new Date().toLocaleString("zh-TW", {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    
+    return `記帳失敗！\n` +
+           `金額：未知元\n` +
+           `支付方式：未指定\n` +
+           `時間：${currentDateTime}\n` +
+           `科目：未知科目\n` +
+           `備註：${options.originalInput || ''}\n` +
+           `使用者類型：J\n` +
+           `錯誤原因：訊息格式化錯誤`;
   }
 }
 
@@ -819,7 +904,7 @@ function LBK_removeAmountFromText(text, amount, paymentMethod, processId) {
     }
 
     // 移除幣別單位
-    const amountEndRegex = new RegExp(`${amountStr}(元|塊|圓)$`, "i");
+    const amountEndRegex = new RegExp(amountStr + "(元|塊|圓)$", "i");
     const match = result.match(amountEndRegex);
     if (match && match.index > 0) {
       result = result.substring(0, match.index).trim();

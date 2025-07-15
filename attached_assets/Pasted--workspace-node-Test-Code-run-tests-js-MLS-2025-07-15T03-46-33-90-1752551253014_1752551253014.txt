@@ -1,0 +1,37 @@
+~/workspace$ node "Test Code/run_tests.js"
+🚀 開始執行 MLS 多帳本管理模組測試
+📅 測試開始時間: 2025-07-15T03:46:33.903Z
+執行錯誤: Error: Command failed: npx jest --config=tests/jest.config.js --coverage
+Error: Can't find a root directory while resolving a config file path.
+Provided path to resolve: tests/jest.config.js
+cwd: /home/runner/workspace
+    at resolveConfigPath (/home/runner/workspace/node_modules/jest-config/build/index.js:2437:11)
+    at readInitialOptions (/home/runner/workspace/node_modules/jest-config/build/index.js:1138:55)
+    at readConfig (/home/runner/workspace/node_modules/jest-config/build/index.js:918:13)
+    at readConfigs (/home/runner/workspace/node_modules/jest-config/build/index.js:1168:32)
+    at runCLI (/home/runner/workspace/node_modules/@jest/core/build/index.js:1393:43)
+    at Object.run (/home/runner/workspace/node_modules/jest-cli/build/index.js:656:34)
+
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at ChildProcess.exithandler (node:child_process:419:12)
+    at ChildProcess.emit (node:events:518:28)
+    at maybeClose (node:internal/child_process:1104:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:304:5) {
+  code: 1,
+  killed: false,
+  signal: null,
+  cmd: 'npx jest --config=tests/jest.config.js --coverage'
+}
+❌ 測試執行失敗: Command failed: npx jest --config=tests/jest.config.js --coverage
+Error: Can't find a root directory while resolving a config file path.
+Provided path to resolve: tests/jest.config.js
+cwd: /home/runner/workspace
+    at resolveConfigPath (/home/runner/workspace/node_modules/jest-config/build/index.js:2437:11)
+    at readInitialOptions (/home/runner/workspace/node_modules/jest-config/build/index.js:1138:55)
+    at readConfig (/home/runner/workspace/node_modules/jest-config/build/index.js:918:13)
+    at readConfigs (/home/runner/workspace/node_modules/jest-config/build/index.js:1168:32)
+    at runCLI (/home/runner/workspace/node_modules/@jest/core/build/index.js:1393:43)
+    at Object.run (/home/runner/workspace/node_modules/jest-cli/build/index.js:656:34)
+
+~/workspace$ 
