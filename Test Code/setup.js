@@ -17,35 +17,61 @@ global.console = {
   info: jest.fn(console.info)
 };
 
-// 模擬 Firebase Admin
+// 模擬 Firebase Admin - 專為 LBK 模組測試優化
 jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
-  apps: [], // 新增 apps 屬性，初始化為空陣列
+  apps: [], // 支援 admin.apps.length 檢查
   credential: {
     cert: jest.fn()
   },
   firestore: jest.fn(() => ({
     collection: jest.fn(() => ({
       doc: jest.fn(() => ({
+        collection: jest.fn(() => ({
+          where: jest.fn(() => ({
+            get: jest.fn(() => Promise.resolve({
+              empty: false,
+              docs: [
+                {
+                  id: 'test_subject_1',
+                  data: () => ({
+                    大項代碼: '4001',
+                    大項名稱: '餐飲',
+                    子項代碼: '4001001',
+                    子項名稱: '午餐',
+                    同義詞: '用餐,吃飯',
+                    isActive: true
+                  })
+                },
+                {
+                  id: 'test_subject_2', 
+                  data: () => ({
+                    大項代碼: '8001',
+                    大項名稱: '薪資',
+                    子項代碼: '8001001',
+                    子項名稱: '薪水',
+                    同義詞: '工資,收入',
+                    isActive: true
+                  })
+                }
+              ]
+            }))
+          })),
+          orderBy: jest.fn(() => ({
+            limit: jest.fn(() => ({
+              get: jest.fn(() => Promise.resolve({
+                empty: true,
+                docs: []
+              }))
+            }))
+          })),
+          add: jest.fn(() => Promise.resolve({ id: 'test_entry_id' }))
+        })),
         get: jest.fn(() => Promise.resolve({
           exists: true,
           data: () => ({
-            id: 'test_id',
-            name: 'test_name',
-            type: 'project',
-            owner_id: 'test_owner',
-            members: ['test_owner'],
-            permissions: {
-              owner: 'test_owner',
-              admins: [],
-              members: [],
-              viewers: [],
-              settings: {
-                allow_invite: true,
-                allow_edit: true,
-                allow_delete: false
-              }
-            }
+            id: 'test_ledger',
+            name: 'test_ledger'
           })
         })),
         set: jest.fn(() => Promise.resolve()),
@@ -61,7 +87,14 @@ jest.mock('firebase-admin', () => ({
     }))
   })),
   FieldValue: {
-    serverTimestamp: jest.fn()
+    serverTimestamp: jest.fn(() => ({ seconds: Date.now() / 1000, nanoseconds: 0 }))
+  },
+  // 新增 Timestamp 支援 LBK 模組
+  firestore: {
+    Timestamp: {
+      now: jest.fn(() => ({ seconds: Date.now() / 1000, nanoseconds: 0 })),
+      fromDate: jest.fn((date) => ({ seconds: date.getTime() / 1000, nanoseconds: 0 }))
+    }
   }
 }));
 
