@@ -1,5 +1,5 @@
 /**
- * LBK_快速記帳模組_1.0.4
+ * LBK_快速記帳模組_1.0.5
  * @module LBK模組
  * @description LINE OA 專用快速記帳處理模組 - 簡化記帳流程，實現極速處理
  * @update 2025-07-15: 升級至v1.0.4，修正bookkeepingData變數引用錯誤，強化錯誤處理機制
