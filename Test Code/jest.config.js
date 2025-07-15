@@ -15,6 +15,9 @@ module.exports = {
   // 設定 Jest 根目錄
   rootDir: '../',
   
+  // 明確清除預設 testMatch 以使用 testRegex
+  testMatch: null,
+  
   // 使用 testRegex 支援複雜檔案名稱格式（數字開頭、空格、TC_ 等）
   testRegex: [
     'Test Code/.*\\.test\\.js$',
