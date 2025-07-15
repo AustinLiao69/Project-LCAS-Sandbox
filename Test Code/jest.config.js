@@ -12,14 +12,18 @@ module.exports = {
   // 測試環境
   testEnvironment: 'node',
   
-  // 測試檔案匹配模式 - 修正為實際目錄結構
+  // 設定 Jest 根目錄
+  rootDir: '../',
+  
+  // 測試檔案匹配模式 - 支援數字開頭和空格的檔案名稱
   testMatch: [
     '**/Test Code/**/*.test.js',
     '**/Test Code/**/*.spec.js',
     '**/Test Code/**/*_test.js',
     '**/Test Code/**/TC_*.js',
     '**/Test Code/**/*.TC_*.js',
-    '**/Test Code/**/*. TC_*.js'
+    '**/Test Code/**/*. TC_*.js',
+    '**/Test Code/**/[0-9]*. TC_*.js'
   ],
   
   // 測試覆蓋率設定
