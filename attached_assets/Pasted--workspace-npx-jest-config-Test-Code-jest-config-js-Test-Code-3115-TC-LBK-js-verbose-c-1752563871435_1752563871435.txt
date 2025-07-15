@@ -1,0 +1,47 @@
+~/workspace$ npx jest --config="Test Code/jest.config.js" "Test Code/3115. TC_LBK.js" --verbose
+  console.log
+    🔥 LBK模組: Firebase Admin 自動初始化完成
+
+      at node_modules/jest-mock/build/index.js:305:39
+
+ FAIL  Test Code/3115. TC_LBK.js
+  ● Test suite failed to run
+
+    TypeError: admin.firestore is not a function
+
+      19 |
+      20 | // 取得 Firestore 實例
+    > 21 | const db = admin.firestore();
+         |                  ^
+      22 | const { v4: uuidv4 } = require("uuid");
+      23 | const moment = require("moment-timezone");
+      24 |
+
+      at Object.firestore (Modules/2010. DL.js:21:18)
+      at Object.require (Modules/2015. LBK.js:28:12)
+      at Object.<anonymous> (Test Code/3115. TC_LBK.js:12:13)
+
+📦 report is created on: /home/runner/workspace/coverage/html-report/test-report.html
+--------------|---------|----------|---------|---------|-------------------
+File          | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+--------------|---------|----------|---------|---------|-------------------
+All files     |       0 |        0 |       0 |       0 |                   
+ 2001. BK.js  |       0 |        0 |       0 |       0 | 9-1943            
+ 2009. AM.js  |       0 |        0 |       0 |       0 | 9-1099            
+ 2010. DL.js  |       0 |        0 |       0 |       0 | 9-1004            
+ 2011. FS.js  |       0 |        0 |       0 |       0 | 9-472             
+ 2012. BM.js  |       0 |        0 |       0 |       0 | 9-1156            
+ 2013. CM.js  |       0 |        0 |       0 |       0 | 8-1199            
+ 2015. LBK.js |       0 |        0 |       0 |       0 | 9-1281            
+ 2020. WH.js  |       0 |        0 |       0 |       0 | 9-1909            
+ 2031. DD1.js |       0 |        0 |       0 |       0 | 12-1388           
+ 2032. DD2.js |       0 |        0 |       0 |       0 | 13-1579           
+ 2033. DD3.js |       0 |        0 |       0 |       0 | 9-335             
+ 2041. MRA.js |       0 |        0 |       0 |       0 | 6-2562            
+ 2061. GR.js  |       0 |        0 |       0 |       0 | 8-956             
+--------------|---------|----------|---------|---------|-------------------
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        2.604 s
+Ran all test suites matching Test Code/3115. TC_LBK.js.
