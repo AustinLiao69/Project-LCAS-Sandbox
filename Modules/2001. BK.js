@@ -1,5 +1,5 @@
 /**
- * BK_記帳處理模組_2.0.5
+ * BK_記帳處理模組_2.0.6
  * @module 記帳處理模組
  * @description LCAS 記帳處理模組 - 實現 BK 2.0 版本，支援簡化記帳路徑
  * @update 2025-07-14: 升級至2.0.5版本，修正BK_removeAmountFromText參數處理、BK_formatSystemReplyMessage收支ID顯示和moduleCode問題
