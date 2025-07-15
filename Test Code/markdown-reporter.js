@@ -20,10 +20,10 @@ class MarkdownReporter {
     this._globalConfig = globalConfig;
     this._options = options || {};
     
-    // 確保 coverage 目錄存在
-    const coverageDir = path.dirname(this._options.outputFile || './coverage/report.md');
-    if (!fs.existsSync(coverageDir)) {
-      fs.mkdirSync(coverageDir, { recursive: true });
+    // 確保 Test report 目錄存在
+    const reportDir = path.dirname(this._options.outputFile || './Test report/report.md');
+    if (!fs.existsSync(reportDir)) {
+      fs.mkdirSync(reportDir, { recursive: true });
     }
     
     // 初始化報告資料

@@ -110,9 +110,9 @@ module.exports = {
     "default",
     // 自訂 Markdown 報告器配置
     ["<rootDir>/Test Code/markdown-reporter.js", {
-      outputFile: `./coverage/${testReportFilename}`,
-      coverageFile: `./coverage/${coverageReportFilename}`,
-      performanceFile: `./coverage/${performanceReportFilename}`,
+      outputFile: `./Test report/${testReportFilename}`,
+      coverageFile: `./Test report/${coverageReportFilename}`,
+      performanceFile: `./Test report/${performanceReportFilename}`,
       includeConsoleOutput: true,
       includeStackTrace: true,
       generateTimestamp: timestamp
