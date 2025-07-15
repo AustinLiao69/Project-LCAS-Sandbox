@@ -71,7 +71,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         error: errorMessage,
         success: false
       });
-      
+
       return {
         success: false,
         message: formattedErrorMessage,
@@ -79,7 +79,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.0.4",
+        moduleVersion: "1.0.5",
         errorType: parseResult.errorType || "PARSE_ERROR"
       };
     }
@@ -96,7 +96,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         success: false,
         partialData: parseResult.data
       });
-      
+
       return {
         success: false,
         message: formattedErrorMessage,
@@ -104,7 +104,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.0.4",
+        moduleVersion: "1.0.5",
         errorType: bookkeepingResult.errorType || "BOOKING_ERROR"
       };
     }
@@ -124,7 +124,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       module: "LBK",
       data: bookkeepingResult.data,
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.0.4"
+      moduleVersion: "1.0.5"
     };
 
   } catch (error) {
@@ -144,7 +144,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       moduleCode: "LBK",
       module: "LBK",
       processingTime: 0,
-      moduleVersion: "1.0.4",
+      moduleVersion: "1.0.5",
       errorType: "SYSTEM_ERROR"
     };
   }
@@ -809,7 +809,7 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
       // 處理錯誤情況
       const errorMessage = options.error || "處理失敗";
       const originalInput = options.originalInput || "";
-      
+
       // 如果有部分解析資料，顯示更詳細的錯誤訊息
       if (options.partialData) {
         const partialData = options.partialData;
@@ -851,6 +851,8 @@ function LBK_removeAmountFromText(text, amount, paymentMethod, processId) {
     // 移除金額
     if (text.includes(" " + amountStr)) {
       result = text.replace(" " + amountStr, "").trim();
+    }```text
+
     } else if (text.endsWith(amountStr)) {
       result = text.substring(0, text.length - amountStr.length).trim();
     }
