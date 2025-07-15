@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.0.21
+ * WH_Webhook處理模組_2.0.22
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 實現 BR-0007 簡化記帳路徑，完全分離LINE文字訊息處理
- * @update 2025-07-14: 升級至2.0.20版本，實現LINE文字訊息與DD模組完全分離，所有LINE文字訊息強制走BK 2.0路徑
+ * @description LINE Webhook處理模組 - 修復LBK模組訊息格式驗證問題，支援LBK直連路徑
+ * @update 2025-07-15: 升級至2.0.22版本，修復WH_replyMessage函數格式驗證邏輯，同時支援BK和LBK模組回覆
  */
 
 // 首先引入其他模組
@@ -64,7 +64,7 @@ const WH_CONFIG = {
 };
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.0.16 (2025-07-09)");
+console.log("WH模組初始化，版本: 2.0.22 (2025-07-15)");
 
 // 創建 Express 應用
 const app = express();
@@ -704,16 +704,17 @@ function WH_logCritical(
  */
 function WH_replyMessage(replyToken, message) {
   try {
-    // 強制驗證：只接受 BK_formatSystemReplyMessage 格式化的訊息
-    // 修正：同時檢查 moduleCode 為 'BK' 或來自 BK 模組的訊息
+    // 擴展格式驗證：同時支援 BK 和 LBK 模組格式化的訊息
+    // 檢查 moduleCode 為 'BK' 或 'LBK'，或來自 BK/LBK 模組的訊息
     const isValidFormat = message && typeof message === 'object' && message.responseMessage && 
-                         (message.moduleCode === 'BK' || message.module === 'BK');
+                         (message.moduleCode === 'BK' || message.moduleCode === 'LBK' || 
+                          message.module === 'BK' || message.module === 'LBK');
     
     if (!isValidFormat) {
-      console.error('WH_replyMessage: 拒絕未經 BK_formatSystemReplyMessage 格式化的訊息');
+      console.error('WH_replyMessage: 拒絕未經正確格式化的訊息');
       WH_directLogWrite([
         WH_formatDateTime(new Date()),
-        `WH 2.0.19: 拒絕未經格式化的訊息，moduleCode=${message?.moduleCode || "未定義"}, module=${message?.module || "未定義"}`,
+        `WH 2.0.22: 拒絕未經格式化的訊息，moduleCode=${message?.moduleCode || "未定義"}, module=${message?.module || "未定義"}`,
         "訊息驗證",
         "",
         "INVALID_MESSAGE_FORMAT",
