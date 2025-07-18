@@ -1,0 +1,378 @@
+
+# PRD_SR_排程提醒模組_v1.0
+
+**文件編號**: 1005  
+**版本**: 1.0.0  
+**建立日期**: 2025-07-18  
+**建立者**: LCAS PM Team  
+**最後更新**: 2025-07-18 00:00:00 UTC+8  
+=>時間還是沒有改
+---
+
+## 1.0 模組概述（Module Overview）
+
+### 1.1 產品定位
+SR (Scheduled Reminder) 排程提醒模組是 LCAS 2.0 系統的智慧記帳自動化核心，負責處理定期記帳提醒、自動記帳執行、財務統計推播等功能。本模組結合 Replit Scheduled Deployments 技術，提供可靠的定時任務執行能力。
+=>並沒有本模組結合 Replit Scheduled Deployments 技術，請刪除
+
+### 1.2 核心價值主張
+- **智慧自動化**: 自動執行重複性記帳任務，減少使用者手動操作
+- **個人化提醒**: 基於使用者習慣的智慧提醒系統
+- **分層服務**: 免費基礎功能 + 付費進階功能的商業模式
+=>請刪除
+- **高可靠性**: 基於 Replit 雲端基礎設施的穩定排程服務
+=>請刪除
+
+### 1.3 目標使用者
+- **個人記帳用戶**: 需要定期記帳提醒的個人使用者
+- **付費訂閱用戶**: 需要進階統計分析和自動推播的用戶
+- **習慣養成用戶**: 希望建立良好財務管理習慣的用戶
+
+---
+
+## 2.0 功能需求（Functional Requirements）
+
+### 2.1 基礎排程功能（免費功能）
+
+#### 2.1.1 自動記帳提醒
+- 支援週期性記帳提醒（每日、每週、每月）
+- 使用 Quick Reply 按鈕提供快速操作選項
+- 基礎條件判斷（週末、國定假日處理）
+- 無提醒設定數量限制
+=>請注意，記帳提醒數量限制的部分要設計一個付費與否的開關，付費數量是無限，免費是2個。
+
+#### 2.1.2 簡單統計查詢
+```javascript
+const basicStatistics = {
+  dailySummary: "今日收支統計",
+  weeklySummary: "本週收支統計", 
+  monthlyBasic: "本月收支統計"
+};
+
+const quickReplyOptions = [
+  { type: "action", action: { type: "message", label: "今日統計", text: "今日統計" }},
+  { type: "action", action: { type: "message", label: "本週統計", text: "本週統計" }},
+  { type: "action", action: { type: "message", label: "本月統計", text: "本月統計" }}
+];
+```
+
+### 2.2 進階付費功能
+
+#### 2.2.1 自動推播服務（付費限定）
+- 每日財務摘要自動推播（21:00）
+- 預算警告自動通知
+- 月度財務報告自動生成
+- 智慧提醒時間最佳化
+
+#### 2.2.2 社群比較功能（付費限定）
+```javascript
+const socialComparison = {
+  anonymousRanking: "匿名排名比較",
+  categoryComparison: "同類群體比較",
+  habitComparison: "記帳習慣比較",
+  ageGroupAnalysis: "同年齡層分析"
+};
+```
+
+### 2.3 成就系統
+
+#### 2.3.1 基礎成就追蹤
+```javascript
+const achievementTracking = {
+  streakCounter: {
+    dailyStreak: "連續記帳天數",
+    weeklyStreak: "連續記帳週數",
+    achievements: ["記帳新手", "記帳達人", "記帳專家", "理財大師"]
+  },
+  milestones: {
+    firstWeek: "第一週完成",
+    firstMonth: "第一月完成",
+    hundredDays: "百日記帳"
+  }
+};
+```
+
+---
+
+## 3.0 付費功能開關設計
+
+### 3.1 功能權限矩陣
+```javascript
+const featureMatrix = {
+  FREE: {
+    pushNotifications: false,
+    socialComparison: false,
+    features: [
+      'basic_bookkeeping',
+      'manual_summary', 
+      'quick_reply_stats',
+      'basic_reminders'
+    ]
+  },
+  PREMIUM: {
+    pushNotifications: true,
+    socialComparison: true,
+    features: [
+      'auto_push',
+      'trend_analysis',
+      'budget_alerts',
+      'social_ranking',
+      'smart_timing'
+    ]
+  }
+};
+```
+
+### 3.2 功能開關實作
+每個功能在 coding 時都必須設定是否開放給免費使用者使用，包含：
+
+- **基礎提醒功能**: 免費開放
+- **手動統計查詢**: 免費開放  
+- **Quick Reply 操作**: 免費開放
+- **自動推播服務**: 付費限定
+- **社群比較功能**: 付費限定
+- **進階時間最佳化**: 付費限定
+
+---
+
+## 4.0 使用者體驗設計
+
+### 4.1 Quick Reply 互動設計
+```javascript
+const quickReplyTemplates = {
+  dailyStats: {
+    text: "📊 今日財務摘要",
+    quickReply: {
+      items: [
+        { type: "action", action: { type: "message", label: "詳細明細", text: "明細" }},
+        { type: "action", action: { type: "message", label: "本週比較", text: "週比較" }},
+        { type: "action", action: { type: "message", label: "設定提醒", text: "提醒設定" }}
+      ]
+    }
+  },
+  
+  upgradePrompt: {
+    text: "🔒 此功能需要 Premium 訂閱",
+    quickReply: {
+      items: [
+        { type: "action", action: { type: "uri", label: "立即升級", uri: "https://lcas.premium/upgrade" }},
+        { type: "action", action: { type: "message", label: "免費試用", text: "試用" }},
+        { type: "action", action: { type: "message", label: "了解更多", text: "功能介紹" }}
+      ]
+    }
+  }
+};
+```
+
+### 4.2 推播訊息格式
+```javascript
+const pushMessageTemplates = {
+  dailySummary: `🏦 今日財務摘要 ({date})
+📈 收入：NT$ {income}
+📉 支出：NT$ {expense}  
+💰 淨額：{netAmount >= 0 ? '+' : ''}NT$ {netAmount}
+
+🔍 收入明細：
+{incomeDetails}
+
+🔍 支出明細：
+{expenseDetails}
+
+⚠️ 自動記帳提醒：
+{upcomingReminders}
+
+📝 輸入"統計"查看詳細分析`,
+
+  budgetAlert: `⚠️ 預算警告
+📊 {categoryName} 本月支出：NT$ {currentAmount}
+🎯 預算額度：NT$ {budgetLimit}
+📈 使用率：{usagePercentage}%
+
+💡 建議：{suggestion}`,
+
+  achievementUnlock: `🎉 恭喜達成新成就！
+🏆 {achievementName}
+📅 連續記帳：{streakDays} 天
+⭐ 里程碑達成：{milestone}`
+};
+```
+
+---
+
+## 5.0 資料庫結構設計
+
+### 5.1 排程設定集合
+```javascript
+// scheduled_reminders/{reminderId}
+{
+  userId: string,
+  reminderType: "daily" | "weekly" | "monthly" | "custom",
+  schedule: {
+    cronExpression: string,
+    timezone: "Asia/Taipei",
+    enabled: boolean
+  },
+  reminderData: {
+    subjectCode: string,
+    amount: number,
+    paymentMethod: string,
+    message: string
+  },
+  conditions: {
+    skipWeekends: boolean,
+    skipHolidays: boolean,
+    holidayAction: "advance" | "postpone" | "skip"
+  },
+  createdAt: timestamp,
+  lastExecuted: timestamp,
+  nextExecution: timestamp
+}
+```
+
+### 5.2 用戶訂閱狀態
+```javascript
+// users/{userId}/subscription
+{
+  subscriptionType: "FREE" | "PREMIUM",
+  features: array,
+  expiresAt: timestamp,
+  autoRenew: boolean,
+  paymentMethod: string,
+  billingCycle: "monthly" | "yearly"
+}
+```
+
+### 5.3 國定假日處理機制
+```javascript
+const holidayProcessor = {
+  async calculateActualReminderDay(scheduledDate, rules) {
+    const holidays = await SR_getHolidays(scheduledDate.getFullYear());
+    let reminderDate = new Date(scheduledDate);
+    
+    while (this.isHolidayOrWeekend(reminderDate, holidays)) {
+      if (rules.holidayAction === "advance") {
+        reminderDate.setDate(reminderDate.getDate() - 1);
+      } else if (rules.holidayAction === "postpone") {
+        reminderDate.setDate(reminderDate.getDate() + 1);
+      } else {
+        break; // skip
+      }
+    }
+    
+    return reminderDate;
+  }
+};
+```
+
+---
+
+## 6.0 商業模式設計
+
+### 6.1 免費功能價值
+- 基礎記帳提醒養成使用習慣
+- 簡單統計滿足基本需求  
+- Quick Reply 提供便利性
+- 無數量限制的提醒設定
+
+### 6.2 付費功能誘因
+- 自動推播節省時間
+- 社群比較激發動機
+- 智慧時間最佳化
+- 進階統計分析
+
+### 6.3 轉換策略
+```javascript
+const conversionStrategy = {
+  freeTrial: {
+    duration: 7, // 7天免費試用
+    features: ["socialComparison", "autoPush"],
+    conversionRate: "試用結束後 30% 轉付費"
+  },
+  
+  valuedemonstration: {
+    monthlyReport: "免費用戶獲得簡化版月報",
+    socialRanking: "顯示排名但隱藏詳細數據",
+    upgradePrompt: "解鎖完整功能查看更多"
+  }
+};
+```
+
+---
+
+## 7.0 錯誤處理與例外狀況
+
+### 7.1 排程執行失敗
+- Replit Scheduled Deployments 超時處理
+- 網路連線異常重試機制
+- Firestore 寫入失敗備援方案
+
+### 7.2 LINE API 限制
+- Reply Token 60秒限制應對
+- Push API 配額管理
+- Rich Menu 更新失敗處理
+
+### 7.3 付費功能驗證
+- 訂閱狀態過期處理
+- 功能降級平滑轉換
+- 付費驗證失敗容錯
+
+---
+
+## 8.0 測試計畫
+
+### 8.1 功能測試
+- 排程執行準確性測試
+- 付費功能開關測試
+- Quick Reply 互動測試
+- 推播訊息格式測試
+
+### 8.2 效能測試
+- 大量使用者並發排程測試
+- Firestore 讀寫效能測試
+- LINE API 呼叫頻率測試
+
+### 8.3 商業邏輯測試
+- 免費/付費功能邊界測試
+- 訂閱狀態轉換測試
+- 計費邏輯正確性測試
+
+---
+
+## 9.0 優先順序規劃
+
+### Phase 1 (MVP)
+1. 基礎自動記帳提醒
+2. Quick Reply 統計查詢
+3. 付費功能框架
+4. 國定假日處理
+
+### Phase 2 (商業化)
+1. 自動推播服務
+2. 社群比較功能
+3. 成就系統完善
+4. 智慧時間最佳化
+
+### Phase 3 (進階功能)
+1. 複雜條件排程
+2. 多帳本支援
+3. API 開放平台
+4. 企業版功能
+
+---
+
+**文件維護記錄**
+
+| 版本 | 日期 | 修改者 | 修改內容 |
+|------|------|--------|----------|
+| v1.0 | 2025-07-18 | LCAS PM Team | 初版建立，整合用戶回饋和商業需求，移除重複記帳檢測、MRA相關功能及獎勵機制 |
+
+---
+
+**備註**：
+* 每個功能在 coding 的時候都必須設定是否開放給免費使用者
+* 本文件專注於模組功能描述，不包含技術實作細節
+* 獎勵與挑戰機制已移至新的行銷活動模組處理
+* 個人化洞察報告功能移至 MRA 模組處理
+
+
+=>請把code的部分轉化為文字敘述
