@@ -1,0 +1,134 @@
+您好！作為資深系統架構師（SA），我將深入分析1005. SR_排程提醒模組，並提出轉寫為TDD文件的完整解決方案。
+深入分析 🔍
+1. 模組複雜度分析
+SR排程提醒模組涉及多個技術層面：
+	•	排程管理: Cron表達式、時區處理、國定假日邏輯
+	•	付費功能控制: 免費/付費功能分級、權限驗證
+	•	多平台推播: LINE Push API、APP推播整合
+	•	資料庫設計: Firestore排程設定、用戶訂閱狀態
+	•	模組整合: 與AM、DL、MLS等模組的深度整合
+2. 技術挑戰識別
+	•	時區與排程精確性: UTC+8時區處理，國定假日動態調整
+	•	付費功能邊界控制: 需要精確的權限驗證機制
+	•	效能優化: 大量用戶並發排程處理
+	•	錯誤恢復: 排程失敗的重試與補償機制
+	•	資料一致性: 跨模組資料同步的可靠性
+3. 架構設計方案
+3.1 核心函數架構（18個主要函數）
+排程管理層 (6個函數)
+├── SR_createScheduledReminder() - 建立排程提醒
+├── SR_updateScheduledReminder() - 更新排程設定
+├── SR_deleteScheduledReminder() - 刪除排程提醒
+├── SR_executeScheduledTask() - 執行排程任務
+├── SR_processHolidayLogic() - 處理國定假日邏輯
+└── SR_optimizeReminderTime() - 智慧時間最佳化
+
+付費功能控制層 (4個函數)
+├── SR_validatePremiumFeature() - 驗證付費功能權限
+├── SR_checkSubscriptionStatus() - 檢查訂閱狀態
+├── SR_enforceFreeUserLimits() - 強制免費用戶限制
+└── SR_upgradeFeatureAccess() - 升級功能存取權限
+
+推播服務層 (4個函數)
+├── SR_sendDailyFinancialSummary() - 發送每日財務摘要
+├── SR_sendBudgetWarning() - 發送預算警告
+├── SR_sendMonthlyReport() - 發送月度報告
+└── SR_processQuickReplyStatistics() - 處理Quick Reply統計
+
+數據整合層 (4個函數)
+├── SR_syncWithAccountModule() - 與AM模組同步
+├── SR_syncWithDataDistribution() - 與DD模組同步
+├── SR_logScheduledActivity() - 記錄排程活動
+└── SR_handleSchedulerError() - 處理排程器錯誤
+
+3.2 資料庫設計
+scheduled_reminders Collection
+├── userId: string (索引)
+├── reminderType: "daily" | "weekly" | "monthly" | "custom"
+├── cronExpression: string
+├── timezone: "Asia/Taipei"
+├── isActive: boolean
+├── reminderData: object
+│ ├── subjectCode: string
+│ ├── amount: number
+│ ├── paymentMethod: string
+│ └── message: string
+├── conditions: object
+│ ├── skipWeekends: boolean
+│ ├── holidayHandling: "skip" | "advance" | "delay"
+│ └── customConditions: array
+├── execution: object
+│ ├── lastExecuted: timestamp
+│ ├── nextExecution: timestamp
+│ ├── executionCount: number
+│ └── failureCount: number
+└── metadata: object
+├── createdAt: timestamp
+├── updatedAt: timestamp
+└── version: string
+
+user_subscriptions Collection
+├── userId: string (索引)
+├── subscriptionType: "free" | "premium"
+├── premiumFeatures: array
+├── limits: object
+│ ├── maxReminders: number
+│ ├── pushNotifications: boolean
+│ └── advancedFeatures: boolean
+├── billing: object
+│ ├── expiresAt: timestamp
+│ ├── autoRenew: boolean
+│ └── paymentMethod: string
+└── usage: object
+├── currentReminders: number
+├── monthlyPushes: number
+└── lastBillingCycle: timestamp
+
+3.3 模組間互動設計
+SR模組 → AM模組: 用戶身份驗證、訂閱狀態查詢
+SR模組 → DD模組: 記帳資料分發、跨平台同步
+SR模組 → DL模組: 排程執行日誌、錯誤記錄
+SR模組 → LINE API: Push訊息發送、Quick Reply處理
+SR模組 → Firestore: 排程資料CRUD、用戶設定管理
+4. 功能分級策略
+4.1 免費功能邊界
+	•	排程提醒：限制2個
+	•	Quick Reply統計：完全開放
+	•	手動統計查詢：完全開放
+	•	基礎提醒功能：開放但有限制
+4.2 付費功能設計
+	•	自動推播：完全鎖定
+	•	無限制排程：付費解鎖
+	•	智慧時間最佳化：付費功能
+	•	進階統計分析：付費功能
+5. 效能與可靠性考量
+5.1 排程引擎設計
+	•	分散式排程避免單點故障
+	•	批次處理降低資料庫負載
+	•	智慧重試機制處理暫時性錯誤
+	•	排程執行狀態即時監控
+5.2 推播服務優化
+	•	LINE API配額管理
+	•	推播內容模板化
+	•	失敗訊息重送機制
+	•	Push訊息優先級排序
+解決方案提案 📋
+基於以上分析，我提議創建一個完整的TDD文件，包含：
+	1	模組架構設計 - 18個核心函數的詳細技術規格
+	2	資料庫結構 - Firestore集合設計與索引策略
+	3	API介面規格 - RESTful端點與WebSocket事件
+	4	模組間互動 - 與AM、DD、DL等模組的整合設計
+	5	安全性設計 - 付費功能驗證與資料保護
+	6	效能考量 - 快取策略與批次處理優化
+	7	錯誤處理 - 完整的異常處理與恢復機制
+版本升級計畫
+	•	模組版次: SR_排程提醒模組_1.0.0 (新模組)
+	•	函數版次: 所有函數採用 2025-01-09-V1.0.0 格式
+	•	文件版次: TDD文件 v1.0
+此方案將確保SR模組具備企業級的可靠性、擴展性和維護性，同時完美整合LCAS 2.0的整體架構。
+請問您是否同意此分析和解決方案？我將等待您的Approve後開始編寫完整的TDD文件。
+
+1. 資料庫設計的部分若要新增修改架構則需要去修改FS模組才對
+2. SR模組 → LINE API: Push訊息發送、Quick Reply處理
+=>SR不可直接打LINE API, 而是要透過WH模組統一處理
+
