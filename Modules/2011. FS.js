@@ -39,7 +39,7 @@ async function initFirestoreDatabase() {
 
     // 檢查 Database 連接
     const testRef = db.collection('_health_check').doc('connection_test');
-    
+
     // 建立測試資料，避免 undefined 值
     const testData = {
       timestamp: admin.firestore.Timestamp.now(),
@@ -47,12 +47,12 @@ async function initFirestoreDatabase() {
       message: 'Database connection verified',
       test_id: `test_${Date.now()}`
     };
-    
+
     // 只有在 PROJECT_ID 有值時才加入
     if (PROJECT_ID && PROJECT_ID !== 'default-project') {
       testData.project_id = PROJECT_ID;
     }
-    
+
     await testRef.set(testData);
 
     // 立即刪除測試文件
@@ -182,14 +182,14 @@ async function createSubjectsCollection(ledgerId) {
     // 導入完整科目資料
     const subjectData = require('../Miscellaneous/9999. Subject_code.json');
     const batch = db.batch();
-    
+
     console.log(`🔄 開始導入 ${subjectData.length} 筆科目資料...`);
-    
+
     let importCount = 0;
     for (const subject of subjectData) {
       const docId = `${subject.大項代碼}_${subject.子項代碼}`;
       const subjectRef = db.collection('ledgers').doc(ledgerId).collection('subjects').doc(docId);
-      
+
       batch.set(subjectRef, {
         大項代碼: String(subject.大項代碼),
         大項名稱: subject.大項名稱 || '',
@@ -201,24 +201,24 @@ async function createSubjectsCollection(ledgerId) {
         createdAt: admin.firestore.Timestamp.now(),
         updatedAt: admin.firestore.Timestamp.now()
       });
-      
+
       importCount++;
-      
+
       // 每 400 筆提交一次 batch（Firestore 限制 500 筆）
       if (importCount % 400 === 0) {
         await batch.commit();
         console.log(`📦 已提交 ${importCount} 筆科目資料...`);
       }
     }
-    
+
     // 提交剩餘的資料
     if (importCount % 400 !== 0) {
       await batch.commit();
     }
-    
+
     console.log(`✅ 科目資料導入完成，共 ${importCount} 筆`);
     console.log('✅ Subjects Sub-Collection 結構建立完成');
-    
+
   } catch (error) {
     console.error('❌ 科目表初始化失敗:', error);
     console.log('✅ Subjects Sub-Collection 結構建立完成（僅 template）');
@@ -305,7 +305,7 @@ async function createAccountMappingsCollection() {
 async function createSystemMetadata(currentTime) {
   // 取得 UTC+8 時間
   const utcPlus8Time = new Date(currentTime.getTime() + (8 * 60 * 60 * 1000));
-  
+
   const metadataDoc = {
     database_version: '2.0',                   // 資料庫版本
     structure_version: '1.0.8',               // 結構版本（更新至當前版本）
@@ -326,12 +326,12 @@ async function createSystemMetadata(currentTime) {
     created_local: utcPlus8Time.toISOString(), // UTC+8 建立時間
     notes: 'Complete Firestore structure with Database → Collections → Documents → Fields hierarchy'
   };
-  
+
   // 只有在 PROJECT_ID 有效時才加入
   if (PROJECT_ID && PROJECT_ID !== 'default-project') {
     metadataDoc.project_id = PROJECT_ID;
   }
-  
+
   await db.collection('_system').doc('metadata').set(metadataDoc);
   console.log('✅ System Metadata 建立完成');
 }
@@ -374,20 +374,20 @@ initDatabaseStructure();
 async function initUserSubjects(userUID, ledgerIdPrefix = 'user_') {
   try {
     console.log(`🔄 開始為用戶 ${userUID} 初始化科目數據...`);
-    
+
     const userLedgerId = `${ledgerIdPrefix}${userUID}`;
-    
+
     // 導入完整科目資料
     const subjectData = require('../Miscellaneous/9999. Subject_code.json');
     const batch = db.batch();
-    
+
     console.log(`📋 準備導入 ${subjectData.length} 筆科目資料到 ${userLedgerId}...`);
-    
+
     let importCount = 0;
     for (const subject of subjectData) {
       const docId = `${subject.大項代碼}_${subject.子項代碼}`;
       const subjectRef = db.collection('ledgers').doc(userLedgerId).collection('subjects').doc(docId);
-      
+
       batch.set(subjectRef, {
         大項代碼: String(subject.大項代碼),
         大項名稱: subject.大項名稱 || '',
@@ -399,28 +399,28 @@ async function initUserSubjects(userUID, ledgerIdPrefix = 'user_') {
         createdAt: admin.firestore.Timestamp.now(),
         updatedAt: admin.firestore.Timestamp.now()
       });
-      
+
       importCount++;
-      
+
       // 每 400 筆提交一次 batch
       if (importCount % 400 === 0) {
         await batch.commit();
         console.log(`📦 已提交 ${importCount} 筆科目資料到用戶帳本...`);
       }
     }
-    
+
     // 提交剩餘的資料
     if (importCount % 400 !== 0) {
       await batch.commit();
     }
-    
+
     console.log(`✅ 用戶 ${userUID} 科目初始化完成，共導入 ${importCount} 筆科目`);
     return {
       success: true,
       importCount: importCount,
       userLedgerId: userLedgerId
     };
-    
+
   } catch (error) {
     console.error(`❌ 用戶 ${userUID} 科目初始化失敗:`, error);
     return {
@@ -439,9 +439,9 @@ async function initUserSubjects(userUID, ledgerIdPrefix = 'user_') {
 async function fixTestUserSubjects() {
   const testUID = 'Uae47d9d496e4596d70ed724a7d6e2948';
   console.log(`🔧 開始修復測試用戶 ${testUID} 的科目數據...`);
-  
+
   const result = await initUserSubjects(testUID);
-  
+
   if (result.success) {
     console.log(`🎉 測試用戶科目修復完成！`);
     console.log(`📊 帳本 ID: ${result.userLedgerId}`);
@@ -449,24 +449,312 @@ async function fixTestUserSubjects() {
   } else {
     console.error(`❌ 測試用戶科目修復失敗: ${result.error}`);
   }
-  
+
   return result;
 }
 
-// 模組導出
-module.exports = {
-  initDatabaseStructure,
-  createUserCollection,
-  createLedgerCollection,
-  createSubjectsCollection,
-  createEntriesCollection,
-  createLogCollection,
-  createAccountMappingsCollection,
-  createSystemMetadata,
-  logError,
-  initUserSubjects,
-  fixTestUserSubjects
-};
+// =============== SR模組專用集合操作函數 ===============
 
-// 立即執行測試用戶修復
-fixTestUserSubjects();
+/**
+ * 21. 建立SR排程提醒記錄
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 在scheduled_reminders集合中建立新的提醒記錄
+ */
+async function FS_createSRReminder(reminderData, requesterId) {
+  const functionName = "FS_createSRReminder";
+  try {
+    FS_logOperation(`建立SR提醒記錄: ${reminderData.reminderId}`, "建立文件", reminderData.userId, "", "", functionName);
+
+    // 驗證必要欄位
+    const requiredFields = ['reminderId', 'userId', 'reminderType', 'cronExpression'];
+    for (const field of requiredFields) {
+      if (!reminderData[field]) {
+        throw new Error(`缺少必要欄位: ${field}`);
+      }
+    }
+
+    // 建立完整的提醒記錄
+    const reminderRecord = {
+      ...reminderData,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      createdBy: requesterId,
+      active: true,
+      executionCount: 0,
+      failureCount: 0
+    };
+
+    const result = await FS_setDocument('scheduled_reminders', reminderData.reminderId, reminderRecord, requesterId);
+
+    if (result.success) {
+      return {
+        success: true,
+        reminderId: reminderData.reminderId,
+        data: reminderRecord
+      };
+    }
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`建立SR提醒失敗: ${error.message}`, "建立文件", reminderData?.userId || "", "FS_SR_CREATE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_SR_CREATE_ERROR'
+    };
+  }
+}
+
+/**
+ * 22. 更新SR排程提醒記錄
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 更新scheduled_reminders集合中的提醒記錄
+ */
+async function FS_updateSRReminder(reminderId, updateData, requesterId) {
+  const functionName = "FS_updateSRReminder";
+  try {
+    FS_logOperation(`更新SR提醒: ${reminderId}`, "更新文件", updateData.userId || "", "", "", functionName);
+
+    // 新增更新時間戳
+    const dataWithTimestamp = {
+      ...updateData,
+      updatedAt: admin.firestore.Timestamp.now(),
+      updatedBy: requesterId
+    };
+
+    const result = await FS_updateDocument('scheduled_reminders', reminderId, dataWithTimestamp, requesterId);
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`更新SR提醒失敗: ${error.message}`, "更新文件", "", "FS_SR_UPDATE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_SR_UPDATE_ERROR'
+    };
+  }
+}
+
+/**
+ * 23. 查詢SR排程提醒
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 查詢scheduled_reminders集合中的提醒記錄
+ */
+async function FS_querySRReminders(userId, filters, requesterId) {
+  const functionName = "FS_querySRReminders";
+  try {
+    FS_logOperation(`查詢SR提醒: ${userId}`, "查詢集合", userId, "", "", functionName);
+
+    // 建立查詢條件
+    const queryConditions = [
+      { field: 'userId', operator: '==', value: userId }
+    ];
+
+    // 新增額外篩選條件
+    if (filters) {
+      if (filters.active !== undefined) {
+        queryConditions.push({ field: 'active', operator: '==', value: filters.active });
+      }
+      if (filters.reminderType) {
+        queryConditions.push({ field: 'reminderType', operator: '==', value: filters.reminderType });
+      }
+    }
+
+    const result = await FS_queryCollection('scheduled_reminders', queryConditions, requesterId, {
+      orderBy: { field: 'createdAt', direction: 'desc' },
+      limit: filters?.limit || 50
+    });
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`查詢SR提醒失敗: ${error.message}`, "查詢集合", userId, "FS_SR_QUERY_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_SR_QUERY_ERROR'
+    };
+  }
+}
+
+/**
+ * 24. 管理SR用戶配額
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 管理user_quotas集合中的用戶配額資訊
+ */
+async function FS_manageSRUserQuota(userId, operation, quotaData, requesterId) {
+  const functionName = "FS_manageSRUserQuota";
+  try {
+    FS_logOperation(`管理SR配額: ${operation}`, "配額管理", userId, "", "", functionName);
+
+    let result;
+
+    switch (operation) {
+      case 'get':
+        result = await FS_getDocument('user_quotas', userId, requesterId);
+        break;
+
+      case 'set':
+        const quotaRecord = {
+          ...quotaData,
+          userId,
+          updatedAt: admin.firestore.Timestamp.now(),
+          updatedBy: requesterId
+        };
+        result = await FS_setDocument('user_quotas', userId, quotaRecord, requesterId);
+        break;
+
+      case 'update':
+        const updateData = {
+          ...quotaData,
+          updatedAt: admin.firestore.Timestamp.now(),
+          updatedBy: requesterId
+        };
+        result = await FS_updateDocument('user_quotas', userId, updateData, requesterId);
+        break;
+
+      case 'increment':
+        // 增量更新配額使用量
+        const incrementData = {};
+        Object.keys(quotaData).forEach(key => {
+          incrementData[key] = admin.firestore.FieldValue.increment(quotaData[key]);
+        });
+        incrementData.updatedAt = admin.firestore.Timestamp.now();
+        result = await FS_updateDocument('user_quotas', userId, incrementData, requesterId);
+        break;
+
+      default:
+        throw new Error(`不支援的操作: ${operation}`);
+    }
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`管理SR配額失敗: ${error.message}`, "配額管理", userId, "FS_SR_QUOTA_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_SR_QUOTA_ERROR'
+    };
+  }
+}
+
+/**
+ * 25. 記錄SR活動日誌
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 在scheduler_logs集合中記錄SR模組活動
+ */
+async function FS_logSRActivity(activityData, requesterId) {
+  const functionName = "FS_logSRActivity";
+  try {
+    // 建立日誌記錄
+    const logRecord = {
+      ...activityData,
+      timestamp: admin.firestore.Timestamp.now(),
+      source: 'SR_module',
+      loggedBy: requesterId,
+      processed: false
+    };
+
+    const result = await FS_addToCollection('scheduler_logs', logRecord, requesterId);
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`記錄SR活動失敗: ${error.message}`, "活動記錄", "", "FS_SR_LOG_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_SR_LOG_ERROR'
+    };
+  }
+}
+
+/**
+ * 26. 處理SR Quick Reply會話
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 管理quick_reply_sessions集合中的Quick Reply會話資料
+ */
+async function FS_handleSRQuickReply(userId, interactionData, requesterId) {
+  const functionName = "FS_handleSRQuickReply";
+  try {
+    FS_logOperation(`處理SR Quick Reply: ${userId}`, "Quick Reply", userId, "", "", functionName);
+
+    // 建立會話記錄
+    const sessionRecord = {
+      userId,
+      ...interactionData,
+      timestamp: admin.firestore.Timestamp.now(),
+      source: 'SR_module',
+      processed: false
+    };
+
+    const result = await FS_addToCollection('quick_reply_sessions', sessionRecord, requesterId);
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`處理SR Quick Reply失敗: ${error.message}`, "Quick Reply", userId, "FS_SR_QR_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_SR_QR_ERROR'
+    };
+  }
+}
+
+// 導出所有函數
+module.exports = {
+  // 文件操作函數
+  FS_setDocument,
+  FS_getDocument,
+  FS_updateDocument,
+  FS_deleteDocument,
+  FS_mergeDocument,
+
+  // 集合操作函數
+  FS_queryCollection,
+  FS_addToCollection,
+  FS_deleteCollection,
+  FS_getCollectionSize,
+  FS_batchOperations,
+
+  // 批次操作函數
+  FS_batchWrite,
+  FS_batchRead,
+  FS_batchDelete,
+  FS_transaction,
+  FS_runTransaction,
+
+  // 即時監聽函數
+  FS_listenToDocument,
+  FS_listenToCollection,
+  FS_stopListener,
+  FS_stopAllListeners,
+
+  // SR模組專用集合操作 (新增)
+  FS_createSRReminder,
+  FS_updateSRReminder,
+  FS_querySRReminders,
+  FS_manageSRUserQuota,
+  FS_logSRActivity,
+  FS_handleSRQuickReply,
+
+  // 系統管理函數
+  FS_validatePermission,
+  FS_logOperation,
+  FS_handleError,
+  FS_initialize,
+
+  // 導出常數和配置
+  FS_CONFIG,
+  FS_ERROR_CODES
+};

@@ -1074,7 +1074,302 @@ async function AM_validateSearchPermission(requesterId) {
   return false;
 }
 
-// 模組導出
+// =============== SR模組專用付費功能API ===============
+
+/**
+ * 22. 驗證SR模組付費功能權限
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 專門為SR模組驗證用戶的付費功能權限
+ */
+async function AM_validateSRPremiumFeature(userId, featureName, requesterId) {
+  const functionName = "AM_validateSRPremiumFeature";
+  try {
+    AM_logInfo(`驗證SR付費功能: ${featureName}`, "SR權限驗證", userId, "", "", functionName);
+
+    // 取得用戶訂閱資訊
+    const subscriptionInfo = await AM_getSubscriptionInfo(userId, requesterId);
+    if (!subscriptionInfo.success) {
+      return {
+        success: false,
+        allowed: false,
+        reason: '無法取得訂閱資訊',
+        error: subscriptionInfo.error
+      };
+    }
+
+    const subscription = subscriptionInfo.subscriptionData;
+
+    // SR功能權限矩陣
+    const srFeatureMatrix = {
+      'CREATE_REMINDER': { level: 'free', quota: 2 },
+      'AUTO_PUSH': { level: 'premium', quota: -1 },
+      'OPTIMIZE_TIME': { level: 'premium', quota: -1 },
+      'UNLIMITED_REMINDERS': { level: 'premium', quota: -1 },
+      'BUDGET_WARNING': { level: 'premium', quota: -1 },
+      'MONTHLY_REPORT': { level: 'premium', quota: -1 }
+    };
+
+    const feature = srFeatureMatrix[featureName];
+    if (!feature) {
+      return {
+        success: false,
+        allowed: false,
+        reason: '未知的功能名稱'
+      };
+    }
+
+    // 檢查付費狀態
+    if (feature.level === 'premium' && subscription.plan !== 'premium') {
+      return {
+        success: true,
+        allowed: false,
+        reason: '此功能需要Premium訂閱',
+        upgradeRequired: true,
+        currentPlan: subscription.plan
+      };
+    }
+
+    // 檢查配額限制
+    if (feature.quota > 0) {
+      const usageInfo = await AM_getSRUserQuota(userId, featureName, requesterId);
+      if (usageInfo.success && usageInfo.currentUsage >= feature.quota) {
+        return {
+          success: true,
+          allowed: false,
+          reason: `已達到${feature.quota}個的使用限制`,
+          quotaExceeded: true,
+          currentUsage: usageInfo.currentUsage,
+          maxQuota: feature.quota
+        };
+      }
+    }
+
+    return {
+      success: true,
+      allowed: true,
+      reason: 'Permission granted',
+      featureLevel: feature.level,
+      quota: feature.quota
+    };
+
+  } catch (error) {
+    AM_logError(`SR付費功能驗證失敗: ${error.message}`, "SR權限驗證", userId, "AM_SR_VALIDATE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      allowed: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * 23. 取得SR用戶配額資訊
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 查詢用戶在SR模組的功能使用配額
+ */
+async function AM_getSRUserQuota(userId, featureName, requesterId) {
+  const functionName = "AM_getSRUserQuota";
+  try {
+    // 權限檢查
+    if (requesterId !== userId && requesterId !== 'SYSTEM') {
+      const permissionCheck = await AM_checkPermission(requesterId, 'admin', 'read');
+      if (!permissionCheck.hasPermission) {
+        return {
+          success: false,
+          error: '權限不足'
+        };
+      }
+    }
+
+    // 從Firestore取得配額資訊
+    if (FS && typeof FS.FS_getDocument === 'function') {
+      const quotaDoc = await FS.FS_getDocument('user_quotas', userId, 'SYSTEM');
+
+      let quotaData = {};
+      if (quotaDoc.success && quotaDoc.data) {
+        quotaData = quotaDoc.data;
+      }
+
+      const currentUsage = quotaData[featureName] || 0;
+
+      return {
+        success: true,
+        currentUsage,
+        quotaData,
+        featureName
+      };
+    }
+
+    return {
+      success: false,
+      error: 'FS模組不可用'
+    };
+
+  } catch (error) {
+    AM_logError(`取得SR配額失敗: ${error.message}`, "SR配額查詢", userId, "AM_SR_QUOTA_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * 24. 更新SR功能使用量
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 更新用戶SR功能的使用量統計
+ */
+async function AM_updateSRFeatureUsage(userId, featureName, increment, requesterId) {
+  const functionName = "AM_updateSRFeatureUsage";
+  try {
+    AM_logInfo(`更新SR功能使用量: ${featureName} +${increment}`, "SR使用量", userId, "", "", functionName);
+
+    // 系統權限檢查
+    if (requesterId !== 'SYSTEM' && requesterId !== 'SR_MODULE') {
+      return {
+        success: false,
+        error: '只有系統或SR模組可以更新使用量'
+      };
+    }
+
+    if (FS && typeof FS.FS_updateDocument === 'function') {
+      const updateData = {
+        [featureName]: admin.firestore.FieldValue.increment(increment),
+        lastUpdated: admin.firestore.Timestamp.now()
+      };
+
+      const updateResult = await FS.FS_updateDocument('user_quotas', userId, updateData, 'SYSTEM');
+
+      if (updateResult.success) {
+        return {
+          success: true,
+          featureName,
+          increment,
+          newTotal: updateResult.data?.[featureName] || increment
+        };
+      }
+
+      return {
+        success: false,
+        error: updateResult.error
+      };
+    }
+
+    return {
+      success: false,
+      error: 'FS模組不可用'
+    };
+
+  } catch (error) {
+    AM_logError(`更新SR使用量失敗: ${error.message}`, "SR使用量", userId, "AM_SR_USAGE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * 25. 處理SR功能升級
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 14:00:00
+ * @description 處理用戶升級至Premium以使用SR進階功能
+ */
+async function AM_processSRUpgrade(userId, upgradeType, paymentInfo, requesterId) {
+  const functionName = "AM_processSRUpgrade";
+  try {
+    AM_logInfo(`處理SR功能升級: ${upgradeType}`, "SR升級", userId, "", "", functionName);
+
+    // 權限檢查
+    if (requesterId !== userId) {
+      return {
+        success: false,
+        error: '只能升級自己的帳號'
+      };
+    }
+
+    // 驗證升級類型
+    const validUpgradeTypes = ['monthly', 'yearly', 'trial'];
+    if (!validUpgradeTypes.includes(upgradeType)) {
+      return {
+        success: false,
+        error: '無效的升級類型'
+      };
+    }
+
+    // 計算到期時間
+    let expiresAt;
+    const now = new Date();
+
+    switch (upgradeType) {
+      case 'monthly':
+        expiresAt = new Date(now.setMonth(now.getMonth() + 1));
+        break;
+      case 'yearly':
+        expiresAt = new Date(now.setFullYear(now.getFullYear() + 1));
+        break;
+      case 'trial':
+        expiresAt = new Date(now.setDate(now.getDate() + 7)); // 7天試用
+        break;
+    }
+
+    // 更新訂閱資訊
+    const subscriptionData = {
+      plan: upgradeType === 'trial' ? 'trial' : 'premium',
+      features: [
+        'unlimited_reminders',
+        'auto_push_notifications', 
+        'advanced_analytics',
+        'smart_optimization',
+        'budget_warnings',
+        'monthly_reports'
+      ],
+      expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+      upgradeDate: admin.firestore.Timestamp.now(),
+      upgradeType,
+      paymentInfo: upgradeType !== 'trial' ? paymentInfo : null
+    };
+
+    const updateResult = await AM_updateAccountInfo(userId, { subscription: subscriptionData }, requesterId);
+
+    if (updateResult.success) {
+      // 重置配額（Premium用戶無限制）
+      if (FS && typeof FS.FS_setDocument === 'function') {
+        const quotaData = {
+          plan: subscriptionData.plan,
+          upgradeDate: subscriptionData.upgradeDate,
+          resetDate: admin.firestore.Timestamp.now()
+        };
+
+        await FS.FS_setDocument('user_quotas', userId, quotaData, 'SYSTEM');
+      }
+
+      return {
+        success: true,
+        newPlan: subscriptionData.plan,
+        expiresAt: expiresAt.toISOString(),
+        features: subscriptionData.features
+      };
+    }
+
+    return {
+      success: false,
+      error: updateResult.error
+    };
+
+  } catch (error) {
+    AM_logError(`SR升級處理失敗: ${error.message}`, "SR升級", userId, "AM_SR_UPGRADE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// 導出模組函數
 module.exports = {
   AM_createLineAccount,
   AM_createAppAccount,
@@ -1093,7 +1388,52 @@ module.exports = {
   AM_handleAccountError,
   AM_monitorSystemHealth,
   AM_initializeUserSubjects,
-  AM_ensureUserSubjects
+  AM_ensureUserSubjects,
+  // SR模組專用付費功能API (新增)
+  AM_validateSRPremiumFeature,
+  AM_getSRUserQuota,
+  AM_updateSRFeatureUsage,
+  AM_processSRUpgrade
 };
 
 console.log('AM 帳號管理模組載入完成 v1.0.1');
+
+/**
+ * AM_logInfo
+ * @param {} logMessage 
+ * @param {} action 
+ * @param {} userId 
+ * @param {} ledgerId 
+ * @param {} objectId 
+ * @param {} functionName 
+ */
+async function AM_logInfo(logMessage, action = "AM_Action", userId = "SYSTEM", ledgerId = "", objectId = "", functionName = "AM_Function") {
+    DL.DL_log("AM", functionName, "INFO", logMessage, userId, ledgerId, objectId, action)
+}
+
+/**
+ * AM_logWarning
+ * @param {} logMessage 
+ * @param {} action 
+ * @param {} userId 
+ * @param {} ledgerId 
+ * @param {} objectId 
+ * @param {} functionName 
+ */
+async function AM_logWarning(logMessage, action = "AM_Action", userId = "SYSTEM", ledgerId = "", objectId = "", functionName = "AM_Function") {
+    DL.DL_warning("AM", functionName, "WARNING", logMessage, userId, ledgerId, objectId, action)
+}
+
+/**
+ * AM_logError
+ * @param {} logMessage 
+ * @param {} action 
+ * @param {} userId 
+ * @param {} ledgerId 
+ * @param {} objectId 
+ * @param {} errorCode 
+ * @param {} functionName 
+ */
+async function AM_logError(logMessage, action = "AM_Action", userId = "SYSTEM", ledgerId = "", objectId = "", errorCode = "AM_Error", functionName = "AM_Function") {
+    DL.DL_error("AM", functionName, "ERROR", logMessage, userId, ledgerId, objectId, errorCode, action)
+}
