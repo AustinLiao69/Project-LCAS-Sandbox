@@ -1,8 +1,8 @@
 /**
  * WH_Webhook處理模組_2.1.0
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 整合SR排程提醒模組，支援Quick Reply互動
- * @update 2025-07-21: 升級至v2.1.0，整合SR模組路由機制，新增Quick Reply事件處理
+ * @description LINE Webhook處理模組 - 新增Quick Reply支援和SR模組整合
+ * @update 2025-07-21: 升級至v2.1.0，新增Quick Reply事件處理、SR模組路由機制、擴展訊息回覆格式支援
  */
 
 // 首先引入其他模組
@@ -62,6 +62,14 @@ const WH_CONFIG = {
     DELAY_MS: 1000,
   },
   TIMEZONE: "Asia/Taipei", // 台灣時區
+};
+
+// Quick Reply 配置
+const WH_QUICK_REPLY_CONFIG = {
+  MAX_ITEMS: 4,
+  STATISTICS_KEYWORDS: ['今日統計', '本週統計', '本月統計'],
+  PREMIUM_KEYWORDS: ['upgrade_premium', '試用', '功能介紹'],
+  REMINDER_KEYWORDS: ['setup_daily_reminder', 'setup_weekly_reminder', 'setup_monthly_reminder']
 };
 
 // 初始化檢查 - 在全局執行一次
@@ -883,8 +891,7 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
       `WH 2.0.3: 開始回覆訊息: ${textMessage.substring(0, 50)}${textMessage.length > 50 ? "..." : ""}`,
       "訊息回覆",
       "",
-      "",
-      "WH",
+      "",      "WH",
       "",
       0,
       "WH_replyMessage",
@@ -895,8 +902,7 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
     if (!replyToken || replyToken === "00000000000000000000000000000000") {
       console.log("無效的回覆令牌，跳過回覆");
 
-      WH_direct```python
-LogWrite([
+      WH_directLogWrite([
         WH_formatDateTime(new Date()),
         `WH 2.0.3: 無效的回覆令牌，跳過回覆`,
         "訊息回覆",
@@ -974,6 +980,11 @@ LogWrite([
       "WH_replyMessage",
       "INFO",
     ]);
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${CHANNEL_ACCESS_TOKEN}`
+    };
 
     // 使用 axios 發送 HTTP 請求 
     return axios
@@ -1782,8 +1793,7 @@ app.get("/check-https", (req, res) => {
       : `⚠️ HTTPS不可用，LINE Webhook無法使用`,
     testURLs: {
       http: `http://${req.get("host")}/`,
-      https: `https://${req.get("host")}/`,
-    },
+      https: `https://${req.get("host")}/`,      },
     headers: {
       host: req.get("host"),
       "x-forwarded-proto": req.headers["x-forwarded-proto"],
@@ -2054,5 +2064,379 @@ function WH_ReceiveDDdata(data, action) {
     ]);
 
     return { success: false, error: error.toString() };
+  }
+}
+/**
+ * 14. 處理 Quick Reply 事件
+ * @version 2025-07-21-V1.0.0
+ * @date 2025-07-21 10:30:00
+ * @description 統一處理 Quick Reply 按鈕點擊事件，路由到對應的SR模組處理
+ */
+async function WH_handleQuickReplyEvent(userId, postbackData, messageContext, event) {
+  const functionName = "WH_handleQuickReplyEvent";
+  try {
+    WH_logInfo(`處理Quick Reply事件: ${postbackData}`, "Quick Reply處理", userId, "", "", functionName);
+
+    // 檢查SR模組是否可用
+    if (!SR || typeof SR.SR_handleQuickReplyInteraction !== 'function') {
+      throw new Error('SR模組不可用或函數不存在');
+    }
+
+    // 路由到SR模組處理
+    const srResponse = await SR.SR_handleQuickReplyInteraction(userId, postbackData, messageContext);
+
+    if (srResponse.success) {
+      // 建立回覆訊息
+      let replyMessage = {
+        type: 'text',
+        text: srResponse.message
+      };
+
+      // 添加 Quick Reply 按鈕（如果有）
+      if (srResponse.quickReply && srResponse.quickReply.items) {
+        replyMessage.quickReply = {
+          items: srResponse.quickReply.items.map(item => ({
+            type: 'action',
+            action: {
+              type: 'postback',
+              label: item.label,
+              data: item.postbackData
+            }
+          }))
+        };
+      }
+
+      // 發送回覆
+      await WH_replyMessage(event.replyToken, [replyMessage]);
+
+      WH_logInfo(`Quick Reply處理成功: ${postbackData}`, "Quick Reply處理", userId, "", "", functionName);
+      return {
+        success: true,
+        processed: true,
+        responseType: srResponse.quickReply ? 'with_quick_reply' : 'text_only'
+      };
+    } else {
+      throw new Error(srResponse.error || 'SR模組處理失敗');
+    }
+
+  } catch (error) {
+    WH_logError(`Quick Reply事件處理失敗: ${error.message}`, "Quick Reply處理", userId, "WH_QUICKREPLY_ERROR", error.toString(), functionName);
+
+    // 發送錯誤回覆
+    const errorMessage = {
+      type: 'text',
+      text: '抱歉，系統暫時無法處理您的請求，請稍後再試'
+    };
+
+    try {
+      await WH_replyMessage(event.replyToken, [errorMessage]);
+    } catch (replyError) {
+      WH_logError(`錯誤回覆發送失敗: ${replyError.message}`, "Quick Reply處理", userId, "WH_REPLY_ERROR", replyError.toString(), functionName);
+    }
+
+    return {
+      success: false,
+      error: error.message,
+      processed: true
+    };
+  }
+}
+
+/**
+ * 15. 路由到SR模組處理
+ * @version 2025-07-21-V1.0.0
+ * @date 2025-07-21 10:30:00
+ * @description 統一路由機制，將特定事件轉發給SR模組處理
+ */
+async function WH_routeToSRModule(userId, actionType, actionData, context) {
+  const functionName = "WH_routeToSRModule";
+  try {
+    WH_logInfo(`路由到SR模組: ${actionType}`, "SR路由", userId, "", "", functionName);
+
+    if (!SR) {
+      throw new Error('SR模組不可用');
+    }
+
+    let result = null;
+
+    switch (actionType) {
+      case 'QUICK_REPLY_STATISTICS':
+        if (typeof SR.SR_processQuickReplyStatistics === 'function') {
+          result = await SR.SR_processQuickReplyStatistics(userId, actionData.postbackData);
+        }
+        break;
+
+      case 'PREMIUM_FEATURE_ACCESS':
+        if (typeof SR.SR_validatePremiumFeature === 'function') {
+          result = await SR.SR_validatePremiumFeature(userId, actionData.featureName);
+        }
+        break;
+
+      case 'PAYWALL_INTERACTION':
+        if (typeof SR.SR_handlePaywallQuickReply === 'function') {
+          result = await SR.SR_handlePaywallQuickReply(userId, actionData.actionType, context);
+        }
+        break;
+
+      default:
+        throw new Error(`未知的路由類型: ${actionType}`);
+    }
+
+    if (result) {
+      WH_logInfo(`SR模組路由成功: ${actionType}`, "SR路由", userId, "", "", functionName);
+      return {
+        success: true,
+        data: result,
+        actionType
+      };
+    } else {
+      throw new Error('SR模組返回空結果');
+    }
+
+  } catch (error) {
+    WH_logError(`SR模組路由失敗: ${error.message}`, "SR路由", userId, "WH_SR_ROUTE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      actionType
+    };
+  }
+}
+
+/**
+ * 16. 處理用戶文本消息並調用LBK進行快速記帳 - 修正異步處理和函數聲明
+ */
+async function WH_processTextMessageWithLBK(userId, messageText, replyToken, event) {
+  const functionName = "WH_processTextMessageWithLBK";
+  try {
+    WH_logInfo(`處理文字訊息: ${messageText}`, "文字訊息處理", userId, "", "", functionName);
+
+    // 準備 LBK 處理所需的數據
+    const lbkInputData = {
+      userId: userId,
+      messageText: messageText,
+      replyToken: replyToken,
+      timestamp: event.timestamp,
+      processId: generateProcessId()
+    };
+
+    // 調用 LBK 處理，完全跳過 DD 模組
+    const result = await LBK.LBK_processQuickBookkeeping(lbkInputData);
+
+    if (!result) {
+      WH_logError(`LBK 模組處理失敗，返回空結果`, "文字訊息處理", userId, "LBK_ERROR", "", functionName);
+      return {
+        success: false,
+        message: 'LBK 模組處理失敗',
+        event
+      };
+    }
+
+    // 訊息格式化和回覆
+    const replyResult = await WH_replyMessage(replyToken, [result]);
+    WH_logInfo(`訊息回覆結果: ${JSON.stringify(replyResult)}`, "文字訊息處理", userId, "", "", functionName);
+
+    return replyResult;
+
+  } catch (error) {
+    WH_logError(`處理文字訊息時發生錯誤: ${error.message}`, "文字訊息處理", userId, "WH_TEXT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      message: `處理文字訊息時發生錯誤: ${error}`,
+      event
+    };
+  }
+}
+
+/**
+ * 17. 處理LINE的Postback事件
+ */
+async function WH_handlePostbackEvent(userId, postbackData, event) {
+  const functionName = "WH_handlePostbackEvent";
+  try {
+    WH_logInfo(`處理 postback 事件: ${postbackData}`, "Postback處理", userId, "", "", functionName);
+
+    // 在這裡添加您的 postback 事件處理邏輯
+    // 示例：
+    if (postbackData === 'SHOW_HELP') {
+      const helpMessage = WH_buildHelpMessage();
+      await WH_replyMessage(event.replyToken, [helpMessage]);
+    } else {
+      WH_logWarning(`未知的 postback 數據: ${postbackData}`, "Postback處理", userId, "UNKNOWN_POSTBACK", "", functionName);
+      await WH_replyMessage(event.replyToken, [{
+        type: 'text',
+        text: '抱歉，無法識別此操作。'
+      }]);
+    }
+
+  } catch (error) {
+    WH_logError(`處理 postback 事件時發生錯誤: ${error.message}`, "Postback處理", userId, "WH_POSTBACK_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      message: `處理 postback 事件時發生錯誤: ${error}`,
+      event
+    };
+  }
+}
+
+/**
+ * 18. 構建使用說明訊息
+ */
+function WH_buildHelpMessage() {
+  return {
+    type: 'text',
+    text:
+      "【LCAS記帳助手使用說明】\n" +
+      "1. 直接輸入訊息即可快速記帳，例如：'午餐-100'\n" +
+      "2. 支援自定義科目，例如：'交通-50'\n" +
+      "3. 輸入 '幫助' 或 '?' 獲取使用說明\n" +
+      "4. 輸入 '今日統計'、'本週統計'、'本月統計' 查詢統計資訊"
+  };
+}
+
+/**
+ * 19. 處理主要的 Webhook 事件
+ */
+async function WH_handleWebhook(event, reqId) {
+  const functionName = "WH_handleWebhook";
+  const eventType = event.type;
+  const userId = event.source.userId;
+  let messageText = '';
+
+  try {
+    WH_logInfo(`開始處理事件: ${eventType}`, "事件處理", userId, "", "", functionName);
+
+    // 檢查是否為用戶的文字輸入、postback 事件或 Quick Reply
+    if (eventType === 'message' && event.message && event.message.type === 'text') {
+      messageText = event.message.text;
+      WH_logInfo(`用戶發送文字訊息: ${messageText}`, "處理訊息", userId, "", "", functionName);
+
+      // 檢查是否為Quick Reply統計查詢
+      if (WH_QUICK_REPLY_CONFIG.STATISTICS_KEYWORDS.includes(messageText)) {
+        await WH_handleQuickReplyEvent(userId, messageText, { messageText }, event);
+        return;
+      }
+
+      // 添加特殊指令檢查 - 輸入「?」時觸發使用說明
+      if (messageText === '?') {
+        const helpMessage = WH_buildHelpMessage();
+        await WH_replyMessage(event.replyToken, [helpMessage]);
+        return;
+      }
+
+      // 先嘗試使用 LBK 快速記帳處理
+      await WH_processTextMessageWithLBK(userId, messageText, event.replyToken, event);
+
+    } else if (eventType === 'postback') {
+      const postbackData = event.postback.data;
+      WH_logInfo(`用戶觸發 postback: ${postbackData}`, "處理訊息", userId, "", "", functionName);
+
+      // 檢查是否為SR模組相關的Quick Reply postback
+      if (WH_isQuickReplyPostback(postbackData)) {
+        await WH_handleQuickReplyEvent(userId, postbackData, { postbackData }, event);
+      } else {
+        // 處理其他 postback 事件的邏輯
+        await WH_handlePostbackEvent(userId, postbackData, event);
+      }
+
+    } else if (eventType === 'follow') {
+      // 處理加入好友事件
+      WH_logInfo(`收到 follow 事件`, "事件處理", userId, "", "", functionName);
+      await WH_replyMessage(event.replyToken, [{
+        type: 'text',
+        text: "感謝您的加入！請輸入 '幫助' 或 '?' 獲取使用說明。"
+      }]);
+
+    } else {
+      WH_logWarning(`收到未處理的事件類型: ${eventType}`, "事件處理", userId, "UNHANDLED_EVENT", "", functionName);
+      await WH_replyMessage(event.replyToken, [{
+        type: 'text',
+        text: `抱歉，目前無法處理此類型的事件：${eventType}`
+      }]);
+    }
+
+  } catch (error) {
+    WH_logError(`處理 Webhook 事件時發生錯誤: ${error.message}`, "事件處理", userId, "WEBHOOK_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      message: `處理 Webhook 事件時發生錯誤: ${error}`,
+      event
+    };
+  }
+}
+
+/**
+ * 20. 檢查是否為Quick Reply相關的postback
+ * @version 2025-07-21-V1.0.0
+ * @date 2025-07-21 10:30:00
+ * @description 判斷postback資料是否屬於Quick Reply系統
+ */
+function WH_isQuickReplyPostback(postbackData) {
+  const quickReplyKeywords = [
+    ...WH_QUICK_REPLY_CONFIG.STATISTICS_KEYWORDS,
+    ...WH_QUICK_REPLY_CONFIG.PREMIUM_KEYWORDS,
+    ...WH_QUICK_REPLY_CONFIG.REMINDER_KEYWORDS
+  ];
+
+  return quickReplyKeywords.some(keyword => postbackData.includes(keyword));
+}
+
+/**
+ * 21. 發送推播訊息（支援SR模組推播服務）
+ * @version 2025-07-21-V1.0.0
+ * @date 2025-07-21 10:30:00
+ * @description 統一的推播訊息發送介面，支援SR模組的自動推播功能
+ */
+async function WH_sendPushMessage(userId, message, messageType = 'text') {
+  const functionName = "WH_sendPushMessage";
+  try {
+    WH_logInfo(`發送推播訊息給用戶: ${userId}`, "推播服務", userId, "", "", functionName);
+
+    // 構建推播訊息
+    let pushMessage = null;
+
+    if (typeof message === 'string') {
+      pushMessage = {
+        type: 'text',
+        text: message
+      };
+    } else if (typeof message === 'object') {
+      pushMessage = message;
+    } else {
+      throw new Error('不支援的訊息格式');
+    }
+
+    // 確保 lineClient 已經初始化
+    if (!lineClient) {
+      throw new Error('lineClient 未初始化');
+    }
+
+    // 發送推播
+    await lineClient.pushMessage(userId, pushMessage);
+
+    WH_logInfo(`推播訊息發送成功: ${userId}`, "推播服務", userId, "", "", functionName);
+
+    // 記錄推播活動（透過SR模組）
+    if (SR && typeof SR.SR_logScheduledActivity === 'function') {
+      await SR.SR_logScheduledActivity('push_message_sent', {
+        userId,
+        messageType,
+        messageLength: typeof message === 'string' ? message.length : JSON.stringify(message).length
+      }, userId);
+    }
+
+    return {
+      success: true,
+      messageId: `push_${Date.now()}`,
+      userId
+    };
+
+  } catch (error) {
+    WH_logError(`推播訊息發送失敗: ${error.message}`, "推播服務", userId, "WH_PUSH_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      userId
+    };
   }
 }
