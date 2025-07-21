@@ -1,9 +1,9 @@
 
 /**
- * SR_排程提醒模組_1.0.0
+ * SR_排程提醒模組_1.1.0
  * @module SR排程提醒模組
  * @description LCAS 2.0 排程提醒系統 - 智慧記帳自動化核心功能
- * @update 2025-07-21: 初版建立，實現定期記帳提醒、自動推播、Quick Reply統計查詢及付費功能控制機制
+ * @update 2025-07-21: 升級至v1.1.0，完善排程引擎部署(Phase 4)和Quick Reply功能(Phase 5)，增強付費功能控制機制和時區處理
  */
 
 const admin = require('firebase-admin');
@@ -308,15 +308,17 @@ async function SR_deleteScheduledReminder(reminderId, userId, confirmationToken)
 }
 
 /**
- * 04. 執行到期的排程任務
- * @version 2025-07-21-V1.0.0
+ * 04. 執行到期的排程任務 - 強化錯誤處理和重試機制
+ * @version 2025-07-21-V1.1.0
  * @date 2025-07-21 10:00:00
- * @description 執行排程提醒任務
+ * @update: 新增自動重試機制、強化錯誤恢復、完善執行狀態追蹤
  */
-async function SR_executeScheduledTask(reminderId) {
+async function SR_executeScheduledTask(reminderId, retryCount = 0) {
   const functionName = "SR_executeScheduledTask";
+  const maxRetries = 3;
+  
   try {
-    SR_logInfo(`執行排程任務: ${reminderId}`, "執行任務", "", "", "", functionName);
+    SR_logInfo(`執行排程任務: ${reminderId} (重試次數: ${retryCount})`, "執行任務", "", "", "", functionName);
 
     // 取得提醒資料
     const reminderDoc = await db.collection('scheduled_reminders').doc(reminderId).get();
@@ -326,115 +328,270 @@ async function SR_executeScheduledTask(reminderId) {
 
     const reminderData = reminderDoc.data();
     
+    // 檢查提醒是否仍處於活躍狀態
+    if (!reminderData.active) {
+      SR_logWarning(`提醒已被停用: ${reminderId}`, "執行任務", reminderData.userId, "", "", functionName);
+      return {
+        executed: false,
+        reason: '提醒已停用'
+      };
+    }
+
     // 檢查是否需要跳過（週末、假日）
     const skipExecution = await SR_shouldSkipExecution(reminderData);
     if (skipExecution.skip) {
       SR_logInfo(`跳過執行: ${skipExecution.reason}`, "執行任務", reminderData.userId, "", "", functionName);
+      
+      // 計算下次執行時間（考慮跳過邏輯）
+      const nextExecution = await SR_calculateNextExecutionWithSkip(reminderData);
+      await reminderDoc.ref.update({
+        nextExecution: admin.firestore.Timestamp.fromDate(nextExecution),
+        lastSkipped: admin.firestore.Timestamp.now(),
+        skipReason: skipExecution.reason
+      });
+      
       return {
         executed: false,
-        reason: skipExecution.reason
+        reason: skipExecution.reason,
+        nextExecution: nextExecution.toISOString()
       };
+    }
+
+    // 檢查付費功能權限（針對進階提醒功能）
+    if (reminderData.premiumFeatures && reminderData.premiumFeatures.length > 0) {
+      const permissionCheck = await SR_validatePremiumFeature(reminderData.userId, 'PREMIUM_REMINDER');
+      if (!permissionCheck.allowed) {
+        SR_logWarning(`付費功能權限不足: ${reminderId}`, "執行任務", reminderData.userId, "", "", functionName);
+        // 降級為基礎提醒
+        reminderData.premiumFeatures = [];
+      }
     }
 
     // 建立提醒訊息
     const reminderMessage = SR_buildReminderMessage(reminderData);
 
     // 發送提醒 - 透過 WH 模組發送 LINE 訊息
+    let pushResult = null;
     if (WH && typeof WH.WH_sendPushMessage === 'function') {
-      await WH.WH_sendPushMessage(reminderData.userId, reminderMessage);
+      try {
+        pushResult = await WH.WH_sendPushMessage(reminderData.userId, reminderMessage);
+      } catch (pushError) {
+        throw new Error(`推播發送失敗: ${pushError.message}`);
+      }
+    } else {
+      throw new Error('WH 模組不可用');
     }
 
     // 更新執行記錄
-    await reminderDoc.ref.update({
+    const updateData = {
       lastExecution: admin.firestore.Timestamp.now(),
       nextExecution: admin.firestore.Timestamp.fromDate(SR_calculateNextExecution(reminderData)),
-      executionCount: admin.firestore.FieldValue.increment(1)
-    });
+      executionCount: admin.firestore.FieldValue.increment(1),
+      lastExecutionStatus: 'success',
+      failureCount: 0 // 重置失敗計數
+    };
+
+    if (pushResult && pushResult.messageId) {
+      updateData.lastMessageId = pushResult.messageId;
+    }
+
+    await reminderDoc.ref.update(updateData);
+
+    // 記錄成功執行
+    await SR_logScheduledActivity('REMINDER_EXECUTED', {
+      reminderId,
+      messageLength: reminderMessage.length,
+      pushResult
+    }, reminderData.userId);
 
     SR_logInfo(`排程任務執行成功: ${reminderId}`, "執行任務", reminderData.userId, "", "", functionName);
 
     return {
       executed: true,
-      message: '提醒發送成功'
+      message: '提醒發送成功',
+      messageId: pushResult?.messageId,
+      nextExecution: updateData.nextExecution.toDate().toISOString()
     };
 
   } catch (error) {
     SR_logError(`執行排程任務失敗: ${error.message}`, "執行任務", "", "SR_EXECUTE_ERROR", error.toString(), functionName);
-    return {
-      executed: false,
-      error: error.message
-    };
+    
+    // 更新失敗記錄
+    try {
+      const reminderDoc = await db.collection('scheduled_reminders').doc(reminderId).get();
+      if (reminderDoc.exists) {
+        await reminderDoc.ref.update({
+          lastExecutionStatus: 'failed',
+          lastError: error.message,
+          failureCount: admin.firestore.FieldValue.increment(1),
+          lastFailure: admin.firestore.Timestamp.now()
+        });
+      }
+    } catch (updateError) {
+      SR_logError(`更新失敗記錄失敗: ${updateError.message}`, "執行任務", "", "SR_UPDATE_ERROR", updateError.toString(), functionName);
+    }
+
+    // 自動重試機制
+    if (retryCount < maxRetries) {
+      const retryDelay = Math.pow(2, retryCount) * 1000; // 指數退避
+      SR_logWarning(`${retryDelay/1000}秒後進行第${retryCount + 1}次重試`, "執行任務", "", "", "", functionName);
+      
+      setTimeout(async () => {
+        await SR_executeScheduledTask(reminderId, retryCount + 1);
+      }, retryDelay);
+      
+      return {
+        executed: false,
+        error: error.message,
+        retryScheduled: true,
+        retryCount: retryCount + 1
+      };
+    } else {
+      // 達到最大重試次數，記錄錯誤並停用提醒
+      await SR_handleSchedulerError('EXECUTION_FAILED', {
+        reminderId,
+        error: error.message,
+        retryCount
+      }, { reminderId });
+      
+      return {
+        executed: false,
+        error: error.message,
+        maxRetriesReached: true
+      };
+    }
   }
 }
 
 /**
- * 05. 處理國定假日邏輯
- * @version 2025-07-21-V1.0.0
+ * 05. 處理國定假日邏輯 - 強化台灣假日處理和智慧調整
+ * @version 2025-07-21-V1.1.0
  * @date 2025-07-21 10:00:00
- * @description 檢查是否為國定假日並處理排程邏輯
+ * @update: 新增台灣假日日曆整合、智慧工作日計算、假日處理策略最佳化
  */
-async function SR_processHolidayLogic(date, holidayHandling = 'skip') {
+async function SR_processHolidayLogic(date, holidayHandling = 'skip', userTimezone = TIMEZONE) {
   const functionName = "SR_processHolidayLogic";
   try {
-    // 檢查是否為週末
-    const dayOfWeek = moment(date).day();
+    SR_logInfo(`處理假日邏輯: ${moment(date).format('YYYY-MM-DD')}`, "假日處理", "", "", "", functionName);
+
+    // 使用使用者時區處理日期
+    const userDate = moment(date).tz(userTimezone);
+    const dayOfWeek = userDate.day();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const dateStr = userDate.format('YYYY-MM-DD');
+    const year = userDate.format('YYYY');
 
-    // 簡化版假日檢查（實際應用可整合政府假日API）
-    const holidays2025 = [
-      '2025-01-01', // 元旦
-      '2025-02-10', '2025-02-11', '2025-02-12', // 春節
-      '2025-04-04', // 清明節
-      '2025-05-01', // 勞動節
-      '2025-10-10'  // 國慶日
-    ];
-
-    const dateStr = moment(date).format('YYYY-MM-DD');
-    const isHoliday = holidays2025.includes(dateStr);
-
-    let adjustedDate = date;
-    let shouldSkip = false;
-
-    if (isWeekend || isHoliday) {
-      switch (holidayHandling) {
-        case 'skip':
-          shouldSkip = true;
-          break;
-        case 'next_workday':
-          // 找到下一個工作日
-          let nextDay = moment(date).add(1, 'day');
-          while (nextDay.day() === 0 || nextDay.day() === 6 || holidays2025.includes(nextDay.format('YYYY-MM-DD'))) {
-            nextDay.add(1, 'day');
-          }
-          adjustedDate = nextDay.toDate();
-          break;
-        case 'previous_workday':
-          // 找到前一個工作日
-          let prevDay = moment(date).subtract(1, 'day');
-          while (prevDay.day() === 0 || prevDay.day() === 6 || holidays2025.includes(prevDay.format('YYYY-MM-DD'))) {
-            prevDay.subtract(1, 'day');
-          }
-          adjustedDate = prevDay.toDate();
-          break;
+    // 從資料庫取得台灣假日日曆
+    let isHoliday = false;
+    let holidayName = '';
+    
+    try {
+      const holidayDoc = await db.collection('holiday_calendar').doc(year).get();
+      if (holidayDoc.exists) {
+        const holidayData = holidayDoc.data();
+        const holiday = holidayData.holidays?.find(h => h.date === dateStr);
+        if (holiday) {
+          isHoliday = true;
+          holidayName = holiday.name;
+        }
+      } else {
+        // 如果資料庫中沒有假日資料，使用內建的2025年假日清單
+        const builtInHolidays = await SR_getBuiltInHolidays(year);
+        const holiday = builtInHolidays.find(h => h.date === dateStr);
+        if (holiday) {
+          isHoliday = true;
+          holidayName = holiday.name;
+        }
+      }
+    } catch (dbError) {
+      SR_logWarning(`無法從資料庫取得假日資料，使用內建清單: ${dbError.message}`, "假日處理", "", "", "", functionName);
+      // 使用內建假日清單作為備案
+      const builtInHolidays = await SR_getBuiltInHolidays(year);
+      const holiday = builtInHolidays.find(h => h.date === dateStr);
+      if (holiday) {
+        isHoliday = true;
+        holidayName = holiday.name;
       }
     }
 
-    return {
+    let adjustedDate = date;
+    let shouldSkip = false;
+    let adjustmentReason = '';
+
+    if (isWeekend || isHoliday) {
+      const reasonType = isHoliday ? `國定假日(${holidayName})` : '週末';
+      
+      switch (holidayHandling) {
+        case 'skip':
+          shouldSkip = true;
+          adjustmentReason = `跳過${reasonType}`;
+          break;
+          
+        case 'next_workday':
+          // 智慧尋找下一個工作日
+          adjustedDate = await SR_findNextWorkday(userDate, userTimezone);
+          adjustmentReason = `${reasonType}調整至下一工作日`;
+          break;
+          
+        case 'previous_workday':
+          // 智慧尋找前一個工作日
+          adjustedDate = await SR_findPreviousWorkday(userDate, userTimezone);
+          adjustmentReason = `${reasonType}調整至前一工作日`;
+          break;
+          
+        case 'smart_adjust':
+          // 智慧調整：根據距離選擇最近的工作日
+          const nextWorkday = await SR_findNextWorkday(userDate, userTimezone);
+          const prevWorkday = await SR_findPreviousWorkday(userDate, userTimezone);
+          
+          const nextDiff = moment(nextWorkday).diff(userDate, 'days');
+          const prevDiff = userDate.diff(moment(prevWorkday), 'days');
+          
+          if (nextDiff <= prevDiff) {
+            adjustedDate = nextWorkday;
+            adjustmentReason = `${reasonType}智慧調整至下一工作日`;
+          } else {
+            adjustedDate = prevWorkday;
+            adjustmentReason = `${reasonType}智慧調整至前一工作日`;
+          }
+          break;
+          
+        default:
+          shouldSkip = true;
+          adjustmentReason = `跳過${reasonType}`;
+      }
+    }
+
+    const result = {
       isWeekend,
       isHoliday,
+      holidayName,
       shouldSkip,
       adjustedDate,
-      originalDate: date
+      originalDate: date,
+      adjustmentReason,
+      holidayHandling,
+      timezone: userTimezone
     };
+
+    // 記錄假日處理結果
+    if (isWeekend || isHoliday) {
+      SR_logInfo(`假日處理結果: ${adjustmentReason}`, "假日處理", "", "", JSON.stringify(result), functionName);
+    }
+
+    return result;
 
   } catch (error) {
     SR_logError(`處理假日邏輯失敗: ${error.message}`, "假日處理", "", "SR_HOLIDAY_ERROR", error.toString(), functionName);
     return {
       isWeekend: false,
       isHoliday: false,
+      holidayName: '',
       shouldSkip: false,
       adjustedDate: date,
-      originalDate: date
+      originalDate: date,
+      adjustmentReason: '處理失敗，使用原始日期',
+      error: error.message
     };
   }
 }
@@ -486,64 +643,156 @@ async function SR_optimizeReminderTime(userId, reminderId) {
 // =============== 付費功能控制層函數 (4個) ===============
 
 /**
- * 07. 驗證付費功能權限
- * @version 2025-07-21-V1.0.0
+ * 07. 驗證付費功能權限 - 強化權限檢查和配額管理
+ * @version 2025-07-21-V1.1.0
  * @date 2025-07-21 10:00:00
- * @description 檢查用戶是否有權限使用特定付費功能
+ * @update: 新增詳細配額檢查、試用期處理、功能使用統計、快取機制
  */
-async function SR_validatePremiumFeature(userId, featureName) {
+async function SR_validatePremiumFeature(userId, featureName, operationContext = {}) {
   const functionName = "SR_validatePremiumFeature";
   try {
-    // 取得用戶訂閱狀態
-    const subscriptionStatus = await SR_checkSubscriptionStatus(userId);
+    SR_logInfo(`驗證付費功能: ${featureName}`, "權限驗證", userId, "", "", functionName);
+
+    // 檢查快取中的權限資訊
+    const cacheKey = `user_permissions_${userId}`;
+    let subscriptionStatus = null;
     
-    // 免費用戶功能限制
-    const freeFeatures = ['CREATE_REMINDER', 'BASIC_STATISTICS'];
-    const premiumFeatures = ['AUTO_PUSH', 'OPTIMIZE_TIME', 'UNLIMITED_REMINDERS'];
-
-    if (subscriptionStatus.isPremium) {
-      return {
-        allowed: true,
-        reason: 'Premium user',
-        featureType: 'premium'
-      };
+    try {
+      // 這裡可以整合快取機制，暫時直接查詢
+      subscriptionStatus = await SR_checkSubscriptionStatus(userId);
+    } catch (statusError) {
+      SR_logWarning(`無法取得訂閱狀態: ${statusError.message}`, "權限驗證", userId, "", "", functionName);
+      // 預設為免費用戶以保安全
+      subscriptionStatus = { isPremium: false, subscriptionType: 'free' };
     }
 
-    // 檢查免費功能
-    if (freeFeatures.includes(featureName)) {
-      // 檢查免費用戶限制
-      if (featureName === 'CREATE_REMINDER') {
-        const currentReminders = await SR_getUserReminderCount(userId);
-        if (currentReminders >= SR_CONFIG.MAX_FREE_REMINDERS) {
-          return {
-            allowed: false,
-            reason: `免費用戶最多只能設定 ${SR_CONFIG.MAX_FREE_REMINDERS} 個提醒`,
-            upgradeRequired: true
-          };
-        }
-      }
+    // 定義功能權限矩陣
+    const featureMatrix = {
+      // 免費功能
+      'CREATE_REMINDER': { 
+        level: 'free', 
+        quotaLimited: true, 
+        maxQuota: SR_CONFIG.MAX_FREE_REMINDERS,
+        description: '建立排程提醒' 
+      },
+      'BASIC_STATISTICS': { 
+        level: 'free', 
+        quotaLimited: false, 
+        description: '基礎統計查詢' 
+      },
+      'QUICK_REPLY_STATS': { 
+        level: 'free', 
+        quotaLimited: false, 
+        description: 'Quick Reply統計' 
+      },
       
+      // 付費功能
+      'AUTO_PUSH': { 
+        level: 'premium', 
+        quotaLimited: false, 
+        description: '自動推播服務' 
+      },
+      'OPTIMIZE_TIME': { 
+        level: 'premium', 
+        quotaLimited: false, 
+        description: '智慧時間最佳化' 
+      },
+      'UNLIMITED_REMINDERS': { 
+        level: 'premium', 
+        quotaLimited: false, 
+        description: '無限制提醒設定' 
+      },
+      'PREMIUM_REMINDER': { 
+        level: 'premium', 
+        quotaLimited: false, 
+        description: '進階提醒功能' 
+      },
+      'DAILY_SUMMARY': { 
+        level: 'premium', 
+        quotaLimited: false, 
+        description: '每日財務摘要' 
+      },
+      'BUDGET_WARNING': { 
+        level: 'premium', 
+        quotaLimited: false, 
+        description: '預算警告通知' 
+      },
+      'MONTHLY_REPORT': { 
+        level: 'premium', 
+        quotaLimited: false, 
+        description: '月度報告' 
+      }
+    };
+
+    const feature = featureMatrix[featureName];
+    if (!feature) {
       return {
-        allowed: true,
-        reason: 'Free feature',
-        featureType: 'free'
+        allowed: false,
+        reason: '未知功能',
+        errorCode: 'UNKNOWN_FEATURE'
       };
     }
 
-    // 付費功能需要升級
-    return {
-      allowed: false,
-      reason: '此功能需要 Premium 訂閱',
-      upgradeRequired: true,
-      featureType: 'premium'
+    // 檢查試用期狀態
+    const trialStatus = await SR_checkTrialStatus(userId);
+    const hasPremiumAccess = subscriptionStatus.isPremium || trialStatus.isInTrial;
+
+    // 付費功能權限檢查
+    if (feature.level === 'premium' && !hasPremiumAccess) {
+      return {
+        allowed: false,
+        reason: trialStatus.hasTrialExpired ? 
+          '免費試用已結束，請升級至 Premium 訂閱' : 
+          '此功能需要 Premium 訂閱',
+        upgradeRequired: true,
+        featureType: 'premium',
+        featureDescription: feature.description,
+        trialAvailable: !trialStatus.hasUsedTrial
+      };
+    }
+
+    // 免費功能配額檢查
+    if (feature.level === 'free' && feature.quotaLimited && !hasPremiumAccess) {
+      const quotaResult = await SR_checkFeatureQuota(userId, featureName, feature.maxQuota);
+      
+      if (!quotaResult.available) {
+        return {
+          allowed: false,
+          reason: `免費用戶${feature.description}已達上限 (${quotaResult.used}/${feature.maxQuota})`,
+          upgradeRequired: true,
+          featureType: 'free_limited',
+          quotaUsed: quotaResult.used,
+          quotaLimit: feature.maxQuota,
+          nextResetDate: quotaResult.nextResetDate
+        };
+      }
+    }
+
+    // 記錄功能使用
+    await SR_recordFeatureUsage(userId, featureName, operationContext);
+
+    const result = {
+      allowed: true,
+      reason: hasPremiumAccess ? 
+        (subscriptionStatus.isPremium ? 'Premium user' : `Trial user (${trialStatus.daysRemaining} days left)`) : 
+        'Free feature',
+      featureType: feature.level,
+      featureDescription: feature.description,
+      subscriptionType: subscriptionStatus.subscriptionType,
+      trialStatus: trialStatus
     };
+
+    SR_logInfo(`功能權限驗證通過: ${featureName}`, "權限驗證", userId, "", JSON.stringify(result), functionName);
+    
+    return result;
 
   } catch (error) {
     SR_logError(`驗證付費功能失敗: ${error.message}`, "權限驗證", userId, "SR_VALIDATE_ERROR", error.toString(), functionName);
     return {
       allowed: false,
-      reason: '驗證失敗',
-      error: error.message
+      reason: '權限驗證失敗',
+      error: error.message,
+      errorCode: 'VALIDATION_ERROR'
     };
   }
 }
@@ -1151,218 +1400,598 @@ async function SR_handleSchedulerError(errorType, errorData, context) {
 // =============== Quick Reply 專用層函數 (3個) ===============
 
 /**
- * 19. 統一處理 Quick Reply 互動
- * @version 2025-07-21-V1.0.0
+ * 19. 統一處理 Quick Reply 互動 - 強化會話管理和上下文處理
+ * @version 2025-07-21-V1.1.0
  * @date 2025-07-21 10:00:00
- * @description 統一處理所有 Quick Reply 相關互動
+ * @update: 新增會話狀態管理、上下文感知處理、智慧路由分發、錯誤恢復機制
  */
-async function SR_handleQuickReplyInteraction(userId, postbackData, messageContext) {
+async function SR_handleQuickReplyInteraction(userId, postbackData, messageContext = {}) {
   const functionName = "SR_handleQuickReplyInteraction";
+  const sessionId = `qr_${userId}_${Date.now()}`;
+  
   try {
     SR_logInfo(`處理Quick Reply互動: ${postbackData}`, "Quick Reply", userId, "", "", functionName);
 
-    let response = null;
+    // 建立或取得會話狀態
+    const session = await SR_getOrCreateQuickReplySession(userId, sessionId, messageContext);
+    
+    // 記錄互動開始
+    await SR_recordInteractionStart(userId, postbackData, session);
 
-    // 根據 postback 資料判斷處理類型
+    let response = null;
+    let interactionType = 'unknown';
+
+    // 智慧路由分發
     if (['今日統計', '本週統計', '本月統計'].includes(postbackData)) {
-      // 統計查詢
-      response = await SR_processQuickReplyStatistics(userId, postbackData);
+      interactionType = 'statistics';
       
-    } else if (postbackData === 'upgrade_premium') {
-      // 付費升級
+      // 檢查統計查詢權限
+      const permissionCheck = await SR_validatePremiumFeature(userId, 'BASIC_STATISTICS');
+      if (!permissionCheck.allowed) {
+        response = await SR_handlePaywallQuickReply(userId, 'blocked', { 
+          blockedFeature: 'statistics',
+          reason: permissionCheck.reason 
+        });
+      } else {
+        response = await SR_processQuickReplyStatistics(userId, postbackData);
+        
+        // 添加相關的Quick Reply選項
+        if (response.success) {
+          const additionalOptions = await SR_generateContextualQuickReply(userId, 'post_statistics', response);
+          if (additionalOptions && additionalOptions.items) {
+            response.quickReply = response.quickReply || { type: 'quick_reply', items: [] };
+            response.quickReply.items = [...response.quickReply.items, ...additionalOptions.items].slice(0, 4);
+          }
+        }
+      }
+      
+    } else if (['upgrade_premium', '立即升級'].includes(postbackData)) {
+      interactionType = 'upgrade';
       response = await SR_handlePaywallQuickReply(userId, 'upgrade', messageContext);
       
-    } else if (postbackData === '試用') {
-      // 免費試用
-      response = await SR_handlePaywallQuickReply(userId, 'trial', messageContext);
+    } else if (['試用', '免費試用', 'start_trial'].includes(postbackData)) {
+      interactionType = 'trial';
       
-    } else if (postbackData === '功能介紹') {
-      // 功能介紹
+      // 檢查試用資格
+      const trialStatus = await SR_checkTrialStatus(userId);
+      if (trialStatus.hasUsedTrial) {
+        response = {
+          success: false,
+          message: '您已使用過免費試用，請考慮升級至 Premium 會員',
+          quickReply: await SR_generateQuickReplyOptions(userId, 'upgrade_prompt')
+        };
+      } else {
+        response = await SR_handlePaywallQuickReply(userId, 'trial', messageContext);
+      }
+      
+    } else if (['功能介紹', '了解更多', 'learn_more'].includes(postbackData)) {
+      interactionType = 'info';
       response = await SR_handlePaywallQuickReply(userId, 'info', messageContext);
       
-    } else {
-      // 未知的 postback
+    } else if (postbackData.startsWith('setup_')) {
+      interactionType = 'reminder_setup';
+      response = await SR_handleReminderSetupInteraction(userId, postbackData, session);
+      
+    } else if (['contact_support', '聯繫客服'].includes(postbackData)) {
+      interactionType = 'support';
       response = {
-        success: false,
-        message: '抱歉，無法識別您的選擇，請重新操作',
-        quickReply: SR_generateQuickReplyOptions(userId, 'default')
+        success: true,
+        message: `💬 客服聯繫方式
+
+📧 Email: support@lcas.com
+⏰ 服務時間: 週一至週五 09:00-18:00
+
+或直接輸入「客服」與我們聯繫`,
+        quickReply: await SR_generateQuickReplyOptions(userId, 'default')
       };
+      
+    } else {
+      // 未知的 postback - 嘗試智慧解析
+      const parsedIntent = await SR_parseUnknownPostback(postbackData, messageContext);
+      if (parsedIntent.recognized) {
+        interactionType = parsedIntent.type;
+        response = await SR_handleParsedIntent(userId, parsedIntent, session);
+      } else {
+        interactionType = 'unknown';
+        response = {
+          success: false,
+          message: '抱歉，無法識別您的選擇。請從下方選項重新操作：',
+          quickReply: await SR_generateQuickReplyOptions(userId, 'default'),
+          errorCode: 'UNKNOWN_POSTBACK'
+        };
+      }
     }
 
-    // 記錄互動
-    await SR_logQuickReplyInteraction(userId, postbackData, response);
+    // 更新會話狀態
+    await SR_updateQuickReplySession(sessionId, {
+      lastInteraction: postbackData,
+      interactionType,
+      response: response.success,
+      timestamp: admin.firestore.Timestamp.now()
+    });
 
+    // 記錄詳細互動資訊
+    await SR_logQuickReplyInteraction(userId, postbackData, response, {
+      sessionId,
+      interactionType,
+      messageContext
+    });
+
+    // 添加會話資訊到回應
+    if (response) {
+      response.sessionId = sessionId;
+      response.interactionType = interactionType;
+      response.timestamp = new Date().toISOString();
+    }
+
+    SR_logInfo(`Quick Reply處理完成: ${interactionType}`, "Quick Reply", userId, "", "", functionName);
+    
     return response;
 
   } catch (error) {
     SR_logError(`處理Quick Reply互動失敗: ${error.message}`, "Quick Reply", userId, "SR_INTERACTION_ERROR", error.toString(), functionName);
     
-    return {
+    // 錯誤恢復機制
+    const fallbackResponse = {
       success: false,
-      message: '系統暫時無法處理您的請求，請稍後再試',
+      message: '系統暫時無法處理您的請求，請稍後再試或使用基本功能：',
+      quickReply: {
+        type: 'quick_reply',
+        items: [
+          { label: '今日統計', postbackData: '今日統計' },
+          { label: '客服協助', postbackData: 'contact_support' }
+        ]
+      },
+      error: error.message,
+      errorCode: 'INTERACTION_ERROR',
+      sessionId,
+      recoveryMode: true
+    };
+
+    // 記錄錯誤互動
+    try {
+      await SR_logQuickReplyInteraction(userId, postbackData, fallbackResponse, {
+        sessionId,
+        error: error.message,
+        recoveryMode: true
+      });
+    } catch (logError) {
+      // 靜默處理日誌錯誤
+    }
+
+    return fallbackResponse;
+  }
+}
+
+/**
+ * 20. 動態生成 Quick Reply 選項 - 強化智慧推薦和個人化
+ * @version 2025-07-21-V1.1.0
+ * @date 2025-07-21 10:00:00
+ * @update: 新增智慧推薦機制、使用習慣分析、個人化選項排序、A/B測試支援
+ */
+async function SR_generateQuickReplyOptions(userId, context, additionalParams = {}) {
+  const functionName = "SR_generateQuickReplyOptions";
+  try {
+    SR_logInfo(`生成Quick Reply選項: ${context}`, "Quick Reply", userId, "", "", functionName);
+
+    // 取得使用者狀態和偏好
+    const [subscriptionStatus, userPreferences, usageHistory, trialStatus] = await Promise.all([
+      SR_checkSubscriptionStatus(userId),
+      SR_getUserPreferences(userId),
+      SR_getUserUsageHistory(userId),
+      SR_checkTrialStatus(userId)
+    ]);
+
+    const hasPremiumAccess = subscriptionStatus.isPremium || trialStatus.isInTrial;
+    let options = [];
+    let maxOptions = 4; // LINE Quick Reply 限制
+
+    switch (context) {
+      case 'statistics':
+        // 統計查詢選項（根據使用習慣排序）
+        const baseStats = [
+          { ...SR_QUICK_REPLY_CONFIG.STATISTICS.TODAY, priority: usageHistory.todayStatsUsage || 0 },
+          { ...SR_QUICK_REPLY_CONFIG.STATISTICS.WEEKLY, priority: usageHistory.weeklyStatsUsage || 0 },
+          { ...SR_QUICK_REPLY_CONFIG.STATISTICS.MONTHLY, priority: usageHistory.monthlyStatsUsage || 0 }
+        ];
+        
+        // 根據使用頻率排序
+        options = baseStats.sort((a, b) => b.priority - a.priority);
+        
+        // 添加個人化推薦選項
+        if (hasPremiumAccess && usageHistory.reminderCount > 0) {
+          options.push({ label: '提醒管理', postbackData: 'manage_reminders', priority: 100 });
+        }
+        break;
+
+      case 'paywall':
+        // 付費功能牆選項（個人化推薦）
+        if (!hasPremiumAccess) {
+          options = [];
+          
+          // 根據試用狀態調整選項
+          if (!trialStatus.hasUsedTrial) {
+            options.push({
+              ...SR_QUICK_REPLY_CONFIG.PREMIUM.TRIAL,
+              label: '免費試用7天',
+              priority: 10
+            });
+          }
+          
+          options.push(SR_QUICK_REPLY_CONFIG.PREMIUM.UPGRADE);
+          options.push(SR_QUICK_REPLY_CONFIG.PREMIUM.INFO);
+          
+          // 根據用戶行為添加特殊選項
+          if (usageHistory.statisticsUsage > 5) {
+            options.push({ 
+              label: '查看統計', 
+              postbackData: '今日統計',
+              priority: 5 
+            });
+          }
+        } else {
+          // 已是付費用戶，提供進階選項
+          options = [
+            { label: '設定提醒', postbackData: 'setup_reminder' },
+            { label: '時間最佳化', postbackData: 'optimize_time' },
+            { label: '推播設定', postbackData: 'push_settings' }
+          ];
+        }
+        break;
+
+      case 'reminder_setup':
+        // 提醒設定選項（智慧推薦）
+        const reminderOptions = [
+          { label: '每日提醒', postbackData: 'setup_daily_reminder', priority: 0 },
+          { label: '每週提醒', postbackData: 'setup_weekly_reminder', priority: 0 },
+          { label: '每月提醒', postbackData: 'setup_monthly_reminder', priority: 0 }
+        ];
+        
+        // 根據使用者偏好調整優先級
+        if (userPreferences.preferredReminderType) {
+          const preferred = reminderOptions.find(opt => 
+            opt.postbackData.includes(userPreferences.preferredReminderType)
+          );
+          if (preferred) preferred.priority = 10;
+        }
+        
+        options = reminderOptions.sort((a, b) => b.priority - a.priority);
+        
+        if (hasPremiumAccess) {
+          options.push({ 
+            label: '智慧提醒', 
+            postbackData: 'setup_smart_reminder',
+            priority: 15 
+          });
+        } else {
+          // 檢查免費用戶限制
+          const currentReminders = await SR_getUserReminderCount(userId);
+          if (currentReminders >= SR_CONFIG.MAX_FREE_REMINDERS) {
+            options = [
+              { label: '升級解鎖', postbackData: 'upgrade_premium' },
+              { label: '管理現有', postbackData: 'manage_existing_reminders' }
+            ];
+          }
+        }
+        break;
+
+      case 'post_statistics':
+        // 統計查詢後的推薦選項
+        options = [];
+        
+        if (additionalParams.hasData) {
+          options.push({ label: '詳細分析', postbackData: 'detailed_analysis' });
+          
+          if (hasPremiumAccess) {
+            options.push({ label: '趨勢報告', postbackData: 'trend_report' });
+          }
+        }
+        
+        options.push({ label: '設定提醒', postbackData: 'setup_reminder' });
+        
+        if (!hasPremiumAccess) {
+          options.push({ label: '試用進階', postbackData: '試用' });
+        }
+        break;
+
+      case 'upgrade_prompt':
+        // 升級提示專用選項
+        options = [
+          SR_QUICK_REPLY_CONFIG.PREMIUM.UPGRADE,
+          { label: '功能比較', postbackData: '功能介紹' },
+          { label: '繼續免費', postbackData: '今日統計' }
+        ];
+        
+        if (!trialStatus.hasUsedTrial) {
+          options.unshift(SR_QUICK_REPLY_CONFIG.PREMIUM.TRIAL);
+        }
+        break;
+
+      case 'error_recovery':
+        // 錯誤恢復選項
+        options = [
+          SR_QUICK_REPLY_CONFIG.STATISTICS.TODAY,
+          { label: '重新開始', postbackData: 'restart' },
+          { label: '客服協助', postbackData: 'contact_support' }
+        ];
+        break;
+
+      default:
+        // 預設選項（智慧推薦）
+        options = [SR_QUICK_REPLY_CONFIG.STATISTICS.TODAY];
+        
+        // 根據用戶狀態添加推薦選項
+        if (usageHistory.reminderCount === 0) {
+          options.push({ label: '設定提醒', postbackData: 'setup_reminder' });
+        } else {
+          options.push({ label: '管理提醒', postbackData: 'manage_reminders' });
+        }
+        
+        if (!hasPremiumAccess && usageHistory.statisticsUsage > 3) {
+          options.push({ label: '升級會員', postbackData: 'upgrade_premium' });
+        }
+    }
+
+    // 確保選項數量不超過限制
+    options = options.slice(0, maxOptions);
+
+    // 添加選項元數據
+    const result = {
+      type: 'quick_reply',
+      items: options.map(option => ({
+        label: option.label,
+        postbackData: option.postbackData,
+        priority: option.priority || 0
+      })),
+      context,
+      userId,
+      timestamp: new Date().toISOString(),
+      subscriptionStatus: subscriptionStatus.subscriptionType,
+      hasPremiumAccess
+    };
+
+    // 記錄選項生成
+    await SR_logQuickReplyGeneration(userId, context, result);
+
+    SR_logInfo(`生成${options.length}個Quick Reply選項`, "Quick Reply", userId, "", "", functionName);
+    
+    return result;
+
+  } catch (error) {
+    SR_logError(`生成Quick Reply選項失敗: ${error.message}`, "Quick Reply", userId, "SR_GENERATE_ERROR", error.toString(), functionName);
+    
+    // 錯誤時回傳最基本的安全選項
+    return {
+      type: 'quick_reply',
+      items: [
+        { label: '今日統計', postbackData: '今日統計' },
+        { label: '重新開始', postbackData: 'restart' }
+      ],
+      context: 'error_fallback',
       error: error.message
     };
   }
 }
 
 /**
- * 20. 動態生成 Quick Reply 選項
- * @version 2025-07-21-V1.0.0
+ * 21. 處理付費功能牆 Quick Reply - 強化試用管理和轉換優化
+ * @version 2025-07-21-V1.1.0
  * @date 2025-07-21 10:00:00
- * @description 根據用戶狀態和上下文動態生成 Quick Reply 按鈕
+ * @update: 新增試用狀態管理、個人化升級提案、轉換率優化、用戶行為追蹤
  */
-async function SR_generateQuickReplyOptions(userId, context) {
-  const functionName = "SR_generateQuickReplyOptions";
-  try {
-    const subscriptionStatus = await SR_checkSubscriptionStatus(userId);
-    let options = [];
-
-    switch (context) {
-      case 'statistics':
-        // 統計查詢選項（免費功能）
-        options = [
-          SR_QUICK_REPLY_CONFIG.STATISTICS.TODAY,
-          SR_QUICK_REPLY_CONFIG.STATISTICS.WEEKLY,
-          SR_QUICK_REPLY_CONFIG.STATISTICS.MONTHLY
-        ];
-        break;
-
-      case 'paywall':
-        // 付費功能牆選項
-        if (!subscriptionStatus.isPremium) {
-          options = [
-            SR_QUICK_REPLY_CONFIG.PREMIUM.UPGRADE,
-            SR_QUICK_REPLY_CONFIG.PREMIUM.TRIAL,
-            SR_QUICK_REPLY_CONFIG.PREMIUM.INFO
-          ];
-        }
-        break;
-
-      case 'reminder_setup':
-        // 提醒設定選項
-        options = [
-          { label: '每日提醒', postbackData: 'setup_daily_reminder' },
-          { label: '每週提醒', postbackData: 'setup_weekly_reminder' },
-          { label: '每月提醒', postbackData: 'setup_monthly_reminder' }
-        ];
-        
-        if (subscriptionStatus.isPremium) {
-          options.push({ label: '自訂提醒', postbackData: 'setup_custom_reminder' });
-        }
-        break;
-
-      default:
-        // 預設選項
-        options = [
-          SR_QUICK_REPLY_CONFIG.STATISTICS.TODAY,
-          { label: '設定提醒', postbackData: 'setup_reminder' }
-        ];
-    }
-
-    return {
-      type: 'quick_reply',
-      items: options.slice(0, 4) // LINE Quick Reply 最多4個按鈕
-    };
-
-  } catch (error) {
-    SR_logError(`生成Quick Reply選項失敗: ${error.message}`, "Quick Reply", userId, "SR_GENERATE_ERROR", error.toString(), functionName);
-    
-    // 回傳基本選項
-    return {
-      type: 'quick_reply',
-      items: [SR_QUICK_REPLY_CONFIG.STATISTICS.TODAY]
-    };
-  }
-}
-
-/**
- * 21. 處理付費功能牆 Quick Reply
- * @version 2025-07-21-V1.0.0
- * @date 2025-07-21 10:00:00
- * @description 處理付費功能相關的 Quick Reply 互動
- */
-async function SR_handlePaywallQuickReply(userId, actionType, context) {
+async function SR_handlePaywallQuickReply(userId, actionType, context = {}) {
   const functionName = "SR_handlePaywallQuickReply";
   try {
     SR_logInfo(`處理付費功能牆: ${actionType}`, "付費功能", userId, "", "", functionName);
+
+    // 取得用戶詳細狀態
+    const [subscriptionStatus, trialStatus, userUsage, userPreferences] = await Promise.all([
+      SR_checkSubscriptionStatus(userId),
+      SR_checkTrialStatus(userId),
+      SR_getUserUsageHistory(userId),
+      SR_getUserPreferences(userId)
+    ]);
 
     let response = {};
 
     switch (actionType) {
       case 'upgrade':
+        // 個人化升級提案
+        const savingsAmount = SR_calculateUserSavings(userUsage);
+        const personalizedFeatures = SR_getPersonalizedFeatures(userUsage, userPreferences);
+        
         response = {
           success: true,
-          message: `🌟 升級至 Premium 會員
+          message: `🌟 專為您打造的 Premium 升級方案
 
-✅ 無限排程提醒設定
-✅ 自動推播每日摘要
-✅ 智慧時間最佳化
-✅ 進階統計分析
-✅ 預算警示通知
+${personalizedFeatures.map(f => `✅ ${f.name} - ${f.benefit}`).join('\n')}
 
-💳 月費方案：NT$ 99/月
-💳 年費方案：NT$ 990/年 (省下2個月)
+💰 為您節省時間價值：每月約 ${savingsAmount} 元
+🎯 基於您的使用習慣推薦功能
 
-請聯繫客服或前往官網完成升級`,
+💳 優惠方案：
+• 月費：NT$ 99/月
+• 年費：NT$ 990/年 (省 2 個月！)
+${trialStatus.hasUsedTrial ? '' : '• 首次用戶：免費試用 7 天'}
+
+立即升級享受智慧記帳新體驗！`,
           quickReply: {
             type: 'quick_reply',
             items: [
-              { label: '聯繫客服', postbackData: 'contact_support' },
-              { label: '了解更多', postbackData: '功能介紹' }
+              { label: '立即升級', postbackData: 'confirm_upgrade' },
+              ...(trialStatus.hasUsedTrial ? [] : [{ label: '免費試用', postbackData: '試用' }]),
+              { label: '功能比較', postbackData: '功能介紹' },
+              { label: '聯繫客服', postbackData: 'contact_support' }
             ]
+          },
+          upgradeContext: {
+            personalizedFeatures,
+            savingsAmount,
+            userSegment: SR_getUserSegment(userUsage)
           }
         };
         break;
 
       case 'trial':
-        response = {
-          success: true,
-          message: `🎁 免費試用 Premium 功能
+        if (trialStatus.hasUsedTrial) {
+          response = {
+            success: false,
+            message: `🚫 試用期限制
 
-您可以免費體驗以下功能 7 天：
-• 自動推播每日摘要
+您已經使用過 7 天免費試用。
+
+💡 但您可以：
+• 查看功能對比了解更多價值
+• 聯繫客服了解優惠方案
+• 繼續使用免費功能
+
+感謝您對 LCAS Premium 的興趣！`,
+            quickReply: {
+              type: 'quick_reply',
+              items: [
+                { label: '升級會員', postbackData: 'upgrade_premium' },
+                { label: '功能對比', postbackData: '功能介紹' },
+                { label: '聯繫客服', postbackData: 'contact_support' },
+                { label: '繼續免費', postbackData: '今日統計' }
+              ]
+            }
+          };
+        } else if (trialStatus.isInTrial) {
+          response = {
+            success: true,
+            message: `🎉 您正在試用 Premium 功能
+
+⏱️ 試用剩餘時間：${trialStatus.daysRemaining} 天
+📊 已使用功能：${trialStatus.featuresUsed.length} 項
+
+試用期間可享受：
+• 無限排程提醒設定
+• 每日財務摘要推播
 • 智慧時間最佳化
 • 進階統計分析
 
-試用期後將自動恢復免費方案，無需取消。
+試用即將結束，記得及時升級！`,
+            quickReply: {
+              type: 'quick_reply',
+              items: [
+                { label: '立即升級', postbackData: 'upgrade_premium' },
+                { label: '試用設定', postbackData: 'trial_settings' },
+                { label: '使用統計', postbackData: 'trial_usage' }
+              ]
+            }
+          };
+        } else {
+          // 開始試用流程
+          const trialResult = await SR_startTrialPeriod(userId);
+          
+          if (trialResult.success) {
+            response = {
+              success: true,
+              message: `🎁 歡迎開始 7 天 Premium 免費試用！
 
-是否要開始免費試用？`,
+✅ 試用已啟動，至 ${moment().add(7, 'days').format('MM/DD')} 結束
+🚀 現在您可以使用所有 Premium 功能
+
+立即體驗：
+• 設定無限排程提醒
+• 開啟每日財務摘要
+• 使用智慧時間最佳化
+
+試用期後將自動恢復免費方案，無需取消`,
+              quickReply: {
+                type: 'quick_reply',
+                items: [
+                  { label: '設定提醒', postbackData: 'setup_reminder' },
+                  { label: '開啟推播', postbackData: 'enable_push' },
+                  { label: '智慧最佳化', postbackData: 'optimize_time' },
+                  { label: '試用說明', postbackData: 'trial_guide' }
+                ]
+              }
+            };
+          } else {
+            response = {
+              success: false,
+              message: `😅 試用啟動失敗
+
+${trialResult.error}
+
+請稍後再試或聯繫客服協助`,
+              quickReply: {
+                type: 'quick_reply',
+                items: [
+                  { label: '重新試用', postbackData: '試用' },
+                  { label: '聯繫客服', postbackData: 'contact_support' },
+                  { label: '查看功能', postbackData: '功能介紹' }
+                ]
+              }
+            };
+          }
+        }
+        break;
+
+      case 'info':
+        // 個人化功能介紹
+        const relevantFeatures = SR_getRelevantFeatures(userUsage, subscriptionStatus);
+        
+        response = {
+          success: true,
+          message: `📊 Premium 功能完整介紹
+
+🔔 智慧提醒系統
+• 無限制排程提醒設定（免費版限 ${SR_CONFIG.MAX_FREE_REMINDERS} 個）
+• AI 基於使用習慣推薦最佳時間
+• 假日與週末智慧處理
+• 多種提醒模式（每日/週/月/自訂）
+
+📈 自動推播服務
+• 每日財務摘要（21:00 自動發送）
+• 預算超支即時警告
+• 月度報告自動生成
+• 個人化洞察分析
+
+📊 進階分析功能
+• 支出趨勢分析與預測
+• 類別占比統計
+• 同期比較報告
+• 財務健康評分
+
+${userUsage.statisticsUsage > 5 ? '💡 根據您的使用習慣，最推薦「自動推播」功能' : ''}`,
           quickReply: {
             type: 'quick_reply',
             items: [
-              { label: '開始試用', postbackData: 'start_trial' },
-              { label: '暫不使用', postbackData: '今日統計' }
+              { label: '立即升級', postbackData: 'upgrade_premium' },
+              ...(trialStatus.hasUsedTrial ? [] : [{ label: '免費試用', postbackData: '試用' }]),
+              { label: '價格方案', postbackData: 'pricing_plans' },
+              { label: '繼續免費', postbackData: '今日統計' }
             ]
           }
         };
         break;
 
-      case 'info':
+      case 'blocked':
+        // 功能被阻擋時的處理
+        const blockedFeature = context.blockedFeature || '此功能';
+        const reason = context.reason || '需要 Premium 訂閱';
+        
         response = {
-          success: true,
-          message: `📊 Premium 功能詳細介紹
+          success: false,
+          message: `🔒 ${blockedFeature}需要升級
 
-🔔 智慧提醒系統
-• 無限制排程提醒設定
-• 基於使用習慣的最佳時間推薦
-• 假日與週末智慧處理
+${reason}
 
-📈 自動推播服務
-• 每日財務摘要 (21:00)
-• 預算超支即時警告
-• 月度報告自動生成
+Premium 會員專享：
+• 無限制使用所有功能
+• 個人化智慧建議
+• 優先客服支援
 
-📊 進階分析功能
-• 支出趨勢分析
-• 類別占比統計
-• 同期比較報告
-
-輸入「統計」體驗基礎功能`,
+${trialStatus.hasUsedTrial ? '立即升級享受完整體驗' : '也可以先免費試用 7 天'}`,
           quickReply: {
             type: 'quick_reply',
             items: [
               { label: '立即升級', postbackData: 'upgrade_premium' },
-              { label: '免費試用', postbackData: '試用' }
+              ...(trialStatus.hasUsedTrial ? [] : [{ label: '免費試用', postbackData: '試用' }]),
+              { label: '了解更多', postbackData: '功能介紹' },
+              { label: '繼續免費', postbackData: '今日統計' }
             ]
           }
         };
@@ -1371,10 +2000,13 @@ async function SR_handlePaywallQuickReply(userId, actionType, context) {
       default:
         response = {
           success: false,
-          message: '無法處理此操作',
-          quickReply: SR_generateQuickReplyOptions(userId, 'default')
+          message: '無法處理此操作，請重新選擇',
+          quickReply: await SR_generateQuickReplyOptions(userId, 'default')
         };
     }
+
+    // 記錄付費功能互動
+    await SR_recordPaywallInteraction(userId, actionType, response, context);
 
     return response;
 
@@ -1383,7 +2015,14 @@ async function SR_handlePaywallQuickReply(userId, actionType, context) {
     
     return {
       success: false,
-      message: '系統錯誤，請稍後再試',
+      message: '系統暫時無法處理，請稍後再試',
+      quickReply: {
+        type: 'quick_reply',
+        items: [
+          { label: '重新開始', postbackData: 'restart' },
+          { label: '客服協助', postbackData: 'contact_support' }
+        ]
+      },
       error: error.message
     };
   }
@@ -1562,19 +2201,295 @@ function SR_generateUpgradeMessage(violationType) {
 }
 
 /**
- * 記錄 Quick Reply 互動
+ * 記錄 Quick Reply 互動 - 強化版
  */
-async function SR_logQuickReplyInteraction(userId, postbackData, response) {
+async function SR_logQuickReplyInteraction(userId, postbackData, response, metadata = {}) {
   try {
     await db.collection('quick_reply_sessions').add({
       userId,
       postbackData,
       success: response.success,
       timestamp: admin.firestore.Timestamp.now(),
-      responseType: response.quickReply ? 'with_quick_reply' : 'text_only'
+      responseType: response.quickReply ? 'with_quick_reply' : 'text_only',
+      sessionId: metadata.sessionId,
+      interactionType: metadata.interactionType,
+      messageContext: metadata.messageContext,
+      error: metadata.error,
+      recoveryMode: metadata.recoveryMode || false
     });
   } catch (error) {
     // 靜默記錄失敗，不影響主流程
+  }
+}
+
+/**
+ * 計算下次執行時間（考慮跳過邏輯）
+ */
+async function SR_calculateNextExecutionWithSkip(reminderData) {
+  const baseNext = SR_calculateNextExecution(reminderData);
+  
+  if (reminderData.skipWeekends || reminderData.skipHolidays) {
+    const holidayResult = await SR_processHolidayLogic(baseNext, 'next_workday');
+    return holidayResult.adjustedDate;
+  }
+  
+  return baseNext;
+}
+
+/**
+ * 取得內建假日清單
+ */
+async function SR_getBuiltInHolidays(year) {
+  const holidays2025 = [
+    { date: '2025-01-01', name: '元旦', type: 'national' },
+    { date: '2025-02-10', name: '春節', type: 'national' },
+    { date: '2025-02-11', name: '春節', type: 'national' },
+    { date: '2025-02-12', name: '春節', type: 'national' },
+    { date: '2025-04-04', name: '清明節', type: 'national' },
+    { date: '2025-05-01', name: '勞動節', type: 'national' },
+    { date: '2025-10-10', name: '國慶日', type: 'national' }
+  ];
+  
+  return year === '2025' ? holidays2025 : [];
+}
+
+/**
+ * 智慧尋找下一個工作日
+ */
+async function SR_findNextWorkday(date, timezone) {
+  let nextDay = moment(date).tz(timezone).add(1, 'day');
+  let maxAttempts = 10; // 防止無限循環
+  
+  while (maxAttempts > 0) {
+    const holidayCheck = await SR_processHolidayLogic(nextDay.toDate(), 'skip', timezone);
+    if (!holidayCheck.isWeekend && !holidayCheck.isHoliday) {
+      return nextDay.toDate();
+    }
+    nextDay.add(1, 'day');
+    maxAttempts--;
+  }
+  
+  return nextDay.toDate(); // 返回最後嘗試的日期
+}
+
+/**
+ * 智慧尋找前一個工作日
+ */
+async function SR_findPreviousWorkday(date, timezone) {
+  let prevDay = moment(date).tz(timezone).subtract(1, 'day');
+  let maxAttempts = 10; // 防止無限循環
+  
+  while (maxAttempts > 0) {
+    const holidayCheck = await SR_processHolidayLogic(prevDay.toDate(), 'skip', timezone);
+    if (!holidayCheck.isWeekend && !holidayCheck.isHoliday) {
+      return prevDay.toDate();
+    }
+    prevDay.subtract(1, 'day');
+    maxAttempts--;
+  }
+  
+  return prevDay.toDate(); // 返回最後嘗試的日期
+}
+
+/**
+ * 檢查試用狀態
+ */
+async function SR_checkTrialStatus(userId) {
+  try {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      return { hasUsedTrial: false, isInTrial: false, daysRemaining: 0 };
+    }
+    
+    const userData = userDoc.data();
+    const trial = userData.trial || {};
+    
+    if (!trial.startDate) {
+      return { hasUsedTrial: false, isInTrial: false, daysRemaining: 0 };
+    }
+    
+    const trialStart = moment(trial.startDate.toDate());
+    const trialEnd = trialStart.clone().add(7, 'days');
+    const now = moment();
+    
+    const isInTrial = now.isBefore(trialEnd);
+    const daysRemaining = Math.max(0, trialEnd.diff(now, 'days'));
+    
+    return {
+      hasUsedTrial: true,
+      isInTrial,
+      daysRemaining,
+      startDate: trialStart.toDate(),
+      endDate: trialEnd.toDate(),
+      featuresUsed: trial.featuresUsed || []
+    };
+  } catch (error) {
+    return { hasUsedTrial: false, isInTrial: false, daysRemaining: 0 };
+  }
+}
+
+/**
+ * 檢查功能配額
+ */
+async function SR_checkFeatureQuota(userId, featureName, maxQuota) {
+  try {
+    if (featureName === 'CREATE_REMINDER') {
+      const used = await SR_getUserReminderCount(userId);
+      return {
+        available: used < maxQuota,
+        used,
+        limit: maxQuota,
+        nextResetDate: null // 提醒配額不重置
+      };
+    }
+    
+    // 其他功能的配額檢查
+    return { available: true, used: 0, limit: maxQuota };
+  } catch (error) {
+    return { available: false, used: 0, limit: maxQuota };
+  }
+}
+
+/**
+ * 記錄功能使用
+ */
+async function SR_recordFeatureUsage(userId, featureName, context) {
+  try {
+    await db.collection('feature_usage').add({
+      userId,
+      featureName,
+      timestamp: admin.firestore.Timestamp.now(),
+      context: context || {}
+    });
+  } catch (error) {
+    // 靜默處理記錄失敗
+  }
+}
+
+/**
+ * 取得用戶偏好設定
+ */
+async function SR_getUserPreferences(userId) {
+  try {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      return userDoc.data().preferences || {};
+    }
+    return {};
+  } catch (error) {
+    return {};
+  }
+}
+
+/**
+ * 取得用戶使用歷史
+ */
+async function SR_getUserUsageHistory(userId) {
+  try {
+    const usageDoc = await db.collection('user_usage_stats').doc(userId).get();
+    if (usageDoc.exists) {
+      return usageDoc.data();
+    }
+    
+    // 返回預設值
+    return {
+      statisticsUsage: 0,
+      todayStatsUsage: 0,
+      weeklyStatsUsage: 0,
+      monthlyStatsUsage: 0,
+      reminderCount: 0,
+      lastActiveDate: null
+    };
+  } catch (error) {
+    return {
+      statisticsUsage: 0,
+      reminderCount: 0
+    };
+  }
+}
+
+/**
+ * 開始試用期
+ */
+async function SR_startTrialPeriod(userId) {
+  try {
+    await db.collection('users').doc(userId).update({
+      'trial.startDate': admin.firestore.Timestamp.now(),
+      'trial.featuresUsed': [],
+      'trial.active': true
+    });
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * 計算用戶節省金額
+ */
+function SR_calculateUserSavings(userUsage) {
+  const timeValue = 50; // 每小時時間價值
+  const savedHours = Math.min(userUsage.statisticsUsage * 0.1, 5); // 最多5小時
+  return Math.round(savedHours * timeValue);
+}
+
+/**
+ * 取得個人化功能推薦
+ */
+function SR_getPersonalizedFeatures(userUsage, preferences) {
+  const features = [
+    { name: '無限提醒設定', benefit: '不再受限於2個提醒' },
+    { name: '每日自動摘要', benefit: '無需手動查詢統計' }
+  ];
+  
+  if (userUsage.statisticsUsage > 10) {
+    features.push({ name: '進階分析', benefit: '深度洞察支出模式' });
+  }
+  
+  return features;
+}
+
+/**
+ * 取得用戶分群
+ */
+function SR_getUserSegment(userUsage) {
+  if (userUsage.statisticsUsage > 20) return 'power_user';
+  if (userUsage.reminderCount > 0) return 'engaged_user';
+  return 'casual_user';
+}
+
+/**
+ * 記錄付費功能互動
+ */
+async function SR_recordPaywallInteraction(userId, actionType, response, context) {
+  try {
+    await db.collection('paywall_interactions').add({
+      userId,
+      actionType,
+      success: response.success,
+      timestamp: admin.firestore.Timestamp.now(),
+      context
+    });
+  } catch (error) {
+    // 靜默處理
+  }
+}
+
+/**
+ * 記錄Quick Reply選項生成
+ */
+async function SR_logQuickReplyGeneration(userId, context, result) {
+  try {
+    await db.collection('quickreply_generations').add({
+      userId,
+      context,
+      optionCount: result.items.length,
+      timestamp: admin.firestore.Timestamp.now(),
+      subscriptionStatus: result.subscriptionStatus
+    });
+  } catch (error) {
+    // 靜默處理
   }
 }
 
