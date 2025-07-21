@@ -1,5 +1,5 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.1.0
+* FS_FirestoreStructure_資料庫結構模組_1.2.0
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
 * @update 2025-07-08: 升級至1.0.9版本，修正project_id undefined問題，加入UTC+8時區支援

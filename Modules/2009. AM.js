@@ -1,5 +1,5 @@
 /**
- * AM_帳號管理模組_1.0.1
+ * AM_帳號管理模組_1.1.1
  * @module AM模組 
  * @description 跨平台帳號管理系統 - 支援LINE OA、iOS、Android統一帳號管理
  * @update 2025-07-11: 
