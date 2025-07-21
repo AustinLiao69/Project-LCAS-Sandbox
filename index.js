@@ -106,4 +106,4 @@ console.log('🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對�
 console.log('⚡ WH → LBK 直連路徑已啟用：WH → LBK → Firestore');
 console.log('🚀 LINE OA 快速記帳：26個函數 → 8個函數，處理時間 < 2秒');
 console.log('📋 Rich Menu/APP 路徑：維持 WH → DD → BK 完整功能');
-console.log('📅 SR 排程提醒模組已整合：支援智慧提醒、Quick Reply統計、付費功能控制');
+console.log('📅 SR 排程提醒模組已整合：支援排程提醒、Quick Reply統計、付費功能控制（v1.3.0）');

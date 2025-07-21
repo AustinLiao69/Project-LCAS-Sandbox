@@ -1,9 +1,9 @@
 
 /**
- * SR_排程提醒模組_1.1.0
+ * SR_排程提醒模組_1.3.0
  * @module SR排程提醒模組
  * @description LCAS 2.0 排程提醒系統 - 智慧記帳自動化核心功能
- * @update 2025-07-21: 升級至v1.1.0，完善排程引擎部署(Phase 4)和Quick Reply功能(Phase 5)，增強付費功能控制機制和時區處理
+ * @update 2025-01-09: 升級至v1.3.0，移除智慧時間最佳化功能，簡化付費功能架構，優化核心排程功能
  */
 
 const admin = require('firebase-admin');
@@ -596,57 +596,15 @@ async function SR_processHolidayLogic(date, holidayHandling = 'skip', userTimezo
   }
 }
 
-/**
- * 06. 智慧時間最佳化（付費功能）
- * @version 2025-07-21-V1.0.0
- * @date 2025-07-21 10:00:00
- * @description 基於用戶使用習慣最佳化提醒時間
- */
-async function SR_optimizeReminderTime(userId, reminderId) {
-  const functionName = "SR_optimizeReminderTime";
-  try {
-    // 檢查付費功能權限
-    const permissionCheck = await SR_validatePremiumFeature(userId, 'OPTIMIZE_TIME');
-    if (!permissionCheck.allowed) {
-      return {
-        optimized: false,
-        error: '此功能需要 Premium 訂閱',
-        upgradeRequired: true
-      };
-    }
 
-    SR_logInfo(`最佳化提醒時間: ${reminderId}`, "時間最佳化", userId, "", "", functionName);
-
-    // 分析用戶活躍時間模式（簡化版）
-    const userPattern = await SR_analyzeUserActivePattern(userId);
-    
-    // 建議最佳提醒時間
-    const optimalTime = SR_calculateOptimalTime(userPattern);
-
-    return {
-      optimized: true,
-      currentTime: userPattern.currentReminderTime,
-      suggestedTime: optimalTime,
-      confidence: userPattern.confidence,
-      reasoning: optimalTime.reasoning
-    };
-
-  } catch (error) {
-    SR_logError(`時間最佳化失敗: ${error.message}`, "時間最佳化", userId, "SR_OPTIMIZE_ERROR", error.toString(), functionName);
-    return {
-      optimized: false,
-      error: error.message
-    };
-  }
-}
 
 // =============== 付費功能控制層函數 (4個) ===============
 
 /**
  * 07. 驗證付費功能權限 - 強化權限檢查和配額管理
- * @version 2025-07-21-V1.1.0
- * @date 2025-07-21 10:00:00
- * @update: 新增詳細配額檢查、試用期處理、功能使用統計、快取機制
+ * @version 2025-01-09-V1.3.0
+ * @date 2025-01-09 20:00:00
+ * @update: 移除智慧時間最佳化功能，簡化付費功能權限矩陣，優化核心功能驗證
  */
 async function SR_validatePremiumFeature(userId, featureName, operationContext = {}) {
   const functionName = "SR_validatePremiumFeature";
@@ -666,7 +624,7 @@ async function SR_validatePremiumFeature(userId, featureName, operationContext =
       subscriptionStatus = { isPremium: false, subscriptionType: 'free' };
     }
 
-    // 定義功能權限矩陣
+    // 定義功能權限矩陣（移除智慧時間最佳化）
     const featureMatrix = {
       // 免費功能
       'CREATE_REMINDER': { 
@@ -691,11 +649,6 @@ async function SR_validatePremiumFeature(userId, featureName, operationContext =
         level: 'premium', 
         quotaLimited: false, 
         description: '自動推播服務' 
-      },
-      'OPTIMIZE_TIME': { 
-        level: 'premium', 
-        quotaLimited: false, 
-        description: '智慧時間最佳化' 
       },
       'UNLIMITED_REMINDERS': { 
         level: 'premium', 
@@ -1659,8 +1612,8 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
         
         if (hasPremiumAccess) {
           options.push({ 
-            label: '智慧提醒', 
-            postbackData: 'setup_smart_reminder',
+            label: '進階提醒', 
+            postbackData: 'setup_premium_reminder',
             priority: 15 
           });
         } else {
@@ -2569,13 +2522,12 @@ async function SR_loadExistingSchedules() {
 
 // 導出模組函數
 module.exports = {
-  // 排程管理層函數
+  // 排程管理層函數 (5個函數，移除智慧時間最佳化)
   SR_createScheduledReminder,
   SR_updateScheduledReminder,
   SR_deleteScheduledReminder,
   SR_executeScheduledTask,
   SR_processHolidayLogic,
-  SR_optimizeReminderTime,
   
   // 付費功能控制層函數
   SR_validatePremiumFeature,
