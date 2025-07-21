@@ -42,6 +42,7 @@ const LBK = require('./Modules/2015. LBK.js');  // LINE快速記帳模組
 const DD = require('./Modules/2031. DD1.js');    // 數據分發模組
 const DL = require('./Modules/2010. DL.js');    // 數據記錄模組
 const AM = require('./Modules/2009. AM.js');    // 帳號管理模組
+const SR = require('./Modules/2005. SR.js');    // 排程提醒模組
 
 // 預先初始化 BK 模組
 console.log('🔧 初始化 BK 模組...');
@@ -57,6 +58,14 @@ LBK.LBK_initialize().then(() => {
   console.log('✅ LBK 模組初始化完成');
 }).catch((error) => {
   console.log('❌ LBK 模組初始化失敗:', error);
+});
+
+// 預先初始化 SR 模組
+console.log('🔧 初始化 SR 排程提醒模組...');
+SR.SR_initialize().then(() => {
+  console.log('✅ SR 模組初始化完成');
+}).catch((error) => {
+  console.log('❌ SR 模組初始化失敗:', error);
 });
 
 /**
@@ -97,3 +106,4 @@ console.log('🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對�
 console.log('⚡ WH → LBK 直連路徑已啟用：WH → LBK → Firestore');
 console.log('🚀 LINE OA 快速記帳：26個函數 → 8個函數，處理時間 < 2秒');
 console.log('📋 Rich Menu/APP 路徑：維持 WH → DD → BK 完整功能');
+console.log('📅 SR 排程提醒模組已整合：支援智慧提醒、Quick Reply統計、付費功能控制');
