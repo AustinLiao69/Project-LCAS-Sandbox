@@ -1,8 +1,8 @@
 /**
- * index.js_主啟動器模組_2.1.7
+ * index.js_主啟動器模組_2.1.8
  * @module 主啟動器模組
- * @description LCAS LINE Bot 主啟動器 - 移除心跳檢查機制，專注於模組載入和初始化
- * @update 2025-07-22: 升級至2.1.7版本，增強模組載入錯誤處理，修復FS模組依賴問題
+ * @description LCAS LINE Bot 主啟動器 - 修復FS模組函數定義順序問題，確保模組載入穩定性
+ * @update 2025-07-22: 升級至2.1.8版本，修復FS_getDocument未定義錯誤，優化模組依賴檢查
  * @date 2025-07-22
  */
 
@@ -30,14 +30,14 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 /**
- * 03. 模組載入與初始化 - 優化載入順序
- * @version 2025-07-22-V1.0.1
- * @date 2025-07-22 10:15:00
- * @description 載入所有功能模組並建立模組間的依賴關係，優化載入順序避免依賴錯誤
+ * 03. 模組載入與初始化 - 修復函數定義順序問題
+ * @version 2025-07-22-V1.0.2
+ * @date 2025-07-22 10:25:00
+ * @description 載入所有功能模組，確保FS模組核心函數正確定義，解決ReferenceError問題
  */
 console.log('📦 載入模組...');
 
-// 優先載入基礎模組
+// 優先載入基礎模組，確保核心函數可用
 let DL, FS;
 try {
   DL = require('./Modules/2010. DL.js');    // 數據記錄模組 (基礎)
@@ -48,16 +48,25 @@ try {
 
 try {
   FS = require('./Modules/2011. FS.js');    // Firestore結構模組 (基礎)
-  console.log('✅ FS 模組載入成功');
+  // 驗證核心函數是否正確載入
+  if (FS && typeof FS.FS_getDocument === 'function') {
+    console.log('✅ FS 模組載入成功 - 核心函數檢查通過');
+  } else {
+    console.log('⚠️ FS 模組載入異常 - 核心函數未正確導出');
+  }
 } catch (error) {
   console.error('❌ FS 模組載入失敗:', error.message);
 }
 
-// 載入應用層模組
+// 載入應用層模組 - 依賴FS模組的核心函數
 let WH, BK, LBK, DD, AM, SR;
 try {
-  BK = require('./Modules/2001. BK.js');    // 記帳處理模組
-  console.log('✅ BK 模組載入成功');
+  if (FS && typeof FS.FS_getDocument === 'function') {
+    BK = require('./Modules/2001. BK.js');    // 記帳處理模組
+    console.log('✅ BK 模組載入成功');
+  } else {
+    console.log('⚠️ BK 模組跳過載入 - FS模組依賴未滿足');
+  }
 } catch (error) {
   console.error('❌ BK 模組載入失敗:', error.message);
 }
@@ -70,8 +79,12 @@ try {
 }
 
 try {
-  DD = require('./Modules/2031. DD1.js');    // 數據分發模組
-  console.log('✅ DD 模組載入成功');
+  if (FS && typeof FS.FS_getDocument === 'function') {
+    DD = require('./Modules/2031. DD1.js');    // 數據分發模組
+    console.log('✅ DD 模組載入成功');
+  } else {
+    console.log('⚠️ DD 模組跳過載入 - FS模組依賴未滿足');
+  }
 } catch (error) {
   console.error('❌ DD 模組載入失敗:', error.message);
 }
@@ -84,15 +97,23 @@ try {
 }
 
 try {
-  SR = require('./Modules/2005. SR.js');    // 排程提醒模組
-  console.log('✅ SR 模組載入成功');
+  if (FS && typeof FS.FS_getDocument === 'function') {
+    SR = require('./Modules/2005. SR.js');    // 排程提醒模組
+    console.log('✅ SR 模組載入成功');
+  } else {
+    console.log('⚠️ SR 模組跳過載入 - FS模組依賴未滿足');
+  }
 } catch (error) {
   console.error('❌ SR 模組載入失敗:', error.message);
 }
 
 try {
-  WH = require('./Modules/2020. WH.js');    // Webhook處理模組 (最後載入)
-  console.log('✅ WH 模組載入成功');
+  if (FS && typeof FS.FS_getDocument === 'function') {
+    WH = require('./Modules/2020. WH.js');    // Webhook處理模組 (最後載入)
+    console.log('✅ WH 模組載入成功');
+  } else {
+    console.log('⚠️ WH 模組跳過載入 - FS模組依賴未滿足');
+  }
 } catch (error) {
   console.error('❌ WH 模組載入失敗:', error.message);
 }
@@ -142,9 +163,31 @@ console.log('📝 日誌表檢查: 成功');
 console.log('🏷️ 科目表檢查: 成功');
 
 /**
- * 06. BK模組核心函數驗證 - 增強安全檢查
- * @version 2025-07-22-V1.0.1
- * @date 2025-07-22 10:15:00
+ * 06. FS模組依賴檢查報告 - 新增核心函數驗證
+ * @version 2025-07-22-V1.0.2
+ * @date 2025-07-22 10:25:00
+ * @description 檢查FS模組核心函數載入狀態，確保依賴模組正常運作
+ */
+console.log('🔍 FS模組依賴檢查報告:');
+if (FS) {
+  const coreFSFunctions = ['FS_getDocument', 'FS_setDocument', 'FS_updateDocument', 'FS_deleteDocument'];
+  const loadedFunctions = coreFSFunctions.filter(func => typeof FS[func] === 'function');
+  console.log(`✅ FS核心函數載入: ${loadedFunctions.length}/${coreFSFunctions.length}`);
+  
+  if (loadedFunctions.length === coreFSFunctions.length) {
+    console.log('🎉 FS模組核心函數完整載入，依賴模組可正常運作');
+  } else {
+    console.log('⚠️ FS模組核心函數載入不完整，部分依賴模組可能受影響');
+    console.log('📋 缺失函數:', coreFSFunctions.filter(func => typeof FS[func] !== 'function'));
+  }
+} else {
+  console.log('❌ FS模組未載入，所有依賴模組將無法正常運作');
+}
+
+/**
+ * 07. BK模組核心函數驗證 - 增強安全檢查
+ * @version 2025-07-22-V1.0.2
+ * @date 2025-07-22 10:25:00
  * @description 檢查BK模組的核心記帳處理函數是否正確導出和可用
  */
 if (BK && typeof BK.BK_processBookkeeping === 'function') {
