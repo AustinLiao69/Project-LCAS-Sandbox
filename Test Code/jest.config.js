@@ -1,11 +1,11 @@
 
 /**
- * Jest測試配置檔案_1.3.0
+ * Jest測試配置檔案_1.4.0
  * @module Jest測試配置
- * @description Jest測試環境配置 - 動態測試模組偵測，智慧報告檔名生成
- * @version 1.3.0
- * @update 2025-01-09: 新增動態測試模組偵測邏輯，修復報告檔名硬編碼問題
- * @date 2025-01-09 20:00:00
+ * @description Jest測試環境配置 - 強化動態測試模組偵測，多重解析策略，完美支援SR模組
+ * @version 1.4.0
+ * @update 2025-01-09: 強化參數解析邏輯，修復空格轉義問題，完善SR模組偵測
+ * @date 2025-01-09 21:00:00
  */
 
 // 生成動態檔名的時間戳記 - UTC+8時區，格式：YYYYMMDD-HHMM
@@ -24,45 +24,73 @@ const generateTimestamp = () => {
 };
 
 /**
- * 動態偵測測試模組並生成對應檔名
- * @version 1.3.0
- * @description 根據執行的測試檔案動態生成報告檔名
+ * 動態偵測測試模組並生成對應檔名 - 強化版本
+ * @version 1.4.0
+ * @description 根據執行的測試檔案動態生成報告檔名，支援多重解析策略
  */
 const detectTestModule = () => {
   const args = process.argv;
+  console.log('🔍 Jest參數解析:', args.join(' '));
   
-  // 尋找測試檔案參數
+  // 多重策略尋找測試檔案參數
   let testFile = '';
+  let detectionMethod = '';
+  
+  // 策略1: 直接匹配檔案路徑
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
-    // 檢查是否為測試檔案路徑
     if (arg.includes('TC_') || arg.includes('Test Code/')) {
       testFile = arg;
+      detectionMethod = '直接匹配';
       break;
     }
   }
   
-  // 解析模組資訊
+  // 策略2: 處理空格轉義 (Test\ Code/3005.\ TC_SR.js)
+  if (!testFile) {
+    const joinedArgs = args.join(' ');
+    const testCodeMatch = joinedArgs.match(/Test\\?\s*Code[\/\\][\d\.\\]+\s*TC_[A-Z]+\.js/);
+    if (testCodeMatch) {
+      testFile = testCodeMatch[0].replace(/\\/g, '');
+      detectionMethod = '轉義處理';
+    }
+  }
+  
+  // 策略3: 正規表達式匹配模組編號
+  if (!testFile) {
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      if (/\d{4}.*TC_[A-Z]+/.test(arg)) {
+        testFile = arg;
+        detectionMethod = '正規表達式';
+        break;
+      }
+    }
+  }
+  
+  console.log(`📁 偵測到測試檔案: "${testFile}" (方法: ${detectionMethod})`);
+  
+  // 預設模組資訊
   let moduleInfo = {
     code: '3115',
     name: 'LBK',
     type: 'TC-LBK'
   };
   
-  if (testFile.includes('3005') || testFile.includes('TC_SR')) {
+  // 強化模組判斷邏輯
+  if (testFile.includes('3005') || testFile.includes('TC_SR') || testFile.includes('SR.js')) {
     moduleInfo = {
       code: '3005',
       name: 'SR',
       type: 'TC-SR'
     };
-  } else if (testFile.includes('3115') || testFile.includes('TC_LBK')) {
+  } else if (testFile.includes('3115') || testFile.includes('TC_LBK') || testFile.includes('LBK.js')) {
     moduleInfo = {
       code: '3115',
       name: 'LBK',
       type: 'TC-LBK'
     };
-  } else if (testFile.includes('3151') || testFile.includes('TC_MLS')) {
+  } else if (testFile.includes('3151') || testFile.includes('TC_MLS') || testFile.includes('MLS.js')) {
     moduleInfo = {
       code: '3151',
       name: 'MLS',
@@ -70,7 +98,7 @@ const detectTestModule = () => {
     };
   }
   
-  console.log(`🎯 動態偵測到測試模組: ${moduleInfo.name} (${moduleInfo.code})`);
+  console.log(`🎯 動態偵測到測試模組: ${moduleInfo.name} (${moduleInfo.code}) - 偵測方法: ${detectionMethod}`);
   return moduleInfo;
 };
 

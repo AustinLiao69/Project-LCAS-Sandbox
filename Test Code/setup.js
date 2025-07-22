@@ -1,11 +1,11 @@
 
 /**
- * 測試環境設定_1.3.0
+ * 測試環境設定_1.4.0
  * @module 測試環境設定
- * @description 測試前的全域設定與準備 - 整合動態模組偵測，Markdown 報告支援，純靜態資料管理機制
- * @version 1.3.0
- * @update 2025-01-09: 新增動態測試模組偵測支援，整合智慧報告生成
- * @date 2025-01-09 20:00:00
+ * @description 測試前的全域設定與準備 - 強化動態模組偵測，完美支援SR模組，智慧報告生成機制
+ * @version 1.4.0
+ * @update 2025-01-09: 強化動態偵測機制，完善SR模組支援，新增偵測結果驗證功能
+ * @date 2025-01-09 21:00:00
  */
 
 // 全域測試設定
@@ -122,28 +122,56 @@ global.staticTestUtils = {
   }
 };
 
-// 動態測試模組偵測工具
+// 動態測試模組偵測工具 - 強化版本
 global.dynamicTestModuleDetector = {
   /**
-   * 偵測當前執行的測試模組
+   * 偵測當前執行的測試模組 - 強化版本
+   * @version 1.4.0
    * @returns {Object} 模組資訊
    */
   detectCurrentModule: () => {
     const args = process.argv;
+    console.log('🔍 Setup.js 參數解析:', args.join(' '));
     
-    // 尋找測試檔案參數
+    // 多重策略尋找測試檔案參數
     let testFile = '';
+    let detectionMethod = '';
+    
+    // 策略1: 直接匹配檔案路徑
     for (let i = 0; i < args.length; i++) {
       const arg = args[i];
-      
-      // 檢查是否為測試檔案路徑
       if (arg.includes('TC_') || arg.includes('Test Code/')) {
         testFile = arg;
+        detectionMethod = '直接匹配';
         break;
       }
     }
     
-    // 解析模組資訊
+    // 策略2: 處理空格轉義
+    if (!testFile) {
+      const joinedArgs = args.join(' ');
+      const testCodeMatch = joinedArgs.match(/Test\\?\s*Code[\/\\][\d\.\\]+\s*TC_[A-Z]+\.js/);
+      if (testCodeMatch) {
+        testFile = testCodeMatch[0].replace(/\\/g, '');
+        detectionMethod = '轉義處理';
+      }
+    }
+    
+    // 策略3: 正規表達式匹配
+    if (!testFile) {
+      for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        if (/\d{4}.*TC_[A-Z]+/.test(arg)) {
+          testFile = arg;
+          detectionMethod = '正規表達式';
+          break;
+        }
+      }
+    }
+    
+    console.log(`📁 Setup.js 偵測到測試檔案: "${testFile}" (方法: ${detectionMethod})`);
+    
+    // 預設模組資訊
     let moduleInfo = {
       code: '0000',
       name: 'UNKNOWN',
@@ -152,7 +180,8 @@ global.dynamicTestModuleDetector = {
       description: '未識別的測試模組'
     };
     
-    if (testFile.includes('3005') || testFile.includes('TC_SR')) {
+    // 強化模組判斷邏輯
+    if (testFile.includes('3005') || testFile.includes('TC_SR') || testFile.includes('SR.js')) {
       moduleInfo = {
         code: '3005',
         name: 'SR',
@@ -160,7 +189,7 @@ global.dynamicTestModuleDetector = {
         displayName: 'SR',
         description: '排程提醒模組'
       };
-    } else if (testFile.includes('3115') || testFile.includes('TC_LBK')) {
+    } else if (testFile.includes('3115') || testFile.includes('TC_LBK') || testFile.includes('LBK.js')) {
       moduleInfo = {
         code: '3115',
         name: 'LBK',
@@ -168,7 +197,7 @@ global.dynamicTestModuleDetector = {
         displayName: 'LBK',
         description: '快速記帳模組'
       };
-    } else if (testFile.includes('3151') || testFile.includes('TC_MLS')) {
+    } else if (testFile.includes('3151') || testFile.includes('TC_MLS') || testFile.includes('MLS.js')) {
       moduleInfo = {
         code: '3151',
         name: 'MLS',
@@ -189,6 +218,35 @@ global.dynamicTestModuleDetector = {
     console.log(`🎯 動態偵測測試模組: ${moduleInfo.displayName} (${moduleInfo.code})`);
     console.log(`📋 模組描述: ${moduleInfo.description}`);
     console.log(`🏷️  測試類型: ${moduleInfo.type}`);
+  },
+
+  /**
+   * 偵測結果驗證功能
+   * @version 1.4.0
+   * @param {Object} moduleInfo - 模組資訊
+   * @returns {Object} 驗證結果
+   */
+  validateDetectionResult: (moduleInfo) => {
+    const validModules = ['SR', 'LBK', 'MLS'];
+    const validCodes = ['3005', '3115', '3151'];
+    
+    const validation = {
+      isValid: validModules.includes(moduleInfo.name) && validCodes.includes(moduleInfo.code),
+      expectedCode: moduleInfo.name === 'SR' ? '3005' : moduleInfo.name === 'LBK' ? '3115' : '3151',
+      codeMatches: false,
+      nameMatches: validModules.includes(moduleInfo.name),
+      confidence: 'low'
+    };
+    
+    validation.codeMatches = validation.expectedCode === moduleInfo.code;
+    
+    if (validation.isValid && validation.codeMatches) {
+      validation.confidence = 'high';
+    } else if (validation.nameMatches || validation.codeMatches) {
+      validation.confidence = 'medium';
+    }
+    
+    return validation;
   }
 };
 
@@ -394,11 +452,22 @@ global.subject9999Utils = {
 
 // 測試前準備
 beforeAll(async () => {
-  console.log('🔧 全域測試環境準備中（動態模組偵測版本）...');
+  console.log('🔧 全域測試環境準備中（強化動態模組偵測版本 1.4.0）...');
   
   // 動態偵測當前測試模組
   const moduleInfo = global.dynamicTestModuleDetector.detectCurrentModule();
   global.dynamicTestModuleDetector.logModuleDetection(moduleInfo);
+  
+  // 新增：偵測結果驗證
+  const validation = global.dynamicTestModuleDetector.validateDetectionResult(moduleInfo);
+  console.log(`🔍 偵測結果驗證: ${validation.isValid ? '通過' : '失敗'} (信心度: ${validation.confidence})`);
+  
+  if (!validation.isValid) {
+    console.warn(`⚠️ 偵測結果異常:`);
+    console.warn(`   模組名稱匹配: ${validation.nameMatches ? '是' : '否'}`);
+    console.warn(`   代碼匹配: ${validation.codeMatches ? '是' : '否'}`);
+    console.warn(`   期望代碼: ${validation.expectedCode}, 實際代碼: ${moduleInfo.code}`);
+  }
   
   // 驗證 9999.json 檔案
   const fileExists = global.subject9999Utils.validate9999JsonExists();
