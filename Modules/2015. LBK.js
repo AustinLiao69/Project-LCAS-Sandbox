@@ -1530,10 +1530,10 @@ function LBK_logError(message, operationType = "", userId = "", errorCode = "", 
 }
 
 /**
- * 45. 檢查統計查詢關鍵字
- * @version 2025-07-22-V1.1.0
- * @date 2025-07-22 10:30:00
- * @description 檢查用戶輸入是否為統計查詢關鍵字，支援Quick Reply功能
+ * 45. 檢查統計查詢關鍵字 - 直接使用SR模組關鍵字配置
+ * @version 2025-01-09-V1.1.0
+ * @date 2025-01-09 20:30:00
+ * @description 直接從SR模組讀取統計查詢關鍵字配置，確保關鍵字統一管理和自動同步
  */
 async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
   try {
@@ -1543,16 +1543,38 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
 
     const normalizedText = messageText.trim().toLowerCase();
     
-    // 定義統計關鍵字映射
-    const statisticsKeywords = {
-      '今日統計': { type: 'daily', postbackData: '今日統計' },
-      '本週統計': { type: 'weekly', postbackData: '本週統計' },
-      '本月統計': { type: 'monthly', postbackData: '本月統計' },
-      '週統計': { type: 'weekly', postbackData: '本週統計' },
-      '月統計': { type: 'monthly', postbackData: '本月統計' },
-      '統計': { type: 'daily', postbackData: '今日統計' },
-      'stats': { type: 'daily', postbackData: '今日統計' }
-    };
+    // 直接使用SR模組的關鍵字配置，確保一致性
+    let statisticsKeywords = {};
+    
+    // 檢查SR模組是否可用並有配置
+    if (SR && SR.SR_QUICK_REPLY_CONFIG && SR.SR_QUICK_REPLY_CONFIG.STATISTICS) {
+      const srConfig = SR.SR_QUICK_REPLY_CONFIG.STATISTICS;
+      statisticsKeywords = {
+        [srConfig.TODAY.label]: { type: 'daily', postbackData: srConfig.TODAY.postbackData },
+        [srConfig.WEEKLY.label]: { type: 'weekly', postbackData: srConfig.WEEKLY.postbackData },
+        [srConfig.MONTHLY.label]: { type: 'monthly', postbackData: srConfig.MONTHLY.postbackData },
+        // 額外的常用別名
+        '週統計': { type: 'weekly', postbackData: srConfig.WEEKLY.postbackData },
+        '月統計': { type: 'monthly', postbackData: srConfig.MONTHLY.postbackData },
+        '統計': { type: 'daily', postbackData: srConfig.TODAY.postbackData },
+        'stats': { type: 'daily', postbackData: srConfig.TODAY.postbackData }
+      };
+      
+      LBK_logDebug(`從SR模組載入統計關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
+    } else {
+      // SR模組不可用時的備用配置
+      statisticsKeywords = {
+        '今日統計': { type: 'daily', postbackData: '今日統計' },
+        '本週統計': { type: 'weekly', postbackData: '本週統計' },
+        '本月統計': { type: 'monthly', postbackData: '本月統計' },
+        '週統計': { type: 'weekly', postbackData: '本週統計' },
+        '月統計': { type: 'monthly', postbackData: '本月統計' },
+        '統計': { type: 'daily', postbackData: '今日統計' },
+        'stats': { type: 'daily', postbackData: '今日統計' }
+      };
+      
+      LBK_logWarning(`SR模組不可用，使用備用關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
+    }
 
     // 精確匹配檢查
     for (const [keyword, config] of Object.entries(statisticsKeywords)) {
