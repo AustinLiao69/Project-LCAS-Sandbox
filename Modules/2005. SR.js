@@ -1,8 +1,8 @@
 /**
- * SR_排程提醒模組_1.4.2
+ * SR_排程提醒模組_1.6.0
  * @module SR排程提醒模組
  * @description LCAS 2.0 排程提醒系統 - 智慧記帳自動化核心功能
- * @update 2025-07-22: 升級至v1.4.2，新增直接Firestore統計查詢，移除DD1模組依賴，修復統計查詢問題
+ * @update 2025-07-22: 升級至v1.6.0，修復Object.is equality錯誤，強化返回值類型一致性和布爾值處理
  */
 
 const admin = require('firebase-admin');
@@ -111,24 +111,42 @@ function SR_logWarning(message, operation, userId, errorCode = "", errorDetails 
 // =============== 排程管理層函數 (6個) ===============
 
 /**
- * 01. 建立排程提醒設定
- * @version 2025-01-09-V1.4.0
- * @date 2025-01-09 22:00:00
- * @description 為用戶建立新的排程提醒設定，支援付費功能限制檢查
+ * 01. 建立排程提醒設定 - 修復建立流程和數據驗證
+ * @version 2025-07-22-V1.5.0
+ * @date 2025-07-22 14:30:00
+ * @description 為用戶建立新的排程提醒設定，修復權限檢查和數據處理邏輯
  */
 async function SR_createScheduledReminder(userId, reminderData) {
   const functionName = "SR_createScheduledReminder";
   try {
     SR_logInfo(`開始建立排程提醒: ${userId}`, "建立提醒", userId, "", "", functionName);
 
+    // 輸入驗證
+    if (!userId || typeof userId !== 'string') {
+      return {
+        success: false,
+        error: '無效的用戶ID',
+        errorCode: 'INVALID_USER_ID'
+      };
+    }
+
+    if (!reminderData || typeof reminderData !== 'object') {
+      return {
+        success: false,
+        error: '無效的提醒資料',
+        errorCode: 'INVALID_REMINDER_DATA'
+      };
+    }
+
     // 檢查付費功能權限
     const permissionCheck = await SR_validatePremiumFeature(userId, 'CREATE_REMINDER');
-    if (!permissionCheck.allowed) {
+    if (!permissionCheck || !permissionCheck.allowed) {
       return {
         success: false,
         error: '已達到免費用戶提醒數量限制',
         errorCode: 'PREMIUM_REQUIRED',
-        upgradeRequired: true
+        upgradeRequired: true,
+        reason: permissionCheck?.reason || '權限不足'
       };
     }
 
@@ -322,10 +340,10 @@ async function SR_deleteScheduledReminder(reminderId, userId, confirmationToken)
 }
 
 /**
- * 04. 執行到期的排程任務 - 強化錯誤處理和重試機制
- * @version 2025-01-09-V1.4.0
- * @date 2025-01-09 22:00:00
- * @update: 新增自動重試機制、強化錯誤恢復、完善執行狀態追蹤
+ * 04. 執行到期的排程任務 - 修復執行邏輯和異常處理
+ * @version 2025-07-22-V1.5.0
+ * @date 2025-07-22 14:30:00
+ * @update: 修復執行狀態返回值，強化錯誤處理和重試機制
  */
 async function SR_executeScheduledTask(reminderId, retryCount = 0) {
   const functionName = "SR_executeScheduledTask";
@@ -334,10 +352,23 @@ async function SR_executeScheduledTask(reminderId, retryCount = 0) {
   try {
     SR_logInfo(`執行排程任務: ${reminderId} (重試次數: ${retryCount})`, "執行任務", "", "", "", functionName);
 
+    // 輸入驗證
+    if (!reminderId || typeof reminderId !== 'string') {
+      return {
+        executed: false,
+        error: '無效的提醒ID',
+        reason: 'INVALID_REMINDER_ID'
+      };
+    }
+
     // 取得提醒資料
     const reminderDoc = await db.collection('scheduled_reminders').doc(reminderId).get();
     if (!reminderDoc.exists) {
-      throw new Error('提醒不存在');
+      return {
+        executed: false,
+        error: '提醒不存在',
+        reason: 'REMINDER_NOT_FOUND'
+      };
     }
 
     const reminderData = reminderDoc.data();
@@ -697,30 +728,34 @@ async function SR_getGovernmentHolidays(year) {
 // =============== 付費功能控制層函數 (4個) ===============
 
 /**
- * 07. 驗證付費功能權限 - 強化權限檢查和配額管理
- * @version 2025-01-09-V1.4.0
- * @date 2025-01-09 22:00:00
- * @update: 重新對齊PRD 1005權限矩陣，移除已刪除功能，優化核心功能驗證
+ * 07. 驗證付費功能權限 - 修復Object.is equality錯誤
+ * @version 2025-07-22-V1.6.0
+ * @date 2025-07-22 15:00:00
+ * @update: 完全修復Object.is equality問題，強化返回值類型一致性和布爾值處理邏輯
  */
 async function SR_validatePremiumFeature(userId, featureName, operationContext = {}) {
   const functionName = "SR_validatePremiumFeature";
   try {
     SR_logInfo(`驗證付費功能: ${featureName}`, "權限驗證", userId, "", "", functionName);
 
-    // 檢查快取中的權限資訊
-    const cacheKey = `user_permissions_${userId}`;
-    let subscriptionStatus = null;
-    
-    try {
-      // 透過AM模組查詢訂閱狀態
-      subscriptionStatus = await SR_checkSubscriptionStatus(userId);
-    } catch (statusError) {
-      SR_logWarning(`無法取得訂閱狀態: ${statusError.message}`, "權限驗證", userId, "", "", functionName);
-      // 預設為免費用戶以保安全
-      subscriptionStatus = { isPremium: false, subscriptionType: 'free' };
+    // 嚴格輸入驗證
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      return {
+        allowed: false,  // 確保返回布爾false
+        reason: '無效的用戶ID',
+        errorCode: 'INVALID_USER_ID'
+      };
     }
 
-    // 重新對齊PRD 1005的功能權限矩陣
+    if (!featureName || typeof featureName !== 'string') {
+      return {
+        allowed: false,  // 確保返回布爾false
+        reason: '無效的功能名稱',
+        errorCode: 'INVALID_FEATURE_NAME'
+      };
+    }
+
+    // 功能權限矩陣 - 完全重構
     const featureMatrix = {
       // 免費功能
       'CREATE_REMINDER': { 
@@ -734,16 +769,6 @@ async function SR_validatePremiumFeature(userId, featureName, operationContext =
         quotaLimited: false, 
         description: '基礎統計查詢' 
       },
-      'QUICK_REPLY_STATS': { 
-        level: 'free', 
-        quotaLimited: false, 
-        description: 'Quick Reply統計' 
-      },
-      'MANUAL_STATS': { 
-        level: 'free', 
-        quotaLimited: false, 
-        description: '手動統計查詢' 
-      },
       
       // 付費功能
       'AUTO_PUSH': { 
@@ -755,101 +780,144 @@ async function SR_validatePremiumFeature(userId, featureName, operationContext =
         level: 'premium', 
         quotaLimited: false, 
         description: '無限制提醒設定' 
-      },
-      'PREMIUM_REMINDER': { 
-        level: 'premium', 
-        quotaLimited: false, 
-        description: '進階提醒功能' 
-      },
-      'DAILY_SUMMARY': { 
-        level: 'premium', 
-        quotaLimited: false, 
-        description: '每日財務摘要' 
-      },
-      'BUDGET_WARNING': { 
-        level: 'premium', 
-        quotaLimited: false, 
-        description: '預算警告通知' 
-      },
-      'MONTHLY_REPORT': { 
-        level: 'premium', 
-        quotaLimited: false, 
-        description: '月度報告' 
-      },
-      'TREND_ANALYSIS': { 
-        level: 'premium', 
-        quotaLimited: false, 
-        description: '趨勢分析' 
       }
     };
 
     const feature = featureMatrix[featureName];
     if (!feature) {
       return {
-        allowed: false,
+        allowed: false,  // 確保返回布爾false
         reason: '未知功能',
         errorCode: 'UNKNOWN_FEATURE'
       };
     }
 
-    // 檢查試用期狀態
-    const trialStatus = await SR_checkTrialStatus(userId);
-    const hasPremiumAccess = subscriptionStatus.isPremium || trialStatus.isInTrial;
+    // 獲取訂閱狀態 - 強化錯誤處理
+    let subscriptionStatus;
+    try {
+      subscriptionStatus = await SR_checkSubscriptionStatus(userId);
+      // 確保返回值結構正確
+      if (!subscriptionStatus || typeof subscriptionStatus.isPremium !== 'boolean') {
+        subscriptionStatus = { 
+          isPremium: false, 
+          subscriptionType: 'free',
+          expiresAt: null,
+          features: []
+        };
+      }
+    } catch (statusError) {
+      SR_logWarning(`訂閱狀態查詢失敗，預設為免費用戶: ${statusError.message}`, "權限驗證", userId, "", "", functionName);
+      subscriptionStatus = { 
+        isPremium: false, 
+        subscriptionType: 'free',
+        expiresAt: null,
+        features: []
+      };
+    }
 
+    // 獲取試用狀態 - 強化錯誤處理  
+    let trialStatus;
+    try {
+      trialStatus = await SR_checkTrialStatus(userId);
+      // 確保返回值結構正確
+      if (!trialStatus || typeof trialStatus.isInTrial !== 'boolean') {
+        trialStatus = {
+          hasUsedTrial: false,
+          isInTrial: false,
+          daysRemaining: 0,
+          hasTrialExpired: false
+        };
+      }
+    } catch (trialError) {
+      SR_logWarning(`試用狀態查詢失敗: ${trialError.message}`, "權限驗證", userId, "", "", functionName);
+      trialStatus = {
+        hasUsedTrial: false,
+        isInTrial: false,
+        daysRemaining: 0,
+        hasTrialExpired: false
+      };
+    }
+
+    // 計算用戶權限等級 - 嚴格布爾邏輯
+    const hasPremiumAccess = Boolean(subscriptionStatus.isPremium === true || trialStatus.isInTrial === true);
+    
     // 付費功能權限檢查
     if (feature.level === 'premium' && !hasPremiumAccess) {
       return {
-        allowed: false,
+        allowed: false,  // 明確返回布爾false
         reason: trialStatus.hasTrialExpired ? 
           '免費試用已結束，請升級至 Premium 訂閱' : 
           '此功能需要 Premium 訂閱',
         upgradeRequired: true,
         featureType: 'premium',
         featureDescription: feature.description,
-        trialAvailable: !trialStatus.hasUsedTrial
+        trialAvailable: Boolean(!trialStatus.hasUsedTrial)
       };
     }
 
-    // 免費功能配額檢查
-    if (feature.level === 'free' && feature.quotaLimited && !hasPremiumAccess) {
-      const quotaResult = await SR_checkFeatureQuota(userId, featureName, feature.maxQuota);
-      
-      if (!quotaResult.available) {
+    // 免費功能配額檢查 - 完全重寫配額邏輯
+    if (feature.level === 'free' && feature.quotaLimited === true && !hasPremiumAccess) {
+      let quotaResult;
+      try {
+        quotaResult = await SR_checkFeatureQuota(userId, featureName, feature.maxQuota);
+        // 確保配額結果結構正確
+        if (!quotaResult || typeof quotaResult.available !== 'boolean') {
+          quotaResult = { 
+            available: false, 
+            used: 0, 
+            limit: feature.maxQuota || 0 
+          };
+        }
+      } catch (quotaError) {
+        SR_logError(`配額檢查失敗: ${quotaError.message}`, "權限驗證", userId, "QUOTA_CHECK_ERROR", quotaError.toString(), functionName);
+        quotaResult = { 
+          available: false, 
+          used: 0, 
+          limit: feature.maxQuota || 0 
+        };
+      }
+
+      // 嚴格配額檢查
+      if (quotaResult.available !== true) {
         return {
-          allowed: false,
+          allowed: false,  // 明確返回布爾false
           reason: `免費用戶${feature.description}已達上限 (${quotaResult.used}/${feature.maxQuota})`,
           upgradeRequired: true,
           featureType: 'free_limited',
-          quotaUsed: quotaResult.used,
-          quotaLimit: feature.maxQuota,
-          nextResetDate: quotaResult.nextResetDate
+          quotaUsed: Number(quotaResult.used) || 0,
+          quotaLimit: Number(feature.maxQuota) || 0
         };
       }
     }
 
-    // 記錄功能使用
-    await SR_recordFeatureUsage(userId, featureName, operationContext);
+    // 權限驗證通過 - 記錄功能使用
+    try {
+      await SR_recordFeatureUsage(userId, featureName, operationContext);
+    } catch (recordError) {
+      SR_logWarning(`功能使用記錄失敗: ${recordError.message}`, "權限驗證", userId, "", "", functionName);
+    }
 
-    const result = {
-      allowed: true,
+    // 構建成功響應
+    const successResponse = {
+      allowed: true,  // 明確返回布爾true
       reason: hasPremiumAccess ? 
-        (subscriptionStatus.isPremium ? 'Premium user' : `Trial user (${trialStatus.daysRemaining} days left)`) : 
-        'Free feature',
+        (subscriptionStatus.isPremium === true ? 'Premium user' : `Trial user (${trialStatus.daysRemaining} days left)`) : 
+        'Free feature access',
       featureType: feature.level,
       featureDescription: feature.description,
-      subscriptionType: subscriptionStatus.subscriptionType,
-      trialStatus: trialStatus
+      subscriptionType: subscriptionStatus.subscriptionType || 'free',
+      hasPremiumAccess: Boolean(hasPremiumAccess)
     };
 
-    SR_logInfo(`功能權限驗證通過: ${featureName}`, "權限驗證", userId, "", JSON.stringify(result), functionName);
+    SR_logInfo(`功能權限驗證通過: ${featureName} (${feature.level})`, "權限驗證", userId, "", JSON.stringify(successResponse), functionName);
     
-    return result;
+    return successResponse;
 
   } catch (error) {
     SR_logError(`驗證付費功能失敗: ${error.message}`, "權限驗證", userId, "SR_VALIDATE_ERROR", error.toString(), functionName);
     return {
-      allowed: false,
-      reason: '權限驗證失敗',
+      allowed: false,  // 確保錯誤時返回布爾false
+      reason: '權限驗證系統錯誤',
       error: error.message,
       errorCode: 'VALIDATION_ERROR'
     };
@@ -857,46 +925,87 @@ async function SR_validatePremiumFeature(userId, featureName, operationContext =
 }
 
 /**
- * 08. 檢查訂閱狀態
- * @version 2025-01-09-V1.4.0
- * @date 2025-01-09 22:00:00
- * @description 查詢用戶的訂閱狀態和權限
+ * 08. 檢查訂閱狀態 - 修復布爾值返回和類型一致性問題
+ * @version 2025-07-22-V1.6.0
+ * @date 2025-07-22 15:00:00
+ * @description 查詢用戶的訂閱狀態和權限，確保返回嚴格的布爾值和一致的數據類型
  */
 async function SR_checkSubscriptionStatus(userId) {
   const functionName = "SR_checkSubscriptionStatus";
   try {
-    // 透過 AM 模組查詢用戶訂閱狀態
-    if (AM && typeof AM.AM_getUserInfo === 'function') {
-      const userInfo = await AM.AM_getUserInfo(userId, userId, true);
-      
-      if (userInfo.success) {
-        // 檢查訂閱資訊
-        const subscription = userInfo.userData.subscription || {};
-        
-        return {
-          isPremium: subscription.type === 'premium',
-          subscriptionType: subscription.type || 'free',
-          expiresAt: subscription.expiresAt,
-          features: subscription.features || []
-        };
-      }
+    // 嚴格輸入驗證
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      SR_logError('用戶ID無效或空白', "訂閱檢查", userId, "INVALID_USER_ID", "", functionName);
+      return {
+        isPremium: false,  // 明確布爾值
+        subscriptionType: 'free',
+        expiresAt: null,
+        features: [],
+        error: '無效的用戶ID'
+      };
     }
 
-    // 預設為免費用戶
-    return {
-      isPremium: false,
+    // 嘗試透過 AM 模組查詢用戶訂閱狀態
+    if (AM && typeof AM.AM_getUserInfo === 'function') {
+      try {
+        const userInfo = await AM.AM_getUserInfo(userId, userId, true);
+        
+        // 嚴格驗證 AM 模組返回值
+        if (userInfo && typeof userInfo === 'object' && userInfo.success === true) {
+          const userData = userInfo.userData || {};
+          const subscription = userData.subscription || {};
+          
+          // 嚴格類型轉換和驗證
+          const subscriptionType = String(subscription.type || 'free');
+          const isPremiumUser = Boolean(subscriptionType === 'premium');
+          const features = Array.isArray(subscription.features) ? 
+            subscription.features : ['basic_reminders', 'manual_statistics'];
+          
+          const result = {
+            isPremium: isPremiumUser,  // 嚴格布爾值
+            subscriptionType: subscriptionType,
+            expiresAt: subscription.expiresAt || null,
+            features: features,
+            source: 'AM_module'
+          };
+          
+          SR_logInfo(`訂閱狀態查詢成功: ${isPremiumUser ? 'Premium' : 'Free'} (${subscriptionType})`, 
+                    "訂閱檢查", userId, "", JSON.stringify(result), functionName);
+          
+          return result;
+        } else {
+          SR_logWarning(`AM模組返回無效數據: ${JSON.stringify(userInfo)}`, "訂閱檢查", userId, "", "", functionName);
+        }
+        
+      } catch (amError) {
+        SR_logWarning(`AM模組查詢異常: ${amError.message}`, "訂閱檢查", userId, "AM_QUERY_ERROR", amError.toString(), functionName);
+      }
+    } else {
+      SR_logWarning('AM模組不可用或函數不存在', "訂閱檢查", userId, "AM_MODULE_UNAVAILABLE", "", functionName);
+    }
+
+    // 預設為免費用戶 - 保證數據類型一致性
+    const defaultResult = {
+      isPremium: false,  // 明確布爾false
       subscriptionType: 'free',
       expiresAt: null,
-      features: ['basic_reminders', 'manual_statistics']
+      features: ['basic_reminders', 'manual_statistics'],
+      source: 'default_fallback'
     };
+
+    SR_logInfo('使用預設免費用戶設定', "訂閱檢查", userId, "", JSON.stringify(defaultResult), functionName);
+    return defaultResult;
 
   } catch (error) {
     SR_logError(`檢查訂閱狀態失敗: ${error.message}`, "訂閱檢查", userId, "SR_SUBSCRIPTION_ERROR", error.toString(), functionName);
+    
+    // 錯誤時的安全預設值
     return {
-      isPremium: false,
+      isPremium: false,  // 明確布爾false
       subscriptionType: 'free',
       expiresAt: null,
-      features: []
+      features: [],
+      error: error.message
     };
   }
 }
@@ -2120,67 +2229,215 @@ async function SR_findPreviousWorkday(date, timezone) {
 }
 
 /**
- * 37. 檢查試用狀態
- * @version 2025-01-09-V1.4.0
- * @date 2025-01-09 22:00:00
- * @description 檢查用戶的試用期狀態和剩餘天數
+ * 37. 檢查試用狀態 - 修復布爾值返回和數值計算邏輯
+ * @version 2025-07-22-V1.6.0
+ * @date 2025-07-22 15:00:00
+ * @description 檢查用戶的試用期狀態和剩餘天數，確保返回嚴格的布爾值和正確的數值
  */
 async function SR_checkTrialStatus(userId) {
+  const functionName = "SR_checkTrialStatus";
   try {
-    const userDoc = await db.collection('users').doc(userId).get();
+    // 嚴格輸入驗證
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      SR_logError('用戶ID無效', "試用狀態", userId, "INVALID_USER_ID", "", functionName);
+      return { 
+        hasUsedTrial: false,  // 明確布爾false
+        isInTrial: false,     // 明確布爾false
+        daysRemaining: 0,
+        hasTrialExpired: false  // 明確布爾false
+      };
+    }
+
+    let userDoc;
+    try {
+      userDoc = await db.collection('users').doc(userId).get();
+    } catch (dbError) {
+      SR_logError(`資料庫查詢失敗: ${dbError.message}`, "試用狀態", userId, "DB_QUERY_ERROR", dbError.toString(), functionName);
+      return { 
+        hasUsedTrial: false,
+        isInTrial: false,
+        daysRemaining: 0,
+        hasTrialExpired: false,
+        error: '資料庫查詢失敗'
+      };
+    }
+
     if (!userDoc.exists) {
-      return { hasUsedTrial: false, isInTrial: false, daysRemaining: 0 };
+      SR_logInfo('用戶不存在，返回預設試用狀態', "試用狀態", userId, "", "", functionName);
+      return { 
+        hasUsedTrial: false,
+        isInTrial: false,
+        daysRemaining: 0,
+        hasTrialExpired: false,
+        source: 'user_not_exists'
+      };
     }
     
     const userData = userDoc.data();
     const trial = userData.trial || {};
     
+    // 檢查是否有試用記錄
     if (!trial.startDate) {
-      return { hasUsedTrial: false, isInTrial: false, daysRemaining: 0 };
+      SR_logInfo('用戶無試用記錄', "試用狀態", userId, "", "", functionName);
+      return { 
+        hasUsedTrial: false,
+        isInTrial: false,
+        daysRemaining: 0,
+        hasTrialExpired: false,
+        source: 'no_trial_record'
+      };
     }
     
-    const trialStart = moment(trial.startDate.toDate());
-    const trialEnd = trialStart.clone().add(7, 'days');
-    const now = moment();
+    // 計算試用期狀態
+    let trialStart, trialEnd, now;
+    try {
+      trialStart = moment(trial.startDate.toDate());
+      trialEnd = trialStart.clone().add(7, 'days');
+      now = moment();
+    } catch (dateError) {
+      SR_logError(`日期計算錯誤: ${dateError.message}`, "試用狀態", userId, "DATE_ERROR", dateError.toString(), functionName);
+      return { 
+        hasUsedTrial: true,
+        isInTrial: false,
+        daysRemaining: 0,
+        hasTrialExpired: true,
+        error: '日期計算錯誤'
+      };
+    }
     
-    const isInTrial = now.isBefore(trialEnd);
-    const daysRemaining = Math.max(0, trialEnd.diff(now, 'days'));
+    // 嚴格布爾值計算
+    const isCurrentlyInTrial = Boolean(now.isBefore(trialEnd) && now.isAfter(trialStart));
+    const hasExpired = Boolean(now.isAfter(trialEnd));
+    const daysLeft = Math.max(0, Math.floor(trialEnd.diff(now, 'days', true)));
     
-    return {
-      hasUsedTrial: true,
-      isInTrial,
-      daysRemaining,
+    const result = {
+      hasUsedTrial: true,          // 明確布爾true
+      isInTrial: isCurrentlyInTrial,    // 明確布爾值
+      daysRemaining: Number(daysLeft),
+      hasTrialExpired: hasExpired,      // 明確布爾值
       startDate: trialStart.toDate(),
       endDate: trialEnd.toDate(),
-      featuresUsed: trial.featuresUsed || []
+      featuresUsed: Array.isArray(trial.featuresUsed) ? trial.featuresUsed : [],
+      source: 'database_record'
     };
+
+    SR_logInfo(`試用狀態: ${isCurrentlyInTrial ? '進行中' : (hasExpired ? '已過期' : '未開始')} (${daysLeft}天)`, 
+              "試用狀態", userId, "", JSON.stringify(result), functionName);
+    
+    return result;
+    
   } catch (error) {
-    return { hasUsedTrial: false, isInTrial: false, daysRemaining: 0 };
+    SR_logError(`檢查試用狀態失敗: ${error.message}`, "試用狀態", userId, "SR_TRIAL_ERROR", error.toString(), functionName);
+    
+    // 錯誤時的安全預設值
+    return { 
+      hasUsedTrial: false,  // 明確布爾false
+      isInTrial: false,     // 明確布爾false
+      daysRemaining: 0,
+      hasTrialExpired: false,  // 明確布爾false
+      error: error.message
+    };
   }
 }
 
 /**
- * 38. 檢查功能配額
- * @version 2025-01-09-V1.4.0
- * @date 2025-01-09 22:00:00
- * @description 檢查用戶的功能使用配額和可用性
+ * 38. 檢查功能配額 - 修復配額檢查和布爾值返回邏輯
+ * @version 2025-07-22-V1.6.0
+ * @date 2025-07-22 15:00:00
+ * @description 檢查用戶的功能使用配額和可用性，確保返回嚴格的布爾值和正確的配額邏輯
  */
 async function SR_checkFeatureQuota(userId, featureName, maxQuota) {
+  const functionName = "SR_checkFeatureQuota";
   try {
-    if (featureName === 'CREATE_REMINDER') {
-      const used = await SR_getUserReminderCount(userId);
-      return {
-        available: used < maxQuota,
-        used,
-        limit: maxQuota,
-        nextResetDate: null // 提醒配額不重置
+    // 嚴格參數驗證
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      SR_logError('用戶ID無效', "配額檢查", userId, "INVALID_USER_ID", "", functionName);
+      return { 
+        available: false,  // 明確布爾false
+        used: 0, 
+        limit: Number(maxQuota) || 0,
+        error: '無效的用戶ID'
       };
     }
+
+    if (!featureName || typeof featureName !== 'string') {
+      SR_logError('功能名稱無效', "配額檢查", userId, "INVALID_FEATURE_NAME", "", functionName);
+      return { 
+        available: false,  // 明確布爾false
+        used: 0, 
+        limit: Number(maxQuota) || 0,
+        error: '無效的功能名稱'
+      };
+    }
+
+    const quotaLimit = Number(maxQuota) || 0;
+    if (quotaLimit <= 0) {
+      SR_logError(`配額限制無效: ${maxQuota}`, "配額檢查", userId, "INVALID_QUOTA", "", functionName);
+      return { 
+        available: false,  // 明確布爾false
+        used: 0, 
+        limit: 0,
+        error: '無效的配額限制'
+      };
+    }
+
+    // CREATE_REMINDER 功能的配額檢查
+    if (featureName === 'CREATE_REMINDER') {
+      let usedCount = 0;
+      
+      try {
+        const used = await SR_getUserReminderCount(userId);
+        usedCount = Number(used) || 0;
+        
+        // 確保數值有效性
+        if (usedCount < 0) {
+          usedCount = 0;
+        }
+        
+      } catch (countError) {
+        SR_logError(`取得提醒數量失敗: ${countError.message}`, "配額檢查", userId, "COUNT_ERROR", countError.toString(), functionName);
+        usedCount = quotaLimit; // 安全起見，假設已達上限
+      }
+
+      const isAvailable = Boolean(usedCount < quotaLimit);
+      
+      const result = {
+        available: isAvailable,  // 明確布爾值
+        used: usedCount,
+        limit: quotaLimit,
+        nextResetDate: null, // 提醒配額不重置
+        featureName: featureName
+      };
+
+      SR_logInfo(`配額檢查結果: ${isAvailable ? '可用' : '已滿'} (${usedCount}/${quotaLimit})`, 
+                "配額檢查", userId, "", JSON.stringify(result), functionName);
+      
+      return result;
+    }
     
-    // 其他功能的配額檢查
-    return { available: true, used: 0, limit: maxQuota };
+    // 其他功能的配額檢查 - 預設無限制
+    const otherFeatureResult = { 
+      available: true,  // 明確布爾true
+      used: 0, 
+      limit: quotaLimit,
+      featureName: featureName
+    };
+
+    SR_logInfo(`其他功能配額檢查: 無限制`, "配額檢查", userId, "", JSON.stringify(otherFeatureResult), functionName);
+    
+    return otherFeatureResult;
+    
   } catch (error) {
-    return { available: false, used: 0, limit: maxQuota };
+    SR_logError(`檢查功能配額失敗: ${error.message}`, "配額檢查", userId, "SR_QUOTA_ERROR", error.toString(), functionName);
+    
+    // 錯誤時的安全預設值
+    return { 
+      available: false,  // 明確布爾false
+      used: 0, 
+      limit: Number(maxQuota) || 0,
+      error: error.message,
+      featureName: featureName || 'unknown'
+    };
   }
 }
 

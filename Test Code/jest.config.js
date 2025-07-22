@@ -1,11 +1,11 @@
 
 /**
- * Jest測試配置檔案_1.4.0
+ * Jest測試配置檔案_1.6.0
  * @module Jest測試配置
- * @description Jest測試環境配置 - 強化動態測試模組偵測，多重解析策略，完美支援SR模組
- * @version 1.4.0
- * @update 2025-01-09: 強化參數解析邏輯，修復空格轉義問題，完善SR模組偵測
- * @date 2025-01-09 21:00:00
+ * @description Jest測試環境配置 - 超強動態測試模組偵測，完美解決SR模組檔名問題
+ * @version 1.6.0
+ * @update 2025-07-22: 升級版本，優化SR測試配置，強化錯誤處理和測試穩定性
+ * @date 2025-07-22 14:30:00
  */
 
 // 生成動態檔名的時間戳記 - UTC+8時區，格式：YYYYMMDD-HHMM
@@ -24,81 +24,127 @@ const generateTimestamp = () => {
 };
 
 /**
- * 動態偵測測試模組並生成對應檔名 - 強化版本
- * @version 1.4.0
- * @description 根據執行的測試檔案動態生成報告檔名，支援多重解析策略
+ * 動態偵測測試模組並生成對應檔名 - 超強版本
+ * @version 1.5.0
+ * @description 根據執行的測試檔案動態生成報告檔名，完美支援SR模組，多重解析策略
  */
 const detectTestModule = () => {
   const args = process.argv;
-  console.log('🔍 Jest參數解析:', args.join(' '));
+  console.log('🔍 Jest參數解析 v1.5.0:', args);
   
-  // 多重策略尋找測試檔案參數
+  // 多重策略尋找測試檔案參數 - 升級版
   let testFile = '';
   let detectionMethod = '';
+  let moduleInfo = {
+    code: '3115',
+    name: 'LBK', 
+    type: 'TC-LBK'
+  };
   
-  // 策略1: 直接匹配檔案路徑
+  // 策略1: 精確匹配SR模組 - 優先處理
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg.includes('TC_') || arg.includes('Test Code/')) {
+    // 專門處理 3005 和 SR 相關檔案
+    if (arg.includes('3005') || arg.includes('TC_SR') || arg.includes('SR.js')) {
       testFile = arg;
-      detectionMethod = '直接匹配';
+      detectionMethod = 'SR專用匹配';
+      moduleInfo = {
+        code: '3005',
+        name: 'SR',
+        type: 'TC-SR'
+      };
       break;
     }
   }
   
-  // 策略2: 處理空格轉義 (Test\ Code/3005.\ TC_SR.js)
-  if (!testFile) {
+  // 策略2: 處理空格轉義問題 - 針對SR模組優化
+  if (!testFile || moduleInfo.name === 'LBK') {
     const joinedArgs = args.join(' ');
-    const testCodeMatch = joinedArgs.match(/Test\\?\s*Code[\/\\][\d\.\\]+\s*TC_[A-Z]+\.js/);
-    if (testCodeMatch) {
-      testFile = testCodeMatch[0].replace(/\\/g, '');
-      detectionMethod = '轉義處理';
+    console.log('🔧 檢查轉義參數:', joinedArgs);
+    
+    // 強化正規表達式 - 專門處理SR模組
+    const srPattern = /(?:Test\\?\s*Code[\/\\])?(?:[\d\.\\]*\s*)?(?:3005|TC_SR|SR)/i;
+    const srMatch = joinedArgs.match(srPattern);
+    
+    if (srMatch) {
+      testFile = srMatch[0];
+      detectionMethod = 'SR轉義處理';
+      moduleInfo = {
+        code: '3005',
+        name: 'SR',
+        type: 'TC-SR'
+      };
+      console.log('✅ SR模組轉義匹配成功:', srMatch[0]);
+    } else {
+      // 一般轉義處理
+      const generalPattern = /Test\\?\s*Code[\/\\][\d\.\\]+\s*TC_[A-Z]+\.js/;
+      const generalMatch = joinedArgs.match(generalPattern);
+      if (generalMatch) {
+        testFile = generalMatch[0].replace(/\\/g, '');
+        detectionMethod = '一般轉義處理';
+        // 根據結果判斷模組
+        if (testFile.includes('3005') || testFile.includes('SR')) {
+          moduleInfo = { code: '3005', name: 'SR', type: 'TC-SR' };
+        }
+      }
     }
   }
   
-  // 策略3: 正規表達式匹配模組編號
-  if (!testFile) {
+  // 策略3: 直接匹配檔案路徑
+  if (!testFile || moduleInfo.name === 'LBK') {
     for (let i = 0; i < args.length; i++) {
       const arg = args[i];
-      if (/\d{4}.*TC_[A-Z]+/.test(arg)) {
+      if (arg.includes('TC_') || arg.includes('Test Code/')) {
         testFile = arg;
-        detectionMethod = '正規表達式';
+        detectionMethod = '直接匹配';
+        
+        // 精確判斷模組類型
+        if (arg.includes('3005') || arg.includes('TC_SR') || arg.includes('SR.js')) {
+          moduleInfo = { code: '3005', name: 'SR', type: 'TC-SR' };
+        } else if (arg.includes('3115') || arg.includes('TC_LBK') || arg.includes('LBK.js')) {
+          moduleInfo = { code: '3115', name: 'LBK', type: 'TC-LBK' };
+        } else if (arg.includes('3151') || arg.includes('TC_MLS') || arg.includes('MLS.js')) {
+          moduleInfo = { code: '3151', name: 'MLS', type: 'TC-MLS' };
+        }
+        break;
+      }
+    }
+  }
+  
+  // 策略4: 正規表達式全域搜尋
+  if (!testFile || moduleInfo.name === 'LBK') {
+    const allArgs = args.join(' ');
+    const patterns = [
+      { regex: /3005|TC_SR|SR\.js/i, info: { code: '3005', name: 'SR', type: 'TC-SR' } },
+      { regex: /3115|TC_LBK|LBK\.js/i, info: { code: '3115', name: 'LBK', type: 'TC-LBK' } },
+      { regex: /3151|TC_MLS|MLS\.js/i, info: { code: '3151', name: 'MLS', type: 'TC-MLS' } }
+    ];
+    
+    for (const pattern of patterns) {
+      if (pattern.regex.test(allArgs)) {
+        testFile = allArgs.match(pattern.regex)[0];
+        moduleInfo = pattern.info;
+        detectionMethod = '全域正規匹配';
         break;
       }
     }
   }
   
   console.log(`📁 偵測到測試檔案: "${testFile}" (方法: ${detectionMethod})`);
+  console.log(`🎯 動態偵測到測試模組: ${moduleInfo.name} (${moduleInfo.code})`);
   
-  // 預設模組資訊
-  let moduleInfo = {
-    code: '3115',
-    name: 'LBK',
-    type: 'TC-LBK'
-  };
-  
-  // 強化模組判斷邏輯
-  if (testFile.includes('3005') || testFile.includes('TC_SR') || testFile.includes('SR.js')) {
-    moduleInfo = {
-      code: '3005',
-      name: 'SR',
-      type: 'TC-SR'
-    };
-  } else if (testFile.includes('3115') || testFile.includes('TC_LBK') || testFile.includes('LBK.js')) {
-    moduleInfo = {
-      code: '3115',
-      name: 'LBK',
-      type: 'TC-LBK'
-    };
-  } else if (testFile.includes('3151') || testFile.includes('TC_MLS') || testFile.includes('MLS.js')) {
-    moduleInfo = {
-      code: '3151',
-      name: 'MLS',
-      type: 'TC-MLS'
-    };
+  // 額外驗證 - 確保SR模組正確識別
+  if (moduleInfo.name === 'LBK') {
+    const hasShellSRIndicators = args.some(arg => 
+      arg.includes('3005') || arg.includes('TC_SR') || arg.includes('SR')
+    );
+    if (hasShellSRIndicators) {
+      console.log('⚠️ 強制修正為SR模組 - Shell參數包含SR指標');
+      moduleInfo = { code: '3005', name: 'SR', type: 'TC-SR' };
+      detectionMethod += ' + 強制修正';
+    }
   }
   
-  console.log(`🎯 動態偵測到測試模組: ${moduleInfo.name} (${moduleInfo.code}) - 偵測方法: ${detectionMethod}`);
   return moduleInfo;
 };
 
