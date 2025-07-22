@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.2.1
+* FS_FirestoreStructure_資料庫結構模組_1.2.2
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
-* @update 2025-07-22: 升級至1.2.1版本，修復函數定義順序問題，解決FS_setDocument未定義錯誤
+* @update 2025-07-22: 升級至1.2.2版本，修復函數聲明順序問題，解決所有ReferenceError異常
 */
 
 // 直接使用 Firebase Admin SDK 和 serviceaccountkey.json
@@ -30,9 +30,255 @@ const TIMEZONE = 'Asia/Taipei';
 // =============== 核心函數聲明區 ===============
 
 /**
- * 27. 設置文檔 - 核心函數聲明
- * @version 2025-07-22-V1.2.1
- * @date 2025-07-22 10:15:00
+ * 27. 取得文檔 - 核心函數聲明
+ * @version 2025-07-22-V1.2.2
+ * @date 2025-07-22 10:20:00
+ * @description 從Firestore中取得指定文檔
+ */
+async function FS_getDocument(collectionPath, documentId, requesterId) {
+  const functionName = "FS_getDocument";
+  try {
+    FS_logOperation(`取得文檔: ${collectionPath}/${documentId}`, "取得文檔", requesterId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!collectionPath || !documentId) {
+      throw new Error("缺少必要參數: collectionPath, documentId");
+    }
+
+    // 準備文檔引用
+    const docRef = db.collection(collectionPath).doc(documentId);
+
+    // 取得文檔
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return {
+        success: false,
+        exists: false,
+        error: "文檔不存在",
+        errorCode: 'FS_DOCUMENT_NOT_FOUND'
+      };
+    }
+
+    return {
+      success: true,
+      exists: true,
+      data: doc.data(),
+      documentId: documentId,
+      path: `${collectionPath}/${documentId}`
+    };
+
+  } catch (error) {
+    FS_handleError(`取得文檔失敗: ${error.message}`, "取得文檔", requesterId || "", "FS_GET_DOCUMENT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_GET_DOCUMENT_ERROR'
+    };
+  }
+}
+
+/**
+ * 28. 更新文檔 - 核心函數聲明
+ * @version 2025-07-22-V1.2.2
+ * @date 2025-07-22 10:20:00
+ * @description 更新Firestore中的文檔
+ */
+async function FS_updateDocument(collectionPath, documentId, updateData, requesterId) {
+  const functionName = "FS_updateDocument";
+  try {
+    FS_logOperation(`更新文檔: ${collectionPath}/${documentId}`, "更新文檔", requesterId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!collectionPath || !documentId || !updateData) {
+      throw new Error("缺少必要參數: collectionPath, documentId, updateData");
+    }
+
+    // 準備文檔引用
+    const docRef = db.collection(collectionPath).doc(documentId);
+
+    // 執行更新操作
+    await docRef.update(updateData);
+
+    return {
+      success: true,
+      documentId: documentId,
+      path: `${collectionPath}/${documentId}`,
+      updatedFields: Object.keys(updateData)
+    };
+
+  } catch (error) {
+    FS_handleError(`更新文檔失敗: ${error.message}`, "更新文檔", requesterId || "", "FS_UPDATE_DOCUMENT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_UPDATE_DOCUMENT_ERROR'
+    };
+  }
+}
+
+/**
+ * 29. 刪除文檔 - 核心函數聲明
+ * @version 2025-07-22-V1.2.2
+ * @date 2025-07-22 10:20:00
+ * @description 從Firestore中刪除文檔
+ */
+async function FS_deleteDocument(collectionPath, documentId, requesterId) {
+  const functionName = "FS_deleteDocument";
+  try {
+    FS_logOperation(`刪除文檔: ${collectionPath}/${documentId}`, "刪除文檔", requesterId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!collectionPath || !documentId) {
+      throw new Error("缺少必要參數: collectionPath, documentId");
+    }
+
+    // 準備文檔引用
+    const docRef = db.collection(collectionPath).doc(documentId);
+
+    // 執行刪除操作
+    await docRef.delete();
+
+    return {
+      success: true,
+      documentId: documentId,
+      path: `${collectionPath}/${documentId}`,
+      operation: 'deleted'
+    };
+
+  } catch (error) {
+    FS_handleError(`刪除文檔失敗: ${error.message}`, "刪除文檔", requesterId || "", "FS_DELETE_DOCUMENT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_DELETE_DOCUMENT_ERROR'
+    };
+  }
+}
+
+/**
+ * 30. 合併文檔 - 核心函數聲明
+ * @version 2025-07-22-V1.2.2
+ * @date 2025-07-22 10:20:00
+ * @description 合併更新Firestore中的文檔
+ */
+async function FS_mergeDocument(collectionPath, documentId, mergeData, requesterId) {
+  const functionName = "FS_mergeDocument";
+  try {
+    FS_logOperation(`合併文檔: ${collectionPath}/${documentId}`, "合併文檔", requesterId || "", "", "", functionName);
+
+    // 使用 FS_setDocument 進行合併操作
+    return await FS_setDocument(collectionPath, documentId, mergeData, requesterId, { merge: true });
+
+  } catch (error) {
+    FS_handleError(`合併文檔失敗: ${error.message}`, "合併文檔", requesterId || "", "FS_MERGE_DOCUMENT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_MERGE_DOCUMENT_ERROR'
+    };
+  }
+}
+
+/**
+ * 31. 查詢集合 - 核心函數聲明
+ * @version 2025-07-22-V1.2.2
+ * @date 2025-07-22 10:20:00
+ * @description 查詢Firestore集合
+ */
+async function FS_queryCollection(collectionPath, queryConditions, requesterId, options = {}) {
+  const functionName = "FS_queryCollection";
+  try {
+    FS_logOperation(`查詢集合: ${collectionPath}`, "查詢集合", requesterId || "", "", "", functionName);
+
+    // 建立查詢
+    let query = db.collection(collectionPath);
+
+    // 套用查詢條件
+    if (queryConditions && Array.isArray(queryConditions)) {
+      queryConditions.forEach(condition => {
+        query = query.where(condition.field, condition.operator, condition.value);
+      });
+    }
+
+    // 套用排序
+    if (options.orderBy) {
+      query = query.orderBy(options.orderBy.field, options.orderBy.direction || 'asc');
+    }
+
+    // 套用限制
+    if (options.limit) {
+      query = query.limit(options.limit);
+    }
+
+    // 執行查詢
+    const snapshot = await query.get();
+
+    const results = [];
+    snapshot.forEach(doc => {
+      results.push({
+        id: doc.id,
+        data: doc.data()
+      });
+    });
+
+    return {
+      success: true,
+      results: results,
+      count: results.length,
+      collectionPath: collectionPath
+    };
+
+  } catch (error) {
+    FS_handleError(`查詢集合失敗: ${error.message}`, "查詢集合", requesterId || "", "FS_QUERY_COLLECTION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_QUERY_COLLECTION_ERROR'
+    };
+  }
+}
+
+/**
+ * 32. 新增到集合 - 核心函數聲明
+ * @version 2025-07-22-V1.2.2
+ * @date 2025-07-22 10:20:00
+ * @description 新增文檔到Firestore集合
+ */
+async function FS_addToCollection(collectionPath, data, requesterId) {
+  const functionName = "FS_addToCollection";
+  try {
+    FS_logOperation(`新增到集合: ${collectionPath}`, "新增文檔", requesterId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!collectionPath || !data) {
+      throw new Error("缺少必要參數: collectionPath, data");
+    }
+
+    // 新增文檔
+    const docRef = await db.collection(collectionPath).add(data);
+
+    return {
+      success: true,
+      documentId: docRef.id,
+      path: `${collectionPath}/${docRef.id}`,
+      data: data
+    };
+
+  } catch (error) {
+    FS_handleError(`新增到集合失敗: ${error.message}`, "新增文檔", requesterId || "", "FS_ADD_TO_COLLECTION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_ADD_TO_COLLECTION_ERROR'
+    };
+  }
+}
+
+/**
+ * 33. 設置文檔 - 核心函數聲明
+ * @version 2025-07-22-V1.2.2
+ * @date 2025-07-22 10:20:00
  * @description 在Firestore中設置文檔，支援完整覆蓋或合併更新
  */
 async function FS_setDocument(collectionPath, documentId, data, requesterId, options = {}) {
@@ -72,9 +318,9 @@ async function FS_setDocument(collectionPath, documentId, data, requesterId, opt
 }
 
 /**
- * 28. 記錄操作日誌 - 核心函數聲明
- * @version 2025-07-22-V1.2.1
- * @date 2025-07-22 10:15:00
+ * 34. 記錄操作日誌 - 核心函數聲明
+ * @version 2025-07-22-V1.2.2
+ * @date 2025-07-22 10:20:00
  * @description 記錄系統操作日誌到Firestore
  */
 function FS_logOperation(message, operation, userId, errorCode, details, functionName) {
@@ -88,9 +334,9 @@ function FS_logOperation(message, operation, userId, errorCode, details, functio
 }
 
 /**
- * 29. 錯誤處理 - 核心函數聲明
- * @version 2025-07-22-V1.2.1
- * @date 2025-07-22 10:15:00
+ * 35. 錯誤處理 - 核心函數聲明
+ * @version 2025-07-22-V1.2.2
+ * @date 2025-07-22 10:20:00
  * @description 統一錯誤處理機制
  */
 function FS_handleError(message, operation, userId, errorCode, details, functionName) {
@@ -794,34 +1040,18 @@ async function FS_handleSRQuickReply(userId, interactionData, requesterId) {
 
 // 導出所有函數
 module.exports = {
-  // 文件操作函數
-  FS_setDocument,
+  // 核心文件操作函數
   FS_getDocument,
+  FS_setDocument,
   FS_updateDocument,
   FS_deleteDocument,
   FS_mergeDocument,
 
-  // 集合操作函數
+  // 核心集合操作函數
   FS_queryCollection,
   FS_addToCollection,
-  FS_deleteCollection,
-  FS_getCollectionSize,
-  FS_batchOperations,
 
-  // 批次操作函數
-  FS_batchWrite,
-  FS_batchRead,
-  FS_batchDelete,
-  FS_transaction,
-  FS_runTransaction,
-
-  // 即時監聽函數
-  FS_listenToDocument,
-  FS_listenToCollection,
-  FS_stopListener,
-  FS_stopAllListeners,
-
-  // SR模組專用集合操作 (新增)
+  // SR模組專用集合操作
   FS_createSRReminder,
   FS_updateSRReminder,
   FS_querySRReminders,
@@ -830,12 +1060,15 @@ module.exports = {
   FS_handleSRQuickReply,
 
   // 系統管理函數
-  FS_validatePermission,
   FS_logOperation,
   FS_handleError,
-  FS_initialize,
 
-  // 導出常數和配置
-  FS_CONFIG,
-  FS_ERROR_CODES
+  // 資料庫初始化函數
+  initDatabaseStructure,
+  initUserSubjects,
+  fixTestUserSubjects,
+
+  // 基礎配置
+  db,
+  admin
 };
