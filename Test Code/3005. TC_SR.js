@@ -1,14 +1,14 @@
 
 /**
- * 3005. TC_SR_排程提醒模組_1.1.0
+ * 3005. TC_SR_排程提醒模組_1.2.0
  * @description 基於 3005. SR_排程提醒模組.md 測試計畫的完整測試套件
- * @version 1.1.0
+ * @version 1.2.0
  * @date 2025-07-22
  * @author SQA Team
  * @基於 3005. SR_排程提醒模組.md 測試計畫
  * @參考格式 3115. TC_LBK.js
- * @模組版本 SR v1.5.0
- * @update 2025-07-22: 修復測試邏輯，強化Mock設定，解決Object.is equality問題
+ * @模組版本 SR v1.6.0
+ * @update 2025-07-22: 完全修復Object.is equality錯誤，強化測試邏輯和期望值類型一致性
  */
 
 const SR = require('../Modules/2005. SR.js');
@@ -111,35 +111,54 @@ describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.0.0', () => 
 
       const reminderData1 = testDataGenerator.generateReminderData({
         type: 'daily',
-        subjectName: '早餐'
+        subjectName: '早餐配額測試1'
       });
 
       const reminderData2 = testDataGenerator.generateReminderData({
         type: 'weekly',
-        subjectName: '午餐'
+        subjectName: '午餐配額測試2'
       });
 
       const reminderData3 = testDataGenerator.generateReminderData({
         type: 'monthly',
-        subjectName: '晚餐'
+        subjectName: '晚餐配額測試3'
       });
 
       // 建立第1個提醒（應成功）
       const result1 = await SR.SR_createScheduledReminder(testEnv.freeUser, reminderData1);
-      console.log(`免費用戶第1個提醒:`, result1);
-      expect(Boolean(result1.success)).toBe(true);
+      console.log(`免費用戶第1個提醒:`, JSON.stringify(result1, null, 2));
+      
+      // 修復Object.is equality - 使用嚴格比較
+      expect(result1.success).toBe(true);
+      expect(typeof result1.success).toBe('boolean');
+      if (result1.success) {
+        expect(result1.reminderId).toBeDefined();
+        expect(typeof result1.reminderId).toBe('string');
+      }
 
       // 建立第2個提醒（應成功）
       const result2 = await SR.SR_createScheduledReminder(testEnv.freeUser, reminderData2);
-      console.log(`免費用戶第2個提醒:`, result2);
-      expect(Boolean(result2.success)).toBe(true);
+      console.log(`免費用戶第2個提醒:`, JSON.stringify(result2, null, 2));
+      
+      // 修復Object.is equality - 使用嚴格比較
+      expect(result2.success).toBe(true);
+      expect(typeof result2.success).toBe('boolean');
+      if (result2.success) {
+        expect(result2.reminderId).toBeDefined();
+        expect(typeof result2.reminderId).toBe('string');
+      }
 
-      // 建立第3個提醒（應被拒絕）
+      // 建立第3個提醒（應被拒絕 - 達到免費配額上限）
       const result3 = await SR.SR_createScheduledReminder(testEnv.freeUser, reminderData3);
-      console.log(`免費用戶第3個提醒:`, result3);
-      expect(Boolean(result3.success)).toBe(false);
-      expect(String(result3.errorCode)).toBe('PREMIUM_REQUIRED');
-      expect(Boolean(result3.upgradeRequired)).toBe(true);
+      console.log(`免費用戶第3個提醒:`, JSON.stringify(result3, null, 2));
+      
+      // 修復Object.is equality - 使用嚴格比較和類型檢查
+      expect(result3.success).toBe(false);
+      expect(typeof result3.success).toBe('boolean');
+      expect(result3.errorCode).toBe('PREMIUM_REQUIRED');
+      expect(typeof result3.errorCode).toBe('string');
+      expect(result3.upgradeRequired).toBe(true);
+      expect(typeof result3.upgradeRequired).toBe('boolean');
 
       console.log('✅ 免費用戶配額限制測試完成');
     });
@@ -149,6 +168,7 @@ describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.0.0', () => 
 
       const testCount = 5;
       let successCount = 0;
+      const results = [];
 
       for (let i = 0; i < testCount; i++) {
         const reminderData = testDataGenerator.generateReminderData({
@@ -156,19 +176,32 @@ describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.0.0', () => 
         });
 
         const result = await SR.SR_createScheduledReminder(testEnv.premiumUser, reminderData);
-        console.log(`付費用戶提醒 ${i + 1}:`, result);
+        console.log(`付費用戶提醒 ${i + 1}:`, JSON.stringify(result, null, 2));
+        results.push(result);
         
-        if (Boolean(result.success)) {
+        // 修復Object.is equality - 嚴格檢查success屬性
+        if (result.success === true) {
           successCount++;
           expect(result.reminderId).toBeDefined();
+          expect(typeof result.reminderId).toBe('string');
           expect(result.nextExecution).toBeDefined();
         }
       }
 
       console.log(`付費用戶成功率: ${successCount}/${testCount}`);
-      const successRate = Number(successCount);
-      const expectedMinimum = Number(Math.floor(testCount * 0.9));
-      expect(successRate).toBeGreaterThanOrEqual(expectedMinimum); // 90%成功率
+      console.log('所有結果:', JSON.stringify(results, null, 2));
+      
+      // 修復數值比較邏輯 - 使用原始數字而非Number()包裝
+      const successRate = successCount;  // 已經是number
+      const expectedMinimum = Math.floor(testCount * 0.9);  // 已經是number
+      
+      // 使用直接比較而非Number()轉換
+      expect(successRate).toBeGreaterThanOrEqual(expectedMinimum);
+      expect(successRate).toBeGreaterThan(0); // 至少要有一個成功
+      
+      // 額外驗證
+      expect(typeof successRate).toBe('number');
+      expect(typeof expectedMinimum).toBe('number');
 
       console.log('✅ 付費用戶無限制建立測試完成');
     });
@@ -184,21 +217,37 @@ describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.0.0', () => 
       });
 
       const result = await SR.SR_createScheduledReminder(testEnv.testUserId, reminderData);
-      console.log('排程建立結果:', result);
+      console.log('排程建立結果:', JSON.stringify(result, null, 2));
 
-      expect(Boolean(result.success)).toBe(true);
-      expect(result.reminderId).toBeDefined();
-      expect(result.nextExecution).toBeDefined();
+      // 修復Object.is equality - 使用嚴格比較
+      expect(result.success).toBe(true);
+      expect(typeof result.success).toBe('boolean');
       
+      if (result.success === true) {
+        expect(result.reminderId).toBeDefined();
+        expect(typeof result.reminderId).toBe('string');
+        expect(result.nextExecution).toBeDefined();
+        expect(typeof result.nextExecution).toBe('string');
+        
+        // 驗證提醒ID格式
+        expect(result.reminderId).toMatch(/^reminder_\d+_[a-z0-9]+$/);
+      }
+      
+      // 檢查成功訊息
       if (result.message) {
-        expect(String(result.message)).toContain('成功');
+        expect(result.message).toContain('成功');
+        expect(typeof result.message).toBe('string');
       }
 
       // 驗證下次執行時間格式（如果有提供）
       if (result.nextExecution) {
         const nextExecution = new Date(result.nextExecution);
         expect(nextExecution).toBeInstanceOf(Date);
-        expect(Number(nextExecution.getTime())).toBeGreaterThan(Number(Date.now()));
+        expect(nextExecution.getTime()).toBeGreaterThan(Date.now());
+        
+        // 驗證時間合理性（應該在未來24小時內）
+        const oneDayFromNow = Date.now() + (24 * 60 * 60 * 1000);
+        expect(nextExecution.getTime()).toBeLessThan(oneDayFromNow);
       }
 
       console.log(`建立的提醒ID: ${result.reminderId}`);
@@ -220,11 +269,15 @@ describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.0.0', () => 
       });
 
       const createResult = await SR.SR_createScheduledReminder(testEnv.testUserId, reminderData);
-      console.log('建立排程結果:', createResult);
-      expect(Boolean(createResult.success)).toBe(true);
+      console.log('建立排程結果:', JSON.stringify(createResult, null, 2));
+      
+      // 修復Object.is equality - 嚴格檢查
+      expect(createResult.success).toBe(true);
+      expect(typeof createResult.success).toBe('boolean');
 
       const reminderId = createResult.reminderId;
       expect(reminderId).toBeDefined();
+      expect(typeof reminderId).toBe('string');
 
       // 模擬執行排程任務
       const startTime = Date.now();
@@ -232,23 +285,31 @@ describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.0.0', () => 
       const endTime = Date.now();
 
       const executionTime = endTime - startTime;
-      console.log('執行結果:', executeResult);
+      console.log('執行結果:', JSON.stringify(executeResult, null, 2));
 
-      console.log(`排程執行結果: ${Boolean(executeResult.executed) ? '成功' : '失敗'}`);
+      // 修復Object.is equality - 檢查executed屬性類型
+      expect(typeof executeResult.executed).toBe('boolean');
+      
+      console.log(`排程執行結果: ${executeResult.executed === true ? '成功' : '失敗'}`);
       console.log(`執行時間: ${executionTime}ms`);
 
-      if (Boolean(executeResult.executed)) {
+      if (executeResult.executed === true) {
         if (executeResult.message) {
-          expect(String(executeResult.message)).toContain('成功');
+          expect(executeResult.message).toContain('成功');
+          expect(typeof executeResult.message).toBe('string');
         }
         if (executeResult.nextExecution) {
           expect(executeResult.nextExecution).toBeDefined();
+          expect(typeof executeResult.nextExecution).toBe('string');
         }
       } else {
         expect(executeResult.reason || executeResult.error).toBeDefined();
+        expect(typeof (executeResult.reason || executeResult.error)).toBe('string');
       }
 
-      expect(Number(executionTime)).toBeLessThan(Number(testEnv.maxProcessingTime));
+      // 修復數值比較 - 直接使用數字
+      expect(executionTime).toBeLessThan(testEnv.maxProcessingTime);
+      expect(typeof executionTime).toBe('number');
 
       console.log('✅ 排程執行基本功能測試完成');
     });
@@ -285,19 +346,28 @@ describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.0.0', () => 
 
       for (const testCase of testCases) {
         const result = await SR.SR_validatePremiumFeature(testCase.user, testCase.feature);
-        console.log(`功能 ${testCase.feature} 用戶 ${testCase.user}:`, result);
+        console.log(`功能 ${testCase.feature} 用戶 ${testCase.user}:`, JSON.stringify(result, null, 2));
 
-        const isAllowed = Boolean(result.allowed);
-        const expectedAllowed = Boolean(testCase.expectAllowed);
-        
-        expect(isAllowed).toBe(expectedAllowed);
+        // 修復Object.is equality - 嚴格檢查allowed屬性
+        expect(typeof result.allowed).toBe('boolean');
+        expect(result.allowed).toBe(testCase.expectAllowed);
 
-        if (!isAllowed) {
+        // 檢查失敗原因
+        if (result.allowed !== true) {
           expect(result.reason || result.error).toBeDefined();
+          expect(typeof (result.reason || result.error)).toBe('string');
         }
 
+        // 檢查升級要求
         if (testCase.feature === 'AUTO_PUSH' && testCase.user === testEnv.freeUser) {
-          expect(Boolean(result.upgradeRequired)).toBe(true);
+          expect(typeof result.upgradeRequired).toBe('boolean');
+          expect(result.upgradeRequired).toBe(true);
+        }
+
+        // 檢查功能類型
+        if (result.featureType) {
+          expect(typeof result.featureType).toBe('string');
+          expect(['free', 'premium']).toContain(result.featureType);
         }
       }
 
@@ -591,13 +661,21 @@ describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.0.0', () => 
       const invalidUserId = 'invalid_user_' + Date.now();
 
       const result = await SR.SR_validatePremiumFeature(invalidUserId, 'CREATE_REMINDER');
-      console.log('異常用戶權限檢查結果:', result);
+      console.log('異常用戶權限檢查結果:', JSON.stringify(result, null, 2));
 
-      const isAllowed = Boolean(result.allowed);
-      expect(isAllowed).toBe(false);
+      // 修復Object.is equality - 嚴格檢查allowed屬性類型
+      expect(typeof result.allowed).toBe('boolean');
+      expect(result.allowed).toBe(false);
       
-      const hasErrorOrReason = Boolean(result.error || result.reason);
-      expect(hasErrorOrReason).toBe(true);
+      // 檢查錯誤或原因
+      expect(result.error || result.reason).toBeDefined();
+      expect(typeof (result.error || result.reason)).toBe('string');
+      
+      // 檢查錯誤代碼
+      if (result.errorCode) {
+        expect(typeof result.errorCode).toBe('string');
+        expect(result.errorCode).toBeTruthy();
+      }
 
       console.log('✅ 系統異常恢復測試完成');
     });
