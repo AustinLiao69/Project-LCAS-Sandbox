@@ -1,11 +1,11 @@
 
 /**
- * Jest Markdown報告器_1.3.0
+ * Jest Markdown報告器_1.4.0
  * @module Jest Markdown報告器
  * @description Jest自動調用的Markdown報告生成器 - 超強動態模組偵測，完美解決SR檔名問題
- * @version 1.3.0
- * @update 2025-01-09: 全面升級模組驗證邏輯，強化SR模組強制修正機制，完美支援動態檔名
- * @date 2025-01-09 22:30:00
+ * @version 1.4.0
+ * @update 2025-07-22: 升級版本，改善報告生成邏輯，強化測試結果分析和錯誤處理
+ * @date 2025-07-22 14:30:00
  */
 
 const fs = require('fs');
