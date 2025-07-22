@@ -1,11 +1,11 @@
 
 /**
- * Jest Markdown報告器_1.2.0
+ * Jest Markdown報告器_1.3.0
  * @module Jest Markdown報告器
- * @description Jest自動調用的Markdown報告生成器 - 強化動態模組偵測，完美支援SR模組，智慧容錯機制
- * @version 1.2.0
- * @update 2025-01-09: 強化偵測失敗容錯機制，改善日誌輸出，完善SR模組支援
- * @date 2025-01-09 21:00:00
+ * @description Jest自動調用的Markdown報告生成器 - 超強動態模組偵測，完美解決SR檔名問題
+ * @version 1.3.0
+ * @update 2025-01-09: 全面升級模組驗證邏輯，強化SR模組強制修正機制，完美支援動態檔名
+ * @date 2025-01-09 22:30:00
  */
 
 const fs = require('fs');
@@ -57,8 +57,8 @@ class MarkdownReporter {
   }
 
   /**
-   * 驗證模組資訊的正確性
-   * @version 1.2.0
+   * 驗證模組資訊的正確性 - 強化版本
+   * @version 1.3.0
    */
   _validateModuleInfo() {
     const expectedModules = {
@@ -66,6 +66,8 @@ class MarkdownReporter {
       '3115': { name: 'LBK', type: 'TC-LBK' },
       '3151': { name: 'MLS', type: 'TC-MLS' }
     };
+    
+    console.log(`🔍 Reporter驗證模組資訊: ${this._moduleInfo.code} -> ${this._moduleInfo.name}`);
     
     const expected = expectedModules[this._moduleInfo.code];
     if (expected) {
@@ -79,7 +81,16 @@ class MarkdownReporter {
         this._moduleInfo.type = expected.type;
         console.log(`🔧 已自動修正模組資訊: ${this._moduleInfo.name} (${this._moduleInfo.code})`);
       }
+    } else {
+      // 額外的SR模組檢查 - 處理未知代碼但可能是SR的情況
+      const processArgs = process.argv.join(' ');
+      if (processArgs.includes('3005') || processArgs.includes('TC_SR') || processArgs.includes('SR')) {
+        console.log(`🎯 強制修正為SR模組 - Process參數包含SR指標`);
+        this._moduleInfo = { code: '3005', name: 'SR', type: 'TC-SR' };
+      }
     }
+    
+    console.log(`✅ 最終模組資訊: ${this._moduleInfo.name} (${this._moduleInfo.code})`);
   }
 
   /**
