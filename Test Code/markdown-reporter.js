@@ -1,32 +1,36 @@
 
 /**
- * Jest Markdown報告器_1.1.0
+ * Jest Markdown報告器_1.2.0
  * @module Jest Markdown報告器
- * @description Jest自動調用的Markdown報告生成器 - 整合測試、覆蓋率、效能報告，支援動態模組偵測
- * @version 1.1.0
- * @update 2025-01-09: 新增動態測試模組支援，智慧檔名生成，修復硬編碼問題
- * @date 2025-01-09 20:00:00
+ * @description Jest自動調用的Markdown報告生成器 - 強化動態模組偵測，完美支援SR模組，智慧容錯機制
+ * @version 1.2.0
+ * @update 2025-01-09: 強化偵測失敗容錯機制，改善日誌輸出，完善SR模組支援
+ * @date 2025-01-09 21:00:00
  */
 
 const fs = require('fs');
 const path = require('path');
 
 /**
- * Jest Markdown Reporter 類別
- * 實作 Jest Reporter 介面，自動生成三種 Markdown 報告
+ * Jest Markdown Reporter 類別 - 強化版本
+ * 實作 Jest Reporter 介面，自動生成三種 Markdown 報告，支援強化偵測機制
+ * @version 1.2.0
  */
 class MarkdownReporter {
   constructor(globalConfig, options) {
     this._globalConfig = globalConfig;
     this._options = options || {};
     
-    // 動態模組資訊
+    // 動態模組資訊 - 強化容錯機制
     this._moduleInfo = this._options.moduleInfo || {
       code: '0000',
       name: 'UNKNOWN',
       type: 'TC-UNKNOWN'
     };
     this._dynamicDetection = this._options.dynamicDetection || false;
+    
+    // 新增偵測結果驗證
+    this._validateModuleInfo();
     
     // 確保 Test report 目錄存在
     const reportDir = path.dirname(this._options.outputFile || './Test report/report.md');
@@ -49,6 +53,32 @@ class MarkdownReporter {
     console.log(`📋 Markdown Reporter 初始化完成 (${this._moduleInfo.name} 模組)`);
     if (this._dynamicDetection) {
       console.log('🎯 動態模組偵測已啟用');
+    }
+  }
+
+  /**
+   * 驗證模組資訊的正確性
+   * @version 1.2.0
+   */
+  _validateModuleInfo() {
+    const expectedModules = {
+      '3005': { name: 'SR', type: 'TC-SR' },
+      '3115': { name: 'LBK', type: 'TC-LBK' },
+      '3151': { name: 'MLS', type: 'TC-MLS' }
+    };
+    
+    const expected = expectedModules[this._moduleInfo.code];
+    if (expected) {
+      if (this._moduleInfo.name !== expected.name || this._moduleInfo.type !== expected.type) {
+        console.warn(`⚠️ 模組資訊不一致: 代碼${this._moduleInfo.code}應對應${expected.name}模組`);
+        console.warn(`   目前: ${this._moduleInfo.name} (${this._moduleInfo.type})`);
+        console.warn(`   預期: ${expected.name} (${expected.type})`);
+        
+        // 自動修正
+        this._moduleInfo.name = expected.name;
+        this._moduleInfo.type = expected.type;
+        console.log(`🔧 已自動修正模組資訊: ${this._moduleInfo.name} (${this._moduleInfo.code})`);
+      }
     }
   }
 
