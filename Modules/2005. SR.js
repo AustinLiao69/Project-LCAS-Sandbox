@@ -67,7 +67,10 @@ const SR_QUICK_REPLY_CONFIG = {
 };
 
 /**
- * 日誌函數封裝
+ * 22. 日誌函數封裝 - 資訊日誌
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 封裝DL模組的資訊日誌記錄功能
  */
 function SR_logInfo(message, operation, userId, errorCode = "", errorDetails = "", functionName = "") {
   if (DL && typeof DL.DL_info === 'function') {
@@ -77,6 +80,12 @@ function SR_logInfo(message, operation, userId, errorCode = "", errorDetails = "
   }
 }
 
+/**
+ * 23. 日誌函數封裝 - 錯誤日誌
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 封裝DL模組的錯誤日誌記錄功能
+ */
 function SR_logError(message, operation, userId, errorCode = "", errorDetails = "", functionName = "") {
   if (DL && typeof DL.DL_error === 'function') {
     DL.DL_error(message, operation, userId, errorCode, errorDetails, 0, functionName, functionName);
@@ -85,6 +94,12 @@ function SR_logError(message, operation, userId, errorCode = "", errorDetails = 
   }
 }
 
+/**
+ * 24. 日誌函數封裝 - 警告日誌
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 封裝DL模組的警告日誌記錄功能
+ */
 function SR_logWarning(message, operation, userId, errorCode = "", errorDetails = "", functionName = "") {
   if (DL && typeof DL.DL_warning === 'function') {
     DL.DL_warning(message, operation, userId, errorCode, errorDetails, 0, functionName, functionName);
@@ -618,7 +633,7 @@ async function SR_processHolidayLogic(date, holidayHandling = 'skip', userTimezo
 }
 
 /**
- * 06. 獲取政府開放資料假日清單 - 新增
+ * 06. 獲取政府開放資料假日清單
  * @version 2025-01-09-V1.4.0
  * @date 2025-01-09 22:00:00
  * @description 從台灣政府開放資料平台獲取假日資訊
@@ -1829,7 +1844,10 @@ ${trialStatus.hasUsedTrial ? '立即升級享受完整體驗' : '也可以先免
 // =============== 輔助函數 ===============
 
 /**
- * 生成 cron 表達式
+ * 25. 生成 cron 表達式
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 根據提醒設定生成對應的cron表達式
  */
 function SR_generateCronExpression(reminderData) {
   const time = reminderData.time || SR_CONFIG.DEFAULT_REMINDER_TIME;
@@ -1850,7 +1868,10 @@ function SR_generateCronExpression(reminderData) {
 }
 
 /**
- * 計算下次執行時間
+ * 26. 計算下次執行時間
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 計算排程的下次執行時間
  */
 function SR_calculateNextExecution(reminderData) {
   const now = moment().tz(TIMEZONE);
@@ -1867,7 +1888,10 @@ function SR_calculateNextExecution(reminderData) {
 }
 
 /**
- * 建立提醒訊息
+ * 27. 建立提醒訊息
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 根據提醒資料建立格式化的提醒訊息
  */
 function SR_buildReminderMessage(reminderData) {
   return `⏰ 記帳提醒
@@ -1883,7 +1907,10 @@ ${reminderData.subjectName}${reminderData.amount}`;
 }
 
 /**
- * 檢查是否應該跳過執行
+ * 28. 檢查是否應該跳過執行
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 檢查是否因為週末或假日而跳過執行
  */
 async function SR_shouldSkipExecution(reminderData) {
   const now = new Date();
@@ -1906,7 +1933,10 @@ async function SR_shouldSkipExecution(reminderData) {
 }
 
 /**
- * 建立每日摘要訊息
+ * 29. 建立每日摘要訊息
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 建立每日財務摘要的格式化訊息
  */
 function SR_buildDailySummaryMessage(statsData) {
   if (!statsData) {
@@ -1934,7 +1964,10 @@ ${balance >= 0 ? '✅ 今日收支平衡良好' : '⚠️ 今日支出大於收�
 }
 
 /**
- * 建立月度報告訊息
+ * 30. 建立月度報告訊息
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 建立月度財務報告的格式化訊息
  */
 function SR_buildMonthlyReportMessage(statsData) {
   if (!statsData) {
@@ -1959,7 +1992,10 @@ ${balance >= 0 ? '✅ 本月收支狀況良好' : '⚠️ 本月支出大於收�
 }
 
 /**
- * 建立統計回覆訊息
+ * 31. 建立統計回覆訊息
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 建立Quick Reply統計查詢的回覆訊息
  */
 function SR_buildStatisticsReplyMessage(period, statsData) {
   const periodNames = {
@@ -1994,7 +2030,10 @@ ${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
 }
 
 /**
- * 取得用戶提醒數量
+ * 32. 取得用戶提醒數量
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 查詢用戶當前的有效提醒數量
  */
 async function SR_getUserReminderCount(userId) {
   try {
@@ -2010,7 +2049,10 @@ async function SR_getUserReminderCount(userId) {
 }
 
 /**
- * 生成升級訊息
+ * 33. 生成升級訊息
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 根據違規類型生成升級提示訊息
  */
 function SR_generateUpgradeMessage(violationType) {
   switch (violationType) {
@@ -2024,7 +2066,10 @@ function SR_generateUpgradeMessage(violationType) {
 }
 
 /**
- * 取得內建假日清單
+ * 34. 取得內建假日清單
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 提供內建的台灣假日清單作為備案
  */
 async function SR_getBuiltInHolidays(year) {
   const holidays2025 = [
@@ -2041,7 +2086,10 @@ async function SR_getBuiltInHolidays(year) {
 }
 
 /**
- * 智慧尋找下一個工作日
+ * 35. 智慧尋找下一個工作日
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 智慧尋找下一個非假日的工作日
  */
 async function SR_findNextWorkday(date, timezone) {
   let nextDay = moment(date).tz(timezone).add(1, 'day');
@@ -2060,7 +2108,10 @@ async function SR_findNextWorkday(date, timezone) {
 }
 
 /**
- * 智慧尋找前一個工作日
+ * 36. 智慧尋找前一個工作日
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 智慧尋找前一個非假日的工作日
  */
 async function SR_findPreviousWorkday(date, timezone) {
   let prevDay = moment(date).tz(timezone).subtract(1, 'day');
@@ -2079,7 +2130,10 @@ async function SR_findPreviousWorkday(date, timezone) {
 }
 
 /**
- * 檢查試用狀態
+ * 37. 檢查試用狀態
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 檢查用戶的試用期狀態和剩餘天數
  */
 async function SR_checkTrialStatus(userId) {
   try {
@@ -2116,7 +2170,10 @@ async function SR_checkTrialStatus(userId) {
 }
 
 /**
- * 檢查功能配額
+ * 38. 檢查功能配額
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 檢查用戶的功能使用配額和可用性
  */
 async function SR_checkFeatureQuota(userId, featureName, maxQuota) {
   try {
@@ -2138,7 +2195,10 @@ async function SR_checkFeatureQuota(userId, featureName, maxQuota) {
 }
 
 /**
- * 記錄功能使用
+ * 39. 記錄功能使用
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 記錄用戶的功能使用情況
  */
 async function SR_recordFeatureUsage(userId, featureName, context) {
   try {
@@ -2154,7 +2214,10 @@ async function SR_recordFeatureUsage(userId, featureName, context) {
 }
 
 /**
- * 啟用付費功能
+ * 40. 啟用付費功能
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 為用戶啟用付費功能
  */
 async function SR_enablePremiumFeatures(userId) {
   try {
@@ -2166,7 +2229,10 @@ async function SR_enablePremiumFeatures(userId) {
 }
 
 /**
- * 記錄 Quick Reply 互動
+ * 41. 記錄 Quick Reply 互動
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 記錄Quick Reply的用戶互動日誌
  */
 async function SR_logQuickReplyInteraction(userId, postbackData, response, metadata = {}) {
   try {
@@ -2185,7 +2251,10 @@ async function SR_logQuickReplyInteraction(userId, postbackData, response, metad
 }
 
 /**
- * 計算下次執行時間（考慮跳過邏輯）
+ * 42. 計算下次執行時間（考慮跳過邏輯）
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 計算考慮假日跳過邏輯的下次執行時間
  */
 async function SR_calculateNextExecutionWithSkip(reminderData) {
   const baseNext = SR_calculateNextExecution(reminderData);
@@ -2199,7 +2268,10 @@ async function SR_calculateNextExecutionWithSkip(reminderData) {
 }
 
 /**
- * 模組初始化函數
+ * 43. 模組初始化函數
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description SR模組的初始化設定和啟動流程
  */
 async function SR_initialize() {
   const functionName = "SR_initialize";
@@ -2241,7 +2313,10 @@ async function SR_initialize() {
 }
 
 /**
- * 載入現有排程設定
+ * 44. 載入現有排程設定
+ * @version 2025-01-09-V1.4.0
+ * @date 2025-01-09 22:00:00
+ * @description 載入並恢復現有的排程設定到記憶體
  */
 async function SR_loadExistingSchedules() {
   try {
