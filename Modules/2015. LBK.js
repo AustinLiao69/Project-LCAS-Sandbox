@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.1.1
+ * LBK_快速記帳模組_1.1.2
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 新增Quick Reply路由功能，支援統計查詢和記帳功能智慧分流
- * @update 2025-07-22: 升級至v1.1.0，新增關鍵字檢核邏輯、SR模組介面、統一回應格式，實現記帳與統計功能分流
+ * @description LINE OA 專用快速記帳處理模組 - 修復循環依賴和回覆格式問題
+ * @update 2025-07-22: 升級至v1.1.1，修復循環依賴問題，統一回覆格式標準，確保與WH模組相容性
  */
 
 // 引入所需模組
@@ -99,7 +99,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.1.0",
+        moduleVersion: "1.1.1",
         errorType: parseResult.errorType || "PARSE_ERROR"
       };
     }
@@ -144,7 +144,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       module: "LBK",
       data: bookkeepingResult.data,
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.1.0"
+      moduleVersion: "1.1.1"
     };
 
   } catch (error) {
@@ -164,7 +164,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       moduleCode: "LBK",
       module: "LBK",
       processingTime: 0,
-      moduleVersion: "1.1.0",
+      moduleVersion: "1.1.1",
       errorType: "SYSTEM_ERROR"
     };
   }
@@ -1713,32 +1713,40 @@ function LBK_buildStatisticsQuickReply(userId, currentType) {
   }
 }
 
-// 導出模組函數
-module.exports = {
-  LBK_processQuickBookkeeping,
-  LBK_parseUserMessage,
-  LBK_parseInputFormat,
-  LBK_extractAmount,
-  LBK_getSubjectCode,
-  LBK_fuzzyMatch,
-  LBK_getAllSubjects,
-  LBK_executeBookkeeping,
-  LBK_generateBookkeepingId,
-  LBK_validateBookkeepingData,
-  LBK_saveToFirestore,
-  LBK_prepareBookkeepingData,
-  LBK_formatReplyMessage,
-  LBK_removeAmountFromText,
-  LBK_validatePaymentMethod,
-  LBK_formatDateTime,
-  LBK_initialize,
-  LBK_handleError,
-  LBK_processAmountInternal,
-  LBK_validateDataInternal,
-  LBK_calculateStringSimilarity,
+// 確保所有函數都正確導出，避免循環依賴問題
+const LBK_MODULE = {
+  // 核心函數 - 確保正確導出
+  LBK_processQuickBookkeeping: LBK_processQuickBookkeeping,
+  LBK_parseUserMessage: LBK_parseUserMessage,
+  LBK_parseInputFormat: LBK_parseInputFormat,
+  LBK_extractAmount: LBK_extractAmount,
+  LBK_getSubjectCode: LBK_getSubjectCode,
+  LBK_fuzzyMatch: LBK_fuzzyMatch,
+  LBK_getAllSubjects: LBK_getAllSubjects,
+  LBK_executeBookkeeping: LBK_executeBookkeeping,
+  LBK_generateBookkeepingId: LBK_generateBookkeepingId,
+  LBK_validateBookkeepingData: LBK_validateBookkeepingData,
+  LBK_saveToFirestore: LBK_saveToFirestore,
+  LBK_prepareBookkeepingData: LBK_prepareBookkeepingData,
+  LBK_formatReplyMessage: LBK_formatReplyMessage,
+  LBK_removeAmountFromText: LBK_removeAmountFromText,
+  LBK_validatePaymentMethod: LBK_validatePaymentMethod,
+  LBK_formatDateTime: LBK_formatDateTime,
+  LBK_initialize: LBK_initialize,
+  LBK_handleError: LBK_handleError,
+  LBK_processAmountInternal: LBK_processAmountInternal,
+  LBK_validateDataInternal: LBK_validateDataInternal,
+  LBK_calculateStringSimilarity: LBK_calculateStringSimilarity,
   
   // 新增函數
-  LBK_checkStatisticsKeyword,
-  LBK_handleStatisticsRequest,
-  LBK_buildStatisticsQuickReply
+  LBK_checkStatisticsKeyword: LBK_checkStatisticsKeyword,
+  LBK_handleStatisticsRequest: LBK_handleStatisticsRequest,
+  LBK_buildStatisticsQuickReply: LBK_buildStatisticsQuickReply,
+  
+  // 版本資訊
+  MODULE_VERSION: "1.1.1",
+  MODULE_NAME: "LBK"
 };
+
+// 導出模組
+module.exports = LBK_MODULE;
