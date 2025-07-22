@@ -1,9 +1,9 @@
 
 /**
- * 3005. TC_SR_排程提醒模組_1.4.0
+ * 3005. TC_SR_排程提醒模組_1.0.0
  * @description 基於 3005. SR_排程提醒模組.md 測試計畫的完整測試套件
- * @version 1.4.0
- * @date 2025-01-09
+ * @version 1.0.0
+ * @date 2025-07-22
  * @author SQA Team
  * @基於 3005. SR_排程提醒模組.md 測試計畫
  * @參考格式 3115. TC_LBK.js
@@ -83,7 +83,7 @@ class SRTestDataGenerator {
 
 const testDataGenerator = new SRTestDataGenerator();
 
-describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.4.0', () => {
+describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.0.0', () => {
 
   // 測試前準備
   beforeAll(async () => {
@@ -643,7 +643,7 @@ describe('SR 排程提醒模組測試 - 基於 3005 測試計畫 v1.4.0', () => 
 
       const report = {
         module: 'SR (排程提醒模組)',
-        version: '1.4.2',
+        version: '1.0.0',
         testSuite: '3005. TC_SR.js',
         testPlan: '3005. SR_排程提醒模組.md',
         timestamp: new Date().toISOString(),
