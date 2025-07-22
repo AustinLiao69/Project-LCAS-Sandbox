@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.2.0
+* FS_FirestoreStructure_資料庫結構模組_1.2.1
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
-* @update 2025-07-08: 升級至1.0.9版本，修正project_id undefined問題，加入UTC+8時區支援
+* @update 2025-07-22: 升級至1.2.1版本，修復函數定義順序問題，解決FS_setDocument未定義錯誤
 */
 
 // 直接使用 Firebase Admin SDK 和 serviceaccountkey.json
@@ -26,6 +26,87 @@ const UNIVERSE_DOMAIN = 'googleapis.com';
 
 // 設定時區為 UTC+8 (Asia/Taipei)
 const TIMEZONE = 'Asia/Taipei';
+
+// =============== 核心函數聲明區 ===============
+
+/**
+ * 27. 設置文檔 - 核心函數聲明
+ * @version 2025-07-22-V1.2.1
+ * @date 2025-07-22 10:15:00
+ * @description 在Firestore中設置文檔，支援完整覆蓋或合併更新
+ */
+async function FS_setDocument(collectionPath, documentId, data, requesterId, options = {}) {
+  const functionName = "FS_setDocument";
+  try {
+    FS_logOperation(`設置文檔: ${collectionPath}/${documentId}`, "設置文檔", requesterId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!collectionPath || !documentId || !data) {
+      throw new Error("缺少必要參數: collectionPath, documentId, data");
+    }
+
+    // 準備文檔引用
+    const docRef = db.collection(collectionPath).doc(documentId);
+
+    // 設置選項
+    const setOptions = options.merge ? { merge: true } : {};
+
+    // 執行設置操作
+    await docRef.set(data, setOptions);
+
+    return {
+      success: true,
+      documentId: documentId,
+      path: `${collectionPath}/${documentId}`,
+      operation: options.merge ? 'merge' : 'overwrite'
+    };
+
+  } catch (error) {
+    FS_handleError(`設置文檔失敗: ${error.message}`, "設置文檔", requesterId || "", "FS_SET_DOCUMENT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_SET_DOCUMENT_ERROR'
+    };
+  }
+}
+
+/**
+ * 28. 記錄操作日誌 - 核心函數聲明
+ * @version 2025-07-22-V1.2.1
+ * @date 2025-07-22 10:15:00
+ * @description 記錄系統操作日誌到Firestore
+ */
+function FS_logOperation(message, operation, userId, errorCode, details, functionName) {
+  try {
+    console.log(`[FS_LOG] ${new Date().toISOString()} | ${operation} | ${message} | User: ${userId} | Function: ${functionName}`);
+    return true;
+  } catch (error) {
+    console.error(`[FS_LOG_ERROR] ${error.toString()}`);
+    return false;
+  }
+}
+
+/**
+ * 29. 錯誤處理 - 核心函數聲明
+ * @version 2025-07-22-V1.2.1
+ * @date 2025-07-22 10:15:00
+ * @description 統一錯誤處理機制
+ */
+function FS_handleError(message, operation, userId, errorCode, details, functionName) {
+  try {
+    console.error(`[FS_ERROR] ${new Date().toISOString()} | ${operation} | ${message} | Error: ${errorCode} | Function: ${functionName}`);
+    
+    if (details) {
+      console.error(`[FS_ERROR_DETAILS] ${details}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`[FS_CRITICAL_ERROR] ${error.toString()}`);
+    return false;
+  }
+}
 
 /**
 * 00. 檢查並初始化 Firestore Database
