@@ -1,14 +1,15 @@
 /**
- * WH_Webhook處理模組_2.1.1
+ * WH_Webhook處理模組_2.1.2
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 新增Quick Reply支援和SR模組整合
- * @update 2025-07-21: 升級至v2.1.0，新增Quick Reply事件處理、SR模組路由機制、擴展訊息回覆格式支援
+ * @description LINE Webhook處理模組 - 修復循環依賴問題和LBK調用機制
+ * @update 2025-07-22: 升級至v2.1.2，修復LBK模組循環依賴，實現動態模組調用機制
  */
 
 // 首先引入其他模組
 const DD = require("./2031. DD1.js");
 const BK = require("./2001. BK.js");
-const LBK = require("./2015. LBK.js");  // 新增 LBK 模組引入
+// 移除直接的LBK模組引入，改用動態載入避免循環依賴
+let LBK = null;
 const SR = require('./2005. SR.js');
 const DL = require("./2010. DL.js");
 const AM = require("./2009. AM.js");
@@ -710,17 +711,27 @@ function WH_logCritical(
  */
 async function WH_replyMessage(replyToken, message, quickReply = null) {
   try {
-    // 擴展格式驗證：同時支援 BK 和 LBK 模組格式化的訊息
-    // 檢查 moduleCode 為 'BK' 或 'LBK'，或來自 BK/LBK 模組的訊息
-    const isValidFormat = message && typeof message === 'object' && message.responseMessage && 
-                         (message.moduleCode === 'BK' || message.moduleCode === 'LBK' || 
-                          message.module === 'BK' || message.module === 'LBK');
+    // 擴展格式驗證：支援字串訊息和格式化物件訊息
+    let isValidFormat = false;
+    
+    if (typeof message === 'string') {
+      // 直接接受字串格式
+      isValidFormat = true;
+    } else if (message && typeof message === 'object') {
+      // 檢查是否為有效的格式化物件
+      if (message.responseMessage || message.message) {
+        isValidFormat = true;
+      } else if (message.moduleCode === 'BK' || message.moduleCode === 'LBK' || 
+                message.module === 'BK' || message.module === 'LBK') {
+        isValidFormat = true;
+      }
+    }
 
     if (!isValidFormat) {
       console.error('WH_replyMessage: 拒絕未經正確格式化的訊息');
       WH_directLogWrite([
         WH_formatDateTime(new Date()),
-        `WH 2.0.22: 拒絕未經格式化的訊息，moduleCode=${message?.moduleCode || "未定義"}, module=${message?.module || "未定義"}`,
+        `WH 2.1.2: 拒絕未經格式化的訊息，type=${typeof message}, moduleCode=${message?.moduleCode || "未定義"}`,
         "訊息驗證",
         "",
         "INVALID_MESSAGE_FORMAT",
@@ -1095,6 +1106,67 @@ function setDependencies(ddModule, bkModule, dlModule) {
 }
 
 /**
+ * 06. 安全調用LBK模組處理函數
+ * @version 2025-07-22-V2.1.2
+ * @date 2025-07-22 11:35:00
+ * @description 動態載入LBK模組並安全調用，避免循環依賴問題
+ */
+async function WH_callLBKSafely(inputData) {
+  try {
+    // 動態載入LBK模組
+    if (!LBK) {
+      LBK = require("./2015. LBK.js");
+    }
+
+    // 驗證函數存在性
+    if (!LBK || typeof LBK.LBK_processQuickBookkeeping !== 'function') {
+      throw new Error('LBK模組不可用或函數不存在');
+    }
+
+    // 調用LBK處理函數
+    const result = await LBK.LBK_processQuickBookkeeping(inputData);
+
+    // 確保回覆格式符合WH規範
+    if (result && !result.moduleCode) {
+      result.moduleCode = 'LBK';
+      result.module = 'LBK';
+    }
+
+    return result;
+
+  } catch (error) {
+    console.log(`WH_callLBKSafely 調用失敗: ${error.toString()}`);
+    
+    // 返回標準格式的錯誤回覆
+    const currentDateTime = new Date().toLocaleString("zh-TW", {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    const errorMessage = `記帳失敗！\n` +
+                        `金額：未知元\n` +
+                        `支付方式：未指定\n` +
+                        `時間：${currentDateTime}\n` +
+                        `科目：未知科目\n` +
+                        `備註：${inputData.messageText || ''}\n` +
+                        `使用者類型：J\n` +
+                        `錯誤原因：系統暫時無法處理，請稍後再試`;
+
+    return {
+      success: false,
+      responseMessage: errorMessage,
+      moduleCode: 'LBK',
+      module: 'LBK',
+      error: error.toString()
+    };
+  }
+}
+
+/**
  * 07. 處理事件 (非同步版) - LINE文字訊息完全分離處理
  * @version 2025-07-14-V2.0.20
  * @date 2025-07-14 15:00:00
@@ -1224,8 +1296,8 @@ async function WH_processEventAsync(event, requestId, userId) {
             processId: requestId
           };
 
-          // 直接調用 LBK 處理，完全跳過 DD 模組
-          result = await LBK.LBK_processQuickBookkeeping(lbkInputData);
+          // 動態載入LBK模組並調用處理函數
+          result = await WH_callLBKSafely(lbkInputData);
 
           // 記錄DD_distributeData處理結果預覽
           if (result) {
