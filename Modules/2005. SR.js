@@ -1,8 +1,8 @@
 /**
- * SR_排程提醒模組_1.4.1
+ * SR_排程提醒模組_1.4.2
  * @module SR排程提醒模組
  * @description LCAS 2.0 排程提醒系統 - 智慧記帳自動化核心功能
- * @update 2025-01-09: 升級至v1.4.0，修正Quick Reply處理邏輯，簡化付費功能架構，強化假日處理機制，優化錯誤處理
+ * @update 2025-07-22: 升級至v1.4.2，新增直接Firestore統計查詢，移除DD1模組依賴，修復統計查詢問題
  */
 
 const admin = require('firebase-admin');
@@ -1193,10 +1193,10 @@ async function SR_sendMonthlyReport(userId) {
 }
 
 /**
- * 14. 處理 Quick Reply 統計 - 簡化版本
- * @version 2025-01-09-V1.4.0
- * @date 2025-01-09 22:00:00
- * @update: 簡化處理邏輯，移除複雜的會話管理，專注於直接統計回應
+ * 14. 處理 Quick Reply 統計 - 直接Firestore查詢版本
+ * @version 2025-07-22-V1.4.1
+ * @date 2025-07-22 12:00:00
+ * @update: 移除DD1模組依賴，新增直接Firestore統計查詢邏輯，確保統計資料正確讀取
  */
 async function SR_processQuickReplyStatistics(userId, postbackData) {
   const functionName = "SR_processQuickReplyStatistics";
@@ -1210,32 +1210,22 @@ async function SR_processQuickReplyStatistics(userId, postbackData) {
     switch (postbackData) {
       case '今日統計':
         period = 'today';
-        if (DD1 && typeof DD1.DD_getStatistics === 'function') {
-          const today = moment().tz(TIMEZONE).format('YYYY-MM-DD');
-          statsResult = await DD1.DD_getStatistics(userId, 'daily', { date: today });
-        }
+        statsResult = await SR_getDirectStatistics(userId, 'daily');
         break;
       
       case '本週統計':
         period = 'week';
-        if (DD1 && typeof DD1.DD_getStatistics === 'function') {
-          const weekStart = moment().tz(TIMEZONE).startOf('week').format('YYYY-MM-DD');
-          const weekEnd = moment().tz(TIMEZONE).endOf('week').format('YYYY-MM-DD');
-          statsResult = await DD1.DD_getStatistics(userId, 'weekly', { startDate: weekStart, endDate: weekEnd });
-        }
+        statsResult = await SR_getDirectStatistics(userId, 'weekly');
         break;
       
       case '本月統計':
         period = 'month';
-        if (DD1 && typeof DD1.DD_getStatistics === 'function') {
-          const thisMonth = moment().tz(TIMEZONE).format('YYYY-MM');
-          statsResult = await DD1.DD_getStatistics(userId, 'monthly', { month: thisMonth });
-        }
+        statsResult = await SR_getDirectStatistics(userId, 'monthly');
         break;
     }
 
     // 建立統計回覆訊息
-    const replyMessage = SR_buildStatisticsReplyMessage(period, statsResult?.data);
+    const replyMessage = SR_buildStatisticsReplyMessage(period, statsResult?.success ? statsResult.data : null);
 
     // 建立基礎 Quick Reply 按鈕
     const quickReplyButtons = await SR_generateQuickReplyOptions(userId, 'statistics');
@@ -2268,7 +2258,101 @@ async function SR_calculateNextExecutionWithSkip(reminderData) {
 }
 
 /**
- * 43. 模組初始化函數
+ * 43. 直接統計查詢函數 - 不依賴DD1模組
+ * @version 2025-07-22-V1.4.1  
+ * @date 2025-07-22 12:00:00
+ * @description 直接查詢Firestore取得統計資料，確保使用正確的用戶帳本路徑
+ */
+async function SR_getDirectStatistics(userId, period) {
+  const functionName = "SR_getDirectStatistics";
+  try {
+    SR_logInfo(`直接查詢統計資料: ${period}`, "統計查詢", userId, "", "", functionName);
+
+    const ledgerId = `user_${userId}`;
+    const now = moment().tz(TIMEZONE);
+    let startDate, endDate;
+
+    // 設定查詢時間範圍
+    switch (period) {
+      case 'daily':
+        startDate = now.clone().startOf('day').toDate();
+        endDate = now.clone().endOf('day').toDate();
+        break;
+      case 'weekly':  
+        startDate = now.clone().startOf('week').toDate();
+        endDate = now.clone().endOf('week').toDate();
+        break;
+      case 'monthly':
+        startDate = now.clone().startOf('month').toDate();
+        endDate = now.clone().endOf('month').toDate();
+        break;
+      default:
+        startDate = now.clone().startOf('day').toDate();
+        endDate = now.clone().endOf('day').toDate();
+    }
+
+    // 查詢Firestore entries集合
+    const entriesRef = db.collection('ledgers').doc(ledgerId).collection('entries');
+    const snapshot = await entriesRef
+      .where('timestamp', '>=', admin.firestore.Timestamp.fromDate(startDate))
+      .where('timestamp', '<=', admin.firestore.Timestamp.fromDate(endDate))
+      .get();
+
+    if (snapshot.empty) {
+      SR_logInfo(`無統計資料: ${period}`, "統計查詢", userId, "", "", functionName);
+      return {
+        success: true,
+        data: {
+          totalIncome: 0,
+          totalExpense: 0,
+          recordCount: 0
+        }
+      };
+    }
+
+    // 計算統計資料
+    let totalIncome = 0;
+    let totalExpense = 0;
+    let recordCount = snapshot.size;
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const income = parseFloat(data.收入 || 0);
+      const expense = parseFloat(data.支出 || 0);
+      
+      totalIncome += income;
+      totalExpense += expense;
+    });
+
+    const statsData = {
+      totalIncome,
+      totalExpense,
+      recordCount
+    };
+
+    SR_logInfo(`統計查詢成功: 收入${totalIncome}，支出${totalExpense}，${recordCount}筆`, "統計查詢", userId, "", "", functionName);
+
+    return {
+      success: true,
+      data: statsData
+    };
+
+  } catch (error) {
+    SR_logError(`直接統計查詢失敗: ${error.message}`, "統計查詢", userId, "SR_STATS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      data: {
+        totalIncome: 0,
+        totalExpense: 0, 
+        recordCount: 0
+      }
+    };
+  }
+}
+
+/**
+ * 44. 模組初始化函數
  * @version 2025-01-09-V1.4.0
  * @date 2025-01-09 22:00:00
  * @description SR模組的初始化設定和啟動流程
@@ -2313,7 +2397,7 @@ async function SR_initialize() {
 }
 
 /**
- * 44. 載入現有排程設定
+ * 45. 載入現有排程設定
  * @version 2025-01-09-V1.4.0
  * @date 2025-01-09 22:00:00
  * @description 載入並恢復現有的排程設定到記憶體
@@ -2382,6 +2466,9 @@ module.exports = {
   
   // 模組初始化
   SR_initialize,
+  
+  // 新增統計查詢函數
+  SR_getDirectStatistics,
   
   // 常數與配置
   SR_CONFIG,

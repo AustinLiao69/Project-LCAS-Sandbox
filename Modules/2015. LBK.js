@@ -1,5 +1,5 @@
 /**
- * LBK_快速記帳模組_1.1.2
+ * LBK_快速記帳模組_1.1.3
  * @module LBK模組
  * @description LINE OA 專用快速記帳處理模組 - 修復循環依賴和回覆格式問題
  * @update 2025-07-22: 升級至v1.1.1，修復循環依賴問題，統一回覆格式標準，確保與WH模組相容性
@@ -70,7 +70,7 @@ async function LBK_processQuickBookkeeping(inputData) {
 
     // 第一步：檢查是否為統計查詢關鍵字
     const keywordCheckResult = await LBK_checkStatisticsKeyword(inputData.messageText, inputData.userId, processId);
-    
+
     if (keywordCheckResult.isStatisticsRequest) {
       // 路由到SR模組處理統計查詢
       LBK_logInfo(`檢測到統計查詢關鍵字，路由至SR模組 [${processId}]`, "統計路由", inputData.userId || "", "LBK_processQuickBookkeeping");
@@ -570,7 +570,7 @@ async function LBK_fuzzyMatch(input, threshold, userId, processId) {
       // 去重並按分數排序
       const uniqueMatches = [];
       const seen = new Set();
-      
+
       matches.forEach(match => {
         const key = `${match.majorCode}-${match.subCode}`;
         if (!seen.has(key)) {
@@ -681,7 +681,7 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
 
       if (!saveResult.success) {
         lastError = saveResult.error;
-        
+
         if (attempt < maxRetries) {
           // 等待遞增延遲後重試
           const delay = Math.pow(2, attempt - 1) * 1000; // 指數退避
@@ -710,10 +710,10 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
 
     } catch (error) {
       lastError = error.toString();
-      
+
       if (attempt < maxRetries) {
         LBK_logWarning(`記帳操作嘗試 ${attempt} 失敗，準備重試: ${error.toString()} [${processId}]`, "記帳執行", bookkeepingData.userId, "LBK_executeBookkeeping");
-        
+
         // 等待後重試
         const delay = Math.pow(2, attempt - 1) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -850,7 +850,8 @@ function LBK_validateBookkeepingData(data, processId) {
 
 /**
  * 11. 儲存記帳資料至Firestore - 加入併發處理優化
- * @version 2025-07-15-V1.0.1
+ * @version 2025-07-```javascript
+15-V1.0.1
  * @date 2025-07-15 19:10:00
  * @description 將記帳資料儲存至Firestore，確保資料一致性和併發安全性
  */
@@ -883,31 +884,37 @@ async function LBK_saveToFirestore(bookkeepingData, processId) {
         attempt: attempt
       };
 
-      // 使用事務確保併發安全性
-      const result = await db.runTransaction(async (transaction) => {
-        // 檢查是否已存在相同的收支ID
-        const existingQuery = await db
-          .collection('ledgers')
-          .doc(`user_${bookkeepingData[8]}`)
-          .collection('entries')
-          .where('收支ID', '==', bookkeepingData[0])
-          .limit(1)
-          .get();
+      // 確保使用正確的用戶帳本格式
+    const userId = bookkeepingData[8];
+    const ledgerId = `user_${userId}`;
 
-        if (!existingQuery.empty) {
-          throw new Error(`收支ID已存在: ${bookkeepingData[0]}`);
-        }
+    LBK_logInfo(`使用用戶帳本: ${ledgerId} [${processId}]`, "資料儲存", userId, "LBK_saveToFirestore");
 
-        // 新增文檔
-        const docRef = db
-          .collection('ledgers')
-          .doc(`user_${bookkeepingData[8]}`)
-          .collection('entries')
-          .doc();
+    // 使用事務確保併發安全性
+    const result = await db.runTransaction(async (transaction) => {
+      // 檢查是否已存在相同的收支ID
+      const existingQuery = await db
+        .collection('ledgers')
+        .doc(ledgerId)
+        .collection('entries')
+        .where('收支ID', '==', bookkeepingData[0])
+        .limit(1)
+        .get();
 
-        transaction.set(docRef, firestoreData);
-        return docRef;
-      });
+      if (!existingQuery.empty) {
+        throw new Error(`收支ID已存在: ${bookkeepingData[0]}`);
+      }
+
+      // 新增文檔到正確的用戶帳本
+      const docRef = db
+        .collection('ledgers')
+        .doc(ledgerId)
+        .collection('entries')
+        .doc();
+
+      transaction.set(docRef, firestoreData);
+      return docRef;
+    });
 
       return {
         success: true,
@@ -918,10 +925,10 @@ async function LBK_saveToFirestore(bookkeepingData, processId) {
 
     } catch (error) {
       lastError = error.toString();
-      
+
       if (attempt < maxRetries) {
         LBK_logWarning(`Firestore儲存嘗試 ${attempt} 失敗，準備重試: ${error.toString()} [${processId}]`, "資料儲存", "", "LBK_saveToFirestore");
-        
+
         // 指數退避延遲
         const delay = Math.pow(2, attempt - 1) * 500 + Math.random() * 500;
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -1387,18 +1394,18 @@ function LBK_calculateStringSimilarity(str1, str2) {
   const len1 = str1.length;
   const len2 = str2.length;
   const maxLen = Math.max(len1, len2);
-  
+
   // 計算編輯距離
   const matrix = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(null));
-  
+
   for (let i = 0; i <= len1; i++) {
     matrix[i][0] = i;
   }
-  
+
   for (let j = 0; j <= len2; j++) {
     matrix[0][j] = j;
   }
-  
+
   for (let i = 1; i <= len1; i++) {
     for (let j = 1; j <= len2; j++) {
       if (str1[i - 1] === str2[j - 1]) {
@@ -1412,7 +1419,7 @@ function LBK_calculateStringSimilarity(str1, str2) {
       }
     }
   }
-  
+
   const editDistance = matrix[len1][len2];
   return 1 - (editDistance / maxLen);
 }
@@ -1542,10 +1549,10 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
     }
 
     const normalizedText = messageText.trim().toLowerCase();
-    
+
     // 直接使用SR模組的關鍵字配置，確保一致性
     let statisticsKeywords = {};
-    
+
     // 檢查SR模組是否可用並有配置
     if (SR && SR.SR_QUICK_REPLY_CONFIG && SR.SR_QUICK_REPLY_CONFIG.STATISTICS) {
       const srConfig = SR.SR_QUICK_REPLY_CONFIG.STATISTICS;
@@ -1559,7 +1566,7 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
         '統計': { type: 'daily', postbackData: srConfig.TODAY.postbackData },
         'stats': { type: 'daily', postbackData: srConfig.TODAY.postbackData }
       };
-      
+
       LBK_logDebug(`從SR模組載入統計關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
     } else {
       // SR模組不可用時的備用配置
@@ -1572,7 +1579,7 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
         '統計': { type: 'daily', postbackData: '今日統計' },
         'stats': { type: 'daily', postbackData: '今日統計' }
       };
-      
+
       LBK_logWarning(`SR模組不可用，使用備用關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
     }
 
@@ -1580,7 +1587,7 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
     for (const [keyword, config] of Object.entries(statisticsKeywords)) {
       if (normalizedText === keyword.toLowerCase() || normalizedText === keyword) {
         LBK_logInfo(`匹配統計關鍵字: "${keyword}" -> ${config.type} [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
-        
+
         return {
           isStatisticsRequest: true,
           statisticsType: config.type,
@@ -1619,7 +1626,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
       'weekly': '本週統計', 
       'monthly': '本月統計'
     };
-    
+
     const postbackData = postbackDataMap[statisticsType] || '今日統計';
 
     // 呼叫SR模組處理統計
@@ -1641,7 +1648,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
     } else {
       // 統計查詢失敗，返回友善錯誤訊息
       const errorMessage = `📊 ${postbackData}\n\n暫時無法取得統計資料，請稍後再試。\n\n💡 您也可以嘗試輸入記帳格式開始記帳`;
-      
+
       return {
         success: false,
         message: errorMessage,
@@ -1659,7 +1666,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
 
     // 返回統一格式的錯誤訊息
     const fallbackMessage = `📊 統計查詢\n\n系統暫時無法處理統計查詢，請稍後再試。\n\n💡 您可以繼續使用記帳功能`;
-    
+
     return {
       success: false,
       message: fallbackMessage,
@@ -1676,13 +1683,14 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
 /**
  * 47. 建立統計Quick Reply按鈕
  * @version 2025-07-22-V1.1.0
- * @date 2025-07-22 10:30:00
+ * @date 2025-07-22 10:30:00This commit modifies the `LBK_saveToFirestore` function to use the correct user-specific ledger ID when saving data.
+```javascript
  * @description 為統計查詢結果建立Quick Reply按鈕選項
  */
 function LBK_buildStatisticsQuickReply(userId, currentType) {
   try {
     const quickReplyItems = [];
-    
+
     // 基礎統計選項
     if (currentType !== 'daily') {
       quickReplyItems.push({ label: '今日統計', postbackData: '今日統計' });
@@ -1693,12 +1701,12 @@ function LBK_buildStatisticsQuickReply(userId, currentType) {
     if (currentType !== 'monthly') {
       quickReplyItems.push({ label: '本月統計', postbackData: '本月統計' });
     }
-    
+
     // 確保至少有一個選項
     if (quickReplyItems.length === 0) {
       quickReplyItems.push({ label: '今日統計', postbackData: '今日統計' });
     }
-    
+
     // 限制最多4個選項
     return {
       type: 'quick_reply',
@@ -1737,14 +1745,14 @@ const LBK_MODULE = {
   LBK_processAmountInternal: LBK_processAmountInternal,
   LBK_validateDataInternal: LBK_validateDataInternal,
   LBK_calculateStringSimilarity: LBK_calculateStringSimilarity,
-  
+
   // 新增函數
   LBK_checkStatisticsKeyword: LBK_checkStatisticsKeyword,
   LBK_handleStatisticsRequest: LBK_handleStatisticsRequest,
   LBK_buildStatisticsQuickReply: LBK_buildStatisticsQuickReply,
-  
+
   // 版本資訊
-  MODULE_VERSION: "1.1.1",
+  MODULE_VERSION: "1.1.3",
   MODULE_NAME: "LBK"
 };
 
