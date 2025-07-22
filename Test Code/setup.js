@@ -1,11 +1,11 @@
 
 /**
- * 測試環境設定_1.2.0
+ * 測試環境設定_1.3.0
  * @module 測試環境設定
- * @description 測試前的全域設定與準備 - 整合 Markdown 報告支援，純靜態資料管理機制
- * @version 1.2.0
- * @update 2025-07-15: 新增 Markdown 報告支援，整合測試報告生成工具
- * @date 2025-07-15 16:45:00
+ * @description 測試前的全域設定與準備 - 整合動態模組偵測，Markdown 報告支援，純靜態資料管理機制
+ * @version 1.3.0
+ * @update 2025-01-09: 新增動態測試模組偵測支援，整合智慧報告生成
+ * @date 2025-01-09 20:00:00
  */
 
 // 全域測試設定
@@ -119,6 +119,76 @@ global.staticTestUtils = {
     } else {
       testDatabase.testCaseHistory.clear();
     }
+  }
+};
+
+// 動態測試模組偵測工具
+global.dynamicTestModuleDetector = {
+  /**
+   * 偵測當前執行的測試模組
+   * @returns {Object} 模組資訊
+   */
+  detectCurrentModule: () => {
+    const args = process.argv;
+    
+    // 尋找測試檔案參數
+    let testFile = '';
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      
+      // 檢查是否為測試檔案路徑
+      if (arg.includes('TC_') || arg.includes('Test Code/')) {
+        testFile = arg;
+        break;
+      }
+    }
+    
+    // 解析模組資訊
+    let moduleInfo = {
+      code: '0000',
+      name: 'UNKNOWN',
+      type: 'TC-UNKNOWN',
+      displayName: '未知模組',
+      description: '未識別的測試模組'
+    };
+    
+    if (testFile.includes('3005') || testFile.includes('TC_SR')) {
+      moduleInfo = {
+        code: '3005',
+        name: 'SR',
+        type: 'TC-SR',
+        displayName: 'SR',
+        description: '排程提醒模組'
+      };
+    } else if (testFile.includes('3115') || testFile.includes('TC_LBK')) {
+      moduleInfo = {
+        code: '3115',
+        name: 'LBK',
+        type: 'TC-LBK',
+        displayName: 'LBK',
+        description: '快速記帳模組'
+      };
+    } else if (testFile.includes('3151') || testFile.includes('TC_MLS')) {
+      moduleInfo = {
+        code: '3151',
+        name: 'MLS',
+        type: 'TC-MLS',
+        displayName: 'MLS',
+        description: '多帳本模組'
+      };
+    }
+    
+    return moduleInfo;
+  },
+
+  /**
+   * 記錄模組偵測結果
+   * @param {Object} moduleInfo - 模組資訊
+   */
+  logModuleDetection: (moduleInfo) => {
+    console.log(`🎯 動態偵測測試模組: ${moduleInfo.displayName} (${moduleInfo.code})`);
+    console.log(`📋 模組描述: ${moduleInfo.description}`);
+    console.log(`🏷️  測試類型: ${moduleInfo.type}`);
   }
 };
 
@@ -324,7 +394,11 @@ global.subject9999Utils = {
 
 // 測試前準備
 beforeAll(async () => {
-  console.log('🔧 全域測試環境準備中（9999.json版本）...');
+  console.log('🔧 全域測試環境準備中（動態模組偵測版本）...');
+  
+  // 動態偵測當前測試模組
+  const moduleInfo = global.dynamicTestModuleDetector.detectCurrentModule();
+  global.dynamicTestModuleDetector.logModuleDetection(moduleInfo);
   
   // 驗證 9999.json 檔案
   const fileExists = global.subject9999Utils.validate9999JsonExists();
@@ -357,11 +431,13 @@ beforeAll(async () => {
   });
   
   console.log('✅ 全域測試環境準備完成');
-  console.log('🎯 靜態測試資料生成器已啟用（基於 9999.json）');
+  console.log('🎯 動態模組偵測已啟用 (Jest 1.3.0)');
+  console.log('🎲 靜態測試資料生成器已啟用（基於 9999.json）');
   console.log('🚫 Firestore 依賴已完全移除');
   console.log('📋 每次測試執行使用 9999.json 中的真實科目資料');
-  console.log('📊 Markdown 報告生成器已啟用');
+  console.log('📊 智慧 Markdown 報告生成器已啟用 (1.1.0)');
   console.log('📁 報告格式: 純 Markdown (.md)');
+  console.log('🎯 報告檔名: 動態生成（根據執行的測試模組）');
 });
 
 // 測試後清理

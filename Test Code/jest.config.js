@@ -1,11 +1,11 @@
 
 /**
- * Jest測試配置檔案_1.2.0
+ * Jest測試配置檔案_1.3.0
  * @module Jest測試配置
- * @description Jest測試環境配置 - 簡化架構，移除冗餘設定，純Markdown報告
- * @version 1.2.0
- * @update 2025-07-15: 移除testResultsProcessor，簡化為單一markdown-reporter架構
- * @date 2025-07-15 17:00:00
+ * @description Jest測試環境配置 - 動態測試模組偵測，智慧報告檔名生成
+ * @version 1.3.0
+ * @update 2025-01-09: 新增動態測試模組偵測邏輯，修復報告檔名硬編碼問題
+ * @date 2025-01-09 20:00:00
  */
 
 // 生成動態檔名的時間戳記 - UTC+8時區，格式：YYYYMMDD-HHMM
@@ -23,11 +23,63 @@ const generateTimestamp = () => {
   return `${year}${month}${day}-${hour}${minute}`;
 };
 
+/**
+ * 動態偵測測試模組並生成對應檔名
+ * @version 1.3.0
+ * @description 根據執行的測試檔案動態生成報告檔名
+ */
+const detectTestModule = () => {
+  const args = process.argv;
+  
+  // 尋找測試檔案參數
+  let testFile = '';
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    // 檢查是否為測試檔案路徑
+    if (arg.includes('TC_') || arg.includes('Test Code/')) {
+      testFile = arg;
+      break;
+    }
+  }
+  
+  // 解析模組資訊
+  let moduleInfo = {
+    code: '3115',
+    name: 'LBK',
+    type: 'TC-LBK'
+  };
+  
+  if (testFile.includes('3005') || testFile.includes('TC_SR')) {
+    moduleInfo = {
+      code: '3005',
+      name: 'SR',
+      type: 'TC-SR'
+    };
+  } else if (testFile.includes('3115') || testFile.includes('TC_LBK')) {
+    moduleInfo = {
+      code: '3115',
+      name: 'LBK',
+      type: 'TC-LBK'
+    };
+  } else if (testFile.includes('3151') || testFile.includes('TC_MLS')) {
+    moduleInfo = {
+      code: '3151',
+      name: 'MLS',
+      type: 'TC-MLS'
+    };
+  }
+  
+  console.log(`🎯 動態偵測到測試模組: ${moduleInfo.name} (${moduleInfo.code})`);
+  return moduleInfo;
+};
+
 // 動態檔名生成
 const timestamp = generateTimestamp();
-const testReportFilename = `test-report-3115-TC-LBK-${timestamp}.md`;
-const coverageReportFilename = `coverage-report-3115-TC-LBK-${timestamp}.md`;
-const performanceReportFilename = `performance-report-3115-TC-LBK-${timestamp}.md`;
+const moduleInfo = detectTestModule();
+const testReportFilename = `test-report-${moduleInfo.code}-${moduleInfo.type}-${timestamp}.md`;
+const coverageReportFilename = `coverage-report-${moduleInfo.code}-${moduleInfo.type}-${timestamp}.md`;
+const performanceReportFilename = `performance-report-${moduleInfo.code}-${moduleInfo.type}-${timestamp}.md`;
 
 module.exports = {
   // 測試檔案匹配模式 - 強化版本（移除testRegex避免衝突）
@@ -107,17 +159,19 @@ module.exports = {
   resetMocks: false,
   restoreMocks: false,
 
-  // Markdown 專用報告器設定
+  // 動態 Markdown 報告器設定
   reporters: [
     "default",
-    // 自訂 Markdown 報告器配置
+    // 自訂 Markdown 報告器配置 - 支援動態模組偵測
     ["<rootDir>/Test Code/markdown-reporter.js", {
       outputFile: `./Test report/${testReportFilename}`,
       coverageFile: `./Test report/${coverageReportFilename}`,
       performanceFile: `./Test report/${performanceReportFilename}`,
       includeConsoleOutput: true,
       includeStackTrace: true,
-      generateTimestamp: timestamp
+      generateTimestamp: timestamp,
+      moduleInfo: moduleInfo,  // 新增模組資訊
+      dynamicDetection: true    // 啟用動態偵測
     }]
   ],
 

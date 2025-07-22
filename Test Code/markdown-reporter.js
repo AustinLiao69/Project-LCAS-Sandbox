@@ -1,11 +1,11 @@
 
 /**
- * Jest Markdown報告器_1.0.0
+ * Jest Markdown報告器_1.1.0
  * @module Jest Markdown報告器
- * @description Jest自動調用的Markdown報告生成器 - 整合測試、覆蓋率、效能報告
- * @version 1.0.0
- * @update 2025-07-15: 簡化架構，移除results-processor依賴，純Markdown輸出
- * @date 2025-07-15 17:00:00
+ * @description Jest自動調用的Markdown報告生成器 - 整合測試、覆蓋率、效能報告，支援動態模組偵測
+ * @version 1.1.0
+ * @update 2025-01-09: 新增動態測試模組支援，智慧檔名生成，修復硬編碼問題
+ * @date 2025-01-09 20:00:00
  */
 
 const fs = require('fs');
@@ -19,6 +19,14 @@ class MarkdownReporter {
   constructor(globalConfig, options) {
     this._globalConfig = globalConfig;
     this._options = options || {};
+    
+    // 動態模組資訊
+    this._moduleInfo = this._options.moduleInfo || {
+      code: '0000',
+      name: 'UNKNOWN',
+      type: 'TC-UNKNOWN'
+    };
+    this._dynamicDetection = this._options.dynamicDetection || false;
     
     // 確保 Test report 目錄存在
     const reportDir = path.dirname(this._options.outputFile || './Test report/report.md');
@@ -38,7 +46,10 @@ class MarkdownReporter {
       averageTestTime: 0
     };
     
-    console.log('📋 Markdown Reporter 初始化完成');
+    console.log(`📋 Markdown Reporter 初始化完成 (${this._moduleInfo.name} 模組)`);
+    if (this._dynamicDetection) {
+      console.log('🎯 動態模組偵測已啟用');
+    }
   }
 
   /**
@@ -112,11 +123,14 @@ class MarkdownReporter {
    */
   _generateTestReport(results, totalDuration) {
     const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    const moduleDisplayName = this._getModuleDisplayName();
     
-    let markdown = `# 📋 LBK模組測試報告 (TC-3115)
+    let markdown = `# 📋 ${moduleDisplayName}模組測試報告 (${this._moduleInfo.type})
 
 ## 📊 測試執行摘要
 - **執行時間**: ${timestamp}
+- **測試模組**: ${moduleDisplayName} (${this._moduleInfo.name})
+- **測試編號**: ${this._moduleInfo.code}
 - **總執行時間**: ${totalDuration}ms (${(totalDuration / 1000).toFixed(2)}秒)
 - **總測試案例**: ${results.numTotalTests}
 - **通過測試**: ${results.numPassedTests} ✅
@@ -166,16 +180,17 @@ class MarkdownReporter {
     }
 
     markdown += `## 📈 統計摘要
-- **模組**: LBK (快速記帳模組)
-- **測試編號**: TC-3115
+- **模組**: ${moduleDisplayName} (${this._getModuleDescription()})
+- **測試編號**: ${this._moduleInfo.type}
+- **動態偵測**: ${this._dynamicDetection ? '已啟用' : '已停用'}
 - **Jest版本**: ${require('jest/package.json').version}
 - **Node.js版本**: ${process.version}
 - **平台**: ${process.platform}
 - **生成時間**: ${timestamp}
-- **報告版本**: 1.0.0
+- **報告版本**: 1.1.0
 
 ---
-*本報告由 Jest Markdown Reporter 自動生成*
+*本報告由 Jest Markdown Reporter 1.1.0 自動生成 (支援動態模組偵測)*
 `;
 
     fs.writeFileSync(this._options.outputFile, markdown, 'utf8');
@@ -186,13 +201,15 @@ class MarkdownReporter {
    */
   _generateCoverageReport(results) {
     const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    const moduleDisplayName = this._getModuleDisplayName();
     
-    let markdown = `# 📊 LBK模組覆蓋率報告 (TC-3115)
+    let markdown = `# 📊 ${moduleDisplayName}模組覆蓋率報告 (${this._moduleInfo.type})
 
 ## 📈 覆蓋率摘要
 - **生成時間**: ${timestamp}
-- **模組**: LBK (快速記帳模組)
-- **測試編號**: TC-3115
+- **測試模組**: ${moduleDisplayName} (${this._getModuleDescription()})
+- **測試編號**: ${this._moduleInfo.type}
+- **動態偵測**: ${this._dynamicDetection ? '已啟用' : '已停用'}
 
 ## 🎯 覆蓋率統計
 
@@ -257,11 +274,15 @@ class MarkdownReporter {
    */
   _generatePerformanceReport(totalDuration) {
     const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    const moduleDisplayName = this._getModuleDisplayName();
     
-    let markdown = `# ⚡ LBK模組效能報告 (TC-3115)
+    let markdown = `# ⚡ ${moduleDisplayName}模組效能報告 (${this._moduleInfo.type})
 
 ## 📊 效能摘要
 - **生成時間**: ${timestamp}
+- **測試模組**: ${moduleDisplayName} (${this._getModuleDescription()})
+- **測試編號**: ${this._moduleInfo.type}
+- **動態偵測**: ${this._dynamicDetection ? '已啟用' : '已停用'}
 - **總執行時間**: ${totalDuration}ms (${(totalDuration / 1000).toFixed(2)}秒)
 - **總測試案例**: ${this._performanceData.totalTests}
 - **平均測試時間**: ${this._performanceData.averageTestTime.toFixed(2)}ms
@@ -363,6 +384,34 @@ class MarkdownReporter {
     } else {
       return sorted[middle].toFixed(2);
     }
+  }
+
+  /**
+   * 取得模組顯示名稱
+   */
+  _getModuleDisplayName() {
+    const displayNames = {
+      'LBK': 'LBK',
+      'SR': 'SR',
+      'MLS': 'MLS',
+      'WH': 'WH',
+      'BM': 'BM'
+    };
+    return displayNames[this._moduleInfo.name] || this._moduleInfo.name;
+  }
+
+  /**
+   * 取得模組描述
+   */
+  _getModuleDescription() {
+    const descriptions = {
+      'LBK': '快速記帳模組',
+      'SR': '排程提醒模組',
+      'MLS': '多帳本模組',
+      'WH': 'Webhook處理模組',
+      'BM': '預算管理模組'
+    };
+    return descriptions[this._moduleInfo.name] || '未知模組';
   }
 }
 
