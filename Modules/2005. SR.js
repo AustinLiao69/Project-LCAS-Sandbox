@@ -1,23 +1,320 @@
 
 /**
- * SR_排程提醒模組_1.4.0
+ * SR_排程提醒模組_1.5.0
  * @module SR排程提醒模組
- * @description LCAS 2.0 排程提醒系統 - 智慧記帳自動化核心功能
- * @update 2025-01-09: 升級至v1.4.0，修正Quick Reply處理邏輯，簡化付費功能架構，強化假日處理機制，優化錯誤處理
+ * @description LCAS 2.0 排程提醒系統 - 智慧記帳自動化核心功能，整合依賴注入與統一配置管理
+ * @update 2025-01-09: 升級至v1.5.0，新增依賴注入容器、統一配置管理、WH-SR協作協議統一管理，實現架構層面改善
  */
 
 const admin = require('firebase-admin');
 const cron = require('node-cron');
 const moment = require('moment-timezone');
 
-// 引入依賴模組
+/**
+ * SR_DependencyContainer 依賴注入容器
+ * @version 2025-01-09-V1.5.0
+ * @description 統一管理所有外部依賴，支援介面抽象和動態注入
+ */
+class SR_DependencyContainer {
+  constructor() {
+    this.dependencies = new Map();
+    this.interfaces = new Map();
+    this.singletons = new Map();
+    this.initialized = false;
+  }
+
+  /**
+   * 註冊介面定義
+   */
+  registerInterface(interfaceName, interfaceDefinition) {
+    this.interfaces.set(interfaceName, interfaceDefinition);
+  }
+
+  /**
+   * 註冊依賴實作
+   */
+  register(interfaceName, implementation, options = {}) {
+    const dependency = {
+      implementation,
+      singleton: options.singleton || false,
+      lazy: options.lazy || false,
+      fallback: options.fallback || null
+    };
+    
+    this.dependencies.set(interfaceName, dependency);
+  }
+
+  /**
+   * 解析依賴
+   */
+  resolve(interfaceName) {
+    const dependency = this.dependencies.get(interfaceName);
+    
+    if (!dependency) {
+      throw new Error(`依賴 ${interfaceName} 未註冊`);
+    }
+
+    // 單例模式檢查
+    if (dependency.singleton && this.singletons.has(interfaceName)) {
+      return this.singletons.get(interfaceName);
+    }
+
+    let instance;
+    try {
+      if (typeof dependency.implementation === 'function') {
+        instance = dependency.implementation();
+      } else {
+        instance = dependency.implementation;
+      }
+
+      // 驗證介面符合性
+      if (this.interfaces.has(interfaceName)) {
+        this.validateInterface(interfaceName, instance);
+      }
+
+      if (dependency.singleton) {
+        this.singletons.set(interfaceName, instance);
+      }
+
+      return instance;
+    } catch (error) {
+      console.warn(`解析依賴 ${interfaceName} 失敗: ${error.message}`);
+      
+      // 使用備案實作
+      if (dependency.fallback) {
+        return dependency.fallback;
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * 驗證介面符合性
+   */
+  validateInterface(interfaceName, instance) {
+    const interfaceDefinition = this.interfaces.get(interfaceName);
+    
+    for (const methodName of interfaceDefinition.methods) {
+      if (typeof instance[methodName] !== 'function') {
+        throw new Error(`實作 ${interfaceName} 缺少方法: ${methodName}`);
+      }
+    }
+  }
+
+  /**
+   * 批次註入依賴到模組
+   */
+  inject(moduleName, dependencyMap) {
+    const injected = {};
+    
+    for (const [key, interfaceName] of Object.entries(dependencyMap)) {
+      try {
+        injected[key] = this.resolve(interfaceName);
+      } catch (error) {
+        console.warn(`注入 ${moduleName}.${key} 失敗: ${error.message}`);
+        injected[key] = null;
+      }
+    }
+    
+    return injected;
+  }
+
+  /**
+   * 初始化所有依賴
+   */
+  async initialize() {
+    if (this.initialized) {
+      return;
+    }
+
+    // 定義介面
+    this.registerInterface('ILogger', {
+      methods: ['log', 'error', 'warning', 'info']
+    });
+
+    this.registerInterface('IWebhook', {
+      methods: ['sendPushMessage', 'sendQuickReply', 'routeToSR']
+    });
+
+    this.registerInterface('IAccount', {
+      methods: ['getUserInfo', 'checkSubscriptionStatus', 'updateAccountInfo']
+    });
+
+    this.registerInterface('IFirestore', {
+      methods: ['getDocument', 'updateDocument', 'createDocument', 'deleteDocument']
+    });
+
+    this.registerInterface('IDataDistribution', {
+      methods: ['distributeData', 'getStatistics']
+    });
+
+    // 註冊依賴實作
+    this.registerModuleDependencies();
+    
+    this.initialized = true;
+  }
+
+  /**
+   * 註冊模組依賴
+   */
+  registerModuleDependencies() {
+    // DL 模組
+    this.register('ILogger', () => {
+      try {
+        const DL = require('./2010. DL.js');
+        return {
+          log: DL.DL_info || (() => {}),
+          error: DL.DL_error || (() => {}),
+          warning: DL.DL_warning || (() => {}),
+          info: DL.DL_info || (() => {})
+        };
+      } catch (error) {
+        return this.createFallbackLogger();
+      }
+    }, { singleton: true, fallback: this.createFallbackLogger() });
+
+    // WH 模組
+    this.register('IWebhook', () => {
+      try {
+        const WH = require('./2020. WH.js');
+        return {
+          sendPushMessage: WH.WH_sendPushMessage || (() => Promise.resolve({ success: false })),
+          sendQuickReply: WH.WH_sendQuickReply || (() => Promise.resolve({ success: false })),
+          routeToSR: WH.WH_routeToSRModule || (() => Promise.resolve({ success: false }))
+        };
+      } catch (error) {
+        return this.createFallbackWebhook();
+      }
+    }, { singleton: true, fallback: this.createFallbackWebhook() });
+
+    // AM 模組
+    this.register('IAccount', () => {
+      try {
+        const AM = require('./2009. AM.js');
+        return {
+          getUserInfo: AM.AM_getUserInfo || (() => Promise.resolve({ success: false })),
+          checkSubscriptionStatus: AM.AM_checkSubscriptionStatus || (() => Promise.resolve({ isPremium: false })),
+          updateAccountInfo: AM.AM_updateAccountInfo || (() => Promise.resolve({ success: false }))
+        };
+      } catch (error) {
+        return this.createFallbackAccount();
+      }
+    }, { singleton: true, fallback: this.createFallbackAccount() });
+
+    // FS 模組
+    this.register('IFirestore', () => {
+      try {
+        const FS = require('./2011. FS.js');
+        return {
+          getDocument: FS.FS_getDocument || (() => Promise.resolve({ success: false })),
+          updateDocument: FS.FS_updateDocument || (() => Promise.resolve({ success: false })),
+          createDocument: FS.FS_createDocument || (() => Promise.resolve({ success: false })),
+          deleteDocument: FS.FS_deleteDocument || (() => Promise.resolve({ success: false }))
+        };
+      } catch (error) {
+        return this.createFallbackFirestore();
+      }
+    }, { singleton: true, fallback: this.createFallbackFirestore() });
+
+    // DD 模組
+    this.register('IDataDistribution', () => {
+      try {
+        const DD1 = require('./2031. DD1.js');
+        return {
+          distributeData: DD1.DD_distributeData || (() => Promise.resolve({ success: false })),
+          getStatistics: DD1.DD_getStatistics || (() => Promise.resolve({ success: false }))
+        };
+      } catch (error) {
+        return this.createFallbackDataDistribution();
+      }
+    }, { singleton: true, fallback: this.createFallbackDataDistribution() });
+  }
+
+  /**
+   * 建立備案實作
+   */
+  createFallbackLogger() {
+    return {
+      log: (message) => console.log(`[SR-LOG] ${message}`),
+      error: (message, operation, userId, errorCode, errorDetails) => console.error(`[SR-ERROR] ${message}`),
+      warning: (message) => console.warn(`[SR-WARNING] ${message}`),
+      info: (message) => console.log(`[SR-INFO] ${message}`)
+    };
+  }
+
+  createFallbackWebhook() {
+    return {
+      sendPushMessage: () => Promise.resolve({ success: false, error: 'WH模組不可用' }),
+      sendQuickReply: () => Promise.resolve({ success: false, error: 'WH模組不可用' }),
+      routeToSR: () => Promise.resolve({ success: false, error: 'WH模組不可用' })
+    };
+  }
+
+  createFallbackAccount() {
+    return {
+      getUserInfo: () => Promise.resolve({ success: false, error: 'AM模組不可用' }),
+      checkSubscriptionStatus: () => Promise.resolve({ isPremium: false, subscriptionType: 'free' }),
+      updateAccountInfo: () => Promise.resolve({ success: false, error: 'AM模組不可用' })
+    };
+  }
+
+  createFallbackFirestore() {
+    return {
+      getDocument: () => Promise.resolve({ success: false, error: 'FS模組不可用' }),
+      updateDocument: () => Promise.resolve({ success: false, error: 'FS模組不可用' }),
+      createDocument: () => Promise.resolve({ success: false, error: 'FS模組不可用' }),
+      deleteDocument: () => Promise.resolve({ success: false, error: 'FS模組不可用' })
+    };
+  }
+
+  createFallbackDataDistribution() {
+    return {
+      distributeData: () => Promise.resolve({ success: false, error: 'DD模組不可用' }),
+      getStatistics: () => Promise.resolve({ success: false, error: 'DD模組不可用' })
+    };
+  }
+}
+
+// 初始化依賴注入容器
+const SR_DependencyManager = new SR_DependencyContainer();
+
+// 向後相容的模組引入
 let DL, WH, AM, FS, DD1, BK, LBK;
 try {
-  DL = require('./2010. DL.js');
-  WH = require('./2020. WH.js');
-  AM = require('./2009. AM.js');
-  FS = require('./2011. FS.js');
-  DD1 = require('./2031. DD1.js');
+  // 透過依賴注入容器載入模組
+  SR_DependencyManager.initialize();
+  
+  const logger = SR_DependencyManager.resolve('ILogger');
+  const webhook = SR_DependencyManager.resolve('IWebhook');
+  const account = SR_DependencyManager.resolve('IAccount');
+  const firestore = SR_DependencyManager.resolve('IFirestore');
+  const dataDistribution = SR_DependencyManager.resolve('IDataDistribution');
+  
+  // 向後相容映射
+  DL = { 
+    DL_info: logger.info, 
+    DL_error: logger.error, 
+    DL_warning: logger.warning 
+  };
+  WH = { 
+    WH_sendPushMessage: webhook.sendPushMessage, 
+    WH_sendQuickReply: webhook.sendQuickReply 
+  };
+  AM = { 
+    AM_getUserInfo: account.getUserInfo, 
+    AM_checkSubscriptionStatus: account.checkSubscriptionStatus 
+  };
+  FS = { 
+    FS_getDocument: firestore.getDocument, 
+    FS_updateDocument: firestore.updateDocument 
+  };
+  DD1 = { 
+    DD_distributeData: dataDistribution.distributeData, 
+    DD_getStatistics: dataDistribution.getStatistics 
+  };
+
+  // 直接載入其他模組（暫時保持原方式）
   BK = require('./2001. BK.js');
   LBK = require('./2015. LBK.js');
 } catch (error) {
@@ -39,12 +336,159 @@ const SR_INIT_STATUS = {
   lastInitTime: null
 };
 
-// 排程提醒配置
+/**
+ * SR_Config 統一配置管理系統
+ * @version 2025-01-09-V1.5.0
+ * @description 集中管理所有SR模組和跨模組配置參數
+ */
+class SR_Config {
+  constructor() {
+    this.configs = {
+      // 模組配置分類
+      scheduler: {
+        maxReminders: 2,
+        defaultReminderTime: '09:00',
+        timezone: TIMEZONE,
+        holidayAPIEnabled: true,
+        retryMaxAttempts: 3,
+        batchSize: 50
+      },
+      webhook: {
+        apiTimeout: 5000,
+        retryCount: 3,
+        routingRules: {
+          statisticsQuery: "SR_processQuickReplyStatistics",
+          paywallInteraction: "SR_handlePaywallQuickReply"
+        }
+      },
+      account: {
+        subscriptionLevels: ['free', 'premium'],
+        quotaLimits: {
+          free: { reminders: 2, pushNotifications: 0 },
+          premium: { reminders: -1, pushNotifications: -1 }
+        },
+        trialDays: 7
+      },
+      features: {
+        premiumFeatures: [
+          'AUTO_PUSH', 'UNLIMITED_REMINDERS', 'PREMIUM_REMINDER',
+          'DAILY_SUMMARY', 'BUDGET_WARNING', 'MONTHLY_REPORT', 'TREND_ANALYSIS'
+        ],
+        freeFeatures: [
+          'CREATE_REMINDER', 'BASIC_STATISTICS', 'QUICK_REPLY_STATS', 'MANUAL_STATS'
+        ]
+      },
+      database: {
+        collections: {
+          scheduledReminders: 'scheduled_reminders',
+          userQuotas: 'user_quotas',
+          holidayCalendar: 'holiday_calendar',
+          schedulerLogs: 'scheduler_logs',
+          quickReplySessions: 'quick_reply_sessions',
+          userInteractions: 'user_interactions'
+        }
+      },
+      cache: {
+        userPermissions: { ttl: 600 },
+        holidayCalendar: { ttl: 86400 },
+        userQuotas: { ttl: 300 },
+        schedulerStatus: { ttl: 60 },
+        quickReplyOptions: { ttl: 180 },
+        paywallConfig: { ttl: 1800 }
+      }
+    };
+    
+    this.loadEnvironmentConfig();
+    this.validateConfig();
+  }
+
+  /**
+   * 載入環境變數配置
+   */
+  loadEnvironmentConfig() {
+    try {
+      // 從環境變數覆蓋配置
+      if (process.env.SR_MAX_FREE_REMINDERS) {
+        this.configs.scheduler.maxReminders = parseInt(process.env.SR_MAX_FREE_REMINDERS);
+      }
+      if (process.env.SR_DEFAULT_TIMEZONE) {
+        this.configs.scheduler.timezone = process.env.SR_DEFAULT_TIMEZONE;
+      }
+      if (process.env.SR_WEBHOOK_TIMEOUT) {
+        this.configs.webhook.apiTimeout = parseInt(process.env.SR_WEBHOOK_TIMEOUT);
+      }
+      if (process.env.SR_TRIAL_DAYS) {
+        this.configs.account.trialDays = parseInt(process.env.SR_TRIAL_DAYS);
+      }
+    } catch (error) {
+      console.warn('載入環境變數配置失敗:', error.message);
+    }
+  }
+
+  /**
+   * 驗證配置有效性
+   */
+  validateConfig() {
+    const errors = [];
+    
+    if (this.configs.scheduler.maxReminders < 1) {
+      errors.push('scheduler.maxReminders 必須大於 0');
+    }
+    if (!this.configs.scheduler.timezone) {
+      errors.push('scheduler.timezone 不能為空');
+    }
+    if (this.configs.webhook.apiTimeout < 1000) {
+      errors.push('webhook.apiTimeout 不能小於 1000ms');
+    }
+    
+    if (errors.length > 0) {
+      throw new Error(`配置驗證失敗: ${errors.join(', ')}`);
+    }
+  }
+
+  /**
+   * 取得模組配置
+   */
+  getModuleConfig(moduleName) {
+    return this.configs[moduleName] || {};
+  }
+
+  /**
+   * 取得功能配置
+   */
+  getFeatureConfig(featureName) {
+    return this.configs.features[featureName] || null;
+  }
+
+  /**
+   * 更新配置
+   */
+  updateConfig(moduleName, configData) {
+    if (this.configs[moduleName]) {
+      this.configs[moduleName] = { ...this.configs[moduleName], ...configData };
+      this.validateConfig();
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 取得所有配置
+   */
+  getAllConfigs() {
+    return { ...this.configs };
+  }
+}
+
+// 初始化配置管理器
+const SR_ConfigManager = new SR_Config();
+
+// 向後相容的配置常數
 const SR_CONFIG = {
-  MAX_FREE_REMINDERS: 2,
-  DEFAULT_REMINDER_TIME: '09:00',
-  HOLIDAY_API_ENABLED: true,
-  TIMEZONE: TIMEZONE,
+  MAX_FREE_REMINDERS: SR_ConfigManager.getModuleConfig('scheduler').maxReminders,
+  DEFAULT_REMINDER_TIME: SR_ConfigManager.getModuleConfig('scheduler').defaultReminderTime,
+  HOLIDAY_API_ENABLED: SR_ConfigManager.getModuleConfig('scheduler').holidayAPIEnabled,
+  TIMEZONE: SR_ConfigManager.getModuleConfig('scheduler').timezone,
   REMINDER_TYPES: {
     DAILY: 'daily',
     WEEKLY: 'weekly', 
@@ -53,7 +497,213 @@ const SR_CONFIG = {
   }
 };
 
-// Quick Reply 按鈕配置
+/**
+ * SR_WHProtocol WH-SR 協作協議統一管理
+ * @version 2025-01-09-V1.5.0
+ * @description 統一管理 WH-SR 間的通訊協議、訊息格式、路由規則
+ */
+class SR_WHProtocol {
+  constructor() {
+    this.messageFormats = {
+      // WH → SR 標準格式
+      quickReplyRequest: {
+        userId: 'string',
+        interactionType: 'statistics|paywall|settings',
+        postbackData: 'string',
+        timestamp: 'ISO8601',
+        replyToken: 'string',
+        contextData: {
+          previousAction: 'string',
+          sessionId: 'string',
+          userPreferences: 'object'
+        }
+      },
+      
+      // SR → WH 標準格式
+      quickReplyResponse: {
+        success: 'boolean',
+        responseMessage: 'string',
+        quickReplyOptions: 'array',
+        sessionId: 'string',
+        metadata: 'object'
+      }
+    };
+
+    this.routingRules = {
+      // 統計查詢路由
+      '今日統計': 'SR_processQuickReplyStatistics',
+      '本週統計': 'SR_processQuickReplyStatistics',
+      '本月統計': 'SR_processQuickReplyStatistics',
+      
+      // 付費功能路由
+      'upgrade_premium': 'SR_handlePaywallQuickReply',
+      '立即升級': 'SR_handlePaywallQuickReply',
+      '試用': 'SR_handlePaywallQuickReply',
+      '免費試用': 'SR_handlePaywallQuickReply',
+      '功能介紹': 'SR_handlePaywallQuickReply',
+      '了解更多': 'SR_handlePaywallQuickReply',
+      
+      // 設定相關路由
+      'setup_reminder': 'SR_handleReminderSetup',
+      'manage_reminders': 'SR_handleReminderManagement'
+    };
+
+    this.validationRules = {
+      quickReplyRequest: {
+        required: ['userId', 'postbackData', 'timestamp'],
+        optional: ['interactionType', 'replyToken', 'contextData']
+      },
+      quickReplyResponse: {
+        required: ['success', 'responseMessage'],
+        optional: ['quickReplyOptions', 'sessionId', 'metadata']
+      }
+    };
+  }
+
+  /**
+   * 驗證請求格式
+   */
+  validateRequest(request) {
+    const rules = this.validationRules.quickReplyRequest;
+    
+    // 檢查必要欄位
+    for (const field of rules.required) {
+      if (!request.hasOwnProperty(field)) {
+        return {
+          valid: false,
+          error: `缺少必要欄位: ${field}`
+        };
+      }
+    }
+
+    // 驗證 userId 格式
+    if (!request.userId || typeof request.userId !== 'string') {
+      return {
+        valid: false,
+        error: 'userId 格式無效'
+      };
+    }
+
+    // 驗證 postbackData
+    if (!request.postbackData || typeof request.postbackData !== 'string') {
+      return {
+        valid: false,
+        error: 'postbackData 格式無效'
+      };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * 格式化回應
+   */
+  formatResponse(responseData) {
+    const standardResponse = {
+      success: responseData.success || false,
+      responseMessage: responseData.message || '',
+      timestamp: new Date().toISOString(),
+      moduleVersion: 'SR_v1.5.0'
+    };
+
+    // 可選欄位
+    if (responseData.quickReply) {
+      standardResponse.quickReplyOptions = this.formatQuickReplyOptions(responseData.quickReply);
+    }
+
+    if (responseData.sessionId) {
+      standardResponse.sessionId = responseData.sessionId;
+    }
+
+    if (responseData.metadata) {
+      standardResponse.metadata = responseData.metadata;
+    }
+
+    return standardResponse;
+  }
+
+  /**
+   * 格式化 Quick Reply 選項
+   */
+  formatQuickReplyOptions(quickReplyData) {
+    if (!quickReplyData || !quickReplyData.items) {
+      return null;
+    }
+
+    return {
+      type: 'quick_reply',
+      items: quickReplyData.items.map(item => ({
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: item.label,
+          data: item.postbackData,
+          displayText: item.label
+        }
+      }))
+    };
+  }
+
+  /**
+   * 取得路由處理函數
+   */
+  getRouteHandler(postbackData) {
+    const handler = this.routingRules[postbackData];
+    
+    if (!handler) {
+      return {
+        handler: 'SR_handleUnknownPostback',
+        isKnown: false
+      };
+    }
+
+    return {
+      handler,
+      isKnown: true
+    };
+  }
+
+  /**
+   * 註冊新路由規則
+   */
+  registerRoute(postbackData, handlerFunction) {
+    this.routingRules[postbackData] = handlerFunction;
+  }
+
+  /**
+   * 建立標準化請求
+   */
+  createStandardRequest(userId, postbackData, options = {}) {
+    return {
+      userId,
+      interactionType: options.interactionType || 'unknown',
+      postbackData,
+      timestamp: new Date().toISOString(),
+      replyToken: options.replyToken || null,
+      contextData: {
+        previousAction: options.previousAction || null,
+        sessionId: options.sessionId || null,
+        userPreferences: options.userPreferences || {}
+      }
+    };
+  }
+
+  /**
+   * 取得協議版本資訊
+   */
+  getProtocolVersion() {
+    return {
+      version: '1.5.0',
+      compatibility: ['WH_v2.0.16', 'SR_v1.4.0', 'SR_v1.5.0'],
+      lastUpdated: '2025-01-09'
+    };
+  }
+}
+
+// 初始化協作協議管理器
+const SR_WHProtocolManager = new SR_WHProtocol();
+
+// 向後相容的配置常數
 const SR_QUICK_REPLY_CONFIG = {
   STATISTICS: {
     TODAY: { label: '今日統計', postbackData: '今日統計' },
@@ -64,6 +714,13 @@ const SR_QUICK_REPLY_CONFIG = {
     UPGRADE: { label: '立即升級', postbackData: 'upgrade_premium' },
     TRIAL: { label: '免費試用', postbackData: '試用' },
     INFO: { label: '了解更多', postbackData: '功能介紹' }
+  },
+  
+  // 新增協議相關配置
+  PROTOCOL: {
+    VERSION: SR_WHProtocolManager.getProtocolVersion().version,
+    MESSAGE_FORMATS: SR_WHProtocolManager.messageFormats,
+    ROUTING_RULES: SR_WHProtocolManager.routingRules
   }
 };
 
@@ -2309,10 +2966,23 @@ module.exports = {
   // 模組初始化
   SR_initialize,
   
+  // 架構管理功能 (新增)
+  SR_ConfigManager,
+  SR_DependencyManager,
+  SR_WHProtocolManager,
+  
   // 常數與配置
   SR_CONFIG,
   SR_QUICK_REPLY_CONFIG,
-  SR_INIT_STATUS
+  SR_INIT_STATUS,
+  
+  // 架構相關方法 (新增)
+  getModuleConfig: (moduleName) => SR_ConfigManager.getModuleConfig(moduleName),
+  updateModuleConfig: (moduleName, configData) => SR_ConfigManager.updateConfig(moduleName, configData),
+  resolveDependency: (interfaceName) => SR_DependencyManager.resolve(interfaceName),
+  validateWHRequest: (request) => SR_WHProtocolManager.validateRequest(request),
+  formatWHResponse: (responseData) => SR_WHProtocolManager.formatResponse(responseData),
+  getRouteHandler: (postbackData) => SR_WHProtocolManager.getRouteHandler(postbackData)
 };
 
 // 自動初始化模組
