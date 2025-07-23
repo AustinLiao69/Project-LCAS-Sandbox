@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.2.4
+* FS_FirestoreStructure_資料庫結構模組_1.2.5
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
-* @update 2025-01-23: 升級至1.2.4版本，配合CommonJS頂層await修復，確保穩定運作
+* @update 2025-07-23: 升級至1.2.5版本，修正科目資料檔案路徑錯誤
 */
 
 // 直接使用 Firebase Admin SDK 和 serviceaccountkey.json
@@ -487,9 +487,9 @@ async function createLedgerCollection(ledgerId, lineUID) {
 
 /**
 * 04. 建立科目代碼集合結構並導入完整科目資料
-* @version 2025-07-11-V1.0.4
-* @date 2025-07-11 16:00:00
-* @update: 從 9999. Subject_code.json 導入完整科目資料
+* @version 2025-07-23-V1.0.5
+* @date 2025-07-23 12:15:00
+* @update: 修正科目資料檔案路徑，從 Miscellaneous 改為 Project documents
 */
 async function createSubjectsCollection(ledgerId) {
   try {
@@ -507,7 +507,7 @@ async function createSubjectsCollection(ledgerId) {
     });
 
     // 導入完整科目資料
-    const subjectData = require('../Miscellaneous/9999. Subject_code.json');
+    const subjectData = require('../Project documents/9999. Subject_code.json');
     const batch = db.batch();
 
     console.log(`🔄 開始導入 ${subjectData.length} 筆科目資料...`);
@@ -705,7 +705,7 @@ async function initUserSubjects(userUID, ledgerIdPrefix = 'user_') {
     const userLedgerId = `${ledgerIdPrefix}${userUID}`;
 
     // 導入完整科目資料
-    const subjectData = require('../Miscellaneous/9999. Subject_code.json');
+    const subjectData = require('../Project documents/9999. Subject_code.json');
     const batch = db.batch();
 
     console.log(`📋 準備導入 ${subjectData.length} 筆科目資料到 ${userLedgerId}...`);
