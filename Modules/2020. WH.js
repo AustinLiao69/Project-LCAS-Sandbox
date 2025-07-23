@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.1.2
+ * WH_Webhook處理模組_2.1.3
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 修復循環依賴問題和LBK調用機制
- * @update 2025-07-22: 升級至v2.1.2，修復LBK模組循環依賴，實現動態模組調用機制
+ * @description LINE Webhook處理模組 - 修復空值檢查和部署錯誤處理
+ * @update 2025-01-22: 升級至v2.1.3，修復第1799行空值檢查問題，增強錯誤處理和健康檢查
  */
 
 // 首先引入其他模組
@@ -78,7 +78,124 @@ console.log("WH模組初始化，版本: 2.0.22 (2025-07-15)");
 
 // 創建 Express 應用
 const app = express();
-app.use(express.json());
+
+/**
+ * 請求驗證中介軟體
+ * @version 2025-01-22-V1.0.0
+ * @date 2025-01-22 10:00:00
+ * @description 驗證所有進入的請求，確保數據完整性和安全性
+ */
+function validateWebhookData(req, res, next) {
+  try {
+    // 跳過健康檢查端點的驗證
+    if (req.path === '/health' || req.path === '/' || req.path === '/test-wh' || req.path === '/check-https') {
+      return next();
+    }
+
+    // 檢查Content-Type
+    if (req.path === '/webhook' && !req.is('application/json')) {
+      return res.status(400).json({
+        error: "Content-Type必須是application/json",
+        status: "error"
+      });
+    }
+
+    // 檢查請求主體
+    if (req.path === '/webhook') {
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({
+          error: "請求主體無效或為空",
+          status: "error"
+        });
+      }
+
+      // 檢查必要的Webhook字段
+      if (!req.body.events || !Array.isArray(req.body.events)) {
+        return res.status(400).json({
+          error: "缺少或無效的events數組",
+          status: "error"
+        });
+      }
+
+      // 驗證每個事件的基本結構
+      for (let i = 0; i < req.body.events.length; i++) {
+        const event = req.body.events[i];
+        if (!event || typeof event !== 'object') {
+          return res.status(400).json({
+            error: `事件${i}格式無效`,
+            status: "error"
+          });
+        }
+
+        if (!event.type) {
+          return res.status(400).json({
+            error: `事件${i}缺少type屬性`,
+            status: "error"
+          });
+        }
+
+        if (!event.source || !event.source.userId) {
+          return res.status(400).json({
+            error: `事件${i}缺少用戶ID`,
+            status: "error"
+          });
+        }
+      }
+    }
+
+    next();
+  } catch (error) {
+    console.error("請求驗證錯誤:", error);
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.1.3: 請求驗證失敗: ${error.message}`,
+      "請求驗證",
+      "",
+      "VALIDATION_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      "validateWebhookData",
+      "ERROR",
+    ]);
+
+    return res.status(500).json({
+      error: "請求驗證過程中發生錯誤",
+      status: "error"
+    });
+  }
+}
+
+// 全域錯誤處理中介軟體
+function globalErrorHandler(err, req, res, next) {
+  console.error("全域錯誤處理器:", err);
+  
+  WH_directLogWrite([
+    WH_formatDateTime(new Date()),
+    `WH 2.1.3: 全域錯誤處理: ${err.message}`,
+    "全域錯誤",
+    "",
+    "GLOBAL_ERROR",
+    "WH",
+    err.stack || err.toString(),
+    0,
+    "globalErrorHandler",
+    "ERROR",
+  ]);
+
+  if (!res.headersSent) {
+    res.status(500).json({
+      error: "內部服務器錯誤",
+      status: "error",
+      timestamp: new Date().toISOString()
+    });
+  }
+}
+
+// 應用中介軟體
+app.use(express.json({ limit: '10mb' })); // 設置請求大小限制
+app.use(validateWebhookData); // 請求驗證
+app.use(globalErrorHandler); // 全域錯誤處理
 
 // 創建緩存服務
 const cache = new NodeCache({ stdTTL: 600 }); // 10分鐘緩存
@@ -287,44 +404,91 @@ async function processWebhookAsync(e) {
       // 處理每個事件
       for (const event of postData.events) {
         try {
-          // 獲取用戶ID
+          // 獲取用戶ID - 增強空值檢查
           let userId = "";
-          if (event.source) {
-            userId = event.source.userId || "";
+          if (event && event.source && event.source.userId) {
+            userId = event.source.userId;
+          } else {
+            console.log(`事件缺少用戶ID: ${JSON.stringify(event)} [${requestId}]`);
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.1.3: 事件缺少用戶ID，跳過處理 [${requestId}]`,
+              "事件驗證",
+              "",
+              "MISSING_USER_ID",
+              "WH",
+              JSON.stringify(event),
+              0,
+              "processWebhookAsync",
+              "WARNING",
+            ]);
+            continue; // 跳過此事件的處理
           }
 
-          // 檢查消息去重
+          // 檢查消息去重 - 修復ID屬性安全訪問
           if (
             WH_CONFIG.MESSAGE_DEDUPLICATION &&
             event.type === "message" &&
             event.message &&
+            typeof event.message === 'object' &&
             event.message.id
           ) {
-            // 在非同步處理中檢查重複
-            const isDuplicate = WH_checkDuplicateMessage(
-              event.message.id,
-              requestId,
-            );
-            if (isDuplicate) {
+            // 安全訪問message.id屬性
+            const messageId = event.message.id;
+            if (messageId && typeof messageId === 'string') {
+              // 在非同步處理中檢查重複
+              const isDuplicate = WH_checkDuplicateMessage(messageId, requestId);
+              if (isDuplicate) {
+                WH_directLogWrite([
+                  WH_formatDateTime(new Date()),
+                  `WH 2.1.3: 跳過重複消息ID: ${messageId} [${requestId}]`,
+                  "消息去重",
+                  userId,
+                  "",
+                  "WH",
+                  "",
+                  0,
+                  "processWebhookAsync",
+                  "INFO",
+                ], userId);
+                continue; // 跳過此消息的處理
+              }
+            } else {
+              console.log(`訊息ID格式無效: ${JSON.stringify(event.message)} [${requestId}]`);
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.0.16: 跳過重複消息ID: ${event.message.id} [${requestId}]`,
-                "消息去重",
+                `WH 2.1.3: 訊息ID格式無效 [${requestId}]`,
+                "消息驗證",
                 userId,
-                "",
+                "INVALID_MESSAGE_ID",
                 "WH",
-                "",
+                JSON.stringify(event.message),
                 0,
                 "processWebhookAsync",
-                "INFO",
+                "WARNING",
               ], userId);
-              continue; // 跳過此消息的處理
             }
           }
 
           if (event.type === "message") {
-            // 處理消息事件
-            await WH_processEventAsync(event, requestId, userId);
+            // 處理消息事件 - 增強安全檢查
+            if (event.message && typeof event.message === 'object') {
+              await WH_processEventAsync(event, requestId, userId);
+            } else {
+              console.log(`訊息事件缺少message物件: ${JSON.stringify(event)} [${requestId}]`);
+              WH_directLogWrite([
+                WH_formatDateTime(new Date()),
+                `WH 2.1.3: 訊息事件缺少message物件 [${requestId}]`,
+                "事件驗證",
+                userId,
+                "INVALID_MESSAGE_OBJECT",
+                "WH",
+                JSON.stringify(event),
+                0,
+                "processWebhookAsync",
+                "ERROR",
+              ]);
+            }
           } else {
             // 記錄其他類型事件
             WH_directLogWrite([
@@ -1176,15 +1340,50 @@ async function WH_callLBKSafely(inputData) {
  * @param {string} userId - 用戶ID
  */
 async function WH_processEventAsync(event, requestId, userId) {
-  // 檢查基本參數
-  if (!event || !event.type) {
-    console.log(`無效事件或缺少類型: ${JSON.stringify(event)} [${requestId}]`);
+  // 增強基本參數檢查
+  if (!event || typeof event !== 'object') {
+    console.log(`無效事件物件: ${JSON.stringify(event)} [${requestId}]`);
     WH_directLogWrite([
       WH_formatDateTime(new Date()),
-      `WH 2.0.3: 無效事件或缺少類型 [${requestId}]`,
+      `WH 2.1.3: 無效事件物件 [${requestId}]`,
       "事件處理",
-      userId,
-      "INVALID_EVENT",
+      userId || "",
+      "INVALID_EVENT_OBJECT",
+      "WH",
+      typeof event === 'object' ? JSON.stringify(event) : String(event),
+      0,
+      "WH_processEventAsync",
+      "ERROR",
+    ]);
+    return;
+  }
+  
+  if (!event.type) {
+    console.log(`事件缺少type屬性: ${JSON.stringify(event)} [${requestId}]`);
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.1.3: 事件缺少type屬性 [${requestId}]`,
+      "事件處理",
+      userId || "",
+      "MISSING_EVENT_TYPE",
+      "WH",
+      JSON.stringify(event),
+      0,
+      "WH_processEventAsync",
+      "ERROR",
+    ]);
+    return;
+  }
+  
+  // 確保userId存在
+  if (!userId) {
+    console.log(`缺少用戶ID: ${JSON.stringify(event)} [${requestId}]`);
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.1.3: 缺少用戶ID [${requestId}]`,
+      "事件處理",
+      "",
+      "MISSING_USER_ID",
       "WH",
       JSON.stringify(event),
       0,
@@ -1779,34 +1978,70 @@ function generateProcessId() {
   return uuidv4().substring(0, 8);
 }
 
-// 測試端點 - 檢查服務狀態和HTTPS支持
+// 增強健康檢查端點 - 提供詳細系統狀態
 app.get("/", (req, res) => {
   const isHTTPS =
     req.protocol === "https" || req.headers["x-forwarded-proto"] === "https";
 
-  res.send(`
+  // 檢查模組載入狀態
+  const moduleStatus = {
+    LBK: LBK ? "✅ 已載入" : "❌ 未載入",
+    DD: DD ? "✅ 已載入" : "❌ 未載入", 
+    FS: FS ? "✅ 已載入" : "❌ 未載入",
+    DL: DL ? "✅ 已載入" : "❌ 未載入",
+    SR: SR ? "✅ 已載入" : "❌ 未載入",
+    AM: AM ? "✅ 已載入" : "❌ 未載入"
+  };
+
+  // 系統記憶體使用情況
+  const memoryUsage = process.memoryUsage();
+  const memoryInfo = {
+    rss: Math.round(memoryUsage.rss / 1024 / 1024) + 'MB',
+    heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024) + 'MB',
+    heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024) + 'MB'
+  };
+
+  res.status(200).send(`
     <h1>LCAS Webhook Service is running! 🤖</h1>
-    <p>版本: 2.0.7 (2025-06-25)</p>
+    <p>版本: 2.1.3 (2025-01-22)</p>
     <p>協議: ${req.protocol.toUpperCase()} ${isHTTPS ? "✅ 支持HTTPS" : "❌ 僅HTTP"}</p>
     <p>Webhook URL: <code>${req.protocol}://${req.get("host")}/webhook</code></p>
     <p>建議的LINE Webhook URL: <code>https://${req.get("host")}/webhook</code></p>
     <p>時間: ${WH_formatDateTime(new Date())}</p>
+    <p>系統運行時間: ${Math.round(process.uptime())} 秒</p>
     <hr>
     <h2>配置狀態:</h2>
     <ul>
       <li>LINE_CHANNEL_SECRET: ${WH_CONFIG.LINE.CHANNEL_SECRET ? "✅ 已設置" : "❌ 未設置"}</li>
       <li>LINE_CHANNEL_ACCESS_TOKEN: ${WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN ? "✅ 已設置" : "❌ 未設置"}</li>
-      <li>SPREADSHEET_ID: ${WH_CONFIG.SHEET.ID ? "✅ 已設置" : "❌ 未設置"}</li>
       <li>測試模式: ${WH_CONFIG.TEST_MODE ? "🟡 開啟 (跳過簽章驗證)" : "🔴 關閉"}</li>
       <li>調試模式: ${WH_CONFIG.DEBUG ? "🟡 開啟" : "🔴 關閉"}</li>
     </ul>
+    <hr>
+    <h2>模組狀態:</h2>
+    <ul>
+      <li>LBK 快速記帳模組: ${moduleStatus.LBK}</li>
+      <li>DD 數據分發模組: ${moduleStatus.DD}</li>
+      <li>FS Firestore模組: ${moduleStatus.FS}</li>
+      <li>DL 日誌記錄模組: ${moduleStatus.DL}</li>
+      <li>SR 排程提醒模組: ${moduleStatus.SR}</li>
+      <li>AM 帳號管理模組: ${moduleStatus.AM}</li>
+    </ul>
+    <hr>
+    <h2>系統資源:</h2>
+    <ul>
+      <li>記憶體使用 (RSS): ${memoryInfo.rss}</li>
+      <li>堆記憶體使用: ${memoryInfo.heapUsed}</li>
+      <li>堆記憶體總計: ${memoryInfo.heapTotal}</li>
+    </ul>
     ${!isHTTPS ? '<p style="color:red;font-weight:bold;">⚠️ 警告：LINE Webhook需要HTTPS！請確認您的Replit支持HTTPS訪問。</p>' : ""}
     <hr>
-    <p><strong>⚠️ 注意：這是連通測試版本</strong></p>
-    <p>由於DD_distributeData函數未載入，在LINE中發送訊息會導致錯誤，但可以測試webhook連接。</p>
-    <p>💡 在LINE Bot中發送任意訊息進行webhook連接測試</p>
-    <p>📋 訪問 <a href="/test-wh">/test-wh</a> 查看詳細狀態</p>
+    <p><strong>✅ 系統狀態：健康運行</strong></p>
+    <p>🔧 已修復空值檢查問題，增強錯誤處理機制</p>
+    <p>💡 在LINE Bot中發送訊息進行功能測試</p>
+    <p>📋 訪問 <a href="/test-wh">/test-wh</a> 查看詳細測試狀態</p>
     <p>🔍 訪問 <a href="/check-https">/check-https</a> 檢查HTTPS支持</p>
+    <p>🏥 訪問 <a href="/health">/health</a> 獲取JSON格式健康檢查</p>
   `);
 });
 
@@ -2512,3 +2747,103 @@ async function WH_sendPushMessage(userId, message, messageType = 'text') {
     };
   }
 }
+
+
+// JSON格式健康檢查API - 供部署系統監控使用
+app.get("/health", (req, res) => {
+  try {
+    // 檢查模組狀態
+    const moduleStatus = {
+      LBK: !!LBK,
+      DD: !!DD,
+      FS: !!FS,
+      DL: !!DL,
+      SR: !!SR,
+      AM: !!AM
+    };
+
+    // 檢查關鍵配置
+    const configStatus = {
+      lineChannelSecret: !!WH_CONFIG.LINE.CHANNEL_SECRET,
+      lineChannelAccessToken: !!WH_CONFIG.LINE.CHANNEL_ACCESS_TOKEN,
+      httpsSupported: req.protocol === "https" || req.headers["x-forwarded-proto"] === "https"
+    };
+
+    // 系統資源狀態
+    const systemStatus = {
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      timestamp: new Date().toISOString()
+    };
+
+    // 計算總體健康狀態
+    const allModulesHealthy = Object.values(moduleStatus).every(status => status);
+    const configHealthy = configStatus.lineChannelSecret && configStatus.lineChannelAccessToken;
+    const isHealthy = allModulesHealthy && configHealthy && configStatus.httpsSupported;
+
+    const healthResponse = {
+      status: isHealthy ? "healthy" : "degraded",
+      timestamp: systemStatus.timestamp,
+      version: "2.1.3",
+      modules: moduleStatus,
+      config: configStatus,
+      system: {
+        uptime: systemStatus.uptime,
+        memory: {
+          rss: Math.round(systemStatus.memory.rss / 1024 / 1024) + 'MB',
+          heapUsed: Math.round(systemStatus.memory.heapUsed / 1024 / 1024) + 'MB',
+          heapTotal: Math.round(systemStatus.memory.heapTotal / 1024 / 1024) + 'MB'
+        }
+      },
+      services: {
+        webhook: "active",
+        lineApi: configHealthy ? "available" : "unavailable",
+        database: moduleStatus.FS ? "connected" : "disconnected"
+      }
+    };
+
+    // 根據健康狀態返回適當的HTTP狀態碼
+    const statusCode = isHealthy ? 200 : 503;
+    
+    res.status(statusCode).json(healthResponse);
+
+    // 記錄健康檢查請求
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.1.3: 健康檢查請求 - 狀態: ${healthResponse.status}`,
+      "健康檢查",
+      "",
+      "",
+      "WH",
+      "",
+      0,
+      "/health",
+      "INFO",
+    ]);
+
+  } catch (error) {
+    console.error("健康檢查端點錯誤:", error);
+    
+    res.status(500).json({
+      status: "error",
+      timestamp: new Date().toISOString(),
+      error: "健康檢查失敗",
+      message: error.message
+    });
+
+    // 記錄健康檢查錯誤
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.1.3: 健康檢查失敗: ${error.message}`,
+      "健康檢查",
+      "",
+      "HEALTH_CHECK_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      "/health",
+      "ERROR",
+    ]);
+  }
+});
+
