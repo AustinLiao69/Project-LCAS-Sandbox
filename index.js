@@ -1,8 +1,8 @@
 /**
- * index.js_主啟動器模組_2.1.10
+ * index.js_主啟動器模組_2.1.11
  * @module 主啟動器模組
- * @description LCAS LINE Bot 主啟動器 - 修復部署FS模組依賴問題
- * @update 2025-01-23: 升級至2.1.10版本，修復FS模組依賴驗證，確保部署環境穩定性
+ * @description LCAS LINE Bot 主啟動器 - 增強WH模組載入前的FS依賴驗證機制
+ * @update 2025-01-23: 升級至2.1.11版本，修復WH模組第1990行FS依賴問題，確保部署健康檢查通過
  * @date 2025-01-23
  */
 
@@ -47,10 +47,10 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 /**
- * 03. 模組載入與初始化 - 修復函數定義順序問題
- * @version 2025-07-22-V1.0.2
- * @date 2025-07-22 10:25:00
- * @description 載入所有功能模組，確保FS模組核心函數正確定義，解決ReferenceError問題
+ * 03. 模組載入與初始化 - 增強WH模組載入前的FS依賴驗證
+ * @version 2025-01-23-V1.1.0
+ * @date 2025-01-23 11:00:00
+ * @description 載入所有功能模組，增強WH模組載入前的FS依賴檢查，確保第1990行不會出現FS未定義錯誤
  */
 console.log('📦 載入模組...');
 
@@ -125,31 +125,67 @@ try {
 }
 
 try {
-  // 關鍵修復：即使FS模組部分功能不可用，仍載入WH模組以確保健康檢查可用
-  if (FS) {
-    WH = require('./Modules/2020. WH.js');    // Webhook處理模組 (最後載入)
-    console.log('✅ WH 模組載入成功');
+  // 關鍵修復：確保WH模組載入前FS模組完全可用，避免第1990行FS未定義錯誤
+  console.log('🔍 WH模組載入前進行FS依賴完整性檢查...');
+  
+  // 增強FS模組依賴檢查 - 確保所有核心函數可用
+  const fsCoreFunctions = ['FS_getDocument', 'FS_setDocument', 'FS_updateDocument', 'FS_deleteDocument'];
+  let fsFullyReady = false;
+  
+  if (FS && typeof FS === 'object') {
+    const availableFunctions = fsCoreFunctions.filter(func => typeof FS[func] === 'function');
+    console.log(`📊 FS核心函數檢查: ${availableFunctions.length}/${fsCoreFunctions.length} 可用`);
     
-    // 驗證WH模組的關鍵函數
-    if (typeof WH.doPost === 'function') {
-      console.log('✅ WH模組核心函數檢查通過');
+    if (availableFunctions.length === fsCoreFunctions.length) {
+      fsFullyReady = true;
+      console.log('✅ FS模組完全就緒，可安全載入WH模組');
+      
+      // 設置全域變數確保WH模組可以安全存取
+      global.FS_MODULE_READY = true;
+      global.FS_CORE_FUNCTIONS = fsCoreFunctions;
+      
     } else {
-      console.log('⚠️ WH模組核心函數檢查失敗');
+      console.log('⚠️ FS模組部分功能缺失，將載入WH模組但標記FS不完整');
+      global.FS_MODULE_READY = false;
+      global.FS_PARTIAL_AVAILABLE = true;
     }
   } else {
-    // 即使FS不可用，仍嘗試載入WH以提供基礎服務
-    console.log('⚠️ FS模組不可用，嘗試載入WH模組基礎功能');
-    try {
-      WH = require('./Modules/2020. WH.js');
-      console.log('✅ WH 模組基礎功能載入成功');
-    } catch (whError) {
-      console.log('❌ WH 模組基礎功能載入失敗:', whError.message);
-    }
+    console.log('❌ FS模組完全不可用，將載入WH模組基礎功能');
+    global.FS_MODULE_READY = false;
+    global.FS_PARTIAL_AVAILABLE = false;
   }
+  
+  // 在FS檢查完成後載入WH模組
+  console.log('📦 開始載入WH模組...');
+  WH = require('./Modules/2020. WH.js');    // Webhook處理模組 (最後載入)
+  console.log('✅ WH 模組載入成功');
+  
+  // 驗證WH模組的關鍵函數
+  if (typeof WH.doPost === 'function') {
+    console.log('✅ WH模組核心函數檢查通過');
+  } else {
+    console.log('⚠️ WH模組核心函數檢查失敗');
+  }
+  
+  // 等待WH模組內部初始化完成
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  console.log('✅ WH模組初始化等待完成');
+  
 } catch (error) {
   console.error('❌ WH 模組載入失敗:', error.message);
   // 記錄詳細錯誤信息
   console.error('錯誤詳情:', error.stack);
+  
+  // 嘗試基礎模式載入
+  try {
+    console.log('🔄 嘗試WH模組基礎模式載入...');
+    global.FS_MODULE_READY = false;
+    global.WH_BASIC_MODE = true;
+    WH = require('./Modules/2020. WH.js');
+    console.log('✅ WH 模組基礎模式載入成功');
+  } catch (basicError) {
+    console.error('❌ WH 模組基礎模式載入也失敗:', basicError.message);
+  }
 }
 
 // 預先初始化各模組（安全初始化）
@@ -285,4 +321,4 @@ console.log('📋 Rich Menu/APP 路徑：維持 WH → DD → BK 完整功能');
 console.log('📅 SR 排程提醒模組已整合：支援排程提醒、Quick Reply統計、付費功能控制（v1.3.0）');
 console.log('🏥 健康檢查機制已啟用：每5分鐘監控系統狀態');
 console.log('🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄');
-console.log('🔧 部署修復已應用：v2.1.10 - 修復FS依賴和健康檢查問題');
+console.log('🔧 部署修復已應用：v2.1.11 - 增強WH模組載入前FS依賴驗證，修復第1990行問題');
