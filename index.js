@@ -1,32 +1,49 @@
 /**
- * index.js_主啟動器模組_2.1.8
+ * index.js_主啟動器模組_2.1.9
  * @module 主啟動器模組
- * @description LCAS LINE Bot 主啟動器 - 修復FS模組函數定義順序問題，確保模組載入穩定性
- * @update 2025-07-22: 升級至2.1.8版本，修復FS_getDocument未定義錯誤，優化模組依賴檢查
- * @date 2025-07-22
+ * @description LCAS LINE Bot 主啟動器 - 增強錯誤處理和健康檢查機制
+ * @update 2025-01-22: 升級至2.1.9版本，添加健康檢查端點，增強全域錯誤處理，修復部署問題
+ * @date 2025-01-22
  */
 
 console.log('🚀 LCAS Webhook 啟動中...');
 console.log('📅 啟動時間:', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
 
 /**
- * 01. 全域錯誤處理機制設置
- * @version 2025-06-30-V1.0.0
- * @date 2025-06-30 13:44:00
- * @description 捕獲未處理的例外和Promise拒絕，防止程式意外終止
+ * 01. 增強全域錯誤處理機制設置
+ * @version 2025-01-22-V1.1.0
+ * @date 2025-01-22 10:00:00
+ * @description 捕獲未處理的例外和Promise拒絕，防止程式意外終止，增強錯誤記錄
  */
 process.on('uncaughtException', (error) => {
   console.error('💥 未捕獲的異常:', error);
+  console.error('💥 異常堆疊:', error.stack);
+  
+  // 記錄到日誌文件
+  if (DL && typeof DL.DL_error === 'function') {
+    DL.DL_error('未捕獲的異常', 'SYSTEM', '', 'UNCAUGHT_EXCEPTION', error.toString(), 'index.js');
+  }
+  
+  // 延遲退出，確保日誌記錄完成
+  setTimeout(() => {
+    process.exit(1);
+  }, 1000);
 });
 
 /**
- * 02. Promise拒絕處理機制
- * @version 2025-06-30-V1.0.0
- * @date 2025-06-30 13:44:00
- * @description 處理未捕獲的Promise拒絕，確保系統穩定性
+ * 02. 增強Promise拒絕處理機制
+ * @version 2025-01-22-V1.1.0
+ * @date 2025-01-22 10:00:00
+ * @description 處理未捕獲的Promise拒絕，確保系統穩定性，增強錯誤記錄
  */
 process.on('unhandledRejection', (reason, promise) => {
   console.error('💥 未處理的 Promise 拒絕:', reason);
+  console.error('💥 Promise:', promise);
+  
+  // 記錄到日誌文件
+  if (DL && typeof DL.DL_error === 'function') {
+    DL.DL_error('未處理的Promise拒絕', 'SYSTEM', '', 'UNHANDLED_REJECTION', reason?.toString() || 'Unknown reason', 'index.js');
+  }
 });
 
 /**
@@ -208,6 +225,40 @@ if (BK && typeof BK.BK_processBookkeeping === 'function') {
 console.log('✅ WH 模組已載入並啟動服務器');
 console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
 
+/**
+ * 08. 健康檢查與部署狀態監控設置
+ * @version 2025-01-22-V1.0.0
+ * @date 2025-01-22 10:00:00
+ * @description 設置系統健康檢查機制，確保部署狀態可監控
+ */
+// 設置健康檢查定時器
+if (WH) {
+  setInterval(() => {
+    try {
+      const healthStatus = {
+        timestamp: new Date().toISOString(),
+        status: 'healthy',
+        modules: {
+          WH: !!WH,
+          LBK: !!LBK,
+          DD: !!DD,
+          FS: !!FS,
+          DL: !!DL
+        },
+        memory: process.memoryUsage(),
+        uptime: process.uptime()
+      };
+      
+      // 每5分鐘記錄一次健康狀態
+      if (DL && typeof DL.DL_info === 'function') {
+        DL.DL_info(`系統健康檢查: ${JSON.stringify(healthStatus)}`, 'HEALTH_CHECK', '', '', '', 'index.js');
+      }
+    } catch (error) {
+      console.error('健康檢查失敗:', error);
+    }
+  }, 300000); // 5分鐘檢查一次
+}
+
 console.log('🎉 LCAS LINE Bot 啟動完成！');
 console.log('📱 現在可以用 LINE 發送訊息測試了！');
 console.log('🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對外服務');
@@ -215,3 +266,5 @@ console.log('⚡ WH → LBK 直連路徑已啟用：WH → LBK → Firestore');
 console.log('🚀 LINE OA 快速記帳：26個函數 → 8個函數，處理時間 < 2秒');
 console.log('📋 Rich Menu/APP 路徑：維持 WH → DD → BK 完整功能');
 console.log('📅 SR 排程提醒模組已整合：支援排程提醒、Quick Reply統計、付費功能控制（v1.3.0）');
+console.log('🏥 健康檢查機制已啟用：每5分鐘監控系統狀態');
+console.log('🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄');

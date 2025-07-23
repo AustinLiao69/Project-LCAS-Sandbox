@@ -1,0 +1,99 @@
+2025-07-23T02:51:27Z info: Deployment: 824370d1-bf5d-47f6-91d8-1e1810ff47d2
+2025-07-23T02:51:27Z info: Build: 54d19729-2fe8-4454-962e-27d5ef4945bd
+2025-07-23T02:51:27Z info: Connecting to builder
+2025-07-23T02:51:28Z info: Builder connected
+2025-07-23T02:51:31Z info: Installing packages
+2025-07-23T02:51:31Z info: Installing packages
+2025-07-23T02:51:32Z info: Skipping Build as no Build command set
+2025-07-23T02:51:33Z info: Pushing pid1 binary layer...
+2025-07-23T02:51:36Z info: Pushing hosting layer...
+2025-07-23T02:51:36Z info: Pushing Repl layer...
+2025-07-23T02:51:36Z info: Retrieved cached nix layer
+2025-07-23T02:51:37Z info: Created hosting layer
+2025-07-23T02:51:41Z info: Created pid1 binary layer
+2025-07-23T02:52:43Z info: Created Repl layer
+2025-07-23T02:52:44Z info: Pushed image manifest
+2025-07-23T02:52:45Z info: Pushed soci index manifest
+2025-07-23T02:52:50Z info: Creating Autoscale service
+✅ DD 模組載入成功
+📱 使用 Secrets 中的 LINE UID: Uae47d9d496e4596d70ed724a7d6e2948
+📅 SR 排程提醒模組初始化中...
+[2025-07-23T02:53:04.791Z] [INFO] [BK] BK模組初始化開始 [2025-07-23T02:53:02.990Z] | DL模組初始化: 失敗 (未找到DL模組) | Firestore初始化: 成功 | 系統初始化 |  | BK_initialize
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:91:12)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+✅ System Metadata 建立完成
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:91:12)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+ReferenceError: FS is not defined
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+ReferenceError: FS is not defined
+    at /home/runner/workspace/Modules/2020. WH.js:1990:9
+ReferenceError: FS is not defined
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at /home/runner/workspace/Modules/2020. WH.js:1990:9
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:91:12)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:91:12)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+ReferenceError: FS is not defined
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+ReferenceError: FS is not defined
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+ReferenceError: FS is not defined
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at /home/runner/workspace/Modules/2020. WH.js:1990:9
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+ReferenceError: FS is not defined
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:91:12)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:91:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/Modules/2020. WH.js:1990:9
+ReferenceError: FS is not defined
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:91:12)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+ReferenceError: FS is not defined
+ReferenceError: FS is not defined
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+ReferenceError: FS is not defined
+    at /home/runner/workspace/Modules/2020. WH.js:1990:9
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at /home/runner/workspace/Modules/2020. WH.js:1990:9
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+ReferenceError: FS is not defined
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:91:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+2025-07-23T02:55:07Z error: The deployment is failing health checks. This can happen if the application isn't responding, responds with an error, or doesn't respond in time. Health checks are sent to the / endpoint by default and must respond as soon as possible. Make sure that the / endpoint is implemented and returns a 200 status code in a timely manner. Avoid doing expensive or long running operations on the / endpoint, prefer deferring them to a different route. Check the logs for more information.
