@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.2.2
+* FS_FirestoreStructure_資料庫結構模組_1.2.3
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
-* @update 2025-07-22: 升級至1.2.2版本，修復函數聲明順序問題，解決所有ReferenceError異常
+* @update 2025-01-23: 升級至1.2.3版本，配合CommonJS模組系統修復，確保正常載入和運作
 */
 
 // 直接使用 Firebase Admin SDK 和 serviceaccountkey.json

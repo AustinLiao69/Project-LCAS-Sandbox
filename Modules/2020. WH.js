@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.1.5
+ * WH_Webhook處理模組_2.1.6
  * @module Webhook模組  
- * @description LINE Webhook處理模組 - 增強FS依賴檢查和部署健康檢查穩定性
- * @update 2025-01-23: 升級至v2.1.5，修復第1990行FS依賴問題，確保部署健康檢查100%通過
+ * @description LINE Webhook處理模組 - 配合CommonJS模組系統修復，確保穩定運作
+ * @update 2025-01-23: 升級至v2.1.6，配合index.js v2.1.12 CommonJS修復，模組載入問題已解決
  */
 
 // 首先引入其他模組 - 增強安全載入

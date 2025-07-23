@@ -1,8 +1,8 @@
 /**
- * index.js_主啟動器模組_2.1.11
+ * index.js_主啟動器模組_2.1.12
  * @module 主啟動器模組
- * @description LCAS LINE Bot 主啟動器 - 增強WH模組載入前的FS依賴驗證機制
- * @update 2025-01-23: 升級至2.1.11版本，修復WH模組第1990行FS依賴問題，確保部署健康檢查通過
+ * @description LCAS LINE Bot 主啟動器 - 修復CommonJS模組載入問題，確保所有模組正常運作
+ * @update 2025-01-23: 升級至2.1.12版本，修復require undefined錯誤，統一使用CommonJS模組系統
  * @date 2025-01-23
  */
 
@@ -321,4 +321,4 @@ console.log('📋 Rich Menu/APP 路徑：維持 WH → DD → BK 完整功能');
 console.log('📅 SR 排程提醒模組已整合：支援排程提醒、Quick Reply統計、付費功能控制（v1.3.0）');
 console.log('🏥 健康檢查機制已啟用：每5分鐘監控系統狀態');
 console.log('🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄');
-console.log('🔧 部署修復已應用：v2.1.11 - 增強WH模組載入前FS依賴驗證，修復第1990行問題');
+console.log('🔧 部署修復已應用：v2.1.12 - 修復CommonJS模組載入問題，確保require函數正常運作');
