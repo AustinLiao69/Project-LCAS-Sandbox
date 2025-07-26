@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.1.7
+ * WH_Webhook處理模組_2.1.8
  * @module Webhook模組  
  * @description LINE Webhook處理模組 - 配合CommonJS頂層await修復，確保穩定運作
- * @update 2025-01-23: 升級至v2.1.7，配合index.js v2.1.13 頂層await修復，語法錯誤已解決
+ * @update 2025-07-26: 升級至v2.1.8，配合index.js v2.1.13 頂層await修復，語法錯誤已解決
  */
 
 // 首先引入其他模組 - 增強安全載入
