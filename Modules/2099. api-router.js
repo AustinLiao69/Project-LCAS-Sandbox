@@ -1,4 +1,3 @@
-
 /**
  * API_Router_1.0.0
  * @module API路由器模組
@@ -22,8 +21,8 @@ const BK = require('./2001. BK.js');
 
 /**
  * 01. 建立API路由器實例
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 建立Express路由器並設定基本中介軟體
  */
 function createApiRouter() {
@@ -38,7 +37,7 @@ function createApiRouter() {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID, X-Timestamp');
-    
+
     if (req.method === 'OPTIONS') {
       res.sendStatus(200);
     } else {
@@ -50,7 +49,7 @@ function createApiRouter() {
   router.use((req, res, next) => {
     const requestId = req.headers['x-request-id'] || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     req.requestId = requestId;
-    
+
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Request ID: ${requestId}`);
     next();
   });
@@ -60,8 +59,8 @@ function createApiRouter() {
 
 /**
  * 02. 設定認證與帳戶管理路由
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 定義所有認證相關的API端點
  */
 function setupAuthRoutes(router) {
@@ -71,7 +70,7 @@ function setupAuthRoutes(router) {
   authRouter.post('/register', async (req, res, next) => {
     try {
       const { platform, userProfile, deviceInfo } = req.body;
-      
+
       let result;
       if (platform === 'LINE') {
         result = await AM.AM_createLineAccount(
@@ -111,14 +110,14 @@ function setupAuthRoutes(router) {
   authRouter.post('/login', async (req, res, next) => {
     try {
       const { platform, credentials } = req.body;
-      
+
       if (platform === 'LINE') {
         const result = await AM.AM_handleLineOAuth(
           credentials.authCode,
           credentials.state,
           credentials.redirectUri
         );
-        
+
         if (result.success) {
           res.json({
             status: 'success',
@@ -170,7 +169,7 @@ function setupAuthRoutes(router) {
     try {
       const { deactivationReason, transferData } = req.body;
       const result = await AM.AM_deactivateAccount(req.user.UID, deactivationReason, transferData);
-      
+
       if (result.success) {
         res.json({
           status: 'success',
@@ -214,8 +213,8 @@ function setupAuthRoutes(router) {
 
 /**
  * 03. 設定基礎記帳功能路由
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 定義基礎記帳相關的API端點
  */
 function setupLedgerRoutes(router) {
@@ -227,7 +226,7 @@ function setupLedgerRoutes(router) {
   ledgerRouter.post('/entry', async (req, res, next) => {
     try {
       const { amount, description, category, date } = req.body;
-      
+
       // 呼叫BK模組的記帳功能
       const result = await BK.BK_processBookkeeping({
         userId: req.user.UID,
@@ -262,7 +261,7 @@ function setupLedgerRoutes(router) {
   ledgerRouter.get('/query', async (req, res, next) => {
     try {
       const { startDate, endDate, category, limit = 50 } = req.query;
-      
+
       // 實作查詢邏輯（需要BK模組支援）
       const result = {
         success: true,
@@ -290,8 +289,8 @@ function setupLedgerRoutes(router) {
 
 /**
  * 04. 設定科目管理路由
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 定義科目代碼管理的API端點
  */
 function setupSubjectsRoutes(router) {
@@ -301,7 +300,7 @@ function setupSubjectsRoutes(router) {
   subjectsRouter.get('/list', async (req, res, next) => {
     try {
       const { category, active = true } = req.query;
-      
+
       // 實作科目清單查詢邏輯
       const result = {
         success: true,
@@ -329,8 +328,8 @@ function setupSubjectsRoutes(router) {
 
 /**
  * 05. 設定使用者設定路由
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 定義使用者設定管理的API端點
  */
 function setupUserRoutes(router) {
@@ -341,7 +340,7 @@ function setupUserRoutes(router) {
     try {
       const updateData = req.body;
       const result = await AM.AM_updateAccountInfo(req.user.UID, updateData, req.user.UID);
-      
+
       if (result.success) {
         res.json({
           status: 'success',
@@ -371,8 +370,8 @@ function setupUserRoutes(router) {
 
 /**
  * 06. 設定系統監控路由
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 定義系統健康監控的API端點
  */
 function setupSystemRoutes(router) {
@@ -381,7 +380,7 @@ function setupSystemRoutes(router) {
   systemRouter.get('/health/check', async (req, res, next) => {
     try {
       const healthStatus = await AM.AM_monitorSystemHealth();
-      
+
       res.json({
         status: 'success',
         code: 'HEALTH_CHECK',
@@ -399,8 +398,8 @@ function setupSystemRoutes(router) {
 
 /**
  * 07. 初始化完整API路由器
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 建立並配置完整的API路由器
  */
 function initializeApiRouter() {

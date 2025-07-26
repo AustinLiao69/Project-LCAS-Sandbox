@@ -1,17 +1,16 @@
-
 /**
  * Error_Handler_1.0.0
  * @module 錯誤處理模組
  * @description LCAS 2.0 統一錯誤處理機制 - 標準化錯誤回應和日誌記錄
- * @update 2025-01-23: 建立版本，實作統一錯誤處理和標準化回應格式
+ * @update 2025-07-26: 建立版本，實作統一錯誤處理和標準化回應格式
  */
 
 const DL = require('./2010. DL.js');
 
 /**
  * 01. 錯誤類型定義
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 定義系統中所有可能的錯誤類型和對應的HTTP狀態碼
  */
 const ERROR_TYPES = {
@@ -116,16 +115,16 @@ const ERROR_TYPES = {
 
 /**
  * 02. 自定義錯誤類別
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 建立可攜帶詳細資訊的自定義錯誤類別
  */
 class ApiError extends Error {
   constructor(errorType, customMessage = null, details = null, userContext = null) {
     const errorInfo = ERROR_TYPES[errorType] || ERROR_TYPES.INTERNAL_SERVER_ERROR;
-    
+
     super(customMessage || errorInfo.message);
-    
+
     this.name = 'ApiError';
     this.type = errorType;
     this.statusCode = errorInfo.statusCode;
@@ -134,7 +133,7 @@ class ApiError extends Error {
     this.userContext = userContext;
     this.timestamp = new Date().toISOString();
     this.requestId = null; // 將在中介軟體中設定
-    
+
     // 保持堆疊追蹤
     Error.captureStackTrace(this, ApiError);
   }
@@ -153,8 +152,8 @@ class ApiError extends Error {
 
 /**
  * 03. 主要錯誤處理中介軟體
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 捕獲所有API錯誤並格式化回應
  */
 async function handleApiError(error, req, res, next) {
@@ -229,7 +228,7 @@ async function handleApiError(error, req, res, next) {
   } catch (handlingError) {
     // 錯誤處理器本身發生錯誤
     console.error('錯誤處理器發生錯誤:', handlingError);
-    
+
     res.status(500).json({
       status: 'error',
       code: 'ERROR_HANDLER_FAILED',
@@ -242,8 +241,8 @@ async function handleApiError(error, req, res, next) {
 
 /**
  * 04. 錯誤日誌記錄
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 統一記錄錯誤到系統日誌
  */
 async function logError(error, req) {
@@ -297,8 +296,8 @@ async function logError(error, req) {
 
 /**
  * 05. 清理請求資料
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 移除敏感資訊以便安全記錄
  */
 function sanitizeRequestBody(body) {
@@ -320,8 +319,8 @@ function sanitizeRequestBody(body) {
 
 /**
  * 06. 格式化驗證錯誤
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 將驗證錯誤轉換為結構化格式
  */
 function formatValidationErrors(error) {
@@ -344,8 +343,8 @@ function formatValidationErrors(error) {
 
 /**
  * 07. 提取重複欄位資訊
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 從MongoDB重複鍵錯誤中提取欄位資訊
  */
 function extractDuplicateFields(error) {
@@ -362,8 +361,8 @@ function extractDuplicateFields(error) {
 
 /**
  * 08. 404錯誤處理中介軟體
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 處理找不到路由的情況
  */
 function handleNotFound(req, res, next) {
@@ -373,8 +372,8 @@ function handleNotFound(req, res, next) {
 
 /**
  * 09. 異步錯誤包裝器
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 包裝異步函數以自動捕獲錯誤
  */
 function asyncErrorHandler(fn) {
@@ -385,8 +384,8 @@ function asyncErrorHandler(fn) {
 
 /**
  * 10. 建立標準化錯誤
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 提供便利的錯誤建立函數
  */
 const createError = {
@@ -403,8 +402,8 @@ const createError = {
 
 /**
  * 11. 錯誤監控和統計
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 提供錯誤統計和監控功能
  */
 class ErrorMonitor {

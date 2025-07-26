@@ -1,9 +1,8 @@
-
 /**
  * Auth_Middleware_1.0.0
  * @module 認證中介軟體模組
  * @description LCAS 2.0 統一認證驗證機制 - 處理JWT token驗證和權限控制
- * @update 2025-01-23: 建立版本，實作統一認證中介軟體和權限管理
+ * @update 2025-07-26: 建立版本，實作統一認證中介軟體和權限管理
  */
 
 const jwt = require('jsonwebtoken');
@@ -17,14 +16,14 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 /**
  * 01. JWT Token驗證中介軟體
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 驗證並解析JWT token，設定用戶資訊到request物件
  */
 async function validateToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         status: 'error',
@@ -39,7 +38,7 @@ async function validateToken(req, res, next) {
     // 嘗試驗證JWT token
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      
+
       // 檢查token是否過期
       if (decoded.exp && Date.now() >= decoded.exp * 1000) {
         return res.status(401).json({
@@ -52,7 +51,7 @@ async function validateToken(req, res, next) {
 
       // 驗證用戶是否存在且有效
       const userExists = await AM.AM_validateAccountExists(decoded.UID, decoded.platform || 'APP');
-      
+
       if (!userExists.exists || userExists.accountStatus !== 'active') {
         return res.status(401).json({
           status: 'error',
@@ -73,7 +72,7 @@ async function validateToken(req, res, next) {
 
       // 記錄認證成功日誌
       await DL.DL_info('AUTH', 'validateToken', `Token驗證成功: ${decoded.UID}`, decoded.UID);
-      
+
       next();
 
     } catch (jwtError) {
@@ -81,13 +80,13 @@ async function validateToken(req, res, next) {
       if (jwtError.name === 'JsonWebTokenError' || jwtError.name === 'TokenExpiredError') {
         return await validateFirebaseToken(req, res, next, token);
       }
-      
+
       throw jwtError;
     }
 
   } catch (error) {
     await DL.DL_error('AUTH', 'validateToken', error.message, '');
-    
+
     return res.status(401).json({
       status: 'error',
       code: 'TOKEN_VALIDATION_FAILED',
@@ -99,17 +98,17 @@ async function validateToken(req, res, next) {
 
 /**
  * 02. Firebase Token驗證
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 驗證Firebase Authentication token
  */
 async function validateFirebaseToken(req, res, next, token) {
   try {
     // 驗證Firebase ID token
     const decodedToken = await admin.auth().verifyIdToken(token);
-    
+
     const userExists = await AM.AM_validateAccountExists(decodedToken.uid, 'FIREBASE');
-    
+
     if (!userExists.exists || userExists.accountStatus !== 'active') {
       return res.status(401).json({
         status: 'error',
@@ -130,12 +129,12 @@ async function validateFirebaseToken(req, res, next, token) {
     };
 
     await DL.DL_info('AUTH', 'validateFirebaseToken', `Firebase Token驗證成功: ${decodedToken.uid}`, decodedToken.uid);
-    
+
     next();
 
   } catch (firebaseError) {
     await DL.DL_error('AUTH', 'validateFirebaseToken', firebaseError.message, '');
-    
+
     return res.status(401).json({
       status: 'error',
       code: 'FIREBASE_TOKEN_INVALID',
@@ -147,8 +146,8 @@ async function validateFirebaseToken(req, res, next, token) {
 
 /**
  * 03. 權限檢查中介軟體
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 檢查用戶是否有特定操作權限
  */
 function requirePermission(requiredPermission, resource = '') {
@@ -164,10 +163,10 @@ function requirePermission(requiredPermission, resource = '') {
       }
 
       const hasPermission = await checkUserPermission(req.user, requiredPermission, resource);
-      
+
       if (!hasPermission) {
         await DL.DL_warning('AUTH', 'requirePermission', `權限不足: ${req.user.UID} 嘗試 ${requiredPermission} ${resource}`, req.user.UID);
-        
+
         return res.status(403).json({
           status: 'error',
           code: 'INSUFFICIENT_PERMISSIONS',
@@ -184,7 +183,7 @@ function requirePermission(requiredPermission, resource = '') {
 
     } catch (error) {
       await DL.DL_error('AUTH', 'requirePermission', error.message, req.user?.UID || '');
-      
+
       return res.status(500).json({
         status: 'error',
         code: 'PERMISSION_CHECK_FAILED',
@@ -197,8 +196,8 @@ function requirePermission(requiredPermission, resource = '') {
 
 /**
  * 04. 檢查用戶權限
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 根據用戶類型檢查特定權限
  */
 async function checkUserPermission(user, permission, resource) {
@@ -220,7 +219,7 @@ async function checkUserPermission(user, permission, resource) {
     };
 
     const userPermissions = permissionMatrix[user.userType] || permissionMatrix['J'];
-    
+
     // 檢查基本權限
     if (userPermissions.includes(permission)) {
       return true;
@@ -252,8 +251,8 @@ async function checkUserPermission(user, permission, resource) {
 
 /**
  * 05. 檢查資源擁有權
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 檢查用戶是否擁有特定資源
  */
 async function checkResourceOwnership(userUID, resourceId) {
@@ -269,8 +268,8 @@ async function checkResourceOwnership(userUID, resourceId) {
 
 /**
  * 06. 產生JWT Token
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 為認證成功的用戶產生JWT token
  */
 function generateJWTToken(userInfo) {
@@ -284,7 +283,7 @@ function generateJWTToken(userInfo) {
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-    
+
     return {
       success: true,
       token: token,
@@ -302,14 +301,14 @@ function generateJWTToken(userInfo) {
 
 /**
  * 07. 刷新Token中介軟體
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 處理token刷新請求
  */
 async function refreshToken(req, res, next) {
   try {
     const { refreshToken: providedRefreshToken } = req.body;
-    
+
     if (!providedRefreshToken) {
       return res.status(400).json({
         status: 'error',
@@ -321,7 +320,7 @@ async function refreshToken(req, res, next) {
 
     // 驗證refresh token（簡化實作）
     const decoded = jwt.verify(providedRefreshToken, JWT_SECRET);
-    
+
     // 產生新的access token
     const newTokenResult = generateJWTToken({
       UID: decoded.UID,
@@ -352,7 +351,7 @@ async function refreshToken(req, res, next) {
 
   } catch (error) {
     await DL.DL_error('AUTH', 'refreshToken', error.message, '');
-    
+
     res.status(401).json({
       status: 'error',
       code: 'INVALID_REFRESH_TOKEN',
@@ -364,14 +363,14 @@ async function refreshToken(req, res, next) {
 
 /**
  * 08. 可選認證中介軟體
- * @version 2025-01-23-V1.0.0
- * @date 2025-01-23 11:30:00
+ * @version 2025-07-26-V1.0.0
+ * @date 2025-07-26 11:30:00
  * @description 可選的認證檢查，用於部分開放的端點
  */
 async function optionalAuth(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // 有token時嘗試驗證，但失敗不會阻止請求
       await validateToken(req, res, () => {
