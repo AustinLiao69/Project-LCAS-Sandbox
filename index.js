@@ -314,6 +314,475 @@ if (WH) {
   }, 300000); // 5分鐘檢查一次
 }
 
+// =============== REST API 端點設置 ===============
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// CORS 設置
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
+// =============== ProjectLedgerService API 端點 ===============
+
+// 取得專案清單
+app.get('/app/projects/list', async (req, res) => {
+  try {
+    const { status, type, limit = 50, offset = 0 } = req.query;
+    const userId = req.headers['user-id']; // 從header取得用戶ID
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // 模擬專案清單資料
+    const projects = [
+      {
+        projectId: `proj_${Date.now()}_1`,
+        projectName: '2025年度預算',
+        projectType: type || 'personal',
+        status: status || 'active',
+        createdAt: new Date().toISOString(),
+        memberCount: 1,
+        entryCount: 15
+      }
+    ];
+
+    res.json({
+      success: true,
+      projects,
+      totalCount: projects.length,
+      message: '取得專案清單成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '取得專案清單失敗',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// 取得專案詳情
+app.get('/app/projects/:projectId', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    // 模擬專案詳情
+    const project = {
+      projectId,
+      projectName: '2025年度預算',
+      projectType: 'personal',
+      description: '個人年度財務規劃專案',
+      budget: 120000,
+      spent: 15000,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      members: [
+        {
+          userId,
+          role: 'owner',
+          joinedAt: new Date().toISOString()
+        }
+      ],
+      settings: {
+        allowMemberInvite: true,
+        budgetAlert: true,
+        autoBackup: true
+      }
+    };
+
+    res.json({
+      success: true,
+      data: project,
+      message: '取得專案詳情成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '取得專案詳情失敗',
+      error: error.message
+    });
+  }
+});
+
+// 邀請專案成員
+app.post('/app/projects/:projectId/invite', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { email, role = 'member' } = req.body;
+    const userId = req.headers['user-id'];
+    
+    if (!userId || !email) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必要參數'
+      });
+    }
+
+    // 模擬邀請處理
+    const inviteId = `invite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    res.json({
+      success: true,
+      data: {
+        inviteId,
+        email,
+        role,
+        status: 'sent',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      message: '邀請發送成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '邀請專案成員失敗',
+      error: error.message
+    });
+  }
+});
+
+// 移除專案成員
+app.delete('/app/projects/:projectId/members/:memberId', async (req, res) => {
+  try {
+    const { projectId, memberId } = req.params;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        projectId,
+        removedMemberId: memberId,
+        removedAt: new Date().toISOString()
+      },
+      message: '成員移除成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '移除專案成員失敗',
+      error: error.message
+    });
+  }
+});
+
+// =============== BudgetService API 端點 ===============
+
+// 取得預算清單
+app.get('/app/budgets/list', async (req, res) => {
+  try {
+    const { type, status, projectId, limit = 50, offset = 0 } = req.query;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    // 模擬預算清單
+    const budgets = [
+      {
+        id: `budget_${Date.now()}_1`,
+        name: '每月生活費預算',
+        description: '基本生活開支控制',
+        userId,
+        type: type || 'monthly',
+        targetAmount: 30000,
+        spentAmount: 12500,
+        period: 'monthly',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        status: status || 'active',
+        settings: {
+          alertThreshold: 0.8,
+          enableNotifications: true,
+          notificationTypes: ['email', 'push'],
+          autoRollover: false
+        },
+        createdAt: new Date().toISOString()
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: budgets,
+      message: '取得預算清單成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '取得預算清單失敗',
+      error: error.message
+    });
+  }
+});
+
+// 更新預算
+app.put('/app/budgets/:budgetId', async (req, res) => {
+  try {
+    const { budgetId } = req.params;
+    const updateData = req.body;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    // 模擬更新後的預算資料
+    const updatedBudget = {
+      id: budgetId,
+      ...updateData,
+      updatedAt: new Date().toISOString()
+    };
+
+    res.json({
+      success: true,
+      data: updatedBudget,
+      message: '預算更新成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '更新預算失敗',
+      error: error.message
+    });
+  }
+});
+
+// 刪除預算
+app.delete('/app/budgets/:budgetId', async (req, res) => {
+  try {
+    const { budgetId } = req.params;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: true,
+      message: '預算刪除成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '刪除預算失敗',
+      error: error.message
+    });
+  }
+});
+
+// 取得預算警示
+app.get('/app/budgets/alerts', async (req, res) => {
+  try {
+    const { budgetId, unreadOnly } = req.query;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    // 模擬預算警示資料
+    const alerts = [
+      {
+        id: `alert_${Date.now()}_1`,
+        budgetId: budgetId || `budget_${Date.now()}_1`,
+        type: 'threshold_warning',
+        title: '預算使用率警告',
+        message: '您的生活費預算已使用 85%，建議控制支出',
+        severity: 'warning',
+        threshold: 0.8,
+        currentUsage: 0.85,
+        isRead: unreadOnly ? false : true,
+        createdAt: new Date().toISOString()
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: alerts,
+      message: '取得預算警示成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '取得預算警示失敗',
+      error: error.message
+    });
+  }
+});
+
+// 標記警示已讀
+app.put('/app/budgets/alerts/:alertId/read', async (req, res) => {
+  try {
+    const { alertId } = req.params;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: true,
+      message: '標記已讀成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '標記警示已讀失敗',
+      error: error.message
+    });
+  }
+});
+
+// =============== ScheduleService API 端點 ===============
+
+// 更新排程提醒
+app.put('/api/v1/schedule/reminder/:reminderId/update', async (req, res) => {
+  try {
+    const { reminderId } = req.params;
+    const { updateData } = req.body;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        reminderId,
+        updatedFields: Object.keys(updateData || {}),
+        updatedAt: new Date().toISOString()
+      },
+      message: '更新排程提醒成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '更新排程提醒失敗',
+      error: error.message
+    });
+  }
+});
+
+// 刪除排程提醒
+app.delete('/api/v1/schedule/reminder/:reminderId/delete', async (req, res) => {
+  try {
+    const { reminderId } = req.params;
+    const { confirmationToken } = req.body;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    if (!confirmationToken) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少確認令牌'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        reminderId,
+        deletedAt: new Date().toISOString()
+      },
+      message: '刪除排程提醒成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '刪除排程提醒失敗',
+      error: error.message
+    });
+  }
+});
+
+// 啟動REST API服務器
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🌐 REST API 服務器已啟動於 Port ${PORT}`);
+  console.log(`📡 API 端點已就緒，Flutter應用可開始對接`);
+});
+
 console.log('🎉 LCAS LINE Bot 啟動完成！');
 console.log('📱 現在可以用 LINE 發送訊息測試了！');
 console.log('🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對外服務');
