@@ -44,12 +44,12 @@ const detectTestModule = () => {
   // 策略1: 精確匹配SR模組 - 優先處理
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    // 專門處理 3005 和 SR 相關檔案
-    if (arg.includes('3005') || arg.includes('TC_SR') || arg.includes('SR.js')) {
+    // 專門處理 3105 和 SR 相關檔案
+    if (arg.includes('3105') || arg.includes('TC_SR') || arg.includes('SR.js')) {
       testFile = arg;
       detectionMethod = 'SR專用匹配';
       moduleInfo = {
-        code: '3005',
+        code: '3105',
         name: 'SR',
         type: 'TC-SR'
       };
@@ -63,14 +63,14 @@ const detectTestModule = () => {
     console.log('🔧 檢查轉義參數:', joinedArgs);
     
     // 強化正規表達式 - 專門處理SR模組
-    const srPattern = /(?:Test\\?\s*Code[\/\\])?(?:[\d\.\\]*\s*)?(?:3005|TC_SR|SR)/i;
+    const srPattern = /(?:Test\\?\s*Code[\/\\])?(?:[\d\.\\]*\s*)?(?:3105|TC_SR|SR)/i;
     const srMatch = joinedArgs.match(srPattern);
     
     if (srMatch) {
       testFile = srMatch[0];
       detectionMethod = 'SR轉義處理';
       moduleInfo = {
-        code: '3005',
+        code: '3105',
         name: 'SR',
         type: 'TC-SR'
       };
@@ -83,8 +83,8 @@ const detectTestModule = () => {
         testFile = generalMatch[0].replace(/\\/g, '');
         detectionMethod = '一般轉義處理';
         // 根據結果判斷模組
-        if (testFile.includes('3005') || testFile.includes('SR')) {
-          moduleInfo = { code: '3005', name: 'SR', type: 'TC-SR' };
+        if (testFile.includes('3105') || testFile.includes('SR')) {
+          moduleInfo = { code: '3105', name: 'SR', type: 'TC-SR' };
         }
       }
     }
@@ -99,8 +99,8 @@ const detectTestModule = () => {
         detectionMethod = '直接匹配';
         
         // 精確判斷模組類型
-        if (arg.includes('3005') || arg.includes('TC_SR') || arg.includes('SR.js')) {
-          moduleInfo = { code: '3005', name: 'SR', type: 'TC-SR' };
+        if (arg.includes('3105') || arg.includes('TC_SR') || arg.includes('SR.js')) {
+          moduleInfo = { code: '3105', name: 'SR', type: 'TC-SR' };
         } else if (arg.includes('3115') || arg.includes('TC_LBK') || arg.includes('LBK.js')) {
           moduleInfo = { code: '3115', name: 'LBK', type: 'TC-LBK' };
         } else if (arg.includes('3151') || arg.includes('TC_MLS') || arg.includes('MLS.js')) {
@@ -115,7 +115,7 @@ const detectTestModule = () => {
   if (!testFile || moduleInfo.name === 'LBK') {
     const allArgs = args.join(' ');
     const patterns = [
-      { regex: /3005|TC_SR|SR\.js/i, info: { code: '3005', name: 'SR', type: 'TC-SR' } },
+      { regex: /3105|TC_SR|SR\.js/i, info: { code: '3105', name: 'SR', type: 'TC-SR' } },
       { regex: /3115|TC_LBK|LBK\.js/i, info: { code: '3115', name: 'LBK', type: 'TC-LBK' } },
       { regex: /3151|TC_MLS|MLS\.js/i, info: { code: '3151', name: 'MLS', type: 'TC-MLS' } }
     ];
@@ -136,11 +136,11 @@ const detectTestModule = () => {
   // 額外驗證 - 確保SR模組正確識別
   if (moduleInfo.name === 'LBK') {
     const hasShellSRIndicators = args.some(arg => 
-      arg.includes('3005') || arg.includes('TC_SR') || arg.includes('SR')
+      arg.includes('3105') || arg.includes('TC_SR') || arg.includes('SR')
     );
     if (hasShellSRIndicators) {
       console.log('⚠️ 強制修正為SR模組 - Shell參數包含SR指標');
-      moduleInfo = { code: '3005', name: 'SR', type: 'TC-SR' };
+      moduleInfo = { code: '3105', name: 'SR', type: 'TC-SR' };
       detectionMethod += ' + 強制修正';
     }
   }
