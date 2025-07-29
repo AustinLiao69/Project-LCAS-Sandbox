@@ -1,9 +1,9 @@
 
 /**
- * entry_service.dart_記帳服務_1.0.0
+ * entry_service.dart_記帳服務_1.1.0
  * @module 記帳服務
  * @description LCAS 2.0 Flutter 記帳服務 - 記帳項目建立、查詢、科目管理、使用者設定
- * @update 2025-01-24: 建立記帳服務，實作4個API端點
+ * @update 2025-01-24: 升級至v1.1.0，增強核心記帳功能，完善業務邏輯實作
  */
 
 import 'dart:convert';
@@ -25,16 +25,45 @@ class EntryService {
 
   /**
    * 01. 建立記帳項目 - 新增收入或支出記錄
-   * @version 2025-01-24-V1.0.0
+   * @version 2025-01-24-V1.1.0
    * @date 2025-01-24 11:00:00
-   * @description 建立新的記帳項目，支援多帳本記帳
+   * @description 建立新的記帳項目，支援多帳本記帳，增強資料驗證和業務邏輯處理
    */
   Future<ApiResponse<LedgerEntry>> createEntry(CreateEntryRequest request) async {
     try {
-      final response = await _apiClient.post('/app/ledger/entry', data: request.toJson());
+      // 增強資料驗證
+      if (request.amount <= 0) {
+        return ApiResponse<LedgerEntry>(
+          success: false,
+          data: null,
+          message: '金額必須大於0',
+          timestamp: DateTime.now(),
+        );
+      }
+
+      if (request.description.trim().isEmpty) {
+        return ApiResponse<LedgerEntry>(
+          success: false,
+          data: null,
+          message: '記帳項目描述不能為空',
+          timestamp: DateTime.now(),
+        );
+      }
+
+      // 自動設定時間戳記
+      final enhancedRequest = request.copyWith(
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final response = await _apiClient.post('/app/ledger/entry', data: enhancedRequest.toJson());
       
       if (response.data['success'] == true) {
         final entry = LedgerEntry.fromJson(response.data['data']);
+        
+        // 記錄成功操作
+        debugPrint('記帳成功: ${entry.id}, 金額: ${entry.amount}, 類型: ${entry.type}');
+        
         return ApiResponse<LedgerEntry>(
           success: true,
           data: entry,

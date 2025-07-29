@@ -1,9 +1,9 @@
 
 /**
- * auth_service.dart_認證服務_1.0.0
+ * auth_service.dart_認證服務_1.1.0
  * @module 認證服務
  * @description LCAS 2.0 Flutter 認證服務 - 使用者註冊、登入、登出、帳號管理
- * @update 2025-01-24: 建立認證服務，實作5個API端點
+ * @update 2025-01-24: 升級至v1.1.0，增強認證安全性和Token管理機制
  */
 
 import 'dart:convert';
@@ -28,13 +28,37 @@ class AuthService {
 
   /**
    * 01. 使用者註冊 - 新建帳號並初始化基礎資料
-   * @version 2025-01-24-V1.0.0
+   * @version 2025-01-24-V1.1.0
    * @date 2025-01-24 10:30:00
-   * @description 處理使用者註冊流程，包含帳號驗證和初始化
+   * @description 處理使用者註冊流程，包含帳號驗證、密碼強度檢查和基礎資料初始化
    */
   Future<AuthResponse> register(RegisterRequest request) async {
     try {
-      final response = await _apiClient.post('/auth/register', data: request.toJson());
+      // 增強密碼強度檢查
+      if (!_isPasswordStrong(request.password)) {
+        return AuthResponse(
+          success: false,
+          message: '密碼強度不足：至少8字元，包含大小寫字母、數字',
+          timestamp: DateTime.now(),
+        );
+      }
+
+      // Email格式驗證
+      if (!_isValidEmail(request.email)) {
+        return AuthResponse(
+          success: false,
+          message: 'Email格式不正確',
+          timestamp: DateTime.now(),
+        );
+      }
+
+      // 增強請求資料
+      final enhancedRequest = request.copyWith(
+        registeredAt: DateTime.now(),
+        deviceInfo: await _getDeviceInfo(),
+      );
+
+      final response = await _apiClient.post('/auth/register', data: enhancedRequest.toJson());
       
       final authResponse = AuthResponse.fromJson(response.data);
       
@@ -45,11 +69,69 @@ class AuthService {
           refreshToken: authResponse.refreshToken ?? '',
           expiresAt: DateTime.now().add(Duration(seconds: authResponse.expiresIn ?? 86400)),
         ));
+
+        // 初始化使用者設定
+        await _initializeUserSettings(authResponse.user?.id);
+        
+        debugPrint('用戶註冊成功: ${authResponse.user?.email}');
       }
       
       return authResponse;
     } catch (e) {
       return _errorHandler.handleAuthError(e, '註冊失敗');
+    }
+  }
+
+  /**
+   * 密碼強度檢查
+   * @version 2025-01-24-V1.1.0
+   */
+  bool _isPasswordStrong(String password) {
+    if (password.length < 8) return false;
+    if (!password.contains(RegExp(r'[a-z]'))) return false;
+    if (!password.contains(RegExp(r'[A-Z]'))) return false;
+    if (!password.contains(RegExp(r'[0-9]'))) return false;
+    return true;
+  }
+
+  /**
+   * Email格式驗證
+   * @version 2025-01-24-V1.1.0
+   */
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  /**
+   * 取得設備資訊
+   * @version 2025-01-24-V1.1.0
+   */
+  Future<Map<String, dynamic>> _getDeviceInfo() async {
+    // 這裡可以整合device_info_plus套件
+    return {
+      'platform': defaultTargetPlatform.name,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+  }
+
+  /**
+   * 初始化使用者設定
+   * @version 2025-01-24-V1.1.0
+   */
+  Future<void> _initializeUserSettings(String? userId) async {
+    if (userId != null) {
+      try {
+        // 設定預設使用者偏好
+        final defaultSettings = UserSettings(
+          currency: 'TWD',
+          dateFormat: 'yyyy-MM-dd',
+          notifications: true,
+          autoBackup: true,
+        );
+        await updateUserSettings(defaultSettings);
+      } catch (e) {
+        debugPrint('初始化使用者設定失敗: $e');
+      }
     }
   }
 
