@@ -116,6 +116,12 @@ error-handler.js v1.0.0   - 統一錯誤處理
 /webhook/*                   - WH 模組 LINE Webhook
 ```
 
+#### 3.4.5 WH模組系統管理API（透過閘道）
+```
+/gateway/v1/system/webhook/health     - Webhook健康檢查
+/gateway/v1/system/webhook/logs       - Webhook日誌查詢
+```
+
 ---
 
 ## 4. 須新增/修改內容
@@ -210,6 +216,10 @@ error-handler.js v1.0.0   - 統一錯誤處理
 #### 4.2.7 BS 模組升級至 v2.0.0（新增 2 個 API 端點函數）
 - `BS_apiCreateBackup()` - 建立備份 API
 - `BS_apiRestoreBackup()` - 還原備份 API
+
+#### 4.2.8 WH 模組升級至 v2.2.0（新增 2 個 API 端點函數）
+- `WH_apiHealthCheck()` - Webhook健康檢查 API
+- `WH_apiGetLogs()` - Webhook日誌查詢 API
 
 ### 4.3 主程式整合升級
 
@@ -331,6 +341,7 @@ error-handler.js v1.0.0   - 統一錯誤處理
 - **CM.js**：v1.x.x → v2.0.0（新增 3 個 API 函數）
 - **MRA.js**：v1.x.x → v2.0.0（新增 3 個 API 函數）
 - **BS.js**：v1.x.x → v2.0.0（新增 2 個 API 函數）
+- **WH.js**：v2.1.x → v2.2.0（新增 2 個 API 函數）
 
 ### 8.3 主程式版本升級
 - **index.js**：v2.1.x → v2.2.0（整合 API 路由系統）
