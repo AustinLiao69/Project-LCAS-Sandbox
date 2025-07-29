@@ -1,9 +1,8 @@
-
 /**
  * ReportService_報表服務模組_1.1.0
  * @module ReportService
  * @description 報表功能服務 - 標準報表產出、自定義報表設計、報表匯出功能
- * @update 2025-01-24: 升級至v1.1.0，增加檔案處理、PDF生成和Excel處理功能
+ * @update 2025-01-24: 升級至v1.1.0，增強檔案處理和模板系統
  */
 
 import 'package:http/http.dart' as http;
@@ -23,10 +22,10 @@ import '../models/report_models.dart';
 class ReportService {
   final ApiClient _apiClient;
   final ErrorHandler _errorHandler;
-  
+
   // 報表模板快取
   final Map<String, ReportTemplate> _templateCache = {};
-  
+
   // 本地儲存路徑
   Directory? _localDirectory;
 
@@ -77,7 +76,7 @@ class ReportService {
 
       if (response.success) {
         final reportResponse = ReportGenerationResponse.fromJson(response.data);
-        
+
         // 根據格式生成本地檔案
         if (request.format == 'pdf') {
           final pdfFile = await _generatePdfReport(reportResponse);
@@ -89,7 +88,7 @@ class ReportService {
 
         // 快取結果
         _cacheReport(cacheKey, reportResponse);
-        
+
         return reportResponse;
       } else {
         throw Exception(response.message ?? '報表產生失敗');
@@ -109,7 +108,7 @@ class ReportService {
    */
   Future<File> _generatePdfReport(ReportGenerationResponse reportData) async {
     final pdf = pw.Document();
-    
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -136,7 +135,7 @@ class ReportService {
     final fileName = 'report_${DateTime.now().millisecondsSinceEpoch}.pdf';
     final file = File('${_localDirectory!.path}/reports/$fileName');
     await file.writeAsBytes(await pdf.save());
-    
+
     debugPrint('PDF報表已生成: ${file.path}');
     return file;
   }
@@ -164,11 +163,11 @@ class ReportService {
     final fileName = 'report_${DateTime.now().millisecondsSinceEpoch}.xlsx';
     final file = File('${_localDirectory!.path}/reports/$fileName');
     final fileBytes = excel.save();
-    
+
     if (fileBytes != null) {
       await file.writeAsBytes(fileBytes);
     }
-    
+
     debugPrint('Excel報表已生成: ${file.path}');
     return file;
   }
@@ -248,7 +247,7 @@ class ReportService {
   }) async {
     try {
       final queryParams = request.toQueryParams();
-      
+
       final response = await _apiClient.get(
         '/app/reports/export',
         queryParams: queryParams,
@@ -279,7 +278,7 @@ class ReportService {
   }) async {
     try {
       final queryParams = request?.toQueryParams() ?? {};
-      
+
       final response = await _apiClient.get(
         '/app/reports/list',
         queryParams: queryParams,
