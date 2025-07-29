@@ -20,6 +20,11 @@ dependencies:
   
   # JSON序列化
   json_annotation: ^4.8.1
+  json_serializable: ^6.7.1
+  
+  # 定時任務支援 (SystemService需要)
+  cron: ^0.6.0
+  workmanager: ^0.5.2
   
   # 狀態管理
   provider: ^6.0.5
