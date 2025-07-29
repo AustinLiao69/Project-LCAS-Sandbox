@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.1.8
+ * WH_Webhook處理模組_2.1.9
  * @module Webhook模組  
- * @description LINE Webhook處理模組 - 配合CommonJS頂層await修復，確保穩定運作
- * @update 2025-07-26: 升級至v2.1.8，配合index.js v2.1.13 頂層await修復，語法錯誤已解決
+ * @description LINE Webhook處理模組 - 改用Firebase動態配置，移除靜態serviceaccountkey.json依賴
+ * @update 2025-01-24: 升級至v2.1.9，實作Firebase動態配置，提升安全性
  */
 
 // 首先引入其他模組 - 增強安全載入
@@ -70,23 +70,34 @@ const path = require("path");
 const moment = require("moment-timezone");
 const NodeCache = require("node-cache");
 
-// 引入Firebase Admin SDK
-const admin = require("firebase-admin");
+// 引入Firebase動態配置模組
+const firebaseConfig = require('./firebase-config');
 
-// 初始化Firebase（如果尚未初始化）
-if (!admin.apps.length) {
-  try {
-    const serviceAccount = require("./Serviceaccountkey.json");
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-    console.log("WH模組：Firebase初始化成功");
-  } catch (error) {
-    console.error("WH模組：Firebase初始化失敗:", error);
+// 初始化Firebase（使用動態配置）
+let admin, db;
+
+try {
+  // 取得Firebase Admin實例
+  admin = firebaseConfig.admin;
+  
+  // 初始化Firebase（如果尚未初始化）
+  firebaseConfig.initializeFirebaseAdmin();
+  
+  // 取得 Firestore 實例
+  db = firebaseConfig.getFirestoreInstance();
+  
+  console.log("✅ WH模組：Firebase動態配置初始化成功");
+  
+} catch (error) {
+  console.error("❌ WH模組：Firebase動態配置初始化失敗:", error.message);
+  
+  // 檢查環境變數設定狀態
+  const envCheck = firebaseConfig.checkEnvironmentVariables();
+  if (!envCheck.isComplete) {
+    console.log('💡 WH模組：請檢查Replit Secrets中的Firebase環境變數設定');
+    console.log(`缺少變數: ${envCheck.missingVars.join(', ')}`);
   }
 }
-
-const db = admin.firestore();
 
 // 1. 配置參數
 const WH_CONFIG = {
