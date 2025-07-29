@@ -28,6 +28,7 @@
 
 ### 2.1 業務需求
 - **前後端分離**：支援多平台客戶端（Flutter、Web、第三方整合）
+- **支援LINE OA**: LINE OA與Android App (Flutter)、iOS App (Flutter)
 - **API 標準化**：建立企業級 RESTful API 設計規範
 - **開發效率**：前後端並行開發，加速產品迭代
 - **系統現代化**：支援微服務架構和雲端部署
@@ -47,33 +48,72 @@
 
 ## 3. 技術架構設計
 
-### 3.1 API 架構層次
+### 3.1 混合架構設計
+**採用混合架構方案，平衡效能與安全性**
+
 ```
-Flutter 應用層 (Dart)
+應用邏輯層 (Flutter/Dart + LINE OA + Web)
        ↓
-RESTful API 介面層
+[混合路由] API分層策略
        ↓
-業務邏輯模組層 (Node.js)
+高頻低延遲API (直接存取) | 安全敏感API (透過閘道)
+       ↓
+商業邏輯層 (Node.js模組群)
        ↓
 資料存取層 (Firestore)
 ```
 
-### 3.2 核心基礎設施模組
+### 3.2 API分層策略
+
+#### 3.2.1 高頻低延遲API（直接模組存取）
+- **記帳功能** (BK模組) - 追求最佳記帳體驗
+- **快速查詢** (LBK模組) - 即時查詢回應
+- **即時同步** (CM模組) - WebSocket即時協作
+
+#### 3.2.2 安全敏感API（透過API閘道）
+- **使用者認證** (AM模組) - 統一身份驗證
+- **權限管理** (CM模組) - 集中權限控制
+- **系統管理** (System APIs) - 集中管理監控
+
+#### 3.2.3 LINE OA特殊處理
+- **LINE OA平台**: 不經過API閘道，直接與WH模組通訊
+- **Webhook處理**: 維持現有直接處理流程，確保即時回應
+
+### 3.3 核心基礎設施模組
 ```
-api-router.js v1.0.0      - 統一路由管理
+api-gateway.js v1.0.0     - API閘道（安全敏感API）
+direct-router.js v1.0.0   - 直接路由（高頻API）  
 auth-middleware.js v1.0.0 - 認證中介軟體  
 error-handler.js v1.0.0   - 統一錯誤處理
 ```
 
-### 3.3 模組 API 端點架構
+### 3.4 模組 API 端點架構
+
+#### 3.4.1 通過API閘道的端點（安全敏感）
 ```
-/api/v1/auth/*           - AM 模組 (6 個端點)
-/api/v1/app/ledger/*     - BK 模組 (2 個端點)
-/api/v1/app/projects/*   - MLS 模組 (6 個端點)
-/api/v1/app/budgets/*    - BM 模組 (3 個端點)
-/api/v1/app/collaborate/* - CM 模組 (3 個端點)
-/api/v1/reports/*        - MRA 模組 (3 個端點)
-/api/v1/backup/*         - BS 模組 (2 個端點)
+/gateway/v1/auth/*           - AM 模組 (6 個端點)
+/gateway/v1/app/collaborate/permissions/* - CM 模組權限管理 (2 個端點)
+/gateway/v1/system/*         - 系統管理 APIs (8 個端點)
+```
+
+#### 3.4.2 直接存取端點（高頻低延遲）
+```
+/direct/v1/app/ledger/*      - BK 模組 (2 個端點)
+/direct/v1/app/query/*       - LBK 模組快速查詢
+/direct/v1/app/sync/*        - CM 模組即時同步 (1 個端點)
+```
+
+#### 3.4.3 混合端點（根據功能分流）
+```
+/api/v1/app/projects/*       - MLS 模組 (6 個端點)
+/api/v1/app/budgets/*        - BM 模組 (3 個端點)
+/api/v1/reports/*            - MRA 模組 (3 個端點)
+/api/v1/backup/*             - BS 模組 (2 個端點)
+```
+
+#### 3.4.4 LINE OA專用（不經閘道）
+```
+/webhook/*                   - WH 模組 LINE Webhook
 ```
 
 ---
@@ -82,18 +122,31 @@ error-handler.js v1.0.0   - 統一錯誤處理
 
 ### 4.1 新建核心基礎設施模組
 
-#### 4.1.1 API 路由器模組 (api-router.js v1.0.0)
+#### 4.1.1 API 閘道模組 (api-gateway.js v1.0.0)
 **功能職責**：
-- 統一 API 路由管理和版本控制
-- 請求路由分發和中介軟體整合
-- API 版本管理和向下相容性
+- 安全敏感API的統一入口管理
+- 認證授權集中處理
+- 流量控制與監控
+- API版本管理和向下相容性
+
+**核心函數**（4個）：
+- `initializeApiGateway()` - 初始化 API 閘道
+- `routeSecureEndpoints()` - 路由安全端點
+- `enforceSecurityPolicies()` - 執行安全政策
+- `monitorApiUsage()` - 監控API使用狀況
+
+#### 4.1.2 直接路由模組 (direct-router.js v1.0.0)
+**功能職責**：
+- 高頻API的直接路由處理
+- 最小延遲的請求分發
+- 效能最佳化路由
 
 **核心函數**（3個）：
-- `initializeApiRouter()` - 初始化 API 路由器
-- `registerModuleRoutes()` - 註冊模組路由
-- `handleApiVersioning()` - 處理 API 版本控制
+- `initializeDirectRouter()` - 初始化直接路由器
+- `handleHighFrequencyApis()` - 處理高頻API
+- `optimizeRoutePerformance()` - 最佳化路由效能
 
-#### 4.1.2 認證中介軟體模組 (auth-middleware.js v1.0.0)
+#### 4.1.3 認證中介軟體模組 (auth-middleware.js v1.0.0)
 **功能職責**：
 - JWT Token 驗證和解析
 - 使用者權限檢查和角色控制
@@ -105,7 +158,7 @@ error-handler.js v1.0.0   - 統一錯誤處理
 - `validateApiAccess()` - API 存取權限驗證
 - `handleAuthError()` - 認證錯誤處理
 
-#### 4.1.3 統一錯誤處理模組 (error-handler.js v1.0.0)
+#### 4.1.4 統一錯誤處理模組 (error-handler.js v1.0.0)
 **功能職責**：
 - 統一錯誤回應格式和狀態碼
 - 錯誤日誌記錄和監控整合
@@ -210,10 +263,11 @@ error-handler.js v1.0.0   - 統一錯誤處理
 
 ## 6. 實作階段規劃
 
-### Phase 1：核心基礎設施建立（Week 1）
-- 建立三個核心基礎設施模組
-- 實作統一路由和錯誤處理機制
-- 建立 JWT 認證中介軟體
+### Phase 1：混合架構基礎建立
+- 建立API閘道模組 (api-gateway.js)
+- 建立直接路由模組 (direct-router.js)
+- 實作認證中介軟體 (auth-middleware.js)
+- 建立統一錯誤處理機制 (error-handler.js)
 
 ### Phase 2：AM 模組 API 實作（Week 2）
 - 實作使用者認證相關 6 個 API 端點
@@ -264,7 +318,8 @@ error-handler.js v1.0.0   - 統一錯誤處理
 ## 8. 版本升級計畫
 
 ### 8.1 新建模組版本
-- **api-router.js**：v1.0.0
+- **api-gateway.js**：v1.0.0（安全敏感API閘道）
+- **direct-router.js**：v1.0.0（高頻API直接路由）
 - **auth-middleware.js**：v1.0.0
 - **error-handler.js**：v1.0.0
 
@@ -334,13 +389,17 @@ error-handler.js v1.0.0   - 統一錯誤處理
 ## 11. 驗收標準
 
 ### 11.1 功能驗收
-- [ ] 3 個核心基礎設施模組正常運作
-- [ ] 25 個業務模組 API 端點完整實作
+- [ ] 4 個核心基礎設施模組正常運作（含混合架構）
+- [ ] 32 個業務模組 API 端點完整實作
+- [ ] 混合路由架構運作正常（閘道+直接存取）
 - [ ] JWT 認證和授權機制正常運作
 - [ ] 統一錯誤處理和回應格式一致
+- [ ] LINE OA直接通訊路徑保持暢通
 
 ### 11.2 效能驗收
-- [ ] API 平均回應時間 < 200ms
+- [ ] 直接存取API 平均回應時間 < 100ms
+- [ ] 閘道API 平均回應時間 < 200ms
+- [ ] LINE OA Webhook 回應時間 < 50ms
 - [ ] 並發處理能力 > 1000 請求/秒
 - [ ] 系統可用性 > 99.9%
 - [ ] 記憶體使用穩定，無記憶體洩漏
