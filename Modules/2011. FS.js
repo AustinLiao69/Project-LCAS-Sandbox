@@ -1,28 +1,44 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_1.2.5
+* FS_FirestoreStructure_資料庫結構模組_1.2.6
 * @module 資料庫結構模組
-* @description LCAS 2.0 Firestore資料庫結構初始化 - 建立完整架構（含Database層級）
-* @update 2025-07-23: 升級至1.2.5版本，修正科目資料檔案路徑錯誤
+* @description LCAS 2.0 Firestore資料庫結構初始化 - 使用動態配置，安全管理敏感資訊
+* @update 2025-01-24: 升級至1.2.6版本，改用動態配置模組，移除靜態serviceaccountkey.json依賴
 */
 
-// 直接使用 Firebase Admin SDK 和 serviceaccountkey.json
-const admin = require('firebase-admin');
-const serviceAccount = require('./Serviceaccountkey.json');
+// 使用動態配置模組
+const firebaseConfig = require('./firebase-config');
 
-// 初始化 Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
-  });
+// 初始化 Firebase Admin（使用動態配置）
+let admin, db, PROJECT_ID, UNIVERSE_DOMAIN;
+
+try {
+  // 取得Firebase Admin實例
+  admin = firebaseConfig.admin;
+  
+  // 初始化Firebase（如果尚未初始化）
+  firebaseConfig.initializeFirebaseAdmin();
+  
+  // 取得 Firestore 實例
+  db = firebaseConfig.getFirestoreInstance();
+  
+  // 取得專案資訊
+  const projectInfo = firebaseConfig.getProjectInfo();
+  PROJECT_ID = projectInfo.PROJECT_ID;
+  UNIVERSE_DOMAIN = projectInfo.UNIVERSE_DOMAIN;
+  
+  console.log('✅ FS模組：Firebase動態配置載入成功');
+  
+} catch (error) {
+  console.error('❌ FS模組：Firebase動態配置載入失敗:', error.message);
+  
+  // 檢查環境變數設定狀態
+  const envCheck = firebaseConfig.checkEnvironmentVariables();
+  console.log('💡 請檢查Replit Secrets中的Firebase環境變數設定');
+  
+  // 設定預設值以避免模組完全失效
+  PROJECT_ID = 'default-project';
+  UNIVERSE_DOMAIN = 'googleapis.com';
 }
-
-// 取得 Firestore 實例
-const db = admin.firestore();
-
-// 從 serviceAccount 取得專案資訊，並處理可能的 undefined 情況
-const PROJECT_ID = serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'default-project';
-const UNIVERSE_DOMAIN = 'googleapis.com';
 
 // 設定時區為 UTC+8 (Asia/Taipei)
 const TIMEZONE = 'Asia/Taipei';
