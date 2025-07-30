@@ -1,9 +1,9 @@
 
 /**
- * budget_service.dart_預算服務_1.0.0
+ * budget_service.dart_預算服務_1.1.0
  * @module 預算服務
  * @description LCAS 2.0 Flutter 預算服務 - 預算建立、追蹤監控、智慧警示
- * @update 2025-01-24: 建立預算服務，實作3個API端點
+ * @update 2025-01-24: 升級至v1.1.0版本，確保與核心基礎設施模組完整相容
  */
 
 import 'dart:convert';

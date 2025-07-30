@@ -1,9 +1,9 @@
 
 /**
- * ApiClient_核心API客戶端_2.0.0
+ * ApiClient_核心API客戶端_2.1.0
  * @module API客戶端模組
  * @description LCAS 2.0 統一API調用客戶端 - 提供標準化HTTP請求處理
- * @update 2025-01-23: 建立v2.0.0版本，支援32個API端點標準化調用
+ * @update 2025-01-24: 升級至v2.1.0版本，修復依賴問題，確保與核心模組完整對接
  */
 
 import 'dart:convert';
