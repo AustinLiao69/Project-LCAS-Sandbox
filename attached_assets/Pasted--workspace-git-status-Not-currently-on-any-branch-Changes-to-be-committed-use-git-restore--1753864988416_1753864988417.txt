@@ -1,0 +1,139 @@
+~/workspace$ git status
+Not currently on any branch.
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+    renamed:    Modules/2001. BK.js -> 01. Replit_Module code_Business layer/2001. BK.js
+    renamed:    Modules/2005. SR.js -> 01. Replit_Module code_Business layer/2005. SR.js
+    renamed:    Modules/2009. AM.js -> 01. Replit_Module code_Business layer/2009. AM.js
+    renamed:    Modules/2010. DL.js -> 01. Replit_Module code_Business layer/2010. DL.js
+    renamed:    Modules/2011. FS.js -> 01. Replit_Module code_Business layer/2011. FS.js
+    renamed:    Modules/2012. BM.js -> 01. Replit_Module code_Business layer/2012. BM.js
+    renamed:    Modules/2013. CM.js -> 01. Replit_Module code_Business layer/2013. CM.js
+    renamed:    Modules/2014. BS.js -> 01. Replit_Module code_Business layer/2014. BS.js
+    renamed:    Modules/2015. LBK.js -> 01. Replit_Module code_Business layer/2015. LBK.js
+    renamed:    Modules/2020. WH.js -> 01. Replit_Module code_Business layer/2020. WH.js
+    renamed:    Modules/2031. DD1.js -> 01. Replit_Module code_Business layer/2031. DD1.js
+    renamed:    Modules/2032. DD2.js -> 01. Replit_Module code_Business layer/2032. DD2.js
+    renamed:    Modules/2033. DD3.js -> 01. Replit_Module code_Business layer/2033. DD3.js
+    renamed:    Modules/2041. MRA.js -> 01. Replit_Module code_Business layer/2041. MRA.js
+    renamed:    Modules/2051. MLS.js -> 01. Replit_Module code_Business layer/2051. MLS.js
+    renamed:    Modules/2061. GR.js -> 01. Replit_Module code_Business layer/2061. GR.js
+    renamed:    Modules/firebase-config.js -> 01. Replit_Module code_Business layer/firebase-config.js
+    renamed:    Project documents/0015. Product_SPEC_LCAS_2.0.md -> 02. Replit_Project documents/0015. Product_SPEC_LCAS_2.0.md
+    renamed:    Project documents/0018. Feature list.md -> 02. Replit_Project documents/0018. Feature list.md
+    renamed:    Project documents/9999. Subject_code.json -> 02. Replit_Project documents/9999. Subject_code.json
+    renamed:    "PRD/1005. SR_\346\216\222\347\250\213\346\217\220\351\206\222\346\250\241\347\265\204.md" -> "03. Replit_PRD/1005. SR_\346\216\222\347\250\213\346\217\220\351\206\222\346\250\241\347\265\204.md"
+    renamed:    "PRD/1009. AM_\345\270\263\350\231\237\347\256\241\347\220\206\346\250\241\347\265\204.md" -> "03. Replit_PRD/1009. AM_\345\270\263\350\231\237\347\256\241\347\220\206\346\250\241\347\265\204.md"
+    renamed:    "PRD/1014. BS_\345\202\231\344\273\275\346\234\215\345\213\231\346\250\241\347\265\204.md" -> "03. Replit_PRD/1014. BS_\345\202\231\344\273\275\346\234\215\345\213\231\346\250\241\347\265\204.md"
+    renamed:    "PRD/1015. LBK_\345\277\253\351\200\237\350\250\230\345\270\263\346\250\241\347\265\204.md" -> "03. Replit_PRD/1015. LBK_\345\277\253\351\200\237\350\250\230\345\270\263\346\250\241\347\265\204.md"
+    renamed:    "TDD/5005. SR_\346\216\222\347\250\213\346\217\220\351\206\222\346\250\241\347\265\204.md" -> "04. Replit_TDD/5005. SR_\346\216\222\347\250\213\346\217\220\351\206\222\346\250\241\347\265\204.md"
+    renamed:    "TDD/5009. AM_\345\270\263\350\231\237\347\256\241\347\220\206\346\250\241\347\265\204.md" -> "04. Replit_TDD/5009. AM_\345\270\263\350\231\237\347\256\241\347\220\206\346\250\241\347\265\204.md"
+    renamed:    "TDD/5011. MLS_\345\244\232\345\270\263\346\234\254\346\250\241\347\265\204.md" -> "04. Replit_TDD/5011. MLS_\345\244\232\345\270\263\346\234\254\346\250\241\347\265\204.md"
+    renamed:    "TDD/5012. BM_\351\240\220\347\256\227\347\256\241\347\220\206\346\250\241\347\265\204.md" -> "04. Replit_TDD/5012. BM_\351\240\220\347\256\227\347\256\241\347\220\206\346\250\241\347\265\204.md"
+    renamed:    "TDD/5013. CM_\345\215\224\344\275\234\347\256\241\347\220\206\346\250\241\347\265\204.md" -> "04. Replit_TDD/5013. CM_\345\215\224\344\275\234\347\256\241\347\220\206\346\250\241\347\265\204.md"
+    renamed:    "TDD/5014. BS_\345\202\231\344\273\275\346\234\215\345\213\231\346\250\241\347\265\204.md" -> "04. Replit_TDD/5014. BS_\345\202\231\344\273\275\346\234\215\345\213\231\346\250\241\347\265\204.md"
+    renamed:    "TDD/5015. LBK_\345\277\253\351\200\237\350\250\230\345\270\263\346\250\241\347\265\204.md" -> "04. Replit_TDD/5015. LBK_\345\277\253\351\200\237\350\250\230\345\270\263\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3001. BK_\350\250\230\345\270\263\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3001. BK_\350\250\230\345\270\263\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3005. SR_\346\216\222\347\250\213\346\217\220\351\206\222\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3005. SR_\346\216\222\347\250\213\346\217\220\351\206\222\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3009. AM_\345\270\263\350\231\237\347\256\241\347\220\206\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3009. AM_\345\270\263\350\231\237\347\256\241\347\220\206\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3010. DL_\350\250\272\346\226\267\350\210\207\346\227\245\350\252\214\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3010. DL_\350\250\272\346\226\267\350\210\207\346\227\245\350\252\214\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3012. BM_\351\240\220\347\256\227\347\256\241\347\220\206\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3012. BM_\351\240\220\347\256\227\347\256\241\347\220\206\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3013. CM_\345\215\224\344\275\234\347\256\241\347\220\206\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3013. CM_\345\215\224\344\275\234\347\256\241\347\220\206\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3014. BS_\345\202\231\344\273\275\346\234\215\345\213\231\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3014. BS_\345\202\231\344\273\275\346\234\215\345\213\231\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3015. LBK_\345\277\253\351\200\237\350\250\230\345\270\263\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3015. LBK_\345\277\253\351\200\237\350\250\230\345\270\263\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3020. WH_Webhook\350\231\225\347\220\206\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3020. WH_Webhook\350\231\225\347\220\206\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3031. DD1_\346\240\270\345\277\203\345\215\224\350\252\277\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3031. DD1_\346\240\270\345\277\203\345\215\224\350\252\277\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3032. DD2_\346\231\272\346\205\247\350\231\225\347\220\206\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3032. DD2_\346\231\272\346\205\247\350\231\225\347\220\206\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3033. DD3_\350\263\207\346\226\231\346\234\215\345\213\231\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3033. DD3_\350\263\207\346\226\231\346\234\215\345\213\231\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3041. MRA_\345\240\261\350\241\250\345\220\210\344\275\265\345\217\212\345\210\206\346\236\220\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3041. MRA_\345\240\261\350\241\250\345\220\210\344\275\265\345\217\212\345\210\206\346\236\220\346\250\241\347\265\204.md"
+    renamed:    "Test plan/3051. MLS_\345\244\232\345\270\263\346\234\254\347\256\241\347\220\206\346\250\241\347\265\204.md" -> "05. Replit_Test plan/3051. MLS_\345\244\232\345\270\263\346\234\254\347\256\241\347\220\206\346\250\241\347\265\204.md"
+    renamed:    Test plan/3097. RESTful_API.md -> 05. Replit_Test plan/3097. RESTful_API.md
+    renamed:    Flutter test plan/3098. AP_Layer.md -> 05. Replit_Test plan/3098. AP_Layer.md
+    renamed:    Test plan/3099. SIT_AP_RESTful.md -> 05. Replit_Test plan/3099. SIT_AP_RESTful.md
+    renamed:    Test Code/3105. TC_SR.js -> 06. Replit_Test Code/3105. TC_SR.js
+    renamed:    Test Code/3115. TC_LBK.js -> 06. Replit_Test Code/3115. TC_LBK.js
+    renamed:    Test Code/3151. TC_MLS.js -> 06. Replit_Test Code/3151. TC_MLS.js
+    renamed:    Test Code/jest.config.js -> 06. Replit_Test Code/jest.config.js
+    renamed:    Test Code/markdown-reporter.js -> 06. Replit_Test Code/markdown-reporter.js
+    renamed:    Test Code/setup.js -> 06. Replit_Test Code/setup.js
+    renamed:    Test report/Archive/coverage-report-3005-TC-SR-20250722-1432.md -> 07. Replit_Test report/Archive/coverage-report-3005-TC-SR-20250722-1432.md
+    renamed:    Test report/Archive/coverage-report-3005-TC-SR-20250722-1448.md -> 07. Replit_Test report/Archive/coverage-report-3005-TC-SR-20250722-1448.md
+    renamed:    Test report/Archive/coverage-report-3005-TC-SR-20250722-1458.md -> 07. Replit_Test report/Archive/coverage-report-3005-TC-SR-20250722-1458.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-2025-07-15-09-14-27.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-2025-07-15-09-14-27.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-20250715-1724.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-20250715-1724.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-20250715-1840.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-20250715-1840.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-20250715-1857.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-20250715-1857.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-20250715-1901.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-20250715-1901.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-20250715-1906.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-20250715-1906.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-20250715-1917.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-20250715-1917.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-20250722-1334.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-20250722-1334.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-20250722-1417.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-20250722-1417.md
+    renamed:    Test report/Archive/coverage-report-3115-TC-LBK-20250722-1429.md -> 07. Replit_Test report/Archive/coverage-report-3115-TC-LBK-20250722-1429.md
+    renamed:    Test report/Archive/performance-report-3005-TC-SR-20250722-1432.md -> 07. Replit_Test report/Archive/performance-report-3005-TC-SR-20250722-1432.md
+    renamed:    Test report/Archive/performance-report-3005-TC-SR-20250722-1448.md -> 07. Replit_Test report/Archive/performance-report-3005-TC-SR-20250722-1448.md
+    renamed:    Test report/Archive/performance-report-3005-TC-SR-20250722-1458.md -> 07. Replit_Test report/Archive/performance-report-3005-TC-SR-20250722-1458.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-2025-07-15-09-14-27.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-2025-07-15-09-14-27.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-20250715-1724.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-20250715-1724.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-20250715-1840.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-20250715-1840.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-20250715-1857.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-20250715-1857.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-20250715-1901.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-20250715-1901.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-20250715-1906.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-20250715-1906.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-20250715-1917.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-20250715-1917.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-20250722-1334.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-20250722-1334.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-20250722-1417.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-20250722-1417.md
+    renamed:    Test report/Archive/performance-report-3115-TC-LBK-20250722-1429.md -> 07. Replit_Test report/Archive/performance-report-3115-TC-LBK-20250722-1429.md
+    renamed:    Test report/Archive/test-report-3005-TC-SR-20250722-1432.md -> 07. Replit_Test report/Archive/test-report-3005-TC-SR-20250722-1432.md
+    renamed:    Test report/Archive/test-report-3005-TC-SR-20250722-1448.md -> 07. Replit_Test report/Archive/test-report-3005-TC-SR-20250722-1448.md
+    renamed:    Test report/Archive/test-report-3005-TC-SR-20250722-1458.md -> 07. Replit_Test report/Archive/test-report-3005-TC-SR-20250722-1458.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-2025-07-15-09-14-27.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-2025-07-15-09-14-27.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-20250715-1724.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-20250715-1724.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-20250715-1840.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-20250715-1840.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-20250715-1857.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-20250715-1857.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-20250715-1901.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-20250715-1901.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-20250715-1906.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-20250715-1906.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-20250715-1917.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-20250715-1917.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-20250722-1334.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-20250722-1334.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-20250722-1417.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-20250722-1417.md
+    renamed:    Test report/Archive/test-report-3115-TC-LBK-20250722-1429.md -> 07. Replit_Test report/Archive/test-report-3115-TC-LBK-20250722-1429.md
+    renamed:    "BR/BR-0006 \345\276\214\347\253\257DB\347\224\261Google Sheet\346\224\271\347\202\272Firestore.md" -> "08. Replit_BR/BR-0006 \345\276\214\347\253\257DB\347\224\261Google Sheet\346\224\271\347\202\272Firestore.md"
+    renamed:    "BR/BR-0007 LINE\347\260\241\345\226\256\350\250\230\345\270\263data flow\350\252\277\346\225\264.md" -> "08. Replit_BR/BR-0007 LINE\347\260\241\345\226\256\350\250\230\345\270\263data flow\350\252\277\346\225\264.md"
+    renamed:    "BR/BR-0008 \345\260\216\345\205\245SR_\346\216\222\347\250\213\346\217\220\351\206\222\346\250\241\347\265\204\345\212\237\350\203\275.md" -> "08. Replit_BR/BR-0008 \345\260\216\345\205\245SR_\346\216\222\347\250\213\346\217\220\351\206\222\346\250\241\347\265\204\345\212\237\350\203\275.md"
+    renamed:    "BR/BR-0009 \345\273\272\347\253\213\345\225\206\346\245\255\351\202\217\350\274\257\345\261\244RESTful API.md" -> "08. Replit_BR/BR-0009 \345\273\272\347\253\213\345\225\206\346\245\255\351\202\217\350\274\257\345\261\244RESTful API.md"
+    renamed:    "BR/BR-0010 \345\273\272\347\253\213\346\207\211\347\224\250\351\202\217\350\274\257\345\261\244.md" -> "08. Replit_BR/BR-0010 \345\273\272\347\253\213\346\207\211\347\224\250\351\202\217\350\274\257\345\261\244.md"
+    renamed:    Flutter modules/lib/core/6001. api_client.dart -> 91. Flutter_Module code_AP layer/lib/core/6001. api_client.dart
+    renamed:    Flutter modules/lib/core/6002. constants.dart -> 91. Flutter_Module code_AP layer/lib/core/6002. constants.dart
+    renamed:    Flutter modules/lib/core/6003. error_handler.dart -> 91. Flutter_Module code_AP layer/lib/core/6003. error_handler.dart
+    renamed:    Flutter modules/lib/core/6004. token_manager.dart -> 91. Flutter_Module code_AP layer/lib/core/6004. token_manager.dart
+    renamed:    Flutter modules/lib/models/6005. auth_models.dart -> 91. Flutter_Module code_AP layer/lib/models/6005. auth_models.dart
+    renamed:    Flutter modules/lib/models/6006. budget_models.dart -> 91. Flutter_Module code_AP layer/lib/models/6006. budget_models.dart
+    renamed:    Flutter modules/lib/models/6007. collaboration_models.dart -> 91. Flutter_Module code_AP layer/lib/models/6007. collaboration_models.dart
+    renamed:    Flutter modules/lib/models/6008. ledger_models.dart -> 91. Flutter_Module code_AP layer/lib/models/6008. ledger_models.dart
+    renamed:    Flutter modules/lib/models/6009. project_models.dart -> 91. Flutter_Module code_AP layer/lib/models/6009. project_models.dart
+    renamed:    Flutter modules/lib/models/6010. report_models.dart -> 91. Flutter_Module code_AP layer/lib/models/6010. report_models.dart
+    renamed:    Flutter modules/lib/models/6011. system_models.dart -> 91. Flutter_Module code_AP layer/lib/models/6011. system_models.dart
+    renamed:    Flutter modules/lib/services/6012. auth_service.dart -> 91. Flutter_Module code_AP layer/lib/services/6012. auth_service.dart
+    renamed:    Flutter modules/lib/services/6013. budget_service.dart -> 91. Flutter_Module code_AP layer/lib/services/6013. budget_service.dart
+    renamed:    Flutter modules/lib/services/6014. collaboration_service.dart -> 91. Flutter_Module code_AP layer/lib/services/6014. collaboration_service.dart
+    renamed:    Flutter modules/lib/services/6015. entry_service.dart -> 91. Flutter_Module code_AP layer/lib/services/6015. entry_service.dart
+    renamed:    Flutter modules/lib/services/6016. project_ledger_service.dart -> 91. Flutter_Module code_AP layer/lib/services/6016. project_ledger_service.dart
+    renamed:    Flutter modules/lib/services/6017. report_service.dart -> 91. Flutter_Module code_AP layer/lib/services/6017. report_service.dart
+    renamed:    Flutter modules/lib/services/6018. schedule_service.dart -> 91. Flutter_Module code_AP layer/lib/services/6018. schedule_service.dart
+    renamed:    Flutter modules/lib/services/6019. system_service.dart -> 91. Flutter_Module code_AP layer/lib/services/6019. system_service.dart
+    renamed:    Flutter modules/lib/utils/6020. date_utils.dart -> 91. Flutter_Module code_AP layer/lib/utils/6020. date_utils.dart
+    renamed:    Flutter modules/lib/utils/6021. format_utils.dart -> 91. Flutter_Module code_AP layer/lib/utils/6021. format_utils.dart
+    renamed:    Flutter modules/lib/utils/6022. validation_utils.dart -> 91. Flutter_Module code_AP layer/lib/utils/6022. validation_utils.dart
+    renamed:    Flutter modules/pubspec.yaml -> 91. Flutter_Module code_AP layer/pubspec.yaml
+    renamed:    Test plan/3098. AP_Layer.md -> 93. Flutter_Test plan_AP layer/3098. AP_Layer.md
+    renamed:    Team members/0901. Character_PG -> 99. Team members/0901. Character_PG
+    renamed:    Team members/0902. Character_PM -> 99. Team members/0902. Character_PM
+    renamed:    Team members/0904. Character_SQA -> 99. Team members/0904. Character_SQA
+    renamed:    Team members/0908. Character_BA -> 99. Team members/0908. Character_BA
+    renamed:    Team members/0909. Character_SA -> 99. Team members/0909. Character_SA
+    deleted:    Flutter modules/.dart_tool/extension_discovery/README.md
+    deleted:    Flutter modules/.dart_tool/extension_discovery/vs_code.json
+    deleted:    Flutter modules/.dart_tool/package_config.json
+    deleted:    Flutter modules/.dart_tool/package_config_subset
+    deleted:    Flutter modules/.dart_tool/package_graph.json
+    deleted:    Flutter modules/.dart_tool/version
+    deleted:    Flutter modules/.flutter-plugins-dependencies
+    deleted:    Flutter modules/pubspec.lock
