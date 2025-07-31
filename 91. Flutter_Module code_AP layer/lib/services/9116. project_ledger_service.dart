@@ -23,10 +23,10 @@ class ProjectLedgerService {
         _errorHandler = errorHandler ?? ErrorHandler();
 
   /**
-   * 01. 建立專案帳本 - 新建專案別帳本
+   * 01. 專案帳本建立 - F031 API端點實作
    * @version 2025-01-24-V1.0.0
    * @date 2025-01-24 11:30:00
-   * @description 建立新的專案帳本，支援專案類型和初始設定
+   * @description 對應F031功能，建立新的專案帳本
    */
   Future<ApiResponse<Project>> createProject(CreateProjectRequest request) async {
     try {
@@ -54,10 +54,10 @@ class ProjectLedgerService {
   }
 
   /**
-   * 02. 管理專案帳本 - 更新專案資訊和設定
+   * 02. 專案帳本管理 - F032 API端點實作
    * @version 2025-01-24-V1.0.0
    * @date 2025-01-24 11:30:00
-   * @description 更新專案的基本資訊、設定和權限
+   * @description 對應F032功能，更新專案的基本資訊、設定和權限
    */
   Future<ApiResponse<Project>> manageProject(String projectId, CreateProjectRequest request) async {
     try {

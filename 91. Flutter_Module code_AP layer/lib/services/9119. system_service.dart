@@ -740,3 +740,150 @@ class ApiResponse<T> {
     required this.timestamp,
   });
 }
+/**
+ * system_service.dart_系統服務_1.0.0
+ * @module 系統服務
+ * @description LCAS 2.0 Flutter 系統服務 - 備份管理、同步檢查、健康監控、錯誤日誌
+ * @update 2025-01-24: 新建系統服務v1.0.0，實作F046-F048, F051 API端點
+ */
+
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import '../core/api_client.dart';
+import '../core/error_handler.dart';
+import '../models/system_models.dart';
+
+class SystemService {
+  final ApiClient _apiClient;
+  final ErrorHandler _errorHandler;
+
+  SystemService({
+    ApiClient? apiClient,
+    ErrorHandler? errorHandler,
+  })  : _apiClient = apiClient ?? ApiClient(),
+        _errorHandler = errorHandler ?? ErrorHandler();
+
+  /**
+   * F051. 定期自動備份 - 設定和管理自動備份
+   * @version 2025-01-24-V1.0.0
+   * @date 2025-01-24 16:00:00
+   * @description 對應F051功能，設定自動備份排程
+   */
+  Future<BackupResponse> scheduleBackup({
+    required BackupScheduleRequest request,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/system/backup/schedule',
+        data: request.toJson(),
+      );
+
+      if (response.data['success'] == true) {
+        return BackupResponse.fromJson(response.data);
+      } else {
+        return BackupResponse(
+          success: false,
+          message: response.data['message'] ?? '備份排程設定失敗',
+          timestamp: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      return BackupResponse(
+        success: false,
+        message: _errorHandler.getErrorMessage(e),
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+
+  /**
+   * F046. 數據同步檢查 - 檢查跨平台數據同步狀態
+   * @version 2025-01-24-V1.0.0
+   * @date 2025-01-24 16:00:00
+   * @description 對應F046功能，檢查同步狀態
+   */
+  Future<SyncStatusResponse> checkSyncStatus() async {
+    try {
+      final response = await _apiClient.get('/system/sync/status');
+
+      if (response.data['success'] == true) {
+        return SyncStatusResponse.fromJson(response.data);
+      } else {
+        return SyncStatusResponse(
+          success: false,
+          message: response.data['message'] ?? '同步狀態檢查失敗',
+          timestamp: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      return SyncStatusResponse(
+        success: false,
+        message: _errorHandler.getErrorMessage(e),
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+
+  /**
+   * F047. 系統健康監控 - 監控系統運行狀態
+   * @version 2025-01-24-V1.0.0
+   * @date 2025-01-24 16:00:00
+   * @description 對應F047功能，檢查系統健康狀態
+   */
+  Future<HealthCheckResponse> checkSystemHealth() async {
+    try {
+      final response = await _apiClient.get('/system/health/check');
+
+      if (response.data['success'] == true) {
+        return HealthCheckResponse.fromJson(response.data);
+      } else {
+        return HealthCheckResponse(
+          success: false,
+          message: response.data['message'] ?? '系統健康檢查失敗',
+          timestamp: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      return HealthCheckResponse(
+        success: false,
+        message: _errorHandler.getErrorMessage(e),
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+
+  /**
+   * F048. 錯誤日誌管理 - 查詢和管理系統錯誤日誌
+   * @version 2025-01-24-V1.0.0
+   * @date 2025-01-24 16:00:00
+   * @description 對應F048功能，管理錯誤日誌
+   */
+  Future<ErrorLogsResponse> getErrorLogs({
+    required ErrorLogsRequest request,
+  }) async {
+    try {
+      final queryParams = request.toJson()..removeWhere((k, v) => v == null);
+      
+      final response = await _apiClient.get(
+        '/system/logs/errors',
+        queryParameters: queryParams,
+      );
+
+      if (response.data['success'] == true) {
+        return ErrorLogsResponse.fromJson(response.data);
+      } else {
+        return ErrorLogsResponse(
+          success: false,
+          message: response.data['message'] ?? '錯誤日誌查詢失敗',
+          timestamp: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      return ErrorLogsResponse(
+        success: false,
+        message: _errorHandler.getErrorMessage(e),
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+}

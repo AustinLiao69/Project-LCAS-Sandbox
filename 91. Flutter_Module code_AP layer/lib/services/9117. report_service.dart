@@ -414,3 +414,127 @@ class ReportService {
     }
   }
 }
+/**
+ * report_service.dart_報表服務_1.0.0
+ * @module 報表服務
+ * @description LCAS 2.0 Flutter 報表服務 - 標準報表產出、自定義報表設計、報表匯出功能
+ * @update 2025-01-24: 新建報表服務v1.0.0，實作F043-F045 API端點
+ */
+
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import '../core/api_client.dart';
+import '../core/error_handler.dart';
+import '../models/report_models.dart';
+
+class ReportService {
+  final ApiClient _apiClient;
+  final ErrorHandler _errorHandler;
+
+  ReportService({
+    ApiClient? apiClient,
+    ErrorHandler? errorHandler,
+  })  : _apiClient = apiClient ?? ApiClient(),
+        _errorHandler = errorHandler ?? ErrorHandler();
+
+  /**
+   * F043. 標準報表產出 - 產生預定義格式的財務報表
+   * @version 2025-01-24-V1.0.0
+   * @date 2025-01-24 16:00:00
+   * @description 對應F043功能，產生標準格式報表
+   */
+  Future<ReportResponse> generateStandardReport({
+    required StandardReportRequest request,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/app/reports/generate',
+        data: request.toJson(),
+      );
+
+      if (response.data['success'] == true) {
+        return ReportResponse.fromJson(response.data);
+      } else {
+        return ReportResponse(
+          success: false,
+          message: response.data['message'] ?? '標準報表產出失敗',
+          timestamp: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      return ReportResponse(
+        success: false,
+        message: _errorHandler.getErrorMessage(e),
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+
+  /**
+   * F044. 自定義報表設計 - 建立客製化報表
+   * @version 2025-01-24-V1.0.0
+   * @date 2025-01-24 16:00:00
+   * @description 對應F044功能，設計自定義報表
+   */
+  Future<CustomReportResponse> createCustomReport({
+    required CustomReportRequest request,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/app/reports/custom',
+        data: request.toJson(),
+      );
+
+      if (response.data['success'] == true) {
+        return CustomReportResponse.fromJson(response.data);
+      } else {
+        return CustomReportResponse(
+          success: false,
+          message: response.data['message'] ?? '自定義報表設計失敗',
+          timestamp: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      return CustomReportResponse(
+        success: false,
+        message: _errorHandler.getErrorMessage(e),
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+
+  /**
+   * F045. 報表匯出功能 - 匯出報表為不同格式
+   * @version 2025-01-24-V1.0.0
+   * @date 2025-01-24 16:00:00
+   * @description 對應F045功能，匯出報表檔案
+   */
+  Future<ExportResponse> exportReport({
+    required ExportReportRequest request,
+  }) async {
+    try {
+      final queryParams = request.toJson()..removeWhere((k, v) => v == null);
+      
+      final response = await _apiClient.get(
+        '/app/reports/export',
+        queryParameters: queryParams,
+      );
+
+      if (response.data['success'] == true) {
+        return ExportResponse.fromJson(response.data);
+      } else {
+        return ExportResponse(
+          success: false,
+          message: response.data['message'] ?? '報表匯出失敗',
+          timestamp: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      return ExportResponse(
+        success: false,
+        message: _errorHandler.getErrorMessage(e),
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+}

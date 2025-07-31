@@ -708,3 +708,169 @@ $balanceStatus''';
     return premiumFeatures.contains(featureName);
   }
 }
+/**
+ * schedule_service.dart_排程服務_1.0.0
+ * @module 排程服務
+ * @description LCAS 2.0 Flutter 排程服務 - 提醒設定、排程執行
+ * @update 2025-01-24: 新建排程服務v1.0.0，實作F049-F050 API端點
+ */
+
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import '../core/api_client.dart';
+import '../core/error_handler.dart';
+
+class ScheduleService {
+  final ApiClient _apiClient;
+  final ErrorHandler _errorHandler;
+
+  ScheduleService({
+    ApiClient? apiClient,
+    ErrorHandler? errorHandler,
+  })  : _apiClient = apiClient ?? ApiClient(),
+        _errorHandler = errorHandler ?? ErrorHandler();
+
+  /**
+   * F049. 排程提醒設定 - 設定個人化提醒排程
+   * @version 2025-01-24-V1.0.0
+   * @date 2025-01-24 16:00:00
+   * @description 對應F049功能，設定提醒排程
+   */
+  Future<ReminderResponse> setReminder({
+    required ReminderRequest request,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/schedule/reminder',
+        data: request.toJson(),
+      );
+
+      if (response.data['success'] == true) {
+        return ReminderResponse.fromJson(response.data);
+      } else {
+        return ReminderResponse(
+          success: false,
+          message: response.data['message'] ?? '排程提醒設定失敗',
+          timestamp: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      return ReminderResponse(
+        success: false,
+        message: _errorHandler.getErrorMessage(e),
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+
+  /**
+   * F050. 排程提醒執行 - 執行排程提醒任務
+   * @version 2025-01-24-V1.0.0
+   * @date 2025-01-24 16:00:00
+   * @description 對應F050功能，執行提醒排程
+   */
+  Future<ExecuteResponse> executeSchedule({
+    required ExecuteRequest request,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/schedule/execute',
+        data: request.toJson(),
+      );
+
+      if (response.data['success'] == true) {
+        return ExecuteResponse.fromJson(response.data);
+      } else {
+        return ExecuteResponse(
+          success: false,
+          message: response.data['message'] ?? '排程執行失敗',
+          timestamp: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      return ExecuteResponse(
+        success: false,
+        message: _errorHandler.getErrorMessage(e),
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+}
+
+// 基本回應模型類別
+class ReminderResponse {
+  final bool success;
+  final String message;
+  final DateTime timestamp;
+
+  const ReminderResponse({
+    required this.success,
+    required this.message,
+    required this.timestamp,
+  });
+
+  factory ReminderResponse.fromJson(Map<String, dynamic> json) {
+    return ReminderResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+    );
+  }
+}
+
+class ExecuteResponse {
+  final bool success;
+  final String message;
+  final DateTime timestamp;
+
+  const ExecuteResponse({
+    required this.success,
+    required this.message,
+    required this.timestamp,
+  });
+
+  factory ExecuteResponse.fromJson(Map<String, dynamic> json) {
+    return ExecuteResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+    );
+  }
+}
+
+class ReminderRequest {
+  final String type;
+  final String schedule;
+  final Map<String, dynamic> settings;
+
+  const ReminderRequest({
+    required this.type,
+    required this.schedule,
+    required this.settings,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type,
+      'schedule': schedule,
+      'settings': settings,
+    };
+  }
+}
+
+class ExecuteRequest {
+  final String scheduleId;
+  final Map<String, dynamic> parameters;
+
+  const ExecuteRequest({
+    required this.scheduleId,
+    required this.parameters,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'scheduleId': scheduleId,
+      'parameters': parameters,
+    };
+  }
+}
