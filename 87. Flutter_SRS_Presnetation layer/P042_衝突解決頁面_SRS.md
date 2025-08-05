@@ -1,10 +1,9 @@
-
 # P042_衝突解決頁面_SRS
 
-**文件編號**: P042-SRS  
-**版本**: v1.0.0  
-**建立日期**: 2025-01-26  
-**最後更新**: 2025-01-26  
+**文件編號**: P042-SRS
+**版本**: v1.0.0
+**建立日期**: 2025-01-26
+**最後更新**: 2025-01-26
 **負責團隊**: LCAS PM Team
 
 ---
@@ -203,7 +202,7 @@
 ## 10. API 規格（API Specification）
 
 ### 10.1 取得衝突資訊 API
-**端點**: GET /collaboration/conflicts/{conflictId}  
+**端點**: GET /collaboration/conflicts/{conflictId}
 **對應**: F023 衝突解決功能
 
 #### 10.1.1 回應（Response）
