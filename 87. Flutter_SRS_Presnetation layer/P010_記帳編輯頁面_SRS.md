@@ -1,6 +1,6 @@
+# P010_記帳編輯頁面_SRS
 
-# P014_記帳編輯頁面_SRS
-
+**文件編號**: P010-SRS
 **文件版本**: v1.0.0  
 **建立日期**: 2025-01-26  
 **負責團隊**: LCAS PM Team  
@@ -128,18 +128,18 @@ const validateAmount = (amount) => {
 const validateDate = (date) => {
   const today = new Date();
   const transactionDate = new Date(date);
-  
+
   if (transactionDate > today) {
     return '交易日期不能晚於今天';
   }
-  
+
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(today.getFullYear() - 1);
-  
+
   if (transactionDate < oneYearAgo) {
     return '交易日期不能早於一年前';
   }
-  
+
   return null;
 };
 ```
@@ -151,16 +151,16 @@ const validateCategory = (categoryId, type) => {
   if (!categoryId) {
     return '請選擇交易科目';
   }
-  
+
   const category = categories.find(c => c.id === categoryId);
   if (!category) {
     return '所選科目不存在';
   }
-  
+
   if (category.type !== type) {
     return '科目類型與交易類型不符';
   }
-  
+
   return null;
 };
 ```
@@ -517,7 +517,7 @@ const handleFieldChange = (field, value) => {
     ...prev,
     [field]: value
   }));
-  
+
   // 清除該欄位的驗證錯誤
   if (validationErrors[field]) {
     setValidationErrors(prev => {
@@ -535,7 +535,7 @@ const handleFieldChange = (field, value) => {
 useEffect(() => {
   const unsubscribe = navigation.addListener('beforeRemove', (e) => {
     if (!hasChanges) return;
-    
+
     e.preventDefault();
     showDialog({
       title: '未儲存的變更',
@@ -546,7 +546,7 @@ useEffect(() => {
       ]
     });
   });
-  
+
   return unsubscribe;
 }, [navigation, hasChanges]);
 ```
@@ -582,7 +582,7 @@ const handleSave = async () => {
       ...formData,
       version: originalData.version // 版本號檢查
     };
-    
+
     await updateTransaction(transactionId, updateData);
   } catch (error) {
     if (error.code === 'VERSION_CONFLICT') {
