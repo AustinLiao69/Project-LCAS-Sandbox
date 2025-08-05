@@ -1,7 +1,7 @@
 
-# P042 協作成員管理（Collaboration Member Management Page）
+# P038_協作成員管理_SRS
 
-**文件編號**: P042  
+**文件編號**: P038-SRS  
 **版本**: v1.0.0  
 **建立日期**: 2025-01-26  
 **建立者**: LCAS SA Team  
