@@ -538,3 +538,89 @@ interface LedgerStatisticsState {
 - [P029_刪除帳本頁面_SRS.md](./P029_刪除帳本頁面_SRS.md) - 帳本刪除功能
 - [9005. Flutter_Presentation layer.md](../90.%20Flutter_PRD/9005.%20Flutter_Presentation%20layer.md) - 視覺規格
 - [9006. Flutter_AP layer.md](../90.%20Flutter_PRD/9006.%20Flutter_AP%20layer.md) - API規格
+# P028_帳本統計頁面_SRS
+
+## 1. 功能目的 (Purpose)
+提供特定帳本的詳細統計分析，包含收支分析、趨勢圖表、成員貢獻統計和帳本健康度評估。
+
+## 2. 使用者故事 (User Story)
+- 作為帳本成員，我希望查看帳本的收支統計
+- 作為帳本管理者，我希望看到成員貢獻度分析
+- 作為帳本使用者，我希望了解帳本的支出趨勢
+- 作為帳本分析者，我希望獲得帳本健康度評估
+
+## 3. 前置條件 (Preconditions)
+- 使用者已登入系統
+- 使用者具有帳本查看權限
+- 帳本包含足夠的資料進行統計
+- 統計時間範圍設定有效
+
+## 4. 功能流程 (Functional Flow)
+
+### 主要流程
+1. 選擇統計時間範圍
+2. 載入帳本統計資料
+3. 顯示收支概覽
+4. 展示圖表分析
+5. 顯示成員貢獻統計
+
+### 替代流程
+- 切換不同統計維度
+- 匯出統計報表
+- 設定統計提醒
+
+## 5. 輸入項目 (Inputs)
+- 統計時間範圍
+- 統計維度選擇
+- 圖表類型設定
+- 成員篩選條件
+
+## 6. 輸出項目 (Outputs)
+- 收支總額統計
+- 趨勢變化圖表
+- 成員貢獻排行
+- 類別支出分析
+- 帳本健康度指標
+
+## 7. 驗證規則 (Validation Rules)
+- 時間範圍有效性驗證
+- 統計權限檢查
+- 資料完整性驗證
+- 圖表參數有效性檢查
+
+## 8. 錯誤處理 (Error Handling)
+- 統計資料載入失敗處理
+- 權限不足錯誤提示
+- 資料不足警告顯示
+- 網路連線錯誤處理
+
+## 9. UI 元件與排版需求 (UI Requirements)
+- 統計概覽卡片
+- 互動式圖表組件
+- 時間範圍選擇器
+- 成員貢獻列表
+- 統計數據表格
+
+## 10. API 規格 (API Specification)
+- GET /app/projects/{projectId}/statistics - 取得帳本統計
+- GET /app/projects/{projectId}/trends - 取得趨勢資料
+- GET /app/projects/{projectId}/member-contributions - 成員貢獻統計
+- POST /app/projects/{projectId}/statistics/export - 匯出統計報表
+
+## 11. 狀態與畫面切換 (State Handling)
+- 統計載入中狀態
+- 統計資料顯示狀態
+- 圖表互動狀態
+- 統計篩選狀態
+
+## 12. 安全性與權限檢查 (Security)
+- 統計查看權限驗證
+- 敏感資料存取控制
+- 成員隱私保護
+- 統計資料加密傳輸
+
+## 13. 其他補充需求 (Others)
+- 統計快取機制
+- 即時資料更新
+- 統計比較功能
+- 自訂統計指標

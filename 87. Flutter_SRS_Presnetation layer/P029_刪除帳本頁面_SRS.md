@@ -557,3 +557,90 @@ interface DeleteLedgerState {
 - [P022_帳本設定頁面_SRS.md](./P022_帳本設定頁面_SRS.md) - 帳本設定功能
 - [9005. Flutter_Presentation layer.md](../90.%20Flutter_PRD/9005.%20Flutter_Presentation%20layer.md) - 視覺規格
 - [9006. Flutter_AP layer.md](../90.%20Flutter_PRD/9006.%20Flutter_AP%20layer.md) - API規格
+# P029_刪除帳本頁面_SRS
+
+## 1. 功能目的 (Purpose)
+提供安全的帳本刪除功能，包含確認流程、資料備份、成員通知和刪除後處理。
+
+## 2. 使用者故事 (User Story)
+- 作為帳本所有者，我希望能安全地刪除不需要的帳本
+- 作為帳本管理者，我希望在刪除前能備份重要資料
+- 作為帳本成員，我希望在帳本被刪除前收到通知
+- 作為系統使用者，我希望誤刪的帳本能有恢復機制
+
+## 3. 前置條件 (Preconditions)
+- 使用者已登入系統
+- 使用者具有帳本刪除權限（僅限所有者）
+- 帳本存在且可被刪除
+- 刪除操作經過身份驗證
+
+## 4. 功能流程 (Functional Flow)
+
+### 主要流程
+1. 觸發刪除帳本操作
+2. 顯示刪除警告和影響說明
+3. 要求輸入確認資訊
+4. 進行最終確認
+5. 執行刪除操作
+6. 顯示刪除結果
+
+### 替代流程
+- 取消刪除操作
+- 資料備份後刪除
+- 軟刪除（暫時停用）
+
+## 5. 輸入項目 (Inputs)
+- 刪除確認密碼
+- 確認文字輸入
+- 資料處理選項
+- 成員通知設定
+
+## 6. 輸出項目 (Outputs)
+- 刪除警告訊息
+- 影響範圍說明
+- 刪除進度顯示
+- 刪除完成確認
+- 備份資料下載連結
+
+## 7. 驗證規則 (Validation Rules)
+- 刪除權限驗證
+- 確認密碼正確性檢查
+- 確認文字匹配驗證
+- 帳本狀態檢查
+
+## 8. 錯誤處理 (Error Handling)
+- 權限不足錯誤提示
+- 密碼錯誤處理
+- 刪除失敗回滾機制
+- 網路錯誤處理
+
+## 9. UI 元件與排版需求 (UI Requirements)
+- 刪除警告對話框
+- 確認步驟指示器
+- 密碼輸入框
+- 影響說明文字
+- 刪除進度條
+
+## 10. API 規格 (API Specification)
+- DELETE /app/projects/{projectId} - 刪除帳本
+- POST /app/projects/{projectId}/backup - 備份帳本資料
+- GET /app/projects/{projectId}/deletion-impact - 取得刪除影響
+- POST /app/projects/{projectId}/restore - 恢復已刪除帳本
+
+## 11. 狀態與畫面切換 (State Handling)
+- 刪除確認狀態
+- 密碼驗證狀態
+- 刪除執行中狀態
+- 刪除完成狀態
+
+## 12. 安全性與權限檢查 (Security)
+- 所有者身份驗證
+- 多重確認機制
+- 操作日誌記錄
+- 敏感資料處理
+
+## 13. 其他補充需求 (Others)
+- 刪除冷卻期機制
+- 資料恢復時限
+- 刪除通知系統
+- 審計日誌記錄

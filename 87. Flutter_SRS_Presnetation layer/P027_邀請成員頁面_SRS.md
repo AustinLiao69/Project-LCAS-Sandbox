@@ -505,3 +505,88 @@ interface InviteMemberState {
 - [P028_帳本統計頁面_SRS.md](./P028_帳本統計頁面_SRS.md) - 統計功能
 - [9005. Flutter_Presentation layer.md](../90.%20Flutter_PRD/9005.%20Flutter_Presentation%20layer.md) - 視覺規格
 - [9006. Flutter_AP layer.md](../90.%20Flutter_PRD/9006.%20Flutter_AP%20layer.md) - API規格
+# P027_邀請成員頁面_SRS
+
+## 1. 功能目的 (Purpose)
+提供帳本成員邀請功能，支援電子郵件邀請、角色分配、批量邀請和邀請管理。
+
+## 2. 使用者故事 (User Story)
+- 作為帳本管理者，我希望能邀請新成員加入帳本
+- 作為帳本管理者，我希望能設定新成員的權限角色
+- 作為帳本管理者，我希望能批量邀請多個成員
+- 作為帳本管理者，我希望能管理和追蹤邀請狀態
+
+## 3. 前置條件 (Preconditions)
+- 使用者已登入系統
+- 使用者具有帳本邀請權限（管理者或協作者）
+- 目標帳本存在且可邀請新成員
+
+## 4. 功能流程 (Functional Flow)
+
+### 主要流程
+1. 進入邀請成員頁面
+2. 輸入被邀請者電子郵件
+3. 選擇成員角色權限
+4. 設定邀請訊息（可選）
+5. 發送邀請
+6. 追蹤邀請狀態
+
+### 替代流程
+- 批量邀請多個成員
+- 重新發送邀請
+- 取消待處理邀請
+
+## 5. 輸入項目 (Inputs)
+- 被邀請者電子郵件
+- 成員角色選擇
+- 邀請訊息內容
+- 帳本邀請權限
+
+## 6. 輸出項目 (Outputs)
+- 邀請發送確認
+- 邀請狀態顯示
+- 邀請連結生成
+- 邀請管理清單
+
+## 7. 驗證規則 (Validation Rules)
+- 電子郵件格式驗證
+- 角色權限有效性檢查
+- 重複邀請防護
+- 邀請數量限制驗證
+
+## 8. 錯誤處理 (Error Handling)
+- 無效電子郵件格式提示
+- 邀請發送失敗處理
+- 網路連線錯誤處理
+- 權限不足錯誤提示
+
+## 9. UI 元件與排版需求 (UI Requirements)
+- 邀請表單輸入區
+- 角色選擇下拉選單
+- 批量邀請功能
+- 邀請狀態追蹤列表
+- 邀請訊息編輯器
+
+## 10. API 規格 (API Specification)
+- POST /app/projects/{projectId}/invite - 發送邀請
+- GET /app/projects/{projectId}/invitations - 取得邀請清單
+- PUT /app/projects/{projectId}/invitations/{inviteId} - 更新邀請
+- DELETE /app/projects/{projectId}/invitations/{inviteId} - 取消邀請
+
+## 11. 狀態與畫面切換 (State Handling)
+- 邀請編輯狀態
+- 邀請發送中狀態
+- 邀請結果顯示狀態
+- 邀請清單管理狀態
+
+## 12. 安全性與權限檢查 (Security)
+- 邀請權限驗證
+- 電子郵件隱私保護
+- 邀請連結安全性
+- 防止濫用機制
+
+## 13. 其他補充需求 (Others)
+- 邀請有效期限管理
+- 邀請提醒功能
+- 邀請統計資訊
+- 多語言邀請訊息支援
