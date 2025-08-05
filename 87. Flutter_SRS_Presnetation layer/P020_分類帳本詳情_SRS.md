@@ -1,7 +1,6 @@
+# P020_分類帳本詳情_SRS
 
-# P024_分類帳本詳情頁面_SRS
-
-**文件編號**: P024  
+**文件編號**: P020-SRS  
 **版本**: v1.0.0  
 **建立日期**: 2025-01-26  
 **建立者**: LCAS PM Team  
@@ -211,7 +210,7 @@ interface CategoryStats {
 - 規則條件格式正確性檢查
 - 規則優先級衝突檢測
 - 規則邏輯有效性驗證
-- 正規表達式語法檢查
+-正規表達式語法檢查
 
 ### 7.3 輸入資料驗證
 - 快速記帳資料格式驗證
@@ -383,23 +382,23 @@ interface ClassificationDetailState {
   isStatsLoading: boolean;
   isRulesLoading: boolean;
   isClassifying: boolean;
-  
+
   // 資料狀態
   ledger: ClassificationLedger | null;
   rules: ClassificationRule[];
   stats: ClassificationStats | null;
   recentResults: ClassificationResult[];
-  
+
   // UI狀態
   activeTab: 'overview' | 'rules' | 'analysis';
   selectedPeriod: string;
   showRuleEditor: boolean;
   showQuickEntry: boolean;
-  
+
   // 編輯狀態
   editingRule: ClassificationRule | null;
   ruleTestResults: RuleTestResult | null;
-  
+
   // 錯誤狀態
   error: string | null;
   ruleErrors: Record<string, string>;

@@ -1,7 +1,6 @@
+# P019_專案帳本詳情_SRS
 
-# P023_專案帳本詳情頁面_SRS
-
-**文件編號**: P023  
+**文件編號**: P019-SRS  
 **版本**: v1.0.0  
 **建立日期**: 2025-01-26  
 **建立者**: LCAS PM Team  
@@ -322,17 +321,17 @@ interface ProjectDetailState {
   isLoading: boolean;
   isStatsLoading: boolean;
   isMembersLoading: boolean;
-  
+
   // 資料狀態
   project: ProjectDetails | null;
   members: ProjectMember[];
   stats: ProjectStats | null;
-  
+
   // UI狀態
   activeTab: 'overview' | 'members' | 'stats';
   selectedPeriod: string;
   showQuickEntry: boolean;
-  
+
   // 錯誤狀態
   error: string | null;
   networkStatus: 'online' | 'offline';
