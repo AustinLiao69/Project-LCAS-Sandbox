@@ -212,7 +212,7 @@
 
 ### 10.2 應用程式初始化API
 **端點**: GET /app/initialization  
-**對應**: F001 使用者註冊/F002 使用者登入
+**對應**: F004 帳號刪除功能
 
 **請求格式**:
 ```json
@@ -221,7 +221,8 @@
     "platform": "android|ios",
     "version": "string",
     "deviceId": "string"
-  }
+  },
+  "accountDeletionCheck": "boolean"
 }
 ```
 
@@ -233,7 +234,9 @@
     "isFirstLaunch": "boolean",
     "userAuthenticated": "boolean",
     "availableModes": "array",
-    "systemConfig": "object"
+    "systemConfig": "object",
+    "accountDeletionRequired": "boolean",
+    "deletionPendingInfo": "object"
   }
 }
 ```
