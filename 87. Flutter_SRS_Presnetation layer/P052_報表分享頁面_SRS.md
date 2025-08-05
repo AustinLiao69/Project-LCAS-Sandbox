@@ -1,4 +1,4 @@
-# P056 報表分享頁面 (Report Sharing Page + 報表分享頁面)
+# P052 報表分享頁面 (Report Sharing Page + 報表分享頁面)
 
 **文件版本**: v1.0.0
 **建立日期**: 2025-01-26
