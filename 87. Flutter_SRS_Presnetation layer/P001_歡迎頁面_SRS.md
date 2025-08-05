@@ -1,4 +1,3 @@
-
 # P001_歡迎頁面_SRS
 
 **文件編號**: P001-SRS  
@@ -48,8 +47,7 @@
 
 | 輸入項目 | 資料類型 | 必填 | 說明 |
 |----------|----------|------|------|
-| 模式選擇 | String | 選填 | 四種模式：精準控制者/紀錄習慣者/轉型挑戰者/潛在覺醒者 |
-| 登入方式選擇 | String | 選填 | LINE OAuth/Google/Apple/Email登入 |
+| 模式選擇 | String | 選填 | 四種模式：精準控制者(Controller)/紀錄習慣者(Logger)/轉型挑戰者(Struggler)/潛在覺醒者(Sleeper) |
 
 ## 6. 輸出項目（Outputs / Responses）
 

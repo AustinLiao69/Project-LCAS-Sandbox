@@ -2,10 +2,10 @@
 # P002_登入頁面_SRS
 
 **文件編號**: P002-SRS  
-**版本**: v1.0.0  
+**版本**: v1.1.0  
 **建立日期**: 2025-01-26  
 **建立者**: LCAS PM Team  
-**最後更新**: 2025-01-26 12:30:00 UTC+8
+**最後更新**: 2025-01-26 16:00:00 UTC+8
 
 ---
 
@@ -252,7 +252,7 @@
 
 ### 9.5 四模式差異化設計
 
-#### 精準控制者模式
+#### 精準控制者模式 (Controller)
 ```css
 .controller-mode .login-card {
   border-left: 4px solid #1976D2;
@@ -263,7 +263,7 @@
 }
 ```
 
-#### 紀錄習慣者模式
+#### 紀錄習慣者模式 (Logger)
 ```css
 .logger-mode .login-card {
   border-left: 4px solid #6A1B9A;
@@ -275,7 +275,7 @@
 }
 ```
 
-#### 轉型挑戰者模式
+#### 轉型挑戰者模式 (Struggler)
 ```css
 .struggler-mode .login-card {
   border-left: 4px solid #FF6B35;
@@ -286,7 +286,7 @@
 }
 ```
 
-#### 潛在覺醒者模式
+#### 潛在覺醒者模式 (Sleeper)
 ```css
 .sleeper-mode .login-card {
   border-left: 4px solid #4CAF50;

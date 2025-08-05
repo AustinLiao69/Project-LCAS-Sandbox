@@ -2,10 +2,10 @@
 # P004_密碼重設頁面_SRS
 
 **文件編號**: P004-SRS  
-**版本**: v1.0.0  
+**版本**: v1.1.0  
 **建立日期**: 2025-01-26  
 **建立者**: LCAS PM Team  
-**最後更新**: 2025-01-26 14:15:00 UTC+8
+**最後更新**: 2025-01-26 16:00:00 UTC+8
 
 ---
 
@@ -572,76 +572,18 @@
 
 ## 10. API 規格（API Specification）
 
-### 10.1 發送重設驗證碼API
-**端點**: POST /auth/reset-password/send-code  
+### 10.1 密碼重設API
+**端點**: POST /auth/reset-password  
 **對應**: F005 密碼重設功能
 
 **請求格式**:
 ```json
 {
   "email": "string",
-  "deviceInfo": {
-    "platform": "android|ios",
-    "deviceId": "string",
-    "appVersion": "string",
-    "ipAddress": "string"
-  }
-}
-```
-
-**回應格式**:
-```json
-{
-  "success": true,
-  "data": {
-    "message": "驗證碼已發送至您的Email",
-    "expiresIn": 600,
-    "canResendIn": 60,
-    "requestId": "string"
-  }
-}
-```
-
-### 10.2 驗證驗證碼API
-**端點**: POST /auth/reset-password/verify-code  
-**對應**: F005 密碼重設功能
-
-**請求格式**:
-```json
-{
-  "email": "string",
-  "verificationCode": "string",
-  "requestId": "string",
-  "deviceInfo": {
-    "platform": "android|ios",
-    "deviceId": "string",
-    "appVersion": "string"
-  }
-}
-```
-
-**回應格式**:
-```json
-{
-  "success": true,
-  "data": {
-    "verified": true,
-    "resetToken": "string",
-    "expiresIn": 900,
-    "message": "驗證成功，請設定新密碼"
-  }
-}
-```
-
-### 10.3 重設密碼API
-**端點**: POST /auth/reset-password/confirm  
-**對應**: F005 密碼重設功能
-
-**請求格式**:
-```json
-{
   "resetToken": "string",
   "newPassword": "string",
+  "step": "send-code|verify-code|reset-password",
+  "verificationCode": "string",
   "deviceInfo": {
     "platform": "android|ios",
     "deviceId": "string",
@@ -655,36 +597,9 @@
 {
   "success": true,
   "data": {
-    "message": "密碼重設成功",
-    "passwordChanged": true,
-    "securityNotificationSent": true
-  }
-}
-```
-
-### 10.4 重新發送驗證碼API
-**端點**: POST /auth/reset-password/resend-code  
-**對應**: F005 密碼重設功能
-
-**請求格式**:
-```json
-{
-  "email": "string",
-  "requestId": "string",
-  "deviceInfo": {
-    "platform": "android|ios",
-    "deviceId": "string",
-    "appVersion": "string"
-  }
-}
-```
-
-**回應格式**:
-```json
-{
-  "success": true,
-  "data": {
-    "message": "新驗證碼已發送",
+    "step": "string",
+    "message": "string",
+    "resetToken": "string",
     "expiresIn": 600,
     "canResendIn": 60
   }
