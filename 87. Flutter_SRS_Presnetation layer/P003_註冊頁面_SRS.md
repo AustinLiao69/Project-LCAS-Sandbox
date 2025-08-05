@@ -2,10 +2,10 @@
 # P003_註冊頁面_SRS
 
 **文件編號**: P003-SRS  
-**版本**: v1.0.0  
+**版本**: v1.1.0  
 **建立日期**: 2025-01-26  
 **建立者**: LCAS PM Team  
-**最後更新**: 2025-01-26 14:00:00 UTC+8
+**最後更新**: 2025-01-26 16:00:00 UTC+8
 
 ---
 
@@ -466,7 +466,7 @@
 ## 10. API 規格（API Specification）
 
 ### 10.1 LINE OAuth註冊API
-**端點**: POST /auth/register/line  
+**端點**: POST /auth/register  
 **對應**: F001 使用者註冊功能
 
 **請求格式**:
@@ -507,7 +507,7 @@
 ```
 
 ### 10.2 Email註冊API
-**端點**: POST /auth/register/email  
+**端點**: POST /auth/register  
 **對應**: F001 使用者註冊功能
 
 **請求格式**:

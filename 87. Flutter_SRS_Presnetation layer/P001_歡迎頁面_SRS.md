@@ -1,11 +1,10 @@
-
 # P001_歡迎頁面_SRS
 
 **文件編號**: P001-SRS  
-**版本**: v1.0.0  
+**版本**: v1.1.0  
 **建立日期**: 2025-01-26  
 **建立者**: LCAS PM Team  
-**最後更新**: 2025-01-26 12:30:00 UTC+8
+**最後更新**: 2025-01-26 14:30:00 UTC+8
 
 ---
 
@@ -48,8 +47,7 @@
 
 | 輸入項目 | 資料類型 | 必填 | 說明 |
 |----------|----------|------|------|
-| 模式選擇 | String | 選填 | 四種模式：精準控制者/紀錄習慣者/轉型挑戰者/潛在覺醒者 |
-| 登入方式選擇 | String | 選填 | LINE OAuth/Google/Apple/Email登入 |
+| 模式選擇 | String | 選填 | 四種模式：精準控制者(Controller)/紀錄習慣者(Logger)/轉型挑戰者(Struggler)/潛在覺醒者(Sleeper) |
 
 ## 6. 輸出項目（Outputs / Responses）
 
@@ -214,7 +212,7 @@
 
 ### 10.2 應用程式初始化API
 **端點**: GET /app/initialization  
-**對應**: F001 使用者註冊/F002 使用者登入
+**對應**: F004 帳號刪除功能
 
 **請求格式**:
 ```json
@@ -223,7 +221,8 @@
     "platform": "android|ios",
     "version": "string",
     "deviceId": "string"
-  }
+  },
+  "accountDeletionCheck": "boolean"
 }
 ```
 
@@ -235,7 +234,9 @@
     "isFirstLaunch": "boolean",
     "userAuthenticated": "boolean",
     "availableModes": "array",
-    "systemConfig": "object"
+    "systemConfig": "object",
+    "accountDeletionRequired": "boolean",
+    "deletionPendingInfo": "object"
   }
 }
 ```

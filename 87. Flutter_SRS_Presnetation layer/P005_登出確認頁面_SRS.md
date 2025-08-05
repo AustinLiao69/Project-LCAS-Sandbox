@@ -2,10 +2,10 @@
 # P005_登出確認頁面_SRS
 
 **文件編號**: P005-SRS  
-**版本**: v1.0.0  
+**版本**: v1.1.0  
 **建立日期**: 2025-01-26  
 **建立者**: LCAS PM Team  
-**最後更新**: 2025-01-26 15:00:00 UTC+8
+**最後更新**: 2025-01-26 16:00:00 UTC+8
 
 ---
 
@@ -514,40 +514,7 @@
 
 ## 10. API 規格（API Specification）
 
-### 10.1 檢查未同步資料API
-**端點**: GET /auth/logout/check-unsync  
-**對應**: F003 使用者登出功能
-
-**請求參數**:
-```
-?userId=user_id&lastSyncTime=ISO_8601_datetime
-```
-
-**回應格式**:
-```json
-{
-  "success": true,
-  "data": {
-    "hasUnsyncData": true,
-    "unsyncItems": [
-      {
-        "type": "transaction",
-        "count": 5,
-        "description": "5筆未同步的記帳記錄"
-      },
-      {
-        "type": "budget",
-        "count": 1,
-        "description": "1個未同步的預算設定"
-      }
-    ],
-    "syncRequired": true,
-    "estimatedSyncTime": 30
-  }
-}
-```
-
-### 10.2 執行登出API
+### 10.1 執行登出API
 **端點**: POST /auth/logout  
 **對應**: F003 使用者登出功能
 
@@ -556,8 +523,6 @@
 {
   "userId": "string",
   "logoutType": "quick|complete",
-  "syncUnsyncData": "boolean",
-  "clearLocalData": "boolean",
   "deviceInfo": {
     "platform": "android|ios",
     "deviceId": "string",
@@ -572,61 +537,7 @@
   "success": true,
   "data": {
     "loggedOut": true,
-    "syncResult": {
-      "success": true,
-      "syncedItems": 6
-    },
-    "cleanupResult": {
-      "tokensCleared": true,
-      "localDataCleared": true,
-      "cacheCleared": true
-    },
     "message": "登出成功"
-  }
-}
-```
-
-### 10.3 同步未同步資料API
-**端點**: POST /auth/logout/sync-data  
-**對應**: F003 使用者登出功能
-
-**請求格式**:
-```json
-{
-  "userId": "string",
-  "unsyncItems": [
-    {
-      "type": "string",
-      "data": "object"
-    }
-  ],
-  "deviceInfo": {
-    "platform": "android|ios",
-    "deviceId": "string",
-    "appVersion": "string"
-  }
-}
-```
-
-**回應格式**:
-```json
-{
-  "success": true,
-  "data": {
-    "syncedCount": 6,
-    "failedCount": 0,
-    "syncResults": [
-      {
-        "type": "transaction",
-        "status": "success",
-        "count": 5
-      },
-      {
-        "type": "budget",
-        "status": "success",
-        "count": 1
-      }
-    ]
   }
 }
 ```
