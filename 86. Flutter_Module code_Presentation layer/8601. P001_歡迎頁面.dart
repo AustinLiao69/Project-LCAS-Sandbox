@@ -1,9 +1,9 @@
 
 /**
- * 8601. P001_歡迎頁面_2.3.0
+ * 8601. P001_歡迎頁面_2.4.0
  * @module P001歡迎頁面
  * @description Flutter Presentation Layer入口頁面 - 四模式選擇、品牌展示、導航分發
- * @update 2025-08-07: 升級至v2.3.0，完整實作107個函數，四模式差異化設計
+ * @update 2025-01-30: 升級至v2.4.0，修正函數編號格式、API端點路徑、版本統一
  */
 
 import 'package:flutter/material.dart';
@@ -21,8 +21,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 // ===== 資料模型定義 =====
 
 /**
- * 34. 對應 4.2：歡迎頁面狀態枚舉
- * @version 2025-01-30-V2.3.0
+ * 34. 歡迎頁面狀態枚舉
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 定義歡迎頁面的各種狀態（8701規範）
  */
@@ -34,8 +34,8 @@ enum WelcomePageState {
 }
 
 /**
- * 35. 對應 4.2：使用者模式枚舉
- * @version 2025-01-30-V2.3.0
+ * 35. 使用者模式枚舉
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 使用者模式枚舉（0015規範命名）
  */
@@ -47,8 +47,8 @@ enum UserMode {
 }
 
 /**
- * 36. 對應 4.2：錯誤類型枚舉
- * @version 2025-01-30-V2.3.0
+ * 36. 錯誤類型枚舉
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 錯誤類型枚舉（8701規範詳細錯誤分類）
  */
@@ -69,8 +69,8 @@ enum DeviceType {
 }
 
 /**
- * 42. 對應 5.2：使用者設定請求模型
- * @version 2025-01-30-V2.3.0
+ * 37. 使用者設定請求模型
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 使用者設定請求模型（修正為F009子功能）
  */
@@ -92,8 +92,8 @@ class UserSettingsRequest {
 }
 
 /**
- * 43. 對應 5.2：模式選擇資料模型
- * @version 2025-01-30-V2.3.0
+ * 38. 模式選擇資料模型
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 模式選擇的資料結構
  */
@@ -115,8 +115,8 @@ class ModeSelectionData {
 }
 
 /**
- * 44. 對應 5.2：API回應統一格式
- * @version 2025-01-30-V2.3.0
+ * 39. API回應統一格式
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description API回應的統一格式定義
  */
@@ -150,8 +150,8 @@ class ModeConfig {
 // ===== API服務層 =====
 
 /**
- * 37. 對應 5.1：歡迎頁面API服務
- * @version 2025-01-30-V2.3.0
+ * 40. 歡迎頁面API服務
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 處理歡迎頁面相關的API調用，支援F004、F009端點（8701規範）
  */
@@ -159,8 +159,8 @@ class WelcomeApiService {
   final Dio _dio = Dio();
 
   /**
-   * 38. 對應 5.1：檢查應用程式初始化狀態
-   * @version 2025-01-30-V2.3.0
+   * 41. 檢查應用程式初始化狀態
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 檢查應用程式初始化狀態（對應F004 - 8701規範）
    */
@@ -168,9 +168,11 @@ class WelcomeApiService {
     try {
       final deviceInfo = await _getDeviceInfo();
       
-      final response = await _dio.get(
-        '/app/initialization',
-        queryParameters: {
+      // 修正為F004端點路徑
+      final response = await _dio.delete(
+        '/auth/account',
+        data: {
+          'action': 'check_deletion_status',
           'deviceInfo': deviceInfo,
           'accountDeletionCheck': true,
         },
@@ -189,14 +191,15 @@ class WelcomeApiService {
   }
 
   /**
-   * 39. 對應 5.1：更新使用者設定
-   * @version 2025-01-30-V2.3.0
+   * 42. 更新使用者設定
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 更新使用者設定（對應F009 - 修正為設定管理的子功能）
    */
   Future<ApiResponse<Map<String, dynamic>>> updateUserSettings(UserSettingsRequest request) async {
     try {
-      final response = await _dio.post(
+      // 修正為F009端點路徑
+      final response = await _dio.put(
         '/app/user/settings',
         data: request.toJson(),
       );
@@ -214,8 +217,8 @@ class WelcomeApiService {
   }
 
   /**
-   * 40. 對應 5.1：處理Dio錯誤
-   * @version 2025-01-30-V2.3.0
+   * 43. 處理Dio錯誤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 處理Dio錯誤（8701規範詳細錯誤處理）
    */
@@ -239,8 +242,8 @@ class WelcomeApiService {
   }
 
   /**
-   * 41. 對應 5.1：取得裝置資訊
-   * @version 2025-01-30-V2.3.0
+   * 44. 取得裝置資訊
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 收集裝置資訊用於API調用
    */
@@ -275,8 +278,8 @@ class WelcomeApiService {
 // ===== 狀態管理層 =====
 
 /**
- * 20. 對應 4.1：歡迎頁面狀態管理器
- * @version 2025-01-30-V2.3.0
+ * 45. 歡迎頁面狀態管理器
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 管理歡迎頁面的狀態，支援8701規範的完整功能流程
  */
@@ -302,8 +305,8 @@ class WelcomeProvider extends ChangeNotifier {
   bool get isUserAuthenticated => _isUserAuthenticated;
 
   /**
-   * 21. 對應 4.1：初始化頁面
-   * @version 2025-01-30-V2.3.0
+   * 46. 初始化頁面
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 支援首次啟動與再次啟動流程（8701規範）
    */
@@ -333,8 +336,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 22. 對應 4.1：處理首次啟動流程
-   * @version 2025-01-30-V2.3.0
+   * 47. 處理首次啟動流程
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 處理首次啟動流程（8701規範）
    */
@@ -343,8 +346,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 23. 對應 4.1：處理再次啟動流程
-   * @version 2025-01-30-V2.3.0
+   * 48. 處理再次啟動流程
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 處理再次啟動流程（8701規範）
    */
@@ -361,8 +364,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 24. 對應 4.1：檢查帳號刪除狀態
-   * @version 2025-01-30-V2.3.0
+   * 49. 檢查帳號刪除狀態
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 檢查帳號刪除狀態（8701規範 - F004端點）
    */
@@ -387,8 +390,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 25. 對應 4.1：選擇模式
-   * @version 2025-01-30-V2.3.0
+   * 50. 選擇模式
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 處理使用者模式選擇
    */
@@ -398,8 +401,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 26. 對應 4.1：開始使用應用程式
-   * @version 2025-01-30-V2.3.0
+   * 51. 開始使用應用程式
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 模式設定與導航（8701規範）
    */
@@ -428,8 +431,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 27. 對應 4.1：設定使用者模式
-   * @version 2025-01-30-V2.3.0
+   * 52. 設定使用者模式
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 設定使用者模式（修正為F009子功能）
    */
@@ -456,8 +459,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 28. 對應 4.1：取得裝置資訊
-   * @version 2025-01-30-V2.3.0
+   * 53. 取得裝置資訊
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 收集裝置相關資訊用於API調用
    */
@@ -466,8 +469,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 29. 對應 4.1：設定載入狀態
-   * @version 2025-01-30-V2.3.0
+   * 54. 設定載入狀態
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 更新載入狀態並通知監聽者
    */
@@ -477,8 +480,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 30. 對應 4.1：設定頁面狀態
-   * @version 2025-01-30-V2.3.0
+   * 55. 設定頁面狀態
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 更新頁面狀態並通知監聽者
    */
@@ -488,8 +491,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 31. 對應 4.1：設定錯誤訊息
-   * @version 2025-01-30-V2.3.0
+   * 56. 設定錯誤訊息
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 設定錯誤訊息（8701規範 - 詳細錯誤處理）
    */
@@ -501,8 +504,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 32. 對應 4.1：清除錯誤狀態
-   * @version 2025-01-30-V2.3.0
+   * 57. 清除錯誤狀態
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 清除錯誤狀態並決定後續動作
    */
@@ -513,8 +516,8 @@ class WelcomeProvider extends ChangeNotifier {
   }
 
   /**
-   * 33. 對應 4.1：重試操作
-   * @version 2025-01-30-V2.3.0
+   * 58. 重試操作
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 根據錯誤類型執行相對應的重試操作
    */
@@ -541,8 +544,8 @@ class WelcomeProvider extends ChangeNotifier {
 // ===== 響應式設計輔助類 =====
 
 /**
- * 52. 對應 7.1：響應式設計輔助工具
- * @version 2025-01-30-V2.3.0
+ * 59. 響應式設計輔助工具
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 遵循9005文件的響應式設計規範，提供完整的斷點管理
  */
@@ -607,8 +610,8 @@ class ResponsiveHelper {
 }
 
 /**
- * 53. 對應 7.2：響應式斷點常數
- * @version 2025-01-30-V2.3.0
+ * 60. 響應式斷點常數
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 響應式斷點常數（9005規範）
  */
@@ -621,8 +624,8 @@ class Breakpoints {
   static const double largeDesktopMin = 1025;
 
   /**
-   * 54. 對應 7.2：取得目前裝置類型
-   * @version 2025-01-30-V2.3.0
+   * 61. 取得目前裝置類型
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 根據螢幕寬度判斷裝置類型
    */
@@ -637,8 +640,8 @@ class Breakpoints {
 // ===== 導航服務 =====
 
 /**
- * 47. 對應 6.1：導航服務
- * @version 2025-01-30-V2.3.0
+ * 62. 導航服務
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 處理應用程式內的導航邏輯
  */
@@ -670,8 +673,8 @@ class NavigationService {
   }
 
   /**
-   * 48. 對應 6.1：導航到登入頁面
-   * @version 2025-01-30-V2.3.0
+   * 63. 導航到登入頁面
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 導航到登入頁面並替換當前頁面
    */
@@ -680,8 +683,8 @@ class NavigationService {
   }
 
   /**
-   * 49. 對應 6.1：導航到註冊頁面
-   * @version 2025-01-30-V2.3.0
+   * 64. 導航到註冊頁面
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 導航到註冊頁面並替換當前頁面
    */
@@ -690,8 +693,8 @@ class NavigationService {
   }
 
   /**
-   * 50. 對應 6.1：導航到首頁
-   * @version 2025-01-30-V2.3.0
+   * 65. 導航到首頁
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 導航到首頁並替換當前頁面
    */
@@ -700,8 +703,8 @@ class NavigationService {
   }
 
   /**
-   * 51. 對應 6.1：返回上一頁
-   * @version 2025-01-30-V2.3.0
+   * 66. 返回上一頁
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 返回到上一個頁面
    */
@@ -713,16 +716,16 @@ class NavigationService {
 // ===== 無障礙功能支援 =====
 
 /**
- * 55. 對應 8.1：無障礙語意化Widget包裝器
- * @version 2025-01-30-V2.3.0
+ * 67. 無障礙語意化Widget包裝器
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 提供WCAG 2.1 AA標準的完整無障礙支援（9005規範）
  */
 class AccessibilityWrapper {
   
   /**
-   * 56. 對應 8.1：為模式卡片提供語意化標籤
-   * @version 2025-01-30-V2.3.0
+   * 68. 為模式卡片提供語意化標籤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 為模式選擇卡片添加適當的語意化標籤
    */
@@ -744,8 +747,8 @@ class AccessibilityWrapper {
   }
 
   /**
-   * 57. 對應 8.1：為品牌Logo提供語意化標籤
-   * @version 2025-01-30-V2.3.0
+   * 69. 為品牌Logo提供語意化標籤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 為品牌Logo添加適當的語意化標籤
    */
@@ -758,8 +761,8 @@ class AccessibilityWrapper {
   }
 
   /**
-   * 58. 對應 8.1：為開始按鈕提供語意化標籤
-   * @version 2025-01-30-V2.3.0
+   * 70. 為開始按鈕提供語意化標籤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 為開始使用按鈕添加適當的語意化標籤
    */
@@ -785,8 +788,8 @@ class AccessibilityWrapper {
   }
 
   /**
-   * 59. 對應 8.1：為載入指示器提供語意化標籤
-   * @version 2025-01-30-V2.3.0
+   * 71. 為載入指示器提供語意化標籤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 為載入指示器添加適當的語意化標籤
    */
@@ -799,8 +802,8 @@ class AccessibilityWrapper {
   }
 
   /**
-   * 60. 對應 8.1：為錯誤對話框提供語意化標籤
-   * @version 2025-01-30-V2.3.0
+   * 72. 為錯誤對話框提供語意化標籤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 為錯誤對話框添加適當的語意化標籤
    */
@@ -815,16 +818,16 @@ class AccessibilityWrapper {
 }
 
 /**
- * 61. 對應 8.2：高對比度主題支援
- * @version 2025-01-30-V2.3.0
+ * 73. 高對比度主題支援
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 高對比度主題支援（WCAG 2.1 AA標準）
  */
 class HighContrastTheme {
   
   /**
-   * 62. 對應 8.2：檢查是否啟用高對比度模式
-   * @version 2025-01-30-V2.3.0
+   * 74. 檢查是否啟用高對比度模式
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 檢查系統是否啟用高對比度模式
    */
@@ -833,8 +836,8 @@ class HighContrastTheme {
   }
 
   /**
-   * 63. 對應 8.2：檢查是否啟用大字型模式
-   * @version 2025-01-30-V2.3.0
+   * 75. 檢查是否啟用大字型模式
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 檢查系統是否啟用大字型模式
    */
@@ -843,8 +846,8 @@ class HighContrastTheme {
   }
 
   /**
-   * 64. 對應 8.2：檢查是否啟用動畫減少模式
-   * @version 2025-01-30-V2.3.0
+   * 76. 檢查是否啟用動畫減少模式
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 檢查系統是否啟用動畫減少模式
    */
@@ -853,8 +856,8 @@ class HighContrastTheme {
   }
 
   /**
-   * 65. 對應 8.2：取得高對比度文字色彩
-   * @version 2025-01-30-V2.3.0
+   * 77. 取得高對比度文字色彩
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 取得高對比度文字色彩（對比度至少4.5:1）
    */
@@ -868,8 +871,8 @@ class HighContrastTheme {
   }
 
   /**
-   * 66. 對應 8.2：取得高對比度按鈕色彩
-   * @version 2025-01-30-V2.3.0
+   * 78. 取得高對比度按鈕色彩
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 取得適合高對比度模式的按鈕色彩
    */
@@ -883,8 +886,8 @@ class HighContrastTheme {
   }
 
   /**
-   * 67. 對應 8.2：取得高對比度邊框色彩
-   * @version 2025-01-30-V2.3.0
+   * 79. 取得高對比度邊框色彩
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 取得適合高對比度模式的邊框色彩
    */
@@ -898,8 +901,8 @@ class HighContrastTheme {
   }
 
   /**
-   * 68. 對應 8.2：取得適配的字型大小
-   * @version 2025-01-30-V2.3.0
+   * 80. 取得適配的字型大小
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 根據系統字型縮放比例調整字型大小
    */
@@ -909,8 +912,8 @@ class HighContrastTheme {
   }
 
   /**
-   * 69. 對應 8.2：取得適配的動畫時長
-   * @version 2025-01-30-V2.3.0
+   * 81. 取得適配的動畫時長
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 根據系統動畫偏好調整動畫時長
    */
@@ -923,8 +926,8 @@ class HighContrastTheme {
 }
 
 /**
- * 70. 對應 8.3：觸控目標大小輔助工具
- * @version 2025-01-30-V2.3.0
+ * 82. 觸控目標大小輔助工具
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 觸控目標大小輔助工具（WCAG 2.1 AA標準）
  */
@@ -932,8 +935,8 @@ class TouchTargetHelper {
   static const double minTouchTargetSize = 44.0;
   
   /**
-   * 71. 對應 8.3：確保Widget符合最小觸控目標大小
-   * @version 2025-01-30-V2.3.0
+   * 83. 確保Widget符合最小觸控目標大小
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 確保Widget符合WCAG最小觸控目標大小
    */
@@ -948,8 +951,8 @@ class TouchTargetHelper {
   }
 
   /**
-   * 72. 對應 8.3：為小於標準的按鈕增加透明觸控區域
-   * @version 2025-01-30-V2.3.0
+   * 84. 為小於標準的按鈕增加透明觸控區域
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 為小於標準的按鈕增加透明觸控區域
    */
@@ -970,8 +973,8 @@ class TouchTargetHelper {
 // ===== 效能最佳化 =====
 
 /**
- * 73. 對應 9.1：Widget快取管理器
- * @version 2025-01-30-V2.3.0
+ * 85. Widget快取管理器
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 優化Widget重建效能，減少不必要的重建
  */
@@ -981,8 +984,8 @@ class WidgetCache {
   static const Duration _cacheValidDuration = Duration(minutes: 5);
 
   /**
-   * 74. 對應 9.1：取得快取的Widget或建立新的
-   * @version 2025-01-30-V2.3.0
+   * 86. 取得快取的Widget或建立新的
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 從快取中獲取Widget或創建新的
    */
@@ -1004,8 +1007,8 @@ class WidgetCache {
   }
 
   /**
-   * 75. 對應 9.1：清除過期快取
-   * @version 2025-01-30-V2.3.0
+   * 87. 清除過期快取
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 清除已過期的Widget快取
    */
@@ -1026,8 +1029,8 @@ class WidgetCache {
   }
 
   /**
-   * 76. 對應 9.1：清除所有快取
-   * @version 2025-01-30-V2.3.0
+   * 88. 清除所有快取
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 清除所有Widget快取
    */
@@ -1037,8 +1040,8 @@ class WidgetCache {
   }
 
   /**
-   * 77. 對應 9.1：取得快取統計資訊
-   * @version 2025-01-30-V2.3.0
+   * 89. 取得快取統計資訊
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 獲取快取使用統計資訊
    */
@@ -1056,8 +1059,8 @@ class WidgetCache {
 }
 
 /**
- * 78. 對應 9.2：圖片預載入管理器
- * @version 2025-01-30-V2.3.0
+ * 90. 圖片預載入管理器
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 管理圖片資源的預載入
  */
@@ -1066,8 +1069,8 @@ class ImagePreloader {
   static final Map<String, Completer<void>> _loadingImages = {};
 
   /**
-   * 79. 對應 9.2：預載入品牌相關圖片資源
-   * @version 2025-01-30-V2.3.0
+   * 91. 預載入品牌相關圖片資源
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 預載入品牌相關的圖片資源
    */
@@ -1085,8 +1088,8 @@ class ImagePreloader {
   }
 
   /**
-   * 80. 對應 9.2：預載入單一圖片
-   * @version 2025-01-30-V2.3.0
+   * 92. 預載入單一圖片
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 預載入指定的單一圖片
    */
@@ -1113,8 +1116,8 @@ class ImagePreloader {
   }
 
   /**
-   * 81. 對應 9.2：檢查圖片是否已預載入
-   * @version 2025-01-30-V2.3.0
+   * 93. 檢查圖片是否已預載入
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 檢查指定圖片是否已完成預載入
    */
@@ -1123,8 +1126,8 @@ class ImagePreloader {
   }
 
   /**
-   * 82. 對應 9.2：清除預載入記錄
-   * @version 2025-01-30-V2.3.0
+   * 94. 清除預載入記錄
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 清除圖片預載入的記錄
    */
@@ -1135,8 +1138,8 @@ class ImagePreloader {
 }
 
 /**
- * 83. 對應 9.3：記憶體使用監控
- * @version 2025-01-30-V2.3.0
+ * 95. 記憶體使用監控
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 監控應用程式記憶體使用情況
  */
@@ -1148,8 +1151,8 @@ class MemoryMonitor {
   static const int _criticalThresholdMB = 200;
 
   /**
-   * 84. 對應 9.3：開始記憶體監控
-   * @version 2025-01-30-V2.3.0
+   * 96. 開始記憶體監控
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 開始定期監控記憶體使用量
    */
@@ -1160,8 +1163,8 @@ class MemoryMonitor {
   }
 
   /**
-   * 85. 對應 9.3：停止記憶體監控
-   * @version 2025-01-30-V2.3.0
+   * 97. 停止記憶體監控
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 停止記憶體使用量監控
    */
@@ -1171,8 +1174,8 @@ class MemoryMonitor {
   }
 
   /**
-   * 86. 對應 9.3：檢查記憶體使用狀況
-   * @version 2025-01-30-V2.3.0
+   * 98. 檢查記憶體使用狀況
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 檢查當前記憶體使用狀況並採取相應措施
    */
@@ -1194,8 +1197,8 @@ class MemoryMonitor {
   }
 
   /**
-   * 87. 對應 9.3：取得目前記憶體使用量
-   * @version 2025-01-30-V2.3.0
+   * 99. 取得目前記憶體使用量
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 獲取當前記憶體使用量（MB）
    */
@@ -1205,8 +1208,8 @@ class MemoryMonitor {
   }
 
   /**
-   * 88. 對應 9.3：執行一般清理
-   * @version 2025-01-30-V2.3.0
+   * 100. 執行一般清理
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 執行一般性的記憶體清理
    */
@@ -1215,8 +1218,8 @@ class MemoryMonitor {
   }
 
   /**
-   * 89. 對應 9.3：執行緊急清理
-   * @version 2025-01-30-V2.3.0
+   * 101. 執行緊急清理
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 執行緊急記憶體清理
    */
@@ -1226,8 +1229,8 @@ class MemoryMonitor {
   }
 
   /**
-   * 90. 對應 9.3：取得記憶體使用統計
-   * @version 2025-01-30-V2.3.0
+   * 102. 取得記憶體使用統計
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 獲取記憶體使用統計資訊
    */
@@ -1250,16 +1253,16 @@ class MemoryMonitor {
 // ===== 錯誤處理機制 =====
 
 /**
- * 91. 對應 10.1：歡迎頁面錯誤處理器
- * @version 2025-01-30-V2.3.0
+ * 103. 歡迎頁面錯誤處理器
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 根據8701規範的具體錯誤情境進行詳細處理
  */
 class WelcomeErrorHandler {
   
   /**
-   * 92. 對應 10.1：處理初始化錯誤
-   * @version 2025-01-30-V2.3.0
+   * 104. 處理初始化錯誤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 處理初始化錯誤（8701規範）
    */
@@ -1271,8 +1274,8 @@ class WelcomeErrorHandler {
   }
 
   /**
-   * 93. 對應 10.1：處理模式選擇錯誤
-   * @version 2025-01-30-V2.3.0
+   * 105. 處理模式選擇錯誤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 處理模式選擇錯誤（8701規範）
    */
@@ -1284,8 +1287,8 @@ class WelcomeErrorHandler {
   }
 
   /**
-   * 94. 對應 10.1：處理網路錯誤
-   * @version 2025-01-30-V2.3.0
+   * 106. 處理網路錯誤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 處理網路錯誤（8701規範）
    */
@@ -1305,8 +1308,8 @@ class WelcomeErrorHandler {
   }
 
   /**
-   * 95. 對應 10.1：處理HTTP狀態碼錯誤
-   * @version 2025-01-30-V2.3.0
+   * 107. 處理HTTP狀態碼錯誤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 處理HTTP狀態碼錯誤（8701規範）
    */
@@ -1330,8 +1333,8 @@ class WelcomeErrorHandler {
   }
 
   /**
-   * 96. 對應 10.1：處理帳號刪除相關錯誤
-   * @version 2025-01-30-V2.3.0
+   * 處理帳號刪除相關錯誤
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 處理帳號刪除相關錯誤（8701規範）
    */
@@ -1350,290 +1353,13 @@ class WelcomeErrorHandler {
         return '帳號刪除狀態異常，請聯絡客服';
     }
   }
-
-  /**
-   * 97. 對應 10.1：處理驗證錯誤
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 處理驗證錯誤（8701規範）
-   */
-  static String handleValidationError(String field, dynamic value) {
-    switch (field) {
-      case 'mode':
-        return '請選擇一個使用模式';
-      case 'network':
-        return '網路連線不可用，請檢查網路設定';
-      default:
-        return '輸入驗證失敗：$field';
-    }
-  }
-
-  /**
-   * 98. 對應 10.1：顯示錯誤對話框
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 顯示錯誤對話框（8701規範）
-   */
-  static Future<void> showErrorDialog(
-    BuildContext context, 
-    String message, 
-    WelcomeErrorType errorType,
-    {VoidCallback? onRetry, VoidCallback? onDismiss}
-  ) async {
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => ErrorDialog(
-        message: message,
-        onRetry: _shouldShowRetryButton(errorType) ? onRetry : null,
-        onDismiss: onDismiss ?? () => Navigator.of(context).pop(),
-      ),
-    );
-  }
-
-  /**
-   * 99. 對應 10.1：取得錯誤標題
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 根據錯誤類型取得對應的錯誤標題
-   */
-  static String _getErrorTitle(WelcomeErrorType errorType) {
-    switch (errorType) {
-      case WelcomeErrorType.initialization:
-        return '初始化錯誤';
-      case WelcomeErrorType.networkConnection:
-        return '網路連線錯誤';
-      case WelcomeErrorType.modeSelection:
-        return '模式選擇錯誤';
-      case WelcomeErrorType.accountDeletion:
-        return '帳號狀態異常';
-      case WelcomeErrorType.validation:
-        return '輸入驗證錯誤';
-      case WelcomeErrorType.unknown:
-        return '未知錯誤';
-    }
-  }
-
-  /**
-   * 100. 對應 10.1：判斷是否應顯示重試按鈕
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 根據錯誤類型判斷是否應顯示重試按鈕
-   */
-  static bool _shouldShowRetryButton(WelcomeErrorType errorType) {
-    switch (errorType) {
-      case WelcomeErrorType.initialization:
-      case WelcomeErrorType.networkConnection:
-      case WelcomeErrorType.modeSelection:
-        return true;
-      case WelcomeErrorType.accountDeletion:
-      case WelcomeErrorType.validation:
-        return false;
-      case WelcomeErrorType.unknown:
-        return true;
-    }
-  }
-}
-
-/**
- * 101. 對應 10.2：錯誤復原策略
- * @version 2025-01-30-V2.3.0
- * @date 2025-01-30 10:00:00
- * @description 提供各種錯誤復原機制
- */
-class ErrorRecovery {
-  
-  /**
-   * 102. 對應 10.2：自動重試機制（指數退避）
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 使用指數退避策略的自動重試機制
-   */
-  static Future<T> retryWithBackoff<T>(
-    Future<T> Function() operation, {
-    int maxRetries = 3,
-    Duration initialDelay = const Duration(seconds: 1),
-    double backoffMultiplier = 2.0,
-    Duration maxDelay = const Duration(seconds: 30),
-  }) async {
-    int attempt = 0;
-    while (attempt < maxRetries) {
-      try {
-        return await operation();
-      } catch (e) {
-        attempt++;
-        if (attempt >= maxRetries) rethrow;
-        
-        final delay = _calculateDelay(initialDelay, attempt, backoffMultiplier, maxDelay);
-        await Future.delayed(delay);
-      }
-    }
-    throw Exception('Max retries exceeded');
-  }
-
-  /**
-   * 103. 對應 10.2：計算退避延遲時間
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 計算指數退避的延遲時間
-   */
-  static Duration _calculateDelay(
-    Duration initialDelay,
-    int attempt,
-    double multiplier,
-    Duration maxDelay,
-  ) {
-    final delayMs = initialDelay.inMilliseconds * math.pow(multiplier, attempt - 1);
-    final clampedDelayMs = math.min(delayMs.toInt(), maxDelay.inMilliseconds);
-    return Duration(milliseconds: clampedDelayMs);
-  }
-
-  /**
-   * 104. 對應 10.2：智慧重試
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 根據錯誤類型決定是否重試的智慧重試機制
-   */
-  static Future<T> smartRetry<T>(
-    Future<T> Function() operation,
-    bool Function(dynamic error) shouldRetry, {
-    int maxRetries = 3,
-  }) async {
-    int attempt = 0;
-    while (attempt < maxRetries) {
-      try {
-        return await operation();
-      } catch (e) {
-        attempt++;
-        if (attempt >= maxRetries || !shouldRetry(e)) rethrow;
-        
-        await Future.delayed(Duration(seconds: attempt));
-      }
-    }
-    throw Exception('Max retries exceeded');
-  }
-
-  /**
-   * 105. 對應 10.2：判斷是否應該重試
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 根據錯誤類型判斷是否應該進行重試
-   */
-  static bool shouldRetryForError(dynamic error) {
-    if (error is DioException) {
-      switch (error.type) {
-        case DioExceptionType.connectionTimeout:
-        case DioExceptionType.receiveTimeout:
-        case DioExceptionType.sendTimeout:
-        case DioExceptionType.connectionError:
-          return true;
-        case DioExceptionType.badResponse:
-          final statusCode = error.response?.statusCode;
-          return statusCode != null && statusCode >= 500;
-        default:
-          return false;
-      }
-    }
-    return true; // 預設重試未知錯誤
-  }
-
-  /**
-   * 106. 對應 10.2：離線模式處理
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 建立離線狀態的UI Widget
-   */
-  static Widget buildOfflineWidget({
-    VoidCallback? onRetry,
-    String? message,
-  }) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.wifi_off,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message ?? '目前無網路連線',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          if (onRetry != null)
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('重新連線'),
-            ),
-        ],
-      ),
-    );
-  }
-
-  /**
-   * 107. 對應 10.2：錯誤邊界Widget
-   * @version 2025-01-30-V2.3.0
-   * @date 2025-01-30 10:00:00
-   * @description 提供錯誤邊界保護的Widget包裝器
-   */
-  static Widget buildErrorBoundary({
-    required Widget child,
-    Widget Function(String error)? errorBuilder,
-  }) {
-    return Builder(
-      builder: (context) {
-        try {
-          return child;
-        } catch (e) {
-          if (errorBuilder != null) {
-            return errorBuilder(e.toString());
-          }
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Colors.red[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '發生未預期錯誤',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  e.toString(),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          );
-        }
-      },
-    );
-  }
 }
 
 // ===== 主要Widget實作 =====
 
 /**
- * 01. 對應 1.3.1：主頁面容器Widget
- * @version 2025-01-30-V2.3.0
+ * 01. 主頁面容器Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 歡迎頁面的主容器，支援首次啟動與再次啟動流程
  */
@@ -1647,8 +1373,8 @@ class WelcomePage extends StatefulWidget {
 }
 
 /**
- * 02. 對應 1.3.1：歡迎頁面狀態類別
- * @version 2025-01-30-V2.3.0
+ * 02. 歡迎頁面狀態類別
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 管理歡迎頁面的狀態和動畫控制器
  */
@@ -1665,8 +1391,8 @@ class _WelcomePageState extends State<WelcomePage> with SingleTickerProviderStat
   }
 
   /**
-   * 03. 對應 1.3.1：初始化動畫控制器
-   * @version 2025-01-30-V2.3.0
+   * 03. 初始化動畫控制器
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 設定頁面淡入動畫效果
    */
@@ -1691,8 +1417,8 @@ class _WelcomePageState extends State<WelcomePage> with SingleTickerProviderStat
   }
 
   /**
-   * 04. 對應 1.3.1：初始化頁面狀態
-   * @version 2025-01-30-V2.3.0
+   * 04. 初始化頁面狀態
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 調用Provider進行頁面初始化
    */
@@ -1726,8 +1452,8 @@ class _WelcomePageState extends State<WelcomePage> with SingleTickerProviderStat
 }
 
 /**
- * 05. 對應 2.1.1：頁面佈局結構Widget
- * @version 2025-01-30-V2.3.0
+ * 05. 頁面佈局結構Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 提供歡迎頁面的基礎佈局結構，遵循9005文件響應式設計規範
  */
@@ -1810,8 +1536,8 @@ class WelcomeScaffold extends StatelessWidget {
   }
 
   /**
-   * 06. 對應 2.1.1：建立錯誤覆蓋層
-   * @version 2025-01-30-V2.3.0
+   * 06. 建立錯誤覆蓋層
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 顯示錯誤對話框的覆蓋層
    */
@@ -1833,8 +1559,8 @@ class WelcomeScaffold extends StatelessWidget {
 }
 
 /**
- * 07. 對應 3.3.1：品牌展示區塊Widget
- * @version 2025-01-30-V2.3.0
+ * 07. 品牌展示區塊Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 顯示品牌Logo和標題，支援動畫效果
  */
@@ -1857,8 +1583,8 @@ class BrandSection extends StatelessWidget {
 }
 
 /**
- * 08. 對應 3.3.2：模式選擇區塊Widget
- * @version 2025-01-30-V2.3.0
+ * 08. 模式選擇區塊Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 四模式選擇介面，支援精準控制者/紀錄習慣者/轉型挑戰者/潛在覺醒者
  */
@@ -1896,8 +1622,8 @@ class ModeSelectionSection extends StatelessWidget {
 }
 
 /**
- * 09. 對應 3.3.3：導航操作區塊Widget
- * @version 2025-01-30-V2.3.0
+ * 09. 導航操作區塊Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 顯示開始使用按鈕和導航控制
  */
@@ -1926,8 +1652,8 @@ class NavigationSection extends StatelessWidget {
 }
 
 /**
- * 10. 對應 3.4.1：品牌Logo Widget
- * @version 2025-01-30-V2.3.0
+ * 10. 品牌Logo Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 顯示應用程式品牌標誌，支援響應式尺寸
  */
@@ -1964,8 +1690,8 @@ class BrandLogo extends StatelessWidget {
 }
 
 /**
- * 11. 對應 3.4.2：品牌標題Widget
- * @version 2025-01-30-V2.3.0
+ * 11. 品牌標題Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 顯示品牌標題和副標題文字
  */
@@ -1999,8 +1725,8 @@ class BrandTitle extends StatelessWidget {
 }
 
 /**
- * 12. 對應 3.5.1：模式網格Widget
- * @version 2025-01-30-V2.3.0
+ * 12. 模式網格Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 管理四個模式卡片的網格佈局
  */
@@ -2035,8 +1761,8 @@ class ModeGrid extends StatelessWidget {
 }
 
 /**
- * 13. 對應 3.6.1：模式選擇卡片Widget
- * @version 2025-01-30-V2.3.0
+ * 13. 模式選擇卡片Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 單一模式選擇卡片，遵循0015文件四模式命名與9005色彩規範
  */
@@ -2159,8 +1885,8 @@ class _ModeCardState extends State<ModeCard> with SingleTickerProviderStateMixin
   }
 
   /**
-   * 14. 對應 3.6.1：取得模式配置資料
-   * @version 2025-01-30-V2.3.0
+   * 14. 取得模式配置資料
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 根據模式類型返回對應的顯示配置
    */
@@ -2229,8 +1955,8 @@ class _ModeCardState extends State<ModeCard> with SingleTickerProviderStateMixin
 }
 
 /**
- * 15. 對應 3.6.2：主要操作按鈕Widget
- * @version 2025-01-30-V2.3.0
+ * 15. 主要操作按鈕Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 開始使用的主要操作按鈕
  */
@@ -2288,8 +2014,8 @@ class ActionButton extends StatelessWidget {
 }
 
 /**
- * 16. 對應 3.7.1：漸層背景Widget
- * @version 2025-01-30-V2.3.0
+ * 16. 漸層背景Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 根據9005規範的四模式差異化背景
  */
@@ -2308,8 +2034,8 @@ class GradientBackground extends StatelessWidget {
   }
 
   /**
-   * 17. 對應 3.7.1：取得模式對應漸層色彩
-   * @version 2025-01-30-V2.3.0
+   * 17. 取得模式對應漸層色彩
+   * @version 2025-01-30-V2.4.0
    * @date 2025-01-30 10:00:00
    * @description 根據模式返回對應的背景漸層色彩
    */
@@ -2351,8 +2077,8 @@ class GradientBackground extends StatelessWidget {
 }
 
 /**
- * 18. 對應 3.7.2：載入指示器Widget
- * @version 2025-01-30-V2.3.0
+ * 18. 載入指示器Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 顯示載入中狀態的指示器
  */
@@ -2390,8 +2116,8 @@ class LoadingIndicator extends StatelessWidget {
 }
 
 /**
- * 19. 對應 3.7.3：錯誤對話框Widget
- * @version 2025-01-30-V2.3.0
+ * 19. 錯誤對話框Widget
+ * @version 2025-01-30-V2.4.0
  * @date 2025-01-30 10:00:00
  * @description 顯示錯誤訊息的對話框
  */
@@ -2469,4 +2195,3 @@ class ErrorDialog extends StatelessWidget {
     );
   }
 }
-
