@@ -3,7 +3,7 @@
  * 8601. P001_歡迎頁面_2.4.0
  * @module P001歡迎頁面
  * @description Flutter Presentation Layer入口頁面 - 四模式選擇、品牌展示、導航分發
- * @update 2025-01-30: 升級至v2.4.0，修正函數編號格式、API端點路徑、版本統一
+ * @update 2025-08-07: 升級至v2.4.0，修正函數編號格式、API端點路徑、版本統一
  */
 
 import 'package:flutter/material.dart';
