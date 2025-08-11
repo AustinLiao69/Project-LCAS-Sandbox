@@ -3,7 +3,7 @@
  * AUTH_認證功能群組_1.0.0
  * @module 認證功能群組
  * @description Flutter認證介面群組 - 純Presentation Layer實作
- * @update 2025-01-21: 初版建立，實現15個核心認證UI函數
+ * @update 2025-08-11: 初版建立，實現15個核心認證UI函數
  */
 
 import 'package:flutter/material.dart';
