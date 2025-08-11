@@ -1,9 +1,9 @@
 
 /**
- * AUTH_認證功能群組_1.0.0
+ * AUTH_認證功能群組_2.5.0
  * @module 認證功能群組
  * @description Flutter認證介面群組 - 純Presentation Layer實作
- * @update 2025-08-11: 初版建立，實現15個核心認證UI函數
+ * @update 2025-01-21: Phase 3優化 - StatefulBuilder優化、輔助函數註解完善、版本升級
  */
 
 import 'package:flutter/material.dart';
@@ -53,7 +53,7 @@ class RegistrationData {
 
 /**
  * 01. 建構歡迎頁面Widget
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構歡迎頁面的完整UI結構
  */
@@ -147,7 +147,7 @@ Widget AUTH_buildWelcomePage({
 
 /**
  * 02. 建構模式選擇Widget
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構四模式選擇網格介面
  */
@@ -213,7 +213,7 @@ Widget AUTH_buildModeSelector({
 
 /**
  * 03. 建構登入頁面Widget
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構登入頁面的完整UI結構，支援四模式差異化
  */
@@ -315,7 +315,7 @@ Widget AUTH_buildLoginPage({
 
 /**
  * 04. 建構OAuth登入按鈕組
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構OAuth登入按鈕，支援四模式樣式差異
  */
@@ -401,7 +401,7 @@ Widget AUTH_buildOAuthButtons({
 
 /**
  * 05. 建構Email登入表單
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構Email登入表單，僅非Sleeper模式顯示
  */
@@ -506,7 +506,7 @@ Widget AUTH_buildEmailLoginForm({
 
 /**
  * 06. 建構註冊頁面Widget
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構註冊頁面的完整UI結構
  */
@@ -570,10 +570,10 @@ Widget AUTH_buildRegisterPage({
 }
 
 /**
- * 07. 建構註冊表單Widget
- * @version 2025-01-21-V1.0.0
+ * 07. 建構註冊表單Widget - 優化StatefulBuilder使用方式
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
- * @description 建構註冊表單，支援四模式欄位差異
+ * @description 建構註冊表單，支援四模式欄位差異，優化狀態管理
  */
 Widget AUTH_buildRegistrationForm({
   required BuildContext context,
@@ -581,169 +581,207 @@ Widget AUTH_buildRegistrationForm({
   required Function(RegistrationData) onRegister,
   bool isLoading = false,
 }) {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
-  final displayNameController = TextEditingController();
-  final formKey = GlobalKey<FormState>();
+  return _RegistrationFormWidget(
+    userMode: userMode,
+    onRegister: onRegister,
+    isLoading: isLoading,
+  );
+}
+
+// 優化的註冊表單Widget類別
+class _RegistrationFormWidget extends StatefulWidget {
+  final UserMode userMode;
+  final Function(RegistrationData) onRegister;
+  final bool isLoading;
+
+  const _RegistrationFormWidget({
+    required this.userMode,
+    required this.onRegister,
+    required this.isLoading,
+  });
+
+  @override
+  State<_RegistrationFormWidget> createState() => _RegistrationFormWidgetState();
+}
+
+class _RegistrationFormWidgetState extends State<_RegistrationFormWidget> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController displayNameController = TextEditingController();
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   
-  return StatefulBuilder(
-    builder: (context, setState) {
-      bool termsAccepted = false;
-      bool privacyAccepted = false;
-      
-      return Form(
-        key: formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Email輸入框（所有模式）
-            TextFormField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Email *',
-                prefixIcon: Icon(Icons.email),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Email不能為空';
-                }
-                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                  return 'Email格式不正確';
-                }
-                return null;
-              },
+  bool termsAccepted = false;
+  bool privacyAccepted = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    displayNameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Email輸入框（所有模式）
+          TextFormField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'Email *',
+              prefixIcon: Icon(Icons.email),
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(height: 16),
-            
-            // 密碼輸入框（所有模式）
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Email不能為空';
+              }
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                return 'Email格式不正確';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          
+          // 密碼輸入框（所有模式）
+          TextFormField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: '密碼 *',
+              prefixIcon: Icon(Icons.lock),
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return '密碼不能為空';
+              }
+              if (value.length < 8) {
+                return '密碼至少需要8個字元';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          
+          // 確認密碼輸入框（非Sleeper模式）
+          if (widget.userMode != UserMode.sleeper) ...[
             TextFormField(
-              controller: passwordController,
+              controller: confirmPasswordController,
               obscureText: true,
               decoration: const InputDecoration(
-                labelText: '密碼 *',
-                prefixIcon: Icon(Icons.lock),
+                labelText: '確認密碼 *',
+                prefixIcon: Icon(Icons.lock_outline),
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '密碼不能為空';
-                }
-                if (value.length < 8) {
-                  return '密碼至少需要8個字元';
+                if (value != passwordController.text) {
+                  return '密碼不一致';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 16),
-            
-            // 確認密碼輸入框（非Sleeper模式）
-            if (userMode != UserMode.sleeper) ...[
-              TextFormField(
-                controller: confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: '確認密碼 *',
-                  prefixIcon: Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value != passwordController.text) {
-                    return '密碼不一致';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
-            
-            // 顯示名稱輸入框（非Sleeper模式）
-            if (userMode != UserMode.sleeper) ...[
-              TextFormField(
-                controller: displayNameController,
-                decoration: const InputDecoration(
-                  labelText: '顯示名稱 *',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '顯示名稱不能為空';
-                  }
-                  if (value.length < 2) {
-                    return '顯示名稱至少需要2個字元';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-            ],
-            
-            // 條款同意區域
-            CheckboxListTile(
-              value: termsAccepted,
-              onChanged: (value) => setState(() => termsAccepted = value ?? false),
-              title: const Text('我同意服務條款'),
-              activeColor: _getModeColor(userMode),
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-            CheckboxListTile(
-              value: privacyAccepted,
-              onChanged: (value) => setState(() => privacyAccepted = value ?? false),
-              title: const Text('我同意隱私政策'),
-              activeColor: _getModeColor(userMode),
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-            const SizedBox(height: 32),
-            
-            // 註冊按鈕
-            SizedBox(
-              height: userMode == UserMode.sleeper ? 72 : 56,
-              child: ElevatedButton(
-                onPressed: (!isLoading && termsAccepted && privacyAccepted) 
-                  ? () {
-                      if (formKey.currentState?.validate() ?? false) {
-                        final registrationData = RegistrationData(
-                          email: emailController.text,
-                          password: passwordController.text,
-                          displayName: userMode != UserMode.sleeper 
-                            ? displayNameController.text 
-                            : null,
-                          userMode: userMode,
-                          termsAccepted: termsAccepted,
-                          privacyAccepted: privacyAccepted,
-                        );
-                        onRegister(registrationData);
-                      }
-                    }
-                  : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getModeColor(userMode),
-                ),
-                child: isLoading
-                  ? AUTH_buildLoadingIndicator()
-                  : Text(
-                      '註冊',
-                      style: TextStyle(
-                        fontSize: userMode == UserMode.sleeper ? 20 : 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-              ),
-            ),
           ],
-        ),
+          
+          // 顯示名稱輸入框（非Sleeper模式）
+          if (widget.userMode != UserMode.sleeper) ...[
+            TextFormField(
+              controller: displayNameController,
+              decoration: const InputDecoration(
+                labelText: '顯示名稱 *',
+                prefixIcon: Icon(Icons.person),
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '顯示名稱不能為空';
+                }
+                if (value.length < 2) {
+                  return '顯示名稱至少需要2個字元';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+          ],
+          
+          // 條款同意區域
+          CheckboxListTile(
+            value: termsAccepted,
+            onChanged: (value) => setState(() => termsAccepted = value ?? false),
+            title: const Text('我同意服務條款'),
+            activeColor: _getModeColor(widget.userMode),
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+          CheckboxListTile(
+            value: privacyAccepted,
+            onChanged: (value) => setState(() => privacyAccepted = value ?? false),
+            title: const Text('我同意隱私政策'),
+            activeColor: _getModeColor(widget.userMode),
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+          const SizedBox(height: 32),
+          
+          // 註冊按鈕
+          SizedBox(
+            height: widget.userMode == UserMode.sleeper ? 72 : 56,
+            child: ElevatedButton(
+              onPressed: _canSubmit() 
+                ? () => _handleSubmit()
+                : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _getModeColor(widget.userMode),
+              ),
+              child: widget.isLoading
+                ? AUTH_buildLoadingIndicator()
+                : Text(
+                    '註冊',
+                    style: TextStyle(
+                      fontSize: widget.userMode == UserMode.sleeper ? 20 : 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _canSubmit() {
+    return !widget.isLoading && termsAccepted && privacyAccepted;
+  }
+
+  void _handleSubmit() {
+    if (formKey.currentState?.validate() ?? false) {
+      final registrationData = RegistrationData(
+        email: emailController.text,
+        password: passwordController.text,
+        displayName: widget.userMode != UserMode.sleeper 
+          ? displayNameController.text 
+          : null,
+        userMode: widget.userMode,
+        termsAccepted: termsAccepted,
+        privacyAccepted: privacyAccepted,
       );
-    },
-  );
+      widget.onRegister(registrationData);
+    }
+  }
 }
 
 /**
  * 08. 建構密碼重設頁面Widget
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構密碼重設頁面的完整UI結構
  */
@@ -801,7 +839,7 @@ Widget AUTH_buildPasswordResetPage({
 
 /**
  * 09. 建構重設步驟Widget
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構密碼重設的三步驟介面
  */
@@ -828,7 +866,7 @@ Widget AUTH_buildResetSteps({
 
 /**
  * 10. 建構登出確認頁面Widget
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構登出確認頁面，支援四模式差異化選項
  */
@@ -969,7 +1007,7 @@ Widget AUTH_buildLogoutPage({
 
 /**
  * 11. 建構精準控制者模式UI
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構專業完整的認證介面
  */
@@ -1052,7 +1090,7 @@ Widget AUTH_buildControllerModeUI({
 
 /**
  * 12. 建構紀錄習慣者模式UI
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構優雅美觀的認證介面
  */
@@ -1138,7 +1176,7 @@ Widget AUTH_buildLoggerModeUI({
 
 /**
  * 13. 建構轉型挑戰者模式UI
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構激勵導向的認證介面
  */
@@ -1255,7 +1293,7 @@ Widget AUTH_buildStruggleModeUI({
 
 /**
  * 14. 建構潛在覺醒者模式UI
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構極簡易用的認證介面
  */
@@ -1348,7 +1386,7 @@ Widget AUTH_buildSleeperModeUI({
 
 /**
  * 15. 建構載入指示器
- * @version 2025-01-21-V1.0.0
+ * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構通用載入指示器
  */
@@ -1368,6 +1406,12 @@ Widget AUTH_buildLoadingIndicator({
 
 // ==================== 輔助函數 ====================
 
+/**
+ * 獲取模式對應顏色
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 根據使用者模式回傳對應的主題顏色
+ */
 Color _getModeColor(UserMode mode) {
   switch (mode) {
     case UserMode.controller:
@@ -1381,6 +1425,12 @@ Color _getModeColor(UserMode mode) {
   }
 }
 
+/**
+ * 獲取模式對應圖標
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 根據使用者模式回傳對應的圖標
+ */
 IconData _getModeIcon(UserMode mode) {
   switch (mode) {
     case UserMode.controller:
@@ -1394,6 +1444,12 @@ IconData _getModeIcon(UserMode mode) {
   }
 }
 
+/**
+ * 獲取模式對應名稱
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 根據使用者模式回傳對應的中文名稱
+ */
 String _getModeName(UserMode mode) {
   switch (mode) {
     case UserMode.controller:
@@ -1407,6 +1463,12 @@ String _getModeName(UserMode mode) {
   }
 }
 
+/**
+ * 獲取模式對應登入標題
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 根據使用者模式回傳對應的登入頁面標題
+ */
 String _getModeLoginTitle(UserMode mode) {
   switch (mode) {
     case UserMode.controller:
@@ -1420,6 +1482,12 @@ String _getModeLoginTitle(UserMode mode) {
   }
 }
 
+/**
+ * 獲取模式對應登入訊息
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 根據使用者模式回傳對應的登入歡迎訊息
+ */
 String _getModeLoginMessage(UserMode mode) {
   switch (mode) {
     case UserMode.controller:
@@ -1433,6 +1501,12 @@ String _getModeLoginMessage(UserMode mode) {
   }
 }
 
+/**
+ * 獲取模式對應註冊標題
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 根據使用者模式回傳對應的註冊頁面標題
+ */
 String _getModeRegisterTitle(UserMode mode) {
   switch (mode) {
     case UserMode.controller:
@@ -1446,6 +1520,12 @@ String _getModeRegisterTitle(UserMode mode) {
   }
 }
 
+/**
+ * 獲取模式對應註冊訊息
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 根據使用者模式回傳對應的註冊歡迎訊息
+ */
 String _getModeRegistrationMessage(UserMode mode) {
   switch (mode) {
     case UserMode.controller:
@@ -1459,6 +1539,12 @@ String _getModeRegistrationMessage(UserMode mode) {
   }
 }
 
+/**
+ * 獲取模式對應登出訊息
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 根據使用者模式回傳對應的登出確認訊息
+ */
 String _getModeLogoutMessage(UserMode mode) {
   switch (mode) {
     case UserMode.controller:
@@ -1472,16 +1558,35 @@ String _getModeLogoutMessage(UserMode mode) {
   }
 }
 
+/**
+ * 檢查表單是否有效
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 檢查Email和密碼輸入框是否有內容
+ */
 bool _isFormValid(TextEditingController emailController, TextEditingController passwordController) {
   return emailController.text.isNotEmpty && passwordController.text.isNotEmpty;
 }
 
+/**
+ * 獲取堅持天數
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 模擬獲取使用者堅持記帳的天數，實際應從狀態管理或API獲取
+ */
 int _getDaysCount() {
   // 模擬堅持天數，實際應從狀態管理或API獲取
   return 23;
 }
 
-// 密碼重設步驟輔助函數
+// ==================== 密碼重設步驟輔助函數 ====================
+
+/**
+ * 建構Email輸入步驟
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 建構密碼重設第一步驟 - Email輸入介面
+ */
 Widget _buildEmailStep(BuildContext context, UserMode userMode, Function(String) onSendCode, bool isLoading) {
   final emailController = TextEditingController();
   
@@ -1544,6 +1649,12 @@ Widget _buildEmailStep(BuildContext context, UserMode userMode, Function(String)
   );
 }
 
+/**
+ * 建構驗證碼輸入步驟
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 建構密碼重設第二步驟 - 驗證碼輸入介面
+ */
 Widget _buildVerificationStep(BuildContext context, UserMode userMode, Function(String) onVerifyCode, bool isLoading) {
   final codeController = TextEditingController();
   
@@ -1606,6 +1717,12 @@ Widget _buildVerificationStep(BuildContext context, UserMode userMode, Function(
   );
 }
 
+/**
+ * 建構新密碼設定步驟
+ * @version 2025-01-21-V2.5.0
+ * @date 2025-01-21 10:00:00
+ * @description 建構密碼重設第三步驟 - 新密碼設定介面
+ */
 Widget _buildPasswordStep(BuildContext context, UserMode userMode, Function(String) onResetPassword, bool isLoading) {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
