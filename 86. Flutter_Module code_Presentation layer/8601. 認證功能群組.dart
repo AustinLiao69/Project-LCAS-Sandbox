@@ -1,6 +1,6 @@
 
 /**
- * AUTH_認證功能群組_2.5.0
+ * AUTH_認證功能群組_2.5.1
  * @module 認證功能群組
  * @description Flutter認證介面群組 - 純Presentation Layer實作
  * @update 2025-08-11: Phase 3優化 - StatefulBuilder優化、輔助函數註解完善、版本升級
