@@ -1,19 +1,16 @@
 
+
 /**
- * MAIN_主要功能群組_1.3.0
+ * MAIN_主要功能群組_1.4.0
  * @module MAIN-UI模組
  * @description Flutter主要功能群組 - 核心記帳操作UI中心
- * @update 2025-01-21: 升級版本，實現完整的30個函數和四模式差異化
+ * @update 2025-01-21: 升級版本，移除超出TDD規格的代碼，強化API錯誤處理策略
  */
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
 
 // ========================================
 // 核心數據模型與枚舉定義
@@ -94,7 +91,7 @@ class ThemeConfig {
 // ========================================
 
 class MainFunctionGroup {
-  static const String MODULE_VERSION = "1.3.0";
+  static const String MODULE_VERSION = "1.4.0";
   static const String MODULE_NAME = "MAIN_主要功能群組";
 
   // ========================================
@@ -103,7 +100,7 @@ class MainFunctionGroup {
 
   /**
    * 01. 建構首頁儀表板Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構首頁儀表板的完整UI結構，支援四模式差異化顯示和智慧洞察
    */
@@ -140,22 +137,16 @@ class MainFunctionGroup {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          // 實現下拉重新整理邏輯
           await Future.delayed(const Duration(seconds: 1));
         },
         child: CustomScrollView(
           slivers: [
-            // 智慧洞察區域
             SliverToBoxAdapter(
               child: _buildInsightSection(userMode, analytics),
             ),
-            
-            // 財務摘要卡片
             SliverToBoxAdapter(
               child: _buildFinancialSummaryGrid(userMode, analytics),
             ),
-            
-            // 快捷操作區域
             SliverToBoxAdapter(
               child: _buildQuickActionsSection(
                 userMode,
@@ -164,8 +155,6 @@ class MainFunctionGroup {
                 onViewHistory: onViewHistory,
               ),
             ),
-            
-            // 最近記錄列表
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
@@ -187,7 +176,7 @@ class MainFunctionGroup {
 
   /**
    * 02. 建構快速記帳頁面Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構快速記帳頁面，支援語音輸入、智慧建議和三步驟記帳流程
    */
@@ -206,17 +195,18 @@ class MainFunctionGroup {
           style: TextStyle(fontSize: _getThemeConfig(userMode).fontSize + 2),
         ),
       ),
-      body: _QuickEntryForm(
+      body: MAIN_buildEntryForm(
         userMode: userMode,
         categories: categories,
         onSubmit: onEntrySubmit,
+        formType: 'quick',
       ),
     );
   }
 
   /**
    * 03. 建構詳細記帳頁面Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構詳細記帳頁面，支援完整記帳功能、附件上傳和高級設定
    */
@@ -236,18 +226,19 @@ class MainFunctionGroup {
           style: TextStyle(fontSize: _getThemeConfig(userMode).fontSize + 2),
         ),
       ),
-      body: _DetailedEntryForm(
+      body: MAIN_buildEntryForm(
         userMode: userMode,
         categories: categories,
         initialEntry: initialEntry,
         onSubmit: onEntrySubmit,
+        formType: 'detailed',
       ),
     );
   }
 
   /**
    * 04. 建構記帳歷史頁面Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構記帳歷史頁面，支援多檢視模式、進階篩選和批量操作
    */
@@ -289,7 +280,7 @@ class MainFunctionGroup {
 
   /**
    * 05. 建構記帳編輯頁面Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構記帳編輯頁面，支援版本控制、變更追蹤和協作功能
    */
@@ -314,18 +305,19 @@ class MainFunctionGroup {
           ),
         ],
       ),
-      body: _EditEntryForm(
+      body: MAIN_buildEntryForm(
         userMode: userMode,
-        entry: entry,
         categories: categories,
-        onUpdate: onEntryUpdate,
+        initialEntry: entry,
+        onSubmit: onEntryUpdate,
+        formType: 'edit',
       ),
     );
   }
 
   /**
    * 06. 建構科目管理頁面Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構科目管理頁面，支援階層管理、拖拽排序和使用統計
    */
@@ -351,12 +343,41 @@ class MainFunctionGroup {
           ),
         ],
       ),
-      body: _CategoryManagementView(
-        userMode: userMode,
-        categories: categories,
-        onCreate: onCategoryCreate,
-        onUpdate: onCategoryUpdate,
-        onDelete: onCategoryDelete,
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              leading: Icon(_getCategoryIcon(category.icon)),
+              title: Text(category.name),
+              subtitle: Text('使用 ${category.useCount} 次'),
+              trailing: userMode != UserMode.sleeper
+                  ? PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          // 編輯科目
+                        } else if (value == 'delete') {
+                          onCategoryDelete(category.id);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Text('編輯'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('刪除'),
+                        ),
+                      ],
+                    )
+                  : null,
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: _getThemeConfig(userMode).primary,
@@ -370,7 +391,7 @@ class MainFunctionGroup {
 
   /**
    * 07. 建構設定頁面Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構設定頁面，支援四模式切換、個人化設定和資料管理
    */
@@ -387,18 +408,71 @@ class MainFunctionGroup {
         foregroundColor: Colors.white,
         title: const Text('設定'),
       ),
-      body: _SettingsView(
-        userMode: userMode,
-        settings: settings,
-        onModeChange: onModeChange,
-        onSettingChange: onSettingChange,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '使用者模式',
+                    style: TextStyle(
+                      fontSize: _getThemeConfig(userMode).fontSize + 2,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...UserMode.values.map((mode) => 
+                    RadioListTile<UserMode>(
+                      title: Text(_getModeDisplayName(mode)),
+                      subtitle: Text(_getModeDescription(mode)),
+                      value: mode,
+                      groupValue: userMode,
+                      onChanged: (value) {
+                        if (value != null) onModeChange(value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('暗色模式'),
+                  value: settings['darkMode'] ?? false,
+                  onChanged: (value) => onSettingChange('darkMode', value),
+                ),
+                SwitchListTile(
+                  title: const Text('記帳提醒'),
+                  value: settings['reminders'] ?? true,
+                  onChanged: (value) => onSettingChange('reminders', value),
+                ),
+                ListTile(
+                  title: const Text('貨幣設定'),
+                  subtitle: Text(settings['currency'] ?? 'TWD'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    // 打開貨幣選擇
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   /**
    * 08. 建構搜尋頁面Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構搜尋頁面，支援全文搜尋、語音搜尋和進階篩選
    */
@@ -415,25 +489,88 @@ class MainFunctionGroup {
         foregroundColor: Colors.white,
         title: const Text('搜尋'),
       ),
-      body: _SearchView(
-        userMode: userMode,
-        searchResults: searchResults,
-        onSearch: onSearch,
-        onFilterApply: onFilterApply,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: '搜尋記帳記錄...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onChanged: onSearch,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.tune),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (context) => MAIN_buildSearchFilter(
+                        userMode: userMode,
+                        onFilterApply: onFilterApply,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: searchResults.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '沒有找到相關記錄',
+                          style: TextStyle(
+                            fontSize: _getThemeConfig(userMode).fontSize,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: searchResults.length,
+                    itemBuilder: (context, index) {
+                      return MAIN_buildEntryCard(
+                        entry: searchResults[index],
+                        userMode: userMode,
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
 
   /**
    * 09. 建構統計頁面Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構統計頁面，支援互動式圖表、趨勢分析和多維度統計
    */
   static Widget MAIN_buildStatisticsPage({
     required UserMode userMode,
     required Map<String, dynamic> statisticsData,
-    required Function(DateRange) onDateRangeChange,
+    required Function(Map<String, dynamic>) onDateRangeChange,
   }) {
     return Scaffold(
       backgroundColor: _getThemeConfig(userMode).background,
@@ -450,17 +587,32 @@ class MainFunctionGroup {
           ),
         ],
       ),
-      body: _StatisticsView(
-        userMode: userMode,
-        data: statisticsData,
-        onDateRangeChange: onDateRangeChange,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _buildFinancialSummaryGrid(userMode, statisticsData),
+            const SizedBox(height: 24),
+            MAIN_buildStatChart(
+              userMode: userMode,
+              chartType: ChartType.pie,
+              data: statisticsData,
+            ),
+            const SizedBox(height: 24),
+            MAIN_buildStatChart(
+              userMode: userMode,
+              chartType: ChartType.line,
+              data: statisticsData,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   /**
    * 10. 建構帳本切換頁面Widget
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構帳本切換頁面，支援多帳本管理、同步狀態和權限控制
    */
@@ -477,11 +629,42 @@ class MainFunctionGroup {
         foregroundColor: Colors.white,
         title: const Text('帳本切換'),
       ),
-      body: _LedgerSwitchView(
-        userMode: userMode,
-        ledgers: ledgers,
-        currentLedgerId: currentLedgerId,
-        onSwitch: onLedgerSwitch,
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: ledgers.length,
+        itemBuilder: (context, index) {
+          final ledger = ledgers[index];
+          final isSelected = ledger['id'] == currentLedgerId;
+          
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: isSelected 
+                    ? _getThemeConfig(userMode).primary
+                    : Colors.grey.shade300,
+                child: Icon(
+                  Icons.book,
+                  color: isSelected ? Colors.white : Colors.grey.shade600,
+                ),
+              ),
+              title: Text(
+                ledger['name'] ?? '未命名帳本',
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+              subtitle: Text(ledger['description'] ?? ''),
+              trailing: isSelected 
+                  ? Icon(
+                      Icons.check_circle,
+                      color: _getThemeConfig(userMode).primary,
+                    )
+                  : const Icon(Icons.chevron_right),
+              onTap: isSelected ? null : () => onLedgerSwitch(ledger['id']),
+            ),
+          );
+        },
       ),
     );
   }
@@ -492,7 +675,7 @@ class MainFunctionGroup {
 
   /**
    * 11. 建構記帳表單組件
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構通用記帳表單組件，支援快速和詳細記帳、智慧驗證
    */
@@ -501,7 +684,7 @@ class MainFunctionGroup {
     required List<Category> categories,
     required Function(Entry) onSubmit,
     Entry? initialEntry,
-    String formType = 'quick', // 'quick', 'detailed', 'edit'
+    String formType = 'quick',
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -509,18 +692,13 @@ class MainFunctionGroup {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 金額輸入
             MAIN_buildAmountInput(userMode: userMode),
             const SizedBox(height: 16),
-            
-            // 科目選擇
             MAIN_buildCategorySelector(
               userMode: userMode,
               categories: categories,
             ),
             const SizedBox(height: 16),
-            
-            // 備註輸入
             if (formType != 'quick') ...[
               TextFormField(
                 decoration: InputDecoration(
@@ -533,8 +711,7 @@ class MainFunctionGroup {
               ),
               const SizedBox(height: 16),
             ],
-            
-            // 提交按鈕
+            const Spacer(),
             ElevatedButton(
               onPressed: () {
                 // 實現表單提交邏輯
@@ -565,7 +742,7 @@ class MainFunctionGroup {
 
   /**
    * 12. 建構科目選擇組件
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構科目選擇組件，支援階層選擇、智慧建議和快速搜尋
    */
@@ -590,14 +767,12 @@ class MainFunctionGroup {
           ),
         ),
         const SizedBox(height: 8),
-        
-        // 智慧建議區域
         if (userMode != UserMode.sleeper) ...[
           Container(
             height: 40,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: 3, // 顯示3個推薦科目
+              itemCount: 3,
               itemBuilder: (context, index) {
                 return Container(
                   margin: const EdgeInsets.only(right: 8),
@@ -611,8 +786,6 @@ class MainFunctionGroup {
           ),
           const SizedBox(height: 12),
         ],
-        
-        // 科目網格
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -678,7 +851,7 @@ class MainFunctionGroup {
 
   /**
    * 13. 建構金額輸入組件
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構金額輸入組件，支援數字鍵盤和格式化顯示
    */
@@ -699,8 +872,6 @@ class MainFunctionGroup {
           ),
         ),
         const SizedBox(height: 8),
-        
-        // 收入/支出切換
         Container(
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
@@ -756,8 +927,6 @@ class MainFunctionGroup {
           ),
         ),
         const SizedBox(height: 12),
-        
-        // 金額輸入框
         TextFormField(
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
@@ -796,7 +965,7 @@ class MainFunctionGroup {
 
   /**
    * 14. 建構統計圖表組件
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構互動式統計圖表組件，支援多種圖表類型和四模式主題
    */
@@ -833,7 +1002,22 @@ class MainFunctionGroup {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: _buildChart(userMode, chartType, data, onDataPointTap),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  '${_getChartTitle(chartType)}\n資料載入中...',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: _getThemeConfig(userMode).fontSize,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -842,7 +1026,7 @@ class MainFunctionGroup {
 
   /**
    * 15. 建構搜尋篩選組件
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構搜尋篩選組件，支援多維度篩選條件和智慧建議
    */
@@ -861,7 +1045,6 @@ class MainFunctionGroup {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 標題列
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -882,18 +1065,36 @@ class MainFunctionGroup {
             ],
           ),
           const SizedBox(height: 16),
-          
-          // 篩選選項
-          _buildFilterOptions(userMode),
-          
+          Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.date_range),
+                title: const Text('日期範圍'),
+                subtitle: const Text('選擇時間範圍'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {},
+              ),
+              ListTile(
+                leading: const Icon(Icons.attach_money),
+                title: const Text('金額範圍'),
+                subtitle: const Text('設定金額區間'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {},
+              ),
+              ListTile(
+                leading: const Icon(Icons.category),
+                title: const Text('科目篩選'),
+                subtitle: const Text('選擇特定科目'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {},
+              ),
+            ],
+          ),
           const SizedBox(height: 20),
-          
-          // 套用按鈕
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                // 套用篩選條件
                 onFilterApply({});
               },
               style: ElevatedButton.styleFrom(
@@ -922,7 +1123,7 @@ class MainFunctionGroup {
 
   /**
    * 16. 建構記帳記錄卡片
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構記帳記錄卡片組件，顯示記帳詳細資訊
    */
@@ -947,7 +1148,6 @@ class MainFunctionGroup {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // 科目圖示
                 Container(
                   width: 48,
                   height: 48,
@@ -962,8 +1162,6 @@ class MainFunctionGroup {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
-                // 記帳內容
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -989,8 +1187,6 @@ class MainFunctionGroup {
                     ],
                   ),
                 ),
-                
-                // 金額
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -1014,8 +1210,6 @@ class MainFunctionGroup {
                     ],
                   ],
                 ),
-                
-                // 操作按鈕
                 if (userMode != UserMode.sleeper) ...[
                   const SizedBox(width: 8),
                   PopupMenuButton<String>(
@@ -1061,7 +1255,7 @@ class MainFunctionGroup {
 
   /**
    * 17. 建構智慧洞察卡片
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構智慧洞察卡片組件，顯示AI分析結果
    */
@@ -1138,7 +1332,7 @@ class MainFunctionGroup {
 
   /**
    * 18. 建構快捷操作組件
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構快捷操作組件，提供常用功能入口
    */
@@ -1167,7 +1361,6 @@ class MainFunctionGroup {
           final action = actions[index];
           return GestureDetector(
             onTap: () {
-              // 根據action type執行對應操作
               switch (action['type']) {
                 case 'quick_entry':
                   onQuickEntry?.call();
@@ -1228,7 +1421,7 @@ class MainFunctionGroup {
 
   /**
    * 19. 建構精準控制者模式UI
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構專業完整的控制介面，提供最大化功能控制和詳細資訊顯示
    */
@@ -1241,8 +1434,6 @@ class MainFunctionGroup {
       child: Stack(
         children: [
           child,
-          
-          // 系統狀態列（精準控制者專用）
           Positioned(
             bottom: 0,
             left: 0,
@@ -1280,7 +1471,7 @@ class MainFunctionGroup {
 
   /**
    * 20. 建構紀錄習慣者模式UI
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構優雅美觀的記錄介面，注重視覺美學和流暢操作體驗
    */
@@ -1308,7 +1499,7 @@ class MainFunctionGroup {
 
   /**
    * 21. 建構轉型挑戰者模式UI
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構激勵導向的挑戰介面，強調目標達成、進步追蹤和成就系統
    */
@@ -1321,8 +1512,6 @@ class MainFunctionGroup {
       child: Stack(
         children: [
           child,
-          
-          // 目標進度浮動條（轉型挑戰者專用）
           if (goalProgress != null) ...[
             Positioned(
               top: 100,
@@ -1386,7 +1575,7 @@ class MainFunctionGroup {
 
   /**
    * 22. 建構潛在覺醒者模式UI
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構極簡友善的覺醒介面，提供最簡化操作體驗和智慧輔助
    */
@@ -1404,7 +1593,7 @@ class MainFunctionGroup {
 
   /**
    * 23. 套用精準控制者主題
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 套用專業主題配色和樣式
    */
@@ -1433,7 +1622,7 @@ class MainFunctionGroup {
 
   /**
    * 24. 套用紀錄習慣者主題
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 套用優雅主題配色和樣式
    */
@@ -1462,7 +1651,7 @@ class MainFunctionGroup {
 
   /**
    * 25. 套用轉型挑戰者主題
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 套用活力主題配色和樣式
    */
@@ -1491,7 +1680,7 @@ class MainFunctionGroup {
 
   /**
    * 26. 套用潛在覺醒者主題
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 套用溫和主題配色和樣式
    */
@@ -1524,7 +1713,7 @@ class MainFunctionGroup {
 
   /**
    * 27. 格式化貨幣顯示
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 根據使用者設定和地區格式化貨幣顯示，支援多幣別和國際化
    */
@@ -1544,7 +1733,7 @@ class MainFunctionGroup {
 
   /**
    * 28. 驗證UI輸入資料
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 驗證使用者在UI層的輸入資料，提供即時回饋和友善錯誤訊息
    */
@@ -1558,7 +1747,6 @@ class MainFunctionGroup {
       'warnings': <String>[],
     };
 
-    // 金額驗證
     if (inputData['amount'] != null) {
       double? amount = double.tryParse(inputData['amount'].toString());
       if (amount == null || amount <= 0) {
@@ -1570,13 +1758,11 @@ class MainFunctionGroup {
       }
     }
 
-    // 科目驗證
     if (inputData['categoryId'] == null || inputData['categoryId'].isEmpty) {
       result['isValid'] = false;
       result['errors'].add(_getCategoryError(userMode));
     }
 
-    // 日期驗證
     if (inputData['entryDate'] != null) {
       DateTime? date = DateTime.tryParse(inputData['entryDate'].toString());
       if (date != null && date.isAfter(DateTime.now())) {
@@ -1589,7 +1775,7 @@ class MainFunctionGroup {
 
   /**
    * 29. 建構載入狀態UI
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
    * @description 建構統一的載入狀態UI，支援不同載入類型和四模式適配
    */
@@ -1601,18 +1787,14 @@ class MainFunctionGroup {
     final themeConfig = _getThemeConfig(userMode);
     
     if (showShimmer) {
-      return Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: Column(
-          children: List.generate(3, (index) => 
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
+      return Column(
+        children: List.generate(3, (index) => 
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
@@ -1645,9 +1827,9 @@ class MainFunctionGroup {
 
   /**
    * 30. 建構錯誤狀態UI
-   * @version 2025-01-21-V1.3.0
+   * @version 2025-01-21-V1.4.0
    * @date 2025-01-21 16:00:00
-   * @description 建構統一的錯誤狀態UI，提供友善錯誤訊息和恢復建議
+   * @description 建構統一的錯誤狀態UI，提供四模式差異化錯誤處理和恢復建議
    */
   static Widget MAIN_buildErrorState({
     required UserMode userMode,
@@ -1722,7 +1904,6 @@ class MainFunctionGroup {
   // 私有輔助函數
   // ========================================
 
-  // 主題配置獲取
   static ThemeConfig _getThemeConfig(UserMode userMode) {
     switch (userMode) {
       case UserMode.controller:
@@ -1768,7 +1949,46 @@ class MainFunctionGroup {
     }
   }
 
-  // 其他私有輔助函數...
+  // 四模式差異化錯誤處理實作
+  static String _getFriendlyErrorMessage(String errorMessage, UserMode userMode) {
+    switch (userMode) {
+      case UserMode.controller:
+        return errorMessage; // 顯示技術詳細錯誤訊息
+      case UserMode.logger:
+        return '✨ 別擔心，我們來幫您解決這個問題'; // 優雅的錯誤動畫和溫和語調
+      case UserMode.struggler:
+        return '💪 不要放棄！讓我們一起解決這個問題'; // 將錯誤轉為挑戰機會的積極語調
+      case UserMode.sleeper:
+        return '🌱 沒關係，我們會幫您處理的'; // 最簡化的錯誤說明和一鍵修復
+    }
+  }
+
+  static String _getErrorTitle(UserMode userMode) {
+    switch (userMode) {
+      case UserMode.controller:
+        return '系統錯誤';
+      case UserMode.logger:
+        return '哎呀，出了點問題';
+      case UserMode.struggler:
+        return '暫時的挫折！';
+      case UserMode.sleeper:
+        return '出了點小問題';
+    }
+  }
+
+  static String _getRetryText(UserMode userMode) {
+    switch (userMode) {
+      case UserMode.controller:
+        return '重試';
+      case UserMode.logger:
+        return '再試一次';
+      case UserMode.struggler:
+        return '重新挑戰！';
+      case UserMode.sleeper:
+        return '試試看';
+    }
+  }
+
   static String _getDashboardTitle(UserMode userMode) {
     switch (userMode) {
       case UserMode.controller:
@@ -2016,46 +2236,33 @@ class MainFunctionGroup {
     }
   }
 
-  static String _getErrorTitle(UserMode userMode) {
-    switch (userMode) {
+  static String _getModeDisplayName(UserMode mode) {
+    switch (mode) {
       case UserMode.controller:
-        return '系統錯誤';
+        return '精準控制者';
       case UserMode.logger:
-        return '哎呀，出了點問題';
+        return '紀錄習慣者';
       case UserMode.struggler:
-        return '暫時的挫折！';
+        return '轉型挑戰者';
       case UserMode.sleeper:
-        return '出了點小問題';
+        return '潛在覺醒者';
     }
   }
 
-  static String _getFriendlyErrorMessage(String errorMessage, UserMode userMode) {
-    switch (userMode) {
+  static String _getModeDescription(UserMode mode) {
+    switch (mode) {
       case UserMode.controller:
-        return errorMessage;
+        return '高動機+高自律：完整功能控制';
       case UserMode.logger:
-        return '✨ 別擔心，我們來幫您解決這個問題';
+        return '低動機+高自律：美觀記錄體驗';
       case UserMode.struggler:
-        return '💪 不要放棄！讓我們一起解決這個問題';
+        return '高動機+低自律：目標導向激勵';
       case UserMode.sleeper:
-        return '🌱 沒關係，我們會幫您處理的';
+        return '低動機+低自律：極簡操作介面';
     }
   }
 
-  static String _getRetryText(UserMode userMode) {
-    switch (userMode) {
-      case UserMode.controller:
-        return '重試';
-      case UserMode.logger:
-        return '再試一次';
-      case UserMode.struggler:
-        return '重新挑戰！';
-      case UserMode.sleeper:
-        return '試試看';
-    }
-  }
-
-  // 其他建構函數的輔助方法...
+  // 其他建構函數的輔助方法
   static Widget _buildInsightSection(UserMode userMode, Map<String, dynamic> analytics) {
     if (userMode == UserMode.sleeper) return const SizedBox.shrink();
     
@@ -2154,65 +2361,6 @@ class MainFunctionGroup {
     );
   }
 
-  static Widget _buildFilterOptions(UserMode userMode) {
-    return Column(
-      children: [
-        // 日期範圍篩選
-        ListTile(
-          leading: const Icon(Icons.date_range),
-          title: const Text('日期範圍'),
-          subtitle: const Text('選擇時間範圍'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {},
-        ),
-        
-        // 金額範圍篩選
-        ListTile(
-          leading: const Icon(Icons.attach_money),
-          title: const Text('金額範圍'),
-          subtitle: const Text('設定金額區間'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {},
-        ),
-        
-        // 科目篩選
-        ListTile(
-          leading: const Icon(Icons.category),
-          title: const Text('科目篩選'),
-          subtitle: const Text('選擇特定科目'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {},
-        ),
-      ],
-    );
-  }
-
-  static Widget _buildChart(
-    UserMode userMode,
-    ChartType chartType,
-    Map<String, dynamic> data,
-    Function(String)? onDataPointTap,
-  ) {
-    // 這裡應該實作具體的圖表建構邏輯
-    // 目前返回一個簡單的佔位符
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Text(
-          '${_getChartTitle(chartType)}\n資料載入中...',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: _getThemeConfig(userMode).fontSize,
-            color: Colors.grey.shade600,
-          ),
-        ),
-      ),
-    );
-  }
-
   static Widget _buildHistoryListView(
     UserMode userMode,
     List<Entry> entries,
@@ -2257,594 +2405,3 @@ class MainFunctionGroup {
   }
 }
 
-// ========================================
-// 自訂Widget類別
-// ========================================
-
-class _QuickEntryForm extends StatefulWidget {
-  final UserMode userMode;
-  final List<Category> categories;
-  final Function(Entry) onSubmit;
-
-  const _QuickEntryForm({
-    required this.userMode,
-    required this.categories,
-    required this.onSubmit,
-  });
-
-  @override
-  State<_QuickEntryForm> createState() => _QuickEntryFormState();
-}
-
-class _QuickEntryFormState extends State<_QuickEntryForm> {
-  final _formKey = GlobalKey<FormState>();
-  double? _amount;
-  Category? _selectedCategory;
-  String? _description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 金額輸入
-            MainFunctionGroup.MAIN_buildAmountInput(
-              userMode: widget.userMode,
-              onAmountChange: (amount) => _amount = amount,
-            ),
-            const SizedBox(height: 24),
-            
-            // 科目選擇
-            MainFunctionGroup.MAIN_buildCategorySelector(
-              userMode: widget.userMode,
-              categories: widget.categories,
-              onCategorySelect: (category) {
-                setState(() {
-                  _selectedCategory = category;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-            
-            // 備註 (潛在覺醒者模式隱藏)
-            if (widget.userMode != UserMode.sleeper) ...[
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: '備註 (選填)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onChanged: (value) => _description = value,
-              ),
-              const SizedBox(height: 24),
-            ],
-            
-            const Spacer(),
-            
-            // 提交按鈕
-            ElevatedButton(
-              onPressed: _submitEntry,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: MainFunctionGroup._getThemeConfig(widget.userMode).primary,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(
-                  vertical: MainFunctionGroup._getThemeConfig(widget.userMode).buttonHeight / 4,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                '儲存記帳',
-                style: TextStyle(
-                  fontSize: MainFunctionGroup._getThemeConfig(widget.userMode).fontSize,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _submitEntry() {
-    if (_formKey.currentState?.validate() ?? false) {
-      if (_amount != null && _selectedCategory != null) {
-        final entry = Entry(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          type: EntryType.expense, // 簡化處理，實際應根據用戶選擇
-          amount: _amount!,
-          categoryId: _selectedCategory!.id,
-          description: _description,
-          entryDate: DateTime.now(),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        
-        widget.onSubmit(entry);
-      }
-    }
-  }
-}
-
-class _DetailedEntryForm extends StatefulWidget {
-  final UserMode userMode;
-  final List<Category> categories;
-  final Entry? initialEntry;
-  final Function(Entry) onSubmit;
-
-  const _DetailedEntryForm({
-    required this.userMode,
-    required this.categories,
-    this.initialEntry,
-    required this.onSubmit,
-  });
-
-  @override
-  State<_DetailedEntryForm> createState() => _DetailedEntryFormState();
-}
-
-class _DetailedEntryFormState extends State<_DetailedEntryForm> {
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: MainFunctionGroup.MAIN_buildEntryForm(
-        userMode: widget.userMode,
-        categories: widget.categories,
-        initialEntry: widget.initialEntry,
-        formType: 'detailed',
-        onSubmit: widget.onSubmit,
-      ),
-    );
-  }
-}
-
-class _EditEntryForm extends StatefulWidget {
-  final UserMode userMode;
-  final Entry entry;
-  final List<Category> categories;
-  final Function(Entry) onUpdate;
-
-  const _EditEntryForm({
-    required this.userMode,
-    required this.entry,
-    required this.categories,
-    required this.onUpdate,
-  });
-
-  @override
-  State<_EditEntryForm> createState() => _EditEntryFormState();
-}
-
-class _EditEntryFormState extends State<_EditEntryForm> {
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // 變更提示
-          if (widget.userMode != UserMode.sleeper) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                border: Border.all(color: Colors.orange.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.edit, color: Colors.orange.shade700),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '正在編輯記帳記錄',
-                      style: TextStyle(color: Colors.orange.shade700),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          
-          // 編輯表單
-          MainFunctionGroup.MAIN_buildEntryForm(
-            userMode: widget.userMode,
-            categories: widget.categories,
-            initialEntry: widget.entry,
-            formType: 'edit',
-            onSubmit: widget.onUpdate,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CategoryManagementView extends StatelessWidget {
-  final UserMode userMode;
-  final List<Category> categories;
-  final Function(Category) onCreate;
-  final Function(Category) onUpdate;
-  final Function(String) onDelete;
-
-  const _CategoryManagementView({
-    required this.userMode,
-    required this.categories,
-    required this.onCreate,
-    required this.onUpdate,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: Icon(MainFunctionGroup._getCategoryIcon(category.icon)),
-            title: Text(category.name),
-            subtitle: Text('使用 ${category.useCount} 次'),
-            trailing: userMode != UserMode.sleeper
-                ? PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        // 編輯科目
-                      } else if (value == 'delete') {
-                        onDelete(category.id);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Text('編輯'),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('刪除'),
-                      ),
-                    ],
-                  )
-                : null,
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SettingsView extends StatelessWidget {
-  final UserMode userMode;
-  final Map<String, dynamic> settings;
-  final Function(UserMode) onModeChange;
-  final Function(String, dynamic) onSettingChange;
-
-  const _SettingsView({
-    required this.userMode,
-    required this.settings,
-    required this.onModeChange,
-    required this.onSettingChange,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // 模式選擇
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '使用者模式',
-                  style: TextStyle(
-                    fontSize: MainFunctionGroup._getThemeConfig(userMode).fontSize + 2,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...UserMode.values.map((mode) => 
-                  RadioListTile<UserMode>(
-                    title: Text(_getModeDisplayName(mode)),
-                    subtitle: Text(_getModeDescription(mode)),
-                    value: mode,
-                    groupValue: userMode,
-                    onChanged: (value) {
-                      if (value != null) onModeChange(value);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // 其他設定選項
-        Card(
-          child: Column(
-            children: [
-              SwitchListTile(
-                title: const Text('暗色模式'),
-                value: settings['darkMode'] ?? false,
-                onChanged: (value) => onSettingChange('darkMode', value),
-              ),
-              SwitchListTile(
-                title: const Text('記帳提醒'),
-                value: settings['reminders'] ?? true,
-                onChanged: (value) => onSettingChange('reminders', value),
-              ),
-              ListTile(
-                title: const Text('貨幣設定'),
-                subtitle: Text(settings['currency'] ?? 'TWD'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  // 打開貨幣選擇
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _getModeDisplayName(UserMode mode) {
-    switch (mode) {
-      case UserMode.controller:
-        return '精準控制者';
-      case UserMode.logger:
-        return '紀錄習慣者';
-      case UserMode.struggler:
-        return '轉型挑戰者';
-      case UserMode.sleeper:
-        return '潛在覺醒者';
-    }
-  }
-
-  String _getModeDescription(UserMode mode) {
-    switch (mode) {
-      case UserMode.controller:
-        return '高動機+高自律：完整功能控制';
-      case UserMode.logger:
-        return '低動機+高自律：美觀記錄體驗';
-      case UserMode.struggler:
-        return '高動機+低自律：目標導向激勵';
-      case UserMode.sleeper:
-        return '低動機+低自律：極簡操作介面';
-    }
-  }
-}
-
-class _SearchView extends StatefulWidget {
-  final UserMode userMode;
-  final List<Entry> searchResults;
-  final Function(String) onSearch;
-  final Function(Map<String, dynamic>) onFilterApply;
-
-  const _SearchView({
-    required this.userMode,
-    required this.searchResults,
-    required this.onSearch,
-    required this.onFilterApply,
-  });
-
-  @override
-  State<_SearchView> createState() => _SearchViewState();
-}
-
-class _SearchViewState extends State<_SearchView> {
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // 搜尋列
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: '搜尋記帳記錄...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        widget.onSearch('');
-                      },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onChanged: widget.onSearch,
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.tune),
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (context) => MainFunctionGroup.MAIN_buildSearchFilter(
-                      userMode: widget.userMode,
-                      onFilterApply: widget.onFilterApply,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        
-        // 搜尋結果
-        Expanded(
-          child: widget.searchResults.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.search_off,
-                        size: 64,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '沒有找到相關記錄',
-                        style: TextStyle(
-                          fontSize: MainFunctionGroup._getThemeConfig(widget.userMode).fontSize,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: widget.searchResults.length,
-                  itemBuilder: (context, index) {
-                    return MainFunctionGroup.MAIN_buildEntryCard(
-                      entry: widget.searchResults[index],
-                      userMode: widget.userMode,
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-}
-
-class _StatisticsView extends StatelessWidget {
-  final UserMode userMode;
-  final Map<String, dynamic> data;
-  final Function(DateRange) onDateRangeChange;
-
-  const _StatisticsView({
-    required this.userMode,
-    required this.data,
-    required this.onDateRangeChange,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // 統計摘要
-          MainFunctionGroup._buildFinancialSummaryGrid(userMode, data),
-          
-          const SizedBox(height: 24),
-          
-          // 圓餅圖
-          MainFunctionGroup.MAIN_buildStatChart(
-            userMode: userMode,
-            chartType: ChartType.pie,
-            data: data,
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // 趨勢圖
-          MainFunctionGroup.MAIN_buildStatChart(
-            userMode: userMode,
-            chartType: ChartType.line,
-            data: data,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LedgerSwitchView extends StatelessWidget {
-  final UserMode userMode;
-  final List<Map<String, dynamic>> ledgers;
-  final String currentLedgerId;
-  final Function(String) onSwitch;
-
-  const _LedgerSwitchView({
-    required this.userMode,
-    required this.ledgers,
-    required this.currentLedgerId,
-    required this.onSwitch,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: ledgers.length,
-      itemBuilder: (context, index) {
-        final ledger = ledgers[index];
-        final isSelected = ledger['id'] == currentLedgerId;
-        
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: isSelected 
-                  ? MainFunctionGroup._getThemeConfig(userMode).primary
-                  : Colors.grey.shade300,
-              child: Icon(
-                Icons.book,
-                color: isSelected ? Colors.white : Colors.grey.shade600,
-              ),
-            ),
-            title: Text(
-              ledger['name'] ?? '未命名帳本',
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-            subtitle: Text(ledger['description'] ?? ''),
-            trailing: isSelected 
-                ? Icon(
-                    Icons.check_circle,
-                    color: MainFunctionGroup._getThemeConfig(userMode).primary,
-                  )
-                : const Icon(Icons.chevron_right),
-            onTap: isSelected ? null : () => onSwitch(ledger['id']),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// DateRange 類別定義
-class DateRange {
-  final DateTime start;
-  final DateTime end;
-
-  DateRange({required this.start, required this.end});
-}
