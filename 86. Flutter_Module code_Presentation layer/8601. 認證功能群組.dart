@@ -1407,7 +1407,7 @@ Widget AUTH_buildLoadingIndicator({
 // ==================== 輔助函數 ====================
 
 /**
- * 獲取模式對應顏色
+ * 16. 獲取模式對應顏色
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 根據使用者模式回傳對應的主題顏色
@@ -1426,7 +1426,7 @@ Color _getModeColor(UserMode mode) {
 }
 
 /**
- * 獲取模式對應圖標
+ * 17. 獲取模式對應圖標
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 根據使用者模式回傳對應的圖標
@@ -1445,7 +1445,7 @@ IconData _getModeIcon(UserMode mode) {
 }
 
 /**
- * 獲取模式對應名稱
+ * 18. 獲取模式對應名稱
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 根據使用者模式回傳對應的中文名稱
@@ -1464,7 +1464,7 @@ String _getModeName(UserMode mode) {
 }
 
 /**
- * 獲取模式對應登入標題
+ * 19. 獲取模式對應登入標題
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 根據使用者模式回傳對應的登入頁面標題
@@ -1483,7 +1483,7 @@ String _getModeLoginTitle(UserMode mode) {
 }
 
 /**
- * 獲取模式對應登入訊息
+ * 20. 獲取模式對應登入訊息
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 根據使用者模式回傳對應的登入歡迎訊息
@@ -1502,7 +1502,7 @@ String _getModeLoginMessage(UserMode mode) {
 }
 
 /**
- * 獲取模式對應註冊標題
+ * 21. 獲取模式對應註冊標題
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 根據使用者模式回傳對應的註冊頁面標題
@@ -1521,7 +1521,7 @@ String _getModeRegisterTitle(UserMode mode) {
 }
 
 /**
- * 獲取模式對應註冊訊息
+ * 22. 獲取模式對應註冊訊息
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 根據使用者模式回傳對應的註冊歡迎訊息
@@ -1540,7 +1540,7 @@ String _getModeRegistrationMessage(UserMode mode) {
 }
 
 /**
- * 獲取模式對應登出訊息
+ * 23. 獲取模式對應登出訊息
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 根據使用者模式回傳對應的登出確認訊息
@@ -1559,7 +1559,7 @@ String _getModeLogoutMessage(UserMode mode) {
 }
 
 /**
- * 檢查表單是否有效
+ * 24. 檢查表單是否有效
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 檢查Email和密碼輸入框是否有內容
@@ -1569,7 +1569,7 @@ bool _isFormValid(TextEditingController emailController, TextEditingController p
 }
 
 /**
- * 獲取堅持天數
+ * 25. 獲取堅持天數
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 模擬獲取使用者堅持記帳的天數，實際應從狀態管理或API獲取
@@ -1582,7 +1582,7 @@ int _getDaysCount() {
 // ==================== 密碼重設步驟輔助函數 ====================
 
 /**
- * 建構Email輸入步驟
+ * 26. 建構Email輸入步驟
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構密碼重設第一步驟 - Email輸入介面
@@ -1650,7 +1650,7 @@ Widget _buildEmailStep(BuildContext context, UserMode userMode, Function(String)
 }
 
 /**
- * 建構驗證碼輸入步驟
+ * 27. 建構驗證碼輸入步驟
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構密碼重設第二步驟 - 驗證碼輸入介面
@@ -1718,7 +1718,7 @@ Widget _buildVerificationStep(BuildContext context, UserMode userMode, Function(
 }
 
 /**
- * 建構新密碼設定步驟
+ * 28. 建構新密碼設定步驟
  * @version 2025-01-21-V2.5.0
  * @date 2025-01-21 10:00:00
  * @description 建構密碼重設第三步驟 - 新密碼設定介面
