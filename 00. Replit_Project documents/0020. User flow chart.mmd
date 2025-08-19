@@ -1,12 +1,12 @@
 
 %% 0020. User Flow Chart
-%% 版本: 1.1.1
+%% 版本: 1.1.2
 %% 建立日期: 2025-08-19
 %% 最後更新: 2025-08-19
 %% 建立者: AustinLiao69
 
 %% F001: LINE OA 首次加入流程
-flowchart TD
+flowchart LR
     A[使用者點擊 LINE OA 連結] --> B[LINE 系統確認加入好友]
     B --> C[系統檢查使用者是否已存在]
     C --> D{使用者是否存在？}
@@ -22,7 +22,7 @@ flowchart TD
     style H fill:#fff3e0
 
 %% F002: APP 註冊與模式識別流程
-flowchart TD
+flowchart LR
     A2[下載並開啟 APP] --> B2[選擇註冊方式]
     B2 --> C2[輸入基本資料並驗證]
     C2 --> D2[進入模式評估問卷]
@@ -43,7 +43,7 @@ flowchart TD
     style I2 fill:#c8e6c9
 
 %% F003: 四模式個人化設定流程
-flowchart TD
+flowchart LR
     A3[開始個人化設定] --> B3{使用者模式}
 
     B3 -->|專家模式| C31[完整帳本設定精靈]
@@ -81,7 +81,7 @@ flowchart TD
     style I3 fill:#fff3e0
 
 %% F004: 跨平台帳號整合流程
-flowchart TD
+flowchart LR
     A4[APP 中選擇整合 LINE OA] --> B4[顯示 LINE OA 介紹]
     B4 --> C4[使用者確認整合意願]
     C4 --> D4{是否已加入 LINE OA？}
@@ -99,7 +99,7 @@ flowchart TD
     style K4 fill:#c8e6c9
 
 %% F005: LINE OA 快速記帳流程
-flowchart TD
+flowchart LR
     A5[使用者在 LINE 輸入記帳訊息] --> B5[WH 模組接收 Webhook]
     B5 --> C5[LBK 模組解析文字內容]
     C5 --> D5[提取金額、科目、帳戶資訊]
@@ -116,7 +116,7 @@ flowchart TD
     style I5 fill:#c8e6c9
 
 %% F006: APP 完整記帳流程
-flowchart TD
+flowchart LR
     A6[開啟 APP 記帳功能] --> B6{使用者模式適配}
 
     B6 -->|專家模式| C61[顯示完整記帳表單]
@@ -146,7 +146,7 @@ flowchart TD
     style O6 fill:#c8e6c9
 
 %% F007: 跨平台同步流程
-flowchart TD
+flowchart LR
     A7[數據變更觸發] --> B7{變更來源}
     B7 -->|LINE OA| C71[WH 模組處理]
     B7 -->|APP| C72[APP 模組處理]
@@ -170,7 +170,7 @@ flowchart TD
     style J7 fill:#c8e6c9
 
 %% F008: 錯誤處理與修正流程
-flowchart TD
+flowchart LR
     A8[檢測到異常或錯誤] --> B8{錯誤類型}
 
     B8 -->|輸入格式錯誤| C81[即時格式驗證]
@@ -199,7 +199,7 @@ flowchart TD
     style J8 fill:#c8e6c9
 
 %% F009: 多帳本協作流程
-flowchart TD
+flowchart LR
     A9[創建協作帳本] --> B9[設定帳本基本資訊]
     B9 --> C9[建立邀請連結或 QR Code]
     C9 --> D9[發送邀請通知]
@@ -218,7 +218,7 @@ flowchart TD
     style K9 fill:#fff3e0
 
 %% F010: 預算管理流程
-flowchart TD
+flowchart LR
     A10[進入預算管理] --> B10[選擇預算類型]
     B10 --> C10{預算設定類型}
 
@@ -253,7 +253,7 @@ flowchart TD
     style N10 fill:#c8e6c9
 
 %% F011: 帳戶科目管理流程
-flowchart TD
+flowchart LR
     A11[進入帳戶科目管理] --> B11{管理類型}
 
     B11 -->|帳戶管理| C111[帳戶操作選擇]
@@ -292,7 +292,7 @@ flowchart TD
     style O11 fill:#c8e6c9
 
 %% F012: 報表生成流程
-flowchart TD
+flowchart LR
     A12[進入報表功能] --> B12[選擇報表類型]
     B12 --> C12{報表需求}
 
@@ -330,7 +330,7 @@ flowchart TD
     style R12 fill:#c8e6c9
 
 %% F013: 數據分析流程
-flowchart TD
+flowchart LR
     A13[啟動數據分析] --> B13[選擇分析維度]
     B13 --> C13{分析類型}
 
