@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+const { exec } = require("child_process");
 
 // 使用 mermaid-cli 將 .mmd 檔轉 PNG
 exec("npx mmdc -i flowchart.mmd -o flowchart.png", (error, stdout, stderr) => {
