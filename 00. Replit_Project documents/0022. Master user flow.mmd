@@ -1,5 +1,5 @@
 %% 0022. Master User Flow
-%% 版本: 1.0.1
+%% 版本: 1.0.2
 %% 建立日期: 2025-08-19
 %% 最後更新: 2025-08-20
 %% 建立者: AustinLiao69
@@ -7,29 +7,32 @@
 
 flowchart LR
     %% ===== 進入階段 =====
-    START[使用者開始使用 LCAS 2.0] --> ENTRY_CHOICE{選擇進入方式}
+    START[使用者開始使用 LCAS 2.0] --> ENTRY_TYPE{首次加入 or 登入}
 
-    %% LINE OA 進入路徑
-    ENTRY_CHOICE -->|LINE OA| LINE_JOIN[加入 LINE OA 好友]
-    LINE_JOIN --> LINE_CHECK{使用者是否存在？}
-    LINE_CHECK -->|否| LINE_CREATE[初始化 Firestore 使用者資料]
-    LINE_CHECK -->|是| LINE_LOAD[讀取現有使用者資料]
+    %% 首次加入後選擇平台
+    ENTRY_TYPE -->|首次加入| JOIN_PLATFORM{選擇加入平台}
+    JOIN_PLATFORM -->|LINE OA| LINE_JOIN[加入 LINE OA 好友]
+    JOIN_PLATFORM -->|APP| APP_DOWNLOAD[下載並開啟 APP]
+
+    %% 登入後選擇平台
+    ENTRY_TYPE -->|登入| LOGIN_PLATFORM{選擇登入平台}
+    LOGIN_PLATFORM -->|LINE OA| LINE_LOGIN[LINE OA 登入]
+    LOGIN_PLATFORM -->|APP| APP_LOGIN_START[開啟 APP 登入]
+
+    %% 首次加入 - LINE OA 路徑
+    LINE_JOIN --> LINE_CREATE[初始化 Firestore 使用者資料]
     LINE_CREATE --> LINE_WELCOME[發送歡迎訊息]
-    LINE_LOAD --> LINE_WELCOME
     LINE_WELCOME --> LINE_MENU[提供 APP 下載選項]
 
-    %% APP 進入路徑 
-    ENTRY_CHOICE -->|APP| APP_ENTRY_TYPE{首次加入 or 登入}
-    APP_ENTRY_TYPE --> APP_DOWNLOAD[下載並開啟 APP]
-    
-    %% 首次加入流程（原有流程）
-    APP_ENTRY_TYPE -->|首次加入| APP_DOWNLOAD
+    %% 首次加入 - APP 路徑
     APP_DOWNLOAD --> APP_REGISTER[註冊與驗證email]
     APP_REGISTER --> MODE_ASSESSMENT[填寫模式評估問卷]
-    
-    %% 登入(已註冊)流程（基於US-005, US-006）
-    APP_ENTRY_TYPE -->|登入已註冊| APP_DOWNLOAD
-    APP_DOWNLOAD --> APP_LOGIN_METHOD{選擇登入方式}
+
+    %% 登入 - LINE OA 路徑
+    LINE_LOGIN --> BOOKKEEPING_START[開始記帳階段]
+
+    %% 登入 - APP 路徑
+    APP_LOGIN_START --> APP_LOGIN_METHOD{選擇登入方式}
     APP_LOGIN_METHOD -->|Email密碼| EMAIL_LOGIN[輸入帳號密碼]
     APP_LOGIN_METHOD -->|Google帳號| GOOGLE_LOGIN[Google帳號登入]
     EMAIL_LOGIN --> LOGIN_VERIFY[系統驗證帳號密碼]
