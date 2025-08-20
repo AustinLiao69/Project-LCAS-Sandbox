@@ -87,7 +87,7 @@ flowchart LR
     PARSE_SUCCESS -->|失敗| FORMAT_FAIL[回覆記帳失敗]
     FORMAT_FAIL --> LINE_INPUT
     WRITE_DB[寫入 Firestore] --> FORMAT_SUCCESS[回覆記帳成功]
-    WRITE_DB[寫入 Firestore] --> RECORD_COMPLETE[記帳完成]
+    WRITE_DB[寫入 Firestore] --> RECORD_COMPLETE[完成記帳]
     FORMAT_SUCCESS[回覆記帳成功] --> LINE_INPUT
 
     %% APP 完整記帳
