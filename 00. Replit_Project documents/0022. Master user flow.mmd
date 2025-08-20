@@ -88,6 +88,7 @@ flowchart LR
     FORMAT_FAIL --> LINE_INPUT
     WRITE_DB[寫入 Firestore] --> FORMAT_SUCCESS[回覆記帳成功]
     WRITE_DB[寫入 Firestore] --> RECORD_COMPLETE[記帳完成]
+    FORMAT_SUCCESS[回覆記帳成功] --> LINE_INPUT
 
     %% APP 完整記帳
     RECORD_CHOICE -->|APP| APP_RECORD_START[開啟 APP 記帳功能]
@@ -95,15 +96,15 @@ flowchart LR
     AMOUNT_INPUT --> CATEGORY_SELECT[選擇科目]
     CATEGORY_SELECT --> ACCOUNT_SELECT[選擇帳戶]
     ACCOUNT_SELECT --> LEDGER_SELECT[選擇帳本]
-    LEDGER_SELECT --> NOTE_ADD[添加備註 - 可選]
-    NOTE_ADD --> FILE_ATTACH[附加檔案 - 可選]
-    FILE_ATTACH --> REPEAT_RULE[設定重複規則 - 可選]
+    LEDGER_SELECT --> NOTE_ADD[添加備註]
+    NOTE_ADD --> FILE_ATTACH[附加檔案]
+    FILE_ATTACH --> REPEAT_RULE[設定重複規則]
     REPEAT_RULE --> PREVIEW_CONFIRM[預覽並確認]
     PREVIEW_CONFIRM --> SAVE_RECORD[儲存記錄]
 
     %% 記帳完成匯合
-    CONFIRM_MSG --> RECORD_COMPLETE[記帳完成]
     SAVE_RECORD --> RECORD_COMPLETE
+    FORMAT_SUCCESS --> RECORD_COMPLETE
 
     %% 跨平台同步
     RECORD_COMPLETE --> SYNC_TRIGGER[觸發同步機制]
