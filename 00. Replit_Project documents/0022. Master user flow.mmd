@@ -1,4 +1,4 @@
-%% 0022. Master User Flow
+\%% 0022. Master User Flow
 %% 版本: 1.0.2
 %% 建立日期: 2025-08-19
 %% 最後更新: 2025-08-20
@@ -29,9 +29,8 @@ flowchart LR
     APP_REGISTER --> MODE_ASSESSMENT[填寫模式評估問卷]
     
     %% 登入 - LINE OA 路徑
-    LINE_LOGIN --> LINE_LOAD[讀取現有使用者資料]
-    LINE_LOAD --> LINE_WELCOME
-    
+    LINE_LOGIN --> BOOKKEEPING_START[開始記帳階段]
+      
     %% 登入 - APP 路徑
     APP_LOGIN_START --> APP_LOGIN_METHOD{選擇登入方式}
     APP_LOGIN_METHOD -->|Email密碼| EMAIL_LOGIN[輸入帳號密碼]
