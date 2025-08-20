@@ -11,18 +11,18 @@ flowchart LR
     START[使用者開始使用 LCAS 2.0] --> ENTRY_CHOICE{選擇進入方式}
     
     %% LINE OA 進入路徑
-    ENTRY_CHOICE -->|LINE OA| LINE_JOIN[點擊 LINE OA 連結]
+    ENTRY_CHOICE -->|LINE OA| LINE_JOIN[加入 LINE OA 好友]
     LINE_JOIN --> LINE_CHECK{使用者是否存在？}
-    LINE_CHECK -->|否| LINE_CREATE[建立 Firestore 用戶資料]
+    LINE_CHECK -->|否| LINE_CREATE[初始化 Firestore 用戶資料]
     LINE_CHECK -->|是| LINE_LOAD[讀取現有用戶資料]
     LINE_CREATE --> LINE_WELCOME[發送歡迎訊息]
     LINE_LOAD --> LINE_WELCOME
-    LINE_WELCOME --> LINE_MENU[提供 Rich Menu 選項]
+    LINE_WELCOME --> LINE_MENU[提供 APP 下載選項]
     
     %% APP 進入路徑
     ENTRY_CHOICE -->|APP| APP_DOWNLOAD[下載並開啟 APP]
-    APP_DOWNLOAD --> APP_REGISTER[註冊與基本資料驗證]
-    APP_REGISTER --> MODE_ASSESSMENT[模式評估問卷]
+    APP_DOWNLOAD --> APP_REGISTER[註冊與email驗證]
+    APP_REGISTER --> MODE_ASSESSMENT[填寫模式評估問卷]
     MODE_ASSESSMENT --> MODE_RESULT{辨識結果}
     
     %% 四模式分支
@@ -39,9 +39,9 @@ flowchart LR
     
     %% 跨平台整合
     SETUP_COMPLETE --> INTEGRATION_OPTION[提供 LINE OA 整合選項]
-    LINE_MENU --> INTEGRATION_CHECK{是否需要 APP 整合？}
-    INTEGRATION_CHECK -->|是| INTEGRATION_BIND[透過 UID 自動綁定]
-    INTEGRATION_CHECK -->|否| BOOKKEEPING_START
+    LINE_MENU --> INTEGRATION_CHECK{有無下載 APP ？}
+    INTEGRATION_CHECK -->|有| INTEGRATION_BIND[透過 UID 自動綁定]
+    INTEGRATION_CHECK -->|無| BOOKKEEPING_START
     INTEGRATION_OPTION --> INTEGRATION_BIND
     INTEGRATION_BIND --> SYNC_COMPLETE[雙平台同步完成]
     
