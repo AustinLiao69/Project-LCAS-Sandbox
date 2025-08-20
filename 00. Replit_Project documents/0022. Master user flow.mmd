@@ -1,5 +1,5 @@
 %% 0022. Master User Flow
-%% 版本: 1.0.2
+%% 版本: 1.0.3
 %% 建立日期: 2025-08-19
 %% 最後更新: 2025-08-20
 %% 建立者: AustinLiao69
@@ -41,7 +41,7 @@ flowchart LR
     LOGIN_SUCCESS -->|成功| LOGIN_MAIN[進入主畫面]
     LOGIN_SUCCESS -->|失敗| LOGIN_ERROR[顯示錯誤訊息]
     LOGIN_MAIN --> BOOKKEEPING_START
-    
+
     %% 重設密碼流程移至下方，避免線條交叉
     LOGIN_ERROR --> FORGOT_PASSWORD{忘記密碼}
     FORGOT_PASSWORD -->|否| RETRY_LOGIN[重新輸入]
@@ -81,40 +81,29 @@ flowchart LR
 
     %% LINE OA 快速記帳
     RECORD_CHOICE -->|LINE OA| LINE_INPUT[輸入記帳訊息]
-    LINE_INPUT --> LINE_PARSE[WH 模組解析內容]
+    LINE_INPUT --> LINE_PARSE[Business layer 解析內容]
     LINE_PARSE --> PARSE_SUCCESS{解析是否成功？}
     PARSE_SUCCESS -->|成功| WRITE_DB[寫入 Firestore]
-    PARSE_SUCCESS -->|失敗| FORMAT_HINT[回覆格式提示]
-    FORMAT_HINT --> LINE_INPUT
-    WRITE_DB --> SYNC_APP[即時同步到 APP]
-    SYNC_APP --> CONFIRM_MSG[回覆確認訊息]
+    PARSE_SUCCESS -->|失敗| FORMAT_FAIL[回覆記帳失敗]
+    FORMAT_FAIL --> LINE_INPUT
+    WRITE_DB[寫入 Firestore] --> FORMAT_SUCCESS[回覆記帳成功]
+    WRITE_DB[寫入 Firestore] --> RECORD_COMPLETE[完成記帳]
+    FORMAT_SUCCESS[回覆記帳成功] --> LINE_INPUT
 
     %% APP 完整記帳
     RECORD_CHOICE -->|APP| APP_RECORD_START[開啟 APP 記帳功能]
-    APP_RECORD_START --> MODE_ADAPT{使用者模式適配}
-    MODE_ADAPT -->|專家模式| FULL_FORM[完整記帳表單]
-    MODE_ADAPT -->|慣性模式| SIMPLE_FORM[簡潔表單]
-    MODE_ADAPT -->|養成模式| GUIDED_FORM[引導式表單]
-    MODE_ADAPT -->|引導模式| MINIMAL_FORM[最簡表單]
-
-    FULL_FORM --> DETAIL_INPUT[填寫詳細資訊]
-    SIMPLE_FORM --> DETAIL_INPUT
-    GUIDED_FORM --> DETAIL_INPUT
-    MINIMAL_FORM --> DETAIL_INPUT
-
-    DETAIL_INPUT --> AMOUNT_INPUT[輸入金額]
+    APP_RECORD_START -->  AMOUNT_INPUT[輸入金額]
     AMOUNT_INPUT --> CATEGORY_SELECT[選擇科目]
     CATEGORY_SELECT --> ACCOUNT_SELECT[選擇帳戶]
     ACCOUNT_SELECT --> LEDGER_SELECT[選擇帳本]
-    LEDGER_SELECT --> NOTE_ADD[添加備註 - 可選]
-    NOTE_ADD --> FILE_ATTACH[附加檔案 - 可選]
-    FILE_ATTACH --> REPEAT_RULE[設定重複規則 - 可選]
-    REPEAT_RULE --> PREVIEW_CONFIRM[預覽並確認]
-    PREVIEW_CONFIRM --> SAVE_RECORD[儲存記錄]
+    LEDGER_SELECT --> NOTE_ADD[輸入備註]
+    NOTE_ADD --> FILE_ATTACH[附加檔案]
+    FILE_ATTACH --> REPEAT_RULE[設定重複規則]
+    REPEAT_RULE --> SAVE_RECORD[儲存]
 
     %% 記帳完成匯合
-    CONFIRM_MSG --> RECORD_COMPLETE[記帳完成]
     SAVE_RECORD --> RECORD_COMPLETE
+    FORMAT_SUCCESS --> RECORD_COMPLETE
 
     %% 跨平台同步
     RECORD_COMPLETE --> SYNC_TRIGGER[觸發同步機制]
