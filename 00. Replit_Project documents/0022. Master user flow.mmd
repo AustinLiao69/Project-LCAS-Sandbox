@@ -1,0 +1,281 @@
+%% 0022. Master User Flow
+%% 版本: 1.0.1
+%% 建立日期: 2025-08-19
+%% 最後更新: 2025-08-20
+%% 建立者: AustinLiao69
+%% 說明: 整合所有核心使用者流程的主要流程圖
+
+flowchart LR
+    %% ===== 進入階段 =====
+    START[使用者開始使用 LCAS 2.0] --> ENTRY_CHOICE{選擇進入方式}
+
+    %% LINE OA 進入路徑
+    ENTRY_CHOICE -->|LINE OA| LINE_JOIN[加入 LINE OA 好友]
+    LINE_JOIN --> LINE_CHECK{使用者是否存在？}
+    LINE_CHECK -->|否| LINE_CREATE[初始化 Firestore 使用者資料]
+    LINE_CHECK -->|是| LINE_LOAD[讀取現有使用者資料]
+    LINE_CREATE --> LINE_WELCOME[發送歡迎訊息]
+    LINE_LOAD --> LINE_WELCOME
+    LINE_WELCOME --> LINE_MENU[提供 APP 下載選項]
+
+    %% APP 進入路徑 - 新增首次加入/登入區分
+    ENTRY_CHOICE -->|APP| APP_DOWNLOAD[下載並開啟 APP]
+    APP_DOWNLOAD --> APP_ENTRY_TYPE{首次加入 or 登入}
+    
+    %% 首次加入流程（原有流程）
+    APP_ENTRY_TYPE -->|首次加入| APP_REGISTER[註冊與驗證email]
+    APP_REGISTER --> MODE_ASSESSMENT[填寫模式評估問卷]
+    
+    %% 登入(已註冊)流程（基於US-005, US-006）
+    APP_ENTRY_TYPE -->|登入已註冊| APP_LOGIN_METHOD{選擇登入方式}
+    APP_LOGIN_METHOD -->|Email密碼| EMAIL_LOGIN[輸入帳號密碼]
+    APP_LOGIN_METHOD -->|Google帳號| GOOGLE_LOGIN[Google帳號登入]
+    EMAIL_LOGIN --> LOGIN_VERIFY[系統驗證帳號密碼]
+    GOOGLE_LOGIN --> LOGIN_VERIFY
+    LOGIN_VERIFY --> LOGIN_SUCCESS{驗證結果}
+    LOGIN_SUCCESS -->|成功| LOGIN_MAIN[進入主畫面]
+    LOGIN_SUCCESS -->|失敗| LOGIN_ERROR[顯示錯誤訊息]
+    LOGIN_ERROR --> FORGOT_PASSWORD{忘記密碼}
+    FORGOT_PASSWORD -->|是| PASSWORD_RESET[重設密碼流程]
+    FORGOT_PASSWORD -->|否| APP_LOGIN_METHOD
+    PASSWORD_RESET --> APP_LOGIN_METHOD
+    LOGIN_MAIN --> BOOKKEEPING_START
+    MODE_ASSESSMENT --> MODE_RESULT{辨識結果}
+
+    %% 四模式分支
+    MODE_RESULT -->|專家模式| EXPERT_SETUP[設定完整帳本]
+    MODE_RESULT -->|慣性模式| INERTIAL_SETUP[簡化快速設定]
+    MODE_RESULT -->|養成模式| CULTIVATION_SETUP[設定習慣養成計畫]
+    MODE_RESULT -->|引導模式| GUIDING_SETUP[設定最簡配置]
+
+    %% 設定完成匯合
+    EXPERT_SETUP --> SETUP_COMPLETE[設定完成]
+    INERTIAL_SETUP --> SETUP_COMPLETE
+    CULTIVATION_SETUP --> SETUP_COMPLETE
+    GUIDING_SETUP --> SETUP_COMPLETE
+
+    %% 跨平台整合
+    SETUP_COMPLETE --> INTEGRATION_OPTION[提供 LINE OA 加入好友頁面]
+    INTEGRATION_OPTION --> LINEOA_CHOICE{有無加入LINE OA好友？}
+    LINEOA_CHOICE -->|有| INTEGRATION_BIND[透過 UID 自動綁定]
+    LINEOA_CHOICE -->|無| BOOKKEEPING_START[開始記帳階段]
+    LINE_MENU --> INTEGRATION_CHECK{有無下載 APP ？}
+    INTEGRATION_CHECK -->|有| INTEGRATION_BIND
+    INTEGRATION_CHECK -->|無| BOOKKEEPING_START
+    INTEGRATION_BIND --> SYNC_COMPLETE[雙平台同步完成]
+    SYNC_COMPLETE --> BOOKKEEPING_START
+
+    %% ===== 記帳階段 =====
+    SYNC_COMPLETE --> BOOKKEEPING_START[開始記帳階段]
+    BOOKKEEPING_START --> RECORD_CHOICE{選擇記帳方式}
+
+    %% LINE OA 快速記帳
+    RECORD_CHOICE -->|LINE OA| LINE_INPUT[輸入記帳訊息]
+    LINE_INPUT --> LINE_PARSE[WH 模組解析內容]
+    LINE_PARSE --> PARSE_SUCCESS{解析是否成功？}
+    PARSE_SUCCESS -->|成功| WRITE_DB[寫入 Firestore]
+    PARSE_SUCCESS -->|失敗| FORMAT_HINT[回覆格式提示]
+    FORMAT_HINT --> LINE_INPUT
+    WRITE_DB --> SYNC_APP[即時同步到 APP]
+    SYNC_APP --> CONFIRM_MSG[回覆確認訊息]
+
+    %% APP 完整記帳
+    RECORD_CHOICE -->|APP| APP_RECORD_START[開啟 APP 記帳功能]
+    APP_RECORD_START --> MODE_ADAPT{使用者模式適配}
+    MODE_ADAPT -->|專家模式| FULL_FORM[完整記帳表單]
+    MODE_ADAPT -->|慣性模式| SIMPLE_FORM[簡潔表單]
+    MODE_ADAPT -->|養成模式| GUIDED_FORM[引導式表單]
+    MODE_ADAPT -->|引導模式| MINIMAL_FORM[最簡表單]
+
+    FULL_FORM --> DETAIL_INPUT[填寫詳細資訊]
+    SIMPLE_FORM --> DETAIL_INPUT
+    GUIDED_FORM --> DETAIL_INPUT
+    MINIMAL_FORM --> DETAIL_INPUT
+
+    DETAIL_INPUT --> AMOUNT_INPUT[輸入金額]
+    AMOUNT_INPUT --> CATEGORY_SELECT[選擇科目]
+    CATEGORY_SELECT --> ACCOUNT_SELECT[選擇帳戶]
+    ACCOUNT_SELECT --> LEDGER_SELECT[選擇帳本]
+    LEDGER_SELECT --> NOTE_ADD[添加備註 - 可選]
+    NOTE_ADD --> FILE_ATTACH[附加檔案 - 可選]
+    FILE_ATTACH --> REPEAT_RULE[設定重複規則 - 可選]
+    REPEAT_RULE --> PREVIEW_CONFIRM[預覽並確認]
+    PREVIEW_CONFIRM --> SAVE_RECORD[儲存記錄]
+
+    %% 記帳完成匯合
+    CONFIRM_MSG --> RECORD_COMPLETE[記帳完成]
+    SAVE_RECORD --> RECORD_COMPLETE
+
+    %% 跨平台同步
+    RECORD_COMPLETE --> SYNC_TRIGGER[觸發同步機制]
+    SYNC_TRIGGER --> SYNC_SOURCE{變更來源}
+    SYNC_SOURCE -->|LINE OA| WH_PROCESS[WH 模組處理]
+    SYNC_SOURCE -->|APP| APP_PROCESS[APP 模組處理]
+    WH_PROCESS --> FIRESTORE_WRITE[寫入 Firestore]
+    APP_PROCESS --> FIRESTORE_WRITE
+    FIRESTORE_WRITE --> SYNC_EVENT[觸發 onChange 事件]
+    SYNC_EVENT --> CLIENT_UPDATE[所有客戶端更新]
+
+    %% 錯誤處理
+    CLIENT_UPDATE --> ERROR_CHECK{是否有錯誤？}
+    ERROR_CHECK -->|無錯誤| CONTINUE_USE[繼續使用]
+    ERROR_CHECK -->|有錯誤| ERROR_TYPE{錯誤類型}
+    ERROR_TYPE -->|格式錯誤| FORMAT_VALIDATE[即時格式驗證]
+    ERROR_TYPE -->|網路錯誤| OFFLINE_HANDLE[離線模式處理]
+    ERROR_TYPE -->|數據衝突| CONFLICT_RESOLVE[衝突解決機制]
+    ERROR_TYPE -->|誤刪除| RECOVERY_OPTION[恢復機制]
+
+    FORMAT_VALIDATE --> ERROR_FIX[使用者修正]
+    OFFLINE_HANDLE --> SYNC_LATER[網路恢復後同步]
+    CONFLICT_RESOLVE --> CONFLICT_NOTIFY[通知衝突解決結果]
+    RECOVERY_OPTION --> RECOVERY_EXECUTE[執行恢復操作]
+
+    ERROR_FIX --> RESUBMIT[重新提交]
+    SYNC_LATER --> RESUBMIT
+    CONFLICT_NOTIFY --> RESUBMIT
+    RECOVERY_EXECUTE --> RESUBMIT
+    RESUBMIT --> CONTINUE_USE
+
+    %% ===== 管理階段 =====
+    CONTINUE_USE --> MANAGEMENT_CHOICE{選擇管理功能}
+
+    %% 多帳本協作
+    MANAGEMENT_CHOICE -->|協作管理| COLLAB_CREATE[創建協作帳本]
+    COLLAB_CREATE --> COLLAB_INVITE[建立邀請連結]
+    COLLAB_INVITE --> COLLAB_SEND[發送邀請通知]
+    COLLAB_SEND --> COLLAB_ACCEPT{協作者是否接受？}
+    COLLAB_ACCEPT -->|是| COLLAB_JOIN[加入協作帳本]
+    COLLAB_ACCEPT -->|否| COLLAB_FAIL[邀請失效]
+    COLLAB_JOIN --> COLLAB_PERMISSION[設定協作者權限]
+    COLLAB_PERMISSION --> COLLAB_START[開始協作記帳]
+    COLLAB_START --> COLLAB_NOTIFY[即時活動通知]
+    COLLAB_NOTIFY --> COLLAB_INTERACT[留言與標註互動]
+
+    %% 預算管理
+    MANAGEMENT_CHOICE -->|預算管理| BUDGET_ENTER[進入預算管理]
+    BUDGET_ENTER --> BUDGET_TYPE{預算設定類型}
+    BUDGET_TYPE -->|月度預算| MONTHLY_BUDGET[設定月度總額]
+    BUDGET_TYPE -->|科目預算| CATEGORY_BUDGET[分科目設定預算]
+    BUDGET_TYPE -->|專案預算| PROJECT_BUDGET[分專案設定預算]
+
+    MONTHLY_BUDGET --> BUDGET_ALLOCATE[預算分配設定]
+    CATEGORY_BUDGET --> BUDGET_ALLOCATE
+    PROJECT_BUDGET --> BUDGET_ALLOCATE
+    BUDGET_ALLOCATE --> BUDGET_MONITOR[啟動預算監控]
+    BUDGET_MONITOR --> DAILY_CHECK[日常記帳觸發檢查]
+    DAILY_CHECK --> BUDGET_ALERT{是否超過警戒線？}
+    BUDGET_ALERT -->|否| NORMAL_RECORD[正常記帳流程]
+    BUDGET_ALERT -->|是| SEND_ALERT[發送預算警示]
+    SEND_ALERT --> BUDGET_DECISION[使用者決定是否繼續]
+
+    %% 帳戶科目管理
+    MANAGEMENT_CHOICE -->|帳戶科目管理| ACCOUNT_MANAGE[進入帳戶科目管理]
+    ACCOUNT_MANAGE --> MANAGE_TYPE{管理類型}
+    MANAGE_TYPE -->|帳戶管理| ACCOUNT_OPS[帳戶操作選擇]
+    MANAGE_TYPE -->|科目管理| CATEGORY_OPS[科目操作選擇]
+
+    ACCOUNT_OPS --> ACCOUNT_ACTION{帳戶操作}
+    ACCOUNT_ACTION -->|新增| CREATE_ACCOUNT[建立新帳戶]
+    ACCOUNT_ACTION -->|編輯| EDIT_ACCOUNT[修改帳戶資訊]
+    ACCOUNT_ACTION -->|停用| DISABLE_ACCOUNT[停用帳戶]
+
+    CATEGORY_OPS --> CATEGORY_ACTION{科目操作}
+    CATEGORY_ACTION -->|新增| CREATE_CATEGORY[建立新科目]
+    CATEGORY_ACTION -->|編輯| EDIT_CATEGORY[修改科目]
+    CATEGORY_ACTION -->|整理| REORGANIZE_CATEGORY[科目重組]
+
+    CREATE_ACCOUNT --> SAVE_CHANGES[儲存變更]
+    EDIT_ACCOUNT --> SAVE_CHANGES
+    DISABLE_ACCOUNT --> SAVE_CHANGES
+    CREATE_CATEGORY --> SAVE_CHANGES
+    EDIT_CATEGORY --> SAVE_CHANGES
+    REORGANIZE_CATEGORY --> SAVE_CHANGES
+    SAVE_CHANGES --> SYNC_ALL[同步到所有平台]
+
+    %% ===== 分析階段 =====
+    MANAGEMENT_CHOICE -->|報表分析| ANALYSIS_START[進入報表功能]
+    COLLAB_INTERACT --> ANALYSIS_START
+    NORMAL_RECORD --> ANALYSIS_START
+    BUDGET_DECISION --> ANALYSIS_START
+    SYNC_ALL --> ANALYSIS_START
+
+    ANALYSIS_START --> REPORT_TYPE{報表需求}
+    REPORT_TYPE -->|標準報表| STANDARD_REPORT[選擇預設報表模板]
+    REPORT_TYPE -->|自訂報表| CUSTOM_REPORT[自訂報表配置]
+
+    STANDARD_REPORT --> TIME_RANGE[設定時間範圍]
+    CUSTOM_REPORT --> TIME_RANGE
+    TIME_RANGE --> DATA_SCOPE[選擇資料範圍]
+    DATA_SCOPE --> CHART_TYPE[選擇圖表類型]
+    CHART_TYPE --> PREVIEW_REPORT[預覽報表內容]
+    PREVIEW_REPORT --> REPORT_SATISFIED{報表是否滿意？}
+
+    REPORT_SATISFIED -->|否| ADJUST_REPORT[調整報表設定]
+    REPORT_SATISFIED -->|是| GENERATE_FINAL[生成最終報表]
+    ADJUST_REPORT --> CHART_TYPE
+
+    GENERATE_FINAL --> OUTPUT_FORMAT{輸出類型}
+    OUTPUT_FORMAT -->|PDF| PDF_GENERATE[生成 PDF 檔案]
+    OUTPUT_FORMAT -->|Excel| EXCEL_GENERATE[生成 Excel 檔案]
+    OUTPUT_FORMAT -->|線上檢視| WEB_VIEW[生成網頁版本]
+
+    PDF_GENERATE --> DOWNLOAD_LINK[提供下載連結]
+    EXCEL_GENERATE --> DOWNLOAD_LINK
+    WEB_VIEW --> APP_VIEW[直接在 APP 中檢視]
+
+    DOWNLOAD_LINK --> SCHEDULE_REPORT[設定定期報表 - 可選]
+    APP_VIEW --> SCHEDULE_REPORT
+
+    %% 數據分析
+    SCHEDULE_REPORT --> DEEP_ANALYSIS[啟動數據分析]
+    DEEP_ANALYSIS --> ANALYSIS_TYPE{分析類型}
+    ANALYSIS_TYPE -->|趨勢分析| TREND_ANALYSIS[時間序列分析]
+    ANALYSIS_TYPE -->|比較分析| COMPARISON_ANALYSIS[期間對比分析]
+    ANALYSIS_TYPE -->|異常檢測| ANOMALY_DETECTION[異常模式識別]
+    ANALYSIS_TYPE -->|預測分析| PREDICTION_ANALYSIS[支出預測模型]
+
+    TREND_ANALYSIS --> INTELLIGENCE_ENGINE[智慧分析引擎處理]
+    COMPARISON_ANALYSIS --> INTELLIGENCE_ENGINE
+    ANOMALY_DETECTION --> INTELLIGENCE_ENGINE
+    PREDICTION_ANALYSIS --> INTELLIGENCE_ENGINE
+
+    INTELLIGENCE_ENGINE --> ANALYSIS_MODE{使用者模式適配}
+    ANALYSIS_MODE -->|專家模式| DETAILED_REPORT[詳細技術分析報告]
+    ANALYSIS_MODE -->|慣性模式| SIMPLE_SUMMARY[簡潔圖表摘要]
+    ANALYSIS_MODE -->|養成模式| IMPROVEMENT_ADVICE[習慣改善建議]
+    ANALYSIS_MODE -->|引導模式| VISUAL_SIMPLE[簡單視覺化呈現]
+
+    DETAILED_REPORT --> CONCRETE_ADVICE[提供具體改善建議]
+    SIMPLE_SUMMARY --> CONCRETE_ADVICE
+    IMPROVEMENT_ADVICE --> CONCRETE_ADVICE
+    VISUAL_SIMPLE --> CONCRETE_ADVICE
+
+    CONCRETE_ADVICE --> ADOPT_ADVICE[使用者採納建議]
+    ADOPT_ADVICE --> FURTHER_ANALYSIS{是否需要深度分析？}
+    FURTHER_ANALYSIS -->|是| DEEP_ANALYSIS
+    FURTHER_ANALYSIS -->|否| ANALYSIS_COMPLETE[分析完成]
+
+    %% 循環回到主要功能
+    ANALYSIS_COMPLETE --> CONTINUE_CHOICE{繼續使用選擇}
+    COLLAB_FAIL --> CONTINUE_CHOICE
+    CONTINUE_CHOICE -->|記帳| BOOKKEEPING_START
+    CONTINUE_CHOICE -->|管理| MANAGEMENT_CHOICE
+    CONTINUE_CHOICE -->|分析| ANALYSIS_START
+    CONTINUE_CHOICE -->|結束| END[結束使用]
+
+    %% 樣式設定
+    style START fill:#e8f5e8
+    style MODE_RESULT fill:#e1f5fe
+    style SYNC_COMPLETE fill:#fff3e0
+    style RECORD_COMPLETE fill:#c8e6c9
+    style INTELLIGENCE_ENGINE fill:#fff3e0
+    style ANALYSIS_COMPLETE fill:#c8e6c9
+    style END fill:#ffcdd2
+
+    %% 錯誤處理樣式
+    style ERROR_CHECK fill:#ffcdd2
+    style ERROR_TYPE fill:#ffcdd2
+    style FORMAT_VALIDATE fill:#fff3e0
+    style OFFLINE_HANDLE fill:#fff3e0
+    style CONFLICT_RESOLVE fill:#fff3e0
+    style RECOVERY_OPTION fill:#fff3e0
