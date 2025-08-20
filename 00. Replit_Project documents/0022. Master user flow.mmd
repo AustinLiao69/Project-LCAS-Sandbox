@@ -106,12 +106,12 @@ flowchart LR
     FORMAT_SUCCESS --> RECORD_COMPLETE
 
     %% 記帳完成直接進入後續流程
-    RECORD_COMPLETE --> CLIENT_UPDATE[更新客戶端顯示]
+    RECORD_COMPLETE --> CLIENT_UPDATE[跨裝置同步]
 
     %% 錯誤處理
     CLIENT_UPDATE --> ERROR_CHECK{是否有錯誤？}
-    ERROR_CHECK -->|無錯誤| CONTINUE_USE[繼續使用]
-    ERROR_CHECK -->|有錯誤| ERROR_TYPE{錯誤類型}
+    ERROR_CHECK -->|無| CONTINUE_USE[繼續使用]
+    ERROR_CHECK -->|有| ERROR_TYPE{錯誤類型}
     ERROR_TYPE -->|格式錯誤| FORMAT_VALIDATE[即時格式驗證]
     ERROR_TYPE -->|網路錯誤| OFFLINE_HANDLE[離線模式處理]
     ERROR_TYPE -->|數據衝突| CONFLICT_RESOLVE[衝突解決機制]
