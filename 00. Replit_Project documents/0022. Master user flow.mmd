@@ -18,16 +18,18 @@ flowchart LR
     LINE_LOAD --> LINE_WELCOME
     LINE_WELCOME --> LINE_MENU[提供 APP 下載選項]
 
-    %% APP 進入路徑 - 新增首次加入/登入區分
-    ENTRY_CHOICE -->|APP| APP_DOWNLOAD[下載並開啟 APP]
-    APP_DOWNLOAD --> APP_ENTRY_TYPE{首次加入 or 登入}
+    %% APP 進入路徑 - 調整順序：首次加入/登入判斷提前
+    ENTRY_CHOICE -->|APP| APP_ENTRY_TYPE{首次加入 or 登入}
+    APP_ENTRY_TYPE --> APP_DOWNLOAD[下載並開啟 APP]
     
     %% 首次加入流程（原有流程）
-    APP_ENTRY_TYPE -->|首次加入| APP_REGISTER[註冊與驗證email]
+    APP_ENTRY_TYPE -->|首次加入| APP_DOWNLOAD
+    APP_DOWNLOAD --> APP_REGISTER[註冊與驗證email]
     APP_REGISTER --> MODE_ASSESSMENT[填寫模式評估問卷]
     
     %% 登入(已註冊)流程（基於US-005, US-006）
-    APP_ENTRY_TYPE -->|登入已註冊| APP_LOGIN_METHOD{選擇登入方式}
+    APP_ENTRY_TYPE -->|登入已註冊| APP_DOWNLOAD
+    APP_DOWNLOAD --> APP_LOGIN_METHOD{選擇登入方式}
     APP_LOGIN_METHOD -->|Email密碼| EMAIL_LOGIN[輸入帳號密碼]
     APP_LOGIN_METHOD -->|Google帳號| GOOGLE_LOGIN[Google帳號登入]
     EMAIL_LOGIN --> LOGIN_VERIFY[系統驗證帳號密碼]
