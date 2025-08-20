@@ -27,15 +27,15 @@ flowchart LR
     APP_REGISTER --> MODE_ASSESSMENT[填寫模式評估問卷]
     
     %% 登入(已註冊)流程（基於US-005, US-006）
-    APP_ENTRY_TYPE -->|登入(已註冊)| APP_LOGIN_METHOD{選擇登入方式}
-    APP_LOGIN_METHOD -->|Email/密碼| EMAIL_LOGIN[輸入帳號密碼]
+    APP_ENTRY_TYPE -->|登入已註冊| APP_LOGIN_METHOD{選擇登入方式}
+    APP_LOGIN_METHOD -->|Email密碼| EMAIL_LOGIN[輸入帳號密碼]
     APP_LOGIN_METHOD -->|Google帳號| GOOGLE_LOGIN[Google帳號登入]
     EMAIL_LOGIN --> LOGIN_VERIFY[系統驗證帳號密碼]
     GOOGLE_LOGIN --> LOGIN_VERIFY
     LOGIN_VERIFY --> LOGIN_SUCCESS{驗證結果}
     LOGIN_SUCCESS -->|成功| LOGIN_MAIN[進入主畫面]
     LOGIN_SUCCESS -->|失敗| LOGIN_ERROR[顯示錯誤訊息]
-    LOGIN_ERROR --> FORGOT_PASSWORD[忘記密碼?]
+    LOGIN_ERROR --> FORGOT_PASSWORD{忘記密碼}
     FORGOT_PASSWORD -->|是| PASSWORD_RESET[重設密碼流程]
     FORGOT_PASSWORD -->|否| APP_LOGIN_METHOD
     PASSWORD_RESET --> APP_LOGIN_METHOD
