@@ -71,7 +71,6 @@ flowchart LR
     SYNC_COMPLETE --> BOOKKEEPING_START
 
     %% ===== 記帳階段 =====
-    SYNC_COMPLETE --> BOOKKEEPING_START[開始記帳階段]
     BOOKKEEPING_START --> RECORD_CHOICE{選擇記帳方式}
 
     %% LINE OA 快速記帳
