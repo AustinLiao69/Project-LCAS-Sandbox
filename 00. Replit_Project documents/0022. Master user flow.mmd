@@ -105,15 +105,8 @@ flowchart LR
     SAVE_RECORD --> RECORD_COMPLETE
     FORMAT_SUCCESS --> RECORD_COMPLETE
 
-    %% 跨平台同步
-    RECORD_COMPLETE --> SYNC_TRIGGER[觸發同步機制]
-    SYNC_TRIGGER --> SYNC_SOURCE{變更來源}
-    SYNC_SOURCE -->|LINE OA| WH_PROCESS[WH 模組處理]
-    SYNC_SOURCE -->|APP| APP_PROCESS[APP 模組處理]
-    WH_PROCESS --> FIRESTORE_WRITE[寫入 Firestore]
-    APP_PROCESS --> FIRESTORE_WRITE
-    FIRESTORE_WRITE --> SYNC_EVENT[觸發 onChange 事件]
-    SYNC_EVENT --> CLIENT_UPDATE[所有客戶端更新]
+    %% 記帳完成直接進入後續流程
+    RECORD_COMPLETE --> CLIENT_UPDATE[更新客戶端顯示]
 
     %% 錯誤處理
     CLIENT_UPDATE --> ERROR_CHECK{是否有錯誤？}
