@@ -18,7 +18,7 @@ flowchart LR
     LINE_LOAD --> LINE_WELCOME
     LINE_WELCOME --> LINE_MENU[提供 APP 下載選項]
 
-    %% APP 進入路徑 - 調整順序：首次加入/登入判斷提前
+    %% APP 進入路徑 
     ENTRY_CHOICE -->|APP| APP_ENTRY_TYPE{首次加入 or 登入}
     APP_ENTRY_TYPE --> APP_DOWNLOAD[下載並開啟 APP]
     
