@@ -1,0 +1,78 @@
+openapi: 3.0.3
+info:
+  title: Example API
+  version: 1.0.0
+  description: "範例 API Spec"
+
+servers:
+  - url: https://api.example.com
+    description: "Production server"
+
+paths:
+  /users:
+    get:
+      summary: "取得使用者列表"
+      description: "回傳系統中所有使用者"
+      parameters:
+        - name: page
+          in: query
+          description: "分頁編號"
+          required: false
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          description: "每頁數量"
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: "成功回傳使用者列表"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        email:
+                          type: string
+        '400':
+          description: "參數錯誤"
+        '500':
+          description: "伺服器錯誤"
+
+    post:
+      summary: "新增使用者"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - name
+                - email
+                - password
+      responses:
+        '201':
+          description: "使用者建立成功"
+        '400':
+          description: "請求參數錯誤"
+        '500':
+          description: "伺服器錯誤"

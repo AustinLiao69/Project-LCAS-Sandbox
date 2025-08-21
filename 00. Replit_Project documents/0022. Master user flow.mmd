@@ -105,20 +105,13 @@ flowchart LR
     SAVE_RECORD --> RECORD_COMPLETE
     FORMAT_SUCCESS --> RECORD_COMPLETE
 
-    %% 跨平台同步
-    RECORD_COMPLETE --> SYNC_TRIGGER[觸發同步機制]
-    SYNC_TRIGGER --> SYNC_SOURCE{變更來源}
-    SYNC_SOURCE -->|LINE OA| WH_PROCESS[WH 模組處理]
-    SYNC_SOURCE -->|APP| APP_PROCESS[APP 模組處理]
-    WH_PROCESS --> FIRESTORE_WRITE[寫入 Firestore]
-    APP_PROCESS --> FIRESTORE_WRITE
-    FIRESTORE_WRITE --> SYNC_EVENT[觸發 onChange 事件]
-    SYNC_EVENT --> CLIENT_UPDATE[所有客戶端更新]
+    %% 記帳完成直接進入後續流程
+    RECORD_COMPLETE --> CLIENT_UPDATE[跨裝置同步]
 
     %% 錯誤處理
     CLIENT_UPDATE --> ERROR_CHECK{是否有錯誤？}
-    ERROR_CHECK -->|無錯誤| CONTINUE_USE[繼續使用]
-    ERROR_CHECK -->|有錯誤| ERROR_TYPE{錯誤類型}
+    ERROR_CHECK -->|無| CONTINUE_USE[繼續使用]
+    ERROR_CHECK -->|有| ERROR_TYPE{錯誤類型}
     ERROR_TYPE -->|格式錯誤| FORMAT_VALIDATE[即時格式驗證]
     ERROR_TYPE -->|網路錯誤| OFFLINE_HANDLE[離線模式處理]
     ERROR_TYPE -->|數據衝突| CONFLICT_RESOLVE[衝突解決機制]
@@ -139,7 +132,7 @@ flowchart LR
     CONTINUE_USE --> MANAGEMENT_CHOICE{選擇管理功能}
 
     %% 多帳本協作
-    MANAGEMENT_CHOICE -->|協作管理| COLLAB_CREATE[創建協作帳本]
+    MANAGEMENT_CHOICE -->|協作管理| COLLAB_CREATE[建立協作帳本]
     COLLAB_CREATE --> COLLAB_INVITE[建立邀請連結]
     COLLAB_INVITE --> COLLAB_SEND[發送邀請通知]
     COLLAB_SEND --> COLLAB_ACCEPT{協作者是否接受？}
@@ -255,7 +248,7 @@ flowchart LR
     FURTHER_ANALYSIS -->|否| ANALYSIS_COMPLETE[分析完成]
 
     %% 循環回到主要功能
-    ANALYSIS_COMPLETE --> CONTINUE_CHOICE{繼續使用選擇}
+    ANALYSIS_COMPLETE --> CONTINUE_CHOICE{繼續？}
     COLLAB_FAIL --> CONTINUE_CHOICE
     CONTINUE_CHOICE -->|記帳| BOOKKEEPING_START
     CONTINUE_CHOICE -->|管理| MANAGEMENT_CHOICE
