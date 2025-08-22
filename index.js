@@ -2023,6 +2023,290 @@ app.post('/testAPI', (req, res) => {
   }
 });
 
+// =============== AI 助理服務 API 端點 ===============
+
+// AI 對話助理
+app.post('/ai/assistant/chat', async (req, res) => {
+  try {
+    const { message, sessionId, context } = req.body;
+    const userId = req.headers['user-id'];
+    
+    if (!userId || !message) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必要參數'
+      });
+    }
+
+    // 模擬 AI 對話回應
+    const response = {
+      message: '我已經收到您的訊息，正在處理中...',
+      sessionId: sessionId || `session_${Date.now()}`,
+      intent: 'general',
+      confidence: 0.85,
+      suggestions: ['查看今日統計', '新增記帳', '設定預算'],
+      actions: [
+        {
+          type: 'create_entry',
+          title: '快速記帳',
+          description: '新增一筆記帳記錄'
+        }
+      ]
+    };
+
+    res.json({
+      success: true,
+      data: response,
+      message: 'AI 助理回應成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'AI 對話處理失敗',
+      error: error.message
+    });
+  }
+});
+
+// 智慧分類建議
+app.post('/ai/classification/suggest', async (req, res) => {
+  try {
+    const { description, amount, transactionType } = req.body;
+    const userId = req.headers['user-id'];
+    
+    if (!userId || !description) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必要參數'
+      });
+    }
+
+    // 模擬智慧分類建議
+    const suggestions = [
+      {
+        categoryId: 'cat_food_001',
+        categoryName: '餐飲費',
+        subcategoryName: '午餐',
+        confidence: 0.92,
+        reason: '根據描述內容判斷'
+      },
+      {
+        categoryId: 'cat_transport_001',
+        categoryName: '交通費',
+        subcategoryName: '大眾運輸',
+        confidence: 0.75,
+        reason: '次要可能分類'
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: {
+        suggestions,
+        confidence: 0.88,
+        reasoning: '基於歷史記錄和關鍵字分析'
+      },
+      message: '分類建議產生成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '智慧分類建議失敗',
+      error: error.message
+    });
+  }
+});
+
+// 財務洞察分析
+app.get('/ai/insights/financial', async (req, res) => {
+  try {
+    const { period = 'month', focus } = req.query;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    // 模擬財務洞察
+    const insights = {
+      summary: {
+        period: period,
+        totalIncome: 45000,
+        totalExpense: 32000,
+        netIncome: 13000,
+        savingsRate: 28.9,
+        topSpendingCategory: '餐飲費',
+        keyInsight: '本月餐飲支出較上月增加15%，建議控制外食頻率'
+      },
+      recommendations: [
+        {
+          type: 'spending_optimization',
+          priority: 'high',
+          title: '優化餐飲支出',
+          description: '建議減少外食，增加在家用餐比例'
+        }
+      ]
+    };
+
+    res.json({
+      success: true,
+      data: insights,
+      message: '財務洞察分析成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '財務洞察分析失敗',
+      error: error.message
+    });
+  }
+});
+
+// 異常檢測
+app.post('/ai/anomaly/detect', async (req, res) => {
+  try {
+    const { transactionIds, dateRange, detectionTypes } = req.body;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    // 模擬異常檢測結果
+    const anomalies = [
+      {
+        transactionId: 'txn_001',
+        anomalyType: 'amount_spike',
+        severity: 'medium',
+        confidence: 0.85,
+        description: '金額異常：超出該類別平均支出3倍'
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: {
+        anomalies,
+        summary: {
+          totalAnomalies: anomalies.length,
+          highSeverityCount: 0,
+          riskLevel: 'low'
+        }
+      },
+      message: '異常檢測完成',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '異常檢測失敗',
+      error: error.message
+    });
+  }
+});
+
+// 個人化建議
+app.get('/ai/recommendations/personal', async (req, res) => {
+  try {
+    const { recommendationType, riskTolerance } = req.query;
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未提供用戶認證'
+      });
+    }
+
+    // 模擬個人化建議
+    const recommendations = [
+      {
+        id: 'rec_001',
+        category: 'saving',
+        title: '建立緊急預備金',
+        description: '建議準備3-6個月的生活費作為緊急預備金',
+        difficulty: 'moderate',
+        timeframe: 'long_term'
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: {
+        recommendations,
+        userProfile: {
+          riskProfile: riskTolerance || 'moderate',
+          primaryGoals: ['儲蓄', '投資']
+        }
+      },
+      message: '個人化建議產生成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '個人化建議失敗',
+      error: error.message
+    });
+  }
+});
+
+// 自然語言解析
+app.post('/ai/nlp/parse', async (req, res) => {
+  try {
+    const { text, context, language = 'zh-TW' } = req.body;
+    const userId = req.headers['user-id'];
+    
+    if (!userId || !text) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必要參數'
+      });
+    }
+
+    // 模擬自然語言解析
+    const parseResult = {
+      parsed: true,
+      confidence: 0.9,
+      extractedData: {
+        amount: 100,
+        transactionType: 'expense',
+        category: '餐飲費',
+        description: text,
+        date: new Date().toISOString()
+      }
+    };
+
+    res.json({
+      success: true,
+      data: parseResult,
+      message: '自然語言解析成功',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '自然語言解析失敗',
+      error: error.message
+    });
+  }
+});
+
 // =============== 系統管理 API 端點 ===============
 
 // 定期自動備份
