@@ -1,0 +1,85 @@
+請不要寫文件，請先回答我的問題，並以此更新你的提案。
+
+我來分析 API spec 與 0020 文件各 API 的對應關係：
+
+📊 API Spec 檔案與 0020 文件的對應分析
+1. 現有 API Spec 檔案覆蓋情況
+根據 06 資料夾中的現有檔案，已涵蓋以下服務：
+
+API Spec 檔案	對應 0020 文件中的服務	API 數量	覆蓋狀況
+0601. 認證服務 API 規格.yaml	認證服務 (10 個)	10/10	■ 完整覆蓋
+0602. 用戶管理服務 API 規格.yaml	用戶管理 (10 個)	10/10	■ 完整覆蓋
+0603. 記帳交易服務 API 規格.yaml	記帳交易 (20 個)	20/20	■ 完整覆蓋
+0604. 帳本管理服務 API 規格.yaml	帳本管理 (13 個)	13/13	■ 完整覆蓋
+0605. 帳戶管理服務 API 規格.yaml	帳戶管理 (8 個)	8/8	■ 完整覆蓋
+0606. 科目管理服務 API 規格.yaml	科目管理 (6 個)	6/6	■ 完整覆蓋
+0607. 預算管理服務 API 規格.yaml	預算管理 (8 個)	8/8	■ 完整覆蓋
+0608. 報表分析服務 API 規格.yaml	報表分析 (13 個)	13/13	■ 完整覆蓋
+0609. AI 助理服務 API 規格.yaml	AI 助理 (6 個)	6/6	■ 完整覆蓋
+0610. 激勵系統服務 API 規格.yaml	激勵系統 (6 個)	6/6	■ 完整覆蓋
+0611. 系統服務 API 規格.yaml	系統服務 (12 個)	12/12	■ 完整覆蓋
+2. 0020 文件中尚未覆蓋的服務
+基於 0020. API list.md 的 105 個 API 端點，已覆蓋 112 個 API，但還有以下服務未包含在 0601-0611 中：
+=>為什麼0020文件說要105個API端點，但你說有112個API？是什麼原因？如果是不按0020文件的API list自行創造的請刪除
+
+
+
+未覆蓋服務	API 數量	建議檔案編號
+檔案管理服務	8 個	0612. 檔案管理服務 API 規格.yaml
+通知管理服務	8 個	0613. 通知管理服務 API 規格.yaml
+備份與資料管理服務	6 個	0614. 備份與資料管理服務 API 規格.yaml
+3. 詳細對應清單
+已覆蓋的 API (0601-0611)：
+0601 認證服務 ■ 0020 文件 4.1 認證層 APIs
+
+■ POST /auth/register, POST /auth/login 等 10 個端點
+0602 用戶管理服務 ■ 0020 文件中用戶管理相關
+
+■ GET /users/profile, POST /users/assessment 等 10 個端點
+0603 記帳交易服務 ■ 0020 文件 4.2 記帳核心 APIs
+
+■ POST /transactions, GET /transactions/dashboard 等 20 個端點
+0604 帳本管理服務 ■ 0020 文件 4.3 管理功能 APIs (帳本部分)
+
+■ GET /ledgers, POST /ledgers/{id}/invitations 等 13 個端點
+0605-0611 ■ 其餘管理、分析、系統功能
+
+■ 完整覆蓋 0020 文件中的所有核心 API
+需要新增的 API (0612 開始)：
+檔案管理服務 (8 個 API)：
+
+POST /files/upload - 檔案上傳
+GET /files/{id} - 取得檔案
+DELETE /files/{id} - 刪除檔案
+POST /files/compress - 圖片壓縮
+GET /files/metadata/{id} - 檔案元資料
+POST /files/batch-upload - 批次上傳
+GET /files/list - 檔案列表
+PUT /files/{id}/permissions - 檔案權限
+通知管理服務 (8 個 API)：
+
+GET /notifications/settings - 通知設定
+PUT /notifications/settings - 更新設定
+POST /notifications/push - 推播通知
+GET /notifications/history - 通知歷史
+POST /notifications/reminders - 記帳提醒
+PUT /notifications/reminders/{id} - 更新提醒
+DELETE /notifications/reminders/{id} - 刪除提醒
+GET /notifications/templates - 通知模板
+備份與資料管理服務 (6 個 API)：
+
+POST /backup/create - 建立備份
+GET /backup/list - 備份列表
+POST /backup/restore - 還原備份
+GET /backup/status - 備份狀態
+POST /data/export - 匯出資料
+POST /data/import - 匯入資料
+4. 建議補充方案
+從 0612 開始新增：
+
+0612. 檔案管理服務 API 規格.yaml - 支援 S-207 圖片附加頁
+0613. 通知管理服務 API 規格.yaml - 支援 S-504 通知設定頁
+0614. 備份與資料管理服務 API 規格.yaml - 支援 S-502 資料備份頁
+這樣可以完整覆蓋 0020 文件中的所有 105+ 個 API 端點，並與 0021. Screen list.md 的畫面功能完全對應。
+
+請確認是否要從 0612 檔案管理服務開始撰寫？
