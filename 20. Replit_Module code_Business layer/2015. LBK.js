@@ -10,17 +10,16 @@ const moment = require('moment-timezone');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 
+// 引入Firebase動態配置模組
+const firebaseConfig = require('./2099. firebase-config');
+
 // 確保 Firebase Admin 在模組載入時就初始化
 if (!admin.apps.length) {
   try {
-    const serviceAccount = require('./Serviceaccountkey.json');
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
-    });
-    console.log('🔥 LBK模組: Firebase Admin 自動初始化完成');
+    firebaseConfig.initializeFirebaseAdmin();
+    console.log('🔥 LBK模組: Firebase Admin 動態配置初始化完成');
   } catch (error) {
-    console.error('❌ LBK模組: Firebase Admin 自動初始化失敗:', error);
+    console.error('❌ LBK模組: Firebase Admin 動態配置初始化失敗:', error);
   }
 }
 
@@ -1484,14 +1483,9 @@ async function LBK_initializeFirestore() {
     if (!admin.apps.length) {
       console.log('🔄 LBK模組: Firebase Admin 尚未初始化，開始初始化...');
 
-      const serviceAccount = require('./Serviceaccountkey.json');
+      firebaseConfig.initializeFirebaseAdmin();
 
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
-      });
-
-      console.log('✅ LBK模組: Firebase Admin 初始化完成');
+      console.log('✅ LBK模組: Firebase Admin 動態配置初始化完成');
     }
 
     // 取得 Firestore 實例

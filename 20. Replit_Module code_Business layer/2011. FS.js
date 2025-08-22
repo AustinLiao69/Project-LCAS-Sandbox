@@ -5,8 +5,8 @@
 * @update 2025-01-24: 升級至1.2.6版本，改用動態配置模組，移除靜態serviceaccountkey.json依賴
 */
 
-// 使用動態配置模組
-const firebaseConfig = require('./firebase-config');
+// 引入Firebase動態配置模組
+const firebaseConfig = require('./2099. firebase-config');
 
 // 初始化 Firebase Admin（使用動態配置）
 let admin, db, PROJECT_ID, UNIVERSE_DOMAIN;
@@ -14,27 +14,27 @@ let admin, db, PROJECT_ID, UNIVERSE_DOMAIN;
 try {
   // 取得Firebase Admin實例
   admin = firebaseConfig.admin;
-  
+
   // 初始化Firebase（如果尚未初始化）
   firebaseConfig.initializeFirebaseAdmin();
-  
+
   // 取得 Firestore 實例
   db = firebaseConfig.getFirestoreInstance();
-  
+
   // 取得專案資訊
   const projectInfo = firebaseConfig.getProjectInfo();
   PROJECT_ID = projectInfo.PROJECT_ID;
   UNIVERSE_DOMAIN = projectInfo.UNIVERSE_DOMAIN;
-  
+
   console.log('✅ FS模組：Firebase動態配置載入成功');
-  
+
 } catch (error) {
   console.error('❌ FS模組：Firebase動態配置載入失敗:', error.message);
-  
+
   // 檢查環境變數設定狀態
   const envCheck = firebaseConfig.checkEnvironmentVariables();
   console.log('💡 請檢查Replit Secrets中的Firebase環境變數設定');
-  
+
   // 設定預設值以避免模組完全失效
   PROJECT_ID = 'default-project';
   UNIVERSE_DOMAIN = 'googleapis.com';
@@ -358,11 +358,11 @@ function FS_logOperation(message, operation, userId, errorCode, details, functio
 function FS_handleError(message, operation, userId, errorCode, details, functionName) {
   try {
     console.error(`[FS_ERROR] ${new Date().toISOString()} | ${operation} | ${message} | Error: ${errorCode} | Function: ${functionName}`);
-    
+
     if (details) {
       console.error(`[FS_ERROR_DETAILS] ${details}`);
     }
-    
+
     return true;
   } catch (error) {
     console.error(`[FS_CRITICAL_ERROR] ${error.toString()}`);
