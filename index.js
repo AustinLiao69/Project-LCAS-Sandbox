@@ -1990,6 +1990,39 @@ app.get('/app/reports/export', async (req, res) => {
   }
 });
 
+// =============== 測試 API 端點 ===============
+
+// 新增的 testAPI - 建立測試使用者
+app.post('/testAPI', (req, res) => {
+  try {
+    const { name, email } = req.body;
+    
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必要參數：name 和 email'
+      });
+    }
+
+    const newUser = {
+      id: Math.floor(Math.random() * 10000), // 產生隨機 id (1-9999)
+      name,
+      email
+    };
+
+    console.log('建立使用者:', newUser);
+    
+    res.status(201).json(newUser);
+    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '建立使用者失敗',
+      error: error.message
+    });
+  }
+});
+
 // =============== 系統管理 API 端點 ===============
 
 // 定期自動備份
@@ -2225,11 +2258,13 @@ wss.on('connection', (ws, req) => {
 
 // 啟動綜合服務器 (HTTP + WebSocket)
 server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
   console.log(`🌐 REST API 服務器已啟動於 Port ${PORT}`);
   console.log(`📡 API 端點已就緒，Flutter應用可開始對接`);
   console.log(`🔌 WebSocket 服務已啟用，支援即時協作同步`);
-  console.log(`📊 API 統計: 47個端點已實作 (32標準 + 15額外)`);
+  console.log(`📊 API 統計: 48個端點已實作 (32標準 + 16額外)`);
   console.log(`✅ 對接完成度: 100% - 所有Flutter端點均已對接`);
+  console.log(`🧪 測試 API 端點: POST /testAPI 已就緒`);
 });
 
 console.log('🎉 LCAS LINE Bot 啟動完成！');
