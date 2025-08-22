@@ -1,0 +1,195 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/8/22 上午9:48:33
+📦 載入模組...
+ ❌ DL 模組載入失敗: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2010. DL.js
+- /home/runner/workspace/index.js
+❌ FS 模組載入失敗: Cannot find module './firebase-config'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2011. FS.js
+- /home/runner/workspace/index.js
+⚠️ BK 模組跳過載入 - FS模組依賴未滿足
+❌ LBK模組: Firebase Admin 自動初始化失敗: Error: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2015. LBK.js
+- /home/runner/workspace/index.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (/home/runner/workspace/20. Replit_Module code_Business layer/2015. LBK.js:16:28)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/home/runner/workspace/20. Replit_Module code_Business layer/2015. LBK.js',
+    '/home/runner/workspace/index.js'
+  ]
+}
+❌ LBK 模組載入失敗: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2010. DL.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2015. LBK.js
+- /home/runner/workspace/index.js
+⚠️ DD 模組跳過載入 - FS模組依賴未滿足
+❌ AM 模組載入失敗: The default Firebase app does not exist. Make sure you call initializeApp() before using any of the Firebase services.
+⚠️ SR 模組跳過載入 - FS模組依賴未滿足
+🔍 WH模組載入前進行FS依賴完整性檢查...
+❌ FS模組完全不可用，將載入WH模組基礎功能
+📦 開始載入WH模組...
+DD模組載入失敗: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2031. DD1.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+❌ BK模組: Firebase Admin 自動初始化失敗: Error: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2001. BK.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (/home/runner/workspace/20. Replit_Module code_Business layer/2001. BK.js:15:28)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/home/runner/workspace/20. Replit_Module code_Business layer/2001. BK.js',
+    '/home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js',
+    '/home/runner/workspace/index.js'
+  ]
+}
+BK模組載入失敗: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2010. DL.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2001. BK.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+SR模組依賴載入警告: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2010. DL.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2005. SR.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+SR模組載入失敗: The default Firebase app does not exist. Make sure you call initializeApp() before using any of the Firebase services.
+DL模組載入失敗: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2010. DL.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+AM模組載入失敗: The default Firebase app does not exist. Make sure you call initializeApp() before using any of the Firebase services.
+FS模組載入失敗: Cannot find module './firebase-config'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2011. FS.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+❌ WH 模組載入失敗: Cannot find module './firebase-config'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+錯誤詳情: Error: Cannot find module './firebase-config'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (/home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js:74:24)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+🔄 嘗試WH模組基礎模式載入...
+DD模組載入失敗: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2031. DD1.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+❌ BK模組: Firebase Admin 自動初始化失敗: Error: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2001. BK.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (/home/runner/workspace/20. Replit_Module code_Business layer/2001. BK.js:15:28)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/home/runner/workspace/20. Replit_Module code_Business layer/2001. BK.js',
+    '/home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js',
+    '/home/runner/workspace/index.js'
+  ]
+}
+BK模組載入失敗: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2010. DL.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2001. BK.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+SR模組依賴載入警告: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2010. DL.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2005. SR.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+SR模組載入失敗: The default Firebase app does not exist. Make sure you call initializeApp() before using any of the Firebase services.
+DL模組載入失敗: Cannot find module './Serviceaccountkey.json'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2010. DL.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+AM模組載入失敗: The default Firebase app does not exist. Make sure you call initializeApp() before using any of the Firebase services.
+FS模組載入失敗: Cannot find module './firebase-config'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2011. FS.js
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+❌ WH 模組基礎模式載入也失敗: Cannot find module './firebase-config'
+Require stack:
+- /home/runner/workspace/20. Replit_Module code_Business layer/2020. WH.js
+- /home/runner/workspace/index.js
+⚠️ BK 模組未正確載入，跳過初始化
+⚠️ LBK 模組未正確載入，跳過初始化
+⚠️ SR 模組未正確載入，跳過初始化
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🔍 FS模組依賴檢查報告:
+❌ FS模組未載入，所有依賴模組將無法正常運作
+❌ BK模組載入失敗，無法檢查函數
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS LINE Bot 啟動完成！
+📱 現在可以用 LINE 發送訊息測試了！
+🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對外服務
+⚡ WH → LBK 直連路徑已啟用：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：26個函數 → 8個函數，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：維持 WH → DD → BK 完整功能
+📅 SR 排程提醒模組已整合：支援排程提醒、Quick Reply統計、付費功能控制（v1.3.0）
+🏥 健康檢查機制已啟用：每5分鐘監控系統狀態
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 部署修復已應用：v2.1.13 - 修復CommonJS頂層await語法錯誤，確保模組正常載入和運作
+🌐 REST API 服務器已啟動於 Port 5000
+📡 API 端點已就緒，Flutter應用可開始對接
+🔌 WebSocket 服務已啟用，支援即時協作同步
+📊 API 統計: 47個端點已實作 (32標準 + 15額外)
+✅ 對接完成度: 100% - 所有Flutter端點均已對接
+^A
