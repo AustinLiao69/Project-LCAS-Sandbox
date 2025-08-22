@@ -1,28 +1,27 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 用戶管理服務 API 規格
   version: 1.0.0
   description: |
     **LCAS 2.0 用戶管理服務 API 規格**
-    
+
     負責用戶資料管理、偏好設定、模式評估與個人化配置的完整 API 規格。
     支援四模式差異化體驗，提供用戶生命週期的完整管理功能。
-    
+
     **服務範圍**:
     - 用戶資料管理（個人資料、偏好設定）
     - 模式評估與切換（Expert、Inertial、Cultivation、Guiding）
     - 安全設定（應用鎖、隱私模式）
     - 使用行為追蹤與個人化推薦
-    
+
     **四模式差異化策略**:
     - **Expert**: 完整控制權、詳細設定選項、專業化配置
     - **Inertial**: 標準設定、簡潔選項、固定流程
     - **Cultivation**: 引導式設定、進度追蹤、習慣養成
     - **Guiding**: 極簡設定、自動化配置、最少決策
-    
-    **版本**: 1.0.0  
-    **建立日期**: 2025-08-21  
+
+    **版本**: 1.0.0
+    **建立日期**: 2025-08-21
     **對應文件**: 0021. Screen list.md (S-103, S-106, S-505)
 
 servers:
@@ -40,7 +39,7 @@ paths:
       summary: "取得用戶個人資料"
       description: |
         取得當前用戶的完整個人資料，包含基本資訊、偏好設定與統計數據。
-        
+
         **對應畫面**: S-505 個人設定頁
         **四模式差異**: 回應資料深度與個人化程度不同
       tags:
@@ -92,7 +91,7 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T10:30:00Z"
-                      
+
                       # Expert/Inertial Mode: 詳細統計
                       statistics:
                         type: object
@@ -109,7 +108,7 @@ paths:
                           longestStreak:
                             type: integer
                             example: 45
-                      
+
                       # Cultivation Mode: 成就與進度
                       achievements:
                         type: object
@@ -126,7 +125,7 @@ paths:
                           currentStreak:
                             type: integer
                             example: 12
-                      
+
                       # Expert Mode: 進階設定
                       preferences:
                         type: object
@@ -150,7 +149,7 @@ paths:
                           defaultLedgerId:
                             type: string
                             example: "ledger-uuid-001"
-                      
+
                       # 安全設定
                       security:
                         type: object
@@ -176,7 +175,7 @@ paths:
       summary: "更新用戶個人資料"
       description: |
         更新用戶的個人資料，包含基本資訊與顯示偏好。
-        
+
         **對應畫面**: S-505 個人設定頁
         **四模式差異**: 可編輯欄位數量與複雜度不同
       tags:
@@ -237,7 +236,7 @@ paths:
       summary: "取得模式評估問卷"
       description: |
         取得用於判斷用戶適合模式的評估問卷題目。
-        
+
         **對應畫面**: S-106 模式評估問卷頁
         **使用時機**: 新用戶註冊後、用戶主動重新評估
       tags:
@@ -326,7 +325,7 @@ paths:
       summary: "提交模式評估結果"
       description: |
         提交用戶完成的評估問卷，系統分析後回傳推薦的使用模式。
-        
+
         **對應畫面**: S-106 模式評估問卷頁
         **業務邏輯**: 根據回答計算最適合的模式並更新用戶設定
       tags:
@@ -436,7 +435,7 @@ paths:
       summary: "更新用戶偏好設定"
       description: |
         更新用戶的應用偏好設定，包含預設值、通知設定等。
-        
+
         **對應畫面**: S-505 個人設定頁
         **四模式差異**: 可設定的偏好項目數量不同
       tags:
@@ -458,7 +457,7 @@ paths:
                 defaultLedgerId:
                   type: string
                   example: "ledger-uuid-001"
-                
+
                 # Expert/Inertial Mode: 進階偏好
                 numberFormat:
                   type: string
@@ -469,7 +468,7 @@ paths:
                 autoBackupEnabled:
                   type: boolean
                   example: true
-                
+
                 # 通知偏好
                 notifications:
                   type: object
@@ -483,7 +482,7 @@ paths:
                     weeklyReport:
                       type: boolean
                       example: false
-                
+
                 # Cultivation Mode: 激勵偏好
                 gamification:
                   type: object
@@ -533,7 +532,7 @@ paths:
       summary: "更新安全設定"
       description: |
         更新用戶的安全相關設定，包含應用鎖、生物辨識、隱私模式等。
-        
+
         **對應畫面**: S-503 安全設定頁
         **安全考量**: PIN 碼等敏感資料需加密傳輸
       tags:
@@ -563,7 +562,7 @@ paths:
                       type: integer
                       example: 300
                       description: "自動鎖定時間（秒）"
-                
+
                 privacyMode:
                   type: object
                   properties:
@@ -576,7 +575,7 @@ paths:
                     maskCategories:
                       type: boolean
                       example: false
-                
+
                 biometric:
                   type: object
                   properties:
@@ -587,7 +586,7 @@ paths:
                       type: string
                       enum: [fingerprint, face, voice]
                       example: "fingerprint"
-                
+
                 twoFactor:
                   type: object
                   properties:
@@ -634,7 +633,7 @@ paths:
       summary: "切換用戶模式"
       description: |
         允許用戶手動切換使用模式，無需重新評估。
-        
+
         **業務邏輯**: 切換後即時生效，影響後續 API 回應格式
         **使用場景**: 用戶體驗不同模式、臨時需求變更
       tags:
@@ -697,7 +696,7 @@ paths:
       summary: "取得模式預設值"
       description: |
         取得指定模式的預設配置，用於模式切換時的初始化。
-        
+
         **使用場景**: 模式切換、新用戶設定、功能重置
       tags:
         - "模式管理"
@@ -774,7 +773,7 @@ paths:
       summary: "記錄使用行為追蹤"
       description: |
         記錄用戶的使用行為，用於個人化推薦與模式優化。
-        
+
         **隱私考量**: 僅記錄功能使用統計，不記錄具體內容
         **數據用途**: 改善用戶體驗、功能推薦、模式優化
       tags:
@@ -841,7 +840,7 @@ paths:
       summary: "取得模式優化建議"
       description: |
         基於用戶使用行為分析，提供模式切換或功能使用建議。
-        
+
         **AI 分析**: 根據使用模式分析適合度並提供建議
         **推薦策略**: 個人化推薦、使用效率優化
       tags:
@@ -899,7 +898,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
-  
+
 
 components:
   securitySchemes:
@@ -1000,7 +999,6 @@ tags:
     description: "使用者模式切換與配置管理"
   - name: "安全管理"
     description: "應用安全與隱私設定"
-  
   - name: "行為分析"
     description: "使用行為追蹤與分析"
   - name: "個人化推薦"
