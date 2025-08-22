@@ -86,40 +86,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/AchievementsList'
 
-  /gamification/achievements/{achievementId}/unlock:
-    post:
-      tags:
-        - 成就系統
-      summary: 解鎖成就
-      description: |
-        解鎖指定成就，記錄成就時間與獎勵發放。
-        支援自動解鎖與手動觸發機制。
-      parameters:
-        - name: achievementId
-          in: path
-          required: true
-          description: 成就 ID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UnlockAchievementRequest'
-      responses:
-        '200':
-          description: 成就解鎖成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/UnlockAchievementResponse'
+  
 
   /gamification/challenges:
     get:
@@ -161,32 +128,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/ChallengesList'
 
-    post:
-      tags:
-        - 挑戰任務
-      summary: 建立自訂挑戰
-      description: |
-        建立個人或團體自訂挑戰任務。
-        支援目標設定、時間範圍、獎勵機制。
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateChallengeRequest'
-      responses:
-        '201':
-          description: 挑戰建立成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/ChallengeDetails'
+    
 
   /gamification/challenges/{challengeId}/join:
     post:
@@ -217,40 +159,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/JoinChallengeResponse'
 
-  /gamification/challenges/{challengeId}/progress:
-    put:
-      tags:
-        - 挑戰任務
-      summary: 更新挑戰進度
-      description: |
-        更新用戶在特定挑戰中的進度。
-        支援自動進度更新與手動記錄。
-      parameters:
-        - name: challengeId
-          in: path
-          required: true
-          description: 挑戰 ID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateProgressRequest'
-      responses:
-        '200':
-          description: 進度更新成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/ChallengeProgress'
+  
 
   /gamification/points:
     get:
@@ -292,59 +201,9 @@ paths:
                   data:
                     $ref: '#/components/schemas/PointsInfo'
 
-  /gamification/points/earn:
-    post:
-      tags:
-        - 積分系統
-      summary: 獲得積分
-      description: |
-        記錄用戶獲得積分的行為與來源。
-        支援多種積分獲得方式與倍數機制。
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EarnPointsRequest'
-      responses:
-        '200':
-          description: 積分獲得成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/EarnPointsResponse'
+  
 
-  /gamification/levels:
-    get:
-      tags:
-        - 等級系統
-      summary: 取得用戶等級資訊
-      description: |
-        取得用戶當前等級、經驗值與升級進度。
-        四模式差異：
-        - Expert: 專業技能樹、認證系統
-        - Inertial: 基本等級顯示、簡化進度
-        - Cultivation: 豐富等級獎勵、習慣里程碑
-        - Guiding: 簡化等級、鼓勵性成長
-      responses:
-        '200':
-          description: 成功取得等級資訊
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/LevelInfo'
+  
 
   /gamification/leaderboard:
     get:
@@ -402,102 +261,9 @@ paths:
                   data:
                     $ref: '#/components/schemas/Leaderboard'
 
-  /gamification/streaks:
-    get:
-      tags:
-        - 習慣追蹤
-      summary: 取得連續記錄統計
-      description: |
-        取得用戶的連續記帳天數與習慣追蹤資訊。
-        支援多種習慣類型的連續記錄統計。
-      parameters:
-        - name: type
-          in: query
-          description: 連續記錄類型
-          schema:
-            type: string
-            enum: [bookkeeping, budgeting, goal_review, app_usage]
-            default: bookkeeping
-      responses:
-        '200':
-          description: 成功取得連續記錄
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/StreakInfo'
+  
 
-  /gamification/rewards:
-    get:
-      tags:
-        - 獎勵系統
-      summary: 取得獎勵列表
-      description: |
-        取得用戶可兌換的獎勵與兌換歷史。
-        四模式差異：
-        - Expert: 專業工具解鎖、高級功能獎勵
-        - Inertial: 基本功能獎勵、實用工具
-        - Cultivation: 習慣養成獎勵、激勵道具
-        - Guiding: 簡化獎勵、鼓勵性物品
-      parameters:
-        - name: category
-          in: query
-          description: 獎勵分類
-          schema:
-            type: string
-            enum: [premium_features, customization, badges, tools, discounts]
-        - name: status
-          in: query
-          description: 獎勵狀態
-          schema:
-            type: string
-            enum: [available, redeemed, locked]
-            default: available
-      responses:
-        '200':
-          description: 成功取得獎勵列表
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/RewardsList'
-
-    post:
-      tags:
-        - 獎勵系統
-      summary: 兌換獎勵
-      description: |
-        使用積分兌換指定獎勵。
-        支援積分扣除與獎勵發放機制。
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RedeemRewardRequest'
-      responses:
-        '200':
-          description: 獎勵兌換成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/RedeemRewardResponse'
+  
 
 components:
   securitySchemes:
