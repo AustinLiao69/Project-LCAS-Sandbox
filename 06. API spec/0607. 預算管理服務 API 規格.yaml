@@ -1,0 +1,2420 @@
+
+openapi: 3.0.3
+info:
+  title: LCAS 2.0 - 預算管理服務 API 規格
+  version: 1.0.0
+  description: |
+    **LCAS 2.0 預算管理服務 API 規格**
+    
+    負責預算的完整生命週期管理，包含預算設定、執行監控、警示通知等功能。
+    支援多種預算類型與週期，提供四模式差異化體驗與智慧預算建議。
+    
+    ## 🎯 服務範圍
+    - **預算 CRUD**：建立、查詢、修改、刪除預算
+    - **預算類型管理**：科目預算、帳戶預算、標籤預算、總預算
+    - **週期管理**：月度、季度、年度、自訂週期預算
+    - **執行監控**：預算達成率、超支警示、趨勢分析
+    - **智慧建議**：基於歷史數據的預算建議
+    - **預算模板**：常用預算範本與快速設定
+    
+    ## 🎨 四模式差異化支援
+    
+    | 模式 | 特色功能 |
+    |------|----------|
+    | **Expert** | 複雜預算規則、多維度分析、精細化控制、進階統計 |
+    | **Inertial** | 標準預算管理、簡潔設定、固定週期、基本監控 |
+    | **Cultivation** | 預算引導、習慣培養、目標追蹤、激勵機制 |
+    | **Guiding** | 極簡預算、自動建議、預設設定、最少決策 |
+    
+    ## 🗂️ 對應畫面
+    - **S-307**：預算管理主頁
+    - **S-308**：建立預算頁
+    
+    **版本**: 1.0.0  
+    **建立日期**: 2025-08-22  
+    **對應文件**: 0021. Screen list.md (S-307, S-308)
+
+servers:
+  - url: https://api.lcas.app/v1
+    description: "Production server"
+  - url: https://api-staging.lcas.app/v1
+    description: "Staging server"
+
+security:
+  - BearerAuth: []
+
+paths:
+  /budgets:
+    get:
+      summary: "取得預算列表"
+      description: |
+        取得使用者的預算列表，支援分頁、篩選和排序。
+        根據使用者模式返回不同詳細程度的資訊。
+        
+        **對應畫面**: S-307 預算管理主頁
+        **四模式差異**: 顯示資訊詳細程度與推薦預算不同
+      tags:
+        - "預算查詢"
+      parameters:
+        - name: ledgerId
+          in: query
+          description: "指定帳本 ID（可選，預設為所有帳本）"
+          schema:
+            type: string
+            example: "ledger-uuid-001"
+        - name: type
+          in: query
+          description: "預算類型篩選"
+          schema:
+            type: string
+            enum: [category, account, tag, total, all]
+            default: all
+        - name: period
+          in: query
+          description: "預算週期篩選"
+          schema:
+            type: string
+            enum: [monthly, quarterly, yearly, custom]
+        - name: status
+          in: query
+          description: "預算狀態篩選"
+          schema:
+            type: string
+            enum: [active, completed, paused, exceeded, all]
+            default: active
+        - name: includeCompleted
+          in: query
+          description: "是否包含已完成的預算"
+          schema:
+            type: boolean
+            default: false
+        - name: search
+          in: query
+          description: "搜尋關鍵字（預算名稱、描述）"
+          schema:
+            type: string
+            example: "食物"
+        - name: sortBy
+          in: query
+          description: "排序欄位"
+          schema:
+            type: string
+            enum: [name, amount, usage_percentage, created_at, end_date, priority]
+            default: usage_percentage
+        - name: sortOrder
+          in: query
+          description: "排序方向"
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: page
+          in: query
+          description: "頁碼"
+          schema:
+            type: integer
+            example: 1
+            default: 1
+        - name: limit
+          in: query
+          description: "每頁筆數"
+          schema:
+            type: integer
+            example: 20
+            default: 20
+            maximum: 100
+        - name: X-User-Mode
+          in: header
+          description: "用戶模式標識"
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: "成功取得預算列表"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      budgets:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "budget-uuid-001"
+                            name:
+                              type: string
+                              example: "食物月預算"
+                            type:
+                              type: string
+                              enum: [category, account, tag, total]
+                              example: "category"
+                            
+                            # 基本資訊
+                            description:
+                              type: string
+                              example: "控制每月食物支出"
+                            amount:
+                              type: number
+                              example: 12000
+                            currency:
+                              type: string
+                              example: "TWD"
+                            
+                            # 週期資訊
+                            period:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum: [monthly, quarterly, yearly, custom]
+                                  example: "monthly"
+                                startDate:
+                                  type: string
+                                  format: date
+                                  example: "2025-01-01"
+                                endDate:
+                                  type: string
+                                  format: date
+                                  example: "2025-01-31"
+                                currentCycle:
+                                  type: integer
+                                  example: 1
+                                  description: "當前週期數"
+                                totalCycles:
+                                  type: integer
+                                  example: 12
+                                  description: "總週期數（null = 無限期）"
+                                  nullable: true
+                            
+                            # 目標設定
+                            target:
+                              type: object
+                              properties:
+                                categoryId:
+                                  type: string
+                                  example: "category-uuid-food"
+                                  description: "科目 ID（category 類型）"
+                                categoryName:
+                                  type: string
+                                  example: "食物"
+                                accountId:
+                                  type: string
+                                  example: "account-uuid-001"
+                                  description: "帳戶 ID（account 類型）"
+                                accountName:
+                                  type: string
+                                  example: "信用卡"
+                                tags:
+                                  type: array
+                                  items:
+                                    type: string
+                                  example: ["外食", "聚餐"]
+                                  description: "標籤列表（tag 類型）"
+                                includeSubcategories:
+                                  type: boolean
+                                  example: true
+                                  description: "是否包含子科目"
+                            
+                            # 執行狀況
+                            execution:
+                              type: object
+                              properties:
+                                usedAmount:
+                                  type: number
+                                  example: 8500
+                                remainingAmount:
+                                  type: number
+                                  example: 3500
+                                usagePercentage:
+                                  type: number
+                                  example: 70.83
+                                status:
+                                  type: string
+                                  enum: [on_track, warning, exceeded, completed]
+                                  example: "warning"
+                                daysElapsed:
+                                  type: integer
+                                  example: 27
+                                daysRemaining:
+                                  type: integer
+                                  example: 4
+                                projectedAmount:
+                                  type: number
+                                  example: 10370
+                                  description: "預計總支出"
+                                dailyBudget:
+                                  type: number
+                                  example: 387.10
+                                  description: "日均可用預算"
+                                averageDaily:
+                                  type: number
+                                  example: 314.81
+                                  description: "實際日均支出"
+                            
+                            # Expert Mode: 進階統計
+                            analytics:
+                              type: object
+                              properties:
+                                historicalPerformance:
+                                  type: object
+                                  properties:
+                                    lastPeriodUsage:
+                                      type: number
+                                      example: 88.5
+                                      description: "上期使用率(%)"
+                                    averageUsage:
+                                      type: number
+                                      example: 82.3
+                                      description: "平均使用率(%)"
+                                    bestPeriod:
+                                      type: number
+                                      example: 67.2
+                                      description: "最佳控制率(%)"
+                                    trend:
+                                      type: string
+                                      enum: [improving, stable, worsening]
+                                      example: "improving"
+                                weeklyBreakdown:
+                                  type: array
+                                  description: "週度分析"
+                                  items:
+                                    type: object
+                                    properties:
+                                      week:
+                                        type: integer
+                                        example: 1
+                                      amount:
+                                        type: number
+                                        example: 2800
+                                      target:
+                                        type: number
+                                        example: 3000
+                                      percentage:
+                                        type: number
+                                        example: 93.33
+                                categoryBreakdown:
+                                  type: array
+                                  description: "子科目分析（如適用）"
+                                  items:
+                                    type: object
+                                    properties:
+                                      categoryId:
+                                        type: string
+                                        example: "category-uuid-restaurant"
+                                      categoryName:
+                                        type: string
+                                        example: "餐廳"
+                                      amount:
+                                        type: number
+                                        example: 5200
+                                      percentage:
+                                        type: number
+                                        example: 61.18
+                            
+                            # 警示設定
+                            alerts:
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                                  example: true
+                                thresholds:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      percentage:
+                                        type: number
+                                        example: 80
+                                      type:
+                                        type: string
+                                        enum: [warning, critical]
+                                        example: "warning"
+                                      notified:
+                                        type: boolean
+                                        example: false
+                                lastAlert:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-01-25T10:30:00Z"
+                                  nullable: true
+                            
+                            # 設定資訊
+                            settings:
+                              type: object
+                              properties:
+                                isActive:
+                                  type: boolean
+                                  example: true
+                                priority:
+                                  type: integer
+                                  example: 1
+                                  description: "優先級（1=最高）"
+                                autoRenew:
+                                  type: boolean
+                                  example: true
+                                  description: "是否自動續期"
+                                rollover:
+                                  type: boolean
+                                  example: false
+                                  description: "是否允許結餘轉入下期"
+                                notificationEnabled:
+                                  type: boolean
+                                  example: true
+                            
+                            # 審計資訊
+                            audit:
+                              type: object
+                              properties:
+                                createdAt:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-01-01T00:00:00Z"
+                                updatedAt:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-01-20T15:30:00Z"
+                                createdBy:
+                                  type: string
+                                  example: "user-uuid-12345"
+                                lastCalculatedAt:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-01-27T12:30:00Z"
+                      
+                      # 分頁資訊
+                      pagination:
+                        type: object
+                        properties:
+                          currentPage:
+                            type: integer
+                            example: 1
+                          totalPages:
+                            type: integer
+                            example: 2
+                          totalRecords:
+                            type: integer
+                            example: 15
+                          hasNextPage:
+                            type: boolean
+                            example: true
+                          hasPreviousPage:
+                            type: boolean
+                            example: false
+                      
+                      # 總體統計
+                      summary:
+                        type: object
+                        properties:
+                          totalBudgets:
+                            type: integer
+                            example: 15
+                          activeBudgets:
+                            type: integer
+                            example: 12
+                          totalBudgetAmount:
+                            type: number
+                            example: 45000
+                          totalUsedAmount:
+                            type: number
+                            example: 28500
+                          overallUsagePercentage:
+                            type: number
+                            example: 63.33
+                          exceededBudgets:
+                            type: integer
+                            example: 2
+                          warningBudgets:
+                            type: integer
+                            example: 4
+                      
+                      # Cultivation Mode: 成就與進度
+                      achievements:
+                        type: object
+                        properties:
+                          budgetStreaks:
+                            type: integer
+                            example: 3
+                            description: "連續達成預算月數"
+                          bestControlRate:
+                            type: number
+                            example: 67.2
+                            description: "最佳控制率"
+                          improvementTrend:
+                            type: string
+                            enum: [improving, stable, needs_attention]
+                            example: "improving"
+                          monthlyGoalProgress:
+                            type: number
+                            example: 85.5
+                            description: "月度目標達成率"
+                      
+                      # 四模式差異化推薦
+                      recommendations:
+                        type: array
+                        description: "預算建議（Cultivation/Expert 模式）"
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              enum: [budget_adjustment, new_budget, category_split, alert_setting]
+                              example: "budget_adjustment"
+                            priority:
+                              type: string
+                              enum: [high, medium, low]
+                              example: "medium"
+                            title:
+                              type: string
+                              example: "調整食物預算"
+                            description:
+                              type: string
+                              example: "根據近期支出模式，建議將食物預算調整為 13,500 元"
+                            action:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  example: "adjust_amount"
+                                budgetId:
+                                  type: string
+                                  example: "budget-uuid-001"
+                                suggestedAmount:
+                                  type: number
+                                  example: 13500
+                            confidence:
+                              type: number
+                              example: 0.87
+                              description: "建議信心度"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      summary: "建立預算"
+      description: |
+        建立新的預算設定，支援多種類型與週期設定。
+        不同模式提供不同的建立選項和預設值。
+        
+        **對應畫面**: S-308 建立預算頁
+        **四模式差異**: 可設定選項與預設值不同
+      tags:
+        - "預算管理"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # 基本資訊（必填）
+                name:
+                  type: string
+                  example: "交通費月預算"
+                  maxLength: 100
+                  minLength: 1
+                type:
+                  type: string
+                  enum: [category, account, tag, total]
+                  example: "category"
+                amount:
+                  type: number
+                  example: 3000
+                  minimum: 0.01
+                ledgerId:
+                  type: string
+                  example: "ledger-uuid-001"
+                  description: "所屬帳本 ID"
+                
+                # 選填資訊
+                description:
+                  type: string
+                  example: "控制每月交通相關支出"
+                  maxLength: 500
+                
+                # 週期設定
+                period:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [monthly, quarterly, yearly, custom]
+                      example: "monthly"
+                      default: "monthly"
+                    startDate:
+                      type: string
+                      format: date
+                      example: "2025-02-01"
+                      description: "開始日期（預設為下月1日）"
+                    endDate:
+                      type: string
+                      format: date
+                      example: "2025-02-28"
+                      description: "結束日期（custom 類型時必填）"
+                    duration:
+                      type: integer
+                      example: 12
+                      description: "持續期數（null = 無限期）"
+                      nullable: true
+                
+                # 目標設定（根據 type 不同）
+                target:
+                  type: object
+                  properties:
+                    # category 類型
+                    categoryId:
+                      type: string
+                      example: "category-uuid-transport"
+                      description: "科目 ID（category 類型時必填）"
+                    includeSubcategories:
+                      type: boolean
+                      example: true
+                      default: true
+                      description: "是否包含子科目"
+                    
+                    # account 類型
+                    accountId:
+                      type: string
+                      example: "account-uuid-001"
+                      description: "帳戶 ID（account 類型時必填）"
+                    
+                    # tag 類型
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                      example: ["交通", "通勤"]
+                      description: "標籤列表（tag 類型時必填）"
+                    
+                    # total 類型
+                    includeCategories:
+                      type: array
+                      items:
+                        type: string
+                      example: ["category-uuid-food", "category-uuid-transport"]
+                      description: "包含科目列表（total 類型時可選）"
+                    excludeCategories:
+                      type: array
+                      items:
+                        type: string
+                      example: ["category-uuid-investment"]
+                      description: "排除科目列表（total 類型時可選）"
+                
+                # Expert Mode: 進階設定
+                advanced:
+                  type: object
+                  properties:
+                    priority:
+                      type: integer
+                      example: 2
+                      minimum: 1
+                      maximum: 5
+                      default: 3
+                      description: "優先級（1=最高，5=最低）"
+                    autoRenew:
+                      type: boolean
+                      example: true
+                      default: true
+                      description: "是否自動續期"
+                    rollover:
+                      type: boolean
+                      example: false
+                      default: false
+                      description: "是否允許結餘轉入下期"
+                    flexibility:
+                      type: number
+                      example: 10
+                      minimum: 0
+                      maximum: 50
+                      default: 0
+                      description: "彈性比例（%），允許超支的百分比"
+                
+                # 警示設定
+                alerts:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      example: true
+                      default: true
+                    thresholds:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          percentage:
+                            type: number
+                            example: 80
+                            minimum: 1
+                            maximum: 100
+                          type:
+                            type: string
+                            enum: [warning, critical]
+                            example: "warning"
+                      example:
+                        - percentage: 80
+                          type: warning
+                        - percentage: 100
+                          type: critical
+                      default:
+                        - percentage: 80
+                          type: warning
+                        - percentage: 100
+                          type: critical
+                    notificationMethods:
+                      type: array
+                      items:
+                        type: string
+                        enum: [app, email, line]
+                      example: ["app", "line"]
+                      default: ["app"]
+                
+                # 模板套用
+                template:
+                  type: object
+                  properties:
+                    useTemplate:
+                      type: boolean
+                      example: false
+                    templateId:
+                      type: string
+                      example: "template-monthly-basic"
+                    customizeFromHistory:
+                      type: boolean
+                      example: true
+                      description: "是否根據歷史數據自動調整"
+                    historyMonths:
+                      type: integer
+                      example: 3
+                      minimum: 1
+                      maximum: 12
+                      default: 3
+                      description: "參考歷史月數"
+              required:
+                - name
+                - type
+                - amount
+                - ledgerId
+      responses:
+        '201':
+          description: "預算建立成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      budgetId:
+                        type: string
+                        example: "budget-uuid-002"
+                      name:
+                        type: string
+                        example: "交通費月預算"
+                      type:
+                        type: string
+                        example: "category"
+                      amount:
+                        type: number
+                        example: 3000
+                      
+                      # 計算結果
+                      calculations:
+                        type: object
+                        properties:
+                          dailyBudget:
+                            type: number
+                            example: 107.14
+                            description: "日均預算"
+                          weeklyBudget:
+                            type: number
+                            example: 750
+                            description: "週均預算"
+                          projectedSavings:
+                            type: number
+                            example: 500
+                            description: "預計節省（基於歷史數據）"
+                          recommendedAdjustment:
+                            type: number
+                            example: 3200
+                            description: "建議金額（基於歷史分析）"
+                      
+                      # 設定確認
+                      setup:
+                        type: object
+                        properties:
+                          periodStart:
+                            type: string
+                            format: date
+                            example: "2025-02-01"
+                          periodEnd:
+                            type: string
+                            format: date
+                            example: "2025-02-28"
+                          alertsConfigured:
+                            type: integer
+                            example: 2
+                          autoRenewEnabled:
+                            type: boolean
+                            example: true
+                      
+                      # 四模式差異化建議
+                      suggestions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              enum: [related_budget, spending_tip, tracking_advice]
+                              example: "related_budget"
+                            title:
+                              type: string
+                              example: "考慮新增停車費預算"
+                            description:
+                              type: string
+                              example: "根據您的交通支出模式，建議單獨設定停車費預算"
+                            actionUrl:
+                              type: string
+                              example: "/budgets/create?categoryId=category-uuid-parking"
+                      
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:30:00Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: "預算設定衝突"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "BUDGET_CONFLICT"
+                      message:
+                        type: string
+                        example: "該科目已有相同週期的預算設定"
+                      field:
+                        type: string
+                        example: "target.categoryId"
+                      conflictingBudgetId:
+                        type: string
+                        example: "budget-uuid-existing"
+                      suggestions:
+                        type: array
+                        items:
+                          type: string
+                        example: ["修改現有預算", "選擇不同週期", "使用子科目預算"]
+
+  /budgets/{id}:
+    get:
+      summary: "取得預算詳情"
+      description: |
+        取得指定預算的詳細資訊，包含執行狀況、歷史趨勢等。
+        
+        **對應畫面**: S-307 預算管理主頁詳細檢視
+        **權限檢查**: 確認用戶對該預算有存取權限
+      tags:
+        - "預算查詢"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "預算 ID"
+          schema:
+            type: string
+            example: "budget-uuid-001"
+        - name: includeTransactions
+          in: query
+          description: "是否包含相關交易記錄"
+          schema:
+            type: boolean
+            default: false
+        - name: transactionLimit
+          in: query
+          description: "交易記錄筆數"
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: includeHistory
+          in: query
+          description: "是否包含歷史執行記錄"
+          schema:
+            type: boolean
+            default: true
+        - name: historyPeriods
+          in: query
+          description: "歷史期數"
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+            default: 6
+        - name: X-User-Mode
+          in: header
+          description: "用戶模式標識"
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: "成功取得預算詳情"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      # 基本資訊
+                      id:
+                        type: string
+                        example: "budget-uuid-001"
+                      name:
+                        type: string
+                        example: "食物月預算"
+                      type:
+                        type: string
+                        example: "category"
+                      description:
+                        type: string
+                        example: "控制每月食物支出"
+                      amount:
+                        type: number
+                        example: 12000
+                      currency:
+                        type: string
+                        example: "TWD"
+                      
+                      # 目標詳情
+                      target:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                            example: "category"
+                          category:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "category-uuid-food"
+                              name:
+                                type: string
+                                example: "食物"
+                              icon:
+                                type: string
+                                example: "🍔"
+                              includeSubcategories:
+                                type: boolean
+                                example: true
+                              subcategories:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      example: "category-uuid-restaurant"
+                                    name:
+                                      type: string
+                                      example: "餐廳"
+                                    included:
+                                      type: boolean
+                                      example: true
+                      
+                      # 當前週期執行狀況
+                      currentPeriod:
+                        type: object
+                        properties:
+                          startDate:
+                            type: string
+                            format: date
+                            example: "2025-01-01"
+                          endDate:
+                            type: string
+                            format: date
+                            example: "2025-01-31"
+                          daysTotal:
+                            type: integer
+                            example: 31
+                          daysElapsed:
+                            type: integer
+                            example: 27
+                          daysRemaining:
+                            type: integer
+                            example: 4
+                          
+                          # 金額執行
+                          execution:
+                            type: object
+                            properties:
+                              budgetAmount:
+                                type: number
+                                example: 12000
+                              usedAmount:
+                                type: number
+                                example: 8500
+                              remainingAmount:
+                                type: number
+                                example: 3500
+                              usagePercentage:
+                                type: number
+                                example: 70.83
+                              projectedAmount:
+                                type: number
+                                example: 10370
+                              projectedOverage:
+                                type: number
+                                example: -1630
+                                description: "預計超支金額（負數表示預計節省）"
+                              status:
+                                type: string
+                                enum: [on_track, warning, exceeded, completed]
+                                example: "warning"
+                          
+                          # 速度分析
+                          pace:
+                            type: object
+                            properties:
+                              expectedUsage:
+                                type: number
+                                example: 10451.61
+                                description: "預期使用金額（按時間比例）"
+                              actualUsage:
+                                type: number
+                                example: 8500
+                              paceRatio:
+                                type: number
+                                example: 0.81
+                                description: "執行速度比（<1=領先，>1=落後）"
+                              dailyTarget:
+                                type: number
+                                example: 387.10
+                                description: "每日目標金額"
+                              dailyActual:
+                                type: number
+                                example: 314.81
+                                description: "實際日均支出"
+                              recommendedDaily:
+                                type: number
+                                example: 875
+                                description: "剩餘期間建議日均支出"
+                      
+                      # Expert Mode: 詳細分析
+                      analytics:
+                        type: object
+                        properties:
+                          # 週度分析
+                          weeklyBreakdown:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                week:
+                                  type: integer
+                                  example: 1
+                                startDate:
+                                  type: string
+                                  format: date
+                                  example: "2025-01-01"
+                                endDate:
+                                  type: string
+                                  format: date
+                                  example: "2025-01-07"
+                                budgetAmount:
+                                  type: number
+                                  example: 2790.32
+                                actualAmount:
+                                  type: number
+                                  example: 2800
+                                variance:
+                                  type: number
+                                  example: 9.68
+                                variancePercentage:
+                                  type: number
+                                  example: 0.35
+                                status:
+                                  type: string
+                                  enum: [under, on_track, over]
+                                  example: "on_track"
+                          
+                          # 科目細分（如適用）
+                          categoryBreakdown:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                categoryId:
+                                  type: string
+                                  example: "category-uuid-restaurant"
+                                categoryName:
+                                  type: string
+                                  example: "餐廳"
+                                amount:
+                                  type: number
+                                  example: 5200
+                                percentage:
+                                  type: number
+                                  example: 61.18
+                                transactionCount:
+                                  type: integer
+                                  example: 18
+                                averageAmount:
+                                  type: number
+                                  example: 288.89
+                          
+                          # 時間模式分析
+                          timePatterns:
+                            type: object
+                            properties:
+                              peakDays:
+                                type: array
+                                items:
+                                  type: string
+                                  enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+                                example: ["friday", "saturday"]
+                              peakHours:
+                                type: array
+                                items:
+                                  type: integer
+                                example: [12, 18, 19]
+                              weekendVsWeekday:
+                                type: object
+                                properties:
+                                  weekendPercentage:
+                                    type: number
+                                    example: 45.2
+                                  weekdayPercentage:
+                                    type: number
+                                    example: 54.8
+                          
+                          # 趨勢分析
+                          trends:
+                            type: object
+                            properties:
+                              direction:
+                                type: string
+                                enum: [increasing, decreasing, stable]
+                                example: "stable"
+                              volatility:
+                                type: string
+                                enum: [low, medium, high]
+                                example: "medium"
+                              predictability:
+                                type: number
+                                example: 0.76
+                                description: "可預測性指數（0-1）"
+                              anomalies:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    date:
+                                      type: string
+                                      format: date
+                                      example: "2025-01-15"
+                                    amount:
+                                      type: number
+                                      example: 1200
+                                    expected:
+                                      type: number
+                                      example: 400
+                                    deviation:
+                                      type: number
+                                      example: 2.0
+                                    description:
+                                      type: string
+                                      example: "異常高額支出"
+                      
+                      # 歷史執行記錄
+                      history:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            period:
+                              type: object
+                              properties:
+                                startDate:
+                                  type: string
+                                  format: date
+                                  example: "2024-12-01"
+                                endDate:
+                                  type: string
+                                  format: date
+                                  example: "2024-12-31"
+                                monthName:
+                                  type: string
+                                  example: "2024年12月"
+                            budgetAmount:
+                              type: number
+                              example: 12000
+                            actualAmount:
+                              type: number
+                              example: 10800
+                            usagePercentage:
+                              type: number
+                              example: 90.0
+                            variance:
+                              type: number
+                              example: -1200
+                            status:
+                              type: string
+                              example: "on_track"
+                            grade:
+                              type: string
+                              enum: [A, B, C, D, F]
+                              example: "A"
+                              description: "執行評級"
+                      
+                      # 相關交易（如請求）
+                      recentTransactions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "transaction-uuid-001"
+                            amount:
+                              type: number
+                              example: 650
+                            description:
+                              type: string
+                              example: "午餐聚會"
+                            categoryName:
+                              type: string
+                              example: "餐廳"
+                            accountName:
+                              type: string
+                              example: "信用卡"
+                            date:
+                              type: string
+                              format: date
+                              example: "2025-01-27"
+                            impactPercentage:
+                              type: number
+                              example: 5.42
+                              description: "對預算的影響百分比"
+                      
+                      # 警示狀態
+                      alerts:
+                        type: object
+                        properties:
+                          activeAlerts:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "alert-uuid-001"
+                                type:
+                                  type: string
+                                  enum: [warning, critical, projection]
+                                  example: "warning"
+                                threshold:
+                                  type: number
+                                  example: 80
+                                triggeredAt:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-01-25T10:30:00Z"
+                                message:
+                                  type: string
+                                  example: "預算使用已達 80%"
+                                acknowledged:
+                                  type: boolean
+                                  example: false
+                          nextThreshold:
+                            type: object
+                            properties:
+                              percentage:
+                                type: number
+                                example: 100
+                              type:
+                                type: string
+                                example: "critical"
+                              estimatedDate:
+                                type: string
+                                format: date
+                                example: "2025-01-30"
+                                description: "預計觸發日期"
+                      
+                      # Cultivation Mode: 激勵資訊
+                      motivation:
+                        type: object
+                        properties:
+                          streak:
+                            type: integer
+                            example: 3
+                            description: "連續達標月數"
+                          bestPeriod:
+                            type: object
+                            properties:
+                              period:
+                                type: string
+                                example: "2024年10月"
+                              usagePercentage:
+                                type: number
+                                example: 67.2
+                              savedAmount:
+                                type: number
+                                example: 3936
+                          improvement:
+                            type: object
+                            properties:
+                              compared_to_last_period:
+                                type: number
+                                example: 12.5
+                                description: "相比上期改善百分比"
+                              compared_to_average:
+                                type: number
+                                example: 8.3
+                                description: "相比平均表現改善百分比"
+                          challenges:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "challenge-uuid-001"
+                                title:
+                                  type: string
+                                  example: "本月控制在 90% 以內"
+                                description:
+                                  type: string
+                                  example: "在月底前將預算使用控制在 90% 以內"
+                                progress:
+                                  type: number
+                                  example: 78.7
+                                target:
+                                  type: number
+                                  example: 90.0
+                                reward:
+                                  type: string
+                                  example: "獲得節約達人徽章"
+                                status:
+                                  type: string
+                                  enum: [active, completed, failed]
+                                  example: "active"
+                      
+                      # 設定資訊
+                      settings:
+                        type: object
+                        properties:
+                          isActive:
+                            type: boolean
+                            example: true
+                          priority:
+                            type: integer
+                            example: 1
+                          autoRenew:
+                            type: boolean
+                            example: true
+                          rollover:
+                            type: boolean
+                            example: false
+                          flexibility:
+                            type: number
+                            example: 10
+                          alertThresholds:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                percentage:
+                                  type: number
+                                  example: 80
+                                type:
+                                  type: string
+                                  example: "warning"
+                          notificationMethods:
+                            type: array
+                            items:
+                              type: string
+                            example: ["app", "line"]
+                      
+                      # 審計資訊
+                      audit:
+                        type: object
+                        properties:
+                          createdAt:
+                            type: string
+                            format: date-time
+                            example: "2025-01-01T00:00:00Z"
+                          updatedAt:
+                            type: string
+                            format: date-time
+                            example: "2025-01-20T15:30:00Z"
+                          createdBy:
+                            type: string
+                            example: "user-uuid-12345"
+                          lastCalculatedAt:
+                            type: string
+                            format: date-time
+                            example: "2025-01-27T12:30:00Z"
+                          calculationVersion:
+                            type: string
+                            example: "v2.1.0"
+                          totalPeriods:
+                            type: integer
+                            example: 4
+                            description: "總執行期數"
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    put:
+      summary: "更新預算"
+      description: |
+        更新預算的設定、金額或警示條件。
+        
+        **對應畫面**: S-307 預算管理主頁編輯功能
+        **權限檢查**: 需要對該預算有編輯權限
+      tags:
+        - "預算管理"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "預算 ID"
+          schema:
+            type: string
+            example: "budget-uuid-001"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # 基本資訊
+                name:
+                  type: string
+                  example: "食物與餐飲月預算"
+                  maxLength: 100
+                description:
+                  type: string
+                  example: "包含所有食物相關支出的月度預算"
+                  maxLength: 500
+                amount:
+                  type: number
+                  example: 13500
+                  minimum: 0.01
+                
+                # 週期調整（僅限當前週期之後）
+                period:
+                  type: object
+                  properties:
+                    duration:
+                      type: integer
+                      example: 24
+                      description: "調整總期數"
+                    autoRenew:
+                      type: boolean
+                      example: true
+                
+                # 目標調整
+                target:
+                  type: object
+                  properties:
+                    includeSubcategories:
+                      type: boolean
+                      example: true
+                    # 其他目標設定與建立時相同
+                
+                # 設定更新
+                settings:
+                  type: object
+                  properties:
+                    priority:
+                      type: integer
+                      example: 1
+                      minimum: 1
+                      maximum: 5
+                    rollover:
+                      type: boolean
+                      example: true
+                    flexibility:
+                      type: number
+                      example: 15
+                      minimum: 0
+                      maximum: 50
+                    isActive:
+                      type: boolean
+                      example: true
+                
+                # 警示更新
+                alerts:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      example: true
+                    thresholds:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          percentage:
+                            type: number
+                            example: 75
+                          type:
+                            type: string
+                            enum: [warning, critical]
+                            example: "warning"
+                    notificationMethods:
+                      type: array
+                      items:
+                        type: string
+                        enum: [app, email, line]
+                      example: ["app", "email"]
+      responses:
+        '200':
+          description: "預算更新成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      budgetId:
+                        type: string
+                        example: "budget-uuid-001"
+                      message:
+                        type: string
+                        example: "預算更新成功"
+                      updatedFields:
+                        type: array
+                        items:
+                          type: string
+                        example: ["name", "amount", "alerts.thresholds"]
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      
+                      # 影響分析
+                      impact:
+                        type: object
+                        properties:
+                          amountChange:
+                            type: number
+                            example: 1500
+                            description: "金額變更"
+                          usagePercentageChange:
+                            type: number
+                            example: -11.85
+                            description: "使用率變化"
+                          newDailyBudget:
+                            type: number
+                            example: 1125
+                            description: "新的每日剩餘預算"
+                          alertsTriggered:
+                            type: array
+                            items:
+                              type: string
+                            example: []
+                            description: "因更新觸發的新警示"
+                          
+                          # 歷史影響
+                          historicalImpact:
+                            type: object
+                            properties:
+                              affectedPeriods:
+                                type: integer
+                                example: 0
+                                description: "影響的歷史期數"
+                              recalculationNeeded:
+                                type: boolean
+                                example: false
+                      
+                      # 建議
+                      recommendations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: "adjustment_tip"
+                            message:
+                              type: string
+                              example: "預算增加後，建議重新檢視相關子科目的分配"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      summary: "刪除預算"
+      description: |
+        刪除指定預算，保留執行歷史記錄以供分析。
+        
+        **對應畫面**: S-307 預算管理主頁刪除功能
+        **權限檢查**: 需要對該預算有刪除權限
+        **業務邏輯**: 軟刪除，保留歷史數據
+      tags:
+        - "預算管理"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "預算 ID"
+          schema:
+            type: string
+            example: "budget-uuid-001"
+        - name: deleteHistory
+          in: query
+          description: "是否同時刪除歷史記錄"
+          schema:
+            type: boolean
+            default: false
+        - name: reason
+          in: query
+          description: "刪除原因"
+          schema:
+            type: string
+            enum: [no_longer_needed, replaced_by_other, wrong_setup, other]
+            example: "no_longer_needed"
+      responses:
+        '200':
+          description: "預算刪除成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      budgetId:
+                        type: string
+                        example: "budget-uuid-001"
+                      message:
+                        type: string
+                        example: "預算已刪除"
+                      deletedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      
+                      # 刪除影響
+                      impact:
+                        type: object
+                        properties:
+                          periodsExecuted:
+                            type: integer
+                            example: 4
+                            description: "已執行期數"
+                          historyPreserved:
+                            type: boolean
+                            example: true
+                            description: "是否保留歷史記錄"
+                          alertsRemoved:
+                            type: integer
+                            example: 3
+                            description: "移除的警示數量"
+                          
+                          # 相關影響
+                          relatedBudgets:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                budgetId:
+                                  type: string
+                                  example: "budget-uuid-002"
+                                budgetName:
+                                  type: string
+                                  example: "總支出預算"
+                                relationship:
+                                  type: string
+                                  example: "included_in_total"
+                            description: "受影響的相關預算"
+                      
+                      # 統計摘要
+                      summary:
+                        type: object
+                        properties:
+                          totalPeriods:
+                            type: integer
+                            example: 4
+                          averageUsageRate:
+                            type: number
+                            example: 82.5
+                            description: "平均使用率"
+                          bestPerformance:
+                            type: number
+                            example: 67.2
+                            description: "最佳表現率"
+                          totalSavings:
+                            type: number
+                            example: 8400
+                            description: "累計節省金額"
+        '400':
+          description: "無法刪除預算"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "BUDGET_CANNOT_DELETE"
+                      message:
+                        type: string
+                        example: "預算當前週期尚未結束，無法刪除"
+                      details:
+                        type: object
+                        properties:
+                          currentPeriodEnd:
+                            type: string
+                            format: date
+                            example: "2025-01-31"
+                          relatedBudgets:
+                            type: integer
+                            example: 2
+                          suggestions:
+                            type: array
+                            items:
+                              type: string
+                            example: ["暫停預算", "等到期間結束", "修改而非刪除"]
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /budgets/status:
+    get:
+      summary: "取得預算執行狀況"
+      description: |
+        取得所有預算的即時執行狀況摘要，用於主頁展示。
+        
+        **對應畫面**: S-202 APP 記帳主頁預算區塊
+        **四模式差異**: 顯示詳細程度不同
+      tags:
+        - "預算查詢"
+      parameters:
+        - name: ledgerId
+          in: query
+          description: "指定帳本 ID"
+          schema:
+            type: string
+            example: "ledger-uuid-001"
+        - name: includeInactive
+          in: query
+          description: "是否包含非活躍預算"
+          schema:
+            type: boolean
+            default: false
+        - name: X-User-Mode
+          in: header
+          description: "用戶模式標識"
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: "成功取得預算狀況"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      # 總體狀況
+                      overview:
+                        type: object
+                        properties:
+                          totalBudgets:
+                            type: integer
+                            example: 8
+                          activeBudgets:
+                            type: integer
+                            example: 6
+                          totalBudgetAmount:
+                            type: number
+                            example: 35000
+                          totalUsedAmount:
+                            type: number
+                            example: 22500
+                          overallUsagePercentage:
+                            type: number
+                            example: 64.29
+                          overallStatus:
+                            type: string
+                            enum: [excellent, good, warning, critical]
+                            example: "good"
+                      
+                      # 狀況分布
+                      statusDistribution:
+                        type: object
+                        properties:
+                          onTrack:
+                            type: integer
+                            example: 4
+                          warning:
+                            type: integer
+                            example: 2
+                          exceeded:
+                            type: integer
+                            example: 0
+                          completed:
+                            type: integer
+                            example: 2
+                      
+                      # 預算列表（簡化）
+                      budgets:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "budget-uuid-001"
+                            name:
+                              type: string
+                              example: "食物"
+                            amount:
+                              type: number
+                              example: 12000
+                            used:
+                              type: number
+                              example: 8500
+                            percentage:
+                              type: number
+                              example: 70.83
+                            status:
+                              type: string
+                              enum: [on_track, warning, exceeded, completed]
+                              example: "warning"
+                            daysRemaining:
+                              type: integer
+                              example: 4
+                            # Expert Mode: 詳細資訊
+                            trend:
+                              type: string
+                              enum: [improving, stable, worsening]
+                              example: "stable"
+                            projectedOverage:
+                              type: number
+                              example: -1630
+                              description: "預計超支金額"
+                      
+                      # 警示摘要
+                      alerts:
+                        type: object
+                        properties:
+                          total:
+                            type: integer
+                            example: 3
+                          byType:
+                            type: object
+                            properties:
+                              warning:
+                                type: integer
+                                example: 2
+                              critical:
+                                type: integer
+                                example: 1
+                              projection:
+                                type: integer
+                                example: 0
+                          recent:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                budgetId:
+                                  type: string
+                                  example: "budget-uuid-001"
+                                budgetName:
+                                  type: string
+                                  example: "食物"
+                                type:
+                                  type: string
+                                  example: "warning"
+                                message:
+                                  type: string
+                                  example: "預算使用已達 80%"
+                                triggeredAt:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-01-25T10:30:00Z"
+                      
+                      # Cultivation Mode: 成就資訊
+                      achievements:
+                        type: object
+                        properties:
+                          monthlyGoalProgress:
+                            type: number
+                            example: 85.5
+                            description: "月度目標達成率"
+                          streakCount:
+                            type: integer
+                            example: 3
+                            description: "連續達標月數"
+                          improvementTrend:
+                            type: string
+                            enum: [improving, stable, needs_attention]
+                            example: "improving"
+                          savingsThisMonth:
+                            type: number
+                            example: 2800
+                            description: "本月節省金額"
+                      
+                      # Expert Mode: 趨勢分析
+                      trends:
+                        type: object
+                        properties:
+                          overallTrend:
+                            type: string
+                            enum: [improving, stable, worsening]
+                            example: "stable"
+                          volatility:
+                            type: string
+                            enum: [low, medium, high]
+                            example: "medium"
+                          predictability:
+                            type: number
+                            example: 0.78
+                            description: "可預測性指數"
+                          riskScore:
+                            type: number
+                            example: 0.35
+                            description: "風險評分（0-1，越高越危險）"
+                      
+                      # 建議行動
+                      actionItems:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            priority:
+                              type: string
+                              enum: [high, medium, low]
+                              example: "high"
+                            type:
+                              type: string
+                              enum: [budget_adjustment, spending_review, alert_setup, category_analysis]
+                              example: "spending_review"
+                            title:
+                              type: string
+                              example: "檢視食物支出模式"
+                            description:
+                              type: string
+                              example: "食物預算使用率較高，建議檢視近期支出明細"
+                            budgetId:
+                              type: string
+                              example: "budget-uuid-001"
+                            actionUrl:
+                              type: string
+                              example: "/budgets/budget-uuid-001/analysis"
+                      
+                      # 更新時間
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:30:00Z"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /budgets/templates:
+    get:
+      summary: "取得預算模板列表"
+      description: |
+        取得系統提供的預算模板，便於快速建立常用預算。
+        
+        **對應畫面**: S-308 建立預算頁模板選擇
+        **四模式差異**: 推薦模板與複雜度不同
+      tags:
+        - "預算設定"
+      parameters:
+        - name: category
+          in: query
+          description: "模板分類"
+          schema:
+            type: string
+            enum: [beginner, family, business, student, all]
+            default: all
+        - name: type
+          in: query
+          description: "預算類型"
+          schema:
+            type: string
+            enum: [category, account, tag, total]
+        - name: X-User-Mode
+          in: header
+          description: "用戶模式標識"
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: "成功取得預算模板"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      # 推薦模板（基於用戶模式）
+                      recommended:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "template-monthly-basic"
+                            name:
+                              type: string
+                              example: "基礎月度預算"
+                            description:
+                              type: string
+                              example: "適合新手的簡單月度預算設定"
+                            category:
+                              type: string
+                              example: "beginner"
+                            complexity:
+                              type: string
+                              enum: [simple, standard, advanced]
+                              example: "simple"
+                            estimatedSetupTime:
+                              type: integer
+                              example: 5
+                              description: "預估設定時間（分鐘）"
+                            popularity:
+                              type: number
+                              example: 4.8
+                              description: "使用者評分"
+                            usageCount:
+                              type: integer
+                              example: 1250
+                              description: "使用次數"
+                      
+                      # 模板分類
+                      categories:
+                        type: object
+                        properties:
+                          beginner:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "template-beginner-food"
+                                name:
+                                  type: string
+                                  example: "新手食物預算"
+                                suggestedAmount:
+                                  type: number
+                                  example: 8000
+                                period:
+                                  type: string
+                                  example: "monthly"
+                                features:
+                                  type: array
+                                  items:
+                                    type: string
+                                  example: ["簡單設定", "基本警示", "月度週期"]
+                          family:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "template-family-comprehensive"
+                                name:
+                                  type: string
+                                  example: "家庭綜合預算"
+                                suggestedAmount:
+                                  type: number
+                                  example: 25000
+                                period:
+                                  type: string
+                                  example: "monthly"
+                                features:
+                                  type: array
+                                  items:
+                                    type: string
+                                  example: ["多科目預算", "子預算設定", "家庭成員分配"]
+                          business:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "template-business-expense"
+                                name:
+                                  type: string
+                                  example: "商務支出預算"
+                                suggestedAmount:
+                                  type: number
+                                  example: 15000
+                                period:
+                                  type: string
+                                  example: "monthly"
+                                features:
+                                  type: array
+                                  items:
+                                    type: string
+                                  example: ["商務分類", "稅務考量", "報表整合"]
+                      
+                      # 自訂模板建議
+                      customSuggestions:
+                        type: array
+                        description: "基於用戶歷史數據的客製化建議"
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: "category"
+                            categoryName:
+                              type: string
+                              example: "交通"
+                            suggestedAmount:
+                              type: number
+                              example: 3200
+                            basedOnData:
+                              type: object
+                              properties:
+                                analysisMonths:
+                                  type: integer
+                                  example: 6
+                                averageAmount:
+                                  type: number
+                                  example: 2980
+                                maxAmount:
+                                  type: number
+                                  example: 4200
+                                confidence:
+                                  type: number
+                                  example: 0.85
+                            reasoning:
+                              type: string
+                              example: "根據過去 6 個月的交通支出數據分析"
+                      
+                      # 模板詳情
+                      templateDetails:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            description:
+                              type: string
+                            configuration:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum: [category, account, tag, total]
+                                period:
+                                  type: string
+                                  enum: [monthly, quarterly, yearly]
+                                defaultAmount:
+                                  type: number
+                                alerts:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      percentage:
+                                        type: number
+                                      type:
+                                        type: string
+                                includedCategories:
+                                  type: array
+                                  items:
+                                    type: string
+                                settings:
+                                  type: object
+                                  properties:
+                                    autoRenew:
+                                      type: boolean
+                                    rollover:
+                                      type: boolean
+                                    priority:
+                                      type: integer
+                            instructions:
+                              type: array
+                              items:
+                                type: string
+                              example: ["選擇主要食物科目", "設定月度金額", "啟用 80% 警示"]
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /budgets/alert:
+    post:
+      summary: "設定預算警示"
+      description: |
+        為指定預算建立或更新警示設定，支援多種觸發條件。
+        
+        **使用場景**: 批次警示設定、動態警示調整
+      tags:
+        - "預算管理"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                budgetId:
+                  type: string
+                  example: "budget-uuid-001"
+                alerts:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [percentage, amount, projection, time_based]
+                        example: "percentage"
+                      condition:
+                        type: object
+                        properties:
+                          # percentage 類型
+                          percentage:
+                            type: number
+                            example: 90
+                            minimum: 1
+                            maximum: 200
+                          # amount 類型
+                          amount:
+                            type: number
+                            example: 10000
+                          # projection 類型
+                          projectedOverage:
+                            type: number
+                            example: 1000
+                          # time_based 類型
+                          daysRemaining:
+                            type: integer
+                            example: 7
+                      severity:
+                        type: string
+                        enum: [info, warning, critical]
+                        example: "warning"
+                      message:
+                        type: string
+                        example: "預算使用已達 90%，請注意控制支出"
+                      enabled:
+                        type: boolean
+                        example: true
+                      methods:
+                        type: array
+                        items:
+                          type: string
+                          enum: [app, email, line, sms]
+                        example: ["app", "line"]
+                      frequency:
+                        type: string
+                        enum: [once, daily, weekly]
+                        example: "once"
+                        description: "通知頻率"
+              required:
+                - budgetId
+                - alerts
+      responses:
+        '201':
+          description: "警示設定成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      budgetId:
+                        type: string
+                        example: "budget-uuid-001"
+                      alertsCreated:
+                        type: integer
+                        example: 3
+                      alertsUpdated:
+                        type: integer
+                        example: 1
+                      alertIds:
+                        type: array
+                        items:
+                          type: string
+                        example: ["alert-uuid-001", "alert-uuid-002", "alert-uuid-003"]
+                      message:
+                        type: string
+                        example: "預算警示設定完成"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Firebase Auth JWT Token"
+
+  responses:
+    UnauthorizedError:
+      description: "未授權存取"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "UNAUTHORIZED"
+                  message:
+                    type: string
+                    example: "Token 無效或已過期"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+
+    ValidationError:
+      description: "請求參數驗證失敗"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "VALIDATION_ERROR"
+                  message:
+                    type: string
+                    example: "請求參數不正確"
+                  field:
+                    type: string
+                    example: "amount"
+                  details:
+                    type: string
+                    example: "預算金額必須大於 0"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+
+    NotFoundError:
+      description: "資源不存在"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "BUDGET_NOT_FOUND"
+                  message:
+                    type: string
+                    example: "找不到指定的預算"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+
+tags:
+  - name: "預算查詢"
+    description: "預算資訊查詢相關功能"
+  - name: "預算管理"
+    description: "預算建立、修改、刪除功能"
+  - name: "預算設定"
+    description: "預算模板和設定相關功能"
