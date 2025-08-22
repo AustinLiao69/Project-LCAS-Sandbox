@@ -899,104 +899,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
-  /users/verify-pin:
-    post:
-      summary: "驗證用戶 PIN 碼"
-      description: |
-        驗證用戶輸入的 PIN 碼，用於應用鎖解鎖等安全操作。
-        
-        **安全考量**: PIN 碼傳輸加密、失敗次數限制、防暴力破解
-      tags:
-        - "安全驗證"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                pinCode:
-                  type: string
-                  example: "encrypted-pin-input"
-                  description: "加密後的 PIN 碼輸入"
-                deviceId:
-                  type: string
-                  example: "device-uuid-67890"
-              required:
-                - pinCode
-      responses:
-        '200':
-          description: "PIN 碼驗證成功"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      verified:
-                        type: boolean
-                        example: true
-                      sessionToken:
-                        type: string
-                        example: "temp-session-token"
-                        description: "臨時會話 token，用於後續操作"
-                      expiresAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T13:00:00Z"
-        '400':
-          description: "PIN 碼錯誤或請求無效"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                        example: "INVALID_PIN"
-                      message:
-                        type: string
-                        example: "PIN 碼錯誤"
-                      remainingAttempts:
-                        type: integer
-                        example: 2
-                      lockoutTime:
-                        type: integer
-                        example: 300
-                        description: "鎖定時間（秒），失敗次數過多時"
-        '429':
-          description: "嘗試次數過多，暫時鎖定"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                        example: "TOO_MANY_ATTEMPTS"
-                      message:
-                        type: string
-                        example: "嘗試次數過多，請稍後再試"
-                      retryAfter:
-                        type: integer
-                        example: 300
+  
 
 components:
   securitySchemes:
@@ -1097,8 +1000,7 @@ tags:
     description: "使用者模式切換與配置管理"
   - name: "安全管理"
     description: "應用安全與隱私設定"
-  - name: "安全驗證"
-    description: "PIN 碼、生物辨識等安全驗證"
+  
   - name: "行為分析"
     description: "使用行為追蹤與分析"
   - name: "個人化推薦"
