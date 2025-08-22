@@ -530,7 +530,7 @@ async function createSubjectsCollection(ledgerId) {
     });
 
     // 導入完整科目資料
-    const subjectData = require('../Project documents/9999. Subject_code.json');
+    const subjectData = require('../00. Replit_Project documents/0099. Subject_code.json');
     const batch = db.batch();
 
     console.log(`🔄 開始導入 ${subjectData.length} 筆科目資料...`);
@@ -728,7 +728,7 @@ async function initUserSubjects(userUID, ledgerIdPrefix = 'user_') {
     const userLedgerId = `${ledgerIdPrefix}${userUID}`;
 
     // 導入完整科目資料
-    const subjectData = require('../Project documents/9999. Subject_code.json');
+    const subjectData = require('../00. Replit_Project documents/0099. Subject_code.json');
     const batch = db.batch();
 
     console.log(`📋 準備導入 ${subjectData.length} 筆科目資料到 ${userLedgerId}...`);
