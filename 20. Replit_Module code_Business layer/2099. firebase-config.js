@@ -133,13 +133,90 @@ async function validateFirebaseConfig() {
   }
 }
 
+/**
+ * 05. 取得專案資訊
+ * @version 2025-08-22-V1.1.0
+ * @date 2025-08-22 10:00:00
+ * @description 取得Firebase專案的基本資訊
+ */
+function getProjectInfo() {
+  try {
+    return {
+      PROJECT_ID: process.env.FIREBASE_PROJECT_ID || 'default-project',
+      UNIVERSE_DOMAIN: process.env.FIREBASE_UNIVERSE_DOMAIN || 'googleapis.com',
+      CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL || '',
+      AUTH_URI: process.env.FIREBASE_AUTH_URI || 'https://accounts.google.com/o/oauth2/auth'
+    };
+  } catch (error) {
+    console.error('❌ 取得專案資訊失敗:', error.message);
+    return {
+      PROJECT_ID: 'default-project',
+      UNIVERSE_DOMAIN: 'googleapis.com',
+      CLIENT_EMAIL: '',
+      AUTH_URI: 'https://accounts.google.com/o/oauth2/auth'
+    };
+  }
+}
+
+/**
+ * 06. 檢查環境變數
+ * @version 2025-08-22-V1.1.0
+ * @date 2025-08-22 10:00:00
+ * @description 檢查Firebase相關環境變數的設定狀態
+ */
+function checkEnvironmentVariables() {
+  try {
+    const requiredVars = {
+      FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+      FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? '已設定' : '未設定',
+      FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
+      FIREBASE_PRIVATE_KEY_ID: process.env.FIREBASE_PRIVATE_KEY_ID,
+      FIREBASE_CLIENT_ID: process.env.FIREBASE_CLIENT_ID
+    };
+
+    const status = {
+      allSet: true,
+      missing: [],
+      present: [],
+      details: requiredVars
+    };
+
+    Object.keys(requiredVars).forEach(key => {
+      if (!process.env[key]) {
+        status.allSet = false;
+        status.missing.push(key);
+      } else {
+        status.present.push(key);
+      }
+    });
+
+    console.log(`✅ 環境變數檢查完成: ${status.present.length}個已設定, ${status.missing.length}個缺失`);
+    
+    if (status.missing.length > 0) {
+      console.warn('⚠️ 缺失的環境變數:', status.missing.join(', '));
+    }
+
+    return status;
+  } catch (error) {
+    console.error('❌ 環境變數檢查失敗:', error.message);
+    return {
+      allSet: false,
+      missing: [],
+      present: [],
+      error: error.message
+    };
+  }
+}
+
 // 導出模組
 module.exports = {
   admin,
   initializeFirebaseAdmin,
   getFirestoreInstance,
   createFirebaseConfig,
-  validateFirebaseConfig
+  validateFirebaseConfig,
+  getProjectInfo,
+  checkEnvironmentVariables
 };
 
 // 自動驗證配置（僅在模組載入時執行一次）

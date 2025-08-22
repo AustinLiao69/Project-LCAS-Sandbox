@@ -32,8 +32,15 @@ try {
   console.error('❌ FS模組：Firebase動態配置載入失敗:', error.message);
 
   // 檢查環境變數設定狀態
-  const envCheck = firebaseConfig.checkEnvironmentVariables();
-  console.log('💡 請檢查Replit Secrets中的Firebase環境變數設定');
+  try {
+    const envCheck = firebaseConfig.checkEnvironmentVariables();
+    console.log('💡 請檢查Replit Secrets中的Firebase環境變數設定');
+    if (envCheck.missing.length > 0) {
+      console.log('🔍 缺失的環境變數:', envCheck.missing.join(', '));
+    }
+  } catch (checkError) {
+    console.warn('⚠️ 無法檢查環境變數:', checkError.message);
+  }
 
   // 設定預設值以避免模組完全失效
   PROJECT_ID = 'default-project';
