@@ -40,109 +40,11 @@ security:
   - bearerAuth: []
 
 paths:
-  /ai/assistant/chat:
+  /ai/categorize:
     post:
       tags:
-        - AI 對話助理
-      summary: 與 AI 助理對話
-      description: |
-        與 AI 助理進行自然語言對話，支援記帳、查詢、建議等功能。
-        四模式差異：
-        - Expert: 專業術語理解、複雜查詢處理、深度分析對話
-        - Inertial: 標準對話模式、常見問題處理
-        - Cultivation: 習慣引導對話、目標設定協助
-        - Guiding: 簡化對話、基礎功能引導
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ChatRequest'
-      responses:
-        '200':
-          description: AI 助理回應成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/ChatResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '429':
-          $ref: '#/components/responses/RateLimit'
-
-  /ai/assistant/context:
-    get:
-      tags:
-        - AI 對話助理
-      summary: 取得對話上下文
-      description: 取得當前對話的上下文資訊與歷史記錄
-      parameters:
-        - name: sessionId
-          in: query
-          description: 對話 Session ID
-          schema:
-            type: string
-        - name: limit
-          in: query
-          description: 歷史記錄筆數限制
-          schema:
-            type: integer
-            default: 10
-            maximum: 50
-      responses:
-        '200':
-          description: 成功取得對話上下文
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/ChatContext'
-
-    delete:
-      tags:
-        - AI 對話助理
-      summary: 清除對話上下文
-      description: 清除指定 Session 的對話歷史
-      parameters:
-        - name: sessionId
-          in: query
-          required: true
-          description: 對話 Session ID
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 對話上下文清除成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "對話上下文已清除"
-
-  /ai/classification/suggest:
-    post:
-      tags:
-        - 智慧分類
-      summary: 取得科目分類建議
+        - AI 智慧分類
+      summary: AI 智慧分類
       description: |
         基於交易描述和歷史資料，提供智慧科目分類建議。
         四模式差異：
@@ -170,121 +72,11 @@ paths:
                   data:
                     $ref: '#/components/schemas/ClassificationSuggestion'
 
-  /ai/classification/learn:
-    post:
-      tags:
-        - 智慧分類
-      summary: 學習用戶分類習慣
-      description: |
-        記錄用戶的分類選擇，用於改進未來的分類建議。
-        支援批量學習和即時回饋機制。
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LearningRequest'
-      responses:
-        '200':
-          description: 學習記錄成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      learned:
-                        type: integer
-                        example: 1
-                      accuracy:
-                        type: number
-                        example: 0.87
-                        description: 當前模型準確度
-
-  /ai/insights/financial:
+  /ai/suggestions:
     get:
       tags:
-        - 財務洞察
-      summary: 取得財務洞察分析
-      description: |
-        基於 AI 分析提供個人化財務洞察與建議。
-        四模式差異：
-        - Expert: 深度財務分析、投資建議、風險評估
-        - Inertial: 標準財務報告、基本建議
-        - Cultivation: 目標導向洞察、習慣改善建議
-        - Guiding: 簡化洞察、易懂建議
-      parameters:
-        - name: period
-          in: query
-          description: 分析期間
-          schema:
-            type: string
-            enum: [week, month, quarter, year]
-            default: month
-        - name: focus
-          in: query
-          description: 分析重點
-          schema:
-            type: string
-            enum: [spending, saving, budgeting, investment]
-        - name: includeForecasting
-          in: query
-          description: 是否包含預測分析
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: 成功取得財務洞察
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/FinancialInsights'
-
-  /ai/anomaly/detect:
-    post:
-      tags:
-        - 異常檢測
-      summary: 檢測異常交易
-      description: |
-        使用 AI 模型檢測可能的異常交易或支出模式。
-        支援即時檢測和批量分析。
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AnomalyDetectionRequest'
-      responses:
-        '200':
-          description: 異常檢測完成
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/AnomalyDetectionResult'
-
-  /ai/recommendations/personal:
-    get:
-      tags:
-        - 個人化建議
-      summary: 取得個人化財務建議
+        - AI 建議
+      summary: AI 建議
       description: |
         基於用戶的財務狀況和目標，提供個人化建議。
         四模式差異：
@@ -313,7 +105,7 @@ paths:
             enum: [short, medium, long]
       responses:
         '200':
-          description: 成功取得個人化建議
+          description: 成功取得 AI 建議
           content:
             application/json:
               schema:
@@ -325,11 +117,11 @@ paths:
                   data:
                     $ref: '#/components/schemas/PersonalRecommendations'
 
-  /ai/goals/advisor:
+  /ai/budget-advice:
     post:
       tags:
-        - 目標建議
-      summary: 財務目標顧問
+        - AI 預算建議
+      summary: AI 預算建議
       description: |
         協助設定和追蹤財務目標，提供達成建議。
         支援短期、中期、長期目標規劃。
@@ -341,7 +133,7 @@ paths:
               $ref: '#/components/schemas/GoalAdvisorRequest'
       responses:
         '200':
-          description: 目標建議成功
+          description: 預算建議成功
           content:
             application/json:
               schema:
@@ -353,23 +145,23 @@ paths:
                   data:
                     $ref: '#/components/schemas/GoalAdvisorResponse'
 
-  /ai/nlp/parse:
+  /ai/anomaly-detection:
     post:
       tags:
-        - 自然語言處理
-      summary: 解析自然語言記帳指令
+        - 異常檢測
+      summary: 異常檢測
       description: |
-        將用戶的自然語言輸入解析為結構化的記帳資料。
-        支援多種語言表達方式和複雜語句結構。
+        使用 AI 模型檢測可能的異常交易或支出模式。
+        支援即時檢測和批量分析。
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NLPParseRequest'
+              $ref: '#/components/schemas/AnomalyDetectionRequest'
       responses:
         '200':
-          description: 自然語言解析成功
+          description: 異常檢測完成
           content:
             application/json:
               schema:
@@ -379,27 +171,45 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    $ref: '#/components/schemas/NLPParseResult'
-        '422':
-          $ref: '#/components/responses/ValidationError'
+                    $ref: '#/components/schemas/AnomalyDetectionResult'
 
-  /ai/training/feedback:
+  /ai/spending-insights:
     post:
       tags:
-        - 模型訓練
-      summary: 提供訓練回饋
+        - AI 支出洞察
+      summary: AI 支出洞察
       description: |
-        收集用戶對 AI 建議的回饋，用於改進模型準確度。
-        支援多維度評分和詳細回饋。
+        基於 AI 分析提供個人化財務洞察與建議。
+        四模式差異：
+        - Expert: 深度財務分析、投資建議、風險評估
+        - Inertial: 標準財務報告、基本建議
+        - Cultivation: 目標導向洞察、習慣改善建議
+        - Guiding: 簡化洞察、易懂建議
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TrainingFeedbackRequest'
+              type: object
+              required:
+                - period
+              properties:
+                period:
+                  type: string
+                  enum: [week, month, quarter, year]
+                  default: month
+                  description: 分析期間
+                focus:
+                  type: string
+                  enum: [spending, saving, budgeting, investment]
+                  description: 分析重點
+                includeForecasting:
+                  type: boolean
+                  default: false
+                  description: 是否包含預測分析
       responses:
         '200':
-          description: 訓練回饋記錄成功
+          description: 成功取得支出洞察
           content:
             application/json:
               schema:
@@ -409,17 +219,52 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: object
-                    properties:
-                      feedbackId:
-                        type: string
-                        description: 回饋記錄 ID
-                      modelVersion:
-                        type: string
-                        description: 當前模型版本
-                      thanksMessage:
-                        type: string
-                        example: "感謝您的回饋！這將幫助我們改進 AI 助理。"
+                    $ref: '#/components/schemas/FinancialInsights'
+
+  /ai/recommendations:
+    get:
+      tags:
+        - AI 個人化推薦
+      summary: AI 個人化推薦
+      description: |
+        基於用戶的財務狀況和目標，提供個人化推薦。
+        四模式差異：
+        - Expert: 專業投資建議、詳細理財規劃
+        - Inertial: 實用省錢建議、基本理財原則
+        - Cultivation: 習慣養成建議、目標達成計畫
+        - Guiding: 簡單易行建議、基礎理財知識
+      parameters:
+        - name: recommendationType
+          in: query
+          description: 建議類型
+          schema:
+            type: string
+            enum: [saving, budgeting, investment, debt, general]
+        - name: riskTolerance
+          in: query
+          description: 風險承受度
+          schema:
+            type: string
+            enum: [conservative, moderate, aggressive]
+        - name: timeHorizon
+          in: query
+          description: 投資時間範圍
+          schema:
+            type: string
+            enum: [short, medium, long]
+      responses:
+        '200':
+          description: 成功取得個人化推薦
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/PersonalRecommendations'
 
 components:
   securitySchemes:
@@ -1614,19 +1459,15 @@ components:
                 $ref: '#/components/schemas/Error'
 
 tags:
-  - name: AI 對話助理
-    description: 自然語言對話與智慧助理功能
-  - name: 智慧分類
-    description: 自動科目分類與學習功能
-  - name: 財務洞察
-    description: AI 驅動的財務分析與洞察
+  - name: AI 智慧分類
+    description: 自動科目分類功能
+  - name: AI 建議
+    description: 基於 AI 的財務建議
+  - name: AI 預算建議
+    description: AI 預算建議功能
   - name: 異常檢測
     description: 智慧異常交易檢測
-  - name: 個人化建議
-    description: 基於 AI 的個人化財務建議
-  - name: 目標建議
-    description: 財務目標設定與達成建議
-  - name: 自然語言處理
-    description: 自然語言記帳指令解析
-  - name: 模型訓練
-    description: AI 模型訓練與回饋機制
+  - name: AI 支出洞察
+    description: AI 驅動的支出分析與洞察
+  - name: AI 個人化推薦
+    description: 基於 AI 的個人化推薦
