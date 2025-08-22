@@ -1693,6 +1693,494 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
+  /transactions/batch:
+    put:
+      summary: "批次更新交易記錄"
+      description: |
+        批次更新多筆交易記錄，支援批量修改。
+        
+        **使用場景**: 批次修改交易類別、帳戶等
+        **限制**: 每次最多處理 100 筆記錄
+      tags:
+        - "批次操作"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updates:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: object
+                    properties:
+                      transactionId:
+                        type: string
+                        example: "transaction-uuid-12345"
+                      amount:
+                        type: number
+                        example: 160
+                      categoryId:
+                        type: string
+                        example: "category-uuid-food"
+                      accountId:
+                        type: string
+                        example: "account-uuid-001"
+                      description:
+                        type: string
+                        example: "午餐（修改）"
+                      tags:
+                        type: array
+                        items:
+                          type: string
+                        example: ["修改", "批次"]
+                    required:
+                      - transactionId
+              required:
+                - updates
+      responses:
+        '200':
+          description: "批次更新完成"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      processed:
+                        type: integer
+                        example: 95
+                      successful:
+                        type: integer
+                        example: 90
+                      failed:
+                        type: integer
+                        example: 5
+                      
+                      results:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            transactionId:
+                              type: string
+                              example: "transaction-uuid-12345"
+                            status:
+                              type: string
+                              enum: [success, failed]
+                              example: "success"
+                            error:
+                              type: string
+                              example: "交易記錄不存在"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      summary: "批次刪除交易記錄"
+      description: |
+        批次刪除多筆交易記錄。
+        
+        **使用場景**: 批次清理、匯入錯誤資料清除
+        **限制**: 每次最多處理 100 筆記錄
+      tags:
+        - "批次操作"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transactionIds:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: string
+                  example: ["transaction-uuid-001", "transaction-uuid-002"]
+                deleteRecurring:
+                  type: boolean
+                  default: false
+                  description: "是否同時刪除關聯的重複設定"
+              required:
+                - transactionIds
+      responses:
+        '200':
+          description: "批次刪除完成"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      processed:
+                        type: integer
+                        example: 50
+                      successful:
+                        type: integer
+                        example: 48
+                      failed:
+                        type: integer
+                        example: 2
+                      
+                      deletedTransactions:
+                        type: array
+                        items:
+                          type: string
+                        example: ["transaction-uuid-001", "transaction-uuid-003"]
+                      
+                      affectedAccounts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            accountId:
+                              type: string
+                              example: "account-uuid-001"
+                            balanceChange:
+                              type: number
+                              example: 1500
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /transactions/recent:
+    get:
+      summary: "取得最近交易記錄"
+      description: |
+        取得用戶最近的交易記錄，用於快速瀏覽。
+        
+        **對應畫面**: S-202 APP 記帳主頁
+        **用途**: 主頁最近交易區塊顯示
+      tags:
+        - "交易查詢"
+      parameters:
+        - name: limit
+          in: query
+          description: "取得筆數"
+          schema:
+            type: integer
+            example: 10
+            default: 10
+            maximum: 50
+        - name: ledgerId
+          in: query
+          description: "帳本 ID"
+          schema:
+            type: string
+            example: "ledger-uuid-001"
+        - name: type
+          in: query
+          description: "交易類型篩選"
+          schema:
+            type: string
+            enum: [income, expense, transfer, all]
+            default: all
+      responses:
+        '200':
+          description: "成功取得最近交易"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      transactions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "transaction-uuid-001"
+                            amount:
+                              type: number
+                              example: 150
+                            type:
+                              type: string
+                              example: "expense"
+                            category:
+                              type: string
+                              example: "食物"
+                            categoryIcon:
+                              type: string
+                              example: "🍽️"
+                            date:
+                              type: string
+                              format: date
+                              example: "2025-01-27"
+                            description:
+                              type: string
+                              example: "午餐"
+                            account:
+                              type: string
+                              example: "現金"
+                            createdAt:
+                              type: string
+                              format: date-time
+                              example: "2025-01-27T12:30:00Z"
+                      totalCount:
+                        type: integer
+                        example: 156
+                      hasMore:
+                        type: boolean
+                        example: true
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /transactions/charts:
+    get:
+      summary: "取得圖表數據"
+      description: |
+        取得交易圖表展示所需的數據。
+        
+        **對應畫面**: S-211 統計圖表頁
+        **用途**: 圖表視覺化展示
+      tags:
+        - "統計分析"
+      parameters:
+        - name: chartType
+          in: query
+          description: "圖表類型"
+          schema:
+            type: string
+            enum: [pie, bar, line, trend]
+            default: pie
+        - name: period
+          in: query
+          description: "統計期間"
+          schema:
+            type: string
+            enum: [week, month, quarter, year]
+            default: month
+        - name: ledgerId
+          in: query
+          description: "帳本 ID"
+          schema:
+            type: string
+            example: "ledger-uuid-001"
+        - name: groupBy
+          in: query
+          description: "分組維度"
+          schema:
+            type: string
+            enum: [category, account, month, week]
+            default: category
+      responses:
+        '200':
+          description: "成功取得圖表數據"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      chartType:
+                        type: string
+                        example: "pie"
+                      period:
+                        type: object
+                        properties:
+                          start:
+                            type: string
+                            format: date
+                            example: "2025-01-01"
+                          end:
+                            type: string
+                            format: date
+                            example: "2025-01-31"
+                      
+                      chartData:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            label:
+                              type: string
+                              example: "食物"
+                            value:
+                              type: number
+                              example: 8000
+                            percentage:
+                              type: number
+                              example: 22.86
+                            color:
+                              type: string
+                              example: "#FF6384"
+                            count:
+                              type: integer
+                              example: 45
+                      
+                      summary:
+                        type: object
+                        properties:
+                          totalAmount:
+                            type: number
+                            example: 35000
+                          totalTransactions:
+                            type: integer
+                            example: 156
+                          averageAmount:
+                            type: number
+                            example: 224.36
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /transactions/import:
+    post:
+      summary: "匯入交易記錄"
+      description: |
+        從外部檔案或系統匯入交易記錄。
+        
+        **支援格式**: CSV, Excel
+        **使用場景**: 銀行對帳單匯入、其他記帳系統資料轉移
+      tags:
+        - "批次操作"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: "匯入檔案 (CSV/Excel)"
+                ledgerId:
+                  type: string
+                  example: "ledger-uuid-001"
+                  description: "目標帳本 ID"
+                mappingConfig:
+                  type: string
+                  example: '{"amount": "金額", "date": "日期", "description": "說明"}'
+                  description: "欄位對應設定 JSON"
+                skipFirstRow:
+                  type: boolean
+                  default: true
+                  description: "是否跳過標題行"
+                duplicateHandling:
+                  type: string
+                  enum: [skip, overwrite, create_new]
+                  default: skip
+                  description: "重複記錄處理方式"
+              required:
+                - file
+                - ledgerId
+      responses:
+        '200':
+          description: "匯入處理完成"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      importId:
+                        type: string
+                        example: "import-uuid-001"
+                      totalRows:
+                        type: integer
+                        example: 120
+                      processed:
+                        type: integer
+                        example: 120
+                      successful:
+                        type: integer
+                        example: 115
+                      failed:
+                        type: integer
+                        example: 3
+                      skipped:
+                        type: integer
+                        example: 2
+                      
+                      importSummary:
+                        type: object
+                        properties:
+                          totalAmount:
+                            type: number
+                            example: 45000
+                          incomeCount:
+                            type: integer
+                            example: 25
+                          expenseCount:
+                            type: integer
+                            example: 90
+                          transferCount:
+                            type: integer
+                            example: 0
+                      
+                      errors:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            row:
+                              type: integer
+                              example: 5
+                            error:
+                              type: string
+                              example: "日期格式不正確"
+                            data:
+                              type: object
+                              example: {"金額": "abc", "日期": "2025/01/30"}
+        '400':
+          description: "匯入檔案格式錯誤或處理失敗"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "IMPORT_FILE_ERROR"
+                      message:
+                        type: string
+                        example: "檔案格式不支援或包含錯誤"
+                      details:
+                        type: array
+                        items:
+                          type: string
+                        example: ["欄位對應設定格式錯誤", "檔案大小超過 10MB 限制"]
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
   /transactions/recurring:
     get:
       summary: "查詢重複交易設定"
@@ -1908,6 +2396,166 @@ paths:
                         example: "2025-01-27T12:30:00Z"
         '400':
           $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /transactions/recurring/{id}:
+    put:
+      summary: "更新重複交易設定"
+      description: |
+        更新指定的重複交易設定。
+        
+        **對應畫面**: S-208 重複設定頁
+        **業務邏輯**: 更新後重新計算下次執行時間
+      tags:
+        - "重複交易"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "重複交易設定 ID"
+          schema:
+            type: string
+            example: "recurring-uuid-001"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "每月房租（調整）"
+                amount:
+                  type: number
+                  example: 16000
+                categoryId:
+                  type: string
+                  example: "category-uuid-rent"
+                accountId:
+                  type: string
+                  example: "account-uuid-001"
+                frequency:
+                  type: string
+                  enum: [daily, weekly, monthly, yearly]
+                  example: "monthly"
+                interval:
+                  type: integer
+                  example: 1
+                endDate:
+                  type: string
+                  format: date
+                  example: "2025-12-31"
+                status:
+                  type: string
+                  enum: [active, paused]
+                  example: "active"
+                description:
+                  type: string
+                  example: "租屋處月租費（調整後）"
+                notifications:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      example: true
+                    advanceDays:
+                      type: integer
+                      example: 2
+      responses:
+        '200':
+          description: "重複交易設定更新成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      recurringId:
+                        type: string
+                        example: "recurring-uuid-001"
+                      message:
+                        type: string
+                        example: "重複交易設定更新成功"
+                      updatedFields:
+                        type: array
+                        items:
+                          type: string
+                        example: ["amount", "endDate", "notifications"]
+                      nextExecutionDate:
+                        type: string
+                        format: date
+                        example: "2025-02-01"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      summary: "刪除重複交易設定"
+      description: |
+        刪除指定的重複交易設定。
+        
+        **對應畫面**: S-208 重複設定頁
+        **業務邏輯**: 軟刪除設定，但保留已產生的交易記錄
+      tags:
+        - "重複交易"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "重複交易設定 ID"
+          schema:
+            type: string
+            example: "recurring-uuid-001"
+        - name: deleteExistingTransactions
+          in: query
+          description: "是否同時刪除已產生的交易記錄"
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: "重複交易設定刪除成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      recurringId:
+                        type: string
+                        example: "recurring-uuid-001"
+                      message:
+                        type: string
+                        example: "重複交易設定已刪除"
+                      deletedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      affectedTransactions:
+                        type: integer
+                        example: 0
+                        description: "被同時刪除的交易記錄數量"
+        '404':
+          $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
