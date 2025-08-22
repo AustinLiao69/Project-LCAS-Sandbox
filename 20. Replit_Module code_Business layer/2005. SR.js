@@ -9,6 +9,9 @@ const admin = require('firebase-admin');
 const cron = require('node-cron');
 const moment = require('moment-timezone');
 
+// 引入Firebase動態配置模組
+const firebaseConfig = require('./2099. firebase-config');
+
 // 引入依賴模組
 let DL, WH, AM, FS, DD1, BK, LBK;
 try {
@@ -152,7 +155,7 @@ async function SR_createScheduledReminder(userId, reminderData) {
 
     // 生成提醒ID
     const reminderId = `reminder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // 建立提醒記錄
     const reminderRecord = {
       reminderId,
@@ -222,7 +225,7 @@ async function SR_updateScheduledReminder(reminderId, userId, updateData) {
     }
 
     const reminderData = reminderDoc.data();
-    
+
     // 驗證擁有者
     if (reminderData.userId !== userId) {
       throw new Error('權限不足：只能修改自己的提醒');
@@ -302,7 +305,7 @@ async function SR_deleteScheduledReminder(reminderId, userId, confirmationToken)
     }
 
     const reminderData = reminderDoc.data();
-    
+
     // 驗證擁有者
     if (reminderData.userId !== userId) {
       throw new Error('權限不足：只能刪除自己的提醒');
@@ -348,7 +351,7 @@ async function SR_deleteScheduledReminder(reminderId, userId, confirmationToken)
 async function SR_executeScheduledTask(reminderId, retryCount = 0) {
   const functionName = "SR_executeScheduledTask";
   const maxRetries = 3;
-  
+
   try {
     SR_logInfo(`執行排程任務: ${reminderId} (重試次數: ${retryCount})`, "執行任務", "", "", "", functionName);
 
@@ -372,7 +375,7 @@ async function SR_executeScheduledTask(reminderId, retryCount = 0) {
     }
 
     const reminderData = reminderDoc.data();
-    
+
     // 檢查提醒是否仍處於活躍狀態
     if (!reminderData.active) {
       SR_logWarning(`提醒已被停用: ${reminderId}`, "執行任務", reminderData.userId, "", "", functionName);
@@ -386,7 +389,7 @@ async function SR_executeScheduledTask(reminderId, retryCount = 0) {
     const skipExecution = await SR_shouldSkipExecution(reminderData);
     if (skipExecution.skip) {
       SR_logInfo(`跳過執行: ${skipExecution.reason}`, "執行任務", reminderData.userId, "", "", functionName);
-      
+
       // 計算下次執行時間（考慮跳過邏輯）
       const nextExecution = await SR_calculateNextExecutionWithSkip(reminderData);
       await reminderDoc.ref.update({
@@ -394,7 +397,7 @@ async function SR_executeScheduledTask(reminderId, retryCount = 0) {
         lastSkipped: admin.firestore.Timestamp.now(),
         skipReason: skipExecution.reason
       });
-      
+
       return {
         executed: false,
         reason: skipExecution.reason,
@@ -473,7 +476,7 @@ async function SR_executeScheduledTask(reminderId, retryCount = 0) {
 
   } catch (error) {
     SR_logError(`執行排程任務失敗: ${error.message}`, "執行任務", "", "SR_EXECUTE_ERROR", error.toString(), functionName);
-    
+
     // 更新失敗記錄
     try {
       const reminderDoc = await db.collection('scheduled_reminders').doc(reminderId).get();
@@ -493,11 +496,11 @@ async function SR_executeScheduledTask(reminderId, retryCount = 0) {
     if (retryCount < maxRetries) {
       const retryDelay = Math.pow(2, retryCount) * 1000; // 指數退避
       SR_logWarning(`${retryDelay/1000}秒後進行第${retryCount + 1}次重試`, "執行任務", "", "", "", functionName);
-      
+
       setTimeout(async () => {
         await SR_executeScheduledTask(reminderId, retryCount + 1);
       }, retryDelay);
-      
+
       return {
         executed: false,
         error: error.message,
@@ -511,7 +514,7 @@ async function SR_executeScheduledTask(reminderId, retryCount = 0) {
         error: error.message,
         retryCount
       }, { reminderId });
-      
+
       return {
         executed: false,
         error: error.message,
@@ -542,12 +545,12 @@ async function SR_processHolidayLogic(date, holidayHandling = 'skip', userTimezo
     // 整合多種假日資料來源
     let isHoliday = false;
     let holidayName = '';
-    
+
     try {
       // 1. 優先查詢政府開放資料（透過API或快取）
       const governmentHolidays = await SR_getGovernmentHolidays(year);
       const govHoliday = governmentHolidays.find(h => h.date === dateStr);
-      
+
       if (govHoliday) {
         isHoliday = true;
         holidayName = govHoliday.name;
@@ -587,33 +590,33 @@ async function SR_processHolidayLogic(date, holidayHandling = 'skip', userTimezo
 
     if (isWeekend || isHoliday) {
       const reasonType = isHoliday ? `國定假日(${holidayName})` : '週末';
-      
+
       switch (holidayHandling) {
         case 'skip':
           shouldSkip = true;
           adjustmentReason = `跳過${reasonType}`;
           break;
-          
+
         case 'next_workday':
           // 智慧尋找下一個工作日（考慮連續假期）
           adjustedDate = await SR_findNextWorkday(userDate, userTimezone);
           adjustmentReason = `${reasonType}調整至下一工作日`;
           break;
-          
+
         case 'previous_workday':
           // 智慧尋找前一個工作日
           adjustedDate = await SR_findPreviousWorkday(userDate, userTimezone);
           adjustmentReason = `${reasonType}調整至前一工作日`;
           break;
-          
+
         case 'smart_adjust':
           // 智慧調整：根據距離選擇最近的工作日
           const nextWorkday = await SR_findNextWorkday(userDate, userTimezone);
           const prevWorkday = await SR_findPreviousWorkday(userDate, userTimezone);
-          
+
           const nextDiff = moment(nextWorkday).diff(userDate, 'days');
           const prevDiff = userDate.diff(moment(prevWorkday), 'days');
-          
+
           if (nextDiff <= prevDiff) {
             adjustedDate = nextWorkday;
             adjustmentReason = `${reasonType}智慧調整至下一工作日`;
@@ -622,7 +625,7 @@ async function SR_processHolidayLogic(date, holidayHandling = 'skip', userTimezo
             adjustmentReason = `${reasonType}智慧調整至前一工作日`;
           }
           break;
-          
+
         default:
           shouldSkip = true;
           adjustmentReason = `跳過${reasonType}`;
@@ -675,12 +678,12 @@ async function SR_getGovernmentHolidays(year) {
     // 先檢查快取
     const cacheKey = `gov_holidays_${year}`;
     const cachedData = await db.collection('holiday_cache').doc(cacheKey).get();
-    
+
     if (cachedData.exists) {
       const cache = cachedData.data();
       const now = new Date();
       const cacheAge = now - cache.timestamp.toDate();
-      
+
       // 快取有效期24小時
       if (cacheAge < 24 * 60 * 60 * 1000) {
         return cache.holidays;
@@ -689,11 +692,11 @@ async function SR_getGovernmentHolidays(year) {
 
     // 政府開放資料API端點
     const apiUrl = `https://data.gov.tw/api/v1/rest/datastore_search?resource_id=W2C00702-E2BC-4D95-9667-65ACB6A8C8D4&filters={"date":"${year}"}`;
-    
+
     try {
       const fetch = require('node-fetch'); // 需要安裝 node-fetch
       const response = await fetch(apiUrl, { timeout: 5000 });
-      
+
       if (response.ok) {
         const data = await response.json();
         const holidays = data.result?.records?.map(record => ({
@@ -701,24 +704,24 @@ async function SR_getGovernmentHolidays(year) {
           name: record.name,
           type: record.isHoliday === 'true' ? 'holiday' : 'workday'
         })) || [];
-        
+
         // 更新快取
         await db.collection('holiday_cache').doc(cacheKey).set({
           holidays,
           timestamp: admin.firestore.Timestamp.now(),
           source: 'government_api'
         });
-        
+
         SR_logInfo(`政府假日資料取得成功: ${holidays.length}筆`, "假日處理", "", "", "", functionName);
         return holidays;
       }
     } catch (apiError) {
       SR_logWarning(`政府API呼叫失敗: ${apiError.message}`, "假日處理", "", "", "", functionName);
     }
-    
+
     // API失敗時返回空陣列，使用其他備案
     return [];
-    
+
   } catch (error) {
     SR_logError(`取得政府假日資料失敗: ${error.message}`, "假日處理", "", "SR_GOV_API_ERROR", error.toString(), functionName);
     return [];
@@ -769,7 +772,7 @@ async function SR_validatePremiumFeature(userId, featureName, operationContext =
         quotaLimited: false, 
         description: '基礎統計查詢' 
       },
-      
+
       // 付費功能
       'AUTO_PUSH': { 
         level: 'premium', 
@@ -840,7 +843,7 @@ async function SR_validatePremiumFeature(userId, featureName, operationContext =
 
     // 計算用戶權限等級 - 嚴格布爾邏輯
     const hasPremiumAccess = Boolean(subscriptionStatus.isPremium === true || trialStatus.isInTrial === true);
-    
+
     // 付費功能權限檢查
     if (feature.level === 'premium' && !hasPremiumAccess) {
       return {
@@ -910,7 +913,7 @@ async function SR_validatePremiumFeature(userId, featureName, operationContext =
     };
 
     SR_logInfo(`功能權限驗證通過: ${featureName} (${feature.level})`, "權限驗證", userId, "", JSON.stringify(successResponse), functionName);
-    
+
     return successResponse;
 
   } catch (error) {
@@ -949,18 +952,18 @@ async function SR_checkSubscriptionStatus(userId) {
     if (AM && typeof AM.AM_getUserInfo === 'function') {
       try {
         const userInfo = await AM.AM_getUserInfo(userId, userId, true);
-        
+
         // 嚴格驗證 AM 模組返回值
         if (userInfo && typeof userInfo === 'object' && userInfo.success === true) {
           const userData = userInfo.userData || {};
           const subscription = userData.subscription || {};
-          
+
           // 嚴格類型轉換和驗證
           const subscriptionType = String(subscription.type || 'free');
           const isPremiumUser = Boolean(subscriptionType === 'premium');
           const features = Array.isArray(subscription.features) ? 
             subscription.features : ['basic_reminders', 'manual_statistics'];
-          
+
           const result = {
             isPremium: isPremiumUser,  // 嚴格布爾值
             subscriptionType: subscriptionType,
@@ -968,15 +971,15 @@ async function SR_checkSubscriptionStatus(userId) {
             features: features,
             source: 'AM_module'
           };
-          
+
           SR_logInfo(`訂閱狀態查詢成功: ${isPremiumUser ? 'Premium' : 'Free'} (${subscriptionType})`, 
                     "訂閱檢查", userId, "", JSON.stringify(result), functionName);
-          
+
           return result;
         } else {
           SR_logWarning(`AM模組返回無效數據: ${JSON.stringify(userInfo)}`, "訂閱檢查", userId, "", "", functionName);
         }
-        
+
       } catch (amError) {
         SR_logWarning(`AM模組查詢異常: ${amError.message}`, "訂閱檢查", userId, "AM_QUERY_ERROR", amError.toString(), functionName);
       }
@@ -998,7 +1001,7 @@ async function SR_checkSubscriptionStatus(userId) {
 
   } catch (error) {
     SR_logError(`檢查訂閱狀態失敗: ${error.message}`, "訂閱檢查", userId, "SR_SUBSCRIPTION_ERROR", error.toString(), functionName);
-    
+
     // 錯誤時的安全預設值
     return {
       isPremium: false,  // 明確布爾false
@@ -1020,7 +1023,7 @@ async function SR_enforceFreeUserLimits(userId, actionType) {
   const functionName = "SR_enforceFreeUserLimits";
   try {
     const subscriptionStatus = await SR_checkSubscriptionStatus(userId);
-    
+
     if (subscriptionStatus.isPremium) {
       return {
         enforced: false,
@@ -1045,7 +1048,7 @@ async function SR_enforceFreeUserLimits(userId, actionType) {
           violationType = 'MAX_REMINDERS';
         }
         break;
-      
+
       case 'PUSH_NOTIFICATION':
         if (!limits.pushNotifications) {
           violated = true;
@@ -1321,12 +1324,12 @@ async function SR_processQuickReplyStatistics(userId, postbackData) {
         period = 'today';
         statsResult = await SR_getDirectStatistics(userId, 'daily');
         break;
-      
+
       case '本週統計':
         period = 'week';
         statsResult = await SR_getDirectStatistics(userId, 'weekly');
         break;
-      
+
       case '本月統計':
         period = 'month';
         statsResult = await SR_getDirectStatistics(userId, 'monthly');
@@ -1348,7 +1351,7 @@ async function SR_processQuickReplyStatistics(userId, postbackData) {
 
   } catch (error) {
     SR_logError(`處理Quick Reply統計失敗: ${error.message}`, "Quick Reply", userId, "SR_QUICKREPLY_ERROR", error.toString(), functionName);
-    
+
     return {
       success: false,
       message: '統計查詢失敗，請稍後再試',
@@ -1553,7 +1556,7 @@ async function SR_handleSchedulerError(errorType, errorData, context) {
  */
 async function SR_handleQuickReplyInteraction(userId, postbackData, messageContext = {}) {
   const functionName = "SR_handleQuickReplyInteraction";
-  
+
   try {
     SR_logInfo(`處理Quick Reply互動: ${postbackData}`, "Quick Reply", userId, "", "", functionName);
 
@@ -1563,7 +1566,7 @@ async function SR_handleQuickReplyInteraction(userId, postbackData, messageConte
     // 直接路由分發，不使用複雜會話管理
     if (['今日統計', '本週統計', '本月統計'].includes(postbackData)) {
       interactionType = 'statistics';
-      
+
       // 檢查統計查詢權限
       const permissionCheck = await SR_validatePremiumFeature(userId, 'BASIC_STATISTICS');
       if (!permissionCheck.allowed) {
@@ -1574,19 +1577,19 @@ async function SR_handleQuickReplyInteraction(userId, postbackData, messageConte
       } else {
         response = await SR_processQuickReplyStatistics(userId, postbackData);
       }
-      
+
     } else if (['upgrade_premium', '立即升級'].includes(postbackData)) {
       interactionType = 'upgrade';
       response = await SR_handlePaywallQuickReply(userId, 'upgrade', messageContext);
-      
+
     } else if (['試用', '免費試用', 'start_trial'].includes(postbackData)) {
       interactionType = 'trial';
       response = await SR_handlePaywallQuickReply(userId, 'trial', messageContext);
-      
+
     } else if (['功能介紹', '了解更多', 'learn_more'].includes(postbackData)) {
       interactionType = 'info';
       response = await SR_handlePaywallQuickReply(userId, 'info', messageContext);
-      
+
     } else {
       // 未知的 postback
       interactionType = 'unknown';
@@ -1607,12 +1610,12 @@ async function SR_handleQuickReplyInteraction(userId, postbackData, messageConte
     }
 
     SR_logInfo(`Quick Reply處理完成: ${interactionType}`, "Quick Reply", userId, "", "", functionName);
-    
+
     return response;
 
   } catch (error) {
     SR_logError(`處理Quick Reply互動失敗: ${error.message}`, "Quick Reply", userId, "SR_INTERACTION_ERROR", error.toString(), functionName);
-    
+
     return {
       success: false,
       message: '系統暫時無法處理您的請求，請稍後再試',
@@ -1643,7 +1646,7 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
     const subscriptionStatus = await SR_checkSubscriptionStatus(userId);
     const trialStatus = await SR_checkTrialStatus(userId);
     const hasPremiumAccess = subscriptionStatus.isPremium || trialStatus.isInTrial;
-    
+
     let options = [];
     const maxOptions = 4; // LINE Quick Reply 限制
 
@@ -1655,7 +1658,7 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
           SR_QUICK_REPLY_CONFIG.STATISTICS.WEEKLY,
           SR_QUICK_REPLY_CONFIG.STATISTICS.MONTHLY
         ];
-        
+
         // 付費用戶可額外看到提醒管理
         if (hasPremiumAccess) {
           options.push({ label: '提醒管理', postbackData: 'manage_reminders' });
@@ -1665,11 +1668,11 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
       case 'paywall':
         // 付費功能牆選項
         options = [];
-        
+
         if (!trialStatus.hasUsedTrial) {
           options.push(SR_QUICK_REPLY_CONFIG.PREMIUM.TRIAL);
         }
-        
+
         options.push(SR_QUICK_REPLY_CONFIG.PREMIUM.UPGRADE);
         options.push(SR_QUICK_REPLY_CONFIG.PREMIUM.INFO);
         options.push({ label: '查看統計', postbackData: '今日統計' });
@@ -1682,7 +1685,7 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
           { label: '功能比較', postbackData: '功能介紹' },
           { label: '繼續免費', postbackData: '今日統計' }
         ];
-        
+
         if (!trialStatus.hasUsedTrial) {
           options.unshift(SR_QUICK_REPLY_CONFIG.PREMIUM.TRIAL);
         }
@@ -1694,7 +1697,7 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
           SR_QUICK_REPLY_CONFIG.STATISTICS.TODAY,
           { label: '設定提醒', postbackData: 'setup_reminder' }
         ];
-        
+
         if (!hasPremiumAccess) {
           options.push({ label: '升級會員', postbackData: 'upgrade_premium' });
         }
@@ -1717,12 +1720,12 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
     };
 
     SR_logInfo(`生成${options.length}個Quick Reply選項`, "Quick Reply", userId, "", "", functionName);
-    
+
     return result;
 
   } catch (error) {
     SR_logError(`生成Quick Reply選項失敗: ${error.message}`, "Quick Reply", userId, "SR_GENERATE_ERROR", error.toString(), functionName);
-    
+
     // 錯誤時回傳最基本的安全選項
     return {
       type: 'quick_reply',
@@ -1889,7 +1892,7 @@ async function SR_handlePaywallQuickReply(userId, actionType, context = {}) {
       case 'blocked':
         const blockedFeature = context.blockedFeature || '此功能';
         const reason = context.reason || '需要 Premium 訂閱';
-        
+
         response = {
           success: false,
           message: `🔒 ${blockedFeature}需要升級
@@ -1925,7 +1928,7 @@ ${trialStatus.hasUsedTrial ? '立即升級享受完整體驗' : '也可以先免
 
   } catch (error) {
     SR_logError(`處理付費功能牆失敗: ${error.message}`, "付費功能", userId, "SR_PAYWALL_ERROR", error.toString(), functionName);
-    
+
     return {
       success: false,
       message: '系統暫時無法處理，請稍後再試',
@@ -2013,7 +2016,7 @@ ${reminderData.subjectName}${reminderData.amount}`;
  */
 async function SR_shouldSkipExecution(reminderData) {
   const now = new Date();
-  
+
   if (reminderData.skipWeekends) {
     const dayOfWeek = moment(now).day();
     if (dayOfWeek === 0 || dayOfWeek === 6) {
@@ -2140,7 +2143,7 @@ async function SR_getUserReminderCount(userId) {
       .where('userId', '==', userId)
       .where('active', '==', true)
       .get();
-    
+
     return snapshot.size;
   } catch (error) {
     return 0;
@@ -2180,7 +2183,7 @@ async function SR_getBuiltInHolidays(year) {
     { date: '2025-05-01', name: '勞動節', type: 'national' },
     { date: '2025-10-10', name: '國慶日', type: 'national' }
   ];
-  
+
   return year === '2025' ? holidays2025 : [];
 }
 
@@ -2193,7 +2196,7 @@ async function SR_getBuiltInHolidays(year) {
 async function SR_findNextWorkday(date, timezone) {
   let nextDay = moment(date).tz(timezone).add(1, 'day');
   let maxAttempts = 10; // 防止無限循環
-  
+
   while (maxAttempts > 0) {
     const holidayCheck = await SR_processHolidayLogic(nextDay.toDate(), 'skip', timezone);
     if (!holidayCheck.isWeekend && !holidayCheck.isHoliday) {
@@ -2202,7 +2205,7 @@ async function SR_findNextWorkday(date, timezone) {
     nextDay.add(1, 'day');
     maxAttempts--;
   }
-  
+
   return nextDay.toDate(); // 返回最後嘗試的日期
 }
 
@@ -2215,7 +2218,7 @@ async function SR_findNextWorkday(date, timezone) {
 async function SR_findPreviousWorkday(date, timezone) {
   let prevDay = moment(date).tz(timezone).subtract(1, 'day');
   let maxAttempts = 10; // 防止無限循環
-  
+
   while (maxAttempts > 0) {
     const holidayCheck = await SR_processHolidayLogic(prevDay.toDate(), 'skip', timezone);
     if (!holidayCheck.isWeekend && !holidayCheck.isHoliday) {
@@ -2224,7 +2227,7 @@ async function SR_findPreviousWorkday(date, timezone) {
     prevDay.subtract(1, 'day');
     maxAttempts--;
   }
-  
+
   return prevDay.toDate(); // 返回最後嘗試的日期
 }
 
@@ -2272,10 +2275,10 @@ async function SR_checkTrialStatus(userId) {
         source: 'user_not_exists'
       };
     }
-    
+
     const userData = userDoc.data();
     const trial = userData.trial || {};
-    
+
     // 檢查是否有試用記錄
     if (!trial.startDate) {
       SR_logInfo('用戶無試用記錄', "試用狀態", userId, "", "", functionName);
@@ -2287,7 +2290,7 @@ async function SR_checkTrialStatus(userId) {
         source: 'no_trial_record'
       };
     }
-    
+
     // 計算試用期狀態
     let trialStart, trialEnd, now;
     try {
@@ -2304,12 +2307,12 @@ async function SR_checkTrialStatus(userId) {
         error: '日期計算錯誤'
       };
     }
-    
+
     // 嚴格布爾值計算
     const isCurrentlyInTrial = Boolean(now.isBefore(trialEnd) && now.isAfter(trialStart));
     const hasExpired = Boolean(now.isAfter(trialEnd));
     const daysLeft = Math.max(0, Math.floor(trialEnd.diff(now, 'days', true)));
-    
+
     const result = {
       hasUsedTrial: true,          // 明確布爾true
       isInTrial: isCurrentlyInTrial,    // 明確布爾值
@@ -2323,12 +2326,12 @@ async function SR_checkTrialStatus(userId) {
 
     SR_logInfo(`試用狀態: ${isCurrentlyInTrial ? '進行中' : (hasExpired ? '已過期' : '未開始')} (${daysLeft}天)`, 
               "試用狀態", userId, "", JSON.stringify(result), functionName);
-    
+
     return result;
-    
+
   } catch (error) {
     SR_logError(`檢查試用狀態失敗: ${error.message}`, "試用狀態", userId, "SR_TRIAL_ERROR", error.toString(), functionName);
-    
+
     // 錯誤時的安全預設值
     return { 
       hasUsedTrial: false,  // 明確布爾false
@@ -2384,23 +2387,23 @@ async function SR_checkFeatureQuota(userId, featureName, maxQuota) {
     // CREATE_REMINDER 功能的配額檢查
     if (featureName === 'CREATE_REMINDER') {
       let usedCount = 0;
-      
+
       try {
         const used = await SR_getUserReminderCount(userId);
         usedCount = Number(used) || 0;
-        
+
         // 確保數值有效性
         if (usedCount < 0) {
           usedCount = 0;
         }
-        
+
       } catch (countError) {
         SR_logError(`取得提醒數量失敗: ${countError.message}`, "配額檢查", userId, "COUNT_ERROR", countError.toString(), functionName);
         usedCount = quotaLimit; // 安全起見，假設已達上限
       }
 
       const isAvailable = Boolean(usedCount < quotaLimit);
-      
+
       const result = {
         available: isAvailable,  // 明確布爾值
         used: usedCount,
@@ -2411,10 +2414,10 @@ async function SR_checkFeatureQuota(userId, featureName, maxQuota) {
 
       SR_logInfo(`配額檢查結果: ${isAvailable ? '可用' : '已滿'} (${usedCount}/${quotaLimit})`, 
                 "配額檢查", userId, "", JSON.stringify(result), functionName);
-      
+
       return result;
     }
-    
+
     // 其他功能的配額檢查 - 預設無限制
     const otherFeatureResult = { 
       available: true,  // 明確布爾true
@@ -2424,12 +2427,12 @@ async function SR_checkFeatureQuota(userId, featureName, maxQuota) {
     };
 
     SR_logInfo(`其他功能配額檢查: 無限制`, "配額檢查", userId, "", JSON.stringify(otherFeatureResult), functionName);
-    
+
     return otherFeatureResult;
-    
+
   } catch (error) {
     SR_logError(`檢查功能配額失敗: ${error.message}`, "配額檢查", userId, "SR_QUOTA_ERROR", error.toString(), functionName);
-    
+
     // 錯誤時的安全預設值
     return { 
       available: false,  // 明確布爾false
@@ -2505,12 +2508,12 @@ async function SR_logQuickReplyInteraction(userId, postbackData, response, metad
  */
 async function SR_calculateNextExecutionWithSkip(reminderData) {
   const baseNext = SR_calculateNextExecution(reminderData);
-  
+
   if (reminderData.skipWeekends || reminderData.skipHolidays) {
     const holidayResult = await SR_processHolidayLogic(baseNext, 'next_workday');
     return holidayResult.adjustedDate;
   }
-  
+
   return baseNext;
 }
 
@@ -2576,7 +2579,7 @@ async function SR_getDirectStatistics(userId, period) {
       const data = doc.data();
       const income = parseFloat(data.收入 || 0);
       const expense = parseFloat(data.支出 || 0);
-      
+
       totalIncome += income;
       totalExpense += expense;
     });
@@ -2618,17 +2621,18 @@ async function SR_initialize() {
   const functionName = "SR_initialize";
   try {
     console.log('📅 SR 排程提醒模組初始化中...');
-    
+
     // 檢查 Firestore 連線
     if (!admin.apps.length) {
-      throw new Error("Firebase Admin 未初始化");
+      // 修正Firebase初始化邏輯
+      firebaseConfig.initializeFirebaseAdmin();
     }
 
     // 檢查依賴模組
     if (!DL) {
       console.warn('⚠️ DL 模組不可用，將使用基本日誌');
     }
-    
+
     if (!WH) {
       console.warn('⚠️ WH 模組不可用，推播功能將受限');
     }
@@ -2644,7 +2648,7 @@ async function SR_initialize() {
 
     SR_logInfo("SR 排程提醒模組初始化完成", "模組初始化", "", "", "", functionName);
     console.log('✅ SR 排程提醒模組已成功啟動');
-    
+
     return true;
   } catch (error) {
     SR_logError(`SR 模組初始化失敗: ${error.message}`, "模組初始化", "", "SR_INIT_ERROR", error.toString(), functionName);
@@ -2667,7 +2671,7 @@ async function SR_loadExistingSchedules() {
 
     snapshot.forEach(doc => {
       const data = doc.data();
-      
+
       try {
         const cronJob = cron.schedule(data.cronExpression, async () => {
           await SR_executeScheduledTask(data.reminderId);
@@ -2697,36 +2701,36 @@ module.exports = {
   SR_executeScheduledTask,
   SR_processHolidayLogic,
   SR_getGovernmentHolidays,
-  
+
   // 付費功能控制層函數
   SR_validatePremiumFeature,
   SR_checkSubscriptionStatus,
   SR_enforceFreeUserLimits,
   SR_upgradeFeatureAccess,
-  
+
   // 推播服務層函數
   SR_sendDailyFinancialSummary,
   SR_sendBudgetWarning,
   SR_sendMonthlyReport,
   SR_processQuickReplyStatistics,
-  
+
   // 數據整合層函數
   SR_syncWithAccountModule,
   SR_syncWithDataDistribution,
   SR_logScheduledActivity,
   SR_handleSchedulerError,
-  
+
   // Quick Reply 專用層函數
   SR_handleQuickReplyInteraction,
   SR_generateQuickReplyOptions,
   SR_handlePaywallQuickReply,
-  
+
   // 模組初始化
   SR_initialize,
-  
+
   // 新增統計查詢函數
   SR_getDirectStatistics,
-  
+
   // 常數與配置
   SR_CONFIG,
   SR_QUICK_REPLY_CONFIG,

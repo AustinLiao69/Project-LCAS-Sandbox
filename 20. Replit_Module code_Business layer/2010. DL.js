@@ -5,20 +5,22 @@
  * @update 2025-07-09: 升級至3.0.6版本，優化函數編號規範和版本資訊完整性
  */
 
-// 直接使用 Firebase Admin SDK 和 serviceaccountkey.json
-const admin = require('firebase-admin');
-const serviceAccount = require('./Serviceaccountkey.json');
+// 引入Firebase動態配置模組
+const firebaseConfig = require('./2099. firebase-config');
 
 // 初始化 Firebase Admin（防重複初始化）
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
-  });
+let admin, db;
+try {
+  firebaseConfig.initializeFirebaseAdmin();
+  admin = firebaseConfig.admin;
+  db = firebaseConfig.getFirestoreInstance();
+  console.log('✅ DL模組：Firebase動態配置載入成功');
+} catch (error) {
+  console.error('❌ DL模組：Firebase動態配置載入失敗:', error.message);
+  // 設定預設值以避免模組完全失效
+  admin = require('firebase-admin');
+  db = null;
 }
-
-// 取得 Firestore 實例
-const db = admin.firestore();
 const { v4: uuidv4 } = require("uuid");
 const moment = require("moment-timezone");
 

@@ -9,14 +9,13 @@
 const moment = require('moment-timezone');
 const admin = require('firebase-admin');
 
+// 引入Firebase動態配置模組
+const firebaseConfig = require('./2099. firebase-config');
+
 // 確保 Firebase Admin 在模組載入時就初始化
 if (!admin.apps.length) {
   try {
-    const serviceAccount = require('./Serviceaccountkey.json');
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
-    });
+    firebaseConfig.initializeFirebaseAdmin();
     console.log('🔥 BK模組: Firebase Admin 自動初始化完成');
   } catch (error) {
     console.error('❌ BK模組: Firebase Admin 自動初始化失敗:', error);
@@ -986,7 +985,7 @@ function BK_validatePaymentMethod(method, majorCode) {
 
     const errorMessage = `不支援的支付方式: "${method}"，僅支援 "現金"、"刷卡"、"轉帳"、"行動支付"`;
     BK_logError(`BK_validatePaymentMethod: ${errorMessage}`, "支付方式驗證", "", "INVALID_PAYMENT_METHOD", errorMessage, "BK_validatePaymentMethod");
-    
+
     return {
       success: false,
       error: errorMessage,
@@ -1412,7 +1411,7 @@ async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {})
     } else {
       // 統一錯誤格式處理
       errorMsg = resultData.error || resultData.message || resultData.errorData?.error || "未知錯誤";
-      
+
       // 特殊錯誤訊息標準化
       let standardErrorMsg = errorMsg;
       if (errorMsg.includes("不支援的支付方式")) {
@@ -1422,7 +1421,7 @@ async function BK_formatSystemReplyMessage(resultData, moduleCode, options = {})
       } else if (errorMsg.includes("找不到科目")) {
         standardErrorMsg = "找不到科目";
       }
-      
+
       const subject = partialData.subject || "未知科目";
       const displayAmount = partialData.rawAmount || (partialData.amount !== undefined ? String(partialData.amount) : "0");
       const paymentMethod = partialData.paymentMethod || "未指定支付方式";
