@@ -33,8 +33,6 @@ tags:
     description: 系統健康檢查
   - name: system-config
     description: 系統配置管理
-  - name: system-logs
-    description: 系統日誌管理
   - name: system-monitoring
     description: 系統監控告警
   - name: system-maintenance
@@ -170,73 +168,6 @@ paths:
         '403':
           description: 權限不足
 
-  /system/logs:
-    get:
-      tags: [system-logs]
-      summary: 查詢系統日誌
-      description: 查詢系統日誌記錄，支援篩選和分頁
-      operationId: getSystemLogs
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: level
-          in: query
-          description: 日誌級別篩選
-          schema:
-            type: string
-            enum: [ERROR, WARN, INFO, DEBUG]
-        - name: module
-          in: query
-          description: 模組名稱篩選
-          schema:
-            type: string
-        - name: startTime
-          in: query
-          description: 開始時間
-          schema:
-            type: string
-            format: date-time
-        - name: endTime
-          in: query
-          description: 結束時間
-          schema:
-            type: string
-            format: date-time
-        - name: limit
-          in: query
-          description: 每頁記錄數
-          schema:
-            type: integer
-            default: 100
-            maximum: 1000
-        - name: offset
-          in: query
-          description: 偏移量
-          schema:
-            type: integer
-            default: 0
-      responses:
-        '200':
-          description: 日誌查詢成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: object
-                    properties:
-                      logs:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/SystemLog'
-                      totalCount:
-                        type: integer
-                      hasMore:
-                        type: boolean
-
   /system/monitoring/alerts:
     get:
       tags: [system-monitoring]
@@ -360,27 +291,6 @@ components:
           format: date-time
         details:
           type: object
-
-    SystemLog:
-      type: object
-      properties:
-        id:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        level:
-          type: string
-          enum: [ERROR, WARN, INFO, DEBUG]
-        module:
-          type: string
-        message:
-          type: string
-        details:
-          type: object
-        userId:
-          type: string
-          nullable: true
 
     SystemAlert:
       type: object
