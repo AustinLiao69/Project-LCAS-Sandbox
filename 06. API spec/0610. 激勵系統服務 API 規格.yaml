@@ -1,0 +1,1518 @@
+
+openapi: 3.0.3
+info:
+  title: LCAS 2.0 - 激勵系統服務 API 規格
+  version: 1.0.0
+  description: |
+    **LCAS 2.0 激勵系統服務 API 規格**
+    
+    負責遊戲化元素、成就系統、挑戰任務、積分獎勵與使用者激勵的完整 API 規格。
+    透過遊戲化機制提升用戶記帳習慣養成與持續使用動機，支援四模式差異化體驗。
+    
+    **服務範圍**:
+    - 成就系統（記帳里程碑、連續記帳、金額達成、習慣養成）
+    - 挑戰任務（每日/週/月挑戰、自訂目標、團體挑戰）
+    - 積分獎勵（記帳積分、成就積分、邀請獎勵、活躍度獎勵）
+    - 等級系統（用戶等級、技能樹、專業認證）
+    - 社交激勵（排行榜、好友競賽、團隊協作）
+    - 個人化激勵（習慣分析、動機提醒、進度追蹤）
+    
+    **四模式差異化策略**:
+    - **Expert**: 專業成就系統、深度分析獎勵、高級認證
+    - **Inertial**: 基本成就與積分、簡化激勵機制
+    - **Cultivation**: 豐富習慣養成激勵、目標導向挑戰、社交競賽
+    - **Guiding**: 簡化成就、基礎鼓勵、溫和提醒
+
+  contact:
+    name: LCAS 開發團隊
+    email: dev@lcas.com.tw
+  license:
+    name: LCAS License
+    url: https://lcas.com.tw/license
+
+servers:
+  - url: https://api.lcas.com.tw/v1
+    description: 正式環境
+  - url: https://staging-api.lcas.com.tw/v1
+    description: 測試環境
+
+security:
+  - bearerAuth: []
+
+paths:
+  /gamification/achievements:
+    get:
+      tags:
+        - 成就系統
+      summary: 取得用戶成就列表
+      description: |
+        取得用戶的成就進度與已解鎖成就列表。
+        四模式差異：
+        - Expert: 專業成就、技術指標、深度分析成就
+        - Inertial: 基本記帳成就、簡化進度顯示
+        - Cultivation: 豐富習慣養成成就、目標達成獎勵
+        - Guiding: 基礎鼓勵成就、溫和里程碑
+      parameters:
+        - name: status
+          in: query
+          description: 成就狀態篩選
+          schema:
+            type: string
+            enum: [unlocked, locked, in_progress, all]
+            default: all
+        - name: category
+          in: query
+          description: 成就分類
+          schema:
+            type: string
+            enum: [bookkeeping, saving, budgeting, analysis, collaboration, habit]
+        - name: difficulty
+          in: query
+          description: 成就難度
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced, expert]
+      responses:
+        '200':
+          description: 成功取得成就列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AchievementsList'
+
+  /gamification/achievements/{achievementId}/unlock:
+    post:
+      tags:
+        - 成就系統
+      summary: 解鎖成就
+      description: |
+        解鎖指定成就，記錄成就時間與獎勵發放。
+        支援自動解鎖與手動觸發機制。
+      parameters:
+        - name: achievementId
+          in: path
+          required: true
+          description: 成就 ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnlockAchievementRequest'
+      responses:
+        '200':
+          description: 成就解鎖成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UnlockAchievementResponse'
+
+  /gamification/challenges:
+    get:
+      tags:
+        - 挑戰任務
+      summary: 取得挑戰任務列表
+      description: |
+        取得用戶可參與的挑戰任務與進度。
+        四模式差異：
+        - Expert: 複雜分析挑戰、專業目標設定
+        - Inertial: 固定週期挑戰、簡化任務
+        - Cultivation: 習慣養成挑戰、目標導向任務
+        - Guiding: 基礎挑戰、溫和目標
+      parameters:
+        - name: type
+          in: query
+          description: 挑戰類型
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, custom, group]
+        - name: status
+          in: query
+          description: 挑戰狀態
+          schema:
+            type: string
+            enum: [active, completed, expired, available]
+            default: active
+      responses:
+        '200':
+          description: 成功取得挑戰列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ChallengesList'
+
+    post:
+      tags:
+        - 挑戰任務
+      summary: 建立自訂挑戰
+      description: |
+        建立個人或團體自訂挑戰任務。
+        支援目標設定、時間範圍、獎勵機制。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChallengeRequest'
+      responses:
+        '201':
+          description: 挑戰建立成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ChallengeDetails'
+
+  /gamification/challenges/{challengeId}/join:
+    post:
+      tags:
+        - 挑戰任務
+      summary: 參加挑戰
+      description: |
+        參加指定的挑戰任務，開始任務進度追蹤。
+        支援個人挑戰與團體挑戰參與。
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          description: 挑戰 ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功參加挑戰
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/JoinChallengeResponse'
+
+  /gamification/challenges/{challengeId}/progress:
+    put:
+      tags:
+        - 挑戰任務
+      summary: 更新挑戰進度
+      description: |
+        更新用戶在特定挑戰中的進度。
+        支援自動進度更新與手動記錄。
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          description: 挑戰 ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProgressRequest'
+      responses:
+        '200':
+          description: 進度更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ChallengeProgress'
+
+  /gamification/points:
+    get:
+      tags:
+        - 積分系統
+      summary: 取得用戶積分資訊
+      description: |
+        取得用戶當前積分、積分歷史與獲得來源。
+        四模式差異：
+        - Expert: 詳細積分分析、專業獎勵
+        - Inertial: 基本積分顯示、簡化統計
+        - Cultivation: 豐富積分來源、習慣獎勵
+        - Guiding: 簡化積分、鼓勵性回饋
+      parameters:
+        - name: period
+          in: query
+          description: 查詢期間
+          schema:
+            type: string
+            enum: [today, week, month, quarter, year, all]
+            default: all
+        - name: source
+          in: query
+          description: 積分來源篩選
+          schema:
+            type: string
+            enum: [bookkeeping, achievement, challenge, referral, bonus]
+      responses:
+        '200':
+          description: 成功取得積分資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/PointsInfo'
+
+  /gamification/points/earn:
+    post:
+      tags:
+        - 積分系統
+      summary: 獲得積分
+      description: |
+        記錄用戶獲得積分的行為與來源。
+        支援多種積分獲得方式與倍數機制。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EarnPointsRequest'
+      responses:
+        '200':
+          description: 積分獲得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/EarnPointsResponse'
+
+  /gamification/levels:
+    get:
+      tags:
+        - 等級系統
+      summary: 取得用戶等級資訊
+      description: |
+        取得用戶當前等級、經驗值與升級進度。
+        四模式差異：
+        - Expert: 專業技能樹、認證系統
+        - Inertial: 基本等級顯示、簡化進度
+        - Cultivation: 豐富等級獎勵、習慣里程碑
+        - Guiding: 簡化等級、鼓勵性成長
+      responses:
+        '200':
+          description: 成功取得等級資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/LevelInfo'
+
+  /gamification/leaderboard:
+    get:
+      tags:
+        - 社交激勵
+      summary: 取得排行榜
+      description: |
+        取得各種類型的排行榜資訊。
+        四模式差異：
+        - Expert: 專業分析排行、技術指標競賽
+        - Inertial: 基本積分排行、簡化顯示
+        - Cultivation: 習慣養成排行、目標達成競賽
+        - Guiding: 友善排行、鼓勵性競賽
+      parameters:
+        - name: type
+          in: query
+          description: 排行榜類型
+          schema:
+            type: string
+            enum: [points, achievements, streak, savings, consistency]
+            default: points
+        - name: scope
+          in: query
+          description: 排行範圍
+          schema:
+            type: string
+            enum: [global, friends, ledger]
+            default: global
+        - name: period
+          in: query
+          description: 排行期間
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, quarterly, yearly, all_time]
+            default: monthly
+        - name: limit
+          in: query
+          description: 排行數量限制
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: 成功取得排行榜
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Leaderboard'
+
+  /gamification/streaks:
+    get:
+      tags:
+        - 習慣追蹤
+      summary: 取得連續記錄統計
+      description: |
+        取得用戶的連續記帳天數與習慣追蹤資訊。
+        支援多種習慣類型的連續記錄統計。
+      parameters:
+        - name: type
+          in: query
+          description: 連續記錄類型
+          schema:
+            type: string
+            enum: [bookkeeping, budgeting, goal_review, app_usage]
+            default: bookkeeping
+      responses:
+        '200':
+          description: 成功取得連續記錄
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/StreakInfo'
+
+  /gamification/rewards:
+    get:
+      tags:
+        - 獎勵系統
+      summary: 取得獎勵列表
+      description: |
+        取得用戶可兌換的獎勵與兌換歷史。
+        四模式差異：
+        - Expert: 專業工具解鎖、高級功能獎勵
+        - Inertial: 基本功能獎勵、實用工具
+        - Cultivation: 習慣養成獎勵、激勵道具
+        - Guiding: 簡化獎勵、鼓勵性物品
+      parameters:
+        - name: category
+          in: query
+          description: 獎勵分類
+          schema:
+            type: string
+            enum: [premium_features, customization, badges, tools, discounts]
+        - name: status
+          in: query
+          description: 獎勵狀態
+          schema:
+            type: string
+            enum: [available, redeemed, locked]
+            default: available
+      responses:
+        '200':
+          description: 成功取得獎勵列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/RewardsList'
+
+    post:
+      tags:
+        - 獎勵系統
+      summary: 兌換獎勵
+      description: |
+        使用積分兌換指定獎勵。
+        支援積分扣除與獎勵發放機制。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedeemRewardRequest'
+      responses:
+        '200':
+          description: 獎勵兌換成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/RedeemRewardResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AchievementsList:
+      type: object
+      properties:
+        totalAchievements:
+          type: integer
+          description: 總成就數量
+        unlockedCount:
+          type: integer
+          description: 已解鎖成就數量
+        achievements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Achievement'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/AchievementCategory'
+        recentUnlocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecentAchievement'
+
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 成就 ID
+        name:
+          type: string
+          description: 成就名稱
+        description:
+          type: string
+          description: 成就描述
+        category:
+          type: string
+          enum: [bookkeeping, saving, budgeting, analysis, collaboration, habit]
+          description: 成就分類
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced, expert]
+          description: 成就難度
+        points:
+          type: integer
+          description: 獎勵積分
+        icon:
+          type: string
+          description: 成就圖標 URL
+        status:
+          type: string
+          enum: [unlocked, locked, in_progress]
+          description: 成就狀態
+        progress:
+          $ref: '#/components/schemas/AchievementProgress'
+        unlockedAt:
+          type: string
+          format: date-time
+          description: 解鎖時間
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/AchievementRequirement'
+        rewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/AchievementReward'
+
+    AchievementProgress:
+      type: object
+      properties:
+        current:
+          type: integer
+          description: 當前進度
+        target:
+          type: integer
+          description: 目標進度
+        percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: 完成百分比
+
+    AchievementRequirement:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 要求類型
+        description:
+          type: string
+          description: 要求描述
+        value:
+          type: integer
+          description: 要求數值
+        unit:
+          type: string
+          description: 數值單位
+
+    AchievementReward:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [points, badge, feature, discount]
+          description: 獎勵類型
+        value:
+          type: integer
+          description: 獎勵數值
+        description:
+          type: string
+          description: 獎勵描述
+
+    AchievementCategory:
+      type: object
+      properties:
+        category:
+          type: string
+          description: 分類名稱
+        totalCount:
+          type: integer
+          description: 該分類總成就數
+        unlockedCount:
+          type: integer
+          description: 該分類已解鎖數
+        progress:
+          type: number
+          description: 分類完成度
+
+    RecentAchievement:
+      type: object
+      properties:
+        achievementId:
+          type: string
+          description: 成就 ID
+        name:
+          type: string
+          description: 成就名稱
+        unlockedAt:
+          type: string
+          format: date-time
+          description: 解鎖時間
+        points:
+          type: integer
+          description: 獲得積分
+
+    UnlockAchievementRequest:
+      type: object
+      required:
+        - trigger
+      properties:
+        trigger:
+          type: string
+          enum: [auto, manual, system]
+          description: 觸發方式
+        context:
+          type: object
+          description: 解鎖上下文資訊
+        validateRequirements:
+          type: boolean
+          default: true
+          description: 是否驗證解鎖要求
+
+    UnlockAchievementResponse:
+      type: object
+      properties:
+        achievement:
+          $ref: '#/components/schemas/Achievement'
+        pointsEarned:
+          type: integer
+          description: 獲得積分
+        newLevel:
+          type: integer
+          description: 新等級（如有升級）
+        bonusRewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/BonusReward'
+        celebrationMessage:
+          type: string
+          description: 慶祝訊息
+
+    BonusReward:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 獎勵類型
+        name:
+          type: string
+          description: 獎勵名稱
+        value:
+          type: string
+          description: 獎勵內容
+
+    ChallengesList:
+      type: object
+      properties:
+        activeChallenges:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeDetails'
+        availableChallenges:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeDetails'
+        completedChallenges:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeDetails'
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeRecommendation'
+
+    ChallengeDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 挑戰 ID
+        title:
+          type: string
+          description: 挑戰標題
+        description:
+          type: string
+          description: 挑戰描述
+        type:
+          type: string
+          enum: [daily, weekly, monthly, custom, group]
+          description: 挑戰類型
+        difficulty:
+          type: string
+          enum: [easy, normal, hard, expert]
+          description: 挑戰難度
+        category:
+          type: string
+          description: 挑戰分類
+        goal:
+          $ref: '#/components/schemas/ChallengeGoal'
+        duration:
+          $ref: '#/components/schemas/ChallengeDuration'
+        participants:
+          type: integer
+          description: 參與人數
+        maxParticipants:
+          type: integer
+          description: 最大參與人數
+        rewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeReward'
+        status:
+          type: string
+          enum: [active, completed, expired, available, joined]
+          description: 挑戰狀態
+        progress:
+          $ref: '#/components/schemas/ChallengeProgress'
+        createdBy:
+          type: string
+          description: 建立者 ID
+        createdAt:
+          type: string
+          format: date-time
+          description: 建立時間
+
+    ChallengeGoal:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [count, amount, streak, completion]
+          description: 目標類型
+        target:
+          type: number
+          description: 目標數值
+        unit:
+          type: string
+          description: 數值單位
+        description:
+          type: string
+          description: 目標描述
+
+    ChallengeDuration:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date-time
+          description: 開始時間
+        endDate:
+          type: string
+          format: date-time
+          description: 結束時間
+        durationDays:
+          type: integer
+          description: 持續天數
+
+    ChallengeReward:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [points, badge, achievement, feature]
+          description: 獎勵類型
+        value:
+          type: integer
+          description: 獎勵數值
+        description:
+          type: string
+          description: 獎勵描述
+        condition:
+          type: string
+          enum: [completion, ranking, participation]
+          description: 獲得條件
+
+    ChallengeProgress:
+      type: object
+      properties:
+        current:
+          type: number
+          description: 當前進度
+        target:
+          type: number
+          description: 目標進度
+        percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: 完成百分比
+        rank:
+          type: integer
+          description: 當前排名
+        lastUpdate:
+          type: string
+          format: date-time
+          description: 最後更新時間
+
+    ChallengeRecommendation:
+      type: object
+      properties:
+        challenge:
+          $ref: '#/components/schemas/ChallengeDetails'
+        reason:
+          type: string
+          description: 推薦原因
+        priority:
+          type: string
+          enum: [high, medium, low]
+          description: 推薦優先級
+
+    CreateChallengeRequest:
+      type: object
+      required:
+        - title
+        - type
+        - goal
+        - duration
+      properties:
+        title:
+          type: string
+          description: 挑戰標題
+          maxLength: 100
+        description:
+          type: string
+          description: 挑戰描述
+          maxLength: 500
+        type:
+          type: string
+          enum: [custom, group]
+          description: 挑戰類型
+        category:
+          type: string
+          description: 挑戰分類
+        goal:
+          $ref: '#/components/schemas/ChallengeGoal'
+        duration:
+          $ref: '#/components/schemas/ChallengeDuration'
+        isPublic:
+          type: boolean
+          default: false
+          description: 是否公開
+        maxParticipants:
+          type: integer
+          description: 最大參與人數
+        invitedUsers:
+          type: array
+          items:
+            type: string
+          description: 邀請的用戶 ID 列表
+
+    JoinChallengeResponse:
+      type: object
+      properties:
+        challengeId:
+          type: string
+          description: 挑戰 ID
+        joinedAt:
+          type: string
+          format: date-time
+          description: 參加時間
+        currentParticipants:
+          type: integer
+          description: 目前參與人數
+        personalGoal:
+          $ref: '#/components/schemas/ChallengeGoal'
+        welcomeMessage:
+          type: string
+          description: 歡迎訊息
+
+    UpdateProgressRequest:
+      type: object
+      required:
+        - progressValue
+      properties:
+        progressValue:
+          type: number
+          description: 進度數值
+        action:
+          type: string
+          description: 觸發動作
+        context:
+          type: object
+          description: 上下文資訊
+        timestamp:
+          type: string
+          format: date-time
+          description: 進度時間
+
+    PointsInfo:
+      type: object
+      properties:
+        totalPoints:
+          type: integer
+          description: 總積分
+        availablePoints:
+          type: integer
+          description: 可用積分
+        lifetimeEarned:
+          type: integer
+          description: 累積獲得積分
+        lifetimeSpent:
+          type: integer
+          description: 累積消費積分
+        currentLevel:
+          type: integer
+          description: 當前等級
+        pointsToNextLevel:
+          type: integer
+          description: 升級所需積分
+        recentActivity:
+          type: array
+          items:
+            $ref: '#/components/schemas/PointsActivity'
+        breakdown:
+          $ref: '#/components/schemas/PointsBreakdown'
+
+    PointsActivity:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 活動 ID
+        type:
+          type: string
+          enum: [earned, spent, bonus, penalty]
+          description: 積分類型
+        amount:
+          type: integer
+          description: 積分數量
+        source:
+          type: string
+          description: 積分來源
+        description:
+          type: string
+          description: 活動描述
+        timestamp:
+          type: string
+          format: date-time
+          description: 活動時間
+
+    PointsBreakdown:
+      type: object
+      properties:
+        bookkeeping:
+          type: integer
+          description: 記帳獲得積分
+        achievements:
+          type: integer
+          description: 成就獲得積分
+        challenges:
+          type: integer
+          description: 挑戰獲得積分
+        referrals:
+          type: integer
+          description: 推薦獲得積分
+        bonuses:
+          type: integer
+          description: 獎勵積分
+        social:
+          type: integer
+          description: 社交獲得積分
+
+    EarnPointsRequest:
+      type: object
+      required:
+        - source
+        - amount
+      properties:
+        source:
+          type: string
+          enum: [bookkeeping, achievement, challenge, referral, bonus, social]
+          description: 積分來源
+        amount:
+          type: integer
+          minimum: 1
+          description: 積分數量
+        description:
+          type: string
+          description: 獲得描述
+        multiplier:
+          type: number
+          default: 1.0
+          description: 積分倍數
+        context:
+          type: object
+          description: 上下文資訊
+
+    EarnPointsResponse:
+      type: object
+      properties:
+        pointsEarned:
+          type: integer
+          description: 實際獲得積分
+        totalPoints:
+          type: integer
+          description: 總積分
+        levelUp:
+          type: boolean
+          description: 是否升級
+        newLevel:
+          type: integer
+          description: 新等級
+        bonusMultiplier:
+          type: number
+          description: 獎勵倍數
+        message:
+          type: string
+          description: 獲得訊息
+
+    LevelInfo:
+      type: object
+      properties:
+        currentLevel:
+          type: integer
+          description: 當前等級
+        currentExp:
+          type: integer
+          description: 當前經驗值
+        expToNextLevel:
+          type: integer
+          description: 升級所需經驗值
+        totalExp:
+          type: integer
+          description: 總經驗值
+        levelProgress:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: 等級進度百分比
+        levelName:
+          type: string
+          description: 等級名稱
+        levelDescription:
+          type: string
+          description: 等級描述
+        perks:
+          type: array
+          items:
+            $ref: '#/components/schemas/LevelPerk'
+        nextLevelPerks:
+          type: array
+          items:
+            $ref: '#/components/schemas/LevelPerk'
+        skillTree:
+          $ref: '#/components/schemas/SkillTree'
+
+    LevelPerk:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 特權名稱
+        description:
+          type: string
+          description: 特權描述
+        type:
+          type: string
+          enum: [feature, discount, bonus, access]
+          description: 特權類型
+        value:
+          type: string
+          description: 特權內容
+
+    SkillTree:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillCategory'
+        unlockedSkills:
+          type: integer
+          description: 已解鎖技能數
+        totalSkills:
+          type: integer
+          description: 總技能數
+
+    SkillCategory:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 技能分類名稱
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/Skill'
+
+    Skill:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 技能 ID
+        name:
+          type: string
+          description: 技能名稱
+        description:
+          type: string
+          description: 技能描述
+        level:
+          type: integer
+          description: 技能等級
+        maxLevel:
+          type: integer
+          description: 最大等級
+        unlocked:
+          type: boolean
+          description: 是否已解鎖
+        requiredLevel:
+          type: integer
+          description: 解鎖所需等級
+
+    Leaderboard:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 排行榜類型
+        scope:
+          type: string
+          description: 排行範圍
+        period:
+          type: string
+          description: 排行期間
+        userRank:
+          type: integer
+          description: 用戶排名
+        userScore:
+          type: number
+          description: 用戶分數
+        rankings:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+        totalParticipants:
+          type: integer
+          description: 總參與人數
+        lastUpdated:
+          type: string
+          format: date-time
+          description: 最後更新時間
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+          description: 排名
+        userId:
+          type: string
+          description: 用戶 ID
+        username:
+          type: string
+          description: 用戶名稱
+        avatar:
+          type: string
+          description: 頭像 URL
+        score:
+          type: number
+          description: 分數
+        level:
+          type: integer
+          description: 等級
+        badge:
+          type: string
+          description: 徽章
+        changeFromPrevious:
+          type: integer
+          description: 與前期排名變化
+
+    StreakInfo:
+      type: object
+      properties:
+        currentStreak:
+          type: integer
+          description: 當前連續天數
+        longestStreak:
+          type: integer
+          description: 最長連續天數
+        streakType:
+          type: string
+          description: 連續記錄類型
+        lastActivity:
+          type: string
+          format: date
+          description: 最後活動日期
+        streakStart:
+          type: string
+          format: date
+          description: 連續開始日期
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/StreakMilestone'
+        riskyDays:
+          type: array
+          items:
+            type: string
+            format: date
+          description: 可能中斷的日期
+        encouragement:
+          type: string
+          description: 鼓勵訊息
+
+    StreakMilestone:
+      type: object
+      properties:
+        days:
+          type: integer
+          description: 里程碑天數
+        name:
+          type: string
+          description: 里程碑名稱
+        achieved:
+          type: boolean
+          description: 是否已達成
+        achievedAt:
+          type: string
+          format: date
+          description: 達成日期
+        reward:
+          type: string
+          description: 獎勵內容
+
+    RewardsList:
+      type: object
+      properties:
+        availableRewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reward'
+        redeemedRewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/RedeemedReward'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/RewardCategory'
+        userPoints:
+          type: integer
+          description: 用戶可用積分
+
+    Reward:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 獎勵 ID
+        name:
+          type: string
+          description: 獎勵名稱
+        description:
+          type: string
+          description: 獎勵描述
+        category:
+          type: string
+          description: 獎勵分類
+        cost:
+          type: integer
+          description: 所需積分
+        type:
+          type: string
+          enum: [premium_feature, customization, badge, tool, discount]
+          description: 獎勵類型
+        icon:
+          type: string
+          description: 獎勵圖標 URL
+        availability:
+          $ref: '#/components/schemas/RewardAvailability'
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/RewardRequirement'
+
+    RewardAvailability:
+      type: object
+      properties:
+        available:
+          type: boolean
+          description: 是否可兌換
+        stock:
+          type: integer
+          description: 剩餘數量
+        startDate:
+          type: string
+          format: date-time
+          description: 開始時間
+        endDate:
+          type: string
+          format: date-time
+          description: 結束時間
+
+    RewardRequirement:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 要求類型
+        description:
+          type: string
+          description: 要求描述
+        met:
+          type: boolean
+          description: 是否滿足
+
+    RedeemedReward:
+      type: object
+      properties:
+        rewardId:
+          type: string
+          description: 獎勵 ID
+        name:
+          type: string
+          description: 獎勵名稱
+        redeemedAt:
+          type: string
+          format: date-time
+          description: 兌換時間
+        pointsSpent:
+          type: integer
+          description: 消費積分
+        status:
+          type: string
+          enum: [active, expired, used]
+          description: 獎勵狀態
+
+    RewardCategory:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 分類名稱
+        description:
+          type: string
+          description: 分類描述
+        rewardCount:
+          type: integer
+          description: 獎勵數量
+
+    RedeemRewardRequest:
+      type: object
+      required:
+        - rewardId
+      properties:
+        rewardId:
+          type: string
+          description: 獎勵 ID
+        quantity:
+          type: integer
+          default: 1
+          description: 兌換數量
+
+    RedeemRewardResponse:
+      type: object
+      properties:
+        reward:
+          $ref: '#/components/schemas/Reward'
+        pointsSpent:
+          type: integer
+          description: 消費積分
+        remainingPoints:
+          type: integer
+          description: 剩餘積分
+        redemptionId:
+          type: string
+          description: 兌換記錄 ID
+        activationInstructions:
+          type: string
+          description: 啟用說明
+        message:
+          type: string
+          description: 兌換訊息
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 錯誤代碼
+        message:
+          type: string
+          description: 錯誤訊息
+        details:
+          type: object
+          description: 錯誤詳細資訊
+
+  responses:
+    BadRequest:
+      description: 請求參數錯誤
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: 未授權存取
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: 禁止存取
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: 資源不存在
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: 內部伺服器錯誤
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: 成就系統
+    description: 用戶成就解鎖與進度管理
+  - name: 挑戰任務
+    description: 個人與團體挑戰任務
+  - name: 積分系統
+    description: 積分獲得與管理
+  - name: 等級系統
+    description: 用戶等級與技能樹
+  - name: 社交激勵
+    description: 排行榜與社交競賽
+  - name: 習慣追蹤
+    description: 連續記錄與習慣統計
+  - name: 獎勵系統
+    description: 積分兌換與獎勵管理
