@@ -1,14 +1,17 @@
 /**
  * AM_帳號管理模組_1.1.1
- * @module AM模組 
+ * @module AM模組
  * @description 跨平台帳號管理系統 - 支援LINE OA、iOS、Android統一帳號管理
- * @update 2025-07-11: 
+ * @update 2025-07-11:
  */
 
 // 引入必要模組
 const admin = require('firebase-admin');
 const axios = require('axios');
 const crypto = require('crypto');
+
+// 引入Firebase動態配置模組
+const firebaseConfig = require('./2099. firebase-config');
 
 // 取得 Firestore 實例
 const db = admin.firestore();
@@ -243,7 +246,7 @@ async function AM_linkCrossPlatformAccounts(primaryUID, linkedAccountInfo) {
  * 04. 更新帳號資訊
  * @version 2025-01-09-V1.0.0
  * @date 2025-01-09 00:34:00
- * @description 修改使用者帳號基本資訊和設定
+ * @description 修改 المستخدم帳號基本資訊和設定
  */
 async function AM_updateAccountInfo(UID, updateData, operatorId) {
   try {
@@ -1321,7 +1324,7 @@ async function AM_processSRUpgrade(userId, upgradeType, paymentInfo, requesterId
       plan: upgradeType === 'trial' ? 'trial' : 'premium',
       features: [
         'unlimited_reminders',
-        'auto_push_notifications', 
+        'auto_push_notifications',
         'advanced_analytics',
         'smart_optimization',
         'budget_warnings',
@@ -1369,6 +1372,8 @@ async function AM_processSRUpgrade(userId, upgradeType, paymentInfo, requesterId
   }
 }
 
+
+
 // 導出模組函數
 module.exports = {
   AM_createLineAccount,
@@ -1400,12 +1405,12 @@ console.log('AM 帳號管理模組載入完成 v1.0.1');
 
 /**
  * AM_logInfo
- * @param {} logMessage 
- * @param {} action 
- * @param {} userId 
- * @param {} ledgerId 
- * @param {} objectId 
- * @param {} functionName 
+ * @param {} logMessage
+ * @param {} action
+ * @param {} userId
+ * @param {} ledgerId
+ * @param {} objectId
+ * @param {} functionName
  */
 async function AM_logInfo(logMessage, action = "AM_Action", userId = "SYSTEM", ledgerId = "", objectId = "", functionName = "AM_Function") {
     DL.DL_log("AM", functionName, "INFO", logMessage, userId, ledgerId, objectId, action)
@@ -1413,12 +1418,12 @@ async function AM_logInfo(logMessage, action = "AM_Action", userId = "SYSTEM", l
 
 /**
  * AM_logWarning
- * @param {} logMessage 
- * @param {} action 
- * @param {} userId 
- * @param {} ledgerId 
- * @param {} objectId 
- * @param {} functionName 
+ * @param {} logMessage
+ * @param {} action
+ * @param {} userId
+ * @param {} ledgerId
+ * @param {} objectId
+ * @param {} functionName
  */
 async function AM_logWarning(logMessage, action = "AM_Action", userId = "SYSTEM", ledgerId = "", objectId = "", functionName = "AM_Function") {
     DL.DL_warning("AM", functionName, "WARNING", logMessage, userId, ledgerId, objectId, action)
@@ -1426,13 +1431,13 @@ async function AM_logWarning(logMessage, action = "AM_Action", userId = "SYSTEM"
 
 /**
  * AM_logError
- * @param {} logMessage 
- * @param {} action 
- * @param {} userId 
- * @param {} ledgerId 
- * @param {} objectId 
- * @param {} errorCode 
- * @param {} functionName 
+ * @param {} logMessage
+ * @param {} action
+ * @param {} userId
+ * @param {} ledgerId
+ * @param {} objectId
+ * @param {} errorCode
+ * @param {} functionName
  */
 async function AM_logError(logMessage, action = "AM_Action", userId = "SYSTEM", ledgerId = "", objectId = "", errorCode = "AM_Error", functionName = "AM_Function") {
     DL.DL_error("AM", functionName, "ERROR", logMessage, userId, ledgerId, objectId, errorCode, action)
