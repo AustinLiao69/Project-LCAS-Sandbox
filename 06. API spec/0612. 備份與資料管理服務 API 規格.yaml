@@ -862,11 +862,7 @@ paths:
                         format: date-time
                         description: 建立時間
                         example: "2025-08-22T11:15:00Z"
-                      statusUrl:
-                        type: string
-                        format: uri
-                        description: 狀態查詢連結
-                        example: "https://api.lcas.app/v1/data/export/export_12345/status"
+                      
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -981,11 +977,7 @@ paths:
                         format: date-time
                         description: 建立時間
                         example: "2025-08-22T11:30:00Z"
-                      statusUrl:
-                        type: string
-                        format: uri
-                        description: 狀態查詢連結
-                        example: "https://api.lcas.app/v1/data/import/import_54321/status"
+                      
         '400':
           description: 檔案格式錯誤或參數無效
           content:
