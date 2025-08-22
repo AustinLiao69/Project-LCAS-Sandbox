@@ -57,14 +57,14 @@ console.log('📦 載入模組...');
 // 優先載入基礎模組，確保核心函數可用
 let DL, FS;
 try {
-  DL = require('./Modules/2010. DL.js');    // 數據記錄模組 (基礎)
+  DL = require('./20. Replit_Module code_Business layer/2010. DL.js');    // 數據記錄模組 (基礎)
   console.log('✅ DL 模組載入成功');
 } catch (error) {
   console.error('❌ DL 模組載入失敗:', error.message);
 }
 
 try {
-  FS = require('./Modules/2011. FS.js');    // Firestore結構模組 (基礎)
+  FS = require('./20. Replit_Module code_Business layer/2011. FS.js');    // Firestore結構模組 (基礎)
   // 驗證核心函數是否正確載入
   if (FS && typeof FS.FS_getDocument === 'function') {
     console.log('✅ FS 模組載入成功 - 核心函數檢查通過');
@@ -79,7 +79,7 @@ try {
 let WH, BK, LBK, DD, AM, SR;
 try {
   if (FS && typeof FS.FS_getDocument === 'function') {
-    BK = require('./Modules/2001. BK.js');    // 記帳處理模組
+    BK = require('./20. Replit_Module code_Business layer/2001. BK.js');    // 記帳處理模組
     console.log('✅ BK 模組載入成功');
   } else {
     console.log('⚠️ BK 模組跳過載入 - FS模組依賴未滿足');
@@ -89,7 +89,7 @@ try {
 }
 
 try {
-  LBK = require('./Modules/2015. LBK.js');  // LINE快速記帳模組
+  LBK = require('./20. Replit_Module code_Business layer/2015. LBK.js');  // LINE快速記帳模組
   console.log('✅ LBK 模組載入成功');
 } catch (error) {
   console.error('❌ LBK 模組載入失敗:', error.message);
@@ -97,7 +97,7 @@ try {
 
 try {
   if (FS && typeof FS.FS_getDocument === 'function') {
-    DD = require('./Modules/2031. DD1.js');    // 數據分發模組
+    DD = require('./20. Replit_Module code_Business layer/2031. DD1.js');    // 數據分發模組
     console.log('✅ DD 模組載入成功');
   } else {
     console.log('⚠️ DD 模組跳過載入 - FS模組依賴未滿足');
@@ -107,7 +107,7 @@ try {
 }
 
 try {
-  AM = require('./Modules/2009. AM.js');    // 帳號管理模組
+  AM = require('./20. Replit_Module code_Business layer/2009. AM.js');    // 帳號管理模組
   console.log('✅ AM 模組載入成功');
 } catch (error) {
   console.error('❌ AM 模組載入失敗:', error.message);
@@ -115,7 +115,7 @@ try {
 
 try {
   if (FS && typeof FS.FS_getDocument === 'function') {
-    SR = require('./Modules/2005. SR.js');    // 排程提醒模組
+    SR = require('./20. Replit_Module code_Business layer/2005. SR.js');    // 排程提醒模組
     console.log('✅ SR 模組載入成功');
   } else {
     console.log('⚠️ SR 模組跳過載入 - FS模組依賴未滿足');
@@ -158,7 +158,7 @@ try {
     
     // 在FS檢查完成後載入WH模組
     console.log('📦 開始載入WH模組...');
-    WH = require('./Modules/2020. WH.js');    // Webhook處理模組 (最後載入)
+    WH = require('./20. Replit_Module code_Business layer/2020. WH.js');    // Webhook處理模組 (最後載入)
     console.log('✅ WH 模組載入成功');
     
     // 驗證WH模組的關鍵函數
@@ -182,7 +182,7 @@ try {
       console.log('🔄 嘗試WH模組基礎模式載入...');
       global.FS_MODULE_READY = false;
       global.WH_BASIC_MODE = true;
-      WH = require('./Modules/2020. WH.js');
+      WH = require('./20. Replit_Module code_Business layer/2020. WH.js');
       console.log('✅ WH 模組基礎模式載入成功');
     } catch (basicError) {
       console.error('❌ WH 模組基礎模式載入也失敗:', basicError.message);
