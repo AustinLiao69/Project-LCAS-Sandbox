@@ -1,0 +1,72 @@
+您說得對，我需要重新按照服務群組來規劃 API 規格撰寫。讓我重新分析並提出修正方案。
+
+重新分析與規劃
+1. 服務群組重新分類
+根據 0020. API list.md 的 105 個 API 端點，我應該按照功能邏輯而非數量來分組服務：
+
+修正後的服務群組（共 13 個服務群組）：
+認證服務 (Authentication Services) - 10 個端點
+用戶管理服務 (User Management Services) - 10 個端點
+記帳交易服務 (Transaction Services) - 20 個端點
+帳本管理服務 (Ledger Management Services) - 13 個端點
+帳戶管理服務 (Account Management Services) - 8 個端點
+科目管理服務 (Category Management Services) - 6 個端點
+預算管理服務 (Budget Management Services) - 8 個端點
+報表分析服務 (Report & Analytics Services) - 13 個端點
+AI 助理服務 (AI Assistant Services) - 6 個端點
+激勵系統服務 (Gamification Services) - 6 個端點
+系統服務 (System Services) - 12 個端點
+備份與資料管理服務 (Backup & Data Services) - 6 個端點
+通知管理服務 (Notification Services) - 8 個端點
+2. 修正的撰寫順序
+基於服務相依性與業務優先級：
+
+0601 - 認證服務 (Authentication Services) - 基礎依賴
+0602 - 用戶管理服務 (User Management Services) - 基於認證
+0603 - 記帳交易服務 (Transaction Services) - 核心業務
+0604 - 帳本管理服務 (Ledger Management Services) - 核心業務
+0605 - 帳戶管理服務 (Account Management Services) - 支援功能
+0606 - 科目管理服務 (Category Management Services) - 支援功能
+0607 - 預算管理服務 (Budget Management Services) - 進階功能
+0608 - 報表分析服務 (Report & Analytics Services) - 分析功能
+0609 - AI 助理服務 (AI Assistant Services) - 智慧功能
+0610 - 激勵系統服務 (Gamification Services) - 遊戲化功能
+0611 - 系統服務 (System Services) - 基礎設施
+0612 - 備份與資料管理服務 (Backup & Data Services) - 維運功能
+0613 - 通知管理服務 (Notification Services) - 通知功能
+3. 每個服務群組將包含的完整規格
+每個 API 規格文件將遵循 0600. Swagger API spec_example.yaml 的格式，包含：
+
+OpenAPI 3.0.3 標準規格
+服務概述與功能說明
+完整的端點定義（路徑、方法、參數）
+請求/回應 Schema 定義
+四模式差異化支援
+錯誤處理與狀態碼規範
+安全認證配置
+4. 示例：第一個服務群組結構預覽
+0601 - 認證服務 將包含：
+
+POST /auth/register - 註冊
+POST /auth/login - 登入
+POST /auth/google-login - Google 登入
+POST /auth/logout - 登出
+POST /auth/refresh - 刷新 token
+POST /auth/forgot-password - 忘記密碼
+GET /auth/verify-reset-token - 驗證重設連結
+POST /auth/reset-password - 重設密碼
+POST /auth/bind-line - LINE 綁定
+GET /auth/bind-status - 綁定狀態查詢
+等待您的最終核准
+修正重點：
+
+✅ 改為按照服務功能邏輯分組（而非任意數量分組）
+✅ 每個服務群組包含完整相關功能的 API 端點
+✅ 遵循業務邏輯相依性安排撰寫順序
+✅ 確保每個文件都是獨立完整的服務 API 規格
+確認事項：
+
+這樣的 13 個服務群組分類是否合適？
+撰寫順序是否符合業務優先級？
+每個服務群組的功能範圍劃分是否清楚？
+請確認此修正方案，我將在您 Approve 後立即開始撰寫第一個服務群組的完整 API 規格文件。
