@@ -1,0 +1,1569 @@
+
+openapi: 3.0.3
+info:
+  title: LCAS 2.0 通知管理服務 API
+  version: 1.0.0
+  description: |
+    **通知管理服務 API 規格書**
+    
+    **版本**: 1.0.0  
+    **建立日期**: 2025-08-22  
+    **最後更新**: 2025-08-22  
+    **建立者**: AustinLiao69  
+    
+    ---
+    
+    ## 📋 服務概述
+    
+    通知管理服務提供完整的通知設定、管理與記帳提醒功能，支援個人化通知偏好與智慧提醒機制。
+    
+    ### 🎯 核心功能
+    - **通知設定**: 個人化通知偏好管理
+    - **通知列表**: 系統通知訊息管理
+    - **記帳提醒**: 智慧記帳提醒與排程
+    - **提醒模板**: 預設提醒規則管理
+    
+    ### 🔧 四模式支援
+    - **Expert**: 詳細通知設定、進階排程規則
+    - **Inertial**: 標準通知設定、固定提醒時間
+    - **Cultivation**: 豐富提醒設定、習慣養成提醒
+    - **Guiding**: 自動通知設定、最簡化管理
+    
+    ### 📊 對應畫面
+    - **S-504**: 通知設定頁
+    - **S-201**: LINE OA 記帳對話（提醒功能）
+    - **S-501**: 激勵系統頁（提醒相關）
+
+servers:
+  - url: https://api.lcas.app/v1
+    description: Production server
+  - url: https://staging-api.lcas.app/v1
+    description: Staging server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: settings
+    description: 通知設定相關 API
+  - name: notifications
+    description: 通知管理相關 API
+  - name: reminders
+    description: 記帳提醒相關 API
+
+paths:
+  /notifications/settings:
+    get:
+      tags:
+        - settings
+      summary: 取得通知設定
+      description: |
+        取得使用者的通知設定與偏好
+        
+        **對應畫面**: S-504 通知設定頁
+        **User Story**: US-034
+        
+        **四模式差異**:
+        - **Expert**: 顯示詳細通知分類設定
+        - **Inertial**: 顯示標準通知設定選項
+        - **Cultivation**: 強調習慣養成相關提醒
+        - **Guiding**: 顯示簡化的基本設定
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+      responses:
+        '200':
+          description: 成功取得通知設定
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      generalSettings:
+                        type: object
+                        description: 一般通知設定
+                        properties:
+                          pushNotifications:
+                            type: boolean
+                            description: 是否啟用推播通知
+                            example: true
+                          emailNotifications:
+                            type: boolean
+                            description: 是否啟用信件通知
+                            example: true
+                          lineNotifications:
+                            type: boolean
+                            description: 是否啟用 LINE 通知
+                            example: true
+                          quietHours:
+                            type: object
+                            description: 靜音時段設定
+                            properties:
+                              enabled:
+                                type: boolean
+                                description: 是否啟用靜音時段
+                                example: true
+                              startTime:
+                                type: string
+                                format: time
+                                description: 靜音開始時間
+                                example: "22:00"
+                              endTime:
+                                type: string
+                                format: time
+                                description: 靜音結束時間
+                                example: "08:00"
+                      reminderSettings:
+                        type: object
+                        description: 提醒設定
+                        properties:
+                          dailyReminder:
+                            type: object
+                            description: 每日記帳提醒
+                            properties:
+                              enabled:
+                                type: boolean
+                                description: 是否啟用
+                                example: true
+                              time:
+                                type: string
+                                format: time
+                                description: 提醒時間
+                                example: "21:00"
+                              message:
+                                type: string
+                                description: 提醒訊息
+                                example: "別忘了記錄今天的支出喔！"
+                          budgetWarning:
+                            type: object
+                            description: 預算警告設定
+                            properties:
+                              enabled:
+                                type: boolean
+                                description: 是否啟用
+                                example: true
+                              threshold:
+                                type: integer
+                                minimum: 1
+                                maximum: 100
+                                description: 警告門檻百分比
+                                example: 80
+                          weeklyReport:
+                            type: object
+                            description: 週報設定
+                            properties:
+                              enabled:
+                                type: boolean
+                                description: 是否啟用
+                                example: true
+                              dayOfWeek:
+                                type: integer
+                                minimum: 0
+                                maximum: 6
+                                description: 星期幾（0=週日）
+                                example: 0
+                              time:
+                                type: string
+                                format: time
+                                description: 發送時間
+                                example: "10:00"
+                          monthlyReport:
+                            type: object
+                            description: 月報設定
+                            properties:
+                              enabled:
+                                type: boolean
+                                description: 是否啟用
+                                example: true
+                              dayOfMonth:
+                                type: integer
+                                minimum: 1
+                                maximum: 31
+                                description: 每月第幾日
+                                example: 1
+                              time:
+                                type: string
+                                format: time
+                                description: 發送時間
+                                example: "09:00"
+                      categorySettings:
+                        type: object
+                        description: 分類通知設定
+                        properties:
+                          systemUpdates:
+                            type: boolean
+                            description: 系統更新通知
+                            example: true
+                          collaborationInvites:
+                            type: boolean
+                            description: 協作邀請通知
+                            example: true
+                          achievementUnlocked:
+                            type: boolean
+                            description: 成就解鎖通知
+                            example: true
+                          dataBackup:
+                            type: boolean
+                            description: 資料備份通知
+                            example: false
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        description: 最後更新時間
+                        example: "2025-08-22T10:30:00Z"
+              examples:
+                expert_settings:
+                  summary: Expert模式 - 詳細設定
+                  value:
+                    success: true
+                    data:
+                      generalSettings:
+                        pushNotifications: true
+                        emailNotifications: true
+                        lineNotifications: true
+                        quietHours:
+                          enabled: true
+                          startTime: "22:00"
+                          endTime: "08:00"
+                      reminderSettings:
+                        dailyReminder:
+                          enabled: true
+                          time: "21:00"
+                          message: "別忘了記錄今天的支出喔！"
+                        budgetWarning:
+                          enabled: true
+                          threshold: 80
+                        weeklyReport:
+                          enabled: true
+                          dayOfWeek: 0
+                          time: "10:00"
+                        monthlyReport:
+                          enabled: true
+                          dayOfMonth: 1
+                          time: "09:00"
+                      categorySettings:
+                        systemUpdates: true
+                        collaborationInvites: true
+                        achievementUnlocked: true
+                        dataBackup: false
+                      lastUpdated: "2025-08-22T10:30:00Z"
+                guiding_settings:
+                  summary: Guiding模式 - 簡化設定
+                  value:
+                    success: true
+                    data:
+                      generalSettings:
+                        pushNotifications: true
+                        lineNotifications: true
+                      reminderSettings:
+                        dailyReminder:
+                          enabled: true
+                          time: "21:00"
+                          message: "記得記帳喔！"
+                      lastUpdated: "2025-08-22T10:30:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - settings
+      summary: 更新通知設定
+      description: |
+        更新使用者的通知設定與偏好
+        
+        **對應畫面**: S-504 通知設定頁
+        **User Story**: US-034
+        
+        **四模式差異**:
+        - **Expert**: 支援詳細通知分類設定
+        - **Inertial**: 支援標準通知設定選項
+        - **Cultivation**: 強調習慣養成相關提醒設定
+        - **Guiding**: 僅支援基本必要設定
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                generalSettings:
+                  type: object
+                  description: 一般通知設定
+                  properties:
+                    pushNotifications:
+                      type: boolean
+                      description: 是否啟用推播通知
+                      example: true
+                    emailNotifications:
+                      type: boolean
+                      description: 是否啟用信件通知
+                      example: true
+                    lineNotifications:
+                      type: boolean
+                      description: 是否啟用 LINE 通知
+                      example: true
+                    quietHours:
+                      type: object
+                      description: 靜音時段設定
+                      properties:
+                        enabled:
+                          type: boolean
+                          description: 是否啟用靜音時段
+                          example: true
+                        startTime:
+                          type: string
+                          format: time
+                          description: 靜音開始時間
+                          example: "22:00"
+                        endTime:
+                          type: string
+                          format: time
+                          description: 靜音結束時間
+                          example: "08:00"
+                reminderSettings:
+                  type: object
+                  description: 提醒設定
+                  properties:
+                    dailyReminder:
+                      type: object
+                      description: 每日記帳提醒
+                      properties:
+                        enabled:
+                          type: boolean
+                          description: 是否啟用
+                          example: true
+                        time:
+                          type: string
+                          format: time
+                          description: 提醒時間
+                          example: "21:00"
+                        message:
+                          type: string
+                          description: 提醒訊息
+                          example: "別忘了記錄今天的支出喔！"
+                          maxLength: 200
+                    budgetWarning:
+                      type: object
+                      description: 預算警告設定
+                      properties:
+                        enabled:
+                          type: boolean
+                          description: 是否啟用
+                          example: true
+                        threshold:
+                          type: integer
+                          minimum: 1
+                          maximum: 100
+                          description: 警告門檻百分比
+                          example: 80
+                    weeklyReport:
+                      type: object
+                      description: 週報設定
+                      properties:
+                        enabled:
+                          type: boolean
+                          description: 是否啟用
+                          example: true
+                        dayOfWeek:
+                          type: integer
+                          minimum: 0
+                          maximum: 6
+                          description: 星期幾（0=週日）
+                          example: 0
+                        time:
+                          type: string
+                          format: time
+                          description: 發送時間
+                          example: "10:00"
+                    monthlyReport:
+                      type: object
+                      description: 月報設定
+                      properties:
+                        enabled:
+                          type: boolean
+                          description: 是否啟用
+                          example: true
+                        dayOfMonth:
+                          type: integer
+                          minimum: 1
+                          maximum: 31
+                          description: 每月第幾日
+                          example: 1
+                        time:
+                          type: string
+                          format: time
+                          description: 發送時間
+                          example: "09:00"
+                categorySettings:
+                  type: object
+                  description: 分類通知設定
+                  properties:
+                    systemUpdates:
+                      type: boolean
+                      description: 系統更新通知
+                      example: true
+                    collaborationInvites:
+                      type: boolean
+                      description: 協作邀請通知
+                      example: true
+                    achievementUnlocked:
+                      type: boolean
+                      description: 成就解鎖通知
+                      example: true
+                    dataBackup:
+                      type: boolean
+                      description: 資料備份通知
+                      example: false
+            examples:
+              update_all_settings:
+                summary: 更新完整設定
+                value:
+                  generalSettings:
+                    pushNotifications: true
+                    emailNotifications: false
+                    lineNotifications: true
+                    quietHours:
+                      enabled: true
+                      startTime: "23:00"
+                      endTime: "07:00"
+                  reminderSettings:
+                    dailyReminder:
+                      enabled: true
+                      time: "20:30"
+                      message: "今天的記帳完成了嗎？"
+                    budgetWarning:
+                      enabled: true
+                      threshold: 85
+                  categorySettings:
+                    systemUpdates: true
+                    collaborationInvites: true
+                    achievementUnlocked: false
+                    dataBackup: false
+              simple_update:
+                summary: 簡單設定更新
+                value:
+                  generalSettings:
+                    pushNotifications: false
+                  reminderSettings:
+                    dailyReminder:
+                      enabled: false
+      responses:
+        '200':
+          description: 成功更新通知設定
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        description: 成功訊息
+                        example: "通知設定已成功更新"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        description: 更新時間
+                        example: "2025-08-22T11:00:00Z"
+                      affectedSettings:
+                        type: array
+                        items:
+                          type: string
+                        description: 被更新的設定項目
+                        example: ["generalSettings.pushNotifications", "reminderSettings.dailyReminder"]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /notifications/list:
+    get:
+      tags:
+        - notifications
+      summary: 通知列表
+      description: |
+        取得使用者的通知訊息列表
+        
+        **對應畫面**: 通知中心、推播通知
+        **User Story**: US-034
+        
+        **通知類型**:
+        - **system**: 系統通知
+        - **reminder**: 記帳提醒
+        - **collaboration**: 協作相關
+        - **achievement**: 成就通知
+        - **budget**: 預算警告
+      parameters:
+        - name: page
+          in: query
+          description: 分頁編號
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每頁筆數
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: type
+          in: query
+          description: 通知類型篩選
+          required: false
+          schema:
+            type: string
+            enum: [all, system, reminder, collaboration, achievement, budget]
+            default: all
+        - name: status
+          in: query
+          description: 讀取狀態篩選
+          required: false
+          schema:
+            type: string
+            enum: [all, unread, read]
+            default: all
+        - name: sortBy
+          in: query
+          description: 排序欄位
+          required: false
+          schema:
+            type: string
+            enum: [createdAt, priority]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          description: 排序方向
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: 成功取得通知列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      notifications:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              description: 通知ID
+                              example: "notif_12345"
+                            type:
+                              type: string
+                              enum: [system, reminder, collaboration, achievement, budget]
+                              description: 通知類型
+                              example: "reminder"
+                            title:
+                              type: string
+                              description: 通知標題
+                              example: "記帳提醒"
+                            message:
+                              type: string
+                              description: 通知內容
+                              example: "別忘了記錄今天的支出喔！"
+                            priority:
+                              type: string
+                              enum: [low, normal, high, urgent]
+                              description: 優先等級
+                              example: "normal"
+                            isRead:
+                              type: boolean
+                              description: 是否已讀
+                              example: false
+                            createdAt:
+                              type: string
+                              format: date-time
+                              description: 建立時間
+                              example: "2025-08-22T09:00:00Z"
+                            readAt:
+                              type: string
+                              format: date-time
+                              description: 讀取時間
+                              example: null
+                            actionUrl:
+                              type: string
+                              format: uri
+                              description: 動作連結
+                              example: "/bookkeeping/new"
+                            metadata:
+                              type: object
+                              description: 額外資訊
+                              properties:
+                                icon:
+                                  type: string
+                                  description: 圖示
+                                  example: "💰"
+                                category:
+                                  type: string
+                                  description: 分類
+                                  example: "daily_reminder"
+                      pagination:
+                        type: object
+                        properties:
+                          currentPage:
+                            type: integer
+                            example: 1
+                          totalPages:
+                            type: integer
+                            example: 3
+                          totalItems:
+                            type: integer
+                            example: 45
+                          pageSize:
+                            type: integer
+                            example: 20
+                          unreadCount:
+                            type: integer
+                            description: 未讀通知數量
+                            example: 12
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /notifications/{id}/read:
+    put:
+      tags:
+        - notifications
+      summary: 標記已讀
+      description: |
+        將指定通知標記為已讀狀態
+        
+        **對應畫面**: 通知中心
+        **User Story**: US-034
+      parameters:
+        - name: id
+          in: path
+          description: 通知ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "notif_12345"
+      responses:
+        '200':
+          description: 成功標記已讀
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        description: 成功訊息
+                        example: "通知已標記為已讀"
+                      readAt:
+                        type: string
+                        format: date-time
+                        description: 讀取時間
+                        example: "2025-08-22T11:30:00Z"
+        '404':
+          description: 通知不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /notifications/reminders:
+    post:
+      tags:
+        - reminders
+      summary: 建立記帳提醒
+      description: |
+        建立自定義記帳提醒規則
+        
+        **對應畫面**: S-504 通知設定頁
+        **User Story**: US-034
+        
+        **四模式差異**:
+        - **Expert**: 支援複雜排程規則、條件觸發
+        - **Inertial**: 支援標準時間提醒
+        - **Cultivation**: 強調習慣養成提醒
+        - **Guiding**: 僅支援簡單每日提醒
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 提醒名稱
+                  example: "每日晚間記帳提醒"
+                  maxLength: 100
+                type:
+                  type: string
+                  enum: [daily, weekly, monthly, custom]
+                  description: 提醒類型
+                  example: "daily"
+                schedule:
+                  type: object
+                  description: 排程設定
+                  properties:
+                    time:
+                      type: string
+                      format: time
+                      description: 提醒時間
+                      example: "21:00"
+                    timezone:
+                      type: string
+                      description: 時區
+                      example: "Asia/Taipei"
+                      default: "Asia/Taipei"
+                    daysOfWeek:
+                      type: array
+                      items:
+                        type: integer
+                        minimum: 0
+                        maximum: 6
+                      description: 星期幾（0=週日，僅weekly類型）
+                      example: [1, 2, 3, 4, 5]
+                    dayOfMonth:
+                      type: integer
+                      minimum: 1
+                      maximum: 31
+                      description: 每月第幾日（僅monthly類型）
+                      example: 1
+                    customRule:
+                      type: string
+                      description: 自定義排程規則（僅custom類型，cron格式）
+                      example: "0 21 * * 1-5"
+                message:
+                  type: object
+                  description: 提醒訊息設定
+                  properties:
+                    title:
+                      type: string
+                      description: 標題
+                      example: "記帳提醒"
+                      maxLength: 50
+                    content:
+                      type: string
+                      description: 內容
+                      example: "別忘了記錄今天的收支喔！"
+                      maxLength: 200
+                    actionText:
+                      type: string
+                      description: 動作按鈕文字
+                      example: "立即記帳"
+                      maxLength: 20
+                    actionUrl:
+                      type: string
+                      format: uri
+                      description: 動作連結
+                      example: "/bookkeeping/new"
+                conditions:
+                  type: object
+                  description: 觸發條件（僅Expert模式）
+                  properties:
+                    minDaysSinceLastEntry:
+                      type: integer
+                      minimum: 0
+                      description: 距離上次記帳最少天數
+                      example: 1
+                    budgetThreshold:
+                      type: number
+                      minimum: 0
+                      maximum: 100
+                      description: 預算使用門檻百分比
+                      example: 80.0
+                    categoryFilter:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: 僅針對特定科目提醒
+                      example: ["cat_123", "cat_456"]
+                isActive:
+                  type: boolean
+                  description: 是否啟用
+                  example: true
+                  default: true
+              required:
+                - name
+                - type
+                - schedule
+                - message
+            examples:
+              daily_reminder:
+                summary: 每日提醒
+                value:
+                  name: "每日晚間記帳提醒"
+                  type: "daily"
+                  schedule:
+                    time: "21:00"
+                    timezone: "Asia/Taipei"
+                  message:
+                    title: "記帳提醒"
+                    content: "別忘了記錄今天的收支喔！"
+                    actionText: "立即記帳"
+                    actionUrl: "/bookkeeping/new"
+                  isActive: true
+              weekly_reminder:
+                summary: 週末提醒
+                value:
+                  name: "週末支出檢視提醒"
+                  type: "weekly"
+                  schedule:
+                    time: "10:00"
+                    daysOfWeek: [0, 6]
+                    timezone: "Asia/Taipei"
+                  message:
+                    title: "週末支出檢視"
+                    content: "來看看這週的支出狀況吧！"
+                    actionText: "查看報表"
+                    actionUrl: "/reports/weekly"
+                  isActive: true
+              expert_conditional:
+                summary: Expert模式 - 條件提醒
+                value:
+                  name: "預算超標警告"
+                  type: "custom"
+                  schedule:
+                    customRule: "0 18 * * *"
+                    timezone: "Asia/Taipei"
+                  message:
+                    title: "預算警告"
+                    content: "本月預算即將超標，請注意支出！"
+                    actionText: "查看預算"
+                    actionUrl: "/budget/status"
+                  conditions:
+                    budgetThreshold: 85.0
+                  isActive: true
+      responses:
+        '201':
+          description: 成功建立提醒規則
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      reminderId:
+                        type: string
+                        format: uuid
+                        description: 提醒規則ID
+                        example: "reminder_67890"
+                      name:
+                        type: string
+                        description: 提醒名稱
+                        example: "每日晚間記帳提醒"
+                      status:
+                        type: string
+                        enum: [active, inactive]
+                        description: 狀態
+                        example: "active"
+                      nextTrigger:
+                        type: string
+                        format: date-time
+                        description: 下次觸發時間
+                        example: "2025-08-22T21:00:00Z"
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: 建立時間
+                        example: "2025-08-22T11:45:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags:
+        - reminders
+      summary: 取得提醒列表
+      description: |
+        取得使用者的記帳提醒規則列表
+        
+        **對應畫面**: S-504 通知設定頁
+        **User Story**: US-034
+      parameters:
+        - name: status
+          in: query
+          description: 狀態篩選
+          required: false
+          schema:
+            type: string
+            enum: [all, active, inactive]
+            default: all
+        - name: type
+          in: query
+          description: 類型篩選
+          required: false
+          schema:
+            type: string
+            enum: [all, daily, weekly, monthly, custom]
+            default: all
+      responses:
+        '200':
+          description: 成功取得提醒列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      reminders:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              description: 提醒ID
+                              example: "reminder_67890"
+                            name:
+                              type: string
+                              description: 提醒名稱
+                              example: "每日晚間記帳提醒"
+                            type:
+                              type: string
+                              enum: [daily, weekly, monthly, custom]
+                              description: 提醒類型
+                              example: "daily"
+                            isActive:
+                              type: boolean
+                              description: 是否啟用
+                              example: true
+                            schedule:
+                              type: object
+                              description: 排程設定
+                              properties:
+                                time:
+                                  type: string
+                                  format: time
+                                  description: 提醒時間
+                                  example: "21:00"
+                                frequency:
+                                  type: string
+                                  description: 頻率描述
+                                  example: "每日"
+                            message:
+                              type: object
+                              description: 提醒訊息
+                              properties:
+                                title:
+                                  type: string
+                                  description: 標題
+                                  example: "記帳提醒"
+                                content:
+                                  type: string
+                                  description: 內容
+                                  example: "別忘了記錄今天的收支喔！"
+                            nextTrigger:
+                              type: string
+                              format: date-time
+                              description: 下次觸發時間
+                              example: "2025-08-22T21:00:00Z"
+                            lastTriggered:
+                              type: string
+                              format: date-time
+                              description: 上次觸發時間
+                              example: "2025-08-21T21:00:00Z"
+                            createdAt:
+                              type: string
+                              format: date-time
+                              description: 建立時間
+                              example: "2025-08-20T12:00:00Z"
+                      totalCount:
+                        type: integer
+                        description: 總提醒數量
+                        example: 3
+                      activeCount:
+                        type: integer
+                        description: 啟用提醒數量
+                        example: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /notifications/reminders/{id}:
+    put:
+      tags:
+        - reminders
+      summary: 更新提醒規則
+      description: |
+        更新指定的記帳提醒規則
+        
+        **對應畫面**: S-504 通知設定頁
+        **User Story**: US-034
+      parameters:
+        - name: id
+          in: path
+          description: 提醒規則ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "reminder_67890"
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 提醒名稱
+                  example: "每日晚間記帳提醒"
+                  maxLength: 100
+                schedule:
+                  type: object
+                  description: 排程設定
+                  properties:
+                    time:
+                      type: string
+                      format: time
+                      description: 提醒時間
+                      example: "21:30"
+                    daysOfWeek:
+                      type: array
+                      items:
+                        type: integer
+                        minimum: 0
+                        maximum: 6
+                      description: 星期幾（僅weekly類型）
+                      example: [1, 2, 3, 4, 5]
+                message:
+                  type: object
+                  description: 提醒訊息設定
+                  properties:
+                    title:
+                      type: string
+                      description: 標題
+                      example: "記帳提醒"
+                      maxLength: 50
+                    content:
+                      type: string
+                      description: 內容
+                      example: "記得記錄今天的支出！"
+                      maxLength: 200
+                isActive:
+                  type: boolean
+                  description: 是否啟用
+                  example: true
+            examples:
+              update_time:
+                summary: 更新提醒時間
+                value:
+                  schedule:
+                    time: "20:30"
+              update_message:
+                summary: 更新提醒訊息
+                value:
+                  message:
+                    content: "今天有記帳嗎？快來記錄一下吧！"
+              disable_reminder:
+                summary: 停用提醒
+                value:
+                  isActive: false
+      responses:
+        '200':
+          description: 成功更新提醒規則
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        description: 成功訊息
+                        example: "提醒規則已成功更新"
+                      reminderId:
+                        type: string
+                        format: uuid
+                        description: 提醒規則ID
+                        example: "reminder_67890"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        description: 更新時間
+                        example: "2025-08-22T12:00:00Z"
+                      nextTrigger:
+                        type: string
+                        format: date-time
+                        description: 下次觸發時間
+                        example: "2025-08-22T20:30:00Z"
+        '404':
+          description: 提醒規則不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - reminders
+      summary: 刪除提醒規則
+      description: |
+        刪除指定的記帳提醒規則
+        
+        **對應畫面**: S-504 通知設定頁
+        **User Story**: US-034
+      parameters:
+        - name: id
+          in: path
+          description: 提醒規則ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "reminder_67890"
+      responses:
+        '200':
+          description: 成功刪除提醒規則
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        description: 成功訊息
+                        example: "提醒規則已成功刪除"
+                      deletedAt:
+                        type: string
+                        format: date-time
+                        description: 刪除時間
+                        example: "2025-08-22T12:15:00Z"
+        '404':
+          description: 提醒規則不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /notifications/reminder-templates:
+    get:
+      tags:
+        - reminders
+      summary: 取得提醒模板
+      description: |
+        取得系統預設的提醒規則模板
+        
+        **對應畫面**: S-504 通知設定頁
+        **User Story**: US-034
+        
+        **四模式差異**:
+        - **Expert**: 顯示所有模板包含進階選項
+        - **Inertial**: 顯示標準模板
+        - **Cultivation**: 強調習慣養成相關模板
+        - **Guiding**: 僅顯示基本簡單模板
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+        - name: category
+          in: query
+          description: 模板分類
+          required: false
+          schema:
+            type: string
+            enum: [all, daily, weekly, monthly, budget, habit]
+            default: all
+      responses:
+        '200':
+          description: 成功取得提醒模板
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      templates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: 模板ID
+                              example: "template_daily_evening"
+                            name:
+                              type: string
+                              description: 模板名稱
+                              example: "每日晚間提醒"
+                            description:
+                              type: string
+                              description: 模板描述
+                              example: "提醒您在每天晚上記錄當日的收支"
+                            category:
+                              type: string
+                              enum: [daily, weekly, monthly, budget, habit]
+                              description: 模板分類
+                              example: "daily"
+                            difficulty:
+                              type: string
+                              enum: [beginner, intermediate, advanced]
+                              description: 適用難度
+                              example: "beginner"
+                            recommendedFor:
+                              type: array
+                              items:
+                                type: string
+                                enum: [Expert, Inertial, Cultivation, Guiding]
+                              description: 推薦模式
+                              example: ["Inertial", "Cultivation", "Guiding"]
+                            template:
+                              type: object
+                              description: 模板內容
+                              properties:
+                                type:
+                                  type: string
+                                  enum: [daily, weekly, monthly, custom]
+                                  description: 提醒類型
+                                  example: "daily"
+                                schedule:
+                                  type: object
+                                  description: 預設排程
+                                  properties:
+                                    time:
+                                      type: string
+                                      format: time
+                                      description: 建議時間
+                                      example: "21:00"
+                                    daysOfWeek:
+                                      type: array
+                                      items:
+                                        type: integer
+                                      description: 星期設定
+                                      example: [1, 2, 3, 4, 5, 6, 7]
+                                message:
+                                  type: object
+                                  description: 預設訊息
+                                  properties:
+                                    title:
+                                      type: string
+                                      description: 標題
+                                      example: "記帳提醒"
+                                    content:
+                                      type: string
+                                      description: 內容
+                                      example: "別忘了記錄今天的收支喔！"
+                                    actionText:
+                                      type: string
+                                      description: 動作按鈕
+                                      example: "立即記帳"
+                            usage:
+                              type: object
+                              description: 使用統計
+                              properties:
+                                popularity:
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 100
+                                  description: 受歡迎程度
+                                  example: 85
+                                userCount:
+                                  type: integer
+                                  description: 使用人數
+                                  example: 1250
+                      categories:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: 分類ID
+                              example: "daily"
+                            name:
+                              type: string
+                              description: 分類名稱
+                              example: "每日提醒"
+                            count:
+                              type: integer
+                              description: 該分類模板數量
+                              example: 5
+              examples:
+                expert_templates:
+                  summary: Expert模式 - 完整模板
+                  value:
+                    success: true
+                    data:
+                      templates:
+                        - id: "template_daily_evening"
+                          name: "每日晚間提醒"
+                          description: "提醒您在每天晚上記錄當日的收支"
+                          category: "daily"
+                          difficulty: "beginner"
+                          recommendedFor: ["Inertial", "Cultivation", "Guiding"]
+                          template:
+                            type: "daily"
+                            schedule:
+                              time: "21:00"
+                            message:
+                              title: "記帳提醒"
+                              content: "別忘了記錄今天的收支喔！"
+                              actionText: "立即記帳"
+                          usage:
+                            popularity: 85
+                            userCount: 1250
+                        - id: "template_budget_warning"
+                          name: "預算警告提醒"
+                          description: "當預算使用達到設定門檻時自動提醒"
+                          category: "budget"
+                          difficulty: "advanced"
+                          recommendedFor: ["Expert"]
+                          template:
+                            type: "custom"
+                            schedule:
+                              customRule: "0 18 * * *"
+                            message:
+                              title: "預算警告"
+                              content: "本月預算即將超標，請注意支出！"
+                          usage:
+                            popularity: 65
+                            userCount: 380
+                      categories:
+                        - id: "daily"
+                          name: "每日提醒"
+                          count: 5
+                        - id: "budget"
+                          name: "預算相關"
+                          count: 3
+                guiding_templates:
+                  summary: Guiding模式 - 簡化模板
+                  value:
+                    success: true
+                    data:
+                      templates:
+                        - id: "template_simple_daily"
+                          name: "簡單每日提醒"
+                          description: "每天提醒您記帳"
+                          category: "daily"
+                          difficulty: "beginner"
+                          recommendedFor: ["Guiding"]
+                          template:
+                            type: "daily"
+                            schedule:
+                              time: "20:00"
+                            message:
+                              title: "記帳時間"
+                              content: "記得記帳喔！"
+                              actionText: "記帳"
+                          usage:
+                            popularity: 90
+                            userCount: 850
+                      categories:
+                        - id: "daily"
+                          name: "每日提醒"
+                          count: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: 錯誤代碼
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              description: 錯誤訊息
+              example: "請求參數格式錯誤"
+            details:
+              type: object
+              description: 詳細錯誤資訊
+            timestamp:
+              type: string
+              format: date-time
+              description: 錯誤發生時間
+              example: "2025-08-22T12:00:00Z"
+            requestId:
+              type: string
+              format: uuid
+              description: 請求追蹤ID
+              example: "req_abc123"
+
+  responses:
+    BadRequest:
+      description: 請求參數錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            validation_error:
+              summary: 參數驗證錯誤
+              value:
+                success: false
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "提醒時間格式錯誤"
+                  details:
+                    field: "schedule.time"
+                    rejectedValue: "25:00"
+                    expectedFormat: "HH:mm"
+                  timestamp: "2025-08-22T12:00:00Z"
+                  requestId: "req_abc123"
+
+    Unauthorized:
+      description: 未授權存取
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "UNAUTHORIZED"
+              message: "存取令牌無效或已過期"
+              timestamp: "2025-08-22T12:00:00Z"
+              requestId: "req_abc123"
+
+    InternalServerError:
+      description: 內部伺服器錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "INTERNAL_SERVER_ERROR"
+              message: "系統暫時無法處理請求，請稍後再試"
+              timestamp: "2025-08-22T12:00:00Z"
+              requestId: "req_abc123"
