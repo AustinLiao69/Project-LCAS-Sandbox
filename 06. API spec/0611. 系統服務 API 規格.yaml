@@ -1,0 +1,410 @@
+
+openapi: 3.0.3
+info:
+  title: LCAS 2.0 系統服務 API 規格
+  description: |
+    系統服務 API 提供 LCAS 2.0 系統的基礎管理功能，包含健康檢查、
+    系統監控、配置管理、日誌管理等核心系統服務。
+    
+    ## 🎯 服務範圍
+    - **系統健康檢查**：服務狀態監控、可用性檢測
+    - **系統配置管理**：動態配置更新、環境設定
+    - **日誌管理**：系統日誌查詢、錯誤追蹤
+    - **監控告警**：性能監控、異常告警
+    - **維護模式**：系統維護、版本管理
+    
+  version: 1.0.0
+  contact:
+    name: LCAS 2.0 API Support
+    email: support@lcas.app
+  license:
+    name: Proprietary
+    
+servers:
+  - url: https://api.lcas.app/v1
+    description: 生產環境
+  - url: https://staging-api.lcas.app/v1
+    description: 測試環境
+  - url: http://localhost:5000/v1
+    description: 開發環境
+
+tags:
+  - name: system-health
+    description: 系統健康檢查
+  - name: system-config
+    description: 系統配置管理
+  - name: system-logs
+    description: 系統日誌管理
+  - name: system-monitoring
+    description: 系統監控告警
+  - name: system-maintenance
+    description: 系統維護管理
+
+paths:
+  /system/health:
+    get:
+      tags: [system-health]
+      summary: 系統健康檢查
+      description: 檢查系統各服務模組的健康狀態和可用性
+      operationId: getSystemHealth
+      responses:
+        '200':
+          description: 系統健康狀態
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum: [healthy, degraded, unhealthy]
+                        example: healthy
+                      timestamp:
+                        type: string
+                        format: date-time
+                      services:
+                        type: object
+                        properties:
+                          api:
+                            $ref: '#/components/schemas/ServiceHealth'
+                          database:
+                            $ref: '#/components/schemas/ServiceHealth'
+                          authentication:
+                            $ref: '#/components/schemas/ServiceHealth'
+                          backup:
+                            $ref: '#/components/schemas/ServiceHealth'
+                      metrics:
+                        type: object
+                        properties:
+                          uptime:
+                            type: string
+                            example: "99.98%"
+                          avgResponseTime:
+                            type: string
+                            example: "28ms"
+                          activeUsers:
+                            type: integer
+                            example: 1250
+                          systemLoad:
+                            type: string
+                            example: "0.65"
+                      version:
+                        type: string
+                        example: "2.1.13"
+
+  /system/config:
+    get:
+      tags: [system-config]
+      summary: 取得系統配置
+      description: 查詢當前系統配置參數
+      operationId: getSystemConfig
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 系統配置資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      environment:
+                        type: string
+                        example: production
+                      features:
+                        type: object
+                        properties:
+                          ai_assistant:
+                            type: boolean
+                          gamification:
+                            type: boolean
+                          collaboration:
+                            type: boolean
+                      limits:
+                        type: object
+                        properties:
+                          maxConcurrentUsers:
+                            type: integer
+                          rateLimitPerMinute:
+                            type: integer
+                          maxFileSize:
+                            type: string
+                            
+    put:
+      tags: [system-config]
+      summary: 更新系統配置
+      description: 動態更新系統配置參數（需要管理員權限）
+      operationId: updateSystemConfig
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                configKey:
+                  type: string
+                  example: "features.ai_assistant"
+                configValue:
+                  type: string
+                  example: "true"
+                reason:
+                  type: string
+                  example: "啟用AI助理功能"
+      responses:
+        '200':
+          description: 配置更新成功
+        '403':
+          description: 權限不足
+
+  /system/logs:
+    get:
+      tags: [system-logs]
+      summary: 查詢系統日誌
+      description: 查詢系統日誌記錄，支援篩選和分頁
+      operationId: getSystemLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: level
+          in: query
+          description: 日誌級別篩選
+          schema:
+            type: string
+            enum: [ERROR, WARN, INFO, DEBUG]
+        - name: module
+          in: query
+          description: 模組名稱篩選
+          schema:
+            type: string
+        - name: startTime
+          in: query
+          description: 開始時間
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          description: 結束時間
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: 每頁記錄數
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: offset
+          in: query
+          description: 偏移量
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: 日誌查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      logs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SystemLog'
+                      totalCount:
+                        type: integer
+                      hasMore:
+                        type: boolean
+
+  /system/monitoring/alerts:
+    get:
+      tags: [system-monitoring]
+      summary: 取得系統告警
+      description: 查詢系統監控告警資訊
+      operationId: getSystemAlerts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: severity
+          in: query
+          description: 告警嚴重程度
+          schema:
+            type: string
+            enum: [critical, high, medium, low]
+        - name: status
+          in: query
+          description: 告警狀態
+          schema:
+            type: string
+            enum: [active, resolved, suppressed]
+      responses:
+        '200':
+          description: 告警查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      alerts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SystemAlert'
+
+  /system/maintenance:
+    get:
+      tags: [system-maintenance]
+      summary: 取得維護狀態
+      description: 查詢系統維護模式狀態
+      operationId: getMaintenanceStatus
+      responses:
+        '200':
+          description: 維護狀態查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      isMaintenanceMode:
+                        type: boolean
+                      scheduledMaintenance:
+                        type: object
+                        properties:
+                          startTime:
+                            type: string
+                            format: date-time
+                          endTime:
+                            type: string
+                            format: date-time
+                          description:
+                            type: string
+                            
+    post:
+      tags: [system-maintenance]
+      summary: 設定維護模式
+      description: 啟用或停用系統維護模式
+      operationId: setMaintenanceMode
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  description: 是否啟用維護模式
+                message:
+                  type: string
+                  description: 維護訊息
+                estimatedDuration:
+                  type: integer
+                  description: 預估維護時間（分鐘）
+      responses:
+        '200':
+          description: 維護模式設定成功
+        '403':
+          description: 權限不足
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ServiceHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [up, down, degraded]
+        responseTime:
+          type: string
+          example: "45ms"
+        lastCheck:
+          type: string
+          format: date-time
+        details:
+          type: object
+
+    SystemLog:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        level:
+          type: string
+          enum: [ERROR, WARN, INFO, DEBUG]
+        module:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+        userId:
+          type: string
+          nullable: true
+
+    SystemAlert:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        status:
+          type: string
+          enum: [active, resolved, suppressed]
+        triggeredAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        affectedServices:
+          type: array
+          items:
+            type: string

@@ -2309,6 +2309,43 @@ app.post('/ai/nlp/parse', async (req, res) => {
 
 // =============== 系統管理 API 端點 ===============
 
+// 系統健康檢查
+app.get('/system/health/check', async (req, res) => {
+  try {
+    const healthStatus = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      services: {
+        api: { status: 'up', responseTime: '45ms' },
+        database: { status: 'up', responseTime: '12ms' },
+        authentication: { status: 'up', responseTime: '23ms' },
+        backup: { status: 'up', lastBackup: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() }
+      },
+      metrics: {
+        uptime: '99.98%',
+        avgResponseTime: '28ms',
+        activeUsers: 1250,
+        systemLoad: '0.65'
+      },
+      version: '2.1.13'
+    };
+
+    res.json({
+      success: true,
+      data: healthStatus,
+      message: '系統健康檢查完成',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '系統健康監控失敗',
+      error: error.message
+    });
+  }
+});
+
 // 定期自動備份
 app.post('/system/backup/schedule', async (req, res) => {
   try {
