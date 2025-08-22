@@ -1372,9 +1372,7 @@ async function AM_processSRUpgrade(userId, upgradeType, paymentInfo, requesterId
   }
 }
 
-// if (!admin.apps.length) {
-//   firebaseConfig.initializeFirebaseAdmin();
-// }
+
 
 // 導出模組函數
 module.exports = {

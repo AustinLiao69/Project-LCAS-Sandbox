@@ -11,7 +11,9 @@ const firebaseConfig = require('./2099. firebase-config');
 // 初始化 Firebase Admin（防重複初始化）
 let admin, db;
 try {
-  firebaseConfig.initializeFirebaseAdmin();
+  if (!firebaseConfig.admin || !firebaseConfig.admin.apps.length) {
+    firebaseConfig.initializeFirebaseAdmin();
+  }
   admin = firebaseConfig.admin;
   db = firebaseConfig.getFirestoreInstance();
   console.log('✅ DL模組：Firebase動態配置載入成功');

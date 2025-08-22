@@ -114,14 +114,8 @@ async function initializeFirestore() {
     if (!admin.apps.length) {
       console.log('🔄 BK模組: Firebase Admin 尚未初始化，開始初始化...');
 
-      // 載入服務帳號金鑰
-      const serviceAccount = require('./Serviceaccountkey.json');
-
-      // 初始化 Firebase Admin
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
-      });
+      // 使用動態配置模組初始化
+      firebaseConfig.initializeFirebaseAdmin();
 
       console.log('✅ BK模組: Firebase Admin 初始化完成');
     }
