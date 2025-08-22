@@ -1,0 +1,1134 @@
+
+openapi: 3.0.3
+info:
+  title: LCAS 2.0 備份與資料管理服務 API
+  version: 1.0.0
+  description: |
+    **備份與資料管理服務 API 規格書**
+    
+    **版本**: 1.0.0  
+    **建立日期**: 2025-08-22  
+    **最後更新**: 2025-08-22  
+    **建立者**: AustinLiao69  
+    
+    ---
+    
+    ## 📋 服務概述
+    
+    備份與資料管理服務提供完整的資料備份、還原與匯入匯出功能，確保使用者資料的安全性與可攜性。
+    
+    ### 🎯 核心功能
+    - **備份管理**: 建立、列表、狀態查詢
+    - **資料還原**: 從備份檔案還原資料
+    - **資料匯出**: 支援多種格式匯出
+    - **資料匯入**: 從外部檔案匯入資料
+    
+    ### 🔧 四模式支援
+    - **Expert**: 詳細備份控制、進階設定選項
+    - **Inertial**: 標準備份流程、固定設定
+    - **Cultivation**: 引導式備份、進度追蹤
+    - **Guiding**: 自動備份、最簡化操作
+    
+    ### 📊 對應畫面
+    - **S-502**: 資料備份頁
+
+servers:
+  - url: https://api.lcas.app/v1
+    description: Production server
+  - url: https://staging-api.lcas.app/v1
+    description: Staging server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: backup
+    description: 備份管理相關 API
+  - name: data
+    description: 資料匯入匯出相關 API
+
+paths:
+  /backup/create:
+    post:
+      tags:
+        - backup
+      summary: 建立備份
+      description: |
+        建立使用者資料的完整備份
+        
+        **對應畫面**: S-502 資料備份頁
+        **User Story**: US-031
+        
+        **四模式差異**:
+        - **Expert**: 支援自定義備份範圍、壓縮等級
+        - **Inertial**: 標準全量備份
+        - **Cultivation**: 引導式備份設定
+        - **Guiding**: 自動化一鍵備份
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                backupName:
+                  type: string
+                  description: 備份名稱
+                  example: "每週備份_2025-08-22"
+                  maxLength: 100
+                description:
+                  type: string
+                  description: 備份描述
+                  example: "包含所有記帳資料的完整備份"
+                  maxLength: 500
+                includeData:
+                  type: object
+                  description: 要備份的資料類型
+                  properties:
+                    transactions:
+                      type: boolean
+                      description: 是否包含交易記錄
+                      default: true
+                    ledgers:
+                      type: boolean
+                      description: 是否包含帳本資料
+                      default: true
+                    accounts:
+                      type: boolean
+                      description: 是否包含帳戶資料
+                      default: true
+                    categories:
+                      type: boolean
+                      description: 是否包含科目資料
+                      default: true
+                    budgets:
+                      type: boolean
+                      description: 是否包含預算資料
+                      default: true
+                    settings:
+                      type: boolean
+                      description: 是否包含使用者設定
+                      default: true
+                dateRange:
+                  type: object
+                  description: 備份的時間範圍（僅Expert模式）
+                  properties:
+                    startDate:
+                      type: string
+                      format: date
+                      description: 開始日期
+                      example: "2025-01-01"
+                    endDate:
+                      type: string
+                      format: date
+                      description: 結束日期
+                      example: "2025-08-22"
+                compressionLevel:
+                  type: integer
+                  description: 壓縮等級 (1-9，僅Expert模式)
+                  minimum: 1
+                  maximum: 9
+                  default: 6
+                isEncrypted:
+                  type: boolean
+                  description: 是否加密備份檔案
+                  default: true
+              required:
+                - backupName
+            examples:
+              expert_backup:
+                summary: Expert模式 - 自定義備份
+                value:
+                  backupName: "專案記帳備份_Q3"
+                  description: "2025年第三季專案相關記帳資料"
+                  includeData:
+                    transactions: true
+                    ledgers: true
+                    accounts: true
+                    categories: false
+                    budgets: true
+                    settings: false
+                  dateRange:
+                    startDate: "2025-07-01"
+                    endDate: "2025-09-30"
+                  compressionLevel: 9
+                  isEncrypted: true
+              simple_backup:
+                summary: 簡單模式 - 完整備份
+                value:
+                  backupName: "完整備份_2025-08-22"
+                  description: "所有資料的完整備份"
+      responses:
+        '202':
+          description: 備份請求已接受，開始處理
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      backupId:
+                        type: string
+                        format: uuid
+                        description: 備份任務ID
+                        example: "backup_67890"
+                      status:
+                        type: string
+                        enum: [queued, processing]
+                        description: 備份狀態
+                        example: "queued"
+                      estimatedTime:
+                        type: integer
+                        description: 預估完成時間（秒）
+                        example: 120
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: 建立時間
+                        example: "2025-08-22T10:30:00Z"
+                      message:
+                        type: string
+                        description: 狀態訊息
+                        example: "備份已排入佇列，請稍候"
+              examples:
+                expert_response:
+                  summary: Expert模式回應
+                  value:
+                    success: true
+                    data:
+                      backupId: "backup_67890"
+                      status: "processing"
+                      estimatedTime: 180
+                      createdAt: "2025-08-22T10:30:00Z"
+                      message: "正在建立自定義範圍備份"
+                      details:
+                        totalItems: 15420
+                        processedItems: 0
+                        compressionLevel: 9
+                guiding_response:
+                  summary: Guiding模式回應
+                  value:
+                    success: true
+                    data:
+                      backupId: "backup_67890"
+                      status: "processing"
+                      estimatedTime: 60
+                      createdAt: "2025-08-22T10:30:00Z"
+                      message: "正在為您建立備份..."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /backup/list:
+    get:
+      tags:
+        - backup
+      summary: 備份列表
+      description: |
+        取得使用者的備份檔案列表
+        
+        **對應畫面**: S-502 資料備份頁
+        **User Story**: US-031
+        
+        **四模式差異**:
+        - **Expert**: 顯示詳細備份資訊、大小、設定
+        - **Inertial**: 顯示基本備份列表
+        - **Cultivation**: 顯示備份進度、成就
+        - **Guiding**: 顯示最近備份狀態
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+        - name: page
+          in: query
+          description: 分頁編號
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每頁筆數
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          description: 備份狀態篩選
+          required: false
+          schema:
+            type: string
+            enum: [all, completed, processing, failed]
+            default: all
+        - name: sortBy
+          in: query
+          description: 排序欄位
+          required: false
+          schema:
+            type: string
+            enum: [createdAt, name, size]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          description: 排序方向
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: 成功取得備份列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      backups:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              description: 備份ID
+                              example: "backup_67890"
+                            name:
+                              type: string
+                              description: 備份名稱
+                              example: "每週備份_2025-08-22"
+                            description:
+                              type: string
+                              description: 備份描述
+                              example: "包含所有記帳資料的完整備份"
+                            status:
+                              type: string
+                              enum: [completed, processing, failed, queued]
+                              description: 備份狀態
+                              example: "completed"
+                            size:
+                              type: integer
+                              description: 檔案大小（位元組）
+                              example: 2048576
+                            sizeFormatted:
+                              type: string
+                              description: 格式化的檔案大小
+                              example: "2.0 MB"
+                            createdAt:
+                              type: string
+                              format: date-time
+                              description: 建立時間
+                              example: "2025-08-22T10:30:00Z"
+                            completedAt:
+                              type: string
+                              format: date-time
+                              description: 完成時間
+                              example: "2025-08-22T10:32:15Z"
+                            expiresAt:
+                              type: string
+                              format: date-time
+                              description: 過期時間
+                              example: "2025-11-22T10:30:00Z"
+                            isEncrypted:
+                              type: boolean
+                              description: 是否加密
+                              example: true
+                            dataTypes:
+                              type: array
+                              items:
+                                type: string
+                              description: 包含的資料類型
+                              example: ["transactions", "ledgers", "accounts"]
+                            downloadUrl:
+                              type: string
+                              format: uri
+                              description: 下載連結（僅completed狀態）
+                              example: "https://api.lcas.app/v1/backup/backup_67890/download"
+                      pagination:
+                        type: object
+                        properties:
+                          currentPage:
+                            type: integer
+                            example: 1
+                          totalPages:
+                            type: integer
+                            example: 3
+                          totalItems:
+                            type: integer
+                            example: 15
+                          pageSize:
+                            type: integer
+                            example: 20
+              examples:
+                expert_response:
+                  summary: Expert模式 - 詳細備份資訊
+                  value:
+                    success: true
+                    data:
+                      backups:
+                        - id: "backup_67890"
+                          name: "專案記帳備份_Q3"
+                          description: "2025年第三季專案相關記帳資料"
+                          status: "completed"
+                          size: 2048576
+                          sizeFormatted: "2.0 MB"
+                          createdAt: "2025-08-22T10:30:00Z"
+                          completedAt: "2025-08-22T10:32:15Z"
+                          expiresAt: "2025-11-22T10:30:00Z"
+                          isEncrypted: true
+                          compressionLevel: 9
+                          dataTypes: ["transactions", "ledgers", "budgets"]
+                          downloadUrl: "https://api.lcas.app/v1/backup/backup_67890/download"
+                          statistics:
+                            transactionCount: 1520
+                            ledgerCount: 3
+                            accountCount: 8
+                guiding_response:
+                  summary: Guiding模式 - 簡化資訊
+                  value:
+                    success: true
+                    data:
+                      backups:
+                        - id: "backup_67890"
+                          name: "自動備份_2025-08-22"
+                          status: "completed"
+                          createdAt: "2025-08-22T10:30:00Z"
+                          downloadUrl: "https://api.lcas.app/v1/backup/backup_67890/download"
+                          message: "備份完成，可以下載"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /backup/restore:
+    post:
+      tags:
+        - backup
+      summary: 還原備份
+      description: |
+        從備份檔案還原使用者資料
+        
+        **對應畫面**: S-502 資料備份頁
+        **User Story**: US-032
+        
+        **四模式差異**:
+        - **Expert**: 選擇性還原、衝突處理選項
+        - **Inertial**: 標準完整還原
+        - **Cultivation**: 引導式還原流程
+        - **Guiding**: 一鍵完整還原
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                backupId:
+                  type: string
+                  format: uuid
+                  description: 備份檔案ID
+                  example: "backup_67890"
+                restoreOptions:
+                  type: object
+                  description: 還原選項
+                  properties:
+                    dataTypes:
+                      type: array
+                      items:
+                        type: string
+                        enum: [transactions, ledgers, accounts, categories, budgets, settings]
+                      description: 要還原的資料類型
+                      example: ["transactions", "ledgers", "accounts"]
+                    conflictResolution:
+                      type: string
+                      enum: [overwrite, merge, skip]
+                      description: 資料衝突處理方式
+                      default: merge
+                    deleteExisting:
+                      type: boolean
+                      description: 是否刪除現有資料
+                      default: false
+                    restoreToDate:
+                      type: string
+                      format: date
+                      description: 還原到特定日期（僅Expert模式）
+                      example: "2025-08-20"
+                confirmDeletion:
+                  type: boolean
+                  description: 確認刪除現有資料（當deleteExisting=true時必填）
+                  example: false
+              required:
+                - backupId
+            examples:
+              expert_restore:
+                summary: Expert模式 - 選擇性還原
+                value:
+                  backupId: "backup_67890"
+                  restoreOptions:
+                    dataTypes: ["transactions", "ledgers"]
+                    conflictResolution: "merge"
+                    deleteExisting: false
+                    restoreToDate: "2025-08-20"
+              simple_restore:
+                summary: 簡單模式 - 完整還原
+                value:
+                  backupId: "backup_67890"
+                  restoreOptions:
+                    conflictResolution: "merge"
+      responses:
+        '202':
+          description: 還原請求已接受，開始處理
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      restoreId:
+                        type: string
+                        format: uuid
+                        description: 還原任務ID
+                        example: "restore_78901"
+                      status:
+                        type: string
+                        enum: [queued, processing]
+                        description: 還原狀態
+                        example: "queued"
+                      estimatedTime:
+                        type: integer
+                        description: 預估完成時間（秒）
+                        example: 90
+                      startedAt:
+                        type: string
+                        format: date-time
+                        description: 開始時間
+                        example: "2025-08-22T11:00:00Z"
+                      message:
+                        type: string
+                        description: 狀態訊息
+                        example: "正在準備還原資料..."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 備份檔案不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /backup/status:
+    get:
+      tags:
+        - backup
+      summary: 備份狀態
+      description: |
+        查詢特定備份或還原任務的狀態
+        
+        **對應畫面**: S-502 資料備份頁
+        **User Story**: US-031, US-032
+      parameters:
+        - name: taskId
+          in: query
+          description: 任務ID（備份ID或還原ID）
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "backup_67890"
+        - name: taskType
+          in: query
+          description: 任務類型
+          required: true
+          schema:
+            type: string
+            enum: [backup, restore]
+            example: "backup"
+      responses:
+        '200':
+          description: 成功取得任務狀態
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      taskId:
+                        type: string
+                        format: uuid
+                        description: 任務ID
+                        example: "backup_67890"
+                      taskType:
+                        type: string
+                        enum: [backup, restore]
+                        description: 任務類型
+                        example: "backup"
+                      status:
+                        type: string
+                        enum: [queued, processing, completed, failed, cancelled]
+                        description: 任務狀態
+                        example: "processing"
+                      progress:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: 完成進度（百分比）
+                        example: 65
+                      startedAt:
+                        type: string
+                        format: date-time
+                        description: 開始時間
+                        example: "2025-08-22T10:30:00Z"
+                      completedAt:
+                        type: string
+                        format: date-time
+                        description: 完成時間（若已完成）
+                        example: "2025-08-22T10:32:15Z"
+                      estimatedTimeRemaining:
+                        type: integer
+                        description: 預估剩餘時間（秒）
+                        example: 45
+                      currentStep:
+                        type: string
+                        description: 當前執行步驟
+                        example: "正在備份交易記錄..."
+                      result:
+                        type: object
+                        description: 執行結果（若已完成）
+                        properties:
+                          totalItems:
+                            type: integer
+                            description: 總項目數
+                            example: 1520
+                          processedItems:
+                            type: integer
+                            description: 已處理項目數
+                            example: 1520
+                          skippedItems:
+                            type: integer
+                            description: 跳過項目數
+                            example: 0
+                          errors:
+                            type: array
+                            items:
+                              type: string
+                            description: 錯誤訊息列表
+                            example: []
+                          fileSize:
+                            type: integer
+                            description: 檔案大小（僅備份）
+                            example: 2048576
+                          downloadUrl:
+                            type: string
+                            format: uri
+                            description: 下載連結（僅備份成功）
+                            example: "https://api.lcas.app/v1/backup/backup_67890/download"
+        '404':
+          description: 任務不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /data/export:
+    post:
+      tags:
+        - data
+      summary: 匯出資料
+      description: |
+        將使用者資料匯出為指定格式
+        
+        **對應畫面**: S-502 資料備份頁
+        **User Story**: US-031
+        
+        **支援格式**:
+        - CSV: 適合 Excel 開啟
+        - JSON: 適合程式處理
+        - PDF: 適合列印分享
+        - XLSX: Excel 格式
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum: [csv, json, pdf, xlsx]
+                  description: 匯出格式
+                  example: "csv"
+                dataType:
+                  type: string
+                  enum: [transactions, ledgers, accounts, categories, budgets, all]
+                  description: 要匯出的資料類型
+                  example: "transactions"
+                dateRange:
+                  type: object
+                  description: 資料時間範圍
+                  properties:
+                    startDate:
+                      type: string
+                      format: date
+                      description: 開始日期
+                      example: "2025-01-01"
+                    endDate:
+                      type: string
+                      format: date
+                      description: 結束日期
+                      example: "2025-08-22"
+                filters:
+                  type: object
+                  description: 資料篩選條件
+                  properties:
+                    ledgerIds:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: 帳本ID列表
+                      example: ["ledger_123", "ledger_456"]
+                    categoryIds:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: 科目ID列表
+                      example: ["cat_789"]
+                    accountIds:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: 帳戶ID列表
+                      example: ["acc_101"]
+                    transactionType:
+                      type: string
+                      enum: [income, expense, transfer, all]
+                      description: 交易類型
+                      default: all
+                options:
+                  type: object
+                  description: 匯出選項
+                  properties:
+                    includeAttachments:
+                      type: boolean
+                      description: 是否包含附件
+                      default: false
+                    includeDeleted:
+                      type: boolean
+                      description: 是否包含已刪除資料
+                      default: false
+                    currency:
+                      type: string
+                      description: 金額顯示幣別
+                      example: "TWD"
+                      default: "TWD"
+                    locale:
+                      type: string
+                      description: 語言地區設定
+                      example: "zh-TW"
+                      default: "zh-TW"
+              required:
+                - format
+                - dataType
+            examples:
+              csv_export:
+                summary: CSV 格式匯出交易記錄
+                value:
+                  format: "csv"
+                  dataType: "transactions"
+                  dateRange:
+                    startDate: "2025-01-01"
+                    endDate: "2025-08-22"
+                  filters:
+                    transactionType: "all"
+                  options:
+                    includeAttachments: false
+                    currency: "TWD"
+                    locale: "zh-TW"
+              json_export:
+                summary: JSON 格式完整匯出
+                value:
+                  format: "json"
+                  dataType: "all"
+                  options:
+                    includeAttachments: true
+                    includeDeleted: false
+      responses:
+        '202':
+          description: 匯出請求已接受，開始處理
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      exportId:
+                        type: string
+                        format: uuid
+                        description: 匯出任務ID
+                        example: "export_12345"
+                      status:
+                        type: string
+                        enum: [queued, processing]
+                        description: 匯出狀態
+                        example: "queued"
+                      format:
+                        type: string
+                        description: 匯出格式
+                        example: "csv"
+                      estimatedTime:
+                        type: integer
+                        description: 預估完成時間（秒）
+                        example: 30
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: 建立時間
+                        example: "2025-08-22T11:15:00Z"
+                      statusUrl:
+                        type: string
+                        format: uri
+                        description: 狀態查詢連結
+                        example: "https://api.lcas.app/v1/data/export/export_12345/status"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /data/import:
+    post:
+      tags:
+        - data
+      summary: 匯入資料
+      description: |
+        從外部檔案匯入資料到系統
+        
+        **對應畫面**: S-502 資料備份頁
+        **User Story**: US-032
+        
+        **支援格式**:
+        - CSV: 從 Excel 或其他系統匯入
+        - JSON: 從備份檔案或API匯入
+        - XLSX: Excel 格式
+        
+        **四模式差異**:
+        - **Expert**: 詳細欄位對應、錯誤處理選項
+        - **Inertial**: 標準格式匯入
+        - **Cultivation**: 引導式匯入流程
+        - **Guiding**: 自動格式偵測匯入
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 使用者模式
+          required: false
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Inertial
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 要匯入的檔案
+                format:
+                  type: string
+                  enum: [csv, json, xlsx, auto]
+                  description: 檔案格式（auto為自動偵測）
+                  default: auto
+                dataType:
+                  type: string
+                  enum: [transactions, accounts, categories, budgets]
+                  description: 資料類型
+                  example: "transactions"
+                importOptions:
+                  type: string
+                  description: 匯入選項 (JSON格式)
+                  example: '{"conflictResolution": "merge", "skipErrors": true}'
+              required:
+                - file
+                - dataType
+      responses:
+        '202':
+          description: 匯入請求已接受，開始處理
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      importId:
+                        type: string
+                        format: uuid
+                        description: 匯入任務ID
+                        example: "import_54321"
+                      status:
+                        type: string
+                        enum: [validating, processing, completed, failed]
+                        description: 匯入狀態
+                        example: "validating"
+                      fileName:
+                        type: string
+                        description: 檔案名稱
+                        example: "transactions_2025.csv"
+                      fileSize:
+                        type: integer
+                        description: 檔案大小（位元組）
+                        example: 524288
+                      detectedFormat:
+                        type: string
+                        description: 偵測到的檔案格式
+                        example: "csv"
+                      estimatedRecords:
+                        type: integer
+                        description: 預估記錄數
+                        example: 1250
+                      estimatedTime:
+                        type: integer
+                        description: 預估完成時間（秒）
+                        example: 60
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: 建立時間
+                        example: "2025-08-22T11:30:00Z"
+                      statusUrl:
+                        type: string
+                        format: uri
+                        description: 狀態查詢連結
+                        example: "https://api.lcas.app/v1/data/import/import_54321/status"
+        '400':
+          description: 檔案格式錯誤或參數無效
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "INVALID_FILE_FORMAT"
+                      message:
+                        type: string
+                        example: "不支援的檔案格式或檔案已損毀"
+                      details:
+                        type: object
+                        properties:
+                          supportedFormats:
+                            type: array
+                            items:
+                              type: string
+                            example: ["csv", "json", "xlsx"]
+                          maxFileSize:
+                            type: string
+                            example: "10MB"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: 檔案過大
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: 錯誤代碼
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              description: 錯誤訊息
+              example: "請求參數格式錯誤"
+            details:
+              type: object
+              description: 詳細錯誤資訊
+            timestamp:
+              type: string
+              format: date-time
+              description: 錯誤發生時間
+              example: "2025-08-22T12:00:00Z"
+            requestId:
+              type: string
+              format: uuid
+              description: 請求追蹤ID
+              example: "req_abc123"
+
+  responses:
+    BadRequest:
+      description: 請求參數錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            validation_error:
+              summary: 參數驗證錯誤
+              value:
+                success: false
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "備份名稱不能為空"
+                  details:
+                    field: "backupName"
+                    rejectedValue: ""
+                  timestamp: "2025-08-22T12:00:00Z"
+                  requestId: "req_abc123"
+
+    Unauthorized:
+      description: 未授權存取
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "UNAUTHORIZED"
+              message: "存取令牌無效或已過期"
+              timestamp: "2025-08-22T12:00:00Z"
+              requestId: "req_abc123"
+
+    TooManyRequests:
+      description: 請求頻率過高
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "RATE_LIMIT_EXCEEDED"
+              message: "備份請求頻率過高，請稍後再試"
+              details:
+                retryAfter: 300
+                limit: "每小時最多5次備份"
+              timestamp: "2025-08-22T12:00:00Z"
+              requestId: "req_abc123"
+
+    InternalServerError:
+      description: 內部伺服器錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "INTERNAL_SERVER_ERROR"
+              message: "系統暫時無法處理請求，請稍後再試"
+              timestamp: "2025-08-22T12:00:00Z"
+              requestId: "req_abc123"
