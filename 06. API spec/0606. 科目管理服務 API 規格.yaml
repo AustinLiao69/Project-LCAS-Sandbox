@@ -1,0 +1,1762 @@
+
+openapi: 3.0.3
+info:
+  title: LCAS 2.0 - 科目管理服務 API 規格
+  version: 1.0.0
+  description: |
+    **LCAS 2.0 科目管理服務 API 規格**
+    
+    負責收支科目的完整管理功能，包含科目分類、階層結構、使用統計等。
+    支援四模式差異化體驗，提供靈活的科目管理與個人化設定。
+    
+    ## 🎯 服務範圍
+    - **科目 CRUD**：建立、查詢、修改、刪除科目
+    - **階層管理**：科目樹狀結構、父子關係管理
+    - **科目分類**：收入科目、支出科目、轉帳科目
+    - **使用統計**：科目使用頻率、金額分析
+    - **個人化設定**：常用科目、快速選擇、預設科目
+    
+    ## 🎨 四模式差異化支援
+    
+    | 模式 | 特色功能 |
+    |------|----------|
+    | **Expert** | 完整科目管理、自訂階層、批次操作、進階統計 |
+    | **Inertial** | 標準科目操作、固定分類、簡潔管理 |
+    | **Cultivation** | 科目建議、使用引導、習慣分析 |
+    | **Guiding** | 極簡科目、預設分類、最少選項 |
+    
+    ## 🗂️ 對應畫面
+    - **S-204**：科目選擇頁
+    - **S-306**：科目管理主頁
+    
+    **版本**: 1.0.0  
+    **建立日期**: 2025-08-22  
+    **對應文件**: 0021. Screen list.md (S-204, S-306)
+
+servers:
+  - url: https://api.lcas.app/v1
+    description: "Production server"
+  - url: https://api-staging.lcas.app/v1
+    description: "Staging server"
+
+security:
+  - BearerAuth: []
+
+paths:
+  /categories:
+    get:
+      summary: "取得科目列表"
+      description: |
+        取得使用者的科目列表，支援分層結構、篩選和排序。
+        根據使用者模式返回不同詳細程度的資訊。
+        
+        **對應畫面**: S-204 科目選擇頁、S-306 科目管理主頁
+        **四模式差異**: 顯示資訊詳細程度與推薦科目不同
+      tags:
+        - "科目查詢"
+      parameters:
+        - name: ledgerId
+          in: query
+          description: "指定帳本 ID（可選，預設為所有帳本）"
+          schema:
+            type: string
+            example: "ledger-uuid-001"
+        - name: type
+          in: query
+          description: "科目類型篩選"
+          schema:
+            type: string
+            enum: [income, expense, transfer, all]
+            default: all
+        - name: parentId
+          in: query
+          description: "父科目 ID（取得子科目）"
+          schema:
+            type: string
+        - name: level
+          in: query
+          description: "科目層級（0=根層級）"
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 5
+        - name: includeInactive
+          in: query
+          description: "是否包含已停用科目"
+          schema:
+            type: boolean
+            default: false
+        - name: includeStatistics
+          in: query
+          description: "是否包含使用統計"
+          schema:
+            type: boolean
+            default: false
+        - name: search
+          in: query
+          description: "搜尋關鍵字（科目名稱、描述）"
+          schema:
+            type: string
+            example: "餐廳"
+        - name: sortBy
+          in: query
+          description: "排序欄位"
+          schema:
+            type: string
+            enum: [name, type, usage_count, amount_total, created_at, sort_order]
+            default: sort_order
+        - name: sortOrder
+          in: query
+          description: "排序方向"
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+        - name: X-User-Mode
+          in: header
+          description: "用戶模式標識"
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: "成功取得科目列表"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      categories:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "category-uuid-001"
+                            name:
+                              type: string
+                              example: "餐廳"
+                            type:
+                              type: string
+                              enum: [income, expense, transfer]
+                              example: "expense"
+                            
+                            # 基本資訊
+                            description:
+                              type: string
+                              example: "外食餐廳用餐"
+                            icon:
+                              type: string
+                              example: "🍽️"
+                            color:
+                              type: string
+                              example: "#FF5722"
+                            
+                            # 階層資訊
+                            parentId:
+                              type: string
+                              example: "category-uuid-food"
+                              nullable: true
+                            level:
+                              type: integer
+                              example: 1
+                              description: "科目層級（0=根層級）"
+                            path:
+                              type: string
+                              example: "食物 > 餐廳"
+                              description: "完整路徑"
+                            hasChildren:
+                              type: boolean
+                              example: false
+                            childrenCount:
+                              type: integer
+                              example: 0
+                            
+                            # 設定資訊
+                            isActive:
+                              type: boolean
+                              example: true
+                            isDefault:
+                              type: boolean
+                              example: false
+                            sortOrder:
+                              type: integer
+                              example: 10
+                            
+                            # Expert Mode: 詳細統計
+                            statistics:
+                              type: object
+                              properties:
+                                usageCount:
+                                  type: integer
+                                  example: 45
+                                  description: "使用次數"
+                                totalAmount:
+                                  type: number
+                                  example: 28500
+                                  description: "總金額"
+                                averageAmount:
+                                  type: number
+                                  example: 633.33
+                                  description: "平均金額"
+                                lastUsed:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-01-27T12:30:00Z"
+                                monthlyUsage:
+                                  type: integer
+                                  example: 8
+                                  description: "本月使用次數"
+                                monthlyAmount:
+                                  type: number
+                                  example: 4500
+                                  description: "本月金額"
+                                usageRank:
+                                  type: integer
+                                  example: 3
+                                  description: "使用頻率排名"
+                            
+                            # Cultivation Mode: 習慣分析
+                            habits:
+                              type: object
+                              properties:
+                                frequencyPattern:
+                                  type: string
+                                  enum: [daily, weekly, monthly, irregular]
+                                  example: "weekly"
+                                averageInterval:
+                                  type: number
+                                  example: 6.5
+                                  description: "平均使用間隔（天）"
+                                preferredTimeSlots:
+                                  type: array
+                                  items:
+                                    type: string
+                                  example: ["12:00-14:00", "18:00-20:00"]
+                                seasonalPattern:
+                                  type: string
+                                  example: "較常在週末使用"
+                            
+                            # 審計資訊
+                            audit:
+                              type: object
+                              properties:
+                                createdAt:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-01-01T00:00:00Z"
+                                updatedAt:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-01-20T15:30:00Z"
+                                createdBy:
+                                  type: string
+                                  example: "user-uuid-12345"
+                                isSystemDefault:
+                                  type: boolean
+                                  example: false
+                                  description: "是否為系統預設科目"
+                      
+                      # 階層結構（樹狀）
+                      tree:
+                        type: array
+                        description: "科目樹狀結構（Expert 模式）"
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "category-uuid-food"
+                            name:
+                              type: string
+                              example: "食物"
+                            type:
+                              type: string
+                              example: "expense"
+                            children:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    example: "category-uuid-restaurant"
+                                  name:
+                                    type: string
+                                    example: "餐廳"
+                                  children:
+                                    type: array
+                                    items: {}
+                      
+                      # 四模式差異化推薦
+                      recommendations:
+                        type: array
+                        description: "推薦科目（Cultivation/Guiding 模式）"
+                        items:
+                          type: object
+                          properties:
+                            categoryId:
+                              type: string
+                              example: "category-uuid-001"
+                            reason:
+                              type: string
+                              enum: [frequently_used, similar_amount, time_pattern, seasonal]
+                              example: "frequently_used"
+                            description:
+                              type: string
+                              example: "您經常在這個時間使用此科目"
+                            confidence:
+                              type: number
+                              example: 0.85
+                              description: "推薦信心度"
+                      
+                      # 快速存取
+                      quickAccess:
+                        type: object
+                        properties:
+                          favorites:
+                            type: array
+                            description: "常用科目"
+                            items:
+                              type: string
+                            example: ["category-uuid-001", "category-uuid-005"]
+                          recent:
+                            type: array
+                            description: "最近使用科目"
+                            items:
+                              type: string
+                            example: ["category-uuid-001", "category-uuid-003"]
+                          suggested:
+                            type: array
+                            description: "智慧建議科目"
+                            items:
+                              type: string
+                            example: ["category-uuid-002", "category-uuid-007"]
+                      
+                      # 統計摘要
+                      summary:
+                        type: object
+                        properties:
+                          totalCategories:
+                            type: integer
+                            example: 35
+                          activeCategories:
+                            type: integer
+                            example: 28
+                          byType:
+                            type: object
+                            properties:
+                              income:
+                                type: integer
+                                example: 8
+                              expense:
+                                type: integer
+                                example: 25
+                              transfer:
+                                type: integer
+                                example: 2
+                          customCategories:
+                            type: integer
+                            example: 12
+                            description: "自訂科目數量"
+                          systemCategories:
+                            type: integer
+                            example: 23
+                            description: "系統預設科目數量"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      summary: "建立科目"
+      description: |
+        建立新的收支科目，支援階層結構設定。
+        不同模式提供不同的建立選項和預設值。
+        
+        **對應畫面**: S-306 科目管理主頁建立功能
+        **四模式差異**: 可設定選項與預設值不同
+      tags:
+        - "科目管理"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # 基本資訊（必填）
+                name:
+                  type: string
+                  example: "計程車"
+                  maxLength: 50
+                  minLength: 1
+                type:
+                  type: string
+                  enum: [income, expense, transfer]
+                  example: "expense"
+                ledgerId:
+                  type: string
+                  example: "ledger-uuid-001"
+                  description: "所屬帳本 ID"
+                
+                # 選填資訊
+                description:
+                  type: string
+                  example: "計程車車資"
+                  maxLength: 200
+                parentId:
+                  type: string
+                  example: "category-uuid-transport"
+                  description: "父科目 ID（建立子科目時）"
+                
+                # 外觀設定
+                icon:
+                  type: string
+                  example: "🚕"
+                  maxLength: 2
+                color:
+                  type: string
+                  example: "#FFC107"
+                  pattern: "^#[0-9A-Fa-f]{6}$"
+                
+                # Expert Mode: 進階設定
+                advanced:
+                  type: object
+                  properties:
+                    sortOrder:
+                      type: integer
+                      example: 10
+                      minimum: 0
+                      maximum: 999
+                    isDefault:
+                      type: boolean
+                      example: false
+                      description: "是否為預設科目"
+                    budgetEnabled:
+                      type: boolean
+                      example: true
+                      description: "是否啟用預算追蹤"
+                    trackingEnabled:
+                      type: boolean
+                      example: true
+                      description: "是否啟用使用統計"
+                    autoSuggest:
+                      type: boolean
+                      example: true
+                      description: "是否加入智慧建議"
+                
+                # 限制設定
+                restrictions:
+                  type: object
+                  properties:
+                    maxAmount:
+                      type: number
+                      example: 1000
+                      description: "單筆金額上限"
+                    requireNote:
+                      type: boolean
+                      example: false
+                      description: "是否強制填寫備註"
+                    allowedAccounts:
+                      type: array
+                      items:
+                        type: string
+                      example: ["account-uuid-cash", "account-uuid-card"]
+                      description: "允許使用的帳戶"
+                
+                # 模板套用
+                template:
+                  type: object
+                  properties:
+                    useTemplate:
+                      type: boolean
+                      example: false
+                    templateId:
+                      type: string
+                      example: "template-transport-basic"
+                    includeSubcategories:
+                      type: boolean
+                      example: true
+              required:
+                - name
+                - type
+                - ledgerId
+      responses:
+        '201':
+          description: "科目建立成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      categoryId:
+                        type: string
+                        example: "category-uuid-002"
+                      name:
+                        type: string
+                        example: "計程車"
+                      type:
+                        type: string
+                        example: "expense"
+                      path:
+                        type: string
+                        example: "交通 > 計程車"
+                      level:
+                        type: integer
+                        example: 1
+                      
+                      # 建立結果
+                      setupComplete:
+                        type: boolean
+                        example: true
+                      
+                      # 四模式差異化建議
+                      suggestions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              enum: [subcategory_suggestion, budget_setup, similar_category]
+                              example: "budget_setup"
+                            title:
+                              type: string
+                              example: "設定預算"
+                            description:
+                              type: string
+                              example: "為計程車科目設定月預算有助於控制交通支出"
+                            actionUrl:
+                              type: string
+                              example: "/budgets/create?categoryId=category-uuid-002"
+                      
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:30:00Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: "科目名稱重複"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "CATEGORY_NAME_EXISTS"
+                      message:
+                        type: string
+                        example: "相同帳本中已存在此科目名稱"
+                      field:
+                        type: string
+                        example: "name"
+                      existingCategoryId:
+                        type: string
+                        example: "category-uuid-existing"
+
+  /categories/{id}:
+    get:
+      summary: "取得科目詳情"
+      description: |
+        取得指定科目的詳細資訊，包含使用統計、子科目等。
+        
+        **對應畫面**: S-306 科目管理主頁詳細檢視
+        **權限檢查**: 確認用戶對該科目有存取權限
+      tags:
+        - "科目查詢"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "科目 ID"
+          schema:
+            type: string
+            example: "category-uuid-001"
+        - name: includeChildren
+          in: query
+          description: "是否包含子科目"
+          schema:
+            type: boolean
+            default: true
+        - name: includeStatistics
+          in: query
+          description: "是否包含使用統計"
+          schema:
+            type: boolean
+            default: true
+        - name: includeTransactions
+          in: query
+          description: "是否包含最近交易"
+          schema:
+            type: boolean
+            default: false
+        - name: transactionLimit
+          in: query
+          description: "最近交易筆數"
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: X-User-Mode
+          in: header
+          description: "用戶模式標識"
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: "成功取得科目詳情"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      # 基本資訊
+                      id:
+                        type: string
+                        example: "category-uuid-001"
+                      name:
+                        type: string
+                        example: "餐廳"
+                      type:
+                        type: string
+                        example: "expense"
+                      description:
+                        type: string
+                        example: "外食餐廳用餐"
+                      
+                      # 外觀設定
+                      icon:
+                        type: string
+                        example: "🍽️"
+                      color:
+                        type: string
+                        example: "#FF5722"
+                      
+                      # 階層資訊
+                      parentId:
+                        type: string
+                        example: "category-uuid-food"
+                        nullable: true
+                      level:
+                        type: integer
+                        example: 1
+                      path:
+                        type: string
+                        example: "食物 > 餐廳"
+                      
+                      # 父科目資訊
+                      parent:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            example: "category-uuid-food"
+                          name:
+                            type: string
+                            example: "食物"
+                          icon:
+                            type: string
+                            example: "🍔"
+                      
+                      # 子科目列表
+                      children:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "category-uuid-fastfood"
+                            name:
+                              type: string
+                              example: "速食"
+                            icon:
+                              type: string
+                              example: "🍟"
+                            isActive:
+                              type: boolean
+                              example: true
+                            usageCount:
+                              type: integer
+                              example: 15
+                      
+                      # 設定資訊
+                      settings:
+                        type: object
+                        properties:
+                          isActive:
+                            type: boolean
+                            example: true
+                          isDefault:
+                            type: boolean
+                            example: false
+                          sortOrder:
+                            type: integer
+                            example: 10
+                          budgetEnabled:
+                            type: boolean
+                            example: true
+                          trackingEnabled:
+                            type: boolean
+                            example: true
+                      
+                      # 使用統計
+                      statistics:
+                        type: object
+                        properties:
+                          # 基本統計
+                          usageCount:
+                            type: integer
+                            example: 45
+                          totalAmount:
+                            type: number
+                            example: 28500
+                          averageAmount:
+                            type: number
+                            example: 633.33
+                          
+                          # 時間統計
+                          firstUsed:
+                            type: string
+                            format: date-time
+                            example: "2025-01-01T00:00:00Z"
+                          lastUsed:
+                            type: string
+                            format: date-time
+                            example: "2025-01-27T12:30:00Z"
+                          
+                          # 月度統計
+                          monthlyStats:
+                            type: object
+                            properties:
+                              currentMonth:
+                                type: object
+                                properties:
+                                  usageCount:
+                                    type: integer
+                                    example: 8
+                                  totalAmount:
+                                    type: number
+                                    example: 4500
+                                  averageAmount:
+                                    type: number
+                                    example: 562.5
+                              previousMonth:
+                                type: object
+                                properties:
+                                  usageCount:
+                                    type: integer
+                                    example: 12
+                                  totalAmount:
+                                    type: number
+                                    example: 7200
+                              changeRate:
+                                type: object
+                                properties:
+                                  usageCount:
+                                    type: number
+                                    example: -33.33
+                                    description: "使用次數變化率(%)"
+                                  totalAmount:
+                                    type: number
+                                    example: -37.5
+                                    description: "總金額變化率(%)"
+                          
+                          # Expert Mode: 進階分析
+                          trends:
+                            type: object
+                            properties:
+                              weeklyPattern:
+                                type: array
+                                description: "週間使用模式"
+                                items:
+                                  type: object
+                                  properties:
+                                    dayOfWeek:
+                                      type: integer
+                                      example: 1
+                                    usageCount:
+                                      type: integer
+                                      example: 8
+                                    averageAmount:
+                                      type: number
+                                      example: 650
+                              timePattern:
+                                type: array
+                                description: "時間使用模式"
+                                items:
+                                  type: object
+                                  properties:
+                                    hour:
+                                      type: integer
+                                      example: 12
+                                    usageCount:
+                                      type: integer
+                                      example: 15
+                              seasonalTrend:
+                                type: string
+                                enum: [increasing, decreasing, stable, seasonal]
+                                example: "stable"
+                          
+                          # 排名資訊
+                          rankings:
+                            type: object
+                            properties:
+                              usageRank:
+                                type: integer
+                                example: 3
+                                description: "使用頻率排名"
+                              amountRank:
+                                type: integer
+                                example: 5
+                                description: "金額排名"
+                              totalCategories:
+                                type: integer
+                                example: 28
+                                description: "總科目數"
+                      
+                      # 預算關聯
+                      budgets:
+                        type: array
+                        description: "相關預算設定"
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "budget-uuid-001"
+                            name:
+                              type: string
+                              example: "餐廳月預算"
+                            amount:
+                              type: number
+                              example: 8000
+                            used:
+                              type: number
+                              example: 4500
+                            remaining:
+                              type: number
+                              example: 3500
+                            status:
+                              type: string
+                              enum: [on_track, warning, exceeded]
+                              example: "on_track"
+                      
+                      # 最近交易
+                      recentTransactions:
+                        type: array
+                        description: "最近使用此科目的交易"
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "transaction-uuid-001"
+                            amount:
+                              type: number
+                              example: 650
+                            description:
+                              type: string
+                              example: "午餐聚會"
+                            accountName:
+                              type: string
+                              example: "信用卡"
+                            date:
+                              type: string
+                              format: date
+                              example: "2025-01-27"
+                            createdAt:
+                              type: string
+                              format: date-time
+                              example: "2025-01-27T12:30:00Z"
+                      
+                      # 審計資訊
+                      audit:
+                        type: object
+                        properties:
+                          createdAt:
+                            type: string
+                            format: date-time
+                            example: "2025-01-01T00:00:00Z"
+                          updatedAt:
+                            type: string
+                            format: date-time
+                            example: "2025-01-20T15:30:00Z"
+                          createdBy:
+                            type: string
+                            example: "user-uuid-12345"
+                          isSystemDefault:
+                            type: boolean
+                            example: false
+                          version:
+                            type: integer
+                            example: 3
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    put:
+      summary: "更新科目"
+      description: |
+        更新科目的基本資訊、設定或階層關係。
+        
+        **對應畫面**: S-306 科目管理主頁編輯功能
+        **權限檢查**: 需要對該科目有編輯權限
+      tags:
+        - "科目管理"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "科目 ID"
+          schema:
+            type: string
+            example: "category-uuid-001"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # 基本資訊
+                name:
+                  type: string
+                  example: "高級餐廳"
+                  maxLength: 50
+                description:
+                  type: string
+                  example: "高級餐廳用餐消費"
+                  maxLength: 200
+                
+                # 外觀設定
+                icon:
+                  type: string
+                  example: "🥂"
+                  maxLength: 2
+                color:
+                  type: string
+                  example: "#E91E63"
+                  pattern: "^#[0-9A-Fa-f]{6}$"
+                
+                # 階層調整
+                parentId:
+                  type: string
+                  example: "category-uuid-food-dining"
+                  nullable: true
+                  description: "父科目 ID（null = 移至根層級）"
+                
+                # 設定更新
+                settings:
+                  type: object
+                  properties:
+                    isActive:
+                      type: boolean
+                      example: true
+                    isDefault:
+                      type: boolean
+                      example: false
+                    sortOrder:
+                      type: integer
+                      example: 15
+                    budgetEnabled:
+                      type: boolean
+                      example: true
+                    trackingEnabled:
+                      type: boolean
+                      example: true
+                    autoSuggest:
+                      type: boolean
+                      example: true
+                
+                # 限制設定更新
+                restrictions:
+                  type: object
+                  properties:
+                    maxAmount:
+                      type: number
+                      example: 2000
+                    requireNote:
+                      type: boolean
+                      example: true
+                    allowedAccounts:
+                      type: array
+                      items:
+                        type: string
+                      example: ["account-uuid-card"]
+      responses:
+        '200':
+          description: "科目更新成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      categoryId:
+                        type: string
+                        example: "category-uuid-001"
+                      message:
+                        type: string
+                        example: "科目更新成功"
+                      updatedFields:
+                        type: array
+                        items:
+                          type: string
+                        example: ["name", "icon", "restrictions.maxAmount"]
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      
+                      # 階層變更影響
+                      hierarchyChanges:
+                        type: object
+                        properties:
+                          pathChanged:
+                            type: boolean
+                            example: true
+                          newPath:
+                            type: string
+                            example: "食物 > 精緻用餐 > 高級餐廳"
+                          affectedChildren:
+                            type: integer
+                            example: 2
+                      
+                      # 相關資料影響
+                      relatedUpdates:
+                        type: object
+                        properties:
+                          budgetsAffected:
+                            type: integer
+                            example: 1
+                          transactionsAffected:
+                            type: integer
+                            example: 0
+                            description: "歷史交易不受影響"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: "科目名稱重複或階層衝突"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "HIERARCHY_CONFLICT"
+                      message:
+                        type: string
+                        example: "不能將科目設為自己的子科目"
+                      details:
+                        type: object
+                        properties:
+                          conflictType:
+                            type: string
+                            enum: [circular_reference, name_duplicate, max_depth_exceeded]
+                            example: "circular_reference"
+
+    delete:
+      summary: "刪除科目"
+      description: |
+        刪除指定科目，包含子科目和相關資料的處理。
+        
+        **對應畫面**: S-306 科目管理主頁刪除功能
+        **權限檢查**: 需要對該科目有刪除權限
+        **業務邏輯**: 有交易記錄的科目進行軟刪除
+      tags:
+        - "科目管理"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "科目 ID"
+          schema:
+            type: string
+            example: "category-uuid-001"
+        - name: deleteChildren
+          in: query
+          description: "是否同時刪除子科目"
+          schema:
+            type: boolean
+            default: false
+        - name: transferTransactionsTo
+          in: query
+          description: "交易記錄轉移目標科目 ID"
+          schema:
+            type: string
+            example: "category-uuid-002"
+        - name: force
+          in: query
+          description: "是否強制刪除（即使有交易記錄）"
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: "科目刪除成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      categoryId:
+                        type: string
+                        example: "category-uuid-001"
+                      message:
+                        type: string
+                        example: "科目已刪除"
+                      deleteType:
+                        type: string
+                        enum: [soft, hard, transferred]
+                        example: "soft"
+                        description: "刪除類型：soft=軟刪除，hard=永久刪除，transferred=轉移後刪除"
+                      deletedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      
+                      # 資料處理結果
+                      dataProcessing:
+                        type: object
+                        properties:
+                          transactionsCount:
+                            type: integer
+                            example: 45
+                          childrenCount:
+                            type: integer
+                            example: 2
+                          budgetsCount:
+                            type: integer
+                            example: 1
+                          transferredTo:
+                            type: string
+                            example: "category-uuid-002"
+                            description: "交易記錄轉移到的科目 ID"
+                          childrenAction:
+                            type: string
+                            enum: [deleted, moved_to_parent, orphaned]
+                            example: "moved_to_parent"
+                            description: "子科目處理方式"
+                      
+                      # 影響範圍
+                      impactSummary:
+                        type: object
+                        properties:
+                          budgetsAffected:
+                            type: array
+                            items:
+                              type: string
+                            example: ["budget-uuid-001"]
+                          reportsAffected:
+                            type: boolean
+                            example: true
+                          statisticsRecalculated:
+                            type: boolean
+                            example: true
+        '400':
+          description: "無法刪除科目"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "CATEGORY_HAS_TRANSACTIONS"
+                      message:
+                        type: string
+                        example: "科目有交易記錄，請指定轉移目標或使用強制刪除"
+                      details:
+                        type: object
+                        properties:
+                          transactionCount:
+                            type: integer
+                            example: 45
+                          childrenCount:
+                            type: integer
+                            example: 2
+                          budgetCount:
+                            type: integer
+                            example: 1
+                          suggestions:
+                            type: array
+                            items:
+                              type: string
+                            example: ["指定 transferTransactionsTo 參數", "使用 force=true 強制刪除", "先移除子科目"]
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /categories/tree:
+    get:
+      summary: "取得科目樹狀結構"
+      description: |
+        取得完整的科目階層樹狀結構，便於顯示階層選擇器。
+        
+        **對應畫面**: S-204 科目選擇頁樹狀結構
+        **四模式差異**: 顯示深度與推薦科目不同
+      tags:
+        - "科目查詢"
+      parameters:
+        - name: ledgerId
+          in: query
+          description: "指定帳本 ID"
+          schema:
+            type: string
+            example: "ledger-uuid-001"
+        - name: type
+          in: query
+          description: "科目類型篩選"
+          schema:
+            type: string
+            enum: [income, expense, transfer, all]
+            default: all
+        - name: maxDepth
+          in: query
+          description: "最大深度層級"
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+            default: 3
+        - name: includeInactive
+          in: query
+          description: "是否包含已停用科目"
+          schema:
+            type: boolean
+            default: false
+        - name: includeUsageCount
+          in: query
+          description: "是否包含使用次數"
+          schema:
+            type: boolean
+            default: false
+        - name: X-User-Mode
+          in: header
+          description: "用戶模式標識"
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: "成功取得科目樹狀結構"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      # 收入科目樹
+                      income:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "category-uuid-salary"
+                            name:
+                              type: string
+                              example: "薪資收入"
+                            icon:
+                              type: string
+                              example: "💰"
+                            color:
+                              type: string
+                              example: "#4CAF50"
+                            level:
+                              type: integer
+                              example: 0
+                            isActive:
+                              type: boolean
+                              example: true
+                            usageCount:
+                              type: integer
+                              example: 12
+                            children:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    example: "category-uuid-salary-basic"
+                                  name:
+                                    type: string
+                                    example: "基本薪資"
+                                  icon:
+                                    type: string
+                                    example: "💵"
+                                  level:
+                                    type: integer
+                                    example: 1
+                                  isActive:
+                                    type: boolean
+                                    example: true
+                                  usageCount:
+                                    type: integer
+                                    example: 8
+                                  children:
+                                    type: array
+                                    items: {}
+                      
+                      # 支出科目樹
+                      expense:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "category-uuid-food"
+                            name:
+                              type: string
+                              example: "食物"
+                            icon:
+                              type: string
+                              example: "🍔"
+                            color:
+                              type: string
+                              example: "#FF5722"
+                            level:
+                              type: integer
+                              example: 0
+                            isActive:
+                              type: boolean
+                              example: true
+                            usageCount:
+                              type: integer
+                              example: 89
+                            children:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    example: "category-uuid-restaurant"
+                                  name:
+                                    type: string
+                                    example: "餐廳"
+                                  icon:
+                                    type: string
+                                    example: "🍽️"
+                                  level:
+                                    type: integer
+                                    example: 1
+                                  isActive:
+                                    type: boolean
+                                    example: true
+                                  usageCount:
+                                    type: integer
+                                    example: 45
+                                  children:
+                                    type: array
+                                    items: {}
+                      
+                      # 轉帳科目樹
+                      transfer:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "category-uuid-transfer"
+                            name:
+                              type: string
+                              example: "帳戶轉帳"
+                            icon:
+                              type: string
+                              example: "🔄"
+                            color:
+                              type: string
+                              example: "#2196F3"
+                            level:
+                              type: integer
+                              example: 0
+                            isActive:
+                              type: boolean
+                              example: true
+                            usageCount:
+                              type: integer
+                              example: 15
+                            children:
+                              type: array
+                              items: {}
+                      
+                      # Guiding Mode: 簡化結構
+                      simplified:
+                        type: array
+                        description: "Guiding 模式的簡化科目列表"
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "category-uuid-food"
+                            name:
+                              type: string
+                              example: "食物"
+                            type:
+                              type: string
+                              example: "expense"
+                            icon:
+                              type: string
+                              example: "🍔"
+                            isRecommended:
+                              type: boolean
+                              example: true
+                      
+                      # 統計摘要
+                      summary:
+                        type: object
+                        properties:
+                          totalCategories:
+                            type: integer
+                            example: 35
+                          maxDepth:
+                            type: integer
+                            example: 3
+                          byType:
+                            type: object
+                            properties:
+                              income:
+                                type: object
+                                properties:
+                                  count:
+                                    type: integer
+                                    example: 8
+                                  maxDepth:
+                                    type: integer
+                                    example: 2
+                              expense:
+                                type: object
+                                properties:
+                                  count:
+                                    type: integer
+                                    example: 25
+                                  maxDepth:
+                                    type: integer
+                                    example: 3
+                              transfer:
+                                type: object
+                                properties:
+                                  count:
+                                    type: integer
+                                    example: 2
+                                  maxDepth:
+                                    type: integer
+                                    example: 1
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /categories/templates:
+    get:
+      summary: "取得科目模板"
+      description: |
+        取得系統提供的科目模板，用於快速建立科目分類。
+        
+        **對應畫面**: S-306 科目管理主頁模板選擇
+        **四模式差異**: 推薦模板與複雜度不同
+      tags:
+        - "科目模板"
+      parameters:
+        - name: category
+          in: query
+          description: "模板分類"
+          schema:
+            type: string
+            enum: [personal, family, business, student, basic]
+        - name: type
+          in: query
+          description: "科目類型"
+          schema:
+            type: string
+            enum: [income, expense, all]
+            default: all
+        - name: X-User-Mode
+          in: header
+          description: "用戶模式標識"
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: "成功取得科目模板"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      templates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "template-personal-basic"
+                            name:
+                              type: string
+                              example: "個人基本科目"
+                            description:
+                              type: string
+                              example: "適合個人記帳的基本科目分類"
+                            category:
+                              type: string
+                              example: "personal"
+                            
+                            preview:
+                              type: object
+                              properties:
+                                incomeCount:
+                                  type: integer
+                                  example: 6
+                                expenseCount:
+                                  type: integer
+                                  example: 18
+                                maxDepth:
+                                  type: integer
+                                  example: 2
+                                totalCategories:
+                                  type: integer
+                                  example: 24
+                            
+                            # Expert Mode: 詳細內容
+                            contents:
+                              type: object
+                              properties:
+                                categories:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      name:
+                                        type: string
+                                        example: "食物"
+                                      type:
+                                        type: string
+                                        example: "expense"
+                                      icon:
+                                        type: string
+                                        example: "🍔"
+                                      color:
+                                        type: string
+                                        example: "#FF5722"
+                                      children:
+                                        type: array
+                                        items:
+                                          type: object
+                                          properties:
+                                            name:
+                                              type: string
+                                              example: "餐廳"
+                                            icon:
+                                              type: string
+                                              example: "🍽️"
+                            
+                            popularity:
+                              type: object
+                              properties:
+                                usageCount:
+                                  type: integer
+                                  example: 850
+                                rating:
+                                  type: number
+                                  example: 4.6
+                                isRecommended:
+                                  type: boolean
+                                  example: true
+                      
+                      # 四模式差異化推薦
+                      recommendations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            templateId:
+                              type: string
+                              example: "template-personal-basic"
+                            reason:
+                              type: string
+                              example: "最適合個人記帳入門"
+                            priority:
+                              type: integer
+                              example: 1
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Firebase Auth JWT Token"
+
+  responses:
+    UnauthorizedError:
+      description: "未授權存取"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "UNAUTHORIZED"
+                  message:
+                    type: string
+                    example: "Token 無效或已過期"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+
+    ValidationError:
+      description: "請求參數驗證失敗"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "VALIDATION_ERROR"
+                  message:
+                    type: string
+                    example: "請求參數不正確"
+                  field:
+                    type: string
+                    example: "name"
+                  details:
+                    type: string
+                    example: "科目名稱不能為空"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+
+    NotFoundError:
+      description: "資源不存在"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "RESOURCE_NOT_FOUND"
+                  message:
+                    type: string
+                    example: "科目不存在"
+                  resourceType:
+                    type: string
+                    example: "category"
+                  resourceId:
+                    type: string
+                    example: "category-uuid-001"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+
+tags:
+  - name: "科目查詢"
+    description: "科目列表查詢與詳細資訊取得"
+  - name: "科目管理"
+    description: "科目的 CRUD 操作與階層管理"
+  - name: "科目模板"
+    description: "科目模板管理與套用"

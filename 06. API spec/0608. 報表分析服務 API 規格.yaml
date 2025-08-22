@@ -1,0 +1,1726 @@
+
+openapi: 3.0.3
+info:
+  title: LCAS 2.0 - 報表分析服務 API 規格
+  version: 1.0.0
+  description: |
+    **LCAS 2.0 報表分析服務 API 規格**
+    
+    負責報表生成、自訂報表設計、數據分析與視覺化的完整 API 規格。
+    支援標準報表、自訂報表、多格式匯出與深度分析功能，提供四模式差異化體驗。
+    
+    **服務範圍**:
+    - 標準報表生成（收支分析、預算執行、趨勢分析）
+    - 自訂報表設計（拖拉式設計器、範本管理）
+    - 報表匯出功能（PDF、Excel、CSV、圖片格式）
+    - 數據分析與洞察（AI 分析、趨勢預測）
+    - 報表分享與協作（權限控制、分享連結）
+    
+    **四模式差異化策略**:
+    - **Expert**: 完整報表設計工具、進階分析功能、詳細統計數據
+    - **Inertial**: 標準報表範本、簡化設定選項、固定分析維度
+    - **Cultivation**: 目標導向報表、進度追蹤、激勵性數據展示
+    - **Guiding**: 智慧預設報表、一鍵生成、簡化分析結果
+
+  contact:
+    name: LCAS 開發團隊
+    email: dev@lcas.com.tw
+  license:
+    name: LCAS License
+    url: https://lcas.com.tw/license
+
+servers:
+  - url: https://api.lcas.com.tw/v1
+    description: 正式環境
+  - url: https://staging-api.lcas.com.tw/v1
+    description: 測試環境
+
+security:
+  - bearerAuth: []
+
+paths:
+  /reports:
+    get:
+      tags:
+        - 報表查詢
+      summary: 取得報表列表
+      description: |
+        取得使用者的報表列表，支援篩選與分頁。
+        四模式差異：
+        - Expert: 顯示所有報表詳細資訊、進階篩選選項
+        - Inertial: 標準列表展示、基本篩選功能
+        - Cultivation: 重點報表推薦、目標相關報表
+        - Guiding: 簡化列表、推薦報表
+      parameters:
+        - name: page
+          in: query
+          description: 頁碼
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: type
+          in: query
+          description: 報表類型
+          schema:
+            type: string
+            enum: [standard, custom, scheduled, shared]
+        - name: category
+          in: query
+          description: 報表分類
+          schema:
+            type: string
+            enum: [income, expense, budget, analysis, comparison]
+        - name: dateRange
+          in: query
+          description: 日期範圍
+          schema:
+            type: string
+            enum: [today, week, month, quarter, year, custom]
+        - name: search
+          in: query
+          description: 搜尋關鍵字
+          schema:
+            type: string
+            maxLength: 100
+      responses:
+        '200':
+          description: 成功取得報表列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      reports:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ReportSummary'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                      statistics:
+                        $ref: '#/components/schemas/ReportStatistics'
+                      quickActions:
+                        type: array
+                        items:
+                          type: string
+                        example: ["createReport", "viewTemplates", "exportAll"]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - 報表生成
+      summary: 生成標準報表
+      description: |
+        生成標準報表，支援多種報表類型與自訂參數。
+        四模式差異：
+        - Expert: 完整參數控制、進階分析選項
+        - Inertial: 標準參數設定、固定分析維度
+        - Cultivation: 目標導向參數、進度追蹤元素
+        - Guiding: 智慧預設參數、簡化設定
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateReportRequest'
+      responses:
+        '201':
+          description: 報表生成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ReportGenerationResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /reports/templates:
+    get:
+      tags:
+        - 報表範本
+      summary: 取得報表範本列表
+      description: |
+        取得可用的報表範本列表。
+        四模式差異：
+        - Expert: 所有範本類型、詳細範本資訊
+        - Inertial: 常用範本、標準資訊
+        - Cultivation: 目標導向範本、推薦範本
+        - Guiding: 基礎範本、簡化選擇
+      parameters:
+        - name: category
+          in: query
+          description: 範本分類
+          schema:
+            type: string
+            enum: [financial, budget, analysis, comparison, custom]
+        - name: complexity
+          in: query
+          description: 複雜度等級
+          schema:
+            type: string
+            enum: [simple, moderate, advanced]
+      responses:
+        '200':
+          description: 成功取得範本列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      templates:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ReportTemplate'
+                      categories:
+                        type: array
+                        items:
+                          type: string
+                      featuredTemplates:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ReportTemplate'
+
+  /reports/custom:
+    post:
+      tags:
+        - 自訂報表
+      summary: 建立自訂報表
+      description: |
+        建立自訂報表設計，支援拖拉式設計器功能。
+        四模式差異：
+        - Expert: 完整設計工具、進階元件、詳細配置
+        - Inertial: 標準設計選項、預設配置
+        - Cultivation: 目標導向設計、引導式流程
+        - Guiding: 簡化設計、智慧建議
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomReportRequest'
+      responses:
+        '201':
+          description: 自訂報表建立成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/CustomReportResult'
+
+  /reports/{reportId}:
+    get:
+      tags:
+        - 報表查詢
+      summary: 取得報表詳細資訊
+      description: 取得指定報表的詳細資訊與內容
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          description: 報表 ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功取得報表詳細資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ReportDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - 報表管理
+      summary: 更新報表
+      description: 更新報表設定或內容
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          description: 報表 ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReportRequest'
+      responses:
+        '200':
+          description: 報表更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ReportDetail'
+
+    delete:
+      tags:
+        - 報表管理
+      summary: 刪除報表
+      description: 刪除指定報表（軟刪除，保留 30 天）
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          description: 報表 ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 報表刪除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "報表已刪除，將保留 30 天供恢復"
+
+  /reports/{reportId}/export:
+    post:
+      tags:
+        - 報表匯出
+      summary: 匯出報表
+      description: |
+        將報表匯出為指定格式。
+        四模式差異：
+        - Expert: 完整匯出選項、多格式同時匯出
+        - Inertial: 標準匯出設定、常用格式
+        - Cultivation: 目標導向格式建議、簡化選項
+        - Guiding: 智慧預設格式、一鍵匯出
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          description: 報表 ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportReportRequest'
+      responses:
+        '202':
+          description: 匯出任務已建立
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ExportTaskResult'
+
+  /reports/{reportId}/share:
+    post:
+      tags:
+        - 報表分享
+      summary: 建立報表分享
+      description: |
+        建立報表分享連結與權限設定。
+        四模式差異：
+        - Expert: 詳細權限控制、進階分享選項
+        - Inertial: 標準分享設定、基本權限
+        - Cultivation: 簡化分享流程、推薦設定
+        - Guiding: 一鍵分享、預設權限
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          description: 報表 ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareReportRequest'
+      responses:
+        '201':
+          description: 分享連結建立成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ShareResult'
+
+  /reports/analytics/insights:
+    get:
+      tags:
+        - 數據分析
+      summary: 取得數據洞察
+      description: |
+        取得 AI 驅動的數據分析洞察。
+        四模式差異：
+        - Expert: 深度分析報告、技術性洞察
+        - Inertial: 標準分析報告、關鍵洞察
+        - Cultivation: 目標導向洞察、改善建議
+        - Guiding: 簡化洞察、易懂建議
+      parameters:
+        - name: dateRange
+          in: query
+          required: true
+          description: 分析日期範圍
+          schema:
+            type: string
+            enum: [week, month, quarter, year]
+        - name: categories
+          in: query
+          description: 分析科目（逗號分隔）
+          schema:
+            type: string
+        - name: analysisType
+          in: query
+          description: 分析類型
+          schema:
+            type: string
+            enum: [spending, income, budget, trend, anomaly]
+      responses:
+        '200':
+          description: 成功取得數據洞察
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AnalyticsInsights'
+
+  /reports/analytics/trends:
+    get:
+      tags:
+        - 數據分析
+      summary: 取得趨勢分析
+      description: |
+        取得財務數據的趨勢分析與預測。
+        四模式差異：
+        - Expert: 複雜趨勢模型、詳細預測數據
+        - Inertial: 標準趨勢圖表、基本預測
+        - Cultivation: 目標導向趨勢、進度預測
+        - Guiding: 簡化趨勢、易懂預測
+      parameters:
+        - name: period
+          in: query
+          required: true
+          description: 分析週期
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, quarterly]
+        - name: metric
+          in: query
+          required: true
+          description: 分析指標
+          schema:
+            type: string
+            enum: [income, expense, balance, category_spending]
+        - name: forecastPeriods
+          in: query
+          description: 預測期數
+          schema:
+            type: integer
+            default: 3
+            minimum: 1
+            maximum: 12
+      responses:
+        '200':
+          description: 成功取得趨勢分析
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/TrendAnalysis'
+
+  /reports/schedule:
+    post:
+      tags:
+        - 排程報表
+      summary: 建立排程報表
+      description: |
+        建立定期自動生成的排程報表。
+        四模式差異：
+        - Expert: 複雜排程規則、詳細配置選項
+        - Inertial: 標準排程選項、固定配置
+        - Cultivation: 目標導向排程、提醒設定
+        - Guiding: 簡化排程、預設配置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleReportRequest'
+      responses:
+        '201':
+          description: 排程報表建立成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ScheduleResult'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ReportSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 報表 ID
+        name:
+          type: string
+          description: 報表名稱
+        type:
+          type: string
+          enum: [standard, custom, scheduled]
+          description: 報表類型
+        category:
+          type: string
+          description: 報表分類
+        createdAt:
+          type: string
+          format: date-time
+          description: 建立時間
+        lastGenerated:
+          type: string
+          format: date-time
+          description: 最後生成時間
+        status:
+          type: string
+          enum: [draft, ready, generating, error]
+          description: 報表狀態
+        size:
+          type: string
+          description: 檔案大小
+        format:
+          type: string
+          description: 檔案格式
+        isShared:
+          type: boolean
+          description: 是否已分享
+        downloadUrl:
+          type: string
+          description: 下載連結
+
+    GenerateReportRequest:
+      type: object
+      required:
+        - reportType
+        - dateRange
+      properties:
+        reportType:
+          type: string
+          enum: [income_expense, budget_analysis, category_breakdown, trend_analysis, comparison]
+          description: 報表類型
+        name:
+          type: string
+          maxLength: 100
+          description: 報表名稱
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        filters:
+          $ref: '#/components/schemas/ReportFilters'
+        chartOptions:
+          $ref: '#/components/schemas/ChartOptions'
+        analysisOptions:
+          $ref: '#/components/schemas/AnalysisOptions'
+        outputFormat:
+          type: string
+          enum: [pdf, excel, csv, png, jpg]
+          default: pdf
+          description: 輸出格式
+
+    CustomReportRequest:
+      type: object
+      required:
+        - name
+        - design
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: 自訂報表名稱
+        description:
+          type: string
+          maxLength: 500
+          description: 報表描述
+        design:
+          $ref: '#/components/schemas/ReportDesign'
+        dataSource:
+          $ref: '#/components/schemas/DataSource'
+        saveAsTemplate:
+          type: boolean
+          default: false
+          description: 是否儲存為範本
+        templateCategory:
+          type: string
+          description: 範本分類
+
+    ReportDesign:
+      type: object
+      properties:
+        layout:
+          $ref: '#/components/schemas/LayoutSettings'
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportSection'
+        styling:
+          $ref: '#/components/schemas/StylingOptions'
+
+    LayoutSettings:
+      type: object
+      properties:
+        pageSize:
+          type: string
+          enum: [A4, A3, Letter, Legal]
+          default: A4
+        orientation:
+          type: string
+          enum: [portrait, landscape]
+          default: portrait
+        margins:
+          $ref: '#/components/schemas/Margins'
+
+    ReportSection:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 區段 ID
+        type:
+          type: string
+          enum: [header, footer, chart, table, text, summary]
+          description: 區段類型
+        position:
+          $ref: '#/components/schemas/Position'
+        size:
+          $ref: '#/components/schemas/Size'
+        content:
+          type: object
+          description: 區段內容配置
+
+    DateRange:
+      type: object
+      required:
+        - startDate
+        - endDate
+      properties:
+        startDate:
+          type: string
+          format: date
+          description: 開始日期
+        endDate:
+          type: string
+          format: date
+          description: 結束日期
+        period:
+          type: string
+          enum: [today, week, month, quarter, year, custom]
+          description: 期間類型
+
+    ReportFilters:
+      type: object
+      properties:
+        ledgerIds:
+          type: array
+          items:
+            type: string
+          description: 帳本 ID 列表
+        accountIds:
+          type: array
+          items:
+            type: string
+          description: 帳戶 ID 列表
+        categoryIds:
+          type: array
+          items:
+            type: string
+          description: 科目 ID 列表
+        tags:
+          type: array
+          items:
+            type: string
+          description: 標籤列表
+        amountRange:
+          $ref: '#/components/schemas/AmountRange'
+        transactionTypes:
+          type: array
+          items:
+            type: string
+            enum: [income, expense]
+          description: 交易類型
+
+    ChartOptions:
+      type: object
+      properties:
+        chartType:
+          type: string
+          enum: [pie, bar, line, area, donut]
+          description: 圖表類型
+        colorScheme:
+          type: string
+          enum: [default, blue, green, orange, custom]
+          description: 色彩配置
+        showLegend:
+          type: boolean
+          default: true
+          description: 顯示圖例
+        showDataLabels:
+          type: boolean
+          default: true
+          description: 顯示數據標籤
+        customColors:
+          type: array
+          items:
+            type: string
+          description: 自訂顏色列表
+
+    AnalysisOptions:
+      type: object
+      properties:
+        includeTrends:
+          type: boolean
+          default: true
+          description: 包含趨勢分析
+        compareWithPrevious:
+          type: boolean
+          default: false
+          description: 與上期比較
+        showGrowthRate:
+          type: boolean
+          default: false
+          description: 顯示成長率
+        includeForecasting:
+          type: boolean
+          default: false
+          description: 包含預測分析
+        granularity:
+          type: string
+          enum: [daily, weekly, monthly]
+          default: monthly
+          description: 分析粒度
+
+    ExportReportRequest:
+      type: object
+      required:
+        - format
+      properties:
+        format:
+          type: string
+          enum: [pdf, excel, csv, png, jpg, ppt]
+          description: 匯出格式
+        quality:
+          type: string
+          enum: [low, medium, high]
+          default: high
+          description: 輸出品質
+        includeRawData:
+          type: boolean
+          default: false
+          description: 包含原始資料
+        password:
+          type: string
+          description: 檔案密碼保護
+        watermark:
+          type: string
+          description: 浮水印文字
+
+    ShareReportRequest:
+      type: object
+      required:
+        - shareType
+      properties:
+        shareType:
+          type: string
+          enum: [link, email, embed]
+          description: 分享類型
+        permissions:
+          type: string
+          enum: [view, download, edit]
+          default: view
+          description: 分享權限
+        expiresAt:
+          type: string
+          format: date-time
+          description: 分享過期時間
+        recipients:
+          type: array
+          items:
+            type: string
+            format: email
+          description: 收件人列表（Email 分享）
+        requirePassword:
+          type: boolean
+          default: false
+          description: 需要密碼存取
+        password:
+          type: string
+          description: 存取密碼
+
+    ScheduleReportRequest:
+      type: object
+      required:
+        - reportConfig
+        - schedule
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: 排程名稱
+        reportConfig:
+          $ref: '#/components/schemas/GenerateReportRequest'
+        schedule:
+          $ref: '#/components/schemas/ScheduleConfig'
+        deliveryConfig:
+          $ref: '#/components/schemas/DeliveryConfig'
+        isActive:
+          type: boolean
+          default: true
+          description: 是否啟用
+
+    ScheduleConfig:
+      type: object
+      required:
+        - frequency
+      properties:
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly, quarterly]
+          description: 執行頻率
+        dayOfWeek:
+          type: integer
+          minimum: 0
+          maximum: 6
+          description: 星期幾執行（週頻率）
+        dayOfMonth:
+          type: integer
+          minimum: 1
+          maximum: 31
+          description: 月份第幾天執行（月頻率）
+        time:
+          type: string
+          pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$'
+          description: 執行時間（HH:MM）
+        timezone:
+          type: string
+          default: "Asia/Taipei"
+          description: 時區
+
+    DeliveryConfig:
+      type: object
+      properties:
+        method:
+          type: string
+          enum: [none, email, notification]
+          default: none
+          description: 傳送方式
+        emailRecipients:
+          type: array
+          items:
+            type: string
+            format: email
+          description: Email 收件人
+        subject:
+          type: string
+          description: Email 主旨
+        message:
+          type: string
+          description: Email 內容
+
+    ReportGenerationResult:
+      type: object
+      properties:
+        reportId:
+          type: string
+          description: 報表 ID
+        name:
+          type: string
+          description: 報表名稱
+        status:
+          type: string
+          enum: [generating, ready, error]
+          description: 生成狀態
+        estimatedTime:
+          type: integer
+          description: 預估完成時間（秒）
+        downloadUrl:
+          type: string
+          description: 下載連結
+        previewUrl:
+          type: string
+          description: 預覽連結
+        metadata:
+          $ref: '#/components/schemas/ReportMetadata'
+
+    ReportMetadata:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+          description: 總記錄數
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        fileSize:
+          type: string
+          description: 檔案大小
+        pageCount:
+          type: integer
+          description: 頁數
+        generatedAt:
+          type: string
+          format: date-time
+          description: 生成時間
+        expiresAt:
+          type: string
+          format: date-time
+          description: 過期時間
+
+    CustomReportResult:
+      type: object
+      properties:
+        reportId:
+          type: string
+          description: 報表 ID
+        name:
+          type: string
+          description: 報表名稱
+        designId:
+          type: string
+          description: 設計 ID
+        templateId:
+          type: string
+          description: 範本 ID（如果儲存為範本）
+        previewUrl:
+          type: string
+          description: 預覽連結
+        status:
+          type: string
+          enum: [draft, ready, error]
+          description: 狀態
+        validationResults:
+          $ref: '#/components/schemas/ValidationResults'
+
+    ValidationResults:
+      type: object
+      properties:
+        isValid:
+          type: boolean
+          description: 是否有效
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationWarning'
+
+    ValidationError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 錯誤代碼
+        message:
+          type: string
+          description: 錯誤訊息
+        field:
+          type: string
+          description: 相關欄位
+
+    ValidationWarning:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 警告代碼
+        message:
+          type: string
+          description: 警告訊息
+        suggestion:
+          type: string
+          description: 建議
+
+    ExportTaskResult:
+      type: object
+      properties:
+        taskId:
+          type: string
+          description: 匯出任務 ID
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+          description: 任務狀態
+        estimatedTime:
+          type: integer
+          description: 預估完成時間（秒）
+        downloadUrl:
+          type: string
+          description: 下載連結
+        expiresAt:
+          type: string
+          format: date-time
+          description: 連結過期時間
+
+    ShareResult:
+      type: object
+      properties:
+        shareId:
+          type: string
+          description: 分享 ID
+        shareUrl:
+          type: string
+          description: 分享連結
+        qrCode:
+          type: string
+          description: QR Code（Base64）
+        permissions:
+          type: string
+          description: 分享權限
+        expiresAt:
+          type: string
+          format: date-time
+          description: 分享過期時間
+        accessCount:
+          type: integer
+          default: 0
+          description: 存取次數
+
+    AnalyticsInsights:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/InsightSummary'
+        insights:
+          type: array
+          items:
+            $ref: '#/components/schemas/Insight'
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
+        anomalies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Anomaly'
+
+    InsightSummary:
+      type: object
+      properties:
+        totalTransactions:
+          type: integer
+          description: 總交易數
+        totalIncome:
+          type: number
+          description: 總收入
+        totalExpense:
+          type: number
+          description: 總支出
+        netIncome:
+          type: number
+          description: 淨收入
+        topCategory:
+          type: string
+          description: 最大支出科目
+        avgDailySpending:
+          type: number
+          description: 平均日支出
+
+    Insight:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [trend, pattern, comparison, achievement]
+          description: 洞察類型
+        title:
+          type: string
+          description: 洞察標題
+        description:
+          type: string
+          description: 洞察描述
+        impact:
+          type: string
+          enum: [high, medium, low]
+          description: 影響程度
+        actionable:
+          type: boolean
+          description: 是否可執行
+        relatedData:
+          type: object
+          description: 相關數據
+
+    Recommendation:
+      type: object
+      properties:
+        category:
+          type: string
+          enum: [budget, saving, spending, investment]
+          description: 建議分類
+        title:
+          type: string
+          description: 建議標題
+        description:
+          type: string
+          description: 建議描述
+        priority:
+          type: string
+          enum: [high, medium, low]
+          description: 優先級
+        estimatedImpact:
+          type: string
+          description: 預估影響
+        steps:
+          type: array
+          items:
+            type: string
+          description: 執行步驟
+
+    Anomaly:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [spending_spike, unusual_category, duplicate_transaction]
+          description: 異常類型
+        severity:
+          type: string
+          enum: [high, medium, low]
+          description: 嚴重程度
+        description:
+          type: string
+          description: 異常描述
+        detectedAt:
+          type: string
+          format: date-time
+          description: 偵測時間
+        affectedTransactions:
+          type: array
+          items:
+            type: string
+          description: 受影響的交易 ID
+
+    TrendAnalysis:
+      type: object
+      properties:
+        metric:
+          type: string
+          description: 分析指標
+        period:
+          type: string
+          description: 分析週期
+        historical:
+          $ref: '#/components/schemas/HistoricalData'
+        forecast:
+          $ref: '#/components/schemas/ForecastData'
+        patterns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pattern'
+        seasonality:
+          $ref: '#/components/schemas/SeasonalityData'
+
+    HistoricalData:
+      type: object
+      properties:
+        dataPoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataPoint'
+        trendDirection:
+          type: string
+          enum: [increasing, decreasing, stable, volatile]
+          description: 趨勢方向
+        growthRate:
+          type: number
+          description: 成長率（%）
+        volatility:
+          type: number
+          description: 波動度
+
+    ForecastData:
+      type: object
+      properties:
+        predictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PredictionPoint'
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: 預測信心度（%）
+        accuracy:
+          type: string
+          enum: [high, medium, low]
+          description: 預測準確度
+        methodology:
+          type: string
+          description: 預測方法
+
+    DataPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: 日期
+        value:
+          type: number
+          description: 數值
+        label:
+          type: string
+          description: 標籤
+
+    PredictionPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: 預測日期
+        predictedValue:
+          type: number
+          description: 預測值
+        lowerBound:
+          type: number
+          description: 下界
+        upperBound:
+          type: number
+          description: 上界
+        confidence:
+          type: number
+          description: 信心度
+
+    Pattern:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [cyclical, seasonal, random, linear]
+          description: 模式類型
+        description:
+          type: string
+          description: 模式描述
+        strength:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: 模式強度
+        frequency:
+          type: string
+          description: 頻率
+
+    SeasonalityData:
+      type: object
+      properties:
+        hasSeasonality:
+          type: boolean
+          description: 是否有季節性
+        seasonalPeriod:
+          type: integer
+          description: 季節週期
+        seasonalStrength:
+          type: number
+          description: 季節性強度
+        seasonalFactors:
+          type: array
+          items:
+            type: number
+          description: 季節因子
+
+    ScheduleResult:
+      type: object
+      properties:
+        scheduleId:
+          type: string
+          description: 排程 ID
+        name:
+          type: string
+          description: 排程名稱
+        status:
+          type: string
+          enum: [active, paused, error]
+          description: 排程狀態
+        nextRun:
+          type: string
+          format: date-time
+          description: 下次執行時間
+        lastRun:
+          type: string
+          format: date-time
+          description: 上次執行時間
+        executionCount:
+          type: integer
+          description: 執行次數
+
+    ReportTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 範本 ID
+        name:
+          type: string
+          description: 範本名稱
+        description:
+          type: string
+          description: 範本描述
+        category:
+          type: string
+          description: 範本分類
+        complexity:
+          type: string
+          enum: [simple, moderate, advanced]
+          description: 複雜度
+        previewImage:
+          type: string
+          description: 預覽圖片 URL
+        usageCount:
+          type: integer
+          description: 使用次數
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+          description: 評分
+        isPublic:
+          type: boolean
+          description: 是否公開
+        createdBy:
+          type: string
+          description: 建立者
+
+    ReportDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 報表 ID
+        name:
+          type: string
+          description: 報表名稱
+        type:
+          type: string
+          description: 報表類型
+        status:
+          type: string
+          description: 報表狀態
+        content:
+          type: object
+          description: 報表內容
+        metadata:
+          $ref: '#/components/schemas/ReportMetadata'
+        shares:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShareInfo'
+        exports:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportInfo'
+
+    ShareInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 分享 ID
+        shareUrl:
+          type: string
+          description: 分享連結
+        permissions:
+          type: string
+          description: 權限
+        createdAt:
+          type: string
+          format: date-time
+          description: 建立時間
+        expiresAt:
+          type: string
+          format: date-time
+          description: 過期時間
+        accessCount:
+          type: integer
+          description: 存取次數
+
+    ExportInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 匯出 ID
+        format:
+          type: string
+          description: 檔案格式
+        size:
+          type: string
+          description: 檔案大小
+        downloadUrl:
+          type: string
+          description: 下載連結
+        createdAt:
+          type: string
+          format: date-time
+          description: 建立時間
+        expiresAt:
+          type: string
+          format: date-time
+          description: 過期時間
+        downloadCount:
+          type: integer
+          description: 下載次數
+
+    UpdateReportRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: 報表名稱
+        description:
+          type: string
+          maxLength: 500
+          description: 報表描述
+        design:
+          $ref: '#/components/schemas/ReportDesign'
+        isPublic:
+          type: boolean
+          description: 是否公開
+
+    DataSource:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [transactions, budgets, accounts, categories]
+          description: 資料來源類型
+        filters:
+          $ref: '#/components/schemas/ReportFilters'
+        aggregation:
+          type: string
+          enum: [sum, average, count, min, max]
+          description: 聚合方式
+        groupBy:
+          type: array
+          items:
+            type: string
+          description: 分組欄位
+
+    StylingOptions:
+      type: object
+      properties:
+        fontFamily:
+          type: string
+          default: "Arial"
+          description: 字型
+        fontSize:
+          type: integer
+          default: 12
+          description: 字型大小
+        colorScheme:
+          type: string
+          description: 色彩配置
+        headerColor:
+          type: string
+          description: 標題顏色
+        textColor:
+          type: string
+          description: 文字顏色
+        backgroundColor:
+          type: string
+          description: 背景顏色
+
+    Position:
+      type: object
+      properties:
+        x:
+          type: number
+          description: X 座標
+        y:
+          type: number
+          description: Y 座標
+
+    Size:
+      type: object
+      properties:
+        width:
+          type: number
+          description: 寬度
+        height:
+          type: number
+          description: 高度
+
+    Margins:
+      type: object
+      properties:
+        top:
+          type: number
+          default: 20
+          description: 上邊距
+        bottom:
+          type: number
+          default: 20
+          description: 下邊距
+        left:
+          type: number
+          default: 20
+          description: 左邊距
+        right:
+          type: number
+          default: 20
+          description: 右邊距
+
+    AmountRange:
+      type: object
+      properties:
+        min:
+          type: number
+          description: 最小金額
+        max:
+          type: number
+          description: 最大金額
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: 當前頁碼
+        limit:
+          type: integer
+          description: 每頁筆數
+        total:
+          type: integer
+          description: 總筆數
+        totalPages:
+          type: integer
+          description: 總頁數
+        hasNext:
+          type: boolean
+          description: 是否有下一頁
+        hasPrev:
+          type: boolean
+          description: 是否有上一頁
+
+    ReportStatistics:
+      type: object
+      properties:
+        totalReports:
+          type: integer
+          description: 總報表數
+        reportsThisMonth:
+          type: integer
+          description: 本月報表數
+        totalExports:
+          type: integer
+          description: 總匯出次數
+        totalShares:
+          type: integer
+          description: 總分享次數
+        mostUsedTemplate:
+          type: string
+          description: 最常用範本
+        avgGenerationTime:
+          type: number
+          description: 平均生成時間（秒）
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 錯誤代碼
+        message:
+          type: string
+          description: 錯誤訊息
+        details:
+          type: object
+          description: 錯誤詳細資訊
+
+  responses:
+    BadRequest:
+      description: 請求參數錯誤
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: 未授權存取
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: 禁止存取
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: 資源不存在
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+    ValidationError:
+      description: 資料驗證失敗
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+              validationErrors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ValidationError'
+
+    InternalServerError:
+      description: 內部伺服器錯誤
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: 報表查詢
+    description: 報表列表查詢與詳細資訊
+  - name: 報表生成
+    description: 標準報表生成功能
+  - name: 自訂報表
+    description: 自訂報表設計與管理
+  - name: 報表範本
+    description: 報表範本管理
+  - name: 報表管理
+    description: 報表 CRUD 操作
+  - name: 報表匯出
+    description: 多格式報表匯出
+  - name: 報表分享
+    description: 報表分享與權限控制
+  - name: 數據分析
+    description: AI 驅動的數據分析與洞察
+  - name: 排程報表
+    description: 定期自動報表功能
