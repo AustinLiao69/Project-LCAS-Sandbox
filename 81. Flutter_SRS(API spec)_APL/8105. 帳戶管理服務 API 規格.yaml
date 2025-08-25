@@ -1,116 +1,119 @@
 
 openapi: 3.0.3
 info:
-  title: LCAS 2.0 - 帳戶管理服務 API 規格
-  description: |
-    **帳戶管理服務 (Account Management Services)**
-    
-    本服務提供完整的帳戶管理功能，包含帳戶的建立、查詢、修改、刪除以及餘額管理。
-    支援多種帳戶類型（現金、銀行、信用卡、投資等），並提供四模式差異化體驗。
-    
-    ## 🎯 服務範圍
-    - **帳戶 CRUD**：建立、查詢、修改、刪除帳戶
-    - **帳戶類型管理**：現金、銀行、信用卡、投資、借貸帳戶
-    - **餘額管理**：即時餘額查詢、餘額歷史追蹤
-    - **帳戶轉帳**：帳戶間資金轉移
-    - **帳戶統計**：使用統計與分析
-    
-    ## 🎨 四模式差異化支援
-    
-    | 模式 | 特色功能 |
-    |------|----------|
-    | **Expert** | 完整帳戶管理工具、進階統計分析、批次操作 |
-    | **Inertial** | 標準帳戶操作、簡潔介面、固定流程 |
-    | **Cultivation** | 帳戶建議、理財引導、進度追蹤 |
-    | **Guiding** | 極簡帳戶設定、預設配置、最少決策 |
-    
-    ## 🗂️ 對應畫面
-    - **S-205**：帳戶選擇頁
-    - **S-304**：帳戶管理主頁  
-    - **S-305**：建立帳戶頁
-    
-  version: 1.0.0
+  title: 帳戶管理服務 API 規格
+  description: LCAS 帳戶管理服務API規格，提供帳戶CRUD、餘額管理和類型分類功能
+  version: 2.0.0
   contact:
-    name: LCAS 2.0 開發團隊
-    email: dev@lcas.com
-  license:
-    name: MIT License
+    name: LCAS SA Team
+    email: sa@lcas.com
 
 servers:
-  - url: https://api.lcas.com/v1
-    description: 正式環境
-  - url: https://api-staging.lcas.com/v1
-    description: 測試環境
+  - url: https://api.lcas.com/v2
+    description: Production server
+  - url: https://staging-api.lcas.com/v2
+    description: Staging server
 
-security:
-  - BearerAuth: []
-  - FirebaseAuth: []
+tags:
+  - name: Account Management
+    description: 帳戶管理相關操作
+  - name: Balance Management
+    description: 餘額管理功能
+  - name: Account Types
+    description: 帳戶類型管理
 
 paths:
   /accounts:
     get:
-      summary: "取得帳戶列表"
-      description: |
-        取得使用者的帳戶列表，支援分頁、篩選和排序。
-        根據使用者模式返回不同詳細程度的資訊。
       tags:
-        - 帳戶查詢
+        - Account Management
+      summary: 取得帳戶列表
+      description: 取得用戶可存取的帳戶列表，支援分頁和篩選
+      operationId: getAccounts
       parameters:
-        - name: ledgerId
+        - name: userId
           in: query
-          description: "指定帳本 ID（可選，預設為所有帳本）"
+          required: true
+          description: 用戶ID
           schema:
             type: string
+            example: "Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: ledgerId
+          in: query
+          description: 帳本ID篩選
+          schema:
+            type: string
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: userMode
+          in: query
+          description: 用戶模式（影響回應內容）
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Expert
+            example: "Expert"
         - name: type
           in: query
-          description: "帳戶類型篩選"
+          description: 帳戶類型篩選
           schema:
             type: string
             enum: [cash, bank, credit_card, investment, loan, other]
-        - name: active
+            example: "bank"
+        - name: status
           in: query
-          description: "是否只顯示啟用帳戶"
+          description: 帳戶狀態篩選
           schema:
-            type: boolean
-            default: true
+            type: string
+            enum: [active, inactive, closed]
+            default: active
+            example: "active"
+        - name: keyword
+          in: query
+          description: 關鍵字搜尋（帳戶名稱、描述）
+          schema:
+            type: string
+            example: "台新銀行"
         - name: includeBalance
           in: query
-          description: "是否包含餘額資訊"
+          description: 是否包含餘額資訊
           schema:
             type: boolean
             default: true
+            example: true
         - name: page
           in: query
-          description: "頁碼（從 1 開始）"
+          description: 頁碼
           schema:
             type: integer
             minimum: 1
             default: 1
+            example: 1
         - name: limit
           in: query
-          description: "每頁筆數"
+          description: 每頁筆數
           schema:
             type: integer
             minimum: 1
             maximum: 100
             default: 20
-        - name: sortBy
+            example: 20
+        - name: sort
           in: query
-          description: "排序欄位"
+          description: 排序方式
           schema:
             type: string
-            enum: [name, type, balance, createdAt, lastUsed]
-            default: "name"
-        - name: sortOrder
+            enum: [createdAt_desc, createdAt_asc, name_asc, name_desc, balance_desc, balance_asc]
+            default: createdAt_desc
+            example: "name_asc"
+        - name: filter
           in: query
-          description: "排序方向"
+          description: 進階篩選條件（JSON格式）
           schema:
             type: string
-            enum: [asc, desc]
-            default: "asc"
+            example: '{"hasTransactions":true,"balanceRange":{"min":0,"max":100000}}'
       responses:
         '200':
-          description: "成功取得帳戶列表"
+          description: 取得成功
           content:
             application/json:
               schema:
@@ -125,69 +128,188 @@ paths:
                       accounts:
                         type: array
                         items:
-                          $ref: '#/components/schemas/Account'
+                          type: object
+                          properties:
+                            accountId:
+                              type: string
+                              description: 帳戶ID
+                              example: "account_12345"
+                            name:
+                              type: string
+                              description: 帳戶名稱
+                              example: "台新銀行支票帳戶"
+                            description:
+                              type: string
+                              description: 帳戶描述
+                              example: "主要往來銀行帳戶"
+                            type:
+                              type: string
+                              enum: [cash, bank, credit_card, investment, loan, other]
+                              description: 帳戶類型
+                              example: "bank"
+                            subtype:
+                              type: string
+                              description: 帳戶子類型
+                              example: "checking"
+                            ledgerId:
+                              type: string
+                              description: 所屬帳本ID
+                              example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+                            ownerId:
+                              type: string
+                              description: 擁有者ID
+                              example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                            status:
+                              type: string
+                              enum: [active, inactive, closed]
+                              description: 帳戶狀態
+                              example: "active"
+                            currency:
+                              type: string
+                              description: 幣別
+                              example: "NTD"
+                            balance:
+                              type: object
+                              description: 餘額資訊（根據includeBalance參數）
+                              properties:
+                                current:
+                                  type: number
+                                  example: 15678.90
+                                available:
+                                  type: number
+                                  example: 15678.90
+                                lastUpdated:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-08-22T12:00:00Z"
+                            bankInfo:
+                              type: object
+                              description: 銀行資訊（bank類型特有）
+                              properties:
+                                bankCode:
+                                  type: string
+                                  example: "812"
+                                branchCode:
+                                  type: string
+                                  example: "0001"
+                                accountNumber:
+                                  type: string
+                                  example: "****1234"
+                            creditInfo:
+                              type: object
+                              description: 信用卡資訊（credit_card類型特有）
+                              properties:
+                                creditLimit:
+                                  type: number
+                                  example: 100000.00
+                                availableCredit:
+                                  type: number
+                                  example: 84321.10
+                                lastFour:
+                                  type: string
+                                  example: "1234"
+                            settings:
+                              type: object
+                              description: 帳戶設定（Expert模式顯示）
+                              properties:
+                                isDefault:
+                                  type: boolean
+                                  example: false
+                                includeInNetWorth:
+                                  type: boolean
+                                  example: true
+                                autoSync:
+                                  type: boolean
+                                  example: false
+                            statistics:
+                              type: object
+                              description: 帳戶統計（根據用戶模式顯示不同詳細程度）
+                              properties:
+                                transactionCount:
+                                  type: integer
+                                  example: 45
+                                lastTransaction:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-08-22T10:30:00Z"
+                                monthlyAverage:
+                                  type: number
+                                  example: 2500.00
+                            createdAt:
+                              type: string
+                              format: date-time
+                              description: 創建時間
+                              example: "2025-08-22T12:00:00Z"
+                            updatedAt:
+                              type: string
+                              format: date-time
+                              description: 最後更新時間
+                              example: "2025-08-22T12:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
                       pagination:
-                        $ref: '#/components/schemas/Pagination'
+                        type: object
+                        properties:
+                          currentPage:
+                            type: integer
+                            example: 1
+                          totalPages:
+                            type: integer
+                            example: 2
+                          totalCount:
+                            type: integer
+                            example: 25
+                          hasNext:
+                            type: boolean
+                            example: true
+                          hasPrevious:
+                            type: boolean
+                            example: false
+                          pageSize:
+                            type: integer
+                            example: 20
+                      filters:
+                        type: object
+                        properties:
+                          appliedFilters:
+                            type: object
+                            example: {"type": "bank", "status": "active"}
+                          userMode:
+                            type: string
+                            example: "Expert"
+                          includeBalance:
+                            type: boolean
+                            example: true
                       summary:
                         type: object
-                        description: "帳戶統計摘要（Expert/Inertial 模式）"
                         properties:
                           totalAccounts:
                             type: integer
-                            example: 8
+                            example: 25
                           totalBalance:
                             type: number
-                            example: 125000
-                          byType:
+                            description: 總餘額（includeBalance=true時）
+                            example: 156789.50
+                          accountTypes:
                             type: object
                             properties:
-                              cash:
-                                type: object
-                                properties:
-                                  count:
-                                    type: integer
-                                    example: 2
-                                  balance:
-                                    type: number
-                                    example: 5000
                               bank:
-                                type: object
-                                properties:
-                                  count:
-                                    type: integer
-                                    example: 3
-                                  balance:
-                                    type: number
-                                    example: 100000
+                                type: integer
+                                example: 8
+                              cash:
+                                type: integer
+                                example: 12
                               credit_card:
-                                type: object
-                                properties:
-                                  count:
-                                    type: integer
-                                    example: 2
-                                  balance:
-                                    type: number
-                                    example: -15000
-                              investment:
-                                type: object
-                                properties:
-                                  count:
-                                    type: integer
-                                    example: 1
-                                  balance:
-                                    type: number
-                                    example: 35000
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+                                type: integer
+                                example: 5
 
     post:
-      summary: "建立帳戶"
-      description: |
-        建立新的帳戶。不同模式提供不同的建立選項和預設值。
       tags:
-        - 帳戶管理
+        - Account Management
+      summary: 創建新帳戶
+      description: 創建新的記帳帳戶
+      operationId: createAccount
       requestBody:
         required: true
         content:
@@ -198,72 +320,88 @@ paths:
                 - name
                 - type
                 - ledgerId
+                - ownerId
               properties:
                 name:
                   type: string
-                  minLength: 1
-                  maxLength: 50
-                  example: "中國信託支票帳戶"
-                  description: "帳戶名稱"
+                  description: 帳戶名稱
+                  example: "台新銀行支票帳戶"
+                description:
+                  type: string
+                  description: 帳戶描述
+                  example: "主要往來銀行帳戶"
                 type:
                   type: string
                   enum: [cash, bank, credit_card, investment, loan, other]
+                  description: 帳戶類型
                   example: "bank"
-                  description: "帳戶類型"
+                subtype:
+                  type: string
+                  description: 帳戶子類型
+                  example: "checking"
                 ledgerId:
                   type: string
-                  example: "ledger-uuid-001"
-                  description: "所屬帳本 ID"
+                  description: 所屬帳本ID
+                  example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+                ownerId:
+                  type: string
+                  description: 擁有者ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
                 currency:
                   type: string
-                  example: "TWD"
-                  default: "TWD"
-                  description: "幣別"
+                  description: 幣別
+                  default: "NTD"
+                  example: "NTD"
                 initialBalance:
                   type: number
-                  example: 10000
+                  description: 初始餘額
                   default: 0
-                  description: "初始餘額"
-                description:
-                  type: string
-                  maxLength: 200
-                  example: "薪水專用帳戶"
-                  description: "帳戶描述"
-                bankName:
-                  type: string
-                  example: "中國信託銀行"
-                  description: "銀行名稱（bank/credit_card 類型時必填）"
-                accountNumber:
-                  type: string
-                  example: "****1234"
-                  description: "帳號末四碼"
-                creditLimit:
-                  type: number
-                  example: 50000
-                  description: "信用額度（credit_card 類型時可填）"
-                interestRate:
-                  type: number
-                  example: 1.2
-                  description: "利率（loan/investment 類型時可填）"
-                icon:
-                  type: string
-                  example: "bank"
-                  description: "帳戶圖示"
-                color:
-                  type: string
-                  example: "#4CAF50"
-                  description: "帳戶顏色"
-                isActive:
-                  type: boolean
-                  default: true
-                  description: "是否啟用"
-                sortOrder:
-                  type: integer
-                  example: 1
-                  description: "排序順序"
+                  example: 10000.00
+                bankInfo:
+                  type: object
+                  description: 銀行資訊（bank類型需要）
+                  properties:
+                    bankCode:
+                      type: string
+                      example: "812"
+                    branchCode:
+                      type: string
+                      example: "0001"
+                    accountNumber:
+                      type: string
+                      example: "123456789012"
+                creditInfo:
+                  type: object
+                  description: 信用卡資訊（credit_card類型需要）
+                  properties:
+                    creditLimit:
+                      type: number
+                      example: 100000.00
+                    lastFour:
+                      type: string
+                      example: "1234"
+                    issuer:
+                      type: string
+                      example: "台新銀行"
+                settings:
+                  type: object
+                  description: 帳戶設定
+                  properties:
+                    isDefault:
+                      type: boolean
+                      default: false
+                      example: false
+                    includeInNetWorth:
+                      type: boolean
+                      default: true
+                      example: true
+                    autoSync:
+                      type: boolean
+                      default: false
+                      example: false
       responses:
         '201':
-          description: "帳戶建立成功"
+          description: 創建成功
           content:
             application/json:
               schema:
@@ -273,76 +411,93 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    allOf:
-                      - $ref: '#/components/schemas/Account'
-                      - type: object
+                    type: object
+                    properties:
+                      accountId:
+                        type: string
+                        description: 帳戶ID
+                        example: "account_1692700800000"
+                      name:
+                        type: string
+                        description: 帳戶名稱
+                        example: "台新銀行支票帳戶"
+                      type:
+                        type: string
+                        description: 帳戶類型
+                        example: "bank"
+                      ledgerId:
+                        type: string
+                        description: 所屬帳本ID
+                        example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+                      balance:
+                        type: number
+                        description: 初始餘額
+                        example: 10000.00
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: 創建時間
+                        example: "2025-08-22T12:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      settings:
+                        type: object
                         properties:
-                          message:
+                          currency:
                             type: string
-                            example: "帳戶建立成功"
-                          suggestions:
-                            type: array
-                            description: "帳戶設定建議（Cultivation 模式）"
-                            items:
-                              type: object
-                              properties:
-                                type:
-                                  type: string
-                                  example: "budget_setup"
-                                title:
-                                  type: string
-                                  example: "設定預算"
-                                description:
-                                  type: string
-                                  example: "為此帳戶設定每月支出預算"
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '409':
-          description: "帳戶名稱重複"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                success: false
-                error:
-                  code: "ACCOUNT_NAME_EXISTS"
-                  message: "帳戶名稱已存在"
-                  field: "name"
+                            example: "NTD"
+                          isDefault:
+                            type: boolean
+                            example: false
 
-  /accounts/{id}:
+  /accounts/{accountId}:
     get:
-      summary: "取得帳戶詳情"
-      description: |
-        取得指定帳戶的詳細資訊，包含餘額、使用統計等。
       tags:
-        - 帳戶查詢
+        - Account Management
+      summary: 取得帳戶詳細資訊
+      description: 取得指定帳戶的詳細資訊
+      operationId: getAccountDetails
       parameters:
-        - name: id
+        - name: accountId
           in: path
           required: true
-          description: "帳戶 ID"
+          description: 帳戶ID
           schema:
             type: string
+            example: "account_12345"
+        - name: userId
+          in: query
+          required: true
+          description: 請求用戶ID
+          schema:
+            type: string
+            example: "Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: userMode
+          in: query
+          description: 用戶模式（影響回應內容細節）
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Expert
+            example: "Expert"
         - name: includeTransactions
           in: query
-          description: "是否包含最近交易記錄"
+          description: 是否包含最近交易
           schema:
             type: boolean
             default: false
-        - name: transactionLimit
+            example: true
+        - name: includeStatistics
           in: query
-          description: "交易記錄筆數（當 includeTransactions=true 時）"
+          description: 是否包含統計資訊
           schema:
-            type: integer
-            minimum: 1
-            maximum: 50
-            default: 10
+            type: boolean
+            default: true
+            example: true
       responses:
         '200':
-          description: "成功取得帳戶詳情"
+          description: 取得成功
           content:
             application/json:
               schema:
@@ -352,59 +507,213 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    allOf:
-                      - $ref: '#/components/schemas/Account'
-                      - type: object
+                    type: object
+                    properties:
+                      accountId:
+                        type: string
+                        description: 帳戶ID
+                        example: "account_12345"
+                      name:
+                        type: string
+                        description: 帳戶名稱
+                        example: "台新銀行支票帳戶"
+                      description:
+                        type: string
+                        description: 帳戶描述
+                        example: "主要往來銀行帳戶"
+                      type:
+                        type: string
+                        description: 帳戶類型
+                        example: "bank"
+                      subtype:
+                        type: string
+                        description: 帳戶子類型
+                        example: "checking"
+                      ledgerId:
+                        type: string
+                        description: 所屬帳本ID
+                        example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+                      ownerId:
+                        type: string
+                        description: 擁有者ID
+                        example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                      status:
+                        type: string
+                        description: 帳戶狀態
+                        example: "active"
+                      currency:
+                        type: string
+                        description: 幣別
+                        example: "NTD"
+                      balance:
+                        type: object
+                        description: 餘額資訊
                         properties:
-                          statistics:
+                          current:
+                            type: number
+                            example: 15678.90
+                          available:
+                            type: number
+                            example: 15678.90
+                          pending:
+                            type: number
+                            example: 0.00
+                          lastUpdated:
+                            type: string
+                            format: date-time
+                            example: "2025-08-22T12:00:00Z"
+                      bankInfo:
+                        type: object
+                        description: 銀行資訊（bank類型）
+                        properties:
+                          bankCode:
+                            type: string
+                            example: "812"
+                          bankName:
+                            type: string
+                            example: "台新銀行"
+                          branchCode:
+                            type: string
+                            example: "0001"
+                          accountNumber:
+                            type: string
+                            example: "****1234"
+                      creditInfo:
+                        type: object
+                        description: 信用卡資訊（credit_card類型）
+                        properties:
+                          creditLimit:
+                            type: number
+                            example: 100000.00
+                          availableCredit:
+                            type: number
+                            example: 84321.10
+                          usedCredit:
+                            type: number
+                            example: 15678.90
+                          lastFour:
+                            type: string
+                            example: "1234"
+                          issuer:
+                            type: string
+                            example: "台新銀行"
+                      settings:
+                        type: object
+                        description: 帳戶設定
+                        properties:
+                          isDefault:
+                            type: boolean
+                            example: false
+                          includeInNetWorth:
+                            type: boolean
+                            example: true
+                          autoSync:
+                            type: boolean
+                            example: false
+                          notifications:
+                            type: boolean
+                            example: true
+                      statistics:
+                        type: object
+                        description: 帳戶統計
+                        properties:
+                          transactionCount:
+                            type: integer
+                            example: 156
+                          totalInflow:
+                            type: number
+                            example: 50000.00
+                          totalOutflow:
+                            type: number
+                            example: 34321.10
+                          averageBalance:
+                            type: number
+                            example: 18000.00
+                          lastTransaction:
+                            type: string
+                            format: date-time
+                            example: "2025-08-22T10:30:00Z"
+                          monthlyAverage:
                             type: object
-                            description: "帳戶使用統計（Expert/Inertial 模式）"
                             properties:
-                              transactionCount:
-                                type: integer
-                                example: 156
-                              lastTransaction:
-                                type: string
-                                format: date-time
-                                example: "2025-01-27T10:30:00Z"
-                              monthlyAverage:
+                              inflow:
                                 type: number
-                                example: -8500
-                                description: "月平均變動"
-                              balanceHistory:
-                                type: array
-                                description: "餘額歷史（最近 30 天）"
-                                items:
-                                  type: object
-                                  properties:
-                                    date:
-                                      type: string
-                                      format: date
-                                    balance:
-                                      type: number
-                          recentTransactions:
-                            type: array
-                            description: "最近交易記錄（當 includeTransactions=true 時）"
-                            items:
-                              $ref: '#/components/schemas/TransactionSummary'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+                                example: 8333.33
+                              outflow:
+                                type: number
+                                example: 5720.18
+                      recentTransactions:
+                        type: array
+                        description: 最近交易（需要includeTransactions=true）
+                        items:
+                          type: object
+                          properties:
+                            transactionId:
+                              type: string
+                              example: "txn_123"
+                            amount:
+                              type: number
+                              example: -500.00
+                            description:
+                              type: string
+                              example: "便利商店購物"
+                            date:
+                              type: string
+                              format: date-time
+                              example: "2025-08-22T10:30:00Z"
+                      permissions:
+                        type: object
+                        description: 用戶權限
+                        properties:
+                          canRead:
+                            type: boolean
+                            example: true
+                          canWrite:
+                            type: boolean
+                            example: true
+                          canDelete:
+                            type: boolean
+                            example: true
+                          canModifySettings:
+                            type: boolean
+                            example: true
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: 創建時間
+                        example: "2025-08-22T12:00:00Z"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        description: 最後更新時間
+                        example: "2025-08-22T12:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      userMode:
+                        type: string
+                        example: "Expert"
+                      includeTransactions:
+                        type: boolean
+                        example: true
+                      includeStatistics:
+                        type: boolean
+                        example: true
 
     put:
-      summary: "更新帳戶"
-      description: |
-        更新帳戶資訊，不包含餘額調整（餘額調整需透過交易記錄）。
       tags:
-        - 帳戶管理
+        - Account Management
+      summary: 更新帳戶資訊
+      description: 更新帳戶的基本資訊和設定
+      operationId: updateAccount
       parameters:
-        - name: id
+        - name: accountId
           in: path
           required: true
-          description: "帳戶 ID"
+          description: 帳戶ID
           schema:
             type: string
+            example: "account_12345"
       requestBody:
         required: true
         content:
@@ -414,90 +723,57 @@ paths:
               properties:
                 name:
                   type: string
-                  minLength: 1
-                  maxLength: 50
-                  example: "中信支票帳戶（更新）"
+                  description: 帳戶名稱
+                  example: "更新後的帳戶名稱"
                 description:
                   type: string
-                  maxLength: 200
-                  example: "主要薪水帳戶"
-                bankName:
+                  description: 帳戶描述
+                  example: "更新後的帳戶描述"
+                status:
                   type: string
-                  example: "中國信託商業銀行"
-                accountNumber:
+                  enum: [active, inactive, closed]
+                  description: 帳戶狀態
+                  example: "active"
+                bankInfo:
+                  type: object
+                  description: 銀行資訊更新
+                  properties:
+                    branchCode:
+                      type: string
+                      example: "0002"
+                    accountNumber:
+                      type: string
+                      example: "new_account_number"
+                creditInfo:
+                  type: object
+                  description: 信用卡資訊更新
+                  properties:
+                    creditLimit:
+                      type: number
+                      example: 150000.00
+                settings:
+                  type: object
+                  description: 帳戶設定
+                  properties:
+                    isDefault:
+                      type: boolean
+                      example: true
+                    includeInNetWorth:
+                      type: boolean
+                      example: true
+                    autoSync:
+                      type: boolean
+                      example: true
+                    notifications:
+                      type: boolean
+                      example: false
+                userId:
                   type: string
-                  example: "****5678"
-                creditLimit:
-                  type: number
-                  example: 80000
-                interestRate:
-                  type: number
-                  example: 1.5
-                icon:
-                  type: string
-                  example: "bank"
-                color:
-                  type: string
-                  example: "#2196F3"
-                isActive:
-                  type: boolean
-                  example: true
-                sortOrder:
-                  type: integer
-                  example: 2
+                  description: 操作用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
       responses:
         '200':
-          description: "帳戶更新成功"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/Account'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '409':
-          description: "帳戶名稱重複"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    delete:
-      summary: "刪除帳戶"
-      description: |
-        刪除帳戶。若帳戶有交易記錄，將進行軟刪除；若無交易記錄，則永久刪除。
-      tags:
-        - 帳戶管理
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: "帳戶 ID"
-          schema:
-            type: string
-        - name: force
-          in: query
-          description: "是否強制刪除（即使有交易記錄）"
-          schema:
-            type: boolean
-            default: false
-        - name: transferTo
-          in: query
-          description: "轉移交易記錄到指定帳戶 ID（當 force=false 且有交易記錄時）"
-          schema:
-            type: string
-      responses:
-        '200':
-          description: "帳戶刪除成功"
+          description: 更新成功
           content:
             application/json:
               schema:
@@ -511,209 +787,31 @@ paths:
                     properties:
                       accountId:
                         type: string
-                        example: "account-uuid-001"
-                      deleteType:
-                        type: string
-                        enum: [soft, hard, transferred]
-                        example: "soft"
-                        description: "刪除類型：soft=軟刪除，hard=永久刪除，transferred=轉移後刪除"
-                      transactionCount:
-                        type: integer
-                        example: 25
-                        description: "受影響的交易記錄數"
-                      transferredTo:
-                        type: string
-                        example: "account-uuid-002"
-                        description: "交易記錄轉移到的帳戶 ID（如適用）"
-                      message:
-                        type: string
-                        example: "帳戶已刪除，相關交易記錄已轉移"
-        '400':
-          description: "無法刪除帳戶"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                success: false
-                error:
-                  code: "ACCOUNT_HAS_TRANSACTIONS"
-                  message: "帳戶有交易記錄，請指定轉移目標帳戶或使用強制刪除"
-                  details:
-                    transactionCount: 25
-                    suggestions:
-                      - "指定 transferTo 參數"
-                      - "使用 force=true 強制刪除"
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  /accounts/{id}/balance:
-    get:
-      summary: "取得帳戶餘額"
-      description: |
-        取得指定帳戶的即時餘額資訊，包含餘額歷史趨勢。
-      tags:
-        - 帳戶查詢
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: "帳戶 ID"
-          schema:
-            type: string
-        - name: includeHistory
-          in: query
-          description: "是否包含餘額歷史"
-          schema:
-            type: boolean
-            default: false
-        - name: historyDays
-          in: query
-          description: "餘額歷史天數（當 includeHistory=true 時）"
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 365
-            default: 30
-      responses:
-        '200':
-          description: "成功取得帳戶餘額"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      accountId:
-                        type: string
-                        example: "account-uuid-001"
-                      accountName:
-                        type: string
-                        example: "中國信託支票帳戶"
-                      currentBalance:
-                        type: number
-                        example: 25000
-                      currency:
-                        type: string
-                        example: "TWD"
-                      lastUpdated:
+                        example: "account_12345"
+                      updatedFields:
+                        type: array
+                        items:
+                          type: string
+                        example: ["name", "description", "settings"]
+                      updatedAt:
                         type: string
                         format: date-time
-                        example: "2025-01-27T10:30:00Z"
-                      balanceChange:
-                        type: object
-                        description: "餘額變動（Expert/Inertial 模式）"
-                        properties:
-                          today:
-                            type: number
-                            example: -500
-                          thisWeek:
-                            type: number
-                            example: -2000
-                          thisMonth:
-                            type: number
-                            example: -8500
-                      balanceHistory:
-                        type: array
-                        description: "餘額歷史（當 includeHistory=true 時）"
-                        items:
-                          type: object
-                          properties:
-                            date:
-                              type: string
-                              format: date
-                              example: "2025-01-27"
-                            balance:
-                              type: number
-                              example: 25000
-                            change:
-                              type: number
-                              example: -500
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
+                        example: "2025-08-22T12:00:00Z"
 
-  /accounts/types:
-    get:
-      summary: "取得帳戶類型列表"
-      description: |
-        取得系統支援的帳戶類型清單，包含類型說明和建議設定。
+    delete:
       tags:
-        - 帳戶設定
-      responses:
-        '200':
-          description: "成功取得帳戶類型列表"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      types:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            code:
-                              type: string
-                              example: "bank"
-                            name:
-                              type: string
-                              example: "銀行帳戶"
-                            description:
-                              type: string
-                              example: "銀行存款帳戶，包含支票、儲蓄等"
-                            icon:
-                              type: string
-                              example: "bank"
-                            color:
-                              type: string
-                              example: "#4CAF50"
-                            fields:
-                              type: array
-                              description: "此類型需要的額外欄位"
-                              items:
-                                type: object
-                                properties:
-                                  name:
-                                    type: string
-                                    example: "bankName"
-                                  label:
-                                    type: string
-                                    example: "銀行名稱"
-                                  type:
-                                    type: string
-                                    example: "string"
-                                  required:
-                                    type: boolean
-                                    example: true
-                            examples:
-                              type: array
-                              description: "帳戶名稱範例"
-                              items:
-                                type: string
-                              example: ["中國信託支票", "台灣銀行儲蓄", "郵局帳戶"]
-
-  /accounts/transfer:
-    post:
-      summary: "帳戶轉帳"
-      description: |
-        在兩個帳戶間進行資金轉移，自動建立對應的交易記錄。
-      tags:
-        - 帳戶管理
+        - Account Management
+      summary: 刪除帳戶
+      description: 刪除指定的帳戶（需要權限驗證）
+      operationId: deleteAccount
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 帳戶ID
+          schema:
+            type: string
+            example: "account_12345"
       requestBody:
         required: true
         content:
@@ -721,46 +819,29 @@ paths:
             schema:
               type: object
               required:
-                - fromAccountId
-                - toAccountId
-                - amount
+                - confirmationToken
+                - userId
               properties:
-                fromAccountId:
+                confirmationToken:
                   type: string
-                  example: "account-uuid-001"
-                  description: "轉出帳戶 ID"
-                toAccountId:
+                  description: 確認刪除的令牌
+                  example: "confirm_delete_account_12345"
+                userId:
                   type: string
-                  example: "account-uuid-002"
-                  description: "轉入帳戶 ID"
-                amount:
-                  type: number
-                  minimum: 0.01
-                  example: 5000
-                  description: "轉帳金額"
-                description:
+                  description: 操作用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                transferTransactions:
                   type: string
-                  maxLength: 200
-                  example: "生活費轉帳"
-                  description: "轉帳說明"
-                date:
-                  type: string
-                  format: date
-                  example: "2025-01-27"
-                  description: "轉帳日期（預設為今天）"
-                categoryId:
-                  type: string
-                  example: "category-uuid-001"
-                  description: "轉帳科目 ID（可選）"
-                tags:
-                  type: array
-                  items:
-                    type: string
-                  example: ["轉帳", "生活費"]
-                  description: "標籤"
+                  description: 交易轉移到的帳戶ID（可選）
+                  example: "target_account_id"
+                deleteTransactions:
+                  type: boolean
+                  description: 是否同時刪除相關交易
+                  default: false
+                  example: false
       responses:
-        '201':
-          description: "轉帳成功"
+        '200':
+          description: 刪除成功
           content:
             application/json:
               schema:
@@ -772,181 +853,315 @@ paths:
                   data:
                     type: object
                     properties:
-                      transferId:
+                      accountId:
                         type: string
-                        example: "transfer-uuid-001"
-                      fromTransaction:
-                        $ref: '#/components/schemas/TransactionSummary'
-                      toTransaction:
-                        $ref: '#/components/schemas/TransactionSummary'
-                      fromAccountBalance:
-                        type: number
-                        example: 20000
-                      toAccountBalance:
-                        type: number
-                        example: 15000
-                      message:
+                        example: "account_12345"
+                      transferredTransactions:
+                        type: integer
+                        description: 轉移的交易數量
+                        example: 25
+                      deletedTransactions:
+                        type: integer
+                        description: 刪除的交易數量
+                        example: 0
+                      deletedAt:
                         type: string
-                        example: "轉帳成功"
-        '400':
-          description: "轉帳失敗"
+                        format: date-time
+                        example: "2025-08-22T12:00:00Z"
+
+  /accounts/{accountId}/balance:
+    get:
+      tags:
+        - Balance Management
+      summary: 取得帳戶餘額
+      description: 取得指定帳戶的即時餘額資訊
+      operationId: getAccountBalance
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 帳戶ID
+          schema:
+            type: string
+            example: "account_12345"
+        - name: userId
+          in: query
+          required: true
+          description: 請求用戶ID
+          schema:
+            type: string
+            example: "Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: includeHistory
+          in: query
+          description: 是否包含餘額歷史
+          schema:
+            type: boolean
+            default: false
+            example: true
+        - name: period
+          in: query
+          description: 歷史期間（天數）
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 365
+            default: 30
+            example: 30
+      responses:
+        '200':
+          description: 取得成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                insufficient_balance:
-                  value:
-                    success: false
-                    error:
-                      code: "INSUFFICIENT_BALANCE"
-                      message: "帳戶餘額不足"
-                      details:
-                        currentBalance: 3000
-                        requiredAmount: 5000
-                same_account:
-                  value:
-                    success: false
-                    error:
-                      code: "SAME_ACCOUNT_TRANSFER"
-                      message: "不能在相同帳戶間轉帳"
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          description: "帳戶不存在"
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      accountId:
+                        type: string
+                        example: "account_12345"
+                      balance:
+                        type: object
+                        properties:
+                          current:
+                            type: number
+                            example: 15678.90
+                          available:
+                            type: number
+                            example: 15678.90
+                          pending:
+                            type: number
+                            example: 0.00
+                          reserved:
+                            type: number
+                            example: 0.00
+                      currency:
+                        type: string
+                        example: "NTD"
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2025-08-22T12:00:00Z"
+                      history:
+                        type: array
+                        description: 餘額歷史（需要includeHistory=true）
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date
+                              example: "2025-08-22"
+                            balance:
+                              type: number
+                              example: 15678.90
+                            change:
+                              type: number
+                              example: -1000.00
+                  metadata:
+                    type: object
+                    properties:
+                      includeHistory:
+                        type: boolean
+                        example: true
+                      period:
+                        type: integer
+                        example: 30
+
+    patch:
+      tags:
+        - Balance Management
+      summary: 調整帳戶餘額
+      description: 手動調整帳戶餘額（需要高權限）
+      operationId: adjustAccountBalance
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 帳戶ID
+          schema:
+            type: string
+            example: "account_12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - adjustmentType
+                - amount
+                - reason
+                - userId
+              properties:
+                adjustmentType:
+                  type: string
+                  enum: [set_balance, add_amount, subtract_amount]
+                  description: 調整類型
+                  example: "set_balance"
+                amount:
+                  type: number
+                  description: 調整金額
+                  example: 20000.00
+                reason:
+                  type: string
+                  description: 調整原因
+                  example: "初始餘額設定"
+                userId:
+                  type: string
+                  description: 操作用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                reference:
+                  type: string
+                  description: 參考編號
+                  example: "ADJ_20250822_001"
+                createTransaction:
+                  type: boolean
+                  description: 是否創建對應交易記錄
+                  default: true
+                  example: true
+      responses:
+        '200':
+          description: 調整成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      accountId:
+                        type: string
+                        example: "account_12345"
+                      previousBalance:
+                        type: number
+                        example: 15678.90
+                      newBalance:
+                        type: number
+                        example: 20000.00
+                      adjustmentAmount:
+                        type: number
+                        example: 4321.10
+                      transactionId:
+                        type: string
+                        description: 對應交易ID（如果有創建）
+                        example: "txn_adjustment_123"
+                      adjustedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-08-22T12:00:00Z"
+
+  /account-types:
+    get:
+      tags:
+        - Account Types
+      summary: 取得帳戶類型列表
+      description: 取得系統支援的帳戶類型和子類型
+      operationId: getAccountTypes
+      parameters:
+        - name: userMode
+          in: query
+          description: 用戶模式（影響回應內容細節）
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Expert
+            example: "Expert"
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      accountTypes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: "bank"
+                            displayName:
+                              type: string
+                              example: "銀行帳戶"
+                            description:
+                              type: string
+                              example: "銀行存款帳戶"
+                            subtypes:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  subtype:
+                                    type: string
+                                    example: "checking"
+                                  displayName:
+                                    type: string
+                                    example: "支票帳戶"
+                                  description:
+                                    type: string
+                                    example: "一般往來帳戶"
+                            requiredFields:
+                              type: array
+                              items:
+                                type: string
+                              example: ["bankCode", "accountNumber"]
+                            optionalFields:
+                              type: array
+                              items:
+                                type: string
+                              example: ["branchCode"]
+                            balanceType:
+                              type: string
+                              enum: [asset, liability]
+                              example: "asset"
+                  metadata:
+                    type: object
+                    properties:
+                      userMode:
+                        type: string
+                        example: "Expert"
 
 components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: "JWT Token 認證"
-    
-    FirebaseAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: Firebase
-      description: "Firebase Authentication Token"
-
   schemas:
     Account:
       type: object
       properties:
-        id:
+        accountId:
           type: string
-          example: "account-uuid-001"
+          description: 帳戶ID
+          example: "account_12345"
         name:
           type: string
-          example: "中國信託支票帳戶"
+          description: 帳戶名稱
+          example: "台新銀行支票帳戶"
         type:
           type: string
           enum: [cash, bank, credit_card, investment, loan, other]
+          description: 帳戶類型
           example: "bank"
         ledgerId:
           type: string
-          example: "ledger-uuid-001"
-        currency:
-          type: string
-          example: "TWD"
-        currentBalance:
-          type: number
-          example: 25000
-        description:
-          type: string
-          example: "主要薪水帳戶"
-        bankName:
-          type: string
-          example: "中國信託銀行"
-        accountNumber:
-          type: string
-          example: "****1234"
-        creditLimit:
-          type: number
-          example: 50000
-        interestRate:
-          type: number
-          example: 1.2
-        icon:
-          type: string
-          example: "bank"
-        color:
-          type: string
-          example: "#4CAF50"
-        isActive:
-          type: boolean
-          example: true
-        sortOrder:
-          type: integer
-          example: 1
-        createdAt:
-          type: string
-          format: date-time
-          example: "2025-01-15T09:00:00Z"
-        updatedAt:
-          type: string
-          format: date-time
-          example: "2025-01-27T10:30:00Z"
-        lastTransactionAt:
-          type: string
-          format: date-time
-          example: "2025-01-27T10:30:00Z"
+          description: 所屬帳本ID
+          example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
 
-    TransactionSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "transaction-uuid-001"
-        amount:
-          type: number
-          example: 5000
-        type:
-          type: string
-          enum: [income, expense, transfer]
-          example: "transfer"
-        categoryName:
-          type: string
-          example: "轉帳"
-        description:
-          type: string
-          example: "生活費轉帳"
-        date:
-          type: string
-          format: date
-          example: "2025-01-27"
-        createdAt:
-          type: string
-          format: date-time
-          example: "2025-01-27T10:30:00Z"
-
-    Pagination:
-      type: object
-      properties:
-        currentPage:
-          type: integer
-          example: 1
-        totalPages:
-          type: integer
-          example: 5
-        totalItems:
-          type: integer
-          example: 48
-        itemsPerPage:
-          type: integer
-          example: 20
-        hasNext:
-          type: boolean
-          example: true
-        hasPrev:
-          type: boolean
-          example: false
-
-    Error:
+    ErrorResponse:
       type: object
       properties:
         success:
@@ -957,63 +1172,19 @@ components:
           properties:
             code:
               type: string
-              example: "VALIDATION_ERROR"
+              example: "ERROR_CODE"
             message:
               type: string
-              example: "參數驗證失敗"
-            field:
+              example: "錯誤訊息"
+            details:
               type: string
-              example: "amount"
-            timestamp:
-              type: string
-              format: date-time
-              example: "2025-01-27T12:00:00Z"
-            requestId:
-              type: string
-              example: "req-uuid-123"
+              example: "詳細錯誤說明"
 
-  responses:
-    BadRequestError:
-      description: "請求參數錯誤"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            success: false
-            error:
-              code: "VALIDATION_ERROR"
-              message: "帳戶名稱不能為空"
-              field: "name"
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
-    UnauthorizedError:
-      description: "未授權或 Token 無效"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            success: false
-            error:
-              code: "UNAUTHORIZED"
-              message: "Token 無效或已過期"
-
-    NotFoundError:
-      description: "資源不存在"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            success: false
-            error:
-              code: "ACCOUNT_NOT_FOUND"
-              message: "找不到指定的帳戶"
-
-tags:
-  - name: 帳戶查詢
-    description: "帳戶資訊查詢相關功能"
-  - name: 帳戶管理
-    description: "帳戶建立、修改、刪除功能"
-  - name: 帳戶設定
-    description: "帳戶類型和設定相關功能"
+security:
+  - BearerAuth: []
