@@ -1,34 +1,31 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - AI 助理服務 API 規格
-  version: 1.0.0
   description: |
     **LCAS 2.0 AI 助理服務 API 規格**
-    
-    負責 AI 驅動的智慧記帳助理、財務建議、異常檢測與自動分類的完整 API 規格。
-    整合大語言模型提供個人化財務洞察與建議，支援四模式差異化體驗。
-    
-    **服務範圍**:
-    - 智慧記帳助理（自然語言處理、智慧分類建議）
-    - 財務洞察分析（支出模式、收入趨勢、預算建議）
-    - 異常檢測服務（重複交易、異常金額、可疑支出）
-    - 自動分類服務（智慧科目推薦、學習使用習慣）
-    - 個人化建議（省錢建議、投資建議、財務目標）
-    - 對話式查詢（自然語言查詢交易、生成報表）
-    
-    **四模式差異化策略**:
-    - **Expert**: 深度 AI 分析、技術性建議、詳細洞察報告
-    - **Inertial**: 標準 AI 功能、常用建議、簡化分析
-    - **Cultivation**: AI 習慣教練、目標導向建議、激勵性洞察
-    - **Guiding**: 簡化 AI 助理、基礎建議、易懂洞察
 
+    負責智慧記帳建議、自動分類、支出分析與個人化 AI 助理功能的完整 API 規格。
+    提供基於機器學習的智慧功能，增強用戶記帳體驗與決策支援，支援四模式差異化體驗。
+
+    **服務範圍**:
+    - 智慧記帳建議（自動分類、金額預測、描述建議）
+    - 支出行為分析（消費模式、異常檢測、趨勢預測）
+    - 個人化建議（預算優化、理財建議、目標設定）
+    - 自然語言處理（記帳對話、語音轉文字、語意理解）
+
+    **四模式差異化策略**:
+    - **Expert**: 進階 AI 分析、詳細洞察報告、自訂 AI 模型
+    - **Inertial**: 標準 AI 建議、基本自動分類、固定建議
+    - **Cultivation**: 習慣養成 AI、目標導向建議、激勵式 AI
+    - **Guiding**: 簡化 AI 建議、智慧預設、溫和引導
+
+    **更新記錄**:
+    - v1.1.0 (2025-01-28): 補充缺失API端點，統一路徑參數命名規範，完善四模式支援
+
+  version: 1.1.0
   contact:
     name: LCAS 開發團隊
     email: dev@lcas.com.tw
-  license:
-    name: LCAS License
-    url: https://lcas.com.tw/license
 
 servers:
   - url: https://api.lcas.com.tw/v1
@@ -40,231 +37,181 @@ security:
   - bearerAuth: []
 
 paths:
+  /ai/suggestions/transactions:
+    post:
+      tags:
+        - Smart Suggestions
+      summary: 記帳建議
+      description: |
+        根據用戶輸入或上下文提供智慧記帳建議。
+        四模式差異：
+        - Expert: 詳細建議分析、多重選項、準確度評分
+        - Inertial: 標準建議清單、基本分類、簡化選擇
+        - Cultivation: 習慣導向建議、目標關聯、激勵元素
+        - Guiding: 最佳建議、智慧預設、一鍵採用
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionSuggestionRequest'
+      responses:
+        '200':
+          description: 成功取得記帳建議
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionSuggestionResponse'
+
   /ai/categorize:
     post:
       tags:
-        - AI 智慧分類
-      summary: AI 智慧分類
+        - Smart Suggestions
+      summary: 自動分類
       description: |
-        基於交易描述和歷史資料，提供智慧科目分類建議。
+        自動識別並分類交易記錄。
         四模式差異：
-        - Expert: 詳細分類規則、多層級建議、自訂分類選項
-        - Inertial: 標準分類建議、常用科目優先
-        - Cultivation: 學習導向建議、習慣養成提醒
-        - Guiding: 簡化分類、最常用建議
+        - Expert: 多級分類、自訂規則、分類信心度
+        - Inertial: 標準分類、預設規則、基本準確度
+        - Cultivation: 學習導向分類、習慣建立、進度追蹤
+        - Guiding: 簡化分類、智慧預設、自動採用
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClassificationRequest'
+              $ref: '#/components/schemas/CategorizationRequest'
       responses:
         '200':
-          description: 分類建議成功
+          description: 成功完成自動分類
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/ClassificationSuggestion'
+                $ref: '#/components/schemas/CategorizationResponse'
 
-  /ai/suggestions:
+  /ai/analysis/spending:
+    post:
+      tags:
+        - Spending Analysis
+      summary: 支出分析
+      description: |
+        分析用戶支出模式與行為。
+        四模式差異：
+        - Expert: 深度分析報告、統計模型、預測趨勢
+        - Inertial: 標準分析、基本圖表、簡化洞察
+        - Cultivation: 習慣分析、目標進度、改善建議
+        - Guiding: 關鍵洞察、簡化報告、行動建議
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpendingAnalysisRequest'
+      responses:
+        '200':
+          description: 成功完成支出分析
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpendingAnalysisResponse'
+
+  /ai/recommendations/budget:
     get:
       tags:
-        - AI 建議
-      summary: AI 建議
+        - Personal Recommendations
+      summary: 預算建議
       description: |
-        基於用戶的財務狀況和目標，提供個人化建議。
+        提供個人化預算設定建議。
         四模式差異：
-        - Expert: 專業投資建議、詳細理財規劃
-        - Inertial: 實用省錢建議、基本理財原則
-        - Cultivation: 習慣養成建議、目標達成計畫
-        - Guiding: 簡單易行建議、基礎理財知識
+        - Expert: 詳細預算分析、複雜策略、投資建議
+        - Inertial: 標準預算建議、基本分配、固定比例
+        - Cultivation: 目標導向預算、習慣養成、階段性建議
+        - Guiding: 簡化預算、智慧預設、一鍵設定
       parameters:
-        - name: recommendationType
+        - name: analysisType
           in: query
-          description: 建議類型
+          description: 分析類型
           schema:
             type: string
-            enum: [saving, budgeting, investment, debt, general]
-        - name: riskTolerance
+            enum: [monthly, quarterly, yearly, custom]
+            default: monthly
+        - name: includeGoals
           in: query
-          description: 風險承受度
+          description: 是否包含目標分析
           schema:
-            type: string
-            enum: [conservative, moderate, aggressive]
-        - name: timeHorizon
-          in: query
-          description: 投資時間範圍
-          schema:
-            type: string
-            enum: [short, medium, long]
+            type: boolean
+            default: true
       responses:
         '200':
-          description: 成功取得 AI 建議
+          description: 成功取得預算建議
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/PersonalRecommendations'
+                $ref: '#/components/schemas/BudgetRecommendationResponse'
 
-  /ai/budget-advice:
+  /ai/chat:
     post:
       tags:
-        - AI 預算建議
-      summary: AI 預算建議
+        - Natural Language
+      summary: AI 對話
       description: |
-        協助設定和追蹤財務目標，提供達成建議。
-        支援短期、中期、長期目標規劃。
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GoalAdvisorRequest'
-      responses:
-        '200':
-          description: 預算建議成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/GoalAdvisorResponse'
-
-  /ai/anomaly-detection:
-    post:
-      tags:
-        - 異常檢測
-      summary: 異常檢測
-      description: |
-        使用 AI 模型檢測可能的異常交易或支出模式。
-        支援即時檢測和批量分析。
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AnomalyDetectionRequest'
-      responses:
-        '200':
-          description: 異常檢測完成
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/AnomalyDetectionResult'
-
-  /ai/spending-insights:
-    post:
-      tags:
-        - AI 支出洞察
-      summary: AI 支出洞察
-      description: |
-        基於 AI 分析提供個人化財務洞察與建議。
+        與 AI 助理進行自然語言對話。
         四模式差異：
-        - Expert: 深度財務分析、投資建議、風險評估
-        - Inertial: 標準財務報告、基本建議
-        - Cultivation: 目標導向洞察、習慣改善建議
-        - Guiding: 簡化洞察、易懂建議
+        - Expert: 專業對話、技術分析、詳細解釋
+        - Inertial: 標準對話、基本問答、實用回應
+        - Cultivation: 鼓勵對話、習慣指導、目標討論
+        - Guiding: 簡化對話、溫和引導、基礎協助
       requestBody:
         required: true
         content:
           application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: 成功取得 AI 回應
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+
+  /ai/voice/transcribe:
+    post:
+      tags:
+        - Natural Language
+      summary: 語音轉文字
+      description: |
+        將語音記帳轉換為文字與結構化資料。
+        四模式差異：
+        - Expert: 高精度轉換、多語言支援、詳細標記
+        - Inertial: 標準轉換、基本準確度、中文支援
+        - Cultivation: 學習導向轉換、習慣建立、進度回饋
+        - Guiding: 簡化轉換、智慧校正、自動確認
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
             schema:
               type: object
-              required:
-                - period
               properties:
-                period:
+                audio:
                   type: string
-                  enum: [week, month, quarter, year]
-                  default: month
-                  description: 分析期間
-                focus:
+                  format: binary
+                  description: 音檔
+                language:
                   type: string
-                  enum: [spending, saving, budgeting, investment]
-                  description: 分析重點
-                includeForecasting:
-                  type: boolean
-                  default: false
-                  description: 是否包含預測分析
+                  enum: [zh-TW, en-US, auto]
+                  default: zh-TW
+                  description: 語言設定
+              required:
+                - audio
       responses:
         '200':
-          description: 成功取得支出洞察
+          description: 語音轉換成功
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/FinancialInsights'
-
-  /ai/recommendations:
-    get:
-      tags:
-        - AI 個人化推薦
-      summary: AI 個人化推薦
-      description: |
-        基於用戶的財務狀況和目標，提供個人化推薦。
-        四模式差異：
-        - Expert: 專業投資建議、詳細理財規劃
-        - Inertial: 實用省錢建議、基本理財原則
-        - Cultivation: 習慣養成建議、目標達成計畫
-        - Guiding: 簡單易行建議、基礎理財知識
-      parameters:
-        - name: recommendationType
-          in: query
-          description: 建議類型
-          schema:
-            type: string
-            enum: [saving, budgeting, investment, debt, general]
-        - name: riskTolerance
-          in: query
-          description: 風險承受度
-          schema:
-            type: string
-            enum: [conservative, moderate, aggressive]
-        - name: timeHorizon
-          in: query
-          description: 投資時間範圍
-          schema:
-            type: string
-            enum: [short, medium, long]
-      responses:
-        '200':
-          description: 成功取得個人化推薦
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/PersonalRecommendations'
+                $ref: '#/components/schemas/TranscriptionResponse'
 
 components:
   securitySchemes:
@@ -274,6 +221,453 @@ components:
       bearerFormat: JWT
 
   schemas:
+    TransactionSuggestionRequest:
+      type: object
+      required:
+        - context
+      properties:
+        context:
+          type: object
+          properties:
+            description:
+              type: string
+              description: 交易描述
+            amount:
+              type: number
+              description: 金額
+            location:
+              type: string
+              description: 地點
+            time:
+              type: string
+              format: date-time
+              description: 時間
+        options:
+          type: object
+          properties:
+            maxSuggestions:
+              type: integer
+              minimum: 1
+              maximum: 10
+              default: 5
+            includeConfidence:
+              type: boolean
+              default: true
+            userMode:
+              type: string
+              enum: [Expert, Inertial, Cultivation, Guiding]
+
+    TransactionSuggestionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            suggestions:
+              type: array
+              items:
+                $ref: '#/components/schemas/TransactionSuggestion'
+            metadata:
+              type: object
+              properties:
+                processingTime:
+                  type: number
+                modelVersion:
+                  type: string
+                confidence:
+                  type: number
+
+    TransactionSuggestion:
+      type: object
+      properties:
+        suggestionId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [category, amount, description, account]
+        value:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        reasoning:
+          type: string
+          description: 建議理由
+        metadata:
+          type: object
+          properties:
+            categoryId:
+              type: string
+              format: uuid
+            categoryName:
+              type: string
+            accountId:
+              type: string
+              format: uuid
+            tags:
+              type: array
+              items:
+                type: string
+
+    CategorizationRequest:
+      type: object
+      required:
+        - transactions
+      properties:
+        transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              transactionId:
+                type: string
+                format: uuid
+              description:
+                type: string
+              amount:
+                type: number
+              vendor:
+                type: string
+              location:
+                type: string
+        options:
+          type: object
+          properties:
+            autoApply:
+              type: boolean
+              default: false
+            includeAlternatives:
+              type: boolean
+              default: true
+
+    CategorizationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: '#/components/schemas/CategorizationResult'
+            summary:
+              type: object
+              properties:
+                totalProcessed:
+                  type: integer
+                successfullyClassified:
+                  type: integer
+                averageConfidence:
+                  type: number
+
+    CategorizationResult:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          format: uuid
+        suggestedCategory:
+          type: object
+          properties:
+            categoryId:
+              type: string
+              format: uuid
+            categoryName:
+              type: string
+            confidence:
+              type: number
+        alternatives:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              categoryName:
+                type: string
+              confidence:
+                type: number
+        applied:
+          type: boolean
+          description: 是否已自動套用
+
+    SpendingAnalysisRequest:
+      type: object
+      required:
+        - dateRange
+      properties:
+        dateRange:
+          type: object
+          properties:
+            startDate:
+              type: string
+              format: date
+            endDate:
+              type: string
+              format: date
+        filters:
+          type: object
+          properties:
+            categoryIds:
+              type: array
+              items:
+                type: string
+                format: uuid
+            accountIds:
+              type: array
+              items:
+                type: string
+                format: uuid
+            minAmount:
+              type: number
+            maxAmount:
+              type: number
+        analysisTypes:
+          type: array
+          items:
+            type: string
+            enum: [patterns, anomalies, trends, forecasting, recommendations]
+          default: [patterns, trends]
+
+    SpendingAnalysisResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            analysis:
+              type: object
+              properties:
+                patterns:
+                  $ref: '#/components/schemas/SpendingPatterns'
+                anomalies:
+                  $ref: '#/components/schemas/SpendingAnomalies'
+                trends:
+                  $ref: '#/components/schemas/SpendingTrends'
+                forecasting:
+                  $ref: '#/components/schemas/SpendingForecast'
+                recommendations:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AIRecommendation'
+            metadata:
+              type: object
+              properties:
+                analysisDate:
+                  type: string
+                  format: date-time
+                dataPoints:
+                  type: integer
+                confidence:
+                  type: number
+
+    SpendingPatterns:
+      type: object
+      properties:
+        weeklyPatterns:
+          type: object
+          properties:
+            highestSpendingDay:
+              type: string
+            lowestSpendingDay:
+              type: string
+            averageDailySpending:
+              type: number
+        monthlyPatterns:
+          type: object
+          properties:
+            peakSpendingPeriod:
+              type: string
+            spendingDistribution:
+              type: array
+              items:
+                type: object
+        categoryPatterns:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              categoryName:
+                type: string
+              percentage:
+                type: number
+              trend:
+                type: string
+                enum: [increasing, decreasing, stable]
+
+    SpendingAnomalies:
+      type: object
+      properties:
+        unusualTransactions:
+          type: array
+          items:
+            type: object
+            properties:
+              transactionId:
+                type: string
+                format: uuid
+              reason:
+                type: string
+              severity:
+                type: string
+                enum: [low, medium, high]
+        categoryAnomalies:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              categoryName:
+                type: string
+              anomalyType:
+                type: string
+              description:
+                type: string
+
+    SpendingTrends:
+      type: object
+      properties:
+        overallTrend:
+          type: string
+          enum: [increasing, decreasing, stable, volatile]
+        monthlyGrowth:
+          type: number
+        categoryTrends:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              categoryName:
+                type: string
+              trendDirection:
+                type: string
+              changePercentage:
+                type: number
+
+    SpendingForecast:
+      type: object
+      properties:
+        nextMonth:
+          type: object
+          properties:
+            predictedTotal:
+              type: number
+            confidence:
+              type: number
+            byCategory:
+              type: array
+              items:
+                type: object
+        nextQuarter:
+          type: object
+          properties:
+            predictedTotal:
+              type: number
+            confidence:
+              type: number
+        insights:
+          type: array
+          items:
+            type: string
+
+    BudgetRecommendationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            recommendations:
+              type: array
+              items:
+                $ref: '#/components/schemas/BudgetRecommendation'
+            currentAnalysis:
+              type: object
+              properties:
+                totalIncome:
+                  type: number
+                totalExpenses:
+                  type: number
+                savingsRate:
+                  type: number
+                budgetHealth:
+                  type: string
+                  enum: [excellent, good, fair, poor]
+            optimizations:
+              type: array
+              items:
+                type: object
+                properties:
+                  category:
+                    type: string
+                  currentAmount:
+                    type: number
+                  recommendedAmount:
+                    type: number
+                  potentialSavings:
+                    type: number
+                  reasoning:
+                    type: string
+
+    BudgetRecommendation:
+      type: object
+      properties:
+        recommendationId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [budget_allocation, spending_limit, saving_goal, category_adjustment]
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [high, medium, low]
+        expectedImpact:
+          type: object
+          properties:
+            monthlySavings:
+              type: number
+            improvementScore:
+              type: number
+        actionItems:
+          type: array
+          items:
+            type: string
+        targetCategory:
+          type: object
+          nullable: true
+          properties:
+            categoryId:
+              type: string
+              format: uuid
+            categoryName:
+              type: string
+
     ChatRequest:
       type: object
       required:
@@ -281,1193 +675,172 @@ components:
       properties:
         message:
           type: string
-          description: 用戶訊息
           maxLength: 1000
-        sessionId:
-          type: string
-          description: 對話 Session ID
+          description: 用戶訊息
         context:
-          $ref: '#/components/schemas/ConversationContext'
+          type: object
+          properties:
+            conversationId:
+              type: string
+              format: uuid
+            previousMessages:
+              type: array
+              items:
+                type: object
+                properties:
+                  role:
+                    type: string
+                    enum: [user, assistant]
+                  content:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
         intent:
           type: string
-          enum: [bookkeeping, query, advice, analysis, general]
-          description: 對話意圖提示
-
-    ConversationContext:
-      type: object
-      properties:
-        currentLedger:
-          type: string
-          description: 當前帳本 ID
-        recentTransactions:
-          type: array
-          items:
-            type: string
-          description: 最近交易 ID 列表
-        userPreferences:
-          type: object
-          description: 用戶偏好設定
-        previousIntent:
-          type: string
-          description: 上一次對話意圖
+          enum: [general, transaction_help, budget_advice, analysis_request]
+          description: 對話意圖
 
     ChatResponse:
       type: object
       properties:
-        message:
-          type: string
-          description: AI 助理回應訊息
-        sessionId:
-          type: string
-          description: 對話 Session ID
-        intent:
-          type: string
-          description: 識別的對話意圖
-        confidence:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: 意圖識別信心度
-        suggestions:
-          type: array
-          items:
-            type: string
-          description: 建議的下一步動作
-        actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/SuggestedAction'
-        metadata:
+        success:
+          type: boolean
+          example: true
+        data:
           type: object
-          description: 回應元資料
+          properties:
+            response:
+              type: string
+              description: AI 回應
+            conversationId:
+              type: string
+              format: uuid
+            intent:
+              type: string
+              description: 識別的意圖
+            confidence:
+              type: number
+              description: 回應信心度
+            actions:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [create_transaction, set_budget, view_report]
+                  parameters:
+                    type: object
+                  description:
+                    type: string
+            followUpSuggestions:
+              type: array
+              items:
+                type: string
+              description: 後續問題建議
 
-    SuggestedAction:
+    TranscriptionResponse:
       type: object
       properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            transcription:
+              type: string
+              description: 轉換的文字
+            confidence:
+              type: number
+              description: 轉換信心度
+            language:
+              type: string
+              description: 識別的語言
+            structuredData:
+              type: object
+              nullable: true
+              properties:
+                amount:
+                  type: number
+                description:
+                  type: string
+                category:
+                  type: string
+                type:
+                  type: string
+                  enum: [income, expense]
+            alternatives:
+              type: array
+              items:
+                type: object
+                properties:
+                  text:
+                    type: string
+                  confidence:
+                    type: number
+
+    AIRecommendation:
+      type: object
+      properties:
+        recommendationId:
+          type: string
+          format: uuid
         type:
           type: string
-          enum: [create_entry, view_report, set_budget, ask_question]
-          description: 建議動作類型
+          enum: [budget_adjustment, spending_pattern, saving_opportunity, category_optimization]
         title:
           type: string
-          description: 動作標題
         description:
           type: string
-          description: 動作描述
-        parameters:
-          type: object
-          description: 動作參數
-
-    ChatContext:
-      type: object
-      properties:
-        sessionId:
-          type: string
-          description: 對話 Session ID
-        startTime:
-          type: string
-          format: date-time
-          description: 對話開始時間
-        messageCount:
-          type: integer
-          description: 訊息總數
-        history:
-          type: array
-          items:
-            $ref: '#/components/schemas/ChatMessage'
-        context:
-          $ref: '#/components/schemas/ConversationContext'
-
-    ChatMessage:
-      type: object
-      properties:
-        role:
-          type: string
-          enum: [user, assistant]
-          description: 訊息角色
-        message:
-          type: string
-          description: 訊息內容
-        timestamp:
-          type: string
-          format: date-time
-          description: 訊息時間
-        intent:
-          type: string
-          description: 識別意圖
-        confidence:
-          type: number
-          description: 信心度
-
-    ClassificationRequest:
-      type: object
-      required:
-        - description
-        - amount
-        - transactionType
-      properties:
-        description:
-          type: string
-          description: 交易描述
-          maxLength: 500
-        amount:
-          type: number
-          description: 交易金額
-        transactionType:
-          type: string
-          enum: [income, expense]
-          description: 交易類型
-        merchantName:
-          type: string
-          description: 商家名稱
-        date:
-          type: string
-          format: date
-          description: 交易日期
-        location:
-          type: string
-          description: 交易地點
-        paymentMethod:
-          type: string
-          description: 支付方式
-        userId:
-          type: string
-          description: 用戶 ID（用於個人化）
-
-    ClassificationSuggestion:
-      type: object
-      properties:
-        suggestions:
-          type: array
-          items:
-            $ref: '#/components/schemas/CategorySuggestion'
-        confidence:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: 整體建議信心度
-        reasoning:
-          type: string
-          description: 分類推理說明
-        alternativeCategories:
-          type: array
-          items:
-            $ref: '#/components/schemas/CategorySuggestion'
-        learningTips:
-          type: array
-          items:
-            type: string
-          description: 分類學習提示
-
-    CategorySuggestion:
-      type: object
-      properties:
-        categoryId:
-          type: string
-          description: 科目 ID
-        categoryName:
-          type: string
-          description: 科目名稱
-        subcategoryName:
-          type: string
-          description: 子科目名稱
-        confidence:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: 建議信心度
-        reason:
-          type: string
-          description: 建議原因
-        frequency:
-          type: integer
-          description: 歷史使用頻率
-
-    LearningRequest:
-      type: object
-      required:
-        - transactionId
-        - selectedCategory
-        - suggestedCategories
-      properties:
-        transactionId:
-          type: string
-          description: 交易 ID
-        selectedCategory:
-          type: string
-          description: 用戶選擇的科目 ID
-        suggestedCategories:
-          type: array
-          items:
-            type: string
-          description: AI 建議的科目 ID 列表
-        feedback:
-          type: string
-          enum: [correct, incorrect, partially_correct]
-          description: 用戶回饋
-        customReason:
-          type: string
-          description: 自訂分類原因
-
-    FinancialInsights:
-      type: object
-      properties:
-        summary:
-          $ref: '#/components/schemas/InsightSummary'
-        spendingPatterns:
-          $ref: '#/components/schemas/SpendingPatterns'
-        incomeAnalysis:
-          $ref: '#/components/schemas/IncomeAnalysis'
-        budgetPerformance:
-          $ref: '#/components/schemas/BudgetPerformance'
-        recommendations:
-          type: array
-          items:
-            $ref: '#/components/schemas/Recommendation'
-        forecasting:
-          $ref: '#/components/schemas/FinancialForecasting'
-        riskAssessment:
-          $ref: '#/components/schemas/RiskAssessment'
-
-    InsightSummary:
-      type: object
-      properties:
-        period:
-          type: string
-          description: 分析期間
-        totalIncome:
-          type: number
-          description: 總收入
-        totalExpense:
-          type: number
-          description: 總支出
-        netIncome:
-          type: number
-          description: 淨收入
-        savingsRate:
-          type: number
-          description: 儲蓄率（%）
-        topSpendingCategory:
-          type: string
-          description: 最大支出科目
-        keyInsight:
-          type: string
-          description: 關鍵洞察
-
-    SpendingPatterns:
-      type: object
-      properties:
-        trends:
-          type: array
-          items:
-            $ref: '#/components/schemas/SpendingTrend'
-        cyclicPatterns:
-          type: array
-          items:
-            $ref: '#/components/schemas/CyclicPattern'
-        unusualSpending:
-          type: array
-          items:
-            $ref: '#/components/schemas/UnusualSpending'
-        comparisonToPrevious:
-          $ref: '#/components/schemas/PeriodComparison'
-
-    SpendingTrend:
-      type: object
-      properties:
-        category:
-          type: string
-          description: 科目
-        trend:
-          type: string
-          enum: [increasing, decreasing, stable]
-          description: 趋勢方向
-        changePercentage:
-          type: number
-          description: 變化百分比
-        insight:
-          type: string
-          description: 趨勢洞察
-
-    CyclicPattern:
-      type: object
-      properties:
-        pattern:
-          type: string
-          description: 週期模式描述
-        frequency:
-          type: string
-          enum: [weekly, monthly, quarterly]
-          description: 週期頻率
-        confidence:
-          type: number
-          description: 模式信心度
-        nextOccurrence:
-          type: string
-          format: date
-          description: 下次預期發生日期
-
-    UnusualSpending:
-      type: object
-      properties:
-        date:
-          type: string
-          format: date
-          description: 異常日期
-        category:
-          type: string
-          description: 科目
-        amount:
-          type: number
-          description: 異常金額
-        deviation:
-          type: number
-          description: 偏離程度（標準差）
-        reason:
-          type: string
-          description: 可能原因
-
-    PeriodComparison:
-      type: object
-      properties:
-        currentPeriod:
-          type: number
-          description: 當期金額
-        previousPeriod:
-          type: number
-          description: 上期金額
-        changeAmount:
-          type: number
-          description: 變化金額
-        changePercentage:
-          type: number
-          description: 變化百分比
-        analysis:
-          type: string
-          description: 變化分析
-
-    IncomeAnalysis:
-      type: object
-      properties:
-        totalIncome:
-          type: number
-          description: 總收入
-        primaryIncome:
-          type: number
-          description: 主要收入
-        secondaryIncome:
-          type: number
-          description: 副業收入
-        incomeStability:
-          type: string
-          enum: [stable, variable, volatile]
-          description: 收入穩定性
-        growthRate:
-          type: number
-          description: 收入成長率
-        seasonality:
-          type: string
-          description: 季節性分析
-
-    BudgetPerformance:
-      type: object
-      properties:
-        overallPerformance:
-          type: string
-          enum: [excellent, good, fair, poor]
-          description: 整體預算表現
-        budgetUtilization:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: 預算使用率
-        categoryPerformance:
-          type: array
-          items:
-            $ref: '#/components/schemas/CategoryBudgetPerformance'
-        recommendations:
-          type: array
-          items:
-            type: string
-          description: 預算改善建議
-
-    CategoryBudgetPerformance:
-      type: object
-      properties:
-        category:
-          type: string
-          description: 科目
-        budgeted:
-          type: number
-          description: 預算金額
-        actual:
-          type: number
-          description: 實際金額
-        utilization:
-          type: number
-          description: 使用率
-        status:
-          type: string
-          enum: [within_budget, over_budget, under_budget]
-          description: 預算狀態
-
-    Recommendation:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: [saving, budgeting, investment, debt_management, spending_optimization]
-          description: 建議類型
         priority:
           type: string
           enum: [high, medium, low]
-          description: 優先級
-        title:
-          type: string
-          description: 建議標題
-        description:
-          type: string
-          description: 建議描述
-        potentialImpact:
-          type: string
-          description: 預期影響
-        actionSteps:
-          type: array
-          items:
-            type: string
-          description: 執行步驟
-        relatedCategories:
-          type: array
-          items:
-            type: string
-          description: 相關科目
-
-    FinancialForecasting:
-      type: object
-      properties:
-        nextMonthSpending:
-          type: number
-          description: 下月支出預測
-        nextMonthIncome:
-          type: number
-          description: 下月收入預測
-        savingsProjection:
-          type: array
-          items:
-            $ref: '#/components/schemas/SavingsProjection'
-        budgetAlerts:
-          type: array
-          items:
-            $ref: '#/components/schemas/BudgetAlert'
-        confidence:
-          type: number
-          description: 預測信心度
-
-    SavingsProjection:
-      type: object
-      properties:
-        month:
-          type: string
-          format: date
-          description: 月份
-        projectedSavings:
-          type: number
-          description: 預期儲蓄
-        cumulativeSavings:
-          type: number
-          description: 累積儲蓄
-        confidence:
-          type: number
-          description: 預測信心度
-
-    BudgetAlert:
-      type: object
-      properties:
-        category:
-          type: string
-          description: 科目
-        alertType:
-          type: string
-          enum: [approaching_limit, likely_to_exceed, recommend_adjustment]
-          description: 警告類型
-        projectedAmount:
-          type: number
-          description: 預期金額
-        budgetAmount:
-          type: number
-          description: 預算金額
-        daysRemaining:
-          type: integer
-          description: 剩餘天數
-        recommendation:
-          type: string
-          description: 建議
-
-    RiskAssessment:
-      type: object
-      properties:
-        overallRisk:
-          type: string
-          enum: [low, moderate, high]
-          description: 整體財務風險
-        riskFactors:
-          type: array
-          items:
-            $ref: '#/components/schemas/RiskFactor'
-        emergencyFundRatio:
-          type: number
-          description: 緊急基金比率
-        debtToIncomeRatio:
-          type: number
-          description: 債務收入比
-        recommendations:
-          type: array
-          items:
-            type: string
-          description: 風險管理建議
-
-    RiskFactor:
-      type: object
-      properties:
-        factor:
-          type: string
-          description: 風險因子
-        severity:
-          type: string
-          enum: [low, medium, high]
-          description: 嚴重程度
-        description:
-          type: string
-          description: 風險描述
-        mitigation:
-          type: string
-          description: 緩解措施
-
-    AnomalyDetectionRequest:
-      type: object
-      properties:
-        transactionIds:
-          type: array
-          items:
-            type: string
-          description: 要檢測的交易 ID 列表
-        dateRange:
-          $ref: '#/components/schemas/DateRange'
-        detectionTypes:
-          type: array
-          items:
-            type: string
-            enum: [amount_anomaly, frequency_anomaly, pattern_anomaly, duplicate_detection]
-          description: 檢測類型
-        sensitivity:
-          type: string
-          enum: [low, medium, high]
-          default: medium
-          description: 檢測敏感度
-
-    AnomalyDetectionResult:
-      type: object
-      properties:
-        anomalies:
-          type: array
-          items:
-            $ref: '#/components/schemas/AnomalyResult'
-        summary:
-          $ref: '#/components/schemas/AnomalySummary'
-        recommendations:
-          type: array
-          items:
-            type: string
-          description: 處理建議
-
-    AnomalyResult:
-      type: object
-      properties:
-        transactionId:
-          type: string
-          description: 異常交易 ID
-        anomalyType:
-          type: string
-          enum: [amount_spike, unusual_frequency, pattern_deviation, potential_duplicate]
-          description: 異常類型
-        severity:
-          type: string
-          enum: [low, medium, high]
-          description: 異常嚴重程度
-        confidence:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: 異常信心度
-        description:
-          type: string
-          description: 異常描述
-        expectedValue:
-          type: number
-          description: 預期值
-        actualValue:
-          type: number
-          description: 實際值
-        relatedTransactions:
-          type: array
-          items:
-            type: string
-          description: 相關交易 ID
-
-    AnomalySummary:
-      type: object
-      properties:
-        totalAnomalies:
-          type: integer
-          description: 異常總數
-        highSeverityCount:
-          type: integer
-          description: 高嚴重程度異常數
-        mostCommonType:
-          type: string
-          description: 最常見異常類型
-        riskLevel:
-          type: string
-          enum: [low, medium, high]
-          description: 整體風險等級
-
-    PersonalRecommendations:
-      type: object
-      properties:
-        recommendations:
-          type: array
-          items:
-            $ref: '#/components/schemas/PersonalRecommendation'
-        userProfile:
-          $ref: '#/components/schemas/UserFinancialProfile'
-        prioritizedActions:
-          type: array
-          items:
-            $ref: '#/components/schemas/PrioritizedAction'
-
-    PersonalRecommendation:
-      type: object
-      properties:
-        id:
-          type: string
-          description: 建議 ID
-        category:
-          type: string
-          enum: [saving, budgeting, investment, debt_management, spending_optimization, goal_setting]
-          description: 建議分類
-        title:
-          type: string
-          description: 建議標題
-        description:
-          type: string
-          description: 詳細描述
-        reasoning:
-          type: string
-          description: 建議理由
-        expectedBenefit:
-          type: string
-          description: 預期效益
-        difficulty:
-          type: string
-          enum: [easy, moderate, challenging]
-          description: 執行難度
-        timeframe:
-          type: string
-          enum: [immediate, short_term, long_term]
-          description: 時間範圍
-        actionSteps:
-          type: array
-          items:
-            type: string
-          description: 執行步驟
-
-    UserFinancialProfile:
-      type: object
-      properties:
-        riskProfile:
-          type: string
-          enum: [conservative, moderate, aggressive]
-          description: 風險偏好
-        lifestageStage:
-          type: string
-          enum: [young_professional, family_building, pre_retirement, retired]
-          description: 人生階段
-        primaryGoals:
-          type: array
-          items:
-            type: string
-          description: 主要財務目標
-        strengths:
-          type: array
-          items:
-            type: string
-          description: 財務優勢
-        improvementAreas:
-          type: array
-          items:
-            type: string
-          description: 改善領域
-
-    PrioritizedAction:
-      type: object
-      properties:
-        action:
-          type: string
-          description: 行動項目
-        priority:
-          type: integer
-          minimum: 1
-          maximum: 10
-          description: 優先級分數
         impact:
-          type: string
-          enum: [high, medium, low]
-          description: 影響程度
-        effort:
-          type: string
-          enum: [high, medium, low]
-          description: 所需努力
-        timeline:
-          type: string
-          description: 建議時程
-
-    GoalAdvisorRequest:
-      type: object
-      required:
-        - goalType
-      properties:
-        goalType:
-          type: string
-          enum: [saving, investment, debt_reduction, purchase, retirement]
-          description: 目標類型
-        targetAmount:
-          type: number
-          description: 目標金額
-        targetDate:
-          type: string
-          format: date
-          description: 目標日期
-        currentAmount:
-          type: number
-          description: 當前金額
-        monthlyContribution:
-          type: number
-          description: 月供金額
-        riskTolerance:
-          type: string
-          enum: [conservative, moderate, aggressive]
-          description: 風險承受度
-
-    GoalAdvisorResponse:
-      type: object
-      properties:
-        feasibilityAnalysis:
-          $ref: '#/components/schemas/FeasibilityAnalysis'
-        recommendations:
-          type: array
-          items:
-            $ref: '#/components/schemas/GoalRecommendation'
-        alternativeStrategies:
-          type: array
-          items:
-            $ref: '#/components/schemas/AlternativeStrategy'
-        milestones:
-          type: array
-          items:
-            $ref: '#/components/schemas/GoalMilestone'
-
-    FeasibilityAnalysis:
-      type: object
-      properties:
-        feasible:
-          type: boolean
-          description: 目標是否可行
-        confidence:
-          type: number
-          description: 可行性信心度
-        requiredMonthlyAmount:
-          type: number
-          description: 所需月供金額
-        successProbability:
-          type: number
-          description: 成功機率
-        challenges:
-          type: array
-          items:
-            type: string
-          description: 面臨挑戰
-        strengths:
-          type: array
-          items:
-            type: string
-          description: 有利因素
-
-    GoalRecommendation:
-      type: object
-      properties:
-        strategy:
-          type: string
-          description: 策略名稱
-        description:
-          type: string
-          description: 策略描述
-        adjustments:
-          type: array
-          items:
-            type: string
-          description: 建議調整
-        expectedOutcome:
-          type: string
-          description: 預期結果
-
-    AlternativeStrategy:
-      type: object
-      properties:
-        name:
-          type: string
-          description: 策略名稱
-        targetAmount:
-          type: number
-          description: 調整後目標金額
-        targetDate:
-          type: string
-          format: date
-          description: 調整後目標日期
-        monthlyContribution:
-          type: number
-          description: 調整後月供
-        pros:
-          type: array
-          items:
-            type: string
-          description: 優點
-        cons:
-          type: array
-          items:
-            type: string
-          description: 缺點
-
-    GoalMilestone:
-      type: object
-      properties:
-        date:
-          type: string
-          format: date
-          description: 里程碑日期
-        targetAmount:
-          type: number
-          description: 目標累積金額
-        description:
-          type: string
-          description: 里程碑描述
-        celebration:
-          type: string
-          description: 慶祝建議
-
-    NLPParseRequest:
-      type: object
-      required:
-        - text
-      properties:
-        text:
-          type: string
-          description: 自然語言輸入
-          maxLength: 500
-        context:
-          $ref: '#/components/schemas/NLPContext'
-        language:
-          type: string
-          enum: [zh-TW, zh-CN, en-US]
-          default: zh-TW
-          description: 語言
-
-    NLPContext:
-      type: object
-      properties:
-        currentLedger:
-          type: string
-          description: 當前帳本
-        recentCategories:
-          type: array
-          items:
-            type: string
-          description: 最近使用科目
-        preferredAccounts:
-          type: array
-          items:
-            type: string
-          description: 偏好帳戶
-
-    NLPParseResult:
-      type: object
-      properties:
-        parsed:
-          type: boolean
-          description: 是否成功解析
-        confidence:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: 解析信心度
-        extractedData:
-          $ref: '#/components/schemas/ExtractedTransactionData'
-        suggestions:
-          type: array
-          items:
-            $ref: '#/components/schemas/ParseSuggestion'
-        clarifications:
-          type: array
-          items:
-            $ref: '#/components/schemas/Clarification'
-
-    ExtractedTransactionData:
-      type: object
-      properties:
-        amount:
-          type: number
-          description: 金額
-        transactionType:
-          type: string
-          enum: [income, expense]
-          description: 交易類型
-        category:
-          type: string
-          description: 科目
-        subcategory:
-          type: string
-          description: 子科目
-        description:
-          type: string
-          description: 交易描述
-        date:
-          type: string
-          format: date
-          description: 交易日期
-        account:
-          type: string
-          description: 帳戶
-        merchant:
-          type: string
-          description: 商家
-        tags:
-          type: array
-          items:
-            type: string
-          description: 標籤
-
-    ParseSuggestion:
-      type: object
-      properties:
-        field:
-          type: string
-          description: 建議欄位
-        value:
-          type: string
-          description: 建議值
-        confidence:
-          type: number
-          description: 建議信心度
-        reason:
-          type: string
-          description: 建議原因
-
-    Clarification:
-      type: object
-      properties:
-        question:
-          type: string
-          description: 澄清問題
-        options:
-          type: array
-          items:
-            type: string
-          description: 選項
-        field:
-          type: string
-          description: 相關欄位
-
-    TrainingFeedbackRequest:
-      type: object
-      required:
-        - featureType
-        - feedback
-      properties:
-        featureType:
-          type: string
-          enum: [classification, anomaly_detection, recommendation, nlp_parsing, financial_insights]
-          description: 功能類型
-        requestId:
-          type: string
-          description: 原始請求 ID
-        feedback:
-          $ref: '#/components/schemas/UserFeedback'
-        additionalComments:
-          type: string
-          maxLength: 500
-          description: 額外意見
-
-    UserFeedback:
-      type: object
-      properties:
-        overallSatisfaction:
-          type: integer
-          minimum: 1
-          maximum: 5
-          description: 整體滿意度（1-5分）
-        accuracy:
-          type: integer
-          minimum: 1
-          maximum: 5
-          description: 準確度評分
-        usefulness:
-          type: integer
-          minimum: 1
-          maximum: 5
-          description: 實用性評分
-        specificIssues:
-          type: array
-          items:
-            type: string
-          description: 具體問題
-        suggestions:
-          type: array
-          items:
-            type: string
-          description: 改善建議
-
-    DateRange:
-      type: object
-      required:
-        - startDate
-        - endDate
-      properties:
-        startDate:
-          type: string
-          format: date
-          description: 開始日期
-        endDate:
-          type: string
-          format: date
-          description: 結束日期
-
-    Error:
-      type: object
-      properties:
-        code:
-          type: string
-          description: 錯誤代碼
-        message:
-          type: string
-          description: 錯誤訊息
-        details:
           type: object
-          description: 錯誤詳細資訊
+          properties:
+            financial:
+              type: number
+              description: 預期財務影響
+            behavioral:
+              type: string
+              description: 行為改變描述
+        actionRequired:
+          type: boolean
+          description: 是否需要用戶行動
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          description: 建議執行期限
 
-  responses:
-    BadRequest:
-      description: 請求參數錯誤
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                $ref: '#/components/schemas/Error'
-
-    Unauthorized:
-      description: 未授權存取
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                $ref: '#/components/schemas/Error'
-
-    Forbidden:
-      description: 禁止存取
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                $ref: '#/components/schemas/Error'
-
-    NotFound:
-      description: 資源不存在
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                $ref: '#/components/schemas/Error'
-
-    ValidationError:
-      description: 資料驗證失敗
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                $ref: '#/components/schemas/Error'
-
-    RateLimit:
-      description: 請求頻率超限
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                $ref: '#/components/schemas/Error'
-              retryAfter:
-                type: integer
-                description: 重試等待時間（秒）
-
-    InternalServerError:
-      description: 內部伺服器錯誤
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                $ref: '#/components/schemas/Error'
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+              format: uuid
 
 tags:
-  - name: AI 智慧分類
-    description: 自動科目分類功能
-  - name: AI 建議
-    description: 基於 AI 的財務建議
-  - name: AI 預算建議
-    description: AI 預算建議功能
-  - name: 異常檢測
-    description: 智慧異常交易檢測
-  - name: AI 支出洞察
-    description: AI 驅動的支出分析與洞察
-  - name: AI 個人化推薦
-    description: 基於 AI 的個人化推薦
+  - name: Smart Suggestions
+    description: 智慧建議相關 API
+  - name: Spending Analysis
+    description: 支出分析相關 API
+  - name: Personal Recommendations
+    description: 個人化建議相關 API
+  - name: Natural Language
+    description: 自然語言處理相關 API
