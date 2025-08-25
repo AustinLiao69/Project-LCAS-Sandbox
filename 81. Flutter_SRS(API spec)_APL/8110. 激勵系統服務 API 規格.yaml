@@ -1,4 +1,3 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 激勵系統服務 API 規格
@@ -186,45 +185,145 @@ paths:
   /gamification/leaderboard:
     get:
       tags:
-        - Social
-      summary: 排行榜
-      description: |
-        取得排行榜資訊。
-        四模式差異：
-        - Expert: 詳細排名統計、多維度排行、歷史數據
-        - Inertial: 基本排行榜、簡化顯示
-        - Cultivation: 社交排行榜、好友比較、激勵元素
-        - Guiding: 最小化排行榜、重點排名
+        - gamification
+      summary: 取得排行榜
+      description: 取得積分排行榜和成就排名
+      operationId: getLeaderboard
+      security:
+        - bearerAuth: []
       parameters:
         - name: type
           in: query
-          description: 排行榜類型
+          required: false
           schema:
             type: string
-            enum: [points, streak, achievements, monthly]
+            enum: [points, achievements, streak]
             default: points
-        - name: scope
+          description: 排行榜類型
+          example: "points"
+        - name: period
           in: query
-          description: 排行榜範圍
+          required: false
           schema:
             type: string
-            enum: [global, friends, region]
-            default: global
+            enum: [daily, weekly, monthly, all_time]
+            default: monthly
+          description: 時間週期
+          example: "monthly"
         - name: limit
           in: query
-          description: 排行榜顯示數量
+          required: false
           schema:
             type: integer
-            default: 50
-            minimum: 10
+            minimum: 1
             maximum: 100
+            default: 20
+          description: 返回數量限制
+          example: 20
+        - name: includeMyRank
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: 是否包含用戶自己的排名
+          example: true
       responses:
         '200':
           description: 成功取得排行榜
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LeaderboardResponse'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: "points"
+                      period:
+                        type: string
+                        example: "monthly"
+                      rankings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            rank:
+                              type: integer
+                              example: 1
+                            userId:
+                              type: string
+                              example: "uuid"
+                            displayName:
+                              type: string
+                              example: "記帳達人"
+                            avatar:
+                              type: string
+                              nullable: true
+                              example: "https://example.com/avatar.jpg"
+                            score:
+                              type: integer
+                              description: 積分或成就數量
+                              example: 1250
+                            isCurrentUser:
+                              type: boolean
+                              example: false
+                            badge:
+                              type: string
+                              nullable: true
+                              description: 特殊徽章
+                              example: "月度冠軍"
+                      myRank:
+                        type: object
+                        nullable: true
+                        properties:
+                          rank:
+                            type: integer
+                            example: 15
+                          score:
+                            type: integer
+                            example: 850
+                          percentile:
+                            type: number
+                            format: float
+                            description: 百分位數
+                            example: 75.5
+                      statistics:
+                        type: object
+                        properties:
+                          totalParticipants:
+                            type: integer
+                            example: 1000
+                          averageScore:
+                            type: number
+                            format: float
+                            example: 650.5
+                          topScore:
+                            type: integer
+                            example: 1250
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Cultivation"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /gamification/progress:
     get:
@@ -671,18 +770,18 @@ info:
   version: 1.0.0
   description: |
     **LCAS 2.0 激勵系統服務 API 規格**
-    
+
     負責遊戲化元素、成就系統、挑戰任務、積分獎勵與使用者激勵的完整 API 規格。
     透過遊戲化機制提升用戶記帳習慣養成與持續使用動機，支援四模式差異化體驗。
-    
+
     **服務範圍**:
     - 成就系統（記帳里程碑、連續記帳、金額達成、習慣養成）
     - 挑戰任務（每日/週/月挑戰、自訂目標、團體挑戰）
     - 積分獎勵（記帳積分、成就積分、邀請獎勵、活躍度獎勵）
     - 等級系統（用戶等級、技能樹、專業認證）
     - 社交激勵（排行榜、好友競賽、團隊協作）
-    - 個人化激勵（習慣分析、動機提醒、進度追蹤）
-    
+    -個人化激勵（習慣分析、動機提醒、進度追蹤）
+
     **四模式差異化策略**:
     - **Expert**: 專業成就系統、深度分析獎勵、高級認證
     - **Inertial**: 基本成就與積分、簡化激勵機制
@@ -752,7 +851,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/AchievementsList'
 
-  
+
 
   /gamification/challenges:
     get:
@@ -794,7 +893,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/ChallengesList'
 
-    
+
 
   /gamification/challenges/{challengeId}/join:
     post:
@@ -825,7 +924,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/JoinChallengeResponse'
 
-  
+
 
   /gamification/points:
     get:
@@ -867,15 +966,15 @@ paths:
                   data:
                     $ref: '#/components/schemas/PointsInfo'
 
-  
 
-  
+
+
 
   /gamification/leaderboard:
     get:
       tags:
         - 社交激勵
-      summary: 取得排行榜
+      summary: 排行榜
       description: |
         取得各種類型的排行榜資訊。
         四模式差異：
@@ -927,9 +1026,9 @@ paths:
                   data:
                     $ref: '#/components/schemas/Leaderboard'
 
-  
 
-  
+
+
 
 components:
   securitySchemes:

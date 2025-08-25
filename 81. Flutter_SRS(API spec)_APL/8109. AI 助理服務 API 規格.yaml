@@ -20,7 +20,7 @@ info:
     - **Guiding**: 簡化 AI 建議、智慧預設、溫和引導
 
     **更新記錄**:
-    - v1.1.0 (2025-01-28): 補充缺失API端點，統一路徑參數命名規範，完善四模式支援
+    - v1.1.0 (2025-01-28): 補充缺失API端點，統 எனவே路徑參數命名規範，完善四模式支援
 
   version: 1.1.0
   contact:
@@ -216,58 +216,57 @@ paths:
   /ai/anomaly-detection:
     post:
       tags:
-        - Spending Analysis
+        - ai-analysis
       summary: 異常檢測
-      description: |
-        檢測用戶支出中的異常模式和可疑交易。
-        四模式差異：
-        - Expert: 深度異常分析、統計模型、詳細報告
-        - Inertial: 標準異常檢測、基本警示
-        - Cultivation: 習慣偏差檢測、目標達成警示
-        - Guiding: 簡化異常提醒、友善建議
+      description: 檢測用戶支出模式中的異常行為
+      operationId: detectAnomalies
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - analysisType
               properties:
                 analysisType:
                   type: string
-                  enum: [real_time, batch, scheduled]
-                  default: real_time
-                  description: 分析類型
-                dataRange:
+                  enum: [spending_pattern, category_deviation, amount_outlier, frequency_change]
+                  description: 異常檢測類型
+                  example: "spending_pattern"
+                dateRange:
                   type: object
                   properties:
-                    startDate:
+                    start:
                       type: string
                       format: date
-                    endDate:
+                      example: "2025-01-01"
+                    end:
                       type: string
                       format: date
-                transactionIds:
+                      example: "2025-01-31"
+                categoryIds:
                   type: array
                   items:
                     type: string
-                    format: uuid
-                  description: 指定交易ID（可選）
-                detectionRules:
-                  type: array
-                  items:
-                    type: string
-                    enum: [amount_outlier, frequency_anomaly, category_deviation, time_pattern, location_anomaly]
-                  default: [amount_outlier, frequency_anomaly]
+                  description: 指定檢測的科目ID
+                  example: ["uuid1", "uuid2"]
                 sensitivity:
                   type: string
                   enum: [low, medium, high]
                   default: medium
-                  description: 檢測靈敏度
-              required:
-                - analysisType
+                  description: 檢測敏感度
+                  example: "medium"
+                includeRecommendations:
+                  type: boolean
+                  default: true
+                  description: 是否包含改善建議
+                  example: true
       responses:
         '200':
-          description: 異常檢測完成
+          description: 異常檢測成功
           content:
             application/json:
               schema:
@@ -279,125 +278,125 @@ paths:
                   data:
                     type: object
                     properties:
-                      analysisId:
+                      analysisType:
                         type: string
-                        format: uuid
-                        description: 分析任務ID
-                      detectionResults:
-                        type: object
-                        properties:
-                          anomaliesFound:
-                            type: integer
-                            description: 發現的異常數量
-                          riskLevel:
-                            type: string
-                            enum: [low, medium, high, critical]
-                            description: 風險等級
-                          anomalies:
-                            type: array
-                            items:
+                        example: "spending_pattern"
+                      anomalies:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "anomaly-uuid"
+                            type:
+                              type: string
+                              enum: [amount_spike, frequency_drop, category_shift, unusual_timing]
+                              example: "amount_spike"
+                            severity:
+                              type: string
+                              enum: [low, medium, high, critical]
+                              example: "medium"
+                            description:
+                              type: string
+                              example: "本月餐飲支出比平均高出 150%"
+                            detectedAt:
+                              type: string
+                              format: date-time
+                              example: "2025-01-27T12:00:00Z"
+                            affectedTransactions:
+                              type: array
+                              items:
+                                type: string
+                              example: ["transaction-uuid1", "transaction-uuid2"]
+                            metrics:
                               type: object
                               properties:
-                                anomalyId:
-                                  type: string
-                                  format: uuid
-                                transactionId:
-                                  type: string
-                                  format: uuid
-                                anomalyType:
-                                  type: string
-                                  enum: [amount_outlier, frequency_anomaly, category_deviation, time_pattern, location_anomaly]
-                                severity:
-                                  type: string
-                                  enum: [low, medium, high, critical]
-                                description:
-                                  type: string
-                                  description: 異常描述
-                                confidence:
+                                currentValue:
                                   type: number
-                                  minimum: 0
-                                  maximum: 1
-                                  description: 檢測信心度
+                                  example: 15000
                                 expectedValue:
                                   type: number
-                                  description: 預期值
-                                actualValue:
-                                  type: number
-                                  description: 實際值
+                                  example: 6000
                                 deviation:
                                   type: number
-                                  description: 偏差程度
-                                recommendations:
-                                  type: array
-                                  items:
+                                  format: float
+                                  example: 2.5
+                                confidence:
+                                  type: number
+                                  format: float
+                                  example: 0.85
+                            recommendations:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  action:
                                     type: string
-                                  description: 建議處理方式
-                                relatedTransactions:
-                                  type: array
-                                  items:
+                                    example: "設定餐飲預算上限"
+                                  reason:
                                     type: string
-                                    format: uuid
-                                  description: 相關交易ID
-                          patterns:
+                                    example: "控制非必要外食支出"
+                                  priority:
+                                    type: string
+                                    enum: [low, medium, high]
+                                    example: "high"
+                      summary:
+                        type: object
+                        properties:
+                          totalAnomalies:
+                            type: integer
+                            example: 3
+                          severityBreakdown:
                             type: object
                             properties:
-                              spendingPatterns:
-                                type: array
-                                items:
-                                  type: object
-                                  properties:
-                                    pattern:
-                                      type: string
-                                    frequency:
-                                      type: integer
-                                    normalRange:
-                                      type: object
-                                      properties:
-                                        min:
-                                          type: number
-                                        max:
-                                          type: number
-                              timePatterns:
-                                type: array
-                                items:
-                                  type: object
-                                  properties:
-                                    timeSlot:
-                                      type: string
-                                    expectedFrequency:
-                                      type: integer
-                                    actualFrequency:
-                                      type: integer
-                          summary:
-                            type: object
-                            properties:
-                              analysisDate:
-                                type: string
-                                format: date-time
-                              totalTransactionsAnalyzed:
+                              low:
                                 type: integer
-                              analysisDuration:
-                                type: string
-                                description: 分析耗時
-                              modelVersion:
-                                type: string
-                                description: 使用的模型版本
-                              nextRecommendedCheck:
-                                type: string
-                                format: date-time
-                                description: 建議下次檢查時間
+                                example: 1
+                              medium:
+                                type: integer
+                                example: 2
+                              high:
+                                type: integer
+                                example: 0
+                              critical:
+                                type: integer
+                                example: 0
+                          riskLevel:
+                            type: string
+                            enum: [low, medium, high]
+                            example: "medium"
+                          overallScore:
+                            type: number
+                            format: float
+                            description: 財務健康評分 (0-100)
+                            example: 75.5
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
-          description: 檢測參數錯誤
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '422':
-          description: 資料不足以進行異常檢測
+          description: 資料不足無法分析
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   securitySchemes:
@@ -1020,6 +1019,25 @@ components:
             requestId:
               type: string
               format: uuid
+  responses:
+    BadRequest:
+      description: 請求參數錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: 未經授權的請求
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: 內部伺服器錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
 
 tags:
   - name: Smart Suggestions
@@ -1030,3 +1048,5 @@ tags:
     description: 個人化建議相關 API
   - name: Natural Language
     description: 自然語言處理相關 API
+  - name: ai-analysis
+    description: AI 分析相關 API

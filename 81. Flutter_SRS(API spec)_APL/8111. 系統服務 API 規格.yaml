@@ -1,25 +1,24 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 系統服務 API 規格
   description: |
     系統服務 API 提供 LCAS 2.0 系統的基礎管理功能，包含健康檢查、
     系統監控、配置管理、日誌管理等核心系統服務。
-    
+
     ## 🎯 服務範圍
     - **系統健康檢查**：服務狀態監控、可用性檢測
     - **系統配置管理**：動態配置更新、環境設定
     - **日誌管理**：系統日誌查詢、錯誤追蹤
     - **監控告警**：性能監控、異常告警
     - **維護模式**：系統維護、版本管理
-    
+
   version: 1.0.0
   contact:
     name: LCAS 2.0 API Support
     email: support@lcas.app
   license:
     name: Proprietary
-    
+
 servers:
   - url: https://api.lcas.app/v1
     description: 生產環境
@@ -304,7 +303,7 @@ paths:
                             type: integer
                           maxFileSize:
                             type: string
-                            
+
     put:
       tags: [system-config]
       summary: 更新系統配置
@@ -515,7 +514,7 @@ paths:
                             format: date-time
                           description:
                             type: string
-                            
+
     post:
       tags: [system-maintenance]
       summary: 設定維護模式
