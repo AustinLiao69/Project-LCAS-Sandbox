@@ -2,75 +2,112 @@
 openapi: 3.0.3
 info:
   title: 帳本管理服務 API 規格
-  description: LCAS 2.0 帳本管理服務 API，符合0020和0088設計規範
-  version: 1.1.0
+  description: LCAS 帳本管理服務API規格，提供帳本CRUD、協作管理和分頁查詢功能
+  version: 2.0.0
   contact:
     name: LCAS SA Team
-    email: sa@lcas.app
+    email: sa@lcas.com
 
 servers:
-  - url: https://api.lcas.app/v1
+  - url: https://api.lcas.com/v2
     description: Production server
-  - url: https://api-dev.lcas.app/v1
-    description: Development server
+  - url: https://staging-api.lcas.com/v2
+    description: Staging server
+
+tags:
+  - name: Ledger Management
+    description: 帳本管理相關操作
+  - name: Collaboration
+    description: 帳本協作功能
+  - name: Sharing
+    description: 帳本分享與權限
 
 paths:
   /ledgers:
     get:
-      summary: 取得帳本列表
-      description: 查詢使用者的帳本列表，支援分頁和篩選（對應畫面 S-204）
-      operationId: getLedgers
       tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
+        - Ledger Management
+      summary: 取得帳本列表
+      description: 取得用戶可存取的帳本列表，支援分頁和篩選
+      operationId: getLedgers
       parameters:
+        - name: userId
+          in: query
+          required: true
+          description: 用戶ID
+          schema:
+            type: string
+            example: "Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: userMode
+          in: query
+          description: 用戶模式（影響回應內容）
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Expert
+            example: "Expert"
+        - name: type
+          in: query
+          description: 帳本類型篩選
+          schema:
+            type: string
+            enum: [personal, shared, family, business]
+            example: "personal"
+        - name: status
+          in: query
+          description: 帳本狀態篩選
+          schema:
+            type: string
+            enum: [active, archived, suspended]
+            default: active
+            example: "active"
+        - name: role
+          in: query
+          description: 用戶在帳本中的角色篩選
+          schema:
+            type: string
+            enum: [owner, admin, editor, viewer]
+            example: "owner"
+        - name: keyword
+          in: query
+          description: 關鍵字搜尋（帳本名稱、描述）
+          schema:
+            type: string
+            example: "家庭帳本"
         - name: page
           in: query
+          description: 頁碼
           schema:
             type: integer
             minimum: 1
             default: 1
-          description: 頁碼（從1開始）
-          example: 1
+            example: 1
         - name: limit
           in: query
+          description: 每頁筆數
           schema:
             type: integer
             minimum: 1
             maximum: 100
             default: 20
-          description: 每頁筆數
-          example: 20
+            example: 20
         - name: sort
           in: query
+          description: 排序方式
           schema:
             type: string
-            default: "updatedAt:desc"
-          description: 排序格式 {field}:{asc|desc}
-          example: "name:asc"
+            enum: [createdAt_desc, createdAt_asc, name_asc, name_desc, lastUsed_desc]
+            default: lastUsed_desc
+            example: "lastUsed_desc"
         - name: filter
           in: query
+          description: 進階篩選條件（JSON格式）
           schema:
             type: string
-          description: 過濾條件 {field}:{value}
-          example: "status:active"
-        - name: search
-          in: query
-          schema:
-            type: string
-          description: 搜尋關鍵字（帳本名稱）
-          example: "家庭"
-        - name: type
-          in: query
-          schema:
-            type: string
-            enum: [personal, family, business, shared]
-          description: 帳本類型篩選
-          example: "personal"
+            example: '{"hasCollaborators":true,"createdAfter":"2025-01-01"}'
       responses:
         '200':
-          description: 查詢成功
+          description: 取得成功
           content:
             application/json:
               schema:
@@ -82,96 +119,202 @@ paths:
                   data:
                     type: object
                     properties:
-                      items:
+                      ledgers:
                         type: array
                         items:
-                          $ref: '#/components/schemas/Ledger'
-                      pagination:
-                        $ref: '#/components/schemas/PaginationResponse'
+                          type: object
+                          properties:
+                            ledgerId:
+                              type: string
+                              description: 帳本ID
+                              example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+                            name:
+                              type: string
+                              description: 帳本名稱
+                              example: "個人記帳本"
+                            description:
+                              type: string
+                              description: 帳本描述
+                              example: "我的個人財務管理帳本"
+                            type:
+                              type: string
+                              enum: [personal, shared, family, business]
+                              description: 帳本類型
+                              example: "personal"
+                            ownerId:
+                              type: string
+                              description: 擁有者ID
+                              example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                            userRole:
+                              type: string
+                              enum: [owner, admin, editor, viewer]
+                              description: 用戶在此帳本的角色
+                              example: "owner"
+                            status:
+                              type: string
+                              enum: [active, archived, suspended]
+                              description: 帳本狀態
+                              example: "active"
+                            createdAt:
+                              type: string
+                              format: date-time
+                              description: 創建時間
+                              example: "2025-08-22T12:00:00Z"
+                            updatedAt:
+                              type: string
+                              format: date-time
+                              description: 最後更新時間
+                              example: "2025-08-22T12:00:00Z"
+                            lastUsedAt:
+                              type: string
+                              format: date-time
+                              description: 最後使用時間
+                              example: "2025-08-22T12:00:00Z"
+                            collaborators:
+                              type: object
+                              description: 協作者資訊（Expert模式顯示）
+                              properties:
+                                count:
+                                  type: integer
+                                  example: 3
+                                hasInvites:
+                                  type: boolean
+                                  example: true
+                            statistics:
+                              type: object
+                              description: 帳本統計（根據用戶模式顯示不同詳細程度）
+                              properties:
+                                totalEntries:
+                                  type: integer
+                                  example: 156
+                                totalAmount:
+                                  type: number
+                                  example: 45678.90
+                                lastEntry:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-08-22T10:30:00Z"
                   metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
-        '400':
-          description: 請求參數錯誤
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: 未授權
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                    type: object
+                    properties:
+                      pagination:
+                        type: object
+                        properties:
+                          currentPage:
+                            type: integer
+                            example: 1
+                          totalPages:
+                            type: integer
+                            example: 3
+                          totalCount:
+                            type: integer
+                            example: 45
+                          hasNext:
+                            type: boolean
+                            example: true
+                          hasPrevious:
+                            type: boolean
+                            example: false
+                          pageSize:
+                            type: integer
+                            example: 20
+                      filters:
+                        type: object
+                        properties:
+                          appliedFilters:
+                            type: object
+                            example: {"type": "personal", "status": "active"}
+                          userMode:
+                            type: string
+                            example: "Expert"
+                      summary:
+                        type: object
+                        properties:
+                          totalLedgers:
+                            type: integer
+                            example: 45
+                          ownedLedgers:
+                            type: integer
+                            example: 12
+                          sharedLedgers:
+                            type: integer
+                            example: 33
 
     post:
-      summary: 建立新帳本
-      description: 建立新的記帳帳本（對應畫面 S-205）
-      operationId: createLedger
       tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
+        - Ledger Management
+      summary: 創建新帳本
+      description: 創建新的記帳帳本
+      operationId: createLedger
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - name
+                - ownerId
               properties:
-                data:
+                name:
+                  type: string
+                  description: 帳本名稱
+                  example: "家庭記帳本"
+                description:
+                  type: string
+                  description: 帳本描述
+                  example: "用於記錄家庭日常收支的帳本"
+                type:
+                  type: string
+                  enum: [personal, shared, family, business]
+                  description: 帳本類型
+                  default: personal
+                  example: "family"
+                ownerId:
+                  type: string
+                  description: 擁有者用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                settings:
                   type: object
+                  description: 帳本設定
                   properties:
-                    name:
-                      type: string
-                      maxLength: 100
-                      description: 帳本名稱
-                      example: "家庭記帳本"
-                    description:
-                      type: string
-                      maxLength: 500
-                      description: 帳本描述
-                      example: "記錄家庭日常開支"
-                    type:
-                      type: string
-                      enum: [personal, family, business, shared]
-                      description: 帳本類型
-                      example: "family"
                     currency:
                       type: string
-                      description: 預設貨幣
-                      example: "TWD"
-                    icon:
+                      description: 預設幣別
+                      default: "NTD"
+                      example: "NTD"
+                    timezone:
                       type: string
-                      description: 帳本圖示
-                      example: "🏠"
-                    color:
-                      type: string
-                      pattern: '^#[0-9A-Fa-f]{6}$'
-                      description: 主題顏色
-                      example: "#4CAF50"
-                    isDefault:
+                      description: 時區
+                      default: "Asia/Taipei"
+                      example: "Asia/Taipei"
+                    allowCollaboration:
                       type: boolean
-                      description: 是否為預設帳本
-                      example: false
-                    settings:
-                      type: object
-                      properties:
-                        autoBackup:
-                          type: boolean
-                          example: true
-                        allowCollaboration:
-                          type: boolean
-                          example: true
-                        budgetAlert:
-                          type: boolean
-                          example: true
-                  required:
-                    - name
-                    - type
-                    - currency
+                      description: 是否允許協作
+                      default: false
+                      example: true
+                    defaultViewMode:
+                      type: string
+                      enum: [Expert, Inertial, Cultivation, Guiding]
+                      description: 預設查看模式
+                      default: "Expert"
+                      example: "Expert"
+                initialCollaborators:
+                  type: array
+                  description: 初始協作者（可選）
+                  items:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        example: "user_456"
+                      role:
+                        type: string
+                        enum: [admin, editor, viewer]
+                        example: "editor"
       responses:
         '201':
-          description: 帳本建立成功（四模式差異化回應）
+          description: 創建成功
           content:
             application/json:
               schema:
@@ -181,39 +324,97 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    oneOf:
-                      - $ref: '#/components/schemas/LedgerResponseExpert'
-                      - $ref: '#/components/schemas/LedgerResponseGuiding'
+                    type: object
+                    properties:
+                      ledgerId:
+                        type: string
+                        description: 帳本ID
+                        example: "ledger_1692700800000"
+                      name:
+                        type: string
+                        description: 帳本名稱
+                        example: "家庭記帳本"
+                      type:
+                        type: string
+                        description: 帳本類型
+                        example: "family"
+                      ownerId:
+                        type: string
+                        description: 擁有者ID
+                        example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: 創建時間
+                        example: "2025-08-22T12:00:00Z"
+                      initializedSubjects:
+                        type: boolean
+                        description: 科目是否已初始化
+                        example: true
+                      subjectCount:
+                        type: integer
+                        description: 初始化的科目數量
+                        example: 156
                   metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
-        '400':
-          description: 請求錯誤
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                    type: object
+                    properties:
+                      settings:
+                        type: object
+                        properties:
+                          currency:
+                            type: string
+                            example: "NTD"
+                          allowCollaboration:
+                            type: boolean
+                            example: true
 
   /ledgers/{ledgerId}:
     get:
-      summary: 取得帳本詳情
-      description: 取得特定帳本的詳細資訊（對應畫面 S-206）
-      operationId: getLedger
       tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
+        - Ledger Management
+      summary: 取得帳本詳細資訊
+      description: 取得指定帳本的詳細資訊
+      operationId: getLedgerDetails
       parameters:
         - name: ledgerId
           in: path
           required: true
+          description: 帳本ID
           schema:
             type: string
-            format: uuid
-          description: 帳本ID
-          example: "550e8400-e29b-41d4-a716-446655440000"
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: userId
+          in: query
+          required: true
+          description: 請求用戶ID
+          schema:
+            type: string
+            example: "Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: userMode
+          in: query
+          description: 用戶模式（影響回應內容細節）
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Expert
+            example: "Expert"
+        - name: includeCollaborators
+          in: query
+          description: 是否包含協作者資訊
+          schema:
+            type: boolean
+            default: false
+            example: true
+        - name: includeStatistics
+          in: query
+          description: 是否包含統計資訊
+          schema:
+            type: boolean
+            default: true
+            example: true
       responses:
         '200':
-          description: 查詢成功（四模式差異化回應）
+          description: 取得成功
           content:
             application/json:
               schema:
@@ -223,34 +424,156 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    oneOf:
-                      - $ref: '#/components/schemas/LedgerDetailExpert'
-                      - $ref: '#/components/schemas/LedgerDetailGuiding'
+                    type: object
+                    properties:
+                      ledgerId:
+                        type: string
+                        description: 帳本ID
+                        example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+                      name:
+                        type: string
+                        description: 帳本名稱
+                        example: "個人記帳本"
+                      description:
+                        type: string
+                        description: 帳本描述
+                        example: "我的個人財務管理帳本"
+                      type:
+                        type: string
+                        description: 帳本類型
+                        example: "personal"
+                      ownerId:
+                        type: string
+                        description: 擁有者ID
+                        example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                      userRole:
+                        type: string
+                        enum: [owner, admin, editor, viewer]
+                        description: 用戶在此帳本的角色
+                        example: "owner"
+                      status:
+                        type: string
+                        description: 帳本狀態
+                        example: "active"
+                      settings:
+                        type: object
+                        description: 帳本設定
+                        properties:
+                          currency:
+                            type: string
+                            example: "NTD"
+                          timezone:
+                            type: string
+                            example: "Asia/Taipei"
+                          allowCollaboration:
+                            type: boolean
+                            example: true
+                          defaultViewMode:
+                            type: string
+                            example: "Expert"
+                      collaborators:
+                        type: array
+                        description: 協作者列表（需要權限）
+                        items:
+                          type: object
+                          properties:
+                            userId:
+                              type: string
+                              example: "user_456"
+                            displayName:
+                              type: string
+                              example: "張三"
+                            role:
+                              type: string
+                              enum: [admin, editor, viewer]
+                              example: "editor"
+                            joinedAt:
+                              type: string
+                              format: date-time
+                              example: "2025-08-22T12:00:00Z"
+                            lastActive:
+                              type: string
+                              format: date-time
+                              example: "2025-08-22T11:00:00Z"
+                      statistics:
+                        type: object
+                        description: 帳本統計（根據用戶模式顯示不同詳細程度）
+                        properties:
+                          totalEntries:
+                            type: integer
+                            example: 156
+                          totalIncome:
+                            type: number
+                            example: 75000.00
+                          totalExpense:
+                            type: number
+                            example: 45678.90
+                          balance:
+                            type: number
+                            example: 29321.10
+                          lastEntry:
+                            type: string
+                            format: date-time
+                            example: "2025-08-22T10:30:00Z"
+                          monthlyAverage:
+                            type: number
+                            example: 15000.00
+                      permissions:
+                        type: object
+                        description: 用戶權限
+                        properties:
+                          canRead:
+                            type: boolean
+                            example: true
+                          canWrite:
+                            type: boolean
+                            example: true
+                          canDelete:
+                            type: boolean
+                            example: true
+                          canManageCollaborators:
+                            type: boolean
+                            example: true
+                          canExport:
+                            type: boolean
+                            example: true
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: 創建時間
+                        example: "2025-08-22T12:00:00Z"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        description: 最後更新時間
+                        example: "2025-08-22T12:00:00Z"
                   metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
-        '404':
-          description: 帳本不存在
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                    type: object
+                    properties:
+                      userMode:
+                        type: string
+                        example: "Expert"
+                      includeCollaborators:
+                        type: boolean
+                        example: true
+                      accessLevel:
+                        type: string
+                        example: "full"
 
     put:
-      summary: 更新帳本資料
-      description: 完整更新帳本資料
-      operationId: updateLedger
       tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
+        - Ledger Management
+      summary: 更新帳本資訊
+      description: 更新帳本的基本資訊和設定
+      operationId: updateLedger
       parameters:
         - name: ledgerId
           in: path
           required: true
+          description: 帳本ID
           schema:
             type: string
-            format: uuid
-          description: 帳本ID
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
       requestBody:
         required: true
         content:
@@ -258,8 +581,35 @@ paths:
             schema:
               type: object
               properties:
-                data:
-                  $ref: '#/components/schemas/LedgerUpdateData'
+                name:
+                  type: string
+                  description: 帳本名稱
+                  example: "更新後的帳本名稱"
+                description:
+                  type: string
+                  description: 帳本描述
+                  example: "更新後的帳本描述"
+                settings:
+                  type: object
+                  description: 帳本設定
+                  properties:
+                    currency:
+                      type: string
+                      example: "NTD"
+                    timezone:
+                      type: string
+                      example: "Asia/Taipei"
+                    allowCollaboration:
+                      type: boolean
+                      example: true
+                    defaultViewMode:
+                      type: string
+                      enum: [Expert, Inertial, Cultivation, Guiding]
+                      example: "Expert"
+                userId:
+                  type: string
+                  description: 操作用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
       responses:
         '200':
           description: 更新成功
@@ -272,120 +622,65 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    $ref: '#/components/schemas/Ledger'
-                  metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
+                    type: object
+                    properties:
+                      ledgerId:
+                        type: string
+                        example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+                      updatedFields:
+                        type: array
+                        items:
+                          type: string
+                        example: ["name", "description", "settings"]
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-08-22T12:00:00Z"
 
     delete:
+      tags:
+        - Ledger Management
       summary: 刪除帳本
-      description: 刪除指定的帳本（需要確認）
+      description: 刪除指定的帳本（需要擁有者權限）
       operationId: deleteLedger
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
       parameters:
         - name: ledgerId
           in: path
           required: true
+          description: 帳本ID
           schema:
             type: string
-            format: uuid
-          description: 帳本ID
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - confirmationToken
+                - userId
+              properties:
+                confirmationToken:
+                  type: string
+                  description: 確認刪除的令牌
+                  example: "confirm_delete_user_Uae47d9d496e4596d70ed724a7d6e2948"
+                userId:
+                  type: string
+                  description: 操作用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                backupData:
+                  type: boolean
+                  description: 是否在刪除前備份資料
+                  default: true
+                  example: true
+                transferCollaborators:
+                  type: string
+                  description: 協作者轉移到的帳本ID（可選）
+                  example: "target_ledger_id"
       responses:
-        '204':
+        '200':
           description: 刪除成功
-        '400':
-          description: 不能刪除預設帳本或有交易記錄的帳本
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: 帳本不存在
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /ledgers/{ledgerId}/summary:
-    get:
-      summary: 取得帳本摘要
-      description: 取得帳本的統計摘要資訊（對應畫面 S-207）
-      operationId: getLedgerSummary
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: ledgerId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 帳本ID
-        - name: period
-          in: query
-          schema:
-            type: string
-            enum: [7d, 30d, 90d, 1y, all]
-            default: "30d"
-          description: 統計週期
-          example: "30d"
-      responses:
-        '200':
-          description: 帳本摘要（四模式差異化）
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    oneOf:
-                      - $ref: '#/components/schemas/LedgerSummaryExpert'
-                      - $ref: '#/components/schemas/LedgerSummaryGuiding'
-                  metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
-
-  /ledgers/{ledgerId}/collaborators:
-    get:
-      summary: 取得協作者列表
-      description: 取得帳本協作者列表（對應畫面 S-208）
-      operationId: getLedgerCollaborators
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: ledgerId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 帳本ID
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-          description: 頁碼
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-          description: 每頁筆數
-      responses:
-        '200':
-          description: 協作者列表
           content:
             application/json:
               schema:
@@ -397,59 +692,218 @@ paths:
                   data:
                     type: object
                     properties:
-                      items:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/LedgerCollaborator'
-                      pagination:
-                        $ref: '#/components/schemas/PaginationResponse'
-                  metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
+                      ledgerId:
+                        type: string
+                        example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+                      backupId:
+                        type: string
+                        description: 備份ID（如果有備份）
+                        example: "backup_12345"
+                      deletedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-08-22T12:00:00Z"
+                      affectedCollaborators:
+                        type: integer
+                        description: 受影響的協作者數量
+                        example: 3
 
-    post:
-      summary: 邀請協作者
-      description: 邀請新的協作者加入帳本
-      operationId: inviteCollaborator
+  /ledgers/{ledgerId}/collaborators:
+    get:
       tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
+        - Collaboration
+      summary: 取得帳本協作者列表
+      description: 取得指定帳本的協作者列表，支援分頁
+      operationId: getLedgerCollaborators
       parameters:
         - name: ledgerId
           in: path
           required: true
+          description: 帳本ID
           schema:
             type: string
-            format: uuid
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: userId
+          in: query
+          required: true
+          description: 請求用戶ID
+          schema:
+            type: string
+            example: "Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: role
+          in: query
+          description: 角色篩選
+          schema:
+            type: string
+            enum: [admin, editor, viewer]
+            example: "editor"
+        - name: status
+          in: query
+          description: 狀態篩選
+          schema:
+            type: string
+            enum: [active, invited, suspended]
+            default: active
+            example: "active"
+        - name: page
+          in: query
+          description: 頁碼
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: limit
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+            example: 20
+        - name: sort
+          in: query
+          description: 排序方式
+          schema:
+            type: string
+            enum: [joinedAt_desc, joinedAt_asc, name_asc, name_desc, lastActive_desc]
+            default: joinedAt_desc
+            example: "joinedAt_desc"
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      collaborators:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            userId:
+                              type: string
+                              example: "user_456"
+                            displayName:
+                              type: string
+                              example: "張三"
+                            email:
+                              type: string
+                              example: "user@example.com"
+                            role:
+                              type: string
+                              enum: [admin, editor, viewer]
+                              example: "editor"
+                            status:
+                              type: string
+                              enum: [active, invited, suspended]
+                              example: "active"
+                            joinedAt:
+                              type: string
+                              format: date-time
+                              example: "2025-08-22T12:00:00Z"
+                            lastActive:
+                              type: string
+                              format: date-time
+                              example: "2025-08-22T11:00:00Z"
+                            contributionStats:
+                              type: object
+                              properties:
+                                totalEntries:
+                                  type: integer
+                                  example: 25
+                                lastEntry:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-08-22T10:30:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      pagination:
+                        type: object
+                        properties:
+                          currentPage:
+                            type: integer
+                            example: 1
+                          totalPages:
+                            type: integer
+                            example: 2
+                          totalCount:
+                            type: integer
+                            example: 25
+                          hasNext:
+                            type: boolean
+                            example: true
+                          hasPrevious:
+                            type: boolean
+                            example: false
+
+    post:
+      tags:
+        - Collaboration
+      summary: 邀請協作者
+      description: 邀請用戶加入帳本協作
+      operationId: inviteCollaborator
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
           description: 帳本ID
+          schema:
+            type: string
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - inviteeId
+                - role
+                - inviterId
               properties:
-                data:
+                inviteeId:
+                  type: string
+                  description: 被邀請者用戶ID
+                  example: "user_456"
+                role:
+                  type: string
+                  enum: [admin, editor, viewer]
+                  description: 指派角色
+                  example: "editor"
+                inviterId:
+                  type: string
+                  description: 邀請者用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                message:
+                  type: string
+                  description: 邀請訊息
+                  example: "邀請您加入我的記帳帳本"
+                permissions:
                   type: object
+                  description: 自訂權限設定
                   properties:
-                    email:
-                      type: string
-                      format: email
-                      description: 受邀者Email
-                      example: "collaborator@example.com"
-                    role:
-                      type: string
-                      enum: [viewer, editor, admin]
-                      description: 權限角色
-                      example: "editor"
-                    message:
-                      type: string
-                      maxLength: 500
-                      description: 邀請訊息
-                      example: "歡迎加入我們的家庭記帳本"
-                  required:
-                    - email
-                    - role
+                    canExport:
+                      type: boolean
+                      default: true
+                      example: true
+                    canInviteOthers:
+                      type: boolean
+                      default: false
+                      example: false
+                    canModifySettings:
+                      type: boolean
+                      default: false
+                      example: false
       responses:
         '201':
           description: 邀請發送成功
@@ -464,347 +918,91 @@ paths:
                   data:
                     type: object
                     properties:
-                      invitationId:
+                      inviteId:
                         type: string
-                        format: uuid
-                        example: "550e8400-e29b-41d4-a716-446655440001"
-                      invitedEmail:
+                        description: 邀請ID
+                        example: "invite_12345"
+                      inviteeId:
                         type: string
-                        format: email
-                        example: "collaborator@example.com"
-                      expiresAt:
-                        type: string
-                        format: date-time
-                        example: "2025-02-03T12:00:00Z"
-
-  /ledgers/{ledgerId}/collaborators/{collaboratorId}:
-    patch:
-      summary: 更新協作者權限
-      description: 更新協作者的權限設定
-      operationId: updateCollaboratorRole
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: ledgerId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 帳本ID
-        - name: collaboratorId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 協作者ID
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    role:
-                      type: string
-                      enum: [viewer, editor, admin]
-                      description: 新的權限角色
-                      example: "admin"
-                  required:
-                    - role
-      responses:
-        '200':
-          description: 權限更新成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/LedgerCollaborator'
-                  metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
-
-    delete:
-      summary: 移除協作者
-      description: 從帳本中移除協作者
-      operationId: removeCollaborator
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: ledgerId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 帳本ID
-        - name: collaboratorId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 協作者ID
-      responses:
-        '204':
-          description: 移除成功
-        '404':
-          description: 協作者不存在
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /ledgers/{ledgerId}/duplicate:
-    post:
-      summary: 複製帳本
-      description: 複製現有帳本建立新的帳本
-      operationId: duplicateLedger
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: ledgerId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 來源帳本ID
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                      maxLength: 100
-                      description: 新帳本名稱
-                      example: "家庭記帳本 (副本)"
-                    includeTransactions:
-                      type: boolean
-                      description: 是否包含交易記錄
-                      example: false
-                    includeCategories:
-                      type: boolean
-                      description: 是否包含科目設定
-                      example: true
-                    includeAccounts:
-                      type: boolean
-                      description: 是否包含帳戶設定
-                      example: true
-                  required:
-                    - name
-      responses:
-        '201':
-          description: 複製成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/Ledger'
-                  metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
-
-  /ledgers/{ledgerId}/archive:
-    post:
-      summary: 封存帳本
-      description: 將帳本設為封存狀態
-      operationId: archiveLedger
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: ledgerId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 帳本ID
-      responses:
-        '200':
-          description: 封存成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      ledgerId:
-                        type: string
-                        format: uuid
-                        example: "550e8400-e29b-41d4-a716-446655440000"
-                      status:
-                        type: string
-                        example: "archived"
-                      archivedAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-
-    delete:
-      summary: 取消封存帳本
-      description: 將封存的帳本恢復為正常狀態
-      operationId: unarchiveLedger
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: ledgerId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 帳本ID
-      responses:
-        '200':
-          description: 取消封存成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/Ledger'
-                  metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
-
-  /ledgers/invitations:
-    get:
-      summary: 取得我的邀請列表
-      description: 取得收到的帳本邀請列表
-      operationId: getMyInvitations
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum: [pending, accepted, declined, expired]
-          description: 邀請狀態篩選
-          example: "pending"
-      responses:
-        '200':
-          description: 邀請列表
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      items:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/LedgerInvitation'
-                  metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
-
-  /ledgers/invitations/{invitationId}/accept:
-    post:
-      summary: 接受帳本邀請
-      description: 接受帳本協作邀請
-      operationId: acceptInvitation
-      tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: invitationId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: 邀請ID
-      responses:
-        '200':
-          description: 邀請已接受
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      ledgerId:
-                        type: string
-                        format: uuid
-                        example: "550e8400-e29b-41d4-a716-446655440000"
+                        example: "user_456"
                       role:
                         type: string
                         example: "editor"
-                      joinedAt:
+                      status:
+                        type: string
+                        enum: [sent, pending, accepted, declined]
+                        example: "sent"
+                      invitedAt:
                         type: string
                         format: date-time
-                        example: "2025-01-27T12:00:00Z"
+                        example: "2025-08-22T12:00:00Z"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        description: 邀請過期時間
+                        example: "2025-08-29T12:00:00Z"
 
-  /ledgers/invitations/{invitationId}/decline:
-    post:
-      summary: 拒絕帳本邀請
-      description: 拒絕帳本協作邀請
-      operationId: declineInvitation
+  /ledgers/{ledgerId}/collaborators/{userId}:
+    patch:
       tags:
-        - Ledgers
-      security:
-        - bearerAuth: []
+        - Collaboration
+      summary: 更新協作者角色
+      description: 更新指定協作者的角色和權限
+      operationId: updateCollaboratorRole
       parameters:
-        - name: invitationId
+        - name: ledgerId
           in: path
           required: true
+          description: 帳本ID
           schema:
             type: string
-            format: uuid
-          description: 邀請ID
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: userId
+          in: path
+          required: true
+          description: 協作者用戶ID
+          schema:
+            type: string
+            example: "user_456"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - newRole
+                - operatorId
+              properties:
+                newRole:
+                  type: string
+                  enum: [admin, editor, viewer]
+                  description: 新角色
+                  example: "admin"
+                operatorId:
+                  type: string
+                  description: 操作者用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                permissions:
+                  type: object
+                  description: 自訂權限設定
+                  properties:
+                    canExport:
+                      type: boolean
+                      example: true
+                    canInviteOthers:
+                      type: boolean
+                      example: true
+                    canModifySettings:
+                      type: boolean
+                      example: false
+                reason:
+                  type: string
+                  description: 變更原因
+                  example: "提升為管理員"
       responses:
         '200':
-          description: 邀請已拒絕
+          description: 更新成功
           content:
             application/json:
               schema:
@@ -816,459 +1014,232 @@ paths:
                   data:
                     type: object
                     properties:
-                      invitationId:
+                      userId:
                         type: string
-                        format: uuid
-                        example: "550e8400-e29b-41d4-a716-446655440001"
-                      status:
+                        example: "user_456"
+                      previousRole:
                         type: string
-                        example: "declined"
+                        example: "editor"
+                      newRole:
+                        type: string
+                        example: "admin"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-08-22T12:00:00Z"
+                      updatedPermissions:
+                        type: object
+                        properties:
+                          canExport:
+                            type: boolean
+                            example: true
+                          canInviteOthers:
+                            type: boolean
+                            example: true
+
+    delete:
+      tags:
+        - Collaboration
+      summary: 移除協作者
+      description: 從帳本中移除指定的協作者
+      operationId: removeCollaborator
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          description: 帳本ID
+          schema:
+            type: string
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: userId
+          in: path
+          required: true
+          description: 協作者用戶ID
+          schema:
+            type: string
+            example: "user_456"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - operatorId
+              properties:
+                operatorId:
+                  type: string
+                  description: 操作者用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                reason:
+                  type: string
+                  description: 移除原因
+                  example: "不再需要存取權限"
+                notifyUser:
+                  type: boolean
+                  description: 是否通知被移除的用戶
+                  default: true
+                  example: true
+      responses:
+        '200':
+          description: 移除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      removedUserId:
+                        type: string
+                        example: "user_456"
+                      previousRole:
+                        type: string
+                        example: "editor"
+                      removedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-08-22T12:00:00Z"
+                      notificationSent:
+                        type: boolean
+                        example: true
+
+  /ledgers/{ledgerId}/share:
+    post:
+      tags:
+        - Sharing
+      summary: 產生分享連結
+      description: 為帳本產生分享連結
+      operationId: generateShareLink
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          description: 帳本ID
+          schema:
+            type: string
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - shareType
+              properties:
+                userId:
+                  type: string
+                  description: 分享者用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                shareType:
+                  type: string
+                  enum: [view_only, edit_access, full_access]
+                  description: 分享類型
+                  example: "view_only"
+                expiresAt:
+                  type: string
+                  format: date-time
+                  description: 過期時間（可選）
+                  example: "2025-08-29T12:00:00Z"
+                maxUses:
+                  type: integer
+                  description: 最大使用次數（可選）
+                  minimum: 1
+                  example: 10
+                description:
+                  type: string
+                  description: 分享說明
+                  example: "查看我的家庭帳本"
+      responses:
+        '201':
+          description: 分享連結創建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      shareId:
+                        type: string
+                        description: 分享ID
+                        example: "share_12345"
+                      shareUrl:
+                        type: string
+                        format: uri
+                        description: 分享連結
+                        example: "https://app.lcas.com/share/share_12345"
+                      shareCode:
+                        type: string
+                        description: 分享代碼
+                        example: "LCAS2025"
+                      shareType:
+                        type: string
+                        example: "view_only"
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: "2025-08-22T12:00:00Z"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: "2025-08-29T12:00:00Z"
+                      maxUses:
+                        type: integer
+                        example: 10
+                      currentUses:
+                        type: integer
+                        example: 0
 
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
   schemas:
     Ledger:
       type: object
       properties:
         ledgerId:
           type: string
-          format: uuid
-          description: 帳本唯一識別符
-          example: "550e8400-e29b-41d4-a716-446655440000"
+          description: 帳本ID
+          example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
         name:
           type: string
           description: 帳本名稱
-          example: "家庭記帳本"
-        description:
-          type: string
-          description: 帳本描述
-          example: "記錄家庭日常開支"
+          example: "個人記帳本"
         type:
           type: string
-          enum: [personal, family, business, shared]
+          enum: [personal, shared, family, business]
           description: 帳本類型
-          example: "family"
-        currency:
-          type: string
-          description: 預設貨幣
-          example: "TWD"
-        icon:
-          type: string
-          description: 帳本圖示
-          example: "🏠"
-        color:
-          type: string
-          description: 主題顏色
-          example: "#4CAF50"
-        status:
-          type: string
-          enum: [active, archived, deleted]
-          description: 帳本狀態
-          example: "active"
-        isDefault:
-          type: boolean
-          description: 是否為預設帳本
-          example: false
+          example: "personal"
         ownerId:
           type: string
-          format: uuid
           description: 擁有者ID
-          example: "550e8400-e29b-41d4-a716-446655440001"
-        settings:
-          type: object
-          properties:
-            autoBackup:
-              type: boolean
-              example: true
-            allowCollaboration:
-              type: boolean
-              example: true
-            budgetAlert:
-              type: boolean
-              example: true
-        collaboratorCount:
-          type: integer
-          description: 協作者數量
-          example: 3
-        transactionCount:
-          type: integer
-          description: 交易筆數
-          example: 156
-        lastTransactionAt:
-          type: string
-          format: date-time
-          description: 最後交易時間
-          example: "2025-01-26T18:30:00Z"
-        createdAt:
-          type: string
-          format: date-time
-          description: 建立時間
-          example: "2025-01-01T00:00:00Z"
-        updatedAt:
-          type: string
-          format: date-time
-          description: 更新時間
-          example: "2025-01-27T12:00:00Z"
+          example: "Uae47d9d496e4596d70ed724a7d6e2948"
 
-    LedgerUpdateData:
+    Collaborator:
       type: object
       properties:
-        name:
-          type: string
-          maxLength: 100
-        description:
-          type: string
-          maxLength: 500
-        type:
-          type: string
-          enum: [personal, family, business, shared]
-        currency:
-          type: string
-        icon:
-          type: string
-        color:
-          type: string
-          pattern: '^#[0-9A-Fa-f]{6}$'
-        isDefault:
-          type: boolean
-        settings:
-          type: object
-          properties:
-            autoBackup:
-              type: boolean
-            allowCollaboration:
-              type: boolean
-            budgetAlert:
-              type: boolean
-
-    LedgerResponseExpert:
-      allOf:
-        - $ref: '#/components/schemas/Ledger'
-        - type: object
-          properties:
-            analytics:
-              type: object
-              properties:
-                monthlyGrowth:
-                  type: number
-                  example: 5.2
-                categoryCount:
-                  type: integer
-                  example: 15
-                accountCount:
-                  type: integer
-                  example: 5
-            permissions:
-              type: array
-              items:
-                type: string
-              example: ["view", "edit", "manage", "admin"]
-
-    LedgerResponseGuiding:
-      type: object
-      properties:
-        ledgerId:
-          type: string
-          format: uuid
-        name:
-          type: string
-        icon:
-          type: string
-        color:
-          type: string
-        isDefault:
-          type: boolean
-        simpleMessage:
-          type: string
-          example: "✅ 家庭記帳本建立成功！"
-
-    LedgerDetailExpert:
-      allOf:
-        - $ref: '#/components/schemas/Ledger'
-        - type: object
-          properties:
-            statistics:
-              type: object
-              properties:
-                totalIncome:
-                  type: number
-                  example: 50000
-                totalExpense:
-                  type: number
-                  example: 35000
-                balance:
-                  type: number
-                  example: 15000
-                avgDailyTransactions:
-                  type: number
-                  example: 4.2
-            recentTransactions:
-              type: array
-              items:
-                type: object
-              maxItems: 5
-            topCategories:
-              type: array
-              items:
-                type: object
-              maxItems: 5
-            collaborators:
-              type: array
-              items:
-                $ref: '#/components/schemas/LedgerCollaborator'
-              maxItems: 10
-
-    LedgerDetailGuiding:
-      type: object
-      properties:
-        ledgerId:
-          type: string
-          format: uuid
-        name:
-          type: string
-        icon:
-          type: string
-        totalTransactions:
-          type: integer
-          example: 45
-        encouragement:
-          type: string
-          example: "這個月已記錄 45 筆交易，繼續加油！"
-
-    LedgerSummaryExpert:
-      type: object
-      properties:
-        overview:
-          type: object
-          properties:
-            totalIncome:
-              type: number
-              example: 50000
-            totalExpense:
-              type: number
-              example: 35000
-            netIncome:
-              type: number
-              example: 15000
-            transactionCount:
-              type: integer
-              example: 156
-        trends:
-          type: object
-          properties:
-            dailyAverage:
-              type: number
-              example: 1166.67
-            monthlyGrowth:
-              type: number
-              example: 5.2
-            categoryBreakdown:
-              type: array
-              items:
-                type: object
-        budgetAnalysis:
-          type: object
-          properties:
-            totalBudget:
-              type: number
-              example: 40000
-            usedBudget:
-              type: number
-              example: 35000
-            remainingBudget:
-              type: number
-              example: 5000
-            utilizationRate:
-              type: number
-              example: 87.5
-
-    LedgerSummaryGuiding:
-      type: object
-      properties:
-        simpleStats:
-          type: object
-          properties:
-            totalSpent:
-              type: number
-              example: 35000
-            transactionCount:
-              type: integer
-              example: 45
-        message:
-          type: string
-          example: "本月已花費 NT$35,000，記錄了 45 筆交易"
-
-    LedgerCollaborator:
-      type: object
-      properties:
-        collaboratorId:
-          type: string
-          format: uuid
-          description: 協作者ID
-          example: "550e8400-e29b-41d4-a716-446655440002"
         userId:
           type: string
-          format: uuid
-          description: 使用者ID
-          example: "550e8400-e29b-41d4-a716-446655440003"
-        email:
-          type: string
-          format: email
-          description: 協作者Email
-          example: "collaborator@example.com"
+          description: 用戶ID
+          example: "user_456"
         displayName:
           type: string
           description: 顯示名稱
-          example: "王小華"
-        avatar:
-          type: string
-          format: uri
-          description: 頭像URL
-          example: "https://example.com/avatar2.jpg"
+          example: "張三"
         role:
           type: string
-          enum: [viewer, editor, admin]
-          description: 權限角色
+          enum: [admin, editor, viewer]
+          description: 角色
           example: "editor"
-        status:
-          type: string
-          enum: [pending, active, suspended]
-          description: 協作狀態
-          example: "active"
-        permissions:
-          type: array
-          items:
-            type: string
-          description: 具體權限列表
-          example: ["view_transactions", "create_transactions", "edit_own_transactions"]
-        joinedAt:
-          type: string
-          format: date-time
-          description: 加入時間
-          example: "2025-01-15T10:00:00Z"
-        lastActiveAt:
-          type: string
-          format: date-time
-          description: 最後活動時間
-          example: "2025-01-26T14:30:00Z"
-
-    LedgerInvitation:
-      type: object
-      properties:
-        invitationId:
-          type: string
-          format: uuid
-          description: 邀請ID
-          example: "550e8400-e29b-41d4-a716-446655440004"
-        ledgerId:
-          type: string
-          format: uuid
-          description: 帳本ID
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        ledgerName:
-          type: string
-          description: 帳本名稱
-          example: "家庭記帳本"
-        inviterUserId:
-          type: string
-          format: uuid
-          description: 邀請者ID
-          example: "550e8400-e29b-41d4-a716-446655440001"
-        inviterName:
-          type: string
-          description: 邀請者名稱
-          example: "張小明"
-        invitedEmail:
-          type: string
-          format: email
-          description: 受邀者Email
-          example: "invited@example.com"
-        role:
-          type: string
-          enum: [viewer, editor, admin]
-          description: 邀請角色
-          example: "editor"
-        message:
-          type: string
-          description: 邀請訊息
-          example: "歡迎加入我們的家庭記帳本"
-        status:
-          type: string
-          enum: [pending, accepted, declined, expired]
-          description: 邀請狀態
-          example: "pending"
-        createdAt:
-          type: string
-          format: date-time
-          description: 邀請時間
-          example: "2025-01-25T12:00:00Z"
-        expiresAt:
-          type: string
-          format: date-time
-          description: 過期時間
-          example: "2025-02-01T12:00:00Z"
-
-    PaginationResponse:
-      type: object
-      properties:
-        page:
-          type: integer
-          description: 當前頁碼
-          example: 1
-        limit:
-          type: integer
-          description: 每頁筆數
-          example: 20
-        total:
-          type: integer
-          description: 總筆數
-          example: 156
-        totalPages:
-          type: integer
-          description: 總頁數
-          example: 8
-        hasNext:
-          type: boolean
-          description: 是否有下一頁
-          example: true
-        hasPrev:
-          type: boolean
-          description: 是否有上一頁
-          example: false
-        nextPage:
-          type: integer
-          nullable: true
-          description: 下一頁頁碼
-          example: 2
-        prevPage:
-          type: integer
-          nullable: true
-          description: 上一頁頁碼
-          example: null
-
-    ResponseMetadata:
-      type: object
-      properties:
-        timestamp:
-          type: string
-          format: date-time
-          description: 回應時間戳
-          example: "2025-01-27T12:00:00Z"
-        requestId:
-          type: string
-          format: uuid
-          description: 請求唯一識別符
-          example: "550e8400-e29b-41d4-a716-446655440001"
-        userMode:
-          type: string
-          enum: [Expert, Inertial, Cultivation, Guiding]
-          description: 使用者模式
-          example: "Expert"
 
     ErrorResponse:
       type: object
@@ -1281,28 +1252,19 @@ components:
           properties:
             code:
               type: string
-              description: 錯誤代碼
-              example: "VALIDATION_ERROR"
+              example: "ERROR_CODE"
             message:
               type: string
-              description: 錯誤訊息
-              example: "帳本名稱已存在"
-            field:
-              type: string
-              description: 錯誤欄位
-              example: "name"
-            timestamp:
-              type: string
-              format: date-time
-              example: "2025-01-27T12:00:00Z"
-            requestId:
-              type: string
-              format: uuid
-              example: "550e8400-e29b-41d4-a716-446655440001"
+              example: "錯誤訊息"
             details:
-              type: object
-              description: 詳細錯誤資訊
+              type: string
+              example: "詳細錯誤說明"
 
-tags:
-  - name: Ledgers
-    description: 帳本管理相關 API
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
