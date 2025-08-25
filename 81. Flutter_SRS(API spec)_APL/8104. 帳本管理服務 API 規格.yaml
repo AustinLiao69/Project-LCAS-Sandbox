@@ -1,4 +1,3 @@
-
 openapi: 3.0.3
 info:
   title: 帳本管理服務 API 規格
@@ -152,7 +151,6 @@ paths:
                               example: "owner"
                             status:
                               type: string
-                              enum: [active, archived, suspended]
                               description: 帳本狀態
                               example: "active"
                             createdAt:
@@ -368,7 +366,7 @@ paths:
                             type: boolean
                             example: true
 
-  /ledgers/{ledgerId}:
+  /ledgers/{id}:
     get:
       tags:
         - Ledger Management
@@ -376,7 +374,7 @@ paths:
       description: 取得指定帳本的詳細資訊
       operationId: getLedgerDetails
       parameters:
-        - name: ledgerId
+        - name: id
           in: path
           required: true
           description: 帳本ID
@@ -567,7 +565,7 @@ paths:
       description: 更新帳本的基本資訊和設定
       operationId: updateLedger
       parameters:
-        - name: ledgerId
+        - name: id
           in: path
           required: true
           description: 帳本ID
@@ -644,7 +642,7 @@ paths:
       description: 刪除指定的帳本（需要擁有者權限）
       operationId: deleteLedger
       parameters:
-        - name: ledgerId
+        - name: id
           in: path
           required: true
           description: 帳本ID
@@ -708,7 +706,7 @@ paths:
                         description: 受影響的協作者數量
                         example: 3
 
-  /ledgers/{ledgerId}/collaborators:
+  /ledgers/{id}/collaborators:
     get:
       tags:
         - Collaboration
@@ -716,7 +714,7 @@ paths:
       description: 取得指定帳本的協作者列表，支援分頁
       operationId: getLedgerCollaborators
       parameters:
-        - name: ledgerId
+        - name: id
           in: path
           required: true
           description: 帳本ID
@@ -853,7 +851,7 @@ paths:
       description: 邀請用戶加入帳本協作
       operationId: inviteCollaborator
       parameters:
-        - name: ledgerId
+        - name: id
           in: path
           required: true
           description: 帳本ID
@@ -942,7 +940,7 @@ paths:
                         description: 邀請過期時間
                         example: "2025-08-29T12:00:00Z"
 
-  /ledgers/{ledgerId}/collaborators/{userId}:
+  /ledgers/{id}/collaborators/{userId}:
     patch:
       tags:
         - Collaboration
@@ -950,7 +948,7 @@ paths:
       description: 更新指定協作者的角色和權限
       operationId: updateCollaboratorRole
       parameters:
-        - name: ledgerId
+        - name: id
           in: path
           required: true
           description: 帳本ID
@@ -1044,7 +1042,7 @@ paths:
       description: 從帳本中移除指定的協作者
       operationId: removeCollaborator
       parameters:
-        - name: ledgerId
+        - name: id
           in: path
           required: true
           description: 帳本ID
@@ -1108,7 +1106,7 @@ paths:
                         type: boolean
                         example: true
 
-  /ledgers/{ledgerId}/share:
+  /ledgers/{id}/share:
     post:
       tags:
         - Sharing
@@ -1116,7 +1114,7 @@ paths:
       description: 為帳本產生分享連結
       operationId: generateShareLink
       parameters:
-        - name: ledgerId
+        - name: id
           in: path
           required: true
           description: 帳本ID

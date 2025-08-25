@@ -45,9 +45,17 @@ paths:
       summary: 系統健康檢查
       description: 檢查系統各服務模組的健康狀態和可用性
       operationId: getSystemHealth
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: 用戶模式標識（影響回應詳細程度）
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+            default: Expert
       responses:
         '200':
-          description: 系統健康狀態
+          description: 系統健康狀態（四模式差異化回應）
           content:
             application/json:
               schema:
@@ -57,44 +65,24 @@ paths:
                     type: boolean
                     example: true
                   data:
+                    oneOf:
+                      - $ref: '#/components/schemas/HealthCheckExpert'
+                      - $ref: '#/components/schemas/HealthCheckGuiding'
+                  metadata:
                     type: object
                     properties:
-                      status:
-                        type: string
-                        enum: [healthy, degraded, unhealthy]
-                        example: healthy
                       timestamp:
                         type: string
                         format: date-time
-                      services:
-                        type: object
-                        properties:
-                          api:
-                            $ref: '#/components/schemas/ServiceHealth'
-                          database:
-                            $ref: '#/components/schemas/ServiceHealth'
-                          authentication:
-                            $ref: '#/components/schemas/ServiceHealth'
-                          backup:
-                            $ref: '#/components/schemas/ServiceHealth'
-                      metrics:
-                        type: object
-                        properties:
-                          uptime:
-                            type: string
-                            example: "99.98%"
-                          avgResponseTime:
-                            type: string
-                            example: "28ms"
-                          activeUsers:
-                            type: integer
-                            example: 1250
-                          systemLoad:
-                            type: string
-                            example: "0.65"
-                      version:
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
                         type: string
-                        example: "2.1.13"
+                        format: uuid
+                        example: "550e8400-e29b-41d4-a716-446655440001"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
 
   /system/config:
     get:
@@ -291,6 +279,65 @@ components:
           format: date-time
         details:
           type: object
+
+    HealthCheckExpert:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          example: healthy
+        services:
+          type: object
+          properties:
+            api:
+              $ref: '#/components/schemas/ServiceHealth'
+            database:
+              $ref: '#/components/schemas/ServiceHealth'
+            authentication:
+              $ref: '#/components/schemas/ServiceHealth'
+            backup:
+              $ref: '#/components/schemas/ServiceHealth'
+        metrics:
+          type: object
+          properties:
+            uptime:
+              type: string
+              example: "99.98%"
+            avgResponseTime:
+              type: string
+              example: "28ms"
+            activeUsers:
+              type: integer
+              example: 1250
+            systemLoad:
+              type: string
+              example: "0.65"
+        version:
+          type: string
+          example: "2.1.13"
+        detailedMetrics:
+          type: object
+          properties:
+            cpuUsage:
+              type: number
+              example: 65.2
+            memoryUsage:
+              type: number
+              example: 78.5
+            diskSpace:
+              type: number
+              example: 45.3
+
+    HealthCheckGuiding:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "系統運行正常"
+        simpleIndicator:
+          type: boolean
+          example: true
 
     SystemAlert:
       type: object
