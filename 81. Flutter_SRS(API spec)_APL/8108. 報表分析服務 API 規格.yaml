@@ -250,14 +250,14 @@ paths:
                     type: string
                     example: "報表已刪除，將保留 30 天供恢復"
 
-  /reports/{id}/status:
+  /reports/{reportId}/status:
     get:
       tags:
         - 報表查詢
       summary: 查詢報表生成進度
       description: 查詢指定報表的生成狀態與進度
       parameters:
-        - name: id
+        - name: reportId
           in: path
           required: true
           description: 報表 ID
@@ -298,14 +298,14 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /reports/{id}/cancel:
-    delete:
+  /reports/{reportId}/cancel:
+    post:
       tags:
         - 報表管理
       summary: 取消報表生成
       description: 取消正在生成中的報表任務
       parameters:
-        - name: id
+        - name: reportId
           in: path
           required: true
           description: 報表 ID

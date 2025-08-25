@@ -39,6 +39,184 @@ tags:
     description: 系統維護管理
 
 paths:
+  /system/welcome:
+    get:
+      tags:
+        - System Services
+      summary: 歡迎頁資訊
+      description: 取得應用程式歡迎頁面的個人化資訊
+      operationId: getWelcomeInfo
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: X-User-Mode
+          in: header
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: 成功取得歡迎資訊
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          welcomeMessage:
+                            type: string
+                            description: 個人化歡迎訊息
+                          quickActions:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                title:
+                                  type: string
+                                description:
+                                  type: string
+                                action:
+                                  type: string
+                                icon:
+                                  type: string
+                          statistics:
+                            type: object
+                            properties:
+                              totalTransactions:
+                                type: integer
+                              monthlySpending:
+                                type: number
+                              budgetUsage:
+                                type: number
+                          tips:
+                            type: array
+                            items:
+                              type: string
+                            description: 根據用戶模式提供的使用技巧
+
+  /system/app-info:
+    get:
+      tags:
+        - System Services
+      summary: APP資訊
+      description: 取得應用程式基本資訊
+      operationId: getAppInfo
+      responses:
+        '200':
+          description: 成功取得APP資訊
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          appName:
+                            type: string
+                            example: "LCAS 2.0"
+                          version:
+                            type: string
+                            example: "2.0.0"
+                          buildNumber:
+                            type: string
+                          releaseDate:
+                            type: string
+                            format: date
+                          features:
+                            type: array
+                            items:
+                              type: string
+                          changelog:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                version:
+                                  type: string
+                                date:
+                                  type: string
+                                changes:
+                                  type: array
+                                  items:
+                                    type: string
+
+  /system/app-promotion:
+    get:
+      tags:
+        - System Services
+      summary: APP推廣資訊
+      description: 取得應用程式推廣活動和優惠資訊
+      operationId: getAppPromotion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum: [ios, android, web]
+        - name: userMode
+          in: query
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: 成功取得推廣資訊
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          activePromotions:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                title:
+                                  type: string
+                                description:
+                                  type: string
+                                imageUrl:
+                                  type: string
+                                actionUrl:
+                                  type: string
+                                startDate:
+                                  type: string
+                                  format: date-time
+                                endDate:
+                                  type: string
+                                  format: date-time
+                                targetModes:
+                                  type: array
+                                  items:
+                                    type: string
+                          referralProgram:
+                            type: object
+                            properties:
+                              enabled:
+                                type: boolean
+                              referralCode:
+                                type: string
+                              rewards:
+                                type: array
+                                items:
+                                  type: object
+
   /system/health:
     get:
       tags: [system-health]
