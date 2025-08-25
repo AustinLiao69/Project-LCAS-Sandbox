@@ -1106,6 +1106,149 @@ paths:
                         type: boolean
                         example: true
 
+  /ledgers/{id}/conflicts:
+    get:
+      tags:
+        - Collaboration
+      summary: 協作衝突檢測
+      description: 檢測帳本中的協作衝突
+      operationId: getLedgerConflicts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 帳本ID
+          schema:
+            type: string
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+        - name: userId
+          in: query
+          required: true
+          description: 請求用戶ID
+          schema:
+            type: string
+            example: "Uae47d9d496e4596d70ed724a7d6e2948"
+      responses:
+        '200':
+          description: 衝突檢測結果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      hasConflicts:
+                        type: boolean
+                        example: false
+                      conflicts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            conflictId:
+                              type: string
+                              format: uuid
+                            type:
+                              type: string
+                              enum: [transaction_edit, category_delete, account_merge]
+                            description:
+                              type: string
+                            affectedItems:
+                              type: array
+                              items:
+                                type: string
+                            conflictedUsers:
+                              type: array
+                              items:
+                                type: string
+                            severity:
+                              type: string
+                              enum: [low, medium, high]
+                            detectedAt:
+                              type: string
+                              format: date-time
+
+  /ledgers/{id}/resolve-conflict:
+    post:
+      tags:
+        - Collaboration
+      summary: 解決協作衝突
+      description: 解決帳本中的協作衝突
+      operationId: resolveLedgerConflict
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 帳本ID
+          schema:
+            type: string
+            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - conflictId
+                - resolution
+                - operatorId
+              properties:
+                conflictId:
+                  type: string
+                  format: uuid
+                  description: 衝突ID
+                  example: "conflict_12345"
+                resolution:
+                  type: string
+                  enum: [accept_mine, accept_theirs, merge, custom]
+                  description: 解決方案
+                  example: "merge"
+                operatorId:
+                  type: string
+                  description: 操作者用戶ID
+                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+                customResolution:
+                  type: object
+                  description: 自訂解決方案（當resolution為custom時）
+                reason:
+                  type: string
+                  description: 解決原因
+                  example: "合併兩個版本的修改"
+      responses:
+        '200':
+          description: 衝突解決成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      conflictId:
+                        type: string
+                        format: uuid
+                        example: "conflict_12345"
+                      resolution:
+                        type: string
+                        example: "merge"
+                      resolvedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      resolvedBy:
+                        type: string
+                        example: "Uae47d9d496e4596d70ed724a7d6e2948"
+
   /ledgers/{id}/share:
     post:
       tags:

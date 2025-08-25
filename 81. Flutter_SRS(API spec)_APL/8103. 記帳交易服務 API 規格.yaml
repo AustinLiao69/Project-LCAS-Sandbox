@@ -661,6 +661,136 @@ paths:
                         type: integer
                         example: 0
 
+  /transactions/recurring:
+    get:
+      summary: 查詢重複記帳
+      description: 取得重複記帳規則列表
+      operationId: getRecurringTransactions
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RecurringTransaction'
+                      pagination:
+                        $ref: '#/components/schemas/PaginationResponse'
+
+    post:
+      summary: 建立重複記帳
+      description: 建立重複記帳規則
+      operationId: createRecurringTransaction
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '#/components/schemas/RecurringTransactionCreateData'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/RecurringTransaction'
+
+  /transactions/recurring/{recurringId}:
+    put:
+      summary: 更新重複記帳
+      description: 更新重複記帳規則
+      operationId: updateRecurringTransaction
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recurringId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '#/components/schemas/RecurringTransactionUpdateData'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/RecurringTransaction'
+
+    delete:
+      summary: 刪除重複記帳
+      description: 刪除重複記帳規則
+      operationId: deleteRecurringTransaction
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recurringId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 刪除成功
+
 components:
   securitySchemes:
     bearerAuth:
@@ -976,6 +1106,112 @@ components:
           enum: [Expert, Inertial, Cultivation, Guiding]
           description: 使用者模式
           example: "Expert"
+
+    RecurringTransaction:
+      type: object
+      properties:
+        recurringId:
+          type: string
+          format: uuid
+          description: 重複記帳規則ID
+        name:
+          type: string
+          description: 規則名稱
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly, yearly]
+          description: 重複頻率
+        amount:
+          type: number
+          description: 金額
+        type:
+          type: string
+          enum: [income, expense]
+          description: 收支類型
+        categoryId:
+          type: string
+          format: uuid
+          description: 科目ID
+        accountId:
+          type: string
+          format: uuid
+          description: 帳戶ID
+        description:
+          type: string
+          description: 描述
+        isActive:
+          type: boolean
+          description: 是否啟用
+        nextExecuteDate:
+          type: string
+          format: date
+          description: 下次執行日期
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RecurringTransactionCreateData:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly, yearly]
+        amount:
+          type: number
+          minimum: 0.01
+        type:
+          type: string
+          enum: [income, expense]
+        categoryId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        description:
+          type: string
+          maxLength: 255
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      required:
+        - name
+        - frequency
+        - amount
+        - type
+        - categoryId
+        - accountId
+        - startDate
+
+    RecurringTransactionUpdateData:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly, yearly]
+        amount:
+          type: number
+          minimum: 0.01
+        description:
+          type: string
+          maxLength: 255
+        isActive:
+          type: boolean
+        endDate:
+          type: string
+          format: date
 
     ErrorResponse:
       type: object

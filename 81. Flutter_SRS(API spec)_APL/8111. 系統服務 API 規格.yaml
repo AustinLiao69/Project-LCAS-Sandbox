@@ -195,6 +195,116 @@ paths:
                         items:
                           $ref: '#/components/schemas/SystemAlert'
 
+  /system/welcome:
+    get:
+      tags: [system-config]
+      summary: 歡迎頁資訊
+      description: 取得歡迎頁面顯示資訊
+      operationId: getWelcomeInfo
+      responses:
+        '200':
+          description: 歡迎資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                        example: "歡迎使用 LCAS 2.0"
+                      subtitle:
+                        type: string
+                        example: "智慧記帳，輕鬆理財"
+                      features:
+                        type: array
+                        items:
+                          type: string
+                        example: ["LINE 快速記帳", "多帳本管理", "智慧分析"]
+                      appDownloadUrl:
+                        type: string
+                        example: "https://app.lcas.app/download"
+
+  /system/app-info:
+    get:
+      tags: [system-config]
+      summary: APP 資訊
+      description: 取得應用程式基本資訊
+      operationId: getAppInfo
+      responses:
+        '200':
+          description: APP 資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      appName:
+                        type: string
+                        example: "LCAS 2.0"
+                      version:
+                        type: string
+                        example: "2.1.0"
+                      buildNumber:
+                        type: string
+                        example: "2025012701"
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+
+  /system/app-promotion:
+    get:
+      tags: [system-config]
+      summary: APP 推廣資訊
+      description: 取得應用程式推廣相關資訊
+      operationId: getAppPromotion
+      responses:
+        '200':
+          description: 推廣資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      promotionTitle:
+                        type: string
+                        example: "立即下載 LCAS APP"
+                      description:
+                        type: string
+                        example: "享受更完整的記帳體驗"
+                      downloadLinks:
+                        type: object
+                        properties:
+                          ios:
+                            type: string
+                            example: "https://apps.apple.com/app/lcas"
+                          android:
+                            type: string
+                            example: "https://play.google.com/store/apps/details?id=com.lcas.app"
+                      features:
+                        type: array
+                        items:
+                          type: string
+                        example: ["同步記帳", "智慧分析", "預算管理"]
+
   /system/maintenance:
     get:
       tags: [system-maintenance]
