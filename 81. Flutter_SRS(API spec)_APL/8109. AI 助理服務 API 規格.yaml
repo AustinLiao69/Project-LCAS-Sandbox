@@ -213,6 +213,192 @@ paths:
               schema:
                 $ref: '#/components/schemas/TranscriptionResponse'
 
+  /ai/anomaly-detection:
+    post:
+      tags:
+        - Spending Analysis
+      summary: 異常檢測
+      description: |
+        檢測用戶支出中的異常模式和可疑交易。
+        四模式差異：
+        - Expert: 深度異常分析、統計模型、詳細報告
+        - Inertial: 標準異常檢測、基本警示
+        - Cultivation: 習慣偏差檢測、目標達成警示
+        - Guiding: 簡化異常提醒、友善建議
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                analysisType:
+                  type: string
+                  enum: [real_time, batch, scheduled]
+                  default: real_time
+                  description: 分析類型
+                dataRange:
+                  type: object
+                  properties:
+                    startDate:
+                      type: string
+                      format: date
+                    endDate:
+                      type: string
+                      format: date
+                transactionIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: 指定交易ID（可選）
+                detectionRules:
+                  type: array
+                  items:
+                    type: string
+                    enum: [amount_outlier, frequency_anomaly, category_deviation, time_pattern, location_anomaly]
+                  default: [amount_outlier, frequency_anomaly]
+                sensitivity:
+                  type: string
+                  enum: [low, medium, high]
+                  default: medium
+                  description: 檢測靈敏度
+              required:
+                - analysisType
+      responses:
+        '200':
+          description: 異常檢測完成
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      analysisId:
+                        type: string
+                        format: uuid
+                        description: 分析任務ID
+                      detectionResults:
+                        type: object
+                        properties:
+                          anomaliesFound:
+                            type: integer
+                            description: 發現的異常數量
+                          riskLevel:
+                            type: string
+                            enum: [low, medium, high, critical]
+                            description: 風險等級
+                          anomalies:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                anomalyId:
+                                  type: string
+                                  format: uuid
+                                transactionId:
+                                  type: string
+                                  format: uuid
+                                anomalyType:
+                                  type: string
+                                  enum: [amount_outlier, frequency_anomaly, category_deviation, time_pattern, location_anomaly]
+                                severity:
+                                  type: string
+                                  enum: [low, medium, high, critical]
+                                description:
+                                  type: string
+                                  description: 異常描述
+                                confidence:
+                                  type: number
+                                  minimum: 0
+                                  maximum: 1
+                                  description: 檢測信心度
+                                expectedValue:
+                                  type: number
+                                  description: 預期值
+                                actualValue:
+                                  type: number
+                                  description: 實際值
+                                deviation:
+                                  type: number
+                                  description: 偏差程度
+                                recommendations:
+                                  type: array
+                                  items:
+                                    type: string
+                                  description: 建議處理方式
+                                relatedTransactions:
+                                  type: array
+                                  items:
+                                    type: string
+                                    format: uuid
+                                  description: 相關交易ID
+                          patterns:
+                            type: object
+                            properties:
+                              spendingPatterns:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    pattern:
+                                      type: string
+                                    frequency:
+                                      type: integer
+                                    normalRange:
+                                      type: object
+                                      properties:
+                                        min:
+                                          type: number
+                                        max:
+                                          type: number
+                              timePatterns:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    timeSlot:
+                                      type: string
+                                    expectedFrequency:
+                                      type: integer
+                                    actualFrequency:
+                                      type: integer
+                          summary:
+                            type: object
+                            properties:
+                              analysisDate:
+                                type: string
+                                format: date-time
+                              totalTransactionsAnalyzed:
+                                type: integer
+                              analysisDuration:
+                                type: string
+                                description: 分析耗時
+                              modelVersion:
+                                type: string
+                                description: 使用的模型版本
+                              nextRecommendedCheck:
+                                type: string
+                                format: date-time
+                                description: 建議下次檢查時間
+        '400':
+          description: 檢測參數錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: 資料不足以進行異常檢測
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     bearerAuth:

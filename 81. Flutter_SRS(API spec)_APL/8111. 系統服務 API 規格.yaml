@@ -545,14 +545,276 @@ paths:
         '403':
           description: 權限不足
 
+  /system/retry:
+    post:
+      tags: [system-config]
+      summary: 重試機制
+      description: |
+        針對失敗的操作進行重試處理。
+        四模式差異：
+        - Expert: 詳細重試參數設定、重試策略選擇
+        - Inertial: 標準重試機制、固定重試次數
+        - Cultivation: 智慧重試建議、學習型重試
+        - Guiding: 自動重試、簡化處理
+      operationId: retryOperation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                operationType:
+                  type: string
+                  enum: [transaction, report, backup, sync, api_call]
+                  description: 重試操作類型
+                operationId:
+                  type: string
+                  format: uuid
+                  description: 原始操作ID
+                retryStrategy:
+                  type: string
+                  enum: [immediate, exponential_backoff, scheduled]
+                  default: exponential_backoff
+                  description: 重試策略
+                maxRetries:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 3
+                  description: 最大重試次數
+                reason:
+                  type: string
+                  description: 重試原因
+              required:
+                - operationType
+                - operationId
+      responses:
+        '200':
+          description: 重試操作啟動成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      retryId:
+                        type: string
+                        format: uuid
+                        description: 重試任務ID
+                      status:
+                        type: string
+                        enum: [queued, processing, completed, failed]
+                        description: 重試狀態
+                      estimatedTime:
+                        type: integer
+                        description: 預估完成時間（秒）
+                      nextRetryAt:
+                        type: string
+                        format: date-time
+                        description: 下次重試時間
+        '400':
+          description: 重試參數錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 原始操作不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /system/sync:
+    post:
+      tags: [system-config]
+      summary: 離線同步
+      description: |
+        處理離線資料同步，將本地變更同步到雲端。
+        四模式差異：
+        - Expert: 詳細同步控制、衝突處理策略、同步日誌
+        - Inertial: 標準同步、基本衝突解決
+        - Cultivation: 智慧同步建議、同步進度可視化
+        - Guiding: 自動同步、透明處理
+      operationId: syncOfflineData
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                syncType:
+                  type: string
+                  enum: [full, incremental, selective]
+                  default: incremental
+                  description: 同步類型
+                dataTypes:
+                  type: array
+                  items:
+                    type: string
+                    enum: [transactions, budgets, categories, accounts, settings]
+                  description: 要同步的資料類型
+                conflictResolution:
+                  type: string
+                  enum: [server_wins, client_wins, merge, manual]
+                  default: merge
+                  description: 衝突解決策略
+                lastSyncTimestamp:
+                  type: string
+                  format: date-time
+                  description: 上次同步時間戳
+                offlineChanges:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      changeId:
+                        type: string
+                        format: uuid
+                      operation:
+                        type: string
+                        enum: [create, update, delete]
+                      resourceType:
+                        type: string
+                      resourceId:
+                        type: string
+                      data:
+                        type: object
+                      timestamp:
+                        type: string
+                        format: date-time
+              required:
+                - syncType
+      responses:
+        '200':
+          description: 同步成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      syncId:
+                        type: string
+                        format: uuid
+                        description: 同步任務ID
+                      status:
+                        type: string
+                        enum: [completed, partial, failed]
+                        description: 同步狀態
+                      syncedRecords:
+                        type: integer
+                        description: 已同步記錄數
+                      conflictRecords:
+                        type: integer
+                        description: 衝突記錄數
+                      failedRecords:
+                        type: integer
+                        description: 失敗記錄數
+                      conflicts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            conflictId:
+                              type: string
+                              format: uuid
+                            resourceType:
+                              type: string
+                            resourceId:
+                              type: string
+                            conflictType:
+                              type: string
+                              enum: [data_conflict, version_conflict, delete_conflict]
+                            serverData:
+                              type: object
+                            clientData:
+                              type: object
+                            resolution:
+                              type: string
+                              enum: [auto_resolved, requires_manual]
+                      nextSyncRecommendation:
+                        type: string
+                        format: date-time
+                        description: 建議下次同步時間
+        '409':
+          description: 同步衝突需要手動處理
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: 同步資料格式錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
   schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+        metadata:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+              format: uuid
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+              format: uuid
     ServiceHealth:
       type: object
       properties:
