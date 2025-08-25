@@ -1,716 +1,128 @@
+
 openapi: 3.0.3
 info:
-  title: LCAS 2.0 - 用戶管理服務 API 規格
-  version: 1.0.0
-  description: |
-    **LCAS 2.0 用戶管理服務 API 規格**
-
-    負責用戶資料管理、偏好設定、模式評估與個人化配置的完整 API 規格。
-    支援四模式差異化體驗，提供用戶生命週期的完整管理功能。
-
-    **服務範圍**:
-    - 用戶資料管理（個人資料、偏好設定）
-    - 模式評估與切換（Expert、Inertial、Cultivation、Guiding）
-    - 安全設定（應用鎖、隱私模式）
-    - 使用行為追蹤與個人化推薦
-
-    **四模式差異化策略**:
-    - **Expert**: 完整控制權、詳細設定選項、專業化配置
-    - **Inertial**: 標準設定、簡潔選項、固定流程
-    - **Cultivation**: 引導式設定、進度追蹤、習慣養成
-    - **Guiding**: 極簡設定、自動化配置、最少決策
-
-    **版本**: 1.0.0
-    **建立日期**: 2025-08-21
-    **對應文件**: 0021. Screen list.md (S-103, S-106, S-505)
+  title: 用戶管理服務 API 規格
+  description: LCAS 2.0 用戶管理服務 API，符合0020和0088設計規範
+  version: 1.1.0
+  contact:
+    name: LCAS SA Team
+    email: sa@lcas.app
 
 servers:
   - url: https://api.lcas.app/v1
-    description: "Production server"
-  - url: https://api-staging.lcas.app/v1
-    description: "Staging server"
-
-security:
-  - BearerAuth: []
+    description: Production server
+  - url: https://api-dev.lcas.app/v1
+    description: Development server
 
 paths:
-  /users/profile:
+  /users:
     get:
-      summary: "取得用戶個人資料"
-      description: |
-        取得當前用戶的完整個人資料，包含基本資訊、偏好設定與統計數據。
-
-        **對應畫面**: S-505 個人設定頁
-        **四模式差異**: 回應資料深度與個人化程度不同
+      summary: 取得使用者列表
+      description: 查詢使用者列表，支援分頁和篩選（管理員功能）
+      operationId: getUsers
       tags:
-        - "用戶資料管理"
+        - Users
+      security:
+        - bearerAuth: []
       parameters:
-        - name: X-User-Mode
-          in: header
-          description: "用戶模式標識"
-          required: false
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: 頁碼（從1開始）
+          example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: 每頁筆數
+          example: 20
+        - name: sort
+          in: query
           schema:
             type: string
-            enum: [Expert, Inertial, Cultivation, Guiding]
-      responses:
-        '200':
-          description: "成功取得用戶資料"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      # 基本資料（所有模式）
-                      id:
-                        type: string
-                        example: "user-uuid-12345"
-                      email:
-                        type: string
-                        example: "user@example.com"
-                      displayName:
-                        type: string
-                        example: "張小明"
-                      avatar:
-                        type: string
-                        example: "https://api.lcas.app/avatars/user-123.jpg"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
-                      createdAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-01T00:00:00Z"
-                      lastLoginAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T10:30:00Z"
-
-                      # Expert/Inertial Mode: 詳細統計
-                      statistics:
-                        type: object
-                        properties:
-                          totalTransactions:
-                            type: integer
-                            example: 1250
-                          totalLedgers:
-                            type: integer
-                            example: 3
-                          averageDailyRecords:
-                            type: number
-                            example: 4.2
-                          longestStreak:
-                            type: integer
-                            example: 45
-
-                      # Cultivation Mode: 成就與進度
-                      achievements:
-                        type: object
-                        properties:
-                          currentLevel:
-                            type: integer
-                            example: 8
-                          totalPoints:
-                            type: integer
-                            example: 2350
-                          nextLevelPoints:
-                            type: integer
-                            example: 2500
-                          currentStreak:
-                            type: integer
-                            example: 12
-
-                      # Expert Mode: 進階設定
-                      preferences:
-                        type: object
-                        properties:
-                          language:
-                            type: string
-                            example: "zh-TW"
-                          currency:
-                            type: string
-                            example: "TWD"
-                          timezone:
-                            type: string
-                            example: "Asia/Taipei"
-                          dateFormat:
-                            type: string
-                            example: "YYYY-MM-DD"
-                          theme:
-                            type: string
-                            enum: [light, dark, auto]
-                            example: "auto"
-                          defaultLedgerId:
-                            type: string
-                            example: "ledger-uuid-001"
-
-                      # 安全設定
-                      security:
-                        type: object
-                        properties:
-                          hasAppLock:
-                            type: boolean
-                            example: true
-                          biometricEnabled:
-                            type: boolean
-                            example: true
-                          privacyModeEnabled:
-                            type: boolean
-                            example: false
-                          twoFactorEnabled:
-                            type: boolean
-                            example: false
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    put:
-      summary: "更新用戶個人資料"
-      description: |
-        更新用戶的個人資料，包含基本資訊與顯示偏好。
-
-        **對應畫面**: S-505 個人設定頁
-        **四模式差異**: 可編輯欄位數量與複雜度不同
-      tags:
-        - "用戶資料管理"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                displayName:
-                  type: string
-                  example: "張小明"
-                  maxLength: 50
-                avatar:
-                  type: string
-                  example: "base64-encoded-image-data"
-                language:
-                  type: string
-                  enum: [zh-TW, en-US]
-                  example: "zh-TW"
-                timezone:
-                  type: string
-                  example: "Asia/Taipei"
-                theme:
-                  type: string
-                  enum: [light, dark, auto]
-                  example: "dark"
-      responses:
-        '200':
-          description: "更新成功"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "個人資料更新成功"
-                      updatedAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  /users/assessment-questions:
-    get:
-      summary: "取得模式評估問卷"
-      description: |
-        取得用於判斷用戶適合模式的評估問卷題目。
-
-        **對應畫面**: S-106 模式評估問卷頁
-        **使用時機**: 新用戶註冊後、用戶主動重新評估
-      tags:
-        - "模式評估"
-      responses:
-        '200':
-          description: "成功取得問卷題目"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      questionnaire:
-                        type: object
-                        properties:
-                          id:
-                            type: string
-                            example: "assessment-v2.1"
-                          version:
-                            type: string
-                            example: "2.1"
-                          title:
-                            type: string
-                            example: "LCAS 2.0 使用者模式評估"
-                          description:
-                            type: string
-                            example: "透過 5 道題目了解您的記帳習慣，為您推薦最適合的使用模式"
-                          estimatedTime:
-                            type: integer
-                            example: 3
-                          questions:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                id:
-                                  type: integer
-                                  example: 1
-                                question:
-                                  type: string
-                                  example: "您對記帳軟體的功能需求程度？"
-                                type:
-                                  type: string
-                                  enum: [single_choice, multiple_choice]
-                                  example: "single_choice"
-                                required:
-                                  type: boolean
-                                  example: true
-                                options:
-                                  type: array
-                                  items:
-                                    type: object
-                                    properties:
-                                      id:
-                                        type: string
-                                        example: "A"
-                                      text:
-                                        type: string
-                                        example: "需要完整專業功能"
-                                      weight:
-                                        type: object
-                                        properties:
-                                          Expert:
-                                            type: integer
-                                            example: 3
-                                          Inertial:
-                                            type: integer
-                                            example: 1
-                                          Cultivation:
-                                            type: integer
-                                            example: 2
-                                          Guiding:
-                                            type: integer
-                                            example: 0
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /users/assessment:
-    post:
-      summary: "提交模式評估結果"
-      description: |
-        提交用戶完成的評估問卷，系統分析後回傳推薦的使用模式。
-
-        **對應畫面**: S-106 模式評估問卷頁
-        **業務邏輯**: 根據回答計算最適合的模式並更新用戶設定
-      tags:
-        - "模式評估"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                questionnaireId:
-                  type: string
-                  example: "assessment-v2.1"
-                answers:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      questionId:
-                        type: integer
-                        example: 1
-                      selectedOptions:
-                        type: array
-                        items:
-                          type: string
-                        example: ["A"]
-                completedAt:
-                  type: string
-                  format: date-time
-                  example: "2025-01-27T12:05:00Z"
-              required:
-                - questionnaireId
-                - answers
-      responses:
-        '200':
-          description: "評估完成，回傳推薦模式"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      result:
-                        type: object
-                        properties:
-                          recommendedMode:
-                            type: string
-                            enum: [Expert, Inertial, Cultivation, Guiding]
-                            example: "Expert"
-                          confidence:
-                            type: number
-                            example: 85.5
-                          scores:
-                            type: object
-                            properties:
-                              Expert:
-                                type: number
-                                example: 12.5
-                              Inertial:
-                                type: number
-                                example: 7.0
-                              Cultivation:
-                                type: number
-                                example: 9.5
-                              Guiding:
-                                type: number
-                                example: 4.0
-                          explanation:
-                            type: string
-                            example: "基於您的回答，您偏好擁有完整功能控制權與專業工具，建議使用專家模式以獲得最佳體驗。"
-                          modeCharacteristics:
-                            type: object
-                            properties:
-                              Expert:
-                                type: string
-                                example: "完整功能、專業工具、深度設定"
-                              alternatives:
-                                type: array
-                                items:
-                                  type: object
-                                  properties:
-                                    mode:
-                                      type: string
-                                      example: "Inertial"
-                                    reason:
-                                      type: string
-                                      example: "如果您偏好更簡潔的介面"
-                      applied:
-                        type: boolean
-                        example: true
-                      previousMode:
-                        type: string
-                        example: "Inertial"
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  /users/preferences:
-    put:
-      summary: "更新用戶偏好設定"
-      description: |
-        更新用戶的應用偏好設定，包含預設值、通知設定等。
-
-        **對應畫面**: S-505 個人設定頁
-        **四模式差異**: 可設定的偏好項目數量不同
-      tags:
-        - "用戶資料管理"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                # 基本偏好（所有模式）
-                currency:
-                  type: string
-                  example: "TWD"
-                dateFormat:
-                  type: string
-                  example: "YYYY-MM-DD"
-                defaultLedgerId:
-                  type: string
-                  example: "ledger-uuid-001"
-
-                # Expert/Inertial Mode: 進階偏好
-                numberFormat:
-                  type: string
-                  example: "#,##0.00"
-                fiscalYearStart:
-                  type: string
-                  example: "01-01"
-                autoBackupEnabled:
-                  type: boolean
-                  example: true
-
-                # 通知偏好
-                notifications:
-                  type: object
-                  properties:
-                    dailyReminder:
-                      type: boolean
-                      example: true
-                    budgetAlert:
-                      type: boolean
-                      example: true
-                    weeklyReport:
-                      type: boolean
-                      example: false
-
-                # Cultivation Mode: 激勵偏好
-                gamification:
-                  type: object
-                  properties:
-                    achievementNotifications:
-                      type: boolean
-                      example: true
-                    challengeReminders:
-                      type: boolean
-                      example: true
-                    streakCelebration:
-                      type: boolean
-                      example: true
-      responses:
-        '200':
-          description: "偏好設定更新成功"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "偏好設定已更新"
-                      updatedAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      appliedChanges:
-                        type: array
-                        items:
-                          type: string
-                        example: ["currency", "notifications.dailyReminder"]
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  /users/security:
-    put:
-      summary: "更新安全設定"
-      description: |
-        更新用戶的安全相關設定，包含應用鎖、生物辨識、隱私模式等。
-
-        **對應畫面**: S-503 安全設定頁
-        **安全考量**: PIN 碼等敏感資料需加密傳輸
-      tags:
-        - "安全管理"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                appLock:
-                  type: object
-                  properties:
-                    enabled:
-                      type: boolean
-                      example: true
-                    method:
-                      type: string
-                      enum: [pin, pattern, biometric]
-                      example: "biometric"
-                    pinCode:
-                      type: string
-                      example: "encrypted-pin-hash"
-                      description: "加密後的 PIN 碼"
-                    autoLockTime:
-                      type: integer
-                      example: 300
-                      description: "自動鎖定時間（秒）"
-
-                privacyMode:
-                  type: object
-                  properties:
-                    enabled:
-                      type: boolean
-                      example: false
-                    hideAmounts:
-                      type: boolean
-                      example: false
-                    maskCategories:
-                      type: boolean
-                      example: false
-
-                biometric:
-                  type: object
-                  properties:
-                    enabled:
-                      type: boolean
-                      example: true
-                    method:
-                      type: string
-                      enum: [fingerprint, face, voice]
-                      example: "fingerprint"
-
-                twoFactor:
-                  type: object
-                  properties:
-                    enabled:
-                      type: boolean
-                      example: false
-                    method:
-                      type: string
-                      enum: [sms, email, authenticator]
-                      example: "email"
-      responses:
-        '200':
-          description: "安全設定更新成功"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "安全設定已更新"
-                      securityLevel:
-                        type: string
-                        enum: [low, medium, high]
-                        example: "high"
-                      updatedSettings:
-                        type: array
-                        items:
-                          type: string
-                        example: ["appLock", "biometric"]
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  /users/mode:
-    put:
-      summary: "切換用戶模式"
-      description: |
-        允許用戶手動切換使用模式，無需重新評估。
-
-        **業務邏輯**: 切換後即時生效，影響後續 API 回應格式
-        **使用場景**: 用戶體驗不同模式、臨時需求變更
-      tags:
-        - "模式管理"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                newMode:
-                  type: string
-                  enum: [Expert, Inertial, Cultivation, Guiding]
-                  example: "Cultivation"
-                reason:
-                  type: string
-                  example: "想要嘗試習慣養成功能"
-              required:
-                - newMode
-      responses:
-        '200':
-          description: "模式切換成功"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      previousMode:
-                        type: string
-                        example: "Expert"
-                      currentMode:
-                        type: string
-                        example: "Cultivation"
-                      changedAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      modeDescription:
-                        type: string
-                        example: "養成模式：專注於習慣培養與進度追蹤"
-                      suggestedFeatures:
-                        type: array
-                        items:
-                          type: string
-                        example: ["每日挑戰", "成就系統", "記帳提醒"]
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  /users/mode-defaults:
-    get:
-      summary: "取得模式預設值"
-      description: |
-        取得指定模式的預設配置，用於模式切換時的初始化。
-
-        **使用場景**: 模式切換、新用戶設定、功能重置
-      tags:
-        - "模式管理"
-      parameters:
-        - name: mode
+            default: "createdAt:desc"
+          description: 排序格式 {field}:{asc|desc}
+          example: "email:asc"
+        - name: filter
           in: query
-          description: "要查詢的模式"
+          schema:
+            type: string
+          description: 過濾條件 {field}:{value}
+          example: "status:active"
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: 搜尋關鍵字（姓名或Email）
+          example: "john"
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+                      pagination:
+                        $ref: '#/components/schemas/PaginationResponse'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '400':
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{userId}:
+    get:
+      summary: 取得使用者詳情
+      description: 取得特定使用者的詳細資訊（對應畫面 S-106）
+      operationId: getUser
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
           required: true
           schema:
             type: string
-            enum: [Expert, Inertial, Cultivation, Guiding]
+            format: uuid
+          description: 使用者ID
+          example: "550e8400-e29b-41d4-a716-446655440000"
       responses:
         '200':
-          description: "成功取得模式預設值"
+          description: 查詢成功（四模式差異化回應）
           content:
             application/json:
               schema:
@@ -720,64 +132,34 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: object
-                    properties:
-                      mode:
-                        type: string
-                        example: "Expert"
-                      defaults:
-                        type: object
-                        properties:
-                          ui:
-                            type: object
-                            properties:
-                              showAdvancedOptions:
-                                type: boolean
-                                example: true
-                              compactView:
-                                type: boolean
-                                example: false
-                              chartComplexity:
-                                type: string
-                                enum: [simple, standard, advanced]
-                                example: "advanced"
-                          features:
-                            type: object
-                            properties:
-                              batchOperations:
-                                type: boolean
-                                example: true
-                              customCategories:
-                                type: boolean
-                                example: true
-                              detailedReports:
-                                type: boolean
-                                example: true
-                          notifications:
-                            type: object
-                            properties:
-                              frequency:
-                                type: string
-                                enum: [none, daily, weekly]
-                                example: "weekly"
-                              types:
-                                type: array
-                                items:
-                                  type: string
-                                example: ["budget_alert", "monthly_report"]
-        '400':
-          $ref: '#/components/responses/ValidationError'
+                    oneOf:
+                      - $ref: '#/components/schemas/UserResponseExpert'
+                      - $ref: '#/components/schemas/UserResponseGuiding'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+        '404':
+          description: 使用者不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /users/behavior-tracking:
-    post:
-      summary: "記錄使用行為追蹤"
-      description: |
-        記錄用戶的使用行為，用於個人化推薦與模式優化。
-
-        **隱私考量**: 僅記錄功能使用統計，不記錄具體內容
-        **數據用途**: 改善用戶體驗、功能推薦、模式優化
+    put:
+      summary: 更新使用者資料
+      description: 完整更新使用者資料
+      operationId: updateUser
       tags:
-        - "行為分析"
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: 使用者ID
       requestBody:
         required: true
         content:
@@ -785,36 +167,11 @@ paths:
             schema:
               type: object
               properties:
-                sessionId:
-                  type: string
-                  example: "session-uuid-12345"
-                events:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      type:
-                        type: string
-                        enum: [screen_view, feature_used, action_completed]
-                        example: "feature_used"
-                      name:
-                        type: string
-                        example: "quick_transaction"
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      properties:
-                        type: object
-                        example:
-                          duration: 1200
-                          success: true
-                          mode: "Expert"
-              required:
-                - events
+                data:
+                  $ref: '#/components/schemas/UserUpdateData'
       responses:
         '200':
-          description: "行為記錄成功"
+          description: 更新成功
           content:
             application/json:
               schema:
@@ -824,30 +181,158 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: object
-                    properties:
-                      recorded:
-                        type: integer
-                        example: 5
-                      sessionId:
-                        type: string
-                        example: "session-uuid-12345"
+                    $ref: '#/components/schemas/User'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
-          $ref: '#/components/responses/ValidationError'
+          description: 請求錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /users/mode-recommendations:
+  /users/profile:
     get:
-      summary: "取得模式優化建議"
-      description: |
-        基於用戶使用行為分析，提供模式切換或功能使用建議。
-
-        **AI 分析**: 根據使用模式分析適合度並提供建議
-        **推薦策略**: 個人化推薦、使用效率優化
+      summary: 取得個人資料
+      description: 取得當前使用者的個人資料（對應畫面 S-106）
+      operationId: getUserProfile
       tags:
-        - "個人化推薦"
+        - Users
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: "成功取得個人化建議"
+          description: 個人資料（四模式差異化）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/UserProfileExpert'
+                      - $ref: '#/components/schemas/UserProfileGuiding'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+
+    patch:
+      summary: 更新個人資料
+      description: 部分更新當前使用者的個人資料
+      operationId: updateUserProfile
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    displayName:
+                      type: string
+                      maxLength: 50
+                      description: 顯示名稱
+                      example: "張小明"
+                    avatar:
+                      type: string
+                      format: uri
+                      description: 頭像URL
+                      example: "https://example.com/avatar.jpg"
+                    phone:
+                      type: string
+                      pattern: '^[0-9+\-\s()]+$'
+                      description: 電話號碼
+                      example: "0912345678"
+                    dateOfBirth:
+                      type: string
+                      format: date
+                      description: 生日
+                      example: "1990-01-01"
+                    gender:
+                      type: string
+                      enum: [male, female, other, prefer_not_to_say]
+                      description: 性別
+                      example: "male"
+                    timezone:
+                      type: string
+                      description: 時區
+                      example: "Asia/Taipei"
+                    language:
+                      type: string
+                      description: 語言偏好
+                      example: "zh-TW"
+                    currency:
+                      type: string
+                      description: 預設貨幣
+                      example: "TWD"
+                    userMode:
+                      type: string
+                      enum: [Expert, Inertial, Cultivation, Guiding]
+                      description: 使用者模式
+                      example: "Expert"
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+
+  /users/change-password:
+    post:
+      summary: 變更密碼
+      description: 使用者變更密碼功能
+      operationId: changePassword
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    currentPassword:
+                      type: string
+                      description: 目前密碼
+                      example: "currentPassword123"
+                    newPassword:
+                      type: string
+                      minLength: 8
+                      description: 新密碼
+                      example: "newPassword123"
+                    confirmPassword:
+                      type: string
+                      description: 確認新密碼
+                      example: "newPassword123"
+                  required:
+                    - currentPassword
+                    - newPassword
+                    - confirmPassword
+      responses:
+        '200':
+          description: 密碼變更成功
           content:
             application/json:
               schema:
@@ -859,147 +344,739 @@ paths:
                   data:
                     type: object
                     properties:
-                      currentModeScore:
-                        type: number
-                        example: 8.5
-                        description: "當前模式適合度評分（1-10）"
-                      recommendations:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            type:
-                              type: string
-                              enum: [mode_switch, feature_suggestion, workflow_optimization]
-                              example: "feature_suggestion"
-                            title:
-                              type: string
-                              example: "嘗試使用預算管理功能"
-                            description:
-                              type: string
-                              example: "根據您的記帳習慣，建議設定月度預算來更好控制支出"
-                            priority:
-                              type: string
-                              enum: [low, medium, high]
-                              example: "medium"
-                            action:
-                              type: object
-                              properties:
-                                type:
-                                  type: string
-                                  example: "navigate"
-                                target:
-                                  type: string
-                                  example: "/budgets/create"
-                      analysisDate:
+                      message:
+                        type: string
+                        example: "密碼已成功變更"
+                      passwordChangedAt:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
 
+  /users/assessment:
+    get:
+      summary: 取得模式評估結果
+      description: 取得使用者的四模式評估結果（對應畫面 S-101, S-102）
+      operationId: getUserAssessment
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 評估結果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      assessmentId:
+                        type: string
+                        format: uuid
+                        example: "550e8400-e29b-41d4-a716-446655440001"
+                      recommendedMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                      currentMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                      scores:
+                        type: object
+                        properties:
+                          Expert:
+                            type: number
+                            example: 85
+                          Inertial:
+                            type: number
+                            example: 45
+                          Cultivation:
+                            type: number
+                            example: 60
+                          Guiding:
+                            type: number
+                            example: 30
+                      completedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-20T10:00:00Z"
+                      isValid:
+                        type: boolean
+                        example: true
 
+    post:
+      summary: 提交模式評估
+      description: 提交四模式評估問卷結果
+      operationId: submitAssessment
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    answers:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          questionId:
+                            type: string
+                            example: "Q001"
+                          answer:
+                            type: integer
+                            minimum: 1
+                            maximum: 5
+                            example: 4
+                      description: 問卷答案陣列
+                      example: 
+                        - questionId: "Q001"
+                          answer: 4
+                        - questionId: "Q002"
+                          answer: 3
+                  required:
+                    - answers
+      responses:
+        '201':
+          description: 評估提交成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      assessmentId:
+                        type: string
+                        format: uuid
+                        example: "550e8400-e29b-41d4-a716-446655440001"
+                      recommendedMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                      analysis:
+                        type: object
+                        properties:
+                          strengths:
+                            type: array
+                            items:
+                              type: string
+                            example: ["專業分析能力", "數據敏感度"]
+                          recommendations:
+                            type: array
+                            items:
+                              type: string
+                            example: ["建議使用專家模式", "可考慮進階功能"]
+
+  /users/preferences:
+    get:
+      summary: 取得使用者偏好設定
+      description: 取得使用者的系統偏好設定
+      operationId: getUserPreferences
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 偏好設定
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UserPreferences'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+
+    patch:
+      summary: 更新使用者偏好設定
+      description: 部分更新使用者的系統偏好設定
+      operationId: updateUserPreferences
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '#/components/schemas/UserPreferencesUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UserPreferences'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+
+  /users/statistics:
+    get:
+      summary: 取得使用者統計資料
+      description: 取得使用者的使用統計和成就資料
+      operationId: getUserStatistics
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 統計資料（四模式差異化）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/UserStatisticsExpert'
+                      - $ref: '#/components/schemas/UserStatisticsGuiding'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
+
+  /users/delete-account:
+    post:
+      summary: 申請刪除帳戶
+      description: 使用者申請刪除帳戶（需要額外驗證）
+      operationId: requestAccountDeletion
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    reason:
+                      type: string
+                      description: 刪除原因
+                      example: "不再使用"
+                    password:
+                      type: string
+                      description: 確認密碼
+                      example: "userPassword123"
+                    confirmDeletion:
+                      type: boolean
+                      description: 確認刪除
+                      example: true
+                  required:
+                    - reason
+                    - password
+                    - confirmDeletion
+      responses:
+        '202':
+          description: 刪除申請已受理
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      requestId:
+                        type: string
+                        format: uuid
+                        example: "550e8400-e29b-41d4-a716-446655440002"
+                      scheduledDeletionAt:
+                        type: string
+                        format: date-time
+                        example: "2025-02-26T12:00:00Z"
+                      cancellationDeadline:
+                        type: string
+                        format: date-time
+                        example: "2025-02-25T12:00:00Z"
 
 components:
   securitySchemes:
-    BearerAuth:
+    bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: "Firebase Auth JWT Token"
 
-  responses:
-    UnauthorizedError:
-      description: "未授權存取"
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: 使用者唯一識別符
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        email:
+          type: string
+          format: email
+          description: 電子郵件
+          example: "user@example.com"
+        displayName:
+          type: string
+          description: 顯示名稱
+          example: "張小明"
+        avatar:
+          type: string
+          format: uri
+          description: 頭像URL
+          example: "https://example.com/avatar.jpg"
+        phone:
+          type: string
+          description: 電話號碼
+          example: "0912345678"
+        dateOfBirth:
+          type: string
+          format: date
+          description: 生日
+          example: "1990-01-01"
+        gender:
+          type: string
+          enum: [male, female, other, prefer_not_to_say]
+          description: 性別
+          example: "male"
+        userMode:
+          type: string
+          enum: [Expert, Inertial, Cultivation, Guiding]
+          description: 使用者模式
+          example: "Expert"
+        status:
+          type: string
+          enum: [active, inactive, suspended, pending_deletion]
+          description: 帳戶狀態
+          example: "active"
+        emailVerified:
+          type: boolean
+          description: 電子郵件已驗證
+          example: true
+        hasCompletedAssessment:
+          type: boolean
+          description: 是否已完成模式評估
+          example: true
+        timezone:
+          type: string
+          description: 時區
+          example: "Asia/Taipei"
+        language:
+          type: string
+          description: 語言偏好
+          example: "zh-TW"
+        currency:
+          type: string
+          description: 預設貨幣
+          example: "TWD"
+        createdAt:
+          type: string
+          format: date-time
+          description: 建立時間
+          example: "2025-01-01T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新時間
+          example: "2025-01-27T12:00:00Z"
+        lastLoginAt:
+          type: string
+          format: date-time
+          description: 最後登入時間
+          example: "2025-01-27T11:30:00Z"
+
+    UserUpdateData:
+      type: object
+      properties:
+        displayName:
+          type: string
+          maxLength: 50
+        avatar:
+          type: string
+          format: uri
+        phone:
+          type: string
+          pattern: '^[0-9+\-\s()]+$'
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [male, female, other, prefer_not_to_say]
+        timezone:
+          type: string
+        language:
+          type: string
+        currency:
+          type: string
+        userMode:
+          type: string
+          enum: [Expert, Inertial, Cultivation, Guiding]
+
+    UserResponseExpert:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            statistics:
+              type: object
+              properties:
+                totalTransactions:
+                  type: integer
+                  example: 1250
+                totalLedgers:
+                  type: integer
+                  example: 5
+                avgDailyTransactions:
+                  type: number
+                  example: 4.2
+            achievements:
+              type: array
+              items:
                 type: object
                 properties:
-                  code:
+                  achievementId:
                     type: string
-                    example: "UNAUTHORIZED"
-                  message:
+                  name:
                     type: string
-                    example: "Token 無效或已過期"
-                  timestamp:
+                  unlockedAt:
                     type: string
                     format: date-time
-                    example: "2025-01-27T12:00:00Z"
+            preferences:
+              $ref: '#/components/schemas/UserPreferences'
 
-    ValidationError:
-      description: "請求參數驗證失敗"
-      content:
-        application/json:
-          schema:
+    UserResponseGuiding:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        userMode:
+          type: string
+          example: "Guiding"
+        simpleStats:
+          type: object
+          properties:
+            accountAge:
+              type: integer
+              example: 30
+            basicMessage:
+              type: string
+              example: "您已使用 LCAS 30 天了！"
+
+    UserProfileExpert:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            detailedStats:
+              type: object
+              properties:
+                loginStreak:
+                  type: integer
+                  example: 15
+                totalSessions:
+                  type: integer
+                  example: 245
+                avgSessionDuration:
+                  type: number
+                  example: 12.5
+            recentActivity:
+              type: array
+              items:
+                type: object
+
+    UserProfileGuiding:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        userMode:
+          type: string
+        encouragement:
+          type: string
+          example: "今天也要加油記帳喔！"
+
+    UserPreferences:
+      type: object
+      properties:
+        notifications:
+          type: object
+          properties:
+            email:
+              type: boolean
+              example: true
+            push:
+              type: boolean
+              example: true
+            dailyReminder:
+              type: boolean
+              example: true
+            weeklyReport:
+              type: boolean
+              example: false
+        privacy:
+          type: object
+          properties:
+            profileVisibility:
+              type: string
+              enum: [public, friends, private]
+              example: "friends"
+            shareStatistics:
+              type: boolean
+              example: false
+        display:
+          type: object
+          properties:
+            theme:
+              type: string
+              enum: [light, dark, auto]
+              example: "auto"
+            dateFormat:
+              type: string
+              example: "YYYY-MM-DD"
+            timeFormat:
+              type: string
+              enum: ["12h", "24h"]
+              example: "24h"
+            numberFormat:
+              type: string
+              example: "1,000.00"
+
+    UserPreferencesUpdate:
+      type: object
+      properties:
+        notifications:
+          type: object
+          properties:
+            email:
+              type: boolean
+            push:
+              type: boolean
+            dailyReminder:
+              type: boolean
+            weeklyReport:
+              type: boolean
+        privacy:
+          type: object
+          properties:
+            profileVisibility:
+              type: string
+              enum: [public, friends, private]
+            shareStatistics:
+              type: boolean
+        display:
+          type: object
+          properties:
+            theme:
+              type: string
+              enum: [light, dark, auto]
+            dateFormat:
+              type: string
+            timeFormat:
+              type: string
+              enum: ["12h", "24h"]
+            numberFormat:
+              type: string
+
+    UserStatisticsExpert:
+      type: object
+      properties:
+        overview:
+          type: object
+          properties:
+            totalTransactions:
+              type: integer
+              example: 1250
+            totalAmount:
+              type: number
+              example: 125000.50
+            avgTransactionAmount:
+              type: number
+              example: 100.00
+            categoriesUsed:
+              type: integer
+              example: 25
+        trends:
+          type: object
+          properties:
+            monthlyGrowth:
+              type: number
+              example: 5.2
+            categoryDistribution:
+              type: array
+              items:
+                type: object
+        achievements:
+          type: array
+          items:
             type: object
             properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: object
-                properties:
-                  code:
-                    type: string
-                    example: "VALIDATION_ERROR"
-                  message:
-                    type: string
-                    example: "請求參數不正確"
-                  field:
-                    type: string
-                    example: "displayName"
-                  details:
-                    type: string
-                    example: "顯示名稱不能超過 50 個字元"
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T12:00:00Z"
-
-    InternalServerError:
-      description: "內部伺服器錯誤"
-      content:
-        application/json:
-          schema:
+              achievementId:
+                type: string
+              name:
+                type: string
+              progress:
+                type: number
+        goals:
+          type: array
+          items:
             type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: object
-                properties:
-                  code:
-                    type: string
-                    example: "INTERNAL_SERVER_ERROR"
-                  message:
-                    type: string
-                    example: "伺服器暫時無法處理請求，請稍後再試"
-                  requestId:
-                    type: string
-                    example: "req-uuid-12345"
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T12:00:00Z"
+
+    UserStatisticsGuiding:
+      type: object
+      properties:
+        simpleStats:
+          type: object
+          properties:
+            daysUsed:
+              type: integer
+              example: 30
+            recordsCreated:
+              type: integer
+              example: 45
+        encouragement:
+          type: string
+          example: "您已經連續記帳 7 天了！"
+
+    PaginationResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: 當前頁碼
+          example: 1
+        limit:
+          type: integer
+          description: 每頁筆數
+          example: 20
+        total:
+          type: integer
+          description: 總筆數
+          example: 156
+        totalPages:
+          type: integer
+          description: 總頁數
+          example: 8
+        hasNext:
+          type: boolean
+          description: 是否有下一頁
+          example: true
+        hasPrev:
+          type: boolean
+          description: 是否有上一頁
+          example: false
+        nextPage:
+          type: integer
+          nullable: true
+          description: 下一頁頁碼
+          example: 2
+        prevPage:
+          type: integer
+          nullable: true
+          description: 上一頁頁碼
+          example: null
+
+    ResponseMetadata:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: 回應時間戳
+          example: "2025-01-27T12:00:00Z"
+        requestId:
+          type: string
+          format: uuid
+          description: 請求唯一識別符
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        userMode:
+          type: string
+          enum: [Expert, Inertial, Cultivation, Guiding]
+          description: 使用者模式
+          example: "Expert"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: 錯誤代碼
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              description: 錯誤訊息
+              example: "使用者名稱已存在"
+            field:
+              type: string
+              description: 錯誤欄位
+              example: "displayName"
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-01-27T12:00:00Z"
+            requestId:
+              type: string
+              format: uuid
+              example: "550e8400-e29b-41d4-a716-446655440001"
+            details:
+              type: object
+              description: 詳細錯誤資訊
 
 tags:
-  - name: "用戶資料管理"
-    description: "用戶個人資料與偏好設定管理"
-  - name: "模式評估"
-    description: "使用者模式評估與推薦"
-  - name: "模式管理"
-    description: "使用者模式切換與配置管理"
-  - name: "安全管理"
-    description: "應用安全與隱私設定"
-  - name: "行為分析"
-    description: "使用行為追蹤與分析"
-  - name: "個人化推薦"
-    description: "基於 AI 分析的個人化建議"
+  - name: Users
+    description: 使用者管理相關 API
