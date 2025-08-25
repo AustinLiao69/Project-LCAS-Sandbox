@@ -761,10 +761,28 @@ components:
             message:
               type: string
               description: 錯誤訊息
-            details:
+            field:
               type: string
-              description: 詳細錯誤資訊
+              description: 錯誤欄位
             timestamp:
               type: string
               format: date-time
               description: 錯誤發生時間
+            requestId:
+              type: string
+              description: 請求 ID
+            details:
+              type: object
+              description: 詳細錯誤資訊
+              properties:
+                validation:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      message:
+                        type: string
+                      value:
+                        type: string
