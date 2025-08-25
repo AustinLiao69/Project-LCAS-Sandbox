@@ -1,5 +1,483 @@
 openapi: 3.0.3
 info:
+  title: LCAS 2.0 - 帳戶管理服務 API 規格
+  description: |
+    **LCAS 2.0 帳戶管理服務 API 規格**
+
+    負責金融帳戶管理、餘額追蹤、帳戶類型設定與轉帳功能的完整 API 規格。
+    支援多種帳戶類型管理，提供四模式差異化體驗。
+
+    **服務範圍**:
+    - 帳戶 CRUD 管理（新增、查詢、更新、刪除帳戶）
+    - 帳戶餘額管理（餘額查詢、餘額更新、歷史記錄）
+    - 帳戶類型管理（現金、銀行、信用卡、電子錢包等）
+    - 帳戶轉帳功能（內部轉帳、轉帳記錄管理）
+
+    **四模式差異化策略**:
+    - **Expert**: 完整帳戶管理功能、詳細餘額分析、進階設定
+    - **Inertial**: 標準帳戶操作、基本餘額顯示、固定設定
+    - **Cultivation**: 引導式帳戶設定、目標導向管理、進度追蹤
+    - **Guiding**: 簡化帳戶界面、智慧預設、最少操作
+
+  version: 1.1.0
+  contact:
+    name: LCAS 開發團隊
+    email: dev@lcas.com.tw
+
+servers:
+  - url: https://api.lcas.com.tw/v1
+    description: 正式環境
+  - url: https://staging-api.lcas.com.tw/v1
+    description: 測試環境
+
+security:
+  - bearerAuth: []
+
+paths:
+  /accounts:
+    get:
+      tags:
+        - Account Management
+      summary: 取得帳戶列表
+      description: |
+        取得用戶的帳戶列表，支援篩選與分頁。
+        四模式差異：
+        - Expert: 顯示所有帳戶詳細資訊、進階篩選選項
+        - Inertial: 標準列表展示、基本篩選功能
+        - Cultivation: 重點帳戶推薦、目標相關帳戶
+        - Guiding: 簡化列表、常用帳戶優先
+      parameters:
+        - name: page
+          in: query
+          description: 頁碼
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: type
+          in: query
+          description: 帳戶類型篩選
+          schema:
+            type: string
+            enum: [cash, bank, credit_card, e_wallet, investment]
+        - name: status
+          in: query
+          description: 帳戶狀態篩選
+          schema:
+            type: string
+            enum: [active, inactive, archived]
+            default: active
+      responses:
+        '200':
+          description: 成功取得帳戶列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Account Management
+      summary: 建立帳戶
+      description: 建立新的金融帳戶
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        '201':
+          description: 帳戶建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+
+  /accounts/{accountId}:
+    get:
+      tags:
+        - Account Management
+      summary: 取得帳戶詳情
+      description: 取得指定帳戶的詳細資訊
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 帳戶ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功取得帳戶詳情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Account Management
+      summary: 更新帳戶
+      description: 更新帳戶資訊
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 帳戶ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAccountRequest'
+      responses:
+        '200':
+          description: 帳戶更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+
+    delete:
+      tags:
+        - Account Management
+      summary: 刪除帳戶
+      description: 刪除指定帳戶（軟刪除）
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 帳戶ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 帳戶刪除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /accounts/{accountId}/balance:
+    get:
+      tags:
+        - Account Management
+      summary: 取得帳戶餘額
+      description: 取得指定帳戶的當前餘額資訊
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 帳戶ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功取得帳戶餘額
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+
+  /accounts/types:
+    get:
+      tags:
+        - Account Management
+      summary: 取得帳戶類型
+      description: 取得支援的帳戶類型列表
+      responses:
+        '200':
+          description: 成功取得帳戶類型
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountTypesResponse'
+
+  /accounts/transfer:
+    post:
+      tags:
+        - Account Management
+      summary: 帳戶轉帳
+      description: 在帳戶間進行資金轉移
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '201':
+          description: 轉帳成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AccountListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            accounts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Account'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    Account:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [cash, bank, credit_card, e_wallet, investment]
+        balance:
+          type: number
+        currency:
+          type: string
+          default: NTD
+        status:
+          type: string
+          enum: [active, inactive, archived]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateAccountRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        type:
+          type: string
+          enum: [cash, bank, credit_card, e_wallet, investment]
+        initialBalance:
+          type: number
+          default: 0
+        currency:
+          type: string
+          default: NTD
+        description:
+          type: string
+          maxLength: 500
+
+    UpdateAccountRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        status:
+          type: string
+          enum: [active, inactive, archived]
+
+    AccountResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Account'
+
+    BalanceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            accountId:
+              type: string
+              format: uuid
+            currentBalance:
+              type: number
+            availableBalance:
+              type: number
+            currency:
+              type: string
+            lastUpdated:
+              type: string
+              format: date-time
+
+    AccountTypesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            types:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+
+    TransferRequest:
+      type: object
+      required:
+        - fromAccountId
+        - toAccountId
+        - amount
+      properties:
+        fromAccountId:
+          type: string
+          format: uuid
+        toAccountId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          minimum: 0.01
+        description:
+          type: string
+          maxLength: 255
+
+    TransferResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            transferId:
+              type: string
+              format: uuid
+            fromAccountId:
+              type: string
+              format: uuid
+            toAccountId:
+              type: string
+              format: uuid
+            amount:
+              type: number
+            status:
+              type: string
+              enum: [completed, pending, failed]
+            transferredAt:
+              type: string
+              format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+  responses:
+    BadRequest:
+      description: 請求參數錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: 未授權存取
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: 資源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+              format: uuid
+
+tags:
+  - name: Account Management
+    description: 帳戶管理相關 API
+info:
   title: 帳戶管理服務 API
   description: |
     帳戶管理服務提供帳戶的新增、查詢、修改和刪除功能。

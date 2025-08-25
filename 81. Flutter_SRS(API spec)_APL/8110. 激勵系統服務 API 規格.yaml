@@ -2,6 +2,672 @@
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 激勵系統服務 API 規格
+  description: |
+    **LCAS 2.0 激勵系統服務 API 規格**
+
+    負責遊戲化激勵機制、成就系統、挑戰任務與排行榜功能的完整 API 規格。
+    提供個人化激勵體驗，增強用戶記帳動機與持續使用意願，特別針對 Cultivation 模式優化。
+
+    **服務範圍**:
+    - 成就系統管理（成就解鎖、進度追蹤、獎勵發放）
+    - 挑戰任務系統（日常挑戰、週期性任務、個人化目標）
+    - 積分與等級系統（經驗值累積、等級升級、排行榜）
+    - 獎勵與徽章系統（虛擬獎勵、實體優惠、分享機制）
+
+    **四模式差異化策略**:
+    - **Expert**: 詳細統計分析、進階成就、複雜挑戰任務
+    - **Inertial**: 簡化激勵顯示、基本成就、標準任務
+    - **Cultivation**: 完整激勵體驗、豐富成就系統、多樣化挑戰
+    - **Guiding**: 最小化激勵、簡單成就、引導式任務
+
+  version: 1.1.0
+  contact:
+    name: LCAS 開發團隊
+    email: dev@lcas.com.tw
+
+servers:
+  - url: https://api.lcas.com.tw/v1
+    description: 正式環境
+  - url: https://staging-api.lcas.com.tw/v1
+    description: 測試環境
+
+security:
+  - bearerAuth: []
+
+paths:
+  /gamification/achievements:
+    get:
+      tags:
+        - Achievements
+      summary: 取得成就系統
+      description: |
+        取得用戶的成就狀態與進度。
+        四模式差異：
+        - Expert: 完整成就統計、詳細分析、進階成就
+        - Inertial: 基本成就顯示、簡化統計
+        - Cultivation: 豐富成就體驗、進度可視化、激勵元素
+        - Guiding: 簡化成就展示、重點提示
+      parameters:
+        - name: category
+          in: query
+          description: 成就分類篩選
+          schema:
+            type: string
+            enum: [recording, budgeting, social, special]
+        - name: status
+          in: query
+          description: 成就狀態篩選
+          schema:
+            type: string
+            enum: [unlocked, locked, in_progress]
+        - name: page
+          in: query
+          description: 頁碼
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: 成功取得成就資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AchievementsResponse'
+
+  /gamification/challenges:
+    get:
+      tags:
+        - Challenges
+      summary: 取得挑戰列表
+      description: |
+        取得可用的挑戰任務列表。
+        四模式差異：
+        - Expert: 複雜挑戰任務、詳細條件、進階獎勵
+        - Inertial: 標準挑戰、基本條件、固定獎勵
+        - Cultivation: 個人化挑戰、豐富獎勵、激勵設計
+        - Guiding: 簡化挑戰、清晰指引、基本獎勵
+      parameters:
+        - name: type
+          in: query
+          description: 挑戰類型篩選
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, special]
+        - name: status
+          in: query
+          description: 挑戰狀態篩選
+          schema:
+            type: string
+            enum: [available, active, completed, expired]
+        - name: difficulty
+          in: query
+          description: 難度等級篩選
+          schema:
+            type: string
+            enum: [easy, normal, hard, expert]
+      responses:
+        '200':
+          description: 成功取得挑戰列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengesResponse'
+
+    post:
+      tags:
+        - Challenges
+      summary: 加入挑戰
+      description: 參加指定的挑戰任務
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinChallengeRequest'
+      responses:
+        '201':
+          description: 成功加入挑戰
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeJoinResponse'
+
+  /gamification/challenges/{challengeId}/progress:
+    get:
+      tags:
+        - Challenges
+      summary: 查詢挑戰進度
+      description: 查詢指定挑戰的進度狀況
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          description: 挑戰ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功取得挑戰進度
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeProgressResponse'
+
+  /gamification/claim-reward:
+    post:
+      tags:
+        - Rewards
+      summary: 領取獎勵
+      description: 領取已達成的成就或挑戰獎勵
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimRewardRequest'
+      responses:
+        '200':
+          description: 獎勵領取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimRewardResponse'
+
+  /gamification/leaderboard:
+    get:
+      tags:
+        - Social
+      summary: 排行榜
+      description: |
+        取得排行榜資訊。
+        四模式差異：
+        - Expert: 詳細排名統計、多維度排行、歷史數據
+        - Inertial: 基本排行榜、簡化顯示
+        - Cultivation: 社交排行榜、好友比較、激勵元素
+        - Guiding: 最小化排行榜、重點排名
+      parameters:
+        - name: type
+          in: query
+          description: 排行榜類型
+          schema:
+            type: string
+            enum: [points, streak, achievements, monthly]
+            default: points
+        - name: scope
+          in: query
+          description: 排行榜範圍
+          schema:
+            type: string
+            enum: [global, friends, region]
+            default: global
+        - name: limit
+          in: query
+          description: 排行榜顯示數量
+          schema:
+            type: integer
+            default: 50
+            minimum: 10
+            maximum: 100
+      responses:
+        '200':
+          description: 成功取得排行榜
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+
+  /gamification/progress:
+    get:
+      tags:
+        - Progress
+      summary: 個人進度總覽
+      description: 取得用戶在激勵系統中的整體進度
+      responses:
+        '200':
+          description: 成功取得進度資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AchievementsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            currentLevel:
+              type: integer
+              example: 5
+            totalPoints:
+              type: integer
+              example: 1250
+            nextLevelPoints:
+              type: integer
+              example: 1500
+            achievements:
+              type: array
+              items:
+                $ref: '#/components/schemas/Achievement'
+            recentUnlocks:
+              type: array
+              items:
+                $ref: '#/components/schemas/Achievement'
+            statistics:
+              type: object
+              properties:
+                totalAchievements:
+                  type: integer
+                unlockedAchievements:
+                  type: integer
+                completionRate:
+                  type: number
+
+    Achievement:
+      type: object
+      properties:
+        achievementId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [recording, budgeting, social, special]
+        icon:
+          type: string
+        rarity:
+          type: string
+          enum: [common, rare, epic, legendary]
+        points:
+          type: integer
+        requirements:
+          type: object
+          properties:
+            type:
+              type: string
+            target:
+              type: integer
+            current:
+              type: integer
+        status:
+          type: string
+          enum: [locked, in_progress, unlocked]
+        unlockedAt:
+          type: string
+          format: date-time
+          nullable: true
+        progress:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    ChallengesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            dailyChallenges:
+              type: array
+              items:
+                $ref: '#/components/schemas/Challenge'
+            weeklyChallenges:
+              type: array
+              items:
+                $ref: '#/components/schemas/Challenge'
+            specialChallenges:
+              type: array
+              items:
+                $ref: '#/components/schemas/Challenge'
+            activeChallenges:
+              type: array
+              items:
+                $ref: '#/components/schemas/Challenge'
+
+    Challenge:
+      type: object
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [daily, weekly, monthly, special]
+        difficulty:
+          type: string
+          enum: [easy, normal, hard, expert]
+        requirements:
+          type: object
+          properties:
+            type:
+              type: string
+            target:
+              type: integer
+            timeLimit:
+              type: integer
+              description: 時間限制（小時）
+        rewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reward'
+        status:
+          type: string
+          enum: [available, active, completed, expired]
+        progress:
+          type: number
+          minimum: 0
+          maximum: 100
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        participantCount:
+          type: integer
+
+    Reward:
+      type: object
+      properties:
+        rewardId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [points, badge, item, coupon]
+        name:
+          type: string
+        description:
+          type: string
+        value:
+          type: integer
+        icon:
+          type: string
+        rarity:
+          type: string
+          enum: [common, rare, epic, legendary]
+
+    JoinChallengeRequest:
+      type: object
+      required:
+        - challengeId
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+
+    ChallengeJoinResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            challengeId:
+              type: string
+              format: uuid
+            status:
+              type: string
+              example: "active"
+            joinedAt:
+              type: string
+              format: date-time
+            expiresAt:
+              type: string
+              format: date-time
+
+    ChallengeProgressResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            challengeId:
+              type: string
+              format: uuid
+            title:
+              type: string
+            progress:
+              type: number
+              minimum: 0
+              maximum: 100
+            currentValue:
+              type: integer
+            targetValue:
+              type: integer
+            status:
+              type: string
+              enum: [active, completed, expired]
+            timeRemaining:
+              type: integer
+              description: 剩餘時間（小時）
+            milestones:
+              type: array
+              items:
+                type: object
+                properties:
+                  threshold:
+                    type: integer
+                  reward:
+                    $ref: '#/components/schemas/Reward'
+                  achieved:
+                    type: boolean
+
+    ClaimRewardRequest:
+      type: object
+      required:
+        - rewardId
+        - source
+      properties:
+        rewardId:
+          type: string
+          format: uuid
+        source:
+          type: string
+          enum: [achievement, challenge, daily_login, special_event]
+        sourceId:
+          type: string
+          format: uuid
+
+    ClaimRewardResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            reward:
+              $ref: '#/components/schemas/Reward'
+            claimedAt:
+              type: string
+              format: date-time
+            newTotalPoints:
+              type: integer
+            levelUp:
+              type: boolean
+            newLevel:
+              type: integer
+              nullable: true
+
+    LeaderboardResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            leaderboard:
+              type: array
+              items:
+                $ref: '#/components/schemas/LeaderboardEntry'
+            userRank:
+              type: object
+              properties:
+                rank:
+                  type: integer
+                points:
+                  type: integer
+                isInTopList:
+                  type: boolean
+            statistics:
+              type: object
+              properties:
+                totalParticipants:
+                  type: integer
+                averageScore:
+                  type: number
+                topScore:
+                  type: integer
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        avatar:
+          type: string
+        points:
+          type: integer
+        level:
+          type: integer
+        badges:
+          type: array
+          items:
+            type: string
+
+    ProgressResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            overview:
+              type: object
+              properties:
+                currentLevel:
+                  type: integer
+                totalPoints:
+                  type: integer
+                streak:
+                  type: integer
+                  description: 連續記帳天數
+                rank:
+                  type: integer
+            achievements:
+              type: object
+              properties:
+                total:
+                  type: integer
+                unlocked:
+                  type: integer
+                inProgress:
+                  type: integer
+                completionRate:
+                  type: number
+            challenges:
+              type: object
+              properties:
+                active:
+                  type: integer
+                completed:
+                  type: integer
+                successRate:
+                  type: number
+            recentActivity:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [achievement_unlock, challenge_complete, level_up, reward_claim]
+                  title:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+              format: uuid
+
+tags:
+  - name: Achievements
+    description: 成就系統相關 API
+  - name: Challenges
+    description: 挑戰任務相關 API
+  - name: Rewards
+    description: 獎勵系統相關 API
+  - name: Social
+    description: 社交功能相關 API
+  - name: Progress
+    description: 進度追蹤相關 API
+info:
+  title: LCAS 2.0 - 激勵系統服務 API 規格
   version: 1.0.0
   description: |
     **LCAS 2.0 激勵系統服務 API 規格**

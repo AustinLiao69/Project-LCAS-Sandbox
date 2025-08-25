@@ -1,6 +1,819 @@
 
 openapi: 3.0.3
 info:
+  title: LCAS 2.0 - 通知管理服務 API 規格
+  description: |
+    **LCAS 2.0 通知管理服務 API 規格**
+
+    負責系統通知、推播訊息、記帳提醒與個人化通知管理的完整 API 規格。
+    支援多通道通知傳送，提供彈性的通知規則設定與四模式差異化體驗。
+
+    **服務範圍**:
+    - 通知設定管理（偏好設定、通知規則、頻率控制）
+    - 記帳提醒服務（定時提醒、智慧提醒、情境提醒）
+    - 推播通知管理（系統通知、個人通知、活動通知）
+    - 通知歷史管理（查看歷史、狀態追蹤、統計分析）
+
+    **四模式差異化策略**:
+    - **Expert**: 完整通知控制、進階規則設定、詳細統計
+    - **Inertial**: 標準通知設定、基本規則、簡化管理
+    - **Cultivation**: 激勵式通知、目標提醒、成就通知
+    - **Guiding**: 簡化通知、智慧預設、最少干擾
+
+  version: 1.1.0
+  contact:
+    name: LCAS 開發團隊
+    email: dev@lcas.com.tw
+
+servers:
+  - url: https://api.lcas.com.tw/v1
+    description: 正式環境
+  - url: https://staging-api.lcas.com.tw/v1
+    description: 測試環境
+
+security:
+  - bearerAuth: []
+
+paths:
+  /notifications/settings:
+    get:
+      tags:
+        - Notification Settings
+      summary: 取得通知設定
+      description: |
+        取得用戶的通知偏好設定。
+        四模式差異：
+        - Expert: 完整通知控制選項、進階規則設定、詳細分類
+        - Inertial: 標準通知設定、基本開關、簡化選項
+        - Cultivation: 目標導向通知、激勵設定、成就提醒
+        - Guiding: 簡化設定界面、智慧預設、最少選項
+      responses:
+        '200':
+          description: 成功取得通知設定
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettingsResponse'
+
+    put:
+      tags:
+        - Notification Settings
+      summary: 更新通知設定
+      description: |
+        更新用戶的通知偏好設定。
+        支援批次更新與部分更新。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotificationSettingsRequest'
+      responses:
+        '200':
+          description: 通知設定更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettingsResponse'
+
+  /notifications/list:
+    get:
+      tags:
+        - Notification History
+      summary: 通知列表
+      description: |
+        取得用戶的通知歷史列表。
+        四模式差異：
+        - Expert: 完整通知詳情、進階篩選、統計資訊
+        - Inertial: 標準通知列表、基本篩選、簡化顯示
+        - Cultivation: 重點通知展示、成就通知、激勵元素
+        - Guiding: 簡化通知列表、重要通知優先、清晰分類
+      parameters:
+        - name: page
+          in: query
+          description: 頁碼
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: status
+          in: query
+          description: 通知狀態篩選
+          schema:
+            type: string
+            enum: [unread, read, archived]
+        - name: type
+          in: query
+          description: 通知類型篩選
+          schema:
+            type: string
+            enum: [system, reminder, achievement, alert, social]
+        - name: priority
+          in: query
+          description: 優先級篩選
+          schema:
+            type: string
+            enum: [low, normal, high, urgent]
+      responses:
+        '200':
+          description: 成功取得通知列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+
+  /notifications/{notificationId}/read:
+    put:
+      tags:
+        - Notification History
+      summary: 標記已讀
+      description: 將指定通知標記為已讀
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          description: 通知ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功標記已讀
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /notifications/reminders:
+    get:
+      tags:
+        - Reminders
+      summary: 取得提醒規則
+      description: |
+        取得用戶設定的記帳提醒規則。
+        四模式差異：
+        - Expert: 複雜提醒規則、多條件設定、詳細控制
+        - Inertial: 標準提醒設定、基本規則、固定選項
+        - Cultivation: 目標導向提醒、激勵式提醒、進度相關
+        - Guiding: 簡化提醒設定、智慧建議、最少配置
+      responses:
+        '200':
+          description: 成功取得提醒規則
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemindersResponse'
+
+    post:
+      tags:
+        - Reminders
+      summary: 建立記帳提醒
+      description: 建立新的記帳提醒規則
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReminderRequest'
+      responses:
+        '201':
+          description: 提醒規則建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderResponse'
+
+  /notifications/reminders/{reminderId}:
+    put:
+      tags:
+        - Reminders
+      summary: 更新提醒規則
+      description: 更新指定的記帳提醒規則
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          description: 提醒規則ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReminderRequest'
+      responses:
+        '200':
+          description: 提醒規則更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderResponse'
+
+    delete:
+      tags:
+        - Reminders
+      summary: 刪除提醒
+      description: 刪除指定的記帳提醒規則
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          description: 提醒規則ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 提醒規則刪除成功
+
+  /notifications/reminder-templates:
+    get:
+      tags:
+        - Reminders
+      summary: 取得提醒模板
+      description: |
+        取得預設的提醒模板列表。
+        四模式差異：
+        - Expert: 所有模板類型、詳細設定、自訂選項
+        - Inertial: 常用模板、標準設定、基本選項
+        - Cultivation: 激勵式模板、目標導向、成就相關
+        - Guiding: 簡化模板、智慧推薦、最少選擇
+      responses:
+        '200':
+          description: 成功取得提醒模板
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderTemplatesResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    NotificationSettingsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            general:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  description: 總開關
+                doNotDisturb:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    startTime:
+                      type: string
+                      format: time
+                      example: "22:00"
+                    endTime:
+                      type: string
+                      format: time
+                      example: "07:00"
+            channels:
+              type: object
+              properties:
+                push:
+                  type: boolean
+                  description: 推播通知
+                email:
+                  type: boolean
+                  description: 電子郵件通知
+                line:
+                  type: boolean
+                  description: LINE 通知
+                inApp:
+                  type: boolean
+                  description: App 內通知
+            categories:
+              type: object
+              properties:
+                reminders:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    frequency:
+                      type: string
+                      enum: [low, normal, high]
+                system:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    priority:
+                      type: string
+                      enum: [normal, high, urgent]
+                achievements:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    celebrationMode:
+                      type: boolean
+                budgetAlerts:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    thresholds:
+                      type: array
+                      items:
+                        type: integer
+                social:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    friendActivity:
+                      type: boolean
+                    leaderboard:
+                      type: boolean
+
+    UpdateNotificationSettingsRequest:
+      type: object
+      properties:
+        general:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            doNotDisturb:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                startTime:
+                  type: string
+                  format: time
+                endTime:
+                  type: string
+                  format: time
+        channels:
+          type: object
+          properties:
+            push:
+              type: boolean
+            email:
+              type: boolean
+            line:
+              type: boolean
+            inApp:
+              type: boolean
+        categories:
+          type: object
+          properties:
+            reminders:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                frequency:
+                  type: string
+                  enum: [low, normal, high]
+            system:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                priority:
+                  type: string
+                  enum: [normal, high, urgent]
+            achievements:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                celebrationMode:
+                  type: boolean
+            budgetAlerts:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                thresholds:
+                  type: array
+                  items:
+                    type: integer
+            social:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                friendActivity:
+                  type: boolean
+                leaderboard:
+                  type: boolean
+
+    NotificationListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            notifications:
+              type: array
+              items:
+                $ref: '#/components/schemas/Notification'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+            summary:
+              type: object
+              properties:
+                totalCount:
+                  type: integer
+                unreadCount:
+                  type: integer
+                todayCount:
+                  type: integer
+
+    Notification:
+      type: object
+      properties:
+        notificationId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [system, reminder, achievement, alert, social, promotion]
+        title:
+          type: string
+        message:
+          type: string
+        priority:
+          type: string
+          enum: [low, normal, high, urgent]
+        status:
+          type: string
+          enum: [unread, read, archived]
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [push, email, line, inApp]
+        data:
+          type: object
+          description: 通知附加資料
+          properties:
+            actionUrl:
+              type: string
+            imageUrl:
+              type: string
+            category:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    RemindersResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            reminders:
+              type: array
+              items:
+                $ref: '#/components/schemas/Reminder'
+            activeCount:
+              type: integer
+            nextReminder:
+              type: object
+              nullable: true
+              properties:
+                reminderId:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                scheduledTime:
+                  type: string
+                  format: date-time
+
+    Reminder:
+      type: object
+      properties:
+        reminderId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [daily, weekly, monthly, custom, smart]
+        schedule:
+          type: object
+          properties:
+            frequency:
+              type: string
+              enum: [daily, weekly, monthly, custom]
+            time:
+              type: string
+              format: time
+            daysOfWeek:
+              type: array
+              items:
+                type: integer
+                minimum: 0
+                maximum: 6
+            dayOfMonth:
+              type: integer
+              minimum: 1
+              maximum: 31
+            customPattern:
+              type: string
+              description: 自訂重複模式
+        conditions:
+          type: object
+          properties:
+            onlyWhenNoActivity:
+              type: boolean
+              description: 僅在無記帳活動時提醒
+            budgetThreshold:
+              type: number
+              description: 預算閾值提醒
+            locationBased:
+              type: boolean
+              description: 位置相關提醒
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [push, email, line]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastTriggered:
+          type: string
+          format: date-time
+          nullable: true
+        nextTrigger:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateReminderRequest:
+      type: object
+      required:
+        - title
+        - type
+        - schedule
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          description: 提醒標題
+        message:
+          type: string
+          maxLength: 500
+          description: 提醒訊息
+        type:
+          type: string
+          enum: [daily, weekly, monthly, custom, smart]
+          description: 提醒類型
+        schedule:
+          type: object
+          required:
+            - frequency
+          properties:
+            frequency:
+              type: string
+              enum: [daily, weekly, monthly, custom]
+            time:
+              type: string
+              format: time
+            daysOfWeek:
+              type: array
+              items:
+                type: integer
+                minimum: 0
+                maximum: 6
+            dayOfMonth:
+              type: integer
+              minimum: 1
+              maximum: 31
+            customPattern:
+              type: string
+        conditions:
+          type: object
+          properties:
+            onlyWhenNoActivity:
+              type: boolean
+              default: false
+            budgetThreshold:
+              type: number
+            locationBased:
+              type: boolean
+              default: false
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [push, email, line]
+          default: ["push"]
+
+    UpdateReminderRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        message:
+          type: string
+          maxLength: 500
+        schedule:
+          type: object
+          properties:
+            frequency:
+              type: string
+              enum: [daily, weekly, monthly, custom]
+            time:
+              type: string
+              format: time
+            daysOfWeek:
+              type: array
+              items:
+                type: integer
+                minimum: 0
+                maximum: 6
+            dayOfMonth:
+              type: integer
+              minimum: 1
+              maximum: 31
+            customPattern:
+              type: string
+        conditions:
+          type: object
+          properties:
+            onlyWhenNoActivity:
+              type: boolean
+            budgetThreshold:
+              type: number
+            locationBased:
+              type: boolean
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [push, email, line]
+        isActive:
+          type: boolean
+
+    ReminderResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Reminder'
+
+    ReminderTemplatesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            templates:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReminderTemplate'
+
+    ReminderTemplate:
+      type: object
+      properties:
+        templateId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [daily, weekly, goal_based, smart]
+        template:
+          type: object
+          properties:
+            title:
+              type: string
+            message:
+              type: string
+            type:
+              type: string
+            schedule:
+              type: object
+            conditions:
+              type: object
+        usageCount:
+          type: integer
+          description: 使用次數
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+          description: 評分
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation completed successfully"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+              format: uuid
+
+tags:
+  - name: Notification Settings
+    description: 通知設定相關 API
+  - name: Notification History
+    description: 通知歷史相關 API
+  - name: Reminders
+    description: 記帳提醒相關 API
+info:
   title: LCAS 2.0 通知管理服務 API
   version: 1.0.0
   description: |

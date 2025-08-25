@@ -1,5 +1,425 @@
 openapi: 3.0.3
 info:
+  title: LCAS 2.0 - 科目管理服務 API 規格
+  description: |
+    **LCAS 2.0 科目管理服務 API 規格**
+
+    負責記帳科目分類管理、階層結構設定與智慧分類功能的完整 API 規格。
+    支援自訂科目建立、樹狀結構管理與四模式差異化體驗。
+
+    **服務範圍**:
+    - 科目 CRUD 管理（新增、查詢、更新、刪除科目）
+    - 科目階層管理（父子關係、樹狀結構、層級控制）
+    - 智慧科目建議（AI 推薦、使用頻率分析）
+    - 科目統計分析（使用次數、金額統計、趨勢分析）
+
+    **四模式差異化策略**:
+    - **Expert**: 完整科目管理、自訂階層、進階統計分析
+    - **Inertial**: 標準科目操作、預設分類、基本統計
+    - **Cultivation**: 引導式科目設定、目標分類、使用建議
+    - **Guiding**: 簡化科目選擇、智慧預設、最少選項
+
+  version: 1.1.0
+  contact:
+    name: LCAS 開發團隊
+    email: dev@lcas.com.tw
+
+servers:
+  - url: https://api.lcas.com.tw/v1
+    description: 正式環境
+  - url: https://staging-api.lcas.com.tw/v1
+    description: 測試環境
+
+security:
+  - bearerAuth: []
+
+paths:
+  /categories:
+    get:
+      tags:
+        - Category Management
+      summary: 取得科目列表
+      description: |
+        取得科目分類列表，支援階層查詢與篩選。
+        四模式差異：
+        - Expert: 完整階層結構、詳細統計資訊、自訂篩選
+        - Inertial: 標準分類列表、基本資訊、固定篩選
+        - Cultivation: 常用分類優先、使用建議、目標相關
+        - Guiding: 簡化分類、智慧推薦、最少選項
+      parameters:
+        - name: page
+          in: query
+          description: 頁碼
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 200
+        - name: type
+          in: query
+          description: 科目類型篩選
+          schema:
+            type: string
+            enum: [income, expense, both]
+            default: both
+        - name: parentId
+          in: query
+          description: 父科目ID（查詢子科目）
+          schema:
+            type: string
+            format: uuid
+        - name: level
+          in: query
+          description: 階層等級篩選
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+        - name: includeInactive
+          in: query
+          description: 是否包含停用科目
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 成功取得科目列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+
+    post:
+      tags:
+        - Category Management
+      summary: 建立科目
+      description: 建立新的科目分類
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: 科目建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+
+  /categories/{categoryId}:
+    get:
+      tags:
+        - Category Management
+      summary: 取得科目詳情
+      description: 取得指定科目的詳細資訊
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          description: 科目ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功取得科目詳情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+
+    put:
+      tags:
+        - Category Management
+      summary: 更新科目
+      description: 更新科目資訊
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          description: 科目ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          description: 科目更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+
+    delete:
+      tags:
+        - Category Management
+      summary: 刪除科目
+      description: 刪除指定科目（需確認無使用記錄）
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          description: 科目ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 科目刪除成功
+        '409':
+          description: 科目仍有使用記錄，無法刪除
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /categories/tree:
+    get:
+      tags:
+        - Category Management
+      summary: 取得科目樹狀結構
+      description: 取得完整的科目階層樹狀結構
+      parameters:
+        - name: type
+          in: query
+          description: 科目類型篩選
+          schema:
+            type: string
+            enum: [income, expense, both]
+            default: both
+        - name: maxDepth
+          in: query
+          description: 最大階層深度
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+            default: 3
+      responses:
+        '200':
+          description: 成功取得科目樹狀結構
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryTreeResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CategoryListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            categories:
+              type: array
+              items:
+                $ref: '#/components/schemas/Category'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    Category:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [income, expense]
+        parentId:
+          type: string
+          format: uuid
+          nullable: true
+        level:
+          type: integer
+          minimum: 1
+        path:
+          type: string
+          description: 完整路徑（如：食物 > 外食 > 中式餐廳）
+        icon:
+          type: string
+          description: 科目圖示
+        color:
+          type: string
+          description: 科目顏色代碼
+        isActive:
+          type: boolean
+          default: true
+        isSystem:
+          type: boolean
+          description: 是否為系統預設科目
+        statistics:
+          type: object
+          properties:
+            usageCount:
+              type: integer
+              description: 使用次數
+            totalAmount:
+              type: number
+              description: 總金額
+            lastUsed:
+              type: string
+              format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateCategoryRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        type:
+          type: string
+          enum: [income, expense]
+        parentId:
+          type: string
+          format: uuid
+          nullable: true
+        icon:
+          type: string
+        color:
+          type: string
+        description:
+          type: string
+          maxLength: 200
+
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        parentId:
+          type: string
+          format: uuid
+          nullable: true
+        icon:
+          type: string
+        color:
+          type: string
+        description:
+          type: string
+          maxLength: 200
+        isActive:
+          type: boolean
+
+    CategoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Category'
+
+    CategoryTreeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            tree:
+              $ref: '#/components/schemas/CategoryNode'
+
+    CategoryNode:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [income, expense]
+        level:
+          type: integer
+        icon:
+          type: string
+        color:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryNode'
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+              format: uuid
+
+tags:
+  - name: Category Management
+    description: 科目管理相關 API
+info:
   title: 科目管理服務 API
   description: |
     科目管理服務提供會計科目的新增、查詢、修改和刪除功能。

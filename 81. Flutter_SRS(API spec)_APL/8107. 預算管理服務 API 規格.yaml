@@ -2,6 +2,556 @@
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 預算管理服務 API 規格
+  description: |
+    **LCAS 2.0 預算管理服務 API 規格**
+
+    負責預算設定、執行追蹤、警示通知與分析報告的完整 API 規格。
+    支援多維度預算管理，提供智慧預算建議與四模式差異化體驗。
+
+    **服務範圍**:
+    - 預算 CRUD 管理（建立、查詢、更新、刪除預算）
+    - 預算執行追蹤（進度監控、超支警示、達成分析）
+    - 預算模板管理（預設模板、自訂模板、智慧建議）
+    - 預算分析報告（執行報告、趨勢分析、改善建議）
+
+    **四模式差異化策略**:
+    - **Expert**: 複雜預算規則、詳細分析報告、進階警示設定
+    - **Inertial**: 標準預算管理、基本追蹤、固定警示
+    - **Cultivation**: 目標導向預算、進度激勵、成就系統
+    - **Guiding**: 簡化預算設定、智慧建議、自動管理
+
+  version: 1.1.0
+  contact:
+    name: LCAS 開發團隊
+    email: dev@lcas.com.tw
+
+servers:
+  - url: https://api.lcas.com.tw/v1
+    description: 正式環境
+  - url: https://staging-api.lcas.com.tw/v1
+    description: 測試環境
+
+security:
+  - bearerAuth: []
+
+paths:
+  /budgets:
+    get:
+      tags:
+        - Budget Management
+      summary: 取得預算列表
+      description: |
+        取得用戶的預算列表，支援篩選與分頁。
+        四模式差異：
+        - Expert: 完整預算詳情、進階篩選、複雜統計
+        - Inertial: 標準預算列表、基本篩選、簡化統計
+        - Cultivation: 目標導向預算、進度展示、激勵元素
+        - Guiding: 簡化預算列表、智慧排序、重點提示
+      parameters:
+        - name: page
+          in: query
+          description: 頁碼
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: 每頁筆數
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: status
+          in: query
+          description: 預算狀態篩選
+          schema:
+            type: string
+            enum: [active, inactive, completed, exceeded]
+        - name: period
+          in: query
+          description: 預算期間篩選
+          schema:
+            type: string
+            enum: [monthly, quarterly, yearly, custom]
+        - name: category
+          in: query
+          description: 科目篩選
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功取得預算列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetListResponse'
+
+    post:
+      tags:
+        - Budget Management
+      summary: 建立預算
+      description: 建立新的預算計畫
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBudgetRequest'
+      responses:
+        '201':
+          description: 預算建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetResponse'
+
+  /budgets/{budgetId}:
+    get:
+      tags:
+        - Budget Management
+      summary: 取得預算詳情
+      description: 取得指定預算的詳細資訊
+      parameters:
+        - name: budgetId
+          in: path
+          required: true
+          description: 預算ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功取得預算詳情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetResponse'
+
+    put:
+      tags:
+        - Budget Management
+      summary: 更新預算
+      description: 更新預算設定
+      parameters:
+        - name: budgetId
+          in: path
+          required: true
+          description: 預算ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBudgetRequest'
+      responses:
+        '200':
+          description: 預算更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetResponse'
+
+    delete:
+      tags:
+        - Budget Management
+      summary: 刪除預算
+      description: 刪除指定預算
+      parameters:
+        - name: budgetId
+          in: path
+          required: true
+          description: 預算ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 預算刪除成功
+
+  /budgets/status:
+    get:
+      tags:
+        - Budget Management
+      summary: 取得預算執行狀況
+      description: 取得所有預算的執行狀況摘要
+      parameters:
+        - name: period
+          in: query
+          description: 查詢期間
+          schema:
+            type: string
+            enum: [current, this_month, this_quarter, this_year]
+            default: current
+      responses:
+        '200':
+          description: 成功取得預算狀況
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetStatusResponse'
+
+  /budgets/templates:
+    get:
+      tags:
+        - Budget Management
+      summary: 取得預算模板
+      description: |
+        取得預算模板列表。
+        四模式差異：
+        - Expert: 所有模板類型、詳細模板資訊、自訂選項
+        - Inertial: 常用模板、標準資訊、固定選項
+        - Cultivation: 目標導向模板、推薦模板、激勵設定
+        - Guiding: 基礎模板、簡化選擇、智慧推薦
+      parameters:
+        - name: category
+          in: query
+          description: 模板分類
+          schema:
+            type: string
+            enum: [personal, family, business, student]
+        - name: complexity
+          in: query
+          description: 複雜度等級
+          schema:
+            type: string
+            enum: [simple, moderate, advanced]
+      responses:
+        '200':
+          description: 成功取得模板列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetTemplatesResponse'
+
+  /budgets/alert:
+    post:
+      tags:
+        - Budget Management
+      summary: 預算警示設定
+      description: 設定預算超支或接近上限的警示規則
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetAlertRequest'
+      responses:
+        '201':
+          description: 警示設定成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetAlertResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    BudgetListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            budgets:
+              type: array
+              items:
+                $ref: '#/components/schemas/Budget'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    Budget:
+      type: object
+      properties:
+        budgetId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        amount:
+          type: number
+        period:
+          type: string
+          enum: [monthly, quarterly, yearly, custom]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        categoryId:
+          type: string
+          format: uuid
+        categoryName:
+          type: string
+        spent:
+          type: number
+        remaining:
+          type: number
+        percentage:
+          type: number
+          description: 使用百分比
+        status:
+          type: string
+          enum: [active, inactive, completed, exceeded]
+        alertSettings:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            thresholds:
+              type: array
+              items:
+                type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateBudgetRequest:
+      type: object
+      required:
+        - name
+        - amount
+        - period
+        - categoryId
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        amount:
+          type: number
+          minimum: 0.01
+        period:
+          type: string
+          enum: [monthly, quarterly, yearly, custom]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        categoryId:
+          type: string
+          format: uuid
+        description:
+          type: string
+          maxLength: 500
+        alertSettings:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: true
+            thresholds:
+              type: array
+              items:
+                type: integer
+              example: [50, 80, 100]
+
+    UpdateBudgetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        amount:
+          type: number
+          minimum: 0.01
+        description:
+          type: string
+          maxLength: 500
+        alertSettings:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            thresholds:
+              type: array
+              items:
+                type: integer
+        status:
+          type: string
+          enum: [active, inactive]
+
+    BudgetResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Budget'
+
+    BudgetStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            summary:
+              type: object
+              properties:
+                totalBudgets:
+                  type: integer
+                activeBudgets:
+                  type: integer
+                exceededBudgets:
+                  type: integer
+                totalAllocated:
+                  type: number
+                totalSpent:
+                  type: number
+            budgets:
+              type: array
+              items:
+                $ref: '#/components/schemas/Budget'
+
+    BudgetTemplatesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            templates:
+              type: array
+              items:
+                $ref: '#/components/schemas/BudgetTemplate'
+
+    BudgetTemplate:
+      type: object
+      properties:
+        templateId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        complexity:
+          type: string
+          enum: [simple, moderate, advanced]
+        budgetItems:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryName:
+                type: string
+              suggestedAmount:
+                type: number
+              percentage:
+                type: number
+
+    BudgetAlertRequest:
+      type: object
+      required:
+        - budgetId
+        - alertType
+        - threshold
+      properties:
+        budgetId:
+          type: string
+          format: uuid
+        alertType:
+          type: string
+          enum: [percentage, amount, time_based]
+        threshold:
+          type: number
+        notificationMethod:
+          type: array
+          items:
+            type: string
+            enum: [push, email, line]
+        message:
+          type: string
+
+    BudgetAlertResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            alertId:
+              type: string
+              format: uuid
+            budgetId:
+              type: string
+              format: uuid
+            alertType:
+              type: string
+            threshold:
+              type: number
+            createdAt:
+              type: string
+              format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+              format: uuid
+
+tags:
+  - name: Budget Management
+    description: 預算管理相關 API
+info:
+  title: LCAS 2.0 - 預算管理服務 API 規格
   version: 1.0.0
   description: |
     **LCAS 2.0 預算管理服務 API 規格**
