@@ -1,146 +1,112 @@
-
 openapi: 3.0.3
 info:
-  title: 科目管理服務 API 規格
-  description: LCAS 科目管理服務API規格，提供科目CRUD、樹狀結構管理和分類功能
-  version: 2.0.0
+  title: 科目管理服務 API
+  description: |
+    科目管理服務提供會計科目的新增、查詢、修改和刪除功能。
+    支援階層式科目結構，包括大項科目和子項科目。
+
+    四模式差異化設計：
+    - Expert: 完整科目管理、自訂科目、進階分類功能
+    - Inertial: 基本科目選擇、常用科目快速存取
+    - Cultivation: 科目學習模式、使用頻率追蹤
+    - Guiding: 科目推薦、簡化分類介面
+  version: 1.0.0
   contact:
-    name: LCAS SA Team
-    email: sa@lcas.com
+    name: LCAS 開發團隊
+    email: dev@lcas.com
 
 servers:
-  - url: https://api.lcas.com/v2
-    description: Production server
-  - url: https://staging-api.lcas.com/v2
-    description: Staging server
-
-tags:
-  - name: Subject Management
-    description: 科目管理相關操作
-  - name: Subject Tree
-    description: 科目樹狀結構管理
-  - name: Subject Categories
-    description: 科目分類管理
+  - url: https://api.lcas.com/v1
+    description: 生產環境
+  - url: https://api-staging.lcas.com/v1
+    description: 測試環境
 
 paths:
   /subjects:
     get:
       tags:
-        - Subject Management
-      summary: 取得科目列表
-      description: 取得用戶可存取的科目列表，支援分頁、篩選和樹狀結構
-      operationId: getSubjects
+        - 科目管理
+      summary: 查詢科目清單
+      description: |
+        取得科目清單，支援階層查詢和分頁。
+        四模式差異：
+        - Expert: 顯示完整科目樹狀結構、使用統計
+        - Inertial: 顯示常用科目清單
+        - Cultivation: 顯示學習進度、推薦科目
+        - Guiding: 顯示簡化科目分類、使用指引
       parameters:
-        - name: userId
-          in: query
-          required: true
-          description: 用戶ID
-          schema:
-            type: string
-            example: "Uae47d9d496e4596d70ed724a7d6e2948"
         - name: ledgerId
           in: query
-          description: 帳本ID篩選
+          required: true
           schema:
             type: string
-            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
-        - name: userMode
-          in: query
-          description: 用戶模式（影響回應內容）
-          schema:
-            type: string
-            enum: [Expert, Inertial, Cultivation, Guiding]
-            default: Expert
-            example: "Expert"
-        - name: type
-          in: query
-          description: 科目類型篩選
-          schema:
-            type: string
-            enum: [income, expense, asset, liability, equity]
-            example: "expense"
-        - name: category
-          in: query
-          description: 科目分類篩選
-          schema:
-            type: string
-            example: "食物"
-        - name: level
-          in: query
-          description: 階層等級篩選
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 5
-            example: 1
-        - name: parentId
-          in: query
-          description: 父科目ID篩選
-          schema:
-            type: string
-            example: "subject_food"
-        - name: status
-          in: query
-          description: 科目狀態篩選
-          schema:
-            type: string
-            enum: [active, inactive, archived]
-            default: active
-            example: "active"
-        - name: keyword
-          in: query
-          description: 關鍵字搜尋（科目名稱、代碼）
-          schema:
-            type: string
-            example: "餐費"
-        - name: includeTree
-          in: query
-          description: 是否返回樹狀結構
-          schema:
-            type: boolean
-            default: false
-            example: true
-        - name: includeUsage
-          in: query
-          description: 是否包含使用統計
-          schema:
-            type: boolean
-            default: false
-            example: true
+          description: 帳本ID
         - name: page
           in: query
-          description: 頁碼
           schema:
             type: integer
             minimum: 1
             default: 1
-            example: 1
+          description: 頁碼
         - name: limit
           in: query
-          description: 每頁筆數
           schema:
             type: integer
             minimum: 1
-            maximum: 200
+            maximum: 100
             default: 50
-            example: 50
+          description: 每頁筆數
         - name: sort
           in: query
-          description: 排序方式
           schema:
             type: string
-            enum: [code_asc, code_desc, name_asc, name_desc, usage_desc, createdAt_desc]
-            default: code_asc
-            example: "code_asc"
-        - name: filter
+            enum: [code, name, usageCount, createdAt]
+            default: code
+          description: 排序欄位
+        - name: order
           in: query
-          description: 進階篩選條件（JSON格式）
           schema:
             type: string
-            example: '{"hasChildren":true,"usageCount":{"min":5}}'
+            enum: [asc, desc]
+            default: asc
+          description: 排序方向
+        - name: parentCode
+          in: query
+          schema:
+            type: string
+          description: 父科目代碼，查詢子科目時使用
+        - name: level
+          in: query
+          schema:
+            type: integer
+            enum: [1, 2]
+          description: 科目層級（1=大項，2=子項）
+        - name: active
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: 是否僅查詢啟用的科目
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [income, expense, asset, liability, equity]
+          description: 科目類型篩選
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: 科目名稱搜尋關鍵字
+        - name: includeChildren
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: 是否包含子科目
       responses:
         '200':
-          description: 取得成功
+          description: 成功取得科目清單
           content:
             application/json:
               schema:
@@ -150,281 +116,73 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: object
-                    properties:
-                      subjects:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            subjectId:
-                              type: string
-                              description: 科目ID
-                              example: "subject_food_restaurant"
-                            code:
-                              type: string
-                              description: 科目代碼
-                              example: "5011001"
-                            name:
-                              type: string
-                              description: 科目名稱
-                              example: "餐廳用餐"
-                            description:
-                              type: string
-                              description: 科目描述
-                              example: "在餐廳、飯店等場所用餐的費用"
-                            type:
-                              type: string
-                              enum: [income, expense, asset, liability, equity]
-                              description: 科目類型
-                              example: "expense"
-                            category:
-                              type: string
-                              description: 科目分類
-                              example: "食物"
-                            level:
-                              type: integer
-                              description: 階層等級
-                              example: 3
-                            parentId:
-                              type: string
-                              description: 父科目ID
-                              example: "subject_food"
-                            parentPath:
-                              type: string
-                              description: 父科目路徑
-                              example: "支出/食物"
-                            ledgerId:
-                              type: string
-                              description: 所屬帳本ID
-                              example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
-                            ownerId:
-                              type: string
-                              description: 擁有者ID
-                              example: "Uae47d9d496e4596d70ed724a7d6e2948"
-                            status:
-                              type: string
-                              enum: [active, inactive, archived]
-                              description: 科目狀態
-                              example: "active"
-                            isSystem:
-                              type: boolean
-                              description: 是否為系統預設科目
-                              example: true
-                            isLeaf:
-                              type: boolean
-                              description: 是否為葉節點（無子科目）
-                              example: true
-                            hasChildren:
-                              type: boolean
-                              description: 是否有子科目
-                              example: false
-                            childrenCount:
-                              type: integer
-                              description: 子科目數量
-                              example: 0
-                            settings:
-                              type: object
-                              description: 科目設定（Expert模式顯示）
-                              properties:
-                                allowManualEntry:
-                                  type: boolean
-                                  example: true
-                                suggestOnInput:
-                                  type: boolean
-                                  example: true
-                                trackBudget:
-                                  type: boolean
-                                  example: true
-                                defaultAccount:
-                                  type: string
-                                  example: "account_default"
-                            usage:
-                              type: object
-                              description: 使用統計（需要includeUsage=true）
-                              properties:
-                                transactionCount:
-                                  type: integer
-                                  example: 45
-                                totalAmount:
-                                  type: number
-                                  example: 15678.90
-                                lastUsed:
-                                  type: string
-                                  format: date-time
-                                  example: "2025-08-22T10:30:00Z"
-                                monthlyAverage:
-                                  type: number
-                                  example: 2500.00
-                            children:
-                              type: array
-                              description: 子科目（樹狀結構模式）
-                              items:
-                                $ref: '#/components/schemas/Subject'
-                            createdAt:
-                              type: string
-                              format: date-time
-                              description: 創建時間
-                              example: "2025-08-22T12:00:00Z"
-                            updatedAt:
-                              type: string
-                              format: date-time
-                              description: 最後更新時間
-                              example: "2025-08-22T12:00:00Z"
-                      tree:
-                        type: array
-                        description: 樹狀結構（includeTree=true時）
-                        items:
-                          $ref: '#/components/schemas/SubjectTree'
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subject'
                   metadata:
                     type: object
                     properties:
                       pagination:
+                        $ref: '#/components/schemas/PaginationInfo'
+                      hierarchy:
                         type: object
+                        description: 科目階層統計
                         properties:
-                          currentPage:
+                          majorSubjects:
                             type: integer
-                            example: 1
-                          totalPages:
+                          subSubjects:
                             type: integer
-                            example: 4
-                          totalCount:
-                            type: integer
-                            example: 156
-                          hasNext:
-                            type: boolean
-                            example: true
-                          hasPrevious:
-                            type: boolean
-                            example: false
-                          pageSize:
-                            type: integer
-                            example: 50
-                      filters:
+                      usageStats:
                         type: object
+                        description: 使用統計
                         properties:
-                          appliedFilters:
-                            type: object
-                            example: {"type": "expense", "status": "active"}
-                          userMode:
-                            type: string
-                            example: "Expert"
-                          includeTree:
-                            type: boolean
-                            example: true
-                          includeUsage:
-                            type: boolean
-                            example: true
-                      summary:
-                        type: object
-                        properties:
-                          totalSubjects:
-                            type: integer
-                            example: 156
-                          subjectTypes:
-                            type: object
-                            properties:
-                              income:
-                                type: integer
-                                example: 25
-                              expense:
-                                type: integer
-                                example: 95
-                              asset:
-                                type: integer
-                                example: 20
-                              liability:
-                                type: integer
-                                example: 16
-                          maxLevel:
-                            type: integer
-                            example: 4
-                          systemSubjects:
-                            type: integer
-                            example: 140
-                          customSubjects:
-                            type: integer
-                            example: 16
+                          mostUsed:
+                            type: array
+                            items:
+                              type: object
+                          recentlyUsed:
+                            type: array
+                            items:
+                              type: object
+        '400':
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     post:
       tags:
-        - Subject Management
-      summary: 創建新科目
-      description: 創建新的會計科目
-      operationId: createSubject
+        - 科目管理
+      summary: 新增科目
+      description: |
+        建立新的科目。
+        四模式差異：
+        - Expert: 支援完整科目設定、自訂分類
+        - Inertial: 基本科目建立
+        - Cultivation: 學習導向科目建立
+        - Guiding: 引導式科目建立、推薦設定
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - name
-                - type
-                - ledgerId
-                - ownerId
-              properties:
-                name:
-                  type: string
-                  description: 科目名稱
-                  example: "咖啡店消費"
-                description:
-                  type: string
-                  description: 科目描述
-                  example: "在咖啡店、茶飲店等消費"
-                code:
-                  type: string
-                  description: 科目代碼（可選，系統自動生成）
-                  example: "5011002"
-                type:
-                  type: string
-                  enum: [income, expense, asset, liability, equity]
-                  description: 科目類型
-                  example: "expense"
-                category:
-                  type: string
-                  description: 科目分類
-                  example: "食物"
-                parentId:
-                  type: string
-                  description: 父科目ID（可選）
-                  example: "subject_food"
-                ledgerId:
-                  type: string
-                  description: 所屬帳本ID
-                  example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
-                ownerId:
-                  type: string
-                  description: 擁有者ID
-                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
-                settings:
-                  type: object
-                  description: 科目設定
-                  properties:
-                    allowManualEntry:
-                      type: boolean
-                      default: true
-                      example: true
-                    suggestOnInput:
-                      type: boolean
-                      default: true
-                      example: true
-                    trackBudget:
-                      type: boolean
-                      default: true
-                      example: true
-                    defaultAccount:
-                      type: string
-                      example: "account_cash"
-                tags:
-                  type: array
-                  description: 科目標籤
-                  items:
-                    type: string
-                  example: ["飲料", "日常", "外食"]
+              $ref: '#/components/schemas/CreateSubjectRequest'
       responses:
         '201':
-          description: 創建成功
+          description: 科目建立成功
           content:
             application/json:
               schema:
@@ -434,108 +192,78 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: object
-                    properties:
-                      subjectId:
-                        type: string
-                        description: 科目ID
-                        example: "subject_coffee_shop"
-                      code:
-                        type: string
-                        description: 科目代碼
-                        example: "5011002"
-                      name:
-                        type: string
-                        description: 科目名稱
-                        example: "咖啡店消費"
-                      type:
-                        type: string
-                        description: 科目類型
-                        example: "expense"
-                      level:
-                        type: integer
-                        description: 階層等級
-                        example: 3
-                      parentId:
-                        type: string
-                        description: 父科目ID
-                        example: "subject_food"
-                      createdAt:
-                        type: string
-                        format: date-time
-                        description: 創建時間
-                        example: "2025-08-22T12:00:00Z"
+                    $ref: '#/components/schemas/Subject'
                   metadata:
                     type: object
                     properties:
-                      autoGeneratedCode:
-                        type: boolean
-                        example: true
-                      parentPath:
+                      message:
                         type: string
-                        example: "支出/食物"
+                        example: "科目建立成功"
+        '400':
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 科目代碼已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /subjects/{subjectId}:
     get:
       tags:
-        - Subject Management
-      summary: 取得科目詳細資訊
-      description: 取得指定科目的詳細資訊
-      operationId: getSubjectDetails
+        - 科目管理
+      summary: 查詢單一科目
+      description: |
+        根據科目ID查詢特定科目。
+        四模式差異：
+        - Expert: 顯示完整科目資訊、使用統計、相關交易
+        - Inertial: 顯示基本科目資訊
+        - Cultivation: 顯示學習狀態、使用建議
+        - Guiding: 顯示簡化資訊、使用說明
       parameters:
         - name: subjectId
           in: path
           required: true
-          description: 科目ID
           schema:
             type: string
-            example: "subject_food_restaurant"
-        - name: userId
+          description: 科目ID
+        - name: ledgerId
           in: query
           required: true
-          description: 請求用戶ID
           schema:
             type: string
-            example: "Uae47d9d496e4596d70ed724a7d6e2948"
-        - name: userMode
-          in: query
-          description: 用戶模式（影響回應內容細節）
-          schema:
-            type: string
-            enum: [Expert, Inertial, Cultivation, Guiding]
-            default: Expert
-            example: "Expert"
+          description: 帳本ID
         - name: includeChildren
           in: query
+          schema:
+            type: boolean
+            default: false
           description: 是否包含子科目
+        - name: includeStats
+          in: query
           schema:
             type: boolean
             default: false
-            example: true
-        - name: includeParents
-          in: query
-          description: 是否包含父科目路徑
-          schema:
-            type: boolean
-            default: true
-            example: true
-        - name: includeUsage
-          in: query
           description: 是否包含使用統計
-          schema:
-            type: boolean
-            default: true
-            example: true
-        - name: includeTransactions
-          in: query
-          description: 是否包含最近交易
-          schema:
-            type: boolean
-            default: false
-            example: true
       responses:
         '200':
-          description: 取得成功
+          description: 成功取得科目資訊
           content:
             application/json:
               schema:
@@ -545,276 +273,64 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: object
-                    properties:
-                      subjectId:
-                        type: string
-                        description: 科目ID
-                        example: "subject_food_restaurant"
-                      code:
-                        type: string
-                        description: 科目代碼
-                        example: "5011001"
-                      name:
-                        type: string
-                        description: 科目名稱
-                        example: "餐廳用餐"
-                      description:
-                        type: string
-                        description: 科目描述
-                        example: "在餐廳、飯店等場所用餐的費用"
-                      type:
-                        type: string
-                        description: 科目類型
-                        example: "expense"
-                      category:
-                        type: string
-                        description: 科目分類
-                        example: "食物"
-                      level:
-                        type: integer
-                        description: 階層等級
-                        example: 3
-                      parentId:
-                        type: string
-                        description: 父科目ID
-                        example: "subject_food"
-                      ledgerId:
-                        type: string
-                        description: 所屬帳本ID
-                        example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
-                      ownerId:
-                        type: string
-                        description: 擁有者ID
-                        example: "Uae47d9d496e4596d70ed724a7d6e2948"
-                      status:
-                        type: string
-                        description: 科目狀態
-                        example: "active"
-                      isSystem:
-                        type: boolean
-                        description: 是否為系統預設科目
-                        example: true
-                      isLeaf:
-                        type: boolean
-                        description: 是否為葉節點
-                        example: true
-                      parentPath:
-                        type: array
-                        description: 父科目路徑
-                        items:
-                          type: object
-                          properties:
-                            subjectId:
-                              type: string
-                              example: "subject_expense"
-                            name:
-                              type: string
-                              example: "支出"
-                            level:
-                              type: integer
-                              example: 1
-                      children:
-                        type: array
-                        description: 子科目列表
-                        items:
-                          type: object
-                          properties:
-                            subjectId:
-                              type: string
-                              example: "subject_fast_food"
-                            name:
-                              type: string
-                              example: "速食"
-                            code:
-                              type: string
-                              example: "5011002"
-                            isLeaf:
-                              type: boolean
-                              example: true
-                      settings:
-                        type: object
-                        description: 科目設定
-                        properties:
-                          allowManualEntry:
-                            type: boolean
-                            example: true
-                          suggestOnInput:
-                            type: boolean
-                            example: true
-                          trackBudget:
-                            type: boolean
-                            example: true
-                          defaultAccount:
-                            type: string
-                            example: "account_cash"
-                          notifications:
-                            type: boolean
-                            example: true
-                      usage:
-                        type: object
-                        description: 使用統計
-                        properties:
-                          transactionCount:
-                            type: integer
-                            example: 45
-                          totalAmount:
-                            type: number
-                            example: 15678.90
-                          averageAmount:
-                            type: number
-                            example: 348.42
-                          lastUsed:
-                            type: string
-                            format: date-time
-                            example: "2025-08-22T10:30:00Z"
-                          monthlyStats:
-                            type: object
-                            properties:
-                              currentMonth:
-                                type: number
-                                example: 3500.00
-                              previousMonth:
-                                type: number
-                                example: 2800.00
-                              average:
-                                type: number
-                                example: 2500.00
-                      recentTransactions:
-                        type: array
-                        description: 最近交易
-                        items:
-                          type: object
-                          properties:
-                            transactionId:
-                              type: string
-                              example: "txn_123"
-                            amount:
-                              type: number
-                              example: 500.00
-                            description:
-                              type: string
-                              example: "午餐"
-                            date:
-                              type: string
-                              format: date-time
-                              example: "2025-08-22T12:00:00Z"
-                      tags:
-                        type: array
-                        description: 科目標籤
-                        items:
-                          type: string
-                        example: ["外食", "正餐", "商務"]
-                      permissions:
-                        type: object
-                        description: 用戶權限
-                        properties:
-                          canRead:
-                            type: boolean
-                            example: true
-                          canWrite:
-                            type: boolean
-                            example: true
-                          canDelete:
-                            type: boolean
-                            example: false
-                          canModifySettings:
-                            type: boolean
-                            example: true
-                      createdAt:
-                        type: string
-                        format: date-time
-                        description: 創建時間
-                        example: "2025-08-22T12:00:00Z"
-                      updatedAt:
-                        type: string
-                        format: date-time
-                        description: 最後更新時間
-                        example: "2025-08-22T12:00:00Z"
+                    $ref: '#/components/schemas/Subject'
                   metadata:
                     type: object
                     properties:
-                      userMode:
-                        type: string
-                        example: "Expert"
-                      includeChildren:
-                        type: boolean
-                        example: true
-                      includeUsage:
-                        type: boolean
-                        example: true
+                      children:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Subject'
+                        description: 子科目清單（若包含）
+                      stats:
+                        type: object
+                        description: 使用統計（若包含）
+        '404':
+          description: 科目不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     put:
       tags:
-        - Subject Management
-      summary: 更新科目資訊
-      description: 更新科目的基本資訊和設定
-      operationId: updateSubject
+        - 科目管理
+      summary: 更新科目
+      description: |
+        更新科目資訊。
+        四模式差異：
+        - Expert: 支援完整科目設定修改
+        - Inertial: 基本資訊修改
+        - Cultivation: 學習狀態調整
+        - Guiding: 引導式設定修改
       parameters:
         - name: subjectId
           in: path
           required: true
-          description: 科目ID
           schema:
             type: string
-            example: "subject_food_restaurant"
+          description: 科目ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: 科目名稱
-                  example: "更新後的科目名稱"
-                description:
-                  type: string
-                  description: 科目描述
-                  example: "更新後的科目描述"
-                category:
-                  type: string
-                  description: 科目分類
-                  example: "新分類"
-                parentId:
-                  type: string
-                  description: 父科目ID（移動科目）
-                  example: "subject_new_parent"
-                status:
-                  type: string
-                  enum: [active, inactive, archived]
-                  description: 科目狀態
-                  example: "active"
-                settings:
-                  type: object
-                  description: 科目設定
-                  properties:
-                    allowManualEntry:
-                      type: boolean
-                      example: true
-                    suggestOnInput:
-                      type: boolean
-                      example: false
-                    trackBudget:
-                      type: boolean
-                      example: true
-                    defaultAccount:
-                      type: string
-                      example: "account_new_default"
-                tags:
-                  type: array
-                  description: 科目標籤
-                  items:
-                    type: string
-                  example: ["新標籤1", "新標籤2"]
-                userId:
-                  type: string
-                  description: 操作用戶ID
-                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
+              $ref: '#/components/schemas/UpdateSubjectRequest'
       responses:
         '200':
-          description: 更新成功
+          description: 科目更新成功
           content:
             application/json:
               schema:
@@ -824,75 +340,76 @@ paths:
                     type: boolean
                     example: true
                   data:
+                    $ref: '#/components/schemas/Subject'
+                  metadata:
                     type: object
                     properties:
-                      subjectId:
+                      message:
                         type: string
-                        example: "subject_food_restaurant"
-                      updatedFields:
+                        example: "科目更新成功"
+                      changedFields:
                         type: array
                         items:
                           type: string
-                        example: ["name", "description", "settings"]
-                      parentChanged:
-                        type: boolean
-                        description: 是否變更了父科目
-                        example: false
-                      updatedAt:
-                        type: string
-                        format: date-time
-                        example: "2025-08-22T12:00:00Z"
+                        description: 異動欄位清單
+        '400':
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 科目不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     delete:
       tags:
-        - Subject Management
+        - 科目管理
       summary: 刪除科目
-      description: 刪除指定的科目（需要權限驗證）
-      operationId: deleteSubject
+      description: |
+        刪除指定的科目。僅允許刪除無交易記錄的科目。
+        四模式差異：
+        - Expert: 支援強制刪除選項、數據轉移
+        - Inertial: 基本刪除功能
+        - Cultivation: 刪除前影響評估
+        - Guiding: 引導式刪除確認
       parameters:
         - name: subjectId
           in: path
           required: true
-          description: 科目ID
           schema:
             type: string
-            example: "subject_food_restaurant"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - confirmationToken
-                - userId
-              properties:
-                confirmationToken:
-                  type: string
-                  description: 確認刪除的令牌
-                  example: "confirm_delete_subject_food_restaurant"
-                userId:
-                  type: string
-                  description: 操作用戶ID
-                  example: "Uae47d9d496e4596d70ed724a7d6e2948"
-                transferTransactions:
-                  type: string
-                  description: 交易轉移到的科目ID（可選）
-                  example: "subject_other"
-                deleteTransactions:
-                  type: boolean
-                  description: 是否同時刪除相關交易
-                  default: false
-                  example: false
-                handleChildren:
-                  type: string
-                  enum: [delete, move_to_parent, keep_orphan]
-                  description: 子科目處理方式
-                  default: move_to_parent
-                  example: "move_to_parent"
+          description: 科目ID
+        - name: ledgerId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 帳本ID
+        - name: cascade
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: 是否連同子科目一起刪除
       responses:
         '200':
-          description: 刪除成功
+          description: 科目刪除成功
           content:
             application/json:
               schema:
@@ -904,88 +421,79 @@ paths:
                   data:
                     type: object
                     properties:
-                      subjectId:
+                      deletedSubjectId:
                         type: string
-                        example: "subject_food_restaurant"
-                      transferredTransactions:
-                        type: integer
-                        description: 轉移的交易數量
-                        example: 25
-                      deletedTransactions:
-                        type: integer
-                        description: 刪除的交易數量
-                        example: 0
-                      affectedChildren:
-                        type: integer
-                        description: 受影響的子科目數量
-                        example: 3
-                      deletedAt:
+                        description: 已刪除的科目ID
+                      cascadeDeleted:
+                        type: array
+                        items:
+                          type: string
+                        description: 連帶刪除的子科目ID
+                  metadata:
+                    type: object
+                    properties:
+                      message:
                         type: string
-                        format: date-time
-                        example: "2025-08-22T12:00:00Z"
+                        example: "科目已成功刪除"
+        '404':
+          description: 科目不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 科目仍有交易記錄，無法刪除
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /subjects/tree:
     get:
       tags:
-        - Subject Tree
-      summary: 取得科目樹狀結構
-      description: 取得完整的科目樹狀結構
-      operationId: getSubjectTree
+        - 科目管理
+      summary: 查詢科目樹狀結構
+      description: |
+        取得完整的科目階層樹狀結構。
+        四模式差異：
+        - Expert: 完整樹狀結構、使用統計
+        - Inertial: 簡化樹狀結構
+        - Cultivation: 學習導向樹狀結構
+        - Guiding: 基礎樹狀結構、推薦科目
       parameters:
-        - name: userId
-          in: query
-          required: true
-          description: 用戶ID
-          schema:
-            type: string
-            example: "Uae47d9d496e4596d70ed724a7d6e2948"
         - name: ledgerId
           in: query
-          description: 帳本ID篩選
+          required: true
           schema:
             type: string
-            example: "user_Uae47d9d496e4596d70ed724a7d6e2948"
-        - name: userMode
+          description: 帳本ID
+        - name: activeOnly
           in: query
-          description: 用戶模式（影響回應內容）
           schema:
-            type: string
-            enum: [Expert, Inertial, Cultivation, Guiding]
-            default: Expert
-            example: "Expert"
-        - name: type
+            type: boolean
+            default: true
+          description: 是否僅包含啟用科目
+        - name: includeStats
           in: query
-          description: 科目類型篩選
           schema:
-            type: string
-            enum: [income, expense, asset, liability, equity]
-            example: "expense"
-        - name: maxLevel
-          in: query
-          description: 最大層級
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 10
-            default: 5
-            example: 3
-        - name: includeUsage
-          in: query
+            type: boolean
+            default: false
           description: 是否包含使用統計
-          schema:
-            type: boolean
-            default: false
-            example: true
-        - name: includeInactive
-          in: query
-          description: 是否包含非活動科目
-          schema:
-            type: boolean
-            default: false
-            example: false
       responses:
         '200':
-          description: 取得成功
+          description: 成功取得科目樹狀結構
           content:
             application/json:
               schema:
@@ -1000,103 +508,38 @@ paths:
                       tree:
                         type: array
                         items:
-                          $ref: '#/components/schemas/SubjectTree'
+                          $ref: '#/components/schemas/SubjectTreeNode'
                   metadata:
                     type: object
                     properties:
-                      userMode:
+                      totalMajorSubjects:
+                        type: integer
+                        description: 大項科目總數
+                      totalSubSubjects:
+                        type: integer
+                        description: 子項科目總數
+                      lastUpdated:
                         type: string
-                        example: "Expert"
-                      maxLevel:
-                        type: integer
-                        example: 3
-                      includeUsage:
-                        type: boolean
-                        example: true
-                      totalNodes:
-                        type: integer
-                        example: 156
-                      totalLevels:
-                        type: integer
-                        example: 4
-
-  /subjects/categories:
-    get:
-      tags:
-        - Subject Categories
-      summary: 取得科目分類列表
-      description: 取得系統支援的科目分類
-      operationId: getSubjectCategories
-      parameters:
-        - name: type
-          in: query
-          description: 科目類型篩選
-          schema:
-            type: string
-            enum: [income, expense, asset, liability, equity]
-            example: "expense"
-        - name: userMode
-          in: query
-          description: 用戶模式（影響回應內容細節）
-          schema:
-            type: string
-            enum: [Expert, Inertial, Cultivation, Guiding]
-            default: Expert
-            example: "Expert"
-      responses:
-        '200':
-          description: 取得成功
+                        format: date-time
+                        description: 最後更新時間
+        '400':
+          description: 請求參數錯誤
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      categories:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            category:
-                              type: string
-                              example: "食物"
-                            displayName:
-                              type: string
-                              example: "飲食費用"
-                            description:
-                              type: string
-                              example: "所有與飲食相關的費用"
-                            type:
-                              type: string
-                              example: "expense"
-                            subjectCount:
-                              type: integer
-                              example: 15
-                            examples:
-                              type: array
-                              items:
-                                type: string
-                              example: ["餐廳用餐", "速食", "咖啡"]
-                            icon:
-                              type: string
-                              example: "🍽️"
-                            color:
-                              type: string
-                              example: "#FF6B6B"
-                  metadata:
-                    type: object
-                    properties:
-                      userMode:
-                        type: string
-                        example: "Expert"
-                      totalCategories:
-                        type: integer
-                        example: 25
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
@@ -1106,50 +549,202 @@ components:
         subjectId:
           type: string
           description: 科目ID
-          example: "subject_food_restaurant"
-        code:
+        ledgerId:
           type: string
-          description: 科目代碼
-          example: "5011001"
-        name:
+          description: 帳本ID
+        majorCode:
           type: string
-          description: 科目名稱
-          example: "餐廳用餐"
+          description: 大項科目代碼
+        majorName:
+          type: string
+          description: 大項科目名稱
+        subCode:
+          type: string
+          description: 子項科目代碼
+        subName:
+          type: string
+          description: 子項科目名稱
+        fullCode:
+          type: string
+          description: 完整科目代碼（大項_子項）
+        level:
+          type: integer
+          enum: [1, 2]
+          description: 科目層級（1=大項，2=子項）
         type:
           type: string
           enum: [income, expense, asset, liability, equity]
           description: 科目類型
-          example: "expense"
-        level:
+        isActive:
+          type: boolean
+          description: 是否啟用
+        isDefault:
+          type: boolean
+          description: 是否為系統預設科目
+        synonyms:
+          type: string
+          description: 同義詞（逗號分隔）
+        usageCount:
           type: integer
-          description: 階層等級
-          example: 3
+          description: 使用次數
+        lastUsed:
+          type: string
+          format: date-time
+          description: 最後使用時間
+        sortOrder:
+          type: integer
+          description: 排序順序
+        description:
+          type: string
+          description: 科目說明
+        icon:
+          type: string
+          description: 科目圖示
+        color:
+          type: string
+          description: 科目顏色
+        createdAt:
+          type: string
+          format: date-time
+          description: 建立時間
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新時間
 
-    SubjectTree:
+    SubjectTreeNode:
       type: object
       properties:
         subjectId:
           type: string
-          example: "subject_expense"
-        code:
+          description: 科目ID
+        majorCode:
           type: string
-          example: "5000"
-        name:
+          description: 大項科目代碼
+        majorName:
           type: string
-          example: "支出"
+          description: 大項科目名稱
         type:
           type: string
-          example: "expense"
-        level:
-          type: integer
-          example: 1
-        hasChildren:
-          type: boolean
-          example: true
+          description: 科目類型
         children:
           type: array
           items:
-            $ref: '#/components/schemas/SubjectTree'
+            $ref: '#/components/schemas/Subject'
+          description: 子科目清單
+        stats:
+          type: object
+          description: 使用統計
+          properties:
+            totalUsage:
+              type: integer
+            childrenCount:
+              type: integer
+
+    CreateSubjectRequest:
+      type: object
+      required:
+        - majorCode
+        - majorName
+        - subCode
+        - subName
+        - ledgerId
+        - type
+      properties:
+        majorCode:
+          type: string
+          description: 大項科目代碼
+          pattern: '^[0-9]{1,2}$'
+        majorName:
+          type: string
+          description: 大項科目名稱
+          maxLength: 50
+        subCode:
+          type: string
+          description: 子項科目代碼
+          pattern: '^[0-9]{1,3}$'
+        subName:
+          type: string
+          description: 子項科目名稱
+          maxLength: 50
+        ledgerId:
+          type: string
+          description: 帳本ID
+        type:
+          type: string
+          enum: [income, expense, asset, liability, equity]
+          description: 科目類型
+        synonyms:
+          type: string
+          description: 同義詞（逗號分隔）
+          maxLength: 200
+        description:
+          type: string
+          description: 科目說明
+          maxLength: 500
+        icon:
+          type: string
+          description: 科目圖示
+        color:
+          type: string
+          description: 科目顏色
+        sortOrder:
+          type: integer
+          description: 排序順序
+
+    UpdateSubjectRequest:
+      type: object
+      properties:
+        majorName:
+          type: string
+          description: 大項科目名稱
+          maxLength: 50
+        subName:
+          type: string
+          description: 子項科目名稱
+          maxLength: 50
+        isActive:
+          type: boolean
+          description: 是否啟用
+        synonyms:
+          type: string
+          description: 同義詞（逗號分隔）
+          maxLength: 200
+        description:
+          type: string
+          description: 科目說明
+          maxLength: 500
+        icon:
+          type: string
+          description: 科目圖示
+        color:
+          type: string
+          description: 科目顏色
+        sortOrder:
+          type: integer
+          description: 排序順序
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: 當前頁碼
+        limit:
+          type: integer
+          description: 每頁筆數
+        total:
+          type: integer
+          description: 總筆數
+        totalPages:
+          type: integer
+          description: 總頁數
+        hasNext:
+          type: boolean
+          description: 是否有下一頁
+        hasPrev:
+          type: boolean
+          description: 是否有上一頁
 
     ErrorResponse:
       type: object
@@ -1162,19 +757,14 @@ components:
           properties:
             code:
               type: string
-              example: "ERROR_CODE"
+              description: 錯誤代碼
             message:
               type: string
-              example: "錯誤訊息"
+              description: 錯誤訊息
             details:
               type: string
-              example: "詳細錯誤說明"
-
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-security:
-  - BearerAuth: []
+              description: 詳細錯誤資訊
+            timestamp:
+              type: string
+              format: date-time
+              description: 錯誤發生時間
