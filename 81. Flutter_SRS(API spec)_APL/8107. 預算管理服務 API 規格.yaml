@@ -795,6 +795,19 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:30:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -814,21 +827,31 @@ paths:
                     properties:
                       code:
                         type: string
-                        example: "BUDGET_CONFLICT"
+                        example: "RESOURCE_CONFLICT"
                       message:
                         type: string
                         example: "該科目已有相同週期的預算設定"
                       field:
                         type: string
                         example: "target.categoryId"
-                      conflictingBudgetId:
+                      timestamp:
                         type: string
-                        example: "budget-uuid-existing"
-                      suggestions:
-                        type: array
-                        items:
-                          type: string
-                        example: ["修改現有預算", "選擇不同週期", "使用子科目預算"]
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      details:
+                        type: object
+                        properties:
+                          conflictingBudgetId:
+                            type: string
+                            example: "budget-uuid-existing"
+                          suggestions:
+                            type: array
+                            items:
+                              type: string
+                            example: ["修改現有預算", "選擇不同週期", "使用子科目預算"]
 
   /budgets/{id}:
     get:
@@ -1393,6 +1416,19 @@ paths:
                             type: integer
                             example: 4
                             description: "總執行期數"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -1580,6 +1616,19 @@ paths:
                             message:
                               type: string
                               example: "預算增加後，建議重新檢視相關子科目的分配"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -1696,6 +1745,19 @@ paths:
                             type: number
                             example: 8400
                             description: "累計節省金額"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           description: "無法刪除預算"
           content:
@@ -1711,10 +1773,17 @@ paths:
                     properties:
                       code:
                         type: string
-                        example: "BUDGET_CANNOT_DELETE"
+                        example: "BUSINESS_LOGIC_ERROR"
                       message:
                         type: string
                         example: "預算當前週期尚未結束，無法刪除"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
                       details:
                         type: object
                         properties:
@@ -1972,6 +2041,32 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:30:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        example: "Expert"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -2210,6 +2305,19 @@ paths:
                               items:
                                 type: string
                               example: ["選擇主要食物科目", "設定月度金額", "啟用 80% 警示"]
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -2317,6 +2425,19 @@ paths:
                       message:
                         type: string
                         example: "預算警示設定完成"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -2356,6 +2477,9 @@ components:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     ValidationError:
       description: "請求參數驗證失敗"
@@ -2386,6 +2510,9 @@ components:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     NotFoundError:
       description: "資源不存在"
@@ -2402,7 +2529,7 @@ components:
                 properties:
                   code:
                     type: string
-                    example: "BUDGET_NOT_FOUND"
+                    example: "RESOURCE_NOT_FOUND"
                   message:
                     type: string
                     example: "找不到指定的預算"
@@ -2410,6 +2537,9 @@ components:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
 tags:
   - name: "預算查詢"
