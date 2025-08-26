@@ -1,24 +1,25 @@
+
 openapi: 3.0.3
 info:
   title: LCAS 2.0 系統服務 API 規格
   description: |
     系統服務 API 提供 LCAS 2.0 系統的基礎管理功能，包含健康檢查、
     系統監控、配置管理、日誌管理等核心系統服務。
-
+    
     ## 🎯 服務範圍
     - **系統健康檢查**：服務狀態監控、可用性檢測
     - **系統配置管理**：動態配置更新、環境設定
     - **日誌管理**：系統日誌查詢、錯誤追蹤
     - **監控告警**：性能監控、異常告警
     - **維護模式**：系統維護、版本管理
-
+    
   version: 1.0.0
   contact:
     name: LCAS 2.0 API Support
     email: support@lcas.app
   license:
     name: Proprietary
-
+    
 servers:
   - url: https://api.lcas.app/v1
     description: 生產環境
@@ -38,201 +39,15 @@ tags:
     description: 系統維護管理
 
 paths:
-  /system/welcome:
-    get:
-      tags:
-        - System Services
-      summary: 歡迎頁資訊
-      description: 取得應用程式歡迎頁面的個人化資訊
-      operationId: getWelcomeInfo
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: X-User-Mode
-          in: header
-          schema:
-            type: string
-            enum: [Expert, Inertial, Cultivation, Guiding]
-      responses:
-        '200':
-          description: 成功取得歡迎資訊
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          welcomeMessage:
-                            type: string
-                            description: 個人化歡迎訊息
-                          quickActions:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                title:
-                                  type: string
-                                description:
-                                  type: string
-                                action:
-                                  type: string
-                                icon:
-                                  type: string
-                          statistics:
-                            type: object
-                            properties:
-                              totalTransactions:
-                                type: integer
-                              monthlySpending:
-                                type: number
-                              budgetUsage:
-                                type: number
-                          tips:
-                            type: array
-                            items:
-                              type: string
-                            description: 根據用戶模式提供的使用技巧
-
-  /system/app-info:
-    get:
-      tags:
-        - System Services
-      summary: APP資訊
-      description: 取得應用程式基本資訊
-      operationId: getAppInfo
-      responses:
-        '200':
-          description: 成功取得APP資訊
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          appName:
-                            type: string
-                            example: "LCAS 2.0"
-                          version:
-                            type: string
-                            example: "2.0.0"
-                          buildNumber:
-                            type: string
-                          releaseDate:
-                            type: string
-                            format: date
-                          features:
-                            type: array
-                            items:
-                              type: string
-                          changelog:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                version:
-                                  type: string
-                                date:
-                                  type: string
-                                changes:
-                                  type: array
-                                  items:
-                                    type: string
-
-  /system/app-promotion:
-    get:
-      tags:
-        - System Services
-      summary: APP推廣資訊
-      description: 取得應用程式推廣活動和優惠資訊
-      operationId: getAppPromotion
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: platform
-          in: query
-          schema:
-            type: string
-            enum: [ios, android, web]
-        - name: userMode
-          in: query
-          schema:
-            type: string
-            enum: [Expert, Inertial, Cultivation, Guiding]
-      responses:
-        '200':
-          description: 成功取得推廣資訊
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          activePromotions:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                id:
-                                  type: string
-                                title:
-                                  type: string
-                                description:
-                                  type: string
-                                imageUrl:
-                                  type: string
-                                actionUrl:
-                                  type: string
-                                startDate:
-                                  type: string
-                                  format: date-time
-                                endDate:
-                                  type: string
-                                  format: date-time
-                                targetModes:
-                                  type: array
-                                  items:
-                                    type: string
-                          referralProgram:
-                            type: object
-                            properties:
-                              enabled:
-                                type: boolean
-                              referralCode:
-                                type: string
-                              rewards:
-                                type: array
-                                items:
-                                  type: object
-
   /system/health:
     get:
       tags: [system-health]
       summary: 系統健康檢查
       description: 檢查系統各服務模組的健康狀態和可用性
       operationId: getSystemHealth
-      parameters:
-        - name: X-User-Mode
-          in: header
-          description: 用戶模式標識（影響回應詳細程度）
-          schema:
-            type: string
-            enum: [Expert, Inertial, Cultivation, Guiding]
-            default: Expert
       responses:
         '200':
-          description: 系統健康狀態（四模式差異化回應）
+          description: 系統健康狀態
           content:
             application/json:
               schema:
@@ -242,24 +57,44 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    oneOf:
-                      - $ref: '#/components/schemas/HealthCheckExpert'
-                      - $ref: '#/components/schemas/HealthCheckGuiding'
-                  metadata:
                     type: object
                     properties:
+                      status:
+                        type: string
+                        enum: [healthy, degraded, unhealthy]
+                        example: healthy
                       timestamp:
                         type: string
                         format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
+                      services:
+                        type: object
+                        properties:
+                          api:
+                            $ref: '#/components/schemas/ServiceHealth'
+                          database:
+                            $ref: '#/components/schemas/ServiceHealth'
+                          authentication:
+                            $ref: '#/components/schemas/ServiceHealth'
+                          backup:
+                            $ref: '#/components/schemas/ServiceHealth'
+                      metrics:
+                        type: object
+                        properties:
+                          uptime:
+                            type: string
+                            example: "99.98%"
+                          avgResponseTime:
+                            type: string
+                            example: "28ms"
+                          activeUsers:
+                            type: integer
+                            example: 1250
+                          systemLoad:
+                            type: string
+                            example: "0.65"
+                      version:
                         type: string
-                        format: uuid
-                        example: "550e8400-e29b-41d4-a716-446655440001"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                        example: "2.1.13"
 
   /system/config:
     get:
@@ -303,7 +138,7 @@ paths:
                             type: integer
                           maxFileSize:
                             type: string
-
+                            
     put:
       tags: [system-config]
       summary: 更新系統配置
@@ -372,116 +207,6 @@ paths:
                         items:
                           $ref: '#/components/schemas/SystemAlert'
 
-  /system/welcome:
-    get:
-      tags: [system-config]
-      summary: 歡迎頁資訊
-      description: 取得歡迎頁面顯示資訊
-      operationId: getWelcomeInfo
-      responses:
-        '200':
-          description: 歡迎資訊
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      title:
-                        type: string
-                        example: "歡迎使用 LCAS 2.0"
-                      subtitle:
-                        type: string
-                        example: "智慧記帳，輕鬆理財"
-                      features:
-                        type: array
-                        items:
-                          type: string
-                        example: ["LINE 快速記帳", "多帳本管理", "智慧分析"]
-                      appDownloadUrl:
-                        type: string
-                        example: "https://app.lcas.app/download"
-
-  /system/app-info:
-    get:
-      tags: [system-config]
-      summary: APP 資訊
-      description: 取得應用程式基本資訊
-      operationId: getAppInfo
-      responses:
-        '200':
-          description: APP 資訊
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      appName:
-                        type: string
-                        example: "LCAS 2.0"
-                      version:
-                        type: string
-                        example: "2.1.0"
-                      buildNumber:
-                        type: string
-                        example: "2025012701"
-                      lastUpdated:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-
-  /system/app-promotion:
-    get:
-      tags: [system-config]
-      summary: APP 推廣資訊
-      description: 取得應用程式推廣相關資訊
-      operationId: getAppPromotion
-      responses:
-        '200':
-          description: 推廣資訊
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      promotionTitle:
-                        type: string
-                        example: "立即下載 LCAS APP"
-                      description:
-                        type: string
-                        example: "享受更完整的記帳體驗"
-                      downloadLinks:
-                        type: object
-                        properties:
-                          ios:
-                            type: string
-                            example: "https://apps.apple.com/app/lcas"
-                          android:
-                            type: string
-                            example: "https://play.google.com/store/apps/details?id=com.lcas.app"
-                      features:
-                        type: array
-                        items:
-                          type: string
-                        example: ["同步記帳", "智慧分析", "預算管理"]
-
   /system/maintenance:
     get:
       tags: [system-maintenance]
@@ -514,7 +239,7 @@ paths:
                             format: date-time
                           description:
                             type: string
-
+                            
     post:
       tags: [system-maintenance]
       summary: 設定維護模式
@@ -544,276 +269,14 @@ paths:
         '403':
           description: 權限不足
 
-  /system/retry:
-    post:
-      tags: [system-config]
-      summary: 重試機制
-      description: |
-        針對失敗的操作進行重試處理。
-        四模式差異：
-        - Expert: 詳細重試參數設定、重試策略選擇
-        - Inertial: 標準重試機制、固定重試次數
-        - Cultivation: 智慧重試建議、學習型重試
-        - Guiding: 自動重試、簡化處理
-      operationId: retryOperation
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                operationType:
-                  type: string
-                  enum: [transaction, report, backup, sync, api_call]
-                  description: 重試操作類型
-                operationId:
-                  type: string
-                  format: uuid
-                  description: 原始操作ID
-                retryStrategy:
-                  type: string
-                  enum: [immediate, exponential_backoff, scheduled]
-                  default: exponential_backoff
-                  description: 重試策略
-                maxRetries:
-                  type: integer
-                  minimum: 1
-                  maximum: 10
-                  default: 3
-                  description: 最大重試次數
-                reason:
-                  type: string
-                  description: 重試原因
-              required:
-                - operationType
-                - operationId
-      responses:
-        '200':
-          description: 重試操作啟動成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      retryId:
-                        type: string
-                        format: uuid
-                        description: 重試任務ID
-                      status:
-                        type: string
-                        enum: [queued, processing, completed, failed]
-                        description: 重試狀態
-                      estimatedTime:
-                        type: integer
-                        description: 預估完成時間（秒）
-                      nextRetryAt:
-                        type: string
-                        format: date-time
-                        description: 下次重試時間
-        '400':
-          description: 重試參數錯誤
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: 原始操作不存在
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /system/sync:
-    post:
-      tags: [system-config]
-      summary: 離線同步
-      description: |
-        處理離線資料同步，將本地變更同步到雲端。
-        四模式差異：
-        - Expert: 詳細同步控制、衝突處理策略、同步日誌
-        - Inertial: 標準同步、基本衝突解決
-        - Cultivation: 智慧同步建議、同步進度可視化
-        - Guiding: 自動同步、透明處理
-      operationId: syncOfflineData
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                syncType:
-                  type: string
-                  enum: [full, incremental, selective]
-                  default: incremental
-                  description: 同步類型
-                dataTypes:
-                  type: array
-                  items:
-                    type: string
-                    enum: [transactions, budgets, categories, accounts, settings]
-                  description: 要同步的資料類型
-                conflictResolution:
-                  type: string
-                  enum: [server_wins, client_wins, merge, manual]
-                  default: merge
-                  description: 衝突解決策略
-                lastSyncTimestamp:
-                  type: string
-                  format: date-time
-                  description: 上次同步時間戳
-                offlineChanges:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      changeId:
-                        type: string
-                        format: uuid
-                      operation:
-                        type: string
-                        enum: [create, update, delete]
-                      resourceType:
-                        type: string
-                      resourceId:
-                        type: string
-                      data:
-                        type: object
-                      timestamp:
-                        type: string
-                        format: date-time
-              required:
-                - syncType
-      responses:
-        '200':
-          description: 同步成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      syncId:
-                        type: string
-                        format: uuid
-                        description: 同步任務ID
-                      status:
-                        type: string
-                        enum: [completed, partial, failed]
-                        description: 同步狀態
-                      syncedRecords:
-                        type: integer
-                        description: 已同步記錄數
-                      conflictRecords:
-                        type: integer
-                        description: 衝突記錄數
-                      failedRecords:
-                        type: integer
-                        description: 失敗記錄數
-                      conflicts:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            conflictId:
-                              type: string
-                              format: uuid
-                            resourceType:
-                              type: string
-                            resourceId:
-                              type: string
-                            conflictType:
-                              type: string
-                              enum: [data_conflict, version_conflict, delete_conflict]
-                            serverData:
-                              type: object
-                            clientData:
-                              type: object
-                            resolution:
-                              type: string
-                              enum: [auto_resolved, requires_manual]
-                      nextSyncRecommendation:
-                        type: string
-                        format: date-time
-                        description: 建議下次同步時間
-        '409':
-          description: 同步衝突需要手動處理
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: 同步資料格式錯誤
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
 
   schemas:
-    ApiResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: object
-        metadata:
-          type: object
-          properties:
-            timestamp:
-              type: string
-              format: date-time
-            requestId:
-              type: string
-              format: uuid
-
-    ErrorResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: false
-        error:
-          type: object
-          properties:
-            code:
-              type: string
-            message:
-              type: string
-            timestamp:
-              type: string
-              format: date-time
-            requestId:
-              type: string
-              format: uuid
     ServiceHealth:
       type: object
       properties:
@@ -828,65 +291,6 @@ components:
           format: date-time
         details:
           type: object
-
-    HealthCheckExpert:
-      type: object
-      properties:
-        status:
-          type: string
-          enum: [healthy, degraded, unhealthy]
-          example: healthy
-        services:
-          type: object
-          properties:
-            api:
-              $ref: '#/components/schemas/ServiceHealth'
-            database:
-              $ref: '#/components/schemas/ServiceHealth'
-            authentication:
-              $ref: '#/components/schemas/ServiceHealth'
-            backup:
-              $ref: '#/components/schemas/ServiceHealth'
-        metrics:
-          type: object
-          properties:
-            uptime:
-              type: string
-              example: "99.98%"
-            avgResponseTime:
-              type: string
-              example: "28ms"
-            activeUsers:
-              type: integer
-              example: 1250
-            systemLoad:
-              type: string
-              example: "0.65"
-        version:
-          type: string
-          example: "2.1.13"
-        detailedMetrics:
-          type: object
-          properties:
-            cpuUsage:
-              type: number
-              example: 65.2
-            memoryUsage:
-              type: number
-              example: 78.5
-            diskSpace:
-              type: number
-              example: 45.3
-
-    HealthCheckGuiding:
-      type: object
-      properties:
-        status:
-          type: string
-          example: "系統運行正常"
-        simpleIndicator:
-          type: boolean
-          example: true
 
     SystemAlert:
       type: object

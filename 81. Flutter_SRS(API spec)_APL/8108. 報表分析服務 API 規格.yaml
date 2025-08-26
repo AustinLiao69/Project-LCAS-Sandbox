@@ -1,27 +1,28 @@
+
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 報表分析服務 API 規格
   version: 1.0.1
   description: |
     **LCAS 2.0 報表分析服務 API 規格**
-
+    
     負責報表生成、數據分析與視覺化的完整 API 規格。
     支援標準報表、多格式匯出與深度分析功能，提供四模式差異化體驗。
-
+    
     **服務範圍**:
     - 標準報表生成（收支分析、預算執行、趨勢分析）
     - 報表匯出功能（PDF、Excel、CSV、圖片格式）
     - 數據分析與洞察（AI 分析、趨勢預測）
     - 報表分享與協作（權限控制、分享連結）
-
+    
     **四模式差異化策略**:
     - **Expert**: 完整報表設計工具、進階分析功能、詳細統計數據
     - **Inertial**: 標準報表範本、簡化設定選項、固定分析維度
     - **Cultivation**: 目標導向報表、進度追蹤、激勵性數據展示
     - **Guiding**: 智慧預設報表、一鍵生成、簡化分析結果
-
+    
     **更新記錄**:
-    - v1.0.1 (2025-01-28): 調整 API 端點以符合標準清單，統 சுமார் 路徑參數命名
+    - v1.0.1 (2025-01-28): 調整 API 端點以符合標準清單，統一路徑參數命名
 
   contact:
     name: LCAS 開發團隊
@@ -250,14 +251,14 @@ paths:
                     type: string
                     example: "報表已刪除，將保留 30 天供恢復"
 
-  /reports/{reportId}/status:
+  /reports/{id}/status:
     get:
       tags:
         - 報表查詢
       summary: 查詢報表生成進度
       description: 查詢指定報表的生成狀態與進度
       parameters:
-        - name: reportId
+        - name: id
           in: path
           required: true
           description: 報表 ID
@@ -298,14 +299,14 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /reports/{reportId}/cancel:
-    post:
+  /reports/{id}/cancel:
+    delete:
       tags:
         - 報表管理
       summary: 取消報表生成
       description: 取消正在生成中的報表任務
       parameters:
-        - name: reportId
+        - name: id
           in: path
           required: true
           description: 報表 ID
@@ -404,7 +405,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /reports/{reportId}/export:
+  /reports/{id}/export:
     get:
       tags:
         - 報表匯出
@@ -412,12 +413,12 @@ paths:
       description: |
         將報表匯出為指定格式。
         四模式差異：
-        - **Expert**: 完整匯出選項、多格式同時匯出
-        - **Inertial**: 標準匯出設定、常用格式
-        - **Cultivation**: 目標導向格式建議、簡化選項
-        - **Guiding**: 智慧預設格式、一鍵匯出
+        - Expert: 完整匯出選項、多格式同時匯出
+        - Inertial: 標準匯出設定、常用格式
+        - Cultivation: 目標導向格式建議、簡化選項
+        - Guiding: 智慧預設格式、一鍵匯出
       parameters:
-        - name: reportId
+        - name: id
           in: path
           required: true
           description: 報表 ID
@@ -466,7 +467,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /reports/{reportId}/share:
+  /reports/{id}/share:
     post:
       tags:
         - 報表分享
@@ -474,12 +475,12 @@ paths:
       description: |
         建立報表分享連結與權限設定。
         四模式差異：
-        - **Expert**: 詳細權限控制、進階分享選項
-        - **Inertial**: 標準分享設定、基本權限
-        - **Cultivation**: 簡化分享流程、推薦設定
-        - **Guiding**: 一鍵分享、預設權限
+        - Expert: 詳細權限控制、進階分享選項
+        - Inertial: 標準分享設定、基本權限
+        - Cultivation: 簡化分享流程、推薦設定
+        - Guiding: 一鍵分享、預設權限
       parameters:
-        - name: reportId
+        - name: id
           in: path
           required: true
           description: 報表 ID

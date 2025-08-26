@@ -1,259 +1,123 @@
 openapi: 3.0.3
 info:
-  title: 認證服務 API 規格
-  description: LCAS 2.0 認證服務 API，符合0020和0088設計規範
-  version: 1.1.0
+  title: LCAS 2.0 認證服務 API
+  version: 1.0.0
+  description: |
+    **LCAS 2.0 認證服務 API 規格**
+    
+    本服務提供完整的使用者認證功能，包括註冊、登入、密碼管理、跨平台綁定等功能。
+    支援四模式差異化體驗：Expert、Inertial、Cultivation、Guiding。
+    
+    **核心功能**：
+    - 使用者註冊與登入
+    - Google OAuth 整合
+    - LINE 平台綁定
+    - 密碼重設與管理
+    - Token 管理與刷新
+    - 多平台帳號整合
+
   contact:
-    name: LCAS SA Team
-    email: sa@lcas.app
+    name: LCAS 2.0 開發團隊
+    email: dev@lcas.com
 
 servers:
-  - url: https://api.lcas.app/v1
-    description: Production server
-  - url: https://api-dev.lcas.app/v1
-    description: Development server
+  - url: https://api.lcas.com
+    description: 生產環境
+  - url: https://api-staging.lcas.com
+    description: 測試環境
+
+security:
+  - BearerAuth: []
 
 paths:
-  /auth/verify-email:
+  /auth/register:
     post:
+      summary: 使用者註冊
+      description: |
+        使用者透過 Email 註冊新帳號。支援四模式差異化註冊流程：
+        - **Expert**: 完整註冊表單，提供所有設定選項
+        - **Inertial**: 簡潔註冊流程，固定預設值
+        - **Cultivation**: 引導式註冊，包含動機建立
+        - **Guiding**: 極簡註冊，最少必要資訊
       tags:
-        - Authentication
-      summary: 電子郵件驗證
-      description: 驗證用戶電子郵件地址的有效性
-      operationId: verifyEmail
+        - 認證管理
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - email
+                - password
+                - acceptTerms
+                - userMode
               properties:
                 email:
                   type: string
                   format: email
-                  description: 待驗證的電子郵件
-                verificationCode:
+                  example: "user@example.com"
+                  description: "使用者 Email 地址"
+                password:
                   type: string
-                  description: 驗證碼
-              required:
-                - email
-                - verificationCode
-      responses:
-        '200':
-          description: 驗證成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-        '400':
-          description: 驗證失敗
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /auth/user-mode:
-    get:
-      tags:
-        - Authentication
-      summary: 取得用戶模式
-      description: 取得當前用戶的使用模式（Expert、Inertial、Cultivation、Guiding）
-      operationId: getUserMode
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: 成功取得用戶模式
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ApiResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          userMode:
-                            type: string
-                            enum: [Expert, Inertial, Cultivation, Guiding]
-                            description: 用戶使用模式
-                          modeDescription:
-                            type: string
-                            description: 模式說明
-                          features:
-                            type: array
-                            items:
-                              type: string
-                            description: 該模式可用功能列表
-
-  /auth/login:
-    post:
-      summary: 使用者登入
-      description: 使用者登入功能（對應畫面 S-104）
-      operationId: loginUser
-      tags:
-        - Authentication
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    email:
-                      type: string
-                      format: email
-                      description: 使用者電子郵件
-                      example: "user@example.com"
-                    password:
-                      type: string
-                      description: 密碼
-                      example: "securePassword123"
-                    rememberMe:
-                      type: boolean
-                      description: 記住我
-                      example: true
-                  required:
-                    - email
-                    - password
-                metadata:
-                  type: object
-                  properties:
-                    source:
-                      type: string
-                      example: "app"
-                    userAgent:
-                      type: string
-                      example: "LCAS-App/1.0.0"
-      responses:
-        '200':
-          description: 登入成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      token:
-                        type: string
-                        description: JWT access token
-                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                      refreshToken:
-                        type: string
-                        description: JWT refresh token
-                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                      expiresAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-28T00:00:00Z"
-                      user:
-                        type: object
-                        properties:
-                          userId:
-                            type: string
-                            format: uuid
-                            example: "550e8400-e29b-41d4-a716-446655440000"
-                          email:
-                            type: string
-                            format: email
-                            example: "user@example.com"
-                          userMode:
-                            type: string
-                            enum: [Expert, Inertial, Cultivation, Guiding]
-                            example: "Expert"
-                          hasCompletedAssessment:
-                            type: boolean
-                            example: true
-                  metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        format: uuid
-                        example: "550e8400-e29b-41d4-a716-446655440001"
-                      userMode:
-                        type: string
-                        example: "Expert"
-        '401':
-          description: 登入失敗
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: 帳戶被鎖定
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /auth/register:
-    post:
-      summary: 使用者註冊
-      description: 新使用者註冊功能（對應畫面 S-103）
-      operationId: registerUser
-      tags:
-        - Authentication
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    email:
-                      type: string
-                      format: email
-                      description: 使用者電子郵件
-                      example: "user@example.com"
-                    password:
-                      type: string
-                      minLength: 8
-                      description: 密碼（最少8位）
-                      example: "securePassword123"
-                    confirmPassword:
-                      type: string
-                      description: 確認密碼
-                      example: "securePassword123"
-                    acceptTerms:
-                      type: boolean
-                      description: 同意條款
-                      example: true
-                  required:
-                    - email
-                    - password
-                    - confirmPassword
-                    - acceptTerms
-                metadata:
-                  type: object
-                  properties:
-                    source:
-                      type: string
-                      description: 請求來源
-                      example: "app"
-                    version:
-                      type: string
-                      description: 版本號
-                      example: "1.0.0"
+                  minLength: 8
+                  example: "SecurePassword123"
+                  description: "密碼，至少 8 個字元"
+                confirmPassword:
+                  type: string
+                  example: "SecurePassword123"
+                  description: "確認密碼（非 Guiding 模式必填）"
+                displayName:
+                  type: string
+                  minLength: 2
+                  maxLength: 50
+                  example: "張小明"
+                  description: "顯示名稱（非 Guiding 模式必填）"
+                userMode:
+                  type: string
+                  enum: [Expert, Inertial, Cultivation, Guiding]
+                  example: "Expert"
+                  description: "使用者模式"
+                acceptTerms:
+                  type: boolean
+                  example: true
+                  description: "同意服務條款"
+                acceptPrivacy:
+                  type: boolean
+                  example: true
+                  description: "同意隱私政策"
+                timezone:
+                  type: string
+                  example: "Asia/Taipei"
+                  description: "時區設定"
+                language:
+                  type: string
+                  example: "zh-TW"
+                  description: "語言偏好"
+            examples:
+              expert_mode:
+                summary: "Expert 模式註冊"
+                value:
+                  email: "expert@example.com"
+                  password: "SecurePassword123"
+                  confirmPassword: "SecurePassword123"
+                  displayName: "專業使用者"
+                  userMode: "Expert"
+                  acceptTerms: true
+                  acceptPrivacy: true
+                  timezone: "Asia/Taipei"
+                  language: "zh-TW"
+              guiding_mode:
+                summary: "Guiding 模式註冊"
+                value:
+                  email: "newbie@example.com"
+                  password: "SimplePass123"
+                  userMode: "Guiding"
+                  acceptTerms: true
+                  acceptPrivacy: true
       responses:
         '201':
-          description: 註冊成功
+          description: "註冊成功"
           content:
             application/json:
               schema:
@@ -267,196 +131,100 @@ paths:
                     properties:
                       userId:
                         type: string
-                        format: uuid
-                        description: 使用者唯一識別符
-                        example: "550e8400-e29b-41d4-a716-446655440000"
+                        example: "uuid-string"
+                        description: "使用者 ID"
                       email:
                         type: string
-                        format: email
                         example: "user@example.com"
+                      userMode:
+                        type: string
+                        example: "Expert"
                       verificationSent:
                         type: boolean
                         example: true
+                        description: "是否已發送驗證信"
                       needsAssessment:
                         type: boolean
-                        example: true
-                  metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        format: uuid
-                        example: "550e8400-e29b-41d4-a716-446655440001"
-        '400':
-          description: 請求錯誤
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: 電子郵件已存在
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /auth/google-login:
-    post:
-      summary: Google 登入
-      description: 使用 Google 帳戶登入
-      operationId: googleLogin
-      tags:
-        - Authentication
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    googleToken:
-                      type: string
-                      description: Google ID token
-                      example: "eyJhbGciOiJSUzI1NiIsImtpZCI6..."
-                  required:
-                    - googleToken
-      responses:
-        '200':
-          description: Google 登入成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
+                        example: false
+                        description: "是否需要模式評估"
                       token:
                         type: string
-                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        example: "jwt-token-string"
+                        description: "存取 Token"
                       refreshToken:
                         type: string
-                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                      user:
-                        type: object
-                        properties:
-                          userId:
-                            type: string
-                            format: uuid
-                            example: "550e8400-e29b-41d4-a716-446655440000"
-                          email:
-                            type: string
-                            format: email
-                            example: "user@gmail.com"
-                          userMode:
-                            type: string
-                            enum: [Expert, Inertial, Cultivation, Guiding]
-                            example: "Expert"
-                          isNewUser:
-                            type: boolean
-                            example: false
-
-  /auth/logout:
-    post:
-      summary: 使用者登出
-      description: 登出並撤銷 token
-      operationId: logoutUser
-      tags:
-        - Authentication
-      security:
-        - bearerAuth: []
-      responses:
-        '204':
-          description: 登出成功
-        '401':
-          description: 未授權
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /auth/refresh:
-    post:
-      summary: 刷新 Token
-      description: 使用 refresh token 獲取新的 access token
-      operationId: refreshToken
-      tags:
-        - Authentication
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    refreshToken:
-                      type: string
-                      description: Refresh token
-                      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  required:
-                    - refreshToken
-      responses:
-        '200':
-          description: Token 刷新成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      token:
-                        type: string
-                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        example: "refresh-token-string"
+                        description: "刷新 Token"
                       expiresAt:
                         type: string
                         format: date-time
                         example: "2025-01-28T00:00:00Z"
+                        description: "Token 過期時間"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: "Email 已被使用"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "EMAIL_ALREADY_EXISTS"
+                  message: "此 Email 已被註冊"
+                  field: "email"
+        '500':
+          $ref: '#/components/responses/ServerError'
 
-  /auth/forgot-password:
+  /auth/login:
     post:
-      summary: 忘記密碼
-      description: 發送密碼重設連結到電子郵件（對應畫面 S-105）
-      operationId: forgotPassword
+      summary: 使用者登入
+      description: |
+        使用者透過 Email 和密碼登入。支援四模式差異化登入體驗：
+        - **Expert**: 多種登入選項，詳細登入資訊
+        - **Inertial**: 簡潔固定登入介面
+        - **Cultivation**: 激勵性登入回饋
+        - **Guiding**: 極簡化登入流程
       tags:
-        - Authentication
+        - 認證管理
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - email
+                - password
               properties:
-                data:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "SecurePassword123"
+                rememberMe:
+                  type: boolean
+                  example: true
+                  description: "記住登入狀態"
+                deviceInfo:
                   type: object
                   properties:
-                    email:
+                    deviceId:
                       type: string
-                      format: email
-                      description: 註冊電子郵件
-                      example: "user@example.com"
-                  required:
-                    - email
+                      example: "device-uuid"
+                    platform:
+                      type: string
+                      enum: [iOS, Android, Web]
+                      example: "iOS"
+                    appVersion:
+                      type: string
+                      example: "1.0.0"
       responses:
         '200':
-          description: 密碼重設連結已發送
+          description: "登入成功"
           content:
             application/json:
               schema:
@@ -468,31 +236,278 @@ paths:
                   data:
                     type: object
                     properties:
-                      message:
+                      token:
                         type: string
-                        example: "密碼重設連結已發送至您的電子郵件"
-                      emailSent:
+                        example: "jwt-token-string"
+                      refreshToken:
+                        type: string
+                        example: "refresh-token-string"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-28T00:00:00Z"
+                      user:
+                        $ref: '#/components/schemas/UserProfile'
+                      loginHistory:
+                        type: object
+                        description: "Expert 模式專用"
+                        properties:
+                          lastLogin:
+                            type: string
+                            format: date-time
+                          loginCount:
+                            type: integer
+                          newDeviceDetected:
+                            type: boolean
+                      streakInfo:
+                        type: object
+                        description: "Cultivation 模式專用"
+                        properties:
+                          currentStreak:
+                            type: integer
+                          longestStreak:
+                            type: integer
+                          streakMessage:
+                            type: string
+        '401':
+          description: "認證失敗"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "INVALID_CREDENTIALS"
+                  message: "Email 或密碼錯誤"
+        '423':
+          description: "帳號被鎖定"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "ACCOUNT_LOCKED"
+                  message: "帳號因多次登入失敗被暫時鎖定"
+                  unlockAt: "2025-01-27T14:00:00Z"
+
+  /auth/google-login:
+    post:
+      summary: Google OAuth 登入
+      description: |
+        使用 Google OAuth 進行登入或註冊。如果是新使用者將自動創建帳號。
+      tags:
+        - 認證管理
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - googleToken
+              properties:
+                googleToken:
+                  type: string
+                  example: "google-oauth-token"
+                  description: "Google OAuth Token"
+                userMode:
+                  type: string
+                  enum: [Expert, Inertial, Cultivation, Guiding]
+                  example: "Expert"
+                  description: "新使用者的預設模式"
+                deviceInfo:
+                  type: object
+                  properties:
+                    deviceId:
+                      type: string
+                    platform:
+                      type: string
+                      enum: [iOS, Android, Web]
+                    appVersion:
+                      type: string
+      responses:
+        '200':
+          description: "Google 登入成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      refreshToken:
+                        type: string
+                      expiresAt:
+                        type: string
+                        format: date-time
+                      user:
+                        $ref: '#/components/schemas/UserProfile'
+                      isNewUser:
                         type: boolean
-                        example: true
+                        description: "是否為新註冊使用者"
+                      needsAssessment:
+                        type: boolean
+                        description: "是否需要模式評估"
+
+  /auth/logout:
+    post:
+      summary: 使用者登出
+      description: |
+        登出使用者並無效化 Token。支援選擇性登出（保留某些 Token）。
+      tags:
+        - 認證管理
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logoutAllDevices:
+                  type: boolean
+                  example: false
+                  description: "是否登出所有裝置"
+                clearLocalData:
+                  type: boolean
+                  example: true
+                  description: "是否清除本地資料"
+      responses:
+        '200':
+          description: "登出成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "登出成功"
+                  loggedOutDevices:
+                    type: integer
+                    example: 1
+                    description: "登出的裝置數量"
+
+  /auth/refresh:
+    post:
+      summary: 刷新存取 Token
+      description: |
+        使用刷新 Token 取得新的存取 Token。
+      tags:
+        - 認證管理
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: "refresh-token-string"
+      responses:
+        '200':
+          description: "Token 刷新成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: "new-jwt-token"
+                      refreshToken:
+                        type: string
+                        example: "new-refresh-token"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-28T00:00:00Z"
+        '401':
+          description: "刷新 Token 無效"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/forgot-password:
+    post:
+      summary: 忘記密碼
+      description: |
+        發送密碼重設連結到使用者 Email。
+      tags:
+        - 密碼管理
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        '200':
+          description: "密碼重設連結已發送"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "密碼重設連結已發送到您的 Email"
+                  expiresIn:
+                    type: integer
+                    example: 3600
+                    description: "重設連結有效時間（秒）"
 
   /auth/verify-reset-token:
     get:
-      summary: 驗證重設 Token
-      description: 驗證密碼重設連結的有效性
-      operationId: verifyResetToken
+      summary: 驗證密碼重設 Token
+      description: |
+        驗證從 Email 點擊的密碼重設 Token 是否有效。
       tags:
-        - Authentication
+        - 密碼管理
       parameters:
         - name: token
           in: query
           required: true
           schema:
             type: string
-          description: 重設密碼 token
-          example: "abc123def456"
+          example: "reset-token-string"
+          description: "密碼重設 Token"
       responses:
         '200':
-          description: Token 有效
+          description: "Token 有效"
           content:
             application/json:
               schema:
@@ -501,54 +516,57 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  data:
-                    type: object
-                    properties:
-                      valid:
-                        type: boolean
-                        example: true
-                      expiresAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T15:00:00Z"
+                  valid:
+                    type: boolean
+                    example: true
+                  email:
+                    type: string
+                    example: "user@example.com"
+                    description: "關聯的 Email"
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T15:00:00Z"
+        '400':
+          description: "Token 無效或已過期"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/reset-password:
     post:
       summary: 重設密碼
-      description: 使用重設 token 更新密碼
-      operationId: resetPassword
+      description: |
+        使用有效的重設 Token 設定新密碼。
       tags:
-        - Authentication
+        - 密碼管理
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - token
+                - newPassword
               properties:
-                data:
-                  type: object
-                  properties:
-                    token:
-                      type: string
-                      description: 重設密碼 token
-                      example: "abc123def456"
-                    newPassword:
-                      type: string
-                      minLength: 8
-                      description: 新密碼
-                      example: "newSecurePassword123"
-                    confirmPassword:
-                      type: string
-                      description: 確認新密碼
-                      example: "newSecurePassword123"
-                  required:
-                    - token
-                    - newPassword
-                    - confirmPassword
+                token:
+                  type: string
+                  example: "reset-token-string"
+                  description: "密碼重設 Token"
+                newPassword:
+                  type: string
+                  minLength: 8
+                  example: "NewSecurePassword123"
+                  description: "新密碼"
+                confirmPassword:
+                  type: string
+                  example: "NewSecurePassword123"
+                  description: "確認新密碼"
       responses:
         '200':
-          description: 密碼重設成功
+          description: "密碼重設成功"
           content:
             application/json:
               schema:
@@ -557,46 +575,58 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  data:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "密碼已成功重設"
+                  message:
+                    type: string
+                    example: "密碼重設成功"
+                  autoLogin:
+                    type: boolean
+                    example: true
+                    description: "是否自動登入"
+                  token:
+                    type: string
+                    example: "jwt-token-string"
+                    description: "自動登入的 Token（如果 autoLogin 為 true）"
 
   /auth/bind-line:
     post:
-      summary: LINE 帳號綁定
-      description: 綁定 LINE 帳號與 APP 帳號（對應畫面 S-107）
-      operationId: bindLineAccount
+      summary: 綁定 LINE 帳號
+      description: |
+        將現有帳號與 LINE 帳號進行綁定，實現跨平台整合。
       tags:
-        - Authentication
+        - 跨平台整合
       security:
-        - bearerAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - lineUserId
+                - lineAccessToken
               properties:
-                data:
+                lineUserId:
+                  type: string
+                  example: "U1234567890abcdef"
+                  description: "LINE 使用者 ID"
+                lineAccessToken:
+                  type: string
+                  example: "line-access-token"
+                  description: "LINE 存取 Token"
+                lineProfile:
                   type: object
                   properties:
-                    lineUserId:
+                    displayName:
                       type: string
-                      description: LINE 使用者 ID
-                      example: "Uae47d9d496e4596d70ed724a7d6e2948"
-                    verificationCode:
+                      example: "LINE 使用者"
+                    pictureUrl:
                       type: string
-                      description: 驗證碼
-                      example: "123456"
-                  required:
-                    - lineUserId
-                    - verificationCode
+                      format: uri
+                      example: "https://profile.line-scdn.net/..."
       responses:
         '200':
-          description: 綁定成功
+          description: "LINE 綁定成功"
           content:
             application/json:
               schema:
@@ -605,32 +635,41 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  data:
+                  message:
+                    type: string
+                    example: "LINE 帳號綁定成功"
+                  linkedAccounts:
                     type: object
                     properties:
-                      bindingId:
+                      email:
                         type: string
-                        format: uuid
-                        example: "550e8400-e29b-41d4-a716-446655440002"
-                      lineUserId:
+                        example: "user@example.com"
+                      line:
                         type: string
-                        example: "Uae47d9d496e4596d70ed724a7d6e2948"
-                      status:
+                        example: "U1234567890abcdef"
+                      bindingDate:
                         type: string
-                        example: "active"
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+        '409':
+          description: "LINE 帳號已被其他使用者綁定"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/bind-status:
     get:
-      summary: 綁定狀態查詢
-      description: 查詢 LINE 帳號綁定狀態
-      operationId: getBindStatus
+      summary: 查詢綁定狀態
+      description: |
+        查詢目前使用者的跨平台綁定狀態。
       tags:
-        - Authentication
+        - 跨平台整合
       security:
-        - bearerAuth: []
+        - BearerAuth: []
       responses:
         '200':
-          description: 綁定狀態
+          description: "綁定狀態查詢成功"
           content:
             application/json:
               schema:
@@ -642,31 +681,113 @@ paths:
                   data:
                     type: object
                     properties:
-                      isBound:
-                        type: boolean
-                        example: true
-                      lineUserId:
+                      userId:
                         type: string
-                        example: "Uae47d9d496e4596d70ed724a7d6e2948"
-                      boundAt:
-                        type: string
-                        format: date-time
-                        example: "2025-01-20T10:00:00Z"
-
-
+                        example: "uuid-string"
+                      linkedAccounts:
+                        type: object
+                        properties:
+                          email:
+                            type: object
+                            properties:
+                              value:
+                                type: string
+                                example: "user@example.com"
+                              verified:
+                                type: boolean
+                                example: true
+                              bindingDate:
+                                type: string
+                                format: date-time
+                          line:
+                            type: object
+                            properties:
+                              value:
+                                type: string
+                                example: "U1234567890abcdef"
+                              verified:
+                                type: boolean
+                                example: true
+                              bindingDate:
+                                type: string
+                                format: date-time
+                              profile:
+                                type: object
+                                properties:
+                                  displayName:
+                                    type: string
+                                  pictureUrl:
+                                    type: string
+                          google:
+                            type: object
+                            properties:
+                              value:
+                                type: string
+                                example: "google-user-id"
+                              verified:
+                                type: boolean
+                                example: true
+                              bindingDate:
+                                type: string
+                                format: date-time
+                      availableBindings:
+                        type: array
+                        items:
+                          type: string
+                          enum: [line, google]
+                        example: ["google"]
+                        description: "可用的綁定選項"
 
 components:
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
 
   schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "uuid-string"
+        email:
+          type: string
+          example: "user@example.com"
+        displayName:
+          type: string
+          example: "張小明"
+        userMode:
+          type: string
+          enum: [Expert, Inertial, Cultivation, Guiding]
+          example: "Expert"
+        avatar:
+          type: string
+          format: uri
+          example: "https://api.lcas.com/avatars/user123.jpg"
+        preferences:
+          type: object
+          properties:
+            language:
+              type: string
+              example: "zh-TW"
+            timezone:
+              type: string
+              example: "Asia/Taipei"
+            theme:
+              type: string
+              enum: [light, dark, auto]
+              example: "auto"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-20T10:30:00Z"
+        lastActiveAt:
+          type: string
+          format: date-time
+          example: "2025-01-27T09:15:00Z"
+
     ErrorResponse:
       type: object
       properties:
@@ -678,55 +799,67 @@ components:
           properties:
             code:
               type: string
-              description: 錯誤代碼
               example: "VALIDATION_ERROR"
             message:
               type: string
-              description: 錯誤訊息
-              example: "Email format invalid"
+              example: "請求參數有誤"
             field:
               type: string
-              description: 錯誤欄位
               example: "email"
-            timestamp:
-              type: string
-              format: date-time
-              example: "2025-01-27T12:00:00Z"
-            requestId:
-              type: string
-              format: uuid
-              example: "550e8400-e29b-41d4-a716-446655440001"
+              description: "錯誤相關的欄位（如果適用）"
             details:
               type: object
-              description: 詳細錯誤資訊
-              properties:
-                validation:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      field:
-                        type: string
-                        example: "email"
-                      message:
-                        type: string
-                        example: "Email format invalid"
-                      value:
-                        type: string
-                        example: "invalid-email"
-    ApiResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: object
-          properties:
-            message:
-              type: string
-              example: "Operation successful"
+              description: "額外錯誤詳情"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-27T12:00:00Z"
+        requestId:
+          type: string
+          example: "req-uuid-string"
+
+  responses:
+    ValidationError:
+      description: "請求參數驗證失敗"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "VALIDATION_ERROR"
+              message: "密碼長度不足"
+              field: "password"
+
+    ServerError:
+      description: "伺服器內部錯誤"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "INTERNAL_SERVER_ERROR"
+              message: "伺服器暫時無法處理請求"
+
+    Unauthorized:
+      description: "未授權或 Token 無效"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "UNAUTHORIZED"
+              message: "存取 Token 無效或已過期"
 
 tags:
-  - name: Authentication
-    description: 認證相關 API
+  - name: 認證管理
+    description: 使用者註冊、登入、登出相關功能
+  - name: 密碼管理
+    description: 密碼重設、變更相關功能
+  - name: 跨平台整合
+    description: LINE、Google 等第三方平台整合功能
