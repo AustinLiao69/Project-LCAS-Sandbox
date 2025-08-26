@@ -1,14 +1,13 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 激勵系統服務 API 規格
   version: 1.0.0
   description: |
     **LCAS 2.0 激勵系統服務 API 規格**
-    
+
     負責遊戲化元素、成就系統、挑戰任務、積分獎勵與使用者激勵的完整 API 規格。
     透過遊戲化機制提升用戶記帳習慣養成與持續使用動機，支援四模式差異化體驗。
-    
+
     **服務範圍**:
     - 成就系統（記帳里程碑、連續記帳、金額達成、習慣養成）
     - 挑戰任務（每日/週/月挑戰、自訂目標、團體挑戰）
@@ -16,7 +15,7 @@ info:
     - 等級系統（用戶等級、技能樹、專業認證）
     - 社交激勵（排行榜、好友競賽、團隊協作）
     - 個人化激勵（習慣分析、動機提醒、進度追蹤）
-    
+
     **四模式差異化策略**:
     - **Expert**: 專業成就系統、深度分析獎勵、高級認證
     - **Inertial**: 基本成就與積分、簡化激勵機制
@@ -88,11 +87,63 @@ paths:
                   metadata:
                     $ref: '#/components/schemas/ResponseMetadata'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "參數驗證失敗"
+                  field: "status"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: 未授權存取
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHENTICATED"
+                  message: "未授權的存取"
+                  timestamp: "2025-01-27T12:01:00Z"
+                  requestId: "req-uuid-124"
         '500':
-          $ref: '#/components/responses/InternalServerError'
+          description: 內部伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INTERNAL_SERVER_ERROR"
+                  message: "伺服器內部錯誤"
+                  timestamp: "2025-01-27T12:02:00Z"
+                  requestId: "req-uuid-125"
 
   /gamification/challenges:
     get:
@@ -136,11 +187,63 @@ paths:
                   metadata:
                     $ref: '#/components/schemas/ResponseMetadata'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INVALID_PARAMETER"
+                  message: "無效的挑戰類型"
+                  field: "type"
+                  timestamp: "2025-01-27T12:03:00Z"
+                  requestId: "req-uuid-126"
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: 未授權存取
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHENTICATED"
+                  message: "需要登入才能存取此資源"
+                  timestamp: "2025-01-27T12:04:00Z"
+                  requestId: "req-uuid-127"
         '500':
-          $ref: '#/components/responses/InternalServerError'
+          description: 內部伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INTERNAL_SERVER_ERROR"
+                  message: "伺服器處理請求時發生錯誤"
+                  timestamp: "2025-01-27T12:05:00Z"
+                  requestId: "req-uuid-128"
 
   /gamification/claim-reward:
     post:
@@ -172,13 +275,83 @@ paths:
                   metadata:
                     $ref: '#/components/schemas/ResponseMetadata'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INVALID_REQUEST_BODY"
+                  message: "領取的獎勵 ID 無效"
+                  field: "rewardIds"
+                  timestamp: "2025-01-27T12:06:00Z"
+                  requestId: "req-uuid-129"
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: 未授權存取
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHENTICATED"
+                  message: "需要 API Key 或 Token"
+                  timestamp: "2025-01-27T12:07:00Z"
+                  requestId: "req-uuid-130"
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: 資源不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "REWARD_NOT_FOUND"
+                  message: "指定的獎勵不存在"
+                  field: "rewardId"
+                  timestamp: "2025-01-27T12:08:00Z"
+                  requestId: "req-uuid-131"
         '500':
-          $ref: '#/components/responses/InternalServerError'
+          description: 內部伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INTERNAL_SERVER_ERROR"
+                  message: "領取獎勵時發生伺服器錯誤"
+                  timestamp: "2025-01-27T12:09:00Z"
+                  requestId: "req-uuid-132"
 
   /gamification/leaderboard:
     get:
@@ -238,11 +411,63 @@ paths:
                   metadata:
                     $ref: '#/components/schemas/ResponseMetadata'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INVALID_PARAMETER"
+                  message: "無效的排行範圍"
+                  field: "scope"
+                  timestamp: "2025-01-27T12:10:00Z"
+                  requestId: "req-uuid-133"
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: 未授權存取
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHENTICATED"
+                  message: "需要認證才能查看排行榜"
+                  timestamp: "2025-01-27T12:11:00Z"
+                  requestId: "req-uuid-134"
         '500':
-          $ref: '#/components/responses/InternalServerError'
+          description: 內部伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INTERNAL_SERVER_ERROR"
+                  message: "查詢排行榜時發生伺服器錯誤"
+                  timestamp: "2025-01-27T12:12:00Z"
+                  requestId: "req-uuid-135"
 
   /gamification/join-challenge:
     post:
@@ -274,15 +499,102 @@ paths:
                   metadata:
                     $ref: '#/components/schemas/ResponseMetadata'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INVALID_REQUEST_BODY"
+                  message: "未提供挑戰 ID"
+                  field: "challengeId"
+                  timestamp: "2025-01-27T12:13:00Z"
+                  requestId: "req-uuid-136"
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: 未授權存取
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHENTICATED"
+                  message: "請先登入以參加挑戰"
+                  timestamp: "2025-01-27T12:14:00Z"
+                  requestId: "req-uuid-137"
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: 資源不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "CHALLENGE_NOT_FOUND"
+                  message: "找不到指定的挑戰"
+                  field: "challengeId"
+                  timestamp: "2025-01-27T12:15:00Z"
+                  requestId: "req-uuid-138"
         '409':
-          $ref: '#/components/responses/Conflict'
+          description: 資源衝突
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "CHALLENGE_ALREADY_JOINED"
+                  message: "您已參加此挑戰"
+                  timestamp: "2025-01-27T12:16:00Z"
+                  requestId: "req-uuid-139"
         '500':
-          $ref: '#/components/responses/InternalServerError'
+          description: 內部伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INTERNAL_SERVER_ERROR"
+                  message: "參加挑戰時發生伺服器錯誤"
+                  timestamp: "2025-01-27T12:17:00Z"
+                  requestId: "req-uuid-140"
 
   /gamification/progress:
     get:
@@ -327,11 +639,63 @@ paths:
                   metadata:
                     $ref: '#/components/schemas/ResponseMetadata'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INVALID_PARAMETER"
+                  message: "無效的挑戰狀態"
+                  field: "status"
+                  timestamp: "2025-01-27T12:18:00Z"
+                  requestId: "req-uuid-141"
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: 未授權存取
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHENTICATED"
+                  message: "需要登入才能查看進度"
+                  timestamp: "2025-01-27T12:19:00Z"
+                  requestId: "req-uuid-142"
         '500':
-          $ref: '#/components/responses/InternalServerError'
+          description: 內部伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: "INTERNAL_SERVER_ERROR"
+                  message: "取得挑戰進度時發生伺服器錯誤"
+                  timestamp: "2025-01-27T12:20:00Z"
+                  requestId: "req-uuid-143"
 
 components:
   securitySchemes:
@@ -651,50 +1015,6 @@ components:
           format: date-time
           description: 最後更新時間
 
-    ChallengeRecommendation:
-      type: object
-      properties:
-        challenge:
-          $ref: '#/components/schemas/ChallengeDetails'
-        reason:
-          type: string
-          description: 推薦原因
-        priority:
-          type: string
-          enum: [high, medium, low]
-          description: 推薦優先級
-
-    JoinChallengeRequest:
-      type: object
-      required:
-        - challengeId
-      properties:
-        challengeId:
-          type: string
-          description: 挑戰 ID
-        customGoal:
-          $ref: '#/components/schemas/ChallengeGoal'
-          description: 自定義目標（可選）
-
-    JoinChallengeResponse:
-      type: object
-      properties:
-        challengeId:
-          type: string
-          description: 挑戰 ID
-        joinedAt:
-          type: string
-          format: date-time
-          description: 參加時間
-        currentParticipants:
-          type: integer
-          description: 目前參與人數
-        personalGoal:
-          $ref: '#/components/schemas/ChallengeGoal'
-        welcomeMessage:
-          type: string
-          description: 歡迎訊息
-
     ChallengeProgressList:
       type: object
       properties:
@@ -738,6 +1058,50 @@ components:
             reward:
               type: string
               description: 里程碑獎勵
+
+    ChallengeRecommendation:
+      type: object
+      properties:
+        challenge:
+          $ref: '#/components/schemas/ChallengeDetails'
+        reason:
+          type: string
+          description: 推薦原因
+        priority:
+          type: string
+          enum: [high, medium, low]
+          description: 推薦優先級
+
+    JoinChallengeRequest:
+      type: object
+      required:
+        - challengeId
+      properties:
+        challengeId:
+          type: string
+          description: 挑戰 ID
+        customGoal:
+          $ref: '#/components/schemas/ChallengeGoal'
+          description: 自定義目標（可選）
+
+    JoinChallengeResponse:
+      type: object
+      properties:
+        challengeId:
+          type: string
+          description: 挑戰 ID
+        joinedAt:
+          type: string
+          format: date-time
+          description: 參加時間
+        currentParticipants:
+          type: integer
+          description: 目前參與人數
+        personalGoal:
+          $ref: '#/components/schemas/ChallengeGoal'
+        welcomeMessage:
+          type: string
+          description: 歡迎訊息
 
     ClaimRewardRequest:
       type: object
@@ -895,6 +1259,14 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "VALIDATION_ERROR"
+              message: "參數驗證失敗"
+              field: "query_parameter"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
 
     Unauthorized:
       description: 未授權存取
@@ -908,6 +1280,13 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "UNAUTHENTICATED"
+              message: "未授權的存取"
+              timestamp: "2025-01-27T12:01:00Z"
+              requestId: "req-uuid-124"
 
     Forbidden:
       description: 禁止存取
@@ -921,6 +1300,13 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "FORBIDDEN"
+              message: "禁止存取"
+              timestamp: "2025-01-27T12:21:00Z"
+              requestId: "req-uuid-144"
 
     NotFound:
       description: 資源不存在
@@ -934,6 +1320,14 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "RESOURCE_NOT_FOUND"
+              message: "找不到指定的資源"
+              field: "resourceId"
+              timestamp: "2025-01-27T12:22:00Z"
+              requestId: "req-uuid-145"
 
     Conflict:
       description: 資源衝突
@@ -947,6 +1341,13 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "CONFLICT"
+              message: "資源衝突"
+              timestamp: "2025-01-27T12:23:00Z"
+              requestId: "req-uuid-146"
 
     InternalServerError:
       description: 內部伺服器錯誤
@@ -960,6 +1361,13 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "INTERNAL_SERVER_ERROR"
+              message: "伺服器內部錯誤"
+              timestamp: "2025-01-27T12:24:00Z"
+              requestId: "req-uuid-147"
 
 tags:
   - name: 成就系統
