@@ -70,6 +70,34 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/ClassificationSuggestion'
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /ai/suggestions:
     get:
@@ -115,6 +143,34 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/PersonalRecommendations'
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /ai/budget-advice:
     post:
@@ -143,6 +199,34 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/GoalAdvisorResponse'
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /ai/anomaly-detection:
     post:
@@ -171,6 +255,34 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/AnomalyDetectionResult'
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /ai/spending-insights:
     post:
@@ -219,6 +331,34 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/FinancialInsights'
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /ai/recommendations:
     get:
@@ -264,6 +404,34 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/PersonalRecommendations'
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   securitySchemes:
@@ -1375,6 +1543,16 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+              metadata:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     Unauthorized:
       description: 未授權存取
@@ -1388,6 +1566,16 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+              metadata:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     Forbidden:
       description: 禁止存取
@@ -1401,6 +1589,16 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+              metadata:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     NotFound:
       description: 資源不存在
@@ -1414,6 +1612,16 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+              metadata:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     ValidationError:
       description: 資料驗證失敗
@@ -1427,6 +1635,16 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+              metadata:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     RateLimit:
       description: 請求頻率超限
@@ -1443,6 +1661,16 @@ components:
               retryAfter:
                 type: integer
                 description: 重試等待時間（秒）
+              metadata:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     InternalServerError:
       description: 內部伺服器錯誤
@@ -1456,6 +1684,16 @@ components:
                 example: false
               error:
                 $ref: '#/components/schemas/Error'
+              metadata:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
 tags:
   - name: AI 智慧分類
