@@ -1123,12 +1123,20 @@ components:
         application/json:
           schema:
             type: object
+            required:
+              - success
+              - error
             properties:
               success:
                 type: boolean
                 example: false
               error:
                 type: object
+                required:
+                  - code
+                  - message
+                  - timestamp
+                  - requestId
                 properties:
                   code:
                     type: string
@@ -1156,12 +1164,20 @@ components:
         application/json:
           schema:
             type: object
+            required:
+              - success
+              - error
             properties:
               success:
                 type: boolean
                 example: false
               error:
                 type: object
+                required:
+                  - code
+                  - message
+                  - timestamp
+                  - requestId
                 properties:
                   code:
                     type: string
@@ -1186,6 +1202,9 @@ components:
                         type: array
                         items:
                           type: object
+                          required:
+                            - field
+                            - message
                           properties:
                             field:
                               type: string
@@ -1203,12 +1222,20 @@ components:
         application/json:
           schema:
             type: object
+            required:
+              - success
+              - error
             properties:
               success:
                 type: boolean
                 example: false
               error:
                 type: object
+                required:
+                  - code
+                  - message
+                  - timestamp
+                  - requestId
                 properties:
                   code:
                     type: string
@@ -1236,12 +1263,20 @@ components:
         application/json:
           schema:
             type: object
+            required:
+              - success
+              - error
             properties:
               success:
                 type: boolean
                 example: false
               error:
                 type: object
+                required:
+                  - code
+                  - message
+                  - timestamp
+                  - requestId
                 properties:
                   code:
                     type: string
@@ -1269,12 +1304,20 @@ components:
         application/json:
           schema:
             type: object
+            required:
+              - success
+              - error
             properties:
               success:
                 type: boolean
                 example: false
               error:
                 type: object
+                required:
+                  - code
+                  - message
+                  - timestamp
+                  - requestId
                 properties:
                   code:
                     type: string
@@ -1302,12 +1345,20 @@ components:
         application/json:
           schema:
             type: object
+            required:
+              - success
+              - error
             properties:
               success:
                 type: boolean
                 example: false
               error:
                 type: object
+                required:
+                  - code
+                  - message
+                  - timestamp
+                  - requestId
                 properties:
                   code:
                     type: string
@@ -1332,18 +1383,25 @@ components:
   schemas:
     SuccessMetadata:
       type: object
+      required:
+        - timestamp
+        - requestId
+        - userMode
       properties:
         timestamp:
           type: string
           format: date-time
           example: "2025-01-27T12:00:00Z"
+          description: "API 回應時間戳"
         requestId:
           type: string
           example: "req-uuid-12345"
+          description: "請求唯一識別碼"
         userMode:
           type: string
           enum: [Expert, Inertial, Cultivation, Guiding]
           example: "Expert"
+          description: "用戶當前模式"
 
 tags:
   - name: "用戶資料管理"
