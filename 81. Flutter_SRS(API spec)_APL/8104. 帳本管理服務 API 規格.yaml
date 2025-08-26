@@ -240,6 +240,47 @@ paths:
                                   type: string
                                   enum: [active, archived, deleted]
                                   example: "active"
+                      pagination:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                            example: 1
+                          limit:
+                            type: integer
+                            example: 20
+                          total:
+                            type: integer
+                            example: 150
+                          totalPages:
+                            type: integer
+                            example: 8
+                          hasNext:
+                            type: boolean
+                            example: true
+                          hasPrev:
+                            type: boolean
+                            example: false
+                          nextPage:
+                            type: integer
+                            example: 2
+                          prevPage:
+                            type: integer
+                            nullable: true
+                            example: null
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -325,6 +366,16 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:30:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:30:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12346"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -404,12 +455,22 @@ paths:
                           canManage:
                             type: boolean
                             example: true
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12347"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限存取該帳本"
+          $ref: '#/components/responses/ForbiddenError'
 
     put:
       summary: "更新帳本"
@@ -479,6 +540,16 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12348"
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -486,7 +557,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限修改該帳本"
+          $ref: '#/components/responses/ForbiddenError'
 
     delete:
       summary: "刪除帳本"
@@ -530,12 +601,22 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12349"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限刪除該帳本"
+          $ref: '#/components/responses/ForbiddenError'
 
   /ledgers/{id}/collaborators:
     get:
@@ -604,12 +685,22 @@ paths:
                               type: string
                               format: date-time
                               example: "2025-01-01T00:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12350"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限查看協作者資訊"
+          $ref: '#/components/responses/ForbiddenError'
 
     post:
       summary: "邀請協作者"
@@ -685,6 +776,16 @@ paths:
                             invitationId:
                               type: string
                               example: "invite-uuid-002"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12351"
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -692,7 +793,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限邀請協作者"
+          $ref: '#/components/responses/ForbiddenError'
 
   /ledgers/{id}/collaborators/{userId}:
     put:
@@ -763,6 +864,16 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12352"
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -770,7 +881,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限修改協作者權限"
+          $ref: '#/components/responses/ForbiddenError'
 
     delete:
       summary: "移除協作者"
@@ -823,14 +934,24 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12353"
         '400':
-          description: "移除協作者失敗"
+          $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限移除協作者"
+          $ref: '#/components/responses/ForbiddenError'
 
   /ledgers/{id}/permissions:
     get:
@@ -894,12 +1015,22 @@ paths:
                           canExport:
                             type: boolean
                             example: true
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12354"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限查看該帳本"
+          $ref: '#/components/responses/ForbiddenError'
 
   /ledgers/{id}/conflicts:
     get:
@@ -981,12 +1112,22 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12355"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限檢測衝突"
+          $ref: '#/components/responses/ForbiddenError'
 
   /ledgers/{id}/resolve-conflict:
     post:
@@ -1075,6 +1216,16 @@ paths:
                           name:
                             type: string
                             example: "張小明"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:15:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12356"
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -1082,7 +1233,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限解決衝突"
+          $ref: '#/components/responses/ForbiddenError'
 
   /ledgers/{id}/audit-log:
     get:
@@ -1202,21 +1353,47 @@ paths:
                       pagination:
                         type: object
                         properties:
-                          currentPage:
+                          page:
                             type: integer
                             example: 1
+                          limit:
+                            type: integer
+                            example: 50
+                          total:
+                            type: integer
+                            example: 234
                           totalPages:
                             type: integer
                             example: 5
-                          totalRecords:
+                          hasNext:
+                            type: boolean
+                            example: true
+                          hasPrev:
+                            type: boolean
+                            example: false
+                          nextPage:
                             type: integer
-                            example: 234
+                            example: 2
+                          prevPage:
+                            type: integer
+                            nullable: true
+                            example: null
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12357"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: "無權限查看審計日誌"
+          $ref: '#/components/responses/ForbiddenError'
 
   /ledgers/types:
     get:
@@ -1335,6 +1512,16 @@ paths:
                             type: string
                             example: "personal"
                             description: "引導模式推薦類型"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12358"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1366,10 +1553,21 @@ components:
                   message:
                     type: string
                     example: "Token 無效或已過期"
+                  field:
+                    type: string
+                    nullable: true
+                    example: null
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-error-001"
+                  details:
+                    type: object
+                    nullable: true
+                    example: null
 
     ValidationError:
       description: "請求參數驗證失敗"
@@ -1389,17 +1587,35 @@ components:
                     example: "VALIDATION_ERROR"
                   message:
                     type: string
-                    example: "請求參數不正確"
+                    example: "帳本名稱不能為空"
                   field:
                     type: string
                     example: "name"
-                  details:
-                    type: string
-                    example: "帳本名稱不能為空"
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-error-002"
+                  details:
+                    type: object
+                    properties:
+                      validation:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field:
+                              type: string
+                              example: "name"
+                            message:
+                              type: string
+                              example: "帳本名稱不能為空"
+                            value:
+                              type: string
+                              nullable: true
+                              example: null
 
     NotFoundError:
       description: "資源不存在"
@@ -1420,16 +1636,66 @@ components:
                   message:
                     type: string
                     example: "帳本不存在"
-                  resourceType:
+                  field:
                     type: string
-                    example: "ledger"
-                  resourceId:
-                    type: string
-                    example: "ledger-uuid-001"
+                    nullable: true
+                    example: null
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-error-003"
+                  details:
+                    type: object
+                    properties:
+                      resourceType:
+                        type: string
+                        example: "ledger"
+                      resourceId:
+                        type: string
+                        example: "ledger-uuid-001"
+
+    ForbiddenError:
+      description: "無權限執行操作"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "FORBIDDEN"
+                  message:
+                    type: string
+                    example: "無權限執行此操作"
+                  field:
+                    type: string
+                    nullable: true
+                    example: null
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-error-004"
+                  details:
+                    type: object
+                    properties:
+                      requiredPermission:
+                        type: string
+                        example: "manage"
+                      userRole:
+                        type: string
+                        example: "viewer"
 
 tags:
   - name: "帳本查詢"
