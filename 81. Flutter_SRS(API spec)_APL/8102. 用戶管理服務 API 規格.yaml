@@ -898,6 +898,132 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
+  /users/verify-pin:
+    post:
+      summary: "PIN 碼驗證"
+      description: |
+        驗證用戶輸入的 PIN 碼，用於安全設定功能或敏感操作驗證。
+
+        **對應畫面**: S-503 安全設定頁
+        **安全考量**: PIN 碼需加密傳輸，支援錯誤次數限制
+      tags:
+        - "安全管理"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pinCode:
+                  type: string
+                  example: "1234"
+                  description: "4-6位數PIN碼"
+                  minLength: 4
+                  maxLength: 6
+                operation:
+                  type: string
+                  enum: [verify, change, enable, disable]
+                  example: "verify"
+                  description: "驗證操作類型"
+                deviceInfo:
+                  type: object
+                  properties:
+                    deviceId:
+                      type: string
+                      example: "device-uuid-12345"
+                    platform:
+                      type: string
+                      enum: [iOS, Android, Web]
+                      example: "iOS"
+              required:
+                - pinCode
+                - operation
+      responses:
+        '200':
+          description: "PIN 碼驗證成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      verified:
+                        type: boolean
+                        example: true
+                      operation:
+                        type: string
+                        example: "verify"
+                      remainingAttempts:
+                        type: integer
+                        example: 3
+                        description: "剩餘嘗試次數"
+                      lockoutTime:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:30:00Z"
+                        description: "鎖定解除時間（如果適用）"
+                      validFor:
+                        type: integer
+                        example: 300
+                        description: "驗證有效時間（秒）"
+        '400':
+          description: "PIN 碼錯誤"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "INVALID_PIN"
+                      message:
+                        type: string
+                        example: "PIN 碼錯誤"
+                      remainingAttempts:
+                        type: integer
+                        example: 2
+                      lockoutTime:
+                        type: string
+                        format: date-time
+                        description: "鎖定時間（如果觸發）"
+        '423':
+          description: "PIN 碼已被鎖定"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "PIN_LOCKED"
+                      message:
+                        type: string
+                        example: "PIN 碼已被鎖定，請稍後再試"
+                      unlockAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
 
 
 components:

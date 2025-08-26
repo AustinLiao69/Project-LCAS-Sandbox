@@ -1218,6 +1218,126 @@ paths:
         '403':
           description: "無權限查看審計日誌"
 
+  /ledgers/types:
+    get:
+      summary: "取得帳本類型"
+      description: |
+        取得可用的帳本類型列表，用於建立帳本時的類型選擇。
+        
+        **對應畫面**: S-302 建立帳本頁
+        **四模式差異**: 可選擇的帳本類型與說明詳細程度不同
+      tags:
+        - "帳本查詢"
+      parameters:
+        - name: X-User-Mode
+          in: header
+          description: "用戶模式標識"
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: "成功取得帳本類型列表"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      types:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "personal"
+                            name:
+                              type: string
+                              example: "個人帳本"
+                            description:
+                              type: string
+                              example: "適合個人日常記帳使用"
+                            icon:
+                              type: string
+                              example: "👤"
+                            isDefault:
+                              type: boolean
+                              example: true
+                              description: "是否為預設類型"
+                            
+                            # Expert Mode: 詳細資訊
+                            features:
+                              type: array
+                              items:
+                                type: string
+                              example: ["基本記帳", "報表分析", "預算管理"]
+                              description: "支援功能列表"
+                            limitations:
+                              type: object
+                              properties:
+                                maxTransactions:
+                                  type: integer
+                                  example: -1
+                                  description: "最大交易數限制（-1表示無限制）"
+                                maxCollaborators:
+                                  type: integer
+                                  example: 0
+                                  description: "最大協作者數量"
+                            
+                            # Cultivation Mode: 目標導向說明
+                            suitableFor:
+                              type: array
+                              items:
+                                type: string
+                              example: ["初學者", "個人使用", "簡單記帳"]
+                              description: "適合對象"
+                            
+                            # 進階設定選項
+                            configOptions:
+                              type: object
+                              properties:
+                                allowPublic:
+                                  type: boolean
+                                  example: false
+                                  description: "是否允許公開"
+                                allowCollaboration:
+                                  type: boolean
+                                  example: false
+                                  description: "是否支援協作"
+                                allowExport:
+                                  type: boolean
+                                  example: true
+                                  description: "是否支援匯出"
+                      
+                      # 不同模式的推薦
+                      recommendations:
+                        type: object
+                        properties:
+                          Expert:
+                            type: string
+                            example: "collaboration"
+                            description: "專家模式推薦類型"
+                          Inertial:
+                            type: string
+                            example: "personal"
+                            description: "慣性模式推薦類型"
+                          Cultivation:
+                            type: string
+                            example: "personal"
+                            description: "養成模式推薦類型"
+                          Guiding:
+                            type: string
+                            example: "personal"
+                            description: "引導模式推薦類型"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
 components:
   securitySchemes:
     BearerAuth:

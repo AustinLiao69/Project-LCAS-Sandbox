@@ -467,6 +467,191 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /reports/{id}/download:
+    post:
+      tags:
+        - 報表匯出
+      summary: 下載報表
+      description: |
+        建立報表下載任務，支援大檔案異步下載與進度追蹤。
+        與 GET /reports/{id}/export 的差異：
+        - export 適合小檔案直接下載
+        - download 適合大檔案異步處理，提供下載連結
+        
+        四模式差異：
+        - Expert: 完整下載選項、批次下載
+        - Inertial: 標準下載格式、單檔下載
+        - Cultivation: 推薦下載格式、進度顯示
+        - Guiding: 一鍵下載、預設格式
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 報表 ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                formats:
+                  type: array
+                  items:
+                    type: string
+                    enum: [pdf, excel, csv, png, jpg, ppt]
+                  example: ["pdf", "excel"]
+                  description: "下載格式列表（支援多格式同時下載）"
+                quality:
+                  type: string
+                  enum: [low, medium, high]
+                  default: high
+                  description: "輸出品質"
+                includeRawData:
+                  type: boolean
+                  default: false
+                  description: "包含原始資料"
+                compressionLevel:
+                  type: string
+                  enum: [none, light, medium, heavy]
+                  default: medium
+                  description: "壓縮等級"
+                emailNotification:
+                  type: boolean
+                  default: false
+                  description: "完成後發送 Email 通知"
+                downloadOptions:
+                  type: object
+                  properties:
+                    expiresInHours:
+                      type: integer
+                      default: 24
+                      minimum: 1
+                      maximum: 168
+                      description: "下載連結有效時間（小時）"
+                    passwordProtected:
+                      type: boolean
+                      default: false
+                      description: "是否設定下載密碼"
+                    password:
+                      type: string
+                      description: "下載密碼（當 passwordProtected 為 true 時）"
+              required:
+                - formats
+      responses:
+        '202':
+          description: 下載任務已建立
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      downloadId:
+                        type: string
+                        example: "download-uuid-12345"
+                        description: "下載任務 ID"
+                      status:
+                        type: string
+                        enum: [queued, processing, packaging, completed, failed]
+                        example: "queued"
+                        description: "下載狀態"
+                      formats:
+                        type: array
+                        items:
+                          type: string
+                        example: ["pdf", "excel"]
+                        description: "下載格式"
+                      estimatedTime:
+                        type: integer
+                        example: 120
+                        description: "預估完成時間（秒）"
+                      progress:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        example: 0
+                        description: "完成進度（%）"
+                      statusUrl:
+                        type: string
+                        example: "/reports/download/download-uuid-12345/status"
+                        description: "狀態查詢 URL"
+                      downloadUrls:
+                        type: object
+                        description: "下載連結（完成後提供）"
+                        properties:
+                          pdf:
+                            type: string
+                            example: "https://api.lcas.com.tw/downloads/report-123.pdf"
+                          excel:
+                            type: string
+                            example: "https://api.lcas.com.tw/downloads/report-123.xlsx"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-28T12:00:00Z"
+                        description: "下載連結過期時間"
+                      notification:
+                        type: object
+                        properties:
+                          email:
+                            type: boolean
+                            example: false
+                          webhook:
+                            type: boolean
+                            example: false
+        '400':
+          description: "請求參數錯誤"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "INVALID_FORMAT"
+                      message:
+                        type: string
+                        example: "不支援的下載格式"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          description: "下載請求過於頻繁"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "RATE_LIMIT_EXCEEDED"
+                      message:
+                        type: string
+                        example: "下載請求過於頻繁，請稍後再試"
+                      retryAfter:
+                        type: integer
+                        example: 60
+                        description: "建議重試間隔（秒）"
+
   /reports/{id}/share:
     post:
       tags:
@@ -557,6 +742,204 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/ReportTemplate'
+
+  /reports/config-options:
+    get:
+      tags:
+        - 報表範本
+      summary: 取得報表配置選項
+      description: |
+        取得報表生成時可用的配置選項，包含圖表類型、匯出格式、分析選項等。
+        四模式差異：
+        - Expert: 完整配置選項、進階設定
+        - Inertial: 常用配置選項、標準設定
+        - Cultivation: 推薦配置選項、目標導向
+        - Guiding: 簡化配置選項、預設設定
+      parameters:
+        - name: reportType
+          in: query
+          description: 報表類型
+          schema:
+            type: string
+            enum: [income_expense, budget_analysis, category_breakdown, trend_analysis, comparison]
+        - name: X-User-Mode
+          in: header
+          description: 用戶模式標識
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+      responses:
+        '200':
+          description: 成功取得配置選項
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      chartOptions:
+                        type: object
+                        properties:
+                          availableTypes:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum: [pie, bar, line, area, donut]
+                                name:
+                                  type: string
+                                  example: "圓餅圖"
+                                description:
+                                  type: string
+                                  example: "適合顯示分類比例"
+                                previewUrl:
+                                  type: string
+                                  example: "https://api.lcas.com.tw/chart-previews/pie.png"
+                          colorSchemes:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "blue"
+                                name:
+                                  type: string
+                                  example: "藍色系"
+                                colors:
+                                  type: array
+                                  items:
+                                    type: string
+                                  example: ["#2196F3", "#1976D2", "#0D47A1"]
+                      exportFormats:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            format:
+                              type: string
+                              enum: [pdf, excel, csv, png, jpg, ppt]
+                            name:
+                              type: string
+                              example: "PDF 檔案"
+                            description:
+                              type: string
+                              example: "適合列印和分享"
+                            maxSize:
+                              type: string
+                              example: "50MB"
+                            supportedCharts:
+                              type: array
+                              items:
+                                type: string
+                              example: ["pie", "bar", "line"]
+                      analysisOptions:
+                        type: object
+                        properties:
+                          trends:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  example: "monthly_comparison"
+                                name:
+                                  type: string
+                                  example: "月度比較"
+                                description:
+                                  type: string
+                                  example: "比較不同月份的收支變化"
+                          forecasting:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                method:
+                                  type: string
+                                  example: "linear_regression"
+                                name:
+                                  type: string
+                                  example: "線性預測"
+                                accuracy:
+                                  type: string
+                                  example: "中等"
+                          granularity:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                level:
+                                  type: string
+                                  enum: [daily, weekly, monthly, quarterly, yearly]
+                                name:
+                                  type: string
+                                  example: "月度"
+                                minPeriod:
+                                  type: integer
+                                  example: 3
+                                  description: "最少需要的資料期間數"
+                      modeSpecificOptions:
+                        type: object
+                        properties:
+                          Expert:
+                            type: object
+                            properties:
+                              advancedCharts:
+                                type: boolean
+                                example: true
+                              customSql:
+                                type: boolean
+                                example: true
+                              bulkExport:
+                                type: boolean
+                                example: true
+                          Cultivation:
+                            type: object
+                            properties:
+                              goalTracking:
+                                type: boolean
+                                example: true
+                              progressCharts:
+                                type: boolean
+                                example: true
+                              motivationalElements:
+                                type: boolean
+                                example: true
+                          Guiding:
+                            type: object
+                            properties:
+                              simpleCharts:
+                                type: boolean
+                                example: true
+                              presetTemplates:
+                                type: boolean
+                                example: true
+                              oneClickExport:
+                                type: boolean
+                                example: true
+                      recommendations:
+                        type: object
+                        description: "基於用戶模式的推薦配置"
+                        properties:
+                          defaultChartType:
+                            type: string
+                            example: "bar"
+                          recommendedFormat:
+                            type: string
+                            example: "pdf"
+                          suggestedAnalysis:
+                            type: array
+                            items:
+                              type: string
+                            example: ["trends", "monthly_comparison"]
 
   /analytics/insights:
     get:
