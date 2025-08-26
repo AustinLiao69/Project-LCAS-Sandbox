@@ -999,13 +999,9 @@ components:
             requestId:
               type: string
               example: "req-uuid-123"
-            timestamp:
-              type: string
-              format: date-time
-              example: "2025-01-27T12:00:00Z"
-            requestId:
-              type: string
-              example: "req-uuid-123"
+            details:
+              type: object
+              description: "錯誤詳細資訊（可選）"
 
     ResponseMetadata:
       type: object
