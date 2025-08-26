@@ -1189,17 +1189,32 @@ components:
                   type: array
                   items:
                     type: object
+                    required:
+                      - field
+                      - message
                     properties:
                       field:
                         type: string
                         example: "email"
+                        description: "驗證失敗的欄位名稱"
                       message:
                         type: string
                         example: "請求參數有誤"
+                        description: "驗證失敗的錯誤訊息"
+                      code:
+                        type: string
+                        example: "INVALID_FORMAT"
+                        description: "具體的驗證錯誤碼"
                       value:
-                        type: any
+                        type: string
                         example: "invalid-email"
+                        description: "導致驗證失敗的值"
               description: "額外錯誤詳情"
+          required:
+            - code
+            - message
+            - timestamp
+            - requestId
       required:
         - success
         - error
