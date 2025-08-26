@@ -121,7 +121,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "UNAUTHENTICATED"
+                  code: "UNAUTHORIZED"
                   message: "未授權的存取"
                   timestamp: "2025-01-27T12:01:00Z"
                   requestId: "req-uuid-124"
@@ -201,7 +201,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "INVALID_PARAMETER"
+                  code: "VALIDATION_ERROR"
                   message: "無效的挑戰類型"
                   field: "type"
                   timestamp: "2025-01-27T12:03:00Z"
@@ -221,7 +221,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "UNAUTHENTICATED"
+                  code: "UNAUTHORIZED"
                   message: "需要登入才能存取此資源"
                   timestamp: "2025-01-27T12:04:00Z"
                   requestId: "req-uuid-127"
@@ -289,7 +289,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "INVALID_REQUEST_BODY"
+                  code: "VALIDATION_ERROR"
                   message: "領取的獎勵 ID 無效"
                   field: "rewardIds"
                   timestamp: "2025-01-27T12:06:00Z"
@@ -309,7 +309,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "UNAUTHENTICATED"
+                  code: "UNAUTHORIZED"
                   message: "需要 API Key 或 Token"
                   timestamp: "2025-01-27T12:07:00Z"
                   requestId: "req-uuid-130"
@@ -328,7 +328,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "REWARD_NOT_FOUND"
+                  code: "RESOURCE_NOT_FOUND"
                   message: "指定的獎勵不存在"
                   field: "rewardId"
                   timestamp: "2025-01-27T12:08:00Z"
@@ -425,7 +425,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "INVALID_PARAMETER"
+                  code: "VALIDATION_ERROR"
                   message: "無效的排行範圍"
                   field: "scope"
                   timestamp: "2025-01-27T12:10:00Z"
@@ -445,7 +445,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "UNAUTHENTICATED"
+                  code: "UNAUTHORIZED"
                   message: "需要認證才能查看排行榜"
                   timestamp: "2025-01-27T12:11:00Z"
                   requestId: "req-uuid-134"
@@ -513,7 +513,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "INVALID_REQUEST_BODY"
+                  code: "VALIDATION_ERROR"
                   message: "未提供挑戰 ID"
                   field: "challengeId"
                   timestamp: "2025-01-27T12:13:00Z"
@@ -533,7 +533,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "UNAUTHENTICATED"
+                  code: "UNAUTHORIZED"
                   message: "請先登入以參加挑戰"
                   timestamp: "2025-01-27T12:14:00Z"
                   requestId: "req-uuid-137"
@@ -552,7 +552,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "CHALLENGE_NOT_FOUND"
+                  code: "RESOURCE_NOT_FOUND"
                   message: "找不到指定的挑戰"
                   field: "challengeId"
                   timestamp: "2025-01-27T12:15:00Z"
@@ -572,7 +572,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "CHALLENGE_ALREADY_JOINED"
+                  code: "DUPLICATE_RESOURCE"
                   message: "您已參加此挑戰"
                   timestamp: "2025-01-27T12:16:00Z"
                   requestId: "req-uuid-139"
@@ -653,7 +653,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "INVALID_PARAMETER"
+                  code: "VALIDATION_ERROR"
                   message: "無效的挑戰狀態"
                   field: "status"
                   timestamp: "2025-01-27T12:18:00Z"
@@ -673,7 +673,7 @@ paths:
               example:
                 success: false
                 error:
-                  code: "UNAUTHENTICATED"
+                  code: "UNAUTHORIZED"
                   message: "需要登入才能查看進度"
                   timestamp: "2025-01-27T12:19:00Z"
                   requestId: "req-uuid-142"
@@ -1283,7 +1283,7 @@ components:
           example:
             success: false
             error:
-              code: "UNAUTHENTICATED"
+              code: "UNAUTHORIZED"
               message: "未授權的存取"
               timestamp: "2025-01-27T12:01:00Z"
               requestId: "req-uuid-124"
@@ -1303,8 +1303,8 @@ components:
           example:
             success: false
             error:
-              code: "FORBIDDEN"
-              message: "禁止存取"
+              code: "INSUFFICIENT_PERMISSIONS"
+              message: "權限不足"
               timestamp: "2025-01-27T12:21:00Z"
               requestId: "req-uuid-144"
 
@@ -1344,8 +1344,8 @@ components:
           example:
             success: false
             error:
-              code: "CONFLICT"
-              message: "資源衝突"
+              code: "DUPLICATE_RESOURCE"
+              message: "資源已存在"
               timestamp: "2025-01-27T12:23:00Z"
               requestId: "req-uuid-146"
 
