@@ -968,12 +968,20 @@ components:
 
     Error:
       type: object
+      required:
+        - success
+        - error
       properties:
         success:
           type: boolean
           example: false
         error:
           type: object
+          required:
+            - code
+            - message
+            - timestamp
+            - requestId
           properties:
             code:
               type: string
@@ -995,6 +1003,10 @@ components:
     ResponseMetadata:
       type: object
       description: "統一回應 metadata 結構"
+      required:
+        - timestamp
+        - requestId
+        - userMode
       properties:
         timestamp:
           type: string
