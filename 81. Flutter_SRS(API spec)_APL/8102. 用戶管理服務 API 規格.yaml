@@ -166,6 +166,20 @@ paths:
                           twoFactorEnabled:
                             type: boolean
                             example: false
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '500':
@@ -226,6 +240,20 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -317,6 +345,20 @@ paths:
                                           Guiding:
                                             type: integer
                                             example: 0
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -425,6 +467,20 @@ paths:
                       previousMode:
                         type: string
                         example: "Inertial"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -522,6 +578,20 @@ paths:
                         items:
                           type: string
                         example: ["currency", "notifications.dailyReminder"]
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -623,6 +693,20 @@ paths:
                         items:
                           type: string
                         example: ["appLock", "biometric"]
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -686,6 +770,20 @@ paths:
                         items:
                           type: string
                         example: ["每日挑戰", "成就系統", "記帳提醒"]
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Cultivation"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -765,6 +863,20 @@ paths:
                                 items:
                                   type: string
                                 example: ["budget_alert", "monthly_report"]
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
 
@@ -832,6 +944,20 @@ paths:
                       sessionId:
                         type: string
                         example: "session-uuid-12345"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
 
@@ -895,6 +1021,20 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -972,6 +1112,20 @@ paths:
                         type: integer
                         example: 300
                         description: "驗證有效時間（秒）"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           description: "PIN 碼錯誤"
           content:
@@ -991,13 +1145,26 @@ paths:
                       message:
                         type: string
                         example: "PIN 碼錯誤"
-                      remainingAttempts:
-                        type: integer
-                        example: 2
-                      lockoutTime:
+                      field:
+                        type: string
+                        example: "pinCode"
+                      timestamp:
                         type: string
                         format: date-time
-                        description: "鎖定時間（如果觸發）"
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      details:
+                        type: object
+                        properties:
+                          remainingAttempts:
+                            type: integer
+                            example: 2
+                          lockoutTime:
+                            type: string
+                            format: date-time
+                            description: "鎖定時間（如果觸發）"
         '423':
           description: "PIN 碼已被鎖定"
           content:
@@ -1017,10 +1184,23 @@ paths:
                       message:
                         type: string
                         example: "PIN 碼已被鎖定，請稍後再試"
-                      unlockAt:
+                      field:
+                        type: string
+                        example: "pinCode"
+                      timestamp:
                         type: string
                         format: date-time
-                        example: "2025-01-27T13:00:00Z"
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                      details:
+                        type: object
+                        properties:
+                          unlockAt:
+                            type: string
+                            format: date-time
+                            example: "2025-01-27T13:00:00Z"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1054,10 +1234,19 @@ components:
                   message:
                     type: string
                     example: "Token 無效或已過期"
+                  field:
+                    type: string
+                    example: null
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-12345"
+                  details:
+                    type: object
+                    example: {}
 
     ValidationError:
       description: "請求參數驗證失敗"
@@ -1081,13 +1270,30 @@ components:
                   field:
                     type: string
                     example: "displayName"
-                  details:
-                    type: string
-                    example: "顯示名稱不能超過 50 個字元"
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-12345"
+                  details:
+                    type: object
+                    properties:
+                      validation:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field:
+                              type: string
+                              example: "displayName"
+                            message:
+                              type: string
+                              example: "顯示名稱不能超過 50 個字元"
+                            value:
+                              type: string
+                              example: "一個非常非常非常長的使用者顯示名稱超過五十個字元的限制"
 
     InternalServerError:
       description: "內部伺服器錯誤"
@@ -1108,13 +1314,19 @@ components:
                   message:
                     type: string
                     example: "伺服器暫時無法處理請求，請稍後再試"
-                  requestId:
+                  field:
                     type: string
-                    example: "req-uuid-12345"
+                    example: null
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-12345"
+                  details:
+                    type: object
+                    example: {}
 
 tags:
   - name: "用戶資料管理"
