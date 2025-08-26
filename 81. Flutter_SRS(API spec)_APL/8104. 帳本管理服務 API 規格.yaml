@@ -702,6 +702,7 @@ paths:
         '403':
           $ref: '#/components/responses/ForbiddenError'
 
+  /ledgers/{id}/invitations:
     post:
       summary: "邀請協作者"
       description: |
