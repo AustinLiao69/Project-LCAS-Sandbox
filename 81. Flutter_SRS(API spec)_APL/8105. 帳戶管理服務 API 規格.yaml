@@ -177,6 +177,8 @@ paths:
                                   balance:
                                     type: number
                                     example: 35000
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -295,6 +297,8 @@ paths:
                                 description:
                                   type: string
                                   example: "為此帳戶設定每月支出預算"
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -387,6 +391,8 @@ paths:
                             description: "最近交易記錄（當 includeTransactions=true 時）"
                             items:
                               $ref: '#/components/schemas/TransactionSummary'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -458,6 +464,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/Account'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -528,6 +536,8 @@ paths:
                       message:
                         type: string
                         example: "帳戶已刪除，相關交易記錄已轉移"
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           description: "無法刪除帳戶"
           content:
@@ -636,6 +646,8 @@ paths:
                             change:
                               type: number
                               example: -500
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '404':
@@ -706,6 +718,8 @@ paths:
                               items:
                                 type: string
                               example: ["中國信託支票", "台灣銀行儲蓄", "郵局帳戶"]
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
   /accounts/transfer:
     post:
@@ -788,6 +802,8 @@ paths:
                       message:
                         type: string
                         example: "轉帳成功"
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           description: "轉帳失敗"
           content:
@@ -971,6 +987,25 @@ components:
             requestId:
               type: string
               example: "req-uuid-123"
+
+    ResponseMetadata:
+      type: object
+      description: "統一回應 metadata 結構"
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-27T12:00:00Z"
+          description: "回應時間戳"
+        requestId:
+          type: string
+          example: "req-uuid-123"
+          description: "請求追蹤 ID"
+        userMode:
+          type: string
+          enum: [Expert, Inertial, Cultivation, Guiding]
+          example: "Expert"
+          description: "使用者模式"
 
   responses:
     BadRequestError:
