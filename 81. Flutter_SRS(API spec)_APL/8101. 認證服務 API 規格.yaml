@@ -4,10 +4,10 @@ info:
   version: 1.1.0
   description: |
     **LCAS 2.0 認證服務 API 規格**
-    
+
     本服務提供完整的使用者認證功能，包括註冊、登入、密碼管理、跨平台綁定等功能。
     支援四模式差異化體驗：Expert、Inertial、Cultivation、Guiding。
-    
+
     **核心功能**：
     - 使用者註冊與登入
     - Google OAuth 整合
@@ -160,6 +160,19 @@ paths:
                         format: date-time
                         example: "2025-01-28T00:00:00Z"
                         description: "Token 過期時間"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '409':
@@ -269,6 +282,19 @@ paths:
                             type: integer
                           streakMessage:
                             type: string
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           description: "認證失敗"
           content:
@@ -357,6 +383,19 @@ paths:
                       needsAssessment:
                         type: boolean
                         description: "是否需要模式評估"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
 
   /auth/logout:
     post:
@@ -400,6 +439,19 @@ paths:
                     type: integer
                     example: 1
                     description: "登出的裝置數量"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
 
   /auth/refresh:
     post:
@@ -444,6 +496,19 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-28T00:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           description: "刷新 Token 無效"
           content:
@@ -489,6 +554,19 @@ paths:
                     type: integer
                     example: 3600
                     description: "重設連結有效時間（秒）"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
 
   /auth/verify-reset-token:
     get:
@@ -527,6 +605,19 @@ paths:
                     type: string
                     format: date-time
                     example: "2025-01-27T15:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           description: "Token 無效或已過期"
           content:
@@ -585,6 +676,19 @@ paths:
                     type: string
                     example: "login"
                     description: "下一步操作建議"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           description: "驗證碼錯誤或已過期"
           content:
@@ -660,6 +764,19 @@ paths:
                     type: string
                     example: "jwt-token-string"
                     description: "自動登入的 Token（如果 autoLogin 為 true）"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
 
   /auth/bind-line:
     post:
@@ -725,6 +842,19 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '409':
           description: "LINE 帳號已被其他使用者綁定"
           content:
@@ -811,6 +941,19 @@ paths:
                           enum: [line, google]
                         example: ["google"]
                         description: "可用的綁定選項"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        example: "Expert"
 
 components:
   securitySchemes:
