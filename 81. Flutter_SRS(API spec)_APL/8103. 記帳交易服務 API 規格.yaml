@@ -2896,6 +2896,53 @@ components:
       bearerFormat: JWT
       description: "Firebase Auth JWT Token"
 
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "金額必須大於 0"
+            field:
+              type: string
+              example: "amount"
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-01-27T12:00:00Z"
+            requestId:
+              type: string
+              example: "uuid"
+            details:
+              type: object
+              properties:
+                validation:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                        example: "amount"
+                      message:
+                        type: string
+                        example: "金額必須大於 0"
+                      value:
+                        type: any
+                        example: -100
+      required:
+        - success
+        - error
+
   responses:
     UnauthorizedError:
       description: "未授權存取"
@@ -2938,47 +2985,7 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: object
-                properties:
-                  code:
-                    type: string
-                    example: "VALIDATION_ERROR"
-                  message:
-                    type: string
-                    example: "金額必須大於 0"
-                  field:
-                    type: string
-                    example: "amount"
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T12:00:00Z"
-                  requestId:
-                    type: string
-                    example: "uuid"
-                  details:
-                    type: object
-                    properties:
-                      validation:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            field:
-                              type: string
-                              example: "amount"
-                            message:
-                              type: string
-                              example: "金額必須大於 0"
-                            value:
-                              type: number
-                              example: -100
+            $ref: '#/components/schemas/ErrorResponse'
 
     NotFoundError:
       description: "資源不存在"
@@ -3051,6 +3058,48 @@ components:
                       errorId:
                         type: string
                         example: "error-uuid-12345"
+
+    BusinessLogicError:
+      description: "業務邏輯錯誤"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "BUSINESS_LOGIC_ERROR"
+                  message:
+                    type: string
+                    example: "帳戶餘額不足"
+                  field:
+                    type: string
+                    example: "amount"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "uuid"
+                  details:
+                    type: object
+                    properties:
+                      businessRule:
+                        type: string
+                        example: "insufficient_balance"
+                      currentBalance:
+                        type: number
+                        example: 1000
+                      requiredAmount:
+                        type: number
+                        example: 1500
 
 tags:
   - name: "快速記帳"
