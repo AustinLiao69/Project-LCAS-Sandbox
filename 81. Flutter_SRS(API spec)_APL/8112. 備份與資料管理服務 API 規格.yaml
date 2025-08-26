@@ -204,6 +204,24 @@ paths:
                         type: string
                         description: 狀態訊息
                         example: "備份已排入佇列，請稍候"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: 回應時間戳
+                        example: "2025-08-22T10:30:00Z"
+                      requestId:
+                        type: string
+                        format: uuid
+                        description: 請求追蹤ID
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        description: 使用者模式
+                        example: "Expert"
               examples:
                 expert_response:
                   summary: Expert模式回應
@@ -394,6 +412,24 @@ paths:
                           pageSize:
                             type: integer
                             example: 20
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: 回應時間戳
+                        example: "2025-08-22T11:00:00Z"
+                      requestId:
+                        type: string
+                        format: uuid
+                        description: 請求追蹤ID
+                        example: "req-uuid-456"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        description: 使用者模式
+                        example: "Expert"
               examples:
                 expert_response:
                   summary: Expert模式 - 詳細備份資訊
@@ -558,6 +594,24 @@ paths:
                         type: string
                         description: 狀態訊息
                         example: "正在準備還原資料..."
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: 回應時間戳
+                        example: "2025-08-22T11:00:00Z"
+                      requestId:
+                        type: string
+                        format: uuid
+                        description: 請求追蹤ID
+                        example: "req-uuid-789"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        description: 使用者模式
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -682,6 +736,24 @@ paths:
                             format: uri
                             description: 下載連結（僅備份成功）
                             example: "https://api.lcas.app/v1/backup/backup_67890/download"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: 回應時間戳
+                        example: "2025-08-22T11:15:00Z"
+                      requestId:
+                        type: string
+                        format: uuid
+                        description: 請求追蹤ID
+                        example: "req-uuid-101"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        description: 使用者模式
+                        example: "Expert"
         '404':
           description: 任務不存在
           content:
@@ -862,6 +934,24 @@ paths:
                         format: date-time
                         description: 建立時間
                         example: "2025-08-22T11:15:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: 回應時間戳
+                        example: "2025-08-22T11:15:00Z"
+                      requestId:
+                        type: string
+                        format: uuid
+                        description: 請求追蹤ID
+                        example: "req-uuid-export"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        description: 使用者模式
+                        example: "Expert"
                       
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -977,6 +1067,24 @@ paths:
                         format: date-time
                         description: 建立時間
                         example: "2025-08-22T11:30:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: 回應時間戳
+                        example: "2025-08-22T11:30:00Z"
+                      requestId:
+                        type: string
+                        format: uuid
+                        description: 請求追蹤ID
+                        example: "req-uuid-import"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        description: 使用者模式
+                        example: "Expert"
                       
         '400':
           description: 檔案格式錯誤或參數無效
@@ -1045,9 +1153,10 @@ components:
               type: string
               description: 錯誤訊息
               example: "請求參數格式錯誤"
-            details:
-              type: object
-              description: 詳細錯誤資訊
+            field:
+              type: string
+              description: 錯誤欄位
+              example: "backupName"
             timestamp:
               type: string
               format: date-time
@@ -1058,6 +1167,14 @@ components:
               format: uuid
               description: 請求追蹤ID
               example: "req_abc123"
+            details:
+              type: object
+              description: 詳細錯誤資訊
+          required:
+            - code
+            - message
+            - timestamp
+            - requestId
 
   responses:
     BadRequest:
@@ -1074,11 +1191,12 @@ components:
                 error:
                   code: "VALIDATION_ERROR"
                   message: "備份名稱不能為空"
+                  field: "backupName"
+                  timestamp: "2025-08-22T12:00:00Z"
+                  requestId: "req_abc123"
                   details:
                     field: "backupName"
                     rejectedValue: ""
-                  timestamp: "2025-08-22T12:00:00Z"
-                  requestId: "req_abc123"
 
     Unauthorized:
       description: 未授權存取
