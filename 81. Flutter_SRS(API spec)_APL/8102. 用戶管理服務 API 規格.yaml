@@ -1260,9 +1260,11 @@ components:
             code:
               type: string
               example: "VALIDATION_ERROR"
+              description: "錯誤代碼分類"
             message:
               type: string
               example: "請求參數不正確"
+              description: "錯誤訊息"
             field:
               type: string
               example: "displayName"
@@ -1271,14 +1273,18 @@ components:
               type: string
               format: date-time
               example: "2025-01-27T12:00:00Z"
+              description: "錯誤發生時間戳"
             requestId:
               type: string
               example: "req-uuid-12345"
+              description: "請求唯一識別碼"
             details:
               type: object
+              description: "錯誤詳細資訊"
               properties:
                 validation:
                   type: array
+                  description: "參數驗證錯誤詳情"
                   items:
                     type: object
                     required:
@@ -1288,12 +1294,19 @@ components:
                       field:
                         type: string
                         example: "displayName"
+                        description: "錯誤欄位名稱"
                       message:
                         type: string
                         example: "顯示名稱不能超過 50 個字元"
+                        description: "錯誤詳細說明"
                       value:
                         type: string
                         example: "一個非常非常非常長的使用者顯示名稱超過五十個字元的限制"
+                        description: "導致錯誤的輸入值"
+                      code:
+                        type: string
+                        example: "MAX_LENGTH_EXCEEDED"
+                        description: "具體錯誤代碼"
 
 tags:
   - name: "用戶資料管理"
