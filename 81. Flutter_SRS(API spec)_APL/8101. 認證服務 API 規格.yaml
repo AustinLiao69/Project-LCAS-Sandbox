@@ -122,6 +122,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -162,17 +166,25 @@ paths:
                         description: "Token 過期時間"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
         '400':
           $ref: '#/components/responses/ValidationError'
         '409':
@@ -242,6 +254,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -284,17 +300,25 @@ paths:
                             type: string
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
         '401':
           description: "認證失敗"
           content:
@@ -361,6 +385,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -385,17 +413,25 @@ paths:
                         description: "是否需要模式評估"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
 
   /auth/logout:
     post:
@@ -428,30 +464,45 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "登出成功"
-                  loggedOutDevices:
-                    type: integer
-                    example: 1
-                    description: "登出的裝置數量"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "登出成功"
+                      loggedOutDevices:
+                        type: integer
+                        example: 1
+                        description: "登出的裝置數量"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
 
   /auth/refresh:
     post:
@@ -479,6 +530,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -498,17 +553,25 @@ paths:
                         example: "2025-01-28T00:00:00Z"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
         '401':
           description: "刷新 Token 無效"
           content:
@@ -543,30 +606,45 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "密碼重設連結已發送到您的 Email"
-                  expiresIn:
-                    type: integer
-                    example: 3600
-                    description: "重設連結有效時間（秒）"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "密碼重設連結已發送到您的 Email"
+                      expiresIn:
+                        type: integer
+                        example: 3600
+                        description: "重設連結有效時間（秒）"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
 
   /auth/verify-reset-token:
     get:
@@ -590,34 +668,49 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  valid:
-                    type: boolean
-                    example: true
-                  email:
-                    type: string
-                    example: "user@example.com"
-                    description: "關聯的 Email"
-                  expiresAt:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T15:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      valid:
+                        type: boolean
+                        example: true
+                      email:
+                        type: string
+                        example: "user@example.com"
+                        description: "關聯的 Email"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T15:00:00Z"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
         '400':
           description: "Token 無效或已過期"
           content:
@@ -662,33 +755,48 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "Email 驗證成功"
-                  verified:
-                    type: boolean
-                    example: true
-                  nextStep:
-                    type: string
-                    example: "login"
-                    description: "下一步操作建議"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Email 驗證成功"
+                      verified:
+                        type: boolean
+                        example: true
+                      nextStep:
+                        type: string
+                        example: "login"
+                        description: "下一步操作建議"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
         '400':
           description: "驗證碼錯誤或已過期"
           content:
@@ -700,6 +808,7 @@ paths:
                 error:
                   code: "INVALID_VERIFICATION_CODE"
                   message: "驗證碼錯誤或已過期"
+                  field: "verificationCode"
         '404':
           description: "Email 不存在或未請求驗證"
           content:
@@ -749,34 +858,49 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "密碼重設成功"
-                  autoLogin:
-                    type: boolean
-                    example: true
-                    description: "是否自動登入"
-                  token:
-                    type: string
-                    example: "jwt-token-string"
-                    description: "自動登入的 Token（如果 autoLogin 為 true）"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "密碼重設成功"
+                      autoLogin:
+                        type: boolean
+                        example: true
+                        description: "是否自動登入"
+                      token:
+                        type: string
+                        example: "jwt-token-string"
+                        description: "自動登入的 Token（如果 autoLogin 為 true）"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
 
   /auth/bind-line:
     post:
@@ -822,39 +946,54 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "LINE 帳號綁定成功"
-                  linkedAccounts:
+                  data:
                     type: object
                     properties:
-                      email:
+                      message:
                         type: string
-                        example: "user@example.com"
-                      line:
-                        type: string
-                        example: "U1234567890abcdef"
-                      bindingDate:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
+                        example: "LINE 帳號綁定成功"
+                      linkedAccounts:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            example: "user@example.com"
+                          line:
+                            type: string
+                            example: "U1234567890abcdef"
+                          bindingDate:
+                            type: string
+                            format: date-time
+                            example: "2025-01-27T12:00:00Z"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
         '409':
           description: "LINE 帳號已被其他使用者綁定"
           content:
@@ -878,6 +1017,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -943,17 +1086,25 @@ paths:
                         description: "可用的綁定選項"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
+                        description: "請求唯一識別符"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "使用者模式"
 
 components:
   securitySchemes:
