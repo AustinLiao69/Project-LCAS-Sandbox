@@ -1266,6 +1266,39 @@ components:
             error:
               code: "UNAUTHORIZED"
               message: "存取 Token 無效或已過期"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details: {}
+
+    ForbiddenError:
+      description: "權限不足"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "FORBIDDEN"
+              message: "權限不足，無法執行此操作"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details: {}
+
+    BusinessLogicError:
+      description: "業務邏輯錯誤"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "BUSINESS_LOGIC_ERROR"
+              message: "業務邏輯錯誤"
+              field: null
               timestamp: "2025-01-27T12:00:00Z"
               requestId: "req-uuid-string"
               details: {}
