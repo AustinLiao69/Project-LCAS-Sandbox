@@ -1,3 +1,4 @@
+
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 帳戶管理服務 API 規格
@@ -313,6 +314,8 @@ paths:
                   code: "ACCOUNT_NAME_EXISTS"
                   message: "帳戶名稱已存在"
                   field: "name"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
 
   /accounts/{id}:
     get:
@@ -544,6 +547,8 @@ paths:
                 error:
                   code: "ACCOUNT_HAS_TRANSACTIONS"
                   message: "帳戶有交易記錄，請指定轉移目標帳戶或使用強制刪除"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
                   details:
                     transactionCount: 25
                     suggestions:
@@ -812,6 +817,8 @@ paths:
                     error:
                       code: "INSUFFICIENT_BALANCE"
                       message: "帳戶餘額不足"
+                      timestamp: "2025-01-27T12:00:00Z"
+                      requestId: "req-uuid-123"
                       details:
                         currentBalance: 3000
                         requiredAmount: 5000
@@ -821,6 +828,8 @@ paths:
                     error:
                       code: "SAME_ACCOUNT_TRANSFER"
                       message: "不能在相同帳戶間轉帳"
+                      timestamp: "2025-01-27T12:00:00Z"
+                      requestId: "req-uuid-123"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '404':
@@ -938,18 +947,18 @@ components:
     Pagination:
       type: object
       properties:
-        currentPage:
+        page:
           type: integer
           example: 1
-        totalPages:
-          type: integer
-          example: 5
-        totalItems:
-          type: integer
-          example: 48
-        itemsPerPage:
+        limit:
           type: integer
           example: 20
+        total:
+          type: integer
+          example: 48
+        totalPages:
+          type: integer
+          example: 3
         hasNext:
           type: boolean
           example: true
@@ -1015,6 +1024,8 @@ components:
               code: "VALIDATION_ERROR"
               message: "帳戶名稱不能為空"
               field: "name"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
 
     UnauthorizedError:
       description: "未授權或 Token 無效"
@@ -1027,6 +1038,8 @@ components:
             error:
               code: "UNAUTHORIZED"
               message: "Token 無效或已過期"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
 
     NotFoundError:
       description: "資源不存在"
@@ -1039,6 +1052,8 @@ components:
             error:
               code: "ACCOUNT_NOT_FOUND"
               message: "找不到指定的帳戶"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
 
 tags:
   - name: 帳戶查詢
