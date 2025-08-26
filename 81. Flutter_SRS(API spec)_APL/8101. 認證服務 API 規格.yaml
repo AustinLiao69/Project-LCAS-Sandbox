@@ -1024,16 +1024,34 @@ components:
               type: string
               example: "email"
               description: "錯誤相關的欄位（如果適用）"
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-01-27T12:00:00Z"
+            requestId:
+              type: string
+              example: "req-uuid-string"
             details:
               type: object
+              properties:
+                validation:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                        example: "email"
+                      message:
+                        type: string
+                        example: "請求參數有誤"
+                      value:
+                        type: any
+                        example: "invalid-email"
               description: "額外錯誤詳情"
-        timestamp:
-          type: string
-          format: date-time
-          example: "2025-01-27T12:00:00Z"
-        requestId:
-          type: string
-          example: "req-uuid-string"
+      required:
+        - success
+        - error
 
   responses:
     ValidationError:
@@ -1048,6 +1066,13 @@ components:
               code: "VALIDATION_ERROR"
               message: "密碼長度不足"
               field: "password"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details:
+                validation:
+                  - field: "password"
+                    message: "密碼長度不足"
+                    value: "123"
 
     ServerError:
       description: "伺服器內部錯誤"
@@ -1060,6 +1085,9 @@ components:
             error:
               code: "INTERNAL_SERVER_ERROR"
               message: "伺服器暫時無法處理請求"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details: {}
 
     Unauthorized:
       description: "未授權或 Token 無效"
@@ -1072,6 +1100,9 @@ components:
             error:
               code: "UNAUTHORIZED"
               message: "存取 Token 無效或已過期"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details: {}
 
 tags:
   - name: 認證管理
