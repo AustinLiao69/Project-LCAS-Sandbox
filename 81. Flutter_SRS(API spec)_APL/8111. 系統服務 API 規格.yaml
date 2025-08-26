@@ -269,6 +269,264 @@ paths:
         '403':
           description: 權限不足
 
+  /help/contact:
+    post:
+      tags: [system-maintenance]
+      summary: 聯繫客服
+      description: |
+        提交客服聯繫請求，支援問題分類與優先級設定。
+        
+        **對應畫面**: S-506 幫助中心頁
+        **四模式差異**: 問題分類與表單複雜度不同
+      operationId: contactSupport
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category:
+                  type: string
+                  enum: [technical, billing, feature_request, bug_report, general, account]
+                  example: "technical"
+                  description: "問題分類"
+                priority:
+                  type: string
+                  enum: [low, medium, high, urgent]
+                  example: "medium"
+                  description: "問題優先級"
+                subject:
+                  type: string
+                  example: "無法同步交易資料"
+                  maxLength: 200
+                  description: "問題主旨"
+                message:
+                  type: string
+                  example: "我的交易資料無法正常同步，已經重新登入但問題依然存在。"
+                  maxLength: 2000
+                  description: "問題詳細描述"
+                contactMethod:
+                  type: string
+                  enum: [email, phone, in_app]
+                  example: "email"
+                  description: "希望的聯繫方式"
+                contactInfo:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                      example: "user@example.com"
+                    phone:
+                      type: string
+                      example: "+886-912-345-678"
+                    preferredTime:
+                      type: string
+                      example: "工作日上午 9:00-12:00"
+                attachments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      filename:
+                        type: string
+                        example: "screenshot.png"
+                      size:
+                        type: integer
+                        example: 1024768
+                      mimeType:
+                        type: string
+                        example: "image/png"
+                      base64Data:
+                        type: string
+                        description: "Base64 編碼的檔案內容"
+                  maxItems: 5
+                  description: "附件列表（最多 5 個檔案）"
+                systemInfo:
+                  type: object
+                  properties:
+                    platform:
+                      type: string
+                      enum: [iOS, Android, Web]
+                      example: "iOS"
+                    appVersion:
+                      type: string
+                      example: "2.1.0"
+                    deviceModel:
+                      type: string
+                      example: "iPhone 13"
+                    osVersion:
+                      type: string
+                      example: "iOS 16.0"
+                userMode:
+                  type: string
+                  enum: [Expert, Inertial, Cultivation, Guiding]
+                  example: "Expert"
+                  description: "用戶模式"
+              required:
+                - category
+                - subject
+                - message
+                - contactMethod
+      responses:
+        '201':
+          description: 客服請求提交成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      ticketId:
+                        type: string
+                        example: "TKT-2025012700123"
+                        description: "客服工單號碼"
+                      category:
+                        type: string
+                        example: "technical"
+                      priority:
+                        type: string
+                        example: "medium"
+                      status:
+                        type: string
+                        enum: [pending, assigned, in_progress, resolved, closed]
+                        example: "pending"
+                        description: "工單狀態"
+                      estimatedResponseTime:
+                        type: object
+                        properties:
+                          hours:
+                            type: integer
+                            example: 24
+                          businessHours:
+                            type: boolean
+                            example: true
+                        description: "預估回覆時間"
+                      assignedAgent:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            example: "客服小王"
+                          id:
+                            type: string
+                            example: "agent-001"
+                        description: "指派的客服人員"
+                      trackingUrl:
+                        type: string
+                        example: "https://support.lcas.app/tickets/TKT-2025012700123"
+                        description: "工單追蹤連結"
+                      contactInfo:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            example: "support@lcas.app"
+                          phone:
+                            type: string
+                            example: "+886-2-1234-5678"
+                          workingHours:
+                            type: string
+                            example: "週一至週五 9:00-18:00"
+                      autoReply:
+                        type: object
+                        properties:
+                          sent:
+                            type: boolean
+                            example: true
+                          message:
+                            type: string
+                            example: "感謝您的來信，我們已收到您的問題，將在 24 小時內回覆。"
+                      nextSteps:
+                        type: array
+                        items:
+                          type: string
+                        example: [
+                          "我們將於 24 小時內透過 Email 回覆",
+                          "您可以透過工單號碼追蹤處理進度",
+                          "如有緊急問題請直接撥打客服電話"
+                        ]
+                        description: "後續處理步驟"
+        '400':
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "VALIDATION_ERROR"
+                      message:
+                        type: string
+                        example: "問題描述不能為空"
+                      field:
+                        type: string
+                        example: "message"
+        '413':
+          description: 附件大小超過限制
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "FILE_TOO_LARGE"
+                      message:
+                        type: string
+                        example: "附件大小不能超過 10MB"
+                      maxSize:
+                        type: string
+                        example: "10MB"
+        '429':
+          description: 請求過於頻繁
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "RATE_LIMIT_EXCEEDED"
+                      message:
+                        type: string
+                        example: "請求過於頻繁，請稍後再試"
+                      retryAfter:
+                        type: integer
+                        example: 300
+                        description: "建議重試間隔（秒）"
+        '401':
+          description: 未授權存取
+        '500':
+          description: 內部伺服器錯誤
+
 components:
   securitySchemes:
     bearerAuth:

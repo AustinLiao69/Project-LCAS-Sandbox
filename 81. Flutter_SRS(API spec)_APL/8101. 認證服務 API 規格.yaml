@@ -1,13 +1,13 @@
 openapi: 3.0.3
 info:
   title: LCAS 2.0 認證服務 API
-  version: 1.0.0
+  version: 1.1.0
   description: |
     **LCAS 2.0 認證服務 API 規格**
-    
+
     本服務提供完整的使用者認證功能，包括註冊、登入、密碼管理、跨平台綁定等功能。
     支援四模式差異化體驗：Expert、Inertial、Cultivation、Guiding。
-    
+
     **核心功能**：
     - 使用者註冊與登入
     - Google OAuth 整合
@@ -122,6 +122,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -160,6 +164,27 @@ paths:
                         format: date-time
                         example: "2025-01-28T00:00:00Z"
                         description: "Token 過期時間"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
         '400':
           $ref: '#/components/responses/ValidationError'
         '409':
@@ -229,6 +254,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -238,14 +267,11 @@ paths:
                     properties:
                       token:
                         type: string
-                        example: "jwt-token-string"
                       refreshToken:
                         type: string
-                        example: "refresh-token-string"
                       expiresAt:
                         type: string
                         format: date-time
-                        example: "2025-01-28T00:00:00Z"
                       user:
                         $ref: '#/components/schemas/UserProfile'
                       loginHistory:
@@ -269,6 +295,27 @@ paths:
                             type: integer
                           streakMessage:
                             type: string
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
         '401':
           description: "認證失敗"
           content:
@@ -335,6 +382,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -357,6 +408,27 @@ paths:
                       needsAssessment:
                         type: boolean
                         description: "是否需要模式評估"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
 
   /auth/logout:
     post:
@@ -389,17 +461,45 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "登出成功"
-                  loggedOutDevices:
-                    type: integer
-                    example: 1
-                    description: "登出的裝置數量"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "登出成功"
+                      loggedOutDevices:
+                        type: integer
+                        example: 1
+                        description: "登出的裝置數量"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
 
   /auth/refresh:
     post:
@@ -427,6 +527,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -444,6 +548,27 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-28T00:00:00Z"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
         '401':
           description: "刷新 Token 無效"
           content:
@@ -478,17 +603,45 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "密碼重設連結已發送到您的 Email"
-                  expiresIn:
-                    type: integer
-                    example: 3600
-                    description: "重設連結有效時間（秒）"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "密碼重設連結已發送到您的 Email"
+                      expiresIn:
+                        type: integer
+                        example: 3600
+                        description: "重設連結有效時間（秒）"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
 
   /auth/verify-reset-token:
     get:
@@ -512,27 +665,158 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  valid:
-                    type: boolean
-                    example: true
-                  email:
-                    type: string
-                    example: "user@example.com"
-                    description: "關聯的 Email"
-                  expiresAt:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T15:00:00Z"
+                  data:
+                    type: object
+                    properties:
+                      valid:
+                        type: boolean
+                        example: true
+                      email:
+                        type: string
+                        example: "user@example.com"
+                        description: "關聯的 Email"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T15:00:00Z"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
         '400':
           description: "Token 無效或已過期"
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/verify-email:
+    post:
+      summary: 驗證 Email 地址
+      description: |
+        使用驗證碼驗證使用者的 Email 地址。通常在註冊後或更改Email時使用。
+      tags:
+        - 認證管理
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - verificationCode
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                  description: "要驗證的 Email 地址"
+                verificationCode:
+                  type: string
+                  example: "123456"
+                  description: "6位數驗證碼"
+                token:
+                  type: string
+                  example: "verification-token-string"
+                  description: "驗證 Token（替代驗證碼的方式）"
+      responses:
+        '200':
+          description: "Email 驗證成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - metadata
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Email 驗證成功"
+                      verified:
+                        type: boolean
+                        example: true
+                      nextStep:
+                        type: string
+                        example: "login"
+                        description: "下一步操作建議"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
+        '400':
+          description: "驗證碼錯誤或已過期"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "INVALID_VERIFICATION_CODE"
+                  message: "驗證碼錯誤或已過期"
+                  field: "verificationCode"
+        '404':
+          description: "Email 不存在或未請求驗證"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "EMAIL_NOT_FOUND"
+                  message: "找不到此 Email 的驗證請求"
 
   /auth/reset-password:
     post:
@@ -571,21 +855,49 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "密碼重設成功"
-                  autoLogin:
-                    type: boolean
-                    example: true
-                    description: "是否自動登入"
-                  token:
-                    type: string
-                    example: "jwt-token-string"
-                    description: "自動登入的 Token（如果 autoLogin 為 true）"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "密碼重設成功"
+                      autoLogin:
+                        type: boolean
+                        example: true
+                        description: "是否自動登入"
+                      token:
+                        type: string
+                        example: "jwt-token-string"
+                        description: "自動登入的 Token（如果 autoLogin 為 true）"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
 
   /auth/bind-line:
     post:
@@ -631,26 +943,54 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "LINE 帳號綁定成功"
-                  linkedAccounts:
+                  data:
                     type: object
                     properties:
-                      email:
+                      message:
                         type: string
-                        example: "user@example.com"
-                      line:
-                        type: string
-                        example: "U1234567890abcdef"
-                      bindingDate:
+                        example: "LINE 帳號綁定成功"
+                      linkedAccounts:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            example: "user@example.com"
+                          line:
+                            type: string
+                            example: "U1234567890abcdef"
+                          bindingDate:
+                            type: string
+                            format: date-time
+                            example: "2025-01-27T12:00:00Z"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
         '409':
           description: "LINE 帳號已被其他使用者綁定"
           content:
@@ -674,6 +1014,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - success
+                  - data
+                  - metadata
                 properties:
                   success:
                     type: boolean
@@ -737,6 +1081,27 @@ paths:
                           enum: [line, google]
                         example: ["google"]
                         description: "可用的綁定選項"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                        description: "請求唯一識別符"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "使用者模式"
 
 components:
   securitySchemes:
@@ -807,16 +1172,48 @@ components:
               type: string
               example: "email"
               description: "錯誤相關的欄位（如果適用）"
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-01-27T12:00:00Z"
+            requestId:
+              type: string
+              example: "req-uuid-string"
             details:
               type: object
+              properties:
+                validation:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - field
+                      - message
+                    properties:
+                      field:
+                        type: string
+                        example: "email"
+                        description: "驗證失敗的欄位名稱"
+                      message:
+                        type: string
+                        example: "驗證失敗的錯誤訊息"
+                      code:
+                        type: string
+                        example: "INVALID_FORMAT"
+                        description: "具體的驗證錯誤碼"
+                      value:
+                        type: string
+                        example: "invalid-email"
+                        description: "導致驗證失敗的值"
               description: "額外錯誤詳情"
-        timestamp:
-          type: string
-          format: date-time
-          example: "2025-01-27T12:00:00Z"
-        requestId:
-          type: string
-          example: "req-uuid-string"
+          required:
+            - code
+            - message
+            - timestamp
+            - requestId
+      required:
+        - success
+        - error
 
   responses:
     ValidationError:
@@ -831,6 +1228,13 @@ components:
               code: "VALIDATION_ERROR"
               message: "密碼長度不足"
               field: "password"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details:
+                validation:
+                  - field: "password"
+                    message: "密碼長度不足"
+                    value: "123"
 
     ServerError:
       description: "伺服器內部錯誤"
@@ -843,6 +1247,9 @@ components:
             error:
               code: "INTERNAL_SERVER_ERROR"
               message: "伺服器暫時無法處理請求"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details: {}
 
     Unauthorized:
       description: "未授權或 Token 無效"
@@ -855,6 +1262,42 @@ components:
             error:
               code: "UNAUTHORIZED"
               message: "存取 Token 無效或已過期"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details: {}
+
+    ForbiddenError:
+      description: "權限不足"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "FORBIDDEN"
+              message: "權限不足，無法執行此操作"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details: {}
+
+    BusinessLogicError:
+      description: "業務邏輯錯誤"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "BUSINESS_LOGIC_ERROR"
+              message: "業務邏輯錯誤"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-string"
+              details: {}
 
 tags:
   - name: 認證管理
