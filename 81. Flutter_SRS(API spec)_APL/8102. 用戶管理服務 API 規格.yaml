@@ -1122,263 +1122,100 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            required:
-              - success
-              - error
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: object
-                required:
-                  - code
-                  - message
-                  - timestamp
-                  - requestId
-                properties:
-                  code:
-                    type: string
-                    example: "UNAUTHORIZED"
-                  message:
-                    type: string
-                    example: "Token 無效或已過期"
-                  field:
-                    type: string
-                    example: null
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T12:00:00Z"
-                  requestId:
-                    type: string
-                    example: "req-uuid-12345"
-                  details:
-                    type: object
-                    example: {}
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "UNAUTHORIZED"
+              message: "Token 無效或已過期"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-12345"
+              details: {}
 
     ValidationError:
       description: "請求參數驗證失敗"
       content:
         application/json:
           schema:
-            type: object
-            required:
-              - success
-              - error
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: object
-                required:
-                  - code
-                  - message
-                  - timestamp
-                  - requestId
-                properties:
-                  code:
-                    type: string
-                    example: "VALIDATION_ERROR"
-                  message:
-                    type: string
-                    example: "請求參數不正確"
-                  field:
-                    type: string
-                    example: "displayName"
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T12:00:00Z"
-                  requestId:
-                    type: string
-                    example: "req-uuid-12345"
-                  details:
-                    type: object
-                    properties:
-                      validation:
-                        type: array
-                        items:
-                          type: object
-                          required:
-                            - field
-                            - message
-                          properties:
-                            field:
-                              type: string
-                              example: "displayName"
-                            message:
-                              type: string
-                              example: "顯示名稱不能超過 50 個字元"
-                            value:
-                              type: string
-                              example: "一個非常非常非常長的使用者顯示名稱超過五十個字元的限制"
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "VALIDATION_ERROR"
+              message: "請求參數不正確"
+              field: "displayName"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-12345"
+              details:
+                validation:
+                  - field: "displayName"
+                    message: "顯示名稱不能超過 50 個字元"
+                    value: "一個非常非常非常長的使用者顯示名稱超過五十個字元的限制"
 
     InternalServerError:
       description: "內部伺服器錯誤"
       content:
         application/json:
           schema:
-            type: object
-            required:
-              - success
-              - error
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: object
-                required:
-                  - code
-                  - message
-                  - timestamp
-                  - requestId
-                properties:
-                  code:
-                    type: string
-                    example: "INTERNAL_SERVER_ERROR"
-                  message:
-                    type: string
-                    example: "伺服器暫時無法處理請求，請稍後再試"
-                  field:
-                    type: string
-                    example: null
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T12:00:00Z"
-                  requestId:
-                    type: string
-                    example: "req-uuid-12345"
-                  details:
-                    type: object
-                    example: {}
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "INTERNAL_SERVER_ERROR"
+              message: "伺服器暫時無法處理請求，請稍後再試"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-12345"
+              details: {}
 
     ForbiddenError:
       description: "禁止訪問"
       content:
         application/json:
           schema:
-            type: object
-            required:
-              - success
-              - error
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: object
-                required:
-                  - code
-                  - message
-                  - timestamp
-                  - requestId
-                properties:
-                  code:
-                    type: string
-                    example: "FORBIDDEN"
-                  message:
-                    type: string
-                    example: "您沒有權限執行此操作"
-                  field:
-                    type: string
-                    example: null
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T12:00:00Z"
-                  requestId:
-                    type: string
-                    example: "req-uuid-12345"
-                  details:
-                    type: object
-                    example: {}
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "FORBIDDEN"
+              message: "您沒有權限執行此操作"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-12345"
+              details: {}
 
     BusinessLogicError:
       description: "業務邏輯錯誤"
       content:
         application/json:
           schema:
-            type: object
-            required:
-              - success
-              - error
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: object
-                required:
-                  - code
-                  - message
-                  - timestamp
-                  - requestId
-                properties:
-                  code:
-                    type: string
-                    example: "BUSINESS_LOGIC_ERROR"
-                  message:
-                    type: string
-                    example: "操作失敗，請檢查請求參數"
-                  field:
-                    type: string
-                    example: null
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T12:00:00Z"
-                  requestId:
-                    type: string
-                    example: "req-uuid-12345"
-                  details:
-                    type: object
-                    example: {}
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "BUSINESS_LOGIC_ERROR"
+              message: "操作失敗，請檢查請求參數"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-12345"
+              details: {}
 
     NotFoundError:
       description: "資源未找到"
       content:
         application/json:
           schema:
-            type: object
-            required:
-              - success
-              - error
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: object
-                required:
-                  - code
-                  - message
-                  - timestamp
-                  - requestId
-                properties:
-                  code:
-                    type: string
-                    example: "NOT_FOUND"
-                  message:
-                    type: string
-                    example: "請求的資源不存在"
-                  field:
-                    type: string
-                    example: null
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-27T12:00:00Z"
-                  requestId:
-                    type: string
-                    example: "req-uuid-12345"
-                  details:
-                    type: object
-                    example: {}
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "NOT_FOUND"
+              message: "請求的資源不存在"
+              field: null
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-12345"
+              details: {}
 
   schemas:
     SuccessMetadata:
@@ -1402,6 +1239,61 @@ components:
           enum: [Expert, Inertial, Cultivation, Guiding]
           example: "Expert"
           description: "用戶當前模式"
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - timestamp
+            - requestId
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "請求參數不正確"
+            field:
+              type: string
+              example: "displayName"
+              description: "錯誤相關的欄位（如果適用）"
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-01-27T12:00:00Z"
+            requestId:
+              type: string
+              example: "req-uuid-12345"
+            details:
+              type: object
+              properties:
+                validation:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - field
+                      - message
+                    properties:
+                      field:
+                        type: string
+                        example: "displayName"
+                      message:
+                        type: string
+                        example: "顯示名稱不能超過 50 個字元"
+                      value:
+                        type: string
+                        example: "一個非常非常非常長的使用者顯示名稱超過五十個字元的限制"
 
 tags:
   - name: "用戶資料管理"
