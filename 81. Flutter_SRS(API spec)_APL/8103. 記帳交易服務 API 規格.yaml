@@ -169,6 +169,19 @@ paths:
                             message:
                               type: string
                               example: "本月食物支出已達預算 80%"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           description: "解析失敗或參數錯誤"
           content:
@@ -188,11 +201,24 @@ paths:
                       message:
                         type: string
                         example: "無法解析記帳內容，請嘗試「金額 項目」格式"
-                      suggestions:
-                        type: array
-                        items:
-                          type: string
-                        example: ["150 午餐", "收入 3000 薪水"]
+                      field:
+                        type: string
+                        example: "input"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      details:
+                        type: object
+                        properties:
+                          suggestions:
+                            type: array
+                            items:
+                              type: string
+                            example: ["150 午餐", "收入 3000 薪水"]
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -278,20 +304,13 @@ paths:
             example: 20
             default: 20
             maximum: 100
-        - name: sortBy
+        - name: sort
           in: query
-          description: "排序欄位"
+          description: "排序"
           schema:
             type: string
-            enum: [date, amount, category, created_at]
-            default: date
-        - name: sortOrder
-          in: query
-          description: "排序方向"
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: desc
+            example: "date:desc"
+            default: "date:desc"
         - name: X-User-Mode
           in: header
           description: "用戶模式標識"
@@ -393,25 +412,34 @@ paths:
                               format: date-time
                               example: "2025-01-27T12:30:00Z"
                       
-                      # 分頁資訊
+                      # 分頁資訊（修正為8088規範格式）
                       pagination:
                         type: object
                         properties:
-                          currentPage:
+                          page:
                             type: integer
                             example: 1
+                          limit:
+                            type: integer
+                            example: 20
+                          total:
+                            type: integer
+                            example: 95
                           totalPages:
                             type: integer
                             example: 5
-                          totalRecords:
-                            type: integer
-                            example: 95
-                          hasNextPage:
+                          hasNext:
                             type: boolean
                             example: true
-                          hasPreviousPage:
+                          hasPrev:
                             type: boolean
                             example: false
+                          nextPage:
+                            type: integer
+                            example: 2
+                          prevPage:
+                            type: integer
+                            example: null
                       
                       # Expert Mode: 統計摘要
                       summary:
@@ -429,6 +457,19 @@ paths:
                           recordCount:
                             type: integer
                             example: 95
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -627,6 +668,19 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:30:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -848,6 +902,19 @@ paths:
                                 changes:
                                   type: object
                                   example: {"amount": {"from": 1400, "to": 1500}}
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -958,6 +1025,19 @@ paths:
                             change:
                               type: number
                               example: -100
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -1026,6 +1106,19 @@ paths:
                           attachmentsDeleted:
                             type: integer
                             example: 2
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -1241,6 +1334,19 @@ paths:
                           simpleMessage:
                             type: string
                             example: "今天已花費 NT$450"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1369,6 +1475,19 @@ paths:
                             net:
                               type: number
                               example: -1200
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1488,6 +1607,19 @@ paths:
                             items:
                               type: string
                             example: ["account-uuid-001", "account-uuid-002"]
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           description: "批次請求驗證失敗"
           content:
@@ -1507,20 +1639,36 @@ paths:
                       message:
                         type: string
                         example: "批次資料包含錯誤"
+                      field:
+                        type: string
+                        example: "transactions"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
                       details:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            index:
-                              type: integer
-                              example: 0
-                            field:
-                              type: string
-                              example: "amount"
-                            error:
-                              type: string
-                              example: "金額必須大於 0"
+                        type: object
+                        properties:
+                          validation:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                index:
+                                  type: integer
+                                  example: 0
+                                field:
+                                  type: string
+                                  example: "amount"
+                                message:
+                                  type: string
+                                  example: "金額必須大於 0"
+                                value:
+                                  type: number
+                                  example: -100
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1607,6 +1755,19 @@ paths:
                       totalAttachments:
                         type: integer
                         example: 3
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           description: "檔案上傳失敗"
           content:
@@ -1626,17 +1787,33 @@ paths:
                       message:
                         type: string
                         example: "檔案格式不支援或檔案過大"
+                      field:
+                        type: string
+                        example: "files"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
                       details:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            filename:
-                              type: string
-                              example: "large_file.pdf"
-                            error:
-                              type: string
-                              example: "檔案大小超過 5MB 限制"
+                        type: object
+                        properties:
+                          validation:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                filename:
+                                  type: string
+                                  example: "large_file.pdf"
+                                message:
+                                  type: string
+                                  example: "檔案大小超過 5MB 限制"
+                                value:
+                                  type: integer
+                                  example: 10485760
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -1688,6 +1865,19 @@ paths:
                       remainingAttachments:
                         type: integer
                         example: 2
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -1779,6 +1969,19 @@ paths:
                             error:
                               type: string
                               example: "交易記錄不存在"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -1853,6 +2056,19 @@ paths:
                             balanceChange:
                               type: number
                               example: 1500
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -1944,6 +2160,19 @@ paths:
                       hasMore:
                         type: boolean
                         example: true
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -2047,6 +2276,19 @@ paths:
                           averageAmount:
                             type: number
                             example: 224.36
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -2154,6 +2396,19 @@ paths:
                             data:
                               type: object
                               example: {"金額": "abc", "日期": "2025/01/30"}
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           description: "匯入檔案格式錯誤或處理失敗"
           content:
@@ -2173,11 +2428,33 @@ paths:
                       message:
                         type: string
                         example: "檔案格式不支援或包含錯誤"
+                      field:
+                        type: string
+                        example: "file"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
                       details:
-                        type: array
-                        items:
-                          type: string
-                        example: ["欄位對應設定格式錯誤", "檔案大小超過 10MB 限制"]
+                        type: object
+                        properties:
+                          validation:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                field:
+                                  type: string
+                                  example: "mappingConfig"
+                                message:
+                                  type: string
+                                  example: "欄位對應設定格式錯誤"
+                                value:
+                                  type: string
+                                  example: "invalid json"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -2265,6 +2542,19 @@ paths:
                       totalCount:
                         type: integer
                         example: 5
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -2394,6 +2684,19 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:30:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -2496,6 +2799,19 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -2554,6 +2870,19 @@ paths:
                         type: integer
                         example: 0
                         description: "被同時刪除的交易記錄數量"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "uuid"
+                      userMode:
+                        type: string
+                        example: "Expert"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -2587,10 +2916,22 @@ components:
                   message:
                     type: string
                     example: "Token 無效或已過期"
+                  field:
+                    type: string
+                    example: "authorization"
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "uuid"
+                  details:
+                    type: object
+                    properties:
+                      reason:
+                        type: string
+                        example: "JWT token expired"
 
     ValidationError:
       description: "請求參數驗證失敗"
@@ -2610,17 +2951,34 @@ components:
                     example: "VALIDATION_ERROR"
                   message:
                     type: string
-                    example: "請求參數不正確"
+                    example: "金額必須大於 0"
                   field:
                     type: string
                     example: "amount"
-                  details:
-                    type: string
-                    example: "金額必須大於 0"
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "uuid"
+                  details:
+                    type: object
+                    properties:
+                      validation:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field:
+                              type: string
+                              example: "amount"
+                            message:
+                              type: string
+                              example: "金額必須大於 0"
+                            value:
+                              type: number
+                              example: -100
 
     NotFoundError:
       description: "資源不存在"
@@ -2641,16 +2999,25 @@ components:
                   message:
                     type: string
                     example: "交易記錄不存在"
-                  resourceType:
+                  field:
                     type: string
-                    example: "transaction"
-                  resourceId:
-                    type: string
-                    example: "transaction-uuid-12345"
+                    example: "id"
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "uuid"
+                  details:
+                    type: object
+                    properties:
+                      resourceType:
+                        type: string
+                        example: "transaction"
+                      resourceId:
+                        type: string
+                        example: "transaction-uuid-12345"
 
     InternalServerError:
       description: "內部伺服器錯誤"
@@ -2671,13 +3038,19 @@ components:
                   message:
                     type: string
                     example: "伺服器暫時無法處理請求，請稍後再試"
-                  requestId:
-                    type: string
-                    example: "req-uuid-12345"
                   timestamp:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "uuid"
+                  details:
+                    type: object
+                    properties:
+                      errorId:
+                        type: string
+                        example: "error-uuid-12345"
 
 tags:
   - name: "快速記帳"
