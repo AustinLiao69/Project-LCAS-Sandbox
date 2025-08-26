@@ -167,7 +167,26 @@ paths:
                             type: boolean
                             example: false
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '500':
@@ -229,7 +248,26 @@ paths:
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -322,7 +360,26 @@ paths:
                                             type: integer
                                             example: 0
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '500':
@@ -434,7 +491,26 @@ paths:
                         type: string
                         example: "Inertial"
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -533,7 +609,26 @@ paths:
                           type: string
                         example: ["currency", "notifications.dailyReminder"]
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -640,7 +735,26 @@ paths:
                           type: string
                         example: ["appLock", "biometric"]
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -711,7 +825,26 @@ paths:
                           type: string
                         example: ["每日挑戰", "成就系統", "記帳提醒"]
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -798,7 +931,26 @@ paths:
                                   type: string
                                 example: ["budget_alert", "monthly_report"]
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -873,7 +1025,26 @@ paths:
                         type: string
                         example: "session-uuid-12345"
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -944,7 +1115,26 @@ paths:
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
@@ -1027,7 +1217,26 @@ paths:
                         example: 300
                         description: "驗證有效時間（秒）"
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
         '400':
           description: "PIN 碼錯誤"
           content:
