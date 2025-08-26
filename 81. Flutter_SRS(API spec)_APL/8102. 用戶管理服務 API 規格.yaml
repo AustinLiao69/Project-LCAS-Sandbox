@@ -167,19 +167,7 @@ paths:
                             type: boolean
                             example: false
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '500':
@@ -241,19 +229,7 @@ paths:
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -346,19 +322,9 @@ paths:
                                             type: integer
                                             example: 0
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -468,19 +434,7 @@ paths:
                         type: string
                         example: "Inertial"
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -579,23 +533,15 @@ paths:
                           type: string
                         example: ["currency", "notifications.dailyReminder"]
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /users/security:
     put:
@@ -694,23 +640,17 @@ paths:
                           type: string
                         example: ["appLock", "biometric"]
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/BusinessLogicError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /users/mode:
     put:
@@ -771,23 +711,17 @@ paths:
                           type: string
                         example: ["每日挑戰", "成就系統", "記帳提醒"]
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Cultivation"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/BusinessLogicError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /users/mode-defaults:
     get:
@@ -864,21 +798,15 @@ paths:
                                   type: string
                                 example: ["budget_alert", "monthly_report"]
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /users/behavior-tracking:
     post:
@@ -945,21 +873,15 @@ paths:
                         type: string
                         example: "session-uuid-12345"
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /users/mode-recommendations:
     get:
@@ -1022,21 +944,13 @@ paths:
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /users/verify-pin:
     post:
@@ -1113,19 +1027,7 @@ paths:
                         example: 300
                         description: "驗證有效時間（秒）"
                   metadata:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        format: date-time
-                        example: "2025-01-27T12:00:00Z"
-                      requestId:
-                        type: string
-                        example: "req-uuid-12345"
-                      userMode:
-                        type: string
-                        enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                    $ref: '#/components/schemas/SuccessMetadata'
         '400':
           description: "PIN 碼錯誤"
           content:
@@ -1327,6 +1229,121 @@ components:
                   details:
                     type: object
                     example: {}
+
+    ForbiddenError:
+      description: "禁止訪問"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "FORBIDDEN"
+                  message:
+                    type: string
+                    example: "您沒有權限執行此操作"
+                  field:
+                    type: string
+                    example: null
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-12345"
+                  details:
+                    type: object
+                    example: {}
+
+    BusinessLogicError:
+      description: "業務邏輯錯誤"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "BUSINESS_LOGIC_ERROR"
+                  message:
+                    type: string
+                    example: "操作失敗，請檢查請求參數"
+                  field:
+                    type: string
+                    example: null
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-12345"
+                  details:
+                    type: object
+                    example: {}
+
+    NotFoundError:
+      description: "資源未找到"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "NOT_FOUND"
+                  message:
+                    type: string
+                    example: "請求的資源不存在"
+                  field:
+                    type: string
+                    example: null
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-12345"
+                  details:
+                    type: object
+                    example: {}
+
+  schemas:
+    SuccessMetadata:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-27T12:00:00Z"
+        requestId:
+          type: string
+          example: "req-uuid-12345"
+        userMode:
+          type: string
+          enum: [Expert, Inertial, Cultivation, Guiding]
+          example: "Expert"
 
 tags:
   - name: "用戶資料管理"
