@@ -267,14 +267,11 @@ paths:
                     properties:
                       token:
                         type: string
-                        example: "jwt-token-string"
                       refreshToken:
                         type: string
-                        example: "refresh-token-string"
                       expiresAt:
                         type: string
                         format: date-time
-                        example: "2025-01-28T00:00:00Z"
                       user:
                         $ref: '#/components/schemas/UserProfile'
                       loginHistory:
@@ -1199,8 +1196,7 @@ components:
                         description: "驗證失敗的欄位名稱"
                       message:
                         type: string
-                        example: "請求參數有誤"
-                        description: "驗證失敗的錯誤訊息"
+                        example: "驗證失敗的錯誤訊息"
                       code:
                         type: string
                         example: "INVALID_FORMAT"
