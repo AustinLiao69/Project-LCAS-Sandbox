@@ -2,7 +2,7 @@
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 報表分析服務 API 規格
-  version: 1.0.1
+  version: 1.0.2
   description: |
     **LCAS 2.0 報表分析服務 API 規格**
     
@@ -22,6 +22,7 @@ info:
     - **Guiding**: 智慧預設報表、一鍵生成、簡化分析結果
     
     **更新記錄**:
+    - v1.0.2 (2025-01-28): 統一錯誤處理格式，添加metadata結構，符合8088 API設計規範
     - v1.0.1 (2025-01-28): 調整 API 端點以符合標準清單，統一路徑參數命名
 
   contact:
@@ -120,6 +121,8 @@ paths:
                         items:
                           type: string
                         example: ["createReport", "viewTemplates", "exportAll"]
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -156,6 +159,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/ReportGenerationResult'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -189,6 +194,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/ReportDetail'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -223,6 +230,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/ReportDetail'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
     delete:
       tags:
@@ -250,6 +259,8 @@ paths:
                   message:
                     type: string
                     example: "報表已刪除，將保留 30 天供恢復"
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
   /reports/{id}/status:
     get:
@@ -296,6 +307,8 @@ paths:
                       message:
                         type: string
                         description: 狀態訊息
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -326,6 +339,8 @@ paths:
                   message:
                     type: string
                     example: "報表生成已取消"
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           description: 無法取消（報表已完成或失敗）
           content:
@@ -345,6 +360,13 @@ paths:
                       message:
                         type: string
                         example: "報表已完成，無法取消"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-28T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -392,7 +414,7 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/ChartData'
-                      metadata:
+                      chartMetadata:
                         type: object
                         properties:
                           totalCharts:
@@ -402,6 +424,8 @@ paths:
                           lastUpdated:
                             type: string
                             format: date-time
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -464,6 +488,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/ExportTaskResult'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -607,6 +633,8 @@ paths:
                           webhook:
                             type: boolean
                             example: false
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           description: "請求參數錯誤"
           content:
@@ -626,6 +654,13 @@ paths:
                       message:
                         type: string
                         example: "不支援的下載格式"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-28T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
         '404':
           $ref: '#/components/responses/NotFound'
         '429':
@@ -647,6 +682,13 @@ paths:
                       message:
                         type: string
                         example: "下載請求過於頻繁，請稍後再試"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-28T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
                       retryAfter:
                         type: integer
                         example: 60
@@ -690,6 +732,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/ShareResult'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
   /reports/templates:
     get:
@@ -742,6 +786,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/ReportTemplate'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
   /reports/config-options:
     get:
@@ -940,6 +986,8 @@ paths:
                             items:
                               type: string
                             example: ["trends", "monthly_comparison"]
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
   /analytics/insights:
     get:
@@ -985,6 +1033,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/AnalyticsInsights'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
   /analytics/trends:
     get:
@@ -1034,6 +1084,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/TrendAnalysis'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
   /analytics/custom:
     post:
@@ -1066,6 +1118,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/CustomAnalysisResult'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
         '400':
           $ref: '#/components/responses/BadRequest'
         '422':
@@ -1118,6 +1172,8 @@ paths:
                         type: integer
                       activeCount:
                         type: integer
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
     post:
       tags:
@@ -1144,6 +1200,8 @@ paths:
                     example: true
                   data:
                     $ref: '#/components/schemas/ScheduleResult'
+                  metadata:
+                    $ref: '#/components/schemas/ResponseMetadata'
 
 components:
   securitySchemes:
@@ -1153,6 +1211,36 @@ components:
       bearerFormat: JWT
 
   schemas:
+    ResponseMetadata:
+      type: object
+      required:
+        - timestamp
+        - requestId
+        - userMode
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-28T12:00:00Z"
+          description: 回應時間戳
+        requestId:
+          type: string
+          example: "req-uuid-123"
+          description: 請求唯一識別碼
+        userMode:
+          type: string
+          enum: [Expert, Inertial, Cultivation, Guiding]
+          example: "Expert"
+          description: 用戶模式
+        processingTime:
+          type: number
+          example: 0.234
+          description: 處理時間（秒）
+        apiVersion:
+          type: string
+          example: "v1.0.2"
+          description: API 版本
+
     ReportSummary:
       type: object
       properties:
@@ -1470,7 +1558,7 @@ components:
         previewUrl:
           type: string
           description: 預覽連結
-        metadata:
+        reportMetadata:
           $ref: '#/components/schemas/ReportMetadata'
 
     ReportMetadata:
@@ -1796,7 +1884,7 @@ components:
         results:
           type: object
           description: 分析結果
-        metadata:
+        analysisMetadata:
           type: object
           properties:
             executionTime:
@@ -1889,7 +1977,7 @@ components:
         options:
           type: object
           description: 圖表選項
-        metadata:
+        chartMetadata:
           type: object
           properties:
             dataSource:
@@ -1953,7 +2041,7 @@ components:
         content:
           type: object
           description: 報表內容
-        metadata:
+        reportMetadata:
           $ref: '#/components/schemas/ReportMetadata'
         shares:
           type: array
@@ -2086,13 +2174,33 @@ components:
 
     Error:
       type: object
+      required:
+        - code
+        - message
+        - timestamp
+        - requestId
       properties:
         code:
           type: string
           description: 錯誤代碼
+          example: "VALIDATION_ERROR"
         message:
           type: string
           description: 錯誤訊息
+          example: "報表參數驗證失敗"
+        field:
+          type: string
+          description: 錯誤欄位（驗證錯誤時）
+          example: "dateRange"
+        timestamp:
+          type: string
+          format: date-time
+          description: 錯誤發生時間
+          example: "2025-01-28T12:00:00Z"
+        requestId:
+          type: string
+          description: 請求唯一識別碼
+          example: "req-uuid-123"
         details:
           type: object
           description: 錯誤詳細資訊
@@ -2122,7 +2230,21 @@ components:
                 type: boolean
                 example: false
               error:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "UNAUTHORIZED"
+                  message:
+                    type: string
+                    example: "無效的認證令牌"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-28T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     Forbidden:
       description: 禁止存取
@@ -2135,7 +2257,21 @@ components:
                 type: boolean
                 example: false
               error:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "FORBIDDEN"
+                  message:
+                    type: string
+                    example: "權限不足"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-28T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     NotFound:
       description: 資源不存在
@@ -2148,7 +2284,21 @@ components:
                 type: boolean
                 example: false
               error:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "RESOURCE_NOT_FOUND"
+                  message:
+                    type: string
+                    example: "指定的報表不存在"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-28T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     ValidationError:
       description: 資料驗證失敗
@@ -2161,7 +2311,21 @@ components:
                 type: boolean
                 example: false
               error:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "VALIDATION_ERROR"
+                  message:
+                    type: string
+                    example: "請求資料驗證失敗"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-28T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
               validationErrors:
                 type: array
                 items:
@@ -2169,8 +2333,10 @@ components:
                   properties:
                     field:
                       type: string
+                      example: "reportType"
                     message:
                       type: string
+                      example: "報表類型為必填欄位"
 
     InternalServerError:
       description: 內部伺服器錯誤
@@ -2183,7 +2349,21 @@ components:
                 type: boolean
                 example: false
               error:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "INTERNAL_SERVER_ERROR"
+                  message:
+                    type: string
+                    example: "系統暫時無法處理請求"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-28T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
 tags:
   - name: 報表查詢

@@ -4,31 +4,31 @@ info:
   title: LCAS 2.0 - 帳戶管理服務 API 規格
   description: |
     **帳戶管理服務 (Account Management Services)**
-    
+
     本服務提供完整的帳戶管理功能，包含帳戶的建立、查詢、修改、刪除以及餘額管理。
     支援多種帳戶類型（現金、銀行、信用卡、投資等），並提供四模式差異化體驗。
-    
+
     ## 🎯 服務範圍
     - **帳戶 CRUD**：建立、查詢、修改、刪除帳戶
     - **帳戶類型管理**：現金、銀行、信用卡、投資、借貸帳戶
     - **餘額管理**：即時餘額查詢、餘額歷史追蹤
     - **帳戶轉帳**：帳戶間資金轉移
     - **帳戶統計**：使用統計與分析
-    
+
     ## 🎨 四模式差異化支援
-    
+
     | 模式 | 特色功能 |
     |------|----------|
     | **Expert** | 完整帳戶管理工具、進階統計分析、批次操作 |
     | **Inertial** | 標準帳戶操作、簡潔介面、固定流程 |
     | **Cultivation** | 帳戶建議、理財引導、進度追蹤 |
     | **Guiding** | 極簡帳戶設定、預設配置、最少決策 |
-    
+
     ## 🗂️ 對應畫面
     - **S-205**：帳戶選擇頁
     - **S-304**：帳戶管理主頁  
     - **S-305**：建立帳戶頁
-    
+
   version: 1.0.0
   contact:
     name: LCAS 2.0 開發團隊
@@ -262,7 +262,6 @@ paths:
                 sortOrder:
                   type: integer
                   example: 1
-                  description: "排序順序"
       responses:
         '201':
           description: "帳戶建立成功"
@@ -315,6 +314,8 @@ paths:
                   code: "ACCOUNT_NAME_EXISTS"
                   message: "帳戶名稱已存在"
                   field: "name"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
 
   /accounts/{id}:
     get:
@@ -386,11 +387,8 @@ paths:
                                       format: date
                                     balance:
                                       type: number
-                          recentTransactions:
-                            type: array
-                            description: "最近交易記錄（當 includeTransactions=true 時）"
-                            items:
-                              $ref: '#/components/schemas/TransactionSummary'
+                                    change:
+                                      type: number
                   metadata:
                     $ref: '#/components/schemas/ResponseMetadata'
         '404':
@@ -549,6 +547,8 @@ paths:
                 error:
                   code: "ACCOUNT_HAS_TRANSACTIONS"
                   message: "帳戶有交易記錄，請指定轉移目標帳戶或使用強制刪除"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
                   details:
                     transactionCount: 25
                     suggestions:
@@ -817,6 +817,8 @@ paths:
                     error:
                       code: "INSUFFICIENT_BALANCE"
                       message: "帳戶餘額不足"
+                      timestamp: "2025-01-27T12:00:00Z"
+                      requestId: "req-uuid-123"
                       details:
                         currentBalance: 3000
                         requiredAmount: 5000
@@ -826,6 +828,8 @@ paths:
                     error:
                       code: "SAME_ACCOUNT_TRANSFER"
                       message: "不能在相同帳戶間轉帳"
+                      timestamp: "2025-01-27T12:00:00Z"
+                      requestId: "req-uuid-123"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '404':
@@ -842,7 +846,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: "JWT Token 認證"
-    
+
     FirebaseAuth:
       type: http
       scheme: bearer
@@ -943,18 +947,18 @@ components:
     Pagination:
       type: object
       properties:
-        currentPage:
+        page:
           type: integer
           example: 1
-        totalPages:
-          type: integer
-          example: 5
-        totalItems:
-          type: integer
-          example: 48
-        itemsPerPage:
+        limit:
           type: integer
           example: 20
+        total:
+          type: integer
+          example: 48
+        totalPages:
+          type: integer
+          example: 3
         hasNext:
           type: boolean
           example: true
@@ -964,12 +968,20 @@ components:
 
     Error:
       type: object
+      required:
+        - success
+        - error
       properties:
         success:
           type: boolean
           example: false
         error:
           type: object
+          required:
+            - code
+            - message
+            - timestamp
+            - requestId
           properties:
             code:
               type: string
@@ -987,10 +999,17 @@ components:
             requestId:
               type: string
               example: "req-uuid-123"
+            details:
+              type: object
+              description: "錯誤詳細資訊（可選）"
 
     ResponseMetadata:
       type: object
       description: "統一回應 metadata 結構"
+      required:
+        - timestamp
+        - requestId
+        - userMode
       properties:
         timestamp:
           type: string
@@ -1020,6 +1039,8 @@ components:
               code: "VALIDATION_ERROR"
               message: "帳戶名稱不能為空"
               field: "name"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
 
     UnauthorizedError:
       description: "未授權或 Token 無效"
@@ -1032,6 +1053,8 @@ components:
             error:
               code: "UNAUTHORIZED"
               message: "Token 無效或已過期"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
 
     NotFoundError:
       description: "資源不存在"
@@ -1044,6 +1067,8 @@ components:
             error:
               code: "ACCOUNT_NOT_FOUND"
               message: "找不到指定的帳戶"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
 
 tags:
   - name: 帳戶查詢

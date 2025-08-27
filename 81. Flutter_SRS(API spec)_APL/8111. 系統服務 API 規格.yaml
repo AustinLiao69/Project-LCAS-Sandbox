@@ -29,6 +29,8 @@ servers:
     description: 開發環境
 
 tags:
+  - name: system-info
+    description: 系統資訊服務
   - name: system-health
     description: 系統健康檢查
   - name: system-config
@@ -37,8 +39,154 @@ tags:
     description: 系統監控告警
   - name: system-maintenance
     description: 系統維護管理
+  - name: system-support
+    description: 系統支援服務
+  - name: help-support
+    description: 幫助與支援
 
 paths:
+  /system/app-info:
+    get:
+      tags: [system-info]
+      summary: 取得APP資訊
+      description: |
+        提供APP基本資訊，包含版本號、功能特色、更新資訊等。
+        
+        **對應畫面**: S-102 APP 啟動頁
+        **四模式差異**: 顯示內容的詳細程度不同
+      operationId: getAppInfo
+      responses:
+        '200':
+          description: APP資訊查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  appName: "LCAS 2.0"
+                  version: "2.1.13"
+                  buildNumber: "20250127001"
+                  releaseDate: "2025-01-27"
+                  description: "智能記帳與財務管理應用"
+                  features:
+                    - "智能記帳"
+                    - "多帳本管理"
+                    - "協作記帳"
+                    - "AI分析"
+                    - "遊戲化激勵"
+                  updateInfo:
+                    hasUpdate: false
+                    latestVersion: "2.1.13"
+                    updateRequired: false
+                  supportedPlatforms:
+                    - "iOS 14.0+"
+                    - "Android 8.0+"
+                    - "Web Browser"
+                  systemRequirements:
+                    minimumMemory: "2GB"
+                    recommendedMemory: "4GB"
+                    storageRequired: "500MB"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+
+  /system/welcome:
+    get:
+      tags: [system-info]
+      summary: 取得歡迎資訊
+      description: |
+        提供系統歡迎資訊和引導內容。
+        
+        **對應畫面**: S-101 LINE OA 歡迎頁
+        **四模式差異**: 歡迎內容和引導步驟不同
+      operationId: getWelcomeInfo
+      responses:
+        '200':
+          description: 歡迎資訊查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  welcomeMessage: "歡迎使用 LCAS 2.0 智能記帳系統！"
+                  subtitle: "讓記帳變得簡單有趣"
+                  features:
+                    - icon: "💰"
+                      title: "智能記帳"
+                      description: "AI 輔助分類，快速記錄收支"
+                    - icon: "📊"
+                      title: "數據分析"
+                      description: "專業報表，洞察財務狀況"
+                    - icon: "🎯"
+                      title: "目標管理"
+                      description: "設定預算，追蹤理財目標"
+                  quickStart:
+                    - step: 1
+                      title: "完成註冊"
+                      description: "建立您的專屬帳戶"
+                    - step: 2
+                      title: "模式評估"
+                      description: "選擇適合的使用模式"
+                    - step: 3
+                      title: "開始記帳"
+                      description: "記錄第一筆收支"
+                  promotionalContent:
+                    title: "立即下載 APP"
+                    description: "獲得完整功能體驗"
+                    downloadUrl: "https://app.lcas.app/download"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Guiding"
+
+  /system/status:
+    get:
+      tags: [system-health]
+      summary: 系統狀態查詢
+      description: |
+        查詢當前系統運行狀態和服務可用性。
+        
+        **功能**: 提供系統各模組狀態、性能指標
+        **四模式差異**: 狀態詳細程度不同
+      operationId: getSystemStatus
+      responses:
+        '200':
+          description: 系統狀態查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  overallStatus: "operational"
+                  lastUpdated: "2025-01-27T12:00:00Z"
+                  services:
+                    api: "operational"
+                    database: "operational"
+                    authentication: "operational"
+                    notifications: "maintenance"
+                    backup: "operational"
+                  metrics:
+                    uptime: "99.98%"
+                    responseTime: "28ms"
+                    throughput: "1250 req/min"
+                    activeUsers: 1250
+                    errorRate: "0.02%"
+                  maintenanceSchedule:
+                    nextMaintenance: "2025-02-01T02:00:00Z"
+                    duration: 120
+                    description: "系統優化維護"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+
   /system/health:
     get:
       tags: [system-health]
@@ -51,50 +199,107 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      status:
-                        type: string
-                        enum: [healthy, degraded, unhealthy]
-                        example: healthy
-                      timestamp:
-                        type: string
-                        format: date-time
-                      services:
-                        type: object
-                        properties:
-                          api:
-                            $ref: '#/components/schemas/ServiceHealth'
-                          database:
-                            $ref: '#/components/schemas/ServiceHealth'
-                          authentication:
-                            $ref: '#/components/schemas/ServiceHealth'
-                          backup:
-                            $ref: '#/components/schemas/ServiceHealth'
-                      metrics:
-                        type: object
-                        properties:
-                          uptime:
-                            type: string
-                            example: "99.98%"
-                          avgResponseTime:
-                            type: string
-                            example: "28ms"
-                          activeUsers:
-                            type: integer
-                            example: 1250
-                          systemLoad:
-                            type: string
-                            example: "0.65"
-                      version:
-                        type: string
-                        example: "2.1.13"
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  status: "healthy"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  services:
+                    api:
+                      status: "up"
+                      responseTime: "45ms"
+                      lastCheck: "2025-01-27T12:00:00Z"
+                      details:
+                        endpoint: "/v1/health"
+                        method: "GET"
+                    database:
+                      status: "up"
+                      responseTime: "12ms"
+                      lastCheck: "2025-01-27T12:00:00Z"
+                      details:
+                        connections: 15
+                        maxConnections: 100
+                    authentication:
+                      status: "up"
+                      responseTime: "23ms"
+                      lastCheck: "2025-01-27T12:00:00Z"
+                      details:
+                        activeTokens: 1250
+                    backup:
+                      status: "up"
+                      responseTime: "67ms"
+                      lastCheck: "2025-01-27T11:45:00Z"
+                      details:
+                        lastBackup: "2025-01-27T02:00:00Z"
+                        backupStatus: "completed"
+                  metrics:
+                    uptime: "99.98%"
+                    avgResponseTime: "28ms"
+                    activeUsers: 1250
+                    systemLoad: "0.65"
+                  version: "2.1.13"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+
+  /system/app-promotion:
+    get:
+      tags: [system-info]
+      summary: APP推廣資訊
+      description: |
+        提供APP推廣相關資訊和下載連結。
+        
+        **對應畫面**: S-108 APP 下載推廣頁
+        **功能**: 推廣內容、下載連結、功能介紹
+      operationId: getAppPromotion
+      responses:
+        '200':
+          description: APP推廣資訊查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  title: "LCAS 2.0 - 智能記帳新體驗"
+                  subtitle: "讓理財變得簡單智能"
+                  description: "結合AI技術與遊戲化設計，為您打造專屬的記帳體驗"
+                  keyFeatures:
+                    - title: "AI智能分類"
+                      description: "自動識別交易類型，快速完成記帳"
+                      icon: "🤖"
+                    - title: "多帳本協作"
+                      description: "與家人朋友共同管理財務"
+                      icon: "👥"
+                    - title: "專業分析報表"
+                      description: "深度洞察您的財務狀況"
+                      icon: "📊"
+                    - title: "遊戲化激勵"
+                      description: "讓記帳變成有趣的習慣"
+                      icon: "🎮"
+                  downloadInfo:
+                    iosUrl: "https://apps.apple.com/app/lcas-2-0"
+                    androidUrl: "https://play.google.com/store/apps/details?id=com.lcas.app"
+                    webUrl: "https://app.lcas.app"
+                    qrCode: "https://cdn.lcas.app/images/qr-download.png"
+                  testimonials:
+                    - user: "張小明"
+                      comment: "使用LCAS後，我的記帳習慣變得更穩定了！"
+                      rating: 5
+                    - user: "李小花"
+                      comment: "AI分類功能太方便了，省了好多時間"
+                      rating: 5
+                  systemRequirements:
+                    ios: "iOS 14.0 或以上版本"
+                    android: "Android 8.0 或以上版本"
+                    storage: "至少 500MB 可用空間"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Cultivation"
 
   /system/config:
     get:
@@ -110,35 +315,37 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: object
-                    properties:
-                      environment:
-                        type: string
-                        example: production
-                      features:
-                        type: object
-                        properties:
-                          ai_assistant:
-                            type: boolean
-                          gamification:
-                            type: boolean
-                          collaboration:
-                            type: boolean
-                      limits:
-                        type: object
-                        properties:
-                          maxConcurrentUsers:
-                            type: integer
-                          rateLimitPerMinute:
-                            type: integer
-                          maxFileSize:
-                            type: string
-                            
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  environment: "production"
+                  features:
+                    ai_assistant: true
+                    gamification: true
+                    collaboration: true
+                    advanced_reports: true
+                  limits:
+                    maxConcurrentUsers: 10000
+                    rateLimitPerMinute: 1000
+                    maxFileSize: "10MB"
+                    maxAttachmentsPerTransaction: 5
+                  settings:
+                    defaultCurrency: "TWD"
+                    dateFormat: "YYYY-MM-DD"
+                    timeZone: "Asia/Taipei"
+                    language: "zh-TW"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+            
     put:
       tags: [system-config]
       summary: 更新系統配置
@@ -162,50 +369,39 @@ paths:
                 reason:
                   type: string
                   example: "啟用AI助理功能"
+              required:
+                - configKey
+                - configValue
+                - reason
       responses:
         '200':
           description: 配置更新成功
-        '403':
-          description: 權限不足
-
-  /system/monitoring/alerts:
-    get:
-      tags: [system-monitoring]
-      summary: 取得系統告警
-      description: 查詢系統監控告警資訊
-      operationId: getSystemAlerts
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: severity
-          in: query
-          description: 告警嚴重程度
-          schema:
-            type: string
-            enum: [critical, high, medium, low]
-        - name: status
-          in: query
-          description: 告警狀態
-          schema:
-            type: string
-            enum: [active, resolved, suppressed]
-      responses:
-        '200':
-          description: 告警查詢成功
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: object
-                    properties:
-                      alerts:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/SystemAlert'
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  configKey: "features.ai_assistant"
+                  oldValue: "false"
+                  newValue: "true"
+                  updatedAt: "2025-01-27T12:00:00Z"
+                  updatedBy: "admin-user-id"
+                  reason: "啟用AI助理功能"
+                  effectiveTime: "2025-01-27T12:05:00Z"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /system/maintenance:
     get:
@@ -219,27 +415,37 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: object
-                    properties:
-                      isMaintenanceMode:
-                        type: boolean
-                      scheduledMaintenance:
-                        type: object
-                        properties:
-                          startTime:
-                            type: string
-                            format: date-time
-                          endTime:
-                            type: string
-                            format: date-time
-                          description:
-                            type: string
-                            
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  isMaintenanceMode: false
+                  scheduledMaintenance:
+                    startTime: "2025-02-01T02:00:00Z"
+                    endTime: "2025-02-01T04:00:00Z"
+                    description: "系統版本更新與效能優化"
+                    affectedServices:
+                      - "認證服務"
+                      - "報表服務"
+                  lastMaintenance:
+                    startTime: "2025-01-15T02:00:00Z"
+                    endTime: "2025-01-15T03:30:00Z"
+                    description: "資料庫維護"
+                    status: "completed"
+                  maintenanceHistory:
+                    - date: "2025-01-15"
+                      duration: 90
+                      type: "database"
+                      status: "completed"
+                    - date: "2024-12-20"
+                      duration: 120
+                      type: "system_update"
+                      status: "completed"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+                  
     post:
       tags: [system-maintenance]
       summary: 設定維護模式
@@ -263,15 +469,512 @@ paths:
                 estimatedDuration:
                   type: integer
                   description: 預估維護時間（分鐘）
+              required:
+                - enabled
       responses:
         '200':
           description: 維護模式設定成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  maintenanceMode: true
+                  message: "系統正在進行例行維護，預計2小時後恢復服務"
+                  startTime: "2025-01-27T12:00:00Z"
+                  estimatedEndTime: "2025-01-27T14:00:00Z"
+                  affectedServices: "all"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '403':
-          description: 權限不足
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /system/retry:
+    post:
+      tags: [system-support]
+      summary: 系統重試機制
+      description: |
+        處理失敗請求的重試機制，支援智能重試和手動重試。
+        
+        **功能**: 請求重試、狀態恢復、錯誤處理
+        **使用場景**: 網路異常、服務暫時不可用、資料同步失敗
+      operationId: systemRetry
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requestId:
+                  type: string
+                  description: 原始請求ID
+                  example: "req-uuid-failed-123"
+                retryType:
+                  type: string
+                  enum: [manual, automatic, scheduled]
+                  description: 重試類型
+                  example: "manual"
+                maxRetries:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  description: 最大重試次數
+                  example: 3
+                retryInterval:
+                  type: integer
+                  description: 重試間隔（秒）
+                  example: 5
+                originalRequest:
+                  type: object
+                  properties:
+                    endpoint:
+                      type: string
+                      example: "/transactions"
+                    method:
+                      type: string
+                      example: "POST"
+                    payload:
+                      type: object
+                      description: 原始請求內容
+              required:
+                - requestId
+                - retryType
+      responses:
+        '202':
+          description: 重試請求已接受
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  retryId: "retry-uuid-456"
+                  status: "queued"
+                  originalRequestId: "req-uuid-failed-123"
+                  retryAttempt: 1
+                  maxRetries: 3
+                  nextRetryTime: "2025-01-27T12:05:00Z"
+                  estimatedCompletion: "2025-01-27T12:15:00Z"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /system/sync:
+    post:
+      tags: [system-support]
+      summary: 離線同步
+      description: |
+        處理離線期間的資料同步，確保資料一致性。
+        
+        **功能**: 離線資料上傳、衝突解決、資料合併
+        **使用場景**: 網路恢復後的資料同步、多裝置資料同步
+      operationId: systemSync
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                syncType:
+                  type: string
+                  enum: [full, incremental, conflict_resolution]
+                  description: 同步類型
+                  example: "incremental"
+                lastSyncTime:
+                  type: string
+                  format: date-time
+                  description: 最後同步時間
+                  example: "2025-01-27T10:00:00Z"
+                deviceId:
+                  type: string
+                  description: 裝置識別碼
+                  example: "device-uuid-789"
+                offlineData:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [transaction, ledger, category, account]
+                        description: 資料類型
+                      operation:
+                        type: string
+                        enum: [create, update, delete]
+                        description: 操作類型
+                      data:
+                        type: object
+                        description: 資料內容
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: 離線操作時間
+                      localId:
+                        type: string
+                        description: 本地暫時ID
+                  maxItems: 100
+                  description: 離線期間的資料異動
+              required:
+                - syncType
+                - deviceId
+                - offlineData
+      responses:
+        '200':
+          description: 同步完成
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  syncId: "sync-uuid-101"
+                  syncStatus: "completed"
+                  syncType: "incremental"
+                  itemsProcessed: 15
+                  itemsSuccess: 14
+                  itemsFailed: 1
+                  conflicts: 0
+                  syncTime: "2025-01-27T12:00:00Z"
+                  results:
+                    successful:
+                      - localId: "temp-001"
+                        serverId: "uuid-real-001"
+                        type: "transaction"
+                        operation: "create"
+                    failed:
+                      - localId: "temp-002"
+                        error: "DUPLICATE_RESOURCE"
+                        reason: "交易已存在"
+                  nextSyncRecommendation: "2025-01-27T18:00:00Z"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: 同步衝突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /feedback/report:
+    post:
+      tags: [system-support]
+      summary: 問題回報
+      description: |
+        提交系統問題回報或功能建議。
+        
+        **對應畫面**: S-507 社群回報頁
+        **功能**: 問題分類、附件上傳、追蹤編號生成
+      operationId: reportIssue
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [bug, feature_request, improvement, question, complaint]
+                  description: 回報類型
+                  example: "bug"
+                category:
+                  type: string
+                  enum: [login, transaction, report, sync, performance, ui, other]
+                  description: 問題分類
+                  example: "transaction"
+                priority:
+                  type: string
+                  enum: [low, medium, high, urgent]
+                  description: 問題優先級
+                  example: "medium"
+                title:
+                  type: string
+                  maxLength: 200
+                  description: 問題標題
+                  example: "記帳資料無法儲存"
+                description:
+                  type: string
+                  maxLength: 2000
+                  description: 問題詳細描述
+                  example: "在新增交易時，點選儲存後沒有反應，資料也沒有被保存"
+                stepsToReproduce:
+                  type: array
+                  items:
+                    type: string
+                  description: 重現步驟
+                  example: 
+                    - "開啟記帳頁面"
+                    - "輸入金額和類別"
+                    - "點選儲存按鈕"
+                    - "沒有成功訊息，資料未保存"
+                environment:
+                  type: object
+                  properties:
+                    platform:
+                      type: string
+                      enum: [iOS, Android, Web]
+                      example: "iOS"
+                    appVersion:
+                      type: string
+                      example: "2.1.13"
+                    deviceModel:
+                      type: string
+                      example: "iPhone 13"
+                    osVersion:
+                      type: string
+                      example: "iOS 16.0"
+                attachments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      filename:
+                        type: string
+                        example: "error-screenshot.png"
+                      size:
+                        type: integer
+                        example: 1024768
+                      mimeType:
+                        type: string
+                        example: "image/png"
+                      base64Data:
+                        type: string
+                        description: "Base64編碼的檔案內容"
+                  maxItems: 5
+                  description: "附件列表（最多5個檔案）"
+                userMode:
+                  type: string
+                  enum: [Expert, Inertial, Cultivation, Guiding]
+                  description: "用戶模式"
+                  example: "Expert"
+              required:
+                - type
+                - category
+                - title
+                - description
+      responses:
+        '201':
+          description: 問題回報提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  reportId: "RPT-2025012700123"
+                  type: "bug"
+                  category: "transaction"
+                  priority: "medium"
+                  status: "submitted"
+                  submittedAt: "2025-01-27T12:00:00Z"
+                  estimatedResponseTime: "24-48 hours"
+                  trackingUrl: "https://support.lcas.app/reports/RPT-2025012700123"
+                  autoReply:
+                    sent: true
+                    message: "感謝您的回報，我們已收到您的問題並將儘快處理"
+                  nextSteps:
+                    - "我們的技術團隊將在24小時內審核您的回報"
+                    - "如需要更多資訊，我們將透過Email聯繫您"
+                    - "您可以透過追蹤編號查詢處理進度"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '413':
+          description: 附件過大
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "FILE_TOO_LARGE"
+                  message: "附件大小不能超過 10MB"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  details:
+                    maxSize: "10MB"
+                    currentSize: "15MB"
+        '429':
+          description: 請求頻率超限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "RATE_LIMIT_EXCEEDED"
+                  message: "回報提交過於頻繁，請稍後再試"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  details:
+                    retryAfter: 300
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /help/articles:
+    get:
+      tags: [help-support]
+      summary: 取得幫助文章
+      description: |
+        查詢幫助中心文章列表，支援分類和搜尋。
+        
+        **對應畫面**: S-506 幫助中心頁
+        **四模式差異**: 文章推薦和顯示方式不同
+      operationId: getHelpArticles
+      parameters:
+        - name: category
+          in: query
+          description: 文章分類
+          schema:
+            type: string
+            enum: [getting_started, account, transaction, report, troubleshooting, faq]
+        - name: keyword
+          in: query
+          description: 搜尋關鍵字
+          schema:
+            type: string
+            maxLength: 100
+        - name: userMode
+          in: query
+          description: 用戶模式（影響推薦內容）
+          schema:
+            type: string
+            enum: [Expert, Inertial, Cultivation, Guiding]
+        - name: page
+          in: query
+          description: 頁碼
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: 每頁文章數
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: 幫助文章查詢成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  articles:
+                    - id: "help-001"
+                      title: "如何開始使用 LCAS 2.0"
+                      category: "getting_started"
+                      summary: "新手入門指南，教您快速上手記帳功能"
+                      difficulty: "beginner"
+                      readTime: 5
+                      views: 1250
+                      helpful: 95
+                      publishedAt: "2025-01-20T10:00:00Z"
+                      updatedAt: "2025-01-25T14:30:00Z"
+                      tags: ["新手", "入門", "記帳"]
+                    - id: "help-002"
+                      title: "智能分類功能說明"
+                      category: "transaction"
+                      summary: "了解AI如何幫您自動分類交易"
+                      difficulty: "intermediate"
+                      readTime: 8
+                      views: 890
+                      helpful: 87
+                      publishedAt: "2025-01-18T16:00:00Z"
+                      updatedAt: "2025-01-22T09:15:00Z"
+                      tags: ["AI", "分類", "智能"]
+                  categories:
+                    - id: "getting_started"
+                      name: "新手入門"
+                      description: "適合初次使用的用戶"
+                      articleCount: 12
+                    - id: "transaction"
+                      name: "記帳功能"
+                      description: "記帳相關的使用說明"
+                      articleCount: 25
+                  popularArticles:
+                    - id: "help-001"
+                      title: "如何開始使用 LCAS 2.0"
+                      views: 1250
+                    - id: "help-003"
+                      title: "常見問題解答"
+                      views: 1100
+                  recommendedForUser:
+                    - id: "help-004"
+                      title: "專家模式功能詳解"
+                      reason: "基於您的Expert模式"
+                    - id: "help-005"
+                      title: "進階報表分析技巧"
+                      reason: "適合您的使用習慣"
+                  pagination:
+                    page: 1
+                    limit: 20
+                    total: 45
+                    totalPages: 3
+                    hasNext: true
+                    hasPrev: false
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /help/contact:
     post:
-      tags: [system-maintenance]
+      tags: [help-support]
       summary: 聯繫客服
       description: |
         提交客服聯繫請求，支援問題分類與優先級設定。
@@ -377,155 +1080,72 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      ticketId:
-                        type: string
-                        example: "TKT-2025012700123"
-                        description: "客服工單號碼"
-                      category:
-                        type: string
-                        example: "technical"
-                      priority:
-                        type: string
-                        example: "medium"
-                      status:
-                        type: string
-                        enum: [pending, assigned, in_progress, resolved, closed]
-                        example: "pending"
-                        description: "工單狀態"
-                      estimatedResponseTime:
-                        type: object
-                        properties:
-                          hours:
-                            type: integer
-                            example: 24
-                          businessHours:
-                            type: boolean
-                            example: true
-                        description: "預估回覆時間"
-                      assignedAgent:
-                        type: object
-                        properties:
-                          name:
-                            type: string
-                            example: "客服小王"
-                          id:
-                            type: string
-                            example: "agent-001"
-                        description: "指派的客服人員"
-                      trackingUrl:
-                        type: string
-                        example: "https://support.lcas.app/tickets/TKT-2025012700123"
-                        description: "工單追蹤連結"
-                      contactInfo:
-                        type: object
-                        properties:
-                          email:
-                            type: string
-                            example: "support@lcas.app"
-                          phone:
-                            type: string
-                            example: "+886-2-1234-5678"
-                          workingHours:
-                            type: string
-                            example: "週一至週五 9:00-18:00"
-                      autoReply:
-                        type: object
-                        properties:
-                          sent:
-                            type: boolean
-                            example: true
-                          message:
-                            type: string
-                            example: "感謝您的來信，我們已收到您的問題，將在 24 小時內回覆。"
-                      nextSteps:
-                        type: array
-                        items:
-                          type: string
-                        example: [
-                          "我們將於 24 小時內透過 Email 回覆",
-                          "您可以透過工單號碼追蹤處理進度",
-                          "如有緊急問題請直接撥打客服電話"
-                        ]
-                        description: "後續處理步驟"
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                success: true
+                data:
+                  ticketId: "TKT-2025012700123"
+                  category: "technical"
+                  priority: "medium"
+                  status: "pending"
+                  estimatedResponseTime:
+                    hours: 24
+                    businessHours: true
+                  assignedAgent:
+                    name: "客服小王"
+                    id: "agent-001"
+                  trackingUrl: "https://support.lcas.app/tickets/TKT-2025012700123"
+                  contactInfo:
+                    email: "support@lcas.app"
+                    phone: "+886-2-1234-5678"
+                    workingHours: "週一至週五 9:00-18:00"
+                  autoReply:
+                    sent: true
+                    message: "感謝您的來信，我們已收到您的問題，將在 24 小時內回覆。"
+                  nextSteps:
+                    - "我們將於 24 小時內透過 Email 回覆"
+                    - "您可以透過工單號碼追蹤處理進度"
+                    - "如有緊急問題請直接撥打客服電話"
+                metadata:
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  userMode: "Expert"
         '400':
-          description: 請求參數錯誤
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                        example: "VALIDATION_ERROR"
-                      message:
-                        type: string
-                        example: "問題描述不能為空"
-                      field:
-                        type: string
-                        example: "message"
+          $ref: '#/components/responses/ValidationError'
         '413':
           description: 附件大小超過限制
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                        example: "FILE_TOO_LARGE"
-                      message:
-                        type: string
-                        example: "附件大小不能超過 10MB"
-                      maxSize:
-                        type: string
-                        example: "10MB"
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "FILE_TOO_LARGE"
+                  message: "附件大小不能超過 10MB"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  details:
+                    maxSize: "10MB"
         '429':
           description: 請求過於頻繁
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                        example: "RATE_LIMIT_EXCEEDED"
-                      message:
-                        type: string
-                        example: "請求過於頻繁，請稍後再試"
-                      retryAfter:
-                        type: integer
-                        example: 300
-                        description: "建議重試間隔（秒）"
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "RATE_LIMIT_EXCEEDED"
+                  message: "請求過於頻繁，請稍後再試"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
+                  details:
+                    retryAfter: 300
         '401':
-          description: 未授權存取
+          $ref: '#/components/responses/UnauthorizedError'
         '500':
-          description: 內部伺服器錯誤
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   securitySchemes:
@@ -535,6 +1155,78 @@ components:
       bearerFormat: JWT
 
   schemas:
+    StandardResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          description: "回應資料內容"
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+      required:
+        - success
+        - data
+        - metadata
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "參數驗證失敗"
+            field:
+              type: string
+              example: "amount"
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-01-27T12:00:00Z"
+            requestId:
+              type: string
+              example: "req-uuid-123"
+            details:
+              type: object
+              description: "錯誤詳細資訊"
+          required:
+            - code
+            - message
+            - timestamp
+            - requestId
+      required:
+        - success
+        - error
+
+    ResponseMetadata:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-27T12:00:00Z"
+        requestId:
+          type: string
+          example: "req-uuid-123"
+        userMode:
+          type: string
+          enum: [Expert, Inertial, Cultivation, Guiding]
+          example: "Expert"
+      required:
+        - timestamp
+        - requestId
+        - userMode
+
     ServiceHealth:
       type: object
       properties:
@@ -576,3 +1268,89 @@ components:
           type: array
           items:
             type: string
+
+  responses:
+    UnauthorizedError:
+      description: 未授權存取
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "UNAUTHORIZED"
+              message: "存取令牌無效或已過期"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
+
+    ForbiddenError:
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "INSUFFICIENT_PERMISSIONS"
+              message: "您沒有執行此操作的權限"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
+
+    ValidationError:
+      description: 參數驗證失敗
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "VALIDATION_ERROR"
+              message: "參數驗證失敗"
+              field: "configKey"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
+
+    NotFoundError:
+      description: 資源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "RESOURCE_NOT_FOUND"
+              message: "請求的資源不存在"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
+
+    ConflictError:
+      description: 資源衝突
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "DUPLICATE_RESOURCE"
+              message: "資源已存在或發生衝突"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"
+
+    InternalServerError:
+      description: 內部伺服器錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "INTERNAL_SERVER_ERROR"
+              message: "內部伺服器錯誤，請稍後重試"
+              timestamp: "2025-01-27T12:00:00Z"
+              requestId: "req-uuid-123"

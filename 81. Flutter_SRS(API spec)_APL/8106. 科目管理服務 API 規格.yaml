@@ -370,6 +370,24 @@ paths:
                             type: integer
                             example: 23
                             description: "系統預設科目數量"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -546,6 +564,24 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:30:00Z"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:30:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -575,6 +611,13 @@ paths:
                       existingCategoryId:
                         type: string
                         example: "category-uuid-existing"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:30:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
 
   /categories/{id}:
     get:
@@ -922,6 +965,24 @@ paths:
                           version:
                             type: integer
                             example: 3
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -1071,6 +1132,24 @@ paths:
                             type: integer
                             example: 0
                             description: "歷史交易不受影響"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -1103,6 +1182,13 @@ paths:
                             type: string
                             enum: [circular_reference, name_duplicate, max_depth_exceeded]
                             example: "circular_reference"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
 
     delete:
       summary: "刪除科目"
@@ -1208,6 +1294,24 @@ paths:
                           statisticsRecalculated:
                             type: boolean
                             example: true
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '400':
           description: "無法刪除科目"
           content:
@@ -1244,6 +1348,13 @@ paths:
                             items:
                               type: string
                             example: ["指定 transferTransactionsTo 參數", "使用 force=true 強制刪除", "先移除子科目"]
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T13:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -1515,6 +1626,24 @@ paths:
                                   maxDepth:
                                     type: integer
                                     example: 1
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1552,6 +1681,9 @@ components:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     ValidationError:
       description: "請求參數驗證失敗"
@@ -1582,6 +1714,9 @@ components:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
     NotFoundError:
       description: "資源不存在"
@@ -1612,6 +1747,9 @@ components:
                     type: string
                     format: date-time
                     example: "2025-01-27T12:00:00Z"
+                  requestId:
+                    type: string
+                    example: "req-uuid-123"
 
 tags:
   - name: "科目查詢"
