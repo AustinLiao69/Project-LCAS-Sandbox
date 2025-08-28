@@ -1929,20 +1929,73 @@ class UserModeAdapterImpl implements UserModeAdapter {
   @override
   T adaptResponse<T>(T response, UserMode userMode) {
     // 根據模式調整回應
+    if (response is LoginResponse) {
+      return adaptLoginResponse(response, userMode) as T;
+    } else if (response is RegisterResponse) {
+      return adaptRegisterResponse(response, userMode) as T;
+    }
     return response;
   }
 
   @override
   ApiError adaptErrorResponse(ApiError error, UserMode userMode) {
-    // 根據模式調整錯誤訊息
+    // 深度四模式錯誤訊息差異化
+    final adaptedMessage = error.code.getMessage(userMode);
+    final modeSpecificDetails = _getModeSpecificErrorDetails(error.code, userMode);
+    
+    Map<String, dynamic>? enhancedDetails = error.details ?? {};
+    enhancedDetails.addAll(modeSpecificDetails);
+
     return ApiError(
       code: error.code,
-      message: error.code.getMessage(userMode),
+      message: adaptedMessage,
       field: error.field,
       timestamp: error.timestamp,
       requestId: error.requestId,
-      details: error.details,
+      details: enhancedDetails,
     );
+  }
+
+  /// 81. 取得模式特定錯誤詳情 (新增深度支援)
+  /// @version 2025-08-28-V1.4.0
+  /// @date 2025-08-28 12:00:00
+  /// @update: 新增方法，深度強化四模式錯誤處理差異化
+  Map<String, dynamic> _getModeSpecificErrorDetails(AuthErrorCode code, UserMode userMode) {
+    switch (userMode) {
+      case UserMode.expert:
+        return {
+          'technicalDetails': _getTechnicalErrorDetails(code),
+          'debugInfo': {
+            'errorCode': code.toString(),
+            'httpStatus': code.httpStatusCode,
+            'category': _getErrorCategory(code),
+          },
+          'suggestions': _getExpertSuggestions(code),
+          'relatedDocs': _getRelatedDocumentation(code),
+        };
+      case UserMode.cultivation:
+        return {
+          'encouragement': _getEncouragementMessage(code),
+          'learningTip': _getLearningTip(code),
+          'nextSteps': _getMotivationalNextSteps(code),
+          'progressImpact': _getProgressImpact(code),
+          'emoji': _getErrorEmoji(code),
+        };
+      case UserMode.inertial:
+        return {
+          'quickFix': _getQuickFix(code),
+          'commonCause': _getCommonCause(code),
+          'estimatedTime': _getFixEstimatedTime(code),
+        };
+      case UserMode.guiding:
+        return {
+          'simpleAction': _getSimpleAction(code),
+          'helpButton': true,
+          'contactSupport': code.httpStatusCode >= 500,
+        };
+      default:
+        return {};
+    }
   }
 
   @override
@@ -1958,15 +2011,31 @@ class UserModeAdapterImpl implements UserModeAdapter {
             'lastLogin': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
             'loginCount': 42,
             'newDeviceDetected': false,
-            'securityAlerts': [],
-            'deviceHistory': [
-              {'platform': 'iOS', 'lastSeen': DateTime.now().subtract(Duration(days: 2)).toIso8601String()},
-              {'platform': 'Web', 'lastSeen': DateTime.now().toIso8601String()},
-            ],
+            'securityAlerts': _getSecurityAlerts(),
+            'deviceHistory': _getDeviceHistory(),
             'failedAttempts': 0,
             'accountSecurity': {
               'twoFactorEnabled': false,
               'lastPasswordChange': DateTime.now().subtract(Duration(days: 30)).toIso8601String(),
+              'securityScore': 85,
+              'riskLevel': 'Low',
+              'recommendedActions': [
+                '啟用雙重驗證',
+                '更新密碼強度',
+                '檢查登入裝置',
+              ],
+            },
+            'sessionInfo': {
+              'ip': '192.168.1.100',
+              'location': 'Taipei, Taiwan',
+              'browser': 'Chrome 131.0.0.0',
+              'platform': 'iOS 18.2',
+            },
+            'advancedFeatures': {
+              'apiAccess': true,
+              'bulkOperations': true,
+              'customIntegrations': true,
+              'advancedReports': true,
             },
           },
         );
@@ -1983,8 +2052,29 @@ class UserModeAdapterImpl implements UserModeAdapter {
             'nextGoal': '連續10天挑戰',
             'progressToNextGoal': 70,
             'rewardAvailable': true,
-            'motivationalQuote': '每一筆記帳都是朝向財務自由的一小步！',
-            'dailyTip': '試試設定一個小目標，比如每天記錄3筆交易',
+            'motivationalQuote': _getRandomMotivationalQuote(),
+            'dailyTip': _getDailyTip(),
+            'achievements': {
+              'recentUnlocked': ['記帳新手', '堅持不懈'],
+              'nextToUnlock': {
+                'title': '記帳達人',
+                'description': '連續記帳30天',
+                'progress': 23.3,
+                'reward': '專屬徽章 + 100積分',
+              },
+            },
+            'communityRank': {
+              'position': 156,
+              'total': 1000,
+              'percentile': 84.4,
+              'message': '您超越了84%的用戶！',
+            },
+            'todayChallenge': {
+              'title': '完成3筆不同類別記帳',
+              'progress': 1,
+              'target': 3,
+              'reward': '獲得20積分',
+            },
           },
         );
       case UserMode.inertial:
@@ -1999,6 +2089,13 @@ class UserModeAdapterImpl implements UserModeAdapter {
               'totalLogins': 25,
               'averageSessionTime': '12 minutes',
               'lastActivity': DateTime.now().subtract(Duration(hours: 8)).toIso8601String(),
+              'weeklyUsage': 'Active',
+              'preferredFeatures': ['快速記帳', '月度報表', '基本統計'],
+            },
+            'quickAccess': {
+              'lastUsedCategories': ['食物', '交通', '娛樂'],
+              'frequentAmounts': [50, 100, 200, 500],
+              'defaultAccount': '現金',
             },
           },
         );
@@ -2017,23 +2114,128 @@ class UserModeAdapterImpl implements UserModeAdapter {
 
   @override
   RegisterResponse adaptRegisterResponse(RegisterResponse response, UserMode userMode) {
-    switch (userMode) {
-      case UserMode.expert:
-        // Expert模式提供完整資訊
-        return response;
-      case UserMode.cultivation:
-        // Cultivation模式強調成就感與引導
-        return response;
-      case UserMode.inertial:
-        // Inertial模式提供標準資訊
-        return response;
-      case UserMode.guiding:
-        // Guiding模式簡化資訊
-        return response;
-      default:
-        return response;
+    // 註冊回應不需要額外資料，但可以根據模式調整後續流程提示
+    // 在實際實作中，這裡可以添加模式特定的註冊後引導資訊
+    return response;
+  }
+
+  /// 82. 取得安全警示 (Expert模式專用)
+  /// @version 2025-08-28-V1.4.0
+  /// @date 2025-08-28 12:00:00
+  /// @update: 新增方法，提供專家級安全資訊
+  List<Map<String, dynamic>> _getSecurityAlerts() {
+    return [
+      {
+        'id': 'alert-001',
+        'type': 'info',
+        'message': '建議啟用雙重驗證以提升帳戶安全性',
+        'severity': 'medium',
+        'actionRequired': false,
+      },
+    ];
+  }
+
+  /// 83. 取得裝置歷史 (Expert模式專用)
+  /// @version 2025-08-28-V1.4.0
+  /// @date 2025-08-28 12:00:00
+  /// @update: 新增方法，提供詳細裝置資訊
+  List<Map<String, dynamic>> _getDeviceHistory() {
+    return [
+      {
+        'platform': 'iOS',
+        'device': 'iPhone 15 Pro',
+        'lastSeen': DateTime.now().subtract(Duration(days: 2)).toIso8601String(),
+        'location': 'Taipei, Taiwan',
+        'trusted': true,
+      },
+      {
+        'platform': 'Web',
+        'device': 'Chrome on MacBook Pro',
+        'lastSeen': DateTime.now().toIso8601String(),
+        'location': 'Taipei, Taiwan',
+        'trusted': true,
+      },
+    ];
+  }
+
+  /// 84. 取得隨機激勵語錄 (Cultivation模式專用)
+  /// @version 2025-08-28-V1.4.0
+  /// @date 2025-08-28 12:00:00
+  /// @update: 新增方法，提供個人化激勵內容
+  String _getRandomMotivationalQuote() {
+    final quotes = [
+      '每一筆記帳都是朝向財務自由的一小步！',
+      '堅持記帳的人，未來都會感謝現在的自己！',
+      '理財不是限制，而是為了更好的生活品質！',
+      '今天的記帳，是明天財富的基石！',
+      '小額儲蓄也能累積成大筆財富！',
+    ];
+    return quotes[DateTime.now().millisecond % quotes.length];
+  }
+
+  /// 85. 取得每日小貼士 (Cultivation模式專用)
+  /// @version 2025-08-28-V1.4.0
+  /// @date 2025-08-28 12:00:00
+  /// @update: 新增方法，提供學習型內容
+  String _getDailyTip() {
+    final tips = [
+      '試試設定一個小目標，比如每天記錄3筆交易',
+      '使用標籤功能可以讓記錄更有條理',
+      '定期檢視預算執行狀況，及時調整財務計畫',
+      '拍照記錄收據，讓記帳更完整',
+      '善用重複記帳功能，節省時間',
+    ];
+    return tips[DateTime.now().day % tips.length];
+  }
+
+  /// 86. 取得技術錯誤詳情 (Expert模式專用)
+  /// @version 2025-08-28-V1.4.0
+  /// @date 2025-08-28 12:00:00
+  /// @update: 新增方法，提供技術層級錯誤資訊
+  Map<String, dynamic> _getTechnicalErrorDetails(AuthErrorCode code) {
+    return {
+      'errorClass': 'AuthenticationError',
+      'stackTrace': 'Available in debug mode',
+      'timestamp': DateTime.now().toIso8601String(),
+      'context': {
+        'module': 'AuthController',
+        'function': _getErrorFunction(code),
+        'line': _getErrorLine(code),
+      },
+    };
+  }
+
+  /// 87. 取得錯誤分類
+  /// @version 2025-08-28-V1.4.0
+  /// @date 2025-08-28 12:00:00
+  /// @update: 新增方法，提供錯誤分類資訊
+  String _getErrorCategory(AuthErrorCode code) {
+    if ([AuthErrorCode.validationError, AuthErrorCode.invalidEmail, AuthErrorCode.weakPassword].contains(code)) {
+      return 'Validation';
+    } else if ([AuthErrorCode.unauthorized, AuthErrorCode.invalidCredentials].contains(code)) {
+      return 'Authentication';
+    } else if ([AuthErrorCode.insufficientPermissions, AuthErrorCode.accountDisabled].contains(code)) {
+      return 'Authorization';
+    } else {
+      return 'System';
     }
   }
+
+  String _getErrorFunction(AuthErrorCode code) => 'authenticate';
+  int _getErrorLine(AuthErrorCode code) => 245;
+  
+  List<String> _getExpertSuggestions(AuthErrorCode code) => ['Check logs', 'Verify credentials'];
+  List<String> _getRelatedDocumentation(AuthErrorCode code) => ['API Reference', 'Troubleshooting Guide'];
+  String _getEncouragementMessage(AuthErrorCode code) => '別擔心，這個問題很容易解決！';
+  String _getLearningTip(AuthErrorCode code) => '這是學習的好機會！';
+  List<String> _getMotivationalNextSteps(AuthErrorCode code) => ['重新嘗試', '檢查輸入'];
+  String _getProgressImpact(AuthErrorCode code) => '不會影響您的學習進度';
+  String _getErrorEmoji(AuthErrorCode code) => '🔧';
+  String _getQuickFix(AuthErrorCode code) => '重新輸入正確資訊';
+  String _getCommonCause(AuthErrorCode code) => '輸入格式不正確';
+  String _getFixEstimatedTime(AuthErrorCode code) => '1-2分鐘';
+  String _getSimpleAction(AuthErrorCode code) => '重試';
+}
 
   @override
   List<String> getAvailableActions(UserMode userMode) {
