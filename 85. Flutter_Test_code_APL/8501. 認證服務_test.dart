@@ -1,4 +1,3 @@
-
 /**
  * 8501_認證服務_測試程式碼_v2.0.0
  * @testFile 認證服務測試程式碼
@@ -207,9 +206,9 @@ void main() {
             expiresAt: DateTime.now().add(Duration(hours: 1)),
           );
 
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => expectedResult);
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => expectedTokenPair);
 
           // Act
@@ -253,7 +252,7 @@ void main() {
             errorMessage: 'Email already exists',
           );
 
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => expectedResult);
 
           // Act
@@ -287,9 +286,9 @@ void main() {
             expiresAt: expectedTokenPair.expiresAt,
           );
 
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => expectedResult);
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => expectedTokenPair);
           when(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding))
               .thenReturn(adaptedResponse);
@@ -337,9 +336,9 @@ void main() {
             },
           );
 
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => expectedResult);
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => expectedTokenPair);
           when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert))
               .thenReturn(adaptedResponse);
@@ -363,7 +362,7 @@ void main() {
           final request = TestUtils.createTestLoginRequest(password: 'wrong-password');
           final expectedResult = LoginResult(success: false, errorMessage: 'Invalid credentials');
 
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => expectedResult);
 
           // Act
@@ -405,9 +404,9 @@ void main() {
             },
           );
 
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => expectedResult);
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => expectedTokenPair);
           when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.cultivation))
               .thenReturn(adaptedResponse);
@@ -439,7 +438,7 @@ void main() {
             expiresAt: DateTime.now().add(Duration(hours: 1)),
           );
 
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => expectedTokenPair);
 
           // Act
@@ -478,7 +477,7 @@ void main() {
           // Arrange
           final request = LogoutRequest(logoutAllDevices: false);
 
-          when(mockAuthService.processLogout(any))
+          when(mockAuthService.processLogout(any<LogoutRequest>()))
               .thenAnswer((_) async => {});
 
           // Act
@@ -727,9 +726,9 @@ void main() {
         test('24. 完整註冊登入流程整合', () async {
           // 步驟1: 註冊用戶
           final registerRequest = TestUtils.createTestRegisterRequest();
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => RegisterResult(userId: 'test-user-id', success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           final registerResponse = await authController.register(registerRequest);
@@ -752,7 +751,7 @@ void main() {
             password: registerRequest.password,
           );
           final testUser = TestUtils.createTestUser();
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => LoginResult(user: testUser, success: true));
 
           final loginResponse = await authController.login(loginRequest);
@@ -773,7 +772,7 @@ void main() {
 
           // 步驟5: 登出
           final logoutRequest = LogoutRequest(logoutAllDevices: false);
-          when(mockAuthService.processLogout(any))
+          when(mockAuthService.processLogout(any<LogoutRequest>()))
               .thenAnswer((_) async => {});
 
           final logoutResponse = await authController.logout(logoutRequest);
@@ -787,9 +786,9 @@ void main() {
         test('25. 抽象類別協作整合', () async {
           // 驗證AuthService與TokenService協作
           final registerRequest = TestUtils.createTestRegisterRequest();
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TokenPair(
                 accessToken: 'test-token',
                 refreshToken: 'test-refresh',
@@ -819,9 +818,9 @@ void main() {
 
           when(mockSecurityService.isPasswordSecure(any)).thenReturn(true);
           when(mockSecurityService.verifyPassword(any, any)).thenAnswer((_) async => true);
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => LoginResult(user: mockUser, success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TokenPair(
                 accessToken: 'secure-token',
                 refreshToken: 'secure-refresh',
@@ -842,7 +841,10 @@ void main() {
         /// @version 2025-08-28-V2.0.0
         test('35. ValidationService + ErrorHandler整合測試', () async {
           // Arrange
-          final invalidRequest = TestUtils.createTestRegisterRequest(email: 'invalid-email');
+          final invalidRequest = TestUtils.createTestRegisterRequest(
+            email: 'invalid-email',
+            userMode: UserMode.expert,
+          );
           final validationErrors = [
             ValidationError(field: 'email', message: 'Email格式無效', value: 'invalid-email')
           ];
@@ -852,7 +854,7 @@ void main() {
             validationErrors: validationErrors,
           );
 
-          when(mockValidationService.validateRegisterRequest(any)).thenReturn(validationErrors);
+          when(mockValidationService.validateRegisterRequest(invalidRequest)).thenReturn(validationErrors);
           when(mockErrorHandler.createValidationError(validationErrors, UserMode.expert))
               .thenReturn(expectedError);
 
@@ -885,9 +887,9 @@ void main() {
               expiresAt: DateTime.now().add(Duration(hours: 1)),
             );
 
-            when(mockAuthService.processRegistration(any))
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
                 .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-            when(mockTokenService.generateTokenPair(any, any))
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
                 .thenAnswer((_) async => TestUtils.createTestTokenPair());
             when(mockResponseFilter.filterForExpert(any)).thenReturn({'filtered': 'expert'});
             when(mockResponseFilter.filterForInertial(any)).thenReturn({'filtered': 'inertial'});
@@ -975,7 +977,7 @@ void main() {
           when(mockModeConfigService.getConfigForMode(request.userMode)).thenReturn(modeConfig);
           when(mockAuthService.processRegistration(request))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-          when(mockTokenService.generateTokenPair('test-id', request.userMode))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TokenPair(
                 accessToken: 'test-token',
                 refreshToken: 'test-refresh',
@@ -1054,9 +1056,9 @@ void main() {
 
           for (final mode in modes) {
             final request = TestUtils.createTestRegisterRequest(userMode: mode);
-            when(mockAuthService.processRegistration(any))
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
                 .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-            when(mockTokenService.generateTokenPair(any, any))
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
                 .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
             final response = await authController.register(request);
@@ -1096,9 +1098,9 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => LoginResult(user: expertUser, success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           // Act
@@ -1142,9 +1144,9 @@ void main() {
         test('41. Inertial模式深度穩定性測試', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.inertial);
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           // Act
@@ -1173,9 +1175,9 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => LoginResult(user: inertialUser, success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           // Act - 執行多次登入操作
@@ -1211,9 +1213,9 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => LoginResult(user: cultivationUser, success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           // Act
@@ -1238,9 +1240,9 @@ void main() {
         test('44. Cultivation模式深度成長追蹤測試', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.cultivation);
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           // Act
@@ -1263,9 +1265,9 @@ void main() {
         test('45. Guiding模式深度簡化測試', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.guiding);
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           // Act
@@ -1296,9 +1298,9 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => LoginResult(user: guidingUser, success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           // Act
@@ -1426,10 +1428,10 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          when(mockAuthService.authenticateUser(any, any))
+          when(mockAuthService.authenticateUser(any<String>(), any<String>()))
               .thenAnswer((_) async => LoginResult(user: user, success: true));
           when(mockSecurityService.generateSecureToken()).thenAnswer((_) async => 'unique-session-id');
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           // Act - 模擬並發登入
@@ -1499,9 +1501,9 @@ void main() {
           final stopwatch = Stopwatch()..start();
 
           final request = TestUtils.createTestRegisterRequest();
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           await authController.register(request);
@@ -1517,9 +1519,9 @@ void main() {
         test('31. 併發處理能力測試', () async {
           final futures = <Future>[];
 
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           for (int i = 0; i < 10; i++) {
@@ -1545,7 +1547,7 @@ void main() {
         /// @version 2025-08-28-V2.0.0
         test('32. 網路連接異常處理', () async {
           // 模擬網路異常
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenThrow(Exception('Network connection failed'));
 
           final request = TestUtils.createTestRegisterRequest();
@@ -1562,7 +1564,7 @@ void main() {
         /// @version 2025-08-28-V2.0.0
         test('33. 服務超時處理', () async {
           // 模擬服務超時
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any<RegisterRequest>()))
               .thenAnswer((_) async {
             await Future.delayed(Duration(seconds: 31)); // 超過30秒超時
             return RegisterResult(userId: 'test', success: true);
