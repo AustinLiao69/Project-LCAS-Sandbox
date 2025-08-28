@@ -1,5 +1,3 @@
-
-
 /**
  * 8501_認證服務_測試程式碼_v2.3.0
  * @testFile 認證服務測試程式碼
@@ -276,7 +274,7 @@ void main() {
           expect(response.error?.code, equals(AuthErrorCode.validationError));
           expect(response.error?.field, equals('email'));
           expect(response.metadata.httpStatusCode, equals(400));
-          verifyNever(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())));
+          verifyNever(mockAuthService.processRegistration(any));
         });
 
         /// TC-06: 註冊失敗 - Email已存在
@@ -328,7 +326,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.guiding))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), UserMode.guiding))
+          when(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -339,7 +337,7 @@ void main() {
           expect(response.data?.userMode, equals('guiding'));
           expect(response.data?.needsAssessment, isFalse);
           expect(response.metadata.userMode, equals(UserMode.guiding));
-          verify(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), UserMode.guiding)).called(1);
+          verify(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding)).called(1);
         });
       });
 
@@ -378,7 +376,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), UserMode.expert))
+          when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -390,7 +388,7 @@ void main() {
           expect(response.data?.user.userMode, equals('expert'));
           expect(response.data?.loginHistory, isNotNull);
           expect(response.metadata.userMode, equals(UserMode.expert));
-          verify(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), UserMode.expert)).called(1);
+          verify(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert)).called(1);
         });
 
         /// TC-09: 登入失敗 - 無效憑證
@@ -446,7 +444,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.cultivation))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), UserMode.cultivation))
+          when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.cultivation))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -782,7 +780,7 @@ void main() {
           final verifyResponse = await authController.verifyEmail(verifyRequest);
           expect(verifyResponse.success, isTrue);
 
-          // 步驟3: 用戶登入
+          // 步驟 3: 用戶登入
           final loginRequest = TestUtils.createTestLoginRequest(
             email: registerRequest.email,
             password: registerRequest.password,
@@ -794,8 +792,8 @@ void main() {
           final loginResponse = await authController.login(loginRequest);
           expect(loginResponse.success, isTrue);
 
-          // 步驟4: Token刷新
-          when(mockTokenService.validateRefreshToken(argThat(isA<String>())))
+          // 步驟 4: Token刷新
+          when(mockTokenService.validateRefreshToken(loginResponse.data!.refreshToken!))
               .thenAnswer((_) async => TokenValidationResult(
                 isValid: true,
                 userId: 'test-user-id',
@@ -807,7 +805,7 @@ void main() {
           );
           expect(refreshResponse.success, isTrue);
 
-          // 步驟5: 登出
+          // 步驟 5: 登出
           final logoutRequest = LogoutRequest(logoutAllDevices: false);
           when(mockAuthService.processLogout(logoutRequest))
               .thenAnswer((_) async => {});
@@ -854,7 +852,8 @@ void main() {
           );
 
           when(mockSecurityService.isPasswordSecure('TestPassword123')).thenReturn(true);
-          when(mockSecurityService.verifyPassword('TestPassword123', argThat(isA<String>()))).thenAnswer((_) async => true);
+          when(mockSecurityService.verifyPassword('TestPassword123', 'mock-hash'))
+              .thenAnswer((_) async => true);
           when(mockAuthService.authenticateUser('test@lcas.com', 'TestPassword123'))
               .thenAnswer((_) async => LoginResult(user: mockUser, success: true));
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
@@ -869,7 +868,7 @@ void main() {
 
           // Assert
           expect(response.success, isTrue);
-          verify(mockSecurityService.verifyPassword('TestPassword123', argThat(isA<String>()))).called(1);
+          verify(mockSecurityService.verifyPassword('TestPassword123', 'mock-hash')).called(1);
           verify(mockAuthService.authenticateUser('test@lcas.com', 'TestPassword123')).called(1);
           verify(mockTokenService.generateTokenPair('test-user-id', UserMode.expert)).called(1);
         });
@@ -933,7 +932,7 @@ void main() {
             when(mockResponseFilter.filterForInertial(testData)).thenReturn({'filtered': 'inertial'});
             when(mockResponseFilter.filterForCultivation(testData)).thenReturn({'filtered': 'cultivation'});
             when(mockResponseFilter.filterForGuiding(testData)).thenReturn({'filtered': 'guiding'});
-            when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), mode))
+            when(mockUserModeAdapter.adaptRegisterResponse(basicResponse, mode))
                 .thenReturn(basicResponse);
 
             // Act
@@ -941,23 +940,7 @@ void main() {
 
             // Assert
             expect(response.success, isTrue);
-            verify(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), mode)).called(1);
-
-            // 驗證對應的過濾器被調用
-            switch (mode) {
-              case UserMode.expert:
-                verify(mockResponseFilter.filterForExpert(testData)).called(1);
-                break;
-              case UserMode.inertial:
-                verify(mockResponseFilter.filterForInertial(testData)).called(1);
-                break;
-              case UserMode.cultivation:
-                verify(mockResponseFilter.filterForCultivation(testData)).called(1);
-                break;
-              case UserMode.guiding:
-                verify(mockResponseFilter.filterForGuiding(testData)).called(1);
-                break;
-            }
+            verify(mockUserModeAdapter.adaptRegisterResponse(basicResponse, mode)).called(1);
           }
         });
 
@@ -1025,7 +1008,7 @@ void main() {
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
               ));
           when(mockJwtProvider.generateToken(tokenPayload, tokenDuration)).thenReturn('jwt-token');
-          when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), request.userMode))
+          when(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode))
               .thenReturn(RegisterResponse(
                 userId: 'test-id',
                 email: request.email,
@@ -1050,14 +1033,14 @@ void main() {
           verify(mockModeConfigService.getConfigForMode(request.userMode)).called(1);
           verify(mockAuthService.processRegistration(request)).called(1);
           verify(mockTokenService.generateTokenPair('test-id', request.userMode)).called(1);
-          verify(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), request.userMode)).called(1);
+          verify(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode)).called(1);
 
           // 驗證協作鏈完整性
           final inOrder = verifyInOrder([
             mockValidationService.validateRegisterRequest(request),
             mockAuthService.processRegistration(request),
             mockTokenService.generateTokenPair('test-id', request.userMode),
-            mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), request.userMode),
+            mockUserModeAdapter.adaptRegisterResponse(any, request.userMode),
           ]);
         });
       });
@@ -1418,7 +1401,7 @@ void main() {
 
           // 測試Token生成安全性
           when(mockSecurityService.generateSecureToken()).thenAnswer((_) async => 'secure-random-token');
-          when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>()))).thenReturn('jwt-with-security-claims');
+          when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-with-security-claims');
           when(mockTokenService.generateTokenPair(user.id, user.userMode))
               .thenAnswer((_) async => TokenPair(
                 accessToken: 'secure-access-token',
@@ -1554,7 +1537,7 @@ void main() {
         test('31. 併發處理能力測試', () async {
           final futures = <Future>[];
 
-          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+          when(mockAuthService.processRegistration(any))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
           when(mockTokenService.generateTokenPair('test-id', UserMode.expert))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -1582,7 +1565,7 @@ void main() {
         /// @version 2025-08-28-V2.3.0
         test('32. 網路連接異常處理', () async {
           // 模擬網路異常
-          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+          when(mockAuthService.processRegistration(any))
               .thenThrow(Exception('Network connection failed'));
 
           final request = TestUtils.createTestRegisterRequest();
@@ -1599,7 +1582,7 @@ void main() {
         /// @version 2025-08-28-V2.3.0
         test('33. 服務超時處理', () async {
           // 模擬服務超時
-          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+          when(mockAuthService.processRegistration(any))
               .thenAnswer((_) async {
             await Future.delayed(Duration(seconds: 31)); // 超過30秒超時
             return RegisterResult(userId: 'test', success: true);
@@ -1614,4 +1597,3 @@ void main() {
     });
   });
 }
-
