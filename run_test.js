@@ -28,7 +28,7 @@ function runTest(name, dir) {
 }
 
 // 根目錄名稱
-const aplDir = '85. Flutter_Test code_APL';
+const aplDir = '85. Flutter_Test_code_APL';
 const plDir = '75. Flutter_Test_code_PL';
 
 // 跑測試
