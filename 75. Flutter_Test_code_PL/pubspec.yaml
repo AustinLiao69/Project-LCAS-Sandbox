@@ -1,0 +1,15 @@
+
+name: pl_tests
+description: PL 測試專案
+version: 1.0.0+1
+
+environment:
+  sdk: '^3.5.0'
+
+dependencies:
+  test: ^1.24.0
+  mockito: ^5.4.0
+  build_runner: ^2.4.0
+
+dev_dependencies:
+  test: ^1.24.0
