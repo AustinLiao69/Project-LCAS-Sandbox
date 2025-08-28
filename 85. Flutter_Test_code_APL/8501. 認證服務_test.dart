@@ -274,7 +274,7 @@ void main() {
           expect(response.error?.code, equals(AuthErrorCode.validationError));
           expect(response.error?.field, equals('email'));
           expect(response.metadata.httpStatusCode, equals(400));
-          verifyNever(mockAuthService.processRegistration(any));
+          verifyZeroInteractions(mockAuthService);
         });
 
         /// TC-06: 註冊失敗 - Email已存在
@@ -326,7 +326,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.guiding))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding))
+          when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), UserMode.guiding))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -337,7 +337,7 @@ void main() {
           expect(response.data?.userMode, equals('guiding'));
           expect(response.data?.needsAssessment, isFalse);
           expect(response.metadata.userMode, equals(UserMode.guiding));
-          verify(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding)).called(1);
+          verify(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), UserMode.guiding)).called(1);
         });
       });
 
@@ -376,7 +376,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert))
+          when(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), UserMode.expert))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -388,7 +388,7 @@ void main() {
           expect(response.data?.user.userMode, equals('expert'));
           expect(response.data?.loginHistory, isNotNull);
           expect(response.metadata.userMode, equals(UserMode.expert));
-          verify(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert)).called(1);
+          verify(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), UserMode.expert)).called(1);
         });
 
         /// TC-09: 登入失敗 - 無效憑證
@@ -444,7 +444,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.cultivation))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.cultivation))
+          when(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), UserMode.cultivation))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -1008,7 +1008,7 @@ void main() {
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
               ));
           when(mockJwtProvider.generateToken(tokenPayload, tokenDuration)).thenReturn('jwt-token');
-          when(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode))
+          when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), request.userMode))
               .thenReturn(RegisterResponse(
                 userId: 'test-id',
                 email: request.email,
@@ -1033,7 +1033,7 @@ void main() {
           verify(mockModeConfigService.getConfigForMode(request.userMode)).called(1);
           verify(mockAuthService.processRegistration(request)).called(1);
           verify(mockTokenService.generateTokenPair('test-id', request.userMode)).called(1);
-          verify(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode)).called(1);
+          verify(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), request.userMode)).called(1);
 
           // 驗證協作鏈完整性
           final inOrder = verifyInOrder([
