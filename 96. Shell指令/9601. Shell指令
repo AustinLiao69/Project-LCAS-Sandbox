@@ -7,3 +7,5 @@ node run_test.js
 
 cd "75. Flutter_Test_code_PL" && dart pub get
 進入某個資料夾&&然後執行某個命令
+
+cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
