@@ -1,0 +1,397 @@
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... (3.7s)
+Built test:test.
+00:00 +0: ... 8501. 認證服務_test.dart   00:00 +0 -1: loading 8501. 認證服務_test.dart [E]
+  Failed to load "8501. 認證服務_test.dart":
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:210:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:212:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:212:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:242:59: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            verifyNever(mockAuthService.processRegistration(any));
+                                                            ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:256:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:290:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:292:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:292:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:294:58: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:305:60: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            verify(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding)).called(1);
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:340:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:340:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:342:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:342:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:344:55: Error: The argument type 'Null' can't be assigned to the parameter type 'LoginResponse' because 'LoginResponse' is not nullable.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:356:57: Error: The argument type 'Null' can't be assigned to the parameter type 'LoginResponse' because 'LoginResponse' is not nullable.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            verify(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert)).called(1);
+                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:366:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:366:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:408:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:408:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:410:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:410:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:412:55: Error: The argument type 'Null' can't be assigned to the parameter type 'LoginResponse' because 'LoginResponse' is not nullable.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.cultivation))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:442:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:442:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:481:46: Error: The argument type 'Null' can't be assigned to the parameter type 'LogoutRequest' because 'LogoutRequest' is not nullable.
+   - 'LogoutRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processLogout(any))
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:729:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:731:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:731:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:742:57: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.processEmailVerification(any, any))
+                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:742:62: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.processEmailVerification(any, any))
+                                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:754:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:754:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:761:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.validateRefreshToken(any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:775:46: Error: The argument type 'Null' can't be assigned to the parameter type 'LogoutRequest' because 'LogoutRequest' is not nullable.
+   - 'LogoutRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processLogout(any))
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:789:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:791:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:791:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:819:53: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockSecurityService.isPasswordSecure(any)).thenReturn(true);
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:820:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockSecurityService.verifyPassword(any, any)).thenAnswer((_) async => true);
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:820:56: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockSecurityService.verifyPassword(any, any)).thenAnswer((_) async => true);
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:821:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:821:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:823:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:823:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:835:76: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            verify(mockSecurityService.verifyPassword(loginRequest.password, any)).called(1);
+                                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:890:54: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              when(mockAuthService.processRegistration(any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:892:53: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+              when(mockTokenService.generateTokenPair(any, any))
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:892:58: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              when(mockTokenService.generateTokenPair(any, any))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:894:53: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForExpert(any)).thenReturn({'filtered': 'expert'});
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:895:55: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForInertial(any)).thenReturn({'filtered': 'inertial'});
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:896:58: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForCultivation(any)).thenReturn({'filtered': 'cultivation'});
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:897:54: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForGuiding(any)).thenReturn({'filtered': 'guiding'});
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:898:60: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              when(mockUserModeAdapter.adaptRegisterResponse(any, mode))
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:906:62: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              verify(mockUserModeAdapter.adaptRegisterResponse(any, mode)).called(1);
+                                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:911:59: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForExpert(any)).called(1);
+                                                            ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:914:61: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForInertial(any)).called(1);
+                                                              ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:917:64: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForCultivation(any)).called(1);
+                                                                 ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:920:60: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForGuiding(any)).called(1);
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:980:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:980:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:986:46: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-token');
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:986:51: Error: The argument type 'Null' can't be assigned to the parameter type 'Duration' because 'Duration' is not nullable.
+   - 'Duration' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-token');
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:987:58: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:998:51: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockResponseFilter.filterForExpert(any)).thenReturn({'expert': 'data'});
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1012:60: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            verify(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode)).called(1);
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1019:55: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              mockUserModeAdapter.adaptRegisterResponse(any, request.userMode),
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1059:54: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              when(mockAuthService.processRegistration(any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1061:53: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+              when(mockTokenService.generateTokenPair(any, any))
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1061:58: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              when(mockTokenService.generateTokenPair(any, any))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1099:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1099:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1101:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1101:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1145:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1147:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1147:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1175:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1175:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1177:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1177:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1213:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1213:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1215:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1215:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1240:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1242:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1242:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1264:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1266:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1266:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1296:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1296:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1298:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1298:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1380:46: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-with-security-claims');
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1380:51: Error: The argument type 'Null' can't be assigned to the parameter type 'Duration' because 'Duration' is not nullable.
+   - 'Duration' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-with-security-claims');
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1425:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1425:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1428:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1428:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1498:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1500:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1500:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1516:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1518:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1518:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1544:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1561:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name 'loading 8501. 認證服務_test.dart'
+00:00 +0 -1: Some tests failed.         
+~/workspace/85. Flutter_Test_code_APL$ 
