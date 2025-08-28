@@ -1,13 +1,22 @@
 const { exec } = require("child_process");
 const fs = require("fs");
+const path = require("path");
 
-function runTest(name, path) {
-  if (!fs.existsSync(path)) {
-    console.log(`⚠️  ${name} 測試資料夾不存在，略過。`);
+// 檢查資料夾裡面是否有 Dart 測試檔
+function hasDartTests(dir) {
+  if (!fs.existsSync(dir)) return false;
+  const files = fs.readdirSync(dir);
+  return files.some(file => file.endsWith('.dart'));
+}
+
+// 跑測試函式
+function runTest(name, dir) {
+  if (!fs.existsSync(dir) || !hasDartTests(dir)) {
+    console.log(`⚠️  ${name} 測試資料夾不存在或沒有測試檔，略過。`);
     return;
   }
 
-  exec(`cd ${path} && dart test`, (err, stdout, stderr) => {
+  exec(`cd "${dir}" && dart test`, (err, stdout, stderr) => {
     console.log(`===== ${name} 測試 =====`);
     if (err) {
       console.error(`錯誤: ${err.message}`);
@@ -18,8 +27,10 @@ function runTest(name, path) {
   });
 }
 
-// 跑 APL 測試
-runTest("APL", "apl_tests");
+// 根目錄名稱
+const aplDir = '85. Flutter_Test code_APL';
+const plDir = '75. Flutter_Test code_PL';
 
-// 跑 PL 測試
-runTest("PL", "pl_tests");
+// 跑測試
+runTest("APL", aplDir);
+runTest("PL", plDir);
