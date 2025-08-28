@@ -106,13 +106,13 @@ class MockUserModeAdapter extends _i1.Mock implements _auth.UserModeAdapter {
   }
 
   @override
-  _auth.RegisterResponse adaptRegisterResponse(_auth.RegisterResult result, _auth.UserMode mode) =>
+  _auth.RegisterResponse adaptRegisterResponse(_auth.RegisterResponse response, _auth.UserMode userMode) =>
       (super.noSuchMethod(
-        Invocation.method(#adaptRegisterResponse, [result, mode]),
+        Invocation.method(#adaptRegisterResponse, [response, userMode]),
         returnValue: _auth.RegisterResponse(
           userId: '',
           email: '',
-          userMode: mode,
+          userMode: userMode,
           verificationSent: false,
           needsAssessment: false,
           token: '',
@@ -122,9 +122,9 @@ class MockUserModeAdapter extends _i1.Mock implements _auth.UserModeAdapter {
       ) as _auth.RegisterResponse);
 
   @override
-  _auth.LoginResponse adaptLoginResponse(_auth.LoginResult result, _auth.UserMode mode) =>
+  _auth.LoginResponse adaptLoginResponse(_auth.LoginResponse response, _auth.UserMode userMode) =>
       (super.noSuchMethod(
-        Invocation.method(#adaptLoginResponse, [result, mode]),
+        Invocation.method(#adaptLoginResponse, [response, userMode]),
         returnValue: _auth.LoginResponse(
           token: '',
           refreshToken: '',
@@ -133,7 +133,7 @@ class MockUserModeAdapter extends _i1.Mock implements _auth.UserModeAdapter {
             id: '',
             email: '',
             displayName: '',
-            userMode: mode,
+            userMode: userMode,
             createdAt: DateTime.now(),
           ),
         ),
