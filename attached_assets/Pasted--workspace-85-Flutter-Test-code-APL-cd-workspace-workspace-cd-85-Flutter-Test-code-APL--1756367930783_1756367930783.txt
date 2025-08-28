@@ -1,0 +1,122 @@
+~/workspace/85. Flutter_Test_code_APL$ cd ~/workspace
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart run build_runner build --delete-conflicting-outputs
+Building package executable... (1.4s)
+Built build_runner:build_runner.
+[INFO] Generating build script completed, took 935ms
+[INFO] Reading cached asset graph completed, took 302ms
+[INFO] Checking for updates since last bu
+[INFO] Checking for updates since last build completed, took 2.0s
+[INFO] Running build completed, took 11ms
+[INFO] Caching finalized dependency graph
+[INFO] Caching finalized dependency graph completed, took 202ms
+[INFO] Succeeded after 227ms with 0 outputs (0 actions)
+~/workspace/85. Flutter_Test_code_APL$ cd ~/workspace
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... (9.9s)
+Built test:test.
+00:00 +0: ... 8501. 認證服務_test.dart   00:01 +0: ... 8501. 認證服務_test.dart   00:01 +0 -1: loading 8501. 認證服務_test.dart [E]
+  Failed to load "8501. 認證服務_test.dart":
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:34:8: Error: Error when reading '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart': No such file or directory
+  import '8501. 認證服務_test.mocks.dart';
+         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:158:10: Error: 'MockAuthService' isn't a type.
+      late MockAuthService mockAuthService;
+           ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:159:10: Error: 'MockTokenService' isn't a type.
+      late MockTokenService mockTokenService;
+           ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:160:10: Error: 'MockUserModeAdapter' isn't a type.
+      late MockUserModeAdapter mockUserModeAdapter;
+           ^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:161:10: Error: 'MockSecurityService' isn't a type.
+      late MockSecurityService mockSecurityService;
+           ^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:162:10: Error: 'MockValidationService' isn't a type.
+      late MockValidationService mockValidationService;
+           ^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:163:10: Error: 'MockErrorHandler' isn't a type.
+      late MockErrorHandler mockErrorHandler;
+           ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:164:10: Error: 'MockModeConfigService' isn't a type.
+      late MockModeConfigService mockModeConfigService;
+           ^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:165:10: Error: 'MockResponseFilter' isn't a type.
+      late MockResponseFilter mockResponseFilter;
+           ^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:166:10: Error: 'MockJwtProvider' isn't a type.
+      late MockJwtProvider mockJwtProvider;
+           ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:174:25: Error: Method not found: 'MockAuthService'.
+        mockAuthService = MockAuthService();
+                          ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:175:26: Error: Method not found: 'MockTokenService'.
+        mockTokenService = MockTokenService();
+                           ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:176:29: Error: Method not found: 'MockUserModeAdapter'.
+        mockUserModeAdapter = MockUserModeAdapter();
+                              ^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:177:29: Error: Method not found: 'MockSecurityService'.
+        mockSecurityService = MockSecurityService();
+                              ^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:178:31: Error: Method not found: 'MockValidationService'.
+        mockValidationService = MockValidationService();
+                                ^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:179:26: Error: Method not found: 'MockErrorHandler'.
+        mockErrorHandler = MockErrorHandler();
+                           ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:180:31: Error: Method not found: 'MockModeConfigService'.
+        mockModeConfigService = MockModeConfigService();
+                                ^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:181:28: Error: Method not found: 'MockResponseFilter'.
+        mockResponseFilter = MockResponseFilter();
+                             ^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:182:25: Error: Method not found: 'MockJwtProvider'.
+        mockJwtProvider = MockJwtProvider();
+                          ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:489:27: Error: This expression has type 'void' and can't be used.
+            expect(response.data, isNull);
+                            ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1072:39: Error: The getter 'welcomeMessage' isn't defined for the class 'RegisterResponse'.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'welcomeMessage'.
+                  expect(response.data?.welcomeMessage, contains('恭喜'));
+                                        ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1078:39: Error: The getter 'setupRequired' isn't defined for the class 'RegisterResponse'.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'setupRequired'.
+                  expect(response.data?.setupRequired, isFalse);
+                                        ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1154:33: Error: The getter 'setupRequired' isn't defined for the class 'RegisterResponse'.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'setupRequired'.
+            expect(response.data?.setupRequired, isFalse);
+                                  ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1155:33: Error: The getter 'defaultSettings' isn't defined for the class 'RegisterResponse'.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'defaultSettings'.
+            expect(response.data?.defaultSettings, isNotNull);
+                                  ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1250:33: Error: The getter 'welcomeMessage' isn't defined for the class 'RegisterResponse'.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'welcomeMessage'.
+            expect(response.data?.welcomeMessage, contains('恭喜'));
+                                  ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1251:33: Error: The getter 'progressTracking' isn't defined for the class 'RegisterResponse'.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'progressTracking'.
+            expect(response.data?.progressTracking, isNotNull);
+                                  ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1276:33: Error: The getter 'simpleMessage' isn't defined for the class 'RegisterResponse'.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'simpleMessage'.
+            expect(response.data?.simpleMessage, isNotNull);
+                                  ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1277:33: Error: The getter 'simpleMessage' isn't defined for the class 'RegisterResponse'.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'simpleMessage'.
+            expect(response.data?.simpleMessage?.length, lessThan(50)); // 簡短訊息
+                                  ^^^^^^^^^^^^^
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name 'loading 8501. 認證服務_test.dart'
+00:01 +0 -1: Some tests failed.         
+~/workspace/85. Flutter_Test_code_APL$ 
