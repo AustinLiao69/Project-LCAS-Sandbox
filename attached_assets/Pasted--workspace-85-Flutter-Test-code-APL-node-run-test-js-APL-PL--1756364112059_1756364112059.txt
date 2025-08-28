@@ -1,0 +1,38 @@
+~/workspace/85. Flutter_Test_code_APL$ node run_test.js
+⚠️  APL 測試資料夾不存在，略過。
+⚠️  PL 測試資料夾不存在，略過。
+~/workspace/85. Flutter_Test_code_APL$ cd ~/workspace
+~/workspace$ node run_test.js
+===== APL 測試: 8501. 認證服務_test.dart =====
+⚠️  PL 資料夾沒有 _test.dart 測試檔，略過。
+錯誤: Command failed: dart run "85. Flutter_Test_code_APL/8501. 認證服務_test.dart"
+Error: Couldn't resolve the package 'http' in 'package:http/http.dart'.
+85.%20Flutter_Test_code_APL/8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:34:8: Error: Error when reading '85.%20Flutter_Test_code_APL/8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart': No such file or directory
+import '8501. 認證服務_test.mocks.dart';
+       ^
+83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:11:8: Error: Not found: 'package:http/http.dart'
+import 'package:http/http.dart' as http;
+       ^
+85.%20Flutter_Test_code_APL/8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:158:10: Error: 'MockAuthService' isn't a type.
+    late MockAuthService mockAuthService;
+         ^^^^^^^^^^^^^^^
+85.%20Flutter_Test_code_APL/8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:159:10: Error: 'MockTokenService' isn't a type.
+    late MockTokenService mockTokenService;
+         ^^^^^^^^^^^^^^^^
+85.%20Flutter_Test_code_APL/8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:160:10: Error: 'MockUserModeAdapter' isn't a type.
+    late MockUserModeAdapter mockUserModeAdapter;
+         ^^^^^^^^^^^^^^^^^^^
+85.%20Flutter_Test_code_APL/8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:161:10: Error: 'MockSecurityService' isn't a type.
+    late MockSecurityService mockSecurityService;
+         ^^^^^^^^^^^^^^^^^^^
+85.%20Flutter_Test_code_APL/8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:162:10: Error: 'MockValidationService' isn't a type.
+    late MockValidationService mockValidationService;
+         ^^^^^^^^^^^^^^^^^^^^^
+85.%20Flutter_Test_code_APL/8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:163:10: Error: 'MockErrorHandler' isn't a type.
+    late MockErrorHandler mockErrorHandler;
+         ^^^^^^^^^^^^^^^^
+85.%20Flutter_Test_code_APL/8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:164:10: Error: 'MockModeConfigService' isn't a type.
+    late MockModeConfigService mockModeConfigService;
+         ^^^^^^^^^^^^^^^^^^^^^
+
+~/workspace$ 
