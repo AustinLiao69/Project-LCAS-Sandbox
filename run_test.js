@@ -1,10 +1,25 @@
-// run_tests.js
 const { exec } = require("child_process");
+const fs = require("fs");
 
-exec("85. Flutter_Test code_APL/8501. 認證服務.dart", (err, stdout, stderr) => {
+function runTest(name, path) {
+  if (!fs.existsSync(path)) {
+    console.log(`⚠️  ${name} 測試資料夾不存在，略過。`);
+    return;
+  }
+
+  exec(`cd ${path} && dart test`, (err, stdout, stderr) => {
+    console.log(`===== ${name} 測試 =====`);
     if (err) {
-        console.error("測試錯誤:", err);
-        return;
+      console.error(`錯誤: ${err.message}`);
+      return;
     }
-    console.log("測試結果:\n", stdout);
-});
+    if (stderr) console.error(`stderr:\n${stderr}`);
+    console.log(stdout);
+  });
+}
+
+// 跑 APL 測試
+runTest("APL", "apl_tests");
+
+// 跑 PL 測試
+runTest("PL", "pl_tests");
