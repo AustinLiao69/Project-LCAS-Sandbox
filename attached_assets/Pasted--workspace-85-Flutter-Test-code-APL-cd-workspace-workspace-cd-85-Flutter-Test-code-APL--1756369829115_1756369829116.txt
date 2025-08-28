@@ -1,0 +1,439 @@
+~/workspace/85. Flutter_Test_code_APL$ cd ~/workspace
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... (1.6s)
+Built test:test.
+00:00 +0: ... 8501. 認證服務_test.dart   00:00 +0 -1: loading 8501. 認證服務_test.dart [E]
+  Failed to load "8501. 認證服務_test.dart":
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:209:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:211:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:211:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:241:59: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            verifyNever(mockAuthService.processRegistration(any));
+                                                            ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:255:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:289:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:291:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:291:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:293:58: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:304:60: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            verify(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding)).called(1);
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:339:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:339:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:341:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:341:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:343:55: Error: The argument type 'Null' can't be assigned to the parameter type 'LoginResponse' because 'LoginResponse' is not nullable.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:355:57: Error: The argument type 'Null' can't be assigned to the parameter type 'LoginResponse' because 'LoginResponse' is not nullable.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            verify(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert)).called(1);
+                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:365:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:365:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:407:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:407:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:409:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:409:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:411:55: Error: The argument type 'Null' can't be assigned to the parameter type 'LoginResponse' because 'LoginResponse' is not nullable.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.cultivation))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:441:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:441:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:480:49: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processLogout(any<LogoutRequest>()))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:729:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:731:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:731:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:742:57: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.processEmailVerification(any, any))
+                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:742:62: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.processEmailVerification(any, any))
+                                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:754:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:754:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:761:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.validateRefreshToken(any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:775:49: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processLogout(any<LogoutRequest>()))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:789:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:791:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:791:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:819:53: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockSecurityService.isPasswordSecure(any)).thenReturn(true);
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:820:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockSecurityService.verifyPassword(any, any)).thenAnswer((_) async => true);
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:820:56: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockSecurityService.verifyPassword(any, any)).thenAnswer((_) async => true);
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:821:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:821:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:823:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:823:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:835:76: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            verify(mockSecurityService.verifyPassword(loginRequest.password, any)).called(1);
+                                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:890:57: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+              when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:892:56: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+              when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:892:71: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+              when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:894:53: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForExpert(any)).thenReturn({'filtered': 'expert'});
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:895:55: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForInertial(any)).thenReturn({'filtered': 'inertial'});
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:896:58: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForCultivation(any)).thenReturn({'filtered': 'cultivation'});
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:897:54: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForGuiding(any)).thenReturn({'filtered': 'guiding'});
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:898:60: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              when(mockUserModeAdapter.adaptRegisterResponse(any, mode))
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:906:62: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              verify(mockUserModeAdapter.adaptRegisterResponse(any, mode)).called(1);
+                                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:911:59: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForExpert(any)).called(1);
+                                                            ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:914:61: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForInertial(any)).called(1);
+                                                              ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:917:64: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForCultivation(any)).called(1);
+                                                                 ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:920:60: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForGuiding(any)).called(1);
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:980:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:980:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:986:46: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-token');
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:986:51: Error: The argument type 'Null' can't be assigned to the parameter type 'Duration' because 'Duration' is not nullable.
+   - 'Duration' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-token');
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:987:58: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:998:51: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockResponseFilter.filterForExpert(any)).thenReturn({'expert': 'data'});
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1012:60: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            verify(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode)).called(1);
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1019:55: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResponse' because 'RegisterResponse' is not nullable.
+   - 'RegisterResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              mockUserModeAdapter.adaptRegisterResponse(any, request.userMode),
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1059:57: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+              when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1061:56: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+              when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1061:71: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+              when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1101:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1101:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1103:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1103:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1147:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1149:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1149:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1178:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1178:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1180:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1180:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1216:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1216:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1218:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1218:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1243:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1245:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1245:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1268:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1270:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1270:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1301:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1301:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1303:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1303:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1386:46: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-with-security-claims');
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1386:51: Error: The argument type 'Null' can't be assigned to the parameter type 'Duration' because 'Duration' is not nullable.
+   - 'Duration' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-with-security-claims');
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1431:52: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1431:67: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.authenticateUser(any<String>(), any<String>()))
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1434:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1434:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1504:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1506:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1506:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1522:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1524:54: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1524:69: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockTokenService.generateTokenPair(any<String>(), any<UserMode>()))
+                                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1550:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1567:55: Error: The method 'call' isn't defined for the class 'Null'.
+  Try correcting the name to the name of an existing method, or defining a method named 'call'.
+            when(mockAuthService.processRegistration(any<RegisterRequest>()))
+                                                        ^
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name 'loading 8501. 認證服務_test.dart'
+00:00 +0 -1: Some tests failed.         
+~/workspace/85. Flutter_Test_code_APL$ 
