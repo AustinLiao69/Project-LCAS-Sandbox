@@ -4,7 +4,7 @@ description: PL 測試專案
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.17.0 <4.0.0"
+  sdk: '^3.5.0'
 
 dependencies:
   test: ^1.24.0
