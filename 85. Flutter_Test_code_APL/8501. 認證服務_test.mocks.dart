@@ -7,54 +7,64 @@
 import 'dart:async' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 
+// 引用主模組中的類型定義
+import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart' as _auth;
+
 // Mock classes for authentication services
-class MockAuthService extends _i1.Mock {
+class MockAuthService extends _i1.Mock implements _auth.AuthService {
   MockAuthService() {
     _i1.throwOnMissingStub(this);
   }
 
-  _i2.Future<RegisterResult> processRegistration(RegisterRequest request) =>
+  @override
+  _i2.Future<_auth.RegisterResult> processRegistration(_auth.RegisterRequest request) =>
       (super.noSuchMethod(
         Invocation.method(#processRegistration, [request]),
-        returnValue: _i2.Future<RegisterResult>.value(
-          RegisterResult(userId: '', success: false),
+        returnValue: _i2.Future<_auth.RegisterResult>.value(
+          _auth.RegisterResult(userId: '', success: false),
         ),
-      ) as _i2.Future<RegisterResult>);
+      ) as _i2.Future<_auth.RegisterResult>);
 
-  _i2.Future<LoginResult> authenticateUser(String email, String password) =>
+  @override
+  _i2.Future<_auth.LoginResult> authenticateUser(String email, String password) =>
       (super.noSuchMethod(
         Invocation.method(#authenticateUser, [email, password]),
-        returnValue: _i2.Future<LoginResult>.value(
-          LoginResult(success: false),
+        returnValue: _i2.Future<_auth.LoginResult>.value(
+          _auth.LoginResult(success: false),
         ),
-      ) as _i2.Future<LoginResult>);
+      ) as _i2.Future<_auth.LoginResult>);
 
-  _i2.Future<void> processLogout(LogoutRequest request) =>
+  @override
+  _i2.Future<void> processLogout(_auth.LogoutRequest request) =>
       (super.noSuchMethod(
         Invocation.method(#processLogout, [request]),
         returnValue: _i2.Future<void>.value(),
       ) as _i2.Future<void>);
 
+  @override
   _i2.Future<void> initiateForgotPassword(String email) =>
       (super.noSuchMethod(
         Invocation.method(#initiateForgotPassword, [email]),
         returnValue: _i2.Future<void>.value(),
       ) as _i2.Future<void>);
 
-  _i2.Future<ResetTokenValidation> validateResetToken(String token) =>
+  @override
+  _i2.Future<_auth.ResetTokenValidation> validateResetToken(String token) =>
       (super.noSuchMethod(
         Invocation.method(#validateResetToken, [token]),
-        returnValue: _i2.Future<ResetTokenValidation>.value(
-          ResetTokenValidation(isValid: false, email: ''),
+        returnValue: _i2.Future<_auth.ResetTokenValidation>.value(
+          _auth.ResetTokenValidation(isValid: false, email: ''),
         ),
-      ) as _i2.Future<ResetTokenValidation>);
+      ) as _i2.Future<_auth.ResetTokenValidation>);
 
+  @override
   _i2.Future<void> executePasswordReset(String token, String newPassword) =>
       (super.noSuchMethod(
         Invocation.method(#executePasswordReset, [token, newPassword]),
         returnValue: _i2.Future<void>.value(),
       ) as _i2.Future<void>);
 
+  @override
   _i2.Future<void> processEmailVerification(String email, String code) =>
       (super.noSuchMethod(
         Invocation.method(#processEmailVerification, [email, code]),
@@ -62,41 +72,44 @@ class MockAuthService extends _i1.Mock {
       ) as _i2.Future<void>);
 }
 
-class MockTokenService extends _i1.Mock {
+class MockTokenService extends _i1.Mock implements _auth.TokenService {
   MockTokenService() {
     _i1.throwOnMissingStub(this);
   }
 
-  _i2.Future<TokenPair> generateTokenPair(String userId, UserMode userMode) =>
+  @override
+  _i2.Future<_auth.TokenPair> generateTokenPair(String userId, _auth.UserMode userMode) =>
       (super.noSuchMethod(
         Invocation.method(#generateTokenPair, [userId, userMode]),
-        returnValue: _i2.Future<TokenPair>.value(
-          TokenPair(
+        returnValue: _i2.Future<_auth.TokenPair>.value(
+          _auth.TokenPair(
             accessToken: 'mock-token',
             refreshToken: 'mock-refresh',
             expiresAt: DateTime.now().add(Duration(hours: 1)),
           ),
         ),
-      ) as _i2.Future<TokenPair>);
+      ) as _i2.Future<_auth.TokenPair>);
 
-  _i2.Future<TokenValidationResult> validateRefreshToken(String token) =>
+  @override
+  _i2.Future<_auth.TokenValidationResult> validateRefreshToken(String token) =>
       (super.noSuchMethod(
         Invocation.method(#validateRefreshToken, [token]),
-        returnValue: _i2.Future<TokenValidationResult>.value(
-          TokenValidationResult(isValid: false),
+        returnValue: _i2.Future<_auth.TokenValidationResult>.value(
+          _auth.TokenValidationResult(isValid: false),
         ),
-      ) as _i2.Future<TokenValidationResult>);
+      ) as _i2.Future<_auth.TokenValidationResult>);
 }
 
-class MockUserModeAdapter extends _i1.Mock {
+class MockUserModeAdapter extends _i1.Mock implements _auth.UserModeAdapter {
   MockUserModeAdapter() {
     _i1.throwOnMissingStub(this);
   }
 
-  RegisterResponse adaptRegisterResponse(RegisterResult result, UserMode mode) =>
+  @override
+  _auth.RegisterResponse adaptRegisterResponse(_auth.RegisterResult result, _auth.UserMode mode) =>
       (super.noSuchMethod(
         Invocation.method(#adaptRegisterResponse, [result, mode]),
-        returnValue: RegisterResponse(
+        returnValue: _auth.RegisterResponse(
           userId: '',
           email: '',
           userMode: mode,
@@ -106,16 +119,17 @@ class MockUserModeAdapter extends _i1.Mock {
           refreshToken: '',
           expiresAt: DateTime.now(),
         ),
-      ) as RegisterResponse);
+      ) as _auth.RegisterResponse);
 
-  LoginResponse adaptLoginResponse(LoginResult result, UserMode mode) =>
+  @override
+  _auth.LoginResponse adaptLoginResponse(_auth.LoginResult result, _auth.UserMode mode) =>
       (super.noSuchMethod(
         Invocation.method(#adaptLoginResponse, [result, mode]),
-        returnValue: LoginResponse(
+        returnValue: _auth.LoginResponse(
           token: '',
           refreshToken: '',
           expiresAt: DateTime.now(),
-          user: UserProfile(
+          user: _auth.UserProfile(
             id: '',
             email: '',
             displayName: '',
@@ -123,108 +137,121 @@ class MockUserModeAdapter extends _i1.Mock {
             createdAt: DateTime.now(),
           ),
         ),
-      ) as LoginResponse);
+      ) as _auth.LoginResponse);
 }
 
-class MockSecurityService extends _i1.Mock {
+class MockSecurityService extends _i1.Mock implements _auth.SecurityService {
   MockSecurityService() {
     _i1.throwOnMissingStub(this);
   }
 
+  @override
   bool isPasswordSecure(String password) => (super.noSuchMethod(
         Invocation.method(#isPasswordSecure, [password]),
         returnValue: true,
       ) as bool);
 
+  @override
   _i2.Future<bool> verifyPassword(String password, String hash) =>
       (super.noSuchMethod(
         Invocation.method(#verifyPassword, [password, hash]),
         returnValue: _i2.Future<bool>.value(true),
       ) as _i2.Future<bool>);
 
+  @override
   _i2.Future<String> hashPassword(String password) => (super.noSuchMethod(
         Invocation.method(#hashPassword, [password]),
         returnValue: _i2.Future<String>.value('hashed-password'),
       ) as _i2.Future<String>);
 
+  @override
   _i2.Future<String> generateSecureToken() => (super.noSuchMethod(
         Invocation.method(#generateSecureToken, []),
         returnValue: _i2.Future<String>.value('secure-token'),
       ) as _i2.Future<String>);
 
+  @override
   bool validateTokenFormat(String token) => (super.noSuchMethod(
         Invocation.method(#validateTokenFormat, [token]),
         returnValue: true,
       ) as bool);
 }
 
-class MockValidationService extends _i1.Mock {
+class MockValidationService extends _i1.Mock implements _auth.ValidationService {
   MockValidationService() {
     _i1.throwOnMissingStub(this);
   }
 
-  List<ValidationError> validateRegisterRequest(RegisterRequest request) =>
+  @override
+  List<_auth.ValidationError> validateRegisterRequest(_auth.RegisterRequest request) =>
       (super.noSuchMethod(
         Invocation.method(#validateRegisterRequest, [request]),
-        returnValue: <ValidationError>[],
-      ) as List<ValidationError>);
+        returnValue: <_auth.ValidationError>[],
+      ) as List<_auth.ValidationError>);
 }
 
-class MockErrorHandler extends _i1.Mock {
+class MockErrorHandler extends _i1.Mock implements _auth.ErrorHandler {
   MockErrorHandler() {
     _i1.throwOnMissingStub(this);
   }
 
-  ApiError createValidationError(List<ValidationError> errors, UserMode mode) =>
+  @override
+  _auth.ApiError createValidationError(List<_auth.ValidationError> errors, _auth.UserMode mode) =>
       (super.noSuchMethod(
         Invocation.method(#createValidationError, [errors, mode]),
-        returnValue: ApiError.create(AuthErrorCode.validationError, mode),
-      ) as ApiError);
+        returnValue: _auth.ApiError.create(_auth.AuthErrorCode.validationError, mode),
+      ) as _auth.ApiError);
 }
 
-class MockModeConfigService extends _i1.Mock {
+class MockModeConfigService extends _i1.Mock implements _auth.ModeConfigService {
   MockModeConfigService() {
     _i1.throwOnMissingStub(this);
   }
 
-  ModeConfig getConfigForMode(UserMode mode) => (super.noSuchMethod(
+  @override
+  _auth.ModeConfig getConfigForMode(_auth.UserMode mode) => (super.noSuchMethod(
         Invocation.method(#getConfigForMode, [mode]),
-        returnValue: ModeConfig(
+        returnValue: _auth.ModeConfig(
           mode: mode,
           settings: {},
           features: [],
         ),
-      ) as ModeConfig);
+      ) as _auth.ModeConfig);
 
-  bool isFeatureEnabled(UserMode mode, String feature) => (super.noSuchMethod(
+  @override
+  bool isFeatureEnabled(_auth.UserMode mode, String feature) => (super.noSuchMethod(
         Invocation.method(#isFeatureEnabled, [mode, feature]),
         returnValue: true,
       ) as bool);
 }
 
-class MockResponseFilter extends _i1.Mock {
+class MockResponseFilter extends _i1.Mock implements _auth.ResponseFilter {
   MockResponseFilter() {
     _i1.throwOnMissingStub(this);
   }
 
+  @override
   Map<String, dynamic> filterForExpert(Map<String, dynamic> data) =>
       (super.noSuchMethod(
         Invocation.method(#filterForExpert, [data]),
         returnValue: <String, dynamic>{},
       ) as Map<String, dynamic>);
 
+  @override
   Map<String, dynamic> filterForInertial(Map<String, dynamic> data) =>
       (super.noSuchMethod(
         Invocation.method(#filterForInertial, [data]),
         returnValue: <String, dynamic>{},
       ) as Map<String, dynamic>);
 
+  @override
   Map<String, dynamic> filterForCultivation(Map<String, dynamic> data) =>
       (super.noSuchMethod(
         Invocation.method(#filterForCultivation, [data]),
         returnValue: <String, dynamic>{},
       ) as Map<String, dynamic>);
 
+  @override
   Map<String, dynamic> filterForGuiding(Map<String, dynamic> data) =>
       (super.noSuchMethod(
         Invocation.method(#filterForGuiding, [data]),
@@ -232,172 +259,21 @@ class MockResponseFilter extends _i1.Mock {
       ) as Map<String, dynamic>);
 }
 
-class MockJwtProvider extends _i1.Mock {
+class MockJwtProvider extends _i1.Mock implements _auth.JwtProvider {
   MockJwtProvider() {
     _i1.throwOnMissingStub(this);
   }
 
+  @override
   String generateToken(Map<String, dynamic> payload, Duration duration) =>
       (super.noSuchMethod(
         Invocation.method(#generateToken, [payload, duration]),
         returnValue: 'mock-jwt-token',
       ) as String);
 
+  @override
   Map<String, dynamic> verifyToken(String token) => (super.noSuchMethod(
         Invocation.method(#verifyToken, [token]),
         returnValue: <String, dynamic>{},
       ) as Map<String, dynamic>);
-}
-
-// Additional classes for testing
-class RegisterResult {
-  final String userId;
-  final bool success;
-  final String? errorMessage;
-
-  RegisterResult({
-    required this.userId,
-    required this.success,
-    this.errorMessage,
-  });
-}
-
-class LoginResult {
-  final UserProfile? user;
-  final bool success;
-  final String? errorMessage;
-
-  LoginResult({
-    this.user,
-    required this.success,
-    this.errorMessage,
-  });
-}
-
-class TokenPair {
-  final String accessToken;
-  final String refreshToken;
-  final DateTime expiresAt;
-
-  TokenPair({
-    required this.accessToken,
-    required this.refreshToken,
-    required this.expiresAt,
-  });
-}
-
-class TokenValidationResult {
-  final bool isValid;
-  final String? userId;
-  final UserMode? userMode;
-  final String? reason;
-
-  TokenValidationResult({
-    required this.isValid,
-    this.userId,
-    this.userMode,
-    this.reason,
-  });
-}
-
-class ResetTokenValidation {
-  final bool isValid;
-  final String email;
-  final DateTime? expiresAt;
-
-  ResetTokenValidation({
-    required this.isValid,
-    required this.email,
-    this.expiresAt,
-  });
-}
-
-class ValidationError {
-  final String field;
-  final String message;
-  final String? value;
-
-  ValidationError({
-    required this.field,
-    required this.message,
-    this.value,
-  });
-}
-
-class ModeConfig {
-  final UserMode mode;
-  final Map<String, dynamic> settings;
-  final List<String> features;
-
-  ModeConfig({
-    required this.mode,
-    required this.settings,
-    required this.features,
-  });
-}
-
-// Enum and base classes
-enum UserMode { expert, inertial, cultivation, guiding }
-
-enum AuthErrorCode {
-  validationError,
-  emailAlreadyExists,
-  invalidCredentials,
-  tokenInvalid,
-  tokenExpired,
-  weakPassword,
-  invalidResetToken,
-  internalServerError,
-}
-
-extension AuthErrorCodeMessages on AuthErrorCode {
-  String getMessage(UserMode mode) {
-    switch (this) {
-      case AuthErrorCode.validationError:
-        switch (mode) {
-          case UserMode.expert:
-            return '請求參數驗證失敗，請檢查資料格式與完整性';
-          case UserMode.inertial:
-            return '資料格式驗證失敗，請確認輸入內容';
-          case UserMode.cultivation:
-            return '輸入資料需要調整，讓我們一起完善它！';
-          case UserMode.guiding:
-            return '資料格式錯誤';
-        }
-      case AuthErrorCode.emailAlreadyExists:
-        return 'Email已存在';
-      case AuthErrorCode.invalidCredentials:
-        return '無效的登入憑證';
-      case AuthErrorCode.weakPassword:
-        return '密碼強度不足';
-      default:
-        return '未知錯誤';
-    }
-  }
-}
-
-class ApiError {
-  final AuthErrorCode code;
-  final String message;
-  final String? field;
-  final Map<String, dynamic>? details;
-
-  ApiError({
-    required this.code,
-    required this.message,
-    this.field,
-    this.details,
-  });
-
-  static ApiError create(AuthErrorCode code, UserMode mode, {
-    String? field,
-    List<ValidationError>? validationErrors,
-  }) {
-    return ApiError(
-      code: code,
-      message: code.getMessage(mode),
-      field: field,
-      details: validationErrors != null ? {'validation': validationErrors} : null,
-    );
-  }
 }
