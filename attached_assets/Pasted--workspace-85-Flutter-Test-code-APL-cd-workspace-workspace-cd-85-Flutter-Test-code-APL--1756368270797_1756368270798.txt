@@ -1,0 +1,865 @@
+~/workspace/85. Flutter_Test_code_APL$ cd ~/workspace
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... (2.8s)
+Built test:test.
+00:00 +0: ... 8501. 認證服務_test.dart   00:01 +0: ... 8501. 認證服務_test.dart   00:01 +0 -1: loading 8501. 認證服務_test.dart [E]
+  Failed to load "8501. 認證服務_test.dart":
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:16:50: Error: Type 'RegisterRequest' not found.
+    _i2.Future<RegisterResult> processRegistration(RegisterRequest request) =>
+                                                   ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:32:34: Error: Type 'LogoutRequest' not found.
+    _i2.Future<void> processLogout(LogoutRequest request) =>
+                                   ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:96:3: Error: Type 'RegisterResponse' not found.
+    RegisterResponse adaptRegisterResponse(RegisterResult result, UserMode mode) =>
+    ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:111:3: Error: Type 'LoginResponse' not found.
+    LoginResponse adaptLoginResponse(LoginResult result, UserMode mode) =>
+    ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:166:49: Error: Type 'RegisterRequest' not found.
+    List<ValidationError> validateRegisterRequest(RegisterRequest request) =>
+                                                  ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:266:9: Error: Type 'UserProfile' not found.
+    final UserProfile? user;
+          ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:34:1: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+  import '8501. 認證服務_test.mocks.dart';
+  ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:34:1: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+  import '8501. 認證服務_test.mocks.dart';
+  ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:47:25: Error: Not a constant expression.
+      UserMode userMode = UserMode.expert,
+                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:47:25: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+      UserMode userMode = UserMode.expert,
+                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:89:25: Error: Not a constant expression.
+      UserMode userMode = UserMode.expert,
+                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:89:25: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+      UserMode userMode = UserMode.expert,
+                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:111:12: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+      return TokenPair(
+             ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:202:73: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final request = TestUtils.createTestRegisterRequest(userMode: UserMode.expert);
+                                                                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:203:34: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedResult = RegisterResult(userId: 'test-user-id', success: true);
+                                   ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:204:37: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedTokenPair = TokenPair(
+                                      ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:223:53: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.metadata.userMode, equals(UserMode.expert));
+                                                      ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:225:69: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockTokenService.generateTokenPair('test-user-id', UserMode.expert)).called(1);
+                                                                      ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:239:47: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.error?.code, equals(AuthErrorCode.validationError));
+                                                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:250:34: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedResult = RegisterResult(
+                                   ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:264:47: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.error?.code, equals(AuthErrorCode.emailAlreadyExists));
+                                                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:272:73: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final request = TestUtils.createTestRegisterRequest(userMode: UserMode.guiding);
+                                                                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:273:34: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedResult = RegisterResult(userId: 'test-user-id', success: true);
+                                   ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:274:37: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedTokenPair = TokenPair(
+                                      ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:282:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.guiding,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:294:63: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding))
+                                                                ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:304:53: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.metadata.userMode, equals(UserMode.guiding));
+                                                      ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:305:65: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding)).called(1);
+                                                                  ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:319:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.expert,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:322:34: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedResult = LoginResult(user: mockUser, success: true);
+                                   ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:323:37: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedTokenPair = TokenPair(
+                                      ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:344:60: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert))
+                                                             ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:355:53: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.metadata.userMode, equals(UserMode.expert));
+                                                      ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:356:62: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert)).called(1);
+                                                               ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:364:34: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedResult = LoginResult(success: false, errorMessage: 'Invalid credentials');
+                                   ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:374:47: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.error?.code, equals(AuthErrorCode.invalidCredentials));
+                                                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:387:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.cultivation,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:390:34: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedResult = LoginResult(user: mockUser, success: true);
+                                   ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:391:37: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedTokenPair = TokenPair(
+                                      ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:412:60: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.cultivation))
+                                                             ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:423:53: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.metadata.userMode, equals(UserMode.cultivation));
+                                                      ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:434:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.expert,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:436:37: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedTokenPair = TokenPair(
+                                      ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:461:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.expert,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:469:47: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.error?.code, equals(AuthErrorCode.invalidCredentials));
+                                                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:504:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.expert,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:501:36: Error: 'TokenValidationResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final validationResult = TokenValidationResult(
+                                     ^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:506:32: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final newTokenPair = TokenPair(
+                                 ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:514:67: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
+                                                                    ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:532:36: Error: 'TokenValidationResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final validationResult = TokenValidationResult(
+                                     ^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:545:47: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.error?.code, equals(AuthErrorCode.tokenInvalid));
+                                                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:576:30: Error: 'ResetTokenValidation' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final validation = ResetTokenValidation(
+                               ^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:606:47: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.error?.code, equals(AuthErrorCode.invalidResetToken));
+                                                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:649:47: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.error?.code, equals(AuthErrorCode.weakPassword));
+                                                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:731:40: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => RegisterResult(userId: 'test-user-id', success: true));
+                                         ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:756:40: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => LoginResult(user: testUser, success: true));
+                                         ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:766:27: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                  userMode: UserMode.expert,
+                            ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:763:40: Error: 'TokenValidationResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => TokenValidationResult(
+                                         ^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:791:40: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
+                                         ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:793:40: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => TokenPair(
+                                         ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:803:64: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockTokenService.generateTokenPair('test-id', UserMode.expert)).called(1);
+                                                                 ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:816:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.expert,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:823:40: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => LoginResult(user: mockUser, success: true));
+                                         ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:825:40: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => TokenPair(
+                                         ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:838:69: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockTokenService.generateTokenPair('test-user-id', UserMode.expert)).called(1);
+                                                                      ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:847:13: Error: 'ValidationError' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              ValidationError(field: 'email', message: 'Email格式無效', value: 'invalid-email')
+              ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:850:13: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              AuthErrorCode.validationError,
+              ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:851:13: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              UserMode.expert,
+              ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:849:33: Error: 'ApiError' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final expectedError = ApiError.create(
+                                  ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:856:73: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockErrorHandler.createValidationError(validationErrors, UserMode.expert))
+                                                                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:864:47: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.error?.code, equals(AuthErrorCode.validationError));
+                                                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:866:75: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockErrorHandler.createValidationError(validationErrors, UserMode.expert)).called(1);
+                                                                            ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:873:26: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
+                           ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:873:43: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
+                                            ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:873:62: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
+                                                               ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:873:84: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
+                                                                                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:882:40: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                needsAssessment: mode == UserMode.expert,
+                                         ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:889:42: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                  .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
+                                           ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:908:20: Error: Not a constant expression.
+                case UserMode.expert:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:908:20: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                case UserMode.expert:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:911:20: Error: Not a constant expression.
+                case UserMode.inertial:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:911:20: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                case UserMode.inertial:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:914:20: Error: Not a constant expression.
+                case UserMode.cultivation:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:914:20: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                case UserMode.cultivation:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:917:20: Error: Not a constant expression.
+                case UserMode.guiding:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:917:20: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                case UserMode.guiding:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:928:28: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final userMode = UserMode.cultivation;
+                             ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:929:30: Error: 'ModeConfig' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modeConfig = ModeConfig(
+                               ^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:34:1: Error: 'ValidationError' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+  import '8501. 認證服務_test.mocks.dart';
+  ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:965:30: Error: 'ModeConfig' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modeConfig = ModeConfig(
+                               ^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:977:40: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
+                                         ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:979:40: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => TokenPair(
+                                         ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:991:54: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                  needsAssessment: request.userMode == UserMode.expert,
+                                                       ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1033:22: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              {'mode': UserMode.expert, 'expected': '請求參數驗證失敗，請檢查資料格式與完整性'},
+                       ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1034:22: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              {'mode': UserMode.inertial, 'expected': '資料格式驗證失敗，請確認輸入內容'},
+                       ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1035:22: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              {'mode': UserMode.cultivation, 'expected': '輸入資料需要調整，讓我們一起完善它！'},
+                       ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1036:22: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              {'mode': UserMode.guiding, 'expected': '資料格式錯誤'},
+                       ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1043:29: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              final message = AuthErrorCode.validationError.getMessage(mode);
+                              ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1053:26: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
+                           ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1053:43: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
+                                            ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1053:62: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
+                                                               ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1053:84: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
+                                                                                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1058:42: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                  .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
+                                           ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1068:20: Error: Not a constant expression.
+                case UserMode.expert:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1068:20: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                case UserMode.expert:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1071:20: Error: Not a constant expression.
+                case UserMode.cultivation:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1071:20: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                case UserMode.cultivation:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1075:20: Error: Not a constant expression.
+                case UserMode.guiding:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1075:20: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                case UserMode.guiding:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1078:20: Error: Not a constant expression.
+                case UserMode.inertial:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1078:20: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                case UserMode.inertial:
+                     ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1095:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.expert,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1100:40: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => LoginResult(user: expertUser, success: true));
+                                         ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1126:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.expert,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1144:73: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final request = TestUtils.createTestRegisterRequest(userMode: UserMode.inertial);
+                                                                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1146:40: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
+                                         ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1157:53: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.metadata.userMode, equals(UserMode.inertial));
+                                                      ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1172:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.inertial,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1177:40: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => LoginResult(user: inertialUser, success: true));
+                                         ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1210:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.cultivation,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1215:40: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => LoginResult(user: cultivationUser, success: true));
+                                         ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1240:73: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final request = TestUtils.createTestRegisterRequest(userMode: UserMode.cultivation);
+                                                                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1242:40: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
+                                         ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1253:53: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.metadata.userMode, equals(UserMode.cultivation));
+                                                      ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1265:73: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final request = TestUtils.createTestRegisterRequest(userMode: UserMode.guiding);
+                                                                          ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1267:40: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
+                                         ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1279:53: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.metadata.userMode, equals(UserMode.guiding));
+                                                      ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1295:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.guiding,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1300:40: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => LoginResult(user: guidingUser, success: true));
+                                         ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1337:15: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                AuthErrorCode.validationError,
+                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1338:15: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                AuthErrorCode.weakPassword,
+                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1358:42: Error: 'TokenValidationResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                  .thenAnswer((_) async => TokenValidationResult(isValid: false));
+                                           ^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1364:15: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                AuthErrorCode.tokenInvalid,
+                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1365:15: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                AuthErrorCode.tokenExpired,
+                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1366:15: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                AuthErrorCode.validationError,
+                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1378:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.expert,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1386:40: Error: 'TokenPair' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => TokenPair(
+                                         ^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1425:23: Error: 'UserMode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              userMode: UserMode.expert,
+                        ^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1430:40: Error: 'LoginResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => LoginResult(user: user, success: true));
+                                         ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1503:40: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
+                                         ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1521:40: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+                .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
+                                         ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1555:47: Error: 'AuthErrorCode' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            expect(response.error?.code, equals(AuthErrorCode.internalServerError));
+                                                ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1568:20: Error: 'RegisterResult' is imported from both '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart' and '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              return RegisterResult(userId: 'test', success: true);
+                     ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:186:22: Error: The argument type 'MockAuthService' can't be assigned to the parameter type 'AuthService'.
+   - 'MockAuthService' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+   - 'AuthService' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+          authService: mockAuthService,
+                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:187:23: Error: The argument type 'MockTokenService' can't be assigned to the parameter type 'TokenService'.
+   - 'MockTokenService' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+   - 'TokenService' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+          tokenService: mockTokenService,
+                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:188:26: Error: The argument type 'MockUserModeAdapter' can't be assigned to the parameter type 'UserModeAdapter'.
+   - 'MockUserModeAdapter' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+   - 'UserModeAdapter' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+          userModeAdapter: mockUserModeAdapter,
+                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:212:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:212:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:292:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:292:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:294:58: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResult' because 'RegisterResult' is not nullable.
+   - 'RegisterResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:305:60: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResult' because 'RegisterResult' is not nullable.
+   - 'RegisterResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockUserModeAdapter.adaptRegisterResponse(any, UserMode.guiding)).called(1);
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:340:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:340:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:342:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:342:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:344:55: Error: The argument type 'Null' can't be assigned to the parameter type 'LoginResult' because 'LoginResult' is not nullable.
+   - 'LoginResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:356:57: Error: The argument type 'Null' can't be assigned to the parameter type 'LoginResult' because 'LoginResult' is not nullable.
+   - 'LoginResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockUserModeAdapter.adaptLoginResponse(any, UserMode.expert)).called(1);
+                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:366:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:366:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:408:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:408:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:410:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:410:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:412:55: Error: The argument type 'Null' can't be assigned to the parameter type 'LoginResult' because 'LoginResult' is not nullable.
+   - 'LoginResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockUserModeAdapter.adaptLoginResponse(any, UserMode.cultivation))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:442:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:442:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:732:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:732:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:743:57: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.processEmailVerification(any, any))
+                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:743:62: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.processEmailVerification(any, any))
+                                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:755:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:755:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:762:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.validateRefreshToken(any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:792:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:792:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:820:53: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockSecurityService.isPasswordSecure(any)).thenReturn(true);
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:821:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockSecurityService.verifyPassword(any, any)).thenAnswer((_) async => true);
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:821:56: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockSecurityService.verifyPassword(any, any)).thenAnswer((_) async => true);
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:822:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:822:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:824:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:824:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:836:76: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            verify(mockSecurityService.verifyPassword(loginRequest.password, any)).called(1);
+                                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:855:79: Error: The argument type 'List<dynamic>' can't be assigned to the parameter type 'List<ValidationError>'.
+   - 'List' is from 'dart:core'.
+   - 'ValidationError' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockValidationService.validateRegisterRequest(any)).thenReturn(validationErrors);
+                                                                                ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:856:55: Error: The argument type 'List<dynamic>' can't be assigned to the parameter type 'List<ValidationError>'.
+   - 'List' is from 'dart:core'.
+   - 'ValidationError' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockErrorHandler.createValidationError(validationErrors, UserMode.expert))
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:866:57: Error: The argument type 'List<dynamic>' can't be assigned to the parameter type 'List<ValidationError>'.
+   - 'List' is from 'dart:core'.
+   - 'ValidationError' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockErrorHandler.createValidationError(validationErrors, UserMode.expert)).called(1);
+                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:890:53: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+              when(mockTokenService.generateTokenPair(any, any))
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:890:58: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              when(mockTokenService.generateTokenPair(any, any))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:892:53: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForExpert(any)).thenReturn({'filtered': 'expert'});
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:893:55: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForInertial(any)).thenReturn({'filtered': 'inertial'});
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:894:58: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForCultivation(any)).thenReturn({'filtered': 'cultivation'});
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:895:54: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+              when(mockResponseFilter.filterForGuiding(any)).thenReturn({'filtered': 'guiding'});
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:896:60: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResult' because 'RegisterResult' is not nullable.
+   - 'RegisterResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              when(mockUserModeAdapter.adaptRegisterResponse(any, mode))
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:904:62: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResult' because 'RegisterResult' is not nullable.
+   - 'RegisterResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              verify(mockUserModeAdapter.adaptRegisterResponse(any, mode)).called(1);
+                                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:909:59: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForExpert(any)).called(1);
+                                                            ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:912:61: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForInertial(any)).called(1);
+                                                              ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:915:64: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForCultivation(any)).called(1);
+                                                                 ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:918:60: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+                  verify(mockResponseFilter.filterForGuiding(any)).called(1);
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:975:63: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockModeConfigService.getConfigForMode(request.userMode)).thenReturn(modeConfig);
+                                                                ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:978:70: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair('test-id', request.userMode))
+                                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:984:46: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-token');
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:984:51: Error: The argument type 'Null' can't be assigned to the parameter type 'Duration' because 'Duration' is not nullable.
+   - 'Duration' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-token');
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:985:58: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResult' because 'RegisterResult' is not nullable.
+   - 'RegisterResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:985:71: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode))
+                                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:996:51: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockResponseFilter.filterForExpert(any)).thenReturn({'expert': 'data'});
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1007:65: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockModeConfigService.getConfigForMode(request.userMode)).called(1);
+                                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1009:72: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockTokenService.generateTokenPair('test-id', request.userMode)).called(1);
+                                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1010:60: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResult' because 'RegisterResult' is not nullable.
+   - 'RegisterResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode)).called(1);
+                                                             ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1010:73: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            verify(mockUserModeAdapter.adaptRegisterResponse(any, request.userMode)).called(1);
+                                                                          ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1016:67: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              mockTokenService.generateTokenPair('test-id', request.userMode),
+                                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1017:55: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterResult' because 'RegisterResult' is not nullable.
+   - 'RegisterResult' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              mockUserModeAdapter.adaptRegisterResponse(any, request.userMode),
+                                                        ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1017:68: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              mockUserModeAdapter.adaptRegisterResponse(any, request.userMode),
+                                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1059:53: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+              when(mockTokenService.generateTokenPair(any, any))
+                                                      ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1059:58: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+              when(mockTokenService.generateTokenPair(any, any))
+                                                           ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1099:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1099:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1101:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1101:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1147:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1147:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1176:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1176:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1178:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1178:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1214:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1214:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1216:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1216:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1243:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1243:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1268:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1268:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1299:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1299:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1301:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1301:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1384:46: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-with-security-claims');
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1384:51: Error: The argument type 'Null' can't be assigned to the parameter type 'Duration' because 'Duration' is not nullable.
+   - 'Duration' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-with-security-claims');
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1385:65: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(user.id, user.userMode))
+                                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1393:84: Error: The argument type 'UserMode/*1*/' can't be assigned to the parameter type 'UserMode/*2*/'.
+   - 'UserMode/*1*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+   - 'UserMode/*2*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            final tokenPair = await mockTokenService.generateTokenPair(user.id, user.userMode);
+                                                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1429:49: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1429:54: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockAuthService.authenticateUser(any, any))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1432:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1432:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1504:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1504:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1522:51: Error: The argument type 'Null' can't be assigned to the parameter type 'String' because 'String' is not nullable.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                    ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1522:56: Error: The argument type 'Null' can't be assigned to the parameter type 'UserMode' because 'UserMode' is not nullable.
+   - 'UserMode' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+            when(mockTokenService.generateTokenPair(any, any))
+                                                         ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:16:50: Error: 'RegisterRequest' isn't a type.
+    _i2.Future<RegisterResult> processRegistration(RegisterRequest request) =>
+                                                   ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:32:34: Error: 'LogoutRequest' isn't a type.
+    _i2.Future<void> processLogout(LogoutRequest request) =>
+                                   ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:109:12: Error: 'RegisterResponse' isn't a type.
+        ) as RegisterResponse);
+             ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:99:22: Error: The method 'RegisterResponse' isn't defined for the class 'MockUserModeAdapter'.
+   - 'MockUserModeAdapter' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'RegisterResponse'.
+          returnValue: RegisterResponse(
+                       ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:126:12: Error: 'LoginResponse' isn't a type.
+        ) as LoginResponse);
+             ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:114:22: Error: The method 'LoginResponse' isn't defined for the class 'MockUserModeAdapter'.
+   - 'MockUserModeAdapter' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'LoginResponse'.
+          returnValue: LoginResponse(
+                       ^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:118:17: Error: The method 'UserProfile' isn't defined for the class 'MockUserModeAdapter'.
+   - 'MockUserModeAdapter' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'UserProfile'.
+            user: UserProfile(
+                  ^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:166:49: Error: 'RegisterRequest' isn't a type.
+    List<ValidationError> validateRegisterRequest(RegisterRequest request) =>
+                                                  ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.mocks.dart:266:9: Error: 'UserProfile' isn't a type.
+    final UserProfile? user;
+          ^^^^^^^^^^^
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name 'loading 8501. 認證服務_test.dart'
+00:01 +0 -1: Some tests failed.         
+~/workspace/85. Flutter_Test_code_APL$ 
