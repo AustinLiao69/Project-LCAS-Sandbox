@@ -1,0 +1,251 @@
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... (1.7s)
+Built test:test.
+00:00 +0: loading 8501. 認證服務_test.dart                          00:00 +0: 認證服務測試套件 v2.5.0 (setUpAll)                        00:00 +0: 認證服務測試套件 ... 3. 功能測試 3.1 使用者註冊API測試 04.00:00 +0 -1: 認證服務測試套件 v2.5.0 3. 功能測試 3.1 使用者註冊API測試 04. 正常註冊流程 - Expert模式 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 255:56  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 3. 功能測試 3.1 使用者註冊API測試 04. 正常註冊流程 - Expert模式'
+00:00 +0 -1: 認證服務測試套件 ... 3.1 使用者註冊API測試 05. 註冊驗證00:00 +1 -1: 認證服務測試套件 ... 3.1 使用者註冊API測試 05. 註冊驗證00:00 +1 -1: 認證服務測試套件 ... 功能測試 3.1 使用者註冊API測試 06.00:00 +1 -2: 認證服務測試套件 v2.5.0 3. 功能測試 3.1 使用者註冊API測試 06. 註冊失敗 - Email已存在 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 303:56  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 3. 功能測試 3.1 使用者註冊API測試 06. 註冊失敗 - Email已存在'
+00:00 +1 -2: 認證服務測試套件 ... 3.1 使用者註冊API測試 07. 四模式註00:00 +1 -3: 認證服務測試套件 v2.5.0 3. 功能測試 3.1 使用者註冊API測試 07. 四模式註冊差異 - Guiding模式 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 338:56  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 3. 功能測試 3.1 使用者註冊API測試 07. 四模式註冊差異 - Guiding模式'
+00:00 +1 -3: 認證服務測試套件 ... 功能測試 3.2 使用者登入API測試 08.00:00 +1 -4: 認證服務測試套件 v2.5.0 3. 功能測試 3.2 使用者登入API測試 08. 正常登入流程 - Expert模式 [E]
+  Invalid argument(s): An argument matcher (like `any`) was either not used as an immediate argument to Symbol("authenticateUser") (argument matchers can only be used as an argument for the very method being stubbed or verified), or was used as a named argument without the Mockito "named" API (Each argument matcher that is used as a named argument needs to specify the name of the argument it is being used in. For example: `when(obj.fn(x: anyNamed("x")))`).
+  package:mockito/src/mock.dart 463:7   _InvocationForMatchedArguments._reconstitutePositionalArgs
+  package:mockito/src/mock.dart 374:33  new _InvocationForMatchedArguments
+  package:mockito/src/mock.dart 341:18  _useMatchedInvocationIfSet
+  package:mockito/src/mock.dart 163:18  Mock.noSuchMethod
+  8501.                                 認證服務_test.mocks.dart 30:14      MockAuthService.authenticateUser
+  8501.                                 認證服務_test.dart 388:32           main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 3. 功能測試 3.2 使用者登入API測試 08. 正常登入流程 - Expert模式'
+00:00 +1 -4: 認證服務測試套件 v2.5.0 3. 功能測試 3.2 使用者登入API測00:00 +2 -4: 認證服務測試套件 v2.5.0 3. 功能測試 3.2 使用者登入API測00:00 +2 -4: 認證服務測試套件 ... 使用者登入API測試 10. 四模式登入差00:00 +2 -5: 認證服務測試套件 v2.5.0 3. 功能測試 3.2 使用者登入API測試 10. 四模式登入差異 - Cultivation模式 [E]
+  Expected: true
+    Actual: <false>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 467:11  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 3. 功能測試 3.2 使用者登入API測試 10. 四模式登入差異 - Cultivation模式'
+00:00 +2 -5: 認證服務測試套件 ... 3. 功能測試 3.3 Google登入API測試 00:00 +2 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.3 Google登入API測試 11. Google登入成功 [E]
+  Expected: true
+    Actual: <false>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 497:11  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 3. 功能測試 3.3 Google登入API測試 11. Google登入成功'
+00:00 +2 -6: 認證服務測試套件 ... Google登入API測試 12. Google登入失00:00 +3 -6: 認證服務測試套件 ... Google登入API測試 12. Google登入失00:00 +3 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.4 登出API測試 13.00:00 +4 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.4 登出API測試 13.00:01 +4 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.5 Token刷新API測00:01 +5 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.5 Token刷新API測00:01 +5 -6: 認證服務測試套件 ... 3.5 Token刷新API測試 15. Token刷新00:01 +6 -6: 認證服務測試套件 ... 3.5 Token刷新API測試 15. Token刷新00:01 +6 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.6 忘記密碼API測試00:01 +7 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.6 忘記密碼API測試00:01 +7 -6: 認證服務測試套件 ... 功能測試 3.7 驗證重設Token API測試00:01 +8 -6: 認證服務測試套件 ... 功能測試 3.7 驗證重設Token API測試00:01 +8 -6: 認證服務測試套件 ... 驗證重設Token API測試 18. 重設Toke00:01 +9 -6: 認證服務測試套件 ... 驗證重設Token API測試 18. 重設Toke00:01 +9 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.8 重設密碼API測試00:01 +10 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.8 重設密碼API測00:01 +10 -6: 認證服務測試套件 ... 3. 功能測試 3.8 重設密碼API測試 200:01 +11 -6: 認證服務測試套件 ... 3. 功能測試 3.8 重設密碼API測試 200:01 +11 -6: 認證服務測試套件 ... 3. 功能測試 3.9 Email驗證API測試 00:01 +12 -6: 認證服務測試套件 ... 3. 功能測試 3.9 Email驗證API測試 00:01 +12 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.10 LINE綁定API測00:01 +13 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.10 LINE綁定API測00:01 +13 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.11 綁定狀態API測00:01 +14 -6: 認證服務測試套件 v2.5.0 3. 功能測試 3.11 綁定狀態API測00:01 +14 -6: 認證服務測試套件 v2.5.0 4. 整合測試 4.1 端到端流程測試00:01 +14 -7: 認證服務測試套件 v2.5.0 4. 整合測試 4.1 端到端流程測試 24. 完整註冊登入流程整合 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 777:56  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 4. 整合測試 4.1 端到端流程測試 24. 完整註冊登入流程整合'
+00:01 +14 -7: 認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測00:01 +14 -8: 認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 25. 抽象類別協作整合 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 837:56  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 25. 抽象類別協作整合'
+00:01 +14 -8: ... AuthService + TokenService + SecurityService協作測00:01 +14 -9: 認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 34. AuthService + TokenService + SecurityService協作測試 [E]
+  Invalid argument(s): An argument matcher (like `any`) was either not used as an immediate argument to Symbol("isPasswordSecure") (argument matchers can only be used as an argument for the very method being stubbed or verified), or was used as a named argument without the Mockito "named" API (Each argument matcher that is used as a named argument needs to specify the name of the argument it is being used in. For example: `when(obj.fn(x: anyNamed("x")))`).
+  package:mockito/src/mock.dart 463:7   _InvocationForMatchedArguments._reconstitutePositionalArgs
+  package:mockito/src/mock.dart 374:33  new _InvocationForMatchedArguments
+  package:mockito/src/mock.dart 341:18  _useMatchedInvocationIfSet
+  package:mockito/src/mock.dart 163:18  Mock.noSuchMethod
+  8501.                                 認證服務_test.mocks.dart 149:52     MockSecurityService.isPasswordSecure
+  8501.                                 認證服務_test.dart 867:36           main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 34. AuthService + TokenService + SecurityService協作測試'
+00:01 +14 -9: ... 35. ValidationService + ErrorHandler整合測試      00:01 +14 -10: 認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 35. ValidationService + ErrorHandler整合測試 [E]
+  No matching calls (actually, no calls at all).
+  (If you called `verify(...).called(0);`, please instead use `verifyNever(...);`.)
+  package:matcher                        fail
+  package:mockito/src/mock.dart 797:7    _VerifyCall._checkWith
+  package:mockito/src/mock.dart 1071:18  _makeVerify.<fn>
+  8501.                                  認證服務_test.dart 916:17            main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 35. ValidationService + ErrorHandler整合測試'
+00:01 +14 -10: ... 36. UserModeAdapter + ResponseFilter協作測試     00:01 +14 -11: 認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 36. UserModeAdapter + ResponseFilter協作測試 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 940:58  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 36. UserModeAdapter + ResponseFilter協作測試'
+00:01 +14 -11: ... 37. ModeConfigService + JwtProvider協作測試      00:01 +14 -12: 認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 37. ModeConfigService + JwtProvider協作測試 [E]
+  Invalid argument(s): An argument matcher (like `any`) was either not used as an immediate argument to Symbol("getConfigForMode") (argument matchers can only be used as an argument for the very method being stubbed or verified), or was used as a named argument without the Mockito "named" API (Each argument matcher that is used as a named argument needs to specify the name of the argument it is being used in. For example: `when(obj.fn(x: anyNamed("x")))`).
+  package:mockito/src/mock.dart 463:7   _InvocationForMatchedArguments._reconstitutePositionalArgs
+  package:mockito/src/mock.dart 374:33  new _InvocationForMatchedArguments
+  package:mockito/src/mock.dart 341:18  _useMatchedInvocationIfSet
+  package:mockito/src/mock.dart 163:18  Mock.noSuchMethod
+  8501.                                 認證服務_test.mocks.dart 212:68     MockModeConfigService.getConfigForMode
+  8501.                                 認證服務_test.dart 977:38           main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 37. ModeConfigService + JwtProvider協作測試'
+00:01 +14 -12: 認證服務測試套件 ... 整合測試 4.2 抽象類別協作測試 3800:01 +14 -13: 認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 38. 13個抽象類別完整協作流程測試 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 1015:56  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 4. 整合測試 4.2 抽象類別協作測試 38. 13個抽象類別完整協作流程測試'
+00:01 +14 -13: 認證服務測試套件 ... 四模式差異化測試 5.1 四模式錯誤00:01 +15 -13: 認證服務測試套件 ... 四模式差異化測試 5.1 四模式錯誤00:01 +15 -13: 認證服務測試套件 ... 四模式差異化測試 5.2 四模式回應00:01 +15 -14: 認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 27. 四模式回應內容差異化 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 1097:58  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 27. 四模式回應內容差異化'
+00:01 +15 -14: ... 5. 四模式差異化測試 5.2 四模式回應內容差異化 39. 00:01 +15 -15: 認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 39. Expert模式深度登入測試 [E]
+  Invalid argument(s): An argument matcher (like `any`) was either not used as an immediate argument to Symbol("authenticateUser") (argument matchers can only be used as an argument for the very method being stubbed or verified), or was used as a named argument without the Mockito "named" API (Each argument matcher that is used as a named argument needs to specify the name of the argument it is being used in. For example: `when(obj.fn(x: anyNamed("x")))`).
+  package:mockito/src/mock.dart 463:7   _InvocationForMatchedArguments._reconstitutePositionalArgs
+  package:mockito/src/mock.dart 374:33  new _InvocationForMatchedArguments
+  package:mockito/src/mock.dart 341:18  _useMatchedInvocationIfSet
+  package:mockito/src/mock.dart 163:18  Mock.noSuchMethod
+  8501.                                 認證服務_test.mocks.dart 30:14      MockAuthService.authenticateUser
+  8501.                                 認證服務_test.dart 1137:32          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 39. Expert模式深度登入測試'
+00:01 +15 -15: ... 5. 四模式差異化測試 5.2 四模式回應內容差異化 40. 00:01 +15 -16: 認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 40. Expert模式深度錯誤處理測試 [E]
+  Expected: not null
+    Actual: <null>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 1174:11  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 40. Expert模式深度錯誤處理測試'
+00:01 +15 -16: ... 四模式差異化測試 5.2 四模式回應內容差異化 41. Ine00:01 +15 -17: 認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 41. Inertial模式深度穩定性測試 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 1183:56  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 41. Inertial模式深度穩定性測試'
+00:01 +15 -17: ... 四模式差異化測試 5.2 四模式回應內容差異化 42. Ine00:01 +15 -18: 認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 42. Inertial模式深度一致性測試 [E]
+  Invalid argument(s): An argument matcher (like `any`) was either not used as an immediate argument to Symbol("authenticateUser") (argument matchers can only be used as an argument for the very method being stubbed or verified), or was used as a named argument without the Mockito "named" API (Each argument matcher that is used as a named argument needs to specify the name of the argument it is being used in. For example: `when(obj.fn(x: anyNamed("x")))`).
+  package:mockito/src/mock.dart 463:7   _InvocationForMatchedArguments._reconstitutePositionalArgs
+  package:mockito/src/mock.dart 374:33  new _InvocationForMatchedArguments
+  package:mockito/src/mock.dart 341:18  _useMatchedInvocationIfSet
+  package:mockito/src/mock.dart 163:18  Mock.noSuchMethod
+  8501.                                 認證服務_test.mocks.dart 30:14      MockAuthService.authenticateUser
+  8501.                                 認證服務_test.dart 1213:32          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 42. Inertial模式深度一致性測試'
+00:01 +15 -18: ... 四模式差異化測試 5.2 四模式回應內容差異化 43. Cul00:01 +15 -19: 認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 43. Cultivation模式深度激勵測試 [E]
+  Expected: true
+    Actual: <false>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 1260:11  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 43. Cultivation模式深度激勵測試'
+00:01 +15 -19: ... 5.2 四模式回應內容差異化 44. Cultivation模式深度00:01 +15 -20: 認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 44. Cultivation模式深度成長追蹤測試 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 1278:56  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 44. Cultivation模式深度成長追蹤測試'
+00:01 +15 -20: ... 5. 四模式差異化測試 5.2 四模式回應內容差異化 45. 00:01 +15 -21: 認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 45. Guiding模式深度簡化測試 [E]
+  type 'Null' is not a subtype of type 'RegisterRequest' in type cast
+  unparsed  8501. 認證服務_test.dart 1302:56  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 45. Guiding模式深度簡化測試'
+00:01 +15 -21: ... 5. 四模式差異化測試 5.2 四模式回應內容差異化 46. 00:01 +15 -22: 認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 46. Guiding模式深度易用性測試 [E]
+  Invalid argument(s): An argument matcher (like `any`) was either not used as an immediate argument to Symbol("authenticateUser") (argument matchers can only be used as an argument for the very method being stubbed or verified), or was used as a named argument without the Mockito "named" API (Each argument matcher that is used as a named argument needs to specify the name of the argument it is being used in. For example: `when(obj.fn(x: anyNamed("x")))`).
+  package:mockito/src/mock.dart 463:7   _InvocationForMatchedArguments._reconstitutePositionalArgs
+  package:mockito/src/mock.dart 374:33  new _InvocationForMatchedArguments
+  package:mockito/src/mock.dart 341:18  _useMatchedInvocationIfSet
+  package:mockito/src/mock.dart 163:18  Mock.noSuchMethod
+  8501.                                 認證服務_test.mocks.dart 30:14      MockAuthService.authenticateUser
+  8501.                                 認證服務_test.dart 1334:32          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 5. 四模式差異化測試 5.2 四模式回應內容差異化 46. Guiding模式深度易用性測試'
+00:01 +15 -22: 認證服務測試套件 v2.5.0 6. 安全性測試 6.1 密碼安全性00:01 +15 -23: 認證服務測試套件 v2.5.0 6. 安全性測試 6.1 密碼安全性驗證 28. 密碼安全性驗證 [E]
+  Expected: true
+    Actual: <false>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 1370:13  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 6. 安全性測試 6.1 密碼安全性驗證 28. 密碼安全性驗證'
+00:01 +15 -23: 認證服務測試套件 ... 6. 安全性測試 6.2 Token安全性驗00:01 +15 -24: 認證服務測試套件 v2.5.0 6. 安全性測試 6.2 Token安全性驗證 29. Token安全性驗證 [E]
+  Bad state: Cannot call `when` within a stub response
+  package:mockito/src/mock.dart 1207:5  when
+  8501.                                 認證服務_test.dart 1391:13          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 6. 安全性測試 6.2 Token安全性驗證 29. Token安全性驗證'
+00:01 +15 -24: ... 6. 安全性測試 6.2 Token安全性驗證 47. Token生命週00:01 +15 -25: 認證服務測試套件 v2.5.0 6. 安全性測試 6.2 Token安全性驗證 47. Token生命週期安全性深度測試 [E]
+  Bad state: Cannot call `when` within a stub response
+  package:mockito/src/mock.dart 1207:5  when
+  8501.                                 認證服務_test.dart 1417:11          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 6. 安全性測試 6.2 Token安全性驗證 47. Token生命週期安全性深度測試'
+00:01 +15 -25: 認證服務測試套件 ... 6. 安全性測試 6.2 Token安全性驗00:01 +15 -26: 認證服務測試套件 v2.5.0 6. 安全性測試 6.2 Token安全性驗證 48. 並發登入安全性深度測試 [E]
+  Bad state: Cannot call `when` within a stub response
+  package:mockito/src/mock.dart 1207:5  when
+  8501.                                 認證服務_test.dart 1463:11          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 6. 安全性測試 6.2 Token安全性驗證 48. 並發登入安全性深度測試'
+00:01 +15 -26: 認證服務測試套件 ... 安全性測試 6.2 Token安全性驗證 400:01 +15 -27: 認證服務測試套件 v2.5.0 6. 安全性測試 6.2 Token安全性驗證 49. 跨平台綁定安全性深度測試 [E]
+  Bad state: Cannot call `when` within a stub response
+  package:mockito/src/mock.dart 1207:5  when
+  8501.                                 認證服務_test.dart 1502:11          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 6. 安全性測試 6.2 Token安全性驗證 49. 跨平台綁定安全性深度測試'
+00:01 +15 -27: 認證服務測試套件 v2.5.0 7. 效能測試 7.1 API回應時間測00:01 +15 -28: 認證服務測試套件 v2.5.0 7. 效能測試 7.1 API回應時間測試 30. API回應時間測試 [E]
+  Bad state: Cannot call `when` within a stub response
+  package:mockito/src/mock.dart 1207:5  when
+  8501.                                 認證服務_test.dart 1536:11          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 7. 效能測試 7.1 API回應時間測試 30. API回應時間測試'
+00:01 +15 -28: 認證服務測試套件 v2.5.0 7. 效能測試 7.2 併發處理能力00:01 +15 -29: 認證服務測試套件 v2.5.0 7. 效能測試 7.2 併發處理能力測試 31. 併發處理能力測試 [E]
+  Bad state: Cannot call `when` within a stub response
+  package:mockito/src/mock.dart 1207:5  when
+  8501.                                 認證服務_test.dart 1554:11          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 7. 效能測試 7.2 併發處理能力測試 31. 併發處理能力測試'
+00:01 +15 -29: 認證服務測試套件 v2.5.0 8. 異常測試 8.1 網路連接異常00:01 +15 -30: 認證服務測試套件 v2.5.0 8. 異常測試 8.1 網路連接異常處理 32. 網路連接異常處理 [E]
+  Bad state: Cannot call `when` within a stub response
+  package:mockito/src/mock.dart 1207:5  when
+  8501.                                 認證服務_test.dart 1582:11          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 8. 異常測試 8.1 網路連接異常處理 32. 網路連接異常處理'
+00:01 +15 -30: 認證服務測試套件 v2.5.0 8. 異常測試 8.2 服務超時處理 00:01 +15 -31: 認證服務測試套件 v2.5.0 8. 異常測試 8.2 服務超時處理 33. 服務超時處理 [E]   
+  Bad state: Cannot call `when` within a stub response
+  package:mockito/src/mock.dart 1207:5  when
+  8501.                                 認證服務_test.dart 1599:11          main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.5.0 8. 異常測試 8.2 服務超時處理 33. 服務超時處理'
+00:01 +15 -31: 認證服務測試套件 v2.5.0 (tearDownAll)                00:01 +15 -31: Some tests failed.                                  
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
+~/workspace/85. Flutter_Test_code_APL$ 
