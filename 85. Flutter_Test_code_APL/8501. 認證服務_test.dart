@@ -1,9 +1,9 @@
 /**
- * 8501. 認證服務_測試程式碼_v2.8.0
+ * 8501. 認證服務_測試程式碼_v2.9.0
  * @testFile 認證服務測試程式碼
  * @description LCAS 2.0 認證服務 API 模組完整測試實作 - 手動Mock方案
- * @version 2025-01-28-V2.8.0
- * @update 2025-01-28: 修正LoginResponse final屬性問題，修正ApiError.create參數，升級版次統一
+ * @version 2025-01-28-V2.9.0
+ * @update 2025-01-28: 修正ApiError.create參數錯誤，升級版次與8301模組同步
  */
 
 import 'package:test/test.dart';
@@ -499,7 +499,6 @@ class FakeErrorHandler implements ErrorHandler {
     final error = ApiError.create(
       AuthErrorCode.internalServerError,
       userMode,
-      message: exception.toString(),
     );
     
     return ApiResponse.error(
@@ -685,9 +684,9 @@ class FakeJwtProvider implements JwtProvider {
 /// 測試輔助工具類別
 class TestUtils {
   /// 01. 建立測試註冊請求
-  /// @version 2025-01-28-V2.8.0
+  /// @version 2025-01-28-V2.9.0
   /// @date 2025-01-28 12:00:00
-  /// @update: 升級版次，修正相容性問題
+  /// @update: 升級版次，確保與8301模組API相容性
   static RegisterRequest createTestRegisterRequest({
     UserMode userMode = UserMode.expert,
     String? email,
@@ -707,9 +706,9 @@ class TestUtils {
   }
 
   /// 02. 建立測試登入請求
-  /// @version 2025-01-28-V2.8.0
+  /// @version 2025-01-28-V2.9.0
   /// @date 2025-01-28 12:00:00
-  /// @update: 升級版次，確保相容性
+  /// @update: 升級版次，確保與8301模組API相容性
   static LoginRequest createTestLoginRequest({
     String? email,
     String? password,
@@ -727,9 +726,9 @@ class TestUtils {
   }
 
   /// 03. 建立測試使用者資料
-  /// @version 2025-01-28-V2.8.0
+  /// @version 2025-01-28-V2.9.0
   /// @date 2025-01-28 12:00:00
-  /// @update: 升級版次，確保相容性
+  /// @update: 升級版次，確保與8301模組UserProfile結構相容性
   static UserProfile createTestUser({
     UserMode userMode = UserMode.expert,
     String? userId,
@@ -804,9 +803,9 @@ class TestEnvironmentConfig {
   static const String mockRequestId = 'req-test-456';
 
   /// 初始化測試環境
-  /// @version 2025-01-28-V2.8.0
+  /// @version 2025-01-28-V2.9.0
   /// @date 2025-01-28 12:00:00
-  /// @update: 建立完整測試環境配置
+  /// @update: 升級版次，確保測試環境與8301模組V1.4.0相容
   static Future<void> setupTestEnvironment() async {
     // 初始化模擬資料
     await _initMockData();
@@ -877,7 +876,7 @@ void main() {
     group('3. 功能測試', () {
       group('3.1 使用者註冊API測試', () {
         /// TC-04: 正常註冊流程 - Expert模式
-        /// @version 2025-01-28-V2.8.0
+        /// @version 2025-01-28-V2.9.0
         test('04. 正常註冊流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.expert);
