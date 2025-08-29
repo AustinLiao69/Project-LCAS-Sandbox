@@ -1,0 +1,25 @@
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... (1.1s)
+Built test:test.
+00:00 +0: ... 8501. 認證服務_test.dart           00:00 +0 -1: loading 8501. 認證服務_test.dart [E]   
+  Failed to load "8501. 認證服務_test.dart":
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1038:27: Error: Undefined name 'expectedResponse'.
+                .thenReturn(expectedResponse);
+                            ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1557:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1585:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1602:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(any))
+                                                     ^
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name 'loading 8501. 認證服務_test.dart'
+00:00 +0 -1: Some tests failed.                 
+~/workspace/85. Flutter_Test_code_APL$ ^C
+~/workspace/85. Flutter_Test_code_APL$ 

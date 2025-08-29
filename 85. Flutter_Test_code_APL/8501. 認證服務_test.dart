@@ -1034,6 +1034,16 @@ void main() {
                 refreshToken: 'adapted-refresh',
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
               );
+          final expectedResponse = RegisterResponse(
+            userId: 'test-user-id',
+            email: 'test@lcas.com',
+            userMode: UserMode.expert,
+            verificationSent: true,
+            needsAssessment: true,
+            token: 'test-access-token',
+            refreshToken: 'test-refresh-token',
+            expiresAt: DateTime.now().add(Duration(hours: 1)),
+          );
           when(mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode))
               .thenReturn(expectedResponse);
           when(mockResponseFilter.filterForExpert(<String, dynamic>{'expert': 'data'})).thenReturn({'expert': 'data'});
