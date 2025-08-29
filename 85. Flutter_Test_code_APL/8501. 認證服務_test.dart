@@ -1,9 +1,9 @@
 /**
- * 8501. 認證服務_測試程式碼_v2.7.0
+ * 8501. 認證服務_測試程式碼_v2.8.0
  * @testFile 認證服務測試程式碼
  * @description LCAS 2.0 認證服務 API 模組完整測試實作 - 手動Mock方案
- * @version 2025-01-28-V2.7.0
- * @update 2025-01-28: 升級到v2.7.0版本，補齊所有缺失方法實作，解決編譯錯誤
+ * @version 2025-01-28-V2.8.0
+ * @update 2025-01-28: 升級到v2.8.0版本，修正所有編譯錯誤，補齊缺失方法實作，統一類型定義
  */
 
 import 'package:test/test.dart';
@@ -12,9 +12,6 @@ import 'dart:convert';
 
 // 匯入認證服務模組
 import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart';
-
-// 添加缺失的枚舉定義
-enum PasswordStrength { weak, medium, strong }
 
 // ================================
 // 手動Fake服務類別 (Manual Fake Services)
@@ -196,6 +193,11 @@ class FakeTokenService implements TokenService {
   Future<bool> validateEmailVerificationToken(String token) async {
     return token.isNotEmpty && !token.contains('invalid');
   }
+
+  @override
+  Future<bool> validateResetToken(String token) async {
+    return token.isNotEmpty && token.length >= 20 && !token.contains('invalid');
+  }
 }
 
 /// 手動UserModeAdapter實作
@@ -317,6 +319,35 @@ class FakeUserModeAdapter implements UserModeAdapter {
       case UserMode.inertial:
         return baseMessage;
     }
+  }
+
+  @override
+  ApiError adaptErrorResponse(ApiError error, UserMode userMode) {
+    // 根據用戶模式調整錯誤回應
+    String adaptedMessage;
+    switch (userMode) {
+      case UserMode.expert:
+        adaptedMessage = '${error.message} (詳細錯誤資訊)';
+        break;
+      case UserMode.cultivation:
+        adaptedMessage = '${error.message} 🌱 讓我們一起解決這個問題！';
+        break;
+      case UserMode.guiding:
+        adaptedMessage = error.message.split('.').first;
+        break;
+      case UserMode.inertial:
+        adaptedMessage = error.message;
+        break;
+    }
+
+    return ApiError(
+      code: error.code,
+      message: adaptedMessage,
+      field: error.field,
+      timestamp: error.timestamp,
+      requestId: error.requestId,
+      details: error.details,
+    );
   }
 }
 
@@ -648,7 +679,7 @@ class FakeJwtProvider implements JwtProvider {
 /// 測試輔助工具類別
 class TestUtils {
   /// 01. 建立測試註冊請求
-  /// @version 2025-01-28-V2.7.0
+  /// @version 2025-01-28-V2.8.0
   /// @date 2025-01-28 12:00:00
   /// @update: 提供完整測試資料生成
   static RegisterRequest createTestRegisterRequest({
@@ -767,7 +798,7 @@ class TestEnvironmentConfig {
   static const String mockRequestId = 'req-test-456';
 
   /// 初始化測試環境
-  /// @version 2025-01-28-V2.7.0
+  /// @version 2025-01-28-V2.8.0
   /// @date 2025-01-28 12:00:00
   /// @update: 建立完整測試環境配置
   static Future<void> setupTestEnvironment() async {
@@ -797,7 +828,7 @@ class TestEnvironmentConfig {
 // ================================
 
 void main() {
-  group('認證服務測試套件 v2.7.0 - 手動Mock方案', () {
+  group('認證服務測試套件 v2.8.0 - 手動Mock方案', () {
     late AuthController authController;
     late FakeAuthService fakeAuthService;
     late FakeTokenService fakeTokenService;
@@ -840,7 +871,7 @@ void main() {
     group('3. 功能測試', () {
       group('3.1 使用者註冊API測試', () {
         /// TC-04: 正常註冊流程 - Expert模式
-        /// @version 2025-01-28-V2.6.0
+        /// @version 2025-01-28-V2.8.0
         test('04. 正常註冊流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.expert);
