@@ -256,7 +256,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptRegisterResponse(expectedResponse, UserMode.expert))
+          when(mockUserModeAdapter.adaptRegisterResponse(any as RegisterResponse, any as UserMode))
               .thenReturn(expectedResponse);
 
           // Act
