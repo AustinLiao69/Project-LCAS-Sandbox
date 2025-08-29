@@ -311,6 +311,19 @@ void main() {
             refreshToken: 'test-refresh-token',
             expiresAt: DateTime.now().add(Duration(hours: 1)),
           );
+          
+          // 創建基本的 RegisterResponse
+          final basicResponse = RegisterResponse(
+            userId: 'test-user-id',
+            email: 'test@lcas.com',
+            userMode: UserMode.guiding,
+            verificationSent: true,
+            needsAssessment: false,
+            token: 'test-access-token',
+            refreshToken: 'test-refresh-token',
+            expiresAt: expectedTokenPair.expiresAt,
+          );
+          
           final adaptedResponse = RegisterResponse(
             userId: 'test-user-id',
             email: 'test@lcas.com',
@@ -326,8 +339,12 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.guiding))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), UserMode.guiding))
-              .thenReturn(adaptedResponse);
+          
+          // 確保 UserModeAdapter 收到非空的 RegisterResponse 並返回非空值
+          when(mockUserModeAdapter.adaptRegisterResponse(
+            argThat(isA<RegisterResponse>().having((r) => r.userId, 'userId', 'test-user-id')), 
+            UserMode.guiding
+          )).thenReturn(adaptedResponse);
 
           // Act
           final response = await authController.register(request);
@@ -337,7 +354,10 @@ void main() {
           expect(response.data?.userMode, equals('guiding'));
           expect(response.data?.needsAssessment, isFalse);
           expect(response.metadata.userMode, equals(UserMode.guiding));
-          verify(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), UserMode.guiding)).called(1);
+          verify(mockUserModeAdapter.adaptRegisterResponse(
+            argThat(isA<RegisterResponse>().having((r) => r.userId, 'userId', 'test-user-id')), 
+            UserMode.guiding
+          )).called(1);
         });
       });
 
@@ -376,8 +396,12 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), UserMode.expert))
-              .thenReturn(adaptedResponse);
+          
+          // 確保 UserModeAdapter 收到非空的 LoginResponse 並返回非空值
+          when(mockUserModeAdapter.adaptLoginResponse(
+            argThat(isA<LoginResponse>().having((r) => r.token, 'token', isNotNull)), 
+            UserMode.expert
+          )).thenReturn(adaptedResponse);
 
           // Act
           final response = await authController.login(request);
@@ -388,7 +412,10 @@ void main() {
           expect(response.data?.user.userMode, equals('expert'));
           expect(response.data?.loginHistory, isNotNull);
           expect(response.metadata.userMode, equals(UserMode.expert));
-          verify(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), UserMode.expert)).called(1);
+          verify(mockUserModeAdapter.adaptLoginResponse(
+            argThat(isA<LoginResponse>().having((r) => r.token, 'token', isNotNull)), 
+            UserMode.expert
+          )).called(1);
         });
 
         /// TC-09: 登入失敗 - 無效憑證
@@ -444,8 +471,12 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.cultivation))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), UserMode.cultivation))
-              .thenReturn(adaptedResponse);
+          
+          // 確保 UserModeAdapter 收到非空的 LoginResponse 並返回非空值
+          when(mockUserModeAdapter.adaptLoginResponse(
+            argThat(isA<LoginResponse>().having((r) => r.user.userMode, 'userMode', UserMode.cultivation)), 
+            UserMode.cultivation
+          )).thenReturn(adaptedResponse);
 
           // Act
           final response = await authController.login(request);
