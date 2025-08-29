@@ -1,10 +1,9 @@
-
 /**
- * 8501. 認證服務_測試程式碼_v2.4.0
+ * 8501. 認證服務_測試程式碼_v2.5.0
  * @testFile 認證服務測試程式碼
  * @description LCAS 2.0 認證服務 API 模組完整測試實作 - 涵蓋49個測試案例
- * @version 2025-08-28-V2.4.0
- * @update 2025-08-28: 升級到v2.4.0版本，修復Mockito null safety兼容性問題
+ * @version 2025-08-28-V2.5.0
+ * @update 2025-08-28: 升級到v2.5.0版本，修復Mockito null safety兼容性問題
  */
 
 import 'package:test/test.dart';
@@ -40,7 +39,7 @@ import '8501. 認證服務_test.mocks.dart';
 /// 測試輔助工具類別
 class TestUtils {
   /// 01. 建立測試註冊請求
-  /// @version 2025-08-28-V2.4.0
+  /// @version 2025-08-28-V2.5.0
   /// @date 2025-08-28 12:00:00
   /// @update: 提供完整測試資料生成
   static RegisterRequest createTestRegisterRequest({
@@ -62,7 +61,7 @@ class TestUtils {
   }
 
   /// 02. 建立測試登入請求
-  /// @version 2025-08-28-V2.4.0
+  /// @version 2025-08-28-V2.5.0
   /// @date 2025-08-28 12:00:00
   /// @update: 提供完整登入測試資料
   static LoginRequest createTestLoginRequest({
@@ -82,7 +81,7 @@ class TestUtils {
   }
 
   /// 03. 建立測試使用者資料
-  /// @version 2025-08-28-V2.4.0
+  /// @version 2025-08-28-V2.5.0
   /// @date 2025-08-28 12:00:00
   /// @update: 提供完整使用者測試資料
   static UserProfile createTestUser({
@@ -159,7 +158,7 @@ class TestEnvironmentConfig {
   static const String mockRequestId = 'req-test-456';
 
   /// 初始化測試環境
-  /// @version 2025-08-28-V2.4.0
+  /// @version 2025-08-28-V2.5.0
   /// @date 2025-08-28 12:00:00
   /// @update: 建立完整測試環境配置
   static Future<void> setupTestEnvironment() async {
@@ -189,7 +188,7 @@ class TestEnvironmentConfig {
 // ================================
 
 void main() {
-  group('認證服務測試套件 v2.4.0', () {
+  group('認證服務測試套件 v2.5.0', () {
     late AuthController authController;
     late MockAuthService mockAuthService;
     late MockTokenService mockTokenService;
@@ -232,7 +231,7 @@ void main() {
     group('3. 功能測試', () {
       group('3.1 使用者註冊API測試', () {
         /// TC-04: 正常註冊流程 - Expert模式
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('04. 正常註冊流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.expert);
@@ -255,9 +254,9 @@ void main() {
 
           when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => expectedResult);
-          when(mockTokenService.generateTokenPair(argThat(isA<String>()), argThat(isA<UserMode>())))
+          when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), argThat(isA<UserMode>())))
+          when(mockUserModeAdapter.adaptRegisterResponse(expectedResponse, UserMode.expert))
               .thenReturn(expectedResponse);
 
           // Act
@@ -269,12 +268,12 @@ void main() {
           expect(response.data?.userMode, equals('expert'));
           expect(response.data?.needsAssessment, isTrue); // Expert模式需要評估
           expect(response.metadata.userMode, equals(UserMode.expert));
-          verify(mockAuthService.processRegistration(argThat(isA<RegisterRequest>()))).called(1);
-          verify(mockTokenService.generateTokenPair(argThat(isA<String>()), argThat(isA<UserMode>()))).called(1);
+          verify(mockAuthService.processRegistration(request)).called(1);
+          verify(mockTokenService.generateTokenPair('test-user-id', UserMode.expert)).called(1);
         });
 
         /// TC-05: 註冊驗證錯誤 - 無效Email
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('05. 註冊驗證錯誤 - 無效Email格式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(email: 'invalid-email');
@@ -291,7 +290,7 @@ void main() {
         });
 
         /// TC-06: 註冊失敗 - Email已存在
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('06. 註冊失敗 - Email已存在', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest();
@@ -301,7 +300,7 @@ void main() {
             errorMessage: 'Email already exists',
           );
 
-          when(mockAuthService.processRegistration(request))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => expectedResult);
 
           // Act
@@ -314,7 +313,7 @@ void main() {
         });
 
         /// TC-07: 四模式註冊差異 - Guiding模式
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('07. 四模式註冊差異 - Guiding模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.guiding);
@@ -324,7 +323,7 @@ void main() {
             refreshToken: 'test-refresh-token',
             expiresAt: DateTime.now().add(Duration(hours: 1)),
           );
-          
+
           final adaptedResponse = RegisterResponse(
             userId: 'test-user-id',
             email: 'test@lcas.com',
@@ -336,11 +335,11 @@ void main() {
             expiresAt: expectedTokenPair.expiresAt,
           );
 
-          when(mockAuthService.processRegistration(request))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.guiding))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), argThat(isA<UserMode>())))
+          when(mockUserModeAdapter.adaptRegisterResponse(adaptedResponse, UserMode.guiding))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -351,13 +350,13 @@ void main() {
           expect(response.data?.userMode, equals('guiding'));
           expect(response.data?.needsAssessment, isFalse);
           expect(response.metadata.userMode, equals(UserMode.guiding));
-          verify(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), argThat(isA<UserMode>()))).called(1);
+          verify(mockUserModeAdapter.adaptRegisterResponse(adaptedResponse, UserMode.guiding)).called(1);
         });
       });
 
       group('3.2 使用者登入API測試', () {
         /// TC-08: 正常登入流程 - Expert模式
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('08. 正常登入流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
@@ -390,7 +389,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), argThat(isA<UserMode>())))
+          when(mockUserModeAdapter.adaptLoginResponse(adaptedResponse, UserMode.expert))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -402,11 +401,11 @@ void main() {
           expect(response.data?.user.userMode, equals('expert'));
           expect(response.data?.loginHistory, isNotNull);
           expect(response.metadata.userMode, equals(UserMode.expert));
-          verify(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), argThat(isA<UserMode>()))).called(1);
+          verify(mockUserModeAdapter.adaptLoginResponse(adaptedResponse, UserMode.expert)).called(1);
         });
 
         /// TC-09: 登入失敗 - 無效憑證
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('09. 登入失敗 - 無效憑證', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest(password: 'wrong-password');
@@ -425,7 +424,7 @@ void main() {
         });
 
         /// TC-10: 四模式登入差異 - Cultivation模式
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('10. 四模式登入差異 - Cultivation模式', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
@@ -458,7 +457,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.cultivation))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(argThat(isA<LoginResponse>()), argThat(isA<UserMode>())))
+          when(mockUserModeAdapter.adaptLoginResponse(adaptedResponse, UserMode.cultivation))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -475,7 +474,7 @@ void main() {
 
       group('3.3 Google登入API測試', () {
         /// TC-11: Google登入成功
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('11. Google登入成功', () async {
           // Arrange
           final request = GoogleLoginRequest(
@@ -502,7 +501,7 @@ void main() {
         });
 
         /// TC-12: Google登入失敗 - 無效Token
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('12. Google登入失敗 - 無效Token', () async {
           // Arrange
           final request = GoogleLoginRequest(
@@ -522,7 +521,7 @@ void main() {
 
       group('3.4 登出API測試', () {
         /// TC-13: 正常登出流程
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('13. 正常登出流程', () async {
           // Arrange
           final request = LogoutRequest(logoutAllDevices: false);
@@ -542,7 +541,7 @@ void main() {
 
       group('3.5 Token刷新API測試', () {
         /// TC-14: Token刷新成功
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('14. Token刷新成功', () async {
           // Arrange
           final refreshToken = 'valid-refresh-token';
@@ -573,7 +572,7 @@ void main() {
         });
 
         /// TC-15: Token刷新失敗 - 無效Token
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('15. Token刷新失敗 - 無效Token', () async {
           // Arrange
           final refreshToken = 'invalid-refresh-token';
@@ -597,7 +596,7 @@ void main() {
 
       group('3.6 忘記密碼API測試', () {
         /// TC-16: 忘記密碼成功
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('16. 忘記密碼成功', () async {
           // Arrange
           final request = ForgotPasswordRequest(email: 'test@lcas.com');
@@ -617,7 +616,7 @@ void main() {
 
       group('3.7 驗證重設Token API測試', () {
         /// TC-17: 重設Token驗證成功
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('17. 重設Token驗證成功', () async {
           // Arrange
           final token = 'valid-reset-token-12345678901234567890';
@@ -641,7 +640,7 @@ void main() {
         });
 
         /// TC-18: 重設Token驗證失敗 - 格式錯誤
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('18. 重設Token驗證失敗 - 格式錯誤', () async {
           // Arrange
           final token = 'short-token';
@@ -658,7 +657,7 @@ void main() {
 
       group('3.8 重設密碼API測試', () {
         /// TC-19: 重設密碼成功
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('19. 重設密碼成功', () async {
           // Arrange
           final request = ResetPasswordRequest(
@@ -680,7 +679,7 @@ void main() {
         });
 
         /// TC-20: 重設密碼失敗 - 密碼太短
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('20. 重設密碼失敗 - 密碼太短', () async {
           // Arrange
           final request = ResetPasswordRequest(
@@ -701,7 +700,7 @@ void main() {
 
       group('3.9 Email驗證API測試', () {
         /// TC-21: Email驗證成功
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('21. Email驗證成功', () async {
           // Arrange
           final request = VerifyEmailRequest(
@@ -724,7 +723,7 @@ void main() {
 
       group('3.10 LINE綁定API測試', () {
         /// TC-22: LINE綁定成功
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('22. LINE綁定成功', () async {
           // Arrange
           final request = BindLineRequest(
@@ -749,7 +748,7 @@ void main() {
 
       group('3.11 綁定狀態API測試', () {
         /// TC-23: 綁定狀態查詢成功
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('23. 綁定狀態查詢成功', () async {
           // Act
           final response = await authController.getBindStatus();
@@ -771,11 +770,11 @@ void main() {
     group('4. 整合測試', () {
       group('4.1 端到端流程測試', () {
         /// TC-24: 完整註冊登入流程整合
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('24. 完整註冊登入流程整合', () async {
           // 步驟1: 註冊用戶
           final registerRequest = TestUtils.createTestRegisterRequest();
-          when(mockAuthService.processRegistration(registerRequest))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => RegisterResult(userId: 'test-user-id', success: true));
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -783,7 +782,7 @@ void main() {
           final registerResponse = await authController.register(registerRequest);
           expect(registerResponse.success, isTrue);
 
-          // 步驟2: Email驗證
+          // 步驟 2: Email驗證
           final verifyRequest = VerifyEmailRequest(
             email: registerRequest.email,
             verificationCode: '123456',
@@ -831,11 +830,11 @@ void main() {
 
       group('4.2 抽象類別協作測試', () {
         /// TC-25: 抽象類別協作整合
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('25. 抽象類別協作整合', () async {
           // 驗證AuthService與TokenService協作
           final registerRequest = TestUtils.createTestRegisterRequest();
-          when(mockAuthService.processRegistration(registerRequest))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
           when(mockTokenService.generateTokenPair('test-id', UserMode.expert))
               .thenAnswer((_) async => TokenPair(
@@ -853,7 +852,7 @@ void main() {
         });
 
         /// TC-34: AuthService + TokenService + SecurityService 協作測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('34. AuthService + TokenService + SecurityService協作測試', () async {
           // Arrange
           final loginRequest = TestUtils.createTestLoginRequest();
@@ -888,7 +887,7 @@ void main() {
         });
 
         /// TC-35: ValidationService + ErrorHandler 整合測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('35. ValidationService + ErrorHandler整合測試', () async {
           // Arrange
           final invalidRequest = TestUtils.createTestRegisterRequest(
@@ -919,7 +918,7 @@ void main() {
         });
 
         /// TC-36: UserModeAdapter + ResponseFilter 協作測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('36. UserModeAdapter + ResponseFilter協作測試', () async {
           // Arrange
           final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
@@ -938,7 +937,7 @@ void main() {
               expiresAt: DateTime.now().add(Duration(hours: 1)),
             );
 
-            when(mockAuthService.processRegistration(request))
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
                 .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
             when(mockTokenService.generateTokenPair('test-id', mode))
                 .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -959,7 +958,7 @@ void main() {
         });
 
         /// TC-37: ModeConfigService + JwtProvider 協作測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('37. ModeConfigService + JwtProvider協作測試', () async {
           // Arrange
           final userMode = UserMode.cultivation;
@@ -995,7 +994,7 @@ void main() {
         });
 
         /// TC-38: 13個抽象類別完整協作流程測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('38. 13個抽象類別完整協作流程測試', () async {
           // Arrange - 設置所有抽象類別的模擬回應
           final request = TestUtils.createTestRegisterRequest();
@@ -1013,7 +1012,7 @@ void main() {
           when(mockSecurityService.isPasswordSecure(request.password)).thenReturn(true);
           when(mockSecurityService.hashPassword(request.password)).thenAnswer((_) async => 'hashed-password');
           when(mockModeConfigService.getConfigForMode(request.userMode)).thenReturn(modeConfig);
-          when(mockAuthService.processRegistration(request))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
           when(mockTokenService.generateTokenPair('test-id', request.userMode))
               .thenAnswer((_) async => TokenPair(
@@ -1022,8 +1021,7 @@ void main() {
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
               ));
           when(mockJwtProvider.generateToken(tokenPayload, tokenDuration)).thenReturn('jwt-token');
-          when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), argThat(isA<UserMode>())))
-              .thenReturn(RegisterResponse(
+          final expectedRegisterResponse = RegisterResponse(
                 userId: 'test-id',
                 email: request.email,
                 userMode: request.userMode,
@@ -1032,7 +1030,9 @@ void main() {
                 token: 'adapted-token',
                 refreshToken: 'adapted-refresh',
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
-              ));
+              );
+          when(mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode))
+              .thenReturn(expectedRegisterResponse);
           when(mockResponseFilter.filterForExpert(<String, dynamic>{'expert': 'data'})).thenReturn({'expert': 'data'});
 
           // Act
@@ -1047,14 +1047,14 @@ void main() {
           verify(mockModeConfigService.getConfigForMode(request.userMode)).called(1);
           verify(mockAuthService.processRegistration(request)).called(1);
           verify(mockTokenService.generateTokenPair('test-id', request.userMode)).called(1);
-          verify(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), argThat(isA<UserMode>()))).called(1);
+          verify(mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode)).called(1);
 
           // 驗證協作鏈完整性
           final inOrder = verifyInOrder([
             mockValidationService.validateRegisterRequest(request),
             mockAuthService.processRegistration(request),
             mockTokenService.generateTokenPair('test-id', request.userMode),
-            mockUserModeAdapter.adaptRegisterResponse(any, request.userMode),
+            mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode),
           ]);
         });
       });
@@ -1067,7 +1067,7 @@ void main() {
     group('5. 四模式差異化測試', () {
       group('5.1 四模式錯誤訊息差異化', () {
         /// TC-26: 四模式錯誤訊息差異化
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('26. 四模式錯誤訊息差異化', () async {
           final testCases = [
             {'mode': UserMode.expert, 'expected': '請求參數驗證失敗，請檢查資料格式與完整性'},
@@ -1088,13 +1088,13 @@ void main() {
 
       group('5.2 四模式回應內容差異化', () {
         /// TC-27: 四模式回應內容差異化
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('27. 四模式回應內容差異化', () async {
           final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
 
           for (final mode in modes) {
             final request = TestUtils.createTestRegisterRequest(userMode: mode);
-            when(mockAuthService.processRegistration(request))
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
                 .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
             when(mockTokenService.generateTokenPair('test-id', mode))
                 .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -1122,7 +1122,7 @@ void main() {
         });
 
         /// TC-39: Expert模式深度登入測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('39. Expert模式深度登入測試', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
@@ -1156,7 +1156,7 @@ void main() {
         });
 
         /// TC-40: Expert模式深度錯誤處理測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('40. Expert模式深度錯誤處理測試', () async {
           // Arrange
           final invalidRequest = TestUtils.createTestRegisterRequest(
@@ -1176,11 +1176,11 @@ void main() {
         });
 
         /// TC-41: Inertial模式深度穩定性測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('41. Inertial模式深度穩定性測試', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.inertial);
-          when(mockAuthService.processRegistration(request))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
           when(mockTokenService.generateTokenPair('test-id', UserMode.inertial))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -1199,7 +1199,7 @@ void main() {
         });
 
         /// TC-42: Inertial模式深度一致性測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('42. Inertial模式深度一致性測試', () async {
           // Arrange - 連續多次相同操作
           final request = TestUtils.createTestLoginRequest();
@@ -1237,7 +1237,7 @@ void main() {
         });
 
         /// TC-43: Cultivation模式深度激勵測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('43. Cultivation模式深度激勵測試', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
@@ -1271,11 +1271,11 @@ void main() {
         });
 
         /// TC-44: Cultivation模式深度成長追蹤測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('44. Cultivation模式深度成長追蹤測試', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.cultivation);
-          when(mockAuthService.processRegistration(request))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
           when(mockTokenService.generateTokenPair('test-id', UserMode.cultivation))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -1295,11 +1295,11 @@ void main() {
         });
 
         /// TC-45: Guiding模式深度簡化測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('45. Guiding模式深度簡化測試', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.guiding);
-          when(mockAuthService.processRegistration(request))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
           when(mockTokenService.generateTokenPair('test-id', UserMode.guiding))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -1320,7 +1320,7 @@ void main() {
         });
 
         /// TC-46: Guiding模式深度易用性測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('46. Guiding模式深度易用性測試', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
@@ -1358,7 +1358,7 @@ void main() {
     group('6. 安全性測試', () {
       group('6.1 密碼安全性驗證', () {
         /// TC-28: 密碼安全性驗證
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('28. 密碼安全性驗證', () async {
           final weakPasswords = ['123', 'password', '12345678', 'abc123'];
 
@@ -1377,7 +1377,7 @@ void main() {
 
       group('6.2 Token安全性驗證', () {
         /// TC-29: Token安全性驗證
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('29. Token安全性驗證', () async {
           // 測試無效Token格式
           final invalidTokens = [
@@ -1403,7 +1403,7 @@ void main() {
         });
 
         /// TC-47: Token生命週期安全性深度測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('47. Token生命週期安全性深度測試', () async {
           // Arrange
           final user = UserProfile(
@@ -1449,7 +1449,7 @@ void main() {
         });
 
         /// TC-48: 並發登入安全性深度測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('48. 並發登入安全性深度測試', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
@@ -1486,7 +1486,7 @@ void main() {
         });
 
         /// TC-49: 跨平台綁定安全性深度測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('49. 跨平台綁定安全性深度測試', () async {
           // Arrange
           final bindRequest = BindLineRequest(
@@ -1528,12 +1528,12 @@ void main() {
     group('7. 效能測試', () {
       group('7.1 API回應時間測試', () {
         /// TC-30: API回應時間測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('30. API回應時間測試', () async {
           final stopwatch = Stopwatch()..start();
 
           final request = TestUtils.createTestRegisterRequest();
-          when(mockAuthService.processRegistration(request))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
           when(mockTokenService.generateTokenPair('test-id', UserMode.expert))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -1547,11 +1547,11 @@ void main() {
 
       group('7.2 併發處理能力測試', () {
         /// TC-31: 併發處理能力測試
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('31. 併發處理能力測試', () async {
           final futures = <Future>[];
 
-          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+          when(mockAuthService.processRegistration(any))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
           when(mockTokenService.generateTokenPair('test-id', UserMode.expert))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -1576,10 +1576,10 @@ void main() {
     group('8. 異常測試', () {
       group('8.1 網路連接異常處理', () {
         /// TC-32: 網路連接異常處理
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('32. 網路連接異常處理', () async {
           // 模擬網路異常
-          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+          when(mockAuthService.processRegistration(any))
               .thenThrow(Exception('Network connection failed'));
 
           final request = TestUtils.createTestRegisterRequest();
@@ -1593,10 +1593,10 @@ void main() {
 
       group('8.2 服務超時處理', () {
         /// TC-33: 服務超時處理
-        /// @version 2025-08-28-V2.4.0
+        /// @version 2025-08-28-V2.5.0
         test('33. 服務超時處理', () async {
           // 模擬服務超時
-          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+          when(mockAuthService.processRegistration(any))
               .thenAnswer((_) async {
             await Future.delayed(Duration(seconds: 31)); // 超過30秒超時
             return RegisterResult(userId: 'test', success: true);
