@@ -976,7 +976,7 @@ void main() {
 
           when(mockModeConfigService.getConfigForMode(userMode)).thenReturn(modeConfig);
           when(mockModeConfigService.isFeatureEnabled(userMode, 'streakTracking')).thenReturn(true);
-          when(mockJwtProvider.generateToken(tokenPayload, tokenDuration))
+          when(mockJwtProvider.generateToken(any as Map<String, dynamic>, any as Duration))
               .thenReturn('mode-specific-token');
 
           // Act
@@ -990,7 +990,7 @@ void main() {
           expect(token, equals('mode-specific-token'));
           verify(mockModeConfigService.getConfigForMode(userMode)).called(1);
           verify(mockModeConfigService.isFeatureEnabled(userMode, 'streakTracking')).called(1);
-          verify(mockJwtProvider.generateToken(tokenPayload, tokenDuration)).called(1);
+          verify(mockJwtProvider.generateToken(any as Map<String, dynamic>, any as Duration)).called(1);
         });
 
         /// TC-38: 13個抽象類別完整協作流程測試
@@ -1020,7 +1020,7 @@ void main() {
                 refreshToken: 'test-refresh',
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
               ));
-          when(mockJwtProvider.generateToken(tokenPayload, tokenDuration)).thenReturn('jwt-token');
+          when(mockJwtProvider.generateToken(any as Map<String, dynamic>, any as Duration)).thenReturn('jwt-token');
           final expectedRegisterResponse = RegisterResponse(
                 userId: 'test-id',
                 email: request.email,
@@ -1045,14 +1045,14 @@ void main() {
           verify(mockValidationService.validateRegisterRequest(request)).called(1);
           verify(mockSecurityService.isPasswordSecure(request.password)).called(1);
           verify(mockModeConfigService.getConfigForMode(request.userMode)).called(1);
-          verify(mockAuthService.processRegistration(request)).called(1);
+          verify(mockAuthService.processRegistration(any as RegisterRequest)).called(1);
           verify(mockTokenService.generateTokenPair('test-id', request.userMode)).called(1);
           verify(mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode)).called(1);
 
           // 驗證協作鏈完整性
           final inOrder = verifyInOrder([
             mockValidationService.validateRegisterRequest(request),
-            mockAuthService.processRegistration(request),
+            mockAuthService.processRegistration(any as RegisterRequest),
             mockTokenService.generateTokenPair('test-id', request.userMode),
             mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode),
           ]);
@@ -1415,7 +1415,7 @@ void main() {
 
           // 測試Token生成安全性
           when(mockSecurityService.generateSecureToken()).thenAnswer((_) async => 'secure-random-token');
-          when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-with-security-claims');
+          when(mockJwtProvider.generateToken(any as Map<String, dynamic>, any as Duration)).thenReturn('jwt-with-security-claims');
           when(mockTokenService.generateTokenPair(user.id, user.userMode))
               .thenAnswer((_) async => TokenPair(
                 accessToken: 'secure-access-token',
