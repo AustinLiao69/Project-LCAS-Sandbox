@@ -252,7 +252,8 @@ void main() {
             expiresAt: expectedTokenPair.expiresAt,
           );
 
-          when(mockAuthService.processRegistration(any as RegisterRequest))
+          final testRegisterRequest = TestUtils.createTestRegisterRequest(userMode: UserMode.expert);
+          when(mockAuthService.processRegistration(testRegisterRequest))
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => expectedTokenPair);
@@ -300,7 +301,8 @@ void main() {
             errorMessage: 'Email already exists',
           );
 
-          when(mockAuthService.processRegistration(any as RegisterRequest))
+          final testRegisterRequest = TestUtils.createTestRegisterRequest();
+          when(mockAuthService.processRegistration(testRegisterRequest))
               .thenAnswer((_) async => expectedResult);
 
           // Act
@@ -335,7 +337,8 @@ void main() {
             expiresAt: expectedTokenPair.expiresAt,
           );
 
-          when(mockAuthService.processRegistration(any as RegisterRequest))
+          final testRegisterRequest = TestUtils.createTestRegisterRequest(userMode: UserMode.guiding);
+          when(mockAuthService.processRegistration(testRegisterRequest))
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.guiding))
               .thenAnswer((_) async => expectedTokenPair);
