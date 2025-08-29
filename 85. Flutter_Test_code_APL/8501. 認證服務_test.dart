@@ -1,9 +1,9 @@
 /**
- * 8501. 認證服務_測試程式碼_v2.7.0
+ * 8501. 認證服務_測試程式碼_v2.8.0
  * @testFile 認證服務測試程式碼
  * @description LCAS 2.0 認證服務 API 模組完整測試實作 - 手動Mock方案
- * @version 2025-01-28-V2.7.0
- * @update 2025-01-28: 升級到v2.7.0版本，補齊所有缺失方法實作，解決編譯錯誤
+ * @version 2025-01-28-V2.8.0
+ * @update 2025-01-28: 修正LoginResponse final屬性問題，修正ApiError.create參數，升級版次統一
  */
 
 import 'package:test/test.dart';
@@ -12,9 +12,6 @@ import 'dart:convert';
 
 // 匯入認證服務模組
 import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart';
-
-// 添加缺失的枚舉定義
-enum PasswordStrength { weak, medium, strong }
 
 // ================================
 // 手動Fake服務類別 (Manual Fake Services)
@@ -196,6 +193,11 @@ class FakeTokenService implements TokenService {
   Future<bool> validateEmailVerificationToken(String token) async {
     return token.isNotEmpty && !token.contains('invalid');
   }
+
+  @override
+  Future<bool> validateResetToken(String token) async {
+    return token.isNotEmpty && token.length >= 20 && !token.contains('invalid');
+  }
 }
 
 /// 手動UserModeAdapter實作
@@ -216,34 +218,40 @@ class FakeUserModeAdapter implements UserModeAdapter {
 
   @override
   LoginResponse adaptLoginResponse(LoginResponse response, UserMode userMode) {
-    final baseResponse = LoginResponse(
-      token: response.token,
-      refreshToken: response.refreshToken,
-      expiresAt: response.expiresAt,
-      user: response.user,
-    );
-
-    // 根據不同模式添加特定內容
+    // 根據不同模式創建特定內容的新LoginResponse
     switch (userMode) {
       case UserMode.cultivation:
-        baseResponse.streakInfo = {
-          'currentStreak': 7,
-          'longestStreak': 15,
-          'streakMessage': '連續登入7天！保持下去！🔥',
-        };
-        break;
+        return LoginResponse(
+          token: response.token,
+          refreshToken: response.refreshToken,
+          expiresAt: response.expiresAt,
+          user: response.user,
+          streakInfo: {
+            'currentStreak': 7,
+            'longestStreak': 15,
+            'streakMessage': '連續登入7天！保持下去！🔥',
+          },
+        );
       case UserMode.expert:
-        baseResponse.loginHistory = {
-          'lastLogin': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
-          'loginCount': 42,
-          'newDeviceDetected': false,
-        };
-        break;
+        return LoginResponse(
+          token: response.token,
+          refreshToken: response.refreshToken,
+          expiresAt: response.expiresAt,
+          user: response.user,
+          loginHistory: {
+            'lastLogin': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
+            'loginCount': 42,
+            'newDeviceDetected': false,
+          },
+        );
       default:
-        break;
+        return LoginResponse(
+          token: response.token,
+          refreshToken: response.refreshToken,
+          expiresAt: response.expiresAt,
+          user: response.user,
+        );
     }
-
-    return baseResponse;
   }
 
   @override
@@ -317,6 +325,35 @@ class FakeUserModeAdapter implements UserModeAdapter {
       case UserMode.inertial:
         return baseMessage;
     }
+  }
+
+  @override
+  ApiError adaptErrorResponse(ApiError error, UserMode userMode) {
+    // 根據用戶模式調整錯誤回應
+    String adaptedMessage;
+    switch (userMode) {
+      case UserMode.expert:
+        adaptedMessage = '${error.message} (詳細錯誤資訊)';
+        break;
+      case UserMode.cultivation:
+        adaptedMessage = '${error.message} 🌱 讓我們一起解決這個問題！';
+        break;
+      case UserMode.guiding:
+        adaptedMessage = error.message.split('.').first;
+        break;
+      case UserMode.inertial:
+        adaptedMessage = error.message;
+        break;
+    }
+
+    return ApiError(
+      code: error.code,
+      message: adaptedMessage,
+      field: error.field,
+      timestamp: error.timestamp,
+      requestId: error.requestId,
+      details: error.details,
+    );
   }
 }
 
@@ -648,9 +685,9 @@ class FakeJwtProvider implements JwtProvider {
 /// 測試輔助工具類別
 class TestUtils {
   /// 01. 建立測試註冊請求
-  /// @version 2025-01-28-V2.7.0
+  /// @version 2025-01-28-V2.8.0
   /// @date 2025-01-28 12:00:00
-  /// @update: 提供完整測試資料生成
+  /// @update: 升級版次，修正相容性問題
   static RegisterRequest createTestRegisterRequest({
     UserMode userMode = UserMode.expert,
     String? email,
@@ -670,9 +707,9 @@ class TestUtils {
   }
 
   /// 02. 建立測試登入請求
-  /// @version 2025-01-28-V2.6.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 提供完整登入測試資料
+  /// @version 2025-01-28-V2.8.0
+  /// @date 2025-01-28 12:00:00
+  /// @update: 升級版次，確保相容性
   static LoginRequest createTestLoginRequest({
     String? email,
     String? password,
@@ -690,9 +727,9 @@ class TestUtils {
   }
 
   /// 03. 建立測試使用者資料
-  /// @version 2025-01-28-V2.6.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 提供完整使用者測試資料
+  /// @version 2025-01-28-V2.8.0
+  /// @date 2025-01-28 12:00:00
+  /// @update: 升級版次，確保相容性
   static UserProfile createTestUser({
     UserMode userMode = UserMode.expert,
     String? userId,
@@ -767,7 +804,7 @@ class TestEnvironmentConfig {
   static const String mockRequestId = 'req-test-456';
 
   /// 初始化測試環境
-  /// @version 2025-01-28-V2.7.0
+  /// @version 2025-01-28-V2.8.0
   /// @date 2025-01-28 12:00:00
   /// @update: 建立完整測試環境配置
   static Future<void> setupTestEnvironment() async {
@@ -797,7 +834,7 @@ class TestEnvironmentConfig {
 // ================================
 
 void main() {
-  group('認證服務測試套件 v2.7.0 - 手動Mock方案', () {
+  group('認證服務測試套件 v2.8.0 - 手動Mock方案', () {
     late AuthController authController;
     late FakeAuthService fakeAuthService;
     late FakeTokenService fakeTokenService;
@@ -840,7 +877,7 @@ void main() {
     group('3. 功能測試', () {
       group('3.1 使用者註冊API測試', () {
         /// TC-04: 正常註冊流程 - Expert模式
-        /// @version 2025-01-28-V2.6.0
+        /// @version 2025-01-28-V2.8.0
         test('04. 正常註冊流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.expert);
