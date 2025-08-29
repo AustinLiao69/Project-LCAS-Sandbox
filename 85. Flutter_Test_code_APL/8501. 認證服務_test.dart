@@ -976,8 +976,7 @@ void main() {
 
           when(mockModeConfigService.getConfigForMode(userMode)).thenReturn(modeConfig);
           when(mockModeConfigService.isFeatureEnabled(userMode, 'streakTracking')).thenReturn(true);
-          when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
-              .thenReturn('mode-specific-token');
+          when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>()))).thenReturn('mode-specific-token');
 
           // Act
           final config = mockModeConfigService.getConfigForMode(userMode);
@@ -1415,7 +1414,7 @@ void main() {
 
           // 測試Token生成安全性
           when(mockSecurityService.generateSecureToken()).thenAnswer((_) async => 'secure-random-token');
-          when(mockJwtProvider.generateToken(any as Map<String, dynamic>, any as Duration)).thenReturn('jwt-with-security-claims');
+          when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>()))).thenReturn('jwt-with-security-claims');
           when(mockTokenService.generateTokenPair(user.id, user.userMode))
               .thenAnswer((_) async => TokenPair(
                 accessToken: 'secure-access-token',
