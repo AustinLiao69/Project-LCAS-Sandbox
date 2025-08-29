@@ -1,9 +1,9 @@
 /**
- * 8501. 認證服務_測試程式碼_v2.9.0
+ * 8501. 認證服務_測試程式碼_v3.0.0
  * @testFile 認證服務測試程式碼
  * @description LCAS 2.0 認證服務 API 模組完整測試實作 - 手動Mock方案
- * @version 2025-01-28-V2.9.0
- * @update 2025-01-28: 修正ApiError.create參數錯誤，升級版次與8301模組同步
+ * @version 2025-01-28-V3.0.0
+ * @update 2025-01-28: 修正UserMode枚舉轉字串問題和安全性測試邏輯，升級至V3.0.0
  */
 
 import 'package:test/test.dart';
@@ -684,9 +684,9 @@ class FakeJwtProvider implements JwtProvider {
 /// 測試輔助工具類別
 class TestUtils {
   /// 01. 建立測試註冊請求
-  /// @version 2025-01-28-V2.9.0
+  /// @version 2025-01-28-V3.0.0
   /// @date 2025-01-28 12:00:00
-  /// @update: 升級版次，確保與8301模組API相容性
+  /// @update: 升級版次至V3.0.0，修正UserMode回應格式相容性
   static RegisterRequest createTestRegisterRequest({
     UserMode userMode = UserMode.expert,
     String? email,
@@ -706,9 +706,9 @@ class TestUtils {
   }
 
   /// 02. 建立測試登入請求
-  /// @version 2025-01-28-V2.9.0
+  /// @version 2025-01-28-V3.0.0
   /// @date 2025-01-28 12:00:00
-  /// @update: 升級版次，確保與8301模組API相容性
+  /// @update: 升級版次至V3.0.0，修正API回應格式相容性
   static LoginRequest createTestLoginRequest({
     String? email,
     String? password,
@@ -803,9 +803,9 @@ class TestEnvironmentConfig {
   static const String mockRequestId = 'req-test-456';
 
   /// 初始化測試環境
-  /// @version 2025-01-28-V2.9.0
+  /// @version 2025-01-28-V3.0.0
   /// @date 2025-01-28 12:00:00
-  /// @update: 升級版次，確保測試環境與8301模組V1.4.0相容
+  /// @update: 升級版次至V3.0.0，修正UserMode枚舉處理機制
   static Future<void> setupTestEnvironment() async {
     // 初始化模擬資料
     await _initMockData();
@@ -833,7 +833,7 @@ class TestEnvironmentConfig {
 // ================================
 
 void main() {
-  group('認證服務測試套件 v2.8.0 - 手動Mock方案', () {
+  group('認證服務測試套件 v3.0.0 - 手動Mock方案', () {
     late AuthController authController;
     late FakeAuthService fakeAuthService;
     late FakeTokenService fakeTokenService;
@@ -876,7 +876,7 @@ void main() {
     group('3. 功能測試', () {
       group('3.1 使用者註冊API測試', () {
         /// TC-04: 正常註冊流程 - Expert模式
-        /// @version 2025-01-28-V2.9.0
+        /// @version 2025-01-28-V3.0.0
         test('04. 正常註冊流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.expert);
@@ -887,7 +887,7 @@ void main() {
           // Assert
           expect(response.success, isTrue);
           expect(response.data?.userId, equals('test-user-id'));
-          expect(response.data?.userMode, equals('expert'));
+          expect(response.data?.userMode.toString().split('.').last, equals('expert'));
           expect(response.data?.needsAssessment, isTrue); // Expert模式需要評估
           expect(response.metadata.userMode, equals(UserMode.expert));
         });
@@ -924,7 +924,7 @@ void main() {
         });
 
         /// TC-07: 四模式註冊差異 - Guiding模式
-        /// @version 2025-01-28-V2.6.0
+        /// @version 2025-01-28-V3.0.0
         test('07. 四模式註冊差異 - Guiding模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.guiding);
@@ -934,7 +934,7 @@ void main() {
 
           // Assert
           expect(response.success, isTrue);
-          expect(response.data?.userMode, equals('guiding'));
+          expect(response.data?.userMode.toString().split('.').last, equals('guiding'));
           expect(response.data?.needsAssessment, isFalse);
           expect(response.metadata.userMode, equals(UserMode.guiding));
         });
@@ -942,7 +942,7 @@ void main() {
 
       group('3.2 使用者登入API測試', () {
         /// TC-08: 正常登入流程 - Expert模式
-        /// @version 2025-01-28-V2.6.0
+        /// @version 2025-01-28-V3.0.0
         test('08. 正常登入流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
@@ -953,7 +953,7 @@ void main() {
           // Assert
           expect(response.success, isTrue);
           expect(response.data?.token, isNotNull);
-          expect(response.data?.user.userMode, equals('expert'));
+          expect(response.data?.user.userMode.toString().split('.').last, equals('expert'));
           expect(response.data?.loginHistory, isNotNull);
           expect(response.metadata.userMode, equals(UserMode.expert));
         });
@@ -1324,7 +1324,7 @@ void main() {
         });
 
         /// TC-36: UserModeAdapter + ResponseFilter 協作測試
-        /// @version 2025-01-28-V2.6.0
+        /// @version 2025-01-28-V3.0.0
         test('36. UserModeAdapter + ResponseFilter協作測試', () async {
           // Arrange
           final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
@@ -1335,7 +1335,7 @@ void main() {
 
             // Assert
             expect(response.success, isTrue);
-            expect(response.data?.userMode, equals(mode.toString().split('.').last));
+            expect(response.data?.userMode.toString().split('.').last, equals(mode.toString().split('.').last));
           }
         });
 
@@ -1449,11 +1449,16 @@ void main() {
     group('6. 安全性測試', () {
       group('6.1 密碼安全性驗證', () {
         /// TC-28: 密碼安全性驗證
-        /// @version 2025-01-28-V2.6.0
+        /// @version 2025-01-28-V3.0.0
         test('28. 密碼安全性驗證', () async {
           final weakPasswords = ['123', 'password', '12345678', 'abc123'];
 
           for (final weakPassword in weakPasswords) {
+            final isSecure = fakeSecurityService.isPasswordSecure(weakPassword);
+            
+            // 期望弱密碼不安全
+            expect(isSecure, isFalse);
+            
             final request = TestUtils.createTestRegisterRequest(password: weakPassword);
             final response = await authController.register(request);
 
@@ -1468,7 +1473,7 @@ void main() {
 
       group('6.2 Token安全性驗證', () {
         /// TC-29: Token安全性驗證
-        /// @version 2025-01-28-V2.6.0
+        /// @version 2025-01-28-V3.0.0
         test('29. Token安全性驗證', () async {
           // 測試無效Token格式
           final invalidTokens = [
@@ -1479,6 +1484,11 @@ void main() {
           ];
 
           for (final invalidToken in invalidTokens) {
+            final isValidFormat = fakeSecurityService.validateTokenFormat(invalidToken);
+            
+            // 期望無效Token格式驗證失敗
+            expect(isValidFormat, isFalse);
+            
             final response = await authController.refreshToken(invalidToken);
 
             expect(response.success, isFalse);
