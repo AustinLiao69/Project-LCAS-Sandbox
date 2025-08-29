@@ -1,0 +1,60 @@
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... (1.5s)
+Built test:test.
+00:00 +0: ... 8501. 認證服務_test.dart     00:00 +0 -1: loading 8501. 認證服務_test.dart [E]
+  Failed to load "8501. 認證服務_test.dart":
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:116:7: Error: The non-abstract class 'FakeTokenService' is missing implementations for these members:
+   - TokenService.validateResetToken
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeTokenService implements TokenService {
+        ^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:941:16: Context: 'TokenService.validateResetToken' is defined here.
+    Future<bool> validateResetToken(String token);
+                 ^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:202:7: Error: The non-abstract class 'FakeUserModeAdapter' is missing implementations for these members:
+   - UserModeAdapter.adaptErrorResponse
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeUserModeAdapter implements UserModeAdapter {
+        ^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:986:12: Context: 'UserModeAdapter.adaptErrorResponse' is defined here.
+    ApiError adaptErrorResponse(ApiError error, UserMode userMode);
+             ^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:351:20: Error: The return type of the method 'FakeSecurityService.assessPasswordStrength' is 'PasswordStrength/*1*/', which does not match the return type, 'PasswordStrength/*2*/', of the overridden method, 'SecurityService.assessPasswordStrength'.
+   - 'PasswordStrength/*1*/' is from '8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart'.
+   - 'PasswordStrength/*2*/' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Change to a subtype of 'PasswordStrength/*2*/'.
+    PasswordStrength assessPasswordStrength(String password) {
+                     ^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:725:20: Context: This is the overridden method ('assessPasswordStrength').
+    PasswordStrength assessPasswordStrength(String password);
+                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:229:22: Error: The setter 'streakInfo' isn't defined for the class 'LoginResponse'.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing setter, or defining a setter or field named 'streakInfo'.
+          baseResponse.streakInfo = {
+                       ^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:236:22: Error: The setter 'loginHistory' isn't defined for the class 'LoginResponse'.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing setter, or defining a setter or field named 'loginHistory'.
+          baseResponse.loginHistory = {
+                       ^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:465:7: Error: No named parameter with the name 'message'.
+        message: exception.toString(),
+        ^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:399:19: Context: Found this candidate, but the arguments don't match.
+    static ApiError create(
+                    ^^^^^^
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name 'loading 8501. 認證服務_test.dart'
+00:00 +0 -1: Some tests failed.           
+~/workspace/85. Flutter_Test_code_APL$ 

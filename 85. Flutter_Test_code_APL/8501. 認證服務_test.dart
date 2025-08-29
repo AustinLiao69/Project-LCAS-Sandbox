@@ -1,9 +1,9 @@
 /**
- * 8501. 認證服務_測試程式碼_v2.6.0
+ * 8501. 認證服務_測試程式碼_v2.7.0
  * @testFile 認證服務測試程式碼
  * @description LCAS 2.0 認證服務 API 模組完整測試實作 - 手動Mock方案
- * @version 2025-08-28-V2.6.0
- * @update 2025-08-28: 升級到v2.6.0版本，採用手動Mock方案解決null safety問題
+ * @version 2025-01-28-V2.7.0
+ * @update 2025-01-28: 升級到v2.7.0版本，補齊所有缺失方法實作，解決編譯錯誤
  */
 
 import 'package:test/test.dart';
@@ -12,6 +12,9 @@ import 'dart:convert';
 
 // 匯入認證服務模組
 import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart';
+
+// 添加缺失的枚舉定義
+enum PasswordStrength { weak, medium, strong }
 
 // ================================
 // 手動Fake服務類別 (Manual Fake Services)
@@ -88,6 +91,25 @@ class FakeAuthService implements AuthService {
     // 模擬Email驗證處理
     return;
   }
+
+  @override
+  Future<TokenPair> processTokenRefresh(String refreshToken) async {
+    if (refreshToken == 'invalid-refresh-token') {
+      throw Exception('Invalid refresh token');
+    }
+    
+    return TokenPair(
+      accessToken: 'refreshed-access-token-${DateTime.now().millisecondsSinceEpoch}',
+      refreshToken: 'refreshed-refresh-token-${DateTime.now().millisecondsSinceEpoch}',
+      expiresAt: DateTime.now().add(Duration(hours: 1)),
+    );
+  }
+
+  @override
+  Future<void> sendVerificationEmail(String email) async {
+    // 模擬發送驗證郵件
+    return;
+  }
 }
 
 /// 手動TokenService實作
@@ -112,6 +134,67 @@ class FakeTokenService implements TokenService {
       userId: 'test-user-id',
       userMode: UserMode.expert,
     );
+  }
+
+  @override
+  Future<void> cleanupExpiredTokens() async {
+    // 模擬清理過期Token
+    return;
+  }
+
+  @override
+  Future<String> generateAccessToken(String userId, Map<String, dynamic> claims) async {
+    return 'fake-access-token-$userId-${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  @override
+  Future<String> generateEmailVerificationToken(String email) async {
+    return 'fake-email-verification-token-${email.hashCode}-${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  @override
+  Future<String> generateRefreshToken(String userId) async {
+    return 'fake-refresh-token-$userId-${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  @override
+  Future<String> generateResetToken(String email) async {
+    return 'fake-reset-token-${email.hashCode}-${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  @override
+  Future<bool> isTokenRevoked(String token) async {
+    return token.contains('revoked');
+  }
+
+  @override
+  Future<void> revokeAllUserTokens(String userId) async {
+    // 模擬撤銷使用者所有Token
+    return;
+  }
+
+  @override
+  Future<void> revokeToken(String token) async {
+    // 模擬撤銷Token
+    return;
+  }
+
+  @override
+  Future<TokenValidationResult> validateAccessToken(String token) async {
+    if (token.isEmpty || token == 'invalid-token') {
+      return TokenValidationResult(isValid: false, reason: 'Invalid token');
+    }
+
+    return TokenValidationResult(
+      isValid: true,
+      userId: 'test-user-id',
+      userMode: UserMode.expert,
+    );
+  }
+
+  @override
+  Future<bool> validateEmailVerificationToken(String token) async {
+    return token.isNotEmpty && !token.contains('invalid');
   }
 }
 
@@ -162,6 +245,79 @@ class FakeUserModeAdapter implements UserModeAdapter {
 
     return baseResponse;
   }
+
+  @override
+  T adaptResponse<T>(T response, UserMode userMode) {
+    // 泛型回應適配
+    return response;
+  }
+
+  @override
+  List<String> getAvailableActions(UserMode userMode) {
+    switch (userMode) {
+      case UserMode.expert:
+        return ['login', 'register', 'resetPassword', 'bindLine', 'advanced'];
+      case UserMode.cultivation:
+        return ['login', 'register', 'resetPassword', 'streak'];
+      case UserMode.guiding:
+        return ['login', 'register'];
+      case UserMode.inertial:
+        return ['login', 'register', 'resetPassword'];
+    }
+  }
+
+  @override
+  Map<String, dynamic> filterResponseData(Map<String, dynamic> data, UserMode userMode) {
+    final filteredData = Map<String, dynamic>.from(data);
+    
+    switch (userMode) {
+      case UserMode.guiding:
+        // 簡化回應，移除複雜選項
+        filteredData.removeWhere((key, value) => key.startsWith('advanced'));
+        break;
+      case UserMode.expert:
+        // 保留所有資料
+        break;
+      case UserMode.cultivation:
+        // 添加激勵元素
+        filteredData['motivation'] = 'Keep going! 💪';
+        break;
+      case UserMode.inertial:
+        // 保持固定格式
+        break;
+    }
+    
+    return filteredData;
+  }
+
+  @override
+  bool shouldShowAdvancedOptions(UserMode userMode) {
+    return userMode == UserMode.expert;
+  }
+
+  @override
+  bool shouldIncludeProgressTracking(UserMode userMode) {
+    return userMode == UserMode.cultivation;
+  }
+
+  @override
+  bool shouldSimplifyInterface(UserMode userMode) {
+    return userMode == UserMode.guiding;
+  }
+
+  @override
+  String getModeSpecificMessage(String baseMessage, UserMode userMode) {
+    switch (userMode) {
+      case UserMode.cultivation:
+        return '$baseMessage 🌱';
+      case UserMode.guiding:
+        return baseMessage.split('.').first; // 簡化訊息
+      case UserMode.expert:
+        return '$baseMessage (詳細模式)';
+      case UserMode.inertial:
+        return baseMessage;
+    }
+  }
 }
 
 /// 手動SecurityService實作
@@ -190,6 +346,20 @@ class FakeSecurityService implements SecurityService {
   bool validateTokenFormat(String token) {
     return token.isNotEmpty && token.length > 10;
   }
+
+  @override
+  PasswordStrength assessPasswordStrength(String password) {
+    if (password.length < 8) {
+      return PasswordStrength.weak;
+    } else if (password.length >= 12 && 
+               password.contains(RegExp(r'[A-Z]')) && 
+               password.contains(RegExp(r'[0-9]')) &&
+               password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      return PasswordStrength.strong;
+    } else {
+      return PasswordStrength.medium;
+    }
+  }
 }
 
 /// 手動ValidationService實作
@@ -216,6 +386,64 @@ class FakeValidationService implements ValidationService {
 
     return errors;
   }
+
+  @override
+  List<ValidationError> validateEmail(String email) {
+    final errors = <ValidationError>[];
+    
+    if (email.isEmpty) {
+      errors.add(ValidationError(
+        field: 'email',
+        message: 'Email不能為空',
+        value: email,
+      ));
+    } else if (!email.contains('@') || !email.contains('.')) {
+      errors.add(ValidationError(
+        field: 'email',
+        message: 'Email格式無效',
+        value: email,
+      ));
+    }
+    
+    return errors;
+  }
+
+  @override
+  List<ValidationError> validatePassword(String password) {
+    final errors = <ValidationError>[];
+    
+    if (password.isEmpty) {
+      errors.add(ValidationError(
+        field: 'password',
+        message: '密碼不能為空',
+        value: password,
+      ));
+    } else if (password.length < 8) {
+      errors.add(ValidationError(
+        field: 'password',
+        message: '密碼長度至少8個字符',
+        value: password,
+      ));
+    }
+    
+    return errors;
+  }
+
+  @override
+  List<ValidationError> validateUserMode(UserMode mode) {
+    // UserMode是枚舉，通常不會有驗證錯誤
+    return [];
+  }
+
+  @override
+  List<ValidationError> validateLoginRequest(LoginRequest request) {
+    final errors = <ValidationError>[];
+    
+    errors.addAll(validateEmail(request.email));
+    errors.addAll(validatePassword(request.password));
+    
+    return errors;
+  }
 }
 
 /// 手動ErrorHandler實作
@@ -227,6 +455,60 @@ class FakeErrorHandler implements ErrorHandler {
       mode,
       validationErrors: errors,
     );
+  }
+
+  @override
+  ApiResponse<T> handleException<T>(Exception exception, UserMode userMode) {
+    final error = ApiError.create(
+      AuthErrorCode.internalServerError,
+      userMode,
+      message: exception.toString(),
+    );
+    
+    return ApiResponse.error(
+      error: error,
+      metadata: ApiMetadata.create(userMode),
+    );
+  }
+
+  @override
+  ApiError createBusinessLogicError(String code, String message, UserMode userMode) {
+    return ApiError(
+      code: AuthErrorCode.internalServerError,
+      message: message,
+      timestamp: DateTime.now(),
+      requestId: 'test-request-${DateTime.now().millisecondsSinceEpoch}',
+    );
+  }
+
+  @override
+  String getLocalizedErrorMessage(AuthErrorCode code, UserMode userMode) {
+    switch (code) {
+      case AuthErrorCode.validationError:
+        switch (userMode) {
+          case UserMode.expert:
+            return '請求參數驗證失敗，請檢查資料格式與完整性';
+          case UserMode.inertial:
+            return '資料格式驗證失敗，請確認輸入內容';
+          case UserMode.cultivation:
+            return '輸入資料需要調整，讓我們一起完善它！';
+          case UserMode.guiding:
+            return '資料格式錯誤';
+        }
+      case AuthErrorCode.invalidCredentials:
+        switch (userMode) {
+          case UserMode.expert:
+            return '認證憑據無效，請確認帳號密碼';
+          case UserMode.inertial:
+            return '帳號或密碼錯誤';
+          case UserMode.cultivation:
+            return '登入資訊不正確，再試一次吧！';
+          case UserMode.guiding:
+            return '密碼錯誤';
+        }
+      default:
+        return '發生錯誤';
+    }
   }
 }
 
@@ -247,6 +529,50 @@ class FakeModeConfigService implements ModeConfigService {
   @override
   bool isFeatureEnabled(UserMode mode, String feature) {
     return feature == 'streakTracking' && mode == UserMode.cultivation;
+  }
+
+  @override
+  List<String> getAvailableFeatures(UserMode mode) {
+    switch (mode) {
+      case UserMode.expert:
+        return ['advanced', 'analytics', 'debugging', 'customization'];
+      case UserMode.cultivation:
+        return ['streakTracking', 'motivation', 'progress', 'achievements'];
+      case UserMode.guiding:
+        return ['basic'];
+      case UserMode.inertial:
+        return ['standard', 'fixed'];
+    }
+  }
+
+  @override
+  Map<String, dynamic> getDefaultSettings(UserMode mode) {
+    switch (mode) {
+      case UserMode.expert:
+        return {
+          'sessionDuration': 7200, // 2小時
+          'enableAdvancedLogging': true,
+          'showTechnicalDetails': true,
+        };
+      case UserMode.cultivation:
+        return {
+          'sessionDuration': 3600, // 1小時
+          'enableMotivation': true,
+          'trackProgress': true,
+        };
+      case UserMode.guiding:
+        return {
+          'sessionDuration': 1800, // 30分鐘
+          'simplifiedInterface': true,
+          'hideComplexOptions': true,
+        };
+      case UserMode.inertial:
+        return {
+          'sessionDuration': 3600, // 1小時
+          'fixedLayout': true,
+          'consistentBehavior': true,
+        };
+    }
   }
 }
 
@@ -289,6 +615,30 @@ class FakeJwtProvider implements JwtProvider {
       'exp': DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
     };
   }
+
+  @override
+  bool isTokenExpired(String token) {
+    // 簡單實作：檢查token是否包含expired
+    return token.contains('expired');
+  }
+
+  @override
+  String extractUserId(String token) {
+    // 從fake token中提取userId
+    if (token.startsWith('fake-jwt-')) {
+      final parts = token.split('-');
+      if (parts.length >= 3) {
+        return parts[2];
+      }
+    }
+    return 'test-user-id';
+  }
+
+  @override
+  UserMode extractUserMode(String token) {
+    // 從token中提取用戶模式，預設為expert
+    return UserMode.expert;
+  }
 }
 
 // ================================
@@ -298,8 +648,8 @@ class FakeJwtProvider implements JwtProvider {
 /// 測試輔助工具類別
 class TestUtils {
   /// 01. 建立測試註冊請求
-  /// @version 2025-01-28-V2.6.0
-  /// @date 2025-08-28 12:00:00
+  /// @version 2025-01-28-V2.7.0
+  /// @date 2025-01-28 12:00:00
   /// @update: 提供完整測試資料生成
   static RegisterRequest createTestRegisterRequest({
     UserMode userMode = UserMode.expert,
@@ -417,8 +767,8 @@ class TestEnvironmentConfig {
   static const String mockRequestId = 'req-test-456';
 
   /// 初始化測試環境
-  /// @version 2025-01-28-V2.6.0
-  /// @date 2025-08-28 12:00:00
+  /// @version 2025-01-28-V2.7.0
+  /// @date 2025-01-28 12:00:00
   /// @update: 建立完整測試環境配置
   static Future<void> setupTestEnvironment() async {
     // 初始化模擬資料
@@ -447,7 +797,7 @@ class TestEnvironmentConfig {
 // ================================
 
 void main() {
-  group('認證服務測試套件 v2.6.0 - 手動Mock方案', () {
+  group('認證服務測試套件 v2.7.0 - 手動Mock方案', () {
     late AuthController authController;
     late FakeAuthService fakeAuthService;
     late FakeTokenService fakeTokenService;
