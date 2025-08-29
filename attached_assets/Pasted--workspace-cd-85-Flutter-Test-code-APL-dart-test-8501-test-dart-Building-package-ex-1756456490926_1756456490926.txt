@@ -1,0 +1,227 @@
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... (2.0s)
+Built test:test.
+00:00 +0: ... 8501. 認證服務_test.dart     00:00 +0 -1: loading 8501. 認證服務_test.dart [E]
+  Failed to load "8501. 認證服務_test.dart":
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:21:7: Error: The non-abstract class 'FakeAuthService' is missing implementations for these members:
+   - AuthService.processTokenRefresh
+   - AuthService.sendVerificationEmail
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeAuthService implements AuthService {
+        ^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:1061:21: Context: 'AuthService.processTokenRefresh' is defined here.
+    Future<TokenPair> processTokenRefresh(String refreshToken);
+                      ^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:1091:16: Context: 'AuthService.sendVerificationEmail' is defined here.
+    Future<void> sendVerificationEmail(String email);
+                 ^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:94:7: Error: The non-abstract class 'FakeTokenService' is missing implementations for these members:
+   - TokenService.cleanupExpiredTokens
+   - TokenService.generateAccessToken
+   - TokenService.generateEmailVerificationToken
+   - TokenService.generateRefreshToken
+   - TokenService.generateResetToken
+   - TokenService.isTokenRevoked
+   - TokenService.revokeAllUserTokens
+   - TokenService.revokeToken
+   - TokenService.validateAccessToken
+   - TokenService.validateEmailVerificationToken
+   - TokenService.validateResetToken
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeTokenService implements TokenService {
+        ^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:971:16: Context: 'TokenService.cleanupExpiredTokens' is defined here.
+    Future<void> cleanupExpiredTokens();
+                 ^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:905:18: Context: 'TokenService.generateAccessToken' is defined here.
+    Future<String> generateAccessToken(String userId, Map<String, dynamic> claims);
+                   ^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:923:18: Context: 'TokenService.generateEmailVerificationToken' is defined here.
+    Future<String> generateEmailVerificationToken(String email);
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:911:18: Context: 'TokenService.generateRefreshToken' is defined here.
+    Future<String> generateRefreshToken(String userId);
+                   ^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:917:18: Context: 'TokenService.generateResetToken' is defined here.
+    Future<String> generateResetToken(String email);
+                   ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:965:16: Context: 'TokenService.isTokenRevoked' is defined here.
+    Future<bool> isTokenRevoked(String token);
+                 ^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:959:16: Context: 'TokenService.revokeAllUserTokens' is defined here.
+    Future<void> revokeAllUserTokens(String userId);
+                 ^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:953:16: Context: 'TokenService.revokeToken' is defined here.
+    Future<void> revokeToken(String token);
+                 ^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:929:33: Context: 'TokenService.validateAccessToken' is defined here.
+    Future<TokenValidationResult> validateAccessToken(String token);
+                                  ^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:947:16: Context: 'TokenService.validateEmailVerificationToken' is defined here.
+    Future<bool> validateEmailVerificationToken(String token);
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:941:16: Context: 'TokenService.validateResetToken' is defined here.
+    Future<bool> validateResetToken(String token);
+                 ^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:119:7: Error: The non-abstract class 'FakeUserModeAdapter' is missing implementations for these members:
+   - UserModeAdapter.adaptErrorResponse
+   - UserModeAdapter.adaptResponse
+   - UserModeAdapter.filterResponseData
+   - UserModeAdapter.getAvailableActions
+   - UserModeAdapter.getModeSpecificMessage
+   - UserModeAdapter.shouldIncludeProgressTracking
+   - UserModeAdapter.shouldShowAdvancedOptions
+   - UserModeAdapter.shouldSimplifyInterface
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeUserModeAdapter implements UserModeAdapter {
+        ^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:986:12: Context: 'UserModeAdapter.adaptErrorResponse' is defined here.
+    ApiError adaptErrorResponse(ApiError error, UserMode userMode);
+             ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:980:5: Context: 'UserModeAdapter.adaptResponse' is defined here.
+    T adaptResponse<T>(T response, UserMode userMode);
+      ^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:1010:24: Context: 'UserModeAdapter.filterResponseData' is defined here.
+    Map<String, dynamic> filterResponseData(Map<String, dynamic> data, UserMode userMode);
+                         ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:1004:16: Context: 'UserModeAdapter.getAvailableActions' is defined here.
+    List<String> getAvailableActions(UserMode userMode);
+                 ^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:1034:10: Context: 'UserModeAdapter.getModeSpecificMessage' is defined here.
+    String getModeSpecificMessage(String baseMessage, UserMode userMode);
+           ^^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:1022:8: Context: 'UserModeAdapter.shouldIncludeProgressTracking' is defined here.
+    bool shouldIncludeProgressTracking(UserMode userMode);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:1016:8: Context: 'UserModeAdapter.shouldShowAdvancedOptions' is defined here.
+    bool shouldShowAdvancedOptions(UserMode userMode);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:1028:8: Context: 'UserModeAdapter.shouldSimplifyInterface' is defined here.
+    bool shouldSimplifyInterface(UserMode userMode);
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:168:7: Error: The non-abstract class 'FakeSecurityService' is missing implementations for these members:
+   - SecurityService.assessPasswordStrength
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeSecurityService implements SecurityService {
+        ^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:725:20: Context: 'SecurityService.assessPasswordStrength' is defined here.
+    PasswordStrength assessPasswordStrength(String password);
+                     ^^^^^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:196:7: Error: The non-abstract class 'FakeValidationService' is missing implementations for these members:
+   - ValidationService.validateEmail
+   - ValidationService.validateLoginRequest
+   - ValidationService.validatePassword
+   - ValidationService.validateUserMode
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeValidationService implements ValidationService {
+        ^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:785:25: Context: 'ValidationService.validateEmail' is defined here.
+    List<ValidationError> validateEmail(String email);
+                          ^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:809:25: Context: 'ValidationService.validateLoginRequest' is defined here.
+    List<ValidationError> validateLoginRequest(LoginRequest request);
+                          ^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:791:25: Context: 'ValidationService.validatePassword' is defined here.
+    List<ValidationError> validatePassword(String password);
+                          ^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:797:25: Context: 'ValidationService.validateUserMode' is defined here.
+    List<ValidationError> validateUserMode(UserMode mode);
+                          ^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:222:7: Error: The non-abstract class 'FakeErrorHandler' is missing implementations for these members:
+   - ErrorHandler.createBusinessLogicError
+   - ErrorHandler.getLocalizedErrorMessage
+   - ErrorHandler.handleException
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeErrorHandler implements ErrorHandler {
+        ^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:830:12: Context: 'ErrorHandler.createBusinessLogicError' is defined here.
+    ApiError createBusinessLogicError(String code, String message, UserMode userMode);
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:836:10: Context: 'ErrorHandler.getLocalizedErrorMessage' is defined here.
+    String getLocalizedErrorMessage(AuthErrorCode code, UserMode userMode);
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:818:18: Context: 'ErrorHandler.handleException' is defined here.
+    ApiResponse<T> handleException<T>(Exception exception, UserMode userMode);
+                   ^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:234:7: Error: The non-abstract class 'FakeModeConfigService' is missing implementations for these members:
+   - ModeConfigService.getAvailableFeatures
+   - ModeConfigService.getDefaultSettings
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeModeConfigService implements ModeConfigService {
+        ^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:851:16: Context: 'ModeConfigService.getAvailableFeatures' is defined here.
+    List<String> getAvailableFeatures(UserMode mode);
+                 ^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:857:24: Context: 'ModeConfigService.getDefaultSettings' is defined here.
+    Map<String, dynamic> getDefaultSettings(UserMode mode);
+                         ^^^^^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:277:7: Error: The non-abstract class 'FakeJwtProvider' is missing implementations for these members:
+   - JwtProvider.extractUserId
+   - JwtProvider.extractUserMode
+   - JwtProvider.isTokenExpired
+  Try to either
+   - provide an implementation,
+   - inherit an implementation from a superclass or mixin,
+   - mark the class as abstract, or
+   - provide a 'noSuchMethod' implementation.
+  
+  class FakeJwtProvider implements JwtProvider {
+        ^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:770:10: Context: 'JwtProvider.extractUserId' is defined here.
+    String extractUserId(String token);
+           ^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:776:12: Context: 'JwtProvider.extractUserMode' is defined here.
+    UserMode extractUserMode(String token);
+             ^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:764:8: Context: 'JwtProvider.isTokenExpired' is defined here.
+    bool isTokenExpired(String token);
+         ^^^^^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:146:22: Error: The setter 'streakInfo' isn't defined for the class 'LoginResponse'.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing setter, or defining a setter or field named 'streakInfo'.
+          baseResponse.streakInfo = {
+                       ^^^^^^^^^^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:153:22: Error: The setter 'loginHistory' isn't defined for the class 'LoginResponse'.
+   - 'LoginResponse' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing setter, or defining a setter or field named 'loginHistory'.
+          baseResponse.loginHistory = {
+                       ^^^^^^^^^^^^
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name 'loading 8501. 認證服務_test.dart'
+00:00 +0 -1: Some tests failed.           
+~/workspace/85. Flutter_Test_code_APL$ 
