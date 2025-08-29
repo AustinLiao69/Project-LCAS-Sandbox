@@ -3,7 +3,7 @@
  * @testFile 認證服務測試程式碼
  * @description LCAS 2.0 認證服務 API 模組完整測試實作 - 手動Mock方案
  * @version 2025-01-28-V2.8.0
- * @update 2025-01-28: 升級到v2.8.0版本，修正所有編譯錯誤，補齊缺失方法實作，統一類型定義
+ * @update 2025-01-28: 修正LoginResponse final屬性問題，修正ApiError.create參數，升級版次統一
  */
 
 import 'package:test/test.dart';
@@ -218,34 +218,40 @@ class FakeUserModeAdapter implements UserModeAdapter {
 
   @override
   LoginResponse adaptLoginResponse(LoginResponse response, UserMode userMode) {
-    final baseResponse = LoginResponse(
-      token: response.token,
-      refreshToken: response.refreshToken,
-      expiresAt: response.expiresAt,
-      user: response.user,
-    );
-
-    // 根據不同模式添加特定內容
+    // 根據不同模式創建特定內容的新LoginResponse
     switch (userMode) {
       case UserMode.cultivation:
-        baseResponse.streakInfo = {
-          'currentStreak': 7,
-          'longestStreak': 15,
-          'streakMessage': '連續登入7天！保持下去！🔥',
-        };
-        break;
+        return LoginResponse(
+          token: response.token,
+          refreshToken: response.refreshToken,
+          expiresAt: response.expiresAt,
+          user: response.user,
+          streakInfo: {
+            'currentStreak': 7,
+            'longestStreak': 15,
+            'streakMessage': '連續登入7天！保持下去！🔥',
+          },
+        );
       case UserMode.expert:
-        baseResponse.loginHistory = {
-          'lastLogin': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
-          'loginCount': 42,
-          'newDeviceDetected': false,
-        };
-        break;
+        return LoginResponse(
+          token: response.token,
+          refreshToken: response.refreshToken,
+          expiresAt: response.expiresAt,
+          user: response.user,
+          loginHistory: {
+            'lastLogin': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
+            'loginCount': 42,
+            'newDeviceDetected': false,
+          },
+        );
       default:
-        break;
+        return LoginResponse(
+          token: response.token,
+          refreshToken: response.refreshToken,
+          expiresAt: response.expiresAt,
+          user: response.user,
+        );
     }
-
-    return baseResponse;
   }
 
   @override
@@ -681,7 +687,7 @@ class TestUtils {
   /// 01. 建立測試註冊請求
   /// @version 2025-01-28-V2.8.0
   /// @date 2025-01-28 12:00:00
-  /// @update: 提供完整測試資料生成
+  /// @update: 升級版次，修正相容性問題
   static RegisterRequest createTestRegisterRequest({
     UserMode userMode = UserMode.expert,
     String? email,
@@ -701,9 +707,9 @@ class TestUtils {
   }
 
   /// 02. 建立測試登入請求
-  /// @version 2025-01-28-V2.6.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 提供完整登入測試資料
+  /// @version 2025-01-28-V2.8.0
+  /// @date 2025-01-28 12:00:00
+  /// @update: 升級版次，確保相容性
   static LoginRequest createTestLoginRequest({
     String? email,
     String? password,
@@ -721,9 +727,9 @@ class TestUtils {
   }
 
   /// 03. 建立測試使用者資料
-  /// @version 2025-01-28-V2.6.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 提供完整使用者測試資料
+  /// @version 2025-01-28-V2.8.0
+  /// @date 2025-01-28 12:00:00
+  /// @update: 升級版次，確保相容性
   static UserProfile createTestUser({
     UserMode userMode = UserMode.expert,
     String? userId,
