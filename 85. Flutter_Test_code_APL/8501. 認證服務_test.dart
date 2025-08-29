@@ -963,7 +963,7 @@ void main() {
 
           when(mockModeConfigService.getConfigForMode(userMode)).thenReturn(modeConfig);
           when(mockModeConfigService.isFeatureEnabled(userMode, 'streakTracking')).thenReturn(true);
-          when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
+          when(mockJwtProvider.generateToken(tokenPayload, tokenDuration))
               .thenReturn('mode-specific-token');
 
           // Act
@@ -1040,7 +1040,7 @@ void main() {
             mockValidationService.validateRegisterRequest(request),
             mockAuthService.processRegistration(request),
             mockTokenService.generateTokenPair('test-id', request.userMode),
-            mockUserModeAdapter.adaptRegisterResponse(any, request.userMode),
+            mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), request.userMode),
           ]);
         });
       });
@@ -1401,7 +1401,7 @@ void main() {
 
           // 測試Token生成安全性
           when(mockSecurityService.generateSecureToken()).thenAnswer((_) async => 'secure-random-token');
-          when(mockJwtProvider.generateToken(any, any)).thenReturn('jwt-with-security-claims');
+          when(mockJwtProvider.generateToken(argThat(isA<String>()), argThat(isA<UserMode>()))).thenReturn('jwt-with-security-claims');
           when(mockTokenService.generateTokenPair(user.id, user.userMode))
               .thenAnswer((_) async => TokenPair(
                 accessToken: 'secure-access-token',
@@ -1539,7 +1539,7 @@ void main() {
 
           when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-          when(mockTokenService.generateTokenPair(argThat(isA<String>()), argThat(isA<UserMode>())))
+          when(mockTokenService.generateTokenPair('test-id', UserMode.expert))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           for (int i = 0; i < 10; i++) {
