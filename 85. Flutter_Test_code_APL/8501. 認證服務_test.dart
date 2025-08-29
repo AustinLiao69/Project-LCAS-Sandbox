@@ -976,7 +976,7 @@ void main() {
 
           when(mockModeConfigService.getConfigForMode(userMode)).thenReturn(modeConfig);
           when(mockModeConfigService.isFeatureEnabled(userMode, 'streakTracking')).thenReturn(true);
-          when(mockJwtProvider.generateToken(any as Map<String, dynamic>, any as Duration))
+          when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
               .thenReturn('mode-specific-token');
 
           // Act
@@ -1020,7 +1020,7 @@ void main() {
                 refreshToken: 'test-refresh',
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
               ));
-          when(mockJwtProvider.generateToken(any as Map<String, dynamic>, any as Duration)).thenReturn('jwt-token');
+          when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>()))).thenReturn('jwt-token');
           final expectedRegisterResponse = RegisterResponse(
                 userId: 'test-id',
                 email: request.email,
@@ -1045,14 +1045,14 @@ void main() {
           verify(mockValidationService.validateRegisterRequest(request)).called(1);
           verify(mockSecurityService.isPasswordSecure(request.password)).called(1);
           verify(mockModeConfigService.getConfigForMode(request.userMode)).called(1);
-          verify(mockAuthService.processRegistration(any as RegisterRequest)).called(1);
+          verify(mockAuthService.processRegistration(argThat(isA<RegisterRequest>()))).called(1);
           verify(mockTokenService.generateTokenPair('test-id', request.userMode)).called(1);
           verify(mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode)).called(1);
 
           // 驗證協作鏈完整性
           final inOrder = verifyInOrder([
             mockValidationService.validateRegisterRequest(request),
-            mockAuthService.processRegistration(any as RegisterRequest),
+            mockAuthService.processRegistration(argThat(isA<RegisterRequest>())),
             mockTokenService.generateTokenPair('test-id', request.userMode),
             mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode),
           ]);
