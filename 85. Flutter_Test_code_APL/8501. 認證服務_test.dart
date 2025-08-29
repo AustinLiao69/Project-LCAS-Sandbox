@@ -990,7 +990,7 @@ void main() {
           expect(token, equals('mode-specific-token'));
           verify(mockModeConfigService.getConfigForMode(userMode)).called(1);
           verify(mockModeConfigService.isFeatureEnabled(userMode, 'streakTracking')).called(1);
-          verify(mockJwtProvider.generateToken(any as Map<String, dynamic>, any as Duration)).called(1);
+          verify(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>()))).called(1);
         });
 
         /// TC-38: 13個抽象類別完整協作流程測試
