@@ -1,4 +1,3 @@
-
 /**
  * 8501. 認證服務_測試程式碼_v2.5.0
  * @testFile 認證服務測試程式碼
@@ -253,11 +252,11 @@ void main() {
             expiresAt: expectedTokenPair.expiresAt,
           );
 
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(request))
               .thenAnswer((_) async => expectedResult);
-          when(mockTokenService.generateTokenPair(any, any))
+          when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptRegisterResponse(any, any))
+          when(mockUserModeAdapter.adaptRegisterResponse(expectedResponse, UserMode.expert))
               .thenReturn(expectedResponse);
 
           // Act
@@ -269,8 +268,8 @@ void main() {
           expect(response.data?.userMode, equals('expert'));
           expect(response.data?.needsAssessment, isTrue); // Expert模式需要評估
           expect(response.metadata.userMode, equals(UserMode.expert));
-          verify(mockAuthService.processRegistration(any)).called(1);
-          verify(mockTokenService.generateTokenPair(any, any)).called(1);
+          verify(mockAuthService.processRegistration(request)).called(1);
+          verify(mockTokenService.generateTokenPair('test-user-id', UserMode.expert)).called(1);
         });
 
         /// TC-05: 註冊驗證錯誤 - 無效Email
@@ -324,7 +323,7 @@ void main() {
             refreshToken: 'test-refresh-token',
             expiresAt: DateTime.now().add(Duration(hours: 1)),
           );
-          
+
           final adaptedResponse = RegisterResponse(
             userId: 'test-user-id',
             email: 'test@lcas.com',
@@ -340,7 +339,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.guiding))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptRegisterResponse(any, any))
+          when(mockUserModeAdapter.adaptRegisterResponse(adaptedResponse, UserMode.guiding))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -351,7 +350,7 @@ void main() {
           expect(response.data?.userMode, equals('guiding'));
           expect(response.data?.needsAssessment, isFalse);
           expect(response.metadata.userMode, equals(UserMode.guiding));
-          verify(mockUserModeAdapter.adaptRegisterResponse(any, any)).called(1);
+          verify(mockUserModeAdapter.adaptRegisterResponse(adaptedResponse, UserMode.guiding)).called(1);
         });
       });
 
@@ -390,7 +389,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(any, any))
+          when(mockUserModeAdapter.adaptLoginResponse(adaptedResponse, UserMode.expert))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -402,7 +401,7 @@ void main() {
           expect(response.data?.user.userMode, equals('expert'));
           expect(response.data?.loginHistory, isNotNull);
           expect(response.metadata.userMode, equals(UserMode.expert));
-          verify(mockUserModeAdapter.adaptLoginResponse(any, any)).called(1);
+          verify(mockUserModeAdapter.adaptLoginResponse(adaptedResponse, UserMode.expert)).called(1);
         });
 
         /// TC-09: 登入失敗 - 無效憑證
@@ -458,7 +457,7 @@ void main() {
               .thenAnswer((_) async => expectedResult);
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.cultivation))
               .thenAnswer((_) async => expectedTokenPair);
-          when(mockUserModeAdapter.adaptLoginResponse(any, any))
+          when(mockUserModeAdapter.adaptLoginResponse(adaptedResponse, UserMode.cultivation))
               .thenReturn(adaptedResponse);
 
           // Act
@@ -1022,8 +1021,7 @@ void main() {
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
               ));
           when(mockJwtProvider.generateToken(tokenPayload, tokenDuration)).thenReturn('jwt-token');
-          when(mockUserModeAdapter.adaptRegisterResponse(any, any))
-              .thenReturn(RegisterResponse(
+          final expectedRegisterResponse = RegisterResponse(
                 userId: 'test-id',
                 email: request.email,
                 userMode: request.userMode,
@@ -1032,7 +1030,9 @@ void main() {
                 token: 'adapted-token',
                 refreshToken: 'adapted-refresh',
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
-              ));
+              );
+          when(mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode))
+              .thenReturn(expectedRegisterResponse);
           when(mockResponseFilter.filterForExpert(<String, dynamic>{'expert': 'data'})).thenReturn({'expert': 'data'});
 
           // Act
@@ -1047,14 +1047,14 @@ void main() {
           verify(mockModeConfigService.getConfigForMode(request.userMode)).called(1);
           verify(mockAuthService.processRegistration(request)).called(1);
           verify(mockTokenService.generateTokenPair('test-id', request.userMode)).called(1);
-          verify(mockUserModeAdapter.adaptRegisterResponse(any, any)).called(1);
+          verify(mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode)).called(1);
 
           // 驗證協作鏈完整性
           final inOrder = verifyInOrder([
             mockValidationService.validateRegisterRequest(request),
             mockAuthService.processRegistration(request),
             mockTokenService.generateTokenPair('test-id', request.userMode),
-            mockUserModeAdapter.adaptRegisterResponse(any, request.userMode),
+            mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode),
           ]);
         });
       });
