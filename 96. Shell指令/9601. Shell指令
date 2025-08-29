@@ -10,4 +10,4 @@ cd "75. Flutter_Test_code_PL" && dart pub get
 
 cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
 
-dart test "8501. 認證服務_test.dart"
+dart test "8501. 認證服務_test.dart" --verbose
