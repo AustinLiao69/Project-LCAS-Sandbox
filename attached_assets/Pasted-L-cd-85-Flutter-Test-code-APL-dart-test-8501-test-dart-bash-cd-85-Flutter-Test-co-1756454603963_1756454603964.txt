@@ -1,0 +1,104 @@
+L$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+bash: cd: 85. Flutter_Test_code_APL: No such file or directory
+~/workspace/85. Flutter_Test_code_APL$ cd ~/workspace
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... (1.0s(1.5s)
+Built test:test.
+00:00 +0: ... 認證服務_test.dart    00:00 +0 -1: loading 8501. 認證服務_test.dart [E]
+  Failed to load "8501. 認證服務_test.dart":
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:256:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:305:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:341:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:780:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:840:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:943:54: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:982:46: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:982:84: Error: The argument type 'Null' can't be assigned to the parameter type 'Duration' because 'Duration' is not nullable.
+   - 'Duration' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
+                                                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1018:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1026:46: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1026:84: Error: The argument type 'Null' can't be assigned to the parameter type 'Duration' because 'Duration' is not nullable.
+   - 'Duration' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
+                                                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1062:54: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            verify(mockAuthService.processRegistration(argThat(isA<RegisterRequest>()))).called(1);
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1069:49: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              mockAuthService.processRegistration(argThat(isA<RegisterRequest>())),
+                                                  ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1111:54: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+              when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                       ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1197:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1292:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1316:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1432:46: Error: The argument type 'Null' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>' is not nullable.
+   - 'Map' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
+                                               ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1432:84: Error: The argument type 'Null' can't be assigned to the parameter type 'Duration' because 'Duration' is not nullable.
+   - 'Duration' is from 'dart:core'.
+            when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
+                                                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1551:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1569:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1597:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+  8501.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99_test.dart:1614:52: Error: The argument type 'Null' can't be assigned to the parameter type 'RegisterRequest' because 'RegisterRequest' is not nullable.
+   - 'RegisterRequest' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+            when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
+                                                     ^
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name 'loading 8501. 認證服務_test.dart'
+00:00 +0 -1: Some tests failed.    
+~/workspace/85. Flutter_Test_code_APL$ 
