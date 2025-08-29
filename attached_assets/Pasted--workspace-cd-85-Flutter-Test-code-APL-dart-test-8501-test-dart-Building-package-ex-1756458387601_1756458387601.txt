@@ -1,0 +1,66 @@
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... 
+Built test:test.
+00:00 +0: ... 8501. 認證服務_test.dart     00:00 +0: ... - 手動Mock方案 (setUpAll)    00:00 +0: ... 04. 正常註冊流程 - Expert模式00:00 +0 -1: 認證服務測試套件 v2.8.0 - 手動Mock方案 3. 功能測試 3.1 使用者註冊API測試 04. 正常註冊流程 - Expert模式 [E]
+  Expected: 'expert'
+    Actual: UserMode:<UserMode.expert>
+     Which: not an <Instance of 'String'>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 890:11  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.8.0 - 手動Mock方案 3. 功能測試 3.1 使用者註冊API測試 04. 正常註冊流程 - Expert模式'
+00:00 +0 -1: ... 05. 註冊驗證錯誤 - 無效Ema00:00 +1 -1: ... 05. 註冊驗證錯誤 - 無效Ema00:00 +1 -1: ... 06. 註冊失敗 - Email已存在00:00 +2 -1: ... 06. 註冊失敗 - Email已存在00:00 +2 -1: ... 07. 四模式註冊差異 - Guidi00:00 +2 -2: 認證服務測試套件 v2.8.0 - 手動Mock方案 3. 功能測試 3.1 使用者註冊API測試 07. 四模式註冊差異 - Guiding模式 [E]
+  Expected: 'guiding'
+    Actual: UserMode:<UserMode.guiding>
+     Which: not an <Instance of 'String'>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 937:11  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.8.0 - 手動Mock方案 3. 功能測試 3.1 使用者註冊API測試 07. 四模式註冊差異 - Guiding模式'
+00:00 +2 -2: ... 08. 正常登入流程 - Expert00:00 +2 -3: 認證服務測試套件 v2.8.0 - 手動Mock方案 3. 功能測試 3.2 使用者登入API測試 08. 正常登入流程 - Expert模式 [E]
+  Expected: 'expert'
+    Actual: UserMode:<UserMode.expert>
+     Which: not an <Instance of 'String'>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 956:11  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.8.0 - 手動Mock方案 3. 功能測試 3.2 使用者登入API測試 08. 正常登入流程 - Expert模式'
+00:00 +2 -3: ... 09. 登入失敗 - 無效憑證   00:00 +3 -3: ... 09. 登入失敗 - 無效憑證   00:00 +3 -3: ... 四模式登入差異 - Cultivati00:00 +4 -3: ... 四模式登入差異 - Cultivati00:00 +4 -3: ... 11. Google登入成功        00:00 +5 -3: ... 11. Google登入成功        00:00 +5 -3: ... 12. Google登入失敗 - 無效T00:00 +6 -3: ... 12. Google登入失敗 - 無效T00:00 +6 -3: ... 3.4 登出API測試 13. 正常登00:00 +7 -3: ... 3.4 登出API測試 13. 正常登00:00 +7 -3: ... 14. Token刷新成功         00:00 +8 -3: ... 14. Token刷新成功         00:00 +8 -3: ... 15. Token刷新失敗 - 無效To00:00 +9 -3: ... 15. Token刷新失敗 - 無效To00:00 +9 -3: ... 3.6 忘記密碼API測試 16. 忘00:00 +10 -3: ... 忘記密碼API測試 16. 忘記00:00 +10 -3: ... API測試 17. 重設Token驗證00:00 +11 -3: ... API測試 17. 重設Token驗證00:00 +11 -3: ... 18. 重設Token驗證失敗 - 00:00 +12 -3: ... 18. 重設Token驗證失敗 - 00:00 +12 -3: ... 重設密碼API測試 19. 重設00:00 +13 -3: ... 重設密碼API測試 19. 重設00:00 +13 -3: ... 20. 重設密碼失敗 - 密碼太00:00 +14 -3: ... 20. 重設密碼失敗 - 密碼太00:00 +14 -3: ... 21. Email驗證成功        00:00 +15 -3: ... 21. Email驗證成功        00:00 +15 -3: ... 22. LINE綁定成功         00:00 +16 -3: ... 22. LINE綁定成功         00:00 +16 -3: ... 綁定狀態API測試 23. 綁定00:00 +17 -3: ... 綁定狀態API測試 23. 綁定00:00 +17 -3: ... 端到端流程測試 24. 完整註00:00 +18 -3: ... 端到端流程測試 24. 完整註00:00 +18 -3: ... 抽象類別協作測試 25. 抽象00:00 +19 -3: ... 抽象類別協作測試 25. 抽象00:00 +19 -3: ... + SecurityService協作測試00:00 +20 -3: ... + SecurityService協作測試00:00 +20 -3: ... + ErrorHandler整合測試   00:00 +21 -3: ... + ErrorHandler整合測試   00:00 +21 -3: ... + ResponseFilter協作測試 00:00 +21 -4: 認證服務測試套件 v2.8.0 - 手動Mock方案 4. 整合測試 4.2 抽象類別協作測試 36. UserModeAdapter + ResponseFilter協作測試 [E]
+  Expected: 'expert'
+    Actual: UserMode:<UserMode.expert>
+     Which: not an <Instance of 'String'>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 1338:13  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.8.0 - 手動Mock方案 4. 整合測試 4.2 抽象類別協作測試 36. UserModeAdapter + ResponseFilter協作測試'
+00:00 +21 -4: ... + JwtProvider協作測試    00:00 +22 -4: ... + JwtProvider協作測試    00:00 +22 -4: ... 38. 13個抽象類別完整協作00:00 +23 -4: ... 38. 13個抽象類別完整協作00:00 +23 -4: ... 26. 四模式錯誤訊息差異化 00:00 +24 -4: ... 26. 四模式錯誤訊息差異化 00:00 +24 -4: ... 27. 四模式回應內容差異化 00:00 +25 -4: ... 27. 四模式回應內容差異化 00:00 +25 -4: ... 6.1 密碼安全性驗證 28. 密00:00 +25 -5: 認證服務測試套件 v2.8.0 - 手動Mock方案 6. 安全性測試 6.1 密碼安全性驗證 28. 密碼安全性驗證 [E]
+  Expected: false
+    Actual: <true>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 1460:13  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.8.0 - 手動Mock方案 6. 安全性測試 6.1 密碼安全性驗證 28. 密碼安全性驗證'
+00:00 +25 -5: ... 29. Token安全性驗證      00:00 +25 -6: 認證服務測試套件 v2.8.0 - 手動Mock方案 6. 安全性測試 6.2 Token安全性驗證 29. Token安全性驗證 [E]
+  Expected: false
+    Actual: <true>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 1484:13  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v2.8.0 - 手動Mock方案 6. 安全性測試 6.2 Token安全性驗證 29. Token安全性驗證'
+00:00 +25 -6: ... API回應時間測試 30. API回00:00 +26 -6: ... API回應時間測試 30. API回00:00 +26 -6: ... 併發處理能力測試 31. 併發00:00 +27 -6: ... 併發處理能力測試 31. 併發00:00 +27 -6: ... 網路連接異常處理 32. 網路00:00 +28 -6: ... 網路連接異常處理 32. 網路00:00 +28 -6: ... 8.2 服務超時處理 33. 服務00:00 +29 -6: ... 8.2 服務超時處理 33. 服務00:00 +29 -6: ... 手動Mock方案 (tearDownAll00:00 +29 -6: Some tests failed.          
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
+~/workspace/85. Flutter_Test_code_APL$ 
