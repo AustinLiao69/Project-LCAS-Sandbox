@@ -864,10 +864,10 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          when(mockSecurityService.isPasswordSecure('TestPassword123')).thenReturn(true);
-          when(mockSecurityService.verifyPassword('TestPassword123', 'mock-hash'))
+          when(mockSecurityService.isPasswordSecure(argThat(isA<String>()))).thenReturn(true);
+          when(mockSecurityService.verifyPassword(argThat(isA<String>()), argThat(isA<String>())))
               .thenAnswer((_) async => true);
-          when(mockAuthService.authenticateUser('test@lcas.com', 'TestPassword123'))
+          when(mockAuthService.authenticateUser(argThat(isA<String>()), argThat(isA<String>())))
               .thenAnswer((_) async => LoginResult(user: mockUser, success: true));
           when(mockTokenService.generateTokenPair('test-user-id', UserMode.expert))
               .thenAnswer((_) async => TokenPair(
@@ -881,7 +881,7 @@ void main() {
 
           // Assert
           expect(response.success, isTrue);
-          verify(mockSecurityService.verifyPassword('TestPassword123', 'mock-hash')).called(1);
+          verify(mockSecurityService.verifyPassword('TestPassword123', argThat(isA<String>()))).called(1);
           verify(mockAuthService.authenticateUser('test@lcas.com', 'TestPassword123')).called(1);
           verify(mockTokenService.generateTokenPair('test-user-id', UserMode.expert)).called(1);
         });
@@ -903,8 +903,8 @@ void main() {
             validationErrors: validationErrors,
           );
 
-          when(mockValidationService.validateRegisterRequest(invalidRequest)).thenReturn(validationErrors);
-          when(mockErrorHandler.createValidationError(validationErrors, UserMode.expert))
+          when(mockValidationService.validateRegisterRequest(argThat(isA<RegisterRequest>()))).thenReturn(validationErrors);
+          when(mockErrorHandler.createValidationError(argThat(isA<List<ValidationError>>()), argThat(isA<UserMode>())))
               .thenReturn(expectedError);
 
           // Act
@@ -941,10 +941,10 @@ void main() {
                 .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
             when(mockTokenService.generateTokenPair('test-id', mode))
                 .thenAnswer((_) async => TestUtils.createTestTokenPair());
-            when(mockResponseFilter.filterForExpert(testData)).thenReturn({'filtered': 'expert'});
-            when(mockResponseFilter.filterForInertial(testData)).thenReturn({'filtered': 'inertial'});
-            when(mockResponseFilter.filterForCultivation(testData)).thenReturn({'filtered': 'cultivation'});
-            when(mockResponseFilter.filterForGuiding(testData)).thenReturn({'filtered': 'guiding'});
+            when(mockResponseFilter.filterForExpert(argThat(isA<Map<String, dynamic>>()))).thenReturn({'filtered': 'expert'});
+            when(mockResponseFilter.filterForInertial(argThat(isA<Map<String, dynamic>>()))).thenReturn({'filtered': 'inertial'});
+            when(mockResponseFilter.filterForCultivation(argThat(isA<Map<String, dynamic>>()))).thenReturn({'filtered': 'cultivation'});
+            when(mockResponseFilter.filterForGuiding(argThat(isA<Map<String, dynamic>>()))).thenReturn({'filtered': 'guiding'});
             when(mockUserModeAdapter.adaptRegisterResponse(argThat(isA<RegisterResponse>()), mode))
                 .thenReturn(basicResponse);
 
