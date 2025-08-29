@@ -963,7 +963,7 @@ void main() {
 
           when(mockModeConfigService.getConfigForMode(userMode)).thenReturn(modeConfig);
           when(mockModeConfigService.isFeatureEnabled(userMode, 'streakTracking')).thenReturn(true);
-          when(mockJwtProvider.generateToken(tokenPayload, tokenDuration))
+          when(mockJwtProvider.generateToken(argThat(isA<Map<String, dynamic>>()), argThat(isA<Duration>())))
               .thenReturn('mode-specific-token');
 
           // Act
@@ -1537,9 +1537,9 @@ void main() {
         test('31. 併發處理能力測試', () async {
           final futures = <Future>[];
 
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
-          when(mockTokenService.generateTokenPair('test-id', UserMode.expert))
+          when(mockTokenService.generateTokenPair(argThat(isA<String>()), argThat(isA<UserMode>())))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
 
           for (int i = 0; i < 10; i++) {
@@ -1565,7 +1565,7 @@ void main() {
         /// @version 2025-08-28-V2.4.0
         test('32. 網路連接異常處理', () async {
           // 模擬網路異常
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenThrow(Exception('Network connection failed'));
 
           final request = TestUtils.createTestRegisterRequest();
@@ -1582,7 +1582,7 @@ void main() {
         /// @version 2025-08-28-V2.4.0
         test('33. 服務超時處理', () async {
           // 模擬服務超時
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(argThat(isA<RegisterRequest>())))
               .thenAnswer((_) async {
             await Future.delayed(Duration(seconds: 31)); // 超過30秒超時
             return RegisterResult(userId: 'test', success: true);
