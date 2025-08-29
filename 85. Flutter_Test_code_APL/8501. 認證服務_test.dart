@@ -1032,8 +1032,8 @@ void main() {
                 expiresAt: DateTime.now().add(Duration(hours: 1)),
               );
           when(mockUserModeAdapter.adaptRegisterResponse(expectedRegisterResponse, request.userMode))
-              .thenReturn(expectedResponse);
-          when(mockResponseFilter.filterForExpert(<String, dynamic>{'expert': 'data'})).thenReturn({'expert': 'data'});
+              .thenReturn(expectedRegisterResponse); // Corrected to return expectedRegisterResponse
+          when(mockResponseFilter.filterForExpert(<String, dynamic>{'expert': 'data'})).thenReturn({'filtered': 'expert'});
 
           // Act
           final response = await authController.register(request);
@@ -1551,7 +1551,7 @@ void main() {
         test('31. 併發處理能力測試', () async {
           final futures = <Future>[];
 
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any as RegisterRequest)) // Changed from any to any as RegisterRequest
               .thenAnswer((_) async => RegisterResult(userId: 'test-id', success: true));
           when(mockTokenService.generateTokenPair('test-id', UserMode.expert))
               .thenAnswer((_) async => TestUtils.createTestTokenPair());
@@ -1579,7 +1579,7 @@ void main() {
         /// @version 2025-01-28-V2.6.0
         test('32. 網路連接異常處理', () async {
           // 模擬網路異常
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any as RegisterRequest)) // Changed from any to any as RegisterRequest
               .thenThrow(Exception('Network connection failed'));
 
           final request = TestUtils.createTestRegisterRequest();
@@ -1596,7 +1596,7 @@ void main() {
         /// @version 2025-01-28-V2.6.0
         test('33. 服務超時處理', () async {
           // 模擬服務超時
-          when(mockAuthService.processRegistration(any))
+          when(mockAuthService.processRegistration(any as RegisterRequest)) // Changed from any to any as RegisterRequest
               .thenAnswer((_) async {
             await Future.delayed(Duration(seconds: 31)); // 超過30秒超時
             return RegisterResult(userId: 'test', success: true);
