@@ -1,13 +1,21 @@
 cd ~/workspace
-回到根目錄
+=>回到根目錄
+
 cd "75. Flutter_Test_code_PL"
-進入到某個資料夾
+=>進入到75. Flutter_Test_code_PL
+
 node run_test.js
-執行某個檔案
+=>執行run_test.js
 
 cd "75. Flutter_Test_code_PL" && dart pub get
 進入某個資料夾&&然後執行某個命令
 
 cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+=>進入85. Flutter_Test_code_APL資料夾並執行dart test
 
-dart test "8501. 認證服務_test.dart" --verbose
+dart test "8501. 認證服務_test.dart" 
+=>執行8501. 認證服務_test.dart之dart test
+
+cd "85. Flutter_Test_code_APL"
+dart pub get
+=>安裝dart sdk套件
