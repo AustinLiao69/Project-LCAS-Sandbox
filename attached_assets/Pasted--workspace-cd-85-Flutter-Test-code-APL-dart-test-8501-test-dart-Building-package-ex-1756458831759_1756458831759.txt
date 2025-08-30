@@ -1,0 +1,26 @@
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
+Building package executable... 
+Built test:test.
+00:00 +0: ... 8501. 認證服務_test.dart     00:00 +0: ... - 手動Mock方案 (setUpAll)    00:00 +0: ... 04. 正常註冊流程 - Expert模式00:00 +1: ... 04. 正常註冊流程 - Expert模式00:00 +1: ... 05. 註冊驗證錯誤 - 無效Email00:00 +2: ... 05. 註冊驗證錯誤 - 無效Email00:00 +2: ... 06. 註冊失敗 - Email已存在   00:00 +3: ... 06. 註冊失敗 - Email已存在   00:00 +3: ... 07. 四模式註冊差異 - Guiding00:00 +4: ... 07. 四模式註冊差異 - Guiding00:00 +4: ... 08. 正常登入流程 - Expert模式00:00 +5: ... 08. 正常登入流程 - Expert模式00:00 +5: ... 使用者登入API測試 09. 登入失00:00 +6: ... 使用者登入API測試 09. 登入失00:00 +6: ... 10. 四模式登入差異 - Cultivat00:00 +7: ... 10. 四模式登入差異 - Cultivat00:00 +7: ... 11. Google登入成功           00:00 +8: ... 11. Google登入成功           00:00 +8: ... 12. Google登入失敗 - 無效Toke00:00 +9: ... 12. Google登入失敗 - 無效Toke00:00 +9: ... 功能測試 3.4 登出API測試 13. 00:00 +10: ... 3.4 登出API測試 13. 正常登出00:00 +10: ... Token刷新API測試 14. Token刷00:00 +11: ... Token刷新API測試 14. Token刷00:00 +11: ... 15. Token刷新失敗 - 無效Toke00:00 +12: ... 15. Token刷新失敗 - 無效Toke00:00 +12: ... 3.6 忘記密碼API測試 16. 忘記00:00 +13: ... 3.6 忘記密碼API測試 16. 忘記00:00 +13: ... API測試 17. 重設Token驗證成00:00 +14: ... API測試 17. 重設Token驗證成00:00 +14: ... 18. 重設Token驗證失敗 - 格式00:00 +15: ... 18. 重設Token驗證失敗 - 格式00:00 +15: ... 3.8 重設密碼API測試 19. 重設00:00 +16: ... 3.8 重設密碼API測試 19. 重設00:00 +16: ... 20. 重設密碼失敗 - 密碼太短 00:00 +17: ... 20. 重設密碼失敗 - 密碼太短 00:00 +17: ... Email驗證API測試 21. Email驗00:00 +18: ... Email驗證API測試 21. Email驗00:00 +18: ... LINE綁定API測試 22. LINE綁定00:00 +19: ... LINE綁定API測試 22. LINE綁定00:00 +19: ... 綁定狀態API測試 23. 綁定狀態00:01 +20: ... 綁定狀態API測試 23. 綁定狀態00:01 +20: ... 4.1 端到端流程測試 24. 完整00:01 +21: ... 4.1 端到端流程測試 24. 完整00:01 +21: ... 4.2 抽象類別協作測試 25. 抽00:01 +22: ... 4.2 抽象類別協作測試 25. 抽00:01 +22: ... + SecurityService協作測試   00:01 +23: ... + SecurityService協作測試   00:01 +23: ... + ErrorHandler整合測試      00:01 +24: ... + ErrorHandler整合測試      00:01 +24: ... + ResponseFilter協作測試    00:01 +25: ... + ResponseFilter協作測試    00:01 +25: ... + JwtProvider協作測試       00:01 +26: ... + JwtProvider協作測試       00:01 +26: ... 38. 13個抽象類別完整協作流程00:01 +27: ... 38. 13個抽象類別完整協作流程00:01 +27: ... 四模式錯誤訊息差異化 26. 四00:01 +28: ... 四模式錯誤訊息差異化 26. 四00:01 +28: ... 四模式回應內容差異化 27. 四00:01 +29: ... 四模式回應內容差異化 27. 四00:01 +29: ... 6.1 密碼安全性驗證 28. 密碼00:01 +29 -1: 認證服務測試套件 v3.0.0 - 手動Mock方案 6. 安全性測試 6.1 密碼安全性驗證 28. 密碼安全性驗證 [E]
+  Expected: false
+    Actual: <true>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 1465:13  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v3.0.0 - 手動Mock方案 6. 安全性測試 6.1 密碼安全性驗證 28. 密碼安全性驗證'
+00:01 +29 -1: ... 29. Token安全性驗證      00:01 +29 -2: 認證服務測試套件 v3.0.0 - 手動Mock方案 6. 安全性測試 6.2 Token安全性驗證 29. Token安全性驗證 [E]
+  Expected: false
+    Actual: <true>
+  
+  package:matcher  expect
+  8501.            認證服務_test.dart 1494:13  main.<fn>.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8501. 認證服務_test.dart -p vm --plain-name '認證服務測試套件 v3.0.0 - 手動Mock方案 6. 安全性測試 6.2 Token安全性驗證 29. Token安全性驗證'
+00:01 +29 -2: ... API回應時間測試 30. API回00:01 +30 -2: ... API回應時間測試 30. API回00:01 +30 -2: ... 併發處理能力測試 31. 併發00:01 +31 -2: ... 併發處理能力測試 31. 併發00:01 +31 -2: ... 網路連接異常處理 32. 網路00:01 +32 -2: ... 網路連接異常處理 32. 網路00:01 +32 -2: ... 8.2 服務超時處理 33. 服務00:01 +33 -2: ... 8.2 服務超時處理 33. 服務00:01 +33 -2: ... 手動Mock方案 (tearDownAll00:01 +33 -2: Some tests failed.          
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
+~/workspace/85. Flutter_Test_code_APL$ 
