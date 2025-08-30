@@ -1,9 +1,10 @@
 /**
- * 8501. 認證服務_測試程式碼_v3.1.0
- * @testFile 認證服務測試程式碼
- * @description LCAS 2.0 認證服務 API 模組完整測試實作 - 手動Mock方案
- * @version 2025-01-28-V3.1.0
- * @update 2025-01-28: 修正安全性測試邏輯錯誤，補齊14個缺失測試案例(TC-30至TC-43)，升級至V3.1.0
+ * 8501. 認證服務_test.dart
+ * @testFile 認證服務測試代碼
+ * @version 2.5.0
+ * @description LCAS 2.0 認證服務 API 測試代碼 - 完整覆蓋11個API端點，支援四模式差異化測試
+ * @date 2025-08-28
+ * @update 2025-01-29: 升級至v2.5.0，配合測試計劃重構，強化測試案例編號對應
  */
 
 import 'package:test/test.dart';
@@ -94,7 +95,7 @@ class FakeAuthService implements AuthService {
     if (refreshToken == 'invalid-refresh-token') {
       throw Exception('Invalid refresh token');
     }
-    
+
     return TokenPair(
       accessToken: 'refreshed-access-token-${DateTime.now().millisecondsSinceEpoch}',
       refreshToken: 'refreshed-refresh-token-${DateTime.now().millisecondsSinceEpoch}',
@@ -277,7 +278,7 @@ class FakeUserModeAdapter implements UserModeAdapter {
   @override
   Map<String, dynamic> filterResponseData(Map<String, dynamic> data, UserMode userMode) {
     final filteredData = Map<String, dynamic>.from(data);
-    
+
     switch (userMode) {
       case UserMode.guiding:
         // 簡化回應，移除複雜選項
@@ -294,7 +295,7 @@ class FakeUserModeAdapter implements UserModeAdapter {
         // 保持固定格式
         break;
     }
-    
+
     return filteredData;
   }
 
@@ -427,7 +428,7 @@ class FakeValidationService implements ValidationService {
   @override
   List<ValidationError> validateEmail(String email) {
     final errors = <ValidationError>[];
-    
+
     if (email.isEmpty) {
       errors.add(ValidationError(
         field: 'email',
@@ -441,14 +442,14 @@ class FakeValidationService implements ValidationService {
         value: email,
       ));
     }
-    
+
     return errors;
   }
 
   @override
   List<ValidationError> validatePassword(String password) {
     final errors = <ValidationError>[];
-    
+
     if (password.isEmpty) {
       errors.add(ValidationError(
         field: 'password',
@@ -462,7 +463,7 @@ class FakeValidationService implements ValidationService {
         value: password,
       ));
     }
-    
+
     return errors;
   }
 
@@ -475,10 +476,10 @@ class FakeValidationService implements ValidationService {
   @override
   List<ValidationError> validateLoginRequest(LoginRequest request) {
     final errors = <ValidationError>[];
-    
+
     errors.addAll(validateEmail(request.email));
     errors.addAll(validatePassword(request.password));
-    
+
     return errors;
   }
 }
@@ -500,7 +501,7 @@ class FakeErrorHandler implements ErrorHandler {
       AuthErrorCode.internalServerError,
       userMode,
     );
-    
+
     return ApiResponse.error(
       error: error,
       metadata: ApiMetadata.create(userMode),
@@ -833,7 +834,7 @@ class TestEnvironmentConfig {
 // ================================
 
 void main() {
-  group('認證服務測試套件 v3.1.0 - 手動Mock方案', () {
+  group('認證服務測試套件 v2.5.0 - 手動Mock方案', () {
     late AuthController authController;
     late FakeAuthService fakeAuthService;
     late FakeTokenService fakeTokenService;
@@ -1455,10 +1456,10 @@ void main() {
 
           for (final weakPassword in weakPasswords) {
             final isSecure = fakeSecurityService.isPasswordSecure(weakPassword);
-            
+
             // 修正：期望弱密碼回傳false（不安全）
             expect(isSecure, isFalse);
-            
+
             final request = TestUtils.createTestRegisterRequest(password: weakPassword);
             final response = await authController.register(request);
 
@@ -1485,10 +1486,10 @@ void main() {
 
           for (final invalidToken in invalidTokens) {
             final isValidFormat = fakeSecurityService.validateTokenFormat(invalidToken);
-            
+
             // 修正：期望無效Token回傳false（驗證失敗）
             expect(isValidFormat, isFalse);
-            
+
             final response = await authController.refreshToken(invalidToken);
 
             expect(response.success, isFalse);
