@@ -230,12 +230,6 @@
       "languageVersion": "3.2"
     },
     {
-      "name": "mockito",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/mockito-5.4.4",
-      "packageUri": "lib/",
-      "languageVersion": "3.1"
-    },
-    {
       "name": "node_preamble",
       "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/node_preamble-2.0.2",
       "packageUri": "lib/",
@@ -294,12 +288,6 @@
       "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/shelf_web_socket-2.0.1",
       "packageUri": "lib/",
       "languageVersion": "3.3"
-    },
-    {
-      "name": "source_gen",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/source_gen-1.5.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
     },
     {
       "name": "source_map_stack_trace",
@@ -428,7 +416,7 @@
       "languageVersion": "3.5"
     }
   ],
-  "generated": "2025-08-29T01:46:46.510277Z",
+  "generated": "2025-08-30T02:23:29.432396Z",
   "generator": "pub",
   "generatorVersion": "3.5.4",
   "pubCache": "file:///home/runner/.pub-cache"
