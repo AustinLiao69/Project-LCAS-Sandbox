@@ -890,9 +890,13 @@ void main() {
 
     group('3. 功能測試', () {
       group('3.0 基礎認證流程測試', () {
-        /// TC-001: 基礎註冊API端點驗證
-        /// @version 2025-01-30-V2.7.0
-        test('001. 基礎註冊API端點驗證', () async {
+        /**
+         * TC-001. 基礎註冊API端點驗證
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證基礎註冊API端點功能，確保符合8101規格要求
+         */
+        test('TC-001. 基礎註冊API端點驗證', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest();
 
@@ -906,9 +910,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(200));
         });
 
-        /// TC-002: 基礎登入API端點驗證
-        /// @version 2025-01-30-V2.7.0
-        test('002. 基礎登入API端點驗證', () async {
+        /**
+         * TC-002. 基礎登入API端點驗證
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證基礎登入API端點功能，確保符合8101規格要求
+         */
+        test('TC-002. 基礎登入API端點驗證', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
 
@@ -922,9 +930,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(200));
         });
 
-        /// TC-003: 基礎Token刷新API端點驗證
-        /// @version 2025-01-30-V2.7.0
-        test('003. 基礎Token刷新API端點驗證', () async {
+        /**
+         * TC-003. 基礎Token刷新API端點驗證
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證基礎Token刷新API端點功能，確保符合8101規格要求
+         */
+        test('TC-003. 基礎Token刷新API端點驗證', () async {
           // Arrange
           final refreshToken = 'valid-refresh-token';
 
@@ -938,9 +950,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(200));
         });
 
-        /// TC-004: 基礎登出API端點驗證
-        /// @version 2025-01-30-V2.7.0
-        test('004. 基礎登出API端點驗證', () async {
+        /**
+         * TC-004. 基礎登出API端點驗證
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證基礎登出API端點功能，確保符合8101規格要求
+         */
+        test('TC-004. 基礎登出API端點驗證', () async {
           // Arrange
           final request = LogoutRequest(logoutAllDevices: false);
 
@@ -954,9 +970,13 @@ void main() {
         });
       });
       group('3.1 使用者註冊API測試', () {
-        /// TC-004: 正常註冊流程 - Expert模式
-        /// @version 2025-01-28-V3.0.0
-        test('004. 正常註冊流程 - Expert模式', () async {
+        /**
+         * TC-005. 正常註冊流程 - Expert模式
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證Expert模式下註冊API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-005. 正常註冊流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.expert);
 
@@ -1072,9 +1092,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(401));
         });
 
-        /// TC-10: 四模式登入差異 - Cultivation模式
-        /// @version 2025-01-28-V2.6.0
-        test('10. 四模式登入差異 - Cultivation模式', () async {
+        /**
+         * TC-011. 四模式登入差異 - Cultivation模式
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證Cultivation模式下登入API的差異化行為，確保符合8101規格要求
+         */
+        test('TC-011. 四模式登入差異 - Cultivation模式', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
 
@@ -1097,9 +1121,13 @@ void main() {
       });
 
       group('3.3 Google登入API測試', () {
-        /// TC-11: Google登入成功
-        /// @version 2025-01-28-V2.6.0
-        test('11. Google登入成功', () async {
+        /**
+         * TC-012. Google登入成功
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證Google OAuth登入整合功能，確保符合8101規格要求
+         */
+        test('TC-012. Google登入成功', () async {
           // Arrange
           final request = GoogleLoginRequest(
             googleToken: 'valid-google-token',
@@ -1116,9 +1144,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(200));
         });
 
-        /// TC-12: Google登入失敗 - 無效Token
-        /// @version 2025-01-28-V2.6.0
-        test('12. Google登入失敗 - 無效Token', () async {
+        /**
+         * TC-013. Google登入失敗 - 無效Token
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證Google登入API對無效Token的處理機制，確保符合8101規格要求
+         */
+        test('TC-013. Google登入失敗 - 無效Token', () async {
           // Arrange
           final request = GoogleLoginRequest(
             googleToken: '',
@@ -1136,9 +1168,13 @@ void main() {
       });
 
       group('3.4 登出API測試', () {
-        /// TC-13: 正常登出流程
-        /// @version 2025-01-28-V2.6.0
-        test('13. 正常登出流程', () async {
+        /**
+         * TC-014. 正常登出流程
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證登出API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-014. 正常登出流程', () async {
           // Arrange
           final request = LogoutRequest(logoutAllDevices: false);
 
@@ -1152,9 +1188,13 @@ void main() {
       });
 
       group('3.5 Token刷新API測試', () {
-        /// TC-14: Token刷新成功
-        /// @version 2025-01-28-V2.6.0
-        test('14. Token刷新成功', () async {
+        /**
+         * TC-015. Token刷新成功
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證Token刷新API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-015. Token刷新成功', () async {
           // Arrange
           final refreshToken = 'valid-refresh-token';
 
@@ -1168,9 +1208,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(200));
         });
 
-        /// TC-15: Token刷新失敗 - 無效Token
-        /// @version 2025-01-28-V2.6.0
-        test('15. Token刷新失敗 - 無效Token', () async {
+        /**
+         * TC-016. Token刷新失敗 - 無效Token
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證Token刷新API對無效Token的處理機制，確保符合8101規格要求
+         */
+        test('TC-016. Token刷新失敗 - 無效Token', () async {
           // Arrange
           final refreshToken = 'invalid-refresh-token';
 
@@ -1185,9 +1229,13 @@ void main() {
       });
 
       group('3.6 忘記密碼API測試', () {
-        /// TC-16: 忘記密碼成功
-        /// @version 2025-01-28-V2.6.0
-        test('16. 忘記密碼成功', () async {
+        /**
+         * TC-017. 忘記密碼成功
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證忘記密碼API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-017. 忘記密碼成功', () async {
           // Arrange
           final request = ForgotPasswordRequest(email: 'test@lcas.com');
 
@@ -1201,9 +1249,13 @@ void main() {
       });
 
       group('3.7 驗證重設Token API測試', () {
-        /// TC-17: 重設Token驗證成功
-        /// @version 2025-01-28-V2.6.0
-        test('17. 重設Token驗證成功', () async {
+        /**
+         * TC-018. 重設Token驗證成功
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證重設Token驗證API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-018. 重設Token驗證成功', () async {
           // Arrange
           final token = 'valid-reset-token-12345678901234567890';
 
@@ -1217,9 +1269,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(200));
         });
 
-        /// TC-18: 重設Token驗證失敗 - 格式錯誤
-        /// @version 2025-01-28-V2.6.0
-        test('18. 重設Token驗證失敗 - 格式錯誤', () async {
+        /**
+         * TC-019. 重設Token驗證失敗 - 格式錯誤
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證重設Token驗證API對格式錯誤Token的處理機制，確保符合8101規格要求
+         */
+        test('TC-019. 重設Token驗證失敗 - 格式錯誤', () async {
           // Arrange
           final token = 'short-token';
 
@@ -1234,9 +1290,13 @@ void main() {
       });
 
       group('3.8 重設密碼API測試', () {
-        /// TC-19: 重設密碼成功
-        /// @version 2025-01-28-V2.6.0
-        test('19. 重設密碼成功', () async {
+        /**
+         * TC-020. 重設密碼成功
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證重設密碼API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-020. 重設密碼成功', () async {
           // Arrange
           final request = ResetPasswordRequest(
             token: 'valid-reset-token-12345678901234567890',
@@ -1252,9 +1312,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(200));
         });
 
-        /// TC-20: 重設密碼失敗 - 密碼太短
-        /// @version 2025-01-28-V2.6.0
-        test('20. 重設密碼失敗 - 密碼太短', () async {
+        /**
+         * TC-021. 重設密碼失敗 - 密碼太短
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證重設密碼API對無效密碼的處理機制，確保符合8101規格要求
+         */
+        test('TC-021. 重設密碼失敗 - 密碼太短', () async {
           // Arrange
           final request = ResetPasswordRequest(
             token: 'valid-reset-token-12345678901234567890',
@@ -1273,9 +1337,13 @@ void main() {
       });
 
       group('3.9 Email驗證API測試', () {
-        /// TC-21: Email驗證成功
-        /// @version 2025-01-28-V2.6.0
-        test('21. Email驗證成功', () async {
+        /**
+         * TC-022. Email驗證成功
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證Email驗證API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-022. Email驗證成功', () async {
           // Arrange
           final request = VerifyEmailRequest(
             email: 'test@lcas.com',
@@ -1292,9 +1360,13 @@ void main() {
       });
 
       group('3.10 LINE綁定API測試', () {
-        /// TC-22: LINE綁定成功
-        /// @version 2025-01-28-V2.6.0
-        test('22. LINE綁定成功', () async {
+        /**
+         * TC-023. LINE綁定成功
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證LINE綁定API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-023. LINE綁定成功', () async {
           // Arrange
           final request = BindLineRequest(
             lineUserId: 'U1234567890abcdef',
@@ -1317,9 +1389,13 @@ void main() {
       });
 
       group('3.11 綁定狀態API測試', () {
-        /// TC-23: 綁定狀態查詢成功
-        /// @version 2025-01-28-V2.6.0
-        test('23. 綁定狀態查詢成功', () async {
+        /**
+         * TC-024. 綁定狀態查詢成功
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證綁定狀態查詢API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-024. 綁定狀態查詢成功', () async {
           // Act
           final response = await authController.getBindStatus();
 
@@ -1339,9 +1415,13 @@ void main() {
 
     group('4. 整合測試', () {
       group('4.1 端到端流程測試', () {
-        /// TC-24: 完整註冊登入流程整合
-        /// @version 2025-01-28-V2.6.0
-        test('24. 完整註冊登入流程整合', () async {
+        /**
+         * TC-025. 完整註冊登入流程整合
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證端到端註冊登入完整流程，確保符合8101規格要求
+         */
+        test('TC-025. 完整註冊登入流程整合', () async {
           // 步驟1: 註冊用戶
           final registerRequest = TestUtils.createTestRegisterRequest();
           final registerResponse = await authController.register(registerRequest);
@@ -1377,9 +1457,13 @@ void main() {
       });
 
       group('4.2 抽象類別協作測試', () {
-        /// TC-25: 抽象類別協作整合
-        /// @version 2025-01-28-V2.6.0
-        test('25. 抽象類別協作整合', () async {
+        /**
+         * TC-026. 抽象類別協作整合
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證13個抽象類別間的協作機制，確保符合8101規格要求
+         */
+        test('TC-026. 抽象類別協作整合', () async {
           // 驗證AuthService與TokenService協作
           final registerRequest = TestUtils.createTestRegisterRequest();
           final response = await authController.register(registerRequest);
@@ -1390,9 +1474,13 @@ void main() {
           expect(response.data?.refreshToken, isNotNull);
         });
 
-        /// TC-34: AuthService + TokenService + SecurityService 協作測試
-        /// @version 2025-01-28-V2.6.0
-        test('34. AuthService + TokenService + SecurityService協作測試', () async {
+        /**
+         * TC-027. AuthService + TokenService + SecurityService 協作測試
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證核心認證服務間的協作機制，確保符合8101規格要求
+         */
+        test('TC-027. AuthService + TokenService + SecurityService協作測試', () async {
           // Arrange
           final loginRequest = TestUtils.createTestLoginRequest();
 
@@ -1405,9 +1493,13 @@ void main() {
           expect(response.data?.refreshToken, isNotNull);
         });
 
-        /// TC-35: ValidationService + ErrorHandler 整合測試
-        /// @version 2025-01-28-V2.6.0
-        test('35. ValidationService + ErrorHandler整合測試', () async {
+        /**
+         * TC-028. ValidationService + ErrorHandler 整合測試
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證驗證服務與錯誤處理器的整合功能，確保符合8101規格要求
+         */
+        test('TC-028. ValidationService + ErrorHandler整合測試', () async {
           // Arrange
           final invalidRequest = TestUtils.createTestRegisterRequest(
             email: 'invalid-email',
@@ -1422,9 +1514,13 @@ void main() {
           expect(response.error?.code, equals(AuthErrorCode.validationError));
         });
 
-        /// TC-36: UserModeAdapter + ResponseFilter 協作測試
-        /// @version 2025-01-28-V3.0.0
-        test('36. UserModeAdapter + ResponseFilter協作測試', () async {
+        /**
+         * TC-029. UserModeAdapter + ResponseFilter 協作測試
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證用戶模式適配器與回應過濾器的協作機制，確保符合8101規格要求
+         */
+        test('TC-029. UserModeAdapter + ResponseFilter協作測試', () async {
           // Arrange
           final modes = [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding];
 
@@ -1438,9 +1534,13 @@ void main() {
           }
         });
 
-        /// TC-37: ModeConfigService + JwtProvider 協作測試
-        /// @version 2025-01-28-V2.6.0
-        test('37. ModeConfigService + JwtProvider協作測試', () async {
+        /**
+         * TC-030. ModeConfigService + JwtProvider 協作測試
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證模式配置服務與JWT提供者的協作機制，確保符合8101規格要求
+         */
+        test('TC-030. ModeConfigService + JwtProvider協作測試', () async {
           // Arrange
           final userMode = UserMode.cultivation;
           final tokenPayload = {
