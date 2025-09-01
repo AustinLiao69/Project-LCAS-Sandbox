@@ -1,10 +1,11 @@
 /**
  * 8501. 認證服務_test.dart
- * @testFile 認證服務測試代碼
- * @version 2.6.0
+ * @testFile 認證服務測試代碼  
+ * @version 2.7.0
  * @description LCAS 2.0 認證服務 API 測試代碼 - 完整覆蓋11個API端點，支援四模式差異化測試
  * @date 2025-08-28
- * @update 2025-01-29: 升級至v2.6.0，修復手動Mock服務邏輯錯誤，TC-28/TC-29測試案例修復完成
+ * @update 2025-01-30: 升級至v2.7.0，實施分階段改進計劃第一階段：基礎結構修正
+ * @previous 2025-01-29: 升級至v2.6.0，修復手動Mock服務邏輯錯誤，TC-28/TC-29測試案例修復完成
  */
 
 import 'package:test/test.dart';
@@ -884,14 +885,78 @@ void main() {
     });
 
     // ================================
-    // 3. 功能測試 (測試案例 04-23)
+    // 3. 功能測試 (測試案例 001-023)  
     // ================================
 
     group('3. 功能測試', () {
+      group('3.0 基礎認證流程測試', () {
+        /// TC-001: 基礎註冊API端點驗證
+        /// @version 2025-01-30-V2.7.0
+        test('001. 基礎註冊API端點驗證', () async {
+          // Arrange
+          final request = TestUtils.createTestRegisterRequest();
+
+          // Act
+          final response = await authController.register(request);
+
+          // Assert
+          expect(response, isNotNull);
+          expect(response.success, isTrue);
+          expect(response.data?.userId, isNotEmpty);
+          expect(response.metadata.httpStatusCode, equals(200));
+        });
+
+        /// TC-002: 基礎登入API端點驗證
+        /// @version 2025-01-30-V2.7.0
+        test('002. 基礎登入API端點驗證', () async {
+          // Arrange
+          final request = TestUtils.createTestLoginRequest();
+
+          // Act
+          final response = await authController.login(request);
+
+          // Assert
+          expect(response, isNotNull);
+          expect(response.success, isTrue);
+          expect(response.data?.token, isNotEmpty);
+          expect(response.metadata.httpStatusCode, equals(200));
+        });
+
+        /// TC-003: 基礎Token刷新API端點驗證
+        /// @version 2025-01-30-V2.7.0
+        test('003. 基礎Token刷新API端點驗證', () async {
+          // Arrange
+          final refreshToken = 'valid-refresh-token';
+
+          // Act
+          final response = await authController.refreshToken(refreshToken);
+
+          // Assert
+          expect(response, isNotNull);
+          expect(response.success, isTrue);
+          expect(response.data?.token, isNotEmpty);
+          expect(response.metadata.httpStatusCode, equals(200));
+        });
+
+        /// TC-004: 基礎登出API端點驗證
+        /// @version 2025-01-30-V2.7.0
+        test('004. 基礎登出API端點驗證', () async {
+          // Arrange
+          final request = LogoutRequest(logoutAllDevices: false);
+
+          // Act
+          final response = await authController.logout(request);
+
+          // Assert
+          expect(response, isNotNull);
+          expect(response.success, isTrue);
+          expect(response.metadata.httpStatusCode, equals(200));
+        });
+      });
       group('3.1 使用者註冊API測試', () {
-        /// TC-04: 正常註冊流程 - Expert模式
+        /// TC-004: 正常註冊流程 - Expert模式
         /// @version 2025-01-28-V3.0.0
-        test('04. 正常註冊流程 - Expert模式', () async {
+        test('004. 正常註冊流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.expert);
 
@@ -906,9 +971,9 @@ void main() {
           expect(response.metadata.userMode, equals(UserMode.expert));
         });
 
-        /// TC-05: 註冊驗證錯誤 - 無效Email
+        /// TC-005: 註冊驗證錯誤 - 無效Email
         /// @version 2025-01-28-V2.6.0
-        test('05. 註冊驗證錯誤 - 無效Email格式', () async {
+        test('005. 註冊驗證錯誤 - 無效Email格式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(email: 'invalid-email');
 
@@ -922,9 +987,9 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(400));
         });
 
-        /// TC-06: 註冊失敗 - Email已存在
+        /// TC-006: 註冊失敗 - Email已存在
         /// @version 2025-01-28-V2.6.0
-        test('06. 註冊失敗 - Email已存在', () async {
+        test('006. 註冊失敗 - Email已存在', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(email: 'existing@lcas.com');
 
@@ -937,9 +1002,9 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(409));
         });
 
-        /// TC-07: 四模式註冊差異 - Guiding模式
+        /// TC-007: 四模式註冊差異 - Guiding模式
         /// @version 2025-01-28-V3.0.0
-        test('07. 四模式註冊差異 - Guiding模式', () async {
+        test('007. 四模式註冊差異 - Guiding模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.guiding);
 
