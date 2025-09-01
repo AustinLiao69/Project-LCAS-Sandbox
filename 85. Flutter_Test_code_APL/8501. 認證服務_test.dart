@@ -971,9 +971,13 @@ void main() {
           expect(response.metadata.userMode, equals(UserMode.expert));
         });
 
-        /// TC-005: 註冊驗證錯誤 - 無效Email
-        /// @version 2025-01-28-V2.6.0
-        test('005. 註冊驗證錯誤 - 無效Email格式', () async {
+        /**
+         * TC-006. 註冊驗證錯誤 - 無效Email格式
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證註冊API對無效Email格式的驗證處理，確保符合8101規格要求
+         */
+        test('TC-006. 註冊驗證錯誤 - 無效Email格式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(email: 'invalid-email');
 
@@ -987,9 +991,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(400));
         });
 
-        /// TC-006: 註冊失敗 - Email已存在
-        /// @version 2025-01-28-V2.6.0
-        test('006. 註冊失敗 - Email已存在', () async {
+        /**
+         * TC-007. 註冊失敗 - Email已存在
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證註冊API對重複Email的處理機制，確保符合8101規格要求
+         */
+        test('TC-007. 註冊失敗 - Email已存在', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(email: 'existing@lcas.com');
 
@@ -1002,9 +1010,13 @@ void main() {
           expect(response.metadata.httpStatusCode, equals(409));
         });
 
-        /// TC-007: 四模式註冊差異 - Guiding模式
-        /// @version 2025-01-28-V3.0.0
-        test('007. 四模式註冊差異 - Guiding模式', () async {
+        /**
+         * TC-008. 四模式註冊差異 - Guiding模式
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證Guiding模式下註冊API的差異化行為，確保符合8101規格要求
+         */
+        test('TC-008. 四模式註冊差異 - Guiding模式', () async {
           // Arrange
           final request = TestUtils.createTestRegisterRequest(userMode: UserMode.guiding);
 
@@ -1020,9 +1032,13 @@ void main() {
       });
 
       group('3.2 使用者登入API測試', () {
-        /// TC-08: 正常登入流程 - Expert模式
-        /// @version 2025-01-28-V3.0.0
-        test('08. 正常登入流程 - Expert模式', () async {
+        /**
+         * TC-009. 正常登入流程 - Expert模式
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證Expert模式下登入API的正常功能流程，確保符合8101規格要求
+         */
+        test('TC-009. 正常登入流程 - Expert模式', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest();
 
@@ -1037,9 +1053,13 @@ void main() {
           expect(response.metadata.userMode, equals(UserMode.expert));
         });
 
-        /// TC-09: 登入失敗 - 無效憑證
-        /// @version 2025-01-28-V2.6.0
-        test('09. 登入失敗 - 無效憑證', () async {
+        /**
+         * TC-010. 登入失敗 - 無效憑證
+         * @version v2.7.0
+         * @date 2025-01-30
+         * @description 驗證登入API對無效憑證的處理機制，確保符合8101規格要求
+         */
+        test('TC-010. 登入失敗 - 無效憑證', () async {
           // Arrange
           final request = TestUtils.createTestLoginRequest(password: 'wrong-password');
 
