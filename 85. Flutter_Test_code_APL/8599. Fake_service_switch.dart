@@ -32,5 +32,5 @@ class FakeServiceSwitch {
    * true: 使用 Fake Service
    * false: 使用 Real Service
    */
-  static bool enable8502FakeService = true;
+  static bool enable8502FakeService = false;
 }
