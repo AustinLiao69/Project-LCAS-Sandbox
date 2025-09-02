@@ -2,10 +2,10 @@
 /**
  * 8501. 認證服務_test.dart
  * @testFile 認證服務測試代碼
- * @version 2.8.0
+ * @version 2.9.0
  * @description LCAS 2.0 認證服務 API 測試代碼 - 完整覆蓋11個API端點，支援四模式差異化測試
  * @date 2025-08-28
- * @update 2025-01-29: 升級至v2.8.0，修復TC-021密碼安全性驗證邏輯，統一密碼複雜度檢查規則
+ * @update 2025-01-29: 升級至v2.9.0，修復TC-021密碼安全性驗證邏輯，統一密碼複雜度檢查規則，強化SecurityService v1.2.0
  */
 
 import 'package:test/test.dart';
@@ -348,12 +348,16 @@ class FakeUserModeAdapter implements UserModeAdapter {
 class FakeSecurityService implements SecurityService {
   @override
   bool isPasswordSecure(String password) {
-    // v1.1.0: 移除硬編碼弱密碼列表，改用規則基礎驗證
-    // 基本長度檢查
+    // v1.2.0: 統一密碼安全性驗證規則，修正邏輯一致性
+    
+    // 基本長度檢查 - 至少8個字元
     if (password.length < 8) return false;
     
     // 必須包含大寫字母
     if (!password.contains(RegExp(r'[A-Z]'))) return false;
+    
+    // 必須包含小寫字母
+    if (!password.contains(RegExp(r'[a-z]'))) return false;
     
     // 必須包含數字
     if (!password.contains(RegExp(r'[0-9]'))) return false;
@@ -361,11 +365,22 @@ class FakeSecurityService implements SecurityService {
     // 特別檢查：純數字密碼視為不安全
     if (RegExp(r'^[0-9]+$').hasMatch(password)) return false;
     
-    // 常見弱密碼模式檢查
-    final commonWeakPatterns = ['123', 'password', 'abc123'];
-    for (final pattern in commonWeakPatterns) {
-      if (password.toLowerCase().contains(pattern)) return false;
+    // 特別檢查：純字母密碼視為不安全
+    if (RegExp(r'^[a-zA-Z]+$').hasMatch(password)) return false;
+    
+    // 常見弱密碼模式檢查（不區分大小寫）
+    final weakPatterns = [
+      '123', 'password', 'abc123', 'qwerty', 
+      '111111', '000000', 'admin', 'guest'
+    ];
+    
+    final lowerPassword = password.toLowerCase();
+    for (final pattern in weakPatterns) {
+      if (lowerPassword.contains(pattern)) return false;
     }
+    
+    // 檢查連續重複字符（例如：aaa, 111）
+    if (RegExp(r'(.)\1{2,}').hasMatch(password)) return false;
     
     return true;
   }
@@ -397,10 +412,12 @@ class FakeSecurityService implements SecurityService {
 
   @override
   PasswordStrength assessPasswordStrength(String password) {
-    if (password.length < 8) {
+    // v1.1.0: 與isPasswordSecure保持一致的評估標準
+    if (!isPasswordSecure(password)) {
       return PasswordStrength.weak;
     } else if (password.length >= 12 && 
                password.contains(RegExp(r'[A-Z]')) && 
+               password.contains(RegExp(r'[a-z]')) && 
                password.contains(RegExp(r'[0-9]')) &&
                password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
       return PasswordStrength.strong;
@@ -1586,38 +1603,70 @@ void main() {
     group('安全性測試案例', () {
       /**
        * TC-021. 密碼安全性驗證測試
-       * @version v1.1.0
+       * @version v1.2.0
        * @date 2025-09-01
-       * @description 全面驗證密碼安全性機制，基於規則驗證而非硬編碼列表
-       * @update 2025-01-29: 修正邏輯一致性，統一密碼複雜度檢查規則
+       * @description 全面驗證密碼安全性機制，基於統一規則驗證標準
+       * @update 2025-01-29: v1.2.0修正邏輯一致性，強化密碼複雜度檢查規則
        */
       test('tc-021. 密碼安全性驗證測試', () async {
-        // 測試常見弱密碼
-        final weakPasswords = ['123', 'password', 'abc123'];
+        // 測試各種不安全密碼類型
+        final weakPasswordTests = [
+          // 長度不足
+          {'password': '1234567', 'reason': '長度不足8字元'},
+          {'password': 'Abc12', 'reason': '長度不足8字元'},
+          
+          // 缺乏必要字符類型
+          {'password': '12345678', 'reason': '純數字密碼'},
+          {'password': 'abcdefgh', 'reason': '純小寫字母密碼'},
+          {'password': 'ABCDEFGH', 'reason': '純大寫字母密碼'},
+          {'password': 'ABCDefgh', 'reason': '缺乏數字'},
+          {'password': 'ABCD1234', 'reason': '缺乏小寫字母'},
+          {'password': 'abcd1234', 'reason': '缺乏大寫字母'},
+          
+          // 常見弱密碼模式
+          {'password': 'Password123', 'reason': '包含常見弱密碼模式'},
+          {'password': 'Abc12345', 'reason': '包含常見弱密碼模式'},
+          {'password': 'Qwerty123', 'reason': '包含常見弱密碼模式'},
+          
+          // 重複字符
+          {'password': 'Paaa1234', 'reason': '包含連續重複字符'},
+          {'password': 'Pass1111', 'reason': '包含連續重複字符'},
+        ];
 
-        for (final weakPassword in weakPasswords) {
-          final isSecure = fakeSecurityService.isPasswordSecure(weakPassword);
-          expect(isSecure, isFalse);
+        for (final test in weakPasswordTests) {
+          final password = test['password']!;
+          final reason = test['reason']!;
+          
+          final isSecure = fakeSecurityService.isPasswordSecure(password);
+          expect(isSecure, isFalse, reason: '密碼「$password」應判定為不安全：$reason');
 
-          final request = TestUtils.createTestRegisterRequest(password: weakPassword);
+          final request = TestUtils.createTestRegisterRequest(password: password);
           final response = await authController.register(request);
 
-          expect(response.success, isFalse);
+          expect(response.success, isFalse, reason: '密碼「$password」註冊應失敗：$reason');
           expect([
             AuthErrorCode.validationError,
             AuthErrorCode.weakPassword,
           ].contains(response.error?.code), isTrue);
         }
         
-        // 邊界測試：8字元純數字密碼（缺乏大寫字母和字母組合）
-        final borderlinePassword = '12345678';
-        final isSecure = fakeSecurityService.isPasswordSecure(borderlinePassword);
-        expect(isSecure, isFalse, reason: '純數字密碼缺乏大寫字母，應判定為不安全');
-        
         // 正面測試：符合安全要求的密碼
-        final securePassword = 'SecurePass123';
-        final isSecureStrong = fakeSecurityService.isPasswordSecure(securePassword);
-        expect(isSecureStrong, isTrue, reason: '包含大寫字母、數字的8+字元密碼應為安全');
+        final securePasswords = [
+          'SecurePass123',
+          'MyStr0ngP@ss',
+          'Complex9Pass',
+          'SafeCode2025',
+          'Br@ndNew456',
+        ];
+
+        for (final securePassword in securePasswords) {
+          final isSecure = fakeSecurityService.isPasswordSecure(securePassword);
+          expect(isSecure, isTrue, reason: '密碼「$securePassword」應判定為安全');
+
+          final request = TestUtils.createTestRegisterRequest(password: securePassword);
+          final response = await authController.register(request);
+          expect(response.success, isTrue, reason: '安全密碼「$securePassword」註冊應成功');
+        }
       });
 
       /**
