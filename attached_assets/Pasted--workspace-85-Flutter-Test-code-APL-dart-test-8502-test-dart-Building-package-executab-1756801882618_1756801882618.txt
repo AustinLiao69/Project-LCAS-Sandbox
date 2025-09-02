@@ -1,0 +1,149 @@
+~/workspace/85. Flutter_Test_code_APL$ dart test "8502. 用戶管理服務_test.dart"
+Building package executable... 
+Built test:test.
+00:00 +0: ... 8502. 用戶管理服務_test.dart    00:00 +0 -1: loading 8502. 用戶管理服務_test.dart [E]
+  Failed to load "8502. 用戶管理服務_test.dart":
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1557:25: Error: Method not found: '_performStressOperation'.
+              futures.add(_performStressOperation(userId, operationCount++));
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1760:25: Error: Method not found: '_getTimezoneForLanguage'.
+              'timezone': _getTimezoneForLanguage(language),
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1761:27: Error: Method not found: '_getDateFormatForLanguage'.
+              'dateFormat': _getDateFormatForLanguage(language),
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1557:25: Error: Local variable '_performStressOperation' can't be referenced before it is declared.
+              futures.add(_performStressOperation(userId, operationCount++));
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1859:32: Context: This is the declaration of the variable '_performStressOperation'.
+    Future<Map<String, dynamic>> _performStressOperation(String userId, int operationId) async {
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1862:15: Error: Undefined name 'fakeUserService'.
+          () => fakeUserService.getUserProfile(userId),
+                ^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1863:15: Error: Undefined name 'fakeUserService'.
+          () => fakeUserService.getUserPreferences(userId),
+                ^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1864:15: Error: Undefined name 'fakeUserService'.
+          () => fakeUserService.updateUserProfile(userId, {'lastOperation': operationId.toString()}),
+                ^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1760:25: Error: Local variable '_getTimezoneForLanguage' can't be referenced before it is declared.
+              'timezone': _getTimezoneForLanguage(language),
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1886:10: Context: This is the declaration of the variable '_getTimezoneForLanguage'.
+    String _getTimezoneForLanguage(String language) {
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1761:27: Error: Local variable '_getDateFormatForLanguage' can't be referenced before it is declared.
+              'dateFormat': _getDateFormatForLanguage(language),
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1902:10: Context: This is the declaration of the variable '_getDateFormatForLanguage'.
+    String _getDateFormatForLanguage(String language) {
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1476:35: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['profile']['success'], isTrue, reason: '併發取得個人資料應該成功');
+                                    ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1477:34: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['update']['success'], isTrue, reason: '併發更新個人資料應該成功');
+                                   ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1478:39: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['preferences']['success'], isTrue, reason: '併發取得偏好設定應該成功');
+                                        ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1482:35: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['profile']['data']['userId'], equals(userId));
+                                    ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1483:34: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['update']['data']['userId'], equals(userId));
+                                   ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1484:39: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['preferences']['data']['userId'], equals(userId));
+                                        ^
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name 'loading 8502. 用戶管理服務_test.dart'
+00:00 +0 -1: Some tests failed.              
+~/workspace/85. Flutter_Test_code_APL$ dart test "8502. 用戶管理服務_test.dart"
+Building package executable... 
+Built test:test.
+00:00 +0: ... 8502. 用戶管理服務_test.dart    00:00 +0 -1: loading 8502. 用戶管理服務_test.dart [E]
+  Failed to load "8502. 用戶管理服務_test.dart":
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1557:25: Error: Method not found: '_performStressOperation'.
+              futures.add(_performStressOperation(userId, operationCount++));
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1760:25: Error: Method not found: '_getTimezoneForLanguage'.
+              'timezone': _getTimezoneForLanguage(language),
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1761:27: Error: Method not found: '_getDateFormatForLanguage'.
+              'dateFormat': _getDateFormatForLanguage(language),
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1557:25: Error: Local variable '_performStressOperation' can't be referenced before it is declared.
+              futures.add(_performStressOperation(userId, operationCount++));
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1859:32: Context: This is the declaration of the variable '_performStressOperation'.
+    Future<Map<String, dynamic>> _performStressOperation(String userId, int operationId) async {
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1862:15: Error: Undefined name 'fakeUserService'.
+          () => fakeUserService.getUserProfile(userId),
+                ^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1863:15: Error: Undefined name 'fakeUserService'.
+          () => fakeUserService.getUserPreferences(userId),
+                ^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1864:15: Error: Undefined name 'fakeUserService'.
+          () => fakeUserService.updateUserProfile(userId, {'lastOperation': operationId.toString()}),
+                ^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1760:25: Error: Local variable '_getTimezoneForLanguage' can't be referenced before it is declared.
+              'timezone': _getTimezoneForLanguage(language),
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1886:10: Context: This is the declaration of the variable '_getTimezoneForLanguage'.
+    String _getTimezoneForLanguage(String language) {
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1761:27: Error: Local variable '_getDateFormatForLanguage' can't be referenced before it is declared.
+              'dateFormat': _getDateFormatForLanguage(language),
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1902:10: Context: This is the declaration of the variable '_getDateFormatForLanguage'.
+    String _getDateFormatForLanguage(String language) {
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1476:35: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['profile']['success'], isTrue, reason: '併發取得個人資料應該成功');
+                                    ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1477:34: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['update']['success'], isTrue, reason: '併發更新個人資料應該成功');
+                                   ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1478:39: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['preferences']['success'], isTrue, reason: '併發取得偏好設定應該成功');
+                                        ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1482:35: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['profile']['data']['userId'], equals(userId));
+                                    ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1483:34: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['update']['data']['userId'], equals(userId));
+                                   ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1484:39: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+            expect(result['preferences']['data']['userId'], equals(userId));
+                                        ^
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name 'loading 8502. 用戶管理服務_test.dart'
+00:00 +0 -1: Some tests failed.              
+~/workspace/85. Flutter_Test_code_APL$ 
