@@ -302,6 +302,68 @@ void main() {
   group('用戶管理服務測試套件 v2.5.0 - 完整49個測試案例', () {
     late FakeUserManagementService fakeUserService;
 
+    // ================================
+    // 輔助函數 (Helper Functions) - 移至此處避免作用域問題
+    // ================================
+
+    /// 執行壓力測試操作
+    Future<Map<String, dynamic>> performStressOperation(String userId, int operationId) async {
+      try {
+        final operations = [
+          () => fakeUserService.getUserProfile(userId),
+          () => fakeUserService.getUserPreferences(userId),
+          () => fakeUserService.updateUserProfile(userId, {'lastOperation': operationId.toString()}),
+        ];
+
+        final selectedOperation = operations[operationId % operations.length];
+        final response = await selectedOperation();
+
+        return {
+          'operationId': operationId,
+          'success': response['success'],
+          'timestamp': DateTime.now().toIso8601String(),
+        };
+      } catch (e) {
+        return {
+          'operationId': operationId,
+          'success': false,
+          'error': e.toString(),
+          'timestamp': DateTime.now().toIso8601String(),
+        };
+      }
+    }
+
+    /// 根據語言獲取對應時區
+    String getTimezoneForLanguage(String language) {
+      switch (language) {
+        case 'zh-TW':
+          return 'Asia/Taipei';
+        case 'zh-CN':
+          return 'Asia/Shanghai';
+        case 'en-US':
+          return 'America/New_York';
+        case 'ja-JP':
+          return 'Asia/Tokyo';
+        default:
+          return 'UTC';
+      }
+    }
+
+    /// 根據語言獲取對應日期格式
+    String getDateFormatForLanguage(String language) {
+      switch (language) {
+        case 'zh-TW':
+        case 'zh-CN':
+          return 'YYYY-MM-DD';
+        case 'en-US':
+          return 'MM/DD/YYYY';
+        case 'ja-JP':
+          return 'YYYY年MM月DD日';
+        default:
+          return 'YYYY-MM-DD';
+      }
+    }
+
     setUpAll(() async {
       await UserManagementTestEnvironment.setupTestEnvironment();
     });
@@ -1473,15 +1535,23 @@ void main() {
         expect(results.length, equals(concurrentUsers));
 
         for (final result in results) {
-          expect(result['profile']['success'], isTrue, reason: '併發取得個人資料應該成功');
-          expect(result['update']['success'], isTrue, reason: '併發更新個人資料應該成功');
-          expect(result['preferences']['success'], isTrue, reason: '併發取得偏好設定應該成功');
+          final profileResult = result['profile'] as Map<String, dynamic>;
+          final updateResult = result['update'] as Map<String, dynamic>;
+          final preferencesResult = result['preferences'] as Map<String, dynamic>;
+
+          expect(profileResult['success'], isTrue, reason: '併發取得個人資料應該成功');
+          expect(updateResult['success'], isTrue, reason: '併發更新個人資料應該成功');
+          expect(preferencesResult['success'], isTrue, reason: '併發取得偏好設定應該成功');
 
           // 驗證資料一致性
           final userId = result['userId'] as String;
-          expect(result['profile']['data']['userId'], equals(userId));
-          expect(result['update']['data']['userId'], equals(userId));
-          expect(result['preferences']['data']['userId'], equals(userId));
+          final profileData = profileResult['data'] as Map<String, dynamic>;
+          final updateData = updateResult['data'] as Map<String, dynamic>;
+          final preferencesData = preferencesResult['data'] as Map<String, dynamic>;
+
+          expect(profileData['userId'], equals(userId));
+          expect(updateData['userId'], equals(userId));
+          expect(preferencesData['userId'], equals(userId));
         }
       });
 
@@ -1554,7 +1624,7 @@ void main() {
 
           // 每秒執行多個操作
           for (int i = 0; i < operationsPerSecond; i++) {
-            futures.add(_performStressOperation(userId, operationCount++));
+            futures.add(performStressOperation(userId, operationCount++));
           }
 
           final batchResults = await Future.wait(futures);
@@ -1757,8 +1827,8 @@ void main() {
         for (final language in supportedLanguages) {
           final preferences = {
             'language': language,
-            'timezone': _getTimezoneForLanguage(language),
-            'dateFormat': _getDateFormatForLanguage(language),
+            'timezone': getTimezoneForLanguage(language),
+            'dateFormat': getDateFormatForLanguage(language),
           };
 
           final updateResponse = await fakeUserService.updateUserPreferences(userId, preferences);
@@ -1850,66 +1920,4 @@ void main() {
       });
     });
   });
-
-  // ================================
-  // 輔助函數 (Helper Functions)
-  // ================================
-
-  /// 執行壓力測試操作
-  Future<Map<String, dynamic>> _performStressOperation(String userId, int operationId) async {
-    try {
-      final operations = [
-        () => fakeUserService.getUserProfile(userId),
-        () => fakeUserService.getUserPreferences(userId),
-        () => fakeUserService.updateUserProfile(userId, {'lastOperation': operationId.toString()}),
-      ];
-
-      final selectedOperation = operations[operationId % operations.length];
-      final response = await selectedOperation();
-
-      return {
-        'operationId': operationId,
-        'success': response['success'],
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-    } catch (e) {
-      return {
-        'operationId': operationId,
-        'success': false,
-        'error': e.toString(),
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-    }
-  }
-
-  /// 根據語言獲取對應時區
-  String _getTimezoneForLanguage(String language) {
-    switch (language) {
-      case 'zh-TW':
-        return 'Asia/Taipei';
-      case 'zh-CN':
-        return 'Asia/Shanghai';
-      case 'en-US':
-        return 'America/New_York';
-      case 'ja-JP':
-        return 'Asia/Tokyo';
-      default:
-        return 'UTC';
-    }
-  }
-
-  /// 根據語言獲取對應日期格式
-  String _getDateFormatForLanguage(String language) {
-    switch (language) {
-      case 'zh-TW':
-      case 'zh-CN':
-        return 'YYYY-MM-DD';
-      case 'en-US':
-        return 'MM/DD/YYYY';
-      case 'ja-JP':
-        return 'YYYY年MM月DD日';
-      default:
-        return 'YYYY-MM-DD';
-    }
-  }
 }
