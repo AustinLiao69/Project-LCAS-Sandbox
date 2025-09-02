@@ -1,0 +1,22 @@
+請參照9904文件，以資深SQA深入思考、分析原因並提出解決方案，必須等我Approve之後才能開始編修代碼。模組板次與函數版次都要升版，並將任務切分成數個階段處理(建議分成三個階段)。
+
+背景：目前專案採用TDD test driven development開發，依循下列測試策略，先建立測試代碼後建立Fake Service驗證測試邏輯正確性。為了後續Module code完成後能關閉Fake service以驗證module code正確性，請製作一個Fake service的總開關於85號資料夾，檔案名稱為8599. Fake_service_switch.dart，並存放於85號資料夾
+
+測試策略
+第一層：Fake Service 測試（現在）→ 驗證測試邏輯正確性
+第二層：Real Service 測試（Module Code 完成後）→ 驗證真實業務邏輯
+第三層：整合測試（前後端對接）→ 驗證端到端功能
+
+需求：
+
+1.	請評估所有的測試代碼的Fake service能否只寫一個Fake service switch?
+2.	若第1個需求可被達成，請將8501與8502測試代碼的Fake service switch寫在一起並命名為8599. Fake_service_switch.dart
+3.	各函數之表頭格式範例如下：
+/**
+ * 05. 取得HTTP狀態碼 
+ * @version 2025-08-28-V1.4.0
+ * @date 2025-08-28 12:00:00
+ * @update: 升級版本
+ */
+4. 今天時間為2025-09-02
+5. 函數必須以Dart語言編寫而成
