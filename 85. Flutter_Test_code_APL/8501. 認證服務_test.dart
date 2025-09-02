@@ -2,10 +2,10 @@
 /**
  * 8501. 認證服務_test.dart
  * @testFile 認證服務測試代碼
- * @version 2.10.0
+ * @version 2.11.0
  * @description LCAS 2.0 認證服務 API 測試代碼 - 完整覆蓋11個API端點，支援四模式差異化測試
  * @date 2025-08-28
- * @update 2025-01-29: 升級至v2.10.0，修復TC-021密碼安全性驗證邏輯，優化SecurityService v1.3.0密碼檢查順序
+ * @update 2025-01-29: 升級至v2.11.0，重構SecurityService v1.4.0密碼檢查邏輯，採用「排除優先」原則
  */
 
 import 'package:test/test.dart';
@@ -348,18 +348,20 @@ class FakeUserModeAdapter implements UserModeAdapter {
 class FakeSecurityService implements SecurityService {
   @override
   bool isPasswordSecure(String password) {
-    // v1.3.0: 修正密碼檢查順序，優先檢測簡單模式，確保TC-021正確執行
+    // v1.4.0: 重構密碼安全檢查邏輯，採用「排除優先」原則，確保TC-021正確執行
     
-    // 基本長度檢查 - 至少8個字元
+    // 第一階段：基本格式檢查
     if (password.length < 8) return false;
+    if (password.isEmpty) return false;
     
-    // 【關鍵修正】優先檢查：純數字密碼視為不安全
+    // 第二階段：安全模式排除檢查（優先執行）
+    // 純數字密碼直接拒絕
     if (RegExp(r'^[0-9]+$').hasMatch(password)) return false;
     
-    // 【關鍵修正】優先檢查：純字母密碼視為不安全  
+    // 純字母密碼直接拒絕（不論大小寫）
     if (RegExp(r'^[a-zA-Z]+$').hasMatch(password)) return false;
     
-    // 檢查連續重複字符（例如：aaa, 111）
+    // 連續重複字符拒絕（例如：aaa, 111, AAA）
     if (RegExp(r'(.)\1{2,}').hasMatch(password)) return false;
     
     // 常見弱密碼模式檢查（不區分大小寫）
@@ -373,18 +375,13 @@ class FakeSecurityService implements SecurityService {
       if (lowerPassword.contains(pattern)) return false;
     }
     
-    // 複雜度要求檢查（在簡單模式檢查之後）
+    // 第三階段：複雜度要求驗證（排除檢查通過後執行）
+    bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    bool hasLowercase = password.contains(RegExp(r'[a-z]'));
+    bool hasNumber = password.contains(RegExp(r'[0-9]'));
     
-    // 必須包含大寫字母
-    if (!password.contains(RegExp(r'[A-Z]'))) return false;
-    
-    // 必須包含小寫字母
-    if (!password.contains(RegExp(r'[a-z]'))) return false;
-    
-    // 必須包含數字
-    if (!password.contains(RegExp(r'[0-9]'))) return false;
-    
-    return true;
+    // 必須同時包含大寫字母、小寫字母、數字
+    return hasUppercase && hasLowercase && hasNumber;
   }
 
   @override
@@ -837,7 +834,7 @@ class TestEnvironmentConfig {
 // ================================
 
 void main() {
-  group('認證服務測試套件 v2.10.0 - 完整49個測試案例', () {
+  group('認證服務測試套件 v2.11.0 - 完整49個測試案例', () {
     late AuthController authController;
     late FakeAuthService fakeAuthService;
     late FakeTokenService fakeTokenService;
@@ -1605,10 +1602,10 @@ void main() {
     group('安全性測試案例', () {
       /**
        * TC-021. 密碼安全性驗證測試
-       * @version v1.3.0
+       * @version v1.4.0
        * @date 2025-09-01
        * @description 全面驗證密碼安全性機制，基於統一規則驗證標準
-       * @update 2025-01-29: v1.3.0修正SecurityService檢查順序，優先識別純數字/純字母模式
+       * @update 2025-01-29: v1.4.0重構SecurityService檢查邏輯，採用「排除優先」原則確保密碼安全性
        */
       test('tc-021. 密碼安全性驗證測試', () async {
         // 測試各種不安全密碼類型
