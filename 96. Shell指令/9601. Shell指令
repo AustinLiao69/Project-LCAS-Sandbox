@@ -1,23 +1,29 @@
+1.回到根目錄
 cd ~/workspace
-=>回到根目錄
 
+
+2.進入到75. Flutter_Test_code_PL
 cd "75. Flutter_Test_code_PL"
-=>進入到75. Flutter_Test_code_PL
 
+
+3.執行run_test.js
 node run_test.js
-=>執行run_test.js
 
+
+4.進入某個資料夾&&然後執行某個命令
 cd "75. Flutter_Test_code_PL" && dart pub get
-進入某個資料夾&&然後執行某個命令
 
+
+5.進入85. Flutter_Test_code_APL資料夾並執行dart test
 cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
-=>進入85. Flutter_Test_code_APL資料夾並執行dart test
 
+
+6.執行8501. 認證服務_test.dart之dart test
 dart test "8501. 認證服務_test.dart" 
-=>執行8501. 認證服務_test.dart之dart test
 
+7.安裝dart sdk套件
 cd "85. Flutter_Test_code_APL"
 dart pub get
-=>安裝dart sdk套件
 
+8.檢查該測試代碼之堆疊
 dart test "8501. 認證服務_test.dart" --chain-stack-traces

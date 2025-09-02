@@ -1,0 +1,28 @@
+1. 
+請參照9901文件，以資深PG深入思考、分析原因並提出解決方案，必須等我Approve之後才能開始編修代碼。模組板次與函數版次都要升版。  
+請參照9909文件，以資深SA深入思考、分析原因並提出解決方案，必須等我Approve之後才能開始編修文件。  
+請參照9902文件，以資深PM深入思考、分析原因並提出解決方案，必須等我Approve之後才能開始編修文件。  
+請參照9904文件，以資深SQA深入思考、分析原因並提出解決方案，必須等我Approve之後才能開始編修代碼。模組板次與函數版次都要升版。   
+
+
+
+
+3. jest測試框架
+
+npx jest --config="Test Code/jest.config.js" "Test Code/該測試代碼.js" --verbose
+
+
+範例如下：
+npx jest --config="Test Code/jest.config.js" "Test Code/3115. TC_LBK.js" --verbose
+
+npx jest --config="Test Code/jest.config.js" "Test Code/3005. TC_SR.js" --verbose
+
+
+強制push到github
+git push -f origin main
+
+
+
+
+
+
