@@ -16,7 +16,8 @@ cd "75. Flutter_Test_code_PL" && dart pub get
 
 5.進入85. Flutter_Test_code_APL資料夾並執行dart test
 cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
-dart test "8502. 用戶管理服務_test.dart"
+
+cd "85. Flutter_Test_code_APL" && dart test "8502. 用戶管理服務_test.dart"
 
 6.執行8501. 認證服務_test.dart之dart test
 dart test "8501. 認證服務_test.dart" 
