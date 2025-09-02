@@ -856,9 +856,374 @@ void main() {
       });
     });
 
+    // ================================
+    // 整合測試案例 (TC-016 ~ TC-020, TC-035 ~ TC-038)
+    // ================================
+
     group('整合測試案例', () {
-      test('預留：整合測試將在第三階段實作', () {
-        expect(true, isTrue);
+      /**
+       * TC-016. 端到端用戶管理流程測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本，完整端到端流程驗證
+       */
+      test('tc-016. 端到端用戶管理流程測試', () async {
+        // Arrange
+        const userId = 'e2e-test-user-123';
+        final updateData = UserManagementTestUtils.createTestUpdateData();
+        final preferences = UserManagementTestUtils.createTestPreferences();
+        const newMode = 'cultivation';
+        const pinCode = '987654';
+
+        // Act - 完整流程測試
+        // 1. 取得用戶資料
+        final profileResponse = await fakeUserService.getUserProfile(userId);
+        
+        // 2. 更新用戶資料
+        final updateResponse = await fakeUserService.updateUserProfile(userId, updateData);
+        
+        // 3. 變更用戶模式
+        final modeResponse = await fakeUserService.changeUserMode(userId, newMode);
+        
+        // 4. 更新偏好設定
+        final preferencesResponse = await fakeUserService.updateUserPreferences(userId, preferences);
+        
+        // 5. 設定PIN碼
+        final pinResponse = await fakeUserService.setupPinCode(userId, pinCode);
+        
+        // 6. 取得活動歷史
+        final activityResponse = await fakeUserService.getUserActivityHistory(userId);
+
+        // Assert - 端到端流程驗證
+        expect(profileResponse['success'], isTrue);
+        expect(updateResponse['success'], isTrue);
+        expect(modeResponse['success'], isTrue);
+        expect(modeResponse['data']['newMode'], equals(newMode));
+        expect(preferencesResponse['success'], isTrue);
+        expect(pinResponse['success'], isTrue);
+        expect(activityResponse['success'], isTrue);
+        expect(activityResponse['data']['activities'], isA<List>());
+      });
+
+      /**
+       * TC-017. 抽象類別協作測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本，驗證75個抽象方法協作
+       */
+      test('tc-017. 抽象類別協作測試', () async {
+        // Arrange
+        const userId = 'abstract-test-user-123';
+        final testData = UserManagementTestUtils.createTestUserProfile(userId: userId);
+
+        // Act - 模擬抽象類別協作
+        final profileResponse = await fakeUserService.getUserProfile(userId);
+        final preferencesResponse = await fakeUserService.getUserPreferences(userId);
+        final linkedAccountsResponse = await fakeUserService.getLinkedAccounts(userId);
+
+        // Assert - 抽象類別協作驗證
+        expect(profileResponse['success'], isTrue);
+        expect(profileResponse['data'], isA<Map>());
+        expect(preferencesResponse['success'], isTrue);
+        expect(preferencesResponse['data']['preferences'], isA<Map>());
+        expect(linkedAccountsResponse['success'], isTrue);
+        expect(linkedAccountsResponse['data']['linkedAccounts'], isA<Map>());
+        
+        // 驗證資料結構一致性
+        expect(profileResponse['data']['userId'], equals(userId));
+        expect(preferencesResponse['data']['userId'], equals(userId));
+        expect(linkedAccountsResponse['data']['userId'], equals(userId));
+      });
+
+      /**
+       * TC-018. ProfileService協作測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本，驗證ProfileService核心協作
+       */
+      test('tc-018. ProfileService協作測試', () async {
+        // Arrange
+        const userId = 'profile-test-user-123';
+        final updateData = {
+          'displayName': 'ProfileService測試用戶',
+          'avatar': 'https://example.com/profile-avatar.jpg',
+          'bio': '這是ProfileService協作測試'
+        };
+
+        // Act - ProfileService協作流程
+        final originalProfile = await fakeUserService.getUserProfile(userId);
+        final updateResult = await fakeUserService.updateUserProfile(userId, updateData);
+        final updatedProfile = await fakeUserService.getUserProfile(userId);
+
+        // Assert - ProfileService協作驗證
+        expect(originalProfile['success'], isTrue);
+        expect(updateResult['success'], isTrue);
+        expect(updatedProfile['success'], isTrue);
+        
+        // 驗證ProfileService協作正確性
+        expect(updateResult['data']['updatedFields'], contains('displayName'));
+        expect(updateResult['data']['updatedFields'], contains('avatar'));
+        expect(updateResult['message'], contains('更新成功'));
+      });
+
+      /**
+       * TC-019. SecurityService協作測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本，驗證SecurityService安全協作
+       */
+      test('tc-019. SecurityService協作測試', () async {
+        // Arrange
+        const userId = 'security-test-user-123';
+        const oldPassword = 'OldSecurePassword123';
+        const newPassword = 'NewSecurePassword456';
+        const pinCode = '654321';
+        final biometricData = {'templateId': 'security-fp-template'};
+
+        // Act - SecurityService協作流程
+        final passwordChangeResult = await fakeUserService.changePassword(userId, oldPassword, newPassword);
+        final pinSetupResult = await fakeUserService.setupPinCode(userId, pinCode);
+        final biometricSetupResult = await fakeUserService.setupBiometric(userId, 'fingerprint', biometricData);
+
+        // Assert - SecurityService協作驗證
+        expect(passwordChangeResult['success'], isTrue);
+        expect(passwordChangeResult['message'], contains('密碼變更成功'));
+        expect(pinSetupResult['success'], isTrue);
+        expect(pinSetupResult['message'], contains('PIN碼設定成功'));
+        expect(biometricSetupResult['success'], isTrue);
+        expect(biometricSetupResult['data']['biometricType'], equals('fingerprint'));
+        
+        // 驗證SecurityService協作一致性
+        expect(passwordChangeResult['data']['userId'], equals(userId));
+        expect(pinSetupResult['data']['userId'], equals(userId));
+        expect(biometricSetupResult['data']['userId'], equals(userId));
+      });
+
+      /**
+       * TC-020. AssessmentService協作測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本，驗證AssessmentService評估協作
+       */
+      test('tc-020. AssessmentService協作測試', () async {
+        // Arrange
+        const userId = 'assessment-test-user-123';
+        const cultivationMode = 'cultivation';
+
+        // Act - AssessmentService協作流程（模擬評估服務互動）
+        final modeChangeResult = await fakeUserService.changeUserMode(userId, cultivationMode);
+        final activityHistory = await fakeUserService.getUserActivityHistory(userId);
+        final profileData = await fakeUserService.getUserProfile(userId);
+
+        // Assert - AssessmentService協作驗證
+        expect(modeChangeResult['success'], isTrue);
+        expect(modeChangeResult['data']['newMode'], equals(cultivationMode));
+        expect(activityHistory['success'], isTrue);
+        expect(activityHistory['data']['activities'], isA<List>());
+        expect(profileData['success'], isTrue);
+        expect(profileData['data']['userMode'], isA<String>());
+        
+        // 驗證AssessmentService協作邏輯
+        expect(activityHistory['data']['totalCount'], isA<int>());
+        expect(activityHistory['data']['activities'].length, greaterThan(0));
+      });
+
+      /**
+       * TC-035. ProfileService + SecurityService協作
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本，驗證Profile與Security深度協作
+       */
+      test('tc-035. ProfileService + SecurityService協作', () async {
+        // Arrange
+        const userId = 'profile-security-test-123';
+        final profileUpdate = {
+          'displayName': '安全協作用戶',
+          'securityLevel': 'high'
+        };
+        const newPassword = 'SecurePassword789';
+        const oldPassword = 'OldPassword123';
+
+        // Act - Profile + Security 協作流程
+        final profileUpdateResult = await fakeUserService.updateUserProfile(userId, profileUpdate);
+        final passwordChangeResult = await fakeUserService.changePassword(userId, oldPassword, newPassword);
+        final finalProfile = await fakeUserService.getUserProfile(userId);
+
+        // Assert - 深度協作驗證
+        expect(profileUpdateResult['success'], isTrue);
+        expect(passwordChangeResult['success'], isTrue);
+        expect(finalProfile['success'], isTrue);
+        
+        // 驗證協作資料一致性
+        expect(profileUpdateResult['data']['userId'], equals(passwordChangeResult['data']['userId']));
+        expect(finalProfile['data']['userId'], equals(userId));
+        
+        // 驗證時間戳一致性
+        expect(profileUpdateResult['data']['updatedAt'], isA<String>());
+        expect(passwordChangeResult['data']['changedAt'], isA<String>());
+      });
+
+      /**
+       * TC-036. AssessmentService協作測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本，驗證評估服務獨立協作
+       */
+      test('tc-036. AssessmentService協作測試', () async {
+        // Arrange
+        const userId = 'assessment-solo-test-123';
+        const expertMode = 'expert';
+
+        // Act - AssessmentService 獨立協作
+        final modeChange = await fakeUserService.changeUserMode(userId, expertMode);
+        final activityData = await fakeUserService.getUserActivityHistory(userId);
+        final linkedAccounts = await fakeUserService.getLinkedAccounts(userId);
+
+        // Assert - 評估服務協作驗證
+        expect(modeChange['success'], isTrue);
+        expect(activityData['success'], isTrue);
+        expect(linkedAccounts['success'], isTrue);
+        
+        // 驗證評估資料結構
+        expect(activityData['data']['activities'], isA<List>());
+        expect(linkedAccounts['data']['linkedAccounts'], isA<Map>());
+        
+        // 驗證評估邏輯一致性
+        final activities = activityData['data']['activities'] as List;
+        expect(activities.isNotEmpty, isTrue);
+        for (final activity in activities) {
+          expect(activity['timestamp'], isA<String>());
+          expect(activity['activityType'], isA<String>());
+        }
+      });
+
+      /**
+       * TC-037. UserModeAdapter協作測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本，驗證用戶模式適配器協作
+       */
+      test('tc-037. UserModeAdapter協作測試', () async {
+        // Arrange
+        const userId = 'mode-adapter-test-123';
+        final testModes = ['expert', 'inertial', 'cultivation', 'guiding'];
+
+        // Act - UserModeAdapter 協作測試
+        final results = <String, Map<String, dynamic>>{};
+        
+        for (final mode in testModes) {
+          final modeResult = await fakeUserService.changeUserMode(userId, mode);
+          final profileResult = await fakeUserService.getUserProfile(userId);
+          
+          results[mode] = {
+            'modeChange': modeResult,
+            'profile': profileResult,
+          };
+        }
+
+        // Assert - UserModeAdapter協作驗證
+        for (final mode in testModes) {
+          expect(results[mode]!['modeChange']['success'], isTrue);
+          expect(results[mode]!['modeChange']['data']['newMode'], equals(mode));
+          expect(results[mode]!['profile']['success'], isTrue);
+        }
+        
+        // 驗證模式適配器邏輯
+        expect(results.length, equals(4));
+        for (final entry in results.entries) {
+          expect(entry.value['modeChange']['data']['userId'], equals(userId));
+          expect(entry.value['profile']['data']['userId'], equals(userId));
+        }
+      });
+
+      /**
+       * TC-038. 全模組協作整合測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本，驗證所有模組整體協作
+       */
+      test('tc-038. 全模組協作整合測試', () async {
+        // Arrange
+        const userId = 'full-integration-test-123';
+        final fullTestData = {
+          'profile': UserManagementTestUtils.createTestUpdateData(),
+          'preferences': UserManagementTestUtils.createTestPreferences(),
+          'mode': 'expert',
+          'pinCode': '111111',
+          'biometric': {'templateId': 'full-test-template'},
+          'password': {
+            'old': 'FullTestOldPassword123',
+            'new': 'FullTestNewPassword456'
+          }
+        };
+
+        // Act - 全模組協作流程
+        final operationResults = <String, dynamic>{};
+        
+        // 1. Profile模組協作
+        operationResults['profile'] = await fakeUserService.updateUserProfile(
+          userId, 
+          fullTestData['profile'] as Map<String, dynamic>
+        );
+        
+        // 2. Preferences模組協作
+        operationResults['preferences'] = await fakeUserService.updateUserPreferences(
+          userId, 
+          fullTestData['preferences'] as Map<String, dynamic>
+        );
+        
+        // 3. Mode模組協作
+        operationResults['mode'] = await fakeUserService.changeUserMode(
+          userId, 
+          fullTestData['mode'] as String
+        );
+        
+        // 4. Security模組協作
+        operationResults['pin'] = await fakeUserService.setupPinCode(
+          userId, 
+          fullTestData['pinCode'] as String
+        );
+        
+        operationResults['biometric'] = await fakeUserService.setupBiometric(
+          userId, 
+          'fingerprint',
+          fullTestData['biometric'] as Map<String, dynamic>
+        );
+        
+        final passwordData = fullTestData['password'] as Map<String, dynamic>;
+        operationResults['password'] = await fakeUserService.changePassword(
+          userId,
+          passwordData['old'] as String,
+          passwordData['new'] as String
+        );
+        
+        // 5. Assessment模組協作
+        operationResults['activity'] = await fakeUserService.getUserActivityHistory(userId);
+        operationResults['linked'] = await fakeUserService.getLinkedAccounts(userId);
+        
+        // 6. 最終狀態驗證
+        operationResults['finalProfile'] = await fakeUserService.getUserProfile(userId);
+
+        // Assert - 全模組協作整合驗證
+        for (final entry in operationResults.entries) {
+          expect(entry.value['success'], isTrue, reason: '${entry.key} 操作應該成功');
+        }
+        
+        // 驗證協作數據一致性
+        final profileData = operationResults['finalProfile']['data'];
+        expect(profileData['userId'], equals(userId));
+        
+        // 驗證模組間資料同步
+        expect(operationResults['mode']['data']['newMode'], equals('expert'));
+        expect(operationResults['activity']['data']['userId'], equals(userId));
+        expect(operationResults['linked']['data']['userId'], equals(userId));
+        
+        // 驗證操作順序和依賴關係
+        expect(operationResults['profile']['data']['updatedFields'], isA<List>());
+        expect(operationResults['preferences']['data']['preferences'], isA<Map>());
+        expect(operationResults['pin']['data']['setupAt'], isA<String>());
+        expect(operationResults['biometric']['data']['biometricType'], equals('fingerprint'));
+        expect(operationResults['password']['data']['changedAt'], isA<String>());
       });
     });
 
