@@ -27,3 +27,15 @@ dart pub get
 
 8.檢查該測試代碼之堆疊
 dart test "8501. 認證服務_test.dart" --chain-stack-traces
+
+9.jest測試框架
+
+npx jest --config="Test Code/jest.config.js" "Test Code/該測試代碼.js" --verbose
+
+範例如下：
+npx jest --config="Test Code/jest.config.js" "Test Code/3115. TC_LBK.js" --verbose
+
+npx jest --config="Test Code/jest.config.js" "Test Code/3005. TC_SR.js" --verbose
+
+10.強制push到github
+git push -f origin main
