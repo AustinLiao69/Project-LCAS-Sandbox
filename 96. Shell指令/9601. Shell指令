@@ -16,7 +16,7 @@ cd "75. Flutter_Test_code_PL" && dart pub get
 
 5.進入85. Flutter_Test_code_APL資料夾並執行dart test
 cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
-
+dart test "8502. 用戶管理服務_test.dart"
 
 6.執行8501. 認證服務_test.dart之dart test
 dart test "8501. 認證服務_test.dart" 
@@ -27,3 +27,15 @@ dart pub get
 
 8.檢查該測試代碼之堆疊
 dart test "8501. 認證服務_test.dart" --chain-stack-traces
+
+9.jest測試框架
+
+npx jest --config="Test Code/jest.config.js" "Test Code/該測試代碼.js" --verbose
+
+範例如下：
+npx jest --config="Test Code/jest.config.js" "Test Code/3115. TC_LBK.js" --verbose
+
+npx jest --config="Test Code/jest.config.js" "Test Code/3005. TC_SR.js" --verbose
+
+10.強制push到github
+git push -f origin main
