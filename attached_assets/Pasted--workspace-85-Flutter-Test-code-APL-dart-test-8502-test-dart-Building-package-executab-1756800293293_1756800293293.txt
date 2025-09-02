@@ -1,0 +1,286 @@
+~/workspace/85. Flutter_Test_code_APL$ dart test "8502. 用戶管理服務_test.dart"
+Building package executable... 
+Built test:test.
+00:00 +0: ... 8502. 用戶管理服務_test.dart    00:00 +0 -1: loading 8502. 用戶管理服務_test.dart [E]
+  Failed to load "8502. 用戶管理服務_test.dart":
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:302:8: Error: Can't find ')' to match '('.
+    group('用戶管理服務測試套件 v2.4.0 - 完整49個測試案例', () {
+         ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2779:8: Error: Can't find ')' to match '('.
+    group('用戶管理服務測試套件 v2.4.0 - 完整49個測試案例', () {
+         ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2476:1: Error: Expected a declaration, but got '<'.
+  </new_str>
+  ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2476:2: Error: Expected a declaration, but got '/'.
+  </new_str>
+   ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2476:3: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+  Try adding the name of the type of the variable or the keyword 'var'.
+  </new_str>
+    ^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2476:3: Error: Expected ';' after this.
+  </new_str>
+    ^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2476:10: Error: Expected a declaration, but got '>'.
+  </new_str>
+           ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2477:1: Error: Expected a declaration, but got '<'.
+  </changes><replit_final_file>
+  ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2477:2: Error: Expected a declaration, but got '/'.
+  </changes><replit_final_file>
+   ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2477:3: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+  Try adding the name of the type of the variable or the keyword 'var'.
+  </changes><replit_final_file>
+    ^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2477:3: Error: Expected ';' after this.
+  </changes><replit_final_file>
+    ^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2477:10: Error: Expected a declaration, but got '>'.
+  </changes><replit_final_file>
+           ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2477:11: Error: Expected a declaration, but got '<'.
+  </changes><replit_final_file>
+            ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2477:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+  Try adding the name of the type of the variable or the keyword 'var'.
+  </changes><replit_final_file>
+             ^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2477:12: Error: Expected ';' after this.
+  </changes><replit_final_file>
+             ^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2477:29: Error: Expected a declaration, but got '>'.
+  </changes><replit_final_file>
+                              ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2487:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import 'dart:async';
+  ^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2488:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import 'dart:convert';
+  ^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2489:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import 'dart:math';
+  ^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2491:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import 'package:test/test.dart';
+  ^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2498:7: Error: 'FakeUserManagementService' is already declared in this scope.
+  class FakeUserManagementService {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:21:7: Context: Previous declaration of 'FakeUserManagementService'.
+  class FakeUserManagementService {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2699:7: Error: 'UserManagementTestUtils' is already declared in this scope.
+  class UserManagementTestUtils {
+        ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:222:7: Context: Previous declaration of 'UserManagementTestUtils'.
+  class UserManagementTestUtils {
+        ^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2751:7: Error: 'UserManagementTestEnvironment' is already declared in this scope.
+  class UserManagementTestEnvironment {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:274:7: Context: Previous declaration of 'UserManagementTestEnvironment'.
+  class UserManagementTestEnvironment {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2778:6: Error: 'main' is already declared in this scope.
+  void main() {
+       ^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:301:6: Context: Previous declaration of 'main'.
+  void main() {
+       ^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:303:10: Error: Can't use 'FakeUserManagementService' because it is declared more than once.
+      late FakeUserManagementService fakeUserService;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:306:13: Error: Can't use 'UserManagementTestEnvironment' because it is declared more than once.
+        await UserManagementTestEnvironment.setupTestEnvironment();
+              ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:310:25: Error: Can't use 'FakeUserManagementService' because it is declared more than once.
+        fakeUserService = FakeUserManagementService();
+                          ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:365:28: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final updateData = UserManagementTestUtils.createTestUpdateData();
+                             ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:463:29: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final preferences = UserManagementTestUtils.createTestPreferences();
+                              ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:789:28: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final updateData = UserManagementTestUtils.createTestUpdateData();
+                             ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:817:29: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final preferences = UserManagementTestUtils.createTestPreferences();
+                              ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:871:28: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final updateData = UserManagementTestUtils.createTestUpdateData();
+                             ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:872:29: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final preferences = UserManagementTestUtils.createTestPreferences();
+                              ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:915:26: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final testData = UserManagementTestUtils.createTestUserProfile(userId: userId);
+                           ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1147:22: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+            'profile': UserManagementTestUtils.createTestUpdateData(),
+                       ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:1148:26: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+            'preferences': UserManagementTestUtils.createTestPreferences(),
+                           ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2165:19: Error: Method not found: '_simulateDisasterScenario'.
+              await _simulateDisasterScenario(scenarioName);
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2165:19: Error: Local variable '_simulateDisasterScenario' can't be referenced before it is declared.
+              await _simulateDisasterScenario(scenarioName);
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2227:18: Context: This is the declaration of the variable '_simulateDisasterScenario'.
+      Future<void> _simulateDisasterScenario(String scenarioName) async {
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2343:7: Error: Setter not found: '_serviceFailureFlag'.
+        _serviceFailureFlag = true;
+        ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2348:14: Error: Undefined name '_serviceFailureFlag'.
+        return _serviceFailureFlag;
+               ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2354:7: Error: Setter not found: '_serviceFailureFlag'.
+        _serviceFailureFlag = false;
+        ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2362:21: Error: Undefined name '_serviceFailureFlag'.
+          'healthy': !_serviceFailureFlag,
+                      ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2370:7: Error: Setter not found: '_systemCrashFlag'.
+        _systemCrashFlag = true;
+        ^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2343:7: Error: Local variable '_serviceFailureFlag' can't be referenced before it is declared.
+        _serviceFailureFlag = true;
+        ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2403:10: Context: This is the declaration of the variable '_serviceFailureFlag'.
+      bool _serviceFailureFlag = false;
+           ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2348:14: Error: Local variable '_serviceFailureFlag' can't be referenced before it is declared.
+        return _serviceFailureFlag;
+               ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2403:10: Context: This is the declaration of the variable '_serviceFailureFlag'.
+      bool _serviceFailureFlag = false;
+           ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2354:7: Error: Local variable '_serviceFailureFlag' can't be referenced before it is declared.
+        _serviceFailureFlag = false;
+        ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2403:10: Context: This is the declaration of the variable '_serviceFailureFlag'.
+      bool _serviceFailureFlag = false;
+           ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2362:21: Error: Local variable '_serviceFailureFlag' can't be referenced before it is declared.
+          'healthy': !_serviceFailureFlag,
+                      ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2403:10: Context: This is the declaration of the variable '_serviceFailureFlag'.
+      bool _serviceFailureFlag = false;
+           ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2370:7: Error: Local variable '_systemCrashFlag' can't be referenced before it is declared.
+        _systemCrashFlag = true;
+        ^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2404:10: Context: This is the declaration of the variable '_systemCrashFlag'.
+      bool _systemCrashFlag = false;
+           ^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2474:3: Error: Expected ';' after this.
+    }
+    ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2780:10: Error: Can't use 'FakeUserManagementService' because it is declared more than once.
+      late FakeUserManagementService fakeUserService;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2783:13: Error: Can't use 'UserManagementTestEnvironment' because it is declared more than once.
+        await UserManagementTestEnvironment.setupTestEnvironment();
+              ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2787:25: Error: Can't use 'FakeUserManagementService' because it is declared more than once.
+        fakeUserService = FakeUserManagementService();
+                          ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2842:28: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final updateData = UserManagementTestUtils.createTestUpdateData();
+                             ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:2940:29: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final preferences = UserManagementTestUtils.createTestPreferences();
+                              ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:3266:28: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final updateData = UserManagementTestUtils.createTestUpdateData();
+                             ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:3294:29: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final preferences = UserManagementTestUtils.createTestPreferences();
+                              ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:3348:28: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final updateData = UserManagementTestUtils.createTestUpdateData();
+                             ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:3349:29: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final preferences = UserManagementTestUtils.createTestPreferences();
+                              ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:3392:26: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+          final testData = UserManagementTestUtils.createTestUserProfile(userId: userId);
+                           ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:3624:22: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+            'profile': UserManagementTestUtils.createTestUpdateData(),
+                       ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:3625:26: Error: Can't use 'UserManagementTestUtils' because it is declared more than once.
+            'preferences': UserManagementTestUtils.createTestPreferences(),
+                           ^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4642:19: Error: Method not found: '_simulateDisasterScenario'.
+              await _simulateDisasterScenario(scenarioName);
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4642:19: Error: Local variable '_simulateDisasterScenario' can't be referenced before it is declared.
+              await _simulateDisasterScenario(scenarioName);
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4704:18: Context: This is the declaration of the variable '_simulateDisasterScenario'.
+      Future<void> _simulateDisasterScenario(String scenarioName) async {
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4820:7: Error: Setter not found: '_serviceFailureFlag'.
+        _serviceFailureFlag = true;
+        ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4825:14: Error: Undefined name '_serviceFailureFlag'.
+        return _serviceFailureFlag;
+               ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4831:7: Error: Setter not found: '_serviceFailureFlag'.
+        _serviceFailureFlag = false;
+        ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4839:21: Error: Undefined name '_serviceFailureFlag'.
+          'healthy': !_serviceFailureFlag,
+                      ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4847:7: Error: Setter not found: '_systemCrashFlag'.
+        _systemCrashFlag = true;
+        ^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4820:7: Error: Local variable '_serviceFailureFlag' can't be referenced before it is declared.
+        _serviceFailureFlag = true;
+        ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4880:10: Context: This is the declaration of the variable '_serviceFailureFlag'.
+      bool _serviceFailureFlag = false;
+           ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4825:14: Error: Local variable '_serviceFailureFlag' can't be referenced before it is declared.
+        return _serviceFailureFlag;
+               ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4880:10: Context: This is the declaration of the variable '_serviceFailureFlag'.
+      bool _serviceFailureFlag = false;
+           ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4831:7: Error: Local variable '_serviceFailureFlag' can't be referenced before it is declared.
+        _serviceFailureFlag = false;
+        ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4880:10: Context: This is the declaration of the variable '_serviceFailureFlag'.
+      bool _serviceFailureFlag = false;
+           ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4839:21: Error: Local variable '_serviceFailureFlag' can't be referenced before it is declared.
+          'healthy': !_serviceFailureFlag,
+                      ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4880:10: Context: This is the declaration of the variable '_serviceFailureFlag'.
+      bool _serviceFailureFlag = false;
+           ^^^^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4847:7: Error: Local variable '_systemCrashFlag' can't be referenced before it is declared.
+        _systemCrashFlag = true;
+        ^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4881:10: Context: This is the declaration of the variable '_systemCrashFlag'.
+      bool _systemCrashFlag = false;
+           ^^^^^^^^^^^^^^^^
+  8502.%20%E7%94%A8%E6%88%B6%E7%AE%A1%E7%90%86%E6%9C%8D%E5%8B%99_test.dart:4951:3: Error: Expected ';' after this.
+    }
+    ^
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name 'loading 8502. 用戶管理服務_test.dart'
+00:00 +0 -1: Some tests failed.              
+~/workspace/85. Flutter_Test_code_APL$ 
