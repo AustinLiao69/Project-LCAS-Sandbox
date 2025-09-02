@@ -1,0 +1,167 @@
+~/workspace/85. Flutter_Test_code_APL$ dart test "8502. 用戶管理服務_test.dart"
+Building package executable... 
+Built test:test.
+00:00 +0: ... 8502. 用戶管理服務_test.dart    00:00 +0: ... v2.5.0 - 完整49個測試案例 (setUp00:00 +0: ... 功能測試案例 tc-001. 取得用戶資00:00 +1: ... 功能測試案例 tc-001. 取得用戶資00:00 +1: ... 功能測試案例 tc-002. 取得用戶資00:00 +2: ... 功能測試案例 tc-002. 取得用戶資00:00 +2: ... 功能測試案例 tc-003. 更新用戶資00:00 +3: ... 功能測試案例 tc-003. 更新用戶資00:00 +3: ... 功能測試案例 tc-004. 更新用戶資00:00 +4: ... 功能測試案例 tc-004. 更新用戶資00:00 +4: ... 功能測試案例 tc-005. 變更用戶模00:00 +5: ... 功能測試案例 tc-005. 變更用戶模00:00 +5: ... 功能測試案例 tc-006. 刪除用戶API00:00 +6: ... 功能測試案例 tc-006. 刪除用戶API00:00 +6: ... 功能測試案例 tc-007. 取得用戶偏00:00 +7: ... 功能測試案例 tc-007. 取得用戶偏00:00 +7: ... 功能測試案例 tc-008. 更新用戶偏00:00 +8: ... 功能測試案例 tc-008. 更新用戶偏00:00 +8: ... 功能測試案例 tc-009. 變更密碼API00:00 +9: ... 功能測試案例 tc-009. 變更密碼API00:00 +9: ... 功能測試案例 tc-010. 設定生物辨00:00 +10: ... 功能測試案例 tc-010. 設定生物辨00:00 +10: ... 功能測試案例 tc-011. 設定PIN碼A00:00 +11: ... 功能測試案例 tc-011. 設定PIN碼A00:00 +11: ... 功能測試案例 tc-046. 時區處理測00:00 +12: ... 功能測試案例 tc-046. 時區處理測00:00 +12: ... 功能測試案例 tc-047. 資料驗證邊00:00 +13: ... 功能測試案例 tc-047. 資料驗證邊00:00 +13: ... tc-012. Expert模式差異化測試   00:00 +14: ... tc-012. Expert模式差異化測試   00:00 +14: ... tc-013. Inertial模式差異化測試 00:00 +14 -1: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-013. Inertial模式差異化測試 [E]
+  Expected: 'inertial'
+    Actual: 'expert'
+     Which: is different.
+            Expected: inertial
+              Actual: expert
+                      ^
+             Differ at offset 0
+  
+  package:matcher  expect
+  8502.            用戶管理服務_test.dart 680:9  main.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-013. Inertial模式差異化測試'
+00:00 +14 -1: ... tc-014. Cultivation模式差異00:00 +14 -2: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-014. Cultivation模式差異化測試 [E]
+  Expected: 'cultivation'
+    Actual: 'expert'
+     Which: is different.
+            Expected: cultivatio ...
+              Actual: expert
+                      ^
+             Differ at offset 0
+  
+  package:matcher  expect
+  8502.            用戶管理服務_test.dart 701:9  main.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-014. Cultivation模式差異化測試'
+00:00 +14 -2: ... tc-015. Guiding模式差異化測00:00 +14 -3: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-015. Guiding模式差異化測試 [E]
+  Expected: 'guiding'
+    Actual: 'expert'
+     Which: is different.
+            Expected: guiding
+              Actual: expert
+                      ^
+             Differ at offset 0
+  
+  package:matcher  expect
+  8502.            用戶管理服務_test.dart 722:9  main.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-015. Guiding模式差異化測試'
+00:00 +14 -3: ... tc-031. Expert模式錯誤訊息測00:00 +15 -3: ... tc-031. Expert模式錯誤訊息測00:00 +15 -3: ... tc-032. Inertial模式錯誤訊息00:00 +16 -3: ... tc-032. Inertial模式錯誤訊息00:00 +16 -3: ... Cultivation模式錯誤訊息測試 00:00 +17 -3: ... Cultivation模式錯誤訊息測試 00:00 +17 -3: ... tc-034. Guiding模式錯誤訊息00:00 +18 -3: ... tc-034. Guiding模式錯誤訊息00:00 +18 -3: ... tc-039. Expert模式深度功能測00:00 +19 -3: ... tc-039. Expert模式深度功能測00:00 +19 -3: ... tc-040. Inertial模式穩定性測00:00 +20 -3: ... tc-040. Inertial模式穩定性測00:00 +20 -3: ... tc-041. Cultivation模式激勵00:00 +20 -4: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-041. Cultivation模式激勵測試 [E]
+  Expected: 'cultivation'
+    Actual: 'expert'
+     Which: is different.
+            Expected: cultivatio ...
+              Actual: expert
+                      ^
+             Differ at offset 0
+  
+  package:matcher  expect
+  8502.            用戶管理服務_test.dart 889:9  main.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-041. Cultivation模式激勵測試'
+00:00 +20 -4: ... tc-042. Guiding模式簡化測試 00:00 +20 -5: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-042. Guiding模式簡化測試 [E]
+  Expected: 'guiding'
+    Actual: 'expert'
+     Which: is different.
+            Expected: guiding
+              Actual: expert
+                      ^
+             Differ at offset 0
+  
+  package:matcher  expect
+  8502.            用戶管理服務_test.dart 915:9  main.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-042. Guiding模式簡化測試'
+00:00 +20 -5: ... 整合測試案例 tc-016. 端到端00:00 +21 -5: ... 整合測試案例 tc-016. 端到端00:00 +21 -5: ... 整合測試案例 tc-017. 抽象類00:00 +22 -5: ... 整合測試案例 tc-017. 抽象類00:00 +22 -5: ... tc-018. ProfileService協作測00:00 +23 -5: ... tc-018. ProfileService協作測00:00 +23 -5: ... SecurityService協作測試     00:00 +24 -5: ... SecurityService協作測試     00:00 +24 -5: ... AssessmentService協作測試   00:00 +25 -5: ... AssessmentService協作測試   00:00 +25 -5: ... + SecurityService協作       00:00 +26 -5: ... + SecurityService協作       00:00 +26 -5: ... AssessmentService協作測試   00:00 +27 -5: ... AssessmentService協作測試   00:00 +27 -5: ... UserModeAdapter協作測試     00:00 +28 -5: ... UserModeAdapter協作測試     00:00 +28 -5: ... 整合測試案例 tc-038. 全模組00:00 +29 -5: ... 整合測試案例 tc-038. 全模組00:00 +29 -5: ... 安全性測試案例 tc-021. 密碼00:00 +29 -6: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-021. 密碼安全性驗證測試 [E]
+  Expected: throws <Instance of 'Exception'>
+    Actual: <Closure: () => Future<Map<String, dynamic>>>
+     Which: returned a Future that emitted {
+                                             'success': true,
+                                             'message': '密碼變更成功',
+                                             'data': {'userId': 'security-user-123', 'changedAt': '2025-09-02T08:32:49.706231'}
+                                           }
+  弱密碼 "12345678" 應該被拒絕
+  
+  package:test_api  OutstandingWork.complete
+  
+  Expected: throws <Instance of 'Exception'>
+    Actual: <Closure: () => Future<Map<String, dynamic>>>
+     Which: returned a Future that emitted {
+                                             'success': true,
+                                             'message': '密碼變更成功',
+                                             'data': {'userId': 'security-user-123', 'changedAt': '2025-09-02T08:32:49.706288'}
+                                           }
+  弱密碼 "password" 應該被拒絕
+  
+  package:test_api  OutstandingWork.complete
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-021. 密碼安全性驗證測試'
+00:00 +29 -6: ... tc-022. PIN碼安全性驗證測試 00:00 +29 -7: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-022. PIN碼安全性驗證測試 [E]
+  Expected: throws <Instance of 'Exception'>
+    Actual: <Closure: () => Future<Map<String, dynamic>>>
+     Which: returned a Future that emitted {
+                                             'success': true,
+                                             'message': 'PIN碼設定成功',
+                                             'data': {'userId': 'pin-security-user-123', 'setupAt': '2025-09-02T08:32:49.718684'}
+                                           }
+  無效PIN "000000" 應該被拒絕
+  
+  package:test_api  OutstandingWork.complete
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-022. PIN碼安全性驗證測試'
+00:00 +29 -7: ... 安全性測試案例 tc-023. 生物00:00 +29 -8: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-023. 生物辨識安全測試 [E]
+  type '_Map<dynamic, dynamic>' is not a subtype of type 'Map<String, dynamic>' in type cast
+  unparsed  8502. 用戶管理服務_test.dart 1372:37  main.<fn>.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-023. 生物辨識安全測試'
+00:00 +29 -8: ... 安全性測試案例 tc-024. 隱私00:00 +30 -8: ... 安全性測試案例 tc-024. 隱私00:00 +30 -8: ... 安全性測試案例 tc-043. 跨平00:00 +31 -8: ... 安全性測試案例 tc-043. 跨平00:00 +31 -8: ... 效能測試案例 tc-025. API回應00:00 +32 -8: ... 效能測試案例 tc-025. API回應00:00 +32 -8: ... 效能測試案例 tc-026. 併發處00:00 +33 -8: ... 效能測試案例 tc-026. 併發處00:00 +33 -8: ... tc-027. 大量用戶資料處理效能00:00 +34 -8: ... tc-027. 大量用戶資料處理效能00:00 +34 -8: ... 效能測試案例 tc-048. 系統負00:01 +34 -8: ... 效能測試案例 tc-048. 系統負00:02 +34 -8: ... 效能測試案例 tc-048. 系統負00:03 +34 -8: ... 效能測試案例 tc-048. 系統負00:04 +34 -8: ... 效能測試案例 tc-048. 系統負00:05 +34 -8: ... 效能測試案例 tc-048. 系統負00:05 +34 -8: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-048. 系統負載壓力測試
+壓力測試統計: 總操作數=500, 成功率=100.0%
+00:05 +35 -8: ... 效能測試案例 tc-048. 系統負00:05 +35 -8: ... 異常測試案例 tc-028. 網路異00:05 +35 -9: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-028. 網路異常處理測試 [E]
+  Expected: throws <Instance of 'Exception'>
+    Actual: <Closure: () => Future<Map<String, dynamic>>>
+     Which: returned a Future that emitted {
+                                             'success': true,
+                                             'data': {
+                                               'userId': 'non-existent-user',
+                                               'email': 'user@lcas.com',
+                                               'displayName': '測試用戶',
+                                               'userMode': 'expert',
+                                               'createdAt': '2025-09-02T08:32:54.806256',
+                                               'lastActiveAt': '2025-09-02T08:32:54.806280'
+                                             }
+                                           }
+  網路異常場景: 用戶不存在 應該拋出異常
+  
+  package:test_api  OutstandingWork.complete
+  
+  Expected: throws <Instance of 'Exception'>
+    Actual: <Closure: () => Future<Map<String, dynamic>>>
+     Which: returned a Future that emitted {
+                                             'success': true,
+                                             'data': {
+                                               'userId': 'invalid-format-user',
+                                               'email': 'user@lcas.com',
+                                               'displayName': '測試用戶',
+                                               'userMode': 'expert',
+                                               'createdAt': '2025-09-02T08:32:54.806397',
+                                               'lastActiveAt': '2025-09-02T08:32:54.806400'
+                                             }
+                                           }
+  網路異常場景: 無效格式用戶ID 應該拋出異常
+  
+  package:test_api  OutstandingWork.complete
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-028. 網路異常處理測試'
+00:05 +35 -9: ... 異常測試案例 tc-029. 服務超00:05 +36 -9: ... 異常測試案例 tc-029. 服務超00:05 +36 -9: ... 異常測試案例 tc-030. 資料庫00:05 +37 -9: ... 異常測試案例 tc-030. 資料庫00:05 +37 -9: ... 兼容性測試案例 tc-044. API版00:05 +38 -9: ... 兼容性測試案例 tc-044. API版00:05 +38 -9: ... 兼容性測試案例 tc-045. 多語00:05 +39 -9: ... 兼容性測試案例 tc-045. 多語00:05 +39 -9: ... 可靠性測試案例 tc-049. 災難00:05 +39 -9: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 可靠性測試案例 tc-049. 災難恢復測試
+執行災難場景: 模擬服務重啟
+執行災難場景: 模擬網路中斷
+執行災難場景: 模擬資料庫連線問題
+執行災難場景: 模擬高負載情況
+00:06 +40 -9: ... 可靠性測試案例 tc-049. 災難00:06 +40 -9: ... - 完整49個測試案例 (tearDown00:06 +40 -9: Some tests failed.             
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
+~/workspace/85. Flutter_Test_code_APL$ 
