@@ -2,10 +2,10 @@
 /**
  * 8501. 認證服務_test.dart
  * @testFile 認證服務測試代碼
- * @version 2.7.0
+ * @version 2.8.0
  * @description LCAS 2.0 認證服務 API 測試代碼 - 完整覆蓋11個API端點，支援四模式差異化測試
  * @date 2025-08-28
- * @update 2025-01-29: 升級至v2.7.0，修復TC-047/TC-021/TC-022測試案例，完善Mock服務邏輯
+ * @update 2025-01-29: 升級至v2.8.0，修復TC-021密碼安全性驗證邏輯，統一密碼複雜度檢查規則
  */
 
 import 'package:test/test.dart';
@@ -348,12 +348,25 @@ class FakeUserModeAdapter implements UserModeAdapter {
 class FakeSecurityService implements SecurityService {
   @override
   bool isPasswordSecure(String password) {
-    final weakPasswords = ['123', 'password', '12345678', 'abc123'];
-    if (weakPasswords.contains(password)) return false;
-    
+    // v1.1.0: 移除硬編碼弱密碼列表，改用規則基礎驗證
+    // 基本長度檢查
     if (password.length < 8) return false;
+    
+    // 必須包含大寫字母
     if (!password.contains(RegExp(r'[A-Z]'))) return false;
+    
+    // 必須包含數字
     if (!password.contains(RegExp(r'[0-9]'))) return false;
+    
+    // 特別檢查：純數字密碼視為不安全
+    if (RegExp(r'^[0-9]+$').hasMatch(password)) return false;
+    
+    // 常見弱密碼模式檢查
+    final commonWeakPatterns = ['123', 'password', 'abc123'];
+    for (final pattern in commonWeakPatterns) {
+      if (password.toLowerCase().contains(pattern)) return false;
+    }
+    
     return true;
   }
 
@@ -805,7 +818,7 @@ class TestEnvironmentConfig {
 // ================================
 
 void main() {
-  group('認證服務測試套件 v2.7.0 - 完整49個測試案例', () {
+  group('認證服務測試套件 v2.8.0 - 完整49個測試案例', () {
     late AuthController authController;
     late FakeAuthService fakeAuthService;
     late FakeTokenService fakeTokenService;
@@ -1573,11 +1586,13 @@ void main() {
     group('安全性測試案例', () {
       /**
        * TC-021. 密碼安全性驗證測試
-       * @version v1.0.0
+       * @version v1.1.0
        * @date 2025-09-01
-       * @description 全面驗證密碼安全性機制
+       * @description 全面驗證密碼安全性機制，基於規則驗證而非硬編碼列表
+       * @update 2025-01-29: 修正邏輯一致性，統一密碼複雜度檢查規則
        */
       test('tc-021. 密碼安全性驗證測試', () async {
+        // 測試常見弱密碼
         final weakPasswords = ['123', 'password', 'abc123'];
 
         for (final weakPassword in weakPasswords) {
@@ -1594,10 +1609,15 @@ void main() {
           ].contains(response.error?.code), isTrue);
         }
         
-        // 特別測試12345678（8字元但缺乏複雜性）
+        // 邊界測試：8字元純數字密碼（缺乏大寫字母和字母組合）
         final borderlinePassword = '12345678';
         final isSecure = fakeSecurityService.isPasswordSecure(borderlinePassword);
-        expect(isSecure, isFalse); // 應該不安全，因為缺乏大寫字母
+        expect(isSecure, isFalse, reason: '純數字密碼缺乏大寫字母，應判定為不安全');
+        
+        // 正面測試：符合安全要求的密碼
+        final securePassword = 'SecurePass123';
+        final isSecureStrong = fakeSecurityService.isPasswordSecure(securePassword);
+        expect(isSecureStrong, isTrue, reason: '包含大寫字母、數字的8+字元密碼應為安全');
       });
 
       /**
