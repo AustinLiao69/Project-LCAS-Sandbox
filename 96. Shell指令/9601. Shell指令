@@ -19,3 +19,5 @@ dart test "8501. 認證服務_test.dart"
 cd "85. Flutter_Test_code_APL"
 dart pub get
 =>安裝dart sdk套件
+
+dart test "8501. 認證服務_test.dart" --chain-stack-traces

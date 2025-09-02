@@ -1859,8 +1859,17 @@ void main() {
        */
       test('tc-045. 多語言支援測試', () async {
         // Arrange
-        final request = TestUtils.createTestRegisterRequest();
-        request.language = 'en-US';
+        final request = RegisterRequest(
+          email: 'test@lcas.com',
+          password: 'TestPassword123',
+          confirmPassword: 'TestPassword123',
+          displayName: 'Test User',
+          userMode: UserMode.expert,
+          acceptTerms: true,
+          acceptPrivacy: true,
+          timezone: 'Asia/Taipei',
+          language: 'en-US',
+        );
 
         // Act
         final response = await authController.register(request);
