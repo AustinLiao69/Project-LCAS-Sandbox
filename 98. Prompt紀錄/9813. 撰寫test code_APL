@@ -21,7 +21,8 @@
  * @update: 升級版本
  */
 
-6. TDD(Test driven development) Test Code開發注意事項
+6. 該測試代碼必須要能夠整合至8599. Fake_service_switch.dart，用作Fake service的開關
+7. TDD(Test driven development) Test Code開發注意事項
 
 🎯 基本TDD原則
 Red-Green-Refactor循環：先寫失敗測試 → 寫最少代碼通過 → 重構優化
