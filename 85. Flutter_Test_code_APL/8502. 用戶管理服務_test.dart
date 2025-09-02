@@ -573,10 +573,286 @@ void main() {
       });
     });
 
-    // 其他測試群組將在後續階段實作
+    // ================================
+    // 四模式差異化測試案例 (TC-012 ~ TC-034)
+    // ================================
+
     group('四模式差異化測試案例', () {
-      test('預留：四模式測試將在第二階段實作', () {
-        expect(true, isTrue);
+      /**
+       * TC-012. Expert模式差異化測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-012. Expert模式差異化測試', () async {
+        // Arrange
+        const userId = 'expert-user-123';
+        const expertMode = 'expert';
+        
+        // Act
+        final modeResponse = await fakeUserService.changeUserMode(userId, expertMode);
+        final profileResponse = await fakeUserService.getUserProfile(userId);
+
+        // Assert
+        expect(modeResponse['success'], isTrue);
+        expect(modeResponse['data']['newMode'], equals(expertMode));
+        expect(profileResponse['data']['userMode'], equals(expertMode));
+      });
+
+      /**
+       * TC-013. Inertial模式差異化測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-013. Inertial模式差異化測試', () async {
+        // Arrange
+        const userId = 'inertial-user-123';
+        const inertialMode = 'inertial';
+
+        // Act
+        final modeResponse = await fakeUserService.changeUserMode(userId, inertialMode);
+        final profileResponse = await fakeUserService.getUserProfile(userId);
+
+        // Assert
+        expect(modeResponse['success'], isTrue);
+        expect(modeResponse['data']['newMode'], equals(inertialMode));
+        expect(profileResponse['data']['userMode'], equals(inertialMode));
+      });
+
+      /**
+       * TC-014. Cultivation模式差異化測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-014. Cultivation模式差異化測試', () async {
+        // Arrange
+        const userId = 'cultivation-user-123';
+        const cultivationMode = 'cultivation';
+
+        // Act
+        final modeResponse = await fakeUserService.changeUserMode(userId, cultivationMode);
+        final profileResponse = await fakeUserService.getUserProfile(userId);
+
+        // Assert
+        expect(modeResponse['success'], isTrue);
+        expect(modeResponse['data']['newMode'], equals(cultivationMode));
+        expect(profileResponse['data']['userMode'], equals(cultivationMode));
+      });
+
+      /**
+       * TC-015. Guiding模式差異化測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-015. Guiding模式差異化測試', () async {
+        // Arrange
+        const userId = 'guiding-user-123';
+        const guidingMode = 'guiding';
+
+        // Act
+        final modeResponse = await fakeUserService.changeUserMode(userId, guidingMode);
+        final profileResponse = await fakeUserService.getUserProfile(userId);
+
+        // Assert
+        expect(modeResponse['success'], isTrue);
+        expect(modeResponse['data']['newMode'], equals(guidingMode));
+        expect(profileResponse['data']['userMode'], equals(guidingMode));
+      });
+
+      /**
+       * TC-031. Expert模式錯誤訊息測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-031. Expert模式錯誤訊息測試', () async {
+        // Arrange
+        const userId = 'expert-user-123';
+        const expertMode = 'expert';
+        const invalidMode = 'invalid-mode';
+
+        // Act & Assert
+        await fakeUserService.changeUserMode(userId, expertMode);
+        
+        // 測試錯誤情況
+        expect(
+          () => fakeUserService.changeUserMode(userId, invalidMode),
+          throwsA(predicate((e) => e.toString().contains('無效的用戶模式'))),
+        );
+      });
+
+      /**
+       * TC-032. Inertial模式錯誤訊息測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-032. Inertial模式錯誤訊息測試', () async {
+        // Arrange
+        const userId = 'inertial-user-123';
+        const inertialMode = 'inertial';
+        final emptyUpdateData = <String, dynamic>{};
+
+        // Act & Assert
+        await fakeUserService.changeUserMode(userId, inertialMode);
+        
+        // 測試錯誤情況
+        expect(
+          () => fakeUserService.updateUserProfile(userId, emptyUpdateData),
+          throwsA(predicate((e) => e.toString().contains('更新資料不能為空'))),
+        );
+      });
+
+      /**
+       * TC-033. Cultivation模式錯誤訊息測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-033. Cultivation模式錯誤訊息測試', () async {
+        // Arrange
+        const userId = 'cultivation-user-123';
+        const cultivationMode = 'cultivation';
+        const invalidPinCode = '123'; // 太短的PIN碼
+
+        // Act & Assert
+        await fakeUserService.changeUserMode(userId, cultivationMode);
+        
+        // 測試錯誤情況
+        expect(
+          () => fakeUserService.setupPinCode(userId, invalidPinCode),
+          throwsA(predicate((e) => e.toString().contains('PIN碼必須為6位數字'))),
+        );
+      });
+
+      /**
+       * TC-034. Guiding模式錯誤訊息測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-034. Guiding模式錯誤訊息測試', () async {
+        // Arrange
+        const userId = 'guiding-user-123';
+        const guidingMode = 'guiding';
+        const wrongOldPassword = 'wrong-old-password';
+        const newPassword = 'NewPassword123';
+
+        // Act & Assert
+        await fakeUserService.changeUserMode(userId, guidingMode);
+        
+        // 測試錯誤情況
+        expect(
+          () => fakeUserService.changePassword(userId, wrongOldPassword, newPassword),
+          throwsA(predicate((e) => e.toString().contains('舊密碼驗證失敗'))),
+        );
+      });
+
+      /**
+       * TC-039. Expert模式深度功能測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-039. Expert模式深度功能測試', () async {
+        // Arrange
+        const userId = 'expert-user-123';
+        const expertMode = 'expert';
+        final biometricData = {'templateId': 'expert-fp-template'};
+
+        // Act
+        await fakeUserService.changeUserMode(userId, expertMode);
+        final activityResponse = await fakeUserService.getUserActivityHistory(userId);
+        final linkedAccountsResponse = await fakeUserService.getLinkedAccounts(userId);
+        final biometricResponse = await fakeUserService.setupBiometric(userId, 'fingerprint', biometricData);
+
+        // Assert
+        expect(activityResponse['success'], isTrue);
+        expect(activityResponse['data']['activities'], isA<List>());
+        expect(linkedAccountsResponse['success'], isTrue);
+        expect(linkedAccountsResponse['data']['linkedAccounts'], isA<Map>());
+        expect(biometricResponse['success'], isTrue);
+        expect(biometricResponse['data']['biometricType'], equals('fingerprint'));
+      });
+
+      /**
+       * TC-040. Inertial模式穩定性測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-040. Inertial模式穩定性測試', () async {
+        // Arrange
+        const userId = 'inertial-user-123';
+        const inertialMode = 'inertial';
+        final updateData = UserManagementTestUtils.createTestUpdateData();
+
+        // Act - 多次操作測試穩定性
+        await fakeUserService.changeUserMode(userId, inertialMode);
+        
+        final results = <Map<String, dynamic>>[];
+        for (int i = 0; i < 3; i++) {
+          final response = await fakeUserService.updateUserProfile(userId, updateData);
+          results.add(response);
+        }
+
+        // Assert
+        for (final result in results) {
+          expect(result['success'], isTrue);
+          expect(result['message'], contains('更新成功'));
+        }
+      });
+
+      /**
+       * TC-041. Cultivation模式激勵測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-041. Cultivation模式激勵測試', () async {
+        // Arrange
+        const userId = 'cultivation-user-123';
+        const cultivationMode = 'cultivation';
+        final preferences = UserManagementTestUtils.createTestPreferences();
+
+        // Act
+        await fakeUserService.changeUserMode(userId, cultivationMode);
+        final preferencesResponse = await fakeUserService.updateUserPreferences(userId, preferences);
+        final profileResponse = await fakeUserService.getUserProfile(userId);
+
+        // Assert
+        expect(preferencesResponse['success'], isTrue);
+        expect(preferencesResponse['message'], contains('更新成功'));
+        expect(profileResponse['data']['userMode'], equals(cultivationMode));
+      });
+
+      /**
+       * TC-042. Guiding模式簡化測試
+       * @version 2025-09-02-V1.5.0
+       * @date 2025-09-02 12:00:00
+       * @update: 升級版本
+       */
+      test('tc-042. Guiding模式簡化測試', () async {
+        // Arrange
+        const userId = 'guiding-user-123';
+        const guidingMode = 'guiding';
+        const simpleUpdateData = {
+          'displayName': '簡化用戶',
+          'theme': 'auto'
+        };
+
+        // Act
+        await fakeUserService.changeUserMode(userId, guidingMode);
+        final updateResponse = await fakeUserService.updateUserProfile(userId, simpleUpdateData);
+        final profileResponse = await fakeUserService.getUserProfile(userId);
+
+        // Assert
+        expect(updateResponse['success'], isTrue);
+        expect(updateResponse['data']['updatedFields'], hasLength(2));
+        expect(profileResponse['data']['userMode'], equals(guidingMode));
       });
     });
 
