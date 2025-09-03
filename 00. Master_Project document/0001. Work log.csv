@@ -183,8 +183,9 @@ MM 	 DD 	 Description 	 Progress
 8	30	 整理專案資料夾 	 Closed
 9	1	 修改8501文件 	 Closed
 9	2	 測試8501代碼：TC-021 failed 	 Open
-9	2	 撰寫8202文件 	 Open
-9	2	 撰寫8502測試代碼 	 Open
+9	2	 撰寫8202文件 	 Closed
+9	2	 撰寫8502測試代碼 	 Closed
 9	2	 測試8502測試代碼 	 Open
-9	2	 製作8599. Fake service switch 	 Open
-9	3	 製作8599. Fake service switch 	 Open
+9	2	 製作8599. Fake service switch 	 Closed
+9	3	 製作8599. Fake service switch 	 Closed
+9	3	 撰寫8302模組代碼 	 Open
