@@ -13,6 +13,9 @@ import 'dart:math';
 
 import 'package:test/test.dart';
 
+// 匯入統一開關管理系統
+import '8599. Fake_service_switch.dart';
+
 // ================================
 // 手動Fake服務類別 (Manual Fake Services)
 // ================================
@@ -369,7 +372,16 @@ void main() {
     });
 
     setUp(() {
-      fakeUserService = FakeUserManagementService();
+      // 檢查8599開關狀態決定使用Fake或Real服務
+      if (FakeServiceSwitch.enable8502FakeService) {
+        // 使用Fake Service進行測試
+        fakeUserService = FakeUserManagementService();
+        print('8502測試代碼：使用Fake Service (開關狀態: ${FakeServiceSwitch.enable8502FakeService})');
+      } else {
+        // 開關關閉時拋出提示或跳過測試
+        print('8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關');
+        throw Exception('8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true');
+      }
     });
 
     // ================================

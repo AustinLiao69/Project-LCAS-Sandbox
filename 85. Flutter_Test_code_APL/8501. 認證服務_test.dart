@@ -1,4 +1,3 @@
-
 /**
  * 8501. 認證服務_test.dart
  * @testFile 認證服務測試代碼
@@ -14,6 +13,16 @@ import 'dart:convert';
 
 // 匯入認證服務模組
 import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart';
+
+// ================================
+// 開關設定 (Switch Configuration)
+// ================================
+
+/// 測試環境開關設定，用於控制是否啟用 Fake Service
+class FakeServiceSwitch {
+  /// 預設啟用 8501 Fake Service
+  static bool enable8501FakeService = true; 
+}
 
 // ================================
 // 手動Fake服務類別 (Manual Fake Services)
@@ -349,50 +358,50 @@ class FakeSecurityService implements SecurityService {
   @override
   bool isPasswordSecure(String password) {
     // v1.5.0: 重構密碼安全檢查邏輯，採用絕對早期返回模式，確保TC-021完全通過
-    
+
     // 第一階段：基本格式檢查（絕對優先）
     if (password.isEmpty) return false;
     if (password.length < 8) return false;
-    
+
     // 第二階段：安全模式排除檢查（絕對早期返回）
     // 純數字密碼檢查 - 絕對優先執行
     if (RegExp(r'^[0-9]+$').hasMatch(password)) {
       return false; // 純數字密碼直接拒絕，不進入後續檢查
     }
-    
+
     // 純字母密碼檢查
     if (RegExp(r'^[a-zA-Z]+$').hasMatch(password)) {
       return false; // 純字母密碼直接拒絕
     }
-    
+
     // 連續重複字符檢查
     if (RegExp(r'(.)\1{2,}').hasMatch(password)) {
       return false; // 連續重複字符直接拒絕
     }
-    
+
     // 常見弱密碼模式檢查
     final weakPatterns = [
       '123', 'password', 'abc123', 'qwerty', 
       '111111', '000000', 'admin', 'guest'
     ];
-    
+
     final lowerPassword = password.toLowerCase();
     for (final pattern in weakPatterns) {
       if (lowerPassword.contains(pattern)) {
         return false; // 弱密碼模式直接拒絕
       }
     }
-    
+
     // 第三階段：複雜度要求驗證（僅在通過所有排除檢查後執行）
     final hasUppercase = RegExp(r'[A-Z]').hasMatch(password);
     final hasLowercase = RegExp(r'[a-z]').hasMatch(password);
     final hasNumber = RegExp(r'[0-9]').hasMatch(password);
-    
+
     // 必須同時包含大寫字母、小寫字母、數字
     if (!hasUppercase || !hasLowercase || !hasNumber) {
       return false;
     }
-    
+
     // 通過所有檢查
     return true;
   }
@@ -416,7 +425,7 @@ class FakeSecurityService implements SecurityService {
   bool validateTokenFormat(String token) {
     final invalidTokens = ['', 'invalid-token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid', 'expired-token'];
     if (invalidTokens.contains(token)) return false;
-    
+
     if (token.isEmpty || token.length <= 10) return false;
     if (token.contains('invalid') || token.contains('expired')) return false;
     return true;
@@ -864,21 +873,31 @@ void main() {
     });
 
     setUp(() {
-      fakeAuthService = FakeAuthService();
-      fakeTokenService = FakeTokenService();
-      fakeUserModeAdapter = FakeUserModeAdapter();
-      fakeSecurityService = FakeSecurityService();
-      fakeValidationService = FakeValidationService();
-      fakeErrorHandler = FakeErrorHandler();
-      fakeModeConfigService = FakeModeConfigService();
-      fakeResponseFilter = FakeResponseFilter();
-      fakeJwtProvider = FakeJwtProvider();
+      // 檢查8599開關狀態決定使用Fake或Real服務
+      if (FakeServiceSwitch.enable8501FakeService) {
+        // 使用Fake Service進行測試
+        fakeAuthService = FakeAuthService();
+        fakeTokenService = FakeTokenService();
+        fakeUserModeAdapter = FakeUserModeAdapter();
+        fakeSecurityService = FakeSecurityService();
+        fakeValidationService = FakeValidationService();
+        fakeErrorHandler = FakeErrorHandler();
+        fakeModeConfigService = FakeModeConfigService();
+        fakeResponseFilter = FakeResponseFilter();
+        fakeJwtProvider = FakeJwtProvider();
 
-      authController = AuthController(
-        authService: fakeAuthService,
-        tokenService: fakeTokenService,
-        userModeAdapter: fakeUserModeAdapter,
-      );
+        authController = AuthController(
+          authService: fakeAuthService,
+          tokenService: fakeTokenService,
+          userModeAdapter: fakeUserModeAdapter,
+        );
+
+        print('8501測試代碼：使用Fake Service (開關狀態: ${FakeServiceSwitch.enable8501FakeService})');
+      } else {
+        // 開關關閉時拋出提示或跳過測試
+        print('8501測試代碼：Fake Service已關閉，請配置Real Service或啟用開關');
+        throw Exception('8501 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8501FakeService = true');
+      }
     });
 
     // ================================
@@ -1626,7 +1645,7 @@ void main() {
           // 長度不足
           {'password': '1234567', 'reason': '長度不足8字元'},
           {'password': 'Abc12', 'reason': '長度不足8字元'},
-          
+
           // 缺乏必要字符類型
           {'password': '12345678', 'reason': '純數字密碼'},
           {'password': 'abcdefgh', 'reason': '純小寫字母密碼'},
@@ -1634,12 +1653,12 @@ void main() {
           {'password': 'ABCDefgh', 'reason': '缺乏數字'},
           {'password': 'ABCD1234', 'reason': '缺乏小寫字母'},
           {'password': 'abcd1234', 'reason': '缺乏大寫字母'},
-          
+
           // 常見弱密碼模式
           {'password': 'Password123', 'reason': '包含常見弱密碼模式'},
           {'password': 'Abc12345', 'reason': '包含常見弱密碼模式'},
           {'password': 'Qwerty123', 'reason': '包含常見弱密碼模式'},
-          
+
           // 重複字符
           {'password': 'Paaa1234', 'reason': '包含連續重複字符'},
           {'password': 'Pass1111', 'reason': '包含連續重複字符'},
@@ -1648,7 +1667,7 @@ void main() {
         for (final test in weakPasswordTests) {
           final password = test['password']!;
           final reason = test['reason']!;
-          
+
           final isSecure = fakeSecurityService.isPasswordSecure(password);
           expect(isSecure, isFalse, reason: '密碼「$password」應判定為不安全：$reason');
 
@@ -1661,7 +1680,7 @@ void main() {
             AuthErrorCode.weakPassword,
           ].contains(response.error?.code), isTrue);
         }
-        
+
         // 正面測試：符合安全要求的密碼
         final securePasswords = [
           'SecurePass123',
