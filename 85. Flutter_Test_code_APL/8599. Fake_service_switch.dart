@@ -36,7 +36,7 @@ class FakeServiceSwitch {
    * true: 使用 Fake Service (預設)
    * false: 使用 Real Service
    */
-  static bool enable8502FakeService = true;
+  static bool enable8502FakeService = false;
 
   // ================================
   // 輔助方法 (Helper Methods)
