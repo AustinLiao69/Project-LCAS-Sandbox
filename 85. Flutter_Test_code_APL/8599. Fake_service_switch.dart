@@ -25,7 +25,7 @@ class FakeServiceSwitch {
    * true: 使用 Fake Service (預設)
    * false: 使用 Real Service
    */
-  static bool enable8501FakeService = true;
+  static bool enable8501FakeService = false;
 
   /**
    * 02. 8502用戶管理服務 Fake Service 開關
