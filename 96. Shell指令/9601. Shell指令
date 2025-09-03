@@ -19,8 +19,9 @@ cd "85. Flutter_Test_code_APL" && dart test "8501. 認證服務_test.dart"
 
 cd "85. Flutter_Test_code_APL" && dart test "8502. 用戶管理服務_test.dart"
 
-6.執行8501. 認證服務_test.dart之dart test
+6.執行85號資料夾之dart test
 dart test "8501. 認證服務_test.dart" 
+dart test "8502. 用戶管理服務_test.dart"
 
 7.安裝dart sdk套件
 cd "85. Flutter_Test_code_APL"
