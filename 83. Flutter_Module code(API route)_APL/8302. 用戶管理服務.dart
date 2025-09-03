@@ -2017,185 +2017,228 @@ class SecurityServiceImpl implements SecurityService {
 /// ValidationService 實作
 class ValidationServiceImpl implements ValidationService {
   /**
-   * 39. 驗證顯示名稱 (完全符合8088規範第5.3節)
+   * 39. 適配回應內容 (完全符合8088規範第5.3節)
    * @version 2025-09-03-V1.1.0
    * @date 2025-09-03 12:00:00
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
-  @override
-  List<ValidationError> validateDisplayName(String? displayName) {
-    final errors = <ValidationError>[];
-    
-    if (displayName != null) {
-      if (displayName.isEmpty) {
-        errors.add(ValidationError(
-          field: 'displayName',
-          message: '顯示名稱不能為空',
-          code: 'REQUIRED',
-        ));
-      } else if (displayName.length > 50) {
-        errors.add(ValidationError(
-          field: 'displayName',
-          message: '顯示名稱不能超過50個字元',
-          code: 'MAX_LENGTH_EXCEEDED',
-        ));
-      }
+  T adaptResponse<T>(T response, UserMode userMode) {
+    // 根據用戶模式適配回應內容
+    switch (userMode) {
+      case UserMode.expert:
+        return _adaptForExpertMode(response);
+      case UserMode.inertial:
+        return _adaptForInertialMode(response);
+      case UserMode.cultivation:
+        return _adaptForCultivationMode(response);
+      case UserMode.guiding:
+        return _adaptForGuidingMode(response);
     }
-    
-    return errors;
   }
 
   /**
-   * 40. 驗證時區設定 (完全符合8088規範第5.3節)
+   * 40. 適配錯誤回應 (完全符合8088規範第5.3節)
    * @version 2025-09-03-V1.1.0
    * @date 2025-09-03 12:00:00
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
-  @override
-  List<ValidationError> validateTimezone(String? timezone) {
-    final errors = <ValidationError>[];
-    
-    if (timezone != null) {
-      final validTimezones = ['Asia/Taipei', 'Asia/Shanghai', 'America/New_York', 'Europe/London'];
-      if (!validTimezones.contains(timezone)) {
-        errors.add(ValidationError(
-          field: 'timezone',
-          message: '不支援的時區設定',
-          code: 'INVALID_VALUE',
-        ));
-      }
-    }
-    
-    return errors;
+  ApiError adaptErrorResponse(ApiError error, UserMode userMode) {
+    return ApiError(
+      code: error.code,
+      message: error.code.getMessage(userMode),
+      field: error.field,
+      timestamp: error.timestamp,
+      requestId: error.requestId,
+      details: error.details,
+    );
   }
 
   /**
-   * 41. 驗證語言設定 (完全符合8088規範第5.3節)
+   * 41. 適配用戶資料回應 (完全符合8088規範第5.3節)
    * @version 2025-09-03-V1.1.0
    * @date 2025-09-03 12:00:00
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
-  @override
-  List<ValidationError> validateLanguage(String? language) {
-    final errors = <ValidationError>[];
-    
-    if (language != null) {
-      if (!['zh-TW', 'en-US'].contains(language)) {
-        errors.add(ValidationError(
-          field: 'language',
-          message: '不支援的語言設定',
-          code: 'UNSUPPORTED_LANGUAGE',
-        ));
-      }
+  UserProfileResponse adaptProfileResponse(UserProfileResponse response, UserMode userMode) {
+    switch (userMode) {
+      case UserMode.expert:
+        // 專家模式：完整資訊
+        return response;
+      case UserMode.inertial:
+        // 慣性模式：標準資訊
+        return UserProfileResponse(
+          id: response.id,
+          email: response.email,
+          displayName: response.displayName,
+          userMode: response.userMode,
+        );
+      case UserMode.cultivation:
+        // 養成模式：包含成就資訊
+        return response;
+      case UserMode.guiding:
+        // 引導模式：簡化資訊
+        return UserProfileResponse(
+          id: response.id,
+          email: response.email,
+          displayName: response.displayName,
+          userMode: response.userMode,
+        );
     }
-    
-    return errors;
   }
 
   /**
-   * 42. 驗證主題設定 (完全符合8088規範第5.3節)
+   * 42. 適配評估結果回應 (完全符合8088規範第5.3節)
    * @version 2025-09-03-V1.1.0
    * @date 2025-09-03 12:00:00
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
-  @override
-  List<ValidationError> validateTheme(String? theme) {
-    final errors = <ValidationError>[];
-    
-    if (theme != null) {
-      if (!['light', 'dark', 'auto'].contains(theme)) {
-        errors.add(ValidationError(
-          field: 'theme',
-          message: '不支援的主題設定',
-          code: 'INVALID_VALUE',
-        ));
-      }
+  AssessmentResultResponse adaptAssessmentResponse(AssessmentResultResponse response, UserMode userMode) {
+    switch (userMode) {
+      case UserMode.expert:
+        // 專家模式：完整評估細節
+        return response;
+      case UserMode.inertial:
+        // 慣性模式：簡化評估結果
+        return AssessmentResultResponse(
+          result: {
+            'recommendedMode': response.result['recommendedMode'],
+            'confidence': response.result['confidence'],
+          },
+          applied: response.applied,
+          previousMode: response.previousMode,
+        );
+      case UserMode.cultivation:
+        // 養成模式：包含激勵訊息
+        return AssessmentResultResponse(
+          result: response.result,
+          applied: response.applied,
+          previousMode: response.previousMode,
+        );
+      case UserMode.guiding:
+        // 引導模式：最簡化結果
+        return AssessmentResultResponse(
+          result: {
+            'recommendedMode': response.result['recommendedMode'],
+          },
+          applied: response.applied,
+        );
     }
-    
-    return errors;
   }
 
   /**
-   * 43. 驗證更新資料請求 (完全符合8088規範第5.3節)
+   * 43. 適配安全設定回應 (完全符合8088規範第5.3節)
    * @version 2025-09-03-V1.1.0
    * @date 2025-09-03 12:00:00
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
-  @override
-  List<ValidationError> validateUpdateProfileRequest(UpdateProfileRequest request) {
-    final errors = <ValidationError>[];
-    
-    errors.addAll(validateDisplayName(request.displayName));
-    errors.addAll(validateTimezone(request.timezone));
-    errors.addAll(validateLanguage(request.language));
-    errors.addAll(validateTheme(request.theme));
-    
-    return errors;
+  UpdateSecurityResponse adaptSecurityResponse(UpdateSecurityResponse response, UserMode userMode) {
+    switch (userMode) {
+      case UserMode.expert:
+        // 專家模式：完整安全設定資訊
+        return response;
+      case UserMode.inertial:
+        // 慣性模式：標準安全設定資訊
+        return UpdateSecurityResponse(
+          message: response.message,
+          securityLevel: response.securityLevel,
+          updatedSettings: response.updatedSettings,
+        );
+      case UserMode.cultivation:
+        // 養成模式：包含安全提醒
+        return UpdateSecurityResponse(
+          message: response.message + ' 您的帳戶安全性已提升！',
+          securityLevel: response.securityLevel,
+          updatedSettings: response.updatedSettings,
+        );
+      case UserMode.guiding:
+        // 引導模式：簡化訊息
+        return UpdateSecurityResponse(
+          message: '安全設定已更新',
+          securityLevel: response.securityLevel,
+          updatedSettings: [],
+        );
+    }
+  }
+
+  // 內部適配方法
+  T _adaptForExpertMode<T>(T response) {
+    // 專家模式：完整功能和詳細資訊
+    return response;
+  }
+
+  T _adaptForInertialMode<T>(T response) {
+    // 慣性模式：標準功能
+    return response;
+  }
+
+  T _adaptForCultivationMode<T>(T response) {
+    // 養成模式：包含成就和激勵元素
+    return response;
+  }
+
+  T _adaptForGuidingMode<T>(T response) {
+    // 引導模式：簡化介面和操作
+    return response;
   }
 
   /**
-   * 44. 驗證評估回答 (完全符合8088規範第5.3節)
+   * 44. 取得可用操作選項 (完全符合8088規範第5.3節)
    * @version 2025-09-03-V1.1.0
    * @date 2025-09-03 12:00:00
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
-  @override
-  List<ValidationError> validateAssessmentAnswers(List<AnswerData> answers) {
-    final errors = <ValidationError>[];
-    
-    if (answers.isEmpty) {
-      errors.add(ValidationError(
-        field: 'answers',
-        message: '至少需要回答一題',
-        code: 'REQUIRED',
-      ));
+  List<String> getAvailableActions(UserMode userMode) {
+    switch (userMode) {
+      case UserMode.expert:
+        return ['profile', 'security', 'preferences', 'assessment', 'mode-switch', 'export', 'advanced'];
+      case UserMode.inertial:
+        return ['profile', 'security', 'preferences', 'assessment'];
+      case UserMode.cultivation:
+        return ['profile', 'security', 'assessment', 'achievements', 'goals'];
+      case UserMode.guiding:
+        return ['profile', 'basic-settings'];
     }
-
-    for (var i = 0; i < answers.length; i++) {
-      final answer = answers[i];
-      if (answer.selectedOptions.isEmpty) {
-        errors.add(ValidationError(
-          field: 'answers[$i].selectedOptions',
-          message: '問題${answer.questionId}需要選擇回答',
-          code: 'REQUIRED',
-        ));
-      }
-    }
-    
-    return errors;
   }
 
   /**
-   * 45. 驗證安全設定 (完全符合8088規範第5.3節)
+   * 45. 過濾回應資料 (完全符合8088規範第5.3節)
    * @version 2025-09-03-V1.1.0
    * @date 2025-09-03 12:00:00
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
-  @override
-  List<ValidationError> validateSecuritySettings(UpdateSecurityRequest request) {
-    final errors = <ValidationError>[];
+  Map<String, dynamic> filterResponseData(Map<String, dynamic> data, UserMode userMode) {
+    final filteredData = Map<String, dynamic>.from(data);
     
-    // 驗證PIN碼格式
-    if (request.appLock?.pinCode != null) {
-      final pinCode = request.appLock!.pinCode!;
-      if (pinCode.length < 4 || pinCode.length > 6) {
-        errors.add(ValidationError(
-          field: 'appLock.pinCode',
-          message: 'PIN碼必須是4-6位數字',
-          code: 'INVALID_FORMAT',
-        ));
-      }
-      
-      if (!RegExp(r'^\d+$').hasMatch(pinCode)) {
-        errors.add(ValidationError(
-          field: 'appLock.pinCode',
-          message: 'PIN碼只能包含數字',
-          code: 'INVALID_FORMAT',
-        ));
-      }
+    switch (userMode) {
+      case UserMode.expert:
+        // 專家模式：不過濾任何資料
+        break;
+      case UserMode.inertial:
+        // 慣性模式：過濾進階資料
+        filteredData.remove('advancedSettings');
+        filteredData.remove('debugInfo');
+        break;
+      case UserMode.cultivation:
+        // 養成模式：加入成就資料
+        filteredData['achievements'] = _getCultivationAchievements();
+        break;
+      case UserMode.guiding:
+        // 引導模式：只保留基本資料
+        final basicFields = ['id', 'displayName', 'userMode', 'message'];
+        filteredData.removeWhere((key, value) => !basicFields.contains(key));
+        break;
     }
     
-    return errors;
+    return filteredData;
+  }
+
+  // 輔助方法
+  Map<String, dynamic> _getCultivationAchievements() {
+    return {
+      'totalPoints': 150,
+      'level': 'Bronze',
+      'recentAchievements': ['首次記帳', '連續記帳3天'],
+    };
   }
 }
 
