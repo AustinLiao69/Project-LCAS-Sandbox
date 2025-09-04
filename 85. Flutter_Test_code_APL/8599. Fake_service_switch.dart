@@ -113,28 +113,3 @@ class FakeServiceSwitch {
     enable8503FakeService = false;
   }
 }
-
-/**
- * 開關控制使用說明：
- * 
- * 1. 啟用8501 Fake Service：
- *    FakeServiceSwitch.enable8501FakeService = true;
- * 
- * 2. 啟用8502 Fake Service：
- *    FakeServiceSwitch.enable8502FakeService = true;
- * 
- * 3. 啟用8503 Fake Service：
- *    FakeServiceSwitch.enable8503FakeService = true;
- * 
- * 4. 查看開關狀態：
- *    print(FakeServiceSwitch.getSwitchSummary());
- * 
- * 5. 重設為預設值：
- *    FakeServiceSwitch.resetToDefaults();
- * 
- * 6. 啟用所有 Fake Service：
- *    FakeServiceSwitch.enableAllFakeServices();
- * 
- * 7. 啟用所有 Real Service：
- *    FakeServiceSwitch.enableAllRealServices();
- * 
