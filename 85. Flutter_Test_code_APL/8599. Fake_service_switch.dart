@@ -1,11 +1,11 @@
 
 /**
  * 8599. Fake Service Switch 統一開關管理系統
- * @version 2025-09-02-V1.2.0
- * @date 2025-09-02 14:00:00
- * @update: 階段一修復完成 - 語法錯誤修復與架構簡化，回歸純靜態開關設計
- * @module 模組版次: v1.2.0
- * @function 函數版次: v1.2.0
+ * @version 2025-09-04-V2.5.0
+ * @date 2025-09-04 15:00:00
+ * @update: 階段一修復完成 - 新增 getSwitchSummary 方法，語法錯誤修復與架構優化
+ * @module 模組版次: v2.5.0
+ * @function 函數版次: v2.5.0
  * @description LCAS 2.0 APL層測試代碼統一開關管理中心 - 簡潔穩定的靜態開關設計
  */
 
@@ -49,6 +49,71 @@ class FakeServiceSwitch {
    */
   static bool enable8503FakeService = true;
 
+// ================================
+  // 開關狀態查詢方法 (Switch Status Query Methods)
+  // ================================
+
+  /**
+   * 04. 取得開關狀態摘要
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段一修復 - 新增開關狀態摘要方法
+   * @description 提供所有服務開關的當前狀態摘要
+   * @return String 開關狀態摘要文字
+   */
+  static String getSwitchSummary() {
+    final buffer = StringBuffer();
+    buffer.writeln('🔧 LCAS 2.0 Fake Service Switch 狀態摘要');
+    buffer.writeln('================================================');
+    buffer.writeln('🔐 8501認證服務: ${enable8501FakeService ? "Fake Service" : "Real Service"}');
+    buffer.writeln('👤 8502用戶管理服務: ${enable8502FakeService ? "Fake Service" : "Real Service"}');
+    buffer.writeln('💰 8503記帳交易服務: ${enable8503FakeService ? "Fake Service" : "Real Service"}');
+    buffer.writeln('================================================');
+    buffer.writeln('📊 模組版次: v1.2.0');
+    buffer.writeln('📅 更新日期: 2025-09-04');
+    return buffer.toString();
+  }
+
+  /**
+   * 05. 重設所有開關為預設值
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段一修復 - 新增重設開關方法
+   * @description 將所有服務開關重設為預設的 Fake Service 模式
+   */
+  static void resetToDefaults() {
+    enable8501FakeService = false;
+    enable8502FakeService = false;
+    enable8503FakeService = true;
+  }
+
+  /**
+   * 06. 啟用所有 Fake Service
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段一修復 - 新增批次啟用方法
+   * @description 將所有服務開關設定為 Fake Service 模式
+   */
+  static void enableAllFakeServices() {
+    enable8501FakeService = true;
+    enable8502FakeService = true;
+    enable8503FakeService = true;
+  }
+
+  /**
+   * 07. 啟用所有 Real Service
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段一修復 - 新增批次停用方法
+   * @description 將所有服務開關設定為 Real Service 模式
+   */
+  static void enableAllRealServices() {
+    enable8501FakeService = false;
+    enable8502FakeService = false;
+    enable8503FakeService = false;
+  }
+}
+
 /**
  * 開關控制使用說明：
  * 
@@ -60,4 +125,16 @@ class FakeServiceSwitch {
  * 
  * 3. 啟用8503 Fake Service：
  *    FakeServiceSwitch.enable8503FakeService = true;
+ * 
+ * 4. 查看開關狀態：
+ *    print(FakeServiceSwitch.getSwitchSummary());
+ * 
+ * 5. 重設為預設值：
+ *    FakeServiceSwitch.resetToDefaults();
+ * 
+ * 6. 啟用所有 Fake Service：
+ *    FakeServiceSwitch.enableAllFakeServices();
+ * 
+ * 7. 啟用所有 Real Service：
+ *    FakeServiceSwitch.enableAllRealServices();
  * 
