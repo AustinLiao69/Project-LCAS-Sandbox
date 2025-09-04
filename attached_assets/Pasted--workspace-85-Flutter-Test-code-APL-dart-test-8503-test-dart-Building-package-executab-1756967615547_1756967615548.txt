@@ -1,0 +1,54 @@
+~/workspace/85. Flutter_Test_code_APL$ dart test "8503. 記帳交易服務_test.dart"
+Building package executable... 
+Built test:test.
+00:00 +0: loading 8503. 記帳交易服務_test.dart                00:00 +0 -1: loading 8503. 記帳交易服務_test.dart [E]              
+  Failed to load "8503. 記帳交易服務_test.dart":
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2272:7: Error: Expected an identifier, but got '' 階段四：深度四模式測試與整合驗證''.
+  Try inserting an identifier before '' 階段四：深度四模式測試與整合驗證''.
+  group(' 階段四：深度四模式測試與整合驗證', () {
+        ^^^^^^^^^^^^^^^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2272:28: Error: Expected an identifier, but got '('.
+  Try inserting an identifier before '('.
+  group(' 階段四：深度四模式測試與整合驗證', () {
+                             ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2272:31: Error: Expected ')' before this.
+  group(' 階段四：深度四模式測試與整合驗證', () {
+                                ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:3016:5: Error: Expected a function body or '=>'.
+  Try adding {}.
+    });
+      ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:1443:29: Error: Member not found: 'FakeServiceSwitch.getSwitchSummary'.
+      print(FakeServiceSwitch.getSwitchSummary());
+                              ^^^^^^^^^^^^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:1446:8: Error: Too many positional arguments: 0 allowed, but 2 found.
+  Try removing the extra positional arguments.
+    group('階段一：基礎架構測試', () {
+         ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2272:1: Context: Found this candidate, but the arguments don't match.
+  group(' 階段四：深度四模式測試與整合驗證', () {
+  ^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:1532:8: Error: Too many positional arguments: 0 allowed, but 2 found.
+  Try removing the extra positional arguments.
+    group(' 階段二：核心功能測試', () {
+         ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2272:1: Context: Found this candidate, but the arguments don't match.
+  group(' 階段四：深度四模式測試與整合驗證', () {
+  ^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:1896:8: Error: Too many positional arguments: 0 allowed, but 2 found.
+  Try removing the extra positional arguments.
+    group('🔧 階段三：進階功能測試', () {
+         ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2272:1: Context: Found this candidate, but the arguments don't match.
+  group(' 階段四：深度四模式測試與整合驗證', () {
+  ^^^^^
+  8599.%20Fake_service_switch.dart:52:1: Error: Comment starting with '/*' must end with '*/'.
+  /**
+  ^
+  8599.%20Fake_service_switch.dart:14:25: Error: Can't find '}' to match '{'.
+  class FakeServiceSwitch {
+                          ^
+
+To run this test again: dart test 8503. 記帳交易服務_test.dart -p vm --plain-name 'loading 8503. 記帳交易服務_test.dart'
+00:00 +0 -1: Some tests failed.                              
+~/workspace/85. Flutter_Test_code_APL$ 
