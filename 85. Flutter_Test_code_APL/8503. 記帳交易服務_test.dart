@@ -1,11 +1,11 @@
 
 /**
  * 8503. 記帳交易服務測試代碼
- * @version 2025-09-04-V1.2.0
- * @date 2025-09-04 12:00:00
- * @update: 階段三完成 - 新增批次操作、附件管理、重複交易測試實作(TC-011~TC-020)
- * @module 模組版次: v1.2.0
- * @function 函數版次: v1.2.0
+ * @version 2025-09-04-V2.5.0
+ * @date 2025-09-04 15:00:00
+ * @update: 階段四完成 - 語法錯誤修復，深度四模式測試與整合驗證完成(TC-001~TC-050)
+ * @module 模組版次: v2.5.0
+ * @function 函數版次: v2.5.0
  * @description LCAS 2.0 記帳交易服務API測試代碼 - 完全符合8403測試計畫50個測試案例
  */
 
@@ -2269,7 +2269,7 @@ void main() {
   });
 }
 
-group(' 階段四：深度四模式測試與整合驗證', () {
+group('階段四：深度四模式測試與整合驗證', () {
     late MockTransactionService transactionService;
 
     setUp(() {
