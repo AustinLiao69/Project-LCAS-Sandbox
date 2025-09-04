@@ -1,0 +1,400 @@
+~/workspace/85. Flutter_Test_code_APL$ dart test "8502. 用戶管理服務_test.dart"
+Building package executable... (1.1s)
+Built test:test.
+00:00 +0: ... 8502. 用戶管理服務_test.dart00:00 +0: ... - 完整49個測試案例 (setUpAll00:00 +0: ... tc-001. 取得用戶資料API正常00:00 +0: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-001. 取得用戶資料API正常流程測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -1: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-001. 取得用戶資料API正常流程測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-001. 取得用戶資料API正常流程測試'
+00:00 +0 -1: ... tc-002. 取得用戶資料API異00:00 +0 -1: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-002. 取得用戶資料API異常處理測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -2: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-002. 取得用戶資料API異常處理測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-002. 取得用戶資料API異常處理測試'
+00:00 +0 -2: ... tc-003. 更新用戶資料API正00:00 +0 -2: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-003. 更新用戶資料API正常流程測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -3: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-003. 更新用戶資料API正常流程測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-003. 更新用戶資料API正常流程測試'
+00:00 +0 -3: ... tc-004. 更新用戶資料API異00:00 +0 -3: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-004. 更新用戶資料API異常處理測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -4: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-004. 更新用戶資料API異常處理測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-004. 更新用戶資料API異常處理測試'
+00:00 +0 -4: ... tc-005. 變更用戶模式API測00:00 +0 -4: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-005. 變更用戶模式API測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -5: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-005. 變更用戶模式API測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-005. 變更用戶模式API測試'
+00:00 +0 -5: ... tc-006. 刪除用戶API測試  00:00 +0 -5: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-006. 刪除用戶API測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -6: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-006. 刪除用戶API測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-006. 刪除用戶API測試'
+00:00 +0 -6: ... tc-007. 取得用戶偏好設定A00:00 +0 -6: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-007. 取得用戶偏好設定API測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -7: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-007. 取得用戶偏好設定API測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-007. 取得用戶偏好設定API測試'
+00:00 +0 -7: ... tc-008. 更新用戶偏好設定A00:00 +0 -7: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-008. 更新用戶偏好設定API測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -8: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-008. 更新用戶偏好設定API測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-008. 更新用戶偏好設定API測試'
+00:00 +0 -8: ... tc-009. 變更密碼API測試  00:00 +0 -8: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-009. 變更密碼API測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -9: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-009. 變更密碼API測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-009. 變更密碼API測試'
+00:00 +0 -9: ... tc-010. 設定生物辨識API測00:00 +0 -9: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-010. 設定生物辨識API測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -10: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-010. 設定生物辨識API測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-010. 設定生物辨識API測試'
+00:00 +0 -10: ... tc-011. 設定PIN碼API測試00:00 +0 -10: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-011. 設定PIN碼API測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -11: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-011. 設定PIN碼API測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-011. 設定PIN碼API測試'
+00:00 +0 -11: ... 功能測試案例 tc-046. 時00:00 +0 -11: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-046. 時區處理測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -12: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-046. 時區處理測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-046. 時區處理測試'
+00:00 +0 -12: ... tc-047. 資料驗證邊界測試00:00 +0 -12: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-047. 資料驗證邊界測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -13: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-047. 資料驗證邊界測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 功能測試案例 tc-047. 資料驗證邊界測試'
+00:00 +0 -13: ... tc-012. Expert模式差異化00:00 +0 -13: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-012. Expert模式差異化測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -14: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-012. Expert模式差異化測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-012. Expert模式差異化測試'
+00:00 +0 -14: ... Inertial模式差異化測試  00:00 +0 -14: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-013. Inertial模式差異化測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -15: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-013. Inertial模式差異化測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-013. Inertial模式差異化測試'
+00:00 +0 -15: ... Cultivation模式差異化測00:00 +0 -15: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-014. Cultivation模式差異化測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -16: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-014. Cultivation模式差異化測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-014. Cultivation模式差異化測試'
+00:00 +0 -16: ... tc-015. Guiding模式差異00:00 +0 -16: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-015. Guiding模式差異化測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -17: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-015. Guiding模式差異化測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-015. Guiding模式差異化測試'
+00:00 +0 -17: ... tc-031. Expert模式錯誤訊00:00 +0 -17: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-031. Expert模式錯誤訊息測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -18: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-031. Expert模式錯誤訊息測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-031. Expert模式錯誤訊息測試'
+00:00 +0 -18: ... Inertial模式錯誤訊息測試00:00 +0 -18: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-032. Inertial模式錯誤訊息測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -19: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-032. Inertial模式錯誤訊息測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-032. Inertial模式錯誤訊息測試'
+00:00 +0 -19: ... Cultivation模式錯誤訊息00:00 +0 -19: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-033. Cultivation模式錯誤訊息測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -20: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-033. Cultivation模式錯誤訊息測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-033. Cultivation模式錯誤訊息測試'
+00:00 +0 -20: ... Guiding模式錯誤訊息測試 00:00 +0 -20: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-034. Guiding模式錯誤訊息測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -21: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-034. Guiding模式錯誤訊息測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-034. Guiding模式錯誤訊息測試'
+00:00 +0 -21: ... tc-039. Expert模式深度功00:00 +0 -21: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-039. Expert模式深度功能測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -22: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-039. Expert模式深度功能測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-039. Expert模式深度功能測試'
+00:00 +0 -22: ... Inertial模式穩定性測試  00:00 +0 -22: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-040. Inertial模式穩定性測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -23: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-040. Inertial模式穩定性測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-040. Inertial模式穩定性測試'
+00:00 +0 -23: ... Cultivation模式激勵測試 00:00 +0 -23: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-041. Cultivation模式激勵測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -24: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-041. Cultivation模式激勵測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-041. Cultivation模式激勵測試'
+00:00 +0 -24: ... tc-042. Guiding模式簡化00:00 +0 -24: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-042. Guiding模式簡化測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -25: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-042. Guiding模式簡化測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 四模式差異化測試案例 tc-042. Guiding模式簡化測試'
+00:00 +0 -25: ... tc-016. 端到端用戶管理流00:00 +0 -25: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-016. 端到端用戶管理流程測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -26: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-016. 端到端用戶管理流程測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-016. 端到端用戶管理流程測試'
+00:00 +0 -26: ... tc-017. 抽象類別協作測試00:00 +0 -26: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-017. 抽象類別協作測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -27: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-017. 抽象類別協作測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-017. 抽象類別協作測試'
+00:00 +0 -27: ... ProfileService協作測試  00:00 +0 -27: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-018. ProfileService協作測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -28: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-018. ProfileService協作測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-018. ProfileService協作測試'
+00:00 +0 -28: ... SecurityService協作測試 00:00 +0 -28: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-019. SecurityService協作測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -29: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-019. SecurityService協作測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-019. SecurityService協作測試'
+00:00 +0 -29: ... AssessmentService協作測00:00 +0 -29: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-020. AssessmentService協作測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -30: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-020. AssessmentService協作測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-020. AssessmentService協作測試'
+00:00 +0 -30: ... + SecurityService協作   00:00 +0 -30: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-035. ProfileService + SecurityService協作
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -31: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-035. ProfileService + SecurityService協作 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-035. ProfileService + SecurityService協作'
+00:00 +0 -31: ... AssessmentService協作測00:00 +0 -31: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-036. AssessmentService協作測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -32: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-036. AssessmentService協作測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-036. AssessmentService協作測試'
+00:00 +0 -32: ... UserModeAdapter協作測試 00:00 +0 -32: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-037. UserModeAdapter協作測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -33: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-037. UserModeAdapter協作測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-037. UserModeAdapter協作測試'
+00:00 +0 -33: ... tc-038. 全模組協作整合測00:00 +0 -33: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-038. 全模組協作整合測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -34: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-038. 全模組協作整合測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 整合測試案例 tc-038. 全模組協作整合測試'
+00:00 +0 -34: ... tc-021. 密碼安全性驗證測00:00 +0 -34: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-021. 密碼安全性驗證測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -35: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-021. 密碼安全性驗證測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-021. 密碼安全性驗證測試'
+00:00 +0 -35: ... tc-022. PIN碼安全性驗證00:00 +0 -35: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-022. PIN碼安全性驗證測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -36: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-022. PIN碼安全性驗證測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-022. PIN碼安全性驗證測試'
+00:00 +0 -36: ... tc-023. 生物辨識安全測試00:00 +0 -36: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-023. 生物辨識安全測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -37: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-023. 生物辨識安全測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-023. 生物辨識安全測試'
+00:00 +0 -37: ... tc-024. 隱私模式安全測試00:00 +0 -37: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-024. 隱私模式安全測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -38: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-024. 隱私模式安全測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-024. 隱私模式安全測試'
+00:00 +0 -38: ... tc-043. 跨平台安全設定測00:00 +0 -38: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-043. 跨平台安全設定測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -39: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-043. 跨平台安全設定測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 安全性測試案例 tc-043. 跨平台安全設定測試'
+00:00 +0 -39: ... tc-025. API回應時間效能00:00 +0 -39: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-025. API回應時間效能測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -40: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-025. API回應時間效能測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-025. API回應時間效能測試'
+00:00 +0 -40: ... tc-026. 併發處理能力測試00:00 +0 -40: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-026. 併發處理能力測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -41: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-026. 併發處理能力測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-026. 併發處理能力測試'
+00:00 +0 -41: ... tc-027. 大量用戶資料處理00:00 +0 -41: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-027. 大量用戶資料處理效能測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -42: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-027. 大量用戶資料處理效能測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-027. 大量用戶資料處理效能測試'
+00:00 +0 -42: ... tc-048. 系統負載壓力測試00:00 +0 -42: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-048. 系統負載壓力測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -43: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-048. 系統負載壓力測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 效能測試案例 tc-048. 系統負載壓力測試'
+00:00 +0 -43: ... tc-028. 網路異常處理測試00:00 +0 -43: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-028. 網路異常處理測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -44: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-028. 網路異常處理測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-028. 網路異常處理測試'
+00:00 +0 -44: ... tc-029. 服務超時處理測試00:00 +0 -44: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-029. 服務超時處理測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -45: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-029. 服務超時處理測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-029. 服務超時處理測試'
+00:00 +0 -45: ... tc-030. 資料庫連線異常測00:00 +0 -45: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-030. 資料庫連線異常測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -46: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-030. 資料庫連線異常測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 異常測試案例 tc-030. 資料庫連線異常測試'
+00:00 +0 -46: ... tc-044. API版本兼容性測00:00 +0 -46: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 兼容性測試案例 tc-044. API版本兼容性測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -47: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 兼容性測試案例 tc-044. API版本兼容性測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 兼容性測試案例 tc-044. API版本兼容性測試'
+00:00 +0 -47: ... tc-045. 多語言支援測試  00:00 +0 -47: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 兼容性測試案例 tc-045. 多語言支援測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:00 +0 -48: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 兼容性測試案例 tc-045. 多語言支援測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 兼容性測試案例 tc-045. 多語言支援測試'
+00:01 +0 -48: ... 可靠性測試案例 tc-049. 00:01 +0 -48: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 可靠性測試案例 tc-049. 災難恢復測試
+8502測試代碼：Fake Service已關閉，請配置Real Service或啟用開關
+00:01 +0 -49: ... 可靠性測試案例 tc-049. 00:01 +0 -49: 用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 可靠性測試案例 tc-049. 災難恢復測試 [E]
+  Exception: 8502 Fake Service已關閉，無法進行測試。請設置 FakeServiceSwitch.enable8502FakeService = true
+  unparsed  8502. 用戶管理服務_test.dart 383:9  main.<fn>.<fn>
+  
+
+To run this test again: dart test 8502. 用戶管理服務_test.dart -p vm --plain-name '用戶管理服務測試套件 v2.5.0 - 完整49個測試案例 可靠性測試案例 tc-049. 災難恢復測試'
+00:01 +0 -49: Some tests failed.         
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
+~/workspace/85. Flutter_Test_code_APL$ 
