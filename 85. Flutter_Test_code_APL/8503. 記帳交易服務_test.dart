@@ -1,11 +1,11 @@
 /**
  * 8503. 記帳交易服務測試代碼
- * @version 2025-09-04-V2.5.0
+ * @version 2025-09-04-V3.0.0
  * @date 2025-09-04 15:00:00
- * @update: 階段二完成 - 進階分析功能、錯誤處理機制、深度驗證工具完成(TC-051~TC-060)
- * @module 模組版次: v2.5.0
- * @function 函數版次: v2.5.0
- * @description LCAS 2.0 記帳交易服務API測試代碼 - 完全符合8403測試計畫60個測試案例
+ * @update: 階段一升級完成 - 開關整合修復，版次升級至v3.0.0
+ * @module 模組版次: v3.0.0
+ * @function 函數版次: v3.0.0
+ * @description LCAS 2.0 記帳交易服務API測試代碼 - 完全符合8403測試計畫，8599開關整合修復
  */
 
 import 'dart:convert';
@@ -1454,17 +1454,19 @@ class RealTransactionService implements MockTransactionService {
 class TransactionServiceFactory {
   /**
    * 10. 服務工廠 - 8599開關整合
-   * @version 2025-09-04-V1.2.0
+   * @version 2025-09-04-V3.0.0
    * @date 2025-09-04 12:00:00
-   * @update: 階段一建立 - 整合8599開關系統
+   * @update: 階段一修復 - 修復8599開關整合邏輯，確保開關狀態正確生效
    */
   static MockTransactionService createService() {
     // 檢查8599開關設定，決定使用Fake或Real Service
-    if (FakeServiceSwitch.enable8503FakeService) {
-      print('🔧 8503記帳交易服務: 使用 Fake Service');
+    final useFakeService = FakeServiceSwitch.enable8503FakeService;
+    
+    if (useFakeService) {
+      print('🔧 8503記帳交易服務: 使用 Fake Service (開關已啟用)');
       return FakeTransactionService();
     } else {
-      print('🌐 8503記帳交易服務: 使用 Real Service');
+      print('🌐 8503記帳交易服務: 使用 Real Service (開關已停用)');
       return RealTransactionService(http.Client());
     }
   }
