@@ -47,7 +47,7 @@ class FakeServiceSwitch {
    * true: 使用 Fake Service (預設)
    * false: 使用 Real Service
    */
-  static bool enable8503FakeService = true;
+  static bool enable8503FakeService = false;
 
 // ================================
   // 開關狀態查詢方法 (Switch Status Query Methods)
