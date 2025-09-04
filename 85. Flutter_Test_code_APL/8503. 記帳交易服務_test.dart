@@ -106,7 +106,7 @@ class FakeTransactionService implements MockTransactionService {
           'description': '午餐',
           'confidence': 0.95
         },
-        'confirmation': '✅ 已記錄支出 NT\$150 - 午餐（食物）',
+        'confirmation': ' 已記錄支出 NT\$150 - 午餐（食物）',
         'balance': {
           'today': -450.0,
           'week': -2800.0,
@@ -1439,11 +1439,11 @@ void main() {
   // 設定8599開關為Fake Service（預設）
   setUpAll(() {
     FakeServiceSwitch.enable8503FakeService = true;
-    print('🚀 8503記帳交易服務測試開始');
+    print(' 8503記帳交易服務測試開始');
     print(FakeServiceSwitch.getSwitchSummary());
   });
 
-  group('🏗️ 階段一：基礎架構測試', () {
+  group('階段一：基礎架構測試', () {
     late MockTransactionService transactionService;
 
     setUp(() {
@@ -1473,7 +1473,7 @@ void main() {
       expect(data['parsed']['type'], equals('expense'));
       expect(data['confirmation'], contains('已記錄支出'));
       
-      print('✅ TC-001: 快速記帳測試通過');
+      print(' TC-001: 快速記帳測試通過');
     });
 
     /**
@@ -1498,7 +1498,7 @@ void main() {
       expect(data['amount'], equals(1500.0));
       expect(data['type'], equals('expense'));
       
-      print('✅ TC-002: 建立交易記錄測試通過');
+      print(' TC-002: 建立交易記錄測試通過');
     });
 
     /**
@@ -1525,11 +1525,11 @@ void main() {
       final data = response['data'];
       expect(data.containsKey('balance'), isTrue, reason: 'Expert模式應包含詳細餘額資訊');
       
-      print('✅ TC-021: Expert模式差異化測試通過');
+      print(' TC-021: Expert模式差異化測試通過');
     });
   });
 
-  group('🚀 階段二：核心功能測試', () {
+  group(' 階段二：核心功能測試', () {
     late MockTransactionService transactionService;
 
     setUp(() {
@@ -1570,7 +1570,7 @@ void main() {
         TransactionTestValidator.validateTransactionData(data['transactions'][0]);
       }
       
-      print('✅ TC-003: 查詢交易記錄列表測試通過');
+      print(' TC-003: 查詢交易記錄列表測試通過');
     });
 
     /**
@@ -1598,7 +1598,7 @@ void main() {
       expect(data['account'], isNotNull);
       expect(data['auditInfo'], isNotNull);
       
-      print('✅ TC-004: 取得交易記錄詳情測試通過');
+      print(' TC-004: 取得交易記錄詳情測試通過');
     });
 
     /**
@@ -1629,7 +1629,7 @@ void main() {
       expect(data['updatedFields'], isA<List>());
       expect(data['updatedAt'], isNotNull);
       
-      print('✅ TC-005: 更新交易記錄測試通過');
+      print(' TC-005: 更新交易記錄測試通過');
     });
 
     /**
@@ -1656,7 +1656,7 @@ void main() {
       expect(data['deletedAt'], isNotNull);
       expect(data['affectedData'], isNotNull);
       
-      print('✅ TC-006: 刪除交易記錄測試通過');
+      print(' TC-006: 刪除交易記錄測試通過');
     });
 
     /**
@@ -1686,7 +1686,7 @@ void main() {
       expect(data['summary']['monthExpense'], isA<num>());
       expect(data['summary']['balance'], isA<num>());
       
-      print('✅ TC-007: 取得儀表板數據測試通過');
+      print(' TC-007: 取得儀表板數據測試通過');
     });
 
     /**
@@ -1724,7 +1724,7 @@ void main() {
       expect(summary['netAmount'], isA<num>());
       expect(summary['transactionCount'], isA<int>());
       
-      print('✅ TC-008: 取得統計數據測試通過');
+      print(' TC-008: 取得統計數據測試通過');
     });
 
     /**
@@ -1764,7 +1764,7 @@ void main() {
         }
       }
       
-      print('✅ TC-009: 取得最近交易測試通過');
+      print(' TC-009: 取得最近交易測試通過');
     });
 
     /**
@@ -1804,7 +1804,7 @@ void main() {
         expect(firstItem['percentage'], isA<num>());
       }
       
-      print('✅ TC-010: 取得圖表數據測試通過');
+      print(' TC-010: 取得圖表數據測試通過');
     });
 
     /**
@@ -1832,7 +1832,7 @@ void main() {
       expect(data['confirmation'], isNotNull);
       expect(data['parsed'], isNotNull);
       
-      print('✅ TC-022: Inertial模式差異化測試通過');
+      print(' TC-022: Inertial模式差異化測試通過');
     });
 
     /**
@@ -1861,7 +1861,7 @@ void main() {
         expect(data['achievement'], isNotNull, reason: 'Cultivation模式應包含成就資訊');
       }
       
-      print('✅ TC-023: Cultivation模式差異化測試通過');
+      print(' TC-023: Cultivation模式差異化測試通過');
     });
 
     /**
@@ -1889,7 +1889,7 @@ void main() {
       expect(data.keys.length, lessThanOrEqualTo(5), 
              reason: 'Guiding模式回應應該簡化');
       
-      print('✅ TC-024: Guiding模式差異化測試通過');
+      print(' TC-024: Guiding模式差異化測試通過');
     });
   });
 
@@ -1936,7 +1936,7 @@ void main() {
       expect(data['summary']['totalAmount'], isA<num>());
       expect(data['summary']['affectedAccounts'], isA<List>());
       
-      print('✅ TC-011: 批次新增交易記錄測試通過');
+      print(' TC-011: 批次新增交易記錄測試通過');
     });
 
     /**
@@ -1971,7 +1971,7 @@ void main() {
         expect(result['status'], isIn(['success', 'failed']));
       }
       
-      print('✅ TC-012: 批次更新交易記錄測試通過');
+      print(' TC-012: 批次更新交易記錄測試通過');
     });
 
     /**
@@ -2004,7 +2004,7 @@ void main() {
       expect(data['deletedTransactions'].length, equals(2));
       expect(data['affectedAccounts'], isA<List>());
       
-      print('✅ TC-013: 批次刪除交易記錄測試通過');
+      print(' TC-013: 批次刪除交易記錄測試通過');
     });
 
     /**
@@ -2044,7 +2044,7 @@ void main() {
       expect(data['errors'], isA<List>());
       expect(data['errors'].length, equals(3));
       
-      print('✅ TC-014: 匯入交易記錄測試通過');
+      print(' TC-014: 匯入交易記錄測試通過');
     });
 
     // ================================
@@ -2089,7 +2089,7 @@ void main() {
         expect(file['uploadedAt'], isA<String>());
       }
       
-      print('✅ TC-015: 上傳交易附件測試通過');
+      print(' TC-015: 上傳交易附件測試通過');
     });
 
     /**
@@ -2115,7 +2115,7 @@ void main() {
       expect(data['message'], contains('已刪除'));
       expect(data['remainingAttachments'], isA<int>());
       
-      print('✅ TC-016: 刪除交易附件測試通過');
+      print(' TC-016: 刪除交易附件測試通過');
     });
 
     // ================================
@@ -2158,7 +2158,7 @@ void main() {
         expect(transaction['executedCount'], isA<int>());
       }
       
-      print('✅ TC-017: 查詢重複交易設定測試通過');
+      print(' TC-017: 查詢重複交易設定測試通過');
     });
 
     /**
@@ -2190,7 +2190,7 @@ void main() {
       expect(data['status'], equals('active'));
       expect(data['createdAt'], isA<String>());
       
-      print('✅ TC-018: 建立重複交易設定測試通過');
+      print(' TC-018: 建立重複交易設定測試通過');
     });
 
     /**
@@ -2226,7 +2226,7 @@ void main() {
       expect(data['nextExecutionDate'], isA<String>());
       expect(data['updatedAt'], isA<String>());
       
-      print('✅ TC-019: 更新重複交易設定測試通過');
+      print(' TC-019: 更新重複交易設定測試通過');
     });
 
     /**
@@ -2253,7 +2253,7 @@ void main() {
       expect(data['deletedAt'], isA<String>());
       expect(data['affectedTransactions'], equals(0));
       
-      print('✅ TC-020: 刪除重複交易設定測試通過');
+      print(' TC-020: 刪除重複交易設定測試通過');
     });
   });
 
@@ -2269,7 +2269,7 @@ void main() {
   });
 }
 
-group('🌟 階段四：深度四模式測試與整合驗證', () {
+group(' 階段四：深度四模式測試與整合驗證', () {
     late MockTransactionService transactionService;
 
     setUp(() {
@@ -2306,7 +2306,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       final data = createResponse['data'];
       expect(data['accountBalance'], equals(initialBalance - 1500.0));
       
-      print('✅ TC-025: 交易與帳戶整合測試通過');
+      print(' TC-025: 交易與帳戶整合測試通過');
     });
 
     /**
@@ -2334,7 +2334,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       expect(data['frequency'], equals('monthly'));
       expect(data['status'], equals('active'));
       
-      print('✅ TC-026: 重複交易執行整合測試通過');
+      print(' TC-026: 重複交易執行整合測試通過');
     });
 
     /**
@@ -2365,7 +2365,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
         expect(data['results'], isA<List>());
       }
       
-      print('✅ TC-027: 批次操作事務一致性測試通過');
+      print(' TC-027: 批次操作事務一致性測試通過');
     });
 
     /**
@@ -2393,7 +2393,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       expect(data['uploadedFiles'].length, equals(2));
       expect(data['totalAttachments'], isA<int>());
       
-      print('✅ TC-028: 附件上傳流程整合測試通過');
+      print(' TC-028: 附件上傳流程整合測試通過');
     });
 
     /**
@@ -2425,7 +2425,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       expect(dashboardData['summary']['monthExpense'], 
              equals(statisticsData['summary']['totalExpense']));
       
-      print('✅ TC-029: 統計數據生成整合測試通過');
+      print(' TC-029: 統計數據生成整合測試通過');
     });
 
     /**
@@ -2452,7 +2452,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       expect(data['type'], equals('transfer'));
       expect(data['ledgerId'], isNotNull);
       
-      print('✅ TC-030: 跨帳本交易整合測試通過');
+      print(' TC-030: 跨帳本交易整合測試通過');
     });
 
     // ================================
@@ -2480,7 +2480,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
         print('正確拋出權限錯誤: $error');
       }
       
-      print('✅ TC-031: 交易權限驗證安全測試通過');
+      print(' TC-031: 交易權限驗證安全測試通過');
     });
 
     /**
@@ -2501,7 +2501,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       TransactionTestValidator.validateApiResponse(response);
       expect(response['metadata']['requestId'], isNotNull);
       
-      print('✅ TC-032: API Token驗證安全測試通過（Fake Service模擬）');
+      print(' TC-032: API Token驗證安全測試通過（Fake Service模擬）');
     });
 
     /**
@@ -2525,7 +2525,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       TransactionTestValidator.validateApiResponse(response);
       expect(response['success'], isTrue);
       
-      print('✅ TC-033: SQL注入防護測試通過');
+      print(' TC-033: SQL注入防護測試通過');
     });
 
     /**
@@ -2551,7 +2551,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       final metadata = response['metadata'];
       expect(metadata['timestamp'], isNotNull);
       
-      print('✅ TC-034: 資料加密傳輸測試通過');
+      print(' TC-034: 資料加密傳輸測試通過');
     });
 
     /**
@@ -2578,7 +2578,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       final metadata = response['metadata'];
       expect(metadata.containsKey('userMode'), isTrue);
       
-      print('✅ TC-035: 敏感資料遮罩測試通過');
+      print(' TC-035: 敏感資料遮罩測試通過');
     });
 
     // ================================
@@ -2611,7 +2611,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       expect(response['success'], isTrue);
       expect(duration, lessThan(2000), reason: '查詢時間應小於2秒');
       
-      print('✅ TC-036: 大量交易查詢效能測試通過 (${duration}ms)');
+      print(' TC-036: 大量交易查詢效能測試通過 (${duration}ms)');
     });
 
     /**
@@ -2640,7 +2640,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       expect(response['success'], isTrue);
       expect(duration, lessThan(3000), reason: '儀表板生成時間應小於3秒');
       
-      print('✅ TC-037: 儀表板數據生成效能測試通過 (${duration}ms)');
+      print(' TC-037: 儀表板數據生成效能測試通過 (${duration}ms)');
     });
 
     /**
@@ -2670,7 +2670,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       final throughput = (data['processed'] / duration) * 1000; // 筆/秒
       expect(throughput, greaterThanOrEqualTo(3), reason: '批次處理吞吐量應≥3筆/秒');
       
-      print('✅ TC-038: 批次操作效能測試通過 (吞吐量: ${throughput.toStringAsFixed(2)}筆/秒)');
+      print(' TC-038: 批次操作效能測試通過 (吞吐量: ${throughput.toStringAsFixed(2)}筆/秒)');
     });
 
     /**
@@ -2705,7 +2705,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       final successCount = responses.where((r) => r['success'] == true).length;
       expect(successCount, greaterThanOrEqualTo(4), reason: '並發成功率應≥80%');
       
-      print('✅ TC-039: 並發交易處理效能測試通過 (成功率: ${successCount}/5)');
+      print(' TC-039: 並發交易處理效能測試通過 (成功率: ${successCount}/5)');
     });
 
     /**
@@ -2732,7 +2732,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       expect(response['success'], isTrue);
       expect(duration, lessThan(1500), reason: '快速記帳回應時間應小於1.5秒');
       
-      print('✅ TC-040: 快速記帳回應時間測試通過 (${duration}ms)');
+      print(' TC-040: 快速記帳回應時間測試通過 (${duration}ms)');
     });
 
     // ================================
@@ -2756,7 +2756,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       TransactionTestValidator.validateApiResponse(response);
       expect(response['success'], isTrue);
       
-      print('✅ TC-041: 網路中斷異常處理測試通過（Fake Service模擬）');
+      print(' TC-041: 網路中斷異常處理測試通過（Fake Service模擬）');
     });
 
     /**
@@ -2779,7 +2779,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       TransactionTestValidator.validateApiResponse(response);
       expect(response['success'], isTrue);
       
-      print('✅ TC-042: 資料庫連線失敗測試通過（Fake Service模擬）');
+      print(' TC-042: 資料庫連線失敗測試通過（Fake Service模擬）');
     });
 
     /**
@@ -2800,9 +2800,9 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       try {
         await transactionService.createTransaction(invalidRequest);
         // Fake Service可能正常處理，Real Service會驗證格式
-        print('✅ TC-043: 無效JSON格式處理測試通過（Fake Service容錯）');
+        print(' TC-043: 無效JSON格式處理測試通過（Fake Service容錯）');
       } catch (error) {
-        print('✅ TC-043: 正確處理JSON格式錯誤: $error');
+        print(' TC-043: 正確處理JSON格式錯誤: $error');
       }
     });
 
@@ -2828,7 +2828,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       TransactionTestValidator.validateApiResponse(response);
       expect(response['success'], isTrue);
       
-      print('✅ TC-044: 大檔案上傳異常測試通過');
+      print(' TC-044: 大檔案上傳異常測試通過');
     });
 
     /**
@@ -2850,7 +2850,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       TransactionTestValidator.validateApiResponse(response);
       expect(response['success'], isTrue);
       
-      print('✅ TC-045: 記憶體不足異常測試通過');
+      print(' TC-045: 記憶體不足異常測試通過');
     });
 
     // ================================
@@ -2879,10 +2879,10 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
         TransactionTestValidator.validateApiResponse(response);
         expect(response['success'], isTrue);
         
-        print('平台 $platform: API回應格式一致 ✅');
+        print('平台 $platform: API回應格式一致 ');
       }
       
-      print('✅ TC-046: Flutter跨平台兼容性測試通過');
+      print(' TC-046: Flutter跨平台兼容性測試通過');
     });
 
     /**
@@ -2906,7 +2906,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       final data = response['data'];
       expect(data['transactionId'], isNotNull);
       
-      print('✅ TC-047: API版本兼容性測試通過');
+      print(' TC-047: API版本兼容性測試通過');
     });
 
     /**
@@ -2932,10 +2932,10 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
         TransactionTestValidator.validateApiResponse(response);
         TransactionTestValidator.validateUserModeResponse(response, userData['mode']!);
         
-        print('模式 ${userData['mode']}: 跨版本兼容性正確 ✅');
+        print('模式 ${userData['mode']}: 跨版本兼容性正確 ');
       }
       
-      print('✅ TC-048: 四模式跨版本兼容性測試通過');
+      print(' TC-048: 四模式跨版本兼容性測試通過');
     });
 
     // ================================
@@ -2980,7 +2980,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
       final successRate = successCount / operationCount;
       expect(successRate, greaterThanOrEqualTo(0.95), reason: '長時間運行成功率應≥95%');
       
-      print('✅ TC-049: 長時間運行穩定性測試通過 (成功率: ${(successRate * 100).toStringAsFixed(1)}%)');
+      print(' TC-049: 長時間運行穩定性測試通過 (成功率: ${(successRate * 100).toStringAsFixed(1)}%)');
     });
 
     /**
@@ -3008,7 +3008,7 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
         expect(data['transactionId'], isNotNull);
         expect(data['amount'], equals(10000.0));
         
-        print('✅ TC-050: 災難恢復能力測試通過');
+        print(' TC-050: 災難恢復能力測試通過');
       } catch (error) {
         print('災難恢復測試中的預期錯誤: $error');
       }
@@ -3018,12 +3018,12 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
 /**
  * 階段四完成功能清單：
  * 
- * ✅ 四模式深度測試優化
+ *  四模式深度測試優化
  * - TC-021~TC-024 四模式差異化驗證完善
  * - 模式特有功能詳細驗證
  * - 跨模式兼容性測試
  * 
- * ✅ 整合測試實作（TC-025~TC-030）
+ *  整合測試實作（TC-025~TC-030）
  * - TC-025: 交易與帳戶整合測試
  * - TC-026: 重複交易執行整合測試
  * - TC-027: 批次操作事務一致性測試
@@ -3031,55 +3031,55 @@ group('🌟 階段四：深度四模式測試與整合驗證', () {
  * - TC-029: 統計數據生成整合測試
  * - TC-030: 跨帳本交易整合測試
  * 
- * ✅ 安全性測試實作（TC-031~TC-035）
+ *  安全性測試實作（TC-031~TC-035）
  * - TC-031: 交易權限驗證安全測試
  * - TC-032: API Token驗證安全測試
  * - TC-033: SQL注入防護測試
  * - TC-034: 資料加密傳輸測試
  * - TC-035: 敏感資料遮罩測試
  * 
- * ✅ 效能測試實作（TC-036~TC-040）
+ *  效能測試實作（TC-036~TC-040）
  * - TC-036: 大量交易查詢效能測試
  * - TC-037: 儀表板數據生成效能測試
  * - TC-038: 批次操作效能測試
  * - TC-039: 並發交易處理效能測試
  * - TC-040: 快速記帳回應時間測試
  * 
- * ✅ 異常測試實作（TC-041~TC-045）
+ *  異常測試實作（TC-041~TC-045）
  * - TC-041: 網路中斷異常處理測試
  * - TC-042: 資料庫連線失敗測試
  * - TC-043: 無效JSON格式處理測試
  * - TC-044: 大檔案上傳異常測試
  * - TC-045: 記憶體不足異常測試
  * 
- * ✅ 兼容性測試實作（TC-046~TC-048）
+ *  兼容性測試實作（TC-046~TC-048）
  * - TC-046: Flutter跨平台兼容性測試
  * - TC-047: API版本兼容性測試
  * - TC-048: 四模式跨版本兼容性測試
  * 
- * ✅ 可靠性測試實作（TC-049~TC-050）
+ *  可靠性測試實作（TC-049~TC-050）
  * - TC-049: 長時間運行穩定性測試
  * - TC-050: 災難恢復能力測試
  * 
  * 🎯 階段四完成總結：
- * ✅ 完成全部50個測試案例（TC-001~TC-050）
- * ✅ 100%符合8403測試計畫規範
- * ✅ 企業級品質標準達成
- * ✅ SQA專業認證準備就緒
- * ✅ 生產環境部署就緒
+ *  完成全部50個測試案例（TC-001~TC-050）
+ *  100%符合8403測試計畫規範
+ *  企業級品質標準達成
+ *  SQA專業認證準備就緒
+ *  生產環境部署就緒
  * 
  * 📊 最終測試覆蓋統計：
- * - 功能測試: 20個 ✅
- * - 四模式測試: 4個 ✅
- * - 整合測試: 6個 ✅
- * - 安全性測試: 5個 ✅
- * - 效能測試: 5個 ✅
- * - 異常測試: 5個 ✅
- * - 兼容性測試: 3個 ✅
- * - 可靠性測試: 2個 ✅
+ * - 功能測試: 20個 
+ * - 四模式測試: 4個 
+ * - 整合測試: 6個 
+ * - 安全性測試: 5個 
+ * - 效能測試: 5個 
+ * - 異常測試: 5個 
+ * - 兼容性測試: 3個 
+ * - 可靠性測試: 2個 
  * 
  * 🏆 品質認證等級：⭐⭐⭐⭐⭐ 企業級 (Enterprise Grade)
  * 🎉 模組版次：v1.2.0 → v1.3.0 (階段四完成)
  * 📋 SQA專業認證：通過IEEE 829國際標準
- * 🚀 生產就緒狀態：✅ Ready for Production
+ *  生產就緒狀態： Ready for Production
  */
