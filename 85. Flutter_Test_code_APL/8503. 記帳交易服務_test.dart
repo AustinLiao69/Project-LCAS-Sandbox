@@ -47,7 +47,7 @@ abstract class MockTransactionService {
    * 02. Mock交易服務介面
    * @version 2025-09-04-V1.2.0
    * @date 2025-09-04 12:00:00
-   * @update: 階段一建立 - Mock服務介面定義
+   * @update: 階段二擴展 - 新增核心功能API介面
    */
   Future<Map<String, dynamic>> quickBooking(Map<String, dynamic> request);
   Future<Map<String, dynamic>> getTransactions(Map<String, dynamic> params);
@@ -55,6 +55,12 @@ abstract class MockTransactionService {
   Future<Map<String, dynamic>> getTransactionDetail(String transactionId);
   Future<Map<String, dynamic>> updateTransaction(String transactionId, Map<String, dynamic> request);
   Future<Map<String, dynamic>> deleteTransaction(String transactionId, bool deleteRecurring);
+  
+  // 階段二新增方法
+  Future<Map<String, dynamic>> getDashboardData(Map<String, dynamic> params);
+  Future<Map<String, dynamic>> getStatistics(Map<String, dynamic> params);
+  Future<Map<String, dynamic>> getRecentTransactions(Map<String, dynamic> params);
+  Future<Map<String, dynamic>> getChartData(Map<String, dynamic> params);
 }
 
 // ================================
@@ -279,6 +285,276 @@ class FakeTransactionService implements MockTransactionService {
       }
     };
   }
+
+  /**
+   * 09. 取得儀表板數據 Fake Service
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段二建立 - 儀表板數據模擬實作
+   */
+  @override
+  Future<Map<String, dynamic>> getDashboardData(Map<String, dynamic> params) async {
+    await Future.delayed(Duration(milliseconds: 200));
+    
+    return {
+      'success': true,
+      'data': {
+        'summary': {
+          'todayIncome': 0.0,
+          'todayExpense': 450.0,
+          'monthIncome': 50000.0,
+          'monthExpense': 35000.0,
+          'balance': 15000.0,
+          'transactionCount': 156
+        },
+        'recentTransactions': [
+          {
+            'id': 'transaction-uuid-001',
+            'amount': 150.0,
+            'type': 'expense',
+            'category': '食物',
+            'date': '2025-09-04',
+            'description': '午餐'
+          },
+          {
+            'id': 'transaction-uuid-002',
+            'amount': 300.0,
+            'type': 'expense',
+            'category': '交通',
+            'date': '2025-09-04',
+            'description': '計程車'
+          }
+        ],
+        'charts': {
+          'weeklyTrend': [
+            {'date': '2025-08-28', 'income': 0.0, 'expense': 800.0},
+            {'date': '2025-08-29', 'income': 0.0, 'expense': 1200.0},
+            {'date': '2025-08-30', 'income': 0.0, 'expense': 950.0},
+            {'date': '2025-08-31', 'income': 0.0, 'expense': 750.0},
+            {'date': '2025-09-01', 'income': 0.0, 'expense': 1100.0},
+            {'date': '2025-09-02', 'income': 0.0, 'expense': 650.0},
+            {'date': '2025-09-03', 'income': 0.0, 'expense': 900.0}
+          ],
+          'categoryDistribution': [
+            {'category': '食物', 'amount': 8000.0, 'percentage': 22.86},
+            {'category': '交通', 'amount': 5000.0, 'percentage': 14.29},
+            {'category': '娛樂', 'amount': 3000.0, 'percentage': 8.57},
+            {'category': '購物', 'amount': 4500.0, 'percentage': 12.86}
+          ]
+        },
+        'budgetStatus': [
+          {
+            'categoryId': 'category-uuid-food',
+            'category': '食物',
+            'budgetAmount': 12000.0,
+            'usedAmount': 8000.0,
+            'percentage': 66.7,
+            'status': 'warning'
+          }
+        ]
+      },
+      'metadata': {
+        'timestamp': DateTime.now().toIso8601String(),
+        'requestId': TransactionTestConfig.mockRequestId,
+        'userMode': 'Expert'
+      }
+    };
+  }
+
+  /**
+   * 10. 取得統計數據 Fake Service
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段二建立 - 統計數據模擬實作
+   */
+  @override
+  Future<Map<String, dynamic>> getStatistics(Map<String, dynamic> params) async {
+    await Future.delayed(Duration(milliseconds: 180));
+    
+    return {
+      'success': true,
+      'data': {
+        'period': {
+          'start': '2025-09-01',
+          'end': '2025-09-30',
+          'type': 'month'
+        },
+        'summary': {
+          'totalIncome': 50000.0,
+          'totalExpense': 35000.0,
+          'netAmount': 15000.0,
+          'transactionCount': 156,
+          'averagePerDay': 1161.29
+        },
+        'breakdown': [
+          {
+            'category': '食物',
+            'amount': 8000.0,
+            'count': 45,
+            'percentage': 22.86,
+            'average': 177.78
+          },
+          {
+            'category': '交通',
+            'amount': 5000.0,
+            'count': 30,
+            'percentage': 14.29,
+            'average': 166.67
+          },
+          {
+            'category': '娛樂',
+            'amount': 3000.0,
+            'count': 15,
+            'percentage': 8.57,
+            'average': 200.00
+          }
+        ],
+        'trends': [
+          {'date': '2025-09-01', 'income': 0.0, 'expense': 1200.0, 'net': -1200.0},
+          {'date': '2025-09-02', 'income': 0.0, 'expense': 950.0, 'net': -950.0},
+          {'date': '2025-09-03', 'income': 0.0, 'expense': 1100.0, 'net': -1100.0},
+          {'date': '2025-09-04', 'income': 0.0, 'expense': 450.0, 'net': -450.0}
+        ]
+      },
+      'metadata': {
+        'timestamp': DateTime.now().toIso8601String(),
+        'requestId': TransactionTestConfig.mockRequestId,
+        'userMode': 'Expert'
+      }
+    };
+  }
+
+  /**
+   * 11. 取得最近交易 Fake Service
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段二建立 - 最近交易模擬實作
+   */
+  @override
+  Future<Map<String, dynamic>> getRecentTransactions(Map<String, dynamic> params) async {
+    await Future.delayed(Duration(milliseconds: 120));
+    
+    final limit = params['limit'] ?? 10;
+    
+    return {
+      'success': true,
+      'data': {
+        'transactions': [
+          {
+            'id': 'transaction-uuid-001',
+            'amount': 150.0,
+            'type': 'expense',
+            'category': '食物',
+            'categoryIcon': '🍽️',
+            'date': '2025-09-04',
+            'description': '午餐',
+            'account': '現金',
+            'createdAt': '2025-09-04T12:30:00Z'
+          },
+          {
+            'id': 'transaction-uuid-002',
+            'amount': 300.0,
+            'type': 'expense',
+            'category': '交通',
+            'categoryIcon': '🚗',
+            'date': '2025-09-04',
+            'description': '計程車',
+            'account': '信用卡',
+            'createdAt': '2025-09-04T10:15:00Z'
+          },
+          {
+            'id': 'transaction-uuid-003',
+            'amount': 2000.0,
+            'type': 'income',
+            'category': '薪水',
+            'categoryIcon': '💰',
+            'date': '2025-09-03',
+            'description': '加班費',
+            'account': '銀行帳戶',
+            'createdAt': '2025-09-03T18:00:00Z'
+          }
+        ].take(limit).toList(),
+        'totalCount': 156,
+        'hasMore': true
+      },
+      'metadata': {
+        'timestamp': DateTime.now().toIso8601String(),
+        'requestId': TransactionTestConfig.mockRequestId,
+        'userMode': 'Expert'
+      }
+    };
+  }
+
+  /**
+   * 12. 取得圖表數據 Fake Service
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段二建立 - 圖表數據模擬實作
+   */
+  @override
+  Future<Map<String, dynamic>> getChartData(Map<String, dynamic> params) async {
+    await Future.delayed(Duration(milliseconds: 150));
+    
+    final chartType = params['chartType'] ?? 'pie';
+    
+    return {
+      'success': true,
+      'data': {
+        'chartType': chartType,
+        'period': {
+          'start': '2025-09-01',
+          'end': '2025-09-30'
+        },
+        'chartData': [
+          {
+            'label': '食物',
+            'value': 8000.0,
+            'percentage': 22.86,
+            'color': '#FF6384',
+            'count': 45
+          },
+          {
+            'label': '交通',
+            'value': 5000.0,
+            'percentage': 14.29,
+            'color': '#36A2EB',
+            'count': 30
+          },
+          {
+            'label': '娛樂',
+            'value': 3000.0,
+            'percentage': 8.57,
+            'color': '#FFCE56',
+            'count': 15
+          },
+          {
+            'label': '購物',
+            'value': 4500.0,
+            'percentage': 12.86,
+            'color': '#4BC0C0',
+            'count': 25
+          },
+          {
+            'label': '其他',
+            'value': 14500.0,
+            'percentage': 41.42,
+            'color': '#9966FF',
+            'count': 41
+          }
+        ],
+        'summary': {
+          'totalAmount': 35000.0,
+          'totalTransactions': 156,
+          'averageAmount': 224.36
+        }
+      },
+      'metadata': {
+        'timestamp': DateTime.now().toIso8601String(),
+        'requestId': TransactionTestConfig.mockRequestId,
+        'userMode': 'Expert'
+      }
+    };
+  }
 }
 
 // ================================
@@ -354,6 +630,30 @@ class RealTransactionService implements MockTransactionService {
   @override
   Future<Map<String, dynamic>> deleteTransaction(String transactionId, bool deleteRecurring) async {
     return await _makeRequest('DELETE', '/transactions/$transactionId?deleteRecurring=$deleteRecurring');
+  }
+
+  @override
+  Future<Map<String, dynamic>> getDashboardData(Map<String, dynamic> params) async {
+    final queryParams = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    return await _makeRequest('GET', '/transactions/dashboard?$queryParams');
+  }
+
+  @override
+  Future<Map<String, dynamic>> getStatistics(Map<String, dynamic> params) async {
+    final queryParams = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    return await _makeRequest('GET', '/transactions/statistics?$queryParams');
+  }
+
+  @override
+  Future<Map<String, dynamic>> getRecentTransactions(Map<String, dynamic> params) async {
+    final queryParams = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    return await _makeRequest('GET', '/transactions/recent?$queryParams');
+  }
+
+  @override
+  Future<Map<String, dynamic>> getChartData(Map<String, dynamic> params) async {
+    final queryParams = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    return await _makeRequest('GET', '/transactions/charts?$queryParams');
   }
 }
 
@@ -652,6 +952,370 @@ void main() {
     });
   });
 
+  group('🚀 階段二：核心功能測試', () {
+    late MockTransactionService transactionService;
+
+    setUp(() {
+      transactionService = TransactionServiceFactory.createService();
+    });
+
+    /**
+     * TC-003: 查詢交易記錄列表API測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-003: 查詢交易記錄列表API測試', () async {
+      // Arrange
+      final params = {
+        'ledgerId': 'ledger-uuid-001',
+        'page': 1,
+        'limit': 20,
+        'sort': 'date:desc'
+      };
+      
+      // Act
+      final response = await transactionService.getTransactions(params);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      expect(response['success'], isTrue);
+      
+      final data = response['data'];
+      expect(data['transactions'], isA<List>());
+      expect(data['pagination'], isNotNull);
+      expect(data['pagination']['page'], equals(1));
+      expect(data['pagination']['limit'], equals(20));
+      expect(data['pagination']['total'], isA<int>());
+      
+      // 驗證交易資料格式
+      if (data['transactions'].isNotEmpty) {
+        TransactionTestValidator.validateTransactionData(data['transactions'][0]);
+      }
+      
+      print('✅ TC-003: 查詢交易記錄列表測試通過');
+    });
+
+    /**
+     * TC-004: 取得交易記錄詳情API測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-004: 取得交易記錄詳情API測試', () async {
+      // Arrange
+      const transactionId = 'transaction-uuid-12345';
+      
+      // Act
+      final response = await transactionService.getTransactionDetail(transactionId);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      expect(response['success'], isTrue);
+      
+      final data = response['data'];
+      expect(data['id'], equals(transactionId));
+      expect(data['amount'], isA<num>());
+      expect(data['type'], isIn(['income', 'expense', 'transfer']));
+      expect(data['category'], isNotNull);
+      expect(data['account'], isNotNull);
+      expect(data['auditInfo'], isNotNull);
+      
+      print('✅ TC-004: 取得交易記錄詳情測試通過');
+    });
+
+    /**
+     * TC-005: 更新交易記錄API測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-005: 更新交易記錄API測試', () async {
+      // Arrange
+      const transactionId = 'transaction-uuid-12345';
+      final updateRequest = {
+        'amount': 1600.0,
+        'description': '晚餐聚會（修改）',
+        'tags': ['修改', '聚會']
+      };
+      
+      // Act
+      final response = await transactionService.updateTransaction(transactionId, updateRequest);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      expect(response['success'], isTrue);
+      
+      final data = response['data'];
+      expect(data['transactionId'], equals(transactionId));
+      expect(data['message'], contains('更新成功'));
+      expect(data['updatedFields'], isA<List>());
+      expect(data['updatedAt'], isNotNull);
+      
+      print('✅ TC-005: 更新交易記錄測試通過');
+    });
+
+    /**
+     * TC-006: 刪除交易記錄API測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-006: 刪除交易記錄API測試', () async {
+      // Arrange
+      const transactionId = 'transaction-uuid-12345';
+      const deleteRecurring = false;
+      
+      // Act
+      final response = await transactionService.deleteTransaction(transactionId, deleteRecurring);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      expect(response['success'], isTrue);
+      
+      final data = response['data'];
+      expect(data['transactionId'], equals(transactionId));
+      expect(data['message'], contains('已刪除'));
+      expect(data['deletedAt'], isNotNull);
+      expect(data['affectedData'], isNotNull);
+      
+      print('✅ TC-006: 刪除交易記錄測試通過');
+    });
+
+    /**
+     * TC-007: 取得儀表板數據API測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-007: 取得儀表板數據API測試', () async {
+      // Arrange
+      final params = {
+        'ledgerId': 'ledger-uuid-001',
+        'period': 'month'
+      };
+      
+      // Act
+      final response = await transactionService.getDashboardData(params);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      expect(response['success'], isTrue);
+      
+      final data = response['data'];
+      expect(data['summary'], isNotNull);
+      expect(data['summary']['todayExpense'], isA<num>());
+      expect(data['summary']['monthIncome'], isA<num>());
+      expect(data['summary']['monthExpense'], isA<num>());
+      expect(data['summary']['balance'], isA<num>());
+      
+      print('✅ TC-007: 取得儀表板數據測試通過');
+    });
+
+    /**
+     * TC-008: 取得統計數據API測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-008: 取得統計數據API測試', () async {
+      // Arrange
+      final params = {
+        'ledgerId': 'ledger-uuid-001',
+        'period': 'month',
+        'groupBy': 'category',
+        'type': 'all'
+      };
+      
+      // Act
+      final response = await transactionService.getStatistics(params);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      expect(response['success'], isTrue);
+      
+      final data = response['data'];
+      expect(data['period'], isNotNull);
+      expect(data['summary'], isNotNull);
+      expect(data['breakdown'], isA<List>());
+      expect(data['trends'], isA<List>());
+      
+      // 驗證統計摘要
+      final summary = data['summary'];
+      expect(summary['totalIncome'], isA<num>());
+      expect(summary['totalExpense'], isA<num>());
+      expect(summary['netAmount'], isA<num>());
+      expect(summary['transactionCount'], isA<int>());
+      
+      print('✅ TC-008: 取得統計數據測試通過');
+    });
+
+    /**
+     * TC-009: 取得最近交易API測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-009: 取得最近交易API測試', () async {
+      // Arrange
+      final params = {
+        'limit': 10,
+        'ledgerId': 'ledger-uuid-001',
+        'type': 'all'
+      };
+      
+      // Act
+      final response = await transactionService.getRecentTransactions(params);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      expect(response['success'], isTrue);
+      
+      final data = response['data'];
+      expect(data['transactions'], isA<List>());
+      expect(data['totalCount'], isA<int>());
+      expect(data['hasMore'], isA<bool>());
+      
+      // 驗證時間排序
+      final transactions = data['transactions'] as List;
+      if (transactions.length > 1) {
+        for (int i = 0; i < transactions.length - 1; i++) {
+          final current = DateTime.parse(transactions[i]['createdAt']);
+          final next = DateTime.parse(transactions[i + 1]['createdAt']);
+          expect(current.isAfter(next) || current.isAtSameMomentAs(next), isTrue,
+                 reason: '最近交易應按時間倒序排列');
+        }
+      }
+      
+      print('✅ TC-009: 取得最近交易測試通過');
+    });
+
+    /**
+     * TC-010: 取得圖表數據API測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-010: 取得圖表數據API測試', () async {
+      // Arrange
+      final params = {
+        'chartType': 'pie',
+        'period': 'month',
+        'ledgerId': 'ledger-uuid-001',
+        'groupBy': 'category'
+      };
+      
+      // Act
+      final response = await transactionService.getChartData(params);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      expect(response['success'], isTrue);
+      
+      final data = response['data'];
+      expect(data['chartType'], equals('pie'));
+      expect(data['period'], isNotNull);
+      expect(data['chartData'], isA<List>());
+      expect(data['summary'], isNotNull);
+      
+      // 驗證圖表資料格式
+      final chartData = data['chartData'] as List;
+      if (chartData.isNotEmpty) {
+        final firstItem = chartData[0];
+        expect(firstItem['label'], isA<String>());
+        expect(firstItem['value'], isA<num>());
+        expect(firstItem['percentage'], isA<num>());
+      }
+      
+      print('✅ TC-010: 取得圖表數據測試通過');
+    });
+
+    /**
+     * TC-022: Inertial模式差異化測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-022: Inertial模式差異化測試', () async {
+      // Arrange
+      final inertialUser = TransactionTestDataFactory.getUserModeTestData('inertial');
+      final request = TransactionTestDataFactory.createQuickBookingRequest(
+        userId: inertialUser['userId']!
+      );
+      
+      // Act
+      final response = await transactionService.quickBooking(request);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      TransactionTestValidator.validateUserModeResponse(response, 'Inertial');
+      
+      // Inertial模式特有驗證：標準介面，簡潔資訊
+      final data = response['data'];
+      expect(data['confirmation'], isNotNull);
+      expect(data['parsed'], isNotNull);
+      
+      print('✅ TC-022: Inertial模式差異化測試通過');
+    });
+
+    /**
+     * TC-023: Cultivation模式差異化測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-023: Cultivation模式差異化測試', () async {
+      // Arrange
+      final cultivationUser = TransactionTestDataFactory.getUserModeTestData('cultivation');
+      final request = TransactionTestDataFactory.createQuickBookingRequest(
+        userId: cultivationUser['userId']!
+      );
+      
+      // Act
+      final response = await transactionService.quickBooking(request);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      TransactionTestValidator.validateUserModeResponse(response, 'Cultivation');
+      
+      // Cultivation模式特有驗證：激勵機制
+      final data = response['data'];
+      if (data.containsKey('achievement')) {
+        expect(data['achievement'], isNotNull, reason: 'Cultivation模式應包含成就資訊');
+      }
+      
+      print('✅ TC-023: Cultivation模式差異化測試通過');
+    });
+
+    /**
+     * TC-024: Guiding模式差異化測試
+     * @version 2025-09-04-V1.2.0
+     * @date 2025-09-04 12:00:00
+     * @update: 階段二建立，完全符合8088規範第5.3節HTTP狀態碼標準
+     */
+    test('TC-024: Guiding模式差異化測試', () async {
+      // Arrange
+      final guidingUser = TransactionTestDataFactory.getUserModeTestData('guiding');
+      final request = TransactionTestDataFactory.createQuickBookingRequest(
+        userId: guidingUser['userId']!
+      );
+      
+      // Act
+      final response = await transactionService.quickBooking(request);
+      
+      // Assert
+      TransactionTestValidator.validateApiResponse(response);
+      TransactionTestValidator.validateUserModeResponse(response, 'Guiding');
+      
+      // Guiding模式特有驗證：極簡回應
+      final data = response['data'];
+      expect(data.keys.length, lessThanOrEqualTo(5), 
+             reason: 'Guiding模式回應應該簡化');
+      
+      print('✅ TC-024: Guiding模式差異化測試通過');
+    });
+  });
+
   /**
    * 17. 測試清理
    * @version 2025-09-04-V1.2.0
@@ -688,8 +1352,34 @@ void main() {
  * - TC-002: 建立交易測試
  * - TC-021: Expert模式測試
  * 
- * 🎯 下一階段預告：
- * - 完整20個功能測試案例
- * - 四模式完整測試
- * - 整合測試實作
+ * 階段二完成功能清單：
+ * 
+ * ✅ 核心功能測試實作
+ * - TC-003: 查詢交易記錄列表測試
+ * - TC-004: 取得交易詳情測試
+ * - TC-005: 更新交易記錄測試
+ * - TC-006: 刪除交易記錄測試
+ * 
+ * ✅ 儀表板與統計測試
+ * - TC-007: 儀表板數據測試
+ * - TC-008: 統計數據測試
+ * - TC-009: 最近交易測試
+ * - TC-010: 圖表數據測試
+ * 
+ * ✅ 四模式差異化測試擴展
+ * - TC-022: Inertial模式測試
+ * - TC-023: Cultivation模式測試
+ * - TC-024: Guiding模式測試
+ * 
+ * ✅ Mock服務功能擴展
+ * - 儀表板數據模擬
+ * - 統計分析模擬
+ * - 圖表數據模擬
+ * - 時間排序驗證
+ * 
+ * 🎯 下一階段預告（階段三）：
+ * - 批次操作測試實作（TC-011~TC-014）
+ * - 附件管理測試實作（TC-015~TC-016）
+ * - 重複交易測試實作（TC-017~TC-020）
+ * - 安全性測試實作
  */
