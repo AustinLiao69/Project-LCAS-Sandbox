@@ -49,58 +49,6 @@ class FakeServiceSwitch {
    */
   static bool enable8503FakeService = true;
 
-  // ================================
-  // 輔助方法 (Helper Methods)
-  // ================================
-
-  /**
-   * 取得所有開關狀態摘要
-   * @version 2025-09-04-V1.2.0
-   * @return Map<String, bool> 開關狀態摘要
-   */
-  static Map<String, bool> getAllSwitchStatus() {
-    return {
-      '8501_認證服務': enable8501FakeService,
-      '8502_用戶管理服務': enable8502FakeService,
-      '8503_記帳交易服務': enable8503FakeService,
-    };
-  }
-
-  /**
-   * 批次設定所有開關
-   * @version 2025-09-04-V1.2.0
-   * @param bool enableAll 統一開關狀態
-   */
-  static void setAllSwitches(bool enableAll) {
-    enable8501FakeService = enableAll;
-    enable8502FakeService = enableAll;
-    enable8503FakeService = enableAll;
-  }
-
-  /**
-   * 重設所有開關為預設值
-   * @version 2025-09-04-V1.2.0
-   */
-  static void resetToDefault() {
-    enable8501FakeService = true;
-    enable8502FakeService = true;
-    enable8503FakeService = true;
-  }
-
-  /**
-   * 取得開關設定摘要字串
-   * @version 2025-09-02-V1.2.0
-   * @return String 開關狀態摘要字串
-   */
-  static String getSwitchSummary() {
-    final status = getAllSwitchStatus();
-    final summary = status.entries
-        .map((entry) => '${entry.key}: ${entry.value ? "Fake" : "Real"}')
-        .join(', ');
-    return '8599開關狀態摘要: $summary';
-  }
-}
-
 /**
  * 開關控制使用說明：
  * 
@@ -113,12 +61,3 @@ class FakeServiceSwitch {
  * 3. 啟用8503 Fake Service：
  *    FakeServiceSwitch.enable8503FakeService = true;
  * 
- * 4. 關閉所有Fake Service：
- *    FakeServiceSwitch.setAllSwitches(false);
- * 
- * 5. 重設為預設值：
- *    FakeServiceSwitch.resetToDefault();
- * 
- * 6. 查看開關狀態：
- *    print(FakeServiceSwitch.getSwitchSummary());
- */
