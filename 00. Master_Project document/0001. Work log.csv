@@ -1,4 +1,4 @@
-MM 	 DD 	 Description 	 Progress
+MM 	 DD 	 Description 	    Progress
 3	31	 LCAS   WH、DD模組討論會議 	 Closed
 3	31	 更新系統架構圖：Review並更新各模組功能，各模組data flow需增加回傳 	 Closed
 3	31	 需新增一個MRD文件的範本在軟體開發文件repo中 	 Closed
@@ -188,4 +188,11 @@ MM 	 DD 	 Description 	 Progress
 9	2	 測試8502測試代碼 	 Open
 9	2	 製作8599. Fake service switch 	 Closed
 9	3	 製作8599. Fake service switch 	 Closed
-9	3	 撰寫8302模組代碼 	 Open
+9	3	 撰寫8302模組代碼 	 Closed
+9	3	 Review8302模組代碼 	 Open
+9	3	 設計Test data factory並建置測試資料 	 Open
+9	3	 撰寫6015. Test data factory SRS 	 Open
+9	4	 整理98號資料夾 	 Open
+9	4	 撰寫8403測試計劃 	 Open
+9	4	 編寫8503測試代碼 	 Open
+9	4	 編寫8303模組代碼 	 Open
