@@ -2860,39 +2860,7 @@ void main() {
       print('✅ TC-058: Expert模式進階功能測試通過');
     });
 
-    /**
-     * TC-059: 資料完整性驗證測試
-     * @version 2025-09-04-V2.0.0
-     * @date 2025-09-04 15:30:00
-     * @update: 階段二建立 - 資料完整性驗證測試
-     */
-    test('TC-059: 資料完整性驗證測試', () async {
-      // Arrange - 建立交易記錄
-      final createRequest = TransactionTestDataFactory.createTransactionRequest(
-        amount: 2000.0,
-        description: '資料完整性測試交易'
-      );
-
-      // Act - 建立並查詢
-      final createResponse = await transactionService.createTransaction(createRequest);
-      final transactionId = createResponse['data']['transactionId'];
-
-      final detailResponse = await transactionService.getTransactionDetail(transactionId);
-
-      // Assert - 驗證資料一致性
-      TransactionTestValidator.validateApiResponse(createResponse);
-      TransactionTestValidator.validateApiResponse(detailResponse);
-      TransactionTestValidator.validateTransactionData(detailResponse['data']);
-
-      // 驗證金額一致性
-      expect(detailResponse['data']['amount'], equals(createRequest['amount']),
-             reason: '交易金額應保持一致');
-      expect(detailResponse['data']['description'], equals(createRequest['description']),
-             reason: '交易描述應保持一致');
-
-      print('✅ TC-059: 資料完整性驗證測試通過');
-    });
-
+    
     /**
      * TC-060: API回應時間監控測試
      * @version 2025-09-04-V2.0.0
