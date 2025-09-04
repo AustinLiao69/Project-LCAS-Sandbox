@@ -1,0 +1,114 @@
+~/workspace$ cd "85. Flutter_Test_code_APL" && dart test "8503. 記帳交易服務_test.dart"
+Building package executable... (1.1s)
+Built test:test.
+00:00 +0: ... 8503. 記帳交易服務_test.dart00:00 +0 -1: loading 8503. 記帳交易服務_test.dart [E]
+  Failed to load "8503. 記帳交易服務_test.dart":
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2554:7: Error: Expected an identifier, but got ''📊 階段二：進階分析與錯誤處理測試''.
+  Try inserting an identifier before ''📊 階段二：進階分析與錯誤處理測試''.
+  group('📊 階段二：進階分析與錯誤處理測試', () {
+        ^^^^^^^^^^^^^^^^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2554:29: Error: Expected an identifier, but got '('.
+  Try inserting an identifier before '('.
+  group('📊 階段二：進階分析與錯誤處理測試', () {
+                              ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2554:32: Error: Expected ')' before this.
+  group('📊 階段二：進階分析與錯誤處理測試', () {
+                                 ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2873:5: Error: Expected a function body or '=>'.
+  Try adding {}.
+    });
+      ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2939:9: Error: Expected an identifier, but got ''階段四：深度四模式測試與整合驗證''.
+  Try inserting an identifier before ''階段四：深度四模式測試與整合驗證''.
+    group('階段四：深度四模式測試與整合驗證', () {
+          ^^^^^^^^^^^^^^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2939:29: Error: Expected an identifier, but got '('.
+  Try inserting an identifier before '('.
+    group('階段四：深度四模式測試與整合驗證', () {
+                              ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2939:32: Error: Expected ')' before this.
+    group('階段四：深度四模式測試與整合驗證', () {
+                                 ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:3683:5: Error: Expected a function body or '=>'.
+  Try adding {}.
+    });
+      ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2939:3: Error: 'group' is already declared in this scope.
+    group('階段四：深度四模式測試與整合驗證', () {
+    ^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2554:1: Context: Previous declaration of 'group'.
+  group('📊 階段二：進階分析與錯誤處理測試', () {
+  ^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:3749:9: Error: Expected an identifier, but got ''階段三：進階功能測試''.
+  Try inserting an identifier before ''階段三：進階功能測試''.
+    group('階段三：進階功能測試', () {
+          ^^^^^^^^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:3749:23: Error: Expected an identifier, but got '('.
+  Try inserting an identifier before '('.
+    group('階段三：進階功能測試', () {
+                        ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:3749:26: Error: Expected ')' before this.
+    group('階段三：進階功能測試', () {
+                           ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4111:5: Error: Expected a function body or '=>'.
+  Try adding {}.
+    });
+      ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:3749:3: Error: 'group' is already declared in this scope.
+    group('階段三：進階功能測試', () {
+    ^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2939:3: Context: Previous declaration of 'group'.
+    group('階段四：深度四模式測試與整合驗證', () {
+    ^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4177:9: Error: Expected an identifier, but got ''階段二：進階分析與錯誤處理測試''.
+  Try inserting an identifier before ''階段二：進階分析與錯誤處理測試''.
+    group('階段二：進階分析與錯誤處理測試', () {
+          ^^^^^^^^^^^^^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4177:28: Error: Expected an identifier, but got '('.
+  Try inserting an identifier before '('.
+    group('階段二：進階分析與錯誤處理測試', () {
+                             ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4177:31: Error: Expected ')' before this.
+    group('階段二：進階分析與錯誤處理測試', () {
+                                ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4496:5: Error: Expected a function body or '=>'.
+  Try adding {}.
+    });
+      ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4177:3: Error: 'group' is already declared in this scope.
+    group('階段二：進階分析與錯誤處理測試', () {
+    ^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:3749:3: Context: Previous declaration of 'group'.
+    group('階段三：進階功能測試', () {
+    ^^^^^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4562:15: Error: Expected an identifier, but got '('.
+  Try inserting an identifier before '('.
+    tearDownAll(() {
+                ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4562:18: Error: Expected ')' before this.
+    tearDownAll(() {
+                   ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4565:5: Error: Expected a function body or '=>'.
+  Try adding {}.
+    });
+      ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4566:1: Error: Expected a declaration, but got '}'.
+  }
+  ^
+  8599.%20Fake_service_switch.dart:117:1: Error: Comment starting with '/*' must end with '*/'.
+  /**
+  ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2100:3: Error: Can't use 'group' because it is declared more than once.
+    group('階段一：基礎架構測試', () {
+    ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:2548:14: Error: Too many positional arguments: 0 allowed, but 1 found.
+  Try removing the extra positional arguments.
+    tearDownAll(() {
+               ^
+  8503.%20%E8%A8%98%E5%B8%B3%E4%BA%A4%E6%98%93%E6%9C%8D%E5%8B%99_test.dart:4562:3: Context: Found this candidate, but the arguments don't match.
+    tearDownAll(() {
+    ^^^^^^^^^^^
+
+To run this test again: dart test 8503. 記帳交易服務_test.dart -p vm --plain-name 'loading 8503. 記帳交易服務_test.dart'
+00:00 +0 -1: Some tests failed.          
+~/workspace/85. Flutter_Test_code_APL$ 
