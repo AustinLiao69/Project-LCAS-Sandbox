@@ -1,11 +1,11 @@
 /**
  * 8503. 記帳交易服務測試代碼
- * @version 2025-09-04-V3.1.0
- * @date 2025-09-04 15:30:00
- * @update: 階段一修復完成 - 四模式測試修復，動態用戶模式支援，版次升級至v3.1.0
- * @module 模組版次: v3.1.0
- * @function 函數版次: v3.1.0
- * @description LCAS 2.0 記帳交易服務API測試代碼 - 完全符合8403測試計畫，四模式差異化測試修復
+ * @version 2025-09-04-V3.0.0
+ * @date 2025-09-04 15:00:00
+ * @update: 階段一升級完成 - 開關整合修復，版次升級至v3.0.0
+ * @module 模組版次: v3.0.0
+ * @function 函數版次: v3.0.0
+ * @description LCAS 2.0 記帳交易服務API測試代碼 - 完全符合8403測試計畫，8599開關整合修復
  */
 
 import 'dart:convert';
@@ -88,122 +88,52 @@ abstract class MockTransactionService {
 
 class FakeTransactionService implements MockTransactionService {
   /**
-   * 03. 快速記帳 Fake Service - 階段一修復版
-   * @version 2025-09-04-V3.1.0
-   * @date 2025-09-04 15:00:00
-   * @update: 階段一修復 - 新增動態用戶模式支援和四模式差異化回應
+   * 03. 快速記帳 Fake Service
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段一建立 - 快速記帳模擬實作
    */
   @override
   Future<Map<String, dynamic>> quickBooking(Map<String, dynamic> request) async {
     await Future.delayed(Duration(milliseconds: 100)); // 模擬網路延遲
 
-    // 動態提取用戶模式
-    final userId = request['userId'] ?? TransactionTestConfig.mockUserId;
-    final userMode = _extractUserModeFromUserId(userId);
-
-    // 基礎回應資料
-    final baseResponse = {
-      'transactionId': 'fake-transaction-${DateTime.now().millisecondsSinceEpoch}',
-      'parsed': {
-        'amount': 150.0,
-        'type': 'expense',
-        'category': '食物',
-        'categoryId': 'category-uuid-food',
-        'description': '午餐',
-        'confidence': 0.95
-      },
-      'confirmation': '✅ 已記錄支出 NT\$150 - 午餐（食物）',
-    };
-
-    // 根據用戶模式添加差異化內容
-    final responseData = _buildUserModeSpecificResponse(baseResponse, userMode);
-
     return {
       'success': true,
-      'data': responseData,
+      'data': {
+        'transactionId': 'fake-transaction-${DateTime.now().millisecondsSinceEpoch}',
+        'parsed': {
+          'amount': 150.0,
+          'type': 'expense',
+          'category': '食物',
+          'categoryId': 'category-uuid-food',
+          'description': '午餐',
+          'confidence': 0.95
+        },
+        'confirmation': '✅ 已記錄支出 NT\$150 - 午餐（食物）',
+        'balance': {
+          'today': -450.0,
+          'week': -2800.0,
+          'month': -12500.0,
+          'accountBalance': 25000.0
+        }
+      },
       'metadata': {
         'timestamp': DateTime.now().toIso8601String(),
         'requestId': TransactionTestConfig.mockRequestId,
-        'userMode': userMode
+        'userMode': 'Expert'
       }
     };
   }
 
   /**
-   * 動態提取用戶模式
-   * @version 2025-09-04-V3.1.0
-   */
-  String _extractUserModeFromUserId(String userId) {
-    if (userId.contains('expert')) return 'Expert';
-    if (userId.contains('inertial')) return 'Inertial';  
-    if (userId.contains('cultivation')) return 'Cultivation';
-    if (userId.contains('guiding')) return 'Guiding';
-    return 'Expert'; // 預設值
-  }
-
-  /**
-   * 建構用戶模式特定回應
-   * @version 2025-09-04-V3.1.0
-   */
-  Map<String, dynamic> _buildUserModeSpecificResponse(Map<String, dynamic> baseResponse, String userMode) {
-    final response = Map<String, dynamic>.from(baseResponse);
-    
-    switch (userMode) {
-      case 'Expert':
-        response['balance'] = {
-          'today': -450.0,
-          'week': -2800.0,
-          'month': -12500.0,
-          'accountBalance': 25000.0
-        };
-        response['detailedAnalysis'] = {
-          'categoryTrend': 'increasing',
-          'budgetUsage': 67.5,
-          'recommendations': ['考慮減少餐飲支出', '建議設定預算上限']
-        };
-        break;
-        
-      case 'Inertial':
-        response['summary'] = {
-          'todayTotal': -450.0,
-          'accountBalance': 25000.0
-        };
-        break;
-        
-      case 'Cultivation':
-        response['achievement'] = {
-          'streakDays': 15,
-          'levelProgress': 75,
-          'rewardPoints': 120,
-          'nextMilestone': '連續記帳20天'
-        };
-        response['encouragement'] = '🎉 太棒了！您已連續記帳15天，繼續保持！';
-        break;
-        
-      case 'Guiding':
-        // 簡化回應，只保留核心資訊
-        response.remove('parsed');
-        response['simpleMessage'] = '記帳完成：午餐 $150';
-        response['nextTip'] = '💡 試試說「統計」查看今日花費';
-        break;
-    }
-    
-    return response;
-  }
-
-  /**
-   * 04. 查詢交易記錄 Fake Service - 階段一修復版
-   * @version 2025-09-04-V3.1.0
-   * @date 2025-09-04 15:00:00
-   * @update: 階段一修復 - 新增動態用戶模式支援
+   * 04. 查詢交易記錄 Fake Service
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段一建立 - 交易查詢模擬實作
    */
   @override
   Future<Map<String, dynamic>> getTransactions(Map<String, dynamic> params) async {
     await Future.delayed(Duration(milliseconds: 150));
-
-    // 動態提取用戶模式
-    final userId = params['userId'] ?? TransactionTestConfig.mockUserId;
-    final userMode = _extractUserModeFromUserId(userId);
 
     return {
       'success': true,
@@ -239,24 +169,20 @@ class FakeTransactionService implements MockTransactionService {
       'metadata': {
         'timestamp': DateTime.now().toIso8601String(),
         'requestId': TransactionTestConfig.mockRequestId,
-        'userMode': userMode
+        'userMode': 'Expert'
       }
     };
   }
 
   /**
-   * 05. 建立交易記錄 Fake Service - 階段一修復版
-   * @version 2025-09-04-V3.1.0
-   * @date 2025-09-04 15:00:00
-   * @update: 階段一修復 - 新增動態用戶模式支援
+   * 05. 建立交易記錄 Fake Service
+   * @version 2025-09-04-V1.2.0
+   * @date 2025-09-04 12:00:00
+   * @update: 階段一建立 - 交易建立模擬實作
    */
   @override
   Future<Map<String, dynamic>> createTransaction(Map<String, dynamic> request) async {
     await Future.delayed(Duration(milliseconds: 200));
-
-    // 動態提取用戶模式
-    final userId = request['userId'] ?? TransactionTestConfig.mockUserId;
-    final userMode = _extractUserModeFromUserId(userId);
 
     return {
       'success': true,
@@ -273,7 +199,7 @@ class FakeTransactionService implements MockTransactionService {
       'metadata': {
         'timestamp': DateTime.now().toIso8601String(),
         'requestId': TransactionTestConfig.mockRequestId,
-        'userMode': userMode
+        'userMode': 'Expert'
       }
     };
   }
