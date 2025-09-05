@@ -1,5 +1,5 @@
 entrypoint = "index.js"
-modules = ["nodejs-22"]
+modules = ["nodejs-22", "python-3.11"]
 hidden = [".config", "package-lock.json"]
 
 [gitHubImport]
@@ -23,10 +23,7 @@ localPort = 3001
 
 [[ports]]
 localPort = 5000
-externalPort = 5000
-
-[[ports]]
-localPort = 8000
+externalPort = 80
 
 [[ports]]
 localPort = 9005
@@ -41,3 +38,26 @@ externalPort = 3001
 
 [agent]
 expertMode = true
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Documentation Viewer"
+
+[[workflows.workflow]]
+name = "Documentation Viewer"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -c \"import os; print('LLD文檔已生成，位置：82. Flutter_LLD_APL/'); print('已完成文檔：'); [print(f'- {f}') for f in os.listdir('82. Flutter_LLD_APL') if f.endswith('.md')]; import time; time.sleep(30)\""
+
+[workflows.workflow.metadata]
+outputType = "console"
