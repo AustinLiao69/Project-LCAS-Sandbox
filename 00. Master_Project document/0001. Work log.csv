@@ -163,7 +163,7 @@ MM 	 DD 	 Description 	    Progress
 8	21	 製作API List 	 Closed
 8	21	 編寫Swagger API spec(0601, 0602)) 	 Closed
 8	22	 編寫Swagger API spec 	 Closed
-8	22	 檢查API SPEC與Business layer alignment 	 Open
+8	22	 檢查API SPEC與Business layer alignment 	 Closed
 8	25	 撰寫0088. API設計規範 	 Closed
 8	25	 重新組織專案資料夾框架 	 Closed
 8	26	 整理81號資料夾內的API SPEC(8101~8112)，確認無違反8020以及8088文件規範 	 Closed
@@ -189,13 +189,13 @@ MM 	 DD 	 Description 	    Progress
 9	2	 製作8599. Fake service switch 	 Closed
 9	3	 製作8599. Fake service switch 	 Closed
 9	3	 撰寫8302模組代碼 	 Closed
-9	3	 Review8302模組代碼 	 Open
+9	3	 Review8302模組代碼 	 Closed
 9	3	 設計Test data factory並建置測試資料 	 Open
 9	3	 撰寫6015. Test data factory SRS 	 Open
-9	4	 整理98號資料夾 	 Open
-9	4	 撰寫8403測試計劃 	 Open
-9	4	 編寫8503測試代碼 	 Open
-9	4	 編寫8303模組代碼 	 Open
+9	4	 整理98號資料夾 	 Closed
+9	4	 撰寫8403測試計劃 	 Closed
+9	4	 編寫8503測試代碼 	 Closed
+9	4	 編寫8303模組代碼 	 Closed
 9	5	 檢查8303模組代碼 	 Open
-9	5	 撰寫8204LLD文件 	 Open
-9	5	 撰寫8205LLD文件 	 Open
+9	5	 撰寫8204 LLD文件 	 Closed
+9	5	 撰寫8205 LLD文件 	 Open
