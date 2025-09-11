@@ -1,0 +1,140 @@
+PL模組分群計畫
+
+根據您的要求，我來列出基於功能域分群 + Phase標記混合方案的完整文件結構：
+完整文件結構方案
+1. SRS (Software Requirements Specification) - 71資料夾
+71. Flutter_SRS_PL/
+├── 7101. 系統進入功能群_SRS.md          # S-101~S-108 (Phase 1)
+│   ├── S-101 LINE OA歡迎頁
+│   ├── S-102 APP啟動頁  
+│   ├── S-103 APP註冊頁
+│   ├── S-104 APP登入頁
+│   ├── S-105 忘記密碼頁
+│   ├── S-106 模式評估問卷頁
+│   ├── S-107 跨平台綁定頁
+│   └── S-108 APP下載推廣頁
+├── 7102. 記帳核心功能群_SRS.md          # S-201~S-211 (Phase 1,3,5)
+│   ├── Phase 1: S-201, S-202, S-203, S-206
+│   ├── Phase 3: S-204, S-205, S-207, S-208
+│   └── Phase 5: S-209, S-210, S-211
+├── 7103. 帳本協作功能群_SRS.md          # S-301~S-306 (Phase 2,3)
+│   ├── Phase 2: S-301, S-302, S-303
+│   └── Phase 3: S-304, S-305, S-306
+├── 7104. 預算管理功能群_SRS.md          # S-307~S-308 (Phase 4)
+│   ├── S-307 預算管理主頁
+│   └── S-308 建立預算頁
+├── 7105. 報表分析功能群_SRS.md          # S-401~S-406 (Phase 5,6)
+│   ├── Phase 5: S-401, S-402, S-403
+│   └── Phase 6: S-404, S-405, S-406
+└── 7106. 系統設定功能群_SRS.md          # S-501~S-507 (Phase 6,7)
+    ├── Phase 6: S-501, S-502, S-503
+    └── Phase 7: S-504, S-505, S-506, S-507
+2. LLD (Low-Level Design) - 72資料夾
+72. Flutter_LLD_PL/
+├── 7201. 系統進入功能群_LLD.md          # 對應APL: 8101,8102,8111
+│   ├── 登入註冊流程設計
+│   ├── 模式評估算法
+│   └── 跨平台綁定機制
+├── 7202. 記帳核心功能群_LLD.md          # 對應APL: 8103,8106,8105
+│   ├── 快速記帳界面設計
+│   ├── 科目選擇邏輯
+│   └── 統計圖表渲染
+├── 7203. 帳本協作功能群_LLD.md          # 對應APL: 8104
+│   ├── 多帳本切換機制
+│   ├── 協作權限控制
+│   └── 帳戶管理邏輯
+├── 7204. 預算管理功能群_LLD.md          # 對應APL: 8107
+│   ├── 預算設定界面
+│   └── 預算監控算法
+├── 7205. 報表分析功能群_LLD.md          # 對應APL: 8108,8109
+│   ├── 報表生成界面
+│   ├── 圖表渲染引擎
+│   └── AI分析集成
+└── 7206. 系統設定功能群_LLD.md          # 對應APL: 8110,8111,8112,8113
+    ├── 激勵系統界面
+    ├── 備份恢復機制
+    └── 通知管理界面
+3. Test Plan - 74資料夾
+74. Flutter_Test_plan_PL/
+├── 7401. 系統進入功能群_TestPlan.md
+│   ├── 登入註冊測試案例
+│   ├── 模式切換測試
+│   └── 跨平台綁定測試
+├── 7402. 記帳核心功能群_TestPlan.md
+│   ├── 快速記帳測試
+│   ├── 科目選擇測試
+│   └── 統計功能測試
+├── 7403. 帳本協作功能群_TestPlan.md
+│   ├── 多帳本測試
+│   ├── 協作權限測試
+│   └── 帳戶管理測試
+├── 7404. 預算管理功能群_TestPlan.md
+│   ├── 預算設定測試
+│   └── 預算監控測試
+├── 7405. 報表分析功能群_TestPlan.md
+│   ├── 報表生成測試
+│   ├── 圖表顯示測試
+│   └── AI分析測試
+└── 7406. 系統設定功能群_TestPlan.md
+    ├── 激勵系統測試
+    ├── 備份功能測試
+    └── 通知管理測試
+4. Test Code - 75資料夾
+75. Flutter_Test_code_PL/
+├── 7501. 系統進入功能群_test.dart
+│   ├── login_register_test.dart
+│   ├── mode_assessment_test.dart
+│   └── platform_binding_test.dart
+├── 7502. 記帳核心功能群_test.dart
+│   ├── quick_accounting_test.dart
+│   ├── category_selection_test.dart
+│   └── statistics_chart_test.dart
+├── 7503. 帳本協作功能群_test.dart
+│   ├── ledger_management_test.dart
+│   ├── collaboration_test.dart
+│   └── account_management_test.dart
+├── 7504. 預算管理功能群_test.dart
+│   ├── budget_setup_test.dart
+│   └── budget_monitoring_test.dart
+├── 7505. 報表分析功能群_test.dart
+│   ├── report_generation_test.dart
+│   ├── chart_rendering_test.dart
+│   └── ai_analysis_test.dart
+├── 7506. 系統設定功能群_test.dart
+│   ├── reward_system_test.dart
+│   ├── backup_restore_test.dart
+│   └── notification_test.dart
+├── common/
+│   ├── test_fixtures.dart          # 共用測試資料
+│   ├── test_helpers.dart           # 測試輔助函數
+│   └── mock_services.dart          # Mock服務
+└── pubspec.yaml                    # 測試依賴配置
+文件內部結構範例
+每個SRS文件內部結構：
+# 710X. XXX功能群_SRS.md
+## 1. 功能概覽
+## 2. Phase開發規劃
+### 2.1 Phase X 畫面 (優先實作)
+### 2.2 Phase Y 畫面 (後續實作)
+## 3. 畫面功能規格
+### 3.1 S-XXX 畫面名稱
+### 3.2 S-XXX 畫面名稱
+## 4. 跨畫面整合需求
+## 5. APL服務對應
+每個LLD文件內部結構：
+# 720X. XXX功能群_LLD.md
+## 1. 架構設計
+## 2. Widget結構設計
+## 3. 狀態管理設計
+## 4. 導航流程設計
+## 5. API集成設計
+## 6. 效能優化設計
+優勢說明
+1.	開發順序友善：每個文件內部仍按Phase標記，便於按Sprint開發
+2.	邏輯完整性：相關畫面集中管理，便於理解業務邏輯
+3.	維護效率：功能變更只需修改對應功能群文件
+4.	拆分彈性：未來可輕鬆按畫面拆分成40個獨立文件
+5.	團隊協作：不同功能群可並行開發，減少衝突
+6.	測試覆蓋：功能群內的整合測試更完整
+這個結構既保持了與Sprint計畫的對應關係，又維持了功能的邏輯完整性，是最平衡的選擇。
+
