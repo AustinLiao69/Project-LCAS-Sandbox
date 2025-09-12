@@ -1,8 +1,8 @@
 /**
  * 7502. 記帳核心功能群.dart - 記帳核心功能群測試代碼
- * @version 2025-09-12 v1.2.0
+ * @version 2025-09-12 v1.2.1
  * @date 2025-09-12
- * @update: 階段一完成 - 補強TC-023至TC-026安全性測試案例，升級模組版次至v1.2.0，所有函數升級至v1.1.0
+ * @update: 階段一緊急修復 - 修正TC-025 null safety問題，升級模組版次至v1.2.1，修復函數升級至v1.1.1
  */
 
 import 'dart:async';
@@ -1310,9 +1310,9 @@ class AccountingCoreFunctionGroupTest {
 
   /**
    * TC-025: 跨平台資料同步測試
-   * @version 2025-09-12 v1.1.0
+   * @version 2025-09-12 v1.1.1
    * @date 2025-09-12
-   * @update: 階段一新增 - 確保APP與LINE OA資料同步一致性
+   * @update: 階段一緊急修復 - 修正null safety問題，確保APP與LINE OA資料同步一致性
    */
   Future<void> testCrossPlatformDataSync() async {
     if (!PLFakeServiceSwitch.enable7502FakeService) {
@@ -1344,13 +1344,17 @@ class AccountingCoreFunctionGroupTest {
       await syncManager.syncFromAPP(appTransaction);
       final appSyncResult = await syncManager.getTransactionFromLINE('app_trans_001');
       expect(appSyncResult, isNotNull, reason: 'APP記帳應同步到LINE OA');
-      expect(appSyncResult['amount'], equals(299.0), reason: '金額應一致');
+      if (appSyncResult != null) {
+        expect(appSyncResult['amount'], equals(299.0), reason: '金額應一致');
+      }
 
       // Act - LINE OA記帳同步到APP
       await syncManager.syncFromLINE(lineTransaction);
       final lineSyncResult = await syncManager.getTransactionFromAPP('line_trans_001');
       expect(lineSyncResult, isNotNull, reason: 'LINE記帳應同步到APP');
-      expect(lineSyncResult['description'], equals('LINE記帳測試'), reason: '描述應一致');
+      if (lineSyncResult != null) {
+        expect(lineSyncResult['description'], equals('LINE記帳測試'), reason: '描述應一致');
+      }
 
       // Act - 衝突解決測試
       final conflictTransaction = {
