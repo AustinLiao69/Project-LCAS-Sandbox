@@ -3,14 +3,11 @@ cd ~/workspace
 
 2.進入到75. Flutter_Test_code_PL
 cd "75. Flutter_Test_code_PL"
-dart test "7501. 系統進入功能群.dart" --reporter=expanded
+dart test "7501. 系統進入功能群.dart" && dart test "7501. 系統進入功能群.dart"
 
 6.執行75號資料夾之dart test
 dart test "7501. 系統進入功能群.dart" 
 dart test "7502. 記帳核心功能群.dart"
-
-3.執行run_test.js
-node run_test.js
 
 4.進入資料夾然後安裝dart測試套件
 cd "75. Flutter_Test_code_PL" && dart pub get
