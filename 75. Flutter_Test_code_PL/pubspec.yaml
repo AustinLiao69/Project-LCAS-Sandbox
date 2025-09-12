@@ -1,6 +1,6 @@
 
 name: pl_tests
-description: PL 測試專案
+description: PL 測試專案 - 系統進入功能群
 version: 1.0.0+1
 
 environment:
@@ -10,6 +10,8 @@ dependencies:
   test: ^1.24.0
   mockito: ^5.4.0
   build_runner: ^2.4.0
+  meta: ^1.8.0
 
 dev_dependencies:
   test: ^1.24.0
+  mockito_annotations: ^0.18.0 ^1.24.0
