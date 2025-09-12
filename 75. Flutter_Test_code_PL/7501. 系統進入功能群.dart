@@ -107,12 +107,14 @@ class LoginResponse {
   final String? token;
   final String? userId;
   final String? message;
+  final String? errorCode;
 
   LoginResponse({
     required this.success,
     this.token,
     this.userId,
     this.message,
+    this.errorCode,
   });
 }
 
