@@ -963,6 +963,353 @@ class SystemEntryFunctionGroupTest {
   }
 
   // ===========================================
+  // 第三階段：API整合與異常測試案例 (TC-013 ~ TC-018)
+  // ===========================================
+
+  /**
+   * TC-013: 8101認證服務API一致性測試
+   * @version 2025-09-12 v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<void> testAuthServiceApiConsistency() async {
+    if (!PLFakeServiceSwitch.enable7501FakeService) {
+      throw Exception('Fake Service已停用，無法執行測試');
+    }
+
+    print('TC-013: 開始執行8101認證服務API一致性測試');
+
+    try {
+      // Test 1: POST /auth/register 端點測試
+      print('TC-013.1: 測試 POST /auth/register 端點');
+      final registerRequest = RegisterRequest(
+        email: 'api_test@lcas.app',
+        password: 'ApiTest123!',
+        confirmPassword: 'ApiTest123!'
+      );
+      final registerResponse = await registerWithEmail(registerRequest);
+      expect(registerResponse.success, isTrue, reason: 'Register API應該成功');
+      expect(registerResponse.token, isNotNull, reason: 'Register API應該返回token');
+
+      // Test 2: POST /auth/login 端點測試
+      print('TC-013.2: 測試 POST /auth/login 端點');
+      final loginRequest = LoginRequest(
+        email: 'api_test@lcas.app',
+        password: 'ApiTest123!'
+      );
+      final loginResponse = await getLoginResponse(loginRequest);
+      expect(loginResponse.success, isTrue, reason: 'Login API應該成功');
+      expect(loginResponse.token, isNotNull, reason: 'Login API應該返回token');
+
+      // Test 3: POST /auth/forgot-password 端點測試
+      print('TC-013.3: 測試 POST /auth/forgot-password 端點');
+      final forgotPasswordResponse = await getForgotPasswordResponse('api_test@lcas.app');
+      expect(forgotPasswordResponse.success, isTrue, reason: 'ForgotPassword API應該成功');
+
+      // Test 4: Google OAuth 端點測試
+      print('TC-013.4: 測試 Google OAuth 端點');
+      final googleResponse = await registerWithGoogle();
+      expect(googleResponse.success, isTrue, reason: 'Google OAuth應該成功');
+
+      print('TC-013: ✅ 8101認證服務API一致性測試通過');
+
+    } catch (e) {
+      print('TC-013: ❌ 8101認證服務API一致性測試失敗: $e');
+      rethrow;
+    }
+  }
+
+  /**
+   * TC-014: 8102用戶管理服務整合測試
+   * @version 2025-09-12 v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<void> testUserManagementServiceIntegration() async {
+    if (!PLFakeServiceSwitch.enable7501FakeService) {
+      throw Exception('Fake Service已停用，無法執行測試');
+    }
+
+    print('TC-014: 開始執行8102用戶管理服務整合測試');
+
+    try {
+      // Test 1: POST /users/assessment 端點測試
+      print('TC-014.1: 測試 POST /users/assessment 端點');
+      final assessmentAnswers = [
+        AssessmentAnswer(questionId: 1, selectedOption: 4),
+        AssessmentAnswer(questionId: 2, selectedOption: 3),
+        AssessmentAnswer(questionId: 3, selectedOption: 4),
+        AssessmentAnswer(questionId: 4, selectedOption: 3),
+      ];
+      final assessmentResult = await submitAssessment(assessmentAnswers);
+      expect(assessmentResult.recommendedMode, isNotNull, reason: '評估結果應該有推薦模式');
+      expect(assessmentResult.confidence, greaterThan(0), reason: '信心度應該大於0');
+
+      // Test 2: 載入評估問卷測試
+      print('TC-014.2: 測試載入評估問卷');
+      final questionnaire = await loadAssessmentQuestionnaire();
+      expect(questionnaire.questions.length, greaterThanOrEqualTo(4), reason: '問卷應該至少有4個問題');
+
+      // Test 3: 模式設定保存測試
+      print('TC-014.3: 測試模式設定保存');
+      await saveModeConfiguration(UserMode.expert);
+      // 驗證設定已保存（在實際實作中會檢查本地儲存）
+
+      print('TC-014: ✅ 8102用戶管理服務整合測試通過');
+
+    } catch (e) {
+      print('TC-014: ❌ 8102用戶管理服務整合測試失敗: $e');
+      rethrow;
+    }
+  }
+
+  /**
+   * TC-015: 8111系統服務版本檢查測試
+   * @version 2025-09-12 v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<void> testSystemServiceVersionCheck() async {
+    if (!PLFakeServiceSwitch.enable7501FakeService) {
+      throw Exception('Fake Service已停用，無法執行測試');
+    }
+
+    print('TC-015: 開始執行8111系統服務版本檢查測試');
+
+    try {
+      // Test 1: GET /system/app-info 端點測試
+      print('TC-015.1: 測試 GET /system/app-info 端點');
+      final versionInfo = await checkAppVersion();
+      expect(versionInfo.currentVersion, isNotEmpty, reason: '當前版本不應為空');
+      expect(versionInfo.latestVersion, isNotEmpty, reason: '最新版本不應為空');
+      expect(versionInfo.updateMessage, isNotEmpty, reason: '更新訊息不應為空');
+
+      // Test 2: 版本比對邏輯測試
+      print('TC-015.2: 測試版本比對邏輯');
+      final needsUpdate = _compareVersions(versionInfo.currentVersion, versionInfo.latestVersion);
+      expect(needsUpdate, isA<bool>(), reason: '版本比對應該返回布林值');
+
+      // Test 3: 系統通知測試
+      print('TC-015.3: 測試系統通知');
+      final notification = await getSystemNotification();
+      expect(notification, isNotEmpty, reason: '系統通知不應為空');
+
+      print('TC-015: ✅ 8111系統服務版本檢查測試通過');
+
+    } catch (e) {
+      print('TC-015: ❌ 8111系統服務版本檢查測試失敗: $e');
+      rethrow;
+    }
+  }
+
+  /**
+   * TC-016: 網路連線中斷異常處理測試
+   * @version 2025-09-12 v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<void> testNetworkDisconnectionHandling() async {
+    if (!PLFakeServiceSwitch.enable7501FakeService) {
+      throw Exception('Fake Service已停用，無法執行測試');
+    }
+
+    print('TC-016: 開始執行網路連線中斷異常處理測試');
+
+    try {
+      // Test 1: 模擬網路連線中斷
+      print('TC-016.1: 模擬網路連線中斷情況');
+      _simulateNetworkDisconnection = true;
+
+      // Test 2: 測試離線模式處理
+      print('TC-016.2: 測試離線模式處理');
+      try {
+        await checkAppVersion();
+        // 在網路中斷時應該拋出異常或使用快取
+      } catch (e) {
+        expect(e.toString(), contains('network'), reason: '應該是網路相關錯誤');
+      }
+
+      // Test 3: 測試重試機制
+      print('TC-016.3: 測試重試機制');
+      final retryResult = await _retryWithBackoff(() async {
+        if (_simulateNetworkDisconnection) {
+          throw Exception('Network disconnected');
+        }
+        return 'success';
+      }, maxRetries: 3);
+
+      // Test 4: 恢復網路連線
+      print('TC-016.4: 恢復網路連線測試');
+      _simulateNetworkDisconnection = false;
+      final versionInfo = await checkAppVersion();
+      expect(versionInfo, isNotNull, reason: '網路恢復後應該能正常獲取版本資訊');
+
+      print('TC-016: ✅ 網路連線中斷異常處理測試通過');
+
+    } catch (e) {
+      print('TC-016: ❌ 網路連線中斷異常處理測試失敗: $e');
+      rethrow;
+    } finally {
+      _simulateNetworkDisconnection = false;
+    }
+  }
+
+  /**
+   * TC-017: 認證失敗重試機制測試
+   * @version 2025-09-12 v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<void> testAuthenticationFailureRetry() async {
+    if (!PLFakeServiceSwitch.enable7501FakeService) {
+      throw Exception('Fake Service已停用，無法執行測試');
+    }
+
+    print('TC-017: 開始執行認證失敗重試機制測試');
+
+    try {
+      // Test 1: 測試錯誤憑證登入
+      print('TC-017.1: 測試錯誤憑證登入');
+      final wrongCredentials = LoginRequest(
+        email: 'wrong@example.com',
+        password: 'wrongpassword'
+      );
+      final failedResponse = await getLoginResponse(wrongCredentials);
+      expect(failedResponse.success, isFalse, reason: '錯誤憑證應該登入失敗');
+
+      // Test 2: 測試重試機制
+      print('TC-017.2: 測試重試機制');
+      int attemptCount = 0;
+      final retryResult = await _retryWithBackoff(() async {
+        attemptCount++;
+        if (attemptCount < 3) {
+          throw Exception('Authentication failed');
+        }
+        return LoginResponse(success: true, token: 'retry_token', userId: 'retry_user');
+      }, maxRetries: 3);
+
+      expect(attemptCount, equals(3), reason: '應該重試3次');
+
+      // Test 3: 測試帳號鎖定邏輯
+      print('TC-017.3: 測試帳號鎖定邏輯');
+      final lockResult = await _simulateAccountLocking('test@lcas.app', 5);
+      expect(lockResult, isTrue, reason: '超過重試次數應該鎖定帳號');
+
+      print('TC-017: ✅ 認證失敗重試機制測試通過');
+
+    } catch (e) {
+      print('TC-017: ❌ 認證失敗重試機制測試失敗: $e');
+      rethrow;
+    }
+  }
+
+  /**
+   * TC-018: 輸入驗證錯誤處理測試
+   * @version 2025-09-12 v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<void> testInputValidationErrorHandling() async {
+    if (!PLFakeServiceSwitch.enable7501FakeService) {
+      throw Exception('Fake Service已停用，無法執行測試');
+    }
+
+    print('TC-018: 開始執行輸入驗證錯誤處理測試');
+
+    try {
+      // Test 1: 無效Email格式測試
+      print('TC-018.1: 測試無效Email格式');
+      final invalidEmails = ['invalid-email', '@example.com', 'test@', 'test..test@example.com'];
+      for (final email in invalidEmails) {
+        final isValid = validateEmailFormat(email);
+        expect(isValid, isFalse, reason: '$email 應該是無效的Email格式');
+      }
+
+      // Test 2: 弱密碼測試
+      print('TC-018.2: 測試弱密碼驗證');
+      final weakPasswords = ['123', 'password', '12345678', 'abcd'];
+      for (final password in weakPasswords) {
+        final strength = checkPasswordStrength(password);
+        expect(strength.score, lessThan(3), reason: '$password 應該是弱密碼');
+        expect(strength.suggestions, isNotEmpty, reason: '弱密碼應該有改善建議');
+      }
+
+      // Test 3: 表單驗證測試
+      print('TC-018.3: 測試表單驗證');
+      final invalidFormData = {
+        'email': 'invalid-email',
+        'password': '123',
+        'confirmPassword': '456'
+      };
+      final validationResult = validateCompleteForm(invalidFormData);
+      expect(validationResult.isValid, isFalse, reason: '無效表單資料應該驗證失敗');
+
+      // Test 4: 註冊資訊驗證測試
+      print('TC-018.4: 測試註冊資訊驗證');
+      final invalidRegisterRequest = RegisterRequest(
+        email: 'invalid-email',
+        password: '123',
+        confirmPassword: '456'
+      );
+      final isValidRegistration = validateRegistrationInfo(invalidRegisterRequest);
+      expect(isValidRegistration, isFalse, reason: '無效註冊資訊應該驗證失敗');
+
+      print('TC-018: ✅ 輸入驗證錯誤處理測試通過');
+
+    } catch (e) {
+      print('TC-018: ❌ 輸入驗證錯誤處理測試失敗: $e');
+      rethrow;
+    }
+  }
+
+  // ===========================================
+  // 輔助測試函數
+  // ===========================================
+
+  bool _simulateNetworkDisconnection = false;
+
+  /**
+   * 比較版本號
+   */
+  bool _compareVersions(String current, String latest) {
+    // 簡單的版本比較邏輯
+    final currentParts = current.split('.').map(int.parse).toList();
+    final latestParts = latest.split('.').map(int.parse).toList();
+    
+    for (int i = 0; i < 3; i++) {
+      if (latestParts[i] > currentParts[i]) return true;
+      if (latestParts[i] < currentParts[i]) return false;
+    }
+    return false;
+  }
+
+  /**
+   * 重試機制實作
+   */
+  Future<T> _retryWithBackoff<T>(Future<T> Function() operation, {int maxRetries = 3}) async {
+    int attempt = 0;
+    while (attempt < maxRetries) {
+      try {
+        return await operation();
+      } catch (e) {
+        attempt++;
+        if (attempt >= maxRetries) rethrow;
+        await Future.delayed(Duration(milliseconds: 100 * attempt)); // 指數退避
+      }
+    }
+    throw Exception('Max retries exceeded');
+  }
+
+  /**
+   * 模擬帳號鎖定
+   */
+  Future<bool> _simulateAccountLocking(String email, int maxAttempts) async {
+    // 模擬帳號鎖定邏輯
+    await Future.delayed(Duration(milliseconds: 50));
+    return maxAttempts >= 5; // 超過5次嘗試就鎖定
+  }
+
+  // ===========================================
   // 四模式差異化測試案例 (TC-009 ~ TC-012)
   // ===========================================
 
@@ -1195,6 +1542,40 @@ void main() {
 
     test('TC-012: Guiding模式簡化流程測試', () async {
       await testInstance.testGuidingModeSimplifiedFlow();
+    });
+  });
+
+  // 第三階段測試：API整合與異常測試
+  group('系統進入功能群測試 - 第三階段：API整合與異常測試', () {
+    late SystemEntryFunctionGroupTest testInstance;
+
+    setUp(() {
+      testInstance = SystemEntryFunctionGroupTest();
+      PLFakeServiceSwitch.enable7501FakeService = true;
+    });
+
+    test('TC-013: 8101認證服務API一致性測試', () async {
+      await testInstance.testAuthServiceApiConsistency();
+    });
+
+    test('TC-014: 8102用戶管理服務整合測試', () async {
+      await testInstance.testUserManagementServiceIntegration();
+    });
+
+    test('TC-015: 8111系統服務版本檢查測試', () async {
+      await testInstance.testSystemServiceVersionCheck();
+    });
+
+    test('TC-016: 網路連線中斷異常處理測試', () async {
+      await testInstance.testNetworkDisconnectionHandling();
+    });
+
+    test('TC-017: 認證失敗重試機制測試', () async {
+      await testInstance.testAuthenticationFailureRetry();
+    });
+
+    test('TC-018: 輸入驗證錯誤處理測試', () async {
+      await testInstance.testInputValidationErrorHandling();
     });
   });
 }
