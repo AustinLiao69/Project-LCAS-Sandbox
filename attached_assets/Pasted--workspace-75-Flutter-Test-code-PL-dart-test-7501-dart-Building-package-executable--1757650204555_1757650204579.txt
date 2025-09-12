@@ -1,0 +1,106 @@
+~/workspace/75. Flutter_Test_code_PL$ dart test "7501. 系統進入功能群.dart"
+Building package executable... (5.7s)
+Built test:test.
+00:00 +0: loading 7501. 系統進入功能群.dart         00:00 +0 -1: loading 7501. 系統進入功能群.dart [E]        
+  Failed to load "7501. 系統進入功能群.dart":
+  Couldn't resolve the package 'mockito' in 'package:mockito/mockito.dart'.
+  Error: Couldn't resolve the package 'mockito' in 'package:mockito/annotations.dart'.
+  Error: Couldn't resolve the package 'flutter' in 'package:flutter/material.dart'.
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:11:8: Error: Not found: 'package:mockito/mockito.dart'
+  import 'package:mockito/mockito.dart';
+         ^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:12:8: Error: Not found: 'package:mockito/annotations.dart'
+  import 'package:mockito/annotations.dart';
+         ^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:14:8: Error: Not found: 'package:flutter/material.dart'
+  import 'package:flutter/material.dart'; // Added for ThemeData
+         ^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:905:3: Error: Type 'ThemeData' not found.
+    ThemeData loadModeTheme(UserMode userMode) {
+    ^^^^^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:951:3: Error: Type 'Color' not found.
+    Color getModeColor(UserMode userMode) {
+    ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:282:2: Error: Couldn't find constructor 'GenerateMocks'.
+  @GenerateMocks([
+   ^^^^^^^^^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:907:19: Error: 'Color' isn't a type.
+      Map<UserMode, Color> modeColors = {
+                    ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:917:15: Error: 'Color' isn't a type.
+          <int, Color>{
+                ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:908:24: Error: The method 'Color' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'Color'.
+        UserMode.expert: Color(0xFF1976D2),     // 藍色 - 專業
+                         ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:909:26: Error: The method 'Color' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'Color'.
+        UserMode.inertial: Color(0xFF4CAF50),   // 綠色 - 穩定
+                           ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:910:29: Error: The method 'Color' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'Color'.
+        UserMode.cultivation: Color(0xFFFF9800), // 橙色 - 成長
+                              ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:911:25: Error: The method 'Color' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'Color'.
+        UserMode.guiding: Color(0xFF9C27B0),    // 紫色 - 引導
+                          ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:914:12: Error: The method 'ThemeData' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'ThemeData'.
+      return ThemeData(
+             ^^^^^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:915:22: Error: The method 'MaterialColor' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'MaterialColor'.
+        primarySwatch: MaterialColor(
+                       ^^^^^^^^^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:955:16: Error: The method 'Color' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'Color'.
+          return Color(0xFF1976D2);     // 藍色
+                 ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:957:16: Error: The method 'Color' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'Color'.
+          return Color(0xFF4CAF50);     // 綠色
+                 ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:959:16: Error: The method 'Color' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'Color'.
+          return Color(0xFFFF9800);     // 橙色
+                 ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:961:16: Error: The method 'Color' isn't defined for the class 'SystemEntryFunctionGroupTest'.
+   - 'SystemEntryFunctionGroupTest' is from '7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'Color'.
+          return Color(0xFF9C27B0);     // 紫色
+                 ^^^^^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1712:27: Error: Operator '[]' cannot be called on 'Map<String, dynamic>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+        expect(loginAuditLog['userId'], isNotNull, reason: '應記錄使用者ID');
+                            ^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1713:27: Error: Operator '[]' cannot be called on 'Map<String, dynamic>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+        expect(loginAuditLog['timestamp'], isNotNull, reason: '應記錄時間戳');
+                            ^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1723:28: Error: Operator '[]' cannot be called on 'Map<String, dynamic>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+        expect(failedLoginLog['reason'], isNotNull, reason: '應記錄失敗原因');
+                             ^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1730:28: Error: Operator '[]' cannot be called on 'Map<String, dynamic>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+        expect(sensitiveOpLog['operation'], equals('PASSWORD_RESET'), reason: '應記錄操作類型');
+                             ^
+  7501.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1737:27: Error: Operator '[]' cannot be called on 'Map<String, dynamic>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+        expect(securityAlert['severity'], equals('HIGH'), reason: '應設定適當的嚴重性等級');
+                            ^
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name 'loading 7501. 系統進入功能群.dart'
+00:00 +0 -1: Some tests failed.                    
+~/workspace/75. Flutter_Test_code_PL$ dart test "7501. 系統進入功能群.dart"
