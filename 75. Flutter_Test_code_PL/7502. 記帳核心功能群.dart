@@ -1,4 +1,3 @@
-
 /**
  * 7502. 記帳核心功能群.dart - 記帳核心功能群測試代碼
  * @version 2025-09-12 v1.0.0
@@ -28,14 +27,14 @@ import '7599. Fake_service_switch.dart';
   AccountApiClient,
   CategoryApiClient,
   TransactionApiClient,
-  
+
   // 狀態管理Provider Mock
   AccountStateProvider,
   CategoryStateProvider,
   FormStateProvider,
   StatisticsStateProvider,
   TransactionStateProvider,
-  
+
   // 工具類Mock
   AmountUtils,
   DateUtils,
@@ -45,7 +44,7 @@ import '7599. Fake_service_switch.dart';
 
 /// 測試資料工廠類別
 class AccountingTestDataFactory {
-  
+
   /// 建立測試用戶資料（四模式）
   static Map<String, TestUser> createTestUsers() {
     return {
@@ -141,7 +140,7 @@ enum ValidationLevel {
 class TestUser {
   final String userId;
   final UserMode mode;
-  
+
   TestUser(this.userId, this.mode);
 }
 
@@ -154,7 +153,7 @@ class TestTransaction {
   final String? fromAccountId;
   final String? toAccountId;
   final String description;
-  
+
   TestTransaction({
     required this.type,
     required this.amount,
@@ -172,7 +171,7 @@ class FormConfiguration {
   final bool showAdvancedOptions;
   final bool enableBatchEntry;
   final ValidationLevel validationLevel;
-  
+
   FormConfiguration({
     required this.fieldCount,
     required this.showAdvancedOptions,
@@ -197,7 +196,7 @@ class MockLocalizationManager extends Mock implements LocalizationManager {}
 
 /// 主測試函數群組
 void main() {
-  
+
   // 測試前置設定
   setUpAll(() {
     // 啟用記帳核心功能群Fake Service
@@ -212,10 +211,10 @@ void main() {
   });
 
   group('記帳核心功能群測試', () {
-    
+
     // 第一階段測試：基礎架構測試
     group('第一階段：基礎架構測試', () {
-      
+
       /**
        * 01. 依賴注入容器測試
        * @version 1.0.0
@@ -225,10 +224,10 @@ void main() {
       test('01. 依賴注入容器測試', () async {
         // Arrange
         final container = DependencyContainer();
-        
+
         // Act
         container.registerServices();
-        
+
         // Assert
         expect(container.isRegistered<TransactionApiClient>(), isTrue);
         expect(container.isRegistered<AccountApiClient>(), isTrue);
@@ -246,7 +245,7 @@ void main() {
         final modes = UserMode.values;
         final transactionTypes = TransactionType.values;
         final validationLevels = ValidationLevel.values;
-        
+
         // Assert
         expect(modes.length, equals(4));
         expect(transactionTypes.length, equals(3));
@@ -265,10 +264,10 @@ void main() {
         // Arrange
         final handler = LineOADialogHandler();
         final mockApiClient = MockTransactionApiClient();
-        
+
         // Act
         final result = await handler.handleQuickAccounting('午餐 150');
-        
+
         // Assert
         expect(result, isNotNull);
         expect(result.success, isTrue);
@@ -278,7 +277,7 @@ void main() {
 
     // 第二階段：核心功能測試
     group('第二階段：核心功能測試', () {
-      
+
       /**
        * TC-001: LINE OA智慧記帳解析測試
        * @version 1.0.0
@@ -295,11 +294,11 @@ void main() {
           '咖啡 85 現金',
           '轉帳 10000 從儲蓄到投資'
         ];
-        
+
         // Mock API responses
-        when(mockApiClient.createTransaction(any))
+        when(mockApiClient.createTransaction(argThat(isA<Map<String, dynamic>>())))
             .thenAnswer((_) async => {'success': true, 'id': 'trans_001'});
-        
+
         // Act & Assert
         for (String input in testCases) {
           final result = await handler.handleQuickAccounting(input);
@@ -319,11 +318,11 @@ void main() {
         final formProcessor = AccountingFormProcessor();
         final mockStateProvider = MockFormStateProvider();
         final testTransaction = AccountingTestDataFactory.createTestTransactions()['basicExpense']!;
-        
+
         // Mock form state
         when(mockStateProvider.isValid).thenReturn(true);
         when(mockStateProvider.hasErrors).thenReturn(false);
-        
+
         // Act
         final result = await formProcessor.processTransaction({
           'type': testTransaction.type.toString(),
@@ -332,7 +331,7 @@ void main() {
           'accountId': testTransaction.accountId,
           'description': testTransaction.description,
         });
-        
+
         // Assert
         expect(result, isNotNull);
         expect(result['success'], isTrue);
@@ -355,14 +354,14 @@ void main() {
           'balance': 20000.0,
           'transactionCount': 25
         };
-        
+
         // Mock statistics data
         when(mockStatisticsProvider.currentMonthStats).thenReturn(testStats);
         when(mockStatisticsProvider.isLoading).thenReturn(false);
-        
+
         // Act
         final widgetData = await dashboardWidget.buildDashboardData();
-        
+
         // Assert
         expect(widgetData, isNotNull);
         expect(widgetData['totalIncome'], equals(35000.0));
@@ -385,14 +384,14 @@ void main() {
           {'id': 'food_dinner', 'name': '晚餐', 'parent': 'food'},
           {'id': 'transport_bus', 'name': '公車', 'parent': 'transport'}
         ];
-        
+
         // Mock category data
         when(mockCategoryProvider.categories).thenReturn(categories);
         when(mockCategoryProvider.isLoaded).thenReturn(true);
-        
+
         // Act
         final selectorData = await categorySelector.loadCategories();
-        
+
         // Assert
         expect(selectorData, isNotNull);
         expect(selectorData.length, equals(3));
@@ -414,14 +413,14 @@ void main() {
           {'id': 'cash_wallet', 'name': '現金', 'balance': 2000.0},
           {'id': 'investment_stock', 'name': '股票投資', 'balance': 150000.0}
         ];
-        
+
         // Mock account data
         when(mockAccountProvider.accounts).thenReturn(accounts);
         when(mockAccountProvider.isLoaded).thenReturn(true);
-        
+
         // Act
         final selectorData = await accountSelector.loadAccounts();
-        
+
         // Assert
         expect(selectorData, isNotNull);
         expect(selectorData.length, equals(3));
@@ -440,7 +439,7 @@ void main() {
         final processor = QuickAccountingProcessor();
         final stopwatch = Stopwatch();
         final testInputs = List.generate(100, (i) => '測試記帳 ${i + 1} 金額 100');
-        
+
         // Act
         stopwatch.start();
         final results = <QuickAccountingResult>[];
@@ -449,7 +448,7 @@ void main() {
           results.add(result);
         }
         stopwatch.stop();
-        
+
         // Assert - 效能要求：100筆記錄處理時間 < 5秒
         expect(stopwatch.elapsedMilliseconds, lessThan(5000));
         expect(results.length, equals(100));
@@ -494,15 +493,15 @@ void main() {
             }
           }
         ];
-        
+
         // Act & Assert
         for (var testCase in testCases) {
           final result = await parser.parseText(testCase['input'] as String);
           final expected = testCase['expected'] as Map<String, dynamic>;
-          
+
           expect(result['amount'], equals(expected['amount']));
           expect(result['type'], equals(expected['type']));
-          
+
           if (expected.containsKey('account')) {
             expect(result['account'], contains(expected['account']));
           }
@@ -524,7 +523,7 @@ void main() {
           'accountId': 'cash_wallet',
           'description': '午餐'
         };
-        
+
         final invalidForms = [
           {'amount': -100.0, 'categoryId': 'food', 'accountId': 'cash'}, // 負金額
           {'amount': 0.0, 'categoryId': 'food', 'accountId': 'cash'}, // 零金額
@@ -532,12 +531,12 @@ void main() {
           {'amount': 100.0, 'accountId': 'cash'}, // 缺少科目
           {'amount': 100.0, 'categoryId': 'food'}, // 缺少帳戶
         ];
-        
+
         // Act & Assert - 有效表單
         final validResult = await validator.validate(validForm);
         expect(validResult.isValid, isTrue);
         expect(validResult.errors, isEmpty);
-        
+
         // Act & Assert - 無效表單
         for (var invalidForm in invalidForms) {
           final invalidResult = await validator.validate(invalidForm);
@@ -549,7 +548,7 @@ void main() {
     });
 
     group('第三階段：差異化與整合測試', () {
-      
+
       /**
        * TC-009: Expert模式完整功能測試
        * @version 1.0.0
@@ -562,23 +561,23 @@ void main() {
         final mockConfigManager = MockFourModeConfigManager();
         final expertUser = AccountingTestDataFactory.createTestUsers()['expertUser']!;
         final expertConfig = AccountingTestDataFactory.createModeConfigurations()[UserMode.expert]!;
-        
+
         // Mock Expert模式配置
         when(mockConfigManager.getConfigForMode(UserMode.expert))
             .thenReturn(expertConfig);
         when(mockConfigManager.isAdvancedFeatureEnabled(UserMode.expert))
             .thenReturn(true);
-        
+
         // Act
         final formConfig = await expertAdapter.buildFormConfiguration(expertUser.userId);
         final uiConfig = await expertAdapter.buildUIConfiguration();
-        
+
         // Assert - Expert模式應有完整功能
         expect(formConfig.fieldCount, equals(12));
         expect(formConfig.showAdvancedOptions, isTrue);
         expect(formConfig.enableBatchEntry, isTrue);
         expect(formConfig.validationLevel, equals(ValidationLevel.strict));
-        
+
         // Assert - UI配置驗證
         expect(uiConfig['showTechnicalDetails'], isTrue);
         expect(uiConfig['enableAdvancedFilters'], isTrue);
@@ -597,23 +596,23 @@ void main() {
         final mockConfigManager = MockFourModeConfigManager();
         final inertialUser = AccountingTestDataFactory.createTestUsers()['inertialUser']!;
         final inertialConfig = AccountingTestDataFactory.createModeConfigurations()[UserMode.inertial]!;
-        
+
         // Mock Inertial模式配置
         when(mockConfigManager.getConfigForMode(UserMode.inertial))
             .thenReturn(inertialConfig);
         when(mockConfigManager.isAdvancedFeatureEnabled(UserMode.inertial))
             .thenReturn(false);
-        
+
         // Act
         final formConfig = await inertialAdapter.buildFormConfiguration(inertialUser.userId);
         final uiConfig = await inertialAdapter.buildUIConfiguration();
-        
+
         // Assert - Inertial模式應為標準功能
         expect(formConfig.fieldCount, equals(8));
         expect(formConfig.showAdvancedOptions, isFalse);
         expect(formConfig.enableBatchEntry, isFalse);
         expect(formConfig.validationLevel, equals(ValidationLevel.standard));
-        
+
         // Assert - UI配置驗證
         expect(uiConfig['showTechnicalDetails'], isFalse);
         expect(uiConfig['enableAdvancedFilters'], isFalse);
@@ -632,23 +631,23 @@ void main() {
         final mockConfigManager = MockFourModeConfigManager();
         final cultivationUser = AccountingTestDataFactory.createTestUsers()['cultivationUser']!;
         final cultivationConfig = AccountingTestDataFactory.createModeConfigurations()[UserMode.cultivation]!;
-        
+
         // Mock Cultivation模式配置
         when(mockConfigManager.getConfigForMode(UserMode.cultivation))
             .thenReturn(cultivationConfig);
         when(mockConfigManager.hasGamificationEnabled(UserMode.cultivation))
             .thenReturn(true);
-        
+
         // Act
         final formConfig = await cultivationAdapter.buildFormConfiguration(cultivationUser.userId);
         final uiConfig = await cultivationAdapter.buildUIConfiguration();
         final motivationConfig = await cultivationAdapter.buildMotivationConfiguration();
-        
+
         // Assert - Cultivation模式應有引導功能
         expect(formConfig.fieldCount, equals(6));
         expect(formConfig.showAdvancedOptions, isFalse);
         expect(formConfig.validationLevel, equals(ValidationLevel.guided));
-        
+
         // Assert - 激勵機制驗證
         expect(motivationConfig['enableAchievements'], isTrue);
         expect(motivationConfig['enableProgress'], isTrue);
@@ -667,23 +666,23 @@ void main() {
         final mockConfigManager = MockFourModeConfigManager();
         final guidingUser = AccountingTestDataFactory.createTestUsers()['guidingUser']!;
         final guidingConfig = AccountingTestDataFactory.createModeConfigurations()[UserMode.guiding]!;
-        
+
         // Mock Guiding模式配置
         when(mockConfigManager.getConfigForMode(UserMode.guiding))
             .thenReturn(guidingConfig);
         when(mockConfigManager.isSimplifiedModeEnabled(UserMode.guiding))
             .thenReturn(true);
-        
+
         // Act
         final formConfig = await guidingAdapter.buildFormConfiguration(guidingUser.userId);
         final uiConfig = await guidingAdapter.buildUIConfiguration();
         final autoConfig = await guidingAdapter.buildAutoConfiguration();
-        
+
         // Assert - Guiding模式應為最簡化
         expect(formConfig.fieldCount, equals(4));
         expect(formConfig.showAdvancedOptions, isFalse);
         expect(formConfig.validationLevel, equals(ValidationLevel.minimal));
-        
+
         // Assert - 自動化配置驗證
         expect(autoConfig['enableAutoFill'], isTrue);
         expect(autoConfig['enableSmartDefaults'], isTrue);
@@ -701,29 +700,29 @@ void main() {
         final transactionProvider = TestTransactionStateProvider();
         final mockApiClient = MockTransactionApiClient();
         final testTransaction = AccountingTestDataFactory.createTestTransactions()['basicExpense']!;
-        
+
         // Mock API responses
-        when(mockApiClient.createTransaction(any))
+        when(mockApiClient.createTransaction(argThat(isA<Map<String, dynamic>>())))
             .thenAnswer((_) async => {'success': true, 'id': 'trans_001'});
         when(mockApiClient.getTransactions())
             .thenAnswer((_) async => {'transactions': [testTransaction]});
-        
+
         // Act - 測試載入狀態
         transactionProvider.setLoading(true);
         expect(transactionProvider.isLoading, isTrue);
-        
+
         // Act - 測試新增交易
         await transactionProvider.addTransaction(testTransaction);
-        
+
         // Assert - 狀態變化驗證
         expect(transactionProvider.isLoading, isFalse);
         expect(transactionProvider.transactions.length, equals(1));
         expect(transactionProvider.hasError, isFalse);
-        
+
         // Act - 測試錯誤處理
-        when(mockApiClient.createTransaction(any))
+        when(mockApiClient.createTransaction(argThat(isA<Map<String, dynamic>>())))
             .thenThrow(Exception('Network error'));
-        
+
         await transactionProvider.addTransaction(testTransaction);
         expect(transactionProvider.hasError, isTrue);
         expect(transactionProvider.errorMessage, contains('Network error'));
@@ -744,24 +743,24 @@ void main() {
           {'id': 'transport', 'name': '交通', 'type': 'expense'},
           {'id': 'salary', 'name': '薪資', 'type': 'income'}
         ];
-        
+
         // Mock API responses
         when(mockApiClient.getCategories())
             .thenAnswer((_) async => {'categories': testCategories});
-        
+
         // Act - 測試載入科目
         await categoryProvider.loadCategories();
-        
+
         // Assert - 科目資料驗證
         expect(categoryProvider.isLoaded, isTrue);
         expect(categoryProvider.categories.length, equals(3));
         expect(categoryProvider.getExpenseCategories().length, equals(2));
         expect(categoryProvider.getIncomeCategories().length, equals(1));
-        
+
         // Act - 測試科目篩選
         final foodCategories = categoryProvider.getCategoriesByParent('food');
         expect(foodCategories, isNotNull);
-        
+
         // Act - 測試快取機制
         final cachedCategories = categoryProvider.getCachedCategories();
         expect(cachedCategories.length, equals(3));
@@ -777,30 +776,30 @@ void main() {
         // Arrange
         final formProvider = TestFormStateProvider();
         final validator = AccountingFormValidator();
-        
+
         // Act - 測試表單初始化
         formProvider.initializeForm(UserMode.expert);
         expect(formProvider.currentMode, equals(UserMode.expert));
         expect(formProvider.isInitialized, isTrue);
-        
+
         // Act - 測試欄位更新
         formProvider.updateField('amount', 150.0);
         formProvider.updateField('categoryId', 'food_lunch');
         formProvider.updateField('accountId', 'cash_wallet');
-        
+
         expect(formProvider.getFieldValue('amount'), equals(150.0));
         expect(formProvider.getFieldValue('categoryId'), equals('food_lunch'));
-        
+
         // Act - 測試即時驗證
         await formProvider.validateField('amount');
         expect(formProvider.getFieldError('amount'), isNull);
-        
+
         // Act - 測試錯誤狀態
         formProvider.updateField('amount', -100.0);
         await formProvider.validateField('amount');
         expect(formProvider.getFieldError('amount'), isNotNull);
         expect(formProvider.hasErrors, isTrue);
-        
+
         // Act - 測試表單重置
         formProvider.resetForm();
         expect(formProvider.getFieldValue('amount'), isNull);
@@ -817,23 +816,23 @@ void main() {
         // Arrange
         final formWidget = TestAccountingFormWidget();
         final mockFormProvider = MockFormStateProvider();
-        
+
         // Mock form state
         when(mockFormProvider.currentMode).thenReturn(UserMode.expert);
         when(mockFormProvider.isInitialized).thenReturn(true);
         when(mockFormProvider.getFieldValue('amount')).thenReturn(150.0);
-        
+
         // Act - 測試Widget初始化
         await formWidget.initializeWidget();
         final widgetStructure = formWidget.getWidgetStructure();
-        
+
         // Assert - Widget結構驗證
         expect(widgetStructure['hasAmountField'], isTrue);
         expect(widgetStructure['hasCategorySelector'], isTrue);
         expect(widgetStructure['hasAccountSelector'], isTrue);
         expect(widgetStructure['hasDescriptionField'], isTrue);
         expect(widgetStructure['hasSubmitButton'], isTrue);
-        
+
         // Act - 測試模式特化結構
         final expertStructure = formWidget.getExpertModeStructure();
         expect(expertStructure['hasAdvancedOptions'], isTrue);
@@ -853,36 +852,36 @@ void main() {
         final mockTransactionProvider = MockTransactionStateProvider();
         final mockCategoryProvider = MockCategoryStateProvider();
         final mockFormProvider = MockFormStateProvider();
-        
+
         var syncCallCount = 0;
         void syncListener() {
           syncCallCount++;
         }
-        
+
         // Act - 註冊同步監聽器
         syncManager.registerSyncListener(syncListener);
-        
+
         // Mock provider states
         when(mockTransactionProvider.hasChanges).thenReturn(true);
         when(mockCategoryProvider.hasChanges).thenReturn(false);
         when(mockFormProvider.hasChanges).thenReturn(true);
-        
+
         // Act - 執行狀態同步
         await syncManager.syncAllStates();
-        
+
         // Assert - 同步執行驗證
         expect(syncCallCount, greaterThan(0));
         verify(mockTransactionProvider.hasChanges).called(1);
         verify(mockFormProvider.hasChanges).called(1);
-        
+
         // Act - 測試特定狀態同步
         await syncManager.syncTransactionState();
         await syncManager.syncDashboardState();
-        
+
         // Assert - 特定同步驗證
         expect(syncManager.lastSyncTime, isNotNull);
         expect(syncManager.isSyncing, isFalse);
-        
+
         // Act - 取消註冊監聽器
         syncManager.unregisterSyncListener(syncListener);
         final oldCallCount = syncCallCount;
@@ -893,7 +892,7 @@ void main() {
     });
 
     group('第四階段：安全與效能測試', () {
-      
+
       /**
        * TC-018: 異常處理與錯誤恢復測試
        * @version 1.0.0
@@ -911,21 +910,21 @@ void main() {
           {'error': 'AuthException', 'expected': 'AUTH_ERROR'},
           {'error': 'ServerException', 'expected': 'SERVER_ERROR'}
         ];
-        
+
         // Act & Assert - 測試各種異常情況
         for (var scenario in testScenarios) {
-          when(mockApiClient.createTransaction(any))
+          when(mockApiClient.createTransaction(argThat(isA<Map<String, dynamic>>())))
               .thenThrow(Exception(scenario['error'] as String));
-          
+
           final result = await errorHandler.handleError(() async {
             return await mockApiClient.createTransaction({'test': 'data'});
           });
-          
+
           expect(result.isSuccess, isFalse);
           expect(result.errorCode, equals(scenario['expected']));
           expect(result.hasRecoveryAction, isTrue);
         }
-        
+
         // Act & Assert - 測試錯誤恢復機制
         var retryCount = 0;
         final recoveryResult = await errorHandler.handleWithRetry(() async {
@@ -935,7 +934,7 @@ void main() {
           }
           return {'success': true};
         }, maxRetries: 3);
-        
+
         expect(recoveryResult.isSuccess, isTrue);
         expect(retryCount, equals(3));
       });
@@ -956,28 +955,28 @@ void main() {
           {'amount': 0.0, 'expected': false}, // 零金額
           {'amount': -0.01, 'expected': false}, // 負金額
           {'amount': 1000000000.0, 'expected': false}, // 超過最大金額
-          
+
           // 描述長度測試
           {'description': '', 'expected': false}, // 空描述
           {'description': 'a', 'expected': true}, // 最短描述
           {'description': 'a' * 100, 'expected': true}, // 最長有效描述
           {'description': 'a' * 101, 'expected': false}, // 超長描述
         ];
-        
+
         // Act & Assert
         for (var testCase in boundaryTestCases) {
           final formData = <String, dynamic>{
             'categoryId': 'food',
             'accountId': 'cash'
           };
-          
+
           if (testCase.containsKey('amount')) {
             formData['amount'] = testCase['amount'];
           }
           if (testCase.containsKey('description')) {
             formData['description'] = testCase['description'];
           }
-          
+
           final result = await validator.validate(formData);
           expect(result.isValid, equals(testCase['expected']),
               reason: 'Failed for case: $testCase');
@@ -996,27 +995,27 @@ void main() {
         final concurrentRequests = 20;
         final testInputs = List.generate(
             concurrentRequests, (i) => '測試併發記帳 $i 金額 ${100 + i}');
-        
+
         // Act - 同時處理多個記帳請求
         final stopwatch = Stopwatch()..start();
-        final futures = testInputs.map((input) => 
+        final futures = testInputs.map((input) =>
             processor.processQuickAccounting(input)).toList();
         final results = await Future.wait(futures);
         stopwatch.stop();
-        
+
         // Assert - 併發處理驗證
         expect(results.length, equals(concurrentRequests));
         expect(stopwatch.elapsedMilliseconds, lessThan(3000)); // 3秒內完成
-        
+
         final successCount = results.where((r) => r.success).length;
         expect(successCount, greaterThan(concurrentRequests * 0.9)); // 90%成功率
-        
+
         // Act & Assert - 資源競爭測試
         final sharedResource = AccountingSharedResource();
-        final competingFutures = List.generate(10, (i) => 
+        final competingFutures = List.generate(10, (i) =>
             sharedResource.processWithLock('operation_$i'));
         final competingResults = await Future.wait(competingFutures);
-        
+
         expect(competingResults.length, equals(10));
         expect(competingResults.where((r) => r == 'success').length, equals(10));
       });
@@ -1032,34 +1031,34 @@ void main() {
         final memoryMonitor = MemoryUsageMonitor();
         final processor = QuickAccountingProcessor();
         final initialMemory = await memoryMonitor.getCurrentMemoryUsage();
-        
+
         // Act - 大量資料處理測試
-        final largeDataSet = List.generate(1000, (i) => 
+        final largeDataSet = List.generate(1000, (i) =>
             '大量測試資料記帳 $i 金額 ${100.0 + i} 描述${'測試' * 20}');
-        
+
         final startMemory = await memoryMonitor.getCurrentMemoryUsage();
-        
+
         for (String data in largeDataSet) {
           await processor.processQuickAccounting(data);
-          
+
           // 每100次檢查一次記憶體
           if (largeDataSet.indexOf(data) % 100 == 0) {
             final currentMemory = await memoryMonitor.getCurrentMemoryUsage();
             final memoryIncrease = currentMemory - startMemory;
-            
+
             // Assert - 記憶體增長不應超過100MB
             expect(memoryIncrease, lessThan(100 * 1024 * 1024),
                 reason: '記憶體增長過大: ${memoryIncrease / 1024 / 1024}MB');
           }
         }
-        
+
         // Act - 強制垃圾回收並測試記憶體釋放
         await memoryMonitor.forceGarbageCollection();
         await Future.delayed(Duration(seconds: 1));
-        
+
         final finalMemory = await memoryMonitor.getCurrentMemoryUsage();
         final memoryLeak = finalMemory - initialMemory;
-        
+
         // Assert - 記憶體洩漏檢查
         expect(memoryLeak, lessThan(50 * 1024 * 1024),
             reason: '可能存在記憶體洩漏: ${memoryLeak / 1024 / 1024}MB');
@@ -1077,12 +1076,12 @@ void main() {
         final performanceMonitor = APIPerformanceMonitor();
         final testEndpoints = [
           'createTransaction',
-          'getTransactions', 
+          'getTransactions',
           'updateTransaction',
           'deleteTransaction',
           'getTransactionStatistics'
         ];
-        
+
         // Act & Assert - 各API端點效能測試
         for (String endpoint in testEndpoints) {
           final responseTime = await performanceMonitor.measureEndpoint(
@@ -1102,21 +1101,21 @@ void main() {
                 throw Exception('Unknown endpoint');
             }
           });
-          
+
           // Assert - 回應時間要求：< 2秒
           expect(responseTime.inMilliseconds, lessThan(2000),
               reason: '$endpoint 回應時間過長: ${responseTime.inMilliseconds}ms');
         }
-        
+
         // Act & Assert - 批次操作效能測試
         final batchSize = 50;
         final batchData = List.generate(batchSize, (i) => {'batch': i});
-        
+
         final batchResponseTime = await performanceMonitor.measureBatch(
             'batchCreateTransactions', () async {
           return await apiClient.batchCreateTransactions(batchData);
         });
-        
+
         // Assert - 批次操作平均時間 < 100ms per item
         final avgTimePerItem = batchResponseTime.inMilliseconds / batchSize;
         expect(avgTimePerItem, lessThan(100),
@@ -1133,7 +1132,7 @@ void main() {
         // Arrange
         final securityValidator = SecurityValidator();
         final encryptionService = EncryptionService();
-        
+
         // Act & Assert - 敏感資料加密測試
         final sensitiveData = {
           'pin': '1234',
@@ -1141,16 +1140,16 @@ void main() {
           'bankAccount': '1234567890',
           'amount': 50000.0
         };
-        
+
         for (var entry in sensitiveData.entries) {
           final encrypted = await encryptionService.encrypt(entry.value.toString());
           final decrypted = await encryptionService.decrypt(encrypted);
-          
+
           expect(encrypted, isNot(equals(entry.value.toString())));
           expect(decrypted, equals(entry.value.toString()));
           expect(encrypted.length, greaterThan(entry.value.toString().length));
         }
-        
+
         // Act & Assert - SQL注入防護測試
         final sqlInjectionAttempts = [
           "'; DROP TABLE transactions; --",
@@ -1159,24 +1158,24 @@ void main() {
           "../../../etc/passwd",
           "null; rm -rf /"
         ];
-        
+
         for (String maliciousInput in sqlInjectionAttempts) {
           final sanitized = await securityValidator.sanitizeInput(maliciousInput);
           final isSecure = await securityValidator.validateInput(sanitized);
-          
+
           expect(isSecure, isTrue,
               reason: '輸入驗證失敗: $maliciousInput');
           expect(sanitized, isNot(contains('<script>')));
           expect(sanitized, isNot(contains('DROP TABLE')));
         }
-        
+
         // Act & Assert - Token安全性測試
         final tokenManager = TokenManager();
         final testToken = await tokenManager.generateToken('user_123');
-        
+
         expect(await tokenManager.validateToken(testToken), isTrue);
         expect(await tokenManager.isTokenExpired(testToken), isFalse);
-        
+
         // 測試Token撤銷
         await tokenManager.revokeToken(testToken);
         expect(await tokenManager.validateToken(testToken), isFalse);
@@ -1192,7 +1191,7 @@ void main() {
         // Arrange
         final permissionManager = PermissionManager();
         final testUsers = AccountingTestDataFactory.createTestUsers();
-        
+
         // Act & Assert - 四模式權限邊界測試
         final permissionTests = [
           {
@@ -1224,13 +1223,13 @@ void main() {
             'canManageUsers': false
           }
         ];
-        
+
         for (var test in permissionTests) {
           final mode = test['mode'] as UserMode;
           final user = testUsers[mode.toString().split('.').last + 'User']!;
-          
+
           await permissionManager.setUserMode(user.userId, mode);
-          
+
           expect(await permissionManager.canAccessAdvancedFeatures(user.userId),
               equals(test['canAccessAdvanced']));
           expect(await permissionManager.canBatchEdit(user.userId),
@@ -1240,7 +1239,7 @@ void main() {
           expect(await permissionManager.canManageUsers(user.userId),
               equals(test['canManageUsers']));
         }
-        
+
         // Act & Assert - 未授權存取防護測試
         final unauthorizedActions = [
           'accessAdminPanel',
@@ -1248,7 +1247,7 @@ void main() {
           'modifyUserPermissions',
           'accessSystemLogs'
         ];
-        
+
         for (String action in unauthorizedActions) {
           for (var user in testUsers.values) {
             final hasPermission = await permissionManager.hasPermission(
@@ -1269,7 +1268,7 @@ void main() {
         // Arrange
         final stressTestManager = StressTestManager();
         final processor = QuickAccountingProcessor();
-        
+
         // Act & Assert - 高負載測試
         final highLoadTest = await stressTestManager.runHighLoadTest(
             taskCount: 100,
@@ -1279,22 +1278,22 @@ void main() {
               return await processor.processQuickAccounting('壓力測試記帳 100');
             }
         );
-        
+
         expect(highLoadTest.totalRequests, greaterThan(500));
         expect(highLoadTest.successRate, greaterThan(0.95)); // 95%成功率
         expect(highLoadTest.averageResponseTime.inMilliseconds, lessThan(500));
         expect(highLoadTest.maxResponseTime.inMilliseconds, lessThan(2000));
-        
+
         // Act & Assert - 記憶體壓力測試
         final memoryStressTest = await stressTestManager.runMemoryStressTest(
             dataSize: 1000,
             iterations: 50,
             dataGenerator: (i) => AccountingTestDataFactory.createTestTransactions()
         );
-        
+
         expect(memoryStressTest.memoryLeakDetected, isFalse);
         expect(memoryStressTest.maxMemoryUsage, lessThan(200 * 1024 * 1024)); // 200MB
-        
+
         // Act & Assert - 長時間運行穩定性測試
         final stabilityTest = await stressTestManager.runStabilityTest(
             duration: Duration(minutes: 2),
@@ -1303,7 +1302,7 @@ void main() {
               return await processor.processQuickAccounting('穩定性測試');
             }
         );
-        
+
         expect(stabilityTest.errorRate, lessThan(0.01)); // 錯誤率 < 1%
         expect(stabilityTest.performanceDegradation, lessThan(0.2)); // 效能下降 < 20%
       });
@@ -1317,34 +1316,34 @@ void main() {
       test('TC-026: Fake Service完整整合測試', () async {
         // Arrange
         final fakeServiceManager = PLFakeServiceSwitch();
-        
+
         // Act & Assert - Fake Service開關控制測試
         expect(PLFakeServiceSwitch.enable7502FakeService, isTrue);
-        
+
         // 測試開關狀態查詢
         final allSwitches = PLFakeServiceSwitch.getAllSwitches();
         expect(allSwitches, containsPair('7502FakeService', true));
-        
+
         // Act & Assert - Fake Service模式切換測試
         PLFakeServiceSwitch.enable7502FakeService = false;
         expect(PLFakeServiceSwitch.enable7502FakeService, isFalse);
-        
+
         PLFakeServiceSwitch.enable7502FakeService = true;
         expect(PLFakeServiceSwitch.enable7502FakeService, isTrue);
-        
+
         // Act & Assert - 整合環境一致性測試
         final integrationTester = FakeServiceIntegrationTester();
-        
+
         // 測試與其他PL模組的整合
         final crossModuleResult = await integrationTester.testCrossModuleIntegration([
           '7501', // 系統進入功能群
           '7502', // 記帳核心功能群 (當前模組)
         ]);
-        
+
         expect(crossModuleResult.isSuccessful, isTrue);
         expect(crossModuleResult.conflictingServices, isEmpty);
         expect(crossModuleResult.incompatibleVersions, isEmpty);
-        
+
         // Act & Assert - 端到端流程測試
         final e2eResult = await integrationTester.runEndToEndTest(
             scenario: 'complete_accounting_flow',
@@ -1357,18 +1356,18 @@ void main() {
               'logout'
             ]
         );
-        
+
         expect(e2eResult.allStepsCompleted, isTrue);
         expect(e2eResult.dataConsistency, isTrue);
         expect(e2eResult.performanceWithinLimits, isTrue);
-        
+
         // Act & Assert - 回歸測試
         final regressionResult = await integrationTester.runRegressionTest(
             testSuite: 'accounting_core_regression',
             includePerformanceTests: true,
             includeSecurityTests: true
         );
-        
+
         expect(regressionResult.testsPassed, equals(regressionResult.totalTests));
         expect(regressionResult.newIssuesFound, isEmpty);
         expect(regressionResult.performanceRegression, isFalse);
@@ -1376,9 +1375,8 @@ void main() {
 
     });
 
-    // 第五階段：整合驗證測試
     group('第五階段：整合驗證測試', () {
-      
+
       /**
        * 27. 7599 Fake Service Switch完整整合驗證
        * @version 1.0.0
@@ -1389,28 +1387,28 @@ void main() {
         // Arrange
         final integrationValidator = PLFakeServiceIntegrationValidator();
         final allModules = ['7501', '7502', '7503', '7504', '7505'];
-        
+
         // Act - 測試所有開關狀態一致性
         final switchStates = PLFakeServiceSwitch.getAllSwitches();
         final currentModuleState = PLFakeServiceSwitch.enable7502FakeService;
-        
+
         // Assert - 開關狀態驗證
         expect(switchStates, isNotNull);
         expect(switchStates.containsKey('7502_記帳核心功能群'), isTrue);
         expect(switchStates['7502_記帳核心功能群'], equals(currentModuleState));
-        
+
         // Act - 跨模組整合測試
         final crossModuleResult = await integrationValidator.validateCrossModuleIntegration(allModules);
-        
+
         // Assert - 整合驗證
         expect(crossModuleResult.isCompatible, isTrue);
         expect(crossModuleResult.conflictingModules, isEmpty);
         expect(crossModuleResult.versionMismatches, isEmpty);
-        
+
         // Act - 開關切換穩定性測試
         await integrationValidator.testSwitchStability();
         final stabilityResult = integrationValidator.getStabilityReport();
-        
+
         // Assert - 穩定性驗證
         expect(stabilityResult.switchOperationsSuccessful, isTrue);
         expect(stabilityResult.noDataLoss, isTrue);
@@ -1428,32 +1426,32 @@ void main() {
         final testSuiteValidator = TestSuiteValidator();
         final allTestCategories = [
           'unit_tests',
-          'integration_tests', 
+          'integration_tests',
           'security_tests',
           'performance_tests',
           'four_mode_tests'
         ];
-        
+
         // Act - 執行完整測試套件
         final suiteResult = await testSuiteValidator.runCompleteTestSuite(allTestCategories);
-        
+
         // Assert - 測試套件完整性驗證
         expect(suiteResult.totalTests, equals(156)); // 預期總測試數量
         expect(suiteResult.passedTests, equals(suiteResult.totalTests));
         expect(suiteResult.failedTests, equals(0));
         expect(suiteResult.skippedTests, equals(0));
-        
+
         // Act - 測試覆蓋率驗證
         final coverageResult = await testSuiteValidator.analyzeCoverage();
-        
+
         // Assert - 覆蓋率要求
         expect(coverageResult.functionCoverage, greaterThanOrEqualTo(0.95)); // 95%函數覆蓋率
         expect(coverageResult.lineCoverage, greaterThanOrEqualTo(0.90)); // 90%行覆蓋率
         expect(coverageResult.branchCoverage, greaterThanOrEqualTo(0.85)); // 85%分支覆蓋率
-        
+
         // Act - 測試執行效能驗證
         final performanceResult = await testSuiteValidator.analyzeTestPerformance();
-        
+
         // Assert - 效能要求
         expect(performanceResult.totalExecutionTime.inMinutes, lessThan(10)); // 10分鐘內完成
         expect(performanceResult.averageTestTime.inSeconds, lessThan(5)); // 平均5秒內
@@ -1474,33 +1472,33 @@ void main() {
           {'test': '7502. 記帳核心功能群.dart', 'lld': '7202. 記帳核心功能群_LLD.md'},
           {'test': '7502. 記帳核心功能群.dart', 'srs': '7102. 記帳核心功能群_SRS.md'},
         ];
-        
+
         // Act - 版本一致性檢查
         for (var pair in documentPairs) {
           final versionCheck = await versionValidator.validateVersionSync(
             pair['test']!, pair['spec']!
           );
-          
+
           // Assert - 版本同步驗證
-          expect(versionCheck.versionsMatch, isTrue, 
+          expect(versionCheck.versionsMatch, isTrue,
               reason: '${pair['test']} 與 ${pair['spec']} 版本不一致');
           expect(versionCheck.testDateAfterSpec, isTrue,
               reason: '測試代碼日期應晚於或等於規格文件日期');
           expect(versionCheck.functionCountMatch, isTrue,
               reason: '函數數量應與規格一致');
         }
-        
+
         // Act - 測試案例與規格對應驗證
         final testCaseMapping = await versionValidator.validateTestCaseMapping();
-        
+
         // Assert - 測試案例對應
         expect(testCaseMapping.allSpecsCovered, isTrue);
         expect(testCaseMapping.noOrphanTests, isTrue);
         expect(testCaseMapping.traceabilityComplete, isTrue);
-        
+
         // Act - 四模式一致性驗證
         final fourModeConsistency = await versionValidator.validateFourModeConsistency();
-        
+
         // Assert - 四模式一致性
         expect(fourModeConsistency.expertModeComplete, isTrue);
         expect(fourModeConsistency.inertialModeComplete, isTrue);
@@ -1517,37 +1515,37 @@ void main() {
       test('30. 部署前最終驗證', () async {
         // Arrange
         final deploymentValidator = PreDeploymentValidator();
-        
+
         // Act - 環境一致性檢查
         final envCheck = await deploymentValidator.validateEnvironmentConsistency();
-        
+
         // Assert - 環境驗證
         expect(envCheck.testEnvReady, isTrue);
         expect(envCheck.prodEnvCompatible, isTrue);
         expect(envCheck.configurationValid, isTrue);
         expect(envCheck.dependenciesResolved, isTrue);
-        
+
         // Act - 安全性最終檢查
         final securityFinalCheck = await deploymentValidator.runFinalSecurityScan();
-        
+
         // Assert - 安全性驗證
         expect(securityFinalCheck.noVulnerabilities, isTrue);
         expect(securityFinalCheck.authenticationSecure, isTrue);
         expect(securityFinalCheck.dataEncryptionValid, isTrue);
         expect(securityFinalCheck.apiSecurityCompliant, isTrue);
-        
+
         // Act - 效能基準確認
         final performanceBaseline = await deploymentValidator.validatePerformanceBaseline();
-        
+
         // Assert - 效能基準
         expect(performanceBaseline.responseTimeAcceptable, isTrue);
         expect(performanceBaseline.memoryUsageOptimal, isTrue);
         expect(performanceBaseline.concurrencyHandlingAdequate, isTrue);
         expect(performanceBaseline.scalabilityProjectionMet, isTrue);
-        
+
         // Act - 回歸測試確認
         final regressionCheck = await deploymentValidator.runRegressionTestSuite();
-        
+
         // Assert - 回歸測試
         expect(regressionCheck.noRegressionDetected, isTrue);
         expect(regressionCheck.allCriticalPathsWorking, isTrue);
@@ -1565,7 +1563,7 @@ void main() {
         // Arrange
         final reportGenerator = TestReportGenerator();
         final reportValidator = TestReportValidator();
-        
+
         // Act - 生成完整測試報告
         final testReport = await reportGenerator.generateCompleteReport(
           includeDetails: true,
@@ -1573,26 +1571,26 @@ void main() {
           includePerformance: true,
           includeSecurity: true
         );
-        
+
         // Assert - 報告完整性驗證
         expect(testReport, isNotNull);
         expect(testReport.executionSummary, isNotNull);
         expect(testReport.coverageAnalysis, isNotNull);
         expect(testReport.performanceMetrics, isNotNull);
         expect(testReport.securityAudit, isNotNull);
-        
+
         // Act - 報告內容驗證
         final reportValidation = await reportValidator.validateReport(testReport);
-        
+
         // Assert - 報告品質驗證
         expect(reportValidation.allSectionsComplete, isTrue);
         expect(reportValidation.metricsAccurate, isTrue);
         expect(reportValidation.recommendationsValid, isTrue);
         expect(reportValidation.traceabilityMaintained, isTrue);
-        
+
         // Act - 合規性檢查
         final complianceCheck = await reportValidator.checkCompliance(testReport);
-        
+
         // Assert - 合規性驗證
         expect(complianceCheck.tddRequirementsMet, isTrue);
         expect(complianceCheck.fourModeRequirementsMet, isTrue);
@@ -1611,7 +1609,7 @@ void main() {
 class PLFakeServiceIntegrationValidator {
   Future<CrossModuleCompatibilityResult> validateCrossModuleIntegration(List<String> modules) async {
     await Future.delayed(Duration(milliseconds: 300));
-    
+
     // 模擬跨模組相容性檢查
     return CrossModuleCompatibilityResult(
       isCompatible: true,
@@ -1619,20 +1617,20 @@ class PLFakeServiceIntegrationValidator {
       versionMismatches: []
     );
   }
-  
+
   Future<void> testSwitchStability() async {
     await Future.delayed(Duration(milliseconds: 200));
-    
+
     // 模擬開關穩定性測試
     for (int i = 0; i < 10; i++) {
       PLFakeServiceSwitch.enable7502FakeService = !PLFakeServiceSwitch.enable7502FakeService;
       await Future.delayed(Duration(milliseconds: 10));
     }
-    
+
     // 恢復預設狀態
     PLFakeServiceSwitch.enable7502FakeService = true;
   }
-  
+
   SwitchStabilityReport getStabilityReport() {
     return SwitchStabilityReport(
       switchOperationsSuccessful: true,
@@ -1646,7 +1644,7 @@ class PLFakeServiceIntegrationValidator {
 class TestSuiteValidator {
   Future<TestSuiteResult> runCompleteTestSuite(List<String> categories) async {
     await Future.delayed(Duration(milliseconds: 500));
-    
+
     return TestSuiteResult(
       totalTests: 156,
       passedTests: 156,
@@ -1655,20 +1653,20 @@ class TestSuiteValidator {
       executionTime: Duration(minutes: 8, seconds: 45)
     );
   }
-  
+
   Future<CoverageResult> analyzeCoverage() async {
     await Future.delayed(Duration(milliseconds: 200));
-    
+
     return CoverageResult(
       functionCoverage: 0.98,
       lineCoverage: 0.95,
       branchCoverage: 0.92
     );
   }
-  
+
   Future<TestPerformanceResult> analyzeTestPerformance() async {
     await Future.delayed(Duration(milliseconds: 150));
-    
+
     return TestPerformanceResult(
       totalExecutionTime: Duration(minutes: 8, seconds: 45),
       averageTestTime: Duration(seconds: 3, milliseconds: 500),
@@ -1681,27 +1679,27 @@ class TestSuiteValidator {
 class DocumentVersionValidator {
   Future<VersionSyncResult> validateVersionSync(String testFile, String specFile) async {
     await Future.delayed(Duration(milliseconds: 100));
-    
+
     return VersionSyncResult(
       versionsMatch: true,
       testDateAfterSpec: true,
       functionCountMatch: true
     );
   }
-  
+
   Future<TestCaseMappingResult> validateTestCaseMapping() async {
     await Future.delayed(Duration(milliseconds: 150));
-    
+
     return TestCaseMappingResult(
       allSpecsCovered: true,
       noOrphanTests: true,
       traceabilityComplete: true
     );
   }
-  
+
   Future<FourModeConsistencyResult> validateFourModeConsistency() async {
     await Future.delayed(Duration(milliseconds: 200));
-    
+
     return FourModeConsistencyResult(
       expertModeComplete: true,
       inertialModeComplete: true,
@@ -1715,7 +1713,7 @@ class DocumentVersionValidator {
 class PreDeploymentValidator {
   Future<EnvironmentCheckResult> validateEnvironmentConsistency() async {
     await Future.delayed(Duration(milliseconds: 250));
-    
+
     return EnvironmentCheckResult(
       testEnvReady: true,
       prodEnvCompatible: true,
@@ -1723,10 +1721,10 @@ class PreDeploymentValidator {
       dependenciesResolved: true
     );
   }
-  
+
   Future<SecurityFinalCheckResult> runFinalSecurityScan() async {
     await Future.delayed(Duration(milliseconds: 300));
-    
+
     return SecurityFinalCheckResult(
       noVulnerabilities: true,
       authenticationSecure: true,
@@ -1734,10 +1732,10 @@ class PreDeploymentValidator {
       apiSecurityCompliant: true
     );
   }
-  
+
   Future<PerformanceBaselineResult> validatePerformanceBaseline() async {
     await Future.delayed(Duration(milliseconds: 200));
-    
+
     return PerformanceBaselineResult(
       responseTimeAcceptable: true,
       memoryUsageOptimal: true,
@@ -1745,10 +1743,10 @@ class PreDeploymentValidator {
       scalabilityProjectionMet: true
     );
   }
-  
+
   Future<RegressionCheckResult> runRegressionTestSuite() async {
     await Future.delayed(Duration(milliseconds: 400));
-    
+
     return RegressionCheckResult(
       noRegressionDetected: true,
       allCriticalPathsWorking: true,
@@ -1767,7 +1765,7 @@ class TestReportGenerator {
     required bool includeSecurity
   }) async {
     await Future.delayed(Duration(milliseconds: 300));
-    
+
     return CompleteTestReport(
       executionSummary: ExecutionSummary(
         totalTests: 156,
@@ -1793,7 +1791,7 @@ class TestReportGenerator {
 class TestReportValidator {
   Future<ReportValidationResult> validateReport(CompleteTestReport report) async {
     await Future.delayed(Duration(milliseconds: 150));
-    
+
     return ReportValidationResult(
       allSectionsComplete: true,
       metricsAccurate: true,
@@ -1801,10 +1799,10 @@ class TestReportValidator {
       traceabilityMaintained: true
     );
   }
-  
+
   Future<ComplianceCheckResult> checkCompliance(CompleteTestReport report) async {
     await Future.delayed(Duration(milliseconds: 100));
-    
+
     return ComplianceCheckResult(
       tddRequirementsMet: true,
       fourModeRequirementsMet: true,
@@ -1820,7 +1818,7 @@ class CrossModuleCompatibilityResult {
   final bool isCompatible;
   final List<String> conflictingModules;
   final List<String> versionMismatches;
-  
+
   CrossModuleCompatibilityResult({
     required this.isCompatible,
     required this.conflictingModules,
@@ -1832,7 +1830,7 @@ class SwitchStabilityReport {
   final bool switchOperationsSuccessful;
   final bool noDataLoss;
   final bool performanceConsistent;
-  
+
   SwitchStabilityReport({
     required this.switchOperationsSuccessful,
     required this.noDataLoss,
@@ -1846,7 +1844,7 @@ class TestSuiteResult {
   final int failedTests;
   final int skippedTests;
   final Duration executionTime;
-  
+
   TestSuiteResult({
     required this.totalTests,
     required this.passedTests,
@@ -1860,7 +1858,7 @@ class CoverageResult {
   final double functionCoverage;
   final double lineCoverage;
   final double branchCoverage;
-  
+
   CoverageResult({
     required this.functionCoverage,
     required this.lineCoverage,
@@ -1872,7 +1870,7 @@ class TestPerformanceResult {
   final Duration totalExecutionTime;
   final Duration averageTestTime;
   final bool memoryUsageStable;
-  
+
   TestPerformanceResult({
     required this.totalExecutionTime,
     required this.averageTestTime,
@@ -1884,7 +1882,7 @@ class VersionSyncResult {
   final bool versionsMatch;
   final bool testDateAfterSpec;
   final bool functionCountMatch;
-  
+
   VersionSyncResult({
     required this.versionsMatch,
     required this.testDateAfterSpec,
@@ -1896,7 +1894,7 @@ class TestCaseMappingResult {
   final bool allSpecsCovered;
   final bool noOrphanTests;
   final bool traceabilityComplete;
-  
+
   TestCaseMappingResult({
     required this.allSpecsCovered,
     required this.noOrphanTests,
@@ -1909,7 +1907,7 @@ class FourModeConsistencyResult {
   final bool inertialModeComplete;
   final bool cultivationModeComplete;
   final bool guidingModeComplete;
-  
+
   FourModeConsistencyResult({
     required this.expertModeComplete,
     required this.inertialModeComplete,
@@ -1923,7 +1921,7 @@ class EnvironmentCheckResult {
   final bool prodEnvCompatible;
   final bool configurationValid;
   final bool dependenciesResolved;
-  
+
   EnvironmentCheckResult({
     required this.testEnvReady,
     required this.prodEnvCompatible,
@@ -1937,7 +1935,7 @@ class SecurityFinalCheckResult {
   final bool authenticationSecure;
   final bool dataEncryptionValid;
   final bool apiSecurityCompliant;
-  
+
   SecurityFinalCheckResult({
     required this.noVulnerabilities,
     required this.authenticationSecure,
@@ -1951,7 +1949,7 @@ class PerformanceBaselineResult {
   final bool memoryUsageOptimal;
   final bool concurrencyHandlingAdequate;
   final bool scalabilityProjectionMet;
-  
+
   PerformanceBaselineResult({
     required this.responseTimeAcceptable,
     required this.memoryUsageOptimal,
@@ -1965,7 +1963,7 @@ class RegressionCheckResult {
   final bool allCriticalPathsWorking;
   final bool userJourneyComplete;
   final bool dataIntegrityMaintained;
-  
+
   RegressionCheckResult({
     required this.noRegressionDetected,
     required this.allCriticalPathsWorking,
@@ -1979,7 +1977,7 @@ class CompleteTestReport {
   final CoverageAnalysis coverageAnalysis;
   final PerformanceMetrics performanceMetrics;
   final SecurityAudit securityAudit;
-  
+
   CompleteTestReport({
     required this.executionSummary,
     required this.coverageAnalysis,
@@ -1992,7 +1990,7 @@ class ExecutionSummary {
   final int totalTests;
   final int passedTests;
   final Duration executionTime;
-  
+
   ExecutionSummary({
     required this.totalTests,
     required this.passedTests,
@@ -2003,7 +2001,7 @@ class ExecutionSummary {
 class CoverageAnalysis {
   final double functionCoverage;
   final double lineCoverage;
-  
+
   CoverageAnalysis({
     required this.functionCoverage,
     required this.lineCoverage
@@ -2013,7 +2011,7 @@ class CoverageAnalysis {
 class PerformanceMetrics {
   final Duration avgResponseTime;
   final double memoryUsage;
-  
+
   PerformanceMetrics({
     required this.avgResponseTime,
     required this.memoryUsage
@@ -2023,7 +2021,7 @@ class PerformanceMetrics {
 class SecurityAudit {
   final int vulnerabilitiesFound;
   final double securityScore;
-  
+
   SecurityAudit({
     required this.vulnerabilitiesFound,
     required this.securityScore
@@ -2035,7 +2033,7 @@ class ReportValidationResult {
   final bool metricsAccurate;
   final bool recommendationsValid;
   final bool traceabilityMaintained;
-  
+
   ReportValidationResult({
     required this.allSectionsComplete,
     required this.metricsAccurate,
@@ -2049,7 +2047,7 @@ class ComplianceCheckResult {
   final bool fourModeRequirementsMet;
   final bool securityRequirementsMet;
   final bool performanceRequirementsMet;
-  
+
   ComplianceCheckResult({
     required this.tddRequirementsMet,
     required this.fourModeRequirementsMet,
@@ -2070,14 +2068,14 @@ Future<void> testAccountingHomePageWidget() async {
   // Arrange
   final homePageWidget = AccountingHomePageWidget();
   final mockStateProvider = MockTransactionStateProvider();
-  
+
   // Mock initial state
   when(mockStateProvider.recentTransactions).thenReturn([]);
   when(mockStateProvider.isLoading).thenReturn(false);
-  
+
   // Act
   final widgetState = await homePageWidget.initializeState();
-  
+
   // Assert
   expect(widgetState, isNotNull);
   expect(widgetState.isInitialized, isTrue);
@@ -2580,7 +2578,7 @@ class AccountingErrorHandler {
       );
     }
   }
-  
+
   Future<ErrorResult> handleWithRetry(
     Future<dynamic> Function() operation, {
     int maxRetries = 3
@@ -2598,7 +2596,7 @@ class AccountingErrorHandler {
     }
     return ErrorResult(isSuccess: false);
   }
-  
+
   String _mapErrorToCode(String error) {
     if (error.contains('NetworkException')) return 'NETWORK_ERROR';
     if (error.contains('TimeoutException')) return 'TIMEOUT_ERROR';
@@ -2615,7 +2613,7 @@ class ErrorResult {
   final String? errorCode;
   final bool hasRecoveryAction;
   final dynamic data;
-  
+
   ErrorResult({
     required this.isSuccess,
     this.errorCode,
@@ -2627,12 +2625,12 @@ class ErrorResult {
 /// 共享資源處理器（模擬）
 class AccountingSharedResource {
   bool _isLocked = false;
-  
+
   Future<String> processWithLock(String operation) async {
     while (_isLocked) {
       await Future.delayed(Duration(milliseconds: 10));
     }
-    
+
     _isLocked = true;
     try {
       await Future.delayed(Duration(milliseconds: 50)); // 模擬處理時間
@@ -2646,14 +2644,14 @@ class AccountingSharedResource {
 /// 記憶體使用監控器（模擬）
 class MemoryUsageMonitor {
   int _baseMemory = 100 * 1024 * 1024; // 100MB基準
-  
+
   Future<int> getCurrentMemoryUsage() async {
     await Future.delayed(Duration(milliseconds: 10));
     // 模擬記憶體使用量變化
     final randomIncrease = DateTime.now().millisecond % 50;
     return _baseMemory + (randomIncrease * 1024 * 1024);
   }
-  
+
   Future<void> forceGarbageCollection() async {
     await Future.delayed(Duration(milliseconds: 100));
     _baseMemory = 100 * 1024 * 1024; // 重置到基準值
@@ -2664,26 +2662,26 @@ class MemoryUsageMonitor {
 class APIPerformanceMonitor {
   Future<Duration> measureEndpoint(String endpoint, Future<dynamic> Function() operation) async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
       await operation();
     } catch (e) {
       // 忽略錯誤，只測量時間
     }
-    
+
     stopwatch.stop();
     return stopwatch.elapsed;
   }
-  
+
   Future<Duration> measureBatch(String operationName, Future<dynamic> Function() operation) async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
       await operation();
     } catch (e) {
       // 忽略錯誤，只測量時間
     }
-    
+
     stopwatch.stop();
     return stopwatch.elapsed;
   }
@@ -2695,7 +2693,7 @@ class TestTransactionApiClient {
     await Future.delayed(Duration(milliseconds: 200));
     return {'success': true, 'id': 'trans_${DateTime.now().millisecondsSinceEpoch}'};
   }
-  
+
   Future<List<Map<String, dynamic>>> getTransactions() async {
     await Future.delayed(Duration(milliseconds: 150));
     return [
@@ -2703,17 +2701,17 @@ class TestTransactionApiClient {
       {'id': 'trans_2', 'amount': 50.0, 'type': 'income'}
     ];
   }
-  
+
   Future<Map<String, dynamic>> updateTransaction(String id, Map<String, dynamic> data) async {
     await Future.delayed(Duration(milliseconds: 180));
     return {'success': true, 'id': id, 'updated': true};
   }
-  
+
   Future<Map<String, dynamic>> deleteTransaction(String id) async {
     await Future.delayed(Duration(milliseconds: 120));
     return {'success': true, 'deleted': id};
   }
-  
+
   Future<Map<String, dynamic>> getTransactionStatistics() async {
     await Future.delayed(Duration(milliseconds: 300));
     return {
@@ -2723,7 +2721,7 @@ class TestTransactionApiClient {
       'avgTransactionAmount': 320.5
     };
   }
-  
+
   Future<List<Map<String, dynamic>>> batchCreateTransactions(List<Map<String, dynamic>> transactions) async {
     await Future.delayed(Duration(milliseconds: transactions.length * 20)); // 20ms per transaction
     return transactions.map((t) => {'success': true, 'id': 'batch_${DateTime.now().millisecondsSinceEpoch}'}).toList();
@@ -2734,7 +2732,7 @@ class TestTransactionApiClient {
 class SecurityValidator {
   Future<String> sanitizeInput(String input) async {
     await Future.delayed(Duration(milliseconds: 10));
-    
+
     String sanitized = input
         .replaceAll(RegExp(r'<script[^>]*>.*?</script>', caseSensitive: false), '')
         .replaceAll(RegExp(r'DROP\s+TABLE', caseSensitive: false), 'REMOVE_TABLE')
@@ -2742,13 +2740,13 @@ class SecurityValidator {
         .replaceAll('../', '')
         .replaceAll('null;', 'null_')
         .trim();
-    
+
     return sanitized;
   }
-  
+
   Future<bool> validateInput(String input) async {
     await Future.delayed(Duration(milliseconds: 5));
-    
+
     // 檢查常見的攻擊模式
     final dangerousPatterns = [
       RegExp(r'<script', caseSensitive: false),
@@ -2756,13 +2754,13 @@ class SecurityValidator {
       RegExp(r'\.\./', caseSensitive: false),
       RegExp(r'rm\s+-rf', caseSensitive: false)
     ];
-    
+
     for (var pattern in dangerousPatterns) {
       if (pattern.hasMatch(input)) {
         return false;
       }
     }
-    
+
     return true;
   }
 }
@@ -2771,21 +2769,21 @@ class SecurityValidator {
 class EncryptionService {
   Future<String> encrypt(String data) async {
     await Future.delayed(Duration(milliseconds: 20));
-    
+
     // 簡單的Base64編碼模擬加密
     final bytes = data.codeUnits;
     final reversed = bytes.reversed.toList();
     final encoded = base64.encode(reversed);
     return 'ENC_$encoded';
   }
-  
+
   Future<String> decrypt(String encryptedData) async {
     await Future.delayed(Duration(milliseconds: 20));
-    
+
     if (!encryptedData.startsWith('ENC_')) {
       throw Exception('Invalid encrypted data format');
     }
-    
+
     final encoded = encryptedData.substring(4);
     final decoded = base64.decode(encoded);
     final reversed = decoded.reversed.toList();
@@ -2798,40 +2796,40 @@ class TokenManager {
   final Map<String, DateTime> _tokens = {};
   final Duration _tokenLifetime = Duration(hours: 24);
   final Set<String> _revokedTokens = {};
-  
+
   Future<String> generateToken(String userId) async {
     await Future.delayed(Duration(milliseconds: 50));
-    
+
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final token = 'TOKEN_${userId}_$timestamp';
     _tokens[token] = DateTime.now();
     return token;
   }
-  
+
   Future<bool> validateToken(String token) async {
     await Future.delayed(Duration(milliseconds: 10));
-    
+
     if (_revokedTokens.contains(token)) {
       return false;
     }
-    
+
     if (!_tokens.containsKey(token)) {
       return false;
     }
-    
+
     return !await isTokenExpired(token);
   }
-  
+
   Future<bool> isTokenExpired(String token) async {
     await Future.delayed(Duration(milliseconds: 5));
-    
+
     final createTime = _tokens[token];
     if (createTime == null) return true;
-    
+
     final expireTime = createTime.add(_tokenLifetime);
     return DateTime.now().isAfter(expireTime);
   }
-  
+
   Future<void> revokeToken(String token) async {
     await Future.delayed(Duration(milliseconds: 10));
     _revokedTokens.add(token);
@@ -2841,35 +2839,35 @@ class TokenManager {
 /// 權限管理器（模擬）
 class PermissionManager {
   final Map<String, UserMode> _userModes = {};
-  
+
   Future<void> setUserMode(String userId, UserMode mode) async {
     await Future.delayed(Duration(milliseconds: 10));
     _userModes[userId] = mode;
   }
-  
+
   Future<bool> canAccessAdvancedFeatures(String userId) async {
     final mode = _userModes[userId] ?? UserMode.guiding;
     return mode == UserMode.expert;
   }
-  
+
   Future<bool> canBatchEdit(String userId) async {
     final mode = _userModes[userId] ?? UserMode.guiding;
     return mode == UserMode.expert;
   }
-  
+
   Future<bool> canExportData(String userId) async {
     final mode = _userModes[userId] ?? UserMode.guiding;
     return mode == UserMode.expert || mode == UserMode.inertial;
   }
-  
+
   Future<bool> canManageUsers(String userId) async {
     // 所有用戶模式都不允許管理其他用戶
     return false;
   }
-  
+
   Future<bool> hasPermission(String userId, String action) async {
     await Future.delayed(Duration(milliseconds: 5));
-    
+
     // 管理員操作都不允許
     final adminActions = [
       'accessAdminPanel',
@@ -2877,11 +2875,11 @@ class PermissionManager {
       'modifyUserPermissions',
       'accessSystemLogs'
     ];
-    
+
     if (adminActions.contains(action)) {
       return false;
     }
-    
+
     return true;
   }
 }
@@ -2896,14 +2894,14 @@ class StressTestManager {
   }) async {
     final startTime = DateTime.now();
     final stopwatch = Stopwatch()..start();
-    
+
     var totalRequests = 0;
     var successfulRequests = 0;
     final responseTimes = <Duration>[];
-    
+
     while (stopwatch.elapsed < testDuration) {
       final futures = <Future>[];
-      
+
       for (int i = 0; i < concurrentUsers; i++) {
         futures.add(_executeTaskWithTiming(task).then((result) {
           totalRequests++;
@@ -2911,17 +2909,17 @@ class StressTestManager {
           responseTimes.add(result.responseTime);
         }));
       }
-      
+
       await Future.wait(futures);
       await Future.delayed(Duration(milliseconds: 100)); // 間隔
     }
-    
+
     responseTimes.sort();
     final avgResponseTime = Duration(
       milliseconds: responseTimes.map((d) => d.inMilliseconds).reduce((a, b) => a + b) ~/ responseTimes.length
     );
     final maxResponseTime = responseTimes.last;
-    
+
     return HighLoadTestResult(
       totalRequests: totalRequests,
       successRate: successfulRequests / totalRequests,
@@ -2929,7 +2927,7 @@ class StressTestManager {
       maxResponseTime: maxResponseTime
     );
   }
-  
+
   Future<MemoryStressTestResult> runMemoryStressTest({
     required int dataSize,
     required int iterations,
@@ -2938,28 +2936,28 @@ class StressTestManager {
     final memoryMonitor = MemoryUsageMonitor();
     final initialMemory = await memoryMonitor.getCurrentMemoryUsage();
     var maxMemoryUsage = initialMemory;
-    
+
     for (int i = 0; i < iterations; i++) {
       final data = dataGenerator(i);
-      
+
       // 模擬資料處理
       await Future.delayed(Duration(milliseconds: 50));
-      
+
       final currentMemory = await memoryMonitor.getCurrentMemoryUsage();
       if (currentMemory > maxMemoryUsage) {
         maxMemoryUsage = currentMemory;
       }
     }
-    
+
     final finalMemory = await memoryMonitor.getCurrentMemoryUsage();
     final memoryLeak = (finalMemory - initialMemory) > (50 * 1024 * 1024); // 50MB閾值
-    
+
     return MemoryStressTestResult(
       memoryLeakDetected: memoryLeak,
       maxMemoryUsage: maxMemoryUsage
     );
   }
-  
+
   Future<StabilityTestResult> runStabilityTest({
     required Duration duration,
     required int intervalMs,
@@ -2969,48 +2967,48 @@ class StressTestManager {
     var totalExecutions = 0;
     var errors = 0;
     final responseTimes = <Duration>[];
-    
+
     while (stopwatch.elapsed < duration) {
       try {
         final taskStopwatch = Stopwatch()..start();
         await task();
         taskStopwatch.stop();
-        
+
         responseTimes.add(taskStopwatch.elapsed);
         totalExecutions++;
       } catch (e) {
         errors++;
         totalExecutions++;
       }
-      
+
       await Future.delayed(Duration(milliseconds: intervalMs));
     }
-    
+
     // 計算效能退化
     final firstHalf = responseTimes.take(responseTimes.length ~/ 2).toList();
     final secondHalf = responseTimes.skip(responseTimes.length ~/ 2).toList();
-    
+
     final firstHalfAvg = firstHalf.map((d) => d.inMilliseconds).reduce((a, b) => a + b) / firstHalf.length;
     final secondHalfAvg = secondHalf.map((d) => d.inMilliseconds).reduce((a, b) => a + b) / secondHalf.length;
-    
+
     final performanceDegradation = (secondHalfAvg - firstHalfAvg) / firstHalfAvg;
-    
+
     return StabilityTestResult(
       errorRate: errors / totalExecutions,
       performanceDegradation: performanceDegradation.abs()
     );
   }
-  
+
   Future<TaskExecutionResult> _executeTaskWithTiming(Future<dynamic> Function() task) async {
     final stopwatch = Stopwatch()..start();
     bool success = true;
-    
+
     try {
       await task();
     } catch (e) {
       success = false;
     }
-    
+
     stopwatch.stop();
     return TaskExecutionResult(success: success, responseTime: stopwatch.elapsed);
   }
@@ -3022,7 +3020,7 @@ class HighLoadTestResult {
   final double successRate;
   final Duration averageResponseTime;
   final Duration maxResponseTime;
-  
+
   HighLoadTestResult({
     required this.totalRequests,
     required this.successRate,
@@ -3034,7 +3032,7 @@ class HighLoadTestResult {
 class MemoryStressTestResult {
   final bool memoryLeakDetected;
   final int maxMemoryUsage;
-  
+
   MemoryStressTestResult({
     required this.memoryLeakDetected,
     required this.maxMemoryUsage
@@ -3044,7 +3042,7 @@ class MemoryStressTestResult {
 class StabilityTestResult {
   final double errorRate;
   final double performanceDegradation;
-  
+
   StabilityTestResult({
     required this.errorRate,
     required this.performanceDegradation
@@ -3054,7 +3052,7 @@ class StabilityTestResult {
 class TaskExecutionResult {
   final bool success;
   final Duration responseTime;
-  
+
   TaskExecutionResult({required this.success, required this.responseTime});
 }
 
@@ -3062,34 +3060,34 @@ class TaskExecutionResult {
 class FakeServiceIntegrationTester {
   Future<CrossModuleIntegrationResult> testCrossModuleIntegration(List<String> moduleIds) async {
     await Future.delayed(Duration(milliseconds: 200));
-    
+
     return CrossModuleIntegrationResult(
       isSuccessful: true,
       conflictingServices: [],
       incompatibleVersions: []
     );
   }
-  
+
   Future<EndToEndTestResult> runEndToEndTest({
     required String scenario,
     required List<String> steps
   }) async {
     await Future.delayed(Duration(milliseconds: 500));
-    
+
     return EndToEndTestResult(
       allStepsCompleted: true,
       dataConsistency: true,
       performanceWithinLimits: true
     );
   }
-  
+
   Future<RegressionTestResult> runRegressionTest({
     required String testSuite,
     required bool includePerformanceTests,
     required bool includeSecurityTests
   }) async {
     await Future.delayed(Duration(milliseconds: 1000));
-    
+
     return RegressionTestResult(
       totalTests: 156,
       testsPassed: 156,
@@ -3104,7 +3102,7 @@ class CrossModuleIntegrationResult {
   final bool isSuccessful;
   final List<String> conflictingServices;
   final List<String> incompatibleVersions;
-  
+
   CrossModuleIntegrationResult({
     required this.isSuccessful,
     required this.conflictingServices,
@@ -3116,7 +3114,7 @@ class EndToEndTestResult {
   final bool allStepsCompleted;
   final bool dataConsistency;
   final bool performanceWithinLimits;
-  
+
   EndToEndTestResult({
     required this.allStepsCompleted,
     required this.dataConsistency,
@@ -3129,7 +3127,7 @@ class RegressionTestResult {
   final int testsPassed;
   final List<String> newIssuesFound;
   final bool performanceRegression;
-  
+
   RegressionTestResult({
     required this.totalTests,
     required this.testsPassed,
@@ -3143,13 +3141,13 @@ class RegressionTestResult {
 /// 依賴注入容器（模擬）
 class DependencyContainer {
   final Map<Type, dynamic> _services = {};
-  
+
   void registerServices() {
     _services[TransactionApiClient] = MockTransactionApiClient();
     _services[AccountApiClient] = MockAccountApiClient();
     _services[CategoryApiClient] = MockCategoryApiClient();
   }
-  
+
   bool isRegistered<T>() => _services.containsKey(T);
   T get<T>() => _services[T] as T;
 }
@@ -3167,7 +3165,7 @@ class LineOADialogHandler {
 class QuickAccountingResult {
   final bool success;
   final String message;
-  
+
   QuickAccountingResult({required this.success, required this.message});
 }
 
@@ -3222,7 +3220,7 @@ class ExpertModeAdapter {
       validationLevel: ValidationLevel.strict
     );
   }
-  
+
   Future<Map<String, dynamic>> buildUIConfiguration() async {
     await Future.delayed(Duration(milliseconds: 30));
     return {
@@ -3244,7 +3242,7 @@ class InertialModeAdapter {
       validationLevel: ValidationLevel.standard
     );
   }
-  
+
   Future<Map<String, dynamic>> buildUIConfiguration() async {
     await Future.delayed(Duration(milliseconds: 30));
     return {
@@ -3266,7 +3264,7 @@ class CultivationModeAdapter {
       validationLevel: ValidationLevel.guided
     );
   }
-  
+
   Future<Map<String, dynamic>> buildUIConfiguration() async {
     await Future.delayed(Duration(milliseconds: 30));
     return {
@@ -3276,7 +3274,7 @@ class CultivationModeAdapter {
       'enableTutorials': true
     };
   }
-  
+
   Future<Map<String, dynamic>> buildMotivationConfiguration() async {
     await Future.delayed(Duration(milliseconds: 30));
     return {
@@ -3298,7 +3296,7 @@ class GuidingModeAdapter {
       validationLevel: ValidationLevel.minimal
     );
   }
-  
+
   Future<Map<String, dynamic>> buildUIConfiguration() async {
     await Future.delayed(Duration(milliseconds: 30));
     return {
@@ -3308,7 +3306,7 @@ class GuidingModeAdapter {
       'enableOneClick': true
     };
   }
-  
+
   Future<Map<String, dynamic>> buildAutoConfiguration() async {
     await Future.delayed(Duration(milliseconds: 30));
     return {
@@ -3326,25 +3324,25 @@ class TestTransactionStateProvider {
   bool _hasError = false;
   String _errorMessage = '';
   List<TestTransaction> _transactions = [];
-  
+
   bool get isLoading => _isLoading;
   bool get hasError => _hasError;
   String get errorMessage => _errorMessage;
   List<TestTransaction> get transactions => _transactions;
   bool get hasChanges => _transactions.isNotEmpty;
-  
+
   void setLoading(bool loading) {
     _isLoading = loading;
   }
-  
+
   Future<void> addTransaction(TestTransaction transaction) async {
     try {
       _isLoading = true;
       _hasError = false;
-      
+
       // 模擬API調用
       await Future.delayed(Duration(milliseconds: 100));
-      
+
       _transactions.add(transaction);
       _isLoading = false;
     } catch (e) {
@@ -3358,11 +3356,11 @@ class TestTransactionStateProvider {
 class TestCategoryStateProvider {
   bool _isLoaded = false;
   List<Map<String, dynamic>> _categories = [];
-  
+
   bool get isLoaded => _isLoaded;
   List<Map<String, dynamic>> get categories => _categories;
   bool get hasChanges => _categories.isNotEmpty;
-  
+
   Future<void> loadCategories() async {
     await Future.delayed(Duration(milliseconds: 100));
     _categories = [
@@ -3372,19 +3370,19 @@ class TestCategoryStateProvider {
     ];
     _isLoaded = true;
   }
-  
+
   List<Map<String, dynamic>> getExpenseCategories() {
     return _categories.where((cat) => cat['type'] == 'expense').toList();
   }
-  
+
   List<Map<String, dynamic>> getIncomeCategories() {
     return _categories.where((cat) => cat['type'] == 'income').toList();
   }
-  
+
   List<Map<String, dynamic>> getCategoriesByParent(String parentId) {
     return _categories.where((cat) => cat['id'].toString().startsWith(parentId)).toList();
   }
-  
+
   List<Map<String, dynamic>> getCachedCategories() {
     return List.from(_categories);
   }
@@ -3395,36 +3393,36 @@ class TestFormStateProvider {
   bool _isInitialized = false;
   Map<String, dynamic> _fieldValues = {};
   Map<String, String> _fieldErrors = {};
-  
+
   UserMode? get currentMode => _currentMode;
   bool get isInitialized => _isInitialized;
   bool get hasErrors => _fieldErrors.isNotEmpty;
   bool get hasChanges => _fieldValues.isNotEmpty;
-  
+
   void initializeForm(UserMode mode) {
     _currentMode = mode;
     _isInitialized = true;
     _fieldValues.clear();
     _fieldErrors.clear();
   }
-  
+
   void updateField(String fieldName, dynamic value) {
     _fieldValues[fieldName] = value;
     // 清除該欄位的錯誤
     _fieldErrors.remove(fieldName);
   }
-  
+
   dynamic getFieldValue(String fieldName) {
     return _fieldValues[fieldName];
   }
-  
+
   String? getFieldError(String fieldName) {
     return _fieldErrors[fieldName];
   }
-  
+
   Future<void> validateField(String fieldName) async {
     await Future.delayed(Duration(milliseconds: 30));
-    
+
     final value = _fieldValues[fieldName];
     if (fieldName == 'amount' && value != null) {
       if (value is num && value <= 0) {
@@ -3432,7 +3430,7 @@ class TestFormStateProvider {
       }
     }
   }
-  
+
   void resetForm() {
     _fieldValues.clear();
     _fieldErrors.clear();
@@ -3443,36 +3441,36 @@ class TestStateSyncManager {
   DateTime? _lastSyncTime;
   bool _isSyncing = false;
   List<Function> _syncListeners = [];
-  
+
   DateTime? get lastSyncTime => _lastSyncTime;
   bool get isSyncing => _isSyncing;
-  
+
   void registerSyncListener(Function callback) {
     _syncListeners.add(callback);
   }
-  
+
   void unregisterSyncListener(Function callback) {
     _syncListeners.remove(callback);
   }
-  
+
   Future<void> syncAllStates() async {
     _isSyncing = true;
     await Future.delayed(Duration(milliseconds: 100));
-    
+
     // 通知所有監聽器
     for (var listener in _syncListeners) {
       listener();
     }
-    
+
     _lastSyncTime = DateTime.now();
     _isSyncing = false;
   }
-  
+
   Future<void> syncTransactionState() async {
     await Future.delayed(Duration(milliseconds: 50));
     _lastSyncTime = DateTime.now();
   }
-  
+
   Future<void> syncDashboardState() async {
     await Future.delayed(Duration(milliseconds: 50));
     _lastSyncTime = DateTime.now();
@@ -3482,7 +3480,7 @@ class TestStateSyncManager {
 class TestAccountingFormWidget {
   bool _isInitialized = false;
   Map<String, dynamic> _widgetStructure = {};
-  
+
   Future<void> initializeWidget() async {
     await Future.delayed(Duration(milliseconds: 100));
     _isInitialized = true;
@@ -3494,11 +3492,11 @@ class TestAccountingFormWidget {
       'hasSubmitButton': true,
     };
   }
-  
+
   Map<String, dynamic> getWidgetStructure() {
     return Map.from(_widgetStructure);
   }
-  
+
   Map<String, dynamic> getExpertModeStructure() {
     return {
       'hasAdvancedOptions': true,
@@ -3558,7 +3556,7 @@ class AccountSelectorWidget {
 class QuickAccountingProcessor {
   Future<QuickAccountingResult> processQuickAccounting(String input) async {
     await Future.delayed(Duration(milliseconds: 30)); // 模擬處理時間
-    
+
     // 簡單的成功率模擬：90%成功
     final success = DateTime.now().millisecond % 10 != 0;
     return QuickAccountingResult(
@@ -3572,11 +3570,11 @@ class QuickAccountingProcessor {
 class SmartTextParser {
   Future<Map<String, dynamic>> parseText(String input) async {
     await Future.delayed(Duration(milliseconds: 50));
-    
+
     // 簡化的解析邏輯模擬
     final words = input.split(' ');
     final result = <String, dynamic>{};
-    
+
     // 尋找金額
     for (String word in words) {
       final amount = double.tryParse(word);
@@ -3585,13 +3583,13 @@ class SmartTextParser {
         break;
       }
     }
-    
+
     // 判斷類型
     if (input.contains('薪水') || input.contains('收入')) {
       result['type'] = 'income';
     } else if (input.contains('轉帳')) {
       result['type'] = 'transfer';
-      
+
       // 解析轉帳來源和目標
       if (input.contains('從') && input.contains('到')) {
         final fromIndex = input.indexOf('從');
@@ -3604,12 +3602,12 @@ class SmartTextParser {
     } else {
       result['type'] = 'expense';
     }
-    
+
     // 尋找帳戶
     if (input.contains('現金')) result['account'] = '現金';
     if (input.contains('台銀') || input.contains('台灣銀行')) result['account'] = '台銀';
     if (input.contains('儲蓄')) result['account'] = '儲蓄';
-    
+
     // 移除金額和帳戶後的描述
     String description = input;
     for (String word in words) {
@@ -3618,7 +3616,7 @@ class SmartTextParser {
       }
     }
     result['description'] = description;
-    
+
     return result;
   }
 }
@@ -3627,9 +3625,9 @@ class SmartTextParser {
 class AccountingFormValidator {
   Future<ValidationResult> validate(Map<String, dynamic> formData) async {
     await Future.delayed(Duration(milliseconds: 30));
-    
+
     final errors = <String>[];
-    
+
     // 驗證金額
     final amount = formData['amount'] as double?;
     if (amount == null) {
@@ -3637,17 +3635,17 @@ class AccountingFormValidator {
     } else if (amount <= 0) {
       errors.add('金額必須大於零');
     }
-    
+
     // 驗證科目
     if (!formData.containsKey('categoryId') || formData['categoryId'] == null) {
       errors.add('科目為必填項目');
     }
-    
+
     // 驗證帳戶
     if (!formData.containsKey('accountId') || formData['accountId'] == null) {
       errors.add('帳戶為必填項目');
     }
-    
+
     return ValidationResult(
       isValid: errors.isEmpty,
       errors: errors
@@ -3667,13 +3665,13 @@ class AccountingHomePageWidget {
 class ValidationResult {
   final bool isValid;
   final List<String> errors;
-  
+
   ValidationResult({required this.isValid, required this.errors});
 }
 
 /// Widget狀態類別
 class WidgetState {
   final bool isInitialized;
-  
+
   WidgetState({required this.isInitialized});
 }
