@@ -1,8 +1,8 @@
 /**
  * 7501. 系統進入功能群.dart - 系統進入功能群測試代碼
- * @version 2025-09-12 v1.0.4
+ * @version 2025-09-12 v1.0.5
  * @date 2025-09-12
- * @update: 版本升級，確保與7502一致的人工Mock架構
+ * @update: 修復TC-026測試中的null safety錯誤，強化Map存取安全性
  */
 
 import 'dart:async';
@@ -1755,9 +1755,9 @@ class SystemEntryFunctionGroupTest {
 
   /**
    * TC-026: 安全審計與日誌記錄測試
-   * @version 2025-09-12 v1.0.0
+   * @version 2025-09-12 v1.0.1
    * @date 2025-09-12
-   * @update: 初始版本
+   * @update: 修復null safety問題，確保Map存取前進行null檢查
    */
   Future<void> testSecurityAuditAndLogging() async {
     if (!PLFakeServiceSwitch.enable7501FakeService) {
@@ -1775,8 +1775,10 @@ class SystemEntryFunctionGroupTest {
       ));
       final loginAuditLog = await _getAuditLog('LOGIN');
       expect(loginAuditLog, isNotNull, reason: '登入事件應被記錄');
-      expect(loginAuditLog['userId'], isNotNull, reason: '應記錄使用者ID');
-      expect(loginAuditLog['timestamp'], isNotNull, reason: '應記錄時間戳');
+      if (loginAuditLog != null) {
+        expect(loginAuditLog['userId'], isNotNull, reason: '應記錄使用者ID');
+        expect(loginAuditLog['timestamp'], isNotNull, reason: '應記錄時間戳');
+      }
 
       // Test 2: 失敗認證事件記錄
       print('TC-026.2: 失敗認證事件記錄測試');
@@ -1786,21 +1788,27 @@ class SystemEntryFunctionGroupTest {
       ));
       final failedLoginLog = await _getAuditLog('LOGIN_FAILED');
       expect(failedLoginLog, isNotNull, reason: '失敗登入應被記錄');
-      expect(failedLoginLog['reason'], isNotNull, reason: '應記錄失敗原因');
+      if (failedLoginLog != null) {
+        expect(failedLoginLog['reason'], isNotNull, reason: '應記錄失敗原因');
+      }
 
       // Test 3: 敏感操作日誌記錄
       print('TC-026.3: 敏感操作日誌記錄測試');
       await _performSensitiveOperation('PASSWORD_RESET');
       final sensitiveOpLog = await _getAuditLog('SENSITIVE_OPERATION');
       expect(sensitiveOpLog, isNotNull, reason: '敏感操作應被記錄');
-      expect(sensitiveOpLog['operation'], equals('PASSWORD_RESET'), reason: '應記錄操作類型');
+      if (sensitiveOpLog != null) {
+        expect(sensitiveOpLog['operation'], equals('PASSWORD_RESET'), reason: '應記錄操作類型');
+      }
 
       // Test 4: 安全事件警報測試
       print('TC-026.4: 安全事件警報測試');
       await _triggerSecurityEvent('SUSPICIOUS_ACTIVITY');
       final securityAlert = await _getSecurityAlert();
       expect(securityAlert, isNotNull, reason: '安全事件應觸發警報');
-      expect(securityAlert['severity'], equals('HIGH'), reason: '應設定適當的嚴重性等級');
+      if (securityAlert != null) {
+        expect(securityAlert['severity'], equals('HIGH'), reason: '應設定適當的嚴重性等級');
+      }
 
       print('TC-026: ✅ 安全審計與日誌記錄測試通過');
 
