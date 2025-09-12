@@ -1,14 +1,17 @@
 /**
  * 7501. 系統進入功能群.dart - 系統進入功能群測試代碼
- * @version 2025-09-12 v1.0.3
+ * @version 2025-09-12 v1.0.0
  * @date 2025-09-12
- * @update: 移除Mockito和Flutter UI依賴，改為純Dart人工Mock實作
+ * @update: 初始版本，包含26個核心測試案例
  */
 
 import 'dart:async';
 import 'dart:convert';
 import 'package:test/test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
 import '7599. Fake_service_switch.dart';
+import 'package:flutter/material.dart'; // Added for ThemeData
 
 // 引入必要的類型定義
 enum UserMode { expert, inertial, cultivation, guiding }
@@ -275,86 +278,37 @@ class FormValidationResult {
 }
 
 
-// 人工Mock服務類別 (取代Mockito自動生成)
-class FakeAuthApiService {
+// Mock服務類別
+@GenerateMocks([
+  AuthApiService,
+  SystemApiService,
+  UserManagementApiService
+])
+class MockServices {}
+
+class AuthApiService {
   Future<RegisterResponse> register(RegisterRequest request) async {
-    await Future.delayed(Duration(milliseconds: 100));
-    if (request.email.isEmpty || request.password.isEmpty) {
-      return RegisterResponse(success: false, message: '輸入資料不完整');
-    }
-    return RegisterResponse(
-      success: true,
-      token: 'fake_token_${DateTime.now().millisecondsSinceEpoch}',
-      userId: 'fake_user_${request.email.hashCode}',
-      message: '註冊成功'
-    );
+    throw UnimplementedError();
   }
 
   Future<LoginResponse> login(LoginRequest request) async {
-    await Future.delayed(Duration(milliseconds: 100));
-    if (request.email == 'user@lcas.app' && request.password == 'password123') {
-      return LoginResponse(
-        success: true, 
-        token: 'fake_login_token_${DateTime.now().millisecondsSinceEpoch}', 
-        userId: 'fake_login_user_${request.email.hashCode}'
-      );
-    }
-    return LoginResponse(success: false, message: '登入失敗');
+    throw UnimplementedError();
   }
 
   Future<ForgotPasswordResponse> forgotPassword(String email) async {
-    await Future.delayed(Duration(milliseconds: 100));
-    if (email.isNotEmpty && email.contains('@')) {
-      return ForgotPasswordResponse(success: true, message: '密碼重設郵件已發送');
-    }
-    return ForgotPasswordResponse(success: false, message: '請輸入有效Email');
+    throw UnimplementedError();
   }
 }
 
-class FakeSystemApiService {
+class SystemApiService {
   Future<AppVersionInfo> getVersionInfo() async {
-    await Future.delayed(Duration(milliseconds: 100));
-    return AppVersionInfo(
-      currentVersion: '1.0.2',
-      latestVersion: '1.0.3',
-      forceUpdate: false,
-      updateMessage: '新版本包含效能改善'
-    );
+    throw UnimplementedError();
   }
 }
 
-class FakeUserManagementApiService {
+class UserManagementApiService {
   Future<AssessmentResult> submitAssessment(List<AssessmentAnswer> answers) async {
-    await Future.delayed(Duration(milliseconds: 100));
-    double averageScore = answers.fold(0.0, (sum, answer) => sum + answer.selectedOption) / answers.length;
-    
-    UserMode recommendedMode;
-    double confidence;
-    
-    if (averageScore >= 4.0) {
-      recommendedMode = UserMode.expert;
-      confidence = 0.85;
-    } else if (averageScore >= 3.0) {
-      recommendedMode = UserMode.inertial;
-      confidence = 0.75;
-    } else if (averageScore >= 2.0) {
-      recommendedMode = UserMode.cultivation;
-      confidence = 0.80;
-    } else {
-      recommendedMode = UserMode.guiding;
-      confidence = 0.90;
-    }
-    
-    return AssessmentResult(
-      recommendedMode: recommendedMode,
-      confidence: confidence,
-      scores: {
-        UserMode.expert: averageScore >= 4.0 ? confidence : 0.3,
-        UserMode.inertial: averageScore >= 3.0 && averageScore < 4.0 ? confidence : 0.3,
-        UserMode.cultivation: averageScore >= 2.0 && averageScore < 3.0 ? confidence : 0.3,
-        UserMode.guiding: averageScore < 2.0 ? confidence : 0.3,
-      }
-    );
+    throw UnimplementedError();
   }
 }
 
@@ -943,27 +897,37 @@ class SystemEntryFunctionGroupTest {
   }
 
   /**
-   * 載入模式主題配置
-   * @version 2025-09-12-V1.0.3
+   * 載入模式主題
+   * @version 2025-09-12-V1.0.0
    * @date 2025-09-12
-   * @update: 移除Flutter依賴，改為純Dart主題配置
+   * @update: 初始版本
    */
-  Map<String, dynamic> loadModeTheme(UserMode userMode) {
-    // TDD Red階段 - 純Dart主題配置實作
-    Map<UserMode, int> modeColors = {
-      UserMode.expert: 0xFF1976D2,     // 藍色 - 專業
-      UserMode.inertial: 0xFF4CAF50,   // 綠色 - 穩定
-      UserMode.cultivation: 0xFFFF9800, // 橙色 - 成長
-      UserMode.guiding: 0xFF9C27B0,    // 紫色 - 引導
+  ThemeData loadModeTheme(UserMode userMode) {
+    // TDD Red階段 - 基本主題實作
+    Map<UserMode, Color> modeColors = {
+      UserMode.expert: Color(0xFF1976D2),     // 藍色 - 專業
+      UserMode.inertial: Color(0xFF4CAF50),   // 綠色 - 穩定
+      UserMode.cultivation: Color(0xFFFF9800), // 橙色 - 成長
+      UserMode.guiding: Color(0xFF9C27B0),    // 紫色 - 引導
     };
 
-    return {
-      'primaryColor': modeColors[userMode],
-      'modeName': userMode.toString().split('.').last,
-      'colorName': _getColorName(userMode),
-      'brightness': 'light',
-      'accentColor': _generateAccentColor(modeColors[userMode]!),
-    };
+    return ThemeData(
+      primarySwatch: MaterialColor(
+        modeColors[userMode]!.value,
+        <int, Color>{
+          50: modeColors[userMode]!.withOpacity(0.1),
+          100: modeColors[userMode]!.withOpacity(0.2),
+          200: modeColors[userMode]!.withOpacity(0.3),
+          300: modeColors[userMode]!.withOpacity(0.4),
+          400: modeColors[userMode]!.withOpacity(0.5),
+          500: modeColors[userMode]!,
+          600: modeColors[userMode]!.withOpacity(0.7),
+          700: modeColors[userMode]!.withOpacity(0.8),
+          800: modeColors[userMode]!.withOpacity(0.9),
+          900: modeColors[userMode]!,
+        },
+      ),
+    );
   }
 
   /**
@@ -979,53 +943,23 @@ class SystemEntryFunctionGroupTest {
   }
 
   /**
-   * 獲取模式顏色值
-   * @version 2025-09-12-V1.0.3
+   * 獲取模式顏色
+   * @version 2025-09-12-V1.0.0
    * @date 2025-09-12
-   * @update: 移除Flutter Color依賴，改為int顏色值
+   * @update: 初始版本
    */
-  int getModeColor(UserMode userMode) {
+  Color getModeColor(UserMode userMode) {
     // TDD Red階段 - 基本顏色映射
     switch (userMode) {
       case UserMode.expert:
-        return 0xFF1976D2;     // 藍色
+        return Color(0xFF1976D2);     // 藍色
       case UserMode.inertial:
-        return 0xFF4CAF50;     // 綠色
+        return Color(0xFF4CAF50);     // 綠色
       case UserMode.cultivation:
-        return 0xFFFF9800;     // 橙色
+        return Color(0xFFFF9800);     // 橙色
       case UserMode.guiding:
-        return 0xFF9C27B0;     // 紫色
+        return Color(0xFF9C27B0);     // 紫色
     }
-  }
-
-  /**
-   * 取得顏色名稱
-   * @version 2025-09-12-V1.0.3
-   * @date 2025-09-12
-   * @update: 新增輔助函數
-   */
-  String _getColorName(UserMode userMode) {
-    switch (userMode) {
-      case UserMode.expert:
-        return '藍色';
-      case UserMode.inertial:
-        return '綠色';
-      case UserMode.cultivation:
-        return '橙色';
-      case UserMode.guiding:
-        return '紫色';
-    }
-  }
-
-  /**
-   * 生成強調色
-   * @version 2025-09-12-V1.0.3
-   * @date 2025-09-12
-   * @update: 新增輔助函數
-   */
-  int _generateAccentColor(int primaryColor) {
-    // 簡單的強調色生成邏輯
-    return (primaryColor & 0xFFE0E0E0) | 0xFF404040;
   }
 
   // ===========================================
@@ -2111,7 +2045,7 @@ class SystemEntryFunctionGroupTest {
 
       // Act: 載入並驗證模式主題
       final theme = loadModeTheme(recommendation.recommendedMode);
-      expect(theme['primaryColor'], getModeColor(UserMode.expert), reason: 'Expert模式主題顏色應為藍色');
+      expect(theme.primarySwatch.value, getModeColor(UserMode.expert).value, reason: 'Expert模式主題顏色應為藍色');
 
       // Act: 切換模式主題
       await switchModeTheme(recommendation.recommendedMode);
@@ -2155,7 +2089,7 @@ class SystemEntryFunctionGroupTest {
 
       // Act: 載入並驗證模式主題
       final theme = loadModeTheme(recommendation.recommendedMode);
-      expect(theme['primaryColor'], getModeColor(UserMode.inertial), reason: 'Inertial模式主題顏色應為綠色');
+      expect(theme.primarySwatch.value, getModeColor(UserMode.inertial).value, reason: 'Inertial模式主題顏色應為綠色');
 
       // Act: 切換模式主題
       await switchModeTheme(recommendation.recommendedMode);
@@ -2202,7 +2136,7 @@ class SystemEntryFunctionGroupTest {
 
       // Act: 載入並驗證模式主題
       final theme = loadModeTheme(recommendation.recommendedMode);
-      expect(theme['primaryColor'], getModeColor(UserMode.cultivation), reason: 'Cultivation模式主題顏色應為橙色');
+      expect(theme.primarySwatch.value, getModeColor(UserMode.cultivation).value, reason: 'Cultivation模式主題顏色應為橙色');
 
       print('TC-011: ✅ Cultivation模式引導測試通過');
 
@@ -2243,7 +2177,7 @@ class SystemEntryFunctionGroupTest {
 
       // Act: 載入並驗證模式主題
       final theme = loadModeTheme(recommendation.recommendedMode);
-      expect(theme['primaryColor'], getModeColor(UserMode.guiding), reason: 'Guiding模式主題顏色應為紫色');
+      expect(theme.primarySwatch.value, getModeColor(UserMode.guiding).value, reason: 'Guiding模式主題顏色應為紫色');
 
       // Act: 切換模式主題
       await switchModeTheme(recommendation.recommendedMode);
