@@ -1,8 +1,8 @@
 /**
  * 7501. 系統進入功能群.dart - 系統進入功能群測試代碼
- * @version 2025-09-12 v1.0.3
+ * @version 2025-09-12 v1.0.4
  * @date 2025-09-12
- * @update: 移除Mockito和Flutter UI依賴，改為純Dart人工Mock實作
+ * @update: 版本升級，確保與7502一致的人工Mock架構
  */
 
 import 'dart:async';
@@ -507,9 +507,9 @@ class SystemEntryFunctionGroupTest {
 
   /**
    * 01. 初始化應用程式
-   * @version 2025-09-12-V1.0.0
+   * @version 2025-09-12-V1.0.1
    * @date 2025-09-12
-   * @update: 初始版本
+   * @update: 統一升級版本，確保與7502版本一致性
    */
   Future<void> initializeApp() async {
     // TDD Red階段 - 最小實作
