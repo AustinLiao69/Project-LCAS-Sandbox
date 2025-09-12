@@ -11,7 +11,8 @@
 7. 提出計劃時必須列出該實作之代碼有哪些API端點。
 8. 提出計劃時必須列出該實作之代碼有哪些測試案例。
 9. 該測試代碼必須要能夠整合至8599. Fake_service_switch.dart，用作Fake service的開關
-10. TDD(Test driven development) Test Code開發注意事項
+10. 請勿用Mockito框架，請使用人工mock
+11. TDD(Test driven development) Test Code開發注意事項
 
 🎯 基本TDD Test driven development原則
 Red-Green-Refactor循環：先寫失敗測試 → 寫最少代碼通過 → 重構優化
