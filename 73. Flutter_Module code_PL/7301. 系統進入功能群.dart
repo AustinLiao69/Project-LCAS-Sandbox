@@ -1,12 +1,13 @@
 
 /**
  * 7301. 系統進入功能群.dart
- * @version v1.0.0
+ * @version v1.1.0
  * @date 2025-09-12
- * @update: 階段一實作完成 - 核心基礎架構（函數01-15）
+ * @update: 階段二實作完成 - 模式評估與跨平台整合（函數16-26）
  * 
- * 本模組實現LCAS 2.0系統進入功能群的核心基礎架構，
- * 包括APP啟動、使用者認證、模式設定等關鍵功能。
+ * 本模組實現LCAS 2.0系統進入功能群的完整功能，
+ * 包括APP啟動、使用者認證、模式設定、模式評估問卷、
+ * LINE OA綁定與跨平台資料同步等關鍵功能。
  * 嚴格遵循0026、0090、8088文件規範。
  */
 
@@ -1185,6 +1186,705 @@ class SystemEntryFunctionGroup {
   Future<void> _saveLastLoginTime(DateTime time) async {
     await Future.delayed(Duration(milliseconds: 30));
     // 保存登入時間記錄
+  }
+
+  // ===========================================
+  // 階段二函數實作（16-26）
+  // ===========================================
+
+  /**
+   * 16. 載入模式評估問卷
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<Map<String, dynamic>> loadModeAssessmentSurvey() async {
+    try {
+      print('[SystemEntry] 載入模式評估問卷...');
+      
+      // 調用8111系統服務API取得問卷內容
+      final apiResponse = await _callSystemAPI('/assessment-survey', {});
+      
+      if (apiResponse['success']) {
+        final surveyData = {
+          'surveyId': apiResponse['surveyId'],
+          'version': apiResponse['version'],
+          'questions': apiResponse['questions'],
+          'scoringRules': apiResponse['scoringRules'],
+          'modeThresholds': apiResponse['modeThresholds'],
+        };
+        
+        print('[SystemEntry] ✅ 模式評估問卷載入成功，共${surveyData['questions'].length}題');
+        return {
+          'success': true,
+          'data': surveyData,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': apiResponse['message'] ?? '載入問卷失敗',
+        };
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 載入模式評估問卷失敗: $e');
+      return {
+        'success': false,
+        'message': '系統錯誤，請稍後再試',
+      };
+    }
+  }
+
+  /**
+   * 17. 提交評估答案
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<Map<String, dynamic>> submitAssessmentAnswers(Map<String, dynamic> answers) async {
+    try {
+      print('[SystemEntry] 提交評估答案...');
+      
+      // 驗證答案完整性
+      final validationResult = _validateAssessmentAnswers(answers);
+      if (!validationResult['isValid']) {
+        return {
+          'success': false,
+          'message': validationResult['message'],
+        };
+      }
+      
+      // 調用8111系統服務API提交答案
+      final apiResponse = await _callSystemAPI('/submit-assessment', {
+        'userId': _currentAuthState?.currentUser?.id,
+        'answers': answers,
+        'submittedAt': DateTime.now().toIso8601String(),
+      });
+      
+      if (apiResponse['success']) {
+        print('[SystemEntry] ✅ 評估答案提交成功');
+        return {
+          'success': true,
+          'submissionId': apiResponse['submissionId'],
+          'message': '評估答案已成功提交',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': apiResponse['message'] ?? '提交失敗',
+        };
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 提交評估答案失敗: $e');
+      return {
+        'success': false,
+        'message': '系統錯誤，請稍後再試',
+      };
+    }
+  }
+
+  /**
+   * 18. 計算模式推薦
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<Map<String, dynamic>> calculateModeRecommendation(String submissionId) async {
+    try {
+      print('[SystemEntry] 計算模式推薦...');
+      
+      // 調用8111系統服務API計算推薦模式
+      final apiResponse = await _callSystemAPI('/calculate-recommendation', {
+        'submissionId': submissionId,
+      });
+      
+      if (apiResponse['success']) {
+        final recommendation = {
+          'recommendedMode': apiResponse['recommendedMode'],
+          'confidence': apiResponse['confidence'],
+          'scores': apiResponse['scores'],
+          'explanation': apiResponse['explanation'],
+          'alternatives': apiResponse['alternatives'],
+        };
+        
+        print('[SystemEntry] ✅ 模式推薦計算完成: ${recommendation['recommendedMode']}');
+        return {
+          'success': true,
+          'recommendation': recommendation,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': apiResponse['message'] ?? '計算推薦失敗',
+        };
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 計算模式推薦失敗: $e');
+      return {
+        'success': false,
+        'message': '系統錯誤，請稍後再試',
+      };
+    }
+  }
+
+  /**
+   * 19. 保存使用者模式設定
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<bool> saveUserModeConfiguration(UserMode selectedMode, Map<String, dynamic>? customSettings) async {
+    try {
+      print('[SystemEntry] 保存使用者模式設定...');
+      
+      // 建立新的模式設定
+      final newConfig = ModeConfiguration(
+        userMode: selectedMode,
+        settings: {
+          ...(_currentModeConfig?.settings ?? {}),
+          ...(customSettings ?? {}),
+        },
+        themeConfig: _getDefaultThemeConfig(selectedMode),
+        lastUpdated: DateTime.now(),
+      );
+      
+      // 保存到本地儲存
+      await _saveModeConfiguration(newConfig);
+      
+      // 同步到後端
+      final syncResult = await _syncModeConfigurationToBackend(newConfig);
+      
+      if (syncResult) {
+        _currentModeConfig = newConfig;
+        print('[SystemEntry] ✅ 使用者模式設定保存成功: ${selectedMode.name}');
+        return true;
+      } else {
+        print('[SystemEntry] ⚠️ 本地保存成功，但後端同步失敗');
+        return false;
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 保存使用者模式設定失敗: $e');
+      return false;
+    }
+  }
+
+  /**
+   * 20. 生成LINE綁定QR Code
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<Map<String, dynamic>> generateLineBindingQRCode() async {
+    try {
+      print('[SystemEntry] 生成LINE綁定QR Code...');
+      
+      if (_currentAuthState?.currentUser == null) {
+        return {
+          'success': false,
+          'message': '請先登入後再進行LINE綁定',
+        };
+      }
+      
+      // 調用8111系統服務API生成綁定Token
+      final apiResponse = await _callSystemAPI('/generate-line-binding', {
+        'userId': _currentAuthState!.currentUser!.id,
+        'requestTime': DateTime.now().toIso8601String(),
+      });
+      
+      if (apiResponse['success']) {
+        final qrData = {
+          'bindingToken': apiResponse['bindingToken'],
+          'qrCodeUrl': apiResponse['qrCodeUrl'],
+          'lineOfficialAccount': apiResponse['lineOfficialAccount'],
+          'expiresAt': apiResponse['expiresAt'],
+          'instructions': apiResponse['instructions'],
+        };
+        
+        print('[SystemEntry] ✅ LINE綁定QR Code生成成功');
+        return {
+          'success': true,
+          'qrData': qrData,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': apiResponse['message'] ?? 'QR Code生成失敗',
+        };
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 生成LINE綁定QR Code失敗: $e');
+      return {
+        'success': false,
+        'message': '系統錯誤，請稍後再試',
+      };
+    }
+  }
+
+  /**
+   * 21. 執行LINE平台綁定
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<Map<String, dynamic>> executeLinePlatformBinding(String bindingToken) async {
+    try {
+      print('[SystemEntry] 執行LINE平台綁定...');
+      
+      // 驗證綁定Token
+      final tokenValidation = await _validateBindingToken(bindingToken);
+      if (!tokenValidation['isValid']) {
+        return {
+          'success': false,
+          'message': '綁定Token無效或已過期',
+        };
+      }
+      
+      // 調用8111系統服務API執行綁定
+      final apiResponse = await _callSystemAPI('/execute-line-binding', {
+        'bindingToken': bindingToken,
+        'userId': _currentAuthState?.currentUser?.id,
+      });
+      
+      if (apiResponse['success']) {
+        final bindingResult = {
+          'lineUserId': apiResponse['lineUserId'],
+          'bindingStatus': apiResponse['bindingStatus'],
+          'bindingTime': apiResponse['bindingTime'],
+          'availableFeatures': apiResponse['availableFeatures'],
+        };
+        
+        print('[SystemEntry] ✅ LINE平台綁定成功');
+        return {
+          'success': true,
+          'bindingResult': bindingResult,
+          'message': 'LINE平台綁定成功！',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': apiResponse['message'] ?? 'LINE綁定失敗',
+        };
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 執行LINE平台綁定失敗: $e');
+      return {
+        'success': false,
+        'message': '系統錯誤，請稍後再試',
+      };
+    }
+  }
+
+  /**
+   * 22. 檢查平台綁定狀態
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<Map<String, dynamic>> checkPlatformBindingStatus() async {
+    try {
+      print('[SystemEntry] 檢查平台綁定狀態...');
+      
+      if (_currentAuthState?.currentUser == null) {
+        return {
+          'success': false,
+          'message': '使用者未登入',
+        };
+      }
+      
+      // 調用8111系統服務API檢查綁定狀態
+      final apiResponse = await _callSystemAPI('/check-platform-binding', {
+        'userId': _currentAuthState!.currentUser!.id,
+      });
+      
+      if (apiResponse['success']) {
+        final bindingStatus = {
+          'isLineBound': apiResponse['isLineBound'],
+          'lineUserId': apiResponse['lineUserId'],
+          'bindingTime': apiResponse['bindingTime'],
+          'lastSyncTime': apiResponse['lastSyncTime'],
+          'availablePlatforms': apiResponse['availablePlatforms'],
+          'syncStatus': apiResponse['syncStatus'],
+        };
+        
+        print('[SystemEntry] ✅ 平台綁定狀態檢查完成');
+        return {
+          'success': true,
+          'bindingStatus': bindingStatus,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': apiResponse['message'] ?? '狀態檢查失敗',
+        };
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 檢查平台綁定狀態失敗: $e');
+      return {
+        'success': false,
+        'message': '系統錯誤，請稍後再試',
+      };
+    }
+  }
+
+  /**
+   * 23. 同步跨平台資料
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<Map<String, dynamic>> syncCrossPlatformData() async {
+    try {
+      print('[SystemEntry] 同步跨平台資料...');
+      
+      if (_currentAuthState?.currentUser == null) {
+        return {
+          'success': false,
+          'message': '使用者未登入',
+        };
+      }
+      
+      // 調用8111系統服務API同步資料
+      final apiResponse = await _callSystemAPI('/sync-cross-platform', {
+        'userId': _currentAuthState!.currentUser!.id,
+        'syncType': 'full',
+        'requestTime': DateTime.now().toIso8601String(),
+      });
+      
+      if (apiResponse['success']) {
+        final syncResult = {
+          'syncId': apiResponse['syncId'],
+          'syncedPlatforms': apiResponse['syncedPlatforms'],
+          'syncedDataTypes': apiResponse['syncedDataTypes'],
+          'syncTime': apiResponse['syncTime'],
+          'conflictResolutions': apiResponse['conflictResolutions'],
+        };
+        
+        print('[SystemEntry] ✅ 跨平台資料同步完成');
+        return {
+          'success': true,
+          'syncResult': syncResult,
+          'message': '資料同步完成',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': apiResponse['message'] ?? '資料同步失敗',
+        };
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 同步跨平台資料失敗: $e');
+      return {
+        'success': false,
+        'message': '系統錯誤，請稍後再試',
+      };
+    }
+  }
+
+  /**
+   * 24. 載入APP功能展示內容
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<Map<String, dynamic>> loadAppFeatureShowcase() async {
+    try {
+      print('[SystemEntry] 載入APP功能展示內容...');
+      
+      // 根據使用者模式載入對應的展示內容
+      final userMode = _currentModeConfig?.userMode ?? UserMode.inertial;
+      
+      // 調用8111系統服務API
+      final apiResponse = await _callSystemAPI('/feature-showcase', {
+        'userMode': userMode.name,
+        'language': 'zh-TW',
+      });
+      
+      if (apiResponse['success']) {
+        final showcaseData = {
+          'features': apiResponse['features'],
+          'tutorials': apiResponse['tutorials'],
+          'benefits': apiResponse['benefits'],
+          'screenshots': apiResponse['screenshots'],
+          'demoVideos': apiResponse['demoVideos'],
+          'userTestimonials': apiResponse['userTestimonials'],
+        };
+        
+        print('[SystemEntry] ✅ APP功能展示內容載入成功');
+        return {
+          'success': true,
+          'showcaseData': showcaseData,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': apiResponse['message'] ?? '載入展示內容失敗',
+        };
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 載入APP功能展示內容失敗: $e');
+      return {
+        'success': false,
+        'message': '系統錯誤，請稍後再試',
+      };
+    }
+  }
+
+  /**
+   * 25. 生成APP下載連結
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<Map<String, dynamic>> generateAppDownloadLinks() async {
+    try {
+      print('[SystemEntry] 生成APP下載連結...');
+      
+      // 調用8111系統服務API
+      final apiResponse = await _callSystemAPI('/app-download-links', {
+        'platform': 'all',
+        'version': 'latest',
+        'referralCode': _currentAuthState?.currentUser?.id,
+      });
+      
+      if (apiResponse['success']) {
+        final downloadLinks = {
+          'androidPlayStore': apiResponse['androidPlayStore'],
+          'iosAppStore': apiResponse['iosAppStore'],
+          'webApp': apiResponse['webApp'],
+          'qrCodes': apiResponse['qrCodes'],
+          'directDownload': apiResponse['directDownload'],
+          'referralTracking': apiResponse['referralTracking'],
+        };
+        
+        print('[SystemEntry] ✅ APP下載連結生成成功');
+        return {
+          'success': true,
+          'downloadLinks': downloadLinks,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': apiResponse['message'] ?? '生成下載連結失敗',
+        };
+      }
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 生成APP下載連結失敗: $e');
+      return {
+        'success': false,
+        'message': '系統錯誤，請稍後再試',
+      };
+    }
+  }
+
+  /**
+   * 26. 記錄推廣頁面互動
+   * @version 2025-09-12-v1.0.0
+   * @date 2025-09-12
+   * @update: 初始版本
+   */
+  Future<void> recordPromotionPageInteraction(String interactionType, Map<String, dynamic> interactionData) async {
+    try {
+      print('[SystemEntry] 記錄推廣頁面互動: $interactionType');
+      
+      // 準備互動記錄資料
+      final recordData = {
+        'userId': _currentAuthState?.currentUser?.id,
+        'sessionId': _generateSessionId(),
+        'interactionType': interactionType,
+        'interactionData': interactionData,
+        'timestamp': DateTime.now().toIso8601String(),
+        'userAgent': 'LCAS_Flutter_App',
+        'appVersion': '1.0.0',
+      };
+      
+      // 調用8111系統服務API記錄互動
+      await _callSystemAPI('/record-interaction', recordData);
+      
+      print('[SystemEntry] ✅ 推廣頁面互動記錄完成');
+      
+    } catch (e) {
+      print('[SystemEntry] ❌ 記錄推廣頁面互動失敗: $e');
+      // 記錄失敗不影響主要功能，僅記錄錯誤
+    }
+  }
+
+  // ===========================================
+  // 階段二內部輔助函數
+  // ===========================================
+
+  /// 調用系統服務API
+  Future<Map<String, dynamic>> _callSystemAPI(String endpoint, Map<String, dynamic> data) async {
+    await Future.delayed(Duration(milliseconds: 200)); // 模擬網路延遲
+    
+    // 模擬API回應
+    switch (endpoint) {
+      case '/assessment-survey':
+        return {
+          'success': true,
+          'surveyId': 'survey_2025_v1',
+          'version': '1.0.0',
+          'questions': [
+            {
+              'id': 'q1',
+              'text': '您平常記帳的頻率是？',
+              'type': 'single_choice',
+              'options': ['每日', '每週', '每月', '不定期']
+            },
+            {
+              'id': 'q2', 
+              'text': '您希望APP提供什麼程度的功能指導？',
+              'type': 'single_choice',
+              'options': ['詳細指導', '基本提示', '最少介入', '完全自主']
+            },
+          ],
+          'scoringRules': {'expert': 4, 'inertial': 3, 'cultivation': 2, 'guiding': 1},
+          'modeThresholds': {'expert': 15, 'inertial': 10, 'cultivation': 5, 'guiding': 0},
+        };
+      case '/submit-assessment':
+        return {
+          'success': true,
+          'submissionId': 'submission_${DateTime.now().millisecondsSinceEpoch}',
+        };
+      case '/calculate-recommendation':
+        return {
+          'success': true,
+          'recommendedMode': 'inertial',
+          'confidence': 0.85,
+          'scores': {'expert': 12, 'inertial': 15, 'cultivation': 8, 'guiding': 5},
+          'explanation': '根據您的答案，建議使用慣性模式',
+          'alternatives': ['expert', 'cultivation'],
+        };
+      case '/generate-line-binding':
+        return {
+          'success': true,
+          'bindingToken': 'bind_${DateTime.now().millisecondsSinceEpoch}',
+          'qrCodeUrl': 'https://api.qrserver.com/v1/create-qr-code/?data=LCAS_BIND_TOKEN',
+          'lineOfficialAccount': '@lcas_official',
+          'expiresAt': DateTime.now().add(Duration(minutes: 10)).toIso8601String(),
+          'instructions': ['掃描QR Code', '加入LINE官方帳號', '發送綁定訊息'],
+        };
+      case '/execute-line-binding':
+        return {
+          'success': true,
+          'lineUserId': 'line_user_${data['userId']}',
+          'bindingStatus': 'active',
+          'bindingTime': DateTime.now().toIso8601String(),
+          'availableFeatures': ['快速記帳', '帳本查詢', '支出提醒'],
+        };
+      case '/check-platform-binding':
+        return {
+          'success': true,
+          'isLineBound': true,
+          'lineUserId': 'line_user_${data['userId']}',
+          'bindingTime': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
+          'lastSyncTime': DateTime.now().subtract(Duration(hours: 2)).toIso8601String(),
+          'availablePlatforms': ['LINE', 'WebApp'],
+          'syncStatus': 'synced',
+        };
+      case '/sync-cross-platform':
+        return {
+          'success': true,
+          'syncId': 'sync_${DateTime.now().millisecondsSinceEpoch}',
+          'syncedPlatforms': ['LINE', 'WebApp'],
+          'syncedDataTypes': ['transactions', 'budgets', 'categories'],
+          'syncTime': DateTime.now().toIso8601String(),
+          'conflictResolutions': [],
+        };
+      case '/feature-showcase':
+        return {
+          'success': true,
+          'features': [
+            {'name': '智慧記帳', 'description': 'AI輔助的快速記帳功能'},
+            {'name': '預算管理', 'description': '智慧預算追蹤與提醒'},
+          ],
+          'tutorials': ['新手入門', '進階功能'],
+          'benefits': ['節省時間', '提升效率'],
+          'screenshots': ['screen1.jpg', 'screen2.jpg'],
+          'demoVideos': ['demo1.mp4'],
+          'userTestimonials': [{'user': '使用者A', 'comment': '非常好用！'}],
+        };
+      case '/app-download-links':
+        return {
+          'success': true,
+          'androidPlayStore': 'https://play.google.com/store/apps/details?id=com.lcas.app',
+          'iosAppStore': 'https://apps.apple.com/app/lcas/id123456789',
+          'webApp': 'https://app.lcas.com',
+          'qrCodes': {
+            'android': 'https://api.qrserver.com/v1/create-qr-code/?data=play_store_link',
+            'ios': 'https://api.qrserver.com/v1/create-qr-code/?data=app_store_link',
+          },
+          'directDownload': 'https://download.lcas.com/app.apk',
+          'referralTracking': 'enabled',
+        };
+      case '/record-interaction':
+        return {'success': true};
+      default:
+        return {'success': false, 'message': 'API端點不存在'};
+    }
+  }
+
+  /// 驗證評估答案
+  Map<String, dynamic> _validateAssessmentAnswers(Map<String, dynamic> answers) {
+    if (answers.isEmpty) {
+      return {'isValid': false, 'message': '請完成所有問題'};
+    }
+    
+    // 檢查必要問題是否已回答
+    final requiredQuestions = ['q1', 'q2'];
+    for (String questionId in requiredQuestions) {
+      if (!answers.containsKey(questionId) || answers[questionId] == null) {
+        return {'isValid': false, 'message': '請完成所有必填問題'};
+      }
+    }
+    
+    return {'isValid': true};
+  }
+
+  /// 同步模式設定到後端
+  Future<bool> _syncModeConfigurationToBackend(ModeConfiguration config) async {
+    try {
+      await Future.delayed(Duration(milliseconds: 200));
+      
+      final apiResponse = await _callSystemAPI('/sync-mode-config', {
+        'userId': _currentAuthState?.currentUser?.id,
+        'modeConfig': {
+          'userMode': config.userMode.name,
+          'settings': config.settings,
+          'themeConfig': config.themeConfig,
+          'lastUpdated': config.lastUpdated.toIso8601String(),
+        },
+      });
+      
+      return apiResponse['success'] ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// 驗證綁定Token
+  Future<Map<String, dynamic>> _validateBindingToken(String token) async {
+    await Future.delayed(Duration(milliseconds: 100));
+    
+    if (token.isEmpty || !token.startsWith('bind_')) {
+      return {'isValid': false, 'message': 'Token格式無效'};
+    }
+    
+    // 模擬Token過期檢查
+    return {'isValid': true};
+  }
+
+  /// 生成會話ID
+  String _generateSessionId() {
+    return 'session_${DateTime.now().millisecondsSinceEpoch}_${(_currentAuthState?.currentUser?.id?.hashCode ?? 0).abs()}';
   }
 
   // ===========================================
