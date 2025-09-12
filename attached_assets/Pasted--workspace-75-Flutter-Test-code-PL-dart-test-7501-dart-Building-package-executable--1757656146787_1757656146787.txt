@@ -1,0 +1,245 @@
+~/workspace/75. Flutter_Test_code_PL$ dart test "7501. 系統進入功能群.dart"
+Building package executable... 
+Built test:test.
+00:00 +0: loading 7501. 系統進入功能群.dart              00:00 +0: 系統進入功能群測試 - 第一階段 TC-001: APP啟動初00:00 +0: 系統進入功能群測試 - 第一階段 TC-001: APP啟動初始化流程測試         
+TC-001: 開始執行APP啟動初始化流程測試
+APP初始化完成
+TC-001: ✅ APP啟動初始化流程測試通過
+TC-001: 啟動時間: 503ms
+00:01 +1: 系統進入功能群測試 - 第一階段 TC-001: APP啟動初00:01 +1: 系統進入功能群測試 - 第一階段 TC-002: 版本檢查00:01 +1: 系統進入功能群測試 - 第一階段 TC-002: 版本檢查與更新提示測試          
+TC-002: 開始執行版本檢查與更新提示測試
+TC-002: ✅ 版本檢查與更新提示測試通過
+TC-002: 當前版本: 1.0.0
+TC-002: 最新版本: 1.0.1
+00:01 +2: 系統進入功能群測試 - 第一階段 TC-002: 版本檢查00:01 +2: 系統進入功能群測試 - 第一階段 TC-003: 使用者註00:01 +2: 系統進入功能群測試 - 第一階段 TC-003: 使用者註冊API正常流程測試       
+TC-003: 開始執行使用者註冊API正常流程測試
+TC-003: ✅ 使用者註冊API正常流程測試通過
+TC-003: User ID: user_123
+00:01 +3: 系統進入功能群測試 - 第一階段 TC-003: 使用者註00:01 +3: 系統進入功能群測試 - 第一階段 TC-004: Google OA00:01 +3: 系統進入功能群測試 - 第一階段 TC-004: Google OAuth註冊整合測試   
+TC-004: 開始執行Google OAuth註冊整合測試
+TC-004: ✅ Google OAuth註冊整合測試通過
+00:01 +4: 系統進入功能群測試 - 第一階段 TC-004: Google OA00:01 +4: ... - 第二階段：四模式差異化測試 TC-009: Expert00:01 +4: 系統進入功能群測試 - 第二階段：四模式差異化測試 TC-009: Expert模式進入流程測試
+TC-009: 開始執行Expert模式進入流程測試
+TC-009: ❌ Expert模式進入流程測試失敗: Expected: UserMode:<UserMode.expert>
+  Actual: UserMode:<UserMode.inertial>
+推薦模式應為Expert
+
+00:01 +4 -1: 系統進入功能群測試 - 第二階段：四模式差異化測試 TC-009: Expert模式進入流程測試 [E]
+  Expected: UserMode:<UserMode.expert>
+    Actual: UserMode:<UserMode.inertial>
+  推薦模式應為Expert
+  
+  package:matcher  expect
+  7501.            系統進入功能群.dart 2115:7   SystemEntryFunctionGroupTest.testExpertModeEntryFlow
+  7501.            系統進入功能群.dart 2307:26  main.<fn>.<fn>
+  
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name '系統進入功能群測試 - 第二階段：四模式差異化測試 TC-009: Expert模式進入流程測試'
+00:01 +4 -1: ... 第二階段：四模式差異化測試 TC-010: Inert00:01 +4 -1: 系統進入功能群測試 - 第二階段：四模式差異化測試 TC-010: Inertial模式標準流程測試
+TC-010: 開始執行Inertial模式標準流程測試
+模式設定已保存: inertial
+主題已切換至: inertial模式
+TC-010: ✅ Inertial模式標準流程測試通過
+00:01 +5 -1: ... 第二階段：四模式差異化測試 TC-010: Inert00:01 +5 -1: ... TC-011: Cultivation模式引導測試         00:01 +5 -1: 系統進入功能群測試 - 第二階段：四模式差異化測試 TC-011: Cultivation模式引導測試
+TC-011: 開始執行Cultivation模式引導測試
+TC-011: ❌ Cultivation模式引導測試失敗: Expected: UserMode:<UserMode.cultivation>
+  Actual: UserMode:<UserMode.expert>
+推薦模式應為Cultivation
+
+00:01 +5 -2: 系統進入功能群測試 - 第二階段：四模式差異化測試 TC-011: Cultivation模式引導測試 [E]
+  Expected: UserMode:<UserMode.cultivation>
+    Actual: UserMode:<UserMode.expert>
+  推薦模式應為Cultivation
+  
+  package:matcher  expect
+  7501.            系統進入功能群.dart 2203:7   SystemEntryFunctionGroupTest.testCultivationModeOnboarding
+  7501.            系統進入功能群.dart 2315:26  main.<fn>.<fn>
+  
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name '系統進入功能群測試 - 第二階段：四模式差異化測試 TC-011: Cultivation模式引導測試'
+00:01 +5 -2: ... 第二階段：四模式差異化測試 TC-012: Guidi00:01 +5 -2: 系統進入功能群測試 - 第二階段：四模式差異化測試 TC-012: Guiding模式簡化流程測試
+TC-012: 開始執行Guiding模式簡化流程測試
+TC-012: ❌ Guiding模式簡化流程測試失敗: Expected: UserMode:<UserMode.guiding>
+  Actual: UserMode:<UserMode.cultivation>
+推薦模式應為Guiding
+
+00:01 +5 -3: 系統進入功能群測試 - 第二階段：四模式差異化測試 TC-012: Guiding模式簡化流程測試 [E]
+  Expected: UserMode:<UserMode.guiding>
+    Actual: UserMode:<UserMode.cultivation>
+  推薦模式應為Guiding
+  
+  package:matcher  expect
+  7501.            系統進入功能群.dart 2247:7   SystemEntryFunctionGroupTest.testGuidingModeSimplifiedFlow
+  7501.            系統進入功能群.dart 2319:26  main.<fn>.<fn>
+  
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name '系統進入功能群測試 - 第二階段：四模式差異化測試 TC-012: Guiding模式簡化流程測試'
+00:01 +5 -3: ... TC-013: 8101認證服務API一致性測試       00:01 +5 -3: 系統進入功能群測試 - 第三階段：API整合與異常測試 TC-013: 8101認證服務API一致性測試
+TC-013: 開始執行8101認證服務API一致性測試
+TC-013.1: 測試 POST /auth/register 端點
+TC-013.2: 測試 POST /auth/login 端點
+TC-013: ❌ 8101認證服務API一致性測試失敗: Expected: true
+  Actual: <false>
+Login API應該成功
+
+00:01 +5 -4: 系統進入功能群測試 - 第三階段：API整合與異常測試 TC-013: 8101認證服務API一致性測試 [E]
+  Expected: true
+    Actual: <false>
+  Login API應該成功
+  
+  package:matcher  expect
+  7501.            系統進入功能群.dart 1067:7  SystemEntryFunctionGroupTest.testAuthServiceApiConsistency
+  ===== asynchronous gap ===========================
+  7501.            系統進入功能群.dart 2333:7  main.<fn>.<fn>
+  
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name '系統進入功能群測試 - 第三階段：API整合與異常測試 TC-013: 8101認證服務API一致性測試'
+00:01 +5 -4: ... 第三階段：API整合與異常測試 TC-014: 810200:01 +5 -4: 系統進入功能群測試 - 第三階段：API整合與異常測試 TC-014: 8102用戶管理服務整合測試
+TC-014: 開始執行8102用戶管理服務整合測試
+TC-014.1: 測試 POST /users/assessment 端點
+TC-014.2: 測試載入評估問卷
+TC-014.3: 測試模式設定保存
+模式設定已保存: expert
+TC-014: ✅ 8102用戶管理服務整合測試通過
+00:02 +6 -4: ... 第三階段：API整合與異常測試 TC-014: 810200:02 +6 -4: ... 第三階段：API整合與異常測試 TC-015: 811100:02 +6 -4: 系統進入功能群測試 - 第三階段：API整合與異常測試 TC-015: 8111系統服務版本檢查測試
+TC-015: 開始執行8111系統服務版本檢查測試
+TC-015.1: 測試 GET /system/app-info 端點
+TC-015.2: 測試版本比對邏輯
+TC-015.3: 測試系統通知
+TC-015: ✅ 8111系統服務版本檢查測試通過
+00:02 +7 -4: ... 第三階段：API整合與異常測試 TC-015: 811100:02 +7 -4: ... - 第三階段：API整合與異常測試 TC-016: 網00:02 +7 -4: 系統進入功能群測試 - 第三階段：API整合與異常測試 TC-016: 網路連線中斷異常處理測試
+TC-016: 開始執行網路連線中斷異常處理測試
+TC-016.1: 模擬網路連線中斷情況
+TC-016.2: 測試離線模式處理
+TC-016.3: 測試重試機制
+TC-016: ❌ 網路連線中斷異常處理測試失敗: Exception: Network disconnected
+00:02 +7 -5: 系統進入功能群測試 - 第三階段：API整合與異常測試 TC-016: 網路連線中斷異常處理測試 [E]
+  Exception: Network disconnected
+  7501.  系統進入功能群.dart 1202:11  SystemEntryFunctionGroupTest.testNetworkDisconnectionHandling.<fn>
+  7501.  系統進入功能群.dart 1359:31  SystemEntryFunctionGroupTest._retryWithBackoff
+  ===== asynchronous gap ===========================
+  7501.  系統進入功能群.dart 1200:27  SystemEntryFunctionGroupTest.testNetworkDisconnectionHandling
+  ===== asynchronous gap ===========================
+  7501.  系統進入功能群.dart 2345:7   main.<fn>.<fn>
+  
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name '系統進入功能群測試 - 第三階段：API整合與異常測試 TC-016: 網路連線中斷異常處理測試'
+00:02 +7 -5: ... - 第三階段：API整合與異常測試 TC-017: 認00:02 +7 -5: 系統進入功能群測試 - 第三階段：API整合與異常測試 TC-017: 認證失敗重試機制測試
+TC-017: 開始執行認證失敗重試機制測試
+TC-017.1: 測試錯誤憑證登入
+TC-017.2: 測試重試機制
+TC-017.3: 測試帳號鎖定邏輯
+TC-017: ✅ 認證失敗重試機制測試通過
+00:02 +8 -5: ... - 第三階段：API整合與異常測試 TC-017: 認00:02 +8 -5: ... - 第三階段：API整合與異常測試 TC-018: 輸00:02 +8 -5: 系統進入功能群測試 - 第三階段：API整合與異常測試 TC-018: 輸入驗證錯誤處理測試
+TC-018: 開始執行輸入驗證錯誤處理測試
+TC-018.1: 測試無效Email格式
+TC-018: ❌ 輸入驗證錯誤處理測試失敗: Expected: false
+  Actual: <true>
+@example.com 應該是無效的Email格式
+
+00:02 +8 -6: 系統進入功能群測試 - 第三階段：API整合與異常測試 TC-018: 輸入驗證錯誤處理測試 [E]
+  Expected: false
+    Actual: <true>
+  @example.com 應該是無效的Email格式
+  
+  package:matcher  expect
+  7501.            系統進入功能群.dart 1291:9   SystemEntryFunctionGroupTest.testInputValidationErrorHandling
+  7501.            系統進入功能群.dart 2353:26  main.<fn>.<fn>
+  
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name '系統進入功能群測試 - 第三階段：API整合與異常測試 TC-018: 輸入驗證錯誤處理測試'
+00:02 +8 -6: ... - 第四階段：效能與安全測試 TC-019: APP啟00:02 +8 -6: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-019: APP啟動效能基準測試
+TC-019: 開始執行APP啟動效能基準測試
+TC-019.1: 冷啟動效能測試
+APP初始化完成
+TC-019.2: 熱啟動效能測試
+TC-019.3: 記憶體使用量測試
+TC-019.4: CPU使用率測試
+TC-019: ✅ APP啟動效能基準測試通過
+TC-019: 冷啟動: 501ms, 熱啟動: 0ms
+TC-019: 記憶體: 85.5MB, CPU: 25.8%
+00:03 +9 -6: ... - 第四階段：效能與安全測試 TC-019: APP啟00:03 +9 -6: ... - 第四階段：效能與安全測試 TC-020: 認證A00:03 +9 -6: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-020: 認證API回應時間測試
+TC-020: 開始執行認證API回應時間測試
+TC-020.1: 註冊API回應時間測試
+TC-020.2: 登入API回應時間測試
+TC-020.3: 評估API回應時間測試
+TC-020: ✅ 認證API回應時間測試通過
+TC-020: 註冊: 0ms, 登入: 0ms, 評估: 301ms
+00:03 +10 -6: ... - 第四階段：效能與安全測試 TC-020: 認證00:03 +10 -6: 系統進入功能群測試 - 第四階段：效能與安全測00:03 +10 -6: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-021: 併發操作壓力測試 
+TC-021: 開始執行併發操作壓力測試
+TC-021.1: 併發登入測試
+TC-021.2: 併發評估提交測試
+TC-021.3: 系統資源監控
+TC-021: ✅ 併發操作壓力測試通過
+00:04 +11 -6: 系統進入功能群測試 - 第四階段：效能與安全測00:04 +11 -6: 系統進入功能群測試 - 第四階段：效能與安全測00:04 +11 -6: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-022: 密碼安全性驗證測試
+TC-022: 開始執行密碼安全性驗證測試
+TC-022.1: 弱密碼檢測測試
+TC-022: ❌ 密碼安全性驗證測試失敗: Expected: a value less than <3>
+  Actual: <3>
+   Which: is not a value less than <3>
+password 應被識別為弱密碼
+
+00:04 +11 -7: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-022: 密碼安全性驗證測試 [E]
+  Expected: a value less than <3>
+    Actual: <3>
+     Which: is not a value less than <3>
+  password 應被識別為弱密碼
+  
+  package:matcher  expect
+  7501.            系統進入功能群.dart 1565:9   SystemEntryFunctionGroupTest.testPasswordSecurityValidation
+  7501.            系統進入功能群.dart 2379:26  main.<fn>.<fn>
+  
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name '系統進入功能群測試 - 第四階段：效能與安全測試 TC-022: 密碼安全性驗證測試'
+00:04 +11 -7: 系統進入功能群測試 - 第四階段：效能與安全測00:04 +11 -7: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-023: 資料輸入安全性測試
+TC-023: 開始執行資料輸入安全性測試
+TC-023.1: SQL注入防護測試
+TC-023: ❌ 資料輸入安全性測試失敗: Expected: true
+  Actual: <false>
+應防護SQL注入攻擊: '; DROP TABLE users; --
+
+00:04 +11 -8: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-023: 資料輸入安全性測試 [E]
+  Expected: true
+    Actual: <false>
+  應防護SQL注入攻擊: '; DROP TABLE users; --
+  
+  package:matcher  expect
+  7501.            系統進入功能群.dart 1622:9  SystemEntryFunctionGroupTest.testDataInputSecurity
+  ===== asynchronous gap ===========================
+  7501.            系統進入功能群.dart 2383:7  main.<fn>.<fn>
+  
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name '系統進入功能群測試 - 第四階段：效能與安全測試 TC-023: 資料輸入安全性測試'
+00:04 +11 -8: ... - 第四階段：效能與安全測試 TC-024: Toke00:04 +11 -8: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-024: Token安全性與過期測試
+TC-024: 開始執行Token安全性與過期測試
+TC-024.1: Token格式驗證測試
+TC-024: ❌ Token安全性與過期測試失敗: Null check operator used on a null value
+00:04 +11 -9: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-024: Token安全性與過期測試 [E]
+  Null check operator used on a null value
+  7501.  系統進入功能群.dart 1679:40  SystemEntryFunctionGroupTest.testTokenSecurityAndExpiry
+  ===== asynchronous gap ===========================
+  7501.  系統進入功能群.dart 2387:7   main.<fn>.<fn>
+  
+
+To run this test again: dart test 7501. 系統進入功能群.dart -p vm --plain-name '系統進入功能群測試 - 第四階段：效能與安全測試 TC-024: Token安全性與過期測試'
+00:04 +11 -9: 系統進入功能群測試 - 第四階段：效能與安全測00:04 +11 -9: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-025: 敏感資料保護測試 
+TC-025: 開始執行敏感資料保護測試
+TC-025.1: 密碼遮罩測試
+TC-025.2: Email部分遮罩測試
+TC-025.3: 日誌敏感資料檢查
+TC-025.4: 記憶體中敏感資料清除
+TC-025: ✅ 敏感資料保護測試通過
+00:04 +12 -9: 系統進入功能群測試 - 第四階段：效能與安全測00:04 +12 -9: ... - 第四階段：效能與安全測試 TC-026: 安全00:04 +12 -9: 系統進入功能群測試 - 第四階段：效能與安全測試 TC-026: 安全審計與日誌記錄測試
+TC-026: 開始執行安全審計與日誌記錄測試
+TC-026.1: 登入事件日誌記錄測試
+TC-026.2: 失敗認證事件記錄測試
+TC-026.3: 敏感操作日誌記錄測試
+執行敏感操作: PASSWORD_RESET
+TC-026.4: 安全事件警報測試
+觸發安全事件: SUSPICIOUS_ACTIVITY
+TC-026: ✅ 安全審計與日誌記錄測試通過
+00:05 +13 -9: ... - 第四階段：效能與安全測試 TC-026: 安全00:05 +13 -9: Some tests failed.                        
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
+~/workspace/75. Flutter_Test_code_PL$ 
