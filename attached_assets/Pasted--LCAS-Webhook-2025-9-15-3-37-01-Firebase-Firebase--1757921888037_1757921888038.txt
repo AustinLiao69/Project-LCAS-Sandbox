@@ -1,0 +1,115 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/9/15 下午3:37:01
+📦 載入模組...
+ ✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+✅ Firebase Admin SDK已初始化
+✅ FS模組：Firebase動態配置載入成功
+📱 使用 Secrets 中的 LINE UID: Uae47d9d496e4596d70ed724a7d6e2948
+🚀 開始建立 LCAS 2.0 完整資料庫結構... (執行者: AustinLiao69)
+⏰ 當前 UTC 時間: 2025-09-15T07:37:02.283Z
+🇹🇼 當前 UTC+8 時間: 2025-09-15T15:37:02.283Z
+🔍 檢查 Firestore Database 連接狀態...
+✅ FS 模組載入成功 - 核心函數檢查通過
+✅ BK 模組載入成功
+DD模組初始化檢查 [2025/9/15 下午3:37:02]
+DD模組版本: 3.0.0 (2025-01-09) - 完全Firestore版本
+執行時間 (UTC+8): 2025/9/15 下午3:37:02
+Firestore 連接檢查: 成功
+AM 帳號管理模組載入完成 v1.0.1
+FS模組載入異常，將採用降級模式
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.0.22 (2025-07-15)
+📅 SR 排程提醒模組初始化中...
+✅ LBK 模組載入成功
+✅ DD 模組載入成功
+✅ AM 模組載入成功
+✅ SR 模組載入成功
+🔍 WH模組載入前進行FS依賴完整性檢查...
+📊 FS核心函數檢查: 4/4 可用
+✅ FS模組完全就緒，可安全載入WH模組
+📦 開始載入WH模組...
+✅ WH 模組載入成功
+✅ WH模組核心函數檢查通過
+🔧 初始化 BK 模組...
+[2025-09-15T07:37:02.683Z] [WARNING] [BK] DL模組未找到，將使用原生日誌系統 | 系統初始化 |  | BK_initialize
+🔧 初始化 LBK 模組...
+🔧 LBK模組初始化開始...
+DL模組從環境變數恢復模式設置: NORMAL
+DL模組初始化開始 - Firestore版本
+✅ DL模組初始化成功
+🔧 初始化 SR 排程提醒模組...
+📅 SR 排程提醒模組初始化中...
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🔍 FS模組依賴檢查報告:
+✅ FS核心函數載入: 4/4
+🎉 FS模組核心函數完整載入，依賴模組可正常運作
+✅ BK_processBookkeeping函數檢查: 存在
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS LINE Bot 第一階段重構完成！
+📱 LINE Bot 核心功能維持正常：WH → LBK → Firestore
+🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對外服務
+⚡ WH → LBK 直連路徑已啟用：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：26個函數 → 8個函數，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：維持 WH → DD → BK 完整功能
+📅 SR 排程提醒模組已整合：支援排程提醒、Quick Reply統計、付費功能控制（v1.3.0）
+🏥 健康檢查機制已啟用：每5分鐘監控系統狀態
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 重構版本：v2.2.0 - 第一階段完成，核心功能保留，REST API清理完成
+🚀 WH Webhook Server is running on port 3000
+📅 啟動時間: 2025-09-15 15:37:02
+🌐 Server is accessible at http://0.0.0.0:3000
+📡 Webhook endpoint: http://0.0.0.0:3000/webhook
+[WH 2.0.16 LOG] WH 2.0.7: 服務器啟動成功，監聽端口 3000 (INFO)
+🌐 LCAS 2.0 核心服務器已啟動於 Port 5000
+📡 系統監控端點已就緒: 5個端點
+🔌 WebSocket 服務已啟用，支援即時協作同步
+🧪 測試端點已保留: POST /testAPI
+📋 重構完成統計:
+   ✅ 保留端點: 7個 (5監控 + 1測試 + 1Webhook)
+   ❌ 移除端點: 48個 REST API 端點
+   📉 程式碼精簡: ~1000行 → ~400行
+BK_processBookkeeping函數檢查: 存在
+✅ WH模組初始化等待完成
+📅 已載入 4 個排程設定
+[2025-09-15T07:37:04.248Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+📅 已載入 4 個排程設定
+[2025-09-15T07:37:04.298Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+✅ SR 模組初始化完成
+已創建初始化記錄到Firestore log集合
+DL模組初始化成功 - Firestore版本
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+✅ Firestore Database 連接正常
+📊 Database Project ID: spheric-crow-352809
+🌐 Universe Domain: googleapis.com
+[2025-09-15T07:37:04.563Z] [INFO] [BK] Firestore連接初始化成功 | 系統初始化 |  | initializeFirestore
+[2025-09-15T07:37:04.563Z] [INFO] [BK] BK模組初始化開始 [2025-09-15T07:37:02.683Z] | DL模組初始化: 失敗 (未找到DL模組) | Firestore初始化: 成功 | 系統初始化 |  | BK_initialize
+✅ BK 模組初始化完成
+✅ LBK模組初始化完成
+✅ LBK 模組初始化完成
+✅ Users Collection 結構建立完成
+✅ Ledgers Collection 結構建立完成
+🔄 開始導入 63 筆科目資料...
+✅ 科目資料導入完成，共 63 筆
+✅ Subjects Sub-Collection 結構建立完成
+✅ Entries Sub-Collection 結構建立完成
+✅ Log Sub-Collection 結構建立完成
+✅ Account Mappings Collection 結構建立完成
+✅ System Metadata 建立完成
+✅ LCAS 2.0 完整資料庫結構建立完成！
+✅ UTC 時間: 2025-09-15T07:37:02.283Z
+✅ 執行者: AustinLiao69
+✅ 使用者 ID: Uae47d9d496e4596d70ed724a7d6e2948
+✅ 帳本 ID: ledger_structure_001
+🎉 Database → Collections → Documents → Fields 完整架構已建立！
