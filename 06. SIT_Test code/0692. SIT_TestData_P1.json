@@ -1,0 +1,562 @@
+
+{
+  "metadata": {
+    "version": "v1.2.0",
+    "created_date": "2025-01-24",
+    "last_updated": "2025-01-24",
+    "description": "LCAS 2.0 Phase 1 SIT測試資料配置檔 - 階段二核心業務功能",
+    "test_cases_supported": "TC-SIT-001 to TC-SIT-020",
+    "author": "LCAS SQA Team",
+    "change_log": [
+      {
+        "version": "v1.0.0",
+        "date": "2025-01-24",
+        "changes": "初始版本建立"
+      },
+      {
+        "version": "v1.1.0", 
+        "date": "2025-01-24",
+        "changes": "階段一：基礎測試資料架構建立完成"
+      },
+      {
+        "version": "v1.2.0",
+        "date": "2025-01-24", 
+        "changes": "階段二：核心業務功能測試資料建立完成"
+      }
+    ]
+  },
+  
+  "test_environment": {
+    "api_base_url": "https://lcas-api.replit.app/api/v1",
+    "timeout_settings": {
+      "api_timeout": 5000,
+      "database_timeout": 3000,
+      "authentication_timeout": 10000
+    },
+    "retry_settings": {
+      "max_retries": 3,
+      "retry_delay": 1000
+    }
+  },
+
+  "authentication_test_data": {
+    "valid_users": {
+      "expert_mode_user_001": {
+        "email": "expert001@lcas.app",
+        "password": "ExpertPass123!",
+        "display_name": "Expert測試用戶001",
+        "mode": "expert",
+        "expected_features": ["advanced", "detailed", "batch", "analytics"],
+        "registration_data": {
+          "first_name": "Expert",
+          "last_name": "User001",
+          "phone": "+886912345001",
+          "date_of_birth": "1990-01-01",
+          "preferred_language": "zh-TW"
+        }
+      },
+      "expert_mode_user_002": {
+        "email": "expert002@lcas.app", 
+        "password": "ExpertPass456!",
+        "display_name": "Expert測試用戶002",
+        "mode": "expert",
+        "expected_features": ["advanced", "detailed", "analytics", "export"],
+        "registration_data": {
+          "first_name": "Expert",
+          "last_name": "User002",
+          "phone": "+886912345002",
+          "date_of_birth": "1988-05-15",
+          "preferred_language": "zh-TW"
+        }
+      },
+      "guiding_mode_user_001": {
+        "email": "guiding001@lcas.app",
+        "password": "GuidingPass123!",
+        "display_name": "Guiding測試用戶001",
+        "mode": "guiding",
+        "expected_features": ["simple", "guided", "tutorial", "hints"],
+        "registration_data": {
+          "first_name": "Guiding",
+          "last_name": "User001",
+          "phone": "+886912345003",
+          "date_of_birth": "1995-03-20",
+          "preferred_language": "zh-TW"
+        }
+      },
+      "inertial_mode_user_001": {
+        "email": "inertial001@lcas.app",
+        "password": "InertialPass123!",
+        "display_name": "Inertial測試用戶001", 
+        "mode": "inertial",
+        "expected_features": ["stable", "consistent", "reliable", "standard"],
+        "registration_data": {
+          "first_name": "Inertial",
+          "last_name": "User001",
+          "phone": "+886912345004",
+          "date_of_birth": "1985-08-10",
+          "preferred_language": "zh-TW"
+        }
+      },
+      "cultivation_mode_user_001": {
+        "email": "cultivation001@lcas.app",
+        "password": "CultivationPass123!",
+        "display_name": "Cultivation測試用戶001",
+        "mode": "cultivation", 
+        "expected_features": ["motivation", "achievement", "gamification", "progress"],
+        "registration_data": {
+          "first_name": "Cultivation",
+          "last_name": "User001",
+          "phone": "+886912345005",
+          "date_of_birth": "1992-12-05",
+          "preferred_language": "zh-TW"
+        }
+      }
+    },
+    
+    "invalid_users": {
+      "invalid_email_format": {
+        "email": "invalid-email-format",
+        "password": "ValidPass123!",
+        "expected_error": "EMAIL_FORMAT_INVALID"
+      },
+      "weak_password": {
+        "email": "test@lcas.app",
+        "password": "123",
+        "expected_error": "PASSWORD_TOO_WEAK"
+      },
+      "empty_credentials": {
+        "email": "",
+        "password": "",
+        "expected_error": "REQUIRED_FIELDS_MISSING"
+      },
+      "nonexistent_user": {
+        "email": "nonexistent@lcas.app", 
+        "password": "NonexistentPass123!",
+        "expected_error": "USER_NOT_FOUND"
+      },
+      "wrong_password": {
+        "email": "expert001@lcas.app",
+        "password": "WrongPassword123!",
+        "expected_error": "INVALID_CREDENTIALS"
+      }
+    }
+  },
+
+  "mode_assessment_test_data": {
+    "expert_mode_assessment": {
+      "assessment_id": "expert_assessment_001",
+      "answers": {
+        "financial_experience": "advanced",
+        "detail_preference": "detailed",
+        "control_preference": "high_control",
+        "analysis_preference": "comprehensive",
+        "efficiency_preference": "powerful_features"
+      },
+      "expected_mode": "expert",
+      "confidence_score": 0.95,
+      "expected_features": ["advanced_analytics", "batch_operations", "detailed_reports", "custom_categories"]
+    },
+    "guiding_mode_assessment": {
+      "assessment_id": "guiding_assessment_001", 
+      "answers": {
+        "financial_experience": "beginner",
+        "detail_preference": "simple",
+        "control_preference": "guided",
+        "analysis_preference": "basic",
+        "efficiency_preference": "easy_to_use"
+      },
+      "expected_mode": "guiding",
+      "confidence_score": 0.90,
+      "expected_features": ["step_by_step_guide", "tooltips", "simplified_interface", "default_categories"]
+    },
+    "inertial_mode_assessment": {
+      "assessment_id": "inertial_assessment_001",
+      "answers": {
+        "financial_experience": "intermediate", 
+        "detail_preference": "balanced",
+        "control_preference": "stable",
+        "analysis_preference": "standard",
+        "efficiency_preference": "consistent"
+      },
+      "expected_mode": "inertial",
+      "confidence_score": 0.85,
+      "expected_features": ["consistent_interface", "standard_features", "reliable_operations", "balanced_detail"]
+    },
+    "cultivation_mode_assessment": {
+      "assessment_id": "cultivation_assessment_001",
+      "answers": {
+        "financial_experience": "intermediate",
+        "detail_preference": "motivating", 
+        "control_preference": "encouraging",
+        "analysis_preference": "progress_focused",
+        "efficiency_preference": "achievement_oriented"
+      },
+      "expected_mode": "cultivation",
+      "confidence_score": 0.88,
+      "expected_features": ["achievement_system", "progress_tracking", "motivational_messages", "gamification"]
+    }
+  },
+
+  "basic_bookkeeping_test_data": {
+    "quick_booking_tests": [
+      {
+        "test_id": "quick_001",
+        "input_text": "午餐150",
+        "expected_parsing": {
+          "amount": 150,
+          "category": "餐飲",
+          "type": "expense", 
+          "description": "午餐",
+          "payment_method": "現金"
+        },
+        "mode_specific_responses": {
+          "expert": "已記錄支出：午餐 NT$150 (餐飲類別)",
+          "guiding": "✅ 已幫您記錄：午餐花費150元",
+          "inertial": "記錄完成：午餐 150元",
+          "cultivation": "🎉 恭喜！完成今日第1筆記帳：午餐150元"
+        }
+      },
+      {
+        "test_id": "quick_002", 
+        "input_text": "薪水35000轉帳",
+        "expected_parsing": {
+          "amount": 35000,
+          "category": "薪資",
+          "type": "income",
+          "description": "薪水",
+          "payment_method": "轉帳"
+        },
+        "mode_specific_responses": {
+          "expert": "已記錄收入：薪水 NT$35,000 (轉帳入帳)",
+          "guiding": "✅ 太好了！薪水35,000元已記錄",
+          "inertial": "記錄完成：薪水收入 35,000元",
+          "cultivation": "💰 太棒了！薪水入帳35,000元，財富增加中！"
+        }
+      },
+      {
+        "test_id": "quick_003",
+        "input_text": "咖啡85信用卡",
+        "expected_parsing": {
+          "amount": 85,
+          "category": "餐飲",
+          "type": "expense",
+          "description": "咖啡", 
+          "payment_method": "信用卡"
+        },
+        "mode_specific_responses": {
+          "expert": "已記錄支出：咖啡 NT$85 (信用卡支付)",
+          "guiding": "✅ 咖啡85元已記錄到信用卡",
+          "inertial": "記錄完成：咖啡 85元 (信用卡)",
+          "cultivation": "☕ 記帳好習慣！咖啡85元已記錄"
+        }
+      }
+    ],
+
+    "form_booking_tests": [
+      {
+        "test_id": "form_001",
+        "transaction_data": {
+          "type": "expense",
+          "amount": 1200,
+          "category_id": "cat_food_001",
+          "category_name": "餐飲",
+          "account_id": "acc_cash_001", 
+          "account_name": "現金",
+          "description": "晚餐聚會",
+          "date": "2025-01-24",
+          "time": "19:30",
+          "tags": ["聚會", "朋友"],
+          "notes": "公司同事聚餐",
+          "attachments": []
+        },
+        "expected_result": {
+          "transaction_id": "generated_id",
+          "status": "success",
+          "message": "交易記錄成功"
+        }
+      },
+      {
+        "test_id": "form_002",
+        "transaction_data": {
+          "type": "income", 
+          "amount": 5000,
+          "category_id": "cat_bonus_001",
+          "category_name": "獎金",
+          "account_id": "acc_bank_001",
+          "account_name": "銀行帳戶",
+          "description": "績效獎金",
+          "date": "2025-01-24",
+          "time": "10:00",
+          "tags": ["工作", "績效"],
+          "notes": "Q4績效獎金",
+          "attachments": []
+        },
+        "expected_result": {
+          "transaction_id": "generated_id",
+          "status": "success", 
+          "message": "收入記錄成功"
+        }
+      }
+    ]
+  },
+
+  "api_endpoints": {
+    "authentication": {
+      "register": "/auth/register",
+      "login": "/auth/login", 
+      "logout": "/auth/logout",
+      "refresh_token": "/auth/refresh",
+      "verify_token": "/auth/verify",
+      "reset_password": "/auth/reset-password"
+    },
+    "user_management": {
+      "profile": "/user/profile",
+      "update_profile": "/user/profile/update",
+      "change_password": "/user/password/change",
+      "mode_assessment": "/user/mode-assessment",
+      "update_mode": "/user/mode/update"
+    },
+    "bookkeeping": {
+      "quick_booking": "/bookkeeping/quick",
+      "create_transaction": "/bookkeeping/transactions",
+      "get_transactions": "/bookkeeping/transactions",
+      "update_transaction": "/bookkeeping/transactions/{id}",
+      "delete_transaction": "/bookkeeping/transactions/{id}"
+    }
+  },
+
+  "expected_response_formats": {
+    "success_response": {
+      "success": true,
+      "data": {},
+      "message": "操作成功",
+      "timestamp": "2025-01-24T10:00:00Z"
+    },
+    "error_response": {
+      "success": false,
+      "error": {
+        "code": "ERROR_CODE",
+        "message": "錯誤訊息",
+        "details": {}
+      },
+      "timestamp": "2025-01-24T10:00:00Z"
+    }
+  },
+
+  "cross_layer_error_handling_tests": {
+    "network_errors": [
+      {
+        "test_id": "error_network_001",
+        "scenario": "網路超時",
+        "mock_error": "NETWORK_TIMEOUT",
+        "error_layer": "APL",
+        "expected_pl_response": "網路連線逾時，請檢查網路狀態後重試",
+        "expected_retry_attempts": 3,
+        "expected_user_action": "顯示重試按鈕",
+        "mode_specific_messages": {
+          "expert": "網路超時 (5s)，建議檢查連線狀態",
+          "guiding": "網路似乎有點慢，請稍後再試一次",
+          "inertial": "連線逾時，請重新嘗試",
+          "cultivation": "網路小憩一下，再試一次就好！"
+        }
+      },
+      {
+        "test_id": "error_network_002",
+        "scenario": "伺服器無回應",
+        "mock_error": "SERVER_UNREACHABLE",
+        "error_layer": "APL",
+        "expected_pl_response": "伺服器暫時無法連接，請稍後再試",
+        "expected_retry_attempts": 2,
+        "expected_user_action": "顯示稍後重試訊息"
+      }
+    ],
+
+    "authentication_errors": [
+      {
+        "test_id": "error_auth_001",
+        "scenario": "認證過期",
+        "mock_error": "TOKEN_EXPIRED",
+        "error_layer": "BL",
+        "expected_pl_response": "登入已過期，請重新登入",
+        "expected_user_action": "redirectToLogin",
+        "expected_retry_attempts": 0,
+        "mode_specific_messages": {
+          "expert": "JWT Token已過期，需要重新認證",
+          "guiding": "登入時間到了，請重新登入繼續使用",
+          "inertial": "登入已過期，請重新登入",
+          "cultivation": "該重新充電了！請重新登入繼續記帳之旅"
+        }
+      },
+      {
+        "test_id": "error_auth_002",
+        "scenario": "權限不足",
+        "mock_error": "INSUFFICIENT_PERMISSIONS",
+        "error_layer": "BL",
+        "expected_pl_response": "權限不足，無法執行此操作",
+        "expected_user_action": "showPermissionDenied",
+        "expected_retry_attempts": 0
+      }
+    ],
+
+    "validation_errors": [
+      {
+        "test_id": "error_validation_001",
+        "scenario": "資料格式錯誤",
+        "mock_error": "VALIDATION_ERROR",
+        "error_layer": "APL",
+        "expected_pl_response": "資料格式錯誤，請檢查輸入內容",
+        "expected_error_details": {
+          "field": "amount",
+          "message": "金額必須為正數",
+          "value": "-100"
+        },
+        "expected_user_action": "highlightErrorField",
+        "mode_specific_messages": {
+          "expert": "欄位驗證失敗：amount (金額必須為正數)",
+          "guiding": "金額不能是負數哦，請輸入正確的數字",
+          "inertial": "請輸入有效的金額數字",
+          "cultivation": "數字需要是正的才能記帳成功喔！"
+        }
+      },
+      {
+        "test_id": "error_validation_002",
+        "scenario": "必填欄位缺失",
+        "mock_error": "REQUIRED_FIELD_MISSING",
+        "error_layer": "APL",
+        "expected_pl_response": "請填寫所有必填欄位",
+        "expected_error_details": {
+          "missing_fields": ["amount", "category"],
+          "message": "金額和類別為必填欄位"
+        },
+        "expected_user_action": "highlightRequiredFields"
+      }
+    ],
+
+    "business_logic_errors": [
+      {
+        "test_id": "error_business_001",
+        "scenario": "餘額不足",
+        "mock_error": "INSUFFICIENT_BALANCE",
+        "error_layer": "BL",
+        "expected_pl_response": "帳戶餘額不足，無法完成此交易",
+        "expected_error_details": {
+          "current_balance": 500,
+          "required_amount": 1000,
+          "account_name": "現金帳戶"
+        },
+        "expected_user_action": "showBalanceWarning",
+        "mode_specific_messages": {
+          "expert": "現金帳戶餘額不足：目前500元，需要1000元",
+          "guiding": "錢包裡的錢不夠了，目前只有500元",
+          "inertial": "帳戶餘額不足以完成此交易",
+          "cultivation": "小豬撲滿需要更多零錢才能完成這筆交易！"
+        }
+      }
+    ]
+  },
+
+  "performance_test_data": {
+    "concurrent_operations": {
+      "test_id": "perf_concurrent_001",
+      "concurrent_users": 10,
+      "operations_per_user": 5,
+      "operation_types": ["quick_booking", "form_booking", "transaction_query"],
+      "expected_response_time_ms": 2000,
+      "expected_success_rate": 0.95
+    },
+
+    "load_test_scenarios": [
+      {
+        "test_id": "load_001",
+        "scenario": "高頻記帳測試",
+        "duration_seconds": 60,
+        "requests_per_second": 50,
+        "endpoint": "/bookkeeping/quick",
+        "expected_avg_response_time_ms": 1500,
+        "expected_max_response_time_ms": 3000
+      },
+      {
+        "test_id": "load_002", 
+        "scenario": "批量查詢測試",
+        "duration_seconds": 30,
+        "requests_per_second": 20,
+        "endpoint": "/bookkeeping/transactions",
+        "expected_avg_response_time_ms": 1000,
+        "expected_max_response_time_ms": 2000
+      }
+    ]
+  },
+
+  "data_consistency_tests": {
+    "cross_layer_data_flow": [
+      {
+        "test_id": "consistency_001",
+        "scenario": "PL→APL→BL→DL資料一致性", 
+        "test_data": {
+          "pl_input": {
+            "amount": "1500",
+            "category": "餐飲",
+            "description": "午餐"
+          },
+          "expected_apl_format": {
+            "amount": 1500,
+            "category_id": "cat_food_001",
+            "description": "午餐",
+            "type": "expense"
+          },
+          "expected_bl_processing": {
+            "amount": 1500,
+            "category_id": "cat_food_001", 
+            "user_id": "user_123",
+            "ledger_id": "ledger_456",
+            "transaction_date": "2025-01-24T10:00:00Z"
+          },
+          "expected_dl_storage": {
+            "collection": "transactions",
+            "document_structure": {
+              "amount": 1500,
+              "category_id": "cat_food_001",
+              "user_id": "user_123",
+              "ledger_id": "ledger_456",
+              "created_at": "timestamp",
+              "updated_at": "timestamp"
+            }
+          }
+        }
+      }
+    ],
+
+    "data_transformation_tests": [
+      {
+        "test_id": "transform_001",
+        "scenario": "四模式資料差異化轉換",
+        "base_data": {
+          "amount": 1000,
+          "category": "餐飲",
+          "description": "午餐"
+        },
+        "mode_transformations": {
+          "expert": {
+            "include_analytics": true,
+            "detailed_categorization": true,
+            "advanced_fields": ["tax_rate", "receipt_number"]
+          },
+          "guiding": {
+            "simplified_display": true,
+            "tutorial_hints": true,
+            "default_values": true
+          },
+          "inertial": {
+            "consistent_format": true,
+            "standard_fields_only": true
+          },
+          "cultivation": {
+            "gamification_elements": true,
+            "achievement_tracking": true,
+            "motivational_messages": true
+          }
+        }
+      }
+    ]
+  }
+}
