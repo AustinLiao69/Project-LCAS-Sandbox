@@ -1377,7 +1377,7 @@ function formatTime(date) {
 }
 
 // 引入DD3模組的格式化函數
-const DD3 = require("./2033. DD3.js");
+const DD3 = require("./1333. DD3.js");
 const { DD_formatSystemReplyMessage } = DD3;
 
 // 引入其他模組

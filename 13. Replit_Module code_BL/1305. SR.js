@@ -15,13 +15,13 @@ const firebaseConfig = require('./2099. firebase-config');
 // 引入依賴模組
 let DL, WH, AM, FS, DD1, BK, LBK;
 try {
-  DL = require('./2010. DL.js');
-  WH = require('./2020. WH.js');
-  AM = require('./2009. AM.js');
-  FS = require('./2011. FS.js');
-  DD1 = require('./2031. DD1.js');
-  BK = require('./2001. BK.js');
-  LBK = require('./2015. LBK.js');
+  DL = require('./1310. DL.js');
+  WH = require('./1320. WH.js');
+  AM = require('./1309. AM.js');
+  FS = require('./1311. FS.js');
+  DD1 = require('./1331. DD1.js');
+  BK = require('./1301. BK.js');
+  LBK = require('./1315. LBK.js');
 } catch (error) {
   console.warn('SR模組依賴載入警告:', error.message);
 }

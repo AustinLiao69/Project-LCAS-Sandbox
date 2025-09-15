@@ -17,7 +17,7 @@ const firebaseConfig = require('./1399. firebase-config');
 const db = admin.firestore();
 
 // 引入其他模組
-const DL = require('./2010. DL.js');
+const DL = require('./1310. DL.js');
 
 /**
  * 01. 創建LINE OA用戶帳號
