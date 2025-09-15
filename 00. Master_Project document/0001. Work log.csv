@@ -231,3 +231,4 @@ MM 	 DD 	 Description 	    Progress
 9	15	 建立SIT_P1測試架構 	 Open
 9	15	 於BL各模組建立分散式模組API endpoint 	 Open
 9	15	 重寫8303模組代碼 	 Open
+9	15	 需確認PL模組與APL模組是否有功能重疊部分 	 Open
