@@ -11,12 +11,12 @@ const WebSocket = require('ws');
 // 引入依賴模組
 let DL, MLS, AM, DD, BK, LINE_OA;
 try {
-  DL = require('./2010. DL.js');
-  // MLS = require('./2051. MLS.js');
-  // AM = require('./2001. AM.js');
-  DD = require('./2031. DD.js');
-  BK = require('./2001. BK.js');
-  // LINE_OA = require('./2071. LINE_OA.js');
+  DL = require('./1310. DL.js');
+  // MLS = require('./1351. MLS.js');
+  // AM = require('./1309. AM.js');
+  DD = require('./1331. DD1.js');
+  BK = require('./1301. BK.js');
+  // LINE_OA = require('./1320. WH.js');
 } catch (error) {
   console.warn('CM模組依賴載入警告:', error.message);
 }

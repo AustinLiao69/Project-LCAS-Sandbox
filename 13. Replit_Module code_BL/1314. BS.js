@@ -26,10 +26,10 @@ const db = admin.firestore();
 // 引入依賴模組
 let DL, BK, CM, DD1;
 try {
-  DL = require('./2010. DL.js');
-  BK = require('./2001. BK.js');
-  CM = require('./2013. CM.js');
-  DD1 = require('./2031. DD1.js');
+  DL = require('./1310. DL.js');
+  BK = require('./1301. BK.js');
+  CM = require('./1313. CM.js');
+  DD1 = require('./1331. DD1.js');
 } catch (error) {
   console.warn('BS模組依賴載入警告:', error.message);
 }

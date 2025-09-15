@@ -7,8 +7,8 @@
  */
 
 const admin = require('firebase-admin');
-const DL = require('./2010. DL.js');
-const DD = require('./2031. DD.js');
+const DL = require('./1310. DL.js');
+const DD = require('./1331. DD1.js');
 
 // Firestore 資料庫引用
 const db = admin.firestore();

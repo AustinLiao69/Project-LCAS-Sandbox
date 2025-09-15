@@ -43,7 +43,7 @@ const DD_CONFIG = {
 // 延遲載入DD1模組以避免循環依賴
 let DD1;
 function loadDD1() {
-  if (!DD1) DD1 = require("./2031. DD1.js");
+  if (!DD1) DD1 = require("./1331. DD1.js");
   return DD1;
 }
 
