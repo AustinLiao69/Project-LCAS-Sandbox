@@ -1599,6 +1599,552 @@ async function AM_handleUserLogoutAPI(requestData, userId) {
   }
 }
 
+// =============== Phase 2: 用戶管理功能API端點 ===============
+
+/**
+ * 31. 取得用戶個人資料API端點
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 取得當前用戶的完整個人資料，支援四模式差異化回應
+ */
+async function AM_getUserProfileAPI(userId, userMode = 'Expert', includeStatistics = true) {
+  const functionName = "AM_getUserProfileAPI";
+  try {
+    AM_logInfo(`取得用戶個人資料: ${userId}`, "用戶資料", userId, "", "", functionName);
+
+    // 取得用戶基本資料
+    const userInfo = await AM_getUserInfo(userId, 'SYSTEM', true);
+    if (!userInfo.success) {
+      return {
+        success: false,
+        error: {
+          code: "USER_NOT_FOUND",
+          message: "用戶不存在",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 基本資料（所有模式）
+    let responseData = {
+      id: userId,
+      email: userInfo.userData.email || '',
+      displayName: userInfo.userData.displayName || '',
+      avatar: userInfo.userData.metadata?.profilePicture || null,
+      userMode: userInfo.userData.userMode || userMode,
+      createdAt: userInfo.userData.createdAt?.toDate().toISOString(),
+      lastLoginAt: userInfo.userData.lastActive?.toDate().toISOString()
+    };
+
+    // Expert/Inertial Mode: 詳細統計
+    if ((userMode === 'Expert' || userMode === 'Inertial') && includeStatistics) {
+      // 查詢統計數據（簡化實作）
+      responseData.statistics = {
+        totalTransactions: 1250,
+        totalLedgers: 3,
+        averageDailyRecords: 4.2,
+        longestStreak: 45
+      };
+
+      responseData.preferences = {
+        language: userInfo.userData.settings?.language || 'zh-TW',
+        currency: 'TWD',
+        timezone: userInfo.userData.timezone || 'Asia/Taipei',
+        dateFormat: 'YYYY-MM-DD',
+        theme: userInfo.userData.settings?.theme || 'auto',
+        defaultLedgerId: userInfo.userData.defaultLedgerId || ''
+      };
+    }
+
+    // Cultivation Mode: 成就與進度
+    if (userMode === 'Cultivation') {
+      responseData.achievements = {
+        currentLevel: 8,
+        totalPoints: 2350,
+        nextLevelPoints: 2500,
+        currentStreak: 12
+      };
+    }
+
+    // 安全設定（基本資訊）
+    responseData.security = {
+      hasAppLock: false,
+      biometricEnabled: false,
+      privacyModeEnabled: false,
+      twoFactorEnabled: false
+    };
+
+    return {
+      success: true,
+      data: responseData,
+      metadata: {
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`,
+        userMode: userMode
+      }
+    };
+
+  } catch (error) {
+    AM_logError(`取得用戶資料失敗: ${error.message}`, "用戶資料", userId, "AM_GET_PROFILE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "取得用戶資料時發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
+/**
+ * 32. 更新用戶個人資料API端點
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 更新用戶的個人資料，包含基本資訊與顯示偏好
+ */
+async function AM_updateUserProfileAPI(userId, updateData, userMode = 'Expert') {
+  const functionName = "AM_updateUserProfileAPI";
+  try {
+    AM_logInfo(`更新用戶個人資料: ${userId}`, "資料更新", userId, "", "", functionName);
+
+    // 驗證更新欄位
+    const allowedFields = ['displayName', 'avatar', 'language', 'timezone', 'theme'];
+    const filteredData = {};
+    
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        filteredData[field] = updateData[field];
+      }
+    }
+
+    if (Object.keys(filteredData).length === 0) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "沒有有效的更新欄位",
+          field: "updateData",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 準備更新資料
+    const updatePayload = {};
+    if (filteredData.displayName) updatePayload.displayName = filteredData.displayName;
+    if (filteredData.language) updatePayload['settings.language'] = filteredData.language;
+    if (filteredData.timezone) updatePayload.timezone = filteredData.timezone;
+    if (filteredData.theme) updatePayload['settings.theme'] = filteredData.theme;
+    
+    updatePayload.updatedAt = admin.firestore.Timestamp.now();
+
+    // 執行更新
+    const updateResult = await AM_updateAccountInfo(userId, updatePayload, userId);
+    if (!updateResult.success) {
+      return {
+        success: false,
+        error: {
+          code: "UPDATE_FAILED",
+          message: updateResult.error,
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        message: "個人資料更新成功",
+        updatedAt: admin.firestore.Timestamp.now().toDate().toISOString()
+      },
+      metadata: {
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`,
+        userMode: userMode
+      }
+    };
+
+  } catch (error) {
+    AM_logError(`更新用戶資料失敗: ${error.message}`, "資料更新", userId, "AM_UPDATE_PROFILE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "更新個人資料時發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
+/**
+ * 33. 處理四模式評估API端點
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 處理用戶模式評估問卷並推薦最適合的模式
+ */
+async function AM_handleModeAssessmentAPI(userId, assessmentData) {
+  const functionName = "AM_handleModeAssessmentAPI";
+  try {
+    AM_logInfo(`處理模式評估: ${userId}`, "模式評估", userId, "", "", functionName);
+
+    // 驗證評估資料
+    if (!assessmentData.questionnaireId || !assessmentData.answers || !Array.isArray(assessmentData.answers)) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "缺少評估問卷資料或格式錯誤",
+          field: "assessmentData",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 計算各模式得分
+    const scores = {
+      Expert: 0,
+      Inertial: 0,
+      Cultivation: 0,
+      Guiding: 0
+    };
+
+    // 評估邏輯（簡化實作）
+    for (const answer of assessmentData.answers) {
+      const questionId = answer.questionId;
+      const selectedOptions = answer.selectedOptions || [];
+
+      for (const option of selectedOptions) {
+        switch (option) {
+          case 'A': // 偏向專業功能
+            scores.Expert += 3;
+            scores.Inertial += 1;
+            break;
+          case 'B': // 偏向標準功能
+            scores.Inertial += 3;
+            scores.Expert += 1;
+            break;
+          case 'C': // 偏向引導學習
+            scores.Cultivation += 3;
+            scores.Guiding += 1;
+            break;
+          case 'D': // 偏向簡單使用
+            scores.Guiding += 3;
+            scores.Cultivation += 1;
+            break;
+        }
+      }
+    }
+
+    // 找出最高分的模式
+    const recommendedMode = Object.keys(scores).reduce((a, b) => 
+      scores[a] > scores[b] ? a : b
+    );
+
+    const maxScore = Math.max(...Object.values(scores));
+    const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
+    const confidence = totalScore > 0 ? (maxScore / totalScore * 100) : 0;
+
+    // 更新用戶模式
+    const modeUpdateResult = await AM_changeUserType(userId, 'S', 'SYSTEM', `模式評估推薦: ${recommendedMode}`);
+    
+    // 儲存評估結果
+    await db.collection('users').doc(userId).update({
+      userMode: recommendedMode,
+      lastAssessment: admin.firestore.Timestamp.now(),
+      assessmentScores: scores,
+      assessmentVersion: assessmentData.questionnaireId
+    });
+
+    return {
+      success: true,
+      data: {
+        result: {
+          recommendedMode: recommendedMode,
+          confidence: confidence,
+          scores: scores,
+          explanation: `基於您的回答，推薦使用${recommendedMode}模式以獲得最佳體驗`,
+          modeCharacteristics: {
+            [recommendedMode]: AM_getModeDescription(recommendedMode),
+            alternatives: AM_getAlternativeModes(recommendedMode, scores)
+          }
+        },
+        applied: true,
+        previousMode: 'Auto'
+      },
+      metadata: {
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`,
+        userMode: recommendedMode
+      }
+    };
+
+  } catch (error) {
+    AM_logError(`模式評估失敗: ${error.message}`, "模式評估", userId, "AM_ASSESSMENT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "模式評估過程發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
+/**
+ * 34. 處理模式切換API端點
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 允許用戶手動切換使用模式
+ */
+async function AM_handleModeSwitchAPI(userId, switchData) {
+  const functionName = "AM_handleModeSwitchAPI";
+  try {
+    AM_logInfo(`處理模式切換: ${userId} -> ${switchData.newMode}`, "模式切換", userId, "", "", functionName);
+
+    // 驗證新模式
+    const validModes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
+    if (!switchData.newMode || !validModes.includes(switchData.newMode)) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "無效的模式選擇",
+          field: "newMode",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 取得當前用戶資料
+    const userInfo = await AM_getUserInfo(userId, 'SYSTEM');
+    if (!userInfo.success) {
+      return {
+        success: false,
+        error: {
+          code: "USER_NOT_FOUND",
+          message: "用戶不存在",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    const previousMode = userInfo.userData.userMode || 'Expert';
+
+    // 更新用戶模式
+    await db.collection('users').doc(userId).update({
+      userMode: switchData.newMode,
+      previousMode: previousMode,
+      modeChangedAt: admin.firestore.Timestamp.now(),
+      modeChangeReason: switchData.reason || '用戶主動切換',
+      updatedAt: admin.firestore.Timestamp.now()
+    });
+
+    return {
+      success: true,
+      data: {
+        previousMode: previousMode,
+        currentMode: switchData.newMode,
+        changedAt: admin.firestore.Timestamp.now().toDate().toISOString(),
+        modeDescription: AM_getModeDescription(switchData.newMode),
+        suggestedFeatures: AM_getSuggestedFeatures(switchData.newMode)
+      },
+      metadata: {
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`,
+        userMode: switchData.newMode
+      }
+    };
+
+  } catch (error) {
+    AM_logError(`模式切換失敗: ${error.message}`, "模式切換", userId, "AM_MODE_SWITCH_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "模式切換過程發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
+/**
+ * 35. 管理用戶偏好設定API端點
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 更新用戶的應用偏好設定，包含預設值、通知設定等
+ */
+async function AM_handleUserPreferencesAPI(userId, preferencesData, userMode = 'Expert') {
+  const functionName = "AM_handleUserPreferencesAPI";
+  try {
+    AM_logInfo(`更新用戶偏好設定: ${userId}`, "偏好設定", userId, "", "", functionName);
+
+    // 根據模式篩選允許的設定項目
+    const allowedPreferences = AM_getAllowedPreferences(userMode);
+    const filteredPreferences = {};
+
+    // 基本偏好（所有模式）
+    if (preferencesData.currency && allowedPreferences.includes('currency')) {
+      filteredPreferences['preferences.currency'] = preferencesData.currency;
+    }
+    if (preferencesData.dateFormat && allowedPreferences.includes('dateFormat')) {
+      filteredPreferences['preferences.dateFormat'] = preferencesData.dateFormat;
+    }
+    if (preferencesData.defaultLedgerId && allowedPreferences.includes('defaultLedgerId')) {
+      filteredPreferences['preferences.defaultLedgerId'] = preferencesData.defaultLedgerId;
+    }
+
+    // Expert/Inertial Mode: 進階偏好
+    if ((userMode === 'Expert' || userMode === 'Inertial')) {
+      if (preferencesData.numberFormat) {
+        filteredPreferences['preferences.numberFormat'] = preferencesData.numberFormat;
+      }
+      if (preferencesData.fiscalYearStart) {
+        filteredPreferences['preferences.fiscalYearStart'] = preferencesData.fiscalYearStart;
+      }
+      if (preferencesData.autoBackupEnabled !== undefined) {
+        filteredPreferences['preferences.autoBackupEnabled'] = preferencesData.autoBackupEnabled;
+      }
+    }
+
+    // 通知偏好
+    if (preferencesData.notifications && typeof preferencesData.notifications === 'object') {
+      Object.keys(preferencesData.notifications).forEach(key => {
+        filteredPreferences[`preferences.notifications.${key}`] = preferencesData.notifications[key];
+      });
+    }
+
+    // Cultivation Mode: 激勵偏好
+    if (userMode === 'Cultivation' && preferencesData.gamification) {
+      Object.keys(preferencesData.gamification).forEach(key => {
+        filteredPreferences[`preferences.gamification.${key}`] = preferencesData.gamification[key];
+      });
+    }
+
+    if (Object.keys(filteredPreferences).length === 0) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "沒有有效的偏好設定項目",
+          field: "preferencesData",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 更新偏好設定
+    filteredPreferences.updatedAt = admin.firestore.Timestamp.now();
+    
+    await db.collection('users').doc(userId).update(filteredPreferences);
+
+    const appliedChanges = Object.keys(filteredPreferences).filter(key => key !== 'updatedAt');
+
+    return {
+      success: true,
+      data: {
+        message: "偏好設定已更新",
+        updatedAt: admin.firestore.Timestamp.now().toDate().toISOString(),
+        appliedChanges: appliedChanges
+      },
+      metadata: {
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`,
+        userMode: userMode
+      }
+    };
+
+  } catch (error) {
+    AM_logError(`偏好設定更新失敗: ${error.message}`, "偏好設定", userId, "AM_PREFERENCES_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "偏好設定更新時發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
+// === 輔助函數 ===
+
+/**
+ * 取得模式描述
+ */
+function AM_getModeDescription(mode) {
+  const descriptions = {
+    Expert: "專家模式：完整功能、專業工具、深度設定",
+    Inertial: "標準模式：簡潔介面、固定流程、核心功能",
+    Cultivation: "養成模式：專注於習慣培養與進度追蹤",
+    Guiding: "引導模式：極簡介面、自動化配置、最少決策"
+  };
+  return descriptions[mode] || "未知模式";
+}
+
+/**
+ * 取得替代模式建議
+ */
+function AM_getAlternativeModes(recommendedMode, scores) {
+  const sortedModes = Object.entries(scores)
+    .filter(([mode]) => mode !== recommendedMode)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 2);
+
+  return sortedModes.map(([mode, score]) => ({
+    mode: mode,
+    reason: `如果您偏好${AM_getModeDescription(mode).split('：')[1]}`
+  }));
+}
+
+/**
+ * 取得建議功能
+ */
+function AM_getSuggestedFeatures(mode) {
+  const features = {
+    Expert: ["進階報表", "批次操作", "自訂分類", "詳細分析"],
+    Inertial: ["快速記帳", "基本報表", "預算管理", "月度統計"],
+    Cultivation: ["每日挑戰", "成就系統", "記帳提醒", "習慣追蹤"],
+    Guiding: ["一鍵記帳", "簡單統計", "自動分類", "智慧建議"]
+  };
+  return features[mode] || [];
+}
+
+/**
+ * 取得模式允許的偏好設定
+ */
+function AM_getAllowedPreferences(mode) {
+  const basePreferences = ['currency', 'dateFormat', 'defaultLedgerId'];
+  
+  switch (mode) {
+    case 'Expert':
+      return [...basePreferences, 'numberFormat', 'fiscalYearStart', 'autoBackupEnabled', 'advanced'];
+    case 'Inertial':
+      return [...basePreferences, 'numberFormat', 'autoBackupEnabled'];
+    case 'Cultivation':
+      return [...basePreferences, 'gamification'];
+    case 'Guiding':
+      return basePreferences;
+    default:
+      return basePreferences;
+  }
+}
+
 // =============== SR模組專用付費功能API ===============
 
 /**
@@ -1921,12 +2467,18 @@ module.exports = {
   AM_getSRUserQuota,
   AM_updateSRFeatureUsage,
   AM_processSRUpgrade,
-  // Phase 1: 核心認證API端點 (新增)
+  // Phase 1: 核心認證API端點
   AM_handleUserRegistrationAPI,
   AM_handleUserLoginAPI,
   AM_handlePasswordResetAPI,
   AM_verifyUserAuthenticationAPI,
-  AM_handleUserLogoutAPI
+  AM_handleUserLogoutAPI,
+  // Phase 2: 用戶管理功能API端點 (新增)
+  AM_getUserProfileAPI,
+  AM_updateUserProfileAPI,
+  AM_handleModeAssessmentAPI,
+  AM_handleModeSwitchAPI,
+  AM_handleUserPreferencesAPI
 };
 
 console.log('AM 帳號管理模組載入完成 v1.2.0 - Phase 1 API端點重構');
