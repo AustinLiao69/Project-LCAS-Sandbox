@@ -2,30 +2,30 @@
 {
   "metadata": {
     "version": "v2.0.0",
-    "created_date": "2025-01-24",
-    "last_updated": "2025-01-24",
+    "created_date": "2025-09-15",
+    "last_updated": "2025-09-15",
     "description": "LCAS 2.0 Phase 1 SIT測試資料配置檔 - 階段三完整整合測試資料集",
     "test_cases_supported": "TC-SIT-001 to TC-SIT-028 (完整28個測試案例)",
     "author": "LCAS SQA Team",
     "change_log": [
       {
         "version": "v1.0.0",
-        "date": "2025-01-24",
+        "date": "2025-09-15",
         "changes": "初始版本建立"
       },
       {
         "version": "v1.1.0", 
-        "date": "2025-01-24",
+        "date": "2025-09-15",
         "changes": "階段一：基礎測試資料架構建立完成"
       },
       {
         "version": "v1.2.0",
-        "date": "2025-01-24", 
+        "date": "2025-09-15", 
         "changes": "階段二：核心業務功能測試資料建立完成"
       },
       {
         "version": "v2.0.0",
-        "date": "2025-01-24", 
+        "date": "2025-09-15", 
         "changes": "階段三：完整端到端業務流程測試資料與24小時穩定性測試資料建立完成"
       }
     ]
@@ -56,7 +56,7 @@
           "first_name": "Expert",
           "last_name": "User001",
           "phone": "+886912345001",
-          "date_of_birth": "1990-01-01",
+          "date_of_birth": "1986-05-31",
           "preferred_language": "zh-TW"
         }
       },
@@ -268,7 +268,7 @@
           "account_id": "acc_cash_001", 
           "account_name": "現金",
           "description": "晚餐聚會",
-          "date": "2025-01-24",
+          "date": "2025-09-15",
           "time": "19:30",
           "tags": ["聚會", "朋友"],
           "notes": "公司同事聚餐",
@@ -290,7 +290,7 @@
           "account_id": "acc_bank_001",
           "account_name": "銀行帳戶",
           "description": "績效獎金",
-          "date": "2025-01-24",
+          "date": "2025-09-15",
           "time": "10:00",
           "tags": ["工作", "績效"],
           "notes": "Q4績效獎金",
@@ -335,7 +335,7 @@
       "success": true,
       "data": {},
       "message": "操作成功",
-      "timestamp": "2025-01-24T10:00:00Z"
+      "timestamp": "2025-09-15T10:00:00Z"
     },
     "error_response": {
       "success": false,
@@ -344,7 +344,7 @@
         "message": "錯誤訊息",
         "details": {}
       },
-      "timestamp": "2025-01-24T10:00:00Z"
+      "timestamp": "2025-09-15T10:00:00Z"
     }
   },
 
@@ -849,7 +849,7 @@
             "category_id": "cat_food_001", 
             "user_id": "user_123",
             "ledger_id": "ledger_456",
-            "transaction_date": "2025-01-24T10:00:00Z"
+            "transaction_date": "2025-09-15T10:00:00Z"
           },
           "expected_dl_storage": {
             "collection": "transactions",
