@@ -2184,3 +2184,33 @@ class SITTestCases {
 }
 
 module.exports = SITTestCases;
+
+// 直接執行測試的程式碼
+if (require.main === module) {
+    (async () => {
+        console.log('🚀 LCAS 2.0 Phase 1 SIT - 階段二測試開始');
+        const sitTest = new SITTestCases();
+        
+        const dataLoaded = await sitTest.loadTestData();
+        if (!dataLoaded) {
+            console.error('❌ 測試資料載入失敗，測試中止');
+            process.exit(1);
+        }
+        
+        const results = await sitTest.executePhase2Tests();
+        const report = sitTest.generateReport();
+        
+        console.log('\n📊 階段二測試完成');
+        console.log(`✅ 通過率: ${results.successRate.toFixed(2)}%`);
+        console.log(`⏱️ 執行時間: ${(results.executionTime/1000).toFixed(2)}秒`);
+        
+        if (results.successRate >= 0.8) {
+            console.log('🎉 階段二測試達標！可進入階段三');
+        } else {
+            console.log('⚠️ 階段二測試未達標，需要修正後重新測試');
+        }
+    })().catch(error => {
+        console.error('❌ 測試執行發生錯誤:', error.message);
+        process.exit(1);
+    });
+}
