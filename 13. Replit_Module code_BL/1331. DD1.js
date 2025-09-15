@@ -69,8 +69,8 @@ try {
 // 延遲載入模組以避免循環依賴
 let BK, DL;
 function loadModules() {
-  if (!BK) BK = require("./2001. BK.js");
-  if (!DL) DL = require("./2010. DL.js");
+  if (!BK) BK = require("./1301. BK.js");
+  if (!DL) DL = require("./1310. DL.js");
 }
 
 // 替代 Google Apps Script 的 Utilities 物件
@@ -1377,12 +1377,12 @@ function formatTime(date) {
 }
 
 // 引入DD3模組的格式化函數
-const DD3 = require("./2033. DD3.js");
+const DD3 = require("./1333. DD3.js");
 const { DD_formatSystemReplyMessage } = DD3;
 
 // 引入其他模組
-const WH = require('./2020. WH.js');
-const DD2 = require('./2032. DD2.js');
+const WH = require('./1320. WH.js');
+const DD2 = require('./1332. DD2.js');
 
 // 導出需要的函數
 module.exports = {

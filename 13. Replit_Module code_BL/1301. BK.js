@@ -10,7 +10,7 @@ const moment = require('moment-timezone');
 const admin = require('firebase-admin');
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 確保 Firebase Admin 在模組載入時就初始化
 if (!admin.apps.length) {
@@ -23,8 +23,8 @@ if (!admin.apps.length) {
 }
 
 // 引入DL和FS模組
-const DL = require('./2010. DL.js');
-const FS = require('./2011. FS.js');
+const DL = require('./1310. DL.js');
+const FS = require('./1311. FS.js');
 
 // 配置參數
 const BK_CONFIG = {

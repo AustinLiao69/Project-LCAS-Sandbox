@@ -6,7 +6,7 @@
 */
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 初始化 Firebase Admin（使用動態配置）
 let admin, db, PROJECT_ID, UNIVERSE_DOMAIN;
@@ -530,7 +530,7 @@ async function createSubjectsCollection(ledgerId) {
     });
 
     // 導入完整科目資料
-    const subjectData = require('../00. Replit_Project documents/0099. Subject_code.json');
+    const subjectData = require('../00. Master_Project document/0099. Subject_code.json');
     const batch = db.batch();
 
     console.log(`🔄 開始導入 ${subjectData.length} 筆科目資料...`);

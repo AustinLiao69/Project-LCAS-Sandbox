@@ -11,13 +11,13 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 取得 Firestore 實例
 const db = admin.firestore();
 
 // 引入其他模組
-const DL = require('./2010. DL.js');
+const DL = require('./1310. DL.js');
 
 /**
  * 01. 創建LINE OA用戶帳號

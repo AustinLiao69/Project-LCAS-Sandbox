@@ -18,7 +18,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 // 引入DD1模組以獲取ledgerID
-const DD1 = require('./2031. DD1.js');
+const DD1 = require('./1331. DD1.js');
 const { DD_getLedgerInfo } = DD1;
 
 /**

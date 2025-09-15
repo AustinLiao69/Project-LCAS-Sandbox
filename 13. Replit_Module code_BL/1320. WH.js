@@ -9,38 +9,38 @@
 let DD, BK, LBK, SR, DL, AM, FS;
 
 try {
-  DD = require("./2031. DD1.js");
+  DD = require("./1331. DD1.js");
 } catch (error) {
   console.log("DD模組載入失敗:", error.message);
 }
 
 try {
-  BK = require("./2001. BK.js");
+  BK = require("./1301. BK.js");
 } catch (error) {
   console.log("BK模組載入失敗:", error.message);
 }
 
 try {
-  SR = require('./2005. SR.js');
+  SR = require('./1305. SR.js');
 } catch (error) {
   console.log("SR模組載入失敗:", error.message);
 }
 
 try {
-  DL = require("./2010. DL.js");
+  DL = require("./1310. DL.js");
 } catch (error) {
   console.log("DL模組載入失敗:", error.message);
 }
 
 try {
-  AM = require("./2009. AM.js");
+  AM = require("./1309. AM.js");
 } catch (error) {
   console.log("AM模組載入失敗:", error.message);
 }
 
 // 關鍵修復：增強FS模組安全載入，檢查index.js設置的全域狀態
 try {
-  FS = require("./2011. FS.js");
+  FS = require("./1311. FS.js");
   
   // 檢查index.js設置的FS模組就緒狀態
   const fsModuleReady = global.FS_MODULE_READY || false;
@@ -71,7 +71,7 @@ const moment = require("moment-timezone");
 const NodeCache = require("node-cache");
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 初始化Firebase（使用動態配置）
 let admin, db;

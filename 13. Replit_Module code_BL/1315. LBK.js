@@ -11,7 +11,7 @@ const admin = require('firebase-admin');
 const crypto = require('crypto');
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 確保 Firebase Admin 在模組載入時就初始化
 if (!admin.apps.length) {
@@ -24,12 +24,12 @@ if (!admin.apps.length) {
 }
 
 // 引入依賴模組
-const DL = require('./2010. DL.js');
+const DL = require('./1310. DL.js');
 
 // 引入SR模組 (延遲載入避免循環依賴)
 let SR = null;
 try {
-  SR = require('./2005. SR.js');
+  SR = require('./1305. SR.js');
 } catch (error) {
   console.warn('LBK模組: SR模組載入失敗，統計功能將受限:', error.message);
 }
