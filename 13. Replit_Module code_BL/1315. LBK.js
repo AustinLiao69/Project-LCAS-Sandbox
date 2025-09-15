@@ -29,7 +29,7 @@ const DL = require('./1310. DL.js');
 // 引入SR模組 (延遲載入避免循環依賴)
 let SR = null;
 try {
-  SR = require('./2005. SR.js');
+  SR = require('./1305. SR.js');
 } catch (error) {
   console.warn('LBK模組: SR模組載入失敗，統計功能將受限:', error.message);
 }

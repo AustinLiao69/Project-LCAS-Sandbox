@@ -69,8 +69,8 @@ try {
 // 延遲載入模組以避免循環依賴
 let BK, DL;
 function loadModules() {
-  if (!BK) BK = require("./2001. BK.js");
-  if (!DL) DL = require("./2010. DL.js");
+  if (!BK) BK = require("./1301. BK.js");
+  if (!DL) DL = require("./1310. DL.js");
 }
 
 // 替代 Google Apps Script 的 Utilities 物件
