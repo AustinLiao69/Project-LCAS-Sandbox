@@ -1,0 +1,220 @@
+~/workspace/06. SIT_Test code$ node "0603. SIT_TC_P1.js" --phase=all
+🚀 LCAS 2.0 Phase 1 SIT 測試開始
+✅ 測試資料載入成功
+🎯 執行完整SIT測試計畫 (三個階段)
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 完整測試計畫
+📋 總共28個測試案例，分三階段執行
+NaN
+
+📝 執行測試 1/28: TC-SIT-001: UserRegistration
+❌ FAIL TC-SIT-001 (383ms)
+   錯誤: Not Found
+
+📝 執行測試 2/28: TC-SIT-002: UserLogin
+❌ FAIL TC-SIT-002 (274ms)
+   錯誤: Not Found
+
+📝 執行測試 3/28: TC-SIT-003: TokenManagement
+❌ FAIL TC-SIT-003 (0ms)
+   錯誤: 需要先執行登入測試取得Token
+
+📝 執行測試 4/28: TC-SIT-004: QuickBooking
+❌ FAIL TC-SIT-004 (275ms)
+   錯誤: Not Found
+
+📝 執行測試 5/28: TC-SIT-005: FullBookingForm
+❌ FAIL TC-SIT-005 (268ms)
+   錯誤: Not Found
+
+📝 執行測試 6/28: TC-SIT-006: TransactionQuery
+❌ FAIL TC-SIT-006 (271ms)
+   錯誤: Not Found
+
+📝 執行測試 7/28: TC-SIT-007: CrossLayerErrorHandling
+❌ FAIL TC-SIT-007 (821ms)
+   錯誤: 錯誤處理覆蓋率不足
+
+⏸️  階段 1 完成，休息3秒後繼續...
+
+📝 執行測試 8/28: TC-SIT-008: ModeAssessment
+❌ FAIL TC-SIT-008 (277ms)
+   錯誤: 無法取得評估問卷
+
+📝 執行測試 9/28: TC-SIT-009: ModeDifferentiation
+❌ FAIL TC-SIT-009 (1083ms)
+   錯誤: 模式差異化回應不正確
+
+📝 執行測試 10/28: TC-SIT-010: DataFormatTransformation
+❌ FAIL TC-SIT-010 (1095ms)
+   錯誤: 資料格式轉換失敗
+
+📝 執行測試 11/28: TC-SIT-011: DataSynchronization
+❌ FAIL TC-SIT-011 (274ms)
+   錯誤: 無法建立測試交易
+
+📝 執行測試 12/28: TC-SIT-012: CompleteUserLifecycle
+❌ FAIL TC-SIT-012 (1352ms)
+   錯誤: 用戶生命週期測試未完全通過
+
+📝 執行測試 13/28: TC-SIT-013: BookkeepingEndToEnd
+❌ FAIL TC-SIT-013 (268ms)
+   錯誤: 記帳業務流程端到端測試失敗
+
+📝 執行測試 14/28: TC-SIT-014: NetworkExceptionHandling
+✅ PASS TC-SIT-014 (547ms)
+
+⏸️  階段 2 完成，休息3秒後繼續...
+
+📝 執行測試 15/28: TC-SIT-015: BusinessRuleErrorHandling
+❌ FAIL TC-SIT-015 (273ms)
+   錯誤: 業務規則錯誤處理機制失效
+
+📝 執行測試 16/28: TC-SIT-016: FourModeProcessDifference
+🔄 開始四模式流程差異驗證...
+  📋 測試模式: expert
+    🎯 測試互動: 快速記帳
+      ❌ 快速記帳 失敗: Not Found
+    🎯 測試互動: 查看統計
+      ❌ 查看統計 失敗: Not Found
+  📋 測試模式: guiding
+    🎯 測試互動: 快速記帳
+      ❌ 快速記帳 失敗: Not Found
+    🎯 測試互動: 查看記錄
+      ❌ 查看記錄 失敗: Not Found
+❌ FAIL TC-SIT-016 (3090ms)
+   錯誤: 四模式流程差異驗證未達標準
+🎯 四模式差異化測試完成，差異化評分: 0.00
+
+📝 執行測試 17/28: TC-SIT-017: ConcurrentOperations
+❌ FAIL TC-SIT-017 (366ms)
+   錯誤: 併發操作效能不達標
+
+📝 執行測試 18/28: TC-SIT-018: DataRaceHandling
+❌ FAIL TC-SIT-018 (273ms)
+   錯誤: 無法建立測試交易
+
+📝 執行測試 19/28: TC-SIT-019: EightHourStabilityTest
+❌ FAIL TC-SIT-019 (7433ms)
+   錯誤: 系統穩定性測試未達標
+
+📝 執行測試 20/28: TC-SIT-020: StressAndRecoveryTest
+❌ FAIL TC-SIT-020 (5198ms)
+   錯誤: 壓力測試或恢復測試失敗
+
+📝 執行測試 21/28: TC-SIT-021: CompleteUserJourney
+🚀 開始執行完整使用者旅程測試...
+  📝 執行步驟1: 用戶註冊
+  📝 執行步驟2: 模式評估
+  📝 執行步驟3: 首次記帳
+  📝 執行步驟4: 查詢記帳記錄
+  📝 執行步驟5: 登出
+❌ FAIL TC-SIT-021 (1206ms)
+   錯誤: 完整使用者旅程測試未達標
+
+⏸️  階段 3 完成，休息3秒後繼續...
+
+📝 執行測試 22/28: TC-SIT-022: BusinessValueChainValidation
+❌ FAIL TC-SIT-022 (827ms)
+   錯誤: 業務價值鏈驗證未達標
+
+📝 執行測試 23/28: TC-SIT-023: FourModeUserExperience
+❌ FAIL TC-SIT-023 (3265ms)
+   錯誤: 四模式使用者體驗測試未達標
+
+📝 執行測試 24/28: TC-SIT-024: InterfaceResponsiveness
+❌ FAIL TC-SIT-024 (811ms)
+   錯誤: 介面回應性測試未達標
+
+📝 執行測試 25/28: TC-SIT-025: TwentyFourHourStabilityTest
+🚀 開始24小時穩定性測試模擬 (5分鐘)...
+  📊 穩定性測試進度: 10/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 2759.00ms
+  💾 記憶體使用: 17.59MB
+  📊 穩定性測試進度: 20/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 5489.00ms
+  💾 記憶體使用: 13.81MB
+  📊 穩定性測試進度: 30/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 8205.00ms
+  💾 記憶體使用: 14.55MB
+  📊 穩定性測試進度: 40/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 10936.00ms
+  💾 記憶體使用: 14.31MB
+  📊 穩定性測試進度: 50/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 13644.00ms
+  💾 記憶體使用: 15.06MB
+  📊 穩定性測試進度: 60/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 16370.00ms
+  💾 記憶體使用: 14.46MB
+  📊 穩定性測試進度: 70/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 19096.00ms
+  💾 記憶體使用: 14.61MB
+  📊 穩定性測試進度: 80/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 21834.00ms
+  💾 記憶體使用: 14.81MB
+  📊 穩定性測試進度: 90/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 24559.00ms
+  💾 記憶體使用: 15.00MB
+  📊 穩定性測試進度: 100/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 27301.00ms
+  💾 記憶體使用: 15.16MB
+❌ FAIL TC-SIT-025 (327412ms)
+   錯誤: 24小時穩定性測試未達標
+
+📝 執行測試 26/28: TC-SIT-026: FailureRecoveryTest
+❌ FAIL TC-SIT-026 (1629ms)
+   錯誤: 故障恢復測試未達標
+
+📝 執行測試 27/28: TC-SIT-027: CompleteRegressionTest
+開始執行完整功能回歸測試...
+執行回歸測試: 用戶認證功能
+❌ FAIL TC-SIT-002 (275ms)
+   錯誤: Not Found
+執行回歸測試: 快速記帳功能
+❌ FAIL TC-SIT-004 (277ms)
+   錯誤: Not Found
+執行回歸測試: 資料查詢功能
+❌ FAIL TC-SIT-006 (272ms)
+   錯誤: Not Found
+執行回歸測試: 模式切換功能
+❌ FAIL TC-SIT-009 (1097ms)
+   錯誤: 模式差異化回應不正確
+執行回歸測試: 錯誤處理功能
+❌ FAIL TC-SIT-007 (822ms)
+   錯誤: 錯誤處理覆蓋率不足
+❌ FAIL TC-SIT-027 (2744ms)
+   錯誤: 功能回歸測試未達90%通過率
+
+📝 執行測試 28/28: TC-SIT-028: PerformanceBenchmarkValidation
+❌ FAIL TC-SIT-028 (6167ms)
+   錯誤: 效能基準驗證未達標
+
+⏸️  階段 4 完成，休息3秒後繼續...
+
+NaN
+📊 測試執行完成
+✅ 通過測試: 1/28
+📈 成功率: 3.57%
+⏱️  總執行時間: 379.912秒
+
+📊 完整SIT測試完成
+✅ 通過率: 0.04%
+⏱️ 執行時間: 379.91秒
+❌ 測試未達標，需要重大修正後重新測試
+
+📄 詳細測試報告已準備完成
+📁 報告位置: 06. SIT_Test code/0691. SIT_Report_P1.md
+🔍 執行參數說明:
+   node 0603. SIT_TC_P1.js --phase=phase2  # 執行階段二測試
+   node 0603. SIT_TC_P1.js --phase=phase3  # 執行階段三測試
+   node 0603. SIT_TC_P1.js --phase=all     # 執行完整SIT測試
+~/workspace/06. SIT_Test code$ 
