@@ -71,7 +71,7 @@ const moment = require("moment-timezone");
 const NodeCache = require("node-cache");
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 初始化Firebase（使用動態配置）
 let admin, db;

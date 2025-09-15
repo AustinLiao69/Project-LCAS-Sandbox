@@ -11,7 +11,7 @@ const admin = require('firebase-admin');
 const crypto = require('crypto');
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 確保 Firebase Admin 在模組載入時就初始化
 if (!admin.apps.length) {

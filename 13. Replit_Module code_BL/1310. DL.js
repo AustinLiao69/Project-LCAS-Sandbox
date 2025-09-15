@@ -6,7 +6,7 @@
  */
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 初始化 Firebase Admin（防重複初始化）
 let admin, db;

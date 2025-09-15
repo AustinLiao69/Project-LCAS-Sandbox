@@ -11,7 +11,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 取得 Firestore 實例
 const db = admin.firestore();
