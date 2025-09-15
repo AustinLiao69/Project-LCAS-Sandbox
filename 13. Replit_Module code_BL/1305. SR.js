@@ -10,7 +10,7 @@ const cron = require('node-cron');
 const moment = require('moment-timezone');
 
 // 引入Firebase動態配置模組
-const firebaseConfig = require('./2099. firebase-config');
+const firebaseConfig = require('./1399. firebase-config');
 
 // 引入依賴模組
 let DL, WH, AM, FS, DD1, BK, LBK;

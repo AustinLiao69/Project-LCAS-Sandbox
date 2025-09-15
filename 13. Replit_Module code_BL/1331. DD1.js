@@ -1381,8 +1381,8 @@ const DD3 = require("./1333. DD3.js");
 const { DD_formatSystemReplyMessage } = DD3;
 
 // 引入其他模組
-const WH = require('./2020. WH.js');
-const DD2 = require('./2032. DD2.js');
+const WH = require('./1320. WH.js');
+const DD2 = require('./1332. DD2.js');
 
 // 導出需要的函數
 module.exports = {
