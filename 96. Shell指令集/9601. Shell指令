@@ -47,3 +47,8 @@ npx jest --config="Test Code/jest.config.js" "Test Code/3005. TC_SR.js" --verbos
 
 10.強制push到github
 git push -f origin main
+
+11. 執行0603. SIT_TC_P1.js
+
+cd "06. SIT_Test code"
+node 0603. SIT_TC_P1.js
