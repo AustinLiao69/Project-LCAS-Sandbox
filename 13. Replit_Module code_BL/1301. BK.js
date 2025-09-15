@@ -64,33 +64,6 @@ const BK_SEVERITY_DEFAULTS = {
 };
 
 /**
- * 01. 安全獲取DL級別函數
- * @version 2025-01-03-V1.1.0
- * @date 2025-01-03 17:30:00
- * @description 安全獲取DL模組的日誌級別函數
- */
-function getDLSeverity(level, defaultValue) {
-  try {
-    if (typeof DL_SEVERITY_LEVELS === 'object' && DL_SEVERITY_LEVELS !== null && 
-        typeof DL_SEVERITY_LEVELS[level] === 'number') {
-      return DL_SEVERITY_LEVELS[level];
-    }
-  } catch (e) {
-    BK_logWarning("無法訪問 DL_SEVERITY_LEVELS." + level, "系統初始化", "", "getDLSeverity");
-  }
-  return defaultValue;
-}
-
-// 模組日誌等級映射
-const BK_LOG_LEVEL_MAP = {
-  "DEBUG": getDLSeverity("DEBUG", BK_SEVERITY_DEFAULTS.DEBUG),
-  "INFO": getDLSeverity("INFO", BK_SEVERITY_DEFAULTS.INFO),
-  "WARNING": getDLSeverity("WARNING", BK_SEVERITY_DEFAULTS.WARNING),
-  "ERROR": getDLSeverity("ERROR", BK_SEVERITY_DEFAULTS.ERROR),
-  "CRITICAL": getDLSeverity("ERROR", BK_SEVERITY_DEFAULTS.ERROR)
-};
-
-/**
  * 02. 從環境變數獲取配置
  * @version 2025-01-03-V1.1.0
  * @date 2025-01-03 17:30:00
