@@ -61,3 +61,128 @@ args = "python -c \"import os; print('LLD文檔已生成，位置：82. Flutter_
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow]]
+name = "SIT Phase 2 執行"
+author = 41300326
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd \"06. SIT_Test code\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node -e \""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "const SITTestCases = require('./0603. SIT_TC_P1.js');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "(async () => {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('🚀 LCAS 2.0 Phase 1 SIT - 階段二測試開始');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const sitTest = new SITTestCases();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  // 載入測試資料"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const dataLoaded = await sitTest.loadTestData();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  if (!dataLoaded) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.error('❌ 測試資料載入失敗，測試中止');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    process.exit(1);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  // 執行階段二測試"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const results = await sitTest.executePhase2Tests();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  // 生成測試報告"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const report = sitTest.generateReport();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '''  console.log('\\n📊 階段二測試完成');'''
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '  console.log(\`✅ 通過率: \${results.successRate.toFixed(2)}%\`);'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '  console.log(\`⏱️  執行時間: \${(results.executionTime/1000).toFixed(2)}秒\`);'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  if (results.successRate >= 0.8) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('🎉 階段二測試達標！可進入階段三');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  } else {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('⚠️  階段二測試未達標，需要修正後重新測試');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "})();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "\""

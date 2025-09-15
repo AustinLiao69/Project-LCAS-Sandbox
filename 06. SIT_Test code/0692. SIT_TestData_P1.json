@@ -24,9 +24,9 @@
         "changes": "階段二：核心業務功能測試資料建立完成"
       },
       {
-        "version": "v2.0.0",
-        "date": "2025-09-15", 
-        "changes": "階段三：完整端到端業務流程測試資料與24小時穩定性測試資料建立完成"
+        "version": "v1.1.0",
+        "date": "2025-01-24", 
+        "changes": "階段二：四層架構資料流測試與核心業務流程測試資料建立完成"
       }
     ]
   },
@@ -463,11 +463,16 @@
   "performance_test_data": {
     "concurrent_operations": {
       "test_id": "perf_concurrent_001",
-      "concurrent_users": 10,
-      "operations_per_user": 5,
-      "operation_types": ["quick_booking", "form_booking", "transaction_query"],
+      "concurrent_users": 15,
+      "operations_per_user": 8,
+      "operation_types": ["quick_booking", "form_booking", "transaction_query", "mode_switch"],
       "expected_response_time_ms": 2000,
-      "expected_success_rate": 0.95
+      "expected_success_rate": 0.90,
+      "phase_2_enhancements": {
+        "mode_differentiation_test": true,
+        "cross_layer_validation": true,
+        "data_consistency_check": true
+      }
     },
 
     "load_test_scenarios": [

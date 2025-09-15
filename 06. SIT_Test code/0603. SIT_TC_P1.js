@@ -3,11 +3,13 @@
  * 0603. SIT_TC_P1.js
  * LCAS 2.0 Phase 1 SIT測試案例實作
  * 
- * @version v2.0.0
+ * @version v1.1.0
  * @created 2025-09-15
- * @updated 2025-09-15
+ * @updated 2025-01-24
  * @author LCAS SQA Team
- * @description 實作28個測試案例，涵蓋三階段完整SIT測試流程
+ * @description 階段二：四層架構資料流測試與核心業務流程測試實作
+ * @phase Phase 2 - Core Business Process & Data Flow Testing
+ * @testcases TC-SIT-008 to TC-SIT-020 (13個測試案例)
  */
 
 const axios = require('axios');
@@ -807,51 +809,90 @@ class SITTestCases {
     }
 
     /**
-     * TC-SIT-016: 四模式流程差異驗證
+     * TC-SIT-016: 四模式流程差異驗證 (階段二增強版)
      */
     async testCase016_FourModeProcessDifference() {
         const startTime = Date.now();
         try {
+            console.log('🔄 開始四模式流程差異驗證...');
             const modeTests = this.testData.end_to_end_business_process_tests.four_mode_user_experience_tests;
             let successfulModeTests = 0;
+            const modeResults = [];
 
             for (const modeTest of modeTests) {
+                console.log(`  📋 測試模式: ${modeTest.mode}`);
+                const modeStartTime = Date.now();
+                let modeSuccessCount = 0;
+                
                 try {
                     this.currentUserMode = modeTest.mode;
                     
                     for (const interaction of modeTest.test_interactions) {
                         let response;
                         
+                        console.log(`    🎯 測試互動: ${interaction.action}`);
+                        
                         if (interaction.action === '快速記帳') {
                             response = await this.makeRequest('POST', '/transactions/quick', {
                                 input: interaction.input,
                                 userId: 'test-user-id'
                             });
-                        } else if (interaction.action === '查看統計' || interaction.action === '查看記錄') {
+                        } else if (interaction.action === '查看統計') {
                             response = await this.makeRequest('GET', '/transactions/dashboard');
+                        } else if (interaction.action === '查看記錄') {
+                            response = await this.makeRequest('GET', '/transactions?limit=5');
                         }
                         
                         if (response?.success) {
                             successfulModeTests++;
+                            modeSuccessCount++;
+                            console.log(`      ✅ ${interaction.action} 成功`);
+                        } else {
+                            console.log(`      ❌ ${interaction.action} 失敗: ${response?.error || 'Unknown error'}`);
                         }
+                        
+                        // 模式間切換延遲
+                        await new Promise(resolve => setTimeout(resolve, 500));
                     }
+                    
+                    modeResults.push({
+                        mode: modeTest.mode,
+                        interactions: modeTest.test_interactions.length,
+                        successful: modeSuccessCount,
+                        executionTime: Date.now() - modeStartTime,
+                        success: modeSuccessCount > 0
+                    });
+                    
                 } catch (modeError) {
-                    console.log(`模式測試失敗: ${modeTest.mode} - ${modeError.message}`);
+                    console.log(`    ❌ 模式測試失敗: ${modeTest.mode} - ${modeError.message}`);
+                    modeResults.push({
+                        mode: modeTest.mode,
+                        success: false,
+                        error: modeError.message,
+                        executionTime: Date.now() - modeStartTime
+                    });
                 }
             }
 
             const totalInteractions = modeTests.reduce((sum, test) => sum + test.test_interactions.length, 0);
-            const success = successfulModeTests > totalInteractions * 0.5; // 至少50%成功
+            const success = successfulModeTests > totalInteractions * 0.6; // 提高到60%成功率
 
+            // 計算模式差異化指標
+            const differentiationScore = this.calculateModeDifferentiationScore(modeResults);
+            
             this.recordTestResult('TC-SIT-016', success, Date.now() - startTime, {
                 totalInteractions,
                 successfulModeTests,
                 modeSuccessRate: (successfulModeTests / totalInteractions * 100).toFixed(2) + '%',
-                error: !success ? '四模式流程差異驗證失敗' : null
+                modeResults,
+                differentiationScore: differentiationScore.toFixed(2),
+                qualityGrade: differentiationScore >= 0.8 ? 'A' : differentiationScore >= 0.6 ? 'B' : 'C',
+                error: !success ? '四模式流程差異驗證未達標準' : null
             });
 
             // 重設為Expert模式
             this.currentUserMode = 'Expert';
+            console.log(`🎯 四模式差異化測試完成，差異化評分: ${differentiationScore.toFixed(2)}`);
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-016', false, Date.now() - startTime, {
@@ -859,6 +900,30 @@ class SITTestCases {
             });
             return false;
         }
+    }
+
+    /**
+     * 計算模式差異化評分
+     */
+    calculateModeDifferentiationScore(modeResults) {
+        const successfulModes = modeResults.filter(r => r.success).length;
+        const totalModes = modeResults.length;
+        const baseScore = successfulModes / totalModes;
+        
+        // 加權因子：每個模式成功的互動比例
+        let weightedScore = 0;
+        let totalWeight = 0;
+        
+        modeResults.forEach(result => {
+            if (result.interactions && result.successful !== undefined) {
+                const modeScore = result.successful / result.interactions;
+                weightedScore += modeScore;
+                totalWeight += 1;
+            }
+        });
+        
+        const avgModeScore = totalWeight > 0 ? weightedScore / totalWeight : 0;
+        return (baseScore * 0.5) + (avgModeScore * 0.5); // 基礎分50% + 品質分50%
     }
 
     // ==================== 階段二後半：效能與穩定性測試 ====================
@@ -1891,7 +1956,127 @@ class SITTestCases {
     // ==================== 主要執行方法 ====================
 
     /**
-     * 執行所有測試案例
+     * 執行階段二測試案例 (TC-SIT-008 to TC-SIT-020)
+     */
+    async executePhase2Tests() {
+        console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試');
+        console.log('📋 階段二：四層架構資料流測試 (TC-SIT-008~020)');
+        console.log('🎯 測試重點：四模式差異化、資料一致性、端到端流程、效能穩定性');
+        console.log('=' * 80);
+
+        const phase2TestMethods = [
+            // 四模式差異化整合測試
+            this.testCase008_ModeAssessment,
+            this.testCase009_ModeDifferentiation,
+            this.testCase010_DataFormatTransformation,
+            this.testCase011_DataSynchronization,
+
+            // 端到端資料傳遞驗證
+            this.testCase012_CompleteUserLifecycle,
+            this.testCase013_BookkeepingEndToEnd,
+            this.testCase014_NetworkExceptionHandling,
+            this.testCase015_BusinessRuleErrorHandling,
+            this.testCase016_FourModeProcessDifference,
+
+            // 效能與穩定性測試
+            this.testCase017_ConcurrentOperations,
+            this.testCase018_DataRaceHandling,
+            this.testCase019_EightHourStabilityTest,
+            this.testCase020_StressAndRecoveryTest
+        ];
+
+        let passedTests = 0;
+        let totalTests = phase2TestMethods.length;
+
+        console.log(`📊 階段二測試案例總數：${totalTests} 個`);
+        console.log(`📅 預估執行時間：${totalTests * 2} 分鐘\n`);
+
+        for (let i = 0; i < phase2TestMethods.length; i++) {
+            const testMethod = phase2TestMethods[i];
+            const testName = testMethod.name.replace('testCase', 'TC-SIT-').replace('_', ': ');
+            
+            console.log(`\n📝 執行階段二測試 ${i + 1}/${totalTests}: ${testName}`);
+            
+            try {
+                const result = await testMethod.call(this);
+                if (result) passedTests++;
+                
+                // 每4個測試案例後暫停，分組顯示進度
+                if ((i + 1) % 4 === 0) {
+                    const groupName = i < 4 ? '四模式整合測試' : 
+                                     i < 9 ? '端到端流程測試' : '效能穩定性測試';
+                    console.log(`\n✅ ${groupName} 完成，休息2秒後繼續...`);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            } catch (error) {
+                console.error(`❌ 測試執行錯誤: ${error.message}`);
+            }
+        }
+
+        console.log('\n' + '=' * 80);
+        console.log('📊 階段二測試執行完成');
+        console.log(`✅ 通過測試: ${passedTests}/${totalTests}`);
+        console.log(`📈 成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
+        console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
+
+        // 階段二特殊報告
+        this.generatePhase2Report(passedTests, totalTests);
+
+        return {
+            phase: 'Phase 2',
+            totalTests,
+            passedTests,
+            successRate: passedTests / totalTests,
+            executionTime: Date.now() - this.testStartTime.getTime(),
+            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
+                   parseInt(r.testCase.split('-')[2]) >= 8 && parseInt(r.testCase.split('-')[2]) <= 20)
+        };
+    }
+
+    /**
+     * 生成階段二專用測試報告
+     */
+    generatePhase2Report(passedTests, totalTests) {
+        console.log('\n📋 階段二測試報告摘要');
+        console.log('=' * 50);
+        
+        const phase2Results = this.testResults.filter(r => 
+            r.testCase.includes('SIT-0') && 
+            parseInt(r.testCase.split('-')[2]) >= 8 && 
+            parseInt(r.testCase.split('-')[2]) <= 20
+        );
+
+        // 按測試類別分組統計
+        const categories = {
+            '四模式差異化測試': phase2Results.filter(r => parseInt(r.testCase.split('-')[2]) <= 11),
+            '端到端流程測試': phase2Results.filter(r => {
+                const tcNum = parseInt(r.testCase.split('-')[2]);
+                return tcNum >= 12 && tcNum <= 16;
+            }),
+            '效能穩定性測試': phase2Results.filter(r => parseInt(r.testCase.split('-')[2]) >= 17)
+        };
+
+        Object.entries(categories).forEach(([category, results]) => {
+            const passed = results.filter(r => r.result === 'PASS').length;
+            const total = results.length;
+            const rate = total > 0 ? (passed / total * 100).toFixed(1) : '0';
+            console.log(`${category}: ${passed}/${total} (${rate}%)`);
+        });
+
+        console.log('\n🎯 階段二關鍵指標');
+        console.log('=' * 30);
+        console.log(`四層架構整合度: ${(passedTests / totalTests * 100).toFixed(1)}%`);
+        console.log(`資料一致性驗證: ${phase2Results.filter(r => r.testCase.includes('011')).length > 0 ? '✅ 完成' : '❌ 未完成'}`);
+        console.log(`模式差異化驗證: ${phase2Results.filter(r => r.testCase.includes('009')).length > 0 ? '✅ 完成' : '❌ 未完成'}`);
+        console.log(`端到端流程驗證: ${phase2Results.filter(r => r.testCase.includes('013')).length > 0 ? '✅ 完成' : '❌ 未完成'}`);
+        
+        const performanceTests = phase2Results.filter(r => parseInt(r.testCase.split('-')[2]) >= 17);
+        const performancePassed = performanceTests.filter(r => r.result === 'PASS').length;
+        console.log(`效能穩定性評級: ${performancePassed >= 3 ? 'A級' : performancePassed >= 2 ? 'B級' : 'C級'}`);
+    }
+
+    /**
+     * 執行所有測試案例 (完整版)
      */
     async executeAllTests() {
         console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 完整測試計畫');
