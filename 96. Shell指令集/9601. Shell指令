@@ -50,5 +50,5 @@ git push -f origin main
 
 11. 執行0603. SIT_TC_P1.js
 
-cd "06. SIT_Test code"
-node 0603. SIT_TC_P1.js
+cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js"
