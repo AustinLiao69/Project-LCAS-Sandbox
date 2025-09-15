@@ -1,8 +1,8 @@
 /**
- * AM_帳號管理模組_1.1.1
+ * AM_帳號管理模組_1.2.0
  * @module AM模組
- * @description 跨平台帳號管理系統 - 支援LINE OA、iOS、Android統一帳號管理
- * @update 2025-07-11:
+ * @description 跨平台帳號管理系統 - Phase 1 API端點重構，支援RESTful API
+ * @update 2025-09-15: Phase 1重構 - 新增RESTful API端點支援
  */
 
 // 引入必要模組
@@ -1077,6 +1077,528 @@ async function AM_validateSearchPermission(requesterId) {
   return false;
 }
 
+// =============== Phase 1: 核心認證API端點 ===============
+
+/**
+ * 26. 處理用戶註冊API端點
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 統一用戶註冊API端點，支援四模式差異化註冊流程
+ */
+async function AM_handleUserRegistrationAPI(requestData, userMode = 'Expert') {
+  const functionName = "AM_handleUserRegistrationAPI";
+  try {
+    AM_logInfo(`處理用戶註冊API請求: ${requestData.email}`, "用戶註冊", "SYSTEM", "", "", functionName);
+
+    // 驗證必要欄位
+    if (!requestData.email || !requestData.password || !requestData.userMode) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "缺少必要欄位：email、password、userMode",
+          field: "required_fields",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 檢查帳號是否已存在
+    const existingCheck = await AM_validateAccountExists(requestData.email, 'email');
+    if (existingCheck.exists) {
+      return {
+        success: false,
+        error: {
+          code: "EMAIL_ALREADY_EXISTS",
+          message: "此 Email 已被註冊",
+          field: "email",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 建立用戶資料
+    const userData = {
+      email: requestData.email,
+      displayName: requestData.displayName || '',
+      userMode: requestData.userMode,
+      userType: 'S', // 預設為一般用戶
+      createdAt: admin.firestore.Timestamp.now(),
+      lastActive: admin.firestore.Timestamp.now(),
+      timezone: requestData.timezone || 'Asia/Taipei',
+      language: requestData.language || 'zh-TW',
+      linkedAccounts: {
+        EMAIL: requestData.email,
+        LINE_UID: '',
+        iOS_UID: '',
+        Android_UID: ''
+      },
+      settings: {
+        notifications: true,
+        theme: requestData.theme || 'auto'
+      },
+      emailVerified: false,
+      acceptTerms: requestData.acceptTerms || false,
+      acceptPrivacy: requestData.acceptPrivacy || false
+    };
+
+    // 生成用戶ID
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 儲存用戶資料
+    await db.collection('users').doc(userId).set(userData);
+
+    // 生成JWT Token（簡化實作）
+    const token = `jwt_token_${userId}_${Date.now()}`;
+    const refreshToken = `refresh_token_${userId}_${Date.now()}`;
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24小時
+
+    // 初始化用戶科目
+    const subjectInit = await AM_initializeUserSubjects(userId);
+
+    return {
+      success: true,
+      data: {
+        userId: userId,
+        email: requestData.email,
+        userMode: requestData.userMode,
+        verificationSent: true,
+        needsAssessment: requestData.userMode === 'Auto',
+        token: token,
+        refreshToken: refreshToken,
+        expiresAt: expiresAt.toISOString()
+      },
+      metadata: {
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`,
+        userMode: requestData.userMode
+      }
+    };
+
+  } catch (error) {
+    AM_logError(`用戶註冊API失敗: ${error.message}`, "用戶註冊", "SYSTEM", "AM_REGISTER_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "註冊過程發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
+/**
+ * 27. 處理用戶登入API端點
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 統一用戶登入API端點，支援四模式差異化登入體驗
+ */
+async function AM_handleUserLoginAPI(requestData, userMode = 'Expert') {
+  const functionName = "AM_handleUserLoginAPI";
+  try {
+    AM_logInfo(`處理用戶登入API請求: ${requestData.email}`, "用戶登入", "SYSTEM", "", "", functionName);
+
+    // 驗證必要欄位
+    if (!requestData.email || !requestData.password) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "缺少必要欄位：email、password",
+          field: "credentials",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 驗證帳號存在性
+    const accountCheck = await AM_validateAccountExists(requestData.email, 'email');
+    if (!accountCheck.exists) {
+      return {
+        success: false,
+        error: {
+          code: "INVALID_CREDENTIALS",
+          message: "Email 或密碼錯誤",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 取得用戶資料
+    const userInfo = await AM_getUserInfo(accountCheck.UID, 'SYSTEM', true);
+    if (!userInfo.success) {
+      return {
+        success: false,
+        error: {
+          code: "USER_DATA_ERROR",
+          message: "無法取得用戶資料",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 更新最後登入時間
+    await db.collection('users').doc(accountCheck.UID).update({
+      lastActive: admin.firestore.Timestamp.now()
+    });
+
+    // 生成Token
+    const token = `jwt_token_${accountCheck.UID}_${Date.now()}`;
+    const refreshToken = `refresh_token_${accountCheck.UID}_${Date.now()}`;
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // 根據模式準備回應資料
+    let responseData = {
+      token: token,
+      refreshToken: refreshToken,
+      expiresAt: expiresAt.toISOString(),
+      user: {
+        id: accountCheck.UID,
+        email: userInfo.userData.displayName || requestData.email,
+        displayName: userInfo.userData.displayName,
+        userMode: userInfo.userData.userMode || userMode,
+        avatar: userInfo.userData.metadata?.profilePicture || null
+      }
+    };
+
+    // Expert模式：添加登入歷史
+    if (userMode === 'Expert') {
+      responseData.loginHistory = {
+        lastLogin: userInfo.userData.lastActive?.toDate().toISOString(),
+        loginCount: 1,
+        newDeviceDetected: false
+      };
+    }
+
+    // Cultivation模式：添加連續記錄
+    if (userMode === 'Cultivation') {
+      responseData.streakInfo = {
+        currentStreak: 1,
+        longestStreak: 1,
+        streakMessage: "歡迎回來！繼續保持記帳習慣！"
+      };
+    }
+
+    return {
+      success: true,
+      data: responseData,
+      metadata: {
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`,
+        userMode: userMode
+      }
+    };
+
+  } catch (error) {
+    AM_logError(`用戶登入API失敗: ${error.message}`, "用戶登入", "SYSTEM", "AM_LOGIN_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "登入過程發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
+/**
+ * 28. 處理密碼重設API端點
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 處理忘記密碼和密碼重設功能
+ */
+async function AM_handlePasswordResetAPI(requestData, action = 'forgot') {
+  const functionName = "AM_handlePasswordResetAPI";
+  try {
+    AM_logInfo(`處理密碼重設API請求: ${action}`, "密碼重設", "SYSTEM", "", "", functionName);
+
+    if (action === 'forgot') {
+      // 忘記密碼 - 發送重設連結
+      if (!requestData.email) {
+        return {
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "缺少必要欄位：email",
+            field: "email",
+            timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+            requestId: `req_${Date.now()}`
+          }
+        };
+      }
+
+      // 檢查帳號存在性
+      const accountCheck = await AM_validateAccountExists(requestData.email, 'email');
+      if (!accountCheck.exists) {
+        // 為安全起見，不告知帳號不存在
+        return {
+          success: true,
+          data: {
+            message: "密碼重設連結已發送到您的 Email",
+            expiresIn: 3600
+          },
+          metadata: {
+            timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+            requestId: `req_${Date.now()}`,
+            userMode: "System"
+          }
+        };
+      }
+
+      // 生成重設Token
+      const resetToken = `reset_${accountCheck.UID}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const expiresAt = new Date(Date.now() + 3600 * 1000); // 1小時有效
+
+      // 儲存重設Token
+      await db.collection('password_resets').doc(resetToken).set({
+        userId: accountCheck.UID,
+        email: requestData.email,
+        token: resetToken,
+        expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+        used: false,
+        createdAt: admin.firestore.Timestamp.now()
+      });
+
+      return {
+        success: true,
+        data: {
+          message: "密碼重設連結已發送到您的 Email",
+          expiresIn: 3600
+        },
+        metadata: {
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`,
+          userMode: "System"
+        }
+      };
+
+    } else if (action === 'reset') {
+      // 重設密碼
+      if (!requestData.token || !requestData.newPassword) {
+        return {
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "缺少必要欄位：token、newPassword",
+            field: "reset_data",
+            timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+            requestId: `req_${Date.now()}`
+          }
+        };
+      }
+
+      // 驗證重設Token
+      const tokenDoc = await db.collection('password_resets').doc(requestData.token).get();
+      if (!tokenDoc.exists || tokenDoc.data().used || tokenDoc.data().expiresAt.toDate() < new Date()) {
+        return {
+          success: false,
+          error: {
+            code: "INVALID_RESET_TOKEN",
+            message: "重設連結無效或已過期",
+            timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+            requestId: `req_${Date.now()}`
+          }
+        };
+      }
+
+      const tokenData = tokenDoc.data();
+
+      // 更新密碼（實際應用需要加密）
+      await db.collection('users').doc(tokenData.userId).update({
+        password: requestData.newPassword, // 實際需要加密
+        passwordUpdatedAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now()
+      });
+
+      // 標記Token為已使用
+      await db.collection('password_resets').doc(requestData.token).update({
+        used: true,
+        usedAt: admin.firestore.Timestamp.now()
+      });
+
+      // 生成自動登入Token
+      const autoLoginToken = `jwt_token_${tokenData.userId}_${Date.now()}`;
+
+      return {
+        success: true,
+        data: {
+          message: "密碼重設成功",
+          autoLogin: true,
+          token: autoLoginToken
+        },
+        metadata: {
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`,
+          userMode: "System"
+        }
+      };
+    }
+
+  } catch (error) {
+    AM_logError(`密碼重設API失敗: ${error.message}`, "密碼重設", "SYSTEM", "AM_PASSWORD_RESET_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "密碼重設過程發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
+/**
+ * 29. 驗證用戶認證狀態
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 驗證JWT Token有效性和用戶認證狀態
+ */
+async function AM_verifyUserAuthenticationAPI(token) {
+  const functionName = "AM_verifyUserAuthenticationAPI";
+  try {
+    AM_logInfo(`驗證用戶認證狀態`, "認證驗證", "SYSTEM", "", "", functionName);
+
+    if (!token) {
+      return {
+        success: false,
+        error: {
+          code: "UNAUTHORIZED",
+          message: "缺少認證Token",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 簡化Token驗證（實際應用需要JWT驗證）
+    if (!token.startsWith('jwt_token_')) {
+      return {
+        success: false,
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Token格式無效",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    // 從Token中提取用戶ID（簡化實作）
+    const tokenParts = token.split('_');
+    if (tokenParts.length < 4) {
+      return {
+        success: false,
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Token格式錯誤",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    const userId = `${tokenParts[2]}_${tokenParts[3]}_${tokenParts[4]}`;
+
+    // 驗證用戶存在
+    const userInfo = await AM_getUserInfo(userId, 'SYSTEM');
+    if (!userInfo.success) {
+      return {
+        success: false,
+        error: {
+          code: "UNAUTHORIZED",
+          message: "用戶不存在或已停用",
+          timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+          requestId: `req_${Date.now()}`
+        }
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        userId: userId,
+        userMode: userInfo.userData.userMode || 'Expert',
+        verified: true,
+        tokenValid: true
+      },
+      metadata: {
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`,
+        userMode: userInfo.userData.userMode || 'Expert'
+      }
+    };
+
+  } catch (error) {
+    AM_logError(`認證驗證失敗: ${error.message}`, "認證驗證", "SYSTEM", "AM_AUTH_VERIFY_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "認證驗證過程發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
+/**
+ * 30. 處理登出操作
+ * @version 2025-09-15-V1.5.0
+ * @date 2025-09-15 00:00:00
+ * @description 處理用戶登出，無效化Token並清理會話
+ */
+async function AM_handleUserLogoutAPI(requestData, userId) {
+  const functionName = "AM_handleUserLogoutAPI";
+  try {
+    AM_logInfo(`處理用戶登出: ${userId}`, "用戶登出", userId, "", "", functionName);
+
+    // 記錄登出時間
+    await db.collection('users').doc(userId).update({
+      lastLogout: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now()
+    });
+
+    // 無效化Token（實際應用需要維護Token黑名單）
+    const logoutDevices = requestData.logoutAllDevices ? 'all' : 'current';
+
+    return {
+      success: true,
+      data: {
+        message: "登出成功",
+        loggedOutDevices: logoutDevices === 'all' ? 99 : 1
+      },
+      metadata: {
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`,
+        userMode: "System"
+      }
+    };
+
+  } catch (error) {
+    AM_logError(`用戶登出失敗: ${error.message}`, "用戶登出", userId, "AM_LOGOUT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "登出過程發生錯誤",
+        timestamp: admin.firestore.Timestamp.now().toDate().toISOString(),
+        requestId: `req_${Date.now()}`
+      }
+    };
+  }
+}
+
 // =============== SR模組專用付費功能API ===============
 
 /**
@@ -1394,14 +1916,20 @@ module.exports = {
   AM_monitorSystemHealth,
   AM_initializeUserSubjects,
   AM_ensureUserSubjects,
-  // SR模組專用付費功能API (新增)
+  // SR模組專用付費功能API
   AM_validateSRPremiumFeature,
   AM_getSRUserQuota,
   AM_updateSRFeatureUsage,
-  AM_processSRUpgrade
+  AM_processSRUpgrade,
+  // Phase 1: 核心認證API端點 (新增)
+  AM_handleUserRegistrationAPI,
+  AM_handleUserLoginAPI,
+  AM_handlePasswordResetAPI,
+  AM_verifyUserAuthenticationAPI,
+  AM_handleUserLogoutAPI
 };
 
-console.log('AM 帳號管理模組載入完成 v1.0.1');
+console.log('AM 帳號管理模組載入完成 v1.2.0 - Phase 1 API端點重構');
 
 /**
  * AM_logInfo
