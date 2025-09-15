@@ -1,11 +1,11 @@
 
 {
   "metadata": {
-    "version": "v1.2.0",
+    "version": "v2.0.0",
     "created_date": "2025-01-24",
     "last_updated": "2025-01-24",
-    "description": "LCAS 2.0 Phase 1 SIT測試資料配置檔 - 階段二核心業務功能",
-    "test_cases_supported": "TC-SIT-001 to TC-SIT-020",
+    "description": "LCAS 2.0 Phase 1 SIT測試資料配置檔 - 階段三完整整合測試資料集",
+    "test_cases_supported": "TC-SIT-001 to TC-SIT-028 (完整28個測試案例)",
     "author": "LCAS SQA Team",
     "change_log": [
       {
@@ -22,6 +22,11 @@
         "version": "v1.2.0",
         "date": "2025-01-24", 
         "changes": "階段二：核心業務功能測試資料建立完成"
+      },
+      {
+        "version": "v2.0.0",
+        "date": "2025-01-24", 
+        "changes": "階段三：完整端到端業務流程測試資料與24小時穩定性測試資料建立完成"
       }
     ]
   },
@@ -483,6 +488,341 @@
         "endpoint": "/bookkeeping/transactions",
         "expected_avg_response_time_ms": 1000,
         "expected_max_response_time_ms": 2000
+      }
+    ]
+  },
+
+  "end_to_end_business_process_tests": {
+    "complete_user_journey_tests": [
+      {
+        "test_id": "journey_001",
+        "scenario": "新用戶完整生命週期流程",
+        "steps": [
+          {
+            "step": 1,
+            "action": "用戶註冊",
+            "data": {
+              "email": "newuser001@lcas.app",
+              "password": "NewUser123!",
+              "display_name": "新用戶001"
+            },
+            "expected_result": "註冊成功，獲得用戶ID"
+          },
+          {
+            "step": 2,
+            "action": "模式評估",
+            "data": {
+              "assessment_answers": {
+                "financial_experience": "beginner",
+                "detail_preference": "simple",
+                "control_preference": "guided"
+              }
+            },
+            "expected_result": "被分配為Guiding模式"
+          },
+          {
+            "step": 3,
+            "action": "首次記帳",
+            "data": {
+              "input_text": "早餐50",
+              "expected_category": "餐飲",
+              "expected_amount": 50
+            },
+            "expected_result": "記帳成功，顯示引導式回饋"
+          },
+          {
+            "step": 4,
+            "action": "查詢記帳記錄",
+            "data": {
+              "query_type": "recent",
+              "limit": 10
+            },
+            "expected_result": "正確顯示剛才的記帳記錄"
+          },
+          {
+            "step": 5,
+            "action": "登出",
+            "data": {},
+            "expected_result": "成功登出，Token被撤銷"
+          }
+        ],
+        "total_expected_time": "300000",
+        "success_criteria": "所有步驟100%成功完成"
+      },
+      {
+        "test_id": "journey_002",
+        "scenario": "Expert模式用戶進階功能流程",
+        "steps": [
+          {
+            "step": 1,
+            "action": "Expert用戶登入",
+            "data": {
+              "email": "expert001@lcas.app",
+              "password": "ExpertPass123!"
+            },
+            "expected_result": "登入成功，顯示進階功能介面"
+          },
+          {
+            "step": 2,
+            "action": "批量記帳",
+            "data": {
+              "transactions": [
+                {"input": "午餐120", "category": "餐飲"},
+                {"input": "交通50", "category": "交通"},
+                {"input": "咖啡85", "category": "餐飲"}
+              ]
+            },
+            "expected_result": "批量記帳成功，顯示詳細統計"
+          },
+          {
+            "step": 3,
+            "action": "進階查詢",
+            "data": {
+              "query_type": "advanced",
+              "filters": {
+                "category": "餐飲",
+                "date_range": "today",
+                "amount_range": {"min": 0, "max": 200}
+              }
+            },
+            "expected_result": "正確篩選出今日餐飲記錄"
+          }
+        ],
+        "total_expected_time": "240000",
+        "success_criteria": "Expert模式特有功能正常運作"
+      }
+    ],
+
+    "business_value_chain_tests": [
+      {
+        "test_id": "value_chain_001",
+        "scenario": "記帳價值鏈端到端驗證",
+        "value_chain_steps": [
+          {
+            "step": "資料輸入",
+            "layer": "PL",
+            "function": "用戶輸入記帳資訊",
+            "expected_output": "格式化記帳資料"
+          },
+          {
+            "step": "資料驗證",
+            "layer": "APL",
+            "function": "驗證記帳資料格式",
+            "expected_output": "驗證通過的資料"
+          },
+          {
+            "step": "業務處理",
+            "layer": "BL",
+            "function": "記帳邏輯處理",
+            "expected_output": "處理後的交易記錄"
+          },
+          {
+            "step": "資料儲存",
+            "layer": "DL",
+            "function": "儲存到Firestore",
+            "expected_output": "儲存成功確認"
+          },
+          {
+            "step": "結果回傳",
+            "layer": "APL",
+            "function": "包裝回應資料",
+            "expected_output": "API回應格式"
+          },
+          {
+            "step": "結果顯示",
+            "layer": "PL", 
+            "function": "顯示記帳結果",
+            "expected_output": "用戶友善的成功訊息"
+          }
+        ],
+        "success_criteria": "整個價值鏈無資料遺失，無格式錯誤"
+      }
+    ],
+
+    "four_mode_user_experience_tests": [
+      {
+        "test_id": "ux_expert_001",
+        "mode": "expert",
+        "scenario": "Expert模式用戶體驗流程",
+        "test_interactions": [
+          {
+            "action": "快速記帳",
+            "input": "午餐150信用卡",
+            "expected_response": "已記錄支出：午餐 NT$150 (信用卡支付)",
+            "expected_details": "詳細分類資訊、付款方式、時間戳記"
+          },
+          {
+            "action": "查看統計",
+            "input": "今日統計",
+            "expected_response": "詳細的今日支出分析，包含類別分佈圖表",
+            "expected_details": "進階統計資料、圖表視覺化"
+          }
+        ]
+      },
+      {
+        "test_id": "ux_guiding_001", 
+        "mode": "guiding",
+        "scenario": "Guiding模式用戶體驗流程",
+        "test_interactions": [
+          {
+            "action": "快速記帳",
+            "input": "午餐150",
+            "expected_response": "✅ 已幫您記錄：午餐花費150元",
+            "expected_details": "友善提示、下一步建議"
+          },
+          {
+            "action": "查看記錄",
+            "input": "我的記錄",
+            "expected_response": "簡化的記錄列表，含使用提示",
+            "expected_details": "引導式介面、操作提示"
+          }
+        ]
+      }
+    ]
+  },
+
+  "stability_and_performance_tests": {
+    "long_running_stability_tests": [
+      {
+        "test_id": "stability_8h_001",
+        "scenario": "8小時連續運行測試",
+        "duration_hours": 8,
+        "test_operations": [
+          {
+            "operation": "用戶註冊",
+            "frequency_per_hour": 10,
+            "concurrent_users": 3
+          },
+          {
+            "operation": "用戶登入",
+            "frequency_per_hour": 60,
+            "concurrent_users": 10
+          },
+          {
+            "operation": "快速記帳",
+            "frequency_per_hour": 120,
+            "concurrent_users": 15
+          },
+          {
+            "operation": "記錄查詢",
+            "frequency_per_hour": 80,
+            "concurrent_users": 8
+          }
+        ],
+        "expected_metrics": {
+          "success_rate": 0.99,
+          "avg_response_time_ms": 1500,
+          "max_response_time_ms": 3000,
+          "memory_usage_stable": true,
+          "no_memory_leaks": true
+        }
+      },
+      {
+        "test_id": "stability_24h_001",
+        "scenario": "24小時穩定性測試",
+        "duration_hours": 24,
+        "test_operations": [
+          {
+            "operation": "基礎CRUD操作",
+            "frequency_per_hour": 200,
+            "concurrent_users": 5
+          },
+          {
+            "operation": "模式切換操作",
+            "frequency_per_hour": 20,
+            "concurrent_users": 2
+          },
+          {
+            "operation": "錯誤恢復測試",
+            "frequency_per_hour": 5,
+            "concurrent_users": 1
+          }
+        ],
+        "expected_metrics": {
+          "system_availability": 0.999,
+          "max_downtime_minutes": 5,
+          "auto_recovery_time_minutes": 2,
+          "data_consistency_maintained": true
+        }
+      }
+    ],
+
+    "stress_and_recovery_tests": [
+      {
+        "test_id": "stress_001",
+        "scenario": "高併發壓力測試",
+        "concurrent_users": 50,
+        "duration_minutes": 30,
+        "operations_per_user": 10,
+        "expected_degradation": {
+          "max_response_time_increase": "50%",
+          "min_success_rate": 0.95,
+          "recovery_time_minutes": 5
+        }
+      },
+      {
+        "test_id": "recovery_001",
+        "scenario": "故障恢復測試",
+        "failure_scenarios": [
+          {
+            "type": "database_connection_lost",
+            "expected_recovery_time": "30s",
+            "expected_data_loss": "none"
+          },
+          {
+            "type": "api_service_restart",
+            "expected_recovery_time": "60s", 
+            "expected_in_flight_requests": "graceful_handling"
+          }
+        ]
+      }
+    ]
+  },
+
+  "final_regression_tests": {
+    "complete_functionality_regression": [
+      {
+        "test_id": "regression_001",
+        "scenario": "所有核心功能回歸測試",
+        "test_suites": [
+          "authentication_service_tests",
+          "user_management_tests", 
+          "bookkeeping_core_tests",
+          "four_mode_differentiation_tests",
+          "error_handling_tests"
+        ],
+        "expected_results": {
+          "all_tests_pass": true,
+          "no_regression_detected": true,
+          "performance_maintained": true
+        }
+      }
+    ],
+
+    "performance_benchmark_validation": [
+      {
+        "test_id": "benchmark_001",
+        "scenario": "效能基準驗證",
+        "benchmarks": [
+          {
+            "metric": "api_response_time_95th_percentile",
+            "target": "2000ms",
+            "test_duration": "1h",
+            "test_load": "normal_operations"
+          },
+          {
+            "metric": "concurrent_user_capacity",
+            "target": "100_users",
+            "sustained_duration": "30min",
+            "operations_per_user_per_min": 5
+          },
+          {
+            "metric": "data_consistency_under_load", 
+            "target": "100%_consistency",
+            "concurrent_operations": 50,
+            "test_duration": "15min"
+          }
+        ]
       }
     ]
   },
