@@ -587,7 +587,444 @@ async function BK_deleteTransaction(transactionId, params = {}) {
   }
 }
 
-// === 輔助函數 ===
+// === 階段二：API端點輔助與驗證函數 ===
+
+/**
+ * 09. 記帳數據驗證 - 支援所有交易相關端點
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段二重構 - 完整交易數據驗證機制
+ */
+function BK_validateTransactionData(data) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_validateTransactionData:`;
+
+  try {
+    // 必要欄位驗證
+    if (!data.amount || typeof data.amount !== 'number' || data.amount <= 0) {
+      return { 
+        success: false, 
+        error: "金額必須是大於0的數字",
+        errorType: "AMOUNT_INVALID"
+      };
+    }
+    
+    if (!data.type || !['income', 'expense'].includes(data.type)) {
+      return { 
+        success: false, 
+        error: "交易類型必須是income或expense",
+        errorType: "TYPE_INVALID"
+      };
+    }
+
+    // 金額範圍驗證
+    if (data.amount > 999999999) {
+      return {
+        success: false,
+        error: "金額不能超過999,999,999",
+        errorType: "AMOUNT_TOO_LARGE"
+      };
+    }
+
+    // 描述長度驗證
+    if (data.description && data.description.length > 200) {
+      return {
+        success: false,
+        error: "備註不能超過200個字元",
+        errorType: "DESCRIPTION_TOO_LONG"
+      };
+    }
+
+    // 支付方式驗證
+    if (data.paymentMethod && !BK_validatePaymentMethod(data.paymentMethod).success) {
+      return {
+        success: false,
+        error: "無效的支付方式",
+        errorType: "PAYMENT_METHOD_INVALID"
+      };
+    }
+
+    // 用戶ID驗證
+    if (data.userId && !/^U[a-fA-F0-9]{32}$/.test(data.userId)) {
+      return {
+        success: false,
+        error: "無效的用戶ID格式",
+        errorType: "USER_ID_INVALID"
+      };
+    }
+
+    BK_logInfo(`${logPrefix} 數據驗證通過`, "數據驗證", data.userId || "", "BK_validateTransactionData");
+
+    return { 
+      success: true,
+      validatedData: {
+        amount: parseFloat(data.amount.toFixed(2)),
+        type: data.type,
+        description: data.description || "",
+        paymentMethod: data.paymentMethod || "現金",
+        userId: data.userId || "",
+        ledgerId: data.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID
+      }
+    };
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 驗證過程失敗: ${error.toString()}`, "數據驗證", data.userId || "", "VALIDATION_ERROR", error.toString(), "BK_validateTransactionData");
+    return {
+      success: false,
+      error: "數據驗證過程發生錯誤",
+      errorType: "VALIDATION_PROCESS_ERROR"
+    };
+  }
+}
+
+/**
+ * 10. 生成唯一交易ID - 支援POST相關端點
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段二重構 - 強化交易ID生成演算法
+ */
+async function BK_generateTransactionId(processId) {
+  const logPrefix = `[${processId}] BK_generateTransactionId:`;
+
+  try {
+    const now = moment().tz(BK_CONFIG.TIMEZONE);
+    const dateStr = now.format("YYYYMMDD");
+    const timeStr = now.format("HHmmss");
+    const millisStr = now.format("SSS");
+    
+    // 生成隨機後綴
+    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+    
+    // 組合交易ID：日期-時間-毫秒-隨機碼
+    const transactionId = `${dateStr}-${timeStr}${millisStr}-${randomSuffix}`;
+
+    // 檢查ID唯一性
+    const uniqueCheck = await BK_checkTransactionIdUnique(transactionId);
+    if (!uniqueCheck.success) {
+      // 如果重複，重新生成
+      const fallbackId = `${dateStr}-${Date.now().toString().slice(-8)}-${randomSuffix}`;
+      BK_logWarning(`${logPrefix} 交易ID重複，使用備用ID: ${fallbackId}`, "ID生成", "", "BK_generateTransactionId");
+      return fallbackId;
+    }
+
+    BK_logInfo(`${logPrefix} 交易ID生成成功: ${transactionId}`, "ID生成", "", "BK_generateTransactionId");
+    return transactionId;
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 交易ID生成失敗: ${error.toString()}`, "ID生成", "", "ID_GENERATION_ERROR", error.toString(), "BK_generateTransactionId");
+    
+    // 降級方案：使用時間戳
+    const fallbackId = `${moment().tz(BK_CONFIG.TIMEZONE).format("YYYYMMDD")}-${Date.now()}`;
+    return fallbackId;
+  }
+}
+
+/**
+ * 11. 支付方式驗證 - 支援所有交易端點
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段二重構 - 完整支付方式驗證
+ */
+function BK_validatePaymentMethod(paymentMethod) {
+  const validMethods = [
+    '現金', '刷卡', '轉帳', '行動支付', 
+    'LINE Pay', '街口支付', '悠遊卡', '一卡通',
+    '信用卡', '金融卡', '支票', '其他'
+  ];
+
+  if (!paymentMethod || typeof paymentMethod !== 'string') {
+    return {
+      success: false,
+      error: "支付方式不能為空",
+      validMethods: validMethods
+    };
+  }
+
+  const trimmedMethod = paymentMethod.trim();
+
+  if (!validMethods.includes(trimmedMethod)) {
+    return {
+      success: false,
+      error: `不支援的支付方式: ${trimmedMethod}`,
+      validMethods: validMethods
+    };
+  }
+
+  return {
+    success: true,
+    paymentMethod: trimmedMethod
+  };
+}
+
+/**
+ * 12. 統計數據生成 - 支援GET /transactions/dashboard
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段二重構 - 強化儀表板統計功能
+ */
+function BK_generateStatistics(transactions, period = 'month') {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_generateStatistics:`;
+
+  try {
+    if (!Array.isArray(transactions)) {
+      transactions = [];
+    }
+
+    const stats = {
+      totalIncome: 0,
+      totalExpense: 0,
+      transactionCount: transactions.length,
+      averageTransaction: 0,
+      categories: {},
+      paymentMethods: {},
+      dailyTrends: {},
+      period: period
+    };
+
+    transactions.forEach(transaction => {
+      const amount = parseFloat(transaction.amount) || 0;
+      const category = transaction.category || '其他';
+      const paymentMethod = transaction.paymentMethod || '現金';
+      const date = transaction.date || '';
+
+      // 計算收入支出
+      if (transaction.type === 'income') {
+        stats.totalIncome += amount;
+      } else {
+        stats.totalExpense += amount;
+      }
+
+      // 分類統計
+      if (!stats.categories[category]) {
+        stats.categories[category] = { income: 0, expense: 0, count: 0 };
+      }
+      stats.categories[category][transaction.type] += amount;
+      stats.categories[category].count += 1;
+
+      // 支付方式統計
+      if (!stats.paymentMethods[paymentMethod]) {
+        stats.paymentMethods[paymentMethod] = { amount: 0, count: 0 };
+      }
+      stats.paymentMethods[paymentMethod].amount += amount;
+      stats.paymentMethods[paymentMethod].count += 1;
+
+      // 每日趨勢
+      if (date) {
+        if (!stats.dailyTrends[date]) {
+          stats.dailyTrends[date] = { income: 0, expense: 0 };
+        }
+        stats.dailyTrends[date][transaction.type] += amount;
+      }
+    });
+
+    // 計算平均值
+    stats.averageTransaction = stats.transactionCount > 0 
+      ? ((stats.totalIncome + stats.totalExpense) / stats.transactionCount) 
+      : 0;
+
+    // 計算淨收入
+    stats.netIncome = stats.totalIncome - stats.totalExpense;
+
+    // 計算儲蓄率
+    stats.savingsRate = stats.totalIncome > 0 
+      ? ((stats.netIncome / stats.totalIncome) * 100) 
+      : 0;
+
+    BK_logInfo(`${logPrefix} 統計數據生成完成，處理${stats.transactionCount}筆交易`, "統計生成", "", "BK_generateStatistics");
+
+    return {
+      success: true,
+      data: stats
+    };
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 統計生成失敗: ${error.toString()}`, "統計生成", "", "STATS_ERROR", error.toString(), "BK_generateStatistics");
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "STATISTICS_ERROR"
+    };
+  }
+}
+
+/**
+ * 13. 交易查詢過濾 - 支援GET /transactions
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段二重構 - 強化查詢過濾功能
+ */
+function BK_buildTransactionQuery(queryParams) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_buildTransactionQuery:`;
+
+  try {
+    let query = BK_INIT_STATUS.firestore_db
+      .collection('ledgers')
+      .doc(queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID)
+      .collection('entries');
+
+    const appliedFilters = [];
+
+    // 用戶過濾
+    if (queryParams.userId) {
+      query = query.where('UID', '==', queryParams.userId);
+      appliedFilters.push(`userId: ${queryParams.userId}`);
+    }
+
+    // 日期範圍過濾
+    if (queryParams.startDate) {
+      query = query.where('日期', '>=', queryParams.startDate);
+      appliedFilters.push(`startDate: ${queryParams.startDate}`);
+    }
+
+    if (queryParams.endDate) {
+      query = query.where('日期', '<=', queryParams.endDate);
+      appliedFilters.push(`endDate: ${queryParams.endDate}`);
+    }
+
+    // 交易類型過濾
+    if (queryParams.type) {
+      if (queryParams.type === 'income') {
+        query = query.where('收入', '>', 0);
+      } else if (queryParams.type === 'expense') {
+        query = query.where('支出', '>', 0);
+      }
+      appliedFilters.push(`type: ${queryParams.type}`);
+    }
+
+    // 金額範圍過濾
+    if (queryParams.minAmount || queryParams.maxAmount) {
+      // Firestore 複合查詢限制，這部分需要在結果中進行後處理
+      appliedFilters.push(`amount range: ${queryParams.minAmount || '0'} - ${queryParams.maxAmount || '∞'}`);
+    }
+
+    // 支付方式過濾
+    if (queryParams.paymentMethod) {
+      query = query.where('支付方式', '==', queryParams.paymentMethod);
+      appliedFilters.push(`paymentMethod: ${queryParams.paymentMethod}`);
+    }
+
+    // 排序
+    const orderField = queryParams.orderBy || '日期';
+    const orderDirection = queryParams.orderDirection || 'desc';
+    query = query.orderBy(orderField, orderDirection);
+
+    if (orderField !== '時間') {
+      query = query.orderBy('時間', orderDirection);
+    }
+
+    // 分頁限制
+    if (queryParams.limit) {
+      const limit = Math.min(parseInt(queryParams.limit), 1000); // 最大1000筆
+      query = query.limit(limit);
+      appliedFilters.push(`limit: ${limit}`);
+    }
+
+    BK_logInfo(`${logPrefix} 查詢條件建立完成: [${appliedFilters.join(', ')}]`, "查詢建立", queryParams.userId || "", "BK_buildTransactionQuery");
+
+    return {
+      success: true,
+      query: query,
+      appliedFilters: appliedFilters,
+      postProcessFilters: {
+        minAmount: queryParams.minAmount,
+        maxAmount: queryParams.maxAmount,
+        categoryId: queryParams.categoryId,
+        search: queryParams.search
+      }
+    };
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 查詢建立失敗: ${error.toString()}`, "查詢建立", queryParams.userId || "", "QUERY_BUILD_ERROR", error.toString(), "BK_buildTransactionQuery");
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "QUERY_BUILD_ERROR"
+    };
+  }
+}
+
+/**
+ * 14. 錯誤處理機制 - 支援所有端點
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段二重構 - 統一錯誤處理機制
+ */
+function BK_handleError(error, context = {}) {
+  const processId = context.processId || require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_handleError:`;
+
+  try {
+    // 錯誤分類
+    const errorTypes = {
+      'VALIDATION_ERROR': { severity: 'WARNING', httpCode: 400 },
+      'NOT_FOUND': { severity: 'INFO', httpCode: 404 },
+      'STORAGE_ERROR': { severity: 'ERROR', httpCode: 500 },
+      'FIREBASE_ERROR': { severity: 'ERROR', httpCode: 503 },
+      'AUTHENTICATION_ERROR': { severity: 'WARNING', httpCode: 401 },
+      'AUTHORIZATION_ERROR': { severity: 'WARNING', httpCode: 403 },
+      'RATE_LIMIT_ERROR': { severity: 'WARNING', httpCode: 429 },
+      'PROCESS_ERROR': { severity: 'ERROR', httpCode: 500 },
+      'UNKNOWN_ERROR': { severity: 'ERROR', httpCode: 500 }
+    };
+
+    const errorInfo = errorTypes[error.errorType] || errorTypes['UNKNOWN_ERROR'];
+
+    // 構建標準化錯誤響應
+    const errorResponse = {
+      success: false,
+      error: error.message || error.toString(),
+      errorType: error.errorType || 'UNKNOWN_ERROR',
+      httpCode: errorInfo.httpCode,
+      timestamp: new Date().toISOString(),
+      processId: processId
+    };
+
+    // 添加上下文資訊
+    if (context.userId) errorResponse.userId = context.userId;
+    if (context.operation) errorResponse.operation = context.operation;
+    if (context.requestId) errorResponse.requestId = context.requestId;
+
+    // 記錄錯誤日誌
+    const logFunction = errorInfo.severity === 'ERROR' ? BK_logError : 
+                       errorInfo.severity === 'WARNING' ? BK_logWarning : BK_logInfo;
+
+    logFunction(
+      `${logPrefix} ${errorResponse.error}`,
+      context.operation || "錯誤處理",
+      context.userId || "",
+      error.errorType || "UNKNOWN_ERROR",
+      error.stack || error.toString(),
+      "BK_handleError"
+    );
+
+    // 敏感資訊過濾
+    if (process.env.NODE_ENV === 'production') {
+      delete errorResponse.stack;
+      if (errorInfo.severity === 'ERROR') {
+        errorResponse.error = "系統發生錯誤，請稍後再試";
+      }
+    }
+
+    return errorResponse;
+
+  } catch (handlingError) {
+    // 錯誤處理本身發生錯誤
+    BK_logCritical(`${logPrefix} 錯誤處理失敗: ${handlingError.toString()}`, "錯誤處理", context.userId || "", "ERROR_HANDLING_FAILED", handlingError.toString(), "BK_handleError");
+    
+    return {
+      success: false,
+      error: "系統錯誤處理失敗",
+      errorType: "ERROR_HANDLING_FAILED",
+      httpCode: 500,
+      timestamp: new Date().toISOString(),
+      processId: processId
+    };
+  }
+}
+
+// === 階段一輔助函數（保留） ===
 
 /**
  * 從環境變數獲取配置
@@ -597,18 +1034,23 @@ function getEnvVar(key) {
 }
 
 /**
- * 驗證交易數據
+ * 檢查交易ID唯一性
  */
-function BK_validateTransactionData(data) {
-  if (!data.amount || data.amount <= 0) {
-    return { success: false, error: "金額必須大於0" };
-  }
-  
-  if (!data.type || !['income', 'expense'].includes(data.type)) {
-    return { success: false, error: "交易類型必須是income或expense" };
-  }
+async function BK_checkTransactionIdUnique(transactionId) {
+  try {
+    const db = BK_INIT_STATUS.firestore_db;
+    const querySnapshot = await db.collectionGroup('entries')
+      .where('收支ID', '==', transactionId)
+      .limit(1)
+      .get();
 
-  return { success: true };
+    return {
+      success: querySnapshot.empty,
+      exists: !querySnapshot.empty
+    };
+  } catch (error) {
+    return { success: true, exists: false }; // 查詢失敗時假設不存在
+  }
 }
 
 /**
@@ -736,7 +1178,7 @@ function BK_logCritical(message, operationType, userId, errorCode, errorDetails,
   console.error(`[CRITICAL] [BK] ${message} | ${operationType} | ${userId} | ${errorCode} | ${functionName}`);
 }
 
-// 導出模組 - 階段一的8個核心函數
+// 導出模組 - 階段一+階段二的14個函數
 module.exports = {
   // 階段一：核心架構重建與基礎功能 (8個函數)
   BK_initialize,                    // 01. 模組初始化與配置管理
@@ -747,6 +1189,14 @@ module.exports = {
   BK_getDashboardData,             // 06. 查詢儀表板數據 - 支援 GET /transactions/dashboard
   BK_updateTransaction,            // 07. 更新交易記錄 - 支援 PUT /transactions/{id}
   BK_deleteTransaction,            // 08. 刪除交易記錄 - 支援 DELETE /transactions/{id}
+  
+  // 階段二：API端點輔助與驗證函數 (6個函數)
+  BK_validateTransactionData,      // 09. 記帳數據驗證 - 支援所有交易相關端點
+  BK_generateTransactionId,        // 10. 生成唯一交易ID - 支援 POST 相關端點
+  BK_validatePaymentMethod,        // 11. 支付方式驗證 - 支援所有交易端點
+  BK_generateStatistics,           // 12. 統計數據生成 - 支援 GET /transactions/dashboard
+  BK_buildTransactionQuery,        // 13. 交易查詢過濾 - 支援 GET /transactions
+  BK_handleError,                  // 14. 錯誤處理機制 - 支援所有端點
   
   // 版本資訊
   BK_VERSION: BK_CONFIG.VERSION,
