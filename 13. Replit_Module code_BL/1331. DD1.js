@@ -697,7 +697,552 @@ async function DD_processDeleteTransaction(deleteData) {
   }
 }
 
-// 輔助函數
+// === 階段二：API端點輔助與驗證函數 ===
+
+/**
+ * 09. 記帳數據驗證 - 支援所有交易相關端點
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增完整交易數據驗證機制，支援所有API端點
+ * @description 驗證交易數據的完整性和有效性
+ * @param {Object} transactionData - 交易數據
+ * @returns {Object} 驗證結果
+ */
+function DD_validateTransactionData(transactionData) {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始驗證交易數據`);
+
+    const errors = [];
+    const warnings = [];
+
+    // 必要欄位檢查
+    if (!transactionData.amount || typeof transactionData.amount !== 'number') {
+      errors.push('金額必須是有效數字');
+    } else if (transactionData.amount <= 0) {
+      errors.push('金額必須大於0');
+    } else if (transactionData.amount > 999999999) {
+      errors.push('金額不能超過999,999,999');
+    }
+
+    if (!transactionData.type || !['income', 'expense'].includes(transactionData.type)) {
+      errors.push('交易類型必須是income或expense');
+    }
+
+    if (!transactionData.userId || typeof transactionData.userId !== 'string') {
+      errors.push('使用者ID不能為空');
+    }
+
+    // 選填欄位檢查
+    if (transactionData.description && transactionData.description.length > 200) {
+      warnings.push('備註超過200字元，將被截斷');
+    }
+
+    if (transactionData.categoryId && typeof transactionData.categoryId !== 'string') {
+      warnings.push('類別ID格式不正確');
+    }
+
+    if (transactionData.accountId && typeof transactionData.accountId !== 'string') {
+      warnings.push('帳戶ID格式不正確');
+    }
+
+    // 日期格式檢查
+    if (transactionData.date) {
+      const dateObj = new Date(transactionData.date);
+      if (isNaN(dateObj.getTime())) {
+        errors.push('日期格式不正確');
+      }
+    }
+
+    console.log(`[${processId}] 驗證完成 - 錯誤:${errors.length}個, 警告:${warnings.length}個`);
+
+    return {
+      success: errors.length === 0,
+      errors: errors,
+      warnings: warnings,
+      processId: processId,
+      validatedData: errors.length === 0 ? {
+        amount: parseFloat(transactionData.amount.toFixed(2)),
+        type: transactionData.type,
+        userId: transactionData.userId,
+        categoryId: transactionData.categoryId || 'default',
+        accountId: transactionData.accountId || 'default',
+        description: transactionData.description ? 
+          transactionData.description.substring(0, 200) : '',
+        date: transactionData.date || new Date().toISOString()
+      } : null
+    };
+
+  } catch (error) {
+    console.log(`[${processId}] 驗證過程錯誤: ${error.toString()}`);
+    return {
+      success: false,
+      errors: [`驗證過程錯誤: ${error.toString()}`],
+      warnings: [],
+      processId: processId
+    };
+  }
+}
+
+/**
+ * 10. 生成唯一交易ID - 支援POST相關端點
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增強化交易ID生成演算法
+ * @description 生成唯一的交易ID，包含時間戳和隨機元素
+ * @param {string} processId - 處理ID（可選）
+ * @returns {Promise<string>} 唯一交易ID
+ */
+async function DD_generateTransactionId(processId) {
+  try {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const milliseconds = now.getMilliseconds().toString().padStart(3, '0');
+
+    // 生成隨機後綴
+    const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    // 組合交易ID: YYYYMMDD-HHMMSS-SSS-RANDOM
+    const transactionId = `${year}${month}${day}-${hours}${minutes}${seconds}-${milliseconds}-${randomSuffix}`;
+
+    console.log(`交易ID生成成功: ${transactionId}`);
+    return transactionId;
+
+  } catch (error) {
+    console.log(`交易ID生成失敗: ${error.toString()}`);
+    // 降級方案
+    const fallbackId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    return fallbackId;
+  }
+}
+
+/**
+ * 11. 支付方式驗證 - 支援所有交易端點
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增完整支付方式驗證邏輯
+ * @description 驗證支付方式的有效性
+ * @param {string} paymentMethod - 支付方式
+ * @returns {Object} 驗證結果
+ */
+function DD_validatePaymentMethod(paymentMethod) {
+  const validMethods = [
+    '現金', '刷卡', '轉帳', '行動支付',
+    'LINE Pay', '街口支付', '悠遊卡', '一卡通',
+    '信用卡', '金融卡', '支票', '其他'
+  ];
+
+  try {
+    if (!paymentMethod || typeof paymentMethod !== 'string') {
+      return {
+        success: false,
+        error: '支付方式不能為空',
+        validMethods: validMethods,
+        normalized: '現金'
+      };
+    }
+
+    const trimmed = paymentMethod.trim();
+
+    // 完全匹配
+    if (validMethods.includes(trimmed)) {
+      return {
+        success: true,
+        normalized: trimmed,
+        validMethods: validMethods
+      };
+    }
+
+    // 模糊匹配
+    const fuzzyMatch = validMethods.find(method => 
+      method.includes(trimmed) || trimmed.includes(method)
+    );
+
+    if (fuzzyMatch) {
+      return {
+        success: true,
+        normalized: fuzzyMatch,
+        validMethods: validMethods,
+        warning: `已自動修正為: ${fuzzyMatch}`
+      };
+    }
+
+    return {
+      success: false,
+      error: `不支援的支付方式: ${trimmed}`,
+      validMethods: validMethods,
+      normalized: '其他'
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      error: `支付方式驗證錯誤: ${error.toString()}`,
+      validMethods: validMethods,
+      normalized: '現金'
+    };
+  }
+}
+
+/**
+ * 12. 統計數據生成 - 支援GET /transactions/dashboard
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增儀表板統計數據生成功能
+ * @description 根據交易數據生成統計信息
+ * @param {Array} transactions - 交易記錄陣列
+ * @param {Object} options - 統計選項
+ * @returns {Object} 統計數據
+ */
+function DD_generateStatistics(transactions, options = {}) {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始生成統計數據，交易筆數: ${transactions.length}`);
+
+    if (!Array.isArray(transactions)) {
+      transactions = [];
+    }
+
+    const stats = {
+      summary: {
+        totalTransactions: transactions.length,
+        totalIncome: 0,
+        totalExpense: 0,
+        netIncome: 0,
+        averageIncome: 0,
+        averageExpense: 0
+      },
+      categories: {},
+      paymentMethods: {},
+      dailyTrends: {},
+      monthlyTrends: {},
+      processId: processId
+    };
+
+    let incomeCount = 0;
+    let expenseCount = 0;
+
+    // 處理每筆交易
+    transactions.forEach(transaction => {
+      const amount = parseFloat(transaction.amount) || 0;
+      const type = transaction.type;
+      const category = transaction.category || '其他';
+      const paymentMethod = transaction.paymentMethod || '現金';
+      const date = transaction.date ? transaction.date.split('T')[0] : '';
+
+      // 收入支出統計
+      if (type === 'income') {
+        stats.summary.totalIncome += amount;
+        incomeCount++;
+      } else if (type === 'expense') {
+        stats.summary.totalExpense += amount;
+        expenseCount++;
+      }
+
+      // 分類統計
+      if (!stats.categories[category]) {
+        stats.categories[category] = {
+          income: 0,
+          expense: 0,
+          count: 0
+        };
+      }
+      stats.categories[category][type] += amount;
+      stats.categories[category].count++;
+
+      // 支付方式統計
+      if (!stats.paymentMethods[paymentMethod]) {
+        stats.paymentMethods[paymentMethod] = {
+          amount: 0,
+          count: 0
+        };
+      }
+      stats.paymentMethods[paymentMethod].amount += amount;
+      stats.paymentMethods[paymentMethod].count++;
+
+      // 每日趨勢
+      if (date) {
+        if (!stats.dailyTrends[date]) {
+          stats.dailyTrends[date] = {
+            income: 0,
+            expense: 0,
+            count: 0
+          };
+        }
+        stats.dailyTrends[date][type] += amount;
+        stats.dailyTrends[date].count++;
+      }
+    });
+
+    // 計算衍生統計
+    stats.summary.netIncome = stats.summary.totalIncome - stats.summary.totalExpense;
+    stats.summary.averageIncome = incomeCount > 0 ? 
+      stats.summary.totalIncome / incomeCount : 0;
+    stats.summary.averageExpense = expenseCount > 0 ? 
+      stats.summary.totalExpense / expenseCount : 0;
+
+    // 計算儲蓄率
+    stats.summary.savingsRate = stats.summary.totalIncome > 0 ? 
+      (stats.summary.netIncome / stats.summary.totalIncome * 100) : 0;
+
+    console.log(`[${processId}] 統計數據生成完成`);
+
+    return {
+      success: true,
+      data: stats
+    };
+
+  } catch (error) {
+    console.log(`[${processId}] 統計數據生成失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      processId: processId
+    };
+  }
+}
+
+/**
+ * 13. 交易查詢過濾 - 支援GET /transactions
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增強化查詢過濾功能
+ * @description 根據查詢參數過濾交易記錄
+ * @param {Array} transactions - 所有交易記錄
+ * @param {Object} filters - 過濾條件
+ * @returns {Object} 過濾結果
+ */
+function DD_filterTransactions(transactions, filters = {}) {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始過濾交易，原始筆數: ${transactions.length}`);
+
+    if (!Array.isArray(transactions)) {
+      return {
+        success: false,
+        error: '交易數據格式錯誤',
+        processId: processId
+      };
+    }
+
+    let filtered = [...transactions];
+    const appliedFilters = [];
+
+    // 交易類型過濾
+    if (filters.type && ['income', 'expense'].includes(filters.type)) {
+      filtered = filtered.filter(t => t.type === filters.type);
+      appliedFilters.push(`type: ${filters.type}`);
+    }
+
+    // 日期範圍過濾
+    if (filters.startDate) {
+      const startDate = new Date(filters.startDate);
+      filtered = filtered.filter(t => new Date(t.date) >= startDate);
+      appliedFilters.push(`startDate: ${filters.startDate}`);
+    }
+
+    if (filters.endDate) {
+      const endDate = new Date(filters.endDate);
+      filtered = filtered.filter(t => new Date(t.date) <= endDate);
+      appliedFilters.push(`endDate: ${filters.endDate}`);
+    }
+
+    // 金額範圍過濾
+    if (filters.minAmount !== undefined) {
+      filtered = filtered.filter(t => t.amount >= filters.minAmount);
+      appliedFilters.push(`minAmount: ${filters.minAmount}`);
+    }
+
+    if (filters.maxAmount !== undefined) {
+      filtered = filtered.filter(t => t.amount <= filters.maxAmount);
+      appliedFilters.push(`maxAmount: ${filters.maxAmount}`);
+    }
+
+    // 分類過濾
+    if (filters.category) {
+      filtered = filtered.filter(t => 
+        t.category && t.category.includes(filters.category)
+      );
+      appliedFilters.push(`category: ${filters.category}`);
+    }
+
+    // 支付方式過濾
+    if (filters.paymentMethod) {
+      filtered = filtered.filter(t => t.paymentMethod === filters.paymentMethod);
+      appliedFilters.push(`paymentMethod: ${filters.paymentMethod}`);
+    }
+
+    // 關鍵字搜尋
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      filtered = filtered.filter(t => 
+        (t.description && t.description.toLowerCase().includes(searchTerm)) ||
+        (t.category && t.category.toLowerCase().includes(searchTerm))
+      );
+      appliedFilters.push(`search: ${filters.search}`);
+    }
+
+    // 排序
+    if (filters.sortBy) {
+      const sortField = filters.sortBy;
+      const sortOrder = filters.sortOrder === 'asc' ? 1 : -1;
+      
+      filtered.sort((a, b) => {
+        let aVal = a[sortField];
+        let bVal = b[sortField];
+        
+        if (sortField === 'date') {
+          aVal = new Date(aVal);
+          bVal = new Date(bVal);
+        }
+        
+        if (aVal < bVal) return -1 * sortOrder;
+        if (aVal > bVal) return 1 * sortOrder;
+        return 0;
+      });
+      appliedFilters.push(`sort: ${sortField} ${filters.sortOrder || 'desc'}`);
+    }
+
+    // 分頁
+    let paginatedResults = filtered;
+    const page = parseInt(filters.page) || 1;
+    const limit = parseInt(filters.limit) || 20;
+    
+    if (filters.page || filters.limit) {
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      paginatedResults = filtered.slice(startIndex, endIndex);
+      appliedFilters.push(`pagination: page ${page}, limit ${limit}`);
+    }
+
+    console.log(`[${processId}] 過濾完成，結果筆數: ${paginatedResults.length}`);
+
+    return {
+      success: true,
+      data: {
+        transactions: paginatedResults,
+        pagination: {
+          page: page,
+          limit: limit,
+          total: filtered.length,
+          totalPages: Math.ceil(filtered.length / limit),
+          hasNext: page * limit < filtered.length,
+          hasPrev: page > 1
+        },
+        appliedFilters: appliedFilters,
+        processId: processId
+      }
+    };
+
+  } catch (error) {
+    console.log(`[${processId}] 交易過濾失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      processId: processId
+    };
+  }
+}
+
+/**
+ * 14. 錯誤處理機制 - 支援所有端點
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增統一錯誤處理機制
+ * @description 統一處理各種錯誤情況
+ * @param {Error|Object} error - 錯誤對象
+ * @param {Object} context - 錯誤上下文
+ * @returns {Object} 標準化錯誤響應
+ */
+function DD_handleError(error, context = {}) {
+  const processId = context.processId || uuidv4().substring(0, 8);
+
+  try {
+    // 錯誤分類
+    const errorTypes = {
+      'VALIDATION_ERROR': { level: 'WARNING', code: 400 },
+      'NOT_FOUND': { level: 'INFO', code: 404 },
+      'FIREBASE_ERROR': { level: 'ERROR', code: 503 },
+      'PERMISSION_ERROR': { level: 'WARNING', code: 403 },
+      'RATE_LIMIT_ERROR': { level: 'WARNING', code: 429 },
+      'SYSTEM_ERROR': { level: 'ERROR', code: 500 },
+      'UNKNOWN_ERROR': { level: 'ERROR', code: 500 }
+    };
+
+    const errorType = error.type || error.errorType || 'UNKNOWN_ERROR';
+    const errorInfo = errorTypes[errorType] || errorTypes['UNKNOWN_ERROR'];
+
+    const standardError = {
+      success: false,
+      error: {
+        type: errorType,
+        message: error.message || error.toString(),
+        code: errorInfo.code,
+        timestamp: new Date().toISOString(),
+        processId: processId
+      }
+    };
+
+    // 添加上下文信息
+    if (context.operation) standardError.error.operation = context.operation;
+    if (context.userId) standardError.error.userId = context.userId;
+    if (context.endpoint) standardError.error.endpoint = context.endpoint;
+
+    // 添加詳細信息（開發模式）
+    if (process.env.NODE_ENV === 'development') {
+      standardError.error.details = error.stack || error.details;
+    }
+
+    // 用戶友善訊息
+    standardError.userMessage = DD_getUserFriendlyMessage(errorType);
+
+    console.log(`[${processId}] 錯誤處理完成: ${errorType}`);
+
+    return standardError;
+
+  } catch (handlingError) {
+    // 錯誤處理失敗的備用方案
+    console.log(`[${processId}] 錯誤處理失敗: ${handlingError.toString()}`);
+    return {
+      success: false,
+      error: {
+        type: 'ERROR_HANDLING_FAILED',
+        message: '系統錯誤處理失敗',
+        code: 500,
+        timestamp: new Date().toISOString(),
+        processId: processId
+      },
+      userMessage: '系統發生未知錯誤，請稍後再試'
+    };
+  }
+}
+
+/**
+ * 取得用戶友善錯誤訊息
+ */
+function DD_getUserFriendlyMessage(errorType) {
+  const messages = {
+    'VALIDATION_ERROR': '輸入資料格式不正確，請檢查後重試',
+    'NOT_FOUND': '找不到相關記錄',
+    'FIREBASE_ERROR': '資料庫連線異常，請稍後再試',
+    'PERMISSION_ERROR': '權限不足，無法執行此操作',
+    'RATE_LIMIT_ERROR': '操作過於頻繁，請稍後再試',
+    'SYSTEM_ERROR': '系統發生錯誤，請聯繫客服',
+    'UNKNOWN_ERROR': '發生未知錯誤，請稍後再試'
+  };
+
+  return messages[errorType] || messages['UNKNOWN_ERROR'];
+}
+
+// === 原有輔助函數 ===
 
 /**
  * 解析快速輸入文字（簡化版本）
@@ -790,6 +1335,14 @@ module.exports = {
   DD_processUpdateTransaction,
   DD_processDeleteTransaction,
 
+  // Phase 1 階段二：API端點輔助與驗證函數
+  DD_validateTransactionData,
+  DD_generateTransactionId,
+  DD_validatePaymentMethod,
+  DD_generateStatistics,
+  DD_filterTransactions,
+  DD_handleError,
+
   // 兼容性函數
   DD_distributeData,
   DD_getAllSubjects,
@@ -800,5 +1353,6 @@ module.exports = {
   // 輔助函數 (供內部或需要時使用)
   DD_parseQuickInput,
   DD_formatDashboardByMode,
+  DD_getUserFriendlyMessage,
   DD_formatSystemReplyMessage // 暴露此函數以供外部模組使用
 };
