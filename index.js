@@ -76,7 +76,7 @@ try {
 }
 
 // 載入應用層模組 - 依賴FS模組的核心函數
-let WH, BK, LBK, DD, AM, SR;
+let BK, LBK, DD, AM, SR;
 try {
   if (FS && typeof FS.FS_getDocument === 'function') {
     BK = require('./13. Replit_Module code_BL/1301. BK.js');    // 記帳處理模組
@@ -466,8 +466,8 @@ app.get('/check-https', async (req, res) => {
       protocol: protocol,
       https_supported: httpsSupported,
       replit_proxy: true,
-      webhook_url: httpsSupported ? 
-        `https://${req.get('host')}/webhook` : 
+      webhook_url: httpsSupported ?
+        `https://${req.get('host')}/webhook` :
         `http://${req.get('host')}/webhook`,
       timestamp: new Date().toISOString()
     };
@@ -596,7 +596,7 @@ app.post('/api/v1/auth/login', async (req, res) => {
     if (validation.exists && validation.accountStatus === 'active') {
       // 模擬JWT Token生成（階段一簡化實作）
       const token = `jwt_${lineUID}_${Date.now()}`;
-      
+
       res.json({
         success: true,
         data: {
