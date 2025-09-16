@@ -1,4 +1,3 @@
-
 /**
  * BK_記帳處理模組_2.1.0
  * @module 記帳處理模組
@@ -174,10 +173,10 @@ async function BK_createTransaction(transactionData) {
 
     // 生成交易ID
     const transactionId = await BK_generateTransactionId(processId);
-    
+
     // 準備交易數據
     const preparedData = await BK_prepareTransactionData(transactionId, transactionData, processId);
-    
+
     // 儲存到Firestore
     const result = await BK_saveTransactionToFirestore(preparedData, processId);
 
@@ -252,7 +251,7 @@ async function BK_processQuickTransaction(quickData) {
     if (result.success) {
       // 生成快速記帳回應訊息
       const confirmation = `✅ 已記錄${parsed.type === 'income' ? '收入' : '支出'} NT$${parsed.amount} - ${parsed.description}`;
-      
+
       return {
         success: true,
         data: {
@@ -316,7 +315,7 @@ async function BK_getTransactions(queryParams = {}) {
 
     // 排序和分頁
     query = query.orderBy('日期', 'desc').orderBy('時間', 'desc');
-    
+
     if (queryParams.limit) {
       query = query.limit(parseInt(queryParams.limit));
     }
@@ -550,7 +549,7 @@ async function BK_deleteTransaction(transactionId, params = {}) {
     }
 
     const doc = querySnapshot.docs[0];
-    
+
     // 執行刪除
     await doc.ref.delete();
 
@@ -608,7 +607,7 @@ function BK_validateTransactionData(data) {
         errorType: "AMOUNT_INVALID"
       };
     }
-    
+
     if (!data.type || !['income', 'expense'].includes(data.type)) {
       return { 
         success: false, 
@@ -691,10 +690,10 @@ async function BK_generateTransactionId(processId) {
     const dateStr = now.format("YYYYMMDD");
     const timeStr = now.format("HHmmss");
     const millisStr = now.format("SSS");
-    
+
     // 生成隨機後綴
     const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-    
+
     // 組合交易ID：日期-時間-毫秒-隨機碼
     const transactionId = `${dateStr}-${timeStr}${millisStr}-${randomSuffix}`;
 
@@ -712,7 +711,7 @@ async function BK_generateTransactionId(processId) {
 
   } catch (error) {
     BK_logError(`${logPrefix} 交易ID生成失敗: ${error.toString()}`, "ID生成", "", "ID_GENERATION_ERROR", error.toString(), "BK_generateTransactionId");
-    
+
     // 降級方案：使用時間戳
     const fallbackId = `${moment().tz(BK_CONFIG.TIMEZONE).format("YYYYMMDD")}-${Date.now()}`;
     return fallbackId;
@@ -1012,7 +1011,7 @@ function BK_handleError(error, context = {}) {
   } catch (handlingError) {
     // 錯誤處理本身發生錯誤
     BK_logCritical(`${logPrefix} 錯誤處理失敗: ${handlingError.toString()}`, "錯誤處理", context.userId || "", "ERROR_HANDLING_FAILED", handlingError.toString(), "BK_handleError");
-    
+
     return {
       success: false,
       error: "系統錯誤處理失敗",
@@ -1024,181 +1023,763 @@ function BK_handleError(error, context = {}) {
   }
 }
 
-// === 階段一輔助函數（保留） ===
+// === 階段三：API整合優化函數 ===
 
 /**
- * 從環境變數獲取配置
+ * 15. API響應格式標準化 - 支援所有端點
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段三重構 - 統一API響應格式，提升用戶體驗
  */
-function getEnvVar(key) {
-  return process.env[key] || '';
-}
+function BK_formatAPIResponse(data, operation = '', success = true, metadata = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_formatAPIResponse:`;
 
-/**
- * 檢查交易ID唯一性
- */
-async function BK_checkTransactionIdUnique(transactionId) {
   try {
-    const db = BK_INIT_STATUS.firestore_db;
-    const querySnapshot = await db.collectionGroup('entries')
-      .where('收支ID', '==', transactionId)
-      .limit(1)
-      .get();
-
-    return {
-      success: querySnapshot.empty,
-      exists: !querySnapshot.empty
+    const responseFormat = {
+      success: success,
+      timestamp: new Date().toISOString(),
+      operation: operation,
+      data: success ? data : null,
+      error: success ? null : data,
+      metadata: {
+        version: BK_CONFIG.VERSION,
+        processId: processId,
+        userMode: metadata.userMode || 'Expert',
+        endpoint: metadata.endpoint || '',
+        executionTime: metadata.executionTime || 0,
+        ...metadata
+      }
     };
+
+    // 根據操作類型添加特定格式化
+    switch (operation) {
+      case 'createTransaction':
+        if (success && data) {
+          responseFormat.metadata.transactionCreated = true;
+          responseFormat.metadata.amount = data.amount;
+          responseFormat.metadata.type = data.type;
+        }
+        break;
+
+      case 'getTransactions':
+        if (success && data) {
+          responseFormat.metadata.totalResults = data.transactions?.length || 0;
+          responseFormat.metadata.pagination = {
+            page: data.page || 1,
+            limit: data.limit || 20,
+            hasMore: data.transactions?.length === data.limit
+          };
+        }
+        break;
+
+      case 'getDashboard':
+        if (success && data) {
+          responseFormat.metadata.dashboardGenerated = true;
+          responseFormat.metadata.summaryIncluded = !!data.summary;
+          responseFormat.metadata.recentTransactionsCount = data.recentTransactions?.length || 0;
+        }
+        break;
+
+      case 'quickBooking':
+        if (success && data) {
+          responseFormat.metadata.parsedInput = !!data.parsed;
+          responseFormat.metadata.autoConfirmation = !!data.confirmation;
+        }
+        break;
+
+      case 'updateTransaction':
+      case 'deleteTransaction':
+        if (success) {
+          responseFormat.metadata.operationCompleted = true;
+          responseFormat.metadata.affectedTransactionId = data?.transactionId;
+        }
+        break;
+    }
+
+    // 錯誤格式化增強
+    if (!success) {
+      responseFormat.error = {
+        message: typeof data === 'string' ? data : data?.message || data?.error || 'Unknown error',
+        code: data?.errorType || data?.code || 'UNKNOWN_ERROR',
+        details: data?.details || null
+      };
+
+      // 用戶友善錯誤訊息
+      responseFormat.userMessage = BK_getUserFriendlyErrorMessage(responseFormat.error.code);
+    }
+
+    BK_logInfo(`${logPrefix} API響應格式化完成 - ${operation}`, "響應格式化", metadata.userId || "", "BK_formatAPIResponse");
+
+    return responseFormat;
+
   } catch (error) {
-    return { success: true, exists: false }; // 查詢失敗時假設不存在
+    BK_logError(`${logPrefix} API響應格式化失敗: ${error.toString()}`, "響應格式化", metadata.userId || "", "FORMAT_ERROR", error.toString(), "BK_formatAPIResponse");
+
+    // 降級回應
+    return {
+      success: false,
+      timestamp: new Date().toISOString(),
+      operation: operation,
+      data: null,
+      error: {
+        message: "響應格式化失敗",
+        code: "FORMAT_ERROR",
+        details: error.toString()
+      },
+      metadata: {
+        version: BK_CONFIG.VERSION,
+        processId: processId,
+        formatError: true
+      }
+    };
   }
 }
 
 /**
- * 生成交易ID
+ * 16. 四模式差異化處理 - 支援所有端點
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段三重構 - 根據使用者模式調整處理邏輯和回應內容
  */
-async function BK_generateTransactionId(processId) {
-  const today = new Date();
-  const dateStr = moment(today).tz(BK_CONFIG.TIMEZONE).format("YYYYMMDD");
-  const timestamp = today.getTime();
-  return `${dateStr}-${timestamp.toString().slice(-8)}`;
-}
+function BK_processFourModeData(baseData, userMode = 'Expert', operation = '') {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processFourModeData:`;
 
-/**
- * 準備交易數據
- */
-async function BK_prepareTransactionData(transactionId, data, processId) {
-  const now = moment().tz(BK_CONFIG.TIMEZONE);
-  
-  return {
-    收支ID: transactionId,
-    使用者類型: data.userType || "J",
-    日期: now.format("YYYY/MM/DD"),
-    時間: now.format("HH:mm"),
-    大項代碼: data.majorCode || "1",
-    子項代碼: data.minorCode || "1",
-    支付方式: data.paymentMethod || "現金",
-    子項名稱: data.categoryName || "其他",
-    UID: data.userId || "",
-    備註: data.description || "",
-    收入: data.type === 'income' ? data.amount.toString() : '',
-    支出: data.type === 'expense' ? data.amount.toString() : '',
-    同義詞: data.synonym || '',
-    currency: 'NTD',
-    timestamp: admin.firestore.Timestamp.now()
-  };
-}
-
-/**
- * 儲存交易到Firestore
- */
-async function BK_saveTransactionToFirestore(transactionData, processId) {
   try {
-    const db = BK_INIT_STATUS.firestore_db;
-    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID;
+    const supportedModes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
 
-    const docRef = await db
-      .collection('ledgers')
-      .doc(ledgerId)
-      .collection('entries')
-      .add(transactionData);
+    if (!supportedModes.includes(userMode)) {
+      userMode = 'Expert'; // 預設模式
+      BK_logWarning(`${logPrefix} 無效的使用者模式，使用預設Expert模式`, "模式處理", "", "BK_processFourModeData");
+    }
+
+    let processedData = JSON.parse(JSON.stringify(baseData)); // 深拷貝
+
+    // 根據模式調整資料處理
+    switch (userMode) {
+      case 'Expert':
+        // 專家模式：提供完整詳細資訊
+        processedData = BK_processExpertModeData(processedData, operation);
+        break;
+
+      case 'Inertial':
+        // 慣性模式：簡化介面，突出常用功能
+        processedData = BK_processInertialModeData(processedData, operation);
+        break;
+
+      case 'Cultivation':
+        // 培養模式：教育性引導，提供學習資源
+        processedData = BK_processCultivationModeData(processedData, operation);
+        break;
+
+      case 'Guiding':
+        // 引導模式：步驟式引導，簡化複雜操作
+        processedData = BK_processGuidingModeData(processedData, operation);
+        break;
+    }
+
+    // 添加模式特定的元數據
+    processedData.modeMetadata = {
+      userMode: userMode,
+      processingApplied: true,
+      recommendations: BK_getModeSpecificRecommendations(userMode, operation),
+      nextSuggestions: BK_getModeSpecificNextSteps(userMode, operation)
+    };
+
+    BK_logInfo(`${logPrefix} ${userMode}模式資料處理完成 - ${operation}`, "模式處理", "", "BK_processFourModeData");
+
+    return processedData;
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 模式資料處理失敗: ${error.toString()}`, "模式處理", "", "MODE_PROCESS_ERROR", error.toString(), "BK_processFourModeData");
+
+    // 回退到原始資料
+    return {
+      ...baseData,
+      modeMetadata: {
+        userMode: userMode,
+        processingApplied: false,
+        error: "模式處理失敗",
+        fallbackUsed: true
+      }
+    };
+  }
+}
+
+/**
+ * 17. 批次操作優化 - 增強 POST /transactions
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段三重構 - 優化批次交易處理，提升效能
+ */
+async function BK_optimizeBatchOperations(transactions, options = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_optimizeBatchOperations:`;
+
+  try {
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      return {
+        success: true,
+        data: {
+          processed: 0,
+          successful: 0,
+          failed: 0,
+          results: []
+        }
+      };
+    }
+
+    BK_logInfo(`${logPrefix} 開始批次操作，共${transactions.length}筆交易`, "批次操作", options.userId || "", "BK_optimizeBatchOperations");
+
+    const batchSize = options.batchSize || 10; // 預設批次大小
+    const maxConcurrency = options.maxConcurrency || 5; // 最大併發數
+    const results = [];
+    let successful = 0;
+    let failed = 0;
+
+    // 將交易分組處理
+    const batches = [];
+    for (let i = 0; i < transactions.length; i += batchSize) {
+      batches.push(transactions.slice(i, i + batchSize));
+    }
+
+    // 批次驗證
+    const validationResults = await BK_validateBatchTransactions(transactions);
+    if (validationResults.hasErrors) {
+      BK_logWarning(`${logPrefix} 批次驗證發現${validationResults.errorCount}個錯誤`, "批次操作", options.userId || "", "BK_optimizeBatchOperations");
+    }
+
+    // 併發處理批次
+    const batchPromises = batches.map(async (batch, batchIndex) => {
+      const batchResults = [];
+
+      try {
+        // 準備批次資料
+        const preparedBatch = await BK_prepareBatchData(batch, processId);
+
+        // 批次執行
+        const batchOperations = preparedBatch.map(async (transaction) => {
+          try {
+            const result = await BK_createTransaction({
+              ...transaction,
+              processId: processId,
+              batchId: `${processId}-${batchIndex}`
+            });
+
+            if (result.success) {
+              successful++;
+            } else {
+              failed++;
+            }
+
+            return {
+              originalIndex: transaction.originalIndex,
+              success: result.success,
+              data: result.data,
+              error: result.error
+            };
+          } catch (error) {
+            failed++;
+            return {
+              originalIndex: transaction.originalIndex,
+              success: false,
+              error: error.toString()
+            };
+          }
+        });
+
+        const batchResults = await Promise.allSettled(batchOperations);
+        return batchResults.map(result => result.value || result.reason);
+
+      } catch (batchError) {
+        BK_logError(`${logPrefix} 批次${batchIndex}處理失敗: ${batchError.toString()}`, "批次操作", options.userId || "", "BATCH_ERROR", batchError.toString(), "BK_optimizeBatchOperations");
+
+        return batch.map((transaction, index) => ({
+          originalIndex: transaction.originalIndex,
+          success: false,
+          error: `批次處理失敗: ${batchError.message}`
+        }));
+      }
+    });
+
+    // 等待所有批次完成
+    const allBatchResults = await Promise.all(batchPromises);
+    const flatResults = allBatchResults.flat();
+
+    // 排序結果以保持原始順序
+    flatResults.sort((a, b) => (a.originalIndex || 0) - (b.originalIndex || 0));
+
+    const processingStats = {
+      processed: transactions.length,
+      successful: successful,
+      failed: failed,
+      successRate: (successful / transactions.length * 100).toFixed(2) + '%',
+      batchCount: batches.length,
+      avgBatchSize: (transactions.length / batches.length).toFixed(1)
+    };
+
+    BK_logInfo(`${logPrefix} 批次操作完成 - 成功率: ${processingStats.successRate}`, "批次操作", options.userId || "", "BK_optimizeBatchOperations");
 
     return {
       success: true,
-      docId: docRef.id
+      data: {
+        ...processingStats,
+        results: flatResults,
+        metadata: {
+          processId: processId,
+          executionTime: Date.now() - parseInt(processId, 16), // 簡化時間計算
+          optimizationApplied: true,
+          batchConfiguration: {
+            batchSize: batchSize,
+            maxConcurrency: maxConcurrency,
+            totalBatches: batches.length
+          }
+        }
+      }
     };
+
   } catch (error) {
+    BK_logError(`${logPrefix} 批次操作優化失敗: ${error.toString()}`, "批次操作", options.userId || "", "BATCH_OPTIMIZATION_ERROR", error.toString(), "BK_optimizeBatchOperations");
+
     return {
       success: false,
-      error: error.toString()
+      error: error.toString(),
+      errorType: "BATCH_OPTIMIZATION_ERROR"
     };
   }
 }
 
 /**
- * 解析快速輸入
+ * 18. 快速記帳智能解析 - 增強 POST /transactions/quick
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段三重構 - 增強快速記帳解析能力，支援更多自然語言格式
  */
-function BK_parseQuickInput(input) {
-  const trimmedInput = input.trim();
-  
-  // 簡單的解析邏輯：查找數字
-  const numberMatch = trimmedInput.match(/\d+/);
-  if (!numberMatch) {
-    return { success: false, error: "未找到金額" };
-  }
+function BK_enhanceQuickBookingParsing(inputText, options = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_enhanceQuickBookingParsing:`;
 
-  const amount = parseInt(numberMatch[0]);
-  const description = trimmedInput.replace(/\d+/g, '').trim() || "快速記帳";
-  
-  return {
-    success: true,
-    amount: amount,
-    type: 'expense', // 預設為支出
-    description: description
+  try {
+    if (!inputText || typeof inputText !== 'string') {
+      return {
+        success: false,
+        error: "輸入文字不能為空",
+        errorType: "INVALID_INPUT"
+      };
+    }
+
+    const trimmedInput = inputText.trim();
+    BK_logInfo(`${logPrefix} 開始智能解析: "${trimmedInput}"`, "智能解析", options.userId || "", "BK_enhanceQuickBookingParsing");
+
+    // 多層解析策略
+    const parsingStrategies = [
+      BK_parseStandardFormat,        // 標準格式：午餐100現金
+      BK_parseNaturalLanguage,       // 自然語言：今天中午吃飯花了一百塊
+      BK_parseNumberFirstFormat,     // 數字優先：100午餐現金
+      BK_parseKeywordBasedFormat,    // 關鍵詞：收入薪水50000轉帳
+      BK_parseFallbackFormat         // 備用解析
+    ];
+
+    let bestResult = null;
+    let bestConfidence = 0;
+
+    // 嘗試所有解析策略
+    for (const strategy of parsingStrategies) {
+      try {
+        const result = strategy(trimmedInput, options);
+
+        if (result.success && result.confidence > bestConfidence) {
+          bestResult = result;
+          bestConfidence = result.confidence;
+
+          // 如果置信度很高，直接使用
+          if (result.confidence >= 0.9) {
+            break;
+          }
+        }
+      } catch (strategyError) {
+        BK_logWarning(`${logPrefix} 解析策略失敗: ${strategy.name} - ${strategyError.message}`, "智能解析", options.userId || "", "BK_enhanceQuickBookingParsing");
+      }
+    }
+
+    if (!bestResult || bestResult.confidence < 0.3) {
+      return {
+        success: false,
+        error: "無法解析輸入內容",
+        errorType: "PARSE_FAILED",
+        suggestions: BK_getParsingHelp()
+      };
+    }
+
+    // 增強解析結果
+    const enhancedResult = BK_enhanceParsingResult(bestResult, trimmedInput, options);
+
+    // 添加智能建議
+    enhancedResult.smartSuggestions = BK_generateSmartSuggestions(enhancedResult, options);
+
+    // 添加置信度評估
+    enhancedResult.confidenceLevel = BK_getConfidenceLevel(enhancedResult.confidence);
+
+    BK_logInfo(`${logPrefix} 智能解析完成，置信度: ${enhancedResult.confidence.toFixed(2)}`, "智能解析", options.userId || "", "BK_enhanceQuickBookingParsing");
+
+    return {
+      success: true,
+      data: enhancedResult,
+      metadata: {
+        originalInput: trimmedInput,
+        parsingStrategy: bestResult.strategy || 'unknown',
+        processingTime: Date.now() - parseInt(processId, 16), // 簡化時間計算
+        enhancementsApplied: true
+      }
+    };
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 智能解析失敗: ${error.toString()}`, "智能解析", options.userId || "", "ENHANCED_PARSING_ERROR", error.toString(), "BK_enhanceQuickBookingParsing");
+
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "ENHANCED_PARSING_ERROR",
+      fallbackSuggestion: "請使用格式：[科目][金額][支付方式]，例如：午餐100現金"
+    };
+  }
+}
+
+// === 階段三輔助函數 ===
+
+/**
+ * 取得用戶友善錯誤訊息
+ */
+function BK_getUserFriendlyErrorMessage(errorCode) {
+  const errorMessages = {
+    'VALIDATION_ERROR': '輸入資料格式不正確，請檢查後重試',
+    'NOT_FOUND': '找不到相關記錄',
+    'STORAGE_ERROR': '資料儲存失敗，請稍後再試',
+    'FIREBASE_ERROR': '資料庫連線異常，請稍後再試',
+    'PARSE_ERROR': '無法解析輸入內容，請使用標準格式',
+    'PROCESS_ERROR': '處理過程發生錯誤，請聯繫客服',
+    'UNKNOWN_ERROR': '發生未知錯誤，請稍後再試'
   };
+
+  return errorMessages[errorCode] || errorMessages['UNKNOWN_ERROR'];
 }
 
 /**
- * 計算交易統計
+ * 專家模式資料處理
  */
-function BK_calculateTransactionStats(transactions) {
-  let totalIncome = 0;
-  let totalExpense = 0;
+function BK_processExpertModeData(data, operation) {
+  // 專家模式提供完整詳細資訊
+  data.expertFeatures = {
+    detailedMetrics: true,
+    advancedFilters: true,
+    rawDataAccess: true,
+    performanceStats: true
+  };
+  return data;
+}
 
-  transactions.forEach(transaction => {
-    if (transaction.type === 'income') {
-      totalIncome += transaction.amount;
-    } else {
-      totalExpense += transaction.amount;
+/**
+ * 慣性模式資料處理
+ */
+function BK_processInertialModeData(data, operation) {
+  // 慣性模式簡化介面
+  data.inertialFeatures = {
+    quickAccess: true,
+    recentItems: true,
+    simplifiedUI: true,
+    commonActions: true
+  };
+  return data;
+}
+
+/**
+ * 培養模式資料處理
+ */
+function BK_processCultivationModeData(data, operation) {
+  // 培養模式提供教育性內容
+  data.cultivationFeatures = {
+    learningTips: true,
+    tutorials: true,
+    progressTracking: true,
+    educationalContent: true
+  };
+  return data;
+}
+
+/**
+ * 引導模式資料處理
+ */
+function BK_processGuidingModeData(data, operation) {
+  // 引導模式提供步驟式指導
+  data.guidingFeatures = {
+    stepByStep: true,
+    wizardInterface: true,
+    contextualHelp: true,
+    progressIndicator: true
+  };
+  return data;
+}
+
+/**
+ * 取得模式特定建議
+ */
+function BK_getModeSpecificRecommendations(userMode, operation) {
+  const recommendations = {
+    'Expert': ['查看詳細分析', '使用進階篩選', '匯出原始資料'],
+    'Inertial': ['快速記帳', '查看最近記錄', '使用常用科目'],
+    'Cultivation': ['學習記帳技巧', '查看教學影片', '了解財務概念'],
+    'Guiding': ['跟隨步驟指南', '使用記帳精靈', '查看操作說明']
+  };
+
+  return recommendations[userMode] || recommendations['Expert'];
+}
+
+/**
+ * 取得模式特定下一步建議
+ */
+function BK_getModeSpecificNextSteps(userMode, operation) {
+  const nextSteps = {
+    'Expert': ['分析支出趨勢', '設定預算目標', '產生詳細報表'],
+    'Inertial': ['繼續記帳', '查看本月統計', '檢視支出分類'],
+    'Cultivation': ['完成今日記帳挑戰', '閱讀理財文章', '參與社群討論'],
+    'Guiding': ['進行下一步操作', '查看操作提示', '完成設定精靈']
+  };
+
+  return nextSteps[userMode] || nextSteps['Expert'];
+}
+
+/**
+ * 驗證批次交易
+ */
+async function BK_validateBatchTransactions(transactions) {
+  let errorCount = 0;
+  const errors = [];
+
+  transactions.forEach((transaction, index) => {
+    const validation = BK_validateTransactionData(transaction);
+    if (!validation.success) {
+      errorCount++;
+      errors.push({
+        index: index,
+        error: validation.error
+      });
     }
   });
 
   return {
-    totalIncome,
-    totalExpense,
-    count: transactions.length
+    hasErrors: errorCount > 0,
+    errorCount: errorCount,
+    errors: errors,
+    validCount: transactions.length - errorCount
   };
 }
 
 /**
- * 日誌功能（簡化版）
+ * 準備批次資料
  */
-function BK_logInfo(message, operationType, userId, functionName) {
-  console.log(`[INFO] [BK] ${message} | ${operationType} | ${userId} | ${functionName}`);
+async function BK_prepareBatchData(batch, processId) {
+  return batch.map((transaction, index) => ({
+    ...transaction,
+    originalIndex: transaction.originalIndex || index,
+    batchProcessId: processId,
+    preparedAt: new Date().toISOString()
+  }));
 }
 
-function BK_logError(message, operationType, userId, errorCode, errorDetails, functionName) {
-  console.error(`[ERROR] [BK] ${message} | ${operationType} | ${userId} | ${errorCode} | ${functionName}`);
+/**
+ * 標準格式解析
+ */
+function BK_parseStandardFormat(input, options) {
+  // 解析標準格式：午餐100現金
+  const standardPattern = /^(.+?)(\d+(?:\.\d{1,2})?)(.*)$/;
+  const match = input.match(standardPattern);
+
+  if (match) {
+    return {
+      success: true,
+      confidence: 0.8,
+      strategy: 'standard',
+      amount: parseFloat(match[2]),
+      description: match[1].trim(),
+      paymentMethod: match[3].trim() || '現金',
+      type: 'expense'
+    };
+  }
+
+  return { success: false, confidence: 0 };
 }
 
-function BK_logWarning(message, operationType, userId, functionName) {
-  console.warn(`[WARN] [BK] ${message} | ${operationType} | ${userId} | ${functionName}`);
+/**
+ * 自然語言解析
+ */
+function BK_parseNaturalLanguage(input, options) {
+  // 解析自然語言：今天中午吃飯花了一百塊
+  const patterns = [
+    /花了?(\d+(?:\.\d{1,2})?)/,
+    /(\d+(?:\.\d{1,2})?)元/,
+    /收到(\d+(?:\.\d{1,2})?)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = input.match(pattern);
+    if (match) {
+      return {
+        success: true,
+        confidence: 0.6,
+        strategy: 'natural',
+        amount: parseFloat(match[1]),
+        description: input.replace(pattern, '').trim() || '記帳',
+        paymentMethod: '現金',
+        type: input.includes('收到') ? 'income' : 'expense'
+      };
+    }
+  }
+
+  return { success: false, confidence: 0 };
 }
 
-function BK_logCritical(message, operationType, userId, errorCode, errorDetails, functionName) {
-  console.error(`[CRITICAL] [BK] ${message} | ${operationType} | ${userId} | ${errorCode} | ${functionName}`);
+/**
+ * 數字優先格式解析
+ */
+function BK_parseNumberFirstFormat(input, options) {
+  const numberFirstPattern = /^(\d+(?:\.\d{1,2})?)(.+)$/;
+  const match = input.match(numberFirstPattern);
+
+  if (match) {
+    return {
+      success: true,
+      confidence: 0.7,
+      strategy: 'numberFirst',
+      amount: parseFloat(match[1]),
+      description: match[2].trim() || '記帳',
+      paymentMethod: '現金',
+      type: 'expense'
+    };
+  }
+
+  return { success: false, confidence: 0 };
 }
 
-// 導出模組 - 階段一+階段二的14個函數
-module.exports = {
-  // 階段一：核心架構重建與基礎功能 (8個函數)
-  BK_initialize,                    // 01. 模組初始化與配置管理
-  BK_initializeFirebase,           // 02. Firebase連接初始化  
-  BK_createTransaction,            // 03. 新增交易記錄 - 支援 POST /transactions
-  BK_processQuickTransaction,      // 04. 快速記帳處理 - 支援 POST /transactions/quick
-  BK_getTransactions,              // 05. 查詢交易列表 - 支援 GET /transactions
-  BK_getDashboardData,             // 06. 查詢儀表板數據 - 支援 GET /transactions/dashboard
-  BK_updateTransaction,            // 07. 更新交易記錄 - 支援 PUT /transactions/{id}
-  BK_deleteTransaction,            // 08. 刪除交易記錄 - 支援 DELETE /transactions/{id}
-  
-  // 階段二：API端點輔助與驗證函數 (6個函數)
-  BK_validateTransactionData,      // 09. 記帳數據驗證 - 支援所有交易相關端點
-  BK_generateTransactionId,        // 10. 生成唯一交易ID - 支援 POST 相關端點
-  BK_validatePaymentMethod,        // 11. 支付方式驗證 - 支援所有交易端點
-  BK_generateStatistics,           // 12. 統計數據生成 - 支援 GET /transactions/dashboard
-  BK_buildTransactionQuery,        // 13. 交易查詢過濾 - 支援 GET /transactions
-  BK_handleError,                  // 14. 錯誤處理機制 - 支援所有端點
-  
+/**
+ * 關鍵詞格式解析
+ */
+function BK_parseKeywordBasedFormat(input, options) {
+  const incomeKeywords = ['收入', '薪水', '獎金', '紅利'];
+  const isIncome = incomeKeywords.some(keyword => input.includes(keyword));
+
+  const numberPattern = /(\d+(?:\.\d{1,2})?)/;
+  const match = input.match(numberPattern);
+
+  if (match) {
+    return {
+      success: true,
+      confidence: 0.75,
+      strategy: 'keyword',
+      amount: parseFloat(match[1]),
+      description: input.replace(numberPattern, '').trim() || '記帳',
+      paymentMethod: '現金',
+      type: isIncome ? 'income' : 'expense'
+    };
+  }
+
+  return { success: false, confidence: 0 };
+}
+
+/**
+ * 備用格式解析
+ */
+function BK_parseFallbackFormat(input, options) {
+  const numberPattern = /(\d+(?:\.\d{1,2})?)/;
+  const match = input.match(numberPattern);
+
+  if (match) {
+    return {
+      success: true,
+      confidence: 0.3,
+      strategy: 'fallback',
+      amount: parseFloat(match[1]),
+      description: '記帳',
+      paymentMethod: '現金',
+      type: 'expense'
+    };
+  }
+
+  return { success: false, confidence: 0 };
+}
+
+/**
+ * 增強解析結果
+ */
+function BK_enhanceParsingResult(result, originalInput, options) {
+  // 科目智能匹配（簡化版）
+  if (result.description) {
+    const categoryMapping = {
+      '午餐': '餐飲',
+      '晚餐': '餐飲',
+      '早餐': '餐飲',
+      '咖啡': '餐飲',
+      '公車': '交通',
+      '捷運': '交通',
+      '計程車': '交通',
+      '薪水': '薪資收入'
+    };
+
+    const matchedCategory = Object.keys(categoryMapping).find(key => 
+      result.description.includes(key)
+    );
+
+    if (matchedCategory) {
+      result.suggestedCategory = categoryMapping[matchedCategory];
+    }
+  }
+
+  return result;
+}
+
+/**
+ * 產生智能建議
+ */
+function BK_generateSmartSuggestions(result, options) {
+  const suggestions = [];
+
+  if (result.confidence < 0.7) {
+    suggestions.push('建議使用更清楚的格式，例如：午餐100現金');
+  }
+
+  if (result.amount > 1000) {
+    suggestions.push('建議確認金額是否正確');
+  }
+
+  if (!result.suggestedCategory) {
+    suggestions.push('建議手動選擇適當的支出類別');
+  }
+
+  return suggestions;
+}
+
+/**
+ * 取得置信度等級
+ */
+function BK_getConfidenceLevel(confidence) {
+  if (confidence >= 0.9) return '很高';
+  if (confidence >= 0.7) return '高';
+  if (confidence >= 0.5) return '中等';
+  if (confidence >= 0.3) return '低';
+  return '很低';
+}
+
+/**
+ * 取得解析幫助
+ */
+function BK_getParsingHelp() {
+  return [
+    '標準格式：午餐100現金',
+    '自然語言：今天吃飯花了100元',
+    '數字優先：100午餐',
+    '收入格式：收入薪水50000'
+  ];
+}
+
   // 版本資訊
-  BK_VERSION: BK_CONFIG.VERSION,
-  BK_API_ENDPOINTS: BK_CONFIG.API_ENDPOINTS
 };
