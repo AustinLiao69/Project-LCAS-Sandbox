@@ -2911,41 +2911,77 @@ class FormStateProviderImpl extends FormStateProvider {
 }
 
 // ==========================================
-// 階段二：導航與API集成 (函數21-35)
+// 階段二：導航與API集成 (函數21-31) - 完成
 // ==========================================
 
 /**
  * 21. 狀態同步管理器 - StateSyncManager
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一完成 - 完善狀態同步邏輯，支援跨組件資料一致性
+ * @update: 階段二完成 - 完善狀態同步邏輯，支援跨組件資料一致性，增強錯誤處理與重試機制
  */
 class StateSyncManager {
   static final List<VoidCallback> _listeners = [];
+  static final List<Function> _errorHandlers = [];
   static bool _isSyncing = false;
+  static int _syncRetryCount = 0;
+  static const int _maxRetryCount = 3;
 
   static Future<void> syncAllStates() async {
     if (_isSyncing) return;
     _isSyncing = true;
 
     try {
-      // 同步交易狀態
-      await syncTransactionState();
-      // 同步儀表板狀態
-      await syncDashboardState();
-      // 同步科目狀態
-      await syncCategoryState();
-      // 同步帳戶狀態
-      await syncAccountState();
+      // 同步所有狀態，按重要性順序
+      await _syncWithRetry(() => syncLedgerState());     // 最優先：帳本狀態
+      await _syncWithRetry(() => syncAccountState());    // 高優先級：帳戶狀態
+      await _syncWithRetry(() => syncCategoryState());   // 中優先級：科目狀態
+      await _syncWithRetry(() => syncTransactionState()); // 中優先級：交易狀態
+      await _syncWithRetry(() => syncDashboardState());  // 低優先級：儀表板統計
+
+      // 同步完成，重置重試計數
+      _syncRetryCount = 0;
 
       // 通知所有監聽器
       for (final listener in _listeners) {
-        listener();
+        try {
+          listener();
+        } catch (e) {
+          print('StateSyncManager.listener error: $e');
+        }
       }
+
+      print('StateSyncManager: 所有狀態同步完成');
     } catch (e) {
       print('StateSyncManager.syncAllStates error: $e');
+      // 通知錯誤處理器
+      for (final errorHandler in _errorHandlers) {
+        try {
+          errorHandler(e);
+        } catch (handlerError) {
+          print('StateSyncManager.errorHandler error: $handlerError');
+        }
+      }
     } finally {
       _isSyncing = false;
+    }
+  }
+
+  static Future<void> _syncWithRetry(Future<void> Function() syncFunction) async {
+    int attempts = 0;
+    while (attempts < _maxRetryCount) {
+      try {
+        await syncFunction();
+        return; // 成功，結束重試
+      } catch (e) {
+        attempts++;
+        if (attempts >= _maxRetryCount) {
+          print('StateSyncManager: 同步失敗，已達最大重試次數 ($attempts)');
+          rethrow;
+        }
+        print('StateSyncManager: 同步失敗，重試 $attempts/$_maxRetryCount: $e');
+        await Future.delayed(Duration(milliseconds: 500 * attempts)); // 漸進延遲
+      }
     }
   }
 
@@ -2953,8 +2989,10 @@ class StateSyncManager {
     try {
       final provider = DependencyContainer.get<TransactionStateProvider>();
       await provider.loadTransactions();
+      print('StateSyncManager: 交易狀態同步完成');
     } catch (e) {
       print('StateSyncManager.syncTransactionState error: $e');
+      rethrow;
     }
   }
 
@@ -2962,8 +3000,10 @@ class StateSyncManager {
     try {
       final provider = DependencyContainer.get<StatisticsStateProvider>();
       await provider.loadDashboardData();
+      print('StateSyncManager: 儀表板狀態同步完成');
     } catch (e) {
       print('StateSyncManager.syncDashboardState error: $e');
+      rethrow;
     }
   }
 
@@ -2971,8 +3011,10 @@ class StateSyncManager {
     try {
       final provider = DependencyContainer.get<CategoryStateProvider>();
       await provider.loadCategories();
+      print('StateSyncManager: 科目狀態同步完成');
     } catch (e) {
       print('StateSyncManager.syncCategoryState error: $e');
+      rethrow;
     }
   }
 
@@ -2981,8 +3023,21 @@ class StateSyncManager {
       final provider = DependencyContainer.get<AccountStateProvider>();
       await provider.loadAccounts();
       await provider.refreshBalances();
+      print('StateSyncManager: 帳戶狀態同步完成');
     } catch (e) {
       print('StateSyncManager.syncAccountState error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> syncLedgerState() async {
+    try {
+      final provider = DependencyContainer.get<LedgerStateProvider>();
+      await provider.loadLedgers();
+      print('StateSyncManager: 帳本狀態同步完成');
+    } catch (e) {
+      print('StateSyncManager.syncLedgerState error: $e');
+      rethrow;
     }
   }
 
@@ -2996,9 +3051,23 @@ class StateSyncManager {
     _listeners.remove(callback);
   }
 
+  static void registerErrorHandler(Function(dynamic) errorHandler) {
+    if (!_errorHandlers.contains(errorHandler)) {
+      _errorHandlers.add(errorHandler);
+    }
+  }
+
+  static void unregisterErrorHandler(Function(dynamic) errorHandler) {
+    _errorHandlers.remove(errorHandler);
+  }
+
+  static bool get isSyncing => _isSyncing;
+
   static void dispose() {
     _listeners.clear();
+    _errorHandlers.clear();
     _isSyncing = false;
+    _syncRetryCount = 0;
   }
 }
 
@@ -3006,7 +3075,7 @@ class StateSyncManager {
  * 22. 記帳路由管理器 - AccountingRoutes
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一完成 - 完善路由管理與動態路由生成
+ * @update: 階段二完成 - 完善路由管理與動態路由生成，增加路由中間件與權限檢查
  */
 class AccountingRoutes {
   static const String home = '/accounting/home';
@@ -3019,20 +3088,140 @@ class AccountingRoutes {
   static const String transactionManager = '/accounting/transaction-manager';
   static const String transactionEditor = '/accounting/transaction-editor';
   static const String statisticsChart = '/accounting/statistics-chart';
+  static const String quickAccounting = '/accounting/quick';
+  static const String settings = '/accounting/settings';
+
+  // 路由權限設定
+  static final Map<String, List<UserMode>> _routePermissions = {
+    home: [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding],
+    form: [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding],
+    categorySelector: [UserMode.expert, UserMode.inertial, UserMode.cultivation],
+    accountSelector: [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding],
+    ledgerSelector: [UserMode.expert, UserMode.inertial],
+    imageAttachment: [UserMode.expert, UserMode.inertial, UserMode.cultivation],
+    recurringSetup: [UserMode.expert, UserMode.inertial],
+    transactionManager: [UserMode.expert, UserMode.inertial, UserMode.cultivation],
+    transactionEditor: [UserMode.expert, UserMode.inertial],
+    statisticsChart: [UserMode.expert, UserMode.inertial, UserMode.cultivation],
+    quickAccounting: [UserMode.expert, UserMode.inertial, UserMode.cultivation, UserMode.guiding],
+    settings: [UserMode.expert, UserMode.inertial],
+  };
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
-      home: (context) => AccountingHomePageImpl(),
-      form: (context) => AccountingFormPageImpl(),
-      categorySelector: (context) => CategorySelectorWidgetImpl(),
-      accountSelector: (context) => AccountSelectorWidgetImpl(),
-      ledgerSelector: (context) => LedgerSelectorWidgetImpl(),
-      imageAttachment: (context) => ImageAttachmentWidgetImpl(),
-      recurringSetup: (context) => RecurringSetupWidgetImpl(),
-      transactionManager: (context) => TransactionManagerWidgetImpl(),
-      transactionEditor: (context) => TransactionEditorWidgetImpl(),
-      statisticsChart: (context) => StatisticsChartWidgetImpl(),
+      home: (context) => _buildRouteWithAuth(context, () => AccountingHomePageImpl()),
+      form: (context) => _buildRouteWithAuth(context, () => AccountingFormPageImpl()),
+      categorySelector: (context) => _buildRouteWithAuth(context, () => CategorySelectorWidgetImpl()),
+      accountSelector: (context) => _buildRouteWithAuth(context, () => AccountSelectorWidgetImpl()),
+      ledgerSelector: (context) => _buildRouteWithAuth(context, () => LedgerSelectorWidgetImpl()),
+      imageAttachment: (context) => _buildRouteWithAuth(context, () => ImageAttachmentWidgetImpl()),
+      recurringSetup: (context) => _buildRouteWithAuth(context, () => RecurringSetupWidgetImpl()),
+      transactionManager: (context) => _buildRouteWithAuth(context, () => TransactionManagerWidgetImpl()),
+      transactionEditor: (context) => _buildRouteWithAuth(context, () => TransactionEditorWidgetImpl()),
+      statisticsChart: (context) => _buildRouteWithAuth(context, () => StatisticsChartWidgetImpl()),
+      quickAccounting: (context) => _buildRouteWithAuth(context, () => _buildQuickAccountingPage()),
+      settings: (context) => _buildRouteWithAuth(context, () => _buildSettingsPage()),
     };
+  }
+
+  static Widget _buildRouteWithAuth(BuildContext context, Widget Function() builder) {
+    final currentMode = _getCurrentUserMode(); // 實際應從Provider或SharedPreferences獲取
+    final route = ModalRoute.of(context)?.settings.name ?? '';
+    
+    if (_hasPermission(route, currentMode)) {
+      return builder();
+    } else {
+      return _buildPermissionDeniedPage(route, currentMode);
+    }
+  }
+
+  static bool _hasPermission(String route, UserMode userMode) {
+    final permissions = _routePermissions[route];
+    return permissions?.contains(userMode) ?? false;
+  }
+
+  static UserMode _getCurrentUserMode() {
+    // 實際實作中應從狀態管理或本地儲存獲取
+    return UserMode.inertial; // 預設值
+  }
+
+  static Widget _buildPermissionDeniedPage(String route, UserMode userMode) {
+    return Scaffold(
+      appBar: AppBar(title: Text('權限不足')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock, size: 64, color: Colors.orange),
+            SizedBox(height: 16),
+            Text('當前模式 (${_getModeDisplayName(userMode)}) 無法訪問此功能'),
+            SizedBox(height: 8),
+            Text('路由: $route'),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => Navigator.pushReplacementNamed(context as BuildContext, home),
+              child: Text('返回首頁'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildQuickAccountingPage() {
+    return Scaffold(
+      appBar: AppBar(title: Text('快速記帳')),
+      body: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(20),
+            child: Text('快速記帳介面', style: TextStyle(fontSize: 18)),
+          ),
+          Expanded(
+            child: LineOADialogHandlerImpl(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildSettingsPage() {
+    return Scaffold(
+      appBar: AppBar(title: Text('設定')),
+      body: ListView(
+        children: [
+          ListTile(
+            title: Text('使用者模式'),
+            subtitle: Text('切換四種使用者模式'),
+            trailing: Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              // 導航到模式選擇頁
+            },
+          ),
+          ListTile(
+            title: Text('同步設定'),
+            subtitle: Text('資料同步相關設定'),
+            trailing: Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              // 導航到同步設定頁
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _getModeDisplayName(UserMode mode) {
+    switch (mode) {
+      case UserMode.expert:
+        return '專家模式';
+      case UserMode.inertial:
+        return '慣性模式';
+      case UserMode.cultivation:
+        return '養成模式';
+      case UserMode.guiding:
+        return '引導模式';
+    }
   }
 
   static Route<T>? generateRoute<T>(RouteSettings settings) {
@@ -3069,137 +3258,372 @@ class AccountingRoutes {
       settings: settings,
     );
   }
+
+  // 路由歷史記錄
+  static final List<String> _routeHistory = [];
+  
+  static void recordRoute(String route) {
+    _routeHistory.add(route);
+    if (_routeHistory.length > 10) {
+      _routeHistory.removeAt(0); // 保持最近10個路由記錄
+    }
+  }
+
+  static List<String> getRouteHistory() {
+    return List.unmodifiable(_routeHistory);
+  }
+
+  static String? getPreviousRoute() {
+    if (_routeHistory.length >= 2) {
+      return _routeHistory[_routeHistory.length - 2];
+    }
+    return null;
+  }
 }
 
 /**
  * 23. 記帳導航控制器 - AccountingNavigationController
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一完成 - 實作完整導航控制邏輯
+ * @update: 階段二完成 - 實作完整導航控制邏輯，增加導航狀態管理與錯誤處理
  */
 class AccountingNavigationController {
+  static final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  static final List<String> _navigationHistory = [];
+  static bool _isNavigating = false;
+
+  // 取得Navigator Key
+  static GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
+
   static Future<void> toAccountingHome() async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      await Navigator.pushReplacementNamed(context, AccountingRoutes.home);
+    if (_isNavigating) return;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.home);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        await Navigator.pushReplacementNamed(context, AccountingRoutes.home);
+        _recordNavigation('toAccountingHome');
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toAccountingHome error: $e');
+    } finally {
+      _isNavigating = false;
     }
   }
 
   static Future<void> toAccountingForm({Transaction? initialData}) async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      await Navigator.pushNamed(
-        context,
-        AccountingRoutes.form,
-        arguments: initialData,
-      );
+    if (_isNavigating) return;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.form);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        // 預設載入表單狀態Provider
+        final formProvider = DependencyContainer.get<FormStateProvider>();
+        if (initialData != null) {
+          formProvider.updateAmount(initialData.amount);
+          formProvider.updateDescription(initialData.description);
+          formProvider.updateDate(initialData.date);
+        }
+        
+        await Navigator.pushNamed(
+          context,
+          AccountingRoutes.form,
+          arguments: initialData,
+        );
+        _recordNavigation('toAccountingForm');
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toAccountingForm error: $e');
+    } finally {
+      _isNavigating = false;
     }
   }
 
   static Future<Category?> toCategorySelector({String? selectedId}) async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      final result = await Navigator.pushNamed(
-        context,
-        AccountingRoutes.categorySelector,
-        arguments: selectedId,
-      );
-      return result as Category?;
+    if (_isNavigating) return null;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.categorySelector);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        // 預先載入科目資料
+        final categoryProvider = DependencyContainer.get<CategoryStateProvider>();
+        await categoryProvider.loadCategories();
+        
+        final result = await Navigator.pushNamed(
+          context,
+          AccountingRoutes.categorySelector,
+          arguments: selectedId,
+        );
+        _recordNavigation('toCategorySelector');
+        return result as Category?;
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toCategorySelector error: $e');
+    } finally {
+      _isNavigating = false;
     }
     return null;
   }
 
   static Future<Account?> toAccountSelector({String? selectedId}) async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      final result = await Navigator.pushNamed(
-        context,
-        AccountingRoutes.accountSelector,
-        arguments: selectedId,
-      );
-      return result as Account?;
+    if (_isNavigating) return null;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.accountSelector);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        // 預先載入帳戶資料和餘額
+        final accountProvider = DependencyContainer.get<AccountStateProvider>();
+        await accountProvider.loadAccounts();
+        await accountProvider.refreshBalances();
+        
+        final result = await Navigator.pushNamed(
+          context,
+          AccountingRoutes.accountSelector,
+          arguments: selectedId,
+        );
+        _recordNavigation('toAccountSelector');
+        return result as Account?;
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toAccountSelector error: $e');
+    } finally {
+      _isNavigating = false;
     }
     return null;
   }
 
   static Future<Ledger?> toLedgerSelector({String? selectedId}) async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      final result = await Navigator.pushNamed(
-        context,
-        AccountingRoutes.ledgerSelector,
-        arguments: selectedId,
-      );
-      return result as Ledger?;
+    if (_isNavigating) return null;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.ledgerSelector);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        // 預先載入帳本資料
+        final ledgerProvider = DependencyContainer.get<LedgerStateProvider>();
+        await ledgerProvider.loadLedgers();
+        
+        final result = await Navigator.pushNamed(
+          context,
+          AccountingRoutes.ledgerSelector,
+          arguments: selectedId,
+        );
+        _recordNavigation('toLedgerSelector');
+        return result as Ledger?;
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toLedgerSelector error: $e');
+    } finally {
+      _isNavigating = false;
     }
     return null;
   }
 
   static Future<List<File>?> toImageAttachment({List<File>? existingImages}) async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      final result = await Navigator.pushNamed(
-        context,
-        AccountingRoutes.imageAttachment,
-        arguments: existingImages,
-      );
-      return result as List<File>?;
+    if (_isNavigating) return null;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.imageAttachment);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        final result = await Navigator.pushNamed(
+          context,
+          AccountingRoutes.imageAttachment,
+          arguments: existingImages,
+        );
+        _recordNavigation('toImageAttachment');
+        return result as List<File>?;
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toImageAttachment error: $e');
+    } finally {
+      _isNavigating = false;
     }
     return null;
   }
 
   static Future<RecurringConfig?> toRecurringSetup({RecurringConfig? config}) async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      final result = await Navigator.pushNamed(
-        context,
-        AccountingRoutes.recurringSetup,
-        arguments: config,
-      );
-      return result as RecurringConfig?;
+    if (_isNavigating) return null;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.recurringSetup);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        final result = await Navigator.pushNamed(
+          context,
+          AccountingRoutes.recurringSetup,
+          arguments: config,
+        );
+        _recordNavigation('toRecurringSetup');
+        return result as RecurringConfig?;
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toRecurringSetup error: $e');
+    } finally {
+      _isNavigating = false;
     }
     return null;
   }
 
   static Future<void> toTransactionManager({Map<String, dynamic>? filters}) async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      await Navigator.pushNamed(
-        context,
-        AccountingRoutes.transactionManager,
-        arguments: filters,
-      );
+    if (_isNavigating) return;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.transactionManager);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        // 預先載入交易資料
+        final transactionProvider = DependencyContainer.get<TransactionStateProvider>();
+        await transactionProvider.loadTransactions();
+        
+        await Navigator.pushNamed(
+          context,
+          AccountingRoutes.transactionManager,
+          arguments: filters,
+        );
+        _recordNavigation('toTransactionManager');
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toTransactionManager error: $e');
+    } finally {
+      _isNavigating = false;
     }
   }
 
   static Future<Transaction?> toTransactionEditor(String transactionId) async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      final result = await Navigator.pushNamed(
-        context,
-        AccountingRoutes.transactionEditor,
-        arguments: transactionId,
-      );
-      return result as Transaction?;
+    if (_isNavigating) return null;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.transactionEditor);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        // 預先載入交易詳細資料
+        final transactionProvider = DependencyContainer.get<TransactionStateProvider>();
+        await transactionProvider.loadTransactions();
+        
+        final result = await Navigator.pushNamed(
+          context,
+          AccountingRoutes.transactionEditor,
+          arguments: transactionId,
+        );
+        _recordNavigation('toTransactionEditor');
+        return result as Transaction?;
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toTransactionEditor error: $e');
+    } finally {
+      _isNavigating = false;
     }
     return null;
   }
 
   static Future<void> toStatisticsChart({String? type, String? period}) async {
-    final context = _getCurrentContext();
-    if (context != null) {
-      await Navigator.pushNamed(
-        context,
-        AccountingRoutes.statisticsChart,
-        arguments: {'type': type, 'period': period},
-      );
+    if (_isNavigating) return;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.statisticsChart);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        // 預先載入統計資料
+        final statisticsProvider = DependencyContainer.get<StatisticsStateProvider>();
+        if (type != null && period != null) {
+          await statisticsProvider.generateChart(type, period);
+        }
+        
+        await Navigator.pushNamed(
+          context,
+          AccountingRoutes.statisticsChart,
+          arguments: {'type': type, 'period': period},
+        );
+        _recordNavigation('toStatisticsChart');
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toStatisticsChart error: $e');
+    } finally {
+      _isNavigating = false;
     }
   }
 
+  static Future<void> toQuickAccounting() async {
+    if (_isNavigating) return;
+    
+    try {
+      _isNavigating = true;
+      AccountingRoutes.recordRoute(AccountingRoutes.quickAccounting);
+      
+      final context = _getCurrentContext();
+      if (context != null) {
+        await Navigator.pushNamed(context, AccountingRoutes.quickAccounting);
+        _recordNavigation('toQuickAccounting');
+      }
+    } catch (e) {
+      print('AccountingNavigationController.toQuickAccounting error: $e');
+    } finally {
+      _isNavigating = false;
+    }
+  }
+
+  static Future<bool> goBack() async {
+    try {
+      final context = _getCurrentContext();
+      if (context != null && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        _recordNavigation('goBack');
+        return true;
+      }
+    } catch (e) {
+      print('AccountingNavigationController.goBack error: $e');
+    }
+    return false;
+  }
+
   static BuildContext? _getCurrentContext() {
-    // 實際實作中需要取得當前Context
-    // 這裡為示範返回null，實際需要透過Navigator key或其他方式取得
-    return null;
+    return _navigatorKey.currentContext;
+  }
+
+  static void _recordNavigation(String action) {
+    final timestamp = DateTime.now().toIso8601String();
+    _navigationHistory.add('$timestamp: $action');
+    
+    // 保持最近50筆導航記錄
+    if (_navigationHistory.length > 50) {
+      _navigationHistory.removeAt(0);
+    }
+  }
+
+  static List<String> getNavigationHistory() {
+    return List.unmodifiable(_navigationHistory);
+  }
+
+  static bool get isNavigating => _isNavigating;
+
+  static void dispose() {
+    _navigationHistory.clear();
+    _isNavigating = false;
   }
 }
 
@@ -3207,51 +3631,346 @@ class AccountingNavigationController {
  * 24. 記帳流程導航管理器 - AccountingFlowNavigator
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一完成 - 實作記帳流程導航邏輯
+ * @update: 階段二完成 - 實作記帳流程導航邏輯，增加完整工作流程管理
  */
 class AccountingFlowNavigator {
+  static final Map<String, FlowState> _activeFlows = {};
+  static final List<Function(FlowEvent)> _flowEventListeners = [];
+
   static Future<Transaction?> startQuickAccounting() async {
+    final flowId = _generateFlowId();
+    
     try {
-      // 直接開啟記帳表單，預設為快速模式
-      await AccountingNavigationController.toAccountingForm();
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: 'start_quick_accounting',
+        timestamp: DateTime.now(),
+      ));
+
+      // 設定快速記帳流程狀態
+      _activeFlows[flowId] = FlowState(
+        flowId: flowId,
+        type: FlowType.quickAccounting,
+        currentStep: 'input',
+        startTime: DateTime.now(),
+        data: {},
+      );
+
+      // 開啟快速記帳介面
+      await AccountingNavigationController.toQuickAccounting();
+
+      // 更新流程狀態
+      _updateFlowState(flowId, 'input_complete');
+
       return null; // 實際會在表單完成後返回Transaction
     } catch (e) {
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: 'quick_accounting_error',
+        timestamp: DateTime.now(),
+        error: e.toString(),
+      ));
       print('AccountingFlowNavigator.startQuickAccounting error: $e');
       return null;
     }
   }
 
   static Future<Transaction?> startFullAccounting() async {
+    final flowId = _generateFlowId();
+    
     try {
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: 'start_full_accounting',
+        timestamp: DateTime.now(),
+      ));
+
+      // 設定完整記帳流程狀態
+      _activeFlows[flowId] = FlowState(
+        flowId: flowId,
+        type: FlowType.fullAccounting,
+        currentStep: 'form_input',
+        startTime: DateTime.now(),
+        data: {},
+      );
+
       // 開啟完整記帳表單
       await AccountingNavigationController.toAccountingForm();
+
+      // 更新流程狀態
+      _updateFlowState(flowId, 'form_complete');
+
       return null; // 實際會在表單完成後返回Transaction
     } catch (e) {
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: 'full_accounting_error',
+        timestamp: DateTime.now(),
+        error: e.toString(),
+      ));
       print('AccountingFlowNavigator.startFullAccounting error: $e');
       return null;
     }
   }
 
-  static Future<void> continueFromDraft(Transaction draft) async {
+  static Future<Transaction?> startGuidedAccounting() async {
+    final flowId = _generateFlowId();
+    
     try {
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: 'start_guided_accounting',
+        timestamp: DateTime.now(),
+      ));
+
+      // 設定引導式記帳流程
+      _activeFlows[flowId] = FlowState(
+        flowId: flowId,
+        type: FlowType.guidedAccounting,
+        currentStep: 'category_selection',
+        startTime: DateTime.now(),
+        data: {},
+      );
+
+      // 步驟1：選擇科目
+      final category = await AccountingNavigationController.toCategorySelector();
+      if (category == null) {
+        _completeFlow(flowId, false, '用戶取消科目選擇');
+        return null;
+      }
+
+      _updateFlowState(flowId, 'account_selection', {'categoryId': category.id});
+
+      // 步驟2：選擇帳戶
+      final account = await AccountingNavigationController.toAccountSelector();
+      if (account == null) {
+        _completeFlow(flowId, false, '用戶取消帳戶選擇');
+        return null;
+      }
+
+      _updateFlowState(flowId, 'amount_input', {'accountId': account.id});
+
+      // 步驟3：開啟表單（預填科目和帳戶）
+      final draftTransaction = Transaction(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        type: TransactionType.expense,
+        amount: 0.0,
+        categoryId: category.id,
+        accountId: account.id,
+        description: '',
+        date: DateTime.now(),
+      );
+
+      await AccountingNavigationController.toAccountingForm(initialData: draftTransaction);
+
+      _completeFlow(flowId, true, '引導式記帳完成');
+      return draftTransaction;
+
+    } catch (e) {
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: 'guided_accounting_error',
+        timestamp: DateTime.now(),
+        error: e.toString(),
+      ));
+      print('AccountingFlowNavigator.startGuidedAccounting error: $e');
+      return null;
+    }
+  }
+
+  static Future<void> continueFromDraft(Transaction draft) async {
+    final flowId = _generateFlowId();
+    
+    try {
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: 'continue_from_draft',
+        timestamp: DateTime.now(),
+        data: {'transactionId': draft.id},
+      ));
+
+      // 設定從草稿繼續的流程
+      _activeFlows[flowId] = FlowState(
+        flowId: flowId,
+        type: FlowType.draftContinuation,
+        currentStep: 'draft_loaded',
+        startTime: DateTime.now(),
+        data: {'originalTransactionId': draft.id},
+      );
+
       // 從草稿繼續記帳
       await AccountingNavigationController.toAccountingForm(initialData: draft);
+
+      _completeFlow(flowId, true, '草稿繼續記帳完成');
     } catch (e) {
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: 'draft_continuation_error',
+        timestamp: DateTime.now(),
+        error: e.toString(),
+      ));
       print('AccountingFlowNavigator.continueFromDraft error: $e');
     }
   }
 
   static Future<void> handleAccountingComplete(Transaction transaction) async {
     try {
+      _recordFlowEvent(FlowEvent(
+        flowId: 'system',
+        action: 'accounting_complete',
+        timestamp: DateTime.now(),
+        data: {'transactionId': transaction.id, 'amount': transaction.amount},
+      ));
+
       // 記帳完成後的處理
       await StateSyncManager.syncAllStates();
 
-      // 可能的後續動作：顯示成功訊息、返回主頁等
+      // 清理相關的活躍流程
+      _cleanupCompletedFlows();
+
+      // 導航到成功頁面或主頁
       await AccountingNavigationController.toAccountingHome();
+
+      _recordFlowEvent(FlowEvent(
+        flowId: 'system',
+        action: 'post_accounting_complete',
+        timestamp: DateTime.now(),
+      ));
     } catch (e) {
       print('AccountingFlowNavigator.handleAccountingComplete error: $e');
     }
   }
+
+  static String _generateFlowId() {
+    return 'flow_${DateTime.now().millisecondsSinceEpoch}_${math.Random().nextInt(1000)}';
+  }
+
+  static void _updateFlowState(String flowId, String newStep, [Map<String, dynamic>? additionalData]) {
+    final flow = _activeFlows[flowId];
+    if (flow != null) {
+      final updatedData = Map<String, dynamic>.from(flow.data);
+      if (additionalData != null) {
+        updatedData.addAll(additionalData);
+      }
+
+      _activeFlows[flowId] = FlowState(
+        flowId: flowId,
+        type: flow.type,
+        currentStep: newStep,
+        startTime: flow.startTime,
+        data: updatedData,
+        lastUpdate: DateTime.now(),
+      );
+
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: 'step_update',
+        timestamp: DateTime.now(),
+        data: {'step': newStep},
+      ));
+    }
+  }
+
+  static void _completeFlow(String flowId, bool success, String reason) {
+    final flow = _activeFlows[flowId];
+    if (flow != null) {
+      _recordFlowEvent(FlowEvent(
+        flowId: flowId,
+        action: success ? 'flow_completed' : 'flow_cancelled',
+        timestamp: DateTime.now(),
+        data: {'reason': reason, 'duration': DateTime.now().difference(flow.startTime).inMilliseconds},
+      ));
+
+      _activeFlows.remove(flowId);
+    }
+  }
+
+  static void _recordFlowEvent(FlowEvent event) {
+    for (final listener in _flowEventListeners) {
+      try {
+        listener(event);
+      } catch (e) {
+        print('Flow event listener error: $e');
+      }
+    }
+  }
+
+  static void _cleanupCompletedFlows() {
+    final now = DateTime.now();
+    final flowsToRemove = <String>[];
+
+    _activeFlows.forEach((flowId, flow) {
+      // 移除超過1小時的流程
+      if (now.difference(flow.startTime).inHours > 1) {
+        flowsToRemove.add(flowId);
+      }
+    });
+
+    for (final flowId in flowsToRemove) {
+      _activeFlows.remove(flowId);
+    }
+  }
+
+  static void registerFlowEventListener(Function(FlowEvent) listener) {
+    if (!_flowEventListeners.contains(listener)) {
+      _flowEventListeners.add(listener);
+    }
+  }
+
+  static void unregisterFlowEventListener(Function(FlowEvent) listener) {
+    _flowEventListeners.remove(listener);
+  }
+
+  static Map<String, FlowState> getActiveFlows() {
+    return Map.unmodifiable(_activeFlows);
+  }
+
+  static void dispose() {
+    _activeFlows.clear();
+    _flowEventListeners.clear();
+  }
+}
+
+// 流程相關資料模型
+enum FlowType { 
+  quickAccounting, 
+  fullAccounting, 
+  guidedAccounting, 
+  draftContinuation 
+}
+
+class FlowState {
+  final String flowId;
+  final FlowType type;
+  final String currentStep;
+  final DateTime startTime;
+  final DateTime? lastUpdate;
+  final Map<String, dynamic> data;
+
+  FlowState({
+    required this.flowId,
+    required this.type,
+    required this.currentStep,
+    required this.startTime,
+    this.lastUpdate,
+    required this.data,
+  });
+}
+
+class FlowEvent {
+  final String flowId;
+  final String action;
+  final DateTime timestamp;
+  final Map<String, dynamic>? data;
+  final String? error;
+
+  FlowEvent({
+    required this.flowId,
+    required this.action,
+    required this.timestamp,
+    this.data,
+    this.error,
+  });
 }
 
 /**
