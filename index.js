@@ -511,6 +511,282 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
+// =============== Phase 1 核心API端點（階段一實作） ===============
+
+// 使用者認證API端點
+app.post('/api/v1/auth/register', async (req, res) => {
+  try {
+    console.log('🔐 API: 使用者註冊請求', req.body);
+
+    if (!AM || typeof AM.AM_createLineAccount !== 'function') {
+      return res.status(503).json({
+        success: false,
+        message: 'AM模組不可用',
+        errorCode: 'AM_MODULE_UNAVAILABLE'
+      });
+    }
+
+    const { lineUID, displayName, userType = 'S' } = req.body;
+
+    if (!lineUID || !displayName) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必要參數：lineUID 和 displayName',
+        errorCode: 'MISSING_REQUIRED_FIELDS'
+      });
+    }
+
+    const lineProfile = { displayName };
+    const result = await AM.AM_createLineAccount(lineUID, lineProfile, userType);
+
+    if (result.success) {
+      res.status(201).json({
+        success: true,
+        data: {
+          userId: result.UID,
+          userType: result.userType,
+          message: result.message
+        },
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: result.error,
+        errorCode: result.errorCode,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ 註冊API錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: '註冊處理失敗',
+      errorCode: 'REGISTRATION_ERROR',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.post('/api/v1/auth/login', async (req, res) => {
+  try {
+    console.log('🔑 API: 使用者登入請求');
+
+    if (!AM || typeof AM.AM_validateAccountExists !== 'function') {
+      return res.status(503).json({
+        success: false,
+        message: 'AM模組不可用',
+        errorCode: 'AM_MODULE_UNAVAILABLE'
+      });
+    }
+
+    const { lineUID } = req.body;
+
+    if (!lineUID) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必要參數：lineUID',
+        errorCode: 'MISSING_LINE_UID'
+      });
+    }
+
+    const validation = await AM.AM_validateAccountExists(lineUID, 'LINE');
+
+    if (validation.exists && validation.accountStatus === 'active') {
+      // 模擬JWT Token生成（階段一簡化實作）
+      const token = `jwt_${lineUID}_${Date.now()}`;
+      
+      res.json({
+        success: true,
+        data: {
+          token: token,
+          userId: validation.UID,
+          accountStatus: validation.accountStatus
+        },
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: '帳號不存在或狀態異常',
+        errorCode: 'ACCOUNT_NOT_FOUND',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ 登入API錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: '登入處理失敗',
+      errorCode: 'LOGIN_ERROR',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// 記帳功能API端點
+app.post('/api/v1/transactions', async (req, res) => {
+  try {
+    console.log('💰 API: 新增交易記錄請求', req.body);
+
+    if (!BK || typeof BK.BK_createTransaction !== 'function') {
+      return res.status(503).json({
+        success: false,
+        message: 'BK模組不可用',
+        errorCode: 'BK_MODULE_UNAVAILABLE'
+      });
+    }
+
+    const result = await BK.BK_createTransaction(req.body);
+
+    if (result.success) {
+      res.status(201).json({
+        success: true,
+        data: result.data,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: result.error,
+        errorCode: result.errorType,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ 新增交易API錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: '交易處理失敗',
+      errorCode: 'TRANSACTION_ERROR',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.get('/api/v1/transactions', async (req, res) => {
+  try {
+    console.log('📋 API: 查詢交易記錄請求', req.query);
+
+    if (!BK || typeof BK.BK_getTransactions !== 'function') {
+      return res.status(503).json({
+        success: false,
+        message: 'BK模組不可用',
+        errorCode: 'BK_MODULE_UNAVAILABLE'
+      });
+    }
+
+    const result = await BK.BK_getTransactions(req.query);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        data: result.data,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: result.error,
+        errorCode: result.errorType,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ 查詢交易API錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: '查詢處理失敗',
+      errorCode: 'QUERY_ERROR',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.post('/api/v1/transactions/quick', async (req, res) => {
+  try {
+    console.log('⚡ API: 快速記帳請求', req.body);
+
+    if (!BK || typeof BK.BK_processQuickTransaction !== 'function') {
+      return res.status(503).json({
+        success: false,
+        message: 'BK模組不可用',
+        errorCode: 'BK_MODULE_UNAVAILABLE'
+      });
+    }
+
+    const result = await BK.BK_processQuickTransaction(req.body);
+
+    if (result.success) {
+      res.status(201).json({
+        success: true,
+        data: result.data,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: result.error,
+        errorCode: result.errorType,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ 快速記帳API錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: '快速記帳處理失敗',
+      errorCode: 'QUICK_TRANSACTION_ERROR',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.get('/api/v1/dashboard', async (req, res) => {
+  try {
+    console.log('📊 API: 儀表板數據請求', req.query);
+
+    if (!BK || typeof BK.BK_getDashboardData !== 'function') {
+      return res.status(503).json({
+        success: false,
+        message: 'BK模組不可用',
+        errorCode: 'BK_MODULE_UNAVAILABLE'
+      });
+    }
+
+    const result = await BK.BK_getDashboardData(req.query);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        data: result.data,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: result.error,
+        errorCode: result.errorType,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ 儀表板API錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: '儀表板數據處理失敗',
+      errorCode: 'DASHBOARD_ERROR',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // =============== 測試端點（保留） ===============
 
 // 建立測試使用者（保留）
@@ -626,3 +902,11 @@ console.log('📅 SR 排程提醒模組已整合：支援排程提醒、Quick Re
 console.log('🏥 健康檢查機制已啟用：每5分鐘監控系統狀態');
 console.log('🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄');
 console.log('🔧 重構版本：v2.2.0 - 第一階段完成，核心功能保留，REST API清理完成');
+console.log('🆕 API端點階段一已完成：新增6個Phase 1核心API端點');
+console.log('   ✅ POST /api/v1/auth/register - 使用者註冊');
+console.log('   ✅ POST /api/v1/auth/login - 使用者登入');
+console.log('   ✅ POST /api/v1/transactions - 新增交易記錄');
+console.log('   ✅ GET /api/v1/transactions - 查詢交易記錄');
+console.log('   ✅ POST /api/v1/transactions/quick - 快速記帳');
+console.log('   ✅ GET /api/v1/dashboard - 儀表板數據');
+console.log('🔄 準備進行階段二：API端點輔助與驗證函數完善');
