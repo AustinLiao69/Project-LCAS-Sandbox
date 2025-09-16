@@ -2,13 +2,14 @@
  * 7302. 記帳核心功能群.dart - 記帳核心功能群Module code
  * @version 2025-09-16 V2.1.0
  * @date 2025-09-16
- * @update: 階段一完成 - 核心架構、基礎Widget、API集成與狀態管理、導航流程實作
+ * @update: 階段三完成 - 統計計算器與工具函數完整實作
  */
 
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:intl/intl.dart'; // 引入intl套件以支援國際化格式
 
 // 引入必要的依賴
 enum UserMode { expert, inertial, cultivation, guiding }
@@ -3127,7 +3128,7 @@ class AccountingRoutes {
   static Widget _buildRouteWithAuth(BuildContext context, Widget Function() builder) {
     final currentMode = _getCurrentUserMode(); // 實際應從Provider或SharedPreferences獲取
     final route = ModalRoute.of(context)?.settings.name ?? '';
-    
+
     if (_hasPermission(route, currentMode)) {
       return builder();
     } else {
@@ -3261,7 +3262,7 @@ class AccountingRoutes {
 
   // 路由歷史記錄
   static final List<String> _routeHistory = [];
-  
+
   static void recordRoute(String route) {
     _routeHistory.add(route);
     if (_routeHistory.length > 10) {
@@ -3297,11 +3298,11 @@ class AccountingNavigationController {
 
   static Future<void> toAccountingHome() async {
     if (_isNavigating) return;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.home);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         await Navigator.pushReplacementNamed(context, AccountingRoutes.home);
@@ -3316,11 +3317,11 @@ class AccountingNavigationController {
 
   static Future<void> toAccountingForm({Transaction? initialData}) async {
     if (_isNavigating) return;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.form);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         // 預設載入表單狀態Provider
@@ -3330,7 +3331,7 @@ class AccountingNavigationController {
           formProvider.updateDescription(initialData.description);
           formProvider.updateDate(initialData.date);
         }
-        
+
         await Navigator.pushNamed(
           context,
           AccountingRoutes.form,
@@ -3347,17 +3348,17 @@ class AccountingNavigationController {
 
   static Future<Category?> toCategorySelector({String? selectedId}) async {
     if (_isNavigating) return null;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.categorySelector);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         // 預先載入科目資料
         final categoryProvider = DependencyContainer.get<CategoryStateProvider>();
         await categoryProvider.loadCategories();
-        
+
         final result = await Navigator.pushNamed(
           context,
           AccountingRoutes.categorySelector,
@@ -3376,18 +3377,18 @@ class AccountingNavigationController {
 
   static Future<Account?> toAccountSelector({String? selectedId}) async {
     if (_isNavigating) return null;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.accountSelector);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         // 預先載入帳戶資料和餘額
         final accountProvider = DependencyContainer.get<AccountStateProvider>();
         await accountProvider.loadAccounts();
         await accountProvider.refreshBalances();
-        
+
         final result = await Navigator.pushNamed(
           context,
           AccountingRoutes.accountSelector,
@@ -3406,17 +3407,17 @@ class AccountingNavigationController {
 
   static Future<Ledger?> toLedgerSelector({String? selectedId}) async {
     if (_isNavigating) return null;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.ledgerSelector);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         // 預先載入帳本資料
         final ledgerProvider = DependencyContainer.get<LedgerStateProvider>();
         await ledgerProvider.loadLedgers();
-        
+
         final result = await Navigator.pushNamed(
           context,
           AccountingRoutes.ledgerSelector,
@@ -3435,11 +3436,11 @@ class AccountingNavigationController {
 
   static Future<List<File>?> toImageAttachment({List<File>? existingImages}) async {
     if (_isNavigating) return null;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.imageAttachment);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         final result = await Navigator.pushNamed(
@@ -3460,11 +3461,11 @@ class AccountingNavigationController {
 
   static Future<RecurringConfig?> toRecurringSetup({RecurringConfig? config}) async {
     if (_isNavigating) return null;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.recurringSetup);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         final result = await Navigator.pushNamed(
@@ -3485,17 +3486,17 @@ class AccountingNavigationController {
 
   static Future<void> toTransactionManager({Map<String, dynamic>? filters}) async {
     if (_isNavigating) return;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.transactionManager);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         // 預先載入交易資料
         final transactionProvider = DependencyContainer.get<TransactionStateProvider>();
         await transactionProvider.loadTransactions();
-        
+
         await Navigator.pushNamed(
           context,
           AccountingRoutes.transactionManager,
@@ -3512,17 +3513,17 @@ class AccountingNavigationController {
 
   static Future<Transaction?> toTransactionEditor(String transactionId) async {
     if (_isNavigating) return null;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.transactionEditor);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         // 預先載入交易詳細資料
         final transactionProvider = DependencyContainer.get<TransactionStateProvider>();
         await transactionProvider.loadTransactions();
-        
+
         final result = await Navigator.pushNamed(
           context,
           AccountingRoutes.transactionEditor,
@@ -3541,11 +3542,11 @@ class AccountingNavigationController {
 
   static Future<void> toStatisticsChart({String? type, String? period}) async {
     if (_isNavigating) return;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.statisticsChart);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         // 預先載入統計資料
@@ -3553,7 +3554,7 @@ class AccountingNavigationController {
         if (type != null && period != null) {
           await statisticsProvider.generateChart(type, period);
         }
-        
+
         await Navigator.pushNamed(
           context,
           AccountingRoutes.statisticsChart,
@@ -3570,11 +3571,11 @@ class AccountingNavigationController {
 
   static Future<void> toQuickAccounting() async {
     if (_isNavigating) return;
-    
+
     try {
       _isNavigating = true;
       AccountingRoutes.recordRoute(AccountingRoutes.quickAccounting);
-      
+
       final context = _getCurrentContext();
       if (context != null) {
         await Navigator.pushNamed(context, AccountingRoutes.quickAccounting);
@@ -3608,7 +3609,7 @@ class AccountingNavigationController {
   static void _recordNavigation(String action) {
     final timestamp = DateTime.now().toIso8601String();
     _navigationHistory.add('$timestamp: $action');
-    
+
     // 保持最近50筆導航記錄
     if (_navigationHistory.length > 50) {
       _navigationHistory.removeAt(0);
@@ -3639,7 +3640,7 @@ class AccountingFlowNavigator {
 
   static Future<Transaction?> startQuickAccounting() async {
     final flowId = _generateFlowId();
-    
+
     try {
       _recordFlowEvent(FlowEvent(
         flowId: flowId,
@@ -3677,7 +3678,7 @@ class AccountingFlowNavigator {
 
   static Future<Transaction?> startFullAccounting() async {
     final flowId = _generateFlowId();
-    
+
     try {
       _recordFlowEvent(FlowEvent(
         flowId: flowId,
@@ -3715,7 +3716,7 @@ class AccountingFlowNavigator {
 
   static Future<Transaction?> startGuidedAccounting() async {
     final flowId = _generateFlowId();
-    
+
     try {
       _recordFlowEvent(FlowEvent(
         flowId: flowId,
@@ -3780,7 +3781,7 @@ class AccountingFlowNavigator {
 
   static Future<void> continueFromDraft(Transaction draft) async {
     final flowId = _generateFlowId();
-    
+
     try {
       _recordFlowEvent(FlowEvent(
         flowId: flowId,
@@ -3932,11 +3933,11 @@ class AccountingFlowNavigator {
 }
 
 // 流程相關資料模型
-enum FlowType { 
-  quickAccounting, 
-  fullAccounting, 
-  guidedAccounting, 
-  draftContinuation 
+enum FlowType {
+  quickAccounting,
+  fullAccounting,
+  guidedAccounting,
+  draftContinuation
 }
 
 class FlowState {
@@ -6086,6 +6087,15 @@ class SmartTextParserImpl extends SmartTextParser {
     return description.isEmpty ? '記帳' : description;
   }
 
+  static String _extractType(String input) {
+    if (input.contains('薪水') || input.contains('收入')) {
+      return 'income';
+    } else if (input.contains('轉帳')) {
+      return 'transfer';
+    }
+    return 'expense';
+  }
+
   static double? _extractAmount(String input) {
     final words = input.split(' ');
     for (String word in words) {
@@ -6095,15 +6105,6 @@ class SmartTextParserImpl extends SmartTextParser {
       }
     }
     return null;
-  }
-
-  static String _extractType(String input) {
-    if (input.contains('薪水') || input.contains('收入')) {
-      return 'income';
-    } else if (input.contains('轉帳')) {
-      return 'transfer';
-    }
-    return 'expense';
   }
 }
 
@@ -6339,44 +6340,26 @@ class AccountingFormProcessorImpl extends AccountingFormProcessor {
 
 /**
  * 43. 統計計算器 - StatisticsCalculator
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - 統計計算業務邏輯核心
+ * @version 2025-09-16-V2.3.0
+ * @date 2025-09-16
+ * @update: 階段三完成 - 統計計算完整實作
  */
-abstract class StatisticsCalculator {
-  static DashboardData calculateDashboardData(List<Transaction> transactions);
-  static double calculateBalance(List<Transaction> transactions);
-  static Map<String, double> calculateCategoryTotals(List<Transaction> transactions);
-  static List<ChartData> generateChartData(List<Transaction> transactions, String chartType);
-  static TrendData calculateTrend(List<Transaction> transactions, DateRange period);
-}
-
-class DateRange {
-  final DateTime start;
-  final DateTime end;
-
-  DateRange({required this.start, required this.end});
-}
-
-class TrendData {
-  final double changePercent;
-  final String trend; // 'up', 'down', 'stable'
-  final List<double> monthlyData;
-
-  TrendData({
-    required this.changePercent,
-    required this.trend,
-    required this.monthlyData,
-  });
-}
-
-class StatisticsCalculatorImpl extends StatisticsCalculator {
+class StatisticsCalculator {
   static DashboardData calculateDashboardData(List<Transaction> transactions) {
-    double totalIncome = 0.0;
-    double totalExpense = 0.0;
+    if (transactions.isEmpty) {
+      return DashboardData(
+        totalIncome: 0,
+        totalExpense: 0,
+        balance: 0,
+        transactionCount: 0,
+      );
+    }
+
+    double totalIncome = 0;
+    double totalExpense = 0;
     int transactionCount = transactions.length;
 
-    for (Transaction transaction in transactions) {
+    for (final transaction in transactions) {
       switch (transaction.type) {
         case TransactionType.income:
           totalIncome += transaction.amount;
@@ -6385,12 +6368,12 @@ class StatisticsCalculatorImpl extends StatisticsCalculator {
           totalExpense += transaction.amount;
           break;
         case TransactionType.transfer:
-          // 轉帳不計入收支統計
+          // 轉帳不影響總收支計算
           break;
       }
     }
 
-    double balance = totalIncome - totalExpense;
+    final balance = totalIncome - totalExpense;
 
     return DashboardData(
       totalIncome: totalIncome,
@@ -6401,9 +6384,9 @@ class StatisticsCalculatorImpl extends StatisticsCalculator {
   }
 
   static double calculateBalance(List<Transaction> transactions) {
-    double balance = 0.0;
+    double balance = 0;
 
-    for (Transaction transaction in transactions) {
+    for (final transaction in transactions) {
       switch (transaction.type) {
         case TransactionType.income:
           balance += transaction.amount;
@@ -6412,7 +6395,7 @@ class StatisticsCalculatorImpl extends StatisticsCalculator {
           balance -= transaction.amount;
           break;
         case TransactionType.transfer:
-          // 轉帳不影響總餘額
+          // 轉帳在帳戶層級處理，不影響總餘額
           break;
       }
     }
@@ -6421,13 +6404,11 @@ class StatisticsCalculatorImpl extends StatisticsCalculator {
   }
 
   static Map<String, double> calculateCategoryTotals(List<Transaction> transactions) {
-    final categoryTotals = <String, double>{};
+    final Map<String, double> categoryTotals = {};
 
-    for (Transaction transaction in transactions) {
-      if (transaction.categoryId != null && transaction.type == TransactionType.expense) {
-        final categoryId = transaction.categoryId!;
-        categoryTotals[categoryId] = (categoryTotals[categoryId] ?? 0.0) + transaction.amount;
-      }
+    for (final transaction in transactions) {
+      final categoryId = transaction.categoryId ?? 'uncategorized';
+      categoryTotals[categoryId] = (categoryTotals[categoryId] ?? 0) + transaction.amount;
     }
 
     return categoryTotals;
@@ -6435,288 +6416,301 @@ class StatisticsCalculatorImpl extends StatisticsCalculator {
 
   static List<ChartData> generateChartData(List<Transaction> transactions, String chartType) {
     switch (chartType.toLowerCase()) {
-      case 'pie':
-        return _generatePieChartData(transactions);
-      case 'bar':
-        return _generateBarChartData(transactions);
-      case 'line':
-        return _generateLineChartData(transactions);
+      case 'category':
+        return _generateCategoryChartData(transactions);
+      case 'monthly':
+        return _generateMonthlyChartData(transactions);
+      case 'trend':
+        return _generateTrendChartData(transactions);
       default:
-        return _generatePieChartData(transactions);
+        return _generateCategoryChartData(transactions);
     }
   }
 
-  static TrendData calculateTrend(List<Transaction> transactions, DateRange period) {
-    // 計算趨勢資料
-    final monthlyExpenses = <double>[];
-    final currentMonth = DateTime.now().month;
-
-    // 模擬12個月的資料
-    for (int i = 0; i < 12; i++) {
-      final monthExpense = transactions
-          .where((t) => t.type == TransactionType.expense &&
-                       t.date.month == ((currentMonth - 11 + i) % 12) + 1)
-          .fold(0.0, (sum, t) => sum + t.amount);
-      monthlyExpenses.add(monthExpense);
-    }
-
-    // 計算變化百分比
-    final lastMonth = monthlyExpenses.isNotEmpty ? monthlyExpenses.last : 0.0;
-    final previousMonth = monthlyExpenses.length > 1 ? monthlyExpenses[monthlyExpenses.length - 2] : 0.0;
-
-    double changePercent = 0.0;
-    String trend = 'stable';
-
-    if (previousMonth > 0) {
-      changePercent = ((lastMonth - previousMonth) / previousMonth) * 100;
-      if (changePercent > 5) {
-        trend = 'up';
-      } else if (changePercent < -5) {
-        trend = 'down';
-      }
-    }
-
-    return TrendData(
-      changePercent: changePercent,
-      trend: trend,
-      monthlyData: monthlyExpenses,
-    );
-  }
-
-  static List<ChartData> _generatePieChartData(List<Transaction> transactions) {
+  static List<ChartData> _generateCategoryChartData(List<Transaction> transactions) {
     final categoryTotals = calculateCategoryTotals(transactions);
-    final chartData = <ChartData>[];
+    final colors = [
+      Colors.red,
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.teal,
+      Colors.pink,
+      Colors.amber,
+    ];
 
-    final colors = [Colors.red, Colors.blue, Colors.green, Colors.orange, Colors.purple];
     int colorIndex = 0;
-
-    categoryTotals.forEach((category, total) {
-      chartData.add(ChartData(
-        label: _getCategoryDisplayName(category),
-        value: total,
-        color: colors[colorIndex % colors.length],
-      ));
+    return categoryTotals.entries.map((entry) {
+      final color = colors[colorIndex % colors.length];
       colorIndex++;
-    });
 
-    return chartData;
+      return ChartData(
+        label: _getCategoryDisplayName(entry.key),
+        value: entry.value,
+        color: color,
+      );
+    }).toList();
   }
 
-  static List<ChartData> _generateBarChartData(List<Transaction> transactions) {
-    // 按月份統計
-    final monthlyData = <String, double>{};
+  static List<ChartData> _generateMonthlyChartData(List<Transaction> transactions) {
+    final Map<String, double> monthlyTotals = {};
 
-    for (Transaction transaction in transactions) {
-      if (transaction.type == TransactionType.expense) {
-        final monthKey = '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}';
-        monthlyData[monthKey] = (monthlyData[monthKey] ?? 0.0) + transaction.amount;
-      }
+    for (final transaction in transactions) {
+      final monthKey = '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}';
+      monthlyTotals[monthKey] = (monthlyTotals[monthKey] ?? 0) + transaction.amount;
     }
 
-    final chartData = <ChartData>[];
-    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.red];
-    int colorIndex = 0;
-
-    monthlyData.forEach((month, total) {
-      chartData.add(ChartData(
-        label: month,
-        value: total,
-        color: colors[colorIndex % colors.length],
-      ));
-      colorIndex++;
-    });
-
-    return chartData;
-  }
-
-  static List<ChartData> _generateLineChartData(List<Transaction> transactions) {
-    // 按日期統計，用於趨勢分析
-    final dailyData = <String, double>{};
-
-    for (Transaction transaction in transactions) {
-      if (transaction.type == TransactionType.expense) {
-        final dateKey = '${transaction.date.month}/${transaction.date.day}';
-        dailyData[dateKey] = (dailyData[dateKey] ?? 0.0) + transaction.amount;
-      }
-    }
-
-    final chartData = <ChartData>[];
-
-    dailyData.forEach((date, total) {
-      chartData.add(ChartData(
-        label: date,
-        value: total,
+    return monthlyTotals.entries.map((entry) {
+      return ChartData(
+        label: _formatMonth(entry.key),
+        value: entry.value,
         color: Colors.blue,
-      ));
-    });
+      );
+    }).toList();
+  }
 
-    return chartData;
+  static List<ChartData> _generateTrendChartData(List<Transaction> transactions) {
+    final Map<String, double> dailyTotals = {};
+
+    for (final transaction in transactions) {
+      final dayKey = '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}-${transaction.date.day.toString().padLeft(2, '0')}';
+      dailyTotals[dayKey] = (dailyTotals[dayKey] ?? 0) + transaction.amount;
+    }
+
+    return dailyTotals.entries.map((entry) {
+      return ChartData(
+        label: _formatDate(entry.key),
+        value: entry.value,
+        color: Colors.green,
+      );
+    }).toList();
   }
 
   static String _getCategoryDisplayName(String categoryId) {
-    final displayNames = {
-      'food_lunch': '午餐',
-      'food_dinner': '晚餐',
-      'food_breakfast': '早餐',
-      'transport_bus': '公車',
-      'transport_metro': '捷運',
+    final Map<String, String> categoryNames = {
+      'food': '餐飲',
+      'transport': '交通',
+      'shopping': '購物',
       'entertainment': '娛樂',
+      'healthcare': '醫療',
+      'utilities': '水電',
+      'salary': '薪資',
+      'bonus': '獎金',
+      'uncategorized': '未分類',
     };
 
-    return displayNames[categoryId] ?? categoryId;
+    return categoryNames[categoryId] ?? categoryId;
+  }
+
+  static String _formatMonth(String monthKey) {
+    final parts = monthKey.split('-');
+    if (parts.length == 2) {
+      return '${parts[0]}年${parts[1]}月';
+    }
+    return monthKey;
+  }
+
+  static String _formatDate(String dateKey) {
+    final parts = dateKey.split('-');
+    if (parts.length == 3) {
+      return '${parts[1]}/${parts[2]}';
+    }
+    return dateKey;
+  }
+
+  static Map<String, dynamic> calculateAdvancedStatistics(List<Transaction> transactions) {
+    if (transactions.isEmpty) {
+      return {
+        'averageTransaction': 0.0,
+        'largestTransaction': 0.0,
+        'smallestTransaction': 0.0,
+        'mostFrequentCategory': null,
+        'spendingPattern': 'no_data',
+      };
+    }
+
+    final amounts = transactions.map((t) => t.amount).toList();
+    amounts.sort();
+
+    final total = amounts.fold(0.0, (sum, amount) => sum + amount);
+    final average = total / amounts.length;
+    final largest = amounts.last;
+    final smallest = amounts.first;
+
+    // 計算最常用科目
+    final categoryCount = <String, int>{};
+    for (final transaction in transactions) {
+      final categoryId = transaction.categoryId ?? 'uncategorized';
+      categoryCount[categoryId] = (categoryCount[categoryId] ?? 0) + 1;
+    }
+
+    String? mostFrequentCategory;
+    int maxCount = 0;
+    categoryCount.forEach((category, count) {
+      if (count > maxCount) {
+        maxCount = count;
+        mostFrequentCategory = category;
+      }
+    });
+
+    // 分析消費模式
+    final spendingPattern = _analyzeSpendingPattern(transactions);
+
+    return {
+      'averageTransaction': average,
+      'largestTransaction': largest,
+      'smallestTransaction': smallest,
+      'mostFrequentCategory': mostFrequentCategory,
+      'spendingPattern': spendingPattern,
+      'categoryDistribution': categoryCount,
+      'transactionCount': transactions.length,
+    };
+  }
+
+  static String _analyzeSpendingPattern(List<Transaction> transactions) {
+    final weekdayCount = <int, int>{};
+    final hourCount = <int, int>{};
+
+    for (final transaction in transactions) {
+      final weekday = transaction.date.weekday;
+      final hour = transaction.date.hour;
+
+      weekdayCount[weekday] = (weekdayCount[weekday] ?? 0) + 1;
+      hourCount[hour] = (hourCount[hour] ?? 0) + 1;
+    }
+
+    // 分析主要消費時間
+    final maxWeekday = weekdayCount.entries.reduce((a, b) => a.value > b.value ? a : b);
+    final maxHour = hourCount.entries.reduce((a, b) => a.value > b.value ? a : b);
+
+    if (maxWeekday.key >= 1 && maxWeekday.key <= 5) {
+      return 'weekday_spender'; // 平日消費較多
+    } else {
+      return 'weekend_spender'; // 週末消費較多
+    }
   }
 }
 
 /**
  * 44. 交易資料處理器 - TransactionDataProcessor
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - 交易資料處理業務邏輯
+ * @version 2025-09-16-V2.3.0
+ * @date 2025-09-16
+ * @update: 階段三完成 - 交易資料處理完整實作
  */
-class FilterCriteria {
-  final DateRange? dateRange;
-  final List<TransactionType>? types;
-  final List<String>? categoryIds;
-  final List<String>? accountIds;
-  final double? minAmount;
-  final double? maxAmount;
+class TransactionDataProcessor {
+  static List<Transaction> filterTransactions(List<Transaction> transactions, Map<String, dynamic> criteria) {
+    List<Transaction> filtered = List.from(transactions);
 
-  FilterCriteria({
-    this.dateRange,
-    this.types,
-    this.categoryIds,
-    this.accountIds,
-    this.minAmount,
-    this.maxAmount,
-  });
-}
+    // 日期篩選
+    if (criteria.containsKey('startDate') && criteria['startDate'] != null) {
+      final startDate = criteria['startDate'] as DateTime;
+      filtered = filtered.where((t) => !t.date.isBefore(startDate)).toList();
+    }
 
-class SortCriteria {
-  final String field; // 'date', 'amount', 'description'
-  final bool ascending;
+    if (criteria.containsKey('endDate') && criteria['endDate'] != null) {
+      final endDate = criteria['endDate'] as DateTime;
+      filtered = filtered.where((t) => !t.date.isAfter(endDate)).toList();
+    }
 
-  SortCriteria({required this.field, this.ascending = true});
-}
+    // 金額篩選
+    if (criteria.containsKey('minAmount') && criteria['minAmount'] != null) {
+      final minAmount = criteria['minAmount'] as double;
+      filtered = filtered.where((t) => t.amount >= minAmount).toList();
+    }
 
-class GroupCriteria {
-  final String field; // 'category', 'account', 'date', 'month'
+    if (criteria.containsKey('maxAmount') && criteria['maxAmount'] != null) {
+      final maxAmount = criteria['maxAmount'] as double;
+      filtered = filtered.where((t) => t.amount <= maxAmount).toList();
+    }
 
-  GroupCriteria({required this.field});
-}
+    // 類型篩選
+    if (criteria.containsKey('types') && criteria['types'] != null) {
+      final types = criteria['types'] as List<TransactionType>;
+      filtered = filtered.where((t) => types.contains(t.type)).toList();
+    }
 
-class TransactionSummary {
-  final int count;
-  final double totalAmount;
-  final double averageAmount;
-  final double maxAmount;
-  final double minAmount;
+    // 科目篩選
+    if (criteria.containsKey('categoryIds') && criteria['categoryIds'] != null) {
+      final categoryIds = criteria['categoryIds'] as List<String>;
+      filtered = filtered.where((t) =>
+        t.categoryId != null && categoryIds.contains(t.categoryId)
+      ).toList();
+    }
 
-  TransactionSummary({
-    required this.count,
-    required this.totalAmount,
-    required this.averageAmount,
-    required this.maxAmount,
-    required this.minAmount,
-  });
-}
+    // 帳戶篩選
+    if (criteria.containsKey('accountIds') && criteria['accountIds'] != null) {
+      final accountIds = criteria['accountIds'] as List<String>;
+      filtered = filtered.where((t) =>
+        t.accountId != null && accountIds.contains(t.accountId)
+      ).toList();
+    }
 
-abstract class TransactionDataProcessor {
-  static List<Transaction> filterTransactions(List<Transaction> transactions, FilterCriteria criteria);
-  static List<Transaction> sortTransactions(List<Transaction> transactions, SortCriteria criteria);
-  static Map<String, List<Transaction>> groupTransactions(List<Transaction> transactions, GroupCriteria criteria);
-  static TransactionSummary summarizeTransactions(List<Transaction> transactions);
-}
+    // 關鍵字篩選
+    if (criteria.containsKey('keyword') && criteria['keyword'] != null) {
+      final keyword = criteria['keyword'] as String;
+      filtered = filtered.where((t) =>
+        t.description.toLowerCase().contains(keyword.toLowerCase())
+      ).toList();
+    }
 
-class TransactionDataProcessorImpl extends TransactionDataProcessor {
-  static List<Transaction> filterTransactions(List<Transaction> transactions, FilterCriteria criteria) {
-    return transactions.where((transaction) {
-      // 日期範圍篩選
-      if (criteria.dateRange != null) {
-        if (transaction.date.isBefore(criteria.dateRange!.start) ||
-            transaction.date.isAfter(criteria.dateRange!.end)) {
-          return false;
-        }
-      }
-
-      // 交易類型篩選
-      if (criteria.types != null && criteria.types!.isNotEmpty) {
-        if (!criteria.types!.contains(transaction.type)) {
-          return false;
-        }
-      }
-
-      // 科目篩選
-      if (criteria.categoryIds != null && criteria.categoryIds!.isNotEmpty) {
-        if (transaction.categoryId == null ||
-            !criteria.categoryIds!.contains(transaction.categoryId)) {
-          return false;
-        }
-      }
-
-      // 帳戶篩選
-      if (criteria.accountIds != null && criteria.accountIds!.isNotEmpty) {
-        if (transaction.accountId == null ||
-            !criteria.accountIds!.contains(transaction.accountId)) {
-          return false;
-        }
-      }
-
-      // 金額範圍篩選
-      if (criteria.minAmount != null && transaction.amount < criteria.minAmount!) {
-        return false;
-      }
-      if (criteria.maxAmount != null && transaction.amount > criteria.maxAmount!) {
-        return false;
-      }
-
-      return true;
-    }).toList();
+    return filtered;
   }
 
-  static List<Transaction> sortTransactions(List<Transaction> transactions, SortCriteria criteria) {
-    final sortedTransactions = List<Transaction>.from(transactions);
+  static List<Transaction> sortTransactions(List<Transaction> transactions, Map<String, dynamic> criteria) {
+    final sortBy = criteria['sortBy'] as String? ?? 'date';
+    final ascending = criteria['ascending'] as bool? ?? false;
 
-    sortedTransactions.sort((a, b) {
-      int comparison = 0;
+    List<Transaction> sorted = List.from(transactions);
 
-      switch (criteria.field) {
-        case 'date':
-          comparison = a.date.compareTo(b.date);
-          break;
-        case 'amount':
-          comparison = a.amount.compareTo(b.amount);
-          break;
-        case 'description':
-          comparison = a.description.compareTo(b.description);
-          break;
-        default:
-          comparison = a.date.compareTo(b.date);
-      }
+    switch (sortBy) {
+      case 'date':
+        sorted.sort((a, b) => ascending ? a.date.compareTo(b.date) : b.date.compareTo(a.date));
+        break;
+      case 'amount':
+        sorted.sort((a, b) => ascending ? a.amount.compareTo(b.amount) : b.amount.compareTo(a.amount));
+        break;
+      case 'description':
+        sorted.sort((a, b) => ascending ? a.description.compareTo(b.description) : b.description.compareTo(a.description));
+        break;
+      case 'type':
+        sorted.sort((a, b) => ascending ? a.type.index.compareTo(b.type.index) : b.type.index.compareTo(a.type.index));
+        break;
+      default:
+        // 預設按日期排序
+        sorted.sort((a, b) => b.date.compareTo(a.date));
+    }
 
-      return criteria.ascending ? comparison : -comparison;
-    });
-
-    return sortedTransactions;
+    return sorted;
   }
 
-  static Map<String, List<Transaction>> groupTransactions(List<Transaction> transactions, GroupCriteria criteria) {
-    final grouped = <String, List<Transaction>>{};
+  static Map<String, List<Transaction>> groupTransactions(List<Transaction> transactions, String groupBy) {
+    final Map<String, List<Transaction>> grouped = {};
 
-    for (Transaction transaction in transactions) {
+    for (final transaction in transactions) {
       String groupKey;
 
-      switch (criteria.field) {
+      switch (groupBy) {
+        case 'date':
+          groupKey = '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}-${transaction.date.day.toString().padLeft(2, '0')}';
+          break;
+        case 'month':
+          groupKey = '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}';
+          break;
+        case 'year':
+          groupKey = transaction.date.year.toString();
+          break;
         case 'category':
           groupKey = transaction.categoryId ?? 'uncategorized';
           break;
         case 'account':
           groupKey = transaction.accountId ?? 'unknown';
           break;
-        case 'date':
-          groupKey = '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}-${transaction.date.day.toString().padLeft(2, '0')}';
+        case 'type':
+          groupKey = transaction.type.toString().split('.').last;
           break;
-        case 'month':
-          groupKey = '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}';
+        case 'weekday':
+          groupKey = _getWeekdayName(transaction.date.weekday);
           break;
         default:
           groupKey = 'all';
@@ -6731,85 +6725,190 @@ class TransactionDataProcessorImpl extends TransactionDataProcessor {
     return grouped;
   }
 
-  static TransactionSummary summarizeTransactions(List<Transaction> transactions) {
+  static String _getWeekdayName(int weekday) {
+    const weekdays = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
+    return weekdays[weekday - 1];
+  }
+
+  static Map<String, dynamic> summarizeTransactions(List<Transaction> transactions) {
     if (transactions.isEmpty) {
-      return TransactionSummary(
-        count: 0,
-        totalAmount: 0.0,
-        averageAmount: 0.0,
-        maxAmount: 0.0,
-        minAmount: 0.0,
-      );
+      return {
+        'totalCount': 0,
+        'totalAmount': 0.0,
+        'averageAmount': 0.0,
+        'incomeCount': 0,
+        'expenseCount': 0,
+        'transferCount': 0,
+        'incomeTotal': 0.0,
+        'expenseTotal': 0.0,
+        'categories': <String, Map<String, dynamic>>{},
+        'accounts': <String, Map<String, dynamic>>{},
+        'dateRange': null,
+      };
     }
 
-    final amounts = transactions.map((t) => t.amount).toList();
-    final totalAmount = amounts.reduce((a, b) => a + b);
-    final averageAmount = totalAmount / amounts.length;
-    final maxAmount = amounts.reduce((a, b) => a > b ? a : b);
-    final minAmount = amounts.reduce((a, b) => a < b ? a : b);
+    int incomeCount = 0, expenseCount = 0, transferCount = 0;
+    double incomeTotal = 0, expenseTotal = 0;
+    final Map<String, Map<String, dynamic>> categories = {};
+    final Map<String, Map<String, dynamic>> accounts = {};
 
-    return TransactionSummary(
-      count: transactions.length,
-      totalAmount: totalAmount,
-      averageAmount: averageAmount,
-      maxAmount: maxAmount,
-      minAmount: minAmount,
-    );
+    DateTime? earliestDate, latestDate;
+
+    for (final transaction in transactions) {
+      // 更新日期範圍
+      if (earliestDate == null || transaction.date.isBefore(earliestDate)) {
+        earliestDate = transaction.date;
+      }
+      if (latestDate == null || transaction.date.isAfter(latestDate)) {
+        latestDate = transaction.date;
+      }
+
+      // 按類型統計
+      switch (transaction.type) {
+        case TransactionType.income:
+          incomeCount++;
+          incomeTotal += transaction.amount;
+          break;
+        case TransactionType.expense:
+          expenseCount++;
+          expenseTotal += transaction.amount;
+          break;
+        case TransactionType.transfer:
+          transferCount++;
+          break;
+      }
+
+      // 按科目統計
+      final categoryId = transaction.categoryId ?? 'uncategorized';
+      if (!categories.containsKey(categoryId)) {
+        categories[categoryId] = {'count': 0, 'total': 0.0, 'transactions': <Transaction>[]};
+      }
+      categories[categoryId]!['count'] = categories[categoryId]!['count'] + 1;
+      categories[categoryId]!['total'] = categories[categoryId]!['total'] + transaction.amount;
+      (categories[categoryId]!['transactions'] as List<Transaction>).add(transaction);
+
+      // 按帳戶統計
+      final accountId = transaction.accountId ?? 'unknown';
+      if (!accounts.containsKey(accountId)) {
+        accounts[accountId] = {'count': 0, 'total': 0.0, 'transactions': <Transaction>[]};
+      }
+      accounts[accountId]!['count'] = accounts[accountId]!['count'] + 1;
+      accounts[accountId]!['total'] = accounts[accountId]!['total'] + transaction.amount;
+      (accounts[accountId]!['transactions'] as List<Transaction>).add(transaction);
+    }
+
+    final totalCount = transactions.length;
+    final totalAmount = incomeTotal + expenseTotal;
+    final averageAmount = totalCount > 0 ? totalAmount / totalCount : 0.0;
+
+    return {
+      'totalCount': totalCount,
+      'totalAmount': totalAmount,
+      'averageAmount': averageAmount,
+      'incomeCount': incomeCount,
+      'expenseCount': expenseCount,
+      'transferCount': transferCount,
+      'incomeTotal': incomeTotal,
+      'expenseTotal': expenseTotal,
+      'balance': incomeTotal - expenseTotal,
+      'categories': categories,
+      'accounts': accounts,
+      'dateRange': earliestDate != null && latestDate != null
+          ? {'start': earliestDate, 'end': latestDate}
+          : null,
+    };
+  }
+
+  static List<Transaction> getTopTransactions(List<Transaction> transactions, {int limit = 10, String sortBy = 'amount'}) {
+    final sorted = sortTransactions(transactions, {'sortBy': sortBy, 'ascending': false});
+    return sorted.take(limit).toList();
+  }
+
+  static List<Transaction> searchTransactions(List<Transaction> transactions, String query) {
+    if (query.trim().isEmpty) return transactions;
+
+    final lowercaseQuery = query.toLowerCase();
+    return transactions.where((transaction) {
+      return transaction.description.toLowerCase().contains(lowercaseQuery) ||
+             transaction.amount.toString().contains(query) ||
+             (transaction.categoryId?.toLowerCase().contains(lowercaseQuery) ?? false);
+    }).toList();
   }
 }
 
 /**
  * 45. 交易格式轉換器 - TransactionFormatter
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - 資料格式轉換工具
+ * @version 2025-09-16-V2.3.0
+ * @date 2025-09-16
+ * @update: 階段三完成 - 交易格式轉換完整實作
  */
-enum DateFormat { short, medium, long, custom }
+class TransactionFormatter {
+  static String formatAmount(double amount, [String currency = 'TWD']) {
+    final formatter = NumberFormat.currency(
+      locale: 'zh_TW',
+      symbol: _getCurrencySymbol(currency),
+      decimalDigits: _getDecimalDigits(amount),
+    );
+    return formatter.format(amount);
+  }
 
-abstract class TransactionFormatter {
-  static String formatAmount(double amount, String currency);
-  static String formatDate(DateTime date, DateFormat format);
-  static String formatDescription(String description, int maxLength);
-  static Map<String, dynamic> toJson(Transaction transaction);
-  static Transaction fromJson(Map<String, dynamic> json);
-}
-
-class TransactionFormatterImpl extends TransactionFormatter {
-  static String formatAmount(double amount, String currency) {
+  static String _getCurrencySymbol(String currency) {
     switch (currency.toUpperCase()) {
       case 'TWD':
-      case 'NT':
-        return 'NT\$ ${_formatNumber(amount)}';
+        return 'NT\$';
       case 'USD':
-        return '\$ ${_formatNumber(amount)}';
+        return '\$';
       case 'EUR':
-        return '€ ${_formatNumber(amount)}';
+        return '€';
       case 'JPY':
-        return '¥ ${_formatNumber(amount)}'; // 日圓不顯示小數
+        return '¥';
+      case 'CNY':
+        return '¥';
       default:
-        return '\$ ${_formatNumber(amount)}';
+        return '\$';
     }
   }
 
-  static String formatDate(DateTime date, DateFormat format) {
+  static int _getDecimalDigits(double amount) {
+    // 如果是整數，不顯示小數點
+    return amount == amount.truncate() ? 0 : 2;
+  }
+
+  static String formatDate(DateTime date, [String format = 'yyyy/MM/dd']) {
     switch (format) {
-      case DateFormat.short:
-        return '${date.month}/${date.day}';
-      case DateFormat.medium:
-        return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
-      case DateFormat.long:
-        return '${date.year}年${date.month}月${date.day}日';
-      case DateFormat.custom:
-        return '${_getWeekday(date.weekday)} ${date.month}/${date.day}';
+      case 'short':
+        return DateFormat('MM/dd').format(date);
+      case 'medium':
+        return DateFormat('yyyy/MM/dd').format(date);
+      case 'long':
+        return DateFormat('yyyy年MM月dd日').format(date);
+      case 'full':
+        return DateFormat('yyyy年MM月dd日 EEEE').format(date);
+      case 'time':
+        return DateFormat('HH:mm').format(date);
+      case 'datetime':
+        return DateFormat('yyyy/MM/dd HH:mm').format(date);
+      default:
+        return DateFormat(format).format(date);
     }
   }
 
-  static String formatDescription(String description, int maxLength) {
+  static String formatDescription(String description, [int maxLength = 20]) {
     if (description.length <= maxLength) {
       return description;
     }
-
     return '${description.substring(0, maxLength - 3)}...';
+  }
+
+  static String formatTransactionType(TransactionType type) {
+    switch (type) {
+      case TransactionType.income:
+        return '收入';
+      case TransactionType.expense:
+        return '支出';
+      case TransactionType.transfer:
+        return '轉帳';
+    }
   }
 
   static Map<String, dynamic> toJson(Transaction transaction) {
@@ -6836,28 +6935,6 @@ class TransactionFormatterImpl extends TransactionFormatter {
     );
   }
 
-  static String _formatNumber(double amount) {
-    // 新增千分位分隔符
-    final parts = amount.toStringAsFixed(2).split('.');
-    final integerPart = parts[0];
-    final decimalPart = parts[1];
-
-    String formattedInteger = '';
-    for (int i = 0; i < integerPart.length; i++) {
-      if (i > 0 && (integerPart.length - i) % 3 == 0) {
-        formattedInteger += ',';
-      }
-      formattedInteger += integerPart[i];
-    }
-
-    return decimalPart == '00' ? formattedInteger : '$formattedInteger.$decimalPart';
-  }
-
-  static String _getWeekday(int weekday) {
-    const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
-    return '週${weekdays[weekday - 1]}';
-  }
-
   static TransactionType _parseTransactionType(String typeString) {
     switch (typeString.toLowerCase()) {
       case 'income':
@@ -6868,927 +6945,300 @@ class TransactionFormatterImpl extends TransactionFormatter {
         return TransactionType.expense;
     }
   }
+
+  static String formatTransactionSummary(Transaction transaction) {
+    final typeIcon = _getTypeIcon(transaction.type);
+    final amountStr = formatAmount(transaction.amount);
+    final dateStr = formatDate(transaction.date, 'short');
+    final descriptionStr = formatDescription(transaction.description, 15);
+
+    return '$typeIcon $amountStr - $descriptionStr ($dateStr)';
+  }
+
+  static String _getTypeIcon(TransactionType type) {
+    switch (type) {
+      case TransactionType.income:
+        return '💰';
+      case TransactionType.expense:
+        return '💸';
+      case TransactionType.transfer:
+        return '🔄';
+    }
+  }
+
+  static Color getTypeColor(TransactionType type) {
+    switch (type) {
+      case TransactionType.income:
+        return Colors.green;
+      case TransactionType.expense:
+        return Colors.red;
+      case TransactionType.transfer:
+        return Colors.blue;
+    }
+  }
+
+  static List<Map<String, dynamic>> formatTransactionList(List<Transaction> transactions) {
+    return transactions.map((transaction) => {
+      'id': transaction.id,
+      'formattedAmount': formatAmount(transaction.amount),
+      'formattedDate': formatDate(transaction.date),
+      'formattedDescription': formatDescription(transaction.description),
+      'typeDisplay': formatTransactionType(transaction.type),
+      'summary': formatTransactionSummary(transaction),
+      'original': transaction,
+    }).toList();
+  }
+
+  static String formatStatisticsSummary(Map<String, dynamic> statistics) {
+    final totalIncome = formatAmount(statistics['incomeTotal'] ?? 0);
+    final totalExpense = formatAmount(statistics['expenseTotal'] ?? 0);
+    final balance = formatAmount(statistics['balance'] ?? 0);
+    final transactionCount = statistics['totalCount'] ?? 0;
+
+    return '''
+統計摘要：
+• 總收入：$totalIncome
+• 總支出：$totalExpense
+• 結餘：$balance
+• 交易筆數：$transactionCount 筆
+    '''.trim();
+  }
 }
 
 /**
  * 46. 快取管理器 - CacheManager
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - 快取管理工具
+ * @version 2025-09-16-V2.3.0
+ * @date 2025-09-16
+ * @update: 階段三完成 - 快取管理完整實作
  */
-abstract class CacheManager {
-  static Future<void> cacheTransactions(String key, List<Transaction> transactions);
-  static Future<List<Transaction>?> getCachedTransactions(String key);
-  static Future<void> cacheCategories(String key, List<Category> categories);
-  static Future<List<Category>?> getCachedCategories(String key);
-  static Future<void> clearCache(String key);
-  static Future<void> clearAllCaches();
-  static bool isCacheValid(String key, Duration maxAge);
-}
-
-class CacheManagerImpl extends CacheManager {
-  static final Map<String, dynamic> _cache = {};
-  static final Map<String, DateTime> _cacheTimestamps = {};
+class CacheManager {
+  static final Map<String, CacheEntry> _cache = {};
+  static const Duration _defaultMaxAge = Duration(minutes: 10);
 
   static Future<void> cacheTransactions(String key, List<Transaction> transactions) async {
-    await Future.delayed(Duration(milliseconds: 10));
+    final jsonData = transactions.map((t) => TransactionFormatter.toJson(t)).toList();
+    _cache[key] = CacheEntry(
+      data: jsonData,
+      timestamp: DateTime.now(),
+      maxAge: _defaultMaxAge,
+    );
 
-    final serializedTransactions = transactions.map((t) => TransactionFormatterImpl.toJson(t)).toList();
-    _cache[key] = serializedTransactions;
-    _cacheTimestamps[key] = DateTime.now();
+    // 模擬持久化儲存
+    await Future.delayed(Duration(milliseconds: 10));
+    print('快取交易資料：$key (${transactions.length} 筆)');
   }
 
   static Future<List<Transaction>?> getCachedTransactions(String key) async {
-    await Future.delayed(Duration(milliseconds: 5));
-
-    if (!_cache.containsKey(key)) {
+    final entry = _cache[key];
+    if (entry == null || !_isValidCache(entry)) {
       return null;
     }
 
-    final cachedData = _cache[key] as List<dynamic>;
-    return cachedData.map((json) => TransactionFormatterImpl.fromJson(json as Map<String, dynamic>)).toList();
+    try {
+      final jsonList = entry.data as List<dynamic>;
+      return jsonList.map((json) => TransactionFormatter.fromJson(json as Map<String, dynamic>)).toList();
+    } catch (e) {
+      print('讀取快取交易資料失敗：$e');
+      _cache.remove(key);
+      return null;
+    }
   }
 
   static Future<void> cacheCategories(String key, List<Category> categories) async {
-    await Future.delayed(Duration(milliseconds: 10));
-
-    final serializedCategories = categories.map((c) => {
+    final jsonData = categories.map((c) => {
       'id': c.id,
       'name': c.name,
       'parentId': c.parentId,
       'type': c.type,
     }).toList();
 
-    _cache[key] = serializedCategories;
-    _cacheTimestamps[key] = DateTime.now();
+    _cache[key] = CacheEntry(
+      data: jsonData,
+      timestamp: DateTime.now(),
+      maxAge: Duration(hours: 1), // 科目資料快取時間較長
+    );
+
+    await Future.delayed(Duration(milliseconds: 10));
+    print('快取科目資料：$key (${categories.length} 個)');
   }
 
   static Future<List<Category>?> getCachedCategories(String key) async {
-    await Future.delayed(Duration(milliseconds: 5));
-
-    if (!_cache.containsKey(key)) {
+    final entry = _cache[key];
+    if (entry == null || !_isValidCache(entry)) {
       return null;
     }
 
-    final cachedData = _cache[key] as List<dynamic>;
-    return cachedData.map((json) => Category(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      parentId: json['parentId'] as String?,
-      type: json['type'] as String,
-    )).toList();
+    try {
+      final jsonList = entry.data as List<dynamic>;
+      return jsonList.map((json) => Category(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        parentId: json['parentId'] as String?,
+        type: json['type'] as String,
+      )).toList();
+    } catch (e) {
+      print('讀取快取科目資料失敗：$e');
+      _cache.remove(key);
+      return null;
+    }
+  }
+
+  static Future<void> cacheStatistics(String key, Map<String, dynamic> statistics, [Duration? maxAge]) async {
+    _cache[key] = CacheEntry(
+      data: statistics,
+      timestamp: DateTime.now(),
+      maxAge: maxAge ?? Duration(minutes: 5), // 統計資料快取時間較短
+    );
+
+    await Future.delayed(Duration(milliseconds: 10));
+    print('快取統計資料：$key');
+  }
+
+  static Future<Map<String, dynamic>?> getCachedStatistics(String key) async {
+    final entry = _cache[key];
+    if (entry == null || !_isValidCache(entry)) {
+      return null;
+    }
+
+    return entry.data as Map<String, dynamic>;
   }
 
   static Future<void> clearCache(String key) async {
-    await Future.delayed(Duration(milliseconds: 5));
-
     _cache.remove(key);
-    _cacheTimestamps.remove(key);
+    await Future.delayed(Duration(milliseconds: 10));
+    print('清除快取：$key');
   }
 
   static Future<void> clearAllCaches() async {
-    await Future.delayed(Duration(milliseconds: 10));
-
+    final count = _cache.length;
     _cache.clear();
-    _cacheTimestamps.clear();
+    await Future.delayed(Duration(milliseconds: 10));
+    print('清除所有快取：$count 個項目');
   }
 
-  static bool isCacheValid(String key, Duration maxAge) {
-    if (!_cache.containsKey(key) || !_cacheTimestamps.containsKey(key)) {
-      return false;
-    }
+  static bool isCacheValid(String key, [Duration? maxAge]) {
+    final entry = _cache[key];
+    if (entry == null) return false;
 
-    final cacheTime = _cacheTimestamps[key]!;
-    final now = DateTime.now();
-
-    return now.difference(cacheTime) < maxAge;
-  }
-}
-
-/**
- * 47. 四模式UI適配器 - FourModeUIAdapter
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - UI適配工具
- */
-enum ScreenSize { small, medium, large, extraLarge }
-
-abstract class FourModeUIAdapter {
-  static Widget adaptWidget(Widget widget, UserMode mode);
-  static List<Widget> adaptFormFields(List<Widget> fields, UserMode mode);
-  static ButtonStyle adaptButtonStyle(ButtonStyle baseStyle, UserMode mode);
-  static InputDecoration adaptInputDecoration(InputDecoration decoration, UserMode mode);
-  static int getOptimalFieldCount(UserMode mode, ScreenSize screenSize);
-}
-
-class FourModeUIAdapterImpl extends FourModeUIAdapter {
-  static Widget adaptWidget(Widget widget, UserMode mode) {
-    switch (mode) {
-      case UserMode.expert:
-        return _addExpertDecorations(widget);
-      case UserMode.inertial:
-        return _addInertialDecorations(widget);
-      case UserMode.cultivation:
-        return _addCultivationDecorations(widget);
-      case UserMode.guiding:
-        return _addGuidingDecorations(widget);
-    }
+    final effectiveMaxAge = maxAge ?? entry.maxAge;
+    return DateTime.now().difference(entry.timestamp) < effectiveMaxAge;
   }
 
-  static List<Widget> adaptFormFields(List<Widget> fields, UserMode mode) {
-    final maxFields = FourModeInteractionManagerImpl.getMaxFieldsPerScreen(mode);
-    final adaptedFields = fields.take(maxFields).map((field) => adaptWidget(field, mode)).toList();
-
-    return adaptedFields;
+  static bool _isValidCache(CacheEntry entry) {
+    return DateTime.now().difference(entry.timestamp) < entry.maxAge;
   }
 
-  static ButtonStyle adaptButtonStyle(ButtonStyle baseStyle, UserMode mode) {
-    final primaryColor = FourModeThemeManagerImpl.getPrimaryColor(mode);
+  static Future<void> cleanupExpiredCaches() async {
+    final expiredKeys = <String>[];
 
-    return baseStyle.copyWith(
-      backgroundColor: MaterialStateProperty.all(primaryColor),
-      foregroundColor: MaterialStateProperty.all(Colors.white),
-      padding: MaterialStateProperty.all(_getButtonPadding(mode)),
-      shape: MaterialStateProperty.all(_getButtonShape(mode)),
-    );
-  }
-
-  static InputDecoration adaptInputDecoration(InputDecoration decoration, UserMode mode) {
-    final primaryColor = FourModeThemeManagerImpl.getPrimaryColor(mode);
-
-    return decoration.copyWith(
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(_getBorderRadius(mode)),
-        borderSide: BorderSide(color: primaryColor),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(_getBorderRadius(mode)),
-        borderSide: BorderSide(color: primaryColor, width: 2),
-      ),
-      labelStyle: TextStyle(color: primaryColor),
-    );
-  }
-
-  static int getOptimalFieldCount(UserMode mode, ScreenSize screenSize) {
-    final baseCount = FourModeInteractionManagerImpl.getMaxFieldsPerScreen(mode);
-
-    switch (screenSize) {
-      case ScreenSize.small:
-        return (baseCount * 0.7).round();
-      case ScreenSize.medium:
-        return baseCount;
-      case ScreenSize.large:
-        return (baseCount * 1.2).round();
-      case ScreenSize.extraLarge:
-        return (baseCount * 1.5).round();
-    }
-  }
-
-  static Widget _addExpertDecorations(Widget widget) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: widget,
-    );
-  }
-
-  static Widget _addInertialDecorations(Widget widget) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: widget,
-    );
-  }
-
-  static Widget _addCultivationDecorations(Widget widget) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.withOpacity(0.1), Colors.transparent],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: widget,
-    );
-  }
-
-  static Widget _addGuidingDecorations(Widget widget) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.orange.withOpacity(0.2),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: widget,
-    );
-  }
-
-  static EdgeInsets _getButtonPadding(UserMode mode) {
-    switch (mode) {
-      case UserMode.expert:
-        return EdgeInsets.symmetric(horizontal: 16, vertical: 8);
-      case UserMode.inertial:
-        return EdgeInsets.symmetric(horizontal: 20, vertical: 12);
-      case UserMode.cultivation:
-        return EdgeInsets.symmetric(horizontal: 24, vertical: 14);
-      case UserMode.guiding:
-        return EdgeInsets.symmetric(horizontal: 32, vertical: 16);
-    }
-  }
-
-  static RoundedRectangleBorder _getButtonShape(UserMode mode) {
-    switch (mode) {
-      case UserMode.expert:
-        return RoundedRectangleBorder(borderRadius: BorderRadius.circular(4));
-      case UserMode.inertial:
-        return RoundedRectangleBorder(borderRadius: BorderRadius.circular(8));
-      case UserMode.cultivation:
-        return RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
-      case UserMode.guiding:
-        return RoundedRectangleBorder(borderRadius: BorderRadius.circular(20));
-    }
-  }
-
-  static double _getBorderRadius(UserMode mode) {
-    switch (mode) {
-      case UserMode.expert:
-        return 4.0;
-      case UserMode.inertial:
-        return 8.0;
-      case UserMode.cultivation:
-        return 12.0;
-      case UserMode.guiding:
-        return 16.0;
-    }
-  }
-}
-
-/**
- * 48. 響應式布局管理器 - ResponsiveLayoutManager
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - 響應式布局工具
- */
-abstract class ResponsiveLayoutManager {
-  static Widget buildResponsiveLayout(Widget child, ScreenSize screenSize);
-  static int getColumnsForScreen(ScreenSize screenSize, UserMode mode);
-  static double getOptimalSpacing(ScreenSize screenSize);
-  static EdgeInsets getOptimalPadding(ScreenSize screenSize);
-}
-
-class ResponsiveLayoutManagerImpl extends ResponsiveLayoutManager {
-  static Widget buildResponsiveLayout(Widget child, ScreenSize screenSize) {
-    final padding = getOptimalPadding(screenSize);
-
-    return Container(
-      padding: padding,
-      constraints: _getConstraints(screenSize),
-      child: child,
-    );
-  }
-
-  static int getColumnsForScreen(ScreenSize screenSize, UserMode mode) {
-    final baseColumns = _getBaseColumns(screenSize);
-
-    // 根據模式調整列數
-    switch (mode) {
-      case UserMode.expert:
-        return baseColumns + 1; // 專家模式可以顯示更多列
-      case UserMode.inertial:
-        return baseColumns;
-      case UserMode.cultivation:
-        return (baseColumns * 0.8).round(); // 較少列數，減少複雜度
-      case UserMode.guiding:
-        return 1; // 引導模式固定單列
-    }
-  }
-
-  static double getOptimalSpacing(ScreenSize screenSize) {
-    switch (screenSize) {
-      case ScreenSize.small:
-        return 8.0;
-      case ScreenSize.medium:
-        return 12.0;
-      case ScreenSize.large:
-        return 16.0;
-      case ScreenSize.extraLarge:
-        return 20.0;
-    }
-  }
-
-  static EdgeInsets getOptimalPadding(ScreenSize screenSize) {
-    switch (screenSize) {
-      case ScreenSize.small:
-        return EdgeInsets.all(12);
-      case ScreenSize.medium:
-        return EdgeInsets.all(16);
-      case ScreenSize.large:
-        return EdgeInsets.all(20);
-      case ScreenSize.extraLarge:
-        return EdgeInsets.all(24);
-    }
-  }
-
-  static int _getBaseColumns(ScreenSize screenSize) {
-    switch (screenSize) {
-      case ScreenSize.small:
-        return 1;
-      case ScreenSize.medium:
-        return 2;
-      case ScreenSize.large:
-        return 3;
-      case ScreenSize.extraLarge:
-        return 4;
-    }
-  }
-
-  static BoxConstraints _getConstraints(ScreenSize screenSize) {
-    switch (screenSize) {
-      case ScreenSize.small:
-        return BoxConstraints(maxWidth: 480);
-      case ScreenSize.medium:
-        return BoxConstraints(maxWidth: 768);
-      case ScreenSize.large:
-        return BoxConstraints(maxWidth: 1024);
-      case ScreenSize.extraLarge:
-        return BoxConstraints(maxWidth: double.infinity);
-    }
-  }
-}
-
-/**
- * 49. 日期工具類 - DateUtils
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - 日期處理工具類
- */
-abstract class DateUtils {
-  static DateTime getStartOfMonth(DateTime date);
-  static DateTime getEndOfMonth(DateTime date);
-  static DateRange getCurrentMonth();
-  static DateRange getPreviousMonth();
-  static DateRange getCurrentYear();
-  static List<DateTime> generateDateRange(DateTime start, DateTime end, Duration interval);
-  static bool isDateInRange(DateTime date, DateRange range);
-}
-
-class DateUtilsImpl extends DateUtils {
-  static DateTime getStartOfMonth(DateTime date) {
-    return DateTime(date.year, date.month, 1);
-  }
-
-  static DateTime getEndOfMonth(DateTime date) {
-    return DateTime(date.year, date.month + 1, 0, 23, 59, 59, 999);
-  }
-
-  static DateRange getCurrentMonth() {
-    final now = DateTime.now();
-    return DateRange(
-      start: getStartOfMonth(now),
-      end: getEndOfMonth(now),
-    );
-  }
-
-  static DateRange getPreviousMonth() {
-    final now = DateTime.now();
-    final previousMonth = DateTime(now.year, now.month - 1, now.day);
-    return DateRange(
-      start: getStartOfMonth(previousMonth),
-      end: getEndOfMonth(previousMonth),
-    );
-  }
-
-  static DateRange getCurrentYear() {
-    final now = DateTime.now();
-    return DateRange(
-      start: DateTime(now.year, 1, 1),
-      end: DateTime(now.year, 12, 31, 23, 59, 59, 999),
-    );
-  }
-
-  static List<DateTime> generateDateRange(DateTime start, DateTime end, Duration interval) {
-    final dates = <DateTime>[];
-    DateTime current = start;
-
-    while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
-      dates.add(current);
-      current = current.add(interval);
-    }
-
-    return dates;
-  }
-
-  static bool isDateInRange(DateTime date, DateRange range) {
-    return (date.isAfter(range.start) || date.isAtSameMomentAs(range.start)) &&
-           (date.isBefore(range.end) || date.isAtSameMomentAs(range.end));
-  }
-}
-
-/**
- * 50. 金額工具類 - AmountUtils
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - 金額處理工具類
- */
-class AmountRange {
-  final double min;
-  final double max;
-  final double average;
-
-  AmountRange({required this.min, required this.max, required this.average});
-}
-
-abstract class AmountUtils {
-  static double parseAmountString(String amountStr);
-  static String formatCurrency(double amount, String currencyCode);
-  static bool isValidAmount(double amount);
-  static double roundToDecimalPlaces(double amount, int decimalPlaces);
-  static AmountRange calculateAmountRange(List<Transaction> transactions);
-}
-
-class AmountUtilsImpl extends AmountUtils {
-  static double parseAmountString(String amountStr) {
-    // 移除貨幣符號和分隔符
-    String cleanStr = amountStr
-        .replaceAll(RegExp(r'[^\d.-]'), '') // 只保留數字、小數點、負號
-        .replaceAll(',', ''); // 移除千分位分隔符
-
-    // 嘗試解析
-    final amount = double.tryParse(cleanStr);
-    if (amount == null) {
-      throw FormatException('無法解析金額：$amountStr');
-    }
-
-    return amount;
-  }
-
-  static String formatCurrency(double amount, String currencyCode) {
-    switch (currencyCode.toUpperCase()) {
-      case 'TWD':
-        return 'NT\$ ${_addThousandsSeparator(amount)}';
-      case 'USD':
-        return 'US\$ ${_addThousandsSeparator(amount)}';
-      case 'EUR':
-        return '€ ${_addThousandsSeparator(amount)}';
-      case 'JPY':
-        return '¥ ${_addThousandsSeparator(amount.round())}'; // 日圓不顯示小數
-      case 'CNY':
-        return '¥ ${_addThousandsSeparator(amount)}';
-      default:
-        return '\$ ${_addThousandsSeparator(amount)}';
-    }
-  }
-
-  static bool isValidAmount(double amount) {
-    // 檢查是否為有效數字
-    if (amount.isNaN || amount.isInfinite) {
-      return false;
-    }
-
-    // 檢查是否為正數
-    if (amount <= 0) {
-      return false;
-    }
-
-    // 檢查是否超過最大值
-    if (amount > 999999999) {
-      return false;
-    }
-
-    // 檢查小數位數是否合理（最多2位）
-    final decimalParts = amount.toString().split('.');
-    if (decimalParts.length > 1 && decimalParts[1].length > 2) {
-      return false;
-    }
-
-    return true;
-  }
-
-  static double roundToDecimalPlaces(double amount, int decimalPlaces) {
-    final factor = math.pow(10, decimalPlaces);
-    return (amount * factor).round() / factor;
-  }
-
-  static AmountRange calculateAmountRange(List<Transaction> transactions) {
-    if (transactions.isEmpty) {
-      return AmountRange(min: 0, max: 0, average: 0);
-    }
-
-    final amounts = transactions.map((t) => t.amount).toList();
-    final min = amounts.reduce((a, b) => a < b ? a : b);
-    final max = amounts.reduce((a, b) => a > b ? a : b);
-    final sum = amounts.reduce((a, b) => a + b);
-    final average = sum / amounts.length;
-
-    return AmountRange(
-      min: min,
-      max: max,
-      average: roundToDecimalPlaces(average, 2),
-    );
-  }
-
-  static String _addThousandsSeparator(double amount) {
-    final parts = amount.toStringAsFixed(2).split('.');
-    final integerPart = parts[0];
-    final decimalPart = parts[1];
-
-    String formatted = '';
-    for (int i = 0; i < integerPart.length; i++) {
-      if (i > 0 && (integerPart.length - i) % 3 == 0) {
-        formatted += ',';
+    _cache.forEach((key, entry) {
+      if (!_isValidCache(entry)) {
+        expiredKeys.add(key);
       }
-      formatted += integerPart[i];
+    });
+
+    for (final key in expiredKeys) {
+      _cache.remove(key);
     }
 
-    return decimalPart == '00' ? formatted : '$formatted.$decimalPart';
-  }
-}
-
-/**
- * 51. 錯誤處理管理器 - ErrorHandler
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - 錯誤處理工具類
- */
-enum ErrorSeverity { low, medium, high, critical }
-
-abstract class ErrorHandler {
-  static String getErrorMessage(Exception error, UserMode mode);
-  static bool shouldRetryOperation(Exception error);
-  static Future<void> logError(Exception error, StackTrace stackTrace);
-  static void showErrorDialog(BuildContext context, Exception error);
-  static ErrorSeverity getErrorSeverity(Exception error);
-}
-
-class ErrorHandlerImpl extends ErrorHandler {
-  static String getErrorMessage(Exception error, UserMode mode) {
-    final baseMessage = _getBaseErrorMessage(error);
-
-    switch (mode) {
-      case UserMode.expert:
-        return '$baseMessage\n技術詳情：${error.toString()}';
-      case UserMode.inertial:
-        return baseMessage;
-      case UserMode.cultivation:
-        return '$baseMessage\n💡 建議：請檢查輸入內容後重試';
-      case UserMode.guiding:
-        return '${_getSimplifiedMessage(error)}\n請重新嘗試或聯繫客服';
+    if (expiredKeys.isNotEmpty) {
+      print('清理過期快取：${expiredKeys.length} 個項目');
     }
   }
 
-  static bool shouldRetryOperation(Exception error) {
-    final errorMessage = error.toString().toLowerCase();
+  static Map<String, dynamic> getCacheInfo() {
+    final cacheInfo = <String, dynamic>{};
 
-    // 網路相關錯誤可以重試
-    if (errorMessage.contains('network') ||
-        errorMessage.contains('timeout') ||
-        errorMessage.contains('connection')) {
-      return true;
-    }
+    _cache.forEach((key, entry) {
+      cacheInfo[key] = {
+        'timestamp': entry.timestamp.toIso8601String(),
+        'maxAge': entry.maxAge.inMinutes,
+        'isValid': _isValidCache(entry),
+        'dataType': entry.data.runtimeType.toString(),
+      };
+    });
 
-    // 伺服器暫時錯誤可以重試
-    if (errorMessage.contains('service unavailable') ||
-        errorMessage.contains('server error')) {
-      return true;
-    }
-
-    // 驗證錯誤不應重試
-    if (errorMessage.contains('validation') ||
-        errorMessage.contains('invalid')) {
-      return false;
-    }
-
-    return false;
-  }
-
-  static Future<void> logError(Exception error, StackTrace stackTrace) async {
-    final timestamp = DateTime.now().toIso8601String();
-    final severity = getErrorSeverity(error);
-
-    final logEntry = {
-      'timestamp': timestamp,
-      'error': error.toString(),
-      'stackTrace': stackTrace.toString(),
-      'severity': severity.toString(),
+    return {
+      'totalCaches': _cache.length,
+      'caches': cacheInfo,
     };
-
-    // 模擬記錄到日誌系統
-    print('ERROR LOG: $logEntry');
-
-    // 實際實作中應該發送到後端日誌服務
-    await Future.delayed(Duration(milliseconds: 100));
   }
 
-  static void showErrorDialog(BuildContext context, Exception error) {
-    final userMode = _getCurrentUserMode(context);
-    final errorMessage = getErrorMessage(error, userMode);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(
-                _getErrorIcon(error),
-                color: _getErrorColor(error),
-              ),
-              SizedBox(width: 8),
-              Text('錯誤提示'),
-            ],
-          ),
-          content: Text(errorMessage),
-          actions: [
-            if (shouldRetryOperation(error))
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  // 觸發重試操作
-                },
-                child: Text('重試'),
-              ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('確定'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  static ErrorSeverity getErrorSeverity(Exception error) {
-    final errorMessage = error.toString().toLowerCase();
-
-    if (errorMessage.contains('critical') ||
-        errorMessage.contains('fatal') ||
-        errorMessage.contains('security')) {
-      return ErrorSeverity.critical;
-    }
-
-    if (errorMessage.contains('network') ||
-        errorMessage.contains('server') ||
-        errorMessage.contains('database')) {
-      return ErrorSeverity.high;
-    }
-
-    if (errorMessage.contains('validation') ||
-        errorMessage.contains('format') ||
-        errorMessage.contains('parse')) {
-      return ErrorSeverity.medium;
-    }
-
-    return ErrorSeverity.low;
-  }
-
-  static String _getBaseErrorMessage(Exception error) {
-    final errorMessage = error.toString().toLowerCase();
-
-    if (errorMessage.contains('network')) {
-      return '網路連線發生問題，請檢查網路狀態';
-    }
-
-    if (errorMessage.contains('validation')) {
-      return '輸入資料格式有誤，請檢查後重新輸入';
-    }
-
-    if (errorMessage.contains('permission')) {
-      return '權限不足，無法執行此操作';
-    }
-
-    if (errorMessage.contains('not found')) {
-      return '找不到相關資料';
-    }
-
-    return '系統發生錯誤，請稍後再試';
-  }
-
-  static String _getSimplifiedMessage(Exception error) {
-    final errorMessage = error.toString().toLowerCase();
-
-    if (errorMessage.contains('network')) {
-      return '網路有問題';
-    }
-
-    if (errorMessage.contains('validation')) {
-      return '輸入內容有誤';
-    }
-
-    return '發生錯誤';
-  }
-
-  static UserMode _getCurrentUserMode(BuildContext context) {
-    // 實際實作中應該從用戶設定或Provider獲取
-    return UserMode.inertial;
-  }
-
-  static IconData _getErrorIcon(Exception error) {
-    final severity = getErrorSeverity(error);
-
-    switch (severity) {
-      case ErrorSeverity.critical:
-        return Icons.error;
-      case ErrorSeverity.high:
-        return Icons.warning;
-      case ErrorSeverity.medium:
-        return Icons.info;
-      case ErrorSeverity.low:
-        return Icons.help_outline;
-    }
-  }
-
-  static Color _getErrorColor(Exception error) {
-    final severity = getErrorSeverity(error);
-
-    switch (severity) {
-      case ErrorSeverity.critical:
-        return Colors.red;
-      case ErrorSeverity.high:
-        return Colors.orange;
-      case ErrorSeverity.medium:
-        return Colors.blue;
-      case ErrorSeverity.low:
-        return Colors.grey;
+  static void setCacheMaxAge(String key, Duration maxAge) {
+    final entry = _cache[key];
+    if (entry != null) {
+      _cache[key] = CacheEntry(
+        data: entry.data,
+        timestamp: entry.timestamp,
+        maxAge: maxAge,
+      );
     }
   }
 }
 
-/**
- * 52. 本地化管理器 - LocalizationManager
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段三實作 - 本地化工具類
- */
-abstract class LocalizationManager {
-  static String getLocalizedText(String key, UserMode mode);
-  static String formatLocalizedAmount(double amount, String locale);
-  static String formatLocalizedDate(DateTime date, String locale);
-  static List<String> getSupportedLocales();
-  static String getCurrentLocale();
+// 快取項目資料類別
+class CacheEntry {
+  final dynamic data;
+  final DateTime timestamp;
+  final Duration maxAge;
+
+  CacheEntry({
+    required this.data,
+    required this.timestamp,
+    required this.maxAge,
+  });
 }
 
-class LocalizationManagerImpl extends LocalizationManager {
-  static const Map<String, Map<String, String>> _localizedTexts = {
-    'zh_TW': {
-      'accounting_title': '記帳',
-      'amount_label': '金額',
-      'description_label': '描述',
-      'category_label': '科目',
-      'account_label': '帳戶',
-      'date_label': '日期',
-      'submit_button': '確認記帳',
-      'cancel_button': '取消',
-      'success_message': '記帳成功',
-      'error_message': '記帳失敗',
-    },
-    'en_US': {
-      'accounting_title': 'Accounting',
-      'amount_label': 'Amount',
-      'description_label': 'Description',
-      'category_label': 'Category',
-      'account_label': 'Account',
-      'date_label': 'Date',
-      'submit_button': 'Submit',
-      'cancel_button': 'Cancel',
-      'success_message': 'Success',
-      'error_message': 'Error',
-    },
-    'ja_JP': {
-      'accounting_title': '家計簿',
-      'amount_label': '金額',
-      'description_label': '説明',
-      'category_label': 'カテゴリ',
-      'account_label': 'アカウント',
-      'date_label': '日付',
-      'submit_button': '確認',
-      'cancel_button': 'キャンセル',
-      'success_message': '成功',
-      'error_message': 'エラー',
-    },
-  };
+// 數字格式化工具
+class NumberFormat {
+  final String locale;
+  final String symbol;
+  final int decimalDigits;
 
-  static String _currentLocale = 'zh_TW';
+  NumberFormat.currency({
+    required this.locale,
+    required this.symbol,
+    required this.decimalDigits,
+  });
 
-  static String getLocalizedText(String key, UserMode mode) {
-    final localeTexts = _localizedTexts[_currentLocale] ?? _localizedTexts['zh_TW']!;
-    String baseText = localeTexts[key] ?? key;
-
-    // 根據使用者模式調整文字風格
-    switch (mode) {
-      case UserMode.expert:
-        return baseText; // 專業原始文字
-      case UserMode.inertial:
-        return baseText; // 標準文字
-      case UserMode.cultivation:
-        return _addEncouragingTone(baseText); // 加入鼓勵語氣
-      case UserMode.guiding:
-        return _simplifyText(baseText); // 簡化文字
+  String format(double number) {
+    if (decimalDigits == 0) {
+      return '$symbol${number.round().toString().replaceAllMapped(
+        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+        (Match match) => '${match[1]},',
+      )}';
+    } else {
+      return '$symbol${number.toStringAsFixed(decimalDigits).replaceAllMapped(
+        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+        (Match match) => '${match[1]},',
+      )}';
     }
   }
+}
 
-  static String formatLocalizedAmount(double amount, String locale) {
-    switch (locale) {
-      case 'zh_TW':
-        return 'NT\$ ${_formatTaiwaneseAmount(amount)}';
-      case 'en_US':
-        return '\$ ${_formatUSAmount(amount)}';
-      case 'ja_JP':
-        return '¥ ${_formatJapaneseAmount(amount)}';
-      default:
-        return '\$ ${amount.toStringAsFixed(2)}';
-    }
-  }
+// 日期格式化工具
+class DateFormat {
+  final String pattern;
 
-  static String formatLocalizedDate(DateTime date, String locale) {
-    switch (locale) {
-      case 'zh_TW':
-        return '${date.year}年${date.month}月${date.day}日';
-      case 'en_US':
-        return '${_getMonthName(date.month)} ${date.day}, ${date.year}';
-      case 'ja_JP':
-        return '${date.year}年${date.month}月${date.day}日';
-      default:
+  DateFormat(this.pattern);
+
+  String format(DateTime date) {
+    switch (pattern) {
+      case 'MM/dd':
+        return '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
+      case 'yyyy/MM/dd':
         return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
+      case 'yyyy年MM月dd日':
+        return '${date.year}年${date.month.toString().padLeft(2, '0')}月${date.day.toString().padLeft(2, '0')}日';
+      case 'yyyy年MM月dd日 EEEE':
+        final weekdays = ['', '週一', '週二', '週三', '週四', '週五', '週六', '週日'];
+        return '${date.year}年${date.month.toString().padLeft(2, '0')}月${date.day.toString().padLeft(2, '0')}日 ${weekdays[date.weekday]}';
+      case 'HH:mm':
+        return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      case 'yyyy/MM/dd HH:mm':
+        return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      default:
+        return date.toString();
     }
-  }
-
-  static List<String> getSupportedLocales() {
-    return _localizedTexts.keys.toList();
-  }
-
-  static String getCurrentLocale() {
-    return _currentLocale;
-  }
-
-  static void setCurrentLocale(String locale) {
-    if (_localizedTexts.containsKey(locale)) {
-      _currentLocale = locale;
-    }
-  }
-
-  static String _addEncouragingTone(String text) {
-    final encouragingPrefixes = ['太棒了！', '很好！', '繼續加油！'];
-    final randomPrefix = encouragingPrefixes[DateTime.now().millisecond % encouragingPrefixes.length];
-
-    // 某些文字不需要鼓勵前綴
-    if (text.length > 10 || text.contains('錯誤') || text.contains('失敗')) {
-      return text;
-    }
-
-    return '$randomPrefix $text';
-  }
-
-  static String _simplifyText(String text) {
-    // 簡化複雜文字
-    final simplifications = {
-      '確認記帳': '完成',
-      '記帳成功': '好了',
-      '記帳失敗': '重試',
-      '描述': '內容',
-      '科目': '分類',
-    };
-
-    return simplifications[text] ?? text;
-  }
-
-  static String _formatTaiwaneseAmount(double amount) {
-    return amount.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-  }
-
-  static String _formatUSAmount(double amount) {
-    return amount.toStringAsFixed(2).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-  }
-
-  static String _formatJapaneseAmount(double amount) {
-    return amount.round().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-  }
-
-  static String _getMonthName(int month) {
-    const monthNames = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return monthNames[month];
   }
 }
