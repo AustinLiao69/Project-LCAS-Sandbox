@@ -1,9 +1,9 @@
 /**
- * DD1_核心協調模組_4.0.0
+ * DD1_核心協調模組_4.1.0
  * @module 核心協調模組
  * @description Phase 1 API端點支援 - 專門處理6個核心API端點的商業邏輯協調
  * @author AustinLiao69
- * @update 2025-09-16: 階段一重構，升級版本至4.0.0，實作Phase 1核心API端點支援
+ * @update 2025-09-16: 階段一重構完成，升級版本至4.1.0，實作Phase 1核心API端點支援
  */
 
 /**
@@ -17,7 +17,7 @@ const DD_CONFIG = {
   TIMEZONE: "Asia/Taipei", // GMT+8 台灣時區
   DEFAULT_SUBJECT: "其他支出",
   PHASE: "1", // Phase 1 標識
-  API_VERSION: "4.0.0"
+  API_VERSION: "4.1.0"
 };
 
 // Node.js 模組依賴
