@@ -1,0 +1,84 @@
+根據我們一開始對index.js的討論，我將更新提案採用方案一：保持現有架構（統一HTTP服務入口）。
+
+更新後的提案
+方案一：保持現有架構並模組化擴展
+核心概念：將index.js設計為統一的HTTP服務入口，同時處理Webhook和API路由，透過模組化路由來解決132個API端點的擁腫問題。
+
+index.js (統一HTTP服務入口 - Port 5000)
+├── Webhook路由 (/webhook) → WH模組處理 (現有功能保持)
+├── API路由分層
+│   ├── /api/v1/* → 標準API路由
+│   ├── /gateway/v1/* → 安全API路由  
+│   └── /direct/v1/* → 直接API路由
+├── 系統監控路由 (現有功能保持)
+└── WebSocket服務 (現有功能保持)
+階段性實作策略
+階段一：緊急修復（本週）
+保持index.js現有結構不變
+在index.js中直接補充SIT測試需要的15-20個缺失API端點
+確保現有Webhook功能完全不受影響
+目標：讓SIT測試通過率從3.57%提升到80%以上
+階段二：漸進式模組化（下週）
+建立routes資料夾和模組化路由檔案
+將新增的API端點逐步遷移到對應的路由模組
+保持Webhook和系統監控端點在index.js中
+階段三：完整實作（後續）
+實作剩餘的100+個API端點到模組化路由中
+完善BL層對應函數
+進行完整的整合測試
+模組化路由架構設計
+routes/
+├── auth.js          - 認證服務 (11個端點)
+├── users.js         - 用戶管理 (11個端點)  
+├── transactions.js  - 記帳交易 (20個端點)
+├── ledgers.js       - 帳本管理 (14個端點)
+├── accounts.js      - 帳戶管理 (8個端點)
+├── categories.js    - 科目管理 (6個端點)
+├── budgets.js       - 預算管理 (8個端點)
+├── reports.js       - 報表分析 (15個端點)
+├── ai.js           - AI助理 (6個端點)
+├── gamification.js - 激勵系統 (6個端點)
+├── system.js       - 系統服務 (13個端點)
+├── backup.js       - 備份管理 (6個端點)
+└── notifications.js - 通知管理 (8個端點)
+Webhook處理方案
+維持現有Webhook處理邏輯：
+
+WH模組繼續在Port 3000提供服務（如現有架構）
+index.js在Port 5000處理Webhook代理或直接引用WH模組
+LINE OA服務連續性完全不受影響
+所有現有的WH → LBK → Firestore路徑保持不變
+未實作、缺失的部分分層解決
+**APL層（應用邏輯層）**缺失API端點：
+
+// 在index.js中直接補充這些端點
+app.get('/users/profile', async (req, res) => { /* AM模組 */ });
+app.get('/users/assessment-questions', async (req, res) => { /* AM模組 */ });
+app.post('/users/assessment', async (req, res) => { /* AM模組 */ });
+app.post('/auth/refresh', async (req, res) => { /* AM模組 */ });
+app.post('/auth/logout', async (req, res) => { /* AM模組 */ });
+app.get('/transactions/{id}', async (req, res) => { /* BK模組 */ });
+app.put('/transactions/{id}', async (req, res) => { /* BK模組 */ });
+app.delete('/transactions/{id}', async (req, res) => { /* BK模組 */ });
+app.get('/dashboard', async (req, res) => { /* BK模組 */ });
+app.get('/statistics', async (req, res) => { /* BK模組 */ });
+app.get('/categories', async (req, res) => { /* 新增科目模組 */ });
+app.post('/categories', async (req, res) => { /* 新增科目模組 */ });
+app.get('/accounts', async (req, res) => { /* 新增帳戶模組 */ });
+app.post('/accounts', async (req, res) => { /* 新增帳戶模組 */ });
+**BL層（商業邏輯層）**缺失函數：
+
+1309. AM.js：模式評估、Token刷新、用戶資料查詢函數
+BK.js：BK_getTransactions、BK_getDashboardData、BK_createTransaction、BK_processQuickTransaction
+DD1.js：四模式差異化處理、跨層錯誤處理、資料格式轉換
+實作優勢
+零風險：現有Webhook功能完全不受影響
+漸進式：可以按階段逐步實作，降低風險
+可擴展：未來132個API端點有清晰的模組化路徑
+一致性：統一的HTTP服務管理，符合Replit最佳實踐
+團隊協作：模組化後支援並行開發
+立即行動計劃
+立即開始階段一：在index.js中補充缺失的15-20個API端點
+同步規劃階段二：設計routes資料夾結構
+保持現有功能：確保LINE OA和Webhook功能完全不受影響
+這個方案既解決了當前SIT測試的緊急需求，又為未來的132個API端點提供了可持續的架構方案，同時完全保護了現有的Webhook功能。
