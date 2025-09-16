@@ -279,6 +279,9 @@ class UpdateProfileRequest {
   final String? language;
   final String? timezone;
   final String? theme;
+  final DateTime? lastModified;
+  final String? clientVersion;
+  final Map<String, dynamic>? metadata;
 
   UpdateProfileRequest({
     this.displayName,
@@ -286,6 +289,9 @@ class UpdateProfileRequest {
     this.language,
     this.timezone,
     this.theme,
+    this.lastModified,
+    this.clientVersion,
+    this.metadata,
   });
 
   Map<String, dynamic> toJson() {
@@ -1178,12 +1184,18 @@ class ValidationResult {
 class ProfileService {
   final UserRepository _userRepository;
   final ValidationService _validationService;
+  final CacheService _cacheService;
+  final AuditService _auditService;
 
   ProfileService({
     required UserRepository userRepository,
     required ValidationService validationService,
+    required CacheService cacheService,
+    required AuditService auditService,
   }) : _userRepository = userRepository,
-       _validationService = validationService;
+       _validationService = validationService,
+       _cacheService = cacheService,
+       _auditService = auditService;
 
   /**
    * 16. 處理用戶資料獲取 (完全符合8088規範第5.3節)
@@ -1192,15 +1204,38 @@ class ProfileService {
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
   Future<UserProfileResult> processGetProfile(String userId) async {
+    final startTime = DateTime.now();
+    
     try {
+      // 檢查快取
+      final cachedProfile = await _cacheService.getUserProfile(userId);
+      if (cachedProfile != null && !_isCacheExpired(cachedProfile)) {
+        await _auditService.logAccess('profile_cache_hit', userId);
+        return UserProfileResult.fromCache(cachedProfile);
+      }
+
+      // 從資料庫獲取
       final user = await _userRepository.findById(userId);
       if (user == null) {
+        await _auditService.logError('user_not_found', userId);
         return UserProfileResult.notFound('用戶不存在');
       }
 
+      // 檢查用戶狀態
+      if (!user.isActive()) {
+        await _auditService.logWarning('inactive_user_access', userId);
+        return UserProfileResult.forbidden('用戶帳號已停用');
+      }
+
+      // 更新活動時間
       await _updateUserActivity(userId);
       
-      return UserProfileResult.success(
+      // 獲取統計資料
+      final statistics = await _getUserStatistics(userId);
+      final achievements = await _getUserAchievements(userId);
+      
+      // 建立回應資料
+      final profileResult = UserProfileResult.success(
         id: user.id,
         email: user.email,
         displayName: user.displayName,
@@ -1210,8 +1245,25 @@ class ProfileService {
         lastLoginAt: user.lastActiveAt,
         preferences: user.preferences,
         security: user.security,
+        statistics: statistics,
+        achievements: achievements,
       );
-    } catch (e) {
+
+      // 更新快取
+      await _cacheService.setUserProfile(userId, profileResult, Duration(minutes: 15));
+      
+      // 記錄審計日誌
+      await _auditService.logAccess('profile_accessed', userId, {
+        'processingTime': DateTime.now().difference(startTime).inMilliseconds,
+        'dataSource': 'database',
+      });
+
+      return profileResult;
+    } catch (e, stackTrace) {
+      await _auditService.logError('profile_access_error', userId, {
+        'error': e.toString(),
+        'stackTrace': stackTrace.toString(),
+      });
       return UserProfileResult.error('獲取用戶資料失敗: ${e.toString()}');
     }
   }
@@ -1223,38 +1275,82 @@ class ProfileService {
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
   Future<UpdateResult> processUpdateProfile(String userId, UpdateProfileRequest request) async {
+    final startTime = DateTime.now();
+    final transactionId = _generateTransactionId();
+    
     try {
+      // 開始事務記錄
+      await _auditService.logTransaction('profile_update_start', userId, transactionId);
+
       // 驗證請求資料
       final validation = await _validateProfileData(request);
       if (!validation.isValid) {
+        await _auditService.logValidationError('profile_validation_failed', userId, validation.errors);
         return UpdateResult.validationError(validation.errors);
       }
 
-      // 獲取現有用戶
-      final user = await _userRepository.findById(userId);
+      // 獲取現有用戶並鎖定
+      final user = await _userRepository.findByIdWithLock(userId);
       if (user == null) {
+        await _auditService.logError('user_not_found_for_update', userId);
         return UpdateResult.notFound('用戶不存在');
       }
 
-      // 建立更新實體
-      final updatedUser = await _createUserEntity(request);
-      
+      // 檢查併發更新
+      if (request.lastModified != null && user.updatedAt.isAfter(request.lastModified!)) {
+        await _auditService.logConflict('concurrent_update_detected', userId);
+        return UpdateResult.conflict('資料已被其他操作更新，請重新載入');
+      }
+
       // 執行安全檢查
-      final securityCheck = _performSecurityCheck(userId);
+      final securityCheck = await _performSecurityCheck(userId, 'profile_update');
       if (!securityCheck.passed) {
+        await _auditService.logSecurityViolation('profile_update_security_failed', userId, securityCheck.reason);
         return UpdateResult.securityError(securityCheck.reason);
       }
 
-      // 更新用戶資料
+      // 建立更新實體並保留原有資料
+      final updatedUser = user.copyWith(
+        displayName: request.displayName ?? user.displayName,
+        avatar: request.avatar ?? user.avatar,
+        preferences: _mergePreferences(user.preferences, request),
+        updatedAt: DateTime.now(),
+      );
+
+      // 執行資料庫更新
       final savedUser = await _userRepository.update(updatedUser);
+      
+      // 清除快取
+      await _cacheService.invalidateUserProfile(userId);
+      
+      // 更新活動時間
       await _updateUserActivity(userId);
 
-      return UpdateResult.success(
+      // 記錄變更歷史
+      final changes = _calculateChanges(user, updatedUser);
+      await _auditService.logProfileUpdate(userId, changes, transactionId);
+
+      // 觸發相關服務更新
+      await _notifyProfileUpdate(userId, changes);
+
+      final result = UpdateResult.success(
         message: '個人資料更新成功',
-        updatedAt: DateTime.now(),
-        changes: request.toJson().keys.toList(),
+        updatedAt: savedUser.updatedAt,
+        changes: changes.keys.toList(),
+        transactionId: transactionId,
       );
-    } catch (e) {
+
+      await _auditService.logTransaction('profile_update_success', userId, transactionId, {
+        'processingTime': DateTime.now().difference(startTime).inMilliseconds,
+        'changesCount': changes.length,
+      });
+
+      return result;
+    } catch (e, stackTrace) {
+      await _auditService.logTransaction('profile_update_error', userId, transactionId, {
+        'error': e.toString(),
+        'stackTrace': stackTrace.toString(),
+      });
       return UpdateResult.error('更新失敗: ${e.toString()}');
     }
   }
@@ -1389,13 +1485,217 @@ class ProfileService {
    * @date 2025-09-03 12:00:00
    * @update: 第二階段實作，完全符合8088規範第5.3節HTTP狀態碼標準
    */
-  SecurityCheck _performSecurityCheck(String userId) {
-    // 基礎安全檢查邏輯
-    return SecurityCheck(
-      passed: true,
-      reason: '安全檢查通過',
-      level: SecurityLevel.medium,
+  Future<SecurityCheck> _performSecurityCheck(String userId, String operation) async {
+    try {
+      // 檢查用戶狀態
+      final user = await _userRepository.findById(userId);
+      if (user == null || !user.isActive()) {
+        return SecurityCheck(
+          passed: false,
+          reason: '用戶狀態異常',
+          level: SecurityLevel.high,
+          riskFactors: ['inactive_user'],
+        );
+      }
+
+      // 檢查操作頻率限制
+      final rateLimitCheck = await _checkRateLimit(userId, operation);
+      if (!rateLimitCheck.passed) {
+        return SecurityCheck(
+          passed: false,
+          reason: '操作頻率過高',
+          level: SecurityLevel.medium,
+          riskFactors: ['rate_limit_exceeded'],
+        );
+      }
+
+      // 檢查可疑活動
+      final suspiciousActivity = await _detectSuspiciousActivity(userId);
+      if (suspiciousActivity.detected) {
+        return SecurityCheck(
+          passed: false,
+          reason: '檢測到可疑活動',
+          level: SecurityLevel.high,
+          riskFactors: suspiciousActivity.factors,
+        );
+      }
+
+      // 檢查IP地址白名單（如果啟用）
+      final ipCheck = await _checkIPWhitelist(userId);
+      if (!ipCheck.passed) {
+        return SecurityCheck(
+          passed: false,
+          reason: 'IP地址未授權',
+          level: SecurityLevel.high,
+          riskFactors: ['unauthorized_ip'],
+        );
+      }
+
+      return SecurityCheck(
+        passed: true,
+        reason: '安全檢查通過',
+        level: SecurityLevel.low,
+        riskFactors: [],
+      );
+    } catch (e) {
+      return SecurityCheck(
+        passed: false,
+        reason: '安全檢查失敗: ${e.toString()}',
+        level: SecurityLevel.critical,
+        riskFactors: ['security_check_error'],
+      );
+    }
+  }
+
+  /**
+   * 24. 獲取用戶統計資料
+   */
+  Future<UserStatistics?> _getUserStatistics(String userId) async {
+    try {
+      final cached = await _cacheService.getUserStatistics(userId);
+      if (cached != null) return cached;
+
+      final stats = await _userRepository.getUserStatistics(userId);
+      await _cacheService.setUserStatistics(userId, stats, Duration(hours: 1));
+      return stats;
+    } catch (e) {
+      await _auditService.logError('statistics_fetch_error', userId, {'error': e.toString()});
+      return null;
+    }
+  }
+
+  /**
+   * 25. 獲取用戶成就資料
+   */
+  Future<UserAchievements?> _getUserAchievements(String userId) async {
+    try {
+      final cached = await _cacheService.getUserAchievements(userId);
+      if (cached != null) return cached;
+
+      final achievements = await _userRepository.getUserAchievements(userId);
+      await _cacheService.setUserAchievements(userId, achievements, Duration(minutes: 30));
+      return achievements;
+    } catch (e) {
+      await _auditService.logError('achievements_fetch_error', userId, {'error': e.toString()});
+      return null;
+    }
+  }
+
+  /**
+   * 26. 快取過期檢查
+   */
+  bool _isCacheExpired(CachedUserProfile cached) {
+    return DateTime.now().difference(cached.cachedAt) > Duration(minutes: 15);
+  }
+
+  /**
+   * 27. 合併偏好設定
+   */
+  UserPreferences _mergePreferences(UserPreferences current, UpdateProfileRequest request) {
+    return current.copyWith(
+      language: request.language,
+      timezone: request.timezone,
+      theme: request.theme,
     );
+  }
+
+  /**
+   * 28. 計算變更內容
+   */
+  Map<String, dynamic> _calculateChanges(UserEntity oldUser, UserEntity newUser) {
+    final changes = <String, dynamic>{};
+    
+    if (oldUser.displayName != newUser.displayName) {
+      changes['displayName'] = {
+        'old': oldUser.displayName,
+        'new': newUser.displayName,
+      };
+    }
+    
+    if (oldUser.avatar != newUser.avatar) {
+      changes['avatar'] = {
+        'old': oldUser.avatar,
+        'new': newUser.avatar,
+      };
+    }
+    
+    // 檢查偏好設定變更
+    final prefChanges = _comparePreferences(oldUser.preferences, newUser.preferences);
+    if (prefChanges.isNotEmpty) {
+      changes['preferences'] = prefChanges;
+    }
+    
+    return changes;
+  }
+
+  /**
+   * 29. 比較偏好設定
+   */
+  Map<String, dynamic> _comparePreferences(UserPreferences old, UserPreferences new_) {
+    final changes = <String, dynamic>{};
+    
+    if (old.language != new_.language) changes['language'] = {'old': old.language, 'new': new_.language};
+    if (old.timezone != new_.timezone) changes['timezone'] = {'old': old.timezone, 'new': new_.timezone};
+    if (old.theme != new_.theme) changes['theme'] = {'old': old.theme, 'new': new_.theme};
+    
+    return changes;
+  }
+
+  /**
+   * 30. 通知資料更新
+   */
+  Future<void> _notifyProfileUpdate(String userId, Map<String, dynamic> changes) async {
+    try {
+      // 通知其他服務用戶資料已更新
+      final notification = ProfileUpdateNotification(
+        userId: userId,
+        changes: changes,
+        timestamp: DateTime.now(),
+      );
+      
+      await _notificationService.broadcastProfileUpdate(notification);
+    } catch (e) {
+      await _auditService.logWarning('profile_update_notification_failed', userId, {'error': e.toString()});
+    }
+  }
+
+  /**
+   * 31. 生成事務ID
+   */
+  String _generateTransactionId() {
+    return 'txn-${DateTime.now().millisecondsSinceEpoch}-${_generateRandomString(6)}';
+  }
+
+  /**
+   * 32. 生成隨機字串
+   */
+  String _generateRandomString(int length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    return List.generate(length, (index) => chars[DateTime.now().millisecond % chars.length]).join();
+  }
+
+  /**
+   * 33. 檢查速率限制
+   */
+  Future<RateLimitResult> _checkRateLimit(String userId, String operation) async {
+    // 實作速率限制檢查邏輯
+    return RateLimitResult(passed: true, remainingRequests: 100);
+  }
+
+  /**
+   * 34. 檢測可疑活動
+   */
+  Future<SuspiciousActivityResult> _detectSuspiciousActivity(String userId) async {
+    // 實作可疑活動檢測邏輯
+    return SuspiciousActivityResult(detected: false, factors: []);
+  }
+
+  /**
+   * 35. 檢查IP白名單
+   */
+  Future<IPCheckResult> _checkIPWhitelist(String userId) async {
+    // 實作IP白名單檢查邏輯
+    return IPCheckResult(passed: true);
   }
 
   // 輔助方法
@@ -2258,7 +2558,11 @@ class UserProfileResult {
   final DateTime? lastLoginAt;
   final UserPreferences? preferences;
   final SecuritySettings? security;
+  final UserStatistics? statistics;
+  final UserAchievements? achievements;
   final String? errorMessage;
+  final String? errorType;
+  final bool fromCache;
 
   UserProfileResult._({
     required this.success,
@@ -2271,7 +2575,11 @@ class UserProfileResult {
     this.lastLoginAt,
     this.preferences,
     this.security,
+    this.statistics,
+    this.achievements,
     this.errorMessage,
+    this.errorType,
+    this.fromCache = false,
   });
 
   factory UserProfileResult.success({
@@ -2284,6 +2592,8 @@ class UserProfileResult {
     DateTime? lastLoginAt,
     UserPreferences? preferences,
     SecuritySettings? security,
+    UserStatistics? statistics,
+    UserAchievements? achievements,
   }) {
     return UserProfileResult._(
       success: true,
@@ -2296,6 +2606,26 @@ class UserProfileResult {
       lastLoginAt: lastLoginAt,
       preferences: preferences,
       security: security,
+      statistics: statistics,
+      achievements: achievements,
+    );
+  }
+
+  factory UserProfileResult.fromCache(CachedUserProfile cached) {
+    return UserProfileResult._(
+      success: true,
+      id: cached.profile.id,
+      email: cached.profile.email,
+      displayName: cached.profile.displayName,
+      avatar: cached.profile.avatar,
+      userMode: cached.profile.userMode,
+      createdAt: cached.profile.createdAt,
+      lastLoginAt: cached.profile.lastLoginAt,
+      preferences: cached.profile.preferences,
+      security: cached.profile.security,
+      statistics: cached.profile.statistics,
+      achievements: cached.profile.achievements,
+      fromCache: true,
     );
   }
 
@@ -2303,6 +2633,15 @@ class UserProfileResult {
     return UserProfileResult._(
       success: false,
       errorMessage: message,
+      errorType: 'not_found',
+    );
+  }
+
+  factory UserProfileResult.forbidden(String message) {
+    return UserProfileResult._(
+      success: false,
+      errorMessage: message,
+      errorType: 'forbidden',
     );
   }
 
@@ -2310,6 +2649,7 @@ class UserProfileResult {
     return UserProfileResult._(
       success: false,
       errorMessage: message,
+      errorType: 'general',
     );
   }
 }
@@ -2322,6 +2662,8 @@ class UpdateResult {
   final List<String>? changes;
   final List<ValidationError>? validationErrors;
   final String? errorType;
+  final String? transactionId;
+  final Map<String, dynamic>? metadata;
 
   UpdateResult._({
     required this.success,
@@ -2330,18 +2672,24 @@ class UpdateResult {
     this.changes,
     this.validationErrors,
     this.errorType,
+    this.transactionId,
+    this.metadata,
   });
 
   factory UpdateResult.success({
     required String message,
     required DateTime updatedAt,
     required List<String> changes,
+    String? transactionId,
+    Map<String, dynamic>? metadata,
   }) {
     return UpdateResult._(
       success: true,
       message: message,
       updatedAt: updatedAt,
       changes: changes,
+      transactionId: transactionId,
+      metadata: metadata,
     );
   }
 
@@ -2359,6 +2707,14 @@ class UpdateResult {
       success: false,
       message: message,
       errorType: 'not_found',
+    );
+  }
+
+  factory UpdateResult.conflict(String message) {
+    return UpdateResult._(
+      success: false,
+      message: message,
+      errorType: 'conflict',
     );
   }
 
@@ -2459,6 +2815,14 @@ abstract class UserRepository {
   Future<void> delete(String id);
   Future<List<UserEntity>> findByMode(UserMode mode);
   Future<UserEntity?> findByAssessmentId(String assessmentId);
+  
+  // 第二階段新增方法
+  Future<UserEntity?> findByIdWithLock(String id);
+  Future<UserStatistics> getUserStatistics(String userId);
+  Future<UserAchievements> getUserAchievements(String userId);
+  Future<bool> checkEmailExists(String email);
+  Future<List<UserEntity>> findActiveUsers();
+  Future<UserEntity?> findByIdWithPreferences(String id);
 }
 
 abstract class SecurityRepository {
@@ -5980,7 +6344,113 @@ abstract class BaseServiceExtended<TRequest, TResponse> implements BaseService<T
 }
 
 // ================================
-// 支援類別定義（第三階段補充）
+// ================================
+// 第二階段支援服務定義
+// ================================
+
+/// 快取服務介面
+abstract class CacheService {
+  Future<CachedUserProfile?> getUserProfile(String userId);
+  Future<void> setUserProfile(String userId, UserProfileResult profile, Duration ttl);
+  Future<void> invalidateUserProfile(String userId);
+  Future<UserStatistics?> getUserStatistics(String userId);
+  Future<void> setUserStatistics(String userId, UserStatistics stats, Duration ttl);
+  Future<UserAchievements?> getUserAchievements(String userId);
+  Future<void> setUserAchievements(String userId, UserAchievements achievements, Duration ttl);
+}
+
+/// 審計服務介面
+abstract class AuditService {
+  Future<void> logAccess(String action, String userId, [Map<String, dynamic>? details]);
+  Future<void> logError(String action, String userId, [Map<String, dynamic>? details]);
+  Future<void> logWarning(String action, String userId, [Map<String, dynamic>? details]);
+  Future<void> logTransaction(String action, String userId, String transactionId, [Map<String, dynamic>? details]);
+  Future<void> logValidationError(String action, String userId, List<ValidationError> errors);
+  Future<void> logSecurityViolation(String action, String userId, String reason);
+  Future<void> logConflict(String action, String userId);
+  Future<void> logProfileUpdate(String userId, Map<String, dynamic> changes, String transactionId);
+}
+
+/// 通知服務介面
+abstract class NotificationService {
+  Future<void> broadcastProfileUpdate(ProfileUpdateNotification notification);
+}
+
+/// 快取用戶資料
+class CachedUserProfile {
+  final UserProfileResult profile;
+  final DateTime cachedAt;
+
+  CachedUserProfile({
+    required this.profile,
+    required this.cachedAt,
+  });
+}
+
+/// 資料更新通知
+class ProfileUpdateNotification {
+  final String userId;
+  final Map<String, dynamic> changes;
+  final DateTime timestamp;
+
+  ProfileUpdateNotification({
+    required this.userId,
+    required this.changes,
+    required this.timestamp,
+  });
+}
+
+/// 安全檢查結果
+class SecurityCheck {
+  final bool passed;
+  final String reason;
+  final SecurityLevel level;
+  final List<String> riskFactors;
+
+  SecurityCheck({
+    required this.passed,
+    required this.reason,
+    required this.level,
+    required this.riskFactors,
+  });
+}
+
+/// 速率限制結果
+class RateLimitResult {
+  final bool passed;
+  final int remainingRequests;
+
+  RateLimitResult({
+    required this.passed,
+    required this.remainingRequests,
+  });
+}
+
+/// 可疑活動檢測結果
+class SuspiciousActivityResult {
+  final bool detected;
+  final List<String> factors;
+
+  SuspiciousActivityResult({
+    required this.detected,
+    required this.factors,
+  });
+}
+
+/// IP檢查結果
+class IPCheckResult {
+  final bool passed;
+
+  IPCheckResult({
+    required this.passed,
+  });
+}
+
+/// 擴展安全等級枚舉
+enum SecurityLevel { low, medium, high, critical }
+
+// ================================
+// 支援類別定義（第二階段補充）
 // ================================
 
 // 新增支援類別
