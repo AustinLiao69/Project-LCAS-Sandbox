@@ -1323,6 +1323,816 @@ const { DD_formatSystemReplyMessage } = DD3;
 const WH = require('./1320. WH.js');
 const DD2 = require('./1332. DD2.js');
 
+// === 階段三：API整合優化函數 ===
+
+/**
+ * 15. API響應格式標準化 - 支援所有端點
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增統一API響應格式標準化
+ * @description 統一所有API端點的響應格式，確保一致性
+ * @param {Object} data - 原始回應資料
+ * @param {Object} options - 格式化選項
+ * @returns {Object} 標準化響應格式
+ */
+function DD_standardizeAPIResponse(data, options = {}) {
+  const processId = options.processId || uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始API響應格式標準化`);
+
+    const {
+      userMode = 'Expert',
+      endpoint = '',
+      includeMetadata = true,
+      includeDebugInfo = false
+    } = options;
+
+    // 基礎標準化結構
+    const standardResponse = {
+      success: data.success !== undefined ? data.success : true,
+      timestamp: new Date().toISOString(),
+      requestId: processId
+    };
+
+    // 成功回應處理
+    if (standardResponse.success) {
+      standardResponse.status = "success";
+      standardResponse.code = options.httpCode || 200;
+      standardResponse.message = data.message || "操作成功";
+      
+      // 資料處理
+      if (data.data !== undefined) {
+        standardResponse.data = DD_formatDataByUserMode(data.data, userMode);
+      }
+
+      // 端點特定metadata
+      if (includeMetadata && endpoint) {
+        standardResponse.metadata = {
+          endpoint: endpoint,
+          userMode: userMode,
+          phase: DD_CONFIG.PHASE,
+          apiVersion: DD_CONFIG.API_VERSION
+        };
+      }
+
+    } else {
+      // 錯誤回應處理
+      standardResponse.status = "error";
+      standardResponse.code = data.error?.code || options.httpCode || 500;
+      standardResponse.message = data.error?.message || data.message || "操作失敗";
+      
+      if (data.error) {
+        standardResponse.error = {
+          type: data.error.type || 'UNKNOWN_ERROR',
+          details: data.error.details || data.error.message,
+          ...(data.error.field && { field: data.error.field })
+        };
+      }
+
+      // 開發模式debug資訊
+      if (includeDebugInfo && process.env.NODE_ENV === 'development') {
+        standardResponse.debug = {
+          stack: data.error?.stack,
+          processId: processId,
+          timestamp: standardResponse.timestamp
+        };
+      }
+    }
+
+    console.log(`[${processId}] API響應格式標準化完成`);
+
+    return standardResponse;
+
+  } catch (error) {
+    console.log(`[${processId}] API響應格式標準化失敗: ${error.toString()}`);
+    
+    // 降級處理
+    return {
+      success: false,
+      status: "error",
+      code: 500,
+      message: "回應格式化失敗",
+      error: {
+        type: 'FORMATTING_ERROR',
+        details: error.toString()
+      },
+      timestamp: new Date().toISOString(),
+      requestId: processId
+    };
+  }
+}
+
+/**
+ * 16. 四模式差異化處理 - 支援所有端點
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增四模式用戶差異化處理邏輯
+ * @description 根據用戶模式提供差異化的資料和介面
+ * @param {Object} data - 原始資料
+ * @param {string} userMode - 使用者模式
+ * @param {string} operation - 操作類型
+ * @returns {Object} 差異化處理後的資料
+ */
+function DD_processByUserMode(data, userMode = 'Expert', operation = '') {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始四模式差異化處理 - 模式: ${userMode}`);
+
+    const modes = {
+      'Simple': {
+        maxTransactions: 10,
+        showCategories: false,
+        showAdvancedStats: false,
+        simplifiedLabels: true,
+        quickActions: ['addExpense', 'viewBalance']
+      },
+      'Guiding': {
+        maxTransactions: 20,
+        showCategories: true,
+        showAdvancedStats: false,
+        simplifiedLabels: true,
+        quickActions: ['addExpense', 'addIncome', 'viewReports'],
+        includeTips: true
+      },
+      'Advanced': {
+        maxTransactions: 50,
+        showCategories: true,
+        showAdvancedStats: true,
+        simplifiedLabels: false,
+        quickActions: ['addExpense', 'addIncome', 'viewReports', 'budgetCheck'],
+        includeAnalytics: true
+      },
+      'Expert': {
+        maxTransactions: 100,
+        showCategories: true,
+        showAdvancedStats: true,
+        simplifiedLabels: false,
+        quickActions: ['addExpense', 'addIncome', 'viewReports', 'budgetCheck', 'exportData'],
+        includeDebugInfo: true,
+        includeAllFields: true
+      }
+    };
+
+    const modeConfig = modes[userMode] || modes['Expert'];
+    let processedData = { ...data };
+
+    // 交易列表處理
+    if (data.transactions && Array.isArray(data.transactions)) {
+      processedData.transactions = data.transactions
+        .slice(0, modeConfig.maxTransactions)
+        .map(transaction => DD_formatTransactionByMode(transaction, modeConfig));
+    }
+
+    // 統計資料處理
+    if (data.summary) {
+      processedData.summary = DD_formatSummaryByMode(data.summary, modeConfig);
+    }
+
+    // 操作特定處理
+    switch (operation) {
+      case 'dashboard':
+        processedData = DD_formatDashboardByMode(processedData, userMode);
+        break;
+      
+      case 'transactions':
+        if (modeConfig.includeTips && userMode === 'Guiding') {
+          processedData.tips = DD_generateUserTips(data);
+        }
+        break;
+      
+      case 'quick_bookkeeping':
+        if (userMode === 'Simple') {
+          processedData.confirmation = DD_generateSimpleConfirmation(data);
+        }
+        break;
+    }
+
+    // 添加模式特定UI配置
+    processedData.uiConfig = {
+      userMode: userMode,
+      quickActions: modeConfig.quickActions,
+      showAdvancedFeatures: modeConfig.showAdvancedStats,
+      simplifiedInterface: modeConfig.simplifiedLabels
+    };
+
+    console.log(`[${processId}] 四模式差異化處理完成`);
+
+    return {
+      success: true,
+      data: processedData,
+      processId: processId
+    };
+
+  } catch (error) {
+    console.log(`[${processId}] 四模式差異化處理失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      data: data, // 降級返回原始資料
+      processId: processId
+    };
+  }
+}
+
+/**
+ * 17. 批次操作優化 - 增強POST /transactions
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增批次交易處理優化功能
+ * @description 優化批次交易操作的效能和可靠性
+ * @param {Array} transactions - 批次交易陣列
+ * @param {Object} options - 處理選項
+ * @returns {Object} 批次處理結果
+ */
+async function DD_optimizeBatchOperations(transactions, options = {}) {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始批次操作優化，交易數量: ${transactions.length}`);
+
+    const {
+      userId,
+      batchSize = 10, // 每批次處理數量
+      validateAll = true,
+      stopOnError = false,
+      parallelProcessing = true
+    } = options;
+
+    if (!userId) {
+      throw new Error("缺少使用者ID");
+    }
+
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      throw new Error("交易陣列為空或格式錯誤");
+    }
+
+    // 初始化Firebase連接
+    const firebaseResult = await DD_initializeFirebaseConnection(userId);
+    if (!firebaseResult.success) {
+      throw new Error(`Firebase連接失敗: ${firebaseResult.error}`);
+    }
+
+    const results = {
+      total: transactions.length,
+      successful: 0,
+      failed: 0,
+      errors: [],
+      successfulIds: [],
+      startTime: Date.now(),
+      batchResults: []
+    };
+
+    // 第一階段：全部驗證（如果啟用）
+    if (validateAll) {
+      console.log(`[${processId}] 開始預驗證所有交易`);
+      const validationErrors = [];
+      
+      for (let i = 0; i < transactions.length; i++) {
+        const validation = DD_validateTransactionData({
+          ...transactions[i],
+          userId
+        });
+        
+        if (!validation.success) {
+          validationErrors.push({
+            index: i,
+            errors: validation.errors
+          });
+        }
+      }
+
+      if (validationErrors.length > 0 && stopOnError) {
+        throw new Error(`驗證失敗，發現 ${validationErrors.length} 個錯誤`);
+      }
+    }
+
+    // 第二階段：分批處理
+    const batches = [];
+    for (let i = 0; i < transactions.length; i += batchSize) {
+      batches.push(transactions.slice(i, i + batchSize));
+    }
+
+    console.log(`[${processId}] 分成 ${batches.length} 個批次處理`);
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`[${processId}] 處理第 ${batchIndex + 1} 批次，包含 ${batch.length} 筆交易`);
+
+      const batchResult = {
+        batchIndex: batchIndex + 1,
+        items: batch.length,
+        successful: 0,
+        failed: 0,
+        errors: []
+      };
+
+      if (parallelProcessing) {
+        // 並行處理
+        const batchPromises = batch.map(async (transaction, index) => {
+          try {
+            const result = await DD_processCreateTransaction({
+              ...transaction,
+              userId
+            });
+            
+            if (result.success) {
+              results.successfulIds.push(result.data.transactionId);
+              return { success: true, index, result };
+            } else {
+              throw new Error(result.error);
+            }
+          } catch (error) {
+            return { success: false, index, error: error.toString() };
+          }
+        });
+
+        const batchResults = await Promise.allSettled(batchPromises);
+        
+        batchResults.forEach((result, index) => {
+          if (result.status === 'fulfilled' && result.value.success) {
+            batchResult.successful++;
+            results.successful++;
+          } else {
+            batchResult.failed++;
+            results.failed++;
+            const errorInfo = {
+              batchIndex: batchIndex + 1,
+              itemIndex: index,
+              error: result.reason || result.value?.error || '未知錯誤'
+            };
+            batchResult.errors.push(errorInfo);
+            results.errors.push(errorInfo);
+          }
+        });
+
+      } else {
+        // 序列處理
+        for (let i = 0; i < batch.length; i++) {
+          try {
+            const result = await DD_processCreateTransaction({
+              ...batch[i],
+              userId
+            });
+            
+            if (result.success) {
+              batchResult.successful++;
+              results.successful++;
+              results.successfulIds.push(result.data.transactionId);
+            } else {
+              throw new Error(result.error);
+            }
+          } catch (error) {
+            batchResult.failed++;
+            results.failed++;
+            const errorInfo = {
+              batchIndex: batchIndex + 1,
+              itemIndex: i,
+              error: error.toString()
+            };
+            batchResult.errors.push(errorInfo);
+            results.errors.push(errorInfo);
+
+            if (stopOnError) {
+              console.log(`[${processId}] 遇到錯誤停止處理: ${error.toString()}`);
+              break;
+            }
+          }
+        }
+      }
+
+      results.batchResults.push(batchResult);
+
+      if (stopOnError && batchResult.failed > 0) {
+        break;
+      }
+
+      // 批次間短暫延遲，避免過載
+      if (batchIndex < batches.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    results.endTime = Date.now();
+    results.processingTime = results.endTime - results.startTime;
+    results.successRate = (results.successful / results.total * 100).toFixed(2);
+
+    console.log(`[${processId}] 批次操作完成 - 成功率: ${results.successRate}%`);
+
+    return {
+      success: true,
+      data: results,
+      endpoint: 'POST /transactions (batch)',
+      processId
+    };
+
+  } catch (error) {
+    console.log(`[${processId}] 批次操作優化失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      processId,
+      endpoint: 'POST /transactions (batch)'
+    };
+  }
+}
+
+/**
+ * 18. 快速記帳智能解析 - 增強POST /transactions/quick
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增智能快速記帳解析功能
+ * @description 增強快速記帳的智能解析能力
+ * @param {string} input - 使用者輸入文字
+ * @param {Object} context - 解析上下文
+ * @returns {Object} 智能解析結果
+ */
+function DD_enhanceQuickBookkeepingParsing(input, context = {}) {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始快速記帳智能解析: "${input}"`);
+
+    const { userId, userHistory = [], userPreferences = {} } = context;
+
+    // 解析規則集
+    const parseRules = {
+      // 金額解析模式
+      amountPatterns: [
+        /(\d+(?:\.\d{1,2})?)/g,                    // 基本數字
+        /[NT$＄￥¥]\s*(\d+(?:\.\d{1,2})?)/g,       // 貨幣符號
+        /(\d+(?:\.\d{1,2})?)\s*[元塊]/g           // 中文貨幣單位
+      ],
+      
+      // 類別關鍵字對應
+      categoryKeywords: {
+        '食物': ['吃飯', '餐', '食', '喝', '飲料', '咖啡', '茶', '早餐', '午餐', '晚餐', '宵夜'],
+        '交通': ['車', '油錢', '加油', '停車', '公車', '捷運', '計程車', 'uber', 'taxi'],
+        '購物': ['買', '購', '衣服', '鞋子', '包包', '化妝品', '日用品'],
+        '娛樂': ['電影', '遊戲', 'ktv', '唱歌', '旅遊', '門票'],
+        '醫療': ['看病', '醫院', '藥', '健保', '診所'],
+        '收入': ['薪水', '獎金', '紅包', '收入', '賺']
+      },
+
+      // 日期解析模式
+      datePatterns: [
+        /今天|今日/g,
+        /昨天|昨日/g,
+        /前天/g,
+        /(\d{1,2})[\/\-](\d{1,2})/g,               // MM/DD 或 MM-DD
+        /(\d{1,2})月(\d{1,2})[日號]/g              // MM月DD日
+      ]
+    };
+
+    // 第一階段：基礎解析
+    const basicParse = DD_parseQuickInput(input);
+    
+    // 第二階段：智能增強解析
+    const enhancedResult = {
+      ...basicParse,
+      confidence: 0,
+      suggestions: [],
+      alternatives: [],
+      context: {
+        processId,
+        originalInput: input,
+        parseMethod: 'enhanced'
+      }
+    };
+
+    if (!basicParse.success) {
+      // 基礎解析失敗，嘗試智能解析
+      enhancedResult.success = true;
+      enhancedResult.amount = DD_extractAmount(input, parseRules);
+      enhancedResult.category = DD_extractCategory(input, parseRules, userHistory);
+      enhancedResult.description = DD_extractDescription(input);
+      enhancedResult.type = DD_determineTransactionType(input, enhancedResult.category);
+      enhancedResult.confidence = DD_calculateConfidence(enhancedResult);
+    } else {
+      // 基礎解析成功，進行增強
+      enhancedResult.confidence = 0.7; // 基礎解析基準信心度
+      
+      // 智能類別推薦
+      const smartCategory = DD_extractCategory(input, parseRules, userHistory);
+      if (smartCategory && smartCategory !== enhancedResult.category) {
+        enhancedResult.suggestions.push({
+          type: 'category',
+          original: enhancedResult.category,
+          suggested: smartCategory,
+          reason: '基於使用習慣推薦'
+        });
+      }
+
+      // 描述增強
+      const enhancedDescription = DD_enhanceDescription(input, enhancedResult.description);
+      if (enhancedDescription !== enhancedResult.description) {
+        enhancedResult.description = enhancedDescription;
+        enhancedResult.confidence += 0.1;
+      }
+    }
+
+    // 第三階段：個人化調整
+    if (userId && userPreferences) {
+      enhancedResult.alternatives = DD_generateAlternatives(enhancedResult, userPreferences);
+      enhancedResult.confidence = DD_adjustConfidenceByUser(enhancedResult.confidence, userId, userHistory);
+    }
+
+    // 第四階段：驗證和調整
+    if (enhancedResult.confidence < 0.5) {
+      enhancedResult.requiresConfirmation = true;
+      enhancedResult.confirmationMessage = DD_generateConfirmationMessage(enhancedResult);
+    }
+
+    console.log(`[${processId}] 智能解析完成 - 信心度: ${enhancedResult.confidence.toFixed(2)}`);
+
+    return {
+      success: true,
+      data: enhancedResult,
+      endpoint: 'POST /transactions/quick (enhanced)',
+      processId
+    };
+
+  } catch (error) {
+    console.log(`[${processId}] 快速記帳智能解析失敗: ${error.toString()}`);
+    
+    // 降級到基礎解析
+    const fallbackResult = DD_parseQuickInput(input);
+    return {
+      success: fallbackResult.success,
+      data: fallbackResult.success ? fallbackResult : null,
+      error: fallbackResult.success ? null : error.toString(),
+      fallback: true,
+      processId
+    };
+  }
+}
+
+// === 輔助函數 ===
+
+/**
+ * 根據用戶模式格式化資料
+ */
+function DD_formatDataByUserMode(data, userMode) {
+  if (!data || typeof data !== 'object') return data;
+
+  const modeSettings = {
+    'Simple': { maxDepth: 2, includeDebug: false },
+    'Guiding': { maxDepth: 3, includeDebug: false },
+    'Advanced': { maxDepth: 4, includeDebug: false },
+    'Expert': { maxDepth: 5, includeDebug: true }
+  };
+
+  const settings = modeSettings[userMode] || modeSettings['Expert'];
+  
+  // 深度限制和欄位過濾
+  return DD_limitObjectDepth(data, settings.maxDepth, settings.includeDebug);
+}
+
+/**
+ * 根據模式配置格式化交易
+ */
+function DD_formatTransactionByMode(transaction, modeConfig) {
+  const formatted = { ...transaction };
+
+  if (modeConfig.simplifiedLabels) {
+    // 簡化標籤
+    if (formatted.categoryId) {
+      formatted.category = DD_simplifyCategoryName(formatted.categoryId);
+    }
+    if (formatted.accountId) {
+      formatted.account = DD_simplifyAccountName(formatted.accountId);
+    }
+  }
+
+  if (!modeConfig.includeAllFields) {
+    // 移除進階欄位
+    delete formatted.processId;
+    delete formatted.source;
+    delete formatted.metadata;
+  }
+
+  return formatted;
+}
+
+/**
+ * 根據模式配置格式化摘要
+ */
+function DD_formatSummaryByMode(summary, modeConfig) {
+  const formatted = { ...summary };
+
+  if (!modeConfig.showAdvancedStats) {
+    // 移除進階統計
+    delete formatted.savingsRate;
+    delete formatted.categoryBreakdown;
+    delete formatted.trends;
+  }
+
+  return formatted;
+}
+
+/**
+ * 生成用戶提示
+ */
+function DD_generateUserTips(data) {
+  const tips = [];
+  
+  if (data.summary && data.summary.todayExpense > data.summary.todayIncome) {
+    tips.push("今天的支出超過收入，建議檢視預算規劃");
+  }
+  
+  if (data.transactions && data.transactions.length > 10) {
+    tips.push("記帳記錄豐富，可以考慮查看月度報表分析");
+  }
+  
+  return tips;
+}
+
+/**
+ * 生成簡單確認訊息
+ */
+function DD_generateSimpleConfirmation(data) {
+  if (data.parsed) {
+    const { amount, type, description } = data.parsed;
+    const typeText = type === 'expense' ? '支出' : '收入';
+    return `✅ ${typeText} NT$${amount} - ${description}`;
+  }
+  return "✅ 記帳完成";
+}
+
+/**
+ * 提取金額
+ */
+function DD_extractAmount(input, parseRules) {
+  for (const pattern of parseRules.amountPatterns) {
+    const matches = input.match(pattern);
+    if (matches && matches.length > 0) {
+      const amount = parseFloat(matches[0].replace(/[^\d.]/g, ''));
+      if (!isNaN(amount) && amount > 0) {
+        return amount;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * 提取類別
+ */
+function DD_extractCategory(input, parseRules, userHistory = []) {
+  const { categoryKeywords } = parseRules;
+  
+  // 關鍵字匹配
+  for (const [category, keywords] of Object.entries(categoryKeywords)) {
+    if (keywords.some(keyword => input.includes(keyword))) {
+      return category;
+    }
+  }
+  
+  // 基於歷史記錄推薦
+  if (userHistory.length > 0) {
+    const recentCategories = userHistory
+      .slice(0, 10)
+      .map(h => h.category)
+      .filter(c => c);
+    
+    if (recentCategories.length > 0) {
+      return recentCategories[0]; // 返回最近使用的類別
+    }
+  }
+  
+  return '其他支出';
+}
+
+/**
+ * 提取描述
+ */
+function DD_extractDescription(input) {
+  // 移除金額和特殊字符，保留主要描述
+  return input
+    .replace(/\d+(?:\.\d{1,2})?/g, '')
+    .replace(/[NT$＄￥¥元塊]/g, '')
+    .trim() || '記帳';
+}
+
+/**
+ * 判斷交易類型
+ */
+function DD_determineTransactionType(input, category) {
+  if (category === '收入' || input.includes('收入') || input.includes('賺')) {
+    return 'income';
+  }
+  return 'expense';
+}
+
+/**
+ * 計算信心度
+ */
+function DD_calculateConfidence(result) {
+  let confidence = 0.3; // 基礎信心度
+  
+  if (result.amount && result.amount > 0) confidence += 0.3;
+  if (result.category && result.category !== '其他支出') confidence += 0.2;
+  if (result.description && result.description.length > 1) confidence += 0.2;
+  
+  return Math.min(confidence, 1.0);
+}
+
+/**
+ * 生成替代方案
+ */
+function DD_generateAlternatives(result, userPreferences) {
+  const alternatives = [];
+  
+  // 基於偏好生成替代類別
+  if (userPreferences.preferredCategories) {
+    userPreferences.preferredCategories.forEach(cat => {
+      if (cat !== result.category) {
+        alternatives.push({
+          type: 'category',
+          value: cat,
+          reason: '常用類別'
+        });
+      }
+    });
+  }
+  
+  return alternatives;
+}
+
+/**
+ * 根據用戶調整信心度
+ */
+function DD_adjustConfidenceByUser(confidence, userId, userHistory) {
+  // 基於用戶使用歷史調整信心度
+  if (userHistory.length > 50) {
+    confidence += 0.1; // 經驗豐富的用戶
+  }
+  
+  return Math.min(confidence, 1.0);
+}
+
+/**
+ * 生成確認訊息
+ */
+function DD_generateConfirmationMessage(result) {
+  const typeText = result.type === 'expense' ? '支出' : '收入';
+  return `請確認：${typeText} NT$${result.amount} - ${result.description} (${result.category})`;
+}
+
+/**
+ * 限制物件深度
+ */
+function DD_limitObjectDepth(obj, maxDepth, includeDebug = false) {
+  if (maxDepth <= 0 || typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+  
+  const limited = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (!includeDebug && (key.includes('debug') || key.includes('Debug'))) {
+      continue;
+    }
+    
+    if (typeof value === 'object' && value !== null) {
+      limited[key] = DD_limitObjectDepth(value, maxDepth - 1, includeDebug);
+    } else {
+      limited[key] = value;
+    }
+  }
+  
+  return limited;
+}
+
+/**
+ * 簡化類別名稱
+ */
+function DD_simplifyCategoryName(categoryId) {
+  const simplifications = {
+    'food_beverage': '餐飲',
+    'transportation': '交通',
+    'shopping': '購物',
+    'entertainment': '娛樂',
+    'medical': '醫療',
+    'income_salary': '薪資'
+  };
+  
+  return simplifications[categoryId] || categoryId;
+}
+
+/**
+ * 簡化帳戶名稱
+ */
+function DD_simplifyAccountName(accountId) {
+  const simplifications = {
+    'cash_account': '現金',
+    'bank_account': '銀行',
+    'credit_card': '信用卡'
+  };
+  
+  return simplifications[accountId] || accountId;
+}
+
 // 模組暴露
 module.exports = {
   // Phase 1 核心函數
@@ -1343,6 +2153,12 @@ module.exports = {
   DD_filterTransactions,
   DD_handleError,
 
+  // Phase 1 階段三：API整合優化函數
+  DD_standardizeAPIResponse,
+  DD_processByUserMode,
+  DD_optimizeBatchOperations,
+  DD_enhanceQuickBookkeepingParsing,
+
   // 兼容性函數
   DD_distributeData,
   DD_getAllSubjects,
@@ -1354,5 +2170,9 @@ module.exports = {
   DD_parseQuickInput,
   DD_formatDashboardByMode,
   DD_getUserFriendlyMessage,
-  DD_formatSystemReplyMessage // 暴露此函數以供外部模組使用
+  DD_formatSystemReplyMessage, // 暴露此函數以供外部模組使用
+  
+  // 階段三輔助函數
+  DD_formatDataByUserMode,
+  DD_limitObjectDepth
 };
