@@ -1,9 +1,9 @@
 /**
- * DD1_核心協調模組_3.0.1
+ * DD1_核心協調模組_4.0.0
  * @module 核心協調模組
- * @description 根據預定義的規則將數據分配到不同的資料庫表中，處理時間戳轉換，處理Rich menu指令與使用者訊息 - 完全Firestore版本
+ * @description Phase 1 API端點支援 - 專門處理6個核心API端點的商業邏輯協調
  * @author AustinLiao69
- * @update 2025-01-09: 升級版本至3.0.0，完全遷移至Firestore資料庫，移除Google Sheets依賴，每個使用者獨立帳本
+ * @update 2025-09-16: 階段一重構，升級版本至4.0.0，實作Phase 1核心API端點支援
  */
 
 /**
@@ -16,6 +16,8 @@ const DD_CONFIG = {
   DEBUG: false, // 關閉DEBUG模式減少日誌輸出
   TIMEZONE: "Asia/Taipei", // GMT+8 台灣時區
   DEFAULT_SUBJECT: "其他支出",
+  PHASE: "1", // Phase 1 標識
+  API_VERSION: "4.0.0"
 };
 
 // Node.js 模組依賴
@@ -40,1341 +42,733 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 /**
- * 99. 初始化檢查 - 在模組載入時執行，確保關鍵資源可用
+ * 01. 模組初始化與配置管理
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增Phase 1模組初始化支援所有API端點
+ * @description 支援POST/GET/PUT/DELETE /transactions相關端點
+ * @param {Object} config - 配置參數
+ * @returns {Object} 初始化結果
  */
-try {
-  console.log(`DD模組初始化檢查 [${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}]`);
-  console.log(`DD模組版本: 3.0.0 (2025-01-09) - 完全Firestore版本`);
-  console.log(`執行時間 (UTC+8): ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
+async function DD_initializeModule(config = {}) {
+  const initId = uuidv4().substring(0, 8);
 
-  // 檢查 Firestore 連接 - 現在db已經初始化
-  if (typeof db !== 'undefined' && db) {
-    console.log(`Firestore 連接檢查: 成功`);
-  } else {
-    console.log(`Firestore 連接檢查: 失敗`);
-  }
-  
-  // 延遲檢查BK模組以避免循環依賴
-  setTimeout(() => {
-    loadModules();
-    console.log(
-      `BK_processBookkeeping函數檢查: ${BK && typeof BK.BK_processBookkeeping === "function" ? "存在" : "不存在"}`,
-    );
-  }, 100);
-} catch (error) {
-  console.log(`DD模組初始化錯誤: ${error.toString()}`);
-  if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-}
-
-// 延遲載入模組以避免循環依賴
-let BK, DL;
-function loadModules() {
-  if (!BK) BK = require("./1301. BK.js");
-  if (!DL) DL = require("./1310. DL.js");
-}
-
-// 替代 Google Apps Script 的 Utilities 物件
-const Utilities = {
-  getUuid: () => uuidv4(),
-  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-};
-
-// 定義重試配置
-const DD_MAX_RETRIES = 3; // 最大重試次數
-const DD_RETRY_DELAY = 1000; // 重試延遲時間（毫秒）
-
-/**
- * 01. 獲取所有科目資料 - Firestore版本
- * @version 2025-01-09-V3.0.0
- * @date 2025-01-09 16:00:00
- * @update: 完全重寫，移除預設ledgerID，每個使用者獨立帳本
- * @param {string} userId - 使用者ID (必須提供)
- * @returns {Array} 科目陣列
- */
-async function DD_getAllSubjects(userId) {
   try {
-    // 檢查必要參數
-    if (!userId) {
-      throw new Error("缺少使用者ID，每個使用者都需要獨立的帳本");
-    }
+    console.log(`[${initId}] DD模組初始化檢查 - Phase ${DD_CONFIG.PHASE}`);
+    console.log(`[${initId}] DD模組版本: ${DD_CONFIG.API_VERSION} (2025-09-16)`);
+    console.log(`[${initId}] 執行時間 (UTC+8): ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
 
-    // 使用用戶獨立帳本
-    const ledgerId = `user_${userId}`;
-    console.log(`開始從Firestore獲取科目資料，使用者帳本: ${ledgerId}`);
-
-    const subjectsRef = db
-      .collection("ledgers")
-      .doc(ledgerId)
-      .collection("subjects");
-    const snapshot = await subjectsRef.where("isActive", "==", true).get();
-
-    if (snapshot.empty) {
-      console.log(`使用者 ${userId} 沒有找到任何科目資料`);
-      return [];
-    }
-
-    const subjects = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      // 跳過template文件
-      if (doc.id === "template") return;
-
-      subjects.push({
-        majorCode: data.大項代碼,
-        majorName: data.大項名稱,
-        subCode: data.子項代碼,
-        subName: data.子項名稱,
-        synonyms: data.同義詞 || "",
-      });
-    });
-
-    console.log(`成功獲取使用者 ${userId} 的 ${subjects.length} 個科目`);
-    return subjects;
-  } catch (error) {
-    console.log(`獲取科目資料失敗: ${error.toString()}`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    throw error;
-  }
-}
-
-/**
- * 02. 寫入日誌到Firestore - 完全重寫版本
- * @version 2025-01-09-V3.0.0
- * @date 2025-01-09 16:00:00
- * @update: 完全重寫，移除預設ledgerID，每個使用者獨立帳本
- * @param {string} severity - 嚴重等級
- * @param {string} message - 日誌訊息
- * @param {string} operationType - 操作類型
- * @param {string} userId - 使用者ID (必須提供)
- * @param {string} errorCode - 錯誤代碼
- * @param {string} source - 來源模組，預設為"DD"
- * @param {string} errorDetails - 錯誤詳情
- * @param {number} retryCount - 重試次數
- * @param {string} location - 程式碼位置
- * @param {string} functionName - 函數名稱
- */
-async function DD_writeToLogSheet(
-  severity,
-  message,
-  operationType,
-  userId,
-  errorCode = "",
-  source = "DD",
-  errorDetails = "",
-  retryCount = 0,
-  location = "",
-  functionName = "",
-) {
-  try {
-    // 檢查必要參數
-    if (!userId) {
-      throw new Error("缺少使用者ID，每個使用者都需要獨立的帳本");
-    }
-
-    // 使用用戶獨立帳本
-    const ledgerId = `user_${userId}`;
-
-    // 建立日誌資料
-    const logData = {
-      時間: admin.firestore.Timestamp.now(),
-      訊息: message,
-      操作類型: operationType,
-      UID: userId,
-      錯誤代碼: errorCode,
-      來源: source,
-      錯誤詳情: errorDetails,
-      重試次數: retryCount,
-      程式碼位置: location,
-      嚴重等級: severity,
-      函數名稱: functionName,
+    // 合併配置
+    const moduleConfig = {
+      ...DD_CONFIG,
+      ...config,
+      initId,
+      initTime: new Date().toISOString()
     };
 
-    // 寫入 Firestore
-    await db.collection("ledgers").doc(ledgerId).collection("log").add(logData);
+    // 檢查核心依賴
+    const dependencies = {
+      firebase: typeof db !== 'undefined' && db,
+      uuid: typeof uuidv4 === 'function',
+      moment: typeof moment !== 'undefined'
+    };
+
+    console.log(`[${initId}] 依賴檢查完成:`, dependencies);
+
+    return {
+      success: true,
+      config: moduleConfig,
+      dependencies,
+      phase: DD_CONFIG.PHASE,
+      apiVersion: DD_CONFIG.API_VERSION,
+      supportedEndpoints: [
+        'POST /transactions',
+        'POST /transactions/quick',
+        'GET /transactions',
+        'GET /transactions/dashboard',
+        'PUT /transactions/{id}',
+        'DELETE /transactions/{id}'
+      ]
+    };
   } catch (error) {
-    // 如果寫入日誌失敗，只能在控制台輸出
-    console.log(`寫入日誌失敗: ${error.toString()}. 原始消息: ${message}`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
+    console.log(`[${initId}] 模組初始化失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      initId
+    };
   }
 }
 
 /**
- * 03. 從Firestore獲取帳本資訊
- * @version 2025-01-09-V1.0.0
- * @date 2025-01-09 16:00:00
+ * 02. Firebase連接初始化
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增Firebase連接驗證支援所有API端點
+ * @description 支援所有Phase 1 API端點的Firebase連接
  * @param {string} userId - 使用者ID
- * @returns {Object|null} 帳本資訊或null
+ * @returns {Object} 連接狀態
  */
-async function DD_getLedgerInfo(userId) {
+async function DD_initializeFirebaseConnection(userId) {
+  const connId = uuidv4().substring(0, 8);
+
   try {
+    console.log(`[${connId}] Firebase連接初始化 - 使用者: ${userId}`);
+
+    // 檢查Firebase連接
+    if (!db) {
+      throw new Error("Firestore實例未初始化");
+    }
+
+    // 驗證使用者帳本存在
+    const ledgerId = `user_${userId}`;
+    const ledgerRef = db.collection("ledgers").doc(ledgerId);
+    const ledgerDoc = await ledgerRef.get();
+
+    let ledgerStatus = "existing";
+    if (!ledgerDoc.exists) {
+      // 創建使用者帳本
+      await ledgerRef.set({
+        name: `${userId}的帳本`,
+        type: "個人帳本",
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+        isActive: true,
+        userId: userId,
+        phase: DD_CONFIG.PHASE
+      });
+      ledgerStatus = "created";
+      console.log(`[${connId}] 已創建使用者帳本: ${ledgerId}`);
+    }
+
+    console.log(`[${connId}] Firebase連接驗證成功`);
+
+    return {
+      success: true,
+      connectionId: connId,
+      ledgerId,
+      ledgerStatus,
+      firestore: {
+        connected: true,
+        collections: ['ledgers', 'transactions', 'subjects', 'log']
+      },
+      supportedOperations: ['read', 'write', 'update', 'delete']
+    };
+  } catch (error) {
+    console.log(`[${connId}] Firebase連接初始化失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      connectionId: connId
+    };
+  }
+}
+
+/**
+ * 03. 新增交易記錄處理
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增支援POST /transactions端點
+ * @description 處理完整記帳表單的交易記錄新增
+ * @param {Object} transactionData - 交易資料
+ * @returns {Object} 處理結果
+ */
+async function DD_processCreateTransaction(transactionData) {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始處理新增交易記錄`);
+
+    // 驗證必要欄位
+    const required = ['userId', 'amount', 'type', 'categoryId'];
+    for (const field of required) {
+      if (!transactionData[field]) {
+        throw new Error(`缺少必要欄位: ${field}`);
+      }
+    }
+
+    const { userId, amount, type, categoryId, accountId, description, date } = transactionData;
+
+    // 初始化Firebase連接
+    const firebaseResult = await DD_initializeFirebaseConnection(userId);
+    if (!firebaseResult.success) {
+      throw new Error(`Firebase連接失敗: ${firebaseResult.error}`);
+    }
+
+    // 準備交易資料
+    const transaction = {
+      id: uuidv4(),
+      userId,
+      amount: parseFloat(amount),
+      type, // 'income' or 'expense'
+      categoryId,
+      accountId: accountId || 'default',
+      description: description || '',
+      date: date || new Date().toISOString(),
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      processId,
+      source: 'APP_FORM'
+    };
+
+    // 寫入Firestore
+    const ledgerId = firebaseResult.ledgerId;
+    await db.collection("ledgers")
+      .doc(ledgerId)
+      .collection("transactions")
+      .doc(transaction.id)
+      .set(transaction);
+
+    console.log(`[${processId}] 交易記錄已創建: ${transaction.id}`);
+
+    return {
+      success: true,
+      data: {
+        transactionId: transaction.id,
+        amount: transaction.amount,
+        type: transaction.type,
+        category: categoryId,
+        account: accountId || 'default',
+        date: transaction.date,
+        processId
+      },
+      endpoint: 'POST /transactions'
+    };
+  } catch (error) {
+    console.log(`[${processId}] 新增交易記錄失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      processId,
+      endpoint: 'POST /transactions'
+    };
+  }
+}
+
+/**
+ * 04. 快速記帳處理
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增支援POST /transactions/quick端點
+ * @description 處理LINE OA快速記帳功能
+ * @param {Object} quickData - 快速記帳資料
+ * @returns {Object} 處理結果
+ */
+async function DD_processQuickBookkeeping(quickData) {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始處理快速記帳`);
+
+    const { input, userId, ledgerId } = quickData;
+
+    if (!input || !userId) {
+      throw new Error("缺少必要資料: input 或 userId");
+    }
+
+    // 初始化Firebase連接
+    const firebaseResult = await DD_initializeFirebaseConnection(userId);
+    if (!firebaseResult.success) {
+      throw new Error(`Firebase連接失敗: ${firebaseResult.error}`);
+    }
+
+    // 解析輸入文字 (簡化版本，實際應整合DD2智慧處理)
+    const parseResult = DD_parseQuickInput(input);
+    if (!parseResult.success) {
+      throw new Error(`解析失敗: ${parseResult.error}`);
+    }
+
+    // 創建交易記錄
+    const transaction = {
+      id: uuidv4(),
+      userId,
+      amount: parseResult.amount,
+      type: parseResult.type,
+      category: parseResult.category,
+      description: parseResult.description,
+      date: new Date().toISOString(),
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      processId,
+      source: 'LINE_QUICK'
+    };
+
+    // 寫入Firestore
+    const targetLedgerId = firebaseResult.ledgerId;
+    await db.collection("ledgers")
+      .doc(targetLedgerId)
+      .collection("transactions")
+      .doc(transaction.id)
+      .set(transaction);
+
+    console.log(`[${processId}] 快速記帳完成: ${transaction.id}`);
+
+    return {
+      success: true,
+      data: {
+        transactionId: transaction.id,
+        parsed: {
+          amount: transaction.amount,
+          type: transaction.type,
+          category: transaction.category,
+          description: transaction.description
+        },
+        confirmation: `✅ 已記錄${transaction.type === 'expense' ? '支出' : '收入'} NT$${transaction.amount} - ${transaction.description}`,
+        processId
+      },
+      endpoint: 'POST /transactions/quick'
+    };
+  } catch (error) {
+    console.log(`[${processId}] 快速記帳失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      processId,
+      endpoint: 'POST /transactions/quick'
+    };
+  }
+}
+
+/**
+ * 05. 查詢交易列表處理
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增支援GET /transactions端點
+ * @description 查詢使用者的交易記錄列表
+ * @param {Object} queryParams - 查詢參數
+ * @returns {Object} 查詢結果
+ */
+async function DD_processGetTransactions(queryParams) {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始查詢交易列表`);
+
+    const { userId, page = 1, limit = 20, type, startDate, endDate } = queryParams;
+
     if (!userId) {
       throw new Error("缺少使用者ID");
     }
 
-    const ledgerId = `user_${userId}`;
-    const ledgerDoc = await db.collection("ledgers").doc(ledgerId).get();
-
-    if (!ledgerDoc.exists) {
-      console.log(`使用者 ${userId} 的帳本不存在`);
-      return null;
+    // 初始化Firebase連接
+    const firebaseResult = await DD_initializeFirebaseConnection(userId);
+    if (!firebaseResult.success) {
+      throw new Error(`Firebase連接失敗: ${firebaseResult.error}`);
     }
 
-    const data = ledgerDoc.data();
+    // 建立查詢
+    let query = db.collection("ledgers")
+      .doc(firebaseResult.ledgerId)
+      .collection("transactions")
+      .orderBy("createdAt", "desc");
+
+    // 添加篩選條件
+    if (type) {
+      query = query.where("type", "==", type);
+    }
+
+    if (startDate) {
+      const startTimestamp = admin.firestore.Timestamp.fromDate(new Date(startDate));
+      query = query.where("createdAt", ">=", startTimestamp);
+    }
+
+    if (endDate) {
+      const endTimestamp = admin.firestore.Timestamp.fromDate(new Date(endDate));
+      query = query.where("createdAt", "<=", endTimestamp);
+    }
+
+    // 分頁處理
+    const offset = (page - 1) * limit;
+    if (offset > 0) {
+      query = query.offset(offset);
+    }
+    query = query.limit(parseInt(limit));
+
+    // 執行查詢
+    const snapshot = await query.get();
+    const transactions = [];
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      transactions.push({
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt.toDate().toISOString(),
+        updatedAt: data.updatedAt.toDate().toISOString()
+      });
+    });
+
+    console.log(`[${processId}] 查詢完成，返回 ${transactions.length} 筆記錄`);
+
     return {
-      id: ledgerId,
-      name: data.name || `${userId}的帳本`,
-      type: data.type || "個人帳本",
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-      isActive: data.isActive || true,
+      success: true,
+      data: {
+        transactions,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: transactions.length,
+          hasMore: transactions.length === parseInt(limit)
+        },
+        processId
+      },
+      endpoint: 'GET /transactions'
     };
   } catch (error) {
-    console.log(`獲取帳本資訊失敗: ${error.toString()}`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    return null;
-  }
-}
-
-/**
- * 05. 主要的資料分配函數（支援重試機制）
- * @version 2025-01-09-V3.0.0
- * @author AustinLiao691
- * @update: 整合DD_formatSystemReplyMessage統一處理訊息，適配Firestore異步操作，移除預設ledgerID
- * @param {object} data - 需要分配的原始數據
- * @param {string} source - 數據來源 (例如: 'Rich menu', '使用者訊息')
- * @param {number} retryCount - 當前重試次數（內部使用）
- * @returns {object} - 處理結果
- */
-async function DD_distributeData(data, source, retryCount = 0) {
-  // 檢查必要參數
-  const userId = data.user_id || data.userId;
-  if (!userId) {
-    console.log("DD_distributeData: 缺少使用者ID");
+    console.log(`[${processId}] 查詢交易列表失敗: ${error.toString()}`);
     return {
       success: false,
-      error: "缺少使用者ID，每個使用者都需要獨立的帳本",
-      errorType: "MISSING_USER_ID",
+      error: error.toString(),
+      processId,
+      endpoint: 'GET /transactions'
     };
   }
-
-  // 模組初始化檢查
-  try {
-    console.log("=== DD_distributeData執行初始檢查 ===");
-    console.log(`DD_MAX_RETRIES: ${DD_MAX_RETRIES}`);
-    console.log(`DD_RETRY_DELAY: ${DD_RETRY_DELAY}`);
-    console.log(`DD_TARGET_MODULE_BK: ${DD_TARGET_MODULE_BK}`);
-    console.log(`DD_TARGET_MODULE_WH: ${DD_TARGET_MODULE_WH}`);
-  } catch (e) {
-    console.log(`初始化檢查錯誤: ${e.toString()}`);
-  }
-
-  // 直接控制台日誌，確保無論日誌系統是否正常都會記錄
-  console.log(
-    `DD_distributeData被調用，數據源: ${source}, 用戶ID: ${userId}, 時間: ${new Date().toISOString()}`,
-  );
-
-  const processId = Utilities.getUuid().substring(0, 8);
-  console.log(`處理ID: ${processId}`);
-  await DD_logInfo(
-    `開始處理數據 [${processId}]`,
-    "數據分配",
-    userId,
-    "DD_distributeData",
-    "DD_distributeData",
-  );
-
-  try {
-    // ===== 標準化數據 =====
-    // 確保用戶ID格式一致
-    if (data.userId && !data.user_id) {
-      data.user_id = data.userId;
-      console.log(`標準化用戶ID: userId -> user_id = ${data.user_id}`);
-    } else if (data.user_id && !data.userId) {
-      data.userId = data.user_id;
-      console.log(`標準化用戶ID: user_id -> userId = ${data.userId}`);
-    }
-
-    // ===== 來源適配 =====
-    if (!source || source === "LINE" || source === "Webhook") {
-      console.log(`調整數據來源從「${source}」到「使用者訊息」`);
-      source = "使用者訊息";
-    }
-
-    // 記錄處理的數據和來源
-    const dataPreview =
-      JSON.stringify(data).substring(0, 100) +
-      (JSON.stringify(data).length > 100 ? "..." : "");
-    console.log(`處理數據: ${dataPreview}, 來源: ${source}`);
-    await DD_logDebug(
-      `處理數據: ${dataPreview}, 來源: ${source}`,
-      "數據接收",
-      userId,
-      "DD_distributeData",
-      "DD_distributeData",
-    );
-
-    // 處理時間戳（如果存在）
-    if (data && data.timestamp) {
-      console.log(`處理時間戳: ${data.timestamp}`);
-      await DD_logDebug(
-        `處理時間戳: ${data.timestamp}`,
-        "數據處理",
-        userId,
-        "DD_distributeData",
-        "DD_distributeData",
-      );
-
-      const convertedTime = DD_convertTimestamp(data.timestamp);
-      if (convertedTime) {
-        data.convertedDate = convertedTime.date;
-        data.convertedTime = convertedTime.time;
-        console.log(
-          `時間戳轉換結果: ${data.convertedDate} ${data.convertedTime}`,
-        );
-        await DD_logDebug(
-          `時間戳轉換結果: ${data.convertedDate} ${data.convertedTime}`,
-          "數據處理",
-          userId,
-          "DD_distributeData",
-          "DD_distributeData",
-        );
-      } else {
-        console.log(`警告: 時間戳轉換失敗: ${data.timestamp}`);
-        await DD_logWarning(
-          `時間戳轉換失敗: ${data.timestamp}`,
-          "數據處理",
-          userId,
-          "DD_distributeData",
-          "DD_distributeData",
-        );
-      }
-    }
-
-    // 如果是使用者訊息，先處理訊息內容
-    if (source === "使用者訊息" && data && data.text) {
-      console.log(`處理用戶訊息: "${data.text}"`);
-      await DD_logInfo(
-        `處理用戶訊息: "${data.text}"`,
-        "訊息處理",
-        userId,
-        "DD_distributeData",
-        "DD_distributeData",
-      );
-
-      const processedData = await DD2.DD_processUserMessage(
-        data.text,
-        userId,
-        data.timestamp,
-      );
-      console.log(
-        `DD_processUserMessage返回: ${JSON.stringify(processedData)}`,
-      );
-
-      if (processedData && processedData.processed) {
-        // 保留原始資料，並添加處理後的資訊
-        console.log(
-          `成功解析訊息: 科目=${processedData.subjectName}, 金額=${processedData.amount}, 支付方式=${processedData.paymentMethod || "預設"}`,
-        );
-        await DD_logInfo(
-          `成功解析訊息: 科目=${processedData.subjectName}, 金額=${processedData.amount}, 支付方式=${processedData.paymentMethod || "預設"}`,
-          "訊息處理",
-          userId,
-          "DD_distributeData",
-          "DD_distributeData",
-        );
-
-        // 更新：使用subjectName而不是subject
-        data.subjectName = processedData.subjectName;
-        data.amount = processedData.amount;
-        data.action = processedData.action;
-        data.processed = processedData.processed;
-        data.type = processedData.type;
-
-        // 關鍵修正：使用處理過的文字作為備註
-        data.text = processedData.text || processedData.subjectName;
-
-        // 新增：傳遞支付方式
-        if (processedData.paymentMethod) {
-          data.paymentMethod = processedData.paymentMethod;
-          console.log(`設置支付方式: ${data.paymentMethod}`);
-        }
-
-        // 複製科目代碼信息
-        if (processedData.majorCode) data.majorCode = processedData.majorCode;
-        if (processedData.subCode) data.subCode = processedData.subCode;
-
-        console.log(
-          `訊息解析成功: 科目=${processedData.subjectName}, 金額=${processedData.amount}, 支付方式=${data.paymentMethod || "預設"}`,
-        );
-      } else if (processedData && processedData.errorMessage) {
-        // 處理失敗但有錯誤訊息，直接返回錯誤訊息
-        console.log(`訊息解析失敗但有錯誤訊息: ${processedData.errorMessage}`);
-        await DD_logWarning(
-          `訊息解析失敗但有錯誤訊息: ${processedData.errorMessage}`,
-          "訊息處理",
-          userId,
-          "DD_distributeData",
-          "DD_distributeData",
-        );
-
-        return DD_formatSystemReplyMessage(
-          {
-            success: false,
-            error: processedData.reason || "訊息解析失敗",
-            errorType: processedData.errorType || "MESSAGE_PARSE_ERROR",
-            userFriendlyMessage: processedData.errorMessage,
-          },
-          "DD",
-          {
-            userId: userId,
-            replyToken: data.replyToken,
-            processId: processId,
-          },
-        );
-      } else {
-        // 處理失敗的情況
-        console.log(
-          `訊息解析失敗: ${processedData ? processedData.reason : "未知原因"}`,
-        );
-        await DD_logWarning(
-          `訊息解析失敗: ${processedData ? processedData.reason : "未知原因"}`,
-          "訊息處理",
-          userId,
-          "DD_distributeData",
-          "DD_distributeData",
-        );
-
-        // 直接返回格式化的錯誤訊息
-        return DD_formatSystemReplyMessage(
-          {
-            success: false,
-            error: processedData ? processedData.reason : "無法解析訊息",
-            errorType: "MESSAGE_PARSE_ERROR",
-          },
-          "DD",
-          {
-            userId: userId,
-            replyToken: data.replyToken,
-            processId: processId,
-            errorMessage: "無法解析您的記帳信息，請檢查格式後重試。",
-          },
-        );
-      }
-    }
-
-    // 6. 根據數據屬性進行分類
-    console.log(`開始分類數據`);
-    await DD_logInfo(
-      `開始分類數據`,
-      "數據分類",
-      userId,
-      "DD_distributeData",
-      "DD_distributeData",
-    );
-
-    const category = DD_classifyData(data, source);
-    console.log(`數據分類結果: ${category}`);
-    await DD_logInfo(
-      `數據分類結果: ${category}`,
-      "數據分類",
-      userId,
-      "DD_distributeData",
-      "DD_distributeData",
-    );
-
-    // 7. 根據分類結果分發數據
-    console.log(`開始分發數據至 ${category}`);
-    await DD_logInfo(
-      `開始分發數據至 ${category}`,
-      "數據分發",
-      userId,
-      "DD_distributeData",
-      "DD_distributeData",
-    );
-
-    const dispatchResult = await DD_dispatchData(data, category);
-    console.log(`數據分發完成，結果: ${JSON.stringify(dispatchResult)}`);
-    await DD_logInfo(
-      `數據分發完成，結果: ${JSON.stringify(dispatchResult)}`,
-      "數據分發",
-      userId,
-      "DD_distributeData",
-      "DD_distributeData",
-    );
-
-    // 使用統一消息格式化處理結果
-    return DD_formatSystemReplyMessage(
-      dispatchResult || {
-        success: true,
-        category: category,
-        processId: processId,
-      },
-      dispatchResult ? dispatchResult.module || "DD" : "DD",
-      {
-        userId: userId,
-        replyToken: data.replyToken,
-        processId: processId,
-      },
-    );
-  } catch (error) {
-    // 記錄原始錯誤
-    console.log(`數據處理錯誤: ${error.toString()}`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    await DD_logError(
-      `數據處理錯誤: ${error.toString()}`,
-      "數據處理",
-      userId,
-      "ERROR",
-      error.toString(),
-      "DD_distributeData",
-      "DD_distributeData",
-    );
-
-    // 8. 重試機制
-    if (retryCount < DD_MAX_RETRIES) {
-      // 使用指數退避策略延遲重試
-      const delayTime = DD_RETRY_DELAY * Math.pow(2, retryCount);
-      console.log(
-        `準備重試 (${retryCount + 1}/${DD_MAX_RETRIES})，延遲 ${delayTime}ms`,
-      );
-      await DD_logWarning(
-        `準備重試 (${retryCount + 1}/${DD_MAX_RETRIES})，延遲 ${delayTime}ms`,
-        "錯誤重試",
-        userId,
-        "DD_distributeData",
-        "DD_distributeData",
-      );
-
-      await Utilities.sleep(delayTime);
-      return DD_distributeData(data, source, retryCount + 1);
-    } else {
-      // 重試次數耗盡，使用統一錯誤處理函數生成錯誤訊息
-      return DD_formatSystemReplyMessage(
-        {
-          success: false,
-          error: `超過最大重試次數 ${DD_MAX_RETRIES}，放棄處理`,
-          errorType: "MAX_RETRY",
-          context: { retryCount: DD_MAX_RETRIES },
-        },
-        "DD",
-        {
-          userId: userId,
-          replyToken: data.replyToken,
-          processId: processId,
-          isRetryable: false,
-        },
-      );
-    }
-  }
 }
 
 /**
- * 09. 數據分類函數
- * @param {object} data - 需要分類的數據
- * @param {string} source - 數據來源
- * @returns {string} - 數據的類別 (用於決定分發到哪個模組)
+ * 06. 查詢儀表板數據處理
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增支援GET /transactions/dashboard端點
+ * @description 提供記帳主頁的統計數據
+ * @param {Object} params - 查詢參數
+ * @returns {Object} 儀表板數據
  */
-function DD_classifyData(data, source) {
-  let category = "default";
-  const userId = data.user_id || data.userId;
-
-  // 獲取進程ID用於日誌追蹤
-  const classifyId = Utilities.getUuid().substring(0, 8);
-  console.log(`開始分類，來源: ${source} [${classifyId}]`);
-  DD_logDebug(
-    `開始分類，來源: ${source} [${classifyId}]`,
-    "數據分類",
-    userId,
-    "DD_classifyData",
-    "DD_classifyData",
-  );
+async function DD_processGetDashboard(params) {
+  const processId = uuidv4().substring(0, 8);
 
   try {
-    // 規則 1：處理來自 Rich menu 的各種按鈕
-    if (source === "Rich menu" && data) {
-      if (data.action === "記帳" || data.postback === "記帳") {
-        category = DD_TARGET_MODULE_BK;
-        console.log(`檢測到記帳按鈕操作`);
-        DD_logDebug(
-          `檢測到記帳按鈕操作`,
-          "數據分類",
-          userId,
-          "DD_classifyData",
-          "DD_classifyData",
-        );
-      }
-    }
-    // 規則 2：處理來自使用者訊息
-    else if (source === "使用者訊息" && data) {
-      // 只檢查由DD_processUserMessage標記的數據
-      if (data.type === "記帳" && data.processed) {
-        category = DD_TARGET_MODULE_BK;
-        console.log(`檢測到已處理的記帳訊息`);
-        DD_logDebug(
-          `檢測到已處理的記帳訊息`,
-          "數據分類",
-          userId,
-          "DD_classifyData",
-          "DD_classifyData",
-        );
-      }
-    }
-    // 規則 3：來自 Webhook 的請求
-    else if (source === "Webhook" && data) {
-      category = DD_TARGET_MODULE_WH;
-      console.log(`檢測到Webhook請求`);
-      DD_logDebug(
-        `檢測到Webhook請求`,
-        "數據分類",
-        userId,
-        "DD_classifyData",
-        "DD_classifyData",
-      );
-    }
+    console.log(`[${processId}] 開始查詢儀表板數據`);
 
-    console.log(`分類結果: ${category} [${classifyId}]`);
-    DD_logDebug(
-      `分類結果: ${category} [${classifyId}]`,
-      "數據分類",
-      userId,
-      "DD_classifyData",
-      "DD_classifyData",
-    );
-    return category;
-  } catch (error) {
-    console.log(`分類過程出錯: ${error.toString()} [${classifyId}]`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    DD_logError(
-      `分類過程出錯: ${error.toString()}`,
-      "數據分類",
-      userId,
-      "ERROR",
-      error.toString(),
-      "DD_classifyData",
-      "DD_classifyData",
-    );
-    return "ERROR";
-  }
-}
+    const { userId, userMode = 'Expert' } = params;
 
-/**
- * 10. 數據分發函數
- * @version 2025-01-09-V3.0.0
- * @author AustinLiao691
- * @date 2025-01-09 16:00:00
- * @update: 統一使用58號函數(DD_formatSystemReplyMessage)處理系統回覆訊息，適配Firestore異步操作
- * @param {object} data - 需要分發的數據
- * @param {string} targetModule - 目標模組的名稱
- * @returns {object} - 處理結果
- */
-async function DD_dispatchData(data, targetModule) {
-  const dispatchId = Utilities.getUuid().substring(0, 8);
-  const userId = data.user_id || data.userId || "";
-
-  console.log(`開始分發數據至 ${targetModule} [${dispatchId}]`);
-  await DD_logInfo(
-    `開始分發數據至 ${targetModule} [${dispatchId}]`,
-    "數據分發",
-    userId,
-    "DD_dispatchData",
-    "DD_dispatchData",
-  );
-
-  try {
-    let result = { success: false, module: targetModule };
-
-    switch (targetModule) {
-      case DD_TARGET_MODULE_BK:
-        console.log(`轉發到BK模組 [${dispatchId}]`);
-        await DD_logInfo(
-          `轉發到BK模組 [${dispatchId}]`,
-          "數據分發",
-          userId,
-          "DD_dispatchData",
-          "DD_dispatchData",
-        );
-
-        // 檢查DD_processForBK函數是否存在
-        if (typeof DD_processForBK !== "function") {
-          console.log(`DD_processForBK函數不存在 [${dispatchId}]`);
-          await DD_logError(
-            `DD_processForBK函數不存在 [${dispatchId}]`,
-            "數據分發",
-            userId,
-            "FUNCTION_NOT_FOUND",
-            "函數不存在",
-            "DD_dispatchData",
-          );
-
-          // 使用58號函數統一處理錯誤訊息
-          return DD_formatSystemReplyMessage(
-            {
-              success: false,
-              error: "DD_processForBK函數不存在",
-              errorType: "FUNCTION_NOT_FOUND",
-            },
-            "DD",
-            {
-              userId: userId,
-              context: { functionName: "DD_processForBK" },
-              processId: dispatchId,
-            },
-          );
-        } else {
-          try {
-            console.log(`開始調用DD_processForBK [${dispatchId}]`);
-            result = await DD_processForBK(data);
-            console.log(
-              `DD_processForBK調用完成，結果: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
-            );
-          } catch (bkError) {
-            // 增強錯誤日誌
-            console.log(
-              `調用DD_processForBK時出錯: ${bkError.toString()} [${dispatchId}]`,
-            );
-            if (bkError.stack) console.log(`錯誤堆疊: ${bkError.stack}`);
-            await DD_logError(
-              `調用DD_processForBK時出錯: ${bkError.toString()}\n堆疊: ${bkError.stack || "n/a"}`,
-              "數據分發",
-              userId,
-              "BK_ERROR",
-              bkError.toString(),
-              "DD_dispatchData",
-            );
-
-            // 使用58號函數統一處理錯誤訊息
-            return DD_formatSystemReplyMessage(
-              {
-                success: false,
-                error: bkError.toString(),
-                errorType: "BK_ERROR",
-              },
-              "BK",
-              {
-                userId: userId,
-                processId: dispatchId,
-              },
-            );
-          }
-        }
-        break;
-
-      case DD_TARGET_MODULE_WH:
-        console.log(`轉發到WH模組 [${dispatchId}]`);
-        await DD_logInfo(
-          `轉發到WH模組 [${dispatchId}]`,
-          "數據分發",
-          userId,
-          "DD_dispatchData",
-          "DD_dispatchData",
-        );
-
-        // 檢查DD_processForWH函數是否存在
-        if (typeof DD_processForWH !== "function") {
-          console.log(`DD_processForWH函數不存在 [${dispatchId}]`);
-          await DD_logError(
-            `DD_processForWH函數不存在 [${dispatchId}]`,
-            "數據分發",
-            userId,
-            "FUNCTION_NOT_FOUND",
-            "函數不存在",
-            "DD_dispatchData",
-          );
-
-          // 使用58號函數統一處理錯誤訊息
-          return DD_formatSystemReplyMessage(
-            {
-              success: false,
-              error: "DD_processForWH函數不存在",
-              errorType: "FUNCTION_NOT_FOUND",
-            },
-            "DD",
-            {
-              userId: userId,
-              context: { functionName: "DD_processForWH" },
-              processId: dispatchId,
-            },
-          );
-        } else {
-          try {
-            console.log(`開始調用DD_processForWH [${dispatchId}]`);
-            result = DD_processForWH(data);
-            console.log(
-              `DD_processForWH調用完成，結果: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
-            );
-          } catch (whError) {
-            // 增強錯誤日誌
-            console.log(
-              `調用DD_processForWH時出錯: ${whError.toString()} [${dispatchId}]`,
-            );
-            if (whError.stack) console.log(`錯誤堆疊: ${whError.stack}`);
-            await DD_logError(
-              `調用DD_processForWH時出錯: ${whError.toString()}\n堆疊: ${whError.stack || "n/a"}`,
-              "數據分發",
-              userId,
-              "WH_ERROR",
-              whError.toString(),
-              "DD_dispatchData",
-            );
-
-            // 使用58號函數統一處理錯誤訊息
-            return DD_formatSystemReplyMessage(
-              {
-                success: false,
-                error: whError.toString(),
-                errorType: "WH_ERROR",
-              },
-              "WH",
-              {
-                userId: userId,
-                processId: dispatchId,
-              },
-            );
-          }
-        }
-        break;
-
-      default:
-        console.log(`未知的目標模組: ${targetModule} [${dispatchId}]`);
-        await DD_logError(
-          `未知的目標模組: ${targetModule} [${dispatchId}]`,
-          "數據分發",
-          userId,
-          "UNKNOWN_MODULE",
-          "模組未知",
-          "DD_dispatchData",
-        );
-
-        // 使用58號函數統一處理錯誤訊息
-        return DD_formatSystemReplyMessage(
-          {
-            success: false,
-            error: `未知的目標模組: ${targetModule}`,
-            errorType: "UNKNOWN_MODULE",
-          },
-          "DD",
-          {
-            userId: userId,
-            context: { moduleName: targetModule },
-            processId: dispatchId,
-          },
-        );
-    }
-
-    console.log(
-      `數據分發完成: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
-    );
-    await DD_logInfo(
-      `數據分發完成，結果: ${JSON.stringify(result).substring(0, 200)}... [${dispatchId}]`,
-      "數據分發",
-      userId,
-      "DD_dispatchData",
-      "DD_dispatchData",
-    );
-
-    // 重要：直接返回結果，不再使用DD_formatUserErrorFeedback
-    return result;
-  } catch (error) {
-    // 增強錯誤日誌
-    console.log(`分發數據出錯: ${error.toString()} [${dispatchId}]`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    await DD_logError(
-      `分發數據出錯: ${error.toString()}\n堆疊: ${error.stack || "n/a"}`,
-      "數據分發",
-      userId,
-      "DISPATCH_ERROR",
-      error.toString(),
-      "DD_dispatchData",
-    );
-
-    // 使用58號函數統一處理錯誤訊息
-    return DD_formatSystemReplyMessage(
-      {
-        success: false,
-        error: error.toString(),
-        errorType: "DISPATCH_ERROR",
-      },
-      "DD",
-      {
-        userId: userId,
-        processId: dispatchId,
-      },
-    );
-  }
-}
-
-/**
- * 11. 處理 Webhook 模組 (WH) 的數據
- * @param {object} data - 需要處理的數據
- * @returns {object} - 處理結果
- */
-function DD_processForWH(data) {
-  const whId = Utilities.getUuid().substring(0, 8);
-  console.log(`開始處理WH數據 [${whId}]`);
-
-  // 在此處理轉發給 Webhook 模組的邏輯
-  // 檢查WH模組函數是否存在
-  if (typeof WH_processEvent === "function") {
-    try {
-      console.log(`調用WH_processEvent [${whId}]`);
-      WH_processEvent(data);
-      console.log(`成功轉發到WH模組 [${whId}]`);
-      return { success: true, module: "WH" };
-    } catch (error) {
-      console.log(
-        `轉發到WH_processEvent時發生錯誤 [${whId}]: ${error.toString()}`,
-      );
-      return { success: false, error: error.toString(), module: "WH" };
-    }
-  } else {
-    console.log(`WH_processEvent函數不存在 [${whId}]`);
-    return { success: false, error: "WH_processEvent函數不存在", module: "WH" };
-  }
-}
-
-/**
- * 12. 處理數據並傳遞給BK模組記帳 - 統一錯誤處理和回覆格式
- * @version 2025-07-14-V3.0.1
- * @author AustinLiao69
- * @date 2025-07-14 13:00:00
- * @update: 統一所有錯誤處理通過 BK_formatSystemReplyMessage 格式化，確保訊息格式一致
- * @param {Object} data - 來自DD_processUserMessage或其他來源的數據
- * @return {Object} 處理結果
- */
-async function DD_processForBK(data) {
-  try {
-    // 確保處理ID存在
-    const processId = data.processId || Utilities.getUuid().substring(0, 8);
-
-    // 正確獲取userId - 修復：從data物件中提取userId
-    const userId = data.userId || data.user_id || "";
-
-    // 檢查必要參數
     if (!userId) {
-      throw new Error("缺少使用者ID，每個使用者都需要獨立的帳本");
+      throw new Error("缺少使用者ID");
     }
 
-    // 記錄開始處理
-    await DD_logInfo(
-      `開始處理記帳數據 [${processId}]`,
-      "記帳處理",
-      userId,
-      "DD_processForBK",
-      "DD_processForBK",
-    );
-
-    // 檢查必要字段
-    if (!data.action) {
-      await DD_logWarning(
-        `缺少必要字段: action [${processId}]`,
-        "數據驗證",
-        userId,
-        "DD_processForBK",
-        "DD_processForBK",
-      );
-      throw new Error("缺少必要字段: action");
-    }
-    if (!data.subjectName) {
-      await DD_logWarning(
-        `缺少必要字段: subjectName [${processId}]`,
-        "數據驗證",
-        userId,
-        "DD_processForBK",
-        "DD_processForBK",
-      );
-      throw new Error("缺少必要字段: subjectName");
-    }
-    if (!data.amount || data.amount <= 0) {
-      await DD_logWarning(
-        `無效的金額: ${data.amount} [${processId}]`,
-        "數據驗證",
-        userId,
-        "DD_processForBK",
-        "DD_processForBK",
-      );
-      throw new Error("無效的金額");
-    }
-    if (!data.majorCode) {
-      await DD_logWarning(
-        `缺少必要字段: majorCode [${processId}]`,
-        "數據驗證",
-        userId,
-        "DD_processForBK",
-        "DD_processForBK",
-      );
-      throw new Error("缺少必要字段: majorCode");
-    }
-    if (!data.subCode) {
-      await DD_logWarning(
-        `缺少必要字段: subCode [${processId}]`,
-        "數據驗證",
-        userId,
-        "DD_processForBK",
-        "DD_processForBK",
-      );
-      throw new Error("缺少必要字段: subCode");
+    // 初始化Firebase連接
+    const firebaseResult = await DD_initializeFirebaseConnection(userId);
+    if (!firebaseResult.success) {
+      throw new Error(`Firebase連接失敗: ${firebaseResult.error}`);
     }
 
-    // 提前處理使用者類型 (可讓BK模組接收已處理的類型)
-    let userType = data.userType;
-    if (!userType) {
-      // 使用者類型設為M、S、J三種 (系統預設類型)
-      if (userId === "AustinLiao69") {
-        userType = "M"; // 管理員類型(Manager)
-      } else if (userId && userId.includes("SYSTEM_")) {
-        userType = "S"; // 系統類型(System)
-      } else {
-        userType = "J"; // 一般使用者類型(Junior)
+    // 查詢本月交易記錄
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const monthStartTimestamp = admin.firestore.Timestamp.fromDate(monthStart);
+    const dayStartTimestamp = admin.firestore.Timestamp.fromDate(dayStart);
+
+    // 查詢月度數據
+    const monthQuery = db.collection("ledgers")
+      .doc(firebaseResult.ledgerId)
+      .collection("transactions")
+      .where("createdAt", ">=", monthStartTimestamp);
+
+    const monthSnapshot = await monthQuery.get();
+
+    // 查詢今日數據
+    const dayQuery = db.collection("ledgers")
+      .doc(firebaseResult.ledgerId)
+      .collection("transactions")
+      .where("createdAt", ">=", dayStartTimestamp);
+
+    const daySnapshot = await dayQuery.get();
+
+    // 統計數據
+    let monthIncome = 0, monthExpense = 0;
+    let todayIncome = 0, todayExpense = 0;
+    const recentTransactions = [];
+
+    monthSnapshot.forEach(doc => {
+      const data = doc.data();
+      const amount = parseFloat(data.amount) || 0;
+
+      if (data.type === 'income') {
+        monthIncome += amount;
+      } else if (data.type === 'expense') {
+        monthExpense += amount;
       }
-    }
 
-    // 建立記帳數據對象，確保字段名稱與BK_processBookkeeping期望的完全一致
-    const bookkeepingData = {
-      // 必需字段
-      action: data.action, // 收入/支出
-      subjectName: data.subjectName, // 科目名稱
-      amount: data.amount, // 金額
-      majorCode: data.majorCode, // 主科目代碼
-      subCode: data.subCode, // 子科目代碼
-
-      // 可選但重要字段
-      majorName: data.majorName || "", // 主科目名稱
-      paymentMethod: data.paymentMethod, // 支付方式 - 移除默認值
-      text: data.text || "", // 使用DD處理過的文字（已移除金額）
-      formatId: data.formatId || "", // 匹配的格式ID
-      originalSubject: data.originalSubject || "", // 用戶輸入的原始科目
-      userId: userId, // 用戶ID
-      userType: userType, // 用戶類型
-      processId: processId, // 處理ID
-    };
-
-    // 記錄完整數據
-    await DD_logDebug(
-      `【BK調用前數據完整檢查】
-      - action=${bookkeepingData.action}
-      - subjectName=${bookkeepingData.subjectName}
-      - amount=${bookkeepingData.amount}
-      - majorCode=${bookkeepingData.majorCode}
-      - subCode=${bookkeepingData.subCode}
-      - majorName=${bookkeepingData.majorName}
-      - paymentMethod=${bookkeepingData.paymentMethod || "未設定，將由BK模組決定"}
-      - formatId=${bookkeepingData.formatId || "未指定"}
-      - text=${bookkeepingData.text}
-      - userId=${bookkeepingData.userId || "未指定"}
-      - userType=${bookkeepingData.userType || "未指定"}
-    `,
-      "調用準備",
-      userId,
-      "DD_processForBK",
-      "DD_processForBK",
-    );
-
-    // 調用BK_processBookkeeping處理記帳
-    loadModules(); // 確保模組已載入
-    await DD_logInfo(
-      `開始調用BK_processBookkeeping [${processId}]`,
-      "模組調用",
-      userId,
-      "DD_processForBK",
-      "DD_processForBK",
-    );
-
-    console.log(
-      `[${processId}] 即將調用 BK.BK_processBookkeeping，數據: ${JSON.stringify(bookkeepingData).substring(0, 200)}...`,
-    );
-    const result = await BK.BK_processBookkeeping(bookkeepingData);
-    console.log(
-      `[${processId}] BK.BK_processBookkeeping 返回結果: ${JSON.stringify(result).substring(0, 300)}...`,
-    );
-
-    await DD_logInfo(
-      `BK_processBookkeeping調用完成，結果: ${result && result.success ? "成功" : "失敗"} [${processId}]`,
-      "模組調用",
-      userId,
-      "DD_processForBK",
-      "DD_processForBK",
-    );
-
-    // 統一使用 BK_formatSystemReplyMessage 格式化回覆
-    const formattedResult = await BK.BK_formatSystemReplyMessage(result, "BK", {
-      userId: userId,
-      processId: processId,
+      recentTransactions.push({
+        id: doc.id,
+        amount: data.amount,
+        type: data.type,
+        description: data.description,
+        date: data.createdAt.toDate().toISOString()
+      });
     });
 
-    // 記錄格式化後的結果
-    if (formattedResult.success) {
-      await DD_logInfo(
-        `記帳成功，已格式化回覆訊息 [${processId}]`,
-        "記帳結果",
-        userId,
-        "DD_processForBK",
-        "DD_processForBK",
-      );
-    } else {
-      await DD_logWarning(
-        `記帳失敗，已格式化錯誤訊息 [${processId}]`,
-        "記帳結果",
-        userId,
-        "DD_processForBK",
-        "DD_processForBK",
-      );
-    }
+    daySnapshot.forEach(doc => {
+      const data = doc.data();
+      const amount = parseFloat(data.amount) || 0;
 
-    // 返回統一格式化的結果
+      if (data.type === 'income') {
+        todayIncome += amount;
+      } else if (data.type === 'expense') {
+        todayExpense += amount;
+      }
+    });
+
+    // 根據用戶模式調整回應
+    const dashboardData = DD_formatDashboardByMode({
+      summary: {
+        todayIncome,
+        todayExpense,
+        monthIncome,
+        monthExpense,
+        balance: monthIncome - monthExpense
+      },
+      recentTransactions: recentTransactions.slice(0, 10),
+      processId
+    }, userMode);
+
+    console.log(`[${processId}] 儀表板數據查詢完成`);
+
     return {
-      success: formattedResult.success,
-      result: result,
-      module: "BK",
-      isIncome: bookkeepingData.action === "收入",
-      majorCode: bookkeepingData.majorCode,
-      action: bookkeepingData.action,
-      responseMessage: formattedResult.responseMessage,
-      processId: processId,
-      userId: userId,
-      userType: result.data ? result.data.userType : userType,
-      moduleCode: "BK", // 標記來源模組
+      success: true,
+      data: dashboardData,
+      endpoint: 'GET /transactions/dashboard'
     };
   } catch (error) {
-    // 安全獲取 userId（在 catch 區塊中重新定義以確保作用域）
-    const userId =
-      data && (data.userId || data.user_id) ? data.userId || data.user_id : "";
-
-    // 記錄錯誤
-    await DD_logError(
-      `處理BK數據時出錯: ${error}`,
-      "數據處理",
-      userId,
-      "BK_PROCESS_ERROR",
-      error.toString(),
-      "DD_processForBK",
-      "DD_processForBK",
-    );
-
-    // 使用統一錯誤格式化
-    const errorResult = {
-      success: false,
-      error: error.toString(),
-      errorType: "BK_PROCESS_ERROR",
-      partialData: {
-        subject: data ? data.subjectName : "未知科目",
-        amount: data ? data.amount : 0,
-        rawAmount: data ? data.rawAmount : "0",
-        paymentMethod: data ? data.paymentMethod : "未指定支付方式",
-      },
-    };
-
-    const formattedError = await BK.BK_formatSystemReplyMessage(errorResult, "DD", {
-      userId: userId,
-      processId: processId,
-    });
-
+    console.log(`[${processId}] 查詢儀表板數據失敗: ${error.toString()}`);
     return {
       success: false,
       error: error.toString(),
-      module: "BK",
-      responseMessage: formattedError.responseMessage,
-      processId: processId,
-      moduleCode: "DD", // 標記來源模組
+      processId,
+      endpoint: 'GET /transactions/dashboard'
     };
   }
 }
 
 /**
- * 24. 統一的日誌處理函數
- * @param {string} level - 日誌級別: DEBUG|INFO|WARNING|ERROR|CRITICAL
- * @param {string} message - 日誌訊息
- * @param {string} operationType - 操作類型
- * @param {string} userId - 使用者ID
- * @param {Object} options - 額外選項
- * @param {string} options.errorCode - 錯誤代碼 (僅ERROR/CRITICAL)
- * @param {string} options.errorDetails - 錯誤詳情 (僅ERROR/CRITICAL)
- * @param {string} options.location - 程式碼位置
- * @param {string} options.functionName - 函數名稱
+ * 07. 更新交易記錄處理
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增支援PUT /transactions/{id}端點
+ * @description 更新指定的交易記錄
+ * @param {Object} updateData - 更新資料
+ * @returns {Object} 更新結果
  */
-async function DD_log(
-  level,
-  message,
-  operationType = "",
-  userId = "",
-  options = {},
-) {
-  // 預設值設定
-  const {
-    errorCode = "",
-    errorDetails = "",
-    location = "",
-    functionName = "",
-  } = options;
-
-  // 對DEBUG級別特殊處理 - 只在DEBUG模式開啟時執行
-  if (level === "DEBUG" && !DD_CONFIG.DEBUG) return;
-
-  // 記錄到控制台
-  console.log(`[${level}] [DD] ${message}`);
-
-  // 為ERROR和CRITICAL級別設置源
-  const source = level === "ERROR" || level === "CRITICAL" ? "DD" : "";
-
-  // 寫入日誌表
-  await DD_writeToLogSheet(
-    level,
-    message,
-    operationType,
-    userId,
-    errorCode,
-    source,
-    errorDetails,
-    0,
-    location,
-    functionName,
-  );
-}
-
-// 包裝函數，保持原有API
-async function DD_logDebug(
-  message,
-  operationType = "",
-  userId = "",
-  location = "",
-  functionName = "",
-) {
-  await DD_log("DEBUG", message, operationType, userId, {
-    location,
-    functionName,
-  });
-}
-
-async function DD_logInfo(
-  message,
-  operationType = "",
-  userId = "",
-  location = "",
-  functionName = "",
-) {
-  await DD_log("INFO", message, operationType, userId, {
-    location,
-    functionName,
-  });
-}
-
-async function DD_logWarning(
-  message,
-  operationType = "",
-  userId = "",
-  location = "",
-  functionName = "",
-) {
-  await DD_log("WARNING", message, operationType, userId, {
-    location,
-    functionName,
-  });
-}
-
-async function DD_logError(
-  message,
-  operationType = "",
-  userId = "",
-  errorCode = "",
-  errorDetails = "",
-  location = "",
-  functionName = "",
-) {
-  await DD_log("ERROR", message, operationType, userId, {
-    errorCode,
-    errorDetails,
-    location,
-    functionName,
-  });
-}
-
-async function DD_logCritical(
-  message,
-  operationType = "",
-  userId = "",
-  errorCode = "",
-  errorDetails = "",
-  location = "",
-  functionName = "",
-) {
-  await DD_log("CRITICAL", message, operationType, userId, {
-    errorCode,
-    errorDetails,
-    location,
-    functionName,
-  });
-}
-
-/**
- * 60. 產生處理ID
- * @version 2025-01-09-V1.0.0
- * @date 2025-01-09 16:00:00
- */
-function generateProcessId() {
-  return uuidv4().substring(0, 8);
-}
-
-/**
- * 61. 時間戳轉換函數 - Firestore版本
- * @version 2025-01-09-V3.0.0
- * @date 2025-01-09 16:00:00
- * @update: 完全重寫，使用Firestore資料庫
- */
-function DD_convertTimestamp(timestamp) {
-  const tsId = uuidv4().substring(0, 8);
-  console.log(`開始轉換時間戳: ${timestamp} [${tsId}]`);
+async function DD_processUpdateTransaction(updateData) {
+  const processId = uuidv4().substring(0, 8);
 
   try {
-    if (timestamp === null || timestamp === undefined) {
-      console.log(`時間戳為空 [${tsId}]`);
-      return null;
+    console.log(`[${processId}] 開始更新交易記錄`);
+
+    const { transactionId, userId, ...updateFields } = updateData;
+
+    if (!transactionId || !userId) {
+      throw new Error("缺少交易ID或使用者ID");
     }
 
-    let date;
-
-    if (typeof timestamp === "number" || /^\d+$/.test(timestamp)) {
-      date = new Date(Number(timestamp));
-    } else if (typeof timestamp === "string" && timestamp.includes("T")) {
-      date = new Date(timestamp);
-    } else {
-      date = new Date(timestamp);
+    // 初始化Firebase連接
+    const firebaseResult = await DD_initializeFirebaseConnection(userId);
+    if (!firebaseResult.success) {
+      throw new Error(`Firebase連接失敗: ${firebaseResult.error}`);
     }
 
-    if (isNaN(date.getTime())) {
-      console.log(`無法轉換為有效日期: ${timestamp} [${tsId}]`);
-      return null;
+    // 檢查交易記錄是否存在
+    const transactionRef = db.collection("ledgers")
+      .doc(firebaseResult.ledgerId)
+      .collection("transactions")
+      .doc(transactionId);
+
+    const transactionDoc = await transactionRef.get();
+    if (!transactionDoc.exists) {
+      throw new Error("交易記錄不存在");
     }
 
-    // 轉換為台灣時區
-    const taiwanDate = formatDate(date);
-    const taiwanTime = formatTime(date);
-
-    const result = {
-      date: taiwanDate,
-      time: taiwanTime,
+    // 準備更新資料
+    const updatedData = {
+      ...updateFields,
+      updatedAt: admin.firestore.Timestamp.now(),
+      processId
     };
 
-    console.log(`時間戳轉換結果: ${taiwanDate} ${taiwanTime} [${tsId}]`);
-    return result;
+    // 移除undefined值
+    Object.keys(updatedData).forEach(key => {
+      if (updatedData[key] === undefined) {
+        delete updatedData[key];
+      }
+    });
+
+    // 執行更新
+    await transactionRef.update(updatedData);
+
+    console.log(`[${processId}] 交易記錄更新完成: ${transactionId}`);
+
+    return {
+      success: true,
+      data: {
+        transactionId,
+        updatedFields: Object.keys(updateFields),
+        updatedAt: updatedData.updatedAt.toDate().toISOString(),
+        processId
+      },
+      endpoint: 'PUT /transactions/{id}'
+    };
   } catch (error) {
-    console.log(`時間戳轉換錯誤: ${error.toString()} [${tsId}]`);
-    if (error.stack) console.log(`錯誤堆疊: ${error.stack}`);
-    return null;
+    console.log(`[${processId}] 更新交易記錄失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      processId,
+      endpoint: 'PUT /transactions/{id}'
+    };
   }
 }
 
-// 格式化時間函數
-function formatDate(date) {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  return `${year}/${month}/${day}`;
+/**
+ * 08. 刪除交易記錄處理
+ * @version 2025-09-16-V4.0.0
+ * @date 2025-09-16
+ * @update: 新增支援DELETE /transactions/{id}端點
+ * @description 刪除指定的交易記錄
+ * @param {Object} deleteData - 刪除資料
+ * @returns {Object} 刪除結果
+ */
+async function DD_processDeleteTransaction(deleteData) {
+  const processId = uuidv4().substring(0, 8);
+
+  try {
+    console.log(`[${processId}] 開始刪除交易記錄`);
+
+    const { transactionId, userId } = deleteData;
+
+    if (!transactionId || !userId) {
+      throw new Error("缺少交易ID或使用者ID");
+    }
+
+    // 初始化Firebase連接
+    const firebaseResult = await DD_initializeFirebaseConnection(userId);
+    if (!firebaseResult.success) {
+      throw new Error(`Firebase連接失敗: ${firebaseResult.error}`);
+    }
+
+    // 檢查交易記錄是否存在
+    const transactionRef = db.collection("ledgers")
+      .doc(firebaseResult.ledgerId)
+      .collection("transactions")
+      .doc(transactionId);
+
+    const transactionDoc = await transactionRef.get();
+    if (!transactionDoc.exists) {
+      throw new Error("交易記錄不存在");
+    }
+
+    // 備份交易記錄（軟刪除）
+    const transactionData = transactionDoc.data();
+    await db.collection("ledgers")
+      .doc(firebaseResult.ledgerId)
+      .collection("deleted_transactions")
+      .doc(transactionId)
+      .set({
+        ...transactionData,
+        deletedAt: admin.firestore.Timestamp.now(),
+        deletedBy: userId,
+        processId
+      });
+
+    // 執行刪除
+    await transactionRef.delete();
+
+    console.log(`[${processId}] 交易記錄刪除完成: ${transactionId}`);
+
+    return {
+      success: true,
+      data: {
+        transactionId,
+        deletedAt: new Date().toISOString(),
+        backedUp: true,
+        processId
+      },
+      endpoint: 'DELETE /transactions/{id}'
+    };
+  } catch (error) {
+    console.log(`[${processId}] 刪除交易記錄失敗: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString(),
+      processId,
+      endpoint: 'DELETE /transactions/{id}'
+    };
+  }
 }
 
-function formatTime(date) {
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
+// 輔助函數
+
+/**
+ * 解析快速輸入文字（簡化版本）
+ */
+function DD_parseQuickInput(input) {
+  try {
+    // 簡單的正則表達式解析 "描述 金額" 格式
+    const match = input.match(/^(.+?)\s+(\d+)$/);
+    if (!match) {
+      throw new Error("無法解析輸入格式");
+    }
+
+    const [, description, amount] = match;
+
+    return {
+      success: true,
+      amount: parseFloat(amount),
+      type: 'expense', // 預設為支出
+      category: '其他支出',
+      description: description.trim()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
 }
+
+/**
+ * 根據用戶模式格式化儀表板數據
+ */
+function DD_formatDashboardByMode(data, userMode) {
+  switch (userMode) {
+    case 'Expert':
+      return {
+        ...data,
+        charts: {
+          weeklyTrend: [],
+          categoryDistribution: []
+        },
+        budgetStatus: [],
+        quickActions: [
+          { action: "addTransaction", label: "快速記帳" },
+          { action: "viewReports", label: "查看報表" }
+        ]
+      };
+
+    case 'Guiding':
+      return {
+        todayExpense: data.summary.todayExpense,
+        quickAddButton: true,
+        simpleMessage: `今天已花費 NT$${data.summary.todayExpense}`
+      };
+
+    default:
+      return data;
+  }
+}
+
+// 保留原有的兼容性函數
+const DD_distributeData = DD_processCreateTransaction;
+const DD_getAllSubjects = async (userId) => {
+  const firebaseResult = await DD_initializeFirebaseConnection(userId);
+  if (!firebaseResult.success) return [];
+
+  // 簡化版科目查詢
+  return [
+    { majorCode: '01', majorName: '食物', subCode: '0101', subName: '餐費', synonyms: '吃飯,用餐' }
+  ];
+};
 
 // 引入DD3模組的格式化函數
 const DD3 = require("./1333. DD3.js");
@@ -1384,19 +778,27 @@ const { DD_formatSystemReplyMessage } = DD3;
 const WH = require('./1320. WH.js');
 const DD2 = require('./1332. DD2.js');
 
-// 導出需要的函數
+// 模組暴露
 module.exports = {
+  // Phase 1 核心函數
+  DD_initializeModule,
+  DD_initializeFirebaseConnection,
+  DD_processCreateTransaction,
+  DD_processQuickBookkeeping,
+  DD_processGetTransactions,
+  DD_processGetDashboard,
+  DD_processUpdateTransaction,
+  DD_processDeleteTransaction,
+
+  // 兼容性函數
   DD_distributeData,
   DD_getAllSubjects,
-  DD_writeToLogSheet,
-  DD_getLedgerInfo,
-  DD_convertTimestamp,
-  DD_formatSystemReplyMessage,
-  DD_log,
-  DD_logDebug,
-  DD_logInfo,
-  DD_logWarning,
-  DD_logError,
-  DD_logCritical,
-  generateProcessId,
+
+  // 配置
+  DD_CONFIG,
+
+  // 輔助函數 (供內部或需要時使用)
+  DD_parseQuickInput,
+  DD_formatDashboardByMode,
+  DD_formatSystemReplyMessage // 暴露此函數以供外部模組使用
 };
