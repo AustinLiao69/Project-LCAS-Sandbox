@@ -849,9 +849,9 @@ function BK_generateStatistics(transactions, period = 'month') {
 
 /**
  * 13. 交易查詢過濾 - 支援GET /transactions
- * @version 2025-09-16-V2.1.0
+ * @version 2025-09-16-V2.2.0
  * @date 2025-09-16 
- * @update: 階段二重構 - 強化查詢過濾功能
+ * @update: 階段一重構完成 - 強化查詢過濾功能
  */
 function BK_buildTransactionQuery(queryParams) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -907,10 +907,16 @@ function BK_buildTransactionQuery(queryParams) {
     // 排序
     const orderField = queryParams.orderBy || '日期';
     const orderDirection = queryParams.orderDirection || 'desc';
-    query = query.orderBy(orderField, orderDirection);
-
-    if (orderField !== '時間') {
-      query = query.orderBy('時間', orderDirection);
+    
+    // 確保至少有一個排序字段
+    if (!orderField) {
+        query = query.orderBy('日期', 'desc');
+    } else {
+        query = query.orderBy(orderField, orderDirection);
+        // 如果排序欄位不是時間，且時間欄位存在，則也按時間排序
+        if (orderField !== '時間') {
+            query = query.orderBy('時間', orderDirection);
+        }
     }
 
     // 分頁限制
@@ -920,7 +926,7 @@ function BK_buildTransactionQuery(queryParams) {
       appliedFilters.push(`limit: ${limit}`);
     }
 
-    BK_logInfo(`${logPrefix} 查詢條件建立完成: [${appliedFilters.join(', ')}]`, "查詢建立", queryParams.userId || "", "BK_buildTransactionQuery");
+    BK_logInfo(`${logPrefix} 查詢條件建立完成: [${appliedFilters.join(', ')}]`, "查詢過濾", queryParams.userId || "", "BK_buildTransactionQuery");
 
     return {
       success: true,
@@ -935,7 +941,7 @@ function BK_buildTransactionQuery(queryParams) {
     };
 
   } catch (error) {
-    BK_logError(`${logPrefix} 查詢建立失敗: ${error.toString()}`, "查詢建立", queryParams.userId || "", "QUERY_BUILD_ERROR", error.toString(), "BK_buildTransactionQuery");
+    BK_logError(`${logPrefix} 查詢建立失敗: ${error.toString()}`, "查詢過濾", queryParams.userId || "", "QUERY_BUILD_ERROR", error.toString(), "BK_buildTransactionQuery");
     return {
       success: false,
       error: error.toString(),
@@ -1782,4 +1788,70 @@ function BK_getParsingHelp() {
 }
 
   // 版本資訊
+};
+
+// === 日誌函數 ===
+
+function BK_logInfo(message, category, userId, functionName) {
+    if (DL && typeof DL.DL_info === 'function') {
+        DL.DL_info(message, category, userId, '', '', functionName);
+    } else {
+        console.log(`[BK INFO] ${message}`);
+    }
+}
+
+function BK_logWarning(message, category, userId, functionName) {
+    if (DL && typeof DL.DL_warning === 'function') {
+        DL.DL_warning(message, category, userId, '', '', functionName);
+    } else {
+        console.log(`[BK WARNING] ${message}`);
+    }
+}
+
+function BK_logError(message, category, userId, errorType, errorDetail, functionName) {
+    if (DL && typeof DL.DL_error === 'function') {
+        DL.DL_error(message, category, userId, errorType, errorDetail, functionName);
+    } else {
+        console.error(`[BK ERROR] ${message}`);
+    }
+}
+
+function BK_logCritical(message, category, userId, errorType, errorDetail, functionName) {
+    if (DL && typeof DL.DL_critical === 'function') {
+        DL.DL_critical(message, category, userId, errorType, errorDetail, functionName);
+    } else {
+        console.error(`[BK CRITICAL] ${message}`);
+    }
+}
+
+// === 模組導出 ===
+module.exports = {
+    // 核心API函數 (6個)
+    BK_initialize,
+    BK_createTransaction,
+    BK_processQuickTransaction,
+    BK_getTransactions,
+    BK_getDashboardData,
+    BK_updateTransaction,
+    BK_deleteTransaction,
+
+    // 輔助函數
+    BK_validateTransactionData,
+    BK_generateTransactionId,
+    BK_validatePaymentMethod,
+    BK_generateStatistics,
+    BK_buildTransactionQuery,
+    BK_parseQuickInput,
+    BK_calculateTransactionStats,
+    BK_prepareTransactionData,
+    BK_saveTransactionToFirestore,
+    BK_checkTransactionIdUnique,
+    BK_handleError,
+    BK_formatAPIResponse,
+    BK_processFourModeData,
+    BK_optimizeBatchOperations,
+    BK_enhanceQuickBookingParsing,
+
+    // 配置
+    BK_CONFIG
 };
