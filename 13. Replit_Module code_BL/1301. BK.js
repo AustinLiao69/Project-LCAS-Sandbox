@@ -12,6 +12,11 @@ const admin = require('firebase-admin');
 // 引入Firebase動態配置模組
 const firebaseConfig = require('./1399. firebase-config');
 
+// Helper function to get environment variables
+function getEnvVar(key, defaultValue = null) {
+  return process.env[key] || defaultValue;
+}
+
 // 確保 Firebase Admin 在模組載入時就初始化
 if (!admin.apps.length) {
   try {
@@ -907,7 +912,7 @@ function BK_buildTransactionQuery(queryParams) {
     // 排序
     const orderField = queryParams.orderBy || '日期';
     const orderDirection = queryParams.orderDirection || 'desc';
-    
+
     // 確保至少有一個排序字段
     if (!orderField) {
         query = query.orderBy('日期', 'desc');
