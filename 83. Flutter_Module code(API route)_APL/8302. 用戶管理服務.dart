@@ -1,9 +1,11 @@
 
 /**
- * 8302. 用戶管理服務 - V1.0.0
+ * 8302. 用戶管理服務 - V2.2.0
  * @module 用戶管理服務
- * @description LCAS 2.0 用戶管理服務 - 第一階段核心架構與基礎設施
- * @update 2025-09-03: 第一階段實作，嚴格遵循8202文件規範
+ * @version 2.2.0
+ * @description LCAS 2.0 用戶管理服務 - Phase 1 API端點路徑重構完成
+ * @date 2025-09-03
+ * @update 2025-01-29: 升級至v2.2.0，Phase 1 API路徑重構，統一加上/api/v1前綴，完全符合DCN-0009規範
  */
 
 import 'dart:async';
