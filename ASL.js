@@ -334,7 +334,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL',
-    version: '1.0.0',
+    version: '1.1.0',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -895,7 +895,7 @@ app.post('/api/v1/users/assessment', async (req, res) => {
     if (!AM || typeof AM.AM_processUserAssessment !== 'function') {
       // 模擬評估邏輯
       const { answers } = req.body;
-      
+
       if (!answers || !Array.isArray(answers)) {
         return res.apiError('缺少必要參數：answers', 'MISSING_ANSWERS', 400);
       }
@@ -1235,7 +1235,7 @@ app.get('/api/v1/dashboard', async (req, res) => {
 app.get('/api/v1/categories', async (req, res) => {
   try {
     console.log('📂 API: 取得科目列表請求', req.query);
-    
+
     // 模擬科目資料
     const categories = [
       { id: 'cat_food_001', name: '餐飲', type: 'expense', parentId: null },
@@ -1256,7 +1256,7 @@ app.get('/api/v1/categories', async (req, res) => {
 app.get('/api/v1/accounts', async (req, res) => {
   try {
     console.log('🏦 API: 取得帳戶列表請求', req.query);
-    
+
     // 模擬帳戶資料
     const accounts = [
       { id: 'acc_cash_001', name: '現金', type: 'cash', balance: 5000 },
@@ -1276,12 +1276,12 @@ app.get('/api/v1/accounts', async (req, res) => {
 app.get('/api/v1/ledgers', async (req, res) => {
   try {
     console.log('📚 API: 取得帳本列表請求', req.query);
-    
+
     // 模擬帳本資料
     const ledgers = [
-      { 
-        id: 'ledger_001', 
-        name: '個人帳本', 
+      {
+        id: 'ledger_001',
+        name: '個人帳本',
         type: 'personal',
         isDefault: true,
         balance: 27000,

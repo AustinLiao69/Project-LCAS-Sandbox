@@ -205,7 +205,7 @@ class SITTestCases {
             }
 
             // 測試Token驗證
-            const response = await this.makeRequest('GET', '/api/v1/users/profile');
+            const response = await this.makeRequest('GET', '/users/profile');
 
             const success = response.success && 
                           response.data?.success === true &&
