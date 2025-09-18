@@ -1792,9 +1792,6 @@ function BK_getParsingHelp() {
   ];
 }
 
-  // 版本資訊
-};
-
 // === 日誌函數 ===
 
 function BK_logInfo(message, category, userId, functionName) {
