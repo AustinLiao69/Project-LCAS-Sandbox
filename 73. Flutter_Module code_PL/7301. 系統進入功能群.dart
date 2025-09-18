@@ -14,6 +14,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:http/http.dart' as http;
 
 // ===========================================
 // 核心資料模型定義
@@ -1885,6 +1886,67 @@ class SystemEntryFunctionGroup {
   /// 生成會話ID
   String _generateSessionId() {
     return 'session_${DateTime.now().millisecondsSinceEpoch}_${(_currentAuthState?.currentUser?.id?.hashCode ?? 0).abs()}';
+  }
+
+  // ===========================================
+  // HTTP客戶端服務 (從APL層移入)
+  // ===========================================
+
+  /// HTTP客戶端配置
+  final http.Client _httpClient = http.Client();
+  final String _baseUrl = 'https://api.lcas.com/api/v1';
+
+  /// 統一API調用方法
+  Future<Map<String, dynamic>> _callAPI(String endpoint, String method, {Map<String, dynamic>? data}) async {
+    try {
+      final uri = Uri.parse('$_baseUrl$endpoint');
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (_currentAuthState?.token != null) 'Authorization': 'Bearer ${_currentAuthState!.token}',
+      };
+
+      http.Response response;
+      
+      switch (method.toUpperCase()) {
+        case 'GET':
+          response = await _httpClient.get(uri, headers: headers);
+          break;
+        case 'POST':
+          response = await _httpClient.post(
+            uri,
+            headers: headers,
+            body: data != null ? json.encode(data) : null,
+          );
+          break;
+        case 'PUT':
+          response = await _httpClient.put(
+            uri,
+            headers: headers,
+            body: data != null ? json.encode(data) : null,
+          );
+          break;
+        case 'DELETE':
+          response = await _httpClient.delete(uri, headers: headers);
+          break;
+        default:
+          throw Exception('不支援的HTTP方法: $method');
+      }
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('API調用失敗: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('[HTTP Client] API調用錯誤: $e');
+      throw e;
+    }
+  }
+
+  /// 認證相關API調用
+  Future<Map<String, dynamic>> _callAuthAPI(String endpoint, Map<String, dynamic> data) async {
+    return await _callAPI('/auth$endpoint', 'POST', data: data);
   }
 
   // ===========================================

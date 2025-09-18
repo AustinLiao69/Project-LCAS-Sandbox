@@ -1,2090 +1,275 @@
+
 /**
  * 8301. 認證服務.dart
- * @module 認證服務模組
- * @version 2.2.0
- * @description LCAS 2.0 認證服務 API 模組 - 支援四種用戶模式的差異化認證體驗
- * @date 2025-08-28
- * @update 2025-01-29: 升級至v2.2.0，Phase 1 API路徑重構，統一加上/api/v1前綴
+ * @module 認證服務模組 - API Gateway
+ * @version 2.3.0
+ * @description LCAS 2.0 認證服務 API Gateway - 純路由轉發，業務邏輯已移至PL層
+ * @date 2025-01-29
+ * @update 2025-01-29: 重構為純API Gateway，移除業務邏輯
  */
 
 import 'dart:convert';
 import 'dart:async';
-import 'dart:math';
 import 'package:http/http.dart' as http;
 
 // ================================
-// 規範定義 (Specifications)
+// API Gateway 路由定義
 // ================================
 
-// 8020: API總覽清單
-// 8088: 統一API回應格式
-// 8101: 錯誤處理與資料模型
-// 8201: 認證與授權服務
+/// 認證服務API Gateway
+class AuthAPIGateway {
+  final String _backendBaseUrl = 'http://localhost:5000/api/v1';
+  final http.Client _httpClient = http.Client();
 
-// ================================
-// 核心資料模型 (Data Models)
-// ================================
-
-/// 統一API回應格式 (完全符合8088規範第5節)
-class ApiResponse<T> {
-  final bool success;
-  final T? data;
-  final ApiMetadata metadata;
-  final ApiError? error;
-
-  ApiResponse.success({required this.data, required this.metadata})
-      : success = true,
-        error = null;
-
-  ApiResponse.error({required this.error, required this.metadata})
-      : success = false,
-        data = null;
-
-  /// 01. 建立成功回應 (符合8088規範統一回應格式)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，完全符合8088規範第5節統一回應格式
-  static ApiResponse<T> createSuccess<T>(T data, ApiMetadata metadata) {
-    return ApiResponse.success(data: data, metadata: metadata);
-  }
-
-  /// 02. 建立錯誤回應 (符合8088規範統一回應格式)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，完全符合8088規範第5節統一回應格式
-  static ApiResponse<T> createError<T>(ApiError error, ApiMetadata metadata) {
-    return ApiResponse.error(error: error, metadata: metadata);
-  }
-
-  Map<String, dynamic> toJson() {
-    if (success) {
-      return {
-        'success': success,
-        'data': data,
-        'metadata': metadata.toJson(),
-      };
-    } else {
-      return {
-        'success': success,
-        'error': error?.toJson(),
-        'metadata': metadata.toJson(),
-      };
-    }
-  }
-}
-
-/// API後設資料 (完全符合8088規範第5節)
-class ApiMetadata {
-  final DateTime timestamp;
-  final String requestId;
-  final UserMode userMode;
-  final String apiVersion;
-  final int processingTimeMs;
-  final int? httpStatusCode;
-  final Map<String, dynamic>? additionalInfo;
-
-  ApiMetadata({
-    required this.timestamp,
-    required this.requestId,
-    required this.userMode,
-    this.apiVersion = '1.4.0',
-    this.processingTimeMs = 0,
-    this.httpStatusCode,
-    this.additionalInfo,
-  });
-
-  /// 03. 建立後設資料 (完全符合8088規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，使用統一請求ID服務，完全符合8088規範第5節metadata結構
-  static ApiMetadata create(UserMode userMode, {int? httpStatusCode, Map<String, dynamic>? additionalInfo}) {
-    return ApiMetadata(
-      timestamp: DateTime.now(),
-      requestId: RequestIdService.generate(),
-      userMode: userMode,
-      httpStatusCode: httpStatusCode,
-      additionalInfo: additionalInfo,
+  /**
+   * 01. 使用者註冊API路由 (POST /api/v1/auth/register)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> register(Map<String, dynamic> requestBody) async {
+    return await _forwardRequest(
+      'POST',
+      '/auth/register',
+      requestBody,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'timestamp': timestamp.toIso8601String(),
-      'requestId': requestId,
-      'userMode': userMode.toString().split('.').last,
-      'apiVersion': apiVersion,
-      'processingTimeMs': processingTimeMs,
-      if (httpStatusCode != null) 'httpStatusCode': httpStatusCode,
-      if (additionalInfo != null) 'additionalInfo': additionalInfo,
-    };
-  }
-}
-
-/// 統一請求ID生成服務 (符合8088規範)
-class RequestIdService {
-  static final Random _random = Random();
-
-  /// 04. 生成統一請求ID (符合8088規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，統一請求ID生成策略
-  static String generate() {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final randomSuffix = _random.nextInt(999999).toString().padLeft(6, '0');
-    return 'req-${timestamp.toString().substring(7)}-$randomSuffix';
-  }
-}
-
-/// 使用者模式枚舉 (符合8088規範第10節四模式支援)
-enum UserMode { expert, inertial, cultivation, guiding }
-
-/// 認證錯誤代碼 (完全符合8088規範第6節錯誤處理)
-enum AuthErrorCode {
-  // 驗證錯誤 (400)
-  validationError,
-  invalidEmail,
-  weakPassword,
-  passwordMismatch,
-  missingRequiredField,
-
-  // 認證錯誤 (401)
-  unauthorized,
-  invalidCredentials,
-  tokenExpired,
-  tokenInvalid,
-  tokenRevoked,
-
-  // 權限錯誤 (403)
-  insufficientPermissions,
-  accountDisabled,
-  accountNotVerified,
-  accountLocked,
-
-  // 資源錯誤 (404, 409)
-  userNotFound,
-  emailNotFound,
-  emailAlreadyExists,
-  invalidResetToken,
-  resetTokenExpired,
-
-  // 系統錯誤 (500)
-  internalServerError,
-  externalServiceError,
-  databaseError,
-  emailServiceError;
-
-  /// 05. 取得HTTP狀態碼 (完全符合8088規範第5.3節)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，完全符合8088規範第5.3節HTTP狀態碼標準
-  int get httpStatusCode {
-    switch (this) {
-      case validationError:
-      case invalidEmail:
-      case weakPassword:
-      case passwordMismatch:
-      case missingRequiredField:
-        return 400;
-      case unauthorized:
-      case invalidCredentials:
-      case tokenExpired:
-      case tokenInvalid:
-      case tokenRevoked:
-        return 401;
-      case insufficientPermissions:
-      case accountDisabled:
-      case accountNotVerified:
-        return 403;
-      case accountLocked:
-        return 423;
-      case userNotFound:
-      case emailNotFound:
-      case invalidResetToken:
-      case resetTokenExpired:
-        return 404;
-      case emailAlreadyExists:
-        return 409;
-      case internalServerError:
-      case externalServiceError:
-      case databaseError:
-      case emailServiceError:
-        return 500;
-    }
-  }
-
-  /// 06. 取得深度四模式化錯誤訊息 (完全符合8088規範第10節)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，深度強化四模式差異化訊息，完全符合8088規範第10節四模式支援
-  String getMessage(UserMode userMode) {
-    switch (this) {
-      case validationError:
-        switch (userMode) {
-          case UserMode.expert:
-            return '請求參數驗證失敗，請檢查資料格式與完整性，詳細錯誤可查看details欄位';
-          case UserMode.inertial:
-            return '資料格式驗證失敗，請確認輸入內容是否正確';
-          case UserMode.cultivation:
-            return '輸入資料需要調整，讓我們一起完善它！💪 檢查一下必填欄位吧';
-          case UserMode.guiding:
-            return '資料格式錯誤';
-        }
-      case invalidEmail:
-        switch (userMode) {
-          case UserMode.expert:
-            return 'Email地址格式無效，請確認符合RFC 5322標準格式規範';
-          case UserMode.inertial:
-            return 'Email格式不正確，請重新輸入有效的Email地址';
-          case UserMode.cultivation:
-            return 'Email格式需要調整，試試 user@example.com 的格式吧！📧';
-          case UserMode.guiding:
-            return 'Email格式錯誤';
-        }
-      case weakPassword:
-        switch (userMode) {
-          case UserMode.expert:
-            return '密碼強度不足，建議至少8個字元並包含大小寫字母、數字與特殊符號以確保安全性';
-          case UserMode.inertial:
-            return '密碼強度不足，請使用至少8個字元的安全密碼';
-          case UserMode.cultivation:
-            return '密碼可以更強！💪 試試加入數字和特殊符號，讓您的帳戶更安全';
-          case UserMode.guiding:
-            return '密碼太簡單';
-        }
-      case passwordMismatch:
-        switch (userMode) {
-          case UserMode.expert:
-            return '密碼確認不一致，請確認兩次輸入的密碼完全相同';
-          case UserMode.inertial:
-            return '密碼確認不一致，請重新輸入';
-          case UserMode.cultivation:
-            return '密碼確認不一致，再仔細檢查一下吧！🔍';
-          case UserMode.guiding:
-            return '密碼不一致';
-        }
-      case invalidCredentials:
-        switch (userMode) {
-          case UserMode.expert:
-            return '認證憑證無效，Email或密碼不正確，請確認後重試';
-          case UserMode.inertial:
-            return 'Email或密碼錯誤，請重新輸入';
-          case UserMode.cultivation:
-            return '登入資訊不正確，再試一次吧！加油！💪';
-          case UserMode.guiding:
-            return '帳號或密碼錯誤';
-        }
-      case emailAlreadyExists:
-        switch (userMode) {
-          case UserMode.expert:
-            return '此Email地址已被註冊使用，請使用其他Email地址或嘗試登入現有帳號';
-          case UserMode.inertial:
-            return '此Email已被註冊，請使用其他Email或直接登入';
-          case UserMode.cultivation:
-            return '這個Email已經有帳號了，要不要試試登入？😊';
-          case UserMode.guiding:
-            return '此Email已被使用';
-        }
-      case userNotFound:
-        switch (userMode) {
-          case UserMode.expert:
-            return '找不到指定的使用者帳號，請確認Email地址或聯繫客服協助';
-          case UserMode.inertial:
-            return '找不到使用者帳號，請確認Email是否正確';
-          case UserMode.cultivation:
-            return '找不到這個帳號，要不要檢查一下Email是否正確？🤔';
-          case UserMode.guiding:
-            return '找不到帳號';
-        }
-      case emailNotFound:
-        switch (userMode) {
-          case UserMode.expert:
-            return '此Email地址尚未註冊，請確認Email地址或進行新帳號註冊';
-          case UserMode.inertial:
-            return '此Email尚未註冊，請先註冊帳號';
-          case UserMode.cultivation:
-            return '找不到這個Email，要不要先註冊一個新帳號？🎉';
-          case UserMode.guiding:
-            return '找不到此Email';
-        }
-      case accountDisabled:
-        switch (userMode) {
-          case UserMode.expert:
-            return '帳號已被停用，請聯繫客服了解詳情並申請重新啟用';
-          case UserMode.inertial:
-            return '帳號已被停用，請聯繫客服';
-          case UserMode.cultivation:
-            return '帳號暫時停用了，聯繫客服可以幫助您解決！📞';
-          case UserMode.guiding:
-            return '帳號已停用';
-        }
-      case accountLocked:
-        switch (userMode) {
-          case UserMode.expert:
-            return '帳號因多次登入失敗被暫時鎖定，請稍後再試或使用忘記密碼功能重設';
-          case UserMode.inertial:
-            return '帳號被暫時鎖定，請稍後再試或重設密碼';
-          case UserMode.cultivation:
-            return '帳號暫時被鎖定了，休息一下再試試，或者重設密碼吧！😌';
-          case UserMode.guiding:
-            return '帳號被鎖定';
-        }
-      case invalidResetToken:
-        switch (userMode) {
-          case UserMode.expert:
-            return '密碼重設Token無效或格式錯誤，請重新申請密碼重設連結';
-          case UserMode.inertial:
-            return '重設連結無效，請重新申請';
-          case UserMode.cultivation:
-            return '重設連結有問題，要不要重新申請一個新的？🔗';
-          case UserMode.guiding:
-            return '重設連結無效';
-        }
-      case resetTokenExpired:
-        switch (userMode) {
-          case UserMode.expert:
-            return '密碼重設Token已過期，安全考量限制連結有效期，請重新申請重設連結';
-          case UserMode.inertial:
-            return '重設連結已過期，請重新申請';
-          case UserMode.cultivation:
-            return '重設連結過期了，安全起見有時間限制，重新申請一個吧！⏰';
-          case UserMode.guiding:
-            return '重設連結已過期';
-        }
-      case emailServiceError:
-        switch (userMode) {
-          case UserMode.expert:
-            return 'Email服務暫時無法使用，請稍後再試或聯繫技術支援團隊';
-          case UserMode.inertial:
-            return 'Email服務暫時故障，請稍後再試';
-          case UserMode.cultivation:
-            return 'Email服務有點忙碌，稍等一下再試試吧！📧';
-          case UserMode.guiding:
-            return '無法發送郵件';
-        }
-      default:
-        switch (userMode) {
-          case UserMode.expert:
-            return '系統發生未預期錯誤，請聯繫技術支援團隊協助處理';
-          case UserMode.inertial:
-            return '系統錯誤，請稍後再試';
-          case UserMode.cultivation:
-            return '系統遇到了小問題，稍後再試試吧！我們會盡快修復！🔧';
-          case UserMode.guiding:
-            return '系統錯誤';
-        }
-    }
-  }
-}
-
-/// API錯誤資訊 (完全符合8101規格details結構)
-class ApiError {
-  final AuthErrorCode code;
-  final String message;
-  final String? field;
-  final DateTime timestamp;
-  final String requestId;
-  final Map<String, dynamic>? details;
-
-  ApiError({
-    required this.code,
-    required this.message,
-    this.field,
-    required this.timestamp,
-    required this.requestId,
-    this.details,
-  });
-
-  /// 07. 建立API錯誤 (完全符合8101規格details結構)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，完全符合8101規格details結構，使用統一請求ID服務
-  static ApiError create(
-    AuthErrorCode code,
-    UserMode userMode, {
-    String? field,
-    String? requestId,
-    Map<String, dynamic>? details,
-    List<ValidationError>? validationErrors,
-  }) {
-    Map<String, dynamic>? finalDetails = details;
-
-    // 完全符合8101規格的validation陣列格式
-    if (validationErrors != null && validationErrors.isNotEmpty) {
-      finalDetails ??= {};
-      finalDetails['validation'] = validationErrors.map((error) => {
-        'field': error.field,
-        'message': error.message,
-        'code': 'VALIDATION_FAILED',
-        'value': error.value ?? '',
-      }).toList();
-    }
-
-    return ApiError(
-      code: code,
-      message: code.getMessage(userMode),
-      field: field,
-      timestamp: DateTime.now(),
-      requestId: requestId ?? RequestIdService.generate(),
-      details: finalDetails,
+  /**
+   * 02. 使用者登入API路由 (POST /api/v1/auth/login)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> login(Map<String, dynamic> requestBody) async {
+    return await _forwardRequest(
+      'POST',
+      '/auth/login',
+      requestBody,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'code': code.toString().split('.').last.toUpperCase(),
-      'message': message,
-      if (field != null) 'field': field,
-      'timestamp': timestamp.toIso8601String(),
-      'requestId': requestId,
-      if (details != null) 'details': details,
-    };
-  }
-}
-
-/// 註冊請求資料模型 (符合8101規格)
-class RegisterRequest {
-  final String email;
-  final String password;
-  final String? confirmPassword;
-  final String? displayName;
-  final UserMode userMode;
-  final bool acceptTerms;
-  final bool acceptPrivacy;
-  final String? timezone;
-  final String? language;
-
-  RegisterRequest({
-    required this.email,
-    required this.password,
-    this.confirmPassword,
-    this.displayName,
-    required this.userMode,
-    required this.acceptTerms,
-    required this.acceptPrivacy,
-    this.timezone,
-    this.language,
-  });
-
-  /// 08. 驗證註冊請求 (強化8101規格驗證)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，完全符合8101規格驗證規則
-  List<ValidationError> validate() {
-    List<ValidationError> errors = [];
-
-    if (email.isEmpty || !_isValidEmail(email)) {
-      errors.add(ValidationError(field: 'email', message: 'Email格式無效', value: email));
-    }
-
-    if (password.length < 8) {
-      errors.add(ValidationError(field: 'password', message: '密碼長度至少8個字元', value: password));
-    }
-
-    if (confirmPassword != null && password != confirmPassword) {
-      errors.add(ValidationError(field: 'confirmPassword', message: '密碼確認不一致', value: confirmPassword));
-    }
-
-    if (!acceptTerms) {
-      errors.add(ValidationError(field: 'acceptTerms', message: '必須同意服務條款', value: acceptTerms.toString()));
-    }
-
-    if (!acceptPrivacy) {
-      errors.add(ValidationError(field: 'acceptPrivacy', message: '必須同意隱私政策', value: acceptPrivacy.toString()));
-    }
-
-    return errors;
+  /**
+   * 03. Google登入API路由 (POST /api/v1/auth/google-login)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> googleLogin(Map<String, dynamic> requestBody) async {
+    return await _forwardRequest(
+      'POST',
+      '/auth/google-login',
+      requestBody,
+    );
   }
 
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  /**
+   * 04. 使用者登出API路由 (POST /api/v1/auth/logout)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> logout(Map<String, dynamic> requestBody) async {
+    return await _forwardRequest(
+      'POST',
+      '/auth/logout',
+      requestBody,
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'email': email,
-      'password': password,
-      if (confirmPassword != null) 'confirmPassword': confirmPassword,
-      if (displayName != null) 'displayName': displayName,
-      'userMode': userMode.toString().split('.').last,
-      'acceptTerms': acceptTerms,
-      'acceptPrivacy': acceptPrivacy,
-      if (timezone != null) 'timezone': timezone,
-      if (language != null) 'language': language,
-    };
-  }
-}
-
-/// 登入請求資料模型 (符合8101規格)
-class LoginRequest {
-  final String email;
-  final String password;
-  final bool? rememberMe;
-  final DeviceInfo? deviceInfo;
-
-  LoginRequest({
-    required this.email,
-    required this.password,
-    this.rememberMe,
-    this.deviceInfo,
-  });
-
-  /// 09. 驗證登入請求
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，強化驗證邏輯
-  List<ValidationError> validate() {
-    List<ValidationError> errors = [];
-
-    if (email.isEmpty) {
-      errors.add(ValidationError(field: 'email', message: 'Email不能為空', value: email));
-    }
-
-    if (password.isEmpty) {
-      errors.add(ValidationError(field: 'password', message: '密碼不能為空', value: password));
-    }
-
-    return errors;
+  /**
+   * 05. 刷新Token API路由 (POST /api/v1/auth/refresh)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> refreshToken(Map<String, dynamic> requestBody) async {
+    return await _forwardRequest(
+      'POST',
+      '/auth/refresh',
+      requestBody,
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'email': email,
-      'password': password,
-      if (rememberMe != null) 'rememberMe': rememberMe,
-      if (deviceInfo != null) 'deviceInfo': deviceInfo!.toJson(),
-    };
+  /**
+   * 06. 忘記密碼API路由 (POST /api/v1/auth/forgot-password)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> forgotPassword(Map<String, dynamic> requestBody) async {
+    return await _forwardRequest(
+      'POST',
+      '/auth/forgot-password',
+      requestBody,
+    );
   }
-}
 
-/// 裝置資訊 (符合8101規格)
-class DeviceInfo {
-  final String? deviceId;
-  final String? platform;
-  final String? appVersion;
-
-  DeviceInfo({this.deviceId, this.platform, this.appVersion});
-
-  Map<String, dynamic> toJson() {
-    return {
-      if (deviceId != null) 'deviceId': deviceId,
-      if (platform != null) 'platform': platform,
-      if (appVersion != null) 'appVersion': appVersion,
-    };
+  /**
+   * 07. 驗證重設Token API路由 (GET /api/v1/auth/verify-reset-token)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> verifyResetToken(String token) async {
+    return await _forwardRequest(
+      'GET',
+      '/auth/verify-reset-token?token=$token',
+      null,
+    );
   }
-}
 
-/// 驗證錯誤 (符合8101規格)
-class ValidationError {
-  final String field;
-  final String message;
-  final String? value;
-
-  ValidationError({required this.field, required this.message, this.value});
-}
-
-/// 註冊回應資料模型 (完全符合8101規格)
-class RegisterResponse {
-  final String userId;
-  final String email;
-  final UserMode userMode;
-  final bool verificationSent;
-  final bool needsAssessment; // 修正為8101規格一致的命名
-  final String token;
-  final String refreshToken;
-  final DateTime expiresAt;
-
-  RegisterResponse({
-    required this.userId,
-    required this.email,
-    required this.userMode,
-    required this.verificationSent,
-    required this.needsAssessment,
-    required this.token,
-    required this.refreshToken,
-    required this.expiresAt,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'userId': userId,
-      'email': email,
-      'userMode': userMode.toString().split('.').last,
-      'verificationSent': verificationSent,
-      'needsAssessment': needsAssessment,
-      'token': token,
-      'refreshToken': refreshToken,
-      'expiresAt': expiresAt.toIso8601String(),
-    };
+  /**
+   * 08. 重設密碼API路由 (POST /api/v1/auth/reset-password)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> resetPassword(Map<String, dynamic> requestBody) async {
+    return await _forwardRequest(
+      'POST',
+      '/auth/reset-password',
+      requestBody,
+    );
   }
-}
 
-/// 登入回應資料模型 (深度強化四模式支援)
-class LoginResponse {
-  final String token;
-  final String refreshToken;
-  final DateTime expiresAt;
-  final UserProfile user;
-  final Map<String, dynamic>? loginHistory;
-  final Map<String, dynamic>? streakInfo;
-  final String? simpleMessage;
-
-  LoginResponse({
-    required this.token,
-    required this.refreshToken,
-    required this.expiresAt,
-    required this.user,
-    this.loginHistory,
-    this.streakInfo,
-    this.simpleMessage,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'token': token,
-      'refreshToken': refreshToken,
-      'expiresAt': expiresAt.toIso8601String(),
-      'user': user.toJson(),
-      if (loginHistory != null) 'loginHistory': loginHistory,
-      if (streakInfo != null) 'streakInfo': streakInfo,
-      if (simpleMessage != null) 'simpleMessage': simpleMessage,
-    };
+  /**
+   * 09. 驗證Email API路由 (POST /api/v1/auth/verify-email)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> verifyEmail(Map<String, dynamic> requestBody) async {
+    return await _forwardRequest(
+      'POST',
+      '/auth/verify-email',
+      requestBody,
+    );
   }
-}
 
-/// 使用者資料模型 (符合8101規格)
-class UserProfile {
-  final String id;
-  final String email;
-  final String? displayName;
-  final UserMode userMode;
-  final String? avatar;
-  final Map<String, dynamic>? preferences;
-  final DateTime createdAt;
-  final DateTime? lastActiveAt;
-
-  UserProfile({
-    required this.id,
-    required this.email,
-    this.displayName,
-    required this.userMode,
-    this.avatar,
-    this.preferences,
-    required this.createdAt,
-    this.lastActiveAt,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'email': email,
-      if (displayName != null) 'displayName': displayName,
-      'userMode': userMode.toString().split('.').last,
-      if (avatar != null) 'avatar': avatar,
-      if (preferences != null) 'preferences': preferences,
-      'createdAt': createdAt.toIso8601String(),
-      if (lastActiveAt != null) 'lastActiveAt': lastActiveAt!.toIso8601String(),
-    };
+  /**
+   * 10. 綁定LINE帳號API路由 (POST /api/v1/auth/bind-line)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> bindLine(Map<String, dynamic> requestBody) async {
+    return await _forwardRequest(
+      'POST',
+      '/auth/bind-line',
+      requestBody,
+    );
   }
-}
 
-/// 重設Token驗證結果 (符合8201規範)
-class ResetTokenValidation {
-  final bool isValid;
-  final String? email;
-  final DateTime? expiresAt;
-  final String? reason;
-
-  ResetTokenValidation({
-    required this.isValid,
-    this.email,
-    this.expiresAt,
-    this.reason,
-  });
-}
-
-// ================================
-// 核心服務類別 (Service Classes) - 完善8201規範抽象方法
-// ================================
-
-/// SecurityService 安全服務 (新增8201規範要求的抽象類別)
-abstract class SecurityService {
-  /// 10. 雜湊密碼
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  Future<String> hashPassword(String password);
-
-  /// 11. 驗證密碼
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  Future<bool> verifyPassword(String password, String hash);
-
-  /// 12. 評估密碼強度
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  PasswordStrength assessPasswordStrength(String password);
-
-  /// 13. 檢查密碼安全性
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  bool isPasswordSecure(String password);
-
-  /// 14. 生成安全Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  Future<String> generateSecureToken();
-
-  /// 15. 驗證Token格式
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  bool validateTokenFormat(String token);
-}
-
-/// JwtProvider JWT提供者 (新增8201規範要求的抽象類別)
-abstract class JwtProvider {
-  /// 16. 產生Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  String generateToken(Map<String, dynamic> payload, Duration expiry);
-
-  /// 17. 驗證Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  Map<String, dynamic> verifyToken(String token);
-
-  /// 18. 檢查Token是否過期
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  bool isTokenExpired(String token);
-
-  /// 19. 提取使用者ID
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  String extractUserId(String token);
-
-  /// 20. 提取使用者模式
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  UserMode extractUserMode(String token);
-}
-
-/// ValidationService 驗證服務 (新增8201規範要求的抽象類別)
-abstract class ValidationService {
-  /// 21. 驗證Email
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  List<ValidationError> validateEmail(String email);
-
-  /// 22. 驗證密碼
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  List<ValidationError> validatePassword(String password);
-
-  /// 23. 驗證使用者模式
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  List<ValidationError> validateUserMode(UserMode mode);
-
-  /// 24. 驗證註冊請求
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  List<ValidationError> validateRegisterRequest(RegisterRequest request);
-
-  /// 25. 驗證登入請求
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  List<ValidationError> validateLoginRequest(LoginRequest request);
-}
-
-/// ErrorHandler 錯誤處理器 (新增8201規範要求的抽象類別)
-abstract class ErrorHandler {
-  /// 26. 處理例外
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  ApiResponse<T> handleException<T>(Exception exception, UserMode userMode);
-
-  /// 27. 建立驗證錯誤
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  ApiError createValidationError(List<ValidationError> errors, UserMode userMode);
-
-  /// 28. 建立業務邏輯錯誤
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  ApiError createBusinessLogicError(String code, String message, UserMode userMode);
-
-  /// 29. 取得本地化錯誤訊息
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  String getLocalizedErrorMessage(AuthErrorCode code, UserMode userMode);
-}
-
-/// ModeConfigService 模式設定服務 (新增8201規範要求的抽象類別)
-abstract class ModeConfigService {
-  /// 30. 取得模式設定
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  ModeConfig getConfigForMode(UserMode mode);
-
-  /// 31. 取得可用功能
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  List<String> getAvailableFeatures(UserMode mode);
-
-  /// 32. 取得預設設定
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  Map<String, dynamic> getDefaultSettings(UserMode mode);
-
-  /// 33. 檢查功能是否啟用
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  bool isFeatureEnabled(UserMode mode, String feature);
-}
-
-/// ResponseFilter 回應過濾器 (新增8201規範要求的抽象類別)
-abstract class ResponseFilter {
-  /// 34. Expert模式過濾
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  Map<String, dynamic> filterForExpert(Map<String, dynamic> data);
-
-  /// 35. Inertial模式過濾
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  Map<String, dynamic> filterForInertial(Map<String, dynamic> data);
-
-  /// 36. Cultivation模式過濾
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  Map<String, dynamic> filterForCultivation(Map<String, dynamic> data);
-
-  /// 37. Guiding模式過濾
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範要求的抽象方法
-  Map<String, dynamic> filterForGuiding(Map<String, dynamic> data);
-}
-
-/// Token服務 (完善8201規範抽象方法)
-abstract class TokenService {
-  /// 38. 產生Token對
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<TokenPair> generateTokenPair(String userId, UserMode userMode);
-
-  /// 39. 產生存取Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<String> generateAccessToken(String userId, Map<String, dynamic> claims);
-
-  /// 40. 產生刷新Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<String> generateRefreshToken(String userId);
-
-  /// 41. 產生重設Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<String> generateResetToken(String email);
-
-  /// 42. 產生Email驗證Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<String> generateEmailVerificationToken(String email);
-
-  /// 43. 驗證存取Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<TokenValidationResult> validateAccessToken(String token);
-
-  /// 44. 驗證刷新Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<TokenValidationResult> validateRefreshToken(String token);
-
-  /// 45. 驗證重設Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<bool> validateResetToken(String token);
-
-  /// 46. 驗證Email驗證Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<bool> validateEmailVerificationToken(String token);
-
-  /// 47. 撤銷Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<void> revokeToken(String token);
-
-  /// 48. 撤銷使用者所有Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<void> revokeAllUserTokens(String userId);
-
-  /// 49. 檢查Token是否已撤銷
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<bool> isTokenRevoked(String token);
-
-  /// 50. 清理過期Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<void> cleanupExpiredTokens();
-}
-
-/// 使用者模式適配器 (深度強化四模式支援)
-abstract class UserModeAdapter {
-  /// 51. 適配回應內容
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，深度強化四模式差異化處理
-  T adaptResponse<T>(T response, UserMode userMode);
-
-  /// 52. 適配錯誤回應
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，深度強化四模式錯誤訊息差異化
-  ApiError adaptErrorResponse(ApiError error, UserMode userMode);
-
-  /// 53. 適配登入回應
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，深度強化四模式登入回應差異化
-  LoginResponse adaptLoginResponse(LoginResponse response, UserMode userMode);
-
-  /// 54. 適配註冊回應
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，深度強化四模式註冊回應差異化
-  RegisterResponse adaptRegisterResponse(RegisterResponse response, UserMode userMode);
-
-  /// 55. 取得可用操作選項
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，深度強化功能選項過濾
-  List<String> getAvailableActions(UserMode userMode);
-
-  /// 56. 過濾回應資料
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，深度強化模式特定資料過濾
-  Map<String, dynamic> filterResponseData(Map<String, dynamic> data, UserMode userMode);
-
-  /// 57. 檢查是否顯示進階選項
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法
-  bool shouldShowAdvancedOptions(UserMode userMode);
-
-  /// 58. 檢查是否包含進度追蹤
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法
-  bool shouldIncludeProgressTracking(UserMode userMode);
-
-  /// 59. 檢查是否簡化介面
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法
-  bool shouldSimplifyInterface(UserMode userMode);
-
-  /// 60. 取得模式特定訊息
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法
-  String getModeSpecificMessage(String baseMessage, UserMode userMode);
-}
-
-/// 認證服務 (完善8201規範抽象方法實作)
-abstract class AuthService {
-  /// 61. 處理使用者註冊
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<RegisterResult> processRegistration(RegisterRequest request);
-
-  /// 62. 驗證使用者登入
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<LoginResult> authenticateUser(String email, String password);
-
-  /// 63. 處理使用者登出
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<void> processLogout(LogoutRequest request);
-
-  /// 64. 處理Token刷新
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<TokenPair> processTokenRefresh(String refreshToken);
-
-  /// 65. 處理忘記密碼
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<void> initiateForgotPassword(String email);
-
-  /// 66. 驗證重設Token
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<ResetTokenValidation> validateResetToken(String token);
-
-  /// 67. 執行密碼重設
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<void> executePasswordReset(String token, String newPassword);
-
-  /// 68. 處理Email驗證
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<void> processEmailVerification(String email, String code);
-
-  /// 69. 發送驗證Email
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，符合8201規範抽象方法定義
-  Future<void> sendVerificationEmail(String email);
-}
-
-// ================================
-// 主要控制器 (Main Controller) - 嚴格遵循8020 API總覽清單
-// ================================
-
-/// 認證控制器 - 統一處理所有認證相關API請求 (嚴格遵循8020規範)
-class AuthController {
-  final AuthService _authService;
-  final TokenService _tokenService;
-  final UserModeAdapter _userModeAdapter;
-
-  AuthController({
-    required AuthService authService,
-    required TokenService tokenService,
-    required UserModeAdapter userModeAdapter,
-  })  : _authService = authService,
-        _tokenService = tokenService,
-        _userModeAdapter = userModeAdapter;
-
-  /// 70. 使用者註冊API (嚴格對應8020規範: POST /api/v1/auth/register，對應畫面S-103)
-  /// @version 2025-01-29-V2.2.0
-  /// @date 2025-01-29 12:00:00
-  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴，完整畫面對應標註，深度四模式支援
-  Future<ApiResponse<RegisterResponse>> register(RegisterRequest request) async {
+  /**
+   * 11. 取得綁定狀態API路由 (GET /api/v1/auth/bind-status)
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway實作，轉發至後端BL層
+   */
+  Future<http.Response> getBindStatus(String userId) async {
+    return await _forwardRequest(
+      'GET',
+      '/auth/bind-status?userId=$userId',
+      null,
+    );
+  }
+
+  // ================================
+  // 私有方法：統一請求轉發機制
+  // ================================
+
+  /**
+   * 統一請求轉發方法
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: 純API Gateway核心轉發邏輯
+   */
+  Future<http.Response> _forwardRequest(
+    String method,
+    String endpoint,
+    Map<String, dynamic>? body,
+  ) async {
     try {
-      // 驗證請求
-      final validationErrors = request.validate();
-      if (validationErrors.isNotEmpty) {
-        final error = ApiError.create(
-          AuthErrorCode.validationError,
-          request.userMode,
-          field: validationErrors.first.field,
-          validationErrors: validationErrors,
-        );
-        final metadata = ApiMetadata.create(request.userMode, httpStatusCode: 400);
-        return ApiResponse.createError(error, metadata);
+      final uri = Uri.parse('$_backendBaseUrl$endpoint');
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      http.Response response;
+
+      switch (method.toUpperCase()) {
+        case 'GET':
+          response = await _httpClient.get(uri, headers: headers);
+          break;
+        case 'POST':
+          response = await _httpClient.post(
+            uri,
+            headers: headers,
+            body: body != null ? json.encode(body) : null,
+          );
+          break;
+        case 'PUT':
+          response = await _httpClient.put(
+            uri,
+            headers: headers,
+            body: body != null ? json.encode(body) : null,
+          );
+          break;
+        case 'DELETE':
+          response = await _httpClient.delete(uri, headers: headers);
+          break;
+        default:
+          throw Exception('不支援的HTTP方法: $method');
       }
 
-      // 處理註冊
-      final result = await _authService.processRegistration(request);
-      if (!result.success) {
-        final error = ApiError.create(
-          AuthErrorCode.emailAlreadyExists,
-          request.userMode,
-        );
-        final metadata = ApiMetadata.create(request.userMode, httpStatusCode: 409);
-        return ApiResponse.createError(error, metadata);
-      }
-
-      // 生成Token
-      final tokenPair = await _tokenService.generateTokenPair(result.userId, request.userMode);
-
-      // 建立回應 (符合8101規格)
-      var response = RegisterResponse(
-        userId: result.userId,
-        email: request.email,
-        userMode: request.userMode,
-        verificationSent: true,
-        needsAssessment: request.userMode == UserMode.expert,
-        token: tokenPair.accessToken,
-        refreshToken: tokenPair.refreshToken,
-        expiresAt: tokenPair.expiresAt,
-      );
-
-      // 深度四模式調整回應
-      response = _userModeAdapter.adaptRegisterResponse(response, request.userMode);
-
-      final metadata = ApiMetadata.create(request.userMode, httpStatusCode: 201);
-      return ApiResponse.createSuccess(response, metadata);
-
+      return response;
     } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        request.userMode,
-      );
-      final metadata = ApiMetadata.create(request.userMode, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 71. 使用者登入API (嚴格對應8020規範: POST /api/v1/auth/login，對應畫面S-104)
-  /// @version 2025-01-29-V2.2.0
-  /// @date 2025-01-29 12:00:00
-  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴，深度四模式支援
-  Future<ApiResponse<LoginResponse>> login(LoginRequest request) async {
-    try {
-      // 驗證請求
-      final validationErrors = request.validate();
-      if (validationErrors.isNotEmpty) {
-        final error = ApiError.create(
-          AuthErrorCode.validationError,
-          UserMode.expert, // 預設模式
-          field: validationErrors.first.field,
-          validationErrors: validationErrors,
-        );
-        final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 400);
-        return ApiResponse.createError(error, metadata);
-      }
-
-      // 認證使用者
-      final result = await _authService.authenticateUser(request.email, request.password);
-      if (!result.success || result.user == null) {
-        final error = ApiError.create(
-          AuthErrorCode.invalidCredentials,
-          UserMode.expert,
-        );
-        final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 401);
-        return ApiResponse.createError(error, metadata);
-      }
-
-      final user = result.user!;
-
-      // 生成Token
-      final tokenPair = await _tokenService.generateTokenPair(user.id, user.userMode);
-
-      // 建立基本回應
-      var response = LoginResponse(
-        token: tokenPair.accessToken,
-        refreshToken: tokenPair.refreshToken,
-        expiresAt: tokenPair.expiresAt,
-        user: user,
-      );
-
-      // 深度四模式調整回應
-      response = _userModeAdapter.adaptLoginResponse(response, user.userMode);
-
-      final metadata = ApiMetadata.create(user.userMode, httpStatusCode: 200);
-      return ApiResponse.createSuccess(response, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 72. Google登入API (嚴格對應8020規範: POST /api/v1/auth/google-login，對應畫面S-104)
-  /// @version 2025-01-29-V2.2.0
-  /// @date 2025-01-29 12:00:00
-  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴
-  Future<ApiResponse<LoginResponse>> googleLogin(GoogleLoginRequest request) async {
-    try {
-      // 驗證Google Token
-      if (request.googleToken.isEmpty) {
-        final error = ApiError.create(
-          AuthErrorCode.invalidCredentials,
-          request.userMode ?? UserMode.expert,
-        );
-        final metadata = ApiMetadata.create(request.userMode ?? UserMode.expert, httpStatusCode: 401);
-        return ApiResponse.createError(error, metadata);
-      }
-
-      // 建立模擬使用者
-      final user = UserProfile(
-        id: 'google-user-id',
-        email: 'google.user@example.com',
-        displayName: 'Google使用者',
-        userMode: request.userMode ?? UserMode.expert,
-        createdAt: DateTime.now(),
-      );
-
-      // 生成Token
-      final tokenPair = await _tokenService.generateTokenPair(user.id, user.userMode);
-
-      var response = LoginResponse(
-        token: tokenPair.accessToken,
-        refreshToken: tokenPair.refreshToken,
-        expiresAt: tokenPair.expiresAt,
-        user: user,
-      );
-
-      // 深度四模式調整回應
-      response = _userModeAdapter.adaptLoginResponse(response, user.userMode);
-
-      final metadata = ApiMetadata.create(user.userMode, httpStatusCode: 200);
-      return ApiResponse.createSuccess(response, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        request.userMode ?? UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(request.userMode ?? UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 73. 使用者登出API (嚴格對應8020規範: POST /api/v1/auth/logout)
-  /// @version 2025-01-29-V2.2.0
-  /// @date 2025-01-29 12:00:00
-  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴
-  Future<ApiResponse<void>> logout(LogoutRequest request) async {
-    try {
-      await _authService.processLogout(request);
-
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 200);
-      return ApiResponse.createSuccess(null, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 74. 刷新Token API (嚴格對應8020規範: POST /api/v1/auth/refresh)
-  /// @version 2025-01-29-V2.2.0
-  /// @date 2025-01-29 12:00:00
-  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴
-  Future<ApiResponse<RefreshTokenResponse>> refreshToken(String refreshToken) async {
-    try {
-      // 驗證刷新Token
-      final validationResult = await _tokenService.validateRefreshToken(refreshToken);
-      if (!validationResult.isValid) {
-        final error = ApiError.create(
-          AuthErrorCode.tokenInvalid,
-          UserMode.expert,
-        );
-        final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 401);
-        return ApiResponse.createError(error, metadata);
-      }
-
-      // 生成新Token對
-      final tokenPair = await _tokenService.generateTokenPair(
-        validationResult.userId!,
-        validationResult.userMode!,
-      );
-
-      final response = RefreshTokenResponse(
-        token: tokenPair.accessToken,
-        refreshToken: tokenPair.refreshToken,
-        expiresAt: tokenPair.expiresAt,
-      );
-
-      final metadata = ApiMetadata.create(validationResult.userMode!, httpStatusCode: 200);
-      return ApiResponse.createSuccess(response, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 75. 忘記密碼API (嚴格對應8020規範: POST /api/v1/auth/forgot-password，對應畫面S-105)
-  /// @version 2025-01-29-V2.2.0
-  /// @date 2025-01-29 12:00:00
-  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴
-  Future<ApiResponse<void>> forgotPassword(ForgotPasswordRequest request) async {
-    try {
-      await _authService.initiateForgotPassword(request.email);
-
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 200);
-      return ApiResponse.createSuccess(null, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.emailServiceError,
-        UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 76. 驗證重設Token API (嚴格對應8020規範: GET /api/v1/auth/verify-reset-token，對應畫面S-105)
-  /// @version 2025-01-29-V2.2.0
-  /// @date 2025-01-29 12:00:00
-  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴，補充8020缺失的端點
-  Future<ApiResponse<VerifyResetTokenResponse>> verifyResetToken(String token) async {
-    try {
-      // 驗證Token格式
-      if (token.isEmpty || token.length < 32) {
-        final error = ApiError.create(
-          AuthErrorCode.invalidResetToken,
-          UserMode.expert,
-        );
-        final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 400);
-        return ApiResponse.createError(error, metadata);
-      }
-
-      // 使用AuthService驗證Token有效性
-      final validation = await _authService.validateResetToken(token);
-
-      final response = VerifyResetTokenResponse(
-        valid: validation.isValid,
-        email: validation.email,
-        expiresAt: validation.expiresAt,
-      );
-
-      final statusCode = validation.isValid ? 200 : 404;
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: statusCode);
-      return ApiResponse.createSuccess(response, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 77. 重設密碼API (嚴格對應8020規範: POST /auth/reset-password，對應畫面S-105)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範
-  Future<ApiResponse<void>> resetPassword(ResetPasswordRequest request) async {
-    try {
-      // 驗證Token和密碼
-      if (request.token.isEmpty || request.newPassword.length < 8) {
-        final error = ApiError.create(
-          request.token.isEmpty ? AuthErrorCode.invalidResetToken : AuthErrorCode.weakPassword,
-          UserMode.expert,
-        );
-        final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 400);
-        return ApiResponse.createError(error, metadata);
-      }
-
-      // 使用AuthService執行密碼重設
-      await _authService.executePasswordReset(request.token, request.newPassword);
-
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 200);
-      return ApiResponse.createSuccess(null, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 78. 驗證Email API (嚴格對應8020規範: POST /auth/verify-email，對應畫面S-103)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範
-  Future<ApiResponse<void>> verifyEmail(VerifyEmailRequest request) async {
-    try {
-      await _authService.processEmailVerification(request.email, request.verificationCode ?? '');
-
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 200);
-      return ApiResponse.createSuccess(null, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 79. 綁定LINE帳號API (嚴格對應8020規範: POST /auth/bind-line，對應畫面S-107)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範
-  Future<ApiResponse<BindingResponse>> bindLine(BindLineRequest request) async {
-    try {
-      final response = BindingResponse(
-        message: 'LINE帳號綁定成功',
-        linkedAccounts: {
-          'email': 'user@example.com',
-          'line': request.lineUserId,
-          'bindingDate': DateTime.now().toIso8601String(),
-        },
-      );
-
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 200);
-      return ApiResponse.createSuccess(response, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
-    }
-  }
-
-  /// 80. 取得綁定狀態API (嚴格對應8020規範: GET /auth/bind-status，對應畫面S-107)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範
-  Future<ApiResponse<BindingStatusResponse>> getBindStatus() async {
-    try {
-      final response = BindingStatusResponse(
-        userId: 'current-user-id',
-        linkedAccounts: {
-          'email': {
-            'value': 'user@example.com',
-            'verified': true,
-            'bindingDate': DateTime.now().toIso8601String(),
+      // 返回錯誤回應
+      return http.Response(
+        json.encode({
+          'success': false,
+          'error': {
+            'code': 'GATEWAY_ERROR',
+            'message': '網關轉發失敗: ${e.toString()}',
+            'timestamp': DateTime.now().toIso8601String(),
           }
-        },
-        availableBindings: ['line', 'google'],
+        }),
+        500,
+        headers: {'content-type': 'application/json'},
       );
-
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 200);
-      return ApiResponse.createSuccess(response, metadata);
-
-    } catch (e) {
-      final error = ApiError.create(
-        AuthErrorCode.internalServerError,
-        UserMode.expert,
-      );
-      final metadata = ApiMetadata.create(UserMode.expert, httpStatusCode: 500);
-      return ApiResponse.createError(error, metadata);
     }
   }
+
+  /**
+   * 清理資源
+   * @version 2025-01-29-V2.3.0
+   * @date 2025-01-29 12:00:00
+   * @update: Gateway資源清理
+   */
+  void dispose() {
+    _httpClient.close();
+  }
 }
 
 // ================================
-// 輔助類別定義 (支援類別)
+// 路由映射表
 // ================================
 
-/// Token對
-class TokenPair {
-  final String accessToken;
-  final String refreshToken;
-  final DateTime expiresAt;
-
-  TokenPair({
-    required this.accessToken,
-    required this.refreshToken,
-    required this.expiresAt,
-  });
+/// API路由映射配置
+class AuthRoutes {
+  static const Map<String, String> routes = {
+    'POST /api/v1/auth/register': '/auth/register',
+    'POST /api/v1/auth/login': '/auth/login',
+    'POST /api/v1/auth/google-login': '/auth/google-login',
+    'POST /api/v1/auth/logout': '/auth/logout',
+    'POST /api/v1/auth/refresh': '/auth/refresh',
+    'POST /api/v1/auth/forgot-password': '/auth/forgot-password',
+    'GET /api/v1/auth/verify-reset-token': '/auth/verify-reset-token',
+    'POST /api/v1/auth/reset-password': '/auth/reset-password',
+    'POST /api/v1/auth/verify-email': '/auth/verify-email',
+    'POST /api/v1/auth/bind-line': '/auth/bind-line',
+    'GET /api/v1/auth/bind-status': '/auth/bind-status',
+  };
 }
-
-/// Token驗證結果
-class TokenValidationResult {
-  final bool isValid;
-  final String? userId;
-  final UserMode? userMode;
-  final String? reason;
-
-  TokenValidationResult({
-    required this.isValid,
-    this.userId,
-    this.userMode,
-    this.reason,
-  });
-}
-
-/// 註冊結果
-class RegisterResult {
-  final String userId;
-  final bool success;
-  final String? errorMessage;
-
-  RegisterResult({required this.userId, required this.success, this.errorMessage});
-}
-
-/// 登入結果
-class LoginResult {
-  final UserProfile? user;
-  final bool success;
-  final String? errorMessage;
-
-  LoginResult({this.user, required this.success, this.errorMessage});
-}
-
-/// 登出請求
-class LogoutRequest {
-  final bool? logoutAllDevices;
-  final bool? clearLocalData;
-
-  LogoutRequest({this.logoutAllDevices, this.clearLocalData});
-}
-
-/// 驗證結果
-class ValidationResult {
-  final bool isValid;
-  final List<String> errors;
-
-  ValidationResult({required this.isValid, required this.errors});
-}
-
-/// 刷新Token回應
-class RefreshTokenResponse {
-  final String token;
-  final String refreshToken;
-  final DateTime expiresAt;
-
-  RefreshTokenResponse({
-    required this.token,
-    required this.refreshToken,
-    required this.expiresAt,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'token': token,
-      'refreshToken': refreshToken,
-      'expiresAt': expiresAt.toIso8601String(),
-    };
-  }
-}
-
-/// 忘記密碼請求
-class ForgotPasswordRequest {
-  final String email;
-
-  ForgotPasswordRequest({required this.email});
-}
-
-/// 驗證重設Token回應
-class VerifyResetTokenResponse {
-  final bool valid;
-  final String? email;
-  final DateTime? expiresAt;
-
-  VerifyResetTokenResponse({
-    required this.valid,
-    this.email,
-    this.expiresAt,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'valid': valid,
-      if (email != null) 'email': email,
-      if (expiresAt != null) 'expiresAt': expiresAt!.toIso8601String(),
-    };
-  }
-}
-
-/// 重設密碼請求
-class ResetPasswordRequest {
-  final String token;
-  final String newPassword;
-  final String? confirmPassword;
-
-  ResetPasswordRequest({
-    required this.token,
-    required this.newPassword,
-    this.confirmPassword,
-  });
-}
-
-/// 驗證Email請求
-class VerifyEmailRequest {
-  final String email;
-  final String? verificationCode;
-  final String? token;
-
-  VerifyEmailRequest({
-    required this.email,
-    this.verificationCode,
-    this.token,
-  });
-}
-
-/// Google登入請求
-class GoogleLoginRequest {
-  final String googleToken;
-  final UserMode? userMode;
-  final DeviceInfo? deviceInfo;
-
-  GoogleLoginRequest({
-    required this.googleToken,
-    this.userMode,
-    this.deviceInfo,
-  });
-}
-
-/// 綁定LINE請求
-class BindLineRequest {
-  final String lineUserId;
-  final String lineAccessToken;
-  final Map<String, dynamic>? lineProfile;
-
-  BindLineRequest({
-    required this.lineUserId,
-    required this.lineAccessToken,
-    this.lineProfile,
-  });
-}
-
-/// 綁定回應
-class BindingResponse {
-  final String message;
-  final Map<String, dynamic> linkedAccounts;
-
-  BindingResponse({
-    required this.message,
-    required this.linkedAccounts,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'message': message,
-      'linkedAccounts': linkedAccounts,
-    };
-  }
-}
-
-/// 綁定狀態回應
-class BindingStatusResponse {
-  final String userId;
-  final Map<String, dynamic> linkedAccounts;
-  final List<String> availableBindings;
-
-  BindingStatusResponse({
-    required this.userId,
-    required this.linkedAccounts,
-    required this.availableBindings,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'userId': userId,
-      'linkedAccounts': linkedAccounts,
-      'availableBindings': availableBindings,
-    };
-  }
-}
-
-/// 密碼強度枚舉
-enum PasswordStrength { weak, medium, strong, veryStrong }
-
-/// 模式設定
-class ModeConfig {
-  final UserMode mode;
-  final Map<String, dynamic> settings;
-  final List<String> features;
-
-  ModeConfig({
-    required this.mode,
-    required this.settings,
-    required this.features,
-  });
-}
-
-/// 使用者實體 (完全符合8201規範完整實作)
-class UserEntity {
-  final String id;
-  final String email;
-  final String passwordHash;
-  final String? displayName;
-  final UserMode userMode;
-  final bool emailVerified;
-  final AccountStatus status;
-  final AuthProvider authProvider;
-  final UserPreferences preferences;
-  final SecuritySettings security;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final DateTime? lastActiveAt;
-  final String? profileImageUrl;
-  final Map<String, dynamic>? metadata;
-
-  UserEntity({
-    required this.id,
-    required this.email,
-    required this.passwordHash,
-    this.displayName,
-    required this.userMode,
-    required this.emailVerified,
-    required this.status,
-    required this.authProvider,
-    required this.preferences,
-    required this.security,
-    required this.createdAt,
-    required this.updatedAt,
-    this.lastActiveAt,
-    this.profileImageUrl,
-    this.metadata,
-  });
-
-  /// 81. 轉換為Firestore格式 (符合8201規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，完整符合8201規範UserEntity結構
-  Map<String, dynamic> toFirestore() {
-    return {
-      'email': email,
-      'passwordHash': passwordHash,
-      if (displayName != null) 'displayName': displayName,
-      'userMode': userMode.toString().split('.').last,
-      'emailVerified': emailVerified,
-      'status': status.toString().split('.').last,
-      'authProvider': authProvider.toString().split('.').last,
-      'preferences': preferences.toJson(),
-      'security': security.toJson(),
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-      if (lastActiveAt != null) 'lastActiveAt': lastActiveAt!.toIso8601String(),
-      if (profileImageUrl != null) 'profileImageUrl': profileImageUrl,
-      if (metadata != null) 'metadata': metadata,
-    };
-  }
-
-  /// 82. 從Firestore建立實體 (符合8201規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，完整符合8201規範UserEntity結構
-  static UserEntity fromFirestore(Map<String, dynamic> data, String id) {
-    return UserEntity(
-      id: id,
-      email: data['email'],
-      passwordHash: data['passwordHash'],
-      displayName: data['displayName'],
-      userMode: UserMode.values.firstWhere(
-        (mode) => mode.toString().split('.').last == data['userMode'],
-        orElse: () => UserMode.expert,
-      ),
-      emailVerified: data['emailVerified'] ?? false,
-      status: AccountStatus.values.firstWhere(
-        (status) => status.toString().split('.').last == data['status'],
-        orElse: () => AccountStatus.active,
-      ),
-      authProvider: AuthProvider.values.firstWhere(
-        (provider) => provider.toString().split('.').last == data['authProvider'],
-        orElse: () => AuthProvider.email,
-      ),
-      preferences: UserPreferences.fromJson(data['preferences'] ?? {}),
-      security: SecuritySettings.fromJson(data['security'] ?? {}),
-      createdAt: DateTime.parse(data['createdAt']),
-      updatedAt: DateTime.parse(data['updatedAt']),
-      lastActiveAt: data['lastActiveAt'] != null ? DateTime.parse(data['lastActiveAt']) : null,
-      profileImageUrl: data['profileImageUrl'],
-      metadata: data['metadata'],
-    );
-  }
-
-  /// 83. 檢查是否為活躍使用者 (符合8201規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，強化活躍度判斷邏輯
-  bool isActive() {
-    if (status != AccountStatus.active) return false;
-    if (lastActiveAt == null) return false;
-    return DateTime.now().difference(lastActiveAt!).inDays < 30;
-  }
-
-  /// 84. 檢查是否可以登入 (符合8201規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，強化登入檢查邏輯
-  bool canLogin() {
-    return emailVerified &&
-           status == AccountStatus.active &&
-           !security.isLocked;
-  }
-
-  /// 85. 更新最後活躍時間 (符合8201規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，保持完整實體結構
-  UserEntity updateLastActive() {
-    return UserEntity(
-      id: id,
-      email: email,
-      passwordHash: passwordHash,
-      displayName: displayName,
-      userMode: userMode,
-      emailVerified: emailVerified,
-      status: status,
-      authProvider: authProvider,
-      preferences: preferences,
-      security: security,
-      createdAt: createdAt,
-      updatedAt: DateTime.now(),
-      lastActiveAt: DateTime.now(),
-      profileImageUrl: profileImageUrl,
-      metadata: metadata,
-    );
-  }
-
-  /// 86. 檢查是否為管理員 (符合8201規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，符合8201規範權限檢查
-  bool isAdmin() => security.role == UserRole.admin;
-
-  /// 87. 取得顯示名稱 (符合8201規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增方法，提供友善顯示名稱
-  String getDisplayName() => displayName ?? email.split('@').first;
-}
-
-/// 帳戶狀態枚舉 (符合8201規範)
-enum AccountStatus {
-  active,
-  inactive,
-  locked,
-  suspended,
-  pendingVerification,
-  disabled
-}
-
-/// 認證提供者枚舉 (符合8201規範)
-enum AuthProvider {
-  email,
-  google,
-  line,
-  facebook,
-  apple
-}
-
-/// 使用者角色枚舉 (符合8201規範)
-enum UserRole {
-  user,
-  admin,
-  moderator,
-  developer
-}
-
-/// 使用者偏好設定 (符合8201規範)
-class UserPreferences {
-  final String language;
-  final String timezone;
-  final String theme;
-  final String currency;
-  final Map<String, bool> notifications;
-  final Map<String, dynamic> customSettings;
-
-  UserPreferences({
-    this.language = 'zh-TW',
-    this.timezone = 'Asia/Taipei',
-    this.theme = 'auto',
-    this.currency = 'TWD',
-    this.notifications = const {},
-    this.customSettings = const {},
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'language': language,
-      'timezone': timezone,
-      'theme': theme,
-      'currency': currency,
-      'notifications': notifications,
-      'customSettings': customSettings,
-    };
-  }
-
-  static UserPreferences fromJson(Map<String, dynamic> json) {
-    return UserPreferences(
-      language: json['language'] ?? 'zh-TW',
-      timezone: json['timezone'] ?? 'Asia/Taipei',
-      theme: json['theme'] ?? 'auto',
-      currency: json['currency'] ?? 'TWD',
-      notifications: Map<String, bool>.from(json['notifications'] ?? {}),
-      customSettings: Map<String, dynamic>.from(json['customSettings'] ?? {}),
-    );
-  }
-}
-
-/// 安全設定 (符合8201規範)
-class SecuritySettings {
-  final bool twoFactorEnabled;
-  final UserRole role;
-  final bool isLocked;
-  final DateTime? lockedUntil;
-  final int failedLoginAttempts;
-  final DateTime? lastPasswordChange;
-  final List<String> trustedDevices;
-  final Map<String, dynamic> securityMetadata;
-
-  SecuritySettings({
-    this.twoFactorEnabled = false,
-    this.role = UserRole.user,
-    this.isLocked = false,
-    this.lockedUntil,
-    this.failedLoginAttempts = 0,
-    this.lastPasswordChange,
-    this.trustedDevices = const [],
-    this.securityMetadata = const {},
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'twoFactorEnabled': twoFactorEnabled,
-      'role': role.toString().split('.').last,
-      'isLocked': isLocked,
-      if (lockedUntil != null) 'lockedUntil': lockedUntil!.toIso8601String(),
-      'failedLoginAttempts': failedLoginAttempts,
-      if (lastPasswordChange != null) 'lastPasswordChange': lastPasswordChange!.toIso8601String(),
-      'trustedDevices': trustedDevices,
-      'securityMetadata': securityMetadata,
-    };
-  }
-
-  static SecuritySettings fromJson(Map<String, dynamic> json) {
-    return SecuritySettings(
-      twoFactorEnabled: json['twoFactorEnabled'] ?? false,
-      role: UserRole.values.firstWhere(
-        (role) => role.toString().split('.').last == json['role'],
-        orElse: () => UserRole.user,
-      ),
-      isLocked: json['isLocked'] ?? false,
-      lockedUntil: json['lockedUntil'] != null ? DateTime.parse(json['lockedUntil']) : null,
-      failedLoginAttempts: json['failedLoginAttempts'] ?? 0,
-      lastPasswordChange: json['lastPasswordChange'] != null ? DateTime.parse(json['lastPasswordChange']) : null,
-      trustedDevices: List<String>.from(json['trustedDevices'] ?? []),
-      securityMetadata: Map<String, dynamic>.from(json['securityMetadata'] ?? {}),
-    );
-  }
-}
-
-/// 安全檢查結果 (完全符合8201規範)
-class SecurityCheck {
-  final bool passed;
-  final List<SecurityWarning> warnings;
-  final SecurityLevel level;
-  final Map<String, dynamic> metadata;
-  final DateTime timestamp;
-  final String checkId;
-
-  SecurityCheck({
-    required this.passed,
-    required this.warnings,
-    required this.level,
-    required this.metadata,
-    required this.timestamp,
-    required this.checkId,
-  });
-
-  /// 88. 建立安全檢查結果 (符合8201規範)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 新增工廠方法，簡化安全檢查建立
-  static SecurityCheck create({
-    required bool passed,
-    List<SecurityWarning>? warnings,
-    SecurityLevel? level,
-    Map<String, dynamic>? metadata,
-  }) {
-    return SecurityCheck(
-      passed: passed,
-      warnings: warnings ?? [],
-      level: level ?? (passed ? SecurityLevel.safe : SecurityLevel.warning),
-      metadata: metadata ?? {},
-      timestamp: DateTime.now(),
-      checkId: 'sec_${DateTime.now().millisecondsSinceEpoch}',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'passed': passed,
-      'warnings': warnings.map((w) => w.toJson()).toList(),
-      'level': level.toString().split('.').last,
-      'metadata': metadata,
-      'timestamp': timestamp.toIso8601String(),
-      'checkId': checkId,
-    };
-  }
-}
-
-/// 安全警告 (符合8201規範)
-class SecurityWarning {
-  final String code;
-  final String message;
-  final SecuritySeverity severity;
-  final String? recommendation;
-
-  SecurityWarning({
-    required this.code,
-    required this.message,
-    required this.severity,
-    this.recommendation,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'code': code,
-      'message': message,
-      'severity': severity.toString().split('.').last,
-      if (recommendation != null) 'recommendation': recommendation,
-    };
-  }
-}
-
-/// 安全等級枚舉 (符合8201規範)
-enum SecurityLevel { safe, warning, danger, critical }
-
-/// 安全嚴重性枚舉 (符合8201規範)
-enum SecuritySeverity { low, medium, high, critical }
