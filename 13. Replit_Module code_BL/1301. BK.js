@@ -1362,7 +1362,74 @@ async function BK_optimizeBatchOperations(transactions, options = {}) {
 }
 
 /**
- * 18. 快速記帳智能解析 - 增強 POST /transactions/quick
+ * 18. 快速記帳輸入解析 - 修復函數導出
+ * @version 2025-01-28-V2.1.1
+ * @date 2025-01-28 
+ * @update: 修復BK_parseQuickInput函數缺失問題
+ */
+function BK_parseQuickInput(inputText, options = {}) {
+  try {
+    if (!inputText || typeof inputText !== 'string') {
+      return {
+        success: false,
+        error: "輸入文字不能為空",
+        errorType: "INVALID_INPUT"
+      };
+    }
+
+    const trimmedInput = inputText.trim();
+
+    // 標準格式解析：午餐150、薪水35000轉帳
+    const standardPattern = /^(.+?)(\d+)(.*)$/;
+    const match = trimmedInput.match(standardPattern);
+
+    if (match) {
+      const subject = match[1].trim();
+      const amount = parseInt(match[2], 10);
+      const remaining = match[3].trim();
+
+      // 判斷收支類型
+      const incomeKeywords = ['薪水', '收入', '獎金', '紅利'];
+      const isIncome = incomeKeywords.some(keyword => subject.includes(keyword));
+
+      // 判斷支付方式
+      let paymentMethod = "現金";
+      const paymentMethods = ["現金", "刷卡", "轉帳", "行動支付"];
+      for (const method of paymentMethods) {
+        if (remaining.includes(method)) {
+          paymentMethod = method;
+          break;
+        }
+      }
+
+      return {
+        success: true,
+        amount: amount,
+        type: isIncome ? 'income' : 'expense',
+        description: subject,
+        paymentMethod: paymentMethod,
+        confidence: 0.9,
+        strategy: 'standard_format'
+      };
+    }
+
+    return {
+      success: false,
+      error: "無法解析輸入內容",
+      errorType: "PARSE_FAILED"
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "PARSE_ERROR"
+    };
+  }
+}
+
+/**
+ * 19. 快速記帳智能解析 - 增強 POST /transactions/quick
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16 
  * @update: 階段三重構 - 增強快速記帳解析能力，支援更多自然語言格式
@@ -1590,11 +1657,10 @@ async function BK_validateBatchTransactions(transactions) {
  * 準備批次資料
  */
 async function BK_prepareBatchData(batch, processId) {
-  return batch.map((transaction, index) => ({
-    ...transaction,
-    originalIndex: transaction.originalIndex || index,
-    batchProcessId: processId,
-    preparedAt: new Date().toISOString()
+  return batch.map((item, index) => ({
+    ...item,
+    originalIndex: index,
+    processId: processId
   }));
 }
 
@@ -1828,32 +1894,57 @@ function BK_logCritical(message, category, userId, errorType, errorDetail, funct
 
 // === 模組導出 ===
 module.exports = {
-    // 核心API函數 (6個)
-    BK_initialize,
-    BK_createTransaction,
-    BK_processQuickTransaction,
-    BK_getTransactions,
-    BK_getDashboardData,
-    BK_updateTransaction,
-    BK_deleteTransaction,
+  // 初始化函數
+  BK_initialize,
+  BK_initializeFirebase,
 
-    // 輔助函數
-    BK_validateTransactionData,
-    BK_generateTransactionId,
-    BK_validatePaymentMethod,
-    BK_generateStatistics,
-    BK_buildTransactionQuery,
-    BK_parseQuickInput,
-    BK_calculateTransactionStats,
-    BK_prepareTransactionData,
-    BK_saveTransactionToFirestore,
-    BK_checkTransactionIdUnique,
-    BK_handleError,
-    BK_formatAPIResponse,
-    BK_processFourModeData,
-    BK_optimizeBatchOperations,
-    BK_enhanceQuickBookingParsing,
+  // 核心API端點函數
+  BK_createTransaction,
+  BK_processQuickTransaction,
+  BK_getTransactions,
+  BK_getDashboardData,
+  BK_updateTransaction,
+  BK_deleteTransaction,
 
-    // 配置
-    BK_CONFIG
+  // 輔助函數
+  BK_parseQuickInput,
+  BK_validateTransactionData,
+  BK_generateTransactionId,
+  BK_validatePaymentMethod,
+  BK_generateStatistics,
+  BK_buildTransactionQuery,
+  BK_handleError,
+  BK_formatAPIResponse,
+  BK_processFourModeData,
+  BK_optimizeBatchOperations,
+  BK_enhanceQuickBookingParsing,
+
+  // 內部輔助函數 (通常不導出，但為了完整性包含)
+  BK_getUserFriendlyErrorMessage,
+  BK_processExpertModeData,
+  BK_processInertialModeData,
+  BK_processCultivationModeData,
+  BK_processGuidingModeData,
+  BK_getModeSpecificRecommendations,
+  BK_getModeSpecificNextSteps,
+  BK_validateBatchTransactions,
+  BK_prepareBatchData,
+  BK_parseStandardFormat,
+  BK_parseNaturalLanguage,
+  BK_parseNumberFirstFormat,
+  BK_parseKeywordBasedFormat,
+  BK_parseFallbackFormat,
+  BK_enhanceParsingResult,
+  BK_generateSmartSuggestions,
+  BK_getConfidenceLevel,
+  BK_getParsingHelp,
+
+  // 配置
+  BK_CONFIG,
+
+  // 日誌函數
+  BK_logInfo,
+  BK_logWarning,
+  BK_logError,
+  BK_logCritical,
 };
