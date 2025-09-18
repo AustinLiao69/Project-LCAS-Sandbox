@@ -39,7 +39,7 @@ const BK_CONFIG = {
   DEFAULT_LEDGER_ID: getEnvVar('DEFAULT_LEDGER_ID') || 'ledger_structure_001',
   TIMEZONE: "Asia/Taipei",                // 時區設置
   INITIALIZATION_INTERVAL: 300000,        // 初始化間隔(毫秒)
-  VERSION: "2.1.0",                       // 模組版本
+  VERSION: "2.2.0",                       // 模組版本
   API_ENDPOINTS: {
     POST_TRANSACTIONS: '/transactions',
     GET_TRANSACTIONS: '/transactions',
@@ -1362,7 +1362,74 @@ async function BK_optimizeBatchOperations(transactions, options = {}) {
 }
 
 /**
- * 18. 快速記帳輸入解析 - 修復函數導出
+ * 18. 記帳處理核心函數 - 新增缺失函數
+ * @version 2025-09-18-V2.2.0
+ * @date 2025-09-18 
+ * @update: 新增BK_processBookkeeping函數以修復依賴問題
+ */
+async function BK_processBookkeeping(inputData, options = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processBookkeeping:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理記帳請求`, "記帳處理", inputData.userId || "", "BK_processBookkeeping");
+
+    // 驗證輸入數據
+    if (!inputData || typeof inputData !== 'object') {
+      return {
+        success: false,
+        error: "無效的輸入數據",
+        errorType: "INVALID_INPUT"
+      };
+    }
+
+    // 標準化處理：將輸入轉換為BK_createTransaction格式
+    const transactionData = {
+      amount: inputData.amount || 0,
+      type: inputData.type || 'expense',
+      description: inputData.description || inputData.subject || '',
+      userId: inputData.userId || '',
+      ledgerId: inputData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      paymentMethod: inputData.paymentMethod || '現金',
+      processId: processId
+    };
+
+    // 調用新的交易創建函數
+    const result = await BK_createTransaction(transactionData);
+
+    if (result.success) {
+      BK_logInfo(`${logPrefix} 記帳處理成功: ${result.data.transactionId}`, "記帳處理", inputData.userId || "", "BK_processBookkeeping");
+      
+      // 返回兼容格式
+      return {
+        success: true,
+        data: result.data,
+        responseMessage: `記帳成功！金額：${transactionData.amount}元，科目：${transactionData.description}`,
+        moduleCode: 'BK',
+        processId: processId
+      };
+    } else {
+      return {
+        success: false,
+        error: result.error,
+        errorType: result.errorType || "PROCESS_ERROR",
+        processId: processId
+      };
+    }
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 記帳處理失敗: ${error.toString()}`, "記帳處理", inputData.userId || "", "PROCESS_ERROR", error.toString(), "BK_processBookkeeping");
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "PROCESS_ERROR",
+      processId: processId
+    };
+  }
+}
+
+/**
+ * 19. 快速記帳輸入解析 - 修復函數導出
  * @version 2025-01-28-V2.1.1
  * @date 2025-01-28 
  * @update: 修復BK_parseQuickInput函數缺失問題
@@ -1905,6 +1972,9 @@ module.exports = {
   BK_getDashboardData,
   BK_updateTransaction,
   BK_deleteTransaction,
+
+  // 相容性函數
+  BK_processBookkeeping,
 
   // 輔助函數
   BK_parseQuickInput,

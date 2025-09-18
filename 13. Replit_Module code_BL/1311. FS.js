@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_2.1.0
+* FS_FirestoreStructure_資料庫結構模組_2.2.0
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構模組 - Phase 1核心進入流程專用版本
-* @update 2025-09-16: 階段一重構，升級至2.1.0版本，專注Phase 1核心功能
+* @update 2025-09-18: 階段一重構，升級至2.2.0版本，修復函數依賴問題
 */
 
 // 引入Firebase動態配置模組
@@ -75,10 +75,10 @@ function FS_initializeModule() {
 
     return {
       success: true,
-      version: '2.1.0',
+      version: '2.2.0',
       projectId: PROJECT_ID,
       timezone: TIMEZONE,
-      message: 'FS模組2.1.0初始化成功'
+      message: 'FS模組2.2.0初始化成功'
     };
 
   } catch (error) {
@@ -1776,9 +1776,9 @@ module.exports = {
   admin,
 
   // 模組資訊
-  moduleVersion: '2.1.0',
+  moduleVersion: '2.2.0',
   phase: 'Phase1-Complete',
-  lastUpdate: '2025-09-16'
+  lastUpdate: '2025-09-18'
 };
 
 // 自動初始化模組
