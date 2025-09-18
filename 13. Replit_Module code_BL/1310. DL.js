@@ -1,8 +1,8 @@
 /**
- * DL_診斷與日誌模組_3.0.6
+ * DL_診斷與日誌模組_2.2.0
  * @module DL模組
  * @description 提供統一的日誌記錄和系統診斷功能 - Firestore完整整合版本
- * @update 2025-07-09: 升級至3.0.6版本，優化函數編號規範和版本資訊完整性
+ * @update 2025-09-18: 升級至2.2.0版本，階段一重構修復初始化問題
  */
 
 // 引入Firebase動態配置模組
@@ -104,8 +104,8 @@ function DL_initializeFirestore() {
 
 /**
  * 01. 初始化日誌模組
- * @version 2025-07-09-V3.0.6
- * @date 2025-07-09 17:30:00
+ * @version 2025-09-18-V2.2.0
+ * @date 2025-09-18 14:30:00
  * @description 初始化DL模組，建立Firestore連接並創建初始化日誌記錄
  */
 async function DL_initialize() {
@@ -117,13 +117,13 @@ async function DL_initialize() {
       if (storedMode) {
         DL_CONFIG.mode = storedMode;
         DL_CONFIG.emergencyReason = storedReason;
-        console.log(`DL模組從環境變數恢復模式設置: ${storedMode}`);
+        console.log(`✅ DL模組從環境變數恢復模式設置: ${storedMode}`);
       }
     } catch (e) {
-      console.warn(`無法從環境變數恢復模式設置: ${e.toString()}`);
+      console.warn(`⚠️ 無法從環境變數恢復模式設置: ${e.toString()}`);
     }
 
-    console.log("DL模組初始化開始 - Firestore版本");
+    console.log("🚀 DL模組v2.2.0初始化開始 - Firestore版本");
 
     // 初始化Firestore連接
     DL_initializeFirestore();
