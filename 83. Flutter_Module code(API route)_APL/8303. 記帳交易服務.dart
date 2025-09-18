@@ -1,4 +1,3 @@
-
 /**
  * 8303. 記帳交易服務.dart
  * @module 記帳交易服務 - API Gateway
@@ -45,7 +44,7 @@ class TransactionAPIGateway {
     final queryString = queryParams.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
-    
+
     return await _forwardRequest(
       'GET',
       '/transactions?$queryString',
@@ -105,7 +104,7 @@ class TransactionAPIGateway {
     final queryString = queryParams.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
-    
+
     return await _forwardRequest(
       'DELETE',
       '/transactions/$transactionId?$queryString',
@@ -123,7 +122,7 @@ class TransactionAPIGateway {
     final queryString = queryParams.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
-    
+
     return await _forwardRequest(
       'GET',
       '/transactions/dashboard?$queryString',
@@ -141,7 +140,7 @@ class TransactionAPIGateway {
     final queryString = queryParams.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
-    
+
     return await _forwardRequest(
       'GET',
       '/transactions/statistics?$queryString',
@@ -159,7 +158,7 @@ class TransactionAPIGateway {
     final queryString = queryParams.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
-    
+
     return await _forwardRequest(
       'GET',
       '/transactions/recent?$queryString',
@@ -168,7 +167,7 @@ class TransactionAPIGateway {
   }
 
   /**
-   * 10. 取得圖表數據API路由 (GET /api/v1/transactions/chart-data)
+   * 10. 取得圖表數據API路由 (GET /api/v1/transactions/charts)
    * @version 2025-01-29-V2.3.0
    * @date 2025-01-29 12:00:00
    * @update: 純API Gateway實作，轉發至後端BL層
@@ -177,10 +176,10 @@ class TransactionAPIGateway {
     final queryString = queryParams.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
-    
+
     return await _forwardRequest(
       'GET',
-      '/transactions/chart-data?$queryString',
+      '/transactions/charts?$queryString',
       null,
     );
   }
@@ -270,7 +269,7 @@ class TransactionAPIGateway {
 /// 記帳交易API路由映射配置
 class TransactionRoutes {
   static const Map<String, String> routes = {
-    'POST /api/v1/transactions/quick-booking': '/transactions/quick-booking',
+    'POST /api/v1/transactions/quick': '/transactions/quick',
     'GET /api/v1/transactions': '/transactions',
     'POST /api/v1/transactions': '/transactions',
     'GET /api/v1/transactions/{id}': '/transactions/{id}',
@@ -279,6 +278,6 @@ class TransactionRoutes {
     'GET /api/v1/transactions/dashboard': '/transactions/dashboard',
     'GET /api/v1/transactions/statistics': '/transactions/statistics',
     'GET /api/v1/transactions/recent': '/transactions/recent',
-    'GET /api/v1/transactions/chart-data': '/transactions/chart-data',
+    'GET /api/v1/transactions/charts': '/transactions/charts',
   };
 }

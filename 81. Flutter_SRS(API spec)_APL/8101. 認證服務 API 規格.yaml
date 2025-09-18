@@ -22,9 +22,11 @@ info:
 
 servers:
   - url: https://api.lcas.com
-    description: 生產環境
+    description: 生產環境 (ASL.js)
   - url: https://api-staging.lcas.com
-    description: 測試環境
+    description: 測試環境 (ASL.js)
+  - url: http://0.0.0.0:5000
+    description: 開發環境 (ASL.js)
 
 security:
   - BearerAuth: []

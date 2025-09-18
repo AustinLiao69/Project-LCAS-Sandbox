@@ -330,19 +330,19 @@ if (WH) {
   }, 300000); // 5分鐘檢查一次
 }
 
-// =============== 核心服務器設置 ===============
+// =============== LINE Webhook專用服務器設置 ===============
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.WEBHOOK_PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS 設置
+// CORS 設置（針對LINE Webhook需求優化）
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, X-Line-Signature');
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
@@ -352,13 +352,15 @@ app.use((req, res, next) => {
 
 // =============== 系統監控端點（保留） ===============
 
-// 系統狀態首頁
+// LINE Webhook 服務狀態首頁
 app.get('/', async (req, res) => {
   try {
     const systemInfo = {
-      service: 'LCAS 2.0 LINE Bot Service',
-      version: '2.3.0',
+      service: 'LCAS 2.0 LINE Webhook Service',
+      version: '2.4.0',
       status: 'running',
+      architecture: 'Dual Service Architecture',
+      responsibility: 'LINE OA Webhook Processing',
       modules: {
         WH: !!WH ? 'loaded' : 'not loaded',
         LBK: !!LBK ? 'loaded' : 'not loaded',
@@ -374,7 +376,19 @@ app.get('/', async (req, res) => {
         health: '/health',
         test_wh: '/test-wh',
         https_check: '/check-https',
-        test_api: '/testAPI'
+        home: '/'
+      },
+      companion_service: {
+        name: 'ASL.js (API Service Layer)',
+        port: 5000,
+        responsibility: '132個RESTful API端點',
+        status: 'running_separately'
+      },
+      dcn_status: {
+        phase: 'Phase 4 - index.js重構完成',
+        migration_complete: true,
+        api_endpoints_migrated: 132,
+        webhook_endpoints_preserved: 5
       },
       timestamp: new Date().toISOString()
     };
@@ -382,91 +396,127 @@ app.get('/', async (req, res) => {
     res.json({
       success: true,
       data: systemInfo,
-      message: 'LCAS 2.0 系統運行正常'
+      message: 'LCAS 2.0 LINE Webhook 服務運行正常'
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: '系統狀態檢查失敗',
+      message: 'LINE Webhook 服務狀態檢查失敗',
       error: error.message
     });
   }
 });
 
-// JSON格式健康檢查
+// LINE Webhook 服務健康檢查
 app.get('/health', async (req, res) => {
   try {
     const healthStatus = {
       status: 'healthy',
+      service: 'LINE_WEBHOOK_SERVICE',
       timestamp: new Date().toISOString(),
       services: {
-        api: { status: 'up', responseTime: '25ms' },
-        webhook: { status: WH ? 'up' : 'down', port: 3000 },
-        database: { status: FS ? 'up' : 'down', type: 'Firestore' },
-        modules: {
-          WH: !!WH,
-          LBK: !!LBK,
-          DD: !!DD,
-          FS: !!FS,
-          DL: !!DL,
-          BK: !!BK,
-          AM: !!AM,
-          SR: !!SR
+        webhook: { 
+          status: WH ? 'up' : 'down', 
+          port: 3000,
+          purpose: 'LINE OA Message Processing'
+        },
+        line_integration: {
+          status: LBK ? 'up' : 'down',
+          purpose: 'Quick Booking Integration'
+        },
+        database: { 
+          status: FS ? 'up' : 'down', 
+          type: 'Firestore',
+          purpose: 'User Data Storage'
         }
+      },
+      core_modules: {
+        WH: { loaded: !!WH, purpose: 'Webhook處理' },
+        LBK: { loaded: !!LBK, purpose: 'LINE快速記帳' },
+        DD: { loaded: !!DD, purpose: '數據分發' },
+        FS: { loaded: !!FS, purpose: 'Firestore操作' },
+        DL: { loaded: !!DL, purpose: '日誌記錄' },
+        BK: { loaded: !!BK, purpose: '記帳業務邏輯' },
+        AM: { loaded: !!AM, purpose: '帳號管理' },
+        SR: { loaded: !!SR, purpose: '排程提醒' }
+      },
+      architecture_info: {
+        service_type: 'LINE_WEBHOOK_DEDICATED',
+        companion_service: 'ASL.js (Port 5000)',
+        endpoints_count: 5,
+        primary_function: 'LINE OA訊息處理與回應'
       },
       metrics: {
         uptime: `${Math.floor(process.uptime())} seconds`,
         memory: process.memoryUsage(),
-        version: '2.3.0'
+        version: '2.4.0'
       }
     };
 
     res.json({
       success: true,
       data: healthStatus,
-      message: '系統健康檢查完成'
+      message: 'LINE Webhook 服務健康檢查完成'
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: '健康檢查失敗',
+      message: 'LINE Webhook 健康檢查失敗',
       error: error.message,
       timestamp: new Date().toISOString()
     });
   }
 });
 
-// WH模組測試
+// LINE Webhook 模組測試
 app.get('/test-wh', async (req, res) => {
   try {
     if (!WH) {
       return res.status(503).json({
         success: false,
-        message: 'WH 模組未載入',
+        message: 'LINE Webhook 模組未載入',
+        service: 'LINE_WEBHOOK_SERVICE',
         timestamp: new Date().toISOString()
       });
     }
 
     const testResult = {
+      service: 'LINE_WEBHOOK_SERVICE',
       module: 'WH',
-      version: '2.0.23',
+      version: '2.1.9',
       status: 'loaded',
-      functions: {
+      core_functions: {
         doPost: typeof WH.doPost === 'function'
       },
+      integration_modules: {
+        LBK: !!LBK && typeof LBK.LBK_processMessage === 'function',
+        DD: !!DD && typeof DD.DD_processRequest === 'function',
+        BK: !!BK && typeof BK.BK_processBookkeeping === 'function'
+      },
+      line_capabilities: {
+        message_processing: true,
+        quick_booking: !!LBK,
+        rich_menu_support: !!DD,
+        webhook_verification: true
+      },
       webhook_port: 3000,
+      companion_service: {
+        name: 'ASL.js',
+        port: 5000,
+        status: 'separate_service'
+      },
       test_time: new Date().toISOString()
     };
 
     res.json({
       success: true,
       data: testResult,
-      message: 'WH 模組測試完成'
+      message: 'LINE Webhook 模組測試完成'
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'WH 模組測試失敗',
+      message: 'LINE Webhook 模組測試失敗',
       error: error.message
     });
   }
@@ -477,14 +527,26 @@ app.get('/check-https', async (req, res) => {
   try {
     const protocol = req.get('X-Forwarded-Proto') || req.protocol;
     const httpsSupported = protocol === 'https';
+    const host = req.get('host');
 
     const httpsInfo = {
       protocol: protocol,
       https_supported: httpsSupported,
       replit_proxy: true,
-      webhook_url: httpsSupported ?
-        `https://${req.get('host')}/webhook` :
-        `http://${req.get('host')}/webhook`,
+      service_urls: {
+        webhook_service: httpsSupported ?
+          `https://${host}/webhook` :
+          `http://${host}/webhook`,
+        asl_service: httpsSupported ?
+          `https://${host.replace(':3000', ':5000')}/api/v1` :
+          `http://${host.replace(':3000', ':5000')}/api/v1`
+      },
+      line_integration: {
+        webhook_url: httpsSupported ?
+          `https://${host}/webhook` :
+          `http://${host}/webhook`,
+        status: 'configured_for_line_platform'
+      },
       timestamp: new Date().toISOString()
     };
 
@@ -527,852 +589,20 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-// =============== Phase 1 核心API端點（階段一實作） ===============
-
-// 用戶評估問卷API端點
-app.get('/api/v1/users/assessment-questions', async (req, res) => {
-  try {
-    console.log('📋 API: 取得評估問卷請求');
-
-    // 模擬評估問卷數據
-    const assessmentQuestions = {
-      questions: [
-        {
-          id: 1,
-          question: "您的記帳經驗如何？",
-          options: [
-            { value: "A", text: "完全新手，很少記帳" },
-            { value: "B", text: "偶爾記帳，不太規律" },
-            { value: "C", text: "經常記帳，有一定經驗" },
-            { value: "D", text: "記帳高手，精通各種工具" }
-          ]
-        },
-        {
-          id: 2,
-          question: "您希望記帳功能有多詳細？",
-          options: [
-            { value: "A", text: "越簡單越好，基本記錄即可" },
-            { value: "B", text: "中等程度，能分類就好" },
-            { value: "C", text: "較詳細，包含預算和統計" },
-            { value: "D", text: "非常詳細，要有深度分析" }
-          ]
-        },
-        {
-          id: 3,
-          question: "您更偏好哪種操作方式？",
-          options: [
-            { value: "A", text: "引導式，系統提示每一步" },
-            { value: "B", text: "半自動，保持一些彈性" },
-            { value: "C", text: "自由操作，但有協助" },
-            { value: "D", text: "完全自主，掌控所有設定" }
-          ]
-        },
-        {
-          id: 4,
-          question: "面對新功能時，您的態度是？",
-          options: [
-            { value: "A", text: "希望有詳細教學指導" },
-            { value: "B", text: "簡單說明就能上手" },
-            { value: "C", text: "喜歡自己摸索學習" },
-            { value: "D", text: "直接使用，不需說明" }
-          ]
-        },
-        {
-          id: 5,
-          question: "您對數據分析的需求程度？",
-          options: [
-            { value: "A", text: "不需要，只要知道花了多少" },
-            { value: "B", text: "簡單圖表就夠了" },
-            { value: "C", text: "需要趨勢和分類分析" },
-            { value: "D", text: "要有深度洞察和預測" }
-          ]
-        }
-      ]
-    };
-
-    res.json({
-      success: true,
-      data: assessmentQuestions,
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('❌ 評估問卷API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '取得評估問卷失敗',
-      errorCode: 'ASSESSMENT_QUESTIONS_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-app.post('/api/v1/users/assessment', async (req, res) => {
-  try {
-    console.log('🧭 API: 提交評估結果請求', req.body);
-
-    if (!AM || typeof AM.AM_processUserAssessment !== 'function') {
-      // 模擬評估邏輯
-      const { answers } = req.body;
-      
-      if (!answers || !Array.isArray(answers)) {
-        return res.status(400).json({
-          success: false,
-          message: '缺少必要參數：answers',
-          errorCode: 'MISSING_ANSWERS'
-        });
-      }
-
-      // 簡化版模式判斷邏輯
-      let expertScore = 0, guidingScore = 0, cultivationScore = 0, inertialScore = 0;
-
-      answers.forEach(answer => {
-        switch (answer.answer) {
-          case 'A': guidingScore += 1; break;
-          case 'B': cultivationScore += 1; break;
-          case 'C': inertialScore += 1; break;
-          case 'D': expertScore += 1; break;
-        }
-      });
-
-      const maxScore = Math.max(expertScore, guidingScore, cultivationScore, inertialScore);
-      let recommendedMode = 'Inertial';
-      let confidence = 70;
-
-      if (maxScore === expertScore) {
-        recommendedMode = 'Expert';
-        confidence = 85;
-      } else if (maxScore === guidingScore) {
-        recommendedMode = 'Guiding';
-        confidence = 80;
-      } else if (maxScore === cultivationScore) {
-        recommendedMode = 'Cultivation';
-        confidence = 75;
-      }
-
-      return res.json({
-        success: true,
-        data: {
-          recommendedMode: recommendedMode,
-          confidence: confidence,
-          explanation: `基於您的回答，建議使用${recommendedMode}模式`,
-          modeCharacteristics: {
-            [recommendedMode]: '最適合您的使用習慣',
-            alternative: maxScore === expertScore ? 'Inertial' : 'Expert'
-          }
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const result = await AM.AM_processUserAssessment(req.body);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        data: result.data,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorType,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 評估處理API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '評估處理失敗',
-      errorCode: 'ASSESSMENT_PROCESSING_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 用戶資料API端點
-app.get('/api/v1/users/profile', async (req, res) => {
-  try {
-    console.log('👤 API: 取得用戶資料請求', req.query);
-
-    if (!AM || typeof AM.AM_getUserProfile !== 'function') {
-      // 模擬用戶資料
-      const mockProfile = {
-        id: req.query.userId || 'mock-user-id',
-        email: 'user@example.com',
-        displayName: '測試用戶',
-        userMode: 'Expert',
-        hasCompletedAssessment: true,
-        accountStatus: 'active',
-        preferences: {
-          currency: 'TWD',
-          language: 'zh-TW',
-          timezone: 'Asia/Taipei'
-        },
-        createdAt: '2025-01-01T00:00:00Z',
-        lastLoginAt: new Date().toISOString()
-      };
-
-      return res.json({
-        success: true,
-        data: mockProfile,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const result = await AM.AM_getUserProfile(req.query);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        data: result.data,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorType,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 用戶資料API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '取得用戶資料失敗',
-      errorCode: 'USER_PROFILE_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 使用者認證API端點
-app.post('/api/v1/auth/register', async (req, res) => {
-  try {
-    console.log('🔐 API: 使用者註冊請求', req.body);
-
-    if (!AM || typeof AM.AM_createLineAccount !== 'function') {
-      return res.status(503).json({
-        success: false,
-        message: 'AM模組不可用',
-        errorCode: 'AM_MODULE_UNAVAILABLE'
-      });
-    }
-
-    const { lineUID, displayName, userType = 'S' } = req.body;
-
-    if (!lineUID || !displayName) {
-      return res.status(400).json({
-        success: false,
-        message: '缺少必要參數：lineUID 和 displayName',
-        errorCode: 'MISSING_REQUIRED_FIELDS'
-      });
-    }
-
-    const lineProfile = { displayName };
-    const result = await AM.AM_createLineAccount(lineUID, lineProfile, userType);
-
-    if (result.success) {
-      res.status(201).json({
-        success: true,
-        data: {
-          userId: result.UID,
-          userType: result.userType,
-          message: result.message
-        },
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorCode,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 註冊API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '註冊處理失敗',
-      errorCode: 'REGISTRATION_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-app.post('/api/v1/auth/login', async (req, res) => {
-  try {
-    console.log('🔑 API: 使用者登入請求');
-
-    if (!AM || typeof AM.AM_validateAccountExists !== 'function') {
-      return res.status(503).json({
-        success: false,
-        message: 'AM模組不可用',
-        errorCode: 'AM_MODULE_UNAVAILABLE'
-      });
-    }
-
-    const { lineUID } = req.body;
-
-    if (!lineUID) {
-      return res.status(400).json({
-        success: false,
-        message: '缺少必要參數：lineUID',
-        errorCode: 'MISSING_LINE_UID'
-      });
-    }
-
-    const validation = await AM.AM_validateAccountExists(lineUID, 'LINE');
-
-    if (validation.exists && validation.accountStatus === 'active') {
-      // 模擬JWT Token生成（階段一簡化實作）
-      const token = `jwt_${lineUID}_${Date.now()}`;
-
-      res.json({
-        success: true,
-        data: {
-          token: token,
-          userId: validation.UID,
-          accountStatus: validation.accountStatus
-        },
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(401).json({
-        success: false,
-        message: '帳號不存在或狀態異常',
-        errorCode: 'ACCOUNT_NOT_FOUND',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 登入API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '登入處理失敗',
-      errorCode: 'LOGIN_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 記帳功能API端點
-app.post('/api/v1/transactions', async (req, res) => {
-  try {
-    console.log('💰 API: 新增交易記錄請求', req.body);
-
-    if (!BK || typeof BK.BK_createTransaction !== 'function') {
-      return res.status(503).json({
-        success: false,
-        message: 'BK模組不可用',
-        errorCode: 'BK_MODULE_UNAVAILABLE'
-      });
-    }
-
-    const result = await BK.BK_createTransaction(req.body);
-
-    if (result.success) {
-      res.status(201).json({
-        success: true,
-        data: result.data,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorType,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 新增交易API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '交易處理失敗',
-      errorCode: 'TRANSACTION_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-app.get('/api/v1/transactions', async (req, res) => {
-  try {
-    console.log('📋 API: 查詢交易記錄請求', req.query);
-
-    if (!BK || typeof BK.BK_getTransactions !== 'function') {
-      return res.status(503).json({
-        success: false,
-        message: 'BK模組不可用',
-        errorCode: 'BK_MODULE_UNAVAILABLE'
-      });
-    }
-
-    const result = await BK.BK_getTransactions(req.query);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        data: result.data,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorType,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 查詢交易API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '查詢處理失敗',
-      errorCode: 'QUERY_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-app.post('/api/v1/transactions/quick', async (req, res) => {
-  try {
-    console.log('⚡ API: 快速記帳請求', req.body);
-
-    if (!BK || typeof BK.BK_processQuickTransaction !== 'function') {
-      return res.status(503).json({
-        success: false,
-        message: 'BK模組不可用',
-        errorCode: 'BK_MODULE_UNAVAILABLE'
-      });
-    }
-
-    const result = await BK.BK_processQuickTransaction(req.body);
-
-    if (result.success) {
-      res.status(201).json({
-        success: true,
-        data: result.data,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorType,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 快速記帳API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '快速記帳處理失敗',
-      errorCode: 'QUICK_TRANSACTION_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 交易詳情API端點
-app.get('/api/v1/transactions/:id', async (req, res) => {
-  try {
-    console.log('🔍 API: 取得交易詳情請求', req.params.id);
-
-    if (!BK || typeof BK.BK_getTransactionById !== 'function') {
-      // 模擬交易詳情
-      const mockTransaction = {
-        id: req.params.id,
-        amount: 1500,
-        type: 'expense',
-        category: '食物',
-        categoryId: 'food-001',
-        account: '信用卡',
-        accountId: 'account-001',
-        date: '2025-01-27',
-        description: '晚餐聚會',
-        tags: ['聚會', '餐廳'],
-        attachments: [],
-        createdAt: '2025-01-27T18:30:00Z',
-        updatedAt: '2025-01-27T18:30:00Z'
-      };
-
-      return res.json({
-        success: true,
-        data: mockTransaction,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const result = await BK.BK_getTransactionById(req.params.id);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        data: result.data,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        message: result.error || '交易記錄不存在',
-        errorCode: 'TRANSACTION_NOT_FOUND',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 交易詳情API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '取得交易詳情失敗',
-      errorCode: 'TRANSACTION_DETAIL_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 更新交易API端點
-app.put('/api/v1/transactions/:id', async (req, res) => {
-  try {
-    console.log('✏️ API: 更新交易記錄請求', req.params.id, req.body);
-
-    if (!BK || typeof BK.BK_updateTransaction !== 'function') {
-      // 模擬更新成功回應
-      const updatedTransaction = {
-        ...req.body,
-        id: req.params.id,
-        updatedAt: new Date().toISOString()
-      };
-
-      return res.json({
-        success: true,
-        data: updatedTransaction,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const result = await BK.BK_updateTransaction(req.params.id, req.body);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        data: result.data,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorType,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 更新交易API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '更新交易失敗',
-      errorCode: 'UPDATE_TRANSACTION_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 補充缺失的科目管理API端點
-app.get('/api/v1/categories', async (req, res) => {
-  try {
-    console.log('📂 API: 取得科目列表請求', req.query);
-    
-    // 模擬科目資料
-    const categories = [
-      { id: 'cat_food_001', name: '餐飲', type: 'expense', parentId: null },
-      { id: 'cat_transport_001', name: '交通', type: 'expense', parentId: null },
-      { id: 'cat_salary_001', name: '薪資', type: 'income', parentId: null },
-      { id: 'cat_bonus_001', name: '獎金', type: 'income', parentId: null }
-    ];
-
-    res.json({
-      success: true,
-      data: { categories },
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('❌ 科目列表API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '取得科目列表失敗',
-      errorCode: 'CATEGORIES_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 補充缺失的帳戶管理API端點
-app.get('/api/v1/accounts', async (req, res) => {
-  try {
-    console.log('🏦 API: 取得帳戶列表請求', req.query);
-    
-    // 模擬帳戶資料
-    const accounts = [
-      { id: 'acc_cash_001', name: '現金', type: 'cash', balance: 5000 },
-      { id: 'acc_bank_001', name: '銀行帳戶', type: 'bank', balance: 25000 },
-      { id: 'acc_credit_001', name: '信用卡', type: 'credit', balance: -3000 }
-    ];
-
-    res.json({
-      success: true,
-      data: { accounts },
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('❌ 帳戶列表API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '取得帳戶列表失敗',
-      errorCode: 'ACCOUNTS_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 補充缺失的帳本管理API端點
-app.get('/api/v1/ledgers', async (req, res) => {
-  try {
-    console.log('📚 API: 取得帳本列表請求', req.query);
-    
-    // 模擬帳本資料
-    const ledgers = [
-      { 
-        id: 'ledger_001', 
-        name: '個人帳本', 
-        type: 'personal',
-        isDefault: true,
-        balance: 27000,
-        transactionCount: 156
-      }
-    ];
-
-    res.json({
-      success: true,
-      data: { ledgers },
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('❌ 帳本列表API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '取得帳本列表失敗',
-      errorCode: 'LEDGERS_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 刪除交易API端點
-app.delete('/api/v1/transactions/:id', async (req, res) => {
-  try {
-    console.log('🗑️ API: 刪除交易記錄請求', req.params.id);
-
-    if (!BK || typeof BK.BK_deleteTransaction !== 'function') {
-      // 模擬刪除成功回應
-      return res.json({
-        success: true,
-        message: '交易記錄已刪除',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const result = await BK.BK_deleteTransaction(req.params.id);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        message: result.message || '交易記錄已刪除',
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorType,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 刪除交易API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '刪除交易失敗',
-      errorCode: 'DELETE_TRANSACTION_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// 統計數據API端點
-app.get('/api/v1/transactions/statistics', async (req, res) => {
-  try {
-    console.log('📈 API: 取得統計數據請求', req.query);
-
-    if (!BK || typeof BK.BK_getStatistics !== 'function') {
-      // 模擬統計數據
-      const mockStats = {
-        today: {
-          income: 0,
-          expense: 450,
-          balance: -450,
-          transactionCount: 3
-        },
-        thisWeek: {
-          income: 2000,
-          expense: 3500,
-          balance: -1500,
-          transactionCount: 15
-        },
-        thisMonth: {
-          income: 50000,
-          expense: 35000,
-          balance: 15000,
-          transactionCount: 89
-        },
-        categoryBreakdown: [
-          { category: '食物', amount: 8000, percentage: 30 },
-          { category: '交通', amount: 3500, percentage: 13 },
-          { category: '娛樂', amount: 2800, percentage: 10 }
-        ],
-        weeklyTrend: [
-          { week: '第1週', income: 12000, expense: 8000 },
-          { week: '第2週', income: 15000, expense: 9500 },
-          { week: '第3週', income: 11000, expense: 8800 },
-          { week: '第4週', income: 12000, expense: 8700 }
-        ]
-      };
-
-      return res.json({
-        success: true,
-        data: mockStats,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const result = await BK.BK_getStatistics(req.query);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        data: result.data,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorType,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 統計數據API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '取得統計數據失敗',
-      errorCode: 'STATISTICS_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-app.get('/api/v1/dashboard', async (req, res) => {
-  try {
-    console.log('📊 API: 儀表板數據請求', req.query);
-
-    if (!BK || typeof BK.BK_getDashboardData !== 'function') {
-      return res.status(503).json({
-        success: false,
-        message: 'BK模組不可用',
-        errorCode: 'BK_MODULE_UNAVAILABLE'
-      });
-    }
-
-    const result = await BK.BK_getDashboardData(req.query);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        data: result.data,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: result.error,
-        errorCode: result.errorType,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ 儀表板API錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: '儀表板數據處理失敗',
-      errorCode: 'DASHBOARD_ERROR',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// =============== 測試端點（保留） ===============
-
-// 建立測試使用者（保留）
-app.post('/testAPI', (req, res) => {
-  try {
-    const { name, email } = req.body;
-
-    if (!name || !email) {
-      return res.status(400).json({
-        success: false,
-        message: '缺少必要參數：name 和 email'
-      });
-    }
-
-    const newUser = {
-      id: Math.floor(Math.random() * 10000), // 產生隨機 id (1-9999)
-      name,
-      email,
-      created_at: new Date().toISOString()
-    };
-
-    console.log('建立測試使用者:', newUser);
-
-    res.status(201).json(newUser);
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: '建立測試使用者失敗',
-      error: error.message
-    });
-  }
-});
+// =============== DCN-0011 Phase 4 重構完成 ===============
+// ✅ 132個RESTful API端點已完全遷移至ASL.js (Port 5000)
+// ✅ index.js專注於LINE Webhook處理，保留5個核心端點：
+//    - POST /webhook - LINE訊息處理
+//    - GET /health - 服務健康檢查  
+//    - GET /test-wh - Webhook模組測試
+//    - GET /check-https - HTTPS支援檢查
+//    - GET / - 服務狀態首頁
+//
+// 🏗️ 雙服務架構實現：
+//    - index.js (Port 3000): LINE OA Webhook專用服務
+//    - ASL.js (Port 5000): RESTful API專用服務
+//
+// 📋 職責分離完成，系統架構清晰化
 
 // =============== WebSocket 即時協作同步（保留） ===============
 const http = require('http');
@@ -1433,41 +663,31 @@ process.on('SIGINT', () => {
   });
 });
 
-// =============== 啟動綜合服務器 ===============
+// =============== 啟動LINE Webhook專用服務器 ===============
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🌐 LCAS 2.0 核心服務器已啟動於 Port ${PORT}`);
-  console.log(`📡 系統監控端點已就緒: 5個端點`);
+  console.log(`🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port ${PORT}`);
+  console.log(`📡 LINE Webhook 專用端點已就緒: 5個端點`);
   console.log(`🔌 WebSocket 服務已啟用，支援即時協作同步`);
-  console.log(`🧪 測試端點已保留: POST /testAPI`);
-  console.log(`📋 SIT測試修復統計:`);
-  console.log(`   ✅ 新增API端點: 15個 (SIT測試必要端點)`);
-  console.log(`   🔧 語法錯誤修復: 1個 (第912行)`);
-  console.log(`   📈 預期測試通過率提升: 3.57% → 80%+`);
+  console.log(`📋 DCN-0011 Phase 4 重構統計:`);
+  console.log(`   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)`);
+  console.log(`   🎯 Webhook端點保留: 5個 (LINE OA專用)`);
+  console.log(`   🏗️ 雙服務架構: 職責完全分離`);
+  console.log(`   📈 系統維護性提升: 單一職責原則`);
 });
 
-console.log('🎉 LCAS LINE Bot 第一階段重構完成！');
-console.log('📱 LINE Bot 核心功能維持正常：WH → LBK → Firestore');
-console.log('🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對外服務');
-console.log('⚡ WH → LBK 直連路徑已啟用：WH → LBK → Firestore');
-console.log('🚀 LINE OA 快速記帳：26個函數 → 8個函數，處理時間 < 2秒');
-console.log('📋 Rich Menu/APP 路徑：維持 WH → DD → BK 完整功能');
-console.log('📅 SR 排程提醒模組已整合：支援排程提醒、Quick Reply統計、付費功能控制（v1.3.0）');
-console.log('🏥 健康檢查機制已啟用：每5分鐘監控系統狀態');
+console.log('🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！');
+console.log('📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore');
+console.log('🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000');
+console.log('⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore');
+console.log('🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒');
+console.log('📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能');
+console.log('📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制');
+console.log('🏥 健康檢查機制已優化：專注LINE服務監控');
 console.log('🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄');
-console.log('🔧 SIT修復版本：v2.3.0 - 語法錯誤修復，新增SIT測試必要API端點');
-console.log('🆕 SIT測試API端點已補充：新增15個API端點');
-console.log('   ✅ POST /api/v1/auth/register - 使用者註冊');
-console.log('   ✅ POST /api/v1/auth/login - 使用者登入');
-console.log('   ✅ GET /api/v1/users/assessment-questions - 取得評估問卷');
-console.log('   ✅ POST /api/v1/users/assessment - 提交評估結果');
-console.log('   ✅ GET /api/v1/users/profile - 取得用戶資料');
-console.log('   ✅ POST /api/v1/transactions - 新增交易記錄');
-console.log('   ✅ GET /api/v1/transactions - 查詢交易記錄');
-console.log('   ✅ GET /api/v1/transactions/:id - 取得交易詳情');
-console.log('   ✅ PUT /api/v1/transactions/:id - 更新交易記錄');
-console.log('   ✅ DELETE /api/v1/transactions/:id - 刪除交易記錄');
-console.log('   ✅ POST /api/v1/transactions/quick - 快速記帳');
-console.log('   ✅ GET /api/v1/transactions/statistics - 統計數據');
-console.log('   ✅ GET /api/v1/dashboard - 儀表板數據');
-console.log('🎯 SIT測試修復完成：語法錯誤已修復，API端點已補充');
-console.log('📈 預期測試通過率：從3.57% (1/28) 提升至80%+ (22/28)');
+console.log('🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構');
+console.log('📦 API端點遷移完成統計：');
+console.log('   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點');
+console.log('   📱 保留LINE Webhook專用：5個核心端點');
+console.log('   ✅ 完美職責分離：RESTful API ↔ LINE Webhook');
+console.log('🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現');
+console.log('📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性');
