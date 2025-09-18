@@ -814,6 +814,511 @@ app.get('/api/v1/auth/bind-status', authenticateToken, async (req, res) => {
   }
 });
 
+// =============== Phase 2: 從index.js遷移的API端點 ===============
+
+// 用戶評估問卷API端點
+app.get('/api/v1/users/assessment-questions', async (req, res) => {
+  try {
+    console.log('📋 API: 取得評估問卷請求');
+
+    // 模擬評估問卷數據
+    const assessmentQuestions = {
+      questions: [
+        {
+          id: 1,
+          question: "您的記帳經驗如何？",
+          options: [
+            { value: "A", text: "完全新手，很少記帳" },
+            { value: "B", text: "偶爾記帳，不太規律" },
+            { value: "C", text: "經常記帳，有一定經驗" },
+            { value: "D", text: "記帳高手，精通各種工具" }
+          ]
+        },
+        {
+          id: 2,
+          question: "您希望記帳功能有多詳細？",
+          options: [
+            { value: "A", text: "越簡單越好，基本記錄即可" },
+            { value: "B", text: "中等程度，能分類就好" },
+            { value: "C", text: "較詳細，包含預算和統計" },
+            { value: "D", text: "非常詳細，要有深度分析" }
+          ]
+        },
+        {
+          id: 3,
+          question: "您更偏好哪種操作方式？",
+          options: [
+            { value: "A", text: "引導式，系統提示每一步" },
+            { value: "B", text: "半自動，保持一些彈性" },
+            { value: "C", text: "自由操作，但有協助" },
+            { value: "D", text: "完全自主，掌控所有設定" }
+          ]
+        },
+        {
+          id: 4,
+          question: "面對新功能時，您的態度是？",
+          options: [
+            { value: "A", text: "希望有詳細教學指導" },
+            { value: "B", text: "簡單說明就能上手" },
+            { value: "C", text: "喜歡自己摸索學習" },
+            { value: "D", text: "直接使用，不需說明" }
+          ]
+        },
+        {
+          id: 5,
+          question: "您對數據分析的需求程度？",
+          options: [
+            { value: "A", text: "不需要，只要知道花了多少" },
+            { value: "B", text: "簡單圖表就夠了" },
+            { value: "C", text: "需要趨勢和分類分析" },
+            { value: "D", text: "要有深度洞察和預測" }
+          ]
+        }
+      ]
+    };
+
+    res.apiSuccess(assessmentQuestions, '評估問卷取得成功');
+
+  } catch (error) {
+    console.error('❌ 評估問卷API錯誤:', error);
+    res.apiError('取得評估問卷失敗', 'ASSESSMENT_QUESTIONS_ERROR', 500);
+  }
+});
+
+app.post('/api/v1/users/assessment', async (req, res) => {
+  try {
+    console.log('🧭 API: 提交評估結果請求', req.body);
+
+    if (!AM || typeof AM.AM_processUserAssessment !== 'function') {
+      // 模擬評估邏輯
+      const { answers } = req.body;
+      
+      if (!answers || !Array.isArray(answers)) {
+        return res.apiError('缺少必要參數：answers', 'MISSING_ANSWERS', 400);
+      }
+
+      // 簡化版模式判斷邏輯
+      let expertScore = 0, guidingScore = 0, cultivationScore = 0, inertialScore = 0;
+
+      answers.forEach(answer => {
+        switch (answer.answer) {
+          case 'A': guidingScore += 1; break;
+          case 'B': cultivationScore += 1; break;
+          case 'C': inertialScore += 1; break;
+          case 'D': expertScore += 1; break;
+        }
+      });
+
+      const maxScore = Math.max(expertScore, guidingScore, cultivationScore, inertialScore);
+      let recommendedMode = 'Inertial';
+      let confidence = 70;
+
+      if (maxScore === expertScore) {
+        recommendedMode = 'Expert';
+        confidence = 85;
+      } else if (maxScore === guidingScore) {
+        recommendedMode = 'Guiding';
+        confidence = 80;
+      } else if (maxScore === cultivationScore) {
+        recommendedMode = 'Cultivation';
+        confidence = 75;
+      }
+
+      return res.apiSuccess({
+        recommendedMode: recommendedMode,
+        confidence: confidence,
+        explanation: `基於您的回答，建議使用${recommendedMode}模式`,
+        modeCharacteristics: {
+          [recommendedMode]: '最適合您的使用習慣',
+          alternative: maxScore === expertScore ? 'Inertial' : 'Expert'
+        }
+      }, '評估處理成功');
+    }
+
+    const result = await AM.AM_processUserAssessment(req.body);
+
+    if (result.success) {
+      res.apiSuccess(result.data, '評估處理成功');
+    } else {
+      res.apiError(result.error, result.errorType, 400);
+    }
+
+  } catch (error) {
+    console.error('❌ 評估處理API錯誤:', error);
+    res.apiError('評估處理失敗', 'ASSESSMENT_PROCESSING_ERROR', 500);
+  }
+});
+
+// 用戶資料API端點
+app.get('/api/v1/users/profile', async (req, res) => {
+  try {
+    console.log('👤 API: 取得用戶資料請求', req.query);
+
+    if (!AM || typeof AM.AM_getUserProfile !== 'function') {
+      // 模擬用戶資料
+      const mockProfile = {
+        id: req.query.userId || 'mock-user-id',
+        email: 'user@example.com',
+        displayName: '測試用戶',
+        userMode: 'Expert',
+        hasCompletedAssessment: true,
+        accountStatus: 'active',
+        preferences: {
+          currency: 'TWD',
+          language: 'zh-TW',
+          timezone: 'Asia/Taipei'
+        },
+        createdAt: '2025-01-01T00:00:00Z',
+        lastLoginAt: new Date().toISOString()
+      };
+
+      return res.apiSuccess(mockProfile, '用戶資料取得成功');
+    }
+
+    const result = await AM.AM_getUserProfile(req.query);
+
+    if (result.success) {
+      res.apiSuccess(result.data, '用戶資料取得成功');
+    } else {
+      res.apiError(result.error, result.errorType, 400);
+    }
+
+  } catch (error) {
+    console.error('❌ 用戶資料API錯誤:', error);
+    res.apiError('取得用戶資料失敗', 'USER_PROFILE_ERROR', 500);
+  }
+});
+
+// 記帳功能API端點
+app.post('/api/v1/transactions', async (req, res) => {
+  try {
+    console.log('💰 API: 新增交易記錄請求', req.body);
+
+    if (!BK || typeof BK.BK_createTransaction !== 'function') {
+      return res.apiError('BK模組不可用', 'BK_MODULE_UNAVAILABLE', 503);
+    }
+
+    const result = await BK.BK_createTransaction(req.body);
+
+    if (result.success) {
+      res.status(201).apiSuccess(result.data, '交易記錄新增成功');
+    } else {
+      res.apiError(result.error, result.errorType, 400);
+    }
+
+  } catch (error) {
+    console.error('❌ 新增交易API錯誤:', error);
+    res.apiError('交易處理失敗', 'TRANSACTION_ERROR', 500);
+  }
+});
+
+app.get('/api/v1/transactions', async (req, res) => {
+  try {
+    console.log('📋 API: 查詢交易記錄請求', req.query);
+
+    if (!BK || typeof BK.BK_getTransactions !== 'function') {
+      return res.apiError('BK模組不可用', 'BK_MODULE_UNAVAILABLE', 503);
+    }
+
+    const result = await BK.BK_getTransactions(req.query);
+
+    if (result.success) {
+      res.apiSuccess(result.data, '交易記錄查詢成功');
+    } else {
+      res.apiError(result.error, result.errorType, 400);
+    }
+
+  } catch (error) {
+    console.error('❌ 查詢交易API錯誤:', error);
+    res.apiError('查詢處理失敗', 'QUERY_ERROR', 500);
+  }
+});
+
+app.post('/api/v1/transactions/quick', async (req, res) => {
+  try {
+    console.log('⚡ API: 快速記帳請求', req.body);
+
+    if (!BK || typeof BK.BK_processQuickTransaction !== 'function') {
+      return res.apiError('BK模組不可用', 'BK_MODULE_UNAVAILABLE', 503);
+    }
+
+    const result = await BK.BK_processQuickTransaction(req.body);
+
+    if (result.success) {
+      res.status(201).apiSuccess(result.data, '快速記帳成功');
+    } else {
+      res.apiError(result.error, result.errorType, 400);
+    }
+
+  } catch (error) {
+    console.error('❌ 快速記帳API錯誤:', error);
+    res.apiError('快速記帳處理失敗', 'QUICK_TRANSACTION_ERROR', 500);
+  }
+});
+
+// 交易詳情API端點
+app.get('/api/v1/transactions/:id', async (req, res) => {
+  try {
+    console.log('🔍 API: 取得交易詳情請求', req.params.id);
+
+    if (!BK || typeof BK.BK_getTransactionById !== 'function') {
+      // 模擬交易詳情
+      const mockTransaction = {
+        id: req.params.id,
+        amount: 1500,
+        type: 'expense',
+        category: '食物',
+        categoryId: 'food-001',
+        account: '信用卡',
+        accountId: 'account-001',
+        date: '2025-01-27',
+        description: '晚餐聚會',
+        tags: ['聚會', '餐廳'],
+        attachments: [],
+        createdAt: '2025-01-27T18:30:00Z',
+        updatedAt: '2025-01-27T18:30:00Z'
+      };
+
+      return res.apiSuccess(mockTransaction, '交易詳情取得成功');
+    }
+
+    const result = await BK.BK_getTransactionById(req.params.id);
+
+    if (result.success) {
+      res.apiSuccess(result.data, '交易詳情取得成功');
+    } else {
+      res.apiError(result.error || '交易記錄不存在', 'TRANSACTION_NOT_FOUND', 404);
+    }
+
+  } catch (error) {
+    console.error('❌ 交易詳情API錯誤:', error);
+    res.apiError('取得交易詳情失敗', 'TRANSACTION_DETAIL_ERROR', 500);
+  }
+});
+
+// 更新交易API端點
+app.put('/api/v1/transactions/:id', async (req, res) => {
+  try {
+    console.log('✏️ API: 更新交易記錄請求', req.params.id, req.body);
+
+    if (!BK || typeof BK.BK_updateTransaction !== 'function') {
+      // 模擬更新成功回應
+      const updatedTransaction = {
+        ...req.body,
+        id: req.params.id,
+        updatedAt: new Date().toISOString()
+      };
+
+      return res.apiSuccess(updatedTransaction, '交易記錄更新成功');
+    }
+
+    const result = await BK.BK_updateTransaction(req.params.id, req.body);
+
+    if (result.success) {
+      res.apiSuccess(result.data, '交易記錄更新成功');
+    } else {
+      res.apiError(result.error, result.errorType, 400);
+    }
+
+  } catch (error) {
+    console.error('❌ 更新交易API錯誤:', error);
+    res.apiError('更新交易失敗', 'UPDATE_TRANSACTION_ERROR', 500);
+  }
+});
+
+// 刪除交易API端點
+app.delete('/api/v1/transactions/:id', async (req, res) => {
+  try {
+    console.log('🗑️ API: 刪除交易記錄請求', req.params.id);
+
+    if (!BK || typeof BK.BK_deleteTransaction !== 'function') {
+      // 模擬刪除成功回應
+      return res.apiSuccess({ message: '交易記錄已刪除' }, '刪除成功');
+    }
+
+    const result = await BK.BK_deleteTransaction(req.params.id);
+
+    if (result.success) {
+      res.apiSuccess({ message: result.message || '交易記錄已刪除' }, '刪除成功');
+    } else {
+      res.apiError(result.error, result.errorType, 400);
+    }
+
+  } catch (error) {
+    console.error('❌ 刪除交易API錯誤:', error);
+    res.apiError('刪除交易失敗', 'DELETE_TRANSACTION_ERROR', 500);
+  }
+});
+
+// 統計數據API端點
+app.get('/api/v1/transactions/statistics', async (req, res) => {
+  try {
+    console.log('📈 API: 取得統計數據請求', req.query);
+
+    if (!BK || typeof BK.BK_getStatistics !== 'function') {
+      // 模擬統計數據
+      const mockStats = {
+        today: {
+          income: 0,
+          expense: 450,
+          balance: -450,
+          transactionCount: 3
+        },
+        thisWeek: {
+          income: 2000,
+          expense: 3500,
+          balance: -1500,
+          transactionCount: 15
+        },
+        thisMonth: {
+          income: 50000,
+          expense: 35000,
+          balance: 15000,
+          transactionCount: 89
+        },
+        categoryBreakdown: [
+          { category: '食物', amount: 8000, percentage: 30 },
+          { category: '交通', amount: 3500, percentage: 13 },
+          { category: '娛樂', amount: 2800, percentage: 10 }
+        ],
+        weeklyTrend: [
+          { week: '第1週', income: 12000, expense: 8000 },
+          { week: '第2週', income: 15000, expense: 9500 },
+          { week: '第3週', income: 11000, expense: 8800 },
+          { week: '第4週', income: 12000, expense: 8700 }
+        ]
+      };
+
+      return res.apiSuccess(mockStats, '統計數據取得成功');
+    }
+
+    const result = await BK.BK_getStatistics(req.query);
+
+    if (result.success) {
+      res.apiSuccess(result.data, '統計數據取得成功');
+    } else {
+      res.apiError(result.error, result.errorType, 400);
+    }
+
+  } catch (error) {
+    console.error('❌ 統計數據API錯誤:', error);
+    res.apiError('取得統計數據失敗', 'STATISTICS_ERROR', 500);
+  }
+});
+
+app.get('/api/v1/dashboard', async (req, res) => {
+  try {
+    console.log('📊 API: 儀表板數據請求', req.query);
+
+    if (!BK || typeof BK.BK_getDashboardData !== 'function') {
+      return res.apiError('BK模組不可用', 'BK_MODULE_UNAVAILABLE', 503);
+    }
+
+    const result = await BK.BK_getDashboardData(req.query);
+
+    if (result.success) {
+      res.apiSuccess(result.data, '儀表板數據取得成功');
+    } else {
+      res.apiError(result.error, result.errorType, 400);
+    }
+
+  } catch (error) {
+    console.error('❌ 儀表板API錯誤:', error);
+    res.apiError('儀表板數據處理失敗', 'DASHBOARD_ERROR', 500);
+  }
+});
+
+// 科目管理API端點
+app.get('/api/v1/categories', async (req, res) => {
+  try {
+    console.log('📂 API: 取得科目列表請求', req.query);
+    
+    // 模擬科目資料
+    const categories = [
+      { id: 'cat_food_001', name: '餐飲', type: 'expense', parentId: null },
+      { id: 'cat_transport_001', name: '交通', type: 'expense', parentId: null },
+      { id: 'cat_salary_001', name: '薪資', type: 'income', parentId: null },
+      { id: 'cat_bonus_001', name: '獎金', type: 'income', parentId: null }
+    ];
+
+    res.apiSuccess({ categories }, '科目列表取得成功');
+
+  } catch (error) {
+    console.error('❌ 科目列表API錯誤:', error);
+    res.apiError('取得科目列表失敗', 'CATEGORIES_ERROR', 500);
+  }
+});
+
+// 帳戶管理API端點
+app.get('/api/v1/accounts', async (req, res) => {
+  try {
+    console.log('🏦 API: 取得帳戶列表請求', req.query);
+    
+    // 模擬帳戶資料
+    const accounts = [
+      { id: 'acc_cash_001', name: '現金', type: 'cash', balance: 5000 },
+      { id: 'acc_bank_001', name: '銀行帳戶', type: 'bank', balance: 25000 },
+      { id: 'acc_credit_001', name: '信用卡', type: 'credit', balance: -3000 }
+    ];
+
+    res.apiSuccess({ accounts }, '帳戶列表取得成功');
+
+  } catch (error) {
+    console.error('❌ 帳戶列表API錯誤:', error);
+    res.apiError('取得帳戶列表失敗', 'ACCOUNTS_ERROR', 500);
+  }
+});
+
+// 帳本管理API端點
+app.get('/api/v1/ledgers', async (req, res) => {
+  try {
+    console.log('📚 API: 取得帳本列表請求', req.query);
+    
+    // 模擬帳本資料
+    const ledgers = [
+      { 
+        id: 'ledger_001', 
+        name: '個人帳本', 
+        type: 'personal',
+        isDefault: true,
+        balance: 27000,
+        transactionCount: 156
+      }
+    ];
+
+    res.apiSuccess({ ledgers }, '帳本列表取得成功');
+
+  } catch (error) {
+    console.error('❌ 帳本列表API錯誤:', error);
+    res.apiError('取得帳本列表失敗', 'LEDGERS_ERROR', 500);
+  }
+});
+
+// 測試端點
+app.post('/testAPI', (req, res) => {
+  try {
+    const { name, email } = req.body;
+
+    if (!name || !email) {
+      return res.apiError('缺少必要參數：name 和 email', 'MISSING_REQUIRED_FIELDS', 400);
+    }
+
+    const newUser = {
+      id: Math.floor(Math.random() * 10000), // 產生隨機 id (1-9999)
+      name,
+      email,
+      created_at: new Date().toISOString()
+    };
+
+    console.log('建立測試使用者:', newUser);
+
+    res.status(201).apiSuccess(newUser, '測試用戶建立成功');
+
+  } catch (error) {
+    res.apiError('建立測試使用者失敗', 'TEST_USER_CREATION_ERROR', 500, error.message);
+  }
+});
+
 // =============== Phase 1 核心API端點（階段一實作） ===============
 
 module.exports = app;
