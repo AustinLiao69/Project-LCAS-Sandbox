@@ -90,6 +90,9 @@ try {
   console.error('❌ LBK 模組載入失敗:', error.message);
 }
 
+// 🚫 WH模組已移除 - ASL.js專責RESTful API，不應載入LINE Webhook模組
+// WH模組專屬於LINE OA服務，僅在index.js中載入
+
 try {
   BS = require('./13. Replit_Module code_BL/1314. BS.js');
   console.log('✅ BS 模組載入成功');
