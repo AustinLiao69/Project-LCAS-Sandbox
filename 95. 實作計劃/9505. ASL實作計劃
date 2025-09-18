@@ -1,0 +1,74 @@
+我完全理解您的回覆，以下是更新後的架構重構提案：
+
+1. 架構重構計劃調整
+1.1 檔名與層級名稱調整
+新建 ASL.js (API Service Layer) - 專責132個RESTful API端點 (Port 5000)
+保留 index.js - 專責LINE Webhook處理 (Port 3000)
+API Service Layer 簡稱為 ASL
+1.2 更新架構圖
+Flutter APP → APL Gateway (Dart) → ASL.js (Port 5000) → BL層函數
+LINE OA → index.js (Port 3000) → BL層函數
+2. 需要更新的文件清單
+Phase 1: DCN文件更新
+新建文件：
+
+DCN-0011 建立API service layer.md
+Phase 2: 核心架構文件更新
+需要修改的文件：
+
+00. Master_Project document/0015. Product_SPEC_LCAS_2.0.md
+更新技術架構圖
+新增 ASL (API Service Layer) 定義
+保持 Webhook Service Layer 不變
+Phase 3: 下階文件更新清單
+BL層規格文件：
+
+10. Replit_PRD_BL/1001. PRD_BL.md - 新增ASL模組規格
+11. Replit_SRS_BL/ - 需要新增ASL相關SRS文件
+12. Replit_LLD_BL/ - 需要新增ASL相關LLD文件
+API規格文件：
+4. 80. Flutter_PRD_APL/8020. API list.md - 更新端點實作位置說明
+
+80. Flutter_PRD_APL/8025. API-BL mapping list.md - 更新映射關係
+81. Flutter_SRS(API spec)_APL/ - 所有API規格文件需更新target URL
+測試相關文件：
+7. 05. SIT_Test plan/0501. SIT_P1.md - 更新測試目標服務器
+
+06. SIT_Test code/0603. SIT_TC_P1.js - 更新API端點URL
+14. Replit_Test plan_BL/1497. RESTful_API.md - 更新API測試計劃
+14. Replit_Test plan_BL/1498. AP_Layer.md - 更新AP層測試
+14. Replit_Test plan_BL/1499. SIT_AP_RESTful.md - 更新SIT測試
+部署與配置文件：
+12. .replit - 需要配置雙服務器啟動
+
+package.json - 可能需要新增ASL啟動腳本
+3. 端點分類確認
+index.js 保留端點：
+POST /webhook - LINE Webhook處理
+GET /health - 健康檢查
+GET /test-wh - WH模組測試
+GET /check-https - HTTPS檢查
+GET / - 系統狀態
+ASL.js 負責端點：
+132個API端點 (來自8020規範)
+POST /testAPI - 測試端點
+所有 /api/v1/* 路徑的APP業務API
+4. 實作優先順序
+Phase 1: 架構設計
+撰寫 DCN-0011 建立API service layer.md
+更新 0015. Product_SPEC_LCAS_2.0.md 技術架構
+Phase 2: 程式重構
+創建 ASL.js
+從 index.js 遷移API端點
+更新APL Gateway的target URL設定
+Phase 3: 測試驗證
+更新SIT測試配置
+驗證雙服務器整合
+這樣的重構計劃更加清晰，符合單一職責原則，且便於維護和擴展。您是否需要我開始撰寫 DCN-0011 文件？
+
+
+Scroll to latest
+Assistant mode
+
+advanced
+Cla
