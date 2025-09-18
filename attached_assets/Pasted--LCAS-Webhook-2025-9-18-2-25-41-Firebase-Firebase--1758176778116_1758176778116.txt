@@ -1,0 +1,157 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/9/18 下午2:25:41
+📦 載入模組...
+ ✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+✅ Firebase Admin SDK已初始化
+✅ FS模組2.1.0：Firebase動態配置載入成功
+[FS_LOG_v2.1.0] 2025-09-18T06:25:41.801Z | 模組初始化 | FS模組2.1.0初始化 | User: system | Function: FS_initializeModule
+🎉 FS模組2.1.0階段三重構完成！
+📌 模組版本: 2.1.0
+🎯 專注功能: Phase 1完整功能 + 整合優化與驗證
+📋 階段一功能: 核心基礎操作(9個函數)
+📋 階段二功能: API端點支援(6個函數)
+📋 階段三功能: 整合優化與驗證(5個函數)
+✨ 總計實作: 20個核心函數 + 相容性函數
+🔧 建議執行: FS_performHealthCheck() 進行系統健康檢查
+🔧 建議執行: FS_validatePhase1Integration() 進行功能驗證
+✅ FS 模組載入成功 - 核心函數檢查通過
+✅ BK 模組載入成功 - BK_parseQuickInput函數檢查通過
+AM 帳號管理模組載入完成 v1.2.0 - Phase 1 API端點重構
+FS模組載入異常，將採用降級模式
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.0.22 (2025-07-15)
+📅 SR 排程提醒模組初始化中...
+✅ LBK 模組載入成功
+✅ DD 模組載入成功
+✅ AM 模組載入成功
+✅ SR 模組載入成功
+🔍 WH模組載入前進行FS依賴完整性檢查...
+📊 FS核心函數檢查: 4/4 可用
+✅ FS模組完全就緒，可安全載入WH模組
+📦 開始載入WH模組...
+✅ WH 模組載入成功
+✅ WH模組核心函數檢查通過
+🔧 初始化 BK 模組...
+[2025-09-18T06:25:42.235Z] [WARNING] [DL] DL模組未找到，將使用原生日誌系統 [Location: Object.DL_warning]
+🔧 初始化 LBK 模組...
+🔧 LBK模組初始化開始...
+DL模組從環境變數恢復模式設置: NORMAL
+DL模組初始化開始 - Firestore版本
+✅ DL模組初始化成功
+🔧 初始化 SR 排程提醒模組...
+📅 SR 排程提醒模組初始化中...
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🔍 FS模組依賴檢查報告:
+✅ FS核心函數載入: 4/4
+🎉 FS模組核心函數完整載入，依賴模組可正常運作
+❌ BK_processBookkeeping函數檢查: 不存在
+📋 BK模組導出的函數: [
+  'BK_initialize',
+  'BK_initializeFirebase',
+  'BK_createTransaction',
+  'BK_processQuickTransaction',
+  'BK_getTransactions',
+  'BK_getDashboardData',
+  'BK_updateTransaction',
+  'BK_deleteTransaction',
+  'BK_parseQuickInput',
+  'BK_validateTransactionData',
+  'BK_generateTransactionId',
+  'BK_validatePaymentMethod',
+  'BK_generateStatistics',
+  'BK_buildTransactionQuery',
+  'BK_handleError',
+  'BK_formatAPIResponse',
+  'BK_processFourModeData',
+  'BK_optimizeBatchOperations',
+  'BK_enhanceQuickBookingParsing',
+  'BK_getUserFriendlyErrorMessage',
+  'BK_processExpertModeData',
+  'BK_processInertialModeData',
+  'BK_processCultivationModeData',
+  'BK_processGuidingModeData',
+  'BK_getModeSpecificRecommendations',
+  'BK_getModeSpecificNextSteps',
+  'BK_validateBatchTransactions',
+  'BK_prepareBatchData',
+  'BK_parseStandardFormat',
+  'BK_parseNaturalLanguage',
+  'BK_parseNumberFirstFormat',
+  'BK_parseKeywordBasedFormat',
+  'BK_parseFallbackFormat',
+  'BK_enhanceParsingResult',
+  'BK_generateSmartSuggestions',
+  'BK_getConfidenceLevel',
+  'BK_getParsingHelp',
+  'BK_CONFIG',
+  'BK_logInfo',
+  'BK_logWarning',
+  'BK_logError',
+  'BK_logCritical'
+]
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS LINE Bot 第一階段重構完成！
+📱 LINE Bot 核心功能維持正常：WH → LBK → Firestore
+🌐 WH 模組運行在 Port 3000，通過 Replit HTTPS 代理對外服務
+⚡ WH → LBK 直連路徑已啟用：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：26個函數 → 8個函數，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：維持 WH → DD → BK 完整功能
+📅 SR 排程提醒模組已整合：支援排程提醒、Quick Reply統計、付費功能控制（v1.3.0）
+🏥 健康檢查機制已啟用：每5分鐘監控系統狀態
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 SIT修復版本：v2.3.0 - 語法錯誤修復，新增SIT測試必要API端點
+🆕 SIT測試API端點已補充：新增15個API端點
+   ✅ POST /api/v1/auth/register - 使用者註冊
+   ✅ POST /api/v1/auth/login - 使用者登入
+   ✅ GET /api/v1/users/assessment-questions - 取得評估問卷
+   ✅ POST /api/v1/users/assessment - 提交評估結果
+   ✅ GET /api/v1/users/profile - 取得用戶資料
+   ✅ POST /api/v1/transactions - 新增交易記錄
+   ✅ GET /api/v1/transactions - 查詢交易記錄
+   ✅ GET /api/v1/transactions/:id - 取得交易詳情
+   ✅ PUT /api/v1/transactions/:id - 更新交易記錄
+   ✅ DELETE /api/v1/transactions/:id - 刪除交易記錄
+   ✅ POST /api/v1/transactions/quick - 快速記帳
+   ✅ GET /api/v1/transactions/statistics - 統計數據
+   ✅ GET /api/v1/dashboard - 儀表板數據
+🎯 SIT測試修復完成：語法錯誤已修復，API端點已補充
+📈 預期測試通過率：從3.57% (1/28) 提升至80%+ (22/28)
+🚀 WH Webhook Server is running on port 3000
+📅 啟動時間: 2025-09-18 14:25:42
+🌐 Server is accessible at http://0.0.0.0:3000
+📡 Webhook endpoint: http://0.0.0.0:3000/webhook
+[WH 2.0.16 LOG] WH 2.0.7: 服務器啟動成功，監聽端口 3000 (INFO)
+🌐 LCAS 2.0 核心服務器已啟動於 Port 5000
+📡 系統監控端點已就緒: 5個端點
+🔌 WebSocket 服務已啟用，支援即時協作同步
+🧪 測試端點已保留: POST /testAPI
+📋 SIT測試修復統計:
+   ✅ 新增API端點: 15個 (SIT測試必要端點)
+   🔧 語法錯誤修復: 1個 (第912行)
+   📈 預期測試通過率提升: 3.57% → 80%+
+✅ WH模組初始化等待完成
+成功寫入 1 條日誌到 Firestore
+已創建初始化記錄到Firestore log集合
+DL模組初始化成功 - Firestore版本
+📅 已載入 4 個排程設定
+[2025-09-18T06:25:44.288Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+✅ SR 模組初始化完成
+📅 已載入 4 個排程設定
+[2025-09-18T06:25:44.355Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+✅ LBK模組初始化完成
+✅ LBK 模組初始化完成
+[2025-09-18T06:25:44.460Z] [INFO] [DL] Firebase連接初始化成功 v2.1.0 [Location: Object.DL_info]
+[2025-09-18T06:25:44.460Z] [INFO] [DL] BK模組v2.1.0初始化開始 [2025-09-18T06:25:42.234Z] | DL模組初始化: 失敗 (未找到DL模組) | Firebase初始化: 成功 | 支援API端點: 6個 [Location: Object.DL_info]
+✅ BK 模組初始化完成
+✅ BK_parseQuickInput函數可用
