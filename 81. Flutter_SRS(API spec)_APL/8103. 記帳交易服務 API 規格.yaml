@@ -28,9 +28,11 @@ info:
 
 servers:
   - url: https://api.lcas.app/v1
-    description: "Production server"
+    description: "Production server (ASL.js)"
   - url: https://api-staging.lcas.app/v1
-    description: "Staging server"
+    description: "Staging server (ASL.js)"
+  - url: http://0.0.0.0:5000/v1
+    description: "Development server (ASL.js)"
 
 security:
   - BearerAuth: []
