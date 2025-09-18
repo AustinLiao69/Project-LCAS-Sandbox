@@ -63,11 +63,6 @@ args = "node index.js"
 [workflows.workflow.metadata]
 outputType = "console"
 
-[[workflows.workflow]]
-name = "Dual Services(Deprecated)"
-mode = "parallel"
-author = "agent"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node index.js"
