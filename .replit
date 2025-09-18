@@ -69,3 +69,356 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = '''cd "06. SIT_Test code" && node -e "const SITTestCases = require('./0603. SIT_TC_P1.js'); (async () => { console.log('🚀 LCAS 2.0 Phase 1 SIT - 階段二測試開始'); const sitTest = new SITTestCases(); const dataLoaded = await sitTest.loadTestData(); if (!dataLoaded) { console.error('❌ 測試資料載入失敗，測試中止'); process.exit(1); } const results = await sitTest.executePhase2Tests(); const report = sitTest.generateReport(); console.log('\n📊 階段二測試完成'); console.log('✅ 通過率: ' + results.successRate.toFixed(2) + '%'); console.log('⏱️ 執行時間: ' + (results.executionTime/1000).toFixed(2) + '秒'); if (results.successRate >= 0.8) { console.log('🎉 階段二測試達標！可進入階段三'); } else { console.log('⚠️ 階段二測試未達標，需要修正後重新測試'); } })();"'''
+
+[[workflows.workflow]]
+name = "SIT階段二測試"
+author = 41300326
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd \"06. SIT_Test code\" && node -e \""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "const SITTestCases = require('./0603. SIT_TC_P1.js');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = ""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "(async () => {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('🚀 LCAS 2.0 Phase 1 SIT - 階段二測試開始');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('📋 測試範圍: TC-SIT-008 到 TC-SIT-020 (四層架構資料流測試)');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const sitTest = new SITTestCases();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  // 載入測試資料"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const dataLoaded = await sitTest.loadTestData();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  if (!dataLoaded) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.error('❌ 測試資料載入失敗，測試中止');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    process.exit(1);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const startTime = Date.now();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const phase2Tests = ["
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase008_ModeAssessment',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase009_ModeDifferentiation', "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase010_DataFormatTransformation',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase011_DataSynchronization',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase012_CompleteUserLifecycle',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase013_BookkeepingEndToEnd',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase014_NetworkExceptionHandling',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase015_BusinessRuleErrorHandling',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase016_FourModeProcessDifference',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase017_ConcurrentOperations',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase018_DataRaceHandling',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase019_EightHourStabilityTest',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    'testCase020_StressAndRecoveryTest'"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  ];"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  let passedTests = 0;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  let totalTests = phase2Tests.length;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '''  console.log('\n📊 開始執行階段二測試案例...\n');'''
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  for (const testMethod of phase2Tests) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    try {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.log('⏳ 執行: ' + testMethod);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      const result = await sitTest[testMethod]();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      if (result) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        passedTests++;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.log('');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    } catch (error) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.error('❌ 測試執行錯誤:', testMethod, error.message);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const executionTime = Date.now() - startTime;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const successRate = (passedTests / totalTests) * 100;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '''  console.log('\n📊 階段二測試完成報告');'''
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('=' .repeat(50));"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('✅ 通過測試: ' + passedTests + '/' + totalTests);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('📈 通過率: ' + successRate.toFixed(2) + '%');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('⏱️ 執行時間: ' + (executionTime/1000).toFixed(2) + '秒');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('🎯 目標通過率: 80%');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  if (successRate >= 80) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('🎉 階段二測試達標！可進入階段三');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('📋 下一步: 執行階段三完整業務流程測試 (TC-SIT-021~028)');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  } else {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('⚠️ 階段二測試未達標，需要修正後重新測試');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('🔧 建議: 檢查API端點實作和四模式差異化邏輯');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  // 生成測試報告"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  const report = {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    phase: '階段二',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    testRange: 'TC-SIT-008 到 TC-SIT-020',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    totalTests: totalTests,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    passedTests: passedTests,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    successRate: successRate,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    executionTime: executionTime,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    timestamp: new Date().toISOString(),"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    testResults: sitTest.testResults.filter(r => "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      r.testCase.match(/TC-SIT-0(08|09|10|11|12|13|14|15|16|17|18|19|20)/)"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    )"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  };"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '''  console.log('\n📄 詳細測試報告已記錄');'''
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('🔍 失敗測試詳情請查看上方執行日誌');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "})();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "\""
