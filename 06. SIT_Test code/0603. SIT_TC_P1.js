@@ -19,7 +19,7 @@ class SITTestCases {
     constructor() {
         this.testResults = [];
         this.testData = {};
-        this.apiBaseURL = 'https://lcas-api.replit.app/api/v1';
+        this.apiBaseURL = 'http://0.0.0.0:5000/api/v1';
         this.currentUserMode = 'Expert';
         this.authToken = null;
         this.testStartTime = new Date();
