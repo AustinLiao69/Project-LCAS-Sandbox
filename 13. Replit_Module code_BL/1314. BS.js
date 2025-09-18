@@ -1768,7 +1768,6 @@ async function BS_deleteCloudFile(provider, cloudFileId, userId) {
       // 實際應該呼叫 OneDrive API 刪除檔案
       return { deleted: true };
     default:
-      ```javascript
       throw new Error(`不支援的雲端服務: ${provider}`);
   }
 }
