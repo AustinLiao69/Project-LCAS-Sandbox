@@ -1,10 +1,10 @@
 /**
  * 8301. 認證服務.dart
  * @module 認證服務模組
- * @version 2.1.0
+ * @version 2.2.0
  * @description LCAS 2.0 認證服務 API 模組 - 支援四種用戶模式的差異化認證體驗
  * @date 2025-08-28
- * @update 2025-01-29: 升級至v2.1.0，配合測試計劃重構
+ * @update 2025-01-29: 升級至v2.2.0，Phase 1 API路徑重構，統一加上/api/v1前綴
  */
 
 import 'dart:convert';
@@ -1111,10 +1111,10 @@ class AuthController {
         _tokenService = tokenService,
         _userModeAdapter = userModeAdapter;
 
-  /// 70. 使用者註冊API (嚴格對應8020規範: POST /auth/register，對應畫面S-103)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範，完整畫面對應標註，深度四模式支援
+  /// 70. 使用者註冊API (嚴格對應8020規範: POST /api/v1/auth/register，對應畫面S-103)
+  /// @version 2025-01-29-V2.2.0
+  /// @date 2025-01-29 12:00:00
+  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴，完整畫面對應標註，深度四模式支援
   Future<ApiResponse<RegisterResponse>> register(RegisterRequest request) async {
     try {
       // 驗證請求
@@ -1172,10 +1172,10 @@ class AuthController {
     }
   }
 
-  /// 71. 使用者登入API (嚴格對應8020規範: POST /auth/login，對應畫面S-104)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範，深度四模式支援
+  /// 71. 使用者登入API (嚴格對應8020規範: POST /api/v1/auth/login，對應畫面S-104)
+  /// @version 2025-01-29-V2.2.0
+  /// @date 2025-01-29 12:00:00
+  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴，深度四模式支援
   Future<ApiResponse<LoginResponse>> login(LoginRequest request) async {
     try {
       // 驗證請求
@@ -1231,10 +1231,10 @@ class AuthController {
     }
   }
 
-  /// 72. Google登入API (嚴格對應8020規範: POST /auth/google-login，對應畫面S-104)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範
+  /// 72. Google登入API (嚴格對應8020規範: POST /api/v1/auth/google-login，對應畫面S-104)
+  /// @version 2025-01-29-V2.2.0
+  /// @date 2025-01-29 12:00:00
+  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴
   Future<ApiResponse<LoginResponse>> googleLogin(GoogleLoginRequest request) async {
     try {
       // 驗證Google Token
@@ -1282,10 +1282,10 @@ class AuthController {
     }
   }
 
-  /// 73. 使用者登出API (嚴格對應8020規範: POST /auth/logout)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範
+  /// 73. 使用者登出API (嚴格對應8020規範: POST /api/v1/auth/logout)
+  /// @version 2025-01-29-V2.2.0
+  /// @date 2025-01-29 12:00:00
+  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴
   Future<ApiResponse<void>> logout(LogoutRequest request) async {
     try {
       await _authService.processLogout(request);
@@ -1303,10 +1303,10 @@ class AuthController {
     }
   }
 
-  /// 74. 刷新Token API (嚴格對應8020規範: POST /auth/refresh)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範
+  /// 74. 刷新Token API (嚴格對應8020規範: POST /api/v1/auth/refresh)
+  /// @version 2025-01-29-V2.2.0
+  /// @date 2025-01-29 12:00:00
+  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴
   Future<ApiResponse<RefreshTokenResponse>> refreshToken(String refreshToken) async {
     try {
       // 驗證刷新Token
@@ -1345,10 +1345,10 @@ class AuthController {
     }
   }
 
-  /// 75. 忘記密碼API (嚴格對應8020規範: POST /auth/forgot-password，對應畫面S-105)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範
+  /// 75. 忘記密碼API (嚴格對應8020規範: POST /api/v1/auth/forgot-password，對應畫面S-105)
+  /// @version 2025-01-29-V2.2.0
+  /// @date 2025-01-29 12:00:00
+  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴
   Future<ApiResponse<void>> forgotPassword(ForgotPasswordRequest request) async {
     try {
       await _authService.initiateForgotPassword(request.email);
@@ -1366,10 +1366,10 @@ class AuthController {
     }
   }
 
-  /// 76. 驗證重設Token API (嚴格對應8020規範: GET /auth/verify-reset-token，對應畫面S-105)
-  /// @version 2025-08-28-V1.4.0
-  /// @date 2025-08-28 12:00:00
-  /// @update: 升級版本，嚴格遵循8020規範，補充8020缺失的端點
+  /// 76. 驗證重設Token API (嚴格對應8020規範: GET /api/v1/auth/verify-reset-token，對應畫面S-105)
+  /// @version 2025-01-29-V2.2.0
+  /// @date 2025-01-29 12:00:00
+  /// @update: 升級版本至v2.2.0，API路徑重構加上/api/v1前綴，補充8020缺失的端點
   Future<ApiResponse<VerifyResetTokenResponse>> verifyResetToken(String token) async {
     try {
       // 驗證Token格式
