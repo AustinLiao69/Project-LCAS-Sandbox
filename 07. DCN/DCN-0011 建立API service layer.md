@@ -88,11 +88,31 @@ app.post('/api/v1/transactions');
 ```
 
 #### 3.1.3 中介軟體整合
-- CORS 配置
-- 驗證中介軟體
-- 錯誤處理中介軟體
-- 日誌記錄中介軟體
-- 速率限制中介軟體
+
+**CORS 配置 (Cross-Origin Resource Sharing)**
+- **作用**：允許跨網域的API請求
+- **目的**：讓Flutter APP可以從不同網域存取ASL.js的API端點
+- **實作**：設定允許所有來源存取，或僅允許特定網域
+
+**驗證中介軟體 (Authentication Middleware)**
+- **作用**：檢查API請求是否有有效的認證token
+- **目的**：確保只有已登入的用戶能存取受保護的API
+- **實作**：檢查JWT token有效性，驗證用戶身份
+
+**錯誤處理中介軟體 (Error Handling Middleware)**
+- **作用**：統一處理API執行過程中的錯誤
+- **目的**：提供一致的錯誤回應格式，避免系統崩潰
+- **實作**：捕獲異常並回傳標準化的錯誤訊息
+
+**日誌記錄中介軟體 (Logging Middleware)**
+- **作用**：記錄所有API請求和回應的詳細資訊
+- **目的**：便於除錯、監控系統運行狀況
+- **實作**：記錄請求時間、IP地址、執行時間等
+
+**速率限制中介軟體 (Rate Limiting Middleware)**
+- **作用**：限制單位時間內的API請求次數
+- **目的**：防止API被濫用，保護系統資源
+- **實作**：每分鐘最多100次請求，超過則回傳429錯誤
 
 #### 3.1.4 BL 層整合
 - 整合所有 BL 模組 (BK, AM, FS, DD1, DD2, DD3, 等)
@@ -111,11 +131,27 @@ app.get('/check-https');       // HTTPS 檢查
 app.get('/');                  // 系統狀態
 ```
 
-#### 3.2.2 移除內容
-- 移除所有 `/api/v1/*` 路徑的端點
-- 移除 `POST /testAPI` 測試端點
-- 保留 WH 模組相關功能
-- 保留 LINE OA 特定的中介軟體
+#### 3.2.2 移除內容（精準搬移策略）
+
+**需要移除並搬移至ASL.js的端點**：
+- 僅移除**8020文件中列出的132個RESTful API端點**（搬移到ASL.js）
+- 移除 `POST /testAPI` 測試端點（搬移到ASL.js）
+
+**保留在index.js的功能**：
+- ✅ `POST /webhook` - LINE Webhook 核心功能
+- ✅ `GET /health` - 系統健康檢查  
+- ✅ `GET /test-wh` - Webhook 測試功能
+- ✅ `GET /check-https` - HTTPS 檢查功能
+- ✅ `GET /` - 根路徑系統狀態
+- ✅ 所有WH模組相關功能
+- ✅ LINE OA特定的中介軟體
+- ✅ **index.js原有的其他自定義API端點**（不在8020文件清單中的）
+
+**重點說明**：
+- 這是**精準搬移**而非全面清除
+- 只搬移8020文件規範的標準RESTful API端點
+- index.js的監控、健康檢查等系統功能完全保留
+- 確保LINE Webhook功能不受任何影響
 
 #### 3.2.3 服務端口
 - **維持端口**：3000
