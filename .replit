@@ -12,16 +12,6 @@ packages = ["undollar", "wget", "zulu"]
 [deployment]
 run = "node index.js"
 
-[workflows.dual_services]
-command = "node ASL.js"
-display_name = "ASL Service"
-description = "API Service Layer - 132個RESTful API端點 (Port 5000)"
-
-[workflows.webhook_service]
-command = "node index.js"
-display_name = "Webhook Service"
-description = "LINE Webhook處理服務 (Port 3000)"
-
 [[ports]]
 localPort = 3000
 externalPort = 80
@@ -74,13 +64,9 @@ args = "node index.js"
 outputType = "console"
 
 [[workflows.workflow]]
-name = "Dual Services"
+name = "Dual Services(Deprecated)"
 mode = "parallel"
 author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node ASL.js"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
@@ -90,7 +76,7 @@ args = "node index.js"
 outputType = "console"
 
 [[workflows.workflow]]
-name = "Documentation Viewer"
+name = "Documentation Viewer(Deprecated)"
 author = "agent"
 
 [[workflows.workflow.tasks]]
