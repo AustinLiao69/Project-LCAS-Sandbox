@@ -32,7 +32,8 @@
   },
   
   "test_environment": {
-    "api_base_url": "https://lcas-api.replit.app/api/v1",
+    "api_base_url": "http://0.0.0.0:5000/api/v1",
+    "backup_base_url": "https://lcas-api.replit.app/api/v1", 
     "timeout_settings": {
       "api_timeout": 5000,
       "database_timeout": 3000,

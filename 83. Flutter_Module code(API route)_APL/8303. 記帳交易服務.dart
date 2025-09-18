@@ -18,19 +18,19 @@ import 'package:http/http.dart' as http;
 
 /// 記帳交易服務API Gateway
 class TransactionAPIGateway {
-  final String _backendBaseUrl = 'http://localhost:3000/api/v1';
+  final String _backendBaseUrl = 'http://0.0.0.0:5000/api/v1';
   final http.Client _httpClient = http.Client();
 
   /**
-   * 01. LINE OA 快速記帳API路由 (POST /api/v1/transactions/quick-booking)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 01. LINE OA 快速記帳API路由 (POST /api/v1/transactions/quick)
+   * @version 2025-01-28-V2.3.1
+   * @date 2025-01-28 12:00:00
+   * @update: 修正API端點路徑為與後端一致的/transactions/quick
    */
   Future<http.Response> quickBooking(Map<String, dynamic> requestBody) async {
     return await _forwardRequest(
       'POST',
-      '/transactions/quick-booking',
+      '/transactions/quick',
       requestBody,
     );
   }

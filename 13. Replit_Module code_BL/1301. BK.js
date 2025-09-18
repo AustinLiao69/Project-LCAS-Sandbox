@@ -1362,7 +1362,74 @@ async function BK_optimizeBatchOperations(transactions, options = {}) {
 }
 
 /**
- * 18. 快速記帳智能解析 - 增強 POST /transactions/quick
+ * 18. 快速記帳輸入解析 - 修復函數導出
+ * @version 2025-01-28-V2.1.1
+ * @date 2025-01-28 
+ * @update: 修復BK_parseQuickInput函數缺失問題
+ */
+function BK_parseQuickInput(inputText, options = {}) {
+  try {
+    if (!inputText || typeof inputText !== 'string') {
+      return {
+        success: false,
+        error: "輸入文字不能為空",
+        errorType: "INVALID_INPUT"
+      };
+    }
+
+    const trimmedInput = inputText.trim();
+    
+    // 標準格式解析：午餐150、薪水35000轉帳
+    const standardPattern = /^(.+?)(\d+)(.*)$/;
+    const match = trimmedInput.match(standardPattern);
+    
+    if (match) {
+      const subject = match[1].trim();
+      const amount = parseInt(match[2], 10);
+      const remaining = match[3].trim();
+      
+      // 判斷收支類型
+      const incomeKeywords = ['薪水', '收入', '獎金', '紅利'];
+      const isIncome = incomeKeywords.some(keyword => subject.includes(keyword));
+      
+      // 判斷支付方式
+      let paymentMethod = "現金";
+      const paymentMethods = ["現金", "刷卡", "轉帳", "行動支付"];
+      for (const method of paymentMethods) {
+        if (remaining.includes(method)) {
+          paymentMethod = method;
+          break;
+        }
+      }
+      
+      return {
+        success: true,
+        amount: amount,
+        type: isIncome ? 'income' : 'expense',
+        description: subject,
+        paymentMethod: paymentMethod,
+        confidence: 0.9,
+        strategy: 'standard_format'
+      };
+    }
+    
+    return {
+      success: false,
+      error: "無法解析輸入內容",
+      errorType: "PARSE_FAILED"
+    };
+    
+  } catch (error) {
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "PARSE_ERROR"
+    };
+  }
+}
+
+/**
+ * 19. 快速記帳智能解析 - 增強 POST /transactions/quick
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16 
  * @update: 階段三重構 - 增強快速記帳解析能力，支援更多自然語言格式
@@ -1590,6 +1657,34 @@ async function BK_validateBatchTransactions(transactions) {
  * 準備批次資料
  */
 async function BK_prepareBatchData(batch, processId) {
+  return batch.map((item, index) => ({
+    ...item,
+    originalIndex: index,
+    processId: processId
+  }));
+}
+
+// =============== 模組導出 ===============
+module.exports = {
+  BK_initialize,
+  BK_createTransaction,
+  BK_processQuickTransaction,
+  BK_getTransactions,
+  BK_getDashboardData,
+  BK_updateTransaction,
+  BK_deleteTransaction,
+  BK_parseQuickInput,
+  BK_validateTransactionData,
+  BK_generateTransactionId,
+  BK_validatePaymentMethod,
+  BK_generateStatistics,
+  BK_buildTransactionQuery,
+  BK_handleError,
+  BK_formatAPIResponse,
+  BK_processFourModeData,
+  BK_optimizeBatchOperations,
+  BK_enhanceQuickBookingParsing
+};
   return batch.map((transaction, index) => ({
     ...transaction,
     originalIndex: transaction.originalIndex || index,

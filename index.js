@@ -1075,6 +1075,99 @@ app.put('/api/v1/transactions/:id', async (req, res) => {
   }
 });
 
+// 補充缺失的科目管理API端點
+app.get('/api/v1/categories', async (req, res) => {
+  try {
+    console.log('📂 API: 取得科目列表請求', req.query);
+    
+    // 模擬科目資料
+    const categories = [
+      { id: 'cat_food_001', name: '餐飲', type: 'expense', parentId: null },
+      { id: 'cat_transport_001', name: '交通', type: 'expense', parentId: null },
+      { id: 'cat_salary_001', name: '薪資', type: 'income', parentId: null },
+      { id: 'cat_bonus_001', name: '獎金', type: 'income', parentId: null }
+    ];
+
+    res.json({
+      success: true,
+      data: { categories },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ 科目列表API錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: '取得科目列表失敗',
+      errorCode: 'CATEGORIES_ERROR',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// 補充缺失的帳戶管理API端點
+app.get('/api/v1/accounts', async (req, res) => {
+  try {
+    console.log('🏦 API: 取得帳戶列表請求', req.query);
+    
+    // 模擬帳戶資料
+    const accounts = [
+      { id: 'acc_cash_001', name: '現金', type: 'cash', balance: 5000 },
+      { id: 'acc_bank_001', name: '銀行帳戶', type: 'bank', balance: 25000 },
+      { id: 'acc_credit_001', name: '信用卡', type: 'credit', balance: -3000 }
+    ];
+
+    res.json({
+      success: true,
+      data: { accounts },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ 帳戶列表API錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: '取得帳戶列表失敗',
+      errorCode: 'ACCOUNTS_ERROR',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// 補充缺失的帳本管理API端點
+app.get('/api/v1/ledgers', async (req, res) => {
+  try {
+    console.log('📚 API: 取得帳本列表請求', req.query);
+    
+    // 模擬帳本資料
+    const ledgers = [
+      { 
+        id: 'ledger_001', 
+        name: '個人帳本', 
+        type: 'personal',
+        isDefault: true,
+        balance: 27000,
+        transactionCount: 156
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: { ledgers },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ 帳本列表API錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: '取得帳本列表失敗',
+      errorCode: 'LEDGERS_ERROR',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // 刪除交易API端點
 app.delete('/api/v1/transactions/:id', async (req, res) => {
   try {
