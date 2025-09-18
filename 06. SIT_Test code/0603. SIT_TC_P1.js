@@ -2520,6 +2520,7 @@ class SITTestCases {
     }
 }
 
+// 導出類別
 module.exports = SITTestCases;
 
 // 直接執行測試的程式碼

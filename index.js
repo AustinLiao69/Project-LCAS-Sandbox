@@ -909,5 +909,5 @@ console.log('   ✅ POST /api/v1/transactions - 新增交易記錄');
 console.log('   ✅ GET /api/v1/transactions - 查詢交易記錄');
 console.log('   ✅ POST /api/v1/transactions/quick - 快速記帳');
 console.log('   ✅ GET /api/v1/dashboard - 儀表板數據');
-console.log('✅ 階段二完成：API端點輔助與驗證函數完善完成');
+console.log('✅ 階段二完成：API端點輔助與驗證函數完善完成');');
 console.log('🔄 準備進行階段三：API整合優化與驗證');
