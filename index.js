@@ -78,14 +78,20 @@ try {
 // 載入應用層模組 - 依賴FS模組的核心函數
 let BK, LBK, DD, AM, SR;
 try {
-  if (FS && typeof FS.FS_getDocument === 'function') {
-    BK = require('./13. Replit_Module code_BL/1301. BK.js');    // 記帳處理模組
-    console.log('✅ BK 模組載入成功');
+  BK = require('./13. Replit_Module code_BL/1301. BK.js');    // 記帳處理模組
+  
+  // 驗證關鍵函數是否正確載入
+  if (BK && typeof BK.BK_parseQuickInput === 'function') {
+    console.log('✅ BK 模組載入成功 - BK_parseQuickInput函數檢查通過');
+  } else if (BK) {
+    console.log('⚠️ BK 模組載入異常 - BK_parseQuickInput函數缺失');
+    console.log('📋 BK模組導出的函數:', Object.keys(BK));
   } else {
-    console.log('⚠️ BK 模組跳過載入 - FS模組依賴未滿足');
+    console.log('❌ BK 模組完全載入失敗');
   }
 } catch (error) {
   console.error('❌ BK 模組載入失敗:', error.message);
+  console.error('錯誤詳情:', error.stack);
 }
 
 try {
@@ -195,11 +201,21 @@ if (BK && typeof BK.BK_initialize === 'function') {
   console.log('🔧 初始化 BK 模組...');
   BK.BK_initialize().then(() => {
     console.log('✅ BK 模組初始化完成');
+    
+    // 驗證關鍵函數可用性
+    if (typeof BK.BK_parseQuickInput === 'function') {
+      console.log('✅ BK_parseQuickInput函數可用');
+    } else {
+      console.log('⚠️ BK_parseQuickInput函數不可用');
+    }
   }).catch((error) => {
     console.log('❌ BK 模組初始化失敗:', error.message);
   });
 } else {
   console.log('⚠️ BK 模組未正確載入，跳過初始化');
+  if (BK) {
+    console.log('📋 BK模組可用函數:', Object.keys(BK));
+  }
 }
 
 if (LBK && typeof LBK.LBK_initialize === 'function') {
