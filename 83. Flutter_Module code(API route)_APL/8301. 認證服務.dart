@@ -18,7 +18,7 @@ import 'package:http/http.dart' as http;
 
 /// 認證服務API Gateway
 class AuthAPIGateway {
-  final String _backendBaseUrl = 'http://localhost:3000/api/v1';
+  final String _backendBaseUrl = 'http://localhost:5000/api/v1';
   final http.Client _httpClient = http.Client();
 
   /**
