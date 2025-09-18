@@ -10,9 +10,17 @@ channel = "stable-24_11"
 packages = ["undollar", "wget", "zulu"]
 
 [deployment]
-run = ["sh", "-c", "node index.js"]
-deploymentTarget = "autoscale"
-ignorePorts = false
+run = "node index.js"
+
+[workflows.dual_services]
+command = "node ASL.js"
+display_name = "ASL Service"
+description = "API Service Layer - 132個RESTful API端點 (Port 5000)"
+
+[workflows.webhook_service]
+command = "node index.js"
+display_name = "Webhook Service"
+description = "LINE Webhook處理服務 (Port 3000)"
 
 [[ports]]
 localPort = 3000
