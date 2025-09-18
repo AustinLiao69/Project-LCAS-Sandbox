@@ -83,11 +83,11 @@
   - UserProfile、TransactionItem、DashboardData等
   - ValidationError、ApiResponse處理邏輯
 
-#### 3.1.3 HTTP客戶端整合（新增功能）
-- 建立統一的HTTP客戶端類別
-- 實作RESTful API調用邏輯
-- 處理網路錯誤和重試機制
-- JWT Token管理和自動刷新
+#### 3.1.3 API調用介面（新增功能）
+- 建立與APL層的標準化介面
+- 實作API調用的封裝邏輯
+- 處理UI層面的錯誤顯示
+- 本地狀態與遠端資料同步
 
 ### 3.2 APL層簡化重構（83號資料夾）
 
@@ -107,11 +107,15 @@
   - 保留：API路由和請求轉發
   - 簡化：專注於API Gateway功能
 
-#### 3.2.2 新增HTTP路由定義（核心功能）
+#### 3.2.2 新增HTTP路由定義與客戶端整合（核心功能）
 - 實作Dart shelf框架的HTTP服務器
 - 定義RESTful API路由規則
 - 建立統一的請求轉發機制
 - 實作四模式回應過濾器
+- 建立統一的HTTP客戶端類別
+- 實作RESTful API調用邏輯
+- 處理網路錯誤和重試機制
+- JWT Token管理和自動刷新
 
 ### 3.3 架構層級重新定義
 
