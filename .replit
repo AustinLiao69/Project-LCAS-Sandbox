@@ -70,10 +70,6 @@ args = "node index.js"
 [workflows.workflow.metadata]
 outputType = "console"
 
-[[workflows.workflow]]
-name = "Documentation Viewer(Deprecated)"
-author = "agent"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python -c \"import os; print('LLD文檔已生成，位置：82. Flutter_LLD_APL/'); print('已完成文檔：'); [print(f'- {f}') for f in os.listdir('82. Flutter_LLD_APL') if f.endswith('.md')]; import time; time.sleep(30)\""
