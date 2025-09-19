@@ -519,7 +519,7 @@ class SITTestCases {
         const startTime = Date.now();
         try {
             // 建立交易記錄
-            const createResponse = await this.makeRequest('POST', '/transactions', {
+            const createResponse = await this.makeRequest('POST', '/api/v1/transactions', {
                 amount: 500,
                 type: 'expense',
                 categoryId: 'test-category-id',
@@ -536,7 +536,7 @@ class SITTestCases {
             const transactionId = createResponse.data.data.transactionId;
 
             // 立即查詢該交易
-            const queryResponse = await this.makeRequest('GET', `/transactions/${transactionId}`);
+            const queryResponse = await this.makeRequest('GET', `/api/v1/transactions/${transactionId}`);
 
             const success = queryResponse.success && 
                           queryResponse.data?.data?.description === '同步測試交易';
