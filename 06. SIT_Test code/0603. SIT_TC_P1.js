@@ -2,13 +2,14 @@
  * 0603. SIT_TC_P1.js
  * LCAS 2.0 Phase 1 SIT測試案例實作
  * 
- * @version v1.1.0
+ * @version v1.2.0
  * @created 2025-09-15
  * @updated 2025-01-24
  * @author LCAS SQA Team
- * @description 階段二：四層架構資料流測試與核心業務流程測試實作
- * @phase Phase 2 - Core Business Process & Data Flow Testing
- * @testcases TC-SIT-008 to TC-SIT-020 (13個測試案例)
+ * @description 階段一緊急修復：解決sitTest實例化問題，確保測試執行流程完整
+ * @phase Phase 1 Critical Fix - Instance Initialization
+ * @testcases TC-SIT-001 to TC-SIT-028 (28個測試案例)
+ * @fix 修復sitTest未定義錯誤，添加實例化和初始化流程
  */
 
 const axios = require('axios');
@@ -2632,12 +2633,34 @@ module.exports = SITTestCases;
 // 直接執行測試的程式碼
 if (require.main === module) {
     (async () => {
+        console.log('🚀 初始化 LCAS 2.0 Phase 1 SIT測試環境...');
+        
+        // 修復：創建sitTest實例
+        const sitTest = new SITTestCases();
+        
+        // 載入測試資料
+        console.log('📂 載入測試資料...');
+        const dataLoaded = await sitTest.loadTestData();
+        if (!dataLoaded) {
+            console.error('❌ 測試資料載入失敗，終止測試執行');
+            process.exit(1);
+        }
+        
+        console.log('✅ SIT測試環境初始化完成');
+        console.log(`🌐 API基礎URL: ${sitTest.apiBaseURL}`);
+        console.log(`👤 預設用戶模式: ${sitTest.currentUserMode}`);
+        console.log('=' * 80);
+        
         const args = process.argv.slice(2);
         const phaseArg = args.find(arg => arg.startsWith('--phase='))?.split('=')[1];
 
         let results;
 
-        if (phaseArg === 'phase1+2') {
+        if (phaseArg === 'phase1') {
+            console.log('🎯 執行階段一測試 (TC-SIT-001~007)');
+            results = await sitTest.executePhase1Tests();
+            console.log('\n📊 階段一測試完成');
+        } else if (phaseArg === 'phase1+2') {
             console.log('🎯 執行階段一與階段二綜合測試');
             await sitTest.executePhase1Tests(); // 先執行階段一
             results = await sitTest.executePhase2Tests(); // 再執行階段二
@@ -2655,7 +2678,7 @@ if (require.main === module) {
             results = await sitTest.executePhase3Tests();
             console.log('\n📊 完整SIT測試完成');
         } else {
-             console.error('❌ 無效的階段參數，使用 --phase=phase1+2|phase2|phase3|all');
+             console.error('❌ 無效的階段參數，使用 --phase=phase1|phase1+2|phase2|phase3|all');
              process.exit(1);
         }
 
