@@ -123,7 +123,7 @@ class SITTestCases {
                 ...testUser.registration_data
             };
 
-            const response = await this.makeRequest('POST', '/auth/register', registrationData);
+            const response = await this.makeRequest('POST', '/api/v1/auth/register', registrationData);
 
             const success = response.success && 
                           response.data?.success === true &&
@@ -169,7 +169,7 @@ class SITTestCases {
                 }
             };
 
-            const response = await this.makeRequest('POST', '/auth/login', loginData);
+            const response = await this.makeRequest('POST', '/api/v1/auth/login', loginData);
 
             const success = response.success && 
                           response.data?.success === true &&
@@ -206,7 +206,7 @@ class SITTestCases {
             }
 
             // 測試Token驗證
-            const response = await this.makeRequest('GET', '/users/profile');
+            const response = await this.makeRequest('GET', '/api/v1/users/profile');
 
             const success = response.success && 
                           response.data?.success === true &&
@@ -241,7 +241,7 @@ class SITTestCases {
                 ledgerId: 'test-ledger-id'
             };
 
-            const response = await this.makeRequest('POST', '/transactions/quick', quickBookingData);
+            const response = await this.makeRequest('POST', '/api/v1/transactions/quick', quickBookingData);
 
             const success = response.success && 
                           response.data?.success === true &&
@@ -271,7 +271,7 @@ class SITTestCases {
         try {
             const formBookingTest = this.testData.basic_bookkeeping_test_data.form_booking_tests[0];
 
-            const response = await this.makeRequest('POST', '/transactions', formBookingTest.transaction_data);
+            const response = await this.makeRequest('POST', '/api/v1/transactions', formBookingTest.transaction_data);
 
             const success = response.success && 
                           response.data?.success === true &&
@@ -305,7 +305,7 @@ class SITTestCases {
                 sort: 'date:desc'
             };
 
-            const response = await this.makeRequest('GET', '/transactions?' + new URLSearchParams(queryParams));
+            const response = await this.makeRequest('GET', '/api/v1/transactions?' + new URLSearchParams(queryParams));
 
             const success = response.success && 
                           response.data?.success === true &&
@@ -388,7 +388,7 @@ class SITTestCases {
         const startTime = Date.now();
         try {
             // 先取得評估問卷
-            const questionsResponse = await this.makeRequest('GET', '/users/assessment-questions');
+            const questionsResponse = await this.makeRequest('GET', '/api/v1/users/assessment-questions');
 
             if (!questionsResponse.success) {
                 throw new Error('無法取得評估問卷');
@@ -396,7 +396,7 @@ class SITTestCases {
 
             // 提交評估答案
             const assessmentData = this.testData.mode_assessment_test_data.expert_mode_assessment;
-            const submitResponse = await this.makeRequest('POST', '/users/assessment', {
+            const submitResponse = await this.makeRequest('POST', '/api/v1/users/assessment', {
                 questionnaireId: assessmentData.assessment_id,
                 answers: Object.entries(assessmentData.answers).map((answer, index) => ({
                     questionId: index + 1,
@@ -481,7 +481,7 @@ class SITTestCases {
             for (const mode of modes) {
                 this.currentUserMode = mode;
 
-                const response = await this.makeRequest('POST', '/transactions', {
+                const response = await this.makeRequest('POST', '/api/v1/transactions', {
                     ...transformationTest.base_data,
                     categoryId: 'test-category-id',
                     accountId: 'test-account-id',
@@ -519,7 +519,7 @@ class SITTestCases {
         const startTime = Date.now();
         try {
             // 建立交易記錄
-            const createResponse = await this.makeRequest('POST', '/transactions', {
+            const createResponse = await this.makeRequest('POST', '/api/v1/transactions', {
                 amount: 500,
                 type: 'expense',
                 categoryId: 'test-category-id',
@@ -536,7 +536,7 @@ class SITTestCases {
             const transactionId = createResponse.data.data.transactionId;
 
             // 立即查詢該交易
-            const queryResponse = await this.makeRequest('GET', `/transactions/${transactionId}`);
+            const queryResponse = await this.makeRequest('GET', `/api/v1/transactions/${transactionId}`);
 
             const success = queryResponse.success && 
                           queryResponse.data?.data?.description === '同步測試交易';
@@ -575,13 +575,13 @@ class SITTestCases {
 
                     switch (step.action) {
                         case '用戶註冊':
-                            const regResponse = await this.makeRequest('POST', '/auth/register', step.data);
+                            const regResponse = await this.makeRequest('POST', '/api/v1/auth/register', step.data);
                             stepSuccess = regResponse.success;
                             if (stepSuccess) this.authToken = regResponse.data.data?.token;
                             break;
 
                         case '模式評估':
-                            const assessResponse = await this.makeRequest('POST', '/users/assessment', {
+                            const assessResponse = await this.makeRequest('POST', '/api/v1/users/assessment', {
                                 questionnaireId: 'test-assessment',
                                 answers: Object.entries(step.data.assessment_answers).map((answer, index) => ({
                                     questionId: index + 1,
@@ -592,7 +592,7 @@ class SITTestCases {
                             break;
 
                         case '首次記帳':
-                            const bookingResponse = await this.makeRequest('POST', '/transactions/quick', {
+                            const bookingResponse = await this.makeRequest('POST', '/api/v1/transactions/quick', {
                                 input: step.data.input_text,
                                 userId: 'test-user-id'
                             });
@@ -600,12 +600,12 @@ class SITTestCases {
                             break;
 
                         case '查詢記帳記錄':
-                            const queryResponse = await this.makeRequest('GET', '/transactions?limit=10');
+                            const queryResponse = await this.makeRequest('GET', '/api/v1/transactions?limit=10');
                             stepSuccess = queryResponse.success;
                             break;
 
                         case '登出':
-                            const logoutResponse = await this.makeRequest('POST', '/auth/logout');
+                            const logoutResponse = await this.makeRequest('POST', '/api/v1/auth/logout');
                             stepSuccess = logoutResponse.success;
                             break;
                     }
@@ -666,7 +666,7 @@ class SITTestCases {
                                 date: '2025-09-15'
                             };
 
-                            const validateResponse = await this.makeRequest('POST', '/transactions', validationData);
+                            const validateResponse = await this.makeRequest('POST', '/api/v1/transactions', validationData);
                             stepResult = validateResponse.success;
                             break;
 
@@ -727,7 +727,7 @@ class SITTestCases {
             for (const errorTest of networkErrors) {
                 try {
                     // 模擬網路超時
-                    const timeoutResponse = await this.makeRequest('GET', '/transactions', null, {}, 100); // 很短的超時時間
+                    const timeoutResponse = await this.makeRequest('GET', '/api/v1/transactions', null, {}, 100); // 很短的超時時間
 
                     // 檢查是否正確處理超時錯誤
                     if (!timeoutResponse.success) {
@@ -770,7 +770,7 @@ class SITTestCases {
                 try {
                     // 測試餘額不足錯誤
                     if (errorTest.scenario === '餘額不足') {
-                        const invalidTransaction = await this.makeRequest('POST', '/transactions', {
+                        const invalidTransaction = await this.makeRequest('POST', '/api/v1/transactions', {
                             amount: 999999999, // 超大金額
                             type: 'expense',
                             categoryId: 'test-category',
@@ -789,7 +789,7 @@ class SITTestCases {
                     handledErrorsCount++;
                 }
             }
-
+ㄑ
             const success = handledErrorsCount > 0;
 
             this.recordTestResult('TC-SIT-015', success, Date.now() - startTime, {
@@ -833,14 +833,14 @@ class SITTestCases {
                         console.log(`    🎯 測試互動: ${interaction.action}`);
 
                         if (interaction.action === '快速記帳') {
-                            response = await this.makeRequest('POST', '/transactions/quick', {
+                            response = await this.makeRequest('POST', '/api/v1/transactions/quick', {
                                 input: interaction.input,
                                 userId: 'test-user-id'
                             });
                         } else if (interaction.action === '查看統計') {
-                            response = await this.makeRequest('GET', '/transactions/dashboard');
+                            response = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                         } else if (interaction.action === '查看記錄') {
-                            response = await this.makeRequest('GET', '/transactions?limit=5');
+                            response = await this.makeRequest('GET', '/api/v1/transactions?limit=5');
                         }
 
                         if (response?.success) {
@@ -940,7 +940,7 @@ class SITTestCases {
 
             // 建立多個併發請求
             for (let i = 0; i < concurrentTest.concurrent_users; i++) {
-                const promise = this.makeRequest('GET', '/transactions?page=1&limit=10')
+                const promise = this.makeRequest('GET', '/api/v1/transactions?page=1&limit=10')
                     .then(response => {
                         results.push({
                             user: i + 1,
@@ -994,7 +994,7 @@ class SITTestCases {
         const startTime = Date.now();
         try {
             // 建立測試交易
-            const createResponse = await this.makeRequest('POST', '/transactions', {
+            const createResponse = await this.makeRequest('POST', '/api/v1/transactions', {
                 amount: 100,
                 type: 'expense',
                 categoryId: 'test-category',
@@ -1013,7 +1013,7 @@ class SITTestCases {
             // 同時發送多個更新請求
             const updatePromises = [];
             for (let i = 0; i < 5; i++) {
-                const updatePromise = this.makeRequest('PUT', `/transactions/${transactionId}`, {
+                const updatePromise = this.makeRequest('PUT', `/api/v1/transactions/${transactionId}`, {
                     amount: 100 + i,
                     description: `資料競爭測試-更新${i}`
                 });
@@ -1024,7 +1024,7 @@ class SITTestCases {
             const successfulUpdates = updateResults.filter(r => r.success).length;
 
             // 驗證最終資料一致性
-            const finalResponse = await this.makeRequest('GET', `/transactions/${transactionId}`);
+            const finalResponse = await this.makeRequest('GET', `/api/v1/transactions/${transactionId}`);
 
             const success = finalResponse.success && successfulUpdates > 0;
 
@@ -1067,9 +1067,9 @@ class SITTestCases {
 
                     // 執行不同類型的操作
                     const operations = [
-                        () => this.makeRequest('GET', '/users/profile'),
-                        () => this.makeRequest('GET', '/transactions?limit=5'),
-                        () => this.makeRequest('GET', '/transactions/dashboard')
+                        () => this.makeRequest('GET', '/api/v1/users/profile'),
+                        () => this.makeRequest('GET', '/api/v1/transactions?limit=5'),
+                        () => this.makeRequest('GET', '/api/v1/transactions/dashboard')
                     ];
 
                     const randomOperation = operations[i % operations.length];
@@ -1153,7 +1153,7 @@ class SITTestCases {
             // 恢復測試 - 等待系統恢復後測試正常操作
             await new Promise(resolve => setTimeout(resolve, 2000)); // 等待2秒恢復
 
-            const recoveryResponse = await this.makeRequest('GET', '/users/profile');
+            const recoveryResponse = await this.makeRequest('GET', '/api/v1/users/profile');
             const systemRecovered = recoveryResponse.success;
 
             const success = stressSuccessRate >= 0.8 && systemRecovered;
@@ -1190,7 +1190,7 @@ class SITTestCases {
 
         for (let i = 0; i < operationCount; i++) {
             try {
-                const response = await this.makeRequest('GET', '/transactions?limit=1');
+                const response = await this.makeRequest('GET', '/api/v1/transactions?limit=1');
                 if (response.success) {
                     successfulOperations++;
                 }
@@ -1227,7 +1227,7 @@ class SITTestCases {
                 try {
                     switch (step.action) {
                         case '用戶註冊':
-                            const regResponse = await this.makeRequest('POST', '/auth/register', {
+                            const regResponse = await this.makeRequest('POST', '/api/v1/auth/register', {
                                 ...step.data,
                                 acceptTerms: true,
                                 acceptPrivacy: true
@@ -1240,7 +1240,7 @@ class SITTestCases {
                             break;
 
                         case '模式評估':
-                            const assessResponse = await this.makeRequest('POST', '/users/assessment', {
+                            const assessResponse = await this.makeRequest('POST', '/api/v1/users/assessment', {
                                 questionnaireId: 'complete-journey-test',
                                 answers: Object.entries(step.data.assessment_answers).map((answer, index) => ({
                                     questionId: index + 1,
@@ -1255,7 +1255,7 @@ class SITTestCases {
                             break;
 
                         case '首次記帳':
-                            const bookingResponse = await this.makeRequest('POST', '/transactions/quick', {
+                            const bookingResponse = await this.makeRequest('POST', '/api/v1/transactions/quick', {
                                 input: step.data.input_text,
                                 userId: 'journey-test-user',
                                 ledgerId: 'journey-test-ledger'
@@ -1267,7 +1267,7 @@ class SITTestCases {
                             break;
 
                         case '查詢記帳記錄':
-                            const queryResponse = await this.makeRequest('GET', '/transactions', {
+                            const queryResponse = await this.makeRequest('GET', '/api/v1/transactions', {
                                 ...step.data,
                                 userId: 'journey-test-user'
                             });
@@ -1278,7 +1278,7 @@ class SITTestCases {
                             break;
 
                         case '登出':
-                            const logoutResponse = await this.makeRequest('POST', '/auth/logout');
+                            const logoutResponse = await this.makeRequest('POST', '/api/v1/auth/logout');
                             stepSuccess = logoutResponse.success;
                             if (stepSuccess) {
                                 console.log('    ✅ 用戶登出成功');
@@ -1360,11 +1360,11 @@ class SITTestCases {
                 const needValidation = true; // 假設需求明確
 
                 // 2. 功能設計 - API設計是否完整
-                const apiResponse = await this.makeRequest('GET', '/transactions/dashboard');
+                const apiResponse = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                 const designValidation = apiResponse.success;
 
                 // 3. 技術實現 - 系統是否正常運作
-                const techResponse = await this.makeRequest('POST', '/transactions', {
+                const techResponse = await this.makeRequest('POST', '/api/v1/transactions', {
                     amount: 200,
                     type: 'expense',
                     categoryId: 'test-category',
@@ -1376,7 +1376,7 @@ class SITTestCases {
                 const techValidation = techResponse.success;
 
                 // 4. 資料處理 - 資料是否正確儲存和處理
-                const dataResponse = await this.makeRequest('GET', '/transactions?limit=1');
+                const dataResponse = await this.makeRequest('GET', '/api/v1/transactions?limit=1');
                 const dataValidation = dataResponse.success;
 
                 // 5. 用戶回饋 - 系統回應是否友善
@@ -1508,14 +1508,14 @@ class SITTestCases {
             {
                 name: '功能可用性',
                 test: async () => {
-                    const response = await this.makeRequest('GET', '/transactions/dashboard');
+                    const response = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                     return response.success;
                 }
             },
             {
                 name: '回應友善性',
                 test: async () => {
-                    const response = await this.makeRequest('POST', '/transactions/quick', {
+                    const response = await this.makeRequest('POST', '/api/v1/transactions/quick', {
                         input: '測試100',
                         userId: 'test-user'
                     });
@@ -1545,8 +1545,8 @@ class SITTestCases {
         try {
             const responsiveTests = [
                 { endpoint: '/api/v1/users/profile', expectedTime: 1000, description: '用戶資料載入' },
-                { endpoint: '/transactions/dashboard', expectedTime: 2000, description: '儀表板載入' },
-                { endpoint: '/transactions?limit=10', expectedTime: 1500, description: '交易列表載入' }
+                { endpoint: '/api/v1/transactions/dashboard', expectedTime: 2000, description: '儀表板載入' },
+                { endpoint: '/api/v1/transactions?limit=10', expectedTime: 1500, description: '交易列表載入' }
             ];
 
             const responsiveResults = [];
@@ -1628,29 +1628,29 @@ class SITTestCases {
                     const operationTypes = [
                         {
                             name: '基礎CRUD操作',
-                            action: () => this.makeRequest('GET', '/users/profile')
+                            action: () => this.makeRequest('GET', '/api/v1/users/profile')
                         },
                         {
                             name: '記帳操作',
-                            action: () => this.makeRequest('POST', '/transactions/quick', {
+                            action: () => this.makeRequest('POST', '/api/v1/transactions/quick', {
                                 input: `24H測試記帳${i}`,
                                 userId: 'stability-test-user'
                             })
                         },
                         {
                             name: '查詢操作',
-                            action: () => this.makeRequest('GET', '/transactions?limit=5')
+                            action: () => this.makeRequest('GET', '/api/v1/transactions?limit=5')
                         },
                         {
                             name: '統計操作',
-                            action: () => this.makeRequest('GET', '/transactions/dashboard')
+                            action: () => this.makeRequest('GET', '/api/v1/transactions/dashboard')
                         },
                         {
                             name: '模式切換操作',
                             action: () => {
                                 const modes = ['Expert', 'Guiding', 'Inertial', 'Cultivation'];
                                 this.currentUserMode = modes[i % modes.length];
-                                return this.makeRequest('GET', '/users/profile');
+                                return this.makeRequest('GET', '/api/v1/users/profile');
                             }
                         }
                     ];
@@ -1895,9 +1895,9 @@ class SITTestCases {
                     name: '資料格式錯誤恢復',
                     test: async () => {
                         // 發送格式錯誤的資料
-                        await this.makeRequest('POST', '/transactions', { invalid: 'data' });
+                        await this.makeRequest('POST', '/api/v1/transactions', { invalid: 'data' });
                         // 發送正確格式測試恢復
-                        const recovery = await this.makeRequest('GET', '/transactions/dashboard');
+                        const recovery = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                         return recovery.success;
                     }
                 }
@@ -2026,7 +2026,7 @@ class SITTestCases {
                             const responseTimes = [];
                             for (let i = 0; i < 20; i++) {
                                 const apiStart = Date.now();
-                                const response = await this.makeRequest('GET', '/transactions/dashboard');
+                                const response = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                                 if (response.success) {
                                     responseTimes.push(Date.now() - apiStart);
                                 }
@@ -2049,7 +2049,7 @@ class SITTestCases {
                             const concurrentPromises = [];
                             for (let i = 0; i < 50; i++) { // 測試50併發用戶
                                 concurrentPromises.push(
-                                    this.makeRequest('GET', '/users/profile')
+                                    this.makeRequest('GET', '/api/v1/users/profile')
                                 );
                             }
 
@@ -2070,7 +2070,7 @@ class SITTestCases {
                             const dataConsistencyPromises = [];
                             for (let i = 0; i < 10; i++) {
                                 dataConsistencyPromises.push(
-                                    this.makeRequest('POST', '/transactions', {
+                                    this.makeRequest('POST', '/api/v1/transactions', {
                                         amount: 100 + i,
                                         type: 'expense',
                                         categoryId: 'test-category',
@@ -2634,10 +2634,10 @@ module.exports = SITTestCases;
 if (require.main === module) {
     (async () => {
         console.log('🚀 初始化 LCAS 2.0 Phase 1 SIT測試環境...');
-        
+
         // 修復：創建sitTest實例
         const sitTest = new SITTestCases();
-        
+
         // 載入測試資料
         console.log('📂 載入測試資料...');
         const dataLoaded = await sitTest.loadTestData();
@@ -2645,12 +2645,12 @@ if (require.main === module) {
             console.error('❌ 測試資料載入失敗，終止測試執行');
             process.exit(1);
         }
-        
+
         console.log('✅ SIT測試環境初始化完成');
         console.log(`🌐 API基礎URL: ${sitTest.apiBaseURL}`);
         console.log(`👤 預設用戶模式: ${sitTest.currentUserMode}`);
         console.log('=' * 80);
-        
+
         const args = process.argv.slice(2);
         const phaseArg = args.find(arg => arg.startsWith('--phase='))?.split('=')[1];
 
