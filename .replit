@@ -38,6 +38,7 @@ externalPort = 3001
 expertMode = true
 
 [workflows]
+runButton = "ASL Service"
 
 [[workflows.workflow]]
 name = "ASL Service"
