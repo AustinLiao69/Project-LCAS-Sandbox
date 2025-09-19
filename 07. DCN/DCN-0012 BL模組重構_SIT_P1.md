@@ -70,27 +70,61 @@
 
 ### 3.2 BL模組API端點實作
 
+本DCN專注於Phase 1核心進入流程所需的API端點實作，依據0090 Sprint計畫Phase 1範圍。
+
 #### 3.2.1 AM.js 認證服務API函數（11個端點）
 ```javascript
 // 需要實作的API處理函數
-AM_processAPIRegister()      // POST /api/v1/auth/register
-AM_processAPILogin()         // POST /api/v1/auth/login
-AM_processAPIGoogleLogin()   // POST /api/v1/auth/google-login
-// ... 其他8個認證API函數
+AM_processAPIRegister()          // POST /api/v1/auth/register
+AM_processAPILogin()             // POST /api/v1/auth/login  
+AM_processAPIGoogleLogin()       // POST /api/v1/auth/google-login
+AM_processAPILogout()            // POST /api/v1/auth/logout
+AM_processAPIRefresh()           // POST /api/v1/auth/refresh
+AM_processAPIForgotPassword()    // POST /api/v1/auth/forgot-password
+AM_processAPIVerifyResetToken()  // GET /api/v1/auth/verify-reset-token
+AM_processAPIResetPassword()     // POST /api/v1/auth/reset-password
+AM_processAPIVerifyEmail()       // POST /api/v1/auth/verify-email
+AM_processAPIBindLine()          // POST /api/v1/auth/bind-line
+AM_processAPIBindStatus()        // GET /api/v1/auth/bind-status
 ```
 
-#### 3.2.2 BK.js 記帳交易API函數（20個端點）
+#### 3.2.2 BK.js 記帳交易API函數（15個端點）
 ```javascript
 // 需要實作的API處理函數
-AM_processAPITransaction()         // POST /api/v1/transactions
-BK_processAPIQuickTransaction()    // POST /api/v1/transactions/quick
-BK_processAPIGetTransactions()     // GET /api/v1/transactions
-// ... 其他17個記帳API函數
+BK_processAPITransaction()          // POST /api/v1/transactions
+BK_processAPIQuickTransaction()     // POST /api/v1/transactions/quick  
+BK_processAPIGetTransactions()      // GET /api/v1/transactions
+BK_processAPIGetTransactionDetail() // GET /api/v1/transactions/{id}
+BK_processAPIUpdateTransaction()    // PUT /api/v1/transactions/{id}
+BK_processAPIDeleteTransaction()    // DELETE /api/v1/transactions/{id}
+BK_processAPIGetDashboard()         // GET /api/v1/transactions/dashboard
+BK_processAPIGetStatistics()        // GET /api/v1/transactions/statistics
+BK_processAPIGetRecent()            // GET /api/v1/transactions/recent
+BK_processAPIGetCharts()            // GET /api/v1/transactions/charts
+BK_processAPIBatchCreate()          // POST /api/v1/transactions/batch
+BK_processAPIBatchUpdate()          // PUT /api/v1/transactions/batch
+BK_processAPIBatchDelete()          // DELETE /api/v1/transactions/batch
+BK_processAPIUploadAttachment()     // POST /api/v1/transactions/{id}/attachments
+BK_processAPIDeleteAttachment()     // DELETE /api/v1/transactions/{id}/attachments/{attachmentId}
 ```
 
-#### 3.2.3 其他BL模組API函數（101個端點）
-- **FS.js**：帳本管理相關API函數（14個）
-- **其他模組**：按0026架構矩陣實作對應API函數（87個）
+#### 3.2.3 用戶管理API函數（UM.js - 8個端點）
+```javascript
+// 需要實作的API處理函數  
+UM_processAPIGetProfile()           // GET /api/v1/users/profile
+UM_processAPIUpdateProfile()        // PUT /api/v1/users/profile
+UM_processAPIGetPreferences()       // GET /api/v1/users/preferences
+UM_processAPIUpdatePreferences()    // PUT /api/v1/users/preferences
+UM_processAPIGetLinkedAccounts()    // GET /api/v1/users/linked-accounts
+UM_processAPIUnlinkAccount()        // DELETE /api/v1/users/linked-accounts/{provider}
+UM_processAPIAssessMode()           // POST /api/v1/users/assess-mode
+UM_processAPISwitchMode()           // PUT /api/v1/users/mode
+```
+
+**Phase 1範圍說明**：
+- 總計34個API端點，涵蓋Phase 1核心進入流程所需功能
+- 其他Phase 2-7的API端點將在後續DCN中處理
+- 專注於使用者註冊、登入、基本記帳功能的完整實作
 
 ### 3.3 測試語法錯誤修復
 
@@ -147,11 +181,12 @@ app.post('/api/v1/auth/register', async (req, res) => {
 - 🔧 建立標準化轉發機制
 - 🧪 測試語法錯誤修復
 
-### 階段二：完整API端點實作（Week 2-3）
+### 階段二：Phase 1 API端點實作（Week 2-3）
 - 🔧 **AM.js**: 實作11個認證相關API端點函數
-- 🔧 **BK.js**: 實作20個記帳交易API端點函數
-- 🔧 **其他BL模組**: 按需實作對應API函數（101個）
-- 🧪 單元測試驗證
+- 🔧 **BK.js**: 實作15個記帳交易API端點函數  
+- 🔧 **UM.js**: 實作8個用戶管理API端點函數
+- 🔧 **ASL.js**: 實作34個轉發端點
+- 🧪 單元測試驗證（專注Phase 1範圍）
 
 ### 階段三：系統整合驗證（Week 4）
 - 🧪 **端到端測試**：驗證PL→APL→ASL→BL完整鏈路
@@ -179,26 +214,87 @@ AM_processAPIBindLine()          // POST /api/v1/auth/bind-line
 AM_processAPIBindStatus()        // GET /api/v1/auth/bind-status
 ```
 
-### 6.2 記帳交易端點（BK.js - 20個）
+### 6.2 記帳交易端點（BK.js - 15個）
 ```javascript
 // 需要在BK.js實作的API處理函數
-BK_processAPITransaction()       // POST /api/v1/transactions
-BK_processAPIQuickTransaction()  // POST /api/v1/transactions/quick
-BK_processAPIGetTransactions()   // GET /api/v1/transactions
-// ... 其他17個記帳交易API函數
+BK_processAPITransaction()          // POST /api/v1/transactions
+BK_processAPIQuickTransaction()     // POST /api/v1/transactions/quick  
+BK_processAPIGetTransactions()      // GET /api/v1/transactions
+BK_processAPIGetTransactionDetail() // GET /api/v1/transactions/{id}
+BK_processAPIUpdateTransaction()    // PUT /api/v1/transactions/{id}
+BK_processAPIDeleteTransaction()    // DELETE /api/v1/transactions/{id}
+BK_processAPIGetDashboard()         // GET /api/v1/transactions/dashboard
+BK_processAPIGetStatistics()        // GET /api/v1/transactions/statistics
+BK_processAPIGetRecent()            // GET /api/v1/transactions/recent
+BK_processAPIGetCharts()            // GET /api/v1/transactions/charts
+BK_processAPIBatchCreate()          // POST /api/v1/transactions/batch
+BK_processAPIBatchUpdate()          // PUT /api/v1/transactions/batch
+BK_processAPIBatchDelete()          // DELETE /api/v1/transactions/batch
+BK_processAPIUploadAttachment()     // POST /api/v1/transactions/{id}/attachments
+BK_processAPIDeleteAttachment()     // DELETE /api/v1/transactions/{id}/attachments/{attachmentId}
 ```
 
-### 6.3 其他BL模組API端點（101個）
-- **FS.js**: 帳本管理相關（14個）
-- **其他模組**: 按0026架構矩陣分配（87個）
+### 6.3 用戶管理端點（UM.js - 8個）
+```javascript
+// 需要在UM.js實作的API處理函數  
+UM_processAPIGetProfile()           // GET /api/v1/users/profile
+UM_processAPIUpdateProfile()        // PUT /api/v1/users/profile
+UM_processAPIGetPreferences()       // GET /api/v1/users/preferences
+UM_processAPIUpdatePreferences()    // PUT /api/v1/users/preferences
+UM_processAPIGetLinkedAccounts()    // GET /api/v1/users/linked-accounts
+UM_processAPIUnlinkAccount()        // DELETE /api/v1/users/linked-accounts/{provider}
+UM_processAPIAssessMode()           // POST /api/v1/users/assess-mode
+UM_processAPISwitchMode()           // PUT /api/v1/users/mode
+```
 
-### 6.4 ASL.js轉發端點（132個）
+### 6.4 ASL.js轉發端點（34個）
 ```javascript
 // ASL.js 僅負責轉發，不實作業務邏輯
+// 認證服務轉發（11個）
 app.post('/api/v1/auth/register', (req, res) => AM_processAPIRegister);
+app.post('/api/v1/auth/login', (req, res) => AM_processAPILogin);
+app.post('/api/v1/auth/google-login', (req, res) => AM_processAPIGoogleLogin);
+app.post('/api/v1/auth/logout', (req, res) => AM_processAPILogout);
+app.post('/api/v1/auth/refresh', (req, res) => AM_processAPIRefresh);
+app.post('/api/v1/auth/forgot-password', (req, res) => AM_processAPIForgotPassword);
+app.get('/api/v1/auth/verify-reset-token', (req, res) => AM_processAPIVerifyResetToken);
+app.post('/api/v1/auth/reset-password', (req, res) => AM_processAPIResetPassword);
+app.post('/api/v1/auth/verify-email', (req, res) => AM_processAPIVerifyEmail);
+app.post('/api/v1/auth/bind-line', (req, res) => AM_processAPIBindLine);
+app.get('/api/v1/auth/bind-status', (req, res) => AM_processAPIBindStatus);
+
+// 記帳交易轉發（15個）
+app.post('/api/v1/transactions', (req, res) => BK_processAPITransaction);
 app.post('/api/v1/transactions/quick', (req, res) => BK_processAPIQuickTransaction);
-// ... 其他130個轉發端點
+app.get('/api/v1/transactions', (req, res) => BK_processAPIGetTransactions);
+app.get('/api/v1/transactions/:id', (req, res) => BK_processAPIGetTransactionDetail);
+app.put('/api/v1/transactions/:id', (req, res) => BK_processAPIUpdateTransaction);
+app.delete('/api/v1/transactions/:id', (req, res) => BK_processAPIDeleteTransaction);
+app.get('/api/v1/transactions/dashboard', (req, res) => BK_processAPIGetDashboard);
+app.get('/api/v1/transactions/statistics', (req, res) => BK_processAPIGetStatistics);
+app.get('/api/v1/transactions/recent', (req, res) => BK_processAPIGetRecent);
+app.get('/api/v1/transactions/charts', (req, res) => BK_processAPIGetCharts);
+app.post('/api/v1/transactions/batch', (req, res) => BK_processAPIBatchCreate);
+app.put('/api/v1/transactions/batch', (req, res) => BK_processAPIBatchUpdate);
+app.delete('/api/v1/transactions/batch', (req, res) => BK_processAPIBatchDelete);
+app.post('/api/v1/transactions/:id/attachments', (req, res) => BK_processAPIUploadAttachment);
+app.delete('/api/v1/transactions/:id/attachments/:attachmentId', (req, res) => BK_processAPIDeleteAttachment);
+
+// 用戶管理轉發（8個）
+app.get('/api/v1/users/profile', (req, res) => UM_processAPIGetProfile);
+app.put('/api/v1/users/profile', (req, res) => UM_processAPIUpdateProfile);
+app.get('/api/v1/users/preferences', (req, res) => UM_processAPIGetPreferences);
+app.put('/api/v1/users/preferences', (req, res) => UM_processAPIUpdatePreferences);
+app.get('/api/v1/users/linked-accounts', (req, res) => UM_processAPIGetLinkedAccounts);
+app.delete('/api/v1/users/linked-accounts/:provider', (req, res) => UM_processAPIUnlinkAccount);
+app.post('/api/v1/users/assess-mode', (req, res) => UM_processAPIAssessMode);
+app.put('/api/v1/users/mode', (req, res) => UM_processAPISwitchMode);
 ```
+
+**Phase 1範圍限制**：
+- 總計34個API端點，專注於核心進入流程
+- Phase 2-7的其他API端點將於後續DCN處理
+- 確保SIT測試可以涵蓋關鍵用戶旅程
 
 ---
 
