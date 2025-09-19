@@ -47,9 +47,19 @@ class SITTestCases {
      */
     async makeRequest(method, endpoint, data = null, headers = {}) {
         try {
+            // 階段三修復：確保endpoint不重複baseURL路徑
+            let cleanEndpoint = endpoint;
+            if (endpoint.startsWith('/api/v1/api/v1/')) {
+                cleanEndpoint = endpoint.replace('/api/v1/api/v1/', '/api/v1/');
+            } else if (endpoint.startsWith('api/v1/')) {
+                cleanEndpoint = '/' + endpoint;
+            } else if (!endpoint.startsWith('/')) {
+                cleanEndpoint = '/' + endpoint;
+            }
+            
             const config = {
                 method,
-                url: `${this.apiBaseURL}${endpoint}`,
+                url: `${this.apiBaseURL}${cleanEndpoint}`,
                 headers: {
                     'Content-Type': 'application/json',
                     'X-User-Mode': this.currentUserMode,
@@ -74,9 +84,30 @@ class SITTestCases {
                 headers: response.headers
             };
         } catch (error) {
+            // 階段三修復：正確處理錯誤訊息，避免[object Object]
+            let errorMessage = 'Unknown error';
+            
+            if (error.response?.data) {
+                if (typeof error.response.data === 'string') {
+                    errorMessage = error.response.data;
+                } else if (error.response.data.message) {
+                    errorMessage = error.response.data.message;
+                } else if (error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                } else {
+                    errorMessage = JSON.stringify(error.response.data);
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            } else if (typeof error === 'string') {
+                errorMessage = error;
+            } else {
+                errorMessage = error.toString();
+            }
+            
             return {
                 success: false,
-                error: error.response?.data || error.message,
+                error: errorMessage,
                 status: error.response?.status || 500
             };
         }
@@ -99,7 +130,12 @@ class SITTestCases {
         console.log(`${status} ${testCase} (${duration}ms)`);
 
         if (!result && details.error) {
-            console.log(`   錯誤: ${details.error}`);
+            // 階段三修復：確保錯誤訊息正確顯示
+            let errorMsg = details.error;
+            if (typeof errorMsg === 'object' && errorMsg !== null) {
+                errorMsg = errorMsg.message || errorMsg.error || JSON.stringify(errorMsg);
+            }
+            console.log(`   錯誤: ${errorMsg}`);
         }
     }
 

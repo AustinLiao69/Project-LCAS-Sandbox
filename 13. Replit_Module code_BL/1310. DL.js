@@ -39,8 +39,8 @@ const DL_CONFIG = {
   timezone: "Asia/Taipei", // 時區設置
 
   // 1.3 緩衝區設置
-  logBufferSize: 10, // 緩衝區大小 (減少到10條，更快寫入)
-  bufferFlushInterval: 30000, // 緩衝區刷新間隔 (30秒)
+  logBufferSize: 50, // 緩衝區大小 (增加到50條，減少寫入頻率)
+  bufferFlushInterval: 120000, // 緩衝區刷新間隔 (2分鐘)
   logBuffer: [], // 日誌緩衝區
   lastBufferFlush: 0, // 上次緩衝區刷新時間
 
@@ -56,6 +56,10 @@ const DL_CONFIG = {
 
   // 1.6 Firestore 連接狀態
   firestoreInitialized: false, // Firestore 初始化狀態
+  
+  // 1.7 配額管理 (階段一新增)
+  lastFailureTime: 0, // 上次配額失敗時間
+  quotaExhausted: false, // 配額耗盡標記
 };
 
 // 2. 嚴重等級定義
@@ -180,12 +184,20 @@ async function DL_checkAndFlushBuffer() {
 
 /**
  * 03. 強制刷新日誌緩衝區到Firestore
- * @version 2025-07-09-V3.0.6
- * @date 2025-07-09 17:30:00
- * @description 使用Firestore批次寫入將緩衝區日誌強制寫入資料庫
+ * @version 2025-09-19-V2.2.1
+ * @date 2025-09-19 10:45:00
+ * @description 使用Firestore批次寫入將緩衝區日誌強制寫入資料庫，添加配額檢查
  */
 async function DL_flushLogBuffer() {
   if (DL_CONFIG.logBuffer.length === 0) return;
+
+  // 階段一修復：檢查上次失敗時間，避免頻繁重試
+  const now = Date.now();
+  if (DL_CONFIG.lastFailureTime && (now - DL_CONFIG.lastFailureTime) < 300000) { // 5分鐘內不重試
+    console.log('⏸️ DL: 配額限制期間，跳過Firestore寫入');
+    DL_CONFIG.logBuffer = []; // 清空緩衝區避免累積
+    return;
+  }
 
   try {
     // 使用Firestore batch write批次寫入
@@ -216,9 +228,19 @@ async function DL_flushLogBuffer() {
     DL_CONFIG.logBuffer = [];
     DL_CONFIG.lastBufferFlush = Date.now();
   } catch (error) {
-    console.error(`DL_flushLogBuffer錯誤: ${error.toString()}`);
-    // 發生錯誤時，清空緩衝區避免累積過多日誌
-    DL_CONFIG.logBuffer = [];
+    // 階段一修復：區分配額錯誤和其他錯誤
+    if (error.code === 8 || error.message.includes('RESOURCE_EXHAUSTED')) {
+      console.warn(`⚠️ DL: Firestore配額耗盡，將暫停5分鐘`);
+      DL_CONFIG.lastFailureTime = Date.now();
+      // 配額錯誤時保留部分重要日誌，清空其餘
+      DL_CONFIG.logBuffer = DL_CONFIG.logBuffer.filter(log => 
+        log[9] === 'ERROR' || log[9] === 'CRITICAL'
+      ).slice(-10); // 只保留最後10條錯誤日誌
+    } else {
+      console.error(`DL_flushLogBuffer錯誤: ${error.toString()}`);
+      // 其他錯誤清空緩衝區
+      DL_CONFIG.logBuffer = [];
+    }
     DL_CONFIG.lastBufferFlush = Date.now();
   }
 }

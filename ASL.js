@@ -299,6 +299,22 @@ app.use((req, res, next) => {
  * @description ASL服務的基礎監控端點
  */
 
+// ASL /api 根端點 (階段二修復)
+app.get('/api', (req, res) => {
+  res.apiSuccess({
+    service: 'LCAS 2.0 API Service Layer',
+    version: '1.0.0',
+    status: 'running',
+    baseUrl: '/api/v1',
+    available_endpoints: [
+      'GET /api/v1/endpoints',
+      'GET /api/v1/users/profile',
+      'POST /api/v1/auth/login',
+      'POST /api/v1/transactions'
+    ]
+  }, 'API服務根端點');
+});
+
 // ASL服務狀態首頁
 app.get('/', (req, res) => {
   res.apiSuccess({
