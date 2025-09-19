@@ -241,7 +241,7 @@ class SITTestCases {
                 ledgerId: 'test-ledger-id'
             };
 
-            const response = await this.makeRequest('POST', '/api/v1/api/v1/transactions/quick', quickBookingData);
+            const response = await this.makeRequest('POST', '/api/v1/transactions/quick', quickBookingData);
 
             const success = response.success && 
                           response.data?.success === true &&
@@ -352,7 +352,7 @@ class SITTestCases {
             const tempToken = this.authToken;
             this.authToken = 'invalid-token';
 
-            const authErrorResponse = await this.makeRequest('GET', '/api/v1/api/v1/users/profile');
+            const authErrorResponse = await this.makeRequest('GET', '/api/v1/users/profile');
             totalTests++;
 
             if (!authErrorResponse.success && authErrorResponse.status === 401) {
@@ -388,7 +388,7 @@ class SITTestCases {
         const startTime = Date.now();
         try {
             // 先取得評估問卷
-            const questionsResponse = await this.makeRequest('GET', '/api/v1/api/v1/users/assessment-questions');
+            const questionsResponse = await this.makeRequest('GET', '/api/v1/users/assessment-questions');
 
             if (!questionsResponse.success) {
                 throw new Error('無法取得評估問卷');
@@ -438,7 +438,7 @@ class SITTestCases {
             for (const mode of modes) {
                 this.currentUserMode = mode;
 
-                const response = await this.makeRequest('GET', '/api/v1/api/v1/users/profile');
+                const response = await this.makeRequest('GET', '/api/v1/users/profile');
                 responses[mode] = response;
 
                 if (response.success && response.data?.metadata?.userMode === mode) {
@@ -519,7 +519,7 @@ class SITTestCases {
         const startTime = Date.now();
         try {
             // 建立交易記錄
-            const createResponse = await this.makeRequest('POST', '/api/v1/api/v1/transactions', {
+            const createResponse = await this.makeRequest('POST', '/api/v1/transactions', {
                 amount: 500,
                 type: 'expense',
                 categoryId: 'test-category-id',
@@ -536,7 +536,7 @@ class SITTestCases {
             const transactionId = createResponse.data.data.transactionId;
 
             // 立即查詢該交易
-            const queryResponse = await this.makeRequest('GET', `/api/v1/api/v1/transactions/${transactionId}`);
+            const queryResponse = await this.makeRequest('GET', `/api/v1/transactions/${transactionId}`);
 
             const success = queryResponse.success && 
                           queryResponse.data?.data?.description === '同步測試交易';
@@ -592,7 +592,7 @@ class SITTestCases {
                             break;
 
                         case '首次記帳':
-                            const bookingResponse = await this.makeRequest('POST', '/api/v1/api/v1/transactions/quick', {
+                            const bookingResponse = await this.makeRequest('POST', '/api/v1/transactions/quick', {
                                 input: step.data.input_text,
                                 userId: 'test-user-id'
                             });
@@ -789,7 +789,7 @@ class SITTestCases {
                     handledErrorsCount++;
                 }
             }
-
+ㄑ
             const success = handledErrorsCount > 0;
 
             this.recordTestResult('TC-SIT-015', success, Date.now() - startTime, {
@@ -833,12 +833,12 @@ class SITTestCases {
                         console.log(`    🎯 測試互動: ${interaction.action}`);
 
                         if (interaction.action === '快速記帳') {
-                            response = await this.makeRequest('POST', '/api/v1/api/v1/transactions/quick', {
+                            response = await this.makeRequest('POST', '/api/v1/transactions/quick', {
                                 input: interaction.input,
                                 userId: 'test-user-id'
                             });
                         } else if (interaction.action === '查看統計') {
-                            response = await this.makeRequest('GET', '/api/v1/api/v1/transactions/dashboard');
+                            response = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                         } else if (interaction.action === '查看記錄') {
                             response = await this.makeRequest('GET', '/api/v1/transactions?limit=5');
                         }
@@ -1013,7 +1013,7 @@ class SITTestCases {
             // 同時發送多個更新請求
             const updatePromises = [];
             for (let i = 0; i < 5; i++) {
-                const updatePromise = this.makeRequest('PUT', `/api/v1/api/v1/transactions/${transactionId}`, {
+                const updatePromise = this.makeRequest('PUT', `/api/v1/transactions/${transactionId}`, {
                     amount: 100 + i,
                     description: `資料競爭測試-更新${i}`
                 });
@@ -1069,7 +1069,7 @@ class SITTestCases {
                     const operations = [
                         () => this.makeRequest('GET', '/api/v1/users/profile'),
                         () => this.makeRequest('GET', '/api/v1/transactions?limit=5'),
-                        () => this.makeRequest('GET', '/api/v1/api/v1/transactions/dashboard')
+                        () => this.makeRequest('GET', '/api/v1/transactions/dashboard')
                     ];
 
                     const randomOperation = operations[i % operations.length];
@@ -1255,7 +1255,7 @@ class SITTestCases {
                             break;
 
                         case '首次記帳':
-                            const bookingResponse = await this.makeRequest('POST', '/api/v1/api/v1/transactions/quick', {
+                            const bookingResponse = await this.makeRequest('POST', '/api/v1/transactions/quick', {
                                 input: step.data.input_text,
                                 userId: 'journey-test-user',
                                 ledgerId: 'journey-test-ledger'
@@ -1360,7 +1360,7 @@ class SITTestCases {
                 const needValidation = true; // 假設需求明確
 
                 // 2. 功能設計 - API設計是否完整
-                const apiResponse = await this.makeRequest('GET', '/api/v1/api/v1/transactions/dashboard');
+                const apiResponse = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                 const designValidation = apiResponse.success;
 
                 // 3. 技術實現 - 系統是否正常運作
@@ -1501,21 +1501,21 @@ class SITTestCases {
             {
                 name: '資料展示適配',
                 test: async () => {
-                    const response = await this.makeRequest('GET', '/api/v1/api/v1/users/profile');
+                    const response = await this.makeRequest('GET', '/api/v1/users/profile');
                     return response.success && response.data?.metadata?.userMode === mode;
                 }
             },
             {
                 name: '功能可用性',
                 test: async () => {
-                    const response = await this.makeRequest('GET', '/api/v1/api/v1/transactions/dashboard');
+                    const response = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                     return response.success;
                 }
             },
             {
                 name: '回應友善性',
                 test: async () => {
-                    const response = await this.makeRequest('POST', '/api/v1/api/v1/transactions/quick', {
+                    const response = await this.makeRequest('POST', '/api/v1/transactions/quick', {
                         input: '測試100',
                         userId: 'test-user'
                     });
@@ -1544,8 +1544,8 @@ class SITTestCases {
         const startTime = Date.now();
         try {
             const responsiveTests = [
-                { endpoint: '/api/v1/api/v1/users/profile', expectedTime: 1000, description: '用戶資料載入' },
-                { endpoint: '/api/v1/api/v1/transactions/dashboard', expectedTime: 2000, description: '儀表板載入' },
+                { endpoint: '/api/v1/users/profile', expectedTime: 1000, description: '用戶資料載入' },
+                { endpoint: '/api/v1/transactions/dashboard', expectedTime: 2000, description: '儀表板載入' },
                 { endpoint: '/api/v1/transactions?limit=10', expectedTime: 1500, description: '交易列表載入' }
             ];
 
@@ -1632,7 +1632,7 @@ class SITTestCases {
                         },
                         {
                             name: '記帳操作',
-                            action: () => this.makeRequest('POST', '/api/v1/api/v1/transactions/quick', {
+                            action: () => this.makeRequest('POST', '/api/v1/transactions/quick', {
                                 input: `24H測試記帳${i}`,
                                 userId: 'stability-test-user'
                             })
@@ -1643,7 +1643,7 @@ class SITTestCases {
                         },
                         {
                             name: '統計操作',
-                            action: () => this.makeRequest('GET', '/api/v1/api/v1/transactions/dashboard')
+                            action: () => this.makeRequest('GET', '/api/v1/transactions/dashboard')
                         },
                         {
                             name: '模式切換操作',
@@ -1874,7 +1874,7 @@ class SITTestCases {
                         // 發送無效請求
                         await this.makeRequest('GET', '/invalid-endpoint');
                         // 立即發送正常請求測試恢復
-                        const recovery = await this.makeRequest('GET', '/api/v1/api/v1/users/profile');
+                        const recovery = await this.makeRequest('GET', '/api/v1/users/profile');
                         return recovery.success;
                     }
                 },
@@ -1884,10 +1884,10 @@ class SITTestCases {
                         const originalToken = this.authToken;
                         // 使用無效Token
                         this.authToken = 'invalid-token';
-                        await this.makeRequest('GET', '/api/v1/api/v1/users/profile');
+                        await this.makeRequest('GET', '/api/v1/users/profile');
                         // 恢復正確Token
                         this.authToken = originalToken;
-                        const recovery = await this.makeRequest('GET', '/api/v1/api/v1/users/profile');
+                        const recovery = await this.makeRequest('GET', '/api/v1/users/profile');
                         return recovery.success;
                     }
                 },
@@ -1897,7 +1897,7 @@ class SITTestCases {
                         // 發送格式錯誤的資料
                         await this.makeRequest('POST', '/api/v1/transactions', { invalid: 'data' });
                         // 發送正確格式測試恢復
-                        const recovery = await this.makeRequest('GET', '/api/v1/api/v1/transactions/dashboard');
+                        const recovery = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                         return recovery.success;
                     }
                 }
@@ -2026,7 +2026,7 @@ class SITTestCases {
                             const responseTimes = [];
                             for (let i = 0; i < 20; i++) {
                                 const apiStart = Date.now();
-                                const response = await this.makeRequest('GET', '/api/v1/api/v1/transactions/dashboard');
+                                const response = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
                                 if (response.success) {
                                     responseTimes.push(Date.now() - apiStart);
                                 }
