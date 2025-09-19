@@ -17,7 +17,7 @@ import 'package:http/http.dart' as http;
 
 /// 用戶管理服務API Gateway
 class UserAPIGateway {
-  final String _backendBaseUrl = 'http://0.0.0.0:5000/api/v1';
+  final String _backendBaseUrl = 'http://0.0.0.0:5000';
   final http.Client _httpClient = http.Client();
 
   /**
