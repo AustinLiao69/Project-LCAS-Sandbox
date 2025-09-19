@@ -205,7 +205,7 @@ class SITTestCases {
             }
 
             // 測試Token驗證
-            const response = await this.makeRequest('GET', '/api/v1/users/profile');
+            const response = await this.makeRequest('GET', '/users/profile');
 
             const success = response.success && 
                           response.data?.success === true &&
@@ -2138,7 +2138,232 @@ class SITTestCases {
         return 'D (不合格)';
     }
 
-    // ==================== 主要執行方法 ====================
+    // ==================== 階段一：單點整合驗證測試 ====================
+
+    /**
+     * 執行階段一測試案例 (TC-SIT-001 to TC-SIT-007)
+     */
+    async executePhase1Tests() {
+        console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段一測試');
+        console.log('📋 階段一：單點整合驗證測試 (TC-SIT-001~007)');
+        console.log('🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理');
+        console.log('=' * 80);
+
+        const phase1TestMethods = [
+            this.testCase001_UserRegistration,
+            this.testCase002_UserLogin,
+            this.testCase003_TokenManagement,
+            this.testCase004_QuickBooking,
+            this.testCase005_FullBookingForm,
+            this.testCase006_TransactionQuery,
+            this.testCase007_CrossLayerErrorHandling
+        ];
+
+        let passedTests = 0;
+        let totalTests = phase1TestMethods.length;
+
+        console.log(`📊 階段一測試案例總數：${totalTests} 個`);
+        console.log(`📅 預估執行時間：${totalTests * 1} 分鐘\n`);
+
+        for (let i = 0; i < phase1TestMethods.length; i++) {
+            const testMethod = phase1TestMethods[i];
+            const testName = testMethod.name.replace('testCase', 'TC-SIT-').replace('_', ': ');
+
+            console.log(`\n📝 執行階段一測試 ${i + 1}/${totalTests}: ${testName}`);
+
+            try {
+                const result = await testMethod.call(this);
+                if (result) passedTests++;
+
+                // 每3個測試案例後暫停，分組顯示進度
+                if ((i + 1) % 3 === 0) {
+                    const groupName = i < 3 ? '用戶流程與認證' : i < 6 ? '記帳功能與查詢' : '錯誤處理';
+                    console.log(`\n✅ ${groupName} 完成，休息1秒後繼續...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            } catch (error) {
+                console.error(`❌ 測試執行錯誤: ${error.message}`);
+            }
+        }
+
+        console.log('\n' + '=' * 80);
+        console.log('📊 階段一測試執行完成');
+        console.log(`✅ 通過測試: ${passedTests}/${totalTests}`);
+        console.log(`📈 成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
+        console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
+
+        // 階段一特殊報告
+        this.generatePhase1Report(passedTests, totalTests);
+
+        return {
+            phase: 'Phase 1',
+            totalTests,
+            passedTests,
+            successRate: passedTests / totalTests,
+            executionTime: Date.now() - this.testStartTime.getTime(),
+            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
+                   parseInt(r.testCase.split('-')[2]) >= 1 && parseInt(r.testCase.split('-')[2]) <= 7)
+        };
+    }
+
+    /**
+     * 生成階段一專用測試報告
+     */
+    generatePhase1Report(passedTests, totalTests) {
+        console.log('\n📋 階段一測試報告摘要');
+        console.log('=' * 50);
+
+        const phase1Results = this.testResults.filter(r => 
+            r.testCase.includes('SIT-0') && 
+            parseInt(r.testCase.split('-')[2]) >= 1 && 
+            parseInt(r.testCase.split('-')[2]) <= 7
+        );
+
+        // 按測試類別分組統計
+        const categories = {
+            '用戶認證與管理': phase1Results.filter(r => parseInt(r.testCase.split('-')[2]) <= 3),
+            '記帳功能測試': phase1Results.filter(r => {
+                const tcNum = parseInt(r.testCase.split('-')[2]);
+                return tcNum >= 4 && tcNum <= 5;
+            }),
+            '查詢與錯誤處理': phase1Results.filter(r => parseInt(r.testCase.split('-')[2]) >= 6)
+        };
+
+        Object.entries(categories).forEach(([category, results]) => {
+            const passed = results.filter(r => r.result === 'PASS').length;
+            const total = results.length;
+            const rate = total > 0 ? (passed / total * 100).toFixed(1) : '0';
+            console.log(`${category}: ${passed}/${total} (${rate}%)`);
+        });
+
+        console.log('\n🎯 階段一關鍵指標');
+        console.log('=' * 30);
+        console.log(`基礎功能整合度: ${(passedTests / totalTests * 100).toFixed(1)}%`);
+        console.log(`用戶註冊流程: ${phase1Results.filter(r => r.testCase.includes('001')).length > 0 && phase1Results.filter(r => r.testCase.includes('001'))[0].result === 'PASS' ? '✅ 通過' : '❌ 失敗'}`);
+        console.log(`用戶登入驗證: ${phase1Results.filter(r => r.testCase.includes('002')).length > 0 && phase1Results.filter(r => r.testCase.includes('002'))[0].result === 'PASS' ? '✅ 通過' : '❌ 失敗'}`);
+        console.log(`錯誤處理覆蓋率: ${phase1Results.filter(r => r.testCase.includes('007')).length > 0 ? phase1Results.filter(r => r.testCase.includes('007'))[0].details.errorHandlingRate : 'N/A'}`);
+    }
+
+
+    /**
+     * 執行階段二測試案例 (TC-SIT-008 to TC-SIT-020)
+     */
+    async executePhase2Tests() {
+        console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試');
+        console.log('📋 階段二：四層架構資料流測試 (TC-SIT-008~020)');
+        console.log('🎯 測試重點：四模式差異化、資料一致性、端到端流程、效能穩定性');
+        console.log('=' * 80);
+
+        const phase2TestMethods = [
+            // 四模式差異化整合測試
+            this.testCase008_ModeAssessment,
+            this.testCase009_ModeDifferentiation,
+            this.testCase010_DataFormatTransformation,
+            this.testCase011_DataSynchronization,
+
+            // 端到端資料傳遞驗證
+            this.testCase012_CompleteUserLifecycle,
+            this.testCase013_BookkeepingEndToEnd,
+            this.testCase014_NetworkExceptionHandling,
+            this.testCase015_BusinessRuleErrorHandling,
+            this.testCase016_FourModeProcessDifference,
+
+            // 效能與穩定性測試
+            this.testCase017_ConcurrentOperations,
+            this.testCase018_DataRaceHandling,
+            this.testCase019_EightHourStabilityTest,
+            this.testCase020_StressAndRecoveryTest
+        ];
+
+        let passedTests = 0;
+        let totalTests = phase2TestMethods.length;
+
+        console.log(`📊 階段二測試案例總數：${totalTests} 個`);
+        console.log(`📅 預估執行時間：${totalTests * 2} 分鐘\n`);
+
+        for (let i = 0; i < phase2TestMethods.length; i++) {
+            const testMethod = phase2TestMethods[i];
+            const testName = testMethod.name.replace('testCase', 'TC-SIT-').replace('_', ': ');
+
+            console.log(`\n📝 執行階段二測試 ${i + 1}/${totalTests}: ${testName}`);
+
+            try {
+                const result = await testMethod.call(this);
+                if (result) passedTests++;
+
+                // 每4個測試案例後暫停，分組顯示進度
+                if ((i + 1) % 4 === 0) {
+                    const groupName = i < 4 ? '四模式整合測試' : 
+                                     i < 9 ? '端到端流程測試' : '效能穩定性測試';
+                    console.log(`\n✅ ${groupName} 完成，休息2秒後繼續...`);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            } catch (error) {
+                console.error(`❌ 測試執行錯誤: ${error.message}`);
+            }
+        }
+
+        console.log('\n' + '=' * 80);
+        console.log('📊 階段二測試執行完成');
+        console.log(`✅ 通過測試: ${passedTests}/${totalTests}`);
+        console.log(`📈 成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
+        console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
+
+        // 階段二特殊報告
+        this.generatePhase2Report(passedTests, totalTests);
+
+        return {
+            phase: 'Phase 2',
+            totalTests,
+            passedTests,
+            successRate: passedTests / totalTests,
+            executionTime: Date.now() - this.testStartTime.getTime(),
+            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
+                   parseInt(r.testCase.split('-')[2]) >= 8 && parseInt(r.testCase.split('-')[2]) <= 20)
+        };
+    }
+
+    /**
+     * 生成階段二專用測試報告
+     */
+    generatePhase2Report(passedTests, totalTests) {
+        console.log('\n📋 階段二測試報告摘要');
+        console.log('=' * 50);
+
+        const phase2Results = this.testResults.filter(r => 
+            r.testCase.includes('SIT-0') && 
+            parseInt(r.testCase.split('-')[2]) >= 8 && 
+            parseInt(r.testCase.split('-')[2]) <= 20
+        );
+
+        // 按測試類別分組統計
+        const categories = {
+            '四模式差異化測試': phase2Results.filter(r => parseInt(r.testCase.split('-')[2]) <= 11),
+            '端到端流程測試': phase2Results.filter(r => {
+                const tcNum = parseInt(r.testCase.split('-')[2]);
+                return tcNum >= 12 && tcNum <= 16;
+            }),
+            '效能穩定性測試': phase2Results.filter(r => parseInt(r.testCase.split('-')[2]) >= 17)
+        };
+
+        Object.entries(categories).forEach(([category, results]) => {
+            const passed = results.filter(r => r.result === 'PASS').length;
+            const total = results.length;
+            const rate = total > 0 ? (passed / total * 100).toFixed(1) : '0';
+            console.log(`${category}: ${passed}/${total} (${rate}%)`);
+        });
+
+        console.log('\n🎯 階段二關鍵指標');
+        console.log('=' * 30);
+        console.log(`四層架構整合度: ${(passedTests / totalTests * 100).toFixed(1)}%`);
+        console.log(`資料一致性驗證: ${phase2Results.filter(r => r.testCase.includes('011')).length > 0 ? '✅ 完成' : '❌ 未完成'}`);
+        console.log(`模式差異化驗證: ${phase2Results.filter(r => r.testCase.includes('009')).length > 0 ? '✅ 完成' : '❌ 未完成'}`);
+        console.log(`端到端流程驗證: ${phase2Results.filter(r => r.testCase.includes('013')).length > 0 ? '✅ 完成' : '❌ 未完成'}`);
+
+        const performanceTests = phase2Results.filter(r => parseInt(r.testCase.split('-')[2]) >= 17);
+        const performancePassed = performanceTests.filter(r => r.result === 'PASS').length;
+        console.log(`效能穩定性評級: ${performancePassed >= 3 ? 'A級' : performancePassed >= 2 ? 'B級' : 'C級'}`);
+    }
 
     /**
      * 執行階段三測試案例 (TC-SIT-021 to TC-SIT-028)
@@ -2292,125 +2517,6 @@ class SITTestCases {
         return '❌ 品質不達標，需要全面檢討';
     }
 
-    /**
-     * 執行階段二測試案例 (TC-SIT-008 to TC-SIT-020)
-     */
-    async executePhase2Tests() {
-        console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試');
-        console.log('📋 階段二：四層架構資料流測試 (TC-SIT-008~020)');
-        console.log('🎯 測試重點：四模式差異化、資料一致性、端到端流程、效能穩定性');
-        console.log('=' * 80);
-
-        const phase2TestMethods = [
-            // 四模式差異化整合測試
-            this.testCase008_ModeAssessment,
-            this.testCase009_ModeDifferentiation,
-            this.testCase010_DataFormatTransformation,
-            this.testCase011_DataSynchronization,
-
-            // 端到端資料傳遞驗證
-            this.testCase012_CompleteUserLifecycle,
-            this.testCase013_BookkeepingEndToEnd,
-            this.testCase014_NetworkExceptionHandling,
-            this.testCase015_BusinessRuleErrorHandling,
-            this.testCase016_FourModeProcessDifference,
-
-            // 效能與穩定性測試
-            this.testCase017_ConcurrentOperations,
-            this.testCase018_DataRaceHandling,
-            this.testCase019_EightHourStabilityTest,
-            this.testCase020_StressAndRecoveryTest
-        ];
-
-        let passedTests = 0;
-        let totalTests = phase2TestMethods.length;
-
-        console.log(`📊 階段二測試案例總數：${totalTests} 個`);
-        console.log(`📅 預估執行時間：${totalTests * 2} 分鐘\n`);
-
-        for (let i = 0; i < phase2TestMethods.length; i++) {
-            const testMethod = phase2TestMethods[i];
-            const testName = testMethod.name.replace('testCase', 'TC-SIT-').replace('_', ': ');
-
-            console.log(`\n📝 執行階段二測試 ${i + 1}/${totalTests}: ${testName}`);
-
-            try {
-                const result = await testMethod.call(this);
-                if (result) passedTests++;
-
-                // 每4個測試案例後暫停，分組顯示進度
-                if ((i + 1) % 4 === 0) {
-                    const groupName = i < 4 ? '四模式整合測試' : 
-                                     i < 9 ? '端到端流程測試' : '效能穩定性測試';
-                    console.log(`\n✅ ${groupName} 完成，休息2秒後繼續...`);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                }
-            } catch (error) {
-                console.error(`❌ 測試執行錯誤: ${error.message}`);
-            }
-        }
-
-        console.log('\n' + '=' * 80);
-        console.log('📊 階段二測試執行完成');
-        console.log(`✅ 通過測試: ${passedTests}/${totalTests}`);
-        console.log(`📈 成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
-        console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
-
-        // 階段二特殊報告
-        this.generatePhase2Report(passedTests, totalTests);
-
-        return {
-            phase: 'Phase 2',
-            totalTests,
-            passedTests,
-            successRate: passedTests / totalTests,
-            executionTime: Date.now() - this.testStartTime.getTime(),
-            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
-                   parseInt(r.testCase.split('-')[2]) >= 8 && parseInt(r.testCase.split('-')[2]) <= 20)
-        };
-    }
-
-    /**
-     * 生成階段二專用測試報告
-     */
-    generatePhase2Report(passedTests, totalTests) {
-        console.log('\n📋 階段二測試報告摘要');
-        console.log('=' * 50);
-
-        const phase2Results = this.testResults.filter(r => 
-            r.testCase.includes('SIT-0') && 
-            parseInt(r.testCase.split('-')[2]) >= 8 && 
-            parseInt(r.testCase.split('-')[2]) <= 20
-        );
-
-        // 按測試類別分組統計
-        const categories = {
-            '四模式差異化測試': phase2Results.filter(r => parseInt(r.testCase.split('-')[2]) <= 11),
-            '端到端流程測試': phase2Results.filter(r => {
-                const tcNum = parseInt(r.testCase.split('-')[2]);
-                return tcNum >= 12 && tcNum <= 16;
-            }),
-            '效能穩定性測試': phase2Results.filter(r => parseInt(r.testCase.split('-')[2]) >= 17)
-        };
-
-        Object.entries(categories).forEach(([category, results]) => {
-            const passed = results.filter(r => r.result === 'PASS').length;
-            const total = results.length;
-            const rate = total > 0 ? (passed / total * 100).toFixed(1) : '0';
-            console.log(`${category}: ${passed}/${total} (${rate}%)`);
-        });
-
-        console.log('\n🎯 階段二關鍵指標');
-        console.log('=' * 30);
-        console.log(`四層架構整合度: ${(passedTests / totalTests * 100).toFixed(1)}%`);
-        console.log(`資料一致性驗證: ${phase2Results.filter(r => r.testCase.includes('011')).length > 0 ? '✅ 完成' : '❌ 未完成'}`);
-        console.log(`模式差異化驗證: ${phase2Results.filter(r => r.testCase.includes('009')).length > 0 ? '✅ 完成' : '❌ 未完成'}`);
-        console.log(`端到端流程驗證: ${phase2Results.filter(r => r.testCase.includes('013')).length > 0 ? '✅ 完成' : '❌ 未完成'}`);
-
-        const performanceTests = phase2Results.filter(r => parseInt(r.testCase.split('-')[2]) >= 17);
-        const performancePassed = performanceTests.filter(r => r.result === 'PASS').length;
-        console.log(`效能穩定性評級: ${performancePassed >= 3 ? 'A級' : performancePassed >= 2 ? 'B級' : 'C級'}`);
-    }
 
     /**
      * 執行所有測試案例 (完整版)
@@ -2527,39 +2633,30 @@ module.exports = SITTestCases;
 if (require.main === module) {
     (async () => {
         const args = process.argv.slice(2);
-        const phase = args.find(arg => arg.startsWith('--phase='))?.split('=')[1] || 'phase2';
-
-        console.log('🚀 LCAS 2.0 Phase 1 SIT 測試開始');
-        const sitTest = new SITTestCases();
-
-        const dataLoaded = await sitTest.loadTestData();
-        if (!dataLoaded) {
-            console.error('❌ 測試資料載入失敗，測試中止');
-            process.exit(1);
-        }
+        const phaseArg = args.find(arg => arg.startsWith('--phase='))?.split('=')[1];
 
         let results;
 
-        switch (phase) {
-            case 'phase2':
-                results = await sitTest.executePhase2Tests();
-                console.log('\n📊 階段二測試完成');
-                break;
-
-            case 'phase3':
-                results = await sitTest.executePhase3Tests();
-                console.log('\n📊 階段三測試完成');
-                break;
-
-            case 'all':
-                console.log('🎯 執行完整SIT測試計畫 (三個階段)');
-                results = await sitTest.executeAllTests();
-                console.log('\n📊 完整SIT測試完成');
-                break;
-
-            default:
-                console.error('❌ 無效的階段參數，使用 --phase=phase2|phase3|all');
-                process.exit(1);
+        if (phaseArg === 'phase1+2') {
+            console.log('🎯 執行階段一與階段二綜合測試');
+            await sitTest.executePhase1Tests(); // 先執行階段一
+            results = await sitTest.executePhase2Tests(); // 再執行階段二
+            console.log('\n📊 階段一+二綜合測試完成');
+        } else if (phaseArg === 'phase2') {
+            results = await sitTest.executePhase2Tests();
+            console.log('\n📊 階段二測試完成');
+        } else if (phaseArg === 'phase3') {
+            results = await sitTest.executePhase3Tests();
+            console.log('\n📊 階段三測試完成');
+        } else if (phaseArg === 'all') {
+            console.log('🎯 執行完整SIT測試計畫 (三個階段)');
+            await sitTest.executePhase1Tests();
+            await sitTest.executePhase2Tests();
+            results = await sitTest.executePhase3Tests();
+            console.log('\n📊 完整SIT測試完成');
+        } else {
+             console.error('❌ 無效的階段參數，使用 --phase=phase1+2|phase2|phase3|all');
+             process.exit(1);
         }
 
         const report = sitTest.generateReport();
@@ -2582,9 +2679,10 @@ if (require.main === module) {
         console.log('\n📄 詳細測試報告已準備完成');
         console.log('📁 報告位置: 06. SIT_Test code/0691. SIT_Report_P1.md');
         console.log('🔍 執行參數說明:');
-        console.log('   node 0603. SIT_TC_P1.js --phase=phase2  # 執行階段二測試');
-        console.log('   node 0603. SIT_TC_P1.js --phase=phase3  # 執行階段三測試');
-        console.log('   node 0603. SIT_TC_P1.js --phase=all     # 執行完整SIT測試');
+        console.log('   node 0603. SIT_TC_P1.js --phase=phase1+2  # 執行階段一+二綜合測試');
+        console.log('   node 0603. SIT_TC_P1.js --phase=phase2    # 執行階段二測試');
+        console.log('   node 0603. SIT_TC_P1.js --phase=phase3    # 執行階段三測試');
+        console.log('   node 0603. SIT_TC_P1.js --phase=all       # 執行完整SIT測試');
 
     })().catch(error => {
         console.error('❌ 測試執行發生錯誤:', error.message);
