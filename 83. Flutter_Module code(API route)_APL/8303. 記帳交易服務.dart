@@ -17,7 +17,7 @@ import 'package:http/http.dart' as http;
 
 /// 記帳交易服務API Gateway
 class TransactionAPIGateway {
-  final String _backendBaseUrl = 'http://0.0.0.0:5000/api/v1';
+  final String _backendBaseUrl = 'http://0.0.0.0:5000';
   final http.Client _httpClient = http.Client();
 
   /**
