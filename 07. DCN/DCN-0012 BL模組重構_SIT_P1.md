@@ -1,4 +1,3 @@
-
 # DCN-0012 BL模組重構_SIT_P1
 
 **版本**: v1.0.0  
@@ -122,7 +121,7 @@ UM_processAPISwitchMode()           // PUT /api/v1/users/mode
 ```
 
 **Phase 1範圍說明**：
-- 總計34個API端點，涵蓋Phase 1核心進入流程所需功能
+- 總計26個API端點，專注於核心進入流程
 - 其他Phase 2-7的API端點將在後續DCN中處理
 - 專注於使用者註冊、登入、基本記帳功能的完整實作
 
@@ -292,7 +291,7 @@ app.put('/api/v1/users/mode', (req, res) => UM_processAPISwitchMode);
 ```
 
 **Phase 1範圍限制**：
-- 總計34個API端點，專注於核心進入流程
+- 總計26個API端點，專注於核心進入流程
 - Phase 2-7的其他API端點將於後續DCN處理
 - 確保SIT測試可以涵蓋關鍵用戶旅程
 
