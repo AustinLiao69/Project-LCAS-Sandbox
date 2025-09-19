@@ -1,0 +1,214 @@
+~/workspace$ cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=all
+🚀 初始化 LCAS 2.0 Phase 1 SIT測試環境...
+📂 載入測試資料...
+✅ 測試資料載入成功
+✅ SIT測試環境初始化完成
+🌐 API基礎URL: http://0.0.0.0:5000/api/v1
+👤 預設用戶模式: Expert
+NaN
+🎯 執行完整SIT測試計畫 (三個階段)
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段一測試
+📋 階段一：單點整合驗證測試 (TC-SIT-001~007)
+🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理
+NaN
+📊 階段一測試案例總數：7 個
+📅 預估執行時間：7 分鐘
+
+
+📝 執行階段一測試 1/7: TC-SIT-001: UserRegistration
+❌ FAIL TC-SIT-001 (50ms)
+   錯誤: [object Object]
+
+📝 執行階段一測試 2/7: TC-SIT-002: UserLogin
+❌ FAIL TC-SIT-002 (5ms)
+   錯誤: [object Object]
+
+📝 執行階段一測試 3/7: TC-SIT-003: TokenManagement
+❌ FAIL TC-SIT-003 (0ms)
+   錯誤: 需要先執行登入測試取得Token
+
+✅ 用戶流程與認證 完成，休息1秒後繼續...
+
+📝 執行階段一測試 4/7: TC-SIT-004: QuickBooking
+❌ FAIL TC-SIT-004 (3ms)
+   錯誤: [object Object]
+
+📝 執行階段一測試 5/7: TC-SIT-005: FullBookingForm
+❌ FAIL TC-SIT-005 (4ms)
+   錯誤: [object Object]
+
+📝 執行階段一測試 6/7: TC-SIT-006: TransactionQuery
+❌ FAIL TC-SIT-006 (6ms)
+   錯誤: [object Object]
+
+✅ 記帳功能與查詢 完成，休息1秒後繼續...
+
+📝 執行階段一測試 7/7: TC-SIT-007: CrossLayerErrorHandling
+❌ FAIL TC-SIT-007 (6ms)
+   錯誤: 錯誤處理覆蓋率不足
+
+NaN
+📊 階段一測試執行完成
+✅ 通過測試: 0/7
+📈 成功率: 0.00%
+⏱️  總執行時間: 2.081秒
+
+📋 階段一測試報告摘要
+NaN
+用戶認證與管理: 0/3 (0.0%)
+記帳功能測試: 0/2 (0.0%)
+查詢與錯誤處理: 0/2 (0.0%)
+
+🎯 階段一關鍵指標
+NaN
+基礎功能整合度: 0.0%
+用戶註冊流程: ❌ 失敗
+用戶登入驗證: ❌ 失敗
+錯誤處理覆蓋率: 66.67%
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試
+📋 階段二：四層架構資料流測試 (TC-SIT-008~020)
+🎯 測試重點：四模式差異化、資料一致性、端到端流程、效能穩定性
+NaN
+📊 階段二測試案例總數：13 個
+📅 預估執行時間：26 分鐘
+
+
+📝 執行階段二測試 1/13: TC-SIT-008: ModeAssessment
+❌ FAIL TC-SIT-008 (4ms)
+   錯誤: 無法取得評估問卷
+
+📝 執行階段二測試 2/13: TC-SIT-009: ModeDifferentiation
+❌ FAIL TC-SIT-009 (6ms)
+   錯誤: 模式差異化回應不正確
+
+📝 執行階段二測試 3/13: TC-SIT-010: DataFormatTransformation
+❌ FAIL TC-SIT-010 (8ms)
+   錯誤: 資料格式轉換失敗
+
+📝 執行階段二測試 4/13: TC-SIT-011: DataSynchronization
+❌ FAIL TC-SIT-011 (2ms)
+   錯誤: 無法建立測試交易
+
+✅ 四模式整合測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 5/13: TC-SIT-012: CompleteUserLifecycle
+❌ FAIL TC-SIT-012 (9ms)
+   錯誤: 用戶生命週期測試未完全通過
+
+📝 執行階段二測試 6/13: TC-SIT-013: BookkeepingEndToEnd
+❌ FAIL TC-SIT-013 (3ms)
+   錯誤: 記帳業務流程端到端測試失敗
+
+📝 執行階段二測試 7/13: TC-SIT-014: NetworkExceptionHandling
+✅ PASS TC-SIT-014 (4ms)
+
+📝 執行階段二測試 8/13: TC-SIT-015: BusinessRuleErrorHandling
+❌ FAIL TC-SIT-015 (2ms)
+   錯誤: 業務規則錯誤處理機制失效
+
+✅ 端到端流程測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 9/13: TC-SIT-016: FourModeProcessDifference
+🔄 開始四模式流程差異驗證...
+  📋 測試模式: expert
+    🎯 測試互動: 快速記帳
+      ❌ 快速記帳 失敗: [object Object]
+    🎯 測試互動: 查看統計
+      ❌ 查看統計 失敗: [object Object]
+  📋 測試模式: guiding
+    🎯 測試互動: 快速記帳
+      ❌ 快速記帳 失敗: [object Object]
+    🎯 測試互動: 查看記錄
+      ❌ 查看記錄 失敗: [object Object]
+❌ FAIL TC-SIT-016 (2010ms)
+   錯誤: 四模式流程差異驗證未達標準
+🎯 四模式差異化測試完成，差異化評分: 0.00
+
+📝 執行階段二測試 10/13: TC-SIT-017: ConcurrentOperations
+❌ FAIL TC-SIT-017 (91ms)
+   錯誤: 併發操作效能不達標
+
+📝 執行階段二測試 11/13: TC-SIT-018: DataRaceHandling
+❌ FAIL TC-SIT-018 (3ms)
+   錯誤: 無法建立測試交易
+
+📝 執行階段二測試 12/13: TC-SIT-019: EightHourStabilityTest
+❌ FAIL TC-SIT-019 (2049ms)
+   錯誤: 系統穩定性測試未達標
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 13/13: TC-SIT-020: StressAndRecoveryTest
+❌ FAIL TC-SIT-020 (5007ms)
+   錯誤: 壓力測試或恢復測試失敗
+
+NaN
+📊 階段二測試執行完成
+✅ 通過測試: 1/13
+📈 成功率: 7.69%
+⏱️  總執行時間: 17.287秒
+
+📋 階段二測試報告摘要
+NaN
+四模式差異化測試: 0/4 (0.0%)
+端到端流程測試: 1/5 (20.0%)
+效能穩定性測試: 0/4 (0.0%)
+
+🎯 階段二關鍵指標
+NaN
+四層架構整合度: 7.7%
+資料一致性驗證: ✅ 完成
+模式差異化驗證: ✅ 完成
+端到端流程驗證: ✅ 完成
+效能穩定性評級: C級
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段三測試
+📋 階段三：完整業務流程測試 (TC-SIT-021~028)
+🎯 測試重點：業務價值鏈、用戶體驗、系統穩定性、效能基準
+NaN
+📊 階段三測試案例總數：8 個
+📅 預估執行時間：24 分鐘
+
+
+📝 執行階段三測試 1/8: TC-SIT-021: CompleteUserJourney
+🚀 開始執行完整使用者旅程測試...
+  📝 執行步驟1: 用戶註冊
+  📝 執行步驟2: 模式評估
+  📝 執行步驟3: 首次記帳
+  📝 執行步驟4: 查詢記帳記錄
+  📝 執行步驟5: 登出
+❌ FAIL TC-SIT-021 (6ms)
+   錯誤: 完整使用者旅程測試未達標
+
+📝 執行階段三測試 2/8: TC-SIT-022: BusinessValueChainValidation
+❌ FAIL TC-SIT-022 (6ms)
+   錯誤: 業務價值鏈驗證未達標
+
+📝 執行階段三測試 3/8: TC-SIT-023: FourModeUserExperience
+❌ FAIL TC-SIT-023 (14ms)
+   錯誤: 四模式使用者體驗測試未達標
+
+📝 執行階段三測試 4/8: TC-SIT-024: InterfaceResponsiveness
+❌ FAIL TC-SIT-024 (4ms)
+   錯誤: 介面回應性測試未達標
+
+✅ 業務價值鏈驗證 完成，休息3秒後繼續...
+
+📝 執行階段三測試 5/8: TC-SIT-025: TwentyFourHourStabilityTest
+🚀 開始24小時穩定性測試模擬 (5分鐘)...
+  📊 穩定性測試進度: 10/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 24.00ms
+  💾 記憶體使用: 17.07MB
+  📊 穩定性測試進度: 20/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 47.00ms
+  💾 記憶體使用: 17.90MB
+  📊 穩定性測試進度: 30/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 91.00ms
+  💾 記憶體使用: 14.17MB
+  📊 穩定性測試進度: 40/100
+  ✅ 成功率: 0.00%
+  ⏱️  平均回應時間: 129.00ms
+  💾 記憶體使用: 14.14MB
