@@ -575,7 +575,7 @@ class SITTestCases {
 
                     switch (step.action) {
                         case '用戶註冊':
-                            const regResponse = await this.makeRequest('POST', '/auth/register', step.data);
+                            const regResponse = await this.makeRequest('POST', '/api/v1/auth/register', step.data);
                             stepSuccess = regResponse.success;
                             if (stepSuccess) this.authToken = regResponse.data.data?.token;
                             break;
@@ -1227,7 +1227,7 @@ class SITTestCases {
                 try {
                     switch (step.action) {
                         case '用戶註冊':
-                            const regResponse = await this.makeRequest('POST', '/auth/register', {
+                            const regResponse = await this.makeRequest('POST', '/api/v1/auth/register', {
                                 ...step.data,
                                 acceptTerms: true,
                                 acceptPrivacy: true
