@@ -605,7 +605,7 @@ class SITTestCases {
                             break;
 
                         case '登出':
-                            const logoutResponse = await this.makeRequest('POST', '/auth/logout');
+                            const logoutResponse = await this.makeRequest('POST', '/api/v1/auth/logout');
                             stepSuccess = logoutResponse.success;
                             break;
                     }
@@ -1013,7 +1013,7 @@ class SITTestCases {
             // 同時發送多個更新請求
             const updatePromises = [];
             for (let i = 0; i < 5; i++) {
-                const updatePromise = this.makeRequest('PUT', `/transactions/${transactionId}`, {
+                const updatePromise = this.makeRequest('PUT', `/api/v1/transactions/${transactionId}`, {
                     amount: 100 + i,
                     description: `資料競爭測試-更新${i}`
                 });
@@ -1278,7 +1278,7 @@ class SITTestCases {
                             break;
 
                         case '登出':
-                            const logoutResponse = await this.makeRequest('POST', '/auth/logout');
+                            const logoutResponse = await this.makeRequest('POST', '/api/v1/auth/logout');
                             stepSuccess = logoutResponse.success;
                             if (stepSuccess) {
                                 console.log('    ✅ 用戶登出成功');
@@ -2634,10 +2634,10 @@ module.exports = SITTestCases;
 if (require.main === module) {
     (async () => {
         console.log('🚀 初始化 LCAS 2.0 Phase 1 SIT測試環境...');
-        
+
         // 修復：創建sitTest實例
         const sitTest = new SITTestCases();
-        
+
         // 載入測試資料
         console.log('📂 載入測試資料...');
         const dataLoaded = await sitTest.loadTestData();
@@ -2645,12 +2645,12 @@ if (require.main === module) {
             console.error('❌ 測試資料載入失敗，終止測試執行');
             process.exit(1);
         }
-        
+
         console.log('✅ SIT測試環境初始化完成');
         console.log(`🌐 API基礎URL: ${sitTest.apiBaseURL}`);
         console.log(`👤 預設用戶模式: ${sitTest.currentUserMode}`);
         console.log('=' * 80);
-        
+
         const args = process.argv.slice(2);
         const phaseArg = args.find(arg => arg.startsWith('--phase='))?.split('=')[1];
 
