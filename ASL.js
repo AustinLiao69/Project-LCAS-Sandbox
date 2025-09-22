@@ -1,8 +1,8 @@
 /**
- * ASL.js_API服務層模組_2.0.2
+ * ASL.js_API服務層模組_2.0.3
  * @module API服務層模組（純轉發窗口）
- * @description LCAS 2.0 API Service Layer - 專責轉發P1-2範圍的26個API端點到BL層
- * @update 2025-09-22: DCN-0012階段一語法修復 - 解決CommonJS頂層await錯誤
+ * @description LCAS 2.0 API Service Layer - 專責轉發P1-2範圍的34個API端點到BL層
+ * @update 2025-09-22: DCN-0012階段二用戶管理端點補充 - 修復404錯誤
  * @date 2025-09-22
  */
 
@@ -247,8 +247,9 @@ app.get('/', (req, res) => {
     architecture: 'ASL -> BL層轉發',
     p1_2_endpoints: {
       am_auth: 11,
+      am_users: 8,
       bk_transaction: 15,
-      total: 26
+      total: 34
     },
     modules: {
       AM: !!AM ? 'loaded' : 'not loaded',
@@ -490,6 +491,152 @@ app.get('/api/v1/auth/bind-status', async (req, res) => {
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (bind-status):', error);
     res.apiError('綁定狀態查詢轉發失敗', 'BIND_STATUS_FORWARD_ERROR', 500);
+  }
+});
+
+// =============== 用戶管理API轉發（基於8102.yaml規格） ===============
+
+// 1. 取得用戶個人資料
+app.get('/api/v1/users/profile', async (req, res) => {
+  try {
+    console.log('👤 ASL轉發: 取得用戶資料 -> AM_processAPIGetProfile');
+
+    if (!AM || typeof AM.AM_processAPIGetProfile !== 'function') {
+      return res.apiError('AM_processAPIGetProfile函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPIGetProfile(req.query);
+    res.apiSuccess(result.data, result.message || '用戶資料取得完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (users/profile):', error);
+    res.apiError('用戶資料取得轉發失敗', 'GET_PROFILE_FORWARD_ERROR', 500);
+  }
+});
+
+// 2. 更新用戶個人資料
+app.put('/api/v1/users/profile', async (req, res) => {
+  try {
+    console.log('✏️ ASL轉發: 更新用戶資料 -> AM_processAPIUpdateProfile');
+
+    if (!AM || typeof AM.AM_processAPIUpdateProfile !== 'function') {
+      return res.apiError('AM_processAPIUpdateProfile函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPIUpdateProfile(req.body);
+    res.apiSuccess(result.data, result.message || '用戶資料更新完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (update profile):', error);
+    res.apiError('用戶資料更新轉發失敗', 'UPDATE_PROFILE_FORWARD_ERROR', 500);
+  }
+});
+
+// 3. 取得模式評估問卷
+app.get('/api/v1/users/assessment-questions', async (req, res) => {
+  try {
+    console.log('📝 ASL轉發: 取得評估問卷 -> AM_processAPIGetAssessmentQuestions');
+
+    if (!AM || typeof AM.AM_processAPIGetAssessmentQuestions !== 'function') {
+      return res.apiError('AM_processAPIGetAssessmentQuestions函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPIGetAssessmentQuestions(req.query);
+    res.apiSuccess(result.data, result.message || '評估問卷取得完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (assessment-questions):', error);
+    res.apiError('評估問卷取得轉發失敗', 'GET_ASSESSMENT_QUESTIONS_FORWARD_ERROR', 500);
+  }
+});
+
+// 4. 提交模式評估結果
+app.post('/api/v1/users/assessment', async (req, res) => {
+  try {
+    console.log('📊 ASL轉發: 提交評估結果 -> AM_processAPISubmitAssessment');
+
+    if (!AM || typeof AM.AM_processAPISubmitAssessment !== 'function') {
+      return res.apiError('AM_processAPISubmitAssessment函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPISubmitAssessment(req.body);
+    res.apiSuccess(result.data, result.message || '評估結果提交完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (submit assessment):', error);
+    res.apiError('評估結果提交轉發失敗', 'SUBMIT_ASSESSMENT_FORWARD_ERROR', 500);
+  }
+});
+
+// 5. 更新用戶偏好設定
+app.put('/api/v1/users/preferences', async (req, res) => {
+  try {
+    console.log('⚙️ ASL轉發: 更新偏好設定 -> AM_processAPIUpdatePreferences');
+
+    if (!AM || typeof AM.AM_processAPIUpdatePreferences !== 'function') {
+      return res.apiError('AM_processAPIUpdatePreferences函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPIUpdatePreferences(req.body);
+    res.apiSuccess(result.data, result.message || '偏好設定更新完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (update preferences):', error);
+    res.apiError('偏好設定更新轉發失敗', 'UPDATE_PREFERENCES_FORWARD_ERROR', 500);
+  }
+});
+
+// 6. 更新安全設定
+app.put('/api/v1/users/security', async (req, res) => {
+  try {
+    console.log('🔒 ASL轉發: 更新安全設定 -> AM_processAPIUpdateSecurity');
+
+    if (!AM || typeof AM.AM_processAPIUpdateSecurity !== 'function') {
+      return res.apiError('AM_processAPIUpdateSecurity函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPIUpdateSecurity(req.body);
+    res.apiSuccess(result.data, result.message || '安全設定更新完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (update security):', error);
+    res.apiError('安全設定更新轉發失敗', 'UPDATE_SECURITY_FORWARD_ERROR', 500);
+  }
+});
+
+// 7. 切換用戶模式
+app.put('/api/v1/users/mode', async (req, res) => {
+  try {
+    console.log('🔄 ASL轉發: 切換用戶模式 -> AM_processAPISwitchMode');
+
+    if (!AM || typeof AM.AM_processAPISwitchMode !== 'function') {
+      return res.apiError('AM_processAPISwitchMode函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPISwitchMode(req.body);
+    res.apiSuccess(result.data, result.message || '用戶模式切換完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (switch mode):', error);
+    res.apiError('用戶模式切換轉發失敗', 'SWITCH_MODE_FORWARD_ERROR', 500);
+  }
+});
+
+// 8. PIN碼驗證
+app.post('/api/v1/users/verify-pin', async (req, res) => {
+  try {
+    console.log('🔑 ASL轉發: PIN碼驗證 -> AM_processAPIVerifyPin');
+
+    if (!AM || typeof AM.AM_processAPIVerifyPin !== 'function') {
+      return res.apiError('AM_processAPIVerifyPin函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPIVerifyPin(req.body);
+    res.apiSuccess(result.data, result.message || 'PIN碼驗證完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (verify pin):', error);
+    res.apiError('PIN碼驗證轉發失敗', 'VERIFY_PIN_FORWARD_ERROR', 500);
   }
 });
 
