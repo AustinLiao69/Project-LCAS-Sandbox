@@ -1,8 +1,8 @@
 /**
- * ASL.js_API服務層模組_2.0.3
+ * ASL.js_API服務層模組_2.0.5
  * @module API服務層模組（純轉發窗口）
  * @description LCAS 2.0 API Service Layer - 專責轉發P1-2範圍的34個API端點到BL層
- * @update 2025-09-22: DCN-0012階段二用戶管理端點補充 - 修復404錯誤
+ * @update 2025-09-22: DCN-0012階段一變數作用域修復 - 解決app is not defined錯誤
  * @date 2025-09-22
  */
 
@@ -195,19 +195,22 @@ async function loadBLModules() {
   return moduleStatus;
 }
 
+// 階段一修復：將app變數移至全域作用域
+const express = require('express');
+let app = null;
+
 // 將Express應用初始化包裝在異步函數中
 async function startApplication() {
   // 等待BL模組載入完成
   const moduleStatus = await loadBLModules();
   
   /**
-   * 03. Express應用程式設置
- * @version 2025-09-22-V2.0.0
- * @date 2025-09-22 10:00:00
- * @description 建立Express服務器，設定基礎中介軟體
- */
-const express = require('express');
-const app = express();
+   * 03. Express應用程式設置（階段一修復版）
+   * @version 2025-09-22-V2.0.5
+   * @date 2025-09-22 15:45:00
+   * @description 建立Express服務器，設定基礎中介軟體
+   */
+  app = express();
 const PORT = process.env.ASL_PORT || 5000;
 
 // 基礎解析中介軟體
@@ -1069,4 +1072,8 @@ startApplication().catch((error) => {
   process.exit(1);
 });
 
-module.exports = app;
+// 階段一修復：安全的模組導出
+module.exports = {
+  getApp: () => app,
+  startApplication
+};
