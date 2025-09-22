@@ -3,8 +3,8 @@
  * @module 認證服務模組 - API Gateway
  * @version 2.3.0
  * @description LCAS 2.0 認證服務 API Gateway - 純路由轉發，業務邏輯已移至PL層
- * @date 2025-01-29
- * @update 2025-01-29: 重構為純API Gateway，移除業務邏輯
+ * @date 2025-09-20
+ * @update 2025-09-20: 重構為純API Gateway，移除業務邏輯
  */
 
 import 'dart:convert';
