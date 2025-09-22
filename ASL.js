@@ -1,8 +1,8 @@
 /**
- * ASL.js_API服務層模組_2.0.1
+ * ASL.js_API服務層模組_2.0.2
  * @module API服務層模組（純轉發窗口）
  * @description LCAS 2.0 API Service Layer - 專責轉發P1-2範圍的26個API端點到BL層
- * @update 2025-09-22: DCN-0012階段一重構 + Firebase初始化順序修復
+ * @update 2025-09-22: DCN-0012階段一語法修復 - 解決CommonJS頂層await錯誤
  * @date 2025-09-22
  */
 
@@ -28,39 +28,55 @@ process.on('unhandledRejection', (reason, promise) => {
 
 /**
  * 02. Firebase優先初始化（階段一修復）
- * @version 2025-09-22-V2.0.1
- * @date 2025-09-22 14:45:00
- * @description 確保Firebase在所有模組載入前完成初始化
+ * @version 2025-09-22-V2.0.2
+ * @date 2025-09-22 15:30:00
+ * @description 修復CommonJS頂層await語法錯誤，將初始化邏輯包裝在async函數中
  */
 console.log('🔥 ASL階段一修復：優先初始化Firebase...');
 
 let firebaseInitialized = false;
 let AM, BK, DL, FS;
 
-try {
-  // 步驟1：載入Firebase配置模組
-  console.log('📡 載入Firebase配置模組...');
-  const firebaseConfig = require('./13. Replit_Module code_BL/1399. firebase-config.js');
-  
-  // 步驟2：驗證Firebase配置
-  console.log('🔍 驗證Firebase配置...');
-  await firebaseConfig.validateFirebaseConfig();
-  
-  // 步驟3：初始化Firebase Admin SDK
-  console.log('⚡ 初始化Firebase Admin SDK...');
-  firebaseConfig.initializeFirebaseAdmin();
-  
-  // 步驟4：確認Firestore實例可用
-  console.log('📊 確認Firestore實例...');
-  firebaseConfig.getFirestoreInstance();
-  
-  firebaseInitialized = true;
-  console.log('✅ Firebase初始化完成，開始載入BL模組...');
-  
-} catch (error) {
-  console.error('❌ Firebase初始化失敗:', error.message);
-  console.warn('⚠️ 將嘗試繼續載入模組，但可能遇到問題...');
+/**
+ * Firebase服務初始化函數
+ * @version 2025-09-22-V1.0.0
+ * @description 在async函數中處理Firebase初始化，避免頂層await語法錯誤
+ */
+async function initializeServices() {
+  try {
+    // 步驟1：載入Firebase配置模組
+    console.log('📡 載入Firebase配置模組...');
+    const firebaseConfig = require('./13. Replit_Module code_BL/1399. firebase-config.js');
+    
+    // 步驟2：驗證Firebase配置
+    console.log('🔍 驗證Firebase配置...');
+    await firebaseConfig.validateFirebaseConfig();
+    
+    // 步驟3：初始化Firebase Admin SDK
+    console.log('⚡ 初始化Firebase Admin SDK...');
+    firebaseConfig.initializeFirebaseAdmin();
+    
+    // 步驟4：確認Firestore實例可用
+    console.log('📊 確認Firestore實例...');
+    firebaseConfig.getFirestoreInstance();
+    
+    firebaseInitialized = true;
+    console.log('✅ Firebase初始化完成，開始載入BL模組...');
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Firebase初始化失敗:', error.message);
+    console.warn('⚠️ 將嘗試繼續載入模組，但可能遇到問題...');
+    return false;
+  }
 }
+
+// 執行Firebase初始化
+initializeServices().then((success) => {
+  console.log(`🎯 Firebase初始化結果: ${success ? '成功' : '失敗'}`);
+}).catch((error) => {
+  console.error('💥 Firebase初始化異常:', error.message);
+});
 
 /**
  * 03. BL層模組載入（P1-2範圍）- 階段一優化版
@@ -247,7 +263,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL純轉發窗口',
-    version: '2.0.1',
+    version: '2.0.2',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -260,7 +276,9 @@ app.get('/health', (req, res) => {
     },
     stage1_fix: {
       applied: true,
-      firebase_priority_init: firebaseInitialized,
+      syntax_error_fixed: true,
+      commonjs_compatibility: true,
+      firebase_async_init: firebaseInitialized,
       am_module_status: !!AM ? 'loaded' : 'failed'
     }
   };
