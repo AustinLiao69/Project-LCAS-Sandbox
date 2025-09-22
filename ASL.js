@@ -1,8 +1,8 @@
 /**
- * ASL.js_API服務層模組_2.0.3
+ * ASL.js_API服務層模組_2.0.5
  * @module API服務層模組（純轉發窗口）
  * @description LCAS 2.0 API Service Layer - 專責轉發P1-2範圍的34個API端點到BL層
- * @update 2025-09-22: DCN-0012階段二用戶管理端點補充 - 修復404錯誤
+ * @update 2025-09-22: DCN-0012階段一變數作用域修復 - 解決app is not defined錯誤
  * @date 2025-09-22
  */
 
@@ -38,9 +38,9 @@ let firebaseInitialized = false;
 let AM, BK, DL, FS;
 
 /**
- * Firebase服務初始化函數
- * @version 2025-09-22-V1.0.0
- * @description 在async函數中處理Firebase初始化，避免頂層await語法錯誤
+ * Firebase服務初始化函數（階段一修復版）
+ * @version 2025-09-22-V2.0.4
+ * @description 同步等待Firebase完全初始化，解決時序競爭問題
  */
 async function initializeServices() {
   try {
@@ -52,110 +52,165 @@ async function initializeServices() {
     console.log('🔍 驗證Firebase配置...');
     await firebaseConfig.validateFirebaseConfig();
     
-    // 步驟3：初始化Firebase Admin SDK
+    // 步驟3：初始化Firebase Admin SDK（同步等待）
     console.log('⚡ 初始化Firebase Admin SDK...');
-    firebaseConfig.initializeFirebaseAdmin();
+    const app = firebaseConfig.initializeFirebaseAdmin();
     
-    // 步驟4：確認Firestore實例可用
+    // 步驟4：確認Firestore實例可用（確保完全初始化）
     console.log('📊 確認Firestore實例...');
-    firebaseConfig.getFirestoreInstance();
+    const db = firebaseConfig.getFirestoreInstance();
+    
+    // 步驟5：驗證Firebase連線（新增驗證步驟）
+    console.log('🔗 驗證Firebase連線...');
+    await db.collection('_health_check').doc('init_test').set({
+      timestamp: new Date(),
+      status: 'firebase_ready'
+    });
     
     firebaseInitialized = true;
-    console.log('✅ Firebase初始化完成，開始載入BL模組...');
+    console.log('✅ Firebase完全初始化完成，準備載入BL模組...');
     
     return true;
   } catch (error) {
     console.error('❌ Firebase初始化失敗:', error.message);
-    console.warn('⚠️ 將嘗試繼續載入模組，但可能遇到問題...');
+    console.error('❌ 錯誤堆疊:', error.stack);
+    firebaseInitialized = false;
     return false;
   }
 }
 
-// 執行Firebase初始化
-initializeServices().then((success) => {
-  console.log(`🎯 Firebase初始化結果: ${success ? '成功' : '失敗'}`);
-}).catch((error) => {
-  console.error('💥 Firebase初始化異常:', error.message);
-});
-
-/**
- * 03. BL層模組載入（P1-2範圍）- 階段一優化版
- * @version 2025-09-22-V2.0.1
- * @date 2025-09-22 14:45:00
- * @description 在Firebase初始化完成後載入P1-2階段所需的BL層模組
- */
-console.log('📦 ASL載入P1-2範圍BL層模組...');
-
-// 模組載入狀態監控
-const moduleStatus = {
-  firebase: firebaseInitialized,
-  AM: false,
-  BK: false,
-  DL: false,
-  FS: false
-};
-
-try {
-  AM = require('./13. Replit_Module code_BL/1309. AM.js');
-  moduleStatus.AM = true;
-  console.log('✅ AM (認證管理) 模組載入成功');
-} catch (error) {
-  console.error('❌ AM 模組載入失敗:', error.message);
-  if (firebaseInitialized) {
-    console.error('🔥 Firebase已初始化，但AM模組仍載入失敗，可能是其他依賴問題');
+// 同步執行Firebase初始化並等待完成
+async function waitForFirebaseInit() {
+  const maxRetries = 3;
+  let retryCount = 0;
+  
+  while (retryCount < maxRetries) {
+    try {
+      const success = await initializeServices();
+      if (success) {
+        console.log(`🎯 Firebase初始化成功 (嘗試次數: ${retryCount + 1})`);
+        return true;
+      }
+    } catch (error) {
+      console.error(`💥 Firebase初始化嘗試 ${retryCount + 1} 失敗:`, error.message);
+    }
+    
+    retryCount++;
+    if (retryCount < maxRetries) {
+      console.log(`⏳ 等待 ${retryCount * 2} 秒後重試...`);
+      await new Promise(resolve => setTimeout(resolve, retryCount * 2000));
+    }
   }
-}
-
-try {
-  BK = require('./13. Replit_Module code_BL/1301. BK.js');
-  moduleStatus.BK = true;
-  console.log('✅ BK (記帳核心) 模組載入成功');
-} catch (error) {
-  console.error('❌ BK 模組載入失敗:', error.message);
-}
-
-try {
-  DL = require('./13. Replit_Module code_BL/1310. DL.js');
-  moduleStatus.DL = true;
-  console.log('✅ DL (診斷日誌) 模組載入成功');
-} catch (error) {
-  console.error('❌ DL 模組載入失敗:', error.message);
-}
-
-try {
-  FS = require('./13. Replit_Module code_BL/1311. FS.js');
-  moduleStatus.FS = true;
-  console.log('✅ FS (Firestore) 模組載入成功');
-} catch (error) {
-  console.error('❌ FS 模組載入失敗:', error.message);
-}
-
-// 模組載入結果報告
-console.log('📋 模組載入狀態報告:');
-Object.entries(moduleStatus).forEach(([module, status]) => {
-  console.log(`   ${status ? '✅' : '❌'} ${module.toUpperCase()}: ${status ? '已載入' : '載入失敗'}`);
-});
-
-const successCount = Object.values(moduleStatus).filter(Boolean).length;
-const totalCount = Object.keys(moduleStatus).length;
-console.log(`📊 載入成功率: ${successCount}/${totalCount} (${Math.round(successCount/totalCount*100)}%)`);
-
-if (moduleStatus.firebase && moduleStatus.AM) {
-  console.log('🎉 階段一修復成功：Firebase + AM模組正常載入');
-} else if (moduleStatus.firebase && !moduleStatus.AM) {
-  console.log('⚠️ 階段一部分成功：Firebase正常，AM模組需進一步調查');
-} else {
-  console.log('❌ 階段一修復失敗：需執行階段二深度修復');
+  
+  console.error('❌ Firebase初始化最終失敗，已達最大重試次數');
+  return false;
 }
 
 /**
- * 03. Express應用程式設置
- * @version 2025-09-22-V2.0.0
- * @date 2025-09-22 10:00:00
- * @description 建立Express服務器，設定基礎中介軟體
+ * 03. BL層模組載入（P1-2範圍）- 階段一修復版
+ * @version 2025-09-22-V2.0.4
+ * @date 2025-09-22 
+ * @description 等待Firebase完全初始化後載入P1-2階段所需的BL層模組
  */
+async function loadBLModules() {
+  console.log('📦 ASL載入P1-2範圍BL層模組...');
+
+  // 等待Firebase初始化完成
+  const firebaseReady = await waitForFirebaseInit();
+  
+  // 模組載入狀態監控
+  const moduleStatus = {
+    firebase: firebaseReady,
+    AM: false,
+    BK: false,
+    DL: false,
+    FS: false
+  };
+
+  // 只有在Firebase成功初始化後才載入AM模組
+  if (firebaseReady) {
+    try {
+      console.log('🔥 Firebase已就緒，開始載入AM模組...');
+      AM = require('./13. Replit_Module code_BL/1309. AM.js');
+      moduleStatus.AM = true;
+      console.log('✅ AM (認證管理) 模組載入成功');
+    } catch (error) {
+      console.error('❌ AM 模組載入失敗:', error.message);
+      console.error('❌ AM 模組錯誤堆疊:', error.stack);
+      
+      // 提供更詳細的錯誤診斷
+      if (error.message.includes('Firebase')) {
+        console.error('🔥 Firebase相關錯誤，可能需要檢查firebase-config.js');
+      }
+    }
+  } else {
+    console.error('❌ Firebase初始化失敗，跳過AM模組載入');
+  }
+
+// 載入其他BL模組（這些模組相對獨立）
+  try {
+    BK = require('./13. Replit_Module code_BL/1301. BK.js');
+    moduleStatus.BK = true;
+    console.log('✅ BK (記帳核心) 模組載入成功');
+  } catch (error) {
+    console.error('❌ BK 模組載入失敗:', error.message);
+  }
+
+  try {
+    DL = require('./13. Replit_Module code_BL/1310. DL.js');
+    moduleStatus.DL = true;
+    console.log('✅ DL (診斷日誌) 模組載入成功');
+  } catch (error) {
+    console.error('❌ DL 模組載入失敗:', error.message);
+  }
+
+  try {
+    FS = require('./13. Replit_Module code_BL/1311. FS.js');
+    moduleStatus.FS = true;
+    console.log('✅ FS (Firestore) 模組載入成功');
+  } catch (error) {
+    console.error('❌ FS 模組載入失敗:', error.message);
+  }
+
+  // 模組載入結果報告
+  console.log('📋 模組載入狀態報告:');
+  Object.entries(moduleStatus).forEach(([module, status]) => {
+    console.log(`   ${status ? '✅' : '❌'} ${module.toUpperCase()}: ${status ? '已載入' : '載入失敗'}`);
+  });
+
+  const successCount = Object.values(moduleStatus).filter(Boolean).length;
+  const totalCount = Object.keys(moduleStatus).length;
+  console.log(`📊 載入成功率: ${successCount}/${totalCount} (${Math.round(successCount/totalCount*100)}%)`);
+
+  // 階段一修復結果評估
+  if (moduleStatus.firebase && moduleStatus.AM) {
+    console.log('🎉 階段一修復成功：Firebase + AM模組正常載入');
+    console.log('🚀 系統已準備好處理P1-2範圍API請求');
+  } else if (moduleStatus.firebase && !moduleStatus.AM) {
+    console.log('⚠️ 階段一部分成功：Firebase正常，AM模組需進一步調查');
+  } else {
+    console.log('❌ 階段一修復失敗：需執行階段二深度修復');
+  }
+
+  return moduleStatus;
+}
+
+// 階段一修復：將app變數移至全域作用域
 const express = require('express');
-const app = express();
+let app = null;
+
+// 將Express應用初始化包裝在異步函數中
+async function startApplication() {
+  // 等待BL模組載入完成
+  const moduleStatus = await loadBLModules();
+  
+  /**
+   * 03. Express應用程式設置（階段一修復版）
+   * @version 2025-09-22-V2.0.5
+   * @date 2025-09-22 15:45:00
+   * @description 建立Express服務器，設定基礎中介軟體
+   */
+  app = express();
 const PORT = process.env.ASL_PORT || 5000;
 
 // 基礎解析中介軟體
@@ -947,18 +1002,32 @@ app.use((error, req, res, next) => {
 });
 
 /**
- * 10. 服務器啟動
- * @version 2025-09-22-V2.0.0
- * @date 2025-09-22 10:00:00
- * @description 啟動ASL純轉發服務器
- */
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🌐 LCAS ASL純轉發窗口已啟動於 Port ${PORT}`);
-  console.log(`📍 服務地址: http://0.0.0.0:${PORT}`);
-  console.log(`🔗 健康檢查: http://0.0.0.0:${PORT}/health`);
-  console.log(`🎯 DCN-0012階段一完成: ASL純轉發窗口`);
-  console.log(`📋 P1-2 API端點: AM(11) + BK(15) = 26個端點`);
-});
+   * 10. 服務器啟動（階段一修復版）
+   * @version 2025-09-22-V2.0.4
+   * @date 2025-09-22 
+   * @description 在模組載入完成後啟動ASL純轉發服務器
+   */
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🌐 LCAS ASL純轉發窗口已啟動於 Port ${PORT}`);
+    console.log(`📍 服務地址: http://0.0.0.0:${PORT}`);
+    console.log(`🔗 健康檢查: http://0.0.0.0:${PORT}/health`);
+    console.log(`🎯 DCN-0012階段一修復完成: ASL純轉發窗口`);
+    console.log(`📋 P1-2 API端點: AM(19) + BK(15) = 34個端點`);
+    
+    // 階段一修復狀態報告
+    const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
+    const amStatus = moduleStatus.AM ? '✅' : '❌';
+    const overallStatus = moduleStatus.firebase && moduleStatus.AM ? '成功' : '部分成功';
+    
+    console.log(`🔧 階段一修復狀態: ${overallStatus}`);
+    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus})`);
+    
+    if (moduleStatus.firebase && moduleStatus.AM) {
+      console.log('🚀 系統已完全就緒，可處理P1-2範圍所有API請求');
+    } else {
+      console.log('⚠️ 系統部分就緒，建議執行階段二進一步修復');
+    }
+  });
 
 /**
  * 11. 優雅關閉處理
@@ -982,10 +1051,29 @@ process.on('SIGINT', () => {
   });
 });
 
-console.log('🎉 LCAS ASL純轉發窗口階段一重構 + 修復完成！');
-console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${firebaseInitialized ? '✅' : '❌'}), AM(${!!AM ? '✅' : '❌'}), BK(${!!BK ? '✅' : '❌'}), DL(${!!DL ? '✅' : '❌'}), FS(${!!FS ? '✅' : '❌'})`);
-console.log('🔧 純轉發機制: 26個API端點 -> BL層函數調用');
-console.log('🔧 階段一修復: Firebase優先初始化機制已實作');
-console.log('🚀 準備就緒，等待階段二BL層函數實作');
+console.log('🎉 LCAS ASL純轉發窗口階段一修復完成！');
+  console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'})`);
+  console.log('🔧 純轉發機制: 34個API端點 -> BL層函數調用');
+  console.log('🔧 階段一修復: Firebase同步初始化機制已實作');
+  
+  if (moduleStatus.firebase && moduleStatus.AM) {
+    console.log('🚀 階段一修復成功，系統完全就緒！');
+  } else {
+    console.log('⚠️ 階段一部分成功，建議執行階段二深度修復');
+  }
 
-module.exports = app;
+  return server;
+}
+
+// 啟動應用程式
+startApplication().catch((error) => {
+  console.error('💥 應用程式啟動失敗:', error.message);
+  console.error('💥 錯誤堆疊:', error.stack);
+  process.exit(1);
+});
+
+// 階段一修復：安全的模組導出
+module.exports = {
+  getApp: () => app,
+  startApplication
+};

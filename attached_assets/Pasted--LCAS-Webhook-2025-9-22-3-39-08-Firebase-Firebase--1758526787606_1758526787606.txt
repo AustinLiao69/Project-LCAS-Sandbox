@@ -1,0 +1,89 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/9/22 下午3:39:08
+📦 載入模組...
+ ✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+✅ Firebase Admin SDK已初始化
+✅ FS模組2.1.0：Firebase動態配置載入成功
+[FS_LOG_v2.1.0] 2025-09-22T07:39:09.059Z | 模組初始化 | FS模組2.1.0初始化 | User: system | Function: FS_initializeModule
+🎉 FS模組2.1.0階段三重構完成！
+📌 模組版本: 2.2.0
+🎯 專注功能: Phase 1完整功能 + 整合優化與驗證
+📋 階段一功能: 核心基礎操作(9個函數)
+📋 階段二功能: API端點支援(6個函數)
+📋 階段三功能: 整合優化與驗證(5個函數)
+✨ 總計實作: 20個核心函數 + 相容性函數
+🔧 建議執行: FS_performHealthCheck() 進行系統健康檢查
+🔧 建議執行: FS_validatePhase1Integration() 進行功能驗證
+✅ FS 模組載入成功 - 核心函數檢查通過
+✅ BK 模組載入成功 - BK_parseQuickInput函數檢查通過
+AM 帳號管理模組載入完成 v1.2.0 - Phase 1 API端點重構
+FS模組載入異常，將採用降級模式
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.2.0 (2025-01-28) - 純業務邏輯模組
+📅 SR 排程提醒模組初始化中...
+✅ LBK 模組載入成功
+✅ DD 模組載入成功
+✅ AM 模組載入成功
+✅ SR 模組載入成功
+🔍 WH模組載入前進行FS依賴完整性檢查...
+📊 FS核心函數檢查: 4/4 可用
+✅ FS模組完全就緒，可安全載入WH模組
+📦 開始載入WH模組...
+✅ WH 模組載入成功
+✅ WH模組核心函數檢查通過
+🔧 初始化 BK 模組...
+[2025-09-22T07:39:09.243Z] [WARNING] [DL] DL模組未找到，將使用原生日誌系統 [Location: Object.DL_warning]
+🔧 初始化 LBK 模組...
+🔧 LBK模組初始化開始...
+✅ DL模組從環境變數恢復模式設置: NORMAL
+🚀 DL模組v2.2.0初始化開始 - Firestore版本
+✅ DL模組初始化成功
+🔧 初始化 SR 排程提醒模組...
+📅 SR 排程提醒模組初始化中...
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🔍 FS模組依賴檢查報告:
+✅ FS核心函數載入: 4/4
+🎉 FS模組核心函數完整載入，依賴模組可正常運作
+✅ BK_processBookkeeping函數檢查: 存在
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！
+📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore
+🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000
+⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能
+📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制
+🏥 健康檢查機制已優化：專注LINE服務監控
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構
+📦 API端點遷移完成統計：
+   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點
+   📱 保留LINE Webhook專用：5個核心端點
+   ✅ 完美職責分離：RESTful API ↔ LINE Webhook
+🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現
+📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性
+🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port 3000
+📡 LINE Webhook 專用端點已就緒: 5個端點
+🔌 WebSocket 服務已啟用，支援即時協作同步
+📋 DCN-0011 Phase 4 重構統計:
+   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)
+   🎯 Webhook端點保留: 5個 (LINE OA專用)
+   🏗️ 雙服務架構: 職責完全分離
+   📈 系統維護性提升: 單一職責原則
+✅ WH模組初始化等待完成
+📅 已載入 4 個排程設定
+[2025-09-22T07:39:10.801Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+📅 已載入 4 個排程設定
+[2025-09-22T07:39:10.844Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+✅ SR 模組初始化完成
