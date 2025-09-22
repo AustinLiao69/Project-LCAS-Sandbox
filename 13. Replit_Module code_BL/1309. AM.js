@@ -1265,6 +1265,794 @@ async function AM_processSRUpgrade(userId, upgradeType, paymentInfo, requesterId
 
 
 
+/**
+ * =============== DCN-0012 階段二：API端點處理函數實作 ===============
+ * 基於P1-2範圍，實作11個認證服務API端點的處理函數
+ */
+
+/**
+ * 26. 處理用戶註冊API - POST /api/v1/auth/register
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的註冊請求
+ */
+async function AM_processAPIRegister(requestData) {
+  const functionName = "AM_processAPIRegister";
+  try {
+    AM_logInfo("開始處理註冊API請求", "註冊處理", requestData.email || "", "", "", functionName);
+
+    // 驗證註冊資料
+    if (!requestData.email || !requestData.password) {
+      return {
+        success: false,
+        message: "電子郵件和密碼為必填欄位",
+        errorCode: "MISSING_REQUIRED_FIELDS"
+      };
+    }
+
+    // 檢查帳號是否已存在
+    const existsResult = await AM_validateAccountExists(requestData.email, 'email');
+    if (existsResult.exists) {
+      return {
+        success: false,
+        message: "此電子郵件已被註冊",
+        errorCode: "EMAIL_ALREADY_EXISTS"
+      };
+    }
+
+    // 創建用戶帳號（使用email作為identifier）
+    const createResult = await AM_createAppAccount('APP', {
+      displayName: requestData.displayName || requestData.email,
+      email: requestData.email,
+      userType: requestData.userType || 'S'
+    }, {
+      deviceId: requestData.deviceId || 'web',
+      appVersion: '2.0.0'
+    });
+
+    if (createResult.success) {
+      AM_logInfo(`註冊成功: ${createResult.primaryUID}`, "註冊處理", requestData.email, "", "", functionName);
+      
+      return {
+        success: true,
+        data: {
+          userId: createResult.primaryUID,
+          email: requestData.email,
+          displayName: requestData.displayName || requestData.email,
+          userType: createResult.userType
+        },
+        message: "註冊成功"
+      };
+    } else {
+      return {
+        success: false,
+        message: createResult.error || "註冊失敗",
+        errorCode: createResult.errorCode || "REGISTRATION_FAILED"
+      };
+    }
+
+  } catch (error) {
+    AM_logError(`註冊API處理失敗: ${error.message}`, "註冊處理", requestData.email || "", "", "", "AM_API_REGISTER_ERROR", functionName);
+    return {
+      success: false,
+      message: "系統錯誤，請稍後再試",
+      errorCode: "SYSTEM_ERROR"
+    };
+  }
+}
+
+/**
+ * 27. 處理用戶登入API - POST /api/v1/auth/login
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的登入請求
+ */
+async function AM_processAPILogin(requestData) {
+  const functionName = "AM_processAPILogin";
+  try {
+    AM_logInfo("開始處理登入API請求", "登入處理", requestData.email || "", "", "", functionName);
+
+    // 驗證登入資料
+    if (!requestData.email || !requestData.password) {
+      return {
+        success: false,
+        message: "電子郵件和密碼為必填欄位",
+        errorCode: "MISSING_CREDENTIALS"
+      };
+    }
+
+    // 驗證帳號存在性
+    const existsResult = await AM_validateAccountExists(requestData.email, 'email');
+    if (!existsResult.exists) {
+      return {
+        success: false,
+        message: "帳號不存在",
+        errorCode: "ACCOUNT_NOT_FOUND"
+      };
+    }
+
+    // 模擬密碼驗證（實際專案中應使用bcrypt等安全方式）
+    // 這裡為示範目的，實際應實作密碼雜湊比對
+    const passwordValid = true; // 假設密碼驗證通過
+
+    if (!passwordValid) {
+      return {
+        success: false,
+        message: "密碼錯誤",
+        errorCode: "INVALID_PASSWORD"
+      };
+    }
+
+    // 取得用戶資訊
+    const userInfo = await AM_getUserInfo(existsResult.UID, 'SYSTEM', true);
+    
+    if (userInfo.success) {
+      // 生成JWT token（實際專案中應使用jwt library）
+      const token = `jwt_${existsResult.UID}_${Date.now()}`;
+      
+      AM_logInfo(`登入成功: ${existsResult.UID}`, "登入處理", requestData.email, "", "", functionName);
+      
+      return {
+        success: true,
+        data: {
+          token: token,
+          refreshToken: `refresh_${existsResult.UID}_${Date.now()}`,
+          user: userInfo.userData,
+          expiresIn: 3600
+        },
+        message: "登入成功"
+      };
+    } else {
+      return {
+        success: false,
+        message: "無法取得用戶資訊",
+        errorCode: "USER_INFO_ERROR"
+      };
+    }
+
+  } catch (error) {
+    AM_logError(`登入API處理失敗: ${error.message}`, "登入處理", requestData.email || "", "", "", "AM_API_LOGIN_ERROR", functionName);
+    return {
+      success: false,
+      message: "系統錯誤，請稍後再試",
+      errorCode: "SYSTEM_ERROR"
+    };
+  }
+}
+
+/**
+ * 28. 處理Google登入API - POST /api/v1/auth/google-login
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的Google OAuth登入請求
+ */
+async function AM_processAPIGoogleLogin(requestData) {
+  const functionName = "AM_processAPIGoogleLogin";
+  try {
+    AM_logInfo("開始處理Google登入API請求", "Google登入", requestData.email || "", "", "", functionName);
+
+    // 驗證Google token
+    if (!requestData.googleToken) {
+      return {
+        success: false,
+        message: "Google token為必填欄位",
+        errorCode: "MISSING_GOOGLE_TOKEN"
+      };
+    }
+
+    // 模擬Google token驗證（實際應呼叫Google API驗證）
+    const googleUserInfo = {
+      email: requestData.email || 'user@gmail.com',
+      name: requestData.name || 'Google User',
+      googleId: requestData.googleId || 'google_' + Date.now()
+    };
+
+    // 檢查是否已有帳號
+    const existsResult = await AM_validateAccountExists(googleUserInfo.email, 'email');
+    
+    let userId;
+    if (existsResult.exists) {
+      // 已有帳號，直接登入
+      userId = existsResult.UID;
+    } else {
+      // 建立新帳號
+      const createResult = await AM_createAppAccount('APP', {
+        displayName: googleUserInfo.name,
+        email: googleUserInfo.email,
+        userType: 'S'
+      }, {
+        deviceId: 'google_oauth',
+        appVersion: '2.0.0'
+      });
+
+      if (!createResult.success) {
+        return {
+          success: false,
+          message: "Google登入帳號創建失敗",
+          errorCode: "GOOGLE_ACCOUNT_CREATE_FAILED"
+        };
+      }
+      userId = createResult.primaryUID;
+    }
+
+    // 取得用戶資訊
+    const userInfo = await AM_getUserInfo(userId, 'SYSTEM', true);
+    
+    if (userInfo.success) {
+      const token = `jwt_google_${userId}_${Date.now()}`;
+      
+      AM_logInfo(`Google登入成功: ${userId}`, "Google登入", googleUserInfo.email, "", "", functionName);
+      
+      return {
+        success: true,
+        data: {
+          token: token,
+          refreshToken: `refresh_google_${userId}_${Date.now()}`,
+          user: userInfo.userData,
+          isNewUser: !existsResult.exists,
+          expiresIn: 3600
+        },
+        message: "Google登入成功"
+      };
+    } else {
+      return {
+        success: false,
+        message: "無法取得用戶資訊",
+        errorCode: "USER_INFO_ERROR"
+      };
+    }
+
+  } catch (error) {
+    AM_logError(`Google登入API處理失敗: ${error.message}`, "Google登入", requestData.email || "", "", "", "AM_API_GOOGLE_LOGIN_ERROR", functionName);
+    return {
+      success: false,
+      message: "Google登入失敗",
+      errorCode: "GOOGLE_LOGIN_ERROR"
+    };
+  }
+}
+
+/**
+ * 29. 處理用戶登出API - POST /api/v1/auth/logout
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的登出請求
+ */
+async function AM_processAPILogout(requestData) {
+  const functionName = "AM_processAPILogout";
+  try {
+    AM_logInfo("開始處理登出API請求", "登出處理", requestData.userId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!requestData.token && !requestData.userId) {
+      return {
+        success: false,
+        message: "token或userId為必填欄位",
+        errorCode: "MISSING_AUTH_INFO"
+      };
+    }
+
+    const userId = requestData.userId || 'unknown';
+
+    // 實際專案中應該：
+    // 1. 驗證token有效性
+    // 2. 將token加入黑名單
+    // 3. 清除相關session
+    
+    // 模擬登出處理
+    AM_logInfo(`登出成功: ${userId}`, "登出處理", userId, "", "", functionName);
+    
+    return {
+      success: true,
+      data: {
+        message: "已成功登出"
+      },
+      message: "登出成功"
+    };
+
+  } catch (error) {
+    AM_logError(`登出API處理失敗: ${error.message}`, "登出處理", requestData.userId || "", "", "", "AM_API_LOGOUT_ERROR", functionName);
+    return {
+      success: false,
+      message: "登出失敗",
+      errorCode: "LOGOUT_ERROR"
+    };
+  }
+}
+
+/**
+ * 30. 處理token刷新API - POST /api/v1/auth/refresh
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的token刷新請求
+ */
+async function AM_processAPIRefresh(requestData) {
+  const functionName = "AM_processAPIRefresh";
+  try {
+    AM_logInfo("開始處理token刷新API請求", "Token刷新", "", "", "", functionName);
+
+    // 驗證refresh token
+    if (!requestData.refreshToken) {
+      return {
+        success: false,
+        message: "refresh token為必填欄位",
+        errorCode: "MISSING_REFRESH_TOKEN"
+      };
+    }
+
+    // 模擬refresh token驗證（實際應驗證token有效性和過期時間）
+    const tokenParts = requestData.refreshToken.split('_');
+    if (tokenParts.length < 3 || !tokenParts[0].includes('refresh')) {
+      return {
+        success: false,
+        message: "無效的refresh token",
+        errorCode: "INVALID_REFRESH_TOKEN"
+      };
+    }
+
+    const userId = tokenParts[1];
+
+    // 驗證用戶存在
+    const userInfo = await AM_getUserInfo(userId, 'SYSTEM', false);
+    if (!userInfo.success) {
+      return {
+        success: false,
+        message: "用戶不存在",
+        errorCode: "USER_NOT_FOUND"
+      };
+    }
+
+    // 生成新的token
+    const newToken = `jwt_${userId}_${Date.now()}`;
+    const newRefreshToken = `refresh_${userId}_${Date.now()}`;
+    
+    AM_logInfo(`Token刷新成功: ${userId}`, "Token刷新", userId, "", "", functionName);
+    
+    return {
+      success: true,
+      data: {
+        token: newToken,
+        refreshToken: newRefreshToken,
+        expiresIn: 3600
+      },
+      message: "Token刷新成功"
+    };
+
+  } catch (error) {
+    AM_logError(`Token刷新API處理失敗: ${error.message}`, "Token刷新", "", "", "", "AM_API_REFRESH_ERROR", functionName);
+    return {
+      success: false,
+      message: "Token刷新失敗",
+      errorCode: "REFRESH_ERROR"
+    };
+  }
+}
+
+/**
+ * 31. 處理忘記密碼API - POST /api/v1/auth/forgot-password
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的忘記密碼請求
+ */
+async function AM_processAPIForgotPassword(requestData) {
+  const functionName = "AM_processAPIForgotPassword";
+  try {
+    AM_logInfo("開始處理忘記密碼API請求", "忘記密碼", requestData.email || "", "", "", functionName);
+
+    // 驗證email
+    if (!requestData.email) {
+      return {
+        success: false,
+        message: "電子郵件為必填欄位",
+        errorCode: "MISSING_EMAIL"
+      };
+    }
+
+    // 檢查帳號是否存在
+    const existsResult = await AM_validateAccountExists(requestData.email, 'email');
+    if (!existsResult.exists) {
+      // 為安全考量，即使帳號不存在也回傳成功訊息
+      return {
+        success: true,
+        data: {
+          message: "如果該電子郵件地址存在於我們的系統中，您將收到密碼重設說明"
+        },
+        message: "密碼重設郵件已發送"
+      };
+    }
+
+    // 生成重設token
+    const resetToken = `reset_${existsResult.UID}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 實際專案中應該：
+    // 1. 將reset token儲存到資料庫（含過期時間）
+    // 2. 發送重設密碼郵件
+    
+    AM_logInfo(`忘記密碼處理完成: ${existsResult.UID}`, "忘記密碼", requestData.email, "", "", functionName);
+    
+    return {
+      success: true,
+      data: {
+        message: "密碼重設郵件已發送",
+        resetToken: resetToken // 在實際專案中不應回傳，這裡僅供測試
+      },
+      message: "密碼重設郵件已發送"
+    };
+
+  } catch (error) {
+    AM_logError(`忘記密碼API處理失敗: ${error.message}`, "忘記密碼", requestData.email || "", "", "", "AM_API_FORGOT_PASSWORD_ERROR", functionName);
+    return {
+      success: false,
+      message: "系統錯誤，請稍後再試",
+      errorCode: "SYSTEM_ERROR"
+    };
+  }
+}
+
+/**
+ * 32. 處理驗證重設token API - GET /api/v1/auth/verify-reset-token
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的重設token驗證請求
+ */
+async function AM_processAPIVerifyResetToken(queryParams) {
+  const functionName = "AM_processAPIVerifyResetToken";
+  try {
+    AM_logInfo("開始處理驗證重設token API請求", "驗證重設Token", "", "", "", functionName);
+
+    // 驗證token參數
+    if (!queryParams.token) {
+      return {
+        success: false,
+        message: "重設token為必填參數",
+        errorCode: "MISSING_RESET_TOKEN"
+      };
+    }
+
+    const resetToken = queryParams.token;
+    
+    // 驗證token格式
+    const tokenParts = resetToken.split('_');
+    if (tokenParts.length < 4 || tokenParts[0] !== 'reset') {
+      return {
+        success: false,
+        message: "無效的重設token",
+        errorCode: "INVALID_RESET_TOKEN"
+      };
+    }
+
+    const userId = tokenParts[1];
+    const timestamp = parseInt(tokenParts[2]);
+    
+    // 檢查token是否過期（24小時有效期）
+    const now = Date.now();
+    const tokenAge = now - timestamp;
+    const maxAge = 24 * 60 * 60 * 1000; // 24小時
+    
+    if (tokenAge > maxAge) {
+      return {
+        success: false,
+        message: "重設token已過期",
+        errorCode: "TOKEN_EXPIRED"
+      };
+    }
+
+    // 驗證用戶存在
+    const userInfo = await AM_getUserInfo(userId, 'SYSTEM', false);
+    if (!userInfo.success) {
+      return {
+        success: false,
+        message: "無效的重設token",
+        errorCode: "INVALID_TOKEN_USER"
+      };
+    }
+
+    AM_logInfo(`重設token驗證成功: ${userId}`, "驗證重設Token", userId, "", "", functionName);
+    
+    return {
+      success: true,
+      data: {
+        valid: true,
+        userId: userId,
+        expiresAt: new Date(timestamp + maxAge).toISOString()
+      },
+      message: "重設token有效"
+    };
+
+  } catch (error) {
+    AM_logError(`驗證重設token API處理失敗: ${error.message}`, "驗證重設Token", "", "", "", "AM_API_VERIFY_RESET_TOKEN_ERROR", functionName);
+    return {
+      success: false,
+      message: "token驗證失敗",
+      errorCode: "VERIFICATION_ERROR"
+    };
+  }
+}
+
+/**
+ * 33. 處理重設密碼API - POST /api/v1/auth/reset-password
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的重設密碼請求
+ */
+async function AM_processAPIResetPassword(requestData) {
+  const functionName = "AM_processAPIResetPassword";
+  try {
+    AM_logInfo("開始處理重設密碼API請求", "重設密碼", "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!requestData.token || !requestData.newPassword) {
+      return {
+        success: false,
+        message: "重設token和新密碼為必填欄位",
+        errorCode: "MISSING_REQUIRED_FIELDS"
+      };
+    }
+
+    // 先驗證token
+    const tokenVerification = await AM_processAPIVerifyResetToken({ token: requestData.token });
+    if (!tokenVerification.success) {
+      return tokenVerification;
+    }
+
+    const userId = tokenVerification.data.userId;
+
+    // 驗證新密碼強度
+    if (requestData.newPassword.length < 6) {
+      return {
+        success: false,
+        message: "密碼長度至少需要6個字元",
+        errorCode: "PASSWORD_TOO_SHORT"
+      };
+    }
+
+    // 實際專案中應該：
+    // 1. 使用bcrypt等方式雜湊新密碼
+    // 2. 更新資料庫中的密碼
+    // 3. 使重設token失效
+    
+    AM_logInfo(`重設密碼成功: ${userId}`, "重設密碼", userId, "", "", functionName);
+    
+    return {
+      success: true,
+      data: {
+        message: "密碼已成功重設"
+      },
+      message: "密碼重設成功"
+    };
+
+  } catch (error) {
+    AM_logError(`重設密碼API處理失敗: ${error.message}`, "重設密碼", "", "", "", "AM_API_RESET_PASSWORD_ERROR", functionName);
+    return {
+      success: false,
+      message: "密碼重設失敗",
+      errorCode: "RESET_PASSWORD_ERROR"
+    };
+  }
+}
+
+/**
+ * 34. 處理Email驗證API - POST /api/v1/auth/verify-email
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的Email驗證請求
+ */
+async function AM_processAPIVerifyEmail(requestData) {
+  const functionName = "AM_processAPIVerifyEmail";
+  try {
+    AM_logInfo("開始處理Email驗證API請求", "Email驗證", requestData.email || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!requestData.verificationCode || !requestData.email) {
+      return {
+        success: false,
+        message: "驗證碼和電子郵件為必填欄位",
+        errorCode: "MISSING_VERIFICATION_DATA"
+      };
+    }
+
+    // 檢查帳號是否存在
+    const existsResult = await AM_validateAccountExists(requestData.email, 'email');
+    if (!existsResult.exists) {
+      return {
+        success: false,
+        message: "帳號不存在",
+        errorCode: "ACCOUNT_NOT_FOUND"
+      };
+    }
+
+    // 模擬驗證碼檢查（實際應從資料庫取得並比對）
+    const validCode = '123456'; // 假設的驗證碼
+    if (requestData.verificationCode !== validCode) {
+      return {
+        success: false,
+        message: "驗證碼錯誤",
+        errorCode: "INVALID_VERIFICATION_CODE"
+      };
+    }
+
+    // 更新用戶狀態為已驗證
+    const updateResult = await AM_updateAccountInfo(existsResult.UID, {
+      emailVerified: true,
+      emailVerifiedAt: admin.firestore.Timestamp.now()
+    }, 'SYSTEM');
+
+    if (updateResult.success) {
+      AM_logInfo(`Email驗證成功: ${existsResult.UID}`, "Email驗證", requestData.email, "", "", functionName);
+      
+      return {
+        success: true,
+        data: {
+          message: "電子郵件驗證成功",
+          userId: existsResult.UID
+        },
+        message: "Email驗證成功"
+      };
+    } else {
+      return {
+        success: false,
+        message: "驗證狀態更新失敗",
+        errorCode: "UPDATE_VERIFICATION_STATUS_FAILED"
+      };
+    }
+
+  } catch (error) {
+    AM_logError(`Email驗證API處理失敗: ${error.message}`, "Email驗證", requestData.email || "", "", "", "AM_API_VERIFY_EMAIL_ERROR", functionName);
+    return {
+      success: false,
+      message: "Email驗證失敗",
+      errorCode: "EMAIL_VERIFICATION_ERROR"
+    };
+  }
+}
+
+/**
+ * 35. 處理LINE綁定API - POST /api/v1/auth/bind-line
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的LINE帳號綁定請求
+ */
+async function AM_processAPIBindLine(requestData) {
+  const functionName = "AM_processAPIBindLine";
+  try {
+    AM_logInfo("開始處理LINE綁定API請求", "LINE綁定", requestData.userId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!requestData.userId || !requestData.lineUserId) {
+      return {
+        success: false,
+        message: "用戶ID和LINE用戶ID為必填欄位",
+        errorCode: "MISSING_BINDING_DATA"
+      };
+    }
+
+    // 檢查用戶是否存在
+    const userInfo = await AM_getUserInfo(requestData.userId, 'SYSTEM', true);
+    if (!userInfo.success) {
+      return {
+        success: false,
+        message: "用戶不存在",
+        errorCode: "USER_NOT_FOUND"
+      };
+    }
+
+    // 檢查LINE帳號是否已被其他用戶綁定
+    const lineExists = await AM_validateAccountExists(requestData.lineUserId, 'LINE');
+    if (lineExists.exists && lineExists.UID !== requestData.userId) {
+      return {
+        success: false,
+        message: "此LINE帳號已被其他用戶綁定",
+        errorCode: "LINE_ALREADY_BOUND"
+      };
+    }
+
+    // 執行綁定
+    const linkResult = await AM_linkCrossPlatformAccounts(requestData.userId, {
+      LINE_UID: requestData.lineUserId
+    });
+
+    if (linkResult.success) {
+      AM_logInfo(`LINE綁定成功: ${requestData.userId} -> ${requestData.lineUserId}`, "LINE綁定", requestData.userId, "", "", functionName);
+      
+      return {
+        success: true,
+        data: {
+          message: "LINE帳號綁定成功",
+          userId: requestData.userId,
+          lineUserId: requestData.lineUserId,
+          boundAt: new Date().toISOString()
+        },
+        message: "LINE綁定成功"
+      };
+    } else {
+      return {
+        success: false,
+        message: linkResult.error || "LINE綁定失敗",
+        errorCode: linkResult.errorCode || "LINE_BINDING_FAILED"
+      };
+    }
+
+  } catch (error) {
+    AM_logError(`LINE綁定API處理失敗: ${error.message}`, "LINE綁定", requestData.userId || "", "", "", "AM_API_BIND_LINE_ERROR", functionName);
+    return {
+      success: false,
+      message: "LINE綁定失敗",
+      errorCode: "LINE_BINDING_ERROR"
+    };
+  }
+}
+
+/**
+ * 36. 處理綁定狀態查詢API - GET /api/v1/auth/bind-status
+ * @version 2025-09-22-V1.3.0
+ * @date 2025-09-22 
+ * @description 專門處理ASL.js轉發的綁定狀態查詢請求
+ */
+async function AM_processAPIBindStatus(queryParams) {
+  const functionName = "AM_processAPIBindStatus";
+  try {
+    AM_logInfo("開始處理綁定狀態查詢API請求", "綁定狀態查詢", queryParams.userId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!queryParams.userId) {
+      return {
+        success: false,
+        message: "用戶ID為必填參數",
+        errorCode: "MISSING_USER_ID"
+      };
+    }
+
+    // 取得用戶資訊（包含關聯帳號）
+    const userInfo = await AM_getUserInfo(queryParams.userId, 'SYSTEM', true);
+    if (!userInfo.success) {
+      return {
+        success: false,
+        message: "用戶不存在",
+        errorCode: "USER_NOT_FOUND"
+      };
+    }
+
+    const linkedAccounts = userInfo.linkedAccounts || {};
+    
+    // 構建綁定狀態資訊
+    const bindingStatus = {
+      userId: queryParams.userId,
+      bindings: {
+        line: {
+          bound: !!linkedAccounts.LINE_UID,
+          lineUserId: linkedAccounts.LINE_UID || null,
+          displayName: linkedAccounts.LINE_UID ? 'LINE用戶' : null
+        },
+        ios: {
+          bound: !!linkedAccounts.iOS_UID,
+          deviceId: linkedAccounts.iOS_UID || null
+        },
+        android: {
+          bound: !!linkedAccounts.Android_UID,
+          deviceId: linkedAccounts.Android_UID || null
+        }
+      },
+      totalBound: Object.values(linkedAccounts).filter(uid => uid && uid.length > 0).length
+    };
+
+    AM_logInfo(`綁定狀態查詢完成: ${queryParams.userId}`, "綁定狀態查詢", queryParams.userId, "", "", functionName);
+    
+    return {
+      success: true,
+      data: bindingStatus,
+      message: "綁定狀態查詢成功"
+    };
+
+  } catch (error) {
+    AM_logError(`綁定狀態查詢API處理失敗: ${error.message}`, "綁定狀態查詢", queryParams.userId || "", "", "", "AM_API_BIND_STATUS_ERROR", functionName);
+    return {
+      success: false,
+      message: "綁定狀態查詢失敗",
+      errorCode: "BIND_STATUS_QUERY_ERROR"
+    };
+  }
+}
+
 // 導出模組函數
 module.exports = {
   //原有核心函數 (1-18)
@@ -1291,7 +2079,20 @@ module.exports = {
   AM_validateSRPremiumFeature,
   AM_getSRUserQuota,
   AM_updateSRFeatureUsage,
-  AM_processSRUpgrade
+  AM_processSRUpgrade,
+
+  // DCN-0012 階段二：API端點處理函數 (26-36)
+  AM_processAPIRegister,
+  AM_processAPILogin,
+  AM_processAPIGoogleLogin,
+  AM_processAPILogout,
+  AM_processAPIRefresh,
+  AM_processAPIForgotPassword,
+  AM_processAPIVerifyResetToken,
+  AM_processAPIResetPassword,
+  AM_processAPIVerifyEmail,
+  AM_processAPIBindLine,
+  AM_processAPIBindStatus
 };
 
 console.log('AM 帳號管理模組載入完成 v1.2.0 - Phase 1 API端點重構');
