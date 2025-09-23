@@ -1,0 +1,253 @@
+~/workspace$ cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=all
+🚀 初始化 LCAS 2.0 Phase 1 SIT測試環境...
+🔍 執行前置檢查...
+🔍 檢查Firebase配額狀態...
+✅ Firebase配額狀態正常
+✅ SIT測試環境初始化與配額檢查完成
+🌐 API基礎URL: http://0.0.0.0:5000
+👤 預設用戶模式: Expert
+🔥 Firebase配額狀態: Firebase配額充足
+NaN
+🎯 執行完整SIT測試計畫 (三個階段)
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段一測試
+📋 階段一：單點整合驗證測試 (TC-SIT-001~007)
+🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理
+NaN
+📊 階段一測試案例總數：7 個
+📅 預估執行時間：7 分鐘
+
+
+📝 執行階段一測試 1/7: TC-SIT-001: UserRegistration
+❌ FAIL TC-SIT-001 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'valid_users')
+
+📝 執行階段一測試 2/7: TC-SIT-002: UserLogin
+❌ FAIL TC-SIT-002 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'valid_users')
+
+📝 執行階段一測試 3/7: TC-SIT-003: TokenManagement
+❌ FAIL TC-SIT-003 (0ms)
+   錯誤: 需要先執行登入測試取得Token
+
+✅ 用戶流程與認證 完成，休息1秒後繼續...
+
+📝 執行階段一測試 4/7: TC-SIT-004: QuickBooking
+❌ FAIL TC-SIT-004 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'quick_booking_tests')
+
+📝 執行階段一測試 5/7: TC-SIT-005: FullBookingForm
+❌ FAIL TC-SIT-005 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'form_booking_tests')
+
+📝 執行階段一測試 6/7: TC-SIT-006: TransactionQuery
+❌ FAIL TC-SIT-006 (5004ms)
+   錯誤: timeout of 5000ms exceeded
+
+✅ 記帳功能與查詢 完成，休息1秒後繼續...
+
+📝 執行階段一測試 7/7: TC-SIT-007: CrossLayerErrorHandling
+❌ FAIL TC-SIT-007 (1ms)
+   錯誤: Cannot read properties of undefined (reading 'network_errors')
+
+NaN
+📊 階段一測試執行完成
+✅ 通過測試: 0/7
+📈 成功率: 0.00%
+⏱️  總執行時間: 7.038秒
+
+📋 階段一測試報告摘要
+NaN
+用戶認證與管理: 0/3 (0.0%)
+記帳功能測試: 0/2 (0.0%)
+查詢與錯誤處理: 0/2 (0.0%)
+
+🎯 階段一關鍵指標
+NaN
+基礎功能整合度: 0.0%
+用戶註冊流程: ❌ 失敗
+用戶登入驗證: ❌ 失敗
+錯誤處理覆蓋率: undefined
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試
+📋 階段二：四層架構資料流測試 (TC-SIT-008~020)
+🎯 測試重點：四模式差異化、資料一致性、端到端流程、效能穩定性
+NaN
+📊 階段二測試案例總數：13 個
+📅 預估執行時間：26 分鐘
+
+
+📝 執行階段二測試 1/13: TC-SIT-008: ModeAssessment
+❌ FAIL TC-SIT-008 (5ms)
+   錯誤: Cannot read properties of undefined (reading 'expert_mode_assessment')
+
+📝 執行階段二測試 2/13: TC-SIT-009: ModeDifferentiation
+❌ FAIL TC-SIT-009 (20023ms)
+   錯誤: 模式差異化回應不正確
+
+📝 執行階段二測試 3/13: TC-SIT-010: DataFormatTransformation
+❌ FAIL TC-SIT-010 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'data_transformation_tests')
+
+📝 執行階段二測試 4/13: TC-SIT-011: DataSynchronization
+❌ FAIL TC-SIT-011 (5006ms)
+   錯誤: 無法建立測試交易
+
+✅ 四模式整合測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 5/13: TC-SIT-012: CompleteUserLifecycle
+❌ FAIL TC-SIT-012 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'complete_user_journey_tests')
+
+📝 執行階段二測試 6/13: TC-SIT-013: BookkeepingEndToEnd
+❌ FAIL TC-SIT-013 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'business_value_chain_tests')
+
+📝 執行階段二測試 7/13: TC-SIT-014: NetworkExceptionHandling
+❌ FAIL TC-SIT-014 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'network_errors')
+
+📝 執行階段二測試 8/13: TC-SIT-015: BusinessRuleErrorHandling
+❌ FAIL TC-SIT-015 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'business_logic_errors')
+
+✅ 端到端流程測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 9/13: TC-SIT-016: FourModeProcessDifference
+🔄 開始四模式流程差異驗證...
+❌ FAIL TC-SIT-016 (1ms)
+   錯誤: Cannot read properties of undefined (reading 'four_mode_user_experience_tests')
+
+📝 執行階段二測試 10/13: TC-SIT-017: ConcurrentOperations
+❌ FAIL TC-SIT-017 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'concurrent_operations')
+
+📝 執行階段二測試 11/13: TC-SIT-018: DataRaceHandling
+❌ FAIL TC-SIT-018 (5007ms)
+   錯誤: 無法建立測試交易
+
+📝 執行階段二測試 12/13: TC-SIT-019: EightHourStabilityTest
+❌ FAIL TC-SIT-019 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'long_running_stability_tests')
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 13/13: TC-SIT-020: StressAndRecoveryTest
+❌ FAIL TC-SIT-020 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'stress_and_recovery_tests')
+
+NaN
+📊 階段二測試執行完成
+✅ 通過測試: 0/13
+📈 成功率: 0.00%
+⏱️  總執行時間: 43.092秒
+
+📋 階段二測試報告摘要
+NaN
+四模式差異化測試: 0/4 (0.0%)
+端到端流程測試: 0/5 (0.0%)
+效能穩定性測試: 0/4 (0.0%)
+
+🎯 階段二關鍵指標
+NaN
+四層架構整合度: 0.0%
+資料一致性驗證: ✅ 完成
+模式差異化驗證: ✅ 完成
+端到端流程驗證: ✅ 完成
+效能穩定性評級: C級
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段三測試
+📋 階段三：完整業務流程測試 (TC-SIT-021~028)
+🎯 測試重點：業務價值鏈、用戶體驗、系統穩定性、效能基準
+NaN
+📊 階段三測試案例總數：8 個
+📅 預估執行時間：24 分鐘
+
+
+📝 執行階段三測試 1/8: TC-SIT-021: CompleteUserJourney
+❌ FAIL TC-SIT-021 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'complete_user_journey_tests')
+
+📝 執行階段三測試 2/8: TC-SIT-022: BusinessValueChainValidation
+❌ FAIL TC-SIT-022 (15019ms)
+   錯誤: 業務價值鏈驗證未達標
+
+📝 執行階段三測試 3/8: TC-SIT-023: FourModeUserExperience
+❌ FAIL TC-SIT-023 (40102ms)
+   錯誤: 四模式使用者體驗測試未達標
+
+📝 執行階段三測試 4/8: TC-SIT-024: InterfaceResponsiveness
+❌ FAIL TC-SIT-024 (15014ms)
+   錯誤: 介面回應性測試未達標
+
+✅ 業務價值鏈驗證 完成，休息3秒後繼續...
+
+📝 執行階段三測試 5/8: TC-SIT-025: TwentyFourHourStabilityTest
+❌ FAIL TC-SIT-025 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'long_running_stability_tests')
+
+📝 執行階段三測試 6/8: TC-SIT-026: FailureRecoveryTest
+❌ FAIL TC-SIT-026 (20028ms)
+   錯誤: 故障恢復測試未達標
+
+📝 執行階段三測試 7/8: TC-SIT-027: CompleteRegressionTest
+開始執行完整功能回歸測試...
+執行回歸測試: 用戶認證功能
+❌ FAIL TC-SIT-002 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'valid_users')
+執行回歸測試: 快速記帳功能
+❌ FAIL TC-SIT-004 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'quick_booking_tests')
+執行回歸測試: 資料查詢功能
+❌ FAIL TC-SIT-006 (5006ms)
+   錯誤: timeout of 5000ms exceeded
+執行回歸測試: 模式切換功能
+❌ FAIL TC-SIT-009 (20023ms)
+   錯誤: 模式差異化回應不正確
+執行回歸測試: 錯誤處理功能
+❌ FAIL TC-SIT-007 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'network_errors')
+❌ FAIL TC-SIT-027 (25030ms)
+   錯誤: 功能回歸測試未達90%通過率
+
+📝 執行階段三測試 8/8: TC-SIT-028: PerformanceBenchmarkValidation
+❌ FAIL TC-SIT-028 (0ms)
+   錯誤: Cannot read properties of undefined (reading 'performance_benchmark_validation')
+
+✅ 系統穩定性驗證 完成，休息3秒後繼續...
+
+NaN
+📊 階段三測試執行完成
+✅ 通過測試: 0/8
+📈 成功率: 0.00%
+⏱️  總執行時間: 164.299秒
+
+📋 階段三測試報告摘要
+NaN
+業務價值鏈測試: 0/4 (0.0%)
+系統穩定性測試: 0/4 (0.0%)
+
+🎯 階段三關鍵指標
+NaN
+業務流程完整性: 0.0%
+用戶旅程驗證: ❌ 未完成
+價值鏈驗證: ❌ 未完成
+系統穩定性評級: C級
+效能基準達成: ❌ 未達成
+
+🏆 SIT整體評估
+NaN
+整體品質等級: D (不建議發布)
+發布建議: ❌ 品質不達標，需要全面檢討
+
+📊 完整SIT測試完成
+✅ 通過率: 0.00%
+⏱️ 執行時間: 164.30秒
+❌ 測試未達標，需要重大修正後重新測試
+
+📄 詳細測試報告已準備完成
+📁 報告位置: 06. SIT_Test code/0691. SIT_Report_P1.md
+🔍 執行參數說明:
+   node 0603. SIT_TC_P1.js --phase=phase1+2  # 執行階段一+二綜合測試
+   node 0603. SIT_TC_P1.js --phase=phase2    # 執行階段二測試
+   node 0603. SIT_TC_P1.js --phase=phase3    # 執行階段三測試
+   node 0603. SIT_TC_P1.js --phase=all       # 執行完整SIT測試
+~/workspace/06. SIT_Test code$ 
