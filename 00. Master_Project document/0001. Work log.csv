@@ -255,3 +255,5 @@ MM 	 DD 	 Description 	    Progress
 9	22	 打通SIT測試環境 	 Ongoing
 9	22	 調查Firestore寫入數超過配額原因(29,000) 	 Ongoing
 9	22	 更新BL的LLD文件 	 Open
+9	22	 撰寫DCN-0014 	 Closed
+9	22	 執行DCN-0014 	 Closed

@@ -1,3 +1,91 @@
+---------------------------------------------
+不要寫code，請根據我的回覆更新提案
+
+根據您的回覆，我重新分析並提出更新的提案：
+
+🔍 關鍵問題重新評估
+1. 統一API回應格式處理位置重新評估
+您的問題：「你要考慮到未來所有132個API端點都會經過這個模組統一回應，放在1309.AM真的是對的選擇嗎？」
+
+重新分析結果：您說得對，這不是最佳選擇。
+
+更新提案：將統一回應格式處理放在 ASL.js 模組
+
+理由1：ASL.js是API Service Layer，專責API轉發，所有132個端點都會經過此層
+理由2：職責分離原則，API格式化應該在API層處理，不應該讓AM.js承擔非認證相關職責
+理由3：ASL.js已經有統一的回應中介軟體架構，擴充更自然
+2. Firebase Auth設定說明
+Firebase Authentication設定步驟：
+
+專案配置（已完成）：
+
+環境變數：FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL
+firebase-config.js已建立動態配置
+啟用Authentication服務：
+
+Firebase Console → Authentication → Sign-in method
+啟用Email/Password、Google OAuth等提供者
+整合方式（MVP策略）：
+
+使用Firebase Admin SDK的內建Token驗證
+admin.auth().verifyIdToken(idToken) 驗證前端傳來的Token
+無需自建JWT生成/驗證邏輯
+📋 更新後的三階段提案
+🎯 第一階段 (Critical - 立即執行)
+1.1 統一API回應格式處理方案（修正版）
+建議放置位置：ASL.js模組
+實作策略：
+
+在ASL.js的中介軟體中擴充統一格式化功能
+所有BL模組回傳的資料都經過ASL.js統一格式化
+支援四模式差異化回應格式
+1.2 Firebase Auth MVP整合
+負責模組：AM.js
+新增函數：
+
+AM_verifyFirebaseToken(idToken) - 驗證Firebase ID Token
+AM_getUserFromToken(idToken) - 從Token取得用戶資訊
+移除自建JWT相關函數
+1.3 BL層API處理函數完善（維持原計劃）
+AM.js：22個函數（認證11個 + 用戶管理11個）
+BK.js：9個函數（基本記帳範圍）
+🎯 第二階段 (High - 架構優化)
+2.1 四層架構串接優化
+ASL.js → BL模組 → 統一回應格式：
+
+ASL.js接收請求 → BL函數處理 → ASL.js格式化回應
+確保資料流暢通無阻
+2.2 SIT測試案例更新
+目標檔案：0692. SIT_TestData_P1.json
+
+移除複雜Token管理測試
+新增Firebase Auth整合測試
+API回應格式標準化測試
+🎯 第三階段 (Medium - 測試與部署)
+3.1 完整測試驗證
+四層架構端到端測試
+132個API端點回歸測試
+🔄 關鍵架構決策
+Token管理策略確認
+✅ 採用Firebase Auth內建機制
+
+前端：使用Firebase SDK取得ID Token
+後端：使用Admin SDK驗證Token
+無需自建Token管理邏輯
+統一回應格式放置策略確認
+✅ 放在ASL.js模組
+
+符合API Layer職責
+所有132個端點統一處理
+避免AM.js職責過載
+❓ 確認提案要點
+統一回應格式放在ASL.js - 是否同意？
+Token管理使用Firebase Auth - 是否同意？
+第一階段優先執行31個API函數 - 是否正確？
+移除所有自建Token相關邏輯 - 是否同意？
+這個更新提案解決了架構職責分離問題，並且符合MVP快速上線策略。請確認是否同意此方向，我將據此開始具體實作。
+
+
 
 
 
@@ -38,6 +126,7 @@ Firebase Auth已提供完整的Token生命週期管理
 AM_formatAPIResponse(success, data, message, userMode)
 AM_formatErrorResponse(errorCode, message, details)
 AM_generateMetadata(userMode, requestId)
+
 實作策略：所有BL模組的API處理函數都調用AM.js的格式化函數
 
 1.2 四模式初始設定邏輯
