@@ -1640,6 +1640,11 @@ async function AM_processAPILogin(requestData) {
           expiresIn: 3600,
         },
         message: "登入成功",
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestId: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          userMode: userInfo.userData.userMode || "Expert"
+        }
       };
     } else {
       return {
