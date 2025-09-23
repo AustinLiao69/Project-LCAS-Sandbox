@@ -43,9 +43,162 @@ class SITTestCases {
     }
 
     /**
+     * dependency預檢機制 - 解決Firebase配額和BL模組依賴問題
+     */
+    async checkDependencies() {
+        console.log('🔍 開始dependency預檢...');
+
+        const dependencyStatus = {
+            firebase: false,
+            blModules: false,
+            apiEndpoints: false,
+            testData: false
+        };
+
+        try {
+            // 1. 檢查Firebase配額狀態
+            const firebaseCheck = await this.checkFirebaseQuota();
+            dependencyStatus.firebase = firebaseCheck.available;
+
+            if (!firebaseCheck.available) {
+                console.error('❌ Firebase配額不足:', firebaseCheck.message);
+                return { success: false, status: dependencyStatus, error: 'FIREBASE_QUOTA_EXHAUSTED' };
+            }
+
+            // 2. 檢查BL模組可用性
+            const blCheck = await this.checkBLModules();
+            dependencyStatus.blModules = blCheck.available;
+
+            if (!blCheck.available) {
+                console.error('❌ BL模組不可用:', blCheck.message);
+                return { success: false, status: dependencyStatus, error: 'BL_MODULES_UNAVAILABLE' };
+            }
+
+            // 3. 檢查API端點連通性
+            const apiCheck = await this.checkAPIEndpoints();
+            dependencyStatus.apiEndpoints = apiCheck.available;
+
+            if (!apiCheck.available) {
+                console.error('❌ API端點不可用:', apiCheck.message);
+                return { success: false, status: dependencyStatus, error: 'API_ENDPOINTS_UNAVAILABLE' };
+            }
+
+            // 4. 檢查測試資料完整性
+            const dataLoaded = await this.loadTestData();
+            dependencyStatus.testData = dataLoaded;
+
+            if (!dataLoaded) {
+                return { success: false, status: dependencyStatus, error: 'TEST_DATA_UNAVAILABLE' };
+            }
+
+            console.log('✅ dependency預檢通過');
+            return { success: true, status: dependencyStatus };
+
+        } catch (error) {
+            console.error('❌ dependency預檢失敗:', error.message);
+            return { success: false, status: dependencyStatus, error: 'DEPENDENCY_CHECK_FAILED' };
+        }
+    }
+
+    /**
+     * 檢查Firebase配額狀態
+     */
+    async checkFirebaseQuota() {
+        try {
+            // 輕量級測試：嘗試讀取一個小文檔
+            const testResponse = await this.makeRequest('GET', '/health', null, {}, 3000);
+
+            if (testResponse.success) {
+                return { available: true, message: 'Firebase配額充足' };
+            } else if (testResponse.error?.includes('RESOURCE_EXHAUSTED') ||
+                       testResponse.error?.includes('Quota exceeded')) {
+                return { available: false, message: 'Firebase配額已耗盡' };
+            } else {
+                return { available: false, message: `Firebase連線問題: ${testResponse.error}` };
+            }
+        } catch (error) {
+            if (error.message.includes('RESOURCE_EXHAUSTED') ||
+                error.message.includes('Quota exceeded')) {
+                return { available: false, message: 'Firebase配額已耗盡' };
+            }
+            return { available: false, message: `Firebase檢查失敗: ${error.message}` };
+        }
+    }
+
+    /**
+     * 檢查BL模組可用性
+     */
+    async checkBLModules() {
+        try {
+            // 檢查關鍵BL模組是否可用
+            const modules = ['AM', 'BK', 'DL', 'FS'];
+            const moduleStatus = {};
+
+            for (const module of modules) {
+                try {
+                    const testResponse = await this.makeRequest('GET', `/health/${module.toLowerCase()}`, null, {}, 2000);
+                    moduleStatus[module] = testResponse.success;
+                } catch (error) {
+                    moduleStatus[module] = false;
+                }
+            }
+
+            const availableCount = Object.values(moduleStatus).filter(Boolean).length;
+            const isAvailable = availableCount >= 2; // 至少需要2個模組可用
+
+            return {
+                available: isAvailable,
+                message: `BL模組狀態: ${availableCount}/${modules.length} 可用`,
+                details: moduleStatus
+            };
+        } catch (error) {
+            return { available: false, message: `BL模組檢查失敗: ${error.message}` };
+        }
+    }
+
+    /**
+     * 檢查API端點連通性
+     */
+    async checkAPIEndpoints() {
+        try {
+            // 檢查核心API端點
+            const endpoints = [
+                '/api/v1/auth/login',
+                '/api/v1/transactions',
+                '/api/v1/users/profile'
+            ];
+
+            let availableCount = 0;
+
+            for (const endpoint of endpoints) {
+                try {
+                    // OPTIONS請求檢查端點是否存在
+                    const testResponse = await axios.options(`${this.apiBaseURL}${endpoint}`, {
+                        timeout: 2000
+                    });
+                    if (testResponse.status < 500) {
+                        availableCount++;
+                    }
+                } catch (error) {
+                    // 忽略個別端點錯誤
+                }
+            }
+
+            const isAvailable = availableCount >= 2; // 至少需要2個端點可用
+
+            return {
+                available: isAvailable,
+                message: `API端點狀態: ${availableCount}/${endpoints.length} 可用`
+            };
+        } catch (error) {
+            return { available: false, message: `API端點檢查失敗: ${error.message}` };
+        }
+    }
+
+    /**
      * HTTP請求工具函數
      */
-    async makeRequest(method, endpoint, data = null, headers = {}) {
+    async makeRequest(method, endpoint, data = null, headers = {}, timeout = 5000) {
         try {
             // 階段三修復：確保endpoint不重複baseURL路徑
             let cleanEndpoint = endpoint;
@@ -56,7 +209,7 @@ class SITTestCases {
             } else if (!endpoint.startsWith('/')) {
                 cleanEndpoint = '/' + endpoint;
             }
-            
+
             const config = {
                 method,
                 url: `${this.apiBaseURL}${cleanEndpoint}`,
@@ -65,7 +218,7 @@ class SITTestCases {
                     'X-User-Mode': this.currentUserMode,
                     ...headers
                 },
-                timeout: 5000
+                timeout: timeout
             };
 
             if (this.authToken) {
@@ -86,7 +239,7 @@ class SITTestCases {
         } catch (error) {
             // 階段三修復：正確處理錯誤訊息，避免[object Object]
             let errorMessage = 'Unknown error';
-            
+
             if (error.response?.data) {
                 if (typeof error.response.data === 'string') {
                     errorMessage = error.response.data;
@@ -104,7 +257,7 @@ class SITTestCases {
             } else {
                 errorMessage = error.toString();
             }
-            
+
             return {
                 success: false,
                 error: errorMessage,
@@ -161,7 +314,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('POST', '/api/v1/auth/register', registrationData);
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.userId &&
                           response.data?.data?.email === testUser.email &&
@@ -207,7 +360,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('POST', '/api/v1/auth/login', loginData);
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.token &&
                           response.data?.data?.user?.email === testUser.email;
@@ -244,7 +397,7 @@ class SITTestCases {
             // 測試Token驗證
             const response = await this.makeRequest('GET', '/api/v1/users/profile');
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.email;
 
@@ -279,7 +432,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('POST', '/api/v1/transactions/quick', quickBookingData);
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.transactionId &&
                           response.data?.data?.parsed?.amount === quickBookingTest.expected_parsing.amount;
@@ -309,7 +462,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('POST', '/api/v1/transactions', formBookingTest.transaction_data);
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.transactionId &&
                           response.data?.data?.amount === formBookingTest.transaction_data.amount;
@@ -343,7 +496,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('GET', '/api/v1/transactions?' + new URLSearchParams(queryParams));
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.transactions &&
                           Array.isArray(response.data.data.transactions);
@@ -441,7 +594,7 @@ class SITTestCases {
                 completedAt: new Date().toISOString()
             });
 
-            const success = questionsResponse.success && 
+            const success = questionsResponse.success &&
                           submitResponse.success &&
                           submitResponse.data?.data?.result?.recommendedMode === assessmentData.expected_mode;
 
@@ -574,7 +727,7 @@ class SITTestCases {
             // 立即查詢該交易
             const queryResponse = await this.makeRequest('GET', `/api/v1/transactions/${transactionId}`);
 
-            const success = queryResponse.success && 
+            const success = queryResponse.success &&
                           queryResponse.data?.data?.description === '同步測試交易';
 
             this.recordTestResult('TC-SIT-011', success, Date.now() - startTime, {
@@ -815,7 +968,7 @@ class SITTestCases {
                             date: '2025-09-15'
                         });
 
-                        if (!invalidTransaction.success && 
+                        if (!invalidTransaction.success &&
                             invalidTransaction.error?.code === 'INSUFFICIENT_BALANCE') {
                             handledErrorsCount++;
                         }
@@ -825,7 +978,7 @@ class SITTestCases {
                     handledErrorsCount++;
                 }
             }
-ㄑ
+
             const success = handledErrorsCount > 0;
 
             this.recordTestResult('TC-SIT-015', success, Date.now() - startTime, {
@@ -1002,7 +1155,7 @@ class SITTestCases {
                 .filter(r => r.responseTime)
                 .reduce((sum, r) => sum + r.responseTime, 0) / successCount;
 
-            const success = successRate >= concurrentTest.expected_success_rate && 
+            const success = successRate >= concurrentTest.expected_success_rate &&
                           avgResponseTime <= concurrentTest.expected_response_time_ms;
 
             this.recordTestResult('TC-SIT-017', success, Date.now() - startTime, {
@@ -1754,8 +1907,8 @@ class SITTestCases {
             // 計算系統穩定性指標
             const stabilityMetrics = this.calculateStabilityMetrics(stabilityResults);
 
-            const success = successRate >= 0.99 && 
-                          avgResponseTime <= 3000 && 
+            const success = successRate >= 0.99 &&
+                          avgResponseTime <= 3000 &&
                           !memoryLeakDetection.hasLeak;
 
             this.recordTestResult('TC-SIT-025', success, Date.now() - startTime, {
@@ -2238,7 +2391,7 @@ class SITTestCases {
             passedTests,
             successRate: passedTests / totalTests,
             executionTime: Date.now() - this.testStartTime.getTime(),
-            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
+            results: this.testResults.filter(r => r.testCase.includes('SIT-0') &&
                    parseInt(r.testCase.split('-')[2]) >= 1 && parseInt(r.testCase.split('-')[2]) <= 7)
         };
     }
@@ -2250,9 +2403,9 @@ class SITTestCases {
         console.log('\n📋 階段一測試報告摘要');
         console.log('=' * 50);
 
-        const phase1Results = this.testResults.filter(r => 
-            r.testCase.includes('SIT-0') && 
-            parseInt(r.testCase.split('-')[2]) >= 1 && 
+        const phase1Results = this.testResults.filter(r =>
+            r.testCase.includes('SIT-0') &&
+            parseInt(r.testCase.split('-')[2]) >= 1 &&
             parseInt(r.testCase.split('-')[2]) <= 7
         );
 
@@ -2330,7 +2483,7 @@ class SITTestCases {
 
                 // 每4個測試案例後暫停，分組顯示進度
                 if ((i + 1) % 4 === 0) {
-                    const groupName = i < 4 ? '四模式整合測試' : 
+                    const groupName = i < 4 ? '四模式整合測試' :
                                      i < 9 ? '端到端流程測試' : '效能穩定性測試';
                     console.log(`\n✅ ${groupName} 完成，休息2秒後繼續...`);
                     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -2355,7 +2508,7 @@ class SITTestCases {
             passedTests,
             successRate: passedTests / totalTests,
             executionTime: Date.now() - this.testStartTime.getTime(),
-            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
+            results: this.testResults.filter(r => r.testCase.includes('SIT-0') &&
                    parseInt(r.testCase.split('-')[2]) >= 8 && parseInt(r.testCase.split('-')[2]) <= 20)
         };
     }
@@ -2367,9 +2520,9 @@ class SITTestCases {
         console.log('\n📋 階段二測試報告摘要');
         console.log('=' * 50);
 
-        const phase2Results = this.testResults.filter(r => 
-            r.testCase.includes('SIT-0') && 
-            parseInt(r.testCase.split('-')[2]) >= 8 && 
+        const phase2Results = this.testResults.filter(r =>
+            r.testCase.includes('SIT-0') &&
+            parseInt(r.testCase.split('-')[2]) >= 8 &&
             parseInt(r.testCase.split('-')[2]) <= 20
         );
 
@@ -2467,7 +2620,7 @@ class SITTestCases {
             passedTests,
             successRate: passedTests / totalTests,
             executionTime: Date.now() - this.testStartTime.getTime(),
-            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
+            results: this.testResults.filter(r => r.testCase.includes('SIT-0') &&
                    parseInt(r.testCase.split('-')[2]) >= 21 && parseInt(r.testCase.split('-')[2]) <= 28)
         };
     }
@@ -2479,9 +2632,9 @@ class SITTestCases {
         console.log('\n📋 階段三測試報告摘要');
         console.log('=' * 50);
 
-        const phase3Results = this.testResults.filter(r => 
-            r.testCase.includes('SIT-0') && 
-            parseInt(r.testCase.split('-')[2]) >= 21 && 
+        const phase3Results = this.testResults.filter(r =>
+            r.testCase.includes('SIT-0') &&
+            parseInt(r.testCase.split('-')[2]) >= 21 &&
             parseInt(r.testCase.split('-')[2]) <= 28
         );
 
@@ -2674,15 +2827,15 @@ if (require.main === module) {
         // 修復：創建sitTest實例
         const sitTest = new SITTestCases();
 
-        // 載入測試資料
-        console.log('📂 載入測試資料...');
-        const dataLoaded = await sitTest.loadTestData();
-        if (!dataLoaded) {
-            console.error('❌ 測試資料載入失敗，終止測試執行');
+        // 執行dependency預檢
+        const dependencyCheckResult = await sitTest.checkDependencies();
+
+        if (!dependencyCheckResult.success) {
+            console.error(`❌ SIT測試無法啟動：Dependency Check 失敗 - ${dependencyCheckResult.error}`);
             process.exit(1);
         }
 
-        console.log('✅ SIT測試環境初始化完成');
+        console.log('✅ SIT測試環境初始化與Dependency Check 完成');
         console.log(`🌐 API基礎URL: ${sitTest.apiBaseURL}`);
         console.log(`👤 預設用戶模式: ${sitTest.currentUserMode}`);
         console.log('=' * 80);
