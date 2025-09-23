@@ -47,19 +47,19 @@ async function initializeServices() {
     // 步驟1：載入Firebase配置模組
     console.log('📡 載入Firebase配置模組...');
     const firebaseConfig = require('./13. Replit_Module code_BL/1399. firebase-config.js');
-    
+
     // 步驟2：驗證Firebase配置
     console.log('🔍 驗證Firebase配置...');
     await firebaseConfig.validateFirebaseConfig();
-    
+
     // 步驟3：初始化Firebase Admin SDK（同步等待）
     console.log('⚡ 初始化Firebase Admin SDK...');
     const app = firebaseConfig.initializeFirebaseAdmin();
-    
+
     // 步驟4：確認Firestore實例可用（確保完全初始化）
     console.log('📊 確認Firestore實例...');
     const db = firebaseConfig.getFirestoreInstance();
-    
+
     // 步驟5：驗證Firebase連線（階段一修復：添加超時機制）
     console.log('🔗 驗證Firebase連線...');
     try {
@@ -76,7 +76,7 @@ async function initializeServices() {
       console.log('✅ Firebase連線驗證成功');
     } catch (connectError) {
       console.warn('⚠️ Firebase連線驗證失敗，採用輕量驗證:', connectError.message);
-      
+
       // 輕量驗證：僅檢查Firestore實例可用性
       try {
         const testDoc = db.collection('_system').doc('_test');
@@ -92,10 +92,10 @@ async function initializeServices() {
         // 不拋出錯誤，允許系統繼續啟動
       }
     }
-    
+
     firebaseInitialized = true;
     console.log('✅ Firebase完全初始化完成，準備載入BL模組...');
-    
+
     return true;
   } catch (error) {
     console.error('❌ Firebase初始化失敗:', error.message);
@@ -110,11 +110,11 @@ async function waitForFirebaseInit() {
   const maxRetries = 3;
   const maxInitTime = 15000; // 最大初始化時間15秒
   let retryCount = 0;
-  
+
   while (retryCount < maxRetries) {
     try {
       console.log(`🔄 Firebase初始化嘗試 ${retryCount + 1}/${maxRetries}...`);
-      
+
       // 為整個初始化流程添加超時機制
       const success = await Promise.race([
         initializeServices(),
@@ -122,20 +122,20 @@ async function waitForFirebaseInit() {
           setTimeout(() => reject(new Error('Firebase初始化總體超時')), maxInitTime)
         )
       ]);
-      
+
       if (success) {
         console.log(`🎯 Firebase初始化成功 (嘗試次數: ${retryCount + 1})`);
         return true;
       }
     } catch (error) {
       console.error(`💥 Firebase初始化嘗試 ${retryCount + 1} 失敗:`, error.message);
-      
+
       // 如果是超時錯誤，提供更具體的指導
       if (error.message.includes('超時')) {
         console.warn('⚠️ 檢測到超時問題，建議檢查網路連線或Firestore權限設定');
       }
     }
-    
+
     retryCount++;
     if (retryCount < maxRetries) {
       const waitTime = Math.min(retryCount * 2, 5); // 最多等待5秒
@@ -143,7 +143,7 @@ async function waitForFirebaseInit() {
       await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
     }
   }
-  
+
   console.error('❌ Firebase初始化最終失敗，系統將以降級模式啟動');
   console.warn('🔧 建議檢查：1)網路連線 2)Firebase配置 3)Firestore權限');
   return false;
@@ -160,7 +160,7 @@ async function loadBLModules() {
 
   // 等待Firebase初始化完成
   const firebaseReady = await waitForFirebaseInit();
-  
+
   // 模組載入狀態監控
   const moduleStatus = {
     firebase: firebaseReady,
@@ -180,7 +180,7 @@ async function loadBLModules() {
     } catch (error) {
       console.error('❌ AM 模組載入失敗:', error.message);
       console.error('❌ AM 模組錯誤堆疊:', error.stack);
-      
+
       // 提供更詳細的錯誤診斷
       if (error.message.includes('Firebase')) {
         console.error('🔥 Firebase相關錯誤，可能需要檢查firebase-config.js');
@@ -246,7 +246,7 @@ let app = null;
 async function startApplication() {
   // 等待BL模組載入完成
   const moduleStatus = await loadBLModules();
-  
+
   /**
    * 03. Express應用程式設置（階段一修復版）
    * @version 2025-09-22-V2.0.5
@@ -794,7 +794,79 @@ app.get('/api/v1/transactions', async (req, res) => {
   }
 });
 
-// 4. 取得交易詳情
+// 7. 儀表板數據 (必須在 :id 路由之前)
+app.get('/api/v1/transactions/dashboard', async (req, res) => {
+  try {
+    console.log('📊 ASL轉發: 儀表板數據 -> BK_processAPIGetDashboard');
+
+    if (!BK || typeof BK.BK_processAPIGetDashboard !== 'function') {
+      return res.apiError('BK_processAPIGetDashboard函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await BK.BK_processAPIGetDashboard(req.query);
+    res.apiSuccess(result.data, result.message || '儀表板數據處理完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (dashboard):', error);
+    res.apiError('儀表板數據轉發失敗', 'DASHBOARD_FORWARD_ERROR', 500);
+  }
+});
+
+// 8. 統計數據 (必須在 :id 路由之前)
+app.get('/api/v1/transactions/statistics', async (req, res) => {
+  try {
+    console.log('📈 ASL轉發: 統計數據 -> BK_processAPIGetStatistics');
+
+    if (!BK || typeof BK.BK_processAPIGetStatistics !== 'function') {
+      return res.apiError('BK_processAPIGetStatistics函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await BK.BK_processAPIGetStatistics(req.query);
+    res.apiSuccess(result.data, result.message || '統計數據處理完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (statistics):', error);
+    res.apiError('統計數據轉發失敗', 'STATISTICS_FORWARD_ERROR', 500);
+  }
+});
+
+// 9. 最近交易 (必須在 :id 路由之前)
+app.get('/api/v1/transactions/recent', async (req, res) => {
+  try {
+    console.log('🕒 ASL轉發: 最近交易 -> BK_processAPIGetRecent');
+
+    if (!BK || typeof BK.BK_processAPIGetRecent !== 'function') {
+      return res.apiError('BK_processAPIGetRecent函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await BK.BK_processAPIGetRecent(req.query);
+    res.apiSuccess(result.data, result.message || '最近交易處理完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (recent):', error);
+    res.apiError('最近交易轉發失敗', 'RECENT_FORWARD_ERROR', 500);
+  }
+});
+
+// 10. 圖表數據 (必須在 :id 路由之前)
+app.get('/api/v1/transactions/charts', async (req, res) => {
+  try {
+    console.log('📊 ASL轉發: 圖表數據 -> BK_processAPIGetCharts');
+
+    if (!BK || typeof BK.BK_processAPIGetCharts !== 'function') {
+      return res.apiError('BK_processAPIGetCharts函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await BK.BK_processAPIGetCharts(req.query);
+    res.apiSuccess(result.data, result.message || '圖表數據處理完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (charts):', error);
+    res.apiError('圖表數據轉發失敗', 'CHARTS_FORWARD_ERROR', 500);
+  }
+});
+
+// 4. 取得交易詳情 (通配符路由必須放在最後)
 app.get('/api/v1/transactions/:id', async (req, res) => {
   try {
     console.log('🔍 ASL轉發: 交易詳情 -> BK_processAPIGetTransactionDetail');
@@ -845,78 +917,6 @@ app.delete('/api/v1/transactions/:id', async (req, res) => {
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (delete transaction):', error);
     res.apiError('交易刪除轉發失敗', 'DELETE_TRANSACTION_FORWARD_ERROR', 500);
-  }
-});
-
-// 7. 儀表板數據
-app.get('/api/v1/transactions/dashboard', async (req, res) => {
-  try {
-    console.log('📊 ASL轉發: 儀表板數據 -> BK_processAPIGetDashboard');
-
-    if (!BK || typeof BK.BK_processAPIGetDashboard !== 'function') {
-      return res.apiError('BK_processAPIGetDashboard函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const result = await BK.BK_processAPIGetDashboard(req.query);
-    res.apiSuccess(result.data, result.message || '儀表板數據處理完成');
-
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (dashboard):', error);
-    res.apiError('儀表板數據轉發失敗', 'DASHBOARD_FORWARD_ERROR', 500);
-  }
-});
-
-// 8. 統計數據
-app.get('/api/v1/transactions/statistics', async (req, res) => {
-  try {
-    console.log('📈 ASL轉發: 統計數據 -> BK_processAPIGetStatistics');
-
-    if (!BK || typeof BK.BK_processAPIGetStatistics !== 'function') {
-      return res.apiError('BK_processAPIGetStatistics函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const result = await BK.BK_processAPIGetStatistics(req.query);
-    res.apiSuccess(result.data, result.message || '統計數據處理完成');
-
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (statistics):', error);
-    res.apiError('統計數據轉發失敗', 'STATISTICS_FORWARD_ERROR', 500);
-  }
-});
-
-// 9. 最近交易
-app.get('/api/v1/transactions/recent', async (req, res) => {
-  try {
-    console.log('🕒 ASL轉發: 最近交易 -> BK_processAPIGetRecent');
-
-    if (!BK || typeof BK.BK_processAPIGetRecent !== 'function') {
-      return res.apiError('BK_processAPIGetRecent函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const result = await BK.BK_processAPIGetRecent(req.query);
-    res.apiSuccess(result.data, result.message || '最近交易處理完成');
-
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (recent):', error);
-    res.apiError('最近交易轉發失敗', 'RECENT_FORWARD_ERROR', 500);
-  }
-});
-
-// 10. 圖表數據
-app.get('/api/v1/transactions/charts', async (req, res) => {
-  try {
-    console.log('📊 ASL轉發: 圖表數據 -> BK_processAPIGetCharts');
-
-    if (!BK || typeof BK.BK_processAPIGetCharts !== 'function') {
-      return res.apiError('BK_processAPIGetCharts函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const result = await BK.BK_processAPIGetCharts(req.query);
-    res.apiSuccess(result.data, result.message || '圖表數據處理完成');
-
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (charts):', error);
-    res.apiError('圖表數據轉發失敗', 'CHARTS_FORWARD_ERROR', 500);
   }
 });
 
@@ -1045,26 +1045,26 @@ app.use((error, req, res, next) => {
 });
 
 /**
-   * 10. 服務器啟動（階段一修復版）
-   * @version 2025-09-22-V2.0.4
-   * @date 2025-09-22 
-   * @description 在模組載入完成後啟動ASL純轉發服務器
-   */
+ * 10. 服務器啟動（階段一修復版）
+ * @version 2025-01-24-V2.1.0
+ * @date 2025-01-24
+ * @description 在模組載入完成後啟動ASL純轉發服務器，增強穩定性
+ */
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 LCAS ASL純轉發窗口已啟動於 Port ${PORT}`);
     console.log(`📍 服務地址: http://0.0.0.0:${PORT}`);
     console.log(`🔗 健康檢查: http://0.0.0.0:${PORT}/health`);
     console.log(`🎯 DCN-0012階段一修復完成: ASL純轉發窗口`);
     console.log(`📋 P1-2 API端點: AM(19) + BK(15) = 34個端點`);
-    
+
     // 階段一修復狀態報告
     const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
     const amStatus = moduleStatus.AM ? '✅' : '❌';
     const overallStatus = moduleStatus.firebase && moduleStatus.AM ? '成功' : '部分成功';
-    
+
     console.log(`🔧 階段一修復狀態: ${overallStatus}`);
     console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus})`);
-    
+
     if (moduleStatus.firebase && moduleStatus.AM) {
       console.log('🚀 系統已完全就緒，可處理P1-2範圍所有API請求');
     } else {
@@ -1098,7 +1098,7 @@ console.log('🎉 LCAS ASL純轉發窗口階段一修復完成！');
   console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'})`);
   console.log('🔧 純轉發機制: 34個API端點 -> BL層函數調用');
   console.log('🔧 階段一修復: Firebase超時機制與優雅降級已實作');
-  
+
   if (moduleStatus.firebase && moduleStatus.AM) {
     console.log('🚀 階段一修復成功，系統完全就緒！');
     console.log('🌐 ASL服務器即將在 Port 5000 啟動...');

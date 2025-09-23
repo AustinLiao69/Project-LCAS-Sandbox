@@ -2912,7 +2912,11 @@ function BK_getParsingHelp() {
 
 function BK_logInfo(message, category, userId, functionName) {
     if (DL && typeof DL.DL_info === 'function') {
-        DL.DL_info(message, category, userId, '', '', functionName);
+        try {
+            DL.DL_info(message, category || '系統操作', userId || '', '', '', functionName || 'BK_logInfo');
+        } catch (error) {
+            console.log(`[BK INFO] ${message} [DL_log錯誤: ${error.message}]`);
+        }
     } else {
         console.log(`[BK INFO] ${message}`);
     }
@@ -2920,7 +2924,11 @@ function BK_logInfo(message, category, userId, functionName) {
 
 function BK_logWarning(message, category, userId, functionName) {
     if (DL && typeof DL.DL_warning === 'function') {
-        DL.DL_warning(message, category, userId, '', '', functionName);
+        try {
+            DL.DL_warning(message, category || '系統警告', userId || '', '', '', functionName || 'BK_logWarning');
+        } catch (error) {
+            console.log(`[BK WARNING] ${message} [DL_log錯誤: ${error.message}]`);
+        }
     } else {
         console.log(`[BK WARNING] ${message}`);
     }
@@ -2928,7 +2936,11 @@ function BK_logWarning(message, category, userId, functionName) {
 
 function BK_logError(message, category, userId, errorType, errorDetail, functionName) {
     if (DL && typeof DL.DL_error === 'function') {
-        DL.DL_error(message, category, userId, errorType, errorDetail, functionName);
+        try {
+            DL.DL_error(message, category || '系統錯誤', userId || '', errorType || 'UNKNOWN_ERROR', errorDetail || '', functionName || 'BK_logError');
+        } catch (error) {
+            console.error(`[BK ERROR] ${message} [DL_log錯誤: ${error.message}]`);
+        }
     } else {
         console.error(`[BK ERROR] ${message}`);
     }

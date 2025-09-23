@@ -1,8 +1,8 @@
 /**
- * DL_診斷與日誌模組_2.2.0
+ * DL_診斷與日誌模組_2.2.1
  * @module DL模組
  * @description 提供統一的日誌記錄和系統診斷功能 - Firestore完整整合版本
- * @update 2025-09-18: 升級至2.2.0版本，階段一重構修復初始化問題
+ * @update 2025-09-23: 升級至2.2.1版本，修復參數驗證問題，增加相容性函數
  */
 
 // 引入Firebase動態配置模組
@@ -398,20 +398,31 @@ function DL_setLogLevels(consoleLevel, firestoreLevel) {
 
 /**
  * 06. 記錄日誌的統一函數
- * @version 2025-07-09-V3.0.6
- * @date 2025-07-09 17:30:00
- * @description 統一日誌記錄接口，支援控制台和Firestore雙重輸出
+ * @version 2025-09-23-V2.2.1
+ * @date 2025-09-23 14:30:00
+ * @description 統一日誌記錄接口，支援控制台和Firestore雙重輸出，增強參數容錯性
  */
 async function DL_log(logData) {
-  // 檢查必要參數
+  // 參數容錯處理：支援字串參數或物件參數
+  if (typeof logData === 'string') {
+    logData = { message: logData };
+  }
+
+  // 確保logData是物件
+  if (!logData || typeof logData !== 'object') {
+    console.error("DL_log錯誤: 參數必須是物件或字串");
+    return false;
+  }
+
+  // 檢查必要參數，提供預設值
   if (!logData.message) {
     console.error("DL_log錯誤: 缺少必要參數 message");
     return false;
   }
 
-  if (!logData.operation) {
-    console.error("DL_log錯誤: 缺少必要參數 operation");
-  }
+  // 為缺少的參數提供預設值
+  logData.operation = logData.operation || "一般操作";
+  logData.severity = logData.severity || "INFO";
 
   // 修改這部分：尊重傳入的source參數
   if (!logData.source) {
@@ -712,6 +723,33 @@ async function DL_info(
     function: functionName,
     severity: "INFO",
     source: source,
+  });
+}
+
+/**
+ * 相容性函數：簡化的日誌記錄接口
+ * @version 2025-09-23-V2.2.1
+ * @description 提供簡化的日誌記錄方式，支援其他模組快速調用
+ */
+async function DL_logSimple(message, level = "INFO", source = "SYSTEM") {
+  return await DL_log({
+    message: message,
+    operation: "一般操作",
+    severity: level.toUpperCase(),
+    source: source
+  });
+}
+
+/**
+ * 快速錯誤日誌
+ */
+async function DL_logError(message, errorCode = "", source = "SYSTEM") {
+  return await DL_log({
+    message: message,
+    operation: "錯誤處理",
+    errorCode: errorCode,
+    severity: "ERROR",
+    source: source
   });
 }
 
@@ -1044,6 +1082,10 @@ module.exports = {
   DL_SEVERITY_LEVELS,
   DL_rotateLogSheet, // 保留但改為適用於Firestore
   DL_writeToFirestore, // 新增，替代原來的DL_writeToGoogleSheets
+
+  // v2.2.1新增相容性函數
+  DL_logSimple,
+  DL_logError,
 
   // 新增依賴注入函數
   setDependencies,
