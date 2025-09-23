@@ -1423,6 +1423,554 @@ function BK_logCritical(message, category, userId, errorType, errorDetail, funct
     }
 }
 
+// === API端點處理函數 ===
+
+/**
+ * BK_processAPIQuickTransaction - 處理快速記帳API端點
+ * @version 2025-01-28-V2.2.0
+ * @date 2025-01-28
+ * @update: 新增API端點處理函數，支援POST /transactions/quick
+ */
+async function BK_processAPIQuickTransaction(requestData) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPIQuickTransaction:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理快速記帳API請求`, "API端點", requestData.userId || "", "BK_processAPIQuickTransaction");
+
+    // 初始化模組
+    await BK_initialize();
+
+    // 呼叫快速記帳處理函數
+    const result = await BK_processQuickTransaction({
+      input: requestData.input,
+      userId: requestData.userId,
+      ledgerId: requestData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      context: requestData.context || {},
+      processId: processId
+    });
+
+    if (result.success) {
+      BK_logInfo(`${logPrefix} 快速記帳API處理成功`, "API端點", requestData.userId || "", "BK_processAPIQuickTransaction");
+      
+      return {
+        success: true,
+        data: {
+          transactionId: result.data.transactionId,
+          parsed: result.data.parsed,
+          confirmation: result.data.confirmation,
+          balance: result.data.balance || {},
+          achievement: result.data.achievement || {},
+          suggestions: result.data.suggestions || []
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestId: processId,
+          userMode: requestData.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+        }
+      };
+    } else {
+      return BK_handleError(result, {
+        processId: processId,
+        userId: requestData.userId,
+        operation: "快速記帳API"
+      });
+    }
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 快速記帳API處理失敗: ${error.toString()}`, "API端點", requestData.userId || "", "API_QUICK_TRANSACTION_ERROR", error.toString(), "BK_processAPIQuickTransaction");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: requestData.userId,
+      operation: "快速記帳API"
+    });
+  }
+}
+
+/**
+ * BK_processAPITransaction - 處理交易記錄API端點
+ * @version 2025-01-28-V2.2.0
+ * @date 2025-01-28
+ * @update: 新增API端點處理函數，支援POST /transactions
+ */
+async function BK_processAPITransaction(requestData) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPITransaction:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理交易記錄API請求`, "API端點", requestData.userId || "", "BK_processAPITransaction");
+
+    // 初始化模組
+    await BK_initialize();
+
+    // 驗證請求資料
+    const validation = BK_validateTransactionData(requestData);
+    if (!validation.success) {
+      return BK_handleError({
+        message: validation.error,
+        errorType: validation.errorType
+      }, {
+        processId: processId,
+        userId: requestData.userId,
+        operation: "交易記錄API"
+      });
+    }
+
+    // 呼叫交易創建函數
+    const result = await BK_createTransaction({
+      amount: requestData.amount,
+      type: requestData.type,
+      categoryId: requestData.categoryId,
+      accountId: requestData.accountId,
+      ledgerId: requestData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      date: requestData.date,
+      description: requestData.description || '',
+      notes: requestData.notes || '',
+      tags: requestData.tags || [],
+      userId: requestData.userId,
+      processId: processId,
+      // 轉帳專用
+      toAccountId: requestData.toAccountId,
+      // 進階欄位
+      attachmentIds: requestData.attachmentIds || [],
+      location: requestData.location || {},
+      recurring: requestData.recurring || {}
+    });
+
+    if (result.success) {
+      BK_logInfo(`${logPrefix} 交易記錄API處理成功`, "API端點", requestData.userId || "", "BK_processAPITransaction");
+      
+      return {
+        success: true,
+        data: {
+          transactionId: result.data.transactionId,
+          amount: result.data.amount,
+          type: result.data.type,
+          category: result.data.category,
+          account: result.data.account,
+          date: result.data.date,
+          accountBalance: result.data.accountBalance || 0,
+          monthlyTotal: result.data.monthlyTotal || 0,
+          categoryBudget: result.data.categoryBudget || {},
+          achievement: result.data.achievement || {},
+          message: result.data.message || getEnvVar('TRANSACTION_SUCCESS_MESSAGE', '記帳成功'),
+          recurringId: result.data.recurringId,
+          createdAt: new Date().toISOString()
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestId: processId,
+          userMode: requestData.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+        }
+      };
+    } else {
+      return BK_handleError(result, {
+        processId: processId,
+        userId: requestData.userId,
+        operation: "交易記錄API"
+      });
+    }
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 交易記錄API處理失敗: ${error.toString()}`, "API端點", requestData.userId || "", "API_TRANSACTION_ERROR", error.toString(), "BK_processAPITransaction");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: requestData.userId,
+      operation: "交易記錄API"
+    });
+  }
+}
+
+/**
+ * BK_processAPIGetTransactions - 處理交易查詢API端點
+ * @version 2025-01-28-V2.2.0
+ * @date 2025-01-28
+ * @update: 新增API端點處理函數，支援GET /transactions
+ */
+async function BK_processAPIGetTransactions(queryParams = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPIGetTransactions:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理交易查詢API請求`, "API端點", queryParams.userId || "", "BK_processAPIGetTransactions");
+
+    // 初始化模組
+    await BK_initialize();
+
+    // 呼叫交易查詢函數
+    const result = await BK_getTransactions({
+      userId: queryParams.userId,
+      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      categoryId: queryParams.categoryId,
+      accountId: queryParams.accountId,
+      type: queryParams.type,
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      minAmount: queryParams.minAmount,
+      maxAmount: queryParams.maxAmount,
+      search: queryParams.search,
+      page: parseInt(queryParams.page || '1', 10),
+      limit: Math.min(parseInt(queryParams.limit || '20', 10), parseInt(getEnvVar('MAX_QUERY_LIMIT', '100'), 10)),
+      sort: queryParams.sort || 'date:desc'
+    });
+
+    if (result.success) {
+      BK_logInfo(`${logPrefix} 交易查詢API處理成功，返回${result.data.total}筆記錄`, "API端點", queryParams.userId || "", "BK_processAPIGetTransactions");
+      
+      // 計算分頁資訊
+      const page = parseInt(queryParams.page || '1', 10);
+      const limit = parseInt(queryParams.limit || '20', 10);
+      const total = result.data.total;
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        success: true,
+        data: {
+          transactions: result.data.transactions,
+          pagination: {
+            page: page,
+            limit: limit,
+            total: total,
+            totalPages: totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
+            nextPage: page < totalPages ? page + 1 : null,
+            prevPage: page > 1 ? page - 1 : null
+          },
+          summary: result.data.summary || {
+            totalIncome: 0,
+            totalExpense: 0,
+            netAmount: 0,
+            recordCount: total
+          }
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestId: processId,
+          userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+        }
+      };
+    } else {
+      return BK_handleError(result, {
+        processId: processId,
+        userId: queryParams.userId,
+        operation: "交易查詢API"
+      });
+    }
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 交易查詢API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_GET_TRANSACTIONS_ERROR", error.toString(), "BK_processAPIGetTransactions");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: queryParams.userId,
+      operation: "交易查詢API"
+    });
+  }
+}
+
+/**
+ * BK_processAPIGetTransactionDetail - 處理單一交易詳情API端點
+ * @version 2025-01-28-V2.2.0
+ * @date 2025-01-28
+ * @update: 新增API端點處理函數，支援GET /transactions/{id}
+ */
+async function BK_processAPIGetTransactionDetail(transactionId, queryParams = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPIGetTransactionDetail:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理交易詳情API請求: ${transactionId}`, "API端點", queryParams.userId || "", "BK_processAPIGetTransactionDetail");
+
+    // 初始化模組
+    await BK_initialize();
+    const db = BK_INIT_STATUS.firestore_db;
+
+    // 查找交易記錄
+    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
+    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
+    const idField = getEnvVar('ID_FIELD', '收支ID');
+    
+    const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+    const querySnapshot = await db.collection(ledgerCollection)
+      .doc(ledgerId)
+      .collection(entriesCollection)
+      .where(idField, '==', transactionId)
+      .limit(1)
+      .get();
+
+    if (querySnapshot.empty) {
+      return BK_handleError({
+        message: getEnvVar('TRANSACTION_NOT_FOUND_MESSAGE', '交易記錄不存在'),
+        errorType: "NOT_FOUND"
+      }, {
+        processId: processId,
+        userId: queryParams.userId,
+        operation: "交易詳情API"
+      });
+    }
+
+    const doc = querySnapshot.docs[0];
+    const data = doc.data();
+
+    // 組織回應資料
+    const fieldNames = {
+      id: getEnvVar('ID_FIELD', '收支ID'),
+      income: getEnvVar('INCOME_FIELD', '收入'),
+      expense: getEnvVar('EXPENSE_FIELD', '支出'),
+      date: getEnvVar('DATE_FIELD', '日期'),
+      time: getEnvVar('TIME_FIELD', '時間'),
+      description: getEnvVar('DESCRIPTION_FIELD', '備註'),
+      category: getEnvVar('CATEGORY_FIELD', '子項名稱'),
+      paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
+      uid: getEnvVar('UID_FIELD', 'UID'),
+      majorCode: getEnvVar('MAJOR_CODE_FIELD', '大項代碼'),
+      minorCode: getEnvVar('MINOR_CODE_FIELD', '子項代碼')
+    };
+
+    const transactionDetail = {
+      id: data[fieldNames.id],
+      amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
+      type: data[fieldNames.income] ? 'income' : 'expense',
+      date: data[fieldNames.date],
+      description: data[fieldNames.description] || '',
+      notes: data.notes || '',
+      category: {
+        id: `${data[fieldNames.majorCode]}_${data[fieldNames.minorCode]}`,
+        name: data[fieldNames.category],
+        icon: data.categoryIcon || getEnvVar('DEFAULT_CATEGORY_ICON', '💰'),
+        parentId: data[fieldNames.majorCode]
+      },
+      account: {
+        id: data.accountId || 'default_account',
+        name: data[fieldNames.paymentMethod] || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
+        type: data.accountType || 'cash',
+        balance: data.accountBalance || 0
+      },
+      ledger: {
+        id: ledgerId,
+        name: data.ledgerName || getEnvVar('DEFAULT_LEDGER_NAME', '預設帳本'),
+        type: 'personal'
+      },
+      tags: data.tags || [],
+      attachments: data.attachments || [],
+      location: data.location || {},
+      recurring: data.recurring || {},
+      transferInfo: data.transferInfo || {},
+      auditInfo: {
+        createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate().toISOString() || new Date().toISOString(),
+        createdBy: data[fieldNames.uid],
+        source: data.source || 'manual',
+        modificationHistory: data.modificationHistory || []
+      }
+    };
+
+    BK_logInfo(`${logPrefix} 交易詳情API處理成功: ${transactionId}`, "API端點", queryParams.userId || "", "BK_processAPIGetTransactionDetail");
+
+    return {
+      success: true,
+      data: transactionDetail,
+      metadata: {
+        timestamp: new Date().toISOString(),
+        requestId: processId,
+        userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+      }
+    };
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 交易詳情API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_GET_TRANSACTION_DETAIL_ERROR", error.toString(), "BK_processAPIGetTransactionDetail");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: queryParams.userId,
+      operation: "交易詳情API"
+    });
+  }
+}
+
+/**
+ * BK_processAPIUpdateTransaction - 處理交易更新API端點
+ * @version 2025-01-28-V2.2.0
+ * @date 2025-01-28
+ * @update: 新增API端點處理函數，支援PUT /transactions/{id}
+ */
+async function BK_processAPIUpdateTransaction(transactionId, updateData) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPIUpdateTransaction:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理交易更新API請求: ${transactionId}`, "API端點", updateData.userId || "", "BK_processAPIUpdateTransaction");
+
+    // 初始化模組
+    await BK_initialize();
+
+    // 呼叫交易更新函數
+    const result = await BK_updateTransaction(transactionId, {
+      amount: updateData.amount,
+      type: updateData.type,
+      categoryId: updateData.categoryId,
+      accountId: updateData.accountId,
+      date: updateData.date,
+      description: updateData.description,
+      notes: updateData.notes,
+      tags: updateData.tags,
+      attachmentIds: updateData.attachmentIds,
+      userId: updateData.userId,
+      ledgerId: updateData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      processId: processId
+    });
+
+    if (result.success) {
+      BK_logInfo(`${logPrefix} 交易更新API處理成功: ${transactionId}`, "API端點", updateData.userId || "", "BK_processAPIUpdateTransaction");
+      
+      return {
+        success: true,
+        data: {
+          transactionId: transactionId,
+          message: getEnvVar('TRANSACTION_UPDATE_SUCCESS_MESSAGE', '交易記錄更新成功'),
+          updatedFields: result.data.updatedFields || [],
+          updatedAt: new Date().toISOString(),
+          accountBalanceChanges: result.data.accountBalanceChanges || []
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestId: processId,
+          userMode: updateData.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+        }
+      };
+    } else {
+      return BK_handleError(result, {
+        processId: processId,
+        userId: updateData.userId,
+        operation: "交易更新API"
+      });
+    }
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 交易更新API處理失敗: ${error.toString()}`, "API端點", updateData.userId || "", "API_UPDATE_TRANSACTION_ERROR", error.toString(), "BK_processAPIUpdateTransaction");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: updateData.userId,
+      operation: "交易更新API"
+    });
+  }
+}
+
+/**
+ * BK_processAPIDeleteTransaction - 處理交易刪除API端點
+ * @version 2025-01-28-V2.2.0
+ * @date 2025-01-28
+ * @update: 新增API端點處理函數，支援DELETE /transactions/{id}
+ */
+async function BK_processAPIDeleteTransaction(transactionId, queryParams = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPIDeleteTransaction:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理交易刪除API請求: ${transactionId}`, "API端點", queryParams.userId || "", "BK_processAPIDeleteTransaction");
+
+    // 初始化模組
+    await BK_initialize();
+
+    // 呼叫交易刪除函數
+    const result = await BK_deleteTransaction(transactionId, {
+      userId: queryParams.userId,
+      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      deleteRecurring: queryParams.deleteRecurring === 'true',
+      processId: processId
+    });
+
+    if (result.success) {
+      BK_logInfo(`${logPrefix} 交易刪除API處理成功: ${transactionId}`, "API端點", queryParams.userId || "", "BK_processAPIDeleteTransaction");
+      
+      return {
+        success: true,
+        data: {
+          transactionId: transactionId,
+          message: getEnvVar('TRANSACTION_DELETE_SUCCESS_MESSAGE', '交易記錄已刪除'),
+          deletedAt: new Date().toISOString(),
+          affectedData: result.data.affectedData || {
+            accountBalance: 0,
+            recurringDeleted: false,
+            attachmentsDeleted: 0
+          }
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestId: processId,
+          userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+        }
+      };
+    } else {
+      return BK_handleError(result, {
+        processId: processId,
+        userId: queryParams.userId,
+        operation: "交易刪除API"
+      });
+    }
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 交易刪除API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_DELETE_TRANSACTION_ERROR", error.toString(), "BK_processAPIDeleteTransaction");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: queryParams.userId,
+      operation: "交易刪除API"
+    });
+  }
+}
+
+/**
+ * BK_processAPIGetDashboard - 處理儀表板數據API端點
+ * @version 2025-01-28-V2.2.0
+ * @date 2025-01-28
+ * @update: 新增API端點處理函數，支援GET /transactions/dashboard
+ */
+async function BK_processAPIGetDashboard(queryParams = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPIGetDashboard:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理儀表板數據API請求`, "API端點", queryParams.userId || "", "BK_processAPIGetDashboard");
+
+    // 初始化模組
+    await BK_initialize();
+
+    // 呼叫儀表板數據函數
+    const result = await BK_getDashboardData({
+      userId: queryParams.userId,
+      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      period: queryParams.period || 'month'
+    });
+
+    if (result.success) {
+      BK_logInfo(`${logPrefix} 儀表板數據API處理成功`, "API端點", queryParams.userId || "", "BK_processAPIGetDashboard");
+      
+      return {
+        success: true,
+        data: result.data,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestId: processId,
+          userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+        }
+      };
+    } else {
+      return BK_handleError(result, {
+        processId: processId,
+        userId: queryParams.userId,
+        operation: "儀表板數據API"
+      });
+    }
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 儀表板數據API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_GET_DASHBOARD_ERROR", error.toString(), "BK_processAPIGetDashboard");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: queryParams.userId,
+      operation: "儀表板數據API"
+    });
+  }
+}
+
 // === 模組導出 ===
 module.exports = {
   // 初始化函數
@@ -1436,6 +1984,15 @@ module.exports = {
   BK_getDashboardData,
   BK_updateTransaction,
   BK_deleteTransaction,
+
+  // 新增的API端點處理函數
+  BK_processAPIQuickTransaction,
+  BK_processAPITransaction,
+  BK_processAPIGetTransactions,
+  BK_processAPIGetTransactionDetail,
+  BK_processAPIUpdateTransaction,
+  BK_processAPIDeleteTransaction,
+  BK_processAPIGetDashboard,
 
   // 相容性函數
   BK_processBookkeeping,

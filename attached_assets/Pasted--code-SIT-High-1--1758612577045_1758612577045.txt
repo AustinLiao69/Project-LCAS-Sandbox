@@ -1,0 +1,133 @@
+不要寫code，請根據我的回覆更新提案
+
+
+根據您提到的SIT測試結果和系統架構分析，我來詳細解釋這兩個核心問題：
+📋 問題一：四層架構串接不完整 (High)
+🔍 問題詳細分析
+1.1 ASL轉發正常但BL層函數缺失
+從SIT測試結果可以看出：
+•	ASL.js 的轉發機制運作正常，能夠接收API請求並嘗試轉發
+•	問題核心：BL層缺少對應的API端點處理函數
+具體缺失函數：
+// AM.js 缺失的API端點函數
+AM_processAPIRegister()          // POST /api/v1/auth/register
+AM_processAPILogin()             // POST /api/v1/auth/login  
+AM_processAPIGoogleLogin()       // POST /api/v1/auth/google-login
+AM_processAPILogout()            // POST /api/v1/auth/logout
+AM_processAPIRefresh()           // POST /api/v1/auth/refresh
+// ... 其他11個認證API函數
+// BK.js 缺失的API端點函數  
+BK_processAPIQuickTransaction()  // POST /api/v1/transactions/quick
+BK_processAPITransaction()       // POST /api/v1/transactions
+BK_processAPIGetTransactions()   // GET /api/v1/transactions
+// ... 其他15個記帳API函數
+=>
+1. 為什麼你會知道缺這些函數？是ASL.js裡面寫要轉發的函數嗎?
+2. 請列出BL要新增的函數，並更新在相對應的12號資料夾LLD_BL裡面
+
+
+
+1.2 架構串接流程分析
+期望的串接流程：
+PL層 → APL層 → ASL層 → BL層
+    ↓      ↓      ↓      ↓
+   UI   Gateway  轉發   函數執行
+實際問題點：
+•	PL → APL：正常
+•	APL → ASL：正常
+•	ASL → BL：轉發成功但函數不存在
+1.3 回應格式不符合API規格要求
+問題表現：
+•	SIT測試顯示「註冊回應格式不正確」、「登入回應格式不正確」
+•	缺少統一的API回應格式處理機制
+規範要求（8088 API設計規範）：
+{
+  "success": true/false,
+  "data": { ... },
+  "metadata": {
+    "timestamp": "2025-01-27T12:00:00Z",
+    "requestId": "req-uuid-string",
+    "userMode": "Expert",
+    "apiVersion": "1.0.0"
+  },
+  "error": null
+}
+=> 缺少統一的API回應格式處理機制，請對此提案處理
+
+
+
+
+________________________________________
+📋 問題二：業務邏輯實作不完整 (High)
+🔍 問題詳細分析
+2.1 用戶註冊、登入流程存在格式問題
+具體問題：
+1.	註冊流程問題：
+•	缺少完整的用戶資料驗證機制
+•	沒有正確處理四模式的初始設定
+•	缺少註冊成功後的Token生成和回傳
+2.	登入流程問題：
+•	認證邏輯不完整
+•	Token管理機制缺失
+•	登入狀態持久化問題
+3.	回應格式問題：
+•	沒有按照8101、8102 API規格返回結構化數據
+•	缺少必要的metadata資訊
+•	錯誤處理回應不標準
+
+=> 
+1. 這些問題是由哪些layer的哪些模組處理？請列出
+2. 這三個問題請舉例說明
+3. 這三個問題是否與沒有設立測試案例有關？
+
+
+
+2.2 四模式差異化功能未正確實現
+四模式定義回顧：
+•	Expert：完整功能、詳細設定、專業工具
+•	Inertial：標準功能、平衡設定、實用工具
+•	Cultivation：引導功能、習慣養成、進度追蹤
+•	Guiding：簡化功能、自動設定、最少決策
+實作缺失：
+1.	模式特定的API回應差異化：
+// 缺少這樣的差異化邏輯
+function filterResponseByMode(response, userMode) {
+  switch(userMode) {
+    case 'Expert': return response; // 完整回應
+    case 'Guiding': return filterForGuiding(response); // 簡化回應
+    // ...
+  }
+}
+=> 請提案如何處理？
+
+
+
+2.	模式特定的業務邏輯：
+•	Expert模式：需要提供完整的統計數據和技術細節
+•	Cultivation模式：需要激勵機制和進度追蹤
+•	Guiding模式：需要簡化的操作流程和自動填入
+
+=> 請提案如何處理？
+
+
+
+3.	模式切換機制：
+•	缺少動態模式切換功能
+•	沒有模式評估和建議機制
+
+=> 請提案如何處理？
+
+________________________________________
+🎯 根本原因總結
+架構層面：
+1.	BL層API端點函數實作缺失：Phase 1需要的26個API端點函數未實作
+2.	回應格式標準化缺失：沒有統一的API回應格式處理機制
+業務邏輯層面：
+1.	認證流程不完整：註冊、登入、Token管理邏輯缺失
+2.	四模式差異化缺失：沒有實作模式特定的業務邏輯和回應過濾
+影響範圍：
+•	當前SIT成功率：0.00%（0/7測試通過）
+•	阻塞功能：用戶註冊、登入、快速記帳等核心功能
+•	架構完整性：四層架構串接中斷
+這兩個問題是系統Phase 1階段的關鍵阻礙，需要優先解決才能推進後續的開發和測試工作。
+
