@@ -1,0 +1,187 @@
+不要寫code，請根據我的回覆更新提案
+
+
+
+根據您的回覆，我來更新分析和提案：
+📋 問題一：四層架構串接不完整 (High)
+1.1 缺失函數來源分析
+回答您的問題1：為什麼知道缺這些函數？
+是的，這些缺失的函數是從 ASL.js 中的轉發邏輯分析得出的。在ASL.js中，我看到了這些轉發代碼：
+// ASL.js 中的轉發邏輯
+app.post('/api/v1/auth/register', async (req, res) => {
+  if (!AM || typeof AM.AM_processAPIRegister !== 'function') {
+    return res.apiError('AM_processAPIRegister函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+  }
+  const result = await AM.AM_processAPIRegister(req.body);
+});
+回答您的問題2：BL要新增的函數清單
+AM.js (認證管理模組) 需新增的API端點函數：
+1.	AM_processAPIRegister() - POST /api/v1/auth/register
+2.	AM_processAPILogin() - POST /api/v1/auth/login
+3.	AM_processAPIGoogleLogin() - POST /api/v1/auth/google-login
+4.	AM_processAPILogout() - POST /api/v1/auth/logout
+5.	AM_processAPIRefresh() - POST /api/v1/auth/refresh
+6.	AM_processAPIForgotPassword() - POST /api/v1/auth/forgot-password
+7.	AM_processAPIVerifyResetToken() - GET /api/v1/auth/verify-reset-token
+8.	AM_processAPIResetPassword() - POST /api/v1/auth/reset-password
+9.	AM_processAPIVerifyEmail() - POST /api/v1/auth/verify-email
+10.	AM_processAPIBindLine() - POST /api/v1/auth/bind-line
+11.	AM_processAPIBindStatus() - GET /api/v1/auth/bind-status
+12.	AM_processAPIGetProfile() - GET /api/v1/users/profile
+13.	AM_processAPIUpdateProfile() - PUT /api/v1/users/profile
+14.	AM_processAPIGetAssessmentQuestions() - GET /api/v1/users/assessment-questions
+15.	AM_processAPISubmitAssessment() - POST /api/v1/users/assessment
+16.	AM_processAPIUpdatePreferences() - PUT /api/v1/users/preferences
+17.	AM_processAPIUpdateSecurity() - PUT /api/v1/users/security
+18.	AM_processAPISwitchMode() - PUT /api/v1/users/mode
+19.	AM_processAPIVerifyPin() - POST /api/v1/users/verify-pin
+BK.js (記帳核心模組) 需新增的API端點函數：
+1.	BK_processAPITransaction() - POST /api/v1/transactions
+2.	BK_processAPIQuickTransaction() - POST /api/v1/transactions/quick
+3.	BK_processAPIGetTransactions() - GET /api/v1/transactions
+4.	BK_processAPIGetTransactionDetail() - GET /api/v1/transactions/{id}
+5.	BK_processAPIUpdateTransaction() - PUT /api/v1/transactions/{id}
+6.	BK_processAPIDeleteTransaction() - DELETE /api/v1/transactions/{id}
+7.	BK_processAPIGetDashboard() - GET /api/v1/transactions/dashboard
+8.	BK_processAPIGetStatistics() - GET /api/v1/transactions/statistics
+9.	BK_processAPIGetRecent() - GET /api/v1/transactions/recent
+10.	BK_processAPIGetCharts() - GET /api/v1/transactions/charts
+11.	BK_processAPIBatchCreate() - POST /api/v1/transactions/batch
+12.	BK_processAPIBatchUpdate() - PUT /api/v1/transactions/batch
+13.	BK_processAPIBatchDelete() - DELETE /api/v1/transactions/batch
+14.	BK_processAPIUploadAttachment() - POST /api/v1/transactions/{id}/attachments
+15.	BK_processAPIDeleteAttachment() - DELETE /api/v1/transactions/{id}/attachments/{attachmentId}
+
+=> 請寫一個DCN在12號資料夾LLD文件裡面新增這些函數，檔案名稱為DCN-0014 BL層重構函數.md
+
+
+
+
+
+
+
+1.3 統一API回應格式處理機制提案
+問題：缺少統一的API回應格式處理機制
+提案：在每個BL模組中實作標準化回應格式函數
+// 在AM.js和BK.js中新增
+function formatAPIResponse(success, data = null, message = '', errorCode = null) {
+  const response = {
+    success: success,
+    metadata: {
+      timestamp: new Date().toISOString(),
+      requestId: generateRequestId(),
+      apiVersion: "1.0.0"
+    }
+  };
+  if (success) {
+    response.data = data;
+    if (message) response.message = message;
+    response.error = null;
+  } else {
+    response.data = null;
+    response.error = {
+      code: errorCode || 'UNKNOWN_ERROR',
+      message: message || '操作失敗'
+    };
+  }
+  return response;
+}
+
+=> 我希望是由BL層的一個模組來統一處理，請重新提案
+
+
+
+________________________________________
+📋 問題二：業務邏輯實作不完整 (High)
+2.1 用戶註冊、登入流程問題分析
+回答您的問題1：由哪些layer的哪些模組處理？
+•	BL Layer: AM.js (帳號管理模組) - 負責核心業務邏輯
+•	ASL Layer: ASL.js - 負責API轉發
+•	APL Layer: 8301. 認證服務.dart - 負責API Gateway路由
+=> 所以問題是出在哪一層的哪個模組？你的solution是什麼？
+
+
+
+
+
+
+
+回答您的問題2：三個問題舉例說明
+1.	註冊流程問題舉例：
+•	缺失：四模式初始設定邏輯
+•	舉例：Expert用戶註冊時應該預設開啟所有進階功能，Guiding用戶應該預設簡化設定
+=> 此功能應該是要哪個模組負責的？請提案
+
+
+2.	登入流程問題舉例：
+•	缺失：Token管理機制
+•	舉例：登入成功後沒有生成JWT Token，或Token沒有包含用戶模式資訊
+=> 此功能應該是要哪個模組負責的？請提案
+
+3.	回應格式問題舉例：
+•	缺失：按照8101 API規格返回數據
+•	舉例：應該返回 {success: true, data: {...}, metadata: {...}} 但實際返回的是簡化格式
+=> 此功能應該是要哪個模組負責的？請提案
+
+
+回答您的問題3：是否與沒有設立測試案例有關？
+是的，這些問題與測試案例不完整有關：
+•	SIT測試案例中缺少四模式差異化驗證
+•	缺少Token生命週期管理的測試案例
+•	缺少API回應格式標準化的測試驗證
+=> 請提案要新增哪些案例到0692文件中
+
+
+
+
+
+
+
+
+
+
+
+2.2 四模式差異化功能提案
+問題1：模式特定的API回應差異化
+提案：在BL層實作模式過濾機制
+// 在AM.js和BK.js中新增
+function filterResponseByUserMode(response, userMode) {
+  switch(userMode) {
+    case 'Expert': 
+      return response; // 完整回應
+    case 'Inertial': 
+      return filterInertialMode(response); // 標準回應
+    case 'Cultivation': 
+      return addCultivationFeatures(response); // 添加激勵元素
+    case 'Guiding': 
+      return filterGuidingMode(response); // 簡化回應
+    default: 
+      return response;
+  }
+}
+問題2：模式特定的業務邏輯
+提案：建立模式配置管理機制
+•	Expert模式：提供完整統計數據、技術細節、進階功能選項
+•	Cultivation模式：添加激勵機制、進度追蹤、成就系統
+•	Guiding模式：自動填入、簡化流程、最少決策點
+問題3：模式切換機制
+提案：
+1.	動態模式切換：在AM.js中實作 AM_switchUserMode() 函數
+2.	模式評估機制：建立問卷評估邏輯，動態建議最適合的模式
+3.	模式歷史追蹤：記錄用戶模式切換歷史，提供個人化建議
+________________________________________
+🎯 修復優先級建議
+第一階段 (Critical)
+1.	在AM.js和BK.js中補齊所有缺失的API端點函數
+2.	實作統一的API回應格式處理機制
+3.	更新12號資料夾中的LLD文件，記錄新增函數規格
+第二階段 (High)
+1.	完善註冊、登入流程的業務邏輯
+2.	實作四模式差異化回應機制
+3.	建立完整的Token管理系統
+第三階段 (Medium)
+1.	實作動態模式切換功能
+2.	建立模式評估和建議機制
+3.	完善SIT測試案例覆蓋四模式差異化驗證
+這個修復計畫將能解決當前SIT測試0.00%通過率的問題，並建立穩定的四層架構串接機制。
+
