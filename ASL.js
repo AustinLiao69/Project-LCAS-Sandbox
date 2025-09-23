@@ -794,7 +794,79 @@ app.get('/api/v1/transactions', async (req, res) => {
   }
 });
 
-// 4. 取得交易詳情
+// 7. 儀表板數據 (必須在 :id 路由之前)
+app.get('/api/v1/transactions/dashboard', async (req, res) => {
+  try {
+    console.log('📊 ASL轉發: 儀表板數據 -> BK_processAPIGetDashboard');
+
+    if (!BK || typeof BK.BK_processAPIGetDashboard !== 'function') {
+      return res.apiError('BK_processAPIGetDashboard函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await BK.BK_processAPIGetDashboard(req.query);
+    res.apiSuccess(result.data, result.message || '儀表板數據處理完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (dashboard):', error);
+    res.apiError('儀表板數據轉發失敗', 'DASHBOARD_FORWARD_ERROR', 500);
+  }
+});
+
+// 8. 統計數據 (必須在 :id 路由之前)
+app.get('/api/v1/transactions/statistics', async (req, res) => {
+  try {
+    console.log('📈 ASL轉發: 統計數據 -> BK_processAPIGetStatistics');
+
+    if (!BK || typeof BK.BK_processAPIGetStatistics !== 'function') {
+      return res.apiError('BK_processAPIGetStatistics函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await BK.BK_processAPIGetStatistics(req.query);
+    res.apiSuccess(result.data, result.message || '統計數據處理完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (statistics):', error);
+    res.apiError('統計數據轉發失敗', 'STATISTICS_FORWARD_ERROR', 500);
+  }
+});
+
+// 9. 最近交易 (必須在 :id 路由之前)
+app.get('/api/v1/transactions/recent', async (req, res) => {
+  try {
+    console.log('🕒 ASL轉發: 最近交易 -> BK_processAPIGetRecent');
+
+    if (!BK || typeof BK.BK_processAPIGetRecent !== 'function') {
+      return res.apiError('BK_processAPIGetRecent函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await BK.BK_processAPIGetRecent(req.query);
+    res.apiSuccess(result.data, result.message || '最近交易處理完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (recent):', error);
+    res.apiError('最近交易轉發失敗', 'RECENT_FORWARD_ERROR', 500);
+  }
+});
+
+// 10. 圖表數據 (必須在 :id 路由之前)
+app.get('/api/v1/transactions/charts', async (req, res) => {
+  try {
+    console.log('📊 ASL轉發: 圖表數據 -> BK_processAPIGetCharts');
+
+    if (!BK || typeof BK.BK_processAPIGetCharts !== 'function') {
+      return res.apiError('BK_processAPIGetCharts函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await BK.BK_processAPIGetCharts(req.query);
+    res.apiSuccess(result.data, result.message || '圖表數據處理完成');
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (charts):', error);
+    res.apiError('圖表數據轉發失敗', 'CHARTS_FORWARD_ERROR', 500);
+  }
+});
+
+// 4. 取得交易詳情 (通配符路由必須放在最後)
 app.get('/api/v1/transactions/:id', async (req, res) => {
   try {
     console.log('🔍 ASL轉發: 交易詳情 -> BK_processAPIGetTransactionDetail');
@@ -845,78 +917,6 @@ app.delete('/api/v1/transactions/:id', async (req, res) => {
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (delete transaction):', error);
     res.apiError('交易刪除轉發失敗', 'DELETE_TRANSACTION_FORWARD_ERROR', 500);
-  }
-});
-
-// 7. 儀表板數據
-app.get('/api/v1/transactions/dashboard', async (req, res) => {
-  try {
-    console.log('📊 ASL轉發: 儀表板數據 -> BK_processAPIGetDashboard');
-
-    if (!BK || typeof BK.BK_processAPIGetDashboard !== 'function') {
-      return res.apiError('BK_processAPIGetDashboard函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const result = await BK.BK_processAPIGetDashboard(req.query);
-    res.apiSuccess(result.data, result.message || '儀表板數據處理完成');
-
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (dashboard):', error);
-    res.apiError('儀表板數據轉發失敗', 'DASHBOARD_FORWARD_ERROR', 500);
-  }
-});
-
-// 8. 統計數據
-app.get('/api/v1/transactions/statistics', async (req, res) => {
-  try {
-    console.log('📈 ASL轉發: 統計數據 -> BK_processAPIGetStatistics');
-
-    if (!BK || typeof BK.BK_processAPIGetStatistics !== 'function') {
-      return res.apiError('BK_processAPIGetStatistics函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const result = await BK.BK_processAPIGetStatistics(req.query);
-    res.apiSuccess(result.data, result.message || '統計數據處理完成');
-
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (statistics):', error);
-    res.apiError('統計數據轉發失敗', 'STATISTICS_FORWARD_ERROR', 500);
-  }
-});
-
-// 9. 最近交易
-app.get('/api/v1/transactions/recent', async (req, res) => {
-  try {
-    console.log('🕒 ASL轉發: 最近交易 -> BK_processAPIGetRecent');
-
-    if (!BK || typeof BK.BK_processAPIGetRecent !== 'function') {
-      return res.apiError('BK_processAPIGetRecent函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const result = await BK.BK_processAPIGetRecent(req.query);
-    res.apiSuccess(result.data, result.message || '最近交易處理完成');
-
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (recent):', error);
-    res.apiError('最近交易轉發失敗', 'RECENT_FORWARD_ERROR', 500);
-  }
-});
-
-// 10. 圖表數據
-app.get('/api/v1/transactions/charts', async (req, res) => {
-  try {
-    console.log('📊 ASL轉發: 圖表數據 -> BK_processAPIGetCharts');
-
-    if (!BK || typeof BK.BK_processAPIGetCharts !== 'function') {
-      return res.apiError('BK_processAPIGetCharts函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const result = await BK.BK_processAPIGetCharts(req.query);
-    res.apiSuccess(result.data, result.message || '圖表數據處理完成');
-
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (charts):', error);
-    res.apiError('圖表數據轉發失敗', 'CHARTS_FORWARD_ERROR', 500);
   }
 });
 
