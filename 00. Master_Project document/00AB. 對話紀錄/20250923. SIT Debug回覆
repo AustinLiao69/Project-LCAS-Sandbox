@@ -29,7 +29,7 @@ Solution:
 1.	在AM.js中實作完整的註冊/登入業務邏輯
 2.	建立Token管理機制
 3.	實作四模式初始設定邏輯
-=> 請提案解決
+=> 請提案
 
 
 2.2 具體問題和負責模組
@@ -37,7 +37,7 @@ Solution:
 •	負責模組: AM.js (帳號管理模組)
 •	提案: 新增 AM_initializeUserModeSettings(userMode, userId) 函數
 •	功能: 根據選擇的模式自動配置相應的預設設定
-
+=> 請提案
 
 
 2. Token管理機制
@@ -46,9 +46,17 @@ Solution:
 o	Token_generateJWT(userInfo, userMode)
 o	Token_validateJWT(token)
 o	Token_refreshToken(refreshToken)
+=>
+1. 禁止新增模組
+2. 為什麼要有token management? 如果以MVP的策略，沒有token managment行不行？
+
+
 3. API回應格式問題
 •	負責模組: 新建 1398. API_Response.js 模組 (如上所述)
 •	提案: 統一的回應格式處理中心
+=>
+1. 禁止新增模組，請重新提案並建議此統一回應格式中心要放在哪裡?
+
 2.3 SIT測試案例新增提案
 需要在 0692. SIT_TestData_P1.json 中新增以下測試案例：
 四模式差異化驗證測試
@@ -103,6 +111,10 @@ API回應格式標準化測試
     }
   }
 }
+=>請新增
+
+
+
 🎯 修復優先級建議 (更新版)
 第一階段 (Critical)
 1.	建立 DCN-0014 BL層重構函數.md 文件 ✅
