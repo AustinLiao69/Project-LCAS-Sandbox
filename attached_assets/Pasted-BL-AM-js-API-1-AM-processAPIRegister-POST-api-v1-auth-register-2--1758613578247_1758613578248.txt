@@ -1,0 +1,39 @@
+BL要新增的函數清單
+AM.js (認證管理模組) 需新增的API端點函數：
+1.	AM_processAPIRegister() - POST /api/v1/auth/register
+2.	AM_processAPILogin() - POST /api/v1/auth/login
+3.	AM_processAPIGoogleLogin() - POST /api/v1/auth/google-login
+4.	AM_processAPILogout() - POST /api/v1/auth/logout
+5.	AM_processAPIRefresh() - POST /api/v1/auth/refresh
+6.	AM_processAPIForgotPassword() - POST /api/v1/auth/forgot-password
+7.	AM_processAPIVerifyResetToken() - GET /api/v1/auth/verify-reset-token
+8.	AM_processAPIResetPassword() - POST /api/v1/auth/reset-password
+9.	AM_processAPIVerifyEmail() - POST /api/v1/auth/verify-email
+10.	AM_processAPIBindLine() - POST /api/v1/auth/bind-line
+11.	AM_processAPIBindStatus() - GET /api/v1/auth/bind-status
+12.	AM_processAPIGetProfile() - GET /api/v1/users/profile
+13.	AM_processAPIUpdateProfile() - PUT /api/v1/users/profile
+14.	AM_processAPIGetAssessmentQuestions() - GET /api/v1/users/assessment-questions
+15.	AM_processAPISubmitAssessment() - POST /api/v1/users/assessment
+16.	AM_processAPIUpdatePreferences() - PUT /api/v1/users/preferences
+17.	AM_processAPIUpdateSecurity() - PUT /api/v1/users/security
+18.	AM_processAPISwitchMode() - PUT /api/v1/users/mode
+19.	AM_processAPIVerifyPin() - POST /api/v1/users/verify-pin
+BK.js (記帳核心模組) 需新增的API端點函數：
+1.	BK_processAPITransaction() - POST /api/v1/transactions
+2.	BK_processAPIQuickTransaction() - POST /api/v1/transactions/quick
+3.	BK_processAPIGetTransactions() - GET /api/v1/transactions
+4.	BK_processAPIGetTransactionDetail() - GET /api/v1/transactions/{id}
+5.	BK_processAPIUpdateTransaction() - PUT /api/v1/transactions/{id}
+6.	BK_processAPIDeleteTransaction() - DELETE /api/v1/transactions/{id}
+7.	BK_processAPIGetDashboard() - GET /api/v1/transactions/dashboard
+8.	BK_processAPIGetStatistics() - GET /api/v1/transactions/statistics
+9.	BK_processAPIGetRecent() - GET /api/v1/transactions/recent
+10.	BK_processAPIGetCharts() - GET /api/v1/transactions/charts
+11.	BK_processAPIBatchCreate() - POST /api/v1/transactions/batch
+12.	BK_processAPIBatchUpdate() - PUT /api/v1/transactions/batch
+13.	BK_processAPIBatchDelete() - DELETE /api/v1/transactions/batch
+14.	BK_processAPIUploadAttachment() - POST /api/v1/transactions/{id}/attachments
+15.	BK_processAPIDeleteAttachment() - DELETE /api/v1/transactions/{id}/attachments/{attachmentId}
+
+=> 請寫一個DCN在12號資料夾LLD文件裡面新增這些函數，檔案名稱為DCN-0014 BL層重構函數.md

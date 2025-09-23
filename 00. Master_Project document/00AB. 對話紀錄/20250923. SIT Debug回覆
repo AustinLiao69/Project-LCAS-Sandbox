@@ -1,0 +1,121 @@
+不要寫code，請根據我的回覆更新提案
+
+根據您的回覆，我來更新提案和回答您的問題：
+📋 問題一：四層架構串接不完整 (High)
+DCN-0014 BL層重構函數
+我將建立一個新的DCN文件來記錄需要在BL層新增的函數：
+07. DCN/DCN-0014 BL層重構函數.md
+建立BL層重構函數DCN文件
+=> 我已經弄好DCN-0014，此工作項目可打勾
+
+統一API回應格式處理提案更新
+您建議由BL層的一個統一模組來處理，我重新提案：
+建議建立新的 1398. API_Response.js 模組，作為BL層的統一API回應格式處理中心：
+// 統一的API回應格式處理模組
+// 所有BL模組都調用此模組的函數來格式化回應
+AR_formatAPIResponse(success, data, message, errorCode, userMode)
+AR_formatErrorResponse(errorCode, message, details)
+AR_generateMetadata(userMode, requestId)
+=> 禁止新增模組，請重新提案通一API格式回應要放在哪個模組
+
+
+
+
+
+📋 問題二：業務邏輯實作不完整 (High)
+2.1 問題定位和解決方案
+問題出在: BL Layer的AM.js模組業務邏輯實作不完整
+Solution:
+1.	在AM.js中實作完整的註冊/登入業務邏輯
+2.	建立Token管理機制
+3.	實作四模式初始設定邏輯
+=> 請提案解決
+
+
+2.2 具體問題和負責模組
+1. 四模式初始設定邏輯
+•	負責模組: AM.js (帳號管理模組)
+•	提案: 新增 AM_initializeUserModeSettings(userMode, userId) 函數
+•	功能: 根據選擇的模式自動配置相應的預設設定
+
+
+
+2. Token管理機制
+•	負責模組: AM.js (帳號管理模組) + 新建 1397. Token.js 模組
+•	提案:
+o	Token_generateJWT(userInfo, userMode)
+o	Token_validateJWT(token)
+o	Token_refreshToken(refreshToken)
+3. API回應格式問題
+•	負責模組: 新建 1398. API_Response.js 模組 (如上所述)
+•	提案: 統一的回應格式處理中心
+2.3 SIT測試案例新增提案
+需要在 0692. SIT_TestData_P1.json 中新增以下測試案例：
+四模式差異化驗證測試
+"four_mode_differentiation_tests": {
+  "expert_mode_features": {
+    "test_id": "mode_expert_001",
+    "expected_features": ["advanced_analytics", "batch_operations", "detailed_reports"]
+  },
+  "guiding_mode_simplification": {
+    "test_id": "mode_guiding_001", 
+    "expected_features": ["auto_fill", "simplified_ui", "minimal_decisions"]
+  }
+}
+Token生命週期管理測試
+"token_lifecycle_tests": {
+  "token_generation": {
+    "test_id": "token_gen_001",
+    "scenario": "登入成功後生成JWT Token"
+  },
+  "token_refresh": {
+    "test_id": "token_refresh_001",
+    "scenario": "Token過期自動刷新"
+  },
+  "token_validation": {
+    "test_id": "token_validate_001", 
+    "scenario": "API請求Token驗證"
+  }
+}
+API回應格式標準化測試
+"api_response_format_tests": {
+  "success_response_format": {
+    "test_id": "response_success_001",
+    "expected_structure": {
+      "success": true,
+      "data": "object",
+      "metadata": {
+        "timestamp": "string",
+        "requestId": "string", 
+        "userMode": "string"
+      }
+    }
+  },
+  "error_response_format": {
+    "test_id": "response_error_001",
+    "expected_structure": {
+      "success": false,
+      "error": {
+        "code": "string",
+        "message": "string"
+      },
+      "metadata": "object"
+    }
+  }
+}
+🎯 修復優先級建議 (更新版)
+第一階段 (Critical)
+1.	建立 DCN-0014 BL層重構函數.md 文件 ✅
+2.	建立 1398. API_Response.js 統一回應處理模組
+3.	在AM.js中實作缺失的API端點函數
+4.	在BK.js中實作缺失的API端點函數
+第二階段 (High)
+1.	建立 1397. Token.js Token管理模組
+2.	實作四模式初始設定邏輯
+3.	更新SIT測試案例數據
+第三階段 (Medium)
+1.	完善LLD文件更新
+2.	實作模式評估和切換機制
+3.	完整的四模式差異化功能
+這個更新的修復計畫將能系統性地解決當前SIT測試0.00%通過率的問題，並建立穩定的四層架構串接機制。
+
