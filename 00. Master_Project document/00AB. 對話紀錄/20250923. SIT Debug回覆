@@ -14,6 +14,10 @@
 理由1：ASL.js是API Service Layer，專責API轉發，所有132個端點都會經過此層
 理由2：職責分離原則，API格式化應該在API層處理，不應該讓AM.js承擔非認證相關職責
 理由3：ASL.js已經有統一的回應中介軟體架構，擴充更自然
+=> 那應該如何設計？請簡單解釋
+
+
+
 2. Firebase Auth設定說明
 Firebase Authentication設定步驟：
 
