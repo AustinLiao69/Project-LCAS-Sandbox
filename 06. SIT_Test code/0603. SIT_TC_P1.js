@@ -2,14 +2,17 @@
  * 0603. SIT_TC_P1.js
  * LCAS 2.0 Phase 1 SIT測試案例實作
  * 
- * @version v1.3.0
+ * @version v1.4.0
  * @created 2025-09-15
  * @updated 2025-01-24
  * @author LCAS SQA Team
- * @description 階段一緊急修復：測試資料載入機制強化，錯誤處理完善，消除NaN統計問題
- * @phase Phase 1 Emergency Fix - Data Loading & Error Handling Enhancement
+ * @description 階段一深度修復：AM模組函數完善，Firebase連線穩定性增強
+ * @phase Phase 1 Deep Fix - AM Module Function Enhancement & Firebase Stability
  * @testcases TC-SIT-001 to TC-SIT-028 (28個測試案例)
  * @fixes 
+ *   - 修復AM_validateQueryPermission等缺失函數
+ *   - 強化Firebase連線重試機制
+ *   - 完善API端點錯誤處理
  *   - 修復測試資料載入失敗問題
  *   - 消除 Cannot read properties of undefined 錯誤
  *   - 修復 NaN 統計顯示問題
