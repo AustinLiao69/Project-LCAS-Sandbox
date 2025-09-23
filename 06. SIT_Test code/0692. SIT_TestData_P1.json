@@ -213,7 +213,7 @@
           "category": "餐飲",
           "type": "expense", 
           "description": "午餐",
-          "payment_method": "現金"
+          "payment_method": "刷卡"
         },
         "mode_specific_responses": {
           "expert": "已記錄支出：午餐 NT$150 (餐飲類別)",
@@ -264,7 +264,7 @@
         "transaction_data": {
           "type": "expense",
           "amount": 1200,
-          "category_id": "cat_food_001",
+          "category_id": "10301",
           "category_name": "餐飲",
           "account_id": "acc_cash_001", 
           "account_name": "現金",
@@ -286,7 +286,7 @@
         "transaction_data": {
           "type": "income", 
           "amount": 5000,
-          "category_id": "cat_bonus_001",
+          "category_id": "80105",
           "category_name": "獎金",
           "account_id": "acc_bank_001",
           "account_name": "銀行帳戶",
@@ -302,6 +302,39 @@
           "status": "success", 
           "message": "收入記錄成功"
         }
+      }
+    ]
+  },
+
+  "token_management_test_data": {
+    "valid_tokens": {
+      "expert_user_token": {
+        "userId": "expert001_user_id",
+        "token": "jwt_expert001_test_token",
+        "refreshToken": "refresh_expert001_test_token",
+        "expiresAt": "2025-12-31T23:59:59Z",
+        "userMode": "Expert"
+      },
+      "test_user_token": {
+        "userId": "sit-test-user-001",
+        "token": "jwt_sit_test_token",
+        "refreshToken": "refresh_sit_test_token", 
+        "expiresAt": "2025-12-31T23:59:59Z",
+        "userMode": "Expert"
+      }
+    },
+    "test_scenarios": [
+      {
+        "test_id": "token_001",
+        "scenario": "驗證有效Token",
+        "token": "jwt_expert001_test_token",
+        "expected_result": "valid"
+      },
+      {
+        "test_id": "token_002", 
+        "scenario": "刷新過期Token",
+        "refreshToken": "refresh_expert001_test_token",
+        "expected_result": "refreshed"
       }
     ]
   },
