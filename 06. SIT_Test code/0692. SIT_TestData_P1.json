@@ -264,7 +264,7 @@
         "transaction_data": {
           "type": "expense",
           "amount": 1200,
-          "category_id": "cat_food_001",
+          "category_id": "10301",
           "category_name": "餐飲",
           "account_id": "acc_cash_001", 
           "account_name": "現金",
@@ -286,7 +286,7 @@
         "transaction_data": {
           "type": "income", 
           "amount": 5000,
-          "category_id": "cat_bonus_001",
+          "category_id": "80105",
           "category_name": "獎金",
           "account_id": "acc_bank_001",
           "account_name": "銀行帳戶",
