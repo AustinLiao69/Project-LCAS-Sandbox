@@ -1,7 +1,8 @@
 /**
- * AM_帳號管理模組_1.2.0
+ * AM_帳號管理模組_1.3.0
  * @module AM模組
  * @description 跨平台帳號管理系統 - Phase 1 API端點重構，支援RESTful API
+ * @update 2025-01-24: 階段一修復 - 補充缺失的核心函數實作，修復認證權限驗證問題
  * @update 2025-09-15: Phase 1重構 - 新增RESTful API端點支援
  */
 
@@ -2296,6 +2297,210 @@ async function AM_processAPIVerifyPin(requestData) {
   return { success: true, data: { verified: true }, message: "PIN碼驗證成功" };
 }
 
+/**
+ * AM_validateQueryPermission - 驗證查詢權限
+ * @version 2025-01-24-V1.0.0
+ * @description 驗證用戶是否有權限查詢指定用戶的資訊
+ */
+async function AM_validateQueryPermission(targetUID, requesterId) {
+  try {
+    // 自己查詢自己的資料，永遠允許
+    if (targetUID === requesterId) {
+      return true;
+    }
+    
+    // 系統級別的查詢，永遠允許
+    if (requesterId === 'SYSTEM' || requesterId === 'AM_MODULE') {
+      return true;
+    }
+    
+    // 其他情況需要進一步權限檢查
+    // 這裡可以根據業務需求擴展更複雜的權限邏輯
+    return false;
+    
+  } catch (error) {
+    console.error('驗證查詢權限時發生錯誤:', error);
+    return false;
+  }
+}
+
+/**
+ * AM_validateUpdatePermission - 驗證更新權限
+ * @version 2025-01-24-V1.0.0
+ * @description 驗證用戶是否有權限更新指定用戶的資訊
+ */
+async function AM_validateUpdatePermission(targetUID, operatorId) {
+  try {
+    // 自己更新自己的資料，永遠允許
+    if (targetUID === operatorId) {
+      return true;
+    }
+    
+    // 系統級別的更新，永遠允許
+    if (operatorId === 'SYSTEM' || operatorId === 'AM_MODULE') {
+      return true;
+    }
+    
+    // 其他情況需要進一步權限檢查
+    return false;
+    
+  } catch (error) {
+    console.error('驗證更新權限時發生錯誤:', error);
+    return false;
+  }
+}
+
+/**
+ * AM_validateSearchPermission - 驗證搜尋權限
+ * @version 2025-01-24-V1.0.0
+ * @description 驗證用戶是否有權限進行用戶搜尋
+ */
+async function AM_validateSearchPermission(requesterId) {
+  try {
+    // 系統級別的搜尋，永遠允許
+    if (requesterId === 'SYSTEM' || requesterId === 'AM_MODULE') {
+      return true;
+    }
+    
+    // 一般用戶的搜尋權限（可根據業務需求調整）
+    return true;
+    
+  } catch (error) {
+    console.error('驗證搜尋權限時發生錯誤:', error);
+    return false;
+  }
+}
+
+/**
+ * AM_storeTokenSecurely - 安全儲存Token
+ * @version 2025-01-24-V1.0.0
+ * @description 安全地儲存用戶的認證Token
+ */
+async function AM_storeTokenSecurely(userId, accessToken, refreshToken, expiresIn) {
+  try {
+    const tokenData = {
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      expiresAt: admin.firestore.Timestamp.fromDate(new Date(Date.now() + expiresIn * 1000)),
+      createdAt: admin.firestore.Timestamp.now()
+    };
+    
+    await db.collection('user_tokens').doc(userId).set(tokenData);
+    return { success: true };
+    
+  } catch (error) {
+    console.error('儲存Token時發生錯誤:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * AM_updateStoredToken - 更新儲存的Token
+ * @version 2025-01-24-V1.0.0
+ * @description 更新用戶的認證Token
+ */
+async function AM_updateStoredToken(userId, accessToken, expiresIn) {
+  try {
+    const updateData = {
+      accessToken: accessToken,
+      expiresAt: admin.firestore.Timestamp.fromDate(new Date(Date.now() + expiresIn * 1000)),
+      updatedAt: admin.firestore.Timestamp.now()
+    };
+    
+    await db.collection('user_tokens').doc(userId).update(updateData);
+    return { success: true };
+    
+  } catch (error) {
+    console.error('更新Token時發生錯誤:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * AM_generatePlatformUID - 生成平台專用UID
+ * @version 2025-01-24-V1.0.0
+ * @description 為不同平台生成唯一識別碼
+ */
+function AM_generatePlatformUID(platform, deviceId) {
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substr(2, 9);
+  return `${platform}_${timestamp}_${deviceId}_${randomStr}`;
+}
+
+/**
+ * AM_getSubscriptionInfo - 取得用戶訂閱資訊
+ * @version 2025-01-24-V1.0.0
+ * @description 取得用戶的訂閱狀態和權限資訊
+ */
+async function AM_getSubscriptionInfo(userId, requesterId) {
+  try {
+    // 權限檢查
+    if (userId !== requesterId && requesterId !== 'SYSTEM') {
+      return { success: false, error: '權限不足' };
+    }
+    
+    // 從用戶資料中取得訂閱資訊
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      return { success: false, error: '用戶不存在' };
+    }
+    
+    const userData = userDoc.data();
+    const subscription = userData.subscription || {
+      plan: 'free',
+      features: ['basic_accounting'],
+      expiresAt: null
+    };
+    
+    return {
+      success: true,
+      subscriptionData: subscription
+    };
+    
+  } catch (error) {
+    console.error('取得訂閱資訊時發生錯誤:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * AM_formatAPIResponse - 格式化API回應
+ * @version 2025-01-24-V1.0.0
+ * @description 統一格式化API回應格式
+ */
+function AM_formatAPIResponse(data, error = null) {
+  if (error) {
+    return {
+      success: false,
+      error: error,
+      timestamp: new Date().toISOString()
+    };
+  }
+  
+  return {
+    success: true,
+    data: data,
+    timestamp: new Date().toISOString()
+  };
+}
+
+/**
+ * AM_handleSystemError - 處理系統錯誤
+ * @version 2025-01-24-V1.0.0
+ * @description 統一處理系統級錯誤
+ */
+function AM_handleSystemError(error, context = {}) {
+  console.error('系統錯誤:', error);
+  console.error('錯誤內容:', context);
+  
+  return {
+    success: false,
+    error: 'System error occurred',
+    errorCode: 'SYSTEM_ERROR',
+    timestamp: new Date().toISOString()
+  };
+}
+
 // 導出模組函數
 module.exports = {
   //原有核心函數 (1-18)
@@ -2345,7 +2550,18 @@ module.exports = {
   AM_processAPIUpdatePreferences,
   AM_processAPIUpdateSecurity,
   AM_processAPISwitchMode,
-  AM_processAPIVerifyPin
+  AM_processAPIVerifyPin,
+
+  // 階段一修復：補充缺失的核心函數
+  AM_validateQueryPermission,
+  AM_validateUpdatePermission,
+  AM_validateSearchPermission,
+  AM_storeTokenSecurely,
+  AM_updateStoredToken,
+  AM_generatePlatformUID,
+  AM_getSubscriptionInfo,
+  AM_formatAPIResponse,
+  AM_handleSystemError
 };
 
 console.log('AM 帳號管理模組載入完成 v1.2.0 - Phase 1 API端點重構');
