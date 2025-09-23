@@ -50,197 +50,105 @@ const BK_CONFIG = {
   }
 };
 
-// 初始化狀態追蹤（修復版）
+// 初始化狀態追蹤
 let BK_INIT_STATUS = {
-  lastInitTime: 0,                    // 上次初始化時間
-  initialized: false,                 // 是否已初始化
-  initializationAttempted: false,     // 是否已嘗試過初始化（避免重複）
-  initializationFailed: false,        // 初始化是否失敗
-  quotaExhausted: false,              // Firebase配額是否耗盡
-  DL_initialized: false,              // DL模組是否已初始化
-  firestore_db: null,                 // Firestore 實例
-  moduleVersion: "2.2.0",             // 模組版本追蹤
-  gracefulDegradation: false,         // 優雅降級模式
-  consecutiveFailures: 0,             // 連續失敗次數
-  maxRetries: 3,                      // 最大重試次數
-  retryInterval: 300000               // 重試間隔(5分鐘)
+  lastInitTime: 0,         // 上次初始化時間
+  initialized: false,      // 是否已初始化
+  DL_initialized: false,   // DL模組是否已初始化
+  firestore_db: null,      // Firestore 實例
+  moduleVersion: "2.1.0"   // 模組版本追蹤
 };
 
 /**
- * 01. 模組初始化與配置管理（修復版）
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
- * @update: 修復重複初始化問題，實現單次初始化和優雅降級機制
+ * 01. 模組初始化與配置管理
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16 
+ * @update: 階段一重構 - 專注於6個核心API端點支援
  */
 async function BK_initialize() {
   const currentTime = new Date().getTime();
 
-  // 檢查是否已成功初始化
-  if (BK_INIT_STATUS.initialized && BK_INIT_STATUS.firestore_db) {
+  if (BK_INIT_STATUS.initialized && 
+      (currentTime - BK_INIT_STATUS.lastInitTime) < BK_CONFIG.INITIALIZATION_INTERVAL) {
     return true;
   }
 
-  // 檢查是否處於優雅降級模式
-  if (BK_INIT_STATUS.gracefulDegradation) {
-    console.warn('⚠️ BK模組處於優雅降級模式，跳過初始化');
-    return false;
-  }
-
-  // 檢查是否已嘗試過初始化且失敗
-  if (BK_INIT_STATUS.initializationAttempted && BK_INIT_STATUS.initializationFailed) {
-    const timeSinceLastAttempt = currentTime - BK_INIT_STATUS.lastInitTime;
-    
-    // 如果連續失敗次數過多，進入優雅降級模式
-    if (BK_INIT_STATUS.consecutiveFailures >= BK_INIT_STATUS.maxRetries) {
-      console.warn('❌ BK模組初始化連續失敗，進入優雅降級模式');
-      BK_INIT_STATUS.gracefulDegradation = true;
-      return false;
-    }
-
-    // 如果未到重試時間，直接返回
-    if (timeSinceLastAttempt < BK_INIT_STATUS.retryInterval) {
-      return false;
-    }
-  }
-
-  // 標記已嘗試初始化
-  BK_INIT_STATUS.initializationAttempted = true;
-  BK_INIT_STATUS.lastInitTime = currentTime;
-
   try {
-    console.log(`🔧 BK模組v${BK_CONFIG.VERSION}初始化開始 [嘗試次數: ${BK_INIT_STATUS.consecutiveFailures + 1}]`);
+    let initMessages = [`BK模組v${BK_CONFIG.VERSION}初始化開始 [${new Date().toISOString()}]`];
 
-    // 初始化DL模組（僅一次）
+    // 初始化DL模組
     if (!BK_INIT_STATUS.DL_initialized) {
       if (typeof DL_initialize === 'function') {
         DL_initialize();
         BK_INIT_STATUS.DL_initialized = true;
-        console.log("✅ DL模組初始化成功");
+        initMessages.push("DL模組初始化: 成功");
+
+        if (typeof DL_setLogLevels === 'function') {
+          DL_setLogLevels('DEBUG', 'DEBUG');
+          initMessages.push("DL日誌級別設置為DEBUG");
+        }
       } else {
-        console.warn("⚠️ DL模組未找到，將使用原生日誌系統");
+        BK_logWarning("DL模組未找到，將使用原生日誌系統", "系統初始化", "", "BK_initialize");
+        initMessages.push("DL模組初始化: 失敗 (未找到DL模組)");
       }
     }
 
-    // 嘗試初始化Firebase
-    const firebaseResult = await BK_initializeFirebase();
-    if (!firebaseResult) {
-      throw new Error('Firebase初始化失敗');
-    }
+    // 初始化Firestore
+    await BK_initializeFirebase();
+    initMessages.push("Firebase初始化: 成功");
 
-    // 初始化成功
+    // 驗證API端點支援
+    initMessages.push(`支援API端點: ${Object.keys(BK_CONFIG.API_ENDPOINTS).length}個`);
+
+    BK_logInfo(initMessages.join(" | "), "系統初始化", "", "BK_initialize");
+
+    BK_INIT_STATUS.lastInitTime = currentTime;
     BK_INIT_STATUS.initialized = true;
-    BK_INIT_STATUS.initializationFailed = false;
-    BK_INIT_STATUS.consecutiveFailures = 0;
-    
-    console.log(`✅ BK模組初始化成功 - 支援${Object.keys(BK_CONFIG.API_ENDPOINTS).length}個API端點`);
-    
-    BK_logInfo(`BK模組v${BK_CONFIG.VERSION}初始化成功`, "系統初始化", "", "BK_initialize");
 
     return true;
   } catch (error) {
-    // 初始化失敗處理
-    BK_INIT_STATUS.initializationFailed = true;
-    BK_INIT_STATUS.consecutiveFailures++;
-    
-    const errorMessage = error.toString();
-    
-    // 檢查是否為配額耗盡錯誤
-    if (errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('Quota exceeded')) {
-      console.error('❌ Firebase配額耗盡，停止重試初始化');
-      BK_INIT_STATUS.quotaExhausted = true;
-      BK_INIT_STATUS.gracefulDegradation = true;
-    } else {
-      console.error(`❌ BK模組初始化失敗 (第${BK_INIT_STATUS.consecutiveFailures}次):`, errorMessage);
-    }
-
-    // 只有在非配額問題且未超過最大重試次數時才記錄錯誤日誌
-    if (!BK_INIT_STATUS.quotaExhausted && BK_INIT_STATUS.consecutiveFailures < BK_INIT_STATUS.maxRetries) {
-      BK_logError("BK模組初始化錯誤: " + errorMessage, "系統初始化", "", "INIT_ERROR", errorMessage, "BK_initialize");
-    }
-
+    BK_logCritical("BK模組初始化錯誤: " + error.toString(), "系統初始化", "", "INIT_ERROR", error.toString(), "BK_initialize");
     return false;
   }
 }
 
 /**
- * 02. Firebase連接初始化（修復版）
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 避免重複初始化，實現連接重用和錯誤處理優化
+ * 02. Firebase連接初始化
+ * @version 2025-09-16-V2.1.0
+ * @date 2025-09-16
+ * @update: 優化Firebase連接管理，支援API端點需求
  */
 async function BK_initializeFirebase() {
   try {
-    // 如果已有可用的Firestore實例，直接返回
-    if (BK_INIT_STATUS.firestore_db) {
-      console.log('✅ Firebase連接已存在，重用現有連接');
-      return BK_INIT_STATUS.firestore_db;
-    }
-
-    // 檢查配額狀態
-    if (BK_INIT_STATUS.quotaExhausted) {
-      console.warn('⚠️ Firebase配額已耗盡，跳過初始化');
-      return null;
-    }
-
-    console.log('🔄 開始Firebase連接初始化...');
+    if (BK_INIT_STATUS.firestore_db) return BK_INIT_STATUS.firestore_db;
 
     // 檢查 Firebase Admin 是否已初始化
     if (!admin.apps.length) {
+      console.log('🔄 BK模組: Firebase Admin 尚未初始化，開始初始化...');
       firebaseConfig.initializeFirebaseAdmin();
-      console.log('✅ Firebase Admin SDK初始化完成');
+      console.log('✅ BK模組: Firebase Admin 初始化完成');
     }
 
     // 取得 Firestore 實例
     const db = admin.firestore();
 
-    // 簡化的連接測試（避免不必要的寫入）
-    try {
-      // 僅讀取系統狀態，不寫入
-      await Promise.race([
-        db.collection('_system').doc('_status').get(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('連接測試超時')), 5000)
-        )
-      ]);
-      
-      console.log('✅ Firebase連接測試成功');
-    } catch (testError) {
-      // 如果是配額問題，標記並跳過
-      if (testError.toString().includes('RESOURCE_EXHAUSTED') || 
-          testError.toString().includes('Quota exceeded')) {
-        console.warn('⚠️ Firebase配額耗盡，標記降級模式');
-        BK_INIT_STATUS.quotaExhausted = true;
-        return null;
-      }
-      
-      // 其他錯誤則繼續，可能是網路問題但Firestore實例仍可用
-      console.warn('⚠️ Firebase連接測試失敗，但繼續使用Firestore實例:', testError.message);
-    }
+    // 測試連線
+    await db.collection('_health_check').doc('bk_init_test').set({
+      timestamp: admin.firestore.Timestamp.now(),
+      module: 'BK',
+      version: BK_CONFIG.VERSION,
+      status: 'initialized'
+    });
 
-    // 儲存Firestore實例
+    // 刪除測試文檔
+    await db.collection('_health_check').doc('bk_init_test').delete();
+
     BK_INIT_STATUS.firestore_db = db;
 
-    console.log(`✅ Firebase連接初始化成功 v${BK_CONFIG.VERSION}`);
-    
-    // 只有在成功時才記錄日誌
     BK_logInfo(`Firebase連接初始化成功 v${BK_CONFIG.VERSION}`, "系統初始化", "", "BK_initializeFirebase");
-    
     return db;
   } catch (error) {
-    const errorMessage = error.toString();
-    
-    // 配額耗盡時不記錄錯誤日誌
-    if (errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('Quota exceeded')) {
-      console.warn('⚠️ Firebase配額耗盡，停止初始化');
-      BK_INIT_STATUS.quotaExhausted = true;
-      return null;
-    }
-    
-    console.error('❌ Firebase初始化失敗:', errorMessage);
-    
-    // 只有在非配額問題時才記錄錯誤日誌
-    BK_logError('Firebase初始化失敗', "系統初始化", "", "FIREBASE_INIT_ERROR", errorMessage, "BK_initializeFirebase");
-    
+    BK_logError('Firebase初始化失敗', "系統初始化", "", "FIREBASE_INIT_ERROR", error.toString(), "BK_initializeFirebase");
     throw error;
   }
 }
@@ -256,18 +164,6 @@ async function BK_createTransaction(transactionData) {
   const logPrefix = `[${processId}] BK_createTransaction:`;
 
   try {
-    // 檢查BK模組初始化狀態（修復版）
-    if (!BK_INIT_STATUS.initialized || BK_INIT_STATUS.gracefulDegradation) {
-      const initSuccess = await BK_initialize();
-      if (!initSuccess) {
-        return {
-          success: false,
-          error: "BK模組初始化失敗或處於降級模式",
-          errorType: "INITIALIZATION_ERROR"
-        };
-      }
-    }
-
     BK_logInfo(`${logPrefix} 開始處理新增交易請求`, "新增交易", transactionData.userId || "", "BK_createTransaction");
 
     // 驗證必要資料
@@ -394,28 +290,10 @@ async function BK_getTransactions(queryParams = {}) {
   const logPrefix = `[${processId}] BK_getTransactions:`;
 
   try {
-    // 檢查BK模組初始化狀態（修復版）
-    if (!BK_INIT_STATUS.initialized || BK_INIT_STATUS.gracefulDegradation) {
-      const initSuccess = await BK_initialize();
-      if (!initSuccess) {
-        return {
-          success: false,
-          error: "BK模組初始化失敗或處於降級模式",
-          errorType: "INITIALIZATION_ERROR"
-        };
-      }
-    }
-
     BK_logInfo(`${logPrefix} 開始查詢交易列表`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
 
+    await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
-    if (!db) {
-      return {
-        success: false,
-        error: "Firestore連接不可用",
-        errorType: "DATABASE_ERROR"
-      };
-    }
 
     // 建立查詢
     let query = db.collection('ledgers')
@@ -2653,11 +2531,8 @@ async function BK_prepareTransactionData(transactionId, transactionData, process
  */
 async function BK_saveTransactionToFirestore(transactionData, processId) {
   try {
-    // 檢查Firestore實例是否可用
+    await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
-    if (!db) {
-      throw new Error('Firestore實例不可用，無法儲存交易');
-    }
 
     const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID;
     await db.collection('ledgers')
@@ -3033,61 +2908,6 @@ function BK_getParsingHelp() {
   ];
 }
 
-/**
- * 35. BK模組狀態重置 - 用於配額重置後的恢復
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
- * @description 重置BK模組狀態，用於Firebase配額重置後的系統恢復
- */
-function BK_resetInitializationStatus() {
-  try {
-    console.log('🔄 重置BK模組初始化狀態...');
-    
-    BK_INIT_STATUS.initialized = false;
-    BK_INIT_STATUS.initializationAttempted = false;
-    BK_INIT_STATUS.initializationFailed = false;
-    BK_INIT_STATUS.quotaExhausted = false;
-    BK_INIT_STATUS.gracefulDegradation = false;
-    BK_INIT_STATUS.consecutiveFailures = 0;
-    BK_INIT_STATUS.firestore_db = null;
-    BK_INIT_STATUS.lastInitTime = 0;
-    
-    console.log('✅ BK模組狀態重置完成，可重新嘗試初始化');
-    
-    return {
-      success: true,
-      message: 'BK模組狀態重置成功'
-    };
-  } catch (error) {
-    console.error('❌ BK模組狀態重置失敗:', error);
-    return {
-      success: false,
-      error: error.toString()
-    };
-  }
-}
-
-/**
- * 36. 取得BK模組狀態 - 用於監控和除錯
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
- * @description 取得BK模組當前初始化狀態，用於系統監控
- */
-function BK_getInitializationStatus() {
-  return {
-    initialized: BK_INIT_STATUS.initialized,
-    initializationAttempted: BK_INIT_STATUS.initializationAttempted,
-    initializationFailed: BK_INIT_STATUS.initializationFailed,
-    quotaExhausted: BK_INIT_STATUS.quotaExhausted,
-    gracefulDegradation: BK_INIT_STATUS.gracefulDegradation,
-    consecutiveFailures: BK_INIT_STATUS.consecutiveFailures,
-    hasFirestoreDB: !!BK_INIT_STATUS.firestore_db,
-    lastInitTime: BK_INIT_STATUS.lastInitTime,
-    moduleVersion: BK_INIT_STATUS.moduleVersion,
-    timeSinceLastInit: Date.now() - BK_INIT_STATUS.lastInitTime
-  };
-}
-
 // === 日誌函數 ===
 
 function BK_logInfo(message, category, userId, functionName) {
@@ -3197,10 +3017,6 @@ module.exports = {
 
   // 配置
   BK_CONFIG,
-
-  // 狀態管理函數（新增）
-  BK_resetInitializationStatus,
-  BK_getInitializationStatus,
 
   // 日誌函數
   BK_logInfo,
