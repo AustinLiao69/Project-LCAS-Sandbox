@@ -378,16 +378,65 @@ class SITTestCases {
     }
 
     /**
-     * 檢查Firebase配額狀態
-     * @version 2025-01-24-V1.0.0
-     * @description 在執行測試前檢查Firebase配額是否可用
+     * 檢查API服務就緒狀態（階段一修復版）
+     * @version 2025-01-24-V1.1.0
+     * @description 確保ASL服務完全啟動並穩定運行後才開始測試
+     */
+    async checkAPIServiceReadiness() {
+        console.log('🔍 檢查API服務就緒狀態...');
+        
+        const maxRetries = 10;
+        const retryDelay = 3000; // 3秒
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`🔄 服務就緒檢查嘗試 ${attempt}/${maxRetries}...`);
+                
+                const healthCheckResponse = await this.makeRequest('GET', '/health', null, {}, 5000);
+                
+                if (healthCheckResponse.success) {
+                    console.log('✅ API服務已就緒');
+                    return {
+                        ready: true,
+                        message: 'API服務運行正常',
+                        serviceInfo: healthCheckResponse.data
+                    };
+                }
+                
+            } catch (error) {
+                console.warn(`⚠️ 服務就緒檢查失敗 (嘗試${attempt}): ${error.message}`);
+                
+                if (attempt < maxRetries) {
+                    console.log(`⏳ 等待${retryDelay/1000}秒後重試...`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                } else {
+                    console.error('❌ API服務未就緒，所有嘗試均失敗');
+                    return {
+                        ready: false,
+                        message: 'API服務無法連接',
+                        error: error.message
+                    };
+                }
+            }
+        }
+        
+        return {
+            ready: false,
+            message: 'API服務就緒檢查超時'
+        };
+    }
+
+    /**
+     * 檢查Firebase配額狀態（階段一優化版）
+     * @version 2025-01-24-V1.1.0
+     * @description 在API服務就緒後檢查Firebase配額狀況
      */
     async checkFirebaseQuotaStatus() {
         console.log('🔍 檢查Firebase配額狀態...');
         
         try {
-            // 輕量級健康檢查請求
-            const healthCheckResponse = await this.makeRequest('GET', '/health', null, {}, 3000);
+            // 使用更長的超時時間，確保穩定性
+            const healthCheckResponse = await this.makeRequest('GET', '/health', null, {}, 8000);
             
             // 檢查回應是否指示配額問題
             if (!healthCheckResponse.success) {
@@ -901,6 +950,11 @@ class SITTestCases {
     async testCase001_UserRegistration() {
         const startTime = Date.now();
         try {
+            // 階段一修復：確保測試資料可用性
+            if (!this.testData?.authentication_test_data?.valid_users?.expert_mode_user_001) {
+                throw new Error('測試資料不可用：expert_mode_user_001');
+            }
+            
             const testUser = this.testData.authentication_test_data.valid_users.expert_mode_user_001;
 
             const registrationData = {
@@ -3601,6 +3655,19 @@ if (require.main === module) {
         // 修復：創建sitTest實例
         const sitTest = new SITTestCases();
         
+        // 階段一修復：先檢查API服務就緒狀態
+        console.log('🔍 執行前置檢查...');
+        const serviceStatus = await sitTest.checkAPIServiceReadiness();
+        
+        if (!serviceStatus.ready) {
+            console.error(`❌ API服務未就緒：${serviceStatus.message}`);
+            console.error('💡 建議：確認ASL服務是否正常啟動，檢查Port 5000是否被佔用');
+            process.exit(1);
+        }
+        
+        console.log('✅ API服務就緒檢查完成');
+        console.log(`🌐 API基礎URL: ${sitTest.apiBaseURL}`);
+
         // 階段一新增：載入並驗證測試資料
         console.log('📂 載入測試資料...');
         const dataLoaded = await sitTest.loadTestData();
@@ -3609,8 +3676,8 @@ if (require.main === module) {
             console.error('❌ 測試資料載入失敗，但將使用備援資料繼續執行');
         }
 
-        // 檢查Firebase配額狀態
-        console.log('🔍 執行前置檢查...');
+        // 檢查Firebase配額狀態（在API服務就緒後）
+        console.log('🔍 檢查Firebase配額狀態...');
         const quotaStatus = await sitTest.checkFirebaseQuotaStatus();
         
         if (!quotaStatus.available) {
