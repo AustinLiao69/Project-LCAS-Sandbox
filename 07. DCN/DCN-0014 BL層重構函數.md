@@ -35,8 +35,8 @@
 本次變更目標為：擴充BL層模組功能，在AM.js和BK.js中新增對應的API處理函數，實現完整的四層架構串接。配合ASL.js純轉發窗口機制，確保PL → APL → BL → DL的資料流暢通無阻。
 
 此變更將新增：
-- AM.js認證管理模組：19個API處理函數
-- BK.js記帳核心模組：15個API處理函數
+- AM.js認證管理模組：22個API處理函數
+- BK.js記帳核心模組：9個API處理函數（符合P1-2基本記帳範圍）
 - 統一的函數命名規範和版本管理
 - 標準化的錯誤處理和回應格式
 
@@ -82,7 +82,7 @@ AM_processAPIBindLine()           // POST /api/v1/auth/bind-line
 AM_processAPIBindStatus()         // GET /api/v1/auth/bind-status
 ```
 
-#### 3.1.2 用戶管理API函數（8個）
+#### 3.1.2 用戶管理API函數（11個）
 ```javascript
 // 個人資料管理
 AM_processAPIGetProfile()         // GET /api/v1/users/profile
@@ -95,11 +95,16 @@ AM_processAPIUpdatePreferences()  // PUT /api/v1/users/preferences
 AM_processAPIUpdateSecurity()     // PUT /api/v1/users/security
 AM_processAPISwitchMode()         // PUT /api/v1/users/mode
 AM_processAPIVerifyPin()          // POST /api/v1/users/verify-pin
+
+// 模式管理與優化
+AM_processAPIGetModeDefaults()    // GET /api/v1/users/mode-defaults
+AM_processAPIBehaviorTracking()   // POST /api/v1/users/behavior-tracking
+AM_processAPIGetModeRecommendations() // GET /api/v1/users/mode-recommendations
 ```
 
 ### 3.2 BK.js 記帳核心模組函數
 
-#### 3.2.1 交易記錄API函數（15個）
+#### 3.2.1 基本記帳API函數（9個，符合P1-2範圍）
 ```javascript
 // 基本交易操作
 BK_processAPITransaction()        // POST /api/v1/transactions
@@ -109,21 +114,13 @@ BK_processAPIGetTransactionDetail() // GET /api/v1/transactions/{id}
 BK_processAPIUpdateTransaction()  // PUT /api/v1/transactions/{id}
 BK_processAPIDeleteTransaction()  // DELETE /api/v1/transactions/{id}
 
-// 數據分析
+// 基本統計與儀表板
 BK_processAPIGetDashboard()       // GET /api/v1/transactions/dashboard
 BK_processAPIGetStatistics()      // GET /api/v1/transactions/statistics
 BK_processAPIGetRecent()          // GET /api/v1/transactions/recent
-BK_processAPIGetCharts()          // GET /api/v1/transactions/charts
-
-// 批量操作
-BK_processAPIBatchCreate()        // POST /api/v1/transactions/batch
-BK_processAPIBatchUpdate()        // PUT /api/v1/transactions/batch
-BK_processAPIBatchDelete()        // DELETE /api/v1/transactions/batch
-
-// 附件管理
-BK_processAPIUploadAttachment()   // POST /api/v1/transactions/{id}/attachments
-BK_processAPIDeleteAttachment()   // DELETE /api/v1/transactions/{id}/attachments/{attachmentId}
 ```
+
+**注意**：批量操作、附件管理、圖表生成等進階功能將在後續Phase實作。
 
 ### 3.3 函數命名標準化
 
@@ -248,16 +245,16 @@ BK_LEDGER_ACCESS_DENIED // 帳本存取被拒
 ## 5. 實作階段規劃
 
 ### Phase 1：AM.js函數架構建立（Week 1）
-- 🔧 建立19個AM函數架構
+- 🔧 建立22個AM函數架構（認證11個+用戶管理11個）
 - 🔧 實作統一錯誤處理機制
 - 🔧 建立參數驗證工具函數
 - 🧪 基礎單元測試
 
 ### Phase 2：BK.js函數架構建立（Week 2）
-- 🔧 建立15個BK函數架構
-- 🔧 整合交易處理邏輯
-- 🔧 實作批量操作功能
-- 🧪 交易流程測試
+- 🔧 建立9個BK函數架構（P1-2基本記帳範圍）
+- 🔧 整合基本交易處理邏輯
+- 🔧 實作核心CRUD操作
+- 🧪 基本記帳流程測試
 
 ### Phase 3：業務邏輯整合（Week 3）
 - 🔧 整合Firebase Firestore操作
@@ -281,7 +278,7 @@ BK_LEDGER_ACCESS_DENIED // 帳本存取被拒
 
 ## 6. API函數清單
 
-### 6.1 AM.js 模組函數（19個）
+### 6.1 AM.js 模組函數（22個）
 
 | 函數名稱 | HTTP方法 | 端點路徑 | 功能描述 |
 |---------|---------|----------|----------|
@@ -304,8 +301,11 @@ BK_LEDGER_ACCESS_DENIED // 帳本存取被拒
 | `AM_processAPIUpdateSecurity` | PUT | `/api/v1/users/security` | 更新安全設定 |
 | `AM_processAPISwitchMode` | PUT | `/api/v1/users/mode` | 切換用戶模式 |
 | `AM_processAPIVerifyPin` | POST | `/api/v1/users/verify-pin` | PIN碼驗證 |
+| `AM_processAPIGetModeDefaults` | GET | `/api/v1/users/mode-defaults` | 取得模式預設值 |
+| `AM_processAPIBehaviorTracking` | POST | `/api/v1/users/behavior-tracking` | 使用行為追蹤 |
+| `AM_processAPIGetModeRecommendations` | GET | `/api/v1/users/mode-recommendations` | 模式優化建議 |
 
-### 6.2 BK.js 模組函數（15個）
+### 6.2 BK.js 模組函數（9個，P1-2範圍）
 
 | 函數名稱 | HTTP方法 | 端點路徑 | 功能描述 |
 |---------|---------|----------|----------|
@@ -318,12 +318,8 @@ BK_LEDGER_ACCESS_DENIED // 帳本存取被拒
 | `BK_processAPIGetDashboard` | GET | `/api/v1/transactions/dashboard` | 儀表板數據 |
 | `BK_processAPIGetStatistics` | GET | `/api/v1/transactions/statistics` | 統計數據 |
 | `BK_processAPIGetRecent` | GET | `/api/v1/transactions/recent` | 最近交易 |
-| `BK_processAPIGetCharts` | GET | `/api/v1/transactions/charts` | 圖表數據 |
-| `BK_processAPIBatchCreate` | POST | `/api/v1/transactions/batch` | 批量新增交易 |
-| `BK_processAPIBatchUpdate` | PUT | `/api/v1/transactions/batch` | 批量更新交易 |
-| `BK_processAPIBatchDelete` | DELETE | `/api/v1/transactions/batch` | 批量刪除交易 |
-| `BK_processAPIUploadAttachment` | POST | `/api/v1/transactions/{id}/attachments` | 上傳附件 |
-| `BK_processAPIDeleteAttachment` | DELETE | `/api/v1/transactions/{id}/attachments/{attachmentId}` | 刪除附件 |
+
+**Phase 2+ 功能**：批量操作、附件管理、圖表生成等進階功能將在後續階段實作。
 
 ---
 
@@ -345,6 +341,10 @@ BK_LEDGER_ACCESS_DENIED // 帳本存取被拒
 
 ### 10.4 API映射文件（1個）
 - `80. Flutter_PRD_APL/8025. API-BL mapping list.md` - 更新API-BL映射關係
+
+**正確的P1-2 API端點總數：31個**
+- **AM.js：22個函數**（認證11個 + 用戶管理11個）
+- **BK.js：9個函數**（基本記帳功能）
 
 **總計：9 個文件需要更新**
 
