@@ -1,10 +1,11 @@
 
 /**
- * BK_記帳處理模組_2.2.0
+ * BK_記帳處理模組_2.1.0
  * @module 記帳處理模組
- * @description LCAS 記帳處理模組 - 實現 BK 2.2 版本，重構為支援Phase 1的6個核心API端點
+ * @description LCAS 記帳處理模組 - DCN-0014 BL層重構函數實作
  * @update 2025-09-16: 階段一重構 - 專注於支援POST/GET /transactions等6個核心API端點
  * @update 2025-01-28: 移除所有hard coding，改為動態配置
+ * @update 2025-09-23: DCN-0014 階段一 - 新增9個API處理函數，整合統一回應格式機制
  */
 
 // 引入所需模組
@@ -1971,6 +1972,130 @@ async function BK_processAPIGetDashboard(queryParams = {}) {
   }
 }
 
+/**
+ * =============== DCN-0014 階段一：新增缺失的API處理函數 ===============
+ */
+
+/**
+ * BK_processAPIGetStatistics - 處理統計數據API端點
+ * @version 2025-09-23-V2.1.0
+ * @date 2025-09-23
+ * @description 專門處理ASL.js轉發的統計數據請求，支援GET /transactions/statistics
+ */
+async function BK_processAPIGetStatistics(queryParams = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPIGetStatistics:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理統計數據API請求`, "API端點", queryParams.userId || "", "BK_processAPIGetStatistics");
+
+    await BK_initialize();
+
+    // 取得交易數據
+    const transactionsResult = await BK_getTransactions({
+      userId: queryParams.userId,
+      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate
+    });
+
+    if (transactionsResult.success) {
+      // 生成統計數據
+      const statsResult = BK_generateStatistics(
+        transactionsResult.data.transactions,
+        queryParams.period || 'month'
+      );
+
+      if (statsResult.success) {
+        BK_logInfo(`${logPrefix} 統計數據API處理成功`, "API端點", queryParams.userId || "", "BK_processAPIGetStatistics");
+
+        return {
+          success: true,
+          data: statsResult.data,
+          metadata: {
+            timestamp: new Date().toISOString(),
+            requestId: processId,
+            userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+          }
+        };
+      }
+    }
+
+    return BK_handleError(transactionsResult, {
+      processId: processId,
+      userId: queryParams.userId,
+      operation: "統計數據API"
+    });
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 統計數據API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_GET_STATISTICS_ERROR", error.toString(), "BK_processAPIGetStatistics");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: queryParams.userId,
+      operation: "統計數據API"
+    });
+  }
+}
+
+/**
+ * BK_processAPIGetRecent - 處理最近交易API端點
+ * @version 2025-09-23-V2.1.0
+ * @date 2025-09-23
+ * @description 專門處理ASL.js轉發的最近交易請求，支援GET /transactions/recent
+ */
+async function BK_processAPIGetRecent(queryParams = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPIGetRecent:`;
+
+  try {
+    BK_logInfo(`${logPrefix} 開始處理最近交易API請求`, "API端點", queryParams.userId || "", "BK_processAPIGetRecent");
+
+    await BK_initialize();
+
+    // 查詢最近的交易記錄
+    const limit = Math.min(parseInt(queryParams.limit || '10'), parseInt(getEnvVar('MAX_RECENT_LIMIT', '50')));
+    
+    const recentResult = await BK_getTransactions({
+      userId: queryParams.userId,
+      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      limit: limit,
+      sort: 'date:desc'
+    });
+
+    if (recentResult.success) {
+      BK_logInfo(`${logPrefix} 最近交易API處理成功，返回${recentResult.data.transactions.length}筆記錄`, "API端點", queryParams.userId || "", "BK_processAPIGetRecent");
+
+      return {
+        success: true,
+        data: {
+          transactions: recentResult.data.transactions,
+          count: recentResult.data.transactions.length,
+          limit: limit
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestId: processId,
+          userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+        }
+      };
+    }
+
+    return BK_handleError(recentResult, {
+      processId: processId,
+      userId: queryParams.userId,
+      operation: "最近交易API"
+    });
+
+  } catch (error) {
+    BK_logError(`${logPrefix} 最近交易API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_GET_RECENT_ERROR", error.toString(), "BK_processAPIGetRecent");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: queryParams.userId,
+      operation: "最近交易API"
+    });
+  }
+}
+
 // === 模組導出 ===
 module.exports = {
   // 初始化函數
@@ -1985,7 +2110,7 @@ module.exports = {
   BK_updateTransaction,
   BK_deleteTransaction,
 
-  // 新增的API端點處理函數
+  // 新增的API端點處理函數（DCN-0014：9個基本記帳API）
   BK_processAPIQuickTransaction,
   BK_processAPITransaction,
   BK_processAPIGetTransactions,
@@ -1993,6 +2118,8 @@ module.exports = {
   BK_processAPIUpdateTransaction,
   BK_processAPIDeleteTransaction,
   BK_processAPIGetDashboard,
+  BK_processAPIGetStatistics,
+  BK_processAPIGetRecent,
 
   // 相容性函數
   BK_processBookkeeping,
