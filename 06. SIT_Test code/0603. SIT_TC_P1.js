@@ -42,6 +42,113 @@ class SITTestCases {
         }
     }
 
+    /**
+     * 檢查Firebase配額狀態
+     * @version 2025-01-24-V1.0.0
+     * @description 在執行測試前檢查Firebase配額是否可用
+     */
+    async checkFirebaseQuotaStatus() {
+        console.log('🔍 檢查Firebase配額狀態...');
+        
+        try {
+            // 輕量級健康檢查請求
+            const healthCheckResponse = await this.makeRequest('GET', '/health', null, {}, 3000);
+            
+            // 檢查回應是否指示配額問題
+            if (!healthCheckResponse.success) {
+                const errorMessage = healthCheckResponse.error?.toLowerCase() || '';
+                
+                if (errorMessage.includes('resource_exhausted') || 
+                    errorMessage.includes('quota exceeded') ||
+                    errorMessage.includes('quota') ||
+                    healthCheckResponse.status === 429) {
+                    
+                    console.error('❌ Firebase配額已耗盡，無法執行測試');
+                    console.error('💡 建議：等待配額重置或檢查Firebase使用狀況');
+                    return {
+                        available: false,
+                        reason: 'FIREBASE_QUOTA_EXHAUSTED',
+                        message: 'Firebase配額已耗盡',
+                        suggestion: '請等待配額重置或檢查Firebase控制台'
+                    };
+                }
+                
+                // 其他錯誤，但不是配額問題
+                console.warn('⚠️ Firebase連線有問題，但非配額限制:', healthCheckResponse.error);
+                return {
+                    available: true,
+                    reason: 'CONNECTION_ISSUE',
+                    message: '連線有問題但可嘗試測試',
+                    warning: healthCheckResponse.error
+                };
+            }
+            
+            console.log('✅ Firebase配額狀態正常');
+            return {
+                available: true,
+                reason: 'QUOTA_AVAILABLE',
+                message: 'Firebase配額充足'
+            };
+            
+        } catch (error) {
+            // 檢查錯誤是否與配額相關
+            const errorMessage = error.message?.toLowerCase() || '';
+            
+            if (errorMessage.includes('resource_exhausted') || 
+                errorMessage.includes('quota exceeded') ||
+                errorMessage.includes('quota')) {
+                
+                console.error('❌ Firebase配額檢查失敗 - 配額耗盡');
+                return {
+                    available: false,
+                    reason: 'FIREBASE_QUOTA_EXHAUSTED',
+                    message: 'Firebase配額已耗盡',
+                    error: error.message
+                };
+            }
+            
+            // 非配額相關錯誤
+            console.warn('⚠️ Firebase配額檢查發生錯誤:', error.message);
+            return {
+                available: true,
+                reason: 'CHECK_ERROR',
+                message: '配額檢查失敗但允許測試繼續',
+                warning: error.message
+            };
+        }
+    }
+
+    /**
+     * 等待Firebase配額恢復
+     * @param {number} maxWaitMinutes 最大等待時間（分鐘）
+     */
+    async waitForFirebaseQuotaRecovery(maxWaitMinutes = 5) {
+        console.log(`⏳ 等待Firebase配額恢復（最多${maxWaitMinutes}分鐘）...`);
+        
+        const startTime = Date.now();
+        const maxWaitTime = maxWaitMinutes * 60 * 1000; // 轉換為毫秒
+        let attempts = 0;
+        
+        while (Date.now() - startTime < maxWaitTime) {
+            attempts++;
+            console.log(`🔄 第${attempts}次檢查配額狀態...`);
+            
+            const quotaStatus = await this.checkFirebaseQuotaStatus();
+            
+            if (quotaStatus.available) {
+                console.log('✅ Firebase配額已恢復！');
+                return true;
+            }
+            
+            // 等待30秒後重試
+            console.log('⏸️ 配額尚未恢復，30秒後重試...');
+            await new Promise(resolve => setTimeout(resolve, 30000));
+        }
+        
+        console.error(`❌ 等待${maxWaitMinutes}分鐘後Firebase配額仍未恢復`);
+        return false;
+    }
+
     
 
     /**
@@ -2676,9 +2783,32 @@ if (require.main === module) {
         // 修復：創建sitTest實例
         const sitTest = new SITTestCases();
 
-        console.log('✅ SIT測試環境初始化完成');
+        // 檢查Firebase配額狀態
+        console.log('🔍 執行前置檢查...');
+        const quotaStatus = await sitTest.checkFirebaseQuotaStatus();
+        
+        if (!quotaStatus.available) {
+            console.error(`❌ SIT測試無法執行：${quotaStatus.message}`);
+            console.error(`🔍 原因：${quotaStatus.reason}`);
+            
+            if (quotaStatus.reason === 'FIREBASE_QUOTA_EXHAUSTED') {
+                console.log('🔄 嘗試等待配額恢復...');
+                const recovered = await sitTest.waitForFirebaseQuotaRecovery(5);
+                
+                if (!recovered) {
+                    console.error('❌ Firebase配額未恢復，測試終止');
+                    console.error('💡 建議稍後重新執行測試');
+                    process.exit(1);
+                }
+            } else {
+                process.exit(1);
+            }
+        }
+
+        console.log('✅ SIT測試環境初始化與配額檢查完成');
         console.log(`🌐 API基礎URL: ${sitTest.apiBaseURL}`);
         console.log(`👤 預設用戶模式: ${sitTest.currentUserMode}`);
+        console.log(`🔥 Firebase配額狀態: ${quotaStatus.message}`);
         console.log('=' * 80);
 
         const args = process.argv.slice(2);
