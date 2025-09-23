@@ -43,9 +43,118 @@ class SITTestCases {
     }
 
     /**
+     * 檢查Firebase配額狀態
+     * @version 2025-01-24-V1.0.0
+     * @description 在執行測試前檢查Firebase配額是否可用
+     */
+    async checkFirebaseQuotaStatus() {
+        console.log('🔍 檢查Firebase配額狀態...');
+        
+        try {
+            // 輕量級健康檢查請求
+            const healthCheckResponse = await this.makeRequest('GET', '/health', null, {}, 3000);
+            
+            // 檢查回應是否指示配額問題
+            if (!healthCheckResponse.success) {
+                const errorMessage = healthCheckResponse.error?.toLowerCase() || '';
+                
+                if (errorMessage.includes('resource_exhausted') || 
+                    errorMessage.includes('quota exceeded') ||
+                    errorMessage.includes('quota') ||
+                    healthCheckResponse.status === 429) {
+                    
+                    console.error('❌ Firebase配額已耗盡，無法執行測試');
+                    console.error('💡 建議：等待配額重置或檢查Firebase使用狀況');
+                    return {
+                        available: false,
+                        reason: 'FIREBASE_QUOTA_EXHAUSTED',
+                        message: 'Firebase配額已耗盡',
+                        suggestion: '請等待配額重置或檢查Firebase控制台'
+                    };
+                }
+                
+                // 其他錯誤，但不是配額問題
+                console.warn('⚠️ Firebase連線有問題，但非配額限制:', healthCheckResponse.error);
+                return {
+                    available: true,
+                    reason: 'CONNECTION_ISSUE',
+                    message: '連線有問題但可嘗試測試',
+                    warning: healthCheckResponse.error
+                };
+            }
+            
+            console.log('✅ Firebase配額狀態正常');
+            return {
+                available: true,
+                reason: 'QUOTA_AVAILABLE',
+                message: 'Firebase配額充足'
+            };
+            
+        } catch (error) {
+            // 檢查錯誤是否與配額相關
+            const errorMessage = error.message?.toLowerCase() || '';
+            
+            if (errorMessage.includes('resource_exhausted') || 
+                errorMessage.includes('quota exceeded') ||
+                errorMessage.includes('quota')) {
+                
+                console.error('❌ Firebase配額檢查失敗 - 配額耗盡');
+                return {
+                    available: false,
+                    reason: 'FIREBASE_QUOTA_EXHAUSTED',
+                    message: 'Firebase配額已耗盡',
+                    error: error.message
+                };
+            }
+            
+            // 非配額相關錯誤
+            console.warn('⚠️ Firebase配額檢查發生錯誤:', error.message);
+            return {
+                available: true,
+                reason: 'CHECK_ERROR',
+                message: '配額檢查失敗但允許測試繼續',
+                warning: error.message
+            };
+        }
+    }
+
+    /**
+     * 等待Firebase配額恢復
+     * @param {number} maxWaitMinutes 最大等待時間（分鐘）
+     */
+    async waitForFirebaseQuotaRecovery(maxWaitMinutes = 5) {
+        console.log(`⏳ 等待Firebase配額恢復（最多${maxWaitMinutes}分鐘）...`);
+        
+        const startTime = Date.now();
+        const maxWaitTime = maxWaitMinutes * 60 * 1000; // 轉換為毫秒
+        let attempts = 0;
+        
+        while (Date.now() - startTime < maxWaitTime) {
+            attempts++;
+            console.log(`🔄 第${attempts}次檢查配額狀態...`);
+            
+            const quotaStatus = await this.checkFirebaseQuotaStatus();
+            
+            if (quotaStatus.available) {
+                console.log('✅ Firebase配額已恢復！');
+                return true;
+            }
+            
+            // 等待30秒後重試
+            console.log('⏸️ 配額尚未恢復，30秒後重試...');
+            await new Promise(resolve => setTimeout(resolve, 30000));
+        }
+        
+        console.error(`❌ 等待${maxWaitMinutes}分鐘後Firebase配額仍未恢復`);
+        return false;
+    }
+
+    
+
+    /**
      * HTTP請求工具函數
      */
-    async makeRequest(method, endpoint, data = null, headers = {}) {
+    async makeRequest(method, endpoint, data = null, headers = {}, timeout = 5000) {
         try {
             // 階段三修復：確保endpoint不重複baseURL路徑
             let cleanEndpoint = endpoint;
@@ -56,7 +165,7 @@ class SITTestCases {
             } else if (!endpoint.startsWith('/')) {
                 cleanEndpoint = '/' + endpoint;
             }
-            
+
             const config = {
                 method,
                 url: `${this.apiBaseURL}${cleanEndpoint}`,
@@ -65,7 +174,7 @@ class SITTestCases {
                     'X-User-Mode': this.currentUserMode,
                     ...headers
                 },
-                timeout: 5000
+                timeout: timeout
             };
 
             if (this.authToken) {
@@ -86,7 +195,7 @@ class SITTestCases {
         } catch (error) {
             // 階段三修復：正確處理錯誤訊息，避免[object Object]
             let errorMessage = 'Unknown error';
-            
+
             if (error.response?.data) {
                 if (typeof error.response.data === 'string') {
                     errorMessage = error.response.data;
@@ -104,7 +213,7 @@ class SITTestCases {
             } else {
                 errorMessage = error.toString();
             }
-            
+
             return {
                 success: false,
                 error: errorMessage,
@@ -161,7 +270,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('POST', '/api/v1/auth/register', registrationData);
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.userId &&
                           response.data?.data?.email === testUser.email &&
@@ -207,7 +316,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('POST', '/api/v1/auth/login', loginData);
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.token &&
                           response.data?.data?.user?.email === testUser.email;
@@ -244,7 +353,7 @@ class SITTestCases {
             // 測試Token驗證
             const response = await this.makeRequest('GET', '/api/v1/users/profile');
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.email;
 
@@ -279,7 +388,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('POST', '/api/v1/transactions/quick', quickBookingData);
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.transactionId &&
                           response.data?.data?.parsed?.amount === quickBookingTest.expected_parsing.amount;
@@ -309,7 +418,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('POST', '/api/v1/transactions', formBookingTest.transaction_data);
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.transactionId &&
                           response.data?.data?.amount === formBookingTest.transaction_data.amount;
@@ -343,7 +452,7 @@ class SITTestCases {
 
             const response = await this.makeRequest('GET', '/api/v1/transactions?' + new URLSearchParams(queryParams));
 
-            const success = response.success && 
+            const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.transactions &&
                           Array.isArray(response.data.data.transactions);
@@ -441,7 +550,7 @@ class SITTestCases {
                 completedAt: new Date().toISOString()
             });
 
-            const success = questionsResponse.success && 
+            const success = questionsResponse.success &&
                           submitResponse.success &&
                           submitResponse.data?.data?.result?.recommendedMode === assessmentData.expected_mode;
 
@@ -574,7 +683,7 @@ class SITTestCases {
             // 立即查詢該交易
             const queryResponse = await this.makeRequest('GET', `/api/v1/transactions/${transactionId}`);
 
-            const success = queryResponse.success && 
+            const success = queryResponse.success &&
                           queryResponse.data?.data?.description === '同步測試交易';
 
             this.recordTestResult('TC-SIT-011', success, Date.now() - startTime, {
@@ -815,7 +924,7 @@ class SITTestCases {
                             date: '2025-09-15'
                         });
 
-                        if (!invalidTransaction.success && 
+                        if (!invalidTransaction.success &&
                             invalidTransaction.error?.code === 'INSUFFICIENT_BALANCE') {
                             handledErrorsCount++;
                         }
@@ -825,7 +934,7 @@ class SITTestCases {
                     handledErrorsCount++;
                 }
             }
-ㄑ
+
             const success = handledErrorsCount > 0;
 
             this.recordTestResult('TC-SIT-015', success, Date.now() - startTime, {
@@ -1002,7 +1111,7 @@ class SITTestCases {
                 .filter(r => r.responseTime)
                 .reduce((sum, r) => sum + r.responseTime, 0) / successCount;
 
-            const success = successRate >= concurrentTest.expected_success_rate && 
+            const success = successRate >= concurrentTest.expected_success_rate &&
                           avgResponseTime <= concurrentTest.expected_response_time_ms;
 
             this.recordTestResult('TC-SIT-017', success, Date.now() - startTime, {
@@ -1754,8 +1863,8 @@ class SITTestCases {
             // 計算系統穩定性指標
             const stabilityMetrics = this.calculateStabilityMetrics(stabilityResults);
 
-            const success = successRate >= 0.99 && 
-                          avgResponseTime <= 3000 && 
+            const success = successRate >= 0.99 &&
+                          avgResponseTime <= 3000 &&
                           !memoryLeakDetection.hasLeak;
 
             this.recordTestResult('TC-SIT-025', success, Date.now() - startTime, {
@@ -2238,7 +2347,7 @@ class SITTestCases {
             passedTests,
             successRate: passedTests / totalTests,
             executionTime: Date.now() - this.testStartTime.getTime(),
-            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
+            results: this.testResults.filter(r => r.testCase.includes('SIT-0') &&
                    parseInt(r.testCase.split('-')[2]) >= 1 && parseInt(r.testCase.split('-')[2]) <= 7)
         };
     }
@@ -2250,9 +2359,9 @@ class SITTestCases {
         console.log('\n📋 階段一測試報告摘要');
         console.log('=' * 50);
 
-        const phase1Results = this.testResults.filter(r => 
-            r.testCase.includes('SIT-0') && 
-            parseInt(r.testCase.split('-')[2]) >= 1 && 
+        const phase1Results = this.testResults.filter(r =>
+            r.testCase.includes('SIT-0') &&
+            parseInt(r.testCase.split('-')[2]) >= 1 &&
             parseInt(r.testCase.split('-')[2]) <= 7
         );
 
@@ -2330,7 +2439,7 @@ class SITTestCases {
 
                 // 每4個測試案例後暫停，分組顯示進度
                 if ((i + 1) % 4 === 0) {
-                    const groupName = i < 4 ? '四模式整合測試' : 
+                    const groupName = i < 4 ? '四模式整合測試' :
                                      i < 9 ? '端到端流程測試' : '效能穩定性測試';
                     console.log(`\n✅ ${groupName} 完成，休息2秒後繼續...`);
                     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -2355,7 +2464,7 @@ class SITTestCases {
             passedTests,
             successRate: passedTests / totalTests,
             executionTime: Date.now() - this.testStartTime.getTime(),
-            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
+            results: this.testResults.filter(r => r.testCase.includes('SIT-0') &&
                    parseInt(r.testCase.split('-')[2]) >= 8 && parseInt(r.testCase.split('-')[2]) <= 20)
         };
     }
@@ -2367,9 +2476,9 @@ class SITTestCases {
         console.log('\n📋 階段二測試報告摘要');
         console.log('=' * 50);
 
-        const phase2Results = this.testResults.filter(r => 
-            r.testCase.includes('SIT-0') && 
-            parseInt(r.testCase.split('-')[2]) >= 8 && 
+        const phase2Results = this.testResults.filter(r =>
+            r.testCase.includes('SIT-0') &&
+            parseInt(r.testCase.split('-')[2]) >= 8 &&
             parseInt(r.testCase.split('-')[2]) <= 20
         );
 
@@ -2467,7 +2576,7 @@ class SITTestCases {
             passedTests,
             successRate: passedTests / totalTests,
             executionTime: Date.now() - this.testStartTime.getTime(),
-            results: this.testResults.filter(r => r.testCase.includes('SIT-0') && 
+            results: this.testResults.filter(r => r.testCase.includes('SIT-0') &&
                    parseInt(r.testCase.split('-')[2]) >= 21 && parseInt(r.testCase.split('-')[2]) <= 28)
         };
     }
@@ -2479,9 +2588,9 @@ class SITTestCases {
         console.log('\n📋 階段三測試報告摘要');
         console.log('=' * 50);
 
-        const phase3Results = this.testResults.filter(r => 
-            r.testCase.includes('SIT-0') && 
-            parseInt(r.testCase.split('-')[2]) >= 21 && 
+        const phase3Results = this.testResults.filter(r =>
+            r.testCase.includes('SIT-0') &&
+            parseInt(r.testCase.split('-')[2]) >= 21 &&
             parseInt(r.testCase.split('-')[2]) <= 28
         );
 
@@ -2674,17 +2783,32 @@ if (require.main === module) {
         // 修復：創建sitTest實例
         const sitTest = new SITTestCases();
 
-        // 載入測試資料
-        console.log('📂 載入測試資料...');
-        const dataLoaded = await sitTest.loadTestData();
-        if (!dataLoaded) {
-            console.error('❌ 測試資料載入失敗，終止測試執行');
-            process.exit(1);
+        // 檢查Firebase配額狀態
+        console.log('🔍 執行前置檢查...');
+        const quotaStatus = await sitTest.checkFirebaseQuotaStatus();
+        
+        if (!quotaStatus.available) {
+            console.error(`❌ SIT測試無法執行：${quotaStatus.message}`);
+            console.error(`🔍 原因：${quotaStatus.reason}`);
+            
+            if (quotaStatus.reason === 'FIREBASE_QUOTA_EXHAUSTED') {
+                console.log('🔄 嘗試等待配額恢復...');
+                const recovered = await sitTest.waitForFirebaseQuotaRecovery(5);
+                
+                if (!recovered) {
+                    console.error('❌ Firebase配額未恢復，測試終止');
+                    console.error('💡 建議稍後重新執行測試');
+                    process.exit(1);
+                }
+            } else {
+                process.exit(1);
+            }
         }
 
-        console.log('✅ SIT測試環境初始化完成');
+        console.log('✅ SIT測試環境初始化與配額檢查完成');
         console.log(`🌐 API基礎URL: ${sitTest.apiBaseURL}`);
         console.log(`👤 預設用戶模式: ${sitTest.currentUserMode}`);
+        console.log(`🔥 Firebase配額狀態: ${quotaStatus.message}`);
         console.log('=' * 80);
 
         const args = process.argv.slice(2);

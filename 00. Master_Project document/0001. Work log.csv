@@ -253,3 +253,4 @@ MM 	 DD 	 Description 	    Progress
 9	20	 執行DCN-0012：ASL.js重構 	 Ongoing
 9	20	 打通SIT測試環境 	 Ongoing
 9	22	 打通SIT測試環境 	 Ongoing
+9	22	 檢查Firestore寫入數超過配額原因 	 Ongoing
