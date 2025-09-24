@@ -250,7 +250,7 @@ MM 	 DD 	 Description 	    Progress
 9	19	 需修改0081文件(2.2部分) 	 Open
 9	20	 撰寫DCN-0013 	 Open
 9	20	 執行DCN-0013：8201, 8202, 8203,8204, 8205, 8206重構 	 Ongoing
-9	20	 執行DCN-0012：ASL.js重構 	 Ongoing
+9	20	 執行DCN-0012：ASL.js重構 	 Closed
 9	20	 打通SIT測試環境 	 Ongoing
 9	22	 打通SIT測試環境 	 Ongoing
 9	22	 調查Firestore寫入數超過配額原因(29,000) 	 Ongoing
@@ -260,3 +260,6 @@ MM 	 DD 	 Description 	    Progress
 9	23	 打通SIT測試環境 	 Ongoing
 9	24	 設定Firebase auth 	 Ongoing
 9	24	 修改SIT測試案例及測試資料 	 Ongoing
+9	24	 撰寫DCN-0015 	 Closed
+9	24	 執行DCN-0015 	 Ongoing
+9	24	 執行DCN-0015：更新81,82,83文件 	 Ongoing
