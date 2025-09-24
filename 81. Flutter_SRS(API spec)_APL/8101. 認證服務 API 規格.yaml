@@ -166,18 +166,28 @@ paths:
                         format: date-time
                         example: "2025-01-28T00:00:00Z"
                         description: "Token 過期時間"
+                  error:
+                    type: object
+                    nullable: true
+                    example: null
+                  message:
+                    type: string
+                    example: "使用者註冊成功"
                   metadata:
                     type: object
                     required:
                       - timestamp
                       - requestId
                       - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
-                        description: "回應時間戳"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-string"
@@ -186,7 +196,28 @@ paths:
                         type: string
                         enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
-                        description: "使用者模式"
+                        description: "使用者當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '400':
           $ref: '#/components/responses/ValidationError'
         '409':
@@ -194,13 +225,66 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                error:
-                  code: "EMAIL_ALREADY_EXISTS"
-                  message: "此 Email 已被註冊"
-                  field: "email"
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  data:
+                    type: object
+                    nullable: true
+                    example: null
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "EMAIL_ALREADY_EXISTS"
+                      message:
+                        type: string
+                        example: "此 Email 已被註冊"
+                      field:
+                        type: string
+                        example: "email"
+                      details:
+                        type: object
+                        nullable: true
+                        example: null
+                  message:
+                    type: string
+                    example: "此 Email 已被註冊"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-string"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                      processingTimeMs:
+                        type: number
+                        example: 45
+                      modeFeatures:
+                        type: object
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '500':
           $ref: '#/components/responses/ServerError'
 

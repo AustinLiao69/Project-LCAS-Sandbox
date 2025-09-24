@@ -268,19 +268,58 @@ paths:
                             type: integer
                             nullable: true
                             example: null
+                  error:
+                    type: object
+                    nullable: true
+                    example: null
+                  message:
+                    type: string
+                    example: "成功取得帳本列表"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
                         example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 95
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
