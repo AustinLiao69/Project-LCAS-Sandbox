@@ -329,20 +329,51 @@
   },
 
   "expected_response_formats": {
-    "success_response": {
+    "dcn_0015_unified_success_response": {
       "success": true,
-      "data": {},
-      "message": "操作成功",
-      "timestamp": "2025-09-15T10:00:00Z"
-    },
-    "error_response": {
-      "success": false,
-      "error": {
-        "code": "ERROR_CODE",
-        "message": "錯誤訊息",
-        "details": {}
+      "data": {
+        "exampleField": "exampleValue"
       },
-      "timestamp": "2025-09-15T10:00:00Z"
+      "error": null,
+      "message": "操作成功",
+      "metadata": {
+        "timestamp": "2025-09-24T10:00:00.000Z",
+        "requestId": "req_123456789",
+        "userMode": "Expert",
+        "apiVersion": "v1.0.0",
+        "processingTimeMs": 150,
+        "modeFeatures": {
+          "detailedAnalytics": true,
+          "advancedOptions": true,
+          "performanceMetrics": true
+        }
+      }
+    },
+    "dcn_0015_unified_error_response": {
+      "success": false,
+      "data": null,
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "message": "輸入參數驗證失敗",
+        "details": {
+          "field": "amount",
+          "expectedType": "number",
+          "actualValue": "abc"
+        }
+      },
+      "message": "請求處理失敗",
+      "metadata": {
+        "timestamp": "2025-09-24T10:00:00.000Z",
+        "requestId": "req_123456789",
+        "userMode": "Expert",
+        "apiVersion": "v1.0.0",
+        "processingTimeMs": 45,
+        "modeFeatures": {
+          "detailedAnalytics": true,
+          "advancedOptions": true,
+          "performanceMetrics": true
+        }
+      }
     }
   },
 
@@ -913,57 +944,89 @@
   },
 
   "api_response_format_tests": {
-    "success_response_format": {
+    "dcn_0015_success_response_format": {
       "test_id": "response_success_001",
-      "scenario": "成功回應格式驗證",
+      "scenario": "DCN-0015統一成功回應格式驗證",
       "expected_structure": {
         "success": true,
         "data": "object",
+        "error": null,
+        "message": "string",
         "metadata": {
           "timestamp": "string",
           "requestId": "string",
           "userMode": "string",
-          "apiVersion": "string"
-        },
-        "message": "string"
+          "apiVersion": "string",
+          "processingTimeMs": "number",
+          "modeFeatures": "object"
+        }
       }
     },
-    "error_response_format": {
+    "dcn_0015_error_response_format": {
       "test_id": "response_error_001",
-      "scenario": "錯誤回應格式驗證",
+      "scenario": "DCN-0015統一錯誤回應格式驗證",
       "expected_structure": {
         "success": false,
+        "data": null,
         "error": {
           "code": "string",
           "message": "string",
           "details": "object"
         },
+        "message": "string",
         "metadata": {
           "timestamp": "string",
           "requestId": "string",
-          "userMode": "string"
+          "userMode": "string",
+          "apiVersion": "string",
+          "processingTimeMs": "number",
+          "modeFeatures": "object"
         }
       }
     },
-    "mode_specific_response_format": {
+    "dcn_0015_mode_specific_response_format": {
       "test_id": "response_mode_001",
-      "scenario": "模式差異化回應格式驗證",
+      "scenario": "DCN-0015四模式差異化回應格式驗證",
       "test_cases": [
         {
-          "mode": "expert",
-          "expected_additional_fields": ["advanced_options", "detailed_statistics", "debug_info"]
+          "mode": "Expert",
+          "expected_modeFeatures": {
+            "detailedAnalytics": true,
+            "advancedOptions": true,
+            "performanceMetrics": true,
+            "batchOperations": true,
+            "exportFeatures": true
+          }
         },
         {
-          "mode": "guiding",
-          "expected_additional_fields": ["help_text", "next_steps", "simplified_options"]
+          "mode": "Guiding",
+          "expected_modeFeatures": {
+            "simplifiedInterface": true,
+            "helpHints": true,
+            "autoSuggestions": true,
+            "stepByStepGuide": true,
+            "tutorialMode": true
+          }
         },
         {
-          "mode": "inertial",
-          "expected_additional_fields": ["consistent_format", "stable_data"]
+          "mode": "Inertial",
+          "expected_modeFeatures": {
+            "stabilityMode": true,
+            "consistentInterface": true,
+            "minimalChanges": true,
+            "quickActions": true,
+            "familiarLayout": true
+          }
         },
         {
-          "mode": "cultivation",
-          "expected_additional_fields": ["progress_data", "achievement_status", "motivational_content"]
+          "mode": "Cultivation",
+          "expected_modeFeatures": {
+            "achievementProgress": true,
+            "gamificationElements": true,
+            "motivationalTips": true,
+            "progressTracking": true,
+            "rewardSystem": true
+          }
         }
       ]
     }
