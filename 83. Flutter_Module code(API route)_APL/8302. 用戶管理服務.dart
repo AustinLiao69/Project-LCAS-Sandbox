@@ -1,177 +1,349 @@
+
 /**
  * 8302. 用戶管理服務.dart
- * @module 用戶管理服務 - API Gateway
- * @version 2.3.0
- * @description LCAS 2.0 用戶管理服務 API Gateway - 純路由轉發，業務邏輯已移至PL層
- * @date 2025-01-29
- * @update 2025-01-29: 重構為純API Gateway，移除業務邏輯
+ * @module 用戶管理服務 - API Gateway (DCN-0015適配版)
+ * @version 3.0.0
+ * @description LCAS 2.0 用戶管理服務 API Gateway - 完整支援DCN-0015統一回應格式
+ * @date 2025-09-24
+ * @update 2025-09-24: DCN-0015第三階段 - 統一回應格式解析適配
  */
 
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'unified_response_parser.dart';
+
+// ================================
+// 資料模型類別定義
+// ================================
+
+/// 用戶個人資料模型
+class UserProfileData {
+  final String userId;
+  final String email;
+  final String displayName;
+  final String userMode;
+  final Map<String, dynamic> preferences;
+  final Map<String, dynamic> securitySettings;
+  final DateTime lastUpdated;
+
+  UserProfileData({
+    required this.userId,
+    required this.email,
+    required this.displayName,
+    required this.userMode,
+    required this.preferences,
+    required this.securitySettings,
+    required this.lastUpdated,
+  });
+
+  factory UserProfileData.fromJson(Map<String, dynamic> json) {
+    return UserProfileData(
+      userId: json['userId'] ?? '',
+      email: json['email'] ?? '',
+      displayName: json['displayName'] ?? '',
+      userMode: json['userMode'] ?? 'Inertial',
+      preferences: Map<String, dynamic>.from(json['preferences'] ?? {}),
+      securitySettings: Map<String, dynamic>.from(json['securitySettings'] ?? {}),
+      lastUpdated: DateTime.parse(json['lastUpdated'] ?? DateTime.now().toIso8601String()),
+    );
+  }
+}
+
+/// 模式評估問卷模型
+class AssessmentQuestionsData {
+  final List<AssessmentQuestion> questions;
+  final String assessmentId;
+  final String version;
+
+  AssessmentQuestionsData({
+    required this.questions,
+    required this.assessmentId,
+    required this.version,
+  });
+
+  factory AssessmentQuestionsData.fromJson(Map<String, dynamic> json) {
+    final questionsList = json['questions'] as List? ?? [];
+    return AssessmentQuestionsData(
+      questions: questionsList.map((q) => AssessmentQuestion.fromJson(q)).toList(),
+      assessmentId: json['assessmentId'] ?? '',
+      version: json['version'] ?? 'v1.0.0',
+    );
+  }
+}
+
+/// 評估問題模型
+class AssessmentQuestion {
+  final String questionId;
+  final String question;
+  final List<String> options;
+  final String category;
+
+  AssessmentQuestion({
+    required this.questionId,
+    required this.question,
+    required this.options,
+    required this.category,
+  });
+
+  factory AssessmentQuestion.fromJson(Map<String, dynamic> json) {
+    return AssessmentQuestion(
+      questionId: json['questionId'] ?? '',
+      question: json['question'] ?? '',
+      options: List<String>.from(json['options'] ?? []),
+      category: json['category'] ?? '',
+    );
+  }
+}
+
+/// 模式評估結果模型
+class AssessmentResultData {
+  final String recommendedMode;
+  final Map<String, double> modeScores;
+  final List<String> recommendations;
+  final String confidence;
+
+  AssessmentResultData({
+    required this.recommendedMode,
+    required this.modeScores,
+    required this.recommendations,
+    required this.confidence,
+  });
+
+  factory AssessmentResultData.fromJson(Map<String, dynamic> json) {
+    return AssessmentResultData(
+      recommendedMode: json['recommendedMode'] ?? 'Inertial',
+      modeScores: Map<String, double>.from(json['modeScores'] ?? {}),
+      recommendations: List<String>.from(json['recommendations'] ?? []),
+      confidence: json['confidence'] ?? 'medium',
+    );
+  }
+}
+
+/// PIN碼驗證結果模型
+class PinVerificationData {
+  final bool isValid;
+  final int remainingAttempts;
+  final bool isLocked;
+  final DateTime? lockExpiresAt;
+
+  PinVerificationData({
+    required this.isValid,
+    required this.remainingAttempts,
+    required this.isLocked,
+    this.lockExpiresAt,
+  });
+
+  factory PinVerificationData.fromJson(Map<String, dynamic> json) {
+    return PinVerificationData(
+      isValid: json['isValid'] ?? false,
+      remainingAttempts: json['remainingAttempts'] ?? 0,
+      isLocked: json['isLocked'] ?? false,
+      lockExpiresAt: json['lockExpiresAt'] != null 
+          ? DateTime.parse(json['lockExpiresAt']) 
+          : null,
+    );
+  }
+}
 
 // ================================
 // API Gateway 路由定義
 // ================================
 
-/// 用戶管理服務API Gateway
+/// 用戶管理服務API Gateway (DCN-0015適配版)
 class UserAPIGateway {
   final String _backendBaseUrl = 'http://0.0.0.0:5000';
   final http.Client _httpClient = http.Client();
 
+  // 回調函數定義
+  Function(String)? onShowError;
+  Function(String)? onShowHint;
+  Function(Map<String, dynamic>)? onUpdateUI;
+  Function(String)? onLogError;
+  Function()? onRetry;
+
+  UserAPIGateway({
+    this.onShowError,
+    this.onShowHint,
+    this.onUpdateUI,
+    this.onLogError,
+    this.onRetry,
+  });
+
   /**
-   * 01. 取得用戶個人資料API路由 (GET /api/v1/user/profile)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 01. 取得用戶個人資料API路由 (GET /api/v1/users/profile)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> getProfile(String userId) async {
-    return await _forwardRequest(
-      'GET',
-      '/user/profile?userId=$userId',
-      null,
+  Future<UnifiedApiResponse<UserProfileData>> getProfile(String userId) async {
+    final response = await _forwardRequest('GET', '/api/v1/users/profile?userId=$userId', null);
+    final unifiedResponse = response.toUnifiedResponse<UserProfileData>(
+      (data) => UserProfileData.fromJson(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 02. 更新用戶個人資料API路由 (PUT /api/v1/user/profile)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 02. 更新用戶個人資料API路由 (PUT /api/v1/users/profile)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> updateProfile(Map<String, dynamic> requestBody) async {
-    return await _forwardRequest(
-      'PUT',
-      '/user/profile',
-      requestBody,
+  Future<UnifiedApiResponse<UserProfileData>> updateProfile(Map<String, dynamic> requestBody) async {
+    final response = await _forwardRequest('PUT', '/api/v1/users/profile', requestBody);
+    final unifiedResponse = response.toUnifiedResponse<UserProfileData>(
+      (data) => UserProfileData.fromJson(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 03. 更新用戶偏好設定API路由 (PUT /api/v1/user/preferences)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 03. 更新用戶偏好設定API路由 (PUT /api/v1/users/preferences)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> updatePreferences(Map<String, dynamic> requestBody) async {
-    return await _forwardRequest(
-      'PUT',
-      '/user/preferences',
-      requestBody,
+  Future<UnifiedApiResponse<Map<String, dynamic>>> updatePreferences(Map<String, dynamic> requestBody) async {
+    final response = await _forwardRequest('PUT', '/api/v1/users/preferences', requestBody);
+    final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+      (data) => Map<String, dynamic>.from(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 04. 取得模式評估問卷API路由 (GET /api/v1/user/assessment-questions)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 04. 取得模式評估問卷API路由 (GET /api/v1/users/assessment-questions)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> getAssessmentQuestions() async {
-    return await _forwardRequest(
-      'GET',
-      '/user/assessment-questions',
-      null,
+  Future<UnifiedApiResponse<AssessmentQuestionsData>> getAssessmentQuestions() async {
+    final response = await _forwardRequest('GET', '/api/v1/users/assessment-questions', null);
+    final unifiedResponse = response.toUnifiedResponse<AssessmentQuestionsData>(
+      (data) => AssessmentQuestionsData.fromJson(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 05. 提交模式評估結果API路由 (POST /api/v1/user/submit-assessment)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 05. 提交模式評估結果API路由 (POST /api/v1/users/assessment)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> submitAssessment(Map<String, dynamic> requestBody) async {
-    return await _forwardRequest(
-      'POST',
-      '/user/submit-assessment',
-      requestBody,
+  Future<UnifiedApiResponse<AssessmentResultData>> submitAssessment(Map<String, dynamic> requestBody) async {
+    final response = await _forwardRequest('POST', '/api/v1/users/assessment', requestBody);
+    final unifiedResponse = response.toUnifiedResponse<AssessmentResultData>(
+      (data) => AssessmentResultData.fromJson(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 06. 切換用戶模式API路由 (PUT /api/v1/user/switch-mode)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 06. 切換用戶模式API路由 (PUT /api/v1/users/mode)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> switchUserMode(Map<String, dynamic> requestBody) async {
-    return await _forwardRequest(
-      'PUT',
-      '/user/switch-mode',
-      requestBody,
+  Future<UnifiedApiResponse<UserProfileData>> switchUserMode(Map<String, dynamic> requestBody) async {
+    final response = await _forwardRequest('PUT', '/api/v1/users/mode', requestBody);
+    final unifiedResponse = response.toUnifiedResponse<UserProfileData>(
+      (data) => UserProfileData.fromJson(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 07. 取得模式預設值API路由 (GET /api/v1/user/mode-defaults)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 07. 取得模式預設值API路由 (GET /api/v1/users/mode-defaults)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> getModeDefaults(String mode) async {
-    return await _forwardRequest(
-      'GET',
-      '/user/mode-defaults?mode=$mode',
-      null,
+  Future<UnifiedApiResponse<Map<String, dynamic>>> getModeDefaults(String mode) async {
+    final response = await _forwardRequest('GET', '/api/v1/users/mode-defaults?mode=$mode', null);
+    final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+      (data) => Map<String, dynamic>.from(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 08. 更新安全設定API路由 (PUT /api/v1/user/security)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 08. 更新安全設定API路由 (PUT /api/v1/users/security)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> updateSecurity(Map<String, dynamic> requestBody) async {
-    return await _forwardRequest(
-      'PUT',
-      '/user/security',
-      requestBody,
+  Future<UnifiedApiResponse<Map<String, dynamic>>> updateSecurity(Map<String, dynamic> requestBody) async {
+    final response = await _forwardRequest('PUT', '/api/v1/users/security', requestBody);
+    final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+      (data) => Map<String, dynamic>.from(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 09. PIN碼驗證API路由 (POST /api/v1/user/verify-pin)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 09. PIN碼驗證API路由 (POST /api/v1/users/verify-pin)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> verifyPin(Map<String, dynamic> requestBody) async {
-    return await _forwardRequest(
-      'POST',
-      '/user/verify-pin',
-      requestBody,
+  Future<UnifiedApiResponse<PinVerificationData>> verifyPin(Map<String, dynamic> requestBody) async {
+    final response = await _forwardRequest('POST', '/api/v1/users/verify-pin', requestBody);
+    final unifiedResponse = response.toUnifiedResponse<PinVerificationData>(
+      (data) => PinVerificationData.fromJson(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 10. 記錄使用行為追蹤API路由 (POST /api/v1/user/track-behavior)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 10. 記錄使用行為追蹤API路由 (POST /api/v1/users/behavior-tracking)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> trackBehavior(Map<String, dynamic> requestBody) async {
-    return await _forwardRequest(
-      'POST',
-      '/user/track-behavior',
-      requestBody,
+  Future<UnifiedApiResponse<Map<String, dynamic>>> trackBehavior(Map<String, dynamic> requestBody) async {
+    final response = await _forwardRequest('POST', '/api/v1/users/behavior-tracking', requestBody);
+    final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+      (data) => Map<String, dynamic>.from(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   /**
-   * 11. 取得模式優化建議API路由 (GET /api/v1/user/mode-recommendations)
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway實作，轉發至後端BL層
+   * 11. 取得模式優化建議API路由 (GET /api/v1/users/mode-recommendations)
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一回應格式適配
    */
-  Future<http.Response> getModeRecommendations(String userId) async {
-    return await _forwardRequest(
-      'GET',
-      '/user/mode-recommendations?userId=$userId',
-      null,
+  Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getModeRecommendations(String userId) async {
+    final response = await _forwardRequest('GET', '/api/v1/users/mode-recommendations?userId=$userId', null);
+    final unifiedResponse = response.toUnifiedResponse<List<Map<String, dynamic>>>(
+      (data) => List<Map<String, dynamic>>.from(data),
     );
+
+    _handleResponseProcessing(unifiedResponse);
+    return unifiedResponse;
   }
 
   // ================================
@@ -180,9 +352,9 @@ class UserAPIGateway {
 
   /**
    * 統一請求轉發方法
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
-   * @update: 純API Gateway核心轉發邏輯
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @update: DCN-0015統一錯誤處理適配
    */
   Future<http.Response> _forwardRequest(
     String method,
@@ -225,16 +397,12 @@ class UserAPIGateway {
 
       return response;
     } catch (e) {
-      // 返回錯誤回應
+      // 返回DCN-0015格式的錯誤回應
       return http.Response(
-        json.encode({
-          'success': false,
-          'error': {
-            'code': 'GATEWAY_ERROR',
-            'message': '網關轉發失敗: ${e.toString()}',
-            'timestamp': DateTime.now().toIso8601String(),
-          }
-        }),
+        json.encode(_createUnifiedErrorResponse(
+          'GATEWAY_ERROR',
+          '網關轉發失敗: ${e.toString()}',
+        )),
         500,
         headers: {'content-type': 'application/json'},
       );
@@ -242,9 +410,69 @@ class UserAPIGateway {
   }
 
   /**
+   * 建立DCN-0015格式錯誤回應
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @description 確保錯誤回應符合DCN-0015規範
+   */
+  Map<String, dynamic> _createUnifiedErrorResponse(String errorCode, String errorMessage) {
+    return {
+      'success': false,
+      'data': null,
+      'error': {
+        'code': errorCode,
+        'message': errorMessage,
+        'details': {'timestamp': DateTime.now().toIso8601String()},
+      },
+      'message': errorMessage,
+      'metadata': {
+        'timestamp': DateTime.now().toIso8601String(),
+        'requestId': 'error_${DateTime.now().millisecondsSinceEpoch}',
+        'userMode': 'Inertial',
+        'apiVersion': 'v1.0.0',
+        'processingTimeMs': 0,
+        'modeFeatures': {
+          'stabilityMode': true,
+          'consistentInterface': true,
+          'minimalChanges': true,
+          'quickActions': true,
+          'familiarLayout': true,
+        },
+      },
+    };
+  }
+
+  /**
+   * 處理回應後的統一邏輯
+   * @version 3.0.0
+   * @date 2025-09-24
+   * @description DCN-0015模式特定處理和錯誤處理
+   */
+  void _handleResponseProcessing<T>(UnifiedApiResponse<T> response) {
+    // 處理錯誤情況
+    if (!response.isSuccess && response.safeError != null) {
+      UnifiedResponseParser.handleApiError(
+        response.safeError!,
+        onShowError ?? (message) => print('Error: $message'),
+        onLogError ?? (message) => print('Log: $message'),
+        onRetry ?? () => print('Retry requested'),
+      );
+      return;
+    }
+
+    // 處理模式特定邏輯
+    UnifiedResponseParser.handleModeSpecificLogic(
+      response.userMode,
+      response.metadata.modeFeatures,
+      onShowHint ?? (message) => print('Hint: $message'),
+      onUpdateUI ?? (updates) => print('UI Update: $updates'),
+    );
+  }
+
+  /**
    * 清理資源
-   * @version 2025-01-29-V2.3.0
-   * @date 2025-01-29 12:00:00
+   * @version 3.0.0
+   * @date 2025-09-24
    * @update: Gateway資源清理
    */
   void dispose() {
@@ -259,52 +487,84 @@ class UserAPIGateway {
 /// 用戶管理API路由映射配置
 class UserRoutes {
   static const Map<String, String> routes = {
-    'GET /api/v1/user/profile': '/user/profile',
-    'PUT /api/v1/user/profile': '/user/profile',
-    'PUT /api/v1/user/preferences': '/user/preferences',
-    'GET /api/v1/user/assessment-questions': '/user/assessment-questions',
-    'POST /api/v1/user/submit-assessment': '/user/submit-assessment',
-    'PUT /api/v1/user/switch-mode': '/user/switch-mode',
-    'GET /api/v1/user/mode-defaults': '/user/mode-defaults',
-    'PUT /api/v1/user/security': '/user/security',
-    'POST /api/v1/user/verify-pin': '/user/verify-pin',
-    'POST /api/v1/user/track-behavior': '/user/track-behavior',
-    'GET /api/v1/user/mode-recommendations': '/user/mode-recommendations',
+    'GET /api/v1/users/profile': '/api/v1/users/profile',
+    'PUT /api/v1/users/profile': '/api/v1/users/profile',
+    'PUT /api/v1/users/preferences': '/api/v1/users/preferences',
+    'GET /api/v1/users/assessment-questions': '/api/v1/users/assessment-questions',
+    'POST /api/v1/users/assessment': '/api/v1/users/assessment',
+    'PUT /api/v1/users/mode': '/api/v1/users/mode',
+    'GET /api/v1/users/mode-defaults': '/api/v1/users/mode-defaults',
+    'PUT /api/v1/users/security': '/api/v1/users/security',
+    'POST /api/v1/users/verify-pin': '/api/v1/users/verify-pin',
+    'POST /api/v1/users/behavior-tracking': '/api/v1/users/behavior-tracking',
+    'GET /api/v1/users/mode-recommendations': '/api/v1/users/mode-recommendations',
   };
 }
 
-// 占位符 - PL層的實際業務邏輯和資料模型應在此處或獨立文件中引入
-// 例如:
-// import 'package:your_project/pl/user_service.dart';
-// import 'package:your_project/models/user_profile.dart';
-// import 'package:your_project/models/api_response.dart';
+// ================================
+// 使用範例
+// ================================
 
-// 在實際應用中，UserController可能會委託給 UserAPIGateway 來處理請求
-// 並將 UserAPIGateway 的回應轉發給 PL 層的 UserSevice 進行進一步處理
-// 或直接將 Gateway 的回應作為最終回應。
+/// DCN-0015統一回應格式使用範例
+class UserGatewayUsageExample {
+  late UserAPIGateway userGateway;
 
-// 由於此文件僅作為API Gateway，不包含業務邏輯，
-// 因此移除所有原始 UserController、Service、Repository、Model 的定義。
+  void initializeGateway() {
+    userGateway = UserAPIGateway(
+      onShowError: (message) {
+        // 顯示錯誤訊息給使用者
+        print('顯示錯誤: $message');
+      },
+      onShowHint: (message) {
+        // 顯示提示訊息
+        print('顯示提示: $message');
+      },
+      onUpdateUI: (updates) {
+        // 更新UI狀態
+        print('更新UI: $updates');
+      },
+      onLogError: (message) {
+        // 記錄錯誤日誌
+        print('錯誤日誌: $message');
+      },
+      onRetry: () {
+        // 重試邏輯
+        print('執行重試');
+      },
+    );
+  }
 
-// 以下為 API Gateway 的簡化結構，用於演示路由轉發：
+  Future<void> updateUserProfile(String userId, Map<String, dynamic> updates) async {
+    final updateRequest = {
+      'userId': userId,
+      ...updates,
+    };
 
-// void main() async {
-//   final gateway = UserAPIGateway();
-//   try {
-//     // 示例：獲取用戶資料
-//     final response = await gateway.getProfile('user-123');
-//     print('Status Code: ${response.statusCode}');
-//     print('Body: ${response.body}');
-//
-//     // 示例：更新用戶資料
-//     final updateResponse = await gateway.updateProfile({
-//       'displayName': 'New Name',
-//       'language': 'en-US',
-//     });
-//     print('Update Status Code: ${updateResponse.statusCode}');
-//     print('Update Body: ${updateResponse.body}');
-//
-//   } finally {
-//     gateway.dispose();
-//   }
-// }
+    final response = await userGateway.updateProfile(updateRequest);
+
+    if (response.isSuccess) {
+      final profileData = response.safeData;
+      print('個人資料更新成功: ${profileData?.displayName}');
+      
+      // 根據用戶模式調整反饋
+      switch (response.userMode) {
+        case UserMode.expert:
+          print('個人資料已更新，詳細變更記錄已保存');
+          break;
+        case UserMode.guiding:
+          print('太好了！您的個人資料已成功更新');
+          break;
+        case UserMode.cultivation:
+          print('恭喜！完成個人資料更新，獲得5經驗值');
+          break;
+        case UserMode.inertial:
+        default:
+          print('個人資料已更新');
+          break;
+      }
+    } else {
+      // 錯誤已由_handleResponseProcessing自動處理
+      print('個人資料更新失敗，錯誤已自動處理');
+    }
+  }
+}
