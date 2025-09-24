@@ -42,9 +42,9 @@ class SITTestCases {
     async loadTestData() {
         try {
             console.log('🔄 開始載入SIT測試資料...');
-            
+
             const testDataPath = path.join(__dirname, '0692. SIT_TestData_P1.json');
-            
+
             // 檢查測試資料檔案是否存在
             if (!fs.existsSync(testDataPath)) {
                 console.error('❌ 測試資料檔案不存在:', testDataPath);
@@ -76,16 +76,16 @@ class SITTestCases {
 
             console.log('✅ 測試資料載入並驗證成功');
             console.log(`📊 載入的測試案例資料: ${Object.keys(this.testData).length} 個類別`);
-            
+
             return true;
         } catch (error) {
             console.error('❌ 測試資料載入失敗:', error.message);
             console.log('🔄 嘗試使用最小化預設測試資料...');
-            
+
             // 緊急備援：使用最小化預設測試資料
             this.testData = this.createMinimalTestData();
             console.log('⚡ 已啟用緊急備援測試資料');
-            
+
             return true; // 即使原始資料載入失敗，也要讓測試繼續執行
         }
     }
@@ -107,7 +107,7 @@ class SITTestCases {
         ];
 
         const missingFields = [];
-        
+
         for (const field of requiredFields) {
             if (!this.getNestedProperty(data, field)) {
                 missingFields.push(field);
@@ -137,7 +137,7 @@ class SITTestCases {
      */
     enhanceTestDataWithDefaults(incompleteData) {
         const defaultData = this.createDefaultTestData();
-        
+
         // 深度合併，保留原有資料，補充缺失部分
         return this.deepMerge(defaultData, incompleteData);
     }
@@ -147,7 +147,7 @@ class SITTestCases {
      */
     deepMerge(target, source) {
         const result = { ...target };
-        
+
         for (const key in source) {
             if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
                 result[key] = this.deepMerge(result[key] || {}, source[key]);
@@ -155,7 +155,7 @@ class SITTestCases {
                 result[key] = source[key];
             }
         }
-        
+
         return result;
     }
 
@@ -384,16 +384,16 @@ class SITTestCases {
      */
     async checkAPIServiceReadiness() {
         console.log('🔍 檢查API服務就緒狀態...');
-        
+
         const maxRetries = 10;
         const retryDelay = 3000; // 3秒
-        
+
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 console.log(`🔄 服務就緒檢查嘗試 ${attempt}/${maxRetries}...`);
-                
+
                 const healthCheckResponse = await this.makeRequest('GET', '/health', null, {}, 5000);
-                
+
                 if (healthCheckResponse.success) {
                     console.log('✅ API服務已就緒');
                     return {
@@ -402,10 +402,10 @@ class SITTestCases {
                         serviceInfo: healthCheckResponse.data
                     };
                 }
-                
+
             } catch (error) {
                 console.warn(`⚠️ 服務就緒檢查失敗 (嘗試${attempt}): ${error.message}`);
-                
+
                 if (attempt < maxRetries) {
                     console.log(`⏳ 等待${retryDelay/1000}秒後重試...`);
                     await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -419,7 +419,7 @@ class SITTestCases {
                 }
             }
         }
-        
+
         return {
             ready: false,
             message: 'API服務就緒檢查超時'
@@ -433,20 +433,20 @@ class SITTestCases {
      */
     async checkFirebaseQuotaStatus() {
         console.log('🔍 檢查Firebase配額狀態...');
-        
+
         try {
             // 使用更長的超時時間，確保穩定性
             const healthCheckResponse = await this.makeRequest('GET', '/health', null, {}, 8000);
-            
+
             // 檢查回應是否指示配額問題
             if (!healthCheckResponse.success) {
                 const errorMessage = healthCheckResponse.error?.toLowerCase() || '';
-                
+
                 if (errorMessage.includes('resource_exhausted') || 
                     errorMessage.includes('quota exceeded') ||
                     errorMessage.includes('quota') ||
                     healthCheckResponse.status === 429) {
-                    
+
                     console.error('❌ Firebase配額已耗盡，無法執行測試');
                     console.error('💡 建議：等待配額重置或檢查Firebase使用狀況');
                     return {
@@ -456,7 +456,7 @@ class SITTestCases {
                         suggestion: '請等待配額重置或檢查Firebase控制台'
                     };
                 }
-                
+
                 // 其他錯誤，但不是配額問題
                 console.warn('⚠️ Firebase連線有問題，但非配額限制:', healthCheckResponse.error);
                 return {
@@ -466,22 +466,22 @@ class SITTestCases {
                     warning: healthCheckResponse.error
                 };
             }
-            
+
             console.log('✅ Firebase配額狀態正常');
             return {
                 available: true,
                 reason: 'QUOTA_AVAILABLE',
                 message: 'Firebase配額充足'
             };
-            
+
         } catch (error) {
             // 檢查錯誤是否與配額相關
             const errorMessage = error.message?.toLowerCase() || '';
-            
+
             if (errorMessage.includes('resource_exhausted') || 
                 errorMessage.includes('quota exceeded') ||
                 errorMessage.includes('quota')) {
-                
+
                 console.error('❌ Firebase配額檢查失敗 - 配額耗盡');
                 return {
                     available: false,
@@ -490,7 +490,7 @@ class SITTestCases {
                     error: error.message
                 };
             }
-            
+
             // 非配額相關錯誤
             console.warn('⚠️ Firebase配額檢查發生錯誤:', error.message);
             return {
@@ -508,32 +508,32 @@ class SITTestCases {
      */
     async waitForFirebaseQuotaRecovery(maxWaitMinutes = 5) {
         console.log(`⏳ 等待Firebase配額恢復（最多${maxWaitMinutes}分鐘）...`);
-        
+
         const startTime = Date.now();
         const maxWaitTime = maxWaitMinutes * 60 * 1000; // 轉換為毫秒
         let attempts = 0;
-        
+
         while (Date.now() - startTime < maxWaitTime) {
             attempts++;
             console.log(`🔄 第${attempts}次檢查配額狀態...`);
-            
+
             const quotaStatus = await this.checkFirebaseQuotaStatus();
-            
+
             if (quotaStatus.available) {
                 console.log('✅ Firebase配額已恢復！');
                 return true;
             }
-            
+
             // 等待30秒後重試
             console.log('⏸️ 配額尚未恢復，30秒後重試...');
             await new Promise(resolve => setTimeout(resolve, 30000));
         }
-        
+
         console.error(`❌ 等待${maxWaitMinutes}分鐘後Firebase配額仍未恢復`);
         return false;
     }
 
-    
+
 
     /**
      * HTTP請求工具函數 (v1.1.0 - 階段一優化版)
@@ -544,7 +544,7 @@ class SITTestCases {
         try {
             // 階段一修復：智能超時策略
             const smartTimeout = timeout || this.calculateSmartTimeout(method, endpoint);
-            
+
             // 階段三修復：確保endpoint不重複baseURL路徑
             let cleanEndpoint = endpoint;
             if (endpoint.startsWith('/api/v1/api/v1/')) {
@@ -581,6 +581,54 @@ class SITTestCases {
             }
 
             const response = await axios(config);
+            
+            // DCN-0015 階段二：統一回應格式驗證
+            if (response.data && typeof response.data === 'object') {
+              const responseData = response.data;
+
+              // 檢查統一回應格式的必要欄位
+              const requiredFields = ['success', 'data', 'error', 'message', 'metadata'];
+              const missingFields = requiredFields.filter(field => !responseData.hasOwnProperty(field));
+
+              if (missingFields.length === 0) {
+                console.log(`✅ 統一回應格式檢查 ${endpoint}: 所有必要欄位存在`);
+
+                // 檢查metadata結構
+                if (responseData.metadata && typeof responseData.metadata === 'object') {
+                  const metadataFields = ['timestamp', 'requestId', 'userMode', 'apiVersion', 'processingTimeMs', 'modeFeatures'];
+                  const missingMetadata = metadataFields.filter(field => !responseData.metadata.hasOwnProperty(field));
+
+                  if (missingMetadata.length === 0) {
+                    console.log(`✅ Metadata格式檢查 ${endpoint}: 完整`);
+
+                    // 檢查四模式特定欄位
+                    if (responseData.metadata.modeFeatures && typeof responseData.metadata.modeFeatures === 'object') {
+                      console.log(`✅ 四模式特定欄位檢查 ${endpoint}: 存在 - 模式: ${responseData.metadata.userMode}`);
+                    }
+                  } else {
+                    console.log(`⚠️ Metadata格式檢查 ${endpoint}: 缺少欄位 - ${missingMetadata.join(', ')}`);
+                  }
+                }
+
+                // 檢查成功/失敗回應邏輯
+                if (responseData.success === true) {
+                  if (responseData.data !== null && responseData.error === null) {
+                    console.log(`✅ 成功回應邏輯檢查 ${endpoint}: data有值，error為null`);
+                  } else {
+                    console.log(`⚠️ 成功回應邏輯檢查 ${endpoint}: data應有值且error應為null`);
+                  }
+                } else if (responseData.success === false) {
+                  if (responseData.data === null && responseData.error !== null) {
+                    console.log(`✅ 失敗回應邏輯檢查 ${endpoint}: data為null，error有值`);
+                  } else {
+                    console.log(`⚠️ 失敗回應邏輯檢查 ${endpoint}: data應為null且error應有值`);
+                  }
+                }
+              } else {
+                console.log(`❌ 統一回應格式檢查 ${endpoint}: 缺少必要欄位 - ${missingFields.join(', ')}`);
+              }
+            }
+
             return {
                 success: true,
                 data: response.data,
@@ -634,7 +682,7 @@ class SITTestCases {
     calculateSmartTimeout(method, endpoint) {
         // 基礎超時時間
         let baseTimeout = 3000; // 3秒預設
-        
+
         // 根據HTTP方法調整
         switch (method.toUpperCase()) {
             case 'GET':
@@ -648,7 +696,7 @@ class SITTestCases {
                 baseTimeout = 4000;
                 break;
         }
-        
+
         // 根據端點類型調整
         if (endpoint.includes('/auth/')) {
             baseTimeout += 2000; // 認證相關操作需要更多時間
@@ -659,7 +707,7 @@ class SITTestCases {
         } else if (endpoint.includes('/health')) {
             baseTimeout = 1000; // 健康檢查應該很快
         }
-        
+
         return baseTimeout;
     }
 
@@ -679,10 +727,10 @@ class SITTestCases {
     recordTestResult(testCase, result, duration, details = {}) {
         // 階段一修復：確保 duration 是有效數值，避免 NaN
         const safeDuration = this.ensureValidNumber(duration, 0);
-        
+
         // 階段一修復：深度處理錯誤訊息，確保可讀性
         const processedDetails = this.processTestDetails(details);
-        
+
         const testResult = {
             testCase: testCase || 'UNKNOWN_TEST_CASE',
             result: result ? 'PASS' : 'FAIL',
@@ -697,7 +745,7 @@ class SITTestCases {
                 hasValidError: processedDetails.error && typeof processedDetails.error === 'string'
             }
         };
-        
+
         this.testResults.push(testResult);
 
         // 階段一修復：改善控制台輸出格式
@@ -710,12 +758,12 @@ class SITTestCases {
             const errorLevel = this.getErrorLevel(processedDetails.error);
             const errorIcon = this.getErrorIcon(errorLevel);
             console.log(`   ${errorIcon} 錯誤: ${processedDetails.error}`);
-            
+
             // 如果有錯誤分類，顯示分類資訊
             if (testResult.errorCategory !== 'UNKNOWN') {
                 console.log(`   🏷️  錯誤類型: ${testResult.errorCategory}`);
             }
-            
+
             // 如果有建議解決方案，顯示建議
             const suggestion = this.getErrorSuggestion(processedDetails.error);
             if (suggestion) {
@@ -735,14 +783,14 @@ class SITTestCases {
         if (typeof value === 'number' && !isNaN(value) && isFinite(value)) {
             return value;
         }
-        
+
         if (typeof value === 'string') {
             const parsed = parseFloat(value);
             if (!isNaN(parsed) && isFinite(parsed)) {
                 return parsed;
             }
         }
-        
+
         return defaultValue;
     }
 
@@ -752,58 +800,58 @@ class SITTestCases {
      */
     processTestDetails(details) {
         const processed = { ...details };
-        
+
         // 處理錯誤訊息
         if (processed.error) {
             processed.error = this.normalizeErrorMessage(processed.error);
         }
-        
+
         // 確保數值欄位的有效性
         if (processed.responseTime !== undefined) {
             processed.responseTime = this.ensureValidNumber(processed.responseTime);
         }
-        
+
         if (processed.duration !== undefined) {
             processed.duration = this.ensureValidNumber(processed.duration);
         }
-        
+
         // 處理統計資料，避免NaN
         if (processed.successRate) {
             processed.successRate = this.ensureValidNumber(processed.successRate, 0);
         }
-        
+
         if (processed.errorHandlingRate) {
             processed.errorHandlingRate = this.ensureValidNumber(processed.errorHandlingRate, 0);
         }
-        
+
         return processed;
     }
 
     /**
-     * 正規化錯誤訊息
+     *正規化錯誤訊息
      * @version 2025-01-24-V1.0.0
      */
     normalizeErrorMessage(error) {
         if (!error) return '未知錯誤';
-        
+
         if (typeof error === 'string') {
             return error;
         }
-        
+
         if (typeof error === 'object') {
             // 處理不同類型的錯誤物件
             if (error.message) {
                 return error.message;
             }
-            
+
             if (error.error) {
                 return typeof error.error === 'string' ? error.error : JSON.stringify(error.error);
             }
-            
+
             if (error.code && error.description) {
                 return `${error.code}: ${error.description}`;
             }
-            
+
             // 特殊處理 [object Object] 問題
             try {
                 const jsonStr = JSON.stringify(error, null, 2);
@@ -813,10 +861,10 @@ class SITTestCases {
             } catch (e) {
                 // JSON.stringify 失敗的情況
             }
-            
+
             return error.toString();
         }
-        
+
         return String(error);
     }
 
@@ -828,33 +876,33 @@ class SITTestCases {
         if (!errorMessage || typeof errorMessage !== 'string') {
             return 'UNKNOWN';
         }
-        
+
         const errorLower = errorMessage.toLowerCase();
-        
+
         if (errorLower.includes('cannot read properties of undefined')) {
             return 'DATA_ACCESS_ERROR';
         }
-        
+
         if (errorLower.includes('network') || errorLower.includes('timeout')) {
             return 'NETWORK_ERROR';
         }
-        
+
         if (errorLower.includes('firebase') || errorLower.includes('quota')) {
             return 'FIREBASE_ERROR';
         }
-        
+
         if (errorLower.includes('validation') || errorLower.includes('format')) {
             return 'VALIDATION_ERROR';
         }
-        
+
         if (errorLower.includes('authentication') || errorLower.includes('token')) {
             return 'AUTH_ERROR';
         }
-        
+
         if (errorLower.includes('permission') || errorLower.includes('access denied')) {
             return 'PERMISSION_ERROR';
         }
-        
+
         return 'BUSINESS_LOGIC_ERROR';
     }
 
@@ -864,7 +912,7 @@ class SITTestCases {
      */
     getErrorLevel(errorMessage) {
         const category = this.categorizeError(errorMessage);
-        
+
         switch (category) {
             case 'DATA_ACCESS_ERROR':
             case 'FIREBASE_ERROR':
@@ -899,7 +947,7 @@ class SITTestCases {
      */
     getErrorSuggestion(errorMessage) {
         const category = this.categorizeError(errorMessage);
-        
+
         const suggestions = {
             'DATA_ACCESS_ERROR': '檢查測試資料完整性，確認所有必要欄位存在',
             'NETWORK_ERROR': '檢查網路連線狀態，考慮增加重試機制',
@@ -908,7 +956,7 @@ class SITTestCases {
             'AUTH_ERROR': '檢查認證Token有效性',
             'PERMISSION_ERROR': '檢查用戶權限設定'
         };
-        
+
         return suggestions[category] || null;
     }
 
@@ -920,11 +968,11 @@ class SITTestCases {
         if (isNaN(duration) || !isFinite(duration)) {
             return 'N/A';
         }
-        
+
         if (duration < 1000) {
             return `${Math.round(duration)}ms`;
         }
-        
+
         return `${(duration / 1000).toFixed(2)}s`;
     }
 
@@ -936,7 +984,7 @@ class SITTestCases {
         const invalidResults = this.testResults.filter(result => 
             !result.statisticsSafe?.durationValid
         );
-        
+
         if (invalidResults.length > 0) {
             console.warn(`⚠️ 發現 ${invalidResults.length} 個測試結果的統計資料異常`);
         }
@@ -954,7 +1002,7 @@ class SITTestCases {
             if (!this.testData?.authentication_test_data?.valid_users?.expert_mode_user_001) {
                 throw new Error('測試資料不可用：expert_mode_user_001');
             }
-            
+
             const testUser = this.testData.authentication_test_data.valid_users.expert_mode_user_001;
 
             const registrationData = {
@@ -1457,7 +1505,7 @@ class SITTestCases {
 
                         case '模式評估':
                             const assessResponse = await this.makeRequest('POST', '/api/v1/users/assessment', {
-                                questionnaireId: 'test-assessment',
+                                questionnaireId: 'complete-journey-test',
                                 answers: Object.entries(step.data.assessment_answers).map((answer, index) => ({
                                     questionId: index + 1,
                                     selectedOptions: [answer[1]]
@@ -1469,7 +1517,7 @@ class SITTestCases {
                         case '首次記帳':
                             const bookingResponse = await this.makeRequest('POST', '/api/v1/transactions/quick', {
                                 input: step.data.input_text,
-                                userId: 'test-user-id'
+                                userId: 'journey-test-user'
                             });
                             stepSuccess = bookingResponse.success;
                             break;
@@ -1934,12 +1982,16 @@ class SITTestCases {
             const totalOperations = testDurationMinutes * operationsPerMinute;
 
             let successfulOperations = 0;
+            let totalResponseTime = 0;
             const operationResults = [];
+            const memoryUsageHistory = [];
+
+            console.log(`🚀 開始24小時穩定性測試模擬 (${testDurationMinutes}分鐘)...`);
 
             for (let i = 0; i < totalOperations; i++) {
-                try {
-                    const operationStartTime = Date.now();
+                const operationStartTime = Date.now();
 
+                try {
                     // 執行不同類型的操作
                     const operations = [
                         () => this.makeRequest('GET', '/api/v1/users/profile'),
@@ -1951,15 +2003,30 @@ class SITTestCases {
                     const response = await randomOperation();
 
                     const operationTime = Date.now() - operationStartTime;
-                    operationResults.push({
-                        operation: i + 1,
-                        success: response.success,
-                        responseTime: operationTime
-                    });
+                    totalResponseTime += operationTime;
 
                     if (response.success) {
                         successfulOperations++;
                     }
+
+                    // 記錄記憶體使用情況 (模擬)
+                    if (i % 20 === 0) {
+                        const memoryUsage = {
+                            timestamp: new Date().toISOString(),
+                            heapUsed: process.memoryUsage().heapUsed,
+                            heapTotal: process.memoryUsage().heapTotal,
+                            external: process.memoryUsage().external
+                        };
+                        memoryUsageHistory.push(memoryUsage);
+                    }
+
+                    operationResults.push({
+                        operation: i + 1,
+                        success: response.success,
+                        responseTime: operationTime,
+                        timestamp: new Date().toISOString(),
+                        memorySnapshot: i % 20 === 0 ? process.memoryUsage().heapUsed : null
+                    });
 
                     // 每次操作間隔100ms
                     await new Promise(resolve => setTimeout(resolve, 100));
@@ -1973,11 +2040,13 @@ class SITTestCases {
             }
 
             const successRate = successfulOperations / totalOperations;
-            const avgResponseTime = operationResults
-                .filter(r => r.responseTime)
-                .reduce((sum, r) => sum + r.responseTime, 0) / successfulOperations;
+            const avgResponseTime = totalResponseTime / Math.max(successfulOperations, 1);
+            const systemStability = successRate >= 0.95 ? '穩定' : '不穩定';
 
-            const success = successRate >= 0.95 && avgResponseTime <= 2000;
+            // 分析記憶體使用趨勢
+            const memoryLeakDetection = this.analyzeMemoryUsage(memoryUsageHistory);
+
+            const success = successRate >= 0.95 && avgResponseTime <= 2000 && !memoryLeakDetection.hasLeak;
 
             this.recordTestResult('TC-SIT-019', success, Date.now() - startTime, {
                 testDuration: `${testDurationMinutes} 分鐘 (模擬8小時)`,
@@ -1985,10 +2054,19 @@ class SITTestCases {
                 successfulOperations,
                 successRate: (successRate * 100).toFixed(2) + '%',
                 avgResponseTime: avgResponseTime?.toFixed(2) + 'ms',
-                systemStability: successRate >= 0.95 ? '穩定' : '不穩定',
+                systemStability: systemStability,
+                memoryAnalysis: memoryLeakDetection,
+                performanceGrade: this.getStabilityGrade(successRate, avgResponseTime),
+                operationalHealth: {
+                    responseTimeStability: this.calculateStabilityMetrics(operationResults).responseTimeVariance < 1000 ? '穩定' : '不穩定',
+                    throughputConsistency: this.calculateStabilityMetrics(operationResults).throughputVariance < 0.1 ? '一致' : '波動',
+                    errorRecoveryCapacity: this.calculateStabilityMetrics(operationResults).errorRecoveryRate > 0.9 ? '良好' : '需改善'
+                },
                 error: !success ? '系統穩定性測試未達標' : null
             });
 
+            // 重設為Expert模式
+            this.currentUserMode = 'Expert';
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-019', false, Date.now() - startTime, {
@@ -3014,8 +3092,6 @@ class SITTestCases {
         return 'D (不合格)';
     }
 
-    // ==================== 階段一：單點整合驗證測試 ====================
-
     /**
      * 執行階段一測試案例 (TC-SIT-001 to TC-SIT-007)
      */
@@ -3406,7 +3482,7 @@ class SITTestCases {
             // 階段一：單點整合驗證測試
             this.testCase001_UserRegistration,
             this.testCase002_UserLogin,
-            this.testCase003_TokenManagement,
+            this.testCase003_FirebaseAuthIntegration,
             this.testCase004_QuickBooking,
             this.testCase005_FullBookingForm,
             this.testCase006_TransactionQuery,
@@ -3484,22 +3560,22 @@ class SITTestCases {
     generateReport() {
         // 階段一修復：確保測試結果陣列有效
         const validTestResults = this.testResults.filter(r => r && typeof r === 'object');
-        
+
         const totalTests = validTestResults.length;
         const passedTests = validTestResults.filter(r => r.result === 'PASS').length;
         const failedTests = validTestResults.filter(r => r.result === 'FAIL').length;
-        
+
         // 階段一修復：安全計算平均持續時間，避免NaN
         const validDurations = validTestResults
             .map(r => this.ensureValidNumber(r.duration, 0))
             .filter(d => d > 0);
-        
+
         const averageDuration = validDurations.length > 0 
             ? validDurations.reduce((sum, d) => sum + d, 0) / validDurations.length
             : 0;
-        
+
         const executionTime = this.ensureValidNumber(Date.now() - this.testStartTime.getTime(), 0);
-        
+
         // 階段一修復：安全計算成功率
         const successRate = totalTests > 0 
             ? (passedTests / totalTests * 100)
@@ -3546,15 +3622,15 @@ class SITTestCases {
         const failedTests = testResults.filter(r => r.result === 'FAIL');
         const errorCounts = {};
         const errorLevels = {};
-        
+
         failedTests.forEach(test => {
             const category = test.errorCategory || 'UNKNOWN';
             const level = this.getErrorLevel(test.details?.error);
-            
+
             errorCounts[category] = (errorCounts[category] || 0) + 1;
             errorLevels[level] = (errorLevels[level] || 0) + 1;
         });
-        
+
         return {
             totalErrors: failedTests.length,
             errorByCategory: errorCounts,
@@ -3572,7 +3648,7 @@ class SITTestCases {
         if (!this.testData) {
             return { quality: 'MISSING', score: 0 };
         }
-        
+
         let score = 0;
         const checks = [
             { name: 'authentication_data', weight: 20 },
@@ -3581,18 +3657,18 @@ class SITTestCases {
             { name: 'performance_data', weight: 15 },
             { name: 'e2e_data', weight: 30 }
         ];
-        
+
         checks.forEach(check => {
             const hasData = this.getNestedProperty(this.testData, this.getTestDataPath(check.name));
             if (hasData) {
                 score += check.weight;
             }
         });
-        
+
         const quality = score >= 90 ? 'EXCELLENT' : 
                        score >= 70 ? 'GOOD' : 
                        score >= 50 ? 'FAIR' : 'POOR';
-        
+
         return { quality, score };
     }
 
@@ -3608,7 +3684,7 @@ class SITTestCases {
             'performance_data': 'performance_test_data.concurrent_operations',
             'e2e_data': 'end_to_end_business_process_tests.complete_user_journey_tests'
         };
-        
+
         return paths[checkName] || '';
     }
 
@@ -3623,16 +3699,16 @@ class SITTestCases {
             errorCoverage: summary.errorStatistics.totalErrors > 0 ? 'COMPREHENSIVE' : 'LIMITED',
             overallScore: 0
         };
-        
+
         // 計算整體評分
         if (quality.dataCompleteness === 'COMPLETE') quality.overallScore += 40;
         if (quality.statisticsReliability === 'RELIABLE') quality.overallScore += 30;
         if (quality.errorCoverage === 'COMPREHENSIVE') quality.overallScore += 30;
-        
+
         quality.grade = quality.overallScore >= 90 ? 'A' :
                        quality.overallScore >= 70 ? 'B' :
                        quality.overallScore >= 50 ? 'C' : 'D';
-        
+
         return quality;
     }
 
@@ -3643,14 +3719,14 @@ class SITTestCases {
     getMostCommonValue(counts) {
         let maxCount = 0;
         let mostCommon = null;
-        
+
         Object.entries(counts).forEach(([key, count]) => {
             if (count > maxCount) {
                 maxCount = count;
                 mostCommon = key;
             }
         });
-        
+
         return mostCommon;
     }
 
@@ -3662,7 +3738,7 @@ class SITTestCases {
         const priority = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
         let highest = null;
         let highestPriority = 0;
-        
+
         Object.keys(levels).forEach(level => {
             const priority_level = priority[level] || 0;
             if (priority_level > highestPriority) {
@@ -3670,7 +3746,7 @@ class SITTestCases {
                 highest = level;
             }
         });
-        
+
         return highest;
     }
 }
@@ -3685,24 +3761,24 @@ if (require.main === module) {
 
         // 修復：創建sitTest實例
         const sitTest = new SITTestCases();
-        
+
         // 階段一修復：先檢查API服務就緒狀態
         console.log('🔍 執行前置檢查...');
         const serviceStatus = await sitTest.checkAPIServiceReadiness();
-        
+
         if (!serviceStatus.ready) {
             console.error(`❌ API服務未就緒：${serviceStatus.message}`);
             console.error('💡 建議：確認ASL服務是否正常啟動，檢查Port 5000是否被佔用');
             process.exit(1);
         }
-        
+
         console.log('✅ API服務就緒檢查完成');
         console.log(`🌐 API基礎URL: ${sitTest.apiBaseURL}`);
 
         // 階段一新增：載入並驗證測試資料
         console.log('📂 載入測試資料...');
         const dataLoaded = await sitTest.loadTestData();
-        
+
         if (!dataLoaded) {
             console.error('❌ 測試資料載入失敗，但將使用備援資料繼續執行');
         }
@@ -3710,15 +3786,15 @@ if (require.main === module) {
         // 檢查Firebase配額狀態（在API服務就緒後）
         console.log('🔍 檢查Firebase配額狀態...');
         const quotaStatus = await sitTest.checkFirebaseQuotaStatus();
-        
+
         if (!quotaStatus.available) {
             console.error(`❌ SIT測試無法執行：${quotaStatus.message}`);
             console.error(`🔍 原因：${quotaStatus.reason}`);
-            
+
             if (quotaStatus.reason === 'FIREBASE_QUOTA_EXHAUSTED') {
                 console.log('🔄 嘗試等待配額恢復...');
                 const recovered = await sitTest.waitForFirebaseQuotaRecovery(5);
-                
+
                 if (!recovered) {
                     console.error('❌ Firebase配額未恢復，測試終止');
                     console.error('💡 建議稍後重新執行測試');

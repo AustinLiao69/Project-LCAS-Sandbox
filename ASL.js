@@ -1,9 +1,9 @@
 /**
- * ASL.js_API服務層模組_2.0.6
- * @module API服務層模組（純轉發窗口）
- * @description LCAS 2.0 API Service Layer - 專責轉發P1-2範圍的34個API端點到BL層
- * @update 2025-09-22: DCN-0012階段一Firebase連線掛起修復 - 添加超時機制與優雅降級
- * @date 2025-09-22
+ * ASL.js_API服務層模組_2.1.0
+ * @module API服務層模組（統一回應格式）
+ * @description LCAS 2.0 API Service Layer - DCN-0015階段一：建立統一API回應格式機制
+ * @update 2025-01-27: DCN-0015階段一 - 實作統一回應格式與四模式差異化處理
+ * @date 2025-01-27
  */
 
 console.log('🚀 LCAS ASL (API Service Layer) P1-2重構版啟動中...');
@@ -280,31 +280,123 @@ app.use((req, res, next) => {
 });
 
 /**
- * 05. 統一轉發回應格式中介軟體
- * @version 2025-09-22-V2.0.0
- * @date 2025-09-22 10:00:00
- * @description 提供統一的轉發回應格式
+ * 05. 統一回應格式中介軟體（DCN-0015階段一）
+ * @version 2025-01-27-V2.1.0
+ * @date 2025-01-27 12:00:00
+ * @description 實作統一API回應格式，支援四模式差異化處理
  */
 app.use((req, res, next) => {
-  res.apiSuccess = (data, message = '操作成功', statusCode = 200) => {
-    res.status(statusCode).json({
-      success: true,
-      data: data,
-      message: message,
-      timestamp: new Date().toISOString(),
-      requestId: req.headers['x-request-id'] || 'unknown'
-    });
+  // 記錄請求開始時間
+  req.startTime = Date.now();
+
+  // 生成請求ID
+  const generateRequestId = () => {
+    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  res.apiError = (message = '操作失敗', errorCode = 'UNKNOWN_ERROR', statusCode = 400, details = null) => {
-    res.status(statusCode).json({
-      success: false,
+  // 檢測使用者模式
+  const detectUserMode = (req) => {
+    // 1. 從JWT Token中取得使用者模式
+    if (req.user && req.user.mode) {
+      return req.user.mode;
+    }
+    
+    // 2. 從請求標頭中取得模式設定
+    if (req.headers['x-user-mode']) {
+      return req.headers['x-user-mode'];
+    }
+    
+    // 3. 預設為Inertial模式
+    return 'Inertial';
+  };
+
+  // 四模式差異化處理函數
+  const applyModeSpecificFields = (userMode) => {
+    switch (userMode) {
+      case 'Expert':
+        return {
+          detailedAnalytics: true,
+          advancedOptions: true,
+          performanceMetrics: true,
+          batchOperations: true,
+          exportFeatures: true
+        };
+      case 'Cultivation':
+        return {
+          achievementProgress: true,
+          gamificationElements: true,
+          motivationalTips: true,
+          progressTracking: true,
+          rewardSystem: true
+        };
+      case 'Guiding':
+        return {
+          simplifiedInterface: true,
+          helpHints: true,
+          autoSuggestions: true,
+          stepByStepGuide: true,
+          tutorialMode: true
+        };
+      case 'Inertial':
+      default:
+        return {
+          stabilityMode: true,
+          consistentInterface: true,
+          minimalChanges: true,
+          quickActions: true,
+          familiarLayout: true
+        };
+    }
+  };
+
+  // 統一成功回應格式
+  res.apiSuccess = (data, message = '操作成功', userMode = null) => {
+    const detectedUserMode = userMode || detectUserMode(req);
+    const response = {
+      success: true,
+      data: data,
+      error: null,
       message: message,
-      errorCode: errorCode,
-      details: details,
-      timestamp: new Date().toISOString(),
-      requestId: req.headers['x-request-id'] || 'unknown'
-    });
+      metadata: {
+        timestamp: new Date().toISOString(),
+        requestId: req.headers['x-request-id'] || generateRequestId(),
+        userMode: detectedUserMode,
+        apiVersion: 'v1.0.0',
+        processingTimeMs: Date.now() - req.startTime
+      }
+    };
+
+    // 四模式差異化處理
+    response.metadata.modeFeatures = applyModeSpecificFields(detectedUserMode);
+    
+    res.status(200).json(response);
+  };
+
+  // 統一錯誤回應格式（使用相同結構）
+  res.apiError = (message, errorCode, statusCode = 400, details = null) => {
+    const detectedUserMode = detectUserMode(req);
+    const response = {
+      success: false,
+      data: null,
+      error: {
+        code: errorCode,
+        message: message,
+        details: details
+      },
+      message: message,
+      metadata: {
+        timestamp: new Date().toISOString(),
+        requestId: req.headers['x-request-id'] || generateRequestId(),
+        userMode: detectedUserMode,
+        apiVersion: 'v1.0.0',
+        processingTimeMs: Date.now() - req.startTime
+      }
+    };
+
+    // 錯誤回應也包含四模式特定欄位
+    response.metadata.modeFeatures = applyModeSpecificFields(detectedUserMode);
+
+    res.status(statusCode).json(response);
   };
 
   next();
@@ -338,11 +430,18 @@ app.use((req, res, next) => {
  */
 app.get('/', (req, res) => {
   res.apiSuccess({
-    service: 'LCAS 2.0 API Service Layer (純轉發窗口)',
-    version: '2.0.0',
+    service: 'LCAS 2.0 API Service Layer (統一回應格式)',
+    version: '2.1.0',
     status: 'running',
     port: PORT,
-    architecture: 'ASL -> BL層轉發',
+    architecture: 'ASL -> BL層轉發（統一回應格式）',
+    dcn_0015_features: {
+      unified_response_format: true,
+      four_mode_support: true,
+      request_id_tracking: true,
+      performance_metrics: true,
+      mode_specific_features: true
+    },
     p1_2_endpoints: {
       am_auth: 11,
       am_users: 8,
@@ -354,15 +453,16 @@ app.get('/', (req, res) => {
       BK: !!BK ? 'loaded' : 'not loaded',
       DL: !!DL ? 'loaded' : 'not loaded',
       FS: !!FS ? 'loaded' : 'not loaded'
-    }
-  }, 'ASL純轉發窗口運行正常');
+    },
+    supported_modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding']
+  }, 'ASL統一回應格式運行正常');
 });
 
 app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
-    service: 'ASL純轉發窗口',
-    version: '2.0.2',
+    service: 'ASL統一回應格式',
+    version: '2.1.0',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -372,6 +472,14 @@ app.get('/health', (req, res) => {
       BK: !!BK ? 'ready' : 'unavailable',
       DL: !!DL ? 'ready' : 'unavailable',
       FS: !!FS ? 'ready' : 'unavailable'
+    },
+    dcn_0015_phase1: {
+      unified_response_implemented: true,
+      four_mode_support: true,
+      request_tracking: true,
+      performance_monitoring: true,
+      metadata_structure: true,
+      mode_detection: true
     },
     stage1_fix: {
       applied: true,
