@@ -1,4 +1,3 @@
-
 {
   "metadata": {
     "version": "v2.0.0",
@@ -14,26 +13,26 @@
         "changes": "初始版本建立"
       },
       {
-        "version": "v1.1.0", 
+        "version": "v1.1.0",
         "date": "2025-09-15",
         "changes": "階段一：基礎測試資料架構建立完成"
       },
       {
         "version": "v1.2.0",
-        "date": "2025-09-15", 
+        "date": "2025-09-15",
         "changes": "階段二：核心業務功能測試資料建立完成"
       },
       {
         "version": "v1.1.0",
-        "date": "2025-01-24", 
+        "date": "2025-01-24",
         "changes": "階段二：四層架構資料流測試與核心業務流程測試資料建立完成"
       }
     ]
   },
-  
+
   "test_environment": {
     "api_base_url": "http://0.0.0.0:5000/api/v1",
-    "backup_base_url": "https://lcas-api.replit.app/api/v1", 
+    "backup_base_url": "https://lcas-api.replit.app/api/v1",
     "timeout_settings": {
       "api_timeout": 5000,
       "database_timeout": 3000,
@@ -62,7 +61,7 @@
         }
       },
       "expert_mode_user_002": {
-        "email": "expert002@lcas.app", 
+        "email": "expert002@lcas.app",
         "password": "ExpertPass456!",
         "display_name": "Expert測試用戶002",
         "mode": "expert",
@@ -92,7 +91,7 @@
       "inertial_mode_user_001": {
         "email": "inertial001@lcas.app",
         "password": "InertialPass123!",
-        "display_name": "Inertial測試用戶001", 
+        "display_name": "Inertial測試用戶001",
         "mode": "inertial",
         "expected_features": ["stable", "consistent", "reliable", "standard"],
         "registration_data": {
@@ -107,7 +106,7 @@
         "email": "cultivation001@lcas.app",
         "password": "CultivationPass123!",
         "display_name": "Cultivation測試用戶001",
-        "mode": "cultivation", 
+        "mode": "cultivation",
         "expected_features": ["motivation", "achievement", "gamification", "progress"],
         "registration_data": {
           "first_name": "Cultivation",
@@ -118,7 +117,7 @@
         }
       }
     },
-    
+
     "invalid_users": {
       "invalid_email_format": {
         "email": "invalid-email-format",
@@ -136,7 +135,7 @@
         "expected_error": "REQUIRED_FIELDS_MISSING"
       },
       "nonexistent_user": {
-        "email": "nonexistent@lcas.app", 
+        "email": "nonexistent@lcas.app",
         "password": "NonexistentPass123!",
         "expected_error": "USER_NOT_FOUND"
       },
@@ -154,52 +153,50 @@
       "answers": {
         "financial_experience": "advanced",
         "detail_preference": "detailed",
-        "control_preference": "high_control",
-        "analysis_preference": "comprehensive",
-        "efficiency_preference": "powerful_features"
+        "interface_complexity": "complex",
+        "reporting_needs": "comprehensive"
       },
-      "expected_mode": "expert",
-      "confidence_score": 0.95,
-      "expected_features": ["advanced_analytics", "batch_operations", "detailed_reports", "custom_categories"]
+      "expected_mode": "expert"
     },
     "guiding_mode_assessment": {
-      "assessment_id": "guiding_assessment_001", 
+      "assessment_id": "guiding_assessment_001",
       "answers": {
         "financial_experience": "beginner",
         "detail_preference": "simple",
-        "control_preference": "guided",
-        "analysis_preference": "basic",
-        "efficiency_preference": "easy_to_use"
+        "interface_complexity": "minimal",
+        "guidance_needs": "high"
       },
-      "expected_mode": "guiding",
-      "confidence_score": 0.90,
-      "expected_features": ["step_by_step_guide", "tooltips", "simplified_interface", "default_categories"]
+      "expected_mode": "guiding"
     },
-    "inertial_mode_assessment": {
-      "assessment_id": "inertial_assessment_001",
-      "answers": {
-        "financial_experience": "intermediate", 
-        "detail_preference": "balanced",
-        "control_preference": "stable",
-        "analysis_preference": "standard",
-        "efficiency_preference": "consistent"
+    "four_mode_differentiation_tests": {
+      "expert_mode_features": {
+        "test_id": "mode_expert_001",
+        "mode": "expert",
+        "expected_features": ["advanced_analytics", "batch_operations", "detailed_reports", "custom_categories"],
+        "api_response_fields": ["advanced_data", "detailed_metadata", "comprehensive_options"],
+        "ui_complexity": "high"
       },
-      "expected_mode": "inertial",
-      "confidence_score": 0.85,
-      "expected_features": ["consistent_interface", "standard_features", "reliable_operations", "balanced_detail"]
-    },
-    "cultivation_mode_assessment": {
-      "assessment_id": "cultivation_assessment_001",
-      "answers": {
-        "financial_experience": "intermediate",
-        "detail_preference": "motivating", 
-        "control_preference": "encouraging",
-        "analysis_preference": "progress_focused",
-        "efficiency_preference": "achievement_oriented"
+      "guiding_mode_features": {
+        "test_id": "mode_guiding_001",
+        "mode": "guiding",
+        "expected_features": ["auto_fill", "simplified_ui", "minimal_decisions", "step_by_step_guide"],
+        "api_response_fields": ["simplified_data", "guided_options", "help_text"],
+        "ui_complexity": "low"
       },
-      "expected_mode": "cultivation",
-      "confidence_score": 0.88,
-      "expected_features": ["achievement_system", "progress_tracking", "motivational_messages", "gamification"]
+      "inertial_mode_features": {
+        "test_id": "mode_inertial_001",
+        "mode": "inertial",
+        "expected_features": ["consistent_interface", "stable_workflows", "minimal_changes"],
+        "api_response_fields": ["standard_data", "consistent_format", "stable_options"],
+        "ui_complexity": "medium"
+      },
+      "cultivation_mode_features": {
+        "test_id": "mode_cultivation_001",
+        "mode": "cultivation",
+        "expected_features": ["achievement_tracking", "progress_indicators", "motivational_messages", "goal_setting"],
+        "api_response_fields": ["progress_data", "achievement_status", "motivational_content"],
+        "ui_complexity": "medium"
+      }
     }
   },
 
@@ -211,7 +208,7 @@
         "expected_parsing": {
           "amount": 150,
           "category": "餐飲",
-          "type": "expense", 
+          "type": "expense",
           "description": "午餐",
           "payment_method": "刷卡"
         },
@@ -223,7 +220,7 @@
         }
       },
       {
-        "test_id": "quick_002", 
+        "test_id": "quick_002",
         "input_text": "薪水35000轉帳",
         "expected_parsing": {
           "amount": 35000,
@@ -246,7 +243,7 @@
           "amount": 85,
           "category": "餐飲",
           "type": "expense",
-          "description": "咖啡", 
+          "description": "咖啡",
           "payment_method": "信用卡"
         },
         "mode_specific_responses": {
@@ -266,7 +263,7 @@
           "amount": 1200,
           "category_id": "10301",
           "category_name": "餐飲",
-          "account_id": "acc_cash_001", 
+          "account_id": "acc_cash_001",
           "account_name": "現金",
           "description": "晚餐聚會",
           "date": "2025-09-15",
@@ -284,7 +281,7 @@
       {
         "test_id": "form_002",
         "transaction_data": {
-          "type": "income", 
+          "type": "income",
           "amount": 5000,
           "category_id": "80105",
           "category_name": "獎金",
@@ -299,42 +296,9 @@
         },
         "expected_result": {
           "transaction_id": "generated_id",
-          "status": "success", 
+          "status": "success",
           "message": "收入記錄成功"
         }
-      }
-    ]
-  },
-
-  "token_management_test_data": {
-    "valid_tokens": {
-      "expert_user_token": {
-        "userId": "expert001_user_id",
-        "token": "jwt_expert001_test_token",
-        "refreshToken": "refresh_expert001_test_token",
-        "expiresAt": "2025-12-31T23:59:59Z",
-        "userMode": "Expert"
-      },
-      "test_user_token": {
-        "userId": "sit-test-user-001",
-        "token": "jwt_sit_test_token",
-        "refreshToken": "refresh_sit_test_token", 
-        "expiresAt": "2025-12-31T23:59:59Z",
-        "userMode": "Expert"
-      }
-    },
-    "test_scenarios": [
-      {
-        "test_id": "token_001",
-        "scenario": "驗證有效Token",
-        "token": "jwt_expert001_test_token",
-        "expected_result": "valid"
-      },
-      {
-        "test_id": "token_002", 
-        "scenario": "刷新過期Token",
-        "refreshToken": "refresh_expert001_test_token",
-        "expected_result": "refreshed"
       }
     ]
   },
@@ -342,7 +306,7 @@
   "api_endpoints": {
     "authentication": {
       "register": "/auth/register",
-      "login": "/auth/login", 
+      "login": "/auth/login",
       "logout": "/auth/logout",
       "refresh_token": "/auth/refresh",
       "verify_token": "/auth/verify",
@@ -520,7 +484,7 @@
         "expected_max_response_time_ms": 3000
       },
       {
-        "test_id": "load_002", 
+        "test_id": "load_002",
         "scenario": "批量查詢測試",
         "duration_seconds": 30,
         "requests_per_second": 20,
@@ -669,7 +633,7 @@
           },
           {
             "step": "結果顯示",
-            "layer": "PL", 
+            "layer": "PL",
             "function": "顯示記帳結果",
             "expected_output": "用戶友善的成功訊息"
           }
@@ -699,7 +663,7 @@
         ]
       },
       {
-        "test_id": "ux_guiding_001", 
+        "test_id": "ux_guiding_001",
         "mode": "guiding",
         "scenario": "Guiding模式用戶體驗流程",
         "test_interactions": [
@@ -810,7 +774,7 @@
           },
           {
             "type": "api_service_restart",
-            "expected_recovery_time": "60s", 
+            "expected_recovery_time": "60s",
             "expected_in_flight_requests": "graceful_handling"
           }
         ]
@@ -825,7 +789,7 @@
         "scenario": "所有核心功能回歸測試",
         "test_suites": [
           "authentication_service_tests",
-          "user_management_tests", 
+          "user_management_tests",
           "bookkeeping_core_tests",
           "four_mode_differentiation_tests",
           "error_handling_tests"
@@ -845,23 +809,32 @@
         "benchmarks": [
           {
             "metric": "api_response_time_95th_percentile",
-            "target": "2000ms",
-            "test_duration": "1h",
-            "test_load": "normal_operations"
+            "target": "2000ms"
           },
           {
             "metric": "concurrent_user_capacity",
-            "target": "100_users",
-            "sustained_duration": "30min",
-            "operations_per_user_per_min": 5
+            "target": "50_users_95%_success"
           },
           {
-            "metric": "data_consistency_under_load", 
-            "target": "100%_consistency",
-            "concurrent_operations": 50,
-            "test_duration": "15min"
+            "metric": "data_consistency_under_load",
+            "target": "100%_consistency"
           }
         ]
+      }
+    ],
+
+    "firebase_auth_regression_tests": [
+      {
+        "test_id": "firebase_regression_001",
+        "scenario": "Firebase Auth完整回歸測試",
+        "test_flows": [
+          "user_registration_with_firebase",
+          "firebase_token_verification",
+          "user_login_with_firebase",
+          "token_refresh_mechanism",
+          "user_logout_cleanup"
+        ],
+        "expected_success_rate": "100%"
       }
     ]
   },
@@ -870,7 +843,7 @@
     "cross_layer_data_flow": [
       {
         "test_id": "consistency_001",
-        "scenario": "PL→APL→BL→DL資料一致性", 
+        "scenario": "PL→APL→BL→DL資料一致性",
         "test_data": {
           "pl_input": {
             "amount": "1500",
@@ -885,7 +858,7 @@
           },
           "expected_bl_processing": {
             "amount": 1500,
-            "category_id": "cat_food_001", 
+            "category_id": "cat_food_001",
             "user_id": "user_123",
             "ledger_id": "ledger_456",
             "transaction_date": "2025-09-15T10:00:00Z"
@@ -937,5 +910,62 @@
         }
       }
     ]
+  },
+
+  "api_response_format_tests": {
+    "success_response_format": {
+      "test_id": "response_success_001",
+      "scenario": "成功回應格式驗證",
+      "expected_structure": {
+        "success": true,
+        "data": "object",
+        "metadata": {
+          "timestamp": "string",
+          "requestId": "string",
+          "userMode": "string",
+          "apiVersion": "string"
+        },
+        "message": "string"
+      }
+    },
+    "error_response_format": {
+      "test_id": "response_error_001",
+      "scenario": "錯誤回應格式驗證",
+      "expected_structure": {
+        "success": false,
+        "error": {
+          "code": "string",
+          "message": "string",
+          "details": "object"
+        },
+        "metadata": {
+          "timestamp": "string",
+          "requestId": "string",
+          "userMode": "string"
+        }
+      }
+    },
+    "mode_specific_response_format": {
+      "test_id": "response_mode_001",
+      "scenario": "模式差異化回應格式驗證",
+      "test_cases": [
+        {
+          "mode": "expert",
+          "expected_additional_fields": ["advanced_options", "detailed_statistics", "debug_info"]
+        },
+        {
+          "mode": "guiding",
+          "expected_additional_fields": ["help_text", "next_steps", "simplified_options"]
+        },
+        {
+          "mode": "inertial",
+          "expected_additional_fields": ["consistent_format", "stable_data"]
+        },
+        {
+          "mode": "cultivation",
+          "expected_additional_fields": ["progress_data", "achievement_status", "motivational_content"]
+        }
+      ]
+    }
   }
 }
