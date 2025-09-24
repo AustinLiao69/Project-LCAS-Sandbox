@@ -147,6 +147,9 @@ function applyModeSpecificFields(metadata, userMode) {
 ### 3.2 統一回應格式規範
 
 #### 3.2.1 統一回應格式（成功與失敗使用相同結構）
+**設計原則**：成功與失敗回應使用完全相同的JSON結構，僅透過 `success` 欄位區分狀態。
+
+**統一格式定義**：
 ```javascript
 {
   "success": boolean,           // true=成功, false=失敗
@@ -164,6 +167,13 @@ function applyModeSpecificFields(metadata, userMode) {
     }
   }
 }
+```
+
+**統一格式優勢**：
+- **前端處理一致性**：所有API回應使用相同的判斷邏輯
+- **減少條件分支**：統一的 `success` 欄位判斷
+- **提升可維護性**：一套解析邏輯適用所有API
+- **符合RESTful原則**：標準化的回應結構
 ```
 
 #### 3.2.2 成功回應範例
@@ -246,43 +256,79 @@ function detectUserMode(req) {
 }
 ```
 
-### 3.4 回應處理機制分析
+### 3.4 回應處理機制規範
 
-#### 3.4.1 APL層模組回應處理
-**8301-8304.dart模組處理邏輯**：
+#### 3.4.1 APL層模組回應處理規範
+**8301-8304.dart模組統一處理邏輯**：
 ```dart
 // 統一的API回應處理
 if (response.success) {
   // 成功處理：導航到下一頁面或更新UI狀態
   navigateToNextScreen();
   updateUIState(response.data);
+  showSuccessToast(response.metadata.userMode);
 } else {
   // 失敗處理：顯示錯誤訊息
   showErrorDialog(response.error.message);
   logError(response.error.code, response.metadata.requestId);
+  handleErrorNavigation(response.error.code);
 }
 ```
 
-#### 3.4.2 PL層模組回應處理
-**7301-7302.dart模組處理邏輯**：
+#### 3.4.2 PL層模組回應處理規範
+**7301-7302.dart模組統一處理邏輯**：
 ```dart
 // 根據userMode調整UI回應
 switch (response.metadata.userMode) {
   case 'Expert':
     showDetailedResponse(response);
+    showAdvancedOptions();
+    break;
+  case 'Inertial':
+    showStandardResponse(response);
+    break;
+  case 'Cultivation':
+    showGamifiedResponse(response);
+    showProgressIndicators();
     break;
   case 'Guiding':
     showSimplifiedResponse(response);
+    showHelpHints();
     break;
-  // 其他模式處理...
 }
 ```
 
-#### 3.4.3 Flutter UI層回應處理
+#### 3.4.3 Flutter UI層回應處理規範
 - **Loading狀態控制**：根據API呼叫狀態顯示/隱藏Loading
 - **Toast訊息顯示**：根據 `success` 顯示成功或失敗訊息
 - **頁面跳轉邏輯**：根據 `error.code` 決定跳轉目標
 - **四模式UI調整**：根據 `metadata.userMode` 調整顯示風格
+- **錯誤重試機制**：根據 `error.code` 決定是否提供重試選項
+
+### 3.5 配額管理策略（P1-2階段）
+
+#### 3.5.1 Firestore記錄策略
+**P1-2階段配額控制**：
+- **成功回應**：不記錄至Firestore，僅記錄在記憶體日誌
+- **失敗回應**：僅記錄ERROR和CRITICAL等級至Firestore
+- **配額監控**：實作智慧記錄策略，避免超過每日限額
+- **緊急降級**：配額接近時自動切換至記憶體日誌
+
+#### 3.5.2 記錄等級定義
+```javascript
+const LOG_LEVELS = {
+  SUCCESS: 'SUCCESS',    // P1-2不記錄至Firestore
+  INFO: 'INFO',         // P1-2不記錄至Firestore
+  WARNING: 'WARNING',   // P1-2不記錄至Firestore
+  ERROR: 'ERROR',       // P1-2記錄至Firestore
+  CRITICAL: 'CRITICAL'  // P1-2記錄至Firestore
+};
+```
+
+#### 3.5.3 後續階段擴展
+- **P3階段**：加入完整審計日誌功能
+- **P4階段**：實作使用者行為追蹤
+- **生產階段**：開啟完整的日誌記錄機制
 
 ### 3.5 BL層標準化改造
 
@@ -470,27 +516,76 @@ const MODE_STRATEGIES = {
 
 #### 10.2.1 Phase 1 - 核心架構建立（Week 1）
 **必須執行的Action**：
-1. **更新ASL.js**：實作統一回應格式中介軟體
-2. **更新8088規範**：定義新的統一回應格式標準
-3. **更新BL層函數**：AM.js和BK.js標準化回傳格式
-4. **更新SIT測試**：0603.js測試邏輯修改
+1. **更新ASL.js統一回應格式**：
+   - 實作統一回應格式中介軟體
+   - 整合四模式差異化處理邏輯
+   - 實作配額管理機制
+   
+2. **更新8088 API設計規範**：
+   - 定義統一回應格式標準
+   - 更新錯誤處理規範
+   - 新增四模式支援規範
+
+3. **更新BL層函數標準化**：
+   - AM.js標準化回傳格式
+   - BK.js標準化回傳格式
+   - 移除自定義回應格式
+
+4. **更新SIT測試邏輯**：
+   - 修改0603.js測試邏輯
+   - 更新0692.json測試資料格式
+   - 新增統一格式驗證測試
 
 #### 10.2.2 Phase 2 - 文件同步更新（Week 2）
 **必須執行的Action**：
-1. **更新API規格文件**：81號資料夾13個.yaml檔案
-2. **更新LLD文件**：82號資料夾13個.md檔案
-3. **更新APL模組**：8301-8304.dart回應解析邏輯
-4. **更新測試資料**：0692.json測試資料格式
+1. **更新API規格文件群**：
+   - 81號資料夾13個.yaml檔案回應格式更新
+   - 統一錯誤處理範例
+   - 四模式差異化回應範例
+
+2. **更新LLD設計文件群**：
+   - 82號資料夾13個.md檔案
+   - 新增回應處理機制規範
+   - 更新四模式支援設計
+
+3. **更新APL層模組**：
+   - 8301-8304.dart回應解析邏輯
+   - 統一錯誤處理機制
+   - 四模式UI調整邏輯
+
+4. **更新測試相關檔案**：
+   - 84號資料夾測試計劃更新
+   - 85號資料夾測試代碼更新
+   - SIT測試資料格式調整
 
 #### 10.2.3 Phase 3 - 驗證與部署（Week 3）
 **必須執行的Action**：
-1. **執行回歸測試**：確保所有API端點正常運作
-2. **效能監控建立**：建立API回應時間監控機制
-3. **文件審查**：確保所有文件同步更新完成
-4. **生產環境部署準備**：建立部署檢查清單
+1. **執行完整回歸測試**：
+   - 所有132個API端點功能測試
+   - 統一回應格式驗證測試
+   - 四模式差異化測試
+
+2. **效能與監控建立**：
+   - API回應時間監控機制
+   - Firestore配額監控系統
+   - 錯誤率統計儀表板
+
+3. **文件審查與確認**：
+   - 所有文件更新完成性檢查
+   - 跨文件一致性驗證
+   - 技術債務清理
+
+4. **生產環境準備**：
+   - 部署檢查清單建立
+   - 回滾機制準備
+   - 監控告警設定
 
 **總計影響文件數量：42個文件需要更新**
 **預估工作量：3週（21個工作天）**
+**關鍵里程碑**：
+- Week 1 End：核心統一回應格式機制完成
+- Week 2 End：所有文件同步更新完成  
+- Week 3 End：完整測試驗證通過，準備生產部署
 
 ---
 
