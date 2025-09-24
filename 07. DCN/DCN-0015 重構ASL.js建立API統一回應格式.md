@@ -65,40 +65,50 @@
 app.use((req, res, next) => {
   // 統一成功回應格式
   res.apiSuccess = (data, message = '操作成功', userMode = null) => {
+    const detectedUserMode = userMode || req.user?.mode || 'Inertial';
     const response = {
       success: true,
       data: data,
+      error: null,
       message: message,
       metadata: {
         timestamp: new Date().toISOString(),
         requestId: req.headers['x-request-id'] || generateRequestId(),
-        userMode: userMode || req.user?.mode || 'Inertial',
+        userMode: detectedUserMode,
         apiVersion: 'v1.0.0',
         processingTimeMs: Date.now() - req.startTime
       }
     };
 
     // 四模式差異化處理
-    response.metadata = applyModeSpecificFields(response.metadata, userMode);
+    response.metadata.modeFeatures = applyModeSpecificFields(detectedUserMode);
     
     res.status(200).json(response);
   };
 
-  // 統一錯誤回應格式
+  // 統一錯誤回應格式（使用相同結構）
   res.apiError = (message, errorCode, statusCode = 400, details = null) => {
+    const detectedUserMode = req.user?.mode || 'Inertial';
     const response = {
       success: false,
+      data: null,
       error: {
         code: errorCode,
         message: message,
         details: details
       },
+      message: message,
       metadata: {
         timestamp: new Date().toISOString(),
         requestId: req.headers['x-request-id'] || generateRequestId(),
-        userMode: req.user?.mode || 'Inertial'
+        userMode: detectedUserMode,
+        apiVersion: 'v1.0.0',
+        processingTimeMs: Date.now() - req.startTime
       }
     };
+
+    // 錯誤回應也包含四模式特定欄位
+    response.metadata.modeFeatures = applyModeSpecificFields(detectedUserMode);
 
     res.status(statusCode).json(response);
   };
@@ -109,38 +119,43 @@ app.use((req, res, next) => {
 
 #### 3.1.2 四模式差異化處理函數
 ```javascript
-function applyModeSpecificFields(metadata, userMode) {
+function applyModeSpecificFields(userMode) {
+  // 回傳標準化的模式特定欄位物件
   switch (userMode) {
     case 'Expert':
-      metadata.expertFeatures = {
+      return {
         detailedAnalytics: true,
         advancedOptions: true,
-        performanceMetrics: true
+        performanceMetrics: true,
+        batchOperations: true,
+        exportFeatures: true
       };
-      break;
     case 'Cultivation':
-      metadata.cultivationFeatures = {
+      return {
         achievementProgress: true,
         gamificationElements: true,
-        motivationalTips: true
+        motivationalTips: true,
+        progressTracking: true,
+        rewardSystem: true
       };
-      break;
     case 'Guiding':
-      metadata.guidingFeatures = {
+      return {
         simplifiedInterface: true,
         helpHints: true,
-        autoSuggestions: true
+        autoSuggestions: true,
+        stepByStepGuide: true,
+        tutorialMode: true
       };
-      break;
     case 'Inertial':
     default:
-      metadata.inertialFeatures = {
+      return {
         stabilityMode: true,
-        consistentInterface: true
+        consistentInterface: true,
+        minimalChanges: true,
+        quickActions: true,
+        familiarLayout: true
       };
-      break;
   }
-  return metadata;
 }
 ```
 
@@ -155,19 +170,27 @@ function applyModeSpecificFields(metadata, userMode) {
   "success": boolean,           // true=成功, false=失敗
   "data": object | null,        // 成功時包含資料，失敗時為null
   "error": null | object,       // 成功時為null，失敗時包含錯誤資訊
-  "metadata": {
+  "message": string,            // 成功或失敗的描述訊息
+  "metadata": {                 // 成功與失敗都包含相同的metadata結構
     "timestamp": "2025-09-24T10:00:00.000Z",
     "requestId": "req_123456789",
     "userMode": "Expert|Inertial|Cultivation|Guiding",
     "apiVersion": "v1.0.0",
     "processingTimeMs": 150,
-    // 四模式特定欄位（動態加入）
-    "modeFeatures": {
+    "modeFeatures": {           // 成功與失敗都包含四模式特定欄位
       // 根據userMode動態加入對應欄位
+      "expertAnalytics": true,
+      "detailedMetrics": true
     }
   }
 }
 ```
+
+**關鍵統一要素**：
+1. **相同欄位結構**：成功與失敗回應包含完全相同的根層級欄位
+2. **一致的metadata**：無論成功失敗，metadata結構完全相同
+3. **統一的四模式支援**：所有回應都包含modeFeatures欄位
+4. **標準化訊息欄位**：成功與失敗都有message欄位提供描述
 
 **統一格式優勢**：
 - **前端處理一致性**：所有API回應使用相同的判斷邏輯
@@ -186,6 +209,7 @@ function applyModeSpecificFields(metadata, userMode) {
     "category": "餐飲"
   },
   "error": null,
+  "message": "交易新增成功",
   "metadata": {
     "timestamp": "2025-09-24T10:00:00.000Z",
     "requestId": "req_123456789",
@@ -214,12 +238,17 @@ function applyModeSpecificFields(metadata, userMode) {
       "actualValue": "abc"
     }
   },
+  "message": "請求處理失敗",
   "metadata": {
     "timestamp": "2025-09-24T10:00:00.000Z",
     "requestId": "req_123456789",
     "userMode": "Expert",
     "apiVersion": "v1.0.0",
-    "processingTimeMs": 45
+    "processingTimeMs": 45,
+    "modeFeatures": {
+      "expertAnalytics": true,
+      "detailedMetrics": true
+    }
   }
 }
 ```
