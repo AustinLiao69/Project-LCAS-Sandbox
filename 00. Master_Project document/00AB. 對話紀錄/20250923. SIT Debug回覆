@@ -29,6 +29,11 @@ DCN-0012執行不完整 - 未實作的API端點函數清單
 4.	BK_processAPIBatchDelete() - DELETE /transactions/batch
 5.	BK_processAPIUploadAttachment() - POST /transactions/{id}/attachments
 6.	BK_processAPIDeleteAttachment() - DELETE /transactions/{id}/attachments/{attachmentId}
+
+=> 不對，你說的缺失函數在BK我有查到，請重新檢查
+
+
+
 ❓ 高風險函數（可能存在但命名不一致）：
 •	BK_getTransactionsByDateRange() - 核心查詢函數，應對應到BK_processAPIGetTransactions()的內部實作
 📊 影響範圍重新評估
