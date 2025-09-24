@@ -45,6 +45,7 @@
 - **四模式支援**：支援Expert、Inertial、Cultivation、Guiding四種使用者模式差異化回應
 - **職責分離**：API格式化處理應在API層完成，避免BL層職責過載
 - **擴展性需求**：支援未來API端點的統一格式處理需求
+- **配額管理需求**：P1-2階段需控制Firestore記錄量，避免超過每日配額限制
 
 ### 2.2 預期效益
 - **開發效率**：統一的回應格式處理，減少重複代碼
@@ -145,49 +146,79 @@ function applyModeSpecificFields(metadata, userMode) {
 
 ### 3.2 統一回應格式規範
 
-#### 3.2.1 成功回應格式
+#### 3.2.1 統一回應格式（成功與失敗使用相同結構）
+```javascript
+{
+  "success": boolean,           // true=成功, false=失敗
+  "data": object | null,        // 成功時包含資料，失敗時為null
+  "error": null | object,       // 成功時為null，失敗時包含錯誤資訊
+  "metadata": {
+    "timestamp": "2025-09-24T10:00:00.000Z",
+    "requestId": "req_123456789",
+    "userMode": "Expert|Inertial|Cultivation|Guiding",
+    "apiVersion": "v1.0.0",
+    "processingTimeMs": 150,
+    // 四模式特定欄位（動態加入）
+    "modeFeatures": {
+      // 根據userMode動態加入對應欄位
+    }
+  }
+}
+```
+
+#### 3.2.2 成功回應範例
 ```javascript
 {
   "success": true,
   "data": {
-    // API特定的回應數據
+    "transactionId": "txn_123456",
+    "amount": 1500,
+    "category": "餐飲"
   },
-  "message": "操作成功",
+  "error": null,
   "metadata": {
     "timestamp": "2025-09-24T10:00:00.000Z",
     "requestId": "req_123456789",
     "userMode": "Expert",
     "apiVersion": "v1.0.0",
     "processingTimeMs": 150,
-    // 四模式特定欄位
-    "expertFeatures": {
-      "detailedAnalytics": true,
-      "advancedOptions": true,
-      "performanceMetrics": true
+    "modeFeatures": {
+      "expertAnalytics": true,
+      "detailedMetrics": true
     }
   }
 }
 ```
 
-#### 3.2.2 錯誤回應格式
+#### 3.2.3 失敗回應範例
 ```javascript
 {
   "success": false,
+  "data": null,
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "輸入參數驗證失敗",
+    "field": "amount",
     "details": {
-      "field": "amount",
-      "issue": "金額必須大於0"
+      "expectedType": "number",
+      "actualValue": "abc"
     }
   },
   "metadata": {
     "timestamp": "2025-09-24T10:00:00.000Z",
     "requestId": "req_123456789",
-    "userMode": "Expert"
+    "userMode": "Expert",
+    "apiVersion": "v1.0.0",
+    "processingTimeMs": 45
   }
 }
 ```
+
+#### 3.2.4 統一格式優勢
+- **前端處理一致性**：所有API回應使用相同的判斷邏輯
+- **減少條件分支**：統一的 `success` 欄位判斷
+- **提升可維護性**：一套解析邏輯適用所有API
+- **符合RESTful原則**：標準化的回應結構
 
 ### 3.3 四模式差異化處理
 
@@ -215,7 +246,45 @@ function detectUserMode(req) {
 }
 ```
 
-### 3.4 BL層標準化改造
+### 3.4 回應處理機制分析
+
+#### 3.4.1 APL層模組回應處理
+**8301-8304.dart模組處理邏輯**：
+```dart
+// 統一的API回應處理
+if (response.success) {
+  // 成功處理：導航到下一頁面或更新UI狀態
+  navigateToNextScreen();
+  updateUIState(response.data);
+} else {
+  // 失敗處理：顯示錯誤訊息
+  showErrorDialog(response.error.message);
+  logError(response.error.code, response.metadata.requestId);
+}
+```
+
+#### 3.4.2 PL層模組回應處理
+**7301-7302.dart模組處理邏輯**：
+```dart
+// 根據userMode調整UI回應
+switch (response.metadata.userMode) {
+  case 'Expert':
+    showDetailedResponse(response);
+    break;
+  case 'Guiding':
+    showSimplifiedResponse(response);
+    break;
+  // 其他模式處理...
+}
+```
+
+#### 3.4.3 Flutter UI層回應處理
+- **Loading狀態控制**：根據API呼叫狀態顯示/隱藏Loading
+- **Toast訊息顯示**：根據 `success` 顯示成功或失敗訊息
+- **頁面跳轉邏輯**：根據 `error.code` 決定跳轉目標
+- **四模式UI調整**：根據 `metadata.userMode` 調整顯示風格
+
+### 3.5 BL層標準化改造
 
 #### 3.4.1 BL層統一回傳格式
 ```javascript
@@ -359,19 +428,69 @@ const MODE_STRATEGIES = {
 
 ## 10. 文件更新清單
 
-### 10.1 技術架構文件
-- `ASL.js` - 新增統一回應格式處理中介軟體
-- `8088. API設計規範.md` - 更新回應格式標準
+### 10.1 核心依賴關係分析
 
-### 10.2 API規格文件
-- `81. Flutter_SRS(API spec)_APL/` - 所有13個API規格文件更新回應格式
-- `82. Flutter_LLD_APL/` - 所有13個LLD文件更新回應格式範例
+#### 10.1.1 核心實作文件
+| 文件 | 依賴類型 | 更新內容 | 優先級 |
+|------|----------|----------|--------|
+| `ASL.js` | 主要實作 | 新增統一回應格式處理中介軟體 | P0 |
+| `8088. API設計規範.md` | 規範定義 | 更新統一回應格式標準 | P0 |
+| `DCN-0011 建立API service layer.md` | 架構設計 | 補充統一回應格式機制 | P1 |
 
-### 10.3 測試相關文件
-- `05. SIT_Test plan/0501. SIT_P1.md` - 更新API回應格式測試案例
-- `06. SIT_Test code/0603. SIT_TC_P1.js` - 更新測試驗證邏輯
+#### 10.1.2 BL層依賴文件
+| 文件 | 依賴類型 | 更新內容 | 優先級 |
+|------|----------|----------|--------|
+| `1309. AM.js` | BL層函數 | 標準化回傳格式，移除自定義格式 | P0 |
+| `1301. BK.js` | BL層函數 | 標準化回傳格式，移除自定義格式 | P0 |
+| `1310. DL.js` | 日誌記錄 | 新增API回應日誌記錄機制 | P1 |
+| `1311. FS.js` | 資料庫結構 | 新增API回應日誌Firestore結構 | P1 |
 
-**總計：28 個文件需要更新**
+#### 10.1.3 API規格依賴文件
+| 文件群組 | 數量 | 更新內容 | 優先級 |
+|----------|------|----------|--------|
+| `81. Flutter_SRS(API spec)_APL/*.yaml` | 13個 | 更新所有API端點回應格式範例 | P0 |
+| `82. Flutter_LLD_APL/*.md` | 13個 | 更新所有LLD文件回應格式設計 | P1 |
+
+#### 10.1.4 APL層依賴文件
+| 文件 | 依賴類型 | 更新內容 | 優先級 |
+|------|----------|----------|--------|
+| `8301. 認證服務.dart` | API客戶端 | 更新回應解析邏輯 | P0 |
+| `8302. 用戶管理服務.dart` | API客戶端 | 更新回應解析邏輯 | P0 |
+| `8303. 記帳交易服務.dart` | API客戶端 | 更新回應解析邏輯 | P0 |
+| `8304. 帳本管理服務.dart` | API客戶端 | 更新回應解析邏輯 | P0 |
+
+#### 10.1.5 測試文件依賴
+| 文件 | 依賴類型 | 更新內容 | 優先級 |
+|------|----------|----------|--------|
+| `0603. SIT_TC_P1.js` | 整合測試 | 更新API回應格式驗證邏輯 | P0 |
+| `0692. SIT_TestData_P1.json` | 測試資料 | 更新測試資料回應格式 | P0 |
+| `85號資料夾測試檔案` | 3個 | 更新APL層測試案例 | P1 |
+
+### 10.2 執行Action清單
+
+#### 10.2.1 Phase 1 - 核心架構建立（Week 1）
+**必須執行的Action**：
+1. **更新ASL.js**：實作統一回應格式中介軟體
+2. **更新8088規範**：定義新的統一回應格式標準
+3. **更新BL層函數**：AM.js和BK.js標準化回傳格式
+4. **更新SIT測試**：0603.js測試邏輯修改
+
+#### 10.2.2 Phase 2 - 文件同步更新（Week 2）
+**必須執行的Action**：
+1. **更新API規格文件**：81號資料夾13個.yaml檔案
+2. **更新LLD文件**：82號資料夾13個.md檔案
+3. **更新APL模組**：8301-8304.dart回應解析邏輯
+4. **更新測試資料**：0692.json測試資料格式
+
+#### 10.2.3 Phase 3 - 驗證與部署（Week 3）
+**必須執行的Action**：
+1. **執行回歸測試**：確保所有API端點正常運作
+2. **效能監控建立**：建立API回應時間監控機制
+3. **文件審查**：確保所有文件同步更新完成
+4. **生產環境部署準備**：建立部署檢查清單
+
+**總計影響文件數量：42個文件需要更新**
+**預估工作量：3週（21個工作天）**
 
 ---
 
