@@ -1,7 +1,7 @@
 /**
  * 0603. SIT_TC_P1.js
  * LCAS 2.0 Phase 1 SIT測試案例實作
- * 
+ *
  * @version v2.0.0
  * @created 2025-09-15
  * @updated 2025-01-24
@@ -9,7 +9,7 @@
  * @description 階段三整合測試與文件完善：SIT測試邏輯更新，API回歸測試，四模式差異化測試，監控告警設定
  * @phase Phase 3 Integration Testing & Documentation - SIT Logic Update, API Regression, Mode Differentiation, Monitoring Setup
  * @testcases TC-SIT-001 to TC-SIT-028 (28個測試案例)
- * @fixes 
+ * @fixes
  *   - 整合DCN-0015階段三要求：全面支援階段三測試案例
  *   - 升級SIT測試邏輯至v2.0.0
  *   - P1-2階段核心API端點回歸測試 (參照0090文件P1-2範圍)
@@ -537,13 +537,13 @@ class SITTestCases {
             if (!healthCheckResponse.success) {
                 const errorMessage = healthCheckResponse.error?.toLowerCase() || '';
 
-                if (errorMessage.includes('resource_exhausted') || 
+                if (errorMessage.includes('resource_exhausted') ||
                     errorMessage.includes('quota exceeded') ||
                     errorMessage.includes('quota') ||
                     healthCheckResponse.status === 429) {
 
                     console.error('❌ Firebase配額已耗盡，無法執行測試');
-                    console.error('💡 建議：等待配額重置或檢查Firebase使用狀況');
+                    console.log('💡 建議：等待配額重置或檢查Firebase使用狀況');
                     return {
                         available: false,
                         reason: 'FIREBASE_QUOTA_EXHAUSTED',
@@ -573,7 +573,7 @@ class SITTestCases {
             // 檢查錯誤是否與配額相關
             const errorMessage = error.message?.toLowerCase() || '';
 
-            if (errorMessage.includes('resource_exhausted') || 
+            if (errorMessage.includes('resource_exhausted') ||
                 errorMessage.includes('quota exceeded') ||
                 errorMessage.includes('quota')) {
 
@@ -679,49 +679,15 @@ class SITTestCases {
 
             // DCN-0015 階段二：統一回應格式驗證
             if (response.data && typeof response.data === 'object') {
-              const responseData = response.data;
+                const responseData = response.data;
 
-              // 檢查統一回應格式的必要欄位
-              const requiredFields = ['success', 'data', 'error', 'message', 'metadata'];
-              const missingFields = requiredFields.filter(field => !responseData.hasOwnProperty(field));
-
-              if (missingFields.length === 0) {
-                console.log(`✅ 統一回應格式檢查 ${endpoint}: 所有必要欄位存在`);
-
-                // 檢查metadata結構
-                if (responseData.metadata && typeof responseData.metadata === 'object') {
-                  const metadataFields = ['timestamp', 'requestId', 'userMode', 'apiVersion', 'processingTimeMs', 'modeFeatures'];
-                  const missingMetadata = metadataFields.filter(field => !responseData.metadata.hasOwnProperty(field));
-
-                  if (missingMetadata.length === 0) {
-                    console.log(`✅ Metadata格式檢查 ${endpoint}: 完整`);
-
-                    // 檢查四模式特定欄位
-                    if (responseData.metadata.modeFeatures && typeof responseData.metadata.modeFeatures === 'object') {
-                      console.log(`✅ 四模式特定欄位檢查 ${endpoint}: 存在 - 模式: ${responseData.metadata.userMode}`);
-                    }
-                  } else {
-                    console.log(`⚠️ Metadata格式檢查 ${endpoint}: 缺少欄位 - ${missingMetadata.join(', ')}`);
-                  }
+                // 驗證統一回應格式
+                const validation = this.validateUnifiedResponseFormat(responseData, this.currentUserMode); // 傳入當前模式
+                console.log(`  ✅ 統一回應格式驗證 ${cleanEndpoint}: ${validation.qualityGrade} (Score: ${validation.complianceScore.toFixed(1)}%)`);
+                if (!validation.isValid) {
+                    console.log(`     - 錯誤詳情: ${validation.errors.join('; ')}`);
+                    console.log(`     - 驗證細節: ${JSON.stringify(validation.details)}`);
                 }
-
-                // 檢查成功/失敗回應邏輯
-                if (responseData.success === true) {
-                  if (responseData.data !== null && responseData.error === null) {
-                    console.log(`✅ 成功回應邏輯檢查 ${endpoint}: data有值，error為null`);
-                  } else {
-                    console.log(`⚠️ 成功回應邏輯檢查 ${endpoint}: data應有值且error應為null`);
-                  }
-                } else if (responseData.success === false) {
-                  if (responseData.data === null && responseData.error !== null) {
-                    console.log(`✅ 失敗回應邏輯檢查 ${endpoint}: data為null，error有值`);
-                  } else {
-                    console.log(`⚠️ 失敗回應邏輯檢查 ${endpoint}: data應為null且error應有值`);
-                  }
-                }
-              } else {
-                console.log(`❌ 統一回應格式檢查 ${endpoint}: 缺少必要欄位 - ${missingFields.join(', ')}`);
-              }
             }
 
             return {
@@ -1076,7 +1042,7 @@ class SITTestCases {
      * @version 2025-01-24-V1.0.0
      */
     validateTestResultStatistics() {
-        const invalidResults = this.testResults.filter(result => 
+        const invalidResults = this.testResults.filter(result =>
             !result.statisticsSafe?.durationValid
         );
 
@@ -1194,7 +1160,7 @@ class SITTestCases {
             // 子測試1: Firebase服務初始化檢查
             try {
                 const healthResponse = await this.makeRequest('GET', '/health');
-                const firebaseInit = healthResponse.success && 
+                const firebaseInit = healthResponse.success &&
                                    healthResponse.data?.firebase?.status === 'initialized';
                 subTests.push({ name: 'Firebase初始化', success: firebaseInit });
             } catch (error) {
@@ -1217,7 +1183,7 @@ class SITTestCases {
             // 子測試3: Firebase用戶資料查詢
             try {
                 const userResponse = await this.makeRequest('GET', '/api/v1/users/profile');
-                const userDataValid = userResponse.success && 
+                const userDataValid = userResponse.success &&
                                     userResponse.data?.data?.email &&
                                     userResponse.data?.metadata?.userMode;
                 subTests.push({ name: 'Firebase用戶資料', success: userDataValid });
@@ -2273,7 +2239,7 @@ class SITTestCases {
 
             for (const step of steps) {
                 console.log(`  📝 執行步驟${step.step}: ${step.action}`);
-                let stepSuccess = false;
+                let stepSuccess= false;
 
                 try {
                     switch (step.action) {
@@ -2784,9 +2750,9 @@ class SITTestCases {
                 memoryAnalysis: memoryLeakDetection,
                 performanceGrade: this.getStabilityGrade(successRate, avgResponseTime),
                 operationalHealth: {
-                    responseTimeStability: stabilityMetrics.responseTimeVariance < 1000 ? '穩定' : '不穩定',
-                    throughputConsistency: stabilityMetrics.throughputVariance < 0.1 ? '一致' : '波動',
-                    errorRecoveryCapacity: stabilityMetrics.errorRecoveryRate > 0.9 ? '良好' : '需改善'
+                    responseTimeStability: this.calculateStabilityMetrics(operationResults).responseTimeVariance < 1000 ? '穩定' : '不穩定',
+                    throughputConsistency: this.calculateStabilityMetrics(operationResults).throughputVariance < 0.1 ? '一致' : '波動',
+                    errorRecoveryCapacity: this.calculateStabilityMetrics(operationResults).errorRecoveryRate > 0.9 ? '良好' : '需改善'
                 },
                 error: !success ? '24小時穩定性測試未達標' : null
             });
@@ -3338,8 +3304,8 @@ class SITTestCases {
             // 系統穩定性驗證
             this.testCase025_TwentyFourHourStabilityTest,
             this.testCase026_P1CoreAPIRegression, // Changed from ComprehensiveAPIRegression
-            this.testCase027_SystemMonitoringAndAlerting, // Assuming this test exists in the original code, if not, it needs to be added or removed.
-            this.testCase028_ProductionReadinessValidation // Assuming this test exists in the original code, if not, it needs to be added or removed.
+            this.testCase027_FailureRecoveryTest, // Corrected test case name
+            this.testCase028_PerformanceBenchmarkValidation // Corrected test case name
         ];
 
         let passedTests = 0;
@@ -3451,29 +3417,6 @@ class SITTestCases {
     }
 
     /**
-     * 取得SIT品質等級
-     */
-    getSITQualityGrade(successRate) {
-        if (successRate >= 0.95) return 'A+ (可直接發布)';
-        if (successRate >= 0.9) return 'A (建議發布)';
-        if (successRate >= 0.8) return 'B (條件發布)';
-        if (successRate >= 0.7) return 'C (需修正後發布)';
-        return 'D (不建議發布)';
-    }
-
-    /**
-     * 取得部署建議
-     */
-    getDeploymentRecommendation(successRate) {
-        if (successRate >= 0.95) return '✅ 建議立即進入UAT階段';
-        if (successRate >= 0.9) return '⚠️ 建議修正Minor問題後進入UAT';
-        if (successRate >= 0.8) return '🔶 建議修正Major問題後重新SIT';
-        if (successRate >= 0.7) return '⚠️ 需要重大修正，延後發布時程';
-        return '❌ 品質不達標，需要全面檢討';
-    }
-
-
-    /**
      * 執行所有測試案例 (完整版)
      */
     async executeAllTests() {
@@ -3513,8 +3456,8 @@ class SITTestCases {
             this.testCase024_InterfaceResponsiveness,
             this.testCase025_TwentyFourHourStabilityTest,
             this.testCase026_P1CoreAPIRegression, // Changed from ComprehensiveAPIRegression
-            this.testCase027_SystemMonitoringAndAlerting, // Assuming this test exists in the original code, if not, it needs to be added or removed.
-            this.testCase028_ProductionReadinessValidation // Assuming this test exists in the original code, if not, it needs to be added or removed.
+            this.testCase027_FailureRecoveryTest, // Corrected test case name
+            this.testCase028_PerformanceBenchmarkValidation // Corrected test case name
         ];
 
         let passedTests = 0;
@@ -3983,49 +3926,8 @@ class SITTestCases {
      * @returns {boolean} 是否符合統一格式
      */
     validateUnifiedResponseFormat(responseData) {
-        if (!responseData || typeof responseData !== 'object') {
-            return false;
-        }
-
-        const requiredFields = ['success', 'data', 'error', 'message', 'metadata'];
-        const missingFields = requiredFields.filter(field => !responseData.hasOwnProperty(field));
-
-        if (missingFields.length > 0) {
-            console.log(`      - 統一回應格式檢查失敗: 缺少欄位 - ${missingFields.join(', ')}`);
-            return false;
-        }
-
-        // 檢查metadata結構
-        if (responseData.metadata && typeof responseData.metadata === 'object') {
-            const metadataFields = ['timestamp', 'requestId', 'userMode', 'apiVersion', 'processingTimeMs', 'modeFeatures'];
-            const missingMetadata = metadataFields.filter(field => !responseData.metadata.hasOwnProperty(field));
-
-            if (missingMetadata.length > 0) {
-                console.log(`      - Metadata格式檢查失敗: 缺少欄位 - ${missingMetadata.join(', ')}`);
-                return false;
-            }
-        } else {
-            console.log('      - Metadata格式檢查失敗: metadata 不存在或格式錯誤');
-            return false;
-        }
-
-        // 檢查成功/失敗回應邏輯
-        if (responseData.success === true) {
-            if (responseData.data === null || responseData.error !== null) {
-                console.log(`      - 成功回應邏輯檢查失敗: data應有值且error應為null`);
-                return false;
-            }
-        } else if (responseData.success === false) {
-            if (responseData.data !== null || responseData.error === null) {
-                console.log(`      - 失敗回應邏輯檢查失敗: data應為null且error應有值`);
-                return false;
-            }
-        } else {
-            console.log(`      - success欄位值無效: ${responseData.success}`);
-            return false;
-        }
-
-        return true;
+        const overallResult = this.validateUnifiedResponseFormat(responseData); // 這裡調用的是上面修改後的函數
+        return overallResult.isValid;
     }
 
 
