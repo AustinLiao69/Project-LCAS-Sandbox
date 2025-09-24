@@ -167,8 +167,8 @@ paths:
                   backupName: "完整備份_2025-08-22"
                   description: "所有資料的完整備份"
       responses:
-        '202':
-          description: 備份請求已接受，開始處理
+        '200':
+          description: 備份建立成功
           content:
             application/json:
               schema:

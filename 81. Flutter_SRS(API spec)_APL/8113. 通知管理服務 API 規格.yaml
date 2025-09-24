@@ -1554,6 +1554,23 @@ components:
             details:
               type: object
               description: 詳細錯誤資訊
+    NotificationResult:
+      type: object
+      properties:
+        message:
+          type: string
+          description: 成功訊息
+          example: "通知發送成功"
+        notificationId:
+          type: string
+          format: uuid
+          description: 通知ID
+          example: "notif_abcde"
+        createdAt:
+          type: string
+          format: date-time
+          description: 通知建立時間
+          example: "2025-08-22T12:00:00Z"
 
   responses:
     BadRequest:

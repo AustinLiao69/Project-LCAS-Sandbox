@@ -83,7 +83,14 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    $ref: '#/components/schemas/AchievementsList'
+                    type: object
+                    properties:
+                      achievements:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Achievement'
+                      pagination:
+                        $ref: '#/components/schemas/PaginationInfo'
                   error:
                     type: object
                     nullable: true
@@ -108,12 +115,12 @@ paths:
                         description: "API 回應時間戳"
                       requestId:
                         type: string
-                        example: "req-uuid-12345"
+                        example: "req-uuid-123"
                         description: "請求唯一識別碼"
                       userMode:
                         type: string
                         enum: [Expert, Inertial, Cultivation, Guiding]
-                        example: "Expert"
+                        example: "Cultivation"
                         description: "用戶當前模式"
                       apiVersion:
                         type: string
@@ -127,13 +134,13 @@ paths:
                         type: object
                         description: "四模式特定欄位"
                         properties:
-                          detailedAnalytics:
+                          achievementProgress:
                             type: boolean
                             example: true
-                          advancedOptions:
+                          gamificationElements:
                             type: boolean
                             example: true
-                          performanceMetrics:
+                          motivationalTips:
                             type: boolean
                             example: true
         '400':
@@ -812,6 +819,27 @@ components:
           enum: [Expert, Inertial, Cultivation, Guiding]
           description: 用戶模式
           example: "Expert"
+        apiVersion:
+          type: string
+          example: "v1.0.0"
+          description: "API 版本"
+        processingTimeMs:
+          type: number
+          example: 120
+          description: "處理時間（毫秒）"
+        modeFeatures:
+          type: object
+          description: "四模式特定欄位"
+          properties:
+            detailedAnalytics:
+              type: boolean
+              example: true
+            advancedOptions:
+              type: boolean
+              example: true
+            performanceMetrics:
+              type: boolean
+              example: true
 
     AchievementsList:
       type: object
@@ -1331,6 +1359,45 @@ components:
         details:
           type: object
           description: 錯誤詳細資訊
+    
+    PaginationInfo:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          description: 當前頁碼
+        totalPages:
+          type: integer
+          description: 總頁數
+        pageSize:
+          type: integer
+          description: 每頁項目數
+        totalItems:
+          type: integer
+          description: 總項目數
+
+    UserAchievement:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 成就 ID
+        name:
+          type: string
+          description: 成就名稱
+        description:
+          type: string
+          description: 成就描述
+        category:
+          type: string
+          description: 成就分類
+        unlockedAt:
+          type: string
+          format: date-time
+          description: 解鎖時間
+        points:
+          type: integer
+          description: 獲得積分
 
   responses:
     BadRequest:

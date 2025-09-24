@@ -159,7 +159,65 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StandardResponse'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/SystemStatus'
+                  error:
+                    type: object
+                    nullable: true
+                    example: null
+                  message:
+                    type: string
+                    example: "系統狀態查詢成功"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 85
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
               example:
                 success: true
                 data:
@@ -1322,6 +1380,54 @@ components:
           type: array
           items:
             type: string
+
+    SystemStatus:
+      type: object
+      properties:
+        overallStatus:
+          type: string
+          example: "operational"
+        lastUpdated:
+          type: string
+          format: date-time
+        services:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [operational, degraded, maintenance, unknown]
+        metrics:
+          type: object
+          properties:
+            uptime:
+              type: string
+              example: "99.98%"
+            responseTime:
+              type: string
+              example: "28ms"
+            throughput:
+              type: string
+              example: "1250 req/min"
+            activeUsers:
+              type: integer
+              example: 1250
+            errorRate:
+              type: string
+              example: "0.02%"
+        maintenanceSchedule:
+          type: object
+          properties:
+            nextMaintenance:
+              type: string
+              format: date-time
+            duration:
+              type: integer
+              example: 120
+            description:
+              type: string
+          nullable: true
+        version:
+          type: string
+          example: "2.1.13"
 
   responses:
     UnauthorizedError:
