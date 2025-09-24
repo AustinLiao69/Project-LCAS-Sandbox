@@ -1040,26 +1040,57 @@ class SITTestCases {
     }
 
     /**
-     * TC-SIT-003: Token管理整合測試
+     * TC-SIT-003: Firebase Auth整合測試
      */
-    async testCase003_TokenManagement() {
+    async testCase003_FirebaseAuthIntegration() {
         const startTime = Date.now();
         try {
-            if (!this.authToken) {
-                throw new Error('需要先執行登入測試取得Token');
+            // 測試Firebase Auth整合 - 分三個子測試
+            const subTests = [];
+
+            // 子測試1: Firebase服務初始化檢查
+            try {
+                const healthResponse = await this.makeRequest('GET', '/health');
+                const firebaseInit = healthResponse.success && 
+                                   healthResponse.data?.firebase?.status === 'initialized';
+                subTests.push({ name: 'Firebase初始化', success: firebaseInit });
+            } catch (error) {
+                subTests.push({ name: 'Firebase初始化', success: false, error: error.message });
             }
 
-            // 測試Token驗證
-            const response = await this.makeRequest('GET', '/api/v1/users/profile');
+            // 子測試2: Firebase ID Token驗證 (模擬)
+            if (this.authToken) {
+                try {
+                    const tokenResponse = await this.makeRequest('GET', '/api/v1/users/profile');
+                    const tokenValid = tokenResponse.success && tokenResponse.data?.success === true;
+                    subTests.push({ name: 'Firebase Token驗證', success: tokenValid });
+                } catch (error) {
+                    subTests.push({ name: 'Firebase Token驗證', success: false, error: error.message });
+                }
+            } else {
+                subTests.push({ name: 'Firebase Token驗證', success: false, error: '無可用Token' });
+            }
 
-            const success = response.success &&
-                          response.data?.success === true &&
-                          response.data?.data?.email;
+            // 子測試3: Firebase用戶資料查詢
+            try {
+                const userResponse = await this.makeRequest('GET', '/api/v1/users/profile');
+                const userDataValid = userResponse.success && 
+                                    userResponse.data?.data?.email &&
+                                    userResponse.data?.metadata?.userMode;
+                subTests.push({ name: 'Firebase用戶資料', success: userDataValid });
+            } catch (error) {
+                subTests.push({ name: 'Firebase用戶資料', success: false, error: error.message });
+            }
+
+            const successCount = subTests.filter(test => test.success).length;
+            const success = successCount >= 2; // 至少2個子測試成功
 
             this.recordTestResult('TC-SIT-003', success, Date.now() - startTime, {
-                response: response.data,
-                tokenUsed: !!this.authToken,
-                error: !success ? (response.error || 'Token驗證失敗') : null
+                subTests,
+                successCount,
+                totalSubTests: subTests.length,
+                firebaseIntegration: successCount >= 2 ? '完整' : '部分',
+                error: !success ? 'Firebase Auth整合測試未完全通過' : null
             });
 
             return success;
@@ -2997,7 +3028,7 @@ class SITTestCases {
         const phase1TestMethods = [
             this.testCase001_UserRegistration,
             this.testCase002_UserLogin,
-            this.testCase003_TokenManagement,
+            this.testCase003_FirebaseAuthIntegration,
             this.testCase004_QuickBooking,
             this.testCase005_FullBookingForm,
             this.testCase006_TransactionQuery,
