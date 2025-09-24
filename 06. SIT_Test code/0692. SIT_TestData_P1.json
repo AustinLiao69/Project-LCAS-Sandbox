@@ -329,20 +329,51 @@
   },
 
   "expected_response_formats": {
-    "success_response": {
+    "dcn_0015_unified_success_response": {
       "success": true,
-      "data": {},
-      "message": "操作成功",
-      "timestamp": "2025-09-15T10:00:00Z"
-    },
-    "error_response": {
-      "success": false,
-      "error": {
-        "code": "ERROR_CODE",
-        "message": "錯誤訊息",
-        "details": {}
+      "data": {
+        "exampleField": "exampleValue"
       },
-      "timestamp": "2025-09-15T10:00:00Z"
+      "error": null,
+      "message": "操作成功",
+      "metadata": {
+        "timestamp": "2025-09-24T10:00:00.000Z",
+        "requestId": "req_123456789",
+        "userMode": "Expert",
+        "apiVersion": "v1.0.0",
+        "processingTimeMs": 150,
+        "modeFeatures": {
+          "detailedAnalytics": true,
+          "advancedOptions": true,
+          "performanceMetrics": true
+        }
+      }
+    },
+    "dcn_0015_unified_error_response": {
+      "success": false,
+      "data": null,
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "message": "輸入參數驗證失敗",
+        "details": {
+          "field": "amount",
+          "expectedType": "number",
+          "actualValue": "abc"
+        }
+      },
+      "message": "請求處理失敗",
+      "metadata": {
+        "timestamp": "2025-09-24T10:00:00.000Z",
+        "requestId": "req_123456789",
+        "userMode": "Expert",
+        "apiVersion": "v1.0.0",
+        "processingTimeMs": 45,
+        "modeFeatures": {
+          "detailedAnalytics": true,
+          "advancedOptions": true,
+          "performanceMetrics": true
+        }
+      }
     }
   },
 
@@ -913,57 +944,270 @@
   },
 
   "api_response_format_tests": {
-    "success_response_format": {
+    "dcn_0015_success_response_format": {
       "test_id": "response_success_001",
-      "scenario": "成功回應格式驗證",
+      "scenario": "DCN-0015統一成功回應格式驗證",
       "expected_structure": {
         "success": true,
         "data": "object",
+        "error": null,
+        "message": "string",
         "metadata": {
           "timestamp": "string",
           "requestId": "string",
           "userMode": "string",
-          "apiVersion": "string"
-        },
-        "message": "string"
+          "apiVersion": "string",
+          "processingTimeMs": "number",
+          "modeFeatures": "object"
+        }
       }
     },
-    "error_response_format": {
+    "dcn_0015_validation_test_cases": {
+      "three_layer_validation": {
+        "layer1_basic_structure_tests": [
+          {
+            "test_id": "layer1_001",
+            "scenario": "完整基礎結構驗證",
+            "test_response": {
+              "success": true,
+              "data": {"result": "test"},
+              "error": null,
+              "message": "測試成功",
+              "metadata": {
+                "timestamp": "2025-01-27T10:00:00.000Z",
+                "requestId": "req_test_001",
+                "userMode": "Expert",
+                "apiVersion": "v1.0.0",
+                "processingTimeMs": 150,
+                "modeFeatures": {
+                  "detailedAnalytics": true,
+                  "advancedOptions": true
+                }
+              }
+            },
+            "expected_result": "pass"
+          },
+          {
+            "test_id": "layer1_002",
+            "scenario": "缺少success欄位",
+            "test_response": {
+              "data": {"result": "test"},
+              "error": null,
+              "message": "測試",
+              "metadata": {}
+            },
+            "expected_result": "fail",
+            "expected_error": "缺少根層級必要欄位: success"
+          }
+        ],
+        "layer2_deep_content_tests": [
+          {
+            "test_id": "layer2_001",
+            "scenario": "ISO8601時間戳驗證",
+            "test_response": {
+              "success": true,
+              "data": {"result": "test"},
+              "error": null,
+              "message": "測試成功",
+              "metadata": {
+                "timestamp": "2025-01-27T10:00:00.000Z",
+                "requestId": "req_test_001",
+                "userMode": "Expert",
+                "apiVersion": "v1.0.0",
+                "processingTimeMs": 150,
+                "modeFeatures": {}
+              }
+            },
+            "expected_result": "pass"
+          },
+          {
+            "test_id": "layer2_002",
+            "scenario": "錯誤時間戳格式",
+            "test_response": {
+              "success": true,
+              "data": {"result": "test"},
+              "error": null,
+              "message": "測試成功",
+              "metadata": {
+                "timestamp": "2025-01-27 10:00:00",
+                "requestId": "req_test_001",
+                "userMode": "Expert",
+                "apiVersion": "v1.0.0",
+                "processingTimeMs": 150,
+                "modeFeatures": {}
+              }
+            },
+            "expected_result": "fail",
+            "expected_error": "timestamp格式不符合ISO8601標準"
+          }
+        ],
+        "layer3_business_logic_tests": [
+          {
+            "test_id": "layer3_001",
+            "scenario": "成功回應邏輯驗證",
+            "test_response": {
+              "success": true,
+              "data": {"result": "success"},
+              "error": null,
+              "message": "操作成功",
+              "metadata": {
+                "timestamp": "2025-01-27T10:00:00.000Z",
+                "requestId": "req_test_001",
+                "userMode": "Expert",
+                "apiVersion": "v1.0.0",
+                "processingTimeMs": 150,
+                "modeFeatures": {}
+              }
+            },
+            "expected_result": "pass"
+          },
+          {
+            "test_id": "layer3_002",
+            "scenario": "失敗回應邏輯驗證",
+            "test_response": {
+              "success": false,
+              "data": null,
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "驗證失敗",
+                "details": {}
+              },
+              "message": "操作失敗",
+              "metadata": {
+                "timestamp": "2025-01-27T10:00:00.000Z",
+                "requestId": "req_test_001",
+                "userMode": "Expert",
+                "apiVersion": "v1.0.0",
+                "processingTimeMs": 150,
+                "modeFeatures": {}
+              }
+            },
+            "expected_result": "pass"
+          }
+        ]
+      },
+      "four_mode_validation_tests": [
+        {
+          "test_id": "mode_001",
+          "scenario": "Expert模式特定欄位驗證",
+          "user_mode": "Expert",
+          "test_response": {
+            "success": true,
+            "data": {"result": "test"},
+            "error": null,
+            "message": "測試成功",
+            "metadata": {
+              "timestamp": "2025-01-27T10:00:00.000Z",
+              "requestId": "req_test_001",
+              "userMode": "Expert",
+              "apiVersion": "v1.0.0",
+              "processingTimeMs": 150,
+              "modeFeatures": {
+                "detailedAnalytics": true,
+                "advancedOptions": true,
+                "performanceMetrics": true,
+                "batchOperations": true,
+                "exportFeatures": true
+              }
+            }
+          },
+          "expected_result": "pass",
+          "expected_mode_score": 100
+        },
+        {
+          "test_id": "mode_002",
+          "scenario": "Guiding模式特定欄位驗證",
+          "user_mode": "Guiding",
+          "test_response": {
+            "success": true,
+            "data": {"result": "test"},
+            "error": null,
+            "message": "測試成功",
+            "metadata": {
+              "timestamp": "2025-01-27T10:00:00.000Z",
+              "requestId": "req_test_002",
+              "userMode": "Guiding",
+              "apiVersion": "v1.0.0",
+              "processingTimeMs": 150,
+              "modeFeatures": {
+                "simplifiedInterface": true,
+                "helpHints": true,
+                "autoSuggestions": true,
+                "stepByStepGuide": true,
+                "tutorialMode": true
+              }
+            }
+          },
+          "expected_result": "pass",
+          "expected_mode_score": 100
+        }
+      ]
+    },
+    "dcn_0015_error_response_format": {
       "test_id": "response_error_001",
-      "scenario": "錯誤回應格式驗證",
+      "scenario": "DCN-0015統一錯誤回應格式驗證",
       "expected_structure": {
         "success": false,
+        "data": null,
         "error": {
           "code": "string",
           "message": "string",
           "details": "object"
         },
+        "message": "string",
         "metadata": {
           "timestamp": "string",
           "requestId": "string",
-          "userMode": "string"
+          "userMode": "string",
+          "apiVersion": "string",
+          "processingTimeMs": "number",
+          "modeFeatures": "object"
         }
       }
     },
-    "mode_specific_response_format": {
+    "dcn_0015_mode_specific_response_format": {
       "test_id": "response_mode_001",
-      "scenario": "模式差異化回應格式驗證",
+      "scenario": "DCN-0015四模式差異化回應格式驗證",
       "test_cases": [
         {
-          "mode": "expert",
-          "expected_additional_fields": ["advanced_options", "detailed_statistics", "debug_info"]
+          "mode": "Expert",
+          "expected_modeFeatures": {
+            "detailedAnalytics": true,
+            "advancedOptions": true,
+            "performanceMetrics": true,
+            "batchOperations": true,
+            "exportFeatures": true
+          }
         },
         {
-          "mode": "guiding",
-          "expected_additional_fields": ["help_text", "next_steps", "simplified_options"]
+          "mode": "Guiding",
+          "expected_modeFeatures": {
+            "simplifiedInterface": true,
+            "helpHints": true,
+            "autoSuggestions": true,
+            "stepByStepGuide": true,
+            "tutorialMode": true
+          }
         },
         {
-          "mode": "inertial",
-          "expected_additional_fields": ["consistent_format", "stable_data"]
+          "mode": "Inertial",
+          "expected_modeFeatures": {
+            "stabilityMode": true,
+            "consistentInterface": true,
+            "minimalChanges": true,
+            "quickActions": true,
+            "familiarLayout": true
+          }
         },
         {
-          "mode": "cultivation",
-          "expected_additional_fields": ["progress_data", "achievement_status", "motivational_content"]
+          "mode": "Cultivation",
+          "expected_modeFeatures": {
+            "achievementProgress": true,
+            "gamificationElements": true,
+            "motivationalTips": true,
+            "progressTracking": true,
+            "rewardSystem": true
+          }
         }
       ]
     }
