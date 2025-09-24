@@ -1,4 +1,3 @@
-
 # DCN-0015 重構ASL.js建立API統一回應格式
 
 **版本**: v1.0.0  
@@ -18,7 +17,8 @@
    - 3.1 [ASL.js中介軟體強化](#31-asljs中介軟體強化)
    - 3.2 [統一回應格式規範](#32-統一回應格式規範)
    - 3.3 [四模式差異化處理](#33-四模式差異化處理)
-   - 3.4 [BL層標準化改造](#34-bl層標準化改造)
+   - 3.4 [APL層適配統一回應格式](#34-apl層適配統一回應格式)
+   - 3.5 [BL層標準化改造](#35-bl層標準化改造)
 ### 4. [技術架構設計](#4-技術架構設計)
    - 4.1 [回應格式處理流程](#41-回應格式處理流程)
    - 4.2 [中介軟體設計架構](#42-中介軟體設計架構)
@@ -82,7 +82,7 @@ app.use((req, res, next) => {
 
     // 四模式差異化處理
     response.metadata.modeFeatures = applyModeSpecificFields(detectedUserMode);
-    
+
     res.status(200).json(response);
   };
 
@@ -258,6 +258,35 @@ function applyModeSpecificFields(userMode) {
 - **減少條件分支**：統一的 `success` 欄位判斷
 - **提升可維護性**：一套解析邏輯適用所有API
 - **符合RESTful原則**：標準化的回應結構
+```
+
+#### 3.2.5 APL層回應格式適配
+**81號資料夾 API規格文件更新**：
+- **81. Flutter_SRS(API spec)_APL** 資料夾（13個檔案）
+  - 8101~8113.yaml 檔案：更新 responses section 為 DCN-0015 統一格式
+
+**82號資料夾 LLD文件更新**：
+- **82. Flutter_LLD_APL** 資料夾（13個檔案）
+  - 8201~8213.md 檔案：第4節「統一回應格式」更新為 DCN-0015 規範
+
+**83號資料夾 代碼適配**：
+- **83. Flutter_Module code(API route)_APL** 資料夾（4個檔案）
+  - 8301~8304.dart：更新 API Gateway 回應處理邏輯，支援 DCN-0015 統一格式解析
+
+```dart
+// 統一的API回應處理
+if (response.success) {
+  // 成功處理：導航到下一頁面或更新UI狀態
+  navigateToNextScreen();
+  updateUIState(response.data);
+  showSuccessToast(response.metadata.userMode);
+} else {
+  // 失敗處理：顯示錯誤訊息
+  showErrorDialog(response.error.message);
+  logError(response.error.code, response.metadata.requestId);
+  handleErrorNavigation(response.error.code);
+}
+```
 
 ### 3.3 四模式差異化處理
 
@@ -274,21 +303,27 @@ function detectUserMode(req) {
   if (req.user && req.user.mode) {
     return req.user.mode;
   }
-  
+
   // 2. 從請求標頭中取得模式設定
   if (req.headers['x-user-mode']) {
     return req.headers['x-user-mode'];
   }
-  
+
   // 3. 預設為Inertial模式
   return 'Inertial';
 }
 ```
 
-### 3.4 回應處理機制規範
+### 3.4 APL層適配統一回應格式
 
-#### 3.4.1 APL層模組回應處理規範
-**8301-8304.dart模組統一處理邏輯**：
+#### 3.4.1 82號資料夾LLD文件更新
+**8201-8213.md檔案第4節更新**：
+- 以 8205.md 為標準範本，將 DCN-0015 統一回應格式規範加入所有 LLD 文件
+- 更新「統一回應格式」章節，確保與 DCN-0015 第6節完全一致
+- 加入四模式差異化處理說明
+
+#### 3.4.2 83號資料夾代碼適配
+**8301-8304.dart檔案統一處理邏輯**：
 ```dart
 // 統一的API回應處理
 if (response.success) {
@@ -304,71 +339,16 @@ if (response.success) {
 }
 ```
 
-#### 3.4.2 PL層模組回應處理規範
-**7301-7302.dart模組統一處理邏輯**：
-```dart
-// 根據userMode調整UI回應
-switch (response.metadata.userMode) {
-  case 'Expert':
-    showDetailedResponse(response);
-    showAdvancedOptions();
-    break;
-  case 'Inertial':
-    showStandardResponse(response);
-    break;
-  case 'Cultivation':
-    showGamifiedResponse(response);
-    showProgressIndicators();
-    break;
-  case 'Guiding':
-    showSimplifiedResponse(response);
-    showHelpHints();
-    break;
-}
-```
-
-#### 3.4.3 Flutter UI層回應處理規範
-- **Loading狀態控制**：根據API呼叫狀態顯示/隱藏Loading
-- **Toast訊息顯示**：根據 `success` 顯示成功或失敗訊息
-- **頁面跳轉邏輯**：根據 `error.code` 決定跳轉目標
-- **四模式UI調整**：根據 `metadata.userMode` 調整顯示風格
-- **錯誤重試機制**：根據 `error.code` 決定是否提供重試選項
-
-### 3.5 配額管理策略（P1-2階段）
-
-#### 3.5.1 Firestore記錄策略
-**P1-2階段配額控制**：
-- **成功回應**：不記錄至Firestore，僅記錄在記憶體日誌
-- **失敗回應**：僅記錄ERROR和CRITICAL等級至Firestore
-- **配額監控**：實作智慧記錄策略，避免超過每日限額
-- **緊急降級**：配額接近時自動切換至記憶體日誌
-
-#### 3.5.2 記錄等級定義
-```javascript
-const LOG_LEVELS = {
-  SUCCESS: 'SUCCESS',    // P1-2不記錄至Firestore
-  INFO: 'INFO',         // P1-2不記錄至Firestore
-  WARNING: 'WARNING',   // P1-2不記錄至Firestore
-  ERROR: 'ERROR',       // P1-2記錄至Firestore
-  CRITICAL: 'CRITICAL'  // P1-2記錄至Firestore
-};
-```
-
-#### 3.5.3 後續階段擴展
-- **P3階段**：加入完整審計日誌功能
-- **P4階段**：實作使用者行為追蹤
-- **生產階段**：開啟完整的日誌記錄機制
-
 ### 3.5 BL層標準化改造
 
-#### 3.4.1 BL層統一回傳格式
+#### 3.5.1 BL層統一回傳格式
 ```javascript
 // BL層函數統一回傳格式
 function BL_functionExample(inputData) {
   try {
     // 業務邏輯處理
     const result = processBusinessLogic(inputData);
-    
+
     return {
       success: true,
       data: result,
@@ -387,13 +367,13 @@ function BL_functionExample(inputData) {
 }
 ```
 
-#### 3.4.2 ASL.js接收處理機制
+#### 3.5.2 ASL.js接收處理機制
 ```javascript
 app.post('/api/v1/example', async (req, res) => {
   try {
     // 調用BL層函數
     const blResult = await BL_functionExample(req.body);
-    
+
     if (blResult.success) {
       res.apiSuccess(blResult.data, blResult.message, detectUserMode(req));
     } else {
@@ -503,16 +483,28 @@ const MODE_STRATEGIES = {
 
 ## 10. 文件更新清單
 
-### 10.1 核心依賴關係分析
+### 10.1 需要更新的依賴文件
 
-#### 10.1.1 核心實作文件
+#### 10.1.1 API規格文件更新（81號資料夾）
+- **81. Flutter_SRS(API spec)_APL** 資料夾（13個檔案）
+  - 8101~8113.yaml 檔案：更新 responses section 為 DCN-0015 統一格式
+
+#### 10.1.2 LLD文件更新（82號資料夾）
+- **82. Flutter_LLD_APL** 資料夾（13個檔案）
+  - 8201~8213.md 檔案：第4節「統一回應格式」更新為 DCN-0015 規範
+
+#### 10.1.3 APL層代碼更新（83號資料夾）
+- **83. Flutter_Module code(API route)_APL** 資料夾（4個檔案）
+  - 8301~8304.dart：更新 API Gateway 回應處理邏輯，支援 DCN-0015 統一格式解析
+
+#### 10.1.4 核心實作文件
 | 文件 | 依賴類型 | 更新內容 | 優先級 |
 |------|----------|----------|--------|
 | `ASL.js` | 主要實作 | 新增統一回應格式處理中介軟體 | P0 |
 | `8088. API設計規範.md` | 規範定義 | 更新統一回應格式標準 | P0 |
 | `DCN-0011 建立API service layer.md` | 架構設計 | 補充統一回應格式機制 | P1 |
 
-#### 10.1.2 BL層依賴文件
+#### 10.1.5 BL層依賴文件
 | 文件 | 依賴類型 | 更新內容 | 優先級 |
 |------|----------|----------|--------|
 | `1309. AM.js` | BL層函數 | 標準化回傳格式，移除自定義格式 | P0 |
@@ -520,13 +512,13 @@ const MODE_STRATEGIES = {
 | `1310. DL.js` | 日誌記錄 | 新增API回應日誌記錄機制 | P1 |
 | `1311. FS.js` | 資料庫結構 | 新增API回應日誌Firestore結構 | P1 |
 
-#### 10.1.3 API規格依賴文件
+#### 10.1.6 API規格依賴文件
 | 文件群組 | 數量 | 更新內容 | 優先級 |
 |----------|------|----------|--------|
 | `81. Flutter_SRS(API spec)_APL/*.yaml` | 13個 | 更新所有API端點回應格式範例 | P0 |
 | `82. Flutter_LLD_APL/*.md` | 13個 | 更新所有LLD文件回應格式設計 | P1 |
 
-#### 10.1.4 APL層依賴文件
+#### 10.1.7 APL層依賴文件
 | 文件 | 依賴類型 | 更新內容 | 優先級 |
 |------|----------|----------|--------|
 | `8301. 認證服務.dart` | API客戶端 | 更新回應解析邏輯 | P0 |
@@ -534,7 +526,7 @@ const MODE_STRATEGIES = {
 | `8303. 記帳交易服務.dart` | API客戶端 | 更新回應解析邏輯 | P0 |
 | `8304. 帳本管理服務.dart` | API客戶端 | 更新回應解析邏輯 | P0 |
 
-#### 10.1.5 測試文件依賴
+#### 10.1.8 測試文件依賴
 | 文件 | 依賴類型 | 更新內容 | 優先級 |
 |------|----------|----------|--------|
 | `0603. SIT_TC_P1.js` | 整合測試 | 更新API回應格式驗證邏輯 | P0 |
@@ -549,7 +541,7 @@ const MODE_STRATEGIES = {
    - 實作統一回應格式中介軟體
    - 整合四模式差異化處理邏輯
    - 實作配額管理機制
-   
+
 2. **更新8088 API設計規範**：
    - 定義統一回應格式標準
    - 更新錯誤處理規範
