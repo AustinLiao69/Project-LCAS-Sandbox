@@ -1,26 +1,25 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 報表分析服務 API 規格
   version: 1.0.2
   description: |
     **LCAS 2.0 報表分析服務 API 規格**
-    
+
     負責報表生成、數據分析與視覺化的完整 API 規格。
     支援標準報表、多格式匯出與深度分析功能，提供四模式差異化體驗。
-    
+
     **服務範圍**:
     - 標準報表生成（收支分析、預算執行、趨勢分析）
     - 報表匯出功能（PDF、Excel、CSV、圖片格式）
     - 數據分析與洞察（AI 分析、趨勢預測）
     - 報表分享與協作（權限控制、分享連結）
-    
+
     **四模式差異化策略**:
     - **Expert**: 完整報表設計工具、進階分析功能、詳細統計數據
     - **Inertial**: 標準報表範本、簡化設定選項、固定分析維度
     - **Cultivation**: 目標導向報表、進度追蹤、激勵性數據展示
     - **Guiding**: 智慧預設報表、一鍵生成、簡化分析結果
-    
+
     **更新記錄**:
     - v1.0.2 (2025-01-28): 統一錯誤處理格式，添加metadata結構，符合8088 API設計規範
     - v1.0.1 (2025-01-28): 調整 API 端點以符合標準清單，統一路徑參數命名
@@ -121,6 +120,13 @@ paths:
                         items:
                           type: string
                         example: ["createReport", "viewTemplates", "exportAll"]
+                  error:
+                    type: object
+                    nullable: true
+                    example: null
+                  message:
+                    type: string
+                    example: "成功取得報表列表"
                   metadata:
                     $ref: '#/components/schemas/ResponseMetadata'
         '400':
@@ -503,7 +509,7 @@ paths:
         與 GET /reports/{id}/export 的差異：
         - export 適合小檔案直接下載
         - download 適合大檔案異步處理，提供下載連結
-        
+
         四模式差異：
         - Expert: 完整下載選項、批次下載
         - Inertial: 標準下載格式、單檔下載

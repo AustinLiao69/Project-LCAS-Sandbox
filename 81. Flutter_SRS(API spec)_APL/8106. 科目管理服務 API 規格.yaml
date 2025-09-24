@@ -1,34 +1,33 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 科目管理服務 API 規格
   version: 1.0.0
   description: |
     **LCAS 2.0 科目管理服務 API 規格**
-    
+
     負責收支科目的完整管理功能，包含科目分類、階層結構、使用統計等。
     支援四模式差異化體驗，提供靈活的科目管理與個人化設定。
-    
+
     ## 🎯 服務範圍
     - **科目 CRUD**：建立、查詢、修改、刪除科目
     - **階層管理**：科目樹狀結構、父子關係管理
     - **科目分類**：收入科目、支出科目、轉帳科目
     - **使用統計**：科目使用頻率、金額分析
     - **個人化設定**：常用科目、快速選擇、預設科目
-    
+
     ## 🎨 四模式差異化支援
-    
+
     | 模式 | 特色功能 |
     |------|----------|
     | **Expert** | 完整科目管理、自訂階層、批次操作、進階統計 |
     | **Inertial** | 標準科目操作、固定分類、簡潔管理 |
     | **Cultivation** | 科目建議、使用引導、習慣分析 |
     | **Guiding** | 極簡科目、預設分類、最少選項 |
-    
+
     ## 🗂️ 對應畫面
     - **S-204**：科目選擇頁
     - **S-306**：科目管理主頁
-    
+
     **版本**: 1.0.0  
     **建立日期**: 2025-08-22  
     **對應文件**: 0021. Screen list.md (S-204, S-306)
@@ -49,7 +48,7 @@ paths:
       description: |
         取得使用者的科目列表，支援分層結構、篩選和排序。
         根據使用者模式返回不同詳細程度的資訊。
-        
+
         **對應畫面**: S-204 科目選擇頁、S-306 科目管理主頁
         **四模式差異**: 顯示資訊詳細程度與推薦科目不同
       tags:
@@ -147,7 +146,7 @@ paths:
                               type: string
                               enum: [income, expense, transfer]
                               example: "expense"
-                            
+
                             # 基本資訊
                             description:
                               type: string
@@ -158,7 +157,7 @@ paths:
                             color:
                               type: string
                               example: "#FF5722"
-                            
+
                             # 階層資訊
                             parentId:
                               type: string
@@ -167,7 +166,6 @@ paths:
                             level:
                               type: integer
                               example: 1
-                              description: "科目層級（0=根層級）"
                             path:
                               type: string
                               example: "食物 > 餐廳"
@@ -178,7 +176,7 @@ paths:
                             childrenCount:
                               type: integer
                               example: 0
-                            
+
                             # 設定資訊
                             isActive:
                               type: boolean
@@ -189,7 +187,7 @@ paths:
                             sortOrder:
                               type: integer
                               example: 10
-                            
+
                             # Expert Mode: 詳細統計
                             statistics:
                               type: object
@@ -222,7 +220,7 @@ paths:
                                   type: integer
                                   example: 3
                                   description: "使用頻率排名"
-                            
+
                             # Cultivation Mode: 習慣分析
                             habits:
                               type: object
@@ -243,7 +241,7 @@ paths:
                                 seasonalPattern:
                                   type: string
                                   example: "較常在週末使用"
-                            
+
                             # 審計資訊
                             audit:
                               type: object
@@ -263,7 +261,7 @@ paths:
                                   type: boolean
                                   example: false
                                   description: "是否為系統預設科目"
-                      
+
                       # 階層結構（樹狀）
                       tree:
                         type: array
@@ -294,7 +292,7 @@ paths:
                                   children:
                                     type: array
                                     items: {}
-                      
+
                       # 四模式差異化推薦
                       recommendations:
                         type: array
@@ -316,7 +314,7 @@ paths:
                               type: number
                               example: 0.85
                               description: "推薦信心度"
-                      
+
                       # 快速存取
                       quickAccess:
                         type: object
@@ -339,7 +337,7 @@ paths:
                             items:
                               type: string
                             example: ["category-uuid-002", "category-uuid-007"]
-                      
+
                       # 統計摘要
                       summary:
                         type: object
@@ -396,7 +394,7 @@ paths:
       description: |
         建立新的收支科目，支援階層結構設定。
         不同模式提供不同的建立選項和預設值。
-        
+
         **對應畫面**: S-306 科目管理主頁建立功能
         **四模式差異**: 可設定選項與預設值不同
       tags:
@@ -422,7 +420,7 @@ paths:
                   type: string
                   example: "ledger-uuid-001"
                   description: "所屬帳本 ID"
-                
+
                 # 選填資訊
                 description:
                   type: string
@@ -432,7 +430,7 @@ paths:
                   type: string
                   example: "category-uuid-transport"
                   description: "父科目 ID（建立子科目時）"
-                
+
                 # 外觀設定
                 icon:
                   type: string
@@ -442,7 +440,7 @@ paths:
                   type: string
                   example: "#FFC107"
                   pattern: "^#[0-9A-Fa-f]{6}$"
-                
+
                 # Expert Mode: 進階設定
                 advanced:
                   type: object
@@ -459,16 +457,14 @@ paths:
                     budgetEnabled:
                       type: boolean
                       example: true
-                      description: "是否啟用預算追蹤"
                     trackingEnabled:
                       type: boolean
                       example: true
-                      description: "是否啟用使用統計"
                     autoSuggest:
                       type: boolean
                       example: true
                       description: "是否加入智慧建議"
-                
+
                 # 限制設定
                 restrictions:
                   type: object
@@ -476,18 +472,16 @@ paths:
                     maxAmount:
                       type: number
                       example: 1000
-                      description: "單筆金額上限"
                     requireNote:
                       type: boolean
                       example: false
-                      description: "是否強制填寫備註"
                     allowedAccounts:
                       type: array
                       items:
                         type: string
                       example: ["account-uuid-cash", "account-uuid-card"]
                       description: "允許使用的帳戶"
-                
+
                 # 模板套用
                 template:
                   type: object
@@ -534,12 +528,12 @@ paths:
                       level:
                         type: integer
                         example: 1
-                      
+
                       # 建立結果
                       setupComplete:
                         type: boolean
                         example: true
-                      
+
                       # 四模式差異化建議
                       suggestions:
                         type: array
@@ -559,7 +553,7 @@ paths:
                             actionUrl:
                               type: string
                               example: "/budgets/create?categoryId=category-uuid-002"
-                      
+
                       createdAt:
                         type: string
                         format: date-time
@@ -624,7 +618,7 @@ paths:
       summary: "取得科目詳情"
       description: |
         取得指定科目的詳細資訊，包含使用統計、子科目等。
-        
+
         **對應畫面**: S-306 科目管理主頁詳細檢視
         **權限檢查**: 確認用戶對該科目有存取權限
       tags:
@@ -696,7 +690,7 @@ paths:
                       description:
                         type: string
                         example: "外食餐廳用餐"
-                      
+
                       # 外觀設定
                       icon:
                         type: string
@@ -704,7 +698,7 @@ paths:
                       color:
                         type: string
                         example: "#FF5722"
-                      
+
                       # 階層資訊
                       parentId:
                         type: string
@@ -716,7 +710,7 @@ paths:
                       path:
                         type: string
                         example: "食物 > 餐廳"
-                      
+
                       # 父科目資訊
                       parent:
                         type: object
@@ -731,7 +725,7 @@ paths:
                           icon:
                             type: string
                             example: "🍔"
-                      
+
                       # 子科目列表
                       children:
                         type: array
@@ -753,7 +747,7 @@ paths:
                             usageCount:
                               type: integer
                               example: 15
-                      
+
                       # 設定資訊
                       settings:
                         type: object
@@ -773,7 +767,7 @@ paths:
                           trackingEnabled:
                             type: boolean
                             example: true
-                      
+
                       # 使用統計
                       statistics:
                         type: object
@@ -788,7 +782,7 @@ paths:
                           averageAmount:
                             type: number
                             example: 633.33
-                          
+
                           # 時間統計
                           firstUsed:
                             type: string
@@ -798,7 +792,7 @@ paths:
                             type: string
                             format: date-time
                             example: "2025-01-27T12:30:00Z"
-                          
+
                           # 月度統計
                           monthlyStats:
                             type: object
@@ -835,7 +829,7 @@ paths:
                                     type: number
                                     example: -37.5
                                     description: "總金額變化率(%)"
-                          
+
                           # Expert Mode: 進階分析
                           trends:
                             type: object
@@ -871,7 +865,7 @@ paths:
                                 type: string
                                 enum: [increasing, decreasing, stable, seasonal]
                                 example: "stable"
-                          
+
                           # 排名資訊
                           rankings:
                             type: object
@@ -888,7 +882,7 @@ paths:
                                 type: integer
                                 example: 28
                                 description: "總科目數"
-                      
+
                       # 預算關聯
                       budgets:
                         type: array
@@ -915,7 +909,7 @@ paths:
                               type: string
                               enum: [on_track, warning, exceeded]
                               example: "on_track"
-                      
+
                       # 最近交易
                       recentTransactions:
                         type: array
@@ -943,7 +937,7 @@ paths:
                               type: string
                               format: date-time
                               example: "2025-01-27T12:30:00Z"
-                      
+
                       # 審計資訊
                       audit:
                         type: object
@@ -992,7 +986,7 @@ paths:
       summary: "更新科目"
       description: |
         更新科目的基本資訊、設定或階層關係。
-        
+
         **對應畫面**: S-306 科目管理主頁編輯功能
         **權限檢查**: 需要對該科目有編輯權限
       tags:
@@ -1021,7 +1015,7 @@ paths:
                   type: string
                   example: "高級餐廳用餐消費"
                   maxLength: 200
-                
+
                 # 外觀設定
                 icon:
                   type: string
@@ -1031,14 +1025,14 @@ paths:
                   type: string
                   example: "#E91E63"
                   pattern: "^#[0-9A-Fa-f]{6}$"
-                
+
                 # 階層調整
                 parentId:
                   type: string
                   example: "category-uuid-food-dining"
                   nullable: true
                   description: "父科目 ID（null = 移至根層級）"
-                
+
                 # 設定更新
                 settings:
                   type: object
@@ -1061,7 +1055,7 @@ paths:
                     autoSuggest:
                       type: boolean
                       example: true
-                
+
                 # 限制設定更新
                 restrictions:
                   type: object
@@ -1106,7 +1100,7 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
-                      
+
                       # 階層變更影響
                       hierarchyChanges:
                         type: object
@@ -1120,7 +1114,7 @@ paths:
                           affectedChildren:
                             type: integer
                             example: 2
-                      
+
                       # 相關資料影響
                       relatedUpdates:
                         type: object
@@ -1194,7 +1188,7 @@ paths:
       summary: "刪除科目"
       description: |
         刪除指定科目，包含子科目和相關資料的處理。
-        
+
         **對應畫面**: S-306 科目管理主頁刪除功能
         **權限檢查**: 需要對該科目有刪除權限
         **業務邏輯**: 有交易記錄的科目進行軟刪除
@@ -1255,7 +1249,7 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
-                      
+
                       # 資料處理結果
                       dataProcessing:
                         type: object
@@ -1278,7 +1272,7 @@ paths:
                             enum: [deleted, moved_to_parent, orphaned]
                             example: "moved_to_parent"
                             description: "子科目處理方式"
-                      
+
                       # 影響範圍
                       impactSummary:
                         type: object
@@ -1365,7 +1359,7 @@ paths:
       summary: "取得科目樹狀結構"
       description: |
         取得完整的科目階層樹狀結構，便於顯示階層選擇器。
-        
+
         **對應畫面**: S-204 科目選擇頁樹狀結構
         **四模式差異**: 顯示深度與推薦科目不同
       tags:
@@ -1477,7 +1471,7 @@ paths:
                                   children:
                                     type: array
                                     items: {}
-                      
+
                       # 支出科目樹
                       expense:
                         type: array
@@ -1531,7 +1525,7 @@ paths:
                                   children:
                                     type: array
                                     items: {}
-                      
+
                       # 轉帳科目樹
                       transfer:
                         type: array
@@ -1562,7 +1556,7 @@ paths:
                             children:
                               type: array
                               items: {}
-                      
+
                       # Guiding Mode: 簡化結構
                       simplified:
                         type: array
@@ -1585,7 +1579,7 @@ paths:
                             isRecommended:
                               type: boolean
                               example: true
-                      
+
                       # 統計摘要
                       summary:
                         type: object
@@ -1647,7 +1641,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
-  
+
 
 components:
   securitySchemes:

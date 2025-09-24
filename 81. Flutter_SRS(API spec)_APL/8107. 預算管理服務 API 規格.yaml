@@ -1,14 +1,13 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 預算管理服務 API 規格
   version: 1.0.0
   description: |
     **LCAS 2.0 預算管理服務 API 規格**
-    
+
     負責預算的完整生命週期管理，包含預算設定、執行監控、警示通知等功能。
     支援多種預算類型與週期，提供四模式差異化體驗與智慧預算建議。
-    
+
     ## 🎯 服務範圍
     - **預算 CRUD**：建立、查詢、修改、刪除預算
     - **預算類型管理**：科目預算、帳戶預算、標籤預算、總預算
@@ -16,20 +15,20 @@ info:
     - **執行監控**：預算達成率、超支警示、趨勢分析
     - **智慧建議**：基於歷史數據的預算建議
     - **預算模板**：常用預算範本與快速設定
-    
+
     ## 🎨 四模式差異化支援
-    
+
     | 模式 | 特色功能 |
     |------|----------|
     | **Expert** | 複雜預算規則、多維度分析、精細化控制、進階統計 |
     | **Inertial** | 標準預算管理、簡潔設定、固定週期、基本監控 |
     | **Cultivation** | 預算引導、習慣培養、目標追蹤、激勵機制 |
     | **Guiding** | 極簡預算、自動建議、預設設定、最少決策 |
-    
+
     ## 🗂️ 對應畫面
     - **S-307**：預算管理主頁
     - **S-308**：建立預算頁
-    
+
     **版本**: 1.0.0  
     **建立日期**: 2025-08-22  
     **對應文件**: 0021. Screen list.md (S-307, S-308)
@@ -50,7 +49,7 @@ paths:
       description: |
         取得使用者的預算列表，支援分頁、篩選和排序。
         根據使用者模式返回不同詳細程度的資訊。
-        
+
         **對應畫面**: S-307 預算管理主頁
         **四模式差異**: 顯示資訊詳細程度與推薦預算不同
       tags:
@@ -158,7 +157,7 @@ paths:
                               type: string
                               enum: [category, account, tag, total]
                               example: "category"
-                            
+
                             # 基本資訊
                             description:
                               type: string
@@ -169,7 +168,7 @@ paths:
                             currency:
                               type: string
                               example: "TWD"
-                            
+
                             # 週期資訊
                             period:
                               type: object
@@ -195,7 +194,7 @@ paths:
                                   example: 12
                                   description: "總週期數（null = 無限期）"
                                   nullable: true
-                            
+
                             # 目標設定
                             target:
                               type: object
@@ -224,7 +223,7 @@ paths:
                                   type: boolean
                                   example: true
                                   description: "是否包含子科目"
-                            
+
                             # 執行狀況
                             execution:
                               type: object
@@ -260,7 +259,7 @@ paths:
                                   type: number
                                   example: 314.81
                                   description: "實際日均支出"
-                            
+
                             # Expert Mode: 進階統計
                             analytics:
                               type: object
@@ -320,7 +319,7 @@ paths:
                                       percentage:
                                         type: number
                                         example: 61.18
-                            
+
                             # 警示設定
                             alerts:
                               type: object
@@ -348,7 +347,7 @@ paths:
                                   format: date-time
                                   example: "2025-01-25T10:30:00Z"
                                   nullable: true
-                            
+
                             # 設定資訊
                             settings:
                               type: object
@@ -371,7 +370,7 @@ paths:
                                 notificationEnabled:
                                   type: boolean
                                   example: true
-                            
+
                             # 審計資訊
                             audit:
                               type: object
@@ -391,7 +390,7 @@ paths:
                                   type: string
                                   format: date-time
                                   example: "2025-01-27T12:30:00Z"
-                      
+
                       # 分頁資訊
                       pagination:
                         type: object
@@ -411,7 +410,7 @@ paths:
                           hasPreviousPage:
                             type: boolean
                             example: false
-                      
+
                       # 總體統計
                       summary:
                         type: object
@@ -437,7 +436,7 @@ paths:
                           warningBudgets:
                             type: integer
                             example: 4
-                      
+
                       # Cultivation Mode: 成就與進度
                       achievements:
                         type: object
@@ -458,7 +457,7 @@ paths:
                             type: number
                             example: 85.5
                             description: "月度目標達成率"
-                      
+
                       # 四模式差異化推薦
                       recommendations:
                         type: array
@@ -504,7 +503,7 @@ paths:
       description: |
         建立新的預算設定，支援多種類型與週期設定。
         不同模式提供不同的建立選項和預設值。
-        
+
         **對應畫面**: S-308 建立預算頁
         **四模式差異**: 可設定選項與預設值不同
       tags:
@@ -534,13 +533,13 @@ paths:
                   type: string
                   example: "ledger-uuid-001"
                   description: "所屬帳本 ID"
-                
+
                 # 選填資訊
                 description:
                   type: string
                   example: "控制每月交通相關支出"
                   maxLength: 500
-                
+
                 # 週期設定
                 period:
                   type: object
@@ -565,7 +564,7 @@ paths:
                       example: 12
                       description: "持續期數（null = 無限期）"
                       nullable: true
-                
+
                 # 目標設定（根據 type 不同）
                 target:
                   type: object
@@ -580,13 +579,13 @@ paths:
                       example: true
                       default: true
                       description: "是否包含子科目"
-                    
+
                     # account 類型
                     accountId:
                       type: string
                       example: "account-uuid-001"
                       description: "帳戶 ID（account 類型時必填）"
-                    
+
                     # tag 類型
                     tags:
                       type: array
@@ -594,7 +593,7 @@ paths:
                         type: string
                       example: ["交通", "通勤"]
                       description: "標籤列表（tag 類型時必填）"
-                    
+
                     # total 類型
                     includeCategories:
                       type: array
@@ -608,7 +607,7 @@ paths:
                         type: string
                       example: ["category-uuid-investment"]
                       description: "排除科目列表（total 類型時可選）"
-                
+
                 # Expert Mode: 進階設定
                 advanced:
                   type: object
@@ -637,7 +636,7 @@ paths:
                       maximum: 50
                       default: 0
                       description: "彈性比例（%），允許超支的百分比"
-                
+
                 # 警示設定
                 alerts:
                   type: object
@@ -677,7 +676,7 @@ paths:
                         enum: [app, email, line]
                       example: ["app", "line"]
                       default: ["app"]
-                
+
                 # 模板套用
                 template:
                   type: object
@@ -730,7 +729,7 @@ paths:
                       amount:
                         type: number
                         example: 3000
-                      
+
                       # 計算結果
                       calculations:
                         type: object
@@ -751,7 +750,7 @@ paths:
                             type: number
                             example: 3200
                             description: "建議金額（基於歷史分析）"
-                      
+
                       # 設定確認
                       setup:
                         type: object
@@ -770,7 +769,7 @@ paths:
                           autoRenewEnabled:
                             type: boolean
                             example: true
-                      
+
                       # 四模式差異化建議
                       suggestions:
                         type: array
@@ -790,7 +789,7 @@ paths:
                             actionUrl:
                               type: string
                               example: "/budgets/create?categoryId=category-uuid-parking"
-                      
+
                       createdAt:
                         type: string
                         format: date-time
@@ -858,7 +857,7 @@ paths:
       summary: "取得預算詳情"
       description: |
         取得指定預算的詳細資訊，包含執行狀況、歷史趨勢等。
-        
+
         **對應畫面**: S-307 預算管理主頁詳細檢視
         **權限檢查**: 確認用戶對該預算有存取權限
       tags:
@@ -938,7 +937,7 @@ paths:
                       currency:
                         type: string
                         example: "TWD"
-                      
+
                       # 目標詳情
                       target:
                         type: object
@@ -975,7 +974,7 @@ paths:
                                     included:
                                       type: boolean
                                       example: true
-                      
+
                       # 當前週期執行狀況
                       currentPeriod:
                         type: object
@@ -997,7 +996,7 @@ paths:
                           daysRemaining:
                             type: integer
                             example: 4
-                          
+
                           # 金額執行
                           execution:
                             type: object
@@ -1025,7 +1024,7 @@ paths:
                                 type: string
                                 enum: [on_track, warning, exceeded, completed]
                                 example: "warning"
-                          
+
                           # 速度分析
                           pace:
                             type: object
@@ -1053,7 +1052,7 @@ paths:
                                 type: number
                                 example: 875
                                 description: "剩餘期間建議日均支出"
-                      
+
                       # Expert Mode: 詳細分析
                       analytics:
                         type: object
@@ -1091,7 +1090,7 @@ paths:
                                   type: string
                                   enum: [under, on_track, over]
                                   example: "on_track"
-                          
+
                           # 科目細分（如適用）
                           categoryBreakdown:
                             type: array
@@ -1116,7 +1115,7 @@ paths:
                                 averageAmount:
                                   type: number
                                   example: 288.89
-                          
+
                           # 時間模式分析
                           timePatterns:
                             type: object
@@ -1141,7 +1140,7 @@ paths:
                                   weekdayPercentage:
                                     type: number
                                     example: 54.8
-                          
+
                           # 趨勢分析
                           trends:
                             type: object
@@ -1179,7 +1178,7 @@ paths:
                                     description:
                                       type: string
                                       example: "異常高額支出"
-                      
+
                       # 歷史執行記錄
                       history:
                         type: array
@@ -1220,7 +1219,7 @@ paths:
                               enum: [A, B, C, D, F]
                               example: "A"
                               description: "執行評級"
-                      
+
                       # 相關交易（如請求）
                       recentTransactions:
                         type: array
@@ -1250,7 +1249,7 @@ paths:
                               type: number
                               example: 5.42
                               description: "對預算的影響百分比"
-                      
+
                       # 警示狀態
                       alerts:
                         type: object
@@ -1294,7 +1293,7 @@ paths:
                                 format: date
                                 example: "2025-01-30"
                                 description: "預計觸發日期"
-                      
+
                       # Cultivation Mode: 激勵資訊
                       motivation:
                         type: object
@@ -1353,7 +1352,7 @@ paths:
                                   type: string
                                   enum: [active, completed, failed]
                                   example: "active"
-                      
+
                       # 設定資訊
                       settings:
                         type: object
@@ -1389,7 +1388,7 @@ paths:
                             items:
                               type: string
                             example: ["app", "line"]
-                      
+
                       # 審計資訊
                       audit:
                         type: object
@@ -1438,7 +1437,7 @@ paths:
       summary: "更新預算"
       description: |
         更新預算的設定、金額或警示條件。
-        
+
         **對應畫面**: S-307 預算管理主頁編輯功能
         **權限檢查**: 需要對該預算有編輯權限
       tags:
@@ -1471,7 +1470,7 @@ paths:
                   type: number
                   example: 13500
                   minimum: 0.01
-                
+
                 # 週期調整（僅限當前週期之後）
                 period:
                   type: object
@@ -1483,7 +1482,7 @@ paths:
                     autoRenew:
                       type: boolean
                       example: true
-                
+
                 # 目標調整
                 target:
                   type: object
@@ -1492,7 +1491,7 @@ paths:
                       type: boolean
                       example: true
                     # 其他目標設定與建立時相同
-                
+
                 # 設定更新
                 settings:
                   type: object
@@ -1513,7 +1512,7 @@ paths:
                     isActive:
                       type: boolean
                       example: true
-                
+
                 # 警示更新
                 alerts:
                   type: object
@@ -1568,7 +1567,7 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
-                      
+
                       # 影響分析
                       impact:
                         type: object
@@ -1591,7 +1590,7 @@ paths:
                               type: string
                             example: []
                             description: "因更新觸發的新警示"
-                          
+
                           # 歷史影響
                           historicalImpact:
                             type: object
@@ -1603,7 +1602,7 @@ paths:
                               recalculationNeeded:
                                 type: boolean
                                 example: false
-                      
+
                       # 建議
                       recommendations:
                         type: array
@@ -1640,7 +1639,7 @@ paths:
       summary: "刪除預算"
       description: |
         刪除指定預算，保留執行歷史記錄以供分析。
-        
+
         **對應畫面**: S-307 預算管理主頁刪除功能
         **權限檢查**: 需要對該預算有刪除權限
         **業務邏輯**: 軟刪除，保留歷史數據
@@ -1691,7 +1690,7 @@ paths:
                         type: string
                         format: date-time
                         example: "2025-01-27T13:00:00Z"
-                      
+
                       # 刪除影響
                       impact:
                         type: object
@@ -1708,7 +1707,7 @@ paths:
                             type: integer
                             example: 3
                             description: "移除的警示數量"
-                          
+
                           # 相關影響
                           relatedBudgets:
                             type: array
@@ -1725,7 +1724,7 @@ paths:
                                   type: string
                                   example: "included_in_total"
                             description: "受影響的相關預算"
-                      
+
                       # 統計摘要
                       summary:
                         type: object
@@ -1809,7 +1808,7 @@ paths:
       summary: "取得預算執行狀況"
       description: |
         取得所有預算的即時執行狀況摘要，用於主頁展示。
-        
+
         **對應畫面**: S-202 APP 記帳主頁預算區塊
         **四模式差異**: 顯示詳細程度不同
       tags:
@@ -1870,7 +1869,7 @@ paths:
                             type: string
                             enum: [excellent, good, warning, critical]
                             example: "good"
-                      
+
                       # 狀況分布
                       statusDistribution:
                         type: object
@@ -1887,7 +1886,7 @@ paths:
                           completed:
                             type: integer
                             example: 2
-                      
+
                       # 預算列表（簡化）
                       budgets:
                         type: array
@@ -1925,7 +1924,7 @@ paths:
                               type: number
                               example: -1630
                               description: "預計超支金額"
-                      
+
                       # 警示摘要
                       alerts:
                         type: object
@@ -1966,7 +1965,7 @@ paths:
                                   type: string
                                   format: date-time
                                   example: "2025-01-25T10:30:00Z"
-                      
+
                       # Cultivation Mode: 成就資訊
                       achievements:
                         type: object
@@ -1987,7 +1986,7 @@ paths:
                             type: number
                             example: 2800
                             description: "本月節省金額"
-                      
+
                       # Expert Mode: 趨勢分析
                       trends:
                         type: object
@@ -2008,7 +2007,7 @@ paths:
                             type: number
                             example: 0.35
                             description: "風險評分（0-1，越高越危險）"
-                      
+
                       # 建議行動
                       actionItems:
                         type: array
@@ -2035,7 +2034,7 @@ paths:
                             actionUrl:
                               type: string
                               example: "/budgets/budget-uuid-001/analysis"
-                      
+
                       # 更新時間
                       lastUpdated:
                         type: string
@@ -2075,7 +2074,7 @@ paths:
       summary: "取得預算模板列表"
       description: |
         取得系統提供的預算模板，便於快速建立常用預算。
-        
+
         **對應畫面**: S-308 建立預算頁模板選擇
         **四模式差異**: 推薦模板與複雜度不同
       tags:
@@ -2148,7 +2147,7 @@ paths:
                               type: integer
                               example: 1250
                               description: "使用次數"
-                      
+
                       # 模板分類
                       categories:
                         type: object
@@ -2219,7 +2218,7 @@ paths:
                                   items:
                                     type: string
                                   example: ["商務分類", "稅務考量", "報表整合"]
-                      
+
                       # 自訂模板建議
                       customSuggestions:
                         type: array
@@ -2254,7 +2253,7 @@ paths:
                             reasoning:
                               type: string
                               example: "根據過去 6 個月的交通支出數據分析"
-                      
+
                       # 模板詳情
                       templateDetails:
                         type: object
@@ -2321,12 +2320,11 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
-  /budgets/alert:
     post:
       summary: "設定預算警示"
       description: |
         為指定預算建立或更新警示設定，支援多種觸發條件。
-        
+
         **使用場景**: 批次警示設定、動態警示調整
       tags:
         - "預算管理"
