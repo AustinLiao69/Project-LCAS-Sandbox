@@ -8,6 +8,7 @@ DCN-0012執行不完整 - 未實作的API端點函數清單
 🚨 Critical缺失函數（導致載入失敗）
 1.	BK_getTransactionsByDateRange() - 直接導致模組載入失敗
 
+=>為什麼會發生ASL.js有這個函數但BL層沒有呢？根本原因是什麼？
 
 📋 DCN-0014規範的15個API處理函數狀態檢查
 根據[rag://rag_source_3](DCN-0014 BL層重構函數.md)和rag://rag_source_2的轉發需求：
