@@ -495,6 +495,51 @@ paths:
                               type: number
                               example: 0.87
                               description: "建議信心度"
+                  metadata:
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -796,17 +841,49 @@ paths:
                         example: "2025-01-27T12:30:00Z"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
-                        example: "req-uuid-123"
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -1417,17 +1494,49 @@ paths:
                             description: "總執行期數"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
-                        example: "req-uuid-123"
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -1603,31 +1712,63 @@ paths:
                                 type: boolean
                                 example: false
 
-                      # 建議
-                      recommendations:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            type:
-                              type: string
-                              example: "adjustment_tip"
-                            message:
-                              type: string
-                              example: "預算增加後，建議重新檢視相關子科目的分配"
+                          # 建議
+                          recommendations:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  example: "adjustment_tip"
+                                message:
+                                  type: string
+                                  example: "預算增加後，建議重新檢視相關子科目的分配"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
-                        example: "req-uuid-123"
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -1746,17 +1887,49 @@ paths:
                             description: "累計節省金額"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
-                        example: "req-uuid-123"
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '400':
           description: "無法刪除預算"
           content:
@@ -2042,30 +2215,94 @@ paths:
                         example: "2025-01-27T12:30:00Z"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
-                        example: "req-uuid-123"
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
-                        example: "req-uuid-123"
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -2306,17 +2543,49 @@ paths:
                               example: ["選擇主要食物科目", "設定月度金額", "啟用 80% 警示"]
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
-                        example: "req-uuid-123"
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -2425,17 +2694,49 @@ paths:
                         example: "預算警示設定完成"
                   metadata:
                     type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
                     properties:
                       timestamp:
                         type: string
                         format: date-time
                         example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
                       requestId:
                         type: string
-                        example: "req-uuid-123"
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
                       userMode:
                         type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
                         example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 150
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':

@@ -1,25 +1,24 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 系統服務 API 規格
   description: |
     系統服務 API 提供 LCAS 2.0 系統的基礎管理功能，包含健康檢查、
     系統監控、配置管理、日誌管理等核心系統服務。
-    
+
     ## 🎯 服務範圍
     - **系統健康檢查**：服務狀態監控、可用性檢測
     - **系統配置管理**：動態配置更新、環境設定
     - **日誌管理**：系統日誌查詢、錯誤追蹤
     - **監控告警**：性能監控、異常告警
     - **維護模式**：系統維護、版本管理
-    
+
   version: 1.0.0
   contact:
     name: LCAS 2.0 API Support
     email: support@lcas.app
   license:
     name: Proprietary
-    
+
 servers:
   - url: https://api.lcas.app/v1
     description: 生產環境
@@ -51,7 +50,7 @@ paths:
       summary: 取得APP資訊
       description: |
         提供APP基本資訊，包含版本號、功能特色、更新資訊等。
-        
+
         **對應畫面**: S-102 APP 啟動頁
         **四模式差異**: 顯示內容的詳細程度不同
       operationId: getAppInfo
@@ -99,7 +98,7 @@ paths:
       summary: 取得歡迎資訊
       description: |
         提供系統歡迎資訊和引導內容。
-        
+
         **對應畫面**: S-101 LINE OA 歡迎頁
         **四模式差異**: 歡迎內容和引導步驟不同
       operationId: getWelcomeInfo
@@ -150,7 +149,7 @@ paths:
       summary: 系統狀態查詢
       description: |
         查詢當前系統運行狀態和服務可用性。
-        
+
         **功能**: 提供系統各模組狀態、性能指標
         **四模式差異**: 狀態詳細程度不同
       operationId: getSystemStatus
@@ -250,7 +249,7 @@ paths:
       summary: APP推廣資訊
       description: |
         提供APP推廣相關資訊和下載連結。
-        
+
         **對應畫面**: S-108 APP 下載推廣頁
         **功能**: 推廣內容、下載連結、功能介紹
       operationId: getAppPromotion
@@ -345,7 +344,7 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-            
+
     put:
       tags: [system-config]
       summary: 更新系統配置
@@ -445,7 +444,7 @@ paths:
                   timestamp: "2025-01-27T12:00:00Z"
                   requestId: "req-uuid-123"
                   userMode: "Expert"
-                  
+
     post:
       tags: [system-maintenance]
       summary: 設定維護模式
@@ -505,7 +504,7 @@ paths:
       summary: 系統重試機制
       description: |
         處理失敗請求的重試機制，支援智能重試和手動重試。
-        
+
         **功能**: 請求重試、狀態恢復、錯誤處理
         **使用場景**: 網路異常、服務暫時不可用、資料同步失敗
       operationId: systemRetry
@@ -588,7 +587,7 @@ paths:
       summary: 離線同步
       description: |
         處理離線期間的資料同步，確保資料一致性。
-        
+
         **功能**: 離線資料上傳、衝突解決、資料合併
         **使用場景**: 網路恢復後的資料同步、多裝置資料同步
       operationId: systemSync
@@ -686,7 +685,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/responses/ConflictError'
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "CONFLICT"
+                  message: "同步衝突"
+                  timestamp: "2025-01-27T12:00:00Z"
+                  requestId: "req-uuid-123"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -696,7 +702,7 @@ paths:
       summary: 問題回報
       description: |
         提交系統問題回報或功能建議。
-        
+
         **對應畫面**: S-507 社群回報頁
         **功能**: 問題分類、附件上傳、追蹤編號生成
       operationId: reportIssue
@@ -820,8 +826,6 @@ paths:
                   userMode: "Expert"
         '400':
           $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
         '413':
           description: 附件過大
           content:
@@ -862,7 +866,7 @@ paths:
       summary: 取得幫助文章
       description: |
         查詢幫助中心文章列表，支援分類和搜尋。
-        
+
         **對應畫面**: S-506 幫助中心頁
         **四模式差異**: 文章推薦和顯示方式不同
       operationId: getHelpArticles
@@ -978,7 +982,7 @@ paths:
       summary: 聯繫客服
       description: |
         提交客服聯繫請求，支援問題分類與優先級設定。
-        
+
         **對應畫面**: S-506 幫助中心頁
         **四模式差異**: 問題分類與表單複雜度不同
       operationId: contactSupport
@@ -1164,8 +1168,58 @@ components:
         data:
           type: object
           description: "回應資料內容"
+        error:
+          type: object
+          nullable: true
+          example: null
+        message:
+          type: string
+          example: "成功取得APP資訊"
         metadata:
-          $ref: '#/components/schemas/ResponseMetadata'
+          type: object
+          required:
+            - timestamp
+            - requestId
+            - userMode
+            - apiVersion
+            - processingTimeMs
+            - modeFeatures
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-01-27T12:00:00Z"
+              description: "API 回應時間戳"
+            requestId:
+              type: string
+              example: "req-uuid-12345"
+              description: "請求唯一識別碼"
+            userMode:
+              type: string
+              enum: [Expert, Inertial, Cultivation, Guiding]
+              example: "Expert"
+              description: "用戶當前模式"
+            apiVersion:
+              type: string
+              example: "v1.0.0"
+              description: "API 版本"
+            processingTimeMs:
+              type: number
+              example: 80
+              description: "處理時間（毫秒）"
+            modeFeatures:
+              type: object
+              description: "四模式特定欄位"
+              properties:
+                detailedAnalytics:
+                  type: boolean
+                  example: true
+                advancedOptions:
+                  type: boolean
+                  example: true
+                performanceMetrics:
+                  type: boolean
+                  example: true
       required:
         - success
         - data

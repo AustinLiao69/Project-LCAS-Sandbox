@@ -1,34 +1,33 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 通知管理服務 API
   version: 1.0.0
   description: |
     **通知管理服務 API 規格書**
-    
+
     **版本**: 1.0.0  
     **建立日期**: 2025-08-22  
     **最後更新**: 2025-08-22  
     **建立者**: AustinLiao69  
-    
+
     ---
-    
+
     ## 📋 服務概述
-    
+
     通知管理服務提供完整的通知設定、管理與記帳提醒功能，支援個人化通知偏好與智慧提醒機制。
-    
+
     ### 🎯 核心功能
     - **通知設定**: 個人化通知偏好管理
     - **通知列表**: 系統通知訊息管理
     - **記帳提醒**: 智慧記帳提醒與排程
     - **提醒模板**: 預設提醒規則管理
-    
+
     ### 🔧 四模式支援
     - **Expert**: 詳細通知設定、進階排程規則
     - **Inertial**: 標準通知設定、固定提醒時間
     - **Cultivation**: 豐富提醒設定、習慣養成提醒
     - **Guiding**: 自動通知設定、最簡化管理
-    
+
     ### 📊 對應畫面
     - **S-504**: 通知設定頁
     - **S-201**: LINE OA 記帳對話（提醒功能）
@@ -59,10 +58,10 @@ paths:
       summary: 取得通知設定
       description: |
         取得使用者的通知設定與偏好
-        
+
         **對應畫面**: S-504 通知設定頁
         **User Story**: US-034
-        
+
         **四模式差異**:
         - **Expert**: 顯示詳細通知分類設定
         - **Inertial**: 顯示標準通知設定選項
@@ -310,10 +309,10 @@ paths:
       summary: 更新通知設定
       description: |
         更新使用者的通知設定與偏好
-        
+
         **對應畫面**: S-504 通知設定頁
         **User Story**: US-034
-        
+
         **四模式差異**:
         - **Expert**: 支援詳細通知分類設定
         - **Inertial**: 支援標準通知設定選項
@@ -557,10 +556,10 @@ paths:
       summary: 通知列表
       description: |
         取得使用者的通知訊息列表
-        
+
         **對應畫面**: 通知中心、推播通知
         **User Story**: US-034
-        
+
         **通知類型**:
         - **system**: 系統通知
         - **reminder**: 記帳提醒
@@ -739,7 +738,7 @@ paths:
       summary: 標記已讀
       description: |
         將指定通知標記為已讀狀態
-        
+
         **對應畫面**: 通知中心
         **User Story**: US-034
       parameters:
@@ -805,10 +804,10 @@ paths:
       summary: 建立記帳提醒
       description: |
         建立自定義記帳提醒規則
-        
+
         **對應畫面**: S-504 通知設定頁
         **User Story**: US-034
-        
+
         **四模式差異**:
         - **Expert**: 支援複雜排程規則、條件觸發
         - **Inertial**: 支援標準時間提醒
@@ -1044,7 +1043,7 @@ paths:
       summary: 更新提醒規則
       description: |
         更新指定的記帳提醒規則
-        
+
         **對應畫面**: S-504 通知設定頁
         **User Story**: US-034
       parameters:
@@ -1105,7 +1104,7 @@ paths:
                     content:
                       type: string
                       description: 內容
-                      example: "記得記錄今天的支出！"
+                      example: "今天有記帳嗎？快來記錄一下吧！"
                       maxLength: 200
                 isActive:
                   type: boolean
@@ -1196,7 +1195,7 @@ paths:
       summary: 刪除提醒規則
       description: |
         刪除指定的記帳提醒規則
-        
+
         **對應畫面**: S-504 通知設定頁
         **User Story**: US-034
       parameters:
@@ -1262,10 +1261,10 @@ paths:
       summary: 取得提醒模板
       description: |
         取得系統預設的提醒規則模板
-        
+
         **對應畫面**: S-504 通知設定頁
         **User Story**: US-034
-        
+
         **四模式差異**:
         - **Expert**: 顯示所有模板包含進階選項
         - **Inertial**: 顯示標準模板
