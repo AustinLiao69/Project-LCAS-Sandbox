@@ -170,8 +170,58 @@ paths:
                             message:
                               type: string
                               example: "本月食物支出已達預算 80%"
+                  error:
+                    type: object
+                    nullable: true
+                    example: null
+                  message:
+                    type: string
+                    example: "快速記帳成功"
                   metadata:
-                    $ref: '#/components/schemas/SuccessMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 180
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '400':
           description: "解析失敗或參數錯誤"
           content:
@@ -209,6 +259,8 @@ paths:
                             items:
                               type: string
                             example: ["150 午餐", "收入 3000 薪水"]
+                  metadata:
+                    $ref: '#/components/schemas/SuccessMetadata'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 

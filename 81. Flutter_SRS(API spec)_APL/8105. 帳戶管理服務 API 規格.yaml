@@ -1,4 +1,3 @@
-
 openapi: 3.0.3
 info:
   title: LCAS 2.0 - 帳戶管理服務 API 規格
@@ -26,7 +25,7 @@ info:
 
     ## 🗂️ 對應畫面
     - **S-205**：帳戶選擇頁
-    - **S-304**：帳戶管理主頁  
+    - **S-304**：帳戶管理主頁
     - **S-305**：建立帳戶頁
 
   version: 1.0.0
@@ -177,8 +176,58 @@ paths:
                                   balance:
                                     type: number
                                     example: 35000
+                  error:
+                    type: object
+                    nullable: true
+                    example: null
+                  message:
+                    type: string
+                    example: "成功取得帳戶列表"
                   metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-12345"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 120
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          detailedAnalytics:
+                            type: boolean
+                            example: true
+                          advancedOptions:
+                            type: boolean
+                            example: true
+                          performanceMetrics:
+                            type: boolean
+                            example: true
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':

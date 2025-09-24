@@ -83,9 +83,66 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    $ref: '#/components/schemas/AchievementsList'
+                    type: object
+                    properties:
+                      achievements:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Achievement'
+                      pagination:
+                        $ref: '#/components/schemas/PaginationInfo'
+                  error:
+                    type: object
+                    nullable: true
+                    example: null
+                  message:
+                    type: string
+                    example: "成功取得成就列表"
                   metadata:
-                    $ref: '#/components/schemas/ResponseMetadata'
+                    type: object
+                    required:
+                      - timestamp
+                      - requestId
+                      - userMode
+                      - apiVersion
+                      - processingTimeMs
+                      - modeFeatures
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                        description: "API 回應時間戳"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                        description: "請求唯一識別碼"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Cultivation"
+                        description: "用戶當前模式"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                        description: "API 版本"
+                      processingTimeMs:
+                        type: number
+                        example: 120
+                        description: "處理時間（毫秒）"
+                      modeFeatures:
+                        type: object
+                        description: "四模式特定欄位"
+                        properties:
+                          achievementProgress:
+                            type: boolean
+                            example: true
+                          gamificationElements:
+                            type: boolean
+                            example: true
+                          motivationalTips:
+                            type: boolean
+                            example: true
         '400':
           description: 請求參數錯誤
           content:
@@ -96,16 +153,52 @@ paths:
                   success:
                     type: boolean
                     example: false
+                  data:
+                    type: object
+                    nullable: true
+                    example: null
                   error:
-                    $ref: '#/components/schemas/Error'
-              example:
-                success: false
-                error:
-                  code: "VALIDATION_ERROR"
-                  message: "參數驗證失敗"
-                  field: "status"
-                  timestamp: "2025-01-27T12:00:00Z"
-                  requestId: "req-uuid-123"
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "VALIDATION_ERROR"
+                      message:
+                        type: string
+                        example: "參數驗證失敗"
+                      field:
+                        type: string
+                        example: "status"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                  message:
+                    type: string
+                    example: "參數驗證失敗"
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2025-01-27T12:00:00Z"
+                      requestId:
+                        type: string
+                        example: "req-uuid-123"
+                      userMode:
+                        type: string
+                        enum: [Expert, Inertial, Cultivation, Guiding]
+                        example: "Expert"
+                      apiVersion:
+                        type: string
+                        example: "v1.0.0"
+                      processingTimeMs:
+                        type: number
+                        example: 50
         '401':
           description: 未授權存取
           content:
@@ -726,6 +819,27 @@ components:
           enum: [Expert, Inertial, Cultivation, Guiding]
           description: 用戶模式
           example: "Expert"
+        apiVersion:
+          type: string
+          example: "v1.0.0"
+          description: "API 版本"
+        processingTimeMs:
+          type: number
+          example: 120
+          description: "處理時間（毫秒）"
+        modeFeatures:
+          type: object
+          description: "四模式特定欄位"
+          properties:
+            detailedAnalytics:
+              type: boolean
+              example: true
+            advancedOptions:
+              type: boolean
+              example: true
+            performanceMetrics:
+              type: boolean
+              example: true
 
     AchievementsList:
       type: object
@@ -1245,6 +1359,45 @@ components:
         details:
           type: object
           description: 錯誤詳細資訊
+    
+    PaginationInfo:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          description: 當前頁碼
+        totalPages:
+          type: integer
+          description: 總頁數
+        pageSize:
+          type: integer
+          description: 每頁項目數
+        totalItems:
+          type: integer
+          description: 總項目數
+
+    UserAchievement:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 成就 ID
+        name:
+          type: string
+          description: 成就名稱
+        description:
+          type: string
+          description: 成就描述
+        category:
+          type: string
+          description: 成就分類
+        unlockedAt:
+          type: string
+          format: date-time
+          description: 解鎖時間
+        points:
+          type: integer
+          description: 獲得積分
 
   responses:
     BadRequest:
