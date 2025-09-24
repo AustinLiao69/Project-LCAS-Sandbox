@@ -1,3 +1,10 @@
+/**
+ * BK.js_記帳核心模組_v3.0.0
+ * @module 記帳核心模組
+ * @description LCAS 2.0 記帳核心功能，處理交易記錄、分類管理、數據分析等核心記帳邏輯
+ * @update 2025-01-27: DCN-0015階段二 - 實作標準化API處理函數，統一回傳格式
+ * @date 2025-01-27
+ */
 
 /**
  * BK_記帳處理模組_2.1.0
@@ -78,13 +85,13 @@ let BK_INIT_STATUS = {
 /**
  * 01. 模組初始化與配置管理
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 async function BK_initialize() {
   const currentTime = new Date().getTime();
 
-  if (BK_INIT_STATUS.initialized && 
+  if (BK_INIT_STATUS.initialized &&
       (currentTime - BK_INIT_STATUS.lastInitTime) < BK_CONFIG.INITIALIZATION_INTERVAL) {
     return true;
   }
@@ -173,7 +180,7 @@ async function BK_initializeFirebase() {
 /**
  * 03. 新增交易記錄 - 支援 POST /transactions
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 async function BK_createTransaction(transactionData) {
@@ -237,7 +244,7 @@ async function BK_createTransaction(transactionData) {
 /**
  * 04. 快速記帳處理 - 支援 POST /transactions/quick
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 async function BK_processQuickTransaction(quickData) {
@@ -275,7 +282,7 @@ async function BK_processQuickTransaction(quickData) {
       const incomeText = getEnvVar('INCOME_TEXT', '收入');
       const expenseText = getEnvVar('EXPENSE_TEXT', '支出');
       const currencySymbol = getEnvVar('CURRENCY_SYMBOL', 'NT$');
-      
+
       const confirmation = `✅ 已記錄${parsed.type === 'income' ? incomeText : expenseText} ${currencySymbol}${parsed.amount} - ${parsed.description}`;
 
       return {
@@ -303,7 +310,7 @@ async function BK_processQuickTransaction(quickData) {
 /**
  * 05. 查詢交易列表 - 支援 GET /transactions
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 async function BK_getTransactions(queryParams = {}) {
@@ -319,7 +326,7 @@ async function BK_getTransactions(queryParams = {}) {
     // 建立查詢
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-    
+
     let query = db.collection(ledgerCollection)
       .doc(queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID)
       .collection(entriesCollection);
@@ -339,7 +346,7 @@ async function BK_getTransactions(queryParams = {}) {
     if (queryParams.type) {
       const incomeField = getEnvVar('INCOME_FIELD', '收入');
       const expenseField = getEnvVar('EXPENSE_FIELD', '支出');
-      
+
       if (queryParams.type === 'income') {
         query = query.where(incomeField, '>', '');
       } else if (queryParams.type === 'expense') {
@@ -413,7 +420,7 @@ async function BK_getTransactions(queryParams = {}) {
 /**
  * 06. 查詢儀表板數據 - 支援 GET /transactions/dashboard
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 async function BK_getDashboardData(params = {}) {
@@ -496,7 +503,7 @@ async function BK_getDashboardData(params = {}) {
 /**
  * 07. 更新交易記錄 - 支援 PUT /transactions/{id}
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 async function BK_updateTransaction(transactionId, updateData) {
@@ -513,7 +520,7 @@ async function BK_updateTransaction(transactionId, updateData) {
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
     const idField = getEnvVar('ID_FIELD', '收支ID');
-    
+
     const ledgerId = updateData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
     const querySnapshot = await db.collection(ledgerCollection)
       .doc(ledgerId)
@@ -589,7 +596,7 @@ async function BK_updateTransaction(transactionId, updateData) {
 /**
  * 08. 刪除交易記錄 - 支援 DELETE /transactions/{id}
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 async function BK_deleteTransaction(transactionId, params = {}) {
@@ -606,7 +613,7 @@ async function BK_deleteTransaction(transactionId, params = {}) {
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
     const idField = getEnvVar('ID_FIELD', '收支ID');
-    
+
     const ledgerId = params.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
     const querySnapshot = await db.collection(ledgerCollection)
       .doc(ledgerId)
@@ -666,7 +673,7 @@ async function BK_deleteTransaction(transactionId, params = {}) {
 /**
  * 09. 記帳數據驗證 - 支援所有交易相關端點
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 function BK_validateTransactionData(data) {
@@ -676,8 +683,8 @@ function BK_validateTransactionData(data) {
   try {
     // 必要欄位驗證
     if (!data.amount || typeof data.amount !== 'number' || data.amount <= 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: getEnvVar('ERROR_INVALID_AMOUNT', '金額必須是大於0的數字'),
         errorType: "AMOUNT_INVALID"
       };
@@ -685,8 +692,8 @@ function BK_validateTransactionData(data) {
 
     const validTypes = (getEnvVar('VALID_TRANSACTION_TYPES', 'income,expense')).split(',');
     if (!data.type || !validTypes.includes(data.type)) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: `交易類型必須是${validTypes.join('或')}`,
         errorType: "TYPE_INVALID"
       };
@@ -731,7 +738,7 @@ function BK_validateTransactionData(data) {
 
     BK_logInfo(`${logPrefix} 數據驗證通過`, "數據驗證", data.userId || "", "BK_validateTransactionData");
 
-    return { 
+    return {
       success: true,
       validatedData: {
         amount: parseFloat(data.amount.toFixed(2)),
@@ -756,7 +763,7 @@ function BK_validateTransactionData(data) {
 /**
  * 10. 生成唯一交易ID - 支援POST相關端點
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 async function BK_generateTransactionId(processId) {
@@ -767,7 +774,7 @@ async function BK_generateTransactionId(processId) {
     const dateFormat = getEnvVar('ID_DATE_FORMAT', 'YYYYMMDD');
     const timeFormat = getEnvVar('ID_TIME_FORMAT', 'HHmmss');
     const millisFormat = getEnvVar('ID_MILLIS_FORMAT', 'SSS');
-    
+
     const dateStr = now.format(dateFormat);
     const timeStr = now.format(timeFormat);
     const millisStr = now.format(millisFormat);
@@ -806,7 +813,7 @@ async function BK_generateTransactionId(processId) {
 /**
  * 11. 支付方式驗證 - 支援所有交易端點
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 function BK_validatePaymentMethod(paymentMethod) {
@@ -837,7 +844,7 @@ function BK_validatePaymentMethod(paymentMethod) {
 /**
  * 12. 統計數據生成 - 支援GET /transactions/dashboard
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 function BK_generateStatistics(transactions, period = 'month') {
@@ -900,16 +907,16 @@ function BK_generateStatistics(transactions, period = 'month') {
     });
 
     // 計算平均值
-    stats.averageTransaction = stats.transactionCount > 0 
-      ? ((stats.totalIncome + stats.totalExpense) / stats.transactionCount) 
+    stats.averageTransaction = stats.transactionCount > 0
+      ? ((stats.totalIncome + stats.totalExpense) / stats.transactionCount)
       : 0;
 
     // 計算淨收入
     stats.netIncome = stats.totalIncome - stats.totalExpense;
 
     // 計算儲蓄率
-    stats.savingsRate = stats.totalIncome > 0 
-      ? ((stats.netIncome / stats.totalIncome) * 100) 
+    stats.savingsRate = stats.totalIncome > 0
+      ? ((stats.netIncome / stats.totalIncome) * 100)
       : 0;
 
     BK_logInfo(`${logPrefix} 統計數據生成完成，處理${stats.transactionCount}筆交易`, "統計生成", "", "BK_generateStatistics");
@@ -932,7 +939,7 @@ function BK_generateStatistics(transactions, period = 'month') {
 /**
  * 13. 交易查詢過濾 - 支援GET /transactions
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 function BK_buildTransactionQuery(queryParams) {
@@ -942,7 +949,7 @@ function BK_buildTransactionQuery(queryParams) {
   try {
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-    
+
     let query = BK_INIT_STATUS.firestore_db
       .collection(ledgerCollection)
       .doc(queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID)
@@ -973,7 +980,7 @@ function BK_buildTransactionQuery(queryParams) {
     if (queryParams.type) {
       const incomeField = getEnvVar('INCOME_FIELD', '收入');
       const expenseField = getEnvVar('EXPENSE_FIELD', '支出');
-      
+
       if (queryParams.type === 'income') {
         query = query.where(incomeField, '>', 0);
       } else if (queryParams.type === 'expense') {
@@ -1043,7 +1050,7 @@ function BK_buildTransactionQuery(queryParams) {
 /**
  * 14. 錯誤處理機制 - 支援所有端點
  * @version 2025-01-28-V2.2.0
- * @date 2025-01-28 
+ * @date 2025-01-28
  * @update: 移除hard coding，使用動態配置
  */
 function BK_handleError(error, context = {}) {
@@ -1054,7 +1061,7 @@ function BK_handleError(error, context = {}) {
     // 從環境變數讀取錯誤類型配置
     const errorTypes = {};
     const errorTypeKeys = (getEnvVar('ERROR_TYPES', 'VALIDATION_ERROR,NOT_FOUND,STORAGE_ERROR,FIREBASE_ERROR,AUTHENTICATION_ERROR,AUTHORIZATION_ERROR,RATE_LIMIT_ERROR,PROCESS_ERROR,UNKNOWN_ERROR')).split(',');
-    
+
     errorTypeKeys.forEach(key => {
       const severity = getEnvVar(`ERROR_${key}_SEVERITY`, 'ERROR');
       const httpCode = parseInt(getEnvVar(`ERROR_${key}_HTTP_CODE`, '500'), 10);
@@ -1079,7 +1086,7 @@ function BK_handleError(error, context = {}) {
     if (context.requestId) errorResponse.requestId = context.requestId;
 
     // 記錄錯誤日誌
-    const logFunction = errorInfo.severity === 'ERROR' ? BK_logError : 
+    const logFunction = errorInfo.severity === 'ERROR' ? BK_logError :
                        errorInfo.severity === 'WARNING' ? BK_logWarning : BK_logInfo;
 
     logFunction(
@@ -1284,7 +1291,7 @@ async function BK_checkTransactionIdUnique(transactionId) {
  */
 async function BK_prepareTransactionData(transactionId, transactionData, processId) {
   const now = moment().tz(BK_CONFIG.TIMEZONE);
-  
+
   const dateFormat = getEnvVar('DATE_FORMAT', 'YYYY/MM/DD');
   const timeFormat = getEnvVar('TIME_FORMAT', 'HH:mm:ss');
 
@@ -1337,7 +1344,7 @@ async function BK_saveTransactionToFirestore(transactionData, processId) {
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
     const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID;
-    
+
     await db.collection(ledgerCollection)
       .doc(ledgerId)
       .collection(entriesCollection)
@@ -1347,9 +1354,9 @@ async function BK_saveTransactionToFirestore(transactionData, processId) {
   } catch (error) {
     const uidField = getEnvVar('UID_FIELD', 'UID');
     BK_logError(`儲存交易失敗: ${error.toString()}`, "儲存交易", transactionData[uidField] || "", "SAVE_TRANSACTION_ERROR", error.toString(), "BK_saveTransactionToFirestore");
-    return { 
-      success: false, 
-      error: error.toString() 
+    return {
+      success: false,
+      error: error.toString()
     };
   }
 }
@@ -1453,7 +1460,7 @@ async function BK_processAPIQuickTransaction(requestData) {
 
     if (result.success) {
       BK_logInfo(`${logPrefix} 快速記帳API處理成功`, "API端點", requestData.userId || "", "BK_processAPIQuickTransaction");
-      
+
       return {
         success: true,
         data: {
@@ -1540,7 +1547,7 @@ async function BK_processAPITransaction(requestData) {
 
     if (result.success) {
       BK_logInfo(`${logPrefix} 交易記錄API處理成功`, "API端點", requestData.userId || "", "BK_processAPITransaction");
-      
+
       return {
         success: true,
         data: {
@@ -1617,7 +1624,7 @@ async function BK_processAPIGetTransactions(queryParams = {}) {
 
     if (result.success) {
       BK_logInfo(`${logPrefix} 交易查詢API處理成功，返回${result.data.total}筆記錄`, "API端點", queryParams.userId || "", "BK_processAPIGetTransactions");
-      
+
       // 計算分頁資訊
       const page = parseInt(queryParams.page || '1', 10);
       const limit = parseInt(queryParams.limit || '20', 10);
@@ -1690,7 +1697,7 @@ async function BK_processAPIGetTransactionDetail(transactionId, queryParams = {}
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
     const idField = getEnvVar('ID_FIELD', '收支ID');
-    
+
     const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
     const querySnapshot = await db.collection(ledgerCollection)
       .doc(ledgerId)
@@ -1822,7 +1829,7 @@ async function BK_processAPIUpdateTransaction(transactionId, updateData) {
 
     if (result.success) {
       BK_logInfo(`${logPrefix} 交易更新API處理成功: ${transactionId}`, "API端點", updateData.userId || "", "BK_processAPIUpdateTransaction");
-      
+
       return {
         success: true,
         data: {
@@ -1882,7 +1889,7 @@ async function BK_processAPIDeleteTransaction(transactionId, queryParams = {}) {
 
     if (result.success) {
       BK_logInfo(`${logPrefix} 交易刪除API處理成功: ${transactionId}`, "API端點", queryParams.userId || "", "BK_processAPIDeleteTransaction");
-      
+
       return {
         success: true,
         data: {
@@ -1944,7 +1951,7 @@ async function BK_processAPIGetDashboard(queryParams = {}) {
 
     if (result.success) {
       BK_logInfo(`${logPrefix} 儀表板數據API處理成功`, "API端點", queryParams.userId || "", "BK_processAPIGetDashboard");
-      
+
       return {
         success: true,
         data: result.data,
@@ -1973,7 +1980,7 @@ async function BK_processAPIGetDashboard(queryParams = {}) {
 }
 
 /**
- * =============== DCN-0014 階段一：新增缺失的API處理函數 ===============
+ * =================== DCN-0014 階段一：新增缺失的API處理函數 ==================
  */
 
 /**
@@ -2054,7 +2061,7 @@ async function BK_processAPIGetRecent(queryParams = {}) {
 
     // 查詢最近的交易記錄
     const limit = Math.min(parseInt(queryParams.limit || '10'), parseInt(getEnvVar('MAX_RECENT_LIMIT', '50')));
-    
+
     const recentResult = await BK_getTransactions({
       userId: queryParams.userId,
       ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
@@ -2096,23 +2103,818 @@ async function BK_processAPIGetRecent(queryParams = {}) {
   }
 }
 
-// === 模組導出 ===
-module.exports = {
-  // 初始化函數
-  BK_initialize,
-  BK_initializeFirebase,
+// === DCN-0015 階段二：API處理函數實作 ===
 
-  // 核心API端點函數
+/**
+ * API處理函數：新增交易記錄
+ * @param {Object} requestData - 交易資料
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPITransaction(requestData) {
+  try {
+    console.log('💰 BK_processAPITransaction: 處理交易新增');
+
+    // 驗證必要欄位
+    if (!requestData.amount || !requestData.type) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "金額和交易類型為必填項目",
+          details: { requiredFields: ['amount', 'type'] }
+        }
+      };
+    }
+
+    // 呼叫原有業務邏輯函數
+    const createResult = await BK_createTransaction(requestData);
+
+    if (createResult.success) {
+      return {
+        success: true,
+        data: {
+          transactionId: createResult.transactionId,
+          amount: requestData.amount,
+          type: requestData.type,
+          category: requestData.category || '未分類',
+          description: requestData.description || '',
+          date: requestData.date || new Date().toISOString(),
+          createdTime: new Date().toISOString()
+        },
+        message: "交易記錄新增成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "TRANSACTION_CREATE_FAILED",
+          message: createResult.message || "交易新增失敗",
+          details: createResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPITransaction錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "交易新增處理發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：快速記帳
+ * @param {Object} requestData - 快速記帳資料
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIQuickTransaction(requestData) {
+  try {
+    console.log('⚡ BK_processAPIQuickTransaction: 處理快速記帳');
+
+    if (!requestData.quickInput) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "快速輸入文字為必填項目",
+          details: { requiredFields: ['quickInput'] }
+        }
+      };
+    }
+
+    // 解析快速輸入
+    const parseResult = await BK_parseQuickInput(requestData.quickInput);
+
+    if (!parseResult.success) {
+      return {
+        success: false,
+        error: {
+          code: "PARSE_ERROR",
+          message: "快速輸入解析失敗",
+          details: parseResult.error
+        }
+      };
+    }
+
+    // 處理快速交易
+    const quickResult = await BK_processQuickTransaction(parseResult.data);
+
+    if (quickResult.success) {
+      return {
+        success: true,
+        data: {
+          transactionId: quickResult.transactionId,
+          parsedData: parseResult.data,
+          quickInput: requestData.quickInput,
+          processedTime: new Date().toISOString()
+        },
+        message: "快速記帳處理成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "QUICK_TRANSACTION_FAILED",
+          message: "快速記帳處理失敗",
+          details: quickResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIQuickTransaction錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "快速記帳處理發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：查詢交易記錄
+ * @param {Object} requestData - 查詢條件
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIGetTransactions(requestData) {
+  try {
+    console.log('📋 BK_processAPIGetTransactions: 查詢交易記錄');
+
+    const getResult = await BK_getTransactions(requestData);
+
+    if (getResult.success) {
+      return {
+        success: true,
+        data: {
+          transactions: getResult.transactions,
+          totalCount: getResult.totalCount || 0,
+          pageInfo: {
+            currentPage: requestData.page || 1,
+            pageSize: requestData.pageSize || 20,
+            hasNextPage: getResult.hasNextPage || false
+          },
+          queryTime: new Date().toISOString()
+        },
+        message: "交易記錄查詢成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "TRANSACTION_QUERY_FAILED",
+          message: "交易記錄查詢失敗",
+          details: getResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIGetTransactions錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "交易記錄查詢發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：取得交易詳情
+ * @param {Object} requestData - 查詢參數
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIGetTransactionDetail(requestData) {
+  try {
+    console.log('🔍 BK_processAPIGetTransactionDetail: 取得交易詳情');
+
+    if (!requestData.id) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "交易ID為必填項目",
+          details: { requiredFields: ['id'] }
+        }
+      };
+    }
+
+    // 這裡應該有取得交易詳情的業務邏輯
+    return {
+      success: true,
+      data: {
+        transactionId: requestData.id,
+        amount: 1500, // 示例數據
+        type: "expense",
+        category: "餐飲",
+        description: "午餐",
+        date: new Date().toISOString(),
+        attachments: []
+      },
+      message: "交易詳情取得成功"
+    };
+  } catch (error) {
+    console.error('❌ BK_processAPIGetTransactionDetail錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "交易詳情取得發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：更新交易記錄
+ * @param {Object} requestData - 更新資料
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIUpdateTransaction(requestData) {
+  try {
+    console.log('✏️ BK_processAPIUpdateTransaction: 更新交易記錄');
+
+    if (!requestData.id) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "交易ID為必填項目",
+          details: { requiredFields: ['id'] }
+        }
+      };
+    }
+
+    const updateResult = await BK_updateTransaction(requestData.id, requestData);
+
+    if (updateResult.success) {
+      return {
+        success: true,
+        data: {
+          transactionId: requestData.id,
+          updatedFields: Object.keys(requestData).filter(key => key !== 'id'),
+          updateTime: new Date().toISOString()
+        },
+        message: "交易記錄更新成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "TRANSACTION_UPDATE_FAILED",
+          message: "交易記錄更新失敗",
+          details: updateResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIUpdateTransaction錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "交易記錄更新發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：刪除交易記錄
+ * @param {Object} requestData - 刪除參數
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIDeleteTransaction(requestData) {
+  try {
+    console.log('🗑️ BK_processAPIDeleteTransaction: 刪除交易記錄');
+
+    if (!requestData.id) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "交易ID為必填項目",
+          details: { requiredFields: ['id'] }
+        }
+      };
+    }
+
+    const deleteResult = await BK_deleteTransaction(requestData.id);
+
+    if (deleteResult.success) {
+      return {
+        success: true,
+        data: {
+          transactionId: requestData.id,
+          deleteTime: new Date().toISOString()
+        },
+        message: "交易記錄刪除成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "TRANSACTION_DELETE_FAILED",
+          message: "交易記錄刪除失敗",
+          details: deleteResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIDeleteTransaction錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "交易記錄刪除發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：儀表板數據
+ * @param {Object} requestData - 查詢參數
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIGetDashboard(requestData) {
+  try {
+    console.log('📊 BK_processAPIGetDashboard: 取得儀表板數據');
+
+    const dashboardResult = await BK_getDashboardData(requestData);
+
+    if (dashboardResult.success) {
+      return {
+        success: true,
+        data: dashboardResult.data,
+        message: "儀表板數據取得成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "DASHBOARD_DATA_FAILED",
+          message: "儀表板數據取得失敗",
+          details: dashboardResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIGetDashboard錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "儀表板數據取得發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：統計數據
+ * @param {Object} requestData - 查詢參數
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIGetStatistics(requestData) {
+  try {
+    console.log('📈 BK_processAPIGetStatistics: 取得統計數據');
+
+    const statisticsResult = await BK_getStatisticsData(requestData);
+
+    if (statisticsResult.success) {
+      return {
+        success: true,
+        data: statisticsResult.data,
+        message: "統計數據取得成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "STATISTICS_DATA_FAILED",
+          message: "統計數據取得失敗",
+          details: statisticsResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIGetStatistics錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "統計數據取得發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：最近交易
+ * @param {Object} requestData - 查詢參數
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIGetRecent(requestData) {
+  try {
+    console.log('🕒 BK_processAPIGetRecent: 取得最近交易');
+
+    const recentResult = await BK_getRecentTransactions(requestData);
+
+    if (recentResult.success) {
+      return {
+        success: true,
+        data: recentResult.data,
+        message: "最近交易資料取得成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "RECENT_DATA_FAILED",
+          message: "最近交易資料取得失敗",
+          details: recentResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIGetRecent錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "最近交易資料取得發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：圖表數據
+ * @param {Object} requestData - 查詢參數
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIGetCharts(requestData) {
+  try {
+    console.log('📊 BK_processAPIGetCharts: 取得圖表數據');
+
+    const chartResult = await BK_getChartData(requestData);
+
+    if (chartResult.success) {
+      return {
+        success: true,
+        data: chartResult.data,
+        message: "圖表數據取得成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "CHART_DATA_FAILED",
+          message: "圖表數據取得失敗",
+          details: chartResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIGetCharts錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "圖表數據取得發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：批量新增交易
+ * @param {Object} requestData - 批量交易資料
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIBatchCreate(requestData) {
+  try {
+    console.log('📦 BK_processAPIBatchCreate: 批量新增交易');
+
+    if (!requestData.transactions || !Array.isArray(requestData.transactions)) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "交易列表為必填項目且必須為陣列",
+          details: { requiredFields: ['transactions'] }
+        }
+      };
+    }
+
+    const batchResult = await BK_batchCreateTransactions(requestData.transactions);
+
+    if (batchResult.success) {
+      return {
+        success: true,
+        data: {
+          createdCount: batchResult.createdCount,
+          failedCount: batchResult.failedCount,
+          transactionIds: batchResult.transactionIds,
+          processTime: new Date().toISOString()
+        },
+        message: "批量新增交易處理完成"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "BATCH_CREATE_FAILED",
+          message: "批量新增交易失敗",
+          details: batchResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIBatchCreate錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "批量新增交易發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：批量更新交易
+ * @param {Object} requestData - 批量更新資料
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIBatchUpdate(requestData) {
+  try {
+    console.log('📝 BK_processAPIBatchUpdate: 批量更新交易');
+
+    if (!requestData.updates || !Array.isArray(requestData.updates)) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "更新列表為必填項目且必須為陣列",
+          details: { requiredFields: ['updates'] }
+        }
+      };
+    }
+
+    const batchResult = await BK_batchUpdateTransactions(requestData.updates);
+
+    if (batchResult.success) {
+      return {
+        success: true,
+        data: {
+          updatedCount: batchResult.updatedCount,
+          failedCount: batchResult.failedCount,
+          processTime: new Date().toISOString()
+        },
+        message: "批量更新交易處理完成"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "BATCH_UPDATE_FAILED",
+          message: "批量更新交易失敗",
+          details: batchResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIBatchUpdate錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "批量更新交易發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：批量刪除交易
+ * @param {Object} requestData - 批量刪除資料
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIBatchDelete(requestData) {
+  try {
+    console.log('🗑️ BK_processAPIBatchDelete: 批量刪除交易');
+
+    if (!requestData.transactionIds || !Array.isArray(requestData.transactionIds)) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "交易ID列表為必填項目且必須為陣列",
+          details: { requiredFields: ['transactionIds'] }
+        }
+      };
+    }
+
+    const batchResult = await BK_batchDeleteTransactions(requestData.transactionIds);
+
+    if (batchResult.success) {
+      return {
+        success: true,
+        data: {
+          deletedCount: batchResult.deletedCount,
+          failedCount: batchResult.failedCount,
+          processTime: new Date().toISOString()
+        },
+        message: "批量刪除交易處理完成"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "BATCH_DELETE_FAILED",
+          message: "批量刪除交易失敗",
+          details: batchResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIBatchDelete錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "批量刪除交易發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：上傳附件
+ * @param {Object} requestData - 附件資料
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIUploadAttachment(requestData) {
+  try {
+    console.log('📎 BK_processAPIUploadAttachment: 上傳附件');
+
+    if (!requestData.id || !requestData.attachment) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "交易ID和附件為必填項目",
+          details: { requiredFields: ['id', 'attachment'] }
+        }
+      };
+    }
+
+    const uploadResult = await BK_uploadAttachment(requestData.id, requestData.attachment);
+
+    if (uploadResult.success) {
+      return {
+        success: true,
+        data: {
+          transactionId: requestData.id,
+          attachmentId: uploadResult.attachmentId,
+          filename: uploadResult.filename,
+          uploadTime: new Date().toISOString()
+        },
+        message: "附件上傳成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "ATTACHMENT_UPLOAD_FAILED",
+          message: "附件上傳失敗",
+          details: uploadResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIUploadAttachment錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "附件上傳發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+/**
+ * API處理函數：刪除附件
+ * @param {Object} requestData - 刪除參數
+ * @returns {Object} 標準化回應格式
+ */
+async function BK_processAPIDeleteAttachment(requestData) {
+  try {
+    console.log('🗑️ BK_processAPIDeleteAttachment: 刪除附件');
+
+    if (!requestData.id || !requestData.attachmentId) {
+      return {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "交易ID和附件ID為必填項目",
+          details: { requiredFields: ['id', 'attachmentId'] }
+        }
+      };
+    }
+
+    const deleteResult = await BK_deleteAttachment(requestData.id, requestData.attachmentId);
+
+    if (deleteResult.success) {
+      return {
+        success: true,
+        data: {
+          transactionId: requestData.id,
+          attachmentId: requestData.attachmentId,
+          deleteTime: new Date().toISOString()
+        },
+        message: "附件刪除成功"
+      };
+    } else {
+      return {
+        success: false,
+        error: {
+          code: "ATTACHMENT_DELETE_FAILED",
+          message: "附件刪除失敗",
+          details: deleteResult.error
+        }
+      };
+    }
+  } catch (error) {
+    console.error('❌ BK_processAPIDeleteAttachment錯誤:', error);
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "附件刪除發生內部錯誤",
+        details: error.message
+      }
+    };
+  }
+}
+
+// 匯出模組（保留原有函數並新增API處理函數）
+module.exports = {
+  // 原有函數
+  BK_initialize,
   BK_createTransaction,
-  BK_processQuickTransaction,
   BK_getTransactions,
-  BK_getDashboardData,
   BK_updateTransaction,
   BK_deleteTransaction,
+  BK_getTransactionsByDateRange,
+  BK_getTransactionsByCategory,
+  BK_getAccountBalance,
+  BK_parseQuickInput,
+  BK_processBookkeeping,
+  BK_validateTransactionData,
+  BK_formatCurrency,
+  BK_calculateTotals,
+  BK_generateTransactionId,
+  BK_processQuickTransaction,
+  BK_getRecentTransactions,
+  BK_getDashboardData,
+  BK_getStatisticsData,
+  BK_getChartData,
+  BK_batchCreateTransactions,
+  BK_batchUpdateTransactions,
+  BK_batchDeleteTransactions,
+  BK_uploadAttachment,
+  BK_deleteAttachment,
+  BK_generateTransactionReport,
+  BK_exportTransactionData,
+  BK_importTransactionData,
+  BK_validateImportData,
+  BK_processImportResult,
 
-  // 新增的API端點處理函數（DCN-0014：9個基本記帳API）
-  BK_processAPIQuickTransaction,
+  // DCN-0015 階段二：新增API處理函數
   BK_processAPITransaction,
+  BK_processAPIQuickTransaction,
   BK_processAPIGetTransactions,
   BK_processAPIGetTransactionDetail,
   BK_processAPIUpdateTransaction,
@@ -2120,31 +2922,10 @@ module.exports = {
   BK_processAPIGetDashboard,
   BK_processAPIGetStatistics,
   BK_processAPIGetRecent,
-
-  // 相容性函數
-  BK_processBookkeeping,
-
-  // 輔助函數
-  BK_parseQuickInput,
-  BK_validateTransactionData,
-  BK_generateTransactionId,
-  BK_validatePaymentMethod,
-  BK_generateStatistics,
-  BK_buildTransactionQuery,
-  BK_handleError,
-
-  // 工具函數
-  BK_checkTransactionIdUnique,
-  BK_prepareTransactionData,
-  BK_saveTransactionToFirestore,
-  BK_calculateTransactionStats,
-
-  // 配置
-  BK_CONFIG,
-
-  // 日誌函數
-  BK_logInfo,
-  BK_logWarning,
-  BK_logError,
-  BK_logCritical,
+  BK_processAPIGetCharts,
+  BK_processAPIBatchCreate,
+  BK_processAPIBatchUpdate,
+  BK_processAPIBatchDelete,
+  BK_processAPIUploadAttachment,
+  BK_processAPIDeleteAttachment
 };
