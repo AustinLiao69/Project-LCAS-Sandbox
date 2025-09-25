@@ -258,8 +258,11 @@ MM 	 DD 	 Description 	    Progress
 9	23	 撰寫DCN-0014 	 Closed
 9	23	 執行DCN-0014 	 Closed
 9	23	 打通SIT測試環境 	 Ongoing
-9	24	 設定Firebase auth 	 Ongoing
+9	24	 設定Firebase auth 	 Open
 9	24	 修改SIT測試案例及測試資料 	 Ongoing
 9	24	 撰寫DCN-0015 	 Closed
 9	24	 執行DCN-0015 	 Ongoing
 9	24	 執行DCN-0015：更新APL層81,82,83文件 	 Ongoing
+9	24	 執行DCN-0015：修改SIT測試邏輯 	 Ongoing
+9	24	 打通SIT測試環境 	 Ongoing
+9	25	 打通SIT測試環境 	 Ongoing
