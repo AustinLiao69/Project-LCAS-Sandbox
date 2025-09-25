@@ -2,7 +2,7 @@
  * 0603. SIT_TC_P1.js
  * LCAS 2.0 Phase 1 SIT測試案例實作
  *
- * @version v2.0.0
+ * @version v2.1.0
  * @created 2025-09-15
  * @updated 2025-01-24
  * @author LCAS SQA Team
@@ -4967,9 +4967,9 @@ class SITTestCases {
     // ==================== 主執行邏輯 ====================
 
     /**
-     * 主執行函數
+     * 生成測試統計報告
      */
-    async main() {
+    generateReport() {
         const args = process.argv.slice(2);
         const phase = args.find(arg => arg.startsWith('--phase='))?.split('=')[1] || 'all';
 
@@ -5048,6 +5048,84 @@ class SITTestCases {
     }
 
     // 執行主函數
+    async function main() {
+        const args = process.argv.slice(2);
+        const phase = args.find(arg => arg.startsWith('--phase='))?.split('=')[1] || 'all';
+
+        const sitTestCases = new SITTestCases();
+
+        try {
+            console.log('🚀 LCAS 2.0 Phase 1 SIT測試開始執行');
+            console.log(`📋 執行階段: ${phase}`);
+            console.log(`📅 執行時間: ${new Date().toLocaleString()}`);
+            console.log(`📦 測試版本: v2.1.0 - 語法修復版`);
+            console.log('=' * 80);
+
+            // 前置檢查
+            await sitTestCases.loadTestData();
+
+            const serviceReadiness = await sitTestCases.checkAPIServiceReadiness();
+            if (!serviceReadiness.ready) {
+                console.error('❌ API服務未就緒，測試中止');
+                process.exit(1);
+            }
+
+            const quotaStatus = await sitTestCases.checkFirebaseQuotaStatus();
+            if (!quotaStatus.available) {
+                console.log('⚠️ Firebase配額問題，嘗試等待恢復...');
+                const recovered = await sitTestCases.waitForFirebaseQuotaRecovery(5);
+                if (!recovered) {
+                    console.error('❌ Firebase配額無法恢復，測試中止');
+                    process.exit(1);
+                }
+            }
+
+            let results = [];
+
+            // 根據phase參數執行對應的測試
+            if (phase === 'all' || phase === '1') {
+                console.log('\n🔥 執行階段一測試...');
+                const phase1Result = await sitTestCases.executePhase1Tests();
+                results.push(phase1Result);
+            }
+
+            if (phase === 'all' || phase === '2') {
+                console.log('\n🔥 執行階段二測試...');
+                const phase2Result = await sitTestCases.executePhase2Tests();
+                results.push(phase2Result);
+            }
+
+            if (phase === 'all' || phase === '3') {
+                console.log('\n🔥 執行階段三測試...');
+                const phase3Result = await sitTestCases.executePhase3Tests();
+                results.push(phase3Result);
+            }
+
+            // DCN-0015 專用完整測試套件
+            if (phase === 'dcn-0015') {
+                console.log('\n🌟 執行 DCN-0015 完整測試套件...');
+                const dcnResult = await sitTestCases.runPhase3CompleteSuite();
+                results.push({
+                    phase: 'DCN-0015 Complete',
+                    success: dcnResult,
+                    executionTime: Date.now() - sitTestCases.testStartTime.getTime()
+                });
+            }
+
+            // 生成最終報告
+            await sitTestCases.generateFinalReport(results);
+
+            // 輸出階段三監控數據
+            if (phase === 'all' || phase === '3' || phase === 'dcn-0015') {
+                sitTestCases.generatePhase3MonitoringReport();
+            }
+
+        } catch (error) {
+            console.error('❌ SIT測試執行失敗:', error);
+            process.exit(1);
+        }
+    }
+
     if (require.main === module) {
         main().catch(error => {
             console.error('❌ 測試執行異常:', error);
