@@ -1,5 +1,5 @@
 /**
- * BK.js_記帳核心模組_v3.0.2
+ * BK.js_記帳核心模組_v3.0.3
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能，處理交易記錄、分類管理、數據分析等核心記帳邏輯
  * @update 2025-09-26: 階段二修復 - 將Firebase查詢邏輯遷移到FS.js，修正模組職責分工
@@ -322,14 +322,15 @@ async function BK_getTransactions(queryParams = {}) {
   try {
     BK_logInfo(`${logPrefix} 開始查詢交易列表`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
 
-    // 階段二修復：使用FS.js進行資料查詢，避免BK.js直接操作Firebase
+    // 階段二修復：簡化查詢避免複合索引，使用單一欄位查詢
     const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
     const collectionPath = `ledgers/${ledgerId}/entries`;
 
-    // 建立簡化查詢條件，避免複合索引需求
+    // 階段二修復：僅使用單一欄位查詢，避免複合索引需求
     const queryConditions = [];
     
-    if (queryParams.userId) {
+    // 移除複雜查詢條件，僅在必要時使用userId過濾
+    if (queryParams.userId && queryParams.strictUserFilter) {
       queryConditions.push({
         field: getEnvVar('UID_FIELD', 'UID'),
         operator: '==',
@@ -337,7 +338,7 @@ async function BK_getTransactions(queryParams = {}) {
       });
     }
 
-    // 查詢選項（僅使用createdAt單一欄位排序）
+    // 階段二修復：簡化排序，僅使用單一欄位
     const options = {
       orderBy: {
         field: 'createdAt',
@@ -346,11 +347,11 @@ async function BK_getTransactions(queryParams = {}) {
     };
 
     if (queryParams.limit) {
-      const maxLimit = parseInt(getEnvVar('MAX_QUERY_LIMIT', '20'), 10);
+      const maxLimit = parseInt(getEnvVar('MAX_QUERY_LIMIT', '50'), 10);
       options.limit = Math.min(parseInt(queryParams.limit), maxLimit);
     }
 
-    // 透過FS.js查詢資料
+    // 階段二修復：透過FS.js查詢，使用簡化查詢條件
     const queryResult = await FS.FS_queryCollection(
       collectionPath,
       queryConditions,
