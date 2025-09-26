@@ -1,11 +1,12 @@
 /**
- * AM_帳號管理模組_3.0.0
+ * AM_帳號管理模組_3.0.1
  * @module AM模組
- * @description 跨平台帳號管理系統 - DCN-0015 階段二完整實作
+ * @description 跨平台帳號管理系統 - DCN-0015 階段三修復完成
  * @update 2025-01-24: 階段一修復 - 補充缺失的核心函數實作，修復認證權限驗證問題
  * @update 2025-09-15: Phase 1重構 - 新增RESTful API端點支援
  * @update 2025-09-23: DCN-0014 階段一 - 新增22個API處理函數，建立統一回應格式機制
  * @update 2025-09-24: DCN-0015 階段二 - 新增19個API處理函數，實作統一回傳格式v3.0.0
+ * @update 2025-09-26: 階段一緊急修復 - 修復註冊回應格式，強化錯誤處理機制v3.0.1
  */
 
 // 引入必要模組
@@ -1491,10 +1492,10 @@ async function AM_processSRUpgrade(
  */
 
 /**
- * 26. 處理用戶註冊API - POST /api/v1/auth/register
- * @version 2025-09-22-V1.3.0
- * @date 2025-09-22
- * @description 專門處理ASL.js轉發的註冊請求
+ * 26. 處理用戶註冊API - POST /api/v1/auth/register (v3.0.1修復版)
+ * @version 2025-09-26-V3.0.1
+ * @date 2025-09-26
+ * @description 專門處理ASL.js轉發的註冊請求，修復回應格式問題
  */
 async function AM_processAPIRegister(requestData) {
   const functionName = "AM_processAPIRegister";
@@ -1508,12 +1509,37 @@ async function AM_processAPIRegister(requestData) {
       functionName,
     );
 
-    // 驗證註冊資料
+    // 階段一修復：增強參數驗證
     if (!requestData.email || !requestData.password) {
       return {
         success: false,
+        data: null,
         message: "電子郵件和密碼為必填欄位",
-        errorCode: "MISSING_REQUIRED_FIELDS",
+        error: {
+          code: "MISSING_REQUIRED_FIELDS",
+          message: "電子郵件和密碼為必填欄位",
+          details: {
+            missingFields: [
+              !requestData.email ? "email" : null,
+              !requestData.password ? "password" : null
+            ].filter(Boolean)
+          }
+        }
+      };
+    }
+
+    // 階段一修復：Email格式驗證
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(requestData.email)) {
+      return {
+        success: false,
+        data: null,
+        message: "電子郵件格式不正確",
+        error: {
+          code: "INVALID_EMAIL_FORMAT",
+          message: "請輸入有效的電子郵件地址",
+          details: { email: requestData.email }
+        }
       };
     }
 
@@ -1525,8 +1551,13 @@ async function AM_processAPIRegister(requestData) {
     if (existsResult.exists) {
       return {
         success: false,
+        data: null,
         message: "此電子郵件已被註冊",
-        errorCode: "EMAIL_ALREADY_EXISTS",
+        error: {
+          code: "EMAIL_ALREADY_EXISTS",
+          message: "此電子郵件已被註冊，請使用其他電子郵件或嘗試登入",
+          details: { email: requestData.email }
+        }
       };
     }
 
@@ -1554,6 +1585,7 @@ async function AM_processAPIRegister(requestData) {
         functionName,
       );
 
+      // 階段一修復：完整的成功回應格式
       return {
         success: true,
         data: {
@@ -1561,14 +1593,28 @@ async function AM_processAPIRegister(requestData) {
           email: requestData.email,
           displayName: requestData.displayName || requestData.email,
           userType: createResult.userType,
+          accountStatus: "active",
+          createdAt: new Date().toISOString(),
+          // 階段一修復：添加必要的metadata欄位
+          profileCompletion: {
+            basic: true,
+            preferences: false,
+            security: false
+          }
         },
         message: "註冊成功",
+        error: null
       };
     } else {
       return {
         success: false,
+        data: null,
         message: createResult.error || "註冊失敗",
-        errorCode: createResult.errorCode || "REGISTRATION_FAILED",
+        error: {
+          code: createResult.errorCode || "REGISTRATION_FAILED",
+          message: createResult.error || "註冊過程發生錯誤",
+          details: createResult
+        }
       };
     }
   } catch (error) {
@@ -1583,8 +1629,13 @@ async function AM_processAPIRegister(requestData) {
     );
     return {
       success: false,
+      data: null,
       message: "系統錯誤，請稍後再試",
-      errorCode: "SYSTEM_ERROR",
+      error: {
+        code: "SYSTEM_ERROR",
+        message: "系統錯誤，請稍後再試",
+        details: { error: error.message }
+      }
     };
   }
 }
@@ -1622,7 +1673,7 @@ async function AM_processAPILogin(requestData) {
       return errorResponse;
     }
 
-    // 驗證帳號存在性
+    // 階段一修復：改善帳號驗證邏輯
     const existsResult = await AM_validateAccountExists(
       requestData.email,
       "email",
@@ -1630,8 +1681,16 @@ async function AM_processAPILogin(requestData) {
     if (!existsResult.exists) {
       return {
         success: false,
+        data: null,
         message: "帳號不存在",
-        errorCode: "ACCOUNT_NOT_FOUND",
+        error: {
+          code: "ACCOUNT_NOT_FOUND",
+          message: "找不到此電子郵件對應的帳號，請確認電子郵件地址或註冊新帳號",
+          details: { 
+            email: requestData.email,
+            suggestion: "請檢查電子郵件拼寫或前往註冊頁面"
+          }
+        }
       };
     }
 
