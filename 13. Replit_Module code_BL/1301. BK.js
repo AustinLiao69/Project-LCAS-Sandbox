@@ -1,8 +1,9 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.0.3
+ * 1301. BK.js_記帳核心模組_v3.0.4
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能模組，包含交易管理、分類管理、統計分析等核心功能
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
+ * @update 2025-09-26: 階段一緊急修復 - 修復快速記帳輸入驗證，強化業務邏輯v3.0.4
  * @date 2025-09-26
  */
 
@@ -21,11 +22,14 @@ function BK_formatSuccessResponse(data, message = "操作成功", error = null) 
 }
 
 /**
- * BK_formatErrorResponse - 標準化錯誤回應格式
- * @version 2025-09-26-V3.0.3
- * @description 確保所有BK函數錯誤回傳格式100%符合DCN-0015規範
+ * BK_formatErrorResponse - 標準化錯誤回應格式 (v3.0.4強化版)
+ * @version 2025-09-26-V3.0.4
+ * @description 階段一修復 - 強化錯誤處理機制，確保所有BK函數錯誤回傳格式100%符合DCN-0015規範
  */
 function BK_formatErrorResponse(errorCode, message, details = null) {
+  // 階段一修復：錯誤類型分類
+  const errorCategory = BK_categorizeErrorCode(errorCode);
+  
   return {
     success: false,
     data: null,
@@ -33,9 +37,44 @@ function BK_formatErrorResponse(errorCode, message, details = null) {
     error: {
       code: errorCode,
       message: message,
-      details: details
+      details: details,
+      category: errorCategory,
+      timestamp: new Date().toISOString(),
+      severity: BK_getErrorSeverity(errorCode)
     }
   };
+}
+
+/**
+ * 錯誤代碼分類 (v3.0.4新增)
+ */
+function BK_categorizeErrorCode(errorCode) {
+  if (errorCode.includes('MISSING_') || errorCode.includes('INVALID_')) {
+    return 'VALIDATION_ERROR';
+  }
+  if (errorCode.includes('NOT_FOUND')) {
+    return 'NOT_FOUND_ERROR';
+  }
+  if (errorCode.includes('SYSTEM_') || errorCode.includes('DB_')) {
+    return 'SYSTEM_ERROR';
+  }
+  if (errorCode.includes('AUTH_') || errorCode.includes('PERMISSION_')) {
+    return 'AUTH_ERROR';
+  }
+  return 'BUSINESS_LOGIC_ERROR';
+}
+
+/**
+ * 錯誤嚴重程度評估 (v3.0.4新增)
+ */
+function BK_getErrorSeverity(errorCode) {
+  if (errorCode.includes('CRITICAL_') || errorCode.includes('SYSTEM_')) {
+    return 'HIGH';
+  }
+  if (errorCode.includes('MISSING_') || errorCode.includes('INVALID_')) {
+    return 'MEDIUM';
+  }
+  return 'LOW';
 }
 
 /**
@@ -1305,10 +1344,10 @@ function BK_logCritical(message, category, userId, errorType, errorDetail, funct
 // === API端點處理函數 ===
 
 /**
- * BK_processAPIQuickTransaction - 處理快速記帳API端點
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 新增API端點處理函數，支援POST /transactions/quick
+ * BK_processAPIQuickTransaction - 處理快速記帳API端點 (v3.0.4修復版)
+ * @version 2025-09-26-V3.0.4
+ * @date 2025-09-26
+ * @update: 階段一修復 - 增強輸入驗證，修復必填項目檢查
  */
 async function BK_processAPIQuickTransaction(requestData) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -1317,10 +1356,37 @@ async function BK_processAPIQuickTransaction(requestData) {
   try {
     BK_logInfo(`${logPrefix} 開始處理快速記帳API請求`, "API端點", requestData.userId || "", "BK_processAPIQuickTransaction");
 
+    // 階段一修復：強化輸入驗證
+    if (!requestData.input || typeof requestData.input !== 'string' || requestData.input.trim().length === 0) {
+      return BK_formatErrorResponse("MISSING_INPUT_TEXT", "快速輸入文字為必填項目，請提供記帳內容", {
+        field: "input",
+        requirement: "非空字串",
+        example: "午餐150元",
+        received: requestData.input
+      });
+    }
+
+    // 階段一修復：輸入長度驗證
+    if (requestData.input.trim().length > 200) {
+      return BK_formatErrorResponse("INPUT_TOO_LONG", "輸入內容過長，請控制在200字元以內", {
+        field: "input",
+        maxLength: 200,
+        currentLength: requestData.input.length
+      });
+    }
+
+    // 階段一修復：用戶ID驗證
+    if (!requestData.userId) {
+      return BK_formatErrorResponse("MISSING_USER_ID", "用戶ID為必填項目", {
+        field: "userId",
+        requirement: "有效的用戶識別碼"
+      });
+    }
+
     await BK_initialize();
 
     const result = await BK_processQuickTransaction({
-      input: requestData.input,
+      input: requestData.input.trim(),
       userId: requestData.userId,
       ledgerId: requestData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
       context: requestData.context || {},
