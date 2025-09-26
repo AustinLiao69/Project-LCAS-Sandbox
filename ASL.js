@@ -1,8 +1,8 @@
 /**
  * ASL.js_API服務層模組_2.1.1
  * @module API服務層模組（統一回應格式）
- * @description LCAS 2.0 API Service Layer - DCN-0015第一階段：BL層格式標準化完成
- * @update 2025-09-26: DCN-0015第一階段 - 移除容錯機制，直接使用BL層標準格式
+ * @description LCAS 2.0 API Service Layer - DCN-0015第二階段：移除容錯機制，直接使用BL層標準格式
+ * @update 2025-09-26: DCN-0015第二階段 - 完全信任BL層標準格式，移除所有容錯邏輯
  * @date 2025-09-26
  */
 
@@ -445,7 +445,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.1.0',
+    version: '2.1.1',
     status: 'running',
     port: PORT,
     architecture: 'ASL -> BL層轉發（統一回應格式）',
@@ -476,7 +476,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.1.0',
+    version: '2.1.1',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -572,7 +572,12 @@ app.post('/api/v1/auth/google-login', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIGoogleLogin(req.body);
-    res.apiSuccess(result.data, result.message || 'Google登入處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (google-login):', error);
@@ -590,7 +595,12 @@ app.post('/api/v1/auth/logout', async (req, res) => {
     }
 
     const result = await AM.AM_processAPILogout(req.body);
-    res.apiSuccess(result.data, result.message || '登出處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (logout):', error);
@@ -608,7 +618,12 @@ app.post('/api/v1/auth/refresh', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIRefresh(req.body);
-    res.apiSuccess(result.data, result.message || 'Token刷新處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (refresh):', error);
@@ -626,7 +641,12 @@ app.post('/api/v1/auth/forgot-password', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIForgotPassword(req.body);
-    res.apiSuccess(result.data, result.message || '忘記密碼處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (forgot-password):', error);
@@ -644,7 +664,12 @@ app.get('/api/v1/auth/verify-reset-token', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIVerifyResetToken(req.query);
-    res.apiSuccess(result.data, result.message || '重設Token驗證處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (verify-reset-token):', error);
@@ -662,7 +687,12 @@ app.post('/api/v1/auth/reset-password', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIResetPassword(req.body);
-    res.apiSuccess(result.data, result.message || '重設密碼處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (reset-password):', error);
@@ -680,7 +710,12 @@ app.post('/api/v1/auth/verify-email', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIVerifyEmail(req.body);
-    res.apiSuccess(result.data, result.message || 'Email驗證處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (verify-email):', error);
@@ -698,7 +733,12 @@ app.post('/api/v1/auth/bind-line', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIBindLine(req.body);
-    res.apiSuccess(result.data, result.message || 'LINE綁定處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (bind-line):', error);
@@ -716,7 +756,12 @@ app.get('/api/v1/auth/bind-status', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIBindStatus(req.query);
-    res.apiSuccess(result.data, result.message || '綁定狀態查詢處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (bind-status):', error);
@@ -736,7 +781,12 @@ app.get('/api/v1/users/profile', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIGetProfile(req.query);
-    res.apiSuccess(result.data, result.message || '用戶資料取得完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (users/profile):', error);
@@ -754,7 +804,12 @@ app.put('/api/v1/users/profile', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIUpdateProfile(req.body);
-    res.apiSuccess(result.data, result.message || '用戶資料更新完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (update profile):', error);
@@ -772,7 +827,12 @@ app.get('/api/v1/users/assessment-questions', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIGetAssessmentQuestions(req.query);
-    res.apiSuccess(result.data, result.message || '評估問卷取得完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (assessment-questions):', error);
@@ -790,7 +850,12 @@ app.post('/api/v1/users/assessment', async (req, res) => {
     }
 
     const result = await AM.AM_processAPISubmitAssessment(req.body);
-    res.apiSuccess(result.data, result.message || '評估結果提交完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (submit assessment):', error);
@@ -808,7 +873,12 @@ app.put('/api/v1/users/preferences', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIUpdatePreferences(req.body);
-    res.apiSuccess(result.data, result.message || '偏好設定更新完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (update preferences):', error);
@@ -826,7 +896,12 @@ app.put('/api/v1/users/security', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIUpdateSecurity(req.body);
-    res.apiSuccess(result.data, result.message || '安全設定更新完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (update security):', error);
@@ -844,7 +919,12 @@ app.put('/api/v1/users/mode', async (req, res) => {
     }
 
     const result = await AM.AM_processAPISwitchMode(req.body);
-    res.apiSuccess(result.data, result.message || '用戶模式切換完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (switch mode):', error);
@@ -862,7 +942,12 @@ app.post('/api/v1/users/verify-pin', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIVerifyPin(req.body);
-    res.apiSuccess(result.data, result.message || 'PIN碼驗證完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (verify pin):', error);
@@ -905,7 +990,12 @@ app.post('/api/v1/transactions/quick', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIQuickTransaction(req.body);
-    res.apiSuccess(result.data, result.message || '快速記帳處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (quick):', error);
@@ -923,7 +1013,12 @@ app.get('/api/v1/transactions', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIGetTransactions(req.query);
-    res.apiSuccess(result.data, result.message || '交易查詢處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (get transactions):', error);
@@ -941,7 +1036,12 @@ app.get('/api/v1/transactions/dashboard', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIGetDashboard(req.query);
-    res.apiSuccess(result.data, result.message || '儀表板數據處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (dashboard):', error);
@@ -959,7 +1059,12 @@ app.get('/api/v1/transactions/statistics', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIGetStatistics(req.query);
-    res.apiSuccess(result.data, result.message || '統計數據處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (statistics):', error);
@@ -977,7 +1082,12 @@ app.get('/api/v1/transactions/recent', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIGetRecent(req.query);
-    res.apiSuccess(result.data, result.message || '最近交易處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (recent):', error);
@@ -995,7 +1105,12 @@ app.get('/api/v1/transactions/charts', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIGetCharts(req.query);
-    res.apiSuccess(result.data, result.message || '圖表數據處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (charts):', error);
@@ -1013,7 +1128,12 @@ app.get('/api/v1/transactions/:id', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIGetTransactionDetail({ id: req.params.id, ...req.query });
-    res.apiSuccess(result.data, result.message || '交易詳情處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (transaction detail):', error);
@@ -1031,7 +1151,12 @@ app.put('/api/v1/transactions/:id', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIUpdateTransaction({ id: req.params.id, ...req.body });
-    res.apiSuccess(result.data, result.message || '交易更新處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (update transaction):', error);
@@ -1049,7 +1174,12 @@ app.delete('/api/v1/transactions/:id', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIDeleteTransaction({ id: req.params.id });
-    res.apiSuccess(result.data, result.message || '交易刪除處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (delete transaction):', error);
@@ -1067,7 +1197,12 @@ app.post('/api/v1/transactions/batch', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIBatchCreate(req.body);
-    res.apiSuccess(result.data, result.message || '批量新增處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (batch create):', error);
@@ -1085,7 +1220,12 @@ app.put('/api/v1/transactions/batch', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIBatchUpdate(req.body);
-    res.apiSuccess(result.data, result.message || '批量更新處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (batch update):', error);
@@ -1103,7 +1243,12 @@ app.delete('/api/v1/transactions/batch', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIBatchDelete(req.body);
-    res.apiSuccess(result.data, result.message || '批量刪除處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (batch delete):', error);
@@ -1121,7 +1266,12 @@ app.post('/api/v1/transactions/:id/attachments', async (req, res) => {
     }
 
     const result = await BK.BK_processAPIUploadAttachment({ id: req.params.id, ...req.body });
-    res.apiSuccess(result.data, result.message || '附件上傳處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (upload attachment):', error);
@@ -1142,7 +1292,12 @@ app.delete('/api/v1/transactions/:id/attachments/:attachmentId', async (req, res
       id: req.params.id, 
       attachmentId: req.params.attachmentId 
     });
-    res.apiSuccess(result.data, result.message || '附件刪除處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (delete attachment):', error);
@@ -1191,21 +1346,22 @@ app.use((error, req, res, next) => {
     console.log(`🌐 LCAS ASL純轉發窗口已啟動於 Port ${PORT}`);
     console.log(`📍 服務地址: http://0.0.0.0:${PORT}`);
     console.log(`🔗 健康檢查: http://0.0.0.0:${PORT}/health`);
-    console.log(`🎯 DCN-0012階段一修復完成: ASL純轉發窗口`);
+    console.log(`🎯 DCN-0015第二階段完成: ASL格式驗證強化`);
     console.log(`📋 P1-2 API端點: AM(19) + BK(15) = 34個端點`);
 
-    // 階段一修復狀態報告
+    // 第二階段實作狀態報告
     const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
     const amStatus = moduleStatus.AM ? '✅' : '❌';
-    const overallStatus = moduleStatus.firebase && moduleStatus.AM ? '成功' : '部分成功';
+    const overallStatus = moduleStatus.firebase && moduleStatus.AM ? '完全就緒' : '部分就緒';
 
-    console.log(`🔧 階段一修復狀態: ${overallStatus}`);
+    console.log(`🔧 第二階段實作狀態: ${overallStatus}`);
     console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus})`);
+    console.log(`✨ 容錯機制移除: 100%信任BL層標準格式`);
 
     if (moduleStatus.firebase && moduleStatus.AM) {
-      console.log('🚀 系統已完全就緒，可處理P1-2範圍所有API請求');
+      console.log('🚀 ASL v2.1.1已完全就緒，直接使用BL層標準格式');
     } else {
-      console.log('⚠️ 系統部分就緒，建議執行階段二進一步修復');
+      console.log('⚠️ 系統部分就緒，但已移除所有容錯邏輯');
     }
   });
 
@@ -1231,20 +1387,21 @@ process.on('SIGINT', () => {
   });
 });
 
-console.log('🎉 LCAS ASL純轉發窗口階段一修復完成！');
+console.log('🎉 LCAS ASL第二階段：格式驗證強化完成！');
   console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'})`);
-  console.log('🔧 純轉發機制: 34個API端點 -> BL層函數調用');
-  console.log('🔧 階段一修復: Firebase超時機制與優雅降級已實作');
+  console.log('🔧 純轉發機制: 34個API端點 -> 直接使用BL層標準格式');
+  console.log('✨ 第二階段完成: 移除所有容錯邏輯，100%信任BL層');
 
   if (moduleStatus.firebase && moduleStatus.AM) {
-    console.log('🚀 階段一修復成功，系統完全就緒！');
+    console.log('🚀 第二階段成功，ASL v2.1.1完全就緒！');
     console.log('🌐 ASL服務器即將在 Port 5000 啟動...');
+    console.log('✨ 格式驗證強化: 直接使用result.data, result.message, result.error');
   } else if (moduleStatus.firebase && !moduleStatus.AM) {
-    console.log('⚠️ Firebase正常但AM模組異常，系統部分功能可用');
-    console.log('🔧 建議檢查AM模組依賴和權限設定');
+    console.log('⚠️ Firebase正常但AM模組異常，已移除容錯邏輯');
+    console.log('🔧 建議修復AM模組以完全發揮第二階段效果');
   } else {
-    console.log('❌ Firebase初始化失敗，系統以降級模式運行');
-    console.log('🔧 建議檢查網路連線和Firebase配置');
+    console.log('❌ Firebase初始化失敗，但容錯邏輯已移除');
+    console.log('🔧 建議修復Firebase以完全發揮第二階段效果');
   }
 
   return server;
