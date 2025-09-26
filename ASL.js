@@ -527,11 +527,8 @@ app.post('/api/v1/auth/register', async (req, res) => {
 
     const result = await AM.AM_processAPIRegister(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (register):', error);
@@ -550,11 +547,8 @@ app.post('/api/v1/auth/login', async (req, res) => {
 
     const result = await AM.AM_processAPILogin(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (login):', error);
@@ -573,11 +567,8 @@ app.post('/api/v1/auth/google-login', async (req, res) => {
 
     const result = await AM.AM_processAPIGoogleLogin(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (google-login):', error);
@@ -596,11 +587,8 @@ app.post('/api/v1/auth/logout', async (req, res) => {
 
     const result = await AM.AM_processAPILogout(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (logout):', error);
@@ -619,11 +607,8 @@ app.post('/api/v1/auth/refresh', async (req, res) => {
 
     const result = await AM.AM_processAPIRefresh(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (refresh):', error);
@@ -642,11 +627,8 @@ app.post('/api/v1/auth/forgot-password', async (req, res) => {
 
     const result = await AM.AM_processAPIForgotPassword(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (forgot-password):', error);
@@ -665,11 +647,8 @@ app.get('/api/v1/auth/verify-reset-token', async (req, res) => {
 
     const result = await AM.AM_processAPIVerifyResetToken(req.query);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (verify-reset-token):', error);
@@ -688,11 +667,8 @@ app.post('/api/v1/auth/reset-password', async (req, res) => {
 
     const result = await AM.AM_processAPIResetPassword(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (reset-password):', error);
@@ -711,11 +687,8 @@ app.post('/api/v1/auth/verify-email', async (req, res) => {
 
     const result = await AM.AM_processAPIVerifyEmail(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (verify-email):', error);
@@ -734,11 +707,8 @@ app.post('/api/v1/auth/bind-line', async (req, res) => {
 
     const result = await AM.AM_processAPIBindLine(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (bind-line):', error);
@@ -757,11 +727,8 @@ app.get('/api/v1/auth/bind-status', async (req, res) => {
 
     const result = await AM.AM_processAPIBindStatus(req.query);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (bind-status):', error);
@@ -782,11 +749,8 @@ app.get('/api/v1/users/profile', async (req, res) => {
 
     const result = await AM.AM_processAPIGetProfile(req.query);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (users/profile):', error);
@@ -805,11 +769,8 @@ app.put('/api/v1/users/profile', async (req, res) => {
 
     const result = await AM.AM_processAPIUpdateProfile(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (update profile):', error);
@@ -968,11 +929,8 @@ app.post('/api/v1/transactions', async (req, res) => {
 
     const result = await BK.BK_processAPITransaction(req.body);
     
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
-    } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
-    }
+    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    res.apiSuccess(result.data, result.message);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (transactions):', error);
