@@ -2,7 +2,7 @@
  * 0603. SIT_TC_P1.js
  * LCAS 2.0 Phase 1 SIT測試案例實作
  *
- * @version v2.2.0
+ * @version v2.4.0
  * @created 2025-09-15
  * @updated 2025-01-26
  * @author LCAS SQA Team
@@ -4875,34 +4875,31 @@ class SITTestCases {
     }
 
     /**
-     * 主執行邏輯 - 修復版 v1.2.0
-     * @version 2025-01-26-V1.2.0
+     * 主執行邏輯 - 修復版 v1.3.0
+     * @version 2025-01-26-V1.3.0
      * @description 修復async/await語法錯誤，確保主執行邏輯正確包裝在async函數中
      */
     async executeMainTestFlow() {
         console.log('🚀 LCAS 2.0 Phase 1 SIT測試開始執行...');
         console.log(`📅 測試開始時間: ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
 
-        // 建立測試實例
-        const sitTestCases = new SITTestCases();
-
         try {
             console.log('🔄 SIT測試執行流程啟動...');
 
             // 前置檢查
-            await sitTestCases.loadTestData();
+            await this.loadTestData();
 
-            const serviceReadiness = await sitTestCases.checkAPIServiceReadiness();
+            const serviceReadiness = await this.checkAPIServiceReadiness();
             if (!serviceReadiness.ready) {
                 console.error('❌ API服務未就緒，測試中止');
                 process.exit(1);
             }
 
-            const quotaStatus = await sitTestCases.checkFirebaseQuotaStatus();
+            const quotaStatus = await this.checkFirebaseQuotaStatus();
             if (!quotaStatus.available) {
                 console.log('⚠️ Firebase配額問題，嘗試等待恢復...');
 
-                const recovered = await sitTestCases.waitForFirebaseQuotaRecovery(3);
+                const recovered = await this.waitForFirebaseQuotaRecovery(3);
                 if (!recovered) {
                     console.error('❌ Firebase配額無法恢復，測試中止');
                     console.log('💡 建議稍後重新執行測試');
@@ -4923,17 +4920,17 @@ class SITTestCases {
             switch (phase) {
                 case 'phase1':
                 case '1':
-                    testResults = await sitTestCases.executeMainTestFlow();
+                    testResults = await this.executePhase1Tests();
                     break;
 
                 case 'phase2':
                 case '2':
-                    testResults = await sitTestCases.executePhase2Tests();
+                    testResults = await this.executePhase2Tests();
                     break;
 
                 case 'phase3':
                 case '3':
-                    testResults = await sitTestCases.executePhase3Tests();
+                    testResults = await this.executePhase3Tests();
                     break;
 
                 case 'all':
@@ -4943,22 +4940,22 @@ class SITTestCases {
 
                     // 階段一：單點整合驗證測試
                     console.log('\n📋 ===== 階段一：單點整合驗證測試 =====');
-                    const phase1Results = await sitTestCases.executeMainTestFlow();
+                    const phase1Results = await this.executePhase1Tests();
 
                     // 階段二：四層架構資料流測試
                     console.log('\n📋 ===== 階段二：四層架構資料流測試 =====');
-                    const phase2Results = await sitTestCases.executePhase2Tests();
+                    const phase2Results = await this.executePhase2Tests();
 
                     // 階段三：完整業務流程測試
                     console.log('\n📋 ===== 階段三：完整業務流程測試 =====');
-                    const phase3Results = await sitTestCases.executePhase3Tests();
+                    const phase3Results = await this.executePhase3Tests();
 
-                    testResults = [...phase1Results, ...phase2Results, ...phase3Results];
+                    testResults = [phase1Results, phase2Results, phase3Results];
                     break;
             }
 
             // 生成最終測試報告
-            sitTestCases.generateFinalReport(testResults, phase);
+            this.generateFinalReport(testResults);
 
         } catch (error) {
             console.error('💥 SIT測試執行過程發生致命錯誤:', error.message);
@@ -4966,7 +4963,7 @@ class SITTestCases {
 
             // 即使發生錯誤，也嘗試生成部分報告
             try {
-                sitTestCases.generateFinalReport(sitTestCases.testResults, 'error');
+                this.generateFinalReport(this.testResults);
             } catch (reportError) {
                 console.error('💥 報告生成也失敗:', reportError.message);
             }
@@ -4974,14 +4971,24 @@ class SITTestCases {
             process.exit(1);
         }
     }
-
-    // 檢查是否為主模組執行
-    if (require.main === module) {
-        executeMainTestFlow().catch(error => {
-            console.error('💥 主執行函數發生錯誤:', error.message);
-            process.exit(1);
-        });
-    }
 }
+
+/**
+ * 主執行函數 - 正確的async包裝
+ * @version 2025-01-26-V1.3.0
+ */
+async function executeMainTestFlow() {
+    const sitTestCases = new SITTestCases();
+    await sitTestCases.executeMainTestFlow();
+}
+
+// 檢查是否為主模組執行
+if (require.main === module) {
+    executeMainTestFlow().catch(error => {
+        console.error('💥 主執行函數發生錯誤:', error.message);
+        process.exit(1);
+    });
+}
+
 // 導出類別
 module.exports = SITTestCases;
