@@ -1839,8 +1839,12 @@ async function AM_processAPILogout(requestData) {
     if (!requestData.token && !requestData.userId) {
       return {
         success: false,
+        data: null,
+        error: {
+          code: "MISSING_AUTH_INFO",
+          message: "token或userId為必填欄位"
+        },
         message: "token或userId為必填欄位",
-        errorCode: "MISSING_AUTH_INFO",
       };
     }
 
@@ -1859,6 +1863,7 @@ async function AM_processAPILogout(requestData) {
       data: {
         message: "已成功登出",
       },
+      error: null,
       message: "登出成功",
     };
   } catch (error) {
@@ -1873,8 +1878,12 @@ async function AM_processAPILogout(requestData) {
     );
     return {
       success: false,
+      data: null,
+      error: {
+        code: "LOGOUT_ERROR",
+        message: "登出失敗"
+      },
       message: "登出失敗",
-      errorCode: "LOGOUT_ERROR",
     };
   }
 }
@@ -2588,13 +2597,18 @@ async function AM_processAPIGetProfile(queryParams) {
             biometricEnabled: false,
           },
         },
+        error: null,
         message: "用戶資料取得成功",
       };
     } else {
       return {
         success: false,
+        data: null,
+        error: {
+          code: "USER_NOT_FOUND",
+          message: "用戶不存在"
+        },
         message: "用戶不存在",
-        errorCode: "USER_NOT_FOUND",
       };
     }
   } catch (error) {
@@ -2609,8 +2623,12 @@ async function AM_processAPIGetProfile(queryParams) {
     );
     return {
       success: false,
+      data: null,
+      error: {
+        code: "SYSTEM_ERROR",
+        message: "系統錯誤，請稍後再試"
+      },
       message: "系統錯誤，請稍後再試",
-      errorCode: "SYSTEM_ERROR",
     };
   }
 }
@@ -2823,13 +2841,18 @@ async function AM_processAPISubmitAssessment(requestData) {
           },
           applied: true,
         },
+        error: null,
         message: "評估結果提交成功",
       };
     } else {
       return {
         success: false,
+        data: null,
+        error: {
+          code: "SAVE_FAILED",
+          message: "評估結果保存失敗"
+        },
         message: "評估結果保存失敗",
-        errorCode: "SAVE_FAILED",
       };
     }
   } catch (error) {
@@ -2844,8 +2867,12 @@ async function AM_processAPISubmitAssessment(requestData) {
     );
     return {
       success: false,
+      data: null,
+      error: {
+        code: "SYSTEM_ERROR",
+        message: "系統錯誤，請稍後再試"
+      },
       message: "系統錯誤，請稍後再試",
-      errorCode: "SYSTEM_ERROR",
     };
   }
 }

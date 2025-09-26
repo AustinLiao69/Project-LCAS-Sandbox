@@ -296,18 +296,32 @@ app.use((req, res, next) => {
 
   // 檢測使用者模式
   const detectUserMode = (req) => {
+    let userMode = 'Expert'; // 預設為Expert模式
+    
     // 1. 從JWT Token中取得使用者模式
     if (req.user && req.user.mode) {
-      return req.user.mode;
+      userMode = req.user.mode;
     }
     
     // 2. 從請求標頭中取得模式設定
     if (req.headers['x-user-mode']) {
-      return req.headers['x-user-mode'];
+      userMode = req.headers['x-user-mode'];
     }
     
-    // 3. 預設為Inertial模式
-    return 'Inertial';
+    // 3. 統一模式命名格式（首字母大寫）
+    const normalizedMode = userMode.toLowerCase();
+    switch (normalizedMode) {
+      case 'expert':
+        return 'Expert';
+      case 'inertial':
+        return 'Inertial';
+      case 'cultivation':
+        return 'Cultivation';
+      case 'guiding':
+        return 'Guiding';
+      default:
+        return 'Expert';
+    }
   };
 
   // 四模式差異化處理函數
