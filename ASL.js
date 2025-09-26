@@ -1,9 +1,9 @@
 /**
- * ASL.js_API服務層模組_2.1.0
+ * ASL.js_API服務層模組_2.1.1
  * @module API服務層模組（統一回應格式）
- * @description LCAS 2.0 API Service Layer - DCN-0015階段一：建立統一API回應格式機制
- * @update 2025-01-27: DCN-0015階段一 - 實作統一回應格式與四模式差異化處理
- * @date 2025-01-27
+ * @description LCAS 2.0 API Service Layer - DCN-0015第一階段：BL層格式標準化完成
+ * @update 2025-09-26: DCN-0015第一階段 - 移除容錯機制，直接使用BL層標準格式
+ * @date 2025-09-26
  */
 
 console.log('🚀 LCAS ASL (API Service Layer) P1-2重構版啟動中...');
@@ -512,7 +512,12 @@ app.post('/api/v1/auth/register', async (req, res) => {
     }
 
     const result = await AM.AM_processAPIRegister(req.body);
-    res.apiSuccess(result.data, result.message || '註冊處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (register):', error);
@@ -530,7 +535,12 @@ app.post('/api/v1/auth/login', async (req, res) => {
     }
 
     const result = await AM.AM_processAPILogin(req.body);
-    res.apiSuccess(result.data, result.message || '登入處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (login):', error);
@@ -858,7 +868,12 @@ app.post('/api/v1/transactions', async (req, res) => {
     }
 
     const result = await BK.BK_processAPITransaction(req.body);
-    res.apiSuccess(result.data, result.message || '交易新增處理完成');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (transactions):', error);

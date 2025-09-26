@@ -3108,6 +3108,38 @@ async function AM_processAPIGetModeRecommendations(queryParams) {
 }
 
 /**
+ * AM_formatSuccessResponse - 標準化成功回應格式
+ * @version 2025-09-26-V3.0.1
+ * @description 確保所有AM函數回傳格式100%符合DCN-0015規範
+ */
+function AM_formatSuccessResponse(data, message = "操作成功", error = null) {
+  return {
+    success: true,
+    data: data,
+    message: message,
+    error: error
+  };
+}
+
+/**
+ * AM_formatErrorResponse - 標準化錯誤回應格式
+ * @version 2025-09-26-V3.0.1
+ * @description 確保所有AM函數錯誤回傳格式100%符合DCN-0015規範
+ */
+function AM_formatErrorResponse(errorCode, message, details = null) {
+  return {
+    success: false,
+    data: null,
+    message: message,
+    error: {
+      code: errorCode,
+      message: message,
+      details: details
+    }
+  };
+}
+
+/**
  * AM_validateQueryPermission - 驗證查詢權限
  * @version 2025-01-24-V1.0.0
  * @description 驗證用戶是否有權限查詢指定用戶的資訊
