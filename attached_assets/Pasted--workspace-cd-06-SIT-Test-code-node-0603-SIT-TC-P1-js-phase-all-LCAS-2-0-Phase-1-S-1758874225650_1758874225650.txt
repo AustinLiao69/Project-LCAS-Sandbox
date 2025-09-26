@@ -1,0 +1,85 @@
+~/workspace$ cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=all
+🚀 LCAS 2.0 Phase 1 SIT測試開始執行...
+📅 測試開始時間: 2025/9/26 下午4:10:09
+🔄 SIT測試執行流程啟動...
+🔄 開始載入SIT測試資料...
+⚠️ 關鍵測試資料驗證失敗: [ '效能測試-併發操作資料缺失' ]
+🔧 嘗試使用預設資料修復缺失項目...
+🔧 修復concurrent_operations資料...
+✅ 關鍵測試資料修復成功
+✅ 測試資料載入並驗證成功
+📊 載入的測試案例資料: 14 個類別
+🔍 檢查API服務就緒狀態...
+🔄 服務就緒檢查嘗試 1/10...
+  ✅ 統一回應格式驗證 /health: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T08:10:09.678Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true}}
+✅ API服務已就緒
+🔍 檢查Firebase配額狀態...
+  ✅ 統一回應格式驗證 /health: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T08:10:09.695Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true}}
+✅ Firebase配額狀態正常
+✅ 前置檢查完成，開始執行測試案例...
+🎯 執行測試階段: all
+🔄 執行完整測試流程（所有階段）...
+
+📋 ===== 階段一：單點整合驗證測試 =====
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段一測試
+📋 階段一：單點整合驗證測試 (TC-SIT-001~007)
+🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理
+NaN
+📊 階段一測試案例總數：7 個
+📅 預估執行時間：7 分鐘
+
+
+📝 執行階段一測試 1/7: TC-SIT-001: UserRegistration
+  ✅ 統一回應格式驗證 /api/v1/auth/register: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T08:10:10.810Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true}}
+❌ FAIL TC-SIT-001 (1.13s)
+   ℹ️ 錯誤: 註冊回應格式不正確
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 2/7: TC-SIT-002: UserLogin
+❌ FAIL TC-SIT-002 (246ms)
+   ℹ️ 錯誤: 帳號不存在
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 3/7: TC-SIT-003: FirebaseAuthIntegration
+  ✅ 統一回應格式驗證 /health: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T08:10:11.077Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T08:10:11.224Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true}}
+❌ FAIL TC-SIT-003 (151ms)
+   🚨 錯誤: Firebase Auth整合測試未完全通過
+   🏷️  錯誤類型: FIREBASE_ERROR
+   💡 建議: 檢查Firebase配額和連線設定
+
+✅ 用戶流程與認證 完成，休息1秒後繼續...
+
+📝 執行階段一測試 4/7: TC-SIT-004: QuickBooking
+❌ FAIL TC-SIT-004 (7ms)
+   ℹ️ 錯誤: 快速輸入文字為必填項目
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 5/7: TC-SIT-005: FullBookingForm
+  ✅ 統一回應格式驗證 /api/v1/transactions: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T08:10:12.890Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true}}
+❌ FAIL TC-SIT-005 (655ms)
+   ℹ️ 錯誤: 完整記帳表單失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 6/7: TC-SIT-006: TransactionQuery
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=20&sort=date%3Adesc: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T08:10:13.047Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true}}
+❌ FAIL TC-SIT-006 (159ms)
+   ℹ️ 錯誤: 交易查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 記帳功能與查詢 完成，休息1秒後繼續...
