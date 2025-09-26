@@ -1,0 +1,22 @@
+主題：建立MVP階段的簡化錯誤處理
+
+問題分析
+當前錯誤處理過於複雜，BUSINESS_LOGIC_ERROR類型錯誤過多。
+
+簡化方案
+錯誤分類簡化（僅3類）：
+USER_ERROR：用戶輸入錯誤（400）
+SYSTEM_ERROR：系統錯誤（500）
+AUTH_ERROR：認證錯誤（401）
+統一錯誤格式：
+{
+  success: false,
+  message: "用戶友善的錯誤描述",
+  errorCode: "USER_ERROR|SYSTEM_ERROR|AUTH_ERROR"
+}
+處理邏輯：
+所有BL函數：只拋出這三種類型的錯誤
+ASL.js：統一捕獲並轉換為HTTP狀態碼
+錯誤記錄：僅記錄SYSTEM_ERROR，其他忽略
+PG Insight
+MVP階段的錯誤處理重點是"不要讓系統崩潰"，而非"提供完美的錯誤分類"。
