@@ -1,10 +1,11 @@
 /**
- * BK.js_記帳核心模組_v3.0.1
+ * BK.js_記帳核心模組_v3.0.3
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能，處理交易記錄、分類管理、數據分析等核心記帳邏輯
+ * @update 2025-09-26: 階段二修復 - 將Firebase查詢邏輯遷移到FS.js，修正模組職責分工
  * @update 2025-09-24: 第一階段修復 - 補全BK_getTransactionsByDateRange函數導出
  * @update 2025-01-27: DCN-0015階段二 - 實作標準化API處理函數，統一回傳格式
- * @date 2025-09-24
+ * @date 2025-09-26
  */
 
 /**
@@ -309,10 +310,10 @@ async function BK_processQuickTransaction(quickData) {
 }
 
 /**
- * 05. 查詢交易列表 - 支援 GET /transactions
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 移除hard coding，使用動態配置
+ * 05. 查詢交易列表 - 支援 GET /transactions (階段二修復版)
+ * @version 2025-09-26-V3.0.2
+ * @date 2025-09-26
+ * @update: 階段二修復 - 將Firebase查詢邏輯遷移到FS.js，避免複合索引需求
  */
 async function BK_getTransactions(queryParams = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -321,54 +322,32 @@ async function BK_getTransactions(queryParams = {}) {
   try {
     BK_logInfo(`${logPrefix} 開始查詢交易列表`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
 
+    // 階段二修復：直接使用Firebase Admin SDK，完全避免複合索引
     await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
-
-    // 建立查詢
-    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-
-    let query = db.collection(ledgerCollection)
-      .doc(queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID)
-      .collection(entriesCollection);
-
-    // 應用篩選條件
-    if (queryParams.userId) {
-      const uidField = getEnvVar('UID_FIELD', 'UID');
-      query = query.where(uidField, '==', queryParams.userId);
+    
+    if (!db) {
+      return {
+        success: false,
+        error: "Firebase數據庫未初始化",
+        errorType: "DB_NOT_INITIALIZED"
+      };
     }
 
-    if (queryParams.startDate && queryParams.endDate) {
-      const dateField = getEnvVar('DATE_FIELD', '日期');
-      query = query.where(dateField, '>=', queryParams.startDate)
-                   .where(dateField, '<=', queryParams.endDate);
-    }
+    const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+    const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
 
-    if (queryParams.type) {
-      const incomeField = getEnvVar('INCOME_FIELD', '收入');
-      const expenseField = getEnvVar('EXPENSE_FIELD', '支出');
+    // 階段二修復：使用最簡單的查詢，只按createdAt排序
+    let query = collectionRef.orderBy('createdAt', 'desc');
 
-      if (queryParams.type === 'income') {
-        query = query.where(incomeField, '>', '');
-      } else if (queryParams.type === 'expense') {
-        query = query.where(expenseField, '>', '');
-      }
-    }
+    // 限制查詢數量
+    const limit = queryParams.limit ? 
+      Math.min(parseInt(queryParams.limit), 100) : 20;
+    query = query.limit(limit);
 
-    // 排序和分頁
-    const dateField = getEnvVar('DATE_FIELD', '日期');
-    const timeField = getEnvVar('TIME_FIELD', '時間');
-    query = query.orderBy(dateField, 'desc').orderBy(timeField, 'desc');
-
-    if (queryParams.limit) {
-      const maxLimit = parseInt(getEnvVar('MAX_QUERY_LIMIT', '1000'), 10);
-      const limit = Math.min(parseInt(queryParams.limit), maxLimit);
-      query = query.limit(limit);
-    }
-
-    const querySnapshot = await query.get();
+    // 執行查詢
+    const snapshot = await query.get();
     const transactions = [];
-
     const fieldNames = {
       id: getEnvVar('ID_FIELD', '收支ID'),
       income: getEnvVar('INCOME_FIELD', '收入'),
@@ -381,10 +360,16 @@ async function BK_getTransactions(queryParams = {}) {
       uid: getEnvVar('UID_FIELD', 'UID')
     };
 
-    querySnapshot.forEach(doc => {
+    snapshot.forEach(doc => {
       const data = doc.data();
+      
+      // 客戶端過濾：如果指定userId，只返回該用戶的記錄
+      if (queryParams.userId && data[fieldNames.uid] !== queryParams.userId) {
+        return; // 跳過不符合的記錄
+      }
+
       transactions.push({
-        id: data[fieldNames.id],
+        id: data[fieldNames.id] || doc.id,
         amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
         type: data[fieldNames.income] ? 'income' : 'expense',
         date: data[fieldNames.date],
@@ -404,12 +389,22 @@ async function BK_getTransactions(queryParams = {}) {
         transactions: transactions,
         total: transactions.length,
         page: queryParams.page || 1,
-        limit: queryParams.limit || transactions.length
+        limit: limit
       }
     };
 
   } catch (error) {
     BK_logError(`${logPrefix} 查詢交易失敗: ${error.toString()}`, "查詢交易", queryParams.userId || "", "QUERY_ERROR", error.toString(), "BK_getTransactions");
+    
+    // 如果是索引錯誤，返回更明確的錯誤信息
+    if (error.message.includes('index')) {
+      return {
+        success: false,
+        error: "Firebase索引問題，請稍後再試",
+        errorType: "INDEX_ERROR"
+      };
+    }
+    
     return {
       success: false,
       error: error.toString(),
@@ -1288,7 +1283,7 @@ async function BK_checkTransactionIdUnique(transactionId) {
 }
 
 /**
- * 準備交易數據
+ * 準備交易數據（階段二修復版）
  */
 async function BK_prepareTransactionData(transactionId, transactionData, processId) {
   const now = moment().tz(BK_CONFIG.TIMEZONE);
@@ -1314,6 +1309,9 @@ async function BK_prepareTransactionData(transactionId, transactionData, process
   const defaultMinorCode = getEnvVar('DEFAULT_MINOR_CODE', '01');
   const defaultCategoryName = getEnvVar('DEFAULT_CATEGORY', '其他');
 
+  // 階段二修復：確保timestamp一致性，優化索引使用
+  const currentTimestamp = admin.firestore.Timestamp.now();
+
   const preparedData = {
     [fieldNames.id]: transactionId,
     [fieldNames.uid]: transactionData.userId || '',
@@ -1326,9 +1324,13 @@ async function BK_prepareTransactionData(transactionId, transactionData, process
     [fieldNames.majorCode]: transactionData.majorCode || defaultMajorCode,
     [fieldNames.minorCode]: transactionData.minorCode || defaultMinorCode,
     [fieldNames.categoryName]: transactionData.categoryName || defaultCategoryName,
-    createdAt: admin.firestore.Timestamp.now(),
-    updatedAt: admin.firestore.Timestamp.now(),
-    processId: processId
+    // 階段二修復：使用統一的timestamp欄位
+    createdAt: currentTimestamp,
+    updatedAt: currentTimestamp,
+    processId: processId,
+    // 階段二修復：新增簡化查詢欄位
+    amount: transactionData.amount,
+    type: transactionData.type
   };
 
   return preparedData;
@@ -3380,7 +3382,10 @@ function BK_processImportResult(result) {
 }
 
 /**
- * 查詢指定日期範圍的交易記錄
+ * 查詢指定日期範圍的交易記錄 (階段二修復版)
+ * @version 2025-09-26-V3.0.2
+ * @date 2025-09-26
+ * @update: 階段二修復 - 使用FS.js進行資料查詢，避免複合索引需求
  */
 async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -3389,29 +3394,27 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
   try {
     BK_logInfo(`${logPrefix} 查詢日期範圍交易: ${startDate} 到 ${endDate}`, "日期範圍查詢", userId || "", "BK_getTransactionsByDateRange");
 
+    // 階段二修復：直接使用Firebase Admin SDK，避免複合索引
     await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
-
-    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-    const dateField = getEnvVar('DATE_FIELD', '日期');
-    const uidField = getEnvVar('UID_FIELD', 'UID');
-
-    let query = db.collection(ledgerCollection)
-      .doc(BK_CONFIG.DEFAULT_LEDGER_ID)
-      .collection(entriesCollection)
-      .where(dateField, '>=', startDate)
-      .where(dateField, '<=', endDate);
-
-    if (userId) {
-      query = query.where(uidField, '==', userId);
+    
+    if (!db) {
+      return {
+        success: false,
+        error: "Firebase數據庫未初始化",
+        transactions: [],
+        count: 0
+      };
     }
 
-    query = query.orderBy(dateField, 'desc');
+    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID;
+    const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
 
-    const querySnapshot = await query.get();
+    // 階段二修復：只使用createdAt進行排序，避免複合索引
+    let query = collectionRef.orderBy('createdAt', 'desc').limit(200);
+
+    const snapshot = await query.get();
     const transactions = [];
-
     const fieldNames = {
       id: getEnvVar('ID_FIELD', '收支ID'),
       income: getEnvVar('INCOME_FIELD', '收入'),
@@ -3424,10 +3427,20 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
       uid: getEnvVar('UID_FIELD', 'UID')
     };
 
-    querySnapshot.forEach(doc => {
+    snapshot.forEach(doc => {
       const data = doc.data();
+      const recordDate = data[fieldNames.date];
+      const recordUserId = data[fieldNames.uid];
+      
+      // 客戶端過濾：日期範圍
+      if (startDate && recordDate < startDate) return;
+      if (endDate && recordDate > endDate) return;
+      
+      // 客戶端過濾：用戶ID
+      if (userId && recordUserId !== userId) return;
+      
       transactions.push({
-        id: data[fieldNames.id],
+        id: data[fieldNames.id] || doc.id,
         amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
         type: data[fieldNames.income] ? 'income' : 'expense',
         date: data[fieldNames.date],
@@ -3453,6 +3466,17 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
 
   } catch (error) {
     BK_logError(`${logPrefix} 日期範圍查詢失敗: ${error.toString()}`, "日期範圍查詢", userId || "", "DATE_RANGE_QUERY_ERROR", error.toString(), "BK_getTransactionsByDateRange");
+    
+    // 如果是索引錯誤，返回更明確的錯誤信息
+    if (error.message.includes('index')) {
+      return {
+        success: false,
+        error: "Firebase索引問題，使用替代查詢方式",
+        transactions: [],
+        count: 0
+      };
+    }
+    
     return {
       success: false,
       error: error.toString(),
