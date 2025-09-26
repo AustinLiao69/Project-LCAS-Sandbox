@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "version": "v2.0.0",
+    "version": "v2.1.0",
     "created_date": "2025-09-15",
-    "last_updated": "2025-09-15",
-    "description": "LCAS 2.0 Phase 1 SIT測試資料配置檔 - 階段三完整整合測試資料集",
+    "last_updated": "2025-01-26",
+    "description": "LCAS 2.0 Phase 1 SIT測試資料配置檔 - 階段一緊急修復版",
     "test_cases_supported": "TC-SIT-001 to TC-SIT-028 (完整28個測試案例)",
     "author": "LCAS SQA Team",
     "change_log": [
@@ -23,9 +23,14 @@
         "changes": "階段二：核心業務功能測試資料建立完成"
       },
       {
-        "version": "v1.1.0",
+        "version": "v2.0.0",
         "date": "2025-01-24",
         "changes": "階段二：四層架構資料流測試與核心業務流程測試資料建立完成"
+      },
+      {
+        "version": "v2.1.0",
+        "date": "2025-01-26",
+        "changes": "階段一緊急修復：補全expert_mode_user_001、data_transformation_tests、long_running_stability_tests等缺失欄位"
       }
     ]
   },
@@ -721,26 +726,42 @@
         "test_id": "stability_8h_001",
         "scenario": "8小時連續運行測試",
         "duration_hours": 8,
+        "simulation_duration_minutes": 2,
         "test_operations": [
           {
             "operation": "用戶註冊",
             "frequency_per_hour": 10,
-            "concurrent_users": 3
+            "concurrent_users": 3,
+            "test_data_template": {
+              "email": "stability_user_{index}@lcas.app",
+              "password": "StabilityTest123!",
+              "display_name": "穩定性測試用戶{index}"
+            }
           },
           {
             "operation": "用戶登入",
             "frequency_per_hour": 60,
-            "concurrent_users": 10
+            "concurrent_users": 10,
+            "test_endpoints": ["/api/v1/auth/login"]
           },
           {
             "operation": "快速記帳",
             "frequency_per_hour": 120,
-            "concurrent_users": 15
+            "concurrent_users": 15,
+            "test_data_templates": [
+              "測試記帳{index}",
+              "穩定性測試{amount}",
+              "長時間運行測試{time}"
+            ]
           },
           {
             "operation": "記錄查詢",
             "frequency_per_hour": 80,
-            "concurrent_users": 8
+            "concurrent_users": 8,
+            "test_endpoints": [
+              "/api/v1/transactions",
+              "/api/v1/transactions/dashboard"
+            ]
           }
         ],
         "expected_metrics": {
@@ -748,7 +769,14 @@
           "avg_response_time_ms": 1500,
           "max_response_time_ms": 3000,
           "memory_usage_stable": true,
-          "no_memory_leaks": true
+          "no_memory_leaks": true,
+          "cpu_usage_threshold": 80,
+          "error_recovery_time_ms": 1000
+        },
+        "monitoring_intervals": {
+          "memory_check_seconds": 30,
+          "performance_log_seconds": 60,
+          "health_check_seconds": 10
         }
       },
       {
@@ -916,29 +944,60 @@
         "base_data": {
           "amount": 1000,
           "category": "餐飲",
-          "description": "午餐"
+          "description": "午餐",
+          "categoryId": "cat_food_001",
+          "accountId": "acc_main_001",
+          "ledgerId": "ledger_main_001",
+          "date": "2025-01-26",
+          "type": "expense"
         },
         "mode_transformations": {
           "expert": {
             "include_analytics": true,
             "detailed_categorization": true,
-            "advanced_fields": ["tax_rate", "receipt_number"]
+            "advanced_fields": ["tax_rate", "receipt_number", "merchant_details"],
+            "expected_api_fields": ["detailed_metadata", "advanced_options", "analytics_data"],
+            "response_complexity": "high"
           },
           "guiding": {
             "simplified_display": true,
             "tutorial_hints": true,
-            "default_values": true
+            "default_values": true,
+            "expected_api_fields": ["help_text", "guided_options", "step_instructions"],
+            "response_complexity": "low"
           },
           "inertial": {
             "consistent_format": true,
-            "standard_fields_only": true
+            "standard_fields_only": true,
+            "expected_api_fields": ["stable_options", "consistent_layout"],
+            "response_complexity": "medium"
           },
           "cultivation": {
             "gamification_elements": true,
             "achievement_tracking": true,
-            "motivational_messages": true
+            "motivational_messages": true,
+            "expected_api_fields": ["progress_data", "achievement_status", "rewards"],
+            "response_complexity": "medium"
           }
         }
+      },
+      {
+        "test_id": "transform_002",
+        "scenario": "跨模式資料格式驗證",
+        "base_data": {
+          "amount": 250,
+          "type": "expense",
+          "date": "2025-01-26",
+          "description": "模式轉換測試",
+          "categoryId": "test_category",
+          "accountId": "test_account"
+        },
+        "validation_points": [
+          "資料完整性保持",
+          "格式轉換正確性",
+          "模式特定欄位存在",
+          "API回應結構一致"
+        ]
       }
     ]
   },
