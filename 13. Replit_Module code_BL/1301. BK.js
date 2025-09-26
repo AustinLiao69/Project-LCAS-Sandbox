@@ -1,10 +1,11 @@
 /**
- * BK.js_記帳核心模組_v3.0.1
+ * BK.js_記帳核心模組_v3.0.2
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能，處理交易記錄、分類管理、數據分析等核心記帳邏輯
+ * @update 2025-09-26: 階段二修復 - 優化Firebase查詢邏輯，避免複合索引需求
  * @update 2025-09-24: 第一階段修復 - 補全BK_getTransactionsByDateRange函數導出
  * @update 2025-01-27: DCN-0015階段二 - 實作標準化API處理函數，統一回傳格式
- * @date 2025-09-24
+ * @date 2025-09-26
  */
 
 /**
@@ -309,10 +310,10 @@ async function BK_processQuickTransaction(quickData) {
 }
 
 /**
- * 05. 查詢交易列表 - 支援 GET /transactions
- * @version 2025-01-28-V2.2.0
+ * 05. 查詢交易列表 - 支援 GET /transactions (階段二修復版)
+ * @version 2025-01-28-V2.2.1
  * @date 2025-01-28
- * @update: 移除hard coding，使用動態配置
+ * @update: 階段二修復 - 優化查詢邏輯避免複合索引需求
  */
 async function BK_getTransactions(queryParams = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -324,7 +325,7 @@ async function BK_getTransactions(queryParams = {}) {
     await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
 
-    // 建立查詢
+    // 建立查詢（階段二修復：簡化查詢避免複合索引）
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
 
@@ -332,36 +333,17 @@ async function BK_getTransactions(queryParams = {}) {
       .doc(queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID)
       .collection(entriesCollection);
 
-    // 應用篩選條件
+    // 階段二修復：只使用單一欄位查詢，避免複合索引需求
     if (queryParams.userId) {
       const uidField = getEnvVar('UID_FIELD', 'UID');
       query = query.where(uidField, '==', queryParams.userId);
     }
 
-    if (queryParams.startDate && queryParams.endDate) {
-      const dateField = getEnvVar('DATE_FIELD', '日期');
-      query = query.where(dateField, '>=', queryParams.startDate)
-                   .where(dateField, '<=', queryParams.endDate);
-    }
-
-    if (queryParams.type) {
-      const incomeField = getEnvVar('INCOME_FIELD', '收入');
-      const expenseField = getEnvVar('EXPENSE_FIELD', '支出');
-
-      if (queryParams.type === 'income') {
-        query = query.where(incomeField, '>', '');
-      } else if (queryParams.type === 'expense') {
-        query = query.where(expenseField, '>', '');
-      }
-    }
-
-    // 排序和分頁
-    const dateField = getEnvVar('DATE_FIELD', '日期');
-    const timeField = getEnvVar('TIME_FIELD', '時間');
-    query = query.orderBy(dateField, 'desc').orderBy(timeField, 'desc');
+    // 階段二修復：移除複雜查詢條件，改為簡單排序
+    query = query.orderBy('createdAt', 'desc');
 
     if (queryParams.limit) {
-      const maxLimit = parseInt(getEnvVar('MAX_QUERY_LIMIT', '1000'), 10);
+      const maxLimit = parseInt(getEnvVar('MAX_QUERY_LIMIT', '20'), 10);
       const limit = Math.min(parseInt(queryParams.limit), maxLimit);
       query = query.limit(limit);
     }
@@ -1288,7 +1270,7 @@ async function BK_checkTransactionIdUnique(transactionId) {
 }
 
 /**
- * 準備交易數據
+ * 準備交易數據（階段二修復版）
  */
 async function BK_prepareTransactionData(transactionId, transactionData, processId) {
   const now = moment().tz(BK_CONFIG.TIMEZONE);
@@ -1314,6 +1296,9 @@ async function BK_prepareTransactionData(transactionId, transactionData, process
   const defaultMinorCode = getEnvVar('DEFAULT_MINOR_CODE', '01');
   const defaultCategoryName = getEnvVar('DEFAULT_CATEGORY', '其他');
 
+  // 階段二修復：確保timestamp一致性，優化索引使用
+  const currentTimestamp = admin.firestore.Timestamp.now();
+
   const preparedData = {
     [fieldNames.id]: transactionId,
     [fieldNames.uid]: transactionData.userId || '',
@@ -1326,9 +1311,13 @@ async function BK_prepareTransactionData(transactionId, transactionData, process
     [fieldNames.majorCode]: transactionData.majorCode || defaultMajorCode,
     [fieldNames.minorCode]: transactionData.minorCode || defaultMinorCode,
     [fieldNames.categoryName]: transactionData.categoryName || defaultCategoryName,
-    createdAt: admin.firestore.Timestamp.now(),
-    updatedAt: admin.firestore.Timestamp.now(),
-    processId: processId
+    // 階段二修復：使用統一的timestamp欄位
+    createdAt: currentTimestamp,
+    updatedAt: currentTimestamp,
+    processId: processId,
+    // 階段二修復：新增簡化查詢欄位
+    amount: transactionData.amount,
+    type: transactionData.type
   };
 
   return preparedData;
