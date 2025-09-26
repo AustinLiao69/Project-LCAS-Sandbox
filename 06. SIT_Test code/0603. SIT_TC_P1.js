@@ -568,6 +568,7 @@ class SITTestCases {
         return repairedData;
     }
 
+                        emergency_user: {
                         password: "Emergency123!",
                         display_name: "緊急測試用戶",
                         mode: "expert"
