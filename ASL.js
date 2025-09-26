@@ -550,17 +550,28 @@ app.post('/api/v1/auth/login', async (req, res) => {
     }
 
     const result = await AM.AM_processAPILogin(req.body);
+    console.log('🔍 ASL接收到BL層回應:', JSON.stringify(result, null, 2));
     
-    // 第二階段：直接使用BL層標準格式，100%信任BL層
-    // 直接使用統一回應格式中介軟體，傳遞BL層回傳的完整結構
-    if (result.success) {
+    // 第二階段完成：完全移除容錯邏輯，100%信任BL層標準格式
+    if (result && result.success) {
+      console.log('✅ 登入成功，轉發資料:', result.data);
       res.apiSuccess(result.data, result.message);
+    } else if (result && result.success === false) {
+      console.log('❌ 登入失敗，錯誤資訊:', result.error);
+      res.apiError(
+        result.message || '登入失敗', 
+        result.error?.code || 'LOGIN_ERROR', 
+        400, 
+        result.error?.details || null
+      );
     } else {
-      res.apiError(result.message, result.error?.code || 'LOGIN_ERROR', 400, result.error?.details);
+      console.log('⚠️ BL層回應格式異常:', result);
+      res.apiError('BL層回應格式異常', 'INVALID_BL_RESPONSE', 500);
     }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (login):', error);
+    console.error('❌ 錯誤堆疊:', error.stack);
     res.apiError('登入轉發失敗', 'LOGIN_FORWARD_ERROR', 500);
   }
 });
@@ -1359,10 +1370,11 @@ process.on('SIGINT', () => {
   });
 });
 
-console.log('🎉 LCAS ASL第二階段：格式驗證強化完成！');
+console.log('🎉 LCAS ASL第二階段完成：格式驗證強化 + 登入API修復！');
   console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'})`);
   console.log('🔧 純轉發機制: 34個API端點 -> 統一使用BL層標準格式');
-  console.log('✨ 第二階段完成: 完全移除容錯邏輯，統一success判斷');
+  console.log('✨ 第二階段完成: 完全移除容錯邏輯，AM-ASL格式匹配修復');
+  console.log('🐛 Debug增強: 登入API增加詳細日誌追蹤');
 
   if (moduleStatus.firebase && moduleStatus.AM) {
     console.log('🚀 第二階段完成，ASL v2.1.2完全就緒！');
