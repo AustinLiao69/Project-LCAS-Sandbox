@@ -568,7 +568,7 @@ class SITTestCases {
         return repairedData;
     }
 
-                        emergency_user: {
+                        
                         email: "emergency@lcas.app",
                         password: "Emergency123!",
                         display_name: "緊急測試用戶",
