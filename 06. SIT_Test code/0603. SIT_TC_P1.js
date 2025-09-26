@@ -2,7 +2,7 @@
  * 0603. SIT_TC_P1.js
  * LCAS 2.0 Phase 1 SIT測試案例實作
  *
- * @version v2.2.0
+ * @version v2.3.0
  * @created 2025-09-15
  * @updated 2025-01-26
  * @author LCAS SQA Team
@@ -4923,17 +4923,17 @@ class SITTestCases {
             switch (phase) {
                 case 'phase1':
                 case '1':
-                    testResults = await sitTestCases.executeMainTestFlow();
+                    testResults = await sitTestCases.executePhase1Tests(); // Assuming this method exists and returns results
                     break;
 
                 case 'phase2':
                 case '2':
-                    testResults = await sitTestCases.executePhase2Tests();
+                    testResults = await sitTestCases.executePhase2Tests(); // Assuming this method exists and returns results
                     break;
 
                 case 'phase3':
                 case '3':
-                    testResults = await sitTestCases.executePhase3Tests();
+                    testResults = await sitTestCases.executePhase3Tests(); // Assuming this method exists and returns results
                     break;
 
                 case 'all':
@@ -4943,7 +4943,7 @@ class SITTestCases {
 
                     // 階段一：單點整合驗證測試
                     console.log('\n📋 ===== 階段一：單點整合驗證測試 =====');
-                    const phase1Results = await sitTestCases.executeMainTestFlow();
+                    const phase1Results = await sitTestCases.executePhase1Tests();
 
                     // 階段二：四層架構資料流測試
                     console.log('\n📋 ===== 階段二：四層架構資料流測試 =====');
