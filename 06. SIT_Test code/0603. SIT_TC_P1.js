@@ -4827,7 +4827,7 @@ class SITTestCases {
                 category: '基礎結構',
                 issue: '必要欄位缺失',
                 action: '確保所有API回應包含success, data, error, message, metadata欄位',
-                expectedImprovement: '基礎結構完整性達到'100%'
+                expectedImprovement: '基礎結構完整性達到100%'
             });
         }
 
