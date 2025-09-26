@@ -1873,7 +1873,7 @@ class SITTestCases {
                 modeResults,
                 differentiationScore: differentiationScore.toFixed(2),
                 qualityGrade: differentiationScore >= 0.8 ? 'A' : differentiationScore >= 0.6 ? 'B' : 'C',
-                error: !success ? '四模式流程差異驗證未達標準' : null
+                error: !success ? '四模式流程差異驗證未達標' : null
             });
 
             // 重設為Expert模式
@@ -3423,70 +3423,28 @@ class SITTestCases {
         console.log('📋 總共28個測試案例，分三階段執行');
         console.log('=' * 80);
 
-        const testMethods = [
-            // 階段一：單點整合驗證測試
-            this.testCase001_UserRegistration,
-            this.testCase002_UserLogin,
-            this.testCase003_FirebaseAuthIntegration,
-            this.testCase004_QuickBooking,
-            this.testCase005_FullBookingForm,
-            this.testCase006_TransactionQuery,
-            this.testCase007_CrossLayerErrorHandling,
+        const phase1Results = await this.executePhase1Tests();
+        const phase2Results = await this.executePhase2Tests();
+        const phase3Results = await this.executePhase3Tests();
 
-            // 階段二：四層架構資料流測試
-            this.testCase008_ModeAssessment,
-            this.testCase009_ModeDifferentiation,
-            this.testCase010_DataFormatTransformation,
-            this.testCase011_DataSynchronization,
-            this.testCase012_CompleteUserLifecycle,
-            this.testCase013_BookkeepingEndToEnd,
-            this.testCase014_NetworkExceptionHandling,
-            this.testCase015_BusinessRuleErrorHandling,
-            this.testCase016_FourModeProcessDifference,
-            this.testCase017_ConcurrentOperations,
-            this.testCase018_DataRaceHandling,
-            this.testCase019_EightHourStabilityTest,
-            this.testCase020_StressAndRecoveryTest,
+        const allResults = [phase1Results, phase2Results, phase3Results];
 
-            // 階段三：完整業務流程測試
-            this.testCase021_CompleteUserJourney,
-            this.testCase022_BusinessValueChainValidation,
-            this.testCase023_FourModeUserExperience,
-            this.testCase024_InterfaceResponsiveness,
-            this.testCase025_TwentyFourHourStabilityTest,
-            this.testCase026_P1CoreAPIRegression, // Changed from ComprehensiveAPIRegression
-            this.testCase027_FailureRecoveryTest, // Corrected test case name
-            this.testCase028_PerformanceBenchmarkValidation // Corrected test case name
-        ];
-
+        let totalTests = 0;
         let passedTests = 0;
-        let totalTests = testMethods.length;
 
-        for (let i = 0; i < testMethods.length; i++) {
-            const testMethod = testMethods[i];
-            const testName = testMethod.name.replace('testCase', 'TC-SIT-').replace('_', ': ');
-
-            console.log(`\n📝 執行測試 ${i + 1}/${totalTests}: ${testName}`);
-
-            try {
-                const result = await testMethod.call(this);
-                if (result) passedTests++;
-
-                // 每7個測試案例後暫停一下，模擬實際測試節奏
-                if ((i + 1) % 7 === 0) {
-                    console.log(`\n⏸️  階段 ${Math.ceil((i + 1) / 7)} 完成，休息3秒後繼續...`);
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                }
-            } catch (error) {
-                console.error(`❌ 測試執行錯誤: ${error.message}`);
-            }
-        }
+        allResults.forEach(result => {
+            totalTests += result.totalTests;
+            passedTests += result.passedTests;
+        });
 
         console.log('\n' + '=' * 80);
-        console.log('📊 測試執行完成');
-        console.log(`✅ 通過測試: ${passedTests}/${totalTests}`);
-        console.log(`📈 成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
+        console.log('📊 所有階段測試執行完成');
+        console.log(`✅ 總通過測試數: ${passedTests}/${totalTests}`);
+        console.log(`📈 整體成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
         console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
+
+        // 生成最終報告
+        await this.generateFinalReport(allResults);
 
         return {
             totalTests,
@@ -4225,7 +4183,7 @@ class SITTestCases {
     /**
      * 執行所有測試案例 (完整版)
      */
-    async executeAllPhases() {
+    async executeAllTests() {
         console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 完整測試計畫');
         console.log('📋 總共28個測試案例，分三階段執行');
         console.log('=' * 80);
@@ -4869,7 +4827,7 @@ class SITTestCases {
                 category: '基礎結構',
                 issue: '必要欄位缺失',
                 action: '確保所有API回應包含success, data, error, message, metadata欄位',
-                expectedImprovement: '基礎結構完整性達到100%'
+                expectedImprovement: '基礎結構完整性達到'100%'
             });
         }
 
@@ -4922,83 +4880,107 @@ class SITTestCases {
      * @description 修復async/await語法錯誤，確保主執行邏輯正確包裝在async函數中
      */
     async executeMainTestFlow() {
-        console.log('🚀 LCAS 2.0 Phase 1 SIT測試開始執行');
-        console.log(`📦 測試版本: v2.2.0 - 語法修復版`);
-        console.log('=' * 80);
+        console.log('🚀 LCAS 2.0 Phase 1 SIT測試開始執行...');
+        console.log(`📅 測試開始時間: ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`);
 
-        const args = process.argv.slice(2);
-        const phaseArg = args.find(arg => arg.startsWith('--phase='));
-        const phase = phaseArg ? phaseArg.split('=')[1] : 'all';
-
-        // 建立SITTestCases實例
+        // 建立測試實例
         const sitTestCases = new SITTestCases();
 
-        console.log(`📋 執行階段: ${phase}`);
-        console.log(`📅 執行時間: ${new Date().toLocaleString()}`);
+        try {
+            console.log('🔄 SIT測試執行流程啟動...');
 
-        // 前置檢查
-        await sitTestCases.loadTestData();
+            // 前置檢查
+            await sitTestCases.loadTestData();
 
-        const serviceReadiness = await sitTestCases.checkAPIServiceReadiness();
-        if (!serviceReadiness.ready) {
-            console.error('❌ API服務未就緒，測試中止');
-            process.exit(1);
-        }
-
-        const quotaStatus = await sitTestCases.checkFirebaseQuotaStatus();
-        if (!quotaStatus.available) {
-            console.log('⚠️ Firebase配額問題，嘗試等待恢復...');
-            const recovered = await sitTestCases.waitForFirebaseQuotaRecovery(5);
-            if (!recovered) {
-                console.error('❌ Firebase配額無法恢復，測試中止');
+            const serviceReadiness = await sitTestCases.checkAPIServiceReadiness();
+            if (!serviceReadiness.ready) {
+                console.error('❌ API服務未就緒，測試中止');
                 process.exit(1);
             }
-        }
 
-        let results = [];
+            const quotaStatus = await sitTestCases.checkFirebaseQuotaStatus();
+            if (!quotaStatus.available) {
+                console.log('⚠️ Firebase配額問題，嘗試等待恢復...');
 
-        // 根據phase參數執行對應的測試
-        if (phase === 'all' || phase === '1') {
-            console.log('\n🔥 執行階段一測試...');
-            const phase1Result = await sitTestCases.executePhase1Tests();
-            results.push(phase1Result);
-        }
+                const recovered = await sitTestCases.waitForFirebaseQuotaRecovery(3);
+                if (!recovered) {
+                    console.error('❌ Firebase配額無法恢復，測試中止');
+                    console.log('💡 建議稍後重新執行測試');
+                    process.exit(1);
+                }
+            }
 
-        if (phase === 'all' || phase === '2') {
-            console.log('\n🔥 執行階段二測試...');
-            const phase2Result = await sitTestCases.executePhase2Tests();
-            results.push(phase2Result);
-        }
+            console.log('✅ 前置檢查完成，開始執行測試案例...');
 
-        if (phase === 'all' || phase === '3') {
-            console.log('\n🔥 執行階段三測試...');
-            const phase3Result = await sitTestCases.executePhase3Tests();
-            results.push(phase3Result);
-        }
+            // 執行測試階段
+            const phaseArg = process.argv.find(arg => arg.startsWith('--phase='));
+            const phase = phaseArg ? phaseArg.split('=')[1] : 'all';
 
-        // DCN-0015 專用完整測試套件
-        if (phase === 'dcn-0015') {
-            console.log('\n🌟 執行 DCN-0015 完整測試套件...');
-            const dcnResult = await sitTestCases.runPhase3CompleteSuite();
-            results.push({
-                phase: 'DCN-0015 Complete',
-                success: dcnResult,
-                executionTime: Date.now() - sitTestCases.testStartTime.getTime()
-            });
-        }
+            console.log(`🎯 執行測試階段: ${phase}`);
 
-        // 生成最終報告
-        await sitTestCases.generateFinalReport(results);
+            let testResults = [];
 
-        // 輸出階段三監控數據
-        if (phase === 'all' || phase === '3' || phase === 'dcn-0015') {
-            sitTestCases.generatePhase3MonitoringReport();
+            switch (phase) {
+                case 'phase1':
+                case '1':
+                    testResults = await sitTestCases.executeMainTestFlow();
+                    break;
+
+                case 'phase2':
+                case '2':
+                    testResults = await sitTestCases.executePhase2Tests();
+                    break;
+
+                case 'phase3':
+                case '3':
+                    testResults = await sitTestCases.executePhase3Tests();
+                    break;
+
+                case 'all':
+                default:
+                    // 完整執行所有階段
+                    console.log('🔄 執行完整測試流程（所有階段）...');
+
+                    // 階段一：單點整合驗證測試
+                    console.log('\n📋 ===== 階段一：單點整合驗證測試 =====');
+                    const phase1Results = await sitTestCases.executeMainTestFlow();
+
+                    // 階段二：四層架構資料流測試
+                    console.log('\n📋 ===== 階段二：四層架構資料流測試 =====');
+                    const phase2Results = await sitTestCases.executePhase2Tests();
+
+                    // 階段三：完整業務流程測試
+                    console.log('\n📋 ===== 階段三：完整業務流程測試 =====');
+                    const phase3Results = await sitTestCases.executePhase3Tests();
+
+                    testResults = [...phase1Results, ...phase2Results, ...phase3Results];
+                    break;
+            }
+
+            // 生成最終測試報告
+            sitTestCases.generateFinalReport(testResults, phase);
+
+        } catch (error) {
+            console.error('💥 SIT測試執行過程發生致命錯誤:', error.message);
+            console.error('💥 錯誤堆疊:', error.stack);
+
+            // 即使發生錯誤，也嘗試生成部分報告
+            try {
+                sitTestCases.generateFinalReport(sitTestCases.testResults, 'error');
+            } catch (reportError) {
+                console.error('💥 報告生成也失敗:', reportError.message);
+            }
+
+            process.exit(1);
         }
     }
 
-    // 主執行邏輯
+    // 檢查是否為主模組執行
     if (require.main === module) {
-        executeMainTestFlow();
+        executeMainTestFlow().catch(error => {
+            console.error('💥 主執行函數發生錯誤:', error.message);
+            process.exit(1);
+        });
     }
 }
 // 導出類別
