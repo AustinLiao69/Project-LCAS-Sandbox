@@ -1,8 +1,8 @@
 /**
- * ASL.js_API服務層模組_2.1.1
+ * ASL.js_API服務層模組_2.1.2
  * @module API服務層模組（統一回應格式）
- * @description LCAS 2.0 API Service Layer - DCN-0015第二階段：移除容錯機制，直接使用BL層標準格式
- * @update 2025-09-26: DCN-0015第二階段 - 完全信任BL層標準格式，移除所有容錯邏輯
+ * @description LCAS 2.0 API Service Layer - DCN-0015第二階段完成：完全移除容錯邏輯，100%信任BL層標準格式
+ * @update 2025-09-26: DCN-0015第二階段完成 - 所有API端點統一使用BL層標準格式，移除容錯邏輯
  * @date 2025-09-26
  */
 
@@ -445,7 +445,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.1.1',
+    version: '2.1.2',
     status: 'running',
     port: PORT,
     architecture: 'ASL -> BL層轉發（統一回應格式）',
@@ -476,7 +476,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.1.1',
+    version: '2.1.2',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -528,7 +528,11 @@ app.post('/api/v1/auth/register', async (req, res) => {
     const result = await AM.AM_processAPIRegister(req.body);
     
     // 第二階段：直接使用BL層標準格式，100%信任BL層
-    res.apiSuccess(result.data, result.message);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message, result.error?.code || 'REGISTER_ERROR', 400, result.error?.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (register):', error);
@@ -548,7 +552,12 @@ app.post('/api/v1/auth/login', async (req, res) => {
     const result = await AM.AM_processAPILogin(req.body);
     
     // 第二階段：直接使用BL層標準格式，100%信任BL層
-    res.apiSuccess(result.data, result.message);
+    // 直接使用統一回應格式中介軟體，傳遞BL層回傳的完整結構
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message, result.error?.code || 'LOGIN_ERROR', 400, result.error?.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (login):', error);
@@ -930,7 +939,11 @@ app.post('/api/v1/transactions', async (req, res) => {
     const result = await BK.BK_processAPITransaction(req.body);
     
     // 第二階段：直接使用BL層標準格式，100%信任BL層
-    res.apiSuccess(result.data, result.message);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message, result.error?.code || 'TRANSACTION_ERROR', 400, result.error?.details);
+    }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (transactions):', error);
@@ -1307,19 +1320,20 @@ app.use((error, req, res, next) => {
     console.log(`🎯 DCN-0015第二階段完成: ASL格式驗證強化`);
     console.log(`📋 P1-2 API端點: AM(19) + BK(15) = 34個端點`);
 
-    // 第二階段實作狀態報告
+    // 第二階段完成狀態報告
     const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
     const amStatus = moduleStatus.AM ? '✅' : '❌';
     const overallStatus = moduleStatus.firebase && moduleStatus.AM ? '完全就緒' : '部分就緒';
 
-    console.log(`🔧 第二階段實作狀態: ${overallStatus}`);
+    console.log(`🔧 第二階段完成狀態: ${overallStatus}`);
     console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus})`);
-    console.log(`✨ 容錯機制移除: 100%信任BL層標準格式`);
+    console.log(`✨ 容錯機制完全移除: 100%信任BL層標準格式`);
+    console.log(`🎉 第二階段修正完成: 統一使用success判斷邏輯`);
 
     if (moduleStatus.firebase && moduleStatus.AM) {
-      console.log('🚀 ASL v2.1.1已完全就緒，直接使用BL層標準格式');
+      console.log('🚀 ASL v2.1.2已完全就緒，第二階段目標達成');
     } else {
-      console.log('⚠️ 系統部分就緒，但已移除所有容錯邏輯');
+      console.log('⚠️ 系統部分就緒，但容錯邏輯已完全移除');
     }
   });
 
@@ -1347,13 +1361,14 @@ process.on('SIGINT', () => {
 
 console.log('🎉 LCAS ASL第二階段：格式驗證強化完成！');
   console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'})`);
-  console.log('🔧 純轉發機制: 34個API端點 -> 直接使用BL層標準格式');
-  console.log('✨ 第二階段完成: 移除所有容錯邏輯，100%信任BL層');
+  console.log('🔧 純轉發機制: 34個API端點 -> 統一使用BL層標準格式');
+  console.log('✨ 第二階段完成: 完全移除容錯邏輯，統一success判斷');
 
   if (moduleStatus.firebase && moduleStatus.AM) {
-    console.log('🚀 第二階段成功，ASL v2.1.1完全就緒！');
+    console.log('🚀 第二階段完成，ASL v2.1.2完全就緒！');
     console.log('🌐 ASL服務器即將在 Port 5000 啟動...');
-    console.log('✨ 格式驗證強化: 直接使用result.data, result.message, result.error');
+    console.log('✨ 格式驗證強化: 統一使用result.success判斷邏輯');
+    console.log('🎯 第二階段目標達成: 100%信任BL層，移除所有容錯');
   } else if (moduleStatus.firebase && !moduleStatus.AM) {
     console.log('⚠️ Firebase正常但AM模組異常，已移除容錯邏輯');
     console.log('🔧 建議修復AM模組以完全發揮第二階段效果');
