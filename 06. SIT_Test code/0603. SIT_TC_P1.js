@@ -69,10 +69,10 @@ class SITTestCases {
             if (!criticalDataCheck.isValid) {
                 console.warn('⚠️ 關鍵測試資料驗證失敗:', criticalDataCheck.errors);
                 console.log('🔧 嘗試使用預設資料修復缺失項目...');
-                
+
                 // v1.3.0 新增：嘗試修復缺失的關鍵資料
                 this.testData = this.repairCriticalTestData(this.testData, criticalDataCheck.errors);
-                
+
                 // 再次驗證修復後的資料
                 const revalidationResult = this.validateCriticalTestData();
                 if (!revalidationResult.isValid) {
@@ -447,129 +447,6 @@ class SITTestCases {
                 valid_users: {
                     emergency_user: {
                         email: "emergency@lcas.app",
-
-
-    /**
-     * 修復關鍵測試資料 (v1.3.0 新增)
-     * @version 2025-01-26-V1.0.0
-     * @description 嘗試修復缺失的關鍵測試資料，增強系統容錯性
-     */
-    repairCriticalTestData(data, errors) {
-        const repairedData = { ...data };
-        
-        errors.forEach(error => {
-            try {
-                switch (error) {
-                    case '認證測試用戶資料缺失':
-                        if (!repairedData.authentication_test_data?.valid_users?.expert_mode_user_001) {
-                            console.log('🔧 修復expert_mode_user_001資料...');
-                            repairedData.authentication_test_data = repairedData.authentication_test_data || {};
-                            repairedData.authentication_test_data.valid_users = repairedData.authentication_test_data.valid_users || {};
-                            repairedData.authentication_test_data.valid_users.expert_mode_user_001 = {
-                                email: "expert001@lcas.app",
-                                password: "ExpertPass123!",
-                                display_name: "Expert測試用戶001",
-                                mode: "expert",
-                                expected_features: ["advanced", "detailed", "batch", "analytics"],
-                                registration_data: {
-                                    first_name: "Expert",
-                                    last_name: "User001",
-                                    phone: "+886912345001",
-                                    date_of_birth: "1986-05-31",
-                                    preferred_language: "zh-TW"
-                                }
-                            };
-                        }
-                        break;
-                        
-                    case '快速記帳測試資料缺失':
-                        if (!repairedData.basic_bookkeeping_test_data?.quick_booking_tests) {
-                            console.log('🔧 修復quick_booking_tests資料...');
-                            repairedData.basic_bookkeeping_test_data = repairedData.basic_bookkeeping_test_data || {};
-                            repairedData.basic_bookkeeping_test_data.quick_booking_tests = [
-                                {
-                                    test_id: "quick_emergency_001",
-                                    input_text: "緊急測試100",
-                                    expected_parsing: {
-                                        amount: 100,
-                                        category: "測試",
-                                        type: "expense",
-                                        description: "緊急測試",
-                                        payment_method: "現金"
-                                    }
-                                }
-                            ];
-                        }
-                        break;
-                        
-                    case '效能測試-併發操作資料缺失':
-                        if (!repairedData.stability_and_performance_tests?.concurrent_operations) {
-                            console.log('🔧 修復concurrent_operations資料...');
-                            repairedData.stability_and_performance_tests = repairedData.stability_and_performance_tests || {};
-                            repairedData.stability_and_performance_tests.concurrent_operations = {
-                                test_id: "perf_concurrent_emergency_001",
-                                concurrent_users: 5,
-                                operations_per_user: 3,
-                                expected_response_time_ms: 3000,
-                                expected_success_rate: 0.8
-                            };
-                        }
-                        break;
-                        
-                    case '效能測試-長時間穩定性資料缺失':
-                        if (!repairedData.stability_and_performance_tests?.long_running_stability_tests) {
-                            console.log('🔧 修復long_running_stability_tests資料...');
-                            repairedData.stability_and_performance_tests.long_running_stability_tests = [
-                                {
-                                    test_id: "stability_emergency_001",
-                                    scenario: "緊急穩定性測試",
-                                    duration_hours: 1,
-                                    simulation_duration_minutes: 1,
-                                    expected_metrics: {
-                                        success_rate: 0.95,
-                                        avg_response_time_ms: 2000
-                                    }
-                                }
-                            ];
-                        }
-                        break;
-                        
-                    case '資料轉換測試資料缺失':
-                        if (!repairedData.data_consistency_tests?.data_transformation_tests) {
-                            console.log('🔧 修復data_transformation_tests資料...');
-                            repairedData.data_consistency_tests = repairedData.data_consistency_tests || {};
-                            repairedData.data_consistency_tests.data_transformation_tests = [
-                                {
-                                    test_id: "transform_emergency_001",
-                                    scenario: "緊急資料轉換測試",
-                                    base_data: {
-                                        amount: 100,
-                                        type: "expense",
-                                        description: "緊急測試"
-                                    },
-                                    mode_transformations: {
-                                        expert: { expected_details: "進階資料" },
-                                        guiding: { expected_help: "引導資訊" }
-                                    }
-                                }
-                            ];
-                        }
-                        break;
-                        
-                    default:
-                        console.log(`⚠️ 未知錯誤類型，無法修復: ${error}`);
-                        break;
-                }
-            } catch (repairError) {
-                console.error(`❌ 修復錯誤 "${error}" 時發生問題:`, repairError.message);
-            }
-        });
-        
-        return repairedData;
-    }
-
-                        
-                      
                         password: "Emergency123!",
                         display_name: "緊急測試用戶",
                         mode: "expert"
@@ -605,6 +482,128 @@ class SITTestCases {
             }
         };
     }
+
+    /**
+     * 修復關鍵測試資料 (v1.3.0 新增)
+     * @version 2025-01-26-V1.0.0
+     * @description 嘗試修復缺失的關鍵測試資料，增強系統容錯性
+     */
+    repairCriticalTestData(data, errors) {
+        const repairedData = { ...data };
+
+        errors.forEach(error => {
+            try {
+                switch (error) {
+                    case '認證測試用戶資料缺失':
+                        if (!repairedData.authentication_test_data?.valid_users?.expert_mode_user_001) {
+                            console.log('🔧 修復expert_mode_user_001資料...');
+                            repairedData.authentication_test_data = repairedData.authentication_test_data || {};
+                            repairedData.authentication_test_data.valid_users = repairedData.authentication_test_data.valid_users || {};
+                            repairedData.authentication_test_data.valid_users.expert_mode_user_001 = {
+                                email: "expert001@lcas.app",
+                                password: "ExpertPass123!",
+                                display_name: "Expert測試用戶001",
+                                mode: "expert",
+                                expected_features: ["advanced", "detailed", "batch", "analytics"],
+                                registration_data: {
+                                    first_name: "Expert",
+                                    last_name: "User001",
+                                    phone: "+886912345001",
+                                    date_of_birth: "1986-05-31",
+                                    preferred_language: "zh-TW"
+                                }
+                            };
+                        }
+                        break;
+
+                    case '快速記帳測試資料缺失':
+                        if (!repairedData.basic_bookkeeping_test_data?.quick_booking_tests) {
+                            console.log('🔧 修復quick_booking_tests資料...');
+                            repairedData.basic_bookkeeping_test_data = repairedData.basic_bookkeeping_test_data || {};
+                            repairedData.basic_bookkeeping_test_data.quick_booking_tests = [
+                                {
+                                    test_id: "quick_emergency_001",
+                                    input_text: "緊急測試100",
+                                    expected_parsing: {
+                                        amount: 100,
+                                        category: "測試",
+                                        type: "expense",
+                                        description: "緊急測試",
+                                        payment_method: "現金"
+                                    }
+                                }
+                            ];
+                        }
+                        break;
+
+                    case '效能測試-併發操作資料缺失':
+                        if (!repairedData.stability_and_performance_tests?.concurrent_operations) {
+                            console.log('🔧 修復concurrent_operations資料...');
+                            repairedData.stability_and_performance_tests = repairedData.stability_and_performance_tests || {};
+                            repairedData.stability_and_performance_tests.concurrent_operations = {
+                                test_id: "perf_concurrent_emergency_001",
+                                concurrent_users: 5,
+                                operations_per_user: 3,
+                                expected_response_time_ms: 3000,
+                                expected_success_rate: 0.8
+                            };
+                        }
+                        break;
+
+                    case '效能測試-長時間穩定性資料缺失':
+                        if (!repairedData.stability_and_performance_tests?.long_running_stability_tests) {
+                            console.log('🔧 修復long_running_stability_tests資料...');
+                            repairedData.stability_and_performance_tests = repairedData.stability_and_performance_tests || {};
+                            repairedData.stability_and_performance_tests.long_running_stability_tests = [
+                                {
+                                    test_id: "stability_emergency_001",
+                                    scenario: "緊急穩定性測試",
+                                    duration_hours: 1,
+                                    simulation_duration_minutes: 1,
+                                    expected_metrics: {
+                                        success_rate: 0.95,
+                                        avg_response_time_ms: 2000
+                                    }
+                                }
+                            ];
+                        }
+                        break;
+
+                    case '資料轉換測試資料缺失':
+                        if (!repairedData.data_consistency_tests?.data_transformation_tests) {
+                            console.log('🔧 修復data_transformation_tests資料...');
+                            repairedData.data_consistency_tests = repairedData.data_consistency_tests || {};
+                            repairedData.data_consistency_tests.data_transformation_tests = [
+                                {
+                                    test_id: "transform_emergency_001",
+                                    scenario: "緊急資料轉換測試",
+                                    base_data: {
+                                        amount: 100,
+                                        type: "expense",
+                                        description: "緊急測試"
+                                    },
+                                    mode_transformations: {
+                                        expert: { expected_details: "進階資料" },
+                                        guiding: { expected_help: "引導資訊" }
+                                    }
+                                }
+                            ];
+                        }
+                        break;
+
+                    default:
+                        console.log(`⚠️ 未知錯誤類型，無法修復: ${error}`);
+                        break;
+                }
+            } catch (repairError) {
+                console.error(`❌ 修復錯誤 "${error}" 時發生問題:`, repairError.message);
+            }
+        });
+
+        return repairedData;
+    }
+
+
 
     /**
      * 檢查API服務就緒狀態（階段一修復版）
@@ -2750,7 +2749,7 @@ class SITTestCases {
         }
     }
 
-    // ==================== 階段三後半：系統穩定性驗證 ====================
+    // ==================== 階段三：系統穩定性驗證 ====================
 
     /**
      * TC-SIT-025: 24小時穩定性測試 (模擬版)
@@ -3549,771 +3548,6 @@ class SITTestCases {
         const overallSuccessRate = passedTests / totalTests;
         console.log(`整體品質等級: ${this.getSITQualityGrade(overallSuccessRate)}`);
         console.log(`發布建議: ${this.getDeploymentRecommendation(overallSuccessRate)}`);
-    }
-
-    /**
-     * 執行所有測試案例 (完整版)
-     */
-    async executeAllTests() {
-        console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 完整測試計畫');
-        console.log('📋 總共28個測試案例，分三階段執行');
-        console.log('=' * 80);
-
-        const phase1Results = await this.executePhase1Tests();
-        const phase2Results = await this.executePhase2Tests();
-        const phase3Results = await this.executePhase3Tests();
-
-        const allResults = [phase1Results, phase2Results, phase3Results];
-
-        let totalTests = 0;
-        let passedTests = 0;
-
-        allResults.forEach(result => {
-            totalTests += result.totalTests;
-            passedTests += result.passedTests;
-        });
-
-        console.log('\n' + '=' * 80);
-        console.log('📊 所有階段測試執行完成');
-        console.log(`✅ 總通過測試數: ${passedTests}/${totalTests}`);
-        console.log(`📈 整體成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
-        console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
-
-        // 生成最終報告
-        await this.generateFinalReport(allResults);
-
-        return {
-            totalTests,
-            passedTests,
-            successRate: passedTests / totalTests,
-            executionTime: Date.now() - this.testStartTime.getTime(),
-            results: this.testResults
-        };
-    }
-
-    /**
-     * 產生DCN-0015階段三的完整測試套件
-     * @returns {Promise<boolean>} 測試是否成功
-     */
-    async runPhase3CompleteSuite() {
-        console.log('\n🌟 執行 DCN-0015 階段三完整測試套件');
-        console.log('🎯 測試重點：API回歸測試，四模式差異化，監控告警，統一回應格式');
-        console.log('=' * 80);
-
-        let overallSuccess = true;
-        let testCount = 0;
-        let passedCount = 0;
-
-        // 1. API端點回歸測試 (模擬)
-        console.log('🧪 1. 執行API端點回歸測試 (共132個模擬)');
-        const apiRegressionSuccess = await this.runApiRegressionTests(132);
-        testCount += 1;
-        if (apiRegressionSuccess) passedCount++;
-        overallSuccess = overallSuccess && apiRegressionSuccess;
-        console.log(`   ✅ API回歸測試結果: ${apiRegressionSuccess ? '通過' : '失敗'}`);
-
-        // 2. 四模式差異化測試 (階段三重點)
-        console.log('\n🧪 2. 執行四模式差異化測試');
-        const modeDiffSuccess = await this.testCase009_ModeDifferentiation(); // 複用階段二測試
-        testCount += 1;
-        if (modeDiffSuccess) passedCount++;
-        overallSuccess = overallSuccess && modeDiffSuccess;
-        console.log(`   ✅ 四模式差異化測試結果: ${modeDiffSuccess ? '通過' : '失敗'}`);
-
-        // 3. 監控告警設定測試 (模擬)
-        console.log('\n🧪 3. 執行監控告警設定測試 (模擬)');
-        const monitoringSuccess = await this.runMonitoringTests();
-        testCount += 1;
-        if (monitoringSuccess) passedCount++;
-        overallSuccess = overallSuccess && monitoringSuccess;
-        console.log(`   ✅ 監控告警測試結果: ${monitoringSuccess ? '通過' : '失敗'}`);
-
-        // 4. 統一回應格式驗證 (貫穿所有API請求)
-        console.log('\n🧪 4. 驗證統一回應格式 (已整合至 makeRequest)');
-        // 此處不單獨計數，因其已整合在API請求中
-
-        console.log('\n' + '=' * 80);
-        console.log('📊 DCN-0015 階段三完整測試套件執行完成');
-        console.log(`✅ 總測試項目: ${testCount}`);
-        console.log(`✅ 通過項目: ${passedCount}`);
-        console.log(`📈 整體成功率: ${(passedCount / testCount * 100).toFixed(2)}%`);
-        console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
-
-        return overallSuccess;
-    }
-
-    /**
-     * 執行API端點回歸測試 (模擬)
-     * @param {number} count 測試的API端點數量
-     * @returns {Promise<boolean>} 是否所有測試通過
-     */
-    async runApiRegressionTests(count) {
-        const endpointsToTest = [
-            '/api/v1/users/profile',
-            '/api/v1/transactions',
-            '/api/v1/transactions/dashboard',
-            '/api/v1/auth/login',
-            '/api/v1/auth/register',
-            '/api/v1/users/assessment'
-            // ... 模擬更多端點
-        ];
-
-        let allPassed = true;
-        let passed = 0;
-
-        for (let i = 0; i < count; i++) {
-            const endpoint = endpointsToTest[i % endpointsToTest.length];
-            const response = await this.makeRequest('GET', endpoint); // 預設為GET請求
-
-            if (!response.success) {
-                allPassed = false;
-                // 記錄失敗的端點
-                console.log(`   ❌ API回歸測試失敗: ${endpoint} - ${response.error}`);
-            } else {
-                passed++;
-            }
-
-            // 模擬少量延遲
-            if (i % 10 === 0) await new Promise(resolve => setTimeout(resolve, 50));
-        }
-
-        // 僅記錄一次測試結果，用於總體報告
-        this.recordTestResult(`API-REGRESSION-${count}`, allPassed, Date.now() - this.testStartTime.getTime(), {
-            totalEndpoints: count,
-            passedEndpoints: passed,
-            successRate: `${(passed / count * 100).toFixed(2)}%`
-        });
-
-        return allPassed;
-    }
-
-    /**
-     * 執行監控告警設定測試 (模擬)
-     * @returns {Promise<boolean>} 是否所有測試通過
-     */
-    async runMonitoringTests() {
-        console.log('   - 驗證監控服務啟動...');
-        const healthCheck = await this.makeRequest('GET', '/health');
-        const monitoringServiceActive = healthCheck.success && healthCheck.data?.monitoring?.status === 'active';
-
-        console.log('   - 驗證告警規則設定...');
-        // 模擬檢查告警規則
-        const alarmRulesOk = true; // 假設規則正確
-
-        const success = monitoringServiceActive && alarmRulesOk;
-
-        this.recordTestResult('MONITORING-SETUP', success, Date.now() - this.testStartTime.getTime(), {
-            monitoringServiceActive,
-            alarmRulesOk
-        });
-
-        return success;
-    }
-
-
-    /**
-     * 生成最終報告
-     * @param {Array} phaseResults 各階段測試結果
-     */
-    async generateFinalReport(phaseResults) {
-        console.log('\n==================== DCN-0015 階段三測試報告 ====================');
-        console.log(`測試計畫版本: v2.0.0 - DCN-0015 統一回應格式整合測試`);
-        console.log(`測試執行時間: ${new Date().toLocaleString()}`);
-        console.log(`總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000} 秒`);
-        console.log('====================================================================');
-
-        let totalTestsExecuted = 0;
-        let totalTestsPassed = 0;
-        let overallSuccessRate = 0;
-
-        phaseResults.forEach(result => {
-            console.log(`\n--- ${result.phase} 測試結果 ---`);
-            console.log(`  總測試數: ${result.totalTests}`);
-            console.log(`  通過數: ${result.passedTests}`);
-            console.log(`  成功率: ${(result.successRate * 100).toFixed(2)}%`);
-            console.log(`  執行時間: ${result.executionTime / 1000} 秒`);
-
-            totalTestsExecuted += result.totalTests;
-            totalTestsPassed += result.passedTests;
-        });
-
-        if (totalTestsExecuted > 0) {
-            overallSuccessRate = totalTestsPassed / totalTestsExecuted;
-        }
-
-        console.log('\n--- SIT 整體測試摘要 ---');
-        console.log(`總執行測試數: ${totalTestsExecuted}`);
-        console.log(`總通過測試數: ${totalTestsPassed}`);
-        console.log(`整體成功率: ${(overallSuccessRate * 100).toFixed(2)}%`);
-        console.log(`整體品質等級: ${this.getSITQualityGrade(overallSuccessRate)}`);
-        console.log(`發布建議: ${this.getDeploymentRecommendation(overallSuccessRate)}`);
-        console.log('====================================================================');
-
-        // 產生詳細的測試報告文件
-        const report = this.generateReport(); // 使用現有的 generateReport
-        const reportJson = JSON.stringify(report, null, 2);
-
-        // 寫入報告到檔案
-        const reportFileName = '0691. SIT_Test code/0691. SIT_Report_P1.md'; // 修正報告檔名
-        fs.writeFileSync(reportFileName, this.formatReportToMarkdown(report), 'utf8');
-        console.log(`\n📄 詳細測試報告已寫入: ${reportFileName}`);
-    }
-
-    /**
-     * 格式化測試報告為Markdown
-     * @param {object} report 測試報告物件
-     * @returns {string} Markdown格式的報告字串
-     */
-    formatReportToMarkdown(report) {
-        let markdown = `# SIT Phase 1 Integration Test Report\n\n`;
-        markdown += `**Timestamp:** ${report.timestamp}\n`;
-        markdown += `**Environment:**\n`;
-        markdown += `  - API Base URL: ${report.environment.apiBaseURL}\n`;
-        markdown += `  - User Mode: ${report.environment.userMode}\n`;
-        markdown += `  - Test Data Loaded: ${report.environment.testDataLoaded ? 'Yes' : 'No'}\n`;
-        markdown += `  - Test Data Quality: ${report.environment.testDataQuality.quality} (${report.environment.testDataQuality.score}%)\n\n`;
-
-        markdown += `## Summary\n`;
-        markdown += `| Metric | Value |\n`;
-        markdown += `|---|---|\n`;
-        markdown += `| Total Tests Executed | ${report.summary.totalTests} |\n`;
-        markdown += `| Tests Passed | ${report.summary.passedTests} |\n`;
-        markdown += `| Tests Failed | ${report.summary.failedTests} |\n`;
-        markdown += `| Average Duration | ${this.formatDuration(report.summary.averageDuration)} |\n`;
-        markdown += `| Total Execution Time | ${report.summary.executionTime / 1000}s |\n`;
-        markdown += `| Overall Success Rate | ${report.summary.successRate.toFixed(2)}% |\n\n`;
-
-        markdown += `## Statistics Quality\n`;
-        markdown += `| Metric | Value |\n`;
-        markdown += `|---|---|\n`;
-        markdown += `| Data Completeness | ${report.statisticsQuality.dataCompleteness} |\n`;
-        markdown += `| Statistics Reliability | ${report.statisticsQuality.statisticsReliability} |\n`;
-        markdown += `| Error Coverage | ${report.statisticsQuality.errorCoverage} |\n`;
-        markdown += `| Overall Score | ${report.statisticsQuality.overallScore}% |\n`;
-        markdown += `| Grade | ${report.statisticsQuality.grade} |\n\n`;
-
-        markdown += `## Error Statistics\n`;
-        markdown += `| Category | Count |\n`;
-        markdown += `|---|---|\n`;
-        for (const [category, count] of Object.entries(report.errorStatistics.errorByCategory)) {
-            markdown += `| ${category} | ${count} |\n`;
-        }
-        markdown += `\n`;
-        markdown += `| Error Level | Count |\n`;
-        markdown += `|---|---|\n`;
-        for (const [level, count] of Object.entries(report.errorStatistics.errorByLevel)) {
-            markdown += `| ${level} | ${count} |\n`;
-        }
-        markdown += `\n`;
-        markdown += `**Most Common Error Category:** ${report.errorStatistics.mostCommonError}\n`;
-        markdown += `**Highest Error Level:** ${report.errorStatistics.highestErrorLevel}\n\n`;
-
-        markdown += `## Test Details (First 10 Failures)\n`;
-        const failures = report.details.filter(d => d.result === 'FAIL').slice(0, 10);
-        if (failures.length > 0) {
-            markdown += `| Test Case | Result | Duration | Error Category | Error Message |\n`;
-            markdown += `|---|---|---|---|---|\n`;
-            failures.forEach(detail => {
-                markdown += `| ${detail.testCase} | ${detail.result} | ${this.formatDuration(detail.duration)} | ${detail.errorCategory || 'N/A'} | ${this.normalizeErrorMessage(detail.details.error).substring(0, 50)}... |\n`;
-            });
-        } else {
-            markdown += `No failures found in the first 10 tests.\n`;
-        }
-
-        return markdown;
-    }
-
-    /**
-     * 階段三監控數據報告
-     */
-    generatePhase3MonitoringReport() {
-        console.log('\n--- 階段三監控數據 ---');
-        const monitoringData = this.getMonitoringData();
-        console.log(`  API 請求總數: ${monitoringData.totalRequests}`);
-        console.log(`  成功請求率: ${monitoringData.successRate.toFixed(2)}%`);
-        console.log(`  平均回應時間: ${this.formatDuration(monitoringData.avgResponseTime)}`);
-        console.log(`  錯誤率: ${monitoringData.errorRate.toFixed(2)}%`);
-        console.log(`  記憶體使用高峰: ${this.formatDuration(monitoringData.peakMemoryUsage)}`);
-        console.log(`  CPU負載高峰: ${monitoringData.peakCpuLoad.toFixed(2)}%`);
-        console.log('------------------------');
-    }
-
-    /**
-     * 獲取模擬的監控數據
-     * @returns {object} 監控數據
-     */
-    getMonitoringData() {
-        let totalRequests = 0;
-        let successfulRequests = 0;
-        let totalResponseTime = 0;
-        let peakMemoryUsage = 0;
-        let peakCpuLoad = 0;
-
-        this.testResults.forEach(result => {
-            totalRequests++;
-            if (result.result === 'PASS') {
-                successfulRequests++;
-                totalResponseTime += result.duration;
-                if (result.details.memorySnapshot) { // 假設 details 裡有 memorySnapshot
-                    peakMemoryUsage = Math.max(peakMemoryUsage, result.details.memorySnapshot);
-                }
-            }
-            // 模擬CPU負載，假設錯誤越多CPU負載越高
-            if (result.result === 'FAIL') {
-                peakCpuLoad += 5; // 每次失敗增加5%
-            }
-        });
-
-        const avgResponseTime = successfulRequests > 0 ? totalResponseTime / successfulRequests : 0;
-        const successRate = totalRequests > 0 ? successfulRequests / totalRequests : 0;
-        const errorRate = 1 - successRate;
-
-        return {
-            totalRequests,
-            successRate,
-            avgResponseTime,
-            errorRate,
-            peakMemoryUsage: peakMemoryUsage, // 單位是 bytes
-            peakCpuLoad: Math.min(peakCpuLoad, 100) // CPU負載上限100%
-        };
-    }
-
-    // ==================== 輔助函數 ====================
-
-    /**
-     * 取得穩定性等級
-     */
-    getStabilityGrade(successRate, avgResponseTime) {
-        if (successRate >= 0.99 && avgResponseTime <= 1500) return 'A+ (優秀)';
-        if (successRate >= 0.98 && avgResponseTime <= 2000) return 'A (良好)';
-        if (successRate >= 0.95 && avgResponseTime <= 2500) return 'B (普通)';
-        if (successRate >= 0.90 && avgResponseTime <= 3000) return 'C (需改善)';
-        return 'D (不合格)';
-    }
-
-    /**
-     *分析記憶體使用情況
-     */
-    analyzeMemoryUsage(memoryHistory) {
-        if (memoryHistory.length < 3) {
-            return {
-                hasLeak: false,
-                trend: '資料不足',
-                growthRate: 0
-            };
-        }
-
-        const firstMemory = memoryHistory[0].heapUsed;
-        const lastMemory = memoryHistory[memoryHistory.length - 1].heapUsed;
-        const growthRate = (lastMemory - firstMemory) / firstMemory;
-
-        return {
-            hasLeak: growthRate > 0.5, // 增長超過50%視為記憶體洩漏
-            trend: growthRate > 0.1 ? '增長' : growthRate < -0.1 ? '下降' : '穩定',
-            growthRate: (growthRate * 100).toFixed(2) + '%',
-            initialMemory: (firstMemory / 1024 / 1024).toFixed(2) + 'MB',
-            finalMemory: (lastMemory / 1024 / 1024).toFixed(2) + 'MB'
-        };
-    }
-
-    /**
-     * 計算穩定性指標
-     */
-    calculateStabilityMetrics(results) {
-        const responseTimes = results.filter(r => r.responseTime).map(r => r.responseTime);
-        const successfulResults = results.filter(r => r.success);
-
-        const avgResponseTime = responseTimes.length > 0 ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length : 0;
-        const responseTimeVariance = responseTimes.length > 0 ? responseTimes.reduce((sum, time) => sum + Math.pow(time - avgResponseTime, 2), 0) / responseTimes.length : 0;
-
-        return {
-            maxResponseTime: responseTimes.length > 0 ? Math.max(...responseTimes) : 0,
-            minResponseTime: responseTimes.length > 0 ? Math.min(...responseTimes) : 0,
-            responseTimeVariance: Math.sqrt(responseTimeVariance),
-            throughputVariance: this.calculateThroughputVariance(results),
-            errorRecoveryRate: this.calculateErrorRecoveryRate(results),
-            operationTypeDistribution: this.getOperationTypeDistribution(results)
-        };
-    }
-
-    /**
-     * 計算吞吐量變異數
-     */
-    calculateThroughputVariance(results) {
-        // 簡化實作，實際環境中會計算更複雜的吞吐量指標
-        const successCounts = [];
-        const windowSize = 10;
-
-        for (let i = 0; i < results.length - windowSize; i += windowSize) {
-            const window = results.slice(i, i + windowSize);
-            const successCount = window.filter(r => r.success).length;
-            successCounts.push(successCount / windowSize);
-        }
-
-        if (successCounts.length < 2) return 0;
-
-        const avgThroughput = successCounts.reduce((sum, count) => sum + count, 0) / successCounts.length;
-        const variance = successCounts.reduce((sum, count) => sum + Math.pow(count - avgThroughput, 2), 0) / successCounts.length;
-
-        return Math.sqrt(variance);
-    }
-
-    /**
-     * 計算錯誤恢復率
-     */
-    calculateErrorRecoveryRate(results) {
-        let recoveries = 0;
-        let totalErrors = 0;
-
-        for (let i = 0; i < results.length - 1; i++) {
-            if (!results[i].success) {
-                totalErrors++;
-                if (results[i + 1].success) {
-                    recoveries++;
-                }
-            }
-        }
-
-        return totalErrors > 0 ? recoveries / totalErrors : 1.0;
-    }
-
-    /**
-     * 取得操作類型分佈
-     */
-    getOperationTypeDistribution(results) {
-        const distribution = {};
-        results.forEach(result => {
-            if (result.operationType) {
-                distribution[result.operationType] = (distribution[result.operationType] || 0) + 1;
-            }
-        });
-        return distribution;
-    }
-
-
-    /**
-     * 取得SIT品質等級
-     */
-    getSITQualityGrade(successRate) {
-        if (successRate >= 0.95) return 'A+ (可直接發布)';
-        if (successRate >= 0.9) return 'A (建議發布)';
-        if (successRate >= 0.8) return 'B (條件發布)';
-        if (successRate >= 0.7) return 'C (需修正後發布)';
-        return 'D (不建議發布)';
-    }
-
-    /**
-     * 取得部署建議
-     */
-    getDeploymentRecommendation(successRate) {
-        if (successRate >= 0.95) return '✅ 建議立即進入UAT階段';
-        if (successRate >= 0.9) return '⚠️ 建議修正Minor問題後進入UAT';
-        if (successRate >= 0.8) return '🔶 建議修正Major問題後重新SIT';
-        if (successRate >= 0.7) return '⚠️ 需要重大修正，延後發布時程';
-        return '❌ 品質不達標，需要全面檢討';
-    }
-
-    /**
-     * 驗證統一回應格式
-     * @param {object} responseData API回應資料
-     * @returns {object} 驗證結果 { isValid: boolean, complianceScore: number, qualityGrade: string, errors: string[], details: object }
-     */
-    validateUnifiedResponseFormat(responseData) {
-        let complianceScore = 0;
-        let errors = [];
-        let layerResults = {};
-        let layerScores = { layer1: 0, layer2: 0, layer3: 0, modeValidation: 0 };
-        let totalPossibleScore = 0;
-
-        // 1. 基礎結構驗證 (Layer 1)
-        const layer1Fields = ['success', 'data', 'error', 'message', 'metadata'];
-        let layer1Score = 0;
-        const layer1Validations = layer1Fields.map(field => {
-            const present = responseData && typeof responseData === 'object' && responseData.hasOwnProperty(field);
-            if (present) layer1Score++;
-            else errors.push(`Layer 1: Missing required field - ${field}`);
-            return present;
-        });
-        totalPossibleScore += layer1Fields.length;
-        layerScores.layer1 = (layer1Score / layer1Fields.length) * 100;
-
-        // 2. 深度內容驗證 (Layer 2)
-        let layer2Score = 0;
-        const layer2Validations = [];
-        if (responseData?.metadata) {
-            if (responseData.metadata.timestamp && typeof responseData.metadata.timestamp === 'string') {
-                try { new Date(responseData.metadata.timestamp).toISOString(); layer2Score++; } catch(e) { errors.push(`Layer 2: Invalid timestamp format - ${e.message}`); }
-            } else { errors.push('Layer 2: Missing or invalid metadata.timestamp'); }
-            if (responseData.metadata.userMode && typeof responseData.metadata.userMode === 'string') {
-                const validModes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
-                if (validModes.includes(responseData.metadata.userMode)) layer2Score++;
-                else errors.push(`Layer 2: Invalid metadata.userMode value - ${responseData.metadata.userMode}`);
-            } else { errors.push('Layer 2: Missing or invalid metadata.userMode'); }
-            if (responseData.metadata.processingTimeMs !== undefined && typeof responseData.metadata.processingTimeMs === 'number') {
-                layer2Score++;
-            } else { errors.push('Layer 2: Missing or invalid metadata.processingTimeMs'); }
-        } else { errors.push('Layer 2: Missing metadata object'); }
-        totalPossibleScore += 3; // timestamp, userMode, processingTimeMs
-        layerScores.layer2 = (layer2Score / 3) * 100;
-
-        // 3. 業務邏輯驗證 (Layer 3)
-        let layer3Score = 0;
-        if (responseData?.success === true && responseData?.error === null) {
-            layer3Score++;
-        } else if (responseData?.success === false && responseData?.error !== null) {
-            layer3Score++;
-        } else {
-            errors.push('Layer 3: success/error logic inconsistency');
-        }
-        totalPossibleScore += 1;
-        layerScores.layer3 = (layer3Score / 1) * 100;
-
-        // 4. 四模式差異化驗證 (Mode Validation)
-        let modeValidationScore = 0;
-        if (responseData?.metadata?.userMode && responseData.metadata.modeFeatures) {
-            const userMode = responseData.metadata.userMode;
-            const modeFeatures = responseData.metadata.modeFeatures;
-            if (userMode === 'Expert' && modeFeatures.expertFeatures) modeValidationScore++;
-            else if (userMode === 'Inertial' && modeFeatures.inertialFeatures) modeValidationScore++;
-            else if (userMode === 'Cultivation' && modeFeatures.cultivationFeatures) modeValidationScore++;
-            else if (userMode === 'Guiding' && modeFeatures.guidingFeatures) modeValidationScore++;
-            else errors.push(`Mode Validation: Missing mode-specific features for ${userMode}`);
-        } else {
-             errors.push('Mode Validation: Missing userMode or modeFeatures');
-        }
-        totalPossibleScore += 1;
-        layerScores.modeValidation = (modeValidationScore / 1) * 100;
-
-
-        complianceScore = ((layer1Score + layer2Score + layer3Score + modeValidationScore) / totalPossibleScore) * 100;
-        const isValid = errors.length === 0 && complianceScore >= 80; // DCN-0015標準
-        const qualityGrade = complianceScore >= 95 ? 'A+' : complianceScore >= 85 ? 'A' : complianceScore >= 75 ? 'B' : complianceScore >= 60 ? 'C' : 'F';
-
-        layerResults = {
-             layer1: { score: layerScores.layer1, validations: layer1Validations },
-             layer2: { score: layerScores.layer2 },
-             layer3: { score: layerScores.layer3 },
-             modeValidation: { score: layerScores.modeValidation }
-        };
-
-        return {
-            isValid,
-            complianceScore,
-            qualityGrade,
-            errors,
-            details: {
-                 layer1FieldsPresent: layer1Fields.reduce((acc, field) => { acc[field] = responseData?.hasOwnProperty(field); return acc; }, {}),
-                 metadataValid: responseData?.metadata && typeof responseData.metadata === 'object',
-                 timestampValid: responseData?.metadata?.timestamp && typeof responseData.metadata.timestamp === 'string' && new Date(responseData.metadata.timestamp).toISOString(),
-                 userModeValid: responseData?.metadata?.userMode && typeof responseData.metadata.userMode === 'string',
-                 processingTimeValid: responseData?.metadata?.processingTimeMs !== undefined && typeof responseData.metadata.processingTimeMs === 'number',
-                 logicConsistent: (responseData?.success === true && responseData?.error === null) || (responseData?.success === false && responseData?.error !== null),
-                 modeFeaturesPresent: responseData?.metadata?.userMode && responseData?.metadata?.modeFeatures
-            },
-            layerScores
-        };
-    }
-
-
-    /**
-     * 取得效能等級
-     */
-    getPerformanceGrade(benchmarkSuccessRate) {
-        if (benchmarkSuccessRate >= 0.95) return 'A+ (優秀)';
-        if (benchmarkSuccessRate >= 0.9) return 'A (良好)';
-        if (benchmarkSuccessRate >= 0.8) return 'B (普通)';
-        if (benchmarkSuccessRate >= 0.7) return 'C (需改善)';
-        return 'D (不合格)';
-    }
-
-    /**
-     * 生成DCN-0015詳細驗證報告
-     */
-    generateDCN0015DetailedReport(validationResults, qualityMetrics) {
-        const report = {
-            executionSummary: {
-                totalEndpoints: validationResults.length,
-                avgScore: qualityMetrics.overallScore.toFixed(2),
-                qualityGrade: qualityMetrics.qualityGrade,
-                complianceLevel: qualityMetrics.overallScore >= 95 ? '完全符合DCN-0015' :
-                                qualityMetrics.overallScore >= 80 ? '基本符合DCN-0015' : '不符合DCN-0015'
-            },
-            layerAnalysis: {
-                layer1: {
-                    name: '基礎結構驗證',
-                    avgScore: qualityMetrics.layer1AvgScore.toFixed(2),
-                    status: qualityMetrics.layer1AvgScore >= 95 ? 'PASS' : 'FAIL',
-                    description: '驗證必要欄位存在性'
-                },
-                layer2: {
-                    name: '深度內容驗證',
-                    avgScore: qualityMetrics.layer2AvgScore.toFixed(2),
-                    status: qualityMetrics.layer2AvgScore >= 95 ? 'PASS' : 'FAIL',
-                    description: '驗證欄位類型與格式'
-                },
-                layer3: {
-                    name: '業務邏輯驗證',
-                    avgScore: qualityMetrics.layer3AvgScore.toFixed(2),
-                    status: qualityMetrics.layer3AvgScore >= 95 ? 'PASS' : 'FAIL',
-                    description: '驗證success/error邏輯一致性'
-                },
-                modeValidation: {
-                    name: '四模式差異化驗證',
-                    avgScore: qualityMetrics.modeValidationAvgScore.toFixed(2),
-                    status: qualityMetrics.modeValidationAvgScore >= 80 ? 'PASS' : 'FAIL',
-                    description: '驗證模式特定欄位'
-                }
-            },
-            endpointDetails: validationResults.map(result => ({
-                endpoint: result.endpoint,
-                method: result.method,
-                userMode: result.userMode,
-                score: result.validationResult.complianceScore?.toFixed(2) || '0',
-                grade: result.validationResult.qualityGrade || 'F',
-                status: result.validationResult.isValid ? 'PASS' : 'FAIL',
-                errors: result.validationResult.errors || [],
-                layerScores: {
-                    layer1: result.validationResult.layerScores?.layer1?.score?.toFixed(2) || '0',
-                    layer2: result.validationResult.layerScores?.layer2?.score?.toFixed(2) || '0',
-                    layer3: result.validationResult.layerScores?.layer3?.score?.toFixed(2) || '0',
-                    mode: result.validationResult.layerScores?.modeValidation?.score?.toFixed(2) || '0'
-                }
-            })),
-            recommendations: this.generateDCN0015Recommendations(qualityMetrics),
-            timestamp: new Date().toISOString()
-        };
-
-        return report;
-    }
-
-    /**
-     * 生成DCN-0015改善建議
-     */
-    generateDCN0015Recommendations(qualityMetrics) {
-        const recommendations = [];
-
-        if (qualityMetrics.layer1AvgScore < 95) {
-            recommendations.push({
-                priority: 'HIGH',
-                category: '基礎結構',
-                issue: '必要欄位缺失',
-                action: '確保所有API回應包含success, data, error, message, metadata欄位',
-                expectedImprovement: '基礎結構完整性達到100%'
-            });
-        }
-
-        if (qualityMetrics.layer2AvgScore < 95) {
-            recommendations.push({
-                priority: 'HIGH',
-                category: '內容格式',
-                issue: '欄位類型或格式不符規範',
-                action: '檢查timestamp格式(ISO8601)、userMode枚舉值、processingTimeMs數值格式',
-                expectedImprovement: '內容格式規範性達到100%'
-            });
-        }
-
-        if (qualityMetrics.layer3AvgScore < 95) {
-            recommendations.push({
-                priority: 'MEDIUM',
-                category: '業務邏輯',
-                issue: 'success/error邏輯不一致',
-                action: '確保成功時data非null且error為null，失敗時相反',
-                expectedImprovement: '業務邏輯一致性達到100%'
-            });
-        }
-
-        if (qualityMetrics.modeValidationAvgScore < 80) {
-            recommendations.push({
-                priority: 'MEDIUM',
-                category: '模式差異化',
-                issue: '四模式特定欄位缺失',
-                action: '為每種用戶模式添加對應的modeFeatures欄位',
-                expectedImprovement: '四模式差異化達到90%以上'
-            });
-        }
-
-        if (qualityMetrics.overallScore >= 95) {
-            recommendations.push({
-                priority: 'LOW',
-                category: '持續改善',
-                issue: '無重大問題',
-                action: '維持當前品質標準，持續監控API回應格式',
-                expectedImprovement: '保持DCN-0015完全符合狀態'
-            });
-        }
-
-        return recommendations;
-    }
-
-    /**
-     * 執行階段三測試案例 (TC-SIT-021 to TC-SIT-028)
-     */
-    async executePhase3Tests() {
-        console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段三測試');
-        console.log('📋 階段三：完整業務流程測試 (TC-SIT-021~028)');
-        console.log('🎯 測試重點：業務價值鏈、用戶體驗、系統穩定性、效能基準');
-        console.log('=' * 80);
-
-        const phase3TestMethods = [
-            // 業務價值鏈驗證
-            this.testCase021_CompleteUserJourney,
-            this.testCase022_BusinessValueChainValidation,
-            this.testCase023_FourModeUserExperience,
-            this.testCase024_InterfaceResponsiveness,
-
-            // 系統穩定性驗證
-            this.testCase025_TwentyFourHourStabilityTest,
-            this.testCase026_P1CoreAPIRegression, // Changed from ComprehensiveAPIRegression
-            this.testCase027_FailureRecoveryTest, // Corrected test case name
-            this.testCase028_PerformanceBenchmarkValidation // Corrected test case name
-        ];
-
-        let passedTests = 0;
-        let totalTests = phase3TestMethods.length;
-
-        console.log(`📊 階段三測試案例總數：${totalTests} 個`);
-        console.log(`📅 預估執行時間：${totalTests * 3} 分鐘\n`);
-
-        for (let i = 0; i < phase3TestMethods.length; i++) {
-            const testMethod = phase3TestMethods[i];
-            const testName = testMethod.name.replace('testCase', 'TC-SIT-').replace('_', ': ');
-
-            console.log(`\n📝 執行階段三測試 ${i + 1}/${totalTests}: ${testName}`);
-
-            try {
-                const result = await testMethod.call(this);
-                if (result) passedTests++;
-
-                // 每4個測試案例後暫停，分組顯示進度
-                if ((i + 1) % 4 === 0) {
-                    const groupName = i < 4 ? '業務價值鏈驗證' : '系統穩定性驗證';
-                    console.log(`\n✅ ${groupName} 完成，休息3秒後繼續...`);
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                }
-            } catch (error) {
-                console.error(`❌ 測試執行錯誤: ${error.message}`);
-            }
-        }
-
-        console.log('\n' + '=' * 80);
-        console.log('📊 階段三測試執行完成');
-        console.log(`✅ 通過測試: ${passedTests}/${totalTests}`);
-        console.log(`📈 成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
-        console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
-
-        // 階段三特殊報告
-        this.generatePhase3Report(passedTests, totalTests);
-
-        return {
-            phase: 'Phase 3',
-            totalTests,
-            passedTests,
-            successRate: passedTests / totalTests,
-            executionTime: Date.now() - this.testStartTime.getTime(),
-            results: this.testResults.filter(r => r.testCase.includes('SIT-0') &&
-                   parseInt(r.testCase.split('-')[2]) >= 21 &&
-                   parseInt(r.testCase.split('-')[2]) <= 28)
-        };
     }
 
     /**
