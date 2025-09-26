@@ -122,7 +122,7 @@ class SITTestCases {
     }
 
     /**
-     * 取得嵌套物件屬性的輔助函數
+     * 取得Nested property的輔助函數
      */
     getNestedProperty(obj, path) {
         try {
@@ -1607,6 +1607,7 @@ class SITTestCases {
                 completedSteps,
                 completionRate: (completedSteps / steps.length * 100).toFixed(2) + '%',
                 stepResults,
+                journeyIntegrity: success ? '完整' : '部分',
                 error: !success ? '用戶生命週期測試未完全通過' : null
             });
 
@@ -4916,260 +4917,89 @@ class SITTestCases {
     }
 
     /**
-     * 導出類別
-     */
-    // module.exports = SITTestCases; // 暫時註解，以便在主執行邏輯中直接使用
-
-    // ==================== 主執行邏輯 ====================
-
-    /**
-     * 生成測試統計報告
-     */
-    generateReport() {
-        const args = process.argv.slice(2);
-        const phase = args.find(arg => arg.startsWith('--phase='))?.split('=')[1] || 'all';
-
-        const sitTestCases = new SITTestCases();
-
-        try {
-            console.log('🚀 LCAS 2.0 SIT測試系統啟動');
-            console.log('📅 測試開始時間:', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
-            console.log('=' * 80);
-
-            // 前置檢查
-            await sitTestCases.loadTestData();
-
-            const serviceReadiness = await sitTestCases.checkAPIServiceReadiness();
-            if (!serviceReadiness.ready) {
-                console.error('❌ API服務未就緒，測試中止');
-                process.exit(1);
-            }
-
-            const quotaStatus = await sitTestCases.checkFirebaseQuotaStatus();
-            if (!quotaStatus.available) {
-                console.log('⚠️ Firebase配額問題，嘗試等待恢復...');
-                const recovered = await sitTestCases.waitForFirebaseQuotaRecovery(5);
-                if (!recovered) {
-                    console.error('❌ Firebase配額無法恢復，測試中止');
-                    process.exit(1);
-                }
-            }
-
-            let results = [];
-
-            // 根據phase參數執行對應的測試
-            if (phase === 'all' || phase === '1') {
-                console.log('\n🔥 執行階段一測試...');
-                const phase1Result = await sitTestCases.executePhase1Tests();
-                results.push(phase1Result);
-            }
-
-            if (phase === 'all' || phase === '2') {
-                console.log('\n🔥 執行階段二測試...');
-                const phase2Result = await sitTestCases.executePhase2Tests();
-                results.push(phase2Result);
-            }
-
-            if (phase === 'all' || phase === '3') {
-                console.log('\n🔥 執行階段三測試...');
-                const phase3Result = await sitTestCases.executePhase3Tests();
-                results.push(phase3Result);
-            }
-
-            // DCN-0015 專用完整測試套件
-            if (phase === 'dcn-0015') {
-                console.log('\n🌟 執行 DCN-0015 完整測試套件...');
-                const dcnResult = await sitTestCases.runPhase3CompleteSuite();
-                results.push({
-                    phase: 'DCN-0015 Complete',
-                    success: dcnResult,
-                    executionTime: Date.now() - sitTestCases.testStartTime.getTime()
-                });
-            }
-
-            // 生成最終報告
-            await sitTestCases.generateFinalReport(results);
-
-            // 根據測試結果設定程序退出碼
-            const hasFailures = results.some(result => result && result.totalTests > 0 && result.passedTests < result.totalTests);
-            process.exit(hasFailures ? 1 : 0);
-
-        } catch (error) {
-            console.error('❌ SIT測試執行失敗:', error);
-            process.exit(1);
-        }
-    }
-
-    // 執行主函數
-    async function main() {
-        const args = process.argv.slice(2);
-        const phase = args.find(arg => arg.startsWith('--phase='))?.split('=')[1] || 'all';
-
-        const sitTestCases = new SITTestCases();
-
-        try {
-            console.log('🚀 LCAS 2.0 Phase 1 SIT測試開始執行');
-            console.log(`📋 執行階段: ${phase}`);
-            console.log(`📅 執行時間: ${new Date().toLocaleString()}`);
-            console.log(`📦 測試版本: v2.0.0 - DCN-0015 統一回應格式整合測試`);
-            console.log('=' * 80);
-
-            // 前置檢查
-            await sitTestCases.loadTestData();
-
-            const serviceReadiness = await sitTestCases.checkAPIServiceReadiness();
-            if (!serviceReadiness.ready) {
-                console.error('❌ API服務未就緒，測試中止');
-                process.exit(1);
-            }
-
-            const quotaStatus = await sitTestCases.checkFirebaseQuotaStatus();
-            if (!quotaStatus.available) {
-                console.log('⚠️ Firebase配額問題，嘗試等待恢復...');
-                const recovered = await sitTestCases.waitForFirebaseQuotaRecovery(5);
-                if (!recovered) {
-                    console.error('❌ Firebase配額無法恢復，測試中止');
-                    process.exit(1);
-                }
-            }
-
-            let results = [];
-
-            // 根據phase參數執行對應的測試
-            if (phase === 'all' || phase === '1') {
-                console.log('\n🔥 執行階段一測試...');
-                const phase1Result = await sitTestCases.executePhase1Tests();
-                results.push(phase1Result);
-            }
-
-            if (phase === 'all' || phase === '2') {
-                console.log('\n🔥 執行階段二測試...');
-                const phase2Result = await sitTestCases.executePhase2Tests();
-                results.push(phase2Result);
-            }
-
-            if (phase === 'all' || phase === '3') {
-                console.log('\n🔥 執行階段三測試...');
-                const phase3Result = await sitTestCases.executePhase3Tests();
-                results.push(phase3Result);
-            }
-
-            // DCN-0015 專用完整測試套件
-            if (phase === 'dcn-0015') {
-                console.log('\n🌟 執行 DCN-0015 完整測試套件...');
-                const dcnResult = await sitTestCases.runPhase3CompleteSuite();
-                results.push({
-                    phase: 'DCN-0015 Complete',
-                    success: dcnResult,
-                    executionTime: Date.now() - sitTestCases.testStartTime.getTime()
-                });
-            }
-
-            // 生成最終報告
-            await sitTestCases.generateFinalReport(results);
-
-            // 根據測試結果設定程序退出碼
-            const hasFailures = results.some(result => result && result.totalTests > 0 && result.passedTests < result.totalTests);
-            process.exit(hasFailures ? 1 : 0);
-
-        } catch (error) {
-            console.error('❌ SIT測試執行失敗:', error);
-            process.exit(1);
-        }
-    }
-
-    /**
-     * 主執行函數 - 修復版 v1.2.0
+     * 主執行邏輯 - 修復版 v1.2.0
      * @version 2025-01-26-V1.2.0
      * @description 修復async/await語法錯誤，確保主執行邏輯正確包裝在async函數中
      */
-    async function executeMainTestFlow() {
-        try {
-            console.log('🚀 LCAS 2.0 Phase 1 SIT測試開始執行');
-            console.log(`📦 測試版本: v2.2.0 - 語法修復版`);
-            console.log('=' * 80);
+    async executeMainTestFlow() {
+        console.log('🚀 LCAS 2.0 Phase 1 SIT測試開始執行');
+        console.log(`📦 測試版本: v2.2.0 - 語法修復版`);
+        console.log('=' * 80);
 
-            const args = process.argv.slice(2);
-            const phaseArg = args.find(arg => arg.startsWith('--phase='));
-            const phase = phaseArg ? phaseArg.split('=')[1] : 'all';
+        const args = process.argv.slice(2);
+        const phaseArg = args.find(arg => arg.startsWith('--phase='));
+        const phase = phaseArg ? phaseArg.split('=')[1] : 'all';
 
-            // 建立SITTestCases實例
-            const sitTestCases = new SITTestCases();
+        // 建立SITTestCases實例
+        const sitTestCases = new SITTestCases();
 
-            console.log(`📋 執行階段: ${phase}`);
-            console.log(`📅 執行時間: ${new Date().toLocaleString()}`);
+        console.log(`📋 執行階段: ${phase}`);
+        console.log(`📅 執行時間: ${new Date().toLocaleString()}`);
 
-            // 前置檢查
-            await sitTestCases.loadTestData();
+        // 前置檢查
+        await sitTestCases.loadTestData();
 
-            const serviceReadiness = await sitTestCases.checkAPIServiceReadiness();
-            if (!serviceReadiness.ready) {
-                console.error('❌ API服務未就緒，測試中止');
+        const serviceReadiness = await sitTestCases.checkAPIServiceReadiness();
+        if (!serviceReadiness.ready) {
+            console.error('❌ API服務未就緒，測試中止');
+            process.exit(1);
+        }
+
+        const quotaStatus = await sitTestCases.checkFirebaseQuotaStatus();
+        if (!quotaStatus.available) {
+            console.log('⚠️ Firebase配額問題，嘗試等待恢復...');
+            const recovered = await sitTestCases.waitForFirebaseQuotaRecovery(5);
+            if (!recovered) {
+                console.error('❌ Firebase配額無法恢復，測試中止');
                 process.exit(1);
             }
+        }
 
-            const quotaStatus = await sitTestCases.checkFirebaseQuotaStatus();
-            if (!quotaStatus.available) {
-                console.log('⚠️ Firebase配額問題，嘗試等待恢復...');
-                const recovered = await sitTestCases.waitForFirebaseQuotaRecovery(5);
-                if (!recovered) {
-                    console.error('❌ Firebase配額無法恢復，測試中止');
-                    process.exit(1);
-                }
-            }
+        let results = [];
 
-            let results = [];
+        // 根據phase參數執行對應的測試
+        if (phase === 'all' || phase === '1') {
+            console.log('\n🔥 執行階段一測試...');
+            const phase1Result = await sitTestCases.executePhase1Tests();
+            results.push(phase1Result);
+        }
 
-            // 根據phase參數執行對應的測試
-            if (phase === 'all' || phase === '1') {
-                console.log('\n🔥 執行階段一測試...');
-                const phase1Result = await sitTestCases.executePhase1Tests();
-                results.push(phase1Result);
-            }
+        if (phase === 'all' || phase === '2') {
+            console.log('\n🔥 執行階段二測試...');
+            const phase2Result = await sitTestCases.executePhase2Tests();
+            results.push(phase2Result);
+        }
 
-            if (phase === 'all' || phase === '2') {
-                console.log('\n🔥 執行階段二測試...');
-                const phase2Result = await sitTestCases.executePhase2Tests();
-                results.push(phase2Result);
-            }
+        if (phase === 'all' || phase === '3') {
+            console.log('\n🔥 執行階段三測試...');
+            const phase3Result = await sitTestCases.executePhase3Tests();
+            results.push(phase3Result);
+        }
 
-            if (phase === 'all' || phase === '3') {
-                console.log('\n🔥 執行階段三測試...');
-                const phase3Result = await sitTestCases.executePhase3Tests();
-                results.push(phase3Result);
-            }
+        // DCN-0015 專用完整測試套件
+        if (phase === 'dcn-0015') {
+            console.log('\n🌟 執行 DCN-0015 完整測試套件...');
+            const dcnResult = await sitTestCases.runPhase3CompleteSuite();
+            results.push({
+                phase: 'DCN-0015 Complete',
+                success: dcnResult,
+                executionTime: Date.now() - sitTestCases.testStartTime.getTime()
+            });
+        }
 
-            // DCN-0015 專用完整測試套件
-            if (phase === 'dcn-0015') {
-                console.log('\n🌟 執行 DCN-0015 完整測試套件...');
-                const dcnResult = await sitTestCases.runPhase3CompleteSuite();
-                results.push({
-                    phase: 'DCN-0015 Complete',
-                    success: dcnResult,
-                    executionTime: Date.now() - sitTestCases.testStartTime.getTime()
-                });
-            }
+        // 生成最終報告
+        await sitTestCases.generateFinalReport(results);
 
-            // 生成最終報告
-            await sitTestCases.generateFinalReport(results);
-
-            // 輸出階段三監控數據
-            if (phase === 'all' || phase === '3' || phase === 'dcn-0015') {
-                sitTestCases.generatePhase3MonitoringReport();
-            }
-
-        } catch (error) {
-            console.error('❌ SIT測試執行失敗:', error);
-            process.exit(1);
+        // 輸出階段三監控數據
+        if (phase === 'all' || phase === '3' || phase === 'dcn-0015') {
+            sitTestCases.generatePhase3MonitoringReport();
         }
     }
 
-    // 主執行邏輯 - 修復async/await語法
+    // 主執行邏輯
     if (require.main === module) {
         executeMainTestFlow();
     }
 }
 // 導出類別
 module.exports = SITTestCases;
-</new_str>
-</changes>
