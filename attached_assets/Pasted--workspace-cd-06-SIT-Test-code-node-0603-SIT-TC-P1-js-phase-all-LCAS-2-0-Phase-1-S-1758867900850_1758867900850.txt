@@ -1,0 +1,380 @@
+~/workspace$ cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=all
+🚀 LCAS 2.0 Phase 1 SIT測試開始執行...
+📅 測試開始時間: 2025/9/26 下午2:24:18
+🔄 SIT測試執行流程啟動...
+🔄 開始載入SIT測試資料...
+⚠️ 關鍵測試資料驗證失敗: [ '效能測試-併發操作資料缺失' ]
+🔧 嘗試使用預設資料修復缺失項目...
+🔧 修復concurrent_operations資料...
+✅ 關鍵測試資料修復成功
+✅ 測試資料載入並驗證成功
+📊 載入的測試案例資料: 14 個類別
+🔍 檢查API服務就緒狀態...
+🔄 服務就緒檢查嘗試 1/10...
+  ✅ 統一回應格式驗證 /health: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:18.632Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+✅ API服務已就緒
+🔍 檢查Firebase配額狀態...
+  ✅ 統一回應格式驗證 /health: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:18.648Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+✅ Firebase配額狀態正常
+✅ 前置檢查完成，開始執行測試案例...
+🎯 執行測試階段: all
+🔄 執行完整測試流程（所有階段）...
+
+📋 ===== 階段一：單點整合驗證測試 =====
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段一測試
+📋 階段一：單點整合驗證測試 (TC-SIT-001~007)
+🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理
+NaN
+📊 階段一測試案例總數：7 個
+📅 預估執行時間：7 分鐘
+
+
+📝 執行階段一測試 1/7: TC-SIT-001: UserRegistration
+  ✅ 統一回應格式驗證 /api/v1/auth/register: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:19.790Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+❌ FAIL TC-SIT-001 (1.14s)
+   ℹ️ 錯誤: 註冊回應格式不正確
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 2/7: TC-SIT-002: UserLogin
+❌ FAIL TC-SIT-002 (236ms)
+   ℹ️ 錯誤: 登入轉發失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 3/7: TC-SIT-003: FirebaseAuthIntegration
+  ✅ 統一回應格式驗證 /health: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:20.031Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:20.189Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+❌ FAIL TC-SIT-003 (162ms)
+   🚨 錯誤: Firebase Auth整合測試未完全通過
+   🏷️  錯誤類型: FIREBASE_ERROR
+   💡 建議: 檢查Firebase配額和連線設定
+
+✅ 用戶流程與認證 完成，休息1秒後繼續...
+
+📝 執行階段一測試 4/7: TC-SIT-004: QuickBooking
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:21.194Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+❌ FAIL TC-SIT-004 (4ms)
+   ℹ️ 錯誤: 快速記帳解析失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 5/7: TC-SIT-005: FullBookingForm
+  ✅ 統一回應格式驗證 /api/v1/transactions: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:21.873Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+❌ FAIL TC-SIT-005 (680ms)
+   ℹ️ 錯誤: 完整記帳表單失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 6/7: TC-SIT-006: TransactionQuery
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=20&sort=date%3Adesc: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:22.026Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+❌ FAIL TC-SIT-006 (154ms)
+   ℹ️ 錯誤: 交易查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 記帳功能與查詢 完成，休息1秒後繼續...
+
+📝 執行階段一測試 7/7: TC-SIT-007: CrossLayerErrorHandling
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:23.197Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+❌ FAIL TC-SIT-007 (168ms)
+   ℹ️ 錯誤: 錯誤處理覆蓋率不足
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+NaN
+📊 階段一測試執行完成
+✅ 通過測試: 0/7
+📈 成功率: 0.00%
+⏱️  總執行時間: 4.625秒
+
+📋 階段一測試報告摘要
+NaN
+用戶認證與管理: 0/3 (0.0%)
+記帳功能測試: 0/2 (0.0%)
+錯誤處理: 0/2 (0.0%)
+
+🎯 階段一關鍵指標
+NaN
+基礎功能整合度: 0.0%
+用戶註冊流程: ❌ 失敗
+用戶登入驗證: ❌ 失敗
+錯誤處理覆蓋率: 66.67
+
+📋 ===== 階段二：四層架構資料流測試 =====
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試
+📋 階段二：四層架構資料流測試 (TC-SIT-008~020)
+🎯 測試重點：四模式差異化、資料一致性、端到端流程、效能穩定性
+NaN
+📊 階段二測試案例總數：13 個
+📅 預估執行時間：26 分鐘
+
+
+📝 執行階段二測試 1/13: TC-SIT-008: ModeAssessment
+  ✅ 統一回應格式驗證 /api/v1/users/assessment-questions: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:23.202Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/assessment: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:23.328Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+❌ FAIL TC-SIT-008 (129ms)
+   ℹ️ 錯誤: 模式評估結果不正確
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 2/13: TC-SIT-009: ModeDifferentiation
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:23.465Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Inertial
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:23.602Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:23.756Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"achievementProgress":true,"gamificationElements":true,"motivationalTips":true,"progressTracking":true,"rewardSystem":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Guiding
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:23.889Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"simplifiedInterface":true,"helpHints":true,"autoSuggestions":true,"stepByStepGuide":true,"tutorialMode":true}}
+✅ PASS TC-SIT-009 (561ms)
+
+📝 執行階段二測試 3/13: TC-SIT-010: DataFormatTransformation
+  ✅ 統一回應格式驗證 /api/v1/transactions: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - expert; Mode Validation: Missing mode-specific features for expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:24.159Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - guiding; Mode Validation: Missing mode-specific features for guiding
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:25.094Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - inertial; Mode Validation: Missing mode-specific features for inertial
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:25.773Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:26.320Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+✅ PASS TC-SIT-010 (2.43s)
+
+📝 執行階段二測試 4/13: TC-SIT-011: DataSynchronization
+  ✅ 統一回應格式驗證 /api/v1/transactions: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:26.603Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/undefined: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:26.607Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+❌ FAIL TC-SIT-011 (286ms)
+   ℹ️ 錯誤: 資料同步機制失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 四模式整合測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 5/13: TC-SIT-012: CompleteUserLifecycle
+  ✅ 統一回應格式驗證 /api/v1/auth/register: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:29.042Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/assessment: C (Score: 70.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:29.188Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:29.191Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=10: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:29.331Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+  ✅ 統一回應格式驗證 /api/v1/auth/logout: C (Score: 70.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:29.335Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+✅ PASS TC-SIT-012 (726ms)
+
+📝 執行階段二測試 6/13: TC-SIT-013: BookkeepingEndToEnd
+  ✅ 統一回應格式驗證 /api/v1/transactions: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:29.596Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+✅ PASS TC-SIT-013 (262ms)
+
+📝 執行階段二測試 7/13: TC-SIT-014: NetworkExceptionHandling
+✅ PASS TC-SIT-014 (204ms)
+
+📝 執行階段二測試 8/13: TC-SIT-015: BusinessRuleErrorHandling
+  ✅ 統一回應格式驗證 /api/v1/transactions: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - cultivation; Mode Validation: Missing mode-specific features for cultivation
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:30.248Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+❌ FAIL TC-SIT-015 (447ms)
+   ℹ️ 錯誤: 業務規則錯誤處理機制失效
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 端到端流程測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 9/13: TC-SIT-016: FourModeProcessDifference
+🔄 開始四模式流程差異驗證...
+  📋 測試模式: expert
+    🎯 測試互動: 快速記帳
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - expert; Mode Validation: Missing mode-specific features for expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:32.256Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+      ✅ 快速記帳 成功
+    🎯 測試互動: 查看統計
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - expert; Mode Validation: Missing mode-specific features for expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:33.307Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+      ✅ 查看統計 成功
+  📋 測試模式: guiding
+    🎯 測試互動: 快速記帳
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - guiding; Mode Validation: Missing mode-specific features for guiding
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:33.812Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+      ✅ 快速記帳 成功
+    🎯 測試互動: 查看記錄
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: B (Score: 80.0%)
+     - 錯誤詳情: Layer 2: Invalid metadata.userMode value - guiding; Mode Validation: Missing mode-specific features for guiding
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:34.455Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"stabilityMode":true,"consistentInterface":true,"minimalChanges":true,"quickActions":true,"familiarLayout":true}}
+      ✅ 查看記錄 成功
+✅ PASS TC-SIT-016 (2.71s)
+🎯 四模式差異化測試完成，差異化評分: 1.00
+
+📝 執行階段二測試 10/13: TC-SIT-017: ConcurrentOperations
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.099Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.124Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.132Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.213Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.222Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.233Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.246Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.251Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.256Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.262Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.269Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.273Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.278Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.286Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=10: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.355Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+✅ PASS TC-SIT-017 (398ms)
+
+📝 執行階段二測試 11/13: TC-SIT-018: DataRaceHandling
+  ✅ 統一回應格式驗證 /api/v1/transactions: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.623Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/undefined: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.770Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/undefined: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.778Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/undefined: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.790Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/undefined: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.866Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/undefined: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.873Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/undefined: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:35.877Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+✅ PASS TC-SIT-018 (524ms)
+
+📝 執行階段二測試 12/13: TC-SIT-019: EightHourStabilityTest
+🚀 開始24小時穩定性測試模擬 (2分鐘)...
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:36.049Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:36.280Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:36.898Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:37.144Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:37.377Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:37.896Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:38.144Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:38.375Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:38.896Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:39.145Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:39.381Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:39.880Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:40.152Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:40.388Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:41.041Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:41.278Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:41.584Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:42.105Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/users/profile: B (Score: 80.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data; Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:42.336Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: A (Score: 90.0%)
+     - 錯誤詳情: Mode Validation: Missing mode-specific features for Expert
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":true,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-09-26T06:24:42.576Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true}}
+✅ PASS TC-SIT-019 (6.80s)
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
