@@ -1609,11 +1609,17 @@ async function AM_processAPILogin(requestData) {
 
     // 驗證登入資料
     if (!requestData.email || !requestData.password) {
-      return {
+      const errorResponse = {
         success: false,
+        data: null,
         message: "電子郵件和密碼為必填欄位",
-        errorCode: "MISSING_CREDENTIALS",
+        error: {
+          code: "MISSING_CREDENTIALS",
+          message: "電子郵件和密碼為必填欄位"
+        }
       };
+      console.log("🐛 AM_processAPILogin Debug - 回傳格式:", JSON.stringify(errorResponse, null, 2));
+      return errorResponse;
     }
 
     // 驗證帳號存在性
@@ -1657,7 +1663,7 @@ async function AM_processAPILogin(requestData) {
         functionName,
       );
 
-      return {
+      const successResponse = {
         success: true,
         data: {
           token: token,
@@ -1666,18 +1672,22 @@ async function AM_processAPILogin(requestData) {
           expiresIn: 3600,
         },
         message: "登入成功",
-        metadata: {
-          timestamp: new Date().toISOString(),
-          requestId: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          userMode: userInfo.userData.userMode || "Expert"
+        error: null
+      };
+      console.log("🐛 AM_processAPILogin Debug - 成功回傳格式:", JSON.stringify(successResponse, null, 2));
+      return successResponse;
+    } else {
+      const errorResponse = {
+        success: false,
+        data: null,
+        message: "無法取得用戶資訊",
+        error: {
+          code: "USER_INFO_ERROR",
+          message: "無法取得用戶資訊"
         }
       };
-    } else {
-      return {
-        success: false,
-        message: "無法取得用戶資訊",
-        errorCode: "USER_INFO_ERROR",
-      };
+      console.log("🐛 AM_processAPILogin Debug - 錯誤回傳格式:", JSON.stringify(errorResponse, null, 2));
+      return errorResponse;
     }
   } catch (error) {
     AM_logError(
@@ -1689,11 +1699,17 @@ async function AM_processAPILogin(requestData) {
       "AM_API_LOGIN_ERROR",
       functionName,
     );
-    return {
+    const systemErrorResponse = {
       success: false,
+      data: null,
       message: "系統錯誤，請稍後再試",
-      errorCode: "SYSTEM_ERROR",
+      error: {
+        code: "SYSTEM_ERROR",
+        message: "系統錯誤，請稍後再試"
+      }
     };
+    console.log("🐛 AM_processAPILogin Debug - 系統錯誤回傳格式:", JSON.stringify(systemErrorResponse, null, 2));
+    return systemErrorResponse;
   }
 }
 
