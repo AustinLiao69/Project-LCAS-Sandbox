@@ -69,10 +69,10 @@ class SITTestCases {
             if (!criticalDataCheck.isValid) {
                 console.warn('⚠️ 關鍵測試資料驗證失敗:', criticalDataCheck.errors);
                 console.log('🔧 嘗試使用預設資料修復缺失項目...');
-                
+
                 // v1.3.0 新增：嘗試修復缺失的關鍵資料
                 this.testData = this.repairCriticalTestData(this.testData, criticalDataCheck.errors);
-                
+
                 // 再次驗證修復後的資料
                 const revalidationResult = this.validateCriticalTestData();
                 if (!revalidationResult.isValid) {
@@ -456,7 +456,7 @@ class SITTestCases {
      */
     repairCriticalTestData(data, errors) {
         const repairedData = { ...data };
-        
+
         errors.forEach(error => {
             try {
                 switch (error) {
@@ -481,7 +481,7 @@ class SITTestCases {
                             };
                         }
                         break;
-                        
+
                     case '快速記帳測試資料缺失':
                         if (!repairedData.basic_bookkeeping_test_data?.quick_booking_tests) {
                             console.log('🔧 修復quick_booking_tests資料...');
@@ -501,7 +501,7 @@ class SITTestCases {
                             ];
                         }
                         break;
-                        
+
                     case '效能測試-併發操作資料缺失':
                         if (!repairedData.stability_and_performance_tests?.concurrent_operations) {
                             console.log('🔧 修復concurrent_operations資料...');
@@ -515,10 +515,11 @@ class SITTestCases {
                             };
                         }
                         break;
-                        
+
                     case '效能測試-長時間穩定性資料缺失':
                         if (!repairedData.stability_and_performance_tests?.long_running_stability_tests) {
                             console.log('🔧 修復long_running_stability_tests資料...');
+                            repairedData.stability_and_performance_tests = repairedData.stability_and_performance_tests || {};
                             repairedData.stability_and_performance_tests.long_running_stability_tests = [
                                 {
                                     test_id: "stability_emergency_001",
@@ -533,7 +534,7 @@ class SITTestCases {
                             ];
                         }
                         break;
-                        
+
                     case '資料轉換測試資料缺失':
                         if (!repairedData.data_consistency_tests?.data_transformation_tests) {
                             console.log('🔧 修復data_transformation_tests資料...');
@@ -555,7 +556,7 @@ class SITTestCases {
                             ];
                         }
                         break;
-                        
+
                     default:
                         console.log(`⚠️ 未知錯誤類型，無法修復: ${error}`);
                         break;
@@ -564,12 +565,12 @@ class SITTestCases {
                 console.error(`❌ 修復錯誤 "${error}" 時發生問題:`, repairError.message);
             }
         });
-        
+
         return repairedData;
     }
 
-                        
-                      
+
+
                         password: "Emergency123!",
                         display_name: "緊急測試用戶",
                         mode: "expert"
@@ -2750,7 +2751,7 @@ class SITTestCases {
         }
     }
 
-    // ==================== 階段三後半：系統穩定性驗證 ====================
+    // ==================== 階段三：系統穩定性驗證 ====================
 
     /**
      * TC-SIT-025: 24小時穩定性測試 (模擬版)
