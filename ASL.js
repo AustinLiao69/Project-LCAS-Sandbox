@@ -1,8 +1,8 @@
 /**
- * ASL.js_API服務層模組_2.1.2
+ * ASL.js_API服務層模組_2.1.3
  * @module API服務層模組（統一回應格式）
- * @description LCAS 2.0 API Service Layer - DCN-0015第二階段完成：完全移除容錯邏輯，100%信任BL層標準格式
- * @update 2025-09-26: DCN-0015第二階段完成 - 所有API端點統一使用BL層標準格式，移除容錯邏輯
+ * @description LCAS 2.0 API Service Layer - DCN-0015第三階段完成：四模式欄位完整性修正
+ * @update 2025-09-26: DCN-0015第三階段完成 - 四模式欄位映射完整性修正，強化模式檢測邏輯
  * @date 2025-09-26
  */
 
@@ -294,7 +294,7 @@ app.use((req, res, next) => {
     return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  // 檢測使用者模式
+  // 檢測使用者模式（第三階段強化版）
   const detectUserMode = (req) => {
     let userMode = 'Expert'; // 預設為Expert模式
     
@@ -308,8 +308,17 @@ app.use((req, res, next) => {
       userMode = req.headers['x-user-mode'];
     }
     
-    // 3. 統一模式命名格式（首字母大寫）
-    const normalizedMode = userMode.toLowerCase();
+    // 3. 從查詢參數中取得模式設定（SIT測試支援）
+    if (req.query && req.query.userMode) {
+      userMode = req.query.userMode;
+    }
+    
+    // 4. 統一模式命名格式驗證（嚴格模式匹配）
+    if (!userMode || typeof userMode !== 'string') {
+      return 'Expert';
+    }
+    
+    const normalizedMode = userMode.toLowerCase().trim();
     switch (normalizedMode) {
       case 'expert':
         return 'Expert';
@@ -320,20 +329,26 @@ app.use((req, res, next) => {
       case 'guiding':
         return 'Guiding';
       default:
+        console.warn(`⚠️ 未知使用者模式: ${userMode}，使用預設Expert模式`);
         return 'Expert';
     }
   };
 
-  // 四模式差異化處理函數
+  // 四模式差異化處理函數（DCN-0015第三階段完整性修正）
   const applyModeSpecificFields = (userMode) => {
-    switch (userMode) {
+    // 確保模式名稱統一（首字母大寫）
+    const normalizedMode = userMode ? userMode.charAt(0).toUpperCase() + userMode.slice(1).toLowerCase() : 'Expert';
+    
+    switch (normalizedMode) {
       case 'Expert':
         return {
           detailedAnalytics: true,
           advancedOptions: true,
           performanceMetrics: true,
           batchOperations: true,
-          exportFeatures: true
+          exportFeatures: true,
+          dataInsights: true,
+          customReports: true
         };
       case 'Cultivation':
         return {
@@ -341,7 +356,9 @@ app.use((req, res, next) => {
           gamificationElements: true,
           motivationalTips: true,
           progressTracking: true,
-          rewardSystem: true
+          rewardSystem: true,
+          levelSystem: true,
+          badgeCollection: true
         };
       case 'Guiding':
         return {
@@ -349,7 +366,9 @@ app.use((req, res, next) => {
           helpHints: true,
           autoSuggestions: true,
           stepByStepGuide: true,
-          tutorialMode: true
+          tutorialMode: true,
+          contextualHelp: true,
+          smartDefaults: true
         };
       case 'Inertial':
       default:
@@ -358,7 +377,9 @@ app.use((req, res, next) => {
           consistentInterface: true,
           minimalChanges: true,
           quickActions: true,
-          familiarLayout: true
+          familiarLayout: true,
+          preservedSettings: true,
+          routineOptimization: true
         };
     }
   };
@@ -445,7 +466,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.1.2',
+    version: '2.1.3',
     status: 'running',
     port: PORT,
     architecture: 'ASL -> BL層轉發（統一回應格式）',
@@ -454,7 +475,9 @@ app.get('/', (req, res) => {
       four_mode_support: true,
       request_id_tracking: true,
       performance_metrics: true,
-      mode_specific_features: true
+      mode_specific_features: true,
+      enhanced_mode_detection: true,
+      complete_field_mapping: true
     },
     p1_2_endpoints: {
       am_auth: 11,
@@ -476,7 +499,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.1.2',
+    version: '2.1.3',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -494,6 +517,13 @@ app.get('/health', (req, res) => {
       performance_monitoring: true,
       metadata_structure: true,
       mode_detection: true
+    },
+    dcn_0015_phase3: {
+      four_mode_field_completeness: true,
+      enhanced_mode_detection: true,
+      normalized_mode_names: true,
+      complete_field_mapping: true,
+      sit_test_compatibility: true
     },
     stage1_fix: {
       applied: true,
@@ -1370,23 +1400,25 @@ process.on('SIGINT', () => {
   });
 });
 
-console.log('🎉 LCAS ASL第二階段完成：格式驗證強化 + 登入API修復！');
+console.log('🎉 LCAS ASL第三階段完成：四模式欄位完整性修正！');
   console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'})`);
   console.log('🔧 純轉發機制: 34個API端點 -> 統一使用BL層標準格式');
-  console.log('✨ 第二階段完成: 完全移除容錯邏輯，AM-ASL格式匹配修復');
-  console.log('🐛 Debug增強: 登入API增加詳細日誌追蹤');
+  console.log('✨ 第三階段完成: 四模式欄位映射完整性修正，強化模式檢測邏輯');
+  console.log('🎯 四模式支援: Expert/Inertial/Cultivation/Guiding完整欄位映射');
+  console.log('🔍 模式檢測強化: 支援JWT/Header/Query多重檢測機制');
 
   if (moduleStatus.firebase && moduleStatus.AM) {
-    console.log('🚀 第二階段完成，ASL v2.1.2完全就緒！');
+    console.log('🚀 第三階段完成，ASL v2.1.3完全就緒！');
     console.log('🌐 ASL服務器即將在 Port 5000 啟動...');
-    console.log('✨ 格式驗證強化: 統一使用result.success判斷邏輯');
-    console.log('🎯 第二階段目標達成: 100%信任BL層，移除所有容錯');
+    console.log('✨ 四模式欄位完整性: 7個欄位映射至每種模式');
+    console.log('🎯 第三階段目標達成: 完整四模式支援，SIT測試相容性');
+    console.log('🔍 模式檢測增強: 支援多種檢測來源，嚴格命名驗證');
   } else if (moduleStatus.firebase && !moduleStatus.AM) {
-    console.log('⚠️ Firebase正常但AM模組異常，已移除容錯邏輯');
-    console.log('🔧 建議修復AM模組以完全發揮第二階段效果');
+    console.log('⚠️ Firebase正常但AM模組異常，四模式功能可能受限');
+    console.log('🔧 建議修復AM模組以完全發揮第三階段效果');
   } else {
-    console.log('❌ Firebase初始化失敗，但容錯邏輯已移除');
-    console.log('🔧 建議修復Firebase以完全發揮第二階段效果');
+    console.log('❌ Firebase初始化失敗，但四模式欄位映射已完成');
+    console.log('🔧 建議修復Firebase以完全發揮第三階段效果');
   }
 
   return server;
