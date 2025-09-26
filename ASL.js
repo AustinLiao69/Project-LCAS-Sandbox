@@ -1,5 +1,5 @@
 /**
- * ASL.js_API服務層模組_2.1.3
+ * ASL.js_API服務層模組_2.1.4
  * @module API服務層模組（統一回應格式）
  * @description LCAS 2.0 API Service Layer - DCN-0015第三階段完成：四模式欄位完整性修正
  * @update 2025-09-26: DCN-0015第三階段完成 - 四模式欄位映射完整性修正，強化模式檢測邏輯
@@ -342,44 +342,52 @@ app.use((req, res, next) => {
     switch (normalizedMode) {
       case 'Expert':
         return {
-          detailedAnalytics: true,
-          advancedOptions: true,
-          performanceMetrics: true,
-          batchOperations: true,
-          exportFeatures: true,
-          dataInsights: true,
-          customReports: true
+          expertFeatures: {
+            detailedAnalytics: true,
+            advancedOptions: true,
+            performanceMetrics: true,
+            batchOperations: true,
+            exportFeatures: true,
+            dataInsights: true,
+            customReports: true
+          }
         };
       case 'Cultivation':
         return {
-          achievementProgress: true,
-          gamificationElements: true,
-          motivationalTips: true,
-          progressTracking: true,
-          rewardSystem: true,
-          levelSystem: true,
-          badgeCollection: true
+          cultivationFeatures: {
+            achievementProgress: true,
+            gamificationElements: true,
+            motivationalTips: true,
+            progressTracking: true,
+            rewardSystem: true,
+            levelSystem: true,
+            badgeCollection: true
+          }
         };
       case 'Guiding':
         return {
-          simplifiedInterface: true,
-          helpHints: true,
-          autoSuggestions: true,
-          stepByStepGuide: true,
-          tutorialMode: true,
-          contextualHelp: true,
-          smartDefaults: true
+          guidingFeatures: {
+            simplifiedInterface: true,
+            helpHints: true,
+            autoSuggestions: true,
+            stepByStepGuide: true,
+            tutorialMode: true,
+            contextualHelp: true,
+            smartDefaults: true
+          }
         };
       case 'Inertial':
       default:
         return {
-          stabilityMode: true,
-          consistentInterface: true,
-          minimalChanges: true,
-          quickActions: true,
-          familiarLayout: true,
-          preservedSettings: true,
-          routineOptimization: true
+          inertialFeatures: {
+            stabilityMode: true,
+            consistentInterface: true,
+            minimalChanges: true,
+            quickActions: true,
+            familiarLayout: true,
+            preservedSettings: true,
+            routineOptimization: true
+          }
         };
     }
   };
@@ -466,7 +474,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.1.3',
+    version: '2.1.4',
     status: 'running',
     port: PORT,
     architecture: 'ASL -> BL層轉發（統一回應格式）',
@@ -499,7 +507,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.1.3',
+    version: '2.1.4',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -1400,25 +1408,25 @@ process.on('SIGINT', () => {
   });
 });
 
-console.log('🎉 LCAS ASL第三階段完成：四模式欄位完整性修正！');
+console.log('🎉 LCAS ASL階段一修正完成：四模式欄位結構調整！');
   console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'})`);
   console.log('🔧 純轉發機制: 34個API端點 -> 統一使用BL層標準格式');
-  console.log('✨ 第三階段完成: 四模式欄位映射完整性修正，強化模式檢測邏輯');
-  console.log('🎯 四模式支援: Expert/Inertial/Cultivation/Guiding完整欄位映射');
-  console.log('🔍 模式檢測強化: 支援JWT/Header/Query多重檢測機制');
+  console.log('✨ 階段一修正: 四模式欄位結構調整，符合SIT測試期望');
+  console.log('🎯 四模式支援: Expert/Inertial/Cultivation/Guiding專用欄位結構');
+  console.log('🔍 欄位結構: expertFeatures/inertialFeatures/cultivationFeatures/guidingFeatures');
 
   if (moduleStatus.firebase && moduleStatus.AM) {
-    console.log('🚀 第三階段完成，ASL v2.1.3完全就緒！');
+    console.log('🚀 階段一修正完成，ASL v2.1.4完全就緒！');
     console.log('🌐 ASL服務器即將在 Port 5000 啟動...');
-    console.log('✨ 四模式欄位完整性: 7個欄位映射至每種模式');
-    console.log('🎯 第三階段目標達成: 完整四模式支援，SIT測試相容性');
-    console.log('🔍 模式檢測增強: 支援多種檢測來源，嚴格命名驗證');
+    console.log('✨ 四模式欄位結構: 修正為SIT測試期望格式');
+    console.log('🎯 階段一目標達成: Mode Validation錯誤修正');
+    console.log('🔍 等待SIT測試驗證: 期望達到100%驗證分數');
   } else if (moduleStatus.firebase && !moduleStatus.AM) {
     console.log('⚠️ Firebase正常但AM模組異常，四模式功能可能受限');
-    console.log('🔧 建議修復AM模組以完全發揮第三階段效果');
+    console.log('🔧 建議修復AM模組以完全發揮階段一修正效果');
   } else {
-    console.log('❌ Firebase初始化失敗，但四模式欄位映射已完成');
-    console.log('🔧 建議修復Firebase以完全發揮第三階段效果');
+    console.log('❌ Firebase初始化失敗，但四模式欄位結構已修正');
+    console.log('🔧 建議修復Firebase以完全發揮階段一修正效果');
   }
 
   return server;
