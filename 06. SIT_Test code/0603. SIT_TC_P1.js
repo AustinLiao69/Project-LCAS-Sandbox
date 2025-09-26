@@ -4976,7 +4976,7 @@ class SITTestCases {
     }
 
     // 檢查是否為主模組執行
-    if (require.main === require.cache[process.id]) {
+    if (require.main === module) {
         executeMainTestFlow().catch(error => {
             console.error('💥 主執行函數發生錯誤:', error.message);
             process.exit(1);
