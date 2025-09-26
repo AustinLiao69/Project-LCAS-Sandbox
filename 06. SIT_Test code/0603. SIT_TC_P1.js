@@ -4989,6 +4989,6 @@ if (require.main === module) {
         process.exit(1);
     });
 }
-}
+
 // 導出類別
 module.exports = SITTestCases;
