@@ -569,7 +569,7 @@ class SITTestCases {
     }
 
                         
-                        email: "emergency@lcas.app",
+                      
                         password: "Emergency123!",
                         display_name: "緊急測試用戶",
                         mode: "expert"
