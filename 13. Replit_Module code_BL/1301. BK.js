@@ -2,7 +2,7 @@
  * BK.js_記帳核心模組_v3.0.2
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能，處理交易記錄、分類管理、數據分析等核心記帳邏輯
- * @update 2025-09-26: 階段二修復 - 優化Firebase查詢邏輯，避免複合索引需求
+ * @update 2025-09-26: 階段二修復 - 將Firebase查詢邏輯遷移到FS.js，修正模組職責分工
  * @update 2025-09-24: 第一階段修復 - 補全BK_getTransactionsByDateRange函數導出
  * @update 2025-01-27: DCN-0015階段二 - 實作標準化API處理函數，統一回傳格式
  * @date 2025-09-26
@@ -311,9 +311,9 @@ async function BK_processQuickTransaction(quickData) {
 
 /**
  * 05. 查詢交易列表 - 支援 GET /transactions (階段二修復版)
- * @version 2025-01-28-V2.2.1
- * @date 2025-01-28
- * @update: 階段二修復 - 優化查詢邏輯避免複合索引需求
+ * @version 2025-09-26-V3.0.2
+ * @date 2025-09-26
+ * @update: 階段二修復 - 將Firebase查詢邏輯遷移到FS.js，避免複合索引需求
  */
 async function BK_getTransactions(queryParams = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -322,35 +322,53 @@ async function BK_getTransactions(queryParams = {}) {
   try {
     BK_logInfo(`${logPrefix} 開始查詢交易列表`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
 
-    await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
+    // 階段二修復：使用FS.js進行資料查詢，避免BK.js直接操作Firebase
+    const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+    const collectionPath = `ledgers/${ledgerId}/entries`;
 
-    // 建立查詢（階段二修復：簡化查詢避免複合索引）
-    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-
-    let query = db.collection(ledgerCollection)
-      .doc(queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID)
-      .collection(entriesCollection);
-
-    // 階段二修復：只使用單一欄位查詢，避免複合索引需求
+    // 建立簡化查詢條件，避免複合索引需求
+    const queryConditions = [];
+    
     if (queryParams.userId) {
-      const uidField = getEnvVar('UID_FIELD', 'UID');
-      query = query.where(uidField, '==', queryParams.userId);
+      queryConditions.push({
+        field: getEnvVar('UID_FIELD', 'UID'),
+        operator: '==',
+        value: queryParams.userId
+      });
     }
 
-    // 階段二修復：移除複雜查詢條件，改為簡單排序
-    query = query.orderBy('createdAt', 'desc');
+    // 查詢選項（僅使用createdAt單一欄位排序）
+    const options = {
+      orderBy: {
+        field: 'createdAt',
+        direction: 'desc'
+      }
+    };
 
     if (queryParams.limit) {
       const maxLimit = parseInt(getEnvVar('MAX_QUERY_LIMIT', '20'), 10);
-      const limit = Math.min(parseInt(queryParams.limit), maxLimit);
-      query = query.limit(limit);
+      options.limit = Math.min(parseInt(queryParams.limit), maxLimit);
     }
 
-    const querySnapshot = await query.get();
-    const transactions = [];
+    // 透過FS.js查詢資料
+    const queryResult = await FS.FS_queryCollection(
+      collectionPath,
+      queryConditions,
+      queryParams.userId || 'SYSTEM',
+      options
+    );
 
+    if (!queryResult.success) {
+      BK_logError(`${logPrefix} FS查詢失敗: ${queryResult.error}`, "查詢交易", queryParams.userId || "", "FS_QUERY_ERROR", queryResult.error, "BK_getTransactions");
+      return {
+        success: false,
+        error: queryResult.error,
+        errorType: "FS_QUERY_ERROR"
+      };
+    }
+
+    // 轉換資料格式
+    const transactions = [];
     const fieldNames = {
       id: getEnvVar('ID_FIELD', '收支ID'),
       income: getEnvVar('INCOME_FIELD', '收入'),
@@ -363,8 +381,8 @@ async function BK_getTransactions(queryParams = {}) {
       uid: getEnvVar('UID_FIELD', 'UID')
     };
 
-    querySnapshot.forEach(doc => {
-      const data = doc.data();
+    queryResult.results.forEach(item => {
+      const data = item.data;
       transactions.push({
         id: data[fieldNames.id],
         amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
@@ -3369,7 +3387,10 @@ function BK_processImportResult(result) {
 }
 
 /**
- * 查詢指定日期範圍的交易記錄
+ * 查詢指定日期範圍的交易記錄 (階段二修復版)
+ * @version 2025-09-26-V3.0.2
+ * @date 2025-09-26
+ * @update: 階段二修復 - 使用FS.js進行資料查詢，避免複合索引需求
  */
 async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -3378,29 +3399,49 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
   try {
     BK_logInfo(`${logPrefix} 查詢日期範圍交易: ${startDate} 到 ${endDate}`, "日期範圍查詢", userId || "", "BK_getTransactionsByDateRange");
 
-    await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
+    // 階段二修復：使用FS.js進行資料查詢
+    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID;
+    const collectionPath = `ledgers/${ledgerId}/entries`;
 
-    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-    const dateField = getEnvVar('DATE_FIELD', '日期');
-    const uidField = getEnvVar('UID_FIELD', 'UID');
-
-    let query = db.collection(ledgerCollection)
-      .doc(BK_CONFIG.DEFAULT_LEDGER_ID)
-      .collection(entriesCollection)
-      .where(dateField, '>=', startDate)
-      .where(dateField, '<=', endDate);
-
-    if (userId) {
-      query = query.where(uidField, '==', userId);
+    // 階段二修復：避免複合索引，使用單一欄位查詢
+    const queryConditions = [];
+    
+    // 先按日期範圍查詢（單一欄位查詢）
+    if (startDate) {
+      queryConditions.push({
+        field: getEnvVar('DATE_FIELD', '日期'),
+        operator: '>=',
+        value: startDate
+      });
     }
 
-    query = query.orderBy(dateField, 'desc');
+    const options = {
+      orderBy: {
+        field: getEnvVar('DATE_FIELD', '日期'),
+        direction: 'desc'
+      }
+    };
 
-    const querySnapshot = await query.get();
+    // 透過FS.js查詢資料
+    const queryResult = await FS.FS_queryCollection(
+      collectionPath,
+      queryConditions,
+      userId || 'SYSTEM',
+      options
+    );
+
+    if (!queryResult.success) {
+      BK_logError(`${logPrefix} FS查詢失敗: ${queryResult.error}`, "日期範圍查詢", userId || "", "FS_QUERY_ERROR", queryResult.error, "BK_getTransactionsByDateRange");
+      return {
+        success: false,
+        error: queryResult.error,
+        transactions: [],
+        count: 0
+      };
+    }
+
+    // 在應用層進行過濾（避免複合索引）
     const transactions = [];
-
     const fieldNames = {
       id: getEnvVar('ID_FIELD', '收支ID'),
       income: getEnvVar('INCOME_FIELD', '收入'),
@@ -3413,8 +3454,20 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
       uid: getEnvVar('UID_FIELD', 'UID')
     };
 
-    querySnapshot.forEach(doc => {
-      const data = doc.data();
+    queryResult.results.forEach(item => {
+      const data = item.data;
+      
+      // 應用層過濾：日期範圍和用戶ID
+      const recordDate = data[fieldNames.date];
+      const recordUserId = data[fieldNames.uid];
+      
+      // 檢查日期範圍
+      if (endDate && recordDate > endDate) return;
+      if (startDate && recordDate < startDate) return;
+      
+      // 檢查用戶ID
+      if (userId && recordUserId !== userId) return;
+      
       transactions.push({
         id: data[fieldNames.id],
         amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
