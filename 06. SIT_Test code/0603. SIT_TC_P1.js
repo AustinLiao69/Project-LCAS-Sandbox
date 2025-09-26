@@ -10,7 +10,7 @@
  * @phase Phase 1 Syntax Fix - Async/Await Error Resolution
  * @testcases TC-SIT-001 to TC-SIT-028 (28個測試案例)
  * @fixes
- *   - 修復第4986行附近的await語法錯誤
+ *   - 修復第4984行附近的await語法錯誤
  *   - 確保所有含await的函數正確聲明為async
  *   - 修正主執行邏輯的async/await結構
  *   - 升級loadTestData函數版本至v1.2.0
@@ -5124,9 +5124,12 @@ class SITTestCases {
         }
     }
 
-    // 主執行邏輯 - 修復async/await語法
-if (require.main === module) {
-    (async function() {
+    /**
+     * 主執行函數 - 修復版 v1.2.0
+     * @version 2025-01-26-V1.2.0
+     * @description 修復async/await語法錯誤，確保主執行邏輯正確包裝在async函數中
+     */
+    async function executeMainTestFlow() {
         try {
             console.log('🚀 LCAS 2.0 Phase 1 SIT測試開始執行');
             console.log(`📦 測試版本: v2.2.0 - 語法修復版`);
@@ -5204,8 +5207,12 @@ if (require.main === module) {
             console.error('❌ SIT測試執行失敗:', error);
             process.exit(1);
         }
-    })();
-}
+    }
+
+    // 主執行邏輯 - 修復async/await語法
+    if (require.main === module) {
+        executeMainTestFlow();
+    }
 }
 // 導出類別
 module.exports = SITTestCases;
