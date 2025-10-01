@@ -1,5 +1,5 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.0.8
+ * 1301. BK.js_記帳核心模組_v3.0.9
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能模組，包含交易管理、分類管理、統計分析等核心功能
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
@@ -7,7 +7,8 @@
  * @update 2025-09-26: 階段一緊急修復v3.0.5 - 修復快速記帳和完整記帳處理邏輯，簡化MVP階段業務處理
  * @update 2025-09-26: 階段一緊急修復v3.0.6 - 修復TC-SIT-004,005核心邏輯缺陷，確保SIT測試通過
  * @update 2025-09-26: 階段一緊急修復v3.0.7 - 修復SIT測試TC-SIT-004~006核心邏輯，簡化MVP階段處理，避免超時問題
- * @date 2025-09-26
+ * @update 2025-10-02: 階段一&二修復v3.0.9 - 修正BK_processAPIQuickTransaction調用關係，確保正確調用BK_processBookkeeping
+ * @date 2025-10-02
  */
 
 /**
@@ -1348,9 +1349,9 @@ function BK_logCritical(message, category, userId, errorType, errorDetail, funct
 
 /**
  * BK_processAPIQuickTransaction - 處理快速記帳API端點 (階段一修復版)
- * @version 2025-10-02-V3.0.8
+ * @version 2025-10-02-V3.0.9
  * @date 2025-10-02
- * @update: 階段一修復 - 改為調用BK_processBookkeeping，避免重複邏輯
+ * @update: 階段一修復 - 正確調用BK_processBookkeeping，修正函數調用關係
  */
 async function BK_processAPIQuickTransaction(requestData) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -1364,21 +1365,35 @@ async function BK_processAPIQuickTransaction(requestData) {
       return BK_formatErrorResponse("MISSING_INPUT_FIELD", "快速輸入文字為必填項目");
     }
 
+    // 解析快速輸入
+    const parsed = BK_parseQuickInput(requestData.input);
+    if (!parsed.success) {
+      return BK_formatErrorResponse("PARSE_ERROR", "無法解析輸入內容", parsed.error);
+    }
+
     // 構建調用BK_processBookkeeping的參數
     const bookkeepingData = {
-      input: requestData.input,
+      amount: parsed.data.amount,
+      type: parsed.data.type,
+      description: parsed.data.description,
+      subject: parsed.data.description,
       userId: requestData.userId || `test_user_${Date.now()}`,
       ledgerId: requestData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      paymentMethod: parsed.data.paymentMethod,
       processId: processId
     };
 
     BK_logInfo(`${logPrefix} 轉發至BK_processBookkeeping`, "API端點", bookkeepingData.userId, "BK_processAPIQuickTransaction");
 
-    // 階段一修復：直接調用BK_processBookkeeping
+    // 階段一修復：正確調用BK_processBookkeeping
     const result = await BK_processBookkeeping(bookkeepingData);
 
     if (result.success) {
-      return BK_formatSuccessResponse(result.data, "快速記帳處理成功");
+      return BK_formatSuccessResponse({
+        ...result.data,
+        parsed: parsed.data,
+        quickInput: requestData.input
+      }, "快速記帳處理成功");
     } else {
       return result; // 直接返回BK_processBookkeeping的錯誤格式
     }
@@ -1391,7 +1406,7 @@ async function BK_processAPIQuickTransaction(requestData) {
 
 /**
  * BK_processAPITransaction - 處理交易記錄API端點 (階段一修復版)
- * @version 2025-10-02-V3.0.8
+ * @version 2025-10-02-V3.0.9
  * @date 2025-10-02
  * @update: 階段一修復 - 改為調用BK_createTransaction，避免重複邏輯
  */
@@ -1435,7 +1450,7 @@ async function BK_processAPITransaction(requestData) {
 
 /**
  * BK_processAPIGetTransactions - 處理交易查詢API端點 (階段一修復版)
- * @version 2025-10-02-V3.0.8
+ * @version 2025-10-02-V3.0.9
  * @date 2025-10-02
  * @update: 階段一修復 - 改為調用BK_getTransactions，避免重複邏輯
  */
