@@ -1,9 +1,9 @@
 /**
- * ASL.js_API服務層模組_2.1.4
+ * ASL.js_API服務層模組_2.1.5
  * @module API服務層模組（統一回應格式）
- * @description LCAS 2.0 API Service Layer - DCN-0015第三階段完成：四模式欄位完整性修正
- * @update 2025-09-26: DCN-0015第三階段完成 - 四模式欄位映射完整性修正，強化模式檢測邏輯
- * @date 2025-09-26
+ * @description LCAS 2.0 API Service Layer - 階段一優化：直接調用核心函數，簡化調用鏈
+ * @update 2025-10-02: 階段一優化 - 移除API包裝層，直接調用BK核心函數，降低超時風險
+ * @date 2025-10-02
  */
 
 console.log('🚀 LCAS ASL (API Service Layer) P1-2重構版啟動中...');
@@ -497,10 +497,10 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.1.4',
+    version: '2.1.5',
     status: 'running',
     port: PORT,
-    architecture: 'ASL -> BL層轉發（統一回應格式）',
+    architecture: 'ASL -> BL層直接調用（優化版）',
     dcn_0015_features: {
       unified_response_format: true,
       four_mode_support: true,
@@ -530,7 +530,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.1.4',
+    version: '2.1.5',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -1002,15 +1002,28 @@ app.post('/api/v1/users/verify-pin', async (req, res) => {
 // 1. 新增交易記錄
 app.post('/api/v1/transactions', async (req, res) => {
   try {
-    console.log('💰 ASL轉發: 新增交易 -> BK_processAPITransaction');
+    console.log('💰 ASL轉發: 新增交易 -> BK_createTransaction');
 
-    if (!BK || typeof BK.BK_processAPITransaction !== 'function') {
-      return res.apiError('BK_processAPITransaction函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    if (!BK || typeof BK.BK_createTransaction !== 'function') {
+      return res.apiError('BK_createTransaction函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await BK.BK_processAPITransaction(req.body);
+    // 構建調用BK_createTransaction的參數
+    const transactionData = {
+      amount: req.body.amount,
+      type: req.body.type,
+      description: req.body.description,
+      categoryId: req.body.categoryId,
+      accountId: req.body.accountId,
+      ledgerId: req.body.ledgerId,
+      paymentMethod: req.body.paymentMethod,
+      date: req.body.date,
+      userId: req.body.userId || `test_user_${Date.now()}`,
+      processId: require('crypto').randomUUID().substring(0, 8)
+    };
 
-    // 第二階段：直接使用BL層標準格式，100%信任BL層
+    const result = await BK.BK_createTransaction(transactionData);
+
     if (result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
@@ -1026,18 +1039,44 @@ app.post('/api/v1/transactions', async (req, res) => {
 // 2. 快速記帳
 app.post('/api/v1/transactions/quick', async (req, res) => {
   try {
-    console.log('⚡ ASL轉發: 快速記帳 -> BK_processAPIQuickTransaction');
+    console.log('⚡ ASL轉發: 快速記帳 -> BK_processBookkeeping');
 
-    if (!BK || typeof BK.BK_processAPIQuickTransaction !== 'function') {
-      return res.apiError('BK_processAPIQuickTransaction函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    if (!BK || typeof BK.BK_processBookkeeping !== 'function') {
+      return res.apiError('BK_processBookkeeping函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await BK.BK_processAPIQuickTransaction(req.body);
+    // 檢查輸入參數
+    if (!req.body.input || typeof req.body.input !== 'string' || req.body.input.trim() === '') {
+      return res.apiError('快速輸入文字為必填項目', 'MISSING_INPUT_FIELD', 400);
+    }
+
+    // 解析快速輸入
+    const parsed = BK.BK_parseQuickInput ? BK.BK_parseQuickInput(req.body.input.trim()) : null;
+    if (!parsed || !parsed.success) {
+      return res.apiError('無法解析輸入內容', 'PARSE_ERROR', 400, parsed?.error);
+    }
+
+    // 構建調用BK_processBookkeeping的參數
+    const bookkeepingData = {
+      amount: parsed.data.amount,
+      type: parsed.data.type,
+      description: parsed.data.description,
+      subject: parsed.data.description,
+      userId: req.body.userId || `test_user_${Date.now()}`,
+      ledgerId: req.body.ledgerId,
+      paymentMethod: parsed.data.paymentMethod
+    };
+
+    const result = await BK.BK_processBookkeeping(bookkeepingData);
 
     if (result.success) {
-      res.apiSuccess(result.data, result.message);
+      res.apiSuccess({
+        ...result.data,
+        parsed: parsed.data,
+        quickInput: req.body.input
+      }, result.message);
     } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+      res.apiError(result.error?.message || result.message, result.error?.code || 'PROCESS_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
@@ -1049,18 +1088,35 @@ app.post('/api/v1/transactions/quick', async (req, res) => {
 // 3. 查詢交易記錄
 app.get('/api/v1/transactions', async (req, res) => {
   try {
-    console.log('📋 ASL轉發: 查詢交易 -> BK_processAPIGetTransactions');
+    console.log('📋 ASL轉發: 查詢交易 -> BK_getTransactions');
 
-    if (!BK || typeof BK.BK_processAPIGetTransactions !== 'function') {
-      return res.apiError('BK_processAPIGetTransactions函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
+    if (!BK || typeof BK.BK_getTransactions !== 'function') {
+      return res.apiError('BK_getTransactions函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await BK.BK_processAPIGetTransactions(req.query);
+    // 構建調用BK_getTransactions的參數
+    const queryParams = {
+      userId: req.query.userId,
+      ledgerId: req.query.ledgerId,
+      limit: req.query.limit,
+      page: req.query.page,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+      type: req.query.type,
+      categoryId: req.query.categoryId,
+      minAmount: req.query.minAmount,
+      maxAmount: req.query.maxAmount,
+      paymentMethod: req.query.paymentMethod,
+      orderBy: req.query.orderBy,
+      orderDirection: req.query.orderDirection
+    };
+
+    const result = await BK.BK_getTransactions(queryParams);
 
     if (result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+      res.apiError(result.message, result.error?.code || 'QUERY_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
