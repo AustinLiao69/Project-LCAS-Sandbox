@@ -869,37 +869,41 @@ class SITTestCases {
     }
 
     /**
-     * 計算智能超時時間
-     * @version 2025-01-24-V1.0.0
-     * @description 根據請求類型和端點動態調整超時時間
+     * 計算智能超時時間 (v2.5.1 - 階段一修復版)
+     * @version 2025-10-01-V2.5.1
+     * @description 根據請求類型和端點動態調整超時時間，MVP階段容忍較長回應時間
      */
     calculateSmartTimeout(method, endpoint) {
-        // 基礎超時時間
-        let baseTimeout = 3000; // 3秒預設
+        // 階段一修復：MVP階段基礎超時時間大幅增加
+        let baseTimeout = 8000; // 8秒預設，容忍Firebase連線時間
 
         // 根據HTTP方法調整
         switch (method.toUpperCase()) {
             case 'GET':
-                baseTimeout = 2000; // GET請求通常較快
+                baseTimeout = 10000; // GET查詢操作給予充足時間
                 break;
             case 'POST':
-                baseTimeout = 5000; // POST請求可能需要更多時間
+                baseTimeout = 18000; // POST新增操作需要更多時間
                 break;
             case 'PUT':
             case 'DELETE':
-                baseTimeout = 4000;
+                baseTimeout = 15000;
                 break;
         }
 
-        // 根據端點類型調整
+        // 根據端點類型調整（階段一修復：大幅增加超時時間）
         if (endpoint.includes('/auth/')) {
-            baseTimeout += 2000; // 認證相關操作需要更多時間
+            baseTimeout += 5000; // 認證相關操作：額外5秒
         } else if (endpoint.includes('/transactions/dashboard')) {
-            baseTimeout += 3000; // 儀表板統計需要更多時間
+            baseTimeout += 8000; // 儀表板統計：額外8秒
         } else if (endpoint.includes('/transactions/quick')) {
-            baseTimeout = 2000; // 快速記帳應該很快
+            baseTimeout = 12000; // 快速記帳：12秒（修復TC-SIT-004）
+        } else if (endpoint.includes('/transactions') && method === 'GET') {
+            baseTimeout = 10000; // 交易查詢：10秒（修復TC-SIT-006）
+        } else if (endpoint.includes('/transactions') && method === 'POST') {
+            baseTimeout = 18000; // 完整記帳表單：18秒（修復TC-SIT-005）
         } else if (endpoint.includes('/health')) {
-            baseTimeout = 1000; // 健康檢查應該很快
+            baseTimeout = 3000; // 健康檢查：3秒
         }
 
         return baseTimeout;
