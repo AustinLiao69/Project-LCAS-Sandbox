@@ -13,6 +13,7 @@ ii.	TC-SIT-004: QuickBooking - 快速輸入文字為必填項目
 iii.	TC-SIT-005: FullBookingForm - 完整記帳表單失敗（超時）
 iv.	TC-SIT-006: TransactionQuery - 交易查詢失敗（超時）
 v.	TC-SIT-007: CrossLayerErrorHandling - 錯誤處理覆蓋率不足
+
 根本原因分析
 1. BK_processAPIQuickTransaction 函數問題
 •	輸入驗證機制存在缺陷
