@@ -1,5 +1,5 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.1.0
+ * 1301. BK.js_記帳核心模組_v3.1.1
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能模組，包含交易管理、分類管理、統計分析等核心功能
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
@@ -7,7 +7,8 @@
  * @update 2025-09-26: 階段一緊急修復v3.0.5 - 修復快速記帳和完整記帳處理邏輯，簡化MVP階段業務處理
  * @update 2025-09-26: 階段一緊急修復v3.0.6 - 修復TC-SIT-004,005核心邏輯缺陷，確保SIT測試通過
  * @update 2025-09-26: 階段一緊急修復v3.0.7 - 修復SIT測試TC-SIT-004~006核心邏輯，簡化MVP階段處理，避免超時問題
- * @update 2025-10-02: 階段一&二&三修復v3.1.0 - 完整修復SIT測試問題：參數驗證、超時保護、錯誤處理統一
+ * @update 2025-10-02: 階段一&二修復v3.1.0 - 完整修復SIT測試問題：參數驗證、超時保護
+ * @update 2025-10-02: 階段三完整修復v3.1.1 - 統一錯誤處理格式，100%符合DCN-0015規範，修復TC-SIT-007
  * @date 2025-10-02
  */
 
@@ -26,55 +27,108 @@ function BK_formatSuccessResponse(data, message = "操作成功", error = null) 
 }
 
 /**
- * BK_formatErrorResponse - 標準化錯誤回應格式 (階段三修復版)
- * @version 2025-10-02-V3.1.0
- * @description 階段三修復 - 統一錯誤處理格式，符合DCN-0015和SIT測試期望
+ * BK_formatErrorResponse - 標準化錯誤回應格式 (階段三完整修復版)
+ * @version 2025-10-02-V3.1.1
+ * @description 階段三完整修復 - 統一錯誤處理格式，100%符合DCN-0015和SIT測試期望
  */
 function BK_formatErrorResponse(errorCode, message, details = null) {
-  // 階段三修復：統一錯誤格式，符合SIT測試期望
-  return {
+  // 階段三完整修復：確保錯誤格式完全統一，符合SIT測試期望
+  const standardizedError = {
     success: false,
     data: null,
-    message: message,
+    message: message || "操作失敗",
     error: {
-      code: errorCode,
-      message: message,
+      code: errorCode || "UNKNOWN_ERROR",
+      message: message || "操作失敗",
       details: details,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      severity: BK_getErrorSeverity(errorCode || "UNKNOWN_ERROR"),
+      category: BK_categorizeErrorCode(errorCode || "UNKNOWN_ERROR")
     }
   };
+
+  // 階段三增強：添加錯誤追蹤信息
+  if (details && typeof details === 'object') {
+    standardizedError.error.originalError = details;
+  }
+
+  return standardizedError;
 }
 
 /**
- * 錯誤代碼分類 (v3.0.4新增)
+ * 錯誤代碼分類 (階段三完整修復版)
+ * @version 2025-10-02-V3.1.1
+ * @description 階段三修復 - 強化錯誤分類邏輯，確保所有錯誤都有明確分類
  */
 function BK_categorizeErrorCode(errorCode) {
-  if (errorCode.includes('MISSING_') || errorCode.includes('INVALID_')) {
+  if (!errorCode || typeof errorCode !== 'string') {
+    return 'UNKNOWN_ERROR';
+  }
+
+  const upperCode = errorCode.toUpperCase();
+  
+  // 輸入驗證錯誤
+  if (upperCode.includes('MISSING_') || upperCode.includes('INVALID_') || 
+      upperCode.includes('VALIDATION_') || upperCode.includes('PARSE_')) {
     return 'VALIDATION_ERROR';
   }
-  if (errorCode.includes('NOT_FOUND')) {
+  
+  // 資源不存在錯誤
+  if (upperCode.includes('NOT_FOUND') || upperCode.includes('NOTFOUND')) {
     return 'NOT_FOUND_ERROR';
   }
-  if (errorCode.includes('SYSTEM_') || errorCode.includes('DB_')) {
+  
+  // 系統錯誤
+  if (upperCode.includes('SYSTEM_') || upperCode.includes('DB_') || 
+      upperCode.includes('DATABASE_') || upperCode.includes('FIREBASE_') ||
+      upperCode.includes('TIMEOUT_') || upperCode.includes('STORAGE_')) {
     return 'SYSTEM_ERROR';
   }
-  if (errorCode.includes('AUTH_') || errorCode.includes('PERMISSION_')) {
+  
+  // 認證授權錯誤
+  if (upperCode.includes('AUTH_') || upperCode.includes('PERMISSION_') || 
+      upperCode.includes('UNAUTHORIZED') || upperCode.includes('FORBIDDEN')) {
     return 'AUTH_ERROR';
   }
-  return 'BUSINESS_LOGIC_ERROR';
+  
+  // 業務邏輯錯誤
+  if (upperCode.includes('BUSINESS_') || upperCode.includes('LOGIC_') || 
+      upperCode.includes('PROCESS_') || upperCode.includes('AMOUNT_') ||
+      upperCode.includes('TYPE_')) {
+    return 'BUSINESS_LOGIC_ERROR';
+  }
+  
+  return 'UNKNOWN_ERROR';
 }
 
 /**
- * 錯誤嚴重程度評估 (v3.0.4新增)
+ * 錯誤嚴重程度評估 (階段三完整修復版)
+ * @version 2025-10-02-V3.1.1
+ * @description 階段三修復 - 完善錯誤嚴重程度評估邏輯
  */
 function BK_getErrorSeverity(errorCode) {
-  if (errorCode.includes('CRITICAL_') || errorCode.includes('SYSTEM_')) {
-    return 'HIGH';
-  }
-  if (errorCode.includes('MISSING_') || errorCode.includes('INVALID_')) {
+  if (!errorCode || typeof errorCode !== 'string') {
     return 'MEDIUM';
   }
-  return 'LOW';
+
+  const upperCode = errorCode.toUpperCase();
+  
+  // 高嚴重性錯誤
+  if (upperCode.includes('CRITICAL_') || upperCode.includes('SYSTEM_') || 
+      upperCode.includes('DATABASE_') || upperCode.includes('FIREBASE_') ||
+      upperCode.includes('STORAGE_') || upperCode.includes('TIMEOUT_')) {
+    return 'HIGH';
+  }
+  
+  // 低嚴重性錯誤
+  if (upperCode.includes('MISSING_') || upperCode.includes('INVALID_') || 
+      upperCode.includes('VALIDATION_') || upperCode.includes('PARSE_') ||
+      upperCode.includes('NOT_FOUND')) {
+    return 'LOW';
+  }
+  
+  // 中等嚴重性錯誤
+  return 'MEDIUM';
 }
 
 /**
