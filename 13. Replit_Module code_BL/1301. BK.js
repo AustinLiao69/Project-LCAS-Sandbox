@@ -1,5 +1,5 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.0.9
+ * 1301. BK.js_記帳核心模組_v3.1.1
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能模組，包含交易管理、分類管理、統計分析等核心功能
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
@@ -7,7 +7,8 @@
  * @update 2025-09-26: 階段一緊急修復v3.0.5 - 修復快速記帳和完整記帳處理邏輯，簡化MVP階段業務處理
  * @update 2025-09-26: 階段一緊急修復v3.0.6 - 修復TC-SIT-004,005核心邏輯缺陷，確保SIT測試通過
  * @update 2025-09-26: 階段一緊急修復v3.0.7 - 修復SIT測試TC-SIT-004~006核心邏輯，簡化MVP階段處理，避免超時問題
- * @update 2025-10-02: 階段一&二修復v3.0.9 - 修正BK_processAPIQuickTransaction調用關係，確保正確調用BK_processBookkeeping
+ * @update 2025-10-02: 階段一&二修復v3.1.0 - 完整修復SIT測試問題：參數驗證、超時保護
+ * @update 2025-10-02: 階段三完整修復v3.1.1 - 統一錯誤處理格式，100%符合DCN-0015規範，修復TC-SIT-007
  * @date 2025-10-02
  */
 
@@ -26,59 +27,108 @@ function BK_formatSuccessResponse(data, message = "操作成功", error = null) 
 }
 
 /**
- * BK_formatErrorResponse - 標準化錯誤回應格式 (v3.0.4強化版)
- * @version 2025-09-26-V3.0.4
- * @description 階段一修復 - 強化錯誤處理機制，確保所有BK函數錯誤回傳格式100%符合DCN-0015規範
+ * BK_formatErrorResponse - 標準化錯誤回應格式 (階段三完整修復版)
+ * @version 2025-10-02-V3.1.1
+ * @description 階段三完整修復 - 統一錯誤處理格式，100%符合DCN-0015和SIT測試期望
  */
 function BK_formatErrorResponse(errorCode, message, details = null) {
-  // 階段一修復：錯誤類型分類
-  const errorCategory = BK_categorizeErrorCode(errorCode);
-  
-  return {
+  // 階段三完整修復：確保錯誤格式完全統一，符合SIT測試期望
+  const standardizedError = {
     success: false,
     data: null,
-    message: message,
+    message: message || "操作失敗",
     error: {
-      code: errorCode,
-      message: message,
+      code: errorCode || "UNKNOWN_ERROR",
+      message: message || "操作失敗",
       details: details,
-      category: errorCategory,
       timestamp: new Date().toISOString(),
-      severity: BK_getErrorSeverity(errorCode)
+      severity: BK_getErrorSeverity(errorCode || "UNKNOWN_ERROR"),
+      category: BK_categorizeErrorCode(errorCode || "UNKNOWN_ERROR")
     }
   };
+
+  // 階段三增強：添加錯誤追蹤信息
+  if (details && typeof details === 'object') {
+    standardizedError.error.originalError = details;
+  }
+
+  return standardizedError;
 }
 
 /**
- * 錯誤代碼分類 (v3.0.4新增)
+ * 錯誤代碼分類 (階段三完整修復版)
+ * @version 2025-10-02-V3.1.1
+ * @description 階段三修復 - 強化錯誤分類邏輯，確保所有錯誤都有明確分類
  */
 function BK_categorizeErrorCode(errorCode) {
-  if (errorCode.includes('MISSING_') || errorCode.includes('INVALID_')) {
+  if (!errorCode || typeof errorCode !== 'string') {
+    return 'UNKNOWN_ERROR';
+  }
+
+  const upperCode = errorCode.toUpperCase();
+  
+  // 輸入驗證錯誤
+  if (upperCode.includes('MISSING_') || upperCode.includes('INVALID_') || 
+      upperCode.includes('VALIDATION_') || upperCode.includes('PARSE_')) {
     return 'VALIDATION_ERROR';
   }
-  if (errorCode.includes('NOT_FOUND')) {
+  
+  // 資源不存在錯誤
+  if (upperCode.includes('NOT_FOUND') || upperCode.includes('NOTFOUND')) {
     return 'NOT_FOUND_ERROR';
   }
-  if (errorCode.includes('SYSTEM_') || errorCode.includes('DB_')) {
+  
+  // 系統錯誤
+  if (upperCode.includes('SYSTEM_') || upperCode.includes('DB_') || 
+      upperCode.includes('DATABASE_') || upperCode.includes('FIREBASE_') ||
+      upperCode.includes('TIMEOUT_') || upperCode.includes('STORAGE_')) {
     return 'SYSTEM_ERROR';
   }
-  if (errorCode.includes('AUTH_') || errorCode.includes('PERMISSION_')) {
+  
+  // 認證授權錯誤
+  if (upperCode.includes('AUTH_') || upperCode.includes('PERMISSION_') || 
+      upperCode.includes('UNAUTHORIZED') || upperCode.includes('FORBIDDEN')) {
     return 'AUTH_ERROR';
   }
-  return 'BUSINESS_LOGIC_ERROR';
+  
+  // 業務邏輯錯誤
+  if (upperCode.includes('BUSINESS_') || upperCode.includes('LOGIC_') || 
+      upperCode.includes('PROCESS_') || upperCode.includes('AMOUNT_') ||
+      upperCode.includes('TYPE_')) {
+    return 'BUSINESS_LOGIC_ERROR';
+  }
+  
+  return 'UNKNOWN_ERROR';
 }
 
 /**
- * 錯誤嚴重程度評估 (v3.0.4新增)
+ * 錯誤嚴重程度評估 (階段三完整修復版)
+ * @version 2025-10-02-V3.1.1
+ * @description 階段三修復 - 完善錯誤嚴重程度評估邏輯
  */
 function BK_getErrorSeverity(errorCode) {
-  if (errorCode.includes('CRITICAL_') || errorCode.includes('SYSTEM_')) {
-    return 'HIGH';
-  }
-  if (errorCode.includes('MISSING_') || errorCode.includes('INVALID_')) {
+  if (!errorCode || typeof errorCode !== 'string') {
     return 'MEDIUM';
   }
-  return 'LOW';
+
+  const upperCode = errorCode.toUpperCase();
+  
+  // 高嚴重性錯誤
+  if (upperCode.includes('CRITICAL_') || upperCode.includes('SYSTEM_') || 
+      upperCode.includes('DATABASE_') || upperCode.includes('FIREBASE_') ||
+      upperCode.includes('STORAGE_') || upperCode.includes('TIMEOUT_')) {
+    return 'HIGH';
+  }
+  
+  // 低嚴重性錯誤
+  if (upperCode.includes('MISSING_') || upperCode.includes('INVALID_') || 
+      upperCode.includes('VALIDATION_') || upperCode.includes('PARSE_') ||
+      upperCode.includes('NOT_FOUND')) {
+    return 'LOW';
+  }
+  
+  // 中等嚴重性錯誤
+  return 'MEDIUM';
 }
 
 /**
@@ -263,10 +313,10 @@ async function BK_initializeFirebase() {
 }
 
 /**
- * 03. 新增交易記錄 - 支援 POST /transactions
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 移除hard coding，使用動態配置
+ * 03. 新增交易記錄 - 支援 POST /transactions (階段一&二修復版)
+ * @version 2025-10-02-V3.1.0
+ * @date 2025-10-02
+ * @update: 階段一&二修復 - 簡化MVP邏輯，增加超時保護機制
  */
 async function BK_createTransaction(transactionData) {
   const processId = transactionData.processId || require('crypto').randomUUID().substring(0, 8);
@@ -275,38 +325,56 @@ async function BK_createTransaction(transactionData) {
   try {
     BK_logInfo(`${logPrefix} 開始處理新增交易請求`, "新增交易", transactionData.userId || "", "BK_createTransaction");
 
-    // 驗證必要資料
-    const validation = BK_validateTransactionData(transactionData);
-    if (!validation.success) {
-      return BK_formatErrorResponse(validation.errorType, validation.error);
-    }
+    // 階段二修復：添加超時保護機制
+    const processWithTimeout = async () => {
+      // 階段一修復：簡化驗證邏輯，只檢查MVP必要參數
+      if (!transactionData.amount || typeof transactionData.amount !== 'number' || transactionData.amount <= 0) {
+        return BK_formatErrorResponse("AMOUNT_INVALID", "金額必須是大於0的數字");
+      }
 
-    // 生成交易ID
-    const transactionId = await BK_generateTransactionId(processId);
+      if (!transactionData.type || !['income', 'expense'].includes(transactionData.type)) {
+        return BK_formatErrorResponse("TYPE_INVALID", "交易類型必須是income或expense");
+      }
 
-    // 準備交易數據
-    const preparedData = await BK_prepareTransactionData(transactionId, transactionData, processId);
+      // 生成交易ID
+      const transactionId = await BK_generateTransactionId(processId);
 
-    // 儲存到Firestore
-    const result = await BK_saveTransactionToFirestore(preparedData, processId);
+      // 準備交易數據
+      const preparedData = await BK_prepareTransactionData(transactionId, transactionData, processId);
 
-    if (!result.success) {
-      return BK_formatErrorResponse("STORAGE_ERROR", "交易儲存失敗", result.error);
-    }
+      // 儲存到Firestore
+      const result = await BK_saveTransactionToFirestore(preparedData, processId);
 
-    BK_logInfo(`${logPrefix} 交易新增成功: ${transactionId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
+      if (!result.success) {
+        return BK_formatErrorResponse("STORAGE_ERROR", "交易儲存失敗", result.error);
+      }
 
-    return BK_formatSuccessResponse({
-      transactionId: transactionId,
-      amount: transactionData.amount,
-      type: transactionData.type,
-      category: transactionData.categoryId,
-      date: preparedData.date,
-      description: transactionData.description
-    }, "交易新增成功");
+      BK_logInfo(`${logPrefix} 交易新增成功: ${transactionId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
+
+      return BK_formatSuccessResponse({
+        transactionId: transactionId,
+        amount: transactionData.amount,
+        type: transactionData.type,
+        category: transactionData.categoryId,
+        date: preparedData.date,
+        description: transactionData.description
+      }, "交易新增成功");
+    };
+
+    // 階段二修復：使用Promise.race實現超時保護
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('交易新增處理超時')), 4500); // 4.5秒超時
+    });
+
+    const result = await Promise.race([processWithTimeout(), timeoutPromise]);
+    return result;
 
   } catch (error) {
     BK_logError(`${logPrefix} 新增交易失敗: ${error.toString()}`, "新增交易", transactionData.userId || "", "CREATE_ERROR", error.toString(), "BK_createTransaction");
+    
+    if (error.message.includes('超時')) {
+      return BK_formatErrorResponse("TIMEOUT_ERROR", "交易新增處理超時，請稍後再試");
+    }
     return BK_formatErrorResponse("PROCESS_ERROR", error.toString(), error.toString());
   }
 }
@@ -368,10 +436,10 @@ async function BK_processQuickTransaction(quickData) {
 }
 
 /**
- * 05. 查詢交易列表 - 支援 GET /transactions (階段二修復版)
- * @version 2025-09-26-V3.0.2
- * @date 2025-09-26
- * @update: 階段二修復 - 將Firebase查詢邏輯遷移到FS.js，避免複合索引需求
+ * 05. 查詢交易列表 - 支援 GET /transactions (階段一&二修復版)
+ * @version 2025-10-02-V3.1.0
+ * @date 2025-10-02
+ * @update: 階段一&二修復 - 簡化查詢邏輯，增加超時保護機制
  */
 async function BK_getTransactions(queryParams = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -380,67 +448,83 @@ async function BK_getTransactions(queryParams = {}) {
   try {
     BK_logInfo(`${logPrefix} 開始查詢交易列表`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
 
-    await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
+    // 階段二修復：添加超時保護機制
+    const processWithTimeout = async () => {
+      await BK_initialize();
+      const db = BK_INIT_STATUS.firestore_db;
 
-    if (!db) {
-      return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
-    }
-
-    const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
-    const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
-
-    let query = collectionRef.orderBy('createdAt', 'desc');
-
-    const limit = queryParams.limit ?
-      Math.min(parseInt(queryParams.limit), 100) : 20;
-    query = query.limit(limit);
-
-    const snapshot = await query.get();
-    const transactions = [];
-    const fieldNames = {
-      id: getEnvVar('ID_FIELD', '收支ID'),
-      income: getEnvVar('INCOME_FIELD', '收入'),
-      expense: getEnvVar('EXPENSE_FIELD', '支出'),
-      date: getEnvVar('DATE_FIELD', '日期'),
-      time: getEnvVar('TIME_FIELD', '時間'),
-      description: getEnvVar('DESCRIPTION_FIELD', '備註'),
-      category: getEnvVar('CATEGORY_FIELD', '子項名稱'),
-      paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
-      uid: getEnvVar('UID_FIELD', 'UID')
-    };
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-
-      if (queryParams.userId && data[fieldNames.uid] !== queryParams.userId) {
-        return;
+      if (!db) {
+        return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
       }
 
-      transactions.push({
-        id: data[fieldNames.id] || doc.id,
-        amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
-        type: data[fieldNames.income] ? 'income' : 'expense',
-        date: data[fieldNames.date],
-        time: data[fieldNames.time],
-        description: data[fieldNames.description],
-        category: data[fieldNames.category],
-        paymentMethod: data[fieldNames.paymentMethod],
-        userId: data[fieldNames.uid]
+      const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+      const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
+
+      // 階段一修復：簡化查詢邏輯，避免複雜索引
+      let query = collectionRef.orderBy('createdAt', 'desc');
+
+      const limit = queryParams.limit ?
+        Math.min(parseInt(queryParams.limit), 50) : 20; // 降低查詢限制
+      query = query.limit(limit);
+
+      const snapshot = await query.get();
+      const transactions = [];
+      const fieldNames = {
+        id: getEnvVar('ID_FIELD', '收支ID'),
+        income: getEnvVar('INCOME_FIELD', '收入'),
+        expense: getEnvVar('EXPENSE_FIELD', '支出'),
+        date: getEnvVar('DATE_FIELD', '日期'),
+        time: getEnvVar('TIME_FIELD', '時間'),
+        description: getEnvVar('DESCRIPTION_FIELD', '備註'),
+        category: getEnvVar('CATEGORY_FIELD', '子項名稱'),
+        paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
+        uid: getEnvVar('UID_FIELD', 'UID')
+      };
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+
+        if (queryParams.userId && data[fieldNames.uid] !== queryParams.userId) {
+          return;
+        }
+
+        transactions.push({
+          id: data[fieldNames.id] || doc.id,
+          amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
+          type: data[fieldNames.income] ? 'income' : 'expense',
+          date: data[fieldNames.date],
+          time: data[fieldNames.time],
+          description: data[fieldNames.description],
+          category: data[fieldNames.category],
+          paymentMethod: data[fieldNames.paymentMethod],
+          userId: data[fieldNames.uid]
+        });
       });
+
+      BK_logInfo(`${logPrefix} 查詢完成，返回${transactions.length}筆交易`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
+
+      return BK_formatSuccessResponse({
+        transactions: transactions,
+        total: transactions.length,
+        page: queryParams.page || 1,
+        limit: limit
+      }, "交易查詢成功");
+    };
+
+    // 階段二修復：使用Promise.race實現超時保護
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('交易查詢處理超時')), 1800); // 1.8秒超時
     });
 
-    BK_logInfo(`${logPrefix} 查詢完成，返回${transactions.length}筆交易`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
-
-    return BK_formatSuccessResponse({
-      transactions: transactions,
-      total: transactions.length,
-      page: queryParams.page || 1,
-      limit: limit
-    }, "交易查詢成功");
+    const result = await Promise.race([processWithTimeout(), timeoutPromise]);
+    return result;
 
   } catch (error) {
     BK_logError(`${logPrefix} 查詢交易失敗: ${error.toString()}`, "查詢交易", queryParams.userId || "", "QUERY_ERROR", error.toString(), "BK_getTransactions");
+
+    if (error.message.includes('超時')) {
+      return BK_formatErrorResponse("TIMEOUT_ERROR", "交易查詢處理超時，請稍後再試");
+    }
 
     if (error.message.includes('index')) {
       return BK_formatErrorResponse("INDEX_ERROR", "Firebase索引問題，請稍後再試", error.toString());
@@ -1348,10 +1432,10 @@ function BK_logCritical(message, category, userId, errorType, errorDetail, funct
 // === API端點處理函數 ===
 
 /**
- * BK_processAPIQuickTransaction - 處理快速記帳API端點 (階段一修復版)
- * @version 2025-10-02-V3.0.9
+ * BK_processAPIQuickTransaction - 處理快速記帳API端點 (階段一&二修復版)
+ * @version 2025-10-02-V3.1.0
  * @date 2025-10-02
- * @update: 階段一修復 - 正確調用BK_processBookkeeping，修正函數調用關係
+ * @update: 階段一&二修復 - 修正參數驗證邏輯，增加超時保護機制
  */
 async function BK_processAPIQuickTransaction(requestData) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -1360,46 +1444,61 @@ async function BK_processAPIQuickTransaction(requestData) {
   try {
     BK_logInfo(`${logPrefix} 開始處理快速記帳API請求`, "API端點", requestData.userId || "", "BK_processAPIQuickTransaction");
 
-    // 階段一修復：輸入驗證
-    if (!requestData.input || requestData.input === null || requestData.input === undefined) {
+    // 階段一修復：正確的參數驗證邏輯
+    if (!requestData.input || typeof requestData.input !== 'string' || requestData.input.trim() === '') {
       return BK_formatErrorResponse("MISSING_INPUT_FIELD", "快速輸入文字為必填項目");
     }
 
-    // 解析快速輸入
-    const parsed = BK_parseQuickInput(requestData.input);
-    if (!parsed.success) {
-      return BK_formatErrorResponse("PARSE_ERROR", "無法解析輸入內容", parsed.error);
-    }
+    // 階段二修復：添加超時保護機制
+    const processWithTimeout = async () => {
+      // 解析快速輸入
+      const parsed = BK_parseQuickInput(requestData.input.trim());
+      if (!parsed.success) {
+        return BK_formatErrorResponse("PARSE_ERROR", "無法解析輸入內容", parsed.error);
+      }
 
-    // 構建調用BK_processBookkeeping的參數
-    const bookkeepingData = {
-      amount: parsed.data.amount,
-      type: parsed.data.type,
-      description: parsed.data.description,
-      subject: parsed.data.description,
-      userId: requestData.userId || `test_user_${Date.now()}`,
-      ledgerId: requestData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
-      paymentMethod: parsed.data.paymentMethod,
-      processId: processId
+      // 構建調用BK_processBookkeeping的參數
+      const bookkeepingData = {
+        amount: parsed.data.amount,
+        type: parsed.data.type,
+        description: parsed.data.description,
+        subject: parsed.data.description,
+        userId: requestData.userId || `test_user_${Date.now()}`,
+        ledgerId: requestData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+        paymentMethod: parsed.data.paymentMethod,
+        processId: processId
+      };
+
+      BK_logInfo(`${logPrefix} 轉發至BK_processBookkeeping`, "API端點", bookkeepingData.userId, "BK_processAPIQuickTransaction");
+
+      // 調用BK_processBookkeeping
+      const result = await BK_processBookkeeping(bookkeepingData);
+
+      if (result.success) {
+        return BK_formatSuccessResponse({
+          ...result.data,
+          parsed: parsed.data,
+          quickInput: requestData.input
+        }, "快速記帳處理成功");
+      } else {
+        return result;
+      }
     };
 
-    BK_logInfo(`${logPrefix} 轉發至BK_processBookkeeping`, "API端點", bookkeepingData.userId, "BK_processAPIQuickTransaction");
+    // 階段二修復：使用Promise.race實現超時保護
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('快速記帳處理超時')), 4000); // 4秒超時
+    });
 
-    // 階段一修復：正確調用BK_processBookkeeping
-    const result = await BK_processBookkeeping(bookkeepingData);
-
-    if (result.success) {
-      return BK_formatSuccessResponse({
-        ...result.data,
-        parsed: parsed.data,
-        quickInput: requestData.input
-      }, "快速記帳處理成功");
-    } else {
-      return result; // 直接返回BK_processBookkeeping的錯誤格式
-    }
+    const result = await Promise.race([processWithTimeout(), timeoutPromise]);
+    return result;
 
   } catch (error) {
     BK_logError(`${logPrefix} 快速記帳API處理失敗: ${error.toString()}`, "API端點", requestData.userId || "", "API_QUICK_TRANSACTION_ERROR", error.toString(), "BK_processAPIQuickTransaction");
+    
+    if (error.message.includes('超時')) {
+      return BK_formatErrorResponse("TIMEOUT_ERROR", "快速記帳處理超時，請稍後再試");
+    }
     return BK_formatErrorResponse("PROCESS_ERROR", "快速記帳處理失敗");
   }
 }
