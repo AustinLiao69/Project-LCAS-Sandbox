@@ -1,5 +1,5 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.1.1
+ * 1301. BK.js_記帳核心模組_v3.1.2
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能模組，包含交易管理、分類管理、統計分析等核心功能
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
@@ -9,6 +9,7 @@
  * @update 2025-09-26: 階段一緊急修復v3.0.7 - 修復SIT測試TC-SIT-004~006核心邏輯，簡化MVP階段處理，避免超時問題
  * @update 2025-10-02: 階段一&二修復v3.1.0 - 完整修復SIT測試問題：參數驗證、超時保護
  * @update 2025-10-02: 階段三完整修復v3.1.1 - 統一錯誤處理格式，100%符合DCN-0015規範，修復TC-SIT-007
+ * @update 2025-10-02: 階段二簡化優化v3.1.2 - 移除冗餘API包裝函數，簡化調用鏈，提升性能
  * @date 2025-10-02
  */
 
@@ -1431,168 +1432,11 @@ function BK_logCritical(message, category, userId, errorType, errorDetail, funct
 
 // === API端點處理函數 ===
 
-/**
- * BK_processAPIQuickTransaction - 處理快速記帳API端點 (階段一&二修復版)
- * @version 2025-10-02-V3.1.0
- * @date 2025-10-02
- * @update: 階段一&二修復 - 修正參數驗證邏輯，增加超時保護機制
- */
-async function BK_processAPIQuickTransaction(requestData) {
-  const processId = require('crypto').randomUUID().substring(0, 8);
-  const logPrefix = `[${processId}] BK_processAPIQuickTransaction:`;
 
-  try {
-    BK_logInfo(`${logPrefix} 開始處理快速記帳API請求`, "API端點", requestData.userId || "", "BK_processAPIQuickTransaction");
 
-    // 階段一修復：正確的參數驗證邏輯
-    if (!requestData.input || typeof requestData.input !== 'string' || requestData.input.trim() === '') {
-      return BK_formatErrorResponse("MISSING_INPUT_FIELD", "快速輸入文字為必填項目");
-    }
 
-    // 階段二修復：添加超時保護機制
-    const processWithTimeout = async () => {
-      // 解析快速輸入
-      const parsed = BK_parseQuickInput(requestData.input.trim());
-      if (!parsed.success) {
-        return BK_formatErrorResponse("PARSE_ERROR", "無法解析輸入內容", parsed.error);
-      }
 
-      // 構建調用BK_processBookkeeping的參數
-      const bookkeepingData = {
-        amount: parsed.data.amount,
-        type: parsed.data.type,
-        description: parsed.data.description,
-        subject: parsed.data.description,
-        userId: requestData.userId || `test_user_${Date.now()}`,
-        ledgerId: requestData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
-        paymentMethod: parsed.data.paymentMethod,
-        processId: processId
-      };
 
-      BK_logInfo(`${logPrefix} 轉發至BK_processBookkeeping`, "API端點", bookkeepingData.userId, "BK_processAPIQuickTransaction");
-
-      // 調用BK_processBookkeeping
-      const result = await BK_processBookkeeping(bookkeepingData);
-
-      if (result.success) {
-        return BK_formatSuccessResponse({
-          ...result.data,
-          parsed: parsed.data,
-          quickInput: requestData.input
-        }, "快速記帳處理成功");
-      } else {
-        return result;
-      }
-    };
-
-    // 階段二修復：使用Promise.race實現超時保護
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('快速記帳處理超時')), 4000); // 4秒超時
-    });
-
-    const result = await Promise.race([processWithTimeout(), timeoutPromise]);
-    return result;
-
-  } catch (error) {
-    BK_logError(`${logPrefix} 快速記帳API處理失敗: ${error.toString()}`, "API端點", requestData.userId || "", "API_QUICK_TRANSACTION_ERROR", error.toString(), "BK_processAPIQuickTransaction");
-    
-    if (error.message.includes('超時')) {
-      return BK_formatErrorResponse("TIMEOUT_ERROR", "快速記帳處理超時，請稍後再試");
-    }
-    return BK_formatErrorResponse("PROCESS_ERROR", "快速記帳處理失敗");
-  }
-}
-
-/**
- * BK_processAPITransaction - 處理交易記錄API端點 (階段一修復版)
- * @version 2025-10-02-V3.0.9
- * @date 2025-10-02
- * @update: 階段一修復 - 改為調用BK_createTransaction，避免重複邏輯
- */
-async function BK_processAPITransaction(requestData) {
-  const processId = require('crypto').randomUUID().substring(0, 8);
-  const logPrefix = `[${processId}] BK_processAPITransaction:`;
-
-  try {
-    BK_logInfo(`${logPrefix} 開始處理交易記錄API請求`, "API端點", requestData.userId || "", "BK_processAPITransaction");
-
-    // 構建調用BK_createTransaction的參數
-    const transactionData = {
-      amount: requestData.amount,
-      type: requestData.type,
-      description: requestData.description,
-      categoryId: requestData.categoryId,
-      accountId: requestData.accountId,
-      ledgerId: requestData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
-      paymentMethod: requestData.paymentMethod,
-      date: requestData.date,
-      userId: requestData.userId || `test_user_${Date.now()}`,
-      processId: processId
-    };
-
-    BK_logInfo(`${logPrefix} 轉發至BK_createTransaction`, "API端點", transactionData.userId, "BK_processAPITransaction");
-
-    // 階段一修復：直接調用BK_createTransaction
-    const result = await BK_createTransaction(transactionData);
-
-    if (result.success) {
-      return BK_formatSuccessResponse(result.data, "交易新增成功");
-    } else {
-      return result; // 直接返回BK_createTransaction的錯誤格式
-    }
-
-  } catch (error) {
-    BK_logError(`${logPrefix} 交易記錄API處理失敗: ${error.toString()}`, "API端點", requestData.userId || "", "API_TRANSACTION_ERROR", error.toString(), "BK_processAPITransaction");
-    return BK_formatErrorResponse("PROCESS_ERROR", "交易記錄處理失敗");
-  }
-}
-
-/**
- * BK_processAPIGetTransactions - 處理交易查詢API端點 (階段一修復版)
- * @version 2025-10-02-V3.0.9
- * @date 2025-10-02
- * @update: 階段一修復 - 改為調用BK_getTransactions，避免重複邏輯
- */
-async function BK_processAPIGetTransactions(queryParams = {}) {
-  const processId = require('crypto').randomUUID().substring(0, 8);
-  const logPrefix = `[${processId}] BK_processAPIGetTransactions:`;
-
-  try {
-    BK_logInfo(`${logPrefix} 開始處理交易查詢API請求`, "API端點", queryParams.userId || "", "BK_processAPIGetTransactions");
-
-    // 構建調用BK_getTransactions的參數
-    const queryData = {
-      userId: queryParams.userId,
-      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
-      limit: queryParams.limit,
-      page: queryParams.page,
-      startDate: queryParams.startDate,
-      endDate: queryParams.endDate,
-      type: queryParams.type,
-      categoryId: queryParams.categoryId,
-      minAmount: queryParams.minAmount,
-      maxAmount: queryParams.maxAmount,
-      paymentMethod: queryParams.paymentMethod,
-      orderBy: queryParams.orderBy,
-      orderDirection: queryParams.orderDirection
-    };
-
-    BK_logInfo(`${logPrefix} 轉發至BK_getTransactions`, "API端點", queryParams.userId || "", "BK_processAPIGetTransactions");
-
-    // 階段一修復：直接調用BK_getTransactions
-    const result = await BK_getTransactions(queryData);
-
-    if (result.success) {
-      return BK_formatSuccessResponse(result.data, "交易查詢成功");
-    } else {
-      return result; // 直接返回BK_getTransactions的錯誤格式
-    }
-
-  } catch (error) {
-    BK_logError(`${logPrefix} 交易查詢API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_GET_TRANSACTIONS_ERROR", error.toString(), "BK_processAPIGetTransactions");
-    return BK_formatErrorResponse("QUERY_ERROR", "交易查詢失敗");
-  }
-}
 
 /**
  * BK_processAPIGetTransactionDetail - 處理單一交易詳情API端點
@@ -2947,10 +2791,7 @@ module.exports = {
   BK_validateImportData,
   BK_processImportResult,
 
-  // DCN-0015 階段二：新增API處理函數
-  BK_processAPITransaction,
-  BK_processAPIQuickTransaction,
-  BK_processAPIGetTransactions,
+  // DCN-0015 階段二：API處理函數（已移除冗餘包裝函數）
   BK_processAPIGetTransactionDetail,
   BK_processAPIUpdateTransaction,
   BK_processAPIDeleteTransaction,
