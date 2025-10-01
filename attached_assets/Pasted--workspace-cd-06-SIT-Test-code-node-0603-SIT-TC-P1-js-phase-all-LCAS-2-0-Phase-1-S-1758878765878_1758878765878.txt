@@ -1,0 +1,94 @@
+~/workspace$ cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=all
+🚀 LCAS 2.0 Phase 1 SIT測試開始執行...
+📅 測試開始時間: 2025/9/26 下午5:25:32
+🔄 SIT測試執行流程啟動...
+🔄 開始載入SIT測試資料...
+⚠️ 關鍵測試資料驗證失敗: [ '效能測試-併發操作資料缺失' ]
+🔧 嘗試使用預設資料修復缺失項目...
+🔧 修復concurrent_operations資料...
+✅ 關鍵測試資料修復成功
+✅ 測試資料載入並驗證成功
+📊 載入的測試案例資料: 14 個類別
+🔍 檢查API服務就緒狀態...
+🔄 服務就緒檢查嘗試 1/10...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ API服務已就緒
+🔍 檢查Firebase配額狀態...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ Firebase配額狀態正常
+✅ 前置檢查完成，開始執行測試案例...
+🎯 執行測試階段: all
+🔄 執行完整測試流程（所有階段）...
+
+📋 ===== 階段一：單點整合驗證測試 =====
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段一測試
+📋 階段一：單點整合驗證測試 (TC-SIT-001~007)
+🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理
+NaN
+📊 階段一測試案例總數：7 個
+📅 預估執行時間：7 分鐘
+
+
+📝 執行階段一測試 1/7: TC-SIT-001: UserRegistration
+  ✅ 統一回應格式驗證 /api/v1/auth/register: A+ (Score: 100.0%)
+✅ PASS TC-SIT-001 (23ms)
+
+📝 執行階段一測試 2/7: TC-SIT-002: UserLogin
+  ✅ 統一回應格式驗證 /api/v1/auth/login: A+ (Score: 100.0%)
+✅ PASS TC-SIT-002 (14ms)
+
+📝 執行階段一測試 3/7: TC-SIT-003: FirebaseAuthIntegration
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-003 (804ms)
+   🚨 錯誤: Firebase Auth整合測試未完全通過
+   🏷️  錯誤類型: FIREBASE_ERROR
+   💡 建議: 檢查Firebase配額和連線設定
+
+✅ 用戶流程與認證 完成，休息1秒後繼續...
+
+📝 執行階段一測試 4/7: TC-SIT-004: QuickBooking
+❌ FAIL TC-SIT-004 (5ms)
+   ℹ️ 錯誤: 快速輸入文字為必填項目
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 5/7: TC-SIT-005: FullBookingForm
+❌ FAIL TC-SIT-005 (5.00s)
+   ⚠️ 錯誤: timeout of 5000ms exceeded
+   🏷️  錯誤類型: NETWORK_ERROR
+   💡 建議: 檢查網路連線狀態，考慮增加重試機制
+
+📝 執行階段一測試 6/7: TC-SIT-006: TransactionQuery
+❌ FAIL TC-SIT-006 (2.00s)
+   ⚠️ 錯誤: timeout of 2000ms exceeded
+   🏷️  錯誤類型: NETWORK_ERROR
+   💡 建議: 檢查網路連線狀態，考慮增加重試機制
+
+✅ 記帳功能與查詢 完成，休息1秒後繼續...
+
+📝 執行階段一測試 7/7: TC-SIT-007: CrossLayerErrorHandling
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-007 (150ms)
+   ℹ️ 錯誤: 錯誤處理覆蓋率不足
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+NaN
+📊 階段一測試執行完成
+✅ 通過測試: 2/7
+📈 成功率: 28.57%
+⏱️  總執行時間: 10.082秒
+
+📋 階段一測試報告摘要
+NaN
+用戶認證與管理: 2/3 (66.7%)
+記帳功能測試: 0/2 (0.0%)
+錯誤處理: 0/2 (0.0%)
+
+🎯 階段一關鍵指標
+NaN
+基礎功能整合度: 28.6%
+用戶註冊流程: ✅ 通過
+用戶登入驗證: ✅ 通過
+錯誤處理覆蓋率: 66.67
