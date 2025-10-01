@@ -58,9 +58,177 @@ function BK_formatErrorResponse(errorCode, message, details = null) {
 }
 
 /**
- * 錯誤代碼分類 (階段三完整修復版)
- * @version 2025-10-02-V3.1.1
- * @description 階段三修復 - 強化錯誤分類邏輯，確保所有錯誤都有明確分類
+ * Firebase特定錯誤識別和處理 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ * @description 階段二修復 - Firebase特定錯誤識別和處理機制
+ */
+function BK_identifyFirebaseError(error) {
+  const errorMessage = error.message || error.toString();
+  const errorCode = error.code || '';
+
+  // Firebase連線錯誤
+  if (errorMessage.includes('UNAVAILABLE') || errorMessage.includes('DEADLINE_EXCEEDED')) {
+    return {
+      type: 'FIREBASE_CONNECTION_ERROR',
+      severity: 'HIGH',
+      recoveryAction: 'RETRY_WITH_BACKOFF',
+      suggestion: '檢查網路連線，稍後重試'
+    };
+  }
+
+  // Firebase索引錯誤
+  if (errorMessage.includes('index') || errorMessage.includes('requires an index')) {
+    return {
+      type: 'FIREBASE_INDEX_ERROR',
+      severity: 'MEDIUM',
+      recoveryAction: 'USE_ALTERNATIVE_QUERY',
+      suggestion: '使用替代查詢方式或建立相應索引'
+    };
+  }
+
+  // Firebase權限錯誤
+  if (errorMessage.includes('PERMISSION_DENIED') || errorCode === 'permission-denied') {
+    return {
+      type: 'FIREBASE_PERMISSION_ERROR',
+      severity: 'HIGH',
+      recoveryAction: 'CHECK_AUTH_STATUS',
+      suggestion: '檢查使用者認證狀態或Firestore規則'
+    };
+  }
+
+  // Firebase配額超限
+  if (errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+    return {
+      type: 'FIREBASE_QUOTA_ERROR',
+      severity: 'HIGH',
+      recoveryAction: 'REDUCE_OPERATIONS',
+      suggestion: '減少查詢頻率或升級Firebase方案'
+    };
+  }
+
+  // 一般Firebase錯誤
+  if (errorMessage.includes('firebase') || errorMessage.includes('firestore')) {
+    return {
+      type: 'FIREBASE_GENERAL_ERROR',
+      severity: 'MEDIUM',
+      recoveryAction: 'LOG_AND_RETRY',
+      suggestion: '記錄錯誤詳情並重試操作'
+    };
+  }
+
+  return {
+    type: 'UNKNOWN_ERROR',
+    severity: 'LOW',
+    recoveryAction: 'LOG_ONLY',
+    suggestion: '記錄錯誤供進一步分析'
+  };
+}
+
+/**
+ * 錯誤恢復建議機制 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ * @description 階段二修復 - 提供具體的錯誤恢復建議
+ */
+function BK_getRecoveryActions(errorType) {
+  const recoveryMap = {
+    'FIREBASE_CONNECTION_ERROR': {
+      immediate: '等待2秒後重試',
+      shortTerm: '檢查網路連線狀態',
+      longTerm: '考慮實作離線模式'
+    },
+    'FIREBASE_INDEX_ERROR': {
+      immediate: '改用簡化查詢方式',
+      shortTerm: '建立必要的Firebase索引',
+      longTerm: '優化查詢邏輯設計'
+    },
+    'FIREBASE_PERMISSION_ERROR': {
+      immediate: '重新驗證使用者身份',
+      shortTerm: '檢查Firestore安全規則',
+      longTerm: '優化權限管理機制'
+    },
+    'FIREBASE_QUOTA_ERROR': {
+      immediate: '暫停非必要操作',
+      shortTerm: '實作請求限流機制',
+      longTerm: '升級Firebase方案或優化查詢'
+    }
+  };
+
+  return recoveryMap[errorType] || {
+    immediate: '記錄錯誤詳情',
+    shortTerm: '分析錯誤模式',
+    longTerm: '改善錯誤處理機制'
+  };
+}
+
+/**
+ * 錯誤統計和監控功能 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ * @description 階段二修復 - 錯誤統計和監控功能
+ */
+let BK_ERROR_STATS = {
+  firebase_connection: 0,
+  firebase_index: 0,
+  firebase_permission: 0,
+  firebase_quota: 0,
+  validation_error: 0,
+  timeout_error: 0,
+  unknown_error: 0,
+  total_errors: 0,
+  last_reset: Date.now()
+};
+
+function BK_trackError(errorType) {
+  BK_ERROR_STATS.total_errors++;
+  
+  switch (errorType) {
+    case 'FIREBASE_CONNECTION_ERROR':
+      BK_ERROR_STATS.firebase_connection++;
+      break;
+    case 'FIREBASE_INDEX_ERROR':
+      BK_ERROR_STATS.firebase_index++;
+      break;
+    case 'FIREBASE_PERMISSION_ERROR':
+      BK_ERROR_STATS.firebase_permission++;
+      break;
+    case 'FIREBASE_QUOTA_ERROR':
+      BK_ERROR_STATS.firebase_quota++;
+      break;
+    case 'VALIDATION_ERROR':
+      BK_ERROR_STATS.validation_error++;
+      break;
+    case 'TIMEOUT_ERROR':
+      BK_ERROR_STATS.timeout_error++;
+      break;
+    default:
+      BK_ERROR_STATS.unknown_error++;
+  }
+
+  // 每小時重置統計
+  if (Date.now() - BK_ERROR_STATS.last_reset > 3600000) {
+    BK_resetErrorStats();
+  }
+}
+
+function BK_resetErrorStats() {
+  Object.keys(BK_ERROR_STATS).forEach(key => {
+    if (key !== 'last_reset') {
+      BK_ERROR_STATS[key] = 0;
+    }
+  });
+  BK_ERROR_STATS.last_reset = Date.now();
+}
+
+function BK_getErrorStats() {
+  return {
+    ...BK_ERROR_STATS,
+    uptime_hours: (Date.now() - BK_ERROR_STATS.last_reset) / 3600000
+  };
+}
+
+/**
+ * 錯誤代碼分類 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ * @description 階段二修復 - 整合Firebase特定錯誤識別
  */
 function BK_categorizeErrorCode(errorCode) {
   if (!errorCode || typeof errorCode !== 'string') {
@@ -68,6 +236,11 @@ function BK_categorizeErrorCode(errorCode) {
   }
 
   const upperCode = errorCode.toUpperCase();
+  
+  // Firebase特定錯誤
+  if (upperCode.includes('FIREBASE_')) {
+    return upperCode;
+  }
   
   // 輸入驗證錯誤
   if (upperCode.includes('MISSING_') || upperCode.includes('INVALID_') || 
@@ -82,8 +255,8 @@ function BK_categorizeErrorCode(errorCode) {
   
   // 系統錯誤
   if (upperCode.includes('SYSTEM_') || upperCode.includes('DB_') || 
-      upperCode.includes('DATABASE_') || upperCode.includes('FIREBASE_') ||
-      upperCode.includes('TIMEOUT_') || upperCode.includes('STORAGE_')) {
+      upperCode.includes('DATABASE_') || upperCode.includes('TIMEOUT_') || 
+      upperCode.includes('STORAGE_')) {
     return 'SYSTEM_ERROR';
   }
   
@@ -475,10 +648,10 @@ async function BK_processQuickTransaction(quickData) {
 }
 
 /**
- * 05. 查詢交易列表 - 支援 GET /transactions (階段一&二修復版)
- * @version 2025-10-02-V3.1.0
+ * 05. 查詢交易列表 - 支援 GET /transactions (階段二修復版)
+ * @version 2025-10-02-V3.1.2
  * @date 2025-10-02
- * @update: 階段一&二修復 - 簡化查詢邏輯，增加超時保護機制
+ * @update: 階段二修復 - 實作降級處理機制和簡化查詢邏輯
  */
 async function BK_getTransactions(queryParams = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -487,7 +660,7 @@ async function BK_getTransactions(queryParams = {}) {
   try {
     BK_logInfo(`${logPrefix} 開始查詢交易列表`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
 
-    // 階段二修復：添加超時保護機制
+    // 階段二修復：添加超時保護和降級處理機制
     const processWithTimeout = async () => {
       await BK_initialize();
       const db = BK_INIT_STATUS.firestore_db;
@@ -499,58 +672,47 @@ async function BK_getTransactions(queryParams = {}) {
       const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
       const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
 
-      // 階段一修復：簡化查詢邏輯，避免複雜索引
-      let query = collectionRef.orderBy('createdAt', 'desc');
+      // 階段二修復：實作降級查詢策略
+      let queryResult = null;
+      let queryMethod = 'standard';
 
-      const limit = queryParams.limit ?
-        Math.min(parseInt(queryParams.limit), 50) : 20; // 降低查詢限制
-      query = query.limit(limit);
-
-      const snapshot = await query.get();
-      const transactions = [];
-      const fieldNames = {
-        id: getEnvVar('ID_FIELD', '收支ID'),
-        income: getEnvVar('INCOME_FIELD', '收入'),
-        expense: getEnvVar('EXPENSE_FIELD', '支出'),
-        date: getEnvVar('DATE_FIELD', '日期'),
-        time: getEnvVar('TIME_FIELD', '時間'),
-        description: getEnvVar('DESCRIPTION_FIELD', '備註'),
-        category: getEnvVar('CATEGORY_FIELD', '子項名稱'),
-        paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
-        uid: getEnvVar('UID_FIELD', 'UID')
-      };
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-
-        if (queryParams.userId && data[fieldNames.uid] !== queryParams.userId) {
-          return;
+      try {
+        // 嘗試標準查詢
+        queryResult = await BK_performStandardQuery(collectionRef, queryParams);
+        queryMethod = 'standard';
+      } catch (error) {
+        BK_logWarning(`${logPrefix} 標準查詢失敗，嘗試降級查詢: ${error.message}`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
+        
+        // Firebase特定錯誤識別
+        const firebaseError = BK_identifyFirebaseError(error);
+        BK_trackError(firebaseError.type);
+        
+        // 降級查詢策略
+        try {
+          queryResult = await BK_performDegradedQuery(collectionRef, queryParams);
+          queryMethod = 'degraded';
+        } catch (degradedError) {
+          BK_logError(`${logPrefix} 降級查詢也失敗: ${degradedError.message}`, "查詢交易", queryParams.userId || "", "DEGRADED_QUERY_ERROR", degradedError.toString(), "BK_getTransactions");
+          
+          // 最後嘗試最簡單的查詢
+          queryResult = await BK_performMinimalQuery(collectionRef, queryParams);
+          queryMethod = 'minimal';
         }
+      }
 
-        transactions.push({
-          id: data[fieldNames.id] || doc.id,
-          amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
-          type: data[fieldNames.income] ? 'income' : 'expense',
-          date: data[fieldNames.date],
-          time: data[fieldNames.time],
-          description: data[fieldNames.description],
-          category: data[fieldNames.category],
-          paymentMethod: data[fieldNames.paymentMethod],
-          userId: data[fieldNames.uid]
-        });
-      });
-
-      BK_logInfo(`${logPrefix} 查詢完成，返回${transactions.length}筆交易`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
+      BK_logInfo(`${logPrefix} 查詢完成，使用${queryMethod}方法，返回${queryResult.transactions.length}筆交易`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
 
       return BK_formatSuccessResponse({
-        transactions: transactions,
-        total: transactions.length,
-        page: queryParams.page || 1,
-        limit: limit
+        ...queryResult,
+        queryMethod: queryMethod,
+        performance: {
+          method: queryMethod,
+          degraded: queryMethod !== 'standard'
+        }
       }, "交易查詢成功");
     };
 
-    // 階段一&二修復：調整超時時間以解決SIT測試失敗問題
+    // 階段二修復：調整超時時間
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('交易查詢處理超時')), 8000); // 8秒超時
     });
@@ -559,18 +721,132 @@ async function BK_getTransactions(queryParams = {}) {
     return result;
 
   } catch (error) {
+    // 階段二修復：強化錯誤處理
+    const firebaseError = BK_identifyFirebaseError(error);
+    BK_trackError(firebaseError.type);
+    
+    const recoveryActions = BK_getRecoveryActions(firebaseError.type);
+    
     BK_logError(`${logPrefix} 查詢交易失敗: ${error.toString()}`, "查詢交易", queryParams.userId || "", "QUERY_ERROR", error.toString(), "BK_getTransactions");
 
     if (error.message.includes('超時')) {
-      return BK_formatErrorResponse("TIMEOUT_ERROR", "交易查詢處理超時，請稍後再試");
+      BK_trackError('TIMEOUT_ERROR');
+      return BK_formatErrorResponse("TIMEOUT_ERROR", "交易查詢處理超時，請稍後再試", {
+        suggestion: recoveryActions.immediate,
+        errorStats: BK_getErrorStats()
+      });
     }
 
-    if (error.message.includes('index')) {
-      return BK_formatErrorResponse("INDEX_ERROR", "Firebase索引問題，請稍後再試", error.toString());
-    }
-
-    return BK_formatErrorResponse("QUERY_ERROR", error.toString(), error.toString());
+    return BK_formatErrorResponse(firebaseError.type, firebaseError.suggestion, {
+      recoveryActions: recoveryActions,
+      errorStats: BK_getErrorStats(),
+      severity: firebaseError.severity
+    });
   }
+}
+
+/**
+ * 標準查詢方法 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ */
+async function BK_performStandardQuery(collectionRef, queryParams) {
+  let query = collectionRef.orderBy('createdAt', 'desc');
+  
+  // 用戶過濾
+  if (queryParams.userId) {
+    const uidField = getEnvVar('UID_FIELD', 'UID');
+    query = query.where(uidField, '==', queryParams.userId);
+  }
+  
+  const limit = queryParams.limit ? Math.min(parseInt(queryParams.limit), 50) : 20;
+  query = query.limit(limit);
+
+  const snapshot = await query.get();
+  return BK_processQuerySnapshot(snapshot, queryParams);
+}
+
+/**
+ * 降級查詢方法 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ */
+async function BK_performDegradedQuery(collectionRef, queryParams) {
+  // 降級策略：只使用時間排序，後端過濾其他條件
+  let query = collectionRef.orderBy('createdAt', 'desc');
+  
+  const limit = Math.min(parseInt(queryParams.limit || 20), 100); // 增加limit補償過濾
+  query = query.limit(limit);
+
+  const snapshot = await query.get();
+  return BK_processQuerySnapshot(snapshot, queryParams, true); // 啟用後端過濾
+}
+
+/**
+ * 最簡查詢方法 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ */
+async function BK_performMinimalQuery(collectionRef, queryParams) {
+  // 最簡策略：只取最新20筆，全部後端處理
+  let query = collectionRef.limit(20);
+
+  const snapshot = await query.get();
+  return BK_processQuerySnapshot(snapshot, queryParams, true);
+}
+
+/**
+ * 查詢結果處理 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ */
+function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = false) {
+  const transactions = [];
+  const fieldNames = {
+    id: getEnvVar('ID_FIELD', '收支ID'),
+    income: getEnvVar('INCOME_FIELD', '收入'),
+    expense: getEnvVar('EXPENSE_FIELD', '支出'),
+    date: getEnvVar('DATE_FIELD', '日期'),
+    time: getEnvVar('TIME_FIELD', '時間'),
+    description: getEnvVar('DESCRIPTION_FIELD', '備註'),
+    category: getEnvVar('CATEGORY_FIELD', '子項名稱'),
+    paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
+    uid: getEnvVar('UID_FIELD', 'UID')
+  };
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+
+    // 後端過濾邏輯
+    if (enableBackendFilter) {
+      if (queryParams.userId && data[fieldNames.uid] !== queryParams.userId) {
+        return;
+      }
+      
+      if (queryParams.type) {
+        const hasIncome = data[fieldNames.income] && parseFloat(data[fieldNames.income]) > 0;
+        const hasExpense = data[fieldNames.expense] && parseFloat(data[fieldNames.expense]) > 0;
+        
+        if (queryParams.type === 'income' && !hasIncome) return;
+        if (queryParams.type === 'expense' && !hasExpense) return;
+      }
+    }
+
+    transactions.push({
+      id: data[fieldNames.id] || doc.id,
+      amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
+      type: data[fieldNames.income] ? 'income' : 'expense',
+      date: data[fieldNames.date],
+      time: data[fieldNames.time],
+      description: data[fieldNames.description],
+      category: data[fieldNames.category],
+      paymentMethod: data[fieldNames.paymentMethod],
+      userId: data[fieldNames.uid]
+    });
+  });
+
+  return {
+    transactions: transactions,
+    total: transactions.length,
+    page: queryParams.page || 1,
+    limit: queryParams.limit || 20
+  };
 }
 
 /**
@@ -2845,5 +3121,12 @@ module.exports = {
 
   // DCN-0015 階段一：標準化回應格式函數
   BK_formatSuccessResponse,
-  BK_formatErrorResponse
+  BK_formatErrorResponse,
+
+  // 階段二修復：錯誤處理和監控函數
+  BK_identifyFirebaseError,
+  BK_getRecoveryActions,
+  BK_trackError,
+  BK_getErrorStats,
+  BK_resetErrorStats
 };
