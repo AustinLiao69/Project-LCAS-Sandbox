@@ -1,5 +1,5 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.1.2
+ * 1301. BK.js_記帳核心模組_v3.1.3
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能模組，包含交易管理、分類管理、統計分析等核心功能
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
@@ -10,6 +10,7 @@
  * @update 2025-10-02: 階段一&二修復v3.1.0 - 完整修復SIT測試問題：參數驗證、超時保護
  * @update 2025-10-02: 階段三完整修復v3.1.1 - 統一錯誤處理格式，100%符合DCN-0015規範，修復TC-SIT-007
  * @update 2025-10-02: 階段二簡化優化v3.1.2 - 移除冗餘API包裝函數，簡化調用鏈，提升性能
+ * @update 2025-10-02: 階段三清理優化v3.1.3 - 清理module.exports，移除已刪除函數的導出，完成架構簡化
  * @date 2025-10-02
  */
 
@@ -2791,7 +2792,7 @@ module.exports = {
   BK_validateImportData,
   BK_processImportResult,
 
-  // DCN-0015 階段二：API處理函數（已移除冗餘包裝函數）
+  // DCN-0015 階段三：API處理函數（已清理冗餘導出）
   BK_processAPIGetTransactionDetail,
   BK_processAPIUpdateTransaction,
   BK_processAPIDeleteTransaction,
