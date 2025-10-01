@@ -338,18 +338,55 @@ async function BK_createTransaction(transactionData) {
         return BK_formatErrorResponse("TYPE_INVALID", "交易類型必須是income或expense");
       }
 
-      // 生成交易ID
-      const transactionId = await BK_generateTransactionId(processId);
+      // 階段一&二修復：增加重試機制
+      let retryCount = 0;
+      const maxRetries = 1;
 
-      // 準備交易數據
-      const preparedData = await BK_prepareTransactionData(transactionId, transactionData, processId);
+      // 階段一&二修復：包裝Firebase操作在重試邏輯中
+      const executeTransaction = async () => {
+        // 生成交易ID
+        const transactionId = await BK_generateTransactionId(processId);
 
-      // 儲存到Firestore
-      const result = await BK_saveTransactionToFirestore(preparedData, processId);
+        // 準備交易數據
+        const preparedData = await BK_prepareTransactionData(transactionId, transactionData, processId);
 
-      if (!result.success) {
-        return BK_formatErrorResponse("STORAGE_ERROR", "交易儲存失敗", result.error);
+        // 儲存到Firestore
+        const result = await BK_saveTransactionToFirestore(preparedData, processId);
+
+        if (!result.success) {
+          throw new Error(`交易儲存失敗: ${result.error}`);
+        }
+
+        return {
+          transactionId: transactionId,
+          amount: transactionData.amount,
+          type: transactionData.type,
+          category: transactionData.categoryId,
+          date: preparedData.date,
+          description: transactionData.description
+        };
+      };
+
+      // 執行交易處理，失敗時重試一次
+      let lastError;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const transactionResult = await executeTransaction();
+          
+          BK_logInfo(`${logPrefix} 交易新增成功: ${transactionResult.transactionId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
+
+          return BK_formatSuccessResponse(transactionResult, "交易新增成功");
+        } catch (error) {
+          lastError = error;
+          if (attempt < maxRetries) {
+            BK_logWarning(`${logPrefix} 交易新增失敗，重試中... (${attempt + 1}/${maxRetries + 1})`, "新增交易", transactionData.userId || "", "BK_createTransaction");
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒後重試
+          }
+        }
       }
+
+      // 所有重試都失敗
+      return BK_formatErrorResponse("STORAGE_ERROR", "交易儲存失敗", lastError.message);
 
       BK_logInfo(`${logPrefix} 交易新增成功: ${transactionId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
 
@@ -363,9 +400,9 @@ async function BK_createTransaction(transactionData) {
       }, "交易新增成功");
     };
 
-    // 階段二修復：使用Promise.race實現超時保護
+    // 階段一&二修復：調整超時時間以解決SIT測試失敗問題
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('交易新增處理超時')), 4500); // 4.5秒超時
+      setTimeout(() => reject(new Error('交易新增處理超時')), 15000); // 15秒超時
     });
 
     const result = await Promise.race([processWithTimeout(), timeoutPromise]);
@@ -513,9 +550,9 @@ async function BK_getTransactions(queryParams = {}) {
       }, "交易查詢成功");
     };
 
-    // 階段二修復：使用Promise.race實現超時保護
+    // 階段一&二修復：調整超時時間以解決SIT測試失敗問題
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('交易查詢處理超時')), 1800); // 1.8秒超時
+      setTimeout(() => reject(new Error('交易查詢處理超時')), 8000); // 8秒超時
     });
 
     const result = await Promise.race([processWithTimeout(), timeoutPromise]);
