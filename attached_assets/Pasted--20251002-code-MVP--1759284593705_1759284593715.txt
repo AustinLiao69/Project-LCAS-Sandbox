@@ -1,0 +1,113 @@
+-----------------------------------------
+20251002
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據您的問題，我來詳細回答SIT測試中各個失敗案例的具體輸入資料來源，並基於MVP階段的需求更新分析提案。
+
+🔍 測試資料來源詳細分析
+TC-SIT-004: QuickBooking (快速記帳) - 測試資料來源
+輸入資料來源：
+•	來自 0692. SIT_TestData_P1.json 檔案中的 quick_booking_tests 區段
+•	具體測試資料：
+{
+  "test_id": "quick_001",
+  "input_text": "午餐150",
+  "expected_parsing": {
+    "amount": 150,
+    "category": "餐飲",
+    "type": "expense",
+    "description": "午餐"
+  }
+}
+
+問題根本原因：
+•	BK模組的 BK_processQuickTransaction 函數缺少輸入文字解析邏輯
+
+=>1301模組代碼裡面有BK_processBookkeeping，這兩個函數是不是相同的功能?若是，BK_processQuickTransaction能否學習BK_processBookkeeping的邏輯？
+
+•	當前函數直接回傳400錯誤，根本沒有處理 input_text 參數
+TC-SIT-005: FullBookingForm (完整記帳表單) - 測試資料來源
+輸入資料來源：
+•	來自 0692. SIT_TestData_P1.json 檔案中的 form_booking_tests 區段
+•	具體測試資料：
+{
+  "test_id": "form_001",
+  "transaction_data": {
+    "amount": 300,
+    "type": "income",
+    "categoryId": "salary",
+    "accountId": "main_account",
+    "ledgerId": "main_ledger",
+    "date": "2025-09-15",
+    "description": "月薪"
+  }
+}
+問題根本原因：
+•	BK模組的 BK_createTransaction 函數存在業務邏輯缺陷
+=>請尋找1301模組代碼裡面有無相同或類似的函數可供參考
+
+•	可能是輸入驗證過於嚴格或Firestore儲存邏輯有問題
+
+
+
+TC-SIT-006: TransactionQuery (交易查詢) - 測試資料來源
+輸入資料來源：
+•	查詢參數來自測試程式動態生成
+•	基本查詢條件：userId, ledgerId, limit 等參數
+•	從Firestore中查詢已存在的交易記錄
+問題根本原因：
+•	BK模組的 BK_getTransactions 函數查詢邏輯異常
+•	可能是Firestore索引問題或查詢條件處理錯誤
+
+TC-SIT-003: FirebaseAuthIntegration - 測試資料來源
+輸入資料來源：
+•	來自 0692. SIT_TestData_P1.json 檔案中的 authentication_test_data 區段
+•	具體測試資料：
+{
+  "expert_mode_user_001": {
+    "email": "expert001@lcas.app",
+    "password": "ExpertPass123!",
+    "mode": "expert"
+  }
+}
+問題根本原因：
+•	AM模組的Firebase認證整合不完整
+•	Token生成或驗證機制存在時序問題
+
+
+
+
+💡 MVP階段核心Insight更新
+1. 資料流斷點問題
+核心發現： 所有失敗測試案例都指向同一個根本問題 - 資料在BL層就被阻斷，根本沒有進入真正的業務處理邏輯。
+2. 過度防禦性編程的反效果
+關鍵洞察： 當前BL模組採用過於嚴格的輸入驗證，導致正常的測試資料被拒絕。在MVP階段，這種"安全第一"的思維反而成為了"功能第一"的障礙。
+3. 測試資料與實際需求的錯位
+深層問題： 測試資料設計得很完美，但BL模組根本沒有實作對應的處理邏輯。這暴露了設計與實作之間的巨大落差。
+4. MVP階段的容錯哲學
+核心insight： MVP階段應該採用"寬進嚴出"策略 - 輸入驗證寬鬆一些，專注於核心功能能跑起來，而不是追求完美的資料驗證。
+🎯 MVP修復策略重新定義
+階段一：讓資料能夠流動 (最高優先級)
+1.	BK_processQuickTransaction
+•	移除過度嚴格的輸入驗證
+•	實作最基本的文字解析邏輯
+•	目標：讓 "午餐150" 能夠被成功處理
+2.	BK_createTransaction
+•	簡化必填欄位檢查
+•	確保基本的Firestore儲存能成功
+•	目標：讓標準記帳資料能被儲存
+3.	BK_getTransactions
+•	移除複雜的查詢條件驗證
+•	實作最基本的資料檢索
+•	目標：能夠返回已存在的記錄
+MVP階段技術債務處理原則更新
+1.	容錯優於完美 - 先讓功能跑起來，錯誤處理可以後續完善
+2.	硬編碼優於動態配置 - MVP階段可以接受一些hardcode來快速實現功能
+3.	日誌記錄優於異常處理 - 先記錄問題，不要讓異常阻斷主流程
+關鍵修復順序調整
+基於資料流分析，修復順序應該是：
+1.	資料輸入能力 - 先讓資料能進來
+2.	資料儲存能力 - 再讓資料能存下去
+3.	資料查詢能力 - 最後讓資料能取出來
+這個分析顯示當前問題不是架構設計問題，而是基礎的資料處理邏輯缺失。在MVP階段，我們需要先實作最基本的CRUD操作，而不是追求完美的錯誤處理和資料驗證機制。
