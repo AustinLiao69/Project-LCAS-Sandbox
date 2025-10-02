@@ -333,6 +333,31 @@
     }
   },
 
+  "bookkeeping_test_data": {
+    "default_ledger_id": "test_ledger_001",
+    "default_currency": "TWD",
+    "default_payment_method": "現金",
+    "supported_payment_methods": ["現金", "刷卡", "轉帳", "行動支付", "信用卡"],
+    "income_keywords": ["薪水", "收入", "獎金", "紅利", "津貼"],
+    "currency_units": ["元", "塊", "圓"],
+    "unsupported_currencies": ["NT", "USD", "$"],
+    "validation_rules": {
+      "max_amount": 999999,
+      "min_amount": 0.01,
+      "description_max_length": 200
+    },
+    "test_collections": {
+      "ledger_collection": "test_ledgers",
+      "entries_collection": "test_entries",
+      "log_collection": "test_logs"
+    },
+    "timeout_settings": {
+      "create_transaction_timeout": 15000,
+      "get_transactions_timeout": 8000,
+      "quick_booking_timeout": 12000
+    }
+  },
+
   "expected_response_formats": {
     "dcn_0015_unified_success_response": {
       "success": true,

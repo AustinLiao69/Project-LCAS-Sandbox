@@ -351,22 +351,31 @@ if (!admin.apps.length) {
 const DL = require('./1310. DL.js');
 const FS = require('./1311. FS.js');
 
-// 配置參數 - 從環境變數和配置文件動態讀取
+// 載入測試配置（如果存在）
+let testConfig = {};
+try {
+  testConfig = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
+} catch (error) {
+  // 測試配置檔案不存在時使用預設值
+  console.log('⚠️ 測試配置檔案未找到，使用環境變數設定');
+}
+
+// 配置參數 - 從測試配置檔案和環境變數動態讀取
 const BK_CONFIG = {
   DEBUG: getEnvVar('BK_DEBUG', 'true') === 'true',
   LOG_LEVEL: getEnvVar('BK_LOG_LEVEL', 'DEBUG'),
   FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED', 'true') === 'true',
-  DEFAULT_LEDGER_ID: getEnvVar('DEFAULT_LEDGER_ID', 'ledger_structure_001'),
-  TIMEZONE: getEnvVar('TIMEZONE', 'Asia/Taipei'),
+  DEFAULT_LEDGER_ID: testConfig.bookkeeping_test_data?.default_ledger_id || getEnvVar('DEFAULT_LEDGER_ID', 'ledger_structure_001'),
+  TIMEZONE: testConfig.test_environment?.timezone || getEnvVar('TIMEZONE', 'Asia/Taipei'),
   INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL', '300000'), 10),
-  VERSION: getEnvVar('BK_VERSION', '2.2.0'),
-  MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT', '999999999'), 10),
-  DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY', 'NTD'),
-  DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD', '現金'),
+  VERSION: getEnvVar('BK_VERSION', '3.1.4'),
+  MAX_AMOUNT: testConfig.bookkeeping_test_data?.validation_rules?.max_amount || parseInt(getEnvVar('BK_MAX_AMOUNT', '999999999'), 10),
+  DEFAULT_CURRENCY: testConfig.bookkeeping_test_data?.default_currency || getEnvVar('DEFAULT_CURRENCY', 'NTD'),
+  DEFAULT_PAYMENT_METHOD: testConfig.bookkeeping_test_data?.default_payment_method || getEnvVar('DEFAULT_PAYMENT_METHOD', '現金'),
   BATCH_SIZE: parseInt(getEnvVar('BK_BATCH_SIZE', '10'), 10),
   MAX_CONCURRENCY: parseInt(getEnvVar('BK_MAX_CONCURRENCY', '5'), 10),
-  DESCRIPTION_MAX_LENGTH: parseInt(getEnvVar('BK_DESC_MAX_LENGTH', '200'), 10),
-  API_ENDPOINTS: {
+  DESCRIPTION_MAX_LENGTH: testConfig.bookkeeping_test_data?.validation_rules?.description_max_length || parseInt(getEnvVar('BK_DESC_MAX_LENGTH', '200'), 10),
+  API_ENDPOINTS: testConfig.api_endpoints?.bookkeeping || {
     POST_TRANSACTIONS: getEnvVar('API_POST_TRANSACTIONS', '/transactions'),
     GET_TRANSACTIONS: getEnvVar('API_GET_TRANSACTIONS', '/transactions'),
     PUT_TRANSACTIONS: getEnvVar('API_PUT_TRANSACTIONS', '/transactions/{id}'),
@@ -374,10 +383,14 @@ const BK_CONFIG = {
     POST_QUICK: getEnvVar('API_POST_QUICK', '/transactions/quick'),
     GET_DASHBOARD: getEnvVar('API_GET_DASHBOARD', '/transactions/dashboard')
   },
-  SUPPORTED_PAYMENT_METHODS: (getEnvVar('SUPPORTED_PAYMENT_METHODS', '現金,刷卡,轉帳,行動支付')).split(','),
-  INCOME_KEYWORDS: (getEnvVar('INCOME_KEYWORDS', '薪水,收入,獎金,紅利')).split(','),
-  CURRENCY_UNITS: (getEnvVar('CURRENCY_UNITS', '元,塊,圓')).split(','),
-  UNSUPPORTED_CURRENCIES: (getEnvVar('UNSUPPORTED_CURRENCIES', 'NT,USD,$')).split(',')
+  SUPPORTED_PAYMENT_METHODS: testConfig.bookkeeping_test_data?.supported_payment_methods || (getEnvVar('SUPPORTED_PAYMENT_METHODS', '現金,刷卡,轉帳,行動支付')).split(','),
+  INCOME_KEYWORDS: testConfig.bookkeeping_test_data?.income_keywords || (getEnvVar('INCOME_KEYWORDS', '薪水,收入,獎金,紅利')).split(','),
+  CURRENCY_UNITS: testConfig.bookkeeping_test_data?.currency_units || (getEnvVar('CURRENCY_UNITS', '元,塊,圓')).split(','),
+  UNSUPPORTED_CURRENCIES: testConfig.bookkeeping_test_data?.unsupported_currencies || (getEnvVar('UNSUPPORTED_CURRENCIES', 'NT,USD,$')).split(','),
+  // 新增：測試專用設定
+  TEST_MODE: testConfig.test_environment ? true : false,
+  TEST_LEDGER_COLLECTION: testConfig.test_environment?.test_collections?.ledger_collection || 'ledgers',
+  TEST_ENTRIES_COLLECTION: testConfig.test_environment?.test_collections?.entries_collection || 'entries'
 };
 
 // 初始化狀態追蹤
