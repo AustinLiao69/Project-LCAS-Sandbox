@@ -1378,31 +1378,21 @@ class SITTestCases {
                     });
                 } else {
                     // 使用現有的Token進行驗證，而非重新註冊
-                    const loginVerificationData = {
-                        token: this.authToken,
-                        userId: this.testUserId
-                    };
+                    // 階段一修復：移除不存在的verify-token端點，改用profile API驗證
 
-                    const verifyResponse = await this.makeRequest('POST', '/api/v1/auth/verify-token', loginVerificationData);
-
-                // 階段一修復：智能Token驗證處理
+                // 階段一修復：使用符合P1-2規範的API端點進行驗證
                 let loginSuccess = false;
 
-                if (verifyResponse.success && verifyResponse.data) {
-                    // 檢查Token驗證成功
-                    if (verifyResponse.data.valid === true || verifyResponse.data.success === true) {
-                        loginSuccess = true;
-                        console.log(`    ✅ 用戶Token驗證成功，用戶ID: ${this.testUserId}`);
-                    }
+                // 改用GET /api/v1/users/profile來驗證Token有效性
+                const profileResponse = await this.makeRequest('GET', '/api/v1/users/profile');
+
+                if (profileResponse.success && profileResponse.data) {
+                    loginSuccess = true;
+                    console.log(`    ✅ 用戶Token驗證成功，通過profile API確認`);
                 } else {
-                    // 階段一修復：智能錯誤訊息處理
-                    let errorMsg = 'Token驗證失敗';
-                    if (verifyResponse.data?.error?.message) {
-                        errorMsg = verifyResponse.data.error.message;
-                    } else if (verifyResponse.data?.message) {
-                        errorMsg = verifyResponse.data.message;
-                    } else if (verifyResponse.error) {
-                        errorMsg = typeof verifyResponse.error === 'string' ? verifyResponse.error : verifyResponse.error.message || errorMsg;
+                    let errorMsg = 'Token驗證失敗 - Profile API無法存取';
+                    if (profileResponse.error) {
+                        errorMsg = typeof profileResponse.error === 'string' ? profileResponse.error : profileResponse.error.message || errorMsg;
                     }
                     console.log(`    ❌ 用戶Token驗證失敗: ${errorMsg}`);
                 }
