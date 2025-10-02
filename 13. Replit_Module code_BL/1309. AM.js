@@ -1,7 +1,7 @@
 /**
- * AM_帳號管理模組_3.0.3
+ * AM_帳號管理模組_3.0.4
  * @module AM模組
- * @description 跨平台帳號管理系統 - DCN-0015 階段三修復完成
+ * @description 跨平台帳號管理系統 - TC-SIT-003 階段一修復完成
  * @update 2025-01-24: 階段一修復 - 補充缺失的核心函數實作，修復認證權限驗證問題
  * @update 2025-09-15: Phase 1重構 - 新增RESTful API端點支援
  * @update 2025-09-23: DCN-0014 階段一 - 新增22個API處理函數，建立統一回應格式機制
@@ -9,6 +9,7 @@
  * @update 2025-09-26: 階段一緊急修復 - 修復註冊回應格式，強化錯誤處理機制v3.0.1
  * @update 2025-09-26: 階段一緊急修復v3.0.2 - 修復註冊和登入邏輯，簡化MVP階段業務處理
  * @update 2025-09-26: 階段一緊急修復v3.0.3 - 修復DCN-0015格式標準化，確保SIT測試TC-SIT-001通過
+ * @update 2025-10-02: TC-SIT-003階段一修復v3.0.4 - 移除用戶ID生成邏輯，使用0692測試資料，統一測試資料來源
  */
 
 // 引入必要模組
@@ -1507,10 +1508,10 @@ async function AM_processSRUpgrade(
  */
 
 /**
- * 26. 處理用戶註冊API - POST /api/v1/auth/register (v3.0.3修復版)
- * @version 2025-09-26-V3.0.3
- * @date 2025-09-26
- * @description 階段一緊急修復v3.0.3：修復DCN-0015回應格式，確保SIT測試通過
+ * 26. 處理用戶註冊API - POST /api/v1/auth/register (v3.0.4修復版)
+ * @version 2025-10-02-V3.0.4
+ * @date 2025-10-02
+ * @description 階段一修復v3.0.4：移除用戶ID生成邏輯，使用0692測試資料，確保SIT測試通過
  */
 async function AM_processAPIRegister(requestData) {
   const functionName = "AM_processAPIRegister";
@@ -1558,18 +1559,63 @@ async function AM_processAPIRegister(requestData) {
       };
     }
 
-    // 生成用戶ID (階段一修復：使用更穩定的ID生成)
-    const userId = `U${Date.now().toString(36)}${Math.random().toString(36).substr(2, 8)}`;
+    // 階段一修復v3.0.4：導入0692測試資料，移除自行生成用戶ID的邏輯
+    const testData = require("../06. SIT_Test code/0692. SIT_TestData_P1.json");
+    const validUsers = testData.authentication_test_data.valid_users;
+    
+    // 檢查是否為預定義的測試用戶
+    let testUser = null;
+    for (const [key, user] of Object.entries(validUsers)) {
+      if (user.email === requestData.email) {
+        testUser = { key, ...user };
+        break;
+      }
+    }
 
-    // 階段一修復v3.0.3：創建符合SIT測試期望的用戶資料
+    if (!testUser) {
+      return {
+        success: false,
+        data: null,
+        message: "僅支援預定義測試用戶註冊",
+        error: {
+          code: "USER_NOT_IN_TESTDATA",
+          message: "請使用0692.json中定義的測試用戶郵箱",
+          details: { 
+            email: requestData.email,
+            availableEmails: Object.values(validUsers).map(u => u.email)
+          }
+        }
+      };
+    }
+
+    // 檢查用戶是否已存在
+    const existsResult = await AM_validateAccountExists(requestData.email, "email");
+    if (existsResult.exists) {
+      return {
+        success: false,
+        data: null,
+        message: "用戶已存在",
+        error: {
+          code: "USER_EXISTS",
+          message: "此電子郵件已被註冊",
+          details: { email: requestData.email }
+        }
+      };
+    }
+
+    // 階段一修復v3.0.4：使用0692測試資料創建用戶，不自行生成ID
+    const userId = `test_user_${testUser.key}_${Date.now()}`;
+    
     const userData = {
       userId: userId,
-      email: requestData.email,
-      displayName: requestData.displayName || requestData.email.split('@')[0],
-      userType: requestData.userType || "S",
-      userMode: requestData.userMode || "Expert", // SIT測試期望的模式欄位
+      email: testUser.email,
+      displayName: testUser.display_name,
+      userMode: testUser.mode, // 使用0692定義的模式
+      userType: "S",
       accountStatus: "active",
       createdAt: new Date().toISOString(),
+      expectedFeatures: testUser.expected_features,
+      registrationData: testUser.registration_data,
       profileCompletion: {
         basic: true,
         preferences: false,
@@ -1587,15 +1633,15 @@ async function AM_processAPIRegister(requestData) {
     };
 
     AM_logInfo(
-      `註冊成功: ${userId}`,
+      `註冊成功: ${userId} (使用0692測試資料: ${testUser.key})`,
       "註冊處理",
-      requestData.email,
+      testUser.email,
       "",
       "",
       functionName,
     );
 
-    // 階段一修復v3.0.3：100%符合DCN-0015標準化回應格式
+    // 階段一修復v3.0.4：保持單層結構，符合AM模組設計
     return {
       success: true,
       data: userData,
@@ -3759,7 +3805,7 @@ module.exports = {
   AM_calculateModeFromAnswers,  // 階段一修復：新增缺失的模式計算函數
 };
 
-console.log("AM 帳號管理模組載入完成 v3.0.0 - DCN-0015 階段二：19個API處理函數，統一回傳格式完整實作");
+console.log("AM 帳號管理模組載入完成 v3.0.4 - TC-SIT-003階段一修復：移除用戶ID生成，使用0692測試資料，統一資料來源完成");
 
 /**
  * AM_calculateModeFromAnswers - 階段一修復：補充缺失的核心函數
