@@ -3820,9 +3820,103 @@ module.exports = {
   AM_getSubscriptionInfo,
   AM_formatAPIResponse,
   AM_handleSystemError,
+  AM_calculateModeFromAnswers,  // 階段一修復：新增缺失的模式計算函數
 };
 
 console.log("AM 帳號管理模組載入完成 v3.0.0 - DCN-0015 階段二：19個API處理函數，統一回傳格式完整實作");
+
+/**
+ * AM_calculateModeFromAnswers - 階段一修復：補充缺失的核心函數
+ * @version 2025-10-02-V1.0.0
+ * @date 2025-10-02
+ * @description 根據評估問卷答案計算推薦的用戶模式
+ * @param {Array} answers - 用戶的問卷答案
+ * @returns {Object} 包含推薦模式和分數的結果
+ */
+function AM_calculateModeFromAnswers(answers) {
+  try {
+    console.log(`🔧 AM_calculateModeFromAnswers: 開始計算模式，答案數量: ${answers ? answers.length : 0}`);
+
+    // 初始化各模式分數
+    const modeScores = {
+      Expert: 0,
+      Inertial: 0,
+      Cultivation: 0,
+      Guiding: 0
+    };
+
+    // MVP階段簡化計算邏輯
+    if (!answers || answers.length === 0) {
+      console.log(`⚠️ AM_calculateModeFromAnswers: 無答案數據，返回預設Expert模式`);
+      return {
+        recommendedMode: "Expert",
+        score: modeScores,
+        confidence: 0.5,
+        reason: "預設模式（無答案數據）"
+      };
+    }
+
+    // 簡化的模式計算邏輯
+    answers.forEach((answer, index) => {
+      console.log(`🔍 AM_calculateModeFromAnswers: 處理第${index + 1}題答案: ${answer}`);
+      
+      // 根據答案選項計算分數（簡化版）
+      switch (answer) {
+        case 'A':
+          modeScores.Expert += 3;
+          modeScores.Cultivation += 1;
+          break;
+        case 'B':
+          modeScores.Guiding += 3;
+          modeScores.Inertial += 2;
+          break;
+        case 'C':
+          modeScores.Cultivation += 3;
+          modeScores.Guiding += 2;
+          modeScores.Expert += 1;
+          break;
+        default:
+          // 如果是其他格式的答案，給予平均分
+          Object.keys(modeScores).forEach(mode => {
+            modeScores[mode] += 1;
+          });
+      }
+    });
+
+    // 找出最高分數的模式
+    let recommendedMode = "Expert";
+    let maxScore = 0;
+    
+    Object.entries(modeScores).forEach(([mode, score]) => {
+      if (score > maxScore) {
+        maxScore = score;
+        recommendedMode = mode;
+      }
+    });
+
+    // 計算信心度
+    const totalScore = Object.values(modeScores).reduce((sum, score) => sum + score, 0);
+    const confidence = totalScore > 0 ? maxScore / totalScore : 0.5;
+
+    console.log(`✅ AM_calculateModeFromAnswers: 計算完成，推薦模式: ${recommendedMode}，信心度: ${confidence.toFixed(2)}`);
+
+    return {
+      recommendedMode,
+      score: modeScores,
+      confidence,
+      reason: `基於${answers.length}題評估結果`
+    };
+
+  } catch (error) {
+    console.error(`❌ AM_calculateModeFromAnswers: 計算失敗: ${error.message}`);
+    return {
+      recommendedMode: "Expert",
+      score: { Expert: 1, Inertial: 0, Cultivation: 0, Guiding: 0 },
+      confidence: 0.3,
+      reason: "計算錯誤，使用預設模式"
+    };
+  }
+}
 
 /**
  * AM_logInfo
