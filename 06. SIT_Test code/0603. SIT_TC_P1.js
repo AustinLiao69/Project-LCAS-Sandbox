@@ -2,12 +2,12 @@
  * 0603. SIT_TC_P1.js
  * LCAS 2.0 Phase 1 SIT測試案例實作
  *
- * @version v2.5.1
+ * @version v2.5.2
  * @created 2025-09-15
  * @updated 2025-10-02
  * @author LCAS SQA Team
- * @description 階段二修復：調整TC-SIT-003驗證邏輯，適配AM模組實際回應格式
- * @phase Phase 2 Fix - SIT Test Logic Adjustment
+ * @description 階段一修復：新增測試環境初始化清理機制，確保每次測試從乾淨環境開始
+ * @phase Phase 1 Fix - Test Environment Initialization
  * @testcases TC-SIT-001 to TC-SIT-028 (28個測試案例)
  * @fixes
  *   - 階段一：修復測試資料載入機制，增強容錯性
@@ -16,6 +16,7 @@
  *   - 階段一：升級loadTestData函數版本至v1.3.0
  *   - 階段二：修正TC-SIT-003驗證邏輯，移除雙層success檢查
  *   - 階段二：直接驗證response.data.userId，簡化錯誤處理
+ *   - 階段一修復：新增initializeTestEnvironment函數，測試前清理Firebase測試用戶
  */
 
 const axios = require('axios');
@@ -31,6 +32,56 @@ class SITTestCases {
         this.authToken = null; // 用戶認證 Token
         this.testUserId = null; // 階段一修復：儲存真實測試用戶ID
         this.testStartTime = new Date(); // 測試開始時間
+    }
+
+    /**
+     * 階段一修復：測試環境初始化清理
+     * @version 2025-10-02-V2.5.2
+     * @description 在測試開始前清理Firebase中的測試用戶，確保乾淨環境
+     */
+    async initializeTestEnvironment() {
+        console.log('🧹 階段一修復：開始測試環境初始化清理...');
+        
+        try {
+            // 取得要清理的測試用戶清單
+            const testUsers = [
+                'expert001@lcas.app',
+                'expert002@lcas.app', 
+                'guiding001@lcas.app',
+                'inertial001@lcas.app',
+                'cultivation001@lcas.app'
+            ];
+
+            for (const email of testUsers) {
+                try {
+                    console.log(`🗑️ 清理測試用戶: ${email}`);
+                    
+                    // 嘗試刪除可能存在的測試用戶
+                    const deleteResponse = await this.makeRequest('DELETE', '/api/v1/auth/cleanup-test-user', {
+                        email: email,
+                        force: true
+                    });
+                    
+                    if (deleteResponse.success) {
+                        console.log(`✅ 測試用戶清理成功: ${email}`);
+                    } else {
+                        console.log(`ℹ️ 測試用戶不存在或已清理: ${email}`);
+                    }
+                } catch (cleanupError) {
+                    // 清理失敗不影響測試繼續，只記錄警告
+                    console.warn(`⚠️ 清理用戶 ${email} 時發生錯誤:`, cleanupError.message);
+                }
+                
+                // 每次清理間隔100ms，避免過度負載
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            console.log('✅ 測試環境初始化清理完成');
+            return true;
+        } catch (error) {
+            console.warn('⚠️ 測試環境清理失敗，但允許測試繼續:', error.message);
+            return true; // 即使清理失敗也允許測試繼續
+        }
     }
 
     /**
@@ -3342,6 +3393,10 @@ class SITTestCases {
         console.log('🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理');
         console.log('=' * 80);
 
+        // 階段一修復：測試前環境初始化
+        console.log('🧹 階段一修復：執行測試環境初始化...');
+        await this.initializeTestEnvironment();
+
         const phase1TestMethods = [
             this.testCase001_UserRegistration,
             this.testCase002_UserLogin,
@@ -3696,6 +3751,10 @@ class SITTestCases {
         console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 完整測試計畫');
         console.log('📋 總共28個測試案例，分三階段執行');
         console.log('=' * 80);
+
+        // 階段一修復：測試前環境初始化
+        console.log('🧹 階段一修復：執行測試環境初始化...');
+        await this.initializeTestEnvironment();
 
         const phase1Results = await this.executePhase1Tests();
         const phase2Results = await this.executePhase2Tests();
