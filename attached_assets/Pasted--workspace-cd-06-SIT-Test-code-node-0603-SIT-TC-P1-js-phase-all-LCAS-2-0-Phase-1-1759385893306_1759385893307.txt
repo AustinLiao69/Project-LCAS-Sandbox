@@ -1,0 +1,99 @@
+~/workspace$ 
+cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=all
+🚀 LCAS 2.0 Phase 1 SIT測試開始執行...
+📅 測試開始時間: 2025/10/2 下午2:04:42
+🔄 SIT測試執行流程啟動...
+🔄 開始載入SIT測試資料...
+⚠️ 關鍵測試資料驗證失敗: [ '效能測試-併發操作資料缺失' ]
+🔧 嘗試使用預設資料修復缺失項目...
+🔧 修復concurrent_operations資料...
+✅ 關鍵測試資料修復成功
+✅ 測試資料載入並驗證成功
+📊 載入的測試案例資料: 15 個類別
+🔍 檢查API服務就緒狀態...
+🔄 服務就緒檢查嘗試 1/10...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ API服務已就緒
+🔍 檢查Firebase配額狀態...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ Firebase配額狀態正常
+✅ 前置檢查完成，開始執行測試案例...
+🎯 執行測試階段: all
+🔄 執行完整測試流程（所有階段）...
+
+📋 ===== 階段一：單點整合驗證測試 =====
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段一測試
+📋 階段一：單點整合驗證測試 (TC-SIT-001~007)
+🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理
+NaN
+🧹 階段一修復：執行測試環境初始化...
+🧹 階段一修復：測試環境初始化（簡化版）...
+✅ 測試環境初始化完成（採用動態用戶策略，無需清理）
+📊 階段一測試案例總數：7 個
+📅 預估執行時間：7 分鐘
+
+
+📝 執行階段一測試 1/7: TC-SIT-001: UserRegistration
+🔄 TC-SIT-001: 動態生成測試用戶Email: expert001_1759385082238_0nk6g@lcas.app
+❌ FAIL TC-SIT-001 (38ms)
+   ℹ️ 錯誤: 僅支援預定義測試用戶註冊
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 2/7: TC-SIT-002: UserLogin
+  ✅ 統一回應格式驗證 /api/v1/auth/login: A+ (Score: 100.0%)
+✅ PASS TC-SIT-002 (25ms)
+
+📝 執行階段一測試 3/7: TC-SIT-003: FirebaseAuthIntegration
+🔄 TC-SIT-003: 開始Firebase Auth整合測試（階段二修復版）...
+📋 使用測試用戶: expert001@lcas.app (expert模式)
+  🔍 檢查Firebase服務初始化...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+    ✅ Firebase初始化檢查
+  🔐 測試用戶登入功能（使用TC-SIT-001創建的用戶）...
+  ⚠️ 未找到TC-SIT-001的用戶資料，跳過登入測試
+  🔑 測試Token有效性...
+    ✅ Token有效性驗證通過
+🎯 TC-SIT-003 階段二修復完成: 2/3項子測試成功
+✅ PASS TC-SIT-003 (9ms)
+
+✅ 用戶流程與認證 完成，休息1秒後繼續...
+
+📝 執行階段一測試 4/7: TC-SIT-004: QuickBooking
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: A+ (Score: 100.0%)
+✅ PASS TC-SIT-004 (739ms)
+
+📝 執行階段一測試 5/7: TC-SIT-005: FullBookingForm
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+✅ PASS TC-SIT-005 (279ms)
+
+📝 執行階段一測試 6/7: TC-SIT-006: TransactionQuery
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=20&sort=date%3Adesc: A+ (Score: 100.0%)
+✅ PASS TC-SIT-006 (165ms)
+
+✅ 記帳功能與查詢 完成，休息1秒後繼續...
+
+📝 執行階段一測試 7/7: TC-SIT-007: CrossLayerErrorHandling
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-007 (229ms)
+   ℹ️ 錯誤: 錯誤處理覆蓋率不足
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+NaN
+📊 階段一測試執行完成
+✅ 通過測試: 5/7
+📈 成功率: 71.43%
+⏱️  總執行時間: 3.579秒
+
+📋 階段一測試報告摘要
+NaN
+用戶認證與管理: 2/3 (66.7%)
+記帳功能測試: 2/2 (100.0%)
+錯誤處理: 1/2 (50.0%)
+
+🎯 階段一關鍵指標
+NaN
+基礎功能整合度: 71.4%
+用戶註冊流程: ❌ 失敗
+用戶登入驗證: ✅ 通過
+錯誤處理覆蓋率: 66.67
