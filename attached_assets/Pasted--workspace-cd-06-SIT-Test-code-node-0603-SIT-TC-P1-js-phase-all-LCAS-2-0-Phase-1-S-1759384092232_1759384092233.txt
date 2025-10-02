@@ -1,0 +1,112 @@
+~/workspace$ cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=all
+🚀 LCAS 2.0 Phase 1 SIT測試開始執行...
+📅 測試開始時間: 2025/10/2 下午1:47:46
+🔄 SIT測試執行流程啟動...
+🔄 開始載入SIT測試資料...
+⚠️ 關鍵測試資料驗證失敗: [ '效能測試-併發操作資料缺失' ]
+🔧 嘗試使用預設資料修復缺失項目...
+🔧 修復concurrent_operations資料...
+✅ 關鍵測試資料修復成功
+✅ 測試資料載入並驗證成功
+📊 載入的測試案例資料: 15 個類別
+🔍 檢查API服務就緒狀態...
+🔄 服務就緒檢查嘗試 1/10...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ API服務已就緒
+🔍 檢查Firebase配額狀態...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ Firebase配額狀態正常
+✅ 前置檢查完成，開始執行測試案例...
+🎯 執行測試階段: all
+🔄 執行完整測試流程（所有階段）...
+
+📋 ===== 階段一：單點整合驗證測試 =====
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段一測試
+📋 階段一：單點整合驗證測試 (TC-SIT-001~007)
+🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理
+NaN
+🧹 階段一修復：執行測試環境初始化...
+🧹 階段一修復：開始測試環境直接清理...
+✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firebase重新初始化成功
+🗑️ 清理測試用戶: expert001@lcas.app
+  ℹ️ 用戶不存在，無需清理: expert001@lcas.app
+🗑️ 清理測試用戶: expert002@lcas.app
+  ℹ️ 用戶不存在，無需清理: expert002@lcas.app
+🗑️ 清理測試用戶: guiding001@lcas.app
+  ℹ️ 用戶不存在，無需清理: guiding001@lcas.app
+🗑️ 清理測試用戶: inertial001@lcas.app
+  ℹ️ 用戶不存在，無需清理: inertial001@lcas.app
+🗑️ 清理測試用戶: cultivation001@lcas.app
+  ℹ️ 用戶不存在，無需清理: cultivation001@lcas.app
+✅ 測試環境直接清理完成
+📊 階段一測試案例總數：7 個
+📅 預估執行時間：7 分鐘
+
+
+📝 執行階段一測試 1/7: TC-SIT-001: UserRegistration
+❌ FAIL TC-SIT-001 (985ms)
+   ℹ️ 錯誤: 用戶已存在
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段一測試 2/7: TC-SIT-002: UserLogin
+  ✅ 統一回應格式驗證 /api/v1/auth/login: A+ (Score: 100.0%)
+✅ PASS TC-SIT-002 (22ms)
+
+📝 執行階段一測試 3/7: TC-SIT-003: FirebaseAuthIntegration
+🔄 TC-SIT-003: 開始Firebase Auth整合測試（階段二修復版）...
+📋 使用測試用戶: expert001@lcas.app (expert模式)
+  🔍 檢查Firebase服務初始化...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+    ✅ Firebase初始化檢查
+  📝 測試用戶註冊功能...
+    ❌ 用戶註冊失敗: 用戶已存在
+🎯 TC-SIT-003 階段二修復完成: 1/3項子測試成功
+❌ FAIL TC-SIT-003 (525ms)
+   🚨 錯誤: Firebase Auth整合測試未完全通過
+   🏷️  錯誤類型: FIREBASE_ERROR
+   💡 建議: 檢查Firebase配額和連線設定
+
+✅ 用戶流程與認證 完成，休息1秒後繼續...
+
+📝 執行階段一測試 4/7: TC-SIT-004: QuickBooking
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: A+ (Score: 100.0%)
+✅ PASS TC-SIT-004 (702ms)
+
+📝 執行階段一測試 5/7: TC-SIT-005: FullBookingForm
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+✅ PASS TC-SIT-005 (277ms)
+
+📝 執行階段一測試 6/7: TC-SIT-006: TransactionQuery
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=20&sort=date%3Adesc: A+ (Score: 100.0%)
+✅ PASS TC-SIT-006 (169ms)
+
+✅ 記帳功能與查詢 完成，休息1秒後繼續...
+
+📝 執行階段一測試 7/7: TC-SIT-007: CrossLayerErrorHandling
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-007 (165ms)
+   ℹ️ 錯誤: 錯誤處理覆蓋率不足
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+NaN
+📊 階段一測試執行完成
+✅ 通過測試: 4/7
+📈 成功率: 57.14%
+⏱️  總執行時間: 7.956秒
+
+📋 階段一測試報告摘要
+NaN
+用戶認證與管理: 1/3 (33.3%)
+記帳功能測試: 2/2 (100.0%)
+錯誤處理: 1/2 (50.0%)
+
+🎯 階段一關鍵指標
+NaN
+基礎功能整合度: 57.1%
+用戶註冊流程: ❌ 失敗
+用戶登入驗證: ✅ 通過
+錯誤處理覆蓋率: 66.67
