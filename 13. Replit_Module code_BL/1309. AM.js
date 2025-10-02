@@ -1559,34 +1559,7 @@ async function AM_processAPIRegister(requestData) {
       };
     }
 
-    // 階段一修復v3.0.4：導入0692測試資料，移除自行生成用戶ID的邏輯
-    const testData = require("../06. SIT_Test code/0692. SIT_TestData_P1.json");
-    const validUsers = testData.authentication_test_data.valid_users;
-    
-    // 檢查是否為預定義的測試用戶
-    let testUser = null;
-    for (const [key, user] of Object.entries(validUsers)) {
-      if (user.email === requestData.email) {
-        testUser = { key, ...user };
-        break;
-      }
-    }
-
-    if (!testUser) {
-      return {
-        success: false,
-        data: null,
-        message: "僅支援預定義測試用戶註冊",
-        error: {
-          code: "USER_NOT_IN_TESTDATA",
-          message: "請使用0692.json中定義的測試用戶郵箱",
-          details: { 
-            email: requestData.email,
-            availableEmails: Object.values(validUsers).map(u => u.email)
-          }
-        }
-      };
-    }
+    // 移除硬編碼：不再限制只能使用預定義測試用戶
 
     // 檢查用戶是否已存在
     const existsResult = await AM_validateAccountExists(requestData.email, "email");
@@ -1603,39 +1576,37 @@ async function AM_processAPIRegister(requestData) {
       };
     }
 
-    // 階段一修復v3.0.4：使用0692測試資料創建用戶，不自行生成ID
-    const userId = `test_user_${testUser.key}_${Date.now()}`;
+    // 生成用戶ID
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     const userData = {
       userId: userId,
-      email: testUser.email,
-      displayName: testUser.display_name,
-      userMode: testUser.mode, // 使用0692定義的模式
+      email: requestData.email,
+      displayName: requestData.displayName || requestData.email.split('@')[0],
+      userMode: requestData.userMode || "Expert", // 使用請求中的模式或預設為Expert
       userType: "S",
       accountStatus: "active",
       createdAt: new Date().toISOString(),
-      expectedFeatures: testUser.expected_features,
-      registrationData: testUser.registration_data,
       profileCompletion: {
         basic: true,
         preferences: false,
         security: false
       },
       preferences: {
-        language: "zh-TW",
-        currency: "TWD",
-        timezone: "Asia/Taipei"
+        language: requestData.language || "zh-TW",
+        currency: requestData.currency || "TWD",
+        timezone: requestData.timezone || "Asia/Taipei"
       },
-      // 階段一修復：添加認證相關欄位
+      // 認證相關欄位
       emailVerified: false,
       phoneVerified: false,
       twoFactorEnabled: false
     };
 
     AM_logInfo(
-      `註冊成功: ${userId} (使用0692測試資料: ${testUser.key})`,
+      `註冊成功: ${userId}`,
       "註冊處理",
-      testUser.email,
+      requestData.email,
       "",
       "",
       functionName,
@@ -1718,15 +1689,10 @@ async function AM_processAPILogin(requestData) {
       };
     }
 
-    // 階段一修復：模擬帳號存在性檢查 (簡化版)
-    // 預設一些測試帳號
-    const testAccounts = [
-      "expert001@lcas.app",
-      "test@example.com",
-      "user@test.com"
-    ];
-
-    if (!testAccounts.includes(requestData.email)) {
+    // 檢查帳號是否存在（使用真實的帳號驗證邏輯）
+    const accountExists = await AM_validateAccountExists(requestData.email, "email");
+    
+    if (!accountExists.exists) {
       return {
         success: false,
         data: null,
@@ -1742,27 +1708,45 @@ async function AM_processAPILogin(requestData) {
       };
     }
 
-    // 階段一修復：模擬用戶資料 (簡化版)
-    const userId = `U${Date.now().toString(36)}${Math.random().toString(36).substr(2, 8)}`;
-    const userData = {
-      userId: userId,
-      email: requestData.email,
-      displayName: requestData.email.split('@')[0],
-      userType: "Expert",
-      lastActive: new Date().toISOString(),
-      preferences: {
-        language: "zh-TW",
-        currency: "TWD",
-        timezone: "Asia/Taipei"
-      }
-    };
+    // 取得真實用戶資料
+    const userInfo = await AM_getUserInfo(accountExists.UID, "SYSTEM", false);
+    let userData;
+    
+    if (userInfo.success) {
+      userData = {
+        userId: accountExists.UID,
+        email: requestData.email,
+        displayName: userInfo.userData.displayName || requestData.email.split('@')[0],
+        userType: userInfo.userData.userType || "Expert",
+        lastActive: new Date().toISOString(),
+        preferences: userInfo.userData.preferences || {
+          language: "zh-TW",
+          currency: "TWD",
+          timezone: "Asia/Taipei"
+        }
+      };
+    } else {
+      // 備用方案：使用基本資料
+      userData = {
+        userId: accountExists.UID,
+        email: requestData.email,
+        displayName: requestData.email.split('@')[0],
+        userType: "Expert",
+        lastActive: new Date().toISOString(),
+        preferences: {
+          language: "zh-TW",
+          currency: "TWD",
+          timezone: "Asia/Taipei"
+        }
+      };
+    }
 
     // 生成Token
-    const token = `jwt_${userId}_${Date.now()}`;
-    const refreshToken = `refresh_${userId}_${Date.now()}`;
+    const token = `jwt_${accountExists.UID}_${Date.now()}`;
+    const refreshToken = `refresh_${accountExists.UID}_${Date.now()}`;
 
     AM_logInfo(
-      `登入成功: ${userId}`,
+      `登入成功: ${accountExists.UID}`,
       "登入處理",
       requestData.email,
       "",
