@@ -35,14 +35,37 @@ class SITTestCases {
     }
 
     /**
-     * 階段一修復：測試環境初始化清理
+     * 階段一修復：測試環境初始化清理 (直接Firebase清理版)
      * @version 2025-10-02-V2.5.2
-     * @description 在測試開始前清理Firebase中的測試用戶，確保乾淨環境
+     * @description 直接操作Firebase清理測試用戶，無需API端點
      */
     async initializeTestEnvironment() {
-        console.log('🧹 階段一修復：開始測試環境初始化清理...');
-        
+        console.log('🧹 階段一修復：開始測試環境直接清理...');
+
         try {
+            // 載入Firebase Admin SDK配置
+            const admin = require('firebase-admin');
+
+            // 檢查Firebase是否已初始化
+            let app;
+            try {
+                app = admin.app();
+                console.log('✅ 使用現有Firebase實例');
+            } catch (error) {
+                // 如果沒有初始化，嘗試讀取配置文件初始化
+                try {
+                    const firebaseConfig = require('../13. Replit_Module code_BL/1399. firebase-config.js');
+                    app = firebaseConfig.initializeFirebaseAdmin();
+                    console.log('✅ Firebase重新初始化成功');
+                } catch (configError) {
+                    console.warn('⚠️ Firebase初始化失敗，跳過清理:', configError.message);
+                    return true; // 允許測試繼續，只記錄警告
+                }
+            }
+
+            const auth = admin.auth();
+            const db = admin.firestore();
+
             // 取得要清理的測試用戶清單
             const testUsers = [
                 'expert001@lcas.app',
@@ -55,28 +78,39 @@ class SITTestCases {
             for (const email of testUsers) {
                 try {
                     console.log(`🗑️ 清理測試用戶: ${email}`);
-                    
-                    // 嘗試刪除可能存在的測試用戶
-                    const deleteResponse = await this.makeRequest('DELETE', '/api/v1/auth/cleanup-test-user', {
-                        email: email,
-                        force: true
-                    });
-                    
-                    if (deleteResponse.success) {
-                        console.log(`✅ 測試用戶清理成功: ${email}`);
-                    } else {
-                        console.log(`ℹ️ 測試用戶不存在或已清理: ${email}`);
+
+                    // 直接使用Firebase Admin SDK刪除用戶
+                    try {
+                        const userRecord = await auth.getUserByEmail(email);
+                        await auth.deleteUser(userRecord.uid);
+                        console.log(`  ✅ Firebase Auth用戶已刪除: ${email}`);
+
+                        // 同時刪除Firestore中的用戶資料
+                        try {
+                            await db.collection('users').doc(userRecord.uid).delete();
+                            console.log(`  ✅ Firestore用戶資料已刪除: ${email}`);
+                        } catch (firestoreError) {
+                            console.log(`  ℹ️ Firestore用戶資料不存在或已刪除: ${email}`);
+                        }
+
+                    } catch (userError) {
+                        if (userError.code === 'auth/user-not-found') {
+                            console.log(`  ℹ️ 用戶不存在，無需清理: ${email}`);
+                        } else {
+                            console.warn(`  ⚠️ 清理用戶失敗: ${email} - ${userError.message}`);
+                        }
                     }
+
                 } catch (cleanupError) {
-                    // 清理失敗不影響測試繼續，只記錄警告
+                    // 個別用戶清理失敗不影響測試繼續
                     console.warn(`⚠️ 清理用戶 ${email} 時發生錯誤:`, cleanupError.message);
                 }
-                
-                // 每次清理間隔100ms，避免過度負載
+
+                // 每次清理間隔100ms，避免過度負載Firebase
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-            
-            console.log('✅ 測試環境初始化清理完成');
+
+            console.log('✅ 測試環境直接清理完成');
             return true;
         } catch (error) {
             console.warn('⚠️ 測試環境清理失敗，但允許測試繼續:', error.message);
@@ -826,7 +860,7 @@ class SITTestCases {
             // 階段一修復：智能超時策略
             const smartTimeout = timeout || this.calculateSmartTimeout(method, endpoint);
 
-            // 階段三修復：確保endpoint不重複baseURL路徑
+            // 階段三修復：正確處理endpoint路徑，避免baseURL重複
             let cleanEndpoint = endpoint;
             if (endpoint.startsWith('/api/v1/api/v1/')) {
                 cleanEndpoint = endpoint.replace('/api/v1/api/v1/', '/api/v1/');
@@ -1347,7 +1381,7 @@ class SITTestCases {
         const startTime = Date.now();
         try {
             console.log('🔄 TC-SIT-003: 開始Firebase Auth整合測試（階段二修復版）...');
-            
+
             // 階段二修復：確保使用與AM模組相同的0692測試資料源
             const testUser = this.testData?.authentication_test_data?.valid_users?.expert_mode_user_001;
             if (!testUser) {
@@ -1363,8 +1397,8 @@ class SITTestCases {
                 console.log('  🔍 檢查Firebase服務初始化...');
                 const healthResponse = await this.makeRequest('GET', '/health');
                 const firebaseInit = healthResponse.success;
-                subTests.push({ 
-                    name: 'Firebase初始化', 
+                subTests.push({
+                    name: 'Firebase初始化',
                     success: firebaseInit,
                     details: firebaseInit ? 'Firebase服務正常' : 'Firebase服務異常'
                 });
@@ -1388,10 +1422,10 @@ class SITTestCases {
                 };
 
                 const registerResponse = await this.makeRequest('POST', '/api/v1/auth/register', registrationData);
-                
+
                 // 階段二修復完成：直接檢查AM模組的單層success格式
                 let registerSuccess = false;
-                
+
                 if (registerResponse.success && registerResponse.data) {
                     // AM模組回應格式：{success: true, data: {...}, message: "...", error: null}
                     if (registerResponse.data.success === true && registerResponse.data.data?.userId) {
@@ -1418,8 +1452,8 @@ class SITTestCases {
                     console.log(`    ❌ 用戶註冊失敗: ${errorMsg}`);
                 }
 
-                subTests.push({ 
-                    name: 'Firebase用戶註冊', 
+                subTests.push({
+                    name: 'Firebase用戶註冊',
                     success: registerSuccess,
                     userId: this.testUserId,
                     details: registerSuccess ? '註冊成功' : '註冊失敗',
@@ -1442,17 +1476,17 @@ class SITTestCases {
                     };
 
                     const loginResponse = await this.makeRequest('POST', '/api/v1/auth/login', loginData);
-                    
+
                     // 階段二修復完成：智能格式檢測與適配
                     let loginSuccess = false;
-                    
+
                     if (loginResponse.success && loginResponse.data) {
                         // 檢查ASL包裝格式
                         if (loginResponse.data.success === true && loginResponse.data.data?.token) {
                             this.authToken = loginResponse.data.data.token;
                             loginSuccess = true;
                             console.log(`    ✅ 用戶登入成功（ASL格式），獲得Token`);
-                        } 
+                        }
                         // 檢查AM直接格式
                         else if (loginResponse.data.token) {
                             this.authToken = loginResponse.data.token;
@@ -1472,8 +1506,8 @@ class SITTestCases {
                         console.log(`    ❌ 用戶登入失敗: ${errorMsg}`);
                     }
 
-                    subTests.push({ 
-                        name: 'Firebase用戶登入', 
+                    subTests.push({
+                        name: 'Firebase用戶登入',
                         success: loginSuccess,
                         hasToken: !!this.authToken,
                         details: loginSuccess ? '登入成功' : '登入失敗',
@@ -1485,10 +1519,10 @@ class SITTestCases {
                     console.log(`    ❌ 用戶登入測試失敗: ${error.message}`);
                 }
             } else {
-                subTests.push({ 
-                    name: 'Firebase用戶登入', 
-                    success: false, 
-                    error: '無可用測試用戶ID，註冊步驟失敗' 
+                subTests.push({
+                    name: 'Firebase用戶登入',
+                    success: false,
+                    error: '無可用測試用戶ID，註冊步驟失敗'
                 });
             }
 
@@ -3777,7 +3811,7 @@ class SITTestCases {
         console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
 
         // 生成最終報告
-        await this.generateFinalReport(allResults);
+        this.generateFinalReport(allResults);
 
         return {
             totalTests,
