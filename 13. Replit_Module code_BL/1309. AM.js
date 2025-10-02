@@ -2851,158 +2851,94 @@ async function AM_processAPIGetAssessmentQuestions(queryParams) {
  * 40. 處理提交模式評估結果API - POST /api/v1/users/assessment (階段一修復版)
  * @version 2025-10-02-V1.4.0
  * @date 2025-10-02
- * @description 階段一修復：移除current_user硬編碼，修復用戶ID解析邏輯，確保SIT測試通過
+ * @description 階段一修復 - 移除current_user硬編碼，修復用戶ID解析邏輯，確保SIT測試通過
  */
 async function AM_processAPISubmitAssessment(requestData) {
   const functionName = "AM_processAPISubmitAssessment";
   try {
-    console.log(`🔧 ${functionName}: 階段一修復開始，移除硬編碼current_user`);
+    AM_logInfo(
+      "開始處理模式評估提交API請求",
+      "模式評估",
+      "",
+      "",
+      "",
+      functionName,
+    );
+
+    // 階段一修復：驗證評估答案
+    if (!requestData.answers || typeof requestData.answers !== 'object') {
+      return AM_formatAPIResponse(null, {
+        code: "MISSING_ANSWERS",
+        message: "評估答案為必填項目",
+      });
+    }
+
+    // 階段一修復：要求提供真實用戶ID
+    let userId = requestData.userId || requestData.currentUserId || requestData.user_id;
+
+    if (!userId) {
+      return AM_formatAPIResponse(null, {
+        code: "MISSING_USER_ID",
+        message: "用戶ID為必填項目",
+        details: {
+          suggestion: "請先完成用戶註冊或登入流程"
+        }
+      });
+    }
+
+    // 階段一修復：驗證用戶存在性
+    const userExists = await AM_validateAccountExists(userId);
+    if (!userExists.exists) {
+      return AM_formatAPIResponse(null, {
+        code: "USER_NOT_FOUND",
+        message: "用戶不存在，請確認用戶ID正確性",
+        details: {
+          userId: userId,
+          suggestion: "請先完成用戶註冊流程"
+        }
+      });
+    }
+
+    // 計算用戶模式
+    const modeResult = AM_calculateModeFromAnswers(requestData.answers);
+    const recommendedMode = modeResult.mode;
+    const confidence = modeResult.confidence;
+
+    // 更新用戶模式
+    const updateResult = await AM_updateAccountInfo(userId, {
+      currentMode: recommendedMode,
+      modeConfidence: confidence,
+      assessmentDate: new Date().toISOString(),
+      assessmentAnswers: requestData.answers
+    }, "SYSTEM");
+
+    if (!updateResult.success) {
+      return AM_formatAPIResponse(null, {
+        code: "MODE_UPDATE_FAILED",
+        message: "模式更新失敗",
+        details: updateResult.error
+      });
+    }
 
     AM_logInfo(
-      "開始處理模式評估結果提交 (階段一修復版)",
+      `模式評估完成: ${userId} -> ${recommendedMode} (信心度: ${confidence})`,
       "模式評估",
-      requestData.userId || "",
+      userId,
       "",
       "",
       functionName,
     );
 
-    // 驗證必要參數
-    if (!requestData.questionnaireId || !requestData.answers) {
-      return {
-        success: false,
-        error: {
-          code: "MISSING_REQUIRED_FIELDS",
-          message: "問卷ID和答案為必填欄位"
-        },
-        message: "問卷ID和答案為必填欄位",
-      };
-    }
-
-    // 階段一修復：正確解析用戶ID，完全移除硬編碼
-    let userId = null;
-
-    // 第一優先：從請求數據中取得用戶ID
-    if (requestData.userId && typeof requestData.userId === 'string' && requestData.userId.trim() !== '') {
-      userId = requestData.userId.trim();
-      console.log(`✅ ${functionName}: 從requestData.userId取得用戶ID: ${userId}`);
-    }
-    // 第二優先：從Token中解析（模擬實作）
-    else if (requestData.token) {
-      // 簡化的Token解析邏輯（MVP階段）
-      const tokenParts = requestData.token.split('_');
-      if (tokenParts.length >= 2 && tokenParts[1]) {
-        userId = tokenParts[1];
-        console.log(`✅ ${functionName}: 從Token解析用戶ID: ${userId}`);
-      }
-    }
-    // 第三優先：生成測試用戶ID（用於SIT測試）
-    else {
-      userId = `expert_test_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
-      console.log(`⚠️ ${functionName}: 生成測試用戶ID: ${userId}`);
-    }
-
-    console.log(`🔍 ${functionName}: 最終使用的用戶ID: ${userId}`);
-
-    // 階段一修復：用戶存在性檢查
-    const userExists = await AM_validateAccountExists(userId, "firebase");
-    if (!userExists.exists) {
-      console.log(`🔧 ${functionName}: 用戶不存在，自動創建基本資料: ${userId}`);
-
-      // 自動創建基本用戶資料
-      const createResult = await AM_createAppAccount("APP", {
-        displayName: `評估用戶_${userId.substring(0, 8)}`,
-        email: `${userId}@test.lcas.app`,
-        userType: "S"
-      }, {
-        deviceId: "assessment_device",
-        appVersion: "2.0.0"
-      });
-
-      if (!createResult.success) {
-        console.error(`❌ ${functionName}: 自動創建用戶失敗: ${createResult.error}`);
-        // 繼續執行，使用模擬數據
-      } else {
-        console.log(`✅ ${functionName}: 自動創建用戶成功: ${createResult.primaryUID}`);
-        userId = createResult.primaryUID; // 使用創建後的真實ID
-      }
-    }
-
-    // 模擬評估處理
-    const assessmentResult = AM_calculateModeFromAnswers(requestData.answers);
-
-    // 階段一修復：使用解析出的真實用戶ID更新資料
-    console.log(`📝 ${functionName}: 開始更新用戶模式: ${userId} -> ${assessmentResult.recommendedMode}`);
-
-    const updateResult = await AM_updateAccountInfo(
-      userId, // 使用正確解析的用戶ID，絕不使用current_user
-      {
-        userMode: assessmentResult.recommendedMode,
-        assessmentCompleted: true,
-        assessmentDate: admin.firestore.Timestamp.now(),
-        assessmentScore: assessmentResult.score,
-        lastUpdatedBy: functionName,
-        updateReason: "模式評估完成"
-      },
-      "SYSTEM"
-    );
-
-    if (updateResult.success) {
-      console.log(`✅ ${functionName}: 用戶模式更新成功: ${userId}`);
-
-      AM_logInfo(
-        `模式評估完成: ${userId} -> ${assessmentResult.recommendedMode}`,
-        "模式評估",
-        userId,
-        "",
-        "",
-        functionName,
-      );
-
-      return {
-        success: true,
-        data: {
-          result: assessmentResult,
-          userId: userId,
-          updatedMode: assessmentResult.recommendedMode,
-          userExists: userExists.exists,
-          updateMethod: "real_user_id" // 標記使用真實用戶ID
-        },
-        message: "模式評估結果提交成功",
-      };
-    } else {
-      console.error(`❌ ${functionName}: 用戶模式更新失敗: ${updateResult.error}`);
-      return {
-        success: false,
-        error: {
-          code: "UPDATE_USER_MODE_FAILED",
-          message: "用戶模式更新失敗",
-          details: updateResult.error
-        },
-        message: "用戶模式更新失敗",
-      };
-    }
+    return AM_formatAPIResponse({
+      userId: userId,
+      recommendedMode: recommendedMode,
+      confidence: confidence,
+      assessmentId: `assessment_${Date.now()}`,
+      timestamp: new Date().toISOString()
+    });
 
   } catch (error) {
-    console.error(`❌ ${functionName}: 處理失敗: ${error.message}`);
-    AM_logError(
-      `模式評估結果提交失敗: ${error.message}`,
-      "模式評估",
-      requestData.userId || "",
-      "",
-      "",
-      "AM_API_SUBMIT_ASSESSMENT_ERROR",
-      functionName,
-    );
-    return {
-      success: false,
-      error: {
-        code: "ASSESSMENT_SUBMIT_ERROR",
-        message: "模式評估結果提交失敗",
-        details: error.message
-      },
-      message: "模式評估結果提交失敗",
-    };
+    return AM_handleSystemError(error, { functionName, requestData });
   }
 }
 
@@ -3859,7 +3795,7 @@ function AM_calculateModeFromAnswers(answers) {
     // 簡化的模式計算邏輯
     answers.forEach((answer, index) => {
       console.log(`🔍 AM_calculateModeFromAnswers: 處理第${index + 1}題答案: ${answer}`);
-      
+
       // 根據答案選項計算分數（簡化版）
       switch (answer) {
         case 'A':
@@ -3886,7 +3822,7 @@ function AM_calculateModeFromAnswers(answers) {
     // 找出最高分數的模式
     let recommendedMode = "Expert";
     let maxScore = 0;
-    
+
     Object.entries(modeScores).forEach(([mode, score]) => {
       if (score > maxScore) {
         maxScore = score;
