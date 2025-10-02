@@ -2836,9 +2836,9 @@ async function AM_processAPIGetAssessmentQuestions(queryParams) {
 
 /**
  * 40. 處理提交評估結果API - POST /api/v1/users/assessment
- * @version 2025-09-22-V1.3.0
- * @date 2025-09-22
- * @description 專門處理ASL.js轉發的評估結果提交請求
+ * @version 2025-10-02-V3.0.4
+ * @date 2025-10-02
+ * @description 階段一修復：修復用戶ID解析邏輯，移除current_user硬編碼
  */
 async function AM_processAPISubmitAssessment(requestData) {
   const functionName = "AM_processAPISubmitAssessment";
@@ -2846,68 +2846,134 @@ async function AM_processAPISubmitAssessment(requestData) {
     AM_logInfo(
       "開始處理提交評估結果API請求",
       "評估結果",
-      "",
+      requestData.userId || "",
       "",
       "",
       functionName,
     );
 
+    // 階段一修復：確保用戶ID正確解析
+    let userId = null;
+    
+    // 1. 從請求資料中取得用戶ID
+    if (requestData.userId && requestData.userId !== "current_user") {
+      userId = requestData.userId;
+    }
+    
+    // 2. 從請求中解析Token（如果有）
+    if (!userId && requestData.token) {
+      // 簡化Token解析（實際應使用JWT驗證）
+      const tokenParts = requestData.token.split('_');
+      if (tokenParts.length >= 2) {
+        userId = tokenParts[1];
+      }
+    }
+    
+    // 3. 生成測試用戶ID（MVP階段）
+    if (!userId) {
+      userId = `test_user_${Date.now()}`;
+      console.log(`⚠️ 未提供用戶ID，生成測試ID: ${userId}`);
+    }
+    
+    console.log(`🔍 評估提交用戶ID確認: ${userId}`);
+
     // 模擬評估結果分析
     const recommendedMode = "Expert";
     const confidence = 85.5;
 
-    const userId = requestData.userId || "current_user";
-
-    // 更新用戶模式
-    const updateResult = await AM_updateAccountInfo(
-      userId,
-      {
+    // 階段一修復：先檢查用戶是否存在，不存在則創建
+    const userExists = await AM_validateAccountExists(userId, "email");
+    
+    if (!userExists.exists) {
+      console.log(`📝 用戶不存在，創建新用戶: ${userId}`);
+      
+      // 創建基本用戶資料
+      const userData = {
+        userId: userId,
+        email: `${userId}@test.app`,
+        displayName: `User_${userId.substring(0, 8)}`,
         userType: recommendedMode,
         assessmentCompleted: true,
         assessmentDate: admin.firestore.Timestamp.now(),
-      },
-      "SYSTEM",
-    );
+        createdAt: admin.firestore.Timestamp.now(),
+        preferences: {
+          language: "zh-TW",
+          currency: "TWD",
+          timezone: "Asia/Taipei"
+        }
+      };
 
-    if (updateResult.success) {
-      AM_logInfo(
-        `評估結果提交成功: ${userId} -> ${recommendedMode}`,
-        "評估結果",
+      // 直接寫入Firestore（MVP階段簡化邏輯）
+      try {
+        await db.collection("users").doc(userId).set(userData);
+        console.log(`✅ 新用戶創建成功: ${userId}`);
+      } catch (createError) {
+        console.error(`❌ 用戶創建失敗: ${createError.message}`);
+        return {
+          success: false,
+          data: null,
+          error: {
+            code: "USER_CREATE_FAILED",
+            message: "用戶創建失敗"
+          },
+          message: "用戶創建失敗",
+        };
+      }
+    } else {
+      // 用戶存在，更新評估結果
+      const updateResult = await AM_updateAccountInfo(
         userId,
-        "",
-        "",
-        functionName,
+        {
+          userType: recommendedMode,
+          assessmentCompleted: true,
+          assessmentDate: admin.firestore.Timestamp.now(),
+        },
+        "SYSTEM",
       );
 
-      return {
-        success: true,
-        data: {
-          result: {
-            recommendedMode,
-            confidence,
-            explanation: "基於您的回答，建議使用專家模式以獲得完整功能體驗",
+      if (!updateResult.success) {
+        console.error(`❌ 用戶更新失敗: ${updateResult.error}`);
+        return {
+          success: false,
+          data: null,
+          error: {
+            code: "UPDATE_FAILED",
+            message: "評估結果更新失敗"
           },
-          applied: true,
-        },
-        error: null,
-        message: "評估結果提交成功",
-      };
-    } else {
-      return {
-        success: false,
-        data: null,
-        error: {
-          code: "SAVE_FAILED",
-          message: "評估結果保存失敗"
-        },
-        message: "評估結果保存失敗",
-      };
+          message: "評估結果更新失敗",
+        };
+      }
     }
+
+    AM_logInfo(
+      `評估結果提交成功: ${userId} -> ${recommendedMode}`,
+      "評估結果",
+      userId,
+      "",
+      "",
+      functionName,
+    );
+
+    return {
+      success: true,
+      data: {
+        result: {
+          recommendedMode,
+          confidence,
+          explanation: "基於您的回答，建議使用專家模式以獲得完整功能體驗",
+        },
+        applied: true,
+        userId: userId
+      },
+      error: null,
+      message: "評估結果提交成功",
+    };
+
   } catch (error) {
     AM_logError(
       `評估結果提交API處理失敗: ${error.message}`,
       "評估結果",
-      "",
+      requestData.userId || "",
       "",
       "",
       "AM_API_SUBMIT_ASSESSMENT_ERROR",
