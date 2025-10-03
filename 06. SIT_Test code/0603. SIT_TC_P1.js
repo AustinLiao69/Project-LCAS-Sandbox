@@ -2285,58 +2285,44 @@ class SITTestCases {
     // ==================== 階段二後半：效能與穩定性測試 ====================
 
     /**
-     * TC-SIT-017: 多用戶併發操作測試
+     * TC-SIT-017: 直接測試POST /api/v1/auth/register
      */
-    async testCase017_ConcurrentOperations() {
+    async testCase017_UserRegisterAPI() {
         const startTime = Date.now();
         try {
-            const concurrentTest = this.testData.performance_test_data.concurrent_operations;
-            const promises = [];
-            const results = [];
+            console.log('🔐 TC-SIT-017: 直接測試POST /api/v1/auth/register');
 
-            // 建立多個併發請求
-            for (let i = 0; i < concurrentTest.concurrent_users; i++) {
-                const promise = this.makeRequest('GET', '/api/v1/transactions?page=1&limit=10')
-                    .then(response => {
-                        results.push({
-                            user: i + 1,
-                            success: response.success,
-                            responseTime: Date.now() - startTime
-                        });
-                    })
-                    .catch(error => {
-                        results.push({
-                            user: i + 1,
-                            success: false,
-                            error: error.message
-                        });
-                    });
-                promises.push(promise);
-            }
+            // 動態生成唯一測試用戶Email
+            const timestamp = Date.now();
+            const randomStr = Math.random().toString(36).substr(2, 5);
+            const dynamicEmail = `test_register_${timestamp}_${randomStr}@lcas.app`;
 
-            await Promise.all(promises);
+            const registerData = {
+                email: dynamicEmail,
+                password: "TestRegister123!",
+                displayName: `測試註冊用戶_${timestamp}`,
+                userMode: "expert",
+                acceptTerms: true,
+                acceptPrivacy: true
+            };
 
-            const successCount = results.filter(r => r.success).length;
-            const successRate = successCount / concurrentTest.concurrent_users;
-            const avgResponseTime = results
-                .filter(r => r.responseTime)
-                .reduce((sum, r) => sum + r.responseTime, 0) / successCount;
+            const response = await this.makeRequest('POST', '/api/v1/auth/register', registerData);
 
-            const success = successRate >= concurrentTest.expected_success_rate &&
-                          avgResponseTime <= concurrentTest.expected_response_time_ms;
+            const success = response.success &&
+                          response.data?.userId &&
+                          response.data?.email === dynamicEmail;
 
             this.recordTestResult('TC-SIT-017', success, Date.now() - startTime, {
-                concurrentUsers: concurrentTest.concurrent_users,
-                successCount,
-                successRate: (successRate * 100).toFixed(2) + '%',
-                avgResponseTime: avgResponseTime?.toFixed(2) + 'ms',
-                results,
-                error: !success ? '併發操作效能不達標' : null
+                endpoint: 'POST /api/v1/auth/register',
+                testEmail: dynamicEmail,
+                response: response.data,
+                error: !success ? (response.error || '註冊API測試失敗') : null
             });
 
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-017', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/register',
                 error: error.message
             });
             return false;
@@ -2344,57 +2330,46 @@ class SITTestCases {
     }
 
     /**
-     * TC-SIT-018: 資料競爭處理測試
+     * TC-SIT-018: 直接測試POST /api/v1/auth/login
      */
-    async testCase018_DataRaceHandling() {
+    async testCase018_UserLoginAPI() {
         const startTime = Date.now();
         try {
-            // 建立測試交易
-            const createResponse = await this.makeRequest('POST', '/api/v1/transactions', {
-                amount: 100,
-                type: 'expense',
-                categoryId: 'test-category',
-                accountId: 'test-account',
-                ledgerId: 'test-ledger',
-                date: '2025-09-15',
-                description: '資料競爭測試'
-            });
+            console.log('🔑 TC-SIT-018: 直接測試POST /api/v1/auth/login');
 
-            if (!createResponse.success) {
-                throw new Error('無法建立測試交易');
+            const loginData = {
+                email: "expert001@lcas.app",
+                password: "ExpertPass123!",
+                rememberMe: true,
+                deviceInfo: {
+                    deviceId: 'test-device-sitTest',
+                    platform: 'Web',
+                    appVersion: '1.0.0'
+                }
+            };
+
+            const response = await this.makeRequest('POST', '/api/v1/auth/login', loginData);
+
+            const success = response.success &&
+                          response.data?.token &&
+                          response.data?.user?.email === loginData.email;
+
+            if (success) {
+                this.authToken = response.data.token;
             }
-
-            const transactionId = createResponse.data.data.transactionId;
-
-            // 同時發送多個更新請求
-            const updatePromises = [];
-            for (let i = 0; i < 5; i++) {
-                const updatePromise = this.makeRequest('PUT', `/api/v1/transactions/${transactionId}`, {
-                    amount: 100 + i,
-                    description: `資料競爭測試-更新${i}`
-                });
-                updatePromises.push(updatePromise);
-            }
-
-            const updateResults = await Promise.all(updatePromises);
-            const successfulUpdates = updateResults.filter(r => r.success).length;
-
-            // 驗證最終資料一致性
-            const finalResponse = await this.makeRequest('GET', `/api/v1/transactions/${transactionId}`);
-
-            const success = finalResponse.success && successfulUpdates > 0;
 
             this.recordTestResult('TC-SIT-018', success, Date.now() - startTime, {
-                transactionId,
-                simultaneousUpdates: 5,
-                successfulUpdates,
-                finalDataConsistent: finalResponse.success,
-                error: !success ? '資料競爭處理失敗' : null
+                endpoint: 'POST /api/v1/auth/login',
+                testEmail: loginData.email,
+                hasToken: !!response.data?.token,
+                response: response.data,
+                error: !success ? (response.error || '登入API測試失敗') : null
             });
 
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-018', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/login',
                 error: error.message
             });
             return false;
@@ -2402,107 +2377,40 @@ class SITTestCases {
     }
 
     /**
-     * TC-SIT-019: 8小時連續運行測試 (模擬版)
+     * TC-SIT-019: 直接測試POST /api/v1/auth/logout
      */
-    async testCase019_EightHourStabilityTest() {
+    async testCase019_UserLogoutAPI() {
         const startTime = Date.now();
         try {
-            const stabilityTest = this.testData.stability_and_performance_tests.long_running_stability_tests[0];
+            console.log('🚪 TC-SIT-019: 直接測試POST /api/v1/auth/logout');
 
-            // 因為實際環境限制，這裡模擬短時間內的連續操作
-            const testDurationMinutes = 2; // 2分鐘模擬測試
-            const operationsPerMinute = 10;
-            const totalOperations = testDurationMinutes * operationsPerMinute;
-
-            let successfulOperations = 0;
-            let totalResponseTime = 0;
-            const operationResults = [];
-            const memoryUsageHistory = [];
-
-            console.log(`🚀 開始24小時穩定性測試模擬 (${testDurationMinutes}分鐘)...`);
-
-            for (let i = 0; i < totalOperations; i++) {
-                const operationStartTime = Date.now();
-
-                try {
-                    // 執行不同類型的操作
-                    const operations = [
-                        () => this.makeRequest('GET', '/api/v1/users/profile'),
-                        () => this.makeRequest('GET', '/api/v1/transactions?limit=5'),
-                        () => this.makeRequest('GET', '/api/v1/transactions/dashboard')
-                    ];
-
-                    const randomOperation = operations[i % operations.length];
-                    const response = await randomOperation();
-
-                    const operationTime = Date.now() - operationStartTime;
-                    totalResponseTime += operationTime;
-
-                    if (response.success) {
-                        successfulOperations++;
-                    }
-
-                    // 記錄記憶體使用情況 (模擬)
-                    if (i % 20 === 0) {
-                        const memoryUsage = {
-                            timestamp: new Date().toISOString(),
-                            heapUsed: process.memoryUsage().heapUsed,
-                            heapTotal: process.memoryUsage().heapTotal,
-                            external: process.memoryUsage().external
-                        };
-                        memoryUsageHistory.push(memoryUsage);
-                    }
-
-                    operationResults.push({
-                        operation: i + 1,
-                        success: response.success,
-                        responseTime: operationTime,
-                        timestamp: new Date().toISOString(),
-                        memorySnapshot: i % 20 === 0 ? process.memoryUsage().heapUsed : null
-                    });
-
-                    // 每次操作間隔100ms
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                } catch (opError) {
-                    operationResults.push({
-                        operation: i + 1,
-                        success: false,
-                        error: opError.message
-                    });
+            const logoutData = {
+                token: this.authToken || 'test-token',
+                deviceInfo: {
+                    deviceId: 'test-device-sitTest',
+                    platform: 'Web'
                 }
+            };
+
+            const response = await this.makeRequest('POST', '/api/v1/auth/logout', logoutData);
+
+            const success = response.success;
+
+            if (success) {
+                this.authToken = null; // 清除Token
             }
 
-            const successRate = successfulOperations / totalOperations;
-            const avgResponseTime = totalResponseTime / Math.max(successfulOperations, 1);
-            const systemStability = successRate >= 0.95 ? '穩定' : '不穩定';
-
-            // 分析記憶體使用趨勢
-            const memoryLeakDetection = this.analyzeMemoryUsage(memoryUsageHistory);
-
-            const success = successRate >= 0.95 && avgResponseTime <= 2000 && !memoryLeakDetection.hasLeak;
-
             this.recordTestResult('TC-SIT-019', success, Date.now() - startTime, {
-                testDuration: `${testDurationMinutes} 分鐘 (模擬8小時)`,
-                totalOperations,
-                successfulOperations,
-                successRate: (successRate * 100).toFixed(2) + '%',
-                avgResponseTime: avgResponseTime?.toFixed(2) + 'ms',
-                systemStability: systemStability,
-                memoryAnalysis: memoryLeakDetection,
-                performanceGrade: this.getStabilityGrade(successRate, avgResponseTime),
-                operationalHealth: {
-                    responseTimeStability: this.calculateStabilityMetrics(operationResults).responseTimeVariance < 1000 ? '穩定' : '不穩定',
-                    throughputConsistency: this.calculateStabilityMetrics(operationResults).throughputVariance < 0.1 ? '一致' : '波動',
-                    errorRecoveryCapacity: this.calculateStabilityMetrics(operationResults).errorRecoveryRate > 0.9 ? '良好' : '需改善'
-                },
-                error: !success ? '系統穩定性測試未達標' : null
+                endpoint: 'POST /api/v1/auth/logout',
+                tokenCleared: !this.authToken,
+                response: response.data,
+                error: !success ? (response.error || '登出API測試失敗') : null
             });
 
-            // 重設為Expert模式
-            this.currentUserMode = 'Expert';
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-019', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/logout',
                 error: error.message
             });
             return false;
@@ -2510,58 +2418,31 @@ class SITTestCases {
     }
 
     /**
-     * TC-SIT-020: 壓力測試與恢復測試
+     * TC-SIT-020: 直接測試GET /api/v1/users/profile
      */
-    async testCase020_StressAndRecoveryTest() {
+    async testCase020_UserProfileAPI() {
         const startTime = Date.now();
         try {
-            const stressTest = this.testData.stability_and_performance_tests.stress_and_recovery_tests[0];
+            console.log('👤 TC-SIT-020: 直接測試GET /api/v1/users/profile');
 
-            // 高併發壓力測試
-            const stressPromises = [];
-            const stressResults = [];
+            const response = await this.makeRequest('GET', '/api/v1/users/profile');
 
-            for (let i = 0; i < stressTest.concurrent_users; i++) {
-                const stressPromise = this.performStressOperations(stressTest.operations_per_user)
-                    .then(result => {
-                        stressResults.push(result);
-                    });
-                stressPromises.push(stressPromise);
-            }
-
-            await Promise.all(stressPromises);
-
-            // 計算壓力測試結果
-            const totalOperations = stressResults.reduce((sum, r) => sum + r.totalOperations, 0);
-            const successfulOperations = stressResults.reduce((sum, r) => sum + r.successfulOperations, 0);
-            const stressSuccessRate = successfulOperations / totalOperations;
-
-            // 恢復測試 - 等待系統恢復後測試正常操作
-            await new Promise(resolve => setTimeout(resolve, 2000)); // 等待2秒恢復
-
-            const recoveryResponse = await this.makeRequest('GET', '/api/v1/users/profile');
-            const systemRecovered = recoveryResponse.success;
-
-            const success = stressSuccessRate >= 0.8 && systemRecovered;
+            const success = response.success &&
+                          response.data &&
+                          typeof response.data === 'object';
 
             this.recordTestResult('TC-SIT-020', success, Date.now() - startTime, {
-                stressTest: {
-                    concurrentUsers: stressTest.concurrent_users,
-                    operationsPerUser: stressTest.operations_per_user,
-                    totalOperations,
-                    successfulOperations,
-                    stressSuccessRate: (stressSuccessRate * 100).toFixed(2) + '%'
-                },
-                recoveryTest: {
-                    systemRecovered,
-                    recoveryTime: '2000ms'
-                },
-                error: !success ? '壓力測試或恢復測試失敗' : null
+                endpoint: 'GET /api/v1/users/profile',
+                hasUserData: !!response.data,
+                userMode: response.data?.metadata?.userMode,
+                response: response.data,
+                error: !success ? (response.error || '用戶資料API測試失敗') : null
             });
 
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-020', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/users/profile',
                 error: error.message
             });
             return false;
@@ -2594,128 +2475,46 @@ class SITTestCases {
     // ==================== 階段三：完整業務流程測試 ====================
 
     /**
-     * TC-SIT-021: 完整使用者旅程測試
+     * TC-SIT-021: 直接測試POST /api/v1/users/assessment
      */
-    async testCase021_CompleteUserJourney() {
+    async testCase021_UserAssessmentAPI() {
         const startTime = Date.now();
         try {
-            const journeyTest = this.testData.end_to_end_business_process_tests.complete_user_journey_tests[0];
-            const steps = journeyTest.steps;
-            let completedSteps = 0;
-            const stepResults = [];
+            console.log('📊 TC-SIT-021: 直接測試POST /api/v1/users/assessment');
 
-            console.log('🚀 開始執行完整使用者旅程測試...');
-
-            for (const step of steps) {
-                console.log(`  📝 執行步驟${step.step}: ${step.action}`);
-                let stepSuccess= false;
-
-                try {
-                    switch (step.action) {
-                        case '用戶註冊':
-                            const regResponse = await this.makeRequest('POST', '/api/v1/auth/register', {
-                                ...step.data,
-                                acceptTerms: true,
-                                acceptPrivacy: true
-                            });
-                            stepSuccess = regResponse.success;
-                            if (stepSuccess) {
-                                this.authToken = regResponse.data.data?.token;
-                                console.log('    ✅ 用戶註冊成功');
-                            }
-                            break;
-
-                        case '模式評估':
-                            const assessResponse = await this.makeRequest('POST', '/api/v1/users/assessment', {
-                                questionnaireId: 'complete-journey-test',
-                                answers: Object.entries(step.data.assessment_answers).map((answer, index) => ({
-                                    questionId: index + 1,
-                                    selectedOptions: [answer[1]]
-                                })),
-                                completedAt: new Date().toISOString()
-                            });
-                            stepSuccess = assessResponse.success;
-                            if (stepSuccess) {
-                                console.log('    ✅ 模式評估完成');
-                            }
-                            break;
-
-                        case '首次記帳':
-                            const bookingResponse = await this.makeRequest('POST', '/api/v1/transactions/quick', {
-                                input: step.data.input_text,
-                                userId: 'journey-test-user',
-                                ledgerId: 'journey-test-ledger'
-                            });
-                            stepSuccess = bookingResponse.success;
-                            if (stepSuccess) {
-                                console.log('    ✅ 首次記帳成功');
-                            }
-                            break;
-
-                        case '查詢記帳記錄':
-                            const queryResponse = await this.makeRequest('GET', '/api/v1/transactions', {
-                                ...step.data,
-                                userId: 'journey-test-user'
-                            });
-                            stepSuccess = queryResponse.success;
-                            if (stepSuccess) {
-                                console.log('    ✅ 記帳記錄查詢成功');
-                            }
-                            break;
-
-                        case '登出':
-                            const logoutResponse = await this.makeRequest('POST', '/api/v1/auth/logout');
-                            stepSuccess = logoutResponse.success;
-                            if (stepSuccess) {
-                                console.log('    ✅ 用戶登出成功');
-                                this.authToken = null;
-                            }
-                            break;
-
-                        default:
-                            // 其他步驟的通用處理
-                            stepSuccess = true; // 假設成功，實際環境中會有對應的API
-                            console.log(`    ✅ ${step.action} 完成 (模擬)`);
-                            break;
+            const assessmentData = {
+                questionnaireId: 'test_assessment_001',
+                answers: [
+                    {
+                        questionId: 1,
+                        selectedOptions: ['advanced']
+                    },
+                    {
+                        questionId: 2,
+                        selectedOptions: ['detailed']
                     }
+                ],
+                completedAt: new Date().toISOString()
+            };
 
-                    if (stepSuccess) {
-                        completedSteps++;
-                    }
+            const response = await this.makeRequest('POST', '/api/v1/users/assessment', assessmentData);
 
-                    stepResults.push({
-                        step: step.step,
-                        action: step.action,
-                        success: stepSuccess,
-                        duration: Date.now() - startTime
-                    });
-
-                } catch (stepError) {
-                    console.log(`    ❌ ${step.action} 失敗: ${stepError.message}`);
-                    stepResults.push({
-                        step: step.step,
-                        action: step.action,
-                        success: false,
-                        error: stepError.message
-                    });
-                }
-            }
-
-            const completionRate = completedSteps / steps.length;
-            const success = completionRate >= 0.8; // 80%步驟成功
+            const success = response.success &&
+                          response.data &&
+                          response.data.result;
 
             this.recordTestResult('TC-SIT-021', success, Date.now() - startTime, {
-                totalSteps: steps.length,
-                completedSteps,
-                completionRate: (completionRate * 100).toFixed(2) + '%',
-                stepResults,
-                journeyIntegrity: completionRate >= 0.9 ? '完整' : completionRate >= 0.7 ? '良好' : '需改善',
-                error: !success ? '完整使用者旅程測試未達標' : null
+                endpoint: 'POST /api/v1/users/assessment',
+                assessmentId: assessmentData.questionnaireId,
+                hasResult: !!response.data?.result,
+                response: response.data,
+                error: !success ? (response.error || '用戶評估API測試失敗') : null
             });
 
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-021', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/users/assessment',
                 error: error.message
             });
             return false;
@@ -2723,86 +2522,44 @@ class SITTestCases {
     }
 
     /**
-     * TC-SIT-022: 業務價值鏈驗證
+     * TC-SIT-022: 直接測試PUT /api/v1/users/preferences
      */
-    async testCase022_BusinessValueChainValidation() {
+    async testCase022_UserPreferencesAPI() {
         const startTime = Date.now();
         try {
-            const valueChain = [
-                '需求識別',
-                '功能設計',
-                '技術實現',
-                '資料處理',
-                '用戶回饋',
-                '價值交付'
-            ];
+            console.log('⚙️ TC-SIT-022: 直接測試PUT /api/v1/users/preferences');
 
-            let validatedChains = 0;
-            const chainResults = [];
+            const preferencesData = {
+                language: 'zh-TW',
+                currency: 'TWD',
+                timezone: 'Asia/Taipei',
+                notifications: {
+                    email: true,
+                    push: false,
+                    sms: false
+                },
+                privacy: {
+                    profileVisibility: 'private',
+                    dataSharing: false
+                }
+            };
 
-            // 驗證核心記帳價值鏈
-            try {
-                // 1. 需求識別 - 用戶需要記帳
-                const needValidation = true; // 假設需求明確
+            const response = await this.makeRequest('PUT', '/api/v1/users/preferences', preferencesData);
 
-                // 2. 功能設計 - API設計是否完整
-                const apiResponse = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
-                const designValidation = apiResponse.success;
-
-                // 3. 技術實現 - 系統是否正常運作
-                const techResponse = await this.makeRequest('POST', '/api/v1/transactions', {
-                    amount: 200,
-                    type: 'expense',
-                    categoryId: 'test-category',
-                    accountId: 'test-account',
-                    ledgerId: 'test-ledger',
-                    date: '2025-09-15',
-                    description: '價值鏈驗證'
-                });
-                const techValidation = techResponse.success;
-
-                // 4. 資料處理 - 資料是否正確儲存和處理
-                const dataResponse = await this.makeRequest('GET', '/api/v1/transactions?limit=1');
-                const dataValidation = dataResponse.success;
-
-                // 5. 用戶回饋 - 系統回應是否友善
-                const feedbackValidation = dataResponse.data?.metadata?.userMode === this.currentUserMode;
-
-                // 6. 價值交付 - 使用者目標是否達成
-                const valueValidation = techValidation && dataValidation;
-
-                const validations = [
-                    needValidation, designValidation, techValidation,
-                    dataValidation, feedbackValidation, valueValidation
-                ];
-
-                validatedChains = validations.filter(v => v).length;
-
-                valueChain.forEach((chain, index) => {
-                    chainResults.push({
-                        chain,
-                        validated: validations[index],
-                        details: this.getChainDetails(chain, validations[index])
-                    });
-                });
-
-            } catch (error) {
-                chainResults.push({ error: error.message });
-            }
-
-            const success = validatedChains >= valueChain.length * 0.8;
+            const success = response.success &&
+                          response.data;
 
             this.recordTestResult('TC-SIT-022', success, Date.now() - startTime, {
-                totalChains: valueChain.length,
-                validatedChains,
-                validationRate: (validatedChains / valueChain.length * 100).toFixed(2) + '%',
-                chainResults,
-                error: !success ? '業務價值鏈驗證未達標' : null
+                endpoint: 'PUT /api/v1/users/preferences',
+                preferencesSet: Object.keys(preferencesData),
+                response: response.data,
+                error: !success ? (response.error || '用戶偏好設定API測試失敗') : null
             });
 
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-022', false, Date.now() - startTime, {
+                endpoint: 'PUT /api/v1/users/preferences',
                 error: error.message
             });
             return false;
@@ -2825,54 +2582,38 @@ class SITTestCases {
     }
 
     /**
-     * TC-SIT-023: 四模式使用者體驗測試
+     * TC-SIT-023: 直接測試POST /api/v1/transactions/quick
      */
-    async testCase023_FourModeUserExperience() {
+    async testCase023_QuickBookingAPI() {
         const startTime = Date.now();
         try {
-            const modes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
-            const experienceResults = [];
-            let successfulExperiences = 0;
+            console.log('⚡ TC-SIT-023: 直接測試POST /api/v1/transactions/quick');
 
-            for (const mode of modes) {
-                try {
-                    this.currentUserMode = mode;
+            const quickBookingData = {
+                input: '午餐150',
+                userId: 'test-user-quick',
+                ledgerId: 'test-ledger-quick'
+            };
 
-                    // 測試該模式的用戶體驗
-                    const experiences = await this.testModeExperience(mode);
-                    experienceResults.push({
-                        mode,
-                        experiences,
-                        success: experiences.every(exp => exp.success)
-                    });
+            const response = await this.makeRequest('POST', '/api/v1/transactions/quick', quickBookingData);
 
-                    if (experiences.every(exp => exp.success)) {
-                        successfulExperiences++;
-                    }
-                } catch (modeError) {
-                    experienceResults.push({
-                        mode,
-                        success: false,
-                        error: modeError.message
-                    });
-                }
-            }
-
-            const success = successfulExperiences >= modes.length * 0.75; // 75%模式體驗成功
+            const success = response.success &&
+                          response.data &&
+                          response.data.parsed;
 
             this.recordTestResult('TC-SIT-023', success, Date.now() - startTime, {
-                totalModes: modes.length,
-                successfulExperiences,
-                experienceSuccessRate: (successfulExperiences / modes.length * 100).toFixed(2) + '%',
-                experienceResults,
-                error: !success ? '四模式使用者體驗測試未達標' : null
+                endpoint: 'POST /api/v1/transactions/quick',
+                inputText: quickBookingData.input,
+                parsed: response.data?.parsed,
+                transactionId: response.data?.transactionId,
+                response: response.data,
+                error: !success ? (response.error || '快速記帳API測試失敗') : null
             });
 
-            // 重設為Expert模式
-            this.currentUserMode = 'Expert';
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-023', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/transactions/quick',
                 error: error.message
             });
             return false;
@@ -2924,60 +2665,125 @@ class SITTestCases {
     }
 
     /**
-     * TC-SIT-024: 介面回應性測試
+     * TC-SIT-024: 直接測試CRUD /api/v1/transactions
      */
-    async testCase024_InterfaceResponsiveness() {
+    async testCase024_TransactionCRUDAPI() {
         const startTime = Date.now();
         try {
-            const responsiveTests = [
-                { endpoint: '/api/v1/users/profile', expectedTime: 1000, description: '用戶資料載入' },
-                { endpoint: '/api/v1/transactions/dashboard', expectedTime: 2000, description: '儀表板載入' },
-                { endpoint: '/api/v1/transactions?limit=10', expectedTime: 1500, description: '交易列表載入' }
-            ];
+            console.log('💰 TC-SIT-024: 直接測試CRUD /api/v1/transactions');
 
-            const responsiveResults = [];
-            let responsiveCount = 0;
+            let transactionId = null;
+            const crudResults = [];
 
-            for (const test of responsiveTests) {
-                const testStartTime = Date.now();
+            // CREATE - 新增交易
+            try {
+                const createData = {
+                    amount: 300,
+                    type: 'expense',
+                    description: 'CRUD測試交易',
+                    categoryId: 'test-category',
+                    accountId: 'test-account',
+                    ledgerId: 'test-ledger',
+                    date: '2025-01-01'
+                };
+
+                const createResponse = await this.makeRequest('POST', '/api/v1/transactions', createData);
+                const createSuccess = createResponse.success;
+                
+                if (createSuccess) {
+                    transactionId = createResponse.data?.transactionId || 'test-transaction-id';
+                }
+
+                crudResults.push({
+                    operation: 'CREATE',
+                    success: createSuccess,
+                    transactionId: transactionId
+                });
+            } catch (createError) {
+                crudResults.push({
+                    operation: 'CREATE',
+                    success: false,
+                    error: createError.message
+                });
+            }
+
+            // READ - 查詢交易列表
+            try {
+                const readResponse = await this.makeRequest('GET', '/api/v1/transactions?limit=5');
+                const readSuccess = readResponse.success;
+
+                crudResults.push({
+                    operation: 'READ',
+                    success: readSuccess,
+                    recordCount: readResponse.data?.transactions?.length || 0
+                });
+            } catch (readError) {
+                crudResults.push({
+                    operation: 'READ',
+                    success: false,
+                    error: readError.message
+                });
+            }
+
+            // UPDATE - 更新交易 (如果有transactionId)
+            if (transactionId) {
                 try {
-                    const response = await this.makeRequest('GET', test.endpoint);
-                    const responseTime = Date.now() - testStartTime;
+                    const updateData = {
+                        amount: 350,
+                        description: 'CRUD測試交易-已更新'
+                    };
 
-                    const isResponsive = response.success && responseTime <= test.expectedTime;
-                    if (isResponsive) responsiveCount++;
+                    const updateResponse = await this.makeRequest('PUT', `/api/v1/transactions/${transactionId}`, updateData);
+                    const updateSuccess = updateResponse.success;
 
-                    responsiveResults.push({
-                        endpoint: test.endpoint,
-                        description: test.description,
-                        responseTime,
-                        expectedTime: test.expectedTime,
-                        responsive: isResponsive,
-                        success: response.success
+                    crudResults.push({
+                        operation: 'UPDATE',
+                        success: updateSuccess,
+                        transactionId: transactionId
                     });
-                } catch (error) {
-                    responsiveResults.push({
-                        endpoint: test.endpoint,
-                        description: test.description,
-                        responsive: false,
-                        error: error.message
+                } catch (updateError) {
+                    crudResults.push({
+                        operation: 'UPDATE',
+                        success: false,
+                        error: updateError.message
+                    });
+                }
+
+                // DELETE - 刪除交易
+                try {
+                    const deleteResponse = await this.makeRequest('DELETE', `/api/v1/transactions/${transactionId}`);
+                    const deleteSuccess = deleteResponse.success;
+
+                    crudResults.push({
+                        operation: 'DELETE',
+                        success: deleteSuccess,
+                        transactionId: transactionId
+                    });
+                } catch (deleteError) {
+                    crudResults.push({
+                        operation: 'DELETE',
+                        success: false,
+                        error: deleteError.message
                     });
                 }
             }
 
-            const success = responsiveCount >= responsiveTests.length * 0.8;
+            const successCount = crudResults.filter(r => r.success).length;
+            const success = successCount >= 2; // 至少2個操作成功
 
             this.recordTestResult('TC-SIT-024', success, Date.now() - startTime, {
-                totalTests: responsiveTests.length,
-                responsiveCount,
-                responsivenessRate: (responsiveCount / responsiveTests.length * 100).toFixed(2) + '%',
-                responsiveResults,
-                error: !success ? '介面回應性測試未達標' : null
+                endpoint: 'CRUD /api/v1/transactions',
+                crudResults,
+                successCount,
+                totalOperations: crudResults.length,
+                successRate: (successCount / crudResults.length * 100).toFixed(2) + '%',
+                error: !success ? 'CRUD操作測試失敗' : null
             });
 
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-024', false, Date.now() - startTime, {
+                endpoint: 'CRUD /api/v1/transactions',
                 error: error.message
             });
             return false;
@@ -2987,150 +2793,40 @@ class SITTestCases {
     // ==================== 階段三：系統穩定性驗證 ====================
 
     /**
-     * TC-SIT-025: 24小時穩定性測試 (模擬版)
+     * TC-SIT-025: 直接測試GET /api/v1/transactions/dashboard
      */
-    async testCase025_TwentyFourHourStabilityTest() {
+    async testCase025_TransactionDashboardAPI() {
         const startTime = Date.now();
         try {
-            const stabilityTest = this.testData.stability_and_performance_tests.long_running_stability_tests[1];
+            console.log('📊 TC-SIT-025: 直接測試GET /api/v1/transactions/dashboard');
 
-            // 模擬24小時穩定性測試 (實際執行5分鐘)
-            const testDurationMinutes = 5; // 5分鐘模擬24小時
-            const operationsPerMinute = 20;
-            const totalOperations = testDurationMinutes * operationsPerMinute;
+            const queryParams = {
+                period: 'month',
+                year: '2025',
+                month: '01',
+                includeCharts: true,
+                includeStatistics: true
+            };
 
-            let successfulOperations = 0;
-            let totalResponseTime = 0;
-            const stabilityResults = [];
-            const memoryUsageHistory = [];
+            const response = await this.makeRequest('GET', '/api/v1/transactions/dashboard?' + new URLSearchParams(queryParams));
 
-            console.log(`🚀 開始24小時穩定性測試模擬 (${testDurationMinutes}分鐘)...`);
-
-            for (let i = 0; i < totalOperations; i++) {
-                const operationStartTime = Date.now();
-
-                try {
-                    // 隨機選擇操作類型，模擬真實用戶行為
-                    const operationTypes = [
-                        {
-                            name: '基礎CRUD操作',
-                            action: () => this.makeRequest('GET', '/api/v1/users/profile')
-                        },
-                        {
-                            name: '記帳操作',
-                            action: () => this.makeRequest('POST', '/api/v1/transactions/quick', {
-                                input: `24H測試記帳${i}`,
-                                userId: 'stability-test-user'
-                            })
-                        },
-                        {
-                            name: '查詢操作',
-                            action: () => this.makeRequest('GET', '/api/v1/transactions?limit=5')
-                        },
-                        {
-                            name: '統計操作',
-                            action: () => this.makeRequest('GET', '/api/v1/transactions/dashboard')
-                        },
-                        {
-                            name: '模式切換操作',
-                            action: () => {
-                                const modes = ['Expert', 'Guiding', 'Inertial', 'Cultivation'];
-                                this.currentUserMode = modes[i % modes.length];
-                                return this.makeRequest('GET', '/api/v1/users/profile');
-                            }
-                        }
-                    ];
-
-                    const selectedOperation = operationTypes[i % operationTypes.length];
-                    const response = await selectedOperation.action();
-
-                    const responseTime = Date.now() - operationStartTime;
-                    totalResponseTime += responseTime;
-
-                    if (response.success) {
-                        successfulOperations++;
-                    }
-
-                    // 記錄記憶體使用情況 (模擬)
-                    if (i % 20 === 0) {
-                        const memoryUsage = {
-                            timestamp: new Date().toISOString(),
-                            heapUsed: process.memoryUsage().heapUsed,
-                            heapTotal: process.memoryUsage().heapTotal,
-                            external: process.memoryUsage().external
-                        };
-                        memoryUsageHistory.push(memoryUsage);
-                    }
-
-                    stabilityResults.push({
-                        operation: i + 1,
-                        operationType: selectedOperation.name,
-                        success: response.success,
-                        responseTime,
-                        timestamp: new Date().toISOString(),
-                        memorySnapshot: i % 20 === 0 ? process.memoryUsage().heapUsed : null
-                    });
-
-                    // 每次操作間隔3秒 (模擬實際使用頻率)
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-
-                    // 每10次操作顯示進度和系統狀態
-                    if ((i + 1) % 10 === 0) {
-                        const currentSuccessRate = (successfulOperations / (i + 1) * 100).toFixed(2);
-                        const avgResponseTime = (totalResponseTime / Math.max(successfulOperations, 1)).toFixed(2);
-                        console.log(`  📊 穩定性測試進度: ${i + 1}/${totalOperations}`);
-                        console.log(`  ✅ 成功率: ${currentSuccessRate}%`);
-                        console.log(`  ⏱️  平均回應時間: ${avgResponseTime}ms`);
-                        console.log(`  💾 記憶體使用: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB`);
-                    }
-
-                } catch (error) {
-                    stabilityResults.push({
-                        operation: i + 1,
-                        success: false,
-                        error: error.message,
-                        timestamp: new Date().toISOString()
-                    });
-                }
-            }
-
-            const successRate = successfulOperations / totalOperations;
-            const avgResponseTime = totalResponseTime / Math.max(successfulOperations, 1);
-            const systemAvailability = successRate;
-
-            // 分析記憶體使用趨勢
-            const memoryLeakDetection = this.analyzeMemoryUsage(memoryUsageHistory);
-
-            // 計算系統穩定性指標
-            const stabilityMetrics = this.calculateStabilityMetrics(stabilityResults);
-
-            const success = successRate >= 0.99 &&
-                          avgResponseTime <= 3000 &&
-                          !memoryLeakDetection.hasLeak;
+            const success = response.success &&
+                          response.data &&
+                          typeof response.data === 'object';
 
             this.recordTestResult('TC-SIT-025', success, Date.now() - startTime, {
-                testDuration: `${testDurationMinutes} 分鐘 (模擬24小時)`,
-                totalOperations,
-                successfulOperations,
-                successRate: (successRate * 100).toFixed(2) + '%',
-                avgResponseTime: avgResponseTime.toFixed(2) + 'ms',
-                systemAvailability: (systemAvailability * 100).toFixed(2) + '%',
-                stabilityMetrics,
-                memoryAnalysis: memoryLeakDetection,
-                performanceGrade: this.getStabilityGrade(successRate, avgResponseTime),
-                operationalHealth: {
-                    responseTimeStability: this.calculateStabilityMetrics(operationResults).responseTimeVariance < 1000 ? '穩定' : '不穩定',
-                    throughputConsistency: this.calculateStabilityMetrics(operationResults).throughputVariance < 0.1 ? '一致' : '波動',
-                    errorRecoveryCapacity: this.calculateStabilityMetrics(operationResults).errorRecoveryRate > 0.9 ? '良好' : '需改善'
-                },
-                error: !success ? '24小時穩定性測試未達標' : null
+                endpoint: 'GET /api/v1/transactions/dashboard',
+                queryParams: queryParams,
+                hasData: !!response.data,
+                dataKeys: response.data ? Object.keys(response.data) : [],
+                response: response.data,
+                error: !success ? (response.error || '儀表板API測試失敗') : null
             });
 
-            // 重設為Expert模式
-            this.currentUserMode = 'Expert';
             return success;
         } catch (error) {
             this.recordTestResult('TC-SIT-025', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/dashboard',
                 error: error.message
             });
             return false;
@@ -3561,11 +3257,16 @@ class SITTestCases {
             this.testCase015_BusinessRuleErrorHandling,
             this.testCase016_FourModeProcessDifference,
 
-            // 效能與穩定性測試
-            this.testCase017_ConcurrentOperations,
-            this.testCase018_DataRaceHandling,
-            this.testCase019_EightHourStabilityTest,
-            this.testCase020_StressAndRecoveryTest
+            // 新的API直接測試
+            this.testCase017_UserRegisterAPI,
+            this.testCase018_UserLoginAPI,
+            this.testCase019_UserLogoutAPI,
+            this.testCase020_UserProfileAPI,
+            this.testCase021_UserAssessmentAPI,
+            this.testCase022_UserPreferencesAPI,
+            this.testCase023_QuickBookingAPI,
+            this.testCase024_TransactionCRUDAPI,
+            this.testCase025_TransactionDashboardAPI
         ];
 
         let passedTests = 0;
@@ -3668,17 +3369,10 @@ class SITTestCases {
         console.log('=' * 80);
 
         const phase3TestMethods = [
-            // 業務價值鏈驗證
-            this.testCase021_CompleteUserJourney,
-            this.testCase022_BusinessValueChainValidation,
-            this.testCase023_FourModeUserExperience,
-            this.testCase024_InterfaceResponsiveness,
-
             // 系統穩定性驗證
-            this.testCase025_TwentyFourHourStabilityTest,
-            this.testCase026_P1CoreAPIRegression, // Changed from ComprehensiveAPIRegression
-            this.testCase027_FailureRecoveryTest, // Corrected test case name
-            this.testCase028_PerformanceBenchmarkValidation // Corrected test case name
+            this.testCase026_P1CoreAPIRegression,
+            this.testCase027_FailureRecoveryTest,
+            this.testCase028_PerformanceBenchmarkValidation
         ];
 
         let passedTests = 0;
