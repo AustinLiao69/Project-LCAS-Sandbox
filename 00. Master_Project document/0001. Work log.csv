@@ -251,22 +251,24 @@ MM 	 DD 	 Description 	    Progress
 9	20	 撰寫DCN-0013 	 Open
 9	20	 執行DCN-0013：8201, 8202, 8203,8204, 8205, 8206重構 	 Ongoing
 9	20	 執行DCN-0012：ASL.js重構 	 Closed
-9	20	 打通SIT測試環境 	 Ongoing
-9	22	 打通SIT測試環境 	 Ongoing
+9	20	 打通SIT測試環境 	 Closed
+9	22	 打通SIT測試環境 	 Closed
 9	22	 調查Firestore寫入數超過配額原因(29,000) 	 Ongoing
-9	22	 更新BL的LLD文件 	 Open
+9	22	 更新BL的LLD文件 	 Closed
 9	23	 撰寫DCN-0014 	 Closed
 9	23	 執行DCN-0014 	 Closed
 9	23	 打通SIT測試環境 	 Ongoing
 9	24	 設定Firebase auth 	 Open
-9	24	 修改SIT測試案例及測試資料 	 Ongoing
+9	24	 修改SIT測試案例及測試資料 	 Closed
 9	24	 撰寫DCN-0015 	 Closed
-9	24	 執行DCN-0015 	 Ongoing
-9	24	 執行DCN-0015：更新APL層81,82,83文件 	 Ongoing
-9	24	 執行DCN-0015：修改SIT測試邏輯 	 Ongoing
-9	24	 打通SIT測試環境 	 Ongoing
-9	25	 打通SIT測試環境 	 Ongoing
-9	26	 打通SIT測試環境 	 Ongoing
-10	1	 打通SIT測試環境：修復階段一：單點整合驗證測試 	 Ongoing
+9	24	 執行DCN-0015 	 Closed
+9	24	 執行DCN-0015：更新APL層81,82,83文件 	 Closed
+9	24	 執行DCN-0015：修改SIT測試邏輯 	 Closed
+9	24	 打通SIT測試環境 	 Closed
+9	25	 打通SIT測試環境 	 Closed
+9	26	 打通SIT測試環境 	 Closed
+10	1	 打通SIT測試環境：修復階段一：單點整合驗證測試 	 Closed
 10	2	 打通SIT測試環境：修復階段一：單點整合驗證測試案例003, 007 	 Ongoing
-10	2	 整理文件：20251002. code review prompt參考 	 Ongoing
+10	2	 整理文件：20251002. code review prompt參考 	 Closed
+10	2	 打通SIT測試環境：階段一 	 Closed
+10	3	 打通SIT測試環境：階段二 	 Ongoing
