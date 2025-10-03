@@ -53,6 +53,9 @@ git push -f origin main
 cd "06. SIT_Test code" &&
 node "0603. SIT_TC_P1.js" --phase=all
 
+cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=2
+
 12. 停止shell command
 
 pkill -f node
