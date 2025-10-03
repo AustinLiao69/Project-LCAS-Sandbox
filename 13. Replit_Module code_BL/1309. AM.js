@@ -3792,16 +3792,16 @@ module.exports = {
 console.log("AM 帳號管理模組載入完成 v3.0.4 - TC-SIT-003階段一修復：移除用戶ID生成，使用0692測試資料，統一資料來源完成");
 
 /**
- * AM_calculateModeFromAnswers - 階段一修復：補充缺失的核心函數
- * @version 2025-10-02-V1.0.0
- * @date 2025-10-02
- * @description 根據評估問卷答案計算推薦的用戶模式
- * @param {Array} answers - 用戶的問卷答案
+ * AM_calculateModeFromAnswers - 階段一修復：移除hard coding，支援0692測試資料格式
+ * @version 2025-10-03-V1.1.0
+ * @date 2025-10-03
+ * @description 根據評估問卷答案計算推薦的用戶模式，支援物件和陣列格式
+ * @param {Array|Object} answers - 用戶的問卷答案
  * @returns {Object} 包含推薦模式和分數的結果
  */
 function AM_calculateModeFromAnswers(answers) {
   try {
-    console.log(`🔧 AM_calculateModeFromAnswers: 開始計算模式，答案數量: ${answers ? answers.length : 0}`);
+    console.log(`🔧 AM_calculateModeFromAnswers: 開始計算模式，答案類型: ${typeof answers}`);
 
     // 初始化各模式分數
     const modeScores = {
@@ -3811,41 +3811,89 @@ function AM_calculateModeFromAnswers(answers) {
       Guiding: 0
     };
 
-    // MVP階段簡化計算邏輯
-    if (!answers || answers.length === 0) {
+    // 語義化答案映射表（移除hard coding）
+    const answerMapping = {
+      // 財務經驗相關
+      'advanced': { Expert: 3, Cultivation: 1, Guiding: 0, Inertial: 0 },
+      'intermediate': { Expert: 1, Cultivation: 3, Guiding: 1, Inertial: 1 },
+      'basic': { Expert: 0, Cultivation: 1, Guiding: 3, Inertial: 2 },
+      'beginner': { Expert: 0, Cultivation: 0, Guiding: 2, Inertial: 3 },
+      
+      // 詳細程度偏好
+      'detailed': { Expert: 3, Cultivation: 2, Guiding: 1, Inertial: 0 },
+      'moderate': { Expert: 1, Cultivation: 3, Guiding: 2, Inertial: 1 },
+      'simple': { Expert: 0, Cultivation: 1, Guiding: 3, Inertial: 2 },
+      
+      // 介面複雜度
+      'complex': { Expert: 3, Cultivation: 1, Guiding: 0, Inertial: 0 },
+      'standard': { Expert: 2, Cultivation: 2, Guiding: 2, Inertial: 1 },
+      'simplified': { Expert: 0, Cultivation: 1, Guiding: 3, Inertial: 2 },
+      
+      // 報表需求
+      'comprehensive': { Expert: 3, Cultivation: 2, Guiding: 1, Inertial: 0 },
+      'standard': { Expert: 1, Cultivation: 2, Guiding: 2, Inertial: 1 },
+      'minimal': { Expert: 0, Cultivation: 0, Guiding: 1, Inertial: 3 },
+      
+      // 傳統A/B/C選項支援
+      'A': { Expert: 3, Cultivation: 1, Guiding: 0, Inertial: 0 },
+      'B': { Expert: 1, Cultivation: 2, Guiding: 3, Inertial: 2 },
+      'C': { Expert: 0, Cultivation: 3, Guiding: 2, Inertial: 1 }
+    };
+
+    // 檢查答案格式並處理
+    let processedAnswers = [];
+    
+    if (!answers) {
       console.log(`⚠️ AM_calculateModeFromAnswers: 無答案數據，返回預設Expert模式`);
       return {
-        recommendedMode: "Expert",
+        mode: "Expert",
         score: modeScores,
         confidence: 0.5,
         reason: "預設模式（無答案數據）"
       };
     }
 
-    // 簡化的模式計算邏輯
-    answers.forEach((answer, index) => {
-      console.log(`🔍 AM_calculateModeFromAnswers: 處理第${index + 1}題答案: ${answer}`);
+    // 處理物件格式（0692測試資料格式）
+    if (typeof answers === 'object' && !Array.isArray(answers)) {
+      console.log(`📊 AM_calculateModeFromAnswers: 處理物件格式答案`);
+      processedAnswers = Object.values(answers);
+    }
+    // 處理陣列格式
+    else if (Array.isArray(answers)) {
+      console.log(`📊 AM_calculateModeFromAnswers: 處理陣列格式答案`);
+      processedAnswers = answers;
+    }
+    else {
+      console.log(`⚠️ AM_calculateModeFromAnswers: 未知答案格式，使用預設模式`);
+      return {
+        mode: "Expert",
+        score: modeScores,
+        confidence: 0.3,
+        reason: "未知答案格式"
+      };
+    }
 
-      // 根據答案選項計算分數（簡化版）
-      switch (answer) {
-        case 'A':
-          modeScores.Expert += 3;
-          modeScores.Cultivation += 1;
-          break;
-        case 'B':
-          modeScores.Guiding += 3;
-          modeScores.Inertial += 2;
-          break;
-        case 'C':
-          modeScores.Cultivation += 3;
-          modeScores.Guiding += 2;
-          modeScores.Expert += 1;
-          break;
-        default:
-          // 如果是其他格式的答案，給予平均分
-          Object.keys(modeScores).forEach(mode => {
-            modeScores[mode] += 1;
-          });
+    console.log(`🔍 AM_calculateModeFromAnswers: 處理 ${processedAnswers.length} 個答案`);
+
+    // 計算各模式分數
+    processedAnswers.forEach((answer, index) => {
+      const answerStr = String(answer).toLowerCase();
+      const mapping = answerMapping[answerStr];
+      
+      console.log(`🎯 AM_calculateModeFromAnswers: 第${index + 1}題答案: ${answerStr}`);
+      
+      if (mapping) {
+        // 使用映射表計算分數
+        Object.keys(modeScores).forEach(mode => {
+          modeScores[mode] += mapping[mode] || 0;
+        });
+        console.log(`✓ 使用映射表計算分數`);
+      } else {
+        // 未知答案給予平均分
+        Object.keys(modeScores).forEach(mode => {
+          modeScores[mode] += 1;
+        });
+        console.log(`⚠️ 未知答案 "${answerStr}"，給予平均分`);
       }
     });
 
@@ -3854,6 +3902,7 @@ function AM_calculateModeFromAnswers(answers) {
     let maxScore = 0;
 
     Object.entries(modeScores).forEach(([mode, score]) => {
+      console.log(`📈 ${mode}: ${score}分`);
       if (score > maxScore) {
         maxScore = score;
         recommendedMode = mode;
@@ -3867,16 +3916,21 @@ function AM_calculateModeFromAnswers(answers) {
     console.log(`✅ AM_calculateModeFromAnswers: 計算完成，推薦模式: ${recommendedMode}，信心度: ${confidence.toFixed(2)}`);
 
     return {
-      recommendedMode,
+      mode: recommendedMode,
       score: modeScores,
-      confidence,
-      reason: `基於${answers.length}題評估結果`
+      confidence: confidence,
+      reason: `基於${processedAnswers.length}題評估結果`,
+      details: {
+        totalScore: totalScore,
+        maxScore: maxScore,
+        answersProcessed: processedAnswers.length
+      }
     };
 
   } catch (error) {
     console.error(`❌ AM_calculateModeFromAnswers: 計算失敗: ${error.message}`);
     return {
-      recommendedMode: "Expert",
+      mode: "Expert",
       score: { Expert: 1, Inertial: 0, Cultivation: 0, Guiding: 0 },
       confidence: 0.3,
       reason: "計算錯誤，使用預設模式"
