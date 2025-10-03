@@ -1746,16 +1746,20 @@ class SITTestCases {
                 throw new Error('無法取得評估問卷');
             }
 
-            // 提交評估答案
+            // 提交評估答案 - 階段二修復：直接使用物件格式答案
             const assessmentData = this.testData.mode_assessment_test_data.expert_mode_assessment;
+            
+            console.log(`🔄 TC-SIT-008: 準備提交評估答案...`);
+            console.log(`📋 評估答案:`, assessmentData.answers);
+            console.log(`📋 期望模式:`, assessmentData.expected_mode);
+            
             const submitResponse = await this.makeRequest('POST', '/api/v1/users/assessment', {
                 questionnaireId: assessmentData.assessment_id,
-                answers: Object.entries(assessmentData.answers).map((answer, index) => ({
-                    questionId: index + 1,
-                    selectedOptions: [answer[1]]
-                })),
+                answers: assessmentData.answers, // 直接使用物件格式
                 completedAt: new Date().toISOString()
             });
+            
+            console.log(`📊 評估API回應:`, JSON.stringify(submitResponse.data, null, 2));
 
             const success = questionsResponse.success &&
                           submitResponse.success &&
