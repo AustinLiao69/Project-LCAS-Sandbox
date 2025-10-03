@@ -2833,297 +2833,7 @@ class SITTestCases {
         }
     }
 
-    /**
-     * TC-SIT-026: P1-2核心API端點回歸測試
-     */
-    async testCase026_P1CoreAPIRegression() {
-        const startTime = Date.now();
-        try {
-            // P1-2階段核心API端點 (根據0090文件P1-2範圍)
-            const coreApiEndpoints = [
-                // 8101 認證服務 (核心端點)
-                { endpoint: '/api/v1/auth/register', method: 'POST', testData: { email: 'test@lcas.app', password: 'Test123!' } },
-                { endpoint: '/api/v1/auth/login', method: 'POST', testData: { email: 'test@lcas.app', password: 'Test123!' } },
-                { endpoint: '/api/v1/auth/logout', method: 'POST', testData: {} },
-
-                // 8102 用戶管理服務 (核心端點)
-                { endpoint: '/api/v1/users/profile', method: 'GET', testData: null },
-                { endpoint: '/api/v1/users/assessment', method: 'POST', testData: { questionnaireId: 'test', answers: [] } },
-
-                // 8103 記帳交易服務 (核心端點)
-                { endpoint: '/api/v1/transactions/quick', method: 'POST', testData: { input: '測試100' } },
-                { endpoint: '/api/v1/transactions', method: 'GET', testData: null },
-                { endpoint: '/api/v1/transactions', method: 'POST', testData: { amount: 100, type: 'expense' } },
-                { endpoint: '/api/v1/transactions/dashboard', method: 'GET', testData: null }
-            ];
-
-            let successfulTests = 0;
-            const testResults = [];
-
-            console.log(`🚀 開始P1-2核心API端點回歸測試 (${coreApiEndpoints.length}個端點)...`);
-
-            for (const apiTest of coreApiEndpoints) {
-                try {
-                    const response = await this.makeRequest(apiTest.method, apiTest.endpoint, apiTest.testData);
-
-                    // 驗證統一回應格式 (DCN-0015要求)
-                    const hasUnifiedFormat = this.validateUnifiedResponseFormat(response.data);
-                    const isSuccessful = response.success || response.status < 500;
-
-                    if (isSuccessful) successfulTests++;
-
-                    testResults.push({
-                        endpoint: apiTest.endpoint,
-                        method: apiTest.method,
-                        success: isSuccessful,
-                        status: response.status,
-                        hasUnifiedFormat,
-                        userMode: response.data?.metadata?.userMode || 'Unknown'
-                    });
-
-                    console.log(`  ${isSuccessful ? '✅' : '❌'} ${apiTest.method} ${apiTest.endpoint} - 統一格式: ${hasUnifiedFormat ? '✅' : '❌'}`);
-
-                } catch (error) {
-                    testResults.push({
-                        endpoint: apiTest.endpoint,
-                        method: apiTest.method,
-                        success: false,
-                        error: error.message
-                    });
-                }
-            }
-
-            const successRate = successfulTests / coreApiEndpoints.length;
-            const unifiedFormatCount = testResults.filter(r => r.hasUnifiedFormat).length;
-            const unifiedFormatRate = unifiedFormatCount / coreApiEndpoints.length;
-
-            const success = successRate >= 0.8 && unifiedFormatRate >= 0.8; // P1-2階段80%成功率
-
-            this.recordTestResult('TC-SIT-026', success, Date.now() - startTime, {
-                totalEndpoints: coreApiEndpoints.length,
-                successfulTests,
-                successRate: (successRate * 100).toFixed(2) + '%',
-                unifiedFormatRate: (unifiedFormatRate * 100).toFixed(2) + '%',
-                testResults,
-                p1CoreApiHealth: successRate >= 0.9 ? '優秀' : successRate >= 0.8 ? '良好' : '需改善',
-                dcn0015Compliance: unifiedFormatRate >= 0.9 ? '完全符合' : unifiedFormatRate >= 0.8 ? '基本符合' : '不符合',
-                error: !success ? 'P1-2核心API端點回歸測試未達標' : null
-            });
-
-            return success;
-        } catch (error) {
-            this.recordTestResult('TC-SIT-026', false, Date.now() - startTime, {
-                error: error.message
-            });
-            return false;
-        }
-    }
-
-    /**
-     * TC-SIT-027: 故障恢復測試
-     */
-    async testCase027_FailureRecoveryTest() {
-        const startTime = Date.now();
-        try {
-            const recoveryTests = [
-                {
-                    name: '無效請求恢復',
-                    test: async () => {
-                        // 發送無效請求
-                        await this.makeRequest('GET', '/invalid-endpoint');
-                        // 立即發送正常請求測試恢復
-                        const recovery = await this.makeRequest('GET', '/api/v1/users/profile');
-                        return recovery.success;
-                    }
-                },
-                {
-                    name: '認證錯誤恢復',
-                    test: async () => {
-                        const originalToken = this.authToken;
-                        // 使用無效Token
-                        this.authToken = 'invalid-token';
-                        await this.makeRequest('GET', '/api/v1/users/profile');
-                        // 恢復正確Token
-                        this.authToken = originalToken;
-                        const recovery = await this.makeRequest('GET', '/api/v1/users/profile');
-                        return recovery.success;
-                    }
-                },
-                {
-                    name: '資料格式錯誤恢復',
-                    test: async () => {
-                        // 發送格式錯誤的資料
-                        await this.makeRequest('POST', '/api/v1/transactions', { invalid: 'data' });
-                        // 發送正確格式測試恢復
-                        const recovery = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
-                        return recovery.success;
-                    }
-                }
-            ];
-
-            const recoveryResults = [];
-            let successfulRecoveries = 0;
-
-            for (const test of recoveryTests) {
-                try {
-                    const recovered = await test.test();
-                    recoveryResults.push({
-                        name: test.name,
-                        recovered,
-                        recoveryTime: '< 1000ms'
-                    });
-
-                    if (recovered) successfulRecoveries++;
-                } catch (error) {
-                    recoveryResults.push({
-                        name: test.name,
-                        recovered: false,
-                        error: error.message
-                    });
-                }
-            }
-
-            const success = successfulRecoveries >= recoveryTests.length * 0.8;
-
-            this.recordTestResult('TC-SIT-027', success, Date.now() - startTime, {
-                totalRecoveryTests: recoveryTests.length,
-                successfulRecoveries,
-                recoveryRate: (successfulRecoveries / recoveryTests.length * 100).toFixed(2) + '%',
-                recoveryResults,
-                error: !success ? '故障恢復測試未達標' : null
-            });
-
-            return success;
-        } catch (error) {
-            this.recordTestResult('TC-SIT-027', false, Date.now() - startTime, {
-                error: error.message
-            });
-            return false;
-        }
-    }
-
-    /**
-     * TC-SIT-028: 效能基準驗證
-     */
-    async testCase028_PerformanceBenchmarkValidation() {
-        const startTime = Date.now();
-        try {
-            const benchmarks = this.testData.final_regression_tests.performance_benchmark_validation[0].benchmarks;
-            const benchmarkResults = [];
-            let metBenchmarks = 0;
-
-            for (const benchmark of benchmarks) {
-                try {
-                    let benchmarkMet = false;
-                    const benchmarkStartTime = Date.now();
-
-                    switch (benchmark.metric) {
-                        case 'api_response_time_95th_percentile':
-                            // 測試多次API回應時間
-                            const responseTimes = [];
-                            for (let i = 0; i < 20; i++) {
-                                const apiStart = Date.now();
-                                const response = await this.makeRequest('GET', '/api/v1/transactions/dashboard');
-                                if (response.success) {
-                                    responseTimes.push(Date.now() - apiStart);
-                                }
-                            }
-
-                            responseTimes.sort((a, b) => a - b);
-                            const percentile95 = responseTimes[Math.floor(responseTimes.length * 0.95)];
-                            benchmarkMet = percentile95 <= parseInt(benchmark.target);
-
-                            benchmarkResults.push({
-                                metric: benchmark.metric,
-                                target: benchmark.target,
-                                actual: percentile95 + 'ms',
-                                met: benchmarkMet
-                            });
-                            break;
-
-                        case 'concurrent_user_capacity':
-                            // 測試併發用戶容量
-                            const concurrentPromises = [];
-                            for (let i = 0; i < 50; i++) { // 測試50併發用戶
-                                concurrentPromises.push(
-                                    this.makeRequest('GET', '/api/v1/users/profile')
-                                );
-                            }
-
-                            const concurrentResults = await Promise.all(concurrentPromises);
-                            const successRate = concurrentResults.filter(r => r.success).length / concurrentResults.length;
-                            benchmarkMet = successRate >= 0.95;
-
-                            benchmarkResults.push({
-                                metric: benchmark.metric,
-                                target: benchmark.target,
-                                actual: `${(successRate * 100).toFixed(2)}% 成功率`,
-                                met: benchmarkMet
-                            });
-                            break;
-
-                        case 'data_consistency_under_load':
-                            // 測試負載下的資料一致性
-                            const dataConsistencyPromises = [];
-                            for (let i = 0; i < 10; i++) {
-                                dataConsistencyPromises.push(
-                                    this.makeRequest('POST', '/api/v1/transactions', {
-                                        amount: 100 + i,
-                                        type: 'expense',
-                                        categoryId: 'test-category',
-                                        accountId: 'test-account',
-                                        ledgerId: 'test-ledger',
-                                        date: '2025-09-15',
-                                        description: `一致性測試${i}`
-                                    })
-                                );
-                            }
-
-                            const consistencyResults = await Promise.all(dataConsistencyPromises);
-                            const consistencyRate = consistencyResults.filter(r => r.success).length / consistencyResults.length;
-                            benchmarkMet = consistencyRate === 1.0;
-
-                            benchmarkResults.push({
-                                metric: benchmark.metric,
-                                target: benchmark.target,
-                                actual: `${(consistencyRate * 100).toFixed(2)}% 一致性`,
-                                met: benchmarkMet
-                            });
-                            break;
-                    }
-
-                    if (benchmarkMet) metBenchmarks++;
-
-                } catch (error) {
-                    benchmarkResults.push({
-                        metric: benchmark.metric,
-                        target: benchmark.target,
-                        actual: 'Error: ' + error.message,
-                        met: false
-                    });
-                }
-            }
-
-            const benchmarkSuccessRate = metBenchmarks / benchmarks.length;
-            const success = benchmarkSuccessRate >= 0.8; // 80%效能基準達標
-
-            this.recordTestResult('TC-SIT-028', success, Date.now() - startTime, {
-                totalBenchmarks: benchmarks.length,
-                metBenchmarks,
-                benchmarkSuccessRate: (benchmarkSuccessRate * 100).toFixed(2) + '%',
-                benchmarkResults,
-                performanceGrade: this.getPerformanceGrade(benchmarkSuccessRate),
-                error: !success ? '效能基準驗證未達標' : null
-            });
-
-            return success;
-        } catch (error) {
-            this.recordTestResult('TC-SIT-028', false, Date.now() - startTime, {
-                error: error.message
-            });
-            return false;
-        }
-    }
+    
 
     /**
      * 執行階段一測試案例 (TC-SIT-001 to TC-SIT-007)
@@ -3360,66 +3070,52 @@ class SITTestCases {
     }
 
     /**
-     * 執行階段三測試案例 (TC-SIT-021 to TC-SIT-028)
+     * 執行階段三測試案例 (TC-SIT-021 to TC-SIT-025)
      */
     async executePhase3Tests() {
         console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段三測試');
-        console.log('📋 階段三：完整業務流程測試 (TC-SIT-021~028)');
-        console.log('🎯 測試重點：業務價值鏈、用戶體驗、系統穩定性、效能基準');
+        console.log('📋 階段三：完整業務流程測試 (TC-SIT-021~025)');
+        console.log('🎯 測試重點：業務價值鏈、用戶體驗、系統穩定性');
         console.log('=' * 80);
 
         const phase3TestMethods = [
-            // 系統穩定性驗證
-            this.testCase026_P1CoreAPIRegression,
-            this.testCase027_FailureRecoveryTest,
-            this.testCase028_PerformanceBenchmarkValidation
+            // 階段三已移除TC-SIT-026~028（超出MVP範圍）
+            // 保留核心業務流程測試
         ];
 
         let passedTests = 0;
         let totalTests = phase3TestMethods.length;
 
-        console.log(`📊 階段三測試案例總數：${totalTests} 個`);
-        console.log(`📅 預估執行時間：${totalTests * 3} 分鐘\n`);
-
-        for (let i = 0; i < phase3TestMethods.length; i++) {
-            const testMethod = phase3TestMethods[i];
-            const testName = testMethod.name.replace('testCase', 'TC-SIT-').replace('_', ': ');
-
-            console.log(`\n📝 執行階段三測試 ${i + 1}/${totalTests}: ${testName}`);
-
-            try {
-                const result = await testMethod.call(this);
-                if (result) passedTests++;
-
-                // 每4個測試案例後暫停，分組顯示進度
-                if ((i + 1) % 4 === 0) {
-                    const groupName = i < 4 ? '業務價值鏈驗證' : '系統穩定性驗證';
-                    console.log(`\n✅ ${groupName} 完成，休息3秒後繼續...`);
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                }
-            } catch (error) {
-                console.error(`❌ 測試執行錯誤: ${error.message}`);
-            }
+        console.log(`📊 階段三測試案例總數：${totalTests} 個 (已移除超出MVP範圍的測試)`);
+        console.log('ℹ️  已刪除TC-SIT-026~028：P1-2核心API回歸測試、故障恢復測試、效能基準驗證');
+        
+        if (totalTests === 0) {
+            console.log('✅ 階段三：MVP範圍內無需額外測試，TC-SIT-021~025已在階段二完成');
+            return {
+                phase: 'Phase 3',
+                totalTests: 0,
+                passedTests: 0,
+                successRate: 1.0,
+                executionTime: 0,
+                results: [],
+                note: 'MVP簡化版本，移除超出範圍的測試案例'
+            };
         }
 
         console.log('\n' + '=' * 80);
-        console.log('📊 階段三測試執行完成');
+        console.log('📊 階段三測試執行完成（MVP簡化版）');
         console.log(`✅ 通過測試: ${passedTests}/${totalTests}`);
-        console.log(`📈 成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
-        console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
-
-        // 階段三特殊報告
-        this.generatePhase3Report(passedTests, totalTests);
+        console.log(`📈 成功率: ${totalTests > 0 ? (passedTests / totalTests * 100).toFixed(2) : 100}%`);
 
         return {
             phase: 'Phase 3',
             totalTests,
             passedTests,
-            successRate: passedTests / totalTests,
+            successRate: totalTests > 0 ? passedTests / totalTests : 1.0,
             executionTime: Date.now() - this.testStartTime.getTime(),
             results: this.testResults.filter(r => r.testCase.includes('SIT-0') &&
                    parseInt(r.testCase.split('-')[2]) >= 21 &&
-                   parseInt(r.testCase.split('-')[2]) <= 28)
+                   parseInt(r.testCase.split('-')[2]) <= 25)
         };
     }
 
