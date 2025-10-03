@@ -1,0 +1,99 @@
+Pasted--workspace-cd-06-SIT-Test-code-node-0603-SIT-TC-P1-js-phase-2-LCAS-2-0-Phase-1-SIT-1759480350053_1759480350053.txt
+~/workspace$ cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=2
+🚀 LCAS 2.0 Phase 1 SIT測試開始執行...
+📅 測試開始時間: 2025/10/3 下午4:31:47
+🔄 SIT測試執行流程啟動...
+🔄 開始載入SIT測試資料...
+⚠️ 測試資料結構不完整: [ 'final_regression_tests' ]
+🔧 已使用預設值修復測試資料結構
+⚠️ 關鍵測試資料驗證失敗: [ '效能測試-併發操作資料缺失' ]
+🔧 嘗試使用預設資料修復缺失項目...
+🔧 修復concurrent_operations資料...
+✅ 關鍵測試資料修復成功
+✅ 測試資料載入並驗證成功
+📊 載入的測試案例資料: 15 個類別
+🔍 檢查API服務就緒狀態...
+🔄 服務就緒檢查嘗試 1/10...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ API服務已就緒
+🔍 檢查Firebase配額狀態...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ Firebase配額狀態正常
+✅ 前置檢查完成，開始執行測試案例...
+🎯 執行測試階段: 2
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試
+📋 階段二：四層架構資料流測試 (TC-SIT-008~020)
+🎯 測試重點：四模式差異化、資料一致性、端到端流程、效能穩定性
+NaN
+📊 階段二測試案例總數：18 個
+📅 預估執行時間：36 分鐘
+
+
+📝 執行階段二測試 1/18: TC-SIT-008: ModeAssessment
+  ✅ 統一回應格式驗證 /api/v1/users/assessment-questions: A+ (Score: 100.0%)
+🔄 TC-SIT-008: 準備提交評估答案...
+📋 評估答案: {
+  financial_experience: 'advanced',
+  detail_preference: 'detailed',
+  interface_complexity: 'complex',
+  reporting_needs: 'comprehensive'
+}
+📋 期望模式: expert
+  ✅ 統一回應格式驗證 /api/v1/users/assessment: A+ (Score: 100.0%)
+📊 評估API回應: {
+  "success": true,
+  "data": {
+    "result": {
+      "userId": "assessment_user_1759480307593",
+      "recommendedMode": "expert",
+      "confidence": 0.833,
+      "scores": {
+        "expert": 20,
+        "inertial": 0,
+        "cultivation": 4,
+        "guiding": 0
+      },
+      "assessmentId": "assessment_1759480307596",
+      "timestamp": "2025-10-03T08:31:47.596Z",
+      "questionnaireId": "expert_assessment_001",
+      "totalQuestions": 4,
+      "processingDetails": {
+        "totalScore": 24,
+        "maxScore": 20,
+        "answersProcessed": 4,
+        "tc008Validated": true,
+        "stage2FixApplied": true
+      },
+      "stage2FixApplied": true
+    }
+  },
+  "error": null,
+  "message": "模式評估完成",
+  "metadata": {
+    "timestamp": "2025-10-03T08:31:47.600Z",
+    "requestId": "req_1759480307600_nq11icdqs",
+    "userMode": "Expert",
+    "apiVersion": "v1.0.0",
+    "processingTimeMs": 10,
+    "modeFeatures": {
+      "expertFeatures": {
+        "detailedAnalytics": true,
+        "advancedOptions": true,
+        "performanceMetrics": true,
+        "batchOperations": true,
+        "exportFeatures": true,
+        "dataInsights": true,
+        "customReports": true,
+        "expertAnalytics": true,
+        "professionalTools": true,
+        "detailedReports": true,
+        "bulkProcessing": true,
+        "advancedFiltering": true,
+        "customCategories": true,
+        "budgetForecasting": true
+      }
+    }
+  }
+}
+✅ PASS TC-SIT-008 (170ms)
