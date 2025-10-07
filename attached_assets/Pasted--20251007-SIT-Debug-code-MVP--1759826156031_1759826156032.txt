@@ -1,0 +1,99 @@
+------------------------------------------
+20251007 SIT 階段二 Debug
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+------------------------------------------
+20251007 SIT 階段二 Debug
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+=>
+1. 你在root cause後面都沒有附上fail的測試案例號碼
+
+
+作為資深SQA，基於提供的Console日誌和測試執行記錄，我提供以下結構化分析：
+A. 快速摘要（≤3句）
+•	最可能問題：Firebase Auth整合測試中的data欄位缺失導致統一回應格式驗證失敗，主要集中在TC-SIT-003測試案例
+
+=>但TC003是Pass的，你有沒有看錯啊?
+
+
+•	優先度：高 - 影響核心認證流程和API回應格式一致性，可能導致前端解析錯誤
+
+
+B. Root causes
+1. API回應格式不符合DCN-0015統一規範
+•	證據：
+✅ 統一回應格式驗證 /api/v1/users/profile: A (Score: 90.0%)
+   - 錯誤詳情: Layer 1: Missing required field - data
+•	信心度：95%
+•	最小可行修正：
+// 在AM.js的AM_processAPIGetProfile函數中確保data欄位存在
+return { success: true, data: userData, message: "取得成功" };
+•	失敗的測試案例：TC-SIT-003 (FirebaseAuthIntegration)
+
+=>但TC003是Pass的，你有沒有看錯啊?
+
+2. Firebase索引配置缺失導致查詢降級
+•	證據：
+🔄 標準查詢失敗，嘗試降級查詢: 9 FAILED_PRECONDITION: The query requires an index
+🔄 查詢完成，使用degraded方法，返回0筆交易
+•	信心度：90%
+•	最小可行修正：
+# 根據Firebase Console提示建立複合索引
+# 或在BK.js中調整查詢邏輯避免需要索引
+•	失敗的測試案例：GET /api/v1/transactions/recent 相關測試
+=>請列出測試案例編號
+
+3. Firestore資料更新時undefined值處理錯誤
+•	證據：
+[ERROR] Cannot use "undefined" as a Firestore value (found in field "avatar")
+If you want to ignore undefined values, enable `ignoreUndefinedProperties`
+•	信心度：85%
+•	最小可行修正：
+// 在AM_processAPIUpdateProfile中過濾undefined值
+const cleanData = Object.fromEntries(Object.entries(updateData).filter(([k,v]) => v !== undefined));
+•	失敗的測試案例：PUT /api/v1/users/profile 相關測試
+=>請列出測試案例編號
+
+
+
+4. 交易ID驗證邏輯錯誤導致更新/刪除失敗
+•	證據：
+📤 PUT /api/v1/transactions/test-transaction-002 - 400 (130ms)
+📤 DELETE /api/v1/transactions/test-transaction-003 - 400 (128ms)
+•	信心度：80%
+•	最小可行修正：
+// 在BK.js中加強交易ID存在性檢查
+if (!transactionExists) return BK_formatErrorResponse("NOT_FOUND", "交易記錄不存在");
+•	失敗的測試案例：PUT/DELETE /api/v1/transactions/{id} 相關測試
+=>請列出測試案例編號
+
+
+
+C. 最小重現步驟
+# Commands
+cd "06. SIT_Test code"
+node "0603. SIT_TC_P1.js" --phase=all
+# Environment variables (如果需要)
+export API_BASE_URL=http://0.0.0.0:5000
+export NODE_ENV=test
+# Input example
+# 執行TC-SIT-003時會觸發data欄位缺失問題
+# 執行交易相關API測試時會觸發索引問題
+D. 優先修正建議
+1. 修復API回應格式一致性問題（最高優先）
+•	風險：前端無法正確解析API回應，影響用戶體驗
+•	修正範圍：AM.js中所有API處理函數
+•	回退計畫：暫時在前端增加容錯處理，支援舊格式
+2. 解決Firebase索引配置問題（高優先）
+•	風險：查詢性能下降，返回空結果
+•	修正範圍：Firebase Console索引配置 + BK.js查詢邏輯
+•	回退計畫：暫時使用簡化查詢，減少索引依賴
+3. 處理Firestore undefined值問題（中優先）
+•	風險：資料更新失敗，影響用戶資料完整性
+•	修正範圍：AM.js用戶資料更新相關函數
+•	回退計畫：在更新前進行資料清理和驗證
+建議立即行動：優先修復Root cause #1，這是影響最廣泛且容易修復的問題，可以快速提升測試通過率。
+
