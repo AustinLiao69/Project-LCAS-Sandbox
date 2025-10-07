@@ -2,9 +2,9 @@
  * 0603. SIT_TC_P1.js
  * LCAS 2.0 Phase 1 SIT測試案例實作
  *
- * @version v2.5.2
+ * @version v3.0.0
  * @created 2025-09-15
- * @updated 2025-10-02
+ * @updated 2025-10-03
  * @author LCAS SQA Team
  * @description 階段一修復：新增測試環境初始化清理機制，確保每次測試從乾淨環境開始
  * @phase Phase 1 Fix - Test Environment Initialization
@@ -2914,6 +2914,749 @@ class SITTestCases {
         }
     }
 
+    // ==================== 階段二新增：認證服務缺失API測試 (TC-SIT-026~031) ====================
+
+    /**
+     * TC-SIT-026: /api/v1/auth/refresh 端點測試
+     */
+    async testCase026_AuthRefresh() {
+        const startTime = Date.now();
+        try {
+            console.log('🔄 TC-SIT-026: 測試POST /api/v1/auth/refresh');
+
+            const refreshData = {
+                refreshToken: 'test-refresh-token',
+                deviceInfo: {
+                    deviceId: 'test-device-refresh',
+                    platform: 'Web'
+                }
+            };
+
+            const response = await this.makeRequest('POST', '/api/v1/auth/refresh', refreshData);
+
+            const success = response.success && response.data?.token;
+
+            this.recordTestResult('TC-SIT-026', success, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/refresh',
+                hasNewToken: !!response.data?.token,
+                response: response.data,
+                error: !success ? (response.error || '刷新Token失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-026', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/refresh',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-027: /api/v1/auth/forgot-password 端點測試
+     */
+    async testCase027_AuthForgotPassword() {
+        const startTime = Date.now();
+        try {
+            console.log('🔑 TC-SIT-027: 測試POST /api/v1/auth/forgot-password');
+
+            const forgotPasswordData = {
+                email: 'test@lcas.app',
+                redirectUrl: 'https://lcas.app/reset-password'
+            };
+
+            const response = await this.makeRequest('POST', '/api/v1/auth/forgot-password', forgotPasswordData);
+
+            const success = response.success;
+
+            this.recordTestResult('TC-SIT-027', success, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/forgot-password',
+                email: forgotPasswordData.email,
+                response: response.data,
+                error: !success ? (response.error || '忘記密碼請求失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-027', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/forgot-password',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-028: /api/v1/auth/reset-password 端點測試
+     */
+    async testCase028_AuthResetPassword() {
+        const startTime = Date.now();
+        try {
+            console.log('🔐 TC-SIT-028: 測試POST /api/v1/auth/reset-password');
+
+            const resetPasswordData = {
+                token: 'test-reset-token',
+                newPassword: 'NewPassword123!',
+                confirmPassword: 'NewPassword123!'
+            };
+
+            const response = await this.makeRequest('POST', '/api/v1/auth/reset-password', resetPasswordData);
+
+            const success = response.success;
+
+            this.recordTestResult('TC-SIT-028', success, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/reset-password',
+                hasToken: !!resetPasswordData.token,
+                response: response.data,
+                error: !success ? (response.error || '重設密碼失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-028', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/reset-password',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-029: /api/v1/auth/verify-email 端點測試
+     */
+    async testCase029_AuthVerifyEmail() {
+        const startTime = Date.now();
+        try {
+            console.log('📧 TC-SIT-029: 測試POST /api/v1/auth/verify-email');
+
+            const verifyEmailData = {
+                token: 'test-verify-token',
+                email: 'test@lcas.app'
+            };
+
+            const response = await this.makeRequest('POST', '/api/v1/auth/verify-email', verifyEmailData);
+
+            const success = response.success;
+
+            this.recordTestResult('TC-SIT-029', success, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/verify-email',
+                email: verifyEmailData.email,
+                response: response.data,
+                error: !success ? (response.error || '信箱驗證失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-029', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/verify-email',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-030: /api/v1/auth/bind-line 端點測試
+     */
+    async testCase030_AuthBindLine() {
+        const startTime = Date.now();
+        try {
+            console.log('🔗 TC-SIT-030: 測試POST /api/v1/auth/bind-line');
+
+            const bindLineData = {
+                lineUserId: 'test-line-user-id',
+                accessToken: 'test-line-access-token'
+            };
+
+            const response = await this.makeRequest('POST', '/api/v1/auth/bind-line', bindLineData);
+
+            const success = response.success;
+
+            this.recordTestResult('TC-SIT-030', success, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/bind-line',
+                lineUserId: bindLineData.lineUserId,
+                response: response.data,
+                error: !success ? (response.error || 'LINE綁定失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-030', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/auth/bind-line',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-031: /api/v1/auth/bind-status 端點測試
+     */
+    async testCase031_AuthBindStatus() {
+        const startTime = Date.now();
+        try {
+            console.log('📊 TC-SIT-031: 測試GET /api/v1/auth/bind-status');
+
+            const response = await this.makeRequest('GET', '/api/v1/auth/bind-status');
+
+            const success = response.success && response.data?.bindStatus !== undefined;
+
+            this.recordTestResult('TC-SIT-031', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/auth/bind-status',
+                bindStatus: response.data?.bindStatus,
+                response: response.data,
+                error: !success ? (response.error || '綁定狀態查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-031', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/auth/bind-status',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    // ==================== 階段二新增：用戶管理服務缺失API測試 (TC-SIT-032~037) ====================
+
+    /**
+     * TC-SIT-032: GET /api/v1/users/profile 端點測試
+     */
+    async testCase032_GetUserProfile() {
+        const startTime = Date.now();
+        try {
+            console.log('👤 TC-SIT-032: 測試GET /api/v1/users/profile');
+
+            const response = await this.makeRequest('GET', '/api/v1/users/profile');
+
+            const success = response.success && response.data?.email;
+
+            this.recordTestResult('TC-SIT-032', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/users/profile',
+                hasEmail: !!response.data?.email,
+                hasUserMode: !!response.data?.userMode,
+                response: response.data,
+                error: !success ? (response.error || '用戶資料查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-032', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/users/profile',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-033: PUT /api/v1/users/profile 端點測試
+     */
+    async testCase033_UpdateUserProfile() {
+        const startTime = Date.now();
+        try {
+            console.log('✏️ TC-SIT-033: 測試PUT /api/v1/users/profile');
+
+            const updateData = {
+                displayName: '測試用戶更新',
+                phone: '+886987654321',
+                dateOfBirth: '1990-01-01',
+                preferredLanguage: 'zh-TW'
+            };
+
+            const response = await this.makeRequest('PUT', '/api/v1/users/profile', updateData);
+
+            const success = response.success;
+
+            this.recordTestResult('TC-SIT-033', success, Date.now() - startTime, {
+                endpoint: 'PUT /api/v1/users/profile',
+                updateData: updateData,
+                response: response.data,
+                error: !success ? (response.error || '用戶資料更新失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-033', false, Date.now() - startTime, {
+                endpoint: 'PUT /api/v1/users/profile',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-034: /api/v1/users/preferences 端點測試
+     */
+    async testCase034_UserPreferences() {
+        const startTime = Date.now();
+        try {
+            console.log('⚙️ TC-SIT-034: 測試GET /api/v1/users/preferences');
+
+            const response = await this.makeRequest('GET', '/api/v1/users/preferences');
+
+            const success = response.success && response.data;
+
+            this.recordTestResult('TC-SIT-034', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/users/preferences',
+                hasPreferences: !!response.data,
+                response: response.data,
+                error: !success ? (response.error || '用戶偏好查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-034', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/users/preferences',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-035: /api/v1/users/mode 端點測試
+     */
+    async testCase035_UserMode() {
+        const startTime = Date.now();
+        try {
+            console.log('🔧 TC-SIT-035: 測試PUT /api/v1/users/mode');
+
+            const modeData = {
+                userMode: 'Expert',
+                reason: 'User preference change'
+            };
+
+            const response = await this.makeRequest('PUT', '/api/v1/users/mode', modeData);
+
+            const success = response.success;
+
+            this.recordTestResult('TC-SIT-035', success, Date.now() - startTime, {
+                endpoint: 'PUT /api/v1/users/mode',
+                newMode: modeData.userMode,
+                response: response.data,
+                error: !success ? (response.error || '用戶模式更新失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-035', false, Date.now() - startTime, {
+                endpoint: 'PUT /api/v1/users/mode',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-036: /api/v1/users/security 端點測試
+     */
+    async testCase036_UserSecurity() {
+        const startTime = Date.now();
+        try {
+            console.log('🔐 TC-SIT-036: 測試PUT /api/v1/users/security');
+
+            const securityData = {
+                enableTwoFactor: true,
+                allowFingerprint: true,
+                sessionTimeout: 3600
+            };
+
+            const response = await this.makeRequest('PUT', '/api/v1/users/security', securityData);
+
+            const success = response.success;
+
+            this.recordTestResult('TC-SIT-036', success, Date.now() - startTime, {
+                endpoint: 'PUT /api/v1/users/security',
+                securitySettings: securityData,
+                response: response.data,
+                error: !success ? (response.error || '安全設定更新失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-036', false, Date.now() - startTime, {
+                endpoint: 'PUT /api/v1/users/security',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-037: /api/v1/users/verify-pin 端點測試
+     */
+    async testCase037_UserVerifyPin() {
+        const startTime = Date.now();
+        try {
+            console.log('🔢 TC-SIT-037: 測試POST /api/v1/users/verify-pin');
+
+            const pinData = {
+                pin: '1234',
+                deviceId: 'test-device-pin'
+            };
+
+            const response = await this.makeRequest('POST', '/api/v1/users/verify-pin', pinData);
+
+            const success = response.success && response.data?.verified !== undefined;
+
+            this.recordTestResult('TC-SIT-037', success, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/users/verify-pin',
+                verified: response.data?.verified,
+                response: response.data,
+                error: !success ? (response.error || 'PIN驗證失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-037', false, Date.now() - startTime, {
+                endpoint: 'POST /api/v1/users/verify-pin',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    // ==================== 階段二新增：記帳交易服務缺失API測試 (TC-SIT-038~044) ====================
+
+    /**
+     * TC-SIT-038: GET /api/v1/transactions/{id} 端點測試
+     */
+    async testCase038_GetTransactionById() {
+        const startTime = Date.now();
+        try {
+            console.log('🔍 TC-SIT-038: 測試GET /api/v1/transactions/{id}');
+
+            const testTransactionId = 'test-transaction-001';
+            const response = await this.makeRequest('GET', `/api/v1/transactions/${testTransactionId}`);
+
+            const success = response.success && response.data?.transactionId;
+
+            this.recordTestResult('TC-SIT-038', success, Date.now() - startTime, {
+                endpoint: `GET /api/v1/transactions/${testTransactionId}`,
+                transactionId: testTransactionId,
+                hasTransaction: !!response.data?.transactionId,
+                response: response.data,
+                error: !success ? (response.error || '單筆交易查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-038', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/{id}',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-039: PUT /api/v1/transactions/{id} 端點測試
+     */
+    async testCase039_UpdateTransactionById() {
+        const startTime = Date.now();
+        try {
+            console.log('✏️ TC-SIT-039: 測試PUT /api/v1/transactions/{id}');
+
+            const testTransactionId = 'test-transaction-002';
+            const updateData = {
+                amount: 300,
+                description: '交易更新測試',
+                categoryId: 'updated-category'
+            };
+
+            const response = await this.makeRequest('PUT', `/api/v1/transactions/${testTransactionId}`, updateData);
+
+            const success = response.success;
+
+            this.recordTestResult('TC-SIT-039', success, Date.now() - startTime, {
+                endpoint: `PUT /api/v1/transactions/${testTransactionId}`,
+                transactionId: testTransactionId,
+                updateData: updateData,
+                response: response.data,
+                error: !success ? (response.error || '交易更新失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-039', false, Date.now() - startTime, {
+                endpoint: 'PUT /api/v1/transactions/{id}',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-040: DELETE /api/v1/transactions/{id} 端點測試
+     */
+    async testCase040_DeleteTransactionById() {
+        const startTime = Date.now();
+        try {
+            console.log('🗑️ TC-SIT-040: 測試DELETE /api/v1/transactions/{id}');
+
+            const testTransactionId = 'test-transaction-003';
+            const response = await this.makeRequest('DELETE', `/api/v1/transactions/${testTransactionId}`);
+
+            const success = response.success;
+
+            this.recordTestResult('TC-SIT-040', success, Date.now() - startTime, {
+                endpoint: `DELETE /api/v1/transactions/${testTransactionId}`,
+                transactionId: testTransactionId,
+                response: response.data,
+                error: !success ? (response.error || '交易刪除失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-040', false, Date.now() - startTime, {
+                endpoint: 'DELETE /api/v1/transactions/{id}',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-041: /api/v1/transactions/statistics 端點測試
+     */
+    async testCase041_TransactionStatistics() {
+        const startTime = Date.now();
+        try {
+            console.log('📊 TC-SIT-041: 測試GET /api/v1/transactions/statistics');
+
+            const queryParams = {
+                period: 'month',
+                year: '2025',
+                month: '01'
+            };
+
+            const response = await this.makeRequest('GET', '/api/v1/transactions/statistics?' + new URLSearchParams(queryParams));
+
+            const success = response.success && response.data?.statistics;
+
+            this.recordTestResult('TC-SIT-041', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/statistics',
+                queryParams: queryParams,
+                hasStatistics: !!response.data?.statistics,
+                response: response.data,
+                error: !success ? (response.error || '交易統計查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-041', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/statistics',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-042: /api/v1/transactions/recent 端點測試
+     */
+    async testCase042_TransactionRecent() {
+        const startTime = Date.now();
+        try {
+            console.log('📋 TC-SIT-042: 測試GET /api/v1/transactions/recent');
+
+            const queryParams = {
+                limit: 10,
+                includeDetails: true
+            };
+
+            const response = await this.makeRequest('GET', '/api/v1/transactions/recent?' + new URLSearchParams(queryParams));
+
+            const success = response.success && response.data?.transactions;
+
+            this.recordTestResult('TC-SIT-042', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/recent',
+                queryParams: queryParams,
+                transactionCount: response.data?.transactions?.length || 0,
+                response: response.data,
+                error: !success ? (response.error || '近期交易查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-042', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/recent',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-043: /api/v1/transactions/charts 端點測試
+     */
+    async testCase043_TransactionCharts() {
+        const startTime = Date.now();
+        try {
+            console.log('📈 TC-SIT-043: 測試GET /api/v1/transactions/charts');
+
+            const queryParams = {
+                chartType: 'category',
+                period: 'month',
+                year: '2025',
+                month: '01'
+            };
+
+            const response = await this.makeRequest('GET', '/api/v1/transactions/charts?' + new URLSearchParams(queryParams));
+
+            const success = response.success && response.data?.charts;
+
+            this.recordTestResult('TC-SIT-043', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/charts',
+                queryParams: queryParams,
+                hasCharts: !!response.data?.charts,
+                response: response.data,
+                error: !success ? (response.error || '交易圖表查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-043', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/charts',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-044: /api/v1/transactions/dashboard 端點測試
+     */
+    async testCase044_TransactionDashboard() {
+        const startTime = Date.now();
+        try {
+            console.log('📊 TC-SIT-044: 測試GET /api/v1/transactions/dashboard (完整版)');
+
+            const queryParams = {
+                period: 'year',
+                year: '2025',
+                includeCharts: true,
+                includeStatistics: true,
+                includeBudget: true
+            };
+
+            const response = await this.makeRequest('GET', '/api/v1/transactions/dashboard?' + new URLSearchParams(queryParams));
+
+            const success = response.success && response.data?.dashboard;
+
+            this.recordTestResult('TC-SIT-044', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/dashboard (完整版)',
+                queryParams: queryParams,
+                hasDashboard: !!response.data?.dashboard,
+                response: response.data,
+                error: !success ? (response.error || '完整儀表板查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-044', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/transactions/dashboard (完整版)',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    // ==================== 階段二新增：系統服務缺失API測試 (TC-SIT-045~047) ====================
+
+    /**
+     * TC-SIT-045: /api/v1/system/health 端點測試
+     */
+    async testCase045_SystemHealth() {
+        const startTime = Date.now();
+        try {
+            console.log('🏥 TC-SIT-045: 測試GET /api/v1/system/health');
+
+            const response = await this.makeRequest('GET', '/api/v1/system/health');
+
+            const success = response.success && response.data?.status;
+
+            this.recordTestResult('TC-SIT-045', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/system/health',
+                systemStatus: response.data?.status,
+                health: response.data?.health,
+                response: response.data,
+                error: !success ? (response.error || '系統健康檢查失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-045', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/system/health',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-046: /api/v1/system/app-info 端點測試
+     */
+    async testCase046_SystemAppInfo() {
+        const startTime = Date.now();
+        try {
+            console.log('ℹ️ TC-SIT-046: 測試GET /api/v1/system/app-info');
+
+            const response = await this.makeRequest('GET', '/api/v1/system/app-info');
+
+            const success = response.success && response.data?.appVersion;
+
+            this.recordTestResult('TC-SIT-046', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/system/app-info',
+                appVersion: response.data?.appVersion,
+                buildNumber: response.data?.buildNumber,
+                response: response.data,
+                error: !success ? (response.error || '應用程式資訊查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-046', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/system/app-info',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * TC-SIT-047: /api/v1/system/welcome 端點測試
+     */
+    async testCase047_SystemWelcome() {
+        const startTime = Date.now();
+        try {
+            console.log('👋 TC-SIT-047: 測試GET /api/v1/system/welcome');
+
+            const response = await this.makeRequest('GET', '/api/v1/system/welcome');
+
+            const success = response.success && response.data?.welcomeMessage;
+
+            this.recordTestResult('TC-SIT-047', success, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/system/welcome',
+                welcomeMessage: response.data?.welcomeMessage,
+                features: response.data?.features,
+                response: response.data,
+                error: !success ? (response.error || '歡迎訊息查詢失敗') : null
+            });
+
+            return success;
+        } catch (error) {
+            this.recordTestResult('TC-SIT-047', false, Date.now() - startTime, {
+                endpoint: 'GET /api/v1/system/welcome',
+                error: error.message
+            });
+            return false;
+        }
+    }
+
     
 
     /**
@@ -3026,29 +3769,29 @@ class SITTestCases {
 
 
     /**
-     * 執行階段二測試案例 (TC-SIT-008 to TC-SIT-020)
+     * 執行階段二測試案例 (TC-SIT-008 to TC-SIT-047) - v3.0.0擴展版
      */
     async executePhase2Tests() {
-        console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試');
-        console.log('📋 階段二：四層架構資料流測試 (TC-SIT-008~020)');
-        console.log('🎯 測試重點：四模式差異化、資料一致性、端到端流程、效能穩定性');
+        console.log('🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試 v3.0.0');
+        console.log('📋 階段二：四層架構資料流測試 (TC-SIT-008~047)');
+        console.log('🎯 測試重點：四模式差異化、資料一致性、端到端流程、API端點完整性');
         console.log('=' * 80);
 
         const phase2TestMethods = [
-            // 四模式差異化整合測試
+            // 四模式差異化整合測試 (TC-SIT-008~011)
             this.testCase008_ModeAssessment,
             this.testCase009_ModeDifferentiation,
             this.testCase010_DataFormatTransformation,
             this.testCase011_DataSynchronization,
 
-            // 端到端資料傳遞驗證
+            // 端到端資料傳遞驗證 (TC-SIT-012~016)
             this.testCase012_CompleteUserLifecycle,
             this.testCase013_BookkeepingEndToEnd,
             this.testCase014_NetworkExceptionHandling,
             this.testCase015_BusinessRuleErrorHandling,
             this.testCase016_FourModeProcessDifference,
 
-            // 新的API直接測試
+            // 基礎API直接測試 (TC-SIT-017~025)
             this.testCase017_UserRegisterAPI,
             this.testCase018_UserLoginAPI,
             this.testCase019_UserLogoutAPI,
@@ -3057,14 +3800,44 @@ class SITTestCases {
             this.testCase022_UserPreferencesAPI,
             this.testCase023_QuickBookingAPI,
             this.testCase024_TransactionCRUDAPI,
-            this.testCase025_TransactionDashboardAPI
+            this.testCase025_TransactionDashboardAPI,
+
+            // 認證服務擴展API測試 (TC-SIT-026~031)
+            this.testCase026_AuthRefresh,
+            this.testCase027_AuthForgotPassword,
+            this.testCase028_AuthResetPassword,
+            this.testCase029_AuthVerifyEmail,
+            this.testCase030_AuthBindLine,
+            this.testCase031_AuthBindStatus,
+
+            // 用戶管理服務擴展API測試 (TC-SIT-032~037)
+            this.testCase032_GetUserProfile,
+            this.testCase033_UpdateUserProfile,
+            this.testCase034_UserPreferences,
+            this.testCase035_UserMode,
+            this.testCase036_UserSecurity,
+            this.testCase037_UserVerifyPin,
+
+            // 記帳交易服務擴展API測試 (TC-SIT-038~044)
+            this.testCase038_GetTransactionById,
+            this.testCase039_UpdateTransactionById,
+            this.testCase040_DeleteTransactionById,
+            this.testCase041_TransactionStatistics,
+            this.testCase042_TransactionRecent,
+            this.testCase043_TransactionCharts,
+            this.testCase044_TransactionDashboard,
+
+            // 系統服務API測試 (TC-SIT-045~047)
+            this.testCase045_SystemHealth,
+            this.testCase046_SystemAppInfo,
+            this.testCase047_SystemWelcome
         ];
 
         let passedTests = 0;
         let totalTests = phase2TestMethods.length;
 
-        console.log(`📊 階段二測試案例總數：${totalTests} 個`);
-        console.log(`📅 預估執行時間：${totalTests * 2} 分鐘\n`);
+        console.log(`📊 階段二測試案例總數：${totalTests} 個 (新增22個API端點測試)`);
+        console.log(`📅 預估執行時間：${Math.ceil(totalTests * 1.5)} 分鐘 (v3.0.0 優化版)\n`);
 
         for (let i = 0; i < phase2TestMethods.length; i++) {
             const testMethod = phase2TestMethods[i];

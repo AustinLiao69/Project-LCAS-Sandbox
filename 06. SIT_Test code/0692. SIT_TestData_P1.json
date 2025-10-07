@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "version": "v2.2.0",
+    "version": "v3.0.0",
     "created_date": "2025-09-15", 
     "last_updated": "2025-10-03",
-    "description": "LCAS 2.0 Phase 1 SIT測試資料配置檔 - MVP簡化版",
-    "test_cases_supported": "TC-SIT-001 to TC-SIT-025 (25個測試案例，已移除超出MVP範圍的TC-026~028)",
+    "description": "LCAS 2.0 Phase 1 SIT測試資料配置檔 - API端點完整覆蓋版",
+    "test_cases_supported": "TC-SIT-001 to TC-SIT-047 (47個測試案例，達成100%API端點覆蓋)",
     "author": "LCAS SQA Team",
     "change_log": [
       {
@@ -36,6 +36,11 @@
         "version": "v2.2.0",
         "date": "2025-10-03",
         "changes": "MVP簡化版：移除TC-SIT-026~028（P1-2核心API回歸測試、故障恢復測試、效能基準驗證），簡化TC-017~025測試資料為基礎API測試格式"
+      },
+      {
+        "version": "v3.0.0",
+        "date": "2025-10-03",
+        "changes": "階段二完成版：新增22個API端點測試案例(TC-SIT-026~047)，達成47個測試案例100%API端點覆蓋率，更新所有API路徑為/api/v1格式"
       }
     ]
   },
@@ -365,26 +370,39 @@
 
   "api_endpoints": {
     "authentication": {
-      "register": "/auth/register",
-      "login": "/auth/login",
-      "logout": "/auth/logout",
-      "refresh_token": "/auth/refresh",
-      "verify_token": "/auth/verify",
-      "reset_password": "/auth/reset-password"
+      "register": "/api/v1/auth/register",
+      "login": "/api/v1/auth/login",
+      "logout": "/api/v1/auth/logout",
+      "refresh_token": "/api/v1/auth/refresh",
+      "forgot_password": "/api/v1/auth/forgot-password",
+      "reset_password": "/api/v1/auth/reset-password",
+      "verify_email": "/api/v1/auth/verify-email",
+      "bind_line": "/api/v1/auth/bind-line",
+      "bind_status": "/api/v1/auth/bind-status"
     },
     "user_management": {
-      "profile": "/user/profile",
-      "update_profile": "/user/profile/update",
-      "change_password": "/user/password/change",
-      "mode_assessment": "/user/mode-assessment",
-      "update_mode": "/user/mode/update"
+      "profile": "/api/v1/users/profile",
+      "update_profile": "/api/v1/users/profile",
+      "preferences": "/api/v1/users/preferences",
+      "mode": "/api/v1/users/mode",
+      "security": "/api/v1/users/security",
+      "verify_pin": "/api/v1/users/verify-pin",
+      "assessment": "/api/v1/users/assessment",
+      "assessment_questions": "/api/v1/users/assessment-questions"
     },
-    "bookkeeping": {
-      "quick_booking": "/bookkeeping/quick",
-      "create_transaction": "/bookkeeping/transactions",
-      "get_transactions": "/bookkeeping/transactions",
-      "update_transaction": "/bookkeeping/transactions/{id}",
-      "delete_transaction": "/bookkeeping/transactions/{id}"
+    "transaction_management": {
+      "quick_booking": "/api/v1/transactions/quick",
+      "transactions": "/api/v1/transactions",
+      "transaction_by_id": "/api/v1/transactions/{id}",
+      "statistics": "/api/v1/transactions/statistics",
+      "recent": "/api/v1/transactions/recent",
+      "charts": "/api/v1/transactions/charts",
+      "dashboard": "/api/v1/transactions/dashboard"
+    },
+    "system_management": {
+      "health": "/api/v1/system/health",
+      "app_info": "/api/v1/system/app-info",
+      "welcome": "/api/v1/system/welcome"
     }
   },
 
@@ -1101,6 +1119,222 @@
           "test_data": null
         }
       ]
+    },
+    "tc_026_047_extended_api_tests": {
+      "test_id": "extended_api_001",
+      "scenario": "TC-026~047擴展API測試資料",
+      "description": "新增22個API端點測試，達成100%API覆蓋率",
+      "categories": {
+        "auth_service_extended": {
+          "endpoints": [
+            {
+              "tc_id": "TC-SIT-026",
+              "endpoint": "/api/v1/auth/refresh",
+              "method": "POST",
+              "test_data": {
+                "refreshToken": "test-refresh-token",
+                "deviceInfo": {
+                  "deviceId": "test-device-refresh",
+                  "platform": "Web"
+                }
+              }
+            },
+            {
+              "tc_id": "TC-SIT-027",
+              "endpoint": "/api/v1/auth/forgot-password",
+              "method": "POST",
+              "test_data": {
+                "email": "test@lcas.app",
+                "redirectUrl": "https://lcas.app/reset-password"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-028",
+              "endpoint": "/api/v1/auth/reset-password",
+              "method": "POST",
+              "test_data": {
+                "token": "test-reset-token",
+                "newPassword": "NewPassword123!",
+                "confirmPassword": "NewPassword123!"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-029",
+              "endpoint": "/api/v1/auth/verify-email",
+              "method": "POST",
+              "test_data": {
+                "token": "test-verify-token",
+                "email": "test@lcas.app"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-030",
+              "endpoint": "/api/v1/auth/bind-line",
+              "method": "POST",
+              "test_data": {
+                "lineUserId": "test-line-user-id",
+                "accessToken": "test-line-access-token"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-031",
+              "endpoint": "/api/v1/auth/bind-status",
+              "method": "GET",
+              "test_data": null
+            }
+          ]
+        },
+        "user_management_extended": {
+          "endpoints": [
+            {
+              "tc_id": "TC-SIT-032",
+              "endpoint": "/api/v1/users/profile",
+              "method": "GET",
+              "test_data": null
+            },
+            {
+              "tc_id": "TC-SIT-033",
+              "endpoint": "/api/v1/users/profile",
+              "method": "PUT",
+              "test_data": {
+                "displayName": "測試用戶更新",
+                "phone": "+886987654321",
+                "dateOfBirth": "1990-01-01",
+                "preferredLanguage": "zh-TW"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-034",
+              "endpoint": "/api/v1/users/preferences",
+              "method": "GET",
+              "test_data": null
+            },
+            {
+              "tc_id": "TC-SIT-035",
+              "endpoint": "/api/v1/users/mode",
+              "method": "PUT",
+              "test_data": {
+                "userMode": "Expert",
+                "reason": "User preference change"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-036",
+              "endpoint": "/api/v1/users/security",
+              "method": "PUT",
+              "test_data": {
+                "enableTwoFactor": true,
+                "allowFingerprint": true,
+                "sessionTimeout": 3600
+              }
+            },
+            {
+              "tc_id": "TC-SIT-037",
+              "endpoint": "/api/v1/users/verify-pin",
+              "method": "POST",
+              "test_data": {
+                "pin": "1234",
+                "deviceId": "test-device-pin"
+              }
+            }
+          ]
+        },
+        "transaction_service_extended": {
+          "endpoints": [
+            {
+              "tc_id": "TC-SIT-038",
+              "endpoint": "/api/v1/transactions/{id}",
+              "method": "GET",
+              "test_data": {
+                "transactionId": "test-transaction-001"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-039",
+              "endpoint": "/api/v1/transactions/{id}",
+              "method": "PUT",
+              "test_data": {
+                "transactionId": "test-transaction-002",
+                "amount": 300,
+                "description": "交易更新測試",
+                "categoryId": "updated-category"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-040",
+              "endpoint": "/api/v1/transactions/{id}",
+              "method": "DELETE",
+              "test_data": {
+                "transactionId": "test-transaction-003"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-041",
+              "endpoint": "/api/v1/transactions/statistics",
+              "method": "GET",
+              "test_data": {
+                "period": "month",
+                "year": "2025",
+                "month": "01"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-042",
+              "endpoint": "/api/v1/transactions/recent",
+              "method": "GET",
+              "test_data": {
+                "limit": 10,
+                "includeDetails": true
+              }
+            },
+            {
+              "tc_id": "TC-SIT-043",
+              "endpoint": "/api/v1/transactions/charts",
+              "method": "GET",
+              "test_data": {
+                "chartType": "category",
+                "period": "month",
+                "year": "2025",
+                "month": "01"
+              }
+            },
+            {
+              "tc_id": "TC-SIT-044",
+              "endpoint": "/api/v1/transactions/dashboard",
+              "method": "GET",
+              "test_data": {
+                "period": "year",
+                "year": "2025",
+                "includeCharts": true,
+                "includeStatistics": true,
+                "includeBudget": true
+              }
+            }
+          ]
+        },
+        "system_service": {
+          "endpoints": [
+            {
+              "tc_id": "TC-SIT-045",
+              "endpoint": "/api/v1/system/health",
+              "method": "GET",
+              "test_data": null
+            },
+            {
+              "tc_id": "TC-SIT-046",
+              "endpoint": "/api/v1/system/app-info",
+              "method": "GET",
+              "test_data": null
+            },
+            {
+              "tc_id": "TC-SIT-047",
+              "endpoint": "/api/v1/system/welcome",
+              "method": "GET",
+              "test_data": null
+            }
+          ]
+        }
+      }
     }
   }
 }
