@@ -1,7 +1,309 @@
 ------------------------------------------
-20251007
+20251007 Debug Root cause整理
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據您的要求，我將更新提案，加入每個root cause對應的具體測試失敗案例，並提供MVP階段的insight分析：
+A. 快速摘要（≤3句）
+•	主要問題：AM模組API缺少data欄位導致DCN-0015不符合；BK模組CRUD操作硬編碼ID查詢失敗；系統API端點不在P1-2範圍內
+•	優先度：高 - 成功率55.32%，需立即修復格式問題和測試範圍
+B. Root Causes分析與對應失敗測試案例
+1. AM模組API回應格式缺少data欄位
+•	對應失敗測試案例：
+o	TC-SIT-001：用戶註冊 - A級評分 (90.0%)
+o	TC-SIT-002：用戶登入 - A級評分
+o	TC-SIT-026~031：認證相關API - 所有A級評分
+•	證據：Missing required field - data 在統一回應格式驗證中反覆出現
+•	信心度：95%
+•	MVP Insight：AM.js所有成功回應都設data為null，違反DCN-0015規範要求data必須為非null物件
+•	最小修正：AM.js所有API處理函數的成功回應設data為實際資料物件
+2. BK模組CRUD操作使用硬編碼測試ID
+•	對應失敗測試案例：
+o	TC-SIT-038：PUT /api/v1/transactions/test-transaction-002 - 400錯誤
+o	TC-SIT-039：DELETE /api/v1/transactions/test-transaction-003 - 400錯誤
+•	證據：控制台顯示這兩個具體ID的操作都返回400狀態碼
+•	信心度：90%
+•	MVP Insight：測試使用預定義ID但Firebase中無對應資料，暴露BK模組缺乏資源存在性檢查的設計缺陷
+•	最小修正：BK_updateTransaction和BK_deleteTransaction函數增加ID存在性驗證邏輯
+3. 測試範圍包含非P1-2端點
+•	對應失敗測試案例：
+o	TC-SIT-045：GET /api/v1/system/health - 404錯誤
+o	TC-SIT-046：GET /api/v1/system/app-info - 404錯誤
+o	TC-SIT-047：GET /api/v1/system/welcome - 404錯誤
+•	證據：控制台顯示「ASL未知端點」錯誤訊息
+•	信心度：100%
+•	MVP Insight：系統管理端點超出P1-2基礎記帳功能範圍，測試應聚焦核心業務價值
+•	最小修正：從0501和0603測試計畫中移除這3個system端點測試
+4. 業務邏輯錯誤處理格式不統一
+•	對應失敗測試案例：
+o	TC-SIT-015：業務規則錯誤處理機制測試失敗
+o	TC-SIT-017：註冊API測試失敗（業務邏輯驗證）
+o	TC-SIT-018：登入API測試失敗（業務邏輯驗證）
+•	證據：這些測試案例標記為BUSINESS_LOGIC_ERROR分類失敗
+•	信心度：85%
+•	MVP Insight：BL層部分函數未完全遵循DCN-0015統一success/error結構，導致ASL層無法正確處理
+•	最小修正：統一BL層錯誤回應格式，確保所有函數都返回標準{success, data, error}結構
+5. Firebase索引配置不足
+•	對應失敗測試案例：
+o	TC-SIT-042：GET /api/v1/transactions/recent - 查詢降級為degraded方法
+•	證據：控制台顯示「The query requires an index」錯誤並提供索引建立連結
+•	信心度：90%
+•	MVP Insight：Firestore複合查詢需要預建索引，目前依賴降級查詢機制但影響效能
+•	最小修正：建立必要的Firestore複合索引或簡化查詢邏輯
+6. 測試資料動態性不足導致依賴性失敗
+•	對應失敗測試案例：
+o	所有使用硬編碼ID的CRUD測試（如test-transaction-002/003）
+o	依賴特定用戶資料的查詢測試
+•	證據：多個400錯誤都源於資源不存在
+•	信心度：75%
+•	MVP Insight：測試過度依賴預設資料而非動態建立，缺乏資料獨立性和清理機制
+•	最小修正：修改測試邏輯使用動態生成ID或在測試前建立必要的前置資料
+C. 修正優先順序（MVP聚焦）
+第一優先：AM模組data欄位修復
+•	影響測試案例：TC-SIT-001, 002, 026-031 (約13個案例)
+•	修正複雜度：低（純格式調整）
+•	預期改善：所有A級評分提升至A+級，立即改善統一格式合規性
+第二優先：移除非P1-2測試範圍
+•	影響測試案例：TC-SIT-045, 046, 047 (3個案例)
+•	修正複雜度：極低（刪除測試案例）
+•	預期改善：立即消除3個404錯誤，聚焦核心功能測試
+第三優先：BK模組ID驗證邏輯
+•	影響測試案例：TC-SIT-038, 039 (2個案例)
+•	修正複雜度：中（業務邏輯調整）
+•	預期改善：400錯誤轉為正確的404或成功回應
+D. MVP階段關鍵Insight
+核心發現：根本問題不在技術複雜度，而在於：
+1.	規範執行落差：DCN-0015統一格式已完整定義，但AM.js實作未完全遵循
+2.	測試範圍偏離：包含了超出P1-2核心記帳功能的系統管理端點
+3.	資料依賴脆弱性：測試過度依賴硬編碼資料，缺乏動態資料管理
+MVP修復哲學：先解決格式合規性（影響面廣但修改簡單），再處理業務邏輯（影響深但數量少），最後調整測試範圍（確保聚焦核心價值）。
+預期成果：修復後成功率將從55.32%提升至85%+，達到B級品質標準，符合MVP發布要求。
+
+
+
+------------------------------------------
+20251007 Debug Root cause整理
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+
+=>Root cause裡面我沒有看到root cause對應測試fail的案例，請加入進去
+
+基於您的SIT測試結果分析，我將專注於MVP階段的核心問題解決，以下是我的更新提案：
+
+A. 快速摘要
+•	主要問題：AM模組API缺少data欄位導致DCN-0015不符合；BK模組CRUD操作硬編碼ID查詢失敗；系統API端點不在P1-2範圍內
+•	優先度：高 - 成功率55.32%，需立即修復格式問題和測試範圍
+B. Root Causes分析與Insight
+1. AM模組API回應格式缺少data欄位
+•	證據：A級評分顯示Missing required field - data
+•	信心度：95%
+•	Insight：AM.js成功回應時返回null作為data，而非實際資料物件
+•	最小修正：將AM.js成功回應的data設為非null值
+2. BK模組CRUD操作使用硬編碼測試ID
+•	證據：PUT/DELETE test-transaction-002、test-transaction-003回傳400
+•	信心度：90%
+•	Insight：測試使用固定ID但Firebase中無對應資料，BK模組缺乏ID存在性驗證
+•	最小修正：BK_updateTransaction和BK_deleteTransaction增加ID存在檢查
+3. 測試範圍包含非P1-2端點
+•	證據：/api/v1/system/*全部404錯誤
+•	信心度：100%
+•	Insight：系統管理端點不在P1-2基礎記帳範圍，測試應聚焦核心功能
+•	最小修正：從0501和0603測試中移除system端點測試
+4. 業務邏輯錯誤處理不一致
+•	證據：TC-SIT-015/017/018業務邏輯錯誤測試失敗
+•	信心度：85%
+•	Insight：BL層錯誤回應格式不統一，部分函數未遵循標準success/error結構
+•	最小修正：統一BL層錯誤回應格式標準
+5. 測試資料動態性不足
+•	證據：TC-SIT-038/039使用硬編碼交易ID失敗
+•	信心度：75%
+•	Insight：測試依賴預設資料而非動態創建，缺乏資料獨立性
+•	最小修正：修改測試邏輯使用動態生成ID或建立測試前置資料
+C. 修正優先順序（MVP聚焦）
+第一優先：AM模組data欄位修復
+•	影響範圍：13個認證API測試案例
+•	修正複雜度：低（格式調整）
+•	預期改善：A級評分提升至A+級
+第二優先：移除非P1-2測試範圍
+•	影響範圍：3個system端點測試
+•	修正複雜度：極低（刪除測試案例）
+•	預期改善：立即消除404錯誤
+第三優先：BK模組ID驗證邏輯
+•	影響範圍：3個CRUD操作測試
+•	修正複雜度：中（業務邏輯調整）
+•	預期改善：400錯誤轉為正確的404或成功回應
+D. MVP階段關鍵Insight
+根本問題不在技術複雜度，而在於：
+1.	規範執行落差：DCN-0015統一格式已定義但AM.js未完全實作
+2.	測試範圍偏離：包含了P1-2範圍外的功能測試
+3.	資料依賴性：測試過度依賴硬編碼資料而非動態建立
+MVP修復策略：先解決格式合規性（快速見效），再處理業務邏輯（影響較深），最後調整測試範圍（確保聚焦）。
+預期修復後成功率將從55.32%提升至85%+，達到B級品質標準。
+
+
+
+------------------------------------------
+20251007 Debug Root cause整理
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+基於SIT測試結果分析，以資深SQA角色提供結構化分析：
+A. 快速摘要（≤3句）
+•	主要問題：AM模組API回應格式缺少data欄位，導致DCN-0015規範不符合（A級評分）；BK模組CRUD操作失敗，回傳400錯誤；系統API端點未實作（404錯誤）
+•	優先度：高 - 整體成功率僅55.32%，品質等級D，不建議發布
+
+B. Root causes（最多 6 條）
+1. AM模組API回應格式不完整
+•	證據：多個A級評分顯示Missing required field - data
+統一回應格式驗證 /api/v1/auth/refresh: A (Score: 90.0%)
+錯誤詳情: Layer 1: Missing required field - data
+•	信心度：95%
+•	最小可行修正：在AM.js所有API處理函數中，成功回應時設置data欄位為非null值
+
+2. BK模組CRUD操作失敗
+•	證據：PUT/DELETE操作回傳400錯誤
+PUT /api/v1/transactions/test-transaction-002 - 400
+DELETE /api/v1/transactions/test-transaction-003 - 400
+•	信心度：90%
+•	最小可行修正：在BK_updateTransaction和BK_deleteTransaction中增加ID存在性檢查，改善錯誤處理
+
+3. 系統API端點未實作
+•	證據：system/*端點全部回傳404
+GET /api/v1/system/health - 404
+GET /api/v1/system/app-info - 404  
+GET /api/v1/system/welcome - 404
+•	信心度：100%
+•	最小可行修正：在ASL.js中添加對應的system端點路由，或在測試中排除這些端點
+
+=>這三個API不屬於P1-2，請在0501,0603中刪除這三個測試案例
+
+4. 業務邏輯錯誤處理機制失效
+•	證據：多個BUSINESS_LOGIC_ERROR分類的測試失敗
+TC-SIT-015: 業務規則錯誤處理機制失效
+TC-SIT-017: 註冊API測試失敗
+TC-SIT-018: 登入API測試失敗
+•	信心度：85%
+•	最小可行修正：統一BL層錯誤回應格式，確保success/error欄位正確設置
+5. 資料同步機制問題
+•	證據：
+TC-SIT-011: 資料同步機制失敗
+TC-SIT-012: 用戶生命週期測試未完全通過
+•	信心度：80%
+•	最小可行修正：在資料變更後添加同步驗證邏輯，確保資料一致性
+6. 測試資料與實際API不匹配
+•	證據：多個API測試使用硬編碼ID導致失敗
+TC-SIT-038: test-transaction-001 查詢失敗
+TC-SIT-039: test-transaction-002 更新失敗
+•	信心度：75%
+•	最小可行修正：修改測試邏輯使用動態生成的交易ID，或確保測試資料存在
+C. 最小重現步驟
+cd "06. SIT_Test code"
+node "0603. SIT_TC_P1.js" --phase=all
+# 重現AM模組格式問題
+curl -X POST http://0.0.0.0:5000/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken": "test"}'
+# 重現BK模組CRUD問題  
+curl -X PUT http://0.0.0.0:5000/api/v1/transactions/test-transaction-002 \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 100}'
+# 重現系統端點404問題
+curl http://0.0.0.0:5000/api/v1/system/health
+D. 優先修正建議
+1. 第一優先：修復AM模組回應格式（影響13個測試案例）
+•	修正方案：在AM.js所有API處理函數的成功回應中加入data欄位
+•	風險：低，僅格式調整
+•	回退計畫：保留原始AM.js備份，必要時回退
+2. 第二優先：修復BK模組CRUD操作（影響3個測試案例）
+•	修正方案：在UPDATE/DELETE操作前增加ID驗證，改善400錯誤處理
+•	風險：中，可能影響現有交易邏輯
+•	回退計畫：使用try-catch包裝，失敗時返回詳細錯誤信息
+3. 第三優先：處理系統API端點（影響3個測試案例）
+•	修正方案：評估是否屬於P1-2範圍，不屬於則在測試中排除
+•	風險：低，主要是測試範圍調整
+•	回退計畫：恢復原始測試案例配置
+預期改善效果：修復後預計成功率可從55.32%提升至80%以上，品質等級從D級提升至B級。
+
+
+
+
+------------------------------------------
+20251007 Debug 階段一計畫
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+基於測試結果分析，以資深SQA角色提出階段二修復方案：
+測試結果分析
+階段一成功率：100% (7/7) ✅
+階段二成功率：47.5% (19/40) ❌
+整體成功率：55.32% (26/47) - D級品質，需要修復
+Root Cause 分析
+1. AM模組API回應格式不完整 (Root Cause 1)
+問題核心：多個AM API缺少data欄位，導致A級評分
+信心度：95%
+從console看到多個A級評分：
+統一回應格式驗證 /api/v1/auth/refresh: A (Score: 90.0%)
+錯誤詳情: Layer 1: Missing required field - data
+Insight：AM模組的API處理函數返回格式不統一，部分函數返回成功但沒有data欄位，影響DCN-0015合規性。
+2. BK模組CRUD操作失敗 (Root Cause 2)
+問題核心：PUT/DELETE交易操作回傳400錯誤
+信心度：90%
+從console看到：
+PUT /api/v1/transactions/test-transaction-002 - 400
+DELETE /api/v1/transactions/test-transaction-003 - 400
+Insight：BK模組的UPDATE/DELETE操作需要先找到對應記錄，但測試使用的ID可能不存在，需要增強ID驗證機制。
+3. 系統API端點未實作 (Root Cause 3)
+問題核心：system/*端點回傳404
+信心度：100%
+GET /api/v1/system/health - 404
+GET /api/v1/system/app-info - 404  
+GET /api/v1/system/welcome - 404
+Insight：這些端點屬於Phase 7功能，不在P1-2範圍內，測試應該排除這些端點。
+階段二修復方案
+修復階段一：AM模組統一回應格式修復
+目標：修復AM模組API回應格式，確保所有成功回應都包含data欄位
+關鍵修復點：
+1.	AM_processAPIRefresh函數：回應缺少data欄位
+2.	AM_processAPIResetPassword函數：回應缺少data欄位
+3.	AM_processAPIVerifyEmail函數：回應缺少data欄位
+4.	AM_processAPIBindLine函數：回應缺少data欄位
+5.	AM_processAPIBindStatus函數：回應缺少data欄位
+修復階段二：BK模組CRUD操作修復
+目標：修復UPDATE/DELETE交易操作40x錯誤
+關鍵修復點：
+1.	增強ID存在性驗證：在UPDATE/DELETE前先檢查ID是否存在
+2.	改善錯誤處理：提供更明確的錯誤訊息
+3.	測試資料對應：確保測試ID與實際資料一致
+修復階段三：測試範圍調整
+目標：調整測試範圍，排除非P1-2功能
+關鍵調整點：
+1.	*排除system/端點：TC-SIT-045~047應標記為跳過
+2.	聚焦核心功能：專注於認證、用戶管理、交易記帳功能
+3.	效能期望調整：MVP階段容許較寬鬆的效能標準
+優先修復建議
+第一優先級：AM模組回應格式 (影響13個測試案例)
+•	修復所有缺少data欄位的AM API函數
+•	確保100% DCN-0015規範符合度
+•	預期提升成功率：20-25%
+第二優先級：BK模組CRUD操作 (影響3個測試案例)
+•	修復PUT/DELETE操作的ID驗證
+•	改善錯誤訊息和處理邏輯
+•	預期提升成功率：5-8%
+第三優先級：測試範圍調整 (影響3個測試案例)
+•	調整測試配置，排除非P1-2端點
+•	預期提升成功率：6-7%
+修復後預期結果
+•	目標成功率：80%以上 (從55.32%提升至80%+)
+•	品質等級：從D級提升至B級
+•	發布建議：從❌變更為✅有條件發布
+總結：主要問題集中在AM模組回應格式不完整和BK模組CRUD操作失敗，這兩項修復可顯著提升測試通過率，使系統達到MVP發布標準。
+
+
+
 
 ------------------------------------------
 20251007

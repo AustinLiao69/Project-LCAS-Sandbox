@@ -1,0 +1,82 @@
+------------------------------------------
+20251007 Debug Root cause整理
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+基於SIT測試結果分析，以資深SQA角色提供結構化分析：
+A. 快速摘要（≤3句）
+•	主要問題：AM模組API回應格式缺少data欄位，導致DCN-0015規範不符合（A級評分）；BK模組CRUD操作失敗，回傳400錯誤；系統API端點未實作（404錯誤）
+•	優先度：高 - 整體成功率僅55.32%，品質等級D，不建議發布
+
+B. Root causes（最多 6 條）
+1. AM模組API回應格式不完整
+•	證據：多個A級評分顯示Missing required field - data
+統一回應格式驗證 /api/v1/auth/refresh: A (Score: 90.0%)
+錯誤詳情: Layer 1: Missing required field - data
+•	信心度：95%
+•	最小可行修正：在AM.js所有API處理函數中，成功回應時設置data欄位為非null值
+
+2. BK模組CRUD操作失敗
+•	證據：PUT/DELETE操作回傳400錯誤
+PUT /api/v1/transactions/test-transaction-002 - 400
+DELETE /api/v1/transactions/test-transaction-003 - 400
+•	信心度：90%
+•	最小可行修正：在BK_updateTransaction和BK_deleteTransaction中增加ID存在性檢查，改善錯誤處理
+
+3. 系統API端點未實作
+•	證據：system/*端點全部回傳404
+GET /api/v1/system/health - 404
+GET /api/v1/system/app-info - 404  
+GET /api/v1/system/welcome - 404
+•	信心度：100%
+•	最小可行修正：在ASL.js中添加對應的system端點路由，或在測試中排除這些端點
+
+=>這三個API不屬於P1-2，請在0501,0603中刪除這三個測試案例
+
+4. 業務邏輯錯誤處理機制失效
+•	證據：多個BUSINESS_LOGIC_ERROR分類的測試失敗
+TC-SIT-015: 業務規則錯誤處理機制失效
+TC-SIT-017: 註冊API測試失敗
+TC-SIT-018: 登入API測試失敗
+•	信心度：85%
+•	最小可行修正：統一BL層錯誤回應格式，確保success/error欄位正確設置
+5. 資料同步機制問題
+•	證據：
+TC-SIT-011: 資料同步機制失敗
+TC-SIT-012: 用戶生命週期測試未完全通過
+•	信心度：80%
+•	最小可行修正：在資料變更後添加同步驗證邏輯，確保資料一致性
+6. 測試資料與實際API不匹配
+•	證據：多個API測試使用硬編碼ID導致失敗
+TC-SIT-038: test-transaction-001 查詢失敗
+TC-SIT-039: test-transaction-002 更新失敗
+•	信心度：75%
+•	最小可行修正：修改測試邏輯使用動態生成的交易ID，或確保測試資料存在
+C. 最小重現步驟
+cd "06. SIT_Test code"
+node "0603. SIT_TC_P1.js" --phase=all
+# 重現AM模組格式問題
+curl -X POST http://0.0.0.0:5000/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken": "test"}'
+# 重現BK模組CRUD問題  
+curl -X PUT http://0.0.0.0:5000/api/v1/transactions/test-transaction-002 \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 100}'
+# 重現系統端點404問題
+curl http://0.0.0.0:5000/api/v1/system/health
+D. 優先修正建議
+1. 第一優先：修復AM模組回應格式（影響13個測試案例）
+•	修正方案：在AM.js所有API處理函數的成功回應中加入data欄位
+•	風險：低，僅格式調整
+•	回退計畫：保留原始AM.js備份，必要時回退
+2. 第二優先：修復BK模組CRUD操作（影響3個測試案例）
+•	修正方案：在UPDATE/DELETE操作前增加ID驗證，改善400錯誤處理
+•	風險：中，可能影響現有交易邏輯
+•	回退計畫：使用try-catch包裝，失敗時返回詳細錯誤信息
+3. 第三優先：處理系統API端點（影響3個測試案例）
+•	修正方案：評估是否屬於P1-2範圍，不屬於則在測試中排除
+•	風險：低，主要是測試範圍調整
+•	回退計畫：恢復原始測試案例配置
+預期改善效果：修復後預計成功率可從55.32%提升至80%以上，品質等級從D級提升至B級。
+
