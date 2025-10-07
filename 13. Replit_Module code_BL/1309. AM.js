@@ -1616,8 +1616,7 @@ async function AM_processAPIRegister(requestData) {
     return {
       success: true,
       data: userData,
-      message: "註冊成功",
-      error: null
+      message: "註冊成功"
     };
 
   } catch (error) {
@@ -1762,8 +1761,7 @@ async function AM_processAPILogin(requestData) {
         user: userData,
         expiresIn: 3600,
       },
-      message: "登入成功",
-      error: null
+      message: "登入成功"
     };
 
   } catch (error) {
@@ -1881,7 +1879,7 @@ async function AM_processAPIGoogleLogin(requestData) {
           isNewUser: !existsResult.exists,
           expiresIn: 3600,
         },
-        message: "Google登入成功",
+        message: "Google登入成功"
       };
     } else {
       return {
@@ -1954,8 +1952,7 @@ async function AM_processAPILogout(requestData) {
       data: {
         message: "已成功登出",
       },
-      error: null,
-      message: "登出成功",
+      message: "登出成功"
     };
   } catch (error) {
     AM_logError(
@@ -2048,7 +2045,7 @@ async function AM_processAPIRefresh(requestData) {
         refreshToken: newRefreshToken,
         expiresIn: 3600,
       },
-      message: "Token刷新成功",
+      message: "Token刷新成功"
     };
   } catch (error) {
     AM_logError(
@@ -2131,9 +2128,9 @@ async function AM_processAPIForgotPassword(requestData) {
       success: true,
       data: {
         message: "密碼重設郵件已發送",
-        resetToken: resetToken, // 在實際專案中不應回傳，這裡僅供測試
+        resetToken: resetToken // 在實際專案中不應回傳，這裡僅供測試
       },
-      message: "密碼重設郵件已發送",
+      message: "密碼重設郵件已發送"
     };
   } catch (error) {
     AM_logError(
@@ -2232,9 +2229,9 @@ async function AM_processAPIVerifyResetToken(queryParams) {
       data: {
         valid: true,
         userId: userId,
-        expiresAt: new Date(timestamp + maxAge).toISOString(),
+        expiresAt: new Date(timestamp + maxAge).toISOString()
       },
-      message: "重設token有效",
+      message: "重設token有效"
     };
   } catch (error) {
     AM_logError(
@@ -2310,9 +2307,9 @@ async function AM_processAPIResetPassword(requestData) {
     return {
       success: true,
       data: {
-        message: "密碼已成功重設",
+        message: "密碼已成功重設"
       },
-      message: "密碼重設成功",
+      message: "密碼重設成功"
     };
   } catch (error) {
     AM_logError(
@@ -2406,9 +2403,9 @@ async function AM_processAPIVerifyEmail(requestData) {
         success: true,
         data: {
           message: "電子郵件驗證成功",
-          userId: existsResult.UID,
+          userId: existsResult.UID
         },
-        message: "Email驗證成功",
+        message: "Email驗證成功"
       };
     } else {
       return {
@@ -2506,9 +2503,9 @@ async function AM_processAPIBindLine(requestData) {
           message: "LINE帳號綁定成功",
           userId: requestData.userId,
           lineUserId: requestData.lineUserId,
-          boundAt: new Date().toISOString(),
+          boundAt: new Date().toISOString()
         },
-        message: "LINE綁定成功",
+        message: "LINE綁定成功"
       };
     } else {
       return {
@@ -2609,7 +2606,7 @@ async function AM_processAPIBindStatus(queryParams) {
     return {
       success: true,
       data: bindingStatus,
-      message: "綁定狀態查詢成功",
+      message: "綁定狀態查詢成功"
     };
   } catch (error) {
     AM_logError(
@@ -2681,25 +2678,23 @@ async function AM_processAPIGetProfile(queryParams) {
           preferences: {
             language: "zh-TW",
             currency: "TWD",
-            timezone: "Asia/Taipei",
+            timezone: "Asia/Taipei"
           },
           security: {
             hasAppLock: false,
-            biometricEnabled: false,
-          },
+            biometricEnabled: false
+          }
         },
-        error: null,
-        message: "用戶資料取得成功",
+        message: "用戶資料取得成功"
       };
     } else {
       return {
         success: false,
-        data: null,
+        message: "用戶不存在",
         error: {
           code: "USER_NOT_FOUND",
           message: "用戶不存在"
-        },
-        message: "用戶不存在",
+        }
       };
     }
   } catch (error) {
@@ -2714,12 +2709,11 @@ async function AM_processAPIGetProfile(queryParams) {
     );
     return {
       success: false,
-      data: null,
+      message: "系統錯誤，請稍後再試",
       error: {
         code: "SYSTEM_ERROR",
         message: "系統錯誤，請稍後再試"
-      },
-      message: "系統錯誤，請稍後再試",
+      }
     };
   }
 }
@@ -2857,7 +2851,7 @@ async function AM_processAPIGetAssessmentQuestions(queryParams) {
     return {
       success: true,
       data: { questionnaire },
-      message: "評估問卷取得成功",
+      message: "評估問卷取得成功"
     };
   } catch (error) {
     AM_logError(
@@ -3005,8 +2999,7 @@ async function AM_processAPISubmitAssessment(requestData) {
       data: {
         result: assessmentResult
       },
-      message: "模式評估完成",
-      error: null
+      message: "模式評估完成"
     };
 
   } catch (error) {
@@ -3023,7 +3016,6 @@ async function AM_processAPISubmitAssessment(requestData) {
 
     return {
       success: false,
-      data: null,
       message: "模式評估處理失敗",
       error: {
         code: "ASSESSMENT_PROCESSING_ERROR",
