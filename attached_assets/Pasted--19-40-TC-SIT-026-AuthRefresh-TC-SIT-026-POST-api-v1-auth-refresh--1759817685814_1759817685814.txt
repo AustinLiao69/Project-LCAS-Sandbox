@@ -1,0 +1,42 @@
+📝 執行階段二測試 19/40: TC-SIT-026: AuthRefresh
+🔄 TC-SIT-026: 測試POST /api/v1/auth/refresh
+  ✅ 統一回應格式驗證 /api/v1/auth/refresh: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-026 (27ms)
+   ⚠️ 錯誤: 刷新Token失敗
+   🏷️  錯誤類型: AUTH_ERROR
+   💡 建議: 檢查認證Token有效性
+
+📝 執行階段二測試 20/40: TC-SIT-027: AuthForgotPassword
+🔑 TC-SIT-027: 測試POST /api/v1/auth/forgot-password
+  ✅ 統一回應格式驗證 /api/v1/auth/forgot-password: A+ (Score: 100.0%)
+✅ PASS TC-SIT-027 (402ms)
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 21/40: TC-SIT-028: AuthResetPassword
+🔐 TC-SIT-028: 測試POST /api/v1/auth/reset-password
+  ✅ 統一回應格式驗證 /api/v1/auth/reset-password: A (Score: 90.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-10-07T06:14:21.411Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"expertFeatures":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true,"expertAnalytics":true,"professionalTools":true,"detailedReports":true,"bulkProcessing":true,"advancedFiltering":true,"customCategories":true,"budgetForecasting":true}}}
+✅ PASS TC-SIT-028 (6ms)
+
+📝 執行階段二測試 22/40: TC-SIT-029: AuthVerifyEmail
+📧 TC-SIT-029: 測試POST /api/v1/auth/verify-email
+  ✅ 統一回應格式驗證 /api/v1/auth/verify-email: A+ (Score: 100.0%)
+✅ PASS TC-SIT-029 (3ms)
+
+📝 執行階段二測試 23/40: TC-SIT-030: AuthBindLine
+🔗 TC-SIT-030: 測試POST /api/v1/auth/bind-line
+  ✅ 統一回應格式驗證 /api/v1/auth/bind-line: A (Score: 90.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-10-07T06:14:21.421Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"expertFeatures":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true,"expertAnalytics":true,"professionalTools":true,"detailedReports":true,"bulkProcessing":true,"advancedFiltering":true,"customCategories":true,"budgetForecasting":true}}}
+✅ PASS TC-SIT-030 (7ms)
+
+📝 執行階段二測試 24/40: TC-SIT-031: AuthBindStatus
+📊 TC-SIT-031: 測試GET /api/v1/auth/bind-status
+  ✅ 統一回應格式驗證 /api/v1/auth/bind-status: A (Score: 90.0%)
+     - 錯誤詳情: Layer 1: Missing required field - data
+     - 驗證細節: {"layer1FieldsPresent":{"success":true,"data":false,"error":true,"message":true,"metadata":true},"metadataValid":true,"timestampValid":"2025-10-07T06:14:21.426Z","userModeValid":true,"processingTimeValid":true,"logicConsistent":true,"modeFeaturesPresent":{"expertFeatures":{"detailedAnalytics":true,"advancedOptions":true,"performanceMetrics":true,"batchOperations":true,"exportFeatures":true,"dataInsights":true,"customReports":true,"expertAnalytics":true,"professionalTools":true,"detailedReports":true,"bulkProcessing":true,"advancedFiltering":true,"customCategories":true,"budgetForecasting":true}}}
+❌ FAIL TC-SIT-031 (5ms)
+   ℹ️ 錯誤: 綁定狀態查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
