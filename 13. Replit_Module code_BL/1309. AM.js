@@ -1998,8 +1998,12 @@ async function AM_processAPIRefresh(requestData) {
     if (!requestData.refreshToken) {
       return {
         success: false,
+        data: null,
         message: "refresh token為必填欄位",
-        errorCode: "MISSING_REFRESH_TOKEN",
+        error: {
+          code: "MISSING_REFRESH_TOKEN",
+          message: "refresh token為必填欄位"
+        }
       };
     }
 
@@ -2008,8 +2012,12 @@ async function AM_processAPIRefresh(requestData) {
     if (tokenParts.length < 3 || !tokenParts[0].includes("refresh")) {
       return {
         success: false,
+        data: null,
         message: "無效的refresh token",
-        errorCode: "INVALID_REFRESH_TOKEN",
+        error: {
+          code: "INVALID_REFRESH_TOKEN",
+          message: "無效的refresh token"
+        }
       };
     }
 
@@ -2020,8 +2028,12 @@ async function AM_processAPIRefresh(requestData) {
     if (!userInfo.success) {
       return {
         success: false,
+        data: null,
         message: "用戶不存在",
-        errorCode: "USER_NOT_FOUND",
+        error: {
+          code: "USER_NOT_FOUND",
+          message: "用戶不存在"
+        }
       };
     }
 
@@ -2059,8 +2071,12 @@ async function AM_processAPIRefresh(requestData) {
     );
     return {
       success: false,
+      data: null,
       message: "Token刷新失敗",
-      errorCode: "REFRESH_ERROR",
+      error: {
+        code: "REFRESH_ERROR",
+        message: "Token刷新失敗"
+      }
     };
   }
 }
@@ -2266,8 +2282,12 @@ async function AM_processAPIResetPassword(requestData) {
     if (!requestData.token || !requestData.newPassword) {
       return {
         success: false,
+        data: null,
         message: "重設token和新密碼為必填欄位",
-        errorCode: "MISSING_REQUIRED_FIELDS",
+        error: {
+          code: "MISSING_REQUIRED_FIELDS",
+          message: "重設token和新密碼為必填欄位"
+        }
       };
     }
 
@@ -2285,8 +2305,12 @@ async function AM_processAPIResetPassword(requestData) {
     if (requestData.newPassword.length < 6) {
       return {
         success: false,
+        data: null,
         message: "密碼長度至少需要6個字元",
-        errorCode: "PASSWORD_TOO_SHORT",
+        error: {
+          code: "PASSWORD_TOO_SHORT",
+          message: "密碼長度至少需要6個字元"
+        }
       };
     }
 
@@ -2323,8 +2347,12 @@ async function AM_processAPIResetPassword(requestData) {
     );
     return {
       success: false,
+      data: null,
       message: "密碼重設失敗",
-      errorCode: "RESET_PASSWORD_ERROR",
+      error: {
+        code: "RESET_PASSWORD_ERROR",
+        message: "密碼重設失敗"
+      }
     };
   }
 }
@@ -2351,8 +2379,12 @@ async function AM_processAPIVerifyEmail(requestData) {
     if (!requestData.verificationCode || !requestData.email) {
       return {
         success: false,
+        data: null,
         message: "驗證碼和電子郵件為必填欄位",
-        errorCode: "MISSING_VERIFICATION_DATA",
+        error: {
+          code: "MISSING_VERIFICATION_DATA",
+          message: "驗證碼和電子郵件為必填欄位"
+        }
       };
     }
 
@@ -2364,8 +2396,12 @@ async function AM_processAPIVerifyEmail(requestData) {
     if (!existsResult.exists) {
       return {
         success: false,
+        data: null,
         message: "帳號不存在",
-        errorCode: "ACCOUNT_NOT_FOUND",
+        error: {
+          code: "ACCOUNT_NOT_FOUND",
+          message: "帳號不存在"
+        }
       };
     }
 
@@ -2374,8 +2410,12 @@ async function AM_processAPIVerifyEmail(requestData) {
     if (requestData.verificationCode !== validCode) {
       return {
         success: false,
+        data: null,
         message: "驗證碼錯誤",
-        errorCode: "INVALID_VERIFICATION_CODE",
+        error: {
+          code: "INVALID_VERIFICATION_CODE",
+          message: "驗證碼錯誤"
+        }
       };
     }
 
@@ -2410,8 +2450,12 @@ async function AM_processAPIVerifyEmail(requestData) {
     } else {
       return {
         success: false,
+        data: null,
         message: "驗證狀態更新失敗",
-        errorCode: "UPDATE_VERIFICATION_STATUS_FAILED",
+        error: {
+          code: "UPDATE_VERIFICATION_STATUS_FAILED",
+          message: "驗證狀態更新失敗"
+        }
       };
     }
   } catch (error) {
@@ -2426,8 +2470,12 @@ async function AM_processAPIVerifyEmail(requestData) {
     );
     return {
       success: false,
+      data: null,
       message: "Email驗證失敗",
-      errorCode: "EMAIL_VERIFICATION_ERROR",
+      error: {
+        code: "EMAIL_VERIFICATION_ERROR",
+        message: "Email驗證失敗"
+      }
     };
   }
 }
