@@ -1132,11 +1132,21 @@
               "endpoint": "/api/v1/auth/refresh",
               "method": "POST",
               "test_data": {
-                "refreshToken": "test-refresh-token",
+                "refreshToken": "refresh_test_user_12345_1728287400000",
                 "deviceInfo": {
                   "deviceId": "test-device-refresh",
                   "platform": "Web"
                 }
+              },
+              "expected_response": {
+                "success": true,
+                "data": {
+                  "accessToken": "string",
+                  "refreshToken": "string",
+                  "expiresIn": 3600
+                },
+                "error": null,
+                "message": "Token刷新成功"
               }
             },
             {
@@ -1180,7 +1190,33 @@
               "tc_id": "TC-SIT-031",
               "endpoint": "/api/v1/auth/bind-status",
               "method": "GET",
-              "test_data": null
+              "test_data": {
+                "userId": "demo_user_bind_status_001"
+              },
+              "expected_response": {
+                "success": true,
+                "data": {
+                  "bindingStatus": {
+                    "LINE": {
+                      "bound": false,
+                      "platform": "LINE",
+                      "status": "unbound"
+                    },
+                    "iOS": {
+                      "bound": false,
+                      "platform": "iOS",
+                      "status": "unbound"
+                    },
+                    "Android": {
+                      "bound": false,
+                      "platform": "Android",
+                      "status": "unbound"
+                    }
+                  }
+                },
+                "error": null,
+                "message": "綁定狀態查詢成功"
+              }
             }
           ]
         },
