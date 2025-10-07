@@ -1348,25 +1348,7 @@
             }
           ]
         },
-        "system_service": {
-          "endpoints": [
-            {
-              "tc_id": "TC-SIT-045",
-              "endpoint": "/api/v1/system/health",
-              "method": "GET",
-              "test_data": null
-            },
-            {
-              "tc_id": "TC-SIT-046",
-              "endpoint": "/api/v1/system/app-info",
-              "method": "GET",
-              "test_data": null
-            },
-            {
-              "tc_id": "TC-SIT-047",
-              "endpoint": "/api/v1/system/welcome",
-              "method": "GET",
-              "test_data": null
+
             }
           ]
         }

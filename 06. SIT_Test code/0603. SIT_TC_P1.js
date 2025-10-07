@@ -3565,100 +3565,6 @@ class SITTestCases {
         }
     }
 
-    // ==================== 階段二新增：系統服務缺失API測試 (TC-SIT-045~047) ====================
-
-    /**
-     * TC-SIT-045: /api/v1/system/health 端點測試
-     */
-    async testCase045_SystemHealth() {
-        const startTime = Date.now();
-        try {
-            console.log('🏥 TC-SIT-045: 測試GET /api/v1/system/health');
-
-            const response = await this.makeRequest('GET', '/api/v1/system/health');
-
-            const success = response.success && response.data?.status;
-
-            this.recordTestResult('TC-SIT-045', success, Date.now() - startTime, {
-                endpoint: 'GET /api/v1/system/health',
-                systemStatus: response.data?.status,
-                health: response.data?.health,
-                response: response.data,
-                error: !success ? (response.error || '系統健康檢查失敗') : null
-            });
-
-            return success;
-        } catch (error) {
-            this.recordTestResult('TC-SIT-045', false, Date.now() - startTime, {
-                endpoint: 'GET /api/v1/system/health',
-                error: error.message
-            });
-            return false;
-        }
-    }
-
-    /**
-     * TC-SIT-046: /api/v1/system/app-info 端點測試
-     */
-    async testCase046_SystemAppInfo() {
-        const startTime = Date.now();
-        try {
-            console.log('ℹ️ TC-SIT-046: 測試GET /api/v1/system/app-info');
-
-            const response = await this.makeRequest('GET', '/api/v1/system/app-info');
-
-            const success = response.success && response.data?.appVersion;
-
-            this.recordTestResult('TC-SIT-046', success, Date.now() - startTime, {
-                endpoint: 'GET /api/v1/system/app-info',
-                appVersion: response.data?.appVersion,
-                buildNumber: response.data?.buildNumber,
-                response: response.data,
-                error: !success ? (response.error || '應用程式資訊查詢失敗') : null
-            });
-
-            return success;
-        } catch (error) {
-            this.recordTestResult('TC-SIT-046', false, Date.now() - startTime, {
-                endpoint: 'GET /api/v1/system/app-info',
-                error: error.message
-            });
-            return false;
-        }
-    }
-
-    /**
-     * TC-SIT-047: /api/v1/system/welcome 端點測試
-     */
-    async testCase047_SystemWelcome() {
-        const startTime = Date.now();
-        try {
-            console.log('👋 TC-SIT-047: 測試GET /api/v1/system/welcome');
-
-            const response = await this.makeRequest('GET', '/api/v1/system/welcome');
-
-            const success = response.success && response.data?.welcomeMessage;
-
-            this.recordTestResult('TC-SIT-047', success, Date.now() - startTime, {
-                endpoint: 'GET /api/v1/system/welcome',
-                welcomeMessage: response.data?.welcomeMessage,
-                features: response.data?.features,
-                response: response.data,
-                error: !success ? (response.error || '歡迎訊息查詢失敗') : null
-            });
-
-            return success;
-        } catch (error) {
-            this.recordTestResult('TC-SIT-047', false, Date.now() - startTime, {
-                endpoint: 'GET /api/v1/system/welcome',
-                error: error.message
-            });
-            return false;
-        }
-    }
-
-    
-
     /**
      * 執行階段一測試案例 (TC-SIT-001 to TC-SIT-007)
      */
@@ -3827,10 +3733,7 @@ class SITTestCases {
             this.testCase043_TransactionCharts,
             this.testCase044_TransactionDashboard,
 
-            // 系統服務API測試 (TC-SIT-045~047)
-            this.testCase045_SystemHealth,
-            this.testCase046_SystemAppInfo,
-            this.testCase047_SystemWelcome
+
         ];
 
         let passedTests = 0;

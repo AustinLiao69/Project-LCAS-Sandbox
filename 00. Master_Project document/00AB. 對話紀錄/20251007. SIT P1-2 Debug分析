@@ -1,0 +1,80 @@
+------------------------------------------
+20251007 SIT 階段二 Debug
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+根據附件的SIT測試結果，我重新盤點了未通過的測試案例，發現確實有我誤刪的案例。讓我詳細分析實際的失敗案例：
+A. 快速摘要（≤3句）
+•	最可能問題：21個測試案例未通過，主要集中在三大問題：1)交易ID驗證邏輯錯誤 2)用戶Profile API data欄位缺失 3)業務邏輯處理不完整
+
+•	優先度：中高 - 核心CRUD功能有問題，需要優先修復
+B. Root causes（實際未通過的21個測試案例分析）
+已識別的核心問題：
+
+1. 用戶Profile API data欄位缺失問題
+•	證據：Layer 1: Missing required field - data 出現在多個用戶相關API
+•	影響測試案例：TC-SIT-003, TC-SIT-007, TC-SIT-009(4次), TC-SIT-020, TC-SIT-032, TC-SIT-033
+•	信心度：95%
+•	分析：AM.js的用戶相關函數回傳格式不符合DCN-0015規範
+
+2. 交易ID驗證邏輯錯誤
+•	證據：PUT /api/v1/transactions/test-transaction-002 - 400, DELETE /api/v1/transactions/test-transaction-003 - 400
+•	影響測試案例：TC-SIT-039 (UpdateTransactionById), TC-SIT-040 (DeleteTransactionById)
+•	信心度：90%
+•	分析：BK.js中交易更新/刪除函數的ID驗證邏輯有缺陷
+
+3. Firebase索引配置缺失導致查詢失敗
+•	證據：🔄 標準查詢失敗，嘗試降級查詢: 9 FAILED_PRECONDITION: The query requires an index
+•	影響測試案例：TC-SIT-042 (TransactionRecent)
+•	信心度：85%
+•	分析：Firebase查詢需要建立複合索引
+新識別的18個業務邏輯問題：
+
+4. 資料同步機制失效
+•	影響測試案例：TC-SIT-011 (DataSynchronization)
+•	信心度：80%
+
+5. 用戶生命週期測試邏輯問題
+•	影響測試案例：TC-SIT-012 (CompleteUserLifecycle)
+•	信心度：75%
+6. 業務規則驗證機制缺失
+•	影響測試案例：TC-SIT-015 (BusinessRuleErrorHandling)
+•	信心度：80%
+7. 註冊/登入API業務邏輯問題
+•	影響測試案例：TC-SIT-017 (UserRegisterAPI), TC-SIT-018 (UserLoginAPI)
+•	信心度：75%
+8. 用戶評估API處理問題
+•	影響測試案例：TC-SIT-021 (UserAssessmentAPI)
+•	信心度：70%
+9. 快速記帳API邏輯問題
+•	影響測試案例：TC-SIT-023 (QuickBookingAPI)
+•	信心度：75%
+10. Token刷新機制問題
+•	影響測試案例：TC-SIT-026 (AuthRefresh)
+•	信心度：85%
+11. 綁定狀態查詢問題
+•	影響測試案例：TC-SIT-031 (AuthBindStatus)
+•	信心度：70%
+12. PIN驗證機制問題
+•	影響測試案例：TC-SIT-037 (UserVerifyPin)
+•	信心度：75%
+13. 交易查詢相關API問題
+•	影響測試案例：TC-SIT-038 (GetTransactionById), TC-SIT-041 (TransactionStatistics), TC-SIT-043 (TransactionCharts)
+•	信心度：80%
+C. SQA Insight
+核心發現：
+1.	格式問題：用戶相關API普遍缺少data欄位，違反DCN-0015規範
+2.	交易CRUD問題：更新和刪除交易的ID驗證邏輯有嚴重缺陷
+3.	業務邏輯不完整：多個API端點的業務邏輯處理不完整，返回錯誤但沒有具體原因
+4.	測試資料問題：使用固定測試ID但系統中可能不存在對應資料
+優先修復建議（按緊急程度）：
+1.	立即修復：AM.js用戶API的data欄位缺失問題（影響8個測試案例）
+2.	高優先級：BK.js交易更新/刪除的ID驗證邏輯（影響2個測試案例）
+3.	中優先級：Firebase索引建立（影響1個測試案例）
+4.	後續處理：其他10個業務邏輯完善問題
+實際失敗測試案例清單：
+TC-SIT-003, TC-SIT-007, TC-SIT-009, TC-SIT-011, TC-SIT-012, TC-SIT-015, TC-SIT-017, TC-SIT-018, TC-SIT-020, TC-SIT-021, TC-SIT-023, TC-SIT-026, TC-SIT-031, TC-SIT-032, TC-SIT-037, TC-SIT-038, TC-SIT-039, TC-SIT-040, TC-SIT-041, TC-SIT-042, TC-SIT-043
+總計21個失敗案例，成功率為55.3% (26/47)
+Scroll to latest
+Assistant mode
