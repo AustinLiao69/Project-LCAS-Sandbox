@@ -1,0 +1,65 @@
+------------------------------------------
+20251007
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+------------------------------------------
+20251007
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+Debug分析報告 - LCAS 2.0 Phase 1 SIT測試
+A. 快速摘要（≤3句）
+•	最可能問題：AM模組缺少AM_processAPIGetPreferences函數，且多個API端點業務邏輯層回傳格式不一致導致測試失敗
+•	優先度：高 - 整體成功率53.19%，品質等級D級，不建議發布
+B. Root causes（最多 6 條）
+1. AM模組缺少關鍵函數
+•	證據：❌ FAIL TC-SIT-034 (4ms) 錯誤: AM_processAPIGetPreferences函數不存在
+•	信心度：100%
+•	最小可行修正：在AM.js中新增AM_processAPIGetPreferences函數實作
+2. API回應格式不一致問題
+•	證據：多個測試顯示Layer 1: Missing required field - data，統一回應格式驗證得分A（90%）而非A+
+•	信心度：95%
+•	最小可行修正：修正AM模組API函數確保成功回應包含data欄位
+3. 業務邏輯層錯誤處理機制失效
+•	證據：22個測試標記為BUSINESS_LOGIC_ERROR，包括TC-SIT-011、TC-SIT-012、TC-SIT-015等
+•	信心度：90%
+•	最小可行修正：檢查BL層函數回傳格式，確保符合DCN-0015統一回應標準
+4. 系統服務API端點缺失
+•	證據：❌ FAIL TC-SIT-045/046/047: API端點不存在: GET /api/v1/system/*
+•	信心度：100%
+•	最小可行修正：確認P1-2範圍是否包含system端點，如不包含則調整測試範圍
+5. 交易相關API功能不完整
+•	證據：TC-SIT-038~044多個交易API測試失敗，涉及CRUD操作、統計、圖表等功能
+•	信心度：85%
+•	最小可行修正：檢查BK模組相關函數實作完整性
+6. 認證API token處理問題
+•	證據：TC-SIT-026刷新Token失敗，TC-SIT-017/018註冊登入API測試失敗
+•	信心度：80%
+•	最小可行修正：檢查AM模組token處理邏輯，確保格式正確
+C. 最小重現步驟
+# Commands
+cd "06. SIT_Test code"
+node "0603. SIT_TC_P1.js" --phase=2
+# 針對特定失敗案例
+curl -X GET "http://0.0.0.0:5000/api/v1/users/preferences"
+curl -X POST "http://0.0.0.0:5000/api/v1/auth/refresh" -H "Content-Type: application/json" -d '{"refreshToken":"test_token"}'
+Input example:
+{
+  "refreshToken": "refresh_test_user_123_456"
+}
+D. 優先修正建議
+1. 修復AM模組缺失函數（最高優先）
+•	風險：核心用戶管理功能不完整，影響基本使用流程
+•	修正：在1309. AM.js中新增AM_processAPIGetPreferences函數
+•	回退計畫：暫時返回預設偏好設定，避免API完全失效
+2. 統一API回應格式標準化（高優先）
+•	風險：前端解析錯誤，用戶體驗受影響
+•	修正：檢查所有AM/BK模組API函數，確保符合DCN-0015格式
+•	回退計畫：恢復到一致的舊版回應格式
+3. 確認P1-2測試範圍邊界（中優先）
+•	風險：測試範圍與實際開發範圍不匹配，造成誤判
+•	修正：依據0091. P1-2_API_Endpoint清單調整測試案例，排除Phase 3-7端點
+•	回退計畫：暫時忽略超出範圍的測試失敗
+建議立即行動：優先修復AM_processAPIGetPreferences函數缺失問題，此為明確可識別的技術債務，修復後預期可提升5-10%測試通過率。
+
