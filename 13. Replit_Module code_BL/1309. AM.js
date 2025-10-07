@@ -3045,6 +3045,66 @@ async function AM_processAPIUpdatePreferences(requestData) {
   };
 }
 
+async function AM_processAPIGetPreferences(queryParams) {
+  const functionName = "AM_processAPIGetPreferences";
+  try {
+    AM_logInfo(
+      "開始處理查詢偏好設定API請求",
+      "偏好設定查詢",
+      queryParams.userId || "",
+      "",
+      "",
+      functionName,
+    );
+
+    // 模擬用戶偏好設定數據
+    const preferences = {
+      userId: queryParams.userId || 'current_user',
+      language: 'zh-TW',
+      currency: 'TWD',
+      timezone: 'Asia/Taipei',
+      notifications: {
+        email: true,
+        push: false,
+        sms: false
+      },
+      displaySettings: {
+        theme: 'light',
+        dateFormat: 'YYYY/MM/DD',
+        numberFormat: 'comma'
+      },
+      privacy: {
+        profileVisible: true,
+        dataSharing: false
+      }
+    };
+
+    return {
+      success: true,
+      data: preferences,
+      message: "偏好設定取得成功",
+    };
+  } catch (error) {
+    AM_logError(
+      `偏好設定查詢API處理失敗: ${error.message}`,
+      "偏好設定查詢",
+      queryParams.userId || "",
+      "",
+      "",
+      "AM_API_GET_PREFERENCES_ERROR",
+      functionName,
+    );
+    return {
+      success: false,
+      error: {
+        code: "SYSTEM_ERROR",
+        message: "系統錯誤，請稍後再試"
+      },
+      message: "偏好設定查詢失敗",
+    };
+  }
+}
+
 async function AM_processAPIUpdateSecurity(requestData) {
   return {
     success: true,

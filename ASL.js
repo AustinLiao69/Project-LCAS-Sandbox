@@ -928,6 +928,29 @@ app.put('/api/v1/users/preferences', async (req, res) => {
   }
 });
 
+// 5.1 查詢用戶偏好設定 (新增GET端點以支援完整CRUD)
+app.get('/api/v1/users/preferences', async (req, res) => {
+  try {
+    console.log('📋 ASL轉發: 查詢偏好設定 -> AM_processAPIGetPreferences');
+
+    if (!AM || typeof AM.AM_processAPIGetPreferences !== 'function') {
+      return res.apiError('AM_processAPIGetPreferences函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPIGetPreferences(req.query);
+
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get preferences):', error);
+    res.apiError('偏好設定查詢轉發失敗', 'GET_PREFERENCES_FORWARD_ERROR', 500);
+  }
+});
+
 // 6. 更新安全設定
 app.put('/api/v1/users/security', async (req, res) => {
   try {
