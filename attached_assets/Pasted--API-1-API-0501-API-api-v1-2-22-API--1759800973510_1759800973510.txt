@@ -1,0 +1,80 @@
+🔍 重新分析API端點缺口
+現有問題確認
+1.	API路徑前綴問題：0501文件中所有API端點都缺少/api/v1前綴
+2.	測試案例數量不足：你的詳細分析正確，實際缺失22個API端點測試
+
+💡 PM Strategic Insights（重新檢視版）
+Insight 1：測試案例數量計算錯誤
+•	原提案只計算了10個新增測試案例，但實際應該是22個
+•	這反映了需求分析不夠細緻，未完整對照0090規範與0501現狀
+
+Insight 2：API端點覆蓋率嚴重不足
+•	0501現有25個測試案例 vs 0090規範要求的47個端點（25+22）
+•	覆蓋率僅53%，遠低於P1-2階段95%的目標要求
+
+Insight 3：MVP階段的務實優先級
+•	所有現有25個測試案例的API路徑修正是Critical級別
+•	22個缺失端點中，認證和記帳核心功能應優先處理
+
+🎯 修正後的三階段解決方案
+階段一：修正現有API路徑（Critical）
+修正0501文件中所有25個測試案例的API路徑：
+•	/auth/register → /api/v1/auth/register
+•	/auth/login → /api/v1/auth/login
+•	/transactions → /api/v1/transactions
+•	/users/profile → /api/v1/users/profile
+•	其他21個測試案例的API路徑同樣加上/api/v1前綴
+新增缺失的22個測試案例（TC-SIT-026~047）：
+認證服務缺失（6個）：
+•	TC-SIT-026：/api/v1/auth/refresh
+•	TC-SIT-027：/api/v1/auth/forgot-password
+•	TC-SIT-028：/api/v1/auth/reset-password
+•	TC-SIT-029：/api/v1/auth/verify-email
+•	TC-SIT-030：/api/v1/auth/bind-line
+•	TC-SIT-031：/api/v1/auth/bind-status
+用戶管理服務缺失（6個）：
+•	TC-SIT-032：GET /api/v1/users/profile
+•	TC-SIT-033：PUT /api/v1/users/profile
+•	TC-SIT-034：/api/v1/users/preferences
+•	TC-SIT-035：/api/v1/users/mode
+•	TC-SIT-036：/api/v1/users/security
+•	TC-SIT-037：/api/v1/users/verify-pin
+記帳交易服務缺失（7個）：
+•	TC-SIT-038：GET /api/v1/transactions/{id}
+•	TC-SIT-039：PUT /api/v1/transactions/{id}
+•	TC-SIT-040：DELETE /api/v1/transactions/{id}
+•	TC-SIT-041：/api/v1/transactions/statistics
+•	TC-SIT-042：/api/v1/transactions/recent
+•	TC-SIT-043：/api/v1/transactions/charts
+•	TC-SIT-044：/api/v1/transactions/dashboard
+系統服務缺失（3個）：
+•	TC-SIT-045：/api/v1/system/health
+•	TC-SIT-046：/api/v1/system/app-info
+•	TC-SIT-047：/api/v1/system/welcome
+
+階段二：測試代碼同步更新
+具體行動：
+1.	0603.SIT_TC_P1.js：修正25個現有測試的API路徑，新增22個測試函數
+2.	0692.SIT_TestData_P1.json：更新所有API端點路徑配置
+3.	版本升級：v2.5.2 → v3.0.0
+
+階段三：文件版本統一
+具體行動：
+1.	0501文件：v1.2.0 → v2.1.0，總計47個測試案例（25個修正路徑 + 22個新增）
+2.	執行驗證：確保修正後的API路徑可正確呼叫
+
+📋 實施重點（修正版）
+優先順序：
+1.	Critical：修正現有25個測試案例的API路徑（避免測試全部失效）
+2.	High：新增22個缺失的API端點測試案例
+3.	Medium：文件版本統一管理
+成功標準：
+•	現有25個測試案例API路徑100%修正
+•	新增22個測試案例API路徑符合規範
+•	API端點覆蓋率從53%提升到100%（47/47）
+•	測試執行成功率>90%
+資源估算：
+•	開發時間：5-7天（比原估算更準確）
+•	新增測試執行時間：約60-90分鐘
+•	維護成本：顯著增加但符合P1-2要求
+這個修正方案解決了測試案例數量不足的關鍵問題，確保P1-2階段API端點100%覆蓋。
