@@ -933,16 +933,25 @@ app.get('/api/v1/users/preferences', async (req, res) => {
   try {
     console.log('📋 ASL轉發: 查詢偏好設定 -> AM_processAPIGetPreferences');
 
-    if (!AM || typeof AM.AM_processAPIGetPreferences !== 'function') {
+    if (!AM) {
+      console.error('❌ AM模組未載入');
+      return res.apiError('AM模組未載入', 'AM_MODULE_NOT_LOADED', 503);
+    }
+
+    if (typeof AM.AM_processAPIGetPreferences !== 'function') {
+      console.error('❌ AM_processAPIGetPreferences函數不存在，可用函數：', Object.keys(AM));
       return res.apiError('AM_processAPIGetPreferences函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
     }
 
     const result = await AM.AM_processAPIGetPreferences(req.query);
 
-    if (result.success) {
+    if (result && result.success) {
       res.apiSuccess(result.data, result.message);
+    } else if (result && result.success === false) {
+      res.apiError(result.message || '偏好設定查詢失敗', result.error?.code || 'GET_PREFERENCES_ERROR', 400, result.error?.details);
     } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+      console.error('❌ AM_processAPIGetPreferences回應格式異常:', result);
+      res.apiError('BL層回應格式異常', 'INVALID_BL_RESPONSE', 500);
     }
 
   } catch (error) {
@@ -1274,10 +1283,19 @@ app.put('/api/v1/transactions/:id', async (req, res) => {
 
     const result = await BK.BK_processAPIUpdateTransaction({ id: req.params.id, ...req.body });
 
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
+    // 統一格式處理：確保符合DCN-0015規範
+    if (result && result.success === true) {
+      res.apiSuccess(result.data, result.message || '交易更新成功');
+    } else if (result && result.success === false) {
+      res.apiError(
+        result.message || result.error?.message || '交易更新失敗',
+        result.error?.code || 'UPDATE_TRANSACTION_ERROR',
+        400,
+        result.error?.details || null
+      );
     } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+      console.error('❌ BK_processAPIUpdateTransaction回應格式異常:', result);
+      res.apiError('BL層回應格式異常', 'INVALID_BL_RESPONSE', 500);
     }
 
   } catch (error) {
@@ -1297,10 +1315,19 @@ app.delete('/api/v1/transactions/:id', async (req, res) => {
 
     const result = await BK.BK_processAPIDeleteTransaction({ id: req.params.id });
 
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
+    // 統一格式處理：確保符合DCN-0015規範
+    if (result && result.success === true) {
+      res.apiSuccess(result.data, result.message || '交易刪除成功');
+    } else if (result && result.success === false) {
+      res.apiError(
+        result.message || result.error?.message || '交易刪除失敗',
+        result.error?.code || 'DELETE_TRANSACTION_ERROR',
+        400,
+        result.error?.details || null
+      );
     } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+      console.error('❌ BK_processAPIDeleteTransaction回應格式異常:', result);
+      res.apiError('BL層回應格式異常', 'INVALID_BL_RESPONSE', 500);
     }
 
   } catch (error) {
