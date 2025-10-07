@@ -946,8 +946,21 @@ async function BK_updateTransaction(transactionId, updateData) {
   try {
     BK_logInfo(`${logPrefix} 開始更新交易: ${transactionId}`, "更新交易", updateData.userId || "", "BK_updateTransaction");
 
+    // 階段一修復：增加基本參數驗證
+    if (!transactionId || typeof transactionId !== 'string') {
+      return BK_formatErrorResponse("INVALID_TRANSACTION_ID", "無效的交易ID");
+    }
+
+    if (!updateData || typeof updateData !== 'object') {
+      return BK_formatErrorResponse("INVALID_UPDATE_DATA", "更新資料不能為空");
+    }
+
     await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
+
+    if (!db) {
+      return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
+    }
 
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
@@ -1025,8 +1038,17 @@ async function BK_deleteTransaction(transactionId, params = {}) {
   try {
     BK_logInfo(`${logPrefix} 開始刪除交易: ${transactionId}`, "刪除交易", params.userId || "", "BK_deleteTransaction");
 
+    // 階段一修復：增加基本參數驗證
+    if (!transactionId || typeof transactionId !== 'string') {
+      return BK_formatErrorResponse("INVALID_TRANSACTION_ID", "無效的交易ID");
+    }
+
     await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
+
+    if (!db) {
+      return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
+    }
 
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
