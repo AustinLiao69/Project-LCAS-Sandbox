@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "v3.0.0",
-    "created_date": "2025-09-15", 
+    "created_date": "2025-09-15",
     "last_updated": "2025-10-03",
     "description": "LCAS 2.0 Phase 1 SIT測試資料配置檔 - API端點完整覆蓋版",
     "test_cases_supported": "TC-SIT-001 to TC-SIT-047 (47個測試案例，達成100%API端點覆蓋)",
@@ -29,7 +29,7 @@
       },
       {
         "version": "v2.1.0",
-        "date": "2025-01-26", 
+        "date": "2025-01-26",
         "changes": "階段一緊急修復：補全expert_mode_user_001、data_transformation_tests、long_running_stability_tests等缺失欄位"
       },
       {
@@ -44,7 +44,6 @@
       }
     ]
   },
-
   "test_environment": {
     "api_base_url": "http://0.0.0.0:5000/api/v1",
     "backup_base_url": "https://lcas-api.replit.app/api/v1",
@@ -58,7 +57,6 @@
       "retry_delay": 1000
     }
   },
-
   "authentication_test_data": {
     "valid_users": {
       "expert_mode_user_001": {
@@ -182,7 +180,6 @@
         }
       }
     },
-
     "invalid_users": {
       "invalid_email_format": {
         "email": "invalid-email-format",
@@ -211,7 +208,6 @@
       }
     }
   },
-
   "mode_assessment_test_data": {
     "expert_mode_assessment": {
       "assessment_id": "expert_assessment_001",
@@ -264,7 +260,6 @@
       }
     }
   },
-
   "basic_bookkeeping_test_data": {
     "quick_booking_tests": [
       {
@@ -319,7 +314,6 @@
         }
       }
     ],
-
     "form_booking_tests": [
       {
         "test_id": "form_001",
@@ -367,7 +361,6 @@
       }
     ]
   },
-
   "api_endpoints": {
     "authentication": {
       "register": "/api/v1/auth/register",
@@ -405,7 +398,6 @@
       "welcome": "/api/v1/system/welcome"
     }
   },
-
   "bookkeeping_test_data": {
     "default_ledger_id": "test_ledger_001",
     "default_currency": "TWD",
@@ -430,7 +422,6 @@
       "quick_booking_timeout": 12000
     }
   },
-
   "expected_response_formats": {
     "dcn_0015_unified_success_response": {
       "success": true,
@@ -479,7 +470,6 @@
       }
     }
   },
-
   "cross_layer_error_handling_tests": {
     "network_errors": [
       {
@@ -507,7 +497,6 @@
         "expected_user_action": "顯示稍後重試訊息"
       }
     ],
-
     "authentication_errors": [
       {
         "test_id": "error_auth_001",
@@ -534,7 +523,6 @@
         "expected_retry_attempts": 0
       }
     ],
-
     "validation_errors": [
       {
         "test_id": "error_validation_001",
@@ -568,7 +556,6 @@
         "expected_user_action": "highlightRequiredFields"
       }
     ],
-
     "business_logic_errors": [
       {
         "test_id": "error_business_001",
@@ -591,7 +578,6 @@
       }
     ]
   },
-
   "performance_test_data": {
     "concurrent_operations": {
       "test_id": "perf_concurrent_001",
@@ -606,7 +592,6 @@
         "data_consistency_check": true
       }
     },
-
     "load_test_scenarios": [
       {
         "test_id": "load_001",
@@ -628,7 +613,6 @@
       }
     ]
   },
-
   "end_to_end_business_process_tests": {
     "complete_user_journey_tests": [
       {
@@ -729,7 +713,6 @@
         "success_criteria": "Expert模式特有功能正常運作"
       }
     ],
-
     "business_value_chain_tests": [
       {
         "test_id": "value_chain_001",
@@ -775,7 +758,6 @@
         "success_criteria": "整個價值鏈無資料遺失，無格式錯誤"
       }
     ],
-
     "four_mode_user_experience_tests": [
       {
         "test_id": "ux_expert_001",
@@ -817,7 +799,6 @@
       }
     ]
   },
-
   "stability_and_performance_tests": {
     "long_running_stability_tests": [
       {
@@ -906,7 +887,6 @@
         }
       }
     ],
-
     "stress_and_recovery_tests": [
       {
         "test_id": "stress_001",
@@ -938,9 +918,6 @@
       }
     ]
   },
-
-  
-
   "data_consistency_tests": {
     "cross_layer_data_flow": [
       {
@@ -979,7 +956,6 @@
         }
       }
     ],
-
     "data_transformation_tests": [
       {
         "test_id": "transform_001",
@@ -1044,7 +1020,6 @@
       }
     ]
   },
-
   "api_basic_test_data": {
     "tc_017_025_basic_api_tests": {
       "test_id": "basic_api_001",
@@ -1060,7 +1035,7 @@
           }
         },
         {
-          "tc_id": "TC-SIT-018", 
+          "tc_id": "TC-SIT-018",
           "endpoint": "/api/v1/auth/login",
           "method": "POST",
           "test_data": {
@@ -1070,7 +1045,7 @@
         },
         {
           "tc_id": "TC-SIT-019",
-          "endpoint": "/api/v1/auth/logout", 
+          "endpoint": "/api/v1/auth/logout",
           "method": "POST",
           "test_data": {}
         },
@@ -1083,7 +1058,7 @@
         {
           "tc_id": "TC-SIT-021",
           "endpoint": "/api/v1/users/assessment",
-          "method": "POST", 
+          "method": "POST",
           "test_data": {
             "questionnaireId": "test_assessment_001",
             "answers": []
@@ -1115,7 +1090,7 @@
         {
           "tc_id": "TC-SIT-025",
           "endpoint": "/api/v1/transactions/dashboard",
-          "method": "GET", 
+          "method": "GET",
           "test_data": null
         }
       ]
@@ -1348,7 +1323,25 @@
             }
           ]
         },
-
+        "system_management_extended": {
+          "endpoints": [
+            {
+              "tc_id": "TC-SIT-045",
+              "endpoint": "/api/v1/system/health",
+              "method": "GET",
+              "test_data": null
+            },
+            {
+              "tc_id": "TC-SIT-046",
+              "endpoint": "/api/v1/system/app-info",
+              "method": "GET",
+              "test_data": null
+            },
+            {
+              "tc_id": "TC-SIT-047",
+              "endpoint": "/api/v1/system/welcome",
+              "method": "GET",
+              "test_data": null
             }
           ]
         }
