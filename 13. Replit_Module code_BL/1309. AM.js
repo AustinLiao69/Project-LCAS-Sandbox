@@ -3854,13 +3854,13 @@ module.exports = {
   AM_initializeUserSubjects,
   AM_ensureUserSubjects,
 
-  // SR模組專用付費功能API (22-25)
+  // SR模組付費功能API
   AM_validateSRPremiumFeature,
   AM_getSRUserQuota,
   AM_updateSRFeatureUsage,
   AM_processSRUpgrade,
 
-  // DCN-0012 階段二：API端點處理函數 (26-44)
+  // 認證服務API處理函數（11個）
   AM_processAPIRegister,
   AM_processAPILogin,
   AM_processAPIGoogleLogin,
@@ -3873,42 +3873,51 @@ module.exports = {
   AM_processAPIBindLine,
   AM_processAPIBindStatus,
 
-  // DCN-0012 階段二：用戶管理API處理函數 (37-47)
+  // 用戶管理API處理函數（8個）
   AM_processAPIGetProfile,
   AM_processAPIUpdateProfile,
   AM_processAPIGetAssessmentQuestions,
   AM_processAPISubmitAssessment,
   AM_processAPIUpdatePreferences,
+  AM_processAPIGetPreferences,  // 階段一修復：補充缺失的函數導出
   AM_processAPIUpdateSecurity,
   AM_processAPISwitchMode,
   AM_processAPIVerifyPin,
+
+  // DCN-0014 階段一：補充缺失的API處理函數（3個）
   AM_processAPIGetModeDefaults,
   AM_processAPIBehaviorTracking,
   AM_processAPIGetModeRecommendations,
 
-  // DCN-0015 階段二：統一API回應格式處理函數（v3.0.0）
+  // 統一API回應格式處理機制
   AM_formatStandardAPIResponse,
   AM_formatErrorResponse,
   AM_formatSuccessResponse,
   AM_generateMetadata,
   AM_generateModeFeatures,
 
-  // DCN-0015 階段二：API配額管理機制
+  // API配額與使用統計
   AM_checkAPIQuota,
   AM_getAPIUsageCount,
   AM_recordAPIUsage,
 
-  // 階段一修復：補充缺失的核心函數
+  // 權限驗證輔助函數
   AM_validateQueryPermission,
   AM_validateUpdatePermission,
   AM_validateSearchPermission,
+
+  // Token管理輔助函數
   AM_storeTokenSecurely,
   AM_updateStoredToken,
   AM_generatePlatformUID,
+
+  // 付費功能輔助函數
   AM_getSubscriptionInfo,
   AM_formatAPIResponse,
   AM_handleSystemError,
-  AM_calculateModeFromAnswers,  // 階段一修復：新增缺失的模式計算函數
+
+  // 模式評估核心函數
+  AM_calculateModeFromAnswers
 };
 
 console.log("AM 帳號管理模組載入完成 v3.0.4 - TC-SIT-003階段一修復：移除用戶ID生成，使用0692測試資料，統一資料來源完成");
