@@ -271,7 +271,14 @@ MM 	 DD 	 Description 	    Progress
 10	2	 打通SIT測試環境：修復階段一：單點整合驗證測試案例003, 007 	 Ongoing
 10	2	 整理文件：20251002. code review prompt參考 	 Closed
 10	2	 打通SIT測試環境：階段一 	 Closed
-10	3	 打通SIT測試環境：階段二 	 Ongoing
 10	3	 檢查0501與0603差異 	 Ongoing
 10	3	 修改0501文件 	 Ongoing
-
+10	3	 打通SIT測試環境：SIT-TC-008 	 Closed
+10	4	 修改0501文件：P1-2 API端點未完全測試	 Ongoing
+10	4	 打通SIT測試環境：SIT-TC-008 	 Ongoing
+10	4	 BL層文件：10,11,12,14資料夾需要重新整理 	 Open
+10	4	 BL層文件：11資料夾文件需補齊 	 Open
+10	4	 撰寫9832. 撰寫Contract表 	 Open
+10	7	 修改0501文件：P1-2 API端點未完全測試	 Ongoing
+10	7	 需修改0501文件：API端點路徑需增加 api/v1	 Ongoing
+10	7	 需修改8020文件：API端點路徑需增加 api/v1	 Ongoing

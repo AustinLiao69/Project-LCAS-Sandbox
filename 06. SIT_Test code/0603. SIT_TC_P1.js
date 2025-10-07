@@ -1734,6 +1734,74 @@ class SITTestCases {
     // ==================== 階段二：四層架構資料流測試 ====================
 
     /**
+     * 模式評估結果驗證 (v1.0.0)
+     * @version 2025-10-03-V1.0.0
+     * @description 驗證模式評估結果的準確性，提供簡潔的評分顯示
+     */
+    validateModeAssessmentResult(response, expectedMode) {
+        if (!response || !response.data || !response.data.result) {
+            return {
+                isValid: false,
+                score: 0,
+                grade: 'F',
+                issues: ['回應結構異常']
+            };
+        }
+
+        const result = response.data.result;
+        let score = 100;
+        const issues = [];
+
+        // 檢查推薦模式是否正確
+        if (result.recommendedMode !== expectedMode) {
+            score -= 50;
+            issues.push(`期望模式: ${expectedMode}, 實際: ${result.recommendedMode}`);
+        }
+
+        // 檢查信心度是否合理
+        if (!result.confidence || result.confidence < 0.5) {
+            score -= 20;
+            issues.push(`信心度過低: ${result.confidence}`);
+        }
+
+        // 檢查評分是否合理
+        if (!result.scores || typeof result.scores !== 'object') {
+            score -= 20;
+            issues.push('評分結構異常');
+        } else {
+            const expectedModeScore = result.scores[expectedMode.toLowerCase()];
+            const otherScores = Object.values(result.scores).filter(s => s !== expectedModeScore);
+            const maxOtherScore = Math.max(...otherScores);
+            
+            if (expectedModeScore <= maxOtherScore) {
+                score -= 10;
+                issues.push('目標模式評分未達最高');
+            }
+        }
+
+        // 計算等級
+        let grade = 'F';
+        if (score >= 95) grade = 'A+';
+        else if (score >= 90) grade = 'A';
+        else if (score >= 80) grade = 'B+';
+        else if (score >= 70) grade = 'B';
+        else if (score >= 60) grade = 'C';
+        else if (score >= 50) grade = 'D';
+
+        return {
+            isValid: score >= 80,
+            score: Math.max(0, score),
+            grade,
+            issues,
+            details: {
+                recommendedMode: result.recommendedMode,
+                confidence: result.confidence,
+                scores: result.scores
+            }
+        };
+    }
+
+    /**
      * TC-SIT-008: 模式評估整合測試
      */
     async testCase008_ModeAssessment() {
@@ -1750,8 +1818,8 @@ class SITTestCases {
             const assessmentData = this.testData.mode_assessment_test_data.expert_mode_assessment;
             
             console.log(`🔄 TC-SIT-008: 準備提交評估答案...`);
-            console.log(`📋 評估答案:`, assessmentData.answers);
-            console.log(`📋 期望模式:`, assessmentData.expected_mode);
+            console.log(`📋 評估答案: ${Object.entries(assessmentData.answers).map(([k,v]) => `${k}=${v}`).join(', ')}`);
+            console.log(`📋 期望模式: ${assessmentData.expected_mode}`);
             
             const submitResponse = await this.makeRequest('POST', '/api/v1/users/assessment', {
                 questionnaireId: assessmentData.assessment_id,
@@ -1759,7 +1827,15 @@ class SITTestCases {
                 completedAt: new Date().toISOString()
             });
             
-            console.log(`📊 評估API回應:`, JSON.stringify(submitResponse.data, null, 2));
+            // 模式評估結果驗證
+            const validation = this.validateModeAssessmentResult(submitResponse.data, assessmentData.expected_mode);
+            console.log(`  ✅ 模式評估結果驗證 /api/v1/users/assessment: ${validation.grade} (Score: ${validation.score.toFixed(1)}%)`);
+            if (!validation.isValid && validation.issues.length > 0) {
+                console.log(`     - 問題詳情: ${validation.issues.join('; ')}`);
+            }
+            if (validation.details) {
+                console.log(`     - 推薦模式: ${validation.details.recommendedMode} (信心度: ${(validation.details.confidence * 100).toFixed(1)}%)`);
+            }
 
             const success = questionsResponse.success &&
                           submitResponse.success &&
@@ -1769,6 +1845,7 @@ class SITTestCases {
                 questionsResponse: questionsResponse.data,
                 submitResponse: submitResponse.data,
                 expectedMode: assessmentData.expected_mode,
+                validation: validation,
                 error: !success ? '模式評估結果不正確' : null
             });
 
