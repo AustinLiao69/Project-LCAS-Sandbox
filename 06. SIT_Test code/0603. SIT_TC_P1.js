@@ -910,6 +910,7 @@ class SITTestCases {
                 timeout: smartTimeout,
                 // 階段一新增：請求元資料
                 metadata: {
+                    // processId: 階段三修復：移除ASL層生成，改由BL層使用1311.FS.js的FS_generateTransactionId()函數生成
                     requestId: this.generateRequestId(),
                     timestamp: new Date().toISOString(),
                     expectedTimeout: smartTimeout
@@ -4092,7 +4093,7 @@ class SITTestCases {
         console.log(`📈 整體成功率: ${(passedTests / totalTests * 100).toFixed(2)}%`);
         console.log(`⏱️  總執行時間: ${(Date.now() - this.testStartTime.getTime()) / 1000}秒`);
 
-        // 生成最終報告
+        // 生成最終測試報告
         this.generateFinalReport(allResults);
 
         return {
@@ -4225,7 +4226,7 @@ class SITTestCases {
 
 
     /**
-     * 生成最終報告 (v2.5.4 - 階段三修復版)
+     * 生成最終測試報告 (v2.5.4 - 階段三修復版)
      * @version 2025-10-02-V2.5.4
      * @description 階段三修復：確保所有統計計算使用安全函數，避免NaN值
      * @param {Array} phaseResults 各階段測試結果
