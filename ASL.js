@@ -192,11 +192,83 @@ async function loadBLModules() {
 
 // 載入其他BL模組（這些模組相對獨立）
   try {
+    console.log('🔄 開始載入BK模組...');
     BK = require('./13. Replit_Module code_BL/1301. BK.js');
-    moduleStatus.BK = true;
-    console.log('✅ BK (記帳核心) 模組載入成功');
+    
+    // 階段三修復：驗證BK模組函數完整性
+    const requiredBKFunctions = [
+      'BK_processBookkeeping',
+      'BK_processAPIGetDashboard', 
+      'BK_processAPIGetTransactionDetail',
+      'BK_processAPIUpdateTransaction',
+      'BK_processAPIDeleteTransaction',
+      'BK_processAPIGetStatistics',
+      'BK_processAPIGetRecent',
+      'BK_processAPIGetCharts',
+      'BK_createTransaction',
+      'BK_getTransactions'
+    ];
+
+    const missingFunctions = [];
+    let availableFunctions = 0;
+
+    for (const funcName of requiredBKFunctions) {
+      if (typeof BK[funcName] === 'function') {
+        availableFunctions++;
+        console.log(`✓ ${funcName}: 可用`);
+      } else {
+        missingFunctions.push(funcName);
+        console.error(`✗ ${funcName}: 缺失或非函數類型`);
+      }
+    }
+
+    console.log(`📊 BK模組函數完整性檢查: ${availableFunctions}/${requiredBKFunctions.length}`);
+    
+    if (missingFunctions.length > 0) {
+      console.error('❌ BK模組缺失函數:', missingFunctions);
+      console.error('📋 BK模組實際導出:', Object.keys(BK));
+      moduleStatus.BK = false;
+      console.log('❌ BK (記帳核心) 模組函數不完整');
+    } else {
+      moduleStatus.BK = true;
+      console.log('✅ BK (記帳核心) 模組載入成功，所有函數可用');
+    }
   } catch (error) {
     console.error('❌ BK 模組載入失敗:', error.message);
+    console.error('❌ BK 載入錯誤堆疊:', error.stack);
+    moduleStatus.BK = false;
+  }
+
+  // 階段三修復：BK模組載入重試機制
+  if (!moduleStatus.BK) {
+    console.log('🔄 BK模組載入失敗，嘗試重新載入...');
+    try {
+      // 清除模組緩存
+      delete require.cache[require.resolve('./13. Replit_Module code_BL/1301. BK.js')];
+      
+      // 重新載入
+      BK = require('./13. Replit_Module code_BL/1301. BK.js');
+      
+      // 重新驗證
+      const criticalFunctions = ['BK_processBookkeeping', 'BK_processAPIGetDashboard'];
+      let retrySuccess = true;
+      
+      for (const funcName of criticalFunctions) {
+        if (typeof BK[funcName] !== 'function') {
+          retrySuccess = false;
+          console.error(`❌ 重試後仍缺失: ${funcName}`);
+        }
+      }
+      
+      if (retrySuccess) {
+        moduleStatus.BK = true;
+        console.log('✅ BK模組重新載入成功');
+      } else {
+        console.error('❌ BK模組重試載入仍失敗');
+      }
+    } catch (retryError) {
+      console.error('❌ BK模組重試載入錯誤:', retryError.message);
+    }
   }
 
   try {
@@ -215,24 +287,39 @@ async function loadBLModules() {
     console.error('❌ FS 模組載入失敗:', error.message);
   }
 
-  // 模組載入結果報告
-  console.log('📋 模組載入狀態報告:');
+  // 階段三修復：詳細模組載入狀態報告
+  console.log('📋 階段三模組載入狀態報告:');
   Object.entries(moduleStatus).forEach(([module, status]) => {
     console.log(`   ${status ? '✅' : '❌'} ${module.toUpperCase()}: ${status ? '已載入' : '載入失敗'}`);
   });
+
+  // 階段三：BK模組特殊診斷
+  if (moduleStatus.BK) {
+    console.log('🔍 BK模組詳細診斷:');
+    if (BK && typeof BK === 'object') {
+      const bkFunctions = Object.keys(BK).filter(key => typeof BK[key] === 'function');
+      console.log(`   📊 BK模組函數總數: ${bkFunctions.length}`);
+      console.log(`   🎯 關鍵API函數狀態:`);
+      console.log(`      - BK_processBookkeeping: ${typeof BK.BK_processBookkeeping === 'function' ? '✅' : '❌'}`);
+      console.log(`      - BK_processAPIGetDashboard: ${typeof BK.BK_processAPIGetDashboard === 'function' ? '✅' : '❌'}`);
+      console.log(`      - BK_createTransaction: ${typeof BK.BK_createTransaction === 'function' ? '✅' : '❌'}`);
+      console.log(`      - BK_getTransactions: ${typeof BK.BK_getTransactions === 'function' ? '✅' : '❌'}`);
+    }
+  }
 
   const successCount = Object.values(moduleStatus).filter(Boolean).length;
   const totalCount = Object.keys(moduleStatus).length;
   console.log(`📊 載入成功率: ${successCount}/${totalCount} (${Math.round(successCount/totalCount*100)}%)`);
 
-  // 階段一修復結果評估
-  if (moduleStatus.firebase && moduleStatus.AM) {
-    console.log('🎉 階段一修復成功：Firebase + AM模組正常載入');
-    console.log('🚀 系統已準備好處理P1-2範圍API請求');
-  } else if (moduleStatus.firebase && !moduleStatus.AM) {
-    console.log('⚠️ 階段一部分成功：Firebase正常，AM模組需進一步調查');
+  // 階段三修復結果評估
+  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK) {
+    console.log('🎉 階段三修復成功：Firebase + AM + BK模組正常載入');
+    console.log('🚀 系統已準備好處理所有P1-2範圍API請求');
+  } else if (moduleStatus.firebase && moduleStatus.AM && !moduleStatus.BK) {
+    console.log('⚠️ 階段三關鍵問題：BK模組載入失敗，所有記帳功能不可用');
+    console.log('🔧 建議檢查：1)BK.js文件完整性 2)module.exports正確性 3)依賴模組可用性');
   } else {
-    console.log('❌ 階段一修復失敗：需執行階段二深度修復');
+    console.log('❌ 階段三修復失敗：需執行進一步調查');
   }
 
   return moduleStatus;

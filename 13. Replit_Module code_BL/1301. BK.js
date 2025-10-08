@@ -3037,14 +3037,14 @@ module.exports = {
   BK_validateImportData,
   BK_processImportResult,
 
-  // DCN-0015 階段三：API處理函數（已清理冗餘導出）
+  // DCN-0015 階段三：API處理函數（階段三修復完整導出）
   BK_processAPIGetTransactionDetail,
-  // BK_processAPIUpdateTransaction, // 已移至階段二修復
-  // BK_processAPIDeleteTransaction, // 已移至階段二修復
-  // BK_processAPIGetDashboard,
-  // BK_processAPIGetStatistics, // 已移至階段二修復
-  // BK_processAPIGetRecent, // 已移至階段二修復
-  // BK_processAPIGetCharts, // 已移至階段二修復
+  BK_processAPIUpdateTransaction,
+  BK_processAPIDeleteTransaction,
+  BK_processAPIGetDashboard,
+  BK_processAPIGetStatistics,
+  BK_processAPIGetRecent,
+  BK_processAPIGetCharts,
   BK_processAPIBatchCreate,
   BK_processAPIBatchUpdate,
   BK_processAPIBatchDelete,
