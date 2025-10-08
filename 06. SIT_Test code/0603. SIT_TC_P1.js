@@ -35,22 +35,102 @@ class SITTestCases {
     }
 
     /**
-     * 階段一修復：測試環境初始化（簡化版）
-     * @version 2025-10-02-V2.5.3
-     * @description 階段一修復：移除複雜清理邏輯，改為動態生成唯一用戶避免衝突
+     * 階段一修復：測試環境初始化（包含測試資料初始化）
+     * @version 2025-10-08-V2.6.0
+     * @description 階段一修復：初始化測試環境並自動建立所需的測試交易資料
      */
     async initializeTestEnvironment() {
-        console.log('🧹 階段一修復：測試環境初始化（簡化版）...');
+        console.log('🧹 階段一修復：測試環境初始化開始...');
 
         try {
-            // 階段一修復：不再進行複雜的Firebase清理
-            // 改為依賴動態生成唯一用戶Email來避免衝突
+            // 1. 基礎環境初始化
+            console.log('📋 步驟1：基礎環境檢查...');
             
-            console.log('✅ 測試環境初始化完成（採用動態用戶策略，無需清理）');
+            // 2. 初始化 SIT 測試所需的交易資料
+            console.log('📋 步驟2：初始化SIT測試交易資料...');
+            const testDataInitResult = await this.initializeSITTestTransactions();
+            
+            if (testDataInitResult.success) {
+                console.log(`✅ 測試交易資料初始化成功：${testDataInitResult.created}筆資料`);
+            } else {
+                console.warn(`⚠️ 測試交易資料初始化失敗：${testDataInitResult.error}`);
+            }
+            
+            console.log('✅ 測試環境初始化完成');
             return true;
         } catch (error) {
             console.warn('⚠️ 測試環境初始化警告:', error.message);
             return true; // 即使有警告也允許測試繼續
+        }
+    }
+
+    /**
+     * 初始化SIT測試所需的交易資料
+     * @version 2025-10-08-V1.0.0
+     * @description 自動建立TC-SIT-038~040所需的測試交易資料
+     */
+    async initializeSITTestTransactions() {
+        console.log('🔄 開始初始化SIT測試交易資料...');
+        
+        try {
+            const testTransactions = this.testData?.bookkeeping_test_data?.test_transactions;
+            if (!testTransactions) {
+                return {
+                    success: false,
+                    error: '測試資料中未找到test_transactions'
+                };
+            }
+
+            let createdCount = 0;
+            const errors = [];
+
+            // 遍歷所有測試交易並建立到Firebase
+            for (const [transactionId, transactionData] of Object.entries(testTransactions)) {
+                try {
+                    console.log(`📝 建立測試交易：${transactionId}`);
+                    
+                    // 使用HTTP請求建立交易資料（透過BL層API）
+                    const createResponse = await this.makeRequest('POST', '/api/v1/transactions', {
+                        id: transactionId,
+                        date: transactionData.日期,
+                        time: transactionData.時間,
+                        amount: parseFloat(transactionData.收入 || transactionData.支出 || 0),
+                        type: transactionData.收入 ? 'income' : 'expense',
+                        description: transactionData.備註,
+                        categoryId: `${transactionData.大項代碼}${transactionData.子項代碼}`,
+                        categoryName: transactionData.子項名稱,
+                        paymentMethod: transactionData.支付方式,
+                        userId: transactionData.UID || 'expert_mode_user_001',
+                        ledgerId: 'test_ledger_001'
+                    });
+
+                    if (createResponse.success) {
+                        createdCount++;
+                        console.log(`  ✅ ${transactionId} 建立成功`);
+                    } else {
+                        errors.push(`${transactionId}: ${createResponse.error}`);
+                        console.log(`  ❌ ${transactionId} 建立失敗: ${createResponse.error}`);
+                    }
+
+                } catch (transactionError) {
+                    errors.push(`${transactionId}: ${transactionError.message}`);
+                    console.log(`  ❌ ${transactionId} 建立異常: ${transactionError.message}`);
+                }
+            }
+
+            return {
+                success: createdCount > 0,
+                created: createdCount,
+                total: Object.keys(testTransactions).length,
+                errors: errors
+            };
+
+        } catch (error) {
+            console.error('❌ SIT測試交易資料初始化失敗:', error.message);
+            return {
+                success: false,
+                error: error.message
+            };
         }
     }
 
