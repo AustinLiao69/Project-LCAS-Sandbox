@@ -1971,12 +1971,15 @@ async function BK_processAPIUpdateTransaction(transactionId, updateData) {
  * @date 2025-10-02
  * @update: 階段二修復 - 處理TC-SIT-040失敗
  */
-async function BK_processAPIDeleteTransaction(transactionId, queryParams = {}) {
+async function BK_processAPIDeleteTransaction(transactionId, params = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
   const logPrefix = `[${processId}] BK_processAPIDeleteTransaction:`;
 
   try {
-    BK_logInfo(`${logPrefix} 開始處理交易刪除API請求: ${transactionId}`, "API端點", queryParams.userId || "", "BK_processAPIDeleteTransaction");
+    // 階段二修復：安全處理參數
+    const safeParams = params || {};
+
+    BK_logInfo(`${logPrefix} 開始處理交易刪除API請求: ${transactionId}`, "API端點", safeParams.userId || "", "BK_processAPIDeleteTransaction");
 
     // 階段二修復：TC-SIT-040 - 交易ID驗證邏輯錯誤
     if (!transactionId || typeof transactionId !== 'string' || transactionId.trim() === '') {
@@ -1985,7 +1988,7 @@ async function BK_processAPIDeleteTransaction(transactionId, queryParams = {}) {
         errorType: "INVALID_TRANSACTION_ID"
       }, {
         processId: processId,
-        userId: queryParams.userId,
+        userId: safeParams.userId,
         operation: "交易刪除API"
       });
     }
@@ -1993,14 +1996,14 @@ async function BK_processAPIDeleteTransaction(transactionId, queryParams = {}) {
     await BK_initialize();
 
     const result = await BK_deleteTransaction(transactionId, {
-      userId: queryParams.userId,
-      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
-      deleteRecurring: queryParams.deleteRecurring === 'true',
+      userId: safeParams.userId,
+      ledgerId: safeParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      deleteRecurring: safeParams.deleteRecurring === 'true',
       processId: processId
     });
 
     if (result.success) {
-      BK_logInfo(`${logPrefix} 交易刪除API處理成功: ${transactionId}`, "API端點", queryParams.userId || "", "BK_processAPIDeleteTransaction");
+      BK_logInfo(`${logPrefix} 交易刪除API處理成功: ${transactionId}`, "API端點", safeParams.userId || "", "BK_processAPIDeleteTransaction");
 
       return BK_formatSuccessResponse({
         transactionId: transactionId,
@@ -2013,21 +2016,21 @@ async function BK_processAPIDeleteTransaction(transactionId, queryParams = {}) {
         }
       }, "交易刪除成功", null, {
         requestId: processId,
-        userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+        userMode: safeParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
       });
     } else {
       return BK_handleError(result, {
         processId: processId,
-        userId: queryParams.userId,
+        userId: safeParams.userId,
         operation: "交易刪除API"
       });
     }
 
   } catch (error) {
-    BK_logError(`${logPrefix} 交易刪除API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_DELETE_TRANSACTION_ERROR", error.toString(), "BK_processAPIDeleteTransaction");
+    BK_logError(`${logPrefix} 交易刪除API處理失敗: ${error.toString()}`, "API端點", safeParams.userId || "", "API_DELETE_TRANSACTION_ERROR", error.toString(), "BK_processAPIDeleteTransaction");
     return BK_handleError(error, {
       processId: processId,
-      userId: queryParams.userId,
+      userId: safeParams.userId,
       operation: "交易刪除API"
     });
   }
@@ -2116,10 +2119,13 @@ async function BK_processAPIGetStatistics(queryParams = {}) {
       if (statsResult.success) {
         BK_logInfo(`${logPrefix} 統計數據API處理成功`, "API端點", queryParams.userId || "", "BK_processAPIGetStatistics");
 
-        return BK_formatSuccessResponse(statsResult.data, "統計數據取得成功", null, {
-          requestId: processId,
-          userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
-        });
+        return BK_formatSuccessResponse({
+          statistics: statsResult.data,
+          metadata: {
+            requestId: processId,
+            userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+          }
+        }, "統計數據取得成功");
       } else {
         // 統計生成失敗
         BK_logError(`${logPrefix} 統計生成失敗`, "API端點", queryParams.userId || "", "STATISTICS_GENERATION_FAILED", statsResult.error, "BK_processAPIGetStatistics");
