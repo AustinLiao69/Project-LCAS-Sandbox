@@ -1,6 +1,3 @@
-` tag, which is incorrectly placed and causing the syntax error.
-
-<replit_final_file>
 /**
  * 1301. BK.js_記帳核心模組_v3.1.3
  * @module 記帳核心模組
