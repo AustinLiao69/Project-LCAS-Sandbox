@@ -1564,7 +1564,34 @@ async function AM_processAPIRegister(requestData) {
       };
     }
 
-    // 移除硬編碼：不再限制只能使用預定義測試用戶
+    // 移除Hard-coding，改為使用0692測試資料
+    // 階段一修復：從0692測試資料載入有效用戶列表
+    let validTestUsers = {};
+    try {
+      const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
+      validTestUsers = testData.authentication_test_data?.valid_users || {};
+    } catch (error) {
+      console.warn('⚠️ 無法載入0692測試資料，使用預設驗證邏輯');
+    }
+
+    // 檢查是否為測試環境中的有效用戶
+    const isTestUser = Object.values(validTestUsers).some(user => user.email === requestData.email);
+
+    if (!isTestUser && Object.keys(validTestUsers).length > 0) {
+      return {
+        success: false,
+        data: null,
+        message: "測試環境僅允許預定義測試用戶註冊",
+        error: {
+          code: "TEST_USER_ONLY",
+          message: "請使用0692測試資料中定義的用戶進行測試",
+          details: {
+            email: requestData.email,
+            validEmails: Object.values(validTestUsers).map(u => u.email)
+          }
+        }
+      };
+    }
 
     // 檢查用戶是否已存在
     const existsResult = await AM_validateAccountExists(requestData.email, "email");
@@ -2001,7 +2028,7 @@ async function AM_processAPIRefresh(requestData) {
 
     // 階段二修復：支援多種Token格式和欄位名稱
     const refreshToken = requestData.refreshToken || requestData.refresh_token || requestData.token;
-    
+
     if (!refreshToken) {
       return {
         success: false,
@@ -2010,7 +2037,7 @@ async function AM_processAPIRefresh(requestData) {
         error: {
           code: "MISSING_REFRESH_TOKEN",
           message: "refresh token為必填項目",
-          details: { 
+          details: {
             field: "refreshToken",
             supportedFields: ["refreshToken", "refresh_token", "token"]
           }
@@ -2058,7 +2085,7 @@ async function AM_processAPIRefresh(requestData) {
         error: {
           code: "INVALID_TOKEN_STRUCTURE",
           message: "refresh token結構不符合要求",
-          details: { 
+          details: {
             refreshToken: refreshToken,
             expectedFormats: ["refresh_userId_timestamp", "jwt_userId_timestamp", "standard_jwt"]
           }
@@ -2833,7 +2860,7 @@ async function AM_processAPIBindStatus(requestData) {
       bindingStatus.platforms.LINE.status = "bound";
       bindingStatus.platforms.LINE.bindingId = "demo_line_binding_001";
       bindingStatus.totalBindings = 1;
-      
+
       AM_logInfo(
         `為測試用戶提供綁定狀態: ${userId}`,
         "綁定狀態查詢",
@@ -3445,11 +3472,11 @@ async function AM_processAPIVerifyPin(requestData) {
     // 階段一修復：簡化PIN碼驗證邏輯（MVP階段）
     const pin = requestData.pin.trim();
     const userId = requestData.userId || "current_user";
-    
+
     // 簡單驗證：4-6位數字
     const pinRegex = /^\d{4,6}$/;
     const isValidFormat = pinRegex.test(pin);
-    
+
     if (!isValidFormat) {
       return {
         success: false,
