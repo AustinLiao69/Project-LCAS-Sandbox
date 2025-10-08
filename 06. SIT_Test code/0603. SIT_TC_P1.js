@@ -22,6 +22,7 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const dynamicTestData = require('./0693. 動態生成測試資料');
 
 class SITTestCases {
     constructor() {
@@ -66,18 +67,39 @@ class SITTestCases {
 
     /**
      * 初始化SIT測試所需的交易資料
-     * @version 2025-10-08-V1.0.0
-     * @description 自動建立TC-SIT-038~040所需的測試交易資料
+     * @version 2025-10-08-V2.0.0
+     * @description 結合0693動態生成，自動建立SIT測試交易資料
      */
     async initializeSITTestTransactions() {
-        console.log('🔄 開始初始化SIT測試交易資料...');
+        console.log('🔄 開始初始化SIT測試交易資料（整合0693）...');
 
         try {
-            const testTransactions = this.testData?.bookkeeping_test_data?.test_transactions;
-            if (!testTransactions) {
+            // 檢查現有測試資料
+            let testTransactions = this.testData?.bookkeeping_test_data?.test_transactions || {};
+            
+            // 如果資料不足，使用0693生成補充資料
+            const existingCount = Object.keys(testTransactions).length;
+            if (existingCount < 10) {
+                console.log(`📊 現有交易資料${existingCount}筆，不足10筆，調用0693生成補充資料...`);
+                
+                const additionalTransactions = dynamicTestData.generateTransactionsBatch(15 - existingCount, {
+                    startDate: new Date(),
+                    userId: 'expert_mode_user_001'
+                });
+                
+                Object.assign(testTransactions, additionalTransactions);
+                
+                // 更新到this.testData
+                if (!this.testData.bookkeeping_test_data) this.testData.bookkeeping_test_data = {};
+                this.testData.bookkeeping_test_data.test_transactions = testTransactions;
+                
+                console.log(`✅ 使用0693補充${Object.keys(additionalTransactions).length}筆動態交易資料`);
+            }
+            
+            if (Object.keys(testTransactions).length === 0) {
                 return {
                     success: false,
-                    error: '測試資料中未找到test_transactions'
+                    error: '無法獲取測試交易資料（靜態+動態）'
                 };
             }
 
@@ -148,37 +170,42 @@ class SITTestCases {
     }
 
     /**
-     * 載入測試資料 (v1.3.0 - 階段一緊急修復版)
-     * @version 2025-01-26-V1.3.0
-     * @description 緊急修復測試資料結構缺失，增強容錯性，確保基礎測試可執行
+     * 載入測試資料 (v1.4.0 - 整合0693動態測試資料)
+     * @version 2025-10-08-V1.4.0
+     * @description 整合0693動態測試資料生成模組，提供靜態+動態測試資料
      */
     async loadTestData() {
         try {
-            console.log('🔄 開始載入SIT測試資料...');
+            console.log('🔄 開始載入SIT測試資料（整合0693動態生成）...');
 
-            const testDataPath = path.join(__dirname, '0692. SIT_TestData_P1.json'); // P1代表Phase 1，但涵蓋所有階段資料
+            const testDataPath = path.join(__dirname, '0692. SIT_TestData_P1.json');
 
-            // 檢查測試資料檔案是否存在
-            if (!fs.existsSync(testDataPath)) {
-                console.error('❌ 測試資料檔案不存在:', testDataPath);
-                this.testData = this.createDefaultTestData(); // 使用預設資料
-                console.log('🔄 使用預設測試資料');
-                return true;
-            }
-
-            const rawData = fs.readFileSync(testDataPath, 'utf8');
-            const parsedData = JSON.parse(rawData);
-
-            // 驗證測試資料結構完整性
-            const validationResult = this.validateTestDataStructure(parsedData);
-            if (!validationResult.isValid) {
-                console.warn('⚠️ 測試資料結構不完整:', validationResult.missingFields);
-                // 使用預設值填補缺失的欄位
-                this.testData = this.enhanceTestDataWithDefaults(parsedData);
-                console.log('🔧 已使用預設值修復測試資料結構');
+            // 載入靜態測試資料
+            let staticData = {};
+            if (fs.existsSync(testDataPath)) {
+                const rawData = fs.readFileSync(testDataPath, 'utf8');
+                staticData = JSON.parse(rawData);
+                console.log('✅ 0692靜態測試資料載入成功');
             } else {
-                this.testData = parsedData;
+                console.warn('⚠️ 0692檔案不存在，僅使用動態資料');
+                staticData = this.createDefaultTestData();
             }
+
+            // 使用0693生成動態測試資料
+            console.log('🔄 調用0693生成動態測試資料...');
+            const dynamicDataConfig = {
+                userCount: 5,
+                transactionsPerUser: 20,
+                includeStaticData: true
+            };
+            
+            const generatedTestData = dynamicTestData.generateCompleteTestDataSet(dynamicDataConfig);
+            
+            // 合併靜態與動態測試資料
+            this.testData = this.mergeTestData(staticData, generatedTestData);
+
+            console.log('✅ 測試資料整合完成（0692靜態 + 0693動態）');
+            console.log(`📊 合併結果: 用戶${Object.keys(this.testData.authentication_test_data?.valid_users || {}).length}個，交易${Object.keys(this.testData.bookkeeping_test_data?.test_transactions || {}).length}筆`);
 
             // 驗證關鍵測試資料是否可用 (v1.3.0 增強版)
             const criticalDataCheck = this.validateCriticalTestData();
@@ -259,6 +286,47 @@ class SITTestCases {
         } catch (error) {
             return null;
         }
+    }
+
+    /**
+     * 合併靜態與動態測試資料
+     * @version 2025-10-08-V1.0.0
+     * @description 智能合併0692靜態資料與0693動態生成資料
+     */
+    mergeTestData(staticData, dynamicData) {
+        console.log('🔄 開始合併測試資料...');
+        
+        // 深度複製靜態資料作為基礎
+        const mergedData = JSON.parse(JSON.stringify(staticData));
+        
+        // 合併用戶資料
+        if (dynamicData.authentication_test_data?.valid_users) {
+            if (!mergedData.authentication_test_data) mergedData.authentication_test_data = {};
+            if (!mergedData.authentication_test_data.valid_users) mergedData.authentication_test_data.valid_users = {};
+            
+            Object.assign(mergedData.authentication_test_data.valid_users, dynamicData.authentication_test_data.valid_users);
+            console.log(`✅ 合併用戶資料: ${Object.keys(dynamicData.authentication_test_data.valid_users).length}個動態用戶`);
+        }
+        
+        // 合併交易資料  
+        if (dynamicData.bookkeeping_test_data?.test_transactions) {
+            if (!mergedData.bookkeeping_test_data) mergedData.bookkeeping_test_data = {};
+            if (!mergedData.bookkeeping_test_data.test_transactions) mergedData.bookkeeping_test_data.test_transactions = {};
+            
+            Object.assign(mergedData.bookkeeping_test_data.test_transactions, dynamicData.bookkeeping_test_data.test_transactions);
+            console.log(`✅ 合併交易資料: ${Object.keys(dynamicData.bookkeeping_test_data.test_transactions).length}筆動態交易`);
+        }
+        
+        // 添加0693元資料
+        mergedData.dynamic_generation_info = {
+            generated_at: new Date().toISOString(),
+            generator_version: '0693_v1.0.0',
+            merge_strategy: 'static_base_with_dynamic_enhancement',
+            statistics: dynamicData.metadata?.generation_stats || {}
+        };
+        
+        console.log('✅ 測試資料合併完成');
+        return mergedData;
     }
 
     /**
@@ -1372,39 +1440,36 @@ class SITTestCases {
     // ==================== 階段一：單點整合驗證測試 ====================
 
     /**
-     * TC-SIT-001: 使用者註冊流程整合測試 (階段一修復版)
-     * @version 2025-10-02-V2.5.3
-     * @description 階段一修復：動態生成唯一測試用戶Email，確保每次測試都能成功註冊
+     * TC-SIT-001: 使用者註冊流程整合測試 (0693整合版)
+     * @version 2025-10-08-V2.6.0
+     * @description 整合0693動態生成測試用戶，確保每次測試都能成功註冊
      */
     async testCase001_UserRegistration() {
         const startTime = Date.now();
         try {
-            // 階段一修復：確保測試資料可用性
-            if (!this.testData?.authentication_test_data?.valid_users?.expert_mode_user_001) {
-                throw new Error('測試資料不可用：expert_mode_user_001');
-            }
-
-            const baseTestUser = this.testData.authentication_test_data.valid_users.expert_mode_user_001;
-
-            // 階段一修復：動態生成唯一測試用戶Email
-            const timestamp = Date.now();
-            const randomStr = Math.random().toString(36).substr(2, 5);
-            const dynamicEmail = `expert001_${timestamp}_${randomStr}@lcas.app`;
-
-            console.log(`🔄 TC-SIT-001: 動態生成測試用戶Email: ${dynamicEmail}`);
+            // 使用0693動態生成測試用戶
+            console.log('🔄 TC-SIT-001: 使用0693動態生成測試用戶...');
+            
+            const dynamicUsers = dynamicTestData.generateUsersBatch(1);
+            const dynamicUserId = Object.keys(dynamicUsers)[0];
+            const dynamicUser = dynamicUsers[dynamicUserId];
+            
+            console.log(`🔄 TC-SIT-001: 動態生成測試用戶: ${dynamicUser.email}`);
 
             const registrationData = {
-                email: dynamicEmail, // 使用動態生成的Email
-                password: baseTestUser.password,
-                displayName: `${baseTestUser.display_name}_${timestamp}`,
-                userMode: baseTestUser.mode,
+                email: dynamicUser.email,
+                password: dynamicUser.password,
+                displayName: dynamicUser.display_name,
+                userMode: dynamicUser.mode,
                 acceptTerms: true,
                 acceptPrivacy: true,
-                ...baseTestUser.registration_data,
-                // 更新registration_data中的email
                 registration_data: {
-                    ...baseTestUser.registration_data,
-                    email: dynamicEmail
+                    first_name: dynamicUser.registration_data.first_name,
+                    last_name: dynamicUser.registration_data.last_name,
+                    phone: dynamicUser.registration_data.phone,
+                    date_of_birth: dynamicUser.registration_data.date_of_birth,
+                    preferred_language: dynamicUser.registration_data.preferred_language,
+                    email: dynamicUser.email
                 }
             };
 
@@ -1413,16 +1478,18 @@ class SITTestCases {
             const success = response.success &&
                           response.data?.success === true &&
                           response.data?.data?.userId &&
-                          response.data?.data?.email === dynamicEmail &&
-                          response.data?.data?.userMode === baseTestUser.mode;
+                          response.data?.data?.email === dynamicUser.email &&
+                          response.data?.data?.userMode === dynamicUser.mode;
 
             this.recordTestResult('TC-SIT-001', success, Date.now() - startTime, {
-                dynamicEmail: dynamicEmail,
-                response: response.data,
-                expected: {
-                    ...baseTestUser,
-                    email: dynamicEmail
+                dynamicEmail: dynamicUser.email,
+                dynamicGeneration: {
+                    source: '0693_dynamic_test_data',
+                    userId: dynamicUserId,
+                    generatedAt: dynamicUser.createdAt
                 },
+                response: response.data,
+                expected: dynamicUser,
                 error: !success ? (response.error || '註冊回應格式不正確') : null
             });
 
