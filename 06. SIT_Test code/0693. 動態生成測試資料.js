@@ -11,14 +11,8 @@
 const moment = require('moment-timezone');
 const crypto = require('crypto');
 
-// 載入0692靜態測試資料作為基準
-let staticTestData = {};
-try {
-  staticTestData = require('./0692. SIT_TestData_P1.json');
-  console.log('✅ 0693: 成功載入0692靜態測試資料');
-} catch (error) {
-  console.warn('⚠️ 0693: 無法載入0692靜態測試資料，使用預設值');
-}
+// 不再依賴0692靜態測試資料，完全動態生成
+console.log('✅ 0693: 完全動態生成測試資料，不依賴0692靜態資料');
 
 /**
  * 動態測試資料生成配置
@@ -201,7 +195,6 @@ function generateTransactionsBatch(count = 10, options = {}) {
  */
 function generateUsersBatch(userCount = 5) {
   const users = {};
-  const baseUsers = staticTestData.authentication_test_data?.valid_users || {};
   
   for (let i = 0; i < userCount; i++) {
     const userId = generateUserId();
@@ -271,13 +264,14 @@ function generateCompleteTestDataSet(config = {}) {
   
   console.log('🔄 0693: 開始生成完整測試資料集...');
   
-  // 基礎結構（合併0692靜態資料）
-  const testDataSet = includeStaticData ? JSON.parse(JSON.stringify(staticTestData)) : {
+  // 基礎結構（完全動態生成，不依賴0692）
+  const testDataSet = {
     metadata: {
       version: '1.0.0 - Dynamic Generated',
       generated_at: new Date().toISOString(),
       generator: '0693_dynamic_test_data',
-      source: 'dynamic_generation'
+      source: 'dynamic_generation_only',
+      note: '完全移除0692依賴'
     }
   };
   

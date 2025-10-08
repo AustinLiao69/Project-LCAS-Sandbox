@@ -76,19 +76,19 @@ class SITTestCases {
         try {
             // 使用0693動態生成測試交易資料
             console.log('🔄 調用0693生成SIT測試交易資料...');
-            
+
             const testTransactions = dynamicTestData.generateTransactionsBatch(15, {
                 startDate: new Date(),
                 userId: 'expert_mode_user_001'
             });
-            
+
             // 更新到this.testData
             if (!this.testData) this.testData = {};
             if (!this.testData.bookkeeping_test_data) this.testData.bookkeeping_test_data = {};
             this.testData.bookkeeping_test_data.test_transactions = testTransactions;
-            
+
             console.log(`✅ 使用0693生成${Object.keys(testTransactions).length}筆動態交易資料`);
-            
+
             if (Object.keys(testTransactions).length === 0) {
                 return {
                     success: false,
@@ -178,9 +178,9 @@ class SITTestCases {
                 transactionsPerUser: 20,
                 includeStaticData: false // 不包含靜態資料
             };
-            
+
             const generatedTestData = dynamicTestData.generateCompleteTestDataSet(dynamicDataConfig);
-            
+
             // 直接使用0693生成的測試資料
             this.testData = generatedTestData;
 
@@ -199,14 +199,14 @@ class SITTestCases {
                     transactionsPerUser: 10,
                     includeStaticData: false
                 };
-                
+
                 const supplementData = dynamicTestData.generateCompleteTestDataSet(supplementConfig);
-                
+
                 // 合併補充資料
                 if (supplementData.authentication_test_data?.valid_users) {
                     Object.assign(this.testData.authentication_test_data.valid_users, supplementData.authentication_test_data.valid_users);
                 }
-                
+
                 if (supplementData.bookkeeping_test_data?.test_transactions) {
                     Object.assign(this.testData.bookkeeping_test_data.test_transactions, supplementData.bookkeeping_test_data.test_transactions);
                 }
@@ -229,7 +229,7 @@ class SITTestCases {
                     transactionsPerUser: 5,
                     includeStaticData: false
                 };
-                
+
                 this.testData = dynamicTestData.generateCompleteTestDataSet(emergencyConfig);
                 console.log('⚡ 已啟用0693緊急備援測試資料');
             } catch (emergencyError) {
@@ -286,7 +286,7 @@ class SITTestCases {
         }
     }
 
-    
+
 
     /**
      * 使用預設值增強測試資料
@@ -1408,11 +1408,11 @@ class SITTestCases {
         try {
             // 使用0693動態生成測試用戶
             console.log('🔄 TC-SIT-001: 使用0693動態生成測試用戶...');
-            
+
             const dynamicUsers = dynamicTestData.generateUsersBatch(1);
             const dynamicUserId = Object.keys(dynamicUsers)[0];
             const dynamicUser = dynamicUsers[dynamicUserId];
-            
+
             console.log(`🔄 TC-SIT-001: 動態生成測試用戶: ${dynamicUser.email}`);
 
             const registrationData = {
@@ -1937,7 +1937,7 @@ class SITTestCases {
             const assessmentData = this.testData.mode_assessment_test_data.expert_mode_assessment;
 
             console.log(`🔄 TC-SIT-008: 準備提交評估答案...`);
-            console.log(`📋 評估答案: ${Object.entries(assessmentData.answers).map(([k,v]) => `${k}=${v}`).join(', ')}`);
+            console.log(`📋 評估答案: ${Object.entries(assessmentData.answers).map((answer, index) => `${answer[0]}=${answer[1]}`).join(', ')}`);
             console.log(`📋 期望模式: ${assessmentData.expected_mode}`);
 
             const submitResponse = await this.makeRequest('POST', '/api/v1/users/assessment', {
@@ -4243,111 +4243,6 @@ class SITTestCases {
         return success;
     }
 
-
-    /**
-     * 生成最終測試報告 (v2.5.4 - 階段三修復版)
-     * @version 2025-10-02-V2.5.4
-     * @description 階段三修復：確保所有統計計算使用安全函數，避免NaN值
-     * @param {Array} phaseResults 各階段測試結果
-     */
-    async generateFinalReport(phaseResults) {
-        console.log('\n==================== DCN-0015 階段三測試報告 ====================');
-        console.log(`測試計畫版本: v2.5.4 - 統計數據處理缺陷修復版`);
-        console.log(`測試執行時間: ${new Date().toLocaleString()}`);
-        console.log(`總執行時間: ${this.ensureValidNumber((Date.now() - this.testStartTime.getTime()) / 1000)} 秒`);
-        console.log('====================================================================');
-
-        let totalTestsExecuted = 0;
-        let totalTestsPassed = 0;
-
-        // 階段三修復：安全處理各階段結果統計
-        phaseResults.forEach(result => {
-            const safeResult = {
-                phase: result.phase || 'Unknown Phase',
-                totalTests: this.ensureValidNumber(result.totalTests, 0),
-                passedTests: this.ensureValidNumber(result.passedTests, 0),
-                successRate: this.ensureValidNumber(result.successRate, 0),
-                executionTime: this.ensureValidNumber(result.executionTime, 0)
-            };
-
-            console.log(`\n--- ${safeResult.phase} 測試結果 ---`);
-            console.log(`  總測試數: ${safeResult.totalTests}`);
-            console.log(`  通過數: ${safeResult.passedTests}`);
-            console.log(`  成功率: ${this.safePercentage(safeResult.passedTests, safeResult.totalTests).toFixed(2)}%`);
-            console.log(`  執行時間: ${(safeResult.executionTime / 1000).toFixed(2)} 秒`);
-
-            totalTestsExecuted += safeResult.totalTests;
-            totalTestsPassed += safeResult.passedTests;
-        });
-
-        // 階段三修復：使用安全除法計算整體成功率
-        const overallSuccessRate = this.safeDivision(totalTestsPassed, totalTestsExecuted, 0);
-
-        console.log('\n--- SIT 整體測試摘要 ---');
-        console.log(`總執行測試數: ${this.ensureValidNumber(totalTestsExecuted)}`);
-        console.log(`總通過測試數: ${this.ensureValidNumber(totalTestsPassed)}`);
-        console.log(`整體成功率: ${this.safePercentage(totalTestsPassed, totalTestsExecuted).toFixed(2)}%`);
-        console.log(`整體品質等級: ${this.getSITQualityGrade(overallSuccessRate)}`);
-        console.log(`發布建議: ${this.getDeploymentRecommendation(overallSuccessRate)}`);
-
-        // 階段三修復：新增統計品質報告
-        console.log('\n--- 統計品質驗證 ---');
-        console.log(`✅ 無NaN值: ${this.validateStatisticsQuality()}`);
-        console.log(`✅ 數值驗證: 使用ensureValidNumber, safeDivision, safePercentage`);
-        console.log(`✅ MVP標準: 專注核心指標，避免過度精確化`);
-        console.log('====================================================================');
-
-        // 產生詳細的測試報告文件
-        const report = this.generateReport(); // 使用現有的 generateReport
-
-        // 階段三修復：確保報告路徑正確
-        const reportFileName = '06. SIT_Test code/0691. SIT_Report_P1.md';
-        try {
-            fs.writeFileSync(reportFileName, this.formatReportToMarkdown(report), 'utf8');
-            console.log(`\n📄 詳細測試報告已寫入: ${reportFileName}`);
-        } catch (writeError) {
-            console.warn(`⚠️ 報告寫入失敗: ${writeError.message}`);
-            console.log(`📄 報告內容已準備完成，但檔案寫入遇到問題`);
-        }
-    }
-
-    /**
-     * 驗證統計品質 (v2.5.4 - 階段三新增)
-     * @version 2025-10-02-V2.5.4
-     * @description 階段三修復：驗證測試結果中是否存在NaN值
-     */
-    validateStatisticsQuality() {
-        let hasNaNValues = false;
-        let validatedResults = 0;
-
-        this.testResults.forEach(result => {
-            // 檢查主要統計欄位
-            const duration = result.duration;
-            if (isNaN(duration) || !isFinite(duration)) {
-                hasNaNValues = true;
-            }
-
-            // 檢查詳細資料中的統計值
-            if (result.details) {
-                Object.values(result.details).forEach(value => {
-                    if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
-                        hasNaNValues = true;
-                    }
-                });
-            }
-
-            validatedResults++;
-        });
-
-        const qualityReport = {
-            totalResults: validatedResults,
-            hasNaNValues: hasNaNValues,
-            qualityGrade: hasNaNValues ? 'C' : 'A',
-            status: hasNaNValues ? '檢測到NaN值' : '統計品質正常'
-        };
-
-        return qualityReport.status;
-    }
 
     /**
      * 生成測試報告 (v2.5.4 - 階段三修復版)
