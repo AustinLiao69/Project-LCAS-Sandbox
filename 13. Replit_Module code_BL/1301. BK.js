@@ -495,7 +495,7 @@ async function BK_initializeFirebase() {
 
     BK_INIT_STATUS.firestore_db = db;
 
-    BK_logInfo(`Firebase連接初始化成功 v${BK_CONFIG.VERSION}`, "系統初始化", "", "BK_initializeFirebase");
+    BK_logInfo("Firebase連接初始化成功 v" + BK_CONFIG.VERSION, "系統初始化", "", "BK_initializeFirebase");
     return db;
   } catch (error) {
     BK_logError('Firebase初始化失敗', "系統初始化", "", "FIREBASE_INIT_ERROR", error.toString(), "BK_initializeFirebase");
