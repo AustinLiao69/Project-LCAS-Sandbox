@@ -2284,7 +2284,7 @@ async function BK_processAPIGetCharts(queryParams = {}) {
         paymentMethodChart: formatChartData(chartData.paymentMethodChart)
       };
 
-      BK_logInfo(`${logPrefix} 圖表數據API處理成功`, "API端點", queryParams.userId || "", "BK_processAPIGetCharts");
+      BK_logInfo(`${logPrefix}圖表數據API處理成功`, "API端點", queryParams.userId || "", "BK_processAPIGetCharts");
 
       return BK_formatSuccessResponse(formattedChartData, "圖表數據取得成功", null, {
         requestId: processId,
@@ -2959,7 +2959,7 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
   }
 }
 
-// 匯出模組（保留原有函數並新增API處理函數）
+// === 匯出模組（保留原有函數並新增API處理函數） ===
 module.exports = {
   // === 核心記帳處理函數 ===
   BK_createTransaction,
