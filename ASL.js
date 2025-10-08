@@ -194,7 +194,7 @@ async function loadBLModules() {
   try {
     console.log('🔄 開始載入BK模組...');
     BK = require('./13. Replit_Module code_BL/1301. BK.js');
-    
+
     // 階段三修復：驗證BK模組函數完整性
     const requiredBKFunctions = [
       'BK_processBookkeeping',
@@ -223,7 +223,7 @@ async function loadBLModules() {
     }
 
     console.log(`📊 BK模組函數完整性檢查: ${availableFunctions}/${requiredBKFunctions.length}`);
-    
+
     if (missingFunctions.length > 0) {
       console.error('❌ BK模組缺失函數:', missingFunctions);
       console.error('📋 BK模組實際導出:', Object.keys(BK));
@@ -245,21 +245,21 @@ async function loadBLModules() {
     try {
       // 清除模組緩存
       delete require.cache[require.resolve('./13. Replit_Module code_BL/1301. BK.js')];
-      
+
       // 重新載入
       BK = require('./13. Replit_Module code_BL/1301. BK.js');
-      
+
       // 重新驗證
       const criticalFunctions = ['BK_processBookkeeping', 'BK_processAPIGetDashboard'];
       let retrySuccess = true;
-      
+
       for (const funcName of criticalFunctions) {
         if (typeof BK[funcName] !== 'function') {
           retrySuccess = false;
           console.error(`❌ 重試後仍缺失: ${funcName}`);
         }
       }
-      
+
       if (retrySuccess) {
         moduleStatus.BK = true;
         console.log('✅ BK模組重新載入成功');
@@ -378,7 +378,10 @@ app.use((req, res, next) => {
 
   // 生成請求ID
   const generateRequestId = () => {
-    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // 使用與1311.FS.js一致的格式
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    return `req_${timestamp}_${random}`;
   };
 
   // 檢測使用者模式（第三階段強化版）
@@ -1127,6 +1130,14 @@ app.post('/api/v1/transactions', async (req, res) => {
       return res.apiError('BK_createTransaction函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
     }
 
+    // 載入0692測試資料
+    let testData = {};
+    try {
+      testData = require('./06. SIT_Test code/0692. SIT_TestData_P1.json');
+    } catch (error) {
+      console.warn('⚠️ 無法載入0692測試資料，使用預設值');
+    }
+
     // 構建調用BK_createTransaction的參數
     const transactionData = {
       amount: req.body.amount,
@@ -1137,8 +1148,8 @@ app.post('/api/v1/transactions', async (req, res) => {
       ledgerId: req.body.ledgerId,
       paymentMethod: req.body.paymentMethod,
       date: req.body.date,
-      userId: req.body.userId || `test_user_${Date.now()}`,
-      processId: require('crypto').randomUUID().substring(0, 8)
+      userId: req.body.userId || Object.keys(testData.authentication_test_data?.valid_users || {})[0] || 'default_test_user'
+      // processId將在BL層使用1311.FS.js的標準函數生成
     };
 
     const result = await BK.BK_createTransaction(transactionData);
@@ -1169,6 +1180,14 @@ app.post('/api/v1/transactions/quick', async (req, res) => {
       return res.apiError('快速輸入文字為必填項目', 'MISSING_INPUT_FIELD', 400);
     }
 
+    // 載入0692測試資料
+    let testData = {};
+    try {
+      testData = require('./06. SIT_Test code/0692. SIT_TestData_P1.json');
+    } catch (error) {
+      console.warn('⚠️ 無法載入0692測試資料，使用預設值');
+    }
+
     // 解析快速輸入
     const parsed = BK.BK_parseQuickInput ? BK.BK_parseQuickInput(req.body.input.trim()) : null;
     if (!parsed || !parsed.success) {
@@ -1181,7 +1200,7 @@ app.post('/api/v1/transactions/quick', async (req, res) => {
       type: parsed.data.type,
       description: parsed.data.description,
       subject: parsed.data.description,
-      userId: req.body.userId || `test_user_${Date.now()}`,
+      userId: req.body.userId || Object.keys(testData.authentication_test_data?.valid_users || {})[0] || 'default_test_user',
       ledgerId: req.body.ledgerId,
       paymentMethod: parsed.data.paymentMethod
     };

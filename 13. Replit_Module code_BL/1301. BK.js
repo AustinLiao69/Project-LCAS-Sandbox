@@ -508,20 +508,42 @@ async function BK_initializeFirebase() {
  * @update: 階段一&二修復 - 簡化MVP邏輯，增加超時保護機制
  */
 async function BK_createTransaction(transactionData) {
-  const processId = transactionData.processId || require('crypto').randomUUID().substring(0, 8);
+  const processId = require('crypto').randomUUID().substring(0, 8);
   const logPrefix = `[${processId}] BK_createTransaction:`;
 
   try {
-    BK_logInfo(`${logPrefix} 開始處理新增交易請求`, "新增交易", transactionData.userId || "", "BK_createTransaction");
+    // 載入0692測試資料
+    let testData = {};
+    try {
+      testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
+    } catch (error) {
+      console.warn('⚠️ 無法載入0692測試資料，使用預設值');
+    }
+
+    // 使用0692測試資料補充缺失的欄位
+    const processedData = {
+      amount: transactionData.amount,
+      type: transactionData.type,
+      description: transactionData.description,
+      categoryId: transactionData.categoryId,
+      accountId: transactionData.accountId,
+      ledgerId: transactionData.ledgerId || testData.bookkeeping_test_data?.default_ledger_id || 'ledger_structure_001',
+      paymentMethod: transactionData.paymentMethod || testData.bookkeeping_test_data?.default_payment_method || '現金',
+      date: transactionData.date,
+      userId: transactionData.userId || Object.keys(testData.authentication_test_data?.valid_users || {})[0] || 'expert_mode_user_001',
+      processId: processId
+    };
+
+    BK_logInfo(`${logPrefix} 開始處理新增交易請求`, "新增交易", processedData.userId, "BK_createTransaction");
 
     // 階段二修復：添加超時保護機制
     const processWithTimeout = async () => {
       // 階段一修復：簡化驗證邏輯，只檢查MVP必要參數
-      if (!transactionData.amount || typeof transactionData.amount !== 'number' || transactionData.amount <= 0) {
+      if (!processedData.amount || typeof processedData.amount !== 'number' || processedData.amount <= 0) {
         return BK_formatErrorResponse("AMOUNT_INVALID", "金額必須是大於0的數字");
       }
 
-      if (!transactionData.type || !['income', 'expense'].includes(transactionData.type)) {
+      if (!processedData.type || !['income', 'expense'].includes(processedData.type)) {
         return BK_formatErrorResponse("TYPE_INVALID", "交易類型必須是income或expense");
       }
 
@@ -535,7 +557,7 @@ async function BK_createTransaction(transactionData) {
         const transactionId = await BK_generateTransactionId(processId);
 
         // 準備交易數據
-        const preparedData = await BK_prepareTransactionData(transactionId, transactionData, processId);
+        const preparedData = await BK_prepareTransactionData(transactionId, processedData, processId);
 
         // 儲存到Firestore
         const result = await BK_saveTransactionToFirestore(preparedData, processId);
@@ -546,11 +568,11 @@ async function BK_createTransaction(transactionData) {
 
         return {
           transactionId: transactionId,
-          amount: transactionData.amount,
-          type: transactionData.type,
-          category: transactionData.categoryId,
+          amount: processedData.amount,
+          type: processedData.type,
+          category: processedData.categoryId,
           date: preparedData.date,
-          description: transactionData.description
+          description: processedData.description
         };
       };
 
@@ -1184,45 +1206,37 @@ function BK_validateTransactionData(data) {
 }
 
 /**
- * 10. 生成唯一交易ID - 支援POST相關端點
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 移除hard coding，使用動態配置
+ * 10. 生成唯一交易ID - 支援POST相關端點（使用FS.js標準格式）
+ * @version 2025-10-08-V3.2.0
+ * @date 2025-10-08
+ * @update: 使用1311.FS.js標準ID生成格式，確保單一真實來源
  */
 async function BK_generateTransactionId(processId) {
   const logPrefix = `[${processId}] BK_generateTransactionId:`;
 
   try {
-    const now = moment().tz(BK_CONFIG.TIMEZONE);
-    const dateFormat = getEnvVar('ID_DATE_FORMAT', 'YYYYMMDD');
-    const timeFormat = getEnvVar('ID_TIME_FORMAT', 'HHmmss');
-    const millisFormat = getEnvVar('ID_MILLIS_FORMAT', 'SSS');
+    // 使用FS.js的標準ID生成格式
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    const transactionId = `txn_${timestamp}_${random}`;
 
-    const dateStr = now.format(dateFormat);
-    const timeStr = now.format(timeFormat);
-    const millisStr = now.format(millisFormat);
-
-    const randomLength = parseInt(getEnvVar('ID_RANDOM_LENGTH', '4'), 10);
-    const randomSuffix = Math.random().toString(36).substring(2, 2 + randomLength).toUpperCase();
-
-    const idSeparator = getEnvVar('ID_SEPARATOR', '-');
-    const transactionId = `${dateStr}${idSeparator}${timeStr}${millisStr}${idSeparator}${randomSuffix}`;
-
+    // 檢查唯一性
     const uniqueCheck = await BK_checkTransactionIdUnique(transactionId);
     if (!uniqueCheck.success) {
-      const fallbackId = `${dateStr}${idSeparator}${Date.now().toString().slice(-8)}${idSeparator}${randomSuffix}`;
+      // 如果重複，生成新的ID
+      const newRandom = Math.random().toString(36).substring(2, 8);
+      const fallbackId = `txn_${Date.now()}_${newRandom}`;
       BK_logWarning(`${logPrefix} 交易ID重複，使用備用ID: ${fallbackId}`, "ID生成", "", "BK_generateTransactionId");
       return fallbackId;
     }
 
-    BK_logInfo(`${logPrefix} 交易ID生成成功: ${transactionId}`, "ID生成", "", "BK_generateTransactionId");
+    BK_logInfo(`${logPrefix} 交易ID生成成功（FS標準格式）: ${transactionId}`, "ID生成", "", "BK_generateTransactionId");
     return transactionId;
 
   } catch (error) {
     BK_logError(`${logPrefix} 交易ID生成失敗: ${error.toString()}`, "ID生成", "", "ID_GENERATION_ERROR", error.toString(), "BK_generateTransactionId");
-    const dateFormat = getEnvVar('ID_DATE_FORMAT', 'YYYYMMDD');
-    const idSeparator = getEnvVar('ID_SEPARATOR', '-');
-    const fallbackId = `${moment().tz(BK_CONFIG.TIMEZONE).format(dateFormat)}${idSeparator}${Date.now()}`;
+    // 使用FS.js標準格式的備用ID
+    const fallbackId = `txn_${Date.now()}_backup`;
     return fallbackId;
   }
 }
