@@ -1127,21 +1127,8 @@ app.post('/api/v1/transactions', async (req, res) => {
       return res.apiError('BK_createTransaction函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
     }
 
-    // 構建調用BK_createTransaction的參數
-    const transactionData = {
-      amount: req.body.amount,
-      type: req.body.type,
-      description: req.body.description,
-      categoryId: req.body.categoryId,
-      accountId: req.body.accountId,
-      ledgerId: req.body.ledgerId,
-      paymentMethod: req.body.paymentMethod,
-      date: req.body.date,
-      userId: req.body.userId || `test_user_${Date.now()}`,
-      processId: require('crypto').randomUUID().substring(0, 8)
-    };
-
-    const result = await BK.BK_createTransaction(transactionData);
+    // 純轉發模式：直接傳遞請求資料給BL層，由BL層處理測試資料邏輯
+    const result = await BK.BK_createTransaction(req.body);
 
     if (result.success) {
       res.apiSuccess(result.data, result.message);
