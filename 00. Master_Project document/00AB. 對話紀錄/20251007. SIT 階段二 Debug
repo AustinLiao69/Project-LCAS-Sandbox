@@ -1,4 +1,73 @@
 ------------------------------------------
+20251008 SIT 階段二 Debug
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+------------------------------------------
+20251008 SIT 階段二 Debug
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據9901文件和測試結果，我以資深PG的角度深入分析當前問題：
+問題分析
+核心問題確認
+從測試結果可以看到階段一的BL層回應格式統一方案已經成功導入：
+•	階段一測試：7/7 通過 (100%)
+•	統一回應格式驗證全部得到A+評級
+但階段二出現了18個失敗案例，成功率僅51.35%，主要集中在：
+1.	BUSINESS_LOGIC_ERROR：業務邏輯錯誤（主要問題）
+2.	AUTH_ERROR：認證相關錯誤
+3.	缺失data欄位：TC-SIT-033中發現PUT /api/v1/users/profile缺失data欄位
+成功與失敗案例分析
+成功案例（已正確導入統一格式）：
+•	TC-SIT-001~007：基礎功能全部成功
+•	TC-SIT-008：模式評估成功
+•	TC-SIT-019：登出API成功
+•	TC-SIT-020：用戶資料查詢成功
+•	TC-SIT-022：用戶偏好設定成功
+失敗案例（需要修復）：
+•	TC-SIT-017、018：註冊登入API失敗
+•	TC-SIT-021：用戶評估API失敗
+•	TC-SIT-026：Token刷新失敗
+•	TC-SIT-031：綁定狀態查詢失敗
+•	TC-SIT-037：PIN驗證失敗
+•	多個交易相關API失敗
+解決方案提案
+階段一：修復AM.js中缺失data欄位的API函數
+目標：確保所有AM.js函數回傳包含完整的success、data、message格式
+需要修復的函數：
+1.	AM_processAPIUpdateProfile - TC-SIT-033發現缺失data欄位
+2.	AM_processAPIBindStatus - TC-SIT-031失敗
+3.	AM_processAPIVerifyPin - TC-SIT-037失敗
+4.	AM_processAPIGetProfile - TC-SIT-032失敗
+階段二：修復BK.js中業務邏輯錯誤的API函數
+目標：修復交易相關API的業務邏輯問題
+需要修復的函數：
+1.	BK_processAPIUpdateTransaction - TC-SIT-039失敗
+2.	BK_processAPIDeleteTransaction - TC-SIT-040失敗
+3.	BK_processAPIGetStatistics - TC-SIT-041失敗
+4.	BK_processAPIGetRecent - TC-SIT-042失敗
+5.	BK_processAPIGetCharts - TC-SIT-043失敗
+階段三：優化Token處理機制
+目標：修復認證相關的Token處理問題
+需要修復：
+1.	AM_processAPIRefresh - TC-SIT-026 Token刷新失敗
+2.	完善Token驗證邏輯
+Insights
+1.	階段一方案已成功導入：基礎測試100%通過證明統一回應格式機制有效
+2.	問題集中在特定函數：失敗案例主要集中在少數API處理函數，不是架構問題
+3.	data欄位缺失是主要問題：部分函數沒有完全遵循success、data、message三元素格式
+4.	業務邏輯層需要補強：某些API函數的業務邏輯實作不完整
+具體修復建議
+請確認是否開始執行以下修復：
+第一優先級：修復AM.js中4個缺失data欄位的函數
+第二優先級：修復BK.js中5個業務邏輯錯誤的函數
+第三優先級：優化Token處理機制
+每個階段完成後都會進行版本升級，並專注解決當前MVP階段的核心問題，不進行過度優化。
+請確認是否開始執行階段一的修復工作？
+
+
+------------------------------------------
 20251007 SIT 階段二 Debug
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
