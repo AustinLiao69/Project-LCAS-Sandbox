@@ -1206,45 +1206,37 @@ function BK_validateTransactionData(data) {
 }
 
 /**
- * 10. 生成唯一交易ID - 支援POST相關端點
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 移除hard coding，使用動態配置
+ * 10. 生成唯一交易ID - 支援POST相關端點（使用FS.js標準格式）
+ * @version 2025-10-08-V3.2.0
+ * @date 2025-10-08
+ * @update: 使用1311.FS.js標準ID生成格式，確保單一真實來源
  */
 async function BK_generateTransactionId(processId) {
   const logPrefix = `[${processId}] BK_generateTransactionId:`;
 
   try {
-    const now = moment().tz(BK_CONFIG.TIMEZONE);
-    const dateFormat = getEnvVar('ID_DATE_FORMAT', 'YYYYMMDD');
-    const timeFormat = getEnvVar('ID_TIME_FORMAT', 'HHmmss');
-    const millisFormat = getEnvVar('ID_MILLIS_FORMAT', 'SSS');
+    // 使用FS.js的標準ID生成格式
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    const transactionId = `txn_${timestamp}_${random}`;
 
-    const dateStr = now.format(dateFormat);
-    const timeStr = now.format(timeFormat);
-    const millisStr = now.format(millisFormat);
-
-    const randomLength = parseInt(getEnvVar('ID_RANDOM_LENGTH', '4'), 10);
-    const randomSuffix = Math.random().toString(36).substring(2, 2 + randomLength).toUpperCase();
-
-    const idSeparator = getEnvVar('ID_SEPARATOR', '-');
-    const transactionId = `${dateStr}${idSeparator}${timeStr}${millisStr}${idSeparator}${randomSuffix}`;
-
+    // 檢查唯一性
     const uniqueCheck = await BK_checkTransactionIdUnique(transactionId);
     if (!uniqueCheck.success) {
-      const fallbackId = `${dateStr}${idSeparator}${Date.now().toString().slice(-8)}${idSeparator}${randomSuffix}`;
+      // 如果重複，生成新的ID
+      const newRandom = Math.random().toString(36).substring(2, 8);
+      const fallbackId = `txn_${Date.now()}_${newRandom}`;
       BK_logWarning(`${logPrefix} 交易ID重複，使用備用ID: ${fallbackId}`, "ID生成", "", "BK_generateTransactionId");
       return fallbackId;
     }
 
-    BK_logInfo(`${logPrefix} 交易ID生成成功: ${transactionId}`, "ID生成", "", "BK_generateTransactionId");
+    BK_logInfo(`${logPrefix} 交易ID生成成功（FS標準格式）: ${transactionId}`, "ID生成", "", "BK_generateTransactionId");
     return transactionId;
 
   } catch (error) {
     BK_logError(`${logPrefix} 交易ID生成失敗: ${error.toString()}`, "ID生成", "", "ID_GENERATION_ERROR", error.toString(), "BK_generateTransactionId");
-    const dateFormat = getEnvVar('ID_DATE_FORMAT', 'YYYYMMDD');
-    const idSeparator = getEnvVar('ID_SEPARATOR', '-');
-    const fallbackId = `${moment().tz(BK_CONFIG.TIMEZONE).format(dateFormat)}${idSeparator}${Date.now()}`;
+    // 使用FS.js標準格式的備用ID
+    const fallbackId = `txn_${Date.now()}_backup`;
     return fallbackId;
   }
 }
