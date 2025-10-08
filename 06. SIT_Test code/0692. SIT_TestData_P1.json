@@ -399,7 +399,7 @@
     }
   },
   "bookkeeping_test_data": {
-    "default_ledger_id": "test_ledger_001",
+    "default_ledger_id": "ledger_structure_001",
     "default_currency": "TWD",
     "default_payment_method": "現金",
     "supported_payment_methods": ["現金", "刷卡", "轉帳", "行動支付", "信用卡"],
@@ -412,14 +412,55 @@
       "description_max_length": 200
     },
     "test_collections": {
-      "ledger_collection": "test_ledgers",
-      "entries_collection": "test_entries",
-      "log_collection": "test_logs"
+      "ledger_collection": "ledgers",
+      "entries_collection": "entries",
+      "log_collection": "log"
     },
     "timeout_settings": {
       "create_transaction_timeout": 15000,
       "get_transactions_timeout": 8000,
       "quick_booking_timeout": 12000
+    },
+    "test_transactions": {
+      "test-transaction-001": {
+        "收支ID": "test-transaction-001",
+        "日期": "2025/10/08",
+        "時間": "10:00:00",
+        "收入": "",
+        "支出": "150",
+        "備註": "測試交易001",
+        "子項名稱": "餐飲",
+        "大項代碼": "103",
+        "子項代碼": "01",
+        "支付方式": "現金",
+        "UID": "expert_mode_user_001"
+      },
+      "test-transaction-002": {
+        "收支ID": "test-transaction-002",
+        "日期": "2025/10/08",
+        "時間": "11:00:00",
+        "收入": "",
+        "支出": "300",
+        "備註": "測試交易002",
+        "子項名稱": "交通",
+        "大項代碼": "105",
+        "子項代碼": "01",
+        "支付方式": "信用卡",
+        "UID": "expert_mode_user_002"
+      },
+      "test-transaction-003": {
+        "收支ID": "test-transaction-003",
+        "日期": "2025/10/08",
+        "時間": "12:00:00",
+        "收入": "2000",
+        "支出": "",
+        "備註": "測試交易003",
+        "子項名稱": "薪資收入",
+        "大項代碼": "801",
+        "子項代碼": "01",
+        "支付方式": "轉帳",
+        "UID": "expert_mode_user_001"
+      }
     }
   },
   "expected_response_formats": {

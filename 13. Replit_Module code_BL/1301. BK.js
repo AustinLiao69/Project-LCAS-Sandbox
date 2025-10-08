@@ -355,6 +355,7 @@ const FS = require('./1311. FS.js');
 let testConfig = {};
 try {
   testConfig = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
+  console.log('✅ BK模組：成功載入0692測試資料配置');
 } catch (error) {
   // 測試配置檔案不存在時使用預設值
   console.log('⚠️ 測試配置檔案未找到，使用環境變數設定');
