@@ -1782,12 +1782,6 @@ function BK_logCritical(message, category, userId, errorType, errorDetail, funct
 
 // === API端點處理函數 ===
 
-
-
-
-
-
-
 /**
  * BK_processAPIGetTransactionDetail - 處理單一交易詳情API端點
  * @version 2025-01-28-V2.2.0

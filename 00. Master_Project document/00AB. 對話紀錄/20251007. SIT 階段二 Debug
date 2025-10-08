@@ -3,6 +3,80 @@
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+根據SIT測試結果分析，我以資深PG的角度深入分析當前問題：
+
+問題分析
+核心問題確認
+從測試結果可以看到階段一和階段二的修復計畫已經部分成功導入：
+
+階段一測試：4/7 通過 (57.14%)
+階段二測試：14/37 通過 (37.84%)
+整體成功率：18/44 通過 (40.91%)
+成功與失敗案例分析
+成功案例（已正確修復）：
+
+TC-SIT-001~003：用戶認證流程全部成功
+TC-SIT-008~009：四模式差異化測試通過
+TC-SIT-019020、027030、033~036：多個AM.js相關API成功
+失敗案例（需要修復）：
+
+BK模組函數缺失：大量BK_processXXX函數不存在錯誤
+業務邏輯錯誤：多個BUSINESS_LOGIC_ERROR
+解決方案提案
+
+階段三：修復BK.js中缺失的API處理函數
+目標：完成BK.js的API端點函數實作，解決函數不存在錯誤
+
+需要新增的函數：
+
+BK_processAPIGetTransactionDetail - TC-SIT-038失敗
+BK_processAPIUpdateTransaction - TC-SIT-039失敗
+BK_processAPIDeleteTransaction - TC-SIT-040失敗
+BK_processAPIGetStatistics - TC-SIT-041失敗
+BK_processAPIGetRecent - TC-SIT-042失敗
+BK_processAPIGetCharts - TC-SIT-043失敗
+BK_processAPIGetDashboard - TC-SIT-025、044失敗
+BK_processBookkeeping - TC-SIT-004、016、023失敗
+=>以上的函數你再檢查一次1301，全部都有，問題是為什麼會顯示找不到？請說明原因
+
+
+
+階段四：修復AM.js中業務邏輯錯誤
+目標：修復已存在但邏輯有問題的AM.js函數
+
+需要修復的函數：
+
+AM_processAPIRefresh - TC-SIT-026 Token刷新失敗
+AM_processAPIBindStatus - TC-SIT-031綁定狀態查詢失敗
+AM_processAPIVerifyPin - TC-SIT-037 PIN驗證失敗
+階段五：修復跨層整合問題
+目標：解決資料流和端到端流程問題
+
+需要修復的問題：
+
+TC-SIT-010：資料格式轉換失敗
+TC-SIT-011：資料同步機制失敗
+TC-SIT-012：用戶完整生命週期測試失敗
+TC-SIT-013：記帳業務流程端到端失敗
+Insights
+階段一和二修復已見成效：AM.js相關的data欄位修復基本成功，統一回應格式驗證全部A+
+問題集中在BK模組：多數失敗都是BK.js缺少API處理函數導致
+函數命名規律清晰：需要的函數都遵循BK_processAPIXXX命名規範
+修復優先級明確：先解決函數缺失問題，再處理業務邏輯問題
+修復建議
+第一優先級：新增BK.js缺失的8個API處理函數
+第二優先級：修復AM.js的3個業務邏輯問題
+第三優先級：解決跨層整合和端到端流程問題
+
+每個階段完成後都會進行版本升級，專注解決當前MVP階段的核心問題。
+
+請確認是否開始執行階段三的BK.js函數新增工作？
+
+------------------------------------------
+20251008 SIT 階段二 Debug
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 根據附件的SIT測試結果分析，我來深入分析這些失敗案例的根本原因：
 問題分析
 核心發現
@@ -55,7 +129,7 @@ TC-SIT-037: UserVerifyPin (PIN驗證失敗)
 
 
 ------------------------------------------
-20251008 SIT 階段二 Debug
+20251008 SIT 階段二 Debug_Master plan
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
