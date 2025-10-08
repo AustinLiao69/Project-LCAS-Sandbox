@@ -423,7 +423,7 @@ async function BK_initialize() {
   }
 
   try {
-    let initMessages = [`BK模組v${BK_CONFIG.VERSION}初始化開始 [${new Date().toISOString()}]`];
+    let initMessages = ['BK模組v' + BK_CONFIG.VERSION + '初始化開始 [' + new Date().toISOString() + ']'];
 
     // 初始化DL模組
     if (!BK_INIT_STATUS.DL_initialized) {
