@@ -1,0 +1,75 @@
+
+📝 執行階段二測試 19/37: TC-SIT-026: AuthRefresh
+🔄 TC-SIT-026: 測試POST /api/v1/auth/refresh
+  ✅ 統一回應格式驗證 /api/v1/auth/refresh: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-026 (5ms)
+   ⚠️ 錯誤: 刷新Token失敗
+   🏷️  錯誤類型: AUTH_ERROR
+   💡 建議: 檢查認證Token有效性
+
+📝 執行階段二測試 20/37: TC-SIT-027: AuthForgotPassword
+🔑 TC-SIT-027: 測試POST /api/v1/auth/forgot-password
+  ✅ 統一回應格式驗證 /api/v1/auth/forgot-password: A+ (Score: 100.0%)
+✅ PASS TC-SIT-027 (240ms)
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 21/37: TC-SIT-028: AuthResetPassword
+🔐 TC-SIT-028: 測試POST /api/v1/auth/reset-password
+  ✅ 統一回應格式驗證 /api/v1/auth/reset-password: A+ (Score: 100.0%)
+✅ PASS TC-SIT-028 (4ms)
+
+📝 執行階段二測試 22/37: TC-SIT-029: AuthVerifyEmail
+📧 TC-SIT-029: 測試POST /api/v1/auth/verify-email
+  ✅ 統一回應格式驗證 /api/v1/auth/verify-email: A+ (Score: 100.0%)
+✅ PASS TC-SIT-029 (3ms)
+
+📝 執行階段二測試 23/37: TC-SIT-030: AuthBindLine
+🔗 TC-SIT-030: 測試POST /api/v1/auth/bind-line
+  ✅ 統一回應格式驗證 /api/v1/auth/bind-line: A+ (Score: 100.0%)
+✅ PASS TC-SIT-030 (2ms)
+
+📝 執行階段二測試 24/37: TC-SIT-031: AuthBindStatus
+📊 TC-SIT-031: 測試GET /api/v1/auth/bind-status
+  ✅ 統一回應格式驗證 /api/v1/auth/bind-status: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-031 (3ms)
+   ℹ️ 錯誤: 綁定狀態查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 25/37: TC-SIT-032: GetUserProfile
+👤 TC-SIT-032: 測試GET /api/v1/users/profile
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-032 (124ms)
+   ℹ️ 錯誤: 用戶資料查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 26/37: TC-SIT-033: UpdateUserProfile
+✏️ TC-SIT-033: 測試PUT /api/v1/users/profile
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+✅ PASS TC-SIT-033 (129ms)
+
+📝 執行階段二測試 27/37: TC-SIT-034: UserPreferences
+⚙️ TC-SIT-034: 測試GET /api/v1/users/preferences
+  ✅ 統一回應格式驗證 /api/v1/users/preferences: A+ (Score: 100.0%)
+✅ PASS TC-SIT-034 (14ms)
+
+📝 執行階段二測試 28/37: TC-SIT-035: UserMode
+🔧 TC-SIT-035: 測試PUT /api/v1/users/mode
+  ✅ 統一回應格式驗證 /api/v1/users/mode: A+ (Score: 100.0%)
+✅ PASS TC-SIT-035 (11ms)
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 29/37: TC-SIT-036: UserSecurity
+🔐 TC-SIT-036: 測試PUT /api/v1/users/security
+  ✅ 統一回應格式驗證 /api/v1/users/security: A+ (Score: 100.0%)
+✅ PASS TC-SIT-036 (6ms)
+
+📝 執行階段二測試 30/37: TC-SIT-037: UserVerifyPin
+🔢 TC-SIT-037: 測試POST /api/v1/users/verify-pin
+  ✅ 統一回應格式驗證 /api/v1/users/verify-pin: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-037 (5ms)
+   ℹ️ 錯誤: PIN驗證失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
