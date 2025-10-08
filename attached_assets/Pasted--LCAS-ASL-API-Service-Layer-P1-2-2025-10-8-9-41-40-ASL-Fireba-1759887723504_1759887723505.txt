@@ -1,0 +1,85 @@
+🚀 LCAS ASL (API Service Layer) P1-2重構版啟動中...
+📅 啟動時間: 2025/10/8 上午9:41:40
+🔥 ASL階段一修復：優先初始化Firebase...
+📦 ASL載入P1-2範圍BL層模組...
+🔄 Firebase初始化嘗試 1/3...
+📡 載入Firebase配置模組...
+✅ Firebase配置驗證通過
+🔍 驗證Firebase配置...
+✅ Firebase配置驗證通過
+⚡ 初始化Firebase Admin SDK...
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+📊 確認Firestore實例...
+ ✅ Firestore實例取得成功
+🔗 驗證Firebase連線...
+✅ Firebase連線驗證成功
+✅ Firebase完全初始化完成，準備載入BL模組...
+🎯 Firebase初始化成功 (嘗試次數: 1)
+🔥 Firebase已就緒，開始載入AM模組...
+✅ DL模組：Firebase動態配置載入成功
+AM 帳號管理模組載入完成 v3.0.8 - 階段一修復版：恢復Token刷新和綁定狀態查詢的基礎驗證能力
+✅ AM (認證管理) 模組載入成功
+🔄 開始載入BK模組...
+❌ BK 模組載入失敗: Unexpected token '<'
+❌ BK 載入錯誤堆疊: /home/runner/workspace/13. Replit_Module code_BL/1301. BK.js:3065
+</replit_final_file>
+^
+
+SyntaxError: Unexpected token '<'
+    at wrapSafe (node:internal/modules/cjs/loader:1662:18)
+    at Module._compile (node:internal/modules/cjs/loader:1704:20)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at loadBLModules (/home/runner/workspace/ASL.js:196:10)
+🔄 BK模組載入失敗，嘗試重新載入...
+❌ BK模組重試載入錯誤: Unexpected token '<'
+✅ DL (診斷日誌) 模組載入成功
+✅ Firebase Admin SDK已初始化
+✅ FS模組2.1.0：Firebase動態配置載入成功
+[FS_LOG_v2.1.0] 2025-10-08T01:41:42.102Z | 模組初始化 | FS模組2.1.0初始化 | User: system | Function: FS_initializeModule
+🎉 FS模組2.1.0階段三重構完成！
+📌 模組版本: 2.2.0
+🎯 專注功能: Phase 1完整功能 + 整合優化與驗證
+📋 階段一功能: 核心基礎操作(9個函數)
+📋 階段二功能: API端點支援(6個函數)
+📋 階段三功能: 整合優化與驗證(5個函數)
+✨ 總計實作: 20個核心函數 + 相容性函數
+🔧 建議執行: FS_performHealthCheck() 進行系統健康檢查
+🔧 建議執行: FS_validatePhase1Integration() 進行功能驗證
+✅ FS (Firestore) 模組載入成功
+📋 階段三模組載入狀態報告:
+   ✅ FIREBASE: 已載入
+   ✅ AM: 已載入
+   ❌ BK: 載入失敗
+   ✅ DL: 已載入
+   ✅ FS: 已載入
+📊 載入成功率: 4/5 (80%)
+⚠️ 階段三關鍵問題：BK模組載入失敗，所有記帳功能不可用
+🔧 建議檢查：1)BK.js文件完整性 2)module.exports正確性 3)依賴模組可用性
+🎉 LCAS ASL階段一修正完成：四模式欄位結構調整！
+📦 P1-2範圍BL模組載入狀態: Firebase(✅), AM(✅), BK(❌), DL(✅), FS(✅)
+🔧 純轉發機制: 34個API端點 -> 統一使用BL層標準格式
+✨ 階段一修正: 四模式欄位結構調整，符合SIT測試期望
+🎯 四模式支援: Expert/Inertial/Cultivation/Guiding專用欄位結構
+🔍 欄位結構: expertFeatures/inertialFeatures/cultivationFeatures/guidingFeatures
+🚀 階段一修正完成，ASL v2.1.4完全就緒！
+🌐 ASL服務器即將在 Port 5000 啟動...
+✨ 四模式欄位結構: 修正為SIT測試期望格式
+🎯 階段一目標達成: Mode Validation錯誤修正
+🔍 等待SIT測試驗證: 期望達到100%驗證分數
+🌐 LCAS ASL純轉發窗口已啟動於 Port 5000
+📍 服務地址: http://0.0.0.0:5000
+🔗 健康檢查: http://0.0.0.0:5000/health
+🎯 DCN-0015第二階段完成: ASL格式驗證強化
+📋 P1-2 API端點: AM(19) + BK(15) = 34個端點
+🔧 第二階段完成狀態: 完全就緒
+📦 核心模組狀態: Firebase(✅), AM(✅)
+✨ 容錯機制完全移除: 100%信任BL層標準格式
+🎉 第二階段修正完成: 統一使用success判斷邏輯
+🚀 ASL v2.1.2已完全就緒，第二階段目標達成
