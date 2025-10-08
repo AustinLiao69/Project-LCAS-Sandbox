@@ -378,7 +378,10 @@ app.use((req, res, next) => {
 
   // 生成請求ID
   const generateRequestId = () => {
-    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // 使用與1311.FS.js一致的格式
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    return `req_${timestamp}_${random}`;
   };
 
   // 檢測使用者模式（第三階段強化版）
@@ -1145,8 +1148,8 @@ app.post('/api/v1/transactions', async (req, res) => {
       ledgerId: req.body.ledgerId,
       paymentMethod: req.body.paymentMethod,
       date: req.body.date,
-      userId: req.body.userId || Object.keys(testData.authentication_test_data?.valid_users || {})[0] || 'default_test_user',
-      processId: require('crypto').randomUUID().substring(0, 8)
+      userId: req.body.userId || Object.keys(testData.authentication_test_data?.valid_users || {})[0] || 'default_test_user'
+      // processId將在BL層使用1311.FS.js的標準函數生成
     };
 
     const result = await BK.BK_createTransaction(transactionData);
