@@ -275,7 +275,7 @@ MM 	 DD 	 Description 	    Progress
 10	3	 修改0501文件 	 Ongoing
 10	3	 打通SIT測試環境：SIT-TC-008 	 Closed
 10	4	 修改0501文件：P1-2 API端點未完全測試	 Ongoing
-10	4	 打通SIT測試環境：SIT-TC-008 	 Ongoing
+10	4	 打通SIT測試環境：SIT-TC-008 	 Closed
 10	4	 BL層文件：10,11,12,14資料夾需要重新整理 	 Open
 10	4	 BL層文件：11資料夾文件需補齊 	 Open
 10	4	 撰寫9832. 撰寫Contract表 	 Open
@@ -285,3 +285,4 @@ MM 	 DD 	 Description 	    Progress
 10	7	 計畫用VScode部署Flutter app	 Open
 10	7	 打通SIT測試環境：SIT-TC-026~31 	 Ongoing
 10	7	 打通SIT測試環境：處理DCN-0015 格式標準化不完整問題 	 Ongoing
+10	8	 打通SIT測試：階段二 	 Ongoing
