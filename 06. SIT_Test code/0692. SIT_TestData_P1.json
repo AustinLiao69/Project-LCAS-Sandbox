@@ -422,8 +422,8 @@
       "quick_booking_timeout": 12000
     },
     "test_transactions": {
-      "test-transaction-001": {
-        "收支ID": "test-transaction-001",
+      "txn_1728387052123_a4b2c8": {
+        "收支ID": "txn_1728387052123_a4b2c8",
         "日期": "2025/10/08",
         "時間": "10:00:00",
         "收入": "",
@@ -435,8 +435,8 @@
         "支付方式": "現金",
         "UID": "expert_mode_user_001"
       },
-      "test-transaction-002": {
-        "收支ID": "test-transaction-002",
+      "txn_1728387112456_d8f3e9": {
+        "收支ID": "txn_1728387112456_d8f3e9",
         "日期": "2025/10/08",
         "時間": "11:00:00",
         "收入": "",
@@ -448,8 +448,8 @@
         "支付方式": "信用卡",
         "UID": "expert_mode_user_002"
       },
-      "test-transaction-003": {
-        "收支ID": "test-transaction-003",
+      "txn_1728387172789_f2a5b7": {
+        "收支ID": "txn_1728387172789_f2a5b7",
         "日期": "2025/10/08",
         "時間": "12:00:00",
         "收入": "2000",
@@ -1298,7 +1298,7 @@
               "endpoint": "/api/v1/transactions/{id}",
               "method": "GET",
               "test_data": {
-                "transactionId": "test-transaction-001"
+                "transactionId": "txn_1728387052123_a4b2c8"
               }
             },
             {
@@ -1306,7 +1306,7 @@
               "endpoint": "/api/v1/transactions/{id}",
               "method": "PUT",
               "test_data": {
-                "transactionId": "test-transaction-002",
+                "transactionId": "txn_1728387112456_d8f3e9",
                 "amount": 300,
                 "description": "交易更新測試",
                 "categoryId": "updated-category"
@@ -1317,7 +1317,7 @@
               "endpoint": "/api/v1/transactions/{id}",
               "method": "DELETE",
               "test_data": {
-                "transactionId": "test-transaction-003"
+                "transactionId": "txn_1728387172789_f2a5b7"
               }
             },
             {
