@@ -447,7 +447,7 @@ async function BK_initialize() {
     initMessages.push("Firebase初始化: 成功");
 
     // 驗證API端點支援
-    initMessages.push(`支援API端點: ${Object.keys(BK_CONFIG.API_ENDPOINTS).length}個`);
+    initMessages.push("支援API端點: " + Object.keys(BK_CONFIG.API_ENDPOINTS).length + "個");
 
     BK_logInfo(initMessages.join(" | "), "系統初始化", "", "BK_initialize");
 
