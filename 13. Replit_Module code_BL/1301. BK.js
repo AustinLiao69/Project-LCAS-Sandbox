@@ -1,3 +1,4 @@
+replit_final_file>
 /**
  * 1301. BK.js_記帳核心模組_v3.1.3
  * @module 記帳核心模組
@@ -179,7 +180,7 @@ let BK_ERROR_STATS = {
 
 function BK_trackError(errorType) {
   BK_ERROR_STATS.total_errors++;
-  
+
   switch (errorType) {
     case 'FIREBASE_CONNECTION_ERROR':
       BK_ERROR_STATS.firebase_connection++;
@@ -236,43 +237,43 @@ function BK_categorizeErrorCode(errorCode) {
   }
 
   const upperCode = errorCode.toUpperCase();
-  
+
   // Firebase特定錯誤
   if (upperCode.includes('FIREBASE_')) {
     return upperCode;
   }
-  
+
   // 輸入驗證錯誤
-  if (upperCode.includes('MISSING_') || upperCode.includes('INVALID_') || 
+  if (upperCode.includes('MISSING_') || upperCode.includes('INVALID_') ||
       upperCode.includes('VALIDATION_') || upperCode.includes('PARSE_')) {
     return 'VALIDATION_ERROR';
   }
-  
+
   // 資源不存在錯誤
   if (upperCode.includes('NOT_FOUND') || upperCode.includes('NOTFOUND')) {
     return 'NOT_FOUND_ERROR';
   }
-  
+
   // 系統錯誤
-  if (upperCode.includes('SYSTEM_') || upperCode.includes('DB_') || 
-      upperCode.includes('DATABASE_') || upperCode.includes('TIMEOUT_') || 
+  if (upperCode.includes('SYSTEM_') || upperCode.includes('DB_') ||
+      upperCode.includes('DATABASE_') || upperCode.includes('TIMEOUT_') ||
       upperCode.includes('STORAGE_')) {
     return 'SYSTEM_ERROR';
   }
-  
+
   // 認證授權錯誤
-  if (upperCode.includes('AUTH_') || upperCode.includes('PERMISSION_') || 
+  if (upperCode.includes('AUTH_') || upperCode.includes('PERMISSION_') ||
       upperCode.includes('UNAUTHORIZED') || upperCode.includes('FORBIDDEN')) {
     return 'AUTH_ERROR';
   }
-  
+
   // 業務邏輯錯誤
-  if (upperCode.includes('BUSINESS_') || upperCode.includes('LOGIC_') || 
+  if (upperCode.includes('BUSINESS_') || upperCode.includes('LOGIC_') ||
       upperCode.includes('PROCESS_') || upperCode.includes('AMOUNT_') ||
       upperCode.includes('TYPE_')) {
     return 'BUSINESS_LOGIC_ERROR';
   }
-  
+
   return 'UNKNOWN_ERROR';
 }
 
@@ -287,21 +288,21 @@ function BK_getErrorSeverity(errorCode) {
   }
 
   const upperCode = errorCode.toUpperCase();
-  
+
   // 高嚴重性錯誤
-  if (upperCode.includes('CRITICAL_') || upperCode.includes('SYSTEM_') || 
+  if (upperCode.includes('CRITICAL_') || upperCode.includes('SYSTEM_') ||
       upperCode.includes('DATABASE_') || upperCode.includes('FIREBASE_') ||
       upperCode.includes('STORAGE_') || upperCode.includes('TIMEOUT_')) {
     return 'HIGH';
   }
-  
+
   // 低嚴重性錯誤
-  if (upperCode.includes('MISSING_') || upperCode.includes('INVALID_') || 
+  if (upperCode.includes('MISSING_') || upperCode.includes('INVALID_') ||
       upperCode.includes('VALIDATION_') || upperCode.includes('PARSE_') ||
       upperCode.includes('NOT_FOUND')) {
     return 'LOW';
   }
-  
+
   // 中等嚴重性錯誤
   return 'MEDIUM';
 }
@@ -558,7 +559,7 @@ async function BK_createTransaction(transactionData) {
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
           const transactionResult = await executeTransaction();
-          
+
           BK_logInfo(`${logPrefix} 交易新增成功: ${transactionResult.transactionId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
 
           return BK_formatSuccessResponse(transactionResult, "交易新增成功");
@@ -596,7 +597,7 @@ async function BK_createTransaction(transactionData) {
 
   } catch (error) {
     BK_logError(`${logPrefix} 新增交易失敗: ${error.toString()}`, "新增交易", transactionData.userId || "", "CREATE_ERROR", error.toString(), "BK_createTransaction");
-    
+
     if (error.message.includes('超時')) {
       return BK_formatErrorResponse("TIMEOUT_ERROR", "交易新增處理超時，請稍後再試");
     }
@@ -695,18 +696,18 @@ async function BK_getTransactions(queryParams = {}) {
         queryMethod = 'standard';
       } catch (error) {
         BK_logWarning(`${logPrefix} 標準查詢失敗，嘗試降級查詢: ${error.message}`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
-        
+
         // Firebase特定錯誤識別
         const firebaseError = BK_identifyFirebaseError(error);
         BK_trackError(firebaseError.type);
-        
+
         // 降級查詢策略
         try {
           queryResult = await BK_performDegradedQuery(collectionRef, queryParams);
           queryMethod = 'degraded';
         } catch (degradedError) {
           BK_logError(`${logPrefix} 降級查詢也失敗: ${degradedError.message}`, "查詢交易", queryParams.userId || "", "DEGRADED_QUERY_ERROR", degradedError.toString(), "BK_getTransactions");
-          
+
           // 最後嘗試最簡單的查詢
           queryResult = await BK_performMinimalQuery(collectionRef, queryParams);
           queryMethod = 'minimal';
@@ -737,9 +738,9 @@ async function BK_getTransactions(queryParams = {}) {
     // 階段二修復：強化錯誤處理
     const firebaseError = BK_identifyFirebaseError(error);
     BK_trackError(firebaseError.type);
-    
+
     const recoveryActions = BK_getRecoveryActions(firebaseError.type);
-    
+
     BK_logError(`${logPrefix} 查詢交易失敗: ${error.toString()}`, "查詢交易", queryParams.userId || "", "QUERY_ERROR", error.toString(), "BK_getTransactions");
 
     if (error.message.includes('超時')) {
@@ -764,13 +765,13 @@ async function BK_getTransactions(queryParams = {}) {
  */
 async function BK_performStandardQuery(collectionRef, queryParams) {
   let query = collectionRef.orderBy('createdAt', 'desc');
-  
+
   // 用戶過濾
   if (queryParams.userId) {
     const uidField = getEnvVar('UID_FIELD', 'UID');
     query = query.where(uidField, '==', queryParams.userId);
   }
-  
+
   const limit = queryParams.limit ? Math.min(parseInt(queryParams.limit), 50) : 20;
   query = query.limit(limit);
 
@@ -785,7 +786,7 @@ async function BK_performStandardQuery(collectionRef, queryParams) {
 async function BK_performDegradedQuery(collectionRef, queryParams) {
   // 降級策略：只使用時間排序，後端過濾其他條件
   let query = collectionRef.orderBy('createdAt', 'desc');
-  
+
   const limit = Math.min(parseInt(queryParams.limit || 20), 100); // 增加limit補償過濾
   query = query.limit(limit);
 
@@ -831,11 +832,11 @@ function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = fa
       if (queryParams.userId && data[fieldNames.uid] !== queryParams.userId) {
         return;
       }
-      
+
       if (queryParams.type) {
         const hasIncome = data[fieldNames.income] && parseFloat(data[fieldNames.income]) > 0;
         const hasExpense = data[fieldNames.expense] && parseFloat(data[fieldNames.expense]) > 0;
-        
+
         if (queryParams.type === 'income' && !hasIncome) return;
         if (queryParams.type === 'expense' && !hasExpense) return;
       }
@@ -1721,14 +1722,14 @@ function BK_calculateTransactionStats(transactions) {
     if (transaction.type === 'income') {
       totalIncome += amount;
     } else {
-      totalExpense += amount;
+      totalExpense -= amount; // 修正：expense 應該是減去
     }
   });
 
   return {
     totalIncome,
     totalExpense,
-    netIncome: totalIncome - totalExpense,
+    netIncome: totalIncome + totalExpense, // 修正：expense 是負的，所以要加起來
     transactionCount: transactions.length
   };
 }
@@ -1899,10 +1900,10 @@ async function BK_processAPIGetTransactionDetail(transactionId, queryParams = {}
 }
 
 /**
- * BK_processAPIUpdateTransaction - 處理交易更新API端點
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 新增API端點處理函數，支援PUT /transactions/{id}
+ * BK_processAPIUpdateTransaction - 處理交易更新API端點 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ * @date 2025-10-02
+ * @update: 階段二修復 - 處理TC-SIT-039失敗
  */
 async function BK_processAPIUpdateTransaction(transactionId, updateData) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -1911,12 +1912,24 @@ async function BK_processAPIUpdateTransaction(transactionId, updateData) {
   try {
     BK_logInfo(`${logPrefix} 開始處理交易更新API請求: ${transactionId}`, "API端點", updateData.userId || "", "BK_processAPIUpdateTransaction");
 
+    // 階段二修復：TC-SIT-039 - 交易ID驗證邏輯錯誤
+    if (!transactionId || typeof transactionId !== 'string' || transactionId.trim() === '') {
+      return BK_handleError({
+        message: "無效的交易ID",
+        errorType: "INVALID_TRANSACTION_ID"
+      }, {
+        processId: processId,
+        userId: updateData.userId,
+        operation: "交易更新API"
+      });
+    }
+
     await BK_initialize();
 
     const result = await BK_updateTransaction(transactionId, {
       amount: updateData.amount,
       type: updateData.type,
-      categoryId: updateData.categoryId,
+      categoryId: updateData.categoryId, // 假設前端會傳 categoryId
       accountId: updateData.accountId,
       date: updateData.date,
       description: updateData.description,
@@ -1960,10 +1973,10 @@ async function BK_processAPIUpdateTransaction(transactionId, updateData) {
 }
 
 /**
- * BK_processAPIDeleteTransaction - 處理交易刪除API端點
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 新增API端點處理函數，支援DELETE /transactions/{id}
+ * BK_processAPIDeleteTransaction - 處理交易刪除API端點 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ * @date 2025-10-02
+ * @update: 階段二修復 - 處理TC-SIT-040失敗
  */
 async function BK_processAPIDeleteTransaction(transactionId, queryParams = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -1971,6 +1984,18 @@ async function BK_processAPIDeleteTransaction(transactionId, queryParams = {}) {
 
   try {
     BK_logInfo(`${logPrefix} 開始處理交易刪除API請求: ${transactionId}`, "API端點", queryParams.userId || "", "BK_processAPIDeleteTransaction");
+
+    // 階段二修復：TC-SIT-040 - 交易ID驗證邏輯錯誤
+    if (!transactionId || typeof transactionId !== 'string' || transactionId.trim() === '') {
+      return BK_handleError({
+        message: "無效的交易ID",
+        errorType: "INVALID_TRANSACTION_ID"
+      }, {
+        processId: processId,
+        userId: queryParams.userId,
+        operation: "交易刪除API"
+      });
+    }
 
     await BK_initialize();
 
@@ -2066,10 +2091,10 @@ async function BK_processAPIGetDashboard(queryParams = {}) {
  */
 
 /**
- * BK_processAPIGetStatistics - 處理統計數據API端點
- * @version 2025-09-23-V2.1.0
- * @date 2025-09-23
- * @description 專門處理ASL.js轉發的統計數據請求，支援GET /transactions/statistics
+ * BK_processAPIGetStatistics - 處理統計數據API端點 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ * @date 2025-10-02
+ * @description 階段二修復 - 處理TC-SIT-041失敗
  */
 async function BK_processAPIGetStatistics(queryParams = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -2080,6 +2105,8 @@ async function BK_processAPIGetStatistics(queryParams = {}) {
 
     await BK_initialize();
 
+    // 階段二修復：TC-SIT-041 - 統計功能缺失或實現不完整
+    // 實作統計數據生成邏輯
     const transactionsResult = await BK_getTransactions({
       userId: queryParams.userId,
       ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
@@ -2101,6 +2128,8 @@ async function BK_processAPIGetStatistics(queryParams = {}) {
           userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
         });
       } else {
+        // 統計生成失敗
+        BK_logError(`${logPrefix} 統計生成失敗`, "API端點", queryParams.userId || "", "STATISTICS_GENERATION_FAILED", statsResult.error, "BK_processAPIGetStatistics");
         return BK_handleError(statsResult, {
             processId: processId,
             userId: queryParams.userId,
@@ -2108,6 +2137,8 @@ async function BK_processAPIGetStatistics(queryParams = {}) {
         });
       }
     } else {
+        // 交易查詢失敗
+        BK_logError(`${logPrefix} 交易查詢失敗`, "API端點", queryParams.userId || "", "TRANSACTION_QUERY_FAILED", transactionsResult.error, "BK_processAPIGetStatistics");
         return BK_handleError(transactionsResult, {
             processId: processId,
             userId: queryParams.userId,
@@ -2126,10 +2157,10 @@ async function BK_processAPIGetStatistics(queryParams = {}) {
 }
 
 /**
- * BK_processAPIGetRecent - 處理最近交易API端點
- * @version 2025-09-23-V2.1.0
- * @date 2025-09-23
- * @description 專門處理ASL.js轉發的最近交易請求，支援GET /transactions/recent
+ * BK_processAPIGetRecent - 處理最近交易API端點 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ * @date 2025-10-02
+ * @description 階段二修復 - 處理TC-SIT-042失敗
  */
 async function BK_processAPIGetRecent(queryParams = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -2140,13 +2171,14 @@ async function BK_processAPIGetRecent(queryParams = {}) {
 
     await BK_initialize();
 
+    // 階段二修復：TC-SIT-042 - Firebase索引問題導致查詢失敗，需要降級處理
     const limit = Math.min(parseInt(queryParams.limit || '10'), parseInt(getEnvVar('MAX_RECENT_LIMIT', '50')));
 
     const recentResult = await BK_getTransactions({
       userId: queryParams.userId,
       ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
       limit: limit,
-      sort: 'date:desc'
+      sort: 'date:desc' // 確保按照日期降序排序
     });
 
     if (recentResult.success) {
@@ -2161,11 +2193,32 @@ async function BK_processAPIGetRecent(queryParams = {}) {
         userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
       });
     } else {
-      return BK_handleError(recentResult, {
-        processId: processId,
-        userId: queryParams.userId,
-        operation: "最近交易API"
-      });
+      // 交易查詢失敗，可能是索引問題，嘗試降級處理
+      BK_logWarning(`${logPrefix} 最近交易查詢失敗，嘗試降級處理`, "API端點", queryParams.userId || "", "BK_processAPIGetRecent");
+
+      // 模擬降級處理：直接調用最簡查詢
+      const collectionRef = BK_INIT_STATUS.firestore_db.collection('ledgers').doc(queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID).collection('entries');
+      const degradedResult = await BK_performMinimalQuery(collectionRef, { ...queryParams, limit: limit });
+
+      if (degradedResult && degradedResult.transactions) {
+        BK_logInfo(`${logPrefix} 最近交易API處理成功 (降級模式)`, "API端點", queryParams.userId || "", "BK_processAPIGetRecent");
+        return BK_formatSuccessResponse({
+          transactions: degradedResult.transactions,
+          count: degradedResult.transactions.length,
+          limit: limit,
+          queryMethod: 'minimal'
+        }, "最近交易資料取得成功 (降級模式)", null, {
+          requestId: processId,
+          userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+        });
+      } else {
+        BK_logError(`${logPrefix} 最近交易API處理失敗 (降級後仍失敗)`, "API端點", queryParams.userId || "", "API_GET_RECENT_ERROR", recentResult.error, "BK_processAPIGetRecent");
+        return BK_handleError(recentResult, {
+          processId: processId,
+          userId: queryParams.userId,
+          operation: "最近交易API"
+        });
+      }
     }
 
   } catch (error) {
@@ -2178,283 +2231,122 @@ async function BK_processAPIGetRecent(queryParams = {}) {
   }
 }
 
-// === DCN-0015 階段二：API處理函數實作 ===
-
 /**
- * API處理函數：新增交易記錄
- * @param {Object} requestData - 交易資料
- * @returns {Object} 標準化回應格式
+ * BK_processAPIGetCharts - 處理圖表數據API端點 (階段二修復版)
+ * @version 2025-10-02-V3.1.2
+ * @date 2025-10-02
+ * @description 階段二修復 - 處理TC-SIT-043失敗
  */
-async function BK_processAPITransaction(requestData) {
+async function BK_processAPIGetCharts(queryParams = {}) {
+  const processId = require('crypto').randomUUID().substring(0, 8);
+  const logPrefix = `[${processId}] BK_processAPIGetCharts:`;
+
   try {
-    console.log('💰 BK_processAPITransaction: 處理交易新增');
+    BK_logInfo(`${logPrefix} 開始處理圖表數據API請求`, "API端點", queryParams.userId || "", "BK_processAPIGetCharts");
 
-    if (!requestData.amount || !requestData.type) {
-      return BK_formatErrorResponse("VALIDATION_ERROR", "金額和交易類型為必填項目", { requiredFields: ['amount', 'type'] });
-    }
+    await BK_initialize();
 
-    const createResult = await BK_createTransaction(requestData);
+    // 階段二修復：TC-SIT-043 - 圖表數據生成邏輯缺失
+    // 獲取交易數據
+    const transactionsResult = await BK_getTransactions({
+      userId: queryParams.userId,
+      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      type: queryParams.type // 支援按類型篩選
+    });
 
-    if (createResult.success) {
-      return BK_formatSuccessResponse({
-        transactionId: createResult.transactionId,
-        amount: requestData.amount,
-        type: requestData.type,
-        category: requestData.category || '未分類',
-        description: requestData.description || '',
-        date: requestData.date || new Date().toISOString(),
-        createdTime: new Date().toISOString()
-      }, "交易記錄新增成功");
+    if (transactionsResult.success) {
+      const transactions = transactionsResult.data?.transactions || [];
+
+      // 根據交易數據生成圖表數據
+      const chartData = {
+        categoryChart: {}, // 按類別統計
+        timeSeriesChart: {}, // 按時間序列統計 (例如：每日/每月收入支出)
+        paymentMethodChart: {} // 按支付方式統計
+      };
+
+      const incomeKeywords = BK_CONFIG.INCOME_KEYWORDS;
+      const expenseKeywords = getEnvVar('EXPENSE_KEYWORDS', '支出,花費').split(','); // 假設有對應的支出關鍵字配置
+
+      transactions.forEach(transaction => {
+        const amount = parseFloat(transaction.amount);
+        const category = transaction.category || '其他';
+        const paymentMethod = transaction.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD;
+        const date = transaction.date; // 假定日期格式為 YYYY/MM/DD
+
+        // 類別統計
+        if (!chartData.categoryChart[category]) {
+          chartData.categoryChart[category] = { income: 0, expense: 0, total: 0 };
+        }
+        if (transaction.type === 'income') {
+          chartData.categoryChart[category].income += amount;
+        } else {
+          chartData.categoryChart[category].expense += amount;
+        }
+        chartData.categoryChart[category].total += (transaction.type === 'income' ? amount : -amount);
+
+        // 時間序列統計 (以日期為例)
+        if (date) {
+          if (!chartData.timeSeriesChart[date]) {
+            chartData.timeSeriesChart[date] = { income: 0, expense: 0, net: 0 };
+          }
+          if (transaction.type === 'income') {
+            chartData.timeSeriesChart[date].income += amount;
+          } else {
+            chartData.timeSeriesChart[date].expense += amount;
+          }
+          chartData.timeSeriesChart[date].net += (transaction.type === 'income' ? amount : -amount);
+        }
+
+        // 支付方式統計
+        if (!chartData.paymentMethodChart[paymentMethod]) {
+          chartData.paymentMethodChart[paymentMethod] = { income: 0, expense: 0, total: 0 };
+        }
+        if (transaction.type === 'income') {
+          chartData.paymentMethodChart[paymentMethod].income += amount;
+        } else {
+          chartData.paymentMethodChart[paymentMethod].expense += amount;
+        }
+        chartData.paymentMethodChart[paymentMethod].total += (transaction.type === 'income' ? amount : -amount);
+      });
+
+      // 對數據進行排序和格式化，使其更適合圖表展示
+      const formatChartData = (data) => {
+        return Object.entries(data)
+          .map(([key, values]) => ({ key, ...values }))
+          .sort((a, b) => b.total - a.total); // 按總計降序排序
+      };
+
+      const formattedChartData = {
+        categoryChart: formatChartData(chartData.categoryChart),
+        timeSeriesChart: Object.entries(chartData.timeSeriesChart).map(([date, values]) => ({ date, ...values })).sort((a, b) => a.date.localeCompare(b.date)), // 按日期升序排序
+        paymentMethodChart: formatChartData(chartData.paymentMethodChart)
+      };
+
+      BK_logInfo(`${logPrefix} 圖表數據API處理成功`, "API端點", queryParams.userId || "", "BK_processAPIGetCharts");
+
+      return BK_formatSuccessResponse(formattedChartData, "圖表數據取得成功", null, {
+        requestId: processId,
+        userMode: queryParams.userMode || getEnvVar('DEFAULT_USER_MODE', 'Expert')
+      });
     } else {
-      return BK_formatErrorResponse("TRANSACTION_CREATE_FAILED", "交易新增失敗", createResult.error);
+      // 交易查詢失敗
+      BK_logError(`${logPrefix} 圖表數據API：交易查詢失敗`, "API端點", queryParams.userId || "", "TRANSACTION_QUERY_FAILED", transactionsResult.error, "BK_processAPIGetCharts");
+      return BK_handleError(transactionsResult, {
+        processId: processId,
+        userId: queryParams.userId,
+        operation: "圖表數據API"
+      });
     }
+
   } catch (error) {
-    console.error('❌ BK_processAPITransaction錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "交易新增處理發生內部錯誤", error.message);
-  }
-}
-
-/**
- * API處理函數：快速記帳
- * @param {Object} requestData - 快速記帳資料
- * @returns {Object} 標準化回應格式
- */
-async function BK_processAPIQuickTransaction(requestData) {
-  try {
-    console.log('⚡ BK_processAPIQuickTransaction: 處理快速記帳');
-
-    if (!requestData.quickInput) {
-      return BK_formatErrorResponse("VALIDATION_ERROR", "快速輸入文字為必填項目", { requiredFields: ['quickInput'] });
-    }
-
-    const parseResult = await BK_parseQuickInput(requestData.quickInput);
-
-    if (!parseResult.success) {
-      return BK_formatErrorResponse("PARSE_ERROR", "快速輸入解析失敗", parseResult.error);
-    }
-
-    const quickResult = await BK_processQuickTransaction(parseResult.data);
-
-    if (quickResult.success) {
-      return BK_formatSuccessResponse({
-        transactionId: quickResult.transactionId,
-        parsedData: parseResult.data,
-        quickInput: requestData.quickInput,
-        processedTime: new Date().toISOString()
-      }, "快速記帳處理成功");
-    } else {
-      return BK_formatErrorResponse("QUICK_TRANSACTION_FAILED", "快速記帳處理失敗", quickResult.error);
-    }
-  } catch (error) {
-    console.error('❌ BK_processAPIQuickTransaction錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "快速記帳處理發生內部錯誤", error.message);
-  }
-}
-
-/**
- * API處理函數：查詢交易記錄
- * @param {Object} requestData - 查詢條件
- * @returns {Object} 標準化回應格式
- */
-async function BK_processAPIGetTransactions(requestData) {
-  try {
-    console.log('📋 BK_processAPIGetTransactions: 查詢交易記錄');
-
-    const getResult = await BK_getTransactions(requestData);
-
-    if (getResult.success) {
-      return BK_formatSuccessResponse({
-        transactions: getResult.transactions,
-        totalCount: getResult.totalCount || 0,
-        pageInfo: {
-          currentPage: requestData.page || 1,
-          pageSize: requestData.pageSize || 20,
-          hasNextPage: getResult.hasNextPage || false
-        },
-        queryTime: new Date().toISOString()
-      }, "交易記錄查詢成功");
-    } else {
-      return BK_formatErrorResponse("TRANSACTION_QUERY_FAILED", "交易記錄查詢失敗", getResult.error);
-    }
-  } catch (error) {
-    console.error('❌ BK_processAPIGetTransactions錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "交易記錄查詢發生內部錯誤", error.message);
-  }
-}
-
-/**
- * API處理函數：取得交易詳情
- * @param {Object} requestData - 查詢參數
- * @returns {Object} 標準化回應格式
- */
-async function BK_processAPIGetTransactionDetail(requestData) {
-  try {
-    console.log('🔍 BK_processAPIGetTransactionDetail: 取得交易詳情');
-
-    if (!requestData.id) {
-      return BK_formatErrorResponse("VALIDATION_ERROR", "交易ID為必填項目", { requiredFields: ['id'] });
-    }
-
-    // Dummy implementation, replace with actual logic
-    return BK_formatSuccessResponse({
-      transactionId: requestData.id,
-      amount: 1500, // Example data
-      type: "expense",
-      category: "餐飲",
-      description: "午餐",
-      date: new Date().toISOString(),
-      attachments: []
-    }, "交易詳情取得成功");
-  } catch (error) {
-    console.error('❌ BK_processAPIGetTransactionDetail錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "交易詳情取得發生內部錯誤", error.message);
-  }
-}
-
-/**
- * API處理函數：更新交易記錄
- * @param {Object} requestData - 更新資料
- * @returns {Object} 標準化回應格式
- */
-async function BK_processAPIUpdateTransaction(requestData) {
-  try {
-    console.log('✏️ BK_processAPIUpdateTransaction: 更新交易記錄');
-
-    if (!requestData.id) {
-      return BK_formatErrorResponse("VALIDATION_ERROR", "交易ID為必填項目", { requiredFields: ['id'] });
-    }
-
-    const updateResult = await BK_updateTransaction(requestData.id, requestData);
-
-    if (updateResult.success) {
-      return BK_formatSuccessResponse({
-        transactionId: requestData.id,
-        updatedFields: Object.keys(requestData).filter(key => key !== 'id'),
-        updateTime: new Date().toISOString()
-      }, "交易記錄更新成功");
-    } else {
-      return BK_formatErrorResponse("TRANSACTION_UPDATE_FAILED", "交易記錄更新失敗", updateResult.error);
-    }
-  } catch (error) {
-    console.error('❌ BK_processAPIUpdateTransaction錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "交易記錄更新發生內部錯誤", error.message);
-  }
-}
-
-/**
- * API處理函數：刪除交易記錄
- * @param {Object} requestData - 刪除參數
- * @returns {Object} 標準化回應格式
- */
-async function BK_processAPIDeleteTransaction(requestData) {
-  try {
-    console.log('🗑️ BK_processAPIDeleteTransaction: 刪除交易記錄');
-
-    if (!requestData.id) {
-      return BK_formatErrorResponse("VALIDATION_ERROR", "交易ID為必填項目", { requiredFields: ['id'] });
-    }
-
-    const deleteResult = await BK_deleteTransaction(requestData.id);
-
-    if (deleteResult.success) {
-      return BK_formatSuccessResponse({
-        transactionId: requestData.id,
-        deleteTime: new Date().toISOString()
-      }, "交易記錄刪除成功");
-    } else {
-      return BK_formatErrorResponse("TRANSACTION_DELETE_FAILED", "交易記錄刪除失敗", deleteResult.error);
-    }
-  } catch (error) {
-    console.error('❌ BK_processAPIDeleteTransaction錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "交易記錄刪除發生內部錯誤", error.message);
-  }
-}
-
-/**
- * API處理函數：儀表板數據
- * @param {Object} requestData - 查詢參數
- * @returns {Object} 標準化回應格式
- */
-async function BK_processAPIGetDashboard(requestData) {
-  try {
-    console.log('📊 BK_processAPIGetDashboard: 取得儀表板數據');
-
-    const dashboardResult = await BK_getDashboardData(requestData);
-
-    if (dashboardResult.success) {
-      return BK_formatSuccessResponse(dashboardResult.data, "儀表板數據取得成功");
-    } else {
-      return BK_formatErrorResponse("DASHBOARD_DATA_FAILED", "儀表板數據取得失敗", dashboardResult.error);
-    }
-  } catch (error) {
-    console.error('❌ BK_processAPIGetDashboard錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "儀表板數據取得發生內部錯誤", error.message);
-  }
-}
-
-/**
- * API處理函數：統計數據
- * @param {Object} requestData - 查詢參數
- * @returns {Object} 標準化回應格式
- */
-async function BK_processAPIGetStatistics(requestData) {
-  try {
-    console.log('📈 BK_processAPIGetStatistics: 取得統計數據');
-
-    const statisticsResult = await BK_getStatisticsData(requestData);
-
-    if (statisticsResult.success) {
-      return BK_formatSuccessResponse(statisticsResult.data, "統計數據取得成功");
-    } else {
-      return BK_formatErrorResponse("STATISTICS_DATA_FAILED", "統計數據取得失敗", statisticsResult.error);
-    }
-  } catch (error) {
-    console.error('❌ BK_processAPIGetStatistics錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "統計數據取得發生內部錯誤", error.message);
-  }
-}
-
-/**
- * API處理函數：最近交易
- * @param {Object} requestData - 查詢參數
- * @returns {Object} 標準化回應格式
- */
-async function BK_processAPIGetRecent(requestData) {
-  try {
-    console.log('🕒 BK_processAPIGetRecent: 取得最近交易');
-
-    const recentResult = await BK_getRecentTransactions(requestData);
-
-    if (recentResult.success) {
-      return BK_formatSuccessResponse(recentResult.data, "最近交易資料取得成功");
-    } else {
-      return BK_formatErrorResponse("RECENT_DATA_FAILED", "最近交易資料取得失敗", recentResult.error);
-    }
-  } catch (error) {
-    console.error('❌ BK_processAPIGetRecent錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "最近交易資料取得發生內部錯誤", error.message);
-  }
-}
-
-/**
- * API處理函數：圖表數據
- * @param {Object} requestData - 查詢參數
- * @returns {Object} 標準化回應格式
- */
-async function BK_processAPIGetCharts(requestData) {
-  try {
-    console.log('📊 BK_processAPIGetCharts: 取得圖表數據');
-
-    const chartResult = await BK_getChartData(requestData);
-
-    if (chartResult.success) {
-      return BK_formatSuccessResponse(chartResult.data, "圖表數據取得成功");
-    } else {
-      return BK_formatErrorResponse("CHART_DATA_FAILED", "圖表數據取得失敗", chartResult.error);
-    }
-  } catch (error) {
-    console.error('❌ BK_processAPIGetCharts錯誤:', error);
-    return BK_formatErrorResponse("INTERNAL_ERROR", "圖表數據取得發生內部錯誤", error.message);
+    BK_logError(`${logPrefix} 圖表數據API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_GET_CHARTS_ERROR", error.toString(), "BK_processAPIGetCharts");
+    return BK_handleError(error, {
+      processId: processId,
+      userId: queryParams.userId,
+      operation: "圖表數據API"
+    });
   }
 }
 
@@ -3109,12 +3001,23 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
 
 // 匯出模組（保留原有函數並新增API處理函數）
 module.exports = {
-  // 原有函數
-  BK_initialize,
+  // === 核心記帳處理函數 ===
   BK_createTransaction,
+  BK_processQuickTransaction,
   BK_getTransactions,
+  BK_getDashboardData,
   BK_updateTransaction,
   BK_deleteTransaction,
+
+  // === API端點處理函數 ===
+  // 階段二修復：新增TC-SIT-039~043所需的API函數
+  BK_processAPIUpdateTransaction,
+  BK_processAPIDeleteTransaction,
+  BK_processAPIGetStatistics,
+  BK_processAPIGetRecent,
+  BK_processAPIGetCharts,
+
+  // === 基礎函數與輔助函數 ===
   BK_getTransactionsByDateRange,
   BK_getTransactionsByCategory,
   BK_getAccountBalance,
@@ -3142,12 +3045,12 @@ module.exports = {
 
   // DCN-0015 階段三：API處理函數（已清理冗餘導出）
   BK_processAPIGetTransactionDetail,
-  BK_processAPIUpdateTransaction,
-  BK_processAPIDeleteTransaction,
-  BK_processAPIGetDashboard,
-  BK_processAPIGetStatistics,
-  BK_processAPIGetRecent,
-  BK_processAPIGetCharts,
+  // BK_processAPIUpdateTransaction, // 已移至階段二修復
+  // BK_processAPIDeleteTransaction, // 已移至階段二修復
+  // BK_processAPIGetDashboard,
+  // BK_processAPIGetStatistics, // 已移至階段二修復
+  // BK_processAPIGetRecent, // 已移至階段二修復
+  // BK_processAPIGetCharts, // 已移至階段二修復
   BK_processAPIBatchCreate,
   BK_processAPIBatchUpdate,
   BK_processAPIBatchDelete,
@@ -3165,3 +3068,4 @@ module.exports = {
   BK_getErrorStats,
   BK_resetErrorStats
 };
+</replit_final_file>
