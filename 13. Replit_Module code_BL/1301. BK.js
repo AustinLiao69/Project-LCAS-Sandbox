@@ -1,4 +1,6 @@
-replit_final_file>
+` tag, which is incorrectly placed and causing the syntax error.
+
+<replit_final_file>
 /**
  * 1301. BK.js_記帳核心模組_v3.1.3
  * @module 記帳核心模組
@@ -2326,7 +2328,7 @@ async function BK_processAPIGetCharts(queryParams = {}) {
       });
     } else {
       // 交易查詢失敗
-      BK_logError(`${logPrefix} 圖表數據API：交易查詢失敗`, "API端點", queryParams.userId || "", "TRANSACTION_QUERY_FAILED", transactionsResult.error, "BK_processAPIGetCharts");
+      BK_logError(`${logPrefix}圖表數據API：交易查詢失敗`, "API端點", queryParams.userId || "", "TRANSACTION_QUERY_FAILED", transactionsResult.error, "BK_processAPIGetCharts");
       return BK_handleError(transactionsResult, {
         processId: processId,
         userId: queryParams.userId,
@@ -2335,7 +2337,7 @@ async function BK_processAPIGetCharts(queryParams = {}) {
     }
 
   } catch (error) {
-    BK_logError(`${logPrefix} 圖表數據API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_GET_CHARTS_ERROR", error.toString(), "BK_processAPIGetCharts");
+    BK_logError(`${logPrefix}圖表數據API處理失敗: ${error.toString()}`, "API端點", queryParams.userId || "", "API_GET_CHARTS_ERROR", error.toString(), "BK_processAPIGetCharts");
     return BK_handleError(error, {
       processId: processId,
       userId: queryParams.userId,
@@ -3021,7 +3023,7 @@ module.exports = {
   BK_formatCurrency,
   BK_calculateTotals,
   BK_generateTransactionId,
-  BK_processQuickTransaction,
+  BK_processQuickTransaction, // Duplicate, should be removed or handled
   BK_getRecentTransactions,
   BK_getDashboardData,
   BK_getStatisticsData,
@@ -3062,4 +3064,3 @@ module.exports = {
   BK_getErrorStats,
   BK_resetErrorStats
 };
-</replit_final_file>
