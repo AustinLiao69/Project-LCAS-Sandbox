@@ -286,3 +286,4 @@ MM 	 DD 	 Description 	    Progress
 10	7	 打通SIT測試環境：SIT-TC-026~31 	 Ongoing
 10	7	 打通SIT測試環境：處理DCN-0015 格式標準化不完整問題 	 Ongoing
 10	8	 打通SIT測試：階段二 	 Ongoing
+10	8	 打通SIT測試：從Firestore的欄位去確認寫入資料正確性 	 Ongoing

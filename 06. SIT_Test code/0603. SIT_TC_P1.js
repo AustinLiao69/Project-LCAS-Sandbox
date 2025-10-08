@@ -101,7 +101,7 @@ class SITTestCases {
                   categoryName: transactionData.子項名稱 || '測試類別',
                   paymentMethod: transactionData.支付方式 || '現金',
                   userId: transactionData.UID || 'expert_mode_user_001',
-                  ledgerId: 'test_ledger_001',
+                  ledgerId: 'ledger_structure_001',
                   // 階段三新增：確保資料完整性
                   createdAt: new Date().toISOString(),
                   source: 'test_data_0692'
