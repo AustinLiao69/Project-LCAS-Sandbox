@@ -3019,7 +3019,7 @@ module.exports = {
   BK_validateTransactionData,
   BK_formatCurrency,
   BK_calculateTotals,
-  BK_generateTransactionId
+  BK_generateTransactionId,
   BK_getRecentTransactions,
   BK_getStatisticsData,
   BK_getChartData,
