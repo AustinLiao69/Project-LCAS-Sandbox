@@ -2466,14 +2466,19 @@ class SITTestCases {
         try {
             console.log('🔐 TC-SIT-017: 直接測試POST /api/v1/auth/register');
 
-            // 動態生成唯一測試用戶Email
+            // 使用0692測試資料
+            const testUserTemplate = this.testData?.api_basic_test_data?.tc_017_025_basic_api_tests?.endpoints?.find(
+                endpoint => endpoint.tc_id === "TC-SIT-017"
+            ) || {};
+
+            // 動態生成唯一測試用戶Email，但使用0692的基礎結構
             const timestamp = Date.now();
             const randomStr = Math.random().toString(36).substr(2, 5);
             const dynamicEmail = `test_register_${timestamp}_${randomStr}@lcas.app`;
 
             const registerData = {
                 email: dynamicEmail,
-                password: "TestRegister123!",
+                password: testUserTemplate.test_data?.password || "TestRegister123!",
                 displayName: `測試註冊用戶_${timestamp}`,
                 userMode: "expert",
                 acceptTerms: true,
@@ -2511,9 +2516,16 @@ class SITTestCases {
         try {
             console.log('🔑 TC-SIT-018: 直接測試POST /api/v1/auth/login');
 
+            // 使用0692測試資料
+            const testLoginTemplate = this.testData?.api_basic_test_data?.tc_017_025_basic_api_tests?.endpoints?.find(
+                endpoint => endpoint.tc_id === "TC-SIT-018"
+            ) || {};
+            
+            const expertUser = this.testData?.authentication_test_data?.valid_users?.expert_mode_user_001;
+
             const loginData = {
-                email: "expert001@lcas.app",
-                password: "ExpertPass123!",
+                email: testLoginTemplate.test_data?.email || expertUser?.email || "expert001@lcas.app",
+                password: testLoginTemplate.test_data?.password || expertUser?.password || "ExpertPass123!",
                 rememberMe: true,
                 deviceInfo: {
                     deviceId: 'test-device-sitTest',
@@ -2763,10 +2775,17 @@ class SITTestCases {
         try {
             console.log('⚡ TC-SIT-023: 直接測試POST /api/v1/transactions/quick');
 
+            // 使用0692測試資料
+            const quickBookingTemplate = this.testData?.api_basic_test_data?.tc_017_025_basic_api_tests?.endpoints?.find(
+                endpoint => endpoint.tc_id === "TC-SIT-023"
+            );
+            
+            const quickBookingTestData = this.testData?.basic_bookkeeping_test_data?.quick_booking_tests?.[0];
+
             const quickBookingData = {
-                input: '午餐150',
+                input: quickBookingTemplate?.test_data?.input || quickBookingTestData?.input_text || '午餐150',
                 userId: 'test-user-quick',
-                ledgerId: 'test-ledger-quick'
+                ledgerId: this.testData?.bookkeeping_test_data?.default_ledger_id || 'test-ledger-quick'
             };
 
             const response = await this.makeRequest('POST', '/api/v1/transactions/quick', quickBookingData);
@@ -3422,7 +3441,10 @@ class SITTestCases {
         try {
             console.log('🔍 TC-SIT-038: 測試GET /api/v1/transactions/{id}');
 
-            const testTransactionId = 'test-transaction-001';
+            // 使用0692測試資料中的交易ID
+            const testTransactionId = this.testData?.api_basic_test_data?.tc_026_047_extended_api_tests?.categories?.transaction_service_extended?.endpoints?.find(
+                endpoint => endpoint.tc_id === "TC-SIT-038"
+            )?.test_data?.transactionId || 'test-transaction-001';
             const response = await this.makeRequest('GET', `/api/v1/transactions/${testTransactionId}`);
 
             const success = response.success && response.data?.transactionId;
@@ -3453,7 +3475,10 @@ class SITTestCases {
         try {
             console.log('✏️ TC-SIT-039: 測試PUT /api/v1/transactions/{id}');
 
-            const testTransactionId = 'test-transaction-002';
+            // 使用0692測試資料中的交易ID
+            const testTransactionId = this.testData?.api_basic_test_data?.tc_026_047_extended_api_tests?.categories?.transaction_service_extended?.endpoints?.find(
+                endpoint => endpoint.tc_id === "TC-SIT-039"
+            )?.test_data?.transactionId || 'test-transaction-002';
             const updateData = {
                 amount: 300,
                 description: '交易更新測試',
@@ -3490,7 +3515,10 @@ class SITTestCases {
         try {
             console.log('🗑️ TC-SIT-040: 測試DELETE /api/v1/transactions/{id}');
 
-            const testTransactionId = 'test-transaction-003';
+            // 使用0692測試資料中的交易ID
+            const testTransactionId = this.testData?.api_basic_test_data?.tc_026_047_extended_api_tests?.categories?.transaction_service_extended?.endpoints?.find(
+                endpoint => endpoint.tc_id === "TC-SIT-040"
+            )?.test_data?.transactionId || 'test-transaction-003';
             const response = await this.makeRequest('DELETE', `/api/v1/transactions/${testTransactionId}`);
 
             const success = response.success;
