@@ -1,0 +1,437 @@
+~/workspace$ 
+~/workspace$ cd "06. SIT_Test code" &&
+node "0603. SIT_TC_P1.js" --phase=all
+🚀 LCAS 2.0 Phase 1 SIT測試開始執行...
+📅 測試開始時間: 2025/10/8 上午10:38:08
+🔄 SIT測試執行流程啟動...
+🔄 開始載入SIT測試資料...
+⚠️ 測試資料結構不完整: [ 'final_regression_tests' ]
+🔧 已使用預設值修復測試資料結構
+⚠️ 關鍵測試資料驗證失敗: [ '效能測試-併發操作資料缺失' ]
+🔧 嘗試使用預設資料修復缺失項目...
+🔧 修復concurrent_operations資料...
+✅ 關鍵測試資料修復成功
+✅ 測試資料載入並驗證成功
+📊 載入的測試案例資料: 15 個類別
+🔍 檢查API服務就緒狀態...
+🔄 服務就緒檢查嘗試 1/10...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ API服務已就緒
+🔍 檢查Firebase配額狀態...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+✅ Firebase配額狀態正常
+✅ 前置檢查完成，開始執行測試案例...
+🎯 執行測試階段: all
+🔄 執行完整測試流程（所有階段）...
+
+📋 ===== 階段一：單點整合驗證測試 =====
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段一測試
+📋 階段一：單點整合驗證測試 (TC-SIT-001~007)
+🎯 測試重點：基礎功能、用戶流程、跨層互動、錯誤處理
+NaN
+🧹 階段一修復：執行測試環境初始化...
+🧹 階段一修復：測試環境初始化（簡化版）...
+✅ 測試環境初始化完成（採用動態用戶策略，無需清理）
+📊 階段一測試案例總數：7 個
+📅 預估執行時間：7 分鐘
+
+
+📝 執行階段一測試 1/7: TC-SIT-001: UserRegistration
+🔄 TC-SIT-001: 動態生成測試用戶Email: expert001_1759891088078_agmyr@lcas.app
+  ✅ 統一回應格式驗證 /api/v1/auth/register: A+ (Score: 100.0%)
+✅ PASS TC-SIT-001 (689ms)
+✅ TC-SIT-001: 註冊成功，用戶ID: user_1759891088765_6181i9ctg
+
+📝 執行階段一測試 2/7: TC-SIT-002: UserLogin
+  ✅ 統一回應格式驗證 /api/v1/auth/login: A+ (Score: 100.0%)
+✅ PASS TC-SIT-002 (637ms)
+
+📝 執行階段一測試 3/7: TC-SIT-003: FirebaseAuthIntegration
+🔄 TC-SIT-003: 開始Firebase Auth整合測試（階段二修復版）...
+📋 使用測試用戶: expert001@lcas.app (expert模式)
+  🔍 檢查Firebase服務初始化...
+  ✅ 統一回應格式驗證 /health: A+ (Score: 100.0%)
+    ✅ Firebase初始化檢查
+  🔐 測試用戶登入功能（使用TC-SIT-001創建的用戶）...
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+    ✅ 用戶Token驗證成功，通過profile API確認
+  🔑 測試Token有效性...
+    ✅ Token有效性驗證通過
+🎯 TC-SIT-003 階段二修復完成: 3/3項子測試成功
+✅ PASS TC-SIT-003 (142ms)
+
+✅ 用戶流程與認證 完成，休息1秒後繼續...
+
+📝 執行階段一測試 4/7: TC-SIT-004: QuickBooking
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: A+ (Score: 100.0%)
+✅ PASS TC-SIT-004 (641ms)
+
+📝 執行階段一測試 5/7: TC-SIT-005: FullBookingForm
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+✅ PASS TC-SIT-005 (246ms)
+
+📝 執行階段一測試 6/7: TC-SIT-006: TransactionQuery
+  ✅ 統一回應格式驗證 /api/v1/transactions?page=1&limit=20&sort=date%3Adesc: A+ (Score: 100.0%)
+✅ PASS TC-SIT-006 (152ms)
+
+✅ 記帳功能與查詢 完成，休息1秒後繼續...
+
+📝 執行階段一測試 7/7: TC-SIT-007: CrossLayerErrorHandling
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+✅ PASS TC-SIT-007 (133ms)
+
+NaN
+📊 階段一測試執行完成
+✅ 通過測試: 7/7
+📈 成功率: 100.00%
+⏱️  總執行時間: 4.688秒
+
+📋 階段一測試報告摘要
+NaN
+用戶認證與管理: 3/3 (100.0%)
+記帳功能測試: 2/2 (100.0%)
+錯誤處理: 2/2 (100.0%)
+
+🎯 階段一關鍵指標
+NaN
+基礎功能整合度: 100.0%
+用戶註冊流程: ✅ 通過
+用戶登入驗證: ✅ 通過
+錯誤處理覆蓋率: 66.67
+
+📋 ===== 階段二：四層架構資料流測試 =====
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段二測試 v3.0.0
+📋 階段二：四層架構資料流測試 (TC-SIT-008~047)
+🎯 測試重點：四模式差異化、資料一致性、端到端流程、API端點完整性
+NaN
+📊 階段二測試案例總數：37 個 (新增22個API端點測試)
+📅 預估執行時間：56 分鐘 (v3.0.0 優化版)
+
+
+📝 執行階段二測試 1/37: TC-SIT-008: ModeAssessment
+  ✅ 統一回應格式驗證 /api/v1/users/assessment-questions: A+ (Score: 100.0%)
+🔄 TC-SIT-008: 準備提交評估答案...
+📋 評估答案: financial_experience=advanced, detail_preference=detailed, interface_complexity=complex, reporting_needs=comprehensive
+📋 期望模式: expert
+  ✅ 統一回應格式驗證 /api/v1/users/assessment: A+ (Score: 100.0%)
+  ✅ 模式評估結果驗證 /api/v1/users/assessment: A+ (Score: 100.0%)
+     - 推薦模式: expert (信心度: 83.3%)
+✅ PASS TC-SIT-008 (8ms)
+
+📝 執行階段二測試 2/37: TC-SIT-009: ModeDifferentiation
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+✅ PASS TC-SIT-009 (487ms)
+
+📝 執行階段二測試 3/37: TC-SIT-010: DataFormatTransformation
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+✅ PASS TC-SIT-010 (1.05s)
+
+📝 執行階段二測試 4/37: TC-SIT-011: DataSynchronization
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/transactions/20251008-103814266-K83P: A+ (Score: 100.0%)
+✅ PASS TC-SIT-011 (381ms)
+
+✅ 四模式整合測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 5/37: TC-SIT-012: CompleteUserLifecycle
+  ✅ 統一回應格式驗證 /api/v1/users/assessment: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=10: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/auth/logout: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-012 (675ms)
+   ℹ️ 錯誤: 用戶生命週期測試未完全通過
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 6/37: TC-SIT-013: BookkeepingEndToEnd
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+✅ PASS TC-SIT-013 (288ms)
+
+📝 執行階段二測試 7/37: TC-SIT-014: NetworkExceptionHandling
+✅ PASS TC-SIT-014 (204ms)
+
+📝 執行階段二測試 8/37: TC-SIT-015: BusinessRuleErrorHandling
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-015 (255ms)
+   ℹ️ 錯誤: 業務規則錯誤處理機制失效
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 端到端流程測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 9/37: TC-SIT-016: FourModeProcessDifference
+🔄 開始四模式流程差異驗證...
+  📋 測試模式: expert
+    🎯 測試互動: 快速記帳
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: A+ (Score: 100.0%)
+      ✅ 快速記帳 成功
+    🎯 測試互動: 查看統計
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard: A+ (Score: 100.0%)
+      ✅ 查看統計 成功
+  📋 測試模式: guiding
+    🎯 測試互動: 快速記帳
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: A+ (Score: 100.0%)
+      ✅ 快速記帳 成功
+    🎯 測試互動: 查看記錄
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: A+ (Score: 100.0%)
+      ✅ 查看記錄 成功
+✅ PASS TC-SIT-016 (3.17s)
+🎯 四模式差異化測試完成，差異化評分: 1.00
+
+📝 執行階段二測試 10/37: TC-SIT-017: UserRegisterAPI
+🔐 TC-SIT-017: 直接測試POST /api/v1/auth/register
+  ✅ 統一回應格式驗證 /api/v1/auth/register: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-017 (118ms)
+   ℹ️ 錯誤: 註冊API測試失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 11/37: TC-SIT-018: UserLoginAPI
+🔑 TC-SIT-018: 直接測試POST /api/v1/auth/login
+  ✅ 統一回應格式驗證 /api/v1/auth/login: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-018 (377ms)
+   ℹ️ 錯誤: 登入API測試失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 12/37: TC-SIT-019: UserLogoutAPI
+🚪 TC-SIT-019: 直接測試POST /api/v1/auth/logout
+  ✅ 統一回應格式驗證 /api/v1/auth/logout: A+ (Score: 100.0%)
+✅ PASS TC-SIT-019 (3ms)
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 13/37: TC-SIT-020: UserProfileAPI
+👤 TC-SIT-020: 直接測試GET /api/v1/users/profile
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+✅ PASS TC-SIT-020 (121ms)
+
+📝 執行階段二測試 14/37: TC-SIT-021: UserAssessmentAPI
+📊 TC-SIT-021: 直接測試POST /api/v1/users/assessment
+  ✅ 統一回應格式驗證 /api/v1/users/assessment: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-021 (4ms)
+   ℹ️ 錯誤: 用戶評估API測試失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 15/37: TC-SIT-022: UserPreferencesAPI
+⚙️ TC-SIT-022: 直接測試PUT /api/v1/users/preferences
+  ✅ 統一回應格式驗證 /api/v1/users/preferences: A+ (Score: 100.0%)
+✅ PASS TC-SIT-022 (2ms)
+
+📝 執行階段二測試 16/37: TC-SIT-023: QuickBookingAPI
+⚡ TC-SIT-023: 直接測試POST /api/v1/transactions/quick
+  ✅ 統一回應格式驗證 /api/v1/transactions/quick: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-023 (247ms)
+   ℹ️ 錯誤: 快速記帳API測試失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 17/37: TC-SIT-024: TransactionCRUDAPI
+💰 TC-SIT-024: 直接測試CRUD /api/v1/transactions
+  ✅ 統一回應格式驗證 /api/v1/transactions: A+ (Score: 100.0%)
+  ✅ 統一回應格式驗證 /api/v1/transactions?limit=5: A+ (Score: 100.0%)
+✅ PASS TC-SIT-024 (661ms)
+
+📝 執行階段二測試 18/37: TC-SIT-025: TransactionDashboardAPI
+📊 TC-SIT-025: 直接測試GET /api/v1/transactions/dashboard
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard?period=month&year=2025&month=01&includeCharts=true&includeStatistics=true: A+ (Score: 100.0%)
+✅ PASS TC-SIT-025 (587ms)
+
+📝 執行階段二測試 19/37: TC-SIT-026: AuthRefresh
+🔄 TC-SIT-026: 測試POST /api/v1/auth/refresh
+  ✅ 統一回應格式驗證 /api/v1/auth/refresh: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-026 (2ms)
+   ⚠️ 錯誤: 刷新Token失敗
+   🏷️  錯誤類型: AUTH_ERROR
+   💡 建議: 檢查認證Token有效性
+
+📝 執行階段二測試 20/37: TC-SIT-027: AuthForgotPassword
+🔑 TC-SIT-027: 測試POST /api/v1/auth/forgot-password
+  ✅ 統一回應格式驗證 /api/v1/auth/forgot-password: A+ (Score: 100.0%)
+✅ PASS TC-SIT-027 (240ms)
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 21/37: TC-SIT-028: AuthResetPassword
+🔐 TC-SIT-028: 測試POST /api/v1/auth/reset-password
+  ✅ 統一回應格式驗證 /api/v1/auth/reset-password: A+ (Score: 100.0%)
+✅ PASS TC-SIT-028 (3ms)
+
+📝 執行階段二測試 22/37: TC-SIT-029: AuthVerifyEmail
+📧 TC-SIT-029: 測試POST /api/v1/auth/verify-email
+  ✅ 統一回應格式驗證 /api/v1/auth/verify-email: A+ (Score: 100.0%)
+✅ PASS TC-SIT-029 (3ms)
+
+📝 執行階段二測試 23/37: TC-SIT-030: AuthBindLine
+🔗 TC-SIT-030: 測試POST /api/v1/auth/bind-line
+  ✅ 統一回應格式驗證 /api/v1/auth/bind-line: A+ (Score: 100.0%)
+✅ PASS TC-SIT-030 (3ms)
+
+📝 執行階段二測試 24/37: TC-SIT-031: AuthBindStatus
+📊 TC-SIT-031: 測試GET /api/v1/auth/bind-status
+  ✅ 統一回應格式驗證 /api/v1/auth/bind-status: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-031 (2ms)
+   ℹ️ 錯誤: 綁定狀態查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 25/37: TC-SIT-032: GetUserProfile
+👤 TC-SIT-032: 測試GET /api/v1/users/profile
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-032 (124ms)
+   ℹ️ 錯誤: 用戶資料查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 26/37: TC-SIT-033: UpdateUserProfile
+✏️ TC-SIT-033: 測試PUT /api/v1/users/profile
+  ✅ 統一回應格式驗證 /api/v1/users/profile: A+ (Score: 100.0%)
+✅ PASS TC-SIT-033 (139ms)
+
+📝 執行階段二測試 27/37: TC-SIT-034: UserPreferences
+⚙️ TC-SIT-034: 測試GET /api/v1/users/preferences
+  ✅ 統一回應格式驗證 /api/v1/users/preferences: A+ (Score: 100.0%)
+✅ PASS TC-SIT-034 (3ms)
+
+📝 執行階段二測試 28/37: TC-SIT-035: UserMode
+🔧 TC-SIT-035: 測試PUT /api/v1/users/mode
+  ✅ 統一回應格式驗證 /api/v1/users/mode: A+ (Score: 100.0%)
+✅ PASS TC-SIT-035 (2ms)
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 29/37: TC-SIT-036: UserSecurity
+🔐 TC-SIT-036: 測試PUT /api/v1/users/security
+  ✅ 統一回應格式驗證 /api/v1/users/security: A+ (Score: 100.0%)
+✅ PASS TC-SIT-036 (3ms)
+
+📝 執行階段二測試 30/37: TC-SIT-037: UserVerifyPin
+🔢 TC-SIT-037: 測試POST /api/v1/users/verify-pin
+  ✅ 統一回應格式驗證 /api/v1/users/verify-pin: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-037 (3ms)
+   ℹ️ 錯誤: PIN驗證失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 31/37: TC-SIT-038: GetTransactionById
+🔍 TC-SIT-038: 測試GET /api/v1/transactions/{id}
+❌ FAIL TC-SIT-038 (122ms)
+   ℹ️ 錯誤: {
+  "code": "GET_TRANSACTION_ERROR",
+  "details": null
+}
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 32/37: TC-SIT-039: UpdateTransactionById
+✏️ TC-SIT-039: 測試PUT /api/v1/transactions/{id}
+❌ FAIL TC-SIT-039 (126ms)
+   ℹ️ 錯誤: 交易更新失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 33/37: TC-SIT-040: DeleteTransactionById
+🗑️ TC-SIT-040: 測試DELETE /api/v1/transactions/{id}
+❌ FAIL TC-SIT-040 (119ms)
+   ℹ️ 錯誤: 交易刪除失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 34/37: TC-SIT-041: TransactionStatistics
+📊 TC-SIT-041: 測試GET /api/v1/transactions/statistics
+  ✅ 統一回應格式驗證 /api/v1/transactions/statistics?period=month&year=2025&month=01: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-041 (146ms)
+   ℹ️ 錯誤: 交易統計查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 35/37: TC-SIT-042: TransactionRecent
+📋 TC-SIT-042: 測試GET /api/v1/transactions/recent
+  ✅ 統一回應格式驗證 /api/v1/transactions/recent?limit=10&includeDetails=true: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-042 (143ms)
+   ℹ️ 錯誤: 近期交易查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+📝 執行階段二測試 36/37: TC-SIT-043: TransactionCharts
+📈 TC-SIT-043: 測試GET /api/v1/transactions/charts
+  ✅ 統一回應格式驗證 /api/v1/transactions/charts?chartType=category&period=month&year=2025&month=01: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-043 (135ms)
+   ℹ️ 錯誤: 交易圖表查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+✅ 效能穩定性測試 完成，休息2秒後繼續...
+
+📝 執行階段二測試 37/37: TC-SIT-044: TransactionDashboard
+📊 TC-SIT-044: 測試GET /api/v1/transactions/dashboard (完整版)
+  ✅ 統一回應格式驗證 /api/v1/transactions/dashboard?period=year&year=2025&includeCharts=true&includeStatistics=true&includeBudget=true: A+ (Score: 100.0%)
+❌ FAIL TC-SIT-044 (401ms)
+   ℹ️ 錯誤: 完整儀表板查詢失敗
+   🏷️  錯誤類型: BUSINESS_LOGIC_ERROR
+
+NaN
+📊 階段二測試執行完成
+✅ 通過測試: 20/37
+📈 成功率: 54.05%
+⏱️  總執行時間: 33.058秒
+
+📋 階段二測試報告摘要
+NaN
+四模式差異化測試: 4/4 (100.0%)
+端到端流程測試: 3/5 (60.0%)
+效能穩定性測試: 2/4 (50.0%)
+
+🎯 階段二關鍵指標
+NaN
+四層架構整合度: 54.1%
+資料一致性驗證: ✅ 完成
+模式差異化驗證: ✅ 完成
+端到端流程驗證: ✅ 完成
+效能穩定性評級: B級
+
+📋 ===== 階段三：完整業務流程測試 =====
+🚀 開始執行 LCAS 2.0 Phase 1 SIT 階段三測試
+📋 階段三：完整業務流程測試 (TC-SIT-021~025)
+🎯 測試重點：業務價值鏈、用戶體驗、系統穩定性
+NaN
+📊 階段三測試案例總數：0 個 (已移除超出MVP範圍的測試)
+ℹ️  已刪除TC-SIT-026~028：P1-2核心API回歸測試、故障恢復測試、效能基準驗證
+✅ 階段三：MVP範圍內無需額外測試，TC-SIT-021~025已在階段二完成
+
+==================== DCN-0015 階段三測試報告 ====================
+測試計畫版本: v2.5.4 - 統計數據處理缺陷修復版
+測試執行時間: 10/8/2025, 2:38:41 AM
+總執行時間: 33.062 秒
+====================================================================
+
+--- Phase 1 測試結果 ---
+  總測試數: 7
+  通過數: 7
+  成功率: 100.00%
+  執行時間: 4.69 秒
+
+--- Phase 2 測試結果 ---
+  總測試數: 37
+  通過數: 20
+  成功率: 54.05%
+  執行時間: 33.06 秒
+
+--- Phase 3 測試結果 ---
+  總測試數: 0
+  通過數: 0
+  成功率: 0.00%
+  執行時間: 0.00 秒
+
+--- SIT 整體測試摘要 ---
+總執行測試數: 44
+總通過測試數: 27
+整體成功率: 61.36%
+整體品質等級: D (不建議發布)
+發布建議: ❌ 品質不達標，需要全面檢討
+
+--- 統計品質驗證 ---
+✅ 無NaN值: 統計品質正常
+✅ 數值驗證: 使用ensureValidNumber, safeDivision, safePercentage
+✅ MVP標準: 專注核心指標，避免過度精確化
+====================================================================
+⚠️ 報告寫入失敗: ENOENT: no such file or directory, open '06. SIT_Test code/0691. SIT_Report_P1.md'
+📄 報告內容已準備完成，但檔案寫入遇到問題

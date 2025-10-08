@@ -1345,12 +1345,12 @@ app.get('/api/v1/transactions/:id', async (req, res) => {
       return res.apiError('BK_processAPIGetTransactionDetail函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await BK.BK_processAPIGetTransactionDetail({ id: req.params.id, ...req.query });
+    const result = await BK.BK_processAPIGetTransactionDetail(req.params.id, req.query);
 
     if (result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError(result.error.message, result.error.code, 400, result.error.details);
+      res.apiError(result.message || result.error?.message, result.error?.code || 'GET_TRANSACTION_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
@@ -1368,7 +1368,7 @@ app.put('/api/v1/transactions/:id', async (req, res) => {
       return res.apiError('BK_processAPIUpdateTransaction函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await BK.BK_processAPIUpdateTransaction({ id: req.params.id, ...req.body });
+    const result = await BK.BK_processAPIUpdateTransaction(req.params.id, req.body);
 
     // 統一格式處理：確保符合DCN-0015規範
     if (result && result.success === true) {
@@ -1400,7 +1400,7 @@ app.delete('/api/v1/transactions/:id', async (req, res) => {
       return res.apiError('BK_processAPIDeleteTransaction函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await BK.BK_processAPIDeleteTransaction({ id: req.params.id });
+    const result = await BK.BK_processAPIDeleteTransaction(req.params.id, req.query);
 
     // 統一格式處理：確保符合DCN-0015規範
     if (result && result.success === true) {
