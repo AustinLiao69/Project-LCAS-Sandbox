@@ -1,6 +1,3 @@
-` tag, which is incorrectly placed and causing the syntax error.
-
-<replit_final_file>
 /**
  * 1301. BK.js_記帳核心模組_v3.1.3
  * @module 記帳核心模組
@@ -3023,9 +3020,7 @@ module.exports = {
   BK_formatCurrency,
   BK_calculateTotals,
   BK_generateTransactionId,
-  BK_processQuickTransaction, // Duplicate, should be removed or handled
   BK_getRecentTransactions,
-  BK_getDashboardData,
   BK_getStatisticsData,
   BK_getChartData,
   BK_batchCreateTransactions,
@@ -3039,7 +3034,7 @@ module.exports = {
   BK_validateImportData,
   BK_processImportResult,
 
-  // DCN-0015 階段三：API處理函數（階段三修復完整導出）
+  // API處理函數
   BK_processAPIGetTransactionDetail,
   BK_processAPIUpdateTransaction,
   BK_processAPIDeleteTransaction,
