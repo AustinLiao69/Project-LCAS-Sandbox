@@ -1335,12 +1335,12 @@ Map<String, dynamic> getInjectionStatistics() {
 }
 
 /**
- * 階段二主要入口：執行深度整合測試
- * @version 2025-10-09-V2.0.0
- * @date 2025-10-09
- * @update: 階段二實作 - SIT測試主入口強化
- */
-Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+   * 階段二主要入口：執行深度整合測試
+   * @version 2025-10-09-V2.0.0
+   * @date 2025-10-09
+   * @update: 階段二實作 - SIT測試主入口強化
+   */
+  Future<Map<String, dynamic>> executePhase2DeepIntegrationTest() async {
   try {
     print('[7570] 🎯 階段二：開始執行深度整合層測試');
 
@@ -1401,89 +1401,7 @@ Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTes
   }
 }
 
-/**
- * 計算階段二整體成功率
- */
-bool _calculatePhase2OverallSuccess(Map<String, dynamic> results) {
-  try {
-    // 深度驗證成功率
-    final deepValidation = results['deepValidation'] as Map<String, dynamic>?;
-    final deepValidationSuccess = deepValidation?['overallSuccess'] ?? false;
 
-    // 資料整合成功率
-    final dataIntegration = results['dataIntegration'] as Map<String, dynamic>?;
-    final integrationScore = dataIntegration?['integrationSummary']?['integrationScore'] ?? 0.0;
-    final dataIntegrationSuccess = integrationScore >= 80.0;
-
-    // 錯誤處理驗證
-    final errorHandling = results['errorHandling'] as Map<String, dynamic>?;
-    final totalErrors = errorHandling?['totalErrors'] ?? 0;
-    final errorHandlingSuccess = totalErrors < 5; // 容忍少量錯誤
-
-    // 至少需要通過2/3的驗證項目
-    final successCount = [deepValidationSuccess, dataIntegrationSuccess, errorHandlingSuccess]
-        .where((success) => success).length;
-
-    return successCount >= 2;
-
-  } catch (e) {
-    print('[7570] ❌ 計算階段二成功率失敗: $e');
-    return false;
-  }
-}
-
-/**
- * 計算階段二分數
- */
-double _calculatePhase2Score(Map<String, dynamic> results) {
-  try {
-    double totalScore = 0.0;
-    int scoreCount = 0;
-
-    // 深度驗證分數 (權重40%)
-    final deepValidation = results['deepValidation'] as Map<String, dynamic>?;
-    if (deepValidation != null && deepValidation.containsKey('validationCategories')) {
-      final categories = deepValidation['validationCategories'] as Map<String, dynamic>;
-      double categoryTotal = 0.0;
-      int categoryCount = 0;
-
-      for (final category in categories.values) {
-        if (category is Map<String, dynamic>) {
-          final score = category['differentiationScore'] ??
-                       category['complianceScore'] ??
-                       category['integrationScore'] ??
-                       category['endToEndScore'] ?? 0.0;
-          categoryTotal += score as double;
-          categoryCount++;
-        }
-      }
-
-      if (categoryCount > 0) {
-        totalScore += (categoryTotal / categoryCount) * 0.4;
-        scoreCount++;
-      }
-    }
-
-    // 資料整合分數 (權重40%)
-    final dataIntegration = results['dataIntegration'] as Map<String, dynamic>?;
-    final integrationScore = dataIntegration?['integrationSummary']?['integrationScore'] ?? 0.0;
-    totalScore += (integrationScore as double) * 0.4;
-    scoreCount++;
-
-    // 錯誤處理分數 (權重20%)
-    final errorHandling = results['errorHandling'] as Map<String, dynamic>?;
-    final totalErrors = errorHandling?['totalErrors'] ?? 0;
-    final errorScore = totalErrors == 0 ? 100.0 : (totalErrors < 5 ? 80.0 : 60.0);
-    totalScore += errorScore * 0.2;
-    scoreCount++;
-
-    return scoreCount > 0 ? totalScore : 0.0;
-
-  } catch (e) {
-    print('[7570] ❌ 計算階段二分數失敗: $e');
-    return 0.0;
-  }
-}
 
 // ==========================================
 // 階段三：API契約層測試案例實作 (TC-SIT-017~044)

@@ -1,8 +1,8 @@
 /**
  * 7580. 注入測試資料.dart
- * @version v1.0.0
+ * @version v2.0.0
  * @date 2025-10-09
- * @update: 階段一建立 - 基礎測試資料注入功能
+ * @update: 階段二完成 - 完整測試資料注入功能，支援7570 SIT測試
  */
 
 import 'dart:async';

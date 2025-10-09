@@ -1,13 +1,14 @@
 /**
  * 7590. 生成動態測試資料.dart
- * @version v1.0.0
+ * @version v2.0.0
  * @date 2025-10-09
- * @update: 階段一建立 - 基礎動態測試資料生成功能
+ * @update: 階段二完成 - 完整動態測試資料生成功能，支援7570 SIT測試
  */
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import '7580. 注入測試資料.dart';
 
 /// 動態測試資料工廠
 class DynamicTestDataFactory {
