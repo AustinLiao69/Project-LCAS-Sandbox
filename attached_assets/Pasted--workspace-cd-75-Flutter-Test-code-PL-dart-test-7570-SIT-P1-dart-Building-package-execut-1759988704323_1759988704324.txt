@@ -1,0 +1,1643 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
+Building package executable... (3.8s)
+Built test:test.
+00:01 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  7570.%20SIT_P1.dart:2732:30: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                               ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2732:49: Error: Expected '{' before this.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                                                  ^
+  7570.%20SIT_P1.dart:2732:30: Error: 'SITP1TestController' is already declared in this scope.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                               ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:34:7: Context: Previous declaration of 'SITP1TestController'.
+  class SITP1TestController {
+        ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2732:49: Error: Expected a declaration, but got '.'.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                                                  ^
+  7570.%20SIT_P1.dart:3270:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  export {
+  ^^^^^^
+  7570.%20SIT_P1.dart:3270:8: Error: Expected a String, but got '{'.
+  export {
+         ^
+  7570.%20SIT_P1.dart:3270:1: Error: Expected ';' after this.
+  export {
+  ^^^^^^
+  7570.%20SIT_P1.dart:3270:8: Error: Expected a declaration, but got '{'.
+  export {
+         ^
+  7570.%20SIT_P1.dart:3297:2: Error: Unexpected token ';'.
+  };
+   ^
+  7570.%20SIT_P1.dart:19:8: Error: Error when reading '7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart': No such file or directory
+  import '7301. 系統進入功能群.dart';
+         ^
+  7570.%20SIT_P1.dart:20:8: Error: Error when reading '7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart': No such file or directory
+  import '7302. 記帳核心功能群.dart';
+         ^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:17:8: Error: Error when reading '7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart': No such file or directory
+  import '7301. 系統進入功能群.dart';
+         ^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:18:8: Error: Error when reading '7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart': No such file or directory
+  import '7302. 記帳核心功能群.dart';
+         ^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:1136:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  export {
+  ^^^^^^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:1136:8: Error: Expected a String, but got '{'.
+  export {
+         ^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:1136:1: Error: Expected ';' after this.
+  export {
+  ^^^^^^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:1136:8: Error: Expected a declaration, but got '{'.
+  export {
+         ^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:1155:2: Error: Unexpected token ';'.
+  };
+   ^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:880:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  export {
+  ^^^^^^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:880:8: Error: Expected a String, but got '{'.
+  export {
+         ^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:880:1: Error: Expected ';' after this.
+  export {
+  ^^^^^^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:880:8: Error: Expected a declaration, but got '{'.
+  export {
+         ^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:887:2: Error: Unexpected token ';'.
+  };
+   ^
+  7570.%20SIT_P1.dart:35:16: Error: 'SITP1TestController' isn't a type.
+    static final SITP1TestController _instance = SITP1TestController._internal();
+                 ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:35:16: Context: This isn't a type.
+    static final SITP1TestController _instance = SITP1TestController._internal();
+                 ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:36:10: Error: 'SITP1TestController' isn't a type.
+    static SITP1TestController get instance => _instance;
+           ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:36:10: Context: This isn't a type.
+    static SITP1TestController get instance => _instance;
+           ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:35:16: Error: Can't use 'SITP1TestController' because it is declared more than once.
+    static final SITP1TestController _instance = SITP1TestController._internal();
+                 ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:35:48: Error: Can't use 'SITP1TestController' because it is declared more than once.
+    static final SITP1TestController _instance = SITP1TestController._internal();
+                                                 ^
+  7570.%20SIT_P1.dart:191:36: Error: The getter 'IntegrationTestController' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'IntegrationTestController'.
+        final deepValidation = await IntegrationTestController.instance.executeDeepIntegrationValidation();
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:195:37: Error: The getter 'TestDataIntegrationManager' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'TestDataIntegrationManager'.
+        final dataIntegration = await TestDataIntegrationManager.instance.executeCompleteDataIntegration(
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:207:29: Error: The getter 'IntegrationErrorHandler' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'IntegrationErrorHandler'.
+        final errorHandling = IntegrationErrorHandler.instance.getErrorStatistics();
+                              ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:227:7: Error: The getter 'IntegrationErrorHandler' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'IntegrationErrorHandler'.
+        IntegrationErrorHandler.instance.handleIntegrationError(
+        ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:452:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['generatedUser'] = testUser['userId'];
+                           ^
+  7570.%20SIT_P1.dart:456:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['injectionSuccess'] = injectionResult;
+                           ^
+  7570.%20SIT_P1.dart:462:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['chainValidation'] = true;
+                             ^
+  7570.%20SIT_P1.dart:471:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:503:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['loginResult'] = loginResult;
+                           ^
+  7570.%20SIT_P1.dart:507:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['jwtTokenValid'] = true;
+                             ^
+  7570.%20SIT_P1.dart:508:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['userModeReturned'] = true;
+                             ^
+  7570.%20SIT_P1.dart:517:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:553:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['firebaseAuthResult'] = authResult;
+                           ^
+  7570.%20SIT_P1.dart:557:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['firebaseIdTokenValid'] = true;
+                             ^
+  7570.%20SIT_P1.dart:558:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['userRegistrationComplete'] = true;
+                             ^
+  7570.%20SIT_P1.dart:567:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:599:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['quickBookkeepingResult'] = bookkeepingResult;
+                           ^
+  7570.%20SIT_P1.dart:603:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['textParsingAccuracy'] = true;
+                             ^
+  7570.%20SIT_P1.dart:604:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['recordStoredCorrectly'] = true;
+                             ^
+  7570.%20SIT_P1.dart:605:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['fourModeProcessing'] = true;
+                             ^
+  7570.%20SIT_P1.dart:614:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:650:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['completeFormResult'] = formResult;
+                           ^
+  7570.%20SIT_P1.dart:654:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['formValidationCorrect'] = true;
+                             ^
+  7570.%20SIT_P1.dart:655:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dataIntegrityGuaranteed'] = true;
+                             ^
+  7570.%20SIT_P1.dart:664:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:701:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['batchInjectionResults'] = batchInjectionResults;
+                           ^
+  7570.%20SIT_P1.dart:706:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dataQueryAccuracy'] = true;
+                             ^
+  7570.%20SIT_P1.dart:707:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['fourModeResponseDifferentiation'] = true;
+                             ^
+  7570.%20SIT_P1.dart:716:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:751:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['errorHandlingFailed'] = true;
+                             ^
+  7570.%20SIT_P1.dart:754:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['errorCaptured'] = true;
+                             ^
+  7570.%20SIT_P1.dart:755:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['errorMessage'] = e.toString();
+                             ^
+  7570.%20SIT_P1.dart:759:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['networkTimeoutHandling'] = true; // 模擬
+                           ^
+  7570.%20SIT_P1.dart:760:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['authenticationErrorHandling'] = true; // 模擬
+                           ^
+  7570.%20SIT_P1.dart:761:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['unifiedErrorFormat'] = true; // 模擬
+                           ^
+  7570.%20SIT_P1.dart:762:49: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+      testResult['passed'] = testResult['details']['errorCaptured'] == true;
+                                                  ^
+  7570.%20SIT_P1.dart:769:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:808:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['assessmentResult'] = assessmentResult;
+                           ^
+  7570.%20SIT_P1.dart:812:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['evaluationLogicCorrect'] = true;
+                             ^
+  7570.%20SIT_P1.dart:813:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['modeAssignmentAccurate'] = true;
+                             ^
+  7570.%20SIT_P1.dart:822:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:856:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['modeResults'] = modeResults;
+                           ^
+  7570.%20SIT_P1.dart:861:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['expertModeResponse'] = true;
+                             ^
+  7570.%20SIT_P1.dart:862:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['inertialModeResponse'] = true;
+                             ^
+  7570.%20SIT_P1.dart:863:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['cultivationModeResponse'] = true;
+                             ^
+  7570.%20SIT_P1.dart:864:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['guidingModeResponse'] = true;
+                             ^
+  7570.%20SIT_P1.dart:873:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:908:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['conversionResult'] = conversionResult;
+                           ^
+  7570.%20SIT_P1.dart:912:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['formatConversionAccuracy'] = true;
+                             ^
+  7570.%20SIT_P1.dart:913:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dataIntegrity'] = true;
+                             ^
+  7570.%20SIT_P1.dart:922:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:970:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['syncSuccess'] = syncSuccess;
+                           ^
+  7570.%20SIT_P1.dart:974:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['syncTimeliness'] = true;
+                             ^
+  7570.%20SIT_P1.dart:975:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dataConsistency'] = true;
+                             ^
+  7570.%20SIT_P1.dart:984:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1012:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT017_AuthRegisterEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1030:33: Error: Undefined name 'APIComplianceValidator'.
+      final apiValidation = await APIComplianceValidator.instance.validateEndpoint(
+                                  ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1038:37: Error: Undefined name 'DCN0015ComplianceValidator'.
+      final dcn0015Validation = await DCN0015ComplianceValidator.instance.validateResponseFormat(
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1058:38: Error: Undefined name 'FourModeComplianceValidator'.
+      final fourModeValidation = await FourModeComplianceValidator.instance.validateModeSpecificResponse(
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1065:35: Error: Method not found: '_calculateComplianceScore'.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1066:39: Error: Method not found: '_calculateComplianceScore'.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1067:40: Error: Method not found: '_calculateComplianceScore'.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1090:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT018_AuthLoginEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:1090:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT018_AuthLoginEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1108:33: Error: Undefined name 'APIComplianceValidator'.
+      final apiValidation = await APIComplianceValidator.instance.validateEndpoint(
+                                  ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1116:37: Error: Undefined name 'DCN0015ComplianceValidator'.
+      final dcn0015Validation = await DCN0015ComplianceValidator.instance.validateResponseFormat(
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1140:38: Error: Undefined name 'FourModeComplianceValidator'.
+      final fourModeValidation = await FourModeComplianceValidator.instance.validateModeSpecificResponse(
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1147:35: Error: Method not found: '_calculateComplianceScore'.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1148:39: Error: Method not found: '_calculateComplianceScore'.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1149:40: Error: Method not found: '_calculateComplianceScore'.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1171:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT019_AuthLogoutEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:1171:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT019_AuthLogoutEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1172:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1201:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT020_UsersProfileEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:1201:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT020_UsersProfileEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1202:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1237:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT021_UsersAssessmentEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:1237:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT021_UsersAssessmentEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1238:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1274:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT022_UsersPreferencesEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:1274:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT022_UsersPreferencesEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1275:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1304:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT023_TransactionsQuickEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:1304:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT023_TransactionsQuickEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1305:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1343:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT024_TransactionsCRUDEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:1343:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT024_TransactionsCRUDEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1344:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1378:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT025_TransactionsDashboardEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:1378:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT025_TransactionsDashboardEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1379:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1419:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+  ^^^^^^
+  7570.%20SIT_P1.dart:1419:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1444:33: Error: Undefined name 'APIComplianceValidator'.
+      final apiValidation = await APIComplianceValidator.instance.validateEndpoint(
+                                  ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1452:37: Error: Undefined name 'DCN0015ComplianceValidator'.
+      final dcn0015Validation = await DCN0015ComplianceValidator.instance.validateResponseFormat(
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1459:38: Error: Undefined name 'FourModeComplianceValidator'.
+      final fourModeValidation = await FourModeComplianceValidator.instance.validateModeSpecificResponse(
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1466:35: Error: Method not found: '_calculateComplianceScore'.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1467:39: Error: Method not found: '_calculateComplianceScore'.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1468:40: Error: Method not found: '_calculateComplianceScore'.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1488:1: Error: Expected ',' before this.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+  ^^^
+  7570.%20SIT_P1.dart:1488:5: Error: A function expression can't have a name.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1499:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT026_AuthRefreshEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:1499:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT026_AuthRefreshEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1512:1: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+  class APIComplianceValidator {
+  ^^^^^
+  7570.%20SIT_P1.dart:1512:1: Error: Expected ';' after this.
+  class APIComplianceValidator {
+  ^^^^^
+  7570.%20SIT_P1.dart:1512:1: Error: Undefined name 'class'.
+  class APIComplianceValidator {
+  ^^^^^
+  7570.%20SIT_P1.dart:1512:7: Error: Expected ';' after this.
+  class APIComplianceValidator {
+        ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1512:7: Error: Undefined name 'APIComplianceValidator'.
+  class APIComplianceValidator {
+        ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1513:3: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+    static final APIComplianceValidator _instance = APIComplianceValidator._internal();
+    ^^^^^^
+  7570.%20SIT_P1.dart:1513:16: Error: 'APIComplianceValidator' isn't a type.
+    static final APIComplianceValidator _instance = APIComplianceValidator._internal();
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1513:51: Error: Undefined name 'APIComplianceValidator'.
+    static final APIComplianceValidator _instance = APIComplianceValidator._internal();
+                                                    ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1514:3: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+    static APIComplianceValidator get instance => _instance;
+    ^^^^^^
+  7570.%20SIT_P1.dart:1514:10: Error: 'APIComplianceValidator' isn't a type.
+    static APIComplianceValidator get instance => _instance;
+           ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1514:33: Error: Expected ';' after this.
+    static APIComplianceValidator get instance => _instance;
+                                  ^^^
+  7570.%20SIT_P1.dart:1514:46: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+    static APIComplianceValidator get instance => _instance;
+                                               ^^
+  7570.%20SIT_P1.dart:1515:3: Error: Undefined name 'APIComplianceValidator'.
+    APIComplianceValidator._internal();
+    ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1537:25: Error: Method not found: '_validateEndpointPath'.
+        final pathCheck = _validateEndpointPath(endpoint);
+                          ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1546:27: Error: Method not found: '_validateHTTPMethod'.
+        final methodCheck = _validateHTTPMethod(method, endpoint);
+                            ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1555:34: Error: Method not found: '_validate8020APIList'.
+        final api8020Check = await _validate8020APIList(endpoint, expectedSpec);
+                                   ^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1563:34: Error: Method not found: '_validate8088APIDesign'.
+        final api8088Check = await _validate8088APIDesign(endpoint, method);
+                                   ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1571:29: Error: Method not found: '_validateP12Range'.
+        final p12RangeCheck = _validateP12Range(endpoint);
+                              ^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1537:25: Error: Local variable '_validateEndpointPath' can't be referenced before it is declared.
+        final pathCheck = _validateEndpointPath(endpoint);
+                          ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1595:24: Context: This is the declaration of the variable '_validateEndpointPath'.
+    Map<String, dynamic> _validateEndpointPath(String endpoint) {
+                         ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1546:27: Error: Local variable '_validateHTTPMethod' can't be referenced before it is declared.
+        final methodCheck = _validateHTTPMethod(method, endpoint);
+                            ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1609:24: Context: This is the declaration of the variable '_validateHTTPMethod'.
+    Map<String, dynamic> _validateHTTPMethod(String method, String endpoint) {
+                         ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1614:26: Error: Method not found: '_checkRESTfulConvention'.
+      final restfulCheck = _checkRESTfulConvention(method, endpoint);
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1614:26: Error: Local variable '_checkRESTfulConvention' can't be referenced before it is declared.
+      final restfulCheck = _checkRESTfulConvention(method, endpoint);
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1627:24: Context: This is the declaration of the variable '_checkRESTfulConvention'.
+    Map<String, dynamic> _checkRESTfulConvention(String method, String endpoint) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1555:34: Error: Local variable '_validate8020APIList' can't be referenced before it is declared.
+        final api8020Check = await _validate8020APIList(endpoint, expectedSpec);
+                                   ^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1644:32: Context: This is the declaration of the variable '_validate8020APIList'.
+    Future<Map<String, dynamic>> _validate8020APIList(String endpoint, String expectedSpec) async {
+                                 ^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1563:34: Error: Local variable '_validate8088APIDesign' can't be referenced before it is declared.
+        final api8088Check = await _validate8088APIDesign(endpoint, method);
+                                   ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1678:32: Context: This is the declaration of the variable '_validate8088APIDesign'.
+    Future<Map<String, dynamic>> _validate8088APIDesign(String endpoint, String method) async {
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1571:29: Error: Local variable '_validateP12Range' can't be referenced before it is declared.
+        final p12RangeCheck = _validateP12Range(endpoint);
+                              ^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1709:24: Context: This is the declaration of the variable '_validateP12Range'.
+    Map<String, dynamic> _validateP12Range(String endpoint) {
+                         ^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1747:1: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+  class DCN0015ComplianceValidator {
+  ^^^^^
+  7570.%20SIT_P1.dart:1747:1: Error: Expected ';' after this.
+  class DCN0015ComplianceValidator {
+  ^^^^^
+  7570.%20SIT_P1.dart:1747:1: Error: Undefined name 'class'.
+  class DCN0015ComplianceValidator {
+  ^^^^^
+  7570.%20SIT_P1.dart:1747:7: Error: Expected ';' after this.
+  class DCN0015ComplianceValidator {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1747:7: Error: Undefined name 'DCN0015ComplianceValidator'.
+  class DCN0015ComplianceValidator {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1748:3: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+    static final DCN0015ComplianceValidator _instance = DCN0015ComplianceValidator._internal();
+    ^^^^^^
+  7570.%20SIT_P1.dart:1748:16: Error: 'DCN0015ComplianceValidator' isn't a type.
+    static final DCN0015ComplianceValidator _instance = DCN0015ComplianceValidator._internal();
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1748:55: Error: Undefined name 'DCN0015ComplianceValidator'.
+    static final DCN0015ComplianceValidator _instance = DCN0015ComplianceValidator._internal();
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1749:3: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+    static DCN0015ComplianceValidator get instance => _instance;
+    ^^^^^^
+  7570.%20SIT_P1.dart:1749:10: Error: 'DCN0015ComplianceValidator' isn't a type.
+    static DCN0015ComplianceValidator get instance => _instance;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1749:37: Error: Expected ';' after this.
+    static DCN0015ComplianceValidator get instance => _instance;
+                                      ^^^
+  7570.%20SIT_P1.dart:1749:50: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+    static DCN0015ComplianceValidator get instance => _instance;
+                                                   ^^
+  7570.%20SIT_P1.dart:1750:3: Error: Undefined name 'DCN0015ComplianceValidator'.
+    DCN0015ComplianceValidator._internal();
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1771:30: Error: Method not found: '_validateRequiredFields'.
+        final requiredFields = _validateRequiredFields(sampleResponse);
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1780:28: Error: Method not found: '_validateSuccessField'.
+        final successField = _validateSuccessField(sampleResponse);
+                             ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1789:29: Error: Method not found: '_validateMetadataStructure'.
+        final metadataCheck = _validateMetadataStructure(sampleResponse);
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1797:28: Error: Method not found: '_validateModeFeatures'.
+        final modeFeatures = _validateModeFeatures(sampleResponse);
+                             ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1805:30: Error: Method not found: '_validateTimestamp'.
+        final timestampCheck = _validateTimestamp(sampleResponse);
+                               ^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1771:30: Error: Local variable '_validateRequiredFields' can't be referenced before it is declared.
+        final requiredFields = _validateRequiredFields(sampleResponse);
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1828:24: Context: This is the declaration of the variable '_validateRequiredFields'.
+    Map<String, dynamic> _validateRequiredFields(Map<String, dynamic> response) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1780:28: Error: Local variable '_validateSuccessField' can't be referenced before it is declared.
+        final successField = _validateSuccessField(sampleResponse);
+                             ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1849:24: Context: This is the declaration of the variable '_validateSuccessField'.
+    Map<String, dynamic> _validateSuccessField(Map<String, dynamic> response) {
+                         ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1789:29: Error: Local variable '_validateMetadataStructure' can't be referenced before it is declared.
+        final metadataCheck = _validateMetadataStructure(sampleResponse);
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1872:24: Context: This is the declaration of the variable '_validateMetadataStructure'.
+    Map<String, dynamic> _validateMetadataStructure(Map<String, dynamic> response) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1894:36: Error: Method not found: '_isValidISO8601'.
+        if (timestamp is! String || !_isValidISO8601(timestamp)) {
+                                     ^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1797:28: Error: Local variable '_validateModeFeatures' can't be referenced before it is declared.
+        final modeFeatures = _validateModeFeatures(sampleResponse);
+                             ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1925:24: Context: This is the declaration of the variable '_validateModeFeatures'.
+    Map<String, dynamic> _validateModeFeatures(Map<String, dynamic> response) {
+                         ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1933:30: Error: Method not found: '_getExpectedModeFeatures'.
+      final expectedFeatures = _getExpectedModeFeatures(userMode);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1933:30: Error: Local variable '_getExpectedModeFeatures' can't be referenced before it is declared.
+      final expectedFeatures = _getExpectedModeFeatures(userMode);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1949:16: Context: This is the declaration of the variable '_getExpectedModeFeatures'.
+    List<String> _getExpectedModeFeatures(String? userMode) {
+                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1805:30: Error: Local variable '_validateTimestamp' can't be referenced before it is declared.
+        final timestampCheck = _validateTimestamp(sampleResponse);
+                               ^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1967:24: Context: This is the declaration of the variable '_validateTimestamp'.
+    Map<String, dynamic> _validateTimestamp(Map<String, dynamic> response) {
+                         ^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1972:42: Error: Method not found: '_isValidISO8601'.
+      final isValid = timestamp != null && _isValidISO8601(timestamp);
+                                           ^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1894:36: Error: Local variable '_isValidISO8601' can't be referenced before it is declared.
+        if (timestamp is! String || !_isValidISO8601(timestamp)) {
+                                     ^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1984:8: Context: This is the declaration of the variable '_isValidISO8601'.
+    bool _isValidISO8601(String timestamp) {
+         ^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1972:42: Error: Local variable '_isValidISO8601' can't be referenced before it is declared.
+      final isValid = timestamp != null && _isValidISO8601(timestamp);
+                                           ^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1984:8: Context: This is the declaration of the variable '_isValidISO8601'.
+    bool _isValidISO8601(String timestamp) {
+         ^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2004:1: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+  class FourModeComplianceValidator {
+  ^^^^^
+  7570.%20SIT_P1.dart:2004:1: Error: Expected ';' after this.
+  class FourModeComplianceValidator {
+  ^^^^^
+  7570.%20SIT_P1.dart:2004:1: Error: Undefined name 'class'.
+  class FourModeComplianceValidator {
+  ^^^^^
+  7570.%20SIT_P1.dart:2004:7: Error: Expected ';' after this.
+  class FourModeComplianceValidator {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2004:7: Error: Undefined name 'FourModeComplianceValidator'.
+  class FourModeComplianceValidator {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2005:3: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+    static final FourModeComplianceValidator _instance = FourModeComplianceValidator._internal();
+    ^^^^^^
+  7570.%20SIT_P1.dart:2005:16: Error: 'FourModeComplianceValidator' isn't a type.
+    static final FourModeComplianceValidator _instance = FourModeComplianceValidator._internal();
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2005:56: Error: Undefined name 'FourModeComplianceValidator'.
+    static final FourModeComplianceValidator _instance = FourModeComplianceValidator._internal();
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2006:3: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+    static FourModeComplianceValidator get instance => _instance;
+    ^^^^^^
+  7570.%20SIT_P1.dart:2006:10: Error: 'FourModeComplianceValidator' isn't a type.
+    static FourModeComplianceValidator get instance => _instance;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2006:38: Error: Expected ';' after this.
+    static FourModeComplianceValidator get instance => _instance;
+                                       ^^^
+  7570.%20SIT_P1.dart:2006:51: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+    static FourModeComplianceValidator get instance => _instance;
+                                                    ^^
+  7570.%20SIT_P1.dart:2007:3: Error: Undefined name 'FourModeComplianceValidator'.
+    FourModeComplianceValidator._internal();
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2031:33: Error: Method not found: '_validateSingleMode'.
+          final modeCheck = await _validateSingleMode(endpoint, mode);
+                                  ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2031:33: Error: Local variable '_validateSingleMode' can't be referenced before it is declared.
+          final modeCheck = await _validateSingleMode(endpoint, mode);
+                                  ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2062:32: Context: This is the declaration of the variable '_validateSingleMode'.
+    Future<Map<String, dynamic>> _validateSingleMode(String endpoint, String mode) async {
+                                 ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2071:26: Error: Method not found: '_checkModeSpecificFeatures'.
+      final featureCheck = _checkModeSpecificFeatures(mode);
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2078:29: Error: Method not found: '_checkResponseComplexity'.
+      final complexityCheck = _checkResponseComplexity(mode, endpoint);
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2085:21: Error: Method not found: '_checkUserExperienceAdaptation'.
+      final uxCheck = _checkUserExperienceAdaptation(mode);
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2092:30: Error: Method not found: '_checkModeConsistency'.
+      final consistencyCheck = _checkModeConsistency(mode);
+                               ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2071:26: Error: Local variable '_checkModeSpecificFeatures' can't be referenced before it is declared.
+      final featureCheck = _checkModeSpecificFeatures(mode);
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2105:24: Context: This is the declaration of the variable '_checkModeSpecificFeatures'.
+    Map<String, dynamic> _checkModeSpecificFeatures(String mode) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2106:30: Error: Method not found: '_getExpectedModeFeatures'.
+      final expectedFeatures = _getExpectedModeFeatures(mode);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2109:31: Error: Method not found: '_simulateAvailableFeatures'.
+      final availableFeatures = _simulateAvailableFeatures(mode);
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2078:29: Error: Local variable '_checkResponseComplexity' can't be referenced before it is declared.
+      final complexityCheck = _checkResponseComplexity(mode, endpoint);
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2123:24: Context: This is the declaration of the variable '_checkResponseComplexity'.
+    Map<String, dynamic> _checkResponseComplexity(String mode, String endpoint) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2124:32: Error: Method not found: '_getExpectedComplexity'.
+      final expectedComplexity = _getExpectedComplexity(mode);
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2125:30: Error: Method not found: '_calculateEndpointComplexity'.
+      final actualComplexity = _calculateEndpointComplexity(endpoint);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2085:21: Error: Local variable '_checkUserExperienceAdaptation' can't be referenced before it is declared.
+      final uxCheck = _checkUserExperienceAdaptation(mode);
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2140:24: Context: This is the declaration of the variable '_checkUserExperienceAdaptation'.
+    Map<String, dynamic> _checkUserExperienceAdaptation(String mode) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2141:31: Error: Method not found: '_getModeUXCharacteristics'.
+      final uxCharacteristics = _getModeUXCharacteristics(mode);
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2144:19: Error: Method not found: '_simulateUXScore'.
+      final score = _simulateUXScore(mode);
+                    ^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2092:30: Error: Local variable '_checkModeConsistency' can't be referenced before it is declared.
+      final consistencyCheck = _checkModeConsistency(mode);
+                               ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2156:24: Context: This is the declaration of the variable '_checkModeConsistency'.
+    Map<String, dynamic> _checkModeConsistency(String mode) {
+                         ^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2158:30: Error: Method not found: '_simulateConsistencyScore'.
+      final consistencyScore = _simulateConsistencyScore(mode);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2106:30: Error: Local variable '_getExpectedModeFeatures' can't be referenced before it is declared.
+      final expectedFeatures = _getExpectedModeFeatures(mode);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2168:16: Context: This is the declaration of the variable '_getExpectedModeFeatures'.
+    List<String> _getExpectedModeFeatures(String mode) {
+                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2109:31: Error: Local variable '_simulateAvailableFeatures' can't be referenced before it is declared.
+      final availableFeatures = _simulateAvailableFeatures(mode);
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2183:16: Context: This is the declaration of the variable '_simulateAvailableFeatures'.
+    List<String> _simulateAvailableFeatures(String mode) {
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2185:25: Error: Method not found: '_getExpectedModeFeatures'.
+      final allFeatures = _getExpectedModeFeatures(mode);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2124:32: Error: Local variable '_getExpectedComplexity' can't be referenced before it is declared.
+      final expectedComplexity = _getExpectedComplexity(mode);
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2189:7: Context: This is the declaration of the variable '_getExpectedComplexity'.
+    int _getExpectedComplexity(String mode) {
+        ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2125:30: Error: Local variable '_calculateEndpointComplexity' can't be referenced before it is declared.
+      final actualComplexity = _calculateEndpointComplexity(endpoint);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2199:7: Context: This is the declaration of the variable '_calculateEndpointComplexity'.
+    int _calculateEndpointComplexity(String endpoint) {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2141:31: Error: Local variable '_getModeUXCharacteristics' can't be referenced before it is declared.
+      final uxCharacteristics = _getModeUXCharacteristics(mode);
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2208:24: Context: This is the declaration of the variable '_getModeUXCharacteristics'.
+    Map<String, dynamic> _getModeUXCharacteristics(String mode) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2144:19: Error: Local variable '_simulateUXScore' can't be referenced before it is declared.
+      final score = _simulateUXScore(mode);
+                    ^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2223:7: Context: This is the declaration of the variable '_simulateUXScore'.
+    int _simulateUXScore(String mode) {
+        ^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2158:30: Error: Local variable '_simulateConsistencyScore' can't be referenced before it is declared.
+      final consistencyScore = _simulateConsistencyScore(mode);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2229:7: Context: This is the declaration of the variable '_simulateConsistencyScore'.
+    int _simulateConsistencyScore(String mode) {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2237:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2244:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT027_AuthForgotPasswordEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2244:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT027_AuthForgotPasswordEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2245:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2252:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT028_AuthResetPasswordEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2252:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT028_AuthResetPasswordEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2253:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2260:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT029_AuthVerifyEmailEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2260:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT029_AuthVerifyEmailEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2261:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2268:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT030_AuthBindLineEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2268:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT030_AuthBindLineEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2269:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2276:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT031_AuthBindStatusEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2276:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT031_AuthBindStatusEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2277:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2284:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT032_GetUsersProfileEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2284:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT032_GetUsersProfileEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2285:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2292:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT033_PutUsersProfileEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2292:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT033_PutUsersProfileEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2293:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2300:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT034_UsersPreferencesManagementEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2300:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT034_UsersPreferencesManagementEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2301:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2308:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT035_UsersModeEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2308:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT035_UsersModeEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2309:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2316:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT036_UsersSecurityEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2316:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT036_UsersSecurityEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2317:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2324:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT037_UsersVerifyPinEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2324:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT037_UsersVerifyPinEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2325:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2332:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT038_GetTransactionByIdEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2332:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT038_GetTransactionByIdEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2333:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2340:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT039_PutTransactionByIdEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2340:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT039_PutTransactionByIdEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2341:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2348:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT040_DeleteTransactionByIdEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2348:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT040_DeleteTransactionByIdEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2349:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2356:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT041_TransactionsStatisticsEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2356:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT041_TransactionsStatisticsEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2357:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2364:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT042_TransactionsRecentEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2364:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT042_TransactionsRecentEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2365:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2372:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT043_TransactionsChartsEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2372:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT043_TransactionsChartsEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2373:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2380:1: Error: Expected ',' before this.
+  Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpointValidation() async {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2380:30: Error: A function expression can't have a name.
+  Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpointValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2381:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2389:5: Error: Expected ',' before this.
+      'passed': false,
+      ^^^^^^^^
+  7570.%20SIT_P1.dart:997:13: Error: Expected ',' before this.
+      'testId': 'TC-SIT-012',
+              ^
+  7570.%20SIT_P1.dart:998:15: Error: Expected ',' before this.
+      'testName': '使用者完整生命週期測試',
+                ^
+  7570.%20SIT_P1.dart:999:12: Error: Expected ',' before this.
+      'focus': '端到端流程驗證',
+             ^
+  7570.%20SIT_P1.dart:2389:13: Error: Expected ',' before this.
+      'passed': false,
+              ^
+  7570.%20SIT_P1.dart:2390:14: Error: Expected ',' before this.
+      'details': <String, dynamic>{},
+               ^
+  7570.%20SIT_P1.dart:2391:20: Error: Expected ',' before this.
+      'executionTime': 0,
+                     ^
+  7570.%20SIT_P1.dart:1035:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['apiValidation'] = apiValidation;
+                           ^
+  7570.%20SIT_P1.dart:1055:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['dcn0015Validation'] = dcn0015Validation;
+                           ^
+  7570.%20SIT_P1.dart:1062:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['fourModeValidation'] = fourModeValidation;
+                           ^
+  7570.%20SIT_P1.dart:1070:56: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+      testResult['passed'] = testResult['apiCompliance'] >= 80 && 
+                                                         ^^
+  7570.%20SIT_P1.dart:1071:59: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['dcn0015Compliance'] >= 80 && 
+                                                            ^^
+  7570.%20SIT_P1.dart:1072:60: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['fourModeCompliance'] >= 70;
+                                                             ^^
+  7570.%20SIT_P1.dart:1079:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1113:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['apiValidation'] = apiValidation;
+                           ^
+  7570.%20SIT_P1.dart:1137:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['dcn0015Validation'] = dcn0015Validation;
+                           ^
+  7570.%20SIT_P1.dart:1144:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['fourModeValidation'] = fourModeValidation;
+                           ^
+  7570.%20SIT_P1.dart:1151:56: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+      testResult['passed'] = testResult['apiCompliance'] >= 80 && 
+                                                         ^^
+  7570.%20SIT_P1.dart:1152:59: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['dcn0015Compliance'] >= 80 && 
+                                                            ^^
+  7570.%20SIT_P1.dart:1153:60: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['fourModeCompliance'] >= 70;
+                                                             ^^
+  7570.%20SIT_P1.dart:1160:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1449:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['apiValidation'] = apiValidation;
+                           ^
+  7570.%20SIT_P1.dart:1456:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['dcn0015Validation'] = dcn0015Validation;
+                           ^
+  7570.%20SIT_P1.dart:1463:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['fourModeValidation'] = fourModeValidation;
+                           ^
+  7570.%20SIT_P1.dart:1471:56: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+      testResult['passed'] = testResult['apiCompliance'] >= 80 && 
+                                                         ^^
+  7570.%20SIT_P1.dart:1472:59: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['dcn0015Compliance'] >= 80 && 
+                                                            ^^
+  7570.%20SIT_P1.dart:1473:60: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['fourModeCompliance'] >= 70;
+                                                             ^^
+  7570.%20SIT_P1.dart:1480:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1538:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['pathFormat'] = pathCheck;
+                            ^
+  7570.%20SIT_P1.dart:1541:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 20;
+                              ^
+  7570.%20SIT_P1.dart:1542:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('端點路徑格式不符合規範');
+                               ^^^
+  7570.%20SIT_P1.dart:1547:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['httpMethod'] = methodCheck;
+                            ^
+  7570.%20SIT_P1.dart:1550:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 15;
+                              ^
+  7570.%20SIT_P1.dart:1551:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('HTTP方法不符合RESTful規範');
+                               ^^^
+  7570.%20SIT_P1.dart:1556:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['api8020Compliance'] = api8020Check;
+                            ^
+  7570.%20SIT_P1.dart:1558:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 25;
+                              ^
+  7570.%20SIT_P1.dart:1559:32: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['warnings'].add('端點未在8020 API清單中找到');
+                                 ^^^
+  7570.%20SIT_P1.dart:1564:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['api8088Compliance'] = api8088Check;
+                            ^
+  7570.%20SIT_P1.dart:1566:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 20;
+                              ^
+  7570.%20SIT_P1.dart:1567:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('不符合8088 API設計規範');
+                               ^^^
+  7570.%20SIT_P1.dart:1572:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['p12Range'] = p12RangeCheck;
+                            ^
+  7570.%20SIT_P1.dart:1575:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 30;
+                              ^
+  7570.%20SIT_P1.dart:1576:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('端點超出P1-2範圍');
+                               ^^^
+  7570.%20SIT_P1.dart:1772:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['requiredFields'] = requiredFields;
+                            ^
+  7570.%20SIT_P1.dart:1775:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 30;
+                              ^
+  7570.%20SIT_P1.dart:1776:30: Error: The method 'addAll' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'addAll'.
+          validation['errors'].addAll(requiredFields['missingFields']);
+                               ^^^^^^
+  7570.%20SIT_P1.dart:1781:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['successField'] = successField;
+                            ^
+  7570.%20SIT_P1.dart:1784:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 20;
+                              ^
+  7570.%20SIT_P1.dart:1785:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('success欄位格式錯誤');
+                               ^^^
+  7570.%20SIT_P1.dart:1790:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['metadata'] = metadataCheck;
+                            ^
+  7570.%20SIT_P1.dart:1792:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 25;
+                              ^
+  7570.%20SIT_P1.dart:1793:30: Error: The method 'addAll' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'addAll'.
+          validation['errors'].addAll(metadataCheck['errors']);
+                               ^^^^^^
+  7570.%20SIT_P1.dart:1798:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['modeFeatures'] = modeFeatures;
+                            ^
+  7570.%20SIT_P1.dart:1800:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 15;
+                              ^
+  7570.%20SIT_P1.dart:1801:32: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['warnings'].add('四模式欄位不完整');
+                                 ^^^
+  7570.%20SIT_P1.dart:1806:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['timestamp'] = timestampCheck;
+                            ^
+  7570.%20SIT_P1.dart:1808:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 10;
+                              ^
+  7570.%20SIT_P1.dart:1809:32: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['warnings'].add('時間戳格式不標準');
+                                 ^^^
+  7570.%20SIT_P1.dart:2032:33: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+          validation['modeChecks'][mode] = modeCheck;
+                                  ^
+  7570.%20SIT_P1.dart:2038:34: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+            validation['warnings'].add('$mode 模式驗證不完整');
+                                   ^^^
+  7570.%20SIT_P1.dart:2044:51: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+        validation['isValid'] = validation['score'] >= 70;
+                                                    ^^
+  7570.%20SIT_P1.dart:2072:24: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      modeCheck['checks']['features'] = featureCheck;
+                         ^
+  7570.%20SIT_P1.dart:2074:26: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+        modeCheck['score'] -= 30;
+                           ^
+  7570.%20SIT_P1.dart:2079:24: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      modeCheck['checks']['complexity'] = complexityCheck;
+                         ^
+  7570.%20SIT_P1.dart:2081:26: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+        modeCheck['score'] -= 25;
+                           ^
+  7570.%20SIT_P1.dart:2086:24: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      modeCheck['checks']['userExperience'] = uxCheck;
+                         ^
+  7570.%20SIT_P1.dart:2088:26: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+        modeCheck['score'] -= 20;
+                           ^
+  7570.%20SIT_P1.dart:2093:24: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      modeCheck['checks']['consistency'] = consistencyCheck;
+                         ^
+  7570.%20SIT_P1.dart:2095:26: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+        modeCheck['score'] -= 25;
+                           ^
+  7570.%20SIT_P1.dart:2098:47: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+      modeCheck['isValid'] = modeCheck['score'] >= 70;
+                                                ^^
+  7570.%20SIT_P1.dart:2429:15: Error: The operator '[]' isn't defined for the class 'Set<dynamic>'.
+   - 'Set' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+      testResult['details']['lifecycleSteps'] = lifecycleSteps;
+                ^
+  7570.%20SIT_P1.dart:2434:17: Error: The operator '[]' isn't defined for the class 'Set<dynamic>'.
+   - 'Set' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+        testResult['details']['completeLifecycleSuccess'] = true;
+                  ^
+  7570.%20SIT_P1.dart:2435:17: Error: The operator '[]=' isn't defined for the class 'Set<dynamic>'.
+   - 'Set' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['passed'] = true;
+                  ^
+  7570.%20SIT_P1.dart:2439:15: Error: The operator '[]=' isn't defined for the class 'Set<dynamic>'.
+   - 'Set' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['executionTime'] = stopwatch.elapsedMilliseconds;
+                ^
+  7570.%20SIT_P1.dart:2441:12: Error: A value of type 'Set<dynamic>' can't be returned from an async function with return type 'Future<Map<String, dynamic>>'.
+   - 'Set' is from 'dart:core'.
+   - 'Future' is from 'dart:async'.
+   - 'Map' is from 'dart:core'.
+      return testResult;
+             ^
+  7570.%20SIT_P1.dart:2443:15: Error: The operator '[]' isn't defined for the class 'Set<dynamic>'.
+   - 'Set' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+      testResult['details']['error'] = e.toString();
+                ^
+  7570.%20SIT_P1.dart:2444:12: Error: A value of type 'Set<dynamic>' can't be returned from an async function with return type 'Future<Map<String, dynamic>>'.
+   - 'Set' is from 'dart:core'.
+   - 'Future' is from 'dart:async'.
+   - 'Map' is from 'dart:core'.
+      return testResult;
+             ^
+  7570.%20SIT_P1.dart:2495:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['businessProcess'] = businessProcess;
+                           ^
+  7570.%20SIT_P1.dart:2500:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['businessProcessComplete'] = true;
+                             ^
+  7570.%20SIT_P1.dart:2509:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:2561:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['networkExceptions'] = networkExceptions;
+                           ^
+  7570.%20SIT_P1.dart:2565:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['systemStabilityUnderException'] = true;
+                             ^
+  7570.%20SIT_P1.dart:2574:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:2623:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['businessRuleErrors'] = businessRuleErrors;
+                           ^
+  7570.%20SIT_P1.dart:2627:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['businessRuleValidationAccuracy'] = true;
+                             ^
+  7570.%20SIT_P1.dart:2636:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:2676:67: Error: The argument type 'Object?' can't be assigned to the parameter type 'Map<String, dynamic>'.
+   - 'Object' is from 'dart:core'.
+   - 'Map' is from 'dart:core'.
+      final formatValidation = validateSystemEntryFormat(dcn0015Data['data']);
+                                                                    ^
+  7570.%20SIT_P1.dart:2677:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['formatValidation'] = formatValidation;
+                           ^
+  7570.%20SIT_P1.dart:2681:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dcn0015FormatCompliance'] = 100.0;
+                             ^
+  7570.%20SIT_P1.dart:2682:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['qualityGradeA'] = true;
+                             ^
+  7570.%20SIT_P1.dart:2691:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:2708:53: Error: The getter '_injectionHistory' isn't defined for the class 'TestDataInjectionFactory'.
+   - 'TestDataInjectionFactory' is from '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named '_injectionHistory'.
+    final history = TestDataInjectionFactory.instance._injectionHistory;
+                                                      ^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2732:30: Error: A non-null value must be returned since the return type 'Future<Map<String, dynamic>>' doesn't allow null.
+   - 'Future' is from 'dart:async'.
+   - 'Map' is from 'dart:core'.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                               ^
+  7570.%20SIT_P1.dart:2742:34: Error: Undefined name 'IntegrationTestController'.
+      final deepValidation = await IntegrationTestController.instance.executeDeepIntegrationValidation();
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2746:35: Error: Undefined name 'TestDataIntegrationManager'.
+      final dataIntegration = await TestDataIntegrationManager.instance.executeCompleteDataIntegration(
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2758:27: Error: Undefined name 'IntegrationErrorHandler'.
+      final errorHandling = IntegrationErrorHandler.instance.getErrorStatistics();
+                            ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2778:5: Error: Undefined name 'IntegrationErrorHandler'.
+      IntegrationErrorHandler.instance.handleIntegrationError(
+      ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2911:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['paramValidation'] = paramValidation;
+                           ^
+  7570.%20SIT_P1.dart:2930:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['dcn0015Validation'] = dcn0015Validation;
+                           ^
+  7570.%20SIT_P1.dart:2934:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['dataIntegrity'] = dataIntegrity;
+                           ^
+  7570.%20SIT_P1.dart:2943:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:2976:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['credentialValidation'] = credentialValidation;
+                           ^
+  7570.%20SIT_P1.dart:2981:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['jwtValidation'] = jwtValidation;
+                           ^
+  7570.%20SIT_P1.dart:2996:52: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+      final userModeValidation = mockResponse['data']['user']['userMode'] != null;
+                                                     ^
+  7570.%20SIT_P1.dart:2997:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['userModeValidation'] = userModeValidation;
+                           ^
+  7570.%20SIT_P1.dart:3001:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['api8101Compliance'] = api8101Compliance;
+                           ^
+  7570.%20SIT_P1.dart:3010:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:3041:52: Error: Method 'startsWith' cannot be called on 'String?' because it is potentially null.
+  Try calling using ?. instead.
+      final tokenValidation = logoutRequest['token'].startsWith('Bearer ');
+                                                     ^^^^^^^^^^
+  7570.%20SIT_P1.dart:3042:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['tokenValidation'] = tokenValidation;
+                           ^
+  7570.%20SIT_P1.dart:3054:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['responseFormatValidation'] = responseFormatValidation;
+                           ^
+  7570.%20SIT_P1.dart:3058:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['tokenInvalidation'] = tokenInvalidation;
+                           ^
+  7570.%20SIT_P1.dart:3062:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['dcn0015Compliance'] = dcn0015Compliance;
+                           ^
+  7570.%20SIT_P1.dart:3071:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:3241:22: Error: Can't use 'SITP1TestController' because it is declared more than once.
+    final controller = SITP1TestController.instance;
+                       ^
+  7570.%20SIT_P1.dart:3332:27: Error: Can't use 'SITP1TestController' because it is declared more than once.
+      final results = await SITP1TestController.instance.executeFullSITTest();
+                            ^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:878:25: Error: Undefined name 'SystemEntryFunctionGroup'.
+      final systemEntry = SystemEntryFunctionGroup.instance;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:906:5: Error: Undefined name 'DependencyContainer'.
+      DependencyContainer.registerAccountingDependencies();
+      ^^^^^^^^^^^^^^^^^^^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:408:46: Error: Operator '[]=' cannot be called on 'Map<String, Object>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+   - 'Object' is from 'dart:core'.
+        testDataSet['authentication_test_data']['valid_users'] = dynamicUsers;
+                                               ^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:417:46: Error: Operator '[]' cannot be called on 'Map<String, Object>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+   - 'Object' is from 'dart:core'.
+          (testDataSet['bookkeeping_test_data']['test_transactions'] as Map<String, Map<String, dynamic>>)
+                                               ^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:423:48: Error: Operator '[]' cannot be called on 'Map<String, Object>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+   - 'Object' is from 'dart:core'.
+            (testDataSet['bookkeeping_test_data']['test_ledgers'] as Map<String, Map<String, dynamic>>)[ledger['id']] = ledger;
+                                                 ^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:428:66: Error: Operator '[]' cannot be called on 'Map<String, Object>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+   - 'Object' is from 'dart:core'.
+        final totalUsers = (testDataSet['authentication_test_data']['valid_users'] as Map).length;
+                                                                   ^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:429:70: Error: Operator '[]' cannot be called on 'Map<String, Object>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+   - 'Object' is from 'dart:core'.
+        final totalTransactions = (testDataSet['bookkeeping_test_data']['test_transactions'] as Map).length;
+                                                                       ^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:430:65: Error: Operator '[]' cannot be called on 'Map<String, Object>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+   - 'Object' is from 'dart:core'.
+        final totalLedgers = (testDataSet['bookkeeping_test_data']['test_ledgers'] as Map).length;
+                                                                  ^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:432:30: Error: Operator '[]=' cannot be called on 'Map<String, Object>?' because it is potentially null.
+   - 'Map' is from 'dart:core'.
+   - 'Object' is from 'dart:core'.
+        testDataSet['metadata']['generation_stats'] = {
+                               ^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:02 +0 -1: Some tests failed. 
