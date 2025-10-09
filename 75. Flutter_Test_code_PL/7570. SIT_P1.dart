@@ -1043,7 +1043,7 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
     final allStepsSuccess = lifecycleSteps.values.every((step) => step);
     if (allStepsSuccess) {
       testResult['details']['completeLifecycleSuccess'] = true;
-      testresult['passed'] = true;
+      testResult['passed'] = true;
     }
 
     stopwatch.stop();
@@ -1174,7 +1174,7 @@ Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
     // 驗證異常情況下的系統穩定性
     if (networkExceptions.isNotEmpty) {
       testResult['details']['systemStabilityUnderException'] = true;
-      testresult['passed'] = true;
+      testResult['passed'] = true;
     }
 
     stopwatch.stop();
@@ -1236,7 +1236,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
     // 驗證業務規則驗證準確性
     if (businessRuleErrors.isNotEmpty) {
       testResult['details']['businessRuleValidationAccuracy'] = true;
-      testresult['passed'] = true;
+      testResult['passed'] = true;
     }
 
     stopwatch.stop();
@@ -2901,12 +2901,6 @@ void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic
     }
   ]);
 }
-
-// ==========================================
-// 模組導出 (階段二完整版)
-// ==========================================
-
-// Export declarations removed - using class-based exports instead
 
 // ==========================================
 // 階段二模組初始化

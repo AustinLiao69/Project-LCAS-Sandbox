@@ -10,10 +10,10 @@ import 'dart:convert';
 import 'dart:math';
 
 /// 動態測試資料工廠
-class SITDynamicTestDataFactory {
-  static final SITDynamicTestDataFactory _instance = SITDynamicTestDataFactory._internal();
-  static SITDynamicTestDataFactory get instance => _instance;
-  SITDynamicTestDataFactory._internal();
+class DynamicTestDataFactory {
+  static final DynamicTestDataFactory _instance = DynamicTestDataFactory._internal();
+  static DynamicTestDataFactory get instance => _instance;
+  DynamicTestDataFactory._internal();
 
   final Random _random = Random();
 
@@ -411,22 +411,4 @@ class IntegrationErrorHandler {
   }
 }
 
-// Mocking TestDataInjectionFactory for the code to be runnable
-// In a real scenario, this would be imported from '7580. 注入測試資料.dart';
-class TestDataInjectionFactory {
-  static final TestDataInjectionFactory _instance = TestDataInjectionFactory._internal();
-  static TestDataInjectionFactory get instance => _instance;
-  TestDataInjectionFactory._internal();
-
-  Future<bool> injectSystemEntryData(Map<String, dynamic> userData) async {
-    await Future.delayed(Duration(milliseconds: 10));
-    print('[MockInjection] 注入系統進入資料: ${userData['userId']}');
-    return true; // Simulate successful injection
-  }
-
-  Future<bool> injectAccountingCoreData(Map<String, dynamic> transactionData) async {
-    await Future.delayed(Duration(milliseconds: 10));
-    print('[MockInjection] 注入記帳核心資料: ${transactionData['收支ID']}');
-    return true; // Simulate successful injection
-  }
-}
+// TestDataInjectionFactory 已在 7580. 注入測試資料.dart 中定義

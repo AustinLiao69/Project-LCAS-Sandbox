@@ -9,10 +9,13 @@ import 'dart:async';
 import 'dart:convert';
 
 /// 測試資料注入工廠
-class SITTestDataInjectionFactory {
-  static final SITTestDataInjectionFactory _instance = SITTestDataInjectionFactory._internal();
-  static SITTestDataInjectionFactory get instance => _instance;
-  SITTestDataInjectionFactory._internal();
+class TestDataInjectionFactory {
+  static final TestDataInjectionFactory _instance = TestDataInjectionFactory._internal();
+  static TestDataInjectionFactory get instance => _instance;
+  TestDataInjectionFactory._internal();
+  
+  // 記錄注入歷史
+  final List<String> _injectionHistory = [];
 
   /// 注入系統進入功能群測試資料
   Future<bool> injectSystemEntryData(Map<String, dynamic> testData) async {
@@ -24,6 +27,9 @@ class SITTestDataInjectionFactory {
       if (testData.isEmpty) {
         return false;
       }
+
+      // 記錄注入歷史
+      _injectionHistory.add('SystemEntry: ${testData['userId'] ?? 'unknown'} - ${DateTime.now().toIso8601String()}');
 
       // 模擬成功注入
       print('[TestDataInjection] 系統進入資料注入成功: ${testData['userId'] ?? 'unknown'}');
@@ -45,6 +51,9 @@ class SITTestDataInjectionFactory {
       if (testData.isEmpty) {
         return false;
       }
+
+      // 記錄注入歷史
+      _injectionHistory.add('AccountingCore: ${testData['transactionId'] ?? testData['收支ID'] ?? 'unknown'} - ${DateTime.now().toIso8601String()}');
 
       // 模擬成功注入
       print('[TestDataInjection] 記帳核心資料注入成功: ${testData['transactionId'] ?? testData['收支ID'] ?? 'unknown'}');
