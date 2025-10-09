@@ -440,7 +440,7 @@ async function BK_initialize() {
       }
     }
 
-    // 初始化Firestore
+    // 初始化Firebase
     await BK_initializeFirebase();
     initMessages.push("Firebase初始化: 成功");
 
@@ -1649,51 +1649,35 @@ async function BK_checkTransactionIdUnique(transactionId) {
 }
 
 /**
- * 準備交易數據（階段二修復版）
+ * 準備交易數據（1311 FS.js規範版）
  */
 async function BK_prepareTransactionData(transactionId, transactionData, processId) {
   const now = moment().tz(BK_CONFIG.TIMEZONE);
-
-  const dateFormat = getEnvVar('DATE_FORMAT', 'YYYY/MM/DD');
-  const timeFormat = getEnvVar('TIME_FORMAT', 'HH:mm:ss');
-
-  const fieldNames = {
-    id: getEnvVar('ID_FIELD', '收支ID'),
-    uid: getEnvVar('UID_FIELD', 'UID'),
-    date: getEnvVar('DATE_FIELD', '日期'),
-    time: getEnvVar('TIME_FIELD', '時間'),
-    income: getEnvVar('INCOME_FIELD', '收入'),
-    expense: getEnvVar('EXPENSE_FIELD', '支出'),
-    description: getEnvVar('DESCRIPTION_FIELD', '備註'),
-    paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
-    majorCode: getEnvVar('MAJOR_CODE_FIELD', '大項代碼'),
-    minorCode: getEnvVar('MINOR_CODE_FIELD', '子項代碼'),
-    categoryName: getEnvVar('CATEGORY_FIELD', '子項名稱')
-  };
-
-  const defaultMajorCode = getEnvVar('DEFAULT_MAJOR_CODE', '01');
-  const defaultMinorCode = getEnvVar('DEFAULT_MINOR_CODE', '01');
-  const defaultCategoryName = getEnvVar('DEFAULT_CATEGORY', '其他');
-
   const currentTimestamp = admin.firestore.Timestamp.now();
 
+  // 使用1311 FS.js標準欄位格式
   const preparedData = {
-    [fieldNames.id]: transactionId,
-    [fieldNames.uid]: transactionData.userId || '',
-    [fieldNames.date]: now.format(dateFormat),
-    [fieldNames.time]: now.format(timeFormat),
-    [fieldNames.income]: transactionData.type === 'income' ? transactionData.amount.toString() : '',
-    [fieldNames.expense]: transactionData.type === 'expense' ? transactionData.amount.toString() : '',
-    [fieldNames.description]: transactionData.description || '',
-    [fieldNames.paymentMethod]: transactionData.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
-    [fieldNames.majorCode]: transactionData.majorCode || defaultMajorCode,
-    [fieldNames.minorCode]: transactionData.minorCode || defaultMinorCode,
-    [fieldNames.categoryName]: transactionData.categoryName || defaultCategoryName,
+    id: transactionId,
+    amount: transactionData.amount,
+    type: transactionData.type, // 'income' 或 'expense'
+    description: transactionData.description || '',
+    categoryId: transactionData.categoryId || 'default',
+    accountId: transactionData.accountId || 'default',
+    date: now.format('YYYY-MM-DD'),
     createdAt: currentTimestamp,
     updatedAt: currentTimestamp,
-    processId: processId,
-    amount: transactionData.amount,
-    type: transactionData.type
+    source: 'quick',
+    userId: transactionData.userId || '',
+    paymentMethod: transactionData.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
+
+    // 保留舊格式以維持向後相容性（標記為deprecated）
+    [getEnvVar('ID_FIELD', '收支ID')]: transactionId,
+    [getEnvVar('DATE_FIELD', '日期')]: now.format('YYYY/MM/DD'),
+    [getEnvVar('TIME_FIELD', '時間')]: now.format('HH:mm:ss'),
+    [getEnvVar('INCOME_FIELD', '收入')]: transactionData.type === 'income' ? transactionData.amount.toString() : '',
+    [getEnvVar('EXPENSE_FIELD', '支出')]: transactionData.type === 'expense' ? transactionData.amount.toString() : '',
+    [getEnvVar('DESCRIPTION_FIELD', '備註')]: transactionData.description || '',
+    [getEnvVar('UID_FIELD', 'UID')]: transactionData.userId || ''
   };
 
   return preparedData;
