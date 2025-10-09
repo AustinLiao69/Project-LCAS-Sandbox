@@ -1,0 +1,807 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
+Building package executable... ((1.8s)
+Built test:test.
+00:00 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  7570.%20SIT_P1.dart:1343:30: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                               ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1343:49: Error: Expected '{' before this.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                                                  ^
+  7570.%20SIT_P1.dart:1343:30: Error: 'SITP1TestController' is already declared in this scope.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                               ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:34:7: Context: Previous declaration of 'SITP1TestController'.
+  class SITP1TestController {
+        ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1343:49: Error: Expected a declaration, but got '.'.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                                                  ^
+  7570.%20SIT_P1.dart:2913:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  export {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2913:8: Error: Expected a String, but got '{'.
+  export {
+         ^
+  7570.%20SIT_P1.dart:2913:1: Error: Expected ';' after this.
+  export {
+  ^^^^^^
+  7570.%20SIT_P1.dart:2913:8: Error: Expected a declaration, but got '{'.
+  export {
+         ^
+  7570.%20SIT_P1.dart:2940:2: Error: Unexpected token ';'.
+  };
+   ^
+  7570.%20SIT_P1.dart:19:8: Error: Error when reading '7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart': No such file or directory
+  import '7301. 系統進入功能群.dart';
+         ^
+  7570.%20SIT_P1.dart:20:8: Error: Error when reading '7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart': No such file or directory
+  import '7302. 記帳核心功能群.dart';
+         ^
+  7570.%20SIT_P1.dart:35:16: Error: 'SITP1TestController' isn't a type.
+    static final SITP1TestController _instance = SITP1TestController._internal();
+                 ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:35:16: Context: This isn't a type.
+    static final SITP1TestController _instance = SITP1TestController._internal();
+                 ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:36:10: Error: 'SITP1TestController' isn't a type.
+    static SITP1TestController get instance => _instance;
+           ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:36:10: Context: This isn't a type.
+    static SITP1TestController get instance => _instance;
+           ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:35:16: Error: Can't use 'SITP1TestController' because it is declared more than once.
+    static final SITP1TestController _instance = SITP1TestController._internal();
+                 ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:35:48: Error: Can't use 'SITP1TestController' because it is declared more than once.
+    static final SITP1TestController _instance = SITP1TestController._internal();
+                                                 ^
+  7570.%20SIT_P1.dart:455:35: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      final injectionResult = await TestDataInjectionFactory.instance.injectSystemEntryData(testUser);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:452:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['generatedUser'] = testUser['userId'];
+                           ^
+  7570.%20SIT_P1.dart:456:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['injectionSuccess'] = injectionResult;
+                           ^
+  7570.%20SIT_P1.dart:462:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['chainValidation'] = true;
+                             ^
+  7570.%20SIT_P1.dart:471:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:502:31: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      final loginResult = await TestDataInjectionFactory.instance.injectSystemEntryData(loginData);
+                                ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:503:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['loginResult'] = loginResult;
+                           ^
+  7570.%20SIT_P1.dart:507:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['jwtTokenValid'] = true;
+                             ^
+  7570.%20SIT_P1.dart:508:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['userModeReturned'] = true;
+                             ^
+  7570.%20SIT_P1.dart:517:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:552:30: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      final authResult = await TestDataInjectionFactory.instance.injectSystemEntryData(firebaseData);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:553:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['firebaseAuthResult'] = authResult;
+                           ^
+  7570.%20SIT_P1.dart:557:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['firebaseIdTokenValid'] = true;
+                             ^
+  7570.%20SIT_P1.dart:558:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['userRegistrationComplete'] = true;
+                             ^
+  7570.%20SIT_P1.dart:567:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:598:37: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      final bookkeepingResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(quickTransaction);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:599:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['quickBookkeepingResult'] = bookkeepingResult;
+                           ^
+  7570.%20SIT_P1.dart:603:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['textParsingAccuracy'] = true;
+                             ^
+  7570.%20SIT_P1.dart:604:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['recordStoredCorrectly'] = true;
+                             ^
+  7570.%20SIT_P1.dart:605:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['fourModeProcessing'] = true;
+                             ^
+  7570.%20SIT_P1.dart:614:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:649:30: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      final formResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(completeTransaction);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:650:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['completeFormResult'] = formResult;
+                           ^
+  7570.%20SIT_P1.dart:654:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['formValidationCorrect'] = true;
+                             ^
+  7570.%20SIT_P1.dart:655:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dataIntegrityGuaranteed'] = true;
+                             ^
+  7570.%20SIT_P1.dart:664:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:697:28: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+        final result = await TestDataInjectionFactory.instance.injectAccountingCoreData(transaction);
+                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:701:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['batchInjectionResults'] = batchInjectionResults;
+                           ^
+  7570.%20SIT_P1.dart:706:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dataQueryAccuracy'] = true;
+                             ^
+  7570.%20SIT_P1.dart:707:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['fourModeResponseDifferentiation'] = true;
+                             ^
+  7570.%20SIT_P1.dart:716:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:750:13: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+        await TestDataInjectionFactory.instance.injectSystemEntryData(invalidData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:751:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['errorHandlingFailed'] = true;
+                             ^
+  7570.%20SIT_P1.dart:754:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['errorCaptured'] = true;
+                             ^
+  7570.%20SIT_P1.dart:755:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['errorMessage'] = e.toString();
+                             ^
+  7570.%20SIT_P1.dart:759:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['networkTimeoutHandling'] = true; // 模擬
+                           ^
+  7570.%20SIT_P1.dart:760:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['authenticationErrorHandling'] = true; // 模擬
+                           ^
+  7570.%20SIT_P1.dart:761:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['unifiedErrorFormat'] = true; // 模擬
+                           ^
+  7570.%20SIT_P1.dart:762:49: Error: The operator '[]' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]' operator.
+      testResult['passed'] = testResult['details']['errorCaptured'] == true;
+                                                  ^
+  7570.%20SIT_P1.dart:769:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:807:36: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      final assessmentResult = await TestDataInjectionFactory.instance.injectSystemEntryData(assessmentData);
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:808:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['assessmentResult'] = assessmentResult;
+                           ^
+  7570.%20SIT_P1.dart:812:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['evaluationLogicCorrect'] = true;
+                             ^
+  7570.%20SIT_P1.dart:813:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['modeAssignmentAccurate'] = true;
+                             ^
+  7570.%20SIT_P1.dart:822:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:852:28: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+        final result = await TestDataInjectionFactory.instance.injectSystemEntryData(modeData);
+                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:856:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['modeResults'] = modeResults;
+                           ^
+  7570.%20SIT_P1.dart:861:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['expertModeResponse'] = true;
+                             ^
+  7570.%20SIT_P1.dart:862:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['inertialModeResponse'] = true;
+                             ^
+  7570.%20SIT_P1.dart:863:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['cultivationModeResponse'] = true;
+                             ^
+  7570.%20SIT_P1.dart:864:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['guidingModeResponse'] = true;
+                             ^
+  7570.%20SIT_P1.dart:873:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:907:36: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      final conversionResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(rawData);
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:908:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['conversionResult'] = conversionResult;
+                           ^
+  7570.%20SIT_P1.dart:912:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['formatConversionAccuracy'] = true;
+                             ^
+  7570.%20SIT_P1.dart:913:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dataIntegrity'] = true;
+                             ^
+  7570.%20SIT_P1.dart:922:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:960:28: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+        final result = await TestDataInjectionFactory.instance.injectSystemEntryData(userData);
+                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:966:28: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+        final result = await TestDataInjectionFactory.instance.injectAccountingCoreData(transactionData);
+                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:970:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['syncSuccess'] = syncSuccess;
+                           ^
+  7570.%20SIT_P1.dart:974:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['syncTimeliness'] = true;
+                             ^
+  7570.%20SIT_P1.dart:975:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dataConsistency'] = true;
+                             ^
+  7570.%20SIT_P1.dart:984:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1017:44: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      lifecycleSteps['registration'] = await TestDataInjectionFactory.instance.injectSystemEntryData(registrationData);
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1024:37: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      lifecycleSteps['login'] = await TestDataInjectionFactory.instance.injectSystemEntryData(loginData);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1028:46: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      lifecycleSteps['modeAssessment'] = await TestDataInjectionFactory.instance.injectSystemEntryData(assessmentData);
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1032:43: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      lifecycleSteps['bookkeeping'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(transaction);
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1031:82: Error: Required named parameter 'description' must be provided.
+      final transaction = await DynamicTestDataFactory.instance.generateTransaction(userId: userId);
+                                                                                   ^
+  7570.%20SIT_P1.dart:1040:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['lifecycleSteps'] = lifecycleSteps;
+                           ^
+  7570.%20SIT_P1.dart:1045:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['completeLifecycleSuccess'] = true;
+                             ^
+  7570.%20SIT_P1.dart:1054:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1087:49: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      businessProcess['quickBookkeeping'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(quickTransaction);
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1098:45: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+      businessProcess['completeForm'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(completeTransaction);
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1106:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['businessProcess'] = businessProcess;
+                           ^
+  7570.%20SIT_P1.dart:1111:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['businessProcessComplete'] = true;
+                             ^
+  7570.%20SIT_P1.dart:1120:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1153:13: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+        await TestDataInjectionFactory.instance.injectSystemEntryData(invalidNetworkData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1164:13: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+        await TestDataInjectionFactory.instance.injectAccountingCoreData(timeoutData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1172:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['networkExceptions'] = networkExceptions;
+                           ^
+  7570.%20SIT_P1.dart:1176:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['systemStabilityUnderException'] = true;
+                             ^
+  7570.%20SIT_P1.dart:1185:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1218:13: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+        await TestDataInjectionFactory.instance.injectAccountingCoreData(invalidInputData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1229:13: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+        await TestDataInjectionFactory.instance.injectSystemEntryData(conflictData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1239:7: Error: Undefined name 'testresult'.
+        testresult['passed'] = true;
+        ^^^^^^^^^^
+  7570.%20SIT_P1.dart:1234:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['businessRuleErrors'] = businessRuleErrors;
+                           ^
+  7570.%20SIT_P1.dart:1238:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['businessRuleValidationAccuracy'] = true;
+                             ^
+  7570.%20SIT_P1.dart:1247:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1288:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['formatValidation'] = formatValidation;
+                           ^
+  7570.%20SIT_P1.dart:1292:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['dcn0015FormatCompliance'] = 100.0;
+                             ^
+  7570.%20SIT_P1.dart:1293:28: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        testResult['details']['qualityGradeA'] = true;
+                             ^
+  7570.%20SIT_P1.dart:1302:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1319:19: Error: 'TestDataInjectionFactory' is imported from both '7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart' and '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+    final history = TestDataInjectionFactory.instance._injectionHistory;
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1343:30: Error: A non-null value must be returned since the return type 'Future<Map<String, dynamic>>' doesn't allow null.
+   - 'Future' is from 'dart:async'.
+   - 'Map' is from 'dart:core'.
+  Future<Map<String, dynamic>> SITP1TestController.executePhase2DeepIntegrationTest() async {
+                               ^
+  7570.%20SIT_P1.dart:1521:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['apiValidation'] = apiValidation;
+                           ^
+  7570.%20SIT_P1.dart:1541:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['dcn0015Validation'] = dcn0015Validation;
+                           ^
+  7570.%20SIT_P1.dart:1548:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['fourModeValidation'] = fourModeValidation;
+                           ^
+  7570.%20SIT_P1.dart:1556:56: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+      testResult['passed'] = testResult['apiCompliance'] >= 80 &&
+                                                         ^^
+  7570.%20SIT_P1.dart:1557:59: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['dcn0015Compliance'] >= 80 &&
+                                                            ^^
+  7570.%20SIT_P1.dart:1558:60: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['fourModeCompliance'] >= 70;
+                                                             ^^
+  7570.%20SIT_P1.dart:1565:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1599:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['apiValidation'] = apiValidation;
+                           ^
+  7570.%20SIT_P1.dart:1623:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['dcn0015Validation'] = dcn0015Validation;
+                           ^
+  7570.%20SIT_P1.dart:1630:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['fourModeValidation'] = fourModeValidation;
+                           ^
+  7570.%20SIT_P1.dart:1637:56: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+      testResult['passed'] = testResult['apiCompliance'] >= 80 &&
+                                                         ^^
+  7570.%20SIT_P1.dart:1638:59: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['dcn0015Compliance'] >= 80 &&
+                                                            ^^
+  7570.%20SIT_P1.dart:1639:60: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['fourModeCompliance'] >= 70;
+                                                             ^^
+  7570.%20SIT_P1.dart:1646:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:1933:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['apiValidation'] = apiValidation;
+                           ^
+  7570.%20SIT_P1.dart:1940:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['dcn0015Validation'] = dcn0015Validation;
+                           ^
+  7570.%20SIT_P1.dart:1947:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['fourModeValidation'] = fourModeValidation;
+                           ^
+  7570.%20SIT_P1.dart:1955:56: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+      testResult['passed'] = testResult['apiCompliance'] >= 80 &&
+                                                         ^^
+  7570.%20SIT_P1.dart:1956:59: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['dcn0015Compliance'] >= 80 &&
+                                                            ^^
+  7570.%20SIT_P1.dart:1957:60: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+                            testResult['fourModeCompliance'] >= 70;
+                                                             ^^
+  7570.%20SIT_P1.dart:1964:26: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      testResult['details']['error'] = e.toString();
+                           ^
+  7570.%20SIT_P1.dart:2174:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['pathFormat'] = pathCheck;
+                            ^
+  7570.%20SIT_P1.dart:2177:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 20;
+                              ^
+  7570.%20SIT_P1.dart:2178:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('端點路徑格式不符合規範');
+                               ^^^
+  7570.%20SIT_P1.dart:2183:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['httpMethod'] = methodCheck;
+                            ^
+  7570.%20SIT_P1.dart:2186:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 15;
+                              ^
+  7570.%20SIT_P1.dart:2187:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('HTTP方法不符合RESTful規範');
+                               ^^^
+  7570.%20SIT_P1.dart:2192:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['api8020Compliance'] = api8020Check;
+                            ^
+  7570.%20SIT_P1.dart:2194:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 25;
+                              ^
+  7570.%20SIT_P1.dart:2195:32: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['warnings'].add('端點未在8020 API清單中找到');
+                                 ^^^
+  7570.%20SIT_P1.dart:2200:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['api8088Compliance'] = api8088Check;
+                            ^
+  7570.%20SIT_P1.dart:2202:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 20;
+                              ^
+  7570.%20SIT_P1.dart:2203:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('不符合8088 API設計規範');
+                               ^^^
+  7570.%20SIT_P1.dart:2208:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['p12Range'] = p12RangeCheck;
+                            ^
+  7570.%20SIT_P1.dart:2211:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 30;
+                              ^
+  7570.%20SIT_P1.dart:2212:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('端點超出P1-2範圍');
+                               ^^^
+  7570.%20SIT_P1.dart:2408:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['requiredFields'] = requiredFields;
+                            ^
+  7570.%20SIT_P1.dart:2411:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 30;
+                              ^
+  7570.%20SIT_P1.dart:2412:30: Error: The method 'addAll' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'addAll'.
+          validation['errors'].addAll(requiredFields['missingFields']);
+                               ^^^^^^
+  7570.%20SIT_P1.dart:2417:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['successField'] = successField;
+                            ^
+  7570.%20SIT_P1.dart:2420:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 20;
+                              ^
+  7570.%20SIT_P1.dart:2421:30: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['errors'].add('success欄位格式錯誤');
+                               ^^^
+  7570.%20SIT_P1.dart:2426:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['metadata'] = metadataCheck;
+                            ^
+  7570.%20SIT_P1.dart:2428:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 25;
+                              ^
+  7570.%20SIT_P1.dart:2429:30: Error: The method 'addAll' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'addAll'.
+          validation['errors'].addAll(metadataCheck['errors']);
+                               ^^^^^^
+  7570.%20SIT_P1.dart:2434:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['modeFeatures'] = modeFeatures;
+                            ^
+  7570.%20SIT_P1.dart:2436:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 15;
+                              ^
+  7570.%20SIT_P1.dart:2437:32: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['warnings'].add('四模式欄位不完整');
+                                 ^^^
+  7570.%20SIT_P1.dart:2442:27: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+        validation['checks']['timestamp'] = timestampCheck;
+                            ^
+  7570.%20SIT_P1.dart:2444:29: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+          validation['score'] -= 10;
+                              ^
+  7570.%20SIT_P1.dart:2445:32: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+          validation['warnings'].add('時間戳格式不標準');
+                                 ^^^
+  7570.%20SIT_P1.dart:2668:33: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+          validation['modeChecks'][mode] = modeCheck;
+                                  ^
+  7570.%20SIT_P1.dart:2674:34: Error: The method 'add' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'add'.
+            validation['warnings'].add('$mode 模式驗證不完整');
+                                   ^^^
+  7570.%20SIT_P1.dart:2680:51: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+        validation['isValid'] = validation['score'] >= 70;
+                                                    ^^
+  7570.%20SIT_P1.dart:2708:24: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      modeCheck['checks']['features'] = featureCheck;
+                         ^
+  7570.%20SIT_P1.dart:2710:26: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+        modeCheck['score'] -= 30;
+                           ^
+  7570.%20SIT_P1.dart:2715:24: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      modeCheck['checks']['complexity'] = complexityCheck;
+                         ^
+  7570.%20SIT_P1.dart:2717:26: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+        modeCheck['score'] -= 25;
+                           ^
+  7570.%20SIT_P1.dart:2722:24: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      modeCheck['checks']['userExperience'] = uxCheck;
+                         ^
+  7570.%20SIT_P1.dart:2724:26: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+        modeCheck['score'] -= 20;
+                           ^
+  7570.%20SIT_P1.dart:2729:24: Error: The operator '[]=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '[]=' operator.
+      modeCheck['checks']['consistency'] = consistencyCheck;
+                         ^
+  7570.%20SIT_P1.dart:2731:26: Error: The operator '-' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '-' operator.
+        modeCheck['score'] -= 25;
+                           ^
+  7570.%20SIT_P1.dart:2734:47: Error: The operator '>=' isn't defined for the class 'Object?'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '>=' operator.
+      modeCheck['isValid'] = modeCheck['score'] >= 70;
+                                                ^^
+  7570.%20SIT_P1.dart:2881:22: Error: Can't use 'SITP1TestController' because it is declared more than once.
+    final controller = SITP1TestController.instance;
+                       ^
+  7570.%20SIT_P1.dart:2970:10: Error: Can't use 'SITP1TestController' because it is declared more than once.
+      late SITP1TestController testController;
+           ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2973:24: Error: Can't use 'SITP1TestController' because it is declared more than once.
+        testController = SITP1TestController.instance;
+                         ^
+  7570.%20SIT_P1.dart:2998:27: Error: Can't use 'SITP1TestController' because it is declared more than once.
+      final results = await SITP1TestController.instance.executeFullSITTest();
+                            ^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:00 +0 -1: Some tests failed.
+~/workspace/75. Flutter_Test_code_PL$ 
