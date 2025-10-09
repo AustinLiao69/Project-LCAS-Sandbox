@@ -1096,8 +1096,9 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
 
     // 4. 記帳操作
     final transaction = await DynamicTestDataFactory.instance.generateTransaction(
-      userId: userId,
       description: '生命週期測試交易',
+      transactionType: 'expense',
+      userId: userId,
     );
     lifecycleSteps['bookkeeping'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(transaction);
 
