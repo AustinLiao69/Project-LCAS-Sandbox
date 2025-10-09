@@ -2,7 +2,7 @@
  * 7590. 生成動態測試資料.dart
  * @version v2.0.0
  * @date 2025-10-09
- * @update: 階段二完成 - 完整動態測試資料生成功能，支援7570 SIT測試
+ * @update: 階段一實作 - SIT動態測試資料生成機制
  */
 
 import 'dart:async';
@@ -54,7 +54,7 @@ class DynamicTestDataFactory {
       rethrow;
     }
   }
-  
+
   /// 生成評估問卷答案
   Map<String, dynamic> _generateAssessmentAnswers(String mode) {
     switch (mode) {
@@ -349,7 +349,7 @@ class IntegrationTestController {
       final validationScores = validationResults['validationCategories'].values
           .map((v) => v['success'] == true ? 1 : 0)
           .toList();
-      final overallSuccess = validationScores.isNotEmpty && 
+      final overallSuccess = validationScores.isNotEmpty &&
           (validationScores.reduce((a, b) => a + b) / validationScores.length) >= 0.75;
 
       validationResults['overallSuccess'] = overallSuccess;

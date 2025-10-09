@@ -1,127 +1,66 @@
+
 /**
  * 7580. 注入測試資料.dart
  * @version v2.0.0
  * @date 2025-10-09
- * @update: 階段二完成 - 完整測試資料注入功能，支援7570 SIT測試
+ * @update: 階段一實作 - SIT測試資料注入機制
  */
 
 import 'dart:async';
 import 'dart:convert';
 
-/// 測試資料注入工廠
+// ==========================================
+// 測試資料注入工廠
+// ==========================================
+
 class TestDataInjectionFactory {
   static final TestDataInjectionFactory _instance = TestDataInjectionFactory._internal();
   static TestDataInjectionFactory get instance => _instance;
   TestDataInjectionFactory._internal();
-  
-  // 記錄注入歷史
+
   final List<String> _injectionHistory = [];
-  final Map<String, int> _injectionStats = {
-    'total': 0,
-    'success': 0,
-    'failed': 0,
-  };
 
-  /// 注入系統進入功能群測試資料
-  Future<bool> injectSystemEntryData(Map<String, dynamic> testData) async {
+  Future<bool> injectSystemEntryData(Map<String, dynamic> data) async {
     try {
-      _injectionStats['total'] = (_injectionStats['total'] ?? 0) + 1;
-      
-      // 模擬資料注入處理
       await Future.delayed(Duration(milliseconds: 100));
-
-      // 強化資料格式驗證
-      if (testData.isEmpty) {
-        _injectionStats['failed'] = (_injectionStats['failed'] ?? 0) + 1;
-        return false;
-      }
-      
-      // 驗證必要欄位
-      final requiredFields = ['userId', 'email'];
-      for (final field in requiredFields) {
-        if (!testData.containsKey(field) || testData[field] == null) {
-          print('[TestDataInjection] 缺少必要欄位: $field');
-          _injectionStats['failed'] = (_injectionStats['failed'] ?? 0) + 1;
-          return false;
-        }
-      }
-
-      // 記錄注入歷史
-      _injectionHistory.add('SystemEntry: ${testData['userId'] ?? 'unknown'} - ${DateTime.now().toIso8601String()}');
-      _injectionStats['success'] = (_injectionStats['success'] ?? 0) + 1;
-
-      // 模擬成功注入
-      print('[TestDataInjection] 系統進入資料注入成功: ${testData['userId'] ?? 'unknown'}');
+      _injectionHistory.add('SystemEntry: ${DateTime.now().toIso8601String()}');
       return true;
-
     } catch (e) {
-      print('[TestDataInjection] 資料注入失敗: $e');
-      _injectionStats['failed'] = (_injectionStats['failed'] ?? 0) + 1;
       return false;
     }
   }
-  
-  /// 取得注入統計資訊
-  Map<String, dynamic> getInjectionStatistics() {
-    return {
-      'statistics': Map<String, int>.from(_injectionStats),
-      'history': List<String>.from(_injectionHistory),
-      'lastInjection': _injectionHistory.isNotEmpty ? _injectionHistory.last : null,
-    };
-  }
 
-  /// 注入記帳核心功能群測試資料
-  Future<bool> injectAccountingCoreData(Map<String, dynamic> testData) async {
+  Future<bool> injectAccountingCoreData(Map<String, dynamic> data) async {
     try {
-      // 模擬資料注入處理
-      await Future.delayed(Duration(milliseconds: 150));
-
-      // 驗證資料格式
-      if (testData.isEmpty) {
-        return false;
-      }
-
-      // 記錄注入歷史
-      _injectionHistory.add('AccountingCore: ${testData['transactionId'] ?? testData['收支ID'] ?? 'unknown'} - ${DateTime.now().toIso8601String()}');
-
-      // 模擬成功注入
-      print('[TestDataInjection] 記帳核心資料注入成功: ${testData['transactionId'] ?? testData['收支ID'] ?? 'unknown'}');
+      await Future.delayed(Duration(milliseconds: 100));
+      _injectionHistory.add('AccountingCore: ${DateTime.now().toIso8601String()}');
       return true;
-
     } catch (e) {
-      print('[TestDataInjection] 資料注入失敗: $e');
       return false;
     }
   }
 }
 
-/// 系統進入測試資料模板
+// ==========================================
+// 系統進入測試資料模板
+// ==========================================
+
 class SystemEntryTestDataTemplate {
-  /// 取得用戶註冊模板
   static Map<String, dynamic> getUserRegistrationTemplate({
     required String userId,
     required String email,
-    String userMode = 'Expert',
+    String? displayName,
+    String userMode = 'Inertial',
   }) {
     return {
       'userId': userId,
       'email': email,
-      'password': 'TestPass123!',
-      'displayName': '測試用戶_$userId',
+      'displayName': displayName ?? 'Test User',
       'userMode': userMode,
-      'acceptTerms': true,
-      'acceptPrivacy': true,
-      'registration_data': {
-        'first_name': 'Test',
-        'last_name': 'User',
-        'phone': '+886912345678',
-        'date_of_birth': '1990-01-01',
-        'preferred_language': 'zh-TW'
-      }
+      'registrationDate': DateTime.now().toIso8601String(),
     };
   }
 
-  /// 取得用戶登入模板
   static Map<String, dynamic> getUserLoginTemplate({
     required String userId,
     required String email,
@@ -129,83 +68,60 @@ class SystemEntryTestDataTemplate {
     return {
       'userId': userId,
       'email': email,
-      'password': 'TestPass123!',
-      'rememberMe': true,
-      'deviceInfo': {
-        'deviceId': 'test-device-$userId',
-        'platform': 'Web',
-        'appVersion': '1.0.0'
-      }
+      'loginTime': DateTime.now().toIso8601String(),
     };
   }
 }
 
-/// 記帳核心測試資料模板
+// ==========================================
+// 記帳核心測試資料模板
+// ==========================================
+
 class AccountingCoreTestDataTemplate {
-  /// 取得交易記錄模板
   static Map<String, dynamic> getTransactionTemplate({
     required String transactionId,
     required double amount,
     required String type,
-    required String description,
+    String? description,
     String? categoryId,
     String? accountId,
   }) {
     return {
-      '收支ID': transactionId,
-      '金額': amount,
-      '收支類型': type,
-      '描述': description,
-      '科目ID': categoryId ?? 'default_category',
-      '帳戶ID': accountId ?? 'default_account',
-      '建立時間': DateTime.now().toIso8601String(),
-      '更新時間': DateTime.now().toIso8601String(),
-    };
-  }
-
-  /// 取得快速記帳模板
-  static Map<String, dynamic> getQuickTransactionTemplate({
-    required String description,
-    required String transactionType,
-  }) {
-    return {
-      '描述': description,
-      '收支類型': transactionType,
-      '快速記帳': true,
-      '建立時間': DateTime.now().toIso8601String(),
+      'transactionId': transactionId,
+      'amount': amount,
+      'type': type,
+      'description': description ?? 'Test transaction',
+      'categoryId': categoryId,
+      'accountId': accountId,
+      'date': DateTime.now().toIso8601String(),
     };
   }
 }
 
-/// 格式驗證函數
+// ==========================================
+// 格式驗證函數
+// ==========================================
+
 Map<String, dynamic> validateSystemEntryFormat(dynamic data) {
-  try {
-    if (data is! Map<String, dynamic>) {
-      return {
-        'isValid': false,
-        'error': '資料格式必須為Map<String, dynamic>'
-      };
-    }
-
-    // 基本欄位驗證
-    final requiredFields = ['userId', 'email'];
-    for (final field in requiredFields) {
-      if (!data.containsKey(field) || data[field] == null) {
-        return {
-          'isValid': false,
-          'error': '缺少必要欄位: $field'
-        };
-      }
-    }
-
-    return {
-      'isValid': true,
-      'message': '格式驗證通過'
-    };
-  } catch (e) {
-    return {
-      'isValid': false,
-      'error': '驗證過程發生錯誤: ${e.toString()}'
-    };
+  if (data == null) {
+    return {'isValid': false, 'error': 'Data is null'};
   }
+  
+  if (data is! Map<String, dynamic>) {
+    return {'isValid': false, 'error': 'Data is not a Map'};
+  }
+  
+  return {'isValid': true};
+}
+
+Map<String, dynamic> validateAccountingCoreFormat(dynamic data) {
+  if (data == null) {
+    return {'isValid': false, 'error': 'Data is null'};
+  }
+  
+  if (data is! Map<String, dynamic>) {
+    return {'isValid': false, 'error': 'Data is not a Map'};
+  }
+  
+  return {'isValid': true};
 }
