@@ -23,6 +23,12 @@ class DynamicTestDataFactory {
     try {
       await Future.delayed(Duration(milliseconds: 50));
 
+      // 驗證模式有效性
+      final validModes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
+      if (!validModes.contains(mode)) {
+        throw ArgumentError('無效的用戶模式: $mode');
+      }
+
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final userId = 'user_${mode.toLowerCase()}_$timestamp';
 
@@ -37,11 +43,47 @@ class DynamicTestDataFactory {
           'theme': mode.toLowerCase(),
         },
         'modeSpecificSettings': _generateModeSettings(mode),
+        'registrationDate': DateTime.now().toIso8601String(),
         'createdAt': DateTime.now().toIso8601String(),
+        // 新增SIT測試所需的欄位
+        'assessmentAnswers': _generateAssessmentAnswers(mode),
+        'evaluationResult': mode,
       };
     } catch (e) {
       print('[DynamicTestDataFactory] 生成模式特定資料失敗: $e');
       rethrow;
+    }
+  }
+  
+  /// 生成評估問卷答案
+  Map<String, dynamic> _generateAssessmentAnswers(String mode) {
+    switch (mode) {
+      case 'Expert':
+        return {
+          'Q1': 'A', // 進階功能需求高
+          'Q2': 'A', // 詳細資訊需求高
+          'Q3': 'A', // 自定義需求高
+        };
+      case 'Inertial':
+        return {
+          'Q1': 'B', // 中等功能需求
+          'Q2': 'B', // 標準資訊需求
+          'Q3': 'B', // 部分自定義需求
+        };
+      case 'Cultivation':
+        return {
+          'Q1': 'C', // 引導式功能需求
+          'Q2': 'B', // 教育性資訊需求
+          'Q3': 'C', // 適應性自定義需求
+        };
+      case 'Guiding':
+        return {
+          'Q1': 'D', // 簡化功能需求
+          'Q2': 'C', // 基本資訊需求
+          'Q3': 'D', // 最小自定義需求
+        };
+      default:
+        return {};
     }
   }
 

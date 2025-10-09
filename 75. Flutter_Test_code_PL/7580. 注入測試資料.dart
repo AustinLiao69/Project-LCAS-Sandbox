@@ -16,20 +16,39 @@ class TestDataInjectionFactory {
   
   // 記錄注入歷史
   final List<String> _injectionHistory = [];
+  final Map<String, int> _injectionStats = {
+    'total': 0,
+    'success': 0,
+    'failed': 0,
+  };
 
   /// 注入系統進入功能群測試資料
   Future<bool> injectSystemEntryData(Map<String, dynamic> testData) async {
     try {
+      _injectionStats['total'] = (_injectionStats['total'] ?? 0) + 1;
+      
       // 模擬資料注入處理
       await Future.delayed(Duration(milliseconds: 100));
 
-      // 驗證資料格式
+      // 強化資料格式驗證
       if (testData.isEmpty) {
+        _injectionStats['failed'] = (_injectionStats['failed'] ?? 0) + 1;
         return false;
+      }
+      
+      // 驗證必要欄位
+      final requiredFields = ['userId', 'email'];
+      for (final field in requiredFields) {
+        if (!testData.containsKey(field) || testData[field] == null) {
+          print('[TestDataInjection] 缺少必要欄位: $field');
+          _injectionStats['failed'] = (_injectionStats['failed'] ?? 0) + 1;
+          return false;
+        }
       }
 
       // 記錄注入歷史
       _injectionHistory.add('SystemEntry: ${testData['userId'] ?? 'unknown'} - ${DateTime.now().toIso8601String()}');
+      _injectionStats['success'] = (_injectionStats['success'] ?? 0) + 1;
 
       // 模擬成功注入
       print('[TestDataInjection] 系統進入資料注入成功: ${testData['userId'] ?? 'unknown'}');
@@ -37,8 +56,18 @@ class TestDataInjectionFactory {
 
     } catch (e) {
       print('[TestDataInjection] 資料注入失敗: $e');
+      _injectionStats['failed'] = (_injectionStats['failed'] ?? 0) + 1;
       return false;
     }
+  }
+  
+  /// 取得注入統計資訊
+  Map<String, dynamic> getInjectionStatistics() {
+    return {
+      'statistics': Map<String, int>.from(_injectionStats),
+      'history': List<String>.from(_injectionHistory),
+      'lastInjection': _injectionHistory.isNotEmpty ? _injectionHistory.last : null,
+    };
   }
 
   /// 注入記帳核心功能群測試資料
