@@ -25,6 +25,9 @@ class Transaction {
   final String? accountId;
   final String description;
   final DateTime date;
+  final DateTime createdAt;        // 新增：符合1311規範
+  final DateTime updatedAt;        // 新增：符合1311規範
+  final String source;             // 新增：符合1311規範
 
   Transaction({
     required this.id,
@@ -34,7 +37,53 @@ class Transaction {
     this.accountId,
     required this.description,
     required this.date,
+    required this.createdAt,
+    required this.updatedAt,
+    this.source = 'manual',
   });
+
+  /// 轉換為符合1311.FS.js格式的JSON
+  Map<String, dynamic> toFirestoreJson() {
+    return {
+      'id': id,
+      'amount': amount,
+      'type': type.toString().split('.').last,
+      'description': description,
+      'categoryId': categoryId,
+      'accountId': accountId,
+      'date': date.toIso8601String().split('T')[0],
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'source': source,
+    };
+  }
+
+  /// 從1311格式JSON建立Transaction
+  factory Transaction.fromFirestoreJson(Map<String, dynamic> json) {
+    return Transaction(
+      id: json['id'] as String,
+      type: _parseTransactionType(json['type'] as String),
+      amount: (json['amount'] as num).toDouble(),
+      categoryId: json['categoryId'] as String?,
+      accountId: json['accountId'] as String?,
+      description: json['description'] as String? ?? '',
+      date: DateTime.parse(json['date'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      source: json['source'] as String? ?? 'manual',
+    );
+  }
+
+  static TransactionType _parseTransactionType(String typeString) {
+    switch (typeString.toLowerCase()) {
+      case 'income':
+        return TransactionType.income;
+      case 'transfer':
+        return TransactionType.transfer;
+      default:
+        return TransactionType.expense;
+    }
+  }
 }
 
 class QuickAccountingResult {
