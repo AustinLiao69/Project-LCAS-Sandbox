@@ -272,8 +272,8 @@ class SITP1TestController {
       phase2Results['endTime'] = DateTime.now().toIso8601String();
 
       print('[7570] ✅ 階段二深度整合測試完成');
-      print('[7570]    - 整體成功: $overallSuccess');
-      print('[7570]    - 整合分數: ${phase2Results['overallScore']}%');
+      print('[7570]    - overallSuccess: $overallSuccess');
+      print('[7570]    - overallScore: ${phase2Results['overallScore']}%');
 
       return phase2Results;
 
@@ -508,17 +508,17 @@ Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() asyn
 
     // 1. 生成測試資料
     final testUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
-    testResult['details']['generatedUser'] = testUser['userId'];
+    testResult['details']?['generatedUser'] = testUser['userId'];
 
     // 2. 注入PL層
     final injectionResult = await TestDataInjectionFactory.instance.injectSystemEntryData(testUser);
-    testResult['details']['injectionSuccess'] = injectionResult;
+    testResult['details']?['injectionSuccess'] = injectionResult;
 
     // 3. 驗證完整鏈路
-    if (injectionResult) {
+    if (injectionResult == true) {
       // 模擬PL→APL→ASL→BL→DL流程驗證
       await Future.delayed(Duration(milliseconds: 100)); // 模擬處理時間
-      testResult['details']['chainValidation'] = true;
+      testResult['details']?['chainValidation'] = true;
       testResult['passed'] = true;
     }
 
@@ -559,12 +559,12 @@ Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() asy
 
     // 2. 驗證登入流程
     final loginResult = await TestDataInjectionFactory.instance.injectSystemEntryData(loginData);
-    testResult['details']['loginResult'] = loginResult;
+    testResult['details']?['loginResult'] = loginResult;
 
     // 3. 驗證JWT Token格式 (模擬)
-    if (loginResult) {
-      testResult['details']['jwtTokenValid'] = true;
-      testResult['details']['userModeReturned'] = true;
+    if (loginResult == true) {
+      testResult['details']?['jwtTokenValid'] = true;
+      testResult['details']?['userModeReturned'] = true;
       testResult['passed'] = true;
     }
 
@@ -609,12 +609,12 @@ Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
 
     // 2. 注入Firebase認證資料
     final authResult = await TestDataInjectionFactory.instance.injectSystemEntryData(firebaseData);
-    testResult['details']['firebaseAuthResult'] = authResult;
+    testResult['details']?['firebaseAuthResult'] = authResult;
 
     // 3. 驗證Firebase ID Token (模擬)
-    if (authResult) {
-      testResult['details']['firebaseIdTokenValid'] = true;
-      testResult['details']['userRegistrationComplete'] = true;
+    if (authResult == true) {
+      testResult['details']?['firebaseIdTokenValid'] = true;
+      testResult['details']?['userRegistrationComplete'] = true;
       testResult['passed'] = true;
     }
 
@@ -655,13 +655,13 @@ Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() asyn
 
     // 2. 注入記帳資料
     final bookkeepingResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(quickTransaction);
-    testResult['details']['quickBookkeepingResult'] = bookkeepingResult;
+    testResult['details']?['quickBookkeepingResult'] = bookkeepingResult;
 
     // 3. 驗證文字解析準確性 (模擬)
-    if (bookkeepingResult) {
-      testResult['details']['textParsingAccuracy'] = true;
-      testResult['details']['recordStoredCorrectly'] = true;
-      testResult['details']['fourModeProcessing'] = true;
+    if (bookkeepingResult == true) {
+      testResult['details']?['textParsingAccuracy'] = true;
+      testResult['details']?['recordStoredCorrectly'] = true;
+      testResult['details']?['fourModeProcessing'] = true;
       testResult['passed'] = true;
     }
 
@@ -706,12 +706,12 @@ Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration
 
     // 2. 注入完整表單資料
     final formResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(completeTransaction);
-    testResult['details']['completeFormResult'] = formResult;
+    testResult['details']?['completeFormResult'] = formResult;
 
     // 3. 驗證表單驗證正確執行
-    if (formResult) {
-      testResult['details']['formValidationCorrect'] = true;
-      testResult['details']['dataIntegrityGuaranteed'] = true;
+    if (formResult == true) {
+      testResult['details']?['formValidationCorrect'] = true;
+      testResult['details']?['dataIntegrityGuaranteed'] = true;
       testResult['passed'] = true;
     }
 
@@ -757,13 +757,13 @@ Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() 
       batchInjectionResults[transaction['收支ID']] = result;
     }
 
-    testResult['details']['batchInjectionResults'] = batchInjectionResults;
+    testResult['details']?['batchInjectionResults'] = batchInjectionResults;
 
     // 3. 驗證資料查詢準確性
     final allSuccessful = batchInjectionResults.values.every((result) => result);
     if (allSuccessful) {
-      testResult['details']['dataQueryAccuracy'] = true;
-      testResult['details']['fourModeResponseDifferentiation'] = true;
+      testResult['details']?['dataQueryAccuracy'] = true;
+      testResult['details']?['fourModeResponseDifferentiation'] = true;
       testResult['passed'] = true;
     }
 
@@ -807,18 +807,18 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
     // 2. 嘗試注入錯誤資料
     try {
       await TestDataInjectionFactory.instance.injectSystemEntryData(invalidData);
-      testResult['details']['errorHandlingFailed'] = true;
+      testResult['details']?['errorHandlingFailed'] = true;
     } catch (e) {
       // 預期會產生錯誤
-      testResult['details']['errorCaptured'] = true;
-      testResult['details']['errorMessage'] = e.toString();
+      testResult['details']?['errorCaptured'] = true;
+      testResult['details']?['errorMessage'] = e.toString();
     }
 
     // 3. 驗證錯誤處理覆蓋率
-    testResult['details']['networkTimeoutHandling'] = true; // 模擬
-    testResult['details']['authenticationErrorHandling'] = true; // 模擬
-    testResult['details']['unifiedErrorFormat'] = true; // 模擬
-    testResult['passed'] = testResult['details']['errorCaptured'] == true;
+    testResult['details']?['networkTimeoutHandling'] = true; // 模擬
+    testResult['details']?['authenticationErrorHandling'] = true; // 模擬
+    testResult['details']?['unifiedErrorFormat'] = true; // 模擬
+    testResult['passed'] = testResult['details']?['errorCaptured'] == true;
 
     stopwatch.stop();
     testResult['executionTime'] = stopwatch.elapsedMilliseconds;
@@ -864,12 +864,12 @@ Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async 
 
     // 2. 注入評估資料
     final assessmentResult = await TestDataInjectionFactory.instance.injectSystemEntryData(assessmentData);
-    testResult['details']['assessmentResult'] = assessmentResult;
+    testResult['details']?['assessmentResult'] = assessmentResult;
 
     // 3. 驗證評估邏輯正確執行
-    if (assessmentResult) {
-      testResult['details']['evaluationLogicCorrect'] = true;
-      testResult['details']['modeAssignmentAccurate'] = true;
+    if (assessmentResult == true) {
+      testResult['details']?['evaluationLogicCorrect'] = true;
+      testResult['details']?['modeAssignmentAccurate'] = true;
       testResult['passed'] = true;
     }
 
@@ -912,15 +912,15 @@ Future<Map<String, dynamic>> _executeTCSIT009_ModeDifferentiationResponse() asyn
       modeResults[mode] = result;
     }
 
-    testResult['details']['modeResults'] = modeResults;
+    testResult['details']?['modeResults'] = modeResults;
 
     // 2. 驗證四模式正確回應
     final allModesSuccess = modeResults.values.every((result) => result);
     if (allModesSuccess) {
-      testResult['details']['expertModeResponse'] = true;
-      testResult['details']['inertialModeResponse'] = true;
-      testResult['details']['cultivationModeResponse'] = true;
-      testResult['details']['guidingModeResponse'] = true;
+      testResult['details']?['expertModeResponse'] = true;
+      testResult['details']?['inertialModeResponse'] = true;
+      testResult['details']?['cultivationModeResponse'] = true;
+      testResult['details']?['guidingModeResponse'] = true;
       testResult['passed'] = true;
     }
 
@@ -964,12 +964,12 @@ Future<Map<String, dynamic>> _executeTCSIT010_DataFormatConversion() async {
 
     // 2. 執行格式轉換 (透過注入流程)
     final conversionResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(rawData);
-    testResult['details']['conversionResult'] = conversionResult;
+    testResult['details']?['conversionResult'] = conversionResult;
 
     // 3. 驗證格式轉換準確性
-    if (conversionResult) {
-      testResult['details']['formatConversionAccuracy'] = true;
-      testResult['details']['dataIntegrity'] = true;
+    if (conversionResult == true) {
+      testResult['details']?['formatConversionAccuracy'] = true;
+      testResult['details']?['dataIntegrity'] = true;
       testResult['passed'] = true;
     }
 
@@ -1026,12 +1026,12 @@ Future<Map<String, dynamic>> _executeTCSIT011_DataSynchronizationMechanism() asy
       if (!result) syncSuccess = false;
     }
 
-    testResult['details']['syncSuccess'] = syncSuccess;
+    testResult['details']?['syncSuccess'] = syncSuccess;
 
     // 3. 驗證同步時效性和資料一致性
     if (syncSuccess) {
-      testResult['details']['syncTimeliness'] = true;
-      testResult['details']['dataConsistency'] = true;
+      testResult['details']?['syncTimeliness'] = true;
+      testResult['details']?['dataConsistency'] = true;
       testResult['passed'] = true;
     }
 
@@ -1096,12 +1096,12 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
     // 6. 登出 (模擬)
     lifecycleSteps['logout'] = true;
 
-    testResult['details']['lifecycleSteps'] = lifecycleSteps;
+    testResult['details']?['lifecycleSteps'] = lifecycleSteps;
 
     // 驗證完整生命週期
     final allStepsSuccess = lifecycleSteps.values.every((step) => step);
     if (allStepsSuccess) {
-      testResult['details']['completeLifecycleSuccess'] = true;
+      testResult['details']?['completeLifecycleSuccess'] = true;
       testResult['passed'] = true;
     }
 
@@ -1162,12 +1162,12 @@ Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd
     // 4. 統計分析 (模擬)
     businessProcess['statisticalAnalysis'] = true;
 
-    testResult['details']['businessProcess'] = businessProcess;
+    testResult['details']?['businessProcess'] = businessProcess;
 
     // 驗證記帳核心功能完整性
     final allProcessSuccess = businessProcess.values.every((process) => process);
     if (allProcessSuccess) {
-      testResult['details']['businessProcessComplete'] = true;
+      testResult['details']?['businessProcessComplete'] = true;
       testResult['passed'] = true;
     }
 
@@ -1228,11 +1228,11 @@ Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
     // 3. 模擬服務暫時不可用
     networkExceptions['serviceUnavailable'] = true; // 模擬處理
 
-    testResult['details']['networkExceptions'] = networkExceptions;
+    testResult['details']?['networkExceptions'] = networkExceptions;
 
     // 驗證異常情況下的系統穩定性
     if (networkExceptions.isNotEmpty) {
-      testResult['details']['systemStabilityUnderException'] = true;
+      testResult['details']?['systemStabilityUnderException'] = true;
       testResult['passed'] = true;
     }
 
@@ -1290,11 +1290,11 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
       businessRuleErrors['businessRuleConflict'] = true;
     }
 
-    testResult['details']['businessRuleErrors'] = businessRuleErrors;
+    testResult['details']?['businessRuleErrors'] = businessRuleErrors;
 
     // 驗證業務規則驗證準確性
     if (businessRuleErrors.isNotEmpty) {
-      testResult['details']['businessRuleValidationAccuracy'] = true;
+      testResult['details']?['businessRuleValidationAccuracy'] = true;
       testResult['passed'] = true;
     }
 
@@ -1344,12 +1344,12 @@ Future<Map<String, dynamic>> _executeTCSIT016_DCN0015FormatValidation() async {
 
     // 2. 驗證格式驗證功能
     final formatValidation = validateSystemEntryFormat(dcn0015Data['data']);
-    testResult['details']['formatValidation'] = formatValidation;
+    testResult['details']?['formatValidation'] = formatValidation;
 
     // 3. 驗證DCN-0015格式100%合規
-    if (formatValidation['isValid']) {
-      testResult['details']['dcn0015FormatCompliance'] = 100.0;
-      testResult['details']['qualityGradeA'] = true;
+    if (formatValidation['isValid'] == true) {
+      testResult['details']?['dcn0015FormatCompliance'] = 100.0;
+      testResult['details']?['qualityGradeA'] = true;
       testResult['passed'] = true;
     }
 
@@ -1453,8 +1453,8 @@ Map<String, dynamic> getInjectionStatistics() {
       phase2Results['endTime'] = DateTime.now().toIso8601String();
 
       print('[7570] ✅ 階段二深度整合測試完成');
-      print('[7570]    - 整體成功: $overallSuccess');
-      print('[7570]    - 整合分數: ${phase2Results['overallScore']}%');
+      print('[7570]    - overallSuccess: $overallSuccess');
+      print('[7570]    - overallScore: ${phase2Results['overallScore']}%');
 
       return phase2Results;
 
@@ -1512,7 +1512,7 @@ Future<Map<String, dynamic>> _executeTCSIT017_AuthRegisterEndpointValidation() a
       method: 'POST',
       expectedSpec: '8101',
     );
-    testResult['details']['apiValidation'] = apiValidation;
+    testResult['details']?['apiValidation'] = apiValidation;
 
     // 2. DCN-0015統一回應格式驗證
     final dcn0015Validation = await DCN0015ComplianceValidator.instance.validateResponseFormat(
@@ -1532,14 +1532,14 @@ Future<Map<String, dynamic>> _executeTCSIT017_AuthRegisterEndpointValidation() a
         }
       },
     );
-    testResult['details']['dcn0015Validation'] = dcn0015Validation;
+    testResult['details']?['dcn0015Validation'] = dcn0015Validation;
 
     // 3. 四模式差異化驗證
     final fourModeValidation = await FourModeComplianceValidator.instance.validateModeSpecificResponse(
       endpoint: '/api/v1/auth/register',
       modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding'],
     );
-    testResult['details']['fourModeValidation'] = fourModeValidation;
+    testResult['details']?['fourModeValidation'] = fourModeValidation;
 
     // 計算合規分數
     testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
@@ -1590,7 +1590,7 @@ Future<Map<String, dynamic>> _executeTCSIT018_AuthLoginEndpointValidation() asyn
       method: 'POST',
       expectedSpec: '8101',
     );
-    testResult['details']['apiValidation'] = apiValidation;
+    testResult['details']?['apiValidation'] = apiValidation;
 
     // DCN-0015格式驗證
     final dcn0015Validation = await DCN0015ComplianceValidator.instance.validateResponseFormat(
@@ -1614,14 +1614,14 @@ Future<Map<String, dynamic>> _executeTCSIT018_AuthLoginEndpointValidation() asyn
         }
       },
     );
-    testResult['details']['dcn0015Validation'] = dcn0015Validation;
+    testResult['details']?['dcn0015Validation'] = dcn0015Validation;
 
     // 四模式差異化驗證
     final fourModeValidation = await FourModeComplianceValidator.instance.validateModeSpecificResponse(
       endpoint: '/api/v1/auth/login',
       modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding'],
     );
-    testResult['details']['fourModeValidation'] = fourModeValidation;
+    testResult['details']?['fourModeValidation'] = fourModeValidation;
 
     // 計算合規分數並判斷通過
     testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
@@ -1776,21 +1776,21 @@ Future<Map<String, dynamic>> _executeStandardAPIContractTest({
       method: method,
       expectedSpec: expectedSpec,
     );
-    testResult['details']['apiValidation'] = apiValidation;
+    testResult['details']?['apiValidation'] = apiValidation;
 
     // 2. DCN-0015統一回應格式驗證
     final dcn0015Validation = await DCN0015ComplianceValidator.instance.validateResponseFormat(
       endpoint: endpoint,
       sampleResponse: sampleResponse,
     );
-    testResult['details']['dcn0015Validation'] = dcn0015Validation;
+    testResult['details']?['dcn0015Validation'] = dcn0015Validation;
 
     // 3. 四模式差異化驗證
     final fourModeValidation = await FourModeComplianceValidator.instance.validateModeSpecificResponse(
       endpoint: endpoint,
       modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding'],
     );
-    testResult['details']['fourModeValidation'] = fourModeValidation;
+    testResult['details']?['fourModeValidation'] = fourModeValidation;
 
     // 計算合規分數
     testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
