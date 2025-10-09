@@ -1613,36 +1613,78 @@ async function AM_processAPIRegister(requestData) {
 
     // 準備用戶數據（完全符合1311 FS.js規範）
     const userData = {
+      // 核心用戶資料 - 符合 FS.js 標準
       email: requestData.email,
       displayName: requestData.displayName || '',
       userMode: requestData.userMode,
       emailVerified: false,
+      
+      // 時間欄位 - FS.js 標準格式
       createdAt: admin.firestore.Timestamp.now(),
       lastActiveAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      
+      // 用戶偏好設定 - FS.js 標準結構
       preferences: {
         language: requestData.language || 'zh-TW',
         timezone: requestData.timezone || 'Asia/Taipei',
         currency: requestData.currency || 'TWD',
-        theme: 'auto',
+        theme: requestData.theme || 'auto',
         notifications: {
           email: true,
           push: false,
-          sms: false
-        }
+          sms: false,
+          inApp: true
+        },
+        dateFormat: 'YYYY/MM/DD',
+        numberFormat: 'comma'
       },
+      
+      // 安全設定 - FS.js 標準結構
       security: {
         hasAppLock: false,
         biometricEnabled: false,
         privacyModeEnabled: false,
         twoFactorEnabled: false,
-        securityLevel: 'standard'
+        securityLevel: 'standard',
+        lastPasswordChange: admin.firestore.Timestamp.now(),
+        loginAttempts: 0
       },
-      // 符合1311 FS.js的完整用戶結構
+      
+      // 帳號狀態 - FS.js 標準欄位
+      status: 'active',
       accountStatus: 'active',
+      
+      // 個人資料完成度 - FS.js 標準結構
       profileCompletion: {
         basic: true,
         preferences: false,
-        security: false
+        security: false,
+        percentage: 30
+      },
+      
+      // 跨平台帳號關聯 - FS.js 標準結構
+      linkedAccounts: {
+        LINE_UID: "",
+        iOS_UID: "",
+        Android_UID: "",
+        Google_UID: "",
+        Apple_UID: ""
+      },
+      
+      // 用戶統計 - FS.js 標準欄位
+      statistics: {
+        totalTransactions: 0,
+        totalLedgers: 0,
+        lastActivity: admin.firestore.Timestamp.now(),
+        loginCount: 1
+      },
+      
+      // 元數據 - FS.js 標準格式
+      metadata: {
+        source: 'registration',
+        version: AM_CONFIG.API.VERSION,
+        createdBy: 'AM_MODULE'
       }
     };
 

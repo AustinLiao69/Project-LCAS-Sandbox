@@ -1694,26 +1694,64 @@ async function BK_prepareTransactionData(transactionId, transactionData, process
 }
 
 /**
- * 儲存交易到Firestore
+ * 儲存交易到Firestore（完全符合1311 FS.js規範版）
+ * @version 2025-10-09-V3.2.0
+ * @date 2025-10-09
+ * @update: 完全符合1311 FS.js標準欄位規範
  */
 async function BK_saveTransactionToFirestore(transactionData, processId) {
   try {
     await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
 
-    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID;
+    // 使用 FS.js 標準路徑結構
+    const ledgerId = transactionData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+    
+    // 確保交易數據完全符合 1311 FS.js 標準格式
+    const fsCompliantData = {
+      // 核心欄位 - 完全符合 FS.js 標準
+      id: transactionData.id,
+      amount: transactionData.amount,
+      type: transactionData.type, // 'income' 或 'expense'
+      description: transactionData.description || '',
+      categoryId: transactionData.categoryId || 'default',
+      accountId: transactionData.accountId || 'default',
+      
+      // 時間欄位 - FS.js 標準格式
+      date: transactionData.date,
+      createdAt: transactionData.createdAt,
+      updatedAt: transactionData.updatedAt,
+      
+      // 來源和用戶資訊 - FS.js 標準
+      source: transactionData.source || 'quick',
+      userId: transactionData.userId || '',
+      paymentMethod: transactionData.paymentMethod,
+      
+      // 記帳特定欄位 - FS.js 標準
+      ledgerId: ledgerId,
+      
+      // 狀態欄位 - FS.js 標準
+      status: transactionData.status || 'active',
+      verified: transactionData.verified || false,
+      
+      // 元數據 - FS.js 標準
+      metadata: transactionData.metadata || {
+        processId: processId,
+        module: 'BK',
+        version: BK_CONFIG.VERSION
+      }
+    };
 
-    await db.collection(ledgerCollection)
+    // 使用 FS.js 標準路徑：ledgers/{ledgerId}/transactions
+    await db.collection('ledgers')
       .doc(ledgerId)
-      .collection(entriesCollection)
-      .add(transactionData);
+      .collection('transactions')
+      .doc(fsCompliantData.id)
+      .set(fsCompliantData);
 
-    return BK_formatSuccessResponse({ saved: true });
+    return BK_formatSuccessResponse({ saved: true, transactionId: fsCompliantData.id });
   } catch (error) {
-    const uidField = getEnvVar('UID_FIELD', 'UID');
-    BK_logError(`儲存交易失敗: ${error.toString()}`, "儲存交易", transactionData[uidField] || "", "SAVE_TRANSACTION_ERROR", error.toString(), "BK_saveTransactionToFirestore");
+    BK_logError(`儲存交易失敗: ${error.toString()}`, "儲存交易", transactionData.userId || "", "SAVE_TRANSACTION_ERROR", error.toString(), "BK_saveTransactionToFirestore");
     return BK_formatErrorResponse("SAVE_TRANSACTION_ERROR", error.toString(), error.toString());
   }
 }
