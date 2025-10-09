@@ -440,7 +440,7 @@ async function BK_initialize() {
       }
     }
 
-    // 初始化Firestore
+    // 初始化Firebase
     await BK_initializeFirebase();
     initMessages.push("Firebase初始化: 成功");
 
@@ -829,51 +829,47 @@ async function BK_performMinimalQuery(collectionRef, queryParams) {
 }
 
 /**
- * 查詢結果處理 (階段二修復版)
- * @version 2025-10-02-V3.1.2
+ * 查詢結果處理 (符合1311 FS.js規範版)
+ * @version 2025-10-09-V3.2.0
+ * @date 2025-10-09
+ * @update: 使用1311 FS.js標準欄位名稱處理查詢結果
  */
 function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = false) {
   const transactions = [];
-  const fieldNames = {
-    id: getEnvVar('ID_FIELD', '收支ID'),
-    income: getEnvVar('INCOME_FIELD', '收入'),
-    expense: getEnvVar('EXPENSE_FIELD', '支出'),
-    date: getEnvVar('DATE_FIELD', '日期'),
-    time: getEnvVar('TIME_FIELD', '時間'),
-    description: getEnvVar('DESCRIPTION_FIELD', '備註'),
-    category: getEnvVar('CATEGORY_FIELD', '子項名稱'),
-    paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
-    uid: getEnvVar('UID_FIELD', 'UID')
-  };
 
   snapshot.forEach(doc => {
     const data = doc.data();
 
-    // 後端過濾邏輯
+    // 後端過濾邏輯 - 使用標準欄位名稱
     if (enableBackendFilter) {
-      if (queryParams.userId && data[fieldNames.uid] !== queryParams.userId) {
+      if (queryParams.userId && data.userId !== queryParams.userId) {
         return;
       }
 
-      if (queryParams.type) {
-        const hasIncome = data[fieldNames.income] && parseFloat(data[fieldNames.income]) > 0;
-        const hasExpense = data[fieldNames.expense] && parseFloat(data[fieldNames.expense]) > 0;
-
-        if (queryParams.type === 'income' && !hasIncome) return;
-        if (queryParams.type === 'expense' && !hasExpense) return;
+      if (queryParams.type && data.type !== queryParams.type) {
+        return;
+      }
+      
+      if (queryParams.categoryId && data.categoryId !== queryParams.categoryId) {
+        return;
       }
     }
 
+    // 使用1311 FS.js標準欄位構建回應
     transactions.push({
-      id: data[fieldNames.id] || doc.id,
-      amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
-      type: data[fieldNames.income] ? 'income' : 'expense',
-      date: data[fieldNames.date],
-      time: data[fieldNames.time],
-      description: data[fieldNames.description],
-      category: data[fieldNames.category],
-      paymentMethod: data[fieldNames.paymentMethod],
-      userId: data[fieldNames.uid]
+      id: data.id || doc.id,
+      amount: parseFloat(data.amount || 0),
+      type: data.type || 'expense',
+      date: data.date,
+      description: data.description || '',
+      categoryId: data.categoryId,
+      accountId: data.accountId,
+      paymentMethod: data.paymentMethod,
+      userId: data.userId,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      status: data.status || 'active',
+      ledgerId: data.ledgerId
     });
   });
 
@@ -881,7 +877,8 @@ function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = fa
     transactions: transactions,
     total: transactions.length,
     page: queryParams.page || 1,
-    limit: queryParams.limit || 20
+    limit: queryParams.limit || 20,
+    dataFormat: 'FS_STANDARD'
   };
 }
 
@@ -1649,77 +1646,112 @@ async function BK_checkTransactionIdUnique(transactionId) {
 }
 
 /**
- * 準備交易數據（階段二修復版）
+ * 準備交易數據（完全符合1311 FS.js規範版）
+ * @version 2025-10-09-V3.2.0
+ * @date 2025-10-09
+ * @update: 完全符合1311 FS.js標準格式，移除舊格式欄位
  */
 async function BK_prepareTransactionData(transactionId, transactionData, processId) {
   const now = moment().tz(BK_CONFIG.TIMEZONE);
-
-  const dateFormat = getEnvVar('DATE_FORMAT', 'YYYY/MM/DD');
-  const timeFormat = getEnvVar('TIME_FORMAT', 'HH:mm:ss');
-
-  const fieldNames = {
-    id: getEnvVar('ID_FIELD', '收支ID'),
-    uid: getEnvVar('UID_FIELD', 'UID'),
-    date: getEnvVar('DATE_FIELD', '日期'),
-    time: getEnvVar('TIME_FIELD', '時間'),
-    income: getEnvVar('INCOME_FIELD', '收入'),
-    expense: getEnvVar('EXPENSE_FIELD', '支出'),
-    description: getEnvVar('DESCRIPTION_FIELD', '備註'),
-    paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
-    majorCode: getEnvVar('MAJOR_CODE_FIELD', '大項代碼'),
-    minorCode: getEnvVar('MINOR_CODE_FIELD', '子項代碼'),
-    categoryName: getEnvVar('CATEGORY_FIELD', '子項名稱')
-  };
-
-  const defaultMajorCode = getEnvVar('DEFAULT_MAJOR_CODE', '01');
-  const defaultMinorCode = getEnvVar('DEFAULT_MINOR_CODE', '01');
-  const defaultCategoryName = getEnvVar('DEFAULT_CATEGORY', '其他');
-
   const currentTimestamp = admin.firestore.Timestamp.now();
 
+  // 完全使用1311 FS.js標準欄位格式
   const preparedData = {
-    [fieldNames.id]: transactionId,
-    [fieldNames.uid]: transactionData.userId || '',
-    [fieldNames.date]: now.format(dateFormat),
-    [fieldNames.time]: now.format(timeFormat),
-    [fieldNames.income]: transactionData.type === 'income' ? transactionData.amount.toString() : '',
-    [fieldNames.expense]: transactionData.type === 'expense' ? transactionData.amount.toString() : '',
-    [fieldNames.description]: transactionData.description || '',
-    [fieldNames.paymentMethod]: transactionData.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
-    [fieldNames.majorCode]: transactionData.majorCode || defaultMajorCode,
-    [fieldNames.minorCode]: transactionData.minorCode || defaultMinorCode,
-    [fieldNames.categoryName]: transactionData.categoryName || defaultCategoryName,
+    // 核心欄位 - 符合FS.js標準
+    id: transactionId,
+    amount: transactionData.amount,
+    type: transactionData.type, // 'income' 或 'expense'
+    description: transactionData.description || '',
+    categoryId: transactionData.categoryId || 'default',
+    accountId: transactionData.accountId || 'default',
+    
+    // 時間欄位 - 標準格式
+    date: now.format('YYYY-MM-DD'),
     createdAt: currentTimestamp,
     updatedAt: currentTimestamp,
-    processId: processId,
-    amount: transactionData.amount,
-    type: transactionData.type
+    
+    // 來源和用戶資訊
+    source: 'quick',
+    userId: transactionData.userId || '',
+    paymentMethod: transactionData.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
+    
+    // 記帳特定欄位
+    ledgerId: transactionData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+    
+    // 狀態欄位
+    status: 'active',
+    verified: false,
+    
+    // 元數據
+    metadata: {
+      processId: processId,
+      module: 'BK',
+      version: BK_CONFIG.VERSION
+    }
   };
 
   return preparedData;
 }
 
 /**
- * 儲存交易到Firestore
+ * 儲存交易到Firestore（完全符合1311 FS.js規範版）
+ * @version 2025-10-09-V3.2.0
+ * @date 2025-10-09
+ * @update: 完全符合1311 FS.js標準欄位規範
  */
 async function BK_saveTransactionToFirestore(transactionData, processId) {
   try {
     await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
 
-    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID;
+    // 使用 FS.js 標準路徑結構
+    const ledgerId = transactionData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+    
+    // 確保交易數據完全符合 1311 FS.js 標準格式
+    const fsCompliantData = {
+      // 核心欄位 - 完全符合 FS.js 標準
+      id: transactionData.id,
+      amount: transactionData.amount,
+      type: transactionData.type, // 'income' 或 'expense'
+      description: transactionData.description || '',
+      categoryId: transactionData.categoryId || 'default',
+      accountId: transactionData.accountId || 'default',
+      
+      // 時間欄位 - FS.js 標準格式
+      date: transactionData.date,
+      createdAt: transactionData.createdAt,
+      updatedAt: transactionData.updatedAt,
+      
+      // 來源和用戶資訊 - FS.js 標準
+      source: transactionData.source || 'quick',
+      userId: transactionData.userId || '',
+      paymentMethod: transactionData.paymentMethod,
+      
+      // 記帳特定欄位 - FS.js 標準
+      ledgerId: ledgerId,
+      
+      // 狀態欄位 - FS.js 標準
+      status: transactionData.status || 'active',
+      verified: transactionData.verified || false,
+      
+      // 元數據 - FS.js 標準
+      metadata: transactionData.metadata || {
+        processId: processId,
+        module: 'BK',
+        version: BK_CONFIG.VERSION
+      }
+    };
 
-    await db.collection(ledgerCollection)
+    // 使用 FS.js 標準路徑：ledgers/{ledgerId}/transactions
+    await db.collection('ledgers')
       .doc(ledgerId)
-      .collection(entriesCollection)
-      .add(transactionData);
+      .collection('transactions')
+      .doc(fsCompliantData.id)
+      .set(fsCompliantData);
 
-    return BK_formatSuccessResponse({ saved: true });
+    return BK_formatSuccessResponse({ saved: true, transactionId: fsCompliantData.id });
   } catch (error) {
-    const uidField = getEnvVar('UID_FIELD', 'UID');
-    BK_logError(`儲存交易失敗: ${error.toString()}`, "儲存交易", transactionData[uidField] || "", "SAVE_TRANSACTION_ERROR", error.toString(), "BK_saveTransactionToFirestore");
+    BK_logError(`儲存交易失敗: ${error.toString()}`, "儲存交易", transactionData.userId || "", "SAVE_TRANSACTION_ERROR", error.toString(), "BK_saveTransactionToFirestore");
     return BK_formatErrorResponse("SAVE_TRANSACTION_ERROR", error.toString(), error.toString());
   }
 }

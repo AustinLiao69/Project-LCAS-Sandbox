@@ -292,3 +292,4 @@ MM 	 DD 	 Description 	    Progress
 10	8	 撰寫PL層SIT測試計畫6501文件 	 Ongoing
 10	8	 建立PL層SIT測試代碼 	 Ongoing
 10	9	 檢視PL層模組之資料欄位是否符合1311規定之資料欄位：7301, 7302 	 Ongoing
+10	9	 檢視BL層模組之資料欄位是否符合1311規定之資料欄位：1301, 1309 	 Ongoing

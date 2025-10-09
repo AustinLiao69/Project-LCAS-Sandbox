@@ -1611,28 +1611,81 @@ async function AM_processAPIRegister(requestData) {
     // 生成用戶ID
     const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+    // 準備用戶數據（完全符合1311 FS.js規範）
     const userData = {
-      userId: userId,
+      // 核心用戶資料 - 符合 FS.js 標準
       email: requestData.email,
-      displayName: requestData.displayName || requestData.email.split('@')[0],
-      userMode: requestData.userMode || "Expert", // 使用請求中的模式或預設為Expert
-      userType: "S",
-      accountStatus: "active",
-      createdAt: new Date().toISOString(),
+      displayName: requestData.displayName || '',
+      userMode: requestData.userMode,
+      emailVerified: false,
+      
+      // 時間欄位 - FS.js 標準格式
+      createdAt: admin.firestore.Timestamp.now(),
+      lastActiveAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      
+      // 用戶偏好設定 - FS.js 標準結構
+      preferences: {
+        language: requestData.language || 'zh-TW',
+        timezone: requestData.timezone || 'Asia/Taipei',
+        currency: requestData.currency || 'TWD',
+        theme: requestData.theme || 'auto',
+        notifications: {
+          email: true,
+          push: false,
+          sms: false,
+          inApp: true
+        },
+        dateFormat: 'YYYY/MM/DD',
+        numberFormat: 'comma'
+      },
+      
+      // 安全設定 - FS.js 標準結構
+      security: {
+        hasAppLock: false,
+        biometricEnabled: false,
+        privacyModeEnabled: false,
+        twoFactorEnabled: false,
+        securityLevel: 'standard',
+        lastPasswordChange: admin.firestore.Timestamp.now(),
+        loginAttempts: 0
+      },
+      
+      // 帳號狀態 - FS.js 標準欄位
+      status: 'active',
+      accountStatus: 'active',
+      
+      // 個人資料完成度 - FS.js 標準結構
       profileCompletion: {
         basic: true,
         preferences: false,
-        security: false
+        security: false,
+        percentage: 30
       },
-      preferences: {
-        language: requestData.language || "zh-TW",
-        currency: requestData.currency || "TWD",
-        timezone: requestData.timezone || "Asia/Taipei"
+      
+      // 跨平台帳號關聯 - FS.js 標準結構
+      linkedAccounts: {
+        LINE_UID: "",
+        iOS_UID: "",
+        Android_UID: "",
+        Google_UID: "",
+        Apple_UID: ""
       },
-      // 認證相關欄位
-      emailVerified: false,
-      phoneVerified: false,
-      twoFactorEnabled: false
+      
+      // 用戶統計 - FS.js 標準欄位
+      statistics: {
+        totalTransactions: 0,
+        totalLedgers: 0,
+        lastActivity: admin.firestore.Timestamp.now(),
+        loginCount: 1
+      },
+      
+      // 元數據 - FS.js 標準格式
+      metadata: {
+        source: 'registration',
+        version: AM_CONFIG.API.VERSION,
+        createdBy: 'AM_MODULE'
+      }
     };
 
     AM_logInfo(
@@ -2085,7 +2138,7 @@ async function AM_processAPIRefresh(requestData) {
     try {
       const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
       const validUsers = testData.authentication_test_data?.valid_users || {};
-      
+
       // 如果解析的userId在測試資料中存在，直接使用
       if (validUsers[userId]) {
         console.log(`🔧 Token刷新: 使用0692測試資料中的用戶: ${userId}`);
@@ -2947,12 +3000,12 @@ async function AM_processAPIGetProfile(queryParams) {
 
     // 階段二修復：移除hard-coding，改為從0692測試資料動態取得用戶ID
     let userId = queryParams.userId;
-    
+
     if (!userId) {
       try {
         const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
         const validUsers = testData.authentication_test_data?.valid_users || {};
-        
+
         // 優先使用expert_mode_user_001作為預設用戶
         if (validUsers.expert_mode_user_001) {
           userId = "expert_mode_user_001";
@@ -2961,7 +3014,7 @@ async function AM_processAPIGetProfile(queryParams) {
           const firstUserId = Object.keys(validUsers)[0];
           userId = firstUserId || "anonymous_user";
         }
-        
+
         console.log(`🔧 AM_processAPIGetProfile: 使用0692測試資料用戶ID: ${userId}`);
       } catch (error) {
         console.warn('⚠️ 無法載入0692測試資料，使用備用用戶ID');
@@ -2991,7 +3044,7 @@ async function AM_processAPIGetProfile(queryParams) {
         const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
         const validUsers = testData.authentication_test_data?.valid_users || {};
         const userData = validUsers[userId];
-        
+
         if (userData) {
           userEmail = userData.email;
           displayName = userData.display_name;
@@ -3081,12 +3134,12 @@ async function AM_processAPIUpdateProfile(requestData) {
 
     // 階段二修復：移除current_user hard-coding，改為從0692測試資料動態取得
     let userId = requestData.userId;
-    
+
     if (!userId) {
       try {
         const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
         const validUsers = testData.authentication_test_data?.valid_users || {};
-        
+
         // 優先使用expert_mode_user_001
         if (validUsers.expert_mode_user_001) {
           userId = "expert_mode_user_001";
@@ -3094,7 +3147,7 @@ async function AM_processAPIUpdateProfile(requestData) {
           const firstUserId = Object.keys(validUsers)[0];
           userId = firstUserId || "fallback_user";
         }
-        
+
         console.log(`🔧 AM_processAPIUpdateProfile: 使用0692測試資料用戶ID: ${userId}`);
       } catch (error) {
         console.warn('⚠️ 無法載入0692測試資料，使用備用用戶ID');
@@ -3433,19 +3486,19 @@ async function AM_processAPIGetPreferences(queryParams) {
 
     // 階段二修復：移除current_user hard-coding，改為0692動態引用
     let userId = queryParams.userId;
-    
+
     if (!userId) {
       try {
         const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
         const validUsers = testData.authentication_test_data?.valid_users || {};
-        
+
         if (validUsers.expert_mode_user_001) {
           userId = "expert_mode_user_001";
         } else {
           const firstUserId = Object.keys(validUsers)[0];
           userId = firstUserId || "fallback_user";
         }
-        
+
         console.log(`🔧 AM_processAPIGetPreferences: 使用0692測試資料用戶ID: ${userId}`);
       } catch (error) {
         console.warn('⚠️ 無法載入0692測試資料，使用備用用戶ID');
@@ -3563,22 +3616,22 @@ async function AM_processAPIVerifyPin(requestData) {
 
     // 階段一修復：簡化PIN碼驗證邏輯（MVP階段）
     const pin = requestData.pin.trim();
-    
+
     // 階段二修復：移除current_user hard-coding，改為0692動態引用
     let userId = requestData.userId;
-    
+
     if (!userId) {
       try {
         const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
         const validUsers = testData.authentication_test_data?.valid_users || {};
-        
+
         if (validUsers.expert_mode_user_001) {
           userId = "expert_mode_user_001";
         } else {
           const firstUserId = Object.keys(validUsers)[0];
           userId = firstUserId || "fallback_user";
         }
-        
+
         console.log(`🔧 AM_processAPIVerifyPin: 使用0692測試資料用戶ID: ${userId}`);
       } catch (error) {
         console.warn('⚠️ 無法載入0692測試資料，使用備用用戶ID');
@@ -3655,7 +3708,7 @@ async function AM_processAPIVerifyPin(requestData) {
 }
 
 /**
- * =============== DCN-0014 階段一：補充缺失的用戶管理API處理函數 ===============
+ * DCN-0014 階段一：補充缺失的用戶管理API處理函數
  */
 
 /**

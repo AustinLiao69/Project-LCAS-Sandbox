@@ -83,13 +83,75 @@ class AuthState {
   });
 }
 
-/// 使用者資訊
+/// 使用者偏好設定
+class UserPreferences {
+  final String language;
+  final String timezone;
+  final String theme;
+
+  UserPreferences({
+    required this.language,
+    required this.timezone,
+    required this.theme,
+  });
+
+  factory UserPreferences.fromJson(Map<String, dynamic> json) {
+    return UserPreferences(
+      language: json['language'] ?? 'zh-TW',
+      timezone: json['timezone'] ?? 'Asia/Taipei',
+      theme: json['theme'] ?? 'auto',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'language': language,
+      'timezone': timezone,
+      'theme': theme,
+    };
+  }
+}
+
+/// 使用者安全設定
+class UserSecurity {
+  final bool hasAppLock;
+  final bool biometricEnabled;
+  final bool privacyModeEnabled;
+
+  UserSecurity({
+    required this.hasAppLock,
+    required this.biometricEnabled,
+    required this.privacyModeEnabled,
+  });
+
+  factory UserSecurity.fromJson(Map<String, dynamic> json) {
+    return UserSecurity(
+      hasAppLock: json['hasAppLock'] ?? false,
+      biometricEnabled: json['biometricEnabled'] ?? false,
+      privacyModeEnabled: json['privacyModeEnabled'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'hasAppLock': hasAppLock,
+      'biometricEnabled': biometricEnabled,
+      'privacyModeEnabled': privacyModeEnabled,
+    };
+  }
+}
+
+/// 使用者資訊 - 符合1311.FS.js規範
 class User {
   final String id;
   final String email;
   final String? displayName;
   final String? avatarUrl;
   final UserMode mode;
+  final bool emailVerified;           // 新增：符合1311規範
+  final UserPreferences preferences;  // 新增：符合1311規範
+  final UserSecurity security;       // 新增：符合1311規範
+  final DateTime? lastActiveAt;       // 新增：符合1311規範
   final DateTime createdAt;
 
   User({
@@ -98,6 +160,10 @@ class User {
     this.displayName,
     this.avatarUrl,
     required this.mode,
+    required this.emailVerified,
+    required this.preferences,
+    required this.security,
+    this.lastActiveAt,
     required this.createdAt,
   });
 
@@ -108,11 +174,31 @@ class User {
       displayName: json['displayName'],
       avatarUrl: json['avatarUrl'],
       mode: UserMode.values.firstWhere(
-        (mode) => mode.name == json['mode'],
+        (mode) => mode.name == json['userMode'], // 注意：1311使用userMode
         orElse: () => UserMode.inertial,
       ),
+      emailVerified: json['emailVerified'] ?? false,
+      preferences: UserPreferences.fromJson(json['preferences'] ?? {}),
+      security: UserSecurity.fromJson(json['security'] ?? {}),
+      lastActiveAt: json['lastActiveAt'] != null 
+          ? DateTime.parse(json['lastActiveAt'])
+          : null,
       createdAt: DateTime.parse(json['createdAt']),
     );
+  }
+
+  /// 轉換為符合1311.FS.js格式的JSON
+  Map<String, dynamic> toFirestoreJson() {
+    return {
+      'email': email,
+      'displayName': displayName ?? '',
+      'userMode': mode.name, // 1311使用userMode而非mode
+      'emailVerified': emailVerified,
+      'preferences': preferences.toJson(),
+      'security': security.toJson(),
+      'lastActiveAt': lastActiveAt?.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+    };
   }
 }
 
