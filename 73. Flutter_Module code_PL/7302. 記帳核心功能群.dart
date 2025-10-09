@@ -110,6 +110,15 @@ class Category {
     this.parentId,
     required this.type,
   });
+  
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      parentId: json['parentId'] as String?,
+      type: json['type'] as String,
+    );
+  }
 }
 
 class Account {
@@ -152,6 +161,15 @@ class DashboardData {
     required this.balance,
     required this.transactionCount,
   });
+  
+  factory DashboardData.fromJson(Map<String, dynamic> json) {
+    return DashboardData(
+      totalIncome: (json['totalIncome'] ?? 0.0).toDouble(),
+      totalExpense: (json['totalExpense'] ?? 0.0).toDouble(),
+      balance: (json['balance'] ?? 0.0).toDouble(),
+      transactionCount: json['transactionCount'] ?? 0,
+    );
+  }
 }
 
 class RecurringConfig {
@@ -493,18 +511,63 @@ abstract class DashboardWidget extends StatelessWidget {
 
 class DashboardWidgetImpl extends DashboardWidget {
   const DashboardWidgetImpl({Key? key}) : super(key: key);
+  
+  late final TransactionApiClient _transactionApiClient;
+  late final StatisticsApiClient _statisticsApiClient;
+  
+  @override
+  void initState() {
+    super.initState();
+    _transactionApiClient = TransactionApiClient();
+    _statisticsApiClient = StatisticsApiClient();
+  }
 
   @override
   Widget buildBalanceCard() {
     return Card(
       child: Container(
         padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text('總餘額', style: TextStyle(fontSize: 16)),
-            SizedBox(height: 8),
-            Text('\$25,000', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          ],
+        child: FutureBuilder<DashboardData>(
+          future: _loadDashboardData(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Column(
+                children: [
+                  Text('總餘額', style: TextStyle(fontSize: 16)),
+                  SizedBox(height: 8),
+                  CircularProgressIndicator(),
+                ],
+              );
+            }
+            
+            if (snapshot.hasError) {
+              return Column(
+                children: [
+                  Text('總餘額', style: TextStyle(fontSize: 16)),
+                  SizedBox(height: 8),
+                  Text('載入失敗', style: TextStyle(color: Colors.red)),
+                ],
+              );
+            }
+            
+            final data = snapshot.data!;
+            final formatter = NumberFormat.currency(locale: 'zh_TW', symbol: '\$');
+            
+            return Column(
+              children: [
+                Text('總餘額', style: TextStyle(fontSize: 16)),
+                SizedBox(height: 8),
+                Text(
+                  formatter.format(data.balance),
+                  style: TextStyle(
+                    fontSize: 24, 
+                    fontWeight: FontWeight.bold,
+                    color: data.balance >= 0 ? Colors.green : Colors.red,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -515,22 +578,62 @@ class DashboardWidgetImpl extends DashboardWidget {
     return Card(
       child: Container(
         padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('本月概覽', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: FutureBuilder<DashboardData>(
+          future: _loadDashboardData(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('本月概覽', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 8),
+                  CircularProgressIndicator(),
+                ],
+              );
+            }
+            
+            if (snapshot.hasError) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('本月概覽', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 8),
+                  Text('載入失敗', style: TextStyle(color: Colors.red)),
+                ],
+              );
+            }
+            
+            final data = snapshot.data!;
+            final formatter = NumberFormat.currency(locale: 'zh_TW', symbol: '\$');
+            
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('收入: \$5,000'),
-                Text('支出: \$3,500'),
+                Text('本月概覽', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('收入: ${formatter.format(data.totalIncome)}'),
+                    Text('支出: ${formatter.format(data.totalExpense)}'),
+                  ],
+                ),
               ],
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
+  }
+
+  Future<DashboardData> _loadDashboardData() async {
+    try {
+      // 調用BL層API獲取真實儀表板數據
+      final response = await _transactionApiClient.getDashboardData();
+      return response.data!;
+    } catch (e) {
+      throw Exception('載入儀表板數據失敗: $e');
+    }
   }
 
   @override
@@ -904,31 +1007,81 @@ abstract class CategorySelectorWidget extends StatefulWidget {
 
 class CategorySelectorWidgetImpl extends CategorySelectorWidget {
   const CategorySelectorWidgetImpl({Key? key}) : super(key: key);
+  
+  late final CategoryApiClient _categoryApiClient;
+  List<Category> categories = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    _categoryApiClient = CategoryApiClient();
+  }
 
   @override
   Widget buildCategoryTree() {
     return Container(
-      child: ListView(
-        children: [
-          ExpansionTile(
-            title: Text('食物'),
-            children: [
-              ListTile(title: Text('早餐'), onTap: () => onCategorySelected('breakfast')),
-              ListTile(title: Text('午餐'), onTap: () => onCategorySelected('lunch')),
-              ListTile(title: Text('晚餐'), onTap: () => onCategorySelected('dinner')),
-            ],
-          ),
-          ExpansionTile(
-            title: Text('交通'),
-            children: [
-              ListTile(title: Text('公車'), onTap: () => onCategorySelected('bus')),
-              ListTile(title: Text('捷運'), onTap: () => onCategorySelected('metro')),
-              ListTile(title: Text('計程車'), onTap: () => onCategorySelected('taxi')),
-            ],
-          ),
-        ],
+      child: FutureBuilder<List<Category>>(
+        future: _loadCategories(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          
+          if (snapshot.hasError) {
+            return Center(child: Text('載入科目失敗: ${snapshot.error}'));
+          }
+          
+          final categories = snapshot.data ?? [];
+          return ListView.builder(
+            itemCount: categories.length,
+            itemBuilder: (context, index) {
+              final category = categories[index];
+              return _buildCategoryItem(category);
+            },
+          );
+        },
       ),
     );
+  }
+
+  Future<List<Category>> _loadCategories() async {
+    try {
+      // 調用BL層獲取真實科目資料
+      final response = await _categoryApiClient.getCategories();
+      return response.data ?? [];
+    } catch (e) {
+      throw Exception('載入科目失敗: $e');
+    }
+  }
+
+  Widget _buildCategoryItem(Category category) {
+    if (category.parentId == null) {
+      // 父級科目，顯示為展開項目
+      return ExpansionTile(
+        title: Text(category.name),
+        children: _buildSubcategories(category.id),
+      );
+    } else {
+      // 子級科目
+      return ListTile(
+        title: Text(category.name),
+        onTap: () => onCategorySelected(category.id),
+      );
+    }
+  }
+
+  List<Widget> _buildSubcategories(String parentId) {
+    return _loadSubcategories(parentId).map((subcategory) {
+      return ListTile(
+        title: Text(subcategory.name),
+        onTap: () => onCategorySelected(subcategory.id),
+      );
+    }).toList();
+  }
+
+  List<Category> _loadSubcategories(String parentId) {
+    // 從已載入的分類中篩選子分類
+    return categories.where((cat) => cat.parentId == parentId).toList();
   }
 
   @override
@@ -2151,27 +2304,109 @@ class StatisticsChartWidgetImpl extends StatisticsChartWidget {
         border: Border.all(color: Colors.grey),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.pie_chart, size: 80, color: Colors.grey[400]),
-          SizedBox(height: 16),
-          Text('圓餅圖', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
-          Text('支出分類統計'),
-          SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildLegendItem('食物', Colors.red, '40%'),
-              _buildLegendItem('交通', Colors.blue, '30%'),
-              _buildLegendItem('娛樂', Colors.green, '20%'),
-              _buildLegendItem('其他', Colors.orange, '10%'),
-            ],
-          ),
-        ],
+      child: FutureBuilder<List<ChartData>>(
+        future: _loadChartData(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('載入圖表數據中...'),
+              ],
+            );
+          }
+          
+          if (snapshot.hasError) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error, size: 80, color: Colors.red),
+                SizedBox(height: 16),
+                Text('載入圖表失敗', style: TextStyle(color: Colors.red)),
+                SizedBox(height: 8),
+                Text('${snapshot.error}'),
+              ],
+            );
+          }
+          
+          final chartData = snapshot.data ?? [];
+          if (chartData.isEmpty) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.pie_chart_outline, size: 80, color: Colors.grey[400]),
+                SizedBox(height: 16),
+                Text('暫無統計數據'),
+              ],
+            );
+          }
+          
+          return _buildDynamicChart(chartData);
+        },
       ),
     );
+  }
+
+  Widget _buildDynamicChart(List<ChartData> chartData) {
+    final total = chartData.fold(0.0, (sum, item) => sum + item.value);
+    
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 這裡可以整合真正的圖表庫如fl_chart
+        Icon(Icons.pie_chart, size: 80, color: Colors.blue),
+        SizedBox(height: 16),
+        Text('支出分類統計', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        SizedBox(height: 8),
+        Text('總計: ${NumberFormat.currency(locale: 'zh_TW', symbol: '\$').format(total)}'),
+        SizedBox(height: 16),
+        Wrap(
+          spacing: 8,
+          children: chartData.map((data) {
+            final percentage = total > 0 ? (data.value / total * 100).toStringAsFixed(1) : '0';
+            return _buildLegendItem(data.label, data.color, '$percentage%');
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Future<List<ChartData>> _loadChartData() async {
+    try {
+      // 調用BL層獲取統計數據
+      final response = await _statisticsApiClient.getCategoryStatistics({
+        'startDate': DateTime.now().subtract(Duration(days: 30)).toIso8601String(),
+        'endDate': DateTime.now().toIso8601String(),
+      });
+      
+      // 轉換統計數據為圖表數據
+      return _convertToChartData(response.data);
+    } catch (e) {
+      throw Exception('載入統計數據失敗: $e');
+    }
+  }
+
+  List<ChartData> _convertToChartData(dynamic statisticsData) {
+    // 將BL層返回的統計數據轉換為圖表數據格式
+    final List<ChartData> chartData = [];
+    final colors = [Colors.red, Colors.blue, Colors.green, Colors.orange, Colors.purple];
+    
+    if (statisticsData != null && statisticsData['categories'] != null) {
+      final categories = statisticsData['categories'] as List;
+      
+      for (int i = 0; i < categories.length && i < colors.length; i++) {
+        final category = categories[i];
+        chartData.add(ChartData(
+          label: category['name'] ?? '未知',
+          value: (category['amount'] ?? 0.0).toDouble(),
+          color: colors[i],
+        ));
+      }
+    }
+    
+    return chartData;
   }
 
   Widget _buildLegendItem(String label, Color color, String percentage) {
@@ -2229,6 +2464,96 @@ class _StatisticsChartWidgetState extends State<StatisticsChartWidget> {
   @override
   Widget build(BuildContext context) {
     return Container();
+  }
+}
+
+// ==========================================
+// API客戶端類別
+// ==========================================
+
+/**
+ * 科目API客戶端
+ */
+class CategoryApiClient {
+  Future<ApiResponse<List<Category>>> getCategories() async {
+    try {
+      // 調用BL層API
+      final response = await http.get(Uri.parse('/api/v1/categories'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final categories = (data['data'] as List)
+            .map((item) => Category.fromJson(item))
+            .toList();
+        return ApiResponse.success(data: categories, metadata: ApiMetadata.fromJson(data['metadata']));
+      } else {
+        throw Exception('API呼叫失敗: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('載入科目失敗: $e');
+    }
+  }
+}
+
+/**
+ * 交易API客戶端
+ */
+class TransactionApiClient {
+  Future<ApiResponse<DashboardData>> getDashboardData() async {
+    try {
+      final response = await http.get(Uri.parse('/api/v1/transactions/dashboard'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final dashboardData = DashboardData.fromJson(data['data']);
+        return ApiResponse.success(data: dashboardData, metadata: ApiMetadata.fromJson(data['metadata']));
+      } else {
+        throw Exception('API呼叫失敗: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('載入儀表板數據失敗: $e');
+    }
+  }
+}
+
+/**
+ * 統計API客戶端
+ */
+class StatisticsApiClient {
+  Future<ApiResponse<Map<String, dynamic>>> getCategoryStatistics(Map<String, String> params) async {
+    try {
+      final uri = Uri.parse('/api/v1/statistics/categories').replace(queryParameters: params);
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return ApiResponse.success(data: data['data'], metadata: ApiMetadata.fromJson(data['metadata']));
+      } else {
+        throw Exception('API呼叫失敗: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('載入統計數據失敗: $e');
+    }
+  }
+}
+
+/**
+ * API回應元數據
+ */
+class ApiMetadata {
+  final String timestamp;
+  final String requestId;
+  final String userMode;
+  
+  ApiMetadata({
+    required this.timestamp,
+    required this.requestId,
+    required this.userMode,
+  });
+  
+  factory ApiMetadata.fromJson(Map<String, dynamic> json) {
+    return ApiMetadata(
+      timestamp: json['timestamp'] ?? '',
+      requestId: json['requestId'] ?? '',
+      userMode: json['userMode'] ?? '',
+    );
   }
 }
 
