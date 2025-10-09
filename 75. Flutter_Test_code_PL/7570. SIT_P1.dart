@@ -1043,7 +1043,7 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
     final allStepsSuccess = lifecycleSteps.values.every((step) => step);
     if (allStepsSuccess) {
       testResult['details']['completeLifecycleSuccess'] = true;
-      testResult['passed'] = true;
+      testresult['passed'] = true;
     }
 
     stopwatch.stop();
@@ -1174,7 +1174,7 @@ Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
     // 驗證異常情況下的系統穩定性
     if (networkExceptions.isNotEmpty) {
       testResult['details']['systemStabilityUnderException'] = true;
-      testResult['passed'] = true;
+      testresult['passed'] = true;
     }
 
     stopwatch.stop();
@@ -2906,38 +2906,7 @@ void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic
 // 模組導出 (階段二完整版)
 // ==========================================
 
-/// 7570 SIT P1測試代碼模組主要導出 (v2.0.0 - 階段二版本)
-// Dart不需要export語句，直接在main()函數中呼叫測試
-// Dart不需要export語句，直接在main()函數中呼叫測試
-// Dart不需要export語句，直接在main()函數中呼叫測試
-export {
-  // ====== 核心控制器 ======
-  SITP1TestController,
-
-  // ====== 階段二新增：深度整合測試 ======
-  IntegrationTestController,
-  TestDataIntegrationManager,
-  IntegrationErrorHandler,
-
-  // ====== 7580注入相關 ======
-  TestDataInjectionFactory,
-  SystemEntryTestDataTemplate,
-  AccountingCoreTestDataTemplate,
-  FourModeTestDataGenerator,
-
-  // ====== 7590生成相關 ======
-  DynamicTestDataFactory,
-  DynamicGenerationInjectionIntegrator,
-
-  // ====== 驗證器 ======
-  validateSystemEntryFormat,
-  validateAccountingCoreFormat,
-  filterBusinessLogicFields,
-
-  // ====== 統計與管理 ======
-  getInjectionStatistics,
-  // getGenerationStatistics, // 假設在7590模組中導出
-};
+// Export declarations removed - using class-based exports instead
 
 // ==========================================
 // 階段二模組初始化

@@ -9,10 +9,10 @@ import 'dart:async';
 import 'dart:convert';
 
 /// 測試資料注入工廠
-class TestDataInjectionFactory {
-  static final TestDataInjectionFactory _instance = TestDataInjectionFactory._internal();
-  static TestDataInjectionFactory get instance => _instance;
-  TestDataInjectionFactory._internal();
+class SITTestDataInjectionFactory {
+  static final SITTestDataInjectionFactory _instance = SITTestDataInjectionFactory._internal();
+  static SITTestDataInjectionFactory get instance => _instance;
+  SITTestDataInjectionFactory._internal();
 
   /// 注入系統進入功能群測試資料
   Future<bool> injectSystemEntryData(Map<String, dynamic> testData) async {

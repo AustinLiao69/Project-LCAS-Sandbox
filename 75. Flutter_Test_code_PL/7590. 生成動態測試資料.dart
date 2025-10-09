@@ -10,10 +10,10 @@ import 'dart:convert';
 import 'dart:math';
 
 /// 動態測試資料工廠
-class DynamicTestDataFactory {
-  static final DynamicTestDataFactory _instance = DynamicTestDataFactory._internal();
-  static DynamicTestDataFactory get instance => _instance;
-  DynamicTestDataFactory._internal();
+class SITDynamicTestDataFactory {
+  static final SITDynamicTestDataFactory _instance = SITDynamicTestDataFactory._internal();
+  static SITDynamicTestDataFactory get instance => _instance;
+  SITDynamicTestDataFactory._internal();
 
   final Random _random = Random();
 
