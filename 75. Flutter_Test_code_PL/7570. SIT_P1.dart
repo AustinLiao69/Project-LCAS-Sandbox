@@ -527,7 +527,7 @@ Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() asyn
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -573,7 +573,7 @@ Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() asy
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -623,7 +623,7 @@ Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -670,7 +670,7 @@ Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() asyn
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -720,7 +720,7 @@ Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -772,7 +772,7 @@ Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() 
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -825,7 +825,7 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -878,7 +878,7 @@ Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async 
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -929,7 +929,7 @@ Future<Map<String, dynamic>> _executeTCSIT009_ModeDifferentiationResponse() asyn
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -978,7 +978,7 @@ Future<Map<String, dynamic>> _executeTCSIT010_DataFormatConversion() async {
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -1040,7 +1040,7 @@ Future<Map<String, dynamic>> _executeTCSIT011_DataSynchronizationMechanism() asy
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -1110,7 +1110,7 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -1176,7 +1176,7 @@ Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -1241,7 +1241,7 @@ Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -1303,7 +1303,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -1358,7 +1358,7 @@ Future<Map<String, dynamic>> _executeTCSIT016_DCN0015FormatValidation() async {
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -1556,7 +1556,7 @@ Future<Map<String, dynamic>> _executeTCSIT017_AuthRegisterEndpointValidation() a
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -1637,7 +1637,7 @@ Future<Map<String, dynamic>> _executeTCSIT018_AuthLoginEndpointValidation() asyn
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
@@ -1807,7 +1807,7 @@ Future<Map<String, dynamic>> _executeStandardAPIContractTest({
 
     return testResult;
   } catch (e) {
-    testResult['details']['error'] = e.toString();
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
 }
