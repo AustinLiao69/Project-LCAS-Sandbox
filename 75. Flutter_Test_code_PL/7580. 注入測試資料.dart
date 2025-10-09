@@ -1,8 +1,8 @@
 /**
  * 7580. 注入測試資料.dart
- * @version v1.0.0
+ * @version v2.0.0
  * @date 2025-10-09
- * @update: 階段一建立 - 基礎測試資料注入功能
+ * @update: 階段二完成 - 完整測試資料注入功能，支援7570 SIT測試
  */
 
 import 'dart:async';
@@ -13,17 +13,42 @@ class TestDataInjectionFactory {
   static final TestDataInjectionFactory _instance = TestDataInjectionFactory._internal();
   static TestDataInjectionFactory get instance => _instance;
   TestDataInjectionFactory._internal();
+  
+  // 記錄注入歷史
+  final List<String> _injectionHistory = [];
+  final Map<String, int> _injectionStats = {
+    'total': 0,
+    'success': 0,
+    'failed': 0,
+  };
 
   /// 注入系統進入功能群測試資料
   Future<bool> injectSystemEntryData(Map<String, dynamic> testData) async {
     try {
+      _injectionStats['total'] = (_injectionStats['total'] ?? 0) + 1;
+      
       // 模擬資料注入處理
       await Future.delayed(Duration(milliseconds: 100));
 
-      // 驗證資料格式
+      // 強化資料格式驗證
       if (testData.isEmpty) {
+        _injectionStats['failed'] = (_injectionStats['failed'] ?? 0) + 1;
         return false;
       }
+      
+      // 驗證必要欄位
+      final requiredFields = ['userId', 'email'];
+      for (final field in requiredFields) {
+        if (!testData.containsKey(field) || testData[field] == null) {
+          print('[TestDataInjection] 缺少必要欄位: $field');
+          _injectionStats['failed'] = (_injectionStats['failed'] ?? 0) + 1;
+          return false;
+        }
+      }
+
+      // 記錄注入歷史
+      _injectionHistory.add('SystemEntry: ${testData['userId'] ?? 'unknown'} - ${DateTime.now().toIso8601String()}');
+      _injectionStats['success'] = (_injectionStats['success'] ?? 0) + 1;
 
       // 模擬成功注入
       print('[TestDataInjection] 系統進入資料注入成功: ${testData['userId'] ?? 'unknown'}');
@@ -31,8 +56,18 @@ class TestDataInjectionFactory {
 
     } catch (e) {
       print('[TestDataInjection] 資料注入失敗: $e');
+      _injectionStats['failed'] = (_injectionStats['failed'] ?? 0) + 1;
       return false;
     }
+  }
+  
+  /// 取得注入統計資訊
+  Map<String, dynamic> getInjectionStatistics() {
+    return {
+      'statistics': Map<String, int>.from(_injectionStats),
+      'history': List<String>.from(_injectionHistory),
+      'lastInjection': _injectionHistory.isNotEmpty ? _injectionHistory.last : null,
+    };
   }
 
   /// 注入記帳核心功能群測試資料
@@ -45,6 +80,9 @@ class TestDataInjectionFactory {
       if (testData.isEmpty) {
         return false;
       }
+
+      // 記錄注入歷史
+      _injectionHistory.add('AccountingCore: ${testData['transactionId'] ?? testData['收支ID'] ?? 'unknown'} - ${DateTime.now().toIso8601String()}');
 
       // 模擬成功注入
       print('[TestDataInjection] 記帳核心資料注入成功: ${testData['transactionId'] ?? testData['收支ID'] ?? 'unknown'}');
