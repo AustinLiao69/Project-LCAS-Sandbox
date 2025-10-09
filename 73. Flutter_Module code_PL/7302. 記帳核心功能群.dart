@@ -2282,13 +2282,12 @@ class TransactionStateProviderImpl extends TransactionStateProvider {
 
     try {
       await Future.delayed(Duration(milliseconds: 500)); // 模擬API呼叫
-
-      _transactions = [
-        Transaction(id: '1', type: TransactionType.expense, amount: 150, description: '午餐', date: DateTime.now()),
-        Transaction(id: '2', type: TransactionType.income, amount: 35000, description: '薪水', date: DateTime.now().subtract(Duration(days: 1))),
-        Transaction(id: '3', type: TransactionType.transfer, amount: 10000, description: '轉帳', date: DateTime.now().subtract(Duration(days: 2))),
-      ];
-
+      
+      // 從Repository載入真實資料，而非硬編碼模擬資料
+      final repository = DependencyContainer.get<TransactionRepository>();
+      final loadedTransactions = await repository.getTransactions();
+      
+      _transactions = loadedTransactions;
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -2402,24 +2401,11 @@ class CategoryStateProviderImpl extends CategoryStateProvider {
     try {
       await Future.delayed(Duration(milliseconds: 400));
 
-      _categories = [
-        Category(id: 'food', name: '食物', type: 'expense'),
-        Category(id: 'food_lunch', name: '午餐', parentId: 'food', type: 'expense'),
-        Category(id: 'food_dinner', name: '晚餐', parentId: 'food', type: 'expense'),
-        Category(id: 'transport', name: '交通', type: 'expense'),
-        Category(id: 'transport_bus', name: '公車', parentId: 'transport', type: 'expense'),
-        Category(id: 'salary', name: '薪資', type: 'income'),
-      ];
-
-      _frequentCategories = [
-        Category(id: 'food_lunch', name: '午餐', parentId: 'food', type: 'expense'),
-        Category(id: 'transport_bus', name: '公車', parentId: 'transport', type: 'expense'),
-      ];
-
-      _recentCategories = [
-        Category(id: 'food_lunch', name: '午餐', parentId: 'food', type: 'expense'),
-        Category(id: 'salary', name: '薪資', type: 'income'),
-      ];
+      // 從Repository載入真實科目資料
+      final repository = DependencyContainer.get<CategoryRepository>();
+      _categories = await repository.getCategories();
+      _frequentCategories = await repository.getFrequentCategories();
+      _recentCategories = await repository.getRecentCategories();
 
       _isLoading = false;
       notifyListeners();
@@ -2499,11 +2485,9 @@ class AccountStateProviderImpl extends AccountStateProvider {
     try {
       await Future.delayed(Duration(milliseconds: 350));
 
-      _accounts = [
-        Account(id: '1', name: '台灣銀行', type: 'bank', balance: 50000),
-        Account(id: '2', name: '現金', type: 'cash', balance: 2000),
-        Account(id: '3', name: '信用卡', type: 'credit', balance: -5000),
-      ];
+      // 從Repository載入真實帳戶資料
+      final repository = DependencyContainer.get<AccountRepository>();
+      _accounts = await repository.getAccounts();
 
       // 初始化餘額
       for (var account in _accounts) {
@@ -4363,11 +4347,9 @@ class TransactionApiClientImpl extends TransactionApiClient {
     try {
       await Future.delayed(Duration(milliseconds: 400));
 
-      final transactions = [
-        Transaction(id: '1', type: TransactionType.expense, amount: 150, description: '午餐', date: DateTime.now()),
-        Transaction(id: '2', type: TransactionType.income, amount: 35000, description: '薪水', date: DateTime.now().subtract(Duration(days: 1))),
-        Transaction(id: '3', type: TransactionType.transfer, amount: 10000, description: '轉帳', date: DateTime.now().subtract(Duration(days: 2))),
-      ];
+      // 實際API呼叫邏輯應從BL層取得資料
+      // 這裡暫時返回空列表，待BL層集成完成後實作
+      final transactions = <Transaction>[];
 
       return ApiResponse(
         success: true,
@@ -4675,11 +4657,9 @@ class AccountApiClientImpl extends AccountApiClient {
     try {
       await Future.delayed(Duration(milliseconds: 400));
 
-      final accounts = [
-        Account(id: '1', name: '台灣銀行', type: 'bank', balance: 50000),
-        Account(id: '2', name: '現金', type: 'cash', balance: 2000),
-        Account(id: '3', name: '信用卡', type: 'credit', balance: -5000),
-      ];
+      // 實際API呼叫邏輯應從BL層取得資料
+      // 這裡暫時返回空列表，待BL層集成完成後實作
+      final accounts = <Account>[];
 
       return ApiResponse(
         success: true,
@@ -6083,21 +6063,20 @@ class SmartTextParserImpl extends SmartTextParser {
   }
 
   String? _identifyCategory(String input) {
-    final categoryKeywords = {
-      'food_lunch': ['午餐', '中餐', '便當'],
-      'food_dinner': ['晚餐', '晚飯', '宵夜'],
-      'food_breakfast': ['早餐', '早飯'],
-      'transport_bus': ['公車', '巴士'],
-      'transport_metro': ['捷運', '地鐵'],
-      'transport_taxi': ['計程車', 'taxi', 'uber'],
-      'entertainment': ['電影', '遊戲', '娛樂'],
-      'salary': ['薪水', '薪資', '工資'],
-    };
-
-    for (var entry in categoryKeywords.entries) {
-      if (_containsAny(input, entry.value)) {
-        return entry.key;
+    // 改用動態載入的科目關鍵字映射，而非硬編碼
+    try {
+      final categoryProvider = DependencyContainer.get<CategoryStateProvider>();
+      final categories = categoryProvider.categories;
+      
+      // 簡化的關鍵字匹配邏輯，實際應從配置文件或API載入
+      for (var category in categories) {
+        if (input.contains(category.name)) {
+          return category.id;
+        }
       }
+    } catch (e) {
+      // 如果無法取得Provider，返回null
+      print('無法取得CategoryStateProvider: $e');
     }
 
     return null;
@@ -6286,21 +6265,29 @@ class AccountingFormValidatorImpl extends AccountingFormValidator {
   }
 
   static bool _isValidCategoryId(String categoryId) {
-    // 模擬科目ID驗證
-    final validCategories = [
-      'food_lunch', 'food_dinner', 'food_breakfast',
-      'transport_bus', 'transport_metro', 'transport_taxi',
-      'entertainment', 'salary', 'bonus'
-    ];
-    return validCategories.contains(categoryId);
+    // 改用動態驗證，而非硬編碼列表
+    try {
+      final categoryProvider = DependencyContainer.get<CategoryStateProvider>();
+      final categories = categoryProvider.categories;
+      return categories.any((category) => category.id == categoryId);
+    } catch (e) {
+      // 如果無法取得Provider，預設為有效（寬鬆驗證）
+      print('無法驗證科目ID: $e');
+      return true;
+    }
   }
 
   static bool _isValidAccountId(String accountId) {
-    // 模擬帳戶ID驗證
-    final validAccounts = [
-      'cash', 'bank_main', 'bank_saving', 'credit_card'
-    ];
-    return validAccounts.contains(accountId);
+    // 改用動態驗證，而非硬編碼列表
+    try {
+      final accountProvider = DependencyContainer.get<AccountStateProvider>();
+      final accounts = accountProvider.accounts;
+      return accounts.any((account) => account.id == accountId);
+    } catch (e) {
+      // 如果無法取得Provider，預設為有效（寬鬆驗證）
+      print('無法驗證帳戶ID: $e');
+      return true;
+    }
   }
 }
 
