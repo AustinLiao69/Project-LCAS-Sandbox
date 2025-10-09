@@ -94,7 +94,7 @@ class SITP1TestController {
   SITP1TestController._internal();
 
   // 測試統計
-  final Map<String, dynamic> _testResults = {
+  final Map<String, dynamic> _testResults = <String, dynamic>{
     'totalTests': 44, // P1: 16 + P2: 28
     'passedTests': 0,
     'failedTests': 0,
@@ -138,8 +138,9 @@ class SITP1TestController {
       final phase3ApiContractTestsResults = await _executePhase3ApiContractTests();
 
       stopwatch.stop();
-      _testResults['executionTime'] = stopwatch.elapsedMilliseconds;
-      _testResults['endTime'] = DateTime.now().toIso8601String();
+      final Map<String, dynamic> testResults = _testResults;
+      testResults['executionTime'] = stopwatch.elapsedMilliseconds;
+      testResults['endTime'] = DateTime.now().toIso8601String();
 
       // 統計結果
       _compileTestResults(
@@ -149,18 +150,19 @@ class SITP1TestController {
       );
 
       print('[7570] ✅ SIT P1完整測試完成');
-      print('[7570]    - 總測試數: ${_testResults['totalTests']}');
-      print('[7570]    - 通過數: ${_testResults['passedTests']}');
-      print('[7570]    - 失敗數: ${_testResults['failedTests']}');
-      print('[7570]    - 成功率: ${(_testResults['passedTests'] / _testResults['totalTests'] * 100).toStringAsFixed(1)}%');
-      print('[7570]    - 執行時間: ${_testResults['executionTime']}ms');
+      print('[7570]    - 總測試數: ${testResults['totalTests']}');
+      print('[7570]    - 通過數: ${testResults['passedTests']}');
+      print('[7570]    - 失敗數: ${testResults['failedTests']}');
+      print('[7570]    - 成功率: ${(testResults['passedTests'] / testResults['totalTests'] * 100).toStringAsFixed(1)}%');
+      print('[7570]    - 執行時間: ${testResults['executionTime']}ms');
 
       return _testResults;
 
     } catch (e) {
       print('[7570] ❌ SIT測試執行失敗: $e');
-      _testResults['error'] = e.toString();
-      return _testResults;
+      final Map<String, dynamic> testResults = _testResults;
+      testResults['error'] = e.toString();
+      return testResults;
     }
   }
 
@@ -2148,10 +2150,11 @@ void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic
   // 階段一與階段二的測試案例是重疊的 (TC-SIT-001~016)，所以統計時要避免重複計算
   // 這裡假設階段二的結果是階段一的深度驗證，不增加總數
   // 總數維持44個測試案例
-  controller._testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
-  controller._testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
+  final Map<String, dynamic> testResults = controller._testResults;
+  testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
+  testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
 
-  controller._testResults['testDetails'].addAll([
+  (testResults['testDetails'] as List<Map<String, dynamic>>).addAll([
     {
       'phase': 'Phase 1 - Integration Tests (TC-SIT-001~016)',
       'results': phase1Results,
