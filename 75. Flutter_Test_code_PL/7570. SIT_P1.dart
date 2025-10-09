@@ -494,7 +494,7 @@ class SITP1TestController {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-001',
     'testName': '使用者註冊流程整合測試',
     'focus': 'PL→APL→ASL→BL→DL完整鏈路驗證',
@@ -539,7 +539,7 @@ Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() asyn
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-002',
     'testName': '登入驗證整合測試',
     'focus': '端到端流程驗證',
@@ -585,7 +585,7 @@ Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() asy
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-003',
     'testName': 'Firebase Auth整合測試',
     'focus': '業務邏輯正確性',
@@ -635,7 +635,7 @@ Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-004',
     'testName': '快速記帳整合測試',
     'focus': '完整使用者體驗差異',
@@ -682,7 +682,7 @@ Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() asyn
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-005',
     'testName': '完整記帳表單整合測試',
     'focus': '跨層整合流程',
@@ -732,7 +732,7 @@ Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-006',
     'testName': '記帳資料查詢整合測試',
     'focus': '端到端流程驗證',
@@ -784,7 +784,7 @@ Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() 
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-007',
     'testName': '跨層錯誤處理整合測試',
     'focus': '跨層整合流程',
@@ -837,7 +837,7 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-008',
     'testName': '模式評估整合測試',
     'focus': '四模式差異化',
@@ -890,7 +890,7 @@ Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async 
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT009_ModeDifferentiationResponse() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-009',
     'testName': '模式差異化回應測試',
     'focus': '完整使用者體驗差異',
@@ -941,7 +941,7 @@ Future<Map<String, dynamic>> _executeTCSIT009_ModeDifferentiationResponse() asyn
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT010_DataFormatConversion() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-010',
     'testName': '資料格式轉換測試',
     'focus': '跨層整合流程',
@@ -990,7 +990,7 @@ Future<Map<String, dynamic>> _executeTCSIT010_DataFormatConversion() async {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT011_DataSynchronizationMechanism() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-011',
     'testName': '資料同步機制測試',
     'focus': 'PL→APL→ASL→BL→DL完整鏈路',
@@ -1052,7 +1052,7 @@ Future<Map<String, dynamic>> _executeTCSIT011_DataSynchronizationMechanism() asy
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-012',
     'testName': '使用者完整生命週期測試',
     'focus': '端到端流程驗證',
@@ -1122,7 +1122,7 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-013',
     'testName': '記帳業務流程端到端測試',
     'focus': '業務邏輯正確性',
@@ -1188,7 +1188,7 @@ Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-014',
     'testName': '網路異常處理測試',
     'focus': '跨層錯誤處理',
@@ -1253,7 +1253,7 @@ Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-015',
     'testName': '業務規則錯誤處理測試',
     'focus': '業務邏輯正確性',
@@ -1295,7 +1295,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
     // 驗證業務規則驗證準確性
     if (businessRuleErrors.isNotEmpty) {
       testResult['details']['businessRuleValidationAccuracy'] = true;
-      testresult['passed'] = true;
+      testResult['passed'] = true;
     }
 
     stopwatch.stop();
@@ -1315,7 +1315,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT016_DCN0015FormatValidation() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-016',
     'testName': 'DCN-0015格式驗證測試',
     'focus': 'API回應格式標準化',
@@ -1490,7 +1490,7 @@ Map<String, dynamic> getInjectionStatistics() {
  * @update: 階段三實作 - API契約層測試
  */
 Future<Map<String, dynamic>> _executeTCSIT017_AuthRegisterEndpointValidation() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-017',
     'testName': 'POST /api/v1/auth/register 註冊端點驗證',
     'focus': 'API規格合規性',
@@ -1568,7 +1568,7 @@ Future<Map<String, dynamic>> _executeTCSIT017_AuthRegisterEndpointValidation() a
  * @update: 階段三實作 - API契約層測試
  */
 Future<Map<String, dynamic>> _executeTCSIT018_AuthLoginEndpointValidation() async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': 'TC-SIT-018',
     'testName': 'POST /api/v1/auth/login 登入端點驗證',
     'focus': 'API規格合規性',
@@ -1754,7 +1754,7 @@ Future<Map<String, dynamic>> _executeStandardAPIContractTest({
   required String expectedSpec,
   required Map<String, dynamic> sampleResponse,
 }) async {
-  final testResult = <String, dynamic>{
+  final Map<String, dynamic> testResult = <String, dynamic>{
     'testId': testId,
     'testName': testName,
     'focus': 'API規格合規性',
