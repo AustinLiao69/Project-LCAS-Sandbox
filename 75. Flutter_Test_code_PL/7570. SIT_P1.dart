@@ -1295,7 +1295,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
     // 驗證業務規則驗證準確性
     if (businessRuleErrors.isNotEmpty) {
       testResult['details']['businessRuleValidationAccuracy'] = true;
-      testResult['passed'] = true;
+      testresult['passed'] = true;
     }
 
     stopwatch.stop();
