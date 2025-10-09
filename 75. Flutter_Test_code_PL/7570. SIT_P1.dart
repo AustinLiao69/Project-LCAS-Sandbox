@@ -24,7 +24,7 @@ class APIComplianceValidator {
   static final APIComplianceValidator _instance = APIComplianceValidator._internal();
   static APIComplianceValidator get instance => _instance;
   APIComplianceValidator._internal();
-  
+
   Future<Map<String, dynamic>> validateEndpoint({
     required String endpoint,
     required String method,
@@ -44,7 +44,7 @@ class DCN0015ComplianceValidator {
   static final DCN0015ComplianceValidator _instance = DCN0015ComplianceValidator._internal();
   static DCN0015ComplianceValidator get instance => _instance;
   DCN0015ComplianceValidator._internal();
-  
+
   Future<Map<String, dynamic>> validateResponseFormat({
     required String endpoint,
     required Map<String, dynamic> sampleResponse,
@@ -63,7 +63,7 @@ class FourModeComplianceValidator {
   static final FourModeComplianceValidator _instance = FourModeComplianceValidator._internal();
   static FourModeComplianceValidator get instance => _instance;
   FourModeComplianceValidator._internal();
-  
+
   Future<Map<String, dynamic>> validateModeSpecificResponse({
     required String endpoint,
     required List<String> modes,
@@ -494,7 +494,7 @@ class SITP1TestController {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-001',
     'testName': '使用者註冊流程整合測試',
     'focus': 'PL→APL→ASL→BL→DL完整鏈路驗證',
@@ -539,7 +539,7 @@ Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() asyn
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-002',
     'testName': '登入驗證整合測試',
     'focus': '端到端流程驗證',
@@ -585,7 +585,7 @@ Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() asy
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-003',
     'testName': 'Firebase Auth整合測試',
     'focus': '業務邏輯正確性',
@@ -635,7 +635,7 @@ Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-004',
     'testName': '快速記帳整合測試',
     'focus': '完整使用者體驗差異',
@@ -682,7 +682,7 @@ Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() asyn
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-005',
     'testName': '完整記帳表單整合測試',
     'focus': '跨層整合流程',
@@ -732,7 +732,7 @@ Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-006',
     'testName': '記帳資料查詢整合測試',
     'focus': '端到端流程驗證',
@@ -784,7 +784,7 @@ Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() 
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-007',
     'testName': '跨層錯誤處理整合測試',
     'focus': '跨層整合流程',
@@ -837,7 +837,7 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-008',
     'testName': '模式評估整合測試',
     'focus': '四模式差異化',
@@ -890,7 +890,7 @@ Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async 
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT009_ModeDifferentiationResponse() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-009',
     'testName': '模式差異化回應測試',
     'focus': '完整使用者體驗差異',
@@ -941,7 +941,7 @@ Future<Map<String, dynamic>> _executeTCSIT009_ModeDifferentiationResponse() asyn
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT010_DataFormatConversion() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-010',
     'testName': '資料格式轉換測試',
     'focus': '跨層整合流程',
@@ -990,7 +990,7 @@ Future<Map<String, dynamic>> _executeTCSIT010_DataFormatConversion() async {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT011_DataSynchronizationMechanism() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-011',
     'testName': '資料同步機制測試',
     'focus': 'PL→APL→ASL→BL→DL完整鏈路',
@@ -1052,7 +1052,7 @@ Future<Map<String, dynamic>> _executeTCSIT011_DataSynchronizationMechanism() asy
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-012',
     'testName': '使用者完整生命週期測試',
     'focus': '端到端流程驗證',
@@ -1122,7 +1122,7 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-013',
     'testName': '記帳業務流程端到端測試',
     'focus': '業務邏輯正確性',
@@ -1188,7 +1188,7 @@ Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-014',
     'testName': '網路異常處理測試',
     'focus': '跨層錯誤處理',
@@ -1253,7 +1253,7 @@ Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-015',
     'testName': '業務規則錯誤處理測試',
     'focus': '業務邏輯正確性',
@@ -1315,7 +1315,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
  * @update: 階段一實作
  */
 Future<Map<String, dynamic>> _executeTCSIT016_DCN0015FormatValidation() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-016',
     'testName': 'DCN-0015格式驗證測試',
     'focus': 'API回應格式標準化',
@@ -1490,7 +1490,7 @@ Map<String, dynamic> getInjectionStatistics() {
  * @update: 階段三實作 - API契約層測試
  */
 Future<Map<String, dynamic>> _executeTCSIT017_AuthRegisterEndpointValidation() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-017',
     'testName': 'POST /api/v1/auth/register 註冊端點驗證',
     'focus': 'API規格合規性',
@@ -1568,7 +1568,7 @@ Future<Map<String, dynamic>> _executeTCSIT017_AuthRegisterEndpointValidation() a
  * @update: 階段三實作 - API契約層測試
  */
 Future<Map<String, dynamic>> _executeTCSIT018_AuthLoginEndpointValidation() async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': 'TC-SIT-018',
     'testName': 'POST /api/v1/auth/login 登入端點驗證',
     'focus': 'API規格合規性',
@@ -1650,25 +1650,9 @@ Future<Map<String, dynamic>> _executeTCSIT018_AuthLoginEndpointValidation() asyn
  */
 Future<Map<String, dynamic>> _executeTCSIT019_AuthLogoutEndpointValidation() async {
   return await _executeStandardAPIContractTest(
-    testId: 'TC-SIT-019',
-    testName: 'POST /api/v1/auth/logout 登出端點驗證',
-    endpoint: '/api/v1/auth/logout',
-    method: 'POST',
-    expectedSpec: '8101',
-    sampleResponse: {
-      'success': true,
-      'data': {'message': '登出成功'},
-      'error': null,
-      'message': '登出成功',
-      'metadata': {
-        'timestamp': DateTime.now().toIso8601String(),
-        'requestId': 'req-125',
-        'userMode': 'Expert',
-        'apiVersion': 'v1.0.0',
-        'processingTimeMs': 80,
-        'modeFeatures': {'expertAnalytics': true}
-      }
-    },
+    testId: 'TC-SIT-019', testName: 'POST /api/v1/auth/logout 登出端點驗證',
+    endpoint: '/api/v1/auth/logout', method: 'POST', expectedSpec: '8101',
+    sampleResponse: {'success': true, 'data': {'message': '登出成功'}, 'error': null, 'message': '登出成功', 'metadata': {'timestamp': DateTime.now().toIso8601String(), 'requestId': 'req-125', 'userMode': 'Expert', 'apiVersion': 'v1.0.0', 'processingTimeMs': 80, 'modeFeatures': {'expertAnalytics': true}}},
   );
 }
 
@@ -1680,31 +1664,9 @@ Future<Map<String, dynamic>> _executeTCSIT019_AuthLogoutEndpointValidation() asy
  */
 Future<Map<String, dynamic>> _executeTCSIT020_UsersProfileEndpointValidation() async {
   return await _executeStandardAPIContractTest(
-    testId: 'TC-SIT-020',
-    testName: 'GET /api/v1/users/profile 用戶資料端點驗證',
-    endpoint: '/api/v1/users/profile',
-    method: 'GET',
-    expectedSpec: '8102',
-    sampleResponse: {
-      'success': true,
-      'data': {
-        'id': 'user123',
-        'email': 'test@lcas.app',
-        'displayName': '測試用戶',
-        'userMode': 'Expert',
-        'preferences': {'language': 'zh-TW'}
-      },
-      'error': null,
-      'message': '成功取得用戶資料',
-      'metadata': {
-        'timestamp': DateTime.now().toIso8601String(),
-        'requestId': 'req-126',
-        'userMode': 'Expert',
-        'apiVersion': 'v1.0.0',
-        'processingTimeMs': 95,
-        'modeFeatures': {'detailedAnalytics': true}
-      }
-    },
+    testId: 'TC-SIT-020', testName: 'GET /api/v1/users/profile 用戶資料端點驗證',
+    endpoint: '/api/v1/users/profile', method: 'GET', expectedSpec: '8102',
+    sampleResponse: {'success': true, 'data': {'id': 'user123', 'email': 'test@lcas.app', 'displayName': '測試用戶', 'userMode': 'Expert', 'preferences': {'language': 'zh-TW'}}, 'error': null, 'message': '成功取得用戶資料', 'metadata': {'timestamp': DateTime.now().toIso8601String(), 'requestId': 'req-126', 'userMode': 'Expert', 'apiVersion': 'v1.0.0', 'processingTimeMs': 95, 'modeFeatures': {'detailedAnalytics': true}}},
   );
 }
 
@@ -1716,32 +1678,9 @@ Future<Map<String, dynamic>> _executeTCSIT020_UsersProfileEndpointValidation() a
  */
 Future<Map<String, dynamic>> _executeTCSIT021_UsersAssessmentEndpointValidation() async {
   return await _executeStandardAPIContractTest(
-    testId: 'TC-SIT-021',
-    testName: 'GET /api/v1/users/assessment-questions 模式評估端點驗證',
-    endpoint: '/api/v1/users/assessment-questions',
-    method: 'GET',
-    expectedSpec: '8102',
-    sampleResponse: {
-      'success': true,
-      'data': {
-        'questionnaire': {
-          'id': 'assessment-v2.1',
-          'questions': [
-            {'id': 1, 'question': '您對記帳軟體的功能需求程度？', 'options': []}
-          ]
-        }
-      },
-      'error': null,
-      'message': '成功取得問卷題目',
-      'metadata': {
-        'timestamp': DateTime.now().toIso8601String(),
-        'requestId': 'req-127',
-        'userMode': 'Expert',
-        'apiVersion': 'v1.0.0',
-        'processingTimeMs': 110,
-        'modeFeatures': {'expertAnalytics': true}
-      }
-    },
+    testId: 'TC-SIT-021', testName: 'GET /api/v1/users/assessment-questions 模式評估端點驗證',
+    endpoint: '/api/v1/users/assessment-questions', method: 'GET', expectedSpec: '8102',
+    sampleResponse: {'success': true, 'data': {'questionnaire': {'id': 'assessment-v2.1', 'questions': [{'id': 1, 'question': '您對記帳軟體的功能需求程度？', 'options': []}]}}, 'error': null, 'message': '成功取得問卷題目', 'metadata': {'timestamp': DateTime.now().toIso8601String(), 'requestId': 'req-127', 'userMode': 'Expert', 'apiVersion': 'v1.0.0', 'processingTimeMs': 110, 'modeFeatures': {'expertAnalytics': true}}},
   );
 }
 
@@ -1753,25 +1692,9 @@ Future<Map<String, dynamic>> _executeTCSIT021_UsersAssessmentEndpointValidation(
  */
 Future<Map<String, dynamic>> _executeTCSIT022_UsersPreferencesEndpointValidation() async {
   return await _executeStandardAPIContractTest(
-    testId: 'TC-SIT-022',
-    testName: 'PUT /api/v1/users/preferences 用戶偏好端點驗證',
-    endpoint: '/api/v1/users/preferences',
-    method: 'PUT',
-    expectedSpec: '8102',
-    sampleResponse: {
-      'success': true,
-      'data': {'message': '偏好設定更新成功'},
-      'error': null,
-      'message': '偏好設定更新成功',
-      'metadata': {
-        'timestamp': DateTime.now().toIso8601String(),
-        'requestId': 'req-128',
-        'userMode': 'Expert',
-        'apiVersion': 'v1.0.0',
-        'processingTimeMs': 140,
-        'modeFeatures': {'advancedOptions': true}
-      }
-    },
+    testId: 'TC-SIT-022', testName: 'PUT /api/v1/users/preferences 用戶偏好端點驗證',
+    endpoint: '/api/v1/users/preferences', method: 'PUT', expectedSpec: '8102',
+    sampleResponse: {'success': true, 'data': {'message': '偏好設定更新成功'}, 'error': null, 'message': '偏好設定更新成功', 'metadata': {'timestamp': DateTime.now().toIso8601String(), 'requestId': 'req-128', 'userMode': 'Expert', 'apiVersion': 'v1.0.0', 'processingTimeMs': 140, 'modeFeatures': {'advancedOptions': true}}},
   );
 }
 
@@ -1783,34 +1706,9 @@ Future<Map<String, dynamic>> _executeTCSIT022_UsersPreferencesEndpointValidation
  */
 Future<Map<String, dynamic>> _executeTCSIT023_TransactionsQuickEndpointValidation() async {
   return await _executeStandardAPIContractTest(
-    testId: 'TC-SIT-023',
-    testName: 'POST /api/v1/transactions/quick 快速記帳端點驗證',
-    endpoint: '/api/v1/transactions/quick',
-    method: 'POST',
-    expectedSpec: '8103',
-    sampleResponse: {
-      'success': true,
-      'data': {
-        'transactionId': 'txn-123',
-        'parsed': {
-          'amount': 150,
-          'type': 'expense',
-          'category': '食物',
-          'description': '午餐'
-        },
-        'confirmation': '✅ 已記錄支出 NT\$150 - 午餐（食物）'
-      },
-      'error': null,
-      'message': '快速記帳成功',
-      'metadata': {
-        'timestamp': DateTime.now().toIso8601String(),
-        'requestId': 'req-129',
-        'userMode': 'Expert',
-        'apiVersion': 'v1.0.0',
-        'processingTimeMs': 180,
-        'modeFeatures': {'detailedAnalytics': true}
-      }
-    },
+    testId: 'TC-SIT-023', testName: 'POST /api/v1/transactions/quick 快速記帳端點驗證',
+    endpoint: '/api/v1/transactions/quick', method: 'POST', expectedSpec: '8103',
+    sampleResponse: {'success': true, 'data': {'transactionId': 'txn-123', 'parsed': {'amount': 150, 'type': 'expense', 'category': '食物', 'description': '午餐'}, 'confirmation': '✅ 已記錄支出 NT\$150 - 午餐（食物）'}, 'error': null, 'message': '快速記帳成功', 'metadata': {'timestamp': DateTime.now().toIso8601String(), 'requestId': 'req-129', 'userMode': 'Expert', 'apiVersion': 'v1.0.0', 'processingTimeMs': 180, 'modeFeatures': {'detailedAnalytics': true}}},
   );
 }
 
@@ -1822,30 +1720,9 @@ Future<Map<String, dynamic>> _executeTCSIT023_TransactionsQuickEndpointValidatio
  */
 Future<Map<String, dynamic>> _executeTCSIT024_TransactionsCRUDEndpointValidation() async {
   return await _executeStandardAPIContractTest(
-    testId: 'TC-SIT-024',
-    testName: 'POST /api/v1/transactions 交易CRUD端點驗證',
-    endpoint: '/api/v1/transactions',
-    method: 'POST',
-    expectedSpec: '8103',
-    sampleResponse: {
-      'success': true,
-      'data': {
-        'transactionId': 'txn-124',
-        'amount': 500,
-        'type': 'expense',
-        'description': '購買文具'
-      },
-      'error': null,
-      'message': '交易記錄建立成功',
-      'metadata': {
-        'timestamp': DateTime.now().toIso8601String(),
-        'requestId': 'req-130',
-        'userMode': 'Expert',
-        'apiVersion': 'v1.0.0',
-        'processingTimeMs': 160,
-        'modeFeatures': {'performanceMetrics': true}
-      }
-    },
+    testId: 'TC-SIT-024', testName: 'POST /api/v1/transactions 交易CRUD端點驗證',
+    endpoint: '/api/v1/transactions', method: 'POST', expectedSpec: '8103',
+    sampleResponse: {'success': true, 'data': {'transactionId': 'txn-124', 'amount': 500, 'type': 'expense', 'description': '購買文具'}, 'error': null, 'message': '交易記錄建立成功', 'metadata': {'timestamp': DateTime.now().toIso8601String(), 'requestId': 'req-130', 'userMode': 'Expert', 'apiVersion': 'v1.0.0', 'processingTimeMs': 160, 'modeFeatures': {'performanceMetrics': true}}},
   );
 }
 
@@ -1857,34 +1734,9 @@ Future<Map<String, dynamic>> _executeTCSIT024_TransactionsCRUDEndpointValidation
  */
 Future<Map<String, dynamic>> _executeTCSIT025_TransactionsDashboardEndpointValidation() async {
   return await _executeStandardAPIContractTest(
-    testId: 'TC-SIT-025',
-    testName: 'GET /api/v1/transactions/dashboard 儀表板端點驗證',
-    endpoint: '/api/v1/transactions/dashboard',
-    method: 'GET',
-    expectedSpec: '8103',
-    sampleResponse: {
-      'success': true,
-      'data': {
-        'summary': {
-          'totalIncome': 50000,
-          'totalExpense': 35000,
-          'balance': 15000
-        },
-        'charts': [
-          {'type': 'pie', 'data': []}
-        ]
-      },
-      'error': null,
-      'message': '成功取得儀表板數據',
-      'metadata': {
-        'timestamp': DateTime.now().toIso8601String(),
-        'requestId': 'req-131',
-        'userMode': 'Expert',
-        'apiVersion': 'v1.0.0',
-        'processingTimeMs': 220,
-        'modeFeatures': {'advancedOptions': true}
-      }
-    },
+    testId: 'TC-SIT-025', testName: 'GET /api/v1/transactions/dashboard 儀表板端點驗證',
+    endpoint: '/api/v1/transactions/dashboard', method: 'GET', expectedSpec: '8103',
+    sampleResponse: {'success': true, 'data': {'summary': {'totalIncome': 50000, 'totalExpense': 35000, 'balance': 15000}, 'charts': [{'type': 'pie', 'data': []}]}, 'error': null, 'message': '成功取得儀表板數據', 'metadata': {'timestamp': DateTime.now().toIso8601String(), 'requestId': 'req-131', 'userMode': 'Expert', 'apiVersion': 'v1.0.0', 'processingTimeMs': 220, 'modeFeatures': {'advancedOptions': true}}},
   );
 }
 
@@ -1902,7 +1754,7 @@ Future<Map<String, dynamic>> _executeStandardAPIContractTest({
   required String expectedSpec,
   required Map<String, dynamic> sampleResponse,
 }) async {
-  final testResult = {
+  final testResult = <String, dynamic>{
     'testId': testId,
     'testName': testName,
     'focus': 'API規格合規性',
@@ -2378,16 +2230,16 @@ void main() {
       print('[7570]    ✅ 總測試數: ${results['totalTests']}');
       print('[7570]    ✅ 通過數: ${results['passedTests']}');
       print('[7570]    ❌ 失敗數: ${results['failedTests']}');
-      
+
       final totalTests = results['totalTests'] as int? ?? 1;
       final passedTests = results['passedTests'] as int? ?? 0;
       final successRate = (passedTests / totalTests * 100).toStringAsFixed(1);
-      
+
       print('[7570]    📈 成功率: ${successRate}%');
       print('[7570]    ⏱️ 執行時間: ${results['executionTime']}ms');
       print('[7570] 🎯 階段二目標達成: SIT P1整合層測試實作完成，深度驗證能力就緒');
     } catch (e) {
       print('[7570] ❌ SIT測試執行失敗: $e');
     }
-  };
+  }(); // Immediately invoke the async function
 }
