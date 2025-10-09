@@ -1461,9 +1461,9 @@ Map<String, dynamic> getInjectionStatistics() {
       phase2Results['errorHandling'] = errorHandling;
 
       // 4. 計算階段二整體成功率
-      final overallSuccess = _calculatePhase2OverallSuccess(phase2Results);
+      final overallSuccess = SITP1TestController.instance._calculatePhase2OverallSuccess(phase2Results);
       phase2Results['overallSuccess'] = overallSuccess;
-      phase2Results['overallScore'] = _calculatePhase2Score(phase2Results);
+      phase2Results['overallScore'] = SITP1TestController.instance._calculatePhase2Score(phase2Results);
 
       phase2Results['endTime'] = DateTime.now().toIso8601String();
 
