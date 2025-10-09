@@ -16,8 +16,8 @@ import 'dart:math';
 import 'package:test/test.dart';
 
 // 引入相關模組
-import '7301. 系統進入功能群.dart';
-import '7302. 記帳核心功能群.dart';
+import '../73. Flutter_Module code_PL/7301. 系統進入功能群.dart';
+import '../73. Flutter_Module code_PL/7302. 記帳核心功能群.dart';
 import '7580. 注入測試資料.dart';
 import '7590. 生成動態測試資料.dart';
 
@@ -2116,16 +2116,7 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
 // 階段三：API規格合規驗證器
 // ==========================================
 
-/**
- * API合規驗證器
- * @version 2025-10-09-V2.0.0
- * @date 2025-10-09
- * @update: 階段三實作 - API規格合規性檢查
- */
-class APIComplianceValidator {
-  static final APIComplianceValidator _instance = APIComplianceValidator._internal();
-  static APIComplianceValidator get instance => _instance;
-  APIComplianceValidator._internal();
+
 
   /**
    * 驗證API端點規格合規性
