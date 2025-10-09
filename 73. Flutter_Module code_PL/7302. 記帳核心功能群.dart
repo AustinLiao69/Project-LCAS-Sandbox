@@ -1,8 +1,8 @@
 /**
  * 7302. 記帳核心功能群.dart - 記帳核心功能群Module code
- * @version 2025-09-16 V2.1.0
+ * @version 2025-09-16 V2.2.0
  * @date 2025-09-16
- * @update: 階段三完成 - 統計計算器與工具函數完整實作
+ * @update: 階段二和三完成 - 移除API Client硬編碼模擬資料，移除固定科目列表硬編碼，實現完全動態化
  */
 
 import 'dart:async';
@@ -4347,9 +4347,20 @@ class TransactionApiClientImpl extends TransactionApiClient {
     try {
       await Future.delayed(Duration(milliseconds: 400));
 
-      // 實際API呼叫邏輯應從BL層取得資料
-      // 這裡暫時返回空列表，待BL層集成完成後實作
-      final transactions = <Transaction>[];
+      // 實際API呼叫邏輯 - 調用BL層服務
+      final repository = DependencyContainer.get<TransactionRepository>();
+      final filters = {
+        'ledgerId': request.ledgerId,
+        'categoryId': request.categoryId,
+        'accountId': request.accountId,
+        'type': request.type?.toString().split('.').last,
+        'startDate': request.startDate?.toIso8601String(),
+        'endDate': request.endDate?.toIso8601String(),
+        'page': request.page,
+        'limit': request.limit,
+      };
+      
+      final transactions = await repository.getTransactions(filters: filters);
 
       return ApiResponse(
         success: true,
@@ -4657,9 +4668,9 @@ class AccountApiClientImpl extends AccountApiClient {
     try {
       await Future.delayed(Duration(milliseconds: 400));
 
-      // 實際API呼叫邏輯應從BL層取得資料
-      // 這裡暫時返回空列表，待BL層集成完成後實作
-      final accounts = <Account>[];
+      // 實際API呼叫邏輯 - 調用BL層服務
+      final repository = DependencyContainer.get<AccountRepository>();
+      final accounts = await repository.getAccounts();
 
       return ApiResponse(
         success: true,
@@ -4870,11 +4881,9 @@ class CategoryApiClientImpl extends CategoryApiClient {
     try {
       await Future.delayed(Duration(milliseconds: 400));
 
-      final categories = [
-        Category(id: 'food', name: '食物', type: 'expense'),
-        Category(id: 'transport', name: '交通', type: 'expense'),
-        Category(id: 'salary', name: '薪資', type: 'income'),
-      ];
+      // 實際API呼叫邏輯 - 調用BL層服務
+      final repository = DependencyContainer.get<CategoryRepository>();
+      final categories = await repository.getCategories();
 
       return ApiResponse(
         success: true,
@@ -4944,10 +4953,9 @@ class CategoryApiClientImpl extends CategoryApiClient {
     try {
       await Future.delayed(Duration(milliseconds: 300));
 
-      final categories = [
-        Category(id: 'lunch', name: '午餐', parentId: 'food', type: 'expense'),
-        Category(id: 'transport_bus', name: '公車', parentId: 'transport', type: 'expense'),
-      ];
+      // 實際API呼叫邏輯 - 調用BL層服務
+      final repository = DependencyContainer.get<CategoryRepository>();
+      final categories = await repository.getFrequentCategories();
 
       return ApiResponse(
         success: true,
@@ -4968,10 +4976,9 @@ class CategoryApiClientImpl extends CategoryApiClient {
     try {
       await Future.delayed(Duration(milliseconds: 300));
 
-      final categories = [
-        Category(id: 'coffee', name: '咖啡', parentId: 'food', type: 'expense'),
-        Category(id: 'gas', name: '加油', parentId: 'transport', type: 'expense'),
-      ];
+      // 實際API呼叫邏輯 - 調用BL層服務
+      final repository = DependencyContainer.get<CategoryRepository>();
+      final categories = await repository.getRecentCategories();
 
       return ApiResponse(
         success: true,
@@ -6063,19 +6070,33 @@ class SmartTextParserImpl extends SmartTextParser {
   }
 
   String? _identifyCategory(String input) {
-    // 改用動態載入的科目關鍵字映射，而非硬編碼
     try {
       final categoryProvider = DependencyContainer.get<CategoryStateProvider>();
       final categories = categoryProvider.categories;
       
-      // 簡化的關鍵字匹配邏輯，實際應從配置文件或API載入
+      // 動態關鍵字匹配邏輯
       for (var category in categories) {
+        // 完全匹配
         if (input.contains(category.name)) {
           return category.id;
         }
+        
+        // 模糊匹配 - 檢查分類名稱的部分字符
+        if (category.name.length > 1) {
+          final categoryWords = category.name.split('');
+          bool hasMatch = false;
+          for (var word in categoryWords) {
+            if (word.isNotEmpty && input.contains(word)) {
+              hasMatch = true;
+              break;
+            }
+          }
+          if (hasMatch) {
+            return category.id;
+          }
+        }
       }
     } catch (e) {
-      // 如果無法取得Provider，返回null
       print('無法取得CategoryStateProvider: $e');
     }
 
@@ -6083,19 +6104,41 @@ class SmartTextParserImpl extends SmartTextParser {
   }
 
   String? _identifyAccount(String input) {
-    final accountKeywords = {
-      'cash': ['現金', '零錢'],
-      'bank_main': ['銀行', '台銀', '中信'],
-      'credit_card': ['信用卡', '刷卡'],
-    };
-
-    for (var entry in accountKeywords.entries) {
-      if (_containsAny(input, entry.value)) {
-        return entry.key;
+    try {
+      final accountProvider = DependencyContainer.get<AccountStateProvider>();
+      final accounts = accountProvider.accounts;
+      
+      // 動態帳戶匹配邏輯
+      for (var account in accounts) {
+        // 完全匹配帳戶名稱
+        if (input.contains(account.name)) {
+          return account.id;
+        }
+        
+        // 根據帳戶類型匹配常見關鍵字
+        final accountType = account.type.toLowerCase();
+        if ((accountType == 'cash' && (input.contains('現金') || input.contains('零錢'))) ||
+            (accountType == 'bank' && (input.contains('銀行') || input.contains('轉帳'))) ||
+            (accountType == 'credit' && (input.contains('信用卡') || input.contains('刷卡')))) {
+          return account.id;
+        }
       }
+      
+      // 如果有帳戶資料，返回第一個現金類型帳戶作為預設
+      final cashAccount = accounts.firstWhere(
+        (account) => account.type.toLowerCase() == 'cash',
+        orElse: () => accounts.isNotEmpty ? accounts.first : 
+          Account(id: '', name: '', type: '', balance: 0),
+      );
+      
+      if (cashAccount.id.isNotEmpty) {
+        return cashAccount.id;
+      }
+    } catch (e) {
+      print('無法取得AccountStateProvider: $e');
     }
 
-    return 'cash'; // 預設使用現金
+    return null; // 改為返回null，由上層處理預設邏輯
   }
 
   String _extractDescription(String input, String amountStr) {
@@ -6265,27 +6308,41 @@ class AccountingFormValidatorImpl extends AccountingFormValidator {
   }
 
   static bool _isValidCategoryId(String categoryId) {
-    // 改用動態驗證，而非硬編碼列表
     try {
       final categoryProvider = DependencyContainer.get<CategoryStateProvider>();
       final categories = categoryProvider.categories;
+      
+      // 如果沒有載入科目資料，先嘗試載入
+      if (categories.isEmpty) {
+        // 在MVP階段，如果沒有資料就假設有效，避免阻塞用戶操作
+        print('科目資料尚未載入，假設ID有效: $categoryId');
+        return true;
+      }
+      
       return categories.any((category) => category.id == categoryId);
     } catch (e) {
-      // 如果無法取得Provider，預設為有效（寬鬆驗證）
-      print('無法驗證科目ID: $e');
+      // MVP階段採用寬鬆驗證策略
+      print('動態科目ID驗證失敗: $e，採用寬鬆驗證');
       return true;
     }
   }
 
   static bool _isValidAccountId(String accountId) {
-    // 改用動態驗證，而非硬編碼列表
     try {
       final accountProvider = DependencyContainer.get<AccountStateProvider>();
       final accounts = accountProvider.accounts;
+      
+      // 如果沒有載入帳戶資料，先嘗試載入
+      if (accounts.isEmpty) {
+        // 在MVP階段，如果沒有資料就假設有效，避免阻塞用戶操作
+        print('帳戶資料尚未載入，假設ID有效: $accountId');
+        return true;
+      }
+      
       return accounts.any((account) => account.id == accountId);
     } catch (e) {
-      // 如果無法取得Provider，預設為有效（寬鬆驗證）
-      print('無法驗證帳戶ID: $e');
+      // MVP階段採用寬鬆驗證策略
+      print('動態帳戶ID驗證失敗: $e，採用寬鬆驗證');
       return true;
     }
   }
@@ -6524,19 +6581,30 @@ class StatisticsCalculator {
   }
 
   static String _getCategoryDisplayName(String categoryId) {
-    final Map<String, String> categoryNames = {
-      'food': '餐飲',
-      'transport': '交通',
-      'shopping': '購物',
-      'entertainment': '娛樂',
-      'healthcare': '醫療',
-      'utilities': '水電',
-      'salary': '薪資',
-      'bonus': '獎金',
-      'uncategorized': '未分類',
-    };
+    try {
+      final categoryProvider = DependencyContainer.get<CategoryStateProvider>();
+      final categories = categoryProvider.categories;
+      
+      // 動態查找科目顯示名稱
+      final category = categories.firstWhere(
+        (cat) => cat.id == categoryId,
+        orElse: () => Category(id: '', name: '', type: ''),
+      );
+      
+      if (category.id.isNotEmpty) {
+        return category.name;
+      }
+    } catch (e) {
+      print('無法取得分類顯示名稱: $e');
+    }
 
-    return categoryNames[categoryId] ?? categoryId;
+    // 特殊情況處理
+    if (categoryId == 'uncategorized') {
+      return '未分類';
+    }
+    
+    // 如果無法取得動態名稱，返回ID本身
+    return categoryId;
   }
 
   static String _formatMonth(String monthKey) {
