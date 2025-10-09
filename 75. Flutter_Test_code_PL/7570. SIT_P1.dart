@@ -753,9 +753,10 @@ Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() 
     final stopwatch = Stopwatch()..start();
 
     // 1. 生成查詢測試資料
+    final userId = 'query_test_user';
     final queryTransactions = await DynamicTestDataFactory.instance.generateTransactionsBatch(
       count: 5,
-      userId: 'query_test_user',
+      userId: userId,
     );
 
     // 2. 批量注入查詢資料
@@ -2255,7 +2256,7 @@ void main() {
       print('[7570] ❌ SIT測試執行失敗: $e');
     }
   }(); // Immediately invoke the async function
-  
+
   /**
    * 輸出測試摘要
    * @version 2025-10-09-V2.0.0
