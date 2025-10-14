@@ -296,3 +296,6 @@ MM 	 DD 	 Description 	    Progress
 10	9	 撰寫9835文件 	 Ongoing
 10	9	 以9835文件review 7570,7580,7590 	 Ongoing
 10	9	 打通SIT測試代碼7570 	 Ongoing
+10	10	 搞定Flutter設定環境：安裝xcode 	 Ongoing
+10	10	 在Macbook中開啟termianl輸入flutter doctor以檢查flutter環境是否設置完整 	 Ongoing
+10	14	 打通SIT測試 	 Ongoing
