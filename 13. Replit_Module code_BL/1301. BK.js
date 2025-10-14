@@ -3030,6 +3030,10 @@ module.exports = {
   BK_updateTransaction,
   BK_deleteTransaction,
 
+  // === 帳本管理函數（階段二修復：確保帳本ID生成職責正確） ===
+  generateDefaultLedgerId, // 階段二修復：明確導出帳本ID生成函數
+  BK_CONFIG, // 導出配置以供其他模組使用
+
   // === API端點處理函數 ===
   // 階段二修復：新增TC-SIT-039~043所需的API函數
   BK_processAPIUpdateTransaction,
