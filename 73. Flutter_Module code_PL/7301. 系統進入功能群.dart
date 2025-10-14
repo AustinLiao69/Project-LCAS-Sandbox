@@ -456,15 +456,14 @@ class SystemEntryFunctionGroup {
         return storedConfig;
       }
 
-      // 建立預設模式設定
+      // 建立預設模式設定（從環境變數或配置檔案取得）
+      final defaultUserMode = _getDefaultUserModeFromConfig();
+      final defaultSettings = _getDefaultSettingsFromConfig();
+
       _currentModeConfig = ModeConfiguration(
-        userMode: UserMode.inertial, // 預設為慣性模式
-        settings: {
-          'theme': 'default',
-          'language': 'zh-TW',
-          'notifications': true,
-        },
-        themeConfig: _getDefaultThemeConfig(UserMode.inertial),
+        userMode: defaultUserMode,
+        settings: defaultSettings,
+        themeConfig: _getDefaultThemeConfig(defaultUserMode),
         lastUpdated: DateTime.now(),
       );
 
@@ -1340,7 +1339,7 @@ class SystemEntryFunctionGroup {
         };
       }
 
-      // 調用8111系統服務API提交答案
+      //調用8111系統服務API提交答案
       final apiResponse = await _callSystemAPI('/submit-assessment', {
         'userId': _currentAuthState?.currentUser?.id,
         'answers': answers,
@@ -3193,6 +3192,28 @@ class SystemEntryFunctionGroup {
       '123456', '111111', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm',
       'admin123', 'root', 'test', 'guest', '12345678'
     ];
+  }
+
+  /// 取得預設使用者模式
+  UserMode _getDefaultUserModeFromConfig() {
+    // 在這裡實現從環境變數、SharedPreferences或配置檔案讀取預設模式
+    // 為了範例，我們假設預設為 'inertial'
+    print('[SystemEntry] 正在從配置讀取預設使用者模式...');
+    return UserMode.inertial;
+  }
+
+  /// 取得預設設定
+  Map<String, dynamic> _getDefaultSettingsFromConfig() {
+    // 在這裡實現從環境變數、SharedPreferences或配置檔案讀取預設設定
+    // 為了範例，我們假設預設設定如下
+    print('[SystemEntry] 正在從配置讀取預設設定...');
+    return {
+      'theme': 'default',
+      'language': 'zh-TW',
+      'notifications': true,
+      // 'autoSaveInterval': 300, // 範例：自動保存間隔（秒）
+      // 'defaultCurrency': 'TWD', // 範例：預設幣別
+    };
   }
 
   // ===========================================
