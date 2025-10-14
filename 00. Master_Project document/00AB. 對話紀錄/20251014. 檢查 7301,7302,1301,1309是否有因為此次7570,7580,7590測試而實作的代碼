@@ -57,6 +57,7 @@ Future<DashboardData> _loadDashboardDataFromTestFactory() async {
 版本升級：
 •	7302模組：v2.1.0 → v2.2.0
 •	相關函數：buildBalanceCard() v2.0.0 → v2.1.0
+
 階段二：去Hard-coding處理
 目標： 提高配置靈活性
 範圍：

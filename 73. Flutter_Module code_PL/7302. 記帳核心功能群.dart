@@ -1,20 +1,19 @@
 /**
  * 7302. 記帳核心功能群.dart
- * @version v2.1.0
+ * @version v2.2.0
  * @date 2025-10-14
- * @update: 階段三完成 - API Client靈活化與配置參數化
+ * @update: 階段一修復完成 - 移除測試代碼污染，恢復業務邏輯純粹性
  * 
  * 本模組實現LCAS 2.0記帳核心功能群的完整功能，
  * 包括交易管理、帳戶管理、統計分析、圖表生成等核心功能。
  * 
- * 階段三新增功能：
- * - HTTP Headers可注入配置
- * - 環境變數覆蓋預設Headers支援
- * - API Client初始化參數化
- * - 動態Headers管理機制
- * - 配置驗證和更新功能
+ * 階段一修復重點：
+ * - 移除業務邏輯中的測試代碼依賴
+ * - 恢復標準API資料載入邏輯
+ * - 確保模組遵循單一職責原則
+ * - 維持業務邏輯與測試邏輯完全分離
  * 
- * 嚴格遵循0026、0090、8088文件規範，完全依賴7590動態測試資料。
+ * 嚴格遵循0026、0090、8088文件規範，專注於純粹業務邏輯實作。
  */
 
 import 'dart:async';
@@ -515,9 +514,9 @@ class _AccountingHomePageState extends State<AccountingHomePage> {
 
 /**
  * 05. 儀表板組件 - DashboardWidget
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段一實作 - 儀表板數據展示組件
+ * @version 2025-10-14-V2.1.0
+ * @date 2025-10-14
+ * @update: 階段一修復完成 - 移除測試代碼污染，恢復純粹業務邏輯
  */
 abstract class DashboardWidget extends StatefulWidget {
   const DashboardWidget({Key? key}) : super(key: key);
@@ -552,7 +551,7 @@ class DashboardWidgetImpl extends DashboardWidget {
       child: Container(
         padding: EdgeInsets.all(16),
         child: FutureBuilder<DashboardData>(
-          future: _loadDashboardDataFromTestFactory(),
+          future: _loadDashboardData(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Column(
@@ -650,44 +649,7 @@ class DashboardWidgetImpl extends DashboardWidget {
     );
   }
 
-  Future<DashboardData> _loadDashboardDataFromTestFactory() async {
-    try {
-      // 使用7590動態測試資料生成儀表板數據
-      final testData = await DynamicTestDataFactory.instance.generateCompleteTestDataSet(
-        userCount: 1,
-        transactionsPerUser: 10,
-      );
-
-      final transactions = testData['bookkeeping_test_data']['test_transactions'] as Map<String, dynamic>;
-
-      // 計算統計數據
-      double totalIncome = 0.0;
-      double totalExpense = 0.0;
-      int transactionCount = transactions.length;
-
-      transactions.forEach((key, value) {
-        final amount = (value['金額'] as num).toDouble();
-        final type = value['收支類型'] as String;
-
-        if (type == 'income') {
-          totalIncome += amount;
-        } else if (type == 'expense') {
-          totalExpense += amount;
-        }
-      });
-
-      final balance = totalIncome - totalExpense;
-
-      return DashboardData(
-        totalIncome: totalIncome,
-        totalExpense: totalExpense,
-        balance: balance,
-        transactionCount: transactionCount,
-      );
-    } catch (e) {
-      throw Exception('載入動態測試資料失敗: $e');
-    }
-  }
+  
 
   // 模擬API調用獲取DashboardData
   Future<DashboardData> _loadDashboardData() async {
