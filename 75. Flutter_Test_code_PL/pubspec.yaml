@@ -1,6 +1,6 @@
 
 name: pl_tests
-description: PL 測試專案 - 系統進入與記帳核心功能群測試
+description: PL 測試專案 - 系統進入與記帳核心功能群測試 (純Dart版本)
 version: 1.0.0+1
 
 environment:

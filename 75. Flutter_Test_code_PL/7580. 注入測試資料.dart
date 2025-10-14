@@ -8,8 +8,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_test/flutter_test.dart';
 
 // 引入測試資料生成模組
 import '7590. 生成動態測試資料.dart';
@@ -284,5 +282,205 @@ class TestDataInjectionFacade {
       'operationHistory': UserOperationSimulator.instance.getOperationHistory(),
       'timestamp': DateTime.now().toIso8601String(),
     };
+  }
+}
+
+// ==========================================
+// 相容性支援：TestDataInjectionFactory
+// ==========================================
+
+/// 測試資料注入工廠 - 提供7570相容性支援
+class TestDataInjectionFactory {
+  static final TestDataInjectionFactory _instance = TestDataInjectionFactory._internal();
+  static TestDataInjectionFactory get instance => _instance;
+  TestDataInjectionFactory._internal();
+
+  /// 注入系統進入資料（相容性方法）
+  Future<bool> injectSystemEntryData(Map<String, dynamic> entryData) async {
+    try {
+      return await UserOperationSimulator.instance.simulateSystemEntry(entryData);
+    } catch (e) {
+      print('❌ 系統進入資料注入失敗: $e');
+      return false;
+    }
+  }
+
+  /// 注入記帳核心資料（相容性方法）
+  Future<bool> injectAccountingCoreData(Map<String, dynamic> transactionData) async {
+    try {
+      return await UserOperationSimulator.instance.simulateAccountingCore(transactionData);
+    } catch (e) {
+      print('❌ 記帳核心資料注入失敗: $e');
+      return false;
+    }
+  }
+}
+
+/// 測試資料生成器 - 提供7570相容性支援
+class TestDataGenerator {
+  static final TestDataGenerator _instance = TestDataGenerator._internal();
+  static TestDataGenerator get instance => _instance;
+  TestDataGenerator._internal();
+
+  /// 生成系統進入資料
+  Map<String, dynamic> generateSystemEntryData({
+    required String userId,
+    required String email,
+    required String userMode,
+  }) {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    
+    return {
+      'userId': userId,
+      'email': email,
+      'userMode': userMode,
+      'displayName': '$userMode 測試用戶',
+      'preferences': {
+        'language': 'zh-TW',
+        'currency': 'TWD',
+        'theme': userMode.toLowerCase(),
+      },
+      'registrationDate': DateTime.now().toIso8601String(),
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+  }
+
+  /// 生成交易資料
+  Map<String, dynamic> generateTransactionData({
+    required double amount,
+    required String type,
+    required String description,
+    required String userId,
+  }) {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final transactionId = 'txn_${type}_$timestamp';
+
+    return {
+      '收支ID': transactionId,
+      '描述': description,
+      '收支類型': type,
+      '金額': amount,
+      '用戶ID': userId,
+      '科目ID': _generateRandomCategory(type),
+      '帳戶ID': 'account_default',
+      '建立時間': DateTime.now().toIso8601String(),
+      '更新時間': DateTime.now().toIso8601String(),
+    };
+  }
+
+  /// 生成隨機科目
+  String _generateRandomCategory(String transactionType) {
+    final incomeCategories = ['salary', 'bonus', 'investment', 'freelance'];
+    final expenseCategories = ['food', 'transport', 'entertainment', 'utilities'];
+    
+    final categories = transactionType == 'income' ? incomeCategories : expenseCategories;
+    final random = DateTime.now().millisecondsSinceEpoch % categories.length;
+    return categories[random];
+  }
+}
+
+// ==========================================
+// 系統進入測試資料範本
+// ==========================================
+
+class SystemEntryTestDataTemplate {
+  /// 取得使用者註冊範本
+  static Map<String, dynamic> getUserRegistrationTemplate({
+    required String userId,
+    required String email,
+    String userMode = 'Expert',
+  }) {
+    return {
+      'userId': userId,
+      'email': email,
+      'userMode': userMode,
+      'displayName': '$userMode 測試用戶',
+      'preferences': {
+        'language': 'zh-TW',
+        'currency': 'TWD',
+        'theme': userMode.toLowerCase(),
+      },
+      'registrationDate': DateTime.now().toIso8601String(),
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+  }
+
+  /// 取得使用者登入範本
+  static Map<String, dynamic> getUserLoginTemplate({
+    required String userId,
+    required String email,
+  }) {
+    return {
+      'userId': userId,
+      'email': email,
+      'loginTime': DateTime.now().toIso8601String(),
+    };
+  }
+}
+
+// ==========================================
+// 記帳核心測試資料範本
+// ==========================================
+
+class AccountingCoreTestDataTemplate {
+  /// 取得交易範本
+  static Map<String, dynamic> getTransactionTemplate({
+    required String transactionId,
+    required double amount,
+    required String type,
+    required String description,
+    required String categoryId,
+    required String accountId,
+  }) {
+    return {
+      '收支ID': transactionId,
+      '描述': description,
+      '收支類型': type,
+      '金額': amount,
+      '科目ID': categoryId,
+      '帳戶ID': accountId,
+      '建立時間': DateTime.now().toIso8601String(),
+      '更新時間': DateTime.now().toIso8601String(),
+    };
+  }
+}
+
+// ==========================================
+// 格式驗證函數
+// ==========================================
+
+/// 驗證系統進入格式
+Map<String, dynamic> validateSystemEntryFormat(dynamic data) {
+  try {
+    if (data is! Map<String, dynamic>) {
+      return {'isValid': false, 'error': '資料格式必須是Map<String, dynamic>'};
+    }
+
+    final requiredFields = ['userId', 'email', 'userMode'];
+    for (final field in requiredFields) {
+      if (!data.containsKey(field) || data[field] == null || data[field] == '') {
+        return {'isValid': false, 'error': '缺少必要欄位: $field'};
+      }
+    }
+
+    // Email格式驗證
+    final email = data['email'] as String;
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
+      return {'isValid': false, 'error': 'Email格式無效'};
+    }
+
+    // 使用者模式驗證
+    final validModes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
+    if (!validModes.contains(data['userMode'])) {
+      return {'isValid': false, 'error': '無效的使用者模式'};
+    }
+
+    return {
+      'isValid': true,
+      'message': 'DCN-0015格式驗證通過',
+      'validatedFields': requiredFields,
+    };
+  } catch (e) {
+    return {'isValid': false, 'error': '驗證過程發生錯誤: $e'};
   }
 }
