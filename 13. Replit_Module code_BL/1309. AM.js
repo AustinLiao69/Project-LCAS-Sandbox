@@ -39,10 +39,10 @@ const AM_CONFIG = {
     DEFAULT_EXPIRES_IN: parseInt(process.env.AM_TOKEN_EXPIRES) || 3600
   },
   DEFAULTS: {
-    USER_TYPE: "S",
-    LANGUAGE: "zh-TW",
-    TIMEZONE: "Asia/Taipei",
-    CURRENCY: "TWD"
+    USER_TYPE: process.env.AM_DEFAULT_USER_TYPE || "S",
+    LANGUAGE: process.env.AM_DEFAULT_LANGUAGE || "zh-TW",
+    TIMEZONE: process.env.AM_DEFAULT_TIMEZONE || "Asia/Taipei",
+    CURRENCY: process.env.AM_DEFAULT_CURRENCY || "TWD"
   }
 };
 
@@ -1564,34 +1564,8 @@ async function AM_processAPIRegister(requestData) {
       };
     }
 
-    // 移除Hard-coding，改為使用0692測試資料
-    // 階段一修復：從0692測試資料載入有效用戶列表
-    let validTestUsers = {};
-    try {
-      const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
-      validTestUsers = testData.authentication_test_data?.valid_users || {};
-    } catch (error) {
-      console.warn('⚠️ 無法載入0692測試資料，使用預設驗證邏輯');
-    }
-
-    // 檢查是否為測試環境中的有效用戶
-    const isTestUser = Object.values(validTestUsers).some(user => user.email === requestData.email);
-
-    if (!isTestUser && Object.keys(validTestUsers).length > 0) {
-      return {
-        success: false,
-        data: null,
-        message: "測試環境僅允許預定義測試用戶註冊",
-        error: {
-          code: "TEST_USER_ONLY",
-          message: "請使用0692測試資料中定義的用戶進行測試",
-          details: {
-            email: requestData.email,
-            validEmails: Object.values(validTestUsers).map(u => u.email)
-          }
-        }
-      };
-    }
+    // AM模組不直接驗證測試用戶，由上層邏輯決定
+    // 業務邏輯專注於標準的Email格式和註冊流程驗證
 
     // 檢查用戶是否已存在
     const existsResult = await AM_validateAccountExists(requestData.email, "email");
@@ -1611,19 +1585,19 @@ async function AM_processAPIRegister(requestData) {
     // 生成用戶ID
     const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // 準備用戶數據（完全符合1311 FS.js規範）
+    // 準備用戶資料（完全符合1311 FS.js規範）
     const userData = {
       // 核心用戶資料 - 符合 FS.js 標準
       email: requestData.email,
       displayName: requestData.displayName || '',
       userMode: requestData.userMode,
       emailVerified: false,
-      
+
       // 時間欄位 - FS.js 標準格式
       createdAt: admin.firestore.Timestamp.now(),
       lastActiveAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      
+
       // 用戶偏好設定 - FS.js 標準結構
       preferences: {
         language: requestData.language || 'zh-TW',
@@ -1639,7 +1613,7 @@ async function AM_processAPIRegister(requestData) {
         dateFormat: 'YYYY/MM/DD',
         numberFormat: 'comma'
       },
-      
+
       // 安全設定 - FS.js 標準結構
       security: {
         hasAppLock: false,
@@ -1650,11 +1624,11 @@ async function AM_processAPIRegister(requestData) {
         lastPasswordChange: admin.firestore.Timestamp.now(),
         loginAttempts: 0
       },
-      
+
       // 帳號狀態 - FS.js 標準欄位
       status: 'active',
       accountStatus: 'active',
-      
+
       // 個人資料完成度 - FS.js 標準結構
       profileCompletion: {
         basic: true,
@@ -1662,7 +1636,7 @@ async function AM_processAPIRegister(requestData) {
         security: false,
         percentage: 30
       },
-      
+
       // 跨平台帳號關聯 - FS.js 標準結構
       linkedAccounts: {
         LINE_UID: "",
@@ -1671,7 +1645,7 @@ async function AM_processAPIRegister(requestData) {
         Google_UID: "",
         Apple_UID: ""
       },
-      
+
       // 用戶統計 - FS.js 標準欄位
       statistics: {
         totalTransactions: 0,
@@ -1679,7 +1653,7 @@ async function AM_processAPIRegister(requestData) {
         lastActivity: admin.firestore.Timestamp.now(),
         loginCount: 1
       },
-      
+
       // 元數據 - FS.js 標準格式
       metadata: {
         source: 'registration',

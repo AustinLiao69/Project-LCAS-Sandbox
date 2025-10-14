@@ -1,0 +1,130 @@
+------------------------------------------
+20251014 檢查7301,7302代碼hard-coding
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+另外也請提出修復方案
+
+
+我來檢查7301和7302檔案中的hard-coding問題。
+
+7301. 系統進入功能群.dart Hard-Coding檢查結果
+發現的Hard-Coding項目：
+
+1.	API Base URL
+final String _baseUrl = 'https://api.lcas.com/api/v1';
+=>這個沒關係
+
+2.	預設模式設定
+_currentModeConfig = ModeConfiguration(
+  userMode: UserMode.inertial, // 預設為慣性模式
+  settings: {
+    'theme': 'default',
+    'language': 'zh-TW',
+    'notifications': true,
+  },
+  themeConfig: _getDefaultThemeConfig(UserMode.inertial),
+  lastUpdated: DateTime.now(),
+);
+
+
+3.	模式主題顏色設定
+final themeColors = {
+  UserMode.expert: {'primary': 0xFF1976D2, 'accent': 0xFF0D47A1},      // 專業藍
+  UserMode.inertial: {'primary': 0xFF4CAF50, 'accent': 0xFF388E3C},    // 穩定綠
+  UserMode.cultivation: {'primary': 0xFFFF9800, 'accent': 0xFFF57C00}, // 成長橙
+  UserMode.guiding: {'primary': 0xFF9C27B0, 'accent': 0xFF7B1FA2},     // 引導紫
+};
+=>這個沒關係
+
+
+4.	常見密碼清單
+final commonPasswords = [
+  'password', 'password123', '123456789', 'qwerty', 'abc123',
+  'password1', 'admin', 'welcome', 'letmein', 'monkey'
+];
+
+
+5.	模擬API回應資料
+// 在多個API模擬函數中有大量hard-coded回應資料
+final googleUser = googleAuthResult['user'];
+return {
+  'success': true,
+  'androidPlayStore': 'https://play.google.com/store/apps/details?id=com.lcas.app',
+  'iosAppStore': 'https://apps.apple.com/app/lcas/id123456789',
+  // ... 等等
+};
+
+
+7302. 記帳核心功能群.dart Hard-Coding檢查結果
+發現的Hard-Coding項目：
+1.	API Base URL
+final String baseUrl;
+AccountApiClientImpl({
+  this.baseUrl = 'https://api.lcas.app/v1', // Hard-coded URL
+=>這個沒關係
+
+  
+2.	預設HTTP Headers
+this.defaultHeaders = const {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+},
+=>請詳細解釋
+
+3.	模擬帳戶資料
+final accounts = [
+  Account(id: '1', name: '台灣銀行', type: 'bank', balance: 50000),
+  Account(id: '2', name: '現金', type: 'cash', balance: 2000),
+  Account(id: '3', name: '信用卡', type: 'credit', balance: -5000),
+];
+=>這個要改成依賴7590注入測試資料
+
+4.	模擬帳本資料
+_ledgers = [
+  Ledger(id: '1', name: '個人記帳', type: 'personal', userId: 'user1'),
+  Ledger(id: '2', name: '家庭支出', type: 'family', userId: 'user1'),
+  Ledger(id: '3', name: '旅遊基金', type: 'project', userId: 'user1'),
+];
+=>這個要改成依賴7590注入測試資料
+
+5.	模擬統計數據
+_dashboardData = DashboardData(
+  totalIncome: 50000,
+  totalExpense: 35000,
+  balance: 15000,
+  transactionCount: 156,
+);
+=>這個要改成依賴7590注入測試資料
+
+6.	模擬圖表資料
+_chartData = [
+  ChartData(label: '食物', value: 12000, color: Colors.red),
+  ChartData(label: '交通', value: 8000, color: Colors.blue),
+  ChartData(label: '娛樂', value: 6000, color: Colors.green),
+  ChartData(label: '其他', value: 9000, color: Colors.orange),
+];
+=>這個要改成依賴7590注入測試資料
+
+7.	科目名稱和交易資料
+final categories = ['咖啡', '加油', '電影'];
+final transactions = [
+  Transaction(id: '1', type: TransactionType.expense, amount: 150, description: '午餐', date: DateTime.now()),
+  // ... 更多hard-coded交易資料
+];
+=>這個要改成依賴7590注入測試資料
+
+總結
+兩個檔案都包含大量的hard-coding問題，主要集中在：
+1.	API端點URL和配置
+2.	預設值和常數
+3.	模擬測試資料
+4.	UI主題顏色
+5.	預設設定值
+這些hard-coding項目應該：
+•	API URL改為環境變數
+•	預設值從配置檔案或環境變數讀取
+•	模擬資料移至測試資料檔案
+•	主題配置外部化
+•	常數定義集中管理
+
