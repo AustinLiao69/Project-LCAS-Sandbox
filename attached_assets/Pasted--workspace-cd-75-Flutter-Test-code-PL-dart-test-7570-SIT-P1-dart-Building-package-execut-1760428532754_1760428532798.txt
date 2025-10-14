@@ -1,0 +1,124 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
+Building package executable..(15.4s))
+Built test:test.
+00:02 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  Couldn't resolve the package 'flutter' in 'package:flutter/widgets.dart'.
+  Error: Couldn't resolve the package 'flutter_test' in 'package:flutter_test/flutter_test.dart'.
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:11:8: Error: Not found: 'package:flutter/widgets.dart'
+  import 'package:flutter/widgets.dart';
+         ^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:12:8: Error: Not found: 'package:flutter_test/flutter_test.dart'
+  import 'package:flutter_test/flutter_test.dart';
+         ^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:27:9: Error: Type 'TestDataGenerator' not found.
+    final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
+          ^^^^^^^^^^^^^^^^^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:154:9: Error: Type 'TestDataGenerator' not found.
+    final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
+          ^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:524:35: Error: Undefined name 'TestDataInjectionFactory'.
+      final injectionResult = await TestDataInjectionFactory.instance.injectSystemEntryData(testUser);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:565:23: Error: Undefined name 'SystemEntryTestDataTemplate'.
+      final loginData = SystemEntryTestDataTemplate.getUserLoginTemplate(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:571:31: Error: Undefined name 'TestDataInjectionFactory'.
+      final loginResult = await TestDataInjectionFactory.instance.injectSystemEntryData(loginData);
+                                ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:621:30: Error: Undefined name 'TestDataInjectionFactory'.
+      final authResult = await TestDataInjectionFactory.instance.injectSystemEntryData(firebaseData);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:667:37: Error: Undefined name 'TestDataInjectionFactory'.
+      final bookkeepingResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(quickTransaction);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:708:33: Error: Undefined name 'AccountingCoreTestDataTemplate'.
+      final completeTransaction = AccountingCoreTestDataTemplate.getTransactionTemplate(
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:718:30: Error: Undefined name 'TestDataInjectionFactory'.
+      final formResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(completeTransaction);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:767:28: Error: Undefined name 'TestDataInjectionFactory'.
+        final result = await TestDataInjectionFactory.instance.injectAccountingCoreData(transaction);
+                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:820:13: Error: Undefined name 'TestDataInjectionFactory'.
+        await TestDataInjectionFactory.instance.injectSystemEntryData(invalidData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:877:36: Error: Undefined name 'TestDataInjectionFactory'.
+      final assessmentResult = await TestDataInjectionFactory.instance.injectSystemEntryData(assessmentData);
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:922:28: Error: Undefined name 'TestDataInjectionFactory'.
+        final result = await TestDataInjectionFactory.instance.injectSystemEntryData(modeData);
+                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:977:36: Error: Undefined name 'TestDataInjectionFactory'.
+      final conversionResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(rawData);
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1030:28: Error: Undefined name 'TestDataInjectionFactory'.
+        final result = await TestDataInjectionFactory.instance.injectSystemEntryData(userData);
+                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1036:28: Error: Undefined name 'TestDataInjectionFactory'.
+        final result = await TestDataInjectionFactory.instance.injectAccountingCoreData(transactionData);
+                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1082:30: Error: Undefined name 'SystemEntryTestDataTemplate'.
+      final registrationData = SystemEntryTestDataTemplate.getUserRegistrationTemplate(
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1087:44: Error: Undefined name 'TestDataInjectionFactory'.
+      lifecycleSteps['registration'] = await TestDataInjectionFactory.instance.injectSystemEntryData(registrationData);
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1090:23: Error: Undefined name 'SystemEntryTestDataTemplate'.
+      final loginData = SystemEntryTestDataTemplate.getUserLoginTemplate(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1094:37: Error: Undefined name 'TestDataInjectionFactory'.
+      lifecycleSteps['login'] = await TestDataInjectionFactory.instance.injectSystemEntryData(loginData);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1098:46: Error: Undefined name 'TestDataInjectionFactory'.
+      lifecycleSteps['modeAssessment'] = await TestDataInjectionFactory.instance.injectSystemEntryData(assessmentData);
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1106:43: Error: Undefined name 'TestDataInjectionFactory'.
+      lifecycleSteps['bookkeeping'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(transaction);
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1161:49: Error: Undefined name 'TestDataInjectionFactory'.
+      businessProcess['quickBookkeeping'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(quickTransaction);
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1164:33: Error: Undefined name 'AccountingCoreTestDataTemplate'.
+      final completeTransaction = AccountingCoreTestDataTemplate.getTransactionTemplate(
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1172:45: Error: Undefined name 'TestDataInjectionFactory'.
+      businessProcess['completeForm'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(completeTransaction);
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1227:13: Error: Undefined name 'TestDataInjectionFactory'.
+        await TestDataInjectionFactory.instance.injectSystemEntryData(invalidNetworkData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1238:13: Error: Undefined name 'TestDataInjectionFactory'.
+        await TestDataInjectionFactory.instance.injectAccountingCoreData(timeoutData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1292:13: Error: Undefined name 'TestDataInjectionFactory'.
+        await TestDataInjectionFactory.instance.injectAccountingCoreData(invalidInputData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1303:13: Error: Undefined name 'TestDataInjectionFactory'.
+        await TestDataInjectionFactory.instance.injectSystemEntryData(conflictData);
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1361:30: Error: Method not found: 'validateSystemEntryFormat'.
+      final formatValidation = validateSystemEntryFormat(dcn0015Data['data']);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:27:9: Error: 'TestDataGenerator' isn't a type.
+    final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
+          ^^^^^^^^^^^^^^^^^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:27:44: Error: Undefined name 'TestDataGenerator'.
+    final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
+                                             ^^^^^^^^^^^^^^^^^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:154:9: Error: 'TestDataGenerator' isn't a type.
+    final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
+          ^^^^^^^^^^^^^^^^^
+  7580.%20%E6%B3%A8%E5%85%A5%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:154:44: Error: Undefined name 'TestDataGenerator'.
+    final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
+                                             ^^^^^^^^^^^^^^^^^
+  7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart:287:30: Error: The getter 'TestDataInjectionFactory' isn't defined for the class 'TestDataIntegrationManager'.
+   - 'TestDataIntegrationManager' is from '7590.%20%E7%94%9F%E6%88%90%E5%8B%95%E6%85%8B%E6%B8%AC%E8%A9%A6%E8%B3%87%E6%96%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'TestDataInjectionFactory'.
+          final result = await TestDataInjectionFactory.instance.injectSystemEntryData(userData);
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:02 +0 -1: Some tests failed.     
+~/workspace/75. Flutter_Test_code_PL$ 
