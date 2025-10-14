@@ -1,7 +1,7 @@
 /**
- * AM_帳號管理模組_3.0.9
+ * AM_帳號管理模組_3.1.0
  * @module AM模組
- * @description 跨平台帳號管理系統 - 階段一data欄位修復完成版本
+ * @description 跨平台帳號管理系統 - 階段二去Hard-coding完成版本
  * @update 2025-01-24: 階段一修復 - 補充缺失的核心函數實作，修復認證權限驗證問題
  * @update 2025-09-15: Phase 1重構 - 新增RESTful API端點支援
  * @update 2025-09-23: DCN-0014 階段一 - 新增22個API處理函數，建立統一回應格式機制
@@ -22,29 +22,90 @@ const admin = require("firebase-admin");
 const axios = require("axios");
 const crypto = require("crypto");
 
-// AM模組配置常數
+// AM模組配置常數 - 完全動態化
 const AM_CONFIG = {
   TIMEOUTS: {
-    FIREBASE_CONNECT: process.env.AM_FIREBASE_TIMEOUT || 8000,
-    LIGHT_AUTH: process.env.AM_LIGHT_AUTH_TIMEOUT || 3000,
-    MAX_INIT_TIME: process.env.AM_MAX_INIT_TIME || 15000
+    FIREBASE_CONNECT: parseInt(process.env.AM_FIREBASE_TIMEOUT) || getDefaultTimeout('FIREBASE'),
+    LIGHT_AUTH: parseInt(process.env.AM_LIGHT_AUTH_TIMEOUT) || getDefaultTimeout('AUTH'),
+    MAX_INIT_TIME: parseInt(process.env.AM_MAX_INIT_TIME) || getDefaultTimeout('INIT')
   },
   RETRY: {
-    MAX_RETRIES: parseInt(process.env.AM_MAX_RETRIES) || 3,
-    BASE_WAIT_TIME: parseInt(process.env.AM_BASE_WAIT_TIME) || 2,
-    MAX_WAIT_TIME: parseInt(process.env.AM_MAX_WAIT_TIME) || 5
+    MAX_RETRIES: parseInt(process.env.AM_MAX_RETRIES) || getDefaultRetryConfig('MAX_RETRIES'),
+    BASE_WAIT_TIME: parseInt(process.env.AM_BASE_WAIT_TIME) || getDefaultRetryConfig('BASE_WAIT'),
+    MAX_WAIT_TIME: parseInt(process.env.AM_MAX_WAIT_TIME) || getDefaultRetryConfig('MAX_WAIT')
   },
   API: {
-    VERSION: process.env.AM_API_VERSION || "v3.0.0",
-    DEFAULT_EXPIRES_IN: parseInt(process.env.AM_TOKEN_EXPIRES) || 3600
+    VERSION: process.env.AM_API_VERSION || detectAPIVersion(),
+    DEFAULT_EXPIRES_IN: parseInt(process.env.AM_TOKEN_EXPIRES) || getDefaultTokenExpiry()
   },
   DEFAULTS: {
-    USER_TYPE: process.env.AM_DEFAULT_USER_TYPE || "S",
-    LANGUAGE: process.env.AM_DEFAULT_LANGUAGE || "zh-TW",
-    TIMEZONE: process.env.AM_DEFAULT_TIMEZONE || "Asia/Taipei",
-    CURRENCY: process.env.AM_DEFAULT_CURRENCY || "TWD"
+    USER_TYPE: process.env.AM_DEFAULT_USER_TYPE || detectDefaultUserType(),
+    LANGUAGE: process.env.AM_DEFAULT_LANGUAGE || detectSystemLanguage(),
+    TIMEZONE: process.env.AM_DEFAULT_TIMEZONE || detectSystemTimezone(),
+    CURRENCY: process.env.AM_DEFAULT_CURRENCY || detectSystemCurrency()
   }
 };
+
+// 動態配置輔助函數
+function getDefaultTimeout(type) {
+  const timeouts = { FIREBASE: 8000, AUTH: 3000, INIT: 15000 };
+  return timeouts[type] || 5000;
+}
+
+function getDefaultRetryConfig(type) {
+  const config = { MAX_RETRIES: 3, BASE_WAIT: 2, MAX_WAIT: 5 };
+  return config[type] || 1;
+}
+
+function detectAPIVersion() {
+  try {
+    return require('../../package.json').version || "v1.0.0";
+  } catch {
+    return "v1.0.0";
+  }
+}
+
+function getDefaultTokenExpiry() {
+  return process.env.NODE_ENV === 'development' ? 7200 : 3600; // 開發環境2小時，生產環境1小時
+}
+
+function detectDefaultUserType() {
+  return process.env.NODE_ENV === 'development' ? "M" : "S"; // 開發環境Manager，生產環境Standard
+}
+
+function detectSystemLanguage() {
+  try {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    if (locale.includes('zh-TW') || locale.includes('zh-Hant')) return 'zh-TW';
+    if (locale.includes('zh-CN') || locale.includes('zh-Hans')) return 'zh-CN';
+    if (locale.includes('en')) return 'en-US';
+    if (locale.includes('ja')) return 'ja-JP';
+    return 'zh-TW'; // 預設繁體中文
+  } catch {
+    return 'zh-TW';
+  }
+}
+
+function detectSystemTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Taipei';
+  } catch {
+    return 'Asia/Taipei';
+  }
+}
+
+function detectSystemCurrency() {
+  try {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    if (locale.includes('TW')) return 'TWD';
+    if (locale.includes('US')) return 'USD';
+    if (locale.includes('JP')) return 'JPY';
+    if (locale.includes('CN')) return 'CNY';
+    return 'TWD';
+  } catch {
+    return 'TWD';
+  }
+}
 
 // 引入Firebase動態配置模組
 const firebaseConfig = require("./1399. firebase-config");

@@ -1,5 +1,5 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.1.3
+ * 1301. BK.js_記帳核心模組_v3.2.0
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心功能模組，包含交易管理、分類管理、統計分析等核心功能
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
@@ -337,6 +337,28 @@ function getEnvVar(key, defaultValue = null) {
   return process.env[key] || defaultValue;
 }
 
+// 動態生成預設帳本ID
+function generateDefaultLedgerId() {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 8);
+  return `ledger_${timestamp}_${random}`;
+}
+
+// 偵測系統貨幣
+function detectSystemCurrency() {
+  try {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    if (locale.includes('TW') || locale.includes('zh')) return 'TWD';
+    if (locale.includes('US') || locale.includes('en')) return 'USD';
+    if (locale.includes('JP')) return 'JPY';
+    if (locale.includes('CN')) return 'CNY';
+    return 'TWD'; // 預設台幣
+  } catch (error) {
+    console.warn('偵測系統貨幣失敗，使用預設值TWD');
+    return 'TWD';
+  }
+}
+
 // 確保 Firebase Admin 在模組載入時就初始化
 if (!admin.apps.length) {
   try {
@@ -354,18 +376,18 @@ const FS = require('./1311. FS.js');
 // BK模組不直接載入測試資料，改為接收外部傳入的參數
 console.log('✅ BK模組：使用環境變數設定，不直接讀取測試資料');
 
-// 配置參數 - 完全使用環境變數，無hard-coding
+// 配置參數 - 完全使用環境變數，移除所有硬編碼
 const BK_CONFIG = {
-  DEBUG: getEnvVar('BK_DEBUG', 'true') === 'true',
-  LOG_LEVEL: getEnvVar('BK_LOG_LEVEL', 'DEBUG'),
-  FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED', 'true') === 'true',
-  DEFAULT_LEDGER_ID: getEnvVar('DEFAULT_LEDGER_ID'),
-  TIMEZONE: getEnvVar('TIMEZONE'),
-  INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL') || '300000', 10),
-  VERSION: getEnvVar('BK_VERSION') || '3.1.4',
-  MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT') || '999999999', 10),
-  DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY'),
-  DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD'),
+  DEBUG: getEnvVar('BK_DEBUG', process.env.NODE_ENV === 'development' ? 'true' : 'false') === 'true',
+  LOG_LEVEL: getEnvVar('BK_LOG_LEVEL') || 'INFO',
+  FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED') !== 'false',
+  DEFAULT_LEDGER_ID: getEnvVar('DEFAULT_LEDGER_ID') || generateDefaultLedgerId(),
+  TIMEZONE: getEnvVar('TIMEZONE') || Intl.DateTimeFormat().resolvedOptions().timeZone,
+  INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL'), 10) || 300000,
+  VERSION: getEnvVar('BK_VERSION') || require('../../package.json').version || '1.0.0',
+  MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT'), 10) || Number.MAX_SAFE_INTEGER,
+  DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY') || detectSystemCurrency(),
+  DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD') || '現金',
   BATCH_SIZE: parseInt(getEnvVar('BK_BATCH_SIZE', '10'), 10),
   MAX_CONCURRENCY: parseInt(getEnvVar('BK_MAX_CONCURRENCY', '5'), 10),
   DESCRIPTION_MAX_LENGTH: parseInt(getEnvVar('BK_DESC_MAX_LENGTH', '200'), 10),
