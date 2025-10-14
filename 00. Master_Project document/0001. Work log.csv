@@ -295,7 +295,10 @@ MM 	 DD 	 Description 	    Progress
 10	9	 檢視BL層模組之資料欄位是否符合1311規定之資料欄位：1301, 1309 	 Ongoing
 10	9	 撰寫9835文件 	 Ongoing
 10	9	 以9835文件review 7570,7580,7590 	 Ongoing
-10	9	 打通SIT測試代碼7570 	 Ongoing
-10	10	 搞定Flutter設定環境：安裝xcode 	 Ongoing
-10	10	 在Macbook中開啟termianl輸入flutter doctor以檢查flutter環境是否設置完整 	 Ongoing
-10	14	 打通SIT測試 	 Ongoing
+10	9	 打通SIT測試代碼7570 	 Closed
+10	10	 搞定Flutter設定環境：安裝xcode 	 Closed
+10	10	 在Macbook中開啟termianl輸入flutter doctor以檢查flutter環境是否設置完整 	 Closed
+10	14	 打通SIT測試P1-2 	 Closed
+10	14	 檢查1301,1309,7301,7302是否有hard-coding 	 Ongoing
+10	14	 檢查Firestore欄位是否符合需求 	 Ongoing
+10	14	 撰寫DCN-0017	 Ongoing
