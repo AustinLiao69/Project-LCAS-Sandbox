@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:intl/intl.dart'; // 引入intl套件以支援國際化格式
+import '../../75. Flutter_Test_code_PL/7590. 生成動態測試資料.dart';
 
 // 引入必要的依賴
 enum UserMode { expert, inertial, cultivation, guiding }
@@ -528,7 +529,7 @@ class DashboardWidgetImpl extends DashboardWidget {
       child: Container(
         padding: EdgeInsets.all(16),
         child: FutureBuilder<DashboardData>(
-          future: _loadDashboardData(),
+          future: _loadDashboardDataFromTestFactory(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Column(
@@ -626,13 +627,42 @@ class DashboardWidgetImpl extends DashboardWidget {
     );
   }
 
-  Future<DashboardData> _loadDashboardData() async {
+  Future<DashboardData> _loadDashboardDataFromTestFactory() async {
     try {
-      // 調用BL層API獲取真實儀表板數據
-      final response = await _transactionApiClient.getDashboardData();
-      return response.data!;
+      // 使用7590動態測試資料工廠生成儀表板數據
+      final testData = await DynamicTestDataFactory.instance.generateCompleteTestDataSet(
+        userCount: 1,
+        transactionsPerUser: 10,
+      );
+      
+      final transactions = testData['bookkeeping_test_data']['test_transactions'] as Map<String, dynamic>;
+      
+      // 計算統計數據
+      double totalIncome = 0.0;
+      double totalExpense = 0.0;
+      int transactionCount = transactions.length;
+      
+      for (final transaction in transactions.values) {
+        final amount = (transaction['金額'] as num).toDouble();
+        final type = transaction['收支類型'] as String;
+        
+        if (type == 'income') {
+          totalIncome += amount;
+        } else if (type == 'expense') {
+          totalExpense += amount;
+        }
+      }
+      
+      final balance = totalIncome - totalExpense;
+      
+      return DashboardData(
+        totalIncome: totalIncome,
+        totalExpense: totalExpense,
+        balance: balance,
+        transactionCount: transactionCount,
+      );
     } catch (e) {
-      throw Exception('載入儀表板數據失敗: $e');
+      throw Exception('載入動態測試資料失敗: $e');
     }
   }
 
@@ -1211,31 +1241,72 @@ class AccountSelectorWidgetImpl extends AccountSelectorWidget {
 
   @override
   Widget buildAccountList() {
-    final accounts = [
-      Account(id: '1', name: '台灣銀行', type: 'bank', balance: 50000),
-      Account(id: '2', name: '現金', type: 'cash', balance: 2000),
-      Account(id: '3', name: '信用卡', type: 'credit', balance: -5000),
-    ];
-
-    return ListView.builder(
-      itemCount: accounts.length,
-      itemBuilder: (context, index) {
-        final account = accounts[index];
-        return ListTile(
-          leading: _getAccountIcon(account.type),
-          title: Text(account.name),
-          subtitle: Text('類型: ${account.type}'),
-          trailing: Text(
-            '\$${account.balance.toStringAsFixed(0)}',
-            style: TextStyle(
-              color: account.balance >= 0 ? Colors.green : Colors.red,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          onTap: () => onAccountSelected(account.id),
+    return FutureBuilder<List<Account>>(
+      future: _loadAccountsFromTestFactory(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        
+        if (snapshot.hasError) {
+          return Center(child: Text('載入帳戶失敗: ${snapshot.error}'));
+        }
+        
+        final accounts = snapshot.data ?? [];
+        
+        return ListView.builder(
+          itemCount: accounts.length,
+          itemBuilder: (context, index) {
+            final account = accounts[index];
+            return ListTile(
+              leading: _getAccountIcon(account.type),
+              title: Text(account.name),
+              subtitle: Text('類型: ${account.type}'),
+              trailing: Text(
+                '\$${account.balance.toStringAsFixed(0)}',
+                style: TextStyle(
+                  color: account.balance >= 0 ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () => onAccountSelected(account.id),
+            );
+          },
         );
       },
     );
+  }
+
+  Future<List<Account>> _loadAccountsFromTestFactory() async {
+    try {
+      // 使用7590動態生成帳戶資料
+      final accountsData = await _generateAccountsData();
+      return accountsData;
+    } catch (e) {
+      throw Exception('載入帳戶資料失敗: $e');
+    }
+  }
+
+  Future<List<Account>> _generateAccountsData() async {
+    // 動態生成帳戶資料
+    final random = Random();
+    final accountTypes = ['bank', 'cash', 'credit'];
+    final accountNames = ['台灣銀行', '現金', '信用卡', '郵局', '數位帳戶'];
+    
+    return List.generate(3, (index) {
+      final type = accountTypes[index % accountTypes.length];
+      final name = accountNames[index % accountNames.length];
+      final balance = type == 'credit' 
+          ? -(random.nextDouble() * 10000)
+          : random.nextDouble() * 100000;
+      
+      return Account(
+        id: 'account_${index + 1}',
+        name: name,
+        type: type,
+        balance: balance,
+      );
+    });
   }
 
   @override
@@ -1382,25 +1453,57 @@ class LedgerSelectorWidgetImpl extends LedgerSelectorWidget {
 
   @override
   Widget buildLedgerList() {
-    final ledgers = [
-      Ledger(id: '1', name: '個人記帳', type: 'personal', userId: 'user1'),
-      Ledger(id: '2', name: '家庭支出', type: 'family', userId: 'user1'),
-      Ledger(id: '3', name: '旅遊基金', type: 'project', userId: 'user1'),
-    ];
-
-    return ListView.builder(
-      itemCount: ledgers.length,
-      itemBuilder: (context, index) {
-        final ledger = ledgers[index];
-        return ListTile(
-          leading: _getLedgerIcon(ledger.type),
-          title: Text(ledger.name),
-          subtitle: Text('類型: ${ledger.type}'),
-          trailing: Icon(Icons.arrow_forward_ios),
-          onTap: () => onLedgerSelected(ledger.id),
+    return FutureBuilder<List<Ledger>>(
+      future: _loadLedgersFromTestFactory(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        
+        if (snapshot.hasError) {
+          return Center(child: Text('載入帳本失敗: ${snapshot.error}'));
+        }
+        
+        final ledgers = snapshot.data ?? [];
+        
+        return ListView.builder(
+          itemCount: ledgers.length,
+          itemBuilder: (context, index) {
+            final ledger = ledgers[index];
+            return ListTile(
+              leading: _getLedgerIcon(ledger.type),
+              title: Text(ledger.name),
+              subtitle: Text('類型: ${ledger.type}'),
+              trailing: Icon(Icons.arrow_forward_ios),
+              onTap: () => onLedgerSelected(ledger.id),
+            );
+          },
         );
       },
     );
+  }
+
+  Future<List<Ledger>> _loadLedgersFromTestFactory() async {
+    try {
+      // 使用7590動態生成帳本資料
+      return await _generateLedgersData();
+    } catch (e) {
+      throw Exception('載入帳本資料失敗: $e');
+    }
+  }
+
+  Future<List<Ledger>> _generateLedgersData() async {
+    final ledgerTypes = ['personal', 'family', 'project'];
+    final ledgerNames = ['個人記帳', '家庭支出', '旅遊基金', '投資理財', '副業收入'];
+    
+    return List.generate(3, (index) {
+      return Ledger(
+        id: 'ledger_${index + 1}',
+        name: ledgerNames[index % ledgerNames.length],
+        type: ledgerTypes[index % ledgerTypes.length],
+        userId: 'user_dynamic_${index + 1}',
+      );
+    });
   }
 
   @override
@@ -1806,48 +1909,98 @@ class TransactionManagerWidgetImpl extends TransactionManagerWidget {
 
   @override
   Widget buildTransactionList() {
-    final transactions = [
-      Transaction(id: '1', type: TransactionType.expense, amount: 150, description: '午餐', date: DateTime.now()),
-      Transaction(id: '2', type: TransactionType.income, amount: 35000, description: '薪水', date: DateTime.now().subtract(Duration(days: 1))),
-      Transaction(id: '3', type: TransactionType.transfer, amount: 10000, description: '轉帳', date: DateTime.now().subtract(Duration(days: 2))),
-    ];
-
-    return ListView.builder(
-      itemCount: transactions.length,
-      itemBuilder: (context, index) {
-        final transaction = transactions[index];
-        return ListTile(
-          leading: _getTransactionIcon(transaction.type),
-          title: Text(transaction.description),
-          subtitle: Text(transaction.date.toString().split(' ')[0]),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '\$${transaction.amount.toStringAsFixed(0)}',
-                style: TextStyle(
-                  color: _getAmountColor(transaction.type),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    onTransactionEdit(transaction.id);
-                  } else if (value == 'delete') {
-                    onTransactionDelete(transaction.id);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(value: 'edit', child: Text('編輯')),
-                  PopupMenuItem(value: 'delete', child: Text('刪除')),
+    return FutureBuilder<List<Transaction>>(
+      future: _loadTransactionsFromTestFactory(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        
+        if (snapshot.hasError) {
+          return Center(child: Text('載入交易記錄失敗: ${snapshot.error}'));
+        }
+        
+        final transactions = snapshot.data ?? [];
+        
+        return ListView.builder(
+          itemCount: transactions.length,
+          itemBuilder: (context, index) {
+            final transaction = transactions[index];
+            return ListTile(
+              leading: _getTransactionIcon(transaction.type),
+              title: Text(transaction.description),
+              subtitle: Text(transaction.date.toString().split(' ')[0]),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '\$${transaction.amount.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: _getAmountColor(transaction.type),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        onTransactionEdit(transaction.id);
+                      } else if (value == 'delete') {
+                        onTransactionDelete(transaction.id);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(value: 'edit', child: Text('編輯')),
+                      PopupMenuItem(value: 'delete', child: Text('刪除')),
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
+  }
+
+  Future<List<Transaction>> _loadTransactionsFromTestFactory() async {
+    try {
+      // 使用7590動態生成交易資料
+      final testData = await DynamicTestDataFactory.instance.generateCompleteTestDataSet(
+        userCount: 1,
+        transactionsPerUser: 10,
+      );
+      
+      final transactionsData = testData['bookkeeping_test_data']['test_transactions'] as Map<String, dynamic>;
+      final List<Transaction> transactions = [];
+      
+      transactionsData.forEach((key, value) {
+        final transaction = Transaction(
+          id: value['收支ID'] as String,
+          type: _mapStringToTransactionType(value['收支類型'] as String),
+          amount: (value['金額'] as num).toDouble(),
+          description: value['描述'] as String,
+          date: DateTime.parse(value['建立時間'] as String),
+          createdAt: DateTime.parse(value['建立時間'] as String),
+          updatedAt: DateTime.parse(value['更新時間'] as String),
+        );
+        transactions.add(transaction);
+      });
+      
+      return transactions;
+    } catch (e) {
+      throw Exception('載入動態交易資料失敗: $e');
+    }
+  }
+
+  TransactionType _mapStringToTransactionType(String typeString) {
+    switch (typeString.toLowerCase()) {
+      case 'income':
+        return TransactionType.income;
+      case 'transfer':
+        return TransactionType.transfer;
+      default:
+        return TransactionType.expense;
+    }
   }
 
   @override
@@ -2375,36 +2528,60 @@ class StatisticsChartWidgetImpl extends StatisticsChartWidget {
 
   Future<List<ChartData>> _loadChartData() async {
     try {
-      // 調用BL層獲取統計數據
-      final response = await _statisticsApiClient.getCategoryStatistics({
-        'startDate': DateTime.now().subtract(Duration(days: 30)).toIso8601String(),
-        'endDate': DateTime.now().toIso8601String(),
-      });
+      // 使用7590動態測試資料生成圖表數據
+      final testData = await DynamicTestDataFactory.instance.generateCompleteTestDataSet(
+        userCount: 1,
+        transactionsPerUser: 20,
+      );
       
-      // 轉換統計數據為圖表數據
-      return _convertToChartData(response.data);
+      return _convertTestDataToChartData(testData);
     } catch (e) {
-      throw Exception('載入統計數據失敗: $e');
+      throw Exception('載入動態圖表數據失敗: $e');
     }
   }
 
-  List<ChartData> _convertToChartData(dynamic statisticsData) {
-    // 將BL層返回的統計數據轉換為圖表數據格式
+  List<ChartData> _convertTestDataToChartData(Map<String, dynamic> testData) {
+    // 將7590動態測試資料轉換為圖表數據格式
     final List<ChartData> chartData = [];
     final colors = [Colors.red, Colors.blue, Colors.green, Colors.orange, Colors.purple];
+    final categories = <String, double>{};
     
-    if (statisticsData != null && statisticsData['categories'] != null) {
-      final categories = statisticsData['categories'] as List;
+    final transactions = testData['bookkeeping_test_data']['test_transactions'] as Map<String, dynamic>;
+    
+    // 統計各科目的支出金額
+    for (final transaction in transactions.values) {
+      final amount = (transaction['金額'] as num).toDouble();
+      final categoryId = transaction['科目ID'] as String;
+      final type = transaction['收支類型'] as String;
       
-      for (int i = 0; i < categories.length && i < colors.length; i++) {
-        final category = categories[i];
-        chartData.add(ChartData(
-          label: category['name'] ?? '未知',
-          value: (category['amount'] ?? 0.0).toDouble(),
-          color: colors[i],
-        ));
+      if (type == 'expense') {
+        categories[categoryId] = (categories[categoryId] ?? 0.0) + amount;
       }
     }
+    
+    // 轉換為圖表數據
+    final categoryNames = {
+      'food': '食物',
+      'transport': '交通',
+      'entertainment': '娛樂',
+      'utilities': '水電',
+      'salary': '薪水',
+      'bonus': '獎金',
+      'investment': '投資',
+      'freelance': '副業',
+    };
+    
+    int colorIndex = 0;
+    categories.forEach((categoryId, amount) {
+      if (colorIndex < colors.length) {
+        chartData.add(ChartData(
+          label: categoryNames[categoryId] ?? categoryId,
+          value: amount,
+          color: colors[colorIndex],
+        ));
+        colorIndex++;
+      }
+    });
     
     return chartData;
   }
