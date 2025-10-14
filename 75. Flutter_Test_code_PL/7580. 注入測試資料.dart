@@ -94,6 +94,7 @@ class UserOperationSimulator {
     // 模擬表單驗證
     if (!_validateTransactionData(transactionData)) {
       print('❌ 交易資料驗證失敗');
+      print('🔍 除錯資訊: 金額=${transactionData['amount']} (${transactionData['amount'].runtimeType}), 類型=${transactionData['type']}');
       return false;
     }
     
@@ -127,7 +128,24 @@ class UserOperationSimulator {
   }
 
   bool _validateTransactionData(Map<String, dynamic> data) {
-    if (data['amount'] == null || data['amount'] <= 0) return false;
+    // 修復型別轉換問題
+    if (data['amount'] == null) return false;
+    
+    // 安全的金額轉換
+    double amount;
+    try {
+      if (data['amount'] is String) {
+        amount = double.parse(data['amount']);
+      } else if (data['amount'] is num) {
+        amount = data['amount'].toDouble();
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+    
+    if (amount <= 0) return false;
     if (data['type'] == null || !['income', 'expense'].contains(data['type'])) return false;
     return true;
   }
