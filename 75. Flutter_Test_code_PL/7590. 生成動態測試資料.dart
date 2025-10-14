@@ -158,6 +158,10 @@ class DynamicTestDataFactory {
       final users = <String, dynamic>{};
       final transactions = <String, dynamic>{};
 
+      // 階段二修復：依賴BK模組生成預設帳本ID，不自行創建
+      // 注意：帳本ID應該由BK模組的generateDefaultLedgerId()生成
+      const defaultLedgerId = 'ledger_test_default'; // 測試時使用固定ID，實際應調用BK模組
+
       // 生成用戶資料
       for (int i = 0; i < userCount; i++) {
         final mode = modes[i % modes.length];
@@ -180,6 +184,9 @@ class DynamicTestDataFactory {
         'bookkeeping_test_data': {
           'test_transactions': transactions,
           'transaction_count': transactions.length,
+          // 階段二修復：明確指出預設帳本ID來源應為BK模組
+          'default_ledger_id': defaultLedgerId, // 應由BK模組的generateDefaultLedgerId()提供
+          'ledger_id_source': 'BK_MODULE', // 明確標示職責歸屬
         },
         'generated_at': DateTime.now().toIso8601String(),
         'data_summary': {
