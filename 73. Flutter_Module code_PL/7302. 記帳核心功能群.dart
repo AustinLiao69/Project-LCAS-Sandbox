@@ -539,7 +539,7 @@ class DashboardWidgetImpl extends DashboardWidget {
     // 這裡假設API Client已經透過Dependency Injection註冊
     // _transactionApiClient = DependencyContainer.get<TransactionApiClient>();
     // _statisticsApiClient = DependencyContainer.get<StatisticsApiClient>();
-    
+
     // 在沒有 DI 的情況下，暫時先創建實例
     _transactionApiClient = TransactionApiClientImpl(); 
     _statisticsApiClient = StatisticsApiClientImpl();
@@ -649,7 +649,7 @@ class DashboardWidgetImpl extends DashboardWidget {
     );
   }
 
-  
+
 
   // 模擬API調用獲取DashboardData
   Future<DashboardData> _loadDashboardData() async {
@@ -5331,60 +5331,38 @@ class AccountApiClientImpl implements AccountApiClient {
 
   /// 從環境變數或配置獲取API基礎URL
   static String _getApiBaseUrl() {
-    // 優先從環境變數讀取
     const envUrl = String.fromEnvironment('LCAS_API_BASE_URL');
-    if (envUrl.isNotEmpty) {
-      return envUrl;
-    }
+    if (envUrl.isNotEmpty) return envUrl;
 
-    // 從7590動態測試資料獲取配置
     final testDataGenerator = TestDataGenerator();
     final apiConfig = testDataGenerator.generateApiConfiguration();
-
     return apiConfig['baseUrl'] ?? 'https://api.lcas.app/v1';
   }
 
   /// 建立靈活的Headers配置
   static Map<String, String> _buildHeaders(Map<String, String>? customHeaders) {
     final headers = <String, String>{};
-
-    // 預設Headers
     headers['Content-Type'] = const String.fromEnvironment('LCAS_CONTENT_TYPE', defaultValue: 'application/json');
     headers['Accept'] = const String.fromEnvironment('LCAS_ACCEPT_TYPE', defaultValue: 'application/json');
 
-    // 從7590動態測試資料獲取額外Headers
     final testDataGenerator = TestDataGenerator();
     final apiConfig = testDataGenerator.generateApiConfiguration();
-
     if (apiConfig.containsKey('headers')) {
-      final configHeaders = Map<String, String>.from(apiConfig['headers']);
-      headers.addAll(configHeaders);
+      headers.addAll(Map<String, String>.from(apiConfig['headers']));
     }
 
-    // 環境變數覆蓋
     const authToken = String.fromEnvironment('LCAS_AUTH_TOKEN');
-    if (authToken.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $authToken';
-    }
-
+    if (authToken.isNotEmpty) headers['Authorization'] = 'Bearer $authToken';
     const userAgent = String.fromEnvironment('LCAS_USER_AGENT');
-    if (userAgent.isNotEmpty) {
-      headers['User-Agent'] = userAgent;
-    }
+    if (userAgent.isNotEmpty) headers['User-Agent'] = userAgent;
 
-    // 自定義Headers優先級最高
-    if (customHeaders != null) {
-      headers.addAll(customHeaders);
-    }
-
+    if (customHeaders != null) headers.addAll(customHeaders);
     return headers;
   }
 
   /// 獲取動態請求Headers
   Map<String, String> _getRequestHeaders({Map<String, String>? additionalHeaders}) {
     final headers = Map<String, String>.from(defaultHeaders);
-
-    // 根據環境動態調整
     const environment = String.fromEnvironment('FLUTTER_ENV', defaultValue: 'development');
 
     switch (environment) {
@@ -5402,16 +5380,10 @@ class AccountApiClientImpl implements AccountApiClient {
         headers['X-Debug'] = 'true';
         break;
     }
-
-    // 加入時間戳和請求ID用於追蹤
     headers['X-Request-Time'] = DateTime.now().toIso8601String();
     headers['X-Request-ID'] = 'req_${DateTime.now().millisecondsSinceEpoch}';
 
-    // 合併額外Headers
-    if (additionalHeaders != null) {
-      headers.addAll(additionalHeaders);
-    }
-
+    if (additionalHeaders != null) headers.addAll(additionalHeaders);
     return headers;
   }
 
@@ -6284,7 +6256,7 @@ class AccountRepositoryImpl extends AccountRepository {
       if (_cache.isEmpty) {
         await getAccounts(); // 嘗試填充快取
       }
-      
+
       final accountIds = _cache.map((a) => a.id).toList();
       if (accountIds.isEmpty) return {}; // 如果沒有帳戶，返回空Map
 
@@ -6450,7 +6422,7 @@ class SmartTextParserImpl {
       if (cashAccount != null) {
         return cashAccount.id;
       }
-      
+
       // 如果沒有現金帳戶，預設為第一個帳戶
       if (accounts.isNotEmpty) {
         return accounts.first.id;
@@ -6477,7 +6449,7 @@ class SmartTextParserImpl {
     for (String keyword in removeKeywords) {
       description = description.replaceAll(keyword, '').trim();
     }
-    
+
     // 移除多餘的空格
     description = description.replaceAll(RegExp(r'\s+'), ' ').trim();
 
@@ -6857,7 +6829,7 @@ class StatisticsCalculator {
       case 'monthly':
         return _generateMonthlyChartData(transactions);
       case 'trend':
-        return _generateTrendChartData(transactions);
+        return_generateTrendChartData(transactions);
       default:
         return _generateCategoryChartData(transactions);
     }
