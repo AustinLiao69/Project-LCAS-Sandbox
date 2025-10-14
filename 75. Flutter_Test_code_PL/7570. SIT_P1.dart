@@ -1,12 +1,13 @@
 /**
  * 7570. SIT_P1.dart
- * @version v2.1.0
+ * @version v2.2.0
  * @date 2025-10-14
- * @update: 階段一修復 - 架構相容性修復，適配7580模擬器架構
+ * @update: 階段二修復 - 移除測試資料Hard Coding，使用7590動態生成
  *
  * 本模組實現6501 SIT測試計畫，涵蓋TC-SIT-001~016整合測試案例
  * 嚴格遵循DCN-0016測試資料流計畫，整合7580注入和7590生成機制
  * 階段一修復：更新調用方式，使用7580的UserOperationSimulator模擬架構
+ * 階段二修復：移除Hard Coding，實現動態測試資料生成
  * 階段二目標：實作TC-SIT-001~016整合測試案例，與7580/7590模組整合，進行四模式差異化測試驗證，並完成DCN-0016資料流驗證
  */
 
@@ -517,7 +518,7 @@ Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() asyn
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成測試資料
+    // 1. 階段二修復：使用7590動態生成測試資料，避免Hard Coding
     final testUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
     testResult['details']?['generatedUser'] = testUser['userId'];
 
@@ -562,10 +563,11 @@ Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() asy
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成登入測試資料
+    // 1. 階段二修復：使用7590動態生成登入測試資料，避免Hard Coding
+    final loginUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
     final loginData = SystemEntryTestDataTemplate.getUserLoginTemplate(
-      userId: 'test_user_${DateTime.now().millisecondsSinceEpoch}',
-      email: 'test@lcas.app',
+      userId: loginUser['userId'],
+      email: loginUser['email'],
     );
 
     // 2. 使用模擬器驗證登入流程
@@ -608,11 +610,12 @@ Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 模擬Firebase Auth資料
+    // 1. 階段二修復：使用7590動態生成Firebase認證資料，避免Hard Coding
+    final firebaseUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Inertial');
     final firebaseData = {
-      'userId': 'firebase_user_${DateTime.now().millisecondsSinceEpoch}',
-      'email': 'firebase@test.lcas.app',
-      'userMode': 'Inertial',
+      'userId': firebaseUser['userId'],
+      'email': firebaseUser['email'],
+      'userMode': firebaseUser['userMode'],
       'provider': 'firebase',
       'firebaseUid': 'fb_${DateTime.now().millisecondsSinceEpoch}',
       'registrationDate': DateTime.now().toIso8601String(),
@@ -658,7 +661,7 @@ Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() asyn
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成快速記帳測試資料
+    // 1. 階段二修復：使用7590動態生成快速記帳測試資料，避免Hard Coding
     final quickTransaction = await DynamicTestDataFactory.instance.generateTransaction(
       description: '快速記帳測試 - 午餐費用',
       transactionType: 'expense',
@@ -705,12 +708,12 @@ Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成完整表單測試資料 - 修復使用動態生成器避免null值
+    // 1. 階段二修復：使用7590動態生成完整表單測試資料，避免Hard Coding的金額和用戶ID
+    final testUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
     final completeTransaction = await DynamicTestDataFactory.instance.generateTransaction(
       description: '完整表單測試 - 聚餐費用',
       transactionType: 'expense',
-      amount: 1500.0,
-      userId: 'tc_sit_005_user_${DateTime.now().millisecondsSinceEpoch}',
+      userId: testUser['userId'],
     );
 
     // 2. 使用模擬器注入完整表單資料
@@ -753,11 +756,11 @@ Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() 
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成查詢測試資料
-    final userId = 'query_test_user';
+    // 1. 階段二修復：使用7590動態生成查詢測試資料，避免Hard Coding的用戶ID
+    final testUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
     final queryTransactions = await DynamicTestDataFactory.instance.generateTransactionsBatch(
       count: 5,
-      userId: userId,
+      userId: testUser['userId'],
     );
 
     // 2. 使用模擬器批量注入查詢資料
@@ -806,7 +809,7 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成錯誤場景測試資料 - 修復確保能觸發正確的錯誤類型
+    // 1. 階段二修復：使用當前時間戳生成錯誤測試資料，避免Hard Coding的ID和日期
     final invalidData = {
       'userId': '', // 故意留空觸發錯誤
       'email': 'invalid-email-format', // 更明確的無效Email格式
@@ -814,6 +817,7 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
       'displayName': null, // null值測試
       'registrationDate': 'invalid-date', // 無效日期格式
       'errorTest': true, // 標記為錯誤測試案例
+      'timestamp': DateTime.now().millisecondsSinceEpoch, // 使用當前時間戳
     };
 
     // 2. 使用模擬器嘗試注入錯誤資料
@@ -861,17 +865,14 @@ Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async 
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成模式評估測試資料
+    // 1. 階段二修復：使用7590動態生成評估測試資料，避免Hard Coding的用戶ID和Email
+    final assessmentUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
     final assessmentData = {
-      'userId': 'assessment_test_${DateTime.now().millisecondsSinceEpoch}',
-      'email': 'assessment@test.lcas.app',
-      'assessmentAnswers': [
-        {'question': 'Q1', 'answer': 'A'},
-        {'question': 'Q2', 'answer': 'B'},
-        {'question': 'Q3', 'answer': 'C'},
-      ],
-      'evaluationResult': 'Expert',
-      'registrationDate': DateTime.now().toIso8601String(),
+      'userId': assessmentUser['userId'],
+      'email': assessmentUser['email'],
+      'assessmentAnswers': assessmentUser['assessmentAnswers'],
+      'evaluationResult': assessmentUser['userMode'],
+      'registrationDate': assessmentUser['registrationDate'],
     };
 
     // 2. 使用模擬器注入評估資料
@@ -1076,33 +1077,33 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final userId = 'lifecycle_test_${DateTime.now().millisecondsSinceEpoch}';
+    // 階段二修復：使用7590動態生成生命週期測試資料，避免Hard Coding
+    final lifecycleUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
     final lifecycleSteps = <String, bool>{};
 
     // 1. 註冊
     final registrationData = SystemEntryTestDataTemplate.getUserRegistrationTemplate(
-      userId: userId,
-      email: '$userId@test.lcas.app',
-      userMode: 'Expert',
+      userId: lifecycleUser['userId'],
+      email: lifecycleUser['email'],
+      userMode: lifecycleUser['userMode'],
     );
     lifecycleSteps['registration'] = await UserOperationSimulator.instance.simulateSystemEntry(registrationData);
 
     // 2. 登入
     final loginData = SystemEntryTestDataTemplate.getUserLoginTemplate(
-      userId: userId,
-      email: '$userId@test.lcas.app',
+      userId: lifecycleUser['userId'],
+      email: lifecycleUser['email'],
     );
     lifecycleSteps['login'] = await UserOperationSimulator.instance.simulateSystemEntry(loginData);
 
     // 3. 模式評估
-    final assessmentData = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
-    lifecycleSteps['modeAssessment'] = await UserOperationSimulator.instance.simulateSystemEntry(assessmentData);
+    lifecycleSteps['modeAssessment'] = await UserOperationSimulator.instance.simulateSystemEntry(lifecycleUser);
 
     // 4. 記帳操作
     final transaction = await DynamicTestDataFactory.instance.generateTransaction(
       description: '生命週期測試交易',
       transactionType: 'expense',
-      userId: userId,
+      userId: lifecycleUser['userId'],
     );
     lifecycleSteps['bookkeeping'] = await UserOperationSimulator.instance.simulateAccountingCore(transaction);
 
@@ -1150,23 +1151,23 @@ Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd
   try {
     final stopwatch = Stopwatch()..start();
 
-    final userId = 'bookkeeping_e2e_${DateTime.now().millisecondsSinceEpoch}';
+    // 階段二修復：使用7590動態生成業務流程測試用戶，避免Hard Coding的用戶ID
+    final businessUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
     final businessProcess = <String, bool>{};
 
     // 1. 快速記帳
     final quickTransaction = await DynamicTestDataFactory.instance.generateTransaction(
-      userId: userId,
+      userId: businessUser['userId'],
       description: '快速記帳 - 早餐',
       transactionType: 'expense',
     );
     businessProcess['quickBookkeeping'] = await UserOperationSimulator.instance.simulateAccountingCore(quickTransaction);
 
-    // 2. 完整表單記帳 - 修復使用動態生成器
+    // 2. 完整表單記帳 - 使用動態生成的金額和用戶ID
     final completeTransaction = await DynamicTestDataFactory.instance.generateTransaction(
       description: '完整表單 - 薪資收入',
       transactionType: 'income',
-      amount: 2500.0,
-      userId: userId,
+      userId: businessUser['userId'],
     );
     businessProcess['completeForm'] = await UserOperationSimulator.instance.simulateAccountingCore(completeTransaction);
 
@@ -1342,18 +1343,19 @@ Future<Map<String, dynamic>> _executeTCSIT016_DCN0015FormatValidation() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成符合DCN-0015格式的測試資料
+    // 1. 階段二修復：使用7590動態生成DCN-0015驗證資料，避免Hard Coding的用戶ID和Email
+    final validationUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
     final dcn0015Data = {
       'success': true,
       'data': {
-        'userId': 'dcn0015_test_${DateTime.now().millisecondsSinceEpoch}',
-        'email': 'dcn0015@test.lcas.app',
-        'userMode': 'Expert',
+        'userId': validationUser['userId'],
+        'email': validationUser['email'],
+        'userMode': validationUser['userMode'],
       },
       'metadata': {
         'timestamp': DateTime.now().toIso8601String(),
         'requestId': 'req_${DateTime.now().millisecondsSinceEpoch}',
-        'userMode': 'Expert',
+        'userMode': validationUser['userMode'],
       },
     };
 
@@ -2187,20 +2189,21 @@ void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic
 // ==========================================
 
 /**
- * 階段一修復SIT測試模組初始化
- * @version 2025-10-14-V2.1.0
+ * 階段二修復SIT測試模組初始化
+ * @version 2025-10-14-V2.2.0
  * @date 2025-10-14
- * @update: 階段一修復完成 - 架構相容性修復，適配7580模擬器架構
+ * @update: 階段二修復完成 - 移除測試資料Hard Coding，使用7590動態生成
  */
-void initializePhase1FixedSITTestModule() {
-  print('[7570] 🎉 SIT P1測試代碼模組 v2.1.0 (階段一修復) 初始化完成');
-  print('[7570] 📌 階段二功能：16個整合層測試完整實作');
+void initializePhase2FixedSITTestModule() {
+  print('[7570] 🎉 SIT P1測試代碼模組 v2.2.0 (階段二修復) 初始化完成');
+  print('[7570] 📌 階段二功能：移除測試資料Hard Coding');
   print('[7570] 🔗 深度整合：7580注入 + 7590生成 完全整合');
   print('[7570] 🎯 四模式支援：Expert/Inertial/Cultivation/Guiding差異化驗證');
   print('[7570] 📋 DCN-0016合規：完整資料流驗證機制');
   print('[7570] 🛡️ 錯誤處理：完整的錯誤追蹤與處理框架');
   print('[7570] 📊 測試覆蓋：44個測試案例 (16個整合層 + 28個API契約層)');
-  print('[7570] ✅ 階段二：整合層測試實作完成，深度驗證能力就緒');
+  print('[7570] 🚀 動態資料生成：固定用戶ID、時間戳、金額已全面動態化');
+  print('[7570] ✅ 階段二：測試資料Hard Coding移除完成，可維護性提升');
 }
 
 // ==========================================
@@ -2209,8 +2212,8 @@ void initializePhase1FixedSITTestModule() {
 
 /// 主要測試執行函數
 void main() {
-  // 自動初始化 (階段一修復版本)
-  initializePhase1FixedSITTestModule();
+  // 自動初始化 (階段二修復版本)
+  initializePhase2FixedSITTestModule();
 
   group('SIT P1完整測試 - 7570', () {
     late SITP1TestController testController;
