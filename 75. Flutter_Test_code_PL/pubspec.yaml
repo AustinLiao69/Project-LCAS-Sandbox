@@ -1,0 +1,15 @@
+
+name: pl_tests
+description: PL 測試專案 - 系統進入與記帳核心功能群測試
+version: 1.0.0+1
+
+environment:
+  sdk: '^3.5.0'
+
+dependencies:
+  http: ^1.1.0
+
+dev_dependencies:
+  test: ^1.25.2
+  build_runner: ^2.4.9
+  analyzer: ^6.4.1
