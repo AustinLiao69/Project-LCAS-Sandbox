@@ -370,21 +370,21 @@ const BK_CONFIG = {
   MAX_CONCURRENCY: parseInt(getEnvVar('BK_MAX_CONCURRENCY', '5'), 10),
   DESCRIPTION_MAX_LENGTH: parseInt(getEnvVar('BK_DESC_MAX_LENGTH', '200'), 10),
   API_ENDPOINTS: {
-    POST_TRANSACTIONS: getEnvVar('API_POST_TRANSACTIONS', '/transactions'),
-    GET_TRANSACTIONS: getEnvVar('API_GET_TRANSACTIONS', '/transactions'),
-    PUT_TRANSACTIONS: getEnvVar('API_PUT_TRANSACTIONS', '/transactions/{id}'),
-    DELETE_TRANSACTIONS: getEnvVar('API_DELETE_TRANSACTIONS', '/transactions/{id}'),
-    POST_QUICK: getEnvVar('API_POST_QUICK', '/transactions/quick'),
-    GET_DASHBOARD: getEnvVar('API_GET_DASHBOARD', '/transactions/dashboard')
+    POST_TRANSACTIONS: getEnvVar('API_POST_TRANSACTIONS') || '/transactions',
+    GET_TRANSACTIONS: getEnvVar('API_GET_TRANSACTIONS') || '/transactions',
+    PUT_TRANSACTIONS: getEnvVar('API_PUT_TRANSACTIONS') || '/transactions/{id}',
+    DELETE_TRANSACTIONS: getEnvVar('API_DELETE_TRANSACTIONS') || '/transactions/{id}',
+    POST_QUICK: getEnvVar('API_POST_QUICK') || '/transactions/quick',
+    GET_DASHBOARD: getEnvVar('API_GET_DASHBOARD') || '/transactions/dashboard'
   },
-  SUPPORTED_PAYMENT_METHODS: (getEnvVar('SUPPORTED_PAYMENT_METHODS', '現金,刷卡,轉帳,行動支付')).split(','),
-  INCOME_KEYWORDS: (getEnvVar('INCOME_KEYWORDS', '薪水,收入,獎金,紅利')).split(','),
-  CURRENCY_UNITS: (getEnvVar('CURRENCY_UNITS', '元,塊,圓')).split(','),
-  UNSUPPORTED_CURRENCIES: (getEnvVar('UNSUPPORTED_CURRENCIES', 'NT,USD,$')).split(','),
+  SUPPORTED_PAYMENT_METHODS: (getEnvVar('SUPPORTED_PAYMENT_METHODS') || '現金,刷卡,轉帳,行動支付').split(','),
+  INCOME_KEYWORDS: (getEnvVar('INCOME_KEYWORDS') || '薪水,收入,獎金,紅利').split(','),
+  CURRENCY_UNITS: (getEnvVar('CURRENCY_UNITS') || '元,塊,圓').split(','),
+  UNSUPPORTED_CURRENCIES: (getEnvVar('UNSUPPORTED_CURRENCIES') || 'NT,USD,$').split(','),
   // 測試相關設定
   TEST_MODE: getEnvVar('BK_TEST_MODE', 'false') === 'true',
-  TEST_LEDGER_COLLECTION: getEnvVar('TEST_LEDGER_COLLECTION', 'ledgers'),
-  TEST_ENTRIES_COLLECTION: getEnvVar('TEST_ENTRIES_COLLECTION', 'entries')
+  TEST_LEDGER_COLLECTION: getEnvVar('TEST_LEDGER_COLLECTION') || 'ledgers',
+  TEST_ENTRIES_COLLECTION: getEnvVar('TEST_ENTRIES_COLLECTION') || 'entries'
 };
 
 // 初始化狀態追蹤

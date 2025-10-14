@@ -39,10 +39,10 @@ const AM_CONFIG = {
     DEFAULT_EXPIRES_IN: parseInt(process.env.AM_TOKEN_EXPIRES) || 3600
   },
   DEFAULTS: {
-    USER_TYPE: "S",
-    LANGUAGE: "zh-TW",
-    TIMEZONE: "Asia/Taipei",
-    CURRENCY: "TWD"
+    USER_TYPE: process.env.AM_DEFAULT_USER_TYPE || "S",
+    LANGUAGE: process.env.AM_DEFAULT_LANGUAGE || "zh-TW",
+    TIMEZONE: process.env.AM_DEFAULT_TIMEZONE || "Asia/Taipei",
+    CURRENCY: process.env.AM_DEFAULT_CURRENCY || "TWD"
   }
 };
 
