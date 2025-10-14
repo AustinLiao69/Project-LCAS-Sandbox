@@ -1,0 +1,89 @@
+------------------------------------------
+20251014 檢查代碼hard-coding
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+=>等等，我現在是從APL層注入測試資料，也就是用7590動態生成測試資料，7580讀取7590的資料之後注入到7301與7302模組，跟0692沒有關係吧？而且我已經刪除0692文件了
+
+
+感謝您的反饋！基於您的回覆，我將更新提案並回答您的具體問題。讓我針對您提到的關鍵點進行深度分析：
+
+更新後的三階段解決方案（基於您的反饋）
+階段一：MVP關鍵Hard Coding修復（立即執行）
+確認優先處理的7個硬編碼項目：
+•	BK.js (4個項目)：DEFAULT_LEDGER_ID、MAX_AMOUNT、DEFAULT_CURRENCY、DEFAULT_PAYMENT_METHOD
+•	AM.js (3個項目)：USER_TYPE、LANGUAGE、TIMEZONE
+
+針對您問題的詳細回答
+1. loadTestConfig()函數建議位置
+推薦方案：在每個模組內部實作
+•	位置：直接在1301.BK.js和1309.AM.js的模組頂部
+•	原因：避免創建新的依賴關係，保持模組獨立性
+•	實作方式：每個模組各自實作一個簡單的配置讀取函數
+
+=>但我是用7580注入到7301與7302模組，資料再從APL層流到ASL再到BL,DL。所以需要在BL層的各模組做loadTestConfig()函數嗎?
+
+
+MVP階段不建議：
+•	創建獨立的配置模組（會增加複雜度）
+•	統一的全域配置管理器（超出MVP需求）
+2. 測試環境與生產環境配置分離詳細說明
+現狀問題：
+// 目前的寫法（hard coding）
+const DEFAULT_CURRENCY = 'NTD';  // 無法區分環境
+建議改為：
+// MVP階段簡單環境判斷
+function getConfigValue(testDataPath, envVarName, defaultValue) {
+  // 1. 優先檢查是否為測試環境
+  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.SIT_MODE === 'true';
+
+  if (isTestEnv) {
+    // 測試環境：從0692讀取
+    try {
+      const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
+      // 這裡需要根據testDataPath解析巢狀物件
+      return testData.bookkeeping_test_data?.[testDataPath] || defaultValue;
+    } catch (error) {
+      console.warn('測試資料載入失敗，使用預設值');
+      return defaultValue;
+    }
+  } else {
+    // 生產環境：從環境變數讀取
+    return process.env[envVarName] || defaultValue;
+  }
+}
+使用方式：
+// BK.js中的應用
+const DEFAULT_CURRENCY = getConfigValue('default_currency', 'BK_DEFAULT_CURRENCY', 'NTD');
+const MAX_AMOUNT = getConfigValue('validation_rules.max_amount', 'BK_MAX_AMOUNT', '999999999');
+我的深度洞察 (Insights)
+1. MVP階段的配置管理哲學
+問題根源：Hard coding反映了對配置管理需求認知不足
+Insight：在MVP階段，配置管理的核心是「測試可預測性」而非「生產靈活性」
+•	0692測試資料的主要價值是確保SIT測試結果的一致性
+•	生產環境的靈活性可以通過環境變數簡單實現
+2. 單一真實來源的實務考量
+現實挑戰：完全統一配置會創造新的耦合關係
+Insight：MVP階段應該追求「功能正確」而非「架構完美」
+•	讓每個模組各自處理配置讀取，避免跨模組依賴
+•	通過約定而非強制來實現一致性
+3. 測試驅動的配置設計
+核心問題：SIT測試失敗往往源於測試資料不一致
+Insight：Hard coding問題本質上是「測試環境控制」問題
+•	0692的真正價值在於為SIT提供穩定的測試基線
+•	生產環境的需求相對簡單，環境變數已足夠
+4. 配置複雜度與MVP原則的平衡
+關鍵發現：過度設計的配置系統會成為MVP的負擔
+Insight：最佳實踐是「漸進式配置管理」
+•	階段一：解決hard coding，確保測試通過
+•	後續階段：根據實際需求逐步優化
+立即執行策略（簡化版）
+實作原則：
+1.	最小改動原則：只修改必要的7個hard coding項目
+2.	環境感知原則：簡單判斷測試/生產環境
+3.	向後相容原則：保留原有預設值作為最後防線
+成功指標：
+•	P1-2 SIT測試通過率提升
+•	所有hard coding項目可通過0692動態控制
+•	無新增的runtime錯誤
+這個調整後的方案專注於解決當前SIT測試問題，避免了過度工程，符合MVP階段「快速解決問題」的核心原則。您認為這樣的調整是否符合您的期望？
