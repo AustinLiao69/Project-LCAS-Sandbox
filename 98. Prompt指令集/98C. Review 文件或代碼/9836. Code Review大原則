@@ -1,0 +1,2 @@
+1. PL, APL, ASL, BL, DL除非有特別通知，否則嚴格禁止Hard-coding
+2. PL, APL, ASL, BL, DL除非有特別通知，否則嚴格禁止實作因應測試代碼而產生的代碼。
