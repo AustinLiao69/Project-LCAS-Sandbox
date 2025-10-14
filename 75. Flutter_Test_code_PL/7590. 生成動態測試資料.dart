@@ -99,12 +99,17 @@ class DynamicTestDataFactory {
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final transactionId = 'txn_${transactionType}_$timestamp';
+      
+      // 確保金額為double型別
+      final finalAmount = amount ?? (_random.nextDouble() * 1000 + 100).roundToDouble();
 
       return {
         '收支ID': transactionId,
         '描述': description,
         '收支類型': transactionType,
-        '金額': amount ?? (_random.nextDouble() * 1000 + 100).roundToDouble(),
+        '金額': finalAmount, // 確保為double型別
+        'amount': finalAmount, // 同時提供amount欄位供驗證使用
+        'type': transactionType, // 同時提供type欄位供驗證使用
         '用戶ID': userId ?? 'user_$timestamp',
         '科目ID': _generateRandomCategory(transactionType),
         '帳戶ID': 'account_default',
