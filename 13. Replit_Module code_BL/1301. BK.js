@@ -384,7 +384,7 @@ const BK_CONFIG = {
   DEFAULT_LEDGER_ID: getEnvVar('DEFAULT_LEDGER_ID') || generateDefaultLedgerId(),
   TIMEZONE: getEnvVar('TIMEZONE') || Intl.DateTimeFormat().resolvedOptions().timeZone,
   INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL'), 10) || 300000,
-  VERSION: getEnvVar('BK_VERSION') || require('../../package.json').version || '1.0.0',
+  VERSION: getEnvVar('BK_VERSION') || '3.2.0',
   MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT'), 10) || Number.MAX_SAFE_INTEGER,
   DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY') || detectSystemCurrency(),
   DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD') || '現金',
