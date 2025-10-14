@@ -128,14 +128,16 @@ class UserOperationSimulator {
   }
 
   bool _validateTransactionData(Map<String, dynamic> data) {
-    // 修復型別轉換問題
+    // 修復型別轉換問題 - 更強化的處理
     if (data['amount'] == null) return false;
     
-    // 安全的金額轉換
+    // 安全的金額轉換，處理更多情況
     double amount;
     try {
       if (data['amount'] is String) {
-        amount = double.parse(data['amount']);
+        final amountStr = data['amount'] as String;
+        if (amountStr.isEmpty) return false;
+        amount = double.parse(amountStr);
       } else if (data['amount'] is num) {
         amount = data['amount'].toDouble();
       } else {
@@ -146,7 +148,11 @@ class UserOperationSimulator {
     }
     
     if (amount <= 0) return false;
-    if (data['type'] == null || !['income', 'expense'].contains(data['type'])) return false;
+    
+    // 強化type驗證，支援大小寫
+    final type = data['type']?.toString()?.toLowerCase();
+    if (type == null || !['income', 'expense'].contains(type)) return false;
+    
     return true;
   }
 
