@@ -68,12 +68,14 @@ Future<DashboardData> _loadDashboardDataFromTestFactory() async {
 •	7301模組：v1.2.0 → v1.3.0
 •	1301模組：v3.1.3 → v3.2.0
 •	1309模組：v3.0.9 → v3.1.0
+
 階段三：架構清理與標準化
 目標： 確保業務邏輯與測試邏輯完全分離
 範圍：
 •	建立清晰的接口定義
 •	確保所有模組遵循純業務邏輯原則
 •	移除任何測試相關的依賴
+
 📋 具體問題列表
 7302.dart 問題：
 1.	L405-434行：_loadDashboardDataFromTestFactory()函數 - 嚴重違規
