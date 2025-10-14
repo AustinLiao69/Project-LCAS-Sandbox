@@ -812,6 +812,7 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
       'userMode': 'InvalidMode', // 無效模式
       'displayName': null, // null值測試
       'registrationDate': 'invalid-date', // 無效日期格式
+      'errorTest': true, // 標記為錯誤測試案例
     };
 
     // 2. 嘗試注入錯誤資料
@@ -1296,6 +1297,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
       final conflictData = {
         'userMode': 'InvalidMode',
         'email': 'invalid-email-format',
+        'errorTest': true, // 標記為錯誤測試案例
       };
       await TestDataInjectionFactory.instance.injectSystemEntryData(conflictData);
     } catch (e) {
@@ -2206,54 +2208,37 @@ void initializePhase2SITTestModule() {
 
 /// 主要測試執行函數
 void main() {
+  // 自動初始化 (階段二版本)
+  initializePhase2SITTestModule();
+
   group('SIT P1完整測試 - 7570', () {
     late SITP1TestController testController;
 
-    setUp(() {
+    setUpAll(() {
       testController = SITP1TestController.instance;
     });
 
     test('執行完整SIT測試', () async {
-      final result = await testController.executeFullSITTest();
-      expect(result['totalTests'], greaterThan(0));
-      expect(result['passedTests'], greaterThan(0));
-    });
-  });
-
-  group('系統進入功能群測試 - 第一階段', () {
-    // 這裡的測試案例是針對7301模組，與7570的SIT P1測試是分開的
-    // 為了保持原始結構，保留此group，但目前沒有實際測試案例
-    test('Placeholder test for System Entry Group Phase 1', () {
-      // 實際測試案例應在此處實作
-      expect(true, isTrue);
-    });
-  });
-
-  // 自動初始化 (階段二版本)
-  initializePhase2SITTestModule();
-
-  // 執行完整SIT測試 (包含階段一、二、三) - 修復為正確的Dart語法
-  () async {
-    try {
       print('\n[7570] 🚀 開始執行 SIT P1 完整測試...');
-      final results = await SITP1TestController.instance.executeFullSITTest();
-
+      final result = await testController.executeFullSITTest();
+      
+      expect(result['totalTests'], equals(44));
+      expect(result['passedTests'], greaterThan(40)); // 允許少量失敗
+      
       print('\n[7570] 📊 SIT P1測試完成報告:');
-      print('[7570]    ✅ 總測試數: ${results['totalTests']}');
-      print('[7570]    ✅ 通過數: ${results['passedTests']}');
-      print('[7570]    ❌ 失敗數: ${results['failedTests']}');
+      print('[7570]    ✅ 總測試數: ${result['totalTests']}');
+      print('[7570]    ✅ 通過數: ${result['passedTests']}');
+      print('[7570]    ❌ 失敗數: ${result['failedTests']}');
 
-      final totalTests = results['totalTests'] as int? ?? 1;
-      final passedTests = results['passedTests'] as int? ?? 0;
+      final totalTests = result['totalTests'] as int? ?? 1;
+      final passedTests = result['passedTests'] as int? ?? 0;
       final successRate = (passedTests / totalTests * 100).toStringAsFixed(1);
 
       print('[7570]    📈 成功率: ${successRate}%');
-      print('[7570]    ⏱️ 執行時間: ${results['executionTime']}ms');
+      print('[7570]    ⏱️ 執行時間: ${result['executionTime']}ms');
       print('[7570] 🎯 階段二目標達成: SIT P1整合層測試實作完成，深度驗證能力就緒');
-    } catch (e) {
-      print('[7570] ❌ SIT測試執行失敗: $e');
-    }
-  }(); // Immediately invoke the async function
+    });
+  });
 
   /**
    * 輸出測試摘要
