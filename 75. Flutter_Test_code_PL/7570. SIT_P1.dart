@@ -704,14 +704,12 @@ Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成完整表單測試資料
-    final completeTransaction = AccountingCoreTestDataTemplate.getTransactionTemplate(
-      transactionId: 'complete_${DateTime.now().millisecondsSinceEpoch}',
-      amount: 1500.0,
-      type: 'expense',
+    // 1. 生成完整表單測試資料 - 修復使用動態生成器避免null值
+    final completeTransaction = await DynamicTestDataFactory.instance.generateTransaction(
       description: '完整表單測試 - 聚餐費用',
-      categoryId: 'cat_dining',
-      accountId: 'acc_cash',
+      transactionType: 'expense',
+      amount: 1500.0,
+      userId: 'tc_sit_005_user_${DateTime.now().millisecondsSinceEpoch}',
     );
 
     // 2. 注入完整表單資料
@@ -807,12 +805,13 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
   try {
     final stopwatch = Stopwatch()..start();
 
-    // 1. 生成錯誤場景測試資料
+    // 1. 生成錯誤場景測試資料 - 修復確保能觸發正確的錯誤類型
     final invalidData = {
       'userId': '', // 故意留空觸發錯誤
-      'email': 'invalid-email', // 無效Email格式
+      'email': 'invalid-email-format', // 更明確的無效Email格式
       'userMode': 'InvalidMode', // 無效模式
-      'amount': -100, // 負數金額
+      'displayName': null, // null值測試
+      'registrationDate': 'invalid-date', // 無效日期格式
     };
 
     // 2. 嘗試注入錯誤資料
@@ -1160,14 +1159,12 @@ Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd
     );
     businessProcess['quickBookkeeping'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(quickTransaction);
 
-    // 2. 完整表單記帳
-    final completeTransaction = AccountingCoreTestDataTemplate.getTransactionTemplate(
-      transactionId: 'complete_${DateTime.now().millisecondsSinceEpoch}',
-      amount: 2500.0,
-      type: 'income',
+    // 2. 完整表單記帳 - 修復使用動態生成器
+    final completeTransaction = await DynamicTestDataFactory.instance.generateTransaction(
       description: '完整表單 - 薪資收入',
-      categoryId: 'cat_salary',
-      accountId: 'acc_bank',
+      transactionType: 'income',
+      amount: 2500.0,
+      userId: userId,
     );
     businessProcess['completeForm'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(completeTransaction);
 
