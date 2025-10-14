@@ -22,11 +22,38 @@ class TestDataInjectionFactory {
 
   Future<bool> injectSystemEntryData(Map<String, dynamic> data) async {
     try {
+      // 驗證必要欄位
+      if (data['userId'] == null || data['userId'] == '') {
+        throw ArgumentError('userId不能為空');
+      }
+      
+      // 驗證Email格式
+      if (data['email'] != null && data['email'] != '') {
+        final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+        if (!emailRegex.hasMatch(data['email'])) {
+          throw ArgumentError('無效的Email格式: ${data['email']}');
+        }
+      }
+      
+      // 驗證用戶模式
+      if (data['userMode'] != null) {
+        final validModes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
+        if (!validModes.contains(data['userMode'])) {
+          throw ArgumentError('無效的用戶模式: ${data['userMode']}');
+        }
+      }
+      
+      // 驗證金額（如果存在）
+      if (data['amount'] != null && data['amount'] is num && data['amount'] < 0) {
+        throw ArgumentError('金額不能為負數: ${data['amount']}');
+      }
+
       await Future.delayed(Duration(milliseconds: 100));
       _injectionHistory.add('SystemEntry: ${DateTime.now().toIso8601String()}');
       return true;
     } catch (e) {
-      return false;
+      // 重新拋出異常，讓測試可以捕獲
+      rethrow;
     }
   }
 
