@@ -1,8 +1,8 @@
 /**
  * 7570. SIT_P1.dart
- * @version v2.0.0
- * @date 2025-10-09
- * @update: 階段二實作 - 整合層測試實作（Week 2）
+ * @version v2.0.1
+ * @date 2025-10-14
+ * @update: 階段一修正 - TC-SIT-007/015錯誤處理邏輯強化
  *
  * 本模組實現6501 SIT測試計畫，涵蓋TC-SIT-001~016整合測試案例
  * 嚴格遵循DCN-0016測試資料流計畫，整合7580注入和7590生成機制
@@ -790,9 +790,9 @@ Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() 
 
 /**
  * TC-SIT-007：跨層錯誤處理整合測試
- * @version 2025-10-09-V1.0.0
- * @date 2025-10-09
- * @update: 階段一實作
+ * @version 2025-10-14-V2.0.1
+ * @date 2025-10-14
+ * @update: 階段一修正 - 強化錯誤捕獲邏輯
  */
 Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration() async {
   final Map<String, dynamic> testResult = <String, dynamic>{
@@ -815,21 +815,55 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
       'amount': -100, // 負數金額
     };
 
-    // 2. 嘗試注入錯誤資料
+    bool errorWasCaptured = false;
+    String capturedErrorMessage = '';
+
+    // 2. 嘗試注入錯誤資料，預期會產生異常
     try {
       await TestDataInjectionFactory.instance.injectSystemEntryData(invalidData);
+      // 如果沒有拋出異常，這是意外情況
       testResult['details']?['errorHandlingFailed'] = true;
     } catch (e) {
-      // 預期會產生錯誤
+      // 預期會產生錯誤，這是正確的行為
+      errorWasCaptured = true;
+      capturedErrorMessage = e.toString();
       testResult['details']?['errorCaptured'] = true;
-      testResult['details']?['errorMessage'] = e.toString();
+      testResult['details']?['errorMessage'] = capturedErrorMessage;
     }
 
-    // 3. 驗證錯誤處理覆蓋率
-    testResult['details']?['networkTimeoutHandling'] = true; // 模擬
-    testResult['details']?['authenticationErrorHandling'] = true; // 模擬
-    testResult['details']?['unifiedErrorFormat'] = true; // 模擬
-    testResult['passed'] = testResult['details']?['errorCaptured'] == true;
+    // 3. 驗證錯誤處理機制完整性
+    final errorHandlingTests = <String, bool>{};
+    
+    // 測試網路超時處理
+    try {
+      final timeoutData = {'timeout': true};
+      await TestDataInjectionFactory.instance.injectSystemEntryData(timeoutData);
+      errorHandlingTests['networkTimeoutHandling'] = false;
+    } catch (e) {
+      errorHandlingTests['networkTimeoutHandling'] = true;
+    }
+
+    // 測試認證錯誤處理
+    try {
+      final authErrorData = {'invalidToken': 'expired'};
+      await TestDataInjectionFactory.instance.injectSystemEntryData(authErrorData);
+      errorHandlingTests['authenticationErrorHandling'] = false;
+    } catch (e) {
+      errorHandlingTests['authenticationErrorHandling'] = true;
+    }
+
+    // 統一錯誤格式驗證（模擬）
+    errorHandlingTests['unifiedErrorFormat'] = true;
+
+    testResult['details']?['errorHandlingTests'] = errorHandlingTests;
+    
+    // 判斷測試通過條件：至少捕獲到主要錯誤，且錯誤處理機制運作正常
+    final errorHandlingScore = errorHandlingTests.values.where((test) => test).length;
+    final totalErrorTests = errorHandlingTests.length;
+    
+    testResult['passed'] = errorWasCaptured && (errorHandlingScore >= totalErrorTests * 0.6);
+    testResult['details']?['errorHandlingScore'] = errorHandlingScore;
+    testResult['details']?['totalErrorTests'] = totalErrorTests;
 
     stopwatch.stop();
     testResult['executionTime'] = stopwatch.elapsedMilliseconds;
@@ -1263,9 +1297,9 @@ Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
 
 /**
  * TC-SIT-015：業務規則錯誤處理測試
- * @version 2025-10-09-V1.0.0
- * @date 2025-10-09
- * @update: 階段一實作
+ * @version 2025-10-14-V2.0.1
+ * @date 2025-10-14
+ * @update: 階段一修正 - 強化業務規則驗證邏輯
  */
 Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async {
   final Map<String, dynamic> testResult = <String, dynamic>{
@@ -1280,38 +1314,77 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
   try {
     final stopwatch = Stopwatch()..start();
 
-    final businessRuleErrors = <String, bool>{};
+    final businessRuleTests = <String, Map<String, dynamic>>{};
 
-    // 1. 無效資料輸入測試
-    try {
-      final invalidInputData = {
+    // 1. 無效資料輸入測試 - 負數金額
+    businessRuleTests['invalidAmount'] = await _testBusinessRule(() async {
+      final invalidAmountData = {
+        'transactionId': 'test_negative_amount',
         'amount': -1000, // 負數金額
+        'type': 'expense',
+        'description': '測試負數金額',
+        'date': DateTime.now().toIso8601String(),
+      };
+      await TestDataInjectionFactory.instance.injectAccountingCoreData(invalidAmountData);
+    }, '負數金額應該被拒絕');
+
+    // 2. 空描述測試
+    businessRuleTests['emptyDescription'] = await _testBusinessRule(() async {
+      final emptyDescData = {
+        'transactionId': 'test_empty_desc',
+        'amount': 100,
+        'type': 'expense',
         'description': '', // 空描述
+        'date': DateTime.now().toIso8601String(),
+      };
+      await TestDataInjectionFactory.instance.injectAccountingCoreData(emptyDescData);
+    }, '空描述應該被拒絕');
+
+    // 3. 無效日期測試
+    businessRuleTests['invalidDate'] = await _testBusinessRule(() async {
+      final invalidDateData = {
+        'transactionId': 'test_invalid_date',
+        'amount': 100,
+        'type': 'expense',
+        'description': '測試無效日期',
         'date': '2025-13-40', // 無效日期
       };
-      await TestDataInjectionFactory.instance.injectAccountingCoreData(invalidInputData);
-    } catch (e) {
-      businessRuleErrors['invalidDataInput'] = true;
-    }
+      await TestDataInjectionFactory.instance.injectAccountingCoreData(invalidDateData);
+    }, '無效日期應該被拒絕');
 
-    // 2. 業務規則衝突測試
-    try {
-      final conflictData = {
-        'userMode': 'InvalidMode',
-        'email': 'invalid-email-format',
+    // 4. 無效用戶模式測試
+    businessRuleTests['invalidUserMode'] = await _testBusinessRule(() async {
+      final invalidModeData = {
+        'userId': 'test_invalid_mode',
+        'email': 'test@example.com',
+        'userMode': 'InvalidMode', // 無效模式
       };
-      await TestDataInjectionFactory.instance.injectSystemEntryData(conflictData);
-    } catch (e) {
-      businessRuleErrors['businessRuleConflict'] = true;
-    }
+      await TestDataInjectionFactory.instance.injectSystemEntryData(invalidModeData);
+    }, '無效用戶模式應該被拒絕');
 
-    testResult['details']?['businessRuleErrors'] = businessRuleErrors;
+    // 5. 無效Email格式測試
+    businessRuleTests['invalidEmail'] = await _testBusinessRule(() async {
+      final invalidEmailData = {
+        'userId': 'test_invalid_email',
+        'email': 'invalid-email-format', // 無效Email
+        'userMode': 'Expert',
+      };
+      await TestDataInjectionFactory.instance.injectSystemEntryData(invalidEmailData);
+    }, '無效Email格式應該被拒絕');
 
-    // 驗證業務規則驗證準確性
-    if (businessRuleErrors.isNotEmpty) {
-      testResult['details']?['businessRuleValidationAccuracy'] = true;
-      testResult['passed'] = true;
-    }
+    testResult['details']?['businessRuleTests'] = businessRuleTests;
+
+    // 計算業務規則驗證準確性
+    final passedTests = businessRuleTests.values.where((test) => test['passed'] == true).length;
+    final totalTests = businessRuleTests.length;
+    final accuracy = totalTests > 0 ? passedTests / totalTests : 0.0;
+
+    testResult['details']?['businessRuleValidationAccuracy'] = accuracy;
+    testResult['details']?['passedRuleTests'] = passedTests;
+    testResult['details']?['totalRuleTests'] = totalTests;
+
+    // 測試通過條件：至少80%的業務規則測試通過
+    testResult['passed'] = accuracy >= 0.8;
 
     stopwatch.stop();
     testResult['executionTime'] = stopwatch.elapsedMilliseconds;
@@ -1320,6 +1393,29 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
   } catch (e) {
     (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
+  }
+}
+
+/**
+ * 業務規則測試輔助函數
+ */
+Future<Map<String, dynamic>> _testBusinessRule(Future<void> Function() testAction, String expectedBehavior) async {
+  try {
+    await testAction();
+    // 如果沒有拋出異常，表示業務規則驗證失敗
+    return {
+      'passed': false,
+      'reason': '預期應該拋出異常但沒有',
+      'expectedBehavior': expectedBehavior,
+    };
+  } catch (e) {
+    // 拋出異常是預期的行為，表示業務規則驗證成功
+    return {
+      'passed': true,
+      'reason': '成功捕獲預期異常',
+      'errorMessage': e.toString(),
+      'expectedBehavior': expectedBehavior,
+    };
   }
 }
 
@@ -2193,7 +2289,7 @@ void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic
  * @update: 階段二實作完成 - 深度整合測試能力
  */
 void initializePhase2SITTestModule() {
-  print('[7570] 🎉 SIT P1測試代碼模組 v2.0.0 (階段二) 初始化完成');
+  print('[7570] 🎉 SIT P1測試代碼模組 v2.0.1 (階段一修正版) 初始化完成');
   print('[7570] 📌 階段二功能：16個整合層測試完整實作');
   print('[7570] 🔗 深度整合：7580注入 + 7590生成 完全整合');
   print('[7570] 🎯 四模式支援：Expert/Inertial/Cultivation/Guiding差異化驗證');
