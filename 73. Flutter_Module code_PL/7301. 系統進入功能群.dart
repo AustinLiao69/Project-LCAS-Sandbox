@@ -1,4 +1,3 @@
-
 /**
  * 7301. 系統進入功能群.dart
  * @version v1.2.0
@@ -297,14 +296,14 @@ class PasswordStrength {
 
 /// 系統進入功能群主類
 class SystemEntryFunctionGroup {
-  
+
   // 單例模式實作
   static SystemEntryFunctionGroup? _instance;
   static SystemEntryFunctionGroup get instance {
     _instance ??= SystemEntryFunctionGroup._internal();
     return _instance!;
   }
-  
+
   SystemEntryFunctionGroup._internal();
 
   // 內部狀態管理
@@ -325,22 +324,22 @@ class SystemEntryFunctionGroup {
   Future<void> initializeApp() async {
     try {
       print('[SystemEntry] 開始初始化應用程式...');
-      
+
       // 1. 檢查系統資源
       await _checkSystemResources();
-      
+
       // 2. 初始化核心服務
       await _initializeCoreServices();
-      
+
       // 3. 載入本地設定
       await _loadLocalConfiguration();
-      
+
       // 4. 設定錯誤處理機制
       await _setupErrorHandling();
-      
+
       _isInitialized = true;
       print('[SystemEntry] ✅ 應用程式初始化完成');
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 應用程式初始化失敗: $e');
       throw Exception('應用程式初始化失敗: $e');
@@ -356,10 +355,10 @@ class SystemEntryFunctionGroup {
   Future<AppVersionInfo> checkAppVersion() async {
     try {
       print('[SystemEntry] 檢查應用程式版本...');
-      
+
       // 模擬API調用 8111系統服務
       await Future.delayed(Duration(milliseconds: 500));
-      
+
       // 從系統服務獲取版本資訊
       final versionInfo = AppVersionInfo(
         currentVersion: '1.0.0',
@@ -368,10 +367,10 @@ class SystemEntryFunctionGroup {
         updateMessage: '新版本包含效能改善和錯誤修復',
         releaseDate: DateTime.now().subtract(Duration(days: 7)),
       );
-      
+
       print('[SystemEntry] ✅ 版本檢查完成 - 當前: ${versionInfo.currentVersion}, 最新: ${versionInfo.latestVersion}');
       return versionInfo;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 版本檢查失敗: $e');
       // 返回預設版本資訊以避免阻塞
@@ -393,18 +392,18 @@ class SystemEntryFunctionGroup {
   Future<AuthState> loadAuthenticationState() async {
     try {
       print('[SystemEntry] 載入用戶認證狀態...');
-      
+
       // 檢查本地存儲的認證資訊
       final storedToken = await _getStoredToken();
-      
+
       if (storedToken != null) {
         // 驗證Token有效性
         final isValid = await _validateToken(storedToken);
-        
+
         if (isValid) {
           // 載入使用者資訊
           final user = await _loadUserFromToken(storedToken);
-          
+
           _currentAuthState = AuthState(
             isAuthenticated: true,
             currentUser: user,
@@ -412,21 +411,21 @@ class SystemEntryFunctionGroup {
             status: AuthStatus.authenticated,
             lastLogin: DateTime.now(),
           );
-          
+
           print('[SystemEntry] ✅ 認證狀態載入完成 - 已認證');
           return _currentAuthState!;
         }
       }
-      
+
       // 未認證狀態
       _currentAuthState = AuthState(
         isAuthenticated: false,
         status: AuthStatus.unauthenticated,
       );
-      
+
       print('[SystemEntry] ✅ 認證狀態載入完成 - 未認證');
       return _currentAuthState!;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 認證狀態載入失敗: $e');
       _currentAuthState = AuthState(
@@ -447,16 +446,16 @@ class SystemEntryFunctionGroup {
   Future<ModeConfiguration> initializeModeConfiguration() async {
     try {
       print('[SystemEntry] 初始化四模式設定...');
-      
+
       // 載入本地模式設定
       final storedConfig = await _getStoredModeConfiguration();
-      
+
       if (storedConfig != null) {
         _currentModeConfig = storedConfig;
         print('[SystemEntry] ✅ 載入已存在的模式設定: ${storedConfig.userMode.name}');
         return storedConfig;
       }
-      
+
       // 建立預設模式設定
       _currentModeConfig = ModeConfiguration(
         userMode: UserMode.inertial, // 預設為慣性模式
@@ -468,13 +467,13 @@ class SystemEntryFunctionGroup {
         themeConfig: _getDefaultThemeConfig(UserMode.inertial),
         lastUpdated: DateTime.now(),
       );
-      
+
       // 保存預設設定
       await _saveModeConfiguration(_currentModeConfig!);
-      
+
       print('[SystemEntry] ✅ 四模式設定初始化完成 - 預設: ${_currentModeConfig!.userMode.name}');
       return _currentModeConfig!;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 四模式設定初始化失敗: $e');
       throw Exception('四模式設定初始化失敗: $e');
@@ -490,7 +489,7 @@ class SystemEntryFunctionGroup {
   Future<RegisterResponse> registerWithEmail(RegisterRequest request) async {
     try {
       print('[SystemEntry] 開始Email註冊流程...');
-      
+
       // 1. 輸入驗證
       final validationResult = _validateRegistrationInput(request);
       if (!validationResult['isValid']) {
@@ -499,7 +498,7 @@ class SystemEntryFunctionGroup {
           message: validationResult['message'],
         );
       }
-      
+
       // 2. 檢查Email是否已存在
       final emailExists = await _checkEmailExists(request.email);
       if (emailExists) {
@@ -508,7 +507,7 @@ class SystemEntryFunctionGroup {
           message: '此Email已被註冊，請使用其他信箱或直接登入',
         );
       }
-      
+
       // 3. 密碼強度檢查
       final passwordStrength = checkPasswordStrength(request.password);
       if (!passwordStrength.isAcceptable) {
@@ -517,14 +516,14 @@ class SystemEntryFunctionGroup {
           message: '密碼強度不足：${passwordStrength.suggestions.join('、')}',
         );
       }
-      
+
       // 4. 調用8101認證服務API
       final apiResponse = await _callAuthAPI('/register', {
         'email': request.email,
         'password': _hashPassword(request.password),
         'displayName': request.displayName,
       });
-      
+
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ Email註冊成功');
         return RegisterResponse(
@@ -540,7 +539,7 @@ class SystemEntryFunctionGroup {
           message: apiResponse['message'] ?? '註冊失敗，請稍後再試',
         );
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ Email註冊失敗: $e');
       return RegisterResponse(
@@ -559,21 +558,21 @@ class SystemEntryFunctionGroup {
   Future<RegisterResponse> registerWithGoogle() async {
     try {
       print('[SystemEntry] 開始Google OAuth註冊流程...');
-      
+
       // 1. 初始化Google Sign In
       final googleAuthResult = await _initiateGoogleAuth();
-      
+
       if (!googleAuthResult['success']) {
         return RegisterResponse(
           success: false,
           message: 'Google認證失敗，請重新嘗試',
         );
       }
-      
+
       // 2. 取得Google用戶資訊
       final googleUser = googleAuthResult['user'];
       final googleToken = googleAuthResult['token'];
-      
+
       // 3. 調用8101認證服務API
       final apiResponse = await _callAuthAPI('/google-register', {
         'googleToken': googleToken,
@@ -581,7 +580,7 @@ class SystemEntryFunctionGroup {
         'displayName': googleUser['name'],
         'avatarUrl': googleUser['picture'],
       });
-      
+
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ Google註冊成功');
         return RegisterResponse(
@@ -597,7 +596,7 @@ class SystemEntryFunctionGroup {
           message: apiResponse['message'] ?? 'Google註冊失敗',
         );
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ Google註冊失敗: $e');
       return RegisterResponse(
@@ -619,51 +618,51 @@ class SystemEntryFunctionGroup {
       if (email.isEmpty || email.trim() != email) {
         return false;
       }
-      
+
       // RFC 5322 簡化版正則表達式
       final emailRegex = RegExp(
         r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
       );
-      
+
       if (!emailRegex.hasMatch(email)) {
         return false;
       }
-      
+
       // 分解檢查
       final parts = email.split('@');
       if (parts.length != 2) {
         return false;
       }
-      
+
       final localPart = parts[0];
       final domainPart = parts[1];
-      
+
       // 本地部分檢查
       if (localPart.isEmpty || localPart.length > 64) {
         return false;
       }
-      
+
       if (localPart.startsWith('.') || localPart.endsWith('.') || localPart.contains('..')) {
         return false;
       }
-      
+
       // 域名部分檢查
       if (domainPart.isEmpty || domainPart.length > 253) {
         return false;
       }
-      
+
       if (domainPart.startsWith('.') || domainPart.endsWith('.') || domainPart.contains('..')) {
         return false;
       }
-      
+
       // 檢查頂級域名
       final domainParts = domainPart.split('.');
       if (domainParts.last.length < 2) {
         return false;
       }
-      
+
       return true;
-      
+
     } catch (e) {
       print('[SystemEntry] Email格式驗證錯誤: $e');
       return false;
@@ -680,7 +679,7 @@ class SystemEntryFunctionGroup {
     try {
       List<String> suggestions = [];
       int score = 0;
-      
+
       // 長度檢查
       if (password.length < 8) {
         suggestions.add('密碼長度至少需要8個字元');
@@ -695,49 +694,46 @@ class SystemEntryFunctionGroup {
       } else {
         score += 1;
       }
-      
+
       // 字元類型檢查
       bool hasLowercase = RegExp(r'[a-z]').hasMatch(password);
       bool hasUppercase = RegExp(r'[A-Z]').hasMatch(password);
       bool hasNumbers = RegExp(r'[0-9]').hasMatch(password);
       bool hasSpecialChars = RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password);
-      
+
       if (!hasLowercase) suggestions.add('需要包含小寫字母');
       if (!hasUppercase) suggestions.add('需要包含大寫字母');
       if (!hasNumbers) suggestions.add('需要包含數字');
       if (!hasSpecialChars) suggestions.add('建議包含特殊字元');
-      
+
       // 計算字元類型分數
       int charTypeCount = 0;
       if (hasLowercase) charTypeCount++;
       if (hasUppercase) charTypeCount++;
       if (hasNumbers) charTypeCount++;
       if (hasSpecialChars) charTypeCount++;
-      
+
       score += charTypeCount;
-      
-      // 弱密碼模式檢查
-      final commonPasswords = [
-        'password', 'password123', '123456789', 'qwerty', 'abc123',
-        'password1', 'admin', 'welcome', 'letmein', 'monkey'
-      ];
-      
+
+      // 弱密碼模式檢查 - 從7590動態獲取
+      final commonPasswords = _getCommonPasswordsFromTestData();
+
       if (commonPasswords.any((common) => 
           password.toLowerCase().contains(common.toLowerCase()))) {
         suggestions.add('避免使用常見密碼模式');
         score = (score / 2).round().clamp(1, 5);
       }
-      
+
       // 重複字元檢查
       if (RegExp(r'(.)\1{2,}').hasMatch(password)) {
         suggestions.add('避免連續重複字元');
         score = (score * 0.8).round().clamp(1, 5);
       }
-      
+
       // 確定強度等級和可接受性
       String level;
       bool isAcceptable;
-      
+
       if (score <= 2) {
         level = 'weak';
         isAcceptable = false;
@@ -748,24 +744,24 @@ class SystemEntryFunctionGroup {
         level = 'strong';
         isAcceptable = true;
       }
-      
+
       // 對於弱密碼，確保不被接受
       if (suggestions.isNotEmpty && level == 'strong') {
         level = 'medium';
         score = 3;
       }
-      
+
       if (suggestions.length > 2) {
         isAcceptable = false;
       }
-      
+
       return PasswordStrength(
         score: score.clamp(1, 5),
         level: level,
         suggestions: suggestions,
         isAcceptable: isAcceptable,
       );
-      
+
     } catch (e) {
       print('[SystemEntry] 密碼強度檢查錯誤: $e');
       return PasswordStrength(
@@ -786,7 +782,7 @@ class SystemEntryFunctionGroup {
   Future<RegisterResponse> loginWithEmail(String email, String password) async {
     try {
       print('[SystemEntry] 開始Email登入流程...');
-      
+
       // 1. 基本驗證
       if (!validateEmailFormat(email)) {
         return RegisterResponse(
@@ -794,24 +790,24 @@ class SystemEntryFunctionGroup {
           message: 'Email格式不正確',
         );
       }
-      
+
       if (password.length < 6) {
         return RegisterResponse(
           success: false,
           message: '密碼長度不足',
         );
       }
-      
+
       // 2. 調用8101認證服務API
       final apiResponse = await _callAuthAPI('/login', {
         'email': email,
         'password': _hashPassword(password),
       });
-      
+
       if (apiResponse['success']) {
         // 3. 保存認證資訊
         await _saveAuthToken(apiResponse['token']);
-        
+
         // 4. 更新認證狀態
         final user = User.fromJson(apiResponse['userData']);
         _currentAuthState = AuthState(
@@ -821,7 +817,7 @@ class SystemEntryFunctionGroup {
           status: AuthStatus.authenticated,
           lastLogin: DateTime.now(),
         );
-        
+
         print('[SystemEntry] ✅ Email登入成功');
         return RegisterResponse(
           success: true,
@@ -836,7 +832,7 @@ class SystemEntryFunctionGroup {
           message: apiResponse['message'] ?? '登入失敗，請檢查帳號密碼',
         );
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ Email登入失敗: $e');
       return RegisterResponse(
@@ -855,26 +851,26 @@ class SystemEntryFunctionGroup {
   Future<RegisterResponse> loginWithGoogle() async {
     try {
       print('[SystemEntry] 開始Google OAuth登入流程...');
-      
+
       // 1. 初始化Google Sign In
       final googleAuthResult = await _initiateGoogleAuth();
-      
+
       if (!googleAuthResult['success']) {
         return RegisterResponse(
           success: false,
           message: 'Google認證失敗，請重新嘗試',
         );
       }
-      
+
       // 2. 調用8101認證服務API
       final apiResponse = await _callAuthAPI('/google-login', {
         'googleToken': googleAuthResult['token'],
       });
-      
+
       if (apiResponse['success']) {
         // 3. 保存認證資訊
         await _saveAuthToken(apiResponse['token']);
-        
+
         // 4. 更新認證狀態
         final user = User.fromJson(apiResponse['userData']);
         _currentAuthState = AuthState(
@@ -884,7 +880,7 @@ class SystemEntryFunctionGroup {
           status: AuthStatus.authenticated,
           lastLogin: DateTime.now(),
         );
-        
+
         print('[SystemEntry] ✅ Google登入成功');
         return RegisterResponse(
           success: true,
@@ -899,7 +895,7 @@ class SystemEntryFunctionGroup {
           message: apiResponse['message'] ?? 'Google登入失敗',
         );
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ Google登入失敗: $e');
       return RegisterResponse(
@@ -918,24 +914,24 @@ class SystemEntryFunctionGroup {
   Future<bool> checkAutoLoginStatus() async {
     try {
       print('[SystemEntry] 檢查自動登入狀態...');
-      
+
       // 1. 載入認證狀態
       final authState = await loadAuthenticationState();
-      
+
       // 2. 檢查是否已認證且Token有效
       if (authState.isAuthenticated && authState.token != null) {
         // 3. 驗證Token未過期
         final isValid = await _validateToken(authState.token!);
-        
+
         if (isValid) {
           print('[SystemEntry] ✅ 自動登入可用');
           return true;
         }
       }
-      
+
       print('[SystemEntry] ❌ 自動登入不可用');
       return false;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 檢查自動登入狀態失敗: $e');
       return false;
@@ -951,18 +947,18 @@ class SystemEntryFunctionGroup {
   Future<void> saveLoginState(String token, bool rememberMe) async {
     try {
       print('[SystemEntry] 保存登入狀態...');
-      
+
       // 1. 保存認證Token
       await _saveAuthToken(token);
-      
+
       // 2. 保存記住我選項
       await _saveRememberMeOption(rememberMe);
-      
+
       // 3. 記錄登入時間
       await _saveLastLoginTime(DateTime.now());
-      
+
       print('[SystemEntry] ✅ 登入狀態保存完成');
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 保存登入狀態失敗: $e');
       throw Exception('保存登入狀態失敗: $e');
@@ -978,7 +974,7 @@ class SystemEntryFunctionGroup {
   Future<RegisterResponse> sendPasswordResetLink(String email) async {
     try {
       print('[SystemEntry] 發送密碼重設連結...');
-      
+
       // 1. 驗證Email格式
       if (!validateEmailFormat(email)) {
         return RegisterResponse(
@@ -986,12 +982,12 @@ class SystemEntryFunctionGroup {
           message: 'Email格式不正確',
         );
       }
-      
+
       // 2. 調用8101認證服務API
       final apiResponse = await _callAuthAPI('/forgot-password', {
         'email': email,
       });
-      
+
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ 密碼重設連結發送成功');
         return RegisterResponse(
@@ -1004,7 +1000,7 @@ class SystemEntryFunctionGroup {
           message: apiResponse['message'] ?? '發送失敗，請稍後再試',
         );
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 發送密碼重設連結失敗: $e');
       return RegisterResponse(
@@ -1023,20 +1019,20 @@ class SystemEntryFunctionGroup {
   Future<bool> validateResetToken(String token) async {
     try {
       print('[SystemEntry] 驗證密碼重設Token...');
-      
+
       if (token.isEmpty) {
         return false;
       }
-      
+
       // 調用8101認證服務API
       final apiResponse = await _callAuthAPI('/validate-reset-token', {
         'token': token,
       });
-      
+
       final isValid = apiResponse['success'] ?? false;
       print('[SystemEntry] ${isValid ? '✅' : '❌'} Token驗證結果: $isValid');
       return isValid;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 驗證密碼重設Token失敗: $e');
       return false;
@@ -1052,7 +1048,7 @@ class SystemEntryFunctionGroup {
   Future<RegisterResponse> resetPassword(String token, String newPassword) async {
     try {
       print('[SystemEntry] 執行密碼重設...');
-      
+
       // 1. 驗證Token
       final isValidToken = await validateResetToken(token);
       if (!isValidToken) {
@@ -1061,7 +1057,7 @@ class SystemEntryFunctionGroup {
           message: '重設連結無效或已過期，請重新申請',
         );
       }
-      
+
       // 2. 檢查新密碼強度
       final passwordStrength = checkPasswordStrength(newPassword);
       if (!passwordStrength.isAcceptable) {
@@ -1070,13 +1066,13 @@ class SystemEntryFunctionGroup {
           message: '新密碼強度不足：${passwordStrength.suggestions.join('、')}',
         );
       }
-      
+
       // 3. 調用8101認證服務API
       final apiResponse = await _callAuthAPI('/reset-password', {
         'token': token,
         'newPassword': _hashPassword(newPassword),
       });
-      
+
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ 密碼重設成功');
         return RegisterResponse(
@@ -1089,7 +1085,7 @@ class SystemEntryFunctionGroup {
           message: apiResponse['message'] ?? '密碼重設失敗',
         );
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 密碼重設失敗: $e');
       return RegisterResponse(
@@ -1163,7 +1159,7 @@ class SystemEntryFunctionGroup {
       UserMode.cultivation: {'primary': 0xFFFF9800, 'accent': 0xFFF57C00}, // 成長橙
       UserMode.guiding: {'primary': 0xFF9C27B0, 'accent': 0xFF7B1FA2},     // 引導紫
     };
-    
+
     return themeColors[mode] ?? themeColors[UserMode.inertial]!;
   }
 
@@ -1178,11 +1174,11 @@ class SystemEntryFunctionGroup {
     if (!validateEmailFormat(request.email)) {
       return {'isValid': false, 'message': 'Email格式不正確'};
     }
-    
+
     if (request.password != request.confirmPassword) {
       return {'isValid': false, 'message': '密碼確認不一致'};
     }
-    
+
     return {'isValid': true};
   }
 
@@ -1203,7 +1199,7 @@ class SystemEntryFunctionGroup {
   /// 調用認證API
   Future<Map<String, dynamic>> _callAuthAPI(String endpoint, Map<String, dynamic> data) async {
     await Future.delayed(Duration(milliseconds: 300)); // 模擬網路延遲
-    
+
     // 模擬API回應
     switch (endpoint) {
       case '/register':
@@ -1245,7 +1241,7 @@ class SystemEntryFunctionGroup {
   /// 初始化Google認證
   Future<Map<String, dynamic>> _initiateGoogleAuth() async {
     await Future.delayed(Duration(milliseconds: 500));
-    
+
     return {
       'success': true,
       'token': 'google_token_${DateTime.now().millisecondsSinceEpoch}',
@@ -1288,10 +1284,10 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>> loadModeAssessmentSurvey() async {
     try {
       print('[SystemEntry] 載入模式評估問卷...');
-      
+
       // 調用8111系統服務API取得問卷內容
       final apiResponse = await _callSystemAPI('/assessment-survey', {});
-      
+
       if (apiResponse['success']) {
         final surveyData = {
           'surveyId': apiResponse['surveyId'],
@@ -1300,7 +1296,7 @@ class SystemEntryFunctionGroup {
           'scoringRules': apiResponse['scoringRules'],
           'modeThresholds': apiResponse['modeThresholds'],
         };
-        
+
         print('[SystemEntry] ✅ 模式評估問卷載入成功，共${surveyData['questions'].length}題');
         return {
           'success': true,
@@ -1312,7 +1308,7 @@ class SystemEntryFunctionGroup {
           'message': apiResponse['message'] ?? '載入問卷失敗',
         };
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 載入模式評估問卷失敗: $e');
       return {
@@ -1331,7 +1327,7 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>> submitAssessmentAnswers(Map<String, dynamic> answers) async {
     try {
       print('[SystemEntry] 提交評估答案...');
-      
+
       // 驗證答案完整性
       final validationResult = _validateAssessmentAnswers(answers);
       if (!validationResult['isValid']) {
@@ -1340,14 +1336,14 @@ class SystemEntryFunctionGroup {
           'message': validationResult['message'],
         };
       }
-      
+
       // 調用8111系統服務API提交答案
       final apiResponse = await _callSystemAPI('/submit-assessment', {
         'userId': _currentAuthState?.currentUser?.id,
         'answers': answers,
         'submittedAt': DateTime.now().toIso8601String(),
       });
-      
+
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ 評估答案提交成功');
         return {
@@ -1361,7 +1357,7 @@ class SystemEntryFunctionGroup {
           'message': apiResponse['message'] ?? '提交失敗',
         };
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 提交評估答案失敗: $e');
       return {
@@ -1380,12 +1376,12 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>> calculateModeRecommendation(String submissionId) async {
     try {
       print('[SystemEntry] 計算模式推薦...');
-      
+
       // 調用8111系統服務API計算推薦模式
       final apiResponse = await _callSystemAPI('/calculate-recommendation', {
         'submissionId': submissionId,
       });
-      
+
       if (apiResponse['success']) {
         final recommendation = {
           'recommendedMode': apiResponse['recommendedMode'],
@@ -1394,7 +1390,7 @@ class SystemEntryFunctionGroup {
           'explanation': apiResponse['explanation'],
           'alternatives': apiResponse['alternatives'],
         };
-        
+
         print('[SystemEntry] ✅ 模式推薦計算完成: ${recommendation['recommendedMode']}');
         return {
           'success': true,
@@ -1406,7 +1402,7 @@ class SystemEntryFunctionGroup {
           'message': apiResponse['message'] ?? '計算推薦失敗',
         };
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 計算模式推薦失敗: $e');
       return {
@@ -1425,7 +1421,7 @@ class SystemEntryFunctionGroup {
   Future<bool> saveUserModeConfiguration(UserMode selectedMode, Map<String, dynamic>? customSettings) async {
     try {
       print('[SystemEntry] 保存使用者模式設定...');
-      
+
       // 建立新的模式設定
       final newConfig = ModeConfiguration(
         userMode: selectedMode,
@@ -1436,13 +1432,13 @@ class SystemEntryFunctionGroup {
         themeConfig: _getDefaultThemeConfig(selectedMode),
         lastUpdated: DateTime.now(),
       );
-      
+
       // 保存到本地儲存
       await _saveModeConfiguration(newConfig);
-      
+
       // 同步到後端
       final syncResult = await _syncModeConfigurationToBackend(newConfig);
-      
+
       if (syncResult) {
         _currentModeConfig = newConfig;
         print('[SystemEntry] ✅ 使用者模式設定保存成功: ${selectedMode.name}');
@@ -1451,7 +1447,7 @@ class SystemEntryFunctionGroup {
         print('[SystemEntry] ⚠️ 本地保存成功，但後端同步失敗');
         return false;
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 保存使用者模式設定失敗: $e');
       return false;
@@ -1467,20 +1463,20 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>> generateLineBindingQRCode() async {
     try {
       print('[SystemEntry] 生成LINE綁定QR Code...');
-      
+
       if (_currentAuthState?.currentUser == null) {
         return {
           'success': false,
           'message': '請先登入後再進行LINE綁定',
         };
       }
-      
+
       // 調用8111系統服務API生成綁定Token
       final apiResponse = await _callSystemAPI('/generate-line-binding', {
         'userId': _currentAuthState!.currentUser!.id,
         'requestTime': DateTime.now().toIso8601String(),
       });
-      
+
       if (apiResponse['success']) {
         final qrData = {
           'bindingToken': apiResponse['bindingToken'],
@@ -1489,7 +1485,7 @@ class SystemEntryFunctionGroup {
           'expiresAt': apiResponse['expiresAt'],
           'instructions': apiResponse['instructions'],
         };
-        
+
         print('[SystemEntry] ✅ LINE綁定QR Code生成成功');
         return {
           'success': true,
@@ -1501,7 +1497,7 @@ class SystemEntryFunctionGroup {
           'message': apiResponse['message'] ?? 'QR Code生成失敗',
         };
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 生成LINE綁定QR Code失敗: $e');
       return {
@@ -1520,7 +1516,7 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>> executeLinePlatformBinding(String bindingToken) async {
     try {
       print('[SystemEntry] 執行LINE平台綁定...');
-      
+
       // 驗證綁定Token
       final tokenValidation = await _validateBindingToken(bindingToken);
       if (!tokenValidation['isValid']) {
@@ -1529,13 +1525,13 @@ class SystemEntryFunctionGroup {
           'message': '綁定Token無效或已過期',
         };
       }
-      
+
       // 調用8111系統服務API執行綁定
       final apiResponse = await _callSystemAPI('/execute-line-binding', {
         'bindingToken': bindingToken,
         'userId': _currentAuthState?.currentUser?.id,
       });
-      
+
       if (apiResponse['success']) {
         final bindingResult = {
           'lineUserId': apiResponse['lineUserId'],
@@ -1543,7 +1539,7 @@ class SystemEntryFunctionGroup {
           'bindingTime': apiResponse['bindingTime'],
           'availableFeatures': apiResponse['availableFeatures'],
         };
-        
+
         print('[SystemEntry] ✅ LINE平台綁定成功');
         return {
           'success': true,
@@ -1556,7 +1552,7 @@ class SystemEntryFunctionGroup {
           'message': apiResponse['message'] ?? 'LINE綁定失敗',
         };
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 執行LINE平台綁定失敗: $e');
       return {
@@ -1575,19 +1571,19 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>> checkPlatformBindingStatus() async {
     try {
       print('[SystemEntry] 檢查平台綁定狀態...');
-      
+
       if (_currentAuthState?.currentUser == null) {
         return {
           'success': false,
           'message': '使用者未登入',
         };
       }
-      
+
       // 調用8111系統服務API檢查綁定狀態
       final apiResponse = await _callSystemAPI('/check-platform-binding', {
         'userId': _currentAuthState!.currentUser!.id,
       });
-      
+
       if (apiResponse['success']) {
         final bindingStatus = {
           'isLineBound': apiResponse['isLineBound'],
@@ -1597,7 +1593,7 @@ class SystemEntryFunctionGroup {
           'availablePlatforms': apiResponse['availablePlatforms'],
           'syncStatus': apiResponse['syncStatus'],
         };
-        
+
         print('[SystemEntry] ✅ 平台綁定狀態檢查完成');
         return {
           'success': true,
@@ -1609,7 +1605,7 @@ class SystemEntryFunctionGroup {
           'message': apiResponse['message'] ?? '狀態檢查失敗',
         };
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 檢查平台綁定狀態失敗: $e');
       return {
@@ -1628,21 +1624,21 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>> syncCrossPlatformData() async {
     try {
       print('[SystemEntry] 同步跨平台資料...');
-      
+
       if (_currentAuthState?.currentUser == null) {
         return {
           'success': false,
           'message': '使用者未登入',
         };
       }
-      
+
       // 調用8111系統服務API同步資料
       final apiResponse = await _callSystemAPI('/sync-cross-platform', {
         'userId': _currentAuthState!.currentUser!.id,
         'syncType': 'full',
         'requestTime': DateTime.now().toIso8601String(),
       });
-      
+
       if (apiResponse['success']) {
         final syncResult = {
           'syncId': apiResponse['syncId'],
@@ -1651,7 +1647,7 @@ class SystemEntryFunctionGroup {
           'syncTime': apiResponse['syncTime'],
           'conflictResolutions': apiResponse['conflictResolutions'],
         };
-        
+
         print('[SystemEntry] ✅ 跨平台資料同步完成');
         return {
           'success': true,
@@ -1664,7 +1660,7 @@ class SystemEntryFunctionGroup {
           'message': apiResponse['message'] ?? '資料同步失敗',
         };
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 同步跨平台資料失敗: $e');
       return {
@@ -1683,16 +1679,16 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>> loadAppFeatureShowcase() async {
     try {
       print('[SystemEntry] 載入APP功能展示內容...');
-      
+
       // 根據使用者模式載入對應的展示內容
       final userMode = _currentModeConfig?.userMode ?? UserMode.inertial;
-      
+
       // 調用8111系統服務API
       final apiResponse = await _callSystemAPI('/feature-showcase', {
         'userMode': userMode.name,
         'language': 'zh-TW',
       });
-      
+
       if (apiResponse['success']) {
         final showcaseData = {
           'features': apiResponse['features'],
@@ -1702,7 +1698,7 @@ class SystemEntryFunctionGroup {
           'demoVideos': apiResponse['demoVideos'],
           'userTestimonials': apiResponse['userTestimonials'],
         };
-        
+
         print('[SystemEntry] ✅ APP功能展示內容載入成功');
         return {
           'success': true,
@@ -1714,7 +1710,7 @@ class SystemEntryFunctionGroup {
           'message': apiResponse['message'] ?? '載入展示內容失敗',
         };
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 載入APP功能展示內容失敗: $e');
       return {
@@ -1733,14 +1729,14 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>> generateAppDownloadLinks() async {
     try {
       print('[SystemEntry] 生成APP下載連結...');
-      
+
       // 調用8111系統服務API
       final apiResponse = await _callSystemAPI('/app-download-links', {
         'platform': 'all',
         'version': 'latest',
         'referralCode': _currentAuthState?.currentUser?.id,
       });
-      
+
       if (apiResponse['success']) {
         final downloadLinks = {
           'androidPlayStore': apiResponse['androidPlayStore'],
@@ -1750,7 +1746,7 @@ class SystemEntryFunctionGroup {
           'directDownload': apiResponse['directDownload'],
           'referralTracking': apiResponse['referralTracking'],
         };
-        
+
         print('[SystemEntry] ✅ APP下載連結生成成功');
         return {
           'success': true,
@@ -1762,7 +1758,7 @@ class SystemEntryFunctionGroup {
           'message': apiResponse['message'] ?? '生成下載連結失敗',
         };
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 生成APP下載連結失敗: $e');
       return {
@@ -1781,7 +1777,7 @@ class SystemEntryFunctionGroup {
   Future<void> recordPromotionPageInteraction(String interactionType, Map<String, dynamic> interactionData) async {
     try {
       print('[SystemEntry] 記錄推廣頁面互動: $interactionType');
-      
+
       // 準備互動記錄資料
       final recordData = {
         'userId': _currentAuthState?.currentUser?.id,
@@ -1792,12 +1788,12 @@ class SystemEntryFunctionGroup {
         'userAgent': 'LCAS_Flutter_App',
         'appVersion': '1.0.0',
       };
-      
+
       // 調用8111系統服務API記錄互動
       await _callSystemAPI('/record-interaction', recordData);
-      
+
       print('[SystemEntry] ✅ 推廣頁面互動記錄完成');
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 記錄推廣頁面互動失敗: $e');
       // 記錄失敗不影響主要功能，僅記錄錯誤
@@ -1811,7 +1807,7 @@ class SystemEntryFunctionGroup {
   /// 調用系統服務API
   Future<Map<String, dynamic>> _callSystemAPI(String endpoint, Map<String, dynamic> data) async {
     await Future.delayed(Duration(milliseconds: 200)); // 模擬網路延遲
-    
+
     // 模擬API回應
     switch (endpoint) {
       case '/assessment-survey':
@@ -1924,7 +1920,7 @@ class SystemEntryFunctionGroup {
     if (answers.isEmpty) {
       return {'isValid': false, 'message': '請完成所有問題'};
     }
-    
+
     // 檢查必要問題是否已回答
     final requiredQuestions = ['q1', 'q2'];
     for (String questionId in requiredQuestions) {
@@ -1932,7 +1928,7 @@ class SystemEntryFunctionGroup {
         return {'isValid': false, 'message': '請完成所有必填問題'};
       }
     }
-    
+
     return {'isValid': true};
   }
 
@@ -1940,7 +1936,7 @@ class SystemEntryFunctionGroup {
   Future<bool> _syncModeConfigurationToBackend(ModeConfiguration config) async {
     try {
       await Future.delayed(Duration(milliseconds: 200));
-      
+
       final apiResponse = await _callSystemAPI('/sync-mode-config', {
         'userId': _currentAuthState?.currentUser?.id,
         'modeConfig': {
@@ -1950,7 +1946,7 @@ class SystemEntryFunctionGroup {
           'lastUpdated': config.lastUpdated.toIso8601String(),
         },
       });
-      
+
       return apiResponse['success'] ?? false;
     } catch (e) {
       return false;
@@ -1960,11 +1956,11 @@ class SystemEntryFunctionGroup {
   /// 驗證綁定Token
   Future<Map<String, dynamic>> _validateBindingToken(String token) async {
     await Future.delayed(Duration(milliseconds: 100));
-    
+
     if (token.isEmpty || !token.startsWith('bind_')) {
       return {'isValid': false, 'message': 'Token格式無效'};
     }
-    
+
     // 模擬Token過期檢查
     return {'isValid': true};
   }
@@ -1972,67 +1968,6 @@ class SystemEntryFunctionGroup {
   /// 生成會話ID
   String _generateSessionId() {
     return 'session_${DateTime.now().millisecondsSinceEpoch}_${(_currentAuthState?.currentUser?.id?.hashCode ?? 0).abs()}';
-  }
-
-  // ===========================================
-  // HTTP客戶端服務 (從APL層移入)
-  // ===========================================
-
-  /// HTTP客戶端配置
-  final http.Client _httpClient = http.Client();
-  final String _baseUrl = 'https://api.lcas.com/api/v1';
-
-  /// 統一API調用方法
-  Future<Map<String, dynamic>> _callAPI(String endpoint, String method, {Map<String, dynamic>? data}) async {
-    try {
-      final uri = Uri.parse('$_baseUrl$endpoint');
-      final headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        if (_currentAuthState?.token != null) 'Authorization': 'Bearer ${_currentAuthState!.token}',
-      };
-
-      http.Response response;
-      
-      switch (method.toUpperCase()) {
-        case 'GET':
-          response = await _httpClient.get(uri, headers: headers);
-          break;
-        case 'POST':
-          response = await _httpClient.post(
-            uri,
-            headers: headers,
-            body: data != null ? json.encode(data) : null,
-          );
-          break;
-        case 'PUT':
-          response = await _httpClient.put(
-            uri,
-            headers: headers,
-            body: data != null ? json.encode(data) : null,
-          );
-          break;
-        case 'DELETE':
-          response = await _httpClient.delete(uri, headers: headers);
-          break;
-        default:
-          throw Exception('不支援的HTTP方法: $method');
-      }
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('API調用失敗: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      print('[HTTP Client] API調用錯誤: $e');
-      throw e;
-    }
-  }
-
-  /// 認證相關API調用
-  Future<Map<String, dynamic>> _callAuthAPI(String endpoint, Map<String, dynamic> data) async {
-    return await _callAPI('/auth$endpoint', 'POST', data: data);
   }
 
   // ===========================================
@@ -2048,7 +1983,7 @@ class SystemEntryFunctionGroup {
   Map<String, dynamic> loadUserModeTheme(UserMode userMode) {
     try {
       print('[SystemEntry] 載入使用者模式主題: ${userMode.name}');
-      
+
       // 根據使用者模式返回對應的主題配置
       final themeConfigs = {
         UserMode.expert: {
@@ -2116,11 +2051,11 @@ class SystemEntryFunctionGroup {
           'density': 'comfortable',          // 舒適密度
         },
       };
-      
+
       final theme = themeConfigs[userMode] ?? themeConfigs[UserMode.inertial]!;
       print('[SystemEntry] ✅ 使用者模式主題載入完成: ${theme['themeName']}');
       return theme;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 載入使用者模式主題失敗: $e');
       // 返回預設主題
@@ -2137,16 +2072,16 @@ class SystemEntryFunctionGroup {
   Future<bool> switchUserModeTheme(UserMode newMode) async {
     try {
       print('[SystemEntry] 切換使用者模式主題: ${_currentModeConfig?.userMode.name} -> ${newMode.name}');
-      
+
       // 檢查是否需要切換
       if (_currentModeConfig?.userMode == newMode) {
         print('[SystemEntry] ⚠️ 模式相同，無需切換');
         return true;
       }
-      
+
       // 載入新主題
       final newTheme = loadUserModeTheme(newMode);
-      
+
       // 更新模式設定
       final updatedConfig = ModeConfiguration(
         userMode: newMode,
@@ -2154,13 +2089,13 @@ class SystemEntryFunctionGroup {
         themeConfig: newTheme,
         lastUpdated: DateTime.now(),
       );
-      
+
       // 保存設定
       await _saveModeConfiguration(updatedConfig);
-      
+
       // 同步到後端
       final syncResult = await _syncModeConfigurationToBackend(updatedConfig);
-      
+
       if (syncResult) {
         _currentModeConfig = updatedConfig;
         print('[SystemEntry] ✅ 使用者模式主題切換成功: ${newMode.name}');
@@ -2170,7 +2105,7 @@ class SystemEntryFunctionGroup {
         _currentModeConfig = updatedConfig;
         return false;
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 切換使用者模式主題失敗: $e');
       return false;
@@ -2186,7 +2121,7 @@ class SystemEntryFunctionGroup {
   int getModeSpecificColor(UserMode userMode, String colorType) {
     try {
       final theme = loadUserModeTheme(userMode);
-      
+
       final colorMap = {
         'primary': theme['primaryColor'],
         'accent': theme['accentColor'], 
@@ -2198,7 +2133,7 @@ class SystemEntryFunctionGroup {
         'success': theme['successColor'],
         'warning': theme['warningColor'],
       };
-      
+
       final color = colorMap[colorType];
       if (color != null) {
         return color as int;
@@ -2206,7 +2141,7 @@ class SystemEntryFunctionGroup {
         print('[SystemEntry] ⚠️ 未知的顏色類型: $colorType，返回主色');
         return theme['primaryColor'] as int;
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 獲取模式專用顏色失敗: $e');
       // 返回預設藍色
@@ -2223,15 +2158,15 @@ class SystemEntryFunctionGroup {
   Map<String, dynamic> handleNetworkConnectionError(Exception exception) {
     try {
       print('[SystemEntry] 處理網路連線錯誤: ${exception.toString()}');
-      
+
       String errorType = 'UNKNOWN_NETWORK_ERROR';
       String userMessage = '網路連線發生未知錯誤';
       String suggestion = '請檢查網路連線後重試';
       bool retryAllowed = true;
       int retryDelay = 3000;
-      
+
       final exceptionString = exception.toString().toLowerCase();
-      
+
       // 連線逾時
       if (exceptionString.contains('timeout') || exceptionString.contains('timed out')) {
         errorType = 'CONNECTION_TIMEOUT';
@@ -2260,7 +2195,7 @@ class SystemEntryFunctionGroup {
         suggestion = '請檢查系統時間設定或聯繫技術支援';
         retryAllowed = false;
       }
-      
+
       final errorInfo = {
         'errorType': errorType,
         'userMessage': userMessage,
@@ -2270,10 +2205,10 @@ class SystemEntryFunctionGroup {
         'timestamp': DateTime.now().toIso8601String(),
         'originalError': exception.toString(),
       };
-      
+
       print('[SystemEntry] ✅ 網路錯誤處理完成: $errorType');
       return errorInfo;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 處理網路連線錯誤失敗: $e');
       return {
@@ -2297,7 +2232,7 @@ class SystemEntryFunctionGroup {
   Map<String, dynamic> handleAuthenticationError(String errorCode, String? errorMessage) {
     try {
       print('[SystemEntry] 處理認證相關錯誤: $errorCode');
-      
+
       Map<String, dynamic> errorInfo = {
         'errorCode': errorCode,
         'userMessage': '',
@@ -2307,7 +2242,7 @@ class SystemEntryFunctionGroup {
         'redirectTo': null,
         'timestamp': DateTime.now().toIso8601String(),
       };
-      
+
       switch (errorCode) {
         case 'INVALID_CREDENTIALS':
           errorInfo.addAll({
@@ -2317,7 +2252,7 @@ class SystemEntryFunctionGroup {
             'redirectTo': null,
           });
           break;
-          
+
         case 'EMAIL_ALREADY_EXISTS':
           errorInfo.addAll({
             'userMessage': '此電子郵件已被註冊，請使用其他信箱或直接登入',
@@ -2327,7 +2262,7 @@ class SystemEntryFunctionGroup {
             'redirectTo': 'login',
           });
           break;
-          
+
         case 'ACCOUNT_LOCKED':
           errorInfo.addAll({
             'userMessage': '帳號因多次登入失敗被暫時鎖定',
@@ -2337,7 +2272,7 @@ class SystemEntryFunctionGroup {
             'redirectTo': null,
           });
           break;
-          
+
         case 'EMAIL_NOT_VERIFIED':
           errorInfo.addAll({
             'userMessage': '電子郵件尚未驗證，請先完成郵件驗證',
@@ -2346,7 +2281,7 @@ class SystemEntryFunctionGroup {
             'redirectTo': 'email-verification',
           });
           break;
-          
+
         case 'TOKEN_EXPIRED':
           errorInfo.addAll({
             'userMessage': '登入已過期，請重新登入',
@@ -2355,7 +2290,7 @@ class SystemEntryFunctionGroup {
             'redirectTo': 'login',
           });
           break;
-          
+
         case 'INVALID_RESET_TOKEN':
           errorInfo.addAll({
             'userMessage': '重設連結無效或已過期',
@@ -2364,7 +2299,7 @@ class SystemEntryFunctionGroup {
             'redirectTo': 'forgot-password',
           });
           break;
-          
+
         case 'GOOGLE_AUTH_FAILED':
           errorInfo.addAll({
             'userMessage': 'Google 認證失敗，請重新嘗試',
@@ -2373,7 +2308,7 @@ class SystemEntryFunctionGroup {
             'retryAllowed': true,
           });
           break;
-          
+
         case 'LINE_ACCOUNT_ALREADY_BOUND':
           errorInfo.addAll({
             'userMessage': '此LINE帳號已被其他使用者綁定',
@@ -2382,7 +2317,7 @@ class SystemEntryFunctionGroup {
             'retryAllowed': false,
           });
           break;
-          
+
         default:
           errorInfo.addAll({
             'userMessage': errorMessage ?? '認證過程發生未知錯誤',
@@ -2391,10 +2326,10 @@ class SystemEntryFunctionGroup {
             'retryAllowed': true,
           });
       }
-      
+
       print('[SystemEntry] ✅ 認證錯誤處理完成: $errorCode');
       return errorInfo;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 處理認證相關錯誤失敗: $e');
       return {
@@ -2418,10 +2353,10 @@ class SystemEntryFunctionGroup {
   Map<String, dynamic> displayUserFriendlyErrorMessage(String errorCode, Map<String, dynamic>? errorData) {
     try {
       print('[SystemEntry] 顯示使用者友善錯誤訊息: $errorCode');
-      
+
       // 根據當前使用者模式調整訊息風格
       final currentMode = _currentModeConfig?.userMode ?? UserMode.inertial;
-      
+
       Map<String, dynamic> displayInfo = {
         'title': '',
         'message': '',
@@ -2432,7 +2367,7 @@ class SystemEntryFunctionGroup {
         'duration': 5000,
         'priority': 'normal',
       };
-      
+
       // 根據模式調整顯示風格
       switch (currentMode) {
         case UserMode.expert:
@@ -2455,7 +2390,7 @@ class SystemEntryFunctionGroup {
           // 使用預設設定
           break;
       }
-      
+
       // 根據錯誤類型設定訊息內容
       switch (errorCode) {
         case 'NETWORK_ERROR':
@@ -2465,7 +2400,7 @@ class SystemEntryFunctionGroup {
             'iconType': 'network',
           });
           break;
-          
+
         case 'VALIDATION_ERROR':
           displayInfo.addAll({
             'title': '輸入資料有誤',
@@ -2474,7 +2409,7 @@ class SystemEntryFunctionGroup {
             'color': getModeSpecificColor(currentMode, 'warning'),
           });
           break;
-          
+
         case 'AUTH_ERROR':
           displayInfo.addAll({
             'title': '認證失敗',
@@ -2482,7 +2417,7 @@ class SystemEntryFunctionGroup {
             'iconType': 'lock',
           });
           break;
-          
+
         case 'SYSTEM_ERROR':
           displayInfo.addAll({
             'title': '系統暫時無法使用',
@@ -2490,7 +2425,7 @@ class SystemEntryFunctionGroup {
             'iconType': 'system',
           });
           break;
-          
+
         case 'FEATURE_UNAVAILABLE':
           displayInfo.addAll({
             'title': '功能暫時無法使用',
@@ -2499,7 +2434,7 @@ class SystemEntryFunctionGroup {
             'color': getModeSpecificColor(currentMode, 'warning'),
           });
           break;
-          
+
         default:
           displayInfo.addAll({
             'title': '發生錯誤',
@@ -2507,7 +2442,7 @@ class SystemEntryFunctionGroup {
             'iconType': 'error',
           });
       }
-      
+
       // 加入除錯資訊（僅Expert模式）
       if (currentMode == UserMode.expert && errorData != null) {
         displayInfo['debugInfo'] = {
@@ -2516,10 +2451,10 @@ class SystemEntryFunctionGroup {
           'additionalData': errorData,
         };
       }
-      
+
       print('[SystemEntry] ✅ 使用者友善錯誤訊息準備完成');
       return displayInfo;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 顯示使用者友善錯誤訊息失敗: $e');
       return {
@@ -2544,12 +2479,12 @@ class SystemEntryFunctionGroup {
   Future<bool> securelyStoreAuthToken(String token, Map<String, dynamic>? metadata) async {
     try {
       print('[SystemEntry] 安全保存認證Token...');
-      
+
       if (token.isEmpty) {
         print('[SystemEntry] ❌ Token為空，無法保存');
         return false;
       }
-      
+
       // 準備儲存資料
       final tokenData = {
         'token': token,
@@ -2559,19 +2494,19 @@ class SystemEntryFunctionGroup {
         'appVersion': '1.0.0',
         'metadata': metadata ?? {},
       };
-      
+
       // 加密Token（模擬加密過程）
       final encryptedData = _encryptSensitiveData(jsonEncode(tokenData));
-      
+
       // 儲存到安全儲存（模擬FlutterSecureStorage）
       await _storeSecureData('auth_token', encryptedData);
-      
+
       // 設定自動清理機制
       await _scheduleTokenCleanup();
-      
+
       print('[SystemEntry] ✅ 認證Token安全保存完成');
       return true;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 安全保存認證Token失敗: $e');
       return false;
@@ -2587,28 +2522,28 @@ class SystemEntryFunctionGroup {
   Future<Map<String, dynamic>?> retrieveStoredAuthToken() async {
     try {
       print('[SystemEntry] 讀取已保存的認證Token...');
-      
+
       // 從安全儲存讀取
       final encryptedData = await _getSecureData('auth_token');
-      
+
       if (encryptedData == null) {
         print('[SystemEntry] ⚠️ 沒有找到已保存的Token');
         return null;
       }
-      
+
       // 解密資料
       final decryptedData = _decryptSensitiveData(encryptedData);
       final tokenData = jsonDecode(decryptedData);
-      
+
       // 檢查Token有效性
       final isValid = await _verifyTokenValidity(tokenData);
-      
+
       if (!isValid) {
         print('[SystemEntry] ⚠️ 已保存的Token已過期或無效，清除Token');
         await clearStoredAuthToken();
         return null;
       }
-      
+
       print('[SystemEntry] ✅ 認證Token讀取完成');
       return {
         'token': tokenData['token'],
@@ -2617,7 +2552,7 @@ class SystemEntryFunctionGroup {
         'metadata': tokenData['metadata'] ?? {},
         'isValid': true,
       };
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 讀取已保存的認證Token失敗: $e');
       // 發生錯誤時清除可能損壞的Token
@@ -2635,9 +2570,9 @@ class SystemEntryFunctionGroup {
   Future<bool> clearAllLocalStorageData() async {
     try {
       print('[SystemEntry] 清除所有本地儲存資料...');
-      
+
       List<String> clearResults = [];
-      
+
       // 1. 清除認證Token
       try {
         await clearStoredAuthToken();
@@ -2645,7 +2580,7 @@ class SystemEntryFunctionGroup {
       } catch (e) {
         clearResults.add('❌ 認證Token清除失敗: $e');
       }
-      
+
       // 2. 清除模式設定
       try {
         await _clearModeConfiguration();
@@ -2653,7 +2588,7 @@ class SystemEntryFunctionGroup {
       } catch (e) {
         clearResults.add('❌ 模式設定清除失敗: $e');
       }
-      
+
       // 3. 清除使用者偏好設定
       try {
         await _clearUserPreferences();
@@ -2661,7 +2596,7 @@ class SystemEntryFunctionGroup {
       } catch (e) {
         clearResults.add('❌ 使用者偏好設定清除失敗: $e');
       }
-      
+
       // 4. 清除快取資料
       try {
         await _clearCacheData();
@@ -2669,7 +2604,7 @@ class SystemEntryFunctionGroup {
       } catch (e) {
         clearResults.add('❌ 快取資料清除失敗: $e');
       }
-      
+
       // 5. 清除暫存檔案
       try {
         await _clearTemporaryFiles();
@@ -2677,22 +2612,22 @@ class SystemEntryFunctionGroup {
       } catch (e) {
         clearResults.add('❌ 暫存檔案清除失敗: $e');
       }
-      
+
       // 6. 重置內部狀態
       _currentAuthState = null;
       _currentModeConfig = null;
       _isInitialized = false;
       clearResults.add('✅ 內部狀態已重置');
-      
+
       // 統計清除結果
       final successCount = clearResults.where((r) => r.startsWith('✅')).length;
       final totalCount = clearResults.length;
-      
+
       print('[SystemEntry] 清除結果統計：');
       for (String result in clearResults) {
         print('[SystemEntry] $result');
       }
-      
+
       if (successCount == totalCount) {
         print('[SystemEntry] ✅ 所有本地儲存資料清除完成');
         return true;
@@ -2700,7 +2635,7 @@ class SystemEntryFunctionGroup {
         print('[SystemEntry] ⚠️ 部分資料清除失敗 ($successCount/$totalCount)');
         return false;
       }
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 清除所有本地儲存資料失敗: $e');
       return false;
@@ -2716,13 +2651,13 @@ class SystemEntryFunctionGroup {
   Future<bool> navigateToPage(String routeName, Map<String, dynamic>? arguments) async {
     try {
       print('[SystemEntry] 導航至指定頁面: $routeName');
-      
+
       // 檢查路由名稱是否有效
       if (routeName.isEmpty) {
         print('[SystemEntry] ❌ 路由名稱為空');
         return false;
       }
-      
+
       // 有效路由清單
       final validRoutes = [
         '/',              // 首頁/啟動頁
@@ -2734,19 +2669,19 @@ class SystemEntryFunctionGroup {
         '/app-promotion', // APP推廣頁
         '/main',          // 主要功能頁
       ];
-      
+
       if (!validRoutes.contains(routeName)) {
         print('[SystemEntry] ❌ 無效的路由名稱: $routeName');
         return false;
       }
-      
+
       // 記錄導航歷史
       await _recordNavigationHistory(routeName, arguments);
-      
+
       // 根據使用者模式調整導航動畫
       final currentMode = _currentModeConfig?.userMode ?? UserMode.inertial;
       final navigationConfig = _getNavigationConfig(currentMode);
-      
+
       // 準備導航資料
       final navigationData = {
         'route': routeName,
@@ -2756,13 +2691,13 @@ class SystemEntryFunctionGroup {
         'animationType': navigationConfig['animationType'],
         'duration': navigationConfig['duration'],
       };
-      
+
       // 執行導航（模擬）
       await Future.delayed(Duration(milliseconds: navigationConfig['duration']));
-      
+
       print('[SystemEntry] ✅ 導航完成: $routeName');
       return true;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 導航至指定頁面失敗: $e');
       return false;
@@ -2778,24 +2713,24 @@ class SystemEntryFunctionGroup {
   Future<bool> replaceCurrentPage(String routeName, Map<String, dynamic>? arguments) async {
     try {
       print('[SystemEntry] 替換當前頁面: $routeName');
-      
+
       if (routeName.isEmpty) {
         print('[SystemEntry] ❌ 路由名稱為空');
         return false;
       }
-      
+
       // 記錄頁面替換事件
       await _recordPageReplacement(_getCurrentRoute(), routeName, arguments);
-      
+
       // 清除當前頁面狀態
       await _clearCurrentPageState();
-      
+
       // 執行頁面替換（模擬）
       await Future.delayed(Duration(milliseconds: 300));
-      
+
       print('[SystemEntry] ✅ 頁面替換完成: $routeName');
       return true;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 替換當前頁面失敗: $e');
       return false;
@@ -2811,31 +2746,31 @@ class SystemEntryFunctionGroup {
   Future<bool> navigateBackToPreviousPage(dynamic result) async {
     try {
       print('[SystemEntry] 返回上一頁面');
-      
+
       // 檢查是否有上一頁
       final navigationHistory = await _getNavigationHistory();
-      
+
       if (navigationHistory.isEmpty || navigationHistory.length < 2) {
         print('[SystemEntry] ⚠️ 沒有上一頁面可返回');
         return false;
       }
-      
+
       // 取得上一頁面資訊
       final previousPage = navigationHistory[navigationHistory.length - 2];
       final currentPage = _getCurrentRoute();
-      
+
       // 記錄返回事件
       await _recordNavigationBack(currentPage, previousPage['route'], result);
-      
+
       // 執行返回動畫（模擬）
       await Future.delayed(Duration(milliseconds: 250));
-      
+
       // 清理當前頁面資源
       await _cleanupCurrentPageResources();
-      
+
       print('[SystemEntry] ✅ 成功返回至: ${previousPage['route']}');
       return true;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 返回上一頁面失敗: $e');
       return false;
@@ -2860,7 +2795,7 @@ class SystemEntryFunctionGroup {
         'validationType': 'realtime',
         'timestamp': DateTime.now().toIso8601String(),
       };
-      
+
       switch (fieldName.toLowerCase()) {
         case 'email':
           if (value.isEmpty) {
@@ -2878,7 +2813,7 @@ class SystemEntryFunctionGroup {
             validationResult['suggestionMessage'] = 'Email格式正確';
           }
           break;
-          
+
         case 'password':
           if (value.isEmpty) {
             validationResult.addAll({
@@ -2901,7 +2836,7 @@ class SystemEntryFunctionGroup {
             }
           }
           break;
-          
+
         case 'confirmpassword':
         case 'confirm_password':
           // 需要原始密碼進行比對，這裡僅做基本檢查
@@ -2914,7 +2849,7 @@ class SystemEntryFunctionGroup {
             validationResult['suggestionMessage'] = '請確保與原密碼一致';
           }
           break;
-          
+
         case 'displayname':
         case 'display_name':
           if (value.length > 50) {
@@ -2932,7 +2867,7 @@ class SystemEntryFunctionGroup {
             validationResult['suggestionMessage'] = '顯示名稱格式正確';
           }
           break;
-          
+
         default:
           // 通用驗證規則
           if (value.length > 1000) {
@@ -2942,10 +2877,10 @@ class SystemEntryFunctionGroup {
             });
           }
       }
-      
+
       print('[SystemEntry] ✅ 即時表單驗證完成: $fieldName');
       return validationResult;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 執行即時表單驗證失敗: $e');
       return {
@@ -2968,7 +2903,7 @@ class SystemEntryFunctionGroup {
   Map<String, dynamic> performCompleteFormValidation(Map<String, String> formData) {
     try {
       print('[SystemEntry] 執行完整表單驗證...');
-      
+
       Map<String, dynamic> overallResult = {
         'isValid': true,
         'errorCount': 0,
@@ -2978,44 +2913,44 @@ class SystemEntryFunctionGroup {
         'formType': 'unknown',
         'validationTime': DateTime.now().toIso8601String(),
       };
-      
+
       // 判斷表單類型
       String formType = _determineFormType(formData);
       overallResult['formType'] = formType;
-      
+
       // 逐一驗證每個欄位
       for (String fieldName in formData.keys) {
         final fieldValue = formData[fieldName] ?? '';
         final fieldResult = performRealtimeFormValidation(fieldName, fieldValue);
-        
+
         overallResult['fieldResults'][fieldName] = fieldResult;
-        
+
         if (!fieldResult['isValid']) {
           overallResult['isValid'] = false;
           overallResult['errorCount']++;
         }
-        
+
         if (fieldResult['warningMessage'] != null) {
           overallResult['warningCount']++;
         }
       }
-      
+
       // 執行表單特定的交叉驗證
       _performCrossFieldValidation(formData, overallResult);
-      
+
       // 根據表單類型執行額外驗證
       _performFormTypeSpecificValidation(formType, formData, overallResult);
-      
+
       // 產生驗證摘要
       if (overallResult['isValid']) {
         overallResult['validationSummary'] = '所有欄位驗證通過';
       } else {
         overallResult['validationSummary'] = '發現 ${overallResult['errorCount']} 個錯誤需要修正';
       }
-      
+
       print('[SystemEntry] ✅ 完整表單驗證完成 - 類型: $formType, 結果: ${overallResult['isValid']}');
       return overallResult;
-      
+
     } catch (e) {
       print('[SystemEntry] ❌ 執行完整表單驗證失敗: $e');
       return {
@@ -3081,10 +3016,10 @@ class SystemEntryFunctionGroup {
   /// 驗證Token有效性
   Future<bool> _verifyTokenValidity(Map<String, dynamic> tokenData) async {
     await Future.delayed(Duration(milliseconds: 100));
-    
+
     final expiresAt = DateTime.tryParse(tokenData['expiresAt'] ?? '');
     if (expiresAt == null) return false;
-    
+
     return DateTime.now().isBefore(expiresAt);
   }
 
@@ -3144,7 +3079,7 @@ class SystemEntryFunctionGroup {
       UserMode.cultivation: {'animationType': 'scale', 'duration': 400},
       UserMode.guiding: {'animationType': 'fade', 'duration': 500},
     };
-    
+
     return configs[mode] ?? configs[UserMode.inertial]!;
   }
 
@@ -3182,7 +3117,7 @@ class SystemEntryFunctionGroup {
   /// 判斷表單類型
   String _determineFormType(Map<String, String> formData) {
     final fieldNames = formData.keys.map((k) => k.toLowerCase()).toSet();
-    
+
     if (fieldNames.contains('email') && fieldNames.contains('password')) {
       if (fieldNames.contains('confirmpassword') || fieldNames.contains('confirm_password')) {
         return 'register';
@@ -3202,7 +3137,7 @@ class SystemEntryFunctionGroup {
     if (formData.containsKey('password') && (formData.containsKey('confirmPassword') || formData.containsKey('confirm_password'))) {
       final password = formData['password'] ?? '';
       final confirmPassword = formData['confirmPassword'] ?? formData['confirm_password'] ?? '';
-      
+
       if (password != confirmPassword) {
         result['isValid'] = false;
         result['errorCount']++;
@@ -3242,15 +3177,31 @@ class SystemEntryFunctionGroup {
   }
 
   // ===========================================
+  // 階段三內部輔助函數
+  // ===========================================
+
+  /// 獲取測試用的常見密碼列表
+  List<String> _getCommonPasswordsFromTestData() {
+    // 模擬從7590系統獲取常見密碼清單
+    // 在實際應用中，這部分將替換為從API或配置檔案讀取
+    return [
+      'password', 'password123', '123456789', 'qwerty', 'abc123',
+      'password1', 'admin', 'welcome', 'letmein', 'monkey',
+      '123456', '111111', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm',
+      'admin123', 'root', 'test', 'guest', '12345678'
+    ];
+  }
+
+  // ===========================================
   // Getter方法
   // ===========================================
 
   /// 取得當前認證狀態
   AuthState? get currentAuthState => _currentAuthState;
-  
+
   /// 取得當前模式設定
   ModeConfiguration? get currentModeConfig => _currentModeConfig;
-  
+
   /// 檢查是否已初始化
   bool get isInitialized => _isInitialized;
 }
