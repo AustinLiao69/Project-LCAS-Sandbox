@@ -23,7 +23,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:intl/intl.dart'; // 引入intl套件以支援國際化格式
-import '../../75. Flutter_Test_code_PL/7590. 生成動態測試資料.dart'; // 引入測試資料生成器
+
 import 'package:http/http.dart' as http; // For HTTP requests
 
 // 引入必要的依賴
@@ -699,13 +699,23 @@ class DashboardWidgetImpl extends DashboardWidget {
       if (response.success && response.data != null) {
         return response.data!;
       } else {
-        // 如果API失敗，回退到測試工廠數據
-        print('API調用失敗，使用測試數據: ${response.error}');
-        return await _loadDashboardDataFromTestFactory();
+        // 如果API失敗，返回預設數據
+        print('API調用失敗，使用預設數據: ${response.error}');
+        return DashboardData(
+          totalIncome: 0.0,
+          totalExpense: 0.0,
+          balance: 0.0,
+          transactionCount: 0,
+        );
       }
     } catch (e) {
-      print('載入儀表板數據時發生錯誤: $e，使用測試數據');
-      return await _loadDashboardDataFromTestFactory();
+      print('載入儀表板數據時發生錯誤: $e');
+      return DashboardData(
+        totalIncome: 0.0,
+        totalExpense: 0.0,
+        balance: 0.0,
+        transactionCount: 0,
+      );
     }
   }
 

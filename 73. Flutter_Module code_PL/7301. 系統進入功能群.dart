@@ -715,8 +715,11 @@ class SystemEntryFunctionGroup {
 
       score += charTypeCount;
 
-      // 弱密碼模式檢查 - 從7590動態獲取
-      final commonPasswords = _getCommonPasswordsFromTestData();
+      // 弱密碼模式檢查
+      final commonPasswords = [
+        'password', 'password123', '123456789', 'qwerty', 'abc123',
+        'password1', 'admin', 'welcome', 'letmein', 'monkey'
+      ];
 
       if (commonPasswords.any((common) => 
           password.toLowerCase().contains(common.toLowerCase()))) {
