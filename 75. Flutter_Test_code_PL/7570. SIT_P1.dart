@@ -22,6 +22,10 @@ import 'dart:io';
 import 'dart:math' hide Point; // 避免與 test.dart 中的 Point 衝突
 import 'package:test/test.dart';
 
+// 引入真實的7301系統進入功能群
+import '../73. Flutter_Module code_PL/7301. 系統進入功能群.dart' as PL7301;
+// 引入真實的7302記帳核心功能群
+import '../73. Flutter_Module code_PL/7302. 記帳核心功能群.dart' as PL7302;
 
 
 // ==========================================
@@ -1184,8 +1188,8 @@ Future<Map<String, dynamic>> _executeTCSIT017_AuthRegisterEndpoint() async {
     final testData = await StaticTestDataManager.instance.getModeSpecificTestData('Expert');
 
     // 直接測試PL層函數
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
-    final registerRequest = RegisterRequest(
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
+    final registerRequest = PL7301.RegisterRequest(
       email: testData['email'],
       password: 'TestPassword123',
       confirmPassword: 'TestPassword123',
@@ -1238,7 +1242,7 @@ Future<Map<String, dynamic>> _executeTCSIT018_AuthLoginEndpoint() async {
     final testData = await StaticTestDataManager.instance.getModeSpecificTestData('Expert');
 
     // 直接測試PL層函數
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final result = await systemEntryGroup.loginWithEmail(
       testData['email'],
       'TestPassword123',
@@ -1284,7 +1288,7 @@ Future<Map<String, dynamic>> _executeTCSIT019_AuthLogoutEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final result = await systemEntryGroup.logout(); // 假設logout函數存在
 
     testResult['details'] = {
@@ -1323,7 +1327,7 @@ Future<Map<String, dynamic>> _executeTCSIT020_UsersProfileEndpoint() async {
 
     // 假設我們有一個已登入的使用者ID
     final userId = 'user_12345'; // 替換為實際的用戶ID
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final result = await systemEntryGroup.getProfile(userId);
 
     testResult['details'] = {
@@ -1366,7 +1370,7 @@ Future<Map<String, dynamic>> _executeTCSIT021_UsersAssessmentEndpoint() async {
     // 載入7598測試資料 - 假設用於評估
     final testData = await StaticTestDataManager.instance.getModeSpecificTestData('Expert');
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final result = await systemEntryGroup.submitAssessment(
       userId: 'user_abc', // 假設用戶ID
       assessmentData: {
@@ -1416,7 +1420,7 @@ Future<Map<String, dynamic>> _executeTCSIT022_UsersPreferencesEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final updatedPreferences = {
       'theme': 'dark',
       'notifications': {'email': true, 'push': false},
@@ -1468,7 +1472,7 @@ Future<Map<String, dynamic>> _executeTCSIT023_TransactionsQuickEndpoint() async 
     final transactionData = await StaticTestDataManager.instance.getTransactionTestData('success');
 
     // 直接測試PL層快速記帳邏輯（模擬調用7302模組）
-    final quickAccountingProcessor = QuickAccountingProcessorImpl();
+    final quickAccountingProcessor = PL7302.QuickAccountingProcessorImpl();
     final result = await quickAccountingProcessor.processQuickAccounting(
       '${transactionData['description']} ${transactionData['amount']}'
     );
@@ -1519,7 +1523,7 @@ Future<Map<String, dynamic>> _executeTCSIT024_TransactionsCRUDEndpoint() async {
     final createResult = await _createTransaction(
       description: transactionData['description'] ?? 'Test Transaction',
       amount: transactionData['amount']?.toDouble() ?? 100.0,
-      type: transactionData['type'] ?? TransactionType.expense,
+      type: PL7302.TransactionType.expense,
     );
 
     if (!createResult.success) {
@@ -1584,7 +1588,7 @@ Future<Map<String, dynamic>> _executeTCSIT025_TransactionsDashboardEndpoint() as
   try {
     final stopwatch = Stopwatch()..start();
 
-    final accountingCore = AccountingCore.instance; // 假設這是7302的核心類別
+    final accountingCore = PL7302.AccountingCore.instance; // 假設這是7302的核心類別
     final result = await accountingCore.getDashboardData(userId: 'user_dashboard');
 
     testResult['details'] = {
@@ -1593,7 +1597,7 @@ Future<Map<String, dynamic>> _executeTCSIT025_TransactionsDashboardEndpoint() as
       'functionResult': {
         'success': result.success,
         'message': result.message,
-        'dashboardData': result.dashboardData, // 包含總覽數據
+        'dashboardData': result.dashboardData?.toJson(), // 包含總覽數據
       },
     };
 
@@ -1623,7 +1627,7 @@ Future<Map<String, dynamic>> _executeTCSIT026_AuthRefreshEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     // 假設我們有一個當前有效的 Refresh Token
     final refreshToken = 'valid_refresh_token_123';
     final result = await systemEntryGroup.refreshToken(refreshToken);
@@ -1665,7 +1669,7 @@ Future<Map<String, dynamic>> _executeTCSIT027_AuthForgotPasswordEndpoint() async
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final email = 'test_user@example.com';
     final result = await systemEntryGroup.forgotPassword(email);
 
@@ -1704,7 +1708,7 @@ Future<Map<String, dynamic>> _executeTCSIT028_AuthResetPasswordEndpoint() async 
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final resetToken = 'valid_reset_token_456';
     final newPassword = 'NewStrongPassword123!';
     final result = await systemEntryGroup.resetPassword(resetToken, newPassword);
@@ -1747,7 +1751,7 @@ Future<Map<String, dynamic>> _executeTCSIT029_AuthVerifyEmailEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final verificationToken = 'valid_email_token_789';
     final result = await systemEntryGroup.verifyEmail(verificationToken);
 
@@ -1786,7 +1790,7 @@ Future<Map<String, dynamic>> _executeTCSIT030_AuthBindLineEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final userId = 'user_line_bind';
     final lineAuthCode = 'mock_line_auth_code';
     final result = await systemEntryGroup.bindLineAccount(userId, lineAuthCode);
@@ -1830,7 +1834,7 @@ Future<Map<String, dynamic>> _executeTCSIT031_AuthBindStatusEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final userId = 'user_query_bind';
     final result = await systemEntryGroup.getLineBindingStatus(userId);
 
@@ -1876,7 +1880,7 @@ Future<Map<String, dynamic>> _executeTCSIT033_PutUsersProfileEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final userId = 'user_update_profile';
     final profileUpdates = {
       'displayName': 'Updated User Name',
@@ -1927,7 +1931,7 @@ Future<Map<String, dynamic>> _executeTCSIT035_UsersModeEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final userId = 'user_change_mode';
     final newMode = 'Expert'; // 測試切換到 Expert 模式
     final result = await systemEntryGroup.updateUserMode(userId, newMode);
@@ -1970,7 +1974,7 @@ Future<Map<String, dynamic>> _executeTCSIT036_UsersSecurityEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final userId = 'user_security_settings';
     final securityUpdates = {
       'twoFactorEnabled': true,
@@ -2016,7 +2020,7 @@ Future<Map<String, dynamic>> _executeTCSIT037_UsersVerifyPinEndpoint() async {
   try {
     final stopwatch = Stopwatch()..start();
 
-    final systemEntryGroup = SystemEntryFunctionGroup.instance;
+    final systemEntryGroup = PL7301.SystemEntryFunctionGroup.instance;
     final userId = 'user_verify_pin';
     final pinCode = '1234'; // 假設這是正確的PIN碼
     final result = await systemEntryGroup.verifyPin(userId, pinCode);
@@ -2063,7 +2067,7 @@ Future<Map<String, dynamic>> _executeTCSIT038_GetTransactionByIdEndpoint() async
     final createResult = await _createTransaction(
       description: 'Transaction for detail fetch',
       amount: 50.0,
-      type: TransactionType.income,
+      type: PL7302.TransactionType.income,
     );
     if (!createResult.success || createResult.transaction?.id == null) {
       throw Exception('創建交易失敗，無法測試獲取詳情');
@@ -2112,7 +2116,7 @@ Future<Map<String, dynamic>> _executeTCSIT039_PutTransactionByIdEndpoint() async
     final createResult = await _createTransaction(
       description: 'Transaction for update test',
       amount: 100.0,
-      type: TransactionType.expense,
+      type: PL7302.TransactionType.expense,
     );
     if (!createResult.success || createResult.transaction?.id == null) {
       throw Exception('創建交易失敗，無法測試更新');
@@ -2123,8 +2127,8 @@ Future<Map<String, dynamic>> _executeTCSIT039_PutTransactionByIdEndpoint() async
     final updateResult = await _updateTransaction(
       transactionId,
       description: 'Updated transaction description',
-      amount: 120.0,
-      type: TransactionType.income, // 更改類型
+      amount: readResult.transaction!.amount * 1.1, // 增加10%
+      type: PL7302.TransactionType.income, // 更改類型
     );
 
     testResult['details'] = {
@@ -2167,7 +2171,7 @@ Future<Map<String, dynamic>> _executeTCSIT040_DeleteTransactionByIdEndpoint() as
     final createResult = await _createTransaction(
       description: 'Transaction to be deleted',
       amount: 75.0,
-      type: TransactionType.expense,
+      type: PL7302.TransactionType.expense,
     );
     if (!createResult.success || createResult.transaction?.id == null) {
       throw Exception('創建交易失敗，無法測試刪除');
@@ -2209,7 +2213,7 @@ Future<Map<String, dynamic>> _executeTCSIT041_TransactionsStatisticsEndpoint() a
   try {
     final stopwatch = Stopwatch()..start();
 
-    final accountingCore = AccountingCore.instance;
+    final accountingCore = PL7302.AccountingCore.instance;
     final result = await accountingCore.getTransactionStatistics(
       userId: 'user_stats',
       startDate: DateTime(2023, 1, 1),
@@ -2258,7 +2262,7 @@ Future<Map<String, dynamic>> _executeTCSIT042_TransactionsRecentEndpoint() async
   try {
     final stopwatch = Stopwatch()..start();
 
-    final accountingCore = AccountingCore.instance;
+    final accountingCore = PL7302.AccountingCore.instance;
     final result = await accountingCore.getRecentTransactions(
       userId: 'user_recent',
       limit: 10, // 獲取最近10筆
@@ -2303,7 +2307,7 @@ Future<Map<String, dynamic>> _executeTCSIT043_TransactionsChartsEndpoint() async
   try {
     final stopwatch = Stopwatch()..start();
 
-    final accountingCore = AccountingCore.instance;
+    final accountingCore = PL7302.AccountingCore.instance;
     final result = await accountingCore.getTransactionChartData(
       userId: 'user_charts',
       period: 'monthly', // 例如：'monthly', 'yearly'
@@ -2344,749 +2348,45 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
 // PL層測試支援函數 - 模擬調用7301、7302模組
 // ==========================================
 
-// 假設的7301系統進入功能群接口
-abstract class SystemEntryFunctionGroup {
-  static SystemEntryFunctionGroup? _instance;
-  static SystemEntryFunctionGroup get instance {
-    _instance ??= _MockSystemEntryFunctionGroup();
-    return _instance!;
-  }
-
-  Future<RegisterResult> registerWithEmail(RegisterRequest request);
-  Future<LoginResult> loginWithEmail(String email, String password);
-  Future<LogoutResult> logout();
-  Future<ProfileResult> getProfile(String userId);
-  Future<AssessmentResult> submitAssessment({
-    required String userId,
-    required Map<String, dynamic> assessmentData,
-    required String mode,
-  });
-  Future<PreferencesResult> updatePreferences(String userId, Map<String, dynamic> preferences);
-  Future<RefreshTokenResult> refreshToken(String refreshToken);
-  Future<ForgotPasswordResult> forgotPassword(String email);
-  Future<ResetPasswordResult> resetPassword(String resetToken, String newPassword);
-  Future<VerifyEmailResult> verifyEmail(String verificationToken);
-  Future<BindLineResult> bindLineAccount(String userId, String lineAuthCode);
-  Future<BindStatusResult> getLineBindingStatus(String userId);
-  Future<ProfileResult> updateProfile(String userId, Map<String, dynamic> updates);
-  Future<SecuritySettingsResult> updateSecuritySettings(String userId, Map<String, dynamic> settings);
-  Future<VerifyPinResult> verifyPin(String userId, String pinCode);
-  Future<UserModeResult> updateUserMode(String userId, String newMode);
-}
-
-// 假設的7301結果類別
-class RegisterResult {
-  final bool success;
-  final String? message;
-  final String? token;
-  final String? userId;
-  RegisterResult({required this.success, this.message, this.token, this.userId});
-  Map<String, dynamic> toJson() => {'success': success, 'message': message, 'token': token, 'userId': userId};
-}
-
-class LoginResult {
-  final bool success;
-  final String? message;
-  final String? token;
-  final String? userId;
-  final Map<String, dynamic>? userData;
-  LoginResult({required this.success, this.message, this.token, this.userId, this.userData});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message, 'token': token, 'userId': userId, 'userData': userData};
-}
-
-class LogoutResult {
-  final bool success;
-  final String? message;
-  LogoutResult({required this.success, this.message});
-  Map<String, dynamic> toJson() => {'success': success, 'message': message};
-}
-
-class ProfileResult {
-  final bool success;
-  final String? message;
-  final Map<String, dynamic>? userData;
-  ProfileResult({required this.success, this.message, this.userData});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message, 'userData': userData};
-}
-
-class AssessmentResult {
-  final bool success;
-  final String? message;
-  final String? submissionId;
-  AssessmentResult({required this.success, this.message, this.submissionId});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message, 'submissionId': submissionId};
-}
-
-class PreferencesResult {
-  final bool success;
-  final String? message;
-  PreferencesResult({required this.success, this.message});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message};
-}
-
-class RefreshTokenResult {
-  final bool success;
-  final String? message;
-  final String? newToken;
-  final String? newRefreshToken;
-  RefreshTokenResult({required this.success, this.message, this.newToken, this.newRefreshToken});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message, 'newToken': newToken, 'newRefreshToken': newRefreshToken};
-}
-
-class ForgotPasswordResult {
-  final bool success;
-  final String? message;
-  ForgotPasswordResult({required this.success, this.message});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message};
-}
-
-class ResetPasswordResult {
-  final bool success;
-  final String? message;
-  ResetPasswordResult({required this.success, this.message});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message};
-}
-
-class VerifyEmailResult {
-  final bool success;
-  final String? message;
-  VerifyEmailResult({required this.success, this.message});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message};
-}
-
-class BindLineResult {
-  final bool success;
-  final String? message;
-  final String? lineUserId;
-  BindLineResult({required this.success, this.message, this.lineUserId});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message, 'lineUserId': lineUserId};
-}
-
-class BindStatusResult {
-  final bool success;
-  final String? message;
-  final bool isBound;
-  final String? lineUserId;
-  BindStatusResult({required this.success, this.message, this.isBound = false, this.lineUserId});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message, 'isBound': isBound, 'lineUserId': lineUserId};
-}
-
-class SecuritySettingsResult {
-  final bool success;
-  final String? message;
-  SecuritySettingsResult({required this.success, this.message});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message};
-}
-
-class VerifyPinResult {
-  final bool success;
-  final String? message;
-  VerifyPinResult({required this.success, this.message});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message};
-}
-
-class UserModeResult {
-  final bool success;
-  final String? message;
-  UserModeResult({required this.success, this.message});
-   Map<String, dynamic> toJson() => {'success': success, 'message': message};
-}
-
-// 假設的7301請求類別
-class RegisterRequest {
-  final String email;
-  final String password;
-  final String confirmPassword;
-  final String displayName;
-  RegisterRequest({required this.email, required this.password, required this.confirmPassword, required this.displayName});
-}
-
-// 模擬的7301 SystemEntryFunctionGroup 實作
-class _MockSystemEntryFunctionGroup implements SystemEntryFunctionGroup {
-  // 模擬使用者數據庫
-  final Map<String, Map<String, dynamic>> _users = {
-    'user_12345': {'id': 'user_12345', 'email': 'test@example.com', 'displayName': 'Test User', 'mode': 'Expert'},
-    'user_abc': {'id': 'user_abc', 'email': 'assessment@example.com', 'displayName': 'Assessment User', 'mode': 'Inertial'},
-    'user_xyz': {'id': 'user_xyz', 'email': 'prefs@example.com', 'displayName': 'Prefs User', 'mode': 'Cultivation'},
-    'user_change_mode': {'id': 'user_change_mode', 'email': 'mode@example.com', 'displayName': 'Mode User', 'mode': 'Guiding'},
-    'user_security_settings': {'id': 'user_security_settings', 'email': 'security@example.com', 'displayName': 'Security User', 'mode': 'Expert'},
-    'user_verify_pin': {'id': 'user_verify_pin', 'email': 'pin@example.com', 'displayName': 'PIN User', 'mode': 'Inertial'},
-  };
-  // 模擬登入 Token
-  String? _currentAuthToken;
-  String? _currentUserId;
-  String? _currentRefreshToken;
-
-  @override
-  Future<RegisterResult> registerWithEmail(RegisterRequest request) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-    if (_users.containsKey('user_${request.email.hashCode}')) {
-      return RegisterResult(success: false, message: 'Email already in use');
-    }
-    if (request.password != request.confirmPassword) {
-      return RegisterResult(success: false, message: 'Passwords do not match');
-    }
-    // 模擬創建使用者
-    final userId = 'user_${request.email.hashCode}';
-    _users[userId] = {
-      'id': userId,
-      'email': request.email,
-      'displayName': request.displayName,
-      'mode': 'Inertial', // 預設模式
-      'createdAt': DateTime.now().toIso8601String(),
-    };
-    _currentAuthToken = 'reg_token_${DateTime.now().millisecondsSinceEpoch}';
-    _currentUserId = userId;
-    _currentRefreshToken = 'reg_refresh_${DateTime.now().millisecondsSinceEpoch}';
-
-    return RegisterResult(
-      success: true,
-      message: 'Registration successful',
-      token: _currentAuthToken,
-      userId: userId,
-    );
-  }
-
-  @override
-  Future<LoginResult> loginWithEmail(String email, String password) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-    // 模擬登入邏輯
-    final userId = _users.entries.firstWhereOrNull((entry) => entry.value['email'] == email)?.key;
-    if (userId != null) {
-      // 假設密碼驗證成功
-      _currentAuthToken = 'login_token_${DateTime.now().millisecondsSinceEpoch}';
-      _currentUserId = userId;
-      _currentRefreshToken = 'login_refresh_${DateTime.now().millisecondsSinceEpoch}';
-      return LoginResult(
-        success: true,
-        message: 'Login successful',
-        token: _currentAuthToken,
-        userId: userId,
-        userData: _users[userId],
-      );
-    }
-    return LoginResult(success: false, message: 'Invalid credentials');
-  }
-
-  @override
-  Future<LogoutResult> logout() async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    _currentAuthToken = null;
-    _currentUserId = null;
-    _currentRefreshToken = null;
-    return LogoutResult(success: true, message: 'Logout successful');
-  }
-
-  @override
-  Future<ProfileResult> getProfile(String userId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    final userData = _users[userId];
-    if (userData != null) {
-      return ProfileResult(success: true, message: 'Profile fetched', userData: userData);
-    }
-    return ProfileResult(success: false, message: 'User not found');
-  }
-
-  @override
-  Future<AssessmentResult> submitAssessment({
-    required String userId,
-    required Map<String, dynamic> assessmentData,
-    required String mode,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    // 模擬評估邏輯
-    final submissionId = 'submission_${DateTime.now().millisecondsSinceEpoch}';
-    return AssessmentResult(success: true, message: 'Assessment submitted', submissionId: submissionId);
-  }
-
-  @override
-  Future<PreferencesResult> updatePreferences(String userId, Map<String, dynamic> preferences) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-    if (_users.containsKey(userId)) {
-      // 模擬更新偏好設定
-      _users[userId]?['preferences'] = preferences;
-      return PreferencesResult(success: true, message: 'Preferences updated');
-    }
-    return PreferencesResult(success: false, message: 'User not found');
-  }
-
-  @override
-  Future<RefreshTokenResult> refreshToken(String refreshToken) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    // 模擬 Token 刷新邏輯
-    if (refreshToken.startsWith('valid_refresh_token') || refreshToken.startsWith('reg_refresh') || refreshToken.startsWith('login_refresh')) {
-      final newAuthToken = 'new_auth_${DateTime.now().millisecondsSinceEpoch}';
-      final newRefreshToken = 'new_refresh_${DateTime.now().millisecondsSinceEpoch}';
-      _currentAuthToken = newAuthToken;
-      _currentRefreshToken = newRefreshToken;
-      return RefreshTokenResult(
-        success: true,
-        message: 'Token refreshed',
-        newToken: newAuthToken,
-        newRefreshToken: newRefreshToken,
-      );
-    }
-    return RefreshTokenResult(success: false, message: 'Invalid refresh token');
-  }
-
-  @override
-  Future<ForgotPasswordResult> forgotPassword(String email) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    // 模擬發送忘記密碼郵件
-    return ForgotPasswordResult(success: true, message: 'Password reset email sent');
-  }
-
-  @override
-  Future<ResetPasswordResult> resetPassword(String resetToken, String newPassword) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    // 模擬驗證 Token 並重設密碼
-    if (resetToken.startsWith('valid_reset_token')) {
-      return ResetPasswordResult(success: true, message: 'Password reset successful');
-    }
-    return ResetPasswordResult(success: false, message: 'Invalid or expired reset token');
-  }
-
-  @override
-  Future<VerifyEmailResult> verifyEmail(String verificationToken) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    // 模擬驗證 Email
-    if (verificationToken.startsWith('valid_email_token')) {
-      return VerifyEmailResult(success: true, message: 'Email verified successfully');
-    }
-    return VerifyEmailResult(success: false, message: 'Invalid or expired verification token');
-  }
-
-  @override
-  Future<BindLineResult> bindLineAccount(String userId, String lineAuthCode) async {
-    await Future.delayed(const Duration(milliseconds: 350));
-    if (_users.containsKey(userId)) {
-      // 模擬綁定 LINE 帳號
-      final lineUserId = 'line_${DateTime.now().millisecondsSinceEpoch}';
-      _users[userId]?['lineUserId'] = lineUserId;
-      _users[userId]?['isLineBound'] = true;
-      return BindLineResult(success: true, message: 'LINE account bound', lineUserId: lineUserId);
-    }
-    return BindLineResult(success: false, message: 'User not found');
-  }
-
-  @override
-  Future<BindStatusResult> getLineBindingStatus(String userId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    final userData = _users[userId];
-    if (userData != null) {
-      return BindStatusResult(
-        success: true,
-        message: 'Binding status retrieved',
-        isBound: userData['isLineBound'] ?? false,
-        lineUserId: userData['lineUserId'],
-      );
-    }
-    return BindStatusResult(success: false, message: 'User not found');
-  }
-
-  @override
-  Future<ProfileResult> updateProfile(String userId, Map<String, dynamic> updates) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-    if (_users.containsKey(userId)) {
-      // 模擬更新用戶資料
-      updates.forEach((key, value) {
-        _users[userId]?[key] = value;
-      });
-      return ProfileResult(success: true, message: 'Profile updated', userData: _users[userId]);
-    }
-    return ProfileResult(success: false, message: 'User not found');
-  }
-
-  @override
-  Future<SecuritySettingsResult> updateSecuritySettings(String userId, Map<String, dynamic> settings) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-    if (_users.containsKey(userId)) {
-      // 模擬更新安全設定
-      _users[userId]?['securitySettings'] = settings;
-      return SecuritySettingsResult(success: true, message: 'Security settings updated');
-    }
-    return SecuritySettingsResult(success: false, message: 'User not found');
-  }
-
-  @override
-  Future<VerifyPinResult> verifyPin(String userId, String pinCode) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    final userData = _users[userId];
-    // 模擬 PIN 碼驗證
-    if (userData != null && userData['securitySettings']?['pinCode'] == pinCode) {
-      return VerifyPinResult(success: true, message: 'PIN verified');
-    }
-    return VerifyPinResult(success: false, message: 'Invalid PIN');
-  }
-
-  @override
-  Future<UserModeResult> updateUserMode(String userId, String newMode) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-    if (_users.containsKey(userId)) {
-      // 模擬更新用戶模式
-      _users[userId]?['mode'] = newMode;
-      return UserModeResult(success: true, message: 'User mode updated to $newMode');
-    }
-    return UserModeResult(success: false, message: 'User not found');
-  }
-}
-
-// 假設的7302記帳核心功能群接口
-abstract class AccountingCore {
-  static AccountingCore? _instance;
-  static AccountingCore get instance {
-    _instance ??= _MockAccountingCore();
-    return _instance!;
-  }
-
-  Future<TransactionResult> createTransaction(Transaction transaction);
-  Future<TransactionResult> getTransactionById(String transactionId);
-  Future<TransactionResult> updateTransaction(String transactionId, {String? description, double? amount, TransactionType? type});
-  Future<TransactionResult> deleteTransaction(String transactionId);
-  Future<DashboardResult> getDashboardData({required String userId});
-  Future<StatisticsResult> getTransactionStatistics({
-    required String userId,
-    required DateTime startDate,
-    required DateTime endDate,
-    required String groupBy,
-  });
-  Future<RecentTransactionsResult> getRecentTransactions({required String userId, required int limit});
-  Future<ChartDataResult> getTransactionChartData({
-    required String userId,
-    required String period,
-    required String chartType,
-  });
-}
-
-// 模擬的7302 AccountingCore 實作
-class _MockAccountingCore implements AccountingCore {
-  // 模擬交易記錄
-  final Map<String, Transaction> _transactions = {};
-  int _transactionCounter = 0;
-
-  @override
-  Future<TransactionResult> createTransaction(Transaction transaction) async {
-    await Future.delayed(const Duration(milliseconds: 120));
-    _transactionCounter++;
-    final newTransaction = transaction.copyWith(
-      id: 'txn_${_transactionCounter}_${DateTime.now().millisecondsSinceEpoch}',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    _transactions[newTransaction.id!] = newTransaction;
-    return TransactionResult(success: true, message: 'Transaction created', transaction: newTransaction);
-  }
-
-  @override
-  Future<TransactionResult> getTransactionById(String transactionId) async {
-    await Future.delayed(const Duration(milliseconds: 80));
-    final transaction = _transactions[transactionId];
-    if (transaction != null) {
-      return TransactionResult(success: true, message: 'Transaction found', transaction: transaction);
-    }
-    return TransactionResult(success: false, message: 'Transaction not found');
-  }
-
-  @override
-  Future<TransactionResult> updateTransaction(String transactionId, {String? description, double? amount, TransactionType? type}) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-    final transaction = _transactions[transactionId];
-    if (transaction != null) {
-      final updatedTransaction = transaction.copyWith(
-        description: description ?? transaction.description,
-        amount: amount ?? transaction.amount,
-        type: type ?? transaction.type,
-        updatedAt: DateTime.now(),
-      );
-      _transactions[transactionId] = updatedTransaction;
-      return TransactionResult(success: true, message: 'Transaction updated', transaction: updatedTransaction);
-    }
-    return TransactionResult(success: false, message: 'Transaction not found');
-  }
-
-  @override
-  Future<TransactionResult> deleteTransaction(String transactionId) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    if (_transactions.containsKey(transactionId)) {
-      _transactions.remove(transactionId);
-      return TransactionResult(success: true, message: 'Transaction deleted');
-    }
-    return TransactionResult(success: false, message: 'Transaction not found');
-  }
-
-  @override
-  Future<DashboardResult> getDashboardData({required String userId}) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    // 模擬儀表板數據
-    final dashboardData = {
-      'totalIncome': 15000.50,
-      'totalExpenses': 8000.75,
-      'balance': 6999.75,
-      'recentTransactions': await getRecentTransactions(userId: userId, limit: 5).then((res) => res.transactions),
-    };
-    return DashboardResult(success: true, message: 'Dashboard data retrieved', dashboardData: dashboardData);
-  }
-
-  @override
-  Future<StatisticsResult> getTransactionStatistics({
-    required String userId,
-    required DateTime startDate,
-    required DateTime endDate,
-    required String groupBy,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    // 模擬統計數據生成
-    final List<Map<String, dynamic>> statistics = [];
-    DateTime current = startDate;
-    while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
-      final periodKey = groupBy == 'month'
-          ? '${current.year}-${current.month.toString().padLeft(2, '0')}'
-          : '${current.year}';
-      statistics.add({
-        'period': periodKey,
-        'totalIncome': 1000.0 + (current.month * 100.0),
-        'totalExpenses': 500.0 + (current.month * 50.0),
-      });
-      if (groupBy == 'month') {
-        current = DateTime(current.year, current.month + 1, 1);
-      } else {
-        current = DateTime(current.year + 1, 1, 1);
-      }
-    }
-    return StatisticsResult(success: true, message: 'Statistics generated', statistics: statistics);
-  }
-
-  @override
-  Future<RecentTransactionsResult> getRecentTransactions({required String userId, required int limit}) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-    final recent = _transactions.values.toList()
-      ..sort((a, b) => b.createdAt!.compareTo(a.createdAt!))
-      ..take(limit)
-      .toList();
-    return RecentTransactionsResult(success: true, message: 'Recent transactions retrieved', transactions: recent);
-  }
-
-  @override
-  Future<ChartDataResult> getTransactionChartData({
-    required String userId,
-    required String period,
-    required String chartType,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 220));
-    // 模擬圖表數據
-    final List<Map<String, dynamic>> chartData = [];
-    final List<String> labels = ['January', 'February', 'March', 'April'];
-    final List<double> data = [1200.5, 1500.2, 1300.0, 1800.7];
-
-    for (int i = 0; i < labels.length; i++) {
-      chartData.add({
-        'label': labels[i],
-        'value': data[i],
-      });
-    }
-    return ChartDataResult(success: true, message: 'Chart data retrieved', chartData: chartData);
-  }
-}
+// PL層函數測試將直接調用真實的7301、7302模組函數
+// 而非使用模擬實作
 
 
 // ==========================================
 // PL層測試支援類別 - 數據模型
 // ==========================================
 
-enum TransactionType { income, expense }
-
-class Transaction {
-  String? id;
-  TransactionType type;
-  double amount;
-  String description;
-  DateTime? date;
-  DateTime? createdAt;
-  DateTime? updatedAt;
-  String? source; // e.g., 'manual', 'quick', 'import'
-
-  Transaction({
-    this.id,
-    required this.type,
-    required this.amount,
-    required this.description,
-    this.date,
-    this.createdAt,
-    this.updatedAt,
-    this.source,
-  });
-
-  factory Transaction.fromJson(Map<String, dynamic> json) {
-    return Transaction(
-      id: json['id'],
-      type: TransactionType.values.byName(json['type']),
-      amount: json['amount']?.toDouble() ?? 0.0,
-      description: json['description'] ?? '',
-      date: json['date'] != null ? DateTime.parse(json['date']) : null,
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
-      source: json['source'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'type': type.name,
-      'amount': amount,
-      'description': description,
-      'date': date?.toIso8601String(),
-      'createdAt': createdAt?.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
-      'source': source,
-    };
-  }
-
-  Transaction copyWith({
-    String? id,
-    TransactionType? type,
-    double? amount,
-    String? description,
-    DateTime? date,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    String? source,
-  }) {
-    return Transaction(
-      id: id ?? this.id,
-      type: type ?? this.type,
-      amount: amount ?? this.amount,
-      description: description ?? this.description,
-      date: date ?? this.date,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      source: source ?? this.source,
-    );
-  }
-}
-
-// 結果類別
-class TransactionResult {
-  final bool success;
-  final String? message;
-  final Transaction? transaction;
-  TransactionResult({required this.success, this.message, this.transaction});
-}
-
-class DashboardResult {
-  final bool success;
-  final String? message;
-  final Map<String, dynamic>? dashboardData;
-  DashboardResult({required this.success, this.message, this.dashboardData});
-}
-
-class StatisticsResult {
-  final bool success;
-  final String? message;
-  final List<Map<String, dynamic>>? statistics;
-  StatisticsResult({required this.success, this.message, this.statistics});
-}
-
-class RecentTransactionsResult {
-  final bool success;
-  final String? message;
-  final List<Transaction>? transactions;
-  RecentTransactionsResult({required this.success, this.message, this.transactions});
-}
-
-class ChartDataResult {
-  final bool success;
-  final String? message;
-  final List<Map<String, dynamic>>? chartData;
-  ChartDataResult({required this.success, this.message, this.chartData});
-}
-
-/// 快速記帳處理器實作 - 用於測試7302模組邏輯
-class QuickAccountingProcessorImpl {
-  Future<QuickAccountingResult> processQuickAccounting(String input) async {
-    try {
-      // 模擬7302記帳核心功能群的快速記帳邏輯
-      await Future.delayed(Duration(milliseconds: 100));
-
-      // 簡化的文字解析邏輯
-      final parts = input.split(' ');
-      if (parts.length >= 2) {
-        final description = parts[0];
-        final amountStr = parts[1];
-        final amount = double.tryParse(amountStr) ?? 0.0;
-
-        if (amount > 0) {
-          final transaction = Transaction(
-            id: 'txn_${DateTime.now().millisecondsSinceEpoch}',
-            type: TransactionType.expense,
-            amount: amount,
-            description: description,
-            date: DateTime.now(),
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            source: 'quick',
-          );
-
-          return QuickAccountingResult(
-            success: true,
-            message: '快速記帳成功',
-            transaction: transaction,
-          );
-        }
-      }
-
-      return QuickAccountingResult(
-        success: false,
-        message: '無法解析記帳資料',
-      );
-    } catch (e) {
-      return QuickAccountingResult(
-        success: false,
-        message: '快速記帳失敗：$e',
-      );
-    }
-  }
-}
-
-// 快速記帳結果類別
-class QuickAccountingResult {
-  final bool success;
-  final String? message;
-  final Transaction? transaction;
-  QuickAccountingResult({required this.success, this.message, this.transaction});
-}
-
-// ==========================================
-// PL層測試輔助函數 - 模擬調用7302模組
-// ==========================================
-
-// 模擬創建交易
-Future<TransactionResult> _createTransaction(
-    {required String description, required double amount, required TransactionType type}) async {
-  final transaction = Transaction(
+// 交易操作相關函數
+Future<PL7302.CreateTransactionResult> _createTransaction({
+  required String description,
+  required double amount,
+  required PL7302.TransactionType type,
+}) async {
+  final transaction = PL7302.Transaction(
     description: description,
     amount: amount,
     type: type,
     date: DateTime.now(),
     source: 'test',
   );
-  return await AccountingCore.instance.createTransaction(transaction);
+  return await PL7302.AccountingCore.instance.createTransaction(transaction);
 }
 
-// 模擬獲取交易
-Future<TransactionResult> _getTransactionById(String transactionId) async {
-  return await AccountingCore.instance.getTransactionById(transactionId);
+Future<PL7302.GetTransactionResult> _getTransactionById(String transactionId) async {
+  return await PL7302.AccountingCore.instance.getTransactionById(transactionId);
 }
 
-// 模擬更新交易
-Future<TransactionResult> _updateTransaction(
-    String transactionId, {String? description, double? amount, TransactionType? type}) async {
-  return await AccountingCore.instance.updateTransaction(transactionId, description: description, amount: amount, type: type);
+Future<PL7302.UpdateTransactionResult> _updateTransaction(
+  String transactionId, {
+  String? description,
+  double? amount,
+  PL7302.TransactionType? type,
+}) async {
+  return await PL7302.AccountingCore.instance.updateTransaction(transactionId, description: description, amount: amount, type: type);
 }
 
-// 模擬刪除交易
-Future<TransactionResult> _deleteTransaction(String transactionId) async {
-  return await AccountingCore.instance.deleteTransaction(transactionId);
+Future<PL7302.DeleteTransactionResult> _deleteTransaction(String transactionId) async {
+  return await PL7302.AccountingCore.instance.deleteTransaction(transactionId);
 }
 
 
@@ -3147,8 +2447,6 @@ void main() {
       final result = await testController.executeSITTest();
 
       expect(result['totalTests'], equals(44));
-      // 根據實際測試情況調整預期通過數
-      // expect(result['passedTests'], greaterThanOrEqualTo(40)); // 允許最多4個失敗
       // 由於移除了模擬，現在所有PL層函數測試都應該成功，除非PL層本身有bug
       expect(result['passedTests'], equals(44));
 
