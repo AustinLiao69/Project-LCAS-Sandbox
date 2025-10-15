@@ -1092,8 +1092,6 @@ void initializePhase1CompletedSITTestModule() {
   print('[7570] 📊 測試覆蓋：16個整合層測試案例 (TC-SIT-001~016)');
   print('[7570] 🎯 回歸MVP理念：簡單可靠優於複雜完美');
   print('[7570] 🚀 階段一目標達成：靜態測試資料流建立完成');
-}
-
 // ==========================================
 // 主執行函數
 // ==========================================
@@ -1177,12 +1175,15 @@ void main() {
     });
   });
 
-  // Dummy classes and functions that were part of the original file but are now removed or replaced.
-  // These are included here to satisfy potential import/usage issues if any part of the code
-  // was missed during the refactoring, but ideally should not be needed if the refactoring is complete.
+  }
 
-  // Dummy for DynamicTestDataFactory
-  class DynamicTestDataFactory {
+// ==========================================
+// Dummy Classes (階段一保留類別 - 相容性考量)
+// ==========================================
+// 這些類別保留用於相容性，將在後續階段完全移除
+
+/// Dummy for DynamicTestDataFactory
+class DynamicTestDataFactory {
     static final DynamicTestDataFactory _instance = DynamicTestDataFactory._internal();
     static DynamicTestDataFactory get instance => _instance;
     DynamicTestDataFactory._internal();
