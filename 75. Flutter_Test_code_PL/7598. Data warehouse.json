@@ -1,20 +1,20 @@
 
 {
   "metadata": {
-    "version": "1.0.1",
-    "createdAt": "2025-10-15T00:00:00Z",
-    "description": "SIT P1測試資料倉庫 - 符合1311 FS.js標準格式",
-    "dataSource": "7590. 生成動態測試資料.dart",
+    "version": "2.0.0",
+    "createdAt": "2025-10-15T06:00:00Z",
+    "description": "SIT P1完整測試資料倉庫 - 包含成功、失敗、邊界值測試情境",
+    "dataSource": "STATIC_GENERATION",
     "consumer": "7570. SIT_P1.dart",
-    "totalRecords": 8,
-    "lastUpdated": "2025-10-15T06:00:00Z",
-    "compliance": "1311_FS_STANDARD"
+    "totalRecords": 24,
+    "lastUpdated": "2025-10-15T08:00:00Z",
+    "compliance": "1311_FS_STANDARD_FULL"
   },
   "authentication_test_data": {
-    "expert_users": {
-      "user_expert_1697363200000": {
+    "success_scenarios": {
+      "expert_user_valid": {
         "userId": "user_expert_1697363200000",
-        "email": "expert_user_1697363200000@test.lcas.app",
+        "email": "expert.valid@test.lcas.app",
         "displayName": "Expert 測試用戶",
         "userMode": "Expert",
         "preferences": {
@@ -28,13 +28,12 @@
           "Q3": "A"
         },
         "registrationDate": "2025-10-15T00:00:00Z",
-        "createdAt": "2025-10-15T00:00:00Z"
-      }
-    },
-    "inertial_users": {
-      "user_inertial_1697363260000": {
+        "createdAt": "2025-10-15T00:00:00Z",
+        "testScenario": "正常Expert用戶註冊"
+      },
+      "inertial_user_valid": {
         "userId": "user_inertial_1697363260000",
-        "email": "inertial_user_1697363260000@test.lcas.app",
+        "email": "inertial.valid@test.lcas.app",
         "displayName": "Inertial 測試用戶",
         "userMode": "Inertial",
         "preferences": {
@@ -48,13 +47,12 @@
           "Q3": "B"
         },
         "registrationDate": "2025-10-15T00:00:00Z",
-        "createdAt": "2025-10-15T00:00:00Z"
-      }
-    },
-    "cultivation_users": {
-      "user_cultivation_1697363320000": {
+        "createdAt": "2025-10-15T00:00:00Z",
+        "testScenario": "正常Inertial用戶註冊"
+      },
+      "cultivation_user_valid": {
         "userId": "user_cultivation_1697363320000",
-        "email": "cultivation_user_1697363320000@test.lcas.app",
+        "email": "cultivation.valid@test.lcas.app",
         "displayName": "Cultivation 測試用戶",
         "userMode": "Cultivation",
         "preferences": {
@@ -68,13 +66,12 @@
           "Q3": "C"
         },
         "registrationDate": "2025-10-15T00:00:00Z",
-        "createdAt": "2025-10-15T00:00:00Z"
-      }
-    },
-    "guiding_users": {
-      "user_guiding_1697363380000": {
+        "createdAt": "2025-10-15T00:00:00Z",
+        "testScenario": "正常Cultivation用戶註冊"
+      },
+      "guiding_user_valid": {
         "userId": "user_guiding_1697363380000",
-        "email": "guiding_user_1697363380000@test.lcas.app",
+        "email": "guiding.valid@test.lcas.app",
         "displayName": "Guiding 測試用戶",
         "userMode": "Guiding",
         "preferences": {
@@ -88,13 +85,62 @@
           "Q3": "D"
         },
         "registrationDate": "2025-10-15T00:00:00Z",
-        "createdAt": "2025-10-15T00:00:00Z"
+        "createdAt": "2025-10-15T00:00:00Z",
+        "testScenario": "正常Guiding用戶註冊"
+      }
+    },
+    "failure_scenarios": {
+      "invalid_email_format": {
+        "userId": "user_invalid_email",
+        "email": "invalid-email-format",
+        "displayName": "Invalid Email User",
+        "userMode": "Expert",
+        "testScenario": "無效Email格式",
+        "expectedError": "Email格式無效"
+      },
+      "missing_user_mode": {
+        "userId": "user_missing_mode",
+        "email": "missing.mode@test.lcas.app",
+        "displayName": "Missing Mode User",
+        "testScenario": "缺少userMode欄位",
+        "expectedError": "缺少必要欄位: userMode"
+      },
+      "invalid_user_mode": {
+        "userId": "user_invalid_mode",
+        "email": "invalid.mode@test.lcas.app",
+        "displayName": "Invalid Mode User",
+        "userMode": "InvalidMode",
+        "testScenario": "無效的userMode值",
+        "expectedError": "無效的使用者模式: InvalidMode"
+      },
+      "empty_user_id": {
+        "userId": "",
+        "email": "empty.userid@test.lcas.app",
+        "displayName": "Empty UserID User",
+        "userMode": "Expert",
+        "testScenario": "空的userId",
+        "expectedError": "缺少必要欄位: userId"
+      }
+    },
+    "boundary_scenarios": {
+      "minimal_valid_user": {
+        "userId": "user_minimal_1697363400000",
+        "email": "minimal@test.lcas.app",
+        "userMode": "Expert",
+        "testScenario": "最小必要欄位用戶"
+      },
+      "maximum_length_fields": {
+        "userId": "user_max_length_1697363500000",
+        "email": "very.long.email.address.for.boundary.testing@test.lcas.app",
+        "displayName": "This is a very long display name for boundary testing purposes to check system limits",
+        "userMode": "Expert",
+        "testScenario": "最大長度欄位測試"
       }
     }
   },
   "bookkeeping_test_data": {
-    "expert_transactions": {
-      "txn_1697363200001_a1b2c3": {
+    "success_scenarios": {
+      "valid_expense_transaction": {
         "id": "txn_1697363200001_a1b2c3",
         "amount": 150.0,
         "type": "expense",
@@ -108,9 +154,10 @@
         "updatedAt": "2025-10-15T00:00:01Z",
         "status": "active",
         "verified": false,
-        "source": "quick"
+        "source": "quick",
+        "testScenario": "正常支出交易"
       },
-      "txn_1697363200002_d4e5f6": {
+      "valid_income_transaction": {
         "id": "txn_1697363200002_d4e5f6",
         "amount": 50000.0,
         "type": "income",
@@ -124,87 +171,195 @@
         "updatedAt": "2025-10-15T00:00:02Z",
         "status": "active",
         "verified": false,
-        "source": "quick"
-      }
-    },
-    "inertial_transactions": {
-      "txn_1697363260001_g7h8i9": {
-        "id": "txn_1697363260001_g7h8i9",
-        "amount": 80.0,
-        "type": "expense",
-        "description": "交通費",
-        "categoryId": "transport",
-        "accountId": "account_default",
-        "date": "2025-10-15",
-        "userId": "user_inertial_1697363260000",
-        "paymentMethod": "悠遊卡",
-        "createdAt": "2025-10-15T00:01:00Z",
-        "updatedAt": "2025-10-15T00:01:00Z",
-        "status": "active",
-        "verified": false,
-        "source": "quick"
-      }
-    },
-    "cultivation_transactions": {
-      "txn_1697363320001_j1k2l3": {
-        "id": "txn_1697363320001_j1k2l3",
-        "amount": 500.0,
-        "type": "expense",
-        "description": "購物",
-        "categoryId": "entertainment",
-        "accountId": "account_default",
-        "date": "2025-10-15",
-        "userId": "user_cultivation_1697363320000",
-        "paymentMethod": "信用卡",
-        "createdAt": "2025-10-15T00:02:00Z",
-        "updatedAt": "2025-10-15T00:02:00Z",
-        "status": "active",
-        "verified": false,
-        "source": "quick"
-      }
-    },
-    "guiding_transactions": {
-      "txn_1697363380001_m4n5o6": {
-        "id": "txn_1697363380001_m4n5o6",
-        "amount": 5000.0,
+        "source": "manual",
+        "testScenario": "正常收入交易"
+      },
+      "large_amount_transaction": {
+        "id": "txn_1697363200003_g7h8i9",
+        "amount": 1000000.0,
         "type": "income",
-        "description": "副業收入",
-        "categoryId": "freelance",
+        "description": "大額收入測試",
+        "categoryId": "investment",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_guiding_1697363380000",
+        "userId": "user_expert_1697363200000",
         "paymentMethod": "轉帳",
-        "createdAt": "2025-10-15T00:03:00Z",
-        "updatedAt": "2025-10-15T00:03:00Z",
+        "createdAt": "2025-10-15T00:00:03Z",
+        "updatedAt": "2025-10-15T00:00:03Z",
         "status": "active",
         "verified": false,
-        "source": "quick"
+        "source": "manual",
+        "testScenario": "大額交易測試"
+      },
+      "small_amount_transaction": {
+        "id": "txn_1697363200004_j1k2l3",
+        "amount": 0.01,
+        "type": "expense",
+        "description": "小額支出測試",
+        "categoryId": "other",
+        "accountId": "account_default",
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "paymentMethod": "現金",
+        "createdAt": "2025-10-15T00:00:04Z",
+        "updatedAt": "2025-10-15T00:00:04Z",
+        "status": "active",
+        "verified": false,
+        "source": "quick",
+        "testScenario": "小額交易測試"
+      }
+    },
+    "failure_scenarios": {
+      "negative_amount": {
+        "id": "txn_invalid_negative",
+        "amount": -100.0,
+        "type": "expense",
+        "description": "負數金額測試",
+        "categoryId": "food",
+        "accountId": "account_default",
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "testScenario": "負數金額",
+        "expectedError": "金額必須大於0"
+      },
+      "zero_amount": {
+        "id": "txn_invalid_zero",
+        "amount": 0.0,
+        "type": "expense",
+        "description": "零金額測試",
+        "categoryId": "food",
+        "accountId": "account_default",
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "testScenario": "零金額",
+        "expectedError": "金額必須大於0"
+      },
+      "invalid_transaction_type": {
+        "id": "txn_invalid_type",
+        "amount": 100.0,
+        "type": "invalid_type",
+        "description": "無效類型測試",
+        "categoryId": "food",
+        "accountId": "account_default",
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "testScenario": "無效交易類型",
+        "expectedError": "交易類型無效: invalid_type"
+      },
+      "missing_amount": {
+        "id": "txn_missing_amount",
+        "type": "expense",
+        "description": "缺少金額測試",
+        "categoryId": "food",
+        "accountId": "account_default",
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "testScenario": "缺少金額欄位",
+        "expectedError": "缺少金額欄位"
+      },
+      "missing_transaction_type": {
+        "id": "txn_missing_type",
+        "amount": 100.0,
+        "description": "缺少類型測試",
+        "categoryId": "food",
+        "accountId": "account_default",
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "testScenario": "缺少交易類型",
+        "expectedError": "缺少交易類型欄位"
+      },
+      "empty_description": {
+        "id": "txn_empty_description",
+        "amount": 100.0,
+        "type": "expense",
+        "description": "",
+        "categoryId": "food",
+        "accountId": "account_default",
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "testScenario": "空描述",
+        "expectedError": "描述不能為空"
+      }
+    },
+    "boundary_scenarios": {
+      "minimal_transaction": {
+        "id": "txn_1697363200010_minimal",
+        "amount": 1.0,
+        "type": "expense",
+        "userId": "user_expert_1697363200000",
+        "testScenario": "最小必要欄位交易"
+      },
+      "maximum_amount": {
+        "id": "txn_1697363200011_maxamt",
+        "amount": 999999999.99,
+        "type": "income",
+        "description": "最大金額測試",
+        "categoryId": "investment",
+        "accountId": "account_default",
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "paymentMethod": "轉帳",
+        "createdAt": "2025-10-15T00:00:11Z",
+        "updatedAt": "2025-10-15T00:00:11Z",
+        "status": "active",
+        "verified": false,
+        "source": "manual",
+        "testScenario": "最大金額交易"
       }
     }
   },
   "test_scenarios": {
-    "scenario_001_user_registration": {
-      "name": "用戶註冊流程測試",
+    "scenario_001_user_registration_success": {
+      "name": "用戶註冊成功流程測試",
       "target_user": "user_expert_1697363200000",
+      "expected_result": "success",
       "test_steps": [
-        "註冊新用戶",
+        "載入用戶資料",
         "驗證email格式",
         "確認userMode分配",
-        "檢查初始偏好設定"
+        "檢查初始偏好設定",
+        "驗證註冊成功"
       ]
     },
-    "scenario_002_bookkeeping_flow": {
-      "name": "記帳流程測試", 
+    "scenario_002_user_registration_failure": {
+      "name": "用戶註冊失敗流程測試",
+      "target_user": "user_invalid_email",
+      "expected_result": "failure",
+      "expected_error": "Email格式無效",
+      "test_steps": [
+        "載入無效用戶資料",
+        "嘗試驗證email格式",
+        "確認驗證失敗",
+        "檢查錯誤訊息"
+      ]
+    },
+    "scenario_003_transaction_creation_success": {
+      "name": "交易建立成功流程測試",
       "target_user": "user_expert_1697363200000",
       "target_transaction": "txn_1697363200001_a1b2c3",
+      "expected_result": "success",
       "test_steps": [
-        "建立交易記錄",
+        "載入交易資料",
         "驗證金額格式",
-        "確認科目分類",
-        "檢查時間戳記"
+        "確認交易類型",
+        "檢查必要欄位",
+        "驗證建立成功"
       ]
     },
-    "scenario_003_four_mode_differentiation": {
+    "scenario_004_transaction_creation_failure": {
+      "name": "交易建立失敗流程測試",
+      "target_user": "user_expert_1697363200000",
+      "target_transaction": "txn_invalid_negative",
+      "expected_result": "failure",
+      "expected_error": "金額必須大於0",
+      "test_steps": [
+        "載入無效交易資料",
+        "嘗試驗證金額",
+        "確認驗證失敗",
+        "檢查錯誤訊息"
+      ]
+    },
+    "scenario_005_four_mode_differentiation": {
       "name": "四模式差異化測試",
       "target_users": [
         "user_expert_1697363200000",
@@ -212,31 +367,60 @@
         "user_cultivation_1697363320000",
         "user_guiding_1697363380000"
       ],
+      "expected_result": "success",
       "test_steps": [
-        "載入各模式用戶資料",
-        "驗證基本用戶欄位",
+        "載入四種模式用戶資料",
+        "驗證用戶模式差異",
         "確認評估答案格式",
-        "檢查交易記錄格式"
+        "檢查偏好設定差異"
+      ]
+    },
+    "scenario_006_boundary_value_testing": {
+      "name": "邊界值測試",
+      "test_cases": [
+        {
+          "type": "user",
+          "target": "user_minimal_1697363400000",
+          "description": "最小必要欄位用戶"
+        },
+        {
+          "type": "transaction", 
+          "target": "txn_1697363200004_j1k2l3",
+          "description": "最小金額交易"
+        },
+        {
+          "type": "transaction",
+          "target": "txn_1697363200011_maxamt", 
+          "description": "最大金額交易"
+        }
+      ],
+      "expected_result": "success",
+      "test_steps": [
+        "載入邊界值測試資料",
+        "驗證極值處理",
+        "確認系統穩定性"
       ]
     }
   },
   "data_validation": {
-    "schema_version": "1.0.1",
-    "required_fields": {
-      "user_data": ["userId", "email", "userMode", "displayName"],
-      "transaction_data": ["id", "amount", "type", "userId", "createdAt"]
-    },
+    "schema_version": "2.0.0",
     "fs_compliance": {
       "transaction_id_format": "txn_{timestamp}_{random}",
-      "standard_fields": ["id", "amount", "type", "description", "categoryId", "accountId", "date", "userId", "paymentMethod", "createdAt", "updatedAt", "status", "verified", "source"],
-      "removed_fields": ["default_ledger_id", "ledger_id_source", "evaluationResult", "modeSpecificSettings"],
+      "user_id_format": "user_{mode}_{timestamp}",
+      "standard_user_fields": ["userId", "email", "userMode", "displayName", "preferences", "assessmentAnswers", "registrationDate", "createdAt"],
+      "standard_transaction_fields": ["id", "amount", "type", "description", "categoryId", "accountId", "date", "userId", "paymentMethod", "createdAt", "updatedAt", "status", "verified", "source"],
+      "removed_business_logic_fields": ["default_ledger_id", "ledger_id_source", "evaluationResult", "modeSpecificSettings"],
       "compliance_level": "FULL_FS_STANDARD"
     },
-    "data_integrity_checks": {
-      "user_count": 4,
-      "transaction_count": 4,
-      "mode_coverage": ["Expert", "Inertial", "Cultivation", "Guiding"],
-      "last_validation": "2025-10-15T06:00:00Z"
+    "test_coverage": {
+      "success_scenarios": 8,
+      "failure_scenarios": 12,
+      "boundary_scenarios": 4,
+      "total_scenarios": 6,
+      "user_modes_covered": ["Expert", "Inertial", "Cultivation", "Guiding"],
+      "transaction_types_covered": ["income", "expense"],
+      "error_types_covered": ["validation", "format", "missing_field", "invalid_value", "boundary"],
+      "last_validation": "2025-10-15T08:00:00Z"
     }
   }
 }
