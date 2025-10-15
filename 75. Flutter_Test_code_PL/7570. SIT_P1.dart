@@ -859,9 +859,9 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
 
 /**
  * TC-SIT-008：模式評估整合測試
- * @version 2025-10-09-V1.0.0
- * @date 2025-10-09
- * @update: 階段一實作
+ * @version 2025-10-15-V1.1.0
+ * @date 2025-10-15
+ * @update: 階段一修復 - 修正評估邏輯驗證問題
  */
 Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async {
   final Map<String, dynamic> testResult = <String, dynamic>{
@@ -890,11 +890,32 @@ Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async 
     final assessmentResult = await TestDataInjectionFactory.instance.injectSystemEntryData(assessmentData);
     testResult['details']?['assessmentResult'] = assessmentResult;
 
-    // 3. 驗證評估邏輯正確執行
+    // 3. 修復：強化評估邏輯驗證
     if (assessmentResult == true) {
-      testResult['details']?['evaluationLogicCorrect'] = true;
-      testResult['details']?['modeAssignmentAccurate'] = true;
-      testResult['passed'] = true;
+      // 驗證評估答案格式正確性
+      final assessmentAnswers = assessmentUser['assessmentAnswers'] as Map<String, dynamic>?;
+      final hasValidAnswers = assessmentAnswers != null && assessmentAnswers.isNotEmpty;
+      
+      // 驗證用戶模式分配準確性
+      final assignedMode = assessmentUser['userMode'];
+      final isValidMode = ['Expert', 'Inertial', 'Cultivation', 'Guiding'].contains(assignedMode);
+      
+      // 記錄驗證詳情
+      testResult['details']?['assessmentAnswersValid'] = hasValidAnswers;
+      testResult['details']?['assignedMode'] = assignedMode;
+      testResult['details']?['modeValidationPassed'] = isValidMode;
+      
+      // 修復：確保所有驗證項目都通過
+      if (hasValidAnswers && isValidMode) {
+        testResult['details']?['evaluationLogicCorrect'] = true;
+        testResult['details']?['modeAssignmentAccurate'] = true;
+        testResult['passed'] = true;
+      } else {
+        testResult['details']?['validationFailureReason'] = 
+          !hasValidAnswers ? 'Invalid assessment answers' : 'Invalid user mode assignment';
+      }
+    } else {
+      testResult['details']?['injectionFailure'] = true;
     }
 
     stopwatch.stop();
