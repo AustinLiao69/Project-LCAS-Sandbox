@@ -303,5 +303,5 @@ MM 	 DD 	 Description 	    Progress
 10	14	 檢查Firestore欄位是否符合需求 	 Closed
 10	14	 撰寫DCN-0017	 Closed
 10	15	 重構7580模組 	 Closed
-10	15	 重構7570模組 	 Closed
+10	15	 重構7570模組 	 Ongoing
 10	15	 執行DCN-0018 重構測試模組之dataflow 	 Ongoing
