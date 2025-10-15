@@ -15,6 +15,154 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
+// Placeholder for APLApiClient - assuming it exists and has the necessary methods
+// In a real scenario, this would be imported from a different file.
+class APLApiClient {
+  static Future<Map<String, dynamic>> callAuthAPI(String endpoint, Map<String, dynamic> data) async {
+    // This is a mock implementation. Replace with actual APL API client logic.
+    print('[APLApiClient] Calling $endpoint with data: $data');
+    await Future.delayed(Duration(milliseconds: 300)); // Simulate network delay
+
+    // Mock responses based on common scenarios
+    if (endpoint == '/api/v1/auth/google-login') {
+      return {
+        'success': true,
+        'token': 'apl_google_token_${DateTime.now().millisecondsSinceEpoch}',
+        'userId': 'user_google_${data['email'].hashCode}',
+        'userData': {
+          'id': 'user_google_${data['email'].hashCode}',
+          'email': data['email'],
+          'displayName': data['displayName'],
+          'mode': 'inertial',
+          'createdAt': DateTime.now().subtract(Duration(days: 10)).toIso8601String(),
+        },
+      };
+    } else if (endpoint == '/api/v1/auth/login') {
+      return {
+        'success': true,
+        'token': 'apl_login_token_${DateTime.now().millisecondsSinceEpoch}',
+        'userId': 'user_email_${data['email'].hashCode}',
+        'userData': {
+          'id': 'user_email_${data['email'].hashCode}',
+          'email': data['email'],
+          'mode': 'inertial',
+          'createdAt': DateTime.now().subtract(Duration(days: 20)).toIso8601String(),
+        },
+      };
+    } else if (endpoint == '/api/v1/auth/register') {
+      return {
+        'success': true,
+        'token': 'apl_register_token_${DateTime.now().millisecondsSinceEpoch}',
+        'userId': 'user_register_${data['email'].hashCode}',
+        'userData': {
+          'id': 'user_register_${data['email'].hashCode}',
+          'email': data['email'],
+          'mode': 'inertial',
+          'createdAt': DateTime.now().subtract(Duration(days: 5)).toIso8601String(),
+        },
+      };
+    }
+
+    // Default response for unknown endpoints
+    return {'success': false, 'message': 'APL API endpoint not found'};
+  }
+
+  static Future<Map<String, dynamic>> callSystemAPI(String endpoint, Map<String, dynamic> data) async {
+    // This is a mock implementation. Replace with actual APL API client logic.
+    print('[APLApiClient] Calling system API: $endpoint with data: $data');
+    await Future.delayed(Duration(milliseconds: 200)); // Simulate network delay
+
+    // Mock responses for system APIs
+    switch (endpoint) {
+      case '/api/v1/system/assessment-survey':
+        return {
+          'success': true,
+          'surveyId': 'survey_2025_v1',
+          'version': '1.0.0',
+          'questions': [
+            {'id': 'q1', 'text': '您平常記帳的頻率是？', 'type': 'single_choice', 'options': ['每日', '每週', '每月', '不定期']},
+            {'id': 'q2', 'text': '您希望APP提供什麼程度的功能指導？', 'type': 'single_choice', 'options': ['詳細指導', '基本提示', '最少介入', '完全自主']},
+          ],
+          'scoringRules': {'expert': 4, 'inertial': 3, 'cultivation': 2, 'guiding': 1},
+          'modeThresholds': {'expert': 15, 'inertial': 10, 'cultivation': 5, 'guiding': 0},
+        };
+      case '/api/v1/system/submit-assessment':
+        return {'success': true, 'submissionId': 'submission_${DateTime.now().millisecondsSinceEpoch}'};
+      case '/api/v1/system/calculate-recommendation':
+        return {
+          'success': true,
+          'recommendedMode': 'inertial',
+          'confidence': 0.85,
+          'scores': {'expert': 12, 'inertial': 15, 'cultivation': 8, 'guiding': 5},
+          'explanation': '根據您的答案，建議使用慣性模式',
+          'alternatives': ['expert', 'cultivation'],
+        };
+      case '/api/v1/system/generate-line-binding':
+        return {
+          'success': true,
+          'bindingToken': 'bind_${DateTime.now().millisecondsSinceEpoch}',
+          'qrCodeUrl': 'https://api.qrserver.com/v1/create-qr-code/?data=LCAS_BIND_TOKEN',
+          'lineOfficialAccount': '@lcas_official',
+          'expiresAt': DateTime.now().add(Duration(minutes: 10)).toIso8601String(),
+          'instructions': ['掃描QR Code', '加入LINE官方帳號', '發送綁定訊息'],
+        };
+      case '/api/v1/system/execute-line-binding':
+        return {
+          'success': true,
+          'lineUserId': 'line_user_${data['userId']}',
+          'bindingStatus': 'active',
+          'bindingTime': DateTime.now().toIso8601String(),
+          'availableFeatures': ['快速記帳', '帳本查詢', '支出提醒'],
+        };
+      case '/api/v1/system/check-platform-binding':
+        return {
+          'success': true,
+          'isLineBound': true,
+          'lineUserId': 'line_user_${data['userId']}',
+          'bindingTime': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
+          'lastSyncTime': DateTime.now().subtract(Duration(hours: 2)).toIso8601String(),
+          'availablePlatforms': ['LINE', 'WebApp'],
+          'syncStatus': 'synced',
+        };
+      case '/api/v1/system/sync-cross-platform':
+        return {
+          'success': true,
+          'syncId': 'sync_${DateTime.now().millisecondsSinceEpoch}',
+          'syncedPlatforms': ['LINE', 'WebApp'],
+          'syncedDataTypes': ['transactions', 'budgets', 'categories'],
+          'syncTime': DateTime.now().toIso8601String(),
+          'conflictResolutions': [],
+        };
+      case '/api/v1/system/feature-showcase':
+        return {
+          'success': true,
+          'features': [{'name': '智慧記帳', 'description': 'AI輔助的快速記帳功能'}, {'name': '預算管理', 'description': '智慧預算追蹤與提醒'}],
+          'tutorials': ['新手入門', '進階功能'],
+          'benefits': ['節省時間', '提升效率'],
+          'screenshots': ['screen1.jpg', 'screen2.jpg'],
+          'demoVideos': ['demo1.mp4'],
+          'userTestimonials': [{'user': '使用者A', 'comment': '非常好用！'}],
+        };
+      case '/api/v1/system/app-download-links':
+        return {
+          'success': true,
+          'androidPlayStore': 'https://play.google.com/store/apps/details?id=com.lcas.app',
+          'iosAppStore': 'https://apps.apple.com/app/lcas/id123456789',
+          'webApp': 'https://app.lcas.com',
+          'qrCodes': {'android': 'link1', 'ios': 'link2'},
+          'directDownload': 'https://download.lcas.com/app.apk',
+          'referralTracking': 'enabled',
+        };
+      case '/api/v1/system/record-interaction':
+        return {'success': true};
+      case '/api/v1/system/sync-mode-config':
+        return {'success': true};
+      default:
+        return {'success': false, 'message': 'APL System API endpoint not found'};
+    }
+  }
+}
+
 // ===========================================
 // 核心資料模型定義
 // ===========================================
@@ -179,7 +327,7 @@ class User {
       emailVerified: json['emailVerified'] ?? false,
       preferences: UserPreferences.fromJson(json['preferences'] ?? {}),
       security: UserSecurity.fromJson(json['security'] ?? {}),
-      lastActiveAt: json['lastActiveAt'] != null 
+      lastActiveAt: json['lastActiveAt'] != null
           ? DateTime.parse(json['lastActiveAt'])
           : null,
       createdAt: DateTime.parse(json['createdAt']),
@@ -720,7 +868,7 @@ class SystemEntryFunctionGroup {
         'password1', 'admin', 'welcome', 'letmein', 'monkey'
       ];
 
-      if (commonPasswords.any((common) => 
+      if (commonPasswords.any((common) =>
           password.toLowerCase().contains(common.toLowerCase()))) {
         suggestions.add('避免使用常見密碼模式');
         score = (score / 2).round().clamp(1, 5);
@@ -848,7 +996,7 @@ class SystemEntryFunctionGroup {
    * 10. 使用Google帳號登入
    * @version 2025-09-12-v1.0.0
    * @date 2025-09-12
-   * @update: 初始版本
+   * @update: 階段二實作 - 調用APL層API
    */
   Future<RegisterResponse> loginWithGoogle() async {
     try {
@@ -864,16 +1012,23 @@ class SystemEntryFunctionGroup {
         );
       }
 
-      // 2. 調用8101認證服務API
-      final apiResponse = await _callAuthAPI('/google-login', {
-        'googleToken': googleAuthResult['token'],
+      // 2. 取得Google用戶資訊
+      final googleUser = googleAuthResult['user'];
+      final googleToken = googleAuthResult['token'];
+
+      // 3. 調用APL層認證服務API
+      final apiResponse = await APLApiClient.callAuthAPI('/api/v1/auth/google-login', {
+        'googleToken': googleToken,
+        'email': googleUser['email'],
+        'displayName': googleUser['name'],
+        'avatarUrl': googleUser['picture'],
       });
 
       if (apiResponse['success']) {
-        // 3. 保存認證資訊
+        // 4. 保存認證資訊
         await _saveAuthToken(apiResponse['token']);
 
-        // 4. 更新認證狀態
+        // 5. 更新認證狀態
         final user = User.fromJson(apiResponse['userData']);
         _currentAuthState = AuthState(
           isAuthenticated: true,
@@ -1825,7 +1980,7 @@ class SystemEntryFunctionGroup {
               'options': ['每日', '每週', '每月', '不定期']
             },
             {
-              'id': 'q2', 
+              'id': 'q2',
               'text': '您希望APP提供什麼程度的功能指導？',
               'type': 'single_choice',
               'options': ['詳細指導', '基本提示', '最少介入', '完全自主']
@@ -2126,7 +2281,7 @@ class SystemEntryFunctionGroup {
 
       final colorMap = {
         'primary': theme['primaryColor'],
-        'accent': theme['accentColor'], 
+        'accent': theme['accentColor'],
         'background': theme['backgroundColor'],
         'surface': theme['surfaceColor'],
         'text': theme['textColor'],
