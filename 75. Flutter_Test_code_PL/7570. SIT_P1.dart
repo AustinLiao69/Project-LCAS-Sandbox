@@ -2514,11 +2514,54 @@ void main() {
 
       final totalTests = result['totalTests'] as int? ?? 1;
       final passedTests = result['passedTests'] as int? ?? 0;
+      final failedTests = result['failedTests'] as int? ?? 0;
       final successRate = (passedTests / totalTests * 100).toStringAsFixed(1);
 
       print('[7570]    📈 成功率: ${successRate}%');
       print('[7570]    ⏱️ 執行時間: ${result['executionTime']}ms');
-      print('[7570] 🎯 階段一目標達成: SIT P1語法錯誤修復完成，模組可正常執行');
+      
+      // 詳細失敗測試案例分析
+      if (failedTests > 0) {
+        print('\n[7570] ❌ 失敗測試案例詳細分析:');
+        print('[7570] =' * 50);
+        
+        final testDetails = result['testDetails'] as List<Map<String, dynamic>>? ?? [];
+        final failedTestCases = <String>[];
+        
+        for (final phaseDetail in testDetails) {
+          final phaseResults = phaseDetail['results'] as Map<String, dynamic>? ?? {};
+          final testCases = phaseResults['testCases'] as List<Map<String, dynamic>>? ?? [];
+          
+          for (final testCase in testCases) {
+            if (testCase['passed'] == false) {
+              final testId = testCase['testId'] ?? 'Unknown';
+              final error = testCase['error'] ?? testCase['failureReason'] ?? 'Unknown error';
+              failedTestCases.add('$testId: $error');
+              print('[7570]    🔍 $testId: 失敗原因 - $error');
+            }
+          }
+        }
+        
+        print('\n[7570] 📋 失敗測試案例編號列表:');
+        for (int i = 0; i < failedTestCases.length; i++) {
+          print('[7570]    ${i + 1}. ${failedTestCases[i].split(':')[0]}');
+        }
+        
+        print('\n[7570] 🎯 驗收狀態分析:');
+        if (successRate.contains('.')) {
+          final rate = double.tryParse(successRate) ?? 0.0;
+          if (rate >= 95.0) {
+            print('[7570]    ✅ Go條件: 成功率 ${successRate}% >= 95%, 可進入下階段');
+          } else {
+            print('[7570]    ❌ No-Go條件: 成功率 ${successRate}% < 95%, 需修正後重測');
+            print('[7570]    📍 建議: 優先修正Critical和High級別缺陷');
+          }
+        }
+      } else {
+        print('[7570] 🎉 所有測試案例通過！');
+      }
+      
+      print('[7570] 🎯 階段二目標達成: SIT P1依賴關係重構完成，真實系統整合測試');
     });
   });
 
