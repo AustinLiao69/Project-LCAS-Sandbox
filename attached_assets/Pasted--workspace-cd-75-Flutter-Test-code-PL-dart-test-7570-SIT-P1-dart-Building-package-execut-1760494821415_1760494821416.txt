@@ -1,0 +1,83 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
+Building package executable... 
+Built test:test.
+00:00 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  7570.%20SIT_P1.dart:529:35: Error: Undefined name 'UserOperationSimulator'.
+      final injectionResult = await UserOperationSimulator.instance.simulateSystemEntry(testUser);
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:571:23: Error: Undefined name 'SystemEntryTestDataTemplate'.
+      final loginData = SystemEntryTestDataTemplate.getUserLoginTemplate(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:577:31: Error: Undefined name 'UserOperationSimulator'.
+      final loginResult = await UserOperationSimulator.instance.simulateSystemEntry(loginData);
+                                ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:628:30: Error: Undefined name 'UserOperationSimulator'.
+      final authResult = await UserOperationSimulator.instance.simulateSystemEntry(firebaseData);
+                               ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:674:37: Error: Undefined name 'UserOperationSimulator'.
+      final bookkeepingResult = await UserOperationSimulator.instance.simulateAccountingCore(quickTransaction);
+                                      ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:723:30: Error: Undefined name 'UserOperationSimulator'.
+      final formResult = await UserOperationSimulator.instance.simulateAccountingCore(completeTransaction);
+                               ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:772:28: Error: Undefined name 'UserOperationSimulator'.
+        final result = await UserOperationSimulator.instance.simulateAccountingCore(transaction);
+                             ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:828:13: Error: Undefined name 'UserOperationSimulator'.
+        await UserOperationSimulator.instance.simulateSystemEntry(invalidData);
+              ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:887:36: Error: Undefined name 'UserOperationSimulator'.
+      final assessmentResult = await UserOperationSimulator.instance.simulateSystemEntry(assessmentData);
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:932:28: Error: Undefined name 'UserOperationSimulator'.
+        final result = await UserOperationSimulator.instance.simulateSystemEntry(modeData);
+                             ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:987:36: Error: Undefined name 'UserOperationSimulator'.
+      final conversionResult = await UserOperationSimulator.instance.simulateAccountingCore(rawData);
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1040:28: Error: Undefined name 'UserOperationSimulator'.
+        final result = await UserOperationSimulator.instance.simulateSystemEntry(userData);
+                             ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1046:28: Error: Undefined name 'UserOperationSimulator'.
+        final result = await UserOperationSimulator.instance.simulateAccountingCore(transactionData);
+                             ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1093:30: Error: Undefined name 'SystemEntryTestDataTemplate'.
+      final registrationData = SystemEntryTestDataTemplate.getUserRegistrationTemplate(
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1098:44: Error: Undefined name 'UserOperationSimulator'.
+      lifecycleSteps['registration'] = await UserOperationSimulator.instance.simulateSystemEntry(registrationData);
+                                             ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1101:23: Error: Undefined name 'SystemEntryTestDataTemplate'.
+      final loginData = SystemEntryTestDataTemplate.getUserLoginTemplate(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1105:37: Error: Undefined name 'UserOperationSimulator'.
+      lifecycleSteps['login'] = await UserOperationSimulator.instance.simulateSystemEntry(loginData);
+                                      ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1108:46: Error: Undefined name 'UserOperationSimulator'.
+      lifecycleSteps['modeAssessment'] = await UserOperationSimulator.instance.simulateSystemEntry(lifecycleUser);
+                                               ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1116:43: Error: Undefined name 'UserOperationSimulator'.
+      lifecycleSteps['bookkeeping'] = await UserOperationSimulator.instance.simulateAccountingCore(transaction);
+                                            ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1172:49: Error: Undefined name 'UserOperationSimulator'.
+      businessProcess['quickBookkeeping'] = await UserOperationSimulator.instance.simulateAccountingCore(quickTransaction);
+                                                  ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1180:45: Error: Undefined name 'UserOperationSimulator'.
+      businessProcess['completeForm'] = await UserOperationSimulator.instance.simulateAccountingCore(completeTransaction);
+                                              ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1235:13: Error: Undefined name 'UserOperationSimulator'.
+        await UserOperationSimulator.instance.simulateSystemEntry(invalidNetworkData);
+              ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1246:13: Error: Undefined name 'UserOperationSimulator'.
+        await UserOperationSimulator.instance.simulateAccountingCore(timeoutData);
+              ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1301:13: Error: Undefined name 'UserOperationSimulator'.
+        await UserOperationSimulator.instance.simulateAccountingCore(invalidInputData);
+              ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1315:13: Error: Undefined name 'UserOperationSimulator'.
+        await UserOperationSimulator.instance.simulateSystemEntry(conflictData);
+              ^^^^^^^^^^^^^^^^^^^^^^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:00 +0 -1: Some tests failed. 
