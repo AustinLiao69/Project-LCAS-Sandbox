@@ -1,0 +1,171 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
+Building package executable... (1.0s(1.6s)
+Built test:test.
+00:00 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  7570.%20SIT_P1.dart:1188:30: Error: '_executeTCSIT001_UserRegistrationIntegration' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:414:30: Context: Previous declaration of '_executeTCSIT001_UserRegistrationIntegration'.
+  Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1230:30: Error: '_executeTCSIT002_LoginVerificationIntegration' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:456:30: Context: Previous declaration of '_executeTCSIT002_LoginVerificationIntegration'.
+  Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1275:30: Error: '_executeTCSIT003_FirebaseAuthIntegration' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:501:30: Context: Previous declaration of '_executeTCSIT003_FirebaseAuthIntegration'.
+  Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1317:30: Error: '_executeTCSIT004_QuickBookkeepingIntegration' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:543:30: Context: Previous declaration of '_executeTCSIT004_QuickBookkeepingIntegration'.
+  Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1358:30: Error: '_executeTCSIT005_CompleteBookkeepingFormIntegration' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:584:30: Context: Previous declaration of '_executeTCSIT005_CompleteBookkeepingFormIntegration'.
+  Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1399:30: Error: '_executeTCSIT006_BookkeepingDataQueryIntegration' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:625:30: Context: Previous declaration of '_executeTCSIT006_BookkeepingDataQueryIntegration'.
+  Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1440:30: Error: '_executeTCSIT007_CrossLayerErrorHandlingIntegration' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:666:30: Context: Previous declaration of '_executeTCSIT007_CrossLayerErrorHandlingIntegration'.
+  Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1484:30: Error: '_executeTCSIT008_ModeAssessmentIntegration' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:710:30: Context: Previous declaration of '_executeTCSIT008_ModeAssessmentIntegration'.
+  Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1525:30: Error: '_executeTCSIT009_ModeDifferentiationResponse' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT009_ModeDifferentiationResponse() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:751:30: Context: Previous declaration of '_executeTCSIT009_ModeDifferentiationResponse'.
+  Future<Map<String, dynamic>> _executeTCSIT009_ModeDifferentiationResponse() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1572:30: Error: '_executeTCSIT010_DataFormatConversion' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT010_DataFormatConversion() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:798:30: Context: Previous declaration of '_executeTCSIT010_DataFormatConversion'.
+  Future<Map<String, dynamic>> _executeTCSIT010_DataFormatConversion() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1613:30: Error: '_executeTCSIT011_DataSynchronizationMechanism' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT011_DataSynchronizationMechanism() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:839:30: Context: Previous declaration of '_executeTCSIT011_DataSynchronizationMechanism'.
+  Future<Map<String, dynamic>> _executeTCSIT011_DataSynchronizationMechanism() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1654:30: Error: '_executeTCSIT012_UserCompleteLifecycle' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:880:30: Context: Previous declaration of '_executeTCSIT012_UserCompleteLifecycle'.
+  Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1695:30: Error: '_executeTCSIT013_BookkeepingBusinessProcessEndToEnd' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:921:30: Context: Previous declaration of '_executeTCSIT013_BookkeepingBusinessProcessEndToEnd'.
+  Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1736:30: Error: '_executeTCSIT014_NetworkExceptionHandling' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:962:30: Context: Previous declaration of '_executeTCSIT014_NetworkExceptionHandling'.
+  Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1770:30: Error: '_executeTCSIT015_BusinessRuleErrorHandling' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:996:30: Context: Previous declaration of '_executeTCSIT015_BusinessRuleErrorHandling'.
+  Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1814:30: Error: '_executeTCSIT016_DCN0015FormatValidation' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeTCSIT016_DCN0015FormatValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1040:30: Context: Previous declaration of '_executeTCSIT016_DCN0015FormatValidation'.
+  Future<Map<String, dynamic>> _executeTCSIT016_DCN0015FormatValidation() async {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1860:6: Error: 'initializePhase1CompletedSITTestModule' is already declared in this scope.
+  void initializePhase1CompletedSITTestModule() {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1085:6: Context: Previous declaration of 'initializePhase1CompletedSITTestModule'.
+  void initializePhase1CompletedSITTestModule() {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1875:6: Error: 'main' is already declared in this scope.
+  void main() {
+       ^^^^
+  7570.%20SIT_P1.dart:1101:6: Context: Previous declaration of 'main'.
+  void main() {
+       ^^^^
+  7570.%20SIT_P1.dart:361:13: Error: Can't use '_executeTCSIT001_UserRegistrationIntegration' because it is declared more than once.
+        () => _executeTCSIT001_UserRegistrationIntegration(),
+              ^
+  7570.%20SIT_P1.dart:362:13: Error: Can't use '_executeTCSIT002_LoginVerificationIntegration' because it is declared more than once.
+        () => _executeTCSIT002_LoginVerificationIntegration(),
+              ^
+  7570.%20SIT_P1.dart:363:13: Error: Can't use '_executeTCSIT003_FirebaseAuthIntegration' because it is declared more than once.
+        () => _executeTCSIT003_FirebaseAuthIntegration(),
+              ^
+  7570.%20SIT_P1.dart:364:13: Error: Can't use '_executeTCSIT004_QuickBookkeepingIntegration' because it is declared more than once.
+        () => _executeTCSIT004_QuickBookkeepingIntegration(),
+              ^
+  7570.%20SIT_P1.dart:365:13: Error: Can't use '_executeTCSIT005_CompleteBookkeepingFormIntegration' because it is declared more than once.
+        () => _executeTCSIT005_CompleteBookkeepingFormIntegration(),
+              ^
+  7570.%20SIT_P1.dart:366:13: Error: Can't use '_executeTCSIT006_BookkeepingDataQueryIntegration' because it is declared more than once.
+        () => _executeTCSIT006_BookkeepingDataQueryIntegration(),
+              ^
+  7570.%20SIT_P1.dart:367:13: Error: Can't use '_executeTCSIT007_CrossLayerErrorHandlingIntegration' because it is declared more than once.
+        () => _executeTCSIT007_CrossLayerErrorHandlingIntegration(),
+              ^
+  7570.%20SIT_P1.dart:368:13: Error: Can't use '_executeTCSIT008_ModeAssessmentIntegration' because it is declared more than once.
+        () => _executeTCSIT008_ModeAssessmentIntegration(),
+              ^
+  7570.%20SIT_P1.dart:369:13: Error: Can't use '_executeTCSIT009_ModeDifferentiationResponse' because it is declared more than once.
+        () => _executeTCSIT009_ModeDifferentiationResponse(),
+              ^
+  7570.%20SIT_P1.dart:370:13: Error: Can't use '_executeTCSIT010_DataFormatConversion' because it is declared more than once.
+        () => _executeTCSIT010_DataFormatConversion(),
+              ^
+  7570.%20SIT_P1.dart:371:13: Error: Can't use '_executeTCSIT011_DataSynchronizationMechanism' because it is declared more than once.
+        () => _executeTCSIT011_DataSynchronizationMechanism(),
+              ^
+  7570.%20SIT_P1.dart:372:13: Error: Can't use '_executeTCSIT012_UserCompleteLifecycle' because it is declared more than once.
+        () => _executeTCSIT012_UserCompleteLifecycle(),
+              ^
+  7570.%20SIT_P1.dart:373:13: Error: Can't use '_executeTCSIT013_BookkeepingBusinessProcessEndToEnd' because it is declared more than once.
+        () => _executeTCSIT013_BookkeepingBusinessProcessEndToEnd(),
+              ^
+  7570.%20SIT_P1.dart:374:13: Error: Can't use '_executeTCSIT014_NetworkExceptionHandling' because it is declared more than once.
+        () => _executeTCSIT014_NetworkExceptionHandling(),
+              ^
+  7570.%20SIT_P1.dart:375:13: Error: Can't use '_executeTCSIT015_BusinessRuleErrorHandling' because it is declared more than once.
+        () => _executeTCSIT015_BusinessRuleErrorHandling(),
+              ^
+  7570.%20SIT_P1.dart:376:13: Error: Can't use '_executeTCSIT016_DCN0015FormatValidation' because it is declared more than once.
+        () => _executeTCSIT016_DCN0015FormatValidation(),
+              ^
+  7570.%20SIT_P1.dart:1103:3: Error: Can't use 'initializePhase1CompletedSITTestModule' because it is declared more than once.
+    initializePhase1CompletedSITTestModule();
+    ^
+  7570.%20SIT_P1.dart:1877:3: Error: Can't use 'initializePhase1CompletedSITTestModule' because it is declared more than once.
+    initializePhase1CompletedSITTestModule();
+    ^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:00 +0 -1: Some tests failed.    
+~/workspace/75. Flutter_Test_code_PL$
