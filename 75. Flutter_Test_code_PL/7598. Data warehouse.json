@@ -2,12 +2,12 @@
 {
   "metadata": {
     "version": "2.0.0",
-    "createdAt": "2025-10-15T06:00:00Z",
+    "createdAt": "2025-10-15T14:00:00Z",
     "description": "SIT P1完整測試資料倉庫 - 包含成功、失敗、邊界值測試情境",
     "dataSource": "STATIC_GENERATION",
     "consumer": "7570. SIT_P1.dart",
     "totalRecords": 24,
-    "lastUpdated": "2025-10-15T08:00:00Z",
+    "lastUpdated": "2025-10-15T14:00:00Z",
     "compliance": "1311_FS_STANDARD_FULL"
   },
   "authentication_test_data": {
