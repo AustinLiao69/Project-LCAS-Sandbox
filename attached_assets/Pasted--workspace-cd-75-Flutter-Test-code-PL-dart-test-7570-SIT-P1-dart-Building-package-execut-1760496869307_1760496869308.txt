@@ -1,0 +1,156 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
+Building package executable... 
+Built test:test.
+00:00 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  7570.%20SIT_P1.dart:1446:1: Error: Expected a declaration, but got '}'.
+  }
+  ^
+  7570.%20SIT_P1.dart:1976:30: Error: '_executeStandardAPIContractTest' is already declared in this scope.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1887:30: Context: Previous declaration of '_executeStandardAPIContractTest'.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2048:5: Error: '_calculateComplianceScore' is already declared in this scope.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1956:5: Context: Previous declaration of '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2273:24: Error: '_checkRESTfulConvention' is already declared in this scope.
+    Map<String, dynamic> _checkRESTfulConvention(String method, String endpoint) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2064:22: Context: Previous declaration of '_checkRESTfulConvention'.
+  Map<String, dynamic> _checkRESTfulConvention(String method, String endpoint) {
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1683:35: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^
+  7570.%20SIT_P1.dart:1684:39: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^
+  7570.%20SIT_P1.dart:1685:40: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^
+  7570.%20SIT_P1.dart:1765:35: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^
+  7570.%20SIT_P1.dart:1766:39: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^
+  7570.%20SIT_P1.dart:1767:40: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^
+  7570.%20SIT_P1.dart:1790:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:1804:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:1818:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:1832:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:1846:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:1860:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:1874:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:1934:35: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^
+  7570.%20SIT_P1.dart:1935:39: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^
+  7570.%20SIT_P1.dart:1936:40: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^
+  7570.%20SIT_P1.dart:2023:35: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^
+  7570.%20SIT_P1.dart:2024:39: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^
+  7570.%20SIT_P1.dart:2025:40: Error: Can't use '_calculateComplianceScore' because it is declared more than once.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^
+  7570.%20SIT_P1.dart:2083:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2091:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2099:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2107:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2115:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2123:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2131:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2139:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2147:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2155:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2163:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2171:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2179:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2187:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2195:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2203:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2211:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2219:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2227:16: Error: Can't use '_executeStandardAPIContractTest' because it is declared more than once.
+    return await _executeStandardAPIContractTest(
+                 ^
+  7570.%20SIT_P1.dart:2260:26: Error: Can't use '_checkRESTfulConvention' because it is declared more than once.
+      final restfulCheck = _checkRESTfulConvention(method, endpoint);
+                           ^
+  7570.%20SIT_P1.dart:2397:5: Error: Undefined name '_testResults'.
+      _testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
+      ^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2398:5: Error: Undefined name '_testResults'.
+      _testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
+      ^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2400:6: Error: Undefined name '_testResults'.
+      (_testResults['testDetails'] as List<Map<String, dynamic>>).addAll([
+       ^^^^^^^^^^^^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:00 +0 -1: Some tests failed.     
+~/workspace/75. Flutter_Test_code_PL$ 
