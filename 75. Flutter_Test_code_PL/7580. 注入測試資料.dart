@@ -367,7 +367,7 @@ class _MockQuickAccountingResult {
     required this.message,
   });
 }
-}
+
 
 // ==========================================
 // 測試場景模擬器
