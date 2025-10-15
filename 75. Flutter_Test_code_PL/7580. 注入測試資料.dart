@@ -1,18 +1,19 @@
+
 /**
  * 7580. 注入測試資料.dart
- * @version v3.1.0
+ * @version v3.2.0
  * @date 2025-10-15
- * @update: 階段二修復 - 簡化測試場景管理，專注資料格式轉換和驗證
+ * @update: 階段三架構清理與標準化 - 建立清晰接口，移除業務邏輯
  *
- * 職責邊界重新定義：
- * ✅ 應該負責：測試資料生成、資料格式驗證、資料注入、相容性支援
- * ❌ 不應該負責：業務邏輯模擬、API調用、複雜測試場景管理、業務邏輯驗證
+ * 職責邊界最終定義：
+ * ✅ 核心職責：測試資料生成、資料格式驗證、資料注入、相容性支援
+ * ❌ 不再負責：業務邏輯模擬、API調用、複雜測試場景管理、業務邏輯驗證
  *
- * 階段二修復重點：
- * - 簡化TestScenarioSimulator類別
- * - 移除複雜測試流程模擬
- * - 專注於資料格式轉換和驗證
- * - 保持純粹的資料注入功能
+ * 階段三清理重點：
+ * - 統一資料注入接口
+ * - 移除所有業務邏輯相關代碼
+ * - 確保職責邊界清晰
+ * - 標準化API設計
  */
 
 import 'dart:async';
@@ -22,400 +23,447 @@ import 'dart:convert';
 import '7590. 生成動態測試資料.dart';
 
 // ==========================================
-// 純粹測試資料注入器
+// 核心：純粹測試資料注入器（最終版）
 // ==========================================
 
-class UserOperationSimulator {
-  static final UserOperationSimulator _instance = UserOperationSimulator._internal();
-  static UserOperationSimulator get instance => _instance;
-  UserOperationSimulator._internal();
+/// 測試資料注入器 - 純粹資料注入功能
+class TestDataInjector {
+  static final TestDataInjector _instance = TestDataInjector._internal();
+  static TestDataInjector get instance => _instance;
+  TestDataInjector._internal();
 
-  final List<String> _operationHistory = [];
+  final List<String> _injectionLog = [];
   final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
 
-  /// 模擬系統進入操作流程（純粹資料注入）
-  Future<bool> simulateSystemEntry(Map<String, dynamic> entryData) async {
+  /// 主要注入接口：統一測試資料注入
+  Future<TestDataInjectionResult> injectTestData({
+    required String dataType,
+    required Map<String, dynamic> rawData,
+  }) async {
     try {
-      print('[7580] 🎭 開始模擬系統進入操作流程');
+      print('[7580] 🎯 統一測試資料注入接口');
+      print('[7580] 📋 資料類型: $dataType');
 
-      // 純粹的資料驗證和處理
-      final validationResult = _validateSystemEntryData(entryData);
-      if (!validationResult['isValid']) {
-        print('[7580] ❌ 系統進入資料驗證失敗: ${validationResult['message']}');
-        return false;
+      // 1. 資料驗證
+      final validationResult = _validateRawData(dataType, rawData);
+      if (!validationResult.isValid) {
+        return TestDataInjectionResult.failure(
+          errorMessage: '資料驗證失敗: ${validationResult.errorMessage}',
+          dataType: dataType,
+        );
       }
 
-      // 記錄注入操作
-      _operationHistory.add('SystemEntry: ${DateTime.now().toIso8601String()}');
-      print('[7580] ✅ 系統進入操作模擬完成');
-
-      return true;
-    } catch (e) {
-      print('[7580] ❌ 系統進入操作模擬失敗: $e');
-      return false;
-    }
-  }
-
-  /// 模擬記帳核心操作流程（純粹資料注入）
-  Future<bool> simulateAccountingCore(Map<String, dynamic> transactionData) async {
-    try {
-      print('[7580] 🎭 開始模擬記帳核心操作流程');
-
-      // 純粹的資料驗證和處理
-      final validationResult = _validateTransactionData(transactionData);
-      if (!validationResult['isValid']) {
-        print('[7580] ❌ 記帳資料驗證失敗: ${validationResult['message']}');
-        print('[7580] 🔍 除錯資訊: 金額=${transactionData['amount']} (${transactionData['amount']?.runtimeType}), 類型=${transactionData['type']}');
-        return false;
+      // 2. 資料格式化
+      final formattedData = _formatTestData(dataType, rawData);
+      if (formattedData == null) {
+        return TestDataInjectionResult.failure(
+          errorMessage: '資料格式化失敗',
+          dataType: dataType,
+        );
       }
 
-      // 記錄注入操作
-      _operationHistory.add('AccountingCore: ${DateTime.now().toIso8601String()}');
-      print('[7580] ✅ 記帳核心操作模擬完成');
+      // 3. 執行注入（純粹注入，無業務邏輯）
+      final injectionSuccess = await _performDataInjection(dataType, formattedData);
+      
+      // 4. 記錄注入操作
+      _recordInjection(dataType, injectionSuccess);
 
-      return true;
+      return injectionSuccess
+          ? TestDataInjectionResult.success(
+              dataType: dataType,
+              injectedData: formattedData,
+            )
+          : TestDataInjectionResult.failure(
+              errorMessage: '資料注入執行失敗',
+              dataType: dataType,
+            );
+
     } catch (e) {
-      print('[7580] ❌ 記帳核心操作模擬失敗: $e');
-      return false;
+      print('[7580] ❌ 測試資料注入異常: $e');
+      return TestDataInjectionResult.failure(
+        errorMessage: '注入過程異常: $e',
+        dataType: dataType,
+      );
     }
   }
 
-  /// 系統進入資料驗證
-  Map<String, dynamic> _validateSystemEntryData(Map<String, dynamic> data) {
-    // 特殊處理：錯誤測試案例檢查
-    if (data.containsKey('errorTest') && data['errorTest'] == true) {
-      print('[7580] 🧪 檢測到錯誤測試案例，模擬驗證失敗');
-      return {'isValid': false, 'message': '錯誤測試案例驗證失敗'};
-    }
+  /// 批次資料注入接口
+  Future<BatchInjectionResult> injectBatchTestData({
+    required String dataType,
+    required List<Map<String, dynamic>> rawDataList,
+  }) async {
+    try {
+      print('[7580] 📦 批次測試資料注入');
+      print('[7580] 📊 數量: ${rawDataList.length}');
 
-    // 基本欄位檢查
-    if (data['userId'] == null || data['userId'].toString().isEmpty) {
-      return {'isValid': false, 'message': '用戶ID不能為空'};
-    }
+      final results = <TestDataInjectionResult>[];
+      
+      for (int i = 0; i < rawDataList.length; i++) {
+        final result = await injectTestData(
+          dataType: dataType,
+          rawData: rawDataList[i],
+        );
+        results.add(result);
+        
+        // 批次注入間隔，避免過於頻繁
+        if (i < rawDataList.length - 1) {
+          await Future.delayed(Duration(milliseconds: 10));
+        }
+      }
 
-    if (data['email'] == null || !_isValidEmail(data['email'].toString())) {
-      return {'isValid': false, 'message': 'Email格式無效'};
-    }
+      final successCount = results.where((r) => r.isSuccess).length;
+      return BatchInjectionResult(
+        totalCount: rawDataList.length,
+        successCount: successCount,
+        results: results,
+      );
 
-    return {'isValid': true, 'message': '驗證通過'};
+    } catch (e) {
+      print('[7580] ❌ 批次資料注入異常: $e');
+      return BatchInjectionResult(
+        totalCount: rawDataList.length,
+        successCount: 0,
+        results: [],
+        errorMessage: '批次注入異常: $e',
+      );
+    }
   }
 
-  /// 交易資料驗證
-  Map<String, dynamic> _validateTransactionData(Map<String, dynamic> data) {
-    // 金額驗證
-    if (data['amount'] == null) {
-      return {'isValid': false, 'message': '金額不能為空'};
+  /// 資料驗證（純粹格式驗證，無業務邏輯）
+  DataValidationResult _validateRawData(String dataType, Map<String, dynamic> data) {
+    switch (dataType) {
+      case 'systemEntry':
+        return _validateSystemEntryData(data);
+      case 'transaction':
+        return _validateTransactionData(data);
+      case 'batch':
+        return _validateBatchData(data);
+      default:
+        return DataValidationResult.invalid('未知的資料類型: $dataType');
+    }
+  }
+
+  /// 系統進入資料驗證（純粹格式檢查）
+  DataValidationResult _validateSystemEntryData(Map<String, dynamic> data) {
+    // 必要欄位檢查
+    final requiredFields = ['userId', 'email', 'userMode'];
+    for (final field in requiredFields) {
+      if (!data.containsKey(field) || data[field] == null || data[field].toString().isEmpty) {
+        return DataValidationResult.invalid('缺少必要欄位: $field');
+      }
     }
 
-    // 安全的金額轉換
+    // Email格式檢查
+    final email = data['email'].toString();
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
+      return DataValidationResult.invalid('Email格式無效');
+    }
+
+    // 使用者模式檢查
+    final userMode = data['userMode'].toString();
+    if (!['Expert', 'Inertial', 'Cultivation', 'Guiding'].contains(userMode)) {
+      return DataValidationResult.invalid('無效的使用者模式: $userMode');
+    }
+
+    return DataValidationResult.valid();
+  }
+
+  /// 交易資料驗證（純粹格式檢查）
+  DataValidationResult _validateTransactionData(Map<String, dynamic> data) {
+    // 金額檢查
+    if (!data.containsKey('amount') || data['amount'] == null) {
+      return DataValidationResult.invalid('缺少金額欄位');
+    }
+
+    // 金額轉換檢查
     double amount;
     try {
       if (data['amount'] is String) {
-        final amountStr = data['amount'] as String;
-        if (amountStr.isEmpty) {
-          return {'isValid': false, 'message': '金額字串不能為空'};
-        }
-        amount = double.parse(amountStr);
+        amount = double.parse(data['amount']);
       } else if (data['amount'] is num) {
         amount = data['amount'].toDouble();
       } else {
-        return {'isValid': false, 'message': '金額格式無效'};
+        return DataValidationResult.invalid('金額格式無效');
       }
     } catch (e) {
-      return {'isValid': false, 'message': '金額轉換失敗'};
+      return DataValidationResult.invalid('金額轉換失敗');
     }
 
     if (amount <= 0) {
-      return {'isValid': false, 'message': '金額必須大於0'};
+      return DataValidationResult.invalid('金額必須大於0');
     }
 
-    // 交易類型驗證
-    final type = data['type']?.toString()?.toLowerCase();
-    if (type == null || !['income', 'expense'].contains(type)) {
-      return {'isValid': false, 'message': '交易類型無效'};
+    // 交易類型檢查
+    if (!data.containsKey('type') || data['type'] == null) {
+      return DataValidationResult.invalid('缺少交易類型欄位');
     }
 
-    return {'isValid': true, 'message': '驗證通過'};
+    final type = data['type'].toString().toLowerCase();
+    if (!['income', 'expense'].contains(type)) {
+      return DataValidationResult.invalid('交易類型無效: $type');
+    }
+
+    return DataValidationResult.valid();
   }
 
-  /// Email格式驗證
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email);
-  }
-
-  /// 取得操作歷史記錄
-  List<String> getOperationHistory() => List.from(_operationHistory);
-
-  /// 清除操作歷史記錄
-  void clearOperationHistory() => _operationHistory.clear();
-}
-
-// ==========================================
-// 簡化資料轉換管理器
-// ==========================================
-
-class TestDataConverter {
-  final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
-
-  /// 轉換系統進入資料格式
-  Map<String, dynamic> convertSystemEntryData({
-    required String userId,
-    required String email,
-    required String userMode,
-  }) {
-    // 純粹的資料格式轉換，不涉及業務邏輯
-    final baseData = _dataGenerator.generateSystemEntryData(
-      userId: userId,
-      email: email,
-      userMode: userMode,
-    );
-
-    // 格式驗證
-    final validation = validateSystemEntryFormat(baseData);
-    if (!validation['isValid']) {
-      print('[7580] ❌ 系統進入資料格式驗證失敗: ${validation['error']}');
-      return {'error': validation['error'], 'isValid': false};
+  /// 批次資料驗證
+  DataValidationResult _validateBatchData(Map<String, dynamic> data) {
+    if (!data.containsKey('dataList') || data['dataList'] is! List) {
+      return DataValidationResult.invalid('批次資料格式無效');
     }
 
-    print('[7580] ✅ 系統進入資料格式轉換成功');
-    return {'data': baseData, 'isValid': true};
-  }
-
-  /// 轉換記帳資料格式
-  Map<String, dynamic> convertTransactionData({
-    required double amount,
-    required String type,
-    required String description,
-    required String userId,
-  }) {
-    // 純粹的資料格式轉換，不涉及業務邏輯
-    final baseData = _dataGenerator.generateTransactionData(
-      amount: amount,
-      type: type,
-      description: description,
-      userId: userId,
-    );
-
-    // 格式驗證（簡化版）
-    if (amount <= 0 || !['income', 'expense'].contains(type.toLowerCase())) {
-      print('[7580] ❌ 記帳資料格式驗證失敗');
-      return {'error': '資料格式無效', 'isValid': false};
+    final dataList = data['dataList'] as List;
+    if (dataList.isEmpty) {
+      return DataValidationResult.invalid('批次資料不能為空');
     }
 
-    print('[7580] ✅ 記帳資料格式轉換成功');
-    return {'data': baseData, 'isValid': true};
+    return DataValidationResult.valid();
   }
 
-  /// 批次資料格式轉換
-  Map<String, dynamic> convertBatchData({
-    required List<Map<String, dynamic>> rawDataList,
-    required String dataType,
-  }) {
-    final convertedData = <Map<String, dynamic>>[];
-    final errors = <String>[];
-
-    for (int i = 0; i < rawDataList.length; i++) {
-      final rawData = rawDataList[i];
-      
-      try {
-        Map<String, dynamic> result;
-        
-        switch (dataType) {
-          case 'systemEntry':
-            result = convertSystemEntryData(
-              userId: rawData['userId'] ?? 'test_user_$i',
-              email: rawData['email'] ?? 'test$i@example.com',
-              userMode: rawData['userMode'] ?? 'Expert',
-            );
-            break;
-          case 'transaction':
-            result = convertTransactionData(
-              amount: rawData['amount']?.toDouble() ?? 100.0,
-              type: rawData['type'] ?? 'expense',
-              description: rawData['description'] ?? '測試記帳_$i',
-              userId: rawData['userId'] ?? 'test_user_$i',
-            );
-            break;
-          default:
-            errors.add('索引 $i: 未知的資料類型 $dataType');
-            continue;
-        }
-
-        if (result['isValid']) {
-          convertedData.add(result['data']);
-        } else {
-          errors.add('索引 $i: ${result['error']}');
-        }
-      } catch (e) {
-        errors.add('索引 $i: 轉換異常 $e');
-      }
+  /// 資料格式化（純粹格式轉換）
+  Map<String, dynamic>? _formatTestData(String dataType, Map<String, dynamic> rawData) {
+    switch (dataType) {
+      case 'systemEntry':
+        return _formatSystemEntryData(rawData);
+      case 'transaction':
+        return _formatTransactionData(rawData);
+      default:
+        return rawData;
     }
+  }
 
+  /// 系統進入資料格式化
+  Map<String, dynamic> _formatSystemEntryData(Map<String, dynamic> rawData) {
     return {
-      'convertedData': convertedData,
-      'errors': errors,
-      'successCount': convertedData.length,
-      'totalCount': rawDataList.length,
+      'userId': rawData['userId'],
+      'email': rawData['email'],
+      'userMode': rawData['userMode'],
+      'displayName': rawData['displayName'] ?? '${rawData['userMode']} 測試用戶',
+      'preferences': rawData['preferences'] ?? {
+        'language': 'zh-TW',
+        'currency': 'TWD',
+        'theme': rawData['userMode'].toString().toLowerCase(),
+      },
+      'registrationDate': rawData['registrationDate'] ?? DateTime.now().toIso8601String(),
+      'createdAt': rawData['createdAt'] ?? DateTime.now().toIso8601String(),
     };
   }
-}
 
-// ==========================================
-// 測試資料注入外觀模式
-// ==========================================
+  /// 交易資料格式化
+  Map<String, dynamic> _formatTransactionData(Map<String, dynamic> rawData) {
+    final amount = rawData['amount'] is String 
+        ? double.parse(rawData['amount']) 
+        : rawData['amount'].toDouble();
 
-class TestDataInjectionFacade {
-  static final TestDataInjectionFacade _instance = TestDataInjectionFacade._internal();
-  static TestDataInjectionFacade get instance => _instance;
-  TestDataInjectionFacade._internal();
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final transactionId = rawData['transactionId'] ?? 'txn_${rawData['type']}_$timestamp';
 
-  final TestDataConverter _dataConverter = TestDataConverter();
-  final UserOperationSimulator _operationSimulator = UserOperationSimulator.instance;
+    return {
+      '收支ID': transactionId,
+      '描述': rawData['description'] ?? '測試記帳',
+      '收支類型': rawData['type'],
+      '金額': amount,
+      '用戶ID': rawData['userId'],
+      '科目ID': rawData['categoryId'] ?? 'default_category',
+      '帳戶ID': rawData['accountId'] ?? 'account_default',
+      '建立時間': DateTime.now().toIso8601String(),
+      '更新時間': DateTime.now().toIso8601String(),
+    };
+  }
 
-  /// 主要方法：直接注入測試資料（移除複雜場景管理）
-  Future<bool> injectTestData({
-    required String dataType,
-    required Map<String, dynamic> testData,
-  }) async {
+  /// 執行資料注入（純粹注入操作）
+  Future<bool> _performDataInjection(String dataType, Map<String, dynamic> formattedData) async {
     try {
-      print('[7580] 🎯 開始直接注入測試資料');
-      print('[7580] 📋 資料類型: $dataType');
-
-      switch (dataType) {
-        case 'systemEntry':
-          final convertedResult = _dataConverter.convertSystemEntryData(
-            userId: testData['userId'],
-            email: testData['email'],
-            userMode: testData['userMode'] ?? 'Expert',
-          );
-          
-          if (!convertedResult['isValid']) {
-            print('[7580] ❌ 系統進入資料轉換失敗');
-            return false;
-          }
-
-          return await _operationSimulator.simulateSystemEntry(convertedResult['data']);
-
-        case 'transaction':
-          final convertedResult = _dataConverter.convertTransactionData(
-            amount: testData['amount']?.toDouble() ?? 0.0,
-            type: testData['type'] ?? 'expense',
-            description: testData['description'] ?? '測試記帳',
-            userId: testData['userId'],
-          );
-          
-          if (!convertedResult['isValid']) {
-            print('[7580] ❌ 記帳資料轉換失敗');
-            return false;
-          }
-
-          return await _operationSimulator.simulateAccountingCore(convertedResult['data']);
-
-        case 'batch':
-          final batchResult = _dataConverter.convertBatchData(
-            rawDataList: testData['dataList'] ?? [],
-            dataType: testData['batchType'] ?? 'transaction',
-          );
-          
-          print('[7580] 📊 批次轉換結果: ${batchResult['successCount']}/${batchResult['totalCount']}');
-          return batchResult['successCount'] > 0;
-
-        default:
-          print('[7580] ❌ 未知的資料類型: $dataType');
-          return false;
-      }
+      // 模擬注入延遲
+      await Future.delayed(Duration(milliseconds: 50));
+      
+      // 純粹的注入操作（無業務邏輯處理）
+      print('[7580] ✅ 資料注入完成: $dataType');
+      return true;
     } catch (e) {
-      print('[7580] ❌ 測試資料注入失敗: $e');
+      print('[7580] ❌ 資料注入失敗: $e');
       return false;
     }
   }
 
-  /// 取得注入歷史記錄（簡化版）
-  Map<String, dynamic> getInjectionHistory() {
-    return {
-      'operationHistory': _operationSimulator.getOperationHistory(),
-      'timestamp': DateTime.now().toIso8601String(),
-      'note': '階段二簡化：移除複雜場景管理',
-    };
+  /// 記錄注入操作
+  void _recordInjection(String dataType, bool success) {
+    final logEntry = '${DateTime.now().toIso8601String()} - $dataType: ${success ? 'SUCCESS' : 'FAILED'}';
+    _injectionLog.add(logEntry);
+    
+    // 保持日誌大小合理
+    if (_injectionLog.length > 100) {
+      _injectionLog.removeRange(0, 50);
+    }
   }
 
-  /// 資料格式驗證（獨立方法）
-  Map<String, dynamic> validateDataFormat({
-    required String dataType,
-    required Map<String, dynamic> data,
-  }) {
-    try {
-      switch (dataType) {
-        case 'systemEntry':
-          return validateSystemEntryFormat(data);
-        case 'transaction':
-          // 簡化的交易資料驗證
-          if (data['amount'] == null || data['type'] == null) {
-            return {'isValid': false, 'error': '缺少必要欄位'};
-          }
-          return {'isValid': true, 'message': '格式驗證通過'};
-        default:
-          return {'isValid': false, 'error': '未知的資料類型'};
-      }
-    } catch (e) {
-      return {'isValid': false, 'error': '驗證過程異常: $e'};
-    }
+  /// 取得注入歷史記錄
+  List<String> getInjectionHistory() => List.from(_injectionLog);
+
+  /// 清除注入歷史記錄
+  void clearInjectionHistory() => _injectionLog.clear();
+
+  /// 取得注入統計
+  Map<String, dynamic> getInjectionStatistics() {
+    final totalInjections = _injectionLog.length;
+    final successfulInjections = _injectionLog.where((log) => log.contains('SUCCESS')).length;
+    final failedInjections = totalInjections - successfulInjections;
+
+    return {
+      'totalInjections': totalInjections,
+      'successfulInjections': successfulInjections,
+      'failedInjections': failedInjections,
+      'successRate': totalInjections > 0 ? (successfulInjections / totalInjections * 100).round() : 0,
+    };
   }
 }
 
 // ==========================================
-// 相容性支援：TestDataInjectionFactory v3.1.0
+// 標準化：資料注入結果類型
 // ==========================================
 
-/// 測試資料注入工廠 - 提供7570相容性支援（階段二簡化版）
+/// 測試資料注入結果
+class TestDataInjectionResult {
+  final bool isSuccess;
+  final String dataType;
+  final Map<String, dynamic>? injectedData;
+  final String? errorMessage;
+  final DateTime timestamp;
+
+  TestDataInjectionResult._({
+    required this.isSuccess,
+    required this.dataType,
+    this.injectedData,
+    this.errorMessage,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+
+  factory TestDataInjectionResult.success({
+    required String dataType,
+    required Map<String, dynamic> injectedData,
+  }) {
+    return TestDataInjectionResult._(
+      isSuccess: true,
+      dataType: dataType,
+      injectedData: injectedData,
+    );
+  }
+
+  factory TestDataInjectionResult.failure({
+    required String dataType,
+    required String errorMessage,
+  }) {
+    return TestDataInjectionResult._(
+      isSuccess: false,
+      dataType: dataType,
+      errorMessage: errorMessage,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'TestDataInjectionResult(isSuccess: $isSuccess, dataType: $dataType, timestamp: $timestamp)';
+  }
+}
+
+/// 批次注入結果
+class BatchInjectionResult {
+  final int totalCount;
+  final int successCount;
+  final List<TestDataInjectionResult> results;
+  final String? errorMessage;
+  final DateTime timestamp;
+
+  BatchInjectionResult({
+    required this.totalCount,
+    required this.successCount,
+    required this.results,
+    this.errorMessage,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+
+  int get failureCount => totalCount - successCount;
+  double get successRate => totalCount > 0 ? (successCount / totalCount * 100) : 0;
+
+  @override
+  String toString() {
+    return 'BatchInjectionResult(total: $totalCount, success: $successCount, rate: ${successRate.toStringAsFixed(1)}%)';
+  }
+}
+
+/// 資料驗證結果
+class DataValidationResult {
+  final bool isValid;
+  final String? errorMessage;
+
+  DataValidationResult._({
+    required this.isValid,
+    this.errorMessage,
+  });
+
+  factory DataValidationResult.valid() {
+    return DataValidationResult._(isValid: true);
+  }
+
+  factory DataValidationResult.invalid(String errorMessage) {
+    return DataValidationResult._(
+      isValid: false,
+      errorMessage: errorMessage,
+    );
+  }
+}
+
+// ==========================================
+// 相容性支援：7570調用接口（最終版）
+// ==========================================
+
+/// 測試資料注入工廠 - 7570相容性接口
 class TestDataInjectionFactory {
   static final TestDataInjectionFactory _instance = TestDataInjectionFactory._internal();
   static TestDataInjectionFactory get instance => _instance;
   TestDataInjectionFactory._internal();
 
-  final TestDataInjectionFacade _facade = TestDataInjectionFacade.instance;
+  final TestDataInjector _injector = TestDataInjector.instance;
 
-  /// 注入系統進入資料（相容性方法 - 階段二優化）
+  /// 注入系統進入資料（相容性方法）
   Future<bool> injectSystemEntryData(Map<String, dynamic> entryData) async {
     try {
-      // 使用簡化的直接注入方法
-      return await _facade.injectTestData(
+      final result = await _injector.injectTestData(
         dataType: 'systemEntry',
-        testData: entryData,
+        rawData: entryData,
       );
+      return result.isSuccess;
     } catch (e) {
       print('[7580] ❌ 系統進入資料注入失敗: $e');
       return false;
     }
   }
 
-  /// 注入記帳核心資料（相容性方法 - 階段二優化）
+  /// 注入記帳核心資料（相容性方法）
   Future<bool> injectAccountingCoreData(Map<String, dynamic> transactionData) async {
     try {
-      // 使用簡化的直接注入方法
-      return await _facade.injectTestData(
+      final result = await _injector.injectTestData(
         dataType: 'transaction',
-        testData: transactionData,
+        rawData: transactionData,
       );
+      return result.isSuccess;
     } catch (e) {
       print('[7580] ❌ 記帳核心資料注入失敗: $e');
       return false;
     }
   }
 
-  /// 批次資料注入（階段二新增）
+  /// 批次資料注入（相容性方法）
   Future<bool> injectBatchData({
     required List<Map<String, dynamic>> dataList,
     required String batchType,
   }) async {
     try {
-      return await _facade.injectTestData(
-        dataType: 'batch',
-        testData: {
-          'dataList': dataList,
-          'batchType': batchType,
-        },
+      final result = await _injector.injectBatchTestData(
+        dataType: batchType,
+        rawDataList: dataList,
       );
+      return result.successRate >= 80.0; // 80%成功率視為成功
     } catch (e) {
       print('[7580] ❌ 批次資料注入失敗: $e');
       return false;
@@ -424,11 +472,15 @@ class TestDataInjectionFactory {
 
   /// 資料格式驗證（相容性方法）
   Map<String, dynamic> validateDataFormat(String dataType, Map<String, dynamic> data) {
-    return _facade.validateDataFormat(dataType: dataType, data: data);
+    final validationResult = _injector._validateRawData(dataType, data);
+    return {
+      'isValid': validationResult.isValid,
+      'message': validationResult.isValid ? '驗證通過' : validationResult.errorMessage,
+    };
   }
 }
 
-/// 測試資料生成器 - 提供7570相容性支援
+/// 測試資料生成器 - 7570相容性接口
 class TestDataGenerator {
   static final TestDataGenerator _instance = TestDataGenerator._internal();
   static TestDataGenerator get instance => _instance;
@@ -490,73 +542,7 @@ class TestDataGenerator {
 }
 
 // ==========================================
-// 系統進入測試資料範本
-// ==========================================
-
-class SystemEntryTestDataTemplate {
-  /// 取得使用者註冊範本
-  static Map<String, dynamic> getUserRegistrationTemplate({
-    required String userId,
-    required String email,
-    String userMode = 'Expert',
-  }) {
-    return {
-      'userId': userId,
-      'email': email,
-      'userMode': userMode,
-      'displayName': '$userMode 測試用戶',
-      'preferences': {
-        'language': 'zh-TW',
-        'currency': 'TWD',
-        'theme': userMode.toLowerCase(),
-      },
-      'registrationDate': DateTime.now().toIso8601String(),
-      'createdAt': DateTime.now().toIso8601String(),
-    };
-  }
-
-  /// 取得使用者登入範本
-  static Map<String, dynamic> getUserLoginTemplate({
-    required String userId,
-    required String email,
-  }) {
-    return {
-      'userId': userId,
-      'email': email,
-      'loginTime': DateTime.now().toIso8601String(),
-    };
-  }
-}
-
-// ==========================================
-// 記帳核心測試資料範本
-// ==========================================
-
-class AccountingCoreTestDataTemplate {
-  /// 取得交易範本
-  static Map<String, dynamic> getTransactionTemplate({
-    required String transactionId,
-    required double amount,
-    required String type,
-    required String description,
-    required String categoryId,
-    required String accountId,
-  }) {
-    return {
-      '收支ID': transactionId,
-      '描述': description,
-      '收支類型': type,
-      '金額': amount,
-      '科目ID': categoryId,
-      '帳戶ID': accountId,
-      '建立時間': DateTime.now().toIso8601String(),
-      '更新時間': DateTime.now().toIso8601String(),
-    };
-  }
-}
-
-// ==========================================
-// 格式驗證函數
+// 格式驗證函數（純粹格式檢查）
 // ==========================================
 
 /// 驗證系統進入格式
@@ -587,7 +573,7 @@ Map<String, dynamic> validateSystemEntryFormat(dynamic data) {
 
     return {
       'isValid': true,
-      'message': 'DCN-0015格式驗證通過',
+      'message': 'DCN-0016格式驗證通過',
       'validatedFields': requiredFields,
     };
   } catch (e) {
