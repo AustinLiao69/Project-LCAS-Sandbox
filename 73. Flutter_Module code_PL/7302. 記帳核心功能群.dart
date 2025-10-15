@@ -1989,7 +1989,7 @@ class TransactionManagerWidgetImpl extends TransactionManagerWidget {
 
   Future<List<Transaction>> _loadTransactionsFromTestFactory() async {
     try {
-      // 使用7590動態生成交易資料
+      // 使用7590動態測試資料生成 Complete Test Dataset
       final testData = await DynamicTestDataFactory.instance.generateCompleteTestDataSet(
         userCount: 1,
         transactionsPerUser: 10,
@@ -3314,6 +3314,7 @@ class FormStateProviderImpl extends FormStateProvider {
   bool _hasUnsavedChanges = false;
   Map<String, String> _validationErrors = {};
   bool _isSubmitting = false;
+  String? _errorMessage; // Added for error messages
 
   FormStateProviderImpl() {
     _initializeForm();
@@ -3915,7 +3916,7 @@ class AccountingRoutes {
  * 23. 記帳導航控制器 - AccountingNavigationController
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段二完成 - 實作完整導航控制邏輯，增加導航狀態管理與錯誤處理
+ * @update: 階段二完成 - 實作導航控制邏輯，增加導航狀態管理與錯誤處理
  */
 class AccountingNavigationController {
   static final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
@@ -4891,32 +4892,31 @@ class GetChartDataRequest {
 }
 
 /**
- * 26. 記帳交易API客戶端 - TransactionApiClient
+ * 26. 記帳交易API客戶端 - TransactionAPIGateway
  * @version 2025-09-12-V2.0.0
  * @date 2025-09-12
  * @update: 階段二實作 - 記帳交易API客戶端核心
  */
-abstract class TransactionApiClient {
-  Future<ApiResponse<Transaction>> createTransaction(CreateTransactionRequest request);
-  Future<ApiResponse<List<Transaction>>> getTransactions(GetTransactionsRequest request);
-  Future<ApiResponse<Transaction>> getTransaction(String transactionId);
-  Future<ApiResponse<Transaction>> updateTransaction(String transactionId, UpdateTransactionRequest request);
-  Future<ApiResponse<void>> deleteTransaction(String transactionId);
-  Future<ApiResponse<DashboardData>> getDashboardData(GetDashboardRequest request);
-  Future<ApiResponse<DashboardData>> getStatistics(GetStatisticsRequest request);
-  Future<ApiResponse<QuickAccountingResult>> quickAccounting(QuickAccountingRequest request);
-  Future<ApiResponse<List<ChartData>>> getChartData(GetChartDataRequest request);
-}
-
-class TransactionApiClientImpl implements TransactionApiClient {
+class TransactionAPIGateway {
   final String baseUrl;
   final http.Client httpClient;
   final Map<String, String> defaultHeaders;
+  final Function(String) onShowError;
+  final Function(String) onShowHint;
+  final Function(Map<String, dynamic>) onUpdateUI;
+  final Function(String) onLogError;
+  final Function() onRetry;
 
-  TransactionApiClientImpl({
+
+  TransactionAPIGateway({
     String? baseUrl,
     http.Client? httpClient,
     Map<String, String>? customHeaders,
+    required this.onShowError,
+    required this.onShowHint,
+    required this.onUpdateUI,
+    required this.onLogError,
+    required this.onRetry,
   }) : baseUrl = baseUrl ?? _getApiBaseUrl(),
        httpClient = httpClient ?? http.Client(),
        defaultHeaders = _buildHeaders(customHeaders);
@@ -5007,7 +5007,8 @@ class TransactionApiClientImpl implements TransactionApiClient {
     return headers;
   }
 
-  @override
+  // --- Transaction API Methods ---
+
   Future<ApiResponse<Transaction>> createTransaction(CreateTransactionRequest request) async {
     try {
       final url = Uri.parse('$baseUrl/transactions');
@@ -5022,16 +5023,21 @@ class TransactionApiClientImpl implements TransactionApiClient {
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         final transaction = Transaction.fromJson(responseData['data']);
+        onUpdateUI({'transactionCreated': transaction}); // UI更新通知
         return ApiResponse(success: true, data: transaction, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        onShowError('建立交易失敗：${response.statusCode}');
+        onLogError(errorMsg);
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      onShowError('建立交易時發生網路錯誤，請檢查您的連線。');
+      onLogError('createTransaction exception: $e');
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
     }
   }
 
-  @override
   Future<ApiResponse<List<Transaction>>> getTransactions(GetTransactionsRequest request) async {
     try {
       final queryParams = request.toJson().cast<String, String>();
@@ -5048,16 +5054,21 @@ class TransactionApiClientImpl implements TransactionApiClient {
         final transactions = (responseData['data'] as List)
             .map((item) => Transaction.fromJson(item))
             .toList();
+        // onUpdateUI({'transactionsLoaded': transactions}); // Optional: Notify UI about loaded data
         return ApiResponse(success: true, data: transactions, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        onShowError('載入交易記錄失敗：${response.statusCode}');
+        onLogError(errorMsg);
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      onShowError('載入交易記錄時發生網路錯誤。');
+      onLogError('getTransactions exception: $e');
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
     }
   }
 
-  @override
   Future<ApiResponse<Transaction>> getTransaction(String transactionId) async {
     try {
       final url = Uri.parse('$baseUrl/transactions/$transactionId');
@@ -5073,20 +5084,24 @@ class TransactionApiClientImpl implements TransactionApiClient {
         final transaction = Transaction.fromJson(responseData['data']);
         return ApiResponse(success: true, data: transaction, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        onShowError('載入單筆交易失敗：${response.statusCode}');
+        onLogError(errorMsg);
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      onShowError('載入單筆交易時發生網路錯誤。');
+      onLogError('getTransaction exception: $e');
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
     }
   }
 
-  @override
   Future<ApiResponse<Transaction>> updateTransaction(String transactionId, UpdateTransactionRequest request) async {
     try {
       final url = Uri.parse('$baseUrl/transactions/$transactionId');
       final requestHeaders = _getRequestHeaders();
 
-      final response = await httpClient.put(
+      final response = await httpClient.patch( // Use PATCH for partial updates
         url,
         headers: requestHeaders,
         body: jsonEncode(request.toJson()),
@@ -5095,16 +5110,21 @@ class TransactionApiClientImpl implements TransactionApiClient {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final transaction = Transaction.fromJson(responseData['data']);
+        onUpdateUI({'transactionUpdated': transaction}); // UI更新通知
         return ApiResponse(success: true, data: transaction, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        onShowError('更新交易失敗：${response.statusCode}');
+        onLogError(errorMsg);
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      onShowError('更新交易時發生網路錯誤。');
+      onLogError('updateTransaction exception: $e');
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
     }
   }
 
-  @override
   Future<ApiResponse<void>> deleteTransaction(String transactionId) async {
     try {
       final url = Uri.parse('$baseUrl/transactions/$transactionId');
@@ -5116,19 +5136,24 @@ class TransactionApiClientImpl implements TransactionApiClient {
       );
 
       if (response.statusCode == 204) { // 204 No Content is common for successful DELETE
+        onUpdateUI({'transactionDeleted': transactionId}); // UI更新通知
         return ApiResponse(success: true, statusCode: response.statusCode);
       } else if (response.statusCode == 200) { // Or sometimes 200 OK with empty body
+        onUpdateUI({'transactionDeleted': transactionId}); // UI更新通知
         return ApiResponse(success: true, statusCode: response.statusCode);
-      }
-      else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+      } else {
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        onShowError('刪除交易失敗：${response.statusCode}');
+        onLogError(errorMsg);
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      onShowError('刪除交易時發生網路錯誤。');
+      onLogError('deleteTransaction exception: $e');
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
     }
   }
 
-  @override
   Future<ApiResponse<DashboardData>> getDashboardData(GetDashboardRequest request) async {
     try {
       final queryParams = request.toJson().cast<String, String>();
@@ -5143,16 +5168,21 @@ class TransactionApiClientImpl implements TransactionApiClient {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final dashboardData = DashboardData.fromJson(responseData['data']);
+        // onUpdateUI({'dashboardData': dashboardData}); // Optional UI update
         return ApiResponse(success: true, data: dashboardData, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        onShowError('載入儀表板數據失敗：${response.statusCode}');
+        onLogError(errorMsg);
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      onShowError('載入儀表板數據時發生網路錯誤。');
+      onLogError('getDashboardData exception: $e');
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
     }
   }
 
-  @override
   Future<ApiResponse<DashboardData>> getStatistics(GetStatisticsRequest request) async {
     try {
       final queryParams = request.toJson().cast<String, String>();
@@ -5170,14 +5200,18 @@ class TransactionApiClientImpl implements TransactionApiClient {
         final statisticsData = DashboardData.fromJson(responseData['data']);
         return ApiResponse(success: true, data: statisticsData, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        onShowError('載入統計數據失敗：${response.statusCode}');
+        onLogError(errorMsg);
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      onShowError('載入統計數據時發生網路錯誤。');
+      onLogError('getStatistics exception: $e');
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
     }
   }
 
-  @override
   Future<ApiResponse<QuickAccountingResult>> quickAccounting(QuickAccountingRequest request) async {
     try {
       final url = Uri.parse('$baseUrl/quick-accounting');
@@ -5189,23 +5223,34 @@ class TransactionApiClientImpl implements TransactionApiClient {
         body: jsonEncode(request.toJson()),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode >= 200 && response.statusCode < 300) { // Handle 2xx success codes
         final responseData = jsonDecode(response.body);
         final result = QuickAccountingResult(
-          success: responseData['success'] ?? false,
-          message: responseData['message'] ?? '',
+          success: responseData['success'] ?? true, // Assume success if not specified
+          message: responseData['message'] ?? '操作成功',
           transaction: responseData['data'] != null ? Transaction.fromJson(responseData['data']) : null,
         );
+        if (result.success) {
+          onShowHint(result.message);
+          onUpdateUI({'quickAccountingSuccess': result.transaction}); // Notify UI about successful transaction
+        } else {
+          onShowError(result.message); // Show error message from API
+        }
         return ApiResponse(success: true, data: result, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        onShowError('快速記帳失敗：${response.statusCode}');
+        onLogError(errorMsg);
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      onShowError('快速記帳時發生網路錯誤，請稍後再試。');
+      onRetry(); // Trigger retry mechanism if available
+      onLogError('quickAccounting exception: $e');
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
     }
   }
 
-  @override
   Future<ApiResponse<List<ChartData>>> getChartData(GetChartDataRequest request) async {
     try {
       final queryParams = request.toJson().cast<String, String>();
@@ -5223,14 +5268,20 @@ class TransactionApiClientImpl implements TransactionApiClient {
             .map((item) => ChartData(
                   label: item['label'],
                   value: (item['value'] as num).toDouble(),
-                  color: Color(int.parse('0xFF${item['color'].toString().replaceAll('#', '')}')), // Assuming hex color string
+                  // Assuming color is in hex format like '#RRGGBB' or '0xFFRRGGBB'
+                  color: Color(int.parse('0xFF${item['color'].toString().replaceAll('#', '').replaceAll('0x', '')}')),
                 ))
             .toList();
         return ApiResponse(success: true, data: chartData, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        onShowError('載入圖表數據失敗：${response.statusCode}');
+        onLogError(errorMsg);
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      onShowError('載入圖表數據時發生網路錯誤。');
+      onLogError('getChartData exception: $e');
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
     }
   }
@@ -5411,7 +5462,8 @@ class AccountApiClientImpl implements AccountApiClient {
             .toList();
         return ApiResponse(success: true, data: accounts, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5439,7 +5491,8 @@ class AccountApiClientImpl implements AccountApiClient {
         );
         return ApiResponse(success: true, data: account, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5463,7 +5516,8 @@ class AccountApiClientImpl implements AccountApiClient {
         final balances = Map<String, double>.from(responseData['data']);
         return ApiResponse(success: true, data: balances, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5492,7 +5546,8 @@ class AccountApiClientImpl implements AccountApiClient {
         );
         return ApiResponse(success: true, data: account, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5521,7 +5576,8 @@ class AccountApiClientImpl implements AccountApiClient {
         );
         return ApiResponse(success: true, data: account, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5691,7 +5747,8 @@ class CategoryApiClientImpl implements CategoryApiClient {
             .toList();
         return ApiResponse(success: true, data: categories, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5711,7 +5768,8 @@ class CategoryApiClientImpl implements CategoryApiClient {
         final category = Category.fromJson(responseData['data']);
         return ApiResponse(success: true, data: category, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5734,7 +5792,8 @@ class CategoryApiClientImpl implements CategoryApiClient {
             .toList();
         return ApiResponse(success: true, data: categories, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5756,7 +5815,8 @@ class CategoryApiClientImpl implements CategoryApiClient {
             .toList();
         return ApiResponse(success: true, data: categories, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5778,7 +5838,8 @@ class CategoryApiClientImpl implements CategoryApiClient {
             .toList();
         return ApiResponse(success: true, data: categories, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5802,7 +5863,8 @@ class CategoryApiClientImpl implements CategoryApiClient {
         final category = Category.fromJson(responseData['data']);
         return ApiResponse(success: true, data: category, statusCode: response.statusCode);
       } else {
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        final errorMsg = 'API Error: ${response.statusCode} - ${response.body}';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       return ApiResponse(success: false, error: e.toString(), statusCode: 500);
@@ -5829,7 +5891,7 @@ abstract class TransactionRepository {
 }
 
 class TransactionRepositoryImpl extends TransactionRepository {
-  final TransactionApiClient _apiClient;
+  final TransactionAPIGateway _apiClient; // Renamed to TransactionAPIGateway
   final List<Transaction> _cache = [];
   DateTime? _lastCacheUpdate;
 
@@ -6829,7 +6891,7 @@ class StatisticsCalculator {
       case 'monthly':
         return _generateMonthlyChartData(transactions);
       case 'trend':
-        return_generateTrendChartData(transactions);
+        return _generateTrendChartData(transactions);
       default:
         return _generateCategoryChartData(transactions);
     }
@@ -7076,8 +7138,7 @@ class TransactionDataProcessor {
     }
 
     // 科目篩選
-    if (criteria.containsKey('categoryIds') && criteria['categoryIds'] != null) {
-      final categoryIds = criteria['categoryIds'] as List<String>;
+    if (criteria.containsKey('categoryIds') && criteria['categoryIds'] != null) {      final categoryIds = criteria['categoryIds'] as List<String>;
       filtered = filtered.where((t) =>
         t.categoryId != null && categoryIds.contains(t.categoryId)
       ).toList();
@@ -7683,5 +7744,59 @@ class DateFormat {
       default:
         return date.toString(); // Fallback
     }
+  }
+}
+
+// Dummy implementation for TestDataGenerator and DynamicTestDataFactory
+// In a real scenario, these would be properly implemented.
+class TestDataGenerator {
+  Map<String, dynamic> generateApiConfiguration() {
+    return {'baseUrl': 'https://mock-api.lcas.app/v1', 'headers': {'X-Mock-Header': 'mock-value'}};
+  }
+}
+
+class DynamicTestDataFactory {
+  static final DynamicTestDataFactory instance = DynamicTestDataFactory._internal();
+  DynamicTestDataFactory._internal();
+
+  Future<Map<String, dynamic>> generateCompleteTestDataSet({required int userCount, required int transactionsPerUser}) async {
+    await Future.delayed(Duration(milliseconds: 50)); // Simulate async work
+    return {
+      'bookkeeping_test_data': {
+        'test_transactions': {
+          'tx_1': {'收支ID': 'tx_1', '收支類型': 'expense', '金額': 150.0, '科目ID': 'food', '帳戶ID': 'account_1', '描述': '午餐便當', '建立時間': '2023-10-26T12:00:00Z', '更新時間': '2023-10-26T12:05:00Z'},
+          'tx_2': {'收支ID': 'tx_2', '收支類型': 'income', '金額': 1000.0, '科目ID': 'salary', '帳戶ID': 'account_2', '描述': '月薪', '建立時間': '2023-10-25T09:00:00Z', '更新時間': '2023-10-25T09:05:00Z'},
+          'tx_3': {'收支ID': 'tx_3', '收支類型': 'transfer', '金額': 500.0, '科目ID': null, '帳戶ID': 'account_1', '描述': '轉帳給朋友', '建立時間': '2023-10-26T15:30:00Z', '更新時間': '2023-10-26T15:35:00Z'},
+        },
+        'test_accounts': [
+          {'id': 'account_1', 'name': '現金', 'type': 'cash', 'balance': 5000.50},
+          {'id': 'account_2', 'name': '銀行帳戶', 'type': 'bank', 'balance': 50000.75},
+        ],
+        'test_categories': [
+          {'id': 'food', 'name': '餐飲', 'type': 'expense'},
+          {'id': 'transport', 'name': '交通', 'type': 'expense'},
+          {'id': 'salary', 'name': '薪資', 'type': 'income'},
+        ]
+      }
+    };
+  }
+}
+
+// Dummy StatisticsApiClientImpl for testing purposes
+class StatisticsApiClientImpl implements StatisticsApiClient {
+  @override
+  Future<ApiResponse<Map<String, dynamic>>> getCategoryStatistics(GetStatisticsRequest request) async {
+    await Future.delayed(Duration(milliseconds: 100));
+    // Mock data
+    return ApiResponse(
+      success: true,
+      data: {
+        'totalIncome': 5000.0,
+        'totalExpense': 3000.0,
+        'balance': 2000.0,
+        'transactionCount': 15,
+      },
+      statusCode: 200,
+    );
   }
 }

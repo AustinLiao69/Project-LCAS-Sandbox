@@ -15,6 +15,9 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
+// 引入APL層服務
+import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart';
+
 // ===========================================
 // 核心資料模型定義
 // ===========================================
@@ -179,7 +182,7 @@ class User {
       emailVerified: json['emailVerified'] ?? false,
       preferences: UserPreferences.fromJson(json['preferences'] ?? {}),
       security: UserSecurity.fromJson(json['security'] ?? {}),
-      lastActiveAt: json['lastActiveAt'] != null 
+      lastActiveAt: json['lastActiveAt'] != null
           ? DateTime.parse(json['lastActiveAt'])
           : null,
       createdAt: DateTime.parse(json['createdAt']),
@@ -516,12 +519,12 @@ class SystemEntryFunctionGroup {
         );
       }
 
-      // 4. 調用8101認證服務API
-      final apiResponse = await _callAuthAPI('/register', {
-        'email': request.email,
-        'password': _hashPassword(request.password),
-        'displayName': request.displayName,
-      });
+      // 4. 調用APL層註冊服務
+      final apiResponse = await AuthAPLService.register(
+        email: request.email,
+        password: request.password, // APL層會處理hash
+        displayName: request.displayName,
+      );
 
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ Email註冊成功');
@@ -572,13 +575,13 @@ class SystemEntryFunctionGroup {
       final googleUser = googleAuthResult['user'];
       final googleToken = googleAuthResult['token'];
 
-      // 3. 調用8101認證服務API
-      final apiResponse = await _callAuthAPI('/google-register', {
-        'googleToken': googleToken,
-        'email': googleUser['email'],
-        'displayName': googleUser['name'],
-        'avatarUrl': googleUser['picture'],
-      });
+      // 3. 調用APL層Google註冊服務
+      final apiResponse = await AuthAPLService.googleRegister(
+        googleToken: googleToken,
+        email: googleUser['email'],
+        displayName: googleUser['name'],
+        avatarUrl: googleUser['picture'],
+      );
 
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ Google註冊成功');
@@ -720,7 +723,7 @@ class SystemEntryFunctionGroup {
         'password1', 'admin', 'welcome', 'letmein', 'monkey'
       ];
 
-      if (commonPasswords.any((common) => 
+      if (commonPasswords.any((common) =>
           password.toLowerCase().contains(common.toLowerCase()))) {
         suggestions.add('避免使用常見密碼模式');
         score = (score / 2).round().clamp(1, 5);
@@ -800,11 +803,11 @@ class SystemEntryFunctionGroup {
         );
       }
 
-      // 2. 調用8101認證服務API
-      final apiResponse = await _callAuthAPI('/login', {
-        'email': email,
-        'password': _hashPassword(password),
-      });
+      // 2. 調用APL層登入服務
+      final apiResponse = await AuthAPLService.login(
+        email: email,
+        password: password, // APL層會處理hash
+      );
 
       if (apiResponse['success']) {
         // 3. 保存認證資訊
@@ -864,10 +867,10 @@ class SystemEntryFunctionGroup {
         );
       }
 
-      // 2. 調用8101認證服務API
-      final apiResponse = await _callAuthAPI('/google-login', {
-        'googleToken': googleAuthResult['token'],
-      });
+      // 2. 調用APL層Google登入服務
+      final apiResponse = await AuthAPLService.googleLogin(
+        googleToken: googleAuthResult['token'],
+      );
 
       if (apiResponse['success']) {
         // 3. 保存認證資訊
@@ -985,10 +988,8 @@ class SystemEntryFunctionGroup {
         );
       }
 
-      // 2. 調用8101認證服務API
-      final apiResponse = await _callAuthAPI('/forgot-password', {
-        'email': email,
-      });
+      // 2. 調用APL層忘記密碼服務
+      final apiResponse = await AuthAPLService.forgotPassword(email: email);
 
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ 密碼重設連結發送成功');
@@ -1026,10 +1027,8 @@ class SystemEntryFunctionGroup {
         return false;
       }
 
-      // 調用8101認證服務API
-      final apiResponse = await _callAuthAPI('/validate-reset-token', {
-        'token': token,
-      });
+      // 調用APL層驗證重設Token服務
+      final apiResponse = await AuthAPLService.validateResetToken(token: token);
 
       final isValid = apiResponse['success'] ?? false;
       print('[SystemEntry] ${isValid ? '✅' : '❌'} Token驗證結果: $isValid');
@@ -1069,11 +1068,11 @@ class SystemEntryFunctionGroup {
         );
       }
 
-      // 3. 調用8101認證服務API
-      final apiResponse = await _callAuthAPI('/reset-password', {
-        'token': token,
-        'newPassword': _hashPassword(newPassword),
-      });
+      // 3. 調用APL層重設密碼服務
+      final apiResponse = await AuthAPLService.resetPassword(
+        token: token,
+        newPassword: newPassword, // APL層會處理hash
+      );
 
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ 密碼重設成功');
@@ -1825,7 +1824,7 @@ class SystemEntryFunctionGroup {
               'options': ['每日', '每週', '每月', '不定期']
             },
             {
-              'id': 'q2', 
+              'id': 'q2',
               'text': '您希望APP提供什麼程度的功能指導？',
               'type': 'single_choice',
               'options': ['詳細指導', '基本提示', '最少介入', '完全自主']
@@ -2011,7 +2010,7 @@ class SystemEntryFunctionGroup {
           'surfaceColor': 0xFFFFFFFF,        // 白色表面
           'textColor': 0xFF424242,           // 中灰文字
           'secondaryTextColor': 0xFF616161,  // 次要文字
-          'errorColor': 0xFFF44336,          // 錯誤紅
+          'errorColor': 0xF44336,          // 錯誤紅
           'successColor': 0xFF4CAF50,        // 成功綠
           'warningColor': 0xFFFF9800,        // 警告橙
           'borderRadius': 6.0,               // 中圓角
@@ -2126,7 +2125,7 @@ class SystemEntryFunctionGroup {
 
       final colorMap = {
         'primary': theme['primaryColor'],
-        'accent': theme['accentColor'], 
+        'accent': theme['accentColor'],
         'background': theme['backgroundColor'],
         'surface': theme['surfaceColor'],
         'text': theme['textColor'],
