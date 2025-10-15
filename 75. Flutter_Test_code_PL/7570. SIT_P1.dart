@@ -2176,27 +2176,6 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
       'allowedMethods': allowedMethods,
       'restfulConvention': restfulCheck,
     };
-  }
-
-  /**
-   * 檢查RESTful慣例 (這個是重複定義的，與上面的_checkRESTfulConvention是相同的)
-   * 為了修正錯誤，移除其中一個重複的定義。
-   * 這裡我們保留第一個定義，並移除後面的重複定義。
-   */
-  // Map<String, dynamic> _checkRESTfulConvention(String method, String endpoint) {
-  //   final conventions = {
-  //     'GET': endpoint.contains('/{') || !endpoint.contains('/create') || !endpoint.contains('/update'),
-  //     'POST': !endpoint.contains('/{') || endpoint.contains('/search') || endpoint.contains('/batch'),
-  //     'PUT': endpoint.contains('/{') || endpoint.contains('/batch'),
-  //     'DELETE': endpoint.contains('/{') || endpoint.contains('/batch'),
-  //   };
-  //
-  //   return {
-  //     'isValid': conventions[method.toUpperCase()] ?? false,
-  //     'reason': '符合RESTful設計慣例',
-  //   };
-  // }
-
   /**
    * 驗證8020 API清單合規性
    */
@@ -2299,9 +2278,9 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
 
 /**
    * 編譯測試結果
-   * @version 2025-10-15-V1.0.0
+   * @version 2025-10-15-V1.1.0
    * @date 2025-10-15
-   * @update: 移動到類別內部
+   * @update: 修正函數位置和變數引用
    */
   void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic> phase2Results, Map<String, dynamic> phase3Results) {
     // 階段一與階段二的測試案例是重疊的 (TC-SIT-001~016)，所以統計時要避免重複計算
@@ -2325,6 +2304,8 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
       }
     ]);
   }
+
+}
 
 // ==========================================
 // 階段二模組初始化
