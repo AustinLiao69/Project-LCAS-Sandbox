@@ -2179,21 +2179,23 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
   }
 
   /**
-   * 檢查RESTful慣例
+   * 檢查RESTful慣例 (這個是重複定義的，與上面的_checkRESTfulConvention是相同的)
+   * 為了修正錯誤，移除其中一個重複的定義。
+   * 這裡我們保留第一個定義，並移除後面的重複定義。
    */
-  Map<String, dynamic> _checkRESTfulConvention(String method, String endpoint) {
-    final conventions = {
-      'GET': endpoint.contains('/{') || !endpoint.contains('/create') || !endpoint.contains('/update'),
-      'POST': !endpoint.contains('/{') || endpoint.contains('/search') || endpoint.contains('/batch'),
-      'PUT': endpoint.contains('/{') || endpoint.contains('/batch'),
-      'DELETE': endpoint.contains('/{') || endpoint.contains('/batch'),
-    };
-
-    return {
-      'isValid': conventions[method.toUpperCase()] ?? false,
-      'reason': '符合RESTful設計慣例',
-    };
-  }
+  // Map<String, dynamic> _checkRESTfulConvention(String method, String endpoint) {
+  //   final conventions = {
+  //     'GET': endpoint.contains('/{') || !endpoint.contains('/create') || !endpoint.contains('/update'),
+  //     'POST': !endpoint.contains('/{') || endpoint.contains('/search') || endpoint.contains('/batch'),
+  //     'PUT': endpoint.contains('/{') || endpoint.contains('/batch'),
+  //     'DELETE': endpoint.contains('/{') || endpoint.contains('/batch'),
+  //   };
+  //
+  //   return {
+  //     'isValid': conventions[method.toUpperCase()] ?? false,
+  //     'reason': '符合RESTful設計慣例',
+  //   };
+  // }
 
   /**
    * 驗證8020 API清單合規性
