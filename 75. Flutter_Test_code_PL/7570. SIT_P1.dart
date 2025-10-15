@@ -14,7 +14,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
+import 'dart:math' hide Point; // 避免與 test.dart 中的 Point 衝突
 import 'package:test/test.dart';
 
 // 引入相關模組
@@ -2176,6 +2176,7 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
       'allowedMethods': allowedMethods,
       'restfulConvention': restfulCheck,
     };
+  }
   /**
    * 驗證8020 API清單合規性
    */
@@ -2278,14 +2279,12 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
 
 /**
    * 編譯測試結果
-   * @version 2025-10-15-V1.1.0
+   * @version 2025-10-15-V1.3.0
    * @date 2025-10-15
-   * @update: 修正函數位置和變數引用
+   * @update: 移入類別內部，修正變數引用問題
    */
   void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic> phase2Results, Map<String, dynamic> phase3Results) {
     // 階段一與階段二的測試案例是重疊的 (TC-SIT-001~016)，所以統計時要避免重複計算
-    // 這裡假設階段二的結果是階段一的深度驗證，不增加總數
-    // 總數維持44個測試案例
     _testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
     _testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
 
