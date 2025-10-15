@@ -1,0 +1,551 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
+Building package executable... 
+Built test:test.
+00:00 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  7570.%20SIT_P1.dart:1185:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class DynamicTestDataFactory {
+    ^^^^^
+  7570.%20SIT_P1.dart:1185:3: Error: Expected ';' after this.
+    class DynamicTestDataFactory {
+    ^^^^^
+  7570.%20SIT_P1.dart:1185:3: Error: Undefined name 'class'.
+    class DynamicTestDataFactory {
+    ^^^^^
+  7570.%20SIT_P1.dart:1185:9: Error: Expected ';' after this.
+    class DynamicTestDataFactory {
+          ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1185:9: Error: Undefined name 'DynamicTestDataFactory'.
+    class DynamicTestDataFactory {
+          ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1186:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static final DynamicTestDataFactory _instance = DynamicTestDataFactory._internal();
+      ^^^^^^
+  7570.%20SIT_P1.dart:1186:18: Error: 'DynamicTestDataFactory' isn't a type.
+      static final DynamicTestDataFactory _instance = DynamicTestDataFactory._internal();
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1186:53: Error: Undefined name 'DynamicTestDataFactory'.
+      static final DynamicTestDataFactory _instance = DynamicTestDataFactory._internal();
+                                                      ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1187:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static DynamicTestDataFactory get instance => _instance;
+      ^^^^^^
+  7570.%20SIT_P1.dart:1187:12: Error: 'DynamicTestDataFactory' isn't a type.
+      static DynamicTestDataFactory get instance => _instance;
+             ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1187:35: Error: Expected ';' after this.
+      static DynamicTestDataFactory get instance => _instance;
+                                    ^^^
+  7570.%20SIT_P1.dart:1187:48: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+      static DynamicTestDataFactory get instance => _instance;
+                                                 ^^
+  7570.%20SIT_P1.dart:1188:5: Error: Undefined name 'DynamicTestDataFactory'.
+      DynamicTestDataFactory._internal();
+      ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1213:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class TestDataInjector {
+    ^^^^^
+  7570.%20SIT_P1.dart:1213:3: Error: Expected ';' after this.
+    class TestDataInjector {
+    ^^^^^
+  7570.%20SIT_P1.dart:1213:3: Error: Undefined name 'class'.
+    class TestDataInjector {
+    ^^^^^
+  7570.%20SIT_P1.dart:1213:9: Error: Expected ';' after this.
+    class TestDataInjector {
+          ^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1213:9: Error: Undefined name 'TestDataInjector'.
+    class TestDataInjector {
+          ^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1214:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static final TestDataInjector _instance = TestDataInjector._internal();
+      ^^^^^^
+  7570.%20SIT_P1.dart:1214:18: Error: 'TestDataInjector' isn't a type.
+      static final TestDataInjector _instance = TestDataInjector._internal();
+                   ^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1214:47: Error: Undefined name 'TestDataInjector'.
+      static final TestDataInjector _instance = TestDataInjector._internal();
+                                                ^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1215:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static TestDataInjector get instance => _instance;
+      ^^^^^^
+  7570.%20SIT_P1.dart:1215:12: Error: 'TestDataInjector' isn't a type.
+      static TestDataInjector get instance => _instance;
+             ^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1215:29: Error: Expected ';' after this.
+      static TestDataInjector get instance => _instance;
+                              ^^^
+  7570.%20SIT_P1.dart:1215:42: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+      static TestDataInjector get instance => _instance;
+                                           ^^
+  7570.%20SIT_P1.dart:1216:5: Error: Undefined name 'TestDataInjector'.
+      TestDataInjector._internal();
+      ^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1217:12: Error: 'TestDataInjectionResult' isn't a type.
+      Future<TestDataInjectionResult> injectTestData({required String dataType, required Map<String, dynamic> rawData}) async {
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1220:56: Error: Method not found: 'TestDataInjectionResult'.
+        if (rawData.containsKey('expectedError')) return TestDataInjectionResult(isSuccess: false, errorMessage: rawData['expectedError']);
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1221:84: Error: Method not found: 'TestDataInjectionResult'.
+        if (rawData.containsKey('errorTest') && rawData['errorTest'] == true) return TestDataInjectionResult(isSuccess: false, errorMessage: 'Simulated injection error');
+                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1222:14: Error: Method not found: 'TestDataInjectionResult'.
+        return TestDataInjectionResult(isSuccess: true);
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1224:12: Error: 'BatchResult' isn't a type.
+      Future<BatchResult> injectBatchTestData({required String dataType, required List<Map<String, dynamic>> rawDataList}) async {
+             ^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1226:24: Error: 'TestDataInjectionResult' isn't a type.
+        final results = <TestDataInjectionResult>[];
+                         ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1230:14: Error: Method not found: 'BatchResult'.
+        return BatchResult(results: results);
+               ^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1235:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class TestDataInjectionResult {
+    ^^^^^
+  7570.%20SIT_P1.dart:1235:3: Error: Expected ';' after this.
+    class TestDataInjectionResult {
+    ^^^^^
+  7570.%20SIT_P1.dart:1235:3: Error: Undefined name 'class'.
+    class TestDataInjectionResult {
+    ^^^^^
+  7570.%20SIT_P1.dart:1235:9: Error: Expected ';' after this.
+    class TestDataInjectionResult {
+          ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1235:9: Error: Undefined name 'TestDataInjectionResult'.
+    class TestDataInjectionResult {
+          ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1238:39: Error: Expected ',' before this.
+      TestDataInjectionResult({required this.isSuccess, this.errorMessage});
+                                        ^^^^
+  7570.%20SIT_P1.dart:1238:39: Error: Expected identifier, but got 'this'.
+      TestDataInjectionResult({required this.isSuccess, this.errorMessage});
+                                        ^^^^
+  7570.%20SIT_P1.dart:1238:55: Error: Expected identifier, but got 'this'.
+      TestDataInjectionResult({required this.isSuccess, this.errorMessage});
+                                                        ^^^^
+  7570.%20SIT_P1.dart:1238:30: Error: Undefined name 'required'.
+      TestDataInjectionResult({required this.isSuccess, this.errorMessage});
+                               ^^^^^^^^
+  7570.%20SIT_P1.dart:1238:5: Error: Method not found: 'TestDataInjectionResult'.
+      TestDataInjectionResult({required this.isSuccess, this.errorMessage});
+      ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1242:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class BatchResult {
+    ^^^^^
+  7570.%20SIT_P1.dart:1242:3: Error: Expected ';' after this.
+    class BatchResult {
+    ^^^^^
+  7570.%20SIT_P1.dart:1242:3: Error: Undefined name 'class'.
+    class BatchResult {
+    ^^^^^
+  7570.%20SIT_P1.dart:1242:9: Error: Expected ';' after this.
+    class BatchResult {
+          ^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1242:9: Error: Undefined name 'BatchResult'.
+    class BatchResult {
+          ^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1243:16: Error: 'TestDataInjectionResult' isn't a type.
+      final List<TestDataInjectionResult> results;
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1244:27: Error: Expected ',' before this.
+      BatchResult({required this.results});
+                            ^^^^
+  7570.%20SIT_P1.dart:1244:27: Error: Expected identifier, but got 'this'.
+      BatchResult({required this.results});
+                            ^^^^
+  7570.%20SIT_P1.dart:1244:18: Error: Undefined name 'required'.
+      BatchResult({required this.results});
+                   ^^^^^^^^
+  7570.%20SIT_P1.dart:1244:5: Error: Method not found: 'BatchResult'.
+      BatchResult({required this.results});
+      ^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1249:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class TestDataFlowResult {
+    ^^^^^
+  7570.%20SIT_P1.dart:1249:3: Error: Expected ';' after this.
+    class TestDataFlowResult {
+    ^^^^^
+  7570.%20SIT_P1.dart:1249:3: Error: Undefined name 'class'.
+    class TestDataFlowResult {
+    ^^^^^
+  7570.%20SIT_P1.dart:1249:9: Error: Expected ';' after this.
+    class TestDataFlowResult {
+          ^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1249:9: Error: Undefined name 'TestDataFlowResult'.
+    class TestDataFlowResult {
+          ^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1253:11: Error: 'TestDataInjectionResult' isn't a type.
+      final TestDataInjectionResult? injectionResult;
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1260:16: Error: Expected ',' before this.
+        required this.testCase,
+                 ^^^^
+  7570.%20SIT_P1.dart:1260:16: Error: Expected identifier, but got 'this'.
+        required this.testCase,
+                 ^^^^
+  7570.%20SIT_P1.dart:1261:16: Error: Expected ',' before this.
+        required this.userMode,
+                 ^^^^
+  7570.%20SIT_P1.dart:1261:16: Error: Expected identifier, but got 'this'.
+        required this.userMode,
+                 ^^^^
+  7570.%20SIT_P1.dart:1262:7: Error: Expected identifier, but got 'this'.
+        this.dataGenerated,
+        ^^^^
+  7570.%20SIT_P1.dart:1263:7: Error: Expected identifier, but got 'this'.
+        this.injectionResult,
+        ^^^^
+  7570.%20SIT_P1.dart:1264:16: Error: Expected ',' before this.
+        required this.validationPassed,
+                 ^^^^
+  7570.%20SIT_P1.dart:1264:16: Error: Expected identifier, but got 'this'.
+        required this.validationPassed,
+                 ^^^^
+  7570.%20SIT_P1.dart:1265:16: Error: Expected ',' before this.
+        required this.overallSuccess,
+                 ^^^^
+  7570.%20SIT_P1.dart:1265:16: Error: Expected identifier, but got 'this'.
+        required this.overallSuccess,
+                 ^^^^
+  7570.%20SIT_P1.dart:1266:7: Error: Expected identifier, but got 'this'.
+        this.error,
+        ^^^^
+  7570.%20SIT_P1.dart:1267:26: Error: Expected ':' before this.
+        DateTime? timestamp,
+                           ^
+  7570.%20SIT_P1.dart:1267:26: Error: Expected an identifier, but got ','.
+  Try inserting an identifier before ','.
+        DateTime? timestamp,
+                           ^
+  7570.%20SIT_P1.dart:1265:7: Error: Undefined name 'required'.
+        required this.overallSuccess,
+        ^^^^^^^^
+  7570.%20SIT_P1.dart:1264:7: Error: Undefined name 'required'.
+        required this.validationPassed,
+        ^^^^^^^^
+  7570.%20SIT_P1.dart:1261:7: Error: Undefined name 'required'.
+        required this.userMode,
+        ^^^^^^^^
+  7570.%20SIT_P1.dart:1260:7: Error: Undefined name 'required'.
+        required this.testCase,
+        ^^^^^^^^
+  7570.%20SIT_P1.dart:1259:5: Error: Method not found: 'TestDataFlowResult'.
+      TestDataFlowResult({
+      ^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1268:6: Error: Expected ';' after this.
+      }) : timestamp = timestamp ?? DateTime.now();
+       ^
+  7570.%20SIT_P1.dart:1268:8: Error: Expected an identifier, but got ':'.
+  Try inserting an identifier before ':'.
+      }) : timestamp = timestamp ?? DateTime.now();
+         ^
+  7570.%20SIT_P1.dart:1268:8: Error: Unexpected token ':'.
+      }) : timestamp = timestamp ?? DateTime.now();
+         ^
+  7570.%20SIT_P1.dart:1270:5: Error: Expected ';' after this.
+      factory TestDataFlowResult.failure({
+      ^^^^^^^
+  7570.%20SIT_P1.dart:1270:5: Error: Undefined name 'factory'.
+      factory TestDataFlowResult.failure({
+      ^^^^^^^
+  7570.%20SIT_P1.dart:1270:32: Error: A function expression can't have a name.
+      factory TestDataFlowResult.failure({
+                                 ^^^^^^^
+  7570.%20SIT_P1.dart:1275:14: Error: Method not found: 'TestDataFlowResult'.
+        return TestDataFlowResult(
+               ^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1270:32: Error: Expected an identifier, but got 'failure'.
+  Try inserting an identifier before 'failure'.
+      factory TestDataFlowResult.failure({
+                                 ^^^^^^^
+  7570.%20SIT_P1.dart:1282:5: Error: Expected ';' after this.
+      }
+      ^
+  7570.%20SIT_P1.dart:1291:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class APIComplianceValidator {
+    ^^^^^
+  7570.%20SIT_P1.dart:1291:3: Error: Expected ';' after this.
+    class APIComplianceValidator {
+    ^^^^^
+  7570.%20SIT_P1.dart:1291:3: Error: Undefined name 'class'.
+    class APIComplianceValidator {
+    ^^^^^
+  7570.%20SIT_P1.dart:1291:9: Error: Expected ';' after this.
+    class APIComplianceValidator {
+          ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1291:9: Error: Undefined name 'APIComplianceValidator'.
+    class APIComplianceValidator {
+          ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1292:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static final APIComplianceValidator _instance = APIComplianceValidator._internal();
+      ^^^^^^
+  7570.%20SIT_P1.dart:1292:18: Error: 'APIComplianceValidator' isn't a type.
+      static final APIComplianceValidator _instance = APIComplianceValidator._internal();
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1292:53: Error: Undefined name 'APIComplianceValidator'.
+      static final APIComplianceValidator _instance = APIComplianceValidator._internal();
+                                                      ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1293:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static APIComplianceValidator get instance => _instance;
+      ^^^^^^
+  7570.%20SIT_P1.dart:1293:12: Error: 'APIComplianceValidator' isn't a type.
+      static APIComplianceValidator get instance => _instance;
+             ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1293:35: Error: Expected ';' after this.
+      static APIComplianceValidator get instance => _instance;
+                                    ^^^
+  7570.%20SIT_P1.dart:1293:48: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+      static APIComplianceValidator get instance => _instance;
+                                                 ^^
+  7570.%20SIT_P1.dart:1294:5: Error: Undefined name 'APIComplianceValidator'.
+      APIComplianceValidator._internal();
+      ^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1302:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class DCN0015ComplianceValidator {
+    ^^^^^
+  7570.%20SIT_P1.dart:1302:3: Error: Expected ';' after this.
+    class DCN0015ComplianceValidator {
+    ^^^^^
+  7570.%20SIT_P1.dart:1302:3: Error: Undefined name 'class'.
+    class DCN0015ComplianceValidator {
+    ^^^^^
+  7570.%20SIT_P1.dart:1302:9: Error: Expected ';' after this.
+    class DCN0015ComplianceValidator {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1302:9: Error: Undefined name 'DCN0015ComplianceValidator'.
+    class DCN0015ComplianceValidator {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1303:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static final DCN0015ComplianceValidator _instance = DCN0015ComplianceValidator._internal();
+      ^^^^^^
+  7570.%20SIT_P1.dart:1303:18: Error: 'DCN0015ComplianceValidator' isn't a type.
+      static final DCN0015ComplianceValidator _instance = DCN0015ComplianceValidator._internal();
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1303:57: Error: Undefined name 'DCN0015ComplianceValidator'.
+      static final DCN0015ComplianceValidator _instance = DCN0015ComplianceValidator._internal();
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1304:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static DCN0015ComplianceValidator get instance => _instance;
+      ^^^^^^
+  7570.%20SIT_P1.dart:1304:12: Error: 'DCN0015ComplianceValidator' isn't a type.
+      static DCN0015ComplianceValidator get instance => _instance;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1304:39: Error: Expected ';' after this.
+      static DCN0015ComplianceValidator get instance => _instance;
+                                        ^^^
+  7570.%20SIT_P1.dart:1304:52: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+      static DCN0015ComplianceValidator get instance => _instance;
+                                                     ^^
+  7570.%20SIT_P1.dart:1305:5: Error: Undefined name 'DCN0015ComplianceValidator'.
+      DCN0015ComplianceValidator._internal();
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1313:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class FourModeComplianceValidator {
+    ^^^^^
+  7570.%20SIT_P1.dart:1313:3: Error: Expected ';' after this.
+    class FourModeComplianceValidator {
+    ^^^^^
+  7570.%20SIT_P1.dart:1313:3: Error: Undefined name 'class'.
+    class FourModeComplianceValidator {
+    ^^^^^
+  7570.%20SIT_P1.dart:1313:9: Error: Expected ';' after this.
+    class FourModeComplianceValidator {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1313:9: Error: Undefined name 'FourModeComplianceValidator'.
+    class FourModeComplianceValidator {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1314:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static final FourModeComplianceValidator _instance = FourModeComplianceValidator._internal();
+      ^^^^^^
+  7570.%20SIT_P1.dart:1314:18: Error: 'FourModeComplianceValidator' isn't a type.
+      static final FourModeComplianceValidator _instance = FourModeComplianceValidator._internal();
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1314:58: Error: Undefined name 'FourModeComplianceValidator'.
+      static final FourModeComplianceValidator _instance = FourModeComplianceValidator._internal();
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1315:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static FourModeComplianceValidator get instance => _instance;
+      ^^^^^^
+  7570.%20SIT_P1.dart:1315:12: Error: 'FourModeComplianceValidator' isn't a type.
+      static FourModeComplianceValidator get instance => _instance;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1315:40: Error: Expected ';' after this.
+      static FourModeComplianceValidator get instance => _instance;
+                                         ^^^
+  7570.%20SIT_P1.dart:1315:53: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+      static FourModeComplianceValidator get instance => _instance;
+                                                      ^^
+  7570.%20SIT_P1.dart:1316:5: Error: Undefined name 'FourModeComplianceValidator'.
+      FourModeComplianceValidator._internal();
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1324:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class IntegrationErrorHandler {
+    ^^^^^
+  7570.%20SIT_P1.dart:1324:3: Error: Expected ';' after this.
+    class IntegrationErrorHandler {
+    ^^^^^
+  7570.%20SIT_P1.dart:1324:3: Error: Undefined name 'class'.
+    class IntegrationErrorHandler {
+    ^^^^^
+  7570.%20SIT_P1.dart:1324:9: Error: Expected ';' after this.
+    class IntegrationErrorHandler {
+          ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1324:9: Error: Undefined name 'IntegrationErrorHandler'.
+    class IntegrationErrorHandler {
+          ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1325:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static final IntegrationErrorHandler _instance = IntegrationErrorHandler._internal();
+      ^^^^^^
+  7570.%20SIT_P1.dart:1325:18: Error: 'IntegrationErrorHandler' isn't a type.
+      static final IntegrationErrorHandler _instance = IntegrationErrorHandler._internal();
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1325:54: Error: Undefined name 'IntegrationErrorHandler'.
+      static final IntegrationErrorHandler _instance = IntegrationErrorHandler._internal();
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1326:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static IntegrationErrorHandler get instance => _instance;
+      ^^^^^^
+  7570.%20SIT_P1.dart:1326:12: Error: 'IntegrationErrorHandler' isn't a type.
+      static IntegrationErrorHandler get instance => _instance;
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1326:36: Error: Expected ';' after this.
+      static IntegrationErrorHandler get instance => _instance;
+                                     ^^^
+  7570.%20SIT_P1.dart:1326:49: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+      static IntegrationErrorHandler get instance => _instance;
+                                                  ^^
+  7570.%20SIT_P1.dart:1327:5: Error: Undefined name 'IntegrationErrorHandler'.
+      IntegrationErrorHandler._internal();
+      ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1338:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class IntegrationTestController {
+    ^^^^^
+  7570.%20SIT_P1.dart:1338:3: Error: Expected ';' after this.
+    class IntegrationTestController {
+    ^^^^^
+  7570.%20SIT_P1.dart:1338:3: Error: Undefined name 'class'.
+    class IntegrationTestController {
+    ^^^^^
+  7570.%20SIT_P1.dart:1338:9: Error: Expected ';' after this.
+    class IntegrationTestController {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1338:9: Error: Undefined name 'IntegrationTestController'.
+    class IntegrationTestController {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1339:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static final IntegrationTestController _instance = IntegrationTestController._internal();
+      ^^^^^^
+  7570.%20SIT_P1.dart:1339:18: Error: 'IntegrationTestController' isn't a type.
+      static final IntegrationTestController _instance = IntegrationTestController._internal();
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1339:56: Error: Undefined name 'IntegrationTestController'.
+      static final IntegrationTestController _instance = IntegrationTestController._internal();
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1340:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static IntegrationTestController get instance => _instance;
+      ^^^^^^
+  7570.%20SIT_P1.dart:1340:12: Error: 'IntegrationTestController' isn't a type.
+      static IntegrationTestController get instance => _instance;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1340:38: Error: Expected ';' after this.
+      static IntegrationTestController get instance => _instance;
+                                       ^^^
+  7570.%20SIT_P1.dart:1340:51: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+      static IntegrationTestController get instance => _instance;
+                                                    ^^
+  7570.%20SIT_P1.dart:1341:5: Error: Undefined name 'IntegrationTestController'.
+      IntegrationTestController._internal();
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1349:3: Error: 'class' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+    class TestDataIntegrationManager {
+    ^^^^^
+  7570.%20SIT_P1.dart:1349:3: Error: Expected ';' after this.
+    class TestDataIntegrationManager {
+    ^^^^^
+  7570.%20SIT_P1.dart:1349:3: Error: Undefined name 'class'.
+    class TestDataIntegrationManager {
+    ^^^^^
+  7570.%20SIT_P1.dart:1349:9: Error: Expected ';' after this.
+    class TestDataIntegrationManager {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1349:9: Error: Undefined name 'TestDataIntegrationManager'.
+    class TestDataIntegrationManager {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1350:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static final TestDataIntegrationManager _instance = TestDataIntegrationManager._internal();
+      ^^^^^^
+  7570.%20SIT_P1.dart:1350:18: Error: 'TestDataIntegrationManager' isn't a type.
+      static final TestDataIntegrationManager _instance = TestDataIntegrationManager._internal();
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1350:57: Error: Undefined name 'TestDataIntegrationManager'.
+      static final TestDataIntegrationManager _instance = TestDataIntegrationManager._internal();
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1351:5: Error: Can't have modifier 'static' here.
+  Try removing 'static'.
+      static TestDataIntegrationManager get instance => _instance;
+      ^^^^^^
+  7570.%20SIT_P1.dart:1351:12: Error: 'TestDataIntegrationManager' isn't a type.
+      static TestDataIntegrationManager get instance => _instance;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1351:39: Error: Expected ';' after this.
+      static TestDataIntegrationManager get instance => _instance;
+                                        ^^^
+  7570.%20SIT_P1.dart:1351:52: Error: A function declaration needs an explicit list of parameters.
+  Try adding a parameter list to the function declaration.
+      static TestDataIntegrationManager get instance => _instance;
+                                                     ^^
+  7570.%20SIT_P1.dart:1352:5: Error: Undefined name 'TestDataIntegrationManager'.
+      TestDataIntegrationManager._internal();
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1268:22: Error: Final variable 'timestamp' must be assigned before it can be used.
+      }) : timestamp = timestamp ?? DateTime.now();
+                       ^^^^^^^^^
+  7570.%20SIT_P1.dart:1286:45: Error: Final variable 'testCase' must be assigned before it can be used.
+        return 'TestDataFlowResult(testCase: $testCase, userMode: $userMode, success: $overallSuccess)';
+                                              ^^^^^^^^
+  7570.%20SIT_P1.dart:1286:66: Error: Final variable 'userMode' must be assigned before it can be used.
+        return 'TestDataFlowResult(testCase: $testCase, userMode: $userMode, success: $overallSuccess)';
+                                                                   ^^^^^^^^
+  7570.%20SIT_P1.dart:1286:86: Error: Final variable 'overallSuccess' must be assigned before it can be used.
+        return 'TestDataFlowResult(testCase: $testCase, userMode: $userMode, success: $overallSuccess)';
+                                                                                       ^^^^^^^^^^^^^^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:00 +0 -1: Some tests failed.    
+~/workspace/75. Flutter_Test_code_PL$ 
