@@ -1,8 +1,8 @@
 /**
  * 7570. SIT_P1.dart
- * @version v3.0.0
+ * @version v3.1.0
  * @date 2025-10-15
- * @update: 階段一修復 - 移除對7580已清理類別的依賴，改為正確的資料流調用
+ * @update: 階段二修正 - 統一使用7580清理後的標準接口，移除業務邏輯模擬依賴
  *
  * 本模組實現6501 SIT測試計畫，涵蓋TC-SIT-001~016整合測試案例
  * 嚴格遵循DCN-0016測試資料流計畫，整合7580注入和7590生成機制
@@ -525,9 +525,12 @@ Future<Map<String, dynamic>> _executeTCSIT001_UserRegistrationIntegration() asyn
     final testUser = await DynamicTestDataFactory.instance.generateModeSpecificData('Expert');
     testResult['details']?['generatedUser'] = testUser['userId'];
 
-    // 2. 使用7580注入測試資料到PL層
-    final injectionResult = await TestDataInjectionFactory.instance.injectSystemEntryData(testUser);
-    testResult['details']?['injectionSuccess'] = injectionResult;
+    // 2. 使用7580標準注入接口（階段二修正）
+    final injectionResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: testUser,
+    );
+    testResult['details']?['injectionSuccess'] = injectionResult.isSuccess;
 
     // 3. 驗證完整鏈路
     if (injectionResult == true) {
@@ -576,9 +579,12 @@ Future<Map<String, dynamic>> _executeTCSIT002_LoginVerificationIntegration() asy
       'timestamp': DateTime.now().toIso8601String(),
     };
 
-    // 2. 使用7580注入登入測試資料
-    final loginResult = await TestDataInjectionFactory.instance.injectSystemEntryData(loginData);
-    testResult['details']?['loginResult'] = loginResult;
+    // 2. 使用7580標準注入接口（階段二修正）
+    final loginResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: loginData,
+    );
+    testResult['details']?['loginResult'] = loginResult.isSuccess;
 
     // 3. 驗證JWT Token格式 (模擬)
     if (loginResult == true) {
@@ -627,9 +633,12 @@ Future<Map<String, dynamic>> _executeTCSIT003_FirebaseAuthIntegration() async {
       'registrationDate': DateTime.now().toIso8601String(),
     };
 
-    // 2. 使用7580注入Firebase認證資料
-    final authResult = await TestDataInjectionFactory.instance.injectSystemEntryData(firebaseData);
-    testResult['details']?['firebaseAuthResult'] = authResult;
+    // 2. 使用7580標準注入接口（階段二修正）
+    final authResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: firebaseData,
+    );
+    testResult['details']?['firebaseAuthResult'] = authResult.isSuccess;
 
     // 3. 驗證Firebase ID Token (模擬)
     if (authResult == true) {
@@ -673,9 +682,12 @@ Future<Map<String, dynamic>> _executeTCSIT004_QuickBookkeepingIntegration() asyn
       transactionType: 'expense',
     );
 
-    // 2. 使用7580注入記帳資料
-    final bookkeepingResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(quickTransaction);
-    testResult['details']?['quickBookkeepingResult'] = bookkeepingResult;
+    // 2. 使用7580標準注入接口（階段二修正）
+    final bookkeepingResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'transaction',
+      rawData: quickTransaction,
+    );
+    testResult['details']?['quickBookkeepingResult'] = bookkeepingResult.isSuccess;
 
     // 3. 驗證文字解析準確性 (模擬)
     if (bookkeepingResult == true) {
@@ -722,9 +734,12 @@ Future<Map<String, dynamic>> _executeTCSIT005_CompleteBookkeepingFormIntegration
       userId: testUser['userId'],
     );
 
-    // 2. 使用7580注入完整表單資料
-    final formResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(completeTransaction);
-    testResult['details']?['completeFormResult'] = formResult;
+    // 2. 使用7580標準注入接口（階段二修正）
+    final formResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'transaction',
+      rawData: completeTransaction,
+    );
+    testResult['details']?['completeFormResult'] = formResult.isSuccess;
 
     // 3. 驗證表單驗證正確執行
     if (formResult == true) {
@@ -769,11 +784,18 @@ Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() 
       userId: testUser['userId'],
     );
 
-    // 2. 使用7580批量注入查詢資料
+    // 2. 使用7580標準批次注入接口（階段二修正）
+    final transactionList = queryTransactions.values.toList();
+    final batchResult = await TestDataInjector.instance.injectBatchTestData(
+      dataType: 'transaction',
+      rawDataList: transactionList,
+    );
+    
+    // 轉換批次結果為原有格式以保持相容性
     final batchInjectionResults = <String, bool>{};
-    for (final transaction in queryTransactions.values) {
-      final result = await TestDataInjectionFactory.instance.injectAccountingCoreData(transaction);
-      batchInjectionResults[transaction['收支ID']] = result;
+    for (int i = 0; i < batchResult.results.length; i++) {
+      final transactionId = transactionList[i]['收支ID'];
+      batchInjectionResults[transactionId] = batchResult.results[i].isSuccess;
     }
 
     testResult['details']?['batchInjectionResults'] = batchInjectionResults;
@@ -826,14 +848,18 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
       'timestamp': DateTime.now().millisecondsSinceEpoch, // 使用當前時間戳
     };
 
-    // 2. 使用7580嘗試注入錯誤資料
-    try {
-      await TestDataInjectionFactory.instance.injectSystemEntryData(invalidData);
-      testResult['details']?['errorHandlingFailed'] = true;
-    } catch (e) {
+    // 2. 使用7580標準注入接口測試錯誤處理（階段二修正）
+    final errorResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: invalidData,
+    );
+    
+    if (!errorResult.isSuccess) {
       // 預期會產生錯誤
       testResult['details']?['errorCaptured'] = true;
-      testResult['details']?['errorMessage'] = e.toString();
+      testResult['details']?['errorMessage'] = errorResult.errorMessage;
+    } else {
+      testResult['details']?['errorHandlingFailed'] = true;
     }
 
     // 3. 驗證錯誤處理覆蓋率
@@ -886,9 +912,12 @@ Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async 
       'registrationDate': assessmentUser['registrationDate'],
     };
 
-    // 2. 使用7580注入評估資料
-    final assessmentResult = await TestDataInjectionFactory.instance.injectSystemEntryData(assessmentData);
-    testResult['details']?['assessmentResult'] = assessmentResult;
+    // 2. 使用7580標準注入接口（階段二修正）
+    final assessmentResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: assessmentData,
+    );
+    testResult['details']?['assessmentResult'] = assessmentResult.isSuccess;
 
     // 3. 修復：強化評估邏輯驗證
     if (assessmentResult == true) {
@@ -905,9 +934,9 @@ Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async 
       testResult['details']?['assignedMode'] = assignedMode;
       testResult['details']?['modeValidationPassed'] = isValidMode;
       
-      // 修復：簡化驗證邏輯，專注MVP階段需求
+      // 修復：簡化驗證邏輯，專注MVP階段需求（階段二修正）
       // 只要資料注入成功且有基本的評估答案就算通過
-      if (assessmentResult == true && assignedMode != null && assignedMode.isNotEmpty) {
+      if (assessmentResult.isSuccess && assignedMode != null && assignedMode.isNotEmpty) {
         testResult['details']?['evaluationLogicCorrect'] = true;
         testResult['details']?['modeAssignmentAccurate'] = true;
         testResult['passed'] = true;
@@ -951,12 +980,15 @@ Future<Map<String, dynamic>> _executeTCSIT009_ModeDifferentiationResponse() asyn
 
     final modeResults = <String, bool>{};
 
-    // 1. 使用7580測試四種模式差異化
+    // 1. 使用7580標準注入接口測試四種模式差異化（階段二修正）
     final modes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
     for (final mode in modes) {
       final modeData = await DynamicTestDataFactory.instance.generateModeSpecificData(mode);
-      final result = await TestDataInjectionFactory.instance.injectSystemEntryData(modeData);
-      modeResults[mode] = result;
+      final result = await TestDataInjector.instance.injectTestData(
+        dataType: 'systemEntry',
+        rawData: modeData,
+      );
+      modeResults[mode] = result.isSuccess;
     }
 
     testResult['details']?['modeResults'] = modeResults;
@@ -1009,9 +1041,12 @@ Future<Map<String, dynamic>> _executeTCSIT010_DataFormatConversion() async {
       'description': '格式轉換測試',
     };
 
-    // 2. 使用7580執行資料注入
-    final conversionResult = await TestDataInjectionFactory.instance.injectAccountingCoreData(rawData);
-    testResult['details']?['conversionResult'] = conversionResult;
+    // 2. 使用7580標準注入接口執行資料注入（階段二修正）
+    final conversionResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'transaction',
+      rawData: rawData,
+    );
+    testResult['details']?['conversionResult'] = conversionResult.isSuccess;
 
     // 3. 驗證格式轉換準確性
     if (conversionResult == true) {
@@ -1061,16 +1096,22 @@ Future<Map<String, dynamic>> _executeTCSIT011_DataSynchronizationMechanism() asy
 
     var syncSuccess = true;
 
-    // 使用7580注入用戶資料
+    // 使用7580標準注入接口注入用戶資料（階段二修正）
     for (final userData in users.values) {
-      final result = await TestDataInjectionFactory.instance.injectSystemEntryData(userData);
-      if (!result) syncSuccess = false;
+      final result = await TestDataInjector.instance.injectTestData(
+        dataType: 'systemEntry',
+        rawData: userData,
+      );
+      if (!result.isSuccess) syncSuccess = false;
     }
 
-    // 使用7580注入交易資料
+    // 使用7580標準注入接口注入交易資料（階段二修正）
     for (final transactionData in transactions.values) {
-      final result = await TestDataInjectionFactory.instance.injectAccountingCoreData(transactionData);
-      if (!result) syncSuccess = false;
+      final result = await TestDataInjector.instance.injectTestData(
+        dataType: 'transaction',
+        rawData: transactionData,
+      );
+      if (!result.isSuccess) syncSuccess = false;
     }
 
     testResult['details']?['syncSuccess'] = syncSuccess;
@@ -1123,7 +1164,12 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
       'displayName': lifecycleUser['displayName'],
       'registrationDate': DateTime.now().toIso8601String(),
     };
-    lifecycleSteps['registration'] = await TestDataInjectionFactory.instance.injectSystemEntryData(registrationData);
+    // 使用7580標準注入接口（階段二修正）
+    final registrationResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: registrationData,
+    );
+    lifecycleSteps['registration'] = registrationResult.isSuccess;
 
     // 2. 登入
     final loginData = {
@@ -1132,10 +1178,18 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
       'userMode': lifecycleUser['userMode'],
       'loginType': 'standard',
     };
-    lifecycleSteps['login'] = await TestDataInjectionFactory.instance.injectSystemEntryData(loginData);
+    final loginResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: loginData,
+    );
+    lifecycleSteps['login'] = loginResult.isSuccess;
 
     // 3. 模式評估
-    lifecycleSteps['modeAssessment'] = await TestDataInjectionFactory.instance.injectSystemEntryData(lifecycleUser);
+    final assessmentResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: lifecycleUser,
+    );
+    lifecycleSteps['modeAssessment'] = assessmentResult.isSuccess;
 
     // 4. 記帳操作
     final transaction = await DynamicTestDataFactory.instance.generateTransaction(
@@ -1143,7 +1197,11 @@ Future<Map<String, dynamic>> _executeTCSIT012_UserCompleteLifecycle() async {
       transactionType: 'expense',
       userId: lifecycleUser['userId'],
     );
-    lifecycleSteps['bookkeeping'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(transaction);
+    final transactionResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'transaction',
+      rawData: transaction,
+    );
+    lifecycleSteps['bookkeeping'] = transactionResult.isSuccess;
 
     // 5. 查詢操作 (模擬)
     lifecycleSteps['query'] = true;
@@ -1199,7 +1257,12 @@ Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd
       description: '快速記帳 - 早餐',
       transactionType: 'expense',
     );
-    businessProcess['quickBookkeeping'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(quickTransaction);
+    // 使用7580標準注入接口（階段二修正）
+    final quickResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'transaction',
+      rawData: quickTransaction,
+    );
+    businessProcess['quickBookkeeping'] = quickResult.isSuccess;
 
     // 2. 完整表單記帳 - 使用動態生成的金額和用戶ID
     final completeTransaction = await DynamicTestDataFactory.instance.generateTransaction(
@@ -1207,7 +1270,11 @@ Future<Map<String, dynamic>> _executeTCSIT013_BookkeepingBusinessProcessEndToEnd
       transactionType: 'income',
       userId: businessUser['userId'],
     );
-    businessProcess['completeForm'] = await TestDataInjectionFactory.instance.injectAccountingCoreData(completeTransaction);
+    final completeResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'transaction',
+      rawData: completeTransaction,
+    );
+    businessProcess['completeForm'] = completeResult.isSuccess;
 
     // 3. 查詢記錄 (模擬)
     businessProcess['query'] = true;
@@ -1255,28 +1322,27 @@ Future<Map<String, dynamic>> _executeTCSIT014_NetworkExceptionHandling() async {
 
     final networkExceptions = <String, bool>{};
 
-    // 1. 模擬網路中斷
-    try {
-      // 故意使用無效的網路請求資料
-      final invalidNetworkData = {
-        'networkTimeout': true,
-        'connectionFailed': true,
-      };
-      await TestDataInjectionFactory.instance.injectSystemEntryData(invalidNetworkData);
-    } catch (e) {
-      networkExceptions['networkInterruption'] = true;
-    }
+    // 1. 使用7580標準注入接口模擬網路中斷（階段二修正）
+    final invalidNetworkData = {
+      'networkTimeout': true,
+      'connectionFailed': true,
+    };
+    final networkResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: invalidNetworkData,
+    );
+    networkExceptions['networkInterruption'] = !networkResult.isSuccess;
 
-    // 2. 模擬請求超時
-    try {
-      final timeoutData = {
-        'requestTimeout': true,
-        'timeoutDuration': 30000,
-      };
-      await TestDataInjectionFactory.instance.injectAccountingCoreData(timeoutData);
-    } catch (e) {
-      networkExceptions['requestTimeout'] = true;
-    }
+    // 2. 使用7580標準注入接口模擬請求超時（階段二修正）
+    final timeoutData = {
+      'requestTimeout': true,
+      'timeoutDuration': 30000,
+    };
+    final timeoutResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'transaction',
+      rawData: timeoutData,
+    );
+    networkExceptions['requestTimeout'] = !timeoutResult.isSuccess;
 
     // 3. 模擬服務暫時不可用
     networkExceptions['serviceUnavailable'] = true; // 模擬處理
@@ -1328,22 +1394,30 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
         'date': '2025-13-40', // 無效日期
       };
       print('[7570] 🔍 除錯資訊: 金額=${invalidInputData['amount']} (${invalidInputData['amount'].runtimeType}), 類型=${invalidInputData['description']}');
-      await TestDataInjectionFactory.instance.injectAccountingCoreData(invalidInputData);
-    } catch (e) {
-      businessRuleErrors['invalidDataInput'] = true;
-      print('[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗');
-      print('[7570] ❌ 交易資料驗證失敗');
-    }
+      // 使用7580標準注入接口測試無效資料（階段二修正）
+      final invalidResult = await TestDataInjector.instance.injectTestData(
+        dataType: 'transaction',
+        rawData: invalidInputData,
+      );
+      
+      if (!invalidResult.isSuccess) {
+        businessRuleErrors['invalidDataInput'] = true;
+        print('[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗');
+        print('[7570] ❌ 交易資料驗證失敗');
+      }
 
-    // 2. 業務規則衝突測試
-    try {
-      final conflictData = {
-        'userMode': 'InvalidMode',
-        'email': 'invalid-email-format',
-        'errorTest': true, // 標記為錯誤測試案例
-      };
-      await TestDataInjectionFactory.instance.injectSystemEntryData(conflictData);
-    } catch (e) {
+    // 2. 使用7580標準注入接口測試業務規則衝突（階段二修正）
+    final conflictData = {
+      'userMode': 'InvalidMode',
+      'email': 'invalid-email-format',
+      'errorTest': true, // 標記為錯誤測試案例
+    };
+    final conflictResult = await TestDataInjector.instance.injectTestData(
+      dataType: 'systemEntry',
+      rawData: conflictData,
+    );
+    
+    if (!conflictResult.isSuccess) {
       businessRuleErrors['businessRuleConflict'] = true;
       print('[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗');
       print('[7570] ❌ 註冊資料驗證失敗');
@@ -2237,8 +2311,8 @@ void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic
  * @update: 階段二修復完成 - 移除測試資料Hard Coding，使用7590動態生成
  */
 void initializePhase2FixedSITTestModule() {
-  print('[7570] 🎉 SIT P1測試代碼模組 v2.3.0 (階段三修復) 初始化完成');
-  print('[7570] 📌 階段三功能：錯誤處理測試邏輯修正');
+  print('[7570] 🎉 SIT P1測試代碼模組 v3.1.0 (階段二修正) 初始化完成');
+  print('[7570] 📌 階段二功能：統一測試資料流接口，移除業務邏輯模擬依賴');
   print('[7570] 🔗 深度整合：7580注入 + 7590生成 完全整合');
   print('[7570] 🎯 四模式支援：Expert/Inertial/Cultivation/Guiding差異化驗證');
   print('[7570] 📋 DCN-0016合規：完整資料流驗證機制');

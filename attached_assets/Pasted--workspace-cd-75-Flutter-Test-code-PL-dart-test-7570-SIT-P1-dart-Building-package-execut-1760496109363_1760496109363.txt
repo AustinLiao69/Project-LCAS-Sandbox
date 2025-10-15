@@ -1,0 +1,380 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
+Building package executable... 
+Built test:test.
+00:00 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  7570.%20SIT_P1.dart:1374:81: Error: Can't find '}' to match '{'.
+  Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async {
+                                                                                  ^
+  /tmp/dart_test.kernel.ZMHNJP/test.dart:14:42: Error: Undefined name 'main'.
+        internalBootstrapVmTest(() => test.main, sendPort);
+                                           ^^^^
+  7570.%20SIT_P1.dart:148:7: Error: The method '_compileTestResults' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_compileTestResults'.
+        _compileTestResults(
+        ^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:205:13: Error: The method '_executeTCSIT016_DCN0015FormatValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT016_DCN0015FormatValidation'.
+        () => _executeTCSIT016_DCN0015FormatValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:422:13: Error: The method '_executeTCSIT017_AuthRegisterEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT017_AuthRegisterEndpointValidation'.
+        () => _executeTCSIT017_AuthRegisterEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:423:13: Error: The method '_executeTCSIT018_AuthLoginEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT018_AuthLoginEndpointValidation'.
+        () => _executeTCSIT018_AuthLoginEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:424:13: Error: The method '_executeTCSIT019_AuthLogoutEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT019_AuthLogoutEndpointValidation'.
+        () => _executeTCSIT019_AuthLogoutEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:425:13: Error: The method '_executeTCSIT020_UsersProfileEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT020_UsersProfileEndpointValidation'.
+        () => _executeTCSIT020_UsersProfileEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:426:13: Error: The method '_executeTCSIT021_UsersAssessmentEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT021_UsersAssessmentEndpointValidation'.
+        () => _executeTCSIT021_UsersAssessmentEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:427:13: Error: The method '_executeTCSIT022_UsersPreferencesEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT022_UsersPreferencesEndpointValidation'.
+        () => _executeTCSIT022_UsersPreferencesEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:428:13: Error: The method '_executeTCSIT023_TransactionsQuickEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT023_TransactionsQuickEndpointValidation'.
+        () => _executeTCSIT023_TransactionsQuickEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:429:13: Error: The method '_executeTCSIT024_TransactionsCRUDEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT024_TransactionsCRUDEndpointValidation'.
+        () => _executeTCSIT024_TransactionsCRUDEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:430:13: Error: The method '_executeTCSIT025_TransactionsDashboardEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT025_TransactionsDashboardEndpointValidation'.
+        () => _executeTCSIT025_TransactionsDashboardEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:431:13: Error: The method '_executeTCSIT026_AuthRefreshEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT026_AuthRefreshEndpointValidation'.
+        () => _executeTCSIT026_AuthRefreshEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:432:13: Error: The method '_executeTCSIT027_AuthForgotPasswordEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT027_AuthForgotPasswordEndpointValidation'.
+        () => _executeTCSIT027_AuthForgotPasswordEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:433:13: Error: The method '_executeTCSIT028_AuthResetPasswordEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT028_AuthResetPasswordEndpointValidation'.
+        () => _executeTCSIT028_AuthResetPasswordEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:434:13: Error: The method '_executeTCSIT029_AuthVerifyEmailEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT029_AuthVerifyEmailEndpointValidation'.
+        () => _executeTCSIT029_AuthVerifyEmailEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:435:13: Error: The method '_executeTCSIT030_AuthBindLineEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT030_AuthBindLineEndpointValidation'.
+        () => _executeTCSIT030_AuthBindLineEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:436:13: Error: The method '_executeTCSIT031_AuthBindStatusEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT031_AuthBindStatusEndpointValidation'.
+        () => _executeTCSIT031_AuthBindStatusEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:437:13: Error: The method '_executeTCSIT032_GetUsersProfileEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT032_GetUsersProfileEndpointValidation'.
+        () => _executeTCSIT032_GetUsersProfileEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:438:13: Error: The method '_executeTCSIT033_PutUsersProfileEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT033_PutUsersProfileEndpointValidation'.
+        () => _executeTCSIT033_PutUsersProfileEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:439:13: Error: The method '_executeTCSIT034_UsersPreferencesManagementEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT034_UsersPreferencesManagementEndpointValidation'.
+        () => _executeTCSIT034_UsersPreferencesManagementEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:440:13: Error: The method '_executeTCSIT035_UsersModeEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT035_UsersModeEndpointValidation'.
+        () => _executeTCSIT035_UsersModeEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:441:13: Error: The method '_executeTCSIT036_UsersSecurityEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT036_UsersSecurityEndpointValidation'.
+        () => _executeTCSIT036_UsersSecurityEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:442:13: Error: The method '_executeTCSIT037_UsersVerifyPinEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT037_UsersVerifyPinEndpointValidation'.
+        () => _executeTCSIT037_UsersVerifyPinEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:443:13: Error: The method '_executeTCSIT038_GetTransactionByIdEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT038_GetTransactionByIdEndpointValidation'.
+        () => _executeTCSIT038_GetTransactionByIdEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:444:13: Error: The method '_executeTCSIT039_PutTransactionByIdEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT039_PutTransactionByIdEndpointValidation'.
+        () => _executeTCSIT039_PutTransactionByIdEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:445:13: Error: The method '_executeTCSIT040_DeleteTransactionByIdEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT040_DeleteTransactionByIdEndpointValidation'.
+        () => _executeTCSIT040_DeleteTransactionByIdEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:446:13: Error: The method '_executeTCSIT041_TransactionsStatisticsEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT041_TransactionsStatisticsEndpointValidation'.
+        () => _executeTCSIT041_TransactionsStatisticsEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:447:13: Error: The method '_executeTCSIT042_TransactionsRecentEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT042_TransactionsRecentEndpointValidation'.
+        () => _executeTCSIT042_TransactionsRecentEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:448:13: Error: The method '_executeTCSIT043_TransactionsChartsEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT043_TransactionsChartsEndpointValidation'.
+        () => _executeTCSIT043_TransactionsChartsEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:449:13: Error: The method '_executeTCSIT044_TransactionsDashboardCompleteEndpointValidation' isn't defined for the class 'SITP1TestController'.
+   - 'SITP1TestController' is from '7570.%20SIT_P1.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named '_executeTCSIT044_TransactionsDashboardCompleteEndpointValidation'.
+        () => _executeTCSIT044_TransactionsDashboardCompleteEndpointValidation(),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1384:3: Error: A try block must be followed by an 'on', 'catch', or 'finally' clause.
+  Try adding either a catch or finally clause, or remove the try statement.
+    try {
+    ^^^
+  7570.%20SIT_P1.dart:1678:35: Error: Method not found: '_calculateComplianceScore'.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1679:39: Error: Method not found: '_calculateComplianceScore'.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1680:40: Error: Method not found: '_calculateComplianceScore'.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1760:35: Error: Method not found: '_calculateComplianceScore'.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1761:39: Error: Method not found: '_calculateComplianceScore'.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1762:40: Error: Method not found: '_calculateComplianceScore'.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1785:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1799:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1813:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1827:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1841:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1855:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1869:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1785:16: Error: Local variable '_executeStandardAPIContractTest' can't be referenced before it is declared.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1882:30: Context: This is the declaration of the variable '_executeStandardAPIContractTest'.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1799:16: Error: Local variable '_executeStandardAPIContractTest' can't be referenced before it is declared.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1882:30: Context: This is the declaration of the variable '_executeStandardAPIContractTest'.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1813:16: Error: Local variable '_executeStandardAPIContractTest' can't be referenced before it is declared.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1882:30: Context: This is the declaration of the variable '_executeStandardAPIContractTest'.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1827:16: Error: Local variable '_executeStandardAPIContractTest' can't be referenced before it is declared.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1882:30: Context: This is the declaration of the variable '_executeStandardAPIContractTest'.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1841:16: Error: Local variable '_executeStandardAPIContractTest' can't be referenced before it is declared.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1882:30: Context: This is the declaration of the variable '_executeStandardAPIContractTest'.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1855:16: Error: Local variable '_executeStandardAPIContractTest' can't be referenced before it is declared.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1882:30: Context: This is the declaration of the variable '_executeStandardAPIContractTest'.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1869:16: Error: Local variable '_executeStandardAPIContractTest' can't be referenced before it is declared.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1882:30: Context: This is the declaration of the variable '_executeStandardAPIContractTest'.
+  Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1929:35: Error: Method not found: '_calculateComplianceScore'.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1930:39: Error: Method not found: '_calculateComplianceScore'.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1931:40: Error: Method not found: '_calculateComplianceScore'.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1678:35: Error: Local variable '_calculateComplianceScore' can't be referenced before it is declared.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1951:5: Context: This is the declaration of the variable '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1679:39: Error: Local variable '_calculateComplianceScore' can't be referenced before it is declared.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1951:5: Context: This is the declaration of the variable '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1680:40: Error: Local variable '_calculateComplianceScore' can't be referenced before it is declared.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1951:5: Context: This is the declaration of the variable '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1760:35: Error: Local variable '_calculateComplianceScore' can't be referenced before it is declared.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1951:5: Context: This is the declaration of the variable '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1761:39: Error: Local variable '_calculateComplianceScore' can't be referenced before it is declared.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1951:5: Context: This is the declaration of the variable '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1762:40: Error: Local variable '_calculateComplianceScore' can't be referenced before it is declared.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1951:5: Context: This is the declaration of the variable '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1929:35: Error: Local variable '_calculateComplianceScore' can't be referenced before it is declared.
+      testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1951:5: Context: This is the declaration of the variable '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1930:39: Error: Local variable '_calculateComplianceScore' can't be referenced before it is declared.
+      testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1951:5: Context: This is the declaration of the variable '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1931:40: Error: Local variable '_calculateComplianceScore' can't be referenced before it is declared.
+      testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1951:5: Context: This is the declaration of the variable '_calculateComplianceScore'.
+  int _calculateComplianceScore(Map<String, dynamic> validation) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1966:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1974:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1982:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1990:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:1998:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2006:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2014:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2022:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2030:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2038:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2046:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2054:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2062:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2070:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2078:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2086:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2094:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2102:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2110:16: Error: Method not found: '_executeStandardAPIContractTest'.
+    return await _executeStandardAPIContractTest(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2143:26: Error: Method not found: '_checkRESTfulConvention'.
+      final restfulCheck = _checkRESTfulConvention(method, endpoint);
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2143:26: Error: Local variable '_checkRESTfulConvention' can't be referenced before it is declared.
+      final restfulCheck = _checkRESTfulConvention(method, endpoint);
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:2156:24: Context: This is the declaration of the variable '_checkRESTfulConvention'.
+    Map<String, dynamic> _checkRESTfulConvention(String method, String endpoint) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:00 +0 -1: Some tests failed.     
+~/workspace/75. Flutter_Test_code_PL$ ^C
+~/workspace/75. Flutter_Test_code_PL$ 
