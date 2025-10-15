@@ -1,6 +1,6 @@
 
 name: pl_tests
-description: PL 測試專案 - 系統進入與記帳核心功能群測試 (純Dart版本)
+description: PL 測試專案 - SIT P1階段一重構版 (靜態測試資料)
 version: 1.0.0+1
 
 environment:
@@ -11,5 +11,6 @@ dependencies:
 
 dev_dependencies:
   test: ^1.25.2
-  build_runner: ^2.4.9
-  analyzer: ^6.4.1
+
+# 階段三清理完成：移除7580/7590模組後的最小化配置
+# 專注於7570靜態測試資料流，符合MVP理念
