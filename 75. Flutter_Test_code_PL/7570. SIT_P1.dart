@@ -303,7 +303,7 @@ class SITP1TestController {
     }
   }
 
-  
+
 
   /**
    * 計算階段二整體成功率
@@ -790,7 +790,7 @@ Future<Map<String, dynamic>> _executeTCSIT006_BookkeepingDataQueryIntegration() 
       dataType: 'transaction',
       rawDataList: transactionList,
     );
-    
+
     // 轉換批次結果為原有格式以保持相容性
     final batchInjectionResults = <String, bool>{};
     for (int i = 0; i < batchResult.results.length; i++) {
@@ -853,7 +853,7 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
       dataType: 'systemEntry',
       rawData: invalidData,
     );
-    
+
     if (!errorResult.isSuccess) {
       // 預期會產生錯誤
       testResult['details']?['errorCaptured'] = true;
@@ -866,7 +866,7 @@ Future<Map<String, dynamic>> _executeTCSIT007_CrossLayerErrorHandlingIntegration
     testResult['details']?['networkTimeoutHandling'] = true; // 模擬
     testResult['details']?['authenticationErrorHandling'] = true; // 模擬
     testResult['details']?['unifiedErrorFormat'] = true; // 模擬
-    
+
     // 修復：錯誤處理測試應該期望捕獲到錯誤才算成功
     final errorCaptured = testResult['details']?['errorCaptured'] == true;
     print('[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗');
@@ -924,16 +924,16 @@ Future<Map<String, dynamic>> _executeTCSIT008_ModeAssessmentIntegration() async 
       // 驗證評估答案格式正確性
       final assessmentAnswers = assessmentUser['assessmentAnswers'] as Map<String, dynamic>?;
       final hasValidAnswers = assessmentAnswers != null && assessmentAnswers.isNotEmpty;
-      
+
       // 驗證用戶模式分配準確性
       final assignedMode = assessmentUser['userMode'];
       final isValidMode = ['Expert', 'Inertial', 'Cultivation', 'Guiding'].contains(assignedMode);
-      
+
       // 記錄驗證詳情
       testResult['details']?['assessmentAnswersValid'] = hasValidAnswers;
       testResult['details']?['assignedMode'] = assignedMode;
       testResult['details']?['modeValidationPassed'] = isValidMode;
-      
+
       // 修復：簡化驗證邏輯，專注MVP階段需求（階段二修正）
       // 只要資料注入成功且有基本的評估答案就算通過
       if (assessmentResult.isSuccess && assignedMode != null && assignedMode.isNotEmpty) {
@@ -1399,7 +1399,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
         dataType: 'transaction',
         rawData: invalidInputData,
       );
-      
+
       if (!invalidResult.isSuccess) {
         businessRuleErrors['invalidDataInput'] = true;
         print('[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗');
@@ -1420,7 +1420,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
       dataType: 'systemEntry',
       rawData: conflictData,
     );
-    
+
     if (!conflictResult.isSuccess) {
       businessRuleErrors['businessRuleConflict'] = true;
       print('[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗');
@@ -1877,95 +1877,6 @@ Future<Map<String, dynamic>> _executeTCSIT025_TransactionsDashboardEndpointValid
     sampleResponse: {'success': true, 'data': {'summary': {'totalIncome': 50000, 'totalExpense': 35000, 'balance': 15000}, 'charts': [{'type': 'pie', 'data': []}]}, 'error': null, 'message': '成功取得儀表板數據', 'metadata': {'timestamp': DateTime.now().toIso8601String(), 'requestId': 'req-131', 'userMode': 'Expert', 'apiVersion': 'v1.0.0', 'processingTimeMs': 220, 'modeFeatures': {'advancedOptions': true}}},
   );
 }
-
-/**
- * 通用API契約測試執行器
- * @version 2025-10-09-V2.0.0
- * @date 2025-10-09
- * @update: 階段三實作 - 統一測試邏輯
- */
-Future<Map<String, dynamic>> _executeStandardAPIContractTest({
-  required String testId,
-  required String testName,
-  required String endpoint,
-  required String method,
-  required String expectedSpec,
-  required Map<String, dynamic> sampleResponse,
-}) async {
-  final Map<String, dynamic> testResult = <String, dynamic>{
-    'testId': testId,
-    'testName': testName,
-    'focus': 'API規格合規性',
-    'apiEndpoint': expectedSpec,
-    'passed': false,
-    'details': <String, dynamic>{},
-    'apiCompliance': 0,
-    'dcn0015Compliance': 0,
-    'fourModeCompliance': 0,
-    'executionTime': 0,
-  };
-
-  try {
-    final stopwatch = Stopwatch()..start();
-
-    // 1. API端點驗證
-    final apiValidation = await APIComplianceValidator.instance.validateEndpoint(
-      endpoint: endpoint,
-      method: method,
-      expectedSpec: expectedSpec,
-    );
-    testResult['details']?['apiValidation'] = apiValidation;
-
-    // 2. DCN-0015統一回應格式驗證
-    final dcn0015Validation = await DCN0015ComplianceValidator.instance.validateResponseFormat(
-      endpoint: endpoint,
-      sampleResponse: sampleResponse,
-    );
-    testResult['details']?['dcn0015Validation'] = dcn0015Validation;
-
-    // 3. 四模式差異化驗證
-    final fourModeValidation = await FourModeComplianceValidator.instance.validateModeSpecificResponse(
-      endpoint: endpoint,
-      modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding'],
-    );
-    testResult['details']?['fourModeValidation'] = fourModeValidation;
-
-    // 計算合規分數
-    testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
-    testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
-    testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
-
-    // 判斷測試通過條件
-    testResult['passed'] = testResult['apiCompliance'] >= 80 &&
-                          testResult['dcn0015Compliance'] >= 80 &&
-                          testResult['fourModeCompliance'] >= 70;
-
-    stopwatch.stop();
-    testResult['executionTime'] = stopwatch.elapsedMilliseconds;
-
-    return testResult;
-  } catch (e) {
-    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
-    return testResult;
-  }
-}
-
-/**
- * 計算合規分數
- */
-int _calculateComplianceScore(Map<String, dynamic> validation) {
-  try {
-    final isValid = validation['isValid'] ?? false;
-    final score = validation['score'] ?? (isValid ? 100 : 0);
-    return score is int ? score : (score as double).round();
-  } catch (e) {
-    return 0;
-  }
-}
-
-// ==========================================
-// 輔助函數定義（在使用前先定義）
-// ==========================================
 
 /**
  * 通用API契約測試執行器
@@ -2454,10 +2365,10 @@ void main() {
     test('執行完整SIT測試', () async {
       print('\n[7570] 🚀 開始執行 SIT P1 完整測試...');
       final result = await testController.executeFullSITTest();
-      
+
       expect(result['totalTests'], equals(44));
       expect(result['passedTests'], greaterThan(40)); // 允許少量失敗
-      
+
       print('\n[7570] 📊 SIT P1測試完成報告:');
       print('[7570]    ✅ 總測試數: ${result['totalTests']}');
       print('[7570]    ✅ 通過數: ${result['passedTests']}');
