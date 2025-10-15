@@ -1,0 +1,113 @@
+------------------------------------------
+20251015 清理7580模組
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+基於9901資深PG角色分析，我來深入檢查7580模組的職責邊界問題。
+🔍 問題分析
+經過詳細檢視7580. 注入測試資料.dart，我發現7580模組確實存在嚴重的職責越界問題。
+核心問題詳述
+7580模組當前職責範圍過於龐大，超出了「僅注入測試資料到PL層」的原始設計目標。
+具體問題列表
+
+1. 超出職責的Mock模組實作（L322-L410）
+// Mock 7301系統進入功能群模組
+class _MockSystemEntryModule {
+  Future<dynamic> registerWithEmail(dynamic request) async {
+    print('📧 模擬呼叫7301.registerWithEmail');
+    // 模擬API調用延遲
+    await Future.delayed(Duration(milliseconds: 200));
+    // 模擬成功回應
+    return _MockRegisterResponse(...)
+  }
+}
+問題：7580不應該模擬7301、7302的內部邏輯，這已經跨越了PL層邊界。
+
+2. 業務邏輯處理越界（L130-L200）
+// 階段一核心修復：模擬完成後實際調用7301 PL層函數
+print('🔗 開始實際調用7301系統進入功能群');
+try {
+  final systemEntryModule = await _loadSystemEntryModule();
+  final registerRequest = _convertToRegisterRequest(entryData);
+  final registerResponse = await systemEntryModule.registerWithEmail(registerRequest);
+問題：7580直接調用業務邏輯函數，違反了「僅注入測試資料」的單一職責原則。
+3. 複雜的測試場景管理（L411-L500）
+class TestScenarioSimulator {
+  Future<Map<String, dynamic>> simulateCompleteUserJourney({
+    String userMode = 'Expert',
+    required String userId,
+    required String email,
+  }) async {
+問題：測試場景管理應該屬於測試框架層面，不是資料注入模組的職責。
+4. 相容性支援超出範圍（L585-L630）
+class TestDataInjectionFactory {
+  Future<bool> injectSystemEntryData(Map<String, dynamic> entryData) async {
+    try {
+      return await UserOperationSimulator.instance.simulateSystemEntry(entryData);
+    } catch (e) {
+      print('❌ 系統進入資料注入失敗: $e');
+      return false;
+    }
+  }
+}
+問題：相容性包裝雖然必要，但實作方式過於複雜。
+💡 Insight 分析
+核心洞察
+7580模組的設計初衷是「資料注入器」，但實際實作卻變成了「業務邏輯模擬器」，這是典型的功能蔓延（Feature Creep）問題。
+設計原則違反
+1.	單一職責原則違反：一個模組承擔了資料注入、業務邏輯模擬、測試場景管理等多重責任
+2.	依賴倒轉原則違反：測試資料注入模組不應該依賴具體的業務邏輯實作
+3.	開放封閉原則違反：為了支援測試而修改了核心設計
+根本原因
+階段一修復時，為了讓7580能夠「實際調用7301、7302的PL層函數」，引入了過多的業務邏輯模擬，偏離了原始設計目標。
+🎯 三階段解決方案
+階段一：職責範圍重新界定（優先級：高）
+目標：將7580恢復為純粹的測試資料注入器
+修復範圍：
+•	移除所有Mock業務邏輯模組（L322-L410）
+•	移除業務邏輯調用代碼（L130-L200）
+•	保留純粹的資料生成和注入功能
+版本升級：
+•	7580模組：v2.1.0 → v3.0.0（重大架構調整）
+•	相關函數版本統一升級
+階段二：簡化測試場景管理（優先級：中）
+目標：將複雜的測試場景管理移至專用模組
+修復範圍：
+•	簡化TestScenarioSimulator類別
+•	移除不必要的測試流程模擬
+•	專注於資料格式轉換和驗證
+版本升級：
+•	相關類別版本升級至v3.0.0
+階段三：架構清理與標準化（優先級：低）
+目標：確保7580職責邊界清晰
+修復範圍：
+•	建立清晰的資料注入接口
+•	移除所有業務邏輯相關代碼
+•	確保模組僅負責測試資料的生成、驗證、注入
+版本升級：
+•	整體架構版本標記為v3.0.0
+📋 具體職責邊界重新定義
+✅ 7580應該負責的功能
+1.	測試資料生成：根據7590規範生成測試資料
+2.	資料格式驗證：確保資料符合PL層期望格式
+3.	資料注入：將測試資料傳遞給7301、7302
+4.	相容性支援：提供7570調用的接口
+❌ 7580不應該負責的功能
+1.	業務邏輯模擬：不應該模擬7301、7302的內部處理
+2.	API調用：不應該直接調用APL層或ASL層
+3.	測試場景管理：複雜的測試流程應該由測試框架處理
+4.	業務邏輯驗證：不應該驗證業務邏輯的正確性
+🚀 立即執行建議
+最高優先級：階段一職責範圍重新界定
+建議執行順序：
+1.	先移除Mock業務邏輯模組
+2.	再簡化測試場景管理
+3.	最後進行架構清理
+預期效果：
+•	7580模組代碼量減少約60%
+•	職責邊界清晰，符合單一職責原則
+•	與7301、7302的耦合度大幅降低
+這個方案完全符合MVP階段的需求，專注於解決當前的職責邊界問題，避免過度工程，確保7580回歸其「純粹測試資料注入器」的原始設計目標。
+請確認是否同意此分析和解決方案，我將等待您的Approve後開始執行階段一的修復工作。
+
