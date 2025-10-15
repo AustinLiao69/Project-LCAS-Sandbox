@@ -1,9 +1,18 @@
-
 /**
  * 7580. 注入測試資料.dart
- * @version v2.1.0
- * @date 2025-10-14
- * @update: 階段二重構 - 改為模擬使用者操作流程，移除業務邏輯依賴
+ * @version v3.0.0
+ * @date 2025-10-15
+ * @update: 階段一修復 - 職責範圍重新界定，恢復純粹測試資料注入器
+ *
+ * 職責邊界重新定義：
+ * ✅ 應該負責：測試資料生成、資料格式驗證、資料注入、相容性支援
+ * ❌ 不應該負責：業務邏輯模擬、API調用、測試場景管理、業務邏輯驗證
+ *
+ * 修復重點：
+ * - 移除Mock業務邏輯模組
+ * - 移除業務邏輯調用代碼
+ * - 簡化測試場景管理
+ * - 專注於純粹的資料注入功能
  */
 
 import 'dart:async';
@@ -13,7 +22,7 @@ import 'dart:convert';
 import '7590. 生成動態測試資料.dart';
 
 // ==========================================
-// 使用者操作模擬工厂
+// 純粹測試資料注入器
 // ==========================================
 
 class UserOperationSimulator {
@@ -24,198 +33,112 @@ class UserOperationSimulator {
   final List<String> _operationHistory = [];
   final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
 
-  /// 模擬系統進入操作流程
+  /// 模擬系統進入操作流程（純粹資料注入）
   Future<bool> simulateSystemEntry(Map<String, dynamic> entryData) async {
     try {
-      print('🎭 開始模擬系統進入操作流程');
-      
-      // 階段一修復：模擬使用者註冊操作
-      final simulationResult = await _simulateUserRegistration(entryData);
-      
-      if (simulationResult) {
-        _operationHistory.add('SystemEntry: ${DateTime.now().toIso8601String()}');
-        print('✅ 系統進入操作模擬完成');
-        
-        // 階段一核心修復：模擬完成後實際調用7301 PL層函數
-        print('🔗 開始實際調用7301系統進入功能群');
-        try {
-          // 動態導入7301模組
-          final systemEntryModule = await _loadSystemEntryModule();
-          
-          // 實際調用7301的註冊函數
-          final registerRequest = _convertToRegisterRequest(entryData);
-          final registerResponse = await systemEntryModule.registerWithEmail(registerRequest);
-          
-          if (registerResponse.success) {
-            print('✅ 7301系統進入功能群調用成功');
-            return true;
-          } else {
-            print('❌ 7301系統進入功能群調用失敗: ${registerResponse.message}');
-            return false;
-          }
-        } catch (e) {
-          print('❌ 調用7301系統進入功能群時發生錯誤: $e');
-          return false;
-        }
+      print('[7580] 🎭 開始模擬系統進入操作流程');
+
+      // 純粹的資料驗證和處理
+      final validationResult = _validateSystemEntryData(entryData);
+      if (!validationResult['isValid']) {
+        print('[7580] ❌ 系統進入資料驗證失敗: ${validationResult['message']}');
+        return false;
       }
-      
-      return false;
+
+      // 記錄注入操作
+      _operationHistory.add('SystemEntry: ${DateTime.now().toIso8601String()}');
+      print('[7580] ✅ 系統進入操作模擬完成');
+
+      return true;
     } catch (e) {
-      print('❌ 系統進入操作模擬失敗: $e');
+      print('[7580] ❌ 系統進入操作模擬失敗: $e');
       return false;
     }
   }
 
-  /// 模擬記帳核心操作流程
+  /// 模擬記帳核心操作流程（純粹資料注入）
   Future<bool> simulateAccountingCore(Map<String, dynamic> transactionData) async {
     try {
-      print('🎭 開始模擬記帳核心操作流程');
-      
-      // 階段一修復：模擬使用者記帳操作
-      final simulationResult = await _simulateUserTransaction(transactionData);
-      
-      if (simulationResult) {
-        _operationHistory.add('AccountingCore: ${DateTime.now().toIso8601String()}');
-        print('✅ 記帳核心操作模擬完成');
-        
-        // 階段一核心修復：模擬完成後實際調用7302 PL層函數
-        print('🔗 開始實際調用7302記帳核心功能群');
-        try {
-          // 動態導入7302模組
-          final accountingCoreModule = await _loadAccountingCoreModule();
-          
-          // 實際調用7302的快速記帳處理器
-          final quickAccountingProcessor = accountingCoreModule.quickAccountingProcessor;
-          final processingResult = await quickAccountingProcessor.processQuickAccounting(_formatTransactionInput(transactionData));
-          
-          if (processingResult.success) {
-            print('✅ 7302記帳核心功能群調用成功');
-            print('📝 交易記錄已建立: ${processingResult.message}');
-            return true;
-          } else {
-            print('❌ 7302記帳核心功能群調用失敗: ${processingResult.message}');
-            return false;
-          }
-        } catch (e) {
-          print('❌ 調用7302記帳核心功能群時發生錯誤: $e');
-          return false;
-        }
+      print('[7580] 🎭 開始模擬記帳核心操作流程');
+
+      // 純粹的資料驗證和處理
+      final validationResult = _validateTransactionData(transactionData);
+      if (!validationResult['isValid']) {
+        print('[7580] ❌ 記帳資料驗證失敗: ${validationResult['message']}');
+        print('[7580] 🔍 除錯資訊: 金額=${transactionData['amount']} (${transactionData['amount']?.runtimeType}), 類型=${transactionData['type']}');
+        return false;
       }
-      
-      return false;
+
+      // 記錄注入操作
+      _operationHistory.add('AccountingCore: ${DateTime.now().toIso8601String()}');
+      print('[7580] ✅ 記帳核心操作模擬完成');
+
+      return true;
     } catch (e) {
-      print('❌ 記帳核心操作模擬失敗: $e');
+      print('[7580] ❌ 記帳核心操作模擬失敗: $e');
       return false;
     }
   }
 
-  /// 內部方法：模擬使用者註冊流程
-  Future<bool> _simulateUserRegistration(Map<String, dynamic> entryData) async {
-    print('📝 模擬使用者填寫註冊表單...');
-    
-    // 模擬表單驗證
-    if (!_validateRegistrationData(entryData)) {
-      print('❌ 註冊資料驗證失敗');
-      return false;
-    }
-    
-    // 模擬使用者提交表單 - 這裡會透過標準PL流程
-    await Future.delayed(Duration(milliseconds: 100));
-    print('📤 模擬提交註冊表單到APL層...');
-    
-    // 模擬成功回應
-    await Future.delayed(Duration(milliseconds: 50));
-    print('📨 收到APL層成功回應');
-    
-    return true;
-  }
-
-  /// 內部方法：模擬使用者交易流程
-  Future<bool> _simulateUserTransaction(Map<String, dynamic> transactionData) async {
-    print('💰 模擬使用者填寫記帳表單...');
-    
-    // 模擬表單驗證
-    if (!_validateTransactionData(transactionData)) {
-      print('❌ 交易資料驗證失敗');
-      print('🔍 除錯資訊: 金額=${transactionData['amount']} (${transactionData['amount'].runtimeType}), 類型=${transactionData['type']}');
-      return false;
-    }
-    
-    // 模擬使用者輸入金額
-    print('💵 模擬輸入金額: ${transactionData['amount']}');
-    await Future.delayed(Duration(milliseconds: 50));
-    
-    // 模擬選擇交易類型
-    print('📋 模擬選擇交易類型: ${transactionData['type']}');
-    await Future.delayed(Duration(milliseconds: 50));
-    
-    // 模擬輸入描述
-    print('✏️ 模擬輸入描述: ${transactionData['description']}');
-    await Future.delayed(Duration(milliseconds: 50));
-    
-    // 模擬提交表單 - 這裡會透過標準PL流程
-    print('📤 模擬提交記帳表單到APL層...');
-    await Future.delayed(Duration(milliseconds: 100));
-    
-    // 模擬成功回應
-    print('📨 收到APL層成功回應');
-    
-    return true;
-  }
-
-  /// 資料驗證方法 - 增強容錯處理
-  bool _validateRegistrationData(Map<String, dynamic> data) {
+  /// 系統進入資料驗證
+  Map<String, dynamic> _validateSystemEntryData(Map<String, dynamic> data) {
     // 特殊處理：錯誤測試案例檢查
     if (data.containsKey('errorTest') && data['errorTest'] == true) {
-      // 這是錯誤處理測試案例，應該返回false以觸發錯誤場景
-      print('🧪 檢測到錯誤測試案例，模擬驗證失敗');
-      return false;
+      print('[7580] 🧪 檢測到錯誤測試案例，模擬驗證失敗');
+      return {'isValid': false, 'message': '錯誤測試案例驗證失敗'};
     }
-    
+
     // 基本欄位檢查
-    if (data['userId'] == null || data['userId'].toString().isEmpty) return false;
-    if (data['email'] == null || !_isValidEmail(data['email'].toString())) return false;
-    
-    // 容錯處理：如果是測試案例的錯誤資料，也要進行適當處理
-    if (data.containsKey('amount') && data['amount'] != null) {
-      // 這是混合了交易資料的測試案例，跳過註冊驗證
-      if (data['amount'] is num && (data['amount'] as num) < 0) {
-        return false; // 負數金額應該被拒絕
-      }
+    if (data['userId'] == null || data['userId'].toString().isEmpty) {
+      return {'isValid': false, 'message': '用戶ID不能為空'};
     }
-    
-    return true;
+
+    if (data['email'] == null || !_isValidEmail(data['email'].toString())) {
+      return {'isValid': false, 'message': 'Email格式無效'};
+    }
+
+    return {'isValid': true, 'message': '驗證通過'};
   }
 
-  bool _validateTransactionData(Map<String, dynamic> data) {
-    // 修復型別轉換問題 - 更強化的處理
-    if (data['amount'] == null) return false;
-    
-    // 安全的金額轉換，處理更多情況
+  /// 交易資料驗證
+  Map<String, dynamic> _validateTransactionData(Map<String, dynamic> data) {
+    // 金額驗證
+    if (data['amount'] == null) {
+      return {'isValid': false, 'message': '金額不能為空'};
+    }
+
+    // 安全的金額轉換
     double amount;
     try {
       if (data['amount'] is String) {
         final amountStr = data['amount'] as String;
-        if (amountStr.isEmpty) return false;
+        if (amountStr.isEmpty) {
+          return {'isValid': false, 'message': '金額字串不能為空'};
+        }
         amount = double.parse(amountStr);
       } else if (data['amount'] is num) {
         amount = data['amount'].toDouble();
       } else {
-        return false;
+        return {'isValid': false, 'message': '金額格式無效'};
       }
     } catch (e) {
-      return false;
+      return {'isValid': false, 'message': '金額轉換失敗'};
     }
-    
-    if (amount <= 0) return false;
-    
-    // 強化type驗證，支援大小寫
+
+    if (amount <= 0) {
+      return {'isValid': false, 'message': '金額必須大於0'};
+    }
+
+    // 交易類型驗證
     final type = data['type']?.toString()?.toLowerCase();
-    if (type == null || !['income', 'expense'].contains(type)) return false;
-    
-    return true;
+    if (type == null || !['income', 'expense'].contains(type)) {
+      return {'isValid': false, 'message': '交易類型無效'};
+    }
+
+    return {'isValid': true, 'message': '驗證通過'};
   }
 
+  /// Email格式驗證
   bool _isValidEmail(String email) {
     return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email);
   }
@@ -225,159 +148,17 @@ class UserOperationSimulator {
 
   /// 清除操作歷史記錄
   void clearOperationHistory() => _operationHistory.clear();
-
-  // ==========================================
-  // 階段一修復：PL層模組載入與調用輔助函數
-  // ==========================================
-
-  /// 載入7301系統進入功能群模組
-  Future<dynamic> _loadSystemEntryModule() async {
-    try {
-      // 由於Dart不支援動態import，這裡模擬載入7301模組
-      // 實際實作中需要確保7301模組已正確引入
-      print('📦 載入7301系統進入功能群模組');
-      
-      // 模擬載入成功，返回具有必要方法的物件
-      return _MockSystemEntryModule();
-    } catch (e) {
-      print('❌ 載入7301模組失敗: $e');
-      rethrow;
-    }
-  }
-
-  /// 載入7302記帳核心功能群模組
-  Future<dynamic> _loadAccountingCoreModule() async {
-    try {
-      // 由於Dart不支援動態import，這裡模擬載入7302模組
-      print('📦 載入7302記帳核心功能群模組');
-      
-      // 模擬載入成功，返回具有必要方法的物件
-      return _MockAccountingCoreModule();
-    } catch (e) {
-      print('❌ 載入7302模組失敗: $e');
-      rethrow;
-    }
-  }
-
-  /// 轉換測試資料為7301註冊請求格式
-  dynamic _convertToRegisterRequest(Map<String, dynamic> entryData) {
-    return _MockRegisterRequest(
-      email: entryData['email'] ?? 'test@example.com',
-      password: 'TestPassword123!',
-      confirmPassword: 'TestPassword123!',
-      displayName: entryData['displayName'] ?? entryData['userId'] ?? 'Test User',
-    );
-  }
-
-  /// 格式化交易資料為7302輸入格式
-  String _formatTransactionInput(Map<String, dynamic> transactionData) {
-    // 將交易資料格式化為自然語言輸入，供7302的智慧解析器處理
-    final amount = transactionData['金額'] ?? transactionData['amount'] ?? 0;
-    final type = transactionData['收支類型'] ?? transactionData['type'] ?? 'expense';
-    final description = transactionData['描述'] ?? transactionData['description'] ?? '測試記帳';
-    
-    final typeText = type == 'income' ? '收入' : '支出';
-    return '$description $amount元 $typeText';
-  }
 }
 
 // ==========================================
-// 階段一修復：Mock模組類別定義
-// ==========================================
-
-/// Mock 7301系統進入功能群模組
-class _MockSystemEntryModule {
-  Future<dynamic> registerWithEmail(dynamic request) async {
-    print('📧 模擬呼叫7301.registerWithEmail');
-    print('   - Email: ${request.email}');
-    print('   - 顯示名稱: ${request.displayName}');
-    
-    // 模擬API調用延遲
-    await Future.delayed(Duration(milliseconds: 200));
-    
-    // 模擬成功回應
-    return _MockRegisterResponse(
-      success: true,
-      message: '註冊成功',
-      userId: 'user_${DateTime.now().millisecondsSinceEpoch}',
-      token: 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-    );
-  }
-}
-
-/// Mock 7302記帳核心功能群模組
-class _MockAccountingCoreModule {
-  final quickAccountingProcessor = _MockQuickAccountingProcessor();
-}
-
-/// Mock 快速記帳處理器
-class _MockQuickAccountingProcessor {
-  Future<dynamic> processQuickAccounting(String input) async {
-    print('💰 模擬呼叫7302.processQuickAccounting');
-    print('   - 輸入: $input');
-    
-    // 模擬智慧解析與記帳流程
-    await Future.delayed(Duration(milliseconds: 300));
-    
-    // 模擬成功回應
-    return _MockQuickAccountingResult(
-      success: true,
-      message: '記帳成功，已透過標準PL→APL→ASL→BK.js流程處理',
-    );
-  }
-}
-
-/// Mock 註冊請求
-class _MockRegisterRequest {
-  final String email;
-  final String password;
-  final String confirmPassword;
-  final String displayName;
-
-  _MockRegisterRequest({
-    required this.email,
-    required this.password,
-    required this.confirmPassword,
-    required this.displayName,
-  });
-}
-
-/// Mock 註冊回應
-class _MockRegisterResponse {
-  final bool success;
-  final String message;
-  final String? userId;
-  final String? token;
-
-  _MockRegisterResponse({
-    required this.success,
-    required this.message,
-    this.userId,
-    this.token,
-  });
-}
-
-/// Mock 快速記帳結果
-class _MockQuickAccountingResult {
-  final bool success;
-  final String message;
-
-  _MockQuickAccountingResult({
-    required this.success,
-    required this.message,
-  });
-}
-
-
-// ==========================================
-// 測試場景模擬器
+// 簡化測試場景管理器
 // ==========================================
 
 class TestScenarioSimulator {
   final UserOperationSimulator _operationSimulator = UserOperationSimulator.instance;
   final TestDataGenerator _dataGenerator = TestDataGenerator.instance;
 
-  /// 完整的使用者註冊到記帳流程模擬
+  /// 簡化的使用者流程模擬
   Future<Map<String, dynamic>> simulateCompleteUserJourney({
     String userMode = 'Expert',
     required String userId,
@@ -390,69 +171,46 @@ class TestScenarioSimulator {
     };
 
     try {
-      // 步驟1：模擬系統進入
-      print('🚀 步驟1：模擬系統進入流程');
+      // 步驟1：系統進入資料注入
       final entryData = _dataGenerator.generateSystemEntryData(
         userId: userId,
         email: email,
         userMode: userMode,
       );
-      
+
       final entrySuccess = await _operationSimulator.simulateSystemEntry(entryData);
       results['steps']['systemEntry'] = entrySuccess;
-      
+
       if (!entrySuccess) {
-        results['errors'].add('系統進入模擬失敗');
+        results['errors'].add('系統進入資料注入失敗');
         results['success'] = false;
-        return results;
       }
 
-      // 步驟2：模擬記帳操作
-      print('🚀 步驟2：模擬記帳核心流程');
-      final transactionData = _dataGenerator.generateTransactionData(
-        amount: 1000.0,
-        type: 'expense',
-        description: '測試記帳',
-        userId: userId,
-      );
-      
-      final transactionSuccess = await _operationSimulator.simulateAccountingCore(transactionData);
-      results['steps']['accountingCore'] = transactionSuccess;
-      
-      if (!transactionSuccess) {
-        results['errors'].add('記帳核心模擬失敗');
-        results['success'] = false;
-        return results;
+      // 步驟2：記帳資料注入
+      if (entrySuccess) {
+        final transactionData = _dataGenerator.generateTransactionData(
+          amount: 1000.0,
+          type: 'expense',
+          description: '測試記帳',
+          userId: userId,
+        );
+
+        final transactionSuccess = await _operationSimulator.simulateAccountingCore(transactionData);
+        results['steps']['accountingCore'] = transactionSuccess;
+
+        if (!transactionSuccess) {
+          results['errors'].add('記帳資料注入失敗');
+          results['success'] = false;
+        }
       }
 
-      print('🎉 完整使用者流程模擬成功');
-      
+      if (results['success']) {
+        print('[7580] 🎉 完整使用者流程模擬成功');
+      }
+
     } catch (e) {
       results['success'] = false;
       results['errors'].add('流程模擬異常: $e');
-    }
-
-    return results;
-  }
-
-  /// 批次模擬多種使用者模式
-  Future<Map<String, dynamic>> simulateMultipleUserModes() async {
-    final modes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
-    final results = <String, dynamic>{};
-
-    for (final mode in modes) {
-      print('🔄 模擬 $mode 模式使用者流程');
-      
-      final userId = '${mode.toLowerCase()}_test_user_${DateTime.now().millisecondsSinceEpoch}';
-      final email = '${mode.toLowerCase()}@test.com';
-      
-      final modeResult = await simulateCompleteUserJourney(
-        userMode: mode,
-        userId: userId,
-        email: email,
-      );
-      
-      results[mode] = modeResult;
     }
 
     return results;
@@ -469,16 +227,16 @@ class TestDataInjectionFacade {
   TestDataInjectionFacade._internal();
 
   final TestScenarioSimulator _scenarioSimulator = TestScenarioSimulator();
-  
-  /// 階段二主要方法：透過使用者操作模擬注入測試資料
+
+  /// 主要方法：透過使用者操作模擬注入測試資料
   Future<bool> injectTestDataViaUserSimulation({
     required String testScenario,
     required Map<String, dynamic> testData,
   }) async {
     try {
-      print('🎯 開始透過使用者操作模擬注入測試資料');
-      print('📋 測試場景: $testScenario');
-      
+      print('[7580] 🎯 開始透過使用者操作模擬注入測試資料');
+      print('[7580] 📋 測試場景: $testScenario');
+
       switch (testScenario) {
         case 'complete_user_journey':
           final result = await _scenarioSimulator.simulateCompleteUserJourney(
@@ -487,17 +245,13 @@ class TestDataInjectionFacade {
             email: testData['email'],
           );
           return result['success'] == true;
-          
-        case 'multiple_user_modes':
-          final result = await _scenarioSimulator.simulateMultipleUserModes();
-          return result.values.every((mode) => mode['success'] == true);
-          
+
         default:
-          print('❌ 未知的測試場景: $testScenario');
+          print('[7580] ❌ 未知的測試場景: $testScenario');
           return false;
       }
     } catch (e) {
-      print('❌ 測試資料注入失敗: $e');
+      print('[7580] ❌ 測試資料注入失敗: $e');
       return false;
     }
   }
@@ -526,7 +280,7 @@ class TestDataInjectionFactory {
     try {
       return await UserOperationSimulator.instance.simulateSystemEntry(entryData);
     } catch (e) {
-      print('❌ 系統進入資料注入失敗: $e');
+      print('[7580] ❌ 系統進入資料注入失敗: $e');
       return false;
     }
   }
@@ -536,7 +290,7 @@ class TestDataInjectionFactory {
     try {
       return await UserOperationSimulator.instance.simulateAccountingCore(transactionData);
     } catch (e) {
-      print('❌ 記帳核心資料注入失敗: $e');
+      print('[7580] ❌ 記帳核心資料注入失敗: $e');
       return false;
     }
   }
@@ -554,8 +308,6 @@ class TestDataGenerator {
     required String email,
     required String userMode,
   }) {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    
     return {
       'userId': userId,
       'email': email,
@@ -598,7 +350,7 @@ class TestDataGenerator {
   String _generateRandomCategory(String transactionType) {
     final incomeCategories = ['salary', 'bonus', 'investment', 'freelance'];
     final expenseCategories = ['food', 'transport', 'entertainment', 'utilities'];
-    
+
     final categories = transactionType == 'income' ? incomeCategories : expenseCategories;
     final random = DateTime.now().millisecondsSinceEpoch % categories.length;
     return categories[random];
