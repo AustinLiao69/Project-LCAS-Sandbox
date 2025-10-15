@@ -1,13 +1,14 @@
 
 {
   "metadata": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "createdAt": "2025-10-15T00:00:00Z",
-    "description": "SIT P1測試資料倉庫 - 存放7590生成的所有測試資料",
+    "description": "SIT P1測試資料倉庫 - 符合1311 FS.js標準格式",
     "dataSource": "7590. 生成動態測試資料.dart",
     "consumer": "7570. SIT_P1.dart",
-    "totalRecords": 0,
-    "lastUpdated": "2025-10-15T00:00:00Z"
+    "totalRecords": 8,
+    "lastUpdated": "2025-10-15T06:00:00Z",
+    "compliance": "1311_FS_STANDARD"
   },
   "authentication_test_data": {
     "expert_users": {
@@ -21,18 +22,11 @@
           "currency": "TWD",
           "theme": "expert"
         },
-        "modeSpecificSettings": {
-          "showAdvancedOptions": true,
-          "enableDetailedAnalytics": true,
-          "customizationLevel": "high",
-          "autoSuggestions": false
-        },
         "assessmentAnswers": {
           "Q1": "A",
           "Q2": "A", 
           "Q3": "A"
         },
-        "evaluationResult": "Expert",
         "registrationDate": "2025-10-15T00:00:00Z",
         "createdAt": "2025-10-15T00:00:00Z"
       }
@@ -48,18 +42,11 @@
           "currency": "TWD",
           "theme": "inertial"
         },
-        "modeSpecificSettings": {
-          "showAdvancedOptions": false,
-          "enableDetailedAnalytics": false,
-          "customizationLevel": "medium",
-          "autoSuggestions": true
-        },
         "assessmentAnswers": {
           "Q1": "B",
           "Q2": "B",
           "Q3": "B"
         },
-        "evaluationResult": "Inertial",
         "registrationDate": "2025-10-15T00:00:00Z",
         "createdAt": "2025-10-15T00:00:00Z"
       }
@@ -75,19 +62,11 @@
           "currency": "TWD",
           "theme": "cultivation"
         },
-        "modeSpecificSettings": {
-          "showAdvancedOptions": false,
-          "enableDetailedAnalytics": true,
-          "customizationLevel": "medium",
-          "autoSuggestions": true,
-          "gamificationEnabled": true
-        },
         "assessmentAnswers": {
           "Q1": "C",
           "Q2": "B",
           "Q3": "C"
         },
-        "evaluationResult": "Cultivation",
         "registrationDate": "2025-10-15T00:00:00Z",
         "createdAt": "2025-10-15T00:00:00Z"
       }
@@ -103,19 +82,11 @@
           "currency": "TWD",
           "theme": "guiding"
         },
-        "modeSpecificSettings": {
-          "showAdvancedOptions": false,
-          "enableDetailedAnalytics": false,
-          "customizationLevel": "low",
-          "autoSuggestions": true,
-          "stepByStepGuide": true
-        },
         "assessmentAnswers": {
           "Q1": "D",
           "Q2": "C",
           "Q3": "D"
         },
-        "evaluationResult": "Guiding",
         "registrationDate": "2025-10-15T00:00:00Z",
         "createdAt": "2025-10-15T00:00:00Z"
       }
@@ -123,95 +94,93 @@
   },
   "bookkeeping_test_data": {
     "expert_transactions": {
-      "txn_expense_1697363200001": {
-        "收支ID": "txn_expense_1697363200001",
-        "描述": "午餐費用",
-        "收支類型": "expense",
-        "金額": 150.0,
+      "txn_1697363200001_a1b2c3": {
+        "id": "txn_1697363200001_a1b2c3",
         "amount": 150.0,
         "type": "expense",
-        "用戶ID": "user_expert_1697363200000",
-        "科目ID": "food",
-        "帳戶ID": "account_default",
-        "建立時間": "2025-10-15T00:00:01Z",
-        "更新時間": "2025-10-15T00:00:01Z",
+        "description": "午餐費用",
         "categoryId": "food",
         "accountId": "account_default",
-        "description": "午餐費用"
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "paymentMethod": "現金",
+        "createdAt": "2025-10-15T00:00:01Z",
+        "updatedAt": "2025-10-15T00:00:01Z",
+        "status": "active",
+        "verified": false,
+        "source": "quick"
       },
-      "txn_income_1697363200002": {
-        "收支ID": "txn_income_1697363200002",
-        "描述": "薪資收入",
-        "收支類型": "income",
-        "金額": 50000.0,
+      "txn_1697363200002_d4e5f6": {
+        "id": "txn_1697363200002_d4e5f6",
         "amount": 50000.0,
         "type": "income",
-        "用戶ID": "user_expert_1697363200000",
-        "科目ID": "salary",
-        "帳戶ID": "account_default",
-        "建立時間": "2025-10-15T00:00:02Z",
-        "更新時間": "2025-10-15T00:00:02Z",
+        "description": "薪資收入",
         "categoryId": "salary",
         "accountId": "account_default",
-        "description": "薪資收入"
+        "date": "2025-10-15",
+        "userId": "user_expert_1697363200000",
+        "paymentMethod": "轉帳",
+        "createdAt": "2025-10-15T00:00:02Z",
+        "updatedAt": "2025-10-15T00:00:02Z",
+        "status": "active",
+        "verified": false,
+        "source": "quick"
       }
     },
     "inertial_transactions": {
-      "txn_expense_1697363260001": {
-        "收支ID": "txn_expense_1697363260001",
-        "描述": "交通費",
-        "收支類型": "expense",
-        "金額": 80.0,
+      "txn_1697363260001_g7h8i9": {
+        "id": "txn_1697363260001_g7h8i9",
         "amount": 80.0,
         "type": "expense",
-        "用戶ID": "user_inertial_1697363260000",
-        "科目ID": "transport",
-        "帳戶ID": "account_default",
-        "建立時間": "2025-10-15T00:01:00Z",
-        "更新時間": "2025-10-15T00:01:00Z",
+        "description": "交通費",
         "categoryId": "transport",
         "accountId": "account_default",
-        "description": "交通費"
+        "date": "2025-10-15",
+        "userId": "user_inertial_1697363260000",
+        "paymentMethod": "悠遊卡",
+        "createdAt": "2025-10-15T00:01:00Z",
+        "updatedAt": "2025-10-15T00:01:00Z",
+        "status": "active",
+        "verified": false,
+        "source": "quick"
       }
     },
     "cultivation_transactions": {
-      "txn_expense_1697363320001": {
-        "收支ID": "txn_expense_1697363320001",
-        "描述": "購物",
-        "收支類型": "expense",
-        "金額": 500.0,
+      "txn_1697363320001_j1k2l3": {
+        "id": "txn_1697363320001_j1k2l3",
         "amount": 500.0,
         "type": "expense",
-        "用戶ID": "user_cultivation_1697363320000",
-        "科目ID": "entertainment",
-        "帳戶ID": "account_default",
-        "建立時間": "2025-10-15T00:02:00Z",
-        "更新時間": "2025-10-15T00:02:00Z",
+        "description": "購物",
         "categoryId": "entertainment",
         "accountId": "account_default",
-        "description": "購物"
+        "date": "2025-10-15",
+        "userId": "user_cultivation_1697363320000",
+        "paymentMethod": "信用卡",
+        "createdAt": "2025-10-15T00:02:00Z",
+        "updatedAt": "2025-10-15T00:02:00Z",
+        "status": "active",
+        "verified": false,
+        "source": "quick"
       }
     },
     "guiding_transactions": {
-      "txn_income_1697363380001": {
-        "收支ID": "txn_income_1697363380001",
-        "描述": "副業收入",
-        "收支類型": "income",
-        "金額": 5000.0,
+      "txn_1697363380001_m4n5o6": {
+        "id": "txn_1697363380001_m4n5o6",
         "amount": 5000.0,
         "type": "income",
-        "用戶ID": "user_guiding_1697363380000",
-        "科目ID": "freelance",
-        "帳戶ID": "account_default",
-        "建立時間": "2025-10-15T00:03:00Z",
-        "更新時間": "2025-10-15T00:03:00Z",
+        "description": "副業收入",
         "categoryId": "freelance",
         "accountId": "account_default",
-        "description": "副業收入"
+        "date": "2025-10-15",
+        "userId": "user_guiding_1697363380000",
+        "paymentMethod": "轉帳",
+        "createdAt": "2025-10-15T00:03:00Z",
+        "updatedAt": "2025-10-15T00:03:00Z",
+        "status": "active",
+        "verified": false,
+        "source": "quick"
       }
-    },
-    "default_ledger_id": "ledger_test_default",
-    "ledger_id_source": "BK_MODULE"
+    }
   },
   "test_scenarios": {
     "scenario_001_user_registration": {
@@ -227,7 +196,7 @@
     "scenario_002_bookkeeping_flow": {
       "name": "記帳流程測試", 
       "target_user": "user_expert_1697363200000",
-      "target_transaction": "txn_expense_1697363200001",
+      "target_transaction": "txn_1697363200001_a1b2c3",
       "test_steps": [
         "建立交易記錄",
         "驗證金額格式",
@@ -245,23 +214,29 @@
       ],
       "test_steps": [
         "載入各模式用戶資料",
-        "驗證模式特定設定",
-        "確認差異化回應",
-        "檢查評估答案一致性"
+        "驗證基本用戶欄位",
+        "確認評估答案格式",
+        "檢查交易記錄格式"
       ]
     }
   },
   "data_validation": {
-    "schema_version": "1.0.0",
+    "schema_version": "1.0.1",
     "required_fields": {
       "user_data": ["userId", "email", "userMode", "displayName"],
-      "transaction_data": ["收支ID", "金額", "收支類型", "用戶ID", "建立時間"]
+      "transaction_data": ["id", "amount", "type", "userId", "createdAt"]
+    },
+    "fs_compliance": {
+      "transaction_id_format": "txn_{timestamp}_{random}",
+      "standard_fields": ["id", "amount", "type", "description", "categoryId", "accountId", "date", "userId", "paymentMethod", "createdAt", "updatedAt", "status", "verified", "source"],
+      "removed_fields": ["default_ledger_id", "ledger_id_source", "evaluationResult", "modeSpecificSettings"],
+      "compliance_level": "FULL_FS_STANDARD"
     },
     "data_integrity_checks": {
       "user_count": 4,
       "transaction_count": 4,
       "mode_coverage": ["Expert", "Inertial", "Cultivation", "Guiding"],
-      "last_validation": "2025-10-15T00:00:00Z"
+      "last_validation": "2025-10-15T06:00:00Z"
     }
   }
 }
