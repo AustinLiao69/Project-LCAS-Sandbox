@@ -701,6 +701,33 @@ class SITP1TestController {
 
     return phase3Results;
   }
+
+  /**
+   * 編譯測試結果
+   * @version 2025-10-15-V1.3.0
+   * @date 2025-10-15
+   * @update: 修正作用域問題，將方法移入類別內部
+   */
+  void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic> phase2Results, Map<String, dynamic> phase3Results) {
+    // 階段一與階段二的測試案例是重疊的 (TC-SIT-001~016)，所以統計時要避免重複計算
+    _testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
+    _testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
+
+    (_testResults['testDetails'] as List<Map<String, dynamic>>).addAll([
+      {
+        'phase': 'Phase 1 - Integration Tests (TC-SIT-001~016)',
+        'results': phase1Results,
+      },
+      {
+        'phase': 'Phase 2 - Deep Integration Validation (TC-SIT-001~016 Advanced)',
+        'results': phase2Results,
+      },
+      {
+        'phase': 'Phase 3 - API Contract Tests (TC-SIT-017~044)',
+        'results': phase3Results,
+      }
+    ]);
+  }
 }
 
 // ==========================================
@@ -2429,32 +2456,7 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
 // 四模式驗證器已整合至前面定義
 
 
-/**
-   * 編譯測試結果
-   * @version 2025-10-15-V1.3.0
-   * @date 2025-10-15
-   * @update: 移入類別內部，修正變數引用問題
-   */
-  void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic> phase2Results, Map<String, dynamic> phase3Results) {
-    // 階段一與階段二的測試案例是重疊的 (TC-SIT-001~016)，所以統計時要避免重複計算
-    _testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
-    _testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
 
-    (_testResults['testDetails'] as List<Map<String, dynamic>>).addAll([
-      {
-        'phase': 'Phase 1 - Integration Tests (TC-SIT-001~016)',
-        'results': phase1Results,
-      },
-      {
-        'phase': 'Phase 2 - Deep Integration Validation (TC-SIT-001~016 Advanced)',
-        'results': phase2Results,
-      },
-      {
-        'phase': 'Phase 3 - API Contract Tests (TC-SIT-017~044)',
-        'results': phase3Results,
-      }
-    ]);
-  }
 
 
 
