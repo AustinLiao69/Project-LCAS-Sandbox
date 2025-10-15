@@ -145,7 +145,7 @@ class SITP1TestController {
       testResults['endTime'] = DateTime.now().toIso8601String();
 
       // 統計結果
-      _compileTestResults(
+      this._compileTestResults(
         phase1Results,
         phase2DeepIntegrationResults,
         phase3ApiContractTestsResults,
@@ -2285,10 +2285,10 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
    */
   void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic> phase2Results, Map<String, dynamic> phase3Results) {
     // 階段一與階段二的測試案例是重疊的 (TC-SIT-001~016)，所以統計時要避免重複計算
-    _testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
-    _testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
+    this._testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
+    this._testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
 
-    (_testResults['testDetails'] as List<Map<String, dynamic>>).addAll([
+    (this._testResults['testDetails'] as List<Map<String, dynamic>>).addAll([
       {
         'phase': 'Phase 1 - Integration Tests (TC-SIT-001~016)',
         'results': phase1Results,
