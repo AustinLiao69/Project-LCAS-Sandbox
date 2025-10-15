@@ -1,0 +1,226 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
+Building package executable... (2.3s)
+Built test:test.
+00:00 +0: loading 7570. SIT_P1.dart
+[7570] 🎉 SIT P1測試代碼模組 v3.3.0 (階段二依賴關係重構) 初始化完成
+[7570] ✅ 階段一修復：語法錯誤修復完成
+[7570] 🔧 階段二修復：建立TestDataFlowManager統一資料流管理
+[7570] 🔧 階段二修復：移除對UserOperationSimulator和SystemEntryTestDataTemplate的依賴
+[7570] 🔧 階段二修復：實作真實系統層級測試，移除模擬器依賴
+[7570] 🔧 階段二修復：統一使用7590→7580→7570的標準資料流
+[7570] ✅ 依賴關係重構：建立清晰的模組依賴邊界
+[7570] 📊 測試覆蓋：44個測試案例 (16個整合層 + 28個API契約層)
+[7570] 🎯 下一階段：架構清理與標準化
+[7570] 🚀 階段二目標達成：7570現在使用真實的系統整合測試（非模擬測試）
+00:00 +0: ... 執行完整SIT測00:00 +0: SIT P1完整測試 - 7570 執行完整SIT測試
+
+[7570] 🚀 開始執行 SIT P1 完整測試...
+[7570] 🚀 開始執行SIT P1完整測試 (v2.0.0)...
+[7570] 📋 測試範圍: 44個測試案例 (TC-SIT-001~044)
+[7570] 🎯 API端點: 34個P1-2範圍端點
+[7570] 🔄 執行階段一：整合層測試 (TC-SIT-001~016)
+[7570] 🔄 執行測試資料流: TC-SIT-001 (模式: Expert)
+[7570] ✅ 步驟1完成：資料生成成功
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7570] ✅ 步驟2完成：資料注入成功
+[7570] ✅ 步驟3完成：系統驗證通過
+[7570] ✅ TC-SIT-001: 真實系統驗證通過，無需模擬器
+[7570] TC-SIT-001: ✅ PASS
+[7570] 🔄 執行測試資料流: TC-SIT-002 (模式: Expert)
+[7570] ✅ 步驟1完成：資料生成成功
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7570] ✅ 步驟2完成：資料注入成功
+[7570] ✅ 步驟3完成：系統驗證通過
+[7570] ✅ TC-SIT-002: 真實登入驗證通過
+[7570] TC-SIT-002: ✅ PASS
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7570] TC-SIT-003: ❌ FAIL
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7570] TC-SIT-004: ❌ FAIL
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7570] TC-SIT-005: ❌ FAIL
+[7580] 📦 批次測試資料注入
+[7580] 📊 數量: 5
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7570] TC-SIT-006: ✅ PASS
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗
+[7570] ✅ 錯誤處理機制正常運作
+[7570] TC-SIT-007: ✅ PASS (錯誤處理測試)
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7570] TC-SIT-008: ❌ FAIL
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7570] TC-SIT-009: ✅ PASS
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7570] TC-SIT-010: ❌ FAIL
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7570] TC-SIT-011: ✅ PASS
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7570] TC-SIT-012: ✅ PASS
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7580] ✅ 資料注入完成: transaction
+[7570] TC-SIT-013: ✅ PASS
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7570] TC-SIT-014: ✅ PASS
+[7570] 🔍 除錯資訊: 金額=-1000 (int), 類型=
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: transaction
+[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗
+[7570] ❌ 交易資料驗證失敗
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗
+[7570] ❌ 註冊資料驗證失敗
+[7570] ✅ 業務規則錯誤處理機制正常運作
+[7570] TC-SIT-015: ✅ PASS (錯誤處理測試)
+[7570] TC-SIT-016: ✅ PASS
+[7570] 📊 階段一完成: 11/16 通過
+[7570] 🎯 階段二：開始執行深度整合層測試
+[IntegrationTestController] 開始執行深度整合驗證...
+[IntegrationTestController] ✅ 深度整合驗證完成，整體成功: true
+[TestDataIntegration] 開始執行完整資料整合...
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[7580] 🎯 統一測試資料注入接口
+[7580] 📋 資料類型: systemEntry
+[7580] ✅ 資料注入完成: systemEntry
+[TestDataIntegration] ✅ 完整資料整合完成，成功率: 100.0%
+[7570] ✅ 階段二深度整合測試完成
+[7570]    - overallSuccess: true
+[7570]    - overallScore: 55.5%
+[7570] 🔄 執行階段三：API契約層測試 (TC-SIT-017~044)
+[7570] TC-SIT-017: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-018: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-019: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-020: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-021: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-022: ✅ PASS (API:80% DCN:100% 4Mode:100%)
+[7570] TC-SIT-023: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-024: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-025: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-026: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-027: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-028: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-029: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-030: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-031: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-032: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-033: ✅ PASS (API:80% DCN:100% 4Mode:100%)
+[7570] TC-SIT-034: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-035: ✅ PASS (API:80% DCN:100% 4Mode:100%)
+[7570] TC-SIT-036: ✅ PASS (API:80% DCN:100% 4Mode:100%)
+[7570] TC-SIT-037: ✅ PASS (API:80% DCN:100% 4Mode:100%)
+[7570] TC-SIT-038: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-039: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-040: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-041: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-042: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] TC-SIT-043: ✅ PASS (API:80% DCN:100% 4Mode:100%)
+[7570] TC-SIT-044: ✅ PASS (API:100% DCN:100% 4Mode:100%)
+[7570] 📊 階段三完成: 28/28 通過
+[7570] 📈 合規分數: API(95.7%) DCN-0015(100.0%) 四模式(100.0%)
+[7570] ✅ SIT P1完整測試完成
+[7570]    - 總測試數: 44
+[7570]    - 通過數: 39
+[7570]    - 失敗數: 5
+[7570]    - 成功率: 88.6%
+[7570]    - 執行時間: 10984ms
+00:12 +0 -1: ...執行完整SIT00:12 +0 -1: SIT P1完整測試 - 7570 執行完整SIT測試 [E]
+  Expected: a value greater than <40>
+    Actual: <39>
+     Which: is not a value greater than <40>
+  
+  package:matcher  expect
+  7570.            SIT_P1.dart 2811:7  main.<fn>.<fn>
+  
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'SIT P1完整測試 - 7570 執行完整SIT測試'
+00:12 +0 -1: ... failed.  
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
+~/workspace/75. Flutter_Test_code_PL$ 
