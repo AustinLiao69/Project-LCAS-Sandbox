@@ -1405,6 +1405,10 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
         print('[7570] 🧪 檢測到錯誤測試案例，模擬驗證失敗');
         print('[7570] ❌ 交易資料驗證失敗');
       }
+    } catch (e) {
+      businessRuleErrors['invalidDataInput'] = true;
+      print('[7570] ❌ 交易資料驗證異常: $e');
+    }
 
     // 2. 使用7580標準注入接口測試業務規則衝突（階段二修正）
     final conflictData = {
@@ -1438,6 +1442,7 @@ Future<Map<String, dynamic>> _executeTCSIT015_BusinessRuleErrorHandling() async 
     (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
     return testResult;
   }
+}
 }
 
 /**
@@ -1959,6 +1964,118 @@ int _calculateComplianceScore(Map<String, dynamic> validation) {
 }
 
 // ==========================================
+// 輔助函數定義（在使用前先定義）
+// ==========================================
+
+/**
+ * 通用API契約測試執行器
+ * @version 2025-10-15-V2.0.0
+ * @date 2025-10-15
+ * @update: 統一測試邏輯
+ */
+Future<Map<String, dynamic>> _executeStandardAPIContractTest({
+  required String testId,
+  required String testName,
+  required String endpoint,
+  required String method,
+  required String expectedSpec,
+  required Map<String, dynamic> sampleResponse,
+}) async {
+  final Map<String, dynamic> testResult = <String, dynamic>{
+    'testId': testId,
+    'testName': testName,
+    'focus': 'API規格合規性',
+    'apiEndpoint': expectedSpec,
+    'passed': false,
+    'details': <String, dynamic>{},
+    'apiCompliance': 0,
+    'dcn0015Compliance': 0,
+    'fourModeCompliance': 0,
+    'executionTime': 0,
+  };
+
+  try {
+    final stopwatch = Stopwatch()..start();
+
+    // 1. API端點驗證
+    final apiValidation = await APIComplianceValidator.instance.validateEndpoint(
+      endpoint: endpoint,
+      method: method,
+      expectedSpec: expectedSpec,
+    );
+    testResult['details']?['apiValidation'] = apiValidation;
+
+    // 2. DCN-0015統一回應格式驗證
+    final dcn0015Validation = await DCN0015ComplianceValidator.instance.validateResponseFormat(
+      endpoint: endpoint,
+      sampleResponse: sampleResponse,
+    );
+    testResult['details']?['dcn0015Validation'] = dcn0015Validation;
+
+    // 3. 四模式差異化驗證
+    final fourModeValidation = await FourModeComplianceValidator.instance.validateModeSpecificResponse(
+      endpoint: endpoint,
+      modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding'],
+    );
+    testResult['details']?['fourModeValidation'] = fourModeValidation;
+
+    // 計算合規分數
+    testResult['apiCompliance'] = _calculateComplianceScore(apiValidation);
+    testResult['dcn0015Compliance'] = _calculateComplianceScore(dcn0015Validation);
+    testResult['fourModeCompliance'] = _calculateComplianceScore(fourModeValidation);
+
+    // 判斷測試通過條件
+    testResult['passed'] = testResult['apiCompliance'] >= 80 &&
+                          testResult['dcn0015Compliance'] >= 80 &&
+                          testResult['fourModeCompliance'] >= 70;
+
+    stopwatch.stop();
+    testResult['executionTime'] = stopwatch.elapsedMilliseconds;
+
+    return testResult;
+  } catch (e) {
+    (testResult['details'] as Map<String, dynamic>)['error'] = e.toString();
+    return testResult;
+  }
+}
+
+/**
+ * 計算合規分數
+ * @version 2025-10-15-V1.0.0
+ * @date 2025-10-15
+ * @update: 輔助函數
+ */
+int _calculateComplianceScore(Map<String, dynamic> validation) {
+  try {
+    final isValid = validation['isValid'] ?? false;
+    final score = validation['score'] ?? (isValid ? 100 : 0);
+    return score is int ? score : (score as double).round();
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * 檢查RESTful慣例
+ * @version 2025-10-15-V1.0.0
+ * @date 2025-10-15
+ * @update: 輔助函數
+ */
+Map<String, dynamic> _checkRESTfulConvention(String method, String endpoint) {
+  final conventions = {
+    'GET': endpoint.contains('/{') || !endpoint.contains('/create') || !endpoint.contains('/update'),
+    'POST': !endpoint.contains('/{') || endpoint.contains('/search') || endpoint.contains('/batch'),
+    'PUT': endpoint.contains('/{') || endpoint.contains('/batch'),
+    'DELETE': endpoint.contains('/{') || endpoint.contains('/batch'),
+  };
+
+  return {
+    'isValid': conventions[method.toUpperCase()] ?? false,
+    'reason': '符合RESTful設計慣例',
+  };
+}
+
+// ==========================================
 // 階段三：API契約層測試案例實作 (TC-SIT-017~044) - 繼續
 // ==========================================
 
@@ -2267,38 +2384,34 @@ Future<Map<String, dynamic>> _executeTCSIT044_TransactionsDashboardCompleteEndpo
 // 四模式驗證器已整合至前面定義
 
 
-// ==========================================
-// 測試結果統計與報告
-// ==========================================
-
 /**
- * 編譯測試結果
- */
-void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic> phase2Results, Map<String, dynamic> phase3Results) {
-  final controller = SITP1TestController.instance;
+   * 編譯測試結果
+   * @version 2025-10-15-V1.0.0
+   * @date 2025-10-15
+   * @update: 移動到類別內部
+   */
+  void _compileTestResults(Map<String, dynamic> phase1Results, Map<String, dynamic> phase2Results, Map<String, dynamic> phase3Results) {
+    // 階段一與階段二的測試案例是重疊的 (TC-SIT-001~016)，所以統計時要避免重複計算
+    // 這裡假設階段二的結果是階段一的深度驗證，不增加總數
+    // 總數維持44個測試案例
+    _testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
+    _testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
 
-  // 階段一與階段二的測試案例是重疊的 (TC-SIT-001~016)，所以統計時要避免重複計算
-  // 這裡假設階段二的結果是階段一的深度驗證，不增加總數
-  // 總數維持44個測試案例
-  final Map<String, dynamic> testResults = controller._testResults;
-  testResults['passedTests'] = phase1Results['passedCount'] + phase3Results['passedCount'];
-  testResults['failedTests'] = phase1Results['failedCount'] + phase3Results['failedCount'];
-
-  (testResults['testDetails'] as List<Map<String, dynamic>>).addAll([
-    {
-      'phase': 'Phase 1 - Integration Tests (TC-SIT-001~016)',
-      'results': phase1Results,
-    },
-    {
-      'phase': 'Phase 2 - Deep Integration Validation (TC-SIT-001~016 Advanced)',
-      'results': phase2Results,
-    },
-    {
-      'phase': 'Phase 3 - API Contract Tests (TC-SIT-017~044)',
-      'results': phase3Results,
-    }
-  ]);
-}
+    (_testResults['testDetails'] as List<Map<String, dynamic>>).addAll([
+      {
+        'phase': 'Phase 1 - Integration Tests (TC-SIT-001~016)',
+        'results': phase1Results,
+      },
+      {
+        'phase': 'Phase 2 - Deep Integration Validation (TC-SIT-001~016 Advanced)',
+        'results': phase2Results,
+      },
+      {
+        'phase': 'Phase 3 - API Contract Tests (TC-SIT-017~044)',
+        'results': phase3Results,
+      }
+    ]);
+  }
 
 // ==========================================
 // 階段二模組初始化
