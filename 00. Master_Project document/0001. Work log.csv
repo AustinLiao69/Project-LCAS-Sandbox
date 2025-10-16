@@ -305,4 +305,4 @@ MM 	 DD 	 Description 	    Progress
 10	15	 重構7580模組 	 Closed
 10	15	 重構7570模組 	 Ongoing
 10	15	 執行DCN-0018 重構測試模組之dataflow 	 Ongoing
-10	15	 需要重寫6501文件，將API契約層刪除，使7570變成純粹的PL層測試 	 Ongoing
+10	16	 修改6501文件，將API契約層刪除，使7570變成純粹的PL層測試 	 Ongoing
