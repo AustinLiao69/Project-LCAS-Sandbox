@@ -459,6 +459,204 @@ class AuthRoutes {
 }
 
 // ================================
+// AuthAPLService 靜態介面（提供給PL層使用）
+// ================================
+
+class AuthAPLService {
+  static Future<Map<String, dynamic>> register({
+    required String email,
+    required String password,
+    String? displayName,
+  }) async {
+    try {
+      final gateway = AuthAPIGateway();
+      final response = await gateway.register({
+        'email': email,
+        'password': password,
+        'displayName': displayName,
+      });
+
+      return {
+        'success': response.isSuccess,
+        'token': response.safeData?.accessToken,
+        'userId': response.safeData?.userId,
+        'message': response.message,
+        'userData': response.safeData != null ? {
+          'id': response.safeData!.userId,
+          'email': response.safeData!.email,
+          'displayName': response.safeData!.displayName,
+          'userMode': response.safeData!.userMode,
+          'createdAt': response.safeData!.createdAt.toIso8601String(),
+        } : null,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': '註冊服務暫時無法使用',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final gateway = AuthAPIGateway();
+      final response = await gateway.login({
+        'email': email,
+        'password': password,
+      });
+
+      return {
+        'success': response.isSuccess,
+        'token': response.safeData?.accessToken,
+        'userId': response.safeData?.userId,
+        'message': response.message,
+        'userData': response.safeData != null ? {
+          'id': response.safeData!.userId,
+          'email': response.safeData!.email,
+          'displayName': response.safeData!.displayName,
+          'userMode': response.safeData!.userMode,
+        } : null,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': '登入服務暫時無法使用',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> googleRegister({
+    required String googleToken,
+    required String email,
+    required String displayName,
+    String? avatarUrl,
+  }) async {
+    try {
+      final gateway = AuthAPIGateway();
+      final response = await gateway.googleLogin({
+        'googleToken': googleToken,
+        'email': email,
+        'displayName': displayName,
+        'avatarUrl': avatarUrl,
+      });
+
+      return {
+        'success': response.isSuccess,
+        'token': response.safeData?.accessToken,
+        'userId': response.safeData?.userId,
+        'message': response.message,
+        'userData': response.safeData != null ? {
+          'id': response.safeData!.userId,
+          'email': response.safeData!.email,
+          'displayName': response.safeData!.displayName,
+          'userMode': response.safeData!.userMode,
+        } : null,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Google註冊服務暫時無法使用',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> googleLogin({
+    required String googleToken,
+  }) async {
+    try {
+      final gateway = AuthAPIGateway();
+      final response = await gateway.googleLogin({
+        'googleToken': googleToken,
+      });
+
+      return {
+        'success': response.isSuccess,
+        'token': response.safeData?.accessToken,
+        'userId': response.safeData?.userId,
+        'message': response.message,
+        'userData': response.safeData != null ? {
+          'id': response.safeData!.userId,
+          'email': response.safeData!.email,
+          'displayName': response.safeData!.displayName,
+          'userMode': response.safeData!.userMode,
+        } : null,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Google登入服務暫時無法使用',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> forgotPassword({
+    required String email,
+  }) async {
+    try {
+      final gateway = AuthAPIGateway();
+      final response = await gateway.forgotPassword({
+        'email': email,
+      });
+
+      return {
+        'success': response.isSuccess,
+        'message': response.message,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': '忘記密碼服務暫時無法使用',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> validateResetToken({
+    required String token,
+  }) async {
+    try {
+      final gateway = AuthAPIGateway();
+      final response = await gateway.verifyResetToken(token);
+
+      return {
+        'success': response.isSuccess,
+        'message': response.message,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Token驗證服務暫時無法使用',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      final gateway = AuthAPIGateway();
+      final response = await gateway.resetPassword({
+        'token': token,
+        'newPassword': newPassword,
+      });
+
+      return {
+        'success': response.isSuccess,
+        'message': response.message,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': '密碼重設服務暫時無法使用',
+      };
+    }
+  }
+}
+
+// ================================
 // 使用範例
 // ================================
 
