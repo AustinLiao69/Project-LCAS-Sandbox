@@ -460,13 +460,13 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
       // 呼叫APL層8303記帳交易服務
       final response = await _transactionApiClient.createTransaction(
         CreateTransactionRequest(
-          amount: requestData['amount'],
-          type: requestData['type'],
-          categoryId: requestData['categoryId'],
-          accountId: requestData['accountId'],
-          ledgerId: requestData['ledgerId'],
-          date: requestData['date'],
-          description: requestData['description'],
+          amount: requestData['amount'] as double,
+          type: requestData['type'] as String,
+          categoryId: requestData['categoryId'] as String?,
+          accountId: requestData['accountId'] as String?,
+          ledgerId: requestData['ledgerId'] as String,
+          date: requestData['date'] as String,
+          description: requestData['description'] as String?,
         )
       );
       
