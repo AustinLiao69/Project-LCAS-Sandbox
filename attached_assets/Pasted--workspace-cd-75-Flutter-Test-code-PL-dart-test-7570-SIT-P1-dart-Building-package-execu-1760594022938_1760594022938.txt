@@ -1,0 +1,272 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart" 
+Building package executable... (4.6s)
+Built test:test.
+00:03 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:56: Error: String starting with ' must end with '.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                                         ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:43: Error: Can't find ')' to match '('.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                            ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:36: Error: Can't find ')' to match '('.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                     ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:21: Error: Can't find ')' to match '('.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                      ^
+  Error: Couldn't resolve the package 'intl' in 'package:intl/intl.dart'.
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2883:7: Error: Expected a class member, but got 'catch'.
+      } catch (e) {
+        ^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2883:13: Error: Expected an identifier, but got '('.
+  Try inserting an identifier before '('.
+      } catch (e) {
+              ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3228:1: Error: Expected a declaration, but got '}'.
+  }
+  ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:18:8: Error: Not found: 'package:intl/intl.dart'
+  import 'package:intl/intl.dart';
+         ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:25:8: Error: Not found: 'package:intl/intl.dart'
+  import 'package:intl/intl.dart';
+         ^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:14:8: Error: Error when reading '../83.%20Flutter_Module%20code(API%20route)_APL/unified_response_parser.dart': No such file or directory
+  import 'unified_response_parser.dart';
+         ^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:136:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<UserRegistrationData>> register(Map<String, dynamic> requestBody) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:152:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<UserLoginData>> login(Map<String, dynamic> requestBody) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:168:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<UserLoginData>> googleLogin(Map<String, dynamic> requestBody) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:184:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<Map<String, dynamic>>> logout(Map<String, dynamic> requestBody) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:200:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<UserLoginData>> refreshToken(Map<String, dynamic> requestBody) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:216:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<Map<String, dynamic>>> forgotPassword(Map<String, dynamic> requestBody) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:232:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<Map<String, dynamic>>> verifyResetToken(String token) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:248:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<Map<String, dynamic>>> resetPassword(Map<String, dynamic> requestBody) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:264:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<Map<String, dynamic>>> verifyEmail(Map<String, dynamic> requestBody) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:280:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<Map<String, dynamic>>> bindLine(Map<String, dynamic> requestBody) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:296:10: Error: Type 'UnifiedApiResponse' not found.
+    Future<UnifiedApiResponse<BindStatusData>> getBindStatus(String userId) async {
+           ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:408:37: Error: Type 'UnifiedApiResponse' not found.
+    void _handleResponseProcessing<T>(UnifiedApiResponse<T> response) {
+                                      ^^^^^^^^^^^^^^^^^^
+  7570.%20SIT_P1.dart:185:59: Error: The operator '*' isn't defined for the class 'Object'.
+   - 'Object' is from 'dart:core'.
+  Try correcting the operator to an existing operator, or defining a '*' operator.
+        print('[7570]    📈 成功率: ${(summary['successRate']! * 100).toStringAsFixed(1)}%');
+                                                            ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:524:33: Error: The getter 'AuthAPLService' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'AuthAPLService'.
+        final apiResponse = await AuthAPLService.register(
+                                  ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:580:33: Error: The getter 'AuthAPLService' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'AuthAPLService'.
+        final apiResponse = await AuthAPLService.googleRegister(
+                                  ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:805:33: Error: The getter 'AuthAPLService' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'AuthAPLService'.
+        final apiResponse = await AuthAPLService.login(
+                                  ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:869:33: Error: The getter 'AuthAPLService' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'AuthAPLService'.
+        final apiResponse = await AuthAPLService.googleLogin(
+                                  ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:990:33: Error: The getter 'AuthAPLService' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'AuthAPLService'.
+        final apiResponse = await AuthAPLService.forgotPassword(email: email);
+                                  ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1029:33: Error: The getter 'AuthAPLService' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'AuthAPLService'.
+        final apiResponse = await AuthAPLService.validateResetToken(token: token);
+                                  ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1070:33: Error: The getter 'AuthAPLService' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'AuthAPLService'.
+        final apiResponse = await AuthAPLService.resetPassword(
+                                  ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:53: Error: Expected an identifier, but got '\'.
+  Try inserting an identifier before '\'.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                                      ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:54: Error: Expected an identifier, but got '\'.
+  Try inserting an identifier before '\'.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                                       ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:54: Error: Expected ';' after this.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                                       ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:55: Error: Expected an identifier, but got ']'.
+  Try inserting an identifier before ']'.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                                        ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:55: Error: Unexpected token ']'.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                                        ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:56: Error: Expected ';' after this.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                                         ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2865:13: Error: Expected an identifier, but got 'else'.
+  Try inserting an identifier before 'else'.
+            } else if (value.length >= 2) {
+              ^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2865:11: Error: Expected ';' after this.
+            } else if (value.length >= 2) {
+            ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2865:13: Error: Unexpected token 'else'.
+            } else if (value.length >= 2) {
+              ^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2868:11: Error: A break statement can't be used outside of a loop or switch statement.
+  Try removing the break statement.
+            break;
+            ^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2870:9: Error: 'default' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+          default:
+          ^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2870:9: Error: Expected ';' after this.
+          default:
+          ^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2870:16: Error: Expected an identifier, but got ':'.
+  Try inserting an identifier before ':'.
+          default:
+                 ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2870:16: Error: Unexpected token ':'.
+          default:
+                 ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2786:5: Error: A try block must be followed by an 'on', 'catch', or 'finally' clause.
+  Try adding either a catch or finally clause, or remove the try statement.
+      try {
+      ^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2859:52: Error: The operator '/' isn't defined for the class 'String'.
+  Try correcting the operator to an existing operator, or defining a '/' operator.
+            } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+                                                     ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2870:9: Error: The getter 'default' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'default'.
+          default:
+          ^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2881:14: Error: The getter 'validationResult' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'validationResult'.
+        return validationResult;
+               ^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2923:29: Error: Method not found: 'performRealtimeFormValidation'.
+          final fieldResult = performRealtimeFormValidation(fieldName, fieldValue);
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3221:38: Error: Undefined name '_currentAuthState'.
+    AuthState? get currentAuthState => _currentAuthState;
+                                       ^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3224:47: Error: Undefined name '_currentModeConfig'.
+    ModeConfiguration? get currentModeConfig => _currentModeConfig;
+                                                ^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3227:29: Error: Undefined name '_isInitialized'.
+    bool get isInitialized => _isInitialized;
+                              ^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:138:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<UserRegistrationData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:154:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<UserLoginData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:170:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<UserLoginData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:186:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:202:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<UserLoginData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:218:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:234:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:250:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:266:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:282:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:298:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<BindStatusData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:408:37: Error: 'UnifiedApiResponse' isn't a type.
+    void _handleResponseProcessing<T>(UnifiedApiResponse<T> response) {
+                                      ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:411:7: Error: The getter 'UnifiedResponseParser' isn't defined for the class 'AuthAPIGateway'.
+   - 'AuthAPIGateway' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'UnifiedResponseParser'.
+        UnifiedResponseParser.handleApiError(
+        ^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:421:5: Error: The getter 'UnifiedResponseParser' isn't defined for the class 'AuthAPIGateway'.
+   - 'AuthAPIGateway' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'UnifiedResponseParser'.
+      UnifiedResponseParser.handleModeSpecificLogic(
+      ^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:508:14: Error: Undefined name 'UserMode'.
+          case UserMode.expert:
+               ^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:511:14: Error: Undefined name 'UserMode'.
+          case UserMode.guiding:
+               ^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:514:14: Error: Undefined name 'UserMode'.
+          case UserMode.cultivation:
+               ^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:517:14: Error: Undefined name 'UserMode'.
+          case UserMode.inertial:
+               ^^^^^^^^
