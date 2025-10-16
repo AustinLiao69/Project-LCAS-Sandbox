@@ -1,49 +1,80 @@
-
 /**
  * unified_response_parser.dart
- * @version v1.0.0
+ * @version 1.0.0
  * @date 2025-10-16
- * @description 統一API回應解析器 - 支援DCN-0015統一回應格式
+ * @description DCN-0015統一回應格式解析器
  */
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// ================================
-// 統一回應格式類別定義
-// ================================
+/// 使用者模式列舉
+enum UserMode {
+  expert,
+  inertial,
+  cultivation,
+  guiding
+}
 
-/// 統一API錯誤資訊
-class UnifiedApiError {
-  final String code;
+/// 統一API回應格式
+class UnifiedApiResponse<T> {
+  final bool success;
+  final T? data;
+  final UnifiedError? error;
   final String message;
-  final Map<String, dynamic>? details;
+  final UnifiedMetadata metadata;
+  final UserMode userMode;
 
-  UnifiedApiError({
-    required this.code,
+  UnifiedApiResponse({
+    required this.success,
+    this.data,
+    this.error,
     required this.message,
-    this.details,
+    required this.metadata,
+    required this.userMode,
   });
 
-  factory UnifiedApiError.fromJson(Map<String, dynamic> json) {
-    return UnifiedApiError(
+  /// 安全取得資料
+  T? get safeData => data;
+
+  /// 安全取得錯誤
+  UnifiedError? get safeError => error;
+
+  /// 檢查是否成功
+  bool get isSuccess => success;
+}
+
+/// 統一錯誤格式
+class UnifiedError {
+  final String code;
+  final String message;
+  final Map<String, dynamic> details;
+
+  UnifiedError({
+    required this.code,
+    required this.message,
+    required this.details,
+  });
+
+  factory UnifiedError.fromJson(Map<String, dynamic> json) {
+    return UnifiedError(
       code: json['code'] ?? 'UNKNOWN_ERROR',
       message: json['message'] ?? 'Unknown error occurred',
-      details: json['details'],
+      details: Map<String, dynamic>.from(json['details'] ?? {}),
     );
   }
 }
 
-/// 統一API回應元數據
-class UnifiedApiMetadata {
+/// 統一元資料格式
+class UnifiedMetadata {
   final String timestamp;
   final String requestId;
-  final UserMode userMode;
+  final String userMode;
   final String apiVersion;
   final int processingTimeMs;
   final Map<String, dynamic> modeFeatures;
 
-  UnifiedApiMetadata({
+  UnifiedMetadata({
     required this.timestamp,
     required this.requestId,
     required this.userMode,
@@ -52,176 +83,74 @@ class UnifiedApiMetadata {
     required this.modeFeatures,
   });
 
-  factory UnifiedApiMetadata.fromJson(Map<String, dynamic> json) {
-    return UnifiedApiMetadata(
+  factory UnifiedMetadata.fromJson(Map<String, dynamic> json) {
+    return UnifiedMetadata(
       timestamp: json['timestamp'] ?? DateTime.now().toIso8601String(),
       requestId: json['requestId'] ?? 'unknown',
-      userMode: _parseUserMode(json['userMode']),
+      userMode: json['userMode'] ?? 'Inertial',
       apiVersion: json['apiVersion'] ?? 'v1.0.0',
       processingTimeMs: json['processingTimeMs'] ?? 0,
       modeFeatures: Map<String, dynamic>.from(json['modeFeatures'] ?? {}),
     );
   }
-
-  static UserMode _parseUserMode(dynamic mode) {
-    if (mode is String) {
-      switch (mode.toLowerCase()) {
-        case 'expert':
-          return UserMode.expert;
-        case 'cultivation':
-          return UserMode.cultivation;
-        case 'guiding':
-          return UserMode.guiding;
-        case 'inertial':
-        default:
-          return UserMode.inertial;
-      }
-    }
-    return UserMode.inertial;
-  }
 }
 
-/// 使用者模式枚舉
-enum UserMode { expert, inertial, cultivation, guiding }
-
-/// 統一API回應格式
-class UnifiedApiResponse<T> {
-  final bool success;
-  final T? data;
-  final UnifiedApiError? error;
-  final String message;
-  final UnifiedApiMetadata metadata;
-
-  UnifiedApiResponse({
-    required this.success,
-    this.data,
-    this.error,
-    required this.message,
-    required this.metadata,
-  });
-
-  /// 安全取得資料
-  T? get safeData => success ? data : null;
-
-  /// 安全取得錯誤
-  UnifiedApiError? get safeError => success ? null : error;
-
-  /// 檢查是否成功
-  bool get isSuccess => success;
-
-  /// 取得用戶模式
-  UserMode get userMode => metadata.userMode;
-
-  factory UnifiedApiResponse.fromJson(
-    Map<String, dynamic> json,
-    T Function(dynamic)? dataParser,
-  ) {
-    final success = json['success'] ?? false;
-    final metadata = UnifiedApiMetadata.fromJson(json['metadata'] ?? {});
-
-    T? parsedData;
-    UnifiedApiError? parsedError;
-
-    if (success && json['data'] != null && dataParser != null) {
-      try {
-        parsedData = dataParser(json['data']);
-      } catch (e) {
-        // 資料解析失敗時，轉換為錯誤回應
-        parsedError = UnifiedApiError(
-          code: 'DATA_PARSE_ERROR',
-          message: '資料解析失敗: $e',
-        );
-      }
-    } else if (!success && json['error'] != null) {
-      parsedError = UnifiedApiError.fromJson(json['error']);
-    }
-
-    return UnifiedApiResponse<T>(
-      success: success && parsedError == null,
-      data: parsedData,
-      error: parsedError,
-      message: json['message'] ?? (success ? '操作成功' : '操作失敗'),
-      metadata: metadata,
-    );
-  }
-}
-
-// ================================
-// HTTP回應擴展方法
-// ================================
-
+/// HTTP回應擴展方法
 extension HttpResponseExtension on http.Response {
   /// 轉換為統一回應格式
-  UnifiedApiResponse<T> toUnifiedResponse<T>(T Function(dynamic)? dataParser) {
+  UnifiedApiResponse<T> toUnifiedResponse<T>(T Function(Map<String, dynamic>) dataParser) {
     try {
-      if (statusCode >= 200 && statusCode < 300) {
-        final jsonData = json.decode(body) as Map<String, dynamic>;
-        return UnifiedApiResponse<T>.fromJson(jsonData, dataParser);
-      } else {
-        // HTTP錯誤狀態碼處理
-        return UnifiedApiResponse<T>(
-          success: false,
-          error: UnifiedApiError(
-            code: 'HTTP_ERROR_$statusCode',
-            message: 'HTTP錯誤: $statusCode',
-            details: {'statusCode': statusCode, 'body': body},
-          ),
-          message: 'HTTP請求失敗',
-          metadata: UnifiedApiMetadata(
-            timestamp: DateTime.now().toIso8601String(),
-            requestId: 'http_error_${DateTime.now().millisecondsSinceEpoch}',
-            userMode: UserMode.inertial,
-            apiVersion: 'v1.0.0',
-            processingTimeMs: 0,
-            modeFeatures: {},
-          ),
-        );
-      }
+      final jsonData = json.decode(body) as Map<String, dynamic>;
+
+      return UnifiedApiResponse<T>(
+        success: jsonData['success'] ?? false,
+        data: jsonData['data'] != null ? dataParser(jsonData['data']) : null,
+        error: jsonData['error'] != null ? UnifiedError.fromJson(jsonData['error']) : null,
+        message: jsonData['message'] ?? '',
+        metadata: UnifiedMetadata.fromJson(jsonData['metadata'] ?? {}),
+        userMode: _parseUserMode(jsonData['metadata']?['userMode']),
+      );
     } catch (e) {
-      // JSON解析錯誤處理
       return UnifiedApiResponse<T>(
         success: false,
-        error: UnifiedApiError(
-          code: 'JSON_PARSE_ERROR',
-          message: 'JSON解析錯誤: $e',
-          details: {'rawBody': body},
+        data: null,
+        error: UnifiedError(
+          code: 'PARSE_ERROR',
+          message: '回應解析失敗: $e',
+          details: {'originalBody': body},
         ),
-        message: 'API回應解析失敗',
-        metadata: UnifiedApiMetadata(
+        message: '回應解析失敗',
+        metadata: UnifiedMetadata(
           timestamp: DateTime.now().toIso8601String(),
           requestId: 'parse_error_${DateTime.now().millisecondsSinceEpoch}',
-          userMode: UserMode.inertial,
+          userMode: 'Inertial',
           apiVersion: 'v1.0.0',
           processingTimeMs: 0,
           modeFeatures: {},
         ),
+        userMode: UserMode.inertial,
       );
     }
   }
 }
 
-// ================================
-// 統一回應解析器
-// ================================
-
+/// 統一回應解析器
 class UnifiedResponseParser {
   /// 處理API錯誤
   static void handleApiError(
-    UnifiedApiError error,
+    UnifiedError error,
     Function(String) onShowError,
     Function(String) onLogError,
     Function() onRetry,
   ) {
     // 記錄錯誤
-    onLogError('API錯誤 [${error.code}]: ${error.message}');
+    onLogError('API Error [${error.code}]: ${error.message}');
 
-    // 顯示用戶友善錯誤訊息
-    String userMessage = _getUserFriendlyErrorMessage(error);
-    onShowError(userMessage);
+    // 顯示使用者友善錯誤訊息
+    onShowError(error.message);
 
-    // 判斷是否可重試
-    if (_isRetryableError(error.code)) {
-      // 可以觸發重試邏輯
+    // 根據錯誤類型決定是否提供重試選項
+    if (['NETWORK_ERROR', 'TIMEOUT_ERROR', 'SERVER_ERROR'].contains(error.code)) {
       onRetry();
     }
   }
@@ -233,65 +162,40 @@ class UnifiedResponseParser {
     Function(String) onShowHint,
     Function(Map<String, dynamic>) onUpdateUI,
   ) {
+    // 根據使用者模式提供不同的提示和UI更新
     switch (userMode) {
       case UserMode.expert:
-        if (modeFeatures['detailedAnalytics'] == true) {
-          onShowHint('專家模式：詳細分析數據已載入');
-        }
+        onShowHint('專家模式：顯示詳細資訊');
+        onUpdateUI({'showAdvancedOptions': true});
         break;
       case UserMode.cultivation:
-        if (modeFeatures['achievementProgress'] == true) {
-          onShowHint('培養模式：成就進度已更新');
-        }
+        onShowHint('培養模式：提供學習建議');
+        onUpdateUI({'showLearningTips': true});
         break;
       case UserMode.guiding:
-        if (modeFeatures['helpHints'] == true) {
-          onShowHint('引導模式：操作提示已準備');
-        }
+        onShowHint('引導模式：提供步驟指引');
+        onUpdateUI({'showStepGuide': true});
         break;
       case UserMode.inertial:
       default:
-        if (modeFeatures['stabilityMode'] == true) {
-          onShowHint('穩定模式：系統運行正常');
-        }
+        onShowHint('穩定模式：保持簡潔介面');
+        onUpdateUI({'showMinimalUI': true});
         break;
     }
-
-    // 更新UI狀態
-    onUpdateUI({
-      'userMode': userMode.toString().split('.').last,
-      'modeFeatures': modeFeatures,
-    });
   }
+}
 
-  /// 取得用戶友善錯誤訊息
-  static String _getUserFriendlyErrorMessage(UnifiedApiError error) {
-    switch (error.code) {
-      case 'NETWORK_ERROR':
-        return '網路連線有問題，請檢查網路狀態後重試';
-      case 'VALIDATION_ERROR':
-        return '輸入資料有誤，請檢查後重新輸入';
-      case 'AUTH_ERROR':
-        return '認證失敗，請重新登入';
-      case 'PERMISSION_ERROR':
-        return '權限不足，無法執行此操作';
-      case 'RESOURCE_NOT_FOUND':
-        return '找不到要求的資源';
-      case 'RATE_LIMIT_ERROR':
-        return '請求過於頻繁，請稍後再試';
-      default:
-        return error.message;
-    }
-  }
-
-  /// 判斷是否為可重試的錯誤
-  static bool _isRetryableError(String errorCode) {
-    const retryableCodes = [
-      'NETWORK_ERROR',
-      'TIMEOUT_ERROR',
-      'RATE_LIMIT_ERROR',
-      'INTERNAL_SERVER_ERROR',
-    ];
-    return retryableCodes.contains(errorCode);
+/// 解析使用者模式
+UserMode _parseUserMode(String? modeString) {
+  switch (modeString?.toLowerCase()) {
+    case 'expert':
+      return UserMode.expert;
+    case 'cultivation':
+      return UserMode.cultivation;
+    case 'guiding':
+      return UserMode.guiding;
+    case 'inertial':
+    default:
+      return UserMode.inertial;
   }
 }

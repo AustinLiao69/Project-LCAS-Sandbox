@@ -17,7 +17,7 @@ import 'dart:math' as math;
 import 'package:crypto/crypto.dart';
 import 'package:intl/intl.dart';
 // 引入APL層服務
-import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart';
+import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart' show AuthAPLService;
 
 // ===========================================
 // 核心資料模型定義
