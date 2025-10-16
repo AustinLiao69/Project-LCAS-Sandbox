@@ -1,8 +1,8 @@
 /**
  * 7302. 記帳核心功能群.dart
- * @version v2.2.0
- * @date 2025-10-14
- * @update: 階段一修復完成 - 移除測試代碼污染，恢復業務邏輯純粹性
+ * @version v2.3.0
+ * @date 2025-10-16
+ * @update: 階段一Import修復版 - 添加缺失的Flutter框架import語句，解決編譯錯誤
  * 
  * 本模組實現LCAS 2.0記帳核心功能群的完整功能，
  * 包括交易管理、帳戶管理、統計分析、圖表生成等核心功能。
@@ -19,10 +19,11 @@
 import 'dart:async';
 import 'dart:convert'; // For jsonEncode
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart'; // 引入intl套件以支援國際化格式
-
 import 'package:http/http.dart' as http; // For HTTP requests
 
 // 引入必要的依賴
