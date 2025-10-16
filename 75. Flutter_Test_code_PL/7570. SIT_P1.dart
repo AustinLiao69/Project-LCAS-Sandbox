@@ -167,7 +167,7 @@ class StandardTestDataManager {
   }
 }
 
-/// 純業務邏輯測試結果
+/// 純業務邏輯測試結果（階段二增強版）
 class BusinessLogicTestResult {
   final String testId;
   final String testName;
@@ -177,7 +177,9 @@ class BusinessLogicTestResult {
   final Map<String, dynamic> outputData;
   final String? errorMessage;
   final String? failureReason;
+  final Map<String, dynamic>? validationDetails;
   final DateTime timestamp;
+  final int executionTimeMs;
 
   BusinessLogicTestResult({
     required this.testId,
@@ -188,8 +190,40 @@ class BusinessLogicTestResult {
     required this.outputData,
     this.errorMessage,
     this.failureReason,
+    this.validationDetails,
     DateTime? timestamp,
+    this.executionTimeMs = 0,
   }) : timestamp = timestamp ?? DateTime.now();
+
+  /// 取得詳細的失敗資訊
+  String getDetailedFailureInfo() {
+    if (passed) return 'N/A';
+    
+    List<String> details = [];
+    
+    if (failureReason != null) {
+      details.add('失敗原因: $failureReason');
+    }
+    
+    if (errorMessage != null && errorMessage != failureReason) {
+      details.add('錯誤訊息: $errorMessage');
+    }
+    
+    if (validationDetails != null) {
+      final checks = validationDetails!['checks'] as Map<String, dynamic>?;
+      if (checks != null) {
+        final failedChecks = checks.entries
+            .where((e) => e.value == 'invalid' || e.value == 'missing' || e.value == 'empty')
+            .map((e) => '${e.key}: ${e.value}')
+            .toList();
+        if (failedChecks.isNotEmpty) {
+          details.add('驗證失敗項目: ${failedChecks.join(', ')}');
+        }
+      }
+    }
+    
+    return details.isEmpty ? '無詳細資訊' : details.join(' | ');
+  }
 
   @override
   String toString() => 'BusinessLogicTest($testId): ${passed ? "PASS" : "FAIL"}';
@@ -363,7 +397,7 @@ class StandardizedSITController {
     }
   }
 
-  /// 執行標準化業務邏輯測試
+  /// 執行標準化業務邏輯測試（階段二增強版）
   Future<BusinessLogicTestResult> _executeStandardBusinessLogicTest({
     required String testId,
     required String testName,
@@ -371,6 +405,8 @@ class StandardizedSITController {
     required String testType,
     required String userMode,
   }) async {
+    final startTime = DateTime.now();
+    
     try {
       // 載入測試資料
       final inputData = await StandardTestDataManager.instance.getUserModeData(userMode);
@@ -378,7 +414,9 @@ class StandardizedSITController {
       // 執行純業務邏輯驗證
       final validationResult = _validatePureBusinessLogic(testId, inputData);
       
-      // 建立標準化測試結果
+      final executionTime = DateTime.now().difference(startTime).inMilliseconds;
+      
+      // 建立標準化測試結果（階段二增強版）
       return BusinessLogicTestResult(
         testId: testId,
         testName: testName,
@@ -388,9 +426,13 @@ class StandardizedSITController {
         outputData: validationResult,
         errorMessage: validationResult['isValid'] == true ? null : validationResult['error'],
         failureReason: validationResult['isValid'] == true ? null : _getFailureReason(testId, validationResult),
+        validationDetails: validationResult,
+        executionTimeMs: executionTime,
       );
       
     } catch (e) {
+      final executionTime = DateTime.now().difference(startTime).inMilliseconds;
+      
       return BusinessLogicTestResult(
         testId: testId,
         testName: testName,
@@ -400,6 +442,7 @@ class StandardizedSITController {
         outputData: {},
         errorMessage: e.toString(),
         failureReason: '測試執行異常: ${e.toString()}',
+        executionTimeMs: executionTime,
       );
     }
   }
@@ -599,81 +642,221 @@ class StandardizedSITController {
     return reasons.isEmpty ? '未知失敗原因' : reasons.join(', ');
   }
 
-  /// 產生詳細測試案例清單報告
+  /// 產生詳細測試案例清單報告（階段二完整版）
   void _printDetailedTestResults() {
-    print('\n[7570] 📋 測試案例詳細結果:');
-    print('[7570] ${'=' * 50}');
+    print('\n[7570] 📋 詳細測試案例結果清單:');
+    print('[7570] ${'=' * 70}');
     
     // 分類顯示
     final integrationTests = _results.where((r) => r.testCategory == '整合邏輯測試').toList();
     final plFunctionTests = _results.where((r) => r.testCategory == 'PL函數邏輯測試').toList();
     
-    // 整合邏輯測試結果
+    // 整合邏輯測試詳細結果 (TC-SIT-001~016)
     if (integrationTests.isNotEmpty) {
-      print('[7570] 🔄 整合邏輯測試結果:');
+      print('[7570] 🔄 整合邏輯測試結果 (TC-SIT-001~016):');
+      print('[7570] ${'─' * 60}');
+      
       for (var result in integrationTests) {
         final status = result.passed ? '✅ PASS' : '❌ FAIL';
-        print('[7570]    ${result.testId}: $status - ${result.testName}');
+        final timeInfo = result.executionTimeMs > 0 ? ' (${result.executionTimeMs}ms)' : '';
+        
+        print('[7570]    ${result.testId}: $status - ${result.testName}$timeInfo');
+        
+        // 如果失敗，顯示簡要失敗原因
+        if (!result.passed && result.failureReason != null) {
+          print('[7570]       ↳ ${result.failureReason}');
+        }
       }
       print('');
     }
     
-    // PL函數邏輯測試結果  
+    // PL函數邏輯測試詳細結果 (TC-SIT-017~044)
     if (plFunctionTests.isNotEmpty) {
-      print('[7570] 🔧 PL函數邏輯測試結果:');
+      print('[7570] 🔧 PL函數邏輯測試結果 (TC-SIT-017~044):');
+      print('[7570] ${'─' * 60}');
+      
       for (var result in plFunctionTests) {
         final status = result.passed ? '✅ PASS' : '❌ FAIL';
-        print('[7570]    ${result.testId}: $status - ${result.testName}');
+        final timeInfo = result.executionTimeMs > 0 ? ' (${result.executionTimeMs}ms)' : '';
+        
+        print('[7570]    ${result.testId}: $status - ${result.testName}$timeInfo');
+        
+        // 如果失敗，顯示簡要失敗原因
+        if (!result.passed && result.failureReason != null) {
+          print('[7570]       ↳ ${result.failureReason}');
+        }
       }
       print('');
     }
+    
+    // 測試案例總覽統計
+    print('[7570] 📊 測試案例總覽:');
+    print('[7570] ${'─' * 30}');
+    print('[7570]    總測試案例: ${_results.length}');
+    print('[7570]    通過案例: ${_results.where((r) => r.passed).length}');
+    print('[7570]    失敗案例: ${_results.where((r) => !r.passed).length}');
+    print('[7570]    整合邏輯測試: ${integrationTests.length} (通過: ${integrationTests.where((r) => r.passed).length})');
+    print('[7570]    PL函數邏輯測試: ${plFunctionTests.length} (通過: ${plFunctionTests.where((r) => r.passed).length})');
   }
 
-  /// 產生失敗測試摘要報告
+  /// 產生失敗測試摘要報告（階段二詳細版）
   void _printFailedTestsSummary() {
     final failedTests = _results.where((r) => !r.passed).toList();
     
     if (failedTests.isEmpty) {
-      print('[7570] 🎉 所有測試案例均通過！');
+      print('\n[7570] 🎉 恭喜！所有測試案例均通過！');
+      print('[7570] ✨ 階段三純粹業務邏輯測試標準完全達成');
       return;
     }
     
-    print('[7570] ❌ 失敗測試摘要:');
-    print('[7570] ${'=' * 30}');
+    print('\n[7570] ❌ 失敗測試案例摘要報告:');
+    print('[7570] ${'=' * 60}');
+    print('[7570] 📊 失敗統計: ${failedTests.length} 個測試案例失敗');
+    print('[7570] ${'─' * 60}');
     
-    for (var result in failedTests) {
-      print('[7570]    - ${result.testId}: ${result.testName}');
-      print('[7570]      失敗原因: ${result.failureReason ?? result.errorMessage ?? '未知原因'}');
-      if (result.errorMessage != null && result.failureReason != result.errorMessage) {
-        print('[7570]      錯誤訊息: ${result.errorMessage}');
+    // 按分類顯示失敗測試
+    final failedIntegrationTests = failedTests.where((r) => r.testCategory == '整合邏輯測試').toList();
+    final failedPLFunctionTests = failedTests.where((r) => r.testCategory == 'PL函數邏輯測試').toList();
+    
+    // 整合邏輯測試失敗摘要
+    if (failedIntegrationTests.isNotEmpty) {
+      print('\n[7570] 🔄 整合邏輯測試失敗摘要 (${failedIntegrationTests.length}個):');
+      for (var (index, result) in failedIntegrationTests.indexed) {
+        print('[7570]    ${index + 1}. ${result.testId} - ${result.testName}');
+        print('[7570]       🔍 詳細資訊: ${result.getDetailedFailureInfo()}');
+        if (result.validationDetails?['businessRule'] != null) {
+          print('[7570]       📋 業務規則: ${result.validationDetails!['businessRule']}');
+        }
+        if (result.executionTimeMs > 0) {
+          print('[7570]       ⏱️ 執行時間: ${result.executionTimeMs}ms');
+        }
+        print('');
       }
-      print('');
+    }
+    
+    // PL函數邏輯測試失敗摘要
+    if (failedPLFunctionTests.isNotEmpty) {
+      print('[7570] 🔧 PL函數邏輯測試失敗摘要 (${failedPLFunctionTests.length}個):');
+      for (var (index, result) in failedPLFunctionTests.indexed) {
+        print('[7570]    ${index + 1}. ${result.testId} - ${result.testName}');
+        print('[7570]       🔍 詳細資訊: ${result.getDetailedFailureInfo()}');
+        if (result.validationDetails?['businessRule'] != null) {
+          print('[7570]       📋 業務規則: ${result.validationDetails!['businessRule']}');
+        }
+        if (result.executionTimeMs > 0) {
+          print('[7570]       ⏱️ 執行時間: ${result.executionTimeMs}ms');
+        }
+        print('');
+      }
+    }
+    
+    // 失敗原因統計分析
+    print('[7570] 📊 失敗原因統計:');
+    final reasonCounts = <String, int>{};
+    for (var result in failedTests) {
+      final reason = result.failureReason ?? '未知原因';
+      reasonCounts[reason] = (reasonCounts[reason] ?? 0) + 1;
+    }
+    
+    reasonCounts.entries
+        .toList()
+        ..sort((a, b) => b.value.compareTo(a.value))
+        ..forEach((entry) {
+      print('[7570]       - ${entry.key}: ${entry.value} 次');
+    });
+    
+    print('\n[7570] 💡 修復建議:');
+    if (reasonCounts.containsKey('電子郵件格式無效')) {
+      print('[7570]       - 檢查測試資料中的 email 欄位格式');
+    }
+    if (reasonCounts.containsKey('用戶模式不正確')) {
+      print('[7570]       - 確認 userMode 值為: Expert, Inertial, Cultivation, Guiding');
+    }
+    if (reasonCounts.containsKey('金額格式錯誤或為零')) {
+      print('[7570]       - 檢查 amount 欄位是否為正數');
+    }
+    if (reasonCounts.containsKey('缺少必要欄位')) {
+      print('[7570]       - 確保測試資料包含所有必要欄位');
     }
   }
 
-  /// 產生分類統計報告
+  /// 產生分類統計報告（階段二詳細版）
   void _printCategoryStatistics() {
     final integrationTests = _results.where((r) => r.testCategory == '整合邏輯測試').toList();
     final plFunctionTests = _results.where((r) => r.testCategory == 'PL函數邏輯測試').toList();
     
-    print('[7570] 📊 分類統計:');
-    print('[7570] ${'=' * 20}');
+    print('\n[7570] 📊 詳細分類統計報告:');
+    print('[7570] ${'=' * 50}');
     
+    // 整合邏輯測試統計
     if (integrationTests.isNotEmpty) {
       final passed = integrationTests.where((r) => r.passed).length;
+      final failed = integrationTests.where((r) => !r.passed).length;
       final total = integrationTests.length;
       final rate = total > 0 ? (passed / total * 100).toStringAsFixed(1) : '0.0';
-      print('[7570]    整合邏輯測試(001-016): $passed/$total 通過 ($rate%)');
+      final avgTime = integrationTests.isNotEmpty 
+          ? (integrationTests.map((r) => r.executionTimeMs).reduce((a, b) => a + b) / integrationTests.length).toStringAsFixed(1)
+          : '0.0';
+      
+      print('[7570] 🔄 整合邏輯測試 (TC-SIT-001~016):');
+      print('[7570]    📈 通過率: $rate% ($passed/$total)');
+      print('[7570]    ✅ 通過數: $passed');
+      print('[7570]    ❌ 失敗數: $failed');
+      print('[7570]    ⏱️ 平均執行時間: ${avgTime}ms');
+      
+      if (failed > 0) {
+        final failedTestIds = integrationTests
+            .where((r) => !r.passed)
+            .map((r) => r.testId)
+            .toList();
+        print('[7570]    🔍 失敗測試: ${failedTestIds.join(', ')}');
+      }
+      print('');
     }
     
+    // PL函數邏輯測試統計
     if (plFunctionTests.isNotEmpty) {
       final passed = plFunctionTests.where((r) => r.passed).length;
+      final failed = plFunctionTests.where((r) => !r.passed).length;
       final total = plFunctionTests.length;
       final rate = total > 0 ? (passed / total * 100).toStringAsFixed(1) : '0.0';
-      print('[7570]    PL函數邏輯測試(017-044): $passed/$total 通過 ($rate%)');
+      final avgTime = plFunctionTests.isNotEmpty 
+          ? (plFunctionTests.map((r) => r.executionTimeMs).reduce((a, b) => a + b) / plFunctionTests.length).toStringAsFixed(1)
+          : '0.0';
+      
+      print('[7570] 🔧 PL函數邏輯測試 (TC-SIT-017~044):');
+      print('[7570]    📈 通過率: $rate% ($passed/$total)');
+      print('[7570]    ✅ 通過數: $passed');
+      print('[7570]    ❌ 失敗數: $failed');
+      print('[7570]    ⏱️ 平均執行時間: ${avgTime}ms');
+      
+      if (failed > 0) {
+        final failedTestIds = plFunctionTests
+            .where((r) => !r.passed)
+            .map((r) => r.testId)
+            .toList();
+        print('[7570]    🔍 失敗測試: ${failedTestIds.join(', ')}');
+      }
+      print('');
     }
     
-    print('');
+    // 整體比較分析
+    if (integrationTests.isNotEmpty && plFunctionTests.isNotEmpty) {
+      final integrationRate = (integrationTests.where((r) => r.passed).length / integrationTests.length * 100);
+      final plFunctionRate = (plFunctionTests.where((r) => r.passed).length / plFunctionTests.length * 100);
+      
+      print('[7570] 📊 分類比較分析:');
+      print('[7570]    🏆 表現較佳: ${integrationRate > plFunctionRate ? '整合邏輯測試' : 'PL函數邏輯測試'}');
+      print('[7570]    📊 差異: ${(integrationRate - plFunctionRate).abs().toStringAsFixed(1)}%');
+      
+      if (integrationRate < 90.0 || plFunctionRate < 90.0) {
+        print('[7570]    ⚠️ 建議: 關注通過率低於90%的測試分類');
+      } else {
+        print('[7570]    ✨ 評價: 兩個分類的測試表現均優秀');
+      }
+    }
+    
+    print('[7570] ${'─' * 50}');
   }
 }
 
