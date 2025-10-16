@@ -2857,7 +2857,7 @@ class SystemEntryFunctionGroup {
               'isValid': false,
               'errorMessage': '顯示名稱不能超過50個字元',
             });
-          } else if (value.contains(RegExp(r'[<>"\\'\''/\\]'))) {
+          } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
             validationResult.addAll({
               'isValid': false,
               'errorMessage': '顯示名稱包含無效字元',
