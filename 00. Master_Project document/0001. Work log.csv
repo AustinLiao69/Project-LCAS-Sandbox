@@ -306,5 +306,4 @@ MM 	 DD 	 Description 	    Progress
 10	15	 重構7570模組 	 Ongoing
 10	15	 執行DCN-0018 重構測試模組之dataflow 	 Ongoing
 10	16	 修改6501文件，導入更新的測試策略：TC-SIT-001~016：PL層業務邏輯測試，直接調用PL層函數，驗證業務邏輯正確性；TC-SIT-017~044：APL層API Gateway測試，HTTP請求到API端點，驗證API轉發功能 	 Ongoing
-10	16	 重構7570測試代碼 	 Ongoing
-10	16	 評估PL層是否要分成2層 	 Ongoing
+10	16	 重構7570測試代碼：移除對73XX UI部分的Dependency 	 Ongoing
