@@ -3,7 +3,7 @@
  * @version v1.2.0
  * @date 2025-09-12
  * @update: 階段三實作完成 - 系統管理與最佳化（函數27-40）
- * 
+ *
  * 本模組實現LCAS 2.0系統進入功能群的完整功能，
  * 包括APP啟動、使用者認證、模式設定、模式評估問卷、
  * LINE OA綁定與跨平台資料同步等關鍵功能。
@@ -12,9 +12,12 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
-import 'package:http/http.dart' as http;
-
+import 'dart:io';
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 // 引入APL層服務
 import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart';
 
@@ -718,10 +721,7 @@ class SystemEntryFunctionGroup {
       score += charTypeCount;
 
       // 弱密碼模式檢查
-      final commonPasswords = [
-        'password', 'password123', '123456789', 'qwerty', 'abc123',
-        'password1', 'admin', 'welcome', 'letmein', 'monkey'
-      ];
+      final commonPasswords = _getCommonPasswordsFromTestData();
 
       if (commonPasswords.any((common) =>
           password.toLowerCase().contains(common.toLowerCase()))) {
