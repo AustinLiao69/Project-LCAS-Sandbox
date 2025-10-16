@@ -1,0 +1,81 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart" 
+Building package executable... (1.0s(1.8s)
+Built test:test.
+00:00 +0: loading 7570. SIT_P1.dart
+[7570] 🎉 SIT P1測試模組 v10.0.0 (階段一SA修復版) 初始化完成
+[7570] ✅ 階段一目標: 移除模擬功能，建立純測試控制器
+[7570] 🔧 核心改善: 直接調用PL層7301, 7302模組
+[7570] 📋 測試範圍: 44個真實PL層驗證測試
+[7570] 🎯 資料流向: 7598 -> 7570 -> PL層 -> Firebase
+00:00 +0: SIT P1測試 - 7570 (階段一SA修復版) (setUpAll)
+[7570] 🚀 設定階段一測試環境...
+00:00 +0: ... 執行階段一純測試控制器00:00 +0: SIT P1測試 - 7570 (階段一SA修復版) 執行階段一純測試控制器驗證
+
+[7570] 🚀 開始執行階段一SIT測試...
+[7570] 🚀 開始執行階段一SIT測試 (v10.0.0)...
+[7570] 🎯 測試策略: 純測試控制器，直接調用PL層模組
+[7570] 🔄 執行整合層測試 (TC-SIT-001~016)
+[SystemEntry] 初始化四模式設定...
+[SystemEntry] 正在從配置讀取預設使用者模式...
+[SystemEntry] 正在從配置讀取預設設定...
+[SystemEntry] ✅ 四模式設定初始化完成 - 預設: inertial
+[SystemEntry] 初始化四模式設定...
+[SystemEntry] 正在從配置讀取預設使用者模式...
+[SystemEntry] 正在從配置讀取預設設定...
+[SystemEntry] ✅ 四模式設定初始化完成 - 預設: inertial
+[7570] 🔄 執行真實Firebase記帳測試...
+[7570] 🎯 資料流：7598 → 7570 → PL7302 → Firebase
+[7570] 📋 準備寫入Firebase的資料: {amount: 0.0, type: expense, description: 7570測試記帳-1760605084568, categoryId: default_category, accountId: default_account, ledgerId: test_ledger_7570, userId: default_user, date: 2025-10-16, paymentMethod: 現金}
+[7570] 🔄 調用PL層 BookkeepingCoreFunctionGroup.createTransaction()
+[PL7302] 🔄 開始真實Firebase寫入...
+[PL7302] 📋 交易資料: {amount: 0.0, type: expense, description: 7570測試記帳-1760605084568, categoryId: default_category, accountId: default_account, ledgerId: test_ledger_7570, userId: default_user, date: 2025-10-16, paymentMethod: 現金}
+[PL7302] ❌ createTransaction失敗: RangeError (end): Invalid value: Not in inclusive range 0..3: 6
+[7570] ❌ Firebase寫入失敗: RangeError (end): Invalid value: Not in inclusive range 0..3: 6
+[7570] 🔄 執行真實Firebase記帳測試...
+[7570] 🎯 資料流：7598 → 7570 → PL7302 → Firebase
+[7570] 📋 準備寫入Firebase的資料: {amount: 0.0, type: expense, description: 7570測試記帳-1760605084573, categoryId: default_category, accountId: default_account, ledgerId: test_ledger_7570, userId: default_user, date: 2025-10-16, paymentMethod: 現金}
+[7570] 🔄 調用PL層 BookkeepingCoreFunctionGroup.createTransaction()
+[PL7302] 🔄 開始真實Firebase寫入...
+[PL7302] 📋 交易資料: {amount: 0.0, type: expense, description: 7570測試記帳-1760605084573, categoryId: default_category, accountId: default_account, ledgerId: test_ledger_7570, userId: default_user, date: 2025-10-16, paymentMethod: 現金}
+[PL7302] ❌ createTransaction失敗: RangeError (end): Invalid value: Not in inclusive range 0..3: 6
+[7570] ❌ Firebase寫入失敗: RangeError (end): Invalid value: Not in inclusive range 0..3: 6
+[7570] 🔄 執行PL層函數測試 (TC-SIT-017~044)
+
+[7570] 📊 階段一SIT測試完成報告:
+[7570]    🎯 測試策略: PURE_TEST_CONTROLLER
+[7570]    📋 總測試數: 44
+[7570]    ✅ 通過數: 42
+[7570]    ❌ 失敗數: 2
+[7570]    📈 成功率: 95.5%
+[7570]    ⏱️ 執行時間: 970ms
+[7570] 🎉 階段一目標達成: 純測試控制器建立完成
+
+[7570] 📊 階段一測試完成:
+[7570]    🎯 測試策略: PURE_TEST_CONTROLLER
+[7570]    📋 總測試數: 44
+[7570]    ✅ 通過數: 42
+[7570]    ❌ 失敗數: 2
+[7570]    📈 成功率: 95.5%
+[7570]    ⏱️ 執行時間: 970ms
+[7570] 🎉 階段一完成: 純測試控制器建立成功
+00:01 +1: ... 執行階段一純測試控制器00:01 +1: ... (階段一SA修復版) 階段00:01 +1: SIT P1測試 - 7570 (階段一SA修復版) 階段一資料注入驗證
+
+[7570] 🔧 執行資料注入驗證...
+[7570] ✅ 測試資料載入成功
+[7570] ✅ 階段一資料注入驗證完成
+00:01 +2: ... (階段一SA修復版) 階段00:01 +2: ... 真實Firebase記帳寫入驗00:01 +2: SIT P1測試 - 7570 (階段一SA修復版) 真實Firebase記帳寫入驗證
+
+[7570] 🔥 執行真實Firebase記帳寫入測試...
+[7570] 🔄 執行真實Firebase記帳測試...
+[7570] 🎯 資料流：7598 → 7570 → PL7302 → Firebase
+[7570] 📋 準備寫入Firebase的資料: {amount: 999.0, type: expense, description: 7570測試記帳-1760605085199, categoryId: default_category, accountId: default_account, ledgerId: test_ledger_7570, userId: test_user_7570_firebase, date: 2025-10-16, paymentMethod: 現金}
+[7570] 🔄 調用PL層 BookkeepingCoreFunctionGroup.createTransaction()
+[PL7302] 🔄 開始真實Firebase寫入...
+[PL7302] 📋 交易資料: {amount: 999.0, type: expense, description: 7570測試記帳-1760605085199, categoryId: default_category, accountId: default_account, ledgerId: test_ledger_7570, userId: test_user_7570_firebase, date: 2025-10-16, paymentMethod: 現金}
+[PL7302] ❌ createTransaction失敗: RangeError (end): Invalid value: Not in inclusive range 0..3: 6
+[7570] ❌ Firebase寫入失敗: RangeError (end): Invalid value: Not in inclusive range 0..3: 6
+[7570] 📊 Firebase記帳結果: {success: false, message: Firebase寫入失敗, error: RangeError (end): Invalid value: Not in inclusive range 0..3: 6, transactionCreated: false, firebaseWritten: false}
+[7570] ⚠️ Firebase記帳未成功，但測試框架正常: RangeError (end): Invalid value: Not in inclusive range 0..3: 6
+[7570] ✅ 真實Firebase記帳驗證完成
+00:01 +3: ... 真實Firebase記帳寫入驗00:01 +3: All tests passed!        
+~/workspace/75. Flutter_Test_code_PL$ 
