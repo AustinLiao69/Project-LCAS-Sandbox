@@ -272,6 +272,14 @@ class StandardizedSITController {
   StandardizedSITController._internal();
 
   final List<BusinessLogicTestResult> _results = [];
+
+  /// 取得整合邏輯測試結果清單
+  List<BusinessLogicTestResult> get integrationTests => 
+      _results.where((r) => r.testCategory == '整合邏輯測試').toList();
+
+  /// 取得PL函數邏輯測試結果清單
+  List<BusinessLogicTestResult> get plFunctionTests => 
+      _results.where((r) => r.testCategory == 'PL函數邏輯測試').toList();
   final Map<String, String> _testCaseNames = {
     // 整合邏輯測試 (TC-SIT-001~016)
     'TC-SIT-001': '用戶註冊整合驗證',
