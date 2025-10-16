@@ -20,8 +20,6 @@ import 'dart:async';
 import 'dart:convert'; // For jsonEncode
 import 'dart:io';
 import 'dart:math' as math;
-// 階段一Import修復：添加Flutter框架依賴解決編譯錯誤
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // 引入intl套件以支援國際化格式
 import 'package:http/http.dart' as http; // For HTTP requests
 
@@ -289,7 +287,7 @@ abstract class LineOADialogHandler {
 }
 
 class LineOADialogHandlerImpl extends LineOADialogHandler {
-  const LineOADialogHandlerImpl({Key? key}) : super(key: key);
+  // Removed build and createState methods as they are UI-related
 
   @override
   Future<QuickAccountingResult> handleQuickAccounting(String input) async {
@@ -345,23 +343,6 @@ class LineOADialogHandlerImpl extends LineOADialogHandler {
         return TransactionType.expense;
     }
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Text('LINE OA Dialog Handler'),
-    );
-  }
-
-  @override
-  State<LineOADialogHandler> createState() => _LineOADialogHandlerState();
-}
-
-class _LineOADialogHandlerState extends State<LineOADialogHandler> {
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-  }
 }
 
 /**
@@ -384,6 +365,8 @@ class AccountingHomePageImpl extends AccountingHomePage {
 
   @override
   Widget buildDashboard() {
+    // This method is intended for UI, but kept here as per original structure.
+    // In a pure business logic module, this would likely be refactored out or handled by a presenter.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -399,6 +382,7 @@ class AccountingHomePageImpl extends AccountingHomePage {
 
   @override
   Widget buildQuickActions() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Row(
@@ -425,6 +409,7 @@ class AccountingHomePageImpl extends AccountingHomePage {
 
   @override
   Widget buildRecentTransactions() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -452,6 +437,7 @@ class AccountingHomePageImpl extends AccountingHomePage {
 
   @override
   Widget buildStatisticsSummary() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Row(
@@ -484,6 +470,7 @@ class AccountingHomePageImpl extends AccountingHomePage {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Scaffold(
       appBar: AppBar(title: Text('記帳主頁')),
       body: SingleChildScrollView(
@@ -504,6 +491,7 @@ class AccountingHomePageImpl extends AccountingHomePage {
 }
 
 class _AccountingHomePageState extends State<AccountingHomePage> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -539,12 +527,13 @@ class DashboardWidgetImpl extends DashboardWidget {
     // _statisticsApiClient = DependencyContainer.get<StatisticsApiClient>();
 
     // 在沒有 DI 的情況下，暫時先創建實例
-    _transactionApiClient = TransactionApiClientImpl(); 
+    _transactionApiClient = TransactionApiClientImpl();
     _statisticsApiClient = StatisticsApiClientImpl();
   }
 
   @override
   Widget buildBalanceCard() {
+    // This method is intended for UI.
     return Card(
       child: Container(
         padding: EdgeInsets.all(16),
@@ -581,7 +570,7 @@ class DashboardWidgetImpl extends DashboardWidget {
                 Text(
                   formatter.format(data.balance),
                   style: TextStyle(
-                    fontSize: 24, 
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: data.balance >= 0 ? Colors.green : Colors.red,
                   ),
@@ -596,6 +585,7 @@ class DashboardWidgetImpl extends DashboardWidget {
 
   @override
   Widget buildMonthlyOverview() {
+    // This method is intended for UI.
     return Card(
       child: Container(
         padding: EdgeInsets.all(16),
@@ -681,6 +671,7 @@ class DashboardWidgetImpl extends DashboardWidget {
 
   @override
   Widget buildBudgetProgress() {
+    // This method is intended for UI.
     return Card(
       child: Container(
         padding: EdgeInsets.all(16),
@@ -704,6 +695,7 @@ class DashboardWidgetImpl extends DashboardWidget {
 
   @override
   Widget buildQuickStats() {
+    // This method is intended for UI.
     return Card(
       child: Container(
         padding: EdgeInsets.all(16),
@@ -736,6 +728,7 @@ class DashboardWidgetImpl extends DashboardWidget {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Column(
       children: [
         buildBalanceCard(),
@@ -771,6 +764,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 
   @override
   Widget buildTransactionTypeSelector() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -815,6 +809,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 
   @override
   Widget buildAmountInput() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -837,6 +832,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 
   @override
   Widget buildCategorySelector() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -871,6 +867,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 
   @override
   Widget buildAccountSelector() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -905,6 +902,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 
   @override
   Widget buildDatePicker() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -944,6 +942,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 
   @override
   Widget buildDescriptionInput() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -965,6 +964,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 
   @override
   Widget buildAttachmentSection() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -998,6 +998,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 
   @override
   Widget buildSubmitButton() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       width: double.infinity,
@@ -1016,6 +1017,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Scaffold(
       appBar: AppBar(title: Text('記帳表單')),
       body: SingleChildScrollView(
@@ -1040,6 +1042,7 @@ class AccountingFormPageImpl extends AccountingFormPage {
 }
 
 class _AccountingFormPageState extends State<AccountingFormPage> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -1095,6 +1098,7 @@ class CategorySelectorWidgetImpl extends CategorySelectorWidget {
   }
 
   Widget buildCategoryTree() {
+    // This method is intended for UI.
     if (_filteredCategories.isEmpty) {
       return Center(child: Text('沒有科目資料'));
     }
@@ -1108,6 +1112,7 @@ class CategorySelectorWidgetImpl extends CategorySelectorWidget {
   }
 
   Widget _buildCategoryItem(Category category) {
+    // This method is intended for UI.
     // 簡化邏輯：所有科目都顯示為可選列表項
     return ListTile(
       title: Text(category.name),
@@ -1117,6 +1122,7 @@ class CategorySelectorWidgetImpl extends CategorySelectorWidget {
 
   @override
   Widget buildSearchBar() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: TextField(
@@ -1149,6 +1155,7 @@ class CategorySelectorWidgetImpl extends CategorySelectorWidget {
 
   @override
   Widget buildFrequentCategories() {
+    // This method is intended for UI.
     // 假設這是從Provider獲取的常用科目
     final frequentCategories = [
       Category(id: 'lunch', name: '午餐', type: 'expense'),
@@ -1179,6 +1186,7 @@ class CategorySelectorWidgetImpl extends CategorySelectorWidget {
 
   @override
   Widget buildRecentCategories() {
+    // This method is intended for UI.
     // 假設這是從Provider獲取的最近使用科目
     final recentCategories = [
       Category(id: 'coffee', name: '咖啡', type: 'expense'),
@@ -1218,6 +1226,7 @@ class CategorySelectorWidgetImpl extends CategorySelectorWidget {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Scaffold(
       appBar: AppBar(title: Text('選擇科目')),
       body: Column(
@@ -1236,6 +1245,7 @@ class CategorySelectorWidgetImpl extends CategorySelectorWidget {
 }
 
 class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -1262,6 +1272,7 @@ class AccountSelectorWidgetImpl extends AccountSelectorWidget {
 
   @override
   Widget buildAccountList() {
+    // This method is intended for UI.
     return FutureBuilder<List<Account>>(
       future: _loadAccountsFromTestFactory(),
       builder: (context, snapshot) {
@@ -1317,7 +1328,7 @@ class AccountSelectorWidgetImpl extends AccountSelectorWidget {
     return List.generate(3, (index) {
       final type = accountTypes[index % accountTypes.length];
       final name = accountNames[index % accountNames.length];
-      final balance = type == 'credit' 
+      final balance = type == 'credit'
           ? -(random.nextDouble() * 10000)
           : random.nextDouble() * 100000;
 
@@ -1332,6 +1343,7 @@ class AccountSelectorWidgetImpl extends AccountSelectorWidget {
 
   @override
   Widget buildAccountTypeFilter() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Row(
@@ -1372,6 +1384,7 @@ class AccountSelectorWidgetImpl extends AccountSelectorWidget {
 
   @override
   Widget buildBalanceDisplay() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Card(
@@ -1432,6 +1445,7 @@ class AccountSelectorWidgetImpl extends AccountSelectorWidget {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Scaffold(
       appBar: AppBar(title: Text('選擇帳戶')),
       body: Column(
@@ -1449,6 +1463,7 @@ class AccountSelectorWidgetImpl extends AccountSelectorWidget {
 }
 
 class _AccountSelectorWidgetState extends State<AccountSelectorWidget> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -1475,6 +1490,7 @@ class LedgerSelectorWidgetImpl extends LedgerSelectorWidget {
 
   @override
   Widget buildLedgerList() {
+    // This method is intended for UI.
     return FutureBuilder<List<Ledger>>(
       future: _loadLedgersFromTestFactory(),
       builder: (context, snapshot) {
@@ -1530,6 +1546,7 @@ class LedgerSelectorWidgetImpl extends LedgerSelectorWidget {
 
   @override
   Widget buildLedgerTypeFilter() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Row(
@@ -1570,6 +1587,7 @@ class LedgerSelectorWidgetImpl extends LedgerSelectorWidget {
 
   @override
   Widget buildCreateLedgerButton() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       width: double.infinity,
@@ -1605,6 +1623,7 @@ class LedgerSelectorWidgetImpl extends LedgerSelectorWidget {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Scaffold(
       appBar: AppBar(title: Text('選擇帳本')),
       body: Column(
@@ -1622,6 +1641,7 @@ class LedgerSelectorWidgetImpl extends LedgerSelectorWidget {
 }
 
 class _LedgerSelectorWidgetState extends State<LedgerSelectorWidget> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -1649,6 +1669,7 @@ class ImageAttachmentWidgetImpl extends ImageAttachmentWidget {
 
   @override
   Widget buildImagePreview() {
+    // This method is intended for UI.
     return Container(
       height: 200,
       child: ListView.builder(
@@ -1684,6 +1705,7 @@ class ImageAttachmentWidgetImpl extends ImageAttachmentWidget {
 
   @override
   Widget buildImageControls() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Row(
@@ -1732,6 +1754,7 @@ class ImageAttachmentWidgetImpl extends ImageAttachmentWidget {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Scaffold(
       appBar: AppBar(title: Text('圖片附件')),
       body: Column(
@@ -1748,6 +1771,7 @@ class ImageAttachmentWidgetImpl extends ImageAttachmentWidget {
 }
 
 class _ImageAttachmentWidgetState extends State<ImageAttachmentWidget> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -1774,6 +1798,7 @@ class RecurringSetupWidgetImpl extends RecurringSetupWidget {
 
   @override
   Widget buildFrequencySelector() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -1813,6 +1838,7 @@ class RecurringSetupWidgetImpl extends RecurringSetupWidget {
 
   @override
   Widget buildEndDatePicker() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -1845,6 +1871,7 @@ class RecurringSetupWidgetImpl extends RecurringSetupWidget {
 
   @override
   Widget buildPreview() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Card(
@@ -1875,6 +1902,7 @@ class RecurringSetupWidgetImpl extends RecurringSetupWidget {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Scaffold(
       appBar: AppBar(title: Text('重複設定')),
       body: Column(
@@ -1904,6 +1932,7 @@ class RecurringSetupWidgetImpl extends RecurringSetupWidget {
 }
 
 class _RecurringSetupWidgetState extends State<RecurringSetupWidget> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -1932,6 +1961,7 @@ class TransactionManagerWidgetImpl extends TransactionManagerWidget {
 
   @override
   Widget buildTransactionList() {
+    // This method is intended for UI.
     return FutureBuilder<List<Transaction>>(
       future: _loadTransactionsFromTestFactory(),
       builder: (context, snapshot) {
@@ -2028,6 +2058,7 @@ class TransactionManagerWidgetImpl extends TransactionManagerWidget {
 
   @override
   Widget buildFilterControls() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -2097,6 +2128,7 @@ class TransactionManagerWidgetImpl extends TransactionManagerWidget {
 
   @override
   Widget buildSearchBar() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: TextField(
@@ -2114,6 +2146,7 @@ class TransactionManagerWidgetImpl extends TransactionManagerWidget {
 
   @override
   Widget buildBatchActions() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Row(
@@ -2180,6 +2213,7 @@ class TransactionManagerWidgetImpl extends TransactionManagerWidget {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Scaffold(
       appBar: AppBar(title: Text('記錄管理')),
       body: Column(
@@ -2198,6 +2232,7 @@ class TransactionManagerWidgetImpl extends TransactionManagerWidget {
 }
 
 class _TransactionManagerWidgetState extends State<TransactionManagerWidget> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -2224,6 +2259,7 @@ class TransactionEditorWidgetImpl extends TransactionEditorWidget {
 
   @override
   Widget buildEditForm() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -2292,6 +2328,7 @@ class TransactionEditorWidgetImpl extends TransactionEditorWidget {
 
   @override
   Widget buildVersionHistory() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -2340,6 +2377,7 @@ class TransactionEditorWidgetImpl extends TransactionEditorWidget {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     final transactionId = ModalRoute.of(context)?.settings.arguments as String?;
 
     if (transactionId != null) {
@@ -2384,6 +2422,7 @@ class TransactionEditorWidgetImpl extends TransactionEditorWidget {
 }
 
 class _TransactionEditorWidgetState extends State<TransactionEditorWidget> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -2410,6 +2449,7 @@ class StatisticsChartWidgetImpl extends StatisticsChartWidget {
 
   @override
   Widget buildChartSelector() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -2444,6 +2484,7 @@ class StatisticsChartWidgetImpl extends StatisticsChartWidget {
 
   @override
   Widget buildPeriodSelector() {
+    // This method is intended for UI.
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -2489,6 +2530,7 @@ class StatisticsChartWidgetImpl extends StatisticsChartWidget {
 
   @override
   Widget buildChart() {
+    // This method is intended for UI.
     return Container(
       height: 300,
       margin: EdgeInsets.all(16),
@@ -2542,6 +2584,7 @@ class StatisticsChartWidgetImpl extends StatisticsChartWidget {
   }
 
   Widget _buildDynamicChart(List<ChartData> chartData) {
+    // This method is intended for UI.
     final total = chartData.fold(0.0, (sum, item) => sum + item.value);
 
     return Column(
@@ -2624,6 +2667,7 @@ class StatisticsChartWidgetImpl extends StatisticsChartWidget {
   }
 
   Widget _buildLegendItem(String label, Color color, String percentage) {
+    // This method is intended for UI.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: Row(
@@ -2655,6 +2699,7 @@ class StatisticsChartWidgetImpl extends StatisticsChartWidget {
 
   @override
   Widget build(BuildContext context) {
+    // This method is intended for UI.
     return Scaffold(
       appBar: AppBar(title: Text('統計圖表')),
       body: Column(
@@ -2681,6 +2726,7 @@ class StatisticsChartWidgetImpl extends StatisticsChartWidget {
 }
 
 class _StatisticsChartWidgetState extends State<StatisticsChartWidget> {
+  // This class is intended for UI.
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -7132,7 +7178,9 @@ class TransactionDataProcessor {
     // 類型篩選
     if (criteria.containsKey('types') && criteria['types'] != null) {
       final types = criteria['types'] as List<TransactionType>;
-      filtered = filtered.where((t) => types.contains(t.type)).toList();
+      filtered = filtered.where((t) =>
+        types.contains(t.type)
+      ).toList();
     }
 
     // 科目篩選
