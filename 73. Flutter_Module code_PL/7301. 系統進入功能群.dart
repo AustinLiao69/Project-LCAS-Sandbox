@@ -1,7 +1,7 @@
 /**
  * 7301. 系統進入功能群.dart
- * @version v1.2.0
- * @date 2025-09-12
+ * @version v2.5.0
+ * @date 2025-10-16
  * @update: 階段三實作完成 - 系統管理與最佳化（函數27-40）
  *
  * 本模組實現LCAS 2.0系統進入功能群的完整功能，
@@ -2856,7 +2856,7 @@ class SystemEntryFunctionGroup {
               'isValid': false,
               'errorMessage': '顯示名稱不能超過50個字元',
             });
-          } else if (value.contains(RegExp(r'[<>"\'/\\]'))) {
+          } else if (value.contains(RegExp(r'[<>"\'\/\\]'))) {
             validationResult.addAll({
               'isValid': false,
               'errorMessage': '顯示名稱包含無效字元',
