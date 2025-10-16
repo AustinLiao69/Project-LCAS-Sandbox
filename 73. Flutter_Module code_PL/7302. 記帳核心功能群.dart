@@ -277,9 +277,9 @@ abstract class DependencyContainer {
 
 /**
  * 03. LINE OA記帳對話處理器 - LineOADialogHandler
- * @version 2025-10-16-V2.4.0
+ * @version 2025-10-16-V2.3.0
  * @date 2025-10-16
- * @update: 移除UI依賴完成版 - 純粹業務邏輯實作
+ * @update: 階段一Import修復版 - 移除UI依賴，保持純粹業務邏輯
  */
 abstract class LineOADialogHandler {
   Future<QuickAccountingResult> handleQuickAccounting(String input);
@@ -287,7 +287,9 @@ abstract class LineOADialogHandler {
   Future<void> handleStatistics(String period);
 }
 
-class LineOADialogHandlerImpl implements LineOADialogHandler {
+class LineOADialogHandlerImpl extends LineOADialogHandler {
+  const LineOADialogHandlerImpl({Key? key}) : super(key: key);
+
   @override
   Future<QuickAccountingResult> handleQuickAccounting(String input) async {
     try {
@@ -304,8 +306,8 @@ class LineOADialogHandlerImpl implements LineOADialogHandler {
         accountId: parsedData['accountId'],
         description: parsedData['description'] ?? '',
         date: DateTime.now(),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: DateTime.now(), // 新增
+        updatedAt: DateTime.now(), // 新增
       );
 
       // 呼叫快速記帳處理器
@@ -342,19 +344,38 @@ class LineOADialogHandlerImpl implements LineOADialogHandler {
         return TransactionType.expense;
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Text('LINE OA Dialog Handler'),
+    );
+  }
+
+  @override
+  State<LineOADialogHandler> createState() => _LineOADialogHandlerState();
+}
+
+class _LineOADialogHandlerState extends State<LineOADialogHandler> {
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
 }
 
 /**
- * 04. 記帳主頁業務邏輯 - AccountingHomeLogic
- * @version 2025-10-16-V2.4.0
- * @date 2025-10-16
- * @update: UI分離完成版 - 純粹業務邏輯實作
+ * 04. 記帳主頁Widget - AccountingHomePage
+ * @version 2025-09-12-V2.0.0
+ * @date 2025-09-12
+ * @update: 階段一實作 - 記帳主頁核心組件
  */
-abstract class AccountingHomeLogic {
-  Future<DashboardData> loadDashboardData();
-  Future<List<Transaction>> loadRecentTransactions();
-  Future<Map<String, dynamic>> loadStatisticsSummary();
-  Future<bool> processQuickAction(String actionType);
+abstract class AccountingHomePage extends StatefulWidget {
+  const AccountingHomePage({Key? key}) : super(key: key);
+
+  Widget buildDashboard();
+  Widget buildQuickActions();
+  Widget buildRecentTransactions();
+  Widget buildStatisticsSummary();
 }
 
 class AccountingHomePageImpl extends AccountingHomePage {
