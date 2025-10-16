@@ -2857,7 +2857,7 @@ class SystemEntryFunctionGroup {
               'isValid': false,
               'errorMessage': '顯示名稱不能超過50個字元',
             });
-          } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+          } else if (value.contains(RegExp(r'''[<>"\\'/]'''))) {
             validationResult.addAll({
               'isValid': false,
               'errorMessage': '顯示名稱包含無效字元',
@@ -2876,6 +2876,7 @@ class SystemEntryFunctionGroup {
               'errorMessage': '輸入內容過長',
             });
           }
+          break;
       }
 
       print('[SystemEntry] ✅ 即時表單驗證完成: $fieldName');
@@ -2921,7 +2922,7 @@ class SystemEntryFunctionGroup {
       // 逐一驗證每個欄位
       for (String fieldName in formData.keys) {
         final fieldValue = formData[fieldName] ?? '';
-        final fieldResult = performRealtimeFormValidation(fieldName, fieldValue);
+        final fieldResult = this.performRealtimeFormValidation(fieldName, fieldValue);
 
         overallResult['fieldResults'][fieldName] = fieldResult;
 

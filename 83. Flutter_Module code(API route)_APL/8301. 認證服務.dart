@@ -1,4 +1,3 @@
-
 /**
  * 8301. 認證服務.dart
  * @module 認證服務模組 - API Gateway (DCN-0015適配版)
@@ -478,7 +477,7 @@ class AuthAPLService {
 
       return {
         'success': response.isSuccess,
-        'token': response.safeData?.accessToken,
+        'token': response.safeData?.token, // Corrected from accessToken to token
         'userId': response.safeData?.userId,
         'message': response.message,
         'userData': response.safeData != null ? {
@@ -510,7 +509,7 @@ class AuthAPLService {
 
       return {
         'success': response.isSuccess,
-        'token': response.safeData?.accessToken,
+        'token': response.safeData?.token, // Corrected from accessToken to token
         'userId': response.safeData?.userId,
         'message': response.message,
         'userData': response.safeData != null ? {
@@ -545,7 +544,7 @@ class AuthAPLService {
 
       return {
         'success': response.isSuccess,
-        'token': response.safeData?.accessToken,
+        'token': response.safeData?.token, // Corrected from accessToken to token
         'userId': response.safeData?.userId,
         'message': response.message,
         'userData': response.safeData != null ? {
@@ -574,7 +573,7 @@ class AuthAPLService {
 
       return {
         'success': response.isSuccess,
-        'token': response.safeData?.accessToken,
+        'token': response.safeData?.token, // Corrected from accessToken to token
         'userId': response.safeData?.userId,
         'message': response.message,
         'userData': response.safeData != null ? {
@@ -700,7 +699,7 @@ class AuthGatewayUsageExample {
     if (response.isSuccess) {
       final loginData = response.safeData;
       print('登入成功: ${loginData?.displayName}');
-      
+
       // 根據用戶模式調整UI
       switch (response.userMode) {
         case UserMode.expert:
