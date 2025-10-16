@@ -1,0 +1,94 @@
+
+------------------------------------------
+20251016 分拆73XX模組為業務邏輯與UI
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+------------------------------------------
+20251016 分拆73XX模組為業務邏輯與UI
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據您的需求，我將分析當前73XX模組的問題並提出分拆方案。
+🔍 問題分析
+核心問題識別
+從7302模組中可以看到大量Flutter Widget相關的未定義錯誤，根本原因是業務邏輯與UI邏輯混合在同一個模組中，違反了單一職責原則。
+💡 關鍵Insight
+1.	架構混亂的根本原因：當前7301和7302模組同時包含了業務邏輯和UI實作，這導致：
+•	業務邏輯函數與Widget類別混雜
+•	Import依賴複雜且互相污染
+•	測試困難，無法獨立測試業務邏輯
+2.	MVP階段的關鍵洞察：分拆後可以：
+•	7301/7302（業務邏輯）：純粹的Dart邏輯，不依賴Flutter框架
+•	7301U/7302U（UI邏輯）：專注於Widget實作，依賴業務邏輯模組
+🎯 分拆策略
+7301系統進入功能群分拆方案
+保留在7301.dart（業務邏輯）：
+•	✅ 所有資料模型（User, AuthState, ModeConfiguration等）
+•	✅ 所有40個核心函數（initializeApp, checkAppVersion等）
+•	✅ API客戶端介面定義
+•	✅ 狀態管理邏輯
+•	✅ 工具函數（驗證、加密、本地儲存等）
+移至7301U.dart（UI邏輯）：
+•	✅ 所有Widget類別和build方法
+•	✅ Flutter相關的import語句
+•	✅ 四模式UI適配器
+•	✅ 導航控制UI邏輯
+•	✅ 表單驗證UI回饋
+7302記帳核心功能群分拆方案
+保留在7302.dart（業務邏輯）：
+•	✅ 依賴注入容器（DependencyContainer）
+•	✅ 所有Provider的業務邏輯部分
+•	✅ API客戶端實作
+•	✅ Repository模式實作
+•	✅ 資料處理函數（統計計算、格式轉換等）
+移至7302U.dart（UI邏輯）：
+•	✅ 所有abstract Widget類別的實作
+•	✅ 11個核心Widget（LineOADialogHandler, AccountingHomePage等）
+•	✅ 四模式UI適配器實作
+•	✅ 導航控制器UI部分
+🔧 Dependency分離策略
+分離原則
+1.	7301/7302：純Dart邏輯，只能import dart:core相關套件
+2.	7301U/7302U：可以import Flutter套件，並import對應的業務邏輯模組
+介面設計
+// 7301.dart 提供介面
+abstract class SystemEntryBusinessLogic {
+  Future<AuthState> loadAuthenticationState();
+  Future<RegisterResponse> registerWithEmail(RegisterRequest request);
+  // ...其他業務邏輯函數
+}
+// 7301U.dart 使用業務邏輯
+import '7301. 系統進入功能群.dart';
+class LoginPageWidget extends StatefulWidget {
+  final SystemEntryBusinessLogic businessLogic;
+  // Widget實作...
+}
+📋 分拆執行計劃
+第一階段：7301分拆
+1.	建立7301U.dart，移入所有Widget相關代碼
+2.	清理7301.dart的Flutter依賴
+3.	建立業務邏輯與UI的介面契約
+第二階段：7302分拆
+1.	建立7302U.dart，移入所有UI實作
+2.	保留7302.dart的純業務邏輯
+3.	確保Provider業務邏輯與UI邏輯分離
+預期效果
+•	✅ 編譯錯誤消除：UI模組處理Flutter依賴，業務邏輯模組無Flutter污染
+•	✅ 測試能力提升：業務邏輯可獨立單元測試
+•	✅ 職責清晰：符合單一職責原則
+•	✅ 維護性改善：業務邏輯變更不影響UI，反之亦然
+這個分拆方案將徹底解決當前的架構混亂問題，為7570 SIT測試的成功執行奠定基礎。
+
+
+
+------------------------------------------
+20251016 分拆73XX模組為業務邏輯與UI
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+需求如下：
+1.	7301以業務邏輯和UI分拆成兩個模組，業務邏輯部分檔名為7301. 系統進入功能群.dart；UI部分檔名為7301U. 系統進入功能群.dart
+2.	7302以業務邏輯和UI分拆成兩個模組，業務邏輯部分檔名為7302. 記帳核心功能群.dart ；UI部分檔名為7302U. 記帳核心功能群.dart
+請務必注意要把業務邏輯與UI的Dependency全部拆開
+
