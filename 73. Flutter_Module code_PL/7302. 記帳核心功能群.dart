@@ -433,16 +433,15 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
   @override
   Future<Map<String, dynamic>> createTransaction(Map<String, dynamic> transactionData) async {
     try {
-      print('[PL7302] 🔄 開始真實Firebase寫入...');
+      print('[PL7302] 🔄 開始處理交易記錄，透過APL層轉發...');
       print('[PL7302] 📋 交易資料: $transactionData');
       
-      // 生成真實交易ID
+      // 生成交易ID
       final microsecondStr = DateTime.now().microsecond.toString().padLeft(6, '0');
       final transactionId = 'txn_${DateTime.now().millisecondsSinceEpoch}_$microsecondStr';
       
-      // 準備Firebase寫入資料（符合1311 FS.js格式）
-      final firebaseData = {
-        'id': transactionId,
+      // 準備符合8103 API規格的請求資料
+      final requestData = {
         'amount': (transactionData['amount'] as num).toDouble(),
         'type': transactionData['type'] as String,
         'description': transactionData['description'] as String? ?? '',
@@ -452,35 +451,58 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
         'userId': transactionData['userId'] as String? ?? '',
         'paymentMethod': transactionData['paymentMethod'] as String? ?? '現金',
         'ledgerId': transactionData['ledgerId'] as String? ?? 'test_ledger_7570',
-        'createdAt': DateTime.now().toIso8601String(),
-        'updatedAt': DateTime.now().toIso8601String(),
-        'status': 'active',
-        'verified': false,
-        'source': 'pl_test'
+        'source': 'pl_7302'
       };
       
-      print('[PL7302] 🔥 準備寫入Firebase: $firebaseData');
-      print('[PL7302] 🎯 Firebase路徑: ledgers/${firebaseData['ledgerId']}/transactions/${transactionId}');
+      print('[PL7302] 🔄 呼叫APL層8303記帳交易服務...');
+      print('[PL7302] 📡 資料流: PL7302 → APL8303 → ASL → BL → Firebase');
       
-      // 這裡應該真實呼叫Firebase寫入
-      // 目前先返回成功以便測試，實際應該呼叫Firebase API
+      // 呼叫APL層8303記帳交易服務
+      final response = await _transactionApiClient.createTransaction(
+        CreateTransactionRequest(
+          amount: requestData['amount'] as double,
+          type: requestData['type'] as String,
+          categoryId: requestData['categoryId'] as String?,
+          accountId: requestData['accountId'] as String?,
+          ledgerId: requestData['ledgerId'] as String,
+          date: requestData['date'] as String,
+          description: requestData['description'] as String?,
+        )
+      );
       
-      return {
-        'success': true,
-        'data': {
-          'transactionId': transactionId,
-          'amount': firebaseData['amount'],
-          'type': firebaseData['type'],
-          'description': firebaseData['description'],
-          'createdAt': firebaseData['createdAt'],
-          'firebaseWritten': true,
-          'firebasePath': 'ledgers/${firebaseData['ledgerId']}/transactions/${transactionId}'
-        },
-        'error': null,
-      };
+      if (response.success && response.data != null) {
+        final transaction = response.data!;
+        
+        print('[PL7302] ✅ APL層回應成功: ${transaction.id}');
+        
+        return {
+          'success': true,
+          'data': {
+            'transactionId': transaction.id,
+            'amount': transaction.amount,
+            'type': transaction.type.toString().split('.').last,
+            'description': transaction.description,
+            'createdAt': transaction.createdAt.toIso8601String(),
+            'dataFlow': 'PL7302 → APL8303 → ASL → BL → Firebase',
+            'apiResponse': true
+          },
+          'error': null,
+        };
+      } else {
+        print('[PL7302] ❌ APL層回應失敗: ${response.error}');
+        return {
+          'success': false,
+          'error': 'APL層處理失敗: ${response.error}',
+          'dataFlow': 'PL7302 → APL8303 (失敗)'
+        };
+      }
     } catch (e) {
       print('[PL7302] ❌ createTransaction失敗: $e');
-      return {'success': false, 'error': e.toString()};
+      return {
+        'success': false, 
+        'error': e.toString(),
+        'dataFlow': 'PL7302 (異常)'
+      };
     }
   }
 

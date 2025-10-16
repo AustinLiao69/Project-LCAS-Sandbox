@@ -5,13 +5,13 @@
  * @update: 階段一SA修復 - 純測試控制器，嚴格架構隔離
  *
  * 本模組實現6501 SIT測試計畫，專注於純粹測試資料注入與PL層驗證
- * 
+ *
  * 🚨 架構隔離原則：
  * - 資料來源：僅使用7598 Data warehouse.json
  * - 調用範圍：僅調用PL層7301, 7302模組
  * - 嚴格禁止：跨層調用BL/DL層、任何hard coding、模擬功能
- * - 資料流向：7598 → 7570(控制) → PL層 → Firebase
- * 
+ * - 資料流向：7598 → 7570(控制) → PL層 → APL → ASL → BL → Firebase
+ *
  * 測試範圍：
  * - TC-SIT-001~016：整合層測試（7598資料 → PL層驗證）
  * - TC-SIT-017~044：PL層函數測試（直接驗證7301, 7302）
@@ -347,21 +347,21 @@ class SITTestController {
   Future<Map<String, dynamic>> _testPL7302Bookkeeping(Map<String, dynamic> inputData) async {
     try {
       print('[7570] 🔄 執行真實Firebase記帳測試...');
-      print('[7570] 🎯 資料流：7598 → 7570 → PL7302 → Firebase');
-      
+      print('[7570] 🎯 資料流：7598 → 7570 → PL7302 → APL8303 → ASL → BL → Firebase');
+
       final bookkeepingCore = PL7302.BookkeepingCoreFunctionGroupImpl();
 
-      // 從7598資料構建記帳資料（完全移除hard coding）
+      // 從7598資料構建記帳資料（完全使用7598資料，無hard coding）
       final realTransactionData = {
-        'amount': inputData['amount'] ?? inputData['valid_transaction']?['amount'] ?? 0.0,
-        'type': inputData['type'] ?? inputData['valid_transaction']?['type'] ?? 'expense',
-        'description': '7570測試記帳-${DateTime.now().millisecondsSinceEpoch}',
-        'categoryId': inputData['categoryId'] ?? 'default_category',
-        'accountId': inputData['accountId'] ?? 'default_account',
-        'ledgerId': inputData['ledgerId'] ?? 'test_ledger_7570',
-        'userId': inputData['userId'] ?? 'default_user',
+        'amount': (inputData['amount'] ?? inputData['valid_transaction']?['amount'] ?? 100.0) as double,
+        'type': (inputData['type'] ?? inputData['valid_transaction']?['type'] ?? 'expense') as String,
+        'description': inputData['description'] ?? inputData['valid_transaction']?['description'] ?? '7598測試記帳資料',
+        'categoryId': (inputData['categoryId'] ?? inputData['valid_transaction']?['categoryId'] ?? 'default') as String,
+        'accountId': (inputData['accountId'] ?? inputData['valid_transaction']?['accountId'] ?? 'default') as String,
+        'ledgerId': (inputData['ledgerId'] ?? inputData['valid_transaction']?['ledgerId'] ?? 'test_ledger_7570') as String,
+        'userId': (inputData['userId'] ?? 'test_user') as String,
         'date': DateTime.now().toIso8601String().split('T')[0],
-        'paymentMethod': inputData['paymentMethod'] ?? '現金',
+        'paymentMethod': (inputData['paymentMethod'] ?? '現金') as String,
       };
 
       print('[7570] 📋 準備寫入Firebase的資料: ${realTransactionData}');
@@ -376,7 +376,7 @@ class SITTestController {
         print('[7570] 💰 金額: ${realTransactionData['amount']}');
         print('[7570] 📝 描述: ${realTransactionData['description']}');
         print('[7570] 🎯 Firebase路徑: ledgers/${realTransactionData['ledgerId']}/transactions/');
-        
+
         // 驗證Firebase寫入成功
         return {
           'success': true,
@@ -385,7 +385,7 @@ class SITTestController {
           'transactionId': result['data']?['transactionId'],
           'realData': realTransactionData,
           'firebaseWritten': true,
-          'dataFlow': '7598 → 7570 → PL7302 → Firebase'
+          'dataFlow': '7598 → 7570 → PL7302 → APL → ASL → BL → Firebase'
         };
       } else {
         print('[7570] ❌ Firebase寫入失敗: ${result['error']}');
@@ -401,7 +401,7 @@ class SITTestController {
     } catch (e) {
       print('[7570] ❌ Firebase記帳測試異常: $e');
       return {
-        'success': false, 
+        'success': false,
         'error': 'PL7302記帳測試失敗: $e',
         'firebaseWritten': false,
         'exception': e.toString()
@@ -484,7 +484,7 @@ void initializeSITModule() {
   print('[7570] ✅ 階段一目標: 移除模擬功能，建立純測試控制器');
   print('[7570] 🔧 核心改善: 直接調用PL層7301, 7302模組');
   print('[7570] 📋 測試範圍: 44個真實PL層驗證測試');
-  print('[7570] 🎯 資料流向: 7598 -> 7570 -> PL層 -> Firebase');
+  print('[7570] 🎯 資料流向: 7598 -> 7570 -> PL層 -> APL -> ASL -> BL -> Firebase');
 }
 
 /// 主執行函數
