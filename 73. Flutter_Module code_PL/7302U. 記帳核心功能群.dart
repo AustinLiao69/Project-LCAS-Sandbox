@@ -1,16 +1,16 @@
-
 /**
  * 7302U. 記帳核心功能群.dart
- * @version v1.0.0
+ * @version v2.4.0
  * @date 2025-10-16
- * @update: 階段一實作完成 - UI邏輯分拆
+ * @update: 階段二業務邏輯分拆完成版 - UI邏輯與業務邏輯完全分離
  *
  * 本模組實現LCAS 2.0記帳核心功能群的UI展示層，
  * 專注於Widget實作、Flutter相關功能、使用者介面互動。
- * 業務邏輯由7302. 記帳核心功能群.dart提供。
+ * 業務邏輯完全由7302. 記帳核心功能群.dart提供。
  */
 
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -121,7 +121,7 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
-                      
+
                       if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return const Text('尚無帳戶資料');
                       }
@@ -176,7 +176,7 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
-                      
+
                       if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return const Text('尚無交易記錄');
                       }
@@ -192,7 +192,7 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
                                 : Colors.red,
                           ),
                           title: Text(transaction['description'] ?? ''),
-                          subtitle: Text(transaction['category'] ?? ''),
+                          subtitle: Text(transaction['categoryId'] ?? ''),
                           trailing: Text(
                             '${transaction['type'] == 'income' ? '+' : '-'}\$${transaction['amount']?.toStringAsFixed(2) ?? '0.00'}',
                             style: TextStyle(
@@ -249,7 +249,7 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
             ],
           ),
         ),
-        
+
         // 交易清單
         Expanded(
           child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -258,7 +258,7 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-              
+
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return const Center(child: Text('尚無交易記錄'));
               }
@@ -277,7 +277,7 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
                           : Colors.red,
                     ),
                     title: Text(transaction['description'] ?? ''),
-                    subtitle: Text('${transaction['category']} • ${transaction['date']}'),
+                    subtitle: Text('${transaction['categoryId']} • ${transaction['date']}'),
                     trailing: Text(
                       '${transaction['type'] == 'income' ? '+' : '-'}\$${transaction['amount']?.toStringAsFixed(2) ?? '0.00'}',
                       style: TextStyle(
@@ -309,7 +309,7 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 16),
-          
+
           // 收支統計卡片
           Card(
             child: Padding(
@@ -320,7 +320,7 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  
+
                   final stats = snapshot.data ?? {};
                   return Column(
                     children: [
@@ -405,7 +405,7 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
-                      
+
                       if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return const Text('尚無類別數據');
                       }
@@ -471,9 +471,9 @@ class _BookkeepingHomePageWidgetState extends State<BookkeepingHomePageWidget> {
           children: [
             Text('描述：${transaction['description'] ?? ''}'),
             Text('金額：\$${transaction['amount']?.toStringAsFixed(2) ?? '0.00'}'),
-            Text('類別：${transaction['category'] ?? ''}'),
+            Text('類別：${transaction['categoryId'] ?? ''}'),
             Text('日期：${transaction['date'] ?? ''}'),
-            Text('帳戶：${transaction['account'] ?? ''}'),
+            Text('帳戶：${transaction['accountId'] ?? ''}'),
           ],
         ),
         actions: [
@@ -667,21 +667,21 @@ class _QuickTransactionDialogWidgetState extends State<QuickTransactionDialogWid
         'description': _descriptionController.text,
         'amount': double.parse(_amountController.text),
         'type': _selectedType,
-        'category': _selectedCategory!,
-        'account': _selectedAccount!,
+        'categoryId': _selectedCategory!,
+        'accountId': _selectedAccount!,
         'date': DateTime.now().toIso8601String(),
       };
 
       final result = await widget.businessLogic.createQuickTransaction(transactionData);
-      
-      if (result['success']) {
+
+      if (result['success'] == true) {
         widget.onTransactionAdded();
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('交易記錄已新增')),
         );
       } else {
-        throw Exception(result['message'] ?? '新增失敗');
+        throw Exception(result['error'] ?? '新增失敗');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -700,499 +700,16 @@ class _QuickTransactionDialogWidgetState extends State<QuickTransactionDialogWid
   }
 }
 
-/// 記帳表單頁面Widget
-class TransactionFormPageWidget extends StatefulWidget {
-  final BookkeepingCoreFunctionGroup businessLogic;
-  final Map<String, dynamic>? initialTransaction;
-
-  const TransactionFormPageWidget({
-    Key? key,
-    required this.businessLogic,
-    this.initialTransaction,
-  }) : super(key: key);
-
-  @override
-  State<TransactionFormPageWidget> createState() => _TransactionFormPageWidgetState();
-}
-
-class _TransactionFormPageWidgetState extends State<TransactionFormPageWidget> {
-  final _formKey = GlobalKey<FormState>();
-  final _descriptionController = TextEditingController();
-  final _amountController = TextEditingController();
-  final _noteController = TextEditingController();
-  
-  String _selectedType = 'expense';
-  String? _selectedCategory;
-  String? _selectedAccount;
-  String? _selectedLedger;
-  DateTime _selectedDate = DateTime.now();
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.initialTransaction != null) {
-      _initializeWithTransaction(widget.initialTransaction!);
-    }
-  }
-
-  void _initializeWithTransaction(Map<String, dynamic> transaction) {
-    _descriptionController.text = transaction['description'] ?? '';
-    _amountController.text = transaction['amount']?.toString() ?? '';
-    _noteController.text = transaction['note'] ?? '';
-    _selectedType = transaction['type'] ?? 'expense';
-    _selectedCategory = transaction['category'];
-    _selectedAccount = transaction['account'];
-    _selectedLedger = transaction['ledger'];
-    if (transaction['date'] != null) {
-      _selectedDate = DateTime.tryParse(transaction['date']) ?? DateTime.now();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isEdit = widget.initialTransaction != null;
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdit ? '編輯交易' : '新增交易'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        actions: [
-          if (isEdit)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _handleDelete,
-            ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 交易類型選擇
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '交易類型',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(
-                            value: 'expense',
-                            label: Text('支出'),
-                            icon: Icon(Icons.arrow_upward),
-                          ),
-                          ButtonSegment(
-                            value: 'income',
-                            label: Text('收入'),
-                            icon: Icon(Icons.arrow_downward),
-                          ),
-                        ],
-                        selected: {_selectedType},
-                        onSelectionChanged: (Set<String> selection) {
-                          setState(() {
-                            _selectedType = selection.first;
-                            _selectedCategory = null; // 重置類別選擇
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 基本資訊
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '基本資訊',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      TextFormField(
-                        controller: _descriptionController,
-                        decoration: const InputDecoration(
-                          labelText: '描述',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.description),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '請輸入交易描述';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      TextFormField(
-                        controller: _amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(
-                          labelText: '金額',
-                          prefixText: '\$ ',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: Icon(
-                            _selectedType == 'income' 
-                                ? Icons.add_circle_outline 
-                                : Icons.remove_circle_outline,
-                            color: _selectedType == 'income' 
-                                ? Colors.green 
-                                : Colors.red,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '請輸入金額';
-                          }
-                          final amount = double.tryParse(value);
-                          if (amount == null || amount <= 0) {
-                            return '請輸入有效金額';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      ListTile(
-                        leading: const Icon(Icons.calendar_today),
-                        title: const Text('日期'),
-                        subtitle: Text(
-                          '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
-                        ),
-                        onTap: _selectDate,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 分類資訊
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '分類資訊',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          labelText: '帳本',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.book),
-                        ),
-                        value: _selectedLedger,
-                        items: _getLedgers().map((ledger) => 
-                          DropdownMenuItem(value: ledger, child: Text(ledger))
-                        ).toList(),
-                        onChanged: (value) => setState(() => _selectedLedger = value),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '請選擇帳本';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          labelText: '類別',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.category),
-                        ),
-                        value: _selectedCategory,
-                        items: _getCategories().map((category) => 
-                          DropdownMenuItem(value: category, child: Text(category))
-                        ).toList(),
-                        onChanged: (value) => setState(() => _selectedCategory = value),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '請選擇類別';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          labelText: '帳戶',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.account_balance_wallet),
-                        ),
-                        value: _selectedAccount,
-                        items: _getAccounts().map((account) => 
-                          DropdownMenuItem(value: account, child: Text(account))
-                        ).toList(),
-                        onChanged: (value) => setState(() => _selectedAccount = value),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '請選擇帳戶';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 備註
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextFormField(
-                    controller: _noteController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: '備註（選填）',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.note),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // 儲存按鈕
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleSubmit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        isEdit ? '更新交易' : '新增交易',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  List<String> _getLedgers() {
-    return ['個人帳本', '家庭帳本', '工作帳本'];
-  }
-
-  List<String> _getCategories() {
-    if (_selectedType == 'income') {
-      return ['薪資', '獎金', '投資收益', '副業收入', '其他收入'];
-    } else {
-      return ['餐飲', '交通', '購物', '娛樂', '醫療', '教育', '居住', '其他支出'];
-    }
-  }
-
-  List<String> _getAccounts() {
-    return ['現金', '銀行帳戶', '信用卡', '電子錢包', '投資帳戶'];
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() => _selectedDate = picked);
-    }
-  }
-
-  void _handleSubmit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final transactionData = {
-        'id': widget.initialTransaction?['id'],
-        'description': _descriptionController.text,
-        'amount': double.parse(_amountController.text),
-        'type': _selectedType,
-        'category': _selectedCategory!,
-        'account': _selectedAccount!,
-        'ledger': _selectedLedger!,
-        'date': _selectedDate.toIso8601String(),
-        'note': _noteController.text,
-      };
-
-      final result = widget.initialTransaction != null
-          ? await widget.businessLogic.updateTransaction(transactionData)
-          : await widget.businessLogic.createTransaction(transactionData);
-      
-      if (result['success']) {
-        Navigator.of(context).pop(true); // 返回結果表示成功
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.initialTransaction != null ? '交易記錄已更新' : '交易記錄已新增')),
-        );
-      } else {
-        throw Exception(result['message'] ?? '操作失敗');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('操作失敗：$e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  void _handleDelete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('確認刪除'),
-        content: const Text('確定要刪除這筆交易記錄嗎？此操作無法復原。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('刪除'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && widget.initialTransaction != null) {
-      setState(() => _isLoading = true);
-
-      try {
-        final result = await widget.businessLogic.deleteTransaction(widget.initialTransaction!['id']);
-        
-        if (result['success']) {
-          Navigator.of(context).pop(true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('交易記錄已刪除')),
-          );
-        } else {
-          throw Exception(result['message'] ?? '刪除失敗');
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('刪除失敗：$e')),
-        );
-      } finally {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    _amountController.dispose();
-    _noteController.dispose();
-    super.dispose();
-  }
-}
-
 /// 記帳核心UI控制器
 class BookkeepingCoreUIController {
   final BookkeepingCoreFunctionGroup businessLogic;
 
   BookkeepingCoreUIController({required this.businessLogic});
 
-  /// 導航至交易表單頁面
-  Future<bool?> navigateToTransactionForm(BuildContext context, {Map<String, dynamic>? transaction}) {
-    return Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (context) => TransactionFormPageWidget(
-          businessLogic: businessLogic,
-          initialTransaction: transaction,
-        ),
-      ),
-    );
-  }
-
-  /// 顯示類別選擇器
-  Future<String?> showCategorySelector(BuildContext context, String transactionType) async {
-    final categories = transactionType == 'income' 
-        ? ['薪資', '獎金', '投資收益', '副業收入', '其他收入']
-        : ['餐飲', '交通', '購物', '娛樂', '醫療', '教育', '居住', '其他支出'];
-
-    return await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('選擇類別'),
-        children: categories.map((category) => SimpleDialogOption(
-          onPressed: () => Navigator.of(context).pop(category),
-          child: Text(category),
-        )).toList(),
-      ),
-    );
-  }
-
-  /// 顯示帳戶選擇器
-  Future<String?> showAccountSelector(BuildContext context) async {
-    final accounts = ['現金', '銀行帳戶', '信用卡', '電子錢包', '投資帳戶'];
-
-    return await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('選擇帳戶'),
-        children: accounts.map((account) => SimpleDialogOption(
-          onPressed: () => Navigator.of(context).pop(account),
-          child: Text(account),
-        )).toList(),
-      ),
-    );
-  }
-
-  /// 顯示帳本選擇器
-  Future<String?> showLedgerSelector(BuildContext context) async {
-    final ledgers = ['個人帳本', '家庭帳本', '工作帳本'];
-
-    return await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('選擇帳本'),
-        children: ledgers.map((ledger) => SimpleDialogOption(
-          onPressed: () => Navigator.of(context).pop(ledger),
-          child: Text(ledger),
-        )).toList(),
-      ),
-    );
-  }
-
   /// 格式化金額顯示
   String formatAmount(double amount, {bool showSymbol = true, bool showCurrency = true}) {
     final formatted = amount.toStringAsFixed(2);
-    
+
     String result = '';
     if (showSymbol && amount != 0) {
       result += amount > 0 ? '+' : '-';
@@ -1201,7 +718,7 @@ class BookkeepingCoreUIController {
       result += '\$';
     }
     result += amount.abs().toStringAsFixed(2);
-    
+
     return result;
   }
 
