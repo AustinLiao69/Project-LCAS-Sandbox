@@ -44,6 +44,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "clock",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/clock-1.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "collection",
       "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/collection-1.19.1",
       "packageUri": "lib/",
@@ -102,6 +108,12 @@
       "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/http_parser-4.1.2",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "intl",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/intl-0.20.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
     },
     {
       "name": "io",
@@ -314,7 +326,7 @@
       "languageVersion": "3.5"
     }
   ],
-  "generated": "2025-10-16T05:48:16.387684Z",
+  "generated": "2025-10-16T06:03:35.960529Z",
   "generator": "pub",
   "generatorVersion": "3.5.4",
   "pubCache": "file:///home/runner/.pub-cache"
