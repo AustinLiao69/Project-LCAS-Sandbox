@@ -20,9 +20,7 @@ import 'dart:async';
 import 'dart:convert'; // For jsonEncode
 import 'dart:io';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
+// 移除Flutter UI依賴，保持純粹業務邏輯
 import 'package:intl/intl.dart'; // 引入intl套件以支援國際化格式
 import 'package:http/http.dart' as http; // For HTTP requests
 
@@ -279,13 +277,11 @@ abstract class DependencyContainer {
 
 /**
  * 03. LINE OA記帳對話處理器 - LineOADialogHandler
- * @version 2025-09-12-V2.0.0
- * @date 2025-09-12
- * @update: 階段一實作 - 智慧記帳對話處理核心
+ * @version 2025-10-16-V2.3.0
+ * @date 2025-10-16
+ * @update: 階段一Import修復版 - 移除UI依賴，保持純粹業務邏輯
  */
-abstract class LineOADialogHandler extends StatefulWidget {
-  const LineOADialogHandler({Key? key}) : super(key: key);
-
+abstract class LineOADialogHandler {
   Future<QuickAccountingResult> handleQuickAccounting(String input);
   Future<void> handleInquiry(String query);
   Future<void> handleStatistics(String period);
