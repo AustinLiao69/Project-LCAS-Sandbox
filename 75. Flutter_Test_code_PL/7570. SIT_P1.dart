@@ -167,7 +167,7 @@ class StandardTestDataManager {
   }
 }
 
-/// 純業務邏輯測試結果（階段二增強版）
+/// 純業務邏輯測試結果（階段三完整增強版）
 class BusinessLogicTestResult {
   final String testId;
   final String testName;
@@ -178,6 +178,8 @@ class BusinessLogicTestResult {
   final String? errorMessage;
   final String? failureReason;
   final Map<String, dynamic>? validationDetails;
+  final List<String> fixingSuggestions;
+  final Map<String, dynamic> dataValidationDetails;
   final DateTime timestamp;
   final int executionTimeMs;
 
@@ -191,11 +193,13 @@ class BusinessLogicTestResult {
     this.errorMessage,
     this.failureReason,
     this.validationDetails,
+    this.fixingSuggestions = const [],
+    this.dataValidationDetails = const {},
     DateTime? timestamp,
     this.executionTimeMs = 0,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  /// 取得詳細的失敗資訊
+  /// 取得詳細的失敗資訊（階段三增強版）
   String getDetailedFailureInfo() {
     if (passed) return 'N/A';
     
@@ -213,16 +217,48 @@ class BusinessLogicTestResult {
       final checks = validationDetails!['checks'] as Map<String, dynamic>?;
       if (checks != null) {
         final failedChecks = checks.entries
-            .where((e) => e.value == 'invalid' || e.value == 'missing' || e.value == 'empty')
+            .where((e) => e.value == 'invalid' || e.value == 'missing' || e.value == 'empty' || e.value == 'inconsistent')
             .map((e) => '${e.key}: ${e.value}')
             .toList();
         if (failedChecks.isNotEmpty) {
           details.add('驗證失敗項目: ${failedChecks.join(', ')}');
         }
       }
+      
+      // 加入資料品質分數
+      if (dataValidationDetails.containsKey('dataQualityScore')) {
+        final score = (dataValidationDetails['dataQualityScore'] as double) * 100;
+        details.add('資料品質分數: ${score.toStringAsFixed(1)}%');
+      }
+      
+      // 加入關鍵問題
+      if (dataValidationDetails.containsKey('criticalIssues')) {
+        final issues = dataValidationDetails['criticalIssues'] as List<String>;
+        if (issues.isNotEmpty) {
+          details.add('關鍵問題: ${issues.join(', ')}');
+        }
+      }
     }
     
     return details.isEmpty ? '無詳細資訊' : details.join(' | ');
+  }
+
+  /// 取得修復建議摘要（階段三新增）
+  String getFixingSuggestionsSummary() {
+    if (passed || fixingSuggestions.isEmpty) return 'N/A';
+    
+    return fixingSuggestions.take(3).join(' | ');
+  }
+
+  /// 取得資料驗證摘要（階段三新增）
+  String getDataValidationSummary() {
+    if (dataValidationDetails.isEmpty) return 'N/A';
+    
+    final totalFields = dataValidationDetails['inputDataSummary']?['totalFields'] ?? 0;
+    final emptyFields = dataValidationDetails['inputDataSummary']?['emptyFields'] as List? ?? [];
+    final qualityScore = dataValidationDetails['dataQualityScore'] as double? ?? 0.0;
+    
+    return '欄位: $totalFields, 空值: ${emptyFields.length}, 品質: ${(qualityScore * 100).toStringAsFixed(1)}%';
   }
 
   @override
@@ -416,17 +452,23 @@ class StandardizedSITController {
       
       final executionTime = DateTime.now().difference(startTime).inMilliseconds;
       
-      // 建立標準化測試結果（階段二增強版）
+      // 建立標準化測試結果（階段三完整增強版）
+      final isPassed = validationResult['isValid'] == true;
+      final suggestions = isPassed ? <String>[] : _getFixingSuggestions(testId, validationResult);
+      final dataDetails = _getDataValidationDetails(testId, inputData, validationResult);
+      
       return BusinessLogicTestResult(
         testId: testId,
         testName: testName,
         testCategory: testCategory,
-        passed: validationResult['isValid'] == true,
+        passed: isPassed,
         inputData: inputData,
         outputData: validationResult,
-        errorMessage: validationResult['isValid'] == true ? null : validationResult['error'],
-        failureReason: validationResult['isValid'] == true ? null : _getFailureReason(testId, validationResult),
+        errorMessage: isPassed ? null : validationResult['error'],
+        failureReason: isPassed ? null : _getFailureReason(testId, validationResult),
         validationDetails: validationResult,
+        fixingSuggestions: suggestions,
+        dataValidationDetails: dataDetails,
         executionTimeMs: executionTime,
       );
       
@@ -442,6 +484,18 @@ class StandardizedSITController {
         outputData: {},
         errorMessage: e.toString(),
         failureReason: '測試執行異常: ${e.toString()}',
+        fixingSuggestions: [
+          '檢查測試執行環境是否正常',
+          '確認測試資料載入是否成功',
+          '檢查相關PL層模組是否正確引入',
+          '檢查Dart運行環境和依賴套件'
+        ],
+        dataValidationDetails: {
+          'executionError': true,
+          'errorType': e.runtimeType.toString(),
+          'criticalIssues': ['測試執行異常'],
+          'dataQualityScore': 0.0,
+        },
         executionTimeMs: executionTime,
       );
     }
@@ -600,46 +654,244 @@ class StandardizedSITController {
     };
   }
 
-  /// 取得失敗原因分析
+  /// 取得失敗原因分析（階段三增強版）
   String _getFailureReason(String testId, Map<String, dynamic> validationResult) {
     final error = validationResult['error'] ?? '';
     final checks = validationResult['checks'] as Map<String, dynamic>? ?? {};
+    final processedData = validationResult['processedData'] as Map<String, dynamic>? ?? {};
+    final businessRule = validationResult['businessRule'] ?? '';
     
     List<String> reasons = [];
     
-    // 根據檢查結果分析失敗原因
+    // 根據檢查結果分析失敗原因（詳細版）
     checks.forEach((key, value) {
-      if (value == 'invalid' || value == 'missing' || value == 'empty') {
+      if (value == 'invalid' || value == 'missing' || value == 'empty' || value == 'inconsistent') {
         switch (key) {
           case 'email':
-            reasons.add('電子郵件格式無效');
+            final emailValue = processedData['email'] ?? 'N/A';
+            reasons.add('電子郵件格式無效 (值: "$emailValue")');
             break;
           case 'userMode':
-            reasons.add('用戶模式不正確');
+            final modeValue = processedData['userMode'] ?? 'N/A';
+            reasons.add('用戶模式不正確 (值: "$modeValue", 期望: Expert/Inertial/Cultivation/Guiding)');
             break;
           case 'amount':
-            reasons.add('金額格式錯誤或為零');
+            final amountValue = processedData['amount'] ?? 'N/A';
+            reasons.add('金額格式錯誤或為零 (值: "$amountValue", 期望: 正數)');
             break;
           case 'type':
-            reasons.add('交易類型不支援');
+            final typeValue = processedData['type'] ?? 'N/A';
+            reasons.add('交易類型不支援 (值: "$typeValue", 期望: income/expense/transfer)');
             break;
           case 'requiredFields':
-            reasons.add('缺少必要欄位');
+            reasons.add('缺少必要欄位 (檢查: userId, email, userMode等)');
             break;
           case 'dataConsistency':
-            reasons.add('資料一致性檢查失敗');
+            reasons.add('資料一致性檢查失敗 (內部邏輯驗證不通過)');
+            break;
+          case 'userId':
+            final userIdValue = processedData['userId'] ?? 'N/A';
+            reasons.add('用戶ID無效 (值: "$userIdValue")');
+            break;
+          case 'id':
+            final idValue = processedData['id'] ?? 'N/A';
+            reasons.add('識別ID無效 (值: "$idValue")');
+            break;
+          case 'transactionData':
+            reasons.add('交易資料缺失或格式錯誤');
+            break;
+          case 'dataPresence':
+            reasons.add('測試資料完全缺失');
+            break;
+          case 'basicStructure':
+            reasons.add('基本資料結構不符合要求');
+            break;
+          case 'logicalValidation':
+            reasons.add('邏輯驗證失敗');
             break;
           default:
-            reasons.add('$key 驗證失敗');
+            reasons.add('$key 驗證失敗 (狀態: $value)');
         }
       }
     });
     
-    if (reasons.isEmpty && error.isNotEmpty) {
-      reasons.add(error);
+    // 如果有業務規則資訊，加入上下文
+    if (businessRule.isNotEmpty && reasons.isNotEmpty) {
+      reasons.add('業務規則: $businessRule');
     }
     
-    return reasons.isEmpty ? '未知失敗原因' : reasons.join(', ');
+    // 如果沒有具體檢查失敗，但有錯誤訊息
+    if (reasons.isEmpty && error.isNotEmpty) {
+      reasons.add('執行錯誤: $error');
+    }
+    
+    return reasons.isEmpty ? '未知失敗原因' : reasons.join(' | ');
+  }
+
+  /// 取得修復建議（階段三新增）
+  List<String> _getFixingSuggestions(String testId, Map<String, dynamic> validationResult) {
+    final checks = validationResult['checks'] as Map<String, dynamic>? ?? {};
+    final businessRule = validationResult['businessRule'] ?? '';
+    List<String> suggestions = [];
+    
+    // 根據失敗檢查提供具體修復建議
+    checks.forEach((key, value) {
+      if (value == 'invalid' || value == 'missing' || value == 'empty' || value == 'inconsistent') {
+        switch (key) {
+          case 'email':
+            suggestions.add('確保email欄位包含有效的@符號格式');
+            suggestions.add('檢查測試資料中的email是否正確設定');
+            break;
+          case 'userMode':
+            suggestions.add('設定userMode為以下值之一: Expert, Inertial, Cultivation, Guiding');
+            suggestions.add('檢查7598. Data warehouse.json中的用戶模式設定');
+            break;
+          case 'amount':
+            suggestions.add('確保amount欄位為正數（大於0）');
+            suggestions.add('檢查數值型別轉換，確保為double或int格式');
+            break;
+          case 'type':
+            suggestions.add('設定type為以下值之一: income, expense, transfer');
+            suggestions.add('檢查交易類型枚舉值是否正確');
+            break;
+          case 'requiredFields':
+            suggestions.add('確保測試資料包含所有必要欄位: userId, email, userMode等');
+            suggestions.add('檢查StandardTestDataManager.loadTestData()方法');
+            break;
+          case 'dataConsistency':
+            suggestions.add('檢查資料內部邏輯一致性');
+            suggestions.add('確認相關欄位之間的關聯性正確');
+            break;
+          case 'userId':
+          case 'id':
+            suggestions.add('確保ID欄位不為空且格式正確');
+            suggestions.add('檢查ID生成邏輯或測試資料設定');
+            break;
+          case 'transactionData':
+            suggestions.add('確保交易相關資料完整');
+            suggestions.add('檢查amount, type, id等交易欄位');
+            break;
+          case 'dataPresence':
+            suggestions.add('檢查7598. Data warehouse.json檔案是否存在');
+            suggestions.add('確認測試資料載入邏輯是否正常');
+            break;
+          case 'basicStructure':
+            suggestions.add('確保測試資料包含基本的識別欄位');
+            suggestions.add('檢查_createDefaultTestData()方法');
+            break;
+        }
+      }
+    });
+    
+    // 根據業務規則提供建議
+    switch (businessRule) {
+      case 'authentication_validation':
+        if (suggestions.isEmpty) {
+          suggestions.add('檢查認證相關的email, userMode, userId欄位');
+          suggestions.add('確認認證測試資料的完整性');
+        }
+        break;
+      case 'bookkeeping_validation':
+        if (suggestions.isEmpty) {
+          suggestions.add('檢查記帳相關的amount, type, id欄位');
+          suggestions.add('確認交易資料的數值格式');
+        }
+        break;
+      case 'pl_auth_function_validation':
+        suggestions.add('檢查PL層認證函數的輸入參數');
+        suggestions.add('確認認證函數邏輯的實作');
+        break;
+      case 'pl_bookkeeping_function_validation':
+        suggestions.add('檢查PL層記帳函數的輸入參數');
+        suggestions.add('確認記帳函數邏輯的實作');
+        break;
+      case 'general_business_validation':
+        suggestions.add('檢查通用業務邏輯驗證規則');
+        suggestions.add('確認測試資料的基本結構');
+        break;
+    }
+    
+    // 根據測試ID提供特定建議
+    if (testId.startsWith('TC-SIT-001') || testId.startsWith('TC-SIT-002')) {
+      suggestions.add('針對認證整合邏輯：檢查用戶註冊/登入流程');
+      suggestions.add('確認AuthAPLService相關實作');
+    } else if (testId.startsWith('TC-SIT-004') || testId.startsWith('TC-SIT-005')) {
+      suggestions.add('針對記帳整合邏輯：檢查快速記帳/完整記帳流程');
+      suggestions.add('確認記帳交易服務相關實作');
+    } else if (testId.startsWith('TC-SIT-017') || testId.startsWith('TC-SIT-018')) {
+      suggestions.add('針對PL認證函數：檢查7301模組相關函數');
+      suggestions.add('確認PL層認證邏輯的純函數實作');
+    } else if (testId.startsWith('TC-SIT-021') || testId.startsWith('TC-SIT-022')) {
+      suggestions.add('針對PL記帳函數：檢查7302模組相關函數');
+      suggestions.add('確認PL層記帳邏輯的純函數實作');
+    }
+    
+    // 通用建議
+    if (suggestions.isEmpty) {
+      suggestions.add('檢查測試資料的完整性和格式正確性');
+      suggestions.add('確認相關PL層模組的函數實作');
+      suggestions.add('檢查業務邏輯驗證規則的正確性');
+    }
+    
+    return suggestions;
+  }
+
+  /// 取得資料驗證詳細資訊（階段三新增）
+  Map<String, dynamic> _getDataValidationDetails(String testId, Map<String, dynamic> inputData, Map<String, dynamic> validationResult) {
+    final checks = validationResult['checks'] as Map<String, dynamic>? ?? {};
+    final processedData = validationResult['processedData'] as Map<String, dynamic>? ?? {};
+    
+    return {
+      'testId': testId,
+      'inputDataSummary': {
+        'totalFields': inputData.length,
+        'presentFields': inputData.keys.toList(),
+        'emptyFields': inputData.entries.where((e) => e.value == null || e.value.toString().isEmpty).map((e) => e.key).toList(),
+      },
+      'validationChecks': checks,
+      'processedValues': processedData,
+      'dataTypes': inputData.map((key, value) => MapEntry(key, value.runtimeType.toString())),
+      'criticalIssues': _identifyCriticalIssues(checks),
+      'dataQualityScore': _calculateDataQualityScore(checks),
+    };
+  }
+
+  /// 識別關鍵問題（階段三新增）
+  List<String> _identifyCriticalIssues(Map<String, dynamic> checks) {
+    List<String> criticalIssues = [];
+    
+    checks.forEach((key, value) {
+      if (value == 'invalid' || value == 'missing') {
+        switch (key) {
+          case 'email':
+          case 'userId':
+          case 'userMode':
+            criticalIssues.add('認證關鍵欄位異常: $key');
+            break;
+          case 'amount':
+          case 'type':
+          case 'id':
+            criticalIssues.add('交易關鍵欄位異常: $key');
+            break;
+          case 'requiredFields':
+          case 'dataPresence':
+            criticalIssues.add('基礎資料結構問題: $key');
+            break;
+        }
+      }
+    });
+    
+    return criticalIssues;
+  }
+
+  /// 計算資料品質分數（階段三新增）
+  double _calculateDataQualityScore(Map<String, dynamic> checks) {
+    if (checks.isEmpty) return 0.0;
+    
+    int totalChecks = checks.length;
+    int passedChecks = checks.values.where((v) => v == 'valid' || v == 'present' || v == 'consistent').length;
+    
+    return totalChecks > 0 ? (passedChecks / totalChecks) : 0.0;
   }
 
   /// 產生詳細測試案例清單報告（階段二完整版）
@@ -718,34 +970,58 @@ class StandardizedSITController {
     final failedIntegrationTests = failedTests.where((r) => r.testCategory == '整合邏輯測試').toList();
     final failedPLFunctionTests = failedTests.where((r) => r.testCategory == 'PL函數邏輯測試').toList();
     
-    // 整合邏輯測試失敗摘要
+    // 整合邏輯測試失敗摘要（階段三增強版）
     if (failedIntegrationTests.isNotEmpty) {
       print('\n[7570] 🔄 整合邏輯測試失敗摘要 (${failedIntegrationTests.length}個):');
       for (var (index, result) in failedIntegrationTests.indexed) {
         print('[7570]    ${index + 1}. ${result.testId} - ${result.testName}');
         print('[7570]       🔍 詳細資訊: ${result.getDetailedFailureInfo()}');
+        print('[7570]       📊 資料驗證: ${result.getDataValidationSummary()}');
+        print('[7570]       💡 修復建議: ${result.getFixingSuggestionsSummary()}');
+        
         if (result.validationDetails?['businessRule'] != null) {
           print('[7570]       📋 業務規則: ${result.validationDetails!['businessRule']}');
         }
         if (result.executionTimeMs > 0) {
           print('[7570]       ⏱️ 執行時間: ${result.executionTimeMs}ms');
         }
+        
+        // 階段三新增：關鍵問題警示
+        if (result.dataValidationDetails.containsKey('criticalIssues')) {
+          final issues = result.dataValidationDetails['criticalIssues'] as List<String>;
+          if (issues.isNotEmpty) {
+            print('[7570]       ⚠️ 關鍵問題: ${issues.join(', ')}');
+          }
+        }
+        
         print('');
       }
     }
     
-    // PL函數邏輯測試失敗摘要
+    // PL函數邏輯測試失敗摘要（階段三增強版）
     if (failedPLFunctionTests.isNotEmpty) {
       print('[7570] 🔧 PL函數邏輯測試失敗摘要 (${failedPLFunctionTests.length}個):');
       for (var (index, result) in failedPLFunctionTests.indexed) {
         print('[7570]    ${index + 1}. ${result.testId} - ${result.testName}');
         print('[7570]       🔍 詳細資訊: ${result.getDetailedFailureInfo()}');
+        print('[7570]       📊 資料驗證: ${result.getDataValidationSummary()}');
+        print('[7570]       💡 修復建議: ${result.getFixingSuggestionsSummary()}');
+        
         if (result.validationDetails?['businessRule'] != null) {
           print('[7570]       📋 業務規則: ${result.validationDetails!['businessRule']}');
         }
         if (result.executionTimeMs > 0) {
           print('[7570]       ⏱️ 執行時間: ${result.executionTimeMs}ms');
         }
+        
+        // 階段三新增：關鍵問題警示
+        if (result.dataValidationDetails.containsKey('criticalIssues')) {
+          final issues = result.dataValidationDetails['criticalIssues'] as List<String>;
+          if (issues.isNotEmpty) {
+            print('[7570]       ⚠️ 關鍵問題: ${issues.join(', ')}');
+          }
+        }
+        
         print('');
       }
     }
@@ -765,19 +1041,76 @@ class StandardizedSITController {
       print('[7570]       - ${entry.key}: ${entry.value} 次');
     });
     
-    print('\n[7570] 💡 修復建議:');
+    // 階段三增強：詳細修復指導和系統性建議
+    print('\n[7570] 💡 階段三詳細修復指導:');
+    print('[7570] ${'─' * 50}');
+    
+    // 根據失敗原因統計提供指導
     if (reasonCounts.containsKey('電子郵件格式無效')) {
-      print('[7570]       - 檢查測試資料中的 email 欄位格式');
+      print('[7570] 📧 電子郵件問題修復:');
+      print('[7570]       - 檢查7598. Data warehouse.json中的email欄位格式');
+      print('[7570]       - 確保包含有效的@符號和域名結構');
+      print('[7570]       - 檢查StandardTestDataManager._createDefaultUserData()方法');
     }
     if (reasonCounts.containsKey('用戶模式不正確')) {
-      print('[7570]       - 確認 userMode 值為: Expert, Inertial, Cultivation, Guiding');
+      print('[7570] 👤 用戶模式問題修復:');
+      print('[7570]       - 設定userMode為: Expert, Inertial, Cultivation, Guiding');
+      print('[7570]       - 檢查測試資料中的用戶模式枚舉值');
+      print('[7570]       - 確認大小寫格式正確（首字母大寫）');
     }
     if (reasonCounts.containsKey('金額格式錯誤或為零')) {
-      print('[7570]       - 檢查 amount 欄位是否為正數');
+      print('[7570] 💰 金額格式問題修復:');
+      print('[7570]       - 確保amount欄位為正數（> 0）');
+      print('[7570]       - 檢查數值型別轉換邏輯');
+      print('[7570]       - 驗證double.tryParse()轉換是否成功');
     }
     if (reasonCounts.containsKey('缺少必要欄位')) {
-      print('[7570]       - 確保測試資料包含所有必要欄位');
+      print('[7570] 📋 資料結構問題修復:');
+      print('[7570]       - 確保測試資料包含: userId, email, userMode');
+      print('[7570]       - 檢查StandardTestDataManager.loadTestData()方法');
+      print('[7570]       - 驗證_createDefaultTestData()的資料完整性');
     }
+    if (reasonCounts.containsKey('測試執行異常')) {
+      print('[7570] ⚙️ 系統執行問題修復:');
+      print('[7570]       - 檢查Dart運行環境和套件依賴');
+      print('[7570]       - 確認7598. Data warehouse.json檔案存在');
+      print('[7570]       - 檢查PL層模組引入路徑');
+    }
+    
+    // 系統性修復建議
+    print('\n[7570] 🎯 系統性修復建議:');
+    print('[7570] ${'─' * 40}');
+    
+    if (failedTests.length > failedTests.length * 0.5) {
+      print('[7570] 🚨 大範圍失敗（>50%）：');
+      print('[7570]       1. 優先檢查測試資料載入機制');
+      print('[7570]       2. 驗證PL層模組引入是否正確');
+      print('[7570]       3. 確認基礎測試環境設定');
+    }
+    
+    // 根據失敗分類提供建議
+    final integrationFailureRate = failedIntegrationTests.length / integrationTests.length;
+    final plFunctionFailureRate = failedPLFunctionTests.length / plFunctionTests.length;
+    
+    if (integrationFailureRate > 0.3) {
+      print('[7570] 🔄 整合邏輯測試問題：');
+      print('[7570]       - 檢查跨層調用邏輯');
+      print('[7570]       - 驗證APL層服務介面');
+      print('[7570]       - 確認業務流程整合性');
+    }
+    
+    if (plFunctionFailureRate > 0.3) {
+      print('[7570] 🔧 PL函數邏輯測試問題：');
+      print('[7570]       - 檢查7301, 7302模組實作');
+      print('[7570]       - 驗證純函數邏輯正確性');
+      print('[7570]       - 確認函數輸入輸出格式');
+    }
+    
+    print('\n[7570] 📚 參考文件:');
+    print('[7570]       - 6501. SIT_P1.md: SIT測試計畫');
+    print('[7570]       - 7598. Data warehouse.json: 測試資料規格');
+    print('[7570]       - 75. Flutter_Test_code_PL/: 測試代碼目錄');
+    print('[7570]       - 73. Flutter_Module code_PL/: PL層模組代碼');
   }
 
   /// 產生分類統計報告（階段二詳細版）
