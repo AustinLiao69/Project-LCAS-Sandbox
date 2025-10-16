@@ -1,0 +1,273 @@
+mentNamed(context, home),
+                                   ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3884:24: Error: Method not found: 'Text'.
+                  child: Text('返回首頁'),
+                         ^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3882:15: Error: Method not found: 'ElevatedButton'.
+                ElevatedButton(
+                ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3875:18: Error: Method not found: 'Column'.
+            child: Column(
+                   ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3874:15: Error: Method not found: 'Center'.
+          body: Center(
+                ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3872:29: Error: Method not found: 'Scaffold'.
+        builder: (context) => Scaffold(
+                              ^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3871:12: Error: Method not found: 'MaterialPageRoute'.
+      return MaterialPageRoute<T>(
+             ^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3923:26: Error: 'NavigatorState' isn't a type.
+    static final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+                           ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3923:16: Error: 'GlobalKey' isn't a type.
+    static final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+                 ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3923:68: Error: 'NavigatorState' isn't a type.
+    static final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+                                                                     ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3923:58: Error: Method not found: 'GlobalKey'.
+    static final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+                                                           ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3939:15: Error: Undefined name 'Navigator'.
+          await Navigator.pushReplacementNamed(context, AccountingRoutes.home);
+                ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3970:15: Error: Undefined name 'Navigator'.
+          await Navigator.pushNamed(
+                ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3997:30: Error: Undefined name 'Navigator'.
+          final result = await Navigator.pushNamed(
+                               ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4027:30: Error: Undefined name 'Navigator'.
+          final result = await Navigator.pushNamed(
+                               ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4056:30: Error: Undefined name 'Navigator'.
+          final result = await Navigator.pushNamed(
+                               ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4081:30: Error: Undefined name 'Navigator'.
+          final result = await Navigator.pushNamed(
+                               ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4106:30: Error: Undefined name 'Navigator'.
+          final result = await Navigator.pushNamed(
+                               ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4135:15: Error: Undefined name 'Navigator'.
+          await Navigator.pushNamed(
+                ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4162:30: Error: Undefined name 'Navigator'.
+          final result = await Navigator.pushNamed(
+                               ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4193:15: Error: Undefined name 'Navigator'.
+          await Navigator.pushNamed(
+                ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4216:15: Error: Undefined name 'Navigator'.
+          await Navigator.pushNamed(context, AccountingRoutes.quickAccounting);
+                ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4229:30: Error: Undefined name 'Navigator'.
+        if (context != null && Navigator.canPop(context)) {
+                               ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:4230:9: Error: Undefined name 'Navigator'.
+          Navigator.pop(context);
+          ^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:5026:41: Error: Member not found: 'Transaction.fromJson'.
+          final transaction = Transaction.fromJson(responseData['data']);
+                                          ^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:5056:40: Error: Member not found: 'Transaction.fromJson'.
+              .map((item) => Transaction.fromJson(item))
+                                         ^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:5059:49: Error: The argument type 'List<dynamic>' can't be assigned to the parameter type 'List<Transaction>?'.
+   - 'List' is from 'dart:core'.
+   - 'Transaction' is from '../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+          return ApiResponse(success: true, data: transactions, statusCode: response.statusCode);
+                                                  ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:5085:41: Error: Member not found: 'Transaction.fromJson'.
+          final transaction = Transaction.fromJson(responseData['data']);
+                                          ^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:5113:41: Error: Member not found: 'Transaction.fromJson'.
+          final transaction = Transaction.fromJson(responseData['data']);
+                                          ^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:5232:67: Error: Member not found: 'Transaction.fromJson'.
+            transaction: responseData['data'] != null ? Transaction.fromJson(responseData['data']) : null,
+                                                                    ^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:5273:26: Error: The method 'Color' isn't defined for the class 'TransactionAPIGateway'.
+   - 'TransactionAPIGateway' is from '../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'Color'.
+                    color: Color(int.parse('0xFF${item['color'].toString().replaceAll('#', '').replaceAll('0x', '')}')),
+                           ^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:5507:48: Error: Too many positional arguments: 0 allowed, but 1 found.
+  Try removing the extra positional arguments.
+        final requestHeaders = _getRequestHeaders({'Content-Type': 'application/json'}); // Explicitly set content type for POST body
+                                                 ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6030:13: Error: This expression has type 'void' and can't be used.
+          if (removedCount > 0) {
+              ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6030:26: Error: The operator '>' isn't defined for the class 'void'.
+  Try correcting the operator to an existing operator, or defining a '>' operator.
+          if (removedCount > 0) {
+                           ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6116:9: Error: Can't use 'CategoryApiClient' because it is declared more than once.
+    final CategoryApiClient _apiClient;
+          ^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6904:7: Error: Undefined name 'Colors'.
+        Colors.red,
+        ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6905:7: Error: Undefined name 'Colors'.
+        Colors.blue,
+        ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6906:7: Error: Undefined name 'Colors'.
+        Colors.green,
+        ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6907:7: Error: Undefined name 'Colors'.
+        Colors.orange,
+        ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6908:7: Error: Undefined name 'Colors'.
+        Colors.purple,
+        ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6909:7: Error: Undefined name 'Colors'.
+        Colors.teal,
+        ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6910:7: Error: Undefined name 'Colors'.
+        Colors.pink,
+        ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6911:7: Error: Undefined name 'Colors'.
+        Colors.amber,
+        ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6942:16: Error: Undefined name 'Colors'.
+          color: Colors.blue, // Monthly chart might use a single color or gradient
+                 ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:6962:16: Error: Undefined name 'Colors'.
+          color: Colors.green, // Trend chart might use a consistent color
+                 ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:7079:50: Error: The method 'reduceOrNull' isn't defined for the class 'Iterable<MapEntry<int, int>>'.
+   - 'Iterable' is from 'dart:core'.
+   - 'MapEntry' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'reduceOrNull'.
+      final maxWeekdayEntry = weekdayCount.entries.reduceOrNull((a, b) => a.value > b.value ? a : b);
+                                                   ^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:7080:44: Error: The method 'reduceOrNull' isn't defined for the class 'Iterable<MapEntry<int, int>>'.
+   - 'Iterable' is from 'dart:core'.
+   - 'MapEntry' is from 'dart:core'.
+  Try correcting the name to the name of an existing method, or defining a method named 'reduceOrNull'.
+      final maxHourEntry = hourCount.entries.reduceOrNull((a, b) => a.value > b.value ? a : b);
+                                             ^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:7492:16: Error: Undefined name 'Colors'.
+          return Colors.green;
+                 ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:7494:16: Error: Undefined name 'Colors'.
+          return Colors.red;
+                 ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:7496:16: Error: Undefined name 'Colors'.
+          return Colors.blue;
+                 ^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:138:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<UserRegistrationData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:154:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<UserLoginData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:170:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<UserLoginData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:186:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:202:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<UserLoginData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:218:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:234:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:250:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:266:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:282:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<Map<String, dynamic>>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:298:38: Error: The method 'toUnifiedResponse' isn't defined for the class 'Response'.
+   - 'Response' is from 'package:http/src/response.dart' ('../../.pub-cache/hosted/pub.dev/http-1.5.0/lib/src/response.dart').
+  Try correcting the name to the name of an existing method, or defining a method named 'toUnifiedResponse'.
+      final unifiedResponse = response.toUnifiedResponse<BindStatusData>(
+                                       ^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:408:37: Error: 'UnifiedApiResponse' isn't a type.
+    void _handleResponseProcessing<T>(UnifiedApiResponse<T> response) {
+                                      ^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:411:7: Error: The getter 'UnifiedResponseParser' isn't defined for the class 'AuthAPIGateway'.
+   - 'AuthAPIGateway' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'UnifiedResponseParser'.
+        UnifiedResponseParser.handleApiError(
+        ^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:421:5: Error: The getter 'UnifiedResponseParser' isn't defined for the class 'AuthAPIGateway'.
+   - 'AuthAPIGateway' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'UnifiedResponseParser'.
+      UnifiedResponseParser.handleModeSpecificLogic(
+      ^^^^^^^^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:508:14: Error: Undefined name 'UserMode'.
+          case UserMode.expert:
+               ^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:511:14: Error: Undefined name 'UserMode'.
+          case UserMode.guiding:
+               ^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:514:14: Error: Undefined name 'UserMode'.
+          case UserMode.cultivation:
+               ^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:517:14: Error: Undefined name 'UserMode'.
+          case UserMode.inertial:
+               ^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:534:35: Error: Can't have a late final field in a class with a const constructor.
+    late final TransactionApiClient _transactionApiClient;
+                                    ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:532:9: Context: This constructor is const.
+    const DashboardWidgetImpl({Key? key}) : super(key: key);
+          ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:535:34: Error: Can't have a late final field in a class with a const constructor.
+    late final StatisticsApiClient _statisticsApiClient;
+                                   ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:532:9: Context: This constructor is const.
+    const DashboardWidgetImpl({Key? key}) : super(key: key);
+          ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1069:9: Error: Constructor is marked 'const' so all fields must be final.
+    const CategorySelectorWidgetImpl({Key? key}) : super(key: key);
+          ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1072:18: Context: Field isn't final, but constructor is 'const'.
+    List<Category> _allCategories = []; // 完整科目列表
+                   ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1073:18: Context: Field isn't final, but constructor is 'const'.
+    List<Category> _filteredCategories = []; // 搜尋結果或篩選後列表
+                   ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1071:32: Error: Can't have a late final field in a class with a const constructor.
+    late final CategoryApiClient _categoryApiClient;
+                                 ^
+  ../73.%20Flutter_Module%20code_PL/7302.%20%E8%A8%98%E5%B8%B3%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1069:9: Context: This constructor is const.
+    const CategorySelectorWidgetImpl({Key? key}) : super(key: key);
+          ^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:01 +0 -1: ... failed.   
+~/workspace/75. Flutter_Test_code_PL$ 
+~/workspace/75. Flutter_Test_code_PL$ 
