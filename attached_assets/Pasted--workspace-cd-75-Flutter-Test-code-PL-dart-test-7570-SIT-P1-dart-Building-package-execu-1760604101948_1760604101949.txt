@@ -1,0 +1,114 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart" 
+Building package executable... (1.0s(2.0s)
+Built test:test.
+00:00 +0 -1: loading 7570. SIT_P1.dart [E]
+  Failed to load "7570. SIT_P1.dart":
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:58: Error: String starting with ' must end with '.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                                           ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:43: Error: Can't find ')' to match '('.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                            ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:36: Error: Can't find ')' to match '('.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                     ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:21: Error: Can't find ')' to match '('.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                      ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2884:7: Error: Expected a class member, but got 'catch'.
+      } catch (e) {
+        ^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2884:13: Error: Expected an identifier, but got '('.
+  Try inserting an identifier before '('.
+      } catch (e) {
+              ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3229:1: Error: Expected a declaration, but got '}'.
+  }
+  ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:55: Error: Expected an identifier, but got '\'.
+  Try inserting an identifier before '\'.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                                        ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:56: Error: Expected an identifier, but got '\'.
+  Try inserting an identifier before '\'.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                                         ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:56: Error: Expected ';' after this.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                                         ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:57: Error: Expected an identifier, but got ']'.
+  Try inserting an identifier before ']'.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                                          ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:57: Error: Unexpected token ']'.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                                          ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:58: Error: Expected ';' after this.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                                           ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2866:13: Error: Expected an identifier, but got 'else'.
+  Try inserting an identifier before 'else'.
+            } else if (value.length >= 2) {
+              ^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2866:11: Error: Expected ';' after this.
+            } else if (value.length >= 2) {
+            ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2866:13: Error: Unexpected token 'else'.
+            } else if (value.length >= 2) {
+              ^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2869:11: Error: A break statement can't be used outside of a loop or switch statement.
+  Try removing the break statement.
+            break;
+            ^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2871:9: Error: 'default' can't be used as an identifier because it's a keyword.
+  Try renaming this to be an identifier that isn't a keyword.
+          default:
+          ^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2871:9: Error: Expected ';' after this.
+          default:
+          ^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2871:16: Error: Expected an identifier, but got ':'.
+  Try inserting an identifier before ':'.
+          default:
+                 ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2871:16: Error: Unexpected token ':'.
+          default:
+                 ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2787:5: Error: A try block must be followed by an 'on', 'catch', or 'finally' clause.
+  Try adding either a catch or finally clause, or remove the try statement.
+      try {
+      ^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2860:54: Error: The operator '/' isn't defined for the class 'String'.
+  Try correcting the operator to an existing operator, or defining a '/' operator.
+            } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
+                                                       ^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2871:9: Error: The getter 'default' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'default'.
+          default:
+          ^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2882:14: Error: The getter 'validationResult' isn't defined for the class 'SystemEntryFunctionGroup'.
+   - 'SystemEntryFunctionGroup' is from '../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'validationResult'.
+        return validationResult;
+               ^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:2924:29: Error: Method not found: 'performRealtimeFormValidation'.
+          final fieldResult = performRealtimeFormValidation(fieldName, fieldValue);
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3222:38: Error: Undefined name '_currentAuthState'.
+    AuthState? get currentAuthState => _currentAuthState;
+                                       ^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3225:47: Error: Undefined name '_currentModeConfig'.
+    ModeConfiguration? get currentModeConfig => _currentModeConfig;
+                                                ^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7301.%20%E7%B3%BB%E7%B5%B1%E9%80%B2%E5%85%A5%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:3228:29: Error: Undefined name '_isInitialized'.
+    bool get isInitialized => _isInitialized;
+                              ^^^^^^^^^^^^^^
+  ../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart:481:37: Error: The getter 'accessToken' isn't defined for the class 'UserRegistrationData'.
+   - 'UserRegistrationData' is from '../83.%20Flutter_Module%20code(API%20route)_APL/8301.%20%E8%AA%8D%E8%AD%89%E6%9C%8D%E5%8B%99.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'accessToken'.
+          'token': response.safeData?.accessToken,
+                                      ^^^^^^^^^^^
+
+To run this test again: dart test 7570. SIT_P1.dart -p vm --plain-name 'loading 7570. SIT_P1.dart'
+00:00 +0 -1: Some tests failed. 
