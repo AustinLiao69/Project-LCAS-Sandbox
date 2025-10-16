@@ -2586,6 +2586,7 @@ class SystemEntryFunctionGroup {
         clearResults.add('✅ 模式設定已清除');
       } catch (e) {
         clearResults.add('❌ 模式設定清除失敗: $e');
+
       }
 
       // 3. 清除使用者偏好設定
@@ -2856,7 +2857,7 @@ class SystemEntryFunctionGroup {
               'isValid': false,
               'errorMessage': '顯示名稱不能超過50個字元',
             });
-          } else if (value.contains(RegExp(r'[<>"\'\/\\]'))) {
+          } else if (value.contains(RegExp(r'[<>"\\\'/\\]'))) {
             validationResult.addAll({
               'isValid': false,
               'errorMessage': '顯示名稱包含無效字元',
