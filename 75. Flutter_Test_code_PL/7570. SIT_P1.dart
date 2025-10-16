@@ -170,18 +170,24 @@ class StandardTestDataManager {
 /// 純業務邏輯測試結果
 class BusinessLogicTestResult {
   final String testId;
+  final String testName;
+  final String testCategory;
   final bool passed;
   final Map<String, dynamic> inputData;
   final Map<String, dynamic> outputData;
   final String? errorMessage;
+  final String? failureReason;
   final DateTime timestamp;
 
   BusinessLogicTestResult({
     required this.testId,
+    required this.testName,
+    required this.testCategory,
     required this.passed,
     required this.inputData,
     required this.outputData,
     this.errorMessage,
+    this.failureReason,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
@@ -196,6 +202,55 @@ class StandardizedSITController {
   StandardizedSITController._internal();
 
   final List<BusinessLogicTestResult> _results = [];
+  final Map<String, String> _testCaseNames = {
+    // 整合邏輯測試 (TC-SIT-001~016)
+    'TC-SIT-001': '用戶註冊整合驗證',
+    'TC-SIT-002': '用戶登入整合驗證', 
+    'TC-SIT-003': 'Firebase認證整合驗證',
+    'TC-SIT-004': '快速記帳整合驗證',
+    'TC-SIT-005': '完整記帳表單整合驗證',
+    'TC-SIT-006': '記帳資料查詢整合驗證',
+    'TC-SIT-007': '跨層錯誤處理整合驗證',
+    'TC-SIT-008': '模式評估整合驗證',
+    'TC-SIT-009': '模式差異化回應驗證',
+    'TC-SIT-010': '資料同步整合驗證',
+    'TC-SIT-011': '端到端資料流驗證',
+    'TC-SIT-012': '用戶生命週期驗證',
+    'TC-SIT-013': '業務規則一致性驗證',
+    'TC-SIT-014': '錯誤恢復機制驗證',
+    'TC-SIT-015': '資料完整性驗證',
+    'TC-SIT-016': '效能邊界驗證',
+    
+    // PL層函數邏輯測試 (TC-SIT-017~044)
+    'TC-SIT-017': 'PL認證函數邏輯驗證',
+    'TC-SIT-018': 'PL用戶模式驗證函數',
+    'TC-SIT-019': 'PL密碼驗證函數',
+    'TC-SIT-020': 'PL令牌處理函數',
+    'TC-SIT-021': 'PL快速記帳解析函數',
+    'TC-SIT-022': 'PL記帳資料驗證函數',
+    'TC-SIT-023': 'PL交易分類函數',
+    'TC-SIT-024': 'PL金額計算函數',
+    'TC-SIT-025': 'PL日期處理函數',
+    'TC-SIT-026': 'PL資料格式化函數',
+    'TC-SIT-027': 'PL查詢條件建構函數',
+    'TC-SIT-028': 'PL結果過濾函數',
+    'TC-SIT-029': 'PL錯誤映射函數',
+    'TC-SIT-030': 'PL狀態管理函數',
+    'TC-SIT-031': 'PL輸入清理函數',
+    'TC-SIT-032': 'PL輸出包裝函數',
+    'TC-SIT-033': 'PL業務規則驗證函數',
+    'TC-SIT-034': 'PL資料轉換函數',
+    'TC-SIT-035': 'PL邊界檢查函數',
+    'TC-SIT-036': 'PL快取管理函數',
+    'TC-SIT-037': 'PL日誌記錄函數',
+    'TC-SIT-038': 'PL效能監控函數',
+    'TC-SIT-039': 'PL資源清理函數',
+    'TC-SIT-040': 'PL重試機制函數',
+    'TC-SIT-041': 'PL通知處理函數',
+    'TC-SIT-042': 'PL統計計算函數',
+    'TC-SIT-043': 'PL報告生成函數',
+    'TC-SIT-044': 'PL系統健康檢查函數',
+  };
   
   /// 執行標準化SIT測試
   Future<Map<String, dynamic>> executeStandardizedSIT() async {
@@ -231,6 +286,11 @@ class StandardizedSITController {
         'timestamp': DateTime.now().toIso8601String(),
       };
 
+      // 產生詳細報告
+      _printDetailedTestResults();
+      _printFailedTestsSummary();
+      _printCategoryStatistics();
+      
       print('[7570] 📊 階段三標準化測試完成:');
       print('[7570]    ✅ 總測試數: ${summary['totalTests']}');
       print('[7570]    ✅ 通過數: ${summary['passedTests']}');
@@ -268,6 +328,8 @@ class StandardizedSITController {
     for (String testId in integrationTests) {
       final result = await _executeStandardBusinessLogicTest(
         testId: testId,
+        testName: _testCaseNames[testId] ?? '未知測試',
+        testCategory: '整合邏輯測試',
         testType: 'integration_logic',
         userMode: 'Expert'
       );
@@ -292,6 +354,8 @@ class StandardizedSITController {
     for (String testId in plFunctionTests) {
       final result = await _executeStandardBusinessLogicTest(
         testId: testId,
+        testName: _testCaseNames[testId] ?? '未知測試',
+        testCategory: 'PL函數邏輯測試',
         testType: 'pl_function_logic',
         userMode: 'Expert'
       );
@@ -302,6 +366,8 @@ class StandardizedSITController {
   /// 執行標準化業務邏輯測試
   Future<BusinessLogicTestResult> _executeStandardBusinessLogicTest({
     required String testId,
+    required String testName,
+    required String testCategory,
     required String testType,
     required String userMode,
   }) async {
@@ -315,19 +381,25 @@ class StandardizedSITController {
       // 建立標準化測試結果
       return BusinessLogicTestResult(
         testId: testId,
+        testName: testName,
+        testCategory: testCategory,
         passed: validationResult['isValid'] == true,
         inputData: inputData,
         outputData: validationResult,
         errorMessage: validationResult['isValid'] == true ? null : validationResult['error'],
+        failureReason: validationResult['isValid'] == true ? null : _getFailureReason(testId, validationResult),
       );
       
     } catch (e) {
       return BusinessLogicTestResult(
         testId: testId,
+        testName: testName,
+        testCategory: testCategory,
         passed: false,
         inputData: {},
         outputData: {},
         errorMessage: e.toString(),
+        failureReason: '測試執行異常: ${e.toString()}',
       );
     }
   }
@@ -483,6 +555,125 @@ class StandardizedSITController {
       },
       'businessRule': 'general_business_validation',
     };
+  }
+
+  /// 取得失敗原因分析
+  String _getFailureReason(String testId, Map<String, dynamic> validationResult) {
+    final error = validationResult['error'] ?? '';
+    final checks = validationResult['checks'] as Map<String, dynamic>? ?? {};
+    
+    List<String> reasons = [];
+    
+    // 根據檢查結果分析失敗原因
+    checks.forEach((key, value) {
+      if (value == 'invalid' || value == 'missing' || value == 'empty') {
+        switch (key) {
+          case 'email':
+            reasons.add('電子郵件格式無效');
+            break;
+          case 'userMode':
+            reasons.add('用戶模式不正確');
+            break;
+          case 'amount':
+            reasons.add('金額格式錯誤或為零');
+            break;
+          case 'type':
+            reasons.add('交易類型不支援');
+            break;
+          case 'requiredFields':
+            reasons.add('缺少必要欄位');
+            break;
+          case 'dataConsistency':
+            reasons.add('資料一致性檢查失敗');
+            break;
+          default:
+            reasons.add('$key 驗證失敗');
+        }
+      }
+    });
+    
+    if (reasons.isEmpty && error.isNotEmpty) {
+      reasons.add(error);
+    }
+    
+    return reasons.isEmpty ? '未知失敗原因' : reasons.join(', ');
+  }
+
+  /// 產生詳細測試案例清單報告
+  void _printDetailedTestResults() {
+    print('\n[7570] 📋 測試案例詳細結果:');
+    print('[7570] ${'=' * 50}');
+    
+    // 分類顯示
+    final integrationTests = _results.where((r) => r.testCategory == '整合邏輯測試').toList();
+    final plFunctionTests = _results.where((r) => r.testCategory == 'PL函數邏輯測試').toList();
+    
+    // 整合邏輯測試結果
+    if (integrationTests.isNotEmpty) {
+      print('[7570] 🔄 整合邏輯測試結果:');
+      for (var result in integrationTests) {
+        final status = result.passed ? '✅ PASS' : '❌ FAIL';
+        print('[7570]    ${result.testId}: $status - ${result.testName}');
+      }
+      print('');
+    }
+    
+    // PL函數邏輯測試結果  
+    if (plFunctionTests.isNotEmpty) {
+      print('[7570] 🔧 PL函數邏輯測試結果:');
+      for (var result in plFunctionTests) {
+        final status = result.passed ? '✅ PASS' : '❌ FAIL';
+        print('[7570]    ${result.testId}: $status - ${result.testName}');
+      }
+      print('');
+    }
+  }
+
+  /// 產生失敗測試摘要報告
+  void _printFailedTestsSummary() {
+    final failedTests = _results.where((r) => !r.passed).toList();
+    
+    if (failedTests.isEmpty) {
+      print('[7570] 🎉 所有測試案例均通過！');
+      return;
+    }
+    
+    print('[7570] ❌ 失敗測試摘要:');
+    print('[7570] ${'=' * 30}');
+    
+    for (var result in failedTests) {
+      print('[7570]    - ${result.testId}: ${result.testName}');
+      print('[7570]      失敗原因: ${result.failureReason ?? result.errorMessage ?? '未知原因'}');
+      if (result.errorMessage != null && result.failureReason != result.errorMessage) {
+        print('[7570]      錯誤訊息: ${result.errorMessage}');
+      }
+      print('');
+    }
+  }
+
+  /// 產生分類統計報告
+  void _printCategoryStatistics() {
+    final integrationTests = _results.where((r) => r.testCategory == '整合邏輯測試').toList();
+    final plFunctionTests = _results.where((r) => r.testCategory == 'PL函數邏輯測試').toList();
+    
+    print('[7570] 📊 分類統計:');
+    print('[7570] ${'=' * 20}');
+    
+    if (integrationTests.isNotEmpty) {
+      final passed = integrationTests.where((r) => r.passed).length;
+      final total = integrationTests.length;
+      final rate = total > 0 ? (passed / total * 100).toStringAsFixed(1) : '0.0';
+      print('[7570]    整合邏輯測試(001-016): $passed/$total 通過 ($rate%)');
+    }
+    
+    if (plFunctionTests.isNotEmpty) {
+      final passed = plFunctionTests.where((r) => r.passed).length;
+      final total = plFunctionTests.length;
+      final rate = total > 0 ? (passed / total * 100).toStringAsFixed(1) : '0.0';
+      print('[7570]    PL函數邏輯測試(017-044): $passed/$total 通過 ($rate%)');
+    }
+    
+    print('');
   }
 }
 
