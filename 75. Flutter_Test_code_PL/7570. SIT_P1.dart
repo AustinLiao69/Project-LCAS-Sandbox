@@ -235,7 +235,8 @@ class StandardizedSITController {
       print('[7570]    ✅ 總測試數: ${summary['totalTests']}');
       print('[7570]    ✅ 通過數: ${summary['passedTests']}');
       print('[7570]    ❌ 失敗數: ${summary['failedTests']}');
-      print('[7570]    📈 成功率: ${(summary['successRate']! * 100).toStringAsFixed(1)}%');
+      final successRate = summary['successRate'] as double? ?? 0.0;
+        print('[7570]    📈 成功率: ${(successRate * 100).toStringAsFixed(1)}%');
       print('[7570]    ⏱️ 執行時間: ${summary['executionTime']}ms');
       print('[7570] 🎉 階段三目標達成: 純粹業務邏輯測試標準建立完成');
 
@@ -540,10 +541,8 @@ void main() {
         print('[7570]    ✅ 通過數: $passedTests');
         print('[7570]    ❌ 失敗數: ${result['failedTests'] ?? 0}');
         
-        final successRate = result['successRate'];
-        if (successRate != null) {
-          print('[7570]    📈 成功率: ${(successRate * 100).toStringAsFixed(1)}%');
-        }
+        final successRateValue = result['successRate'] as double? ?? 0.0;
+        print('[7570]    📈 成功率: ${(successRateValue * 100).toStringAsFixed(1)}%');
         
         print('[7570]    ⏱️ 執行時間: ${result['executionTime'] ?? 0}ms');
         print('[7570]    🎉 階段三完成: 純粹業務邏輯測試標準建立完成');
