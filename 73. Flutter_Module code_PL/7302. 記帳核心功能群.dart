@@ -437,7 +437,8 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
       print('[PL7302] 📋 交易資料: $transactionData');
       
       // 生成真實交易ID
-      final transactionId = 'txn_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond.toString().substring(0, 6)}';
+      final microsecondStr = DateTime.now().microsecond.toString().padLeft(6, '0');
+      final transactionId = 'txn_${DateTime.now().millisecondsSinceEpoch}_$microsecondStr';
       
       // 準備Firebase寫入資料（符合1311 FS.js格式）
       final firebaseData = {
