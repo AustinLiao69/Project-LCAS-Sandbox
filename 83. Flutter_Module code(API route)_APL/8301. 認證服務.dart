@@ -22,6 +22,7 @@ class UserRegistrationData {
   final String email;
   final String displayName;
   final String userMode;
+  final String token;
   final DateTime createdAt;
 
   UserRegistrationData({
@@ -29,6 +30,7 @@ class UserRegistrationData {
     required this.email,
     required this.displayName,
     required this.userMode,
+    required this.token,
     required this.createdAt,
   });
 
@@ -38,6 +40,7 @@ class UserRegistrationData {
       email: json['email'] ?? '',
       displayName: json['displayName'] ?? '',
       userMode: json['userMode'] ?? 'Inertial',
+      token: json['token'] ?? json['accessToken'] ?? '',
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
     );
   }
@@ -48,7 +51,7 @@ class UserLoginData {
   final String userId;
   final String email;
   final String displayName;
-  final String accessToken;
+  final String token;
   final String refreshToken;
   final String userMode;
   final DateTime expiresAt;
@@ -57,7 +60,7 @@ class UserLoginData {
     required this.userId,
     required this.email,
     required this.displayName,
-    required this.accessToken,
+    required this.token,
     required this.refreshToken,
     required this.userMode,
     required this.expiresAt,
@@ -68,7 +71,7 @@ class UserLoginData {
       userId: json['userId'] ?? '',
       email: json['email'] ?? '',
       displayName: json['displayName'] ?? '',
-      accessToken: json['accessToken'] ?? '',
+      token: json['token'] ?? json['accessToken'] ?? '',
       refreshToken: json['refreshToken'] ?? '',
       userMode: json['userMode'] ?? 'Inertial',
       expiresAt: DateTime.parse(json['expiresAt'] ?? DateTime.now().toIso8601String()),
