@@ -335,11 +335,67 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
   late final TransactionApiClient _transactionApiClient;
   late final CategoryApiClient _categoryApiClient;
   late final AccountApiClient _accountApiClient;
+  late final http.Client _httpClient;
+  
+  // ASL服務器地址
+  static const String _aslBaseUrl = 'http://0.0.0.0:5000';
 
   BookkeepingCoreFunctionGroupImpl() {
     _transactionApiClient = TransactionApiClientImpl();
     _categoryApiClient = CategoryApiClientImpl();
     _accountApiClient = AccountApiClientImpl();
+    _httpClient = http.Client();
+  }
+
+  /// 透過APL層HTTP客戶端調用ASL API
+  Future<Map<String, dynamic>> _makeHttpRequest(
+    String method,
+    String endpoint,
+    Map<String, dynamic>? body,
+  ) async {
+    try {
+      final uri = Uri.parse('$_aslBaseUrl$endpoint');
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      http.Response response;
+      switch (method.toUpperCase()) {
+        case 'GET':
+          response = await _httpClient.get(uri, headers: headers);
+          break;
+        case 'POST':
+          response = await _httpClient.post(
+            uri,
+            headers: headers,
+            body: body != null ? json.encode(body) : null,
+          );
+          break;
+        case 'PUT':
+          response = await _httpClient.put(
+            uri,
+            headers: headers,
+            body: body != null ? json.encode(body) : null,
+          );
+          break;
+        case 'DELETE':
+          response = await _httpClient.delete(uri, headers: headers);
+          break;
+        default:
+          throw Exception('不支援的HTTP方法: $method');
+      }
+
+      final responseData = json.decode(response.body);
+      return responseData;
+
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'HTTP請求失敗: ${e.toString()}',
+        'data': null
+      };
+    }
   }
 
   @override
@@ -436,10 +492,6 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
       print('[PL7302] 🔄 開始處理交易記錄，透過APL層轉發...');
       print('[PL7302] 📋 交易資料: $transactionData');
       
-      // 生成交易ID
-      final microsecondStr = DateTime.now().microsecond.toString().padLeft(6, '0');
-      final transactionId = 'txn_${DateTime.now().millisecondsSinceEpoch}_$microsecondStr';
-      
       // 準備符合8103 API規格的請求資料
       final requestData = {
         'amount': (transactionData['amount'] as num).toDouble(),
@@ -457,42 +509,36 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
       print('[PL7302] 🔄 呼叫APL層8303記帳交易服務...');
       print('[PL7302] 📡 資料流: PL7302 → APL8303 → ASL → BL → Firebase');
       
-      // 呼叫APL層8303記帳交易服務
-      final response = await _transactionApiClient.createTransaction(
-        CreateTransactionRequest(
-          amount: requestData['amount'] as double,
-          type: requestData['type'] as String,
-          categoryId: requestData['categoryId'] as String?,
-          accountId: requestData['accountId'] as String?,
-          ledgerId: requestData['ledgerId'] as String,
-          date: requestData['date'] as String,
-          description: requestData['description'] as String?,
-        )
+      // 透過APL層HTTP客戶端調用ASL API
+      final response = await _makeHttpRequest(
+        'POST',
+        '/api/v1/transactions',
+        requestData
       );
       
-      if (response.success && response.data != null) {
-        final transaction = response.data!;
+      if (response['success'] == true) {
+        final responseData = response['data'];
         
-        print('[PL7302] ✅ APL層回應成功: ${transaction.id}');
+        print('[PL7302] ✅ APL層回應成功: ${responseData['transactionId']}');
         
         return {
           'success': true,
           'data': {
-            'transactionId': transaction.id,
-            'amount': transaction.amount,
-            'type': transaction.type.toString().split('.').last,
-            'description': transaction.description,
-            'createdAt': transaction.createdAt.toIso8601String(),
+            'transactionId': responseData['transactionId'],
+            'amount': responseData['amount'],
+            'type': responseData['type'],
+            'description': responseData['description'],
+            'createdAt': responseData['createdAt'],
             'dataFlow': 'PL7302 → APL8303 → ASL → BL → Firebase',
             'apiResponse': true
           },
           'error': null,
         };
       } else {
-        print('[PL7302] ❌ APL層回應失敗: ${response.error}');
+        print('[PL7302] ❌ APL層回應失敗: ${response['error']}');
         return {
           'success': false,
-          'error': 'APL層處理失敗: ${response.error}',
+          'error': 'APL層處理失敗: ${response['error']}',
           'dataFlow': 'PL7302 → APL8303 (失敗)'
         };
       }
