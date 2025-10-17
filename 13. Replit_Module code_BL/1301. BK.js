@@ -369,77 +369,6 @@ if (!admin.apps.length) {
   }
 }
 
-/**
- * BK_ensureLedgerExists - 確保帳本文檔存在，如無則建立
- * @version 2025-10-17-V3.3.0
- * @date 2025-10-17
- * @update: 階段二修復 - 實作帳本文檔檢查與建立邏輯
- */
-async function BK_ensureLedgerExists(ledgerId, userId, processId) {
-  const logPrefix = `[${processId}] BK_ensureLedgerExists:`;
-
-  try {
-    await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
-
-    if (!db) {
-      throw new Error('Firebase數據庫未初始化');
-    }
-
-    // 檢查帳本文檔是否存在
-    const ledgerRef = db.collection('ledgers').doc(ledgerId);
-    const ledgerDoc = await ledgerRef.get();
-
-    if (ledgerDoc.exists) {
-      BK_logInfo(`${logPrefix} 帳本已存在: ${ledgerId}`, "帳本檢查", userId, "BK_ensureLedgerExists");
-      return BK_formatSuccessResponse({
-        existed: true,
-        ledgerId: ledgerId,
-        message: '使用現有帳本'
-      });
-    }
-
-    // 帳本不存在，建立基礎帳本文檔
-    BK_logInfo(`${logPrefix} 帳本不存在，正在建立: ${ledgerId}`, "帳本檢查", userId, "BK_ensureLedgerExists");
-
-    // 符合1311 FS.js規範的基礎帳本文檔格式
-    const baseLedgerData = {
-      id: ledgerId,
-      name: '預設帳本',
-      description: '系統自動建立的基礎帳本',
-      owner: userId || 'system',
-      members: [userId || 'system'],
-      type: 'personal',
-      currency: 'TWD',
-      timezone: 'Asia/Taipei',
-      settings: {
-        allowNegativeBalance: false,
-        autoCategories: true,
-        reminderSettings: { enabled: false }
-      },
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      status: 'active'
-    };
-
-    await ledgerRef.set(baseLedgerData);
-
-    BK_logInfo(`${logPrefix} 基礎帳本文檔建立成功: ${ledgerId}`, "帳本檢查", userId, "BK_ensureLedgerExists");
-
-    return BK_formatSuccessResponse({
-      existed: false,
-      ledgerId: ledgerId,
-      message: '已建立新帳本',
-      ledgerData: baseLedgerData
-    });
-
-  } catch (error) {
-    BK_logError(`${logPrefix} 帳本檢查失敗: ${error.toString()}`, "帳本檢查", userId, "LEDGER_CHECK_ERROR", error.toString(), "BK_ensureLedgerExists");
-    return BK_formatErrorResponse("LEDGER_CHECK_ERROR", error.toString(), error.toString());
-  }
-}
-
-
 // 引入DL和FS模組
 const DL = require('./1310. DL.js');
 const FS = require('./1311. FS.js');
@@ -647,9 +576,9 @@ async function BK_createTransaction(transactionData) {
         }
 
         if (ledgerResult.data && ledgerResult.data.existed) {
-          BK_logInfo(`${logPrefix} 使用現有帳本: ${processedData.ledgerId}`, "新增交易", processedData.userId, "BK_createTransaction");
+          BK_logInfo(`${logPrefix} 使用現有帳本: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
         } else {
-          BK_logInfo(`${logPrefix} 已建立新帳本: ${processedData.ledgerId}`, "新增交易", processedData.userId, "BK_createTransaction");
+          BK_logInfo(`${logPrefix} 已建立新帳本: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
         }
 
         // 生成交易ID
@@ -3223,78 +3152,61 @@ module.exports = {
   BK_getErrorStats,
   BK_resetErrorStats,
 
-  // 輔助函數（保留現有調用）
-  BK_parseQuickInput,
-  BK_processBookkeeping,
-  BK_checkTransactionIdUnique,
-  BK_prepareTransactionData,
-  BK_saveTransactionToFirestore,
-  BK_calculateTransactionStats,
+  // 輔助函數 BK_getTransactionById - 為了BK_processAPIGetTransactionDetail 函數調用
+  BK_getTransactionById: async function(transactionId, queryParams = {}) {
+    try {
+      await BK_initialize();
+      const db = BK_INIT_STATUS.firestore_db;
+      const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+      const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
+      const idField = getEnvVar('ID_FIELD', '收支ID');
 
-  // 階段二新增函數
-  BK_ensureLedgerExists,
+      const querySnapshot = await collectionRef.where(idField, '==', transactionId).limit(1).get();
 
-  // 模組資訊
-  moduleVersion: '3.3.0',
-  phase: 'Phase2-Complete',
-  lastUpdate: '2025-10-17'
-};
+      if (querySnapshot.empty) {
+        return BK_formatErrorResponse("NOT_FOUND", "交易記錄不存在");
+      }
 
-// 輔助函數 BK_getTransactionById - 為了BK_processAPIGetTransactionDetail 函數調用
-BK_getTransactionById: async function(transactionId, queryParams = {}) {
-  try {
-    await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
-    const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
-    const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
-    const idField = getEnvVar('ID_FIELD', '收支ID');
+      const doc = querySnapshot.docs[0];
+      const data = doc.data();
 
-    const querySnapshot = await collectionRef.where(idField, '==', transactionId).limit(1).get();
+      const fieldNames = {
+        id: getEnvVar('ID_FIELD', '收支ID'),
+        income: getEnvVar('INCOME_FIELD', '收入'),
+        expense: getEnvVar('EXPENSE_FIELD', '支出'),
+        date: getEnvVar('DATE_FIELD', '日期'),
+        time: getEnvVar('TIME_FIELD', '時間'),
+        description: getEnvVar('DESCRIPTION_FIELD', '備註'),
+        category: getEnvVar('CATEGORY_FIELD', '子項名稱'),
+        paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
+        uid: getEnvVar('UID_FIELD', 'UID'),
+        majorCode: getEnvVar('MAJOR_CODE_FIELD', '大項代碼'),
+        minorCode: getEnvVar('MINOR_CODE_FIELD', '子項代碼')
+      };
 
-    if (querySnapshot.empty) {
-      return BK_formatErrorResponse("NOT_FOUND", "交易記錄不存在");
+      const transactionDetail = {
+        id: data[fieldNames.id] || doc.id,
+        amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
+        type: data[fieldNames.income] ? 'income' : 'expense',
+        date: data[fieldNames.date],
+        description: data[fieldNames.description] || '',
+        category: {
+          id: `${data[fieldNames.majorCode]}_${data[fieldNames.minorCode]}`,
+          name: data[fieldNames.category],
+          majorCode: data[fieldNames.majorCode],
+          minorCode: data[fieldNames.minorCode]
+        },
+        paymentMethod: data[fieldNames.paymentMethod],
+        userId: data[fieldNames.uid],
+        createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(),
+        source: 'firestore'
+      };
+
+      return BK_formatSuccessResponse(transactionDetail, "交易詳情查詢成功");
+
+    } catch (error) {
+      BK_logError(`BK_getTransactionById 失敗: ${error.toString()}`, "交易查詢", queryParams.userId || "", "GET_TRANSACTION_BY_ID_ERROR", error.toString(), "BK_getTransactionById");
+      return BK_formatErrorResponse("TRANSACTION_NOT_FOUND", error.toString(), error.toString());
     }
-
-    const doc = querySnapshot.docs[0];
-    const data = doc.data();
-
-    const fieldNames = {
-      id: getEnvVar('ID_FIELD', '收支ID'),
-      income: getEnvVar('INCOME_FIELD', '收入'),
-      expense: getEnvVar('EXPENSE_FIELD', '支出'),
-      date: getEnvVar('DATE_FIELD', '日期'),
-      time: getEnvVar('TIME_FIELD', '時間'),
-      description: getEnvVar('DESCRIPTION_FIELD', '備註'),
-      category: getEnvVar('CATEGORY_FIELD', '子項名稱'),
-      paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
-      uid: getEnvVar('UID_FIELD', 'UID'),
-      majorCode: getEnvVar('MAJOR_CODE_FIELD', '大項代碼'),
-      minorCode: getEnvVar('MINOR_CODE_FIELD', '子項代碼')
-    };
-
-    const transactionDetail = {
-      id: data[fieldNames.id] || doc.id,
-      amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
-      type: data[fieldNames.income] ? 'income' : 'expense',
-      date: data[fieldNames.date],
-      description: data[fieldNames.description] || '',
-      category: {
-        id: `${data[fieldNames.majorCode]}_${data[fieldNames.minorCode]}`,
-        name: data[fieldNames.category],
-        majorCode: data[fieldNames.majorCode],
-        minorCode: data[fieldNames.minorCode]
-      },
-      paymentMethod: data[fieldNames.paymentMethod],
-      userId: data[fieldNames.uid],
-      createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(),
-      source: 'firestore'
-    };
-
-    return BK_formatSuccessResponse(transactionDetail, "交易詳情查詢成功");
-
-  } catch (error) {
-    BK_logError(`BK_getTransactionById 失敗: ${error.toString()}`, "交易查詢", queryParams.userId || "", "GET_TRANSACTION_BY_ID_ERROR", error.toString(), "BK_getTransactionById");
-    return BK_formatErrorResponse("TRANSACTION_NOT_FOUND", error.toString(), error.toString());
   }
-}
 };
