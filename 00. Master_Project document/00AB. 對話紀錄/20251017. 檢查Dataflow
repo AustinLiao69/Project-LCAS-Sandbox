@@ -17,7 +17,6 @@
 💡 關鍵Insight
 架構設計缺陷：當前系統缺少"用戶首次驗證後自動建立Master ledger"的機制，導致BK模組寫入交易到不存在的帳本路徑。
 真正的問題：不是BK與MLS整合問題，而是缺少"Master ledger初始化"邏輯。
-
 🎯 MVP階段解決方案
 階段一：BK模組添加Master ledger檢查與建立邏輯（Critical - 立即執行）
 目標：在BK_createTransaction中添加Master ledger存在性檢查和自動建立功能
@@ -25,10 +24,8 @@
 1.	BK模組修復：在BK_createTransaction中添加Master ledger存在性檢查
 2.	Master ledger建立：如無則建立符合1311 FS.js規範的基礎帳本文檔
 3.	衝突處理：處理UID或帳本已存在的情況
-
 版本升級：
 •	1301 BK.js：v3.2.0 → v3.3.0（添加Master ledger初始化邏輯）
-
 階段二：7570測試流程適配（Medium - 配合執行）
 目標：確保7570每次執行都能正確處理Master ledger
 具體行動：
@@ -36,8 +33,6 @@
 2.	BK邏輯增強：
 •	檢查UID是否有對應Master ledger
 •	如已存在且需要清理，提供清理機制
-=>此項不需要
-
 •	如不存在，自動建立新的Master ledger
 3.	Master ledger格式：符合1311 FS.js的基礎帳本文檔格式
 衝突處理邏輯：
@@ -45,8 +40,6 @@
 o	刪除舊的重新建立（測試環境適用）
 o	使用現有帳本繼續操作
 o	生成新的測試ID避免衝突
-
-
 MVP階段實作重點
 立即需要修復的核心問題：
 1.	1301 BK.js - 添加Master ledger存在性檢查邏輯

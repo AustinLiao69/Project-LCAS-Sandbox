@@ -309,4 +309,4 @@ MM 	 DD 	 Description 	    Progress
 10	16	 重構7570測試代碼：移除對73XX UI部分的Dependency 	 Ongoing
 10	16	 重構73XX模組：分拆成業務邏輯和UI(記得寫DCN) 	 Ongoing
 10	16	 打通Dataflow：打通7302(移除7302的模擬功能) 	 Ongoing
-10	17	 檢視資料與帳號的CRUD 	 Ongoing
+10	17	 系統性檢視資料與帳號的CRUD 	 Ongoing
