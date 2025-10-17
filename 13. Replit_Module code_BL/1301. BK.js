@@ -568,6 +568,19 @@ async function BK_createTransaction(transactionData) {
 
       // 階段一&二修復：包裝Firebase操作在重試邏輯中
       const executeTransaction = async () => {
+        // 階段一新增：確保帳本文檔存在
+        const ledgerResult = await BK_ensureLedgerExists(processedData.ledgerId, processedData.userId, processId);
+
+        if (!ledgerResult.success) {
+          throw new Error(`帳本文檔檢查失敗: ${ledgerResult.error || ledgerResult.message}`);
+        }
+
+        if (ledgerResult.data && ledgerResult.data.existed) {
+          BK_logInfo(`${logPrefix} 使用現有帳本: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        } else {
+          BK_logInfo(`${logPrefix} 已建立新帳本: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        }
+
         // 生成交易ID
         const transactionId = await BK_generateTransactionId(processId);
 
@@ -587,7 +600,8 @@ async function BK_createTransaction(transactionData) {
           type: processedData.type,
           category: processedData.categoryId,
           date: preparedData.date,
-          description: processedData.description
+          description: processedData.description,
+          ledgerStatus: ledgerResult.data
         };
       };
 
@@ -611,17 +625,6 @@ async function BK_createTransaction(transactionData) {
 
       // 所有重試都失敗
       return BK_formatErrorResponse("STORAGE_ERROR", "交易儲存失敗", lastError.message);
-
-      BK_logInfo(`${logPrefix} 交易新增成功: ${transactionId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
-
-      return BK_formatSuccessResponse({
-        transactionId: transactionId,
-        amount: transactionData.amount,
-        type: transactionData.type,
-        category: transactionData.categoryId,
-        date: preparedData.date,
-        description: transactionData.description
-      }, "交易新增成功");
     };
 
     // 階段一&二修復：調整超時時間以解決SIT測試失敗問題
@@ -864,7 +867,7 @@ function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = fa
       if (queryParams.type && data.type !== queryParams.type) {
         return;
       }
-      
+
       if (queryParams.categoryId && data.categoryId !== queryParams.categoryId) {
         return;
       }
@@ -1679,24 +1682,24 @@ async function BK_prepareTransactionData(transactionId, transactionData, process
     description: transactionData.description || '',
     categoryId: transactionData.categoryId || 'default',
     accountId: transactionData.accountId || 'default',
-    
+
     // 時間欄位 - 標準格式
     date: now.format('YYYY-MM-DD'),
     createdAt: currentTimestamp,
     updatedAt: currentTimestamp,
-    
+
     // 來源和用戶資訊
-    source: 'quick',
+    source: 'quick', // 預設為快速記帳，可根據調用函數覆蓋
     userId: transactionData.userId || '',
     paymentMethod: transactionData.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
-    
+
     // 記帳特定欄位
     ledgerId: transactionData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
-    
+
     // 狀態欄位
     status: 'active',
     verified: false,
-    
+
     // 元數據
     metadata: {
       processId: processId,
@@ -1721,7 +1724,7 @@ async function BK_saveTransactionToFirestore(transactionData, processId) {
 
     // 使用 FS.js 標準路徑結構
     const ledgerId = transactionData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
-    
+
     // 確保交易數據完全符合 1311 FS.js 標準格式
     const fsCompliantData = {
       // 核心欄位 - 完全符合 FS.js 標準
@@ -1731,24 +1734,24 @@ async function BK_saveTransactionToFirestore(transactionData, processId) {
       description: transactionData.description || '',
       categoryId: transactionData.categoryId || 'default',
       accountId: transactionData.accountId || 'default',
-      
+
       // 時間欄位 - FS.js 標準格式
       date: transactionData.date,
       createdAt: transactionData.createdAt,
       updatedAt: transactionData.updatedAt,
-      
+
       // 來源和用戶資訊 - FS.js 標準
       source: transactionData.source || 'quick',
       userId: transactionData.userId || '',
       paymentMethod: transactionData.paymentMethod,
-      
+
       // 記帳特定欄位 - FS.js 標準
       ledgerId: ledgerId,
-      
+
       // 狀態欄位 - FS.js 標準
       status: transactionData.status || 'active',
       verified: transactionData.verified || false,
-      
+
       // 元數據 - FS.js 標準
       metadata: transactionData.metadata || {
         processId: processId,
@@ -1794,6 +1797,63 @@ function BK_calculateTransactionStats(transactions) {
     transactionCount: transactions.length
   };
 }
+
+/**
+ * 階段一新增：檢查或建立帳本文檔
+ * @param {string} ledgerId - 要檢查或建立的帳本ID
+ * @param {string} userId - 使用者ID
+ * @param {string} processId - 處理ID
+ * @returns {Promise<Object>}
+ */
+async function BK_ensureLedgerExists(ledgerId, userId, processId) {
+  const logPrefix = `[${processId}] BK_ensureLedgerExists:`;
+  try {
+    await BK_initialize();
+    const db = BK_INIT_STATUS.firestore_db;
+
+    if (!db) {
+      return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
+    }
+
+    // 檢查帳本是否存在
+    const ledgerDoc = await db.collection('ledgers').doc(ledgerId).get();
+
+    if (ledgerDoc.exists) {
+      BK_logInfo(`${logPrefix} 帳本已存在: ${ledgerId}`, "帳本檢查", userId || "", "BK_ensureLedgerExists");
+      return BK_formatSuccessResponse({ existed: true, ledgerId: ledgerId }, "帳本已存在");
+    } else {
+      // 帳本不存在，建立基礎帳本文檔 (符合1311 FS.js規範)
+      BK_logInfo(`${logPrefix} 帳本不存在，正在建立: ${ledgerId}`, "帳本建立", userId || "", "BK_ensureLedgerExists");
+
+      const newLedgerData = {
+        id: ledgerId,
+        ownerId: userId || 'anonymous',
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+        name: `帳本 (${ledgerId.substring(0, 8)})`, // 預設名稱
+        description: '自動建立的基礎帳本',
+        status: 'active',
+        currency: BK_CONFIG.DEFAULT_CURRENCY,
+        // 其他1311 FS.js規範欄位
+        metadata: {
+          processId: processId,
+          module: 'BK',
+          version: BK_CONFIG.VERSION
+        }
+      };
+
+      await db.collection('ledgers').doc(ledgerId).set(newLedgerData);
+      BK_logInfo(`${logPrefix} 基礎帳本文檔建立成功: ${ledgerId}`, "帳本建立", userId || "", "BK_ensureLedgerExists");
+      return BK_formatSuccessResponse({ existed: false, ledgerId: ledgerId }, "帳本已建立");
+    }
+  } catch (error) {
+    BK_logError(`${logPrefix} 帳本檢查/建立失敗: ${error.toString()}`, "帳本操作", userId || "", "LEDGER_OPERATION_ERROR", error.toString(), "BK_ensureLedgerExists");
+    // 嘗試識別Firebase錯誤
+    const firebaseError = BK_identifyFirebaseError(error);
+    return BK_formatErrorResponse(firebaseError.type || "LEDGER_OPERATION_ERROR", `帳本操作失敗: ${error.message}`, { originalError: error.toString(), firebaseError: firebaseError });
+  }
+}
+
 
 // === 日誌函數 ===
 
@@ -3033,6 +3093,7 @@ module.exports = {
   // === 帳本管理函數（階段二修復：確保帳本ID生成職責正確） ===
   generateDefaultLedgerId, // 階段二修復：明確導出帳本ID生成函數
   BK_CONFIG, // 導出配置以供其他模組使用
+  BK_ensureLedgerExists, // 階段一新增：帳本檢查/建立函數
 
   // === API端點處理函數 ===
   // 階段二修復：新增TC-SIT-039~043所需的API函數
