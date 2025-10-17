@@ -151,6 +151,15 @@ class Account {
     required this.type,
     required this.balance,
   });
+
+  factory Account.fromJson(Map<String, dynamic> json) {
+    return Account(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      type: json['type'] as String,
+      balance: (json['balance'] ?? 0).toDouble(),
+    );
+  }
 }
 
 class DashboardData {
@@ -194,13 +203,23 @@ abstract class DependencyContainer {
     // 註冊記帳核心業務邏輯
     register<BookkeepingCoreFunctionGroup>(() => BookkeepingCoreFunctionGroupImpl());
     
-    // 註冊API客戶端
+    // 註冊真實API客戶端
     register<TransactionApiClient>(() => TransactionApiClientImpl());
     register<CategoryApiClient>(() => CategoryApiClientImpl());
     register<AccountApiClient>(() => AccountApiClientImpl());
     
-    // 註冊Repository
-    register<TransactionRepository>(() => TransactionRepositoryImpl(get<TransactionAPIGateway>()));
+    // 註冊真實API Gateway
+    register<TransactionAPIGateway>(() => TransactionAPIGatewayImpl(
+      apiClient: get<TransactionApiClient>(),
+      onShowError: (message) => print('Error: $message'),
+      onShowHint: (message) => print('Hint: $message'),
+      onUpdateUI: (updates) => print('UI Update: $updates'),
+      onLogError: (message) => print('Log Error: $message'),
+      onRetry: () => print('Retry requested'),
+    ));
+    
+    // 註冊真實Repository
+    register<TransactionRepository>(() => TransactionRepositoryImpl(get<TransactionApiClient>()));
     register<CategoryRepository>(() => CategoryRepositoryImpl(get<CategoryApiClient>()));
     register<AccountRepository>(() => AccountRepositoryImpl(get<AccountApiClient>()));
   }
@@ -335,11 +354,67 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
   late final TransactionApiClient _transactionApiClient;
   late final CategoryApiClient _categoryApiClient;
   late final AccountApiClient _accountApiClient;
+  late final http.Client _httpClient;
+  
+  // ASL服務器地址
+  static const String _aslBaseUrl = 'http://0.0.0.0:5000';
 
   BookkeepingCoreFunctionGroupImpl() {
     _transactionApiClient = TransactionApiClientImpl();
     _categoryApiClient = CategoryApiClientImpl();
     _accountApiClient = AccountApiClientImpl();
+    _httpClient = http.Client();
+  }
+
+  /// 透過APL層HTTP客戶端調用ASL API
+  Future<Map<String, dynamic>> _makeHttpRequest(
+    String method,
+    String endpoint,
+    Map<String, dynamic>? body,
+  ) async {
+    try {
+      final uri = Uri.parse('$_aslBaseUrl$endpoint');
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      http.Response response;
+      switch (method.toUpperCase()) {
+        case 'GET':
+          response = await _httpClient.get(uri, headers: headers);
+          break;
+        case 'POST':
+          response = await _httpClient.post(
+            uri,
+            headers: headers,
+            body: body != null ? json.encode(body) : null,
+          );
+          break;
+        case 'PUT':
+          response = await _httpClient.put(
+            uri,
+            headers: headers,
+            body: body != null ? json.encode(body) : null,
+          );
+          break;
+        case 'DELETE':
+          response = await _httpClient.delete(uri, headers: headers);
+          break;
+        default:
+          throw Exception('不支援的HTTP方法: $method');
+      }
+
+      final responseData = json.decode(response.body);
+      return responseData;
+
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'HTTP請求失敗: ${e.toString()}',
+        'data': null
+      };
+    }
   }
 
   @override
@@ -436,10 +511,6 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
       print('[PL7302] 🔄 開始處理交易記錄，透過APL層轉發...');
       print('[PL7302] 📋 交易資料: $transactionData');
       
-      // 生成交易ID
-      final microsecondStr = DateTime.now().microsecond.toString().padLeft(6, '0');
-      final transactionId = 'txn_${DateTime.now().millisecondsSinceEpoch}_$microsecondStr';
-      
       // 準備符合8103 API規格的請求資料
       final requestData = {
         'amount': (transactionData['amount'] as num).toDouble(),
@@ -457,42 +528,36 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
       print('[PL7302] 🔄 呼叫APL層8303記帳交易服務...');
       print('[PL7302] 📡 資料流: PL7302 → APL8303 → ASL → BL → Firebase');
       
-      // 呼叫APL層8303記帳交易服務
-      final response = await _transactionApiClient.createTransaction(
-        CreateTransactionRequest(
-          amount: requestData['amount'] as double,
-          type: requestData['type'] as String,
-          categoryId: requestData['categoryId'] as String?,
-          accountId: requestData['accountId'] as String?,
-          ledgerId: requestData['ledgerId'] as String,
-          date: requestData['date'] as String,
-          description: requestData['description'] as String?,
-        )
+      // 透過APL層HTTP客戶端調用ASL API
+      final response = await _makeHttpRequest(
+        'POST',
+        '/api/v1/transactions',
+        requestData
       );
       
-      if (response.success && response.data != null) {
-        final transaction = response.data!;
+      if (response['success'] == true) {
+        final responseData = response['data'];
         
-        print('[PL7302] ✅ APL層回應成功: ${transaction.id}');
+        print('[PL7302] ✅ APL層回應成功: ${responseData['transactionId']}');
         
         return {
           'success': true,
           'data': {
-            'transactionId': transaction.id,
-            'amount': transaction.amount,
-            'type': transaction.type.toString().split('.').last,
-            'description': transaction.description,
-            'createdAt': transaction.createdAt.toIso8601String(),
+            'transactionId': responseData['transactionId'],
+            'amount': responseData['amount'],
+            'type': responseData['type'],
+            'description': responseData['description'],
+            'createdAt': responseData['createdAt'],
             'dataFlow': 'PL7302 → APL8303 → ASL → BL → Firebase',
             'apiResponse': true
           },
           'error': null,
         };
       } else {
-        print('[PL7302] ❌ APL層回應失敗: ${response.error}');
+        print('[PL7302] ❌ APL層回應失敗: ${response['error']}');
         return {
           'success': false,
-          'error': 'APL層處理失敗: ${response.error}',
+          'error': 'APL層處理失敗: ${response['error']}',
           'dataFlow': 'PL7302 → APL8303 (失敗)'
         };
       }
@@ -567,17 +632,23 @@ class BookkeepingCoreFunctionGroupImpl extends BookkeepingCoreFunctionGroup {
   @override
   Future<List<Map<String, dynamic>>> getCategoryAnalysis() async {
     try {
-      // 模擬類別分析數據
-      await Future.delayed(Duration(milliseconds: 200));
-      
-      return [
-        {'name': '餐飲', 'amount': 3000.0, 'percentage': 35.0},
-        {'name': '交通', 'amount': 2000.0, 'percentage': 25.0},
-        {'name': '購物', 'amount': 1500.0, 'percentage': 20.0},
-        {'name': '娛樂', 'amount': 1000.0, 'percentage': 15.0},
-        {'name': '其他', 'amount': 500.0, 'percentage': 5.0},
-      ];
+      // 透過HTTP調用統計API
+      final response = await _makeHttpRequest(
+        'GET',
+        '/api/v1/transactions/statistics?type=category_analysis',
+        null
+      );
+
+      if (response['success'] == true && response['data'] != null) {
+        final analysisData = response['data']['categoryAnalysis'] as List? ?? [];
+        return analysisData.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+
+      // 如果API調用失敗，返回空列表
+      print('Category analysis API failed: ${response['error']}');
+      return [];
     } catch (e) {
+      print('Error getting category analysis: $e');
       return [];
     }
   }
@@ -794,104 +865,277 @@ class GetCategoriesRequest {
   }
 }
 
-// 實作類別（簡化版）
+// 真實API客戶端實作 - 透過HTTP調用後端服務
 class TransactionApiClientImpl implements TransactionApiClient {
+  final http.Client _httpClient = http.Client();
+  final String _baseUrl = 'http://0.0.0.0:5000';
+
   @override
   Future<ApiResponse<Transaction>> createTransaction(CreateTransactionRequest request) async {
-    await Future.delayed(Duration(milliseconds: 200));
-    
-    final transaction = Transaction(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: _parseTransactionType(request.type),
-      amount: request.amount,
-      categoryId: request.categoryId,
-      accountId: request.accountId,
-      description: request.description ?? '',
-      date: DateTime.parse(request.date),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    
-    return ApiResponse(success: true, data: transaction, statusCode: 201);
+    try {
+      final response = await _httpClient.post(
+        Uri.parse('$_baseUrl/api/v1/transactions'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(request.toJson()),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return ApiResponse(
+            success: true, 
+            data: Transaction.fromJson(data['data']), 
+            statusCode: response.statusCode
+          );
+        }
+      }
+      
+      return ApiResponse(
+        success: false, 
+        error: 'Failed to create transaction',
+        statusCode: response.statusCode
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false, 
+        error: e.toString(),
+        statusCode: 500
+      );
+    }
   }
 
   @override
   Future<ApiResponse<List<Transaction>>> getTransactions(GetTransactionsRequest request) async {
-    await Future.delayed(Duration(milliseconds: 300));
-    return ApiResponse(success: true, data: [], statusCode: 200);
+    try {
+      final queryParams = request.toJson();
+      final uri = Uri.parse('$_baseUrl/api/v1/transactions').replace(queryParameters: 
+        queryParams.map((key, value) => MapEntry(key, value.toString()))
+      );
+
+      final response = await _httpClient.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final transactionsList = data['data']['transactions'] as List? ?? [];
+          final transactions = transactionsList
+              .map((t) => Transaction.fromJson(t))
+              .toList();
+          return ApiResponse(
+            success: true, 
+            data: transactions, 
+            statusCode: response.statusCode
+          );
+        }
+      }
+      
+      return ApiResponse(
+        success: false, 
+        error: 'Failed to get transactions',
+        statusCode: response.statusCode
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false, 
+        error: e.toString(),
+        statusCode: 500
+      );
+    }
   }
 
   @override
   Future<ApiResponse<Transaction>> updateTransaction(String id, UpdateTransactionRequest request) async {
-    await Future.delayed(Duration(milliseconds: 200));
-    
-    final transaction = Transaction(
-      id: id,
-      type: request.type != null ? _parseTransactionType(request.type!) : TransactionType.expense,
-      amount: request.amount ?? 0.0,
-      categoryId: request.categoryId,
-      accountId: request.accountId,
-      description: request.description ?? '',
-      date: request.date != null ? DateTime.parse(request.date!) : DateTime.now(),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    
-    return ApiResponse(success: true, data: transaction, statusCode: 200);
+    try {
+      final response = await _httpClient.put(
+        Uri.parse('$_baseUrl/api/v1/transactions/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(request.toJson()),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return ApiResponse(
+            success: true, 
+            data: Transaction.fromJson(data['data']), 
+            statusCode: response.statusCode
+          );
+        }
+      }
+      
+      return ApiResponse(
+        success: false, 
+        error: 'Failed to update transaction',
+        statusCode: response.statusCode
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false, 
+        error: e.toString(),
+        statusCode: 500
+      );
+    }
   }
 
   @override
   Future<ApiResponse<void>> deleteTransaction(String id) async {
-    await Future.delayed(Duration(milliseconds: 100));
-    return ApiResponse(success: true, statusCode: 204);
+    try {
+      final response = await _httpClient.delete(
+        Uri.parse('$_baseUrl/api/v1/transactions/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return ApiResponse(success: true, statusCode: response.statusCode);
+      }
+      
+      return ApiResponse(
+        success: false, 
+        error: 'Failed to delete transaction',
+        statusCode: response.statusCode
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false, 
+        error: e.toString(),
+        statusCode: 500
+      );
+    }
   }
 
   @override
   Future<ApiResponse<DashboardData>> getDashboardData(GetDashboardRequest request) async {
-    await Future.delayed(Duration(milliseconds: 300));
-    
-    final data = DashboardData(
-      totalIncome: 50000,
-      totalExpense: 35000,
-      balance: 15000,
-      transactionCount: 156,
-    );
-    
-    return ApiResponse(success: true, data: data, statusCode: 200);
-  }
+    try {
+      final queryParams = request.toJson();
+      final uri = Uri.parse('$_baseUrl/api/v1/transactions/dashboard').replace(queryParameters: 
+        queryParams.map((key, value) => MapEntry(key, value.toString()))
+      );
 
-  TransactionType _parseTransactionType(String type) {
-    switch (type.toLowerCase()) {
-      case 'income':
-        return TransactionType.income;
-      case 'transfer':
-        return TransactionType.transfer;
-      default:
-        return TransactionType.expense;
+      final response = await _httpClient.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return ApiResponse(
+            success: true, 
+            data: DashboardData.fromJson(data['data']), 
+            statusCode: response.statusCode
+          );
+        }
+      }
+      
+      return ApiResponse(
+        success: false, 
+        error: 'Failed to get dashboard data',
+        statusCode: response.statusCode
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false, 
+        error: e.toString(),
+        statusCode: 500
+      );
     }
   }
 }
 
 class CategoryApiClientImpl implements CategoryApiClient {
+  final http.Client _httpClient = http.Client();
+  final String _baseUrl = 'http://0.0.0.0:5000';
+
   @override
   Future<ApiResponse<List<Category>>> getCategories(GetCategoriesRequest request) async {
-    await Future.delayed(Duration(milliseconds: 200));
-    return ApiResponse(success: true, data: [], statusCode: 200);
+    try {
+      final queryParams = request.toJson();
+      final uri = Uri.parse('$_baseUrl/api/v1/categories').replace(queryParameters: 
+        queryParams.map((key, value) => MapEntry(key, value.toString()))
+      );
+
+      final response = await _httpClient.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final categoriesList = data['data'] as List? ?? [];
+          final categories = categoriesList
+              .map((c) => Category.fromJson(c))
+              .toList();
+          return ApiResponse(
+            success: true, 
+            data: categories, 
+            statusCode: response.statusCode
+          );
+        }
+      }
+      
+      return ApiResponse(
+        success: false, 
+        error: 'Failed to get categories',
+        statusCode: response.statusCode
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false, 
+        error: e.toString(),
+        statusCode: 500
+      );
+    }
   }
 }
 
 class AccountApiClientImpl implements AccountApiClient {
+  final http.Client _httpClient = http.Client();
+  final String _baseUrl = 'http://0.0.0.0:5000';
+
   @override
   Future<ApiResponse<List<Account>>> getAccounts(GetAccountsRequest request) async {
-    await Future.delayed(Duration(milliseconds: 200));
-    
-    final accounts = [
-      Account(id: 'acc1', name: '現金', type: 'cash', balance: 5000),
-      Account(id: 'acc2', name: '銀行帳戶', type: 'bank', balance: 25000),
-      Account(id: 'acc3', name: '信用卡', type: 'credit', balance: -3000),
-    ];
-    
-    return ApiResponse(success: true, data: accounts, statusCode: 200);
+    try {
+      final queryParams = request.toJson();
+      final uri = Uri.parse('$_baseUrl/api/v1/accounts').replace(queryParameters: 
+        queryParams.map((key, value) => MapEntry(key, value.toString()))
+      );
+
+      final response = await _httpClient.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final accountsList = data['data'] as List? ?? [];
+          final accounts = accountsList
+              .map((a) => Account.fromJson(a))
+              .toList();
+          return ApiResponse(
+            success: true, 
+            data: accounts, 
+            statusCode: response.statusCode
+          );
+        }
+      }
+      
+      return ApiResponse(
+        success: false, 
+        error: 'Failed to get accounts',
+        statusCode: response.statusCode
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false, 
+        error: e.toString(),
+        statusCode: 500
+      );
+    }
   }
 }
 
@@ -908,15 +1152,32 @@ abstract class AccountRepository {
   Future<List<Account>> getAccounts();
 }
 
-// Repository實作（簡化版）
+// Repository真實實作 - 透過API客戶端調用後端服務
 class TransactionRepositoryImpl implements TransactionRepository {
-  final TransactionAPIGateway _apiClient;
+  final TransactionApiClient _apiClient;
   
   TransactionRepositoryImpl(this._apiClient);
 
   @override
   Future<List<Transaction>> getTransactions({Map<String, dynamic>? filters}) async {
-    return [];
+    try {
+      final request = GetTransactionsRequest(
+        ledgerId: filters?['ledgerId'],
+        categoryId: filters?['categoryId'],
+        accountId: filters?['accountId'],
+        type: filters?['type'],
+        startDate: filters?['startDate'],
+        endDate: filters?['endDate'],
+        page: filters?['page'] ?? 1,
+        limit: filters?['limit'] ?? 20,
+      );
+
+      final response = await _apiClient.getTransactions(request);
+      return response.success ? (response.data ?? []) : [];
+    } catch (e) {
+      print('Error getting transactions: $e');
+      return [];
+    }
   }
 }
 
@@ -927,7 +1188,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
   @override
   Future<List<Category>> getCategories() async {
-    return [];
+    try {
+      final request = GetCategoriesRequest();
+      final response = await _apiClient.getCategories(request);
+      return response.success ? (response.data ?? []) : [];
+    } catch (e) {
+      print('Error getting categories: $e');
+      return [];
+    }
   }
 }
 
@@ -938,7 +1206,14 @@ class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<List<Account>> getAccounts() async {
-    return [];
+    try {
+      final request = GetAccountsRequest();
+      final response = await _apiClient.getAccounts(request);
+      return response.success ? (response.data ?? []) : [];
+    } catch (e) {
+      print('Error getting accounts: $e');
+      return [];
+    }
   }
 }
 
@@ -1037,8 +1312,8 @@ class QuickAccountingProcessorImpl {
   }
 }
 
-// TransactionAPIGateway暫時空實作
-class TransactionAPIGateway {
+// TransactionAPIGateway - 實際的API Gateway接口
+abstract class TransactionAPIGateway {
   TransactionAPIGateway({
     required Function(String) onShowError,
     required Function(String) onShowHint,
@@ -1047,8 +1322,57 @@ class TransactionAPIGateway {
     required Function() onRetry,
   });
 
+  Future<ApiResponse<List<Transaction>>> getTransactions(GetTransactionsRequest request);
+  Future<ApiResponse<Transaction>> createTransaction(CreateTransactionRequest request);
+  Future<ApiResponse<Transaction>> updateTransaction(String id, UpdateTransactionRequest request);
+  Future<ApiResponse<void>> deleteTransaction(String id);
+  Future<ApiResponse<DashboardData>> getDashboardData(GetDashboardRequest request);
+}
+
+// TransactionAPIGateway的真實實作
+class TransactionAPIGatewayImpl extends TransactionAPIGateway {
+  final TransactionApiClient _apiClient;
+
+  TransactionAPIGatewayImpl({
+    required this.apiClient,
+    required Function(String) onShowError,
+    required Function(String) onShowHint,
+    required Function(Map<String, dynamic>) onUpdateUI,
+    required Function(String) onLogError,
+    required Function() onRetry,
+  }) : _apiClient = apiClient, super(
+    onShowError: onShowError,
+    onShowHint: onShowHint,
+    onUpdateUI: onUpdateUI,
+    onLogError: onLogError,
+    onRetry: onRetry,
+  );
+
+  final TransactionApiClient apiClient;
+
+  @override
   Future<ApiResponse<List<Transaction>>> getTransactions(GetTransactionsRequest request) async {
-    return ApiResponse(success: true, data: [], statusCode: 200);
+    return await _apiClient.getTransactions(request);
+  }
+
+  @override
+  Future<ApiResponse<Transaction>> createTransaction(CreateTransactionRequest request) async {
+    return await _apiClient.createTransaction(request);
+  }
+
+  @override
+  Future<ApiResponse<Transaction>> updateTransaction(String id, UpdateTransactionRequest request) async {
+    return await _apiClient.updateTransaction(id, request);
+  }
+
+  @override
+  Future<ApiResponse<void>> deleteTransaction(String id) async {
+    return await _apiClient.deleteTransaction(id);
+  }
+
+  @override
+  Future<ApiResponse<DashboardData>> getDashboardData(GetDashboardRequest request) async {
+    return await _apiClient.getDashboardData(request);
   }
 }
 
