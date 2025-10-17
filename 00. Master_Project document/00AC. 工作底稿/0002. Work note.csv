@@ -5,5 +5,10 @@ MM 	 DD 	 Description 	    Progress
 9	19	 有什麼Task是可以在假日做的？ 	 Open
 9	19	 82資料夾的LLD需要全面修改成API gateway，將內容移動到72資料夾 	 Open
 10	15	 7598文件中createdat的時間需要隨系統時間而定 	 Open
-10	17	 APP端也必須跟地端一樣有業務邏輯以及帳本，連往後可以倒(備份)到Firebase 	 Open
+10	17	 APP端與地端需具有相同的業務邏輯：
+
+1. APP端也必須跟地端一樣有業務邏輯以及帳本，連網後可以倒(備份)到Firebase 
+2. 若有需驗證的部分則設置開關：若無連到BL層時由PL層驗證，有連到BL層時則由BL層去驗證     Open
+
+
 10	17	 要如何確認PL層記帳到Firebase的資料欄位是否正確？ 	 Open
