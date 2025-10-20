@@ -287,14 +287,14 @@ MM 	 DD 	 Description 	    Progress
 10	7	 打通SIT測試環境：處理DCN-0015 格式標準化不完整問題 	 Ongoing
 10	8	 打通SIT測試：階段二 	 Ongoing
 10	8	 打通SIT測試：從Firestore的欄位去確認寫入資料正確性 	 Ongoing
-10	8	 整理資料欄位與模組調動邏輯 	 Ongoing
-10	8	 撰寫DCN-0016 P1-2 測試資料流計畫.md 	 Ongoing
-10	8	 撰寫PL層SIT測試計畫6501文件 	 Ongoing
-10	8	 建立PL層SIT測試代碼 	 Ongoing
-10	9	 檢視PL層模組之資料欄位是否符合1311規定之資料欄位：7301, 7302 	 Ongoing
-10	9	 檢視BL層模組之資料欄位是否符合1311規定之資料欄位：1301, 1309 	 Ongoing
-10	9	 撰寫9835文件 	 Ongoing
-10	9	 以9835文件review 7570,7580,7590 	 Ongoing
+10	8	 整理資料欄位與模組調動邏輯 	 Closed
+10	8	 撰寫DCN-0016 P1-2 測試資料流計畫.md 	 Closed
+10	8	 撰寫PL層SIT測試計畫6501文件 	 Closed
+10	8	 建立PL層SIT測試代碼 	 Closed
+10	9	 檢視PL層模組之資料欄位是否符合1311規定之資料欄位：7301, 7302 	 Closed
+10	9	 檢視BL層模組之資料欄位是否符合1311規定之資料欄位：1301, 1309 	 Closed
+10	9	 撰寫9835文件 	 Closed
+10	9	 以9835文件review 7570,7580,7590 	 Closed
 10	9	 打通SIT測試代碼7570 	 Closed
 10	10	 搞定Flutter設定環境：安裝xcode 	 Closed
 10	10	 在Macbook中開啟termianl輸入flutter doctor以檢查flutter環境是否設置完整 	 Closed
@@ -303,10 +303,15 @@ MM 	 DD 	 Description 	    Progress
 10	14	 檢查Firestore欄位是否符合需求 	 Closed
 10	14	 撰寫DCN-0017	 Closed
 10	15	 重構7580模組 	 Closed
-10	15	 重構7570模組 	 Ongoing
+10	15	 重構7570模組 	 Closed
 10	15	 執行DCN-0018 重構測試模組之dataflow 	 Ongoing
 10	16	 修改6501文件，導入更新的測試策略：TC-SIT-001~016：PL層業務邏輯測試，直接調用PL層函數，驗證業務邏輯正確性；TC-SIT-017~044：APL層API Gateway測試，HTTP請求到API端點，驗證API轉發功能 	 Ongoing
 10	16	 重構7570測試代碼：移除對73XX UI部分的Dependency 	 Ongoing
 10	16	 重構73XX模組：分拆成業務邏輯和UI(記得寫DCN) 	 Ongoing
 10	16	 打通Dataflow：打通7302(移除7302的模擬功能) 	 Ongoing
 10	17	 系統性檢視資料與帳號的CRUD 	 Ongoing
+10	17	 Review寫入firebase資料的必要性 	 Ongoing
+10	17	 P1-2 Passed!!!! 	 Closed
+10	17	 我把account_mappings刪除掉，要記得加回來 	 Ongoing
+10	20	 Review寫入firebase資料的必要性、正確性與整理資料欄位 	 Ongoing
+10	20	 要如何在Firebase裡面重新寫入預設的文件？ 	 Ongoing
