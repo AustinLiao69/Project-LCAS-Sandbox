@@ -14,4 +14,8 @@
 1. 請把Date刪除留下CreatedAt
 
 關於1310.DL模組
-1. 時間這欄的時區要改成台北時間
+1. 模組內的時區全部要改成台北時間
+
+關於全部的部分：
+1. 只要有任何跟寫入firebase的時間有關的全部用CreatedAt
+2. 若是有跟CreatedAt相同功能的則保留CreatedAt
