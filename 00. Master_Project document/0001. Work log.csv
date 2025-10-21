@@ -316,3 +316,4 @@ MM 	 DD 	 Description 	    Progress
 10	20	 Review寫入firebase資料的必要性、正確性與整理資料欄位 	 Ongoing
 10	20	 要如何在Firebase裡面重新寫入預設的文件？ 	 Ongoing
 10	20	 處理firebase讀取數量問題 	 Ongoing
+10	21	 修改0090文件：將預算管理功能提至Phase2、重構APL層 	 Ongoing
