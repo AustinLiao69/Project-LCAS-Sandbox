@@ -1,4 +1,56 @@
 ------------------------------------------
+20251021. Review firebase 欄位資料
+
+請參照9909文件，以資深SA深入思考、分析原因。並提出解決方案。
+提案時請注意以下方向：
+1. 必須等我Approve之後才能開始編修代碼。
+2. 模組板次與函數版次都要升版。
+3. 現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、加強穩定性、測試等手段。
+4. 將任務切分成數個階段處理(建議分成三個階段)。
+5. 請提出你的insight
+6. 請列出問題、詳細說明並提出你的看法
+
+您提到的問題很重要，讓我分析一下 Firebase Firestore 目前的實際結構狀況：
+問題分析
+根據您的觀察，在 Firebase 中您只看到了：
+•	ledgers/{ledgerId}/transactions 子集合 ✅ 存在
+•	ledgers/{ledgerId}/accounts 子集合 ❌ 缺失
+•	ledgers/{ledgerId}/categories 子集合 ❌ 缺失
+問題根本原因
+查看 1311. FS.js 中的 FS_initializePhase1DataStructure 函數，我發現該函數只建立了系統級配置文檔，而沒有建立具體帳本的子集合結構：
+目前只建立：
+1.	_system/config - 系統配置
+2.	_system/default_categories - 預設科目模板
+3.	_system/default_account_types - 預設帳戶類型模板
+4.	_system/assessment_questions - 評估問卷
+缺少的關鍵步驟：
+•	沒有建立實際的 ledgers 集合文檔
+•	沒有建立帳本的子集合結構 (accounts 和 categories)
+•	子集合只有在有數據寫入時才會在 Firestore 中顯示
+解決方案
+根據 SA 的角色分析，我將此問題分成三個階段處理：
+階段一：立即修復 - 建立缺失的子集合結構
+需要在 1311. FS.js 中新增函數來建立帳本子集合的預設結構。
+階段二：資料一致性檢查 - 驗證現有資料
+檢查是否有其他帳本相關的資料結構問題。
+階段三：預防機制 - 確保未來帳本建立時自動創建完整結構
+修改帳本建立邏輯，確保每個新帳本都有完整的子集合結構。
+我的建議
+由於這是 MVP 階段，建議：
+1.	立即執行修復指令：建立一個專門的 Firebase 資料結構修復函數
+2.	時區統一：確保所有時間欄位使用 createdAt (Asia/Taipei)
+3.	移除重複欄位：如您要求的移除 Date 欄位，保留 createdAt
+請問您是否同意我開始編修代碼來解決這個 Firebase 資料結構缺失的問題？
+我會：
+•	升級 1311. FS.js 模組版本至 v2.3.0
+•	新增 FS_initializeLedgerSubcollections 函數
+•	修改時區設定為 Asia/Taipei
+•	統一使用 createdAt 時間欄位
+等您 Approve 後我就開始實作。
+
+
+
+------------------------------------------
 20251017. Review firebase 欄位資料
 
 請參照9909文件，以資深SA深入思考、分析原因。並提出解決方案。
@@ -9,6 +61,7 @@
 4. 將任務切分成數個階段處理(建議分成三個階段)。
 5. 請提出你的insight
 6. 請列出問題、詳細說明並提出你的看法
+
 
 關於Ledgers底下的欄位：
 1. 請把Date刪除留下CreatedAt
