@@ -318,4 +318,5 @@ MM 	 DD 	 Description 	    Progress
 10	20	 處理firebase讀取數量問題 	 Ongoing
 10	21	 修改0090文件：將預算管理功能提至Phase2 	 Closed
 10	21	 撰寫DCN去修改P2 scope的APL gateway(P1仍使用83模組，後續回頭再修P1) 	 Ongoing
-10	22	 撰寫DCN去修改P2 scope的APL gateway(P1仍使用83模組，後續回頭再修P1) 	 Ongoing
+10	22	 撰寫DCN-0019 	 Ongoing
+10	22	 建立APL.dart 	 Ongoing
