@@ -3,6 +3,134 @@
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+參照9904文件，以資深SQA深入分析7598測試資料與7571測試需求的對應關係。
+🔍 問題分析
+核心問題：7598測試資料不匹配Phase 2需求
+經過深入檢視7598. Data warehouse.json與7571. SIT_P2.dart，我發現7598目前包含的是Phase 1測試資料，而7571需要的是Phase 2特定測試資料。
+詳細問題說明
+1. 7571期望的Phase 2測試資料結構
+7571模組需要：
+•	collaboration_test_data：協作帳本測試資料
+•	budget_test_data：預算管理測試資料
+•	Phase 2特定的25個測試案例資料
+2. 7598現有的Phase 1測試資料結構
+7598目前包含：
+•	authentication_test_data：認證測試資料（Phase 1用）
+•	bookkeeping_test_data：記帳測試資料（Phase 1用）
+•	完全缺乏Phase 2所需的協作與預算管理資料
+💡 Insight 洞察
+根本原因：資料倉庫設計未考慮階段性擴展需求
+1.	資料結構滯後：7598停留在Phase 1階段，未擴展至Phase 2
+2.	測試資料隔離不足：缺乏Phase間的資料繼承與擴展機制
+3.	模組間契約不明確：7571與7598之間的資料契約定義不清
+📊 P1可複用於P2的測試資料分析
+✅ P1中可直接用於P2的測試資料
+從7598現有資料中，以下可直接用於P2：
+1. 用戶認證資料（100%可複用）
+"authentication_test_data": {
+  "success_scenarios": {
+    "expert_user_valid": {...},
+    "inertial_user_valid": {...},
+    "cultivation_user_valid": {...},
+    "guiding_user_valid": {...}
+  }
+}
+複用原因：P2的協作與預算管理需要相同的用戶認證基礎
+2. 基礎交易資料（80%可複用）
+"bookkeeping_test_data": {
+  "success_scenarios": {
+    "valid_expense_transaction": {...},
+    "valid_income_transaction": {...}
+  }
+}
+複用原因：預算執行計算需要基礎交易資料作為輸入
+3. 四模式用戶資料（100%可複用）
+所有四種模式的用戶資料都可作為協作與預算管理的測試基礎
+❌ P2需要新增的測試資料
+1. 協作帳本測試資料（完全缺失）
+"collaboration_test_data": {
+  "success_scenarios": {
+    "create_collaborative_ledger": {
+      "ledgerId": "collab_ledger_001",
+      "name": "協作測試帳本",
+      "type": "collaborative",
+      "ownerId": "user_expert_1697363200000",
+      "collaborators": []
+    }
+  },
+  "failure_scenarios": {
+    "invalid_collaborator_email": {
+      "email": "invalid-email",
+      "expectedError": "協作者Email格式無效"
+    }
+  }
+}
+2. 預算管理測試資料（完全缺失）
+"budget_test_data": {
+  "success_scenarios": {
+    "create_monthly_budget": {
+      "budgetId": "budget_001",
+      "name": "月度測試預算",
+      "amount": 15000.0,
+      "type": "monthly",
+      "period": {...},
+      "alertSettings": {...}
+    }
+  }
+}
+🎯 三階段解決方案
+階段一：7598測試資料擴展（緊急修復）
+目標：讓7571能正常執行Phase 2測試
+範圍：擴展7598. Data warehouse.json
+具體行動：
+•	新增collaboration_test_data區塊
+•	新增budget_test_data區塊
+•	保持現有Phase 1資料不變（向後相容）
+•	版本升級：7598 v3.0.0 → v3.1.0
+階段二：7571測試資料讀取優化
+目標：確保7571能正確讀取新增的測試資料
+範圍：檢查並調整7571. SIT_P2.dart的資料載入邏輯
+具體行動：
+•	驗證P2TestDataManager.loadP2TestData()函數
+•	確認資料載入邏輯正確對應新的資料結構
+•	版本升級：7571 v1.0.0 → v1.0.1（小幅調整）
+階段三：測試執行驗證
+目標：確認Phase 2測試能正常執行
+範圍：執行7571完整測試流程驗證
+具體行動：
+•	執行dart test 7571. SIT_P2.dart
+•	驗證25個測試案例都能找到對應測試資料
+•	確認測試結果符合預期
+📋 問題列表與我的看法
+高優先級問題
+1.	資料缺失問題：7598缺乏Phase 2協作與預算管理測試資料
+•	我的看法：這是系統性問題，反映了測試資料管理的階段性規劃不足
+2.	架構不匹配問題：7571期望的資料結構與7598實際提供的不符
+•	我的看法：需要建立更清晰的資料契約定義機制
+中優先級問題
+3.	版本控制問題：7598版本為v3.0.0但未包含Phase 2資料
+•	我的看法：版本命名應該反映實際功能範圍
+4.	相容性問題：需要確保新增資料不影響Phase 1測試
+•	我的看法：向後相容是MVP階段的重要原則
+🚀 立即執行建議
+優先級排序：
+1.	最高優先級：補強7598測試資料（解決執行阻塞）
+2.	高優先級：驗證7571資料讀取邏輯
+3.	中優先級：執行完整測試驗證
+MVP原則體現：
+•	✅ 專注解決當前問題：補齊缺失的測試資料
+•	✅ 最小化變動：在現有架構上擴展，不重新設計
+•	✅ 快速交付：三階段漸進式解決，確保每階段都有可驗證成果
+等待您的Approve後，我將按階段執行7598測試資料補強工作，確保7571 Phase 2測試能正常執行。
+
+
+
+
+------------------------------------------
+20251022. 撰寫Test plan_P2
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 參照9909文件，以資深SA深入分析7598測試資料與7571測試需求的對應關係。
 
 🔍 問題分析
