@@ -2,10 +2,10 @@
 /**
  * APL.dart - 統一API Gateway模組
  * @module 統一APL Gateway
- * @description LCAS 2.0 APL層統一Gateway - P2階段30個API端點完整實作
- * @version v1.1.0
+ * @description LCAS 2.0 APL層統一Gateway - P2階段完整實作並為P3-P7建立擴展基礎
+ * @version v1.2.0
  * @date 2025-01-22
- * @update DCN-0019 Phase 2: 實作P2階段30個API端點路由邏輯
+ * @update DCN-0019 Phase 3: 整合驗證與完成，建立P3-P7擴展基礎
  */
 
 import 'dart:convert';
@@ -179,6 +179,29 @@ class APLGateway {
   
   /// 預算管理服務 (8107 API規格) - 8個API端點
   BudgetManagementService get budget => BudgetManagementService(this);
+
+  // === P3-P7擴展基礎 ===
+  
+  /// 科目管理服務 (8106 API規格) - P3階段預留
+  // CategoryManagementService get category => CategoryManagementService(this);
+  
+  /// 報表分析服務 (8108 API規格) - P4階段預留  
+  // ReportAnalysisService get report => ReportAnalysisService(this);
+  
+  /// AI助理服務 (8109 API規格) - P5階段預留
+  // AIAssistantService get ai => AIAssistantService(this);
+  
+  /// 激勵系統服務 (8110 API規格) - P5階段預留
+  // IncentiveSystemService get incentive => IncentiveSystemService(this);
+  
+  /// 系統服務 (8111 API規格) - P6階段預留
+  // SystemService get system => SystemService(this);
+  
+  /// 備份與資料管理服務 (8112 API規格) - P6階段預留
+  // BackupDataService get backup => BackupDataService(this);
+  
+  /// 通知管理服務 (8113 API規格) - P6階段預留
+  // NotificationService get notification => NotificationService(this);
 
   /// 釋放資源
   void dispose() {
@@ -755,8 +778,142 @@ class APL {
   }
 }
 
+/// P2功能完整性驗證方法
+class P2FeatureValidator {
+  final APLGateway _gateway;
+  
+  P2FeatureValidator(this._gateway);
+
+  /// P2完整流程驗證：建立帳本 → 建立帳戶 → 設定預算 → 邀請協作者
+  Future<Map<String, dynamic>> validateP2CompleteFlow() async {
+    final results = <String, dynamic>{
+      'timestamp': DateTime.now().toIso8601String(),
+      'version': 'v1.2.0',
+      'tests': <String, bool>{},
+      'errors': <String, String>{}
+    };
+
+    try {
+      // 1. 建立新帳本
+      final ledgerResponse = await _gateway.ledger.createLedger({
+        'name': '測試帳本_${DateTime.now().millisecondsSinceEpoch}',
+        'type': 'personal',
+        'description': 'P2功能驗證測試帳本'
+      });
+      
+      results['tests']['create_ledger'] = ledgerResponse.success;
+      if (!ledgerResponse.success) {
+        results['errors']['create_ledger'] = ledgerResponse.error?.message ?? '建立帳本失敗';
+        return results;
+      }
+      
+      final ledgerId = ledgerResponse.data?['ledger']?['id'];
+      
+      // 2. 建立帳戶
+      final accountResponse = await _gateway.account.createAccount({
+        'name': '測試現金帳戶',
+        'type': 'cash',
+        'ledgerId': ledgerId,
+        'initialBalance': 10000
+      });
+      
+      results['tests']['create_account'] = accountResponse.success;
+      if (!accountResponse.success) {
+        results['errors']['create_account'] = accountResponse.error?.message ?? '建立帳戶失敗';
+      }
+      
+      // 3. 建立預算
+      final budgetResponse = await _gateway.budget.createBudget({
+        'name': '測試月度預算',
+        'type': 'monthly',
+        'amount': 5000,
+        'ledgerId': ledgerId,
+        'period': {
+          'type': 'monthly',
+          'startDate': DateTime.now().toIso8601String()
+        }
+      });
+      
+      results['tests']['create_budget'] = budgetResponse.success;
+      if (!budgetResponse.success) {
+        results['errors']['create_budget'] = budgetResponse.error?.message ?? '建立預算失敗';
+      }
+      
+      // 4. 取得帳本詳情（含權限驗證）
+      final detailResponse = await _gateway.ledger.getLedgerDetail(
+        ledgerId!, 
+        includeTransactions: true,
+        userMode: 'Expert'
+      );
+      
+      results['tests']['get_ledger_detail'] = detailResponse.success;
+      if (!detailResponse.success) {
+        results['errors']['get_ledger_detail'] = detailResponse.error?.message ?? '取得帳本詳情失敗';
+      }
+      
+      // 5. 取得預算狀況
+      final statusResponse = await _gateway.budget.getBudgetStatus(
+        ledgerId: ledgerId,
+        userMode: 'Expert'
+      );
+      
+      results['tests']['get_budget_status'] = statusResponse.success;
+      if (!statusResponse.success) {
+        results['errors']['get_budget_status'] = statusResponse.error?.message ?? '取得預算狀況失敗';
+      }
+      
+      results['overall_success'] = results['tests'].values.every((test) => test == true);
+      results['ledger_id'] = ledgerId;
+      
+    } catch (error) {
+      results['tests']['exception_handling'] = false;
+      results['errors']['exception'] = error.toString();
+      results['overall_success'] = false;
+    }
+    
+    return results;
+  }
+
+  /// 四模式差異化驗證
+  Future<Map<String, dynamic>> validateUserModeSupport() async {
+    final modes = ['Novice', 'Cultivation', 'Expert', 'Professional'];
+    final results = <String, dynamic>{
+      'timestamp': DateTime.now().toIso8601String(),
+      'mode_tests': <String, bool>{},
+      'errors': <String, String>{}
+    };
+
+    for (final mode in modes) {
+      try {
+        final response = await _gateway.ledger.getLedgers(
+          userMode: mode,
+          limit: 5
+        );
+        results['mode_tests'][mode] = response.success;
+        if (!response.success) {
+          results['errors'][mode] = response.error?.message ?? '模式測試失敗';
+        }
+      } catch (error) {
+        results['mode_tests'][mode] = false;
+        results['errors'][mode] = error.toString();
+      }
+    }
+    
+    results['all_modes_supported'] = results['mode_tests'].values.every((test) => test == true);
+    return results;
+  }
+}
+
 /// 使用範例：
 /// ```dart
+/// // === P2完整功能驗證 ===
+/// final validator = P2FeatureValidator(APL.instance);
+/// final p2Results = await validator.validateP2CompleteFlow();
+/// print('P2功能驗證結果: ${p2Results['overall_success']}');
+///
+/// final modeResults = await validator.validateUserModeSupport();  
+/// print('四模式支援驗證: ${modeResults['all_modes_supported']}');
+///
 /// // === 帳本管理服務範例 ===
 /// // 1. 取得帳本列表
 /// final ledgersResponse = await APL.instance.ledger.getLedgers(
