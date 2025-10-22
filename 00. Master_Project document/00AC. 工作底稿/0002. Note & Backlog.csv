@@ -13,3 +13,4 @@ MM 	 DD 	 Description 	    Progress
 =>不可繼續使用現有帳本，需要跳出錯誤訊息。 	 Open
 10	17	 要如何確認PL層記帳到Firebase的資料欄位是否正確？ 	 Open
 10	22	 要把index.js改名成LWS.js (LINE Webhook service) 	 Open
+10	22	 如果AI一直將你要求刪除的東西加回去，表示上層文件一定沒有刪除乾淨 	 Open
