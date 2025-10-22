@@ -316,5 +316,6 @@ MM 	 DD 	 Description 	    Progress
 10	20	 Review寫入firebase資料的必要性、正確性與整理資料欄位 	 Ongoing
 10	20	 要如何在Firebase裡面重新寫入預設的文件？ 	 Ongoing
 10	20	 處理firebase讀取數量問題 	 Ongoing
-10	21	 修改0090文件：將預算管理功能提至Phase2 	 Ongoing
+10	21	 修改0090文件：將預算管理功能提至Phase2 	 Closed
 10	21	 撰寫DCN去修改P2 scope的APL gateway(P1仍使用83模組，後續回頭再修P1) 	 Ongoing
+10	22	 撰寫DCN去修改P2 scope的APL gateway(P1仍使用83模組，後續回頭再修P1) 	 Ongoing

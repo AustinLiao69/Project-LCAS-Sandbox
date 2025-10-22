@@ -12,3 +12,4 @@ MM 	 DD 	 Description 	    Progress
 10	17	 衝突處理：檢測到已存在帳本時顯示示警訊息，繼續使用現有帳本
 =>不可繼續使用現有帳本，需要跳出錯誤訊息。 	 Open
 10	17	 要如何確認PL層記帳到Firebase的資料欄位是否正確？ 	 Open
+10	22	 要把index.js改名成LWS.js (LINE Webhook service) 	 Open
