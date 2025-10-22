@@ -315,14 +315,14 @@ class P2SITTestController {
     print('[7571] 🔄 執行階段一：預算管理功能測試 (TC-001~008)');
 
     final testCases = [
-      'TC-P2-001',
-      'TC-P2-002', 
-      'TC-P2-003',
-      'TC-P2-004',
-      'TC-P2-005',
-      'TC-P2-006',
-      'TC-P2-007',
-      'TC-P2-008'
+      'TC-001',
+      'TC-002', 
+      'TC-003',
+      'TC-004',
+      'TC-005',
+      'TC-006',
+      'TC-007',
+      'TC-008'
     ];
 
     for (final testId in testCases) {
@@ -336,9 +336,9 @@ class P2SITTestController {
     print('[7571] 🔄 執行階段二：帳本協作功能測試 (TC-009~020)');
 
     final testCases = [
-      'TC-P2-009', 'TC-P2-010', 'TC-P2-011', 'TC-P2-012',
-      'TC-P2-013', 'TC-P2-014', 'TC-P2-015', 'TC-P2-016',
-      'TC-P2-017', 'TC-P2-018', 'TC-P2-019', 'TC-P2-020'
+      'TC-009', 'TC-010', 'TC-011', 'TC-012',
+      'TC-013', 'TC-014', 'TC-015', 'TC-016',
+      'TC-017', 'TC-018', 'TC-019', 'TC-020'
     ];
 
     for (final testId in testCases) {
@@ -356,11 +356,11 @@ class P2SITTestController {
     print('[7571] 🔄 執行階段三：API整合驗證測試 (TC-021~025)');
 
     final testCases = [
-      'TC-P2-021',
-      'TC-P2-022',
-      'TC-P2-023', 
-      'TC-P2-024',
-      'TC-P2-025'
+      'TC-021',
+      'TC-022',
+      'TC-023', 
+      'TC-024',
+      'TC-025'
     ];
 
     for (final testId in testCases) {
@@ -386,42 +386,42 @@ class P2SITTestController {
 
       // 根據測試案例執行對應邏輯
       switch (testId) {
-        case 'TC-P2-001': // 建立基本預算
+        case 'TC-001': // 建立基本預算
           outputData = await _testCreateBudget(inputData);
           testPassed = outputData['success'] == true;
           break;
 
-        case 'TC-P2-002': // 查詢預算列表
+        case 'TC-002': // 查詢預算列表
           outputData = await _testQueryBudgetList(inputData);
           testPassed = outputData['success'] == true;
           break;
 
-        case 'TC-P2-003': // 更新預算資訊
+        case 'TC-003': // 更新預算資訊
           outputData = await _testUpdateBudget(inputData);
           testPassed = outputData['success'] == true;
           break;
 
-        case 'TC-P2-004': // 刪除預算
+        case 'TC-004': // 刪除預算
           outputData = await _testDeleteBudget(inputData);
           testPassed = outputData['success'] == true;
           break;
 
-        case 'TC-P2-005': // 預算執行狀況計算
+        case 'TC-005': // 預算執行狀況計算
           outputData = await _testBudgetExecution(inputData);
           testPassed = outputData['progress'] != null;
           break;
 
-        case 'TC-P2-006': // 預算警示檢查
+        case 'TC-006': // 預算警示檢查
           outputData = await _testBudgetAlert(inputData);
           testPassed = outputData['alerts'] != null;
           break;
 
-        case 'TC-P2-007': // 預算資料驗證
+        case 'TC-007': // 預算資料驗證
           outputData = await _testBudgetValidation(inputData);
           testPassed = outputData['valid'] == true;
           break;
 
-        case 'TC-P2-008': // 預算模式差異化
+        case 'TC-008': // 預算模式差異化
           outputData = await _testBudgetModeDifferentiation(inputData);
           testPassed = outputData['modes_supported'] == true;
           break;
@@ -482,62 +482,62 @@ class P2SITTestController {
 
       // 根據測試案例執行對應邏輯
       switch (testId) {
-        case 'TC-P2-009': // 建立協作帳本
+        case 'TC-009': // 建立協作帳本
           outputData = await _testCreateCollaborativeLedger(inputData);
           testPassed = outputData['success'] == true;
           break;
 
-        case 'TC-P2-010': // 查詢帳本列表
+        case 'TC-010': // 查詢帳本列表
           outputData = await _testQueryLedgerList(inputData);
           testPassed = outputData['success'] == true;
           break;
 
-        case 'TC-P2-011': // 更新帳本資訊
+        case 'TC-011': // 更新帳本資訊
           outputData = await _testUpdateLedgerInfo(inputData);
           testPassed = outputData['success'] == true;
           break;
 
-        case 'TC-P2-012': // 刪除帳本
+        case 'TC-012': // 刪除帳本
           outputData = await _testDeleteLedger(inputData);
           testPassed = outputData['success'] == true;
           break;
 
-        case 'TC-P2-013': // 查詢協作者列表
+        case 'TC-013': // 查詢協作者列表
           outputData = await _testQueryCollaborators(inputData);
           testPassed = outputData['collaborators'] != null;
           break;
 
-        case 'TC-P2-014': // 邀請協作者
+        case 'TC-014': // 邀請協作者
           outputData = await _testInviteCollaborator(inputData);
           testPassed = outputData['invitation_sent'] == true;
           break;
 
-        case 'TC-P2-015': // 更新協作者權限
+        case 'TC-015': // 更新協作者權限
           outputData = await _testUpdateCollaboratorPermissions(inputData);
           testPassed = outputData['permission_updated'] == true;
           break;
 
-        case 'TC-P2-016': // 移除協作者
+        case 'TC-016': // 移除協作者
           outputData = await _testRemoveCollaborator(inputData);
           testPassed = outputData['collaborator_removed'] == true;
           break;
 
-        case 'TC-P2-017': // 權限矩陣計算
+        case 'TC-017': // 權限矩陣計算
           outputData = await _testPermissionMatrixCalculation(inputData);
           testPassed = outputData['matrix_calculated'] == true;
           break;
 
-        case 'TC-P2-018': // 協作衝突檢測
+        case 'TC-018': // 協作衝突檢測
           outputData = await _testCollaborationConflictDetection(inputData);
           testPassed = outputData['conflict_detected'] != null;
           break;
 
-        case 'TC-P2-019': // API整合驗證
+        case 'TC-019': // API整合驗證
           outputData = await _testCollaborationAPIIntegration(inputData);
           testPassed = outputData['integration_verified'] == true;
           break;
 
-        case 'TC-P2-020': // 錯誤處理驗證
+        case 'TC-020': // 錯誤處理驗證
           outputData = await _testCollaborationErrorHandling(inputData);
           testPassed = outputData['error_handled'] == true;
           break;
@@ -594,27 +594,27 @@ class P2SITTestController {
 
       // 根據測試案例執行對應邏輯
       switch (testId) {
-        case 'TC-P2-021': // APL.dart統一Gateway驗證
+        case 'TC-021': // APL.dart統一Gateway驗證
           outputData = await _testAPLGatewayIntegration();
           testPassed = outputData['gateway_working'] == true;
           break;
 
-        case 'TC-P2-022': // 預算管理API轉發驗證
+        case 'TC-022': // 預算管理API轉發驗證
           outputData = await _testBudgetAPIForwarding();
           testPassed = outputData['api_forwarding'] == true;
           break;
 
-        case 'TC-P2-023': // 帳本協作API轉發驗證
+        case 'TC-023': // 帳本協作API轉發驗證
           outputData = await _testLedgerCollaborationAPIForwarding();
           testPassed = outputData['api_forwarding'] == true;
           break;
 
-        case 'TC-P2-024': // 四模式差異化
+        case 'TC-024': // 四模式差異化
           outputData = await _testFourModeDifferentiation();
           testPassed = outputData['modes_working'] == true;
           break;
 
-        case 'TC-P2-025': // 統一回應格式驗證
+        case 'TC-025': // 統一回應格式驗證
           outputData = await _testUnifiedResponseFormat();
           testPassed = outputData['format_compliant'] == true;
           break;
@@ -1289,35 +1289,35 @@ class P2SITTestController {
   String _getP2TestName(String testId) {
     final testNames = {
       // 預算管理測試 (TC-001~008)
-      'TC-P2-001': '建立基本預算',
-      'TC-P2-002': '查詢預算列表',
-      'TC-P2-003': '更新預算資訊',
-      'TC-P2-004': '刪除預算',
-      'TC-P2-005': '預算執行狀況計算',
-      'TC-P2-006': '預算警示檢查',
-      'TC-P2-007': '預算資料驗證',
-      'TC-P2-008': '預算模式差異化',
+      'TC-001': '建立基本預算',
+      'TC-002': '查詢預算列表',
+      'TC-003': '更新預算資訊',
+      'TC-004': '刪除預算',
+      'TC-005': '預算執行狀況計算',
+      'TC-006': '預算警示檢查',
+      'TC-007': '預算資料驗證',
+      'TC-008': '預算模式差異化',
 
       // 帳本協作測試 (TC-009~020)
-      'TC-P2-009': '建立協作帳本',
-      'TC-P2-010': '查詢帳本列表',
-      'TC-P2-011': '更新帳本資訊',
-      'TC-P2-012': '刪除帳本',
-      'TC-P2-013': '查詢協作者列表',
-      'TC-P2-014': '邀請協作者',
-      'TC-P2-015': '更新協作者權限',
-      'TC-P2-016': '移除協作者',
-      'TC-P2-017': '權限矩陣計算',
-      'TC-P2-018': '協作衝突檢測',
-      'TC-P2-019': 'API整合驗證',
-      'TC-P2-020': '錯誤處理驗證',
+      'TC-009': '建立協作帳本',
+      'TC-010': '查詢帳本列表',
+      'TC-011': '更新帳本資訊',
+      'TC-012': '刪除帳本',
+      'TC-013': '查詢協作者列表',
+      'TC-014': '邀請協作者',
+      'TC-015': '更新協作者權限',
+      'TC-016': '移除協作者',
+      'TC-017': '權限矩陣計算',
+      'TC-018': '協作衝突檢測',
+      'TC-019': 'API整合驗證',
+      'TC-020': '錯誤處理驗證',
 
       // API整合測試 (TC-021~025)
-      'TC-P2-021': 'APL.dart統一Gateway驗證',
-      'TC-P2-022': '預算管理API轉發驗證',
-      'TC-P2-023': '帳本協作API轉發驗證',
-      'TC-P2-024': '四模式差異化',
-      'TC-P2-025': '統一回應格式驗證',
+      'TC-021': 'APL.dart統一Gateway驗證',
+      'TC-022': '預算管理API轉發驗證',
+      'TC-023': '帳本協作API轉發驗證',
+      'TC-024': '四模式差異化',
+      'TC-025': '統一回應格式驗證',
     };
 
     return testNames[testId] ?? '未知Phase 2測試';
