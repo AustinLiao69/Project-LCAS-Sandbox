@@ -29,6 +29,10 @@ PL模組分群計畫
 └── 7106. 系統設定功能群_SRS.md          # S-501~S-507 (Phase 6,7)
     ├── Phase 6: S-501, S-502, S-503
     └── Phase 7: S-504, S-505, S-506, S-507
+
+
+
+    
 2. LLD (Low-Level Design) - 72資料夾
 72. Flutter_LLD_PL/
 ├── 7201. 系統進入功能群_LLD.md          # 對應APL: 8101,8102,8111
