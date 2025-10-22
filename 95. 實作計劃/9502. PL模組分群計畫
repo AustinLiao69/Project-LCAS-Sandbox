@@ -1,3 +1,4 @@
+
 PL模組分群計畫
 
 根據您的要求，我來列出基於功能域分群 + Phase標記混合方案的完整文件結構：
@@ -13,22 +14,21 @@ PL模組分群計畫
 │   ├── S-106 模式評估問卷頁
 │   ├── S-107 跨平台綁定頁
 │   └── S-108 APP下載推廣頁
-├── 7102. 記帳核心功能群_SRS.md          # S-201~S-211 (Phase 1,3,5)
+├── 7102. 記帳核心功能群_SRS.md          # S-201~S-211 (Phase 1,3,4)
 │   ├── Phase 1: S-201, S-202, S-203, S-206
 │   ├── Phase 3: S-204, S-205, S-207, S-208
-│   └── Phase 5: S-209, S-210, S-211
-├── 7103. 帳本協作功能群_SRS.md          # S-301~S-306 (Phase 2,3)
-│   ├── Phase 2: S-301, S-302, S-303
-│   └── Phase 3: S-304, S-305, S-306
-├── 7104. 預算管理功能群_SRS.md          # S-307~S-308 (Phase 4)
+│   └── Phase 4: S-209, S-210, S-211
+├── 7103. 帳本協作功能群_SRS.md          # S-301~S-306 (Phase 2)
+│   └── Phase 2: S-301, S-302, S-303, S-304, S-305, S-306
+├── 7104. 預算管理功能群_SRS.md          # S-307~S-308 (Phase 2)
 │   ├── S-307 預算管理主頁
 │   └── S-308 建立預算頁
-├── 7105. 報表分析功能群_SRS.md          # S-401~S-406 (Phase 5,6)
-│   ├── Phase 5: S-401, S-402, S-403
-│   └── Phase 6: S-404, S-405, S-406
-└── 7106. 系統設定功能群_SRS.md          # S-501~S-507 (Phase 6,7)
-    ├── Phase 6: S-501, S-502, S-503
-    └── Phase 7: S-504, S-505, S-506, S-507
+├── 7105. 報表分析功能群_SRS.md          # S-401~S-406 (Phase 4,5)
+│   ├── Phase 4: S-401, S-402, S-403
+│   └── Phase 5: S-404, S-405, S-406
+└── 7106. 系統設定功能群_SRS.md          # S-501~S-507 (Phase 5,6)
+    ├── Phase 5: S-501, S-502, S-503
+    └── Phase 6: S-504, S-505, S-506, S-507
 
 
 
@@ -43,13 +43,14 @@ PL模組分群計畫
 │   ├── 快速記帳界面設計
 │   ├── 科目選擇邏輯
 │   └── 統計圖表渲染
-├── 7203. 帳本協作功能群_LLD.md          # 對應APL: 8104
+├── 7203. 帳本協作功能群_LLD.md          # 對應APL: 8104,8105 (Phase 2重點)
 │   ├── 多帳本切換機制
 │   ├── 協作權限控制
 │   └── 帳戶管理邏輯
-├── 7204. 預算管理功能群_LLD.md          # 對應APL: 8107
+├── 7204. 預算管理功能群_LLD.md          # 對應APL: 8107 (Phase 2重點)
 │   ├── 預算設定界面
-│   └── 預算監控算法
+│   ├── 預算監控算法
+│   └── 預算警示機制
 ├── 7205. 報表分析功能群_LLD.md          # 對應APL: 8108,8109
 │   ├── 報表生成界面
 │   ├── 圖表渲染引擎
@@ -60,51 +61,53 @@ PL模組分群計畫
     └── 通知管理界面
 3. Test Plan - 74資料夾
 74. Flutter_Test_plan_PL/
-├── 7401. 系統進入功能群_TestPlan.md
+├── 7401. 系統進入功能群_TestPlan.md      # Phase 1測試
 │   ├── 登入註冊測試案例
 │   ├── 模式切換測試
 │   └── 跨平台綁定測試
-├── 7402. 記帳核心功能群_TestPlan.md
+├── 7402. 記帳核心功能群_TestPlan.md      # Phase 1,3,4測試
 │   ├── 快速記帳測試
 │   ├── 科目選擇測試
 │   └── 統計功能測試
-├── 7403. 帳本協作功能群_TestPlan.md
+├── 7403. 帳本協作功能群_TestPlan.md      # Phase 2測試重點
 │   ├── 多帳本測試
 │   ├── 協作權限測試
 │   └── 帳戶管理測試
-├── 7404. 預算管理功能群_TestPlan.md
+├── 7404. 預算管理功能群_TestPlan.md      # Phase 2測試重點
 │   ├── 預算設定測試
-│   └── 預算監控測試
-├── 7405. 報表分析功能群_TestPlan.md
+│   ├── 預算監控測試
+│   └── 預算警示測試
+├── 7405. 報表分析功能群_TestPlan.md      # Phase 4,5測試
 │   ├── 報表生成測試
 │   ├── 圖表顯示測試
 │   └── AI分析測試
-└── 7406. 系統設定功能群_TestPlan.md
+└── 7406. 系統設定功能群_TestPlan.md      # Phase 5,6測試
     ├── 激勵系統測試
     ├── 備份功能測試
     └── 通知管理測試
 4. Test Code - 75資料夾
 75. Flutter_Test_code_PL/
-├── 7501. 系統進入功能群_test.dart
+├── 7501. 系統進入功能群_test.dart        # Phase 1測試代碼
 │   ├── login_register_test.dart
 │   ├── mode_assessment_test.dart
 │   └── platform_binding_test.dart
-├── 7502. 記帳核心功能群_test.dart
+├── 7502. 記帳核心功能群_test.dart        # Phase 1,3,4測試代碼
 │   ├── quick_accounting_test.dart
 │   ├── category_selection_test.dart
 │   └── statistics_chart_test.dart
-├── 7503. 帳本協作功能群_test.dart
+├── 7503. 帳本協作功能群_test.dart        # Phase 2測試代碼重點
 │   ├── ledger_management_test.dart
 │   ├── collaboration_test.dart
 │   └── account_management_test.dart
-├── 7504. 預算管理功能群_test.dart
+├── 7504. 預算管理功能群_test.dart        # Phase 2測試代碼重點
 │   ├── budget_setup_test.dart
-│   └── budget_monitoring_test.dart
-├── 7505. 報表分析功能群_test.dart
+│   ├── budget_monitoring_test.dart
+│   └── budget_alert_test.dart
+├── 7505. 報表分析功能群_test.dart        # Phase 4,5測試代碼
 │   ├── report_generation_test.dart
 │   ├── chart_rendering_test.dart
 │   └── ai_analysis_test.dart
-├── 7506. 系統設定功能群_test.dart
+├── 7506. 系統設定功能群_test.dart        # Phase 5,6測試代碼
 │   ├── reward_system_test.dart
 │   ├── backup_restore_test.dart
 │   └── notification_test.dart
@@ -113,6 +116,20 @@ PL模組分群計畫
 │   ├── test_helpers.dart           # 測試輔助函數
 │   └── mock_services.dart          # Mock服務
 └── pubspec.yaml                    # 測試依賴配置
+
+**Phase 2重點更新說明:**
+根據0090文件，Phase 2採用並行開發策略，專注於：
+1. **預算管理功能** (S-307, S-308)
+2. **多帳本與協作功能** (S-301~S-306)
+
+對應的PL層模組：
+- **7304. 預算管理功能群.dart** - 處理S-307、S-308的業務邏輯
+- **7303. 帳本協作管理功能群.dart** - 處理S-301~S-305的業務邏輯
+
+對應的BL層模組：
+- **1312. BM.js:** 預算管理模組（完整實作）
+- **1351. MLS.js:** 多帳本管理模組（完整實作，包含協作功能）
+
 文件內部結構範例
 每個SRS文件內部結構：
 # 710X. XXX功能群_SRS.md
@@ -125,6 +142,7 @@ PL模組分群計畫
 ### 3.2 S-XXX 畫面名稱
 ## 4. 跨畫面整合需求
 ## 5. APL服務對應
+
 每個LLD文件內部結構：
 # 720X. XXX功能群_LLD.md
 ## 1. 架構設計
@@ -133,6 +151,7 @@ PL模組分群計畫
 ## 4. 導航流程設計
 ## 5. API集成設計
 ## 6. 效能優化設計
+
 優勢說明
 1.	開發順序友善：每個文件內部仍按Phase標記，便於按Sprint開發
 2.	邏輯完整性：相關畫面集中管理，便於理解業務邏輯
@@ -140,5 +159,6 @@ PL模組分群計畫
 4.	拆分彈性：未來可輕鬆按畫面拆分成40個獨立文件
 5.	團隊協作：不同功能群可並行開發，減少衝突
 6.	測試覆蓋：功能群內的整合測試更完整
-這個結構既保持了與Sprint計畫的對應關係，又維持了功能的邏輯完整性，是最平衡的選擇。
+7.	**Phase 2聚焦：**符合0090文件的Phase 2並行開發策略，預算管理與多帳本協作功能同時推進
 
+這個結構既保持了與Sprint計畫的對應關係，又維持了功能的邏輯完整性，特別是針對Phase 2的重點功能進行了明確分群。
