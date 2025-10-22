@@ -1060,6 +1060,451 @@ class LedgerCollaborationManager {
     }
   }
 
+  /// =============== 階段三：API整合與錯誤處理函數（5個函數） ===============
+
+  /**
+   * 21. 統一API調用處理（API整合核心）
+   * @version 2025-10-22-V2.0.0
+   * @date 2025-10-22
+   * @update: 階段三實作 - 統一API調用處理
+   */
+  static Future<Map<String, dynamic>> callAPI(
+    String method,
+    String endpoint, {
+    Map<String, dynamic>? data,
+    Map<String, String>? headers,
+    String? userMode,
+    int? timeout,
+  }) async {
+    try {
+      // 構建請求標頭
+      final requestHeaders = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (userMode != null) 'X-User-Mode': userMode,
+        ...?headers,
+      };
+
+      // 設定超時時間（預設30秒）
+      final timeoutDuration = Duration(seconds: timeout ?? 30);
+
+      // 根據HTTP方法調用對應的APL.dart方法
+      switch (method.toUpperCase()) {
+        case 'GET':
+          if (endpoint.startsWith('/api/v1/ledgers')) {
+            final response = await APL.instance.ledger.getLedgers().timeout(timeoutDuration);
+            return {
+              'success': response.success,
+              'data': response.data,
+              'message': response.message,
+              'error': response.error?.message,
+              'errorCode': response.error?.code,
+            };
+          }
+          break;
+        
+        case 'POST':
+          if (endpoint.startsWith('/api/v1/ledgers') && !endpoint.contains('/')) {
+            // 建立帳本
+            final response = await APL.instance.ledger.createLedger(data ?? {}).timeout(timeoutDuration);
+            return {
+              'success': response.success,
+              'data': response.data,
+              'message': response.message,
+              'error': response.error?.message,
+              'errorCode': response.error?.code,
+            };
+          } else if (endpoint.contains('/invitations')) {
+            // 邀請協作者
+            final ledgerId = endpoint.split('/')[4]; // 解析ledgerId
+            final invitations = (data?['invitations'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+            final response = await APL.instance.ledger.inviteCollaborators(ledgerId, invitations).timeout(timeoutDuration);
+            return {
+              'success': response.success,
+              'data': response.data,
+              'message': response.message,
+              'error': response.error?.message,
+              'errorCode': response.error?.code,
+            };
+          }
+          break;
+        
+        case 'PUT':
+          if (endpoint.contains('/collaborators/')) {
+            // 更新協作者權限
+            final pathParts = endpoint.split('/');
+            final ledgerId = pathParts[4];
+            final userId = pathParts[6];
+            final response = await APL.instance.ledger.updateCollaboratorRole(
+              ledgerId, 
+              userId, 
+              role: data?['role'] ?? 'viewer',
+              reason: data?['reason'],
+            ).timeout(timeoutDuration);
+            return {
+              'success': response.success,
+              'data': response.data,
+              'message': response.message,
+              'error': response.error?.message,
+              'errorCode': response.error?.code,
+            };
+          } else if (endpoint.contains('/ledgers/')) {
+            // 更新帳本
+            final ledgerId = endpoint.split('/')[4];
+            final response = await APL.instance.ledger.updateLedger(ledgerId, data ?? {}).timeout(timeoutDuration);
+            return {
+              'success': response.success,
+              'data': response.data,
+              'message': response.message,
+              'error': response.error?.message,
+              'errorCode': response.error?.code,
+            };
+          }
+          break;
+        
+        case 'DELETE':
+          if (endpoint.contains('/collaborators/')) {
+            // 移除協作者
+            final pathParts = endpoint.split('/');
+            final ledgerId = pathParts[4];
+            final userId = pathParts[6];
+            final response = await APL.instance.ledger.removeCollaborator(ledgerId, userId).timeout(timeoutDuration);
+            return {
+              'success': response.success,
+              'data': response.data,
+              'message': response.message,
+              'error': response.error?.message,
+              'errorCode': response.error?.code,
+            };
+          } else if (endpoint.contains('/ledgers/')) {
+            // 刪除帳本
+            final ledgerId = endpoint.split('/')[4];
+            final response = await APL.instance.ledger.deleteLedger(ledgerId).timeout(timeoutDuration);
+            return {
+              'success': response.success,
+              'data': response.data,
+              'message': response.message,
+              'error': response.error?.message,
+              'errorCode': response.error?.code,
+            };
+          }
+          break;
+      }
+
+      // 不支援的端點
+      return {
+        'success': false,
+        'data': null,
+        'message': '不支援的API端點: $method $endpoint',
+        'error': '不支援的API端點',
+        'errorCode': 'UNSUPPORTED_ENDPOINT',
+      };
+
+    } catch (e) {
+      return {
+        'success': false,
+        'data': null,
+        'message': 'API調用失敗: ${e.toString()}',
+        'error': e.toString(),
+        'errorCode': 'API_CALL_ERROR',
+      };
+    }
+  }
+
+  /**
+   * 22. 設定用戶模式（四模式支援）
+   * @version 2025-10-22-V2.0.0
+   * @date 2025-10-22
+   * @update: 階段三實作 - 設定用戶模式
+   */
+  static String setUserMode(String? requestedMode) {
+    // 驗證並設定用戶模式
+    const validModes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
+    
+    if (requestedMode != null && validModes.contains(requestedMode)) {
+      return requestedMode;
+    }
+    
+    // 預設為Inertial模式
+    return 'Inertial';
+  }
+
+  /**
+   * 23. 獲取模式配置（模式差異化配置）
+   * @version 2025-10-22-V2.0.0
+   * @date 2025-10-22
+   * @update: 階段三實作 - 獲取模式配置
+   */
+  static Map<String, dynamic> getConfigurationForMode(String userMode) {
+    switch (userMode) {
+      case 'Expert':
+        return {
+          'showAdvancedFeatures': true,
+          'showDetailedPermissions': true,
+          'enableBulkOperations': true,
+          'showAuditLogs': true,
+          'maxInvitationsPerBatch': 50,
+          'showTechnicalDetails': true,
+          'enableAdvancedSearch': true,
+          'showPerformanceMetrics': true,
+        };
+      
+      case 'Cultivation':
+        return {
+          'showAdvancedFeatures': false,
+          'showDetailedPermissions': false,
+          'enableBulkOperations': false,
+          'showAuditLogs': false,
+          'maxInvitationsPerBatch': 10,
+          'showTechnicalDetails': false,
+          'enableAdvancedSearch': false,
+          'showPerformanceMetrics': false,
+          'showLearningTips': true,
+          'enableProgressTracking': true,
+          'showRecommendations': true,
+        };
+      
+      case 'Guiding':
+        return {
+          'showAdvancedFeatures': false,
+          'showDetailedPermissions': false,
+          'enableBulkOperations': false,
+          'showAuditLogs': false,
+          'maxInvitationsPerBatch': 5,
+          'showTechnicalDetails': false,
+          'enableAdvancedSearch': false,
+          'showPerformanceMetrics': false,
+          'showSimplifiedUI': true,
+          'enableStepByStepGuides': true,
+          'autoSelectDefaults': true,
+        };
+      
+      case 'Inertial':
+      default:
+        return {
+          'showAdvancedFeatures': false,
+          'showDetailedPermissions': true,
+          'enableBulkOperations': true,
+          'showAuditLogs': false,
+          'maxInvitationsPerBatch': 20,
+          'showTechnicalDetails': false,
+          'enableAdvancedSearch': true,
+          'showPerformanceMetrics': false,
+        };
+    }
+  }
+
+  /**
+   * 24. 處理帳本建立錯誤（專用錯誤處理）
+   * @version 2025-10-22-V2.0.0
+   * @date 2025-10-22
+   * @update: 階段三實作 - 處理帳本建立錯誤
+   */
+  static CollaborationError handleLedgerCreationError(
+    String errorCode,
+    String errorMessage, {
+    Map<String, dynamic>? errorDetails,
+    String? userMode,
+  }) {
+    // 根據錯誤碼提供用戶友善的錯誤訊息
+    switch (errorCode) {
+      case 'VALIDATION_ERROR':
+        return CollaborationError(
+          '帳本資料格式不正確，請檢查必填欄位',
+          'LEDGER_VALIDATION_ERROR',
+          {
+            'userFriendlyMessage': '請填寫完整的帳本資訊',
+            'originalError': errorMessage,
+            'suggestions': ['檢查帳本名稱是否為空', '確認帳本類型是否正確'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'DUPLICATE_RESOURCE':
+        return CollaborationError(
+          '帳本名稱已存在，請選擇其他名稱',
+          'LEDGER_NAME_DUPLICATE',
+          {
+            'userFriendlyMessage': '此帳本名稱已被使用',
+            'originalError': errorMessage,
+            'suggestions': ['嘗試不同的帳本名稱', '在名稱後加上日期或編號'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'INSUFFICIENT_PERMISSIONS':
+        return CollaborationError(
+          '您沒有建立帳本的權限',
+          'LEDGER_CREATION_PERMISSION_DENIED',
+          {
+            'userFriendlyMessage': '權限不足，無法建立帳本',
+            'originalError': errorMessage,
+            'suggestions': ['聯繫管理員申請權限', '確認帳戶狀態是否正常'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'QUOTA_EXCEEDED':
+        return CollaborationError(
+          '已達到帳本數量上限',
+          'LEDGER_QUOTA_EXCEEDED',
+          {
+            'userFriendlyMessage': '帳本數量已達上限',
+            'originalError': errorMessage,
+            'suggestions': ['刪除不需要的帳本', '聯繫客服了解升級方案'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'NETWORK_ERROR':
+        return CollaborationError(
+          '網路連線異常，請稍後再試',
+          'LEDGER_CREATION_NETWORK_ERROR',
+          {
+            'userFriendlyMessage': '網路連線不穩定',
+            'originalError': errorMessage,
+            'suggestions': ['檢查網路連線', '稍後再試'],
+            'retryable': true,
+            ...?errorDetails,
+          },
+        );
+      
+      default:
+        return CollaborationError(
+          errorMessage.isNotEmpty ? errorMessage : '建立帳本時發生未知錯誤',
+          'LEDGER_CREATION_UNKNOWN_ERROR',
+          {
+            'userFriendlyMessage': '建立帳本失敗',
+            'originalError': errorMessage,
+            'errorCode': errorCode,
+            'suggestions': ['請稍後再試', '聯繫技術支援'],
+            ...?errorDetails,
+          },
+        );
+    }
+  }
+
+  /**
+   * 25. 處理邀請錯誤（專用錯誤處理）
+   * @version 2025-10-22-V2.0.0
+   * @date 2025-10-22
+   * @update: 階段三實作 - 處理邀請錯誤
+   */
+  static CollaborationError handleInvitationError(
+    String errorCode,
+    String errorMessage, {
+    Map<String, dynamic>? errorDetails,
+    String? userMode,
+    String? email,
+  }) {
+    // 根據錯誤碼提供用戶友善的錯誤訊息
+    switch (errorCode) {
+      case 'INVALID_EMAIL_FORMAT':
+        return CollaborationError(
+          email != null ? 'Email格式不正確：$email' : 'Email格式不正確',
+          'INVITATION_INVALID_EMAIL',
+          {
+            'userFriendlyMessage': '請輸入正確的Email格式',
+            'originalError': errorMessage,
+            'invalidEmail': email,
+            'suggestions': ['檢查Email是否包含@符號', '確認域名格式正確'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'USER_ALREADY_MEMBER':
+        return CollaborationError(
+          '此用戶已是帳本成員',
+          'INVITATION_USER_ALREADY_MEMBER',
+          {
+            'userFriendlyMessage': '該用戶已在帳本中',
+            'originalError': errorMessage,
+            'email': email,
+            'suggestions': ['檢查成員列表', '直接調整該用戶的權限'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'INVITATION_ALREADY_SENT':
+        return CollaborationError(
+          '邀請已發送給此用戶',
+          'INVITATION_DUPLICATE',
+          {
+            'userFriendlyMessage': '該用戶已收到邀請',
+            'originalError': errorMessage,
+            'email': email,
+            'suggestions': ['等待用戶回應', '可以重新發送邀請'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'INVITATION_QUOTA_EXCEEDED':
+        return CollaborationError(
+          '邀請數量已達上限',
+          'INVITATION_QUOTA_EXCEEDED',
+          {
+            'userFriendlyMessage': '邀請數量超過限制',
+            'originalError': errorMessage,
+            'suggestions': ['等待現有邀請被接受或拒絕', '考慮升級帳戶'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'INSUFFICIENT_PERMISSIONS':
+        return CollaborationError(
+          '您沒有邀請協作者的權限',
+          'INVITATION_PERMISSION_DENIED',
+          {
+            'userFriendlyMessage': '權限不足，無法邀請協作者',
+            'originalError': errorMessage,
+            'suggestions': ['聯繫帳本管理員', '確認您的角色權限'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'USER_NOT_FOUND':
+        return CollaborationError(
+          '找不到此Email的用戶',
+          'INVITATION_USER_NOT_FOUND',
+          {
+            'userFriendlyMessage': '該Email尚未註冊',
+            'originalError': errorMessage,
+            'email': email,
+            'suggestions': ['確認Email是否正確', '建議對方先註冊帳戶'],
+            ...?errorDetails,
+          },
+        );
+      
+      case 'EMAIL_DELIVERY_FAILED':
+        return CollaborationError(
+          '邀請Email發送失敗',
+          'INVITATION_EMAIL_DELIVERY_FAILED',
+          {
+            'userFriendlyMessage': '無法發送邀請信',
+            'originalError': errorMessage,
+            'email': email,
+            'suggestions': ['確認Email地址正確', '稍後再試'],
+            'retryable': true,
+            ...?errorDetails,
+          },
+        );
+      
+      default:
+        return CollaborationError(
+          errorMessage.isNotEmpty ? errorMessage : '邀請協作者時發生未知錯誤',
+          'INVITATION_UNKNOWN_ERROR',
+          {
+            'userFriendlyMessage': '邀請發送失敗',
+            'originalError': errorMessage,
+            'errorCode': errorCode,
+            'email': email,
+            'suggestions': ['請稍後再試', '聯繫技術支援'],
+            ...?errorDetails,
+          },
+        );
+    }
+  }
+
   /// =============== 輔助方法 ===============
 
   /**
@@ -1167,10 +1612,15 @@ class LedgerCollaborationManager {
       'phase': 'Phase 2',
       'stage1Functions': 8,
       'stage2Functions': 12,
-      'completedFunctions': 20,
+      'stage3Functions': 5,
+      'completedFunctions': 25,
       'totalFunctions': 25,
       'description': 'LCAS 2.0 帳本協作功能群 - Phase 2 帳本管理與協作記帳業務邏輯',
-      'stage2Description': '階段二完成：協作管理核心函數，包含協作者管理、權限控制、邀請處理等12個核心函數',
+      'stage3Description': '階段三完成：API整合與錯誤處理函數，包含統一API調用、四模式配置、專用錯誤處理等5個核心函數',
+      'completionStatus': '✅ 全部25個函數實作完成',
+      'apiIntegration': '完整整合APL.dart統一Gateway',
+      'errorHandling': '專業化錯誤處理與用戶友善訊息',
+      'modeSupport': '完整四模式差異化支援',
     };
   }
 }
