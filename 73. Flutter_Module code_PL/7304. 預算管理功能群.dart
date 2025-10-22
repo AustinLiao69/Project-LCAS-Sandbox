@@ -190,6 +190,194 @@ class BudgetError {
   });
 }
 
+/// 預算實體類別
+class Budget {
+  final String id;
+  final String name;
+  final double amount;
+  final double usedAmount;
+  final String type;
+  final String status;
+  final DateTime startDate;
+  final DateTime endDate;
+  final String currency;
+  final List<String> categories;
+  final Map<String, dynamic> alertRules;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Budget({
+    required this.id,
+    required this.name,
+    required this.amount,
+    required this.usedAmount,
+    required this.type,
+    required this.status,
+    required this.startDate,
+    required this.endDate,
+    this.currency = 'TWD',
+    this.categories = const [],
+    this.alertRules = const {},
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Budget.fromJson(Map<String, dynamic> json) {
+    return Budget(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      amount: (json['amount'] ?? 0.0).toDouble(),
+      usedAmount: (json['used_amount'] ?? 0.0).toDouble(),
+      type: json['type'] ?? 'monthly',
+      status: json['status'] ?? 'active',
+      startDate: DateTime.tryParse(json['start_date'] ?? '') ?? DateTime.now(),
+      endDate: DateTime.tryParse(json['end_date'] ?? '') ?? DateTime.now().add(Duration(days: 30)),
+      currency: json['currency'] ?? 'TWD',
+      categories: List<String>.from(json['categories'] ?? []),
+      alertRules: Map<String, dynamic>.from(json['alert_rules'] ?? {}),
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(json['updated_at'] ?? '') ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'amount': amount,
+      'used_amount': usedAmount,
+      'type': type,
+      'status': status,
+      'start_date': startDate.toIso8601String(),
+      'end_date': endDate.toIso8601String(),
+      'currency': currency,
+      'categories': categories,
+      'alert_rules': alertRules,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  Budget copyWith({
+    String? id,
+    String? name,
+    double? amount,
+    double? usedAmount,
+    String? type,
+    String? status,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? currency,
+    List<String>? categories,
+    Map<String, dynamic>? alertRules,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Budget(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      amount: amount ?? this.amount,
+      usedAmount: usedAmount ?? this.usedAmount,
+      type: type ?? this.type,
+      status: status ?? this.status,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      currency: currency ?? this.currency,
+      categories: categories ?? this.categories,
+      alertRules: alertRules ?? this.alertRules,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}
+
+/// 預算狀態提供者狀態類別
+class BudgetProviderState {
+  final List<Budget> budgets;
+  final Budget? currentBudget;
+  final BudgetExecution? execution;
+  final List<BudgetAlert> alerts;
+  final bool isLoading;
+  final String? errorMessage;
+  final String userId;
+  final UserMode userMode;
+  final DateTime lastUpdated;
+
+  BudgetProviderState({
+    required this.budgets,
+    this.currentBudget,
+    this.execution,
+    required this.alerts,
+    required this.isLoading,
+    this.errorMessage,
+    required this.userId,
+    required this.userMode,
+    required this.lastUpdated,
+  });
+
+  BudgetProviderState copyWith({
+    List<Budget>? budgets,
+    Budget? currentBudget,
+    BudgetExecution? execution,
+    List<BudgetAlert>? alerts,
+    bool? isLoading,
+    String? errorMessage,
+    String? userId,
+    UserMode? userMode,
+    DateTime? lastUpdated,
+  }) {
+    return BudgetProviderState(
+      budgets: budgets ?? this.budgets,
+      currentBudget: currentBudget ?? this.currentBudget,
+      execution: execution ?? this.execution,
+      alerts: alerts ?? this.alerts,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage ?? this.errorMessage,
+      userId: userId ?? this.userId,
+      userMode: userMode ?? this.userMode,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+    );
+  }
+}
+
+/// 預算狀態更新類別
+class BudgetStateUpdate {
+  final BudgetStateUpdateType type;
+  final List<Budget>? budgets;
+  final Budget? budget;
+  final Budget? currentBudget;
+  final BudgetExecution? execution;
+  final List<BudgetAlert>? alerts;
+  final bool? isLoading;
+  final String? errorMessage;
+  final String? budgetId;
+
+  BudgetStateUpdate({
+    required this.type,
+    this.budgets,
+    this.budget,
+    this.currentBudget,
+    this.execution,
+    this.alerts,
+    this.isLoading,
+    this.errorMessage,
+    this.budgetId,
+  });
+}
+
+/// 預算狀態更新類型枚舉
+enum BudgetStateUpdateType {
+  setBudgets,
+  setCurrentBudget,
+  setExecution,
+  setAlerts,
+  setLoading,
+  setError,
+  addBudget,
+  updateBudget,
+  removeBudget,
+}
+
 /// 預算管理功能群 - 階段一：核心業務邏輯函數
 class BudgetManagementFeatureGroup {
 
@@ -1008,6 +1196,311 @@ class BudgetManagementFeatureGroup {
     return 'normal';
   }
 
+  /// =============== 階段二：統一狀態管理函數（3個函數）===============
+
+  /**
+   * 06. 預算狀態初始化
+   * @version 2025-10-22-V2.0.0
+   * @date 2025-10-22
+   * @description 初始化所有預算相關狀態
+   */
+  static Future<void> initBudgetProvider(String userId, UserMode mode) async {
+    try {
+      print('[initBudgetProvider] 初始化預算狀態 - 用戶ID: $userId, 模式: ${mode.name}');
+      
+      // 驗證必要參數
+      if (userId.isEmpty) {
+        throw ArgumentError('用戶ID不能為空');
+      }
+
+      // 初始化預算狀態結構
+      _budgetProviderState = BudgetProviderState(
+        budgets: [],
+        currentBudget: null,
+        execution: null,
+        alerts: [],
+        isLoading: false,
+        errorMessage: null,
+        userId: userId,
+        userMode: mode,
+        lastUpdated: DateTime.now(),
+      );
+
+      // 根據用戶模式初始化特定狀態
+      await _initializeModeSpecificState(mode);
+      
+      // 載入用戶的預算數據
+      await _loadUserBudgets(userId);
+      
+      print('[initBudgetProvider] 預算狀態初始化完成');
+      
+    } catch (error) {
+      print('[initBudgetProvider] 狀態初始化錯誤: $error');
+      // 設置錯誤狀態
+      _budgetProviderState = _budgetProviderState?.copyWith(
+        isLoading: false,
+        errorMessage: '預算狀態初始化失敗: $error',
+      );
+      rethrow;
+    }
+  }
+
+  /**
+   * 07. 統一狀態更新
+   * @version 2025-10-22-V2.0.0
+   * @date 2025-10-22
+   * @description 統一處理所有預算狀態更新
+   */
+  static void updateBudgetState(BudgetStateUpdate update) {
+    try {
+      print('[updateBudgetState] 更新預算狀態 - 類型: ${update.type}');
+      
+      if (_budgetProviderState == null) {
+        throw StateError('預算狀態未初始化，請先調用 initBudgetProvider');
+      }
+
+      // 根據更新類型執行對應的狀態更新
+      switch (update.type) {
+        case BudgetStateUpdateType.setBudgets:
+          _budgetProviderState = _budgetProviderState!.copyWith(
+            budgets: update.budgets ?? [],
+            lastUpdated: DateTime.now(),
+          );
+          break;
+          
+        case BudgetStateUpdateType.setCurrentBudget:
+          _budgetProviderState = _budgetProviderState!.copyWith(
+            currentBudget: update.currentBudget,
+            lastUpdated: DateTime.now(),
+          );
+          break;
+          
+        case BudgetStateUpdateType.setExecution:
+          _budgetProviderState = _budgetProviderState!.copyWith(
+            execution: update.execution,
+            lastUpdated: DateTime.now(),
+          );
+          break;
+          
+        case BudgetStateUpdateType.setAlerts:
+          _budgetProviderState = _budgetProviderState!.copyWith(
+            alerts: update.alerts ?? [],
+            lastUpdated: DateTime.now(),
+          );
+          break;
+          
+        case BudgetStateUpdateType.setLoading:
+          _budgetProviderState = _budgetProviderState!.copyWith(
+            isLoading: update.isLoading ?? false,
+            lastUpdated: DateTime.now(),
+          );
+          break;
+          
+        case BudgetStateUpdateType.setError:
+          _budgetProviderState = _budgetProviderState!.copyWith(
+            errorMessage: update.errorMessage,
+            isLoading: false,
+            lastUpdated: DateTime.now(),
+          );
+          break;
+          
+        case BudgetStateUpdateType.addBudget:
+          if (update.budget != null) {
+            final currentBudgets = List<Budget>.from(_budgetProviderState!.budgets);
+            currentBudgets.add(update.budget!);
+            _budgetProviderState = _budgetProviderState!.copyWith(
+              budgets: currentBudgets,
+              lastUpdated: DateTime.now(),
+            );
+          }
+          break;
+          
+        case BudgetStateUpdateType.updateBudget:
+          if (update.budget != null) {
+            final currentBudgets = List<Budget>.from(_budgetProviderState!.budgets);
+            final index = currentBudgets.indexWhere((b) => b.id == update.budget!.id);
+            if (index != -1) {
+              currentBudgets[index] = update.budget!;
+              _budgetProviderState = _budgetProviderState!.copyWith(
+                budgets: currentBudgets,
+                lastUpdated: DateTime.now(),
+              );
+            }
+          }
+          break;
+          
+        case BudgetStateUpdateType.removeBudget:
+          if (update.budgetId != null) {
+            final currentBudgets = _budgetProviderState!.budgets
+                .where((b) => b.id != update.budgetId)
+                .toList();
+            _budgetProviderState = _budgetProviderState!.copyWith(
+              budgets: currentBudgets,
+              lastUpdated: DateTime.now(),
+            );
+          }
+          break;
+      }
+
+      // 通知狀態變更（模擬Provider通知）
+      _notifyStateListeners();
+      
+      print('[updateBudgetState] 狀態更新完成 - ${update.type}');
+      
+    } catch (error) {
+      print('[updateBudgetState] 狀態更新錯誤: $error');
+      
+      // 設置錯誤狀態
+      if (_budgetProviderState != null) {
+        _budgetProviderState = _budgetProviderState!.copyWith(
+          errorMessage: '狀態更新失敗: $error',
+          isLoading: false,
+          lastUpdated: DateTime.now(),
+        );
+        _notifyStateListeners();
+      }
+    }
+  }
+
+  /**
+   * 08. 狀態重置
+   * @version 2025-10-22-V2.0.0
+   * @date 2025-10-22
+   * @description 重置所有預算相關狀態
+   */
+  static void resetBudgetState({bool keepCache = false}) {
+    try {
+      print('[resetBudgetState] 重置預算狀態 - 保留快取: $keepCache');
+      
+      if (_budgetProviderState == null) {
+        print('[resetBudgetState] 狀態未初始化，無需重置');
+        return;
+      }
+
+      // 決定是否保留部分狀態
+      if (keepCache && _budgetProviderState != null) {
+        // 保留快取，僅重置運行時狀態
+        _budgetProviderState = _budgetProviderState!.copyWith(
+          currentBudget: null,
+          execution: null,
+          alerts: [],
+          isLoading: false,
+          errorMessage: null,
+          lastUpdated: DateTime.now(),
+        );
+        print('[resetBudgetState] 狀態部分重置完成（保留預算列表）');
+      } else {
+        // 完全重置所有狀態
+        _budgetProviderState = null;
+        _stateListeners.clear();
+        
+        // 清理快取
+        _budgetCache.clear();
+        
+        print('[resetBudgetState] 狀態完全重置完成');
+      }
+
+      // 通知狀態變更
+      _notifyStateListeners();
+      
+    } catch (error) {
+      print('[resetBudgetState] 狀態重置錯誤: $error');
+    }
+  }
+
+  /// =============== 階段二：狀態管理輔助類別與方法 ===============
+
+  /// 預算狀態提供者狀態類別
+  static BudgetProviderState? _budgetProviderState;
+  
+  /// 狀態變更監聽器列表
+  static final List<Function(BudgetProviderState?)> _stateListeners = [];
+  
+  /// 預算快取
+  static final Map<String, Budget> _budgetCache = {};
+
+  /// 根據用戶模式初始化特定狀態
+  static Future<void> _initializeModeSpecificState(UserMode mode) async {
+    switch (mode) {
+      case UserMode.Expert:
+        // Expert模式：啟用進階功能狀態
+        print('[initializeModeSpecificState] 初始化Expert模式狀態');
+        break;
+        
+      case UserMode.Cultivation:
+        // Cultivation模式：初始化成就追蹤狀態
+        print('[initializeModeSpecificState] 初始化Cultivation模式狀態');
+        break;
+        
+      case UserMode.Guiding:
+        // Guiding模式：初始化引導狀態
+        print('[initializeModeSpecificState] 初始化Guiding模式狀態');
+        break;
+        
+      case UserMode.Inertial:
+      default:
+        // Inertial模式：標準狀態
+        print('[initializeModeSpecificState] 初始化Inertial模式狀態');
+        break;
+    }
+  }
+
+  /// 載入用戶預算數據
+  static Future<void> _loadUserBudgets(String userId) async {
+    try {
+      // 透過APL.dart取得用戶預算列表
+      final response = await APL.instance.budget.getBudgets(
+        userMode: _budgetProviderState?.userMode.name,
+        limit: 50,
+      );
+
+      if (response.success && response.data != null) {
+        final budgets = (response.data as List).map((data) => 
+          Budget.fromJson(data as Map<String, dynamic>)
+        ).toList();
+        
+        // 更新狀態
+        updateBudgetState(BudgetStateUpdate(
+          type: BudgetStateUpdateType.setBudgets,
+          budgets: budgets,
+        ));
+        
+        print('[_loadUserBudgets] 載入 ${budgets.length} 個預算');
+      }
+    } catch (error) {
+      print('[_loadUserBudgets] 載入用戶預算失敗: $error');
+      
+      updateBudgetState(BudgetStateUpdate(
+        type: BudgetStateUpdateType.setError,
+        errorMessage: '載入預算失敗: $error',
+      ));
+    }
+  }
+
+  /// 通知狀態監聽器
+  static void _notifyStateListeners() {
+    for (final listener in _stateListeners) {
+      try {
+        listener(_budgetProviderState);
+      } catch (error) {
+        print('[_notifyStateListeners] 監聽器通知錯誤: $error');
+      }
+    }
+  }
+
+  /// 添加狀態監聽器
+  static void addStateListener(Function(BudgetProviderState?) listener) {
+    _stateListeners.add(listener);
+  }
+
+  /// 移除狀態監聽器
+  static void removeStateListener(Function(BudgetProviderState?) listener) {
+    _stateListeners.remove(listener);
+  }
+
+  /// 取得當前狀態
+  static BudgetProviderState? get currentState => _budgetProviderState;
+
   /// 取得模組資訊
   static Map<String, dynamic> getModuleInfo() {
     return {
@@ -1022,9 +1515,14 @@ class BudgetManagementFeatureGroup {
         '04. validateBudgetData - 統一資料驗證',
         '05. transformBudgetData - 統一資料轉換',
       ],
+      'stage2_functions': [
+        '06. initBudgetProvider - 預算狀態初始化',
+        '07. updateBudgetState - 統一狀態更新',
+        '08. resetBudgetState - 狀態重置',
+      ],
       'total_planned_functions': 15,
-      'implemented_functions': 5,
-      'implementation_progress': '33.3%',
+      'implemented_functions': 8,
+      'implementation_progress': '53.3%',
     };
   }
 }
