@@ -320,9 +320,9 @@ MM 	 DD 	 Description 	    Progress
 10	21	 撰寫DCN去修改P2 scope的APL gateway(P1仍使用83模組，後續回頭再修P1) 	 Closed
 10	22	 撰寫DCN-0019 	 Closed
 10	22	 實作APL.dart 	 Closed
-10	22	 實作7571. SIT_P2.dart 	 Ongoing
+10	22	 實作7571 	 Closed
 10	22	 檢查7598測試資料是否能滿足SIT P2 	 Ongoing
-10	22	 製作6502. SIT_P2.md test plan 	 Ongoing
+10	22	 撰寫6502 	 Closed
 10	22	 撰寫1111 	 Ongoing
 10	22	 撰寫1112 	 Ongoing
 10	22	 撰寫1151 	 Ongoing
