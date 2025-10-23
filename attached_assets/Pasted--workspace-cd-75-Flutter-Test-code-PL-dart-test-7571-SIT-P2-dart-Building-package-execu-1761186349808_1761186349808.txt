@@ -1,0 +1,65 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart" 
+Building package executable... 
+Built test:test.
+00:00 +0 -1: loading 7571. SIT_P2.dart [E]
+  Failed to load "7571. SIT_P2.dart":
+  7571.%20SIT_P2.dart:1:1: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+  Try adding the name of the type of the variable or the keyword 'var'.
+  replit_final_file>
+  ^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1:1: Error: Expected ';' after this.
+  replit_final_file>
+  ^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1:18: Error: Expected a declaration, but got '>'.
+  replit_final_file>
+                   ^
+  7571.%20SIT_P2.dart:23:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import 'dart:async';
+  ^^^^^^
+  7571.%20SIT_P2.dart:24:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import 'dart:convert';
+  ^^^^^^
+  7571.%20SIT_P2.dart:25:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import 'dart:io';
+  ^^^^^^
+  7571.%20SIT_P2.dart:26:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import 'package:test/test.dart';
+  ^^^^^^
+  7571.%20SIT_P2.dart:31:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import '../73. Flutter_Module code_PL/7303. 帳本協作功能群.dart' as PL7303;
+  ^^^^^^
+  7571.%20SIT_P2.dart:32:1: Error: Directives must appear before any declarations.
+  Try moving the directive before any declarations.
+  import '../73. Flutter_Module code_PL/7304. 預算管理功能群.dart' as PL7304;
+  ^^^^^^
+  7571.%20SIT_P2.dart:1969:1: Error: Expected a declaration, but got '<'.
+  </replit_final_file>
+  ^
+  7571.%20SIT_P2.dart:1969:2: Error: Expected a declaration, but got '/'.
+  </replit_final_file>
+   ^
+  7571.%20SIT_P2.dart:1969:3: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+  Try adding the name of the type of the variable or the keyword 'var'.
+  </replit_final_file>
+    ^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1969:3: Error: Expected ';' after this.
+  </replit_final_file>
+    ^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1969:3: Error: 'replit_final_file' is already declared in this scope.
+  </replit_final_file>
+    ^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1:1: Context: Previous declaration of 'replit_final_file'.
+  replit_final_file>
+  ^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1969:20: Error: Expected a declaration, but got '>'.
+  </replit_final_file>
+                     ^
+
+To run this test again: dart test 7571. SIT_P2.dart -p vm --plain-name 'loading 7571. SIT_P2.dart'
+00:00 +0 -1: Some tests failed.
+~/workspace/75. Flutter_Test_code_PL$ 
