@@ -1,0 +1,57 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart" 
+Building package executable... ((1.2s)
+Built test:test.
+00:00 +0 -1: loading 7571. SIT_P2.dart [E]
+  Failed to load "7571. SIT_P2.dart":
+  7571.%20SIT_P2.dart:920:19: Error: The getter 'testId' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'testId'.
+            testId: testId,
+                    ^^^^^^
+  7571.%20SIT_P2.dart:921:21: Error: The getter 'testName' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'testName'.
+            testName: testName,
+                      ^^^^^^^^
+  7571.%20SIT_P2.dart:919:16: Error: A value of type 'P2TestResult' can't be returned from an async function with return type 'Future<Map<String, dynamic>>'.
+   - 'P2TestResult' is from '7571.%20SIT_P2.dart'.
+   - 'Future' is from 'dart:async'.
+   - 'Map' is from 'dart:core'.
+          return P2TestResult(
+                 ^
+  7571.%20SIT_P2.dart:982:19: Error: The getter 'testId' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'testId'.
+            testId: testId,
+                    ^^^^^^
+  7571.%20SIT_P2.dart:983:21: Error: The getter 'testName' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'testName'.
+            testName: testName,
+                      ^^^^^^^^
+  7571.%20SIT_P2.dart:981:16: Error: A value of type 'P2TestResult' can't be returned from an async function with return type 'Future<Map<String, dynamic>>'.
+   - 'P2TestResult' is from '7571.%20SIT_P2.dart'.
+   - 'Future' is from 'dart:async'.
+   - 'Map' is from 'dart:core'.
+          return P2TestResult(
+                 ^
+  7571.%20SIT_P2.dart:1000:19: Error: The getter 'testId' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'testId'.
+            testId: testId,
+                    ^^^^^^
+  7571.%20SIT_P2.dart:1001:21: Error: The getter 'testName' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'testName'.
+            testName: testName,
+                      ^^^^^^^^
+  7571.%20SIT_P2.dart:999:16: Error: A value of type 'P2TestResult' can't be returned from an async function with return type 'Future<Map<String, dynamic>>'.
+   - 'P2TestResult' is from '7571.%20SIT_P2.dart'.
+   - 'Future' is from 'dart:async'.
+   - 'Map' is from 'dart:core'.
+          return P2TestResult(
+                 ^
+
+To run this test again: dart test 7571. SIT_P2.dart -p vm --plain-name 'loading 7571. SIT_P2.dart'
+00:00 +0 -1: Some tests failed.
+~/workspace/75. Flutter_Test_code_PL$ 
