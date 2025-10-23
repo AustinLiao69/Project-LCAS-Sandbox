@@ -1,17 +1,13 @@
-1. PL, APL, ASL, BL, DL除非有特別通知，否則嚴格禁止Hard-coding
-2. PL, APL, ASL, BL, DL除非有特別通知，否則嚴格禁止實作因應測試代碼而產生的代碼。
-3. 建立測試模組代碼時禁止模擬業務邏輯操作以及回傳固定值之作為。
 
 
-✅ 嚴格遵守規範
+編寫7571文件時請遵守以下規範：
 •	禁止模擬(Mock)業務邏輯：所有測試函數直接調用PL層7303, 7304真實模組
 •	禁止hard coding：所有測試資料來源於7598 Data warehouse.json
 •	資料流向正確：7598 → 7571 → PL層 → APL → ASL → BL → Firebase
 
-
-* 代碼錯誤常見Lesson learnt
-有無任何參數未定義?
-請檢查hard coding
+也請遵守以下規範：
+請檢查有無參數未定義?
+禁止hard coding
 禁止模擬(Mock)業務邏輯
 禁止實作mock回應確保測試通過
 禁止跨層呼叫
