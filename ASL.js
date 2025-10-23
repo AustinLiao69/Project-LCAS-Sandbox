@@ -294,7 +294,6 @@ async function loadBLModules() {
       console.log('📦 載入P2階段模組 - MLS (帳本管理)...');
       // ASL.js 預期 MLS 和 BM 模組會導出以下方法
       // MLS: MLS_getLedgers, MLS_createLedger, MLS_updateLedger, MLS_deleteLedger, MLS_getLedgerById, MLS_getCollaborators, MLS_getPermissions
-      // BM: BM_getBudgets, BM_createBudget, BM_getBudgetDetail, BM_updateBudget, BM_deleteBudget
       MLS = require('./13. Replit_Module code_BL/1351. MLS.js'); // 修正為正確路徑
       moduleStatus.MLS = true;
       console.log('✅ MLS (帳本管理) 模組載入成功');
@@ -1601,18 +1600,23 @@ app.delete('/api/v1/transactions/:id/attachments/:attachmentId', async (req, res
 app.post('/api/v1/ledgers', async (req, res) => {
   try {
     console.log('➕ ASL轉發: 創建帳本 -> MLS_createLedger');
-    if (!MLS || typeof MLS.MLS_createLedger !== 'function') {
-      return res.apiError('MLS_createLedger函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    if (!MLS || typeof MLS.MLS_createSharedLedger !== 'function') {
+      return res.apiError('MLS_createSharedLedger函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await MLS.MLS_createLedger(req.body);
+    const result = await MLS.MLS_createSharedLedger(
+      req.body.owner_id || req.body.ownerId,
+      req.body.name || req.body.ledgerName,
+      req.body.members || req.body.memberList,
+      req.body.permissions || req.body.permissionSettings
+    );
     if (result.success) {
-      res.apiSuccess(result.data, result.message || '帳本創建成功');
+      res.apiSuccess({ id: result.ledgerId, ledgerId: result.ledgerId, memberCount: result.memberCount }, result.message || '帳本創建成功');
     } else {
-      res.apiError(result.message || '帳本創建失敗', result.error?.code || 'CREATE_LEDGER_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '帳本創建失敗', 'CREATE_LEDGER_ERROR', 400);
     }
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (create ledger):', error);
-    res.apiError('帳本創建轉發失敗', 'CREATE_LEDGER_FORWARD_ERROR', 500);
+    res.apiError('創建帳本轉發失敗', 'CREATE_LEDGER_FORWARD_ERROR', 500);
   }
 });
 
@@ -1620,14 +1624,18 @@ app.post('/api/v1/ledgers', async (req, res) => {
 app.get('/api/v1/ledgers', async (req, res) => {
   try {
     console.log('📋 ASL轉發: 查詢帳本列表 -> MLS_getLedgers');
-    if (!MLS || typeof MLS.MLS_getLedgers !== 'function') {
-      return res.apiError('MLS_getLedgers函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    if (!MLS || typeof MLS.MLS_getLedgerList !== 'function') {
+      return res.apiError('MLS_getLedgerList函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await MLS.MLS_getLedgers(req.query);
+    const result = await MLS.MLS_getLedgerList(
+      req.query.userId || req.headers['x-user-id'] || 'default_user',
+      req.query.filterOptions ? JSON.parse(req.query.filterOptions) : {},
+      req.query.sortOrder
+    );
     if (result.success) {
-      res.apiSuccess(result.data, result.message || '帳本列表查詢成功');
+      res.apiSuccess(result.ledgers, result.message || '帳本列表查詢成功');
     } else {
-      res.apiError(result.message || '帳本列表查詢失敗', result.error?.code || 'GET_LEDGERS_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '帳本列表查詢失敗', 'GET_LEDGERS_ERROR', 400);
     }
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (get ledgers):', error);
@@ -1639,12 +1647,14 @@ app.get('/api/v1/ledgers', async (req, res) => {
 app.get('/api/v1/ledgers/:id', async (req, res) => {
   try {
     console.log('🔍 ASL轉發: 查詢帳本詳情 -> MLS_getLedgerById');
-    if (!MLS || typeof MLS.MLS_getLedgerById !== 'function') {
-      return res.apiError('MLS_getLedgerById函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    if (!MLS || typeof MLS.MLS_getLedgerList !== 'function') {
+      return res.apiError('MLS_getLedgerList函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await MLS.MLS_getLedgerById(req.params.id, req.query);
+    // 使用getLedgerList獲取帳本資訊，再從中提取協作者資訊
+    const result = await MLS.MLS_getLedgerList(req.query.userId, { ledgerId: req.params.id });
     if (result.success) {
-      res.apiSuccess(result.data, result.message || '帳本詳情查詢成功');
+      const ledger = result.ledgers && result.ledgers.length > 0 ? result.ledgers[0] : null;
+      res.apiSuccess(ledger, result.message || '帳本詳情查詢成功');
     } else {
       res.apiError(result.message || '帳本詳情查詢失敗', result.error?.code || 'GET_LEDGER_BY_ID_ERROR', 400, result.error?.details);
     }
@@ -1671,7 +1681,7 @@ app.get('/api/v1/ledgers/:id/collaborators', async (req, res) => {
         permissions: ledger.permissions || {},
         memberCount: ledger.member_count || 0
       } : { collaborators: [], permissions: {}, memberCount: 0 };
-      
+
       res.apiSuccess(collaboratorsData, '協作者列表查詢成功');
     } else {
       res.apiError(result.message || '協作者列表查詢失敗', result.error?.code || 'GET_COLLABORATORS_ERROR', 400, result.error?.details);
@@ -1708,11 +1718,11 @@ app.get('/api/v1/ledgers/:id/permissions', async (req, res) => {
     if (!MLS || typeof MLS.MLS_validateLedgerAccess !== 'function') {
       return res.apiError('MLS_validateLedgerAccess函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
     }
-    
+
     // 使用MLS_validateLedgerAccess來獲取權限資訊
     const userId = req.query.userId || 'system';
     const result = await MLS.MLS_validateLedgerAccess(userId, req.params.id, 'read');
-    
+
     if (result.hasAccess !== undefined) {
       // 構建權限回應格式
       const permissionData = {
@@ -1775,6 +1785,124 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
   }
 });
 
+// 7. 邀請協作者（新增的端點）
+app.post('/api/v1/ledgers/:ledgerId/invitations', async (req, res) => {
+  try {
+    console.log('📧 ASL轉發: 邀請協作者 -> MLS_inviteMember');
+
+    if (!MLS || typeof MLS.MLS_inviteMember !== 'function') {
+      return res.apiError('MLS_inviteMember函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await MLS.MLS_inviteMember(
+      req.params.ledgerId,
+      req.body.inviterId || req.headers['x-user-id'] || 'default_user',
+      req.body.inviteeInfo || { email: req.body.email, userId: req.body.userId },
+      req.body.permissionLevel || req.body.role || 'member'
+    );
+
+    if (result.success) {
+      res.apiSuccess({ invitationSent: true }, result.message || '協作者邀請成功');
+    } else {
+      res.apiError(result.message || '協作者邀請失敗', 'INVITE_COLLABORATOR_ERROR', 400);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (invite collaborator):', error);
+    res.apiError('邀請協作者轉發失敗', 'INVITE_COLLABORATOR_FORWARD_ERROR', 500);
+  }
+});
+
+// 9. 更新協作者角色/權限
+app.put('/api/v1/ledgers/:ledgerId/collaborators/:userId', async (req, res) => {
+  try {
+    console.log('🔄 ASL轉發: 更新協作者權限 -> MLS_setLedgerPermissions');
+
+    if (!MLS || typeof MLS.MLS_setLedgerPermissions !== 'function') {
+      return res.apiError('MLS_setLedgerPermissions函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+
+    // 構建新的權限設定
+    const newPermissions = {
+      owner: req.body.permissions?.owner || req.body.ownerId,
+      admins: req.body.permissions?.admins || [],
+      members: req.body.permissions?.members || [],
+      viewers: req.body.permissions?.viewers || [],
+      settings: req.body.permissions?.settings || {}
+    };
+
+    // 根據新角色更新權限列表
+    const targetUserId = req.params.userId;
+    const newRole = req.body.role || req.body.permissionLevel;
+
+    // 從所有角色列表中移除目標用戶
+    newPermissions.admins = newPermissions.admins.filter(id => id !== targetUserId);
+    newPermissions.members = newPermissions.members.filter(id => id !== targetUserId);
+    newPermissions.viewers = newPermissions.viewers.filter(id => id !== targetUserId);
+
+    // 根據新角色添加到對應列表
+    switch (newRole) {
+      case 'admin':
+        newPermissions.admins.push(targetUserId);
+        break;
+      case 'viewer':
+        newPermissions.viewers.push(targetUserId);
+        break;
+      case 'member':
+      default:
+        newPermissions.members.push(targetUserId);
+        break;
+    }
+
+    const result = await MLS.MLS_setLedgerPermissions(
+      req.params.ledgerId,
+      req.body.requesterId || req.headers['x-user-id'] || 'default_user',
+      newPermissions
+    );
+
+    if (result.success) {
+      res.apiSuccess({ updatedRole: newRole }, result.message || '協作者權限更新成功');
+    } else {
+      res.apiError(result.message || '協作者權限更新失敗', 'UPDATE_COLLABORATOR_PERMISSIONS_ERROR', 400);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (update collaborator permissions):', error);
+    res.apiError('更新協作者權限轉發失敗', 'UPDATE_COLLABORATOR_PERMISSIONS_FORWARD_ERROR', 500);
+  }
+});
+
+// 10. 移除帳本協作者
+app.delete('/api/v1/ledgers/:ledgerId/collaborators/:userId', async (req, res) => {
+  try {
+    console.log('👥🗑️ ASL轉發: 移除帳本協作者 -> MLS_removeMember');
+
+    if (!MLS || typeof MLS.MLS_removeMember !== 'function') {
+      return res.apiError('MLS_removeMember函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await MLS.MLS_removeMember(
+      req.params.ledgerId,
+      req.body.removerId || req.headers['x-user-id'] || 'default_user',
+      req.params.userId,
+      req.body.removeReason || '管理員移除'
+    );
+
+    if (result.success) {
+      res.apiSuccess({ 
+        removedUser: result.removedUser, 
+        newMemberCount: result.newMemberCount 
+      }, '協作者移除成功');
+    } else {
+      res.apiError(result.message || '協作者移除失敗', 'REMOVE_COLLABORATOR_ERROR', 400);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (remove collaborator):', error);
+    res.apiError('移除協作者轉發失敗', 'REMOVE_COLLABORATOR_FORWARD_ERROR', 500);
+  }
+});
+
 
 // =============== BM.js 預算管理 API 轉發 ===============
 // 假設 P2 API 端點的基礎路徑為 /api/v1/budgets
@@ -1784,15 +1912,19 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
 app.post('/api/v1/budgets', async (req, res) => {
   try {
     console.log('➕ ASL轉發: 創建預算 -> BM_createBudget');
+
     if (!BM || typeof BM.BM_createBudget !== 'function') {
       return res.apiError('BM_createBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
+
     const result = await BM.BM_createBudget(req.body);
+
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算創建成功');
     } else {
       res.apiError(result.message || '預算創建失敗', result.error?.code || 'CREATE_BUDGET_ERROR', 400, result.error?.details);
     }
+
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (create budget):', error);
     res.apiError('預算創建轉發失敗', 'CREATE_BUDGET_FORWARD_ERROR', 500);
@@ -1803,15 +1935,19 @@ app.post('/api/v1/budgets', async (req, res) => {
 app.get('/api/v1/budgets', async (req, res) => {
   try {
     console.log('📋 ASL轉發: 查詢預算列表 -> BM_getBudgets');
+
     if (!BM || typeof BM.BM_getBudgets !== 'function') {
       return res.apiError('BM_getBudgets函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
+
     const result = await BM.BM_getBudgets(req.query);
+
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算列表查詢成功');
     } else {
       res.apiError(result.message || '預算列表查詢失敗', result.error?.code || 'GET_BUDGETS_ERROR', 400, result.error?.details);
     }
+
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (get budgets):', error);
     res.apiError('預算列表查詢轉發失敗', 'GET_BUDGETS_FORWARD_ERROR', 500);
@@ -1819,18 +1955,22 @@ app.get('/api/v1/budgets', async (req, res) => {
 });
 
 // 3. 查詢單個預算詳情
-app.get('/api/v1/budgets/:id', async (req, res) => {
+app.get('/api/v1/budgets/:budgetId', async (req, res) => {
   try {
     console.log('🔍 ASL轉發: 查詢預算詳情 -> BM_getBudgetById');
-    if (!BM || typeof BM.BM_getBudgetById !== 'function') {
-      return res.apiError('BM_getBudgetById函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
+
+    if (!BM || typeof BM.BM_getBudgetDetail !== 'function') {
+      return res.apiError('BM_getBudgetDetail函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await BM.BM_getBudgetById(req.params.id, req.query);
+
+    const result = await BM.BM_getBudgetDetail(req.params.budgetId, req.query);
+
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算詳情查詢成功');
     } else {
       res.apiError(result.message || '預算詳情查詢失敗', result.error?.code || 'GET_BUDGET_BY_ID_ERROR', 400, result.error?.details);
     }
+
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (get budget by id):', error);
     res.apiError('預算詳情查詢轉發失敗', 'GET_BUDGET_BY_ID_FORWARD_ERROR', 500);
@@ -1838,18 +1978,22 @@ app.get('/api/v1/budgets/:id', async (req, res) => {
 });
 
 // 4. 更新預算
-app.put('/api/v1/budgets/:id', async (req, res) => {
+app.put('/api/v1/budgets/:budgetId', async (req, res) => {
   try {
     console.log('✏️ ASL轉發: 更新預算 -> BM_updateBudget');
+
     if (!BM || typeof BM.BM_updateBudget !== 'function') {
       return res.apiError('BM_updateBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await BM.BM_updateBudget(req.params.id, req.body);
+
+    const result = await BM.BM_updateBudget(req.params.budgetId, req.body);
+
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算更新成功');
     } else {
       res.apiError(result.message || '預算更新失敗', result.error?.code || 'UPDATE_BUDGET_ERROR', 400, result.error?.details);
     }
+
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (update budget):', error);
     res.apiError('預算更新轉發失敗', 'UPDATE_BUDGET_FORWARD_ERROR', 500);
@@ -1857,18 +2001,22 @@ app.put('/api/v1/budgets/:id', async (req, res) => {
 });
 
 // 5. 刪除預算
-app.delete('/api/v1/budgets/:id', async (req, res) => {
+app.delete('/api/v1/budgets/:budgetId', async (req, res) => {
   try {
     console.log('🗑️ ASL轉發: 刪除預算 -> BM_deleteBudget');
+
     if (!BM || typeof BM.BM_deleteBudget !== 'function') {
       return res.apiError('BM_deleteBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await BM.BM_deleteBudget(req.params.id, req.query);
+
+    const result = await BM.BM_deleteBudget(req.params.budgetId, req.query);
+
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算刪除成功');
     } else {
       res.apiError(result.message || '預算刪除失敗', result.error?.code || 'DELETE_BUDGET_ERROR', 400, result.error?.details);
     }
+
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (delete budget):', error);
     res.apiError('預算刪除轉發失敗', 'DELETE_BUDGET_FORWARD_ERROR', 500);
