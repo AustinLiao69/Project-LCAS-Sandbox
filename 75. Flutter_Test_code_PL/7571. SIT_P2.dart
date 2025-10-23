@@ -275,8 +275,16 @@ class SITP2TestController {
 
     for (int i = 21; i <= 25; i++) {
       final testId = 'TC-${i.toString().padLeft(3, '0')}';
+      print('[7571] 🔧 執行API整合測試：$testId');
       final result = await _executeAPIIntegrationTest(testId);
       _results.add(result);
+
+      // 顯示測試結果
+      if (result.passed) {
+        print('[7571] ✅ $testId 通過 - ${result.testName}');
+      } else {
+        print('[7571] ❌ $testId 失敗 - ${result.errorMessage}');
+      }
     }
   }
 
