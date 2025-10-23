@@ -289,29 +289,29 @@ async function loadBLModules() {
     console.error('❌ FS 模組載入失敗:', error.message);
   }
 
-  // 階段二新增：載入P2階段模組 (假設路徑為 './13. Replit_Module code_BL/xxxx. MLS.js' and './13. Replit_Module code_BL/yyyy. BM.js')
-  try {
-    console.log('📦 載入P2階段模組 - MLS (帳本管理)...');
-    // ASL.js 預期 MLS 和 BM 模組會導出以下方法
-    // MLS: MLS_getLedgers, MLS_createLedger, MLS_updateLedger, MLS_deleteLedger, MLS_getLedgerById, MLS_getCollaborators, MLS_getPermissions
-    // BM: BM_getBudgets, BM_createBudget, BM_getBudgetDetail, BM_updateBudget, BM_deleteBudget
-    MLS = require('./13. Replit_Module code_BL/1371. MLS.js'); // 修正為實際路徑
-    moduleStatus.MLS = true;
-    console.log('✅ MLS (帳本管理) 模組載入成功');
-  } catch (error) {
-    console.error('❌ MLS 模組載入失敗:', error.message);
-    moduleStatus.MLS = false;
-  }
+  // 階段二新增：載入P2階段模組 (使用正確路徑)
+    try {
+      console.log('📦 載入P2階段模組 - MLS (帳本管理)...');
+      // ASL.js 預期 MLS 和 BM 模組會導出以下方法
+      // MLS: MLS_getLedgers, MLS_createLedger, MLS_updateLedger, MLS_deleteLedger, MLS_getLedgerById, MLS_getCollaborators, MLS_getPermissions
+      // BM: BM_getBudgets, BM_createBudget, BM_getBudgetDetail, BM_updateBudget, BM_deleteBudget
+      MLS = require('./13. Replit_Module code_BL/1351. MLS.js'); // 修正為正確路徑
+      moduleStatus.MLS = true;
+      console.log('✅ MLS (帳本管理) 模組載入成功');
+    } catch (error) {
+      console.error('❌ MLS 模組載入失敗:', error.message);
+      moduleStatus.MLS = false;
+    }
 
-  try {
-    console.log('📦 載入P2階段模組 - BM (預算管理)...');
-    BM = require('./13. Replit_Module code_BL/1372. BM.js'); // 修正為實際路徑
-    moduleStatus.BM = true;
-    console.log('✅ BM (預算管理) 模組載入成功');
-  } catch (error) {
-    console.error('❌ BM 模組載入失敗:', error.message);
-    moduleStatus.BM = false;
-  }
+    try {
+      console.log('📦 載入P2階段模組 - BM (預算管理)...');
+      BM = require('./13. Replit_Module code_BL/1312. BM.js'); // 修正為正確路徑
+      moduleStatus.BM = true;
+      console.log('✅ BM (預算管理) 模組載入成功');
+    } catch (error) {
+      console.error('❌ BM 模組載入失敗:', error.message);
+      moduleStatus.BM = false;
+    }
 
 
   // 階段三修復：詳細模組載入狀態報告
@@ -517,7 +517,7 @@ app.use((req, res, next) => {
             quickActions: true,
             familiarLayout: true,
             interfaceStability: "consistent",
-            layoutStyle: "familiar",
+            LayoutStyle: "familiar",
             changeFrequency: "minimal",
             featureAccess: "quick_shortcuts",
             defaultBehavior: "preserved",
@@ -1654,6 +1654,12 @@ app.get('/api/v1/ledgers/:id', async (req, res) => {
   }
 });
 
+// 注意：以下協作相關端點不符合8020規範，已移除：
+// - GET /api/v1/ledgers/{id}/collaborators (違規)
+// - DELETE /api/v1/ledgers/{id}/collaborators/{userId} (違規)  
+// - GET /api/v1/ledgers/{id}/permissions (違規)
+// 協作功能應使用標準的帳本管理API實現
+
 // 4. 更新帳本
 app.put('/api/v1/ledgers/:id', async (req, res) => {
   try {
@@ -1836,9 +1842,9 @@ app.use((error, req, res, next) => {
     console.log(`🔗 健康檢查: http://0.0.0.0:${PORT}/health`);
     console.log(`🎯 DCN-0015第二階段完成: ASL格式驗證強化`);
     // P1-2範圍API端點: AM(19) + BK(15) = 34個端點
-    // P2範圍API端點: 協作(8) + 預算(7) = 15個端點
-    // 總計: 34 + 15 = 49個端點
-    console.log(`📋 P1-2 + P2 API端點: AM(19) + BK(15) + MLS(7) + BM(5) = 46個端點`);
+    // P2範圍API端點: 帳本(5) + 預算(5) = 10個端點
+    // 總計: 34 + 10 = 44個端點
+    console.log(`📋 P1-2 + P2 API端點: AM(19) + BK(15) + MLS(5) + BM(5) = 44個端點`);
 
     // 第二階段完成狀態報告
     const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
@@ -1881,7 +1887,7 @@ process.on('SIGINT', () => {
 
 console.log('🎉 LCAS ASL階段一修正完成：四模式欄位結構調整！');
   console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'})`);
-  console.log('🔧 純轉發機制: 46個API端點 -> 統一使用BL層標準格式');
+  console.log('🔧 純轉發機制: 44個API端點 -> 統一使用BL層標準格式');
   console.log('✨ 階段一修正: 四模式欄位結構調整，符合SIT測試期望');
   console.log('🎯 四模式支援: Expert/Inertial/Cultivation/Guiding專用欄位結構');
   console.log('🔍 欄位結構: expertFeatures/inertialFeatures/cultivationFeatures/guidingFeatures');

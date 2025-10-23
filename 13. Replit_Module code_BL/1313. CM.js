@@ -9,7 +9,7 @@ const admin = require('firebase-admin');
 const WebSocket = require('ws');
 
 // 引入依賴模組
-let DL, MLS, AM, DD, BK, LINE_OA;
+let DL, MLS, AM, DD, BK, LINE_OA, FS; // Added FS here
 try {
   DL = require('./1310. DL.js');
   // MLS = require('./1351. MLS.js');
@@ -17,6 +17,7 @@ try {
   DD = require('./1331. DD1.js');
   BK = require('./1301. BK.js');
   // LINE_OA = require('./1320. WH.js');
+  FS = require('./1311. FS.js'); // FS模組包含完整的Firestore操作函數 - Corrected path
 } catch (error) {
   console.warn('CM模組依賴載入警告:', error.message);
 }
@@ -110,7 +111,7 @@ async function CM_inviteMember(ledgerId, inviterId, inviteeInfo, initialPermissi
 
     // 生成邀請ID
     const invitationId = `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // 建立邀請記錄
     const invitationData = {
       invitationId,
@@ -132,7 +133,7 @@ async function CM_inviteMember(ledgerId, inviterId, inviteeInfo, initialPermissi
     }
 
     CM_logInfo(`成員邀請建立成功: ${invitationId}`, "邀請成員", inviterId, "", "", functionName);
-    
+
     return {
       success: true,
       invitationId,
@@ -167,7 +168,7 @@ async function CM_processMemberJoin(invitationId, userId, responseType) {
     }
 
     const invitationData = invitationDoc.data();
-    
+
     // 檢查邀請狀態
     if (invitationData.status !== "pending") {
       throw new Error(`邀請狀態無效: ${invitationData.status}`);
@@ -181,7 +182,7 @@ async function CM_processMemberJoin(invitationId, userId, responseType) {
     if (responseType === "accept") {
       // 接受邀請 - 加入協作
       const memberId = `member_${Date.now()}_${userId}`;
-      
+
       // 建立成員記錄
       const memberData = {
         memberId,
@@ -214,7 +215,7 @@ async function CM_processMemberJoin(invitationId, userId, responseType) {
       });
 
       CM_logInfo(`成員成功加入協作: ${memberId}`, "處理加入", userId, "", "", functionName);
-      
+
       return {
         success: true,
         memberId,
@@ -224,7 +225,7 @@ async function CM_processMemberJoin(invitationId, userId, responseType) {
     } else if (responseType === "decline") {
       // 拒絕邀請
       await invitationDoc.ref.update({ status: "declined" });
-      
+
       return {
         success: true,
         memberId: null,
@@ -291,7 +292,7 @@ async function CM_removeMember(ledgerId, targetUserId, operatorId, removeType) {
     });
 
     CM_logWarning(`成員已移除: ${targetUserId}, 類型: ${removeType}`, "移除成員", operatorId, "", "", functionName);
-    
+
     return {
       success: true,
       removedUser: targetUserId,
@@ -390,7 +391,7 @@ async function CM_setMemberPermission(ledgerId, targetUserId, newPermission, ope
 
     const collaborationData = collaborationDoc.data();
     const members = collaborationData.members || [];
-    
+
     // 找到目標成員並更新權限
     const targetMemberIndex = members.findIndex(member => member.userId === targetUserId);
     if (targetMemberIndex === -1) {
@@ -429,7 +430,7 @@ async function CM_setMemberPermission(ledgerId, targetUserId, newPermission, ope
     });
 
     CM_logInfo(`權限設定成功: ${targetUserId} ${oldPermission} -> ${newPermission}`, "設定權限", operatorId, "", "", functionName);
-    
+
     return {
       success: true,
       oldPermission,
@@ -467,7 +468,7 @@ async function CM_validatePermission(ledgerId, userId, operationType) {
 
     const collaborationData = collaborationDoc.data();
     const members = collaborationData.members || [];
-    
+
     // 找到用戶成員資訊
     const userMember = members.find(member => member.userId === userId);
     if (!userMember) {
@@ -489,7 +490,7 @@ async function CM_validatePermission(ledgerId, userId, operationType) {
 
     // 檢查是否有權限執行操作
     const hasPermission = userPermission.actions.includes("all") || userPermission.actions.includes(operationType);
-    
+
     return {
       hasPermission,
       currentLevel: userMember.permissionLevel,
@@ -525,7 +526,7 @@ async function CM_getPermissionMatrix(ledgerId, userId) {
 
     // 取得用戶當前權限等級
     const currentPermissionLevel = CM_PERMISSION_LEVELS[userPermission.currentLevel];
-    
+
     // 建立允許操作清單
     const allowedOperations = currentPermissionLevel ? currentPermissionLevel.actions : [];
 
@@ -583,7 +584,7 @@ async function CM_initializeSync(ledgerId, userId, clientInfo) {
     });
 
     CM_logInfo(`協作同步初始化成功: ${syncId}`, "初始化同步", userId, "", "", functionName);
-    
+
     return {
       syncId,
       channelId,
@@ -678,7 +679,7 @@ async function CM_broadcastEvent(ledgerId, eventType, eventData, excludeUsers = 
   const functionName = "CM_broadcastEvent";
   try {
     const eventId = `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // 取得該帳本的所有連線用戶
     const targetConnections = Array.from(CM_INIT_STATUS.activeConnections.entries())
       .filter(([key, conn]) => 
@@ -715,7 +716,7 @@ async function CM_broadcastEvent(ledgerId, eventType, eventData, excludeUsers = 
       const offlineUsers = targetConnections
         .filter(([key, conn]) => !conn.websocket || conn.websocket.readyState !== WebSocket.OPEN)
         .map(([key, conn]) => conn.userId);
-      
+
       if (offlineUsers.length > 0) {
         await LINE_OA.sendOfflineNotification(offlineUsers, {
           eventType,
@@ -726,7 +727,7 @@ async function CM_broadcastEvent(ledgerId, eventType, eventData, excludeUsers = 
     }
 
     CM_logInfo(`事件廣播完成: ${eventType}, 送達 ${deliveredCount} 個連線`, "廣播事件", "", "", "", functionName);
-    
+
     return {
       broadcasted: true,
       deliveredCount,
@@ -773,7 +774,7 @@ async function CM_sendCollaborationNotification(notificationType, recipientList,
 
     // 記錄通知發送狀態
     CM_logInfo(`協作通知發送完成: ${notificationId}`, "發送通知", "", "", "", functionName);
-    
+
     return {
       sent: true,
       deliveredChannels,
@@ -856,7 +857,7 @@ async function CM_logCollaborationAction(ledgerId, userId, actionType, actionDat
   const functionName = "CM_logCollaborationAction";
   try {
     const logId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const logData = {
       logId,
       ledgerId,
@@ -873,7 +874,7 @@ async function CM_logCollaborationAction(ledgerId, userId, actionType, actionDat
 
     // 整合系統日誌
     CM_logInfo(`協作操作記錄: ${actionType}`, actionType, userId, "", JSON.stringify(actionData), functionName);
-    
+
     return {
       logged: true,
       logId,
@@ -909,16 +910,16 @@ async function CM_getCollaborationHistory(ledgerId, userId, filterOptions = {}) 
 
     // 建立查詢條件
     let query = db.collection('collaboration_logs').where('ledgerId', '==', ledgerId);
-    
+
     // 套用過濾條件
     if (filterOptions.actionType) {
       query = query.where('actionType', '==', filterOptions.actionType);
     }
-    
+
     if (filterOptions.startDate) {
       query = query.where('timestamp', '>=', admin.firestore.Timestamp.fromDate(new Date(filterOptions.startDate)));
     }
-    
+
     if (filterOptions.endDate) {
       query = query.where('timestamp', '<=', admin.firestore.Timestamp.fromDate(new Date(filterOptions.endDate)));
     }
@@ -987,13 +988,13 @@ async function CM_handleCollaborationError(errorType, errorData, context) {
     CM_logError(`協作錯誤: ${errorType}`, "錯誤處理", context.userId || "", errorCode, JSON.stringify(errorData), functionName);
 
     let recoveryAction = "none";
-    
+
     // 根據錯誤類型執行恢復操作
     switch (errorType) {
       case "permission_denied":
         recoveryAction = "redirect_to_request_access";
         break;
-        
+
       case "connection_lost":
         recoveryAction = "attempt_reconnection";
         // 嘗試重新建立連線
@@ -1003,7 +1004,7 @@ async function CM_handleCollaborationError(errorType, errorData, context) {
           }, 5000);
         }
         break;
-        
+
       case "data_conflict":
         recoveryAction = "automatic_resolution";
         // 嘗試自動解決衝突
@@ -1011,11 +1012,11 @@ async function CM_handleCollaborationError(errorType, errorData, context) {
           await CM_resolveDataConflict(errorData.conflictData, "timestamp");
         }
         break;
-        
+
       case "sync_failure":
         recoveryAction = "force_refresh";
         break;
-        
+
       default:
         recoveryAction = "manual_intervention_required";
     }
@@ -1070,7 +1071,7 @@ async function CM_monitorCollaborationHealth(ledgerId = null) {
       const specificLedgerConnections = ledgerId 
         ? Array.from(CM_INIT_STATUS.activeConnections.keys()).filter(key => key.startsWith(ledgerId)).length
         : totalConnections;
-        
+
       monitoringData.activeUsers = specificLedgerConnections;
       monitoringData.performance.websocketConnections = totalConnections;
     } else {
@@ -1099,7 +1100,7 @@ async function CM_monitorCollaborationHealth(ledgerId = null) {
 
     // 系統負載檢查
     monitoringData.performance.uptime = Math.round(process.uptime());
-    
+
     // 如果有 MRA 模組，生成詳細效能報表
     if (typeof MRA_generatePerformanceReport === 'function') {
       monitoringData.detailedReport = await MRA_generatePerformanceReport('collaboration');
@@ -1133,7 +1134,7 @@ async function CM_initialize() {
   const functionName = "CM_initialize";
   try {
     console.log('🤝 CM 協作管理模組初始化中...');
-    
+
     // 檢查 Firestore 連線
     if (!admin.apps.length) {
       throw new Error("Firebase Admin 未初始化");
@@ -1146,7 +1147,7 @@ async function CM_initialize() {
 
     CM_logInfo("CM 協作管理模組初始化完成", "模組初始化", "", "", "", functionName);
     console.log('✅ CM 協作管理模組已成功啟動');
-    
+
     return true;
   } catch (error) {
     CM_logError(`CM 模組初始化失敗: ${error.message}`, "模組初始化", "", "CM_INIT_ERROR", error.toString(), functionName);
@@ -1162,32 +1163,32 @@ module.exports = {
   CM_processMemberJoin,
   CM_removeMember,
   CM_getMemberList,
-  
+
   // 權限管理函數
   CM_setMemberPermission,
   CM_validatePermission,
   CM_getPermissionMatrix,
-  
+
   // 即時同步函數
   CM_initializeSync,
   CM_resolveDataConflict,
   CM_broadcastEvent,
-  
+
   // 協作通知函數
   CM_sendCollaborationNotification,
   CM_setNotificationPreferences,
-  
+
   // 變更紀錄函數
   CM_logCollaborationAction,
   CM_getCollaborationHistory,
-  
+
   // 錯誤處理與監控函數
   CM_handleCollaborationError,
   CM_monitorCollaborationHealth,
-  
+
   // 模組初始化
   CM_initialize,
-  
+
   // 常數與配置
   CM_PERMISSION_LEVELS,
   CM_WEBSOCKET_EVENTS,
