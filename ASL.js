@@ -1,4 +1,3 @@
-replit_final_file>
 /**
  * ASL.js_API服務層模組_2.1.5
  * @module API服務層模組（統一回應格式）
@@ -293,7 +292,10 @@ async function loadBLModules() {
   // 階段二新增：載入P2階段模組 (假設路徑為 './13. Replit_Module code_BL/xxxx. MLS.js' and './13. Replit_Module code_BL/yyyy. BM.js')
   try {
     console.log('📦 載入P2階段模組 - MLS (帳本管理)...');
-    MLS = require('./13. Replit_Module code_BL/xxxx. MLS.js'); // 請替換為實際路徑
+    // ASL.js 預期 MLS 和 BM 模組會導出以下方法
+    // MLS: MLS_getLedgers, MLS_createLedger, MLS_updateLedger, MLS_deleteLedger, MLS_getLedgerById, MLS_getCollaborators, MLS_getPermissions
+    // BM: BM_getBudgets, BM_createBudget, BM_getBudgetDetail, BM_updateBudget, BM_deleteBudget
+    MLS = require('./13. Replit_Module code_BL/1371. MLS.js'); // 修正為實際路徑
     moduleStatus.MLS = true;
     console.log('✅ MLS (帳本管理) 模組載入成功');
   } catch (error) {
@@ -303,7 +305,7 @@ async function loadBLModules() {
 
   try {
     console.log('📦 載入P2階段模組 - BM (預算管理)...');
-    BM = require('./13. Replit_Module code_BL/yyyy. BM.js'); // 請替換為實際路徑
+    BM = require('./13. Replit_Module code_BL/1372. BM.js'); // 修正為實際路徑
     moduleStatus.BM = true;
     console.log('✅ BM (預算管理) 模組載入成功');
   } catch (error) {
@@ -349,11 +351,8 @@ async function loadBLModules() {
   return moduleStatus;
 }
 
-// 階段一修復：將app變數移至全域作用域
-const express = require('express');
+// 階段一修復：將Express應用初始化包裝在異步函數中
 let app = null;
-
-// 將Express應用初始化包裝在異步函數中
 async function startApplication() {
   // 等待BL模組載入完成
   const moduleStatus = await loadBLModules();
@@ -364,8 +363,9 @@ async function startApplication() {
    * @date 2025-09-22 15:45:00
    * @description 建立Express服務器，設定基礎中介軟體
    */
+  const express = require('express');
   app = express();
-const PORT = process.env.ASL_PORT || 5000;
+  const PORT = process.env.ASL_PORT || 5000;
 
 // 基礎解析中介軟體
 app.use(express.json({ limit: '10mb' }));
@@ -1835,7 +1835,10 @@ app.use((error, req, res, next) => {
     console.log(`📍 服務地址: http://0.0.0.0:${PORT}`);
     console.log(`🔗 健康檢查: http://0.0.0.0:${PORT}/health`);
     console.log(`🎯 DCN-0015第二階段完成: ASL格式驗證強化`);
-    console.log(`📋 P1-2 API端點: AM(19) + BK(15) = 34個端點`);
+    // P1-2範圍API端點: AM(19) + BK(15) = 34個端點
+    // P2範圍API端點: 協作(8) + 預算(7) = 15個端點
+    // 總計: 34 + 15 = 49個端點
+    console.log(`📋 P1-2 + P2 API端點: AM(19) + BK(15) + MLS(7) + BM(5) = 46個端點`);
 
     // 第二階段完成狀態報告
     const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
@@ -1848,7 +1851,7 @@ app.use((error, req, res, next) => {
     console.log(`🎉 第二階段修正完成: 統一使用success判斷邏輯`);
 
     if (moduleStatus.firebase && moduleStatus.AM) {
-      console.log('🚀 ASL v2.1.2已完全就緒，第二階段目標達成');
+      console.log('🚀 ASL v2.1.5已完全就緒，第二階段目標達成');
     } else {
       console.log('⚠️ 系統部分就緒，但容錯邏輯已完全移除');
     }
@@ -1878,13 +1881,13 @@ process.on('SIGINT', () => {
 
 console.log('🎉 LCAS ASL階段一修正完成：四模式欄位結構調整！');
   console.log(`📦 P1-2範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'})`);
-  console.log('🔧 純轉發機制: 34個API端點 -> 統一使用BL層標準格式');
+  console.log('🔧 純轉發機制: 46個API端點 -> 統一使用BL層標準格式');
   console.log('✨ 階段一修正: 四模式欄位結構調整，符合SIT測試期望');
   console.log('🎯 四模式支援: Expert/Inertial/Cultivation/Guiding專用欄位結構');
   console.log('🔍 欄位結構: expertFeatures/inertialFeatures/cultivationFeatures/guidingFeatures');
 
   if (moduleStatus.firebase && moduleStatus.AM) {
-    console.log('🚀 階段一修正完成，ASL v2.1.4完全就緒！');
+    console.log('🚀 階段一修正完成，ASL v2.1.5完全就緒！');
     console.log('🌐 ASL服務器即將在 Port 5000 啟動...');
     console.log('✨ 四模式欄位結構: 修正為SIT測試期望格式');
     console.log('🎯 階段一目標達成: Mode Validation錯誤修正');
@@ -1912,4 +1915,3 @@ module.exports = {
   getApp: () => app,
   startApplication
 };
-</replit_final_file>
