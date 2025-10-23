@@ -9,9 +9,9 @@
 •	資料流向正確：7598 → 7571 → PL層 → APL → ASL → BL → Firebase
 
 
-* 檢查常出現錯誤用的prompt
-請檢查7571有無任何參數未定義?
+* 代碼錯誤常見Lesson learnt
+有無任何參數未定義?
 請檢查hard coding
-請檢查有無禁止模擬(Mock)業務邏輯
+禁止模擬(Mock)業務邏輯
 禁止實作mock回應確保測試通過
 
