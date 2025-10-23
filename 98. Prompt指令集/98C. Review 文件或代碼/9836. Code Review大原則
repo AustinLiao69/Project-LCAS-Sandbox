@@ -8,5 +8,9 @@
 •	禁止hard coding：所有測試資料來源於7598 Data warehouse.json
 •	資料流向正確：7598 → 7571 → PL層 → APL → ASL → BL → Firebase
 
+
+* 檢查常出現錯誤用的prompt
 請檢查7571有無任何參數未定義?
+請檢查hard coding
+請檢查有無禁止模擬(Mock)業務邏輯
 
