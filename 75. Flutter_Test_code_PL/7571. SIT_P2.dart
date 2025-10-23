@@ -754,20 +754,34 @@ class SITP2TestController {
     try {
       print('[7571] 🤝 階段二測試：建立協作帳本 - 調用PL層7303');
 
-      // 從7598資料構建協作帳本資料
-      final collaborationData = inputData['create_collaborative_ledger'] ?? {
-        'name': '階段二協作測試帳本',
-        'type': 'collaborative',
-        'description': 'Phase 2協作功能測試用帳本',
-        'currency': 'TWD',
-        'timezone': 'Asia/Taipei',
-        'settings': {
-          'permissions': {
-            'default_role': 'viewer',
-            'allow_public_view': false
-          }
-        }
+      // 從7598資料構建協作帳本資料，確保資料結構匹配
+      final sourceData = inputData['create_collaborative_ledger'] ?? {};
+      final collaborationData = <String, dynamic>{
+        'name': sourceData['name'] ?? '階段二協作測試帳本',
+        'type': sourceData['type'] ?? 'shared', // 使用shared替代collaborative
+        'description': sourceData['description'] ?? 'Phase 2協作功能測試用帳本',
+        'currency': sourceData['currency'] ?? 'TWD',
+        'timezone': sourceData['timezone'] ?? 'Asia/Taipei',
+        'owner_id': sourceData['owner_id'] ?? 'user_expert_1697363200000',
+        'members': sourceData['members'] ?? ['user_expert_1697363200000'],
       };
+
+      // 如果有permissions設定，轉換為正確格式
+      if (sourceData['permissions'] is Map<String, dynamic>) {
+        collaborationData['permissions'] = sourceData['permissions'];
+      } else {
+        collaborationData['permissions'] = {
+          'owner': collaborationData['owner_id'],
+          'admins': <String>[],
+          'members': <String>[],
+          'viewers': <String>[],
+          'settings': {
+            'allow_invite': true,
+            'allow_edit': true,
+            'allow_delete': false
+          }
+        };
+      }
 
       print('[7571] 📊 協作帳本資料: ${collaborationData['name']} (${collaborationData['type']})');
 
@@ -915,7 +929,9 @@ class SITP2TestController {
       final inviteData = inputData['invite_collaborator_success'] ?? {};
       // 確保所有資料都來自7598，不使用hard coding預設值
       final ledgerId = inviteData['ledgerId'];
-      final inviteeEmail = inviteData['inviteeInfo']?['email'];
+      final inviteeInfo = inviteData['inviteeInfo'];
+      final inviteeEmail = inviteeInfo?['email'];
+      final inviteeUserId = inviteeInfo?['userId'];
       final inviteeRole = inviteData['role'];
 
       if (ledgerId == null || inviteeEmail == null || inviteeRole == null) {
@@ -930,12 +946,20 @@ class SITP2TestController {
 
       print('[7571] 📧 邀請協作者: $inviteeEmail (角色: $inviteeRole) 到帳本: $ledgerId');
 
+      // 處理permissions資料，確保格式正確
+      Map<String, dynamic> permissions;
+      if (inviteData['permissions'] is Map<String, dynamic>) {
+        permissions = Map<String, dynamic>.from(inviteData['permissions']);
+      } else {
+        permissions = {'read': true, 'write': true, 'manage': false, 'invite': false};
+      }
+
       // 構建邀請資料
       final invitations = [
         PL7303.InvitationData(
           email: inviteeEmail,
           role: inviteeRole,
-          permissions: inviteData['permissions'] ?? {'read': true, 'write': true},
+          permissions: permissions,
           message: '邀請您加入Phase 2協作測試帳本',
         ),
       ];
