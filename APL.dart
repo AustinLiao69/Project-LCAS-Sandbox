@@ -1,4 +1,3 @@
-
 /**
  * APL.dart - 統一API Gateway模組
  * @module 統一APL Gateway
@@ -65,7 +64,7 @@ class APLGateway {
   // ASL.js服務器配置
   static const String _baseUrl = 'http://0.0.0.0:5000';
   static const Duration _timeout = Duration(seconds: 30);
-  
+
   final http.Client _httpClient;
   final Map<String, String> _defaultHeaders;
 
@@ -173,33 +172,33 @@ class APLGateway {
 
   /// 帳本管理服務 (8104 API規格) - 14個API端點
   AccountLedgerService get ledger => AccountLedgerService(this);
-  
+
   /// 帳戶管理服務 (8105 API規格) - 8個API端點
   AccountManagementService get account => AccountManagementService(this);
-  
+
   /// 預算管理服務 (8107 API規格) - 8個API端點
   BudgetManagementService get budget => BudgetManagementService(this);
 
   // === P3-P7擴展基礎 ===
-  
+
   /// 科目管理服務 (8106 API規格) - P3階段預留
   // CategoryManagementService get category => CategoryManagementService(this);
-  
+
   /// 報表分析服務 (8108 API規格) - P4階段預留  
   // ReportAnalysisService get report => ReportAnalysisService(this);
-  
+
   /// AI助理服務 (8109 API規格) - P5階段預留
   // AIAssistantService get ai => AIAssistantService(this);
-  
+
   /// 激勵系統服務 (8110 API規格) - P5階段預留
   // IncentiveSystemService get incentive => IncentiveSystemService(this);
-  
+
   /// 系統服務 (8111 API規格) - P6階段預留
   // SystemService get system => SystemService(this);
-  
+
   /// 備份與資料管理服務 (8112 API規格) - P6階段預留
   // BackupDataService get backup => BackupDataService(this);
-  
+
   /// 通知管理服務 (8113 API規格) - P6階段預留
   // NotificationService get notification => NotificationService(this);
 
@@ -212,10 +211,10 @@ class APLGateway {
 /// 帳本管理服務類別 (對應8104 API規格 - 14個API端點)
 class AccountLedgerService {
   final APLGateway _gateway;
-  
+
   AccountLedgerService(this._gateway);
 
-  /// 1. 取得帳本列表 (GET /ledgers)
+  /// 1. 取得帳本列表 (GET /api/v1/ledgers)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getLedgers({
     String? type,
     String? role,
@@ -249,7 +248,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 2. 建立新帳本 (POST /ledgers)
+  /// 2. 建立新帳本 (POST /api/v1/ledgers)
   Future<UnifiedApiResponse<Map<String, dynamic>>> createLedger(Map<String, dynamic> ledgerData) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'POST',
@@ -260,7 +259,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 3. 取得帳本詳情 (GET /ledgers/{id})
+  /// 3. 取得帳本詳情 (GET /api/v1/ledgers/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> getLedgerDetail(String ledgerId, {
     bool? includeTransactions,
     int? transactionLimit,
@@ -282,7 +281,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 4. 更新帳本 (PUT /ledgers/{id})
+  /// 4. 更新帳本 (PUT /api/v1/ledgers/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> updateLedger(String ledgerId, Map<String, dynamic> updateData) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'PUT',
@@ -293,7 +292,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 5. 刪除帳本 (DELETE /ledgers/{id})
+  /// 5. 刪除帳本 (DELETE /api/v1/ledgers/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> deleteLedger(String ledgerId) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'DELETE',
@@ -304,7 +303,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 6. 取得協作者 (GET /ledgers/{id}/collaborators)
+  /// 6. 取得協作者 (GET /api/v1/ledgers/{id}/collaborators)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getCollaborators(String ledgerId, {
     String? role,
   }) async {
@@ -320,10 +319,10 @@ class AccountLedgerService {
     );
   }
 
-  /// 7. 邀請協作者 (POST /ledgers/{id}/invitations)
+  /// 7. 邀請協作者 (POST /api/v1/ledgers/{id}/invitations)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> inviteCollaborators(String ledgerId, List<Map<String, dynamic>> invitations) async {
     final requestBody = {'invitations': invitations};
-    
+
     return _gateway._forwardRequest<List<Map<String, dynamic>>>(
       'POST',
       '/api/v1/ledgers/$ledgerId/invitations',
@@ -333,7 +332,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 8. 更新協作者權限 (PUT /ledgers/{id}/collaborators/{userId})
+  /// 8. 更新協作者權限 (PUT /api/v1/ledgers/{id}/collaborators/{userId})
   Future<UnifiedApiResponse<Map<String, dynamic>>> updateCollaboratorRole(String ledgerId, String userId, {
     required String role,
     String? reason,
@@ -350,7 +349,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 9. 移除協作者 (DELETE /ledgers/{id}/collaborators/{userId})
+  /// 9. 移除協作者 (DELETE /api/v1/ledgers/{id}/collaborators/{userId})
   Future<UnifiedApiResponse<Map<String, dynamic>>> removeCollaborator(String ledgerId, String userId) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'DELETE',
@@ -361,7 +360,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 10. 取得權限狀態 (GET /ledgers/{id}/permissions)
+  /// 10. 取得權限狀態 (GET /api/v1/ledgers/{id}/permissions)
   Future<UnifiedApiResponse<Map<String, dynamic>>> getPermissions(String ledgerId) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'GET',
@@ -372,7 +371,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 11. 檢測協作衝突 (GET /ledgers/{id}/conflicts)
+  /// 11. 檢測協作衝突 (GET /api/v1/ledgers/{id}/conflicts)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> detectConflicts(String ledgerId, {
     String? checkType,
   }) async {
@@ -388,7 +387,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 12. 解決協作衝突 (POST /ledgers/{id}/resolve-conflict)
+  /// 12. 解決協作衝突 (POST /api/v1/ledgers/{id}/resolve-conflict)
   Future<UnifiedApiResponse<Map<String, dynamic>>> resolveConflict(String ledgerId, {
     required String conflictId,
     required String resolution,
@@ -411,7 +410,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 13. 取得操作審計日誌 (GET /ledgers/{id}/audit-log)
+  /// 13. 取得操作審計日誌 (GET /api/v1/ledgers/{id}/audit-log)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getAuditLog(String ledgerId, {
     String? startDate,
     String? endDate,
@@ -437,7 +436,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 14. 取得帳本類型 (GET /ledgers/types)
+  /// 14. 取得帳本類型 (GET /api/v1/ledgers/types)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getLedgerTypes({
     String? userMode,
   }) async {
@@ -457,10 +456,10 @@ class AccountLedgerService {
 /// 帳戶管理服務類別 (對應8105 API規格 - 8個API端點)
 class AccountManagementService {
   final APLGateway _gateway;
-  
+
   AccountManagementService(this._gateway);
 
-  /// 1. 取得帳戶列表 (GET /accounts)
+  /// 1. 取得帳戶列表 (GET /api/v1/accounts)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getAccounts({
     String? ledgerId,
     String? type,
@@ -490,7 +489,7 @@ class AccountManagementService {
     );
   }
 
-  /// 2. 建立新帳戶 (POST /accounts)
+  /// 2. 建立新帳戶 (POST /api/v1/accounts)
   Future<UnifiedApiResponse<Map<String, dynamic>>> createAccount(Map<String, dynamic> accountData) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'POST',
@@ -501,7 +500,7 @@ class AccountManagementService {
     );
   }
 
-  /// 3. 取得帳戶詳情 (GET /accounts/{id})
+  /// 3. 取得帳戶詳情 (GET /api/v1/accounts/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> getAccountDetail(String accountId, {
     bool? includeTransactions,
     int? transactionLimit,
@@ -519,7 +518,7 @@ class AccountManagementService {
     );
   }
 
-  /// 4. 更新帳戶 (PUT /accounts/{id})
+  /// 4. 更新帳戶 (PUT /api/v1/accounts/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> updateAccount(String accountId, Map<String, dynamic> updateData) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'PUT',
@@ -530,7 +529,7 @@ class AccountManagementService {
     );
   }
 
-  /// 5. 刪除帳戶 (DELETE /accounts/{id})
+  /// 5. 刪除帳戶 (DELETE /api/v1/accounts/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> deleteAccount(String accountId, {
     bool? force,
     String? transferTo,
@@ -548,7 +547,7 @@ class AccountManagementService {
     );
   }
 
-  /// 6. 取得帳戶餘額 (GET /accounts/{id}/balance)
+  /// 6. 取得帳戶餘額 (GET /api/v1/accounts/{id}/balance)
   Future<UnifiedApiResponse<Map<String, dynamic>>> getAccountBalance(String accountId, {
     bool? includeHistory,
     int? historyDays,
@@ -566,7 +565,7 @@ class AccountManagementService {
     );
   }
 
-  /// 7. 取得帳戶類型列表 (GET /accounts/types)
+  /// 7. 取得帳戶類型列表 (GET /api/v1/accounts/types)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getAccountTypes() async {
     return _gateway._forwardRequest<List<Map<String, dynamic>>>(
       'GET',
@@ -577,7 +576,7 @@ class AccountManagementService {
     );
   }
 
-  /// 8. 帳戶轉帳 (POST /accounts/transfer)
+  /// 8. 帳戶轉帳 (POST /api/v1/accounts/transfer)
   Future<UnifiedApiResponse<Map<String, dynamic>>> transfer(Map<String, dynamic> transferData) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'POST',
@@ -592,10 +591,10 @@ class AccountManagementService {
 /// 預算管理服務類別 (對應8107 API規格 - 8個API端點)
 class BudgetManagementService {
   final APLGateway _gateway;
-  
+
   BudgetManagementService(this._gateway);
 
-  /// 1. 取得預算列表 (GET /budgets)
+  /// 1. 取得預算列表 (GET /api/v1/budgets)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getBudgets({
     String? ledgerId,
     String? type,
@@ -633,7 +632,7 @@ class BudgetManagementService {
     );
   }
 
-  /// 2. 建立新預算 (POST /budgets)
+  /// 2. 建立新預算 (POST /api/v1/budgets)
   Future<UnifiedApiResponse<Map<String, dynamic>>> createBudget(Map<String, dynamic> budgetData) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'POST',
@@ -644,7 +643,7 @@ class BudgetManagementService {
     );
   }
 
-  /// 3. 取得預算詳情 (GET /budgets/{id})
+  /// 3. 取得預算詳情 (GET /api/v1/budgets/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> getBudgetDetail(String budgetId, {
     bool? includeTransactions,
     int? transactionLimit,
@@ -670,7 +669,7 @@ class BudgetManagementService {
     );
   }
 
-  /// 4. 更新預算 (PUT /budgets/{id})
+  /// 4. 更新預算 (PUT /api/v1/budgets/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> updateBudget(String budgetId, Map<String, dynamic> updateData) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'PUT',
@@ -681,7 +680,7 @@ class BudgetManagementService {
     );
   }
 
-  /// 5. 刪除預算 (DELETE /budgets/{id})
+  /// 5. 刪除預算 (DELETE /api/v1/budgets/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> deleteBudget(String budgetId, {
     bool? deleteHistory,
     String? reason,
@@ -699,7 +698,7 @@ class BudgetManagementService {
     );
   }
 
-  /// 6. 取得預算執行狀況 (GET /budgets/status)
+  /// 6. 取得預算執行狀況 (GET /api/v1/budgets/status)
   Future<UnifiedApiResponse<Map<String, dynamic>>> getBudgetStatus({
     String? ledgerId,
     bool? includeInactive,
@@ -721,7 +720,7 @@ class BudgetManagementService {
     );
   }
 
-  /// 7. 取得預算模板列表 (GET /budgets/templates)
+  /// 7. 取得預算模板列表 (GET /api/v1/budgets/templates)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getBudgetTemplates({
     String? category,
     String? type,
@@ -743,7 +742,7 @@ class BudgetManagementService {
     );
   }
 
-  /// 8. 設定預算警示 (POST /budgets/alerts) - 使用templates端點的POST方法
+  /// 8. 設定預算警示 (POST /api/v1/budgets/templates) - 使用templates端點的POST方法
   Future<UnifiedApiResponse<Map<String, dynamic>>> setBudgetAlerts({
     required String budgetId,
     required List<Map<String, dynamic>> alerts,
@@ -763,15 +762,15 @@ class BudgetManagementService {
   }
 }
 
-/// APL Gateway 單例模式
+/// APL Gateway單例模式
 class APL {
   static APLGateway? _instance;
-  
+
   static APLGateway get instance {
     _instance ??= APLGateway();
     return _instance!;
   }
-  
+
   static void dispose() {
     _instance?.dispose();
     _instance = null;
@@ -781,7 +780,7 @@ class APL {
 /// P2功能完整性驗證方法
 class P2FeatureValidator {
   final APLGateway _gateway;
-  
+
   P2FeatureValidator(this._gateway);
 
   /// P2完整流程驗證：建立帳本 → 建立帳戶 → 設定預算 → 邀請協作者
@@ -800,15 +799,15 @@ class P2FeatureValidator {
         'type': 'personal',
         'description': 'P2功能驗證測試帳本'
       });
-      
+
       results['tests']['create_ledger'] = ledgerResponse.success;
       if (!ledgerResponse.success) {
         results['errors']['create_ledger'] = ledgerResponse.error?.message ?? '建立帳本失敗';
         return results;
       }
-      
+
       final ledgerId = ledgerResponse.data?['ledger']?['id'];
-      
+
       // 2. 建立帳戶
       final accountResponse = await _gateway.account.createAccount({
         'name': '測試現金帳戶',
@@ -816,12 +815,12 @@ class P2FeatureValidator {
         'ledgerId': ledgerId,
         'initialBalance': 10000
       });
-      
+
       results['tests']['create_account'] = accountResponse.success;
       if (!accountResponse.success) {
         results['errors']['create_account'] = accountResponse.error?.message ?? '建立帳戶失敗';
       }
-      
+
       // 3. 建立預算
       final budgetResponse = await _gateway.budget.createBudget({
         'name': '測試月度預算',
@@ -833,44 +832,44 @@ class P2FeatureValidator {
           'startDate': DateTime.now().toIso8601String()
         }
       });
-      
+
       results['tests']['create_budget'] = budgetResponse.success;
       if (!budgetResponse.success) {
         results['errors']['create_budget'] = budgetResponse.error?.message ?? '建立預算失敗';
       }
-      
+
       // 4. 取得帳本詳情（含權限驗證）
       final detailResponse = await _gateway.ledger.getLedgerDetail(
         ledgerId!, 
         includeTransactions: true,
         userMode: 'Expert'
       );
-      
+
       results['tests']['get_ledger_detail'] = detailResponse.success;
       if (!detailResponse.success) {
         results['errors']['get_ledger_detail'] = detailResponse.error?.message ?? '取得帳本詳情失敗';
       }
-      
+
       // 5. 取得預算狀況
       final statusResponse = await _gateway.budget.getBudgetStatus(
         ledgerId: ledgerId,
         userMode: 'Expert'
       );
-      
+
       results['tests']['get_budget_status'] = statusResponse.success;
       if (!statusResponse.success) {
         results['errors']['get_budget_status'] = statusResponse.error?.message ?? '取得預算狀況失敗';
       }
-      
+
       results['overall_success'] = results['tests'].values.every((test) => test == true);
       results['ledger_id'] = ledgerId;
-      
+
     } catch (error) {
       results['tests']['exception_handling'] = false;
       results['errors']['exception'] = error.toString();
       results['overall_success'] = false;
     }
-    
+
     return results;
   }
 
@@ -898,7 +897,7 @@ class P2FeatureValidator {
         results['errors'][mode] = error.toString();
       }
     }
-    
+
     results['all_modes_supported'] = results['mode_tests'].values.every((test) => test == true);
     return results;
   }
@@ -968,4 +967,4 @@ class P2FeatureValidator {
 ///   print('錯誤訊息: ${response.error?.message}');
 ///   print('錯誤詳情: ${response.error?.details}');
 /// }
-/// ```
+///
