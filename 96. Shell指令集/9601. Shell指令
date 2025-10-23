@@ -68,16 +68,23 @@ pkill -f node
 cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart" 
 
 
-14. 安裝7570之測試包
+14. 安裝75測試包
+
 cd "75. Flutter_Test_code_PL" && dart pub get
 
 cd "75. Flutter_Test_code_PL" && dart pub intl
 
-15. Firebase清空指令(慎用!)
+
+15. 執行7571
+
+cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart" 
+
+
+98. Firebase清空指令(慎用!)
 
 node -e " const FS = require('./13. Replit_Module code_BL/1311. FS.js'); async function clearAndReinitializeFirebase() { try { console.log('🔥 開始完全清空Firebase資料...'); const db = FS.db; const collections = await db.listCollections(); console.log('📋 發現的集合:', collections.map(c => c.id)); for (const collection of collections) { try { console.log('🗑️ 清空集合:', collection.id); const snapshot = await collection.get(); if (snapshot.size > 0) { const batch = db.batch(); snapshot.docs.forEach(doc => batch.delete(doc.ref)); await batch.commit(); console.log('✅ 已清空', snapshot.size, '個文檔'); } } catch (error) { console.log('⚠️ 清空集合出錯:', collection.id, error.message); } } console.log('🔄 開始重新初始化...'); const initResult = await FS.FS_initializePhase1DataStructure('ADMIN'); console.log('📊 初始化結果:', initResult.success ? '成功' : '失敗'); const healthCheck = await FS.FS_performHealthCheck('ADMIN'); console.log('🏥 健康檢查:', healthCheck.success ? '通過' : '失敗'); console.log('✅ Firebase重新初始化完成'); process.exit(0); } catch (error) { console.error('❌ 操作失敗:', error.message); process.exit(1); } } clearAndReinitializeFirebase(); "
 
 
-16. 重新建立Firebase資料結構
+99. 重新建立Firebase資料結構
 
 node -e " const FS = require('./13. Replit_Module code_BL/1311. FS.js'); async function initializeFirebaseStructure() { try { console.log('🔄 開始建立Firebase資料結構（不清空現有資料）...'); const initResult = await FS.FS_initializePhase1DataStructure('ADMIN'); console.log('📊 Phase 1資料結構建立結果:', JSON.stringify(initResult, null, 2)); const healthCheck = await FS.FS_performHealthCheck('ADMIN'); console.log('🏥 系統健康檢查結果:', JSON.stringify(healthCheck, null, 2)); console.log('✅ Firebase資料結構建立完成（現有資料保持不變）'); process.exit(0); } catch (error) { console.error('❌ 資料結構建立失敗:', error.message); process.exit(1); } } initializeFirebaseStructure(); "

@@ -304,12 +304,12 @@ MM 	 DD 	 Description 	    Progress
 10	14	 撰寫DCN-0017	 Closed
 10	15	 重構7580模組 	 Closed
 10	15	 重構7570模組 	 Closed
-10	15	 執行DCN-0018 重構測試模組之dataflow 	 Ongoing
+10	15	 執行DCN-0018 重構測試模組之dataflow 	 Closed
 10	16	 修改6501文件，導入更新的測試策略：TC-SIT-001~016：PL層業務邏輯測試，直接調用PL層函數，驗證業務邏輯正確性；TC-SIT-017~044：APL層API Gateway測試，HTTP請求到API端點，驗證API轉發功能 	 Closed
 10	16	 重構7570測試代碼：移除對73XX UI部分的Dependency 	 Closed
-10	16	 重構73XX模組：分拆成業務邏輯和UI(記得寫DCN) 	 Ongoing
+10	16	 重構73XX模組：分拆成業務邏輯和UI(記得寫DCN) 	 Closed
 10	16	 打通Dataflow：打通7302(移除7302的模擬功能) 	 Closed
-10	17	 系統性檢視資料與帳號的CRUD 	 Ongoing
+10	17	 系統性檢視資料與帳號的CRUD 	 Closed
 10	17	 Review寫入firebase資料的必要性 	 Ongoing
 10	17	 P1-2 Passed!!!! 	 Closed
 10	17	 我把account_mappings刪除掉，要記得加回來 	 Ongoing
@@ -321,20 +321,23 @@ MM 	 DD 	 Description 	    Progress
 10	22	 撰寫DCN-0019 	 Closed
 10	22	 實作APL.dart 	 Closed
 10	22	 實作7571 	 Closed
-10	22	 檢查7598測試資料是否能滿足SIT P2 	 Ongoing
+10	22	 檢查7598測試資料是否能滿足SIT P2 	 Closed
 10	22	 撰寫6502 	 Closed
-10	22	 撰寫1111 	 Ongoing
-10	22	 撰寫1112 	 Ongoing
-10	22	 撰寫1151 	 Ongoing
-10	22	 撰寫1211 	 Ongoing
-10	22	 撰寫1212 	 Ongoing
-10	22	 撰寫1251 	 Ongoing
-10	22	 重構1311 	 Ongoing
-10	22	 重構1312 	 Ongoing
-10	22	 重構1351 	 Ongoing
 10	22	 撰寫7103 	 Closed
 10	22	 撰寫7104 	 Closed
 10	22	 撰寫7203 	 Closed
 10	22	 撰寫7204 	 Closed
 10	22	 實作7303 	 Closed
 10	22	 實作7304 	 Closed
+10	23	 撰寫1111 	 Ongoing
+10	23	 撰寫1112 	 Ongoing
+10	23	 撰寫1151 	 Ongoing
+10	23	 撰寫1211 	 Ongoing
+10	23	 撰寫1212 	 Ongoing
+10	23	 撰寫1251 	 Ongoing
+10	23	 重構1311 	 Ongoing
+10	23	 重構1312 	 Ongoing
+10	23	 重構1351 	 Ongoing
+10	23	 修改0015：加入ASL層   	 Ongoing
+10	23	 修改7001(PL)：修改PL層職責   	 Ongoing
+10	23	 修改8001(APL)：修改APL職責   	 Ongoing
