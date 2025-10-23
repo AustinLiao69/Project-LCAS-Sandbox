@@ -1657,13 +1657,22 @@ app.get('/api/v1/ledgers/:id', async (req, res) => {
 // 6. 查詢帳本協作者
 app.get('/api/v1/ledgers/:id/collaborators', async (req, res) => {
   try {
-    console.log('👥 ASL轉發: 查詢帳本協作者 -> MLS_getCollaborators');
-    if (!MLS || typeof MLS.MLS_getCollaborators !== 'function') {
-      return res.apiError('MLS_getCollaborators函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    console.log('👥 ASL轉發: 查詢帳本協作者 -> MLS_getLedgerList');
+    if (!MLS || typeof MLS.MLS_getLedgerList !== 'function') {
+      return res.apiError('MLS_getLedgerList函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await MLS.MLS_getCollaborators(req.params.id, req.query);
+    // 透過getLedgerList獲取帳本資訊，再從中提取協作者資訊
+    const result = await MLS.MLS_getLedgerList(req.query.userId, { ledgerId: req.params.id });
     if (result.success) {
-      res.apiSuccess(result.data, result.message || '協作者列表查詢成功');
+      // 從帳本資訊中提取協作者資訊
+      const ledger = result.ledgers && result.ledgers.length > 0 ? result.ledgers[0] : null;
+      const collaboratorsData = ledger ? {
+        collaborators: ledger.members || [],
+        permissions: ledger.permissions || {},
+        memberCount: ledger.member_count || 0
+      } : { collaborators: [], permissions: {}, memberCount: 0 };
+      
+      res.apiSuccess(collaboratorsData, '協作者列表查詢成功');
     } else {
       res.apiError(result.message || '協作者列表查詢失敗', result.error?.code || 'GET_COLLABORATORS_ERROR', 400, result.error?.details);
     }
@@ -1676,11 +1685,11 @@ app.get('/api/v1/ledgers/:id/collaborators', async (req, res) => {
 // 7. 移除帳本協作者
 app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
   try {
-    console.log('👥🗑️ ASL轉發: 移除帳本協作者 -> MLS_removeCollaborator');
-    if (!MLS || typeof MLS.MLS_removeCollaborator !== 'function') {
-      return res.apiError('MLS_removeCollaborator函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    console.log('👥🗑️ ASL轉發: 移除帳本協作者 -> MLS_removeMember');
+    if (!MLS || typeof MLS.MLS_removeMember !== 'function') {
+      return res.apiError('MLS_removeMember函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await MLS.MLS_removeCollaborator(req.params.id, req.params.userId, req.query);
+    const result = await MLS.MLS_removeMember(req.params.id, req.query.removerId || 'system', req.params.userId, req.body.removeReason || '管理員移除');
     if (result.success) {
       res.apiSuccess(result.data, result.message || '協作者移除成功');
     } else {
