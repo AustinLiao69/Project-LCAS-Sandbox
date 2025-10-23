@@ -215,7 +215,7 @@ class AccountLedgerService {
   
   AccountLedgerService(this._gateway);
 
-  /// 1. 取得帳本列表 (GET /api/v1/ledgers)
+  /// 1. 取得帳本列表 (GET /ledgers)
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getLedgers({
     String? type,
     String? role,
@@ -249,7 +249,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 2. 建立新帳本 (POST /api/v1/ledgers)
+  /// 2. 建立新帳本 (POST /ledgers)
   Future<UnifiedApiResponse<Map<String, dynamic>>> createLedger(Map<String, dynamic> ledgerData) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'POST',
@@ -260,7 +260,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 3. 取得帳本詳情 (GET /api/v1/ledgers/{id})
+  /// 3. 取得帳本詳情 (GET /ledgers/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> getLedgerDetail(String ledgerId, {
     bool? includeTransactions,
     int? transactionLimit,
@@ -282,7 +282,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 4. 更新帳本 (PUT /api/v1/ledgers/{id})
+  /// 4. 更新帳本 (PUT /ledgers/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> updateLedger(String ledgerId, Map<String, dynamic> updateData) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'PUT',
@@ -293,7 +293,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 5. 刪除帳本 (DELETE /api/v1/ledgers/{id})
+  /// 5. 刪除帳本 (DELETE /ledgers/{id})
   Future<UnifiedApiResponse<Map<String, dynamic>>> deleteLedger(String ledgerId) async {
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'DELETE',
