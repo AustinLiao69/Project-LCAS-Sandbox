@@ -1704,15 +1704,32 @@ app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
 // 8. 查詢帳本權限
 app.get('/api/v1/ledgers/:id/permissions', async (req, res) => {
   try {
-    console.log('🔐 ASL轉發: 查詢帳本權限 -> MLS_getPermissions');
-    if (!MLS || typeof MLS.MLS_getPermissions !== 'function') {
-      return res.apiError('MLS_getPermissions函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    console.log('🔐 ASL轉發: 查詢帳本權限 -> MLS_validateLedgerAccess');
+    if (!MLS || typeof MLS.MLS_validateLedgerAccess !== 'function') {
+      return res.apiError('MLS_validateLedgerAccess函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await MLS.MLS_getPermissions(req.params.id, req.query);
-    if (result.success) {
-      res.apiSuccess(result.data, result.message || '帳本權限查詢成功');
+    
+    // 使用MLS_validateLedgerAccess來獲取權限資訊
+    const userId = req.query.userId || 'system';
+    const result = await MLS.MLS_validateLedgerAccess(userId, req.params.id, 'read');
+    
+    if (result.hasAccess !== undefined) {
+      // 構建權限回應格式
+      const permissionData = {
+        ledgerId: req.params.id,
+        userId: userId,
+        hasAccess: result.hasAccess,
+        reason: result.reason,
+        permissions: {
+          read: result.hasAccess,
+          write: result.hasAccess && result.reason === 'allowed',
+          delete: result.hasAccess && result.reason === 'allowed',
+          manage: result.hasAccess && result.reason === 'allowed'
+        }
+      };
+      res.apiSuccess(permissionData, '帳本權限查詢成功');
     } else {
-      res.apiError(result.message || '帳本權限查詢失敗', result.error?.code || 'GET_PERMISSIONS_ERROR', 400, result.error?.details);
+      res.apiError('權限驗證失敗', 'PERMISSION_VALIDATION_ERROR', 400);
     }
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (get permissions):', error);
