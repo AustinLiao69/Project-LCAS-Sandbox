@@ -1654,6 +1654,12 @@ app.get('/api/v1/ledgers/:id', async (req, res) => {
   }
 });
 
+// 注意：以下協作相關端點不符合8020規範，已移除：
+// - GET /api/v1/ledgers/{id}/collaborators (違規)
+// - DELETE /api/v1/ledgers/{id}/collaborators/{userId} (違規)  
+// - GET /api/v1/ledgers/{id}/permissions (違規)
+// 協作功能應使用標準的帳本管理API實現
+
 // 4. 更新帳本
 app.put('/api/v1/ledgers/:id', async (req, res) => {
   try {

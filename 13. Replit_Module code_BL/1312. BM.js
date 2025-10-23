@@ -1,7 +1,6 @@
-
 /**
  * BM_預算管理模組_2.0.0
- * @module BM模組 
+ * @module BM模組
  * @description 預算管理系統 - 支援預算設定、追蹤、警示與分析
  * @update 2025-07-22: 升級至2.0.0版本，完善測試支援，強化功能穩定性
  */
@@ -11,6 +10,7 @@ console.log('📊 BM 預算管理模組載入中...');
 // 導入相關模組
 const DL = require('./1310. DL.js');
 const DD = require('./1331. DD1.js');
+const FS = require('./1311. FS.js'); // FS模組包含完整的Firestore操作函數
 
 // 預算管理模組物件
 const BM = {};
@@ -23,25 +23,25 @@ const BM = {};
  */
 BM.BM_createBudget = async function(ledgerId, userId, budgetData, budgetType) {
   const logPrefix = '[BM_createBudget]';
-  
+
   try {
     console.log(`${logPrefix} 開始建立預算 - 帳本ID: ${ledgerId}, 用戶: ${userId}`);
-    
+
     // 驗證輸入參數
     if (!ledgerId || !userId || !budgetData) {
       throw new Error('缺少必要參數: ledgerId, userId, budgetData');
     }
-    
+
     // 驗證預算數據
     const validation = await BM.BM_validateBudgetData(budgetData, 'create');
     if (!validation.valid) {
       throw new Error(`預算數據驗證失敗: ${validation.errors.join(', ')}`);
     }
-    
+
     // 生成預算ID
     const budgetId = `budget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date();
-    
+
     // 建立預算物件
     const budget = {
       budget_id: budgetId,
@@ -64,13 +64,14 @@ BM.BM_createBudget = async function(ledgerId, userId, budgetData, budgetType) {
       updated_at: now,
       status: 'active'
     };
-    
+
     // 儲存到 Firestore (模擬)
     console.log(`${logPrefix} 儲存預算到資料庫...`);
-    
+    // await FS.saveBudgetToFirestore(budgetId, budget); // 實際 Firestore 操作
+
     // 記錄操作日誌
     DL.DL_log(`建立預算成功 - 預算ID: ${budgetId}`, '預算管理', userId);
-    
+
     // 分發預算建立事件
     await DD.DD_distributeData('budget_created', {
       budgetId: budgetId,
@@ -78,19 +79,19 @@ BM.BM_createBudget = async function(ledgerId, userId, budgetData, budgetType) {
       userId: userId,
       budgetData: budget
     });
-    
+
     console.log(`${logPrefix} 預算建立完成 - ID: ${budgetId}`);
-    
+
     return {
       success: true,
       budgetId: budgetId,
       message: '預算建立成功'
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算建立失敗:`, error);
     DL.DL_error(`預算建立失敗: ${error.message}`, '預算管理', userId);
-    
+
     return {
       success: false,
       budgetId: null,
@@ -107,32 +108,33 @@ BM.BM_createBudget = async function(ledgerId, userId, budgetData, budgetType) {
  */
 BM.BM_editBudget = async function(budgetId, userId, updateData) {
   const logPrefix = '[BM_editBudget]';
-  
+
   try {
     console.log(`${logPrefix} 開始編輯預算 - 預算ID: ${budgetId}`);
-    
+
     // 驗證輸入參數
     if (!budgetId || !userId || !updateData) {
       throw new Error('缺少必要參數');
     }
-    
+
     // 驗證更新數據
     const validation = await BM.BM_validateBudgetData(updateData, 'edit');
     if (!validation.valid) {
       throw new Error(`預算數據驗證失敗: ${validation.errors.join(', ')}`);
     }
-    
+
     // 建立更新記錄
     const updatedFields = Object.keys(updateData);
     updateData.updated_at = new Date();
     updateData.updated_by = userId;
-    
+
     // 更新資料庫 (模擬)
     console.log(`${logPrefix} 更新預算資料...`);
-    
+    // await FS.updateBudgetInFirestore(budgetId, updateData); // 實際 Firestore 操作
+
     // 記錄操作日誌
     DL.DL_log(`編輯預算成功 - 預算ID: ${budgetId}, 更新欄位: ${updatedFields.join(', ')}`, '預算管理', userId);
-    
+
     // 分發預算更新事件
     await DD.DD_distributeData('budget_updated', {
       budgetId: budgetId,
@@ -140,19 +142,19 @@ BM.BM_editBudget = async function(budgetId, userId, updateData) {
       updatedFields: updatedFields,
       updateData: updateData
     });
-    
+
     console.log(`${logPrefix} 預算編輯完成`);
-    
+
     return {
       success: true,
       updatedFields: updatedFields,
       message: '預算編輯成功'
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算編輯失敗:`, error);
     DL.DL_error(`預算編輯失敗: ${error.message}`, '預算管理', userId);
-    
+
     return {
       success: false,
       updatedFields: [],
@@ -169,23 +171,23 @@ BM.BM_editBudget = async function(budgetId, userId, updateData) {
  */
 BM.BM_deleteBudget = async function(budgetId, userId, confirmationToken) {
   const logPrefix = '[BM_deleteBudget]';
-  
+
   try {
     console.log(`${logPrefix} 開始刪除預算 - 預算ID: ${budgetId}`);
-    
+
     // 驗證輸入參數
     if (!budgetId || !userId) {
       throw new Error('缺少必要參數');
     }
-    
+
     // 驗證確認令牌
     if (!confirmationToken || confirmationToken !== `confirm_delete_${budgetId}`) {
       throw new Error('確認令牌無效，請確認刪除操作');
     }
-    
+
     // 建立刪除前備份 (模擬)
     console.log(`${logPrefix} 建立刪除前備份...`);
-    
+
     // 標記為已刪除而非實際刪除
     const deleteTime = new Date();
     const deleteData = {
@@ -193,31 +195,32 @@ BM.BM_deleteBudget = async function(budgetId, userId, confirmationToken) {
       deleted_at: deleteTime,
       deleted_by: userId
     };
-    
+
     // 更新狀態到資料庫 (模擬)
     console.log(`${logPrefix} 標記預算為已刪除...`);
-    
+    // await FS.markBudgetAsDeletedInFirestore(budgetId, deleteData); // 實際 Firestore 操作
+
     // 記錄刪除日誌
     DL.DL_warning(`刪除預算 - 預算ID: ${budgetId}`, '預算管理', userId);
-    
+
     // 分發預算刪除事件
     await DD.DD_distributeData('budget_deleted', {
       budgetId: budgetId,
       userId: userId,
       deletedAt: deleteTime
     });
-    
+
     console.log(`${logPrefix} 預算刪除完成`);
-    
+
     return {
       success: true,
       message: '預算刪除成功'
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算刪除失敗:`, error);
     DL.DL_error(`預算刪除失敗: ${error.message}`, '預算管理', userId);
-    
+
     return {
       success: false,
       message: `預算刪除失敗: ${error.message}`
@@ -233,16 +236,17 @@ BM.BM_deleteBudget = async function(budgetId, userId, confirmationToken) {
  */
 BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
   const logPrefix = '[BM_calculateBudgetProgress]';
-  
+
   try {
     console.log(`${logPrefix} 計算預算進度 - 預算ID: ${budgetId}`);
-    
+
     // 驗證輸入參數
     if (!budgetId) {
       throw new Error('缺少預算ID');
     }
-    
+
     // 從資料庫取得預算資料 (模擬)
+    // const budgetData = await FS.getBudgetFromFirestore(budgetId); // 實際 Firestore 操作
     const budgetData = {
       amount: 50000,
       used_amount: 35000,
@@ -250,11 +254,12 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
       start_date: new Date('2025-07-01'),
       end_date: new Date('2025-07-31')
     };
-    
+
+
     // 計算進度
     const progress = (budgetData.used_amount / budgetData.amount) * 100;
     const remaining = budgetData.amount - budgetData.used_amount;
-    
+
     // 判斷狀態
     let status = 'normal';
     if (progress >= 100) {
@@ -264,9 +269,9 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
     } else if (progress >= 80) {
       status = 'warning';
     }
-    
+
     console.log(`${logPrefix} 預算進度: ${progress.toFixed(2)}%, 剩餘: ${remaining}`);
-    
+
     return {
       progress: Math.round(progress * 100) / 100,
       remaining: remaining,
@@ -274,11 +279,11 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
       used_amount: budgetData.used_amount,
       total_amount: budgetData.amount
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 進度計算失敗:`, error);
     DL.DL_error(`預算進度計算失敗: ${error.message}`, '預算管理');
-    
+
     return {
       progress: 0,
       remaining: 0,
@@ -295,55 +300,57 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
  */
 BM.BM_updateBudgetUsage = async function(ledgerId, transactionData) {
   const logPrefix = '[BM_updateBudgetUsage]';
-  
+
   try {
     console.log(`${logPrefix} 更新預算使用 - 帳本ID: ${ledgerId}`);
-    
+
     // 驗證輸入參數
     if (!ledgerId || !transactionData) {
       throw new Error('缺少必要參數');
     }
-    
+
     // 取得該帳本的活躍預算 (模擬)
     const activeBudgets = await BM.BM_getActiveBudgets(ledgerId);
-    
+
     let alertTriggered = false;
     const updatedBudgets = [];
-    
+
     // 更新每個相關預算的使用金額
     for (const budget of activeBudgets) {
       // 檢查交易是否符合預算分類
       if (BM.BM_isTransactionMatchBudget(transactionData, budget)) {
         const newUsage = budget.used_amount + Math.abs(transactionData.amount);
-        
+
         // 更新預算使用記錄
         budget.used_amount = newUsage;
         budget.updated_at = new Date();
-        
+
         updatedBudgets.push(budget.budget_id);
-        
+
         // 檢查是否觸發警示
         const alertCheck = await BM.BM_checkBudgetAlert(budget.budget_id, newUsage);
         if (alertCheck.alertRequired) {
           alertTriggered = true;
           await BM.BM_triggerBudgetAlert(budget.budget_id, alertCheck.alertLevel, []);
         }
+
+        // await FS.updateBudgetUsageInFirestore(budget.budget_id, newUsage); // 實際 Firestore 操作
       }
     }
-    
+
     console.log(`${logPrefix} 預算使用更新完成，更新了 ${updatedBudgets.length} 個預算`);
-    
+
     return {
       updated: updatedBudgets.length > 0,
       newUsage: transactionData.amount,
       alertTriggered: alertTriggered,
       updatedBudgets: updatedBudgets
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算使用更新失敗:`, error);
     DL.DL_error(`預算使用更新失敗: ${error.message}`, '預算管理');
-    
+
     return {
       updated: false,
       newUsage: 0,
@@ -360,18 +367,18 @@ BM.BM_updateBudgetUsage = async function(ledgerId, transactionData) {
  */
 BM.BM_getBudgetReport = async function(budgetId, reportType, dateRange) {
   const logPrefix = '[BM_getBudgetReport]';
-  
+
   try {
     console.log(`${logPrefix} 生成預算報告 - 預算ID: ${budgetId}, 類型: ${reportType}`);
-    
+
     // 驗證輸入參數
     if (!budgetId) {
       throw new Error('缺少預算ID');
     }
-    
+
     // 取得預算資料
     const budgetData = await BM.BM_getBudgetData(budgetId);
-    
+
     // 生成報告數據
     const reportData = {
       budget_info: budgetData,
@@ -391,7 +398,7 @@ BM.BM_getBudgetReport = async function(budgetId, reportType, dateRange) {
         remaining: cat.allocated_amount - cat.used_amount
       }))
     };
-    
+
     // 生成圖表數據
     const charts = [
       {
@@ -408,25 +415,25 @@ BM.BM_getBudgetReport = async function(budgetId, reportType, dateRange) {
         }
       }
     ];
-    
+
     // 生成摘要
     const summary = {
       status: reportData.usage_analysis.usage_rate > 100 ? '超支' : '正常',
       recommendation: reportData.usage_analysis.usage_rate > 90 ? '建議調整支出' : '執行良好'
     };
-    
+
     console.log(`${logPrefix} 預算報告生成完成`);
-    
+
     return {
       reportData: reportData,
       charts: charts,
       summary: summary
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 報告生成失敗:`, error);
     DL.DL_error(`預算報告生成失敗: ${error.message}`, '預算管理');
-    
+
     return {
       reportData: {},
       charts: [],
@@ -443,21 +450,21 @@ BM.BM_getBudgetReport = async function(budgetId, reportType, dateRange) {
  */
 BM.BM_checkBudgetAlert = async function(budgetId, currentUsage) {
   const logPrefix = '[BM_checkBudgetAlert]';
-  
+
   try {
     console.log(`${logPrefix} 檢查預算警示 - 預算ID: ${budgetId}`);
-    
+
     // 取得預算警示規則
     const budgetData = await BM.BM_getBudgetData(budgetId);
     const alertRules = budgetData.alert_rules;
-    
+
     // 計算使用率
     const usageRate = (currentUsage / budgetData.amount) * 100;
-    
+
     let alertRequired = false;
     let alertLevel = 'normal';
     let message = '';
-    
+
     // 檢查警示條件
     if (usageRate >= 100) {
       alertRequired = true;
@@ -472,26 +479,26 @@ BM.BM_checkBudgetAlert = async function(budgetId, currentUsage) {
       alertLevel = 'warning';
       message = `預算使用已達 ${usageRate.toFixed(1)}%，請注意支出`;
     }
-    
+
     // 檢查是否啟用通知
     if (alertRequired && !alertRules.enable_notifications) {
       alertRequired = false;
       console.log(`${logPrefix} 警示條件滿足但通知已停用`);
     }
-    
+
     DL.DL_info(`預算警示檢查 - 預算ID: ${budgetId}, 使用率: ${usageRate.toFixed(1)}%, 警示等級: ${alertLevel}`, '預算管理');
-    
+
     return {
       alertRequired: alertRequired,
       alertLevel: alertLevel,
       message: message,
       usageRate: usageRate
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 警示檢查失敗:`, error);
     DL.DL_error(`預算警示檢查失敗: ${error.message}`, '預算管理');
-    
+
     return {
       alertRequired: false,
       alertLevel: 'error',
@@ -508,16 +515,16 @@ BM.BM_checkBudgetAlert = async function(budgetId, currentUsage) {
  */
 BM.BM_triggerBudgetAlert = async function(budgetId, alertType, recipientList) {
   const logPrefix = '[BM_triggerBudgetAlert]';
-  
+
   try {
     console.log(`${logPrefix} 觸發預算警示 - 預算ID: ${budgetId}, 警示類型: ${alertType}`);
-    
+
     // 生成警示ID
     const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // 取得預算資料
     const budgetData = await BM.BM_getBudgetData(budgetId);
-    
+
     // 準備警示消息
     let alertMessage = '';
     switch (alertType) {
@@ -533,7 +540,7 @@ BM.BM_triggerBudgetAlert = async function(budgetId, alertType, recipientList) {
       default:
         alertMessage = `📊 預算通知\n預算「${budgetData.name}」狀態更新。`;
     }
-    
+
     // 記錄警示
     const alertRecord = {
       alert_id: alertId,
@@ -548,31 +555,32 @@ BM.BM_triggerBudgetAlert = async function(budgetId, alertType, recipientList) {
       notification_sent: false,
       recipients: recipientList
     };
-    
+
     // 發送通知 (模擬 LINE OA 模組)
     console.log(`${logPrefix} 發送警示通知: ${alertMessage}`);
-    
+    // await NotificationService.sendLineNotification(recipientList, alertMessage); // 實際通知邏輯
+
     // 標記通知已發送
     alertRecord.notification_sent = true;
-    
+
     // 記錄警示日誌
     DL.DL_warning(`預算警示觸發 - ${alertType}: ${budgetData.name}`, '預算管理');
-    
+
     // 分發警示事件
     await DD.DD_distributeData('budget_alert_triggered', alertRecord);
-    
+
     console.log(`${logPrefix} 警示通知發送完成 - 警示ID: ${alertId}`);
-    
+
     return {
       sent: true,
       recipients: recipientList,
       alertId: alertId
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 警示通知失敗:`, error);
     DL.DL_error(`預算警示通知失敗: ${error.message}`, '預算管理');
-    
+
     return {
       sent: false,
       recipients: [],
@@ -589,10 +597,10 @@ BM.BM_triggerBudgetAlert = async function(budgetId, alertType, recipientList) {
  */
 BM.BM_setBudgetAlertRules = async function(budgetId, alertRules) {
   const logPrefix = '[BM_setBudgetAlertRules]';
-  
+
   try {
     console.log(`${logPrefix} 設定預算警示規則 - 預算ID: ${budgetId}`);
-    
+
     // 驗證警示規則
     const defaultRules = {
       warning_threshold: 80,
@@ -601,42 +609,43 @@ BM.BM_setBudgetAlertRules = async function(budgetId, alertRules) {
       notification_channels: ['line'],
       custom_thresholds: []
     };
-    
+
     const validatedRules = { ...defaultRules, ...alertRules };
-    
+
     // 驗證閾值設定
     if (validatedRules.warning_threshold >= validatedRules.critical_threshold) {
       throw new Error('警告閾值必須小於緊急閾值');
     }
-    
+
     if (validatedRules.warning_threshold < 0 || validatedRules.critical_threshold > 100) {
       throw new Error('閾值必須在 0-100 之間');
     }
-    
+
     // 更新警示規則到資料庫 (模擬)
     console.log(`${logPrefix} 更新警示規則到資料庫...`);
-    
+    // await FS.updateBudgetAlertRulesInFirestore(budgetId, validatedRules); // 實際 Firestore 操作
+
     // 記錄操作日誌
     DL.DL_log(`設定預算警示規則 - 預算ID: ${budgetId}`, '預算管理');
-    
+
     // 分發規則設定事件
     await DD.DD_distributeData('budget_alert_rules_updated', {
       budgetId: budgetId,
       alertRules: validatedRules
     });
-    
+
     console.log(`${logPrefix} 警示規則設定完成`);
-    
+
     return {
       success: true,
       rulesCount: Object.keys(validatedRules).length,
       message: '警示規則設定成功'
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 警示規則設定失敗:`, error);
     DL.DL_error(`預算警示規則設定失敗: ${error.message}`, '預算管理');
-    
+
     return {
       success: false,
       rulesCount: 0,
@@ -653,18 +662,19 @@ BM.BM_setBudgetAlertRules = async function(budgetId, alertRules) {
  */
 BM.BM_analyzeBudgetTrend = async function(budgetId, analysisType, timeRange) {
   const logPrefix = '[BM_analyzeBudgetTrend]';
-  
+
   try {
     console.log(`${logPrefix} 分析預算趨勢 - 預算ID: ${budgetId}, 分析類型: ${analysisType}`);
-    
+
     // 取得歷史預算使用數據 (模擬)
+    // const historicalData = await FS.getBudgetHistoryInFirestore(budgetId, timeRange); // 實際 Firestore 操作
     const historicalData = [
       { date: '2025-07-01', usage: 5000 },
       { date: '2025-07-07', usage: 15000 },
       { date: '2025-07-14', usage: 25000 },
       { date: '2025-07-21', usage: 35000 }
     ];
-    
+
     // 計算趨勢
     const trendData = historicalData.map((data, index) => {
       const dailyIncrease = index > 0 ? data.usage - historicalData[index - 1].usage : 0;
@@ -674,39 +684,39 @@ BM.BM_analyzeBudgetTrend = async function(budgetId, analysisType, timeRange) {
         cumulative_rate: (data.usage / 50000) * 100
       };
     });
-    
+
     // 預測未來使用
-    const averageDailyIncrease = trendData.reduce((sum, data) => sum + data.daily_increase, 0) / (trendData.length - 1);
-    const currentUsage = trendData[trendData.length - 1].usage;
+    const averageDailyIncrease = trendData.length > 1 ? trendData.reduce((sum, data) => sum + data.daily_increase, 0) / (trendData.length - 1) : 0;
+    const currentUsage = trendData.length > 0 ? trendData[trendData.length - 1].usage : 0;
     const remainingDays = 10; // 假設月底還有10天
-    
+
     const prediction = {
       predicted_final_usage: currentUsage + (averageDailyIncrease * remainingDays),
       predicted_overspend: false,
       confidence_level: 0.8
     };
-    
+
     prediction.predicted_overspend = prediction.predicted_final_usage > 50000;
-    
+
     // 生成洞察
     const insights = [
       `目前使用率: ${((currentUsage / 50000) * 100).toFixed(1)}%`,
       `平均日增長: ${averageDailyIncrease.toFixed(0)} 元`,
       prediction.predicted_overspend ? '⚠️ 預測可能超支' : '✅ 預測在預算內'
     ];
-    
+
     console.log(`${logPrefix} 趨勢分析完成`);
-    
+
     return {
       trendData: trendData,
       prediction: prediction,
       insights: insights
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 趨勢分析失敗:`, error);
     DL.DL_error(`預算趨勢分析失敗: ${error.message}`, '預算管理');
-    
+
     return {
       trendData: [],
       prediction: {},
@@ -723,19 +733,19 @@ BM.BM_analyzeBudgetTrend = async function(budgetId, analysisType, timeRange) {
  */
 BM.BM_compareBudgetAcrossLedgers = async function(ledgerIds, comparisonType) {
   const logPrefix = '[BM_compareBudgetAcrossLedgers]';
-  
+
   try {
     console.log(`${logPrefix} 跨帳本預算比較 - 帳本數量: ${ledgerIds.length}`);
-    
+
     // 取得各帳本的預算數據 (模擬)
     const ledgerComparisons = [];
-    
+
     for (const ledgerId of ledgerIds) {
       const budgets = await BM.BM_getActiveBudgets(ledgerId);
       const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0);
       const totalUsed = budgets.reduce((sum, budget) => sum + budget.used_amount, 0);
       const efficiency = totalBudget > 0 ? (totalUsed / totalBudget) * 100 : 0;
-      
+
       ledgerComparisons.push({
         ledger_id: ledgerId,
         total_budget: totalBudget,
@@ -744,7 +754,7 @@ BM.BM_compareBudgetAcrossLedgers = async function(ledgerIds, comparisonType) {
         budget_count: budgets.length
       });
     }
-    
+
     // 排序比較結果
     const ranking = [...ledgerComparisons].sort((a, b) => {
       switch (comparisonType) {
@@ -758,16 +768,16 @@ BM.BM_compareBudgetAcrossLedgers = async function(ledgerIds, comparisonType) {
           return b.efficiency_rate - a.efficiency_rate;
       }
     });
-    
+
     // 生成建議
     const recommendations = [
       '建議學習效率最高的帳本管理方式',
       '考慮調整低效率帳本的預算配置',
       '定期檢視預算執行狀況'
     ];
-    
+
     console.log(`${logPrefix} 跨帳本比較完成`);
-    
+
     return {
       comparisonData: {
         ledgers: ledgerComparisons,
@@ -777,11 +787,11 @@ BM.BM_compareBudgetAcrossLedgers = async function(ledgerIds, comparisonType) {
       ranking: ranking,
       recommendations: recommendations
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 跨帳本比較失敗:`, error);
     DL.DL_error(`跨帳本預算比較失敗: ${error.message}`, '預算管理');
-    
+
     return {
       comparisonData: {},
       ranking: [],
@@ -798,18 +808,18 @@ BM.BM_compareBudgetAcrossLedgers = async function(ledgerIds, comparisonType) {
  */
 BM.BM_createBudgetCategory = async function(ledgerId, categoryData) {
   const logPrefix = '[BM_createBudgetCategory]';
-  
+
   try {
     console.log(`${logPrefix} 建立預算分類 - 帳本ID: ${ledgerId}`);
-    
+
     // 驗證分類資料
     if (!categoryData.name || !categoryData.allocated_amount) {
       throw new Error('缺少分類名稱或分配金額');
     }
-    
+
     // 生成分類ID
     const categoryId = `category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // 建立分類物件
     const category = {
       id: categoryId,
@@ -821,31 +831,32 @@ BM.BM_createBudgetCategory = async function(ledgerId, categoryData) {
       description: categoryData.description || '',
       created_at: new Date()
     };
-    
+
     // 儲存分類 (模擬)
     console.log(`${logPrefix} 儲存預算分類...`);
-    
+    // await FS.saveBudgetCategoryToFirestore(ledgerId, categoryId, category); // 實際 Firestore 操作
+
     // 記錄操作日誌
     DL.DL_log(`建立預算分類 - 分類: ${category.name}, 金額: ${category.allocated_amount}`, '預算管理');
-    
+
     // 分發分類建立事件
     await DD.DD_distributeData('budget_category_created', {
       ledgerId: ledgerId,
       category: category
     });
-    
+
     console.log(`${logPrefix} 預算分類建立完成 - ID: ${categoryId}`);
-    
+
     return {
       success: true,
       categoryId: categoryId,
       message: '預算分類建立成功'
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算分類建立失敗:`, error);
     DL.DL_error(`預算分類建立失敗: ${error.message}`, '預算管理');
-    
+
     return {
       success: false,
       categoryId: null,
@@ -862,19 +873,19 @@ BM.BM_createBudgetCategory = async function(ledgerId, categoryData) {
  */
 BM.BM_allocateBudgetToCategories = async function(budgetId, allocationData) {
   const logPrefix = '[BM_allocateBudgetToCategories]';
-  
+
   try {
     console.log(`${logPrefix} 分配預算至分類 - 預算ID: ${budgetId}`);
-    
+
     // 驗證分配邏輯
     const validation = await BM.BM_validateAllocation(budgetId, allocationData);
     if (!validation.valid) {
       throw new Error(`分配驗證失敗: ${validation.errors.join(', ')}`);
     }
-    
+
     // 計算總分配金額
     const totalAllocated = allocationData.reduce((sum, allocation) => sum + allocation.amount, 0);
-    
+
     // 執行分配
     const allocations = [];
     for (const allocation of allocationData) {
@@ -885,32 +896,33 @@ BM.BM_allocateBudgetToCategories = async function(budgetId, allocationData) {
         percentage: (allocation.amount / totalAllocated) * 100
       });
     }
-    
+
     // 更新預算分類 (模擬)
     console.log(`${logPrefix} 更新預算分類分配...`);
-    
+    // await FS.updateBudgetCategoryAllocationsInFirestore(budgetId, allocations); // 實際 Firestore 操作
+
     // 記錄分配日誌
     DL.DL_log(`預算分配完成 - 預算ID: ${budgetId}, 總分配: ${totalAllocated}`, '預算管理');
-    
+
     // 分發分配事件
     await DD.DD_distributeData('budget_allocated', {
       budgetId: budgetId,
       allocations: allocations,
       totalAllocated: totalAllocated
     });
-    
+
     console.log(`${logPrefix} 預算分配完成`);
-    
+
     return {
       success: true,
       allocations: allocations,
       totalAllocated: totalAllocated
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算分配失敗:`, error);
     DL.DL_error(`預算分配失敗: ${error.message}`, '預算管理');
-    
+
     return {
       success: false,
       allocations: [],
@@ -927,17 +939,17 @@ BM.BM_allocateBudgetToCategories = async function(budgetId, allocationData) {
  */
 BM.BM_handleBudgetError = async function(errorType, errorData, userId) {
   const logPrefix = '[BM_handleBudgetError]';
-  
+
   try {
     console.log(`${logPrefix} 處理預算錯誤 - 錯誤類型: ${errorType}`);
-    
+
     // 生成錯誤代碼
     const errorCode = `BM_${errorType}_${Date.now()}`;
-    
+
     // 根據錯誤類型處理
     let message = '';
     let handled = false;
-    
+
     switch (errorType) {
       case 'VALIDATION_ERROR':
         message = `預算資料驗證失敗: ${errorData.details}`;
@@ -959,26 +971,27 @@ BM.BM_handleBudgetError = async function(errorType, errorData, userId) {
         message = `未知預算錯誤: ${errorData}`;
         handled = false;
     }
-    
+
     // 記錄錯誤
     DL.DL_error(`預算錯誤 [${errorCode}]: ${message}`, '預算管理', userId);
-    
+
     // 發送錯誤通知 (如果是嚴重錯誤)
     if (errorType === 'STORAGE_ERROR' || errorType === 'CALCULATION_ERROR') {
       console.log(`${logPrefix} 發送錯誤通知...`);
+      // await NotificationService.sendAdminAlert(errorCode, message); // 實際通知邏輯
     }
-    
+
     console.log(`${logPrefix} 錯誤處理完成 - 錯誤代碼: ${errorCode}`);
-    
+
     return {
       handled: handled,
       errorCode: errorCode,
       message: message
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 錯誤處理失敗:`, error);
-    
+
     return {
       handled: false,
       errorCode: 'BM_HANDLER_ERROR',
@@ -995,38 +1008,38 @@ BM.BM_handleBudgetError = async function(errorType, errorData, userId) {
  */
 BM.BM_validateBudgetData = async function(budgetData, validationType) {
   const logPrefix = '[BM_validateBudgetData]';
-  
+
   try {
     console.log(`${logPrefix} 驗證預算數據 - 驗證類型: ${validationType}`);
-    
+
     const errors = [];
     const suggestions = [];
-    
+
     // 基本欄位驗證
     if (validationType === 'create') {
       if (!budgetData.name || budgetData.name.trim() === '') {
         errors.push('預算名稱不能為空');
       }
-      
+
       if (!budgetData.amount || budgetData.amount <= 0) {
         errors.push('預算金額必須大於 0');
         suggestions.push('請設定合理的預算金額');
       }
-      
+
       if (budgetData.start_date && budgetData.end_date) {
         if (new Date(budgetData.start_date) >= new Date(budgetData.end_date)) {
           errors.push('預算開始時間必須早於結束時間');
         }
       }
     }
-    
+
     // 編輯驗證
     if (validationType === 'edit') {
       if (budgetData.amount !== undefined && budgetData.amount <= 0) {
         errors.push('預算金額必須大於 0');
       }
     }
-    
+
     // 分類驗證
     if (budgetData.categories && Array.isArray(budgetData.categories)) {
       const totalCategoryAmount = budgetData.categories.reduce((sum, cat) => sum + (cat.allocated_amount || 0), 0);
@@ -1035,36 +1048,36 @@ BM.BM_validateBudgetData = async function(budgetData, validationType) {
         suggestions.push('請調整分類預算分配');
       }
     }
-    
+
     // 警示規則驗證
     if (budgetData.alert_rules) {
       const rules = budgetData.alert_rules;
       if (rules.warning_threshold >= rules.critical_threshold) {
         errors.push('警告閾值必須小於緊急閾值');
       }
-      
+
       if (rules.warning_threshold < 0 || rules.critical_threshold > 100) {
         errors.push('閾值必須在 0-100 範圍內');
       }
     }
-    
+
     // 記錄驗證結果
     if (errors.length > 0) {
       DL.DL_warning(`預算數據驗證失敗: ${errors.join(', ')}`, '預算管理');
     }
-    
+
     console.log(`${logPrefix} 預算數據驗證完成 - 錯誤: ${errors.length}個`);
-    
+
     return {
       valid: errors.length === 0,
       errors: errors,
       suggestions: suggestions
     };
-    
+
   } catch (error) {
     console.error(`${logPrefix} 數據驗證失敗:`, error);
     DL.DL_error(`預算數據驗證異常: ${error.message}`, '預算管理');
-    
+
     return {
       valid: false,
       errors: ['驗證程序異常'],
@@ -1080,6 +1093,7 @@ BM.BM_validateBudgetData = async function(budgetData, validationType) {
  */
 BM.BM_getActiveBudgets = async function(ledgerId) {
   // 模擬從資料庫取得活躍預算
+  // return await FS.getActiveBudgetsFromFirestore(ledgerId); // 實際 Firestore 操作
   return [
     {
       budget_id: 'budget_001',
@@ -1105,6 +1119,7 @@ BM.BM_isTransactionMatchBudget = function(transactionData, budget) {
  */
 BM.BM_getBudgetData = async function(budgetId) {
   // 模擬從資料庫取得預算資料
+  // return await FS.getBudgetFromFirestore(budgetId); // 實際 Firestore 操作
   return {
     budget_id: budgetId,
     name: '月度預算',
@@ -1138,12 +1153,12 @@ BM.BM_getBudgetData = async function(budgetId) {
 BM.BM_validateAllocation = async function(budgetId, allocationData) {
   const budgetData = await BM.BM_getBudgetData(budgetId);
   const totalAllocated = allocationData.reduce((sum, allocation) => sum + allocation.amount, 0);
-  
+
   const errors = [];
   if (totalAllocated > budgetData.amount) {
     errors.push('分配總額超過預算額度');
   }
-  
+
   return {
     valid: errors.length === 0,
     errors: errors
