@@ -1,3 +1,4 @@
+replit_final_file>
 /**
  * ASL.js_API服務層模組_2.1.5
  * @module API服務層模組（統一回應格式）
@@ -35,7 +36,7 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('🔥 ASL階段一修復：優先初始化Firebase...');
 
 let firebaseInitialized = false;
-let AM, BK, DL, FS;
+let AM, BK, DL, FS, MLS, BM;
 
 /**
  * Firebase服務初始化函數（階段一修復版）
@@ -167,7 +168,9 @@ async function loadBLModules() {
     AM: false,
     BK: false,
     DL: false,
-    FS: false
+    FS: false,
+    MLS: false, // 新增 P2 模組：帳本管理 (Ledgers)
+    BM: false  // 新增 P2 模組：預算管理 (Budgets)
   };
 
   // 只有在Firebase成功初始化後才載入AM模組
@@ -287,25 +290,46 @@ async function loadBLModules() {
     console.error('❌ FS 模組載入失敗:', error.message);
   }
 
+  // 階段二新增：載入P2階段模組 (假設路徑為 './13. Replit_Module code_BL/xxxx. MLS.js' and './13. Replit_Module code_BL/yyyy. BM.js')
+  try {
+    console.log('📦 載入P2階段模組 - MLS (帳本管理)...');
+    MLS = require('./13. Replit_Module code_BL/xxxx. MLS.js'); // 請替換為實際路徑
+    moduleStatus.MLS = true;
+    console.log('✅ MLS (帳本管理) 模組載入成功');
+  } catch (error) {
+    console.error('❌ MLS 模組載入失敗:', error.message);
+    moduleStatus.MLS = false;
+  }
+
+  try {
+    console.log('📦 載入P2階段模組 - BM (預算管理)...');
+    BM = require('./13. Replit_Module code_BL/yyyy. BM.js'); // 請替換為實際路徑
+    moduleStatus.BM = true;
+    console.log('✅ BM (預算管理) 模組載入成功');
+  } catch (error) {
+    console.error('❌ BM 模組載入失敗:', error.message);
+    moduleStatus.BM = false;
+  }
+
+
   // 階段三修復：詳細模組載入狀態報告
   console.log('📋 階段三模組載入狀態報告:');
   Object.entries(moduleStatus).forEach(([module, status]) => {
     console.log(`   ${status ? '✅' : '❌'} ${module.toUpperCase()}: ${status ? '已載入' : '載入失敗'}`);
   });
 
-  // 階段三：BK模組特殊診斷
-  if (moduleStatus.BK) {
-    console.log('🔍 BK模組詳細診斷:');
-    if (BK && typeof BK === 'object') {
-      const bkFunctions = Object.keys(BK).filter(key => typeof BK[key] === 'function');
-      console.log(`   📊 BK模組函數總數: ${bkFunctions.length}`);
-      console.log(`   🎯 關鍵API函數狀態:`);
-      console.log(`      - BK_processBookkeeping: ${typeof BK.BK_processBookkeeping === 'function' ? '✅' : '❌'}`);
-      console.log(`      - BK_processAPIGetDashboard: ${typeof BK.BK_processAPIGetDashboard === 'function' ? '✅' : '❌'}`);
-      console.log(`      - BK_createTransaction: ${typeof BK.BK_createTransaction === 'function' ? '✅' : '❌'}`);
-      console.log(`      - BK_getTransactions: ${typeof BK.BK_getTransactions === 'function' ? '✅' : '❌'}`);
-    }
+  // P2階段模組評估
+  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.MLS && moduleStatus.BM) {
+    console.log('🎉 P2階段模組完整載入：Firebase + AM + BK + MLS + BM');
+    console.log('🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理和帳本管理功能');
+  } else if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK) {
+    console.log('🎉 P1-2基礎模組正常載入：Firebase + AM + BK');
+    console.log('⚠️ P2階段新功能模組狀態：MLS(' + (moduleStatus.MLS ? '✅' : '❌') + '), BM(' + (moduleStatus.BM ? '✅' : '❌') + ')');
+    console.log('🚀 系統已準備好處理P1-2基礎功能，P2功能視模組載入狀況而定');
+  } else {
+    console.log('❌ 關鍵模組載入失敗：需執行進一步調查');
   }
+
 
   const successCount = Object.values(moduleStatus).filter(Boolean).length;
   const totalCount = Object.keys(moduleStatus).length;
@@ -610,7 +634,9 @@ app.get('/', (req, res) => {
       AM: !!AM ? 'loaded' : 'not loaded',
       BK: !!BK ? 'loaded' : 'not loaded',
       DL: !!DL ? 'loaded' : 'not loaded',
-      FS: !!FS ? 'loaded' : 'not loaded'
+      FS: !!FS ? 'loaded' : 'not loaded',
+      MLS: !!MLS ? 'loaded' : 'not loaded', // P2 模組
+      BM: !!BM ? 'loaded' : 'not loaded'  // P2 模組
     },
     supported_modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding']
   }, 'ASL統一回應格式運行正常');
@@ -629,7 +655,9 @@ app.get('/health', (req, res) => {
       AM: !!AM ? 'ready' : 'unavailable',
       BK: !!BK ? 'ready' : 'unavailable',
       DL: !!DL ? 'ready' : 'unavailable',
-      FS: !!FS ? 'ready' : 'unavailable'
+      FS: !!FS ? 'ready' : 'unavailable',
+      MLS: !!MLS ? 'ready' : 'unavailable', // P2 模組
+      BM: !!BM ? 'ready' : 'unavailable'  // P2 模組
     },
     dcn_0015_phase1: {
       unified_response_implemented: true,
@@ -1561,6 +1589,211 @@ app.delete('/api/v1/transactions/:id/attachments/:attachmentId', async (req, res
 });
 
 /**
+ * =============== P2 階段 API 端點轉發 ===============
+ * 實作階段二規劃的帳本(Ledgers)和預算(Budgets)相關API端點
+ */
+
+// =============== MLS.js 帳本管理 API 轉發 ===============
+// 假設 P2 API 端點的基礎路徑為 /api/v1/ledgers
+// 請根據實際 API 設計填寫具體路由和調用函數
+
+// 1. 創建帳本
+app.post('/api/v1/ledgers', async (req, res) => {
+  try {
+    console.log('➕ ASL轉發: 創建帳本 -> MLS_createLedger');
+    if (!MLS || typeof MLS.MLS_createLedger !== 'function') {
+      return res.apiError('MLS_createLedger函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await MLS.MLS_createLedger(req.body);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '帳本創建成功');
+    } else {
+      res.apiError(result.message || '帳本創建失敗', result.error?.code || 'CREATE_LEDGER_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (create ledger):', error);
+    res.apiError('帳本創建轉發失敗', 'CREATE_LEDGER_FORWARD_ERROR', 500);
+  }
+});
+
+// 2. 查詢帳本列表
+app.get('/api/v1/ledgers', async (req, res) => {
+  try {
+    console.log('📋 ASL轉發: 查詢帳本列表 -> MLS_getLedgers');
+    if (!MLS || typeof MLS.MLS_getLedgers !== 'function') {
+      return res.apiError('MLS_getLedgers函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await MLS.MLS_getLedgers(req.query);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '帳本列表查詢成功');
+    } else {
+      res.apiError(result.message || '帳本列表查詢失敗', result.error?.code || 'GET_LEDGERS_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get ledgers):', error);
+    res.apiError('帳本列表查詢轉發失敗', 'GET_LEDGERS_FORWARD_ERROR', 500);
+  }
+});
+
+// 3. 查詢單個帳本詳情
+app.get('/api/v1/ledgers/:id', async (req, res) => {
+  try {
+    console.log('🔍 ASL轉發: 查詢帳本詳情 -> MLS_getLedgerById');
+    if (!MLS || typeof MLS.MLS_getLedgerById !== 'function') {
+      return res.apiError('MLS_getLedgerById函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await MLS.MLS_getLedgerById(req.params.id, req.query);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '帳本詳情查詢成功');
+    } else {
+      res.apiError(result.message || '帳本詳情查詢失敗', result.error?.code || 'GET_LEDGER_BY_ID_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get ledger by id):', error);
+    res.apiError('帳本詳情查詢轉發失敗', 'GET_LEDGER_BY_ID_FORWARD_ERROR', 500);
+  }
+});
+
+// 4. 更新帳本
+app.put('/api/v1/ledgers/:id', async (req, res) => {
+  try {
+    console.log('✏️ ASL轉發: 更新帳本 -> MLS_updateLedger');
+    if (!MLS || typeof MLS.MLS_updateLedger !== 'function') {
+      return res.apiError('MLS_updateLedger函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await MLS.MLS_updateLedger(req.params.id, req.body);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '帳本更新成功');
+    } else {
+      res.apiError(result.message || '帳本更新失敗', result.error?.code || 'UPDATE_LEDGER_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (update ledger):', error);
+    res.apiError('帳本更新轉發失敗', 'UPDATE_LEDGER_FORWARD_ERROR', 500);
+  }
+});
+
+// 5. 刪除帳本
+app.delete('/api/v1/ledgers/:id', async (req, res) => {
+  try {
+    console.log('🗑️ ASL轉發: 刪除帳本 -> MLS_deleteLedger');
+    if (!MLS || typeof MLS.MLS_deleteLedger !== 'function') {
+      return res.apiError('MLS_deleteLedger函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await MLS.MLS_deleteLedger(req.params.id, req.query);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '帳本刪除成功');
+    } else {
+      res.apiError(result.message || '帳本刪除失敗', result.error?.code || 'DELETE_LEDGER_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (delete ledger):', error);
+    res.apiError('帳本刪除轉發失敗', 'DELETE_LEDGER_FORWARD_ERROR', 500);
+  }
+});
+
+
+// =============== BM.js 預算管理 API 轉發 ===============
+// 假設 P2 API 端點的基礎路徑為 /api/v1/budgets
+// 請根據實際 API 設計填寫具體路由和調用函數
+
+// 1. 創建預算
+app.post('/api/v1/budgets', async (req, res) => {
+  try {
+    console.log('➕ ASL轉發: 創建預算 -> BM_createBudget');
+    if (!BM || typeof BM.BM_createBudget !== 'function') {
+      return res.apiError('BM_createBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await BM.BM_createBudget(req.body);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '預算創建成功');
+    } else {
+      res.apiError(result.message || '預算創建失敗', result.error?.code || 'CREATE_BUDGET_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (create budget):', error);
+    res.apiError('預算創建轉發失敗', 'CREATE_BUDGET_FORWARD_ERROR', 500);
+  }
+});
+
+// 2. 查詢預算列表
+app.get('/api/v1/budgets', async (req, res) => {
+  try {
+    console.log('📋 ASL轉發: 查詢預算列表 -> BM_getBudgets');
+    if (!BM || typeof BM.BM_getBudgets !== 'function') {
+      return res.apiError('BM_getBudgets函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await BM.BM_getBudgets(req.query);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '預算列表查詢成功');
+    } else {
+      res.apiError(result.message || '預算列表查詢失敗', result.error?.code || 'GET_BUDGETS_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get budgets):', error);
+    res.apiError('預算列表查詢轉發失敗', 'GET_BUDGETS_FORWARD_ERROR', 500);
+  }
+});
+
+// 3. 查詢單個預算詳情
+app.get('/api/v1/budgets/:id', async (req, res) => {
+  try {
+    console.log('🔍 ASL轉發: 查詢預算詳情 -> BM_getBudgetById');
+    if (!BM || typeof BM.BM_getBudgetById !== 'function') {
+      return res.apiError('BM_getBudgetById函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await BM.BM_getBudgetById(req.params.id, req.query);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '預算詳情查詢成功');
+    } else {
+      res.apiError(result.message || '預算詳情查詢失敗', result.error?.code || 'GET_BUDGET_BY_ID_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get budget by id):', error);
+    res.apiError('預算詳情查詢轉發失敗', 'GET_BUDGET_BY_ID_FORWARD_ERROR', 500);
+  }
+});
+
+// 4. 更新預算
+app.put('/api/v1/budgets/:id', async (req, res) => {
+  try {
+    console.log('✏️ ASL轉發: 更新預算 -> BM_updateBudget');
+    if (!BM || typeof BM.BM_updateBudget !== 'function') {
+      return res.apiError('BM_updateBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await BM.BM_updateBudget(req.params.id, req.body);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '預算更新成功');
+    } else {
+      res.apiError(result.message || '預算更新失敗', result.error?.code || 'UPDATE_BUDGET_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (update budget):', error);
+    res.apiError('預算更新轉發失敗', 'UPDATE_BUDGET_FORWARD_ERROR', 500);
+  }
+});
+
+// 5. 刪除預算
+app.delete('/api/v1/budgets/:id', async (req, res) => {
+  try {
+    console.log('🗑️ ASL轉發: 刪除預算 -> BM_deleteBudget');
+    if (!BM || typeof BM.BM_deleteBudget !== 'function') {
+      return res.apiError('BM_deleteBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await BM.BM_deleteBudget(req.params.id, req.query);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '預算刪除成功');
+    } else {
+      res.apiError(result.message || '預算刪除失敗', result.error?.code || 'DELETE_BUDGET_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (delete budget):', error);
+    res.apiError('預算刪除轉發失敗', 'DELETE_BUDGET_FORWARD_ERROR', 500);
+  }
+});
+
+
+/**
  * 08. 404錯誤處理
  * @version 2025-09-22-V2.0.0
  * @date 2025-09-22 10:00:00
@@ -1679,3 +1912,4 @@ module.exports = {
   getApp: () => app,
   startApplication
 };
+</replit_final_file>
