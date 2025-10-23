@@ -1,20 +1,26 @@
 
 {
   "metadata": {
-    "version": "3.0.0",
+    "version": "3.1.0",
     "createdAt": "2025-10-15T14:00:00Z",
-    "description": "SIT P1完整測試資料倉庫 - 階段二重構：完善失敗情境和邊界值測試",
-    "dataSource": "STATIC_GENERATION_ENHANCED",
-    "consumer": "7570. SIT_P1.dart",
-    "totalRecords": 48,
-    "lastUpdated": "2025-10-15T14:30:00Z",
-    "compliance": "1311_FS_STANDARD_ENHANCED",
+    "description": "SIT P1+P2完整測試資料倉庫 - Phase 2擴展：新增協作帳本與預算管理測試資料",
+    "dataSource": "STATIC_GENERATION_ENHANCED_P2",
+    "consumer": ["7570. SIT_P1.dart", "7571. SIT_P2.dart"],
+    "totalRecords": 54,
+    "lastUpdated": "2025-10-22T12:00:00Z",
+    "compliance": "1311_FS_STANDARD_ENHANCED_P2",
     "changes": {
       "v3.0.0": {
         "added": "24個新測試案例",
         "enhanced": "失敗情境測試覆蓋率",
         "removed": "業務邏輯生成欄位",
         "improved": "邊界值測試完整性"
+      },
+      "v3.1.0": {
+        "added": "Phase 2測試資料：collaboration_test_data & budget_test_data",
+        "enhanced": "協作帳本與預算管理測試覆蓋率",
+        "improved": "Phase 2 MVP功能測試完整性",
+        "consumer_extended": "支援7571 SIT_P2測試執行"
       }
     }
   },
@@ -864,6 +870,210 @@
       ]
     }
   },
+  "collaboration_test_data": {
+    "success_scenarios": {
+      "create_collaborative_ledger": {
+        "ledgerId": "collab_ledger_001_1697363500000",
+        "name": "協作測試帳本",
+        "type": "collaborative",
+        "description": "Phase 2協作功能測試用帳本",
+        "ownerId": "user_expert_1697363200000",
+        "collaborators": [],
+        "settings": {
+          "currency": "TWD",
+          "timezone": "Asia/Taipei",
+          "permissions": {
+            "default_role": "viewer",
+            "allow_public_view": false
+          }
+        },
+        "permissions": {
+          "owner": ["read", "write", "admin", "invite", "manage"],
+          "admin": ["read", "write", "invite", "manage"],
+          "editor": ["read", "write"],
+          "viewer": ["read"]
+        },
+        "createdAt": "2025-10-22T00:00:00Z",
+        "updatedAt": "2025-10-22T00:00:00Z",
+        "testScenario": "協作帳本建立成功測試"
+      },
+      "invite_collaborator_success": {
+        "ledgerId": "collab_ledger_001_1697363500000",
+        "inviterId": "user_expert_1697363200000",
+        "inviteeInfo": {
+          "email": "collaborator@test.lcas.app",
+          "name": "協作者測試用戶"
+        },
+        "role": "editor",
+        "permissions": ["read", "write"],
+        "invitationId": "inv_001_1697363600000",
+        "status": "pending",
+        "createdAt": "2025-10-22T00:00:00Z",
+        "expiresAt": "2025-10-29T00:00:00Z",
+        "testScenario": "協作者邀請成功測試"
+      },
+      "update_collaborator_permissions": {
+        "ledgerId": "collab_ledger_001_1697363500000",
+        "collaboratorId": "user_inertial_1697363260000",
+        "oldRole": "viewer",
+        "newRole": "editor",
+        "oldPermissions": ["read"],
+        "newPermissions": ["read", "write"],
+        "operatorId": "user_expert_1697363200000",
+        "updatedAt": "2025-10-22T00:00:00Z",
+        "testScenario": "協作者權限更新成功測試"
+      }
+    },
+    "failure_scenarios": {
+      "invalid_collaborator_email": {
+        "ledgerId": "collab_ledger_001_1697363500000",
+        "inviterId": "user_expert_1697363200000",
+        "email": "invalid-email-format",
+        "role": "editor",
+        "testScenario": "無效協作者Email格式",
+        "expectedError": "協作者Email格式無效"
+      },
+      "insufficient_permissions": {
+        "ledgerId": "collab_ledger_001_1697363500000",
+        "operatorId": "user_cultivation_1697363320000",
+        "targetUserId": "user_inertial_1697363260000",
+        "operation": "remove_collaborator",
+        "testScenario": "權限不足操作失敗",
+        "expectedError": "權限不足：無法執行此操作"
+      },
+      "collaborator_limit_exceeded": {
+        "ledgerId": "collab_ledger_001_1697363500000",
+        "currentCollaboratorCount": 10,
+        "maxAllowed": 10,
+        "newInviteeEmail": "exceed@test.lcas.app",
+        "testScenario": "協作者數量超過限制",
+        "expectedError": "協作者數量已達上限"
+      }
+    }
+  },
+  "budget_test_data": {
+    "success_scenarios": {
+      "create_monthly_budget": {
+        "budgetId": "budget_monthly_001_1697363700000",
+        "name": "月度測試預算",
+        "amount": 15000.0,
+        "type": "monthly",
+        "ledgerId": "collab_ledger_001_1697363500000",
+        "period": {
+          "startDate": "2025-10-01",
+          "endDate": "2025-10-31"
+        },
+        "target": {
+          "type": "category",
+          "categoryId": "food",
+          "categoryName": "餐飲"
+        },
+        "alertSettings": {
+          "enabled": true,
+          "thresholds": [
+            {"level": "info", "percentage": 50, "message": "已使用50%預算"},
+            {"level": "warning", "percentage": 80, "message": "預算即將用完"},
+            {"level": "critical", "percentage": 95, "message": "預算嚴重超支"}
+          ],
+          "notificationMethods": ["app", "email"]
+        },
+        "createdBy": "user_expert_1697363200000",
+        "createdAt": "2025-10-22T00:00:00Z",
+        "updatedAt": "2025-10-22T00:00:00Z",
+        "status": "active",
+        "testScenario": "月度預算建立成功測試"
+      },
+      "create_category_budget": {
+        "budgetId": "budget_category_001_1697363800000",
+        "name": "交通費預算",
+        "amount": 5000.0,
+        "type": "category",
+        "ledgerId": "collab_ledger_001_1697363500000",
+        "period": {
+          "startDate": "2025-10-01",
+          "endDate": "2025-12-31"
+        },
+        "target": {
+          "type": "category",
+          "categoryId": "transport",
+          "categoryName": "交通"
+        },
+        "alertSettings": {
+          "enabled": true,
+          "thresholds": [
+            {"level": "warning", "percentage": 80, "message": "交通費預算即將用完"}
+          ]
+        },
+        "createdBy": "user_expert_1697363200000",
+        "createdAt": "2025-10-22T00:00:00Z",
+        "status": "active",
+        "testScenario": "科目預算建立成功測試"
+      },
+      "budget_execution_tracking": {
+        "budgetId": "budget_monthly_001_1697363700000",
+        "usedAmount": 10125.50,
+        "remainingAmount": 4874.50,
+        "progress": 67.5,
+        "status": "warning",
+        "lastUpdated": "2025-10-22T12:00:00Z",
+        "transactions": [
+          {
+            "transactionId": "txn_1697363200001_a1b2c3",
+            "amount": 150.0,
+            "description": "午餐費用",
+            "date": "2025-10-15"
+          }
+        ],
+        "alertsTriggered": [
+          {
+            "level": "info",
+            "triggeredAt": "2025-10-11T10:00:00Z",
+            "message": "已使用50%預算"
+          }
+        ],
+        "testScenario": "預算執行追蹤成功測試"
+      }
+    },
+    "failure_scenarios": {
+      "invalid_budget_amount": {
+        "budgetId": "budget_invalid_001",
+        "name": "無效金額預算",
+        "amount": -1000.0,
+        "type": "monthly",
+        "testScenario": "無效預算金額",
+        "expectedError": "預算金額必須大於0"
+      },
+      "budget_period_overlap": {
+        "existingBudgetId": "budget_monthly_001_1697363700000",
+        "newBudgetData": {
+          "name": "重疊月度預算",
+          "amount": 8000.0,
+          "type": "monthly",
+          "period": {
+            "startDate": "2025-10-15",
+            "endDate": "2025-11-15"
+          },
+          "target": {
+            "type": "category",
+            "categoryId": "food"
+          }
+        },
+        "testScenario": "預算週期重疊",
+        "expectedError": "預算週期與現有預算重疊"
+      },
+      "insufficient_permissions_budget": {
+        "ledgerId": "collab_ledger_001_1697363500000",
+        "operatorId": "user_guiding_1697363380000",
+        "budgetData": {
+          "name": "無權限預算",
+          "amount": 5000.0,
+          "type": "monthly"
+        },
+        "testScenario": "預算管理權限不足",
+        "expectedError": "權限不足：無法管理此帳本的預算"
+      }
+    }
+  },
   "data_validation": {
     "schema_version": "3.0.0",
     "fs_compliance": {
@@ -885,13 +1095,17 @@
       }
     },
     "test_coverage": {
-      "success_scenarios": 12,
-      "failure_scenarios": 32,
+      "success_scenarios": 17,
+      "failure_scenarios": 35,
       "boundary_scenarios": 10,
       "total_scenarios": 10,
+      "phase_1_scenarios": 54,
+      "phase_2_scenarios": 8,
       "user_modes_covered": ["Expert", "Inertial", "Cultivation", "Guiding"],
       "transaction_types_covered": ["income", "expense", "transfer"],
-      "error_types_covered": ["validation", "format", "missing_field", "invalid_value", "boundary", "duplicate", "null_value", "empty_value"],
+      "collaboration_features_covered": ["ledger_creation", "member_invitation", "permission_management", "collaborator_removal"],
+      "budget_features_covered": ["budget_creation", "execution_tracking", "alert_management", "period_validation"],
+      "error_types_covered": ["validation", "format", "missing_field", "invalid_value", "boundary", "duplicate", "null_value", "empty_value", "permission_denied", "resource_conflict"],
       "validation_categories": [
         "email_format_validation",
         "user_mode_validation", 
@@ -900,9 +1114,12 @@
         "field_presence_validation",
         "data_type_validation",
         "business_rule_validation",
-        "boundary_value_validation"
+        "boundary_value_validation",
+        "collaboration_permission_validation",
+        "budget_period_validation",
+        "resource_conflict_validation"
       ],
-      "last_validation": "2025-10-15T14:30:00Z"
+      "last_validation": "2025-10-22T12:00:00Z"
     }
   },
   "enhancement_summary": {
@@ -917,12 +1134,26 @@
       "date_validation": "Enhanced date format validation including leap year",
       "comprehensive_failure_testing": "Added systematic failure testing across all categories"
     },
+    "version_3_1_0_improvements": {
+      "added_collaboration_scenarios": 6,
+      "added_budget_scenarios": 6,
+      "phase_2_mvp_coverage": "100% Phase 2 MVP功能覆蓋",
+      "collaboration_features": "Complete collaboration management test data",
+      "budget_features": "Complete budget management test data",
+      "permission_testing": "Comprehensive permission validation scenarios",
+      "resource_conflict_testing": "Budget period overlap and collaboration conflicts",
+      "multi_user_scenarios": "Cross-user collaboration testing data",
+      "alert_system_testing": "Budget alert and notification test scenarios"
+    },
     "compliance_improvements": {
       "fs_standard_alignment": "100% compliant with 1311 FS規範",
       "business_logic_separation": "Completely removed BL-generated fields",
       "validation_rules": "Added comprehensive validation rules",
       "error_handling": "Standardized error message format",
-      "data_integrity": "Enhanced data consistency checks"
+      "data_integrity": "Enhanced data consistency checks",
+      "phase_2_compliance": "Full Phase 2 MVP testing compliance",
+      "collaboration_standards": "Collaboration management testing standards",
+      "budget_standards": "Budget management testing standards"
     }
   }
 }
