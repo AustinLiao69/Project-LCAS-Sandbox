@@ -14,3 +14,4 @@ MM 	 DD 	 Description 	    Progress
 10	17	 要如何確認PL層記帳到Firebase的資料欄位是否正確？ 	 Open
 10	22	 要把index.js改名成LWS.js (LINE Webhook service) 	 Open
 10	22	 如果AI一直將你要求刪除的東西加回去，表示上層文件一定沒有刪除乾淨 	 Open
+10	23	 為什麼跑一次7571會造成Firebase讀取數這麼高(2,000~4,000)? 	 Open
