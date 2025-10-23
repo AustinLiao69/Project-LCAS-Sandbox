@@ -1,4 +1,3 @@
-replit_final_file>
 /**
  * 7571. SIT_P2.dart
  * @version v1.0.0
@@ -1966,4 +1965,3 @@ class BudgetOperationResult {
 
   BudgetOperationResult({required this.success, this.budgetId, this.message});
 }
-</replit_final_file>
