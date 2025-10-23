@@ -1701,7 +1701,26 @@ app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
   }
 });
 
-// 8. 查詢帳本權限
+// 8. 邀請協作者 (補齊缺失的API端點)
+app.post('/api/v1/ledgers/:id/invitations', async (req, res) => {
+  try {
+    console.log('📨 ASL轉發: 邀請協作者 -> MLS_inviteCollaborator');
+    if (!MLS || typeof MLS.MLS_inviteCollaborator !== 'function') {
+      return res.apiError('MLS_inviteCollaborator函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await MLS.MLS_inviteCollaborator(req.params.id, req.body);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '協作者邀請成功');
+    } else {
+      res.apiError(result.message || '協作者邀請失敗', result.error?.code || 'INVITE_COLLABORATOR_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (invite collaborator):', error);
+    res.apiError('協作者邀請轉發失敗', 'INVITE_COLLABORATOR_FORWARD_ERROR', 500);
+  }
+});
+
+// 9. 查詢帳本權限
 app.get('/api/v1/ledgers/:id/permissions', async (req, res) => {
   try {
     console.log('🔐 ASL轉發: 查詢帳本權限 -> MLS_validateLedgerAccess');
