@@ -851,17 +851,15 @@ class LedgerCollaborationManager {
   ) async {
     try {
       // 調用APL.dart統一API，添加必要的查詢參數
-      final response = await APL.callAPI(
-        'GET',
-        '/api/v1/ledgers/$ledgerId/permissions',
-        queryParams: {
-          'userId': userId,
-          'operation': 'read',
-        },
+      final response = await APL.instance.ledger.getPermissions(
+        ledgerId,
+        userId: userId,
+        operation: 'read',
       );
 
-      if (response['success']) {
-        final permissionData = response['data'];
+
+      if (response.success && response.data != null) {
+        final permissionData = response.data!;
 
         // 構建權限矩陣
         final permissions = Map<String, bool>.from(permissionData['permissions'] ?? {
@@ -1085,24 +1083,31 @@ class LedgerCollaborationManager {
       // 根據HTTP方法調用對應的APL.dart方法
       switch (method.toUpperCase()) {
         case 'GET':
-          if (endpoint.startsWith('/api/v1/ledgers')) {
-            // 這裡假設 APL.instance.ledger.getLedgers 可以接受 queryParams
-            // 如果不能，需要手動構建URL或修改APL.dart
-            final response = await APL.instance.ledger.getLedgers(
-              // Pass queryParams if the method supports it, otherwise construct URL manually
-              // For demonstration, assuming direct support or manual URL construction needed here.
-              // This part might require adjustment based on actual APL.dart implementation.
-              userMode: userMode, // userMode is passed here as an example
+          // Handle specific GET endpoints if needed here,
+          // but ledger-related GETs are now handled by dedicated functions like processLedgerList.
+          // If this generic GET is for other types of endpoints, implement accordingly.
+          if (endpoint.startsWith('/api/v1/ledgers/') && endpoint.endsWith('/permissions')) {
+            final ledgerId = endpoint.split('/')[4];
+            final response = await APL.instance.ledger.getPermissions(
+              ledgerId,
+              userId: queryParams?['userId'],
+              operation: queryParams?['operation'],
             ).timeout(timeoutDuration);
             return {
               'success': response.success,
               'data': response.data,
               'message': response.message,
-              'error': response.error?.message,
-              'errorCode': response.error?.code,
+              'error': response.error,
             };
           }
-          break;
+          // Fallback for unsupported generic GETs
+          return {
+            'success': false,
+            'data': null,
+            'message': 'Generic GET for ledger endpoints is deprecated. Use specific functions.',
+            'error': 'DEPRECATED_ENDPOINT',
+            'errorCode': 'DEPRECATED_ENDPOINT',
+          };
 
         case 'POST':
           if (endpoint.startsWith('/api/v1/ledgers') && !endpoint.contains('/')) {
@@ -1191,25 +1196,6 @@ class LedgerCollaborationManager {
           }
           break;
       }
-
-      // 處理 /api/v1/ledgers/:id/permissions 端點的GET請求
-      if (method.toUpperCase() == 'GET' && endpoint.startsWith('/api/v1/ledgers/') && endpoint.endsWith('/permissions')) {
-        final ledgerId = endpoint.split('/')[4];
-        // This assumes APL.instance.ledger.getPermissions exists and handles queryParams correctly
-        final response = await APL.instance.ledger.getPermissions(
-          ledgerId,
-          userId: queryParams?['userId'],
-          operation: queryParams?['operation'],
-        ).timeout(timeoutDuration);
-
-        return {
-          'success': response.success,
-          'data': response.data,
-          'message': response.message,
-          'error': response.error, // Assuming response.error contains code and message
-        };
-      }
-
 
       // 不支援的端點
       return {
