@@ -162,6 +162,10 @@ class SITP2TestController {
   SITP2TestController._internal();
 
   final List<P2TestResult> _results = [];
+  
+  // 測試識別參數
+  String get testId => 'SIT-P2-7571';
+  String get testName => 'SIT P2測試控制器';
 
   /// 執行SIT P2測試
   Future<Map<String, dynamic>> executeSITP2Tests() async {
