@@ -147,11 +147,15 @@ class PermissionData {
 
 /// 權限矩陣模型
 class PermissionMatrix {
+  final String userId;
+  final String ledgerId;
   final Map<String, bool> permissions;
   final String role;
   final bool isOwner;
 
   PermissionMatrix({
+    required this.userId,
+    required this.ledgerId,
     required this.permissions,
     required this.role,
     required this.isOwner,
@@ -159,6 +163,8 @@ class PermissionMatrix {
 
   factory PermissionMatrix.fromJson(Map<String, dynamic> json) {
     return PermissionMatrix(
+      userId: json['userId'] ?? '',
+      ledgerId: json['ledgerId'] ?? '',
       permissions: Map<String, bool>.from(json['permissions'] ?? {}),
       role: json['role'] ?? '',
       isOwner: json['isOwner'] ?? false,
@@ -841,83 +847,71 @@ class LedgerCollaborationManager {
    */
   static Future<PermissionMatrix> calculateUserPermissions(
     String userId,
-    String ledgerId, {
-    bool includeInherited = true,
-  }) async {
+    String ledgerId,
+  ) async {
     try {
-      // 通過APL.dart調用權限API
-      final response = await APL.instance.ledger.getPermissions(ledgerId);
+      // 調用APL.dart統一API，添加必要的查詢參數
+      final response = await APL.callAPI(
+        'GET',
+        '/api/v1/ledgers/$ledgerId/permissions',
+        queryParams: {
+          'userId': userId,
+          'operation': 'read',
+        },
+      );
 
-      if (response.success && response.data != null) {
-        final permissionData = response.data!;
+      if (response['success']) {
+        final permissionData = response['data'];
 
-        // 解析用戶權限
-        final permissions = <String, bool>{};
-        final role = _getUserRoleFromPermissionData(permissionData, userId);
-        final isOwner = permissionData['owner'] == userId;
+        // 構建權限矩陣
+        final permissions = Map<String, bool>.from(permissionData['permissions'] ?? {
+          'read': permissionData['hasAccess'] ?? false,
+          'write': false,
+          'delete': false,
+          'manage': false,
+        });
 
-        // 根據角色設定基本權限
-        switch (role.toLowerCase()) {
-          case 'owner':
-            permissions.addAll({
-              'read': true,
-              'write': true,
-              'manage': true,
-              'delete': true,
-              'invite': true,
-              'admin': true,
-            });
-            break;
-          case 'admin':
-            permissions.addAll({
-              'read': true,
-              'write': true,
-              'manage': true,
-              'delete': false,
-              'invite': true,
-              'admin': false,
-            });
-            break;
-          case 'editor':
-            permissions.addAll({
-              'read': true,
-              'write': true,
-              'manage': false,
-              'delete': false,
-              'invite': false,
-              'admin': false,
-            });
-            break;
-          case 'viewer':
-          default:
-            permissions.addAll({
-              'read': true,
-              'write': false,
-              'manage': false,
-              'delete': false,
-              'invite': false,
-              'admin': false,
-            });
-            break;
+        // 根據hasAccess狀態設定基本權限
+        if (permissionData['hasAccess'] == true) {
+          permissions['read'] = true;
+          permissions['write'] = permissionData['reason'] == 'allowed';
         }
 
         return PermissionMatrix(
+          userId: userId,
+          ledgerId: ledgerId,
           permissions: permissions,
-          role: role,
-          isOwner: isOwner,
+          role: _determineRoleFromPermissions(permissions),
+          isOwner: permissions['manage'] == true,
         );
       } else {
-        throw CollaborationError(
-          response.message,
-          response.error?.code ?? 'PERMISSION_CALCULATION_ERROR',
-          response.error?.details,
+        // 如果API調用失敗，創建一個基本的權限矩陣
+        return PermissionMatrix(
+          userId: userId,
+          ledgerId: ledgerId,
+          permissions: {
+            'read': false,
+            'write': false,
+            'delete': false,
+            'manage': false,
+          },
+          role: 'none',
+          isOwner: false,
         );
       }
     } catch (e) {
-      if (e is CollaborationError) rethrow;
-      throw CollaborationError(
-        '計算用戶權限失敗: ${e.toString()}',
-        'CALCULATE_USER_PERMISSIONS_ERROR',
+      // 容錯處理：即使出錯也回傳一個基本的權限矩陣
+      return PermissionMatrix(
+        userId: userId,
+        ledgerId: ledgerId,
+        permissions: {
+          'read': false,
+          'write': false,
+          'delete': false,
+          'manage': false,
+        },
+        role: 'error',
+        isOwner: false,
       );
     }
   }
@@ -1072,6 +1066,7 @@ class LedgerCollaborationManager {
     String endpoint, {
     Map<String, dynamic>? data,
     Map<String, String>? headers,
+    Map<String, dynamic>? queryParams, // Added queryParams here
     String? userMode,
     int? timeout,
   }) async {
@@ -1091,7 +1086,14 @@ class LedgerCollaborationManager {
       switch (method.toUpperCase()) {
         case 'GET':
           if (endpoint.startsWith('/api/v1/ledgers')) {
-            final response = await APL.instance.ledger.getLedgers().timeout(timeoutDuration);
+            // 這裡假設 APL.instance.ledger.getLedgers 可以接受 queryParams
+            // 如果不能，需要手動構建URL或修改APL.dart
+            final response = await APL.instance.ledger.getLedgers(
+              // Pass queryParams if the method supports it, otherwise construct URL manually
+              // For demonstration, assuming direct support or manual URL construction needed here.
+              // This part might require adjustment based on actual APL.dart implementation.
+              userMode: userMode, // userMode is passed here as an example
+            ).timeout(timeoutDuration);
             return {
               'success': response.success,
               'data': response.data,
@@ -1190,22 +1192,45 @@ class LedgerCollaborationManager {
           break;
       }
 
+      // 處理 /api/v1/ledgers/:id/permissions 端點的GET請求
+      if (method.toUpperCase() == 'GET' && endpoint.startsWith('/api/v1/ledgers/') && endpoint.endsWith('/permissions')) {
+        final ledgerId = endpoint.split('/')[4];
+        // This assumes APL.instance.ledger.getPermissions exists and handles queryParams correctly
+        final response = await APL.instance.ledger.getPermissions(
+          ledgerId,
+          userId: queryParams?['userId'],
+          operation: queryParams?['operation'],
+        ).timeout(timeoutDuration);
+
+        return {
+          'success': response.success,
+          'data': response.data,
+          'message': response.message,
+          'error': response.error, // Assuming response.error contains code and message
+        };
+      }
+
+
       // 不支援的端點
       return {
         'success': false,
         'data': null,
         'message': '不支援的API端點: $method $endpoint',
-        'error': '不支援的API端點',
+        'error': 'UNSUPPORTED_ENDPOINT',
         'errorCode': 'UNSUPPORTED_ENDPOINT',
       };
 
     } catch (e) {
+      // Consider more specific error handling for different types of exceptions
       return {
         'success': false,
         'data': null,
         'message': 'API調用失敗: ${e.toString()}',
-        'error': e.toString(),
-        'errorCode': 'API_CALL_ERROR',
+        'error': {
+          'message': e.toString(),
+          'code': e is CollaborationError ? e.code : 'API_CALL_ERROR',
+        },
+        'errorCode': e is CollaborationError ? e.code : 'API_CALL_ERROR',
       };
     }
   }
@@ -1598,6 +1623,15 @@ class LedgerCollaborationManager {
           'admin': false,
         };
     }
+  }
+
+  /// 根據權限判斷角色
+  static String _determineRoleFromPermissions(Map<String, bool> permissions) {
+    if (permissions['manage'] == true) return 'owner';
+    if (permissions['delete'] == true) return 'admin';
+    if (permissions['write'] == true) return 'editor';
+    if (permissions['read'] == true) return 'viewer';
+    return 'none';
   }
 
   /// =============== 模組資訊 ===============

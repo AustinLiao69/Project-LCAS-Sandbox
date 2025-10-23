@@ -1119,6 +1119,54 @@ async function MLS_detectDuplicateName(userId, proposedName, ledgerType) {
   }
 }
 
+/**
+ * 17. 取得帳本權限資訊
+ * @version 2025-10-23-V1.0.1
+ * @date 2025-10-23 
+ * @description 取得指定帳本的詳細權限資訊
+ */
+async function MLS_getPermissions(ledgerId, queryParams) {
+  try {
+    DL.DL_log('MLS', `取得帳本權限 - 帳本ID: ${ledgerId}`);
+    
+    const ledgerRef = db.collection('ledgers').doc(ledgerId);
+    const ledgerDoc = await ledgerRef.get();
+    
+    if (!ledgerDoc.exists) {
+      return {
+        success: false,
+        message: '帳本不存在',
+        error: { code: 'LEDGER_NOT_FOUND' }
+      };
+    }
+    
+    const ledgerData = ledgerDoc.data();
+    const permissions = ledgerData.permissions || {};
+    
+    return {
+      success: true,
+      data: {
+        ledgerId: ledgerId,
+        permissions: permissions,
+        owner: permissions.owner,
+        admins: permissions.admins || [],
+        members: permissions.members || [],
+        viewers: permissions.viewers || [],
+        settings: permissions.settings || {}
+      },
+      message: '權限資訊取得成功'
+    };
+    
+  } catch (error) {
+    DL.DL_error('MLS', `取得帳本權限失敗: ${error.message}`);
+    return {
+      success: false,
+      message: '取得帳本權限時發生錯誤',
+      error: { code: 'GET_PERMISSIONS_ERROR', details: error.message }
+    };
+  }
+}
+
 // 導出所有函數
 module.exports = {
   MLS_createProjectLedger,
@@ -1136,7 +1184,8 @@ module.exports = {
   MLS_setLedgerAttributes,
   MLS_configureLedgerType,
   MLS_handlePermissionError,
-  MLS_detectDuplicateName
+  MLS_detectDuplicateName,
+  MLS_getPermissions
 };
 
 console.log('✅ MLS 多帳本管理模組載入完成');
