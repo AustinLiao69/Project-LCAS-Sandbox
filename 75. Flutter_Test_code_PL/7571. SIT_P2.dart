@@ -916,15 +916,12 @@ class SITP2TestController {
 
       if (ledgerId == null || inviteeEmail == null || inviteeRole == null) {
         print('[7571] ❌ 7598測試資料不完整，缺少必要的協作邀請資料');
-        return P2TestResult(
-          testId: testId,
-          testName: testName,
-          category: 'collaboration',
-          passed: false,
-          errorMessage: '7598測試資料不完整',
-          inputData: inputData,
-          outputData: {},
-        );
+        return {
+          'success': false,
+          'error': '7598測試資料不完整',
+          'testStage': 'stage2_collaboration',
+          'functionCalled': 'PL7303.LedgerCollaborationManager.inviteCollaborators',
+        };
       }
 
       print('[7571] 📧 邀請協作者: $inviteeEmail (角色: $inviteeRole) 到帳本: $ledgerId');
@@ -978,15 +975,12 @@ class SITP2TestController {
       
       if (updateData == null) {
         print('[7571] ❌ 7598測試資料中缺少update_collaborator_permissions資料');
-        return P2TestResult(
-          testId: testId,
-          testName: testName,
-          category: 'collaboration',
-          passed: false,
-          errorMessage: '7598測試資料不完整',
-          inputData: inputData,
-          outputData: {},
-        );
+        return {
+          'success': false,
+          'error': '7598測試資料不完整',
+          'testStage': 'stage2_collaboration',
+          'functionCalled': 'PL7303.LedgerCollaborationManager.updateCollaboratorPermissions',
+        };
       }
 
       final ledgerId = updateData['ledgerId'];
@@ -996,15 +990,12 @@ class SITP2TestController {
 
       if (ledgerId == null || userId == null || newRole == null) {
         print('[7571] ❌ 協作者權限更新測試資料不完整');
-        return P2TestResult(
-          testId: testId,
-          testName: testName,
-          category: 'collaboration',
-          passed: false,
-          errorMessage: '協作者權限更新測試資料不完整',
-          inputData: inputData,
-          outputData: {},
-        );
+        return {
+          'success': false,
+          'error': '協作者權限更新測試資料不完整',
+          'testStage': 'stage2_collaboration',
+          'functionCalled': 'PL7303.LedgerCollaborationManager.updateCollaboratorPermissions',
+        };
       }
 
       print('[7571] 🔄 權限更新: 用戶 $userId 在帳本 $ledgerId 從 $oldRole 更新為 $newRole');
