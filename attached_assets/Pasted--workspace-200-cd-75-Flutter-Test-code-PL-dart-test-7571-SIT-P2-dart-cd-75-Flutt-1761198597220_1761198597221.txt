@@ -1,0 +1,182 @@
+~/workspace$ ^[[200~cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart" ~
+cd \"75. Flutter_Test_code_PL\" && dart test \"7571. SIT_P2.dart\" ~bash: cd: command not found
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
+Building package executable... (1.7s)
+Built test:test.
+00:00 +0: loading 7571. SIT_P2.dart     
+[7571] 🎉 SIT P2測試模組 v1.0.0 (階段二) 初始化完成
+[7571] ✅ 階段二目標: 執行帳本協作功能測試 (TC-009~020)
+[7571] 🔧 核心功能: 真實調用PL層7303帳本協作功能群
+[7571] 🤝 協作測試: 12個協作管理測試案例
+[7571] 📋 測試範圍: 25個P2功能驗證測試
+[7571] 🎯 資料流向: 7598 → 7571 → PL7303 → APL → ASL → BL → Firebase
+[7571] 🚀 階段二重點: 協作帳本、邀請管理、權限控制、API整合
+00:00 +0: ... - 7571 (階段二) (setUpAll) 00:00 +0: SIT P2測試 - 7571 (階段二) (setUpAll)
+[7571] 🚀 設定P2測試環境...
+00:00 +0: ... 7571 (階段二) 執行SIT P2測00:00 +0: SIT P2測試 - 7571 (階段二) 執行SIT P2測試架構驗證
+
+[7571] 🚀 開始執行SIT P2測試...
+[7571] 🚀 開始執行階段二SIT P2測試 (v1.0.0)...
+[7571] 🎯 測試策略: P2功能驗證，直接調用PL層7303, 7304模組
+[7571] 🔄 執行預算管理功能測試 (TC-001~008)
+[7571] 🔧 執行預算測試: TC-001 - 建立基本預算
+[7571] 📊 測試建立基本預算 - 調用PL層7304
+[processBudgetCRUD] 開始統一預算CRUD操作 - 操作類型: create, 模式: Expert
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: true, 錯誤: 0個, 警告: 0個
+[transformBudgetData] 開始資料轉換 - 轉換類型: uiToApi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 7
+[7571] 🔧 執行預算測試: TC-002 - 查詢預算列表
+[7571] 📊 測試查詢預算列表 - 調用PL層7304
+[processBudgetCRUD] 開始統一預算CRUD操作 - 操作類型: read, 模式: Expert
+[7571] 🔧 執行預算測試: TC-003 - 更新預算資訊
+[7571] 📊 測試更新預算資訊 - 調用PL層7304
+[processBudgetCRUD] 開始統一預算CRUD操作 - 操作類型: update, 模式: Expert
+[validateBudgetData] 開始資料驗證 - 驗證類型: update
+[validateBudgetData] 驗證完成 - 有效: true, 錯誤: 0個, 警告: 0個
+[transformBudgetData] 開始資料轉換 - 轉換類型: uiToApi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 4
+[7571] 🔧 執行預算測試: TC-004 - 刪除預算
+[7571] 📊 測試刪除預算 - 調用PL層7304
+[processBudgetCRUD] 開始統一預算CRUD操作 - 操作類型: delete, 模式: Expert
+[validateBudgetData] 開始資料驗證 - 驗證類型: delete
+[validateBudgetData] 驗證完成 - 有效: true, 錯誤: 0個, 警告: 1個
+[7571] 🔧 執行預算測試: TC-005 - 預算執行狀況計算
+[7571] 📊 測試預算執行狀況計算 - 調用PL層7304
+[calculateBudgetExecution] 計算預算執行狀況 - 預算ID: test_budget_003
+[7571] 🔧 執行預算測試: TC-006 - 預算警示檢查
+[7571] 📊 測試預算警示檢查 - 調用PL層7304
+[checkBudgetAlerts] 檢查預算警示 - 預算ID: test_budget_004
+[calculateBudgetExecution] 計算預算執行狀況 - 預算ID: test_budget_004
+[checkBudgetAlerts] 檢查完成 - 找到 0 個警示
+[7571] 🔧 執行預算測試: TC-007 - 預算資料驗證
+[7571] 📊 測試預算資料驗證 - 調用PL層7304
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: false, 錯誤: 1個, 警告: 0個
+[7571] 🔧 執行預算測試: TC-008 - 預算模式差異化
+[7571] 📊 測試預算模式差異化 - 調用PL層7304
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 10
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Inertial
+[transformBudgetData] 轉換完成 - 結果欄位數: 7
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Cultivation
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Guiding
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[7571] 🔄 階段二執行：帳本協作功能測試 (TC-009~020)
+[7571] 🎯 調用範圍：PL層7303帳本協作功能群，透過APL.dart調用BL層
+[7571] 🔧 執行協作測試：TC-009
+[7571] 🔧 執行協作測試: TC-009 - 建立協作帳本
+[7571] 🤝 階段二測試：建立協作帳本 - 調用PL層7303
+[7571] 📊 協作帳本資料: 協作測試帳本 (collaborative)
+[7571] ❌ 協作帳本建立失敗: CollaborationError: 帳本資料驗證失敗: 無效的帳本類型 (Code: VALIDATION_ERROR)
+[7571] ❌ TC-009 失敗 - 建立協作帳本測試失敗: CollaborationError: 帳本資料驗證失敗: 無效的帳本類型 (Code: VALIDATION_ERROR)
+[7571] 🔧 執行協作測試：TC-010
+[7571] 🔧 執行協作測試: TC-010 - 查詢帳本列表
+[7571] 🤝 測試查詢帳本列表 - 調用PL層7303
+[7571] ❌ TC-010 失敗 - 查詢帳本列表測試失敗: CollaborationError: 帳本列表查詢失敗: CollaborationError: MLS_getLedgers函數不存在 (Code: MLS_FUNCTION_NOT_FOUND) (Code: PROCESS_LEDGER_LIST_ERROR)
+[7571] 🔧 執行協作測試：TC-011
+[7571] 🔧 執行協作測試: TC-011 - 更新帳本資訊
+[7571] 🤝 測試更新帳本資訊 - 調用PL層7303
+[7571] ❌ TC-011 失敗 - 更新帳本資訊測試失敗: CollaborationError: 帳本更新資料驗證失敗: 帳本類型為必填項目 (Code: VALIDATION_ERROR)
+[7571] 🔧 執行協作測試：TC-012
+[7571] 🔧 執行協作測試: TC-012 - 刪除帳本
+[7571] 🤝 測試刪除帳本 - 調用PL層7303
+[7571] ❌ TC-012 失敗 - 刪除帳本測試失敗: CollaborationError: 權限不足，無法執行此操作 (Code: DELETE_LEDGER_ERROR)
+[7571] 🔧 執行協作測試：TC-013
+[7571] 🔧 執行協作測試: TC-013 - 查詢協作者列表
+[7571] 🤝 測試查詢協作者列表 - 調用PL層7303
+[7571] ❌ TC-013 失敗 - 查詢協作者列表測試失敗: CollaborationError: 協作者列表查詢失敗: CollaborationError: API端點不存在: GET /api/v1/ledgers/test_ledger_003/collaborators (Code: ENDPOINT_NOT_FOUND) (Code: PROCESS_COLLABORATOR_LIST_ERROR)
+[7571] 🔧 執行協作測試：TC-014
+[7571] 🔧 執行協作測試: TC-014 - 邀請協作者
+[7571] 🤝 階段二測試：邀請協作者 - 調用PL層7303
+[7571] 📧 邀請協作者: collaborator@test.lcas.app (角色: editor) 到帳本: collab_ledger_001_1697363500000
+[7571] ❌ 邀請協作者失敗: type 'List<dynamic>' is not a subtype of type 'Map<String, dynamic>'
+[7571] ❌ TC-014 失敗 - 邀請協作者測試失敗: type 'List<dynamic>' is not a subtype of type 'Map<String, dynamic>'
+[7571] 🔧 執行協作測試：TC-015
+[7571] 🔧 執行協作測試: TC-015 - 更新協作者權限
+[7571] 🤝 階段二測試：更新協作者權限 - 調用PL層7303
+[7571] 🔄 權限更新: 用戶 user_inertial_1697363260000 在帳本 collab_ledger_001_1697363500000 從 viewer 更新為 editor
+[7571] ❌ 權限更新失敗: type 'List<dynamic>' is not a subtype of type 'Map<String, bool>'
+[7571] ❌ TC-015 失敗 - 更新協作者權限測試失敗: type 'List<dynamic>' is not a subtype of type 'Map<String, bool>'
+[7571] 🔧 執行協作測試：TC-016
+[7571] 🔧 執行協作測試: TC-016 - 移除協作者
+[7571] 🤝 測試移除協作者 - 調用PL層7303
+準備清理用戶 test_user_002 在帳本 test_ledger_006 中的相關資料
+[7571] ❌ TC-016 失敗 - 移除協作者測試失敗: CollaborationError: API端點不存在: DELETE /api/v1/ledgers/test_ledger_006/collaborators/test_user_002 (Code: ENDPOINT_NOT_FOUND)
+[7571] 🔧 執行協作測試：TC-017
+[7571] 🔧 執行協作測試: TC-017 - 權限矩陣計算
+[7571] 🤝 階段二測試：權限矩陣計算 - 調用PL層7303
+[7571] 🔢 計算權限矩陣: 用戶 user_expert_1697363200000 在帳本 collab_ledger_001_1697363500000
+[7571] ❌ 權限矩陣計算失敗: CollaborationError: API端點不存在: GET /api/v1/ledgers/collab_ledger_001_1697363500000/permissions (Code: ENDPOINT_NOT_FOUND)
+[7571] ❌ TC-017 失敗 - 權限矩陣計算測試失敗: CollaborationError: API端點不存在: GET /api/v1/ledgers/collab_ledger_001_1697363500000/permissions (Code: ENDPOINT_NOT_FOUND)
+[7571] 🔧 執行協作測試：TC-018
+[7571] 🔧 執行協作測試: TC-018 - 協作衝突檢測
+[7571] 🤝 測試協作衝突檢測 - 調用PL層7303
+[7571] ✅ TC-018 通過 - 協作衝突檢測
+[7571] 🔧 執行協作測試：TC-019
+[7571] 🔧 執行協作測試: TC-019 - API整合驗證
+[7571] 🤝 階段二測試：API整合驗證 - 調用PL層7303統一API
+[7571] 🌐 測試API: GET /api/v1/ledgers
+[7571] ⚠️ API調用異常: /api/v1/ledgers - MLS_getLedgers函數不存在
+[7571] 🌐 測試API: GET /api/v1/ledgers/test/collaborators
+[7571] ⚠️ API調用異常: /api/v1/ledgers/test/collaborators - MLS_getLedgers函數不存在
+[7571] 🌐 測試API: GET /api/v1/ledgers/test/permissions
+[7571] ⚠️ API調用異常: /api/v1/ledgers/test/permissions - MLS_getLedgers函數不存在
+[7571] 📊 API整合驗證結果: 0/3 成功
+[7571] ❌ TC-019 失敗 - null
+[7571] 🔧 執行協作測試：TC-020
+[7571] 🔧 執行協作測試: TC-020 - 錯誤處理驗證
+[7571] 🤝 測試錯誤處理驗證 - 調用PL層7303
+[7571] ✅ TC-020 通過 - 錯誤處理驗證
+[7571] 🎉 階段二帳本協作功能測試完成
+[7571] 🔄 執行API整合驗證測試 (TC-021~025)
+[7571] 🔧 執行API整合測試: TC-021 - APL.dart統一Gateway驗證
+[7571] 🌐 測試APL.dart統一Gateway
+[7571] 🔧 執行API整合測試: TC-022 - 預算管理API轉發驗證
+[7571] 🌐 測試預算管理API轉發
+[7571] 🔧 執行API整合測試: TC-023 - 帳本協作API轉發驗證
+[7571] 🌐 測試帳本協作API轉發
+[7571] 🔧 執行API整合測試: TC-024 - 四模式差異化
+[7571] 🌐 測試四模式差異化
+[7571] 🔧 執行API整合測試: TC-025 - 統一回應格式驗證
+[7571] 🌐 測試統一回應格式
+
+[7571] 📊 SIT P2測試完成報告:
+[7571]    🎯 測試策略: P2_FUNCTION_VERIFICATION
+[7571]    📋 總測試數: 25
+[7571]    ✅ 通過數: 10
+[7571]    ❌ 失敗數: 15
+[7571]    📈 成功率: 40.0%
+[7571]    ⏱️ 執行時間: 441ms
+[7571]    📊 分類結果:
+[7571]       budget: 3/8 (37.5%)
+[7571]       collaboration: 2/12 (16.7%)
+[7571]       api_integration: 5/5 (100.0%)
+[7571] 🎉 SIT P2階段一測試架構建立完成
+
+[7571] 📊 P2測試完成:
+[7571]    🎯 測試策略: P2_FUNCTION_VERIFICATION
+[7571]    📋 總測試數: 25
+[7571]    ✅ 通過數: 10
+[7571]    ❌ 失敗數: 15
+[7571]    📈 成功率: 40.0%
+[7571]    ⏱️ 執行時間: 441ms
+[7571] 🎉 SIT P2測試架構建立成功
+00:01 +1: ... 7571 (階段二) 執行SIT P2測00:01 +1: ... - 7571 (階段二) P2測試資料00:01 +1: SIT P2測試 - 7571 (階段二) P2測試資料載入驗證
+
+[7571] 🔧 執行P2測試資料載入驗證...
+[7571] ✅ P2測試資料載入成功
+[7571] ✅ 協作測試資料驗證通過
+[7571] ✅ 預算測試資料驗證通過
+[7571] ✅ P2測試資料載入驗證完成
+00:01 +2: ... - 7571 (階段二) P2測試資料00:01 +2: ... - 7571 (階段二) P2四模式差00:01 +2: SIT P2測試 - 7571 (階段二) P2四模式差異化驗證
+
+[7571] 🎯 執行P2四模式差異化驗證...
+[7571] ✅ Expert 模式資料驗證通過
+[7571] ✅ Inertial 模式資料驗證通過
+[7571] ✅ Cultivation 模式資料驗證通過
+[7571] ✅ Guiding 模式資料驗證通過
+[7571] ✅ P2四模式差異化驗證完成
+00:01 +3: ... - 7571 (階段二) P2四模式差00:01 +3: ... 7571 (階段二) (tearDownAll)00:01 +3: All tests passed!             
+~/workspace/75. Flutter_Test_code_PL$ 
