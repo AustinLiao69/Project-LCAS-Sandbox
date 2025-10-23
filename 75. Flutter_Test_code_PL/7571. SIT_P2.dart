@@ -189,12 +189,15 @@ class SITP2TestController {
       final passedCount = _results.where((r) => r.passed).length;
       final failedCount = _results.where((r) => !r.passed).length;
 
+      final failedTestIds = _results.where((r) => !r.passed).map((r) => r.testId).toList();
+
       final summary = {
         'version': 'v1.0.0',
         'testStrategy': 'P2_FUNCTION_VERIFICATION',
         'totalTests': _results.length,
         'passedTests': passedCount,
         'failedTests': failedCount,
+        'failedTestIds': failedTestIds,
         'successRate': _results.isNotEmpty ? (passedCount / _results.length) : 0.0,
         'executionTime': stopwatch.elapsedMilliseconds,
         'categoryResults': _getCategoryResults(),
@@ -231,8 +234,16 @@ class SITP2TestController {
 
     for (int i = 1; i <= 8; i++) {
       final testId = 'TC-${i.toString().padLeft(3, '0')}';
+      print('[7571] 🔧 執行預算測試：$testId');
       final result = await _executeBudgetTest(testId);
       _results.add(result);
+
+      // 顯示測試結果
+      if (result.passed) {
+        print('[7571] ✅ $testId 通過 - ${result.testName}');
+      } else {
+        print('[7571] ❌ $testId 失敗 - ${result.errorMessage}');
+      }
     }
   }
 
@@ -1890,6 +1901,12 @@ class SITP2TestController {
     print('[7571]    📋 總測試數: ${summary['totalTests']}');
     print('[7571]    ✅ 通過數: ${summary['passedTests']}');
     print('[7571]    ❌ 失敗數: ${summary['failedTests']}');
+
+    // 顯示失敗測試案例編號
+    final failedTestIds = summary['failedTestIds'] as List<dynamic>? ?? [];
+    if (failedTestIds.isNotEmpty) {
+      print('[7571]    🚨 失敗測試案例: ${failedTestIds.join(', ')}');
+    }
 
     final successRate = summary['successRate'] as double? ?? 0.0;
     print('[7571]    📈 成功率: ${(successRate * 100).toStringAsFixed(1)}%');
