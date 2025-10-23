@@ -60,7 +60,7 @@ async function initializeServices() {
     console.log('📊 確認Firestore實例...');
     const db = firebaseConfig.getFirestoreInstance();
 
-    // 步驟5：驗證Firebase連線（階段一修復：添加超時機制）
+    // 步驟 5：驗證Firebase連線（階段一修復：添加超時機制）
     console.log('🔗 驗證Firebase連線...');
     try {
       // 使用Promise.race實現超時機制
@@ -69,7 +69,7 @@ async function initializeServices() {
           timestamp: new Date(),
           status: 'firebase_ready'
         }),
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Firebase連線超時')), 8000)
         )
       ]);
@@ -82,7 +82,7 @@ async function initializeServices() {
         const testDoc = db.collection('_system').doc('_test');
         await Promise.race([
           testDoc.get(),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('輕量驗證超時')), 3000)
           )
         ]);
@@ -118,7 +118,7 @@ async function waitForFirebaseInit() {
       // 為整個初始化流程添加超時機制
       const success = await Promise.race([
         initializeServices(),
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Firebase初始化總體超時')), maxInitTime)
         )
       ]);
@@ -152,7 +152,7 @@ async function waitForFirebaseInit() {
 /**
  * 03. BL層模組載入（P1-2範圍）- 階段一修復版
  * @version 2025-09-22-V2.0.4
- * @date 2025-09-22 
+ * @date 2025-09-22
  * @description 等待Firebase完全初始化後載入P1-2階段所需的BL層模組
  */
 async function loadBLModules() {
@@ -200,7 +200,7 @@ async function loadBLModules() {
     // 階段三修復：驗證BK模組函數完整性
     const requiredBKFunctions = [
       'BK_processBookkeeping',
-      'BK_processAPIGetDashboard', 
+      'BK_processAPIGetDashboard',
       'BK_processAPIGetTransactionDetail',
       'BK_processAPIUpdateTransaction',
       'BK_processAPIDeleteTransaction',
@@ -738,9 +738,9 @@ app.post('/api/v1/auth/login', async (req, res) => {
     } else if (result && result.success === false) {
       console.log('❌ 登入失敗，錯誤資訊:', result.error);
       res.apiError(
-        result.message || '登入失敗', 
-        result.error?.code || 'LOGIN_ERROR', 
-        400, 
+        result.message || '登入失敗',
+        result.error?.code || 'LOGIN_ERROR',
+        400,
         result.error?.details || null
       );
     } else {
@@ -1571,9 +1571,9 @@ app.delete('/api/v1/transactions/:id/attachments/:attachmentId', async (req, res
       return res.apiError('BK_processAPIDeleteAttachment函數不存在', 'BK_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await BK.BK_processAPIDeleteAttachment({ 
-      id: req.params.id, 
-      attachmentId: req.params.attachmentId 
+    const result = await BK.BK_processAPIDeleteAttachment({
+      id: req.params.id,
+      attachmentId: req.params.attachmentId
     });
 
     if (result.success) {
@@ -1635,13 +1635,20 @@ app.get('/api/v1/ledgers', async (req, res) => {
   }
 });
 
-// 3. 查詢單個帳本詳情
+// 3. 查詢單個帳本詳情 (通配符路由，必須放在最後)
 app.get('/api/v1/ledgers/:id', async (req, res) => {
   try {
     console.log('🔍 ASL轉發: 查詢帳本詳情 -> MLS_getLedgerById');
+
+    // 檢查是否為特殊的非ID路徑（避免被通配符捕獲）
+    if (req.params.id === 'types' || req.params.id === 'conflicts') {
+      return res.apiError(`API端點錯誤: ${req.path} 應使用專用路由`, 'ROUTE_MISMATCH', 400);
+    }
+
     if (!MLS || typeof MLS.MLS_getLedgerById !== 'function') {
       return res.apiError('MLS_getLedgerById函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
     }
+
     const result = await MLS.MLS_getLedgerById(req.params.id, req.query);
     if (result.success) {
       res.apiSuccess(result.data, result.message || '帳本詳情查詢成功');

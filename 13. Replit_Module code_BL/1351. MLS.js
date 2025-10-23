@@ -1169,6 +1169,80 @@ async function MLS_getPermissions(ledgerId, queryParams) {
 // =============== P2測試所需函數 ===============
 
 /**
+ * 新增：取得單一帳本詳情 (P2測試所需)
+ * @version 2025-10-23-V2.2.0
+ * @description 根據帳本ID取得單一帳本詳情
+ */
+async function MLS_getLedgerById(ledgerId, queryParams = {}) {
+  try {
+    DL.DL_log('MLS', `取得帳本詳情 - 帳本ID: ${ledgerId}`);
+
+    if (!ledgerId) {
+      return {
+        success: false,
+        message: '帳本ID為必填項目',
+        error: { code: 'MISSING_LEDGER_ID' }
+      };
+    }
+
+    // 從Firestore查詢帳本
+    const ledgerRef = db.collection('ledgers').doc(ledgerId);
+    const ledgerDoc = await ledgerRef.get();
+
+    if (!ledgerDoc.exists) {
+      return {
+        success: false,
+        message: '帳本不存在',
+        error: { code: 'LEDGER_NOT_FOUND' }
+      };
+    }
+
+    const ledgerData = ledgerDoc.data();
+
+    // 檢查權限（如果提供了userId）
+    if (queryParams.userId) {
+      const accessCheck = await MLS_validateLedgerAccess(queryParams.userId, ledgerId, 'read');
+      if (!accessCheck.hasAccess) {
+        return await MLS_handlePermissionError(queryParams.userId, ledgerId, 'read', '權限不足');
+      }
+    }
+
+    // 返回帳本詳情
+    const result = {
+      id: ledgerData.id,
+      name: ledgerData.name,
+      type: ledgerData.type,
+      description: ledgerData.description || '',
+      owner_id: ledgerData.owner_id,
+      members: ledgerData.members || [],
+      permissions: ledgerData.permissions || {},
+      created_at: ledgerData.created_at,
+      updated_at: ledgerData.updated_at,
+      archived: ledgerData.archived || false,
+      metadata: ledgerData.metadata || {}
+    };
+
+    return {
+      success: true,
+      data: result,
+      message: '帳本詳情取得成功'
+    };
+
+  } catch (error) {
+    DL.DL_error('MLS', `取得帳本詳情失敗: ${error.message}`);
+    return {
+      success: false,
+      data: null,
+      message: `取得帳本詳情失敗: ${error.message}`,
+      error: {
+        code: 'GET_LEDGER_BY_ID_ERROR',
+        message: error.message
+      }
+    };
+  }
+}
+
+/**
  * 新增：取得帳本列表 (P2測試所需)
  * @version 2025-10-23-V2.2.0
  * @description 取得用戶可存取的帳本列表
@@ -1679,6 +1753,7 @@ module.exports = {
   MLS_getPermissions,
   // P2測試所需新增函數
   MLS_getLedgers,
+  MLS_getLedgerById,
   MLS_createLedger,
   MLS_updateLedger,
   MLS_getCollaborators,
