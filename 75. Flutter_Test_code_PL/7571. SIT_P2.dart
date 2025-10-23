@@ -1,4 +1,3 @@
-replit_final_file>
 /**
  * 7571. SIT_P2.dart
  * @version v1.0.0
@@ -910,9 +909,23 @@ class SITP2TestController {
 
       // 從7598資料構建邀請資料
       final inviteData = inputData['invite_collaborator_success'] ?? {};
-      final ledgerId = inviteData['ledgerId'] ?? 'collab_ledger_001_1697363500000';
-      final inviteeEmail = inviteData['inviteeInfo']?['email'] ?? 'collaborator@test.lcas.app';
-      final inviteeRole = inviteData['role'] ?? 'editor';
+      // 確保所有資料都來自7598，不使用hard coding預設值
+      final ledgerId = inviteData['ledgerId'];
+      final inviteeEmail = inviteData['inviteeInfo']?['email'];
+      final inviteeRole = inviteData['role'];
+
+      if (ledgerId == null || inviteeEmail == null || inviteeRole == null) {
+        print('[7571] ❌ 7598測試資料不完整，缺少必要的協作邀請資料');
+        return P2TestResult(
+          testId: testId,
+          testName: testName,
+          category: 'collaboration',
+          passed: false,
+          errorMessage: '7598測試資料不完整',
+          inputData: inputData,
+          outputData: {},
+        );
+      }
 
       print('[7571] 📧 邀請協作者: $inviteeEmail (角色: $inviteeRole) 到帳本: $ledgerId');
 
@@ -961,11 +974,38 @@ class SITP2TestController {
       print('[7571] 🤝 階段二測試：更新協作者權限 - 調用PL層7303');
 
       // 從7598資料構建權限更新資料
-      final updateData = inputData['update_collaborator_permissions'] ?? {};
-      final ledgerId = updateData['ledgerId'] ?? 'collab_ledger_001_1697363500000';
-      final userId = updateData['collaboratorId'] ?? 'user_inertial_1697363260000';
-      final oldRole = updateData['oldRole'] ?? 'viewer';
-      final newRole = updateData['newRole'] ?? 'editor';
+      final updateData = inputData['update_collaborator_permissions'];
+      
+      if (updateData == null) {
+        print('[7571] ❌ 7598測試資料中缺少update_collaborator_permissions資料');
+        return P2TestResult(
+          testId: testId,
+          testName: testName,
+          category: 'collaboration',
+          passed: false,
+          errorMessage: '7598測試資料不完整',
+          inputData: inputData,
+          outputData: {},
+        );
+      }
+
+      final ledgerId = updateData['ledgerId'];
+      final userId = updateData['collaboratorId'];
+      final oldRole = updateData['oldRole'];
+      final newRole = updateData['newRole'];
+
+      if (ledgerId == null || userId == null || newRole == null) {
+        print('[7571] ❌ 協作者權限更新測試資料不完整');
+        return P2TestResult(
+          testId: testId,
+          testName: testName,
+          category: 'collaboration',
+          passed: false,
+          errorMessage: '協作者權限更新測試資料不完整',
+          inputData: inputData,
+          outputData: {},
+        );
+      }
 
       print('[7571] 🔄 權限更新: 用戶 $userId 在帳本 $ledgerId 從 $oldRole 更新為 $newRole');
 
@@ -1966,4 +2006,3 @@ class BudgetOperationResult {
 
   BudgetOperationResult({required this.success, this.budgetId, this.message});
 }
-</replit_final_file>
