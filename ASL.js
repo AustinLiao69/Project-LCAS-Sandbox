@@ -1654,11 +1654,62 @@ app.get('/api/v1/ledgers/:id', async (req, res) => {
   }
 });
 
-// 注意：以下協作相關端點不符合8020規範，已移除：
-// - GET /api/v1/ledgers/{id}/collaborators (違規)
-// - DELETE /api/v1/ledgers/{id}/collaborators/{userId} (違規)  
-// - GET /api/v1/ledgers/{id}/permissions (違規)
-// 協作功能應使用標準的帳本管理API實現
+// 6. 查詢帳本協作者
+app.get('/api/v1/ledgers/:id/collaborators', async (req, res) => {
+  try {
+    console.log('👥 ASL轉發: 查詢帳本協作者 -> MLS_getCollaborators');
+    if (!MLS || typeof MLS.MLS_getCollaborators !== 'function') {
+      return res.apiError('MLS_getCollaborators函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await MLS.MLS_getCollaborators(req.params.id, req.query);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '協作者列表查詢成功');
+    } else {
+      res.apiError(result.message || '協作者列表查詢失敗', result.error?.code || 'GET_COLLABORATORS_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get collaborators):', error);
+    res.apiError('協作者列表查詢轉發失敗', 'GET_COLLABORATORS_FORWARD_ERROR', 500);
+  }
+});
+
+// 7. 移除帳本協作者
+app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
+  try {
+    console.log('👥🗑️ ASL轉發: 移除帳本協作者 -> MLS_removeCollaborator');
+    if (!MLS || typeof MLS.MLS_removeCollaborator !== 'function') {
+      return res.apiError('MLS_removeCollaborator函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await MLS.MLS_removeCollaborator(req.params.id, req.params.userId, req.query);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '協作者移除成功');
+    } else {
+      res.apiError(result.message || '協作者移除失敗', result.error?.code || 'REMOVE_COLLABORATOR_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (remove collaborator):', error);
+    res.apiError('協作者移除轉發失敗', 'REMOVE_COLLABORATOR_FORWARD_ERROR', 500);
+  }
+});
+
+// 8. 查詢帳本權限
+app.get('/api/v1/ledgers/:id/permissions', async (req, res) => {
+  try {
+    console.log('🔐 ASL轉發: 查詢帳本權限 -> MLS_getPermissions');
+    if (!MLS || typeof MLS.MLS_getPermissions !== 'function') {
+      return res.apiError('MLS_getPermissions函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    }
+    const result = await MLS.MLS_getPermissions(req.params.id, req.query);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '帳本權限查詢成功');
+    } else {
+      res.apiError(result.message || '帳本權限查詢失敗', result.error?.code || 'GET_PERMISSIONS_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get permissions):', error);
+    res.apiError('帳本權限查詢轉發失敗', 'GET_PERMISSIONS_FORWARD_ERROR', 500);
+  }
+});
 
 // 4. 更新帳本
 app.put('/api/v1/ledgers/:id', async (req, res) => {

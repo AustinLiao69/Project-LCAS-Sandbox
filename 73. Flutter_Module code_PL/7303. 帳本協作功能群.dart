@@ -1135,8 +1135,8 @@ class LedgerCollaborationManager {
             final ledgerId = pathParts[4];
             final userId = pathParts[6];
             final response = await APL.instance.ledger.updateCollaboratorRole(
-              ledgerId, 
-              userId, 
+              ledgerId,
+              userId,
               role: data?['role'] ?? 'viewer',
               reason: data?['reason'],
             ).timeout(timeoutDuration);
@@ -1535,19 +1535,19 @@ class LedgerCollaborationManager {
     }
 
     // 檢查管理員列表
-    if (permissionData['admins'] != null && 
+    if (permissionData['admins'] != null &&
         (permissionData['admins'] as List).contains(userId)) {
       return 'admin';
     }
 
     // 檢查成員列表
-    if (permissionData['members'] != null && 
+    if (permissionData['members'] != null &&
         (permissionData['members'] as List).contains(userId)) {
       return 'editor';
     }
 
     // 檢查檢視者列表
-    if (permissionData['viewers'] != null && 
+    if (permissionData['viewers'] != null &&
         (permissionData['viewers'] as List).contains(userId)) {
       return 'viewer';
     }

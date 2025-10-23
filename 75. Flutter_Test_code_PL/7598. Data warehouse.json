@@ -873,18 +873,23 @@
   "collaboration_test_data": {
     "success_scenarios": {
       "create_collaborative_ledger": {
-        "ledgerId": "collab_ledger_001_1697363500000",
+        "id": "collab_ledger_001_1697363500000",
         "name": "協作測試帳本",
-        "type": "collaborative",
+        "type": "shared",
         "description": "Phase 2協作功能測試用帳本",
-        "ownerId": "user_expert_1697363200000",
-        "collaborators": [],
-        "settings": {
-          "currency": "TWD",
-          "timezone": "Asia/Taipei",
-          "permissions": {
-            "default_role": "viewer",
-            "allow_public_view": false
+        "owner_id": "user_expert_1697363200000",
+        "members": ["user_expert_1697363200000"],
+        "currency": "TWD",
+        "timezone": "Asia/Taipei",
+        "permissions": {
+          "owner": "user_expert_1697363200000",
+          "admins": [],
+          "members": [],
+          "viewers": [],
+          "settings": {
+            "allow_invite": true,
+            "allow_edit": true,
+            "allow_delete": false
           }
         },
         "permissions": {
@@ -901,11 +906,17 @@
         "ledgerId": "collab_ledger_001_1697363500000",
         "inviterId": "user_expert_1697363200000",
         "inviteeInfo": {
+          "userId": "user_inertial_1697363260000",
           "email": "collaborator@test.lcas.app",
           "name": "協作者測試用戶"
         },
         "role": "editor",
-        "permissions": ["read", "write"],
+        "permissions": {
+          "read": true,
+          "write": true,
+          "manage": false,
+          "invite": false
+        },
         "invitationId": "inv_001_1697363600000",
         "status": "pending",
         "createdAt": "2025-10-22T00:00:00Z",
