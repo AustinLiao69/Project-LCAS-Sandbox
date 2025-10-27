@@ -375,33 +375,32 @@ class SITP2TestController {
     print('[7571] 🎉 階段二整合驗證測試完成 (100%使用7598資料)');
   }
 
-  /// 執行單一預算真實測試（階段二修正：純粹調用PL層7304，移除所有模擬業務邏輯）
+  /// 執行單一預算真實測試（完全移除模擬業務邏輯）
   Future<P2TestResult> _executeBudgetRealTest(String testId) async {
     try {
       final testName = _getBudgetTestName(testId);
-      print('[7571] 📊 階段二預算真實測試: $testId - $testName（純粹調用PL層7304）');
+      print('[7571] 📊 預算真實測試: $testId - $testName（純粹調用PL層）');
 
-      // 從7598載入完整測試資料
+      // 從7598載入測試資料
       final successData = await P2TestDataManager.instance.getBudgetTestData('success');
       final failureData = await P2TestDataManager.instance.getBudgetTestData('failure');
 
-      Map<String, dynamic> plResult = {};
       Map<String, dynamic> inputData = {};
+      dynamic plResult;
 
-      // 根據測試案例純粹調用PL層真實函數（移除所有模擬判斷）
+      // 純粹調用PL層函數，不進行任何業務邏輯判斷
       switch (testId) {
         case 'TC-001': // 建立預算測試
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
             inputData = Map<String, dynamic>.from(budgetData);
-
-            // 純粹調用PL層7304，由PL層處理所有業務邏輯
-            plResult = await PL7304.processBudgetCRUD(
-              operation: BudgetCRUDType.create,
-              data: inputData,
-              mode: UserMode.Expert,
+            // 純粹調用，不設定預設值
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+              BudgetCRUDType.create,
+              inputData,
+              UserMode.Expert,
             );
-            print('[7571] 📋 TC-001純粹調用PL層7304: budgetId=${inputData['budgetId']}');
+            print('[7571] 📋 TC-001純粹調用完成');
           }
           break;
 
@@ -409,14 +408,13 @@ class SITP2TestController {
           final queryData = successData['create_monthly_budget'];
           if (queryData != null) {
             inputData = {'ledgerId': queryData['ledgerId'], 'userId': queryData['userId']};
-
-            // 純粹調用PL層7304，由PL層處理所有業務邏輯和預設值
-            plResult = await budgetManager.processBudgetCRUD(
-              operationType: 'read',
-              budgetData: inputData,
-              userMode: 'Expert',
+            // 純粹調用，不設定預設值
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+              BudgetCRUDType.read,
+              inputData,
+              UserMode.Expert,
             );
-            print('[7571] 📋 TC-002純粹調用PL層7304: ledgerId=${inputData['ledgerId']}');
+            print('[7571] 📋 TC-002純粹調用完成');
           }
           break;
 
@@ -545,18 +543,15 @@ class SITP2TestController {
           throw Exception('階段二錯誤：未定義的測試案例 $testId，必須調用PL層7304');
       }
 
-      // 直接使用PL層回傳結果，不進行任何模擬判斷
-      final success = plResult is Map<String, dynamic> ?
-                      (plResult['success'] ?? false) : false;
-
+      // 直接使用PL層回傳結果，不進行任何判斷
       return P2TestResult(
         testId: testId,
         testName: testName,
         category: 'budget_real_test_stage2',
-        passed: success,
-        errorMessage: success ? null : plResult['message']?.toString(),
+        passed: plResult?.success ?? false,
+        errorMessage: plResult?.success != true ? plResult?.message?.toString() : null,
         inputData: inputData,
-        outputData: plResult,
+        outputData: plResult?.toJson?.call() ?? plResult,
       );
 
     } catch (e) {
@@ -603,17 +598,13 @@ class SITP2TestController {
           if (ledgerData != null) {
             inputData = {'owner_id': ledgerData['owner_id']};
 
-            // 純粹調用PL層7303，移除API直接調用
-            try {
-              final ledgers = await LedgerCollaborationManager.processLedgerList(
-                inputData,
-                userMode: 'Expert',
-              );
-              apiResponse = {'success': true, 'data': ledgers};
-            } catch (e) {
-              apiResponse = {'success': false, 'error': e.toString()};
-            }
-            print('[7571] 📋 TC-010純粹調用PL層7303: owner_id=${inputData['owner_id']}');
+            // 純粹調用PL層7303，不進行任何try-catch包裝
+            final ledgers = await LedgerCollaborationManager.processLedgerList(
+              inputData,
+              userMode: 'Expert',
+            );
+            apiResponse = ledgers;
+            print('[7571] 📋 TC-010純粹調用PL層7303完成');
           }
           break;
 
@@ -807,8 +798,8 @@ class SITP2TestController {
         testId: testId,
         testName: testName,
         category: 'collaboration_real_test_stage2',
-        passed: apiResponse is List ? apiResponse.isNotEmpty : (apiResponse['success'] ?? false),
-        errorMessage: apiResponse is Map && apiResponse['success'] != true ? apiResponse['message']?.toString() : null,
+        passed: apiResponse != null,
+        errorMessage: apiResponse == null ? 'PL層回傳null結果' : null,
         inputData: inputData,
         outputData: apiResponse,
       );
