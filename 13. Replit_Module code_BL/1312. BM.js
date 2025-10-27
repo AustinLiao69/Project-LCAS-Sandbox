@@ -46,7 +46,8 @@ BM.BM_createBudget = async function(requestData) {
     if (typeof requestData === 'object' && requestData !== null) {
       // API格式：{ledgerId, userId, ...budgetData}
       ledgerId = requestData.ledgerId || requestData.ledger_id;
-      userId = requestData.userId || requestData.user_id || requestData.created_by;
+      // userId fallback處理
+      userId = requestData.userId || requestData.user_id || requestData.created_by || requestData.operatorId || 'system_user';
       budgetType = requestData.type || requestData.budgetType || 'monthly';
 
       // 驗證必要參數
@@ -821,7 +822,7 @@ BM.BM_triggerBudgetAlert = async function(budgetId, alertType, recipientList) {
  * 09. 設定預算警示規則
  * @version 2025-07-07-V1.0.0
  * @date 2025-07-07 14:15:41
- * @description 自訂預算警示觸發條件和通知方式
+ * @description 自訂預算警示條件和通知方式
  */
 BM.BM_setBudgetAlertRules = async function(budgetId, alertRules) {
   const logPrefix = '[BM_setBudgetAlertRules]';
@@ -1433,16 +1434,13 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
 };
 
 // 模組導出
-// 確保所有函數都已導出
 module.exports = {
-  // P2測試所需函數明確導出
   BM_createBudget: BM.BM_createBudget,
   BM_getBudgets: BM.BM_getBudgets,
   BM_getBudgetDetail: BM.BM_getBudgetDetail,
   BM_getBudgetById: BM.BM_getBudgetById,
   BM_updateBudget: BM.BM_updateBudget,
   BM_deleteBudget: BM.BM_deleteBudget,
-  // 其他已有函數
   BM_editBudget: BM.BM_editBudget,
   BM_calculateBudgetProgress: BM.BM_calculateBudgetProgress,
   BM_updateBudgetUsage: BM.BM_updateBudgetUsage,
