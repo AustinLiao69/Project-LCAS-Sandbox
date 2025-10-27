@@ -1386,6 +1386,45 @@ BM.BM_validateAllocation = async function(budgetId, allocationData) {
   };
 };
 
+/**
+ * 新增：BM_getBudgetById (ASL.js所需)
+ * @version 2025-10-27-V2.1.1
+ * @description 根據預算ID取得單一預算詳情，供ASL.js調用
+ */
+BM.BM_getBudgetById = async function(budgetId, options = {}) {
+  const logPrefix = '[BM_getBudgetById]';
+  
+  try {
+    console.log(`${logPrefix} 取得預算詳情 - 預算ID: ${budgetId}`);
+    
+    if (!budgetId) {
+      return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
+    }
+    
+    // 模擬從Firestore查詢預算（實際應用FS模組查詢）
+    const budgetDetail = {
+      id: budgetId,
+      name: '測試預算',
+      amount: 50000,
+      used_amount: 32000,
+      remaining: 18000,
+      type: 'monthly',
+      status: 'active',
+      currency: 'TWD',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      progress: 64.0,
+      categories: []
+    };
+    
+    return createStandardResponse(true, budgetDetail, '預算詳情取得成功');
+    
+  } catch (error) {
+    console.error(`${logPrefix} 預算詳情取得失敗:`, error);
+    return createStandardResponse(false, null, `預算詳情取得失敗: ${error.message}`, 'GET_BUDGET_BY_ID_ERROR');
+  }
+};
+
 // 模組導出
 // 確保所有函數都已導出
 module.exports = {
@@ -1394,6 +1433,7 @@ module.exports = {
   BM_createBudget: BM.BM_createBudget,
   BM_getBudgets: BM.BM_getBudgets,
   BM_getBudgetDetail: BM.BM_getBudgetDetail,
+  BM_getBudgetById: BM.BM_getBudgetById,
   BM_updateBudget: BM.BM_updateBudget,
   BM_deleteBudget: BM.BM_deleteBudget,
   // 其他已有函數

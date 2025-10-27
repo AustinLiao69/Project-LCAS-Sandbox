@@ -1732,48 +1732,48 @@ async function MLS_importLedgerData(ledgerId, data, format) {
 // (Compatibility functions are listed above)
 
 
-// 導出模組
+// 模組導出
 module.exports = {
+  // 帳本類型管理函數
   MLS_createProjectLedger,
   MLS_createCategoryLedger,
   MLS_createSharedLedger,
+
+  // 帳本基本操作函數
   MLS_editLedger,
   MLS_deleteLedger,
   MLS_archiveLedger,
+
+  // 權限與成員管理函數
   MLS_setLedgerPermissions,
   MLS_inviteMember,
   MLS_removeMember,
+
+  // 帳本切換與路由函數
   MLS_switchLedger,
   MLS_getLedgerList,
   MLS_validateLedgerAccess,
+
+  // 帳本屬性與設定函數
   MLS_setLedgerAttributes,
   MLS_configureLedgerType,
+
+  // 錯誤處理與監控函數
   MLS_handlePermissionError,
   MLS_detectDuplicateName,
-  MLS_getPermissions,
+
   // P2測試所需新增函數
-  MLS_getLedgers,
   MLS_getLedgerById,
   MLS_createLedger,
   MLS_updateLedger,
+  // MLS_deleteLedger 已在上面定義，避免重複
   MLS_getCollaborators,
   MLS_inviteCollaborator,
   MLS_removeCollaborator,
-  // 相容性函數 (DEPRECATED)
-  MLS_getLedgerType,
-  MLS_getLedgerMembers,
-  MLS_isLedgerOwner,
-  MLS_isValidLedgerName,
-  MLS_getActiveLedgersForUser,
-  MLS_getLedgersByType,
-  MLS_getRecentlyUpdatedLedgers,
-  MLS_getSharedLedgersForUser,
-  MLS_getLedgerBackupInfo,
-  MLS_setLedgerBackupSettings,
-  MLS_getLedgerStatistics,
-  MLS_generateLedgerReport,
-  MLS_exportLedgerData,
-  MLS_importLedgerData
+  MLS_getPermissions,
+
+  // ASL.js 調用所需函數（新增）
+  MLS_getLedgers
 };
 
 console.log('✅ MLS 多帳本管理模組載入完成');
