@@ -468,11 +468,11 @@ class SITP2TestController {
           testPassed = outputData['valid'] == true;
           break;
         case 'TC-022': // 驗證預算管理資料完整性
-          outputData = _validateBudgetManagementDataIntegrity();
+          outputData = await _validateBudgetManagementDataIntegrity();
           testPassed = outputData['valid'] == true;
           break;
         case 'TC-023': // 驗證帳本協作資料完整性
-          outputData = _validateLedgerCollaborationDataIntegrity();
+          outputData = await _validateLedgerCollaborationDataIntegrity();
           testPassed = outputData['valid'] == true;
           break;
         case 'TC-024': // 驗證四模式差異化資料完整性
