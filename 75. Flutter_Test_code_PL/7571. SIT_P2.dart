@@ -185,15 +185,15 @@ class UnifiedAPIClient {
           break;
         case 'POST':
           response = await http.post(
-            url, 
-            headers: defaultHeaders, 
+            url,
+            headers: defaultHeaders,
             body: body != null ? json.encode(body) : null
           ).timeout(Duration(seconds: 10));
           break;
         case 'PUT':
           response = await http.put(
-            url, 
-            headers: defaultHeaders, 
+            url,
+            headers: defaultHeaders,
             body: body != null ? json.encode(body) : null
           ).timeout(Duration(seconds: 10));
           break;
@@ -322,7 +322,7 @@ class SITP2TestController {
     }
   }
 
-  
+
 
   /// 執行預算管理真實測試（階段二修正：100%使用7598資料）
   Future<void> _executeBudgetRealTests() async {
@@ -394,7 +394,7 @@ class SITP2TestController {
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
             inputData = Map<String, dynamic>.from(budgetData);
-            
+
             // 純粹調用PL層7304，由PL層處理所有業務邏輯
             plResult = await PL7304.processBudgetCRUD(
               operation: BudgetCRUDType.create,
@@ -409,7 +409,7 @@ class SITP2TestController {
           final queryData = successData['create_monthly_budget'];
           if (queryData != null) {
             inputData = {'ledgerId': queryData['ledgerId'], 'userId': queryData['userId']};
-            
+
             // 純粹調用PL層7304，由PL層處理所有業務邏輯和預設值
             plResult = await budgetManager.processBudgetCRUD(
               operationType: 'read',
@@ -546,9 +546,9 @@ class SITP2TestController {
       }
 
       // 直接使用PL層回傳結果，不進行任何模擬判斷
-      final success = plResult is Map<String, dynamic> ? 
+      final success = plResult is Map<String, dynamic> ?
                       (plResult['success'] ?? false) : false;
-      
+
       return P2TestResult(
         testId: testId,
         testName: testName,
@@ -583,7 +583,6 @@ class SITP2TestController {
       final failureData = await P2TestDataManager.instance.getCollaborationTestData('failure');
 
       Map<String, dynamic> apiResponse = {};
-      bool testPassed = false;
       Map<String, dynamic> inputData = {};
 
       // 根據測試案例執行真實API調用（100%使用7598資料）
@@ -592,7 +591,7 @@ class SITP2TestController {
           final ledgerData = successData['create_collaborative_ledger'];
           if (ledgerData != null) {
             inputData = Map<String, dynamic>.from(ledgerData);
-            
+
             // 純粹調用PL層7303，移除API直接調用
             apiResponse = await PL7303.createLedger(inputData, userMode: 'Expert');
             print('[7571] 📋 TC-009純粹調用PL層7303: id=${inputData['id']}, name=${inputData['name']}');
@@ -603,7 +602,7 @@ class SITP2TestController {
           final ledgerData = successData['create_collaborative_ledger'];
           if (ledgerData != null) {
             inputData = {'owner_id': ledgerData['owner_id']};
-            
+
             // 純粹調用PL層7303，移除API直接調用
             try {
               final ledgers = await LedgerCollaborationManager.processLedgerList(
@@ -633,7 +632,6 @@ class SITP2TestController {
               method: 'PUT',
               body: inputData,
             );
-            testPassed = apiResponse['success'] == true;
             print('[7571] 📋 TC-011使用7598資料: ledgerId=$ledgerId');
           }
           break;
@@ -649,7 +647,6 @@ class SITP2TestController {
               method: 'DELETE',
               body: inputData,
             );
-            testPassed = apiResponse['success'] == true;
             print('[7571] 📋 TC-012使用7598資料: ledgerId=$ledgerId');
           }
           break;
@@ -664,7 +661,6 @@ class SITP2TestController {
               endpoint: '/api/v1/ledgers/$ledgerId/collaborators',
               method: 'GET',
             );
-            testPassed = apiResponse['success'] == true;
             print('[7571] 📋 TC-013使用7598資料: ledgerId=$ledgerId');
           }
           break;
@@ -685,7 +681,6 @@ class SITP2TestController {
               method: 'POST',
               body: inputData,
             );
-            testPassed = apiResponse['success'] == true;
             print('[7571] 📋 TC-014使用7598資料: ledgerId=$ledgerId, invitee=${inviteData['inviteeInfo']['email']}, role=${inviteData['role']}');
           }
           break;
@@ -706,7 +701,6 @@ class SITP2TestController {
               method: 'PUT',
               body: inputData,
             );
-            testPassed = apiResponse['success'] == true;
             print('[7571] 📋 TC-015使用7598資料: ledgerId=$ledgerId, collaboratorId=$collaboratorId, 角色變更:${updateData['oldRole']}→${updateData['newRole']}');
           }
           break;
@@ -723,7 +717,6 @@ class SITP2TestController {
               method: 'DELETE',
               body: inputData,
             );
-            testPassed = apiResponse['success'] == true;
             print('[7571] 📋 TC-016使用7598資料: ledgerId=$ledgerId, 移除collaboratorId=$collaboratorId');
           }
           break;
@@ -741,7 +734,6 @@ class SITP2TestController {
               method: 'GET',
               body: inputData,
             );
-            testPassed = apiResponse['success'] == true;
             print('[7571] 📋 TC-017使用7598資料: ledgerId=$ledgerId, userId=$userId');
           }
           break;
@@ -761,7 +753,6 @@ class SITP2TestController {
               method: 'GET',
               body: inputData,
             );
-            testPassed = apiResponse['success'] == true;
             print('[7571] 📋 TC-018使用7598資料: ledgerId=$ledgerId, 檢測衝突類型=${inputData['conflictTypes']}');
           }
           break;
@@ -776,16 +767,15 @@ class SITP2TestController {
               '/api/v1/ledgers/$ledgerId/collaborators',
               '/api/v1/ledgers/$ledgerId/permissions'
             ];
-            
+
             int successCount = 0;
             for (final endpoint in testEndpoints) {
               final response = await _apiClient.callAPI(endpoint: endpoint, method: 'GET');
               if (response['success'] == true) successCount++;
             }
-            
-            testPassed = successCount == testEndpoints.length;
+
             inputData = {'ledgerId': ledgerId, 'testedEndpoints': testEndpoints, 'successCount': successCount};
-            apiResponse = {'success': testPassed, 'successCount': successCount, 'totalTests': testEndpoints.length};
+            apiResponse = {'success': successCount == testEndpoints.length, 'successCount': successCount, 'totalTests': testEndpoints.length};
             print('[7571] 📋 TC-019使用7598資料: ledgerId=$ledgerId, API整合測試成功率=$successCount/${testEndpoints.length}');
           }
           break;
@@ -794,16 +784,16 @@ class SITP2TestController {
           final invalidData = failureData['insufficient_permissions'];
           if (invalidData != null) {
             inputData = Map<String, dynamic>.from(invalidData);
-            
+
             // 嘗試執行無權限操作
             apiResponse = await _apiClient.callAPI(
               endpoint: '/api/v1/ledgers/${inputData['ledgerId']}/collaborators',
               method: 'POST',
               body: inputData,
             );
-            
+
             // 預期失敗的測試案例
-            testPassed = apiResponse['success'] == false && apiResponse['error']?.toString().contains('權限不足') == true;
+            apiResponse['success'] = apiResponse['success'] == false && apiResponse['error']?.toString().contains('權限不足') == true;
             print('[7571] 📋 TC-020使用7598失敗資料: 預期錯誤=${invalidData['expectedError']}');
           }
           break;
@@ -843,7 +833,6 @@ class SITP2TestController {
       print('[7571] 🌐 階段二整合真實測試: $testId - $testName（100%使用7598資料）');
 
       Map<String, dynamic> apiResponse = {};
-      bool testPassed = false;
       Map<String, dynamic> inputData = {};
 
       // 根據測試案例執行真實API調用（100%使用7598資料）
@@ -853,12 +842,12 @@ class SITP2TestController {
           final userData = await P2TestDataManager.instance.getUserModeData('Expert');
           if (userData != null) {
             inputData = {'userId': userData['userId'], 'userMode': userData['userMode']};
-            
+
             apiResponse = await _apiClient.callAPI(
               endpoint: '/health',
               method: 'GET',
             );
-            testPassed = apiResponse['statusCode'] == 200;
+            inputData['success'] = apiResponse['statusCode'] == 200;
             print('[7571] 📋 TC-021使用7598資料: userId=${userData['userId']}, userMode=${userData['userMode']}');
           }
           break;
@@ -880,7 +869,7 @@ class SITP2TestController {
               method: 'POST',
               body: inputData,
             );
-            testPassed = apiResponse['success'] == true;
+            inputData['success'] = apiResponse['success'] == true;
             print('[7571] 📋 TC-022使用7598資料: email=${userData['email']}, userMode=${userData['userMode']}');
           }
           break;
@@ -904,7 +893,7 @@ class SITP2TestController {
               method: 'POST',
               body: inputData,
             );
-            testPassed = apiResponse['success'] == true;
+            inputData['success'] = apiResponse['success'] == true;
             print('[7571] 📋 TC-023使用7598資料: userId=${userData['userId']}, 記帳金額=${inputData['amount']}');
           }
           break;
@@ -913,7 +902,7 @@ class SITP2TestController {
           final modes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
           int successCount = 0;
           List<Map<String, dynamic>> modeResults = [];
-          
+
           for (final mode in modes) {
             final userData = await P2TestDataManager.instance.getUserModeData(mode);
             if (userData != null) {
@@ -928,11 +917,11 @@ class SITP2TestController {
                 endpoint: '/api/v1/users/${userData['userId']}/profile',
                 method: 'GET',
               );
-              
+
               if (response['success'] == true) {
                 successCount++;
               }
-              
+
               modeResults.add({
                 'mode': mode,
                 'userId': userData['userId'],
@@ -940,10 +929,9 @@ class SITP2TestController {
               });
             }
           }
-          
-          testPassed = successCount == modes.length;
+
           inputData = {'testedModes': modes, 'successCount': successCount, 'results': modeResults};
-          apiResponse = {'success': testPassed, 'modeTestResults': modeResults, 'successRate': successCount / modes.length};
+          apiResponse = {'success': successCount == modes.length, 'modeTestResults': modeResults, 'successRate': successCount / modes.length};
           print('[7571] 📋 TC-024使用7598資料: 四模式測試成功率=$successCount/${modes.length}');
           break;
 
@@ -952,7 +940,7 @@ class SITP2TestController {
           final userData = await P2TestDataManager.instance.getUserModeData('Expert');
           final ledgerData = await P2TestDataManager.instance.getCollaborationTestData('success');
           final budgetData = await P2TestDataManager.instance.getBudgetTestData('success');
-          
+
           if (userData != null && ledgerData != null && budgetData != null) {
             final testEndpoints = [
               {'endpoint': '/health', 'method': 'GET', 'body': null},
@@ -960,21 +948,21 @@ class SITP2TestController {
               {'endpoint': '/api/v1/ledgers', 'method': 'GET', 'body': null},
               {'endpoint': '/api/v1/budgets', 'method': 'GET', 'body': null},
             ];
-            
+
             int validFormatCount = 0;
             List<Map<String, dynamic>> formatResults = [];
-            
+
             for (final testCase in testEndpoints) {
               final response = await _apiClient.callAPI(
                 endpoint: testCase['endpoint'] as String,
                 method: testCase['method'] as String,
                 body: testCase['body'] as Map<String, dynamic>?,
               );
-              
+
               // 檢查統一回應格式
               final hasValidFormat = response.containsKey('success') || response.containsKey('statusCode');
               if (hasValidFormat) validFormatCount++;
-              
+
               formatResults.add({
                 'endpoint': testCase['endpoint'],
                 'method': testCase['method'],
@@ -982,10 +970,9 @@ class SITP2TestController {
                 'responseKeys': response.keys.toList(),
               });
             }
-            
-            testPassed = validFormatCount == testEndpoints.length;
+
             inputData = {'testedEndpoints': testEndpoints.length, 'validFormatCount': validFormatCount, 'userData': userData['userId']};
-            apiResponse = {'success': testPassed, 'formatResults': formatResults, 'formatCompliance': validFormatCount / testEndpoints.length};
+            apiResponse = {'success': validFormatCount == testEndpoints.length, 'formatResults': formatResults, 'formatCompliance': validFormatCount / testEndpoints.length};
             print('[7571] 📋 TC-025使用7598資料: 統一格式測試成功率=$validFormatCount/${testEndpoints.length}');
           }
           break;
@@ -999,8 +986,8 @@ class SITP2TestController {
         testId: testId,
         testName: testName,
         category: 'integration_real_test_stage2',
-        passed: testPassed,
-        errorMessage: testPassed ? null : apiResponse['error']?.toString(),
+        passed: apiResponse['success'] ?? false,
+        errorMessage: apiResponse['success'] == true ? null : apiResponse['error']?.toString(),
         inputData: inputData,
         outputData: apiResponse,
       );
@@ -1073,7 +1060,7 @@ class SITP2TestController {
     final categories = ['budget_real_test_stage2', 'collaboration_real_test_stage2', 'integration_real_test_stage2'];
     final categoryLabels = {
       'budget_real_test_stage2': 'budget_stage2',
-      'collaboration_real_test_stage2': 'collaboration_stage2', 
+      'collaboration_real_test_stage2': 'collaboration_stage2',
       'integration_real_test_stage2': 'integration_stage2'
     };
 
@@ -1116,7 +1103,7 @@ class SITP2TestController {
     print('[7571]       ✅ 完全依賴7598: ${stage2Compliance['full_7598_dependency']}');
     print('[7571]       📋 資料來源: ${stage2Compliance['data_source']}');
     print('[7571]       🧪 測試模式: ${stage2Compliance['test_mode']}');
-    
+
     final dataCoverage = stage2Compliance['data_coverage'] as Map<String, dynamic>;
     print('[7571]    📊 7598資料覆蓋狀況:');
     print('[7571]       ✅ 成功情境: ${dataCoverage['success_scenarios']}');
@@ -1216,11 +1203,11 @@ void main() {
         expect(userData.containsKey('email'), isTrue);
         expect(userData.containsKey('preferences'), isTrue);
         expect(userData.containsKey('assessmentAnswers'), isTrue);
-        
+
         // 階段二新增：驗證資料不是Hard coding
         expect(userData['userId'].toString().contains(mode.toLowerCase()), isTrue);
         expect(userData['userMode'], equals(mode));
-        
+
         print('[7571] ✅ 階段二：$mode 模式資料完整性驗證通過（含email、preferences、assessment）');
       }
 
