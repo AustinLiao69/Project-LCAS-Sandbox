@@ -257,11 +257,7 @@ class SITP2TestController {
 
       final stopwatch = Stopwatch()..start();
 
-      // 檢查ASL服務是否可用
-      final healthCheck = await _performHealthCheck();
-      if (!healthCheck['available']) {
-        throw Exception('ASL服務不可用: ${healthCheck['error']}');
-      }
+      // 移除健康檢查：SIT測試案例未要求，且違反0098資料流規範
 
       // 階段二：預算管理測試（TC-001~008）- 100%使用7598資料
       print('[7571] 🔄 階段二：執行預算管理測試 (100%使用7598資料)');
@@ -326,38 +322,7 @@ class SITP2TestController {
     }
   }
 
-  /// 執行健康檢查
-  Future<Map<String, dynamic>> _performHealthCheck() async {
-    try {
-      print('[7571] 🔍 檢查ASL服務可用性...');
-
-      final response = await _apiClient.callAPI(
-        endpoint: '/health',
-        method: 'GET',
-      );
-
-      final available = response['statusCode'] == 200 || response['success'] == true;
-
-      if (available) {
-        print('[7571] ✅ ASL服務可用');
-      } else {
-        print('[7571] ❌ ASL服務不可用: ${response['error']}');
-      }
-
-      return {
-        'available': available,
-        'response': response,
-        'error': available ? null : response['error']
-      };
-
-    } catch (e) {
-      print('[7571] ❌ 健康檢查失敗: $e');
-      return {
-        'available': false,
-        'error': 'ASL服務連接失敗: $e'
-      };
-    }
-  }
+  
 
   /// 執行預算管理真實測試（階段二修正：100%使用7598資料）
   Future<void> _executeBudgetRealTests() async {
