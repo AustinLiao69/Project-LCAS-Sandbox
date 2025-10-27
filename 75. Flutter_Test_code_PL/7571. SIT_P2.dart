@@ -375,38 +375,33 @@ class SITP2TestController {
     print('[7571] 🎉 階段二整合驗證測試完成 (100%使用7598資料)');
   }
 
-  /// 執行單一預算真實測試（階段二修正：直接調用PL層7304，100%使用7598資料）
+  /// 執行單一預算真實測試（階段二修正：純粹調用PL層7304，移除所有模擬業務邏輯）
   Future<P2TestResult> _executeBudgetRealTest(String testId) async {
     try {
       final testName = _getBudgetTestName(testId);
-      print('[7571] 📊 階段二預算真實測試: $testId - $testName（直接調用PL層7304）');
+      print('[7571] 📊 階段二預算真實測試: $testId - $testName（純粹調用PL層7304）');
 
       // 從7598載入完整測試資料
       final successData = await P2TestDataManager.instance.getBudgetTestData('success');
       final failureData = await P2TestDataManager.instance.getBudgetTestData('failure');
 
       Map<String, dynamic> plResult = {};
-      bool testPassed = false;
       Map<String, dynamic> inputData = {};
 
-      // 動態導入PL層7304預算管理功能群
-      final budgetManager = await import('../73. Flutter_Module code_PL/7304. 預算管理功能群.dart');
-
-      // 根據測試案例直接調用PL層真實函數（100%使用7598資料）
+      // 根據測試案例純粹調用PL層真實函數（移除所有模擬判斷）
       switch (testId) {
         case 'TC-001': // 建立預算測試
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
             inputData = Map<String, dynamic>.from(budgetData);
             
-            // 直接調用PL層7304預算建立函數
-            plResult = await budgetManager.processBudgetCRUD(
-              operationType: 'create',
-              budgetData: inputData,
-              userMode: inputData['userMode'] ?? 'Expert',
+            // 純粹調用PL層7304，由PL層處理所有業務邏輯
+            plResult = await PL7304.processBudgetCRUD(
+              operation: BudgetCRUDType.create,
+              data: inputData,
+              mode: UserMode.Expert,
             );
-            testPassed = plResult['success'] == true;
-            print('[7571] 📋 TC-001調用PL層7304: budgetId=${inputData['budgetId']}, 結果=${plResult['success']}');
+            print('[7571] 📋 TC-001純粹調用PL層7304: budgetId=${inputData['budgetId']}');
           }
           break;
 
@@ -544,8 +539,8 @@ class SITP2TestController {
         testId: testId,
         testName: testName,
         category: 'budget_real_test_stage2',
-        passed: testPassed,
-        errorMessage: testPassed ? null : plResult['error']?.toString(),
+        passed: plResult['success'] ?? false, // 直接使用PL層回傳結果，不進行模擬判斷
+        errorMessage: plResult['success'] == true ? null : plResult['message']?.toString(),
         inputData: inputData,
         outputData: plResult,
       );
@@ -582,16 +577,11 @@ class SITP2TestController {
         case 'TC-009': // 建立協作帳本
           final ledgerData = successData['create_collaborative_ledger'];
           if (ledgerData != null) {
-            // 階段二修正：直接使用7598中的id，不再動態生成
             inputData = Map<String, dynamic>.from(ledgerData);
             
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/ledgers',
-              method: 'POST',
-              body: inputData,
-            );
-            testPassed = apiResponse['success'] == true;
-            print('[7571] 📋 TC-009使用7598資料: id=${inputData['id']}, name=${inputData['name']}, owner_id=${inputData['owner_id']}');
+            // 純粹調用PL層7303，移除API直接調用
+            apiResponse = await PL7303.createLedger(inputData, userMode: 'Expert');
+            print('[7571] 📋 TC-009純粹調用PL層7303: id=${inputData['id']}, name=${inputData['name']}');
           }
           break;
 
