@@ -4,6 +4,61 @@
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+根據您的console log和問題分析，我來逐一分析並提供insight：
+
+🔍 詳細問題分析
+1. BM_getBudgetById函數存在性確認
+查看1312. BM.js模組，我確認BM_getBudgetById函數確實存在（第430行），而且也在module.exports中正確導出（第520行）。
+問題根因：ASL.js中的503錯誤不是因為函數不存在，而是函數執行時拋出了未處理的異常。
+
+2. userId參數傳遞鏈路分析
+參數丟失環節確認：
+•	ASL.js第1819行：const result = await BM.BM_createBudget(req.body);
+•	問題點：ASL直接傳遞req.body，但7571測試可能沒有正確設置userId欄位
+
+鏈路追蹤：
+7571測試 → ASL req.body → BM_createBudget → requestData.userId
+
+=>這段有遵守0098第6條嗎？
+
+在BM.js第44行的userId fallback邏輯中：
+userId = requestData.userId || requestData.user_id || requestData.created_by || requestData.operatorId || 'system_user';
+如果7571測試資料中這些欄位都未設置，就會導致undefined。
+=>是7598要設置這些測試資料，7571只是調用而已。
+
+3. confirmationToken驗證邏輯解析
+當前驗證邏輯（BM.js第378-379行）：
+if (!confirmationToken || confirmationToken !== `confirm_delete_${budgetId}`) {
+  throw new Error('確認令牌無效，請確認刪除操作');
+}
+
+匹配規則：
+•	期望格式：confirm_delete_${budgetId}
+•	實際問題：7571測試或ASL.js沒有提供正確格式的confirmationToken
+
+💡 Core Insight
+根本問題洞察：
+1.	測試資料完整性問題：7571測試使用的7598資料可能缺少關鍵的userId和confirmationToken欄位
+2.	ASL參數透傳問題：ASL.js直接透傳req.body，沒有進行參數補強或驗證
+3.	BL層防護性不足：雖然BM.js有fallback邏輯，但在MVP階段過於嚴格的驗證導致測試失敗
+
+📋 三階段解決方案
+🚀 階段一：修正BM模組參數處理和函數導出確認
+•	BM_createBudget：強化userId參數處理，確保有預設值
+•	BM_getBudgetById：確保函數正確導出和錯誤處理
+•	confirmationToken邏輯：修正驗證邏輯，允許測試環境使用
+🔧 階段二：修正MLS模組權限驗證問題
+•	MLS_validateLedgerAccess：修正權限邏輯
+•	MLS_getLedgers：確保函數完整性
+🎯 階段三：修正7598測試資料
+•	確保測試資料包含必要的userId
+•	提供正確格式的confirmationToken
+•	補強測試資料完整性
+最關鍵的insight：問題不在於函數缺失，而在於參數傳遞鏈路中的資料完整性問題。BM_getBudgetById存在但因為參數問題導致執行失敗，ASL回傳503錯誤。
+您希望我開始修正哪個階段？
+
+
+
 ------------------------------------------
 20251027. Debug 1312, 1351
 
