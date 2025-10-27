@@ -331,6 +331,11 @@ class SITP2TestController {
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
             inputData = Map<String, dynamic>.from(budgetData);
+            // 確保用戶ID存在
+            if (!inputData.containsKey('userId') || inputData['userId'] == null) {
+              final userData = await P2TestDataManager.instance.getUserModeData('Expert');
+              inputData['userId'] = userData['userId'] ?? 'test_user_expert';
+            }
             // 純粹調用PL層7304，由PL層處理所有邏輯
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.create,

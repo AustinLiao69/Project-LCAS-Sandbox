@@ -152,6 +152,8 @@ async function FS_createDocument(collectionPath, documentId, data, requesterId) 
 
     // 建立文檔
     await docRef.set(data);
+    
+    console.log(`✅ Firebase文檔建立成功: ${collectionPath}/${documentId}`);
 
     return {
       success: true,

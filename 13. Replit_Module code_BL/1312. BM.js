@@ -104,9 +104,18 @@ BM.BM_createBudget = async function(requestData) {
       status: 'active'
     };
 
-    // 儲存到 Firestore (模擬)
+    // 儲存到 Firestore
     console.log(`${logPrefix} 儲存預算到資料庫...`);
-    // await FS.saveBudgetToFirestore(budgetId, budget); // 實際 Firestore 操作
+    try {
+      const firestoreResult = await FS.FS_createDocument('budgets', budgetId, budget, userId);
+      if (!firestoreResult.success) {
+        throw new Error(`Firebase寫入失敗: ${firestoreResult.error}`);
+      }
+      console.log(`${logPrefix} 預算成功寫入Firebase - 文檔ID: ${budgetId}`);
+    } catch (firestoreError) {
+      console.error(`${logPrefix} Firebase寫入失敗:`, firestoreError);
+      throw new Error(`Firebase寫入失敗: ${firestoreError.message}`);
+    }
 
     // 記錄操作日誌
     DL.DL_log(`建立預算成功 - 預算ID: ${budgetId}`, '預算管理', userId);
@@ -322,9 +331,18 @@ BM.BM_editBudget = async function(budgetId, userId, updateData) {
     updateData.updated_at = new Date();
     updateData.updated_by = userId;
 
-    // 更新資料庫 (模擬)
+    // 更新資料庫
     console.log(`${logPrefix} 更新預算資料...`);
-    // await FS.updateBudgetInFirestore(budgetId, updateData); // 實際 Firestore 操作
+    try {
+      const firestoreResult = await FS.FS_updateDocument('budgets', budgetId, updateData, userId);
+      if (!firestoreResult.success) {
+        throw new Error(`Firebase更新失敗: ${firestoreResult.error}`);
+      }
+      console.log(`${logPrefix} 預算成功更新Firebase - 文檔ID: ${budgetId}`);
+    } catch (firestoreError) {
+      console.error(`${logPrefix} Firebase更新失敗:`, firestoreError);
+      throw new Error(`Firebase更新失敗: ${firestoreError.message}`);
+    }
 
     // 記錄操作日誌
     DL.DL_log(`編輯預算成功 - 預算ID: ${budgetId}, 更新欄位: ${updatedFields.join(', ')}`, '預算管理', userId);
@@ -390,9 +408,18 @@ BM.BM_deleteBudget = async function(budgetId, userId, confirmationToken) {
       deleted_by: userId
     };
 
-    // 更新狀態到資料庫 (模擬)
+    // 更新狀態到資料庫
     console.log(`${logPrefix} 標記預算為已刪除...`);
-    // await FS.markBudgetAsDeletedInFirestore(budgetId, deleteData); // 實際 Firestore 操作
+    try {
+      const firestoreResult = await FS.FS_updateDocument('budgets', budgetId, deleteData, userId);
+      if (!firestoreResult.success) {
+        throw new Error(`Firebase刪除失敗: ${firestoreResult.error}`);
+      }
+      console.log(`${logPrefix} 預算成功標記刪除Firebase - 文檔ID: ${budgetId}`);
+    } catch (firestoreError) {
+      console.error(`${logPrefix} Firebase刪除失敗:`, firestoreError);
+      throw new Error(`Firebase刪除失敗: ${firestoreError.message}`);
+    }
 
     // 記錄刪除日誌
     DL.DL_warning(`刪除預算 - 預算ID: ${budgetId}`, '預算管理', userId);
