@@ -35,6 +35,7 @@ if (!confirmationToken || confirmationToken !== `confirm_delete_${budgetId}`) {
 匹配規則：
 •	期望格式：confirm_delete_${budgetId}
 •	實際問題：7571測試或ASL.js沒有提供正確格式的confirmationToken
+=>應該要檢查7598及其流經的資料流的格式是否符合需求。
 
 💡 Core Insight
 根本問題洞察：
