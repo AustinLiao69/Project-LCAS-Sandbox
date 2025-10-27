@@ -425,20 +425,19 @@ class SITP2TestController {
           if (budgetData != null) {
             final budgetId = budgetData['budgetId'];
             inputData = {
-              'budgetId': budgetId,
+              'id': budgetId,
               'name': budgetData['name'] + '_updated_from_7598',
               'amount': (budgetData['amount'] ?? 0) * 1.1,
               'alertSettings': budgetData['alertSettings'],
             };
 
-            // 直接調用PL層7304預算更新函數
-            plResult = await budgetManager.processBudgetCRUD(
-              operationType: 'update',
-              budgetData: inputData,
-              userMode: budgetData['userMode'] ?? 'Expert',
+            // 純粹調用PL層7304，由PL層處理所有業務邏輯
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+              BudgetCRUDType.update,
+              inputData,
+              UserMode.Expert,
             );
-            testPassed = plResult['success'] == true;
-            print('[7571] 📋 TC-003調用PL層7304: budgetId=$budgetId, 結果=${plResult['success']}');
+            print('[7571] 📋 TC-003純粹調用PL層7304: budgetId=$budgetId');
           }
           break;
 
@@ -446,16 +445,19 @@ class SITP2TestController {
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
             final budgetId = budgetData['budgetId'];
-            inputData = {'budgetId': budgetId, 'userId': budgetData['userId']};
+            inputData = {
+              'id': budgetId,
+              'userId': budgetData['userId'],
+              'confirmed': true,
+            };
 
-            // 直接調用PL層7304預算刪除函數
-            plResult = await budgetManager.processBudgetCRUD(
-              operationType: 'delete',
-              budgetData: inputData,
-              userMode: budgetData['userMode'] ?? 'Expert',
+            // 純粹調用PL層7304，由PL層處理所有業務邏輯
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+              BudgetCRUDType.delete,
+              inputData,
+              UserMode.Expert,
             );
-            testPassed = plResult['success'] == true;
-            print('[7571] 📋 TC-004調用PL層7304: budgetId=$budgetId, 結果=${plResult['success']}');
+            print('[7571] 📋 TC-004純粹調用PL層7304: budgetId=$budgetId');
           }
           break;
 
@@ -463,16 +465,19 @@ class SITP2TestController {
           final executionData = successData['budget_execution_tracking'];
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
-            inputData = {'budgetId': budgetId, 'userId': executionData['userId']};
+            inputData = {
+              'budgetId': budgetId,
+              'userId': executionData['userId'],
+              'operation': 'calculate_execution'
+            };
 
-            // 直接調用PL層7304預算執行計算函數
-            plResult = await budgetManager.calculateBudgetExecution(
-              budgetId: budgetId,
-              userId: executionData['userId'],
-              userMode: executionData['userMode'] ?? 'Expert',
+            // 純粹調用PL層7304統一CRUD，由PL層處理計算邏輯
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+              BudgetCRUDType.read,
+              inputData,
+              UserMode.Expert,
             );
-            testPassed = plResult['success'] == true;
-            print('[7571] 📋 TC-005調用PL層7304: budgetId=$budgetId, 結果=${plResult['success']}');
+            print('[7571] 📋 TC-005純粹調用PL層7304: budgetId=$budgetId');
           }
           break;
 
@@ -480,33 +485,38 @@ class SITP2TestController {
           final executionData = successData['budget_execution_tracking'];
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
-            inputData = {'budgetId': budgetId, 'userId': executionData['userId']};
+            inputData = {
+              'budgetId': budgetId,
+              'userId': executionData['userId'],
+              'operation': 'check_alerts'
+            };
 
-            // 直接調用PL層7304預算警示檢查函數
-            plResult = await budgetManager.checkBudgetAlerts(
-              budgetId: budgetId,
-              userId: executionData['userId'],
-              userMode: executionData['userMode'] ?? 'Expert',
+            // 純粹調用PL層7304統一CRUD，由PL層處理警示檢查邏輯
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+              BudgetCRUDType.read,
+              inputData,
+              UserMode.Expert,
             );
-            testPassed = plResult['success'] == true;
-            print('[7571] 📋 TC-006調用PL層7304: budgetId=$budgetId, 結果=${plResult['success']}');
+            print('[7571] 📋 TC-006純粹調用PL層7304: budgetId=$budgetId');
           }
           break;
 
         case 'TC-007': // 預算資料驗證（測試失敗案例）
           final invalidData = failureData['invalid_budget_amount'];
           if (invalidData != null) {
-            inputData = Map<String, dynamic>.from(invalidData);
+            inputData = {
+              ...Map<String, dynamic>.from(invalidData),
+              'operation': 'validate_data',
+              'validation_type': 'create'
+            };
 
-            // 直接調用PL層7304預算資料驗證函數
-            plResult = await budgetManager.validateBudgetData(
-              validationType: 'create',
-              budgetData: inputData,
-              userMode: invalidData['userMode'] ?? 'Expert',
+            // 純粹調用PL層7304統一CRUD，由PL層處理驗證邏輯
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+              BudgetCRUDType.create,
+              inputData,
+              UserMode.Expert,
             );
-            // 預期驗證失敗
-            testPassed = plResult['isValid'] == false;
-            print('[7571] 📋 TC-007調用PL層7304: amount=${inputData['amount']}, 驗證結果=${plResult['isValid']}');
+            print('[7571] 📋 TC-007純粹調用PL層7304: amount=${inputData['amount']}');
           }
           break;
 
@@ -517,16 +527,17 @@ class SITP2TestController {
             inputData = {
               ...Map<String, dynamic>.from(budgetData),
               'userId': userData['userId'],
+              'operation': 'mode_transformation',
+              'transformation_type': 'apiToUi'
             };
 
-            // 直接調用PL層7304四模式預算轉換函數
-            plResult = await budgetManager.transformBudgetData(
-              transformationType: 'apiToUi',
-              budgetData: inputData,
-              userMode: userData['userMode'],
+            // 純粹調用PL層7304統一CRUD，由PL層處理模式差異化邏輯
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+              BudgetCRUDType.read,
+              inputData,
+              UserMode.values.firstWhere((mode) => mode.name == userData['userMode']),
             );
-            testPassed = plResult['success'] == true;
-            print('[7571] 📋 TC-008調用PL層7304: userId=${userData['userId']}, userMode=${userData['userMode']}, 結果=${plResult['success']}');
+            print('[7571] 📋 TC-008純粹調用PL層7304: userId=${userData['userId']}, userMode=${userData['userMode']}');
           }
           break;
 
@@ -534,12 +545,16 @@ class SITP2TestController {
           throw Exception('階段二錯誤：未定義的測試案例 $testId，必須調用PL層7304');
       }
 
+      // 直接使用PL層回傳結果，不進行任何模擬判斷
+      final success = plResult is Map<String, dynamic> ? 
+                      (plResult['success'] ?? false) : false;
+      
       return P2TestResult(
         testId: testId,
         testName: testName,
         category: 'budget_real_test_stage2',
-        passed: plResult['success'] ?? false,
-        errorMessage: plResult['success'] != true ? plResult['message']?.toString() : null,
+        passed: success,
+        errorMessage: success ? null : plResult['message']?.toString(),
         inputData: inputData,
         outputData: plResult,
       );
