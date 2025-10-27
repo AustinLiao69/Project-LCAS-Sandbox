@@ -988,9 +988,9 @@ class SITP2TestController {
             
             for (final testCase in testEndpoints) {
               final response = await _apiClient.callAPI(
-                endpoint: testCase['endpoint'],
-                method: testCase['method'],
-                body: testCase['body'],
+                endpoint: testCase['endpoint'] as String,
+                method: testCase['method'] as String,
+                body: testCase['body'] as Map<String, dynamic>?,
               );
               
               // 檢查統一回應格式
