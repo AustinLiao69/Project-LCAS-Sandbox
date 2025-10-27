@@ -14,7 +14,6 @@
 🔥 1. 預算集合 budgets 欄位解釋
 =>我希望能夠分成總預算(例如：Total budget_Monthly)以及依照不同的科目有不同的預算(例如：Category budget_餐飲_Monthly)，各科目預算不能超過總預算，或者是各科目預算加總起來就是總預算。以上這些需要1312更新業務邏輯，嚴禁hard-coding。其他部分你再幫我發想。
 
-
 budgets/
 ├── {budget_id}/
 │   ├── budget_id: string          // 預算唯一識別碼 (與文檔ID相同，用於查詢)
