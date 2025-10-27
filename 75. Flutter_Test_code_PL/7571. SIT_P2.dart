@@ -411,10 +411,10 @@ class SITP2TestController {
             inputData = {'ledgerId': queryData['ledgerId'], 'userId': queryData['userId']};
             
             // 純粹調用PL層7304，由PL層處理所有業務邏輯和預設值
-            plResult = await PL7304.processBudgetCRUD(
-              operation: BudgetCRUDType.read,
-              data: inputData,
-              mode: UserMode.Expert,
+            plResult = await budgetManager.processBudgetCRUD(
+              operationType: 'read',
+              budgetData: inputData,
+              userMode: 'Expert',
             );
             print('[7571] 📋 TC-002純粹調用PL層7304: ledgerId=${inputData['ledgerId']}');
           }
@@ -538,8 +538,8 @@ class SITP2TestController {
         testId: testId,
         testName: testName,
         category: 'budget_real_test_stage2',
-        passed: plResult['success'] ?? false, // 直接使用PL層回傳結果，不進行模擬判斷
-        errorMessage: plResult['success'] == true ? null : plResult['message']?.toString(),
+        passed: plResult['success'] ?? false,
+        errorMessage: plResult['success'] != true ? plResult['message']?.toString() : null,
         inputData: inputData,
         outputData: plResult,
       );
@@ -590,10 +590,15 @@ class SITP2TestController {
             inputData = {'owner_id': ledgerData['owner_id']};
             
             // 純粹調用PL層7303，移除API直接調用
-            apiResponse = await PL7303.processLedgerList(
-              inputData,
-              userMode: 'Expert',
-            );
+            try {
+              final ledgers = await LedgerCollaborationManager.processLedgerList(
+                inputData,
+                userMode: 'Expert',
+              );
+              apiResponse = {'success': true, 'data': ledgers};
+            } catch (e) {
+              apiResponse = {'success': false, 'error': e.toString()};
+            }
             print('[7571] 📋 TC-010純粹調用PL層7303: owner_id=${inputData['owner_id']}');
           }
           break;
