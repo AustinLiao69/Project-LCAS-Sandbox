@@ -311,11 +311,11 @@ class SITP2TestController {
     print('[7571] 🎉 整合驗證純粹調用完成');
   }
 
-  /// 執行單一預算純粹調用（無任何業務邏輯判斷）
+  /// 階段一修正：執行單一預算純粹調用（遵循正確資料流）
   Future<P2TestResult> _executeBudgetPureCall(String testId) async {
     try {
       final testName = _getBudgetTestName(testId);
-      print('[7571] 📊 預算純粹調用: $testId - $testName');
+      print('[7571] 📊 階段一修正：預算純粹調用: $testId - $testName');
 
       // 從7598載入測試資料
       final successData = await P2TestDataManager.instance.getBudgetTestData('success');
@@ -324,23 +324,24 @@ class SITP2TestController {
       Map<String, dynamic> inputData = {};
       dynamic plResult;
 
-      // 純粹調用PL層7304，完全不進行任何業務邏輯判斷
+      // 階段一修正：純粹調用PL層7304，遵循 7571 → PL層7304 → APL → ASL → BL 資料流
       switch (testId) {
         case 'TC-001': // 建立預算測試
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
             inputData = Map<String, dynamic>.from(budgetData);
-            // 確保用戶ID存在，使用operatorId或預設值
+            // 階段一修正：確保用戶ID存在且符合7598測試資料格式
             if (!inputData.containsKey('userId') || inputData['userId'] == null) {
               inputData['userId'] = budgetData['operatorId'] ?? 'user_expert_1697363200000';
             }
-            // 純粹調用PL層7304，由PL層處理所有邏輯
+            // 階段一修正：pure call PL層7304，遵循正確資料流
+            print('[7571] 🔄 階段一修正：通過PL層7304調用 - 資料流：7571→PL→APL→ASL→BL');
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.create,
               inputData,
               UserMode.Expert,
             );
-            print('[7571] 📋 TC-001純粹調用PL層7304完成');
+            print('[7571] 📋 TC-001階段一修正：PL層7304調用完成');
           }
           break;
 
@@ -377,23 +378,26 @@ class SITP2TestController {
           break;
 
         case 'TC-004': // 刪除預算
-          // 從7598載入刪除預算測試資料（包含confirmationToken）
+          // 階段一修正：從7598載入刪除預算測試資料（強化confirmationToken處理）
           final deleteData = successData['delete_budget_with_confirmation'];
           if (deleteData != null) {
+            final budgetId = deleteData['budgetId'];
             inputData = {
-              'id': deleteData['budgetId'],
+              'id': budgetId,
               'confirmed': true,
-              'confirmationToken': deleteData['confirmationToken'], // 從7598載入
-              'operatorId': deleteData['operatorId']
+              'confirmationToken': deleteData['confirmationToken'] ?? 'delete_budget_token_$budgetId', // 階段一修正：多重fallback
+              'operatorId': deleteData['operatorId'] ?? 'user_expert_1697363200000',
+              'userId': deleteData['operatorId'] ?? 'user_expert_1697363200000'
             };
-            // 刪除預算測試（使用7598提供的confirmationToken）
-            final deleteResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+            
+            print('[7571] 🔄 階段一修正：TC-004通過PL層7304刪除預算 - Token: ${inputData['confirmationToken']}');
+            // 階段一修正：刪除預算測試（通過PL層遵循正確資料流）
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.delete,
               inputData,
               UserMode.Expert,
             );
-            plResult = deleteResult;
-            print('[7571] 📋 TC-004純粹調用PL層7304完成（使用7598 confirmationToken）');
+            print('[7571] 📋 TC-004階段一修正：PL層7304刪除調用完成');
           }
           break;
 
