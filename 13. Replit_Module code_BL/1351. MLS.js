@@ -810,6 +810,14 @@ async function MLS_validateLedgerAccess(userId, ledgerId, operationType) {
   try {
     DL.DL_log('MLS', `驗證帳本存取權限 - 用戶: ${userId}, 帳本: ${ledgerId}, 操作: ${operationType}`);
 
+    // 驗證必要參數
+    if (!userId) {
+      return {
+        hasAccess: false,
+        reason: 'missing_user_id'
+      };
+    }
+
     const ledgerRef = db.collection('ledgers').doc(ledgerId);
     const ledgerDoc = await ledgerRef.get();
 
