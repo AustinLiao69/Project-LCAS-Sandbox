@@ -1425,6 +1425,7 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
       categories: []
     };
 
+    console.log(`${logPrefix} 預算詳情查詢完成 - ID: ${budgetId}`);
     return createStandardResponse(true, budgetDetail, '預算詳情取得成功');
 
   } catch (error) {

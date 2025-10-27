@@ -330,10 +330,9 @@ class SITP2TestController {
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
             inputData = Map<String, dynamic>.from(budgetData);
-            // 確保用戶ID存在
+            // 確保用戶ID存在，使用operatorId或預設值
             if (!inputData.containsKey('userId') || inputData['userId'] == null) {
-              final userData = await P2TestDataManager.instance.getUserModeData('Expert');
-              inputData['userId'] = userData['userId'] ?? 'test_user_expert';
+              inputData['userId'] = budgetData['operatorId'] ?? 'user_expert_1697363200000';
             }
             // 純粹調用PL層7304，由PL層處理所有邏輯
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
@@ -378,24 +377,26 @@ class SITP2TestController {
           break;
 
         case 'TC-004': // 刪除預算
-          final budgetData = successData['create_monthly_budget'];
-          if (budgetData != null) {
+          // 從7598載入刪除預算測試資料（包含confirmationToken）
+          final deleteData = successData['delete_budget_with_confirmation'];
+          if (deleteData != null) {
             inputData = {
-              'id': budgetData['budgetId'],
+              'id': deleteData['budgetId'],
               'confirmed': true,
+              'confirmationToken': deleteData['confirmationToken'], // 從7598載入
+              'operatorId': deleteData['operatorId']
             };
-            // 刪除預算測試（需要提供確認令牌）
+            // 刪除預算測試（使用7598提供的confirmationToken）
             final deleteResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.delete,
               inputData,
               UserMode.Expert,
-              // 修正測試邏輯，提供正確的確認令牌
               options: {
-                'confirmationToken': 'confirm_delete_${budgetData['budgetId']}'
+                'confirmationToken': deleteData['confirmationToken'] // 使用7598的token
               }
             );
             plResult = deleteResult;
-            print('[7571] 📋 TC-004純粹調用PL層7304完成');
+            print('[7571] 📋 TC-004純粹調用PL層7304完成（使用7598 confirmationToken）');
           }
           break;
 
@@ -403,6 +404,7 @@ class SITP2TestController {
           final executionData = successData['budget_execution_tracking'];
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
+            inputData = {'budgetId': budgetId, 'operatorId': executionData['operatorId']};
             // 純粹調用PL層7304預算執行計算函數
             plResult = await BudgetManagementFeatureGroup.calculateBudgetExecution(budgetId);
             print('[7571] 📋 TC-005純粹調用PL層7304完成');
@@ -413,6 +415,7 @@ class SITP2TestController {
           final executionData = successData['budget_execution_tracking'];
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
+            inputData = {'budgetId': budgetId, 'operatorId': executionData['operatorId']};
             // 純粹調用PL層7304預算警示檢查函數
             plResult = await BudgetManagementFeatureGroup.checkBudgetAlerts(budgetId);
             print('[7571] 📋 TC-006純粹調用PL層7304完成');
