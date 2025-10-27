@@ -1031,7 +1031,7 @@ class SITP2TestController {
   }
 
   /// 驗證預算管理資料完整性
-  Map<String, dynamic> _validateBudgetManagementDataIntegrity() async {
+  Future<Map<String, dynamic>> _validateBudgetManagementDataIntegrity() async {
     try {
       final budgetData = await P2TestDataManager.instance.getBudgetTestData('success');
 
@@ -1058,7 +1058,7 @@ class SITP2TestController {
   }
 
   /// 驗證帳本協作資料完整性
-  Map<String, dynamic> _validateLedgerCollaborationDataIntegrity() async {
+  Future<Map<String, dynamic>> _validateLedgerCollaborationDataIntegrity() async {
     try {
       final collaborationData = await P2TestDataManager.instance.getCollaborationTestData('success');
 
