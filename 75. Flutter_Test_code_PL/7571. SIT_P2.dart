@@ -516,7 +516,8 @@ class SITP2TestController {
               'description': '${ledgerData['description'] ?? ""}_updated',
             };
             // 純粹調用PL層7303更新帳本函數
-            plResult = await LedgerCollaborationManager.updateLedger(ledgerId, inputData);
+            await LedgerCollaborationManager.updateLedger(ledgerId, inputData);
+            plResult = {'updateLedger': 'completed', 'ledgerId': ledgerId};
             print('[7571] 📋 TC-011純粹調用PL層7303完成');
           }
           break;
@@ -527,7 +528,8 @@ class SITP2TestController {
             final ledgerId = ledgerData['id'];
             inputData = {'ledgerId': ledgerId};
             // 純粹調用PL層7303刪除帳本函數
-            plResult = await LedgerCollaborationManager.processLedgerDeletion(ledgerId);
+            await LedgerCollaborationManager.processLedgerDeletion(ledgerId);
+            plResult = {'deleteLedger': 'completed', 'ledgerId': ledgerId};
             print('[7571] 📋 TC-012純粹調用PL層7303完成');
           }
           break;
@@ -579,8 +581,9 @@ class SITP2TestController {
               'permissions': permissions.toJson(),
             };
             // 純粹調用PL層7303更新權限函數
-            plResult = await LedgerCollaborationManager.updateCollaboratorPermissions(
+            await LedgerCollaborationManager.updateCollaboratorPermissions(
               ledgerId, collaboratorId, permissions);
+            plResult = {'updatePermissions': 'completed', 'ledgerId': ledgerId, 'collaboratorId': collaboratorId};
             print('[7571] 📋 TC-015純粹調用PL層7303完成');
           }
           break;
@@ -592,7 +595,8 @@ class SITP2TestController {
             final collaboratorId = updateData['collaboratorId'];
             inputData = {'ledgerId': ledgerId, 'collaboratorId': collaboratorId};
             // 純粹調用PL層7303移除協作者函數
-            plResult = await LedgerCollaborationManager.removeCollaborator(ledgerId, collaboratorId);
+            await LedgerCollaborationManager.removeCollaborator(ledgerId, collaboratorId);
+            plResult = {'removeCollaborator': 'completed', 'ledgerId': ledgerId, 'collaboratorId': collaboratorId};
             print('[7571] 📋 TC-016純粹調用PL層7303完成');
           }
           break;
