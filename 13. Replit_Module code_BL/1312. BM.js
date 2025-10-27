@@ -1439,7 +1439,7 @@ module.exports = {
   BM_createBudget: BM.BM_createBudget,
   BM_getBudgets: BM.BM_getBudgets,
   BM_getBudgetDetail: BM.BM_getBudgetDetail,
-  BM_getBudgetById: BM.BM_getBudgetById,
+  BM_getBudgetById: BM.BM_getBudgetById, // Added BM_getBudgetById
   BM_updateBudget: BM.BM_updateBudget,
   BM_deleteBudget: BM.BM_deleteBudget,
   BM_editBudget: BM.BM_editBudget,
