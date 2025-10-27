@@ -15,11 +15,16 @@
 
 
 詳細問題說明
+
 問題1：資料流架構違反
 現況：7571直接引入APL.dart並調用
 import '../APL.dart';
 final response = await APL.instance.budget.createBudget(budgetData);
 違反規範：0098條文第6條「嚴格遵守資料流，例如：PL → APL → ASL → BL → DL(Firebase)」
+
+
+
+
 問題2：Hard coding嚴重
 現況：測試函數內含大量固定值
 final budgetData = {
