@@ -3,6 +3,118 @@
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+📊 1312 (BM) 與 1351 (MLS) Firebase 文檔結構提案
+根據1312.BM.js與1351.MLS.js模組功能分析，我提出以下Firebase Firestore文檔結構建議：
+=>若有與1311重複的資料欄位的定義，請以1311為準去修改
+
+
+🔥 1312.BM.js預算管理模組所需文檔結構
+1. 預算集合 budgets
+budgets/
+├── {budget_id}/
+│   ├── budget_id: string
+│   ├── ledger_id: string  
+│   ├── name: string
+│   ├── type: "monthly" | "yearly" | "project" | "category"
+│   ├── amount: number
+│   ├── used_amount: number
+│   ├── currency: string
+│   ├── start_date: timestamp
+│   ├── end_date: timestamp
+│   ├── categories: array
+│   ├── alert_rules: object
+│   ├── created_by: string
+│   ├── created_at: timestamp
+│   ├── updated_at: timestamp
+│   └── status: "active" | "completed" | "archived"
+
+2. 預算警示集合 budget_alerts
+budget_alerts/
+├── {alert_id}/
+│   ├── budget_id: string
+│   ├── alert_type: "warning" | "critical" | "exceeded"
+│   ├── trigger_condition: object
+│   ├── triggered_at: timestamp
+│   ├── notification_sent: boolean
+│   └── recipients: array
+
+
+🔥 1351.MLS.js多帳本管理模組所需文檔結構
+1. 帳本集合 ledgers (擴充現有結構)
+ledgers/
+├── {ledger_id}/
+│   ├── id: string
+│   ├── type: "project" | "category" | "shared"
+│   ├── name: string
+│   ├── description: string
+│   ├── owner_id: string
+│   ├── members: array
+│   ├── permissions: object
+│   ├── attributes: object
+│   ├── created_at: timestamp
+│   ├── updated_at: timestamp
+│   ├── archived: boolean
+│   └── metadata: object
+2. 帳本權限歷史集合 ledger_permissions_history
+ledger_permissions_history/
+├── {history_id}/
+│   ├── ledger_id: string
+│   ├── action_type: "member_added" | "member_removed" | "permission_changed"
+│   ├── performed_by: string
+│   ├── target_user: string
+│   ├── old_permissions: object
+│   ├── new_permissions: object
+│   └── timestamp: timestamp
+3. 協作邀請集合 collaboration_invitations
+collaboration_invitations/
+├── {invitation_id}/
+│   ├── ledger_id: string
+│   ├── inviter_id: string
+│   ├── invitee_email: string
+│   ├── permission_level: "admin" | "member" | "viewer"
+│   ├── status: "pending" | "accepted" | "declined" | "expired"
+│   ├── created_at: timestamp
+│   ├── expires_at: timestamp
+│   └── response_at: timestamp
+4. 用戶活動集合 user_activities
+user_activities/
+├── {activity_id}/
+│   ├── user_id: string
+│   ├── action: "switch_ledger" | "create_ledger" | "join_ledger"
+│   ├── ledger_id: string
+│   ├── platform: string
+│   ├── timestamp: timestamp
+│   └── metadata: object
+💡 SA Insight與分析
+🎯 核心發現
+1.	資料關聯性: BM與MLS模組都高度依賴現有的ledgers集合，建議保持資料一致性
+2.	權限管理複雜度: MLS的權限管理需要詳細的歷史追蹤和邀請機制
+3.	預算與帳本整合: BM模組的預算資料需要與特定帳本建立強關聯
+🔧 設計原則
+1.	最小侵入: 利用現有ledgers集合，僅擴充必要欄位
+2.	權限分離: 協作相關資料獨立儲存，避免主資料污染
+3.	歷史追溯: 關鍵操作保留完整歷史記錄
+⚠️ MVP階段聚焦問題
+當前核心問題:
+•	BM模組需要預算資料儲存空間
+•	MLS模組需要權限管理和協作功能支援
+建議優先級:
+1.	高優先: budgets集合 - 支援基礎預算功能
+2.	中優先: 擴充ledgers集合權限欄位 - 支援多帳本權限
+3.	低優先: collaboration_invitations、歷史記錄集合 - Phase 2功能
+🚀 實作建議
+階段一: 建立budgets集合，確保BM模組基本功能運作
+階段二: 擴充ledgers權限結構，支援MLS基礎多帳本功能
+階段三: 新增協作相關集合，完善權限管理機制
+這個設計完全符合MVP原則，先解決核心功能需求，避免過度工程化。
+
+
+
+------------------------------------------
+20251027. 分析1311模組
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 根據1311.FS.js模組分析，該模組會在Firebase Firestore中建立以下文檔結構清單：
 🔥 Firebase Firestore 文檔結構清單
 1. 系統配置集合 _system
@@ -10,18 +122,25 @@
 •	_system/default_categories 文檔
 •	_system/default_account_types 文檔
 •	_system/assessment_questions 文檔
+
 2. 用戶管理集合 users
 •	users/{email} 文檔
+
 3. 帳本管理集合 ledgers
 •	ledgers/{ledger_id} 文檔
+
 4. 交易記錄子集合 ledgers/{ledger_id}/transactions
 •	ledgers/{ledger_id}/transactions/{transaction_id} 文檔
+
 5. 帳戶子集合 ledgers/{ledger_id}/accounts
 •	ledgers/{ledger_id}/accounts/{account_id} 文檔
+
 6. 科目子集合 ledgers/{ledger_id}/categories
 •	ledgers/{ledger_id}/categories/{category_id} 文檔
+
 7. 健康檢查集合 _health_check (臨時測試用)
 •	_health_check/{test_id} 文檔
+
 📊 文檔結構特點
 1.	分層架構: 使用集合和子集合的方式組織資料
 2.	用戶隔離: 每個用戶有獨立的帳本和資料
