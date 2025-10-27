@@ -334,14 +334,14 @@ class SITP2TestController {
             if (!inputData.containsKey('userId') || inputData['userId'] == null) {
               inputData['userId'] = budgetData['operatorId'] ?? 'user_expert_1697363200000';
             }
-            // 階段一修正：pure call PL層7304，遵循正確資料流
-            print('[7571] 🔄 階段一修正：通過PL層7304調用 - 資料流：7571→PL→APL→ASL→BL');
+            // 階段一修正：完全通過PL層7304，確保資料流 7571→PL→APL→ASL→BL
+            print('[7571] 🔄 階段一修正：純粹調用PL層7304 - 嚴格遵循資料流');
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.create,
               inputData,
               UserMode.Expert,
             );
-            print('[7571] 📋 TC-001階段一修正：PL層7304調用完成');
+            print('[7571] 📋 TC-001階段一修正：PL層7304純粹調用完成');
           }
           break;
 
