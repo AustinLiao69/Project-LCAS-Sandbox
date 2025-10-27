@@ -375,89 +375,93 @@ class SITP2TestController {
     print('[7571] 🎉 階段二整合驗證測試完成 (100%使用7598資料)');
   }
 
-  /// 執行單一預算真實測試（階段二修正：100%使用7598資料）
+  /// 執行單一預算真實測試（階段二修正：直接調用PL層7304，100%使用7598資料）
   Future<P2TestResult> _executeBudgetRealTest(String testId) async {
     try {
       final testName = _getBudgetTestName(testId);
-      print('[7571] 📊 階段二預算真實測試: $testId - $testName（100%使用7598資料）');
+      print('[7571] 📊 階段二預算真實測試: $testId - $testName（直接調用PL層7304）');
 
       // 從7598載入完整測試資料
       final successData = await P2TestDataManager.instance.getBudgetTestData('success');
       final failureData = await P2TestDataManager.instance.getBudgetTestData('failure');
 
-      Map<String, dynamic> apiResponse = {};
+      Map<String, dynamic> plResult = {};
       bool testPassed = false;
       Map<String, dynamic> inputData = {};
 
-      // 根據測試案例執行真實API調用（100%使用7598資料）
+      // 動態導入PL層7304預算管理功能群
+      final budgetManager = await import('../73. Flutter_Module code_PL/7304. 預算管理功能群.dart');
+
+      // 根據測試案例直接調用PL層真實函數（100%使用7598資料）
       switch (testId) {
         case 'TC-001': // 建立預算測試
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
-            // 階段二修正：直接使用7598中的budgetId，不再動態生成
             inputData = Map<String, dynamic>.from(budgetData);
             
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/budgets',
-              method: 'POST',
-              body: inputData,
+            // 直接調用PL層7304預算建立函數
+            plResult = await budgetManager.processBudgetCRUD(
+              operationType: 'create',
+              budgetData: inputData,
+              userMode: inputData['userMode'] ?? 'Expert',
             );
-            testPassed = apiResponse['success'] == true;
-            print('[7571] 📋 TC-001使用7598資料: budgetId=${inputData['budgetId']}, name=${inputData['name']}');
+            testPassed = plResult['success'] == true;
+            print('[7571] 📋 TC-001調用PL層7304: budgetId=${inputData['budgetId']}, 結果=${plResult['success']}');
           }
           break;
 
         case 'TC-002': // 查詢預算列表
-          // 階段二修正：使用7598中的查詢參數
           final queryData = successData['create_monthly_budget'];
           if (queryData != null) {
-            inputData = {'ledgerId': queryData['ledgerId']};
-            final queryString = inputData.isNotEmpty ? '?' + Uri(queryParameters: inputData.map((k, v) => MapEntry(k, v.toString()))).query : '';
+            inputData = {'ledgerId': queryData['ledgerId'], 'userId': queryData['userId']};
             
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/budgets$queryString',
-              method: 'GET',
+            // 直接調用PL層7304預算查詢函數
+            plResult = await budgetManager.processBudgetCRUD(
+              operationType: 'read',
+              budgetData: inputData,
+              userMode: queryData['userMode'] ?? 'Expert',
             );
-            testPassed = apiResponse['success'] == true;
-            print('[7571] 📋 TC-002使用7598資料: ledgerId=${inputData['ledgerId']}');
+            testPassed = plResult['success'] == true;
+            print('[7571] 📋 TC-002調用PL層7304: ledgerId=${inputData['ledgerId']}, 結果=${plResult['success']}');
           }
           break;
 
         case 'TC-003': // 更新預算
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
-            // 階段二修正：使用7598中的budgetId，更新資料也來源於7598
             final budgetId = budgetData['budgetId'];
             inputData = {
+              'budgetId': budgetId,
               'name': budgetData['name'] + '_updated_from_7598',
-              'amount': (budgetData['amount'] ?? 0) * 1.1, // 增加10%
+              'amount': (budgetData['amount'] ?? 0) * 1.1,
               'alertSettings': budgetData['alertSettings'],
             };
 
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/budgets/$budgetId',
-              method: 'PUT',
-              body: inputData,
+            // 直接調用PL層7304預算更新函數
+            plResult = await budgetManager.processBudgetCRUD(
+              operationType: 'update',
+              budgetData: inputData,
+              userMode: budgetData['userMode'] ?? 'Expert',
             );
-            testPassed = apiResponse['success'] == true;
-            print('[7571] 📋 TC-003使用7598資料: budgetId=$budgetId, 更新金額=${inputData['amount']}');
+            testPassed = plResult['success'] == true;
+            print('[7571] 📋 TC-003調用PL層7304: budgetId=$budgetId, 結果=${plResult['success']}');
           }
           break;
 
         case 'TC-004': // 刪除預算
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
-            // 階段二修正：使用7598中的budgetId
             final budgetId = budgetData['budgetId'];
-            inputData = {'budgetId': budgetId, 'confirmToken': 'DELETE_CONFIRMED'};
+            inputData = {'budgetId': budgetId, 'userId': budgetData['userId']};
 
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/budgets/$budgetId',
-              method: 'DELETE',
-              body: inputData,
+            // 直接調用PL層7304預算刪除函數
+            plResult = await budgetManager.processBudgetCRUD(
+              operationType: 'delete',
+              budgetData: inputData,
+              userMode: budgetData['userMode'] ?? 'Expert',
             );
-            testPassed = apiResponse['success'] == true;
-            print('[7571] 📋 TC-004使用7598資料: budgetId=$budgetId');
+            testPassed = plResult['success'] == true;
+            print('[7571] 📋 TC-004調用PL層7304: budgetId=$budgetId, 結果=${plResult['success']}');
           }
           break;
 
@@ -465,14 +469,16 @@ class SITP2TestController {
           final executionData = successData['budget_execution_tracking'];
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
-            inputData = {'budgetId': budgetId};
+            inputData = {'budgetId': budgetId, 'userId': executionData['userId']};
 
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/budgets/$budgetId/execution',
-              method: 'GET',
+            // 直接調用PL層7304預算執行計算函數
+            plResult = await budgetManager.calculateBudgetExecution(
+              budgetId: budgetId,
+              userId: executionData['userId'],
+              userMode: executionData['userMode'] ?? 'Expert',
             );
-            testPassed = apiResponse['success'] == true;
-            print('[7571] 📋 TC-005使用7598資料: budgetId=$budgetId');
+            testPassed = plResult['success'] == true;
+            print('[7571] 📋 TC-005調用PL層7304: budgetId=$budgetId, 結果=${plResult['success']}');
           }
           break;
 
@@ -480,58 +486,58 @@ class SITP2TestController {
           final executionData = successData['budget_execution_tracking'];
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
-            inputData = {'budgetId': budgetId, 'checkAlerts': true};
+            inputData = {'budgetId': budgetId, 'userId': executionData['userId']};
 
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/budgets/$budgetId/alerts',
-              method: 'GET',
+            // 直接調用PL層7304預算警示檢查函數
+            plResult = await budgetManager.checkBudgetAlerts(
+              budgetId: budgetId,
+              userId: executionData['userId'],
+              userMode: executionData['userMode'] ?? 'Expert',
             );
-            testPassed = apiResponse['success'] == true;
-            print('[7571] 📋 TC-006使用7598資料: budgetId=$budgetId');
+            testPassed = plResult['success'] == true;
+            print('[7571] 📋 TC-006調用PL層7304: budgetId=$budgetId, 結果=${plResult['success']}');
           }
           break;
 
         case 'TC-007': // 預算資料驗證（測試失敗案例）
           final invalidData = failureData['invalid_budget_amount'];
           if (invalidData != null) {
-            // 階段二修正：使用7598中的失敗測試資料
             inputData = Map<String, dynamic>.from(invalidData);
 
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/budgets/validate',
-              method: 'POST',
-              body: inputData,
+            // 直接調用PL層7304預算資料驗證函數
+            plResult = await budgetManager.validateBudgetData(
+              validationType: 'create',
+              budgetData: inputData,
+              userMode: invalidData['userMode'] ?? 'Expert',
             );
-            // 預期失敗的測試案例
-            testPassed = apiResponse['success'] == false && apiResponse['error']?.toString().contains('金額必須大於0') == true;
-            print('[7571] 📋 TC-007使用7598失敗資料: amount=${inputData['amount']}, 預期錯誤=${invalidData['expectedError']}');
+            // 預期驗證失敗
+            testPassed = plResult['isValid'] == false;
+            print('[7571] 📋 TC-007調用PL層7304: amount=${inputData['amount']}, 驗證結果=${plResult['isValid']}');
           }
           break;
 
         case 'TC-008': // 預算模式差異化
-          // 階段二修正：測試四模式的預算差異化處理
           final userData = await P2TestDataManager.instance.getUserModeData('Expert');
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null && userData != null) {
             inputData = {
               ...Map<String, dynamic>.from(budgetData),
               'userId': userData['userId'],
-              'userMode': userData['userMode'],
             };
 
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/budgets/mode-specific',
-              method: 'POST',
-              body: inputData,
+            // 直接調用PL層7304四模式預算轉換函數
+            plResult = await budgetManager.transformBudgetData(
+              transformationType: 'apiToUi',
+              budgetData: inputData,
+              userMode: userData['userMode'],
             );
-            testPassed = apiResponse['success'] == true;
-            print('[7571] 📋 TC-008使用7598資料: userId=${userData['userId']}, userMode=${userData['userMode']}');
+            testPassed = plResult['success'] == true;
+            print('[7571] 📋 TC-008調用PL層7304: userId=${userData['userId']}, userMode=${userData['userMode']}, 結果=${plResult['success']}');
           }
           break;
 
         default:
-          // 階段二修正：移除簡化處理，強制使用7598資料
-          throw Exception('階段二錯誤：未定義的測試案例 $testId，必須使用7598資料');
+          throw Exception('階段二錯誤：未定義的測試案例 $testId，必須調用PL層7304');
       }
 
       return P2TestResult(
@@ -539,9 +545,9 @@ class SITP2TestController {
         testName: testName,
         category: 'budget_real_test_stage2',
         passed: testPassed,
-        errorMessage: testPassed ? null : apiResponse['error']?.toString(),
+        errorMessage: testPassed ? null : plResult['error']?.toString(),
         inputData: inputData,
-        outputData: apiResponse,
+        outputData: plResult,
       );
 
     } catch (e) {
@@ -550,7 +556,7 @@ class SITP2TestController {
         testName: _getBudgetTestName(testId),
         category: 'budget_real_test_stage2',
         passed: false,
-        errorMessage: '[階段二錯誤] $e',
+        errorMessage: '[階段二錯誤] 調用PL層7304失敗: $e',
         inputData: {},
         outputData: {},
       );
