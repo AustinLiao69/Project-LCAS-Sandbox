@@ -141,11 +141,32 @@ class P2TestResult {
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  // 純粹回傳PL層結果，不進行任何判斷
-  bool get passed => plResult != null;
+  // 根據PL層回傳結果判斷是否通過
+  bool get passed {
+    if (plResult == null) return false;
+    
+    // 如果有errorMessage，則為失敗
+    if (errorMessage != null && errorMessage!.isNotEmpty) return false;
+    
+    // 如果PL層結果是Map且包含success欄位
+    if (plResult is Map<String, dynamic>) {
+      final success = plResult['success'];
+      if (success is bool) return success;
+      
+      // 檢查是否有error欄位
+      final error = plResult['error'];
+      if (error != null) return false;
+    }
+    
+    // 如果PL層有回傳結果（非null），且沒有明確的錯誤，則視為通過
+    return true;
+  }
+
+  String get status => passed ? 'PASS' : 'FAIL';
+  String get statusIcon => passed ? '✅' : '❌';
 
   @override
-  String toString() => 'P2TestResult($testId): PL層回傳 ${plResult != null ? "有結果" : "無結果"} [$category]';
+  String toString() => 'P2TestResult($testId): $statusIcon $status [$category]';
 }
 
 /// SIT P2測試控制器（純粹調用版）
@@ -183,15 +204,37 @@ class SITP2TestController {
 
       stopwatch.stop();
 
-      final hasResults = _results.where((r) => r.plResult != null).length;
-      final noResults = _results.where((r) => r.plResult == null).length;
+      final passedTests = _results.where((r) => r.passed).length;
+      final failedTests = _results.where((r) => !r.passed).length;
+      final successRate = _results.isNotEmpty ? (passedTests / _results.length * 100) : 0.0;
+      
+      // 收集失敗的測試案例編號
+      final failedTestIds = _results
+          .where((r) => !r.passed)
+          .map((r) => r.testId)
+          .toList();
+      
+      // 按分類統計
+      final categoryStats = <String, Map<String, int>>{};
+      for (final result in _results) {
+        categoryStats[result.category] ??= {'passed': 0, 'failed': 0, 'total': 0};
+        categoryStats[result.category]!['total'] = (categoryStats[result.category]!['total']! + 1);
+        if (result.passed) {
+          categoryStats[result.category]!['passed'] = (categoryStats[result.category]!['passed']! + 1);
+        } else {
+          categoryStats[result.category]!['failed'] = (categoryStats[result.category]!['failed']! + 1);
+        }
+      }
 
       final summary = {
         'version': 'v2.3.0-pure-call',
         'testStrategy': 'P2_PURE_CALL_NO_MOCK_LOGIC',
         'totalTests': _results.length,
-        'hasResults': hasResults,
-        'noResults': noResults,
+        'passedTests': passedTests,
+        'failedTests': failedTests,
+        'successRate': double.parse(successRate.toStringAsFixed(1)),
+        'failedTestIds': failedTestIds,
+        'categoryStats': categoryStats,
         'executionTime': stopwatch.elapsedMilliseconds,
         'compliance': {
           'no_mock_logic': true,
@@ -225,6 +268,12 @@ class SITP2TestController {
       print('[7571] 🔧 純粹調用：$testId');
       final result = await _executeBudgetPureCall(testId);
       _results.add(result);
+      
+      // 立即顯示測試結果
+      print('[7571] ${result.statusIcon} $testId ${result.status} - ${result.testName}');
+      if (!result.passed && result.errorMessage != null) {
+        print('[7571] 失敗原因: ${result.errorMessage}');
+      }
     }
     print('[7571] 🎉 預算管理純粹調用完成');
   }
@@ -236,6 +285,12 @@ class SITP2TestController {
       print('[7571] 🔧 純粹調用：$testId');
       final result = await _executeCollaborationPureCall(testId);
       _results.add(result);
+      
+      // 立即顯示測試結果
+      print('[7571] ${result.statusIcon} $testId ${result.status} - ${result.testName}');
+      if (!result.passed && result.errorMessage != null) {
+        print('[7571] 失敗原因: ${result.errorMessage}');
+      }
     }
     print('[7571] 🎉 帳本協作純粹調用完成');
   }
@@ -247,6 +302,12 @@ class SITP2TestController {
       print('[7571] 🔧 純粹調用：$testId');
       final result = await _executeIntegrationPureCall(testId);
       _results.add(result);
+      
+      // 立即顯示測試結果
+      print('[7571] ${result.statusIcon} $testId ${result.status} - ${result.testName}');
+      if (!result.passed && result.errorMessage != null) {
+        print('[7571] 失敗原因: ${result.errorMessage}');
+      }
     }
     print('[7571] 🎉 整合驗證純粹調用完成');
   }
@@ -755,9 +816,26 @@ class SITP2TestController {
     print('[7571] 📊 純粹調用版 SIT P2測試完成報告:');
     print('[7571]    🎯 測試策略: ${summary['testStrategy']}');
     print('[7571]    📋 總測試數: ${summary['totalTests']}');
-    print('[7571]    ✅ 有PL層回傳: ${summary['hasResults']}');
-    print('[7571]    ❌ 無PL層回傳: ${summary['noResults']}');
+    print('[7571]    ✅ 通過數: ${summary['passedTests']}');
+    print('[7571]    ❌ 失敗數: ${summary['failedTests']}');
+    print('[7571]    📈 成功率: ${summary['successRate']}%');
     print('[7571]    ⏱️ 執行時間: ${summary['executionTime']}ms');
+    
+    // 顯示失敗的測試案例編號
+    final failedTestIds = summary['failedTestIds'] as List<String>;
+    if (failedTestIds.isNotEmpty) {
+      print('[7571]    🚨 失敗的測試案例: ${failedTestIds.join(', ')}');
+    }
+    
+    // 顯示分類統計
+    final categoryStats = summary['categoryStats'] as Map<String, Map<String, int>>;
+    print('[7571]    📊 分類結果:');
+    categoryStats.forEach((category, stats) {
+      final passed = stats['passed']!;
+      final total = stats['total']!;
+      final rate = total > 0 ? (passed / total * 100).toStringAsFixed(1) : '0.0';
+      print('[7571]       $category: $passed/$total ($rate%)');
+    });
     
     final compliance = summary['compliance'] as Map<String, dynamic>;
     print('[7571]    🔧 合規狀況:');
