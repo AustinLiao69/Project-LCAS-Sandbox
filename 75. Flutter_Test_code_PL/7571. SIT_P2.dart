@@ -410,14 +410,13 @@ class SITP2TestController {
           if (queryData != null) {
             inputData = {'ledgerId': queryData['ledgerId'], 'userId': queryData['userId']};
             
-            // 直接調用PL層7304預算查詢函數
-            plResult = await budgetManager.processBudgetCRUD(
-              operationType: 'read',
-              budgetData: inputData,
-              userMode: queryData['userMode'] ?? 'Expert',
+            // 純粹調用PL層7304，由PL層處理所有業務邏輯和預設值
+            plResult = await PL7304.processBudgetCRUD(
+              operation: BudgetCRUDType.read,
+              data: inputData,
+              mode: UserMode.Expert,
             );
-            testPassed = plResult['success'] == true;
-            print('[7571] 📋 TC-002調用PL層7304: ledgerId=${inputData['ledgerId']}, 結果=${plResult['success']}');
+            print('[7571] 📋 TC-002純粹調用PL層7304: ledgerId=${inputData['ledgerId']}');
           }
           break;
 
@@ -588,16 +587,14 @@ class SITP2TestController {
         case 'TC-010': // 查詢帳本列表
           final ledgerData = successData['create_collaborative_ledger'];
           if (ledgerData != null) {
-            // 階段二修正：使用7598中的owner_id作為查詢參數
             inputData = {'owner_id': ledgerData['owner_id']};
-            final queryString = inputData.isNotEmpty ? '?' + Uri(queryParameters: inputData.map((k, v) => MapEntry(k, v.toString()))).query : '';
             
-            apiResponse = await _apiClient.callAPI(
-              endpoint: '/api/v1/ledgers$queryString',
-              method: 'GET',
+            // 純粹調用PL層7303，移除API直接調用
+            apiResponse = await PL7303.processLedgerList(
+              inputData,
+              userMode: 'Expert',
             );
-            testPassed = apiResponse['success'] == true;
-            print('[7571] 📋 TC-010使用7598資料: owner_id=${inputData['owner_id']}');
+            print('[7571] 📋 TC-010純粹調用PL層7303: owner_id=${inputData['owner_id']}');
           }
           break;
 
@@ -800,8 +797,8 @@ class SITP2TestController {
         testId: testId,
         testName: testName,
         category: 'collaboration_real_test_stage2',
-        passed: testPassed,
-        errorMessage: testPassed ? null : apiResponse['error']?.toString(),
+        passed: apiResponse is List ? apiResponse.isNotEmpty : (apiResponse['success'] ?? false),
+        errorMessage: apiResponse is Map && apiResponse['success'] != true ? apiResponse['message']?.toString() : null,
         inputData: inputData,
         outputData: apiResponse,
       );
