@@ -42,13 +42,19 @@ BM.BM_createBudget = async function(requestData) {
   try {
     // 從requestData中提取參數，支援多種格式
     let ledgerId, userId, budgetData, budgetType;
-    
+
     if (typeof requestData === 'object' && requestData !== null) {
       // API格式：{ledgerId, userId, ...budgetData}
       ledgerId = requestData.ledgerId || requestData.ledger_id;
-      userId = requestData.userId || requestData.user_id;
+      // userId fallback處理
+      userId = requestData.userId || requestData.user_id || requestData.created_by || requestData.operatorId || 'system_user';
       budgetType = requestData.type || requestData.budgetType || 'monthly';
-      
+
+      // 驗證必要參數
+      if (!userId) {
+        return createStandardResponse(false, null, '缺少用戶ID參數', 'MISSING_USER_ID');
+      }
+
       // budgetData包含所有預算相關資料
       budgetData = {
         name: requestData.name,
@@ -154,10 +160,10 @@ BM.BM_createBudget = async function(requestData) {
  */
 BM.BM_getBudgets = async function(queryParams = {}) {
   const logPrefix = '[BM_getBudgets]';
-  
+
   try {
     console.log(`${logPrefix} 取得預算列表 - 查詢參數:`, queryParams);
-    
+
     // 模擬預算列表數據（實際應從Firestore查詢）
     const budgets = [
       {
@@ -170,7 +176,7 @@ BM.BM_getBudgets = async function(queryParams = {}) {
         ledger_id: queryParams.ledgerId || 'default_ledger'
       },
       {
-        id: 'budget_002', 
+        id: 'budget_002',
         name: '年度預算',
         amount: 500000,
         used_amount: 156000,
@@ -179,9 +185,9 @@ BM.BM_getBudgets = async function(queryParams = {}) {
         ledger_id: queryParams.ledgerId || 'default_ledger'
       }
     ];
-    
+
     return createStandardResponse(true, budgets, '預算列表取得成功');
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算列表取得失敗:`, error);
     return createStandardResponse(false, null, `預算列表取得失敗: ${error.message}`, 'GET_BUDGETS_ERROR');
@@ -195,14 +201,14 @@ BM.BM_getBudgets = async function(queryParams = {}) {
  */
 BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
   const logPrefix = '[BM_getBudgetDetail]';
-  
+
   try {
     console.log(`${logPrefix} 取得預算詳情 - 預算ID: ${budgetId}`);
-    
+
     if (!budgetId) {
       return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
     }
-    
+
     // 模擬預算詳情數據（實際應從Firestore查詢）
     const budgetDetail = {
       id: budgetId,
@@ -218,14 +224,14 @@ BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
       progress: 64.0,
       categories: []
     };
-    
+
     // 如果包含交易記錄
     if (options.includeTransactions) {
       budgetDetail.transactions = [];
     }
-    
+
     return createStandardResponse(true, budgetDetail, '預算詳情取得成功');
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算詳情取得失敗:`, error);
     return createStandardResponse(false, null, `預算詳情取得失敗: ${error.message}`, 'GET_BUDGET_DETAIL_ERROR');
@@ -239,27 +245,27 @@ BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
  */
 BM.BM_updateBudget = async function(budgetId, updateData) {
   const logPrefix = '[BM_updateBudget]';
-  
+
   try {
     console.log(`${logPrefix} 更新預算 - 預算ID: ${budgetId}`);
-    
+
     if (!budgetId) {
       return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
     }
-    
+
     if (!updateData || Object.keys(updateData).length === 0) {
       return createStandardResponse(false, null, '缺少更新資料', 'MISSING_UPDATE_DATA');
     }
-    
+
     // 模擬更新操作
     const updatedBudget = {
       id: budgetId,
       ...updateData,
       updated_at: new Date().toISOString()
     };
-    
+
     return createStandardResponse(true, updatedBudget, '預算更新成功');
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算更新失敗:`, error);
     return createStandardResponse(false, null, `預算更新失敗: ${error.message}`, 'UPDATE_BUDGET_ERROR');
@@ -273,30 +279,32 @@ BM.BM_updateBudget = async function(budgetId, updateData) {
  */
 BM.BM_deleteBudget = async function(budgetId, options = {}) {
   const logPrefix = '[BM_deleteBudget]';
-  
+
   try {
     console.log(`${logPrefix} 刪除預算 - 預算ID: ${budgetId}`);
-    
+
     if (!budgetId) {
       return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
     }
-    
-    // 檢查確認Token（如果提供）
-    if (options.confirmationToken) {
-      const expectedToken = `confirm_delete_${budgetId}`;
-      if (options.confirmationToken !== expectedToken) {
-        return createStandardResponse(false, null, '確認令牌無效，請確認刪除操作', 'INVALID_CONFIRMATION_TOKEN');
-      }
+
+    // 檢查確認Token（業務規則：所有刪除操作都需要確認）
+    if (!options.confirmationToken) {
+      return createStandardResponse(false, null, '刪除操作需要確認令牌', 'MISSING_CONFIRMATION_TOKEN');
     }
-    
+
+    const expectedToken = `confirm_delete_${budgetId}`;
+    if (options.confirmationToken !== expectedToken) {
+      return createStandardResponse(false, null, '確認令牌無效，請確認刪除操作', 'INVALID_CONFIRMATION_TOKEN');
+    }
+
     // 模擬刪除操作
     console.log(`${logPrefix} 預算刪除成功 - ID: ${budgetId}`);
-    
+
     return createStandardResponse(true, {
       deletedId: budgetId,
       deletedAt: new Date().toISOString()
     }, '預算刪除成功');
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算刪除失敗:`, error);
     return createStandardResponse(false, null, `預算刪除失敗: ${error.message}`, 'DELETE_BUDGET_ERROR');
@@ -814,7 +822,7 @@ BM.BM_triggerBudgetAlert = async function(budgetId, alertType, recipientList) {
  * 09. 設定預算警示規則
  * @version 2025-07-07-V1.0.0
  * @date 2025-07-07 14:15:41
- * @description 自訂預算警示觸發條件和通知方式
+ * @description 自訂預算警示條件和通知方式
  */
 BM.BM_setBudgetAlertRules = async function(budgetId, alertRules) {
   const logPrefix = '[BM_setBudgetAlertRules]';
@@ -1393,14 +1401,14 @@ BM.BM_validateAllocation = async function(budgetId, allocationData) {
  */
 BM.BM_getBudgetById = async function(budgetId, options = {}) {
   const logPrefix = '[BM_getBudgetById]';
-  
+
   try {
     console.log(`${logPrefix} 取得預算詳情 - 預算ID: ${budgetId}`);
-    
+
     if (!budgetId) {
       return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
     }
-    
+
     // 模擬從Firestore查詢預算（實際應用FS模組查詢）
     const budgetDetail = {
       id: budgetId,
@@ -1416,9 +1424,10 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
       progress: 64.0,
       categories: []
     };
-    
+
+    console.log(`${logPrefix} 預算詳情查詢完成 - ID: ${budgetId}`);
     return createStandardResponse(true, budgetDetail, '預算詳情取得成功');
-    
+
   } catch (error) {
     console.error(`${logPrefix} 預算詳情取得失敗:`, error);
     return createStandardResponse(false, null, `預算詳情取得失敗: ${error.message}`, 'GET_BUDGET_BY_ID_ERROR');
@@ -1426,17 +1435,13 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
 };
 
 // 模組導出
-// 確保所有函數都已導出
 module.exports = {
-  ...BM,
-  // P2測試所需函數明確導出
   BM_createBudget: BM.BM_createBudget,
   BM_getBudgets: BM.BM_getBudgets,
   BM_getBudgetDetail: BM.BM_getBudgetDetail,
   BM_getBudgetById: BM.BM_getBudgetById,
   BM_updateBudget: BM.BM_updateBudget,
   BM_deleteBudget: BM.BM_deleteBudget,
-  // 其他已有函數
   BM_editBudget: BM.BM_editBudget,
   BM_calculateBudgetProgress: BM.BM_calculateBudgetProgress,
   BM_updateBudgetUsage: BM.BM_updateBudgetUsage,

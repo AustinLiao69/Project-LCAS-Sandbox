@@ -1,4 +1,3 @@
-
 /**
  * 7571. SIT_P2.dart
  * @version v2.3.0
@@ -144,20 +143,20 @@ class P2TestResult {
   // 根據PL層回傳結果判斷是否通過
   bool get passed {
     if (plResult == null) return false;
-    
+
     // 如果有errorMessage，則為失敗
     if (errorMessage != null && errorMessage!.isNotEmpty) return false;
-    
+
     // 如果PL層結果是Map且包含success欄位
     if (plResult is Map<String, dynamic>) {
       final success = plResult['success'];
       if (success is bool) return success;
-      
+
       // 檢查是否有error欄位
       final error = plResult['error'];
       if (error != null) return false;
     }
-    
+
     // 如果PL層有回傳結果（非null），且沒有明確的錯誤，則視為通過
     return true;
   }
@@ -207,13 +206,13 @@ class SITP2TestController {
       final passedTests = _results.where((r) => r.passed).length;
       final failedTests = _results.where((r) => !r.passed).length;
       final successRate = _results.isNotEmpty ? (passedTests / _results.length * 100) : 0.0;
-      
+
       // 收集失敗的測試案例編號
       final failedTestIds = _results
           .where((r) => !r.passed)
           .map((r) => r.testId)
           .toList();
-      
+
       // 按分類統計
       final categoryStats = <String, Map<String, int>>{};
       for (final result in _results) {
@@ -268,7 +267,7 @@ class SITP2TestController {
       print('[7571] 🔧 純粹調用：$testId');
       final result = await _executeBudgetPureCall(testId);
       _results.add(result);
-      
+
       // 立即顯示測試結果
       print('[7571] ${result.statusIcon} $testId ${result.status} - ${result.testName}');
       if (!result.passed && result.errorMessage != null) {
@@ -285,7 +284,7 @@ class SITP2TestController {
       print('[7571] 🔧 純粹調用：$testId');
       final result = await _executeCollaborationPureCall(testId);
       _results.add(result);
-      
+
       // 立即顯示測試結果
       print('[7571] ${result.statusIcon} $testId ${result.status} - ${result.testName}');
       if (!result.passed && result.errorMessage != null) {
@@ -302,7 +301,7 @@ class SITP2TestController {
       print('[7571] 🔧 純粹調用：$testId');
       final result = await _executeIntegrationPureCall(testId);
       _results.add(result);
-      
+
       // 立即顯示測試結果
       print('[7571] ${result.statusIcon} $testId ${result.status} - ${result.testName}');
       if (!result.passed && result.errorMessage != null) {
@@ -331,10 +330,9 @@ class SITP2TestController {
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
             inputData = Map<String, dynamic>.from(budgetData);
-            // 確保用戶ID存在
+            // 確保用戶ID存在，使用operatorId或預設值
             if (!inputData.containsKey('userId') || inputData['userId'] == null) {
-              final userData = await P2TestDataManager.instance.getUserModeData('Expert');
-              inputData['userId'] = userData['userId'] ?? 'test_user_expert';
+              inputData['userId'] = budgetData['operatorId'] ?? 'user_expert_1697363200000';
             }
             // 純粹調用PL層7304，由PL層處理所有邏輯
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
@@ -379,19 +377,26 @@ class SITP2TestController {
           break;
 
         case 'TC-004': // 刪除預算
-          final budgetData = successData['create_monthly_budget'];
-          if (budgetData != null) {
+          // 從7598載入刪除預算測試資料（包含confirmationToken）
+          final deleteData = successData['delete_budget_with_confirmation'];
+          if (deleteData != null) {
             inputData = {
-              'id': budgetData['budgetId'],
+              'id': deleteData['budgetId'],
               'confirmed': true,
+              'confirmationToken': deleteData['confirmationToken'], // 從7598載入
+              'operatorId': deleteData['operatorId']
             };
-            // 純粹調用PL層7304
-            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+            // 刪除預算測試（使用7598提供的confirmationToken）
+            final deleteResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.delete,
               inputData,
               UserMode.Expert,
+              options: {
+                'confirmationToken': deleteData['confirmationToken'] // 使用7598的token
+              }
             );
-            print('[7571] 📋 TC-004純粹調用PL層7304完成');
+            plResult = deleteResult;
+            print('[7571] 📋 TC-004純粹調用PL層7304完成（使用7598 confirmationToken）');
           }
           break;
 
@@ -399,6 +404,7 @@ class SITP2TestController {
           final executionData = successData['budget_execution_tracking'];
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
+            inputData = {'budgetId': budgetId, 'operatorId': executionData['operatorId']};
             // 純粹調用PL層7304預算執行計算函數
             plResult = await BudgetManagementFeatureGroup.calculateBudgetExecution(budgetId);
             print('[7571] 📋 TC-005純粹調用PL層7304完成');
@@ -409,6 +415,7 @@ class SITP2TestController {
           final executionData = successData['budget_execution_tracking'];
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
+            inputData = {'budgetId': budgetId, 'operatorId': executionData['operatorId']};
             // 純粹調用PL層7304預算警示檢查函數
             plResult = await BudgetManagementFeatureGroup.checkBudgetAlerts(budgetId);
             print('[7571] 📋 TC-006純粹調用PL層7304完成');
@@ -441,7 +448,7 @@ class SITP2TestController {
               inputData, BudgetTransformType.apiToUi, UserMode.Cultivation);
             final guidingResult = BudgetManagementFeatureGroup.transformBudgetData(
               inputData, BudgetTransformType.apiToUi, UserMode.Guiding);
-            
+
             plResult = {
               'expert': expertResult,
               'inertial': inertialResult,
@@ -829,13 +836,13 @@ class SITP2TestController {
     print('[7571]    ❌ 失敗數: ${summary['failedTests']}');
     print('[7571]    📈 成功率: ${summary['successRate']}%');
     print('[7571]    ⏱️ 執行時間: ${summary['executionTime']}ms');
-    
+
     // 顯示失敗的測試案例編號
     final failedTestIds = summary['failedTestIds'] as List<String>;
     if (failedTestIds.isNotEmpty) {
       print('[7571]    🚨 失敗的測試案例: ${failedTestIds.join(', ')}');
     }
-    
+
     // 顯示分類統計
     final categoryStats = summary['categoryStats'] as Map<String, Map<String, int>>;
     print('[7571]    📊 分類結果:');
@@ -845,7 +852,7 @@ class SITP2TestController {
       final rate = total > 0 ? (passed / total * 100).toStringAsFixed(1) : '0.0';
       print('[7571]       $category: $passed/$total ($rate%)');
     });
-    
+
     final compliance = summary['compliance'] as Map<String, dynamic>;
     print('[7571]    🔧 合規狀況:');
     print('[7571]       ✅ 無模擬業務邏輯: ${compliance['no_mock_logic']}');

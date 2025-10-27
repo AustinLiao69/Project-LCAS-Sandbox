@@ -1,4 +1,3 @@
-
 {
   "metadata": {
     "version": "3.1.0",
@@ -38,7 +37,7 @@
         },
         "assessmentAnswers": {
           "Q1": "A",
-          "Q2": "A", 
+          "Q2": "A",
           "Q3": "A"
         },
         "registrationDate": "2025-10-15T00:00:00Z",
@@ -790,7 +789,7 @@
       "name": "四模式差異化測試",
       "target_users": [
         "user_expert_1697363200000",
-        "user_inertial_1697363260000", 
+        "user_inertial_1697363260000",
         "user_cultivation_1697363320000",
         "user_guiding_1697363380000"
       ],
@@ -857,7 +856,7 @@
           "failures": ["invalid_email_format_1", "missing_user_mode", "invalid_user_mode_1"]
         },
         {
-          "category": "transactions", 
+          "category": "transactions",
           "failures": ["negative_amount", "invalid_transaction_type_1", "missing_amount"]
         }
       ],
@@ -881,17 +880,6 @@
         "members": ["user_expert_1697363200000"],
         "currency": "TWD",
         "timezone": "Asia/Taipei",
-        "permissions": {
-          "owner": "user_expert_1697363200000",
-          "admins": [],
-          "members": [],
-          "viewers": [],
-          "settings": {
-            "allow_invite": true,
-            "allow_edit": true,
-            "allow_delete": false
-          }
-        },
         "permissions": {
           "owner": ["read", "write", "admin", "invite", "manage"],
           "admin": ["read", "write", "invite", "manage"],
@@ -966,33 +954,17 @@
     "success_scenarios": {
       "create_monthly_budget": {
         "budgetId": "budget_monthly_001_1697363700000",
-        "name": "月度測試預算",
-        "amount": 15000.0,
-        "type": "monthly",
         "ledgerId": "collab_ledger_001_1697363500000",
-        "period": {
-          "startDate": "2025-10-01",
-          "endDate": "2025-10-31"
-        },
-        "target": {
-          "type": "category",
-          "categoryId": "food",
-          "categoryName": "餐飲"
-        },
-        "alertSettings": {
-          "enabled": true,
-          "thresholds": [
-            {"level": "info", "percentage": 50, "message": "已使用50%預算"},
-            {"level": "warning", "percentage": 80, "message": "預算即將用完"},
-            {"level": "critical", "percentage": 95, "message": "預算嚴重超支"}
-          ],
-          "notificationMethods": ["app", "email"]
-        },
-        "createdBy": "user_expert_1697363200000",
-        "createdAt": "2025-10-22T00:00:00Z",
-        "updatedAt": "2025-10-22T00:00:00Z",
-        "status": "active",
-        "testScenario": "月度預算建立成功測試"
+        "name": "十月生活預算",
+        "description": "家庭十月份生活費用預算",
+        "amount": 50000.0,
+        "period": "monthly",
+        "startDate": "2023-10-01T00:00:00Z",
+        "endDate": "2023-10-31T23:59:59Z",
+        "categories": ["食物", "交通", "娛樂", "其他"],
+        "currency": "TWD",
+        "operatorId": "user_expert_1697363200000",
+        "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000"
       },
       "create_category_budget": {
         "budgetId": "budget_category_001_1697363800000",
@@ -1022,27 +994,20 @@
       },
       "budget_execution_tracking": {
         "budgetId": "budget_monthly_001_1697363700000",
-        "usedAmount": 10125.50,
-        "remainingAmount": 4874.50,
-        "progress": 67.5,
-        "status": "warning",
-        "lastUpdated": "2025-10-22T12:00:00Z",
-        "transactions": [
-          {
-            "transactionId": "txn_1697363200001_a1b2c3",
-            "amount": 150.0,
-            "description": "午餐費用",
-            "date": "2025-10-15"
-          }
-        ],
-        "alertsTriggered": [
-          {
-            "level": "info",
-            "triggeredAt": "2025-10-11T10:00:00Z",
-            "message": "已使用50%預算"
-          }
-        ],
-        "testScenario": "預算執行追蹤成功測試"
+        "currentAmount": 35000.0,
+        "usedAmount": 15000.0,
+        "remainingAmount": 35000.0,
+        "usagePercentage": 30.0,
+        "daysRemaining": 20,
+        "averageDailySpending": 750.0,
+        "projectedOverrun": false,
+        "operatorId": "user_expert_1697363200000"
+      },
+      "delete_budget_with_confirmation": {
+        "budgetId": "budget_monthly_001_1697363700000",
+        "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000",
+        "operatorId": "user_expert_1697363200000",
+        "testScenario": "預算刪除確認測試"
       }
     },
     "failure_scenarios": {
@@ -1119,7 +1084,7 @@
       "error_types_covered": ["validation", "format", "missing_field", "invalid_value", "boundary", "duplicate", "null_value", "empty_value", "permission_denied", "resource_conflict"],
       "validation_categories": [
         "email_format_validation",
-        "user_mode_validation", 
+        "user_mode_validation",
         "amount_validation",
         "date_format_validation",
         "field_presence_validation",
@@ -1136,7 +1101,7 @@
   "enhancement_summary": {
     "version_3_0_0_improvements": {
       "added_failure_scenarios": 16,
-      "added_boundary_scenarios": 4, 
+      "added_boundary_scenarios": 4,
       "enhanced_validation_coverage": "100%",
       "removed_business_logic_fields": 10,
       "added_test_scenarios": 4,

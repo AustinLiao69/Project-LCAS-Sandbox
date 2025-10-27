@@ -1,0 +1,41 @@
+------------------------------------------
+20251027. Debug 1312, 1351
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+您提出的這個問題非常重要！根據0098文件規範，確實不應該有hard coding的問題。
+
+問題分析
+根據您的觀察，現在的confirmationToken確實是hard coding在BM模組中：
+
+BM_deleteBudget期望的token格式：confirm_delete_{budgetId}
+但7571測試沒有提供這個token，導致測試失敗
+Core Insight
+這違反了0098文件規範第3條：禁止Hard coding。正確的做法應該是：
+
+測試所需的confirmationToken應該定義在7598.Data warehouse.json中
+7571從7598載入token，而不是在代碼中生成
+BM模組的token驗證邏輯可以保留，但測試資料應該外部化
+解決方案
+階段一：在7598中添加confirmationToken測試資料
+需要在budget_test_data.success_scenarios中添加刪除預算測試所需的confirmationToken：
+
+"delete_budget_with_confirmation": {
+  "budgetId": "budget_monthly_001_1697363700000",
+  "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000",
+  "operatorId": "user_expert_1697363200000",
+  "testScenario": "預算刪除確認測試"
+}
+階段二：修正7571測試邏輯
+7571的TC-004（刪除預算測試）應該從7598載入confirmationToken，而不是期望BM模組自動跳過驗證。
+
+階段三：保持BM模組驗證邏輯
+BM_deleteBudget的token驗證邏輯是合理的業務邏輯，應該保留。但可以允許測試環境提供正確的token。
+
+修正建議
+立即修正：在7598中添加刪除預算相關的confirmationToken
+次要修正：修正7571的TC-004測試，從7598載入token
+保持不變：BM模組的驗證邏輯維持原樣
+這樣既遵守了0098規範（無hard coding），又保持了業務邏輯的完整性（需要確認刪除），同時讓測試能夠通過。
+
+您希望我先修正7598資料檔案，還是想看具體的修正內容？

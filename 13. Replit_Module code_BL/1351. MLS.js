@@ -810,6 +810,14 @@ async function MLS_validateLedgerAccess(userId, ledgerId, operationType) {
   try {
     DL.DL_log('MLS', `驗證帳本存取權限 - 用戶: ${userId}, 帳本: ${ledgerId}, 操作: ${operationType}`);
 
+    // 驗證必要參數
+    if (!userId) {
+      return {
+        hasAccess: false,
+        reason: 'missing_user_id'
+      };
+    }
+
     const ledgerRef = db.collection('ledgers').doc(ledgerId);
     const ledgerDoc = await ledgerRef.get();
 
@@ -1244,40 +1252,52 @@ async function MLS_getLedgerById(ledgerId, queryParams = {}) {
 
 /**
  * 新增：取得帳本列表 (P2測試所需)
- * @version 2025-10-23-V2.2.0
- * @description 取得用戶可存取的帳本列表
+ * @version 2025-10-27-V2.2.1
+ * @description 取得用戶可存取的帳本列表，修正函數不存在問題
  */
 async function MLS_getLedgers(queryParams = {}) {
   try {
     DL.DL_log('MLS', `取得帳本列表 - 查詢參數: ${JSON.stringify(queryParams)}`);
 
-    // 模擬帳本列表數據（實際應從Firestore查詢）
-    const ledgers = [
-      {
-        id: 'ledger_001',
-        name: '個人記帳本',
-        type: 'personal',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        owner_id: 'user_001',
-        members: ['user_001'],
-        archived: false
-      },
-      {
-        id: 'ledger_002',
-        name: '家庭共用帳本',
-        type: 'shared',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        owner_id: 'user_001',
-        members: ['user_001', 'user_002'],
-        archived: false
-      }
-    ];
+    // 實際從Firestore查詢帳本列表
+    let query = db.collection('ledgers');
+    
+    // 如果有userId參數，篩選該用戶的帳本
+    if (queryParams.userId) {
+      query = query.where('members', 'array-contains', queryParams.userId);
+    }
+    
+    // 預設只顯示非歸檔的帳本
+    if (queryParams.archived !== true) {
+      query = query.where('archived', '==', false);
+    }
+    
+    // 按更新時間排序
+    query = query.orderBy('updated_at', 'desc');
+    
+    const querySnapshot = await query.get();
+    const ledgers = [];
+    
+    querySnapshot.forEach(doc => {
+      const ledgerData = doc.data();
+      ledgers.push({
+        id: ledgerData.id,
+        name: ledgerData.name,
+        type: ledgerData.type,
+        description: ledgerData.description || '',
+        owner_id: ledgerData.owner_id,
+        members: ledgerData.members || [],
+        created_at: ledgerData.created_at,
+        updated_at: ledgerData.updated_at,
+        archived: ledgerData.archived || false,
+        metadata: ledgerData.metadata || {}
+      });
+    });
 
     return {
       success: true,
       data: ledgers,
+      count: ledgers.length,
       message: '帳本列表取得成功'
     };
 
@@ -1285,7 +1305,8 @@ async function MLS_getLedgers(queryParams = {}) {
     DL.DL_error('MLS', `取得帳本列表失敗: ${error.message}`);
     return {
       success: false,
-      data: null,
+      data: [],
+      count: 0,
       message: `取得帳本列表失敗: ${error.message}`,
       error: {
         code: 'GET_LEDGERS_ERROR',
