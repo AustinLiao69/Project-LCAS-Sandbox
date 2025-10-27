@@ -294,6 +294,7 @@ BM.BM_deleteBudget = async function(budgetId, options = {}) {
 
     const expectedToken = `confirm_delete_${budgetId}`;
     if (options.confirmationToken !== expectedToken) {
+      console.log(`${logPrefix} Token驗證失敗 - 期望: ${expectedToken}, 實際: ${options.confirmationToken}`);
       return createStandardResponse(false, null, '確認令牌無效，請確認刪除操作', 'INVALID_CONFIRMATION_TOKEN');
     }
 
