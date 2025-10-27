@@ -963,7 +963,7 @@
         "endDate": "2023-10-31T23:59:59Z",
         "categories": ["食物", "交通", "娛樂", "其他"],
         "currency": "TWD",
-        "operatorId": "user_expert_1697363200000",
+        "userId": "user_expert_1697363200000",
         "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000"
       },
       "create_category_budget": {
@@ -1001,12 +1001,12 @@
         "daysRemaining": 20,
         "averageDailySpending": 750.0,
         "projectedOverrun": false,
-        "operatorId": "user_expert_1697363200000"
+        "userId": "user_expert_1697363200000"
       },
       "delete_budget_with_confirmation": {
         "budgetId": "budget_monthly_001_1697363700000",
         "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000",
-        "operatorId": "user_expert_1697363200000",
+        "userId": "user_expert_1697363200000",
         "testScenario": "預算刪除確認測試"
       }
     },
