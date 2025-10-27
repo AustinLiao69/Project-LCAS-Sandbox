@@ -391,9 +391,6 @@ class SITP2TestController {
               BudgetCRUDType.delete,
               inputData,
               UserMode.Expert,
-              options: {
-                'confirmationToken': deleteData['confirmationToken'] // 使用7598的token
-              }
             );
             plResult = deleteResult;
             print('[7571] 📋 TC-004純粹調用PL層7304完成（使用7598 confirmationToken）');
