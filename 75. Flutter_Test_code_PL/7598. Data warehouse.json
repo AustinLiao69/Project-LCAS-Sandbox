@@ -964,7 +964,7 @@
         "categories": ["食物", "交通", "娛樂", "其他"],
         "currency": "TWD",
         "userId": "user_expert_1697363200000",
-        "confirmationToken": "confirm_delete_budget_monthly_001"
+        "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000"
       },
       "create_category_budget": {
         "budgetId": "budget_category_001_1697363800000",
@@ -1005,7 +1005,7 @@
       },
       "delete_budget_with_confirmation": {
         "budgetId": "budget_monthly_001_1697363700000",
-        "confirmationToken": "confirm_delete_budget_monthly_001",
+        "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000",
         "userId": "user_expert_1697363200000",
         "testScenario": "預算刪除確認測試"
       }
