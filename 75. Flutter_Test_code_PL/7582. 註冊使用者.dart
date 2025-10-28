@@ -200,27 +200,60 @@ class RegisterUserTest {
       final userData = registrationResult['data'];
       if (userData == null) {
         print('[7582] ❌ 註冊結果中無用戶資料');
+        print('[7582] 📋 完整註冊結果: ${registrationResult.toString()}');
         return false;
       }
 
-      // 根據1309 AM模組的初始化邏輯，帳本ID應該是 user_{userId}
-      // 實際驗證需要查詢Firebase，這裡先檢查回應中是否包含初始化成功標誌
+      print('[7582] 📋 用戶資料內容: ${userData.toString()}');
+
+      // 檢查初始化完成標誌
       final initializationComplete = userData['initializationComplete'] ?? false;
+      print('[7582] 🔍 初始化完成標誌: $initializationComplete');
 
       if (initializationComplete) {
         print('[7582] ✅ 1309模組帳本初始化完成標誌確認');
 
-        // 額外檢查：嘗試調用記帳API驗證帳本可用性
-        final bookkeepingTest = await _testBookkeepingFunctionality(userData);
-        if (bookkeepingTest) {
-          print('[7582] ✅ 帳本功能驗證通過 - 用戶可立即記帳');
-          return true;
+        // 檢查帳本資訊
+        final ledgerInfo = userData['ledgerInfo'];
+        if (ledgerInfo != null) {
+          print('[7582] 📋 帳本資訊: $ledgerInfo');
+          final ledgerId = ledgerInfo['ledgerId'];
+          final subjectCount = ledgerInfo['subjectCount'];
+          final accountCount = ledgerInfo['accountCount'];
+          
+          print('[7582] 📋 帳本ID: $ledgerId');
+          print('[7582] 📋 科目數量: $subjectCount');
+          print('[7582] 📋 帳戶數量: $accountCount');
+
+          if (ledgerId != null && subjectCount != null && accountCount != null) {
+            print('[7582] ✅ 帳本結構資訊完整');
+            
+            // 額外檢查：嘗試調用記帳API驗證帳本可用性
+            final bookkeepingTest = await _testBookkeepingFunctionality(userData);
+            if (bookkeepingTest) {
+              print('[7582] ✅ 帳本功能驗證通過 - 用戶可立即記帳');
+              return true;
+            } else {
+              print('[7582] ⚠️ 帳本初始化完成但記帳功能測試失敗');
+              return false;
+            }
+          } else {
+            print('[7582] ❌ 帳本資訊不完整');
+            return false;
+          }
         } else {
-          print('[7582] ⚠️ 帳本初始化完成但記帳功能測試失敗');
+          print('[7582] ❌ 缺少帳本資訊');
           return false;
         }
       } else {
         print('[7582] ❌ 1309模組帳本初始化未完成');
+        
+        // 檢查是否有初始化錯誤資訊
+        final initError = userData['initializationError'];
+        if (initError != null) {
+          print('[7582] 📋 初始化錯誤: $initError');
+        }
+        
         return false;
       }
 

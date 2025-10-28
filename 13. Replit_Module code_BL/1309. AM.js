@@ -1224,12 +1224,34 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     console.log(`  - 預設交易記錄集合結構已準備`);
 
     // 提交 Batch 寫入
-    await batch.commit();
-    console.log(`✅ Batch 提交成功！`);
+    try {
+      await batch.commit();
+      console.log(`✅ Batch 提交成功！`);
+    } catch (batchError) {
+      console.error(`❌ Batch 提交失敗:`, batchError);
+      throw new Error(`Batch寫入失敗: ${batchError.message}`);
+    }
 
     // 更新帳本主文檔的 initializationComplete 標誌
-    await ledgerRef.update({ initializationComplete: true });
-    console.log(`  - 帳本 ${userLedgerId} 初始化標誌更新為 true`);
+    try {
+      await ledgerRef.update({ initializationComplete: true });
+      console.log(`  - 帳本 ${userLedgerId} 初始化標誌更新為 true`);
+    } catch (updateError) {
+      console.error(`❌ 更新初始化標誌失敗:`, updateError);
+      throw new Error(`更新初始化標誌失敗: ${updateError.message}`);
+    }
+
+    // 驗證帳本是否真的建立成功
+    try {
+      const verifyDoc = await ledgerRef.get();
+      if (!verifyDoc.exists) {
+        throw new Error("帳本文檔驗證失敗：文檔不存在");
+      }
+      console.log(`✅ 帳本 ${userLedgerId} 驗證成功`);
+    } catch (verifyError) {
+      console.error(`❌ 帳本驗證失敗:`, verifyError);
+      throw new Error(`帳本驗證失敗: ${verifyError.message}`);
+    }
 
     await DL.DL_log(
       "AM",
@@ -1849,6 +1871,24 @@ async function AM_processAPIRegister(requestData) {
       }
     };
 
+    // 先建立用戶基本資料到Firebase
+    try {
+      await db.collection("users").doc(userData.email).set(userData);
+      console.log(`✅ AM_processAPIRegister: 用戶基本資料已建立: ${userData.email}`);
+    } catch (error) {
+      console.error(`❌ AM_processAPIRegister: 用戶基本資料建立失敗:`, error);
+      return {
+        success: false,
+        data: null,
+        message: "用戶基本資料建立失敗",
+        error: {
+          code: "USER_DATA_CREATION_FAILED",
+          message: "用戶基本資料建立失敗",
+          details: { error: error.message }
+        }
+      };
+    }
+
     // DCN-0020: 執行完整帳本初始化
     console.log(`🔧 AM_processAPIRegister: 開始為用戶 ${userId} 進行完整帳本初始化...`);
     
@@ -1862,10 +1902,46 @@ async function AM_processAPIRegister(requestData) {
         subjectCount: ledgerInitResult.subjectCount,
         accountCount: ledgerInitResult.accountCount
       };
+      
+      // 更新用戶資料，添加帳本初始化資訊
+      try {
+        await db.collection("users").doc(userData.email).update({
+          initializationComplete: true,
+          ledgerInfo: userData.ledgerInfo,
+          updatedAt: admin.firestore.Timestamp.now()
+        });
+        console.log(`✅ AM_processAPIRegister: 用戶 ${userData.email} 帳本資訊已更新`);
+      } catch (updateError) {
+        console.error(`⚠️ AM_processAPIRegister: 更新帳本資訊失敗:`, updateError);
+      }
     } else {
       console.error(`❌ AM_processAPIRegister: 用戶 ${userId} 帳本初始化失敗:`, ledgerInitResult.error);
       userData.initializationComplete = false;
       userData.ledgerInfo = null;
+      
+      // 即使帳本初始化失敗，也要更新用戶狀態
+      try {
+        await db.collection("users").doc(userData.email).update({
+          initializationComplete: false,
+          ledgerInfo: null,
+          initializationError: ledgerInitResult.error,
+          updatedAt: admin.firestore.Timestamp.now()
+        });
+      } catch (updateError) {
+        console.error(`⚠️ AM_processAPIRegister: 更新失敗狀態時出錯:`, updateError);
+      }
+      
+      // 帳本初始化失敗應該回傳錯誤，不應該讓註冊看似成功
+      return {
+        success: false,
+        data: null,
+        message: "帳本初始化失敗，請稍後重試",
+        error: {
+          code: "LEDGER_INITIALIZATION_FAILED",
+          message: "帳本初始化失敗",
+          details: ledgerInitResult.error
+        }
+      };
     }
 
     AM_logInfo(
