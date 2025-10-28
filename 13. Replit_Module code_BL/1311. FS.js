@@ -1012,6 +1012,10 @@ async function FS_initializePhase1DataStructure(requesterId) {
     const assessmentQuestions = await FS_initializeAssessmentQuestions();
     initResults.push({ type: '評估問卷', result: assessmentQuestions });
 
+    // 5. 初始化預算管理文檔結構 (1312.BM.js支援)
+    const budgetStructure = await FS_initializeBudgetStructure();
+    initResults.push({ type: '預算結構', result: budgetStructure });
+
     const successCount = initResults.filter(r => r.result.success).length;
     const success = successCount === initResults.length;
 
@@ -1454,6 +1458,94 @@ async function FS_initializeDefaultCategories() {
 }
 
 /**
+ * 初始化預算管理文檔結構 (1312.BM.js模組支援)
+ * @version 2025-10-27-V2.2.0
+ * @date 2025-10-27
+ * @description 初始化預算管理模組所需的Firebase文檔結構
+ */
+async function FS_initializeBudgetStructure() {
+  const budgetStructure = {
+    version: '1.0.0',
+    description: '1312.BM.js預算管理模組Firebase文檔結構',
+    collections: {
+      budgets: {
+        description: '預算集合',
+        document_structure: {
+          budget_id: 'string - 預算唯一識別碼 (與文檔ID相同，用於查詢)',
+          ledger_id: 'string - 關聯的帳本ID (對應1311中的ledgers集合)',
+          name: 'string - 預算名稱 (如"月度生活費預算")',
+          type: 'string - 預算類型: "monthly"|"yearly"|"quarterly"|"project"|"category"',
+          total_amount: 'number - 預算總金額 (設定的預算上限)',
+          consumed_amount: 'number - 已使用金額 (目前花費總額)',
+          currency: 'string - 貨幣單位 (如"TWD", "USD")',
+          start_date: 'timestamp - 預算生效開始時間',
+          end_date: 'timestamp - 預算結束時間',
+          allocation: 'array - 預算分類配置 (包含各分類的金額分配)',
+          alert_rules: 'object - 警示規則設定 (閾值、通知方式)',
+          created_by: 'string - 建立者ID (對應users集合的email)',
+          createdAt: 'timestamp - 建立時間 (符合1311.FS.js規範)',
+          updatedAt: 'timestamp - 最後更新時間 (符合1311.FS.js規範)',
+          status: 'string - 預算狀態: "active"|"completed"|"archived"'
+        },
+        subcollections: {
+          allocations: {
+            description: '預算分配子集合',
+            document_structure: {
+              category_id: 'string - 科目ID',
+              category_name: 'string - 科目名稱（如"餐飲"、"交通"）',
+              allocated_amount: 'number - 分配金額',
+              consumed_amount: 'number - 已使用金額',
+              percentage: 'number - 占總預算百分比',
+              createdAt: 'timestamp - 建立時間',
+              updatedAt: 'timestamp - 更新時間'
+            }
+          }
+        }
+      },
+      budget_alerts: {
+        description: '預算警示集合',
+        document_structure: {
+          budget_id: 'string - 預算ID',
+          alert_type: 'string - 警示類型: "warning"|"critical"|"exceeded"',
+          trigger_condition: 'object - 觸發條件',
+          triggered_at: 'timestamp - 觸發時間',
+          notification_sent: 'boolean - 通知發送狀態',
+          recipients: 'array - 接收者列表'
+        }
+      }
+    },
+    example_allocation_structure: [
+      {
+        category_id: "food_001",
+        category_name: "餐飲",
+        allocated_amount: 15000,
+        consumed_amount: 8000
+      },
+      {
+        category_id: "transport_001",
+        category_name: "交通",
+        allocated_amount: 5000,
+        consumed_amount: 3200
+      }
+    ],
+    example_alert_rules_structure: {
+      warning_threshold: 80,
+      critical_threshold: 95,
+      enable_notifications: true,
+      notification_channels: ["line", "email"],
+      custom_thresholds: []
+    }
+  };
+
+  try {
+    const result = await FS_createDocument('_system', 'budget_structure', budgetStructure, 'SYSTEM');
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * 初始化預設帳戶類型
  */
 async function FS_initializeDefaultAccountTypes() {
@@ -1767,6 +1859,9 @@ module.exports = {
   FS_initializePhase1Categories,
   FS_performHealthCheck,
   FS_validatePhase1Integration,
+
+  // 1312.BM預算管理模組支援函數
+  FS_initializeBudgetStructure,
 
   // 相容性函數（保留現有調用）
   FS_mergeDocument,
