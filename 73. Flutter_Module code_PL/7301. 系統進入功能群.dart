@@ -1,8 +1,8 @@
 /**
  * 7301. 系統進入功能群.dart
- * @version v2.6.0
- * @date 2025-10-16
- * @update: 階段二帳本初始化整合完成
+ * @version v2.5.1
+ * @date 2025-10-28
+ * @update: 回滾DCN-0020修改，恢復穩定的註冊邏輯
  *
  * 本模組實現LCAS 2.0系統進入功能群的完整功能，
  * 包括APP啟動、使用者認證、模式設定、模式評估問卷、
@@ -527,7 +527,6 @@ class SystemEntryFunctionGroup {
         email: request.email,
         password: request.password, // APL層會處理hash
         displayName: request.displayName,
-        userMode: _getCurrentModeConfig()?.userMode.name ?? 'Inertial', // DCN-0020 Phase 2: Pass userMode
       );
 
       if (apiResponse['success']) {
@@ -545,41 +544,24 @@ class SystemEntryFunctionGroup {
           );
         }
 
-        // 6. 通過APL Gateway調用AM模組進行帳本初始化（遵循PL→APL→ASL→BL資料流）
-        final ledgerInitResponse = await AuthAPLService.initializeUserLedger(userId: userId);
+        // 6. 更新使用者認證狀態
+        _currentAuthState = AuthState(
+          isAuthenticated: true,
+          currentUser: User.fromJson(apiResponse['userData']),
+          token: token,
+          status: AuthStatus.authenticated,
+          lastLogin: DateTime.now(),
+        );
+        await _saveAuthToken(token); // 保存Token
 
-        if (ledgerInitResponse['success']) {
-          print('[SystemEntry] ✅ 帳本初始化成功');
-
-          // 7. 更新使用者認證狀態 (PL→APL→ASL→BL)
-          _currentAuthState = AuthState(
-            isAuthenticated: true,
-            currentUser: User.fromJson(apiResponse['userData']),
-            token: token,
-            status: AuthStatus.authenticated,
-            lastLogin: DateTime.now(),
-          );
-          await _saveAuthToken(token); // 保存Token
-
-          return RegisterResponse(
-            success: true,
-            token: token,
-            userId: userId,
-            message: '註冊並完成帳本初始化，歡迎加入LCAS！',
-            userData: apiResponse['userData'],
-          );
-        } else {
-          // 帳本初始化失敗，需要進行錯誤處理 (PL→APL→ASL→BL)
-          print('[SystemEntry] ❌ 帳本初始化失敗: ${ledgerInitResponse['message']}');
-          // TODO: Implement robust error handling, potentially involving DL for rollback or notification.
-          // For now, we'll report the failure but the user might be partially registered.
-          // Consider revoking the APL token or marking the account as incomplete.
-          return RegisterResponse(
-            success: false,
-            message: '註冊成功，但帳本初始化失敗：${ledgerInitResponse['message']}',
-            userData: apiResponse['userData'], // Return user data if available
-          );
-        }
+        print('[SystemEntry] ✅ Email註冊完成');
+        return RegisterResponse(
+          success: true,
+          token: token,
+          userId: userId,
+          message: '註冊成功，歡迎加入LCAS！',
+          userData: apiResponse['userData'],
+        );
       } else {
         return RegisterResponse(
           success: false,
