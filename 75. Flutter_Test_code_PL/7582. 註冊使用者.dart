@@ -220,7 +220,7 @@ class RegisterUserTest {
         'type': 'expense',
         'description': '7582註冊測試交易',
         'categoryId': 'food',
-        'date': DateTime.now().toISOString().split('T')[0],
+        'date': DateTime.now().toIso8601String().split('T')[0],
         'userId': userData['userId'] ?? userData['id'],
       };
       
