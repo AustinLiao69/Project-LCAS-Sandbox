@@ -381,7 +381,6 @@ const BK_CONFIG = {
   DEBUG: getEnvVar('BK_DEBUG', process.env.NODE_ENV === 'development' ? 'true' : 'false') === 'true',
   LOG_LEVEL: getEnvVar('BK_LOG_LEVEL') || 'INFO',
   FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED') !== 'false',
-  DEFAULT_LEDGER_ID: getEnvVar('DEFAULT_LEDGER_ID') || generateDefaultLedgerId(),
   TIMEZONE: getEnvVar('TIMEZONE') || Intl.DateTimeFormat().resolvedOptions().timeZone,
   INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL'), 10) || 300000,
   VERSION: getEnvVar('BK_VERSION') || '3.2.0',
@@ -535,6 +534,11 @@ async function BK_createTransaction(transactionData) {
       console.warn('⚠️ 無法載入0692測試資料，使用預設值');
     }
 
+    // 階段三修正：ledgerId必須由AM模組提供，不使用預設值
+    if (!transactionData.ledgerId) {
+      return BK_formatErrorResponse("MISSING_LEDGER_ID", "建立交易需要ledgerId，請確保AM模組已完成帳本初始化");
+    }
+
     // 使用0692測試資料補充缺失的欄位
     const processedData = {
       amount: transactionData.amount,
@@ -542,7 +546,7 @@ async function BK_createTransaction(transactionData) {
       description: transactionData.description,
       categoryId: transactionData.categoryId,
       accountId: transactionData.accountId,
-      ledgerId: transactionData.ledgerId || testData.bookkeeping_test_data?.default_ledger_id || 'ledger_structure_001',
+      ledgerId: transactionData.ledgerId,
       paymentMethod: transactionData.paymentMethod || testData.bookkeeping_test_data?.default_payment_method || '現金',
       date: transactionData.date,
       userId: transactionData.userId || Object.keys(testData.authentication_test_data?.valid_users || {})[0] || 'expert_mode_user_001',
@@ -670,7 +674,7 @@ async function BK_processQuickTransaction(quickData) {
       type: parsed.type,
       description: parsed.description,
       userId: quickData.userId,
-      ledgerId: quickData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      ledgerId: quickData.ledgerId,
       paymentMethod: parsed.paymentMethod,
       processId: processId
     };
