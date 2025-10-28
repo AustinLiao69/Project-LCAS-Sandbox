@@ -185,6 +185,24 @@ class RegisterUserTest {
         };
       }
       
+      // userMode驗證（模擬PL層基本驗證，非業務邏輯）
+      if (userMode == null || userMode.isEmpty) {
+        return {
+          'success': false,
+          'message': '缺少必要欄位: userMode',
+          'errorCode': 'MISSING_USER_MODE',
+        };
+      }
+      
+      final validModes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
+      if (!validModes.contains(userMode)) {
+        return {
+          'success': false,
+          'message': '無效的使用者模式: $userMode',
+          'errorCode': 'INVALID_USER_MODE',
+        };
+      }
+      
       // 模擬成功註冊回應（實際會由ASL→BL→Firebase處理）
       final userId = 'user_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(9999)}';
       
