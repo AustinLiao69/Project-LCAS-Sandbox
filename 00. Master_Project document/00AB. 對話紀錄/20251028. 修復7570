@@ -3,6 +3,44 @@
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+=>請你提案
+
+你問得很好！讓我仔細檢查這個問題。
+查看7301.dart中的代碼：
+// 6. 通過APL Gateway調用AM模組進行帳本初始化（遵循PL→APL→ASL→BL資料流）
+final ledgerInitResponse = await AuthAPLService.initializeUserLedger(userId: userId);
+我的判斷是錯誤的。這裡並不是直接調用MLS模組，讓我重新分析：
+正確的資料流分析
+1.	7301(PL層) → 調用 AuthAPLService.initializeUserLedger
+2.	AuthAPLService(APL層) → 轉發到ASL層
+3.	ASL層 → 根據API路由規則，應該調用AM模組的帳本初始化函數
+4.	AM模組(BL層) → 執行 AM_initializeUserLedger 函數
+關鍵發現
+查看DCN-0020文件，目標是強化AM模組的 AM_initializeUserLedger 功能，而不是調用MLS模組。
+從1309.AM.js中可以看到：
+/**
+ * 19. 完整初始化用戶帳本結構
+ * @version 2025-11-27-V1.0.0
+ * @description 為新用戶創建完整的帳本結構，包含科目、交易記錄、帳戶等
+ */
+async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
+  // AM模組負責帳本初始化，不是MLS模組
+}
+為什麼會觸發MLS模組？
+從console log看到MLS模組被觸發，這可能是因為：
+1.	API路由錯誤映射：ASL.js中某些帳本相關的API端點被錯誤地映射到MLS模組
+2.	測試資料問題：7570測試可能調用了不應該在P1階段出現的P2功能
+3.	架構違規：某些地方存在隔層調用，違反了0098第7條規範
+你的質疑是正確的 - AuthAPLService.initializeUserLedger 應該調用AM模組，而非MLS模組。7570測試中出現MLS模組調用確實是一個架構問題，需要檢查ASL.js的路由映射是否正確。
+
+
+
+
+------------------------------------------
+20251028. 修復7570
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 根據你的疑問，我來分析為什麼執行7570會觸發MLS模組：
 問題分析與Insight
 根本問題：架構違規調用
