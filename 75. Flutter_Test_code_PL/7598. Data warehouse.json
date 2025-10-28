@@ -40,8 +40,8 @@
           "Q2": "A",
           "Q3": "A"
         },
-        "registrationDate": "2025-10-15T00:00:00Z",
-        "createdAt": "2025-10-15T00:00:00Z",
+        "registrationDate": "2025-10-15T08:00:00+08:00",
+        "createdAt": "2025-10-15T08:00:00+08:00",
         "testScenario": "正常Expert用戶註冊"
       },
       "inertial_user_valid": {
@@ -59,8 +59,8 @@
           "Q2": "B",
           "Q3": "B"
         },
-        "registrationDate": "2025-10-15T00:00:00Z",
-        "createdAt": "2025-10-15T00:00:00Z",
+        "registrationDate": "2025-10-15T08:00:00+08:00",
+        "createdAt": "2025-10-15T08:00:00+08:00",
         "testScenario": "正常Inertial用戶註冊"
       },
       "cultivation_user_valid": {
@@ -78,8 +78,8 @@
           "Q2": "B",
           "Q3": "C"
         },
-        "registrationDate": "2025-10-15T00:00:00Z",
-        "createdAt": "2025-10-15T00:00:00Z",
+        "registrationDate": "2025-10-15T08:00:00+08:00",
+        "createdAt": "2025-10-15T08:00:00+08:00",
         "testScenario": "正常Cultivation用戶註冊"
       },
       "guiding_user_valid": {
@@ -97,8 +97,8 @@
           "Q2": "C",
           "Q3": "D"
         },
-        "registrationDate": "2025-10-15T00:00:00Z",
-        "createdAt": "2025-10-15T00:00:00Z",
+        "registrationDate": "2025-10-15T08:00:00+08:00",
+        "createdAt": "2025-10-15T08:00:00+08:00",
         "testScenario": "正常Guiding用戶註冊"
       },
       "user_with_special_characters": {
@@ -116,8 +116,8 @@
           "Q2": "A",
           "Q3": "A"
         },
-        "registrationDate": "2025-10-15T00:00:00Z",
-        "createdAt": "2025-10-15T00:00:00Z",
+        "registrationDate": "2025-10-15T08:00:00+08:00",
+        "createdAt": "2025-10-15T08:00:00+08:00",
         "testScenario": "特殊字元用戶註冊"
       }
     },
@@ -298,10 +298,9 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "現金",
-        "createdAt": "2025-10-15T00:00:01Z",
-        "updatedAt": "2025-10-15T00:00:01Z",
+        "createdAt": "2025-10-15T08:00:01+08:00",
+        "updatedAt": "2025-10-15T08:00:01+08:00",
         "status": "active",
         "verified": false,
         "source": "quick",
@@ -315,10 +314,9 @@
         "categoryId": "salary",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "轉帳",
-        "createdAt": "2025-10-15T00:00:02Z",
-        "updatedAt": "2025-10-15T00:00:02Z",
+        "createdAt": "2025-10-15T08:00:02+08:00",
+        "updatedAt": "2025-10-15T08:00:02+08:00",
         "status": "active",
         "verified": false,
         "source": "manual",
@@ -332,10 +330,9 @@
         "categoryId": "investment",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "轉帳",
-        "createdAt": "2025-10-15T00:00:03Z",
-        "updatedAt": "2025-10-15T00:00:03Z",
+        "createdAt": "2025-10-15T08:00:03+08:00",
+        "updatedAt": "2025-10-15T08:00:03+08:00",
         "status": "active",
         "verified": false,
         "source": "manual",
@@ -349,10 +346,9 @@
         "categoryId": "other",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "現金",
-        "createdAt": "2025-10-15T00:00:04Z",
-        "updatedAt": "2025-10-15T00:00:04Z",
+        "createdAt": "2025-10-15T08:00:04+08:00",
+        "updatedAt": "2025-10-15T08:00:04+08:00",
         "status": "active",
         "verified": false,
         "source": "quick",
@@ -367,10 +363,9 @@
         "accountId": "account_bank",
         "toAccountId": "account_cash",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "轉帳",
-        "createdAt": "2025-10-15T00:00:05Z",
-        "updatedAt": "2025-10-15T00:00:05Z",
+        "createdAt": "2025-10-15T08:00:05+08:00",
+        "updatedAt": "2025-10-15T08:00:05+08:00",
         "status": "active",
         "verified": true,
         "source": "manual",
@@ -384,10 +379,9 @@
         "categoryId": "transport",
         "accountId": "account_default",
         "date": "2025-10-01",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "信用卡",
-        "createdAt": "2025-10-15T00:00:06Z",
-        "updatedAt": "2025-10-15T00:00:06Z",
+        "createdAt": "2025-10-15T08:00:06+08:00",
+        "updatedAt": "2025-10-15T08:00:06+08:00",
         "status": "active",
         "verified": false,
         "source": "manual",
@@ -401,10 +395,9 @@
         "categoryId": "shopping",
         "accountId": "account_default",
         "date": "2025-12-31",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "現金",
-        "createdAt": "2025-10-15T00:00:07Z",
-        "updatedAt": "2025-10-15T00:00:07Z",
+        "createdAt": "2025-10-15T08:00:07+08:00",
+        "updatedAt": "2025-10-15T08:00:07+08:00",
         "status": "active",
         "verified": false,
         "source": "manual",
@@ -420,7 +413,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "負數金額",
         "expectedError": "金額必須大於0"
       },
@@ -432,7 +424,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "零金額",
         "expectedError": "金額必須大於0"
       },
@@ -444,7 +435,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "無效交易類型",
         "expectedError": "交易類型無效: invalid_type"
       },
@@ -456,7 +446,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "空交易類型",
         "expectedError": "交易類型不能為空"
       },
@@ -468,7 +457,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "Null交易類型",
         "expectedError": "交易類型不能為null"
       },
@@ -479,7 +467,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "缺少金額欄位",
         "expectedError": "缺少金額欄位"
       },
@@ -490,7 +477,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "缺少交易類型",
         "expectedError": "缺少交易類型欄位"
       },
@@ -502,7 +488,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "空描述",
         "expectedError": "描述不能為空"
       },
@@ -514,7 +499,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "Null描述",
         "expectedError": "描述不能為null"
       },
@@ -526,7 +510,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "invalid-date",
-        "userId": "user_expert_1697363200000",
         "testScenario": "無效日期格式",
         "expectedError": "日期格式無效"
       },
@@ -538,7 +521,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025/10/15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "錯誤日期格式分隔符",
         "expectedError": "日期格式應為YYYY-MM-DD"
       },
@@ -550,7 +532,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "15-10-2025",
-        "userId": "user_expert_1697363200000",
         "testScenario": "錯誤日期格式順序",
         "expectedError": "日期格式應為YYYY-MM-DD"
       },
@@ -573,7 +554,6 @@
         "categoryId": "food",
         "accountId": "non_existent_account",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "無效帳戶ID",
         "expectedError": "帳戶不存在"
       },
@@ -585,7 +565,6 @@
         "categoryId": "non_existent_category",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "無效科目ID",
         "expectedError": "科目不存在"
       },
@@ -597,7 +576,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "超過系統限制的金額",
         "expectedError": "金額超過系統限制"
       },
@@ -609,7 +587,6 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "testScenario": "重複交易ID",
         "expectedError": "交易ID已存在"
       }
@@ -619,7 +596,6 @@
         "id": "txn_1697363200010_minimal",
         "amount": 1.0,
         "type": "expense",
-        "userId": "user_expert_1697363200000",
         "testScenario": "最小必要欄位交易"
       },
       "maximum_amount": {
@@ -630,10 +606,9 @@
         "categoryId": "investment",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "轉帳",
-        "createdAt": "2025-10-15T00:00:11Z",
-        "updatedAt": "2025-10-15T00:00:11Z",
+        "createdAt": "2025-10-15T08:00:11+08:00",
+        "updatedAt": "2025-10-15T08:00:11+08:00",
         "status": "active",
         "verified": false,
         "source": "manual",
@@ -647,10 +622,9 @@
         "categoryId": "other",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "現金",
-        "createdAt": "2025-10-15T00:00:12Z",
-        "updatedAt": "2025-10-15T00:00:12Z",
+        "createdAt": "2025-10-15T08:00:12+08:00",
+        "updatedAt": "2025-10-15T08:00:12+08:00",
         "status": "active",
         "verified": false,
         "source": "quick",
@@ -664,10 +638,9 @@
         "categoryId": "other",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "現金",
-        "createdAt": "2025-10-15T00:00:13Z",
-        "updatedAt": "2025-10-15T00:00:13Z",
+        "createdAt": "2025-10-15T08:00:13+08:00",
+        "updatedAt": "2025-10-15T08:00:13+08:00",
         "status": "active",
         "verified": false,
         "source": "manual",
@@ -681,10 +654,9 @@
         "categoryId": "food",
         "accountId": "account_default",
         "date": "2025-10-15",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "現金",
-        "createdAt": "2025-10-15T00:00:14Z",
-        "updatedAt": "2025-10-15T00:00:14Z",
+        "createdAt": "2025-10-15T08:00:14+08:00",
+        "updatedAt": "2025-10-15T08:00:14+08:00",
         "status": "active",
         "verified": false,
         "source": "manual",
@@ -698,10 +670,9 @@
         "categoryId": "other",
         "accountId": "account_default",
         "date": "2024-02-29",
-        "userId": "user_expert_1697363200000",
         "paymentMethod": "現金",
-        "createdAt": "2025-10-15T00:00:15Z",
-        "updatedAt": "2025-10-15T00:00:15Z",
+        "createdAt": "2025-10-15T08:00:15+08:00",
+        "updatedAt": "2025-10-15T08:00:15+08:00",
         "status": "active",
         "verified": false,
         "source": "manual",
@@ -712,7 +683,7 @@
   "test_scenarios": {
     "scenario_001_user_registration_success": {
       "name": "用戶註冊成功流程測試",
-      "target_user": "user_expert_1697363200000",
+      "target_user": "expert.valid@test.lcas.app",
       "expected_result": "success",
       "test_steps": [
         "載入用戶資料",
@@ -748,7 +719,7 @@
     },
     "scenario_004_transaction_creation_success": {
       "name": "交易建立成功流程測試",
-      "target_user": "user_expert_1697363200000",
+      "target_user": "expert.valid@test.lcas.app",
       "target_transaction": "txn_1697363200001_a1b2c3",
       "expected_result": "success",
       "test_steps": [
@@ -761,7 +732,7 @@
     },
     "scenario_005_transaction_creation_failure_amount": {
       "name": "交易建立失敗流程測試 - 負數金額",
-      "target_user": "user_expert_1697363200000",
+      "target_user": "expert.valid@test.lcas.app",
       "target_transaction": "txn_invalid_negative",
       "expected_result": "failure",
       "expected_error": "金額必須大於0",
@@ -774,7 +745,7 @@
     },
     "scenario_006_transaction_creation_failure_type": {
       "name": "交易建立失敗流程測試 - 無效類型",
-      "target_user": "user_expert_1697363200000",
+      "target_user": "expert.valid@test.lcas.app",
       "target_transaction": "txn_invalid_type_1",
       "expected_result": "failure",
       "expected_error": "交易類型無效: invalid_type",
@@ -886,8 +857,8 @@
           "editor": ["read", "write"],
           "viewer": ["read"]
         },
-        "createdAt": "2025-10-22T00:00:00Z",
-        "updatedAt": "2025-10-22T00:00:00Z",
+        "createdAt": "2025-10-22T08:00:00+08:00",
+        "updatedAt": "2025-10-22T08:00:00+08:00",
         "testScenario": "協作帳本建立成功測試"
       },
       "invite_collaborator_success": {
@@ -907,8 +878,8 @@
         },
         "invitationId": "inv_001_1697363600000",
         "status": "pending",
-        "createdAt": "2025-10-22T00:00:00Z",
-        "expiresAt": "2025-10-29T00:00:00Z",
+        "createdAt": "2025-10-22T08:00:00+08:00",
+        "expiresAt": "2025-10-29T08:00:00+08:00",
         "testScenario": "協作者邀請成功測試"
       },
       "update_collaborator_permissions": {
@@ -919,7 +890,7 @@
         "oldPermissions": ["read"],
         "newPermissions": ["read", "write"],
         "operatorId": "user_expert_1697363200000",
-        "updatedAt": "2025-10-22T00:00:00Z",
+        "updatedAt": "2025-10-22T08:00:00+08:00",
         "testScenario": "協作者權限更新成功測試"
       }
     },
@@ -963,7 +934,6 @@
         "endDate": "2023-10-31T23:59:59Z",
         "categories": ["食物", "交通", "娛樂", "其他"],
         "currency": "TWD",
-        "userId": "user_expert_1697363200000",
         "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000"
       },
       "create_category_budget": {
@@ -988,7 +958,7 @@
           ]
         },
         "createdBy": "user_expert_1697363200000",
-        "createdAt": "2025-10-22T00:00:00Z",
+        "createdAt": "2025-10-22T08:00:00+08:00",
         "status": "active",
         "testScenario": "科目預算建立成功測試"
       },
@@ -1000,13 +970,11 @@
         "usagePercentage": 30.0,
         "daysRemaining": 20,
         "averageDailySpending": 750.0,
-        "projectedOverrun": false,
-        "userId": "user_expert_1697363200000"
+        "projectedOverrun": false
       },
       "delete_budget_with_confirmation": {
         "budgetId": "budget_monthly_001_1697363700000",
         "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000",
-        "userId": "user_expert_1697363200000",
         "testScenario": "預算刪除確認測試"
       }
     },
