@@ -674,7 +674,7 @@ async function BK_processQuickTransaction(quickData) {
       type: parsed.type,
       description: parsed.description,
       userId: quickData.userId,
-      ledgerId: quickData.ledgerId,
+      ledgerId: quickData.ledgerId, // 階段三修正：ledgerId 必須由外部提供
       paymentMethod: parsed.paymentMethod,
       processId: processId
     };
@@ -1226,7 +1226,7 @@ function BK_validateTransactionData(data) {
         description: data.description || "",
         paymentMethod: data.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
         userId: data.userId || "",
-        ledgerId: data.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID
+        ledgerId: data.ledgerId // 階段三修正：移除DEFAULT_LEDGER_ID
       }
     };
 
@@ -1632,7 +1632,7 @@ async function BK_processBookkeeping(inputData, options = {}) {
       type: inputData.type || 'expense',
       description: inputData.description || inputData.subject || '',
       userId: inputData.userId || '',
-      ledgerId: inputData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      ledgerId: inputData.ledgerId, // 階段三修正：ledgerId 必須由外部提供
       paymentMethod: inputData.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
       processId: processId
     };
@@ -1676,7 +1676,10 @@ async function BK_checkTransactionIdUnique(transactionId) {
     const idField = getEnvVar('ID_FIELD', '收支ID');
 
     // 階段三修正：ledgerId必須從配置中獲取，因為此函數可能在沒有特定ledgerId的情況下被調用
-    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID; // 這裡使用預設值，因為此函數用於生成ID，後續創建時會驗證
+    const ledgerId = BK_CONFIG.TEST_LEDGER_COLLECTION; // 使用測試集合作為預設，或根據實際配置調整
+    if (!ledgerId) {
+      throw new Error("MISSING_DEFAULT_LEDGER_COLLECTION: 無法確定用於唯一性檢查的Collection");
+    }
 
     const querySnapshot = await db.collection(ledgerCollection)
       .doc(ledgerId)
@@ -1723,7 +1726,7 @@ async function BK_prepareTransactionData(transactionId, transactionData, process
     paymentMethod: transactionData.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
 
     // 記帳特定欄位
-    ledgerId: transactionData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+    ledgerId: transactionData.ledgerId, // 階段三修正：移除 DEFAULT_LEDGER_ID
 
     // 狀態欄位
     status: 'active',
@@ -2044,7 +2047,7 @@ async function BK_processAPIUpdateTransaction(transactionId, updateData) {
       tags: updateData.tags,
       attachmentIds: updateData.attachmentIds,
       userId: updateData.userId,
-      ledgerId: updateData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      ledgerId: updateData.ledgerId, // 階段三修正：ledgerId 必須由外部提供
       processId: processId
     });
 
@@ -2111,7 +2114,7 @@ async function BK_processAPIDeleteTransaction(transactionId, params = {}) {
 
     const result = await BK_deleteTransaction(transactionId, {
       userId: safeParams.userId,
-      ledgerId: safeParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      ledgerId: safeParams.ledgerId, // 階段三修正：ledgerId 必須由外部提供
       deleteRecurring: safeParams.deleteRecurring === 'true',
       processId: processId
     });
@@ -2167,7 +2170,7 @@ async function BK_processAPIGetDashboard(queryParams = {}) {
 
     const result = await BK_getDashboardData({
       userId: queryParams.userId,
-      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      ledgerId: queryParams.ledgerId, // 階段三修正：ledgerId 必須由外部提供
       period: queryParams.period || 'month'
     });
 
@@ -2219,7 +2222,7 @@ async function BK_processAPIGetStatistics(queryParams = {}) {
     // 實作統計數據生成邏輯
     const transactionsResult = await BK_getTransactions({
       userId: queryParams.userId,
-      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      ledgerId: queryParams.ledgerId, // 階段三修正：ledgerId 必須由外部提供
       startDate: queryParams.startDate,
       endDate: queryParams.endDate
     });
@@ -2289,7 +2292,7 @@ async function BK_processAPIGetRecent(queryParams = {}) {
 
     const recentResult = await BK_getTransactions({
       userId: queryParams.userId,
-      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      ledgerId: queryParams.ledgerId, // 階段三修正：ledgerId 必須由外部提供
       limit: limit,
       sort: 'date:desc' // 確保按照日期降序排序
     });
@@ -2310,7 +2313,7 @@ async function BK_processAPIGetRecent(queryParams = {}) {
       BK_logWarning(`${logPrefix} 最近交易查詢失敗，嘗試降級處理`, "API端點", queryParams.userId || "", "BK_processAPIGetRecent");
 
       // 模擬降級處理：直接調用最簡查詢
-      const collectionRef = BK_INIT_STATUS.firestore_db.collection('ledgers').doc(queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID).collection('entries');
+      const collectionRef = BK_INIT_STATUS.firestore_db.collection('ledgers').doc(queryParams.ledgerId || BK_CONFIG.TEST_LEDGER_COLLECTION).collection('entries'); // 階段三修正：使用測試集合作為預設
       const degradedResult = await BK_performMinimalQuery(collectionRef, { ...queryParams, limit: limit });
 
       if (degradedResult && degradedResult.transactions) {
@@ -2363,7 +2366,7 @@ async function BK_processAPIGetCharts(queryParams = {}) {
     // 獲取交易數據
     const transactionsResult = await BK_getTransactions({
       userId: queryParams.userId,
-      ledgerId: queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID,
+      ledgerId: queryParams.ledgerId, // 階段三修正：ledgerId 必須由外部提供
       startDate: queryParams.startDate,
       endDate: queryParams.endDate,
       type: queryParams.type // 支援按類型篩選
@@ -3049,7 +3052,11 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
     }
 
     // 階段三修正：ledgerId必須從配置中獲取
-    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID;
+    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_COLLECTION; // 階段三修正：使用測試集合作為預設
+    if (!ledgerId) {
+      throw new Error("MISSING_DEFAULT_LEDGER_COLLECTION: 無法確定用於查詢的Collection");
+    }
+
     const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
 
     let query = collectionRef.orderBy('createdAt', 'desc').limit(200);
