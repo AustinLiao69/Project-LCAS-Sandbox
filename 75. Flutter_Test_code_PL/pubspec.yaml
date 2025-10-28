@@ -10,7 +10,8 @@ dependencies:
   intl: ^0.20.2
 
 dev_dependencies:
-  test: ^1.25.2
+  test: ^1.24.0
+  http: ^1.1.0
 
 # 階段三清理完成：移除7580/7590模組後的最小化配置
 # 專注於7570靜態測試資料流，符合MVP理念
