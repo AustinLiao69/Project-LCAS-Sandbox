@@ -553,7 +553,7 @@ async function BK_createTransaction(transactionData) {
 
     // 階段二修復：添加超時保護機制
     const processWithTimeout = async () => {
-      // 階段一修復：簡化驗證邏輯，只檢查MVP必要參數
+      // 階段一修復：只檢查MVP必要參數
       if (!processedData.amount || typeof processedData.amount !== 'number' || processedData.amount <= 0) {
         return BK_formatErrorResponse("AMOUNT_INVALID", "金額必須是大於0的數字");
       }
@@ -714,6 +714,13 @@ async function BK_getTransactions(queryParams = {}) {
   try {
     BK_logInfo(`${logPrefix} 開始查詢交易列表`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
 
+    // 階段三修正：ledgerId必須明確提供
+    if (!queryParams.ledgerId) {
+      return BK_formatErrorResponse("MISSING_LEDGER_ID", "查詢交易需要指定ledgerId，請確保AM模組已完成帳本初始化");
+    }
+    const ledgerId = queryParams.ledgerId;
+
+
     // 階段二修復：添加超時保護和降級處理機制
     const processWithTimeout = async () => {
       await BK_initialize();
@@ -723,7 +730,6 @@ async function BK_getTransactions(queryParams = {}) {
         return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
       }
 
-      const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
       const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
 
       // 階段二修復：實作降級查詢策略
@@ -1004,7 +1010,12 @@ async function BK_updateTransaction(transactionId, updateData) {
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
     const idField = getEnvVar('ID_FIELD', '收支ID');
 
-    const ledgerId = updateData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+    // 階段三修正：ledgerId必須從更新資料中提供
+    const ledgerId = updateData.ledgerId;
+    if (!ledgerId) {
+      return BK_formatErrorResponse("MISSING_LEDGER_ID", "更新交易需要指定ledgerId");
+    }
+
     const querySnapshot = await db.collection(ledgerCollection)
       .doc(ledgerId)
       .collection(entriesCollection)
@@ -1092,7 +1103,12 @@ async function BK_deleteTransaction(transactionId, params = {}) {
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
     const idField = getEnvVar('ID_FIELD', '收支ID');
 
-    const ledgerId = params.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+    // 階段三修正：ledgerId必須從參數中提供
+    const ledgerId = params.ledgerId;
+    if (!ledgerId) {
+      return BK_formatErrorResponse("MISSING_LEDGER_ID", "刪除交易需要指定ledgerId");
+    }
+
     const querySnapshot = await db.collection(ledgerCollection)
       .doc(ledgerId)
       .collection(entriesCollection)
@@ -1382,9 +1398,15 @@ function BK_buildTransactionQuery(queryParams) {
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
 
+    // 階段三修正：ledgerId必須從queryParams中提供
+    const ledgerId = queryParams.ledgerId;
+    if (!ledgerId) {
+      throw new Error("MISSING_LEDGER_ID: 查詢交易需要指定ledgerId");
+    }
+
     let query = BK_INIT_STATUS.firestore_db
       .collection(ledgerCollection)
-      .doc(queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID)
+      .doc(ledgerId)
       .collection(entriesCollection);
 
     const appliedFilters = [];
@@ -1649,8 +1671,11 @@ async function BK_checkTransactionIdUnique(transactionId) {
     const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
     const idField = getEnvVar('ID_FIELD', '收支ID');
 
+    // 階段三修正：ledgerId必須從配置中獲取，因為此函數可能在沒有特定ledgerId的情況下被調用
+    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID; // 這裡使用預設值，因為此函數用於生成ID，後續創建時會驗證
+
     const querySnapshot = await db.collection(ledgerCollection)
-      .doc(BK_CONFIG.DEFAULT_LEDGER_ID)
+      .doc(ledgerId)
       .collection(entriesCollection)
       .where(idField, '==', transactionId)
       .limit(1)
@@ -1722,8 +1747,11 @@ async function BK_saveTransactionToFirestore(transactionData, processId) {
     await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
 
-    // 使用 FS.js 標準路徑結構
-    const ledgerId = transactionData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+    // 階段三修正：ledgerId必須從交易資料中提供
+    const ledgerId = transactionData.ledgerId;
+    if (!ledgerId) {
+      return BK_formatErrorResponse("MISSING_LEDGER_ID", "儲存交易需要指定ledgerId");
+    }
 
     // 確保交易數據完全符合 1311 FS.js 標準格式
     const fsCompliantData = {
@@ -3016,6 +3044,7 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
+    // 階段三修正：ledgerId必須從配置中獲取
     const ledgerId = BK_CONFIG.DEFAULT_LEDGER_ID;
     const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
 
@@ -3157,7 +3186,11 @@ module.exports = {
     try {
       await BK_initialize();
       const db = BK_INIT_STATUS.firestore_db;
-      const ledgerId = queryParams.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID;
+      // 階段三修正：ledgerId必須從queryParams中提供
+      if (!queryParams.ledgerId) {
+        throw new Error("MISSING_LEDGER_ID: 獲取交易詳情需要指定ledgerId");
+      }
+      const ledgerId = queryParams.ledgerId;
       const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
       const idField = getEnvVar('ID_FIELD', '收支ID');
 
