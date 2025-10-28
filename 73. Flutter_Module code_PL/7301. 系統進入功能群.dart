@@ -18,8 +18,7 @@ import 'package:crypto/crypto.dart';
 import 'package:intl/intl.dart';
 // 引入APL層服務
 import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart' show AuthAPLService;
-// 引入BL層服務 (帳本初始化)
-import '../13. Replit_Module code_BL/1309. AM.js' show LedgerBLService;
+// 注意：7301 PL層通過APL Gateway(8301)調用BL層服務，遵循PL→APL→ASL→BL資料流
 
 
 // ===========================================
@@ -546,8 +545,8 @@ class SystemEntryFunctionGroup {
           );
         }
 
-        // 6. 調用BL層進行帳本初始化
-        final ledgerInitResponse = await LedgerBLService.instance.initializeUserLedger(userId: userId);
+        // 6. 通過APL Gateway調用AM模組進行帳本初始化（遵循PL→APL→ASL→BL資料流）
+        final ledgerInitResponse = await AuthAPLService.initializeUserLedger(userId: userId);
 
         if (ledgerInitResponse['success']) {
           print('[SystemEntry] ✅ 帳本初始化成功');
@@ -570,7 +569,7 @@ class SystemEntryFunctionGroup {
             userData: apiResponse['userData'],
           );
         } else {
-          // 帳本初始化失敗，需要進行錯誤處理 (PL→APL→ASL→BL→DL)
+          // 帳本初始化失敗，需要進行錯誤處理 (PL→APL→ASL→BL)
           print('[SystemEntry] ❌ 帳本初始化失敗: ${ledgerInitResponse['message']}');
           // TODO: Implement robust error handling, potentially involving DL for rollback or notification.
           // For now, we'll report the failure but the user might be partially registered.
@@ -1070,7 +1069,7 @@ class SystemEntryFunctionGroup {
         return false;
       }
 
-      // 調用APL層驗證重設Token服務
+      //調用APL層驗證重設Token服務
       final apiResponse = await AuthAPLService.validateResetToken(token: token);
 
       final isValid = apiResponse['success'] ?? false;
