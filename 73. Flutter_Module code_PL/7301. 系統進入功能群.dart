@@ -1,8 +1,8 @@
 /**
  * 7301. 系統進入功能群.dart
- * @version v2.5.0
+ * @version v2.6.0
  * @date 2025-10-16
- * @update: 階段三實作完成 - 系統管理與最佳化（函數27-40）
+ * @update: 階段二帳本初始化整合完成
  *
  * 本模組實現LCAS 2.0系統進入功能群的完整功能，
  * 包括APP啟動、使用者認證、模式設定、模式評估問卷、
@@ -18,6 +18,9 @@ import 'package:crypto/crypto.dart';
 import 'package:intl/intl.dart';
 // 引入APL層服務
 import '../83. Flutter_Module code(API route)_APL/8301. 認證服務.dart' show AuthAPLService;
+// 引入BL層服務 (帳本初始化)
+import '../31. Business Logic Layer(BL)/3101. 帳本服務.dart' show LedgerBLService;
+
 
 // ===========================================
 // 核心資料模型定義
@@ -487,7 +490,7 @@ class SystemEntryFunctionGroup {
    * 05. 使用Email註冊帳號
    * @version 2025-09-12-v1.0.0
    * @date 2025-09-12
-   * @update: 初始版本
+   * @update: 初始版本 v2.6.0 整合帳本初始化
    */
   Future<RegisterResponse> registerWithEmail(RegisterRequest request) async {
     try {
@@ -525,17 +528,59 @@ class SystemEntryFunctionGroup {
         email: request.email,
         password: request.password, // APL層會處理hash
         displayName: request.displayName,
+        userMode: _getCurrentModeConfig()?.userMode.name ?? 'Inertial', // DCN-0020 Phase 2: Pass userMode
       );
 
       if (apiResponse['success']) {
         print('[SystemEntry] ✅ Email註冊成功');
-        return RegisterResponse(
-          success: true,
-          token: apiResponse['token'],
-          userId: apiResponse['userId'],
-          message: '註冊成功，歡迎加入LCAS！',
-          userData: apiResponse['userData'],
-        );
+
+        // 5. 獲取註冊後的使用者ID和Token
+        final userId = apiResponse['userId'];
+        final token = apiResponse['token'];
+
+        if (userId == null || token == null) {
+          print('[SystemEntry] ❌ 註冊後未收到有效的 userId 或 token');
+          return RegisterResponse(
+            success: false,
+            message: '註冊成功，但無法獲取使用者資訊，請稍後再試',
+          );
+        }
+
+        // 6. 調用BL層進行帳本初始化
+        final ledgerInitResponse = await LedgerBLService.instance.initializeUserLedger(userId: userId);
+
+        if (ledgerInitResponse['success']) {
+          print('[SystemEntry] ✅ 帳本初始化成功');
+
+          // 7. 更新使用者認證狀態 (PL→APL→ASL→BL)
+          _currentAuthState = AuthState(
+            isAuthenticated: true,
+            currentUser: User.fromJson(apiResponse['userData']),
+            token: token,
+            status: AuthStatus.authenticated,
+            lastLogin: DateTime.now(),
+          );
+          await _saveAuthToken(token); // 保存Token
+
+          return RegisterResponse(
+            success: true,
+            token: token,
+            userId: userId,
+            message: '註冊並完成帳本初始化，歡迎加入LCAS！',
+            userData: apiResponse['userData'],
+          );
+        } else {
+          // 帳本初始化失敗，需要進行錯誤處理 (PL→APL→ASL→BL→DL)
+          print('[SystemEntry] ❌ 帳本初始化失敗: ${ledgerInitResponse['message']}');
+          // TODO: Implement robust error handling, potentially involving DL for rollback or notification.
+          // For now, we'll report the failure but the user might be partially registered.
+          // Consider revoking the APL token or marking the account as incomplete.
+          return RegisterResponse(
+            success: false,
+            message: '註冊成功，但帳本初始化失敗：${ledgerInitResponse['message']}',
+            userData: apiResponse['userData'], // Return user data if available
+          );
+        }
       } else {
         return RegisterResponse(
           success: false,
@@ -1210,7 +1255,7 @@ class SystemEntryFunctionGroup {
             'id': 'user_${data['email'].hashCode}',
             'email': data['email'],
             'displayName': data['displayName'],
-            'mode': 'inertial',
+            'userMode': data['userMode'] ?? 'Inertial', // Return the mode that was sent
             'createdAt': DateTime.now().toIso8601String(),
           },
         };
@@ -3213,6 +3258,11 @@ class SystemEntryFunctionGroup {
       // 'autoSaveInterval': 300, // 範例：自動保存間隔（秒）
       // 'defaultCurrency': 'TWD', // 範例：預設幣別
     };
+  }
+
+  /// 取得當前模式設定的輔助方法
+  ModeConfiguration? _getCurrentModeConfig() {
+    return _currentModeConfig;
   }
 
   // ===========================================
