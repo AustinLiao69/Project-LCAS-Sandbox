@@ -1,0 +1,55 @@
+------------------------------------------
+20251028. UID生成
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+
+根據目前的代碼分析，UID的生成流程如下：
+當前UID生成流程分析
+1. AM模組中的UID生成方式
+在 1309. AM.js 中，有幾個不同的UID生成場景：
+註冊時的UID生成 (AM_processAPIRegister)：
+// 生成用戶ID
+const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+LINE帳號創建 (AM_createLineAccount)：
+// 使用LINE提供的UID作為主要UID
+const lineUID = // 從LINE OAuth取得
+APP帳號創建 (AM_createAppAccount)：
+const platformUID = AM_generatePlatformUID(platform, deviceInfo.deviceId);
+const primaryUID = `${platform}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+2. 測試資料中的UID格式
+在 7598. Data warehouse.json 中，測試用戶的UID格式：
+{
+  "userId": "user_expert_1697363200000",
+  "userId": "user_inertial_1697363260000",
+  "userId": "user_cultivation_1697363320000",
+  "userId": "user_guiding_1697363380000"
+}
+3. DCN-0020提到的問題
+根據你提到的問題，當前的dataflow應該是：
+1.	7571取7598預設的UID
+2.	執行用戶註冊流程：PL → APL → ASL → AM
+3.	AM取得UID後生成帳本ID，再傳給BK
+4. 目前存在的Hard-coding問題
+從代碼中看到，BK模組中存在：
+const ledgerId = inputData.ledgerId || BK_CONFIG.DEFAULT_LEDGER_ID || "ledger_structure_001";
+這違反了0098第7條，ledgerId應該來自dataflow的上一層。
+解決方案
+階段一：修正資料流起點（7571測試邏輯）
+•	7571從7598取得預設UID
+•	執行完整用戶註冊流程
+•	AM模組接收UID後自動初始化帳本
+階段二：強化AM模組帳本初始化功能
+•	AM_initializeUserLedger(UID) 負責帳本ID生成
+•	帳本ID格式：user_${UID}
+階段三：移除BK模組hard-coding
+•	BK模組純粹執行記帳邏輯
+•	帳本ID必須由上層提供
+正確的UID生成流程應該是：
+7571測試 → 7598取得UID → PL註冊處理 → APL路由 → ASL統一格式 → AM用戶管理
+  ↓
+AM_initializeUserLedger(UID) → 生成帳本ID → 初始化帳本結構
+  ↓
+BK記帳核心（使用AM提供的帳本ID，不自己生成）
+
