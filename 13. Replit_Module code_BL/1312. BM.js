@@ -294,6 +294,7 @@ BM.BM_deleteBudget = async function(budgetId, options = {}) {
 
     const expectedToken = `confirm_delete_${budgetId}`;
     if (options.confirmationToken !== expectedToken) {
+      console.log(`${logPrefix} Token驗證失敗 - 期望: ${expectedToken}, 實際: ${options.confirmationToken}`);
       return createStandardResponse(false, null, '確認令牌無效，請確認刪除操作', 'INVALID_CONFIRMATION_TOKEN');
     }
 
@@ -1286,7 +1287,7 @@ BM.BM_validateBudgetData = async function(budgetData, validationType) {
       }
 
       if (rules.warning_threshold < 0 || rules.critical_threshold > 100) {
-        errors.push('閾值必須在 0-100 範圍內');
+        errors.push('閾值必須在 0-100 之間');
       }
     }
 
@@ -1409,7 +1410,18 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
       return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
     }
 
-    // 模擬從Firestore查詢預算（實際應用FS模組查詢）
+    // 嘗試從Firestore查詢預算詳情
+    try {
+      const firestoreResult = await FS.FS_getDocument('budgets', budgetId, 'system');
+      if (firestoreResult.success && firestoreResult.data) {
+        console.log(`${logPrefix} 從Firebase查詢到預算詳情`);
+        return createStandardResponse(true, firestoreResult.data, '預算詳情取得成功');
+      }
+    } catch (firestoreError) {
+      console.warn(`${logPrefix} Firebase查詢失敗，使用模擬資料:`, firestoreError.message);
+    }
+
+    // 模擬預算詳情數據（當Firebase查詢失敗時的備用方案）
     const budgetDetail = {
       id: budgetId,
       name: '測試預算',
