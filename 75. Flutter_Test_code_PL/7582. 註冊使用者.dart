@@ -22,7 +22,7 @@ class RegisterUserTest {
   /// 載入7598測試資料
   Map<String, dynamic> loadTestData() {
     try {
-      final file = File('75. Flutter_Test_code_PL/7598. Data warehouse.json');
+      final file = File('7598. Data warehouse.json');
       final jsonString = file.readAsStringSync();
       final data = jsonDecode(jsonString);
       
