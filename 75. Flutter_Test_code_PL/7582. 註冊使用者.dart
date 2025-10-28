@@ -1,4 +1,3 @@
-
 /**
  * 7582. 註冊使用者.dart
  * @version v1.1.0
@@ -30,7 +29,7 @@ class RegisterUserTest {
       final file = File('7598. Data warehouse.json');
       final jsonString = file.readAsStringSync();
       final data = jsonDecode(jsonString);
-      
+
       print('[7582] ✅ 成功載入7598測試資料');
       return data;
     } catch (e) {
@@ -42,57 +41,79 @@ class RegisterUserTest {
   /// 執行使用者註冊測試
   Future<void> runUserRegistrationTests() async {
     print('\n🚀 [7582] 開始執行使用者註冊測試...\n');
-    
+
     try {
       // 載入測試資料
       final testData = loadTestData();
       final authTestData = testData['authentication_test_data'] as Map<String, dynamic>;
       final successScenarios = authTestData['success_scenarios'] as Map<String, dynamic>;
 
+      // 檢查ASL服務狀態
+      await _checkASLServiceStatus();
+
       // 執行成功情境測試（選擇部分進行真實註冊）
       await _runRealRegistrationTests(successScenarios);
 
       // 輸出測試結果統計
       _printTestSummary();
-      
+
     } catch (e) {
       print('[7582] ❌ 註冊測試執行失敗: $e');
       rethrow;
     }
   }
 
+  /// 檢查ASL服務狀態
+  Future<void> _checkASLServiceStatus() async {
+    print('\n🔍 檢查ASL服務狀態...');
+    try {
+      final response = await http.get(Uri.parse('$aslBaseUrl/health'));
+      if (response.statusCode == 200) {
+        print('✅ ASL服務正常運行');
+      } else {
+        print('⚠️ ASL服務回應異常: ${response.statusCode}');
+        print('💡 請確認ASL服務已在Port 5000啟動');
+      }
+    } catch (e) {
+      print('❌ ASL服務不可用: $e');
+      print('💡 請確認ASL服務已在Port 5000啟動');
+      // 雖然服務不可用，但仍繼續測試，以便診斷問題
+    }
+  }
+
   /// 執行真實註冊測試（遵守0098：調用真實API，不模擬業務邏輯）
   Future<void> _runRealRegistrationTests(Map<String, dynamic> successScenarios) async {
     print('📋 執行真實註冊測試（調用ASL → AM → Firebase）...\n');
-    
+
     // 選擇一個測試用戶進行真實註冊
     final testScenario = 'expert_user_valid';
     final scenarioData = successScenarios[testScenario] as Map<String, dynamic>;
-    
+
     print('[7582] 🧪 真實註冊測試: $testScenario');
-    
+
     try {
       // 從7598取得真實email和使用者資料（遵守0098：不hard coding）
       final email = scenarioData['email'] as String;
       final displayName = scenarioData['displayName'] as String?;
       final userMode = scenarioData['userMode'] as String?;
-      
+
       print('[7582] 📧 使用7598測試Email: $email');
       print('[7582] 👤 用戶模式: $userMode');
-      
+
       // 調用真實的註冊API（遵守dataflow: PL → APL → ASL → BL → Firebase）
       final registrationResult = await _callRealRegistrationAPI(
         email: email,
         displayName: displayName,
         userMode: userMode,
       );
-      
+
       if (registrationResult['success'] == true) {
+        print('[7582] ✅ 註冊API調用成功'); // 這裡的日誌是正確的，API調用成功
         print('[7582] ✅ 真實註冊成功！');
-        
+
         // 驗證1309模組是否成功建立Firebase帳本
         final ledgerVerification = await _verifyFirebaseLedgerCreation(registrationResult);
-        
+
         if (ledgerVerification) {
           _recordTestResult(testScenario, true, '真實註冊成功且1309模組已在Firebase建立帳本');
         } else {
@@ -102,7 +123,7 @@ class RegisterUserTest {
         _recordTestResult(testScenario, false, 
           '真實註冊失敗: ${registrationResult['message']}');
       }
-      
+
     } catch (e) {
       _recordTestResult(testScenario, false, '真實註冊測試執行錯誤: $e');
       print('[7582] ❌ 註冊測試錯誤: $e');
@@ -117,7 +138,7 @@ class RegisterUserTest {
   }) async {
     try {
       print('[7582] 📡 調用真實註冊API: POST $aslBaseUrl/api/v1/auth/register');
-      
+
       // 準備真實註冊請求資料
       final registrationData = {
         'email': email,
@@ -128,9 +149,9 @@ class RegisterUserTest {
         'currency': 'TWD',
         'timezone': 'Asia/Taipei',
       };
-      
+
       print('[7582] 📋 註冊資料: ${registrationData.keys.join(', ')}');
-      
+
       // 發送HTTP POST請求到ASL層
       final response = await http.post(
         Uri.parse('$aslBaseUrl/api/v1/auth/register'),
@@ -140,26 +161,26 @@ class RegisterUserTest {
         },
         body: jsonEncode(registrationData),
       );
-      
+
       print('[7582] 🔄 HTTP回應狀態: ${response.statusCode}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-        print('[7582] ✅ 註冊API調用成功');
+        // print('[7582] ✅ 註冊API調用成功'); // 這裡的日誌會被覆蓋，保留下面的
         print('[7582] 📊 回應格式: success=${responseData['success']}');
-        
+
         return responseData;
       } else {
         print('[7582] ❌ 註冊API調用失敗: ${response.statusCode}');
         print('[7582] 📄 錯誤內容: ${response.body}');
-        
+
         return {
           'success': false,
           'message': 'HTTP錯誤: ${response.statusCode}',
           'errorCode': 'HTTP_ERROR',
         };
       }
-      
+
     } catch (e) {
       print('[7582] ❌ 註冊API調用異常: $e');
       return {
@@ -174,21 +195,21 @@ class RegisterUserTest {
   Future<bool> _verifyFirebaseLedgerCreation(Map<String, dynamic> registrationResult) async {
     try {
       print('[7582] 🔍 驗證Firebase帳本建立狀態...');
-      
-      // 從註冊結果取得用戶ID
+
+      // 從註冊結果取得用戶資料
       final userData = registrationResult['data'];
       if (userData == null) {
         print('[7582] ❌ 註冊結果中無用戶資料');
         return false;
       }
-      
+
       // 根據1309 AM模組的初始化邏輯，帳本ID應該是 user_{userId}
       // 實際驗證需要查詢Firebase，這裡先檢查回應中是否包含初始化成功標誌
       final initializationComplete = userData['initializationComplete'] ?? false;
-      
+
       if (initializationComplete) {
         print('[7582] ✅ 1309模組帳本初始化完成標誌確認');
-        
+
         // 額外檢查：嘗試調用記帳API驗證帳本可用性
         final bookkeepingTest = await _testBookkeepingFunctionality(userData);
         if (bookkeepingTest) {
@@ -202,7 +223,7 @@ class RegisterUserTest {
         print('[7582] ❌ 1309模組帳本初始化未完成');
         return false;
       }
-      
+
     } catch (e) {
       print('[7582] ❌ 帳本驗證錯誤: $e');
       return false;
@@ -213,38 +234,60 @@ class RegisterUserTest {
   Future<bool> _testBookkeepingFunctionality(Map<String, dynamic> userData) async {
     try {
       print('[7582] 🧪 測試記帳功能可用性...');
-      
-      // 準備測試交易資料
+
+      // 從用戶資料中取得相關資訊
+      final userId = userData['email'] ?? userData['id'] ?? userData['userId'];
+      final ledgerInfo = userData['ledgerInfo'];
+      final ledgerId = ledgerInfo != null ? ledgerInfo['ledgerId'] : 'user_$userId';
+
+      print('[7582] 📋 測試參數: userId=$userId, ledgerId=$ledgerId');
+
+      // 準備測試交易資料（使用完整參數）
       final testTransaction = {
         'amount': 100.0,
         'type': 'expense',
         'description': '7582註冊測試交易',
         'categoryId': 'food',
+        'accountId': 'cash', // 使用預設現金帳戶
+        'ledgerId': ledgerId,
+        'paymentMethod': 'cash',
         'date': DateTime.now().toIso8601String().split('T')[0],
-        'userId': userData['userId'] ?? userData['id'],
+        'userId': userId,
       };
-      
+
+      print('[7582] 📦 測試交易資料準備完成');
+
       // 調用記帳API
       final response = await http.post(
-        Uri.parse('$aslBaseUrl/api/v1/bookkeeping/transactions'),
+        Uri.parse('$aslBaseUrl/api/v1/transactions'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: jsonEncode(testTransaction),
       );
-      
+
+      print('[7582] 🔄 記帳API回應: ${response.statusCode}');
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        print('[7582] 📋 記帳API回應內容: success=${responseData['success']}');
+
         if (responseData['success'] == true) {
           print('[7582] ✅ 記帳功能測試成功 - 帳本結構完整');
           return true;
+        } else {
+          print('[7582] ❌ 記帳API回應失敗: ${responseData['message']}');
+        }
+      } else {
+        print('[7582] ❌ 記帳功能測試失敗: HTTP ${response.statusCode}');
+        if (response.body.isNotEmpty) {
+          print('[7582] 📄 錯誤詳情: ${response.body}');
         }
       }
-      
-      print('[7582] ❌ 記帳功能測試失敗: ${response.statusCode}');
+
       return false;
-      
+
     } catch (e) {
       print('[7582] ❌ 記帳功能測試異常: $e');
       return false;
@@ -273,13 +316,13 @@ class RegisterUserTest {
     print('失敗: $failedTests');
     print('成功率: ${totalTests > 0 ? (passedTests / totalTests * 100).toStringAsFixed(1) : 0}%');
     print('\n📋 詳細結果:');
-    
+
     for (final result in testResults) {
       print(result);
     }
-    
+
     print('='*60);
-    
+
     if (failedTests == 0) {
       print('🎉 真實註冊測試通過！1309模組成功在Firebase建立帳本。');
       print('✨ 驗證項目：');
@@ -310,37 +353,23 @@ class RegisterUserTest {
 /// 主執行函數
 Future<void> main() async {
   final registerTest = RegisterUserTest();
-  
+
   try {
     print('🔧 [7582] 註冊使用者測試模組 v1.1.0');
     print('📋 目的: 使用7598的email進行真實註冊，觸發1309模組在Firebase建立帳本');
     print('⚖️  遵守0098憲法: 禁止hard coding、模擬業務邏輯，遵守dataflow');
     print('🌐 ASL服務端點: http://localhost:5000');
     print('🔄 資料流向: PL(7582) → APL → ASL → BL(1309 AM) → Firebase');
-    
-    // 確認ASL服務是否運行
-    print('\n🔍 檢查ASL服務狀態...');
-    try {
-      final response = await http.get(Uri.parse('http://localhost:5000/health'));
-      if (response.statusCode == 200) {
-        print('✅ ASL服務正常運行');
-      } else {
-        print('⚠️ ASL服務回應異常: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('❌ ASL服務不可用: $e');
-      print('💡 請確認ASL服務已在Port 5000啟動');
-    }
-    
+
     await registerTest.runUserRegistrationTests();
-    
+
   } catch (e) {
     print('\n💥 [7582] 測試執行失敗: $e');
     exit(1);
   } finally {
     registerTest.cleanup();
   }
-  
+
   print('\n✨ [7582] 真實註冊使用者測試完成');
   print('🎯 如果測試成功，用戶已可立即使用記帳功能！');
 }

@@ -1849,8 +1849,27 @@ async function AM_processAPIRegister(requestData) {
       }
     };
 
+    // DCN-0020: 執行完整帳本初始化
+    console.log(`🔧 AM_processAPIRegister: 開始為用戶 ${userId} 進行完整帳本初始化...`);
+    
+    const ledgerInitResult = await AM_initializeUserLedger(userId, "user_");
+    
+    if (ledgerInitResult.success) {
+      console.log(`✅ AM_processAPIRegister: 用戶 ${userId} 帳本初始化成功`);
+      userData.initializationComplete = true;
+      userData.ledgerInfo = {
+        ledgerId: ledgerInitResult.userLedgerId,
+        subjectCount: ledgerInitResult.subjectCount,
+        accountCount: ledgerInitResult.accountCount
+      };
+    } else {
+      console.error(`❌ AM_processAPIRegister: 用戶 ${userId} 帳本初始化失敗:`, ledgerInitResult.error);
+      userData.initializationComplete = false;
+      userData.ledgerInfo = null;
+    }
+
     AM_logInfo(
-      `註冊成功: ${userId}`,
+      `註冊成功: ${userId}，帳本初始化: ${ledgerInitResult.success ? '成功' : '失敗'}`,
       "註冊處理",
       requestData.email,
       "",
