@@ -22,7 +22,7 @@ class RegisterUserTest {
   /// 載入7598測試資料
   Map<String, dynamic> loadTestData() {
     try {
-      final file = File('7598. Data warehouse.json');
+      final file = File('75. Flutter_Test_code_PL/7598. Data warehouse.json');
       final jsonString = file.readAsStringSync();
       final data = jsonDecode(jsonString);
       
@@ -182,24 +182,6 @@ class RegisterUserTest {
           'success': false,
           'message': 'Email格式不正確',
           'errorCode': 'INVALID_EMAIL_FORMAT',
-        };
-      }
-      
-      // userMode驗證（模擬PL層基本驗證，非業務邏輯）
-      if (userMode == null || userMode.isEmpty) {
-        return {
-          'success': false,
-          'message': '缺少必要欄位: userMode',
-          'errorCode': 'MISSING_USER_MODE',
-        };
-      }
-      
-      final validModes = ['Expert', 'Inertial', 'Cultivation', 'Guiding'];
-      if (!validModes.contains(userMode)) {
-        return {
-          'success': false,
-          'message': '無效的使用者模式: $userMode',
-          'errorCode': 'INVALID_USER_MODE',
         };
       }
       
