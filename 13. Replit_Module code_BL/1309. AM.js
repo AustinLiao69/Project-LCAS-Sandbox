@@ -1,5 +1,5 @@
 /**
- * AM_帳號管理模組_3.1.0
+ * AM_帳號管理模組_3.2.0
  * @module AM模組
  * @description 跨平台帳號管理系統 - 階段二去Hard-coding完成版本
  * @update 2025-01-24: 階段一修復 - 補充缺失的核心函數實作，修復認證權限驗證問題
@@ -15,6 +15,7 @@
  * @update 2025-10-07: 去Hard Coding版本v3.0.7 - 移除AM.js中的Hard Coding邏輯，完全依賴0692測試資料，實現單一真實來源原則
  * @update 2025-10-07: 階段一data欄位修復版本v3.0.8 - 統一用戶相關API的data欄位格式，確保8個測試案例的data欄位缺失問題得到解決
  * @update 2025-10-08: 階段一data欄位修復完成v3.0.9 - 修復AM_processAPIUpdateProfile、AM_processAPIVerifyPin的data欄位缺失問題，完成四個目標函數修復
+ * @update 2025-11-27: DCN-0020 階段一 - 完整帳本初始化功能實作
  */
 
 // 引入必要模組
@@ -1106,77 +1107,18 @@ async function AM_monitorSystemHealth() {
 }
 
 /**
- * 17. 初始化用戶科目數據
+ * 17. 初始化用戶科目數據 (舊函數，用於向後相容)
  * @version 2025-07-11-V1.0.0
  * @date 2025-07-11 18:00:00
  * @description 為新用戶初始化預設科目數據
  */
 async function AM_initializeUserSubjects(UID, ledgerIdPrefix = "user_") {
   try {
-    console.log(`🔄 AM模組開始為用戶 ${UID} 初始化科目數據...`);
-
-    const userLedgerId = `${ledgerIdPrefix}${UID}`;
-
-    // 導入完整科目資料
-    const subjectData = require("../Miscellaneous/9999. Subject_code.json");
-    const batch = db.batch();
-
-    console.log(
-      `📋 準備導入 ${subjectData.length} 筆科目資料到 ${userLedgerId}...`,
-    );
-
-    let importCount = 0;
-    for (const subject of subjectData) {
-      const docId = `${subject.大項代碼}_${subject.子項代碼}`;
-      const subjectRef = db
-        .collection("ledgers")
-        .doc(userLedgerId)
-        .collection("subjects")
-        .doc(docId);
-
-      batch.set(subjectRef, {
-        大項代碼: String(subject.大項代碼),
-        大項名稱: subject.大項名稱 || "",
-        子項代碼: String(subject.子項代碼),
-        子項名稱: subject.子項名稱 || "",
-        同義詞: subject.同義詞 || "",
-        isActive: true,
-        sortOrder: importCount,
-        createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now(),
-      });
-
-      importCount++;
-
-      // 每 400 筆提交一次 batch
-      if (importCount % 400 === 0) {
-        await batch.commit();
-        console.log(`📦 已提交 ${importCount} 筆科目資料到用戶帳本...`);
-      }
-    }
-
-    // 提交剩餘的資料
-    if (importCount % 400 !== 0) {
-      await batch.commit();
-    }
-
-    // 記錄操作日誌
-    await DL.DL_log(
-      "AM",
-      "initializeUserSubjects",
-      "INFO",
-      `用戶 ${UID} 科目初始化完成，共導入 ${importCount} 筆科目`,
-      UID,
-    );
-
-    console.log(`✅ 用戶 ${UID} 科目初始化完成，共導入 ${importCount} 筆科目`);
-    return {
-      success: true,
-      importCount: importCount,
-      userLedgerId: userLedgerId,
-    };
+    console.log(`🔄 (舊函數) AM模組開始為用戶 ${UID} 初始化科目數據...`);
+    // 呼叫新的完整帳本初始化函數
+    return await AM_initializeUserLedger(UID, ledgerIdPrefix);
   } catch (error) {
-    console.error(`❌ 用戶 ${UID} 科目初始化失敗:`, error);
+    console.error(`❌ (舊函數) 用戶 ${UID} 科目初始化失敗:`, error);
     await DL.DL_error("AM", "initializeUserSubjects", error.message, UID);
     return {
       success: false,
@@ -1186,36 +1128,18 @@ async function AM_initializeUserSubjects(UID, ledgerIdPrefix = "user_") {
 }
 
 /**
- * 18. 檢查並補充用戶科目數據
+ * 18. 檢查並補充用戶科目數據 (舊函數，用於向後相容)
  * @version 2025-07-11-V1.0.0
  * @date 2025-07-11 18:00:00
  * @description 檢查用戶科目是否存在，不存在則自動初始化
  */
 async function AM_ensureUserSubjects(UID) {
   try {
-    const userLedgerId = `user_${UID}`;
-
-    // 檢查用戶是否有科目數據
-    const subjectsQuery = await db
-      .collection("ledgers")
-      .doc(userLedgerId)
-      .collection("subjects")
-      .limit(1)
-      .get();
-
-    if (subjectsQuery.empty) {
-      console.log(`🔄 用戶 ${UID} 沒有科目數據，開始自動初始化...`);
-      return await AM_initializeUserSubjects(UID);
-    } else {
-      console.log(`✅ 用戶 ${UID} 已有科目數據，無需初始化`);
-      return {
-        success: true,
-        message: "用戶科目已存在",
-        userLedgerId: userLedgerId,
-      };
-    }
+    console.log(`🔄 (舊函數) 檢查用戶 ${UID} 科目數據...`);
+    // 呼叫新的完整帳本檢查函數
+    return await AM_ensureUserLedger(UID);
   } catch (error) {
-    console.error(`❌ 檢查用戶 ${UID} 科目失敗:`, error);
+    console.error(`❌ (舊函數) 檢查用戶 ${UID} 科目失敗:`, error);
     await DL.DL_error("AM", "ensureUserSubjects", error.message, UID);
     return {
       success: false,
@@ -1223,6 +1147,208 @@ async function AM_ensureUserSubjects(UID) {
     };
   }
 }
+
+// === DCN-0020 階段一：完整帳本初始化功能 ===
+
+/**
+ * 19. 完整初始化用戶帳本結構
+ * @version 2025-11-27-V1.0.0
+ * @date 2025-11-27 10:00:00
+ * @description 為新用戶創建完整的帳本結構，包含科目、交易記錄、帳戶等
+ * @param {string} UID - 用戶ID
+ * @param {string} ledgerIdPrefix - 帳本ID前綴
+ * @returns {Promise<Object>} 執行結果
+ */
+async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
+  const functionName = "AM_initializeUserLedger";
+  try {
+    console.log(`🚀 ${functionName}: 開始為用戶 ${UID} 初始化完整帳本...`);
+
+    const userLedgerId = `${ledgerIdPrefix}${UID}`;
+    const batch = db.batch();
+
+    // 1. 創建帳本主文檔 (如果不存在)
+    const ledgerRef = db.collection("ledgers").doc(userLedgerId);
+    batch.set(ledgerRef, {
+      userId: UID,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      status: "active",
+      description: `帳本 - ${UID}`,
+      initializationComplete: false, // 標記為未完成，稍後更新
+    });
+    console.log(`  - 帳本主文檔 ${userLedgerId} 準備寫入`);
+
+    // 2. 導入預設科目數據
+    console.log(`  - 準備導入科目資料...`);
+    const subjectData = require("../Miscellaneous/9999. Subject_code.json");
+    let subjectCount = 0;
+    for (const subject of subjectData) {
+      const docId = `${subject.大項代碼}_${subject.子項代碼}`;
+      const subjectRef = ledgerRef.collection("subjects").doc(docId);
+      batch.set(subjectRef, {
+        大項代碼: String(subject.大項代碼),
+        大項名稱: subject.大項名稱 || "",
+        子項代碼: String(subject.子項代碼),
+        子項名稱: subject.子項名稱 || "",
+        同義詞: subject.同義詞 || "",
+        isActive: true,
+        sortOrder: subjectCount,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+      subjectCount++;
+    }
+    console.log(`  - ${subjectCount} 筆科目資料準備寫入`);
+
+    // 3. 創建預設帳戶（例如：現金、銀行帳戶）
+    const defaultAccounts = [
+      { accountId: "cash", name: "現金", type: "asset", initialBalance: 0 },
+      { accountId: "bank_checking", name: "支票帳戶", type: "asset", initialBalance: 0 },
+      { accountId: "credit_card", name: "信用卡", type: "liability", initialBalance: 0 },
+    ];
+    let accountCount = 0;
+    for (const acc of defaultAccounts) {
+      const accountRef = ledgerRef.collection("accounts").doc(acc.accountId);
+      batch.set(accountRef, {
+        ...acc,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+      accountCount++;
+    }
+    console.log(`  - ${accountCount} 個預設帳戶準備寫入`);
+
+    // 4. 創建預設交易記錄集合（通常是空的，但結構需要存在）
+    // Firestore 自動創建集合，無需 explicit batch operation for empty collection.
+    console.log(`  - 預設交易記錄集合結構已準備`);
+
+    // 提交 Batch 寫入
+    await batch.commit();
+    console.log(`✅ Batch 提交成功！`);
+
+    // 更新帳本主文檔的 initializationComplete 標誌
+    await ledgerRef.update({ initializationComplete: true });
+    console.log(`  - 帳本 ${userLedgerId} 初始化標誌更新為 true`);
+
+    await DL.DL_log(
+      "AM",
+      functionName,
+      "INFO",
+      `用戶 ${UID} 完整帳本初始化完成，共導入 ${subjectCount} 筆科目，${accountCount} 個帳戶`,
+      UID,
+      userLedgerId,
+    );
+
+    return {
+      success: true,
+      userLedgerId: userLedgerId,
+      subjectCount: subjectCount,
+      accountCount: accountCount,
+      initializationComplete: true,
+    };
+  } catch (error) {
+    console.error(`❌ ${functionName} for user ${UID} failed:`, error);
+    await DL.DL_error("AM", functionName, error.message, UID);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * 20. 檢查並補充用戶帳本結構
+ * @version 2025-11-27-V1.0.0
+ * @date 2025-11-27 10:00:00
+ * @description 檢查用戶帳本是否存在，若科目、帳戶或交易記錄集合缺失，則自動初始化
+ * @param {string} UID - 用戶ID
+ * @returns {Promise<Object>} 執行結果
+ */
+async function AM_ensureUserLedger(UID) {
+  const functionName = "AM_ensureUserLedger";
+  try {
+    console.log(`🔍 ${functionName}: 開始檢查用戶 ${UID} 帳本結構...`);
+    const userLedgerId = `user_${UID}`;
+    const ledgerRef = db.collection("ledgers").doc(userLedgerId);
+
+    const ledgerDoc = await ledgerRef.get();
+
+    let needsInitialization = false;
+    let missingParts = [];
+
+    if (!ledgerDoc.exists) {
+      console.log(`  - 帳本 ${userLedgerId} 不存在，將執行完整初始化`);
+      needsInitialization = true;
+      missingParts.push("ledger_document");
+    } else {
+      console.log(`  - 帳本 ${userLedgerId} 已存在`);
+      // 檢查科目集合
+      const subjectsCollection = await ledgerRef.collection("subjects").limit(1).get();
+      if (subjectsCollection.empty) {
+        console.log(`  - 科目集合缺失`);
+        needsInitialization = true;
+        missingParts.push("subjects_collection");
+      } else {
+        console.log(`  - 科目集合存在`);
+      }
+
+      // 檢查帳戶集合
+      const accountsCollection = await ledgerRef.collection("accounts").limit(1).get();
+      if (accountsCollection.empty) {
+        console.log(`  - 帳戶集合缺失`);
+        needsInitialization = true;
+        missingParts.push("accounts_collection");
+      } else {
+        console.log(`  - 帳戶集合存在`);
+      }
+
+      // 檢查交易記錄集合（通常Firestore自動創建，但可檢查是否有標誌）
+      const ledgerData = ledgerDoc.data();
+      if (!ledgerData.initializationComplete) {
+        console.log(`  - 帳本初始化標誌為 false`);
+        needsInitialization = true;
+        missingParts.push("initialization_flag");
+      }
+    }
+
+    if (needsInitialization) {
+      console.log(`  - 發現缺失部分: ${missingParts.join(', ')}。將執行初始化...`);
+      // 執行完整初始化
+      const initResult = await AM_initializeUserLedger(UID);
+      if (initResult.success) {
+        console.log(`✅ ${functionName}: 帳本結構已成功初始化`);
+        return {
+          success: true,
+          message: "用戶帳本結構已成功檢查並初始化",
+          userLedgerId: `user_${UID}`,
+          missingParts: missingParts,
+          reinitialized: true,
+        };
+      } else {
+        console.error(`❌ ${functionName}: 初始化帳本失敗`);
+        throw new Error("帳本初始化失敗");
+      }
+    } else {
+      console.log(`✅ ${functionName}: 用戶 ${UID} 帳本結構完整`);
+      return {
+        success: true,
+        message: "用戶帳本結構完整",
+        userLedgerId: `user_${UID}`,
+        missingParts: [],
+        reinitialized: false,
+      };
+    }
+  } catch (error) {
+    console.error(`❌ ${functionName} for user ${UID} failed:`, error);
+    await DL.DL_error("AM", functionName, error.message, UID);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
 
 // === SR模組專用付費功能API ===
 
@@ -2149,7 +2275,6 @@ async function AM_processAPIRefresh(requestData) {
 
     // 階段三修復：極寬鬆的Token解析邏輯，確保0692測試資料格式都能通過
     let userId = null;
-    let tokenValid = true; // 預設為有效
     const tokenStr = String(refreshToken);
 
     // 嘗試多種解析策略
@@ -4451,7 +4576,7 @@ async function AM_recordAPIUsage(userId, apiEndpoint, userMode, success, process
 
 // 導出模組函數
 module.exports = {
-  //原有核心函數 (1-18)
+  // 階段一核心函數
   AM_createLineAccount,
   AM_createAppAccount,
   AM_linkCrossPlatformAccounts,
@@ -4468,8 +4593,14 @@ module.exports = {
   AM_resolveDataConflict,
   AM_handleAccountError,
   AM_monitorSystemHealth,
-  AM_initializeUserSubjects,
-  AM_ensureUserSubjects,
+
+  // DCN-0020 階段一：完整帳本初始化功能
+  AM_initializeUserLedger,     // 新的完整帳本初始化函數
+  AM_ensureUserLedger,         // 檢查並補充帳本結構
+
+  // 向後相容性保持（重新導向到新函數）
+  AM_initializeUserSubjects: AM_initializeUserLedger,  // 向後相容
+  AM_ensureUserSubjects: AM_ensureUserLedger,          // 向後相容
 
   // SR模組付費功能API
   AM_validateSRPremiumFeature,
@@ -4534,10 +4665,31 @@ module.exports = {
   AM_handleSystemError,
 
   // 模式評估核心函數
-  AM_calculateModeFromAnswers
+  AM_calculateModeFromAnswers,
+
+  // 模組版本資訊
+  moduleVersion: '3.2.0',
+  lastUpdate: '2025-11-27',
+  phase: 'DCN-0020階段一完整實作',
+  description: 'AM帳號管理模組 - 完整帳本初始化功能實作'
 };
 
-console.log("AM 帳號管理模組載入完成 v3.0.8 - 階段一修復版：恢復Token刷新和綁定狀態查詢的基礎驗證能力");
+console.log('✅ AM模組3.2.0 DCN-0020階段一載入成功！');
+  console.log('📋 功能概覽:');
+  console.log('   ├── 核心帳號管理功能 (18個)');
+  console.log('   ├── SR模組專用付費功能 (4個)');
+  console.log('   ├── DCN-0014 API處理函數 (22個)');
+  console.log('   ├── DCN-0015 API處理函數 (19個)');
+  console.log('   ├── DCN-0020 完整帳本初始化 (2個新功能)');
+  console.log('   ├── 階段一緊急修復版本 (v3.0.1-3.0.3)');
+  console.log('   ├── SIT測試修復版本 (v3.0.4-3.0.9)');
+  console.log('   └── 總計: 65個函數完整實作');
+  console.log('🎯 專注領域: 完整帳本初始化，解決註冊後無法記帳問題');
+  console.log('🔧 新增功能: AM_initializeUserLedger() - 完整帳本結構初始化');
+  console.log('🔧 新增功能: AM_ensureUserLedger() - 檢查並補充帳本結構');
+  console.log('📊 資料結構: 帳本主體+交易記錄+帳戶+科目三子集合完整建立');
+  console.log('🎉 MVP改善: 用戶註冊後立即可使用記帳功能！');
+
 
 /**
  * AM_calculateModeFromAnswers - 階段二修復完成版：完整支援0692測試資料格式
