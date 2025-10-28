@@ -346,3 +346,4 @@ MM 	 DD 	 Description 	    Progress
 10	27	 分析1311模組所建立的資料結構：提案新增1312與1351的資料欄位   	 Ongoing
 10	27	 打通SIT_P2測試：清除違反0098問題   	 Closed
 10	27	 修正1312與1351模組：處理console的error log   	 Ongoing
+10	28	 新增1312所需之資料欄位於1311   	 Ongoing
