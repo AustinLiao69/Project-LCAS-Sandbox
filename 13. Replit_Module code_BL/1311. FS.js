@@ -152,7 +152,7 @@ async function FS_createDocument(collectionPath, documentId, data, requesterId) 
 
     // 建立文檔
     await docRef.set(data);
-    
+
     console.log(`✅ Firebase文檔建立成功: ${collectionPath}/${documentId}`);
 
     return {
@@ -383,7 +383,7 @@ function FS_handleError(message, operation, userId, errorCode, details, function
  * 09. 日誌記錄機制
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16 
- * @update: 階段一重構 - 統一日誌記錄
+ * @update: 階段一重構 - 統 যুক্তি記錄
  */
 function FS_logOperation(message, operation, userId, errorCode, details, functionName) {
   try {
@@ -445,7 +445,7 @@ async function FS_processUserRegistration(registrationData, requesterId) {
 
     // 建立用戶文檔
     const createResult = await FS_createDocument('users', registrationData.email, userData, 'SYSTEM');
-    
+
     if (createResult.success) {
       return {
         success: true,
@@ -480,7 +480,7 @@ async function FS_processUserLogin(loginData, requesterId) {
 
     // 取得用戶資料
     const userResult = await FS_getDocument('users', loginData.email, 'SYSTEM');
-    
+
     if (!userResult.success || !userResult.exists) {
       return {
         success: false,
@@ -549,7 +549,7 @@ async function FS_manageUserProfile(userId, operation, data, requesterId) {
         if (!data) {
           throw new Error("更新操作需要提供數據");
         }
-        
+
         // 準備更新數據
         const updateData = {
           ...data,
@@ -674,7 +674,7 @@ async function FS_manageTransaction(ledgerId, operation, transactionData, reques
         if (!transactionData.id) {
           transactionData.id = FS_generateTransactionId();
         }
-        
+
         const createData = {
           ...transactionData,
           createdAt: admin.firestore.Timestamp.now(),
@@ -700,7 +700,7 @@ async function FS_manageTransaction(ledgerId, operation, transactionData, reques
       case 'QUERY':
         const queryConditions = transactionData.conditions || [];
         const options = transactionData.options || {};
-        
+
         return await FS_queryCollection(collectionPath, queryConditions, requesterId, options);
 
       default:
@@ -734,7 +734,7 @@ async function FS_processQuickTransaction(quickData, requesterId) {
 
     // 解析快速輸入（簡化實作）
     const parsed = FS_parseQuickInput(quickData.input);
-    
+
     if (!parsed.success) {
       return {
         success: false,
@@ -841,7 +841,7 @@ function FS_parseQuickInput(input) {
     // 簡化的解析邏輯：尋找數字和描述
     const amountMatch = input.match(/(\d+)/);
     const amount = amountMatch ? parseInt(amountMatch[1]) : null;
-    
+
     if (!amount) {
       return { success: false, error: "找不到金額" };
     }
@@ -1016,6 +1016,10 @@ async function FS_initializePhase1DataStructure(requesterId) {
     const budgetStructure = await FS_initializeBudgetStructure();
     initResults.push({ type: '預算結構', result: budgetStructure });
 
+    // 6. 初始化帳本集合文檔結構 (MLS.js模組支援)
+    const ledgerStructure = await FS_initializeLedgerStructure();
+    initResults.push({ type: '帳本結構', result: ledgerStructure });
+
     const successCount = initResults.filter(r => r.result.success).length;
     const success = successCount === initResults.length;
 
@@ -1060,7 +1064,7 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
     const ledgerData = {
       name: ledgerConfig.defaultName,
       description: ledgerConfig.description,
-      owner: userId,
+      owner_id: userId,
       members: [userId],
       type: 'personal',
       currency: 'TWD',
@@ -1071,8 +1075,8 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
         reminderSettings: ledgerConfig.reminderSettings,
         privacyMode: false
       },
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
+      created_at: admin.firestore.Timestamp.now(),
+      updated_at: admin.firestore.Timestamp.now(),
       status: 'active'
     };
 
@@ -1082,12 +1086,12 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
     if (createResult.success) {
       // 建立基礎帳戶
       const accountResults = await FS_createBasicAccounts(ledgerId, userMode, requesterId);
-      
+
       // 更新用戶預設帳本
       await FS_updateDocument('users', userId, {
         defaultLedgerId: ledgerId,
         hasBasicLedger: true,
-        updatedAt: admin.firestore.Timestamp.now()
+        updated_at: admin.firestore.Timestamp.now()
       }, requesterId);
 
       return {
@@ -1133,11 +1137,11 @@ async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
         type: 'income',
         icon: income.icon,
         color: income.color,
-        parentId: null,
+        parent_id: null,
         level: 1,
         order: income.order,
-        isDefault: true,
-        isActive: true,
+        is_default: true,
+        is_active: true,
         ledgerId: ledgerId,
         createdAt: admin.firestore.Timestamp.now()
       };
@@ -1154,11 +1158,11 @@ async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
         type: 'expense',
         icon: expense.icon,
         color: expense.color,
-        parentId: null,
+        parent_id: null,
         level: 1,
         order: expense.order,
-        isDefault: true,
-        isActive: true,
+        is_default: true,
+        is_active: true,
         ledgerId: ledgerId,
         createdAt: admin.firestore.Timestamp.now()
       };
@@ -1289,7 +1293,7 @@ async function FS_performHealthCheck(requesterId) {
     // 計算整體健康狀態
     const healthyCount = healthResults.checks.filter(c => c.status === 'healthy').length;
     const totalChecks = healthResults.checks.length;
-    
+
     healthResults.overallStatus = healthyCount === totalChecks ? 'healthy' : 
                                  healthyCount >= totalChecks * 0.8 ? 'degraded' : 'unhealthy';
     healthResults.healthScore = (healthyCount / totalChecks * 100).toFixed(2);
@@ -1404,7 +1408,7 @@ async function FS_validatePhase1Integration(requesterId) {
     // 計算驗證結果
     const passedCount = validationResults.validations.filter(v => v.status === 'pass').length;
     const totalValidations = validationResults.validations.length;
-    
+
     validationResults.overallResult = passedCount === totalValidations ? 'pass' : 
                                      passedCount >= totalValidations * 0.8 ? 'warning' : 'fail';
     validationResults.successRate = (passedCount / totalValidations * 100).toFixed(2);
@@ -1605,6 +1609,168 @@ async function FS_initializeAssessmentQuestions() {
 }
 
 /**
+ * 初始化帳本集合文檔結構 (MLS.js模組支援)
+ * @version 2025-10-27-V2.2.0
+ * @date 2025-10-27
+ * @description 初始化帳本管理模組所需的Firebase帳本集合文檔結構，包含實際帳本文檔欄位
+ */
+async function FS_initializeLedgerStructure() {
+  const ledgerStructure = {
+    version: '1.0.0',
+    description: 'MLS.js帳本管理模組Firebase帳本集合文檔結構',
+    collection: 'ledgers',
+    
+    // ledgers集合下的文檔結構 (如ledger_structure_001等)
+    document_structure: {
+      id: 'string - 帳本唯一識別碼 (與文檔ID相同)',
+      name: 'string - 帳本名稱 (如"個人記帳本", "專案支出")',
+      type: 'string - 帳本類型: "personal"|"project"|"category"|"shared"',
+      description: 'string - 帳本描述說明',
+      owner_id: 'string - 帳本擁有者ID (對應users集合)',
+      members: 'array - 帳本成員列表 (用戶ID陣列)',
+      currency: 'string - 預設貨幣單位 (如"TWD", "USD")',
+      timezone: 'string - 時區設定 (如"Asia/Taipei")',
+      settings: 'object - 帳本設定',
+      permissions: 'object - 權限設定 (擁有者、管理員、成員、檢視者)',
+      attributes: 'object - 帳本屬性 (狀態、進度、分類等)',
+      created_at: 'timestamp - 建立時間 (符合1311.FS.js規範)',
+      updated_at: 'timestamp - 最後更新時間 (符合1311.FS.js規範)',
+      archived: 'boolean - 是否已歸檔',
+      status: 'string - 帳本狀態: "active"|"completed"|"archived"',
+      metadata: 'object - 帳本元數據 (交易總數、總金額、成員數量等)'
+    },
+    
+    // 各帳本文檔下的子集合結構
+    subcollections: {
+      transactions: {
+        description: '帳本交易記錄子集合',
+        document_structure: {
+          id: 'string - 交易唯一識別碼',
+          amount: 'number - 交易金額',
+          type: 'string - 交易類型: "income"|"expense"',
+          description: 'string - 交易描述',
+          category_id: 'string - 科目ID',
+          category_name: 'string - 科目名稱',
+          account_id: 'string - 帳戶ID',
+          account_name: 'string - 帳戶名稱',
+          date: 'string - 交易日期 (YYYY-MM-DD格式)',
+          user_id: 'string - 記帳用戶ID',
+          source: 'string - 記帳來源: "manual"|"quick"|"import"',
+          tags: 'array - 標籤列表',
+          location: 'object - 位置資訊 (可選)',
+          receipt_url: 'string - 收據圖片URL (可選)',
+          notes: 'string - 備註 (可選)',
+          createdAt: 'timestamp - 建立時間',
+          updatedAt: 'timestamp - 最後更新時間'
+        }
+      },
+      categories: {
+        description: '帳本科目分類子集合',
+        document_structure: {
+          id: 'string - 科目唯一識別碼',
+          name: 'string - 科目名稱',
+          type: 'string - 科目類型: "income"|"expense"',
+          icon: 'string - 科目圖示 emoji',
+          color: 'string - 科目顏色 hex code',
+          parent_id: 'string - 父科目ID (可選，支援多層級)',
+          level: 'number - 科目層級 (1為頂層)',
+          order: 'number - 排序順序',
+          is_default: 'boolean - 是否為預設科目',
+          is_active: 'boolean - 是否啟用',
+          budget_limit: 'number - 預算上限 (可選)',
+          description: 'string - 科目說明 (可選)',
+          createdAt: 'timestamp - 建立時間',
+          updatedAt: 'timestamp - 最後更新時間'
+        }
+      },
+      accounts: {
+        description: '帳本帳戶子集合',
+        document_structure: {
+          id: 'string - 帳戶唯一識別碼',
+          name: 'string - 帳戶名稱',
+          type: 'string - 帳戶類型: "cash"|"bank"|"credit"|"investment"|"other"',
+          icon: 'string - 帳戶圖示 emoji',
+          color: 'string - 帳戶顏色 hex code',
+          currency: 'string - 貨幣單位',
+          initial_balance: 'number - 初始餘額',
+          current_balance: 'number - 當前餘額',
+          credit_limit: 'number - 信用額度 (信用卡帳戶)',
+          bank_name: 'string - 銀行名稱 (銀行帳戶)',
+          account_number: 'string - 帳號末四碼 (脫敏)',
+          is_default: 'boolean - 是否為預設帳戶',
+          is_active: 'boolean - 是否啟用',
+          include_in_total: 'boolean - 是否計入總資產',
+          notes: 'string - 備註 (可選)',
+          createdAt: 'timestamp - 建立時間',
+          updatedAt: 'timestamp - 最後更新時間'
+        }
+      },
+      budgets: {
+        description: '帳本預算子集合 (與1312.BM.js模組整合)',
+        document_structure: {
+          id: 'string - 預算唯一識別碼',
+          name: 'string - 預算名稱',
+          type: 'string - 預算類型: "monthly"|"yearly"|"custom"',
+          category_ids: 'array - 關聯科目ID列表',
+          total_amount: 'number - 預算總金額',
+          used_amount: 'number - 已使用金額',
+          start_date: 'timestamp - 預算開始日期',
+          end_date: 'timestamp - 預算結束日期',
+          alert_percentage: 'number - 警示百分比 (如80%)',
+          is_active: 'boolean - 是否啟用',
+          createdAt: 'timestamp - 建立時間',
+          updatedAt: 'timestamp - 最後更新時間'
+        }
+      }
+    },
+    
+    // 權限結構範例
+    permissions_structure: {
+      owner: 'string - 擁有者用戶ID',
+      admins: 'array - 管理員用戶ID列表',
+      members: 'array - 一般成員用戶ID列表', 
+      viewers: 'array - 僅檢視用戶ID列表',
+      settings: {
+        allow_invite: 'boolean - 是否允許邀請成員',
+        allow_edit: 'boolean - 是否允許編輯',
+        allow_delete: 'boolean - 是否允許刪除'
+      }
+    },
+    
+    // 帳本設定結構範例
+    settings_structure: {
+      allow_negative_balance: 'boolean - 是否允許負餘額',
+      auto_categorization: 'boolean - 是否自動分類',
+      default_account_id: 'string - 預設帳戶ID',
+      default_currency: 'string - 預設貨幣',
+      reminder_settings: 'object - 提醒設定',
+      privacy_mode: 'boolean - 隱私模式'
+    },
+    
+    // 元數據結構範例
+    metadata_structure: {
+      total_entries: 'number - 交易總筆數',
+      total_income: 'number - 收入總額',
+      total_expense: 'number - 支出總額',
+      total_amount: 'number - 淨額',
+      last_activity: 'timestamp - 最後活動時間',
+      member_count: 'number - 成員總數',
+      categories_count: 'number - 科目總數',
+      accounts_count: 'number - 帳戶總數',
+      budgets_count: 'number - 預算總數'
+    }
+  };
+
+  try {
+    const result = await FS_createDocument('_system', 'ledger_collection_structure', ledgerStructure, 'SYSTEM');
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+
+/**
  * 根據用戶模式取得帳本配置
  */
 function FS_getLedgerConfigByMode(userMode) {
@@ -1766,7 +1932,7 @@ async function FS_checkDataConsistency() {
   try {
     // 簡化的一致性檢查
     const testDoc = await FS_getDocument('_system', 'config', 'SYSTEM');
-    
+
     return {
       consistent: testDoc.success,
       checks: ['系統配置檢查'],
@@ -1863,6 +2029,9 @@ module.exports = {
   // 1312.BM預算管理模組支援函數
   FS_initializeBudgetStructure,
 
+  // MLS.js帳本管理模組支援函數
+  FS_initializeLedgerStructure,
+
   // 相容性函數（保留現有調用）
   FS_mergeDocument,
   FS_addToCollection,
@@ -1882,7 +2051,7 @@ module.exports = {
 try {
   const initResult = FS_initializeModule();
   if (initResult.success) {
-    console.log('🎉 FS模組2.1.0階段三重構完成！');
+    console.log('🎉 FS模組2.2.0階段三重構完成！');
     console.log(`📌 模組版本: ${initResult.version}`);
     console.log(`🎯 專注功能: Phase 1完整功能 + 整合優化與驗證`);
     console.log(`📋 階段一功能: 核心基礎操作(9個函數)`);
@@ -1893,5 +2062,5 @@ try {
     console.log(`🔧 建議執行: FS_validatePhase1Integration() 進行功能驗證`);
   }
 } catch (error) {
-  console.error('❌ FS模組2.1.0初始化失敗:', error.message);
+  console.error('❌ FS模組2.2.0初始化失敗:', error.message);
 }
