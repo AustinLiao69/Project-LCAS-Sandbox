@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_2.2.0
+* FS_FirestoreStructure_資料庫結構模組_2.3.0
 * @module 資料庫結構模組
 * @description LCAS 2.0 Firestore資料庫結構模組 - Phase 1核心進入流程專用版本
-* @update 2025-09-18: 階段一重構，升級至2.2.0版本，修復函數依賴問題
+* @update 2025-11-27: 階段一重構，升級至2.3.0版本，分離系統配置與業務資料結構初始化
 */
 
 // 引入Firebase動態配置模組
@@ -969,21 +969,21 @@ async function FS_setDocument(collectionPath, documentId, data, requesterId, opt
 // =============== 階段三：整合優化與驗證函數區 ===============
 
 /**
- * 16. Phase 1數據結構初始化
- * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
- * @update: 階段三重構 - Phase 1數據結構初始化
+ * 16. 系統配置初始化（一次性執行）
+ * @version 2025-11-27-V2.3.0
+ * @date 2025-11-27
+ * @update: 階段一重構 - 分離系統配置初始化
  */
-async function FS_initializePhase1DataStructure(requesterId) {
-  const functionName = "FS_initializePhase1DataStructure";
+async function FS_initializeSystemConfig(requesterId) {
+  const functionName = "FS_initializeSystemConfig";
   try {
-    FS_logOperation('Phase 1數據結構初始化', "數據結構初始化", requesterId || "SYSTEM", "", "", functionName);
+    FS_logOperation('系統配置初始化', "系統配置初始化", requesterId || "SYSTEM", "", "", functionName);
 
     const initResults = [];
 
     // 1. 初始化系統配置文檔
     const systemConfig = {
-      version: '2.1.0',
+      version: '2.3.0',
       phase: 'Phase1',
       supportedModes: ['Expert', 'Inertial', 'Cultivation', 'Guiding'],
       features: {
@@ -1028,15 +1028,121 @@ async function FS_initializePhase1DataStructure(requesterId) {
       initialized: successCount,
       total: initResults.length,
       details: initResults,
-      message: success ? 'Phase 1數據結構初始化完成' : '部分數據結構初始化失敗'
+      message: success ? '系統配置初始化完成' : '部分系統配置初始化失敗'
     };
 
   } catch (error) {
-    FS_handleError(`Phase 1數據結構初始化失敗: ${error.message}`, "數據結構初始化", requesterId || "SYSTEM", "FS_INIT_STRUCTURE_ERROR", error.toString(), functionName);
+    FS_handleError(`系統配置初始化失敗: ${error.message}`, "系統配置初始化", requesterId || "SYSTEM", "FS_INIT_SYSTEM_CONFIG_ERROR", error.toString(), functionName);
     return {
       success: false,
       error: error.message,
-      errorCode: 'FS_INIT_STRUCTURE_ERROR'
+      errorCode: 'FS_INIT_SYSTEM_CONFIG_ERROR'
+    };
+  }
+}
+
+/**
+ * 17. 業務資料結構初始化（為每個新用戶執行）
+ * @version 2025-11-27-V2.3.0
+ * @date 2025-11-27
+ * @update: 階段一重構 - 業務資料結構初始化
+ */
+async function FS_initializeDataStructure(requesterId) {
+  const functionName = "FS_initializeDataStructure";
+  try {
+    FS_logOperation('業務資料結構初始化', "資料結構初始化", requesterId || "SYSTEM", "", "", functionName);
+
+    const initResults = [];
+
+    // 1. 確保users集合基本框架存在
+    try {
+      const usersCollection = db.collection('users');
+      // 測試集合存在（透過取得空查詢）
+      await usersCollection.limit(1).get();
+      initResults.push({ 
+        type: 'users集合', 
+        result: { success: true, message: 'users集合框架已確認' }
+      });
+    } catch (error) {
+      initResults.push({ 
+        type: 'users集合', 
+        result: { success: false, error: error.message }
+      });
+    }
+
+    // 2. 確保ledgers集合基本框架存在
+    try {
+      const ledgersCollection = db.collection('ledgers');
+      // 測試集合存在（透過取得空查詢）
+      await ledgersCollection.limit(1).get();
+      initResults.push({ 
+        type: 'ledgers集合', 
+        result: { success: true, message: 'ledgers集合框架已確認' }
+      });
+    } catch (error) {
+      initResults.push({ 
+        type: 'ledgers集合', 
+        result: { success: false, error: error.message }
+      });
+    }
+
+    // 3. 建立集合索引結構定義文檔（為後續查詢最佳化）
+    const indexStructure = {
+      collections: {
+        users: {
+          indices: [
+            { field: 'email', type: 'ascending' },
+            { field: 'userMode', type: 'ascending' },
+            { field: 'createdAt', type: 'descending' }
+          ]
+        },
+        ledgers: {
+          indices: [
+            { field: 'owner_id', type: 'ascending' },
+            { field: 'type', type: 'ascending' },
+            { field: 'created_at', type: 'descending' }
+          ],
+          subcollections: {
+            transactions: [
+              { field: 'user_id', type: 'ascending' },
+              { field: 'date', type: 'descending' },
+              { field: 'type', type: 'ascending' }
+            ],
+            accounts: [
+              { field: 'type', type: 'ascending' },
+              { field: 'is_active', type: 'ascending' }
+            ],
+            categories: [
+              { field: 'type', type: 'ascending' },
+              { field: 'parent_id', type: 'ascending' }
+            ]
+          }
+        }
+      },
+      createdAt: admin.firestore.Timestamp.now(),
+      purpose: '業務資料結構索引定義，供後續查詢最佳化參考'
+    };
+
+    const indexResult = await FS_createDocument('_system', 'index_structure', indexStructure, 'SYSTEM');
+    initResults.push({ type: '索引結構', result: indexResult });
+
+    const successCount = initResults.filter(r => r.result.success).length;
+    const success = successCount === initResults.length;
+
+    return {
+      success: success,
+      initialized: successCount,
+      total: initResults.length,
+      details: initResults,
+      message: success ? '業務資料結構初始化完成' : '部分業務資料結構初始化失敗'
+    };
+
+  } catch (error) {
+    FS_handleError(`業務資料結構初始化失敗: ${error.message}`, "資料結構初始化", requesterId || "SYSTEM", "FS_INIT_DATA_STRUCTURE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_INIT_DATA_STRUCTURE_ERROR'
     };
   }
 }
@@ -2019,8 +2125,9 @@ module.exports = {
   FS_manageTransaction,
   FS_processQuickTransaction,
 
-  // 階段三 Phase 1 整合優化與驗證函數
-  FS_initializePhase1DataStructure,
+  // 階段三 Phase 1 整合優化與驗證函數（重構後）
+  FS_initializeSystemConfig,
+  FS_initializeDataStructure,
   FS_createUserBasicLedger,
   FS_initializePhase1Categories,
   FS_performHealthCheck,
@@ -2042,25 +2149,25 @@ module.exports = {
   admin,
 
   // 模組資訊
-  moduleVersion: '2.2.0',
-  phase: 'Phase1-Complete',
-  lastUpdate: '2025-09-18'
+  moduleVersion: '2.3.0',
+  phase: 'Phase1-Complete-Refactored',
+  lastUpdate: '2025-11-27'
 };
 
 // 自動初始化模組
 try {
   const initResult = FS_initializeModule();
   if (initResult.success) {
-    console.log('🎉 FS模組2.2.0階段三重構完成！');
+    console.log('🎉 FS模組2.3.0階段一重構完成！');
     console.log(`📌 模組版本: ${initResult.version}`);
-    console.log(`🎯 專注功能: Phase 1完整功能 + 整合優化與驗證`);
+    console.log(`🎯 重構成果: 初始化架構分離 - 系統配置 vs 業務資料結構`);
     console.log(`📋 階段一功能: 核心基礎操作(9個函數)`);
     console.log(`📋 階段二功能: API端點支援(6個函數)`);
-    console.log(`📋 階段三功能: 整合優化與驗證(5個函數)`);
-    console.log(`✨ 總計實作: 20個核心函數 + 相容性函數`);
-    console.log(`🔧 建議執行: FS_performHealthCheck() 進行系統健康檢查`);
-    console.log(`🔧 建議執行: FS_validatePhase1Integration() 進行功能驗證`);
+    console.log(`📋 階段三功能: 整合優化與驗證(6個函數，重構後)`);
+    console.log(`✨ 總計實作: 21個核心函數 + 相容性函數`);
+    console.log(`🔧 系統配置: FS_initializeSystemConfig() - 一次性執行`);
+    console.log(`🔧 資料結構: FS_initializeDataStructure() - 每用戶執行`);
   }
 } catch (error) {
-  console.error('❌ FS模組2.2.0初始化失敗:', error.message);
+  console.error('❌ FS模組2.3.0初始化失敗:', error.message);
 }
