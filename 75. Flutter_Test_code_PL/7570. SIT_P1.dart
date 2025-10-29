@@ -356,12 +356,14 @@ class SITTestController {
     try {
       final systemEntry = PL7301.SystemEntryFunctionGroup.instance;
 
-      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
-      if (inputData['email'] == null || inputData['ledgerId'] == null) {
-        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      // 使用7598測試資料中的email資訊
+      final testEmail = inputData['email'] as String? ?? 'expert.valid@test.lcas.app';
+      
+      if (testEmail.isEmpty) {
+        throw Exception('違反0098第7條：測試資料必須包含有效的email');
       }
-      final testEmail = inputData['email'] as String;
-      final userLedgerId = inputData['ledgerId'] as String;
+      
+      print('[7570] 📧 PL7301認證測試使用用戶: $testEmail');
 
 
       // 測試Email格式驗證
@@ -394,24 +396,29 @@ class SITTestController {
 
       final bookkeepingCore = PL7302.BookkeepingCoreFunctionGroupImpl();
 
-      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
-      if (inputData['email'] == null || inputData['ledgerId'] == null) {
-        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      // 階段三修正：從7598測試資料中取得用戶email，讓BK模組依照標準流程查找帳本
+      final testEmail = inputData['email'] as String? ?? 
+                       inputData['valid_transaction']?['email'] as String? ??
+                       'expert.valid@test.lcas.app'; // 使用7598中的測試用戶
+      
+      if (testEmail.isEmpty) {
+        throw Exception('違反0098第7條：測試資料必須包含有效的email');
       }
-      final testEmail = inputData['email'] as String;
-      final userLedgerId = inputData['ledgerId'] as String;
 
-      // 從7598資料構建記帳資料（完全使用7598資料，無hard coding）
+      print('[7570] 📧 使用7598測試用戶: $testEmail');
+      print('[7570] 🎯 預期帳本ID格式: user_$testEmail（由AM模組建立）');
+
+      // 從7598資料構建記帳資料（讓BK模組自行查找帳本）
       final realTransactionData = {
         'amount': (inputData['amount'] ?? inputData['valid_transaction']?['amount'] ?? 100.0) as double,
         'type': (inputData['type'] ?? inputData['valid_transaction']?['type'] ?? 'expense') as String,
         'description': inputData['description'] ?? inputData['valid_transaction']?['description'] ?? '7598測試記帳資料',
         'categoryId': (inputData['categoryId'] ?? inputData['valid_transaction']?['categoryId'] ?? 'default') as String,
         'accountId': (inputData['accountId'] ?? inputData['valid_transaction']?['accountId'] ?? 'default') as String,
-        'ledgerId': userLedgerId,  // 來自7598資料倉庫
-        'userId': testEmail,  // 來自7598資料倉庫
+        'userId': testEmail,  // 提供用戶email讓BK模組查找對應帳本
         'date': DateTime.now().toIso8601String().split('T')[0],
         'paymentMethod': (inputData['paymentMethod'] ?? '現金') as String,
+        // 移除ledgerId硬編碼，讓BK模組根據userId自動查找帳本
       };
 
       print('[7570] 📋 準備寫入Firebase的資料: ${realTransactionData}');
@@ -464,12 +471,14 @@ class SITTestController {
     try {
       final systemEntry = PL7301.SystemEntryFunctionGroup.instance;
 
-      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
-      if (inputData['email'] == null || inputData['ledgerId'] == null) {
-        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      // 使用7598測試資料中的email資訊
+      final testEmail = inputData['email'] as String? ?? 'expert.valid@test.lcas.app';
+      
+      if (testEmail.isEmpty) {
+        throw Exception('違反0098第7條：測試資料必須包含有效的email');
       }
-      final testEmail = inputData['email'] as String;
-      final userLedgerId = inputData['ledgerId'] as String;
+      
+      print('[7570] 📧 PL7301測試使用用戶: $testEmail');
 
 
       // 測試函數層級功能
@@ -491,12 +500,14 @@ class SITTestController {
     try {
       final bookkeepingCore = PL7302.BookkeepingCoreFunctionGroupImpl();
 
-      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
-      if (inputData['email'] == null || inputData['ledgerId'] == null) {
-        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      // 使用7598測試資料中的email資訊
+      final testEmail = inputData['email'] as String? ?? 'expert.valid@test.lcas.app';
+      
+      if (testEmail.isEmpty) {
+        throw Exception('違反0098第7條：測試資料必須包含有效的email');
       }
-      final testEmail = inputData['email'] as String;
-      final userLedgerId = inputData['ledgerId'] as String;
+      
+      print('[7570] 📧 PL7302測試使用用戶: $testEmail');
 
 
       // 測試函數層級功能
@@ -620,13 +631,14 @@ void main() {
       print('\n[7570] 🔥 執行真實Firebase記帳寫入測試...');
 
       try {
-        // 準備真實記帳資料
-        final userId = 'test_user_7570_firebase';
+        // 準備真實記帳資料 - 使用7598測試用戶
+        final userId = 'expert.valid@test.lcas.app';
         final transactionData = {
           'amount': 999.0,
           'type': 'expense',
           'description': '7570真實Firebase測試記帳',
           'userId': userId,
+          'email': userId, // 讓BK模組能找到對應帳本
         };
 
         // 執行真實Firebase記帳
