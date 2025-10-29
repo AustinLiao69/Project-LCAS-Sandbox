@@ -535,9 +535,14 @@ async function BK_createTransaction(transactionData) {
       console.warn('⚠️ 無法載入0692測試資料，使用預設值');
     }
 
-    // 階段三修正：ledgerId必須由AM模組提供，不使用預設值
-    if (!transactionData.ledgerId) {
-      return BK_formatErrorResponse("MISSING_LEDGER_ID", "建立交易需要ledgerId，請確保AM模組已完成帳本初始化");
+    // 根據用戶email動態生成帳本ID，符合1311 FS.js規範
+    let ledgerId = transactionData.ledgerId;
+    if (!ledgerId && transactionData.userId) {
+      // 使用用戶email生成標準帳本ID格式：user_{email}
+      ledgerId = `user_${transactionData.userId}`;
+      BK_logInfo(`${logPrefix} 根據用戶email生成帳本ID: ${ledgerId}`, "新增交易", transactionData.userId, "BK_createTransaction");
+    } else if (!ledgerId && !transactionData.userId) {
+      return BK_formatErrorResponse("MISSING_USER_INFO", "建立交易需要用戶資訊或ledgerId來確定帳本");
     }
 
     // 使用0692測試資料補充缺失的欄位
@@ -547,7 +552,7 @@ async function BK_createTransaction(transactionData) {
       description: transactionData.description,
       categoryId: transactionData.categoryId,
       accountId: transactionData.accountId,
-      ledgerId: transactionData.ledgerId,
+      ledgerId: ledgerId, // 使用動態生成的ledgerId
       paymentMethod: transactionData.paymentMethod || testData.bookkeeping_test_data?.default_payment_method || '現金',
       date: transactionData.date,
       userId: transactionData.userId || Object.keys(testData.authentication_test_data?.valid_users || {})[0] || 'expert_mode_user_001',
