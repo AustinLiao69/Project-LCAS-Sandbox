@@ -1840,8 +1840,8 @@ function BK_calculateTransactionStats(transactions) {
 }
 
 /**
- * 階段一新增：檢查或建立帳本文檔
- * @param {string} ledgerId - 要檢查或建立的帳本ID
+ * 檢查帳本文檔是否存在
+ * @param {string} ledgerId - 要檢查的帳本ID
  * @param {string} userId - 使用者ID
  * @param {string} processId - 處理ID
  * @returns {Promise<Object>}
@@ -1863,29 +1863,12 @@ async function BK_ensureLedgerExists(ledgerId, userId, processId) {
       BK_logInfo(`${logPrefix} 帳本已存在: ${ledgerId}`, "帳本檢查", userId || "", "BK_ensureLedgerExists");
       return BK_formatSuccessResponse({ existed: true, ledgerId: ledgerId }, "帳本已存在");
     } else {
-      // 帳本不存在，建立基礎帳本文檔 (符合1311 FS.js規範)
-      BK_logInfo(`${logPrefix} 帳本不存在，正在建立: ${ledgerId}`, "帳本建立", userId || "", "BK_ensureLedgerExists");
-
-      const newLedgerData = {
-        id: ledgerId,
-        ownerId: userId || 'anonymous',
-        createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now(),
-        name: `帳本 (${ledgerId.substring(0, 8)})`, // 預設名稱
-        description: '自動建立的基礎帳本',
-        status: 'active',
-        currency: BK_CONFIG.DEFAULT_CURRENCY,
-        // 其他1311 FS.js規範欄位
-        metadata: {
-          processId: processId,
-          module: 'BK',
-          version: BK_CONFIG.VERSION
-        }
-      };
-
-      await db.collection('ledgers').doc(ledgerId).set(newLedgerData);
-      BK_logInfo(`${logPrefix} 基礎帳本文檔建立成功: ${ledgerId}`, "帳本建立", userId || "", "BK_ensureLedgerExists");
-      return BK_formatSuccessResponse({ existed: false, ledgerId: ledgerId }, "帳本已建立");
+      // 帳本不存在，報錯而非自動建立
+      BK_logError(`${logPrefix} 帳本不存在: ${ledgerId}`, "帳本檢查", userId || "", "LEDGER_NOT_FOUND", `帳本${ledgerId}不存在`, "BK_ensureLedgerExists");
+      return BK_formatErrorResponse("LEDGER_NOT_FOUND", `帳本不存在: ${ledgerId}，請先完成用戶註冊流程以建立帳本`, {
+        ledgerId: ledgerId,
+        suggestion: "請確保用戶已完成註冊流程，AM模組會自動建立用戶帳本"
+      });
     }
   } catch (error) {
     BK_logError(`${logPrefix} 帳本檢查/建立失敗: ${error.toString()}`, "帳本操作", userId || "", "LEDGER_OPERATION_ERROR", error.toString(), "BK_ensureLedgerExists");
