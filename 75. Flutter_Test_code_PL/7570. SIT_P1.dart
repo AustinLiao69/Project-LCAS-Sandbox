@@ -351,18 +351,12 @@ class SITTestController {
 
       final bookkeepingCore = PL7302.BookkeepingCoreFunctionGroupImpl();
 
-      // 從1309.AM模組獲取用戶的預設ledgerId
-      String userLedgerId = 'test_ledger_7570'; // 備用值
+      // 統一使用同一個測試用戶ID，避免建立多個帳本
+      const unifiedTestUserId = 'test_user_7570_unified';
+      final userLedgerId = 'user_$unifiedTestUserId';
       
-      try {
-        // 模擬調用1309.AM模組獲取用戶的預設ledgerId
-        // 實際應該透過適當的介面調用AM模組
-        final userId = inputData['userId'] ?? 'test_user';
-        userLedgerId = 'user_${userId}'; // 使用與1309.AM模組一致的格式
-        print('[7570] 📋 使用1309.AM模組提供的ledgerId: $userLedgerId');
-      } catch (e) {
-        print('[7570] ⚠️ 無法從1309.AM模組獲取ledgerId，使用預設值: $userLedgerId');
-      }
+      print('[7570] 📋 使用統一測試用戶ID: $unifiedTestUserId');
+      print('[7570] 📋 使用統一帳本ID: $userLedgerId');
 
       // 從7598資料構建記帳資料（完全使用7598資料，無hard coding）
       final realTransactionData = {
@@ -371,8 +365,8 @@ class SITTestController {
         'description': inputData['description'] ?? inputData['valid_transaction']?['description'] ?? '7598測試記帳資料',
         'categoryId': (inputData['categoryId'] ?? inputData['valid_transaction']?['categoryId'] ?? 'default') as String,
         'accountId': (inputData['accountId'] ?? inputData['valid_transaction']?['accountId'] ?? 'default') as String,
-        'ledgerId': userLedgerId,  // 使用從1309.AM模組獲取的ledgerId
-        'userId': (inputData['userId'] ?? 'test_user') as String,
+        'ledgerId': userLedgerId,  // 使用統一的帳本ID
+        'userId': unifiedTestUserId,  // 使用統一的測試用戶ID
         'date': DateTime.now().toIso8601String().split('T')[0],
         'paymentMethod': (inputData['paymentMethod'] ?? '現金') as String,
       };
