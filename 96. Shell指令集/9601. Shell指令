@@ -83,12 +83,6 @@ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
 
 cd "75. Flutter_Test_code_PL" && dart run "7582. 註冊使用者.dart"
 
-
-98. Firebase清空指令(慎用!)
-
-node -e " const FS = require('./13. Replit_Module code_BL/1311. FS.js'); async function clearAndReinitializeFirebase() { try { console.log('🔥 開始完全清空Firebase資料...'); const db = FS.db; const collections = await db.listCollections(); console.log('📋 發現的集合:', collections.map(c => c.id)); for (const collection of collections) { try { console.log('🗑️ 清空集合:', collection.id); const snapshot = await collection.get(); if (snapshot.size > 0) { const batch = db.batch(); snapshot.docs.forEach(doc => batch.delete(doc.ref)); await batch.commit(); console.log('✅ 已清空', snapshot.size, '個文檔'); } } catch (error) { console.log('⚠️ 清空集合出錯:', collection.id, error.message); } } console.log('🔄 開始重新初始化...'); console.log('🔧 第一階段：系統配置初始化'); const systemConfigResult = await FS.FS_initializeSystemConfig('ADMIN'); console.log('📊 系統配置初始化結果:', systemConfigResult.success ? '成功' : '失敗'); console.log('🏗️ 第二階段：業務資料結構初始化'); const dataStructureResult = await FS.FS_initializeDataStructure('ADMIN'); console.log('📊 資料結構初始化結果:', dataStructureResult.success ? '成功' : '失敗'); const healthCheck = await FS.FS_performHealthCheck('ADMIN'); console.log('🏥 健康檢查:', healthCheck.success ? '通過' : '失敗'); console.log('✅ Firebase階段一重構版初始化完成'); console.log('🎯 系統配置:', systemConfigResult.success ? '✅' : '❌'); console.log('🎯 資料結構:', dataStructureResult.success ? '✅' : '❌'); process.exit(0); } catch (error) { console.error('❌ 操作失敗:', error.message); process.exit(1); } } clearAndReinitializeFirebase(); "
-
-
 99. 更新Firebase資料結構（階段二預算管理完整版）
 
 node -e "
