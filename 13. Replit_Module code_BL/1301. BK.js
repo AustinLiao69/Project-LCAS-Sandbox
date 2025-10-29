@@ -374,8 +374,17 @@ if (!admin.apps.length) {
 const DL = require('./1310. DL.js');
 const FS = require('./1311. FS.js');
 
-// BK模組不直接載入測試資料，改為接收外部傳入的參數
-console.log('✅ BK模組：使用環境變數設定，不直接讀取測試資料');
+// BK模組完全移除測試資料依賴，使用純業務邏輯
+console.log('✅ BK模組：使用純業務邏輯配置，禁止引用測試資料');
+
+/**
+ * 生成預設用戶ID（業務邏輯版本）
+ */
+function generateDefaultUserId() {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 6);
+  return `business_user_${timestamp}_${random}`;
+}
 
 // 配置參數 - 完全使用環境變數，移除所有硬編碼
 const BK_CONFIG = {
@@ -527,19 +536,12 @@ async function BK_createTransaction(transactionData) {
   const logPrefix = `[${processId}] BK_createTransaction:`;
 
   try {
-    // 使用0693動態測試資料生成模組
-    let testData = {};
-    try {
-      const dynamicDataGenerator = require('../06. SIT_Test code/0693. 動態生成測試資料.js');
-      const generatedData = dynamicDataGenerator.generateCompleteTestDataSet({
-        userCount: 1,
-        transactionsPerUser: 5,
-        includeStaticData: false
-      });
-      testData = generatedData;
-    } catch (error) {
-      console.warn('⚠️ 無法載入0693動態測試資料，使用預設值');
-    }
+    // 使用外部注入的預設配置，移除對測試資料的直接依賴
+    const defaultConfig = {
+      defaultPaymentMethod: transactionData.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
+      defaultUserId: transactionData.userId || generateDefaultUserId(),
+      defaultCurrency: BK_CONFIG.DEFAULT_CURRENCY
+    };
 
     // 階段四修正：確保帳本透過AM模組正確初始化
     let ledgerId = transactionData.ledgerId;
@@ -573,7 +575,7 @@ async function BK_createTransaction(transactionData) {
     // 更新processedData中的ledgerId
     processedData.ledgerId = ledgerId;
 
-    // 使用0692測試資料補充缺失的欄位
+    // 使用業務邏輯配置補充缺失的欄位
     const processedData = {
       amount: transactionData.amount,
       type: transactionData.type,
@@ -581,9 +583,9 @@ async function BK_createTransaction(transactionData) {
       categoryId: transactionData.categoryId,
       accountId: transactionData.accountId,
       ledgerId: transactionData.ledgerId,
-      paymentMethod: transactionData.paymentMethod || testData.bookkeeping_test_data?.default_payment_method || '現金',
+      paymentMethod: defaultConfig.defaultPaymentMethod,
       date: transactionData.date,
-      userId: transactionData.userId || Object.keys(testData.authentication_test_data?.valid_users || {})[0] || 'expert_mode_user_001',
+      userId: defaultConfig.defaultUserId,
       processId: processId
     };
 
@@ -2056,52 +2058,11 @@ async function BK_processAPIGetTransactionDetail(transactionId, queryParams = {}
       return BK_formatErrorResponse("INVALID_TRANSACTION_ID", "無效的交易ID");
     }
 
-    // 階段二修復：從0693動態測試資料載入測試交易
-    let testTransactions = {};
-    try {
-      const dynamicDataGenerator = require('../06. SIT_Test code/0693. 動態生成測試資料.js');
-      const generatedData = dynamicDataGenerator.generateCompleteTestDataSet({
-        userCount: 1,
-        transactionsPerUser: 10,
-        includeStaticData: false
-      });
-      testTransactions = generatedData.bookkeeping_test_data?.test_transactions || {};
-    } catch (error) {
-      console.warn('⚠️ 無法載入0693動態測試資料');
-    }
-
-    // 階段二修復：檢查0693動態測試資料中是否存在該交易ID
-    const testTransaction = testTransactions[transactionId];
-    if (testTransaction) {
-      // 如果在測試資料中找到，直接返回測試資料
-      const transactionDetail = {
-        id: testTransaction.收支ID || transactionId,
-        date: testTransaction.日期,
-        time: testTransaction.時間,
-        amount: parseFloat(testTransaction.收入 || testTransaction.支出 || 0),
-        type: testTransaction.收入 ? 'income' : 'expense',
-        description: testTransaction.備註,
-        category: {
-          id: `${testTransaction.大項代碼}${testTransaction.子項代碼}`,
-          name: testTransaction.子項名稱,
-          majorCode: testTransaction.大項代碼,
-          minorCode: testTransaction.子項代碼
-        },
-        paymentMethod: testTransaction.支付方式,
-        userId: testTransaction.UID,
-        createdAt: new Date().toISOString(),
-        source: 'test_data_0693_dynamic'
-      };
-
-      BK_logInfo(`${logPrefix} 交易詳情API處理成功（來自0693動態測試資料）: ${transactionId}`, "交易詳情", queryParams.userId || "", "BK_processAPIGetTransactionDetail");
-      return BK_formatSuccessResponse(transactionDetail, "交易詳情查詢成功");
-    }
-
-    // 如果不在測試資料中，嘗試從Firebase查詢
+    // 直接從Firebase查詢，移除測試資料邏輯
     const transactionResult = await BK_getTransactionById(transactionId, queryParams);
 
     if (!transactionResult.success) {
-      return BK_formatErrorResponse("NOT_FOUND", `交易記錄不存在: ${transactionId}（請確認交易ID存在於0693動態測試資料或Firebase中）`);
+      return BK_formatErrorResponse("NOT_FOUND", `交易記錄不存在: ${transactionId}`);
     }
 
     BK_logInfo(`${logPrefix} 交易詳情API處理成功: ${transactionId}`, "交易詳情", queryParams.userId || "", "BK_processAPIGetTransactionDetail");
