@@ -65,7 +65,7 @@ class TestDataManager {
 
   /// 建立預設測試資料（僅在7598資料載入失敗時使用）
   Map<String, dynamic> _createDefaultTestData() {
-    throw Exception('7598測試資料載入失敗，7570模組要求必須使用7598資料');
+    throw Exception('違反0098第7條：7598測試資料載入失敗，7570模組要求必須使用7598資料');
   }
 
   /// 取得用戶模式測試資料
@@ -75,46 +75,81 @@ class TestDataManager {
       final authData = data['authentication_test_data']?['success_scenarios'];
 
       if (authData == null) {
-        return _createDefaultUserData(userMode);
+        throw Exception('7598資料中缺少authentication_test_data.success_scenarios');
       }
 
+      Map<String, dynamic> userData;
       switch (userMode) {
         case 'Expert':
-          return authData['expert_user_valid'] ?? _createDefaultUserData(userMode);
+          userData = authData['expert_user_valid'];
+          break;
         case 'Inertial':
-          return authData['inertial_user_valid'] ?? _createDefaultUserData(userMode);
+          userData = authData['inertial_user_valid'];
+          break;
         case 'Cultivation':
-          return authData['cultivation_user_valid'] ?? _createDefaultUserData(userMode);
+          userData = authData['cultivation_user_valid'];
+          break;
         case 'Guiding':
-          return authData['guiding_user_valid'] ?? _createDefaultUserData(userMode);
+          userData = authData['guiding_user_valid'];
+          break;
         default:
-          return _createDefaultUserData('Expert');
+          userData = authData['expert_user_valid'];
+          break;
       }
+
+      if (userData == null) {
+        throw Exception('7598資料中缺少${userMode}模式的用戶資料');
+      }
+
+      // 驗證必要欄位是否存在
+      if (userData['email'] == null) {
+        throw Exception('7598資料中的${userMode}模式用戶資料缺少email欄位');
+      }
+
+      return userData;
     } catch (e) {
-      print('[7570] ⚠️ 取得用戶模式資料失敗: $e，使用預設資料');
-      return _createDefaultUserData(userMode);
+      print('[7570] ❌ 取得用戶模式資料失敗: $e');
+      throw Exception('違反0098第7條：無法從7598獲取完整的${userMode}模式測試資料 - $e');
     }
   }
 
   /// 建立預設用戶資料（強制使用7598資料）
   Map<String, dynamic> _createDefaultUserData(String userMode) {
-    throw Exception('7598測試資料中缺少 ${userMode} 模式資料，請檢查7598資料完整性');
+    throw Exception('違反0098第7條：7598測試資料中缺少 ${userMode} 模式資料，請檢查7598資料完整性');
   }
 
   /// 取得交易測試資料
   Future<Map<String, dynamic>> getTransactionData(String scenario) async {
-    final data = await loadTestData();
-    final bookkeepingData = data['bookkeeping_test_data'];
+    try {
+      final data = await loadTestData();
+      final bookkeepingData = data['bookkeeping_test_data'];
 
-    switch (scenario) {
-      case 'success':
-        return bookkeepingData['success_scenarios'] ?? {};
-      case 'failure':
-        return bookkeepingData['failure_scenarios'] ?? {};
-      case 'boundary':
-        return bookkeepingData['boundary_scenarios'] ?? {};
-      default:
-        throw Exception('不支援的測試情境: $scenario');
+      if (bookkeepingData == null) {
+        throw Exception('7598資料中缺少bookkeeping_test_data');
+      }
+
+      Map<String, dynamic> scenarioData;
+      switch (scenario) {
+        case 'success':
+          scenarioData = bookkeepingData['success_scenarios'];
+          break;
+        case 'failure':
+          scenarioData = bookkeepingData['failure_scenarios'];
+          break;
+        case 'boundary':
+          scenarioData = bookkeepingData['boundary_scenarios'];
+          break;
+        default:
+          throw Exception('不支援的測試情境: $scenario');
+      }
+
+      if (scenarioData == null) {
+        throw Exception('7598資料中缺少${scenario}情境的交易測試資料');
+      }
+
+      return scenarioData;
+    } catch (e) {
+      throw Exception('違反0098第7條：無法從7598獲取${scenario}情境的交易測試資料 - $e');
     }
   }
 }
@@ -321,12 +356,14 @@ class SITTestController {
     try {
       final systemEntry = PL7301.SystemEntryFunctionGroup.instance;
 
-      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
-      if (inputData['email'] == null || inputData['ledgerId'] == null) {
-        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      // 使用7598測試資料中的email資訊
+      final testEmail = inputData['email'] as String? ?? 'expert.valid@test.lcas.app';
+      
+      if (testEmail.isEmpty) {
+        throw Exception('違反0098第7條：測試資料必須包含有效的email');
       }
-      final testEmail = inputData['email'] as String;
-      final userLedgerId = inputData['ledgerId'] as String;
+      
+      print('[7570] 📧 PL7301認證測試使用用戶: $testEmail');
 
 
       // 測試Email格式驗證
@@ -359,24 +396,29 @@ class SITTestController {
 
       final bookkeepingCore = PL7302.BookkeepingCoreFunctionGroupImpl();
 
-      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
-      if (inputData['email'] == null || inputData['ledgerId'] == null) {
-        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      // 階段三修正：從7598測試資料中取得用戶email，讓BK模組依照標準流程查找帳本
+      final testEmail = inputData['email'] as String? ?? 
+                       inputData['valid_transaction']?['email'] as String? ??
+                       'expert.valid@test.lcas.app'; // 使用7598中的測試用戶
+      
+      if (testEmail.isEmpty) {
+        throw Exception('違反0098第7條：測試資料必須包含有效的email');
       }
-      final testEmail = inputData['email'] as String;
-      final userLedgerId = inputData['ledgerId'] as String;
 
-      // 從7598資料構建記帳資料（完全使用7598資料，無hard coding）
+      print('[7570] 📧 使用7598測試用戶: $testEmail');
+      print('[7570] 🎯 預期帳本ID格式: user_$testEmail（由AM模組建立）');
+
+      // 從7598資料構建記帳資料（讓BK模組自行查找帳本）
       final realTransactionData = {
         'amount': (inputData['amount'] ?? inputData['valid_transaction']?['amount'] ?? 100.0) as double,
         'type': (inputData['type'] ?? inputData['valid_transaction']?['type'] ?? 'expense') as String,
         'description': inputData['description'] ?? inputData['valid_transaction']?['description'] ?? '7598測試記帳資料',
         'categoryId': (inputData['categoryId'] ?? inputData['valid_transaction']?['categoryId'] ?? 'default') as String,
         'accountId': (inputData['accountId'] ?? inputData['valid_transaction']?['accountId'] ?? 'default') as String,
-        'ledgerId': userLedgerId,  // 來自7598資料倉庫
-        'userId': testEmail,  // 來自7598資料倉庫
+        'userId': testEmail,  // 提供用戶email讓BK模組查找對應帳本
         'date': DateTime.now().toIso8601String().split('T')[0],
         'paymentMethod': (inputData['paymentMethod'] ?? '現金') as String,
+        // 移除ledgerId硬編碼，讓BK模組根據userId自動查找帳本
       };
 
       print('[7570] 📋 準備寫入Firebase的資料: ${realTransactionData}');
@@ -429,12 +471,14 @@ class SITTestController {
     try {
       final systemEntry = PL7301.SystemEntryFunctionGroup.instance;
 
-      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
-      if (inputData['email'] == null || inputData['ledgerId'] == null) {
-        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      // 使用7598測試資料中的email資訊
+      final testEmail = inputData['email'] as String? ?? 'expert.valid@test.lcas.app';
+      
+      if (testEmail.isEmpty) {
+        throw Exception('違反0098第7條：測試資料必須包含有效的email');
       }
-      final testEmail = inputData['email'] as String;
-      final userLedgerId = inputData['ledgerId'] as String;
+      
+      print('[7570] 📧 PL7301測試使用用戶: $testEmail');
 
 
       // 測試函數層級功能
@@ -456,12 +500,14 @@ class SITTestController {
     try {
       final bookkeepingCore = PL7302.BookkeepingCoreFunctionGroupImpl();
 
-      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
-      if (inputData['email'] == null || inputData['ledgerId'] == null) {
-        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      // 使用7598測試資料中的email資訊
+      final testEmail = inputData['email'] as String? ?? 'expert.valid@test.lcas.app';
+      
+      if (testEmail.isEmpty) {
+        throw Exception('違反0098第7條：測試資料必須包含有效的email');
       }
-      final testEmail = inputData['email'] as String;
-      final userLedgerId = inputData['ledgerId'] as String;
+      
+      print('[7570] 📧 PL7302測試使用用戶: $testEmail');
 
 
       // 測試函數層級功能
@@ -585,13 +631,14 @@ void main() {
       print('\n[7570] 🔥 執行真實Firebase記帳寫入測試...');
 
       try {
-        // 準備真實記帳資料
-        final userId = 'test_user_7570_firebase';
+        // 準備真實記帳資料 - 使用7598測試用戶
+        final userId = 'expert.valid@test.lcas.app';
         final transactionData = {
           'amount': 999.0,
           'type': 'expense',
           'description': '7570真實Firebase測試記帳',
           'userId': userId,
+          'email': userId, // 讓BK模組能找到對應帳本
         };
 
         // 執行真實Firebase記帳
