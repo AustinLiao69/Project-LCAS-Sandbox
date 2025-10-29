@@ -735,7 +735,8 @@ async function BK_getTransactions(queryParams = {}) {
         return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
       }
 
-      const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
+      // 修正：使用與儲存一致的transactions路徑
+      const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
 
       // 階段二修復：實作降級查詢策略
       let queryResult = null;
@@ -817,10 +818,9 @@ async function BK_getTransactions(queryParams = {}) {
 async function BK_performStandardQuery(collectionRef, queryParams) {
   let query = collectionRef.orderBy('createdAt', 'desc');
 
-  // 用戶過濾
+  // 用戶過濾 - 使用正確的欄位名稱
   if (queryParams.userId) {
-    const uidField = getEnvVar('UID_FIELD', 'UID');
-    query = query.where(uidField, '==', queryParams.userId);
+    query = query.where('userId', '==', queryParams.userId);
   }
 
   const limit = queryParams.limit ? Math.min(parseInt(queryParams.limit), 50) : 20;
@@ -1013,21 +1013,16 @@ async function BK_updateTransaction(transactionId, updateData) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
-    // 修正：使用1311 FS.js標準路徑格式
-    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const transactionsCollection = getEnvVar('TRANSACTIONS_COLLECTION', 'transactions');
-    const idField = getEnvVar('ID_FIELD', 'id');
-
     // 階段三修正：ledgerId必須從更新資料中提供
     const ledgerId = updateData.ledgerId;
     if (!ledgerId) {
       return BK_formatErrorResponse("MISSING_LEDGER_ID", "更新交易需要指定ledgerId");
     }
 
-    const querySnapshot = await db.collection(ledgerCollection)
+    const querySnapshot = await db.collection('ledgers')
       .doc(ledgerId)
-      .collection(transactionsCollection)
-      .where(idField, '==', transactionId)
+      .collection('transactions')
+      .where('id', '==', transactionId)
       .get();
 
     if (querySnapshot.empty) {
@@ -1107,21 +1102,16 @@ async function BK_deleteTransaction(transactionId, params = {}) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
-    // 修正：使用1311 FS.js標準路徑格式
-    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const transactionsCollection = getEnvVar('TRANSACTIONS_COLLECTION', 'transactions');
-    const idField = getEnvVar('ID_FIELD', 'id');
-
     // 階段三修正：ledgerId必須從參數中提供
     const ledgerId = params.ledgerId;
     if (!ledgerId) {
       return BK_formatErrorResponse("MISSING_LEDGER_ID", "刪除交易需要指定ledgerId");
     }
 
-    const querySnapshot = await db.collection(ledgerCollection)
+    const querySnapshot = await db.collection('ledgers')
       .doc(ledgerId)
-      .collection(transactionsCollection)
-      .where(idField, '==', transactionId)
+      .collection('transactions')
+      .where('id', '==', transactionId)
       .get();
 
     if (querySnapshot.empty) {
@@ -1415,15 +1405,14 @@ function BK_buildTransactionQuery(queryParams) {
     }
 
     let query = BK_INIT_STATUS.firestore_db
-      .collection(ledgerCollection)
+      .collection('ledgers')
       .doc(ledgerId)
-      .collection(transactionsCollection);
+      .collection('transactions');
 
     const appliedFilters = [];
 
     if (queryParams.userId) {
-      const uidField = getEnvVar('UID_FIELD', 'UID');
-      query = query.where(uidField, '==', queryParams.userId);
+      query = query.where('userId', '==', queryParams.userId);
       appliedFilters.push(`userId: ${queryParams.userId}`);
     }
 
