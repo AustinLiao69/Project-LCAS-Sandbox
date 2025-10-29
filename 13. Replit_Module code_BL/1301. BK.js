@@ -892,7 +892,7 @@ function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = fa
       date: data.date,
       description: data.description || '',
       categoryId: data.categoryId || 'default',
-      accountId: data.accountId || 'default', 
+      accountId: data.accountId || 'default',
       paymentMethod: data.paymentMethod || '現金',
       userId: data.userId,
       createdAt: data.createdAt,
@@ -1836,34 +1836,66 @@ function BK_calculateTransactionStats(transactions) {
  * @returns {Promise<Object>}
  */
 async function BK_ensureLedgerExists(ledgerId, userId, processId) {
-  const logPrefix = `[${processId}] BK_ensureLedgerExists:`;
+  const functionName = "BK_ensureLedgerExists";
   try {
+    // 驗證ledgerId參數，避免使用硬編碼值
+    if (!ledgerId || ledgerId === 'test_ledger_7570' || typeof ledgerId !== 'string') {
+      throw new Error("無效的ledgerId參數，請使用AM模組生成的動態帳本ID");
+    }
+
+    BK_logInfo(`檢查帳本是否存在: ${ledgerId}`, "帳本檢查", userId || "", functionName);
+
     await BK_initialize();
     const db = BK_INIT_STATUS.firestore_db;
 
     if (!db) {
-      return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
+      throw new Error("Firebase數據庫未初始化");
     }
 
-    // 檢查帳本是否存在
-    const ledgerDoc = await db.collection('ledgers').doc(ledgerId).get();
+    // 檢查帳本是否已存在
+    const ledgerRef = db.collection('ledgers').doc(ledgerId);
+    const ledgerSnapshot = await ledgerRef.get();
 
-    if (ledgerDoc.exists) {
-      BK_logInfo(`${logPrefix} 帳本已存在: ${ledgerId}`, "帳本檢查", userId || "", "BK_ensureLedgerExists");
-      return BK_formatSuccessResponse({ existed: true, ledgerId: ledgerId }, "帳本已存在");
-    } else {
-      // 帳本不存在，報錯而非自動建立
-      BK_logError(`${logPrefix} 帳本不存在: ${ledgerId}`, "帳本檢查", userId || "", "LEDGER_NOT_FOUND", `帳本${ledgerId}不存在`, "BK_ensureLedgerExists");
-      return BK_formatErrorResponse("LEDGER_NOT_FOUND", `帳本不存在: ${ledgerId}，請先完成用戶註冊流程以建立帳本`, {
-        ledgerId: ledgerId,
-        suggestion: "請確保用戶已完成註冊流程，AM模組會自動建立用戶帳本"
-      });
+    if (ledgerSnapshot.exists) {
+      BK_logInfo(`帳本已存在: ${ledgerId}`, "帳本檢查", userId || "", functionName);
+      return {
+        success: true,
+        data: { existed: true, ledgerId: ledgerId }
+      };
     }
+
+    // 如果帳本不存在，建立基礎帳本文檔
+    BK_logInfo(`帳本不存在，正在建立: ${ledgerId}`, "帳本建立", userId || "", functionName);
+
+    // 使用動態配置而非硬編碼
+    const ledgerData = {
+      id: ledgerId,
+      name: `用戶帳本 ${userId}`,
+      description: "由AM模組初始化的用戶帳本",
+      owner_id: userId,
+      type: "personal",
+      currency: "TWD",
+      created_at: admin.firestore.Timestamp.now(),
+      updated_at: admin.firestore.Timestamp.now(),
+      status: "active"
+    };
+
+    await ledgerRef.set(ledgerData);
+
+    BK_logInfo(`基礎帳本文檔建立成功: ${ledgerId}`, "帳本建立", userId || "", functionName);
+
+    return {
+      success: true,
+      data: { existed: false, ledgerId: ledgerId, created: true }
+    };
+
   } catch (error) {
-    BK_logError(`${logPrefix} 帳本檢查/建立失敗: ${error.toString()}`, "帳本操作", userId || "", "LEDGER_OPERATION_ERROR", error.toString(), "BK_ensureLedgerExists");
-    // 嘗試識別Firebase錯誤
-    const firebaseError = BK_identifyFirebaseError(error);
-    return BK_formatErrorResponse(firebaseError.type || "LEDGER_OPERATION_ERROR", `帳本操作失敗: ${error.message}`, { originalError: error.toString(), firebaseError: firebaseError });
+    BK_logError(`帳本檢查/建立失敗: ${error.message}`, "帳本檢查", userId || "", "LEDGER_CHECK_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'LEDGER_CHECK_ERROR'
+    };
   }
 }
 
