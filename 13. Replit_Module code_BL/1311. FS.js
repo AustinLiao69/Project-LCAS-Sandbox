@@ -972,7 +972,7 @@ async function FS_setDocument(collectionPath, documentId, data, requesterId, opt
  * 16. 系統配置初始化（一次性執行）
  * @version 2025-11-27-V2.3.0
  * @date 2025-11-27
- * @update: 階段一重構 - 分離系統配置初始化
+ * @update: 階段一重構 - 分離系統配置初始化，包含集合框架建立
  */
 async function FS_initializeSystemConfig(requesterId) {
   const functionName = "FS_initializeSystemConfig";
@@ -980,6 +980,10 @@ async function FS_initializeSystemConfig(requesterId) {
     FS_logOperation('系統配置初始化', "系統配置初始化", requesterId || "SYSTEM", "", "", functionName);
 
     const initResults = [];
+
+    // 0. 建立基礎集合框架（透過建立佔位文檔）
+    const collectionFramework = await FS_createCollectionFramework();
+    initResults.push({ type: '集合框架', result: collectionFramework });
 
     // 1. 初始化系統配置文檔
     const systemConfig = {
@@ -992,6 +996,11 @@ async function FS_initializeSystemConfig(requesterId) {
         basicBookkeeping: true,
         quickBooking: true,
         modeAssessment: true
+      },
+      collections: {
+        users: 'initialized',
+        ledgers: 'initialized',
+        _system: 'initialized'
       },
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now()
@@ -1537,6 +1546,55 @@ async function FS_validatePhase1Integration(requesterId) {
 }
 
 // =============== 階段三：輔助函數區 ===============
+
+/**
+ * 建立基礎集合框架（透過建立佔位文檔確保集合存在）
+ * @version 2025-11-27-V2.3.0
+ */
+async function FS_createCollectionFramework() {
+  try {
+    const results = [];
+
+    // 1. 建立 users 集合框架
+    const usersPlaceholder = {
+      type: 'collection_placeholder',
+      purpose: '確保 users 集合存在',
+      createdAt: admin.firestore.Timestamp.now(),
+      note: '此文檔僅用於確保集合框架存在，實際用戶註冊時會被覆蓋或刪除'
+    };
+    
+    const usersResult = await FS_createDocument('users', '_placeholder', usersPlaceholder, 'SYSTEM');
+    results.push({ collection: 'users', result: usersResult });
+
+    // 2. 建立 ledgers 集合框架
+    const ledgersPlaceholder = {
+      type: 'collection_placeholder', 
+      purpose: '確保 ledgers 集合存在',
+      createdAt: admin.firestore.Timestamp.now(),
+      note: '此文檔僅用於確保集合框架存在，實際帳本建立時會有真實文檔'
+    };
+
+    const ledgersResult = await FS_createDocument('ledgers', '_placeholder', ledgersPlaceholder, 'SYSTEM');
+    results.push({ collection: 'ledgers', result: ledgersResult });
+
+    const successCount = results.filter(r => r.result.success).length;
+
+    return {
+      success: successCount === results.length,
+      initialized: successCount,
+      total: results.length,
+      collections: results,
+      message: `集合框架建立完成: ${successCount}/${results.length}`
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_CREATE_COLLECTION_FRAMEWORK_ERROR'
+    };
+  }
+}
 
 /**
  * 初始化預設科目
