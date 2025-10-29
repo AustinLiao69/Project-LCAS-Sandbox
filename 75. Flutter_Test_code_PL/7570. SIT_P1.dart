@@ -65,7 +65,7 @@ class TestDataManager {
 
   /// 建立預設測試資料（僅在7598資料載入失敗時使用）
   Map<String, dynamic> _createDefaultTestData() {
-    throw Exception('7598測試資料載入失敗，7570模組要求必須使用7598資料');
+    throw Exception('違反0098第7條：7598測試資料載入失敗，7570模組要求必須使用7598資料');
   }
 
   /// 取得用戶模式測試資料
@@ -75,46 +75,81 @@ class TestDataManager {
       final authData = data['authentication_test_data']?['success_scenarios'];
 
       if (authData == null) {
-        return _createDefaultUserData(userMode);
+        throw Exception('7598資料中缺少authentication_test_data.success_scenarios');
       }
 
+      Map<String, dynamic> userData;
       switch (userMode) {
         case 'Expert':
-          return authData['expert_user_valid'] ?? _createDefaultUserData(userMode);
+          userData = authData['expert_user_valid'];
+          break;
         case 'Inertial':
-          return authData['inertial_user_valid'] ?? _createDefaultUserData(userMode);
+          userData = authData['inertial_user_valid'];
+          break;
         case 'Cultivation':
-          return authData['cultivation_user_valid'] ?? _createDefaultUserData(userMode);
+          userData = authData['cultivation_user_valid'];
+          break;
         case 'Guiding':
-          return authData['guiding_user_valid'] ?? _createDefaultUserData(userMode);
+          userData = authData['guiding_user_valid'];
+          break;
         default:
-          return _createDefaultUserData('Expert');
+          userData = authData['expert_user_valid'];
+          break;
       }
+
+      if (userData == null) {
+        throw Exception('7598資料中缺少${userMode}模式的用戶資料');
+      }
+
+      // 驗證必要欄位是否存在
+      if (userData['email'] == null || userData['ledgerId'] == null) {
+        throw Exception('7598資料中的${userMode}模式用戶資料缺少email或ledgerId欄位');
+      }
+
+      return userData;
     } catch (e) {
-      print('[7570] ⚠️ 取得用戶模式資料失敗: $e，使用預設資料');
-      return _createDefaultUserData(userMode);
+      print('[7570] ❌ 取得用戶模式資料失敗: $e');
+      throw Exception('違反0098第7條：無法從7598獲取完整的${userMode}模式測試資料 - $e');
     }
   }
 
   /// 建立預設用戶資料（強制使用7598資料）
   Map<String, dynamic> _createDefaultUserData(String userMode) {
-    throw Exception('7598測試資料中缺少 ${userMode} 模式資料，請檢查7598資料完整性');
+    throw Exception('違反0098第7條：7598測試資料中缺少 ${userMode} 模式資料，請檢查7598資料完整性');
   }
 
   /// 取得交易測試資料
   Future<Map<String, dynamic>> getTransactionData(String scenario) async {
-    final data = await loadTestData();
-    final bookkeepingData = data['bookkeeping_test_data'];
+    try {
+      final data = await loadTestData();
+      final bookkeepingData = data['bookkeeping_test_data'];
 
-    switch (scenario) {
-      case 'success':
-        return bookkeepingData['success_scenarios'] ?? {};
-      case 'failure':
-        return bookkeepingData['failure_scenarios'] ?? {};
-      case 'boundary':
-        return bookkeepingData['boundary_scenarios'] ?? {};
-      default:
-        throw Exception('不支援的測試情境: $scenario');
+      if (bookkeepingData == null) {
+        throw Exception('7598資料中缺少bookkeeping_test_data');
+      }
+
+      Map<String, dynamic> scenarioData;
+      switch (scenario) {
+        case 'success':
+          scenarioData = bookkeepingData['success_scenarios'];
+          break;
+        case 'failure':
+          scenarioData = bookkeepingData['failure_scenarios'];
+          break;
+        case 'boundary':
+          scenarioData = bookkeepingData['boundary_scenarios'];
+          break;
+        default:
+          throw Exception('不支援的測試情境: $scenario');
+      }
+
+      if (scenarioData == null) {
+        throw Exception('7598資料中缺少${scenario}情境的交易測試資料');
+      }
+
+      return scenarioData;
+    } catch (e) {
+      throw Exception('違反0098第7條：無法從7598獲取${scenario}情境的交易測試資料 - $e');
     }
   }
 }
