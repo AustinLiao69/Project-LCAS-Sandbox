@@ -1174,8 +1174,9 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       throw new Error("Firebase資料庫連接未初始化");
     }
 
+    // 確保帳本ID格式與BK模組一致：user_email格式
     const userLedgerId = `${ledgerIdPrefix}${UID}`;
-    console.log(`📝 ${functionName}: 準備建立帳本ID: ${userLedgerId}`);
+    console.log(`📝 ${functionName}: 準備建立帳本ID: ${userLedgerId}（符合1311 FS.js規範）`);
 
     // 檢查帳本是否已存在
     const existingLedger = await db.collection("ledgers").doc(userLedgerId).get();
@@ -2003,13 +2004,14 @@ async function AM_processAPIRegister(requestData) {
       };
     }
 
-    // DCN-0020: 執行完整帳本初始化
-    console.log(`🔧 AM_processAPIRegister: 開始為用戶 ${userId} 進行完整帳本初始化...`);
+    // DCN-0020: 執行完整帳本初始化 - 使用email作為用戶識別
+    console.log(`🔧 AM_processAPIRegister: 開始為用戶 ${userData.email} 進行完整帳本初始化...`);
     
-    const ledgerInitResult = await AM_initializeUserLedger(userId, "user_");
+    // 使用email作為用戶識別，確保與1311 FS.js結構一致
+    const ledgerInitResult = await AM_initializeUserLedger(userData.email, "user_");
     
     if (ledgerInitResult.success) {
-      console.log(`✅ AM_processAPIRegister: 用戶 ${userId} 帳本初始化成功`);
+      console.log(`✅ AM_processAPIRegister: 用戶 ${userData.email} 帳本初始化成功`);
       userData.initializationComplete = true;
       userData.ledgerInfo = {
         ledgerId: ledgerInitResult.userLedgerId,
