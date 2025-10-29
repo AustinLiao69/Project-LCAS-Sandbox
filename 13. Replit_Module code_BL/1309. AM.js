@@ -1152,9 +1152,9 @@ async function AM_ensureUserSubjects(UID) {
 
 /**
  * 18.5. 取得用戶預設帳本ID
- * @version 2025-11-27-V1.0.1
- * @date 2025-11-27 15:00:00
- * @description 查詢用戶的預設帳本ID，如果不存在則自動初始化
+ * @version 2025-10-29-V1.0.2
+ * @date 2025-10-29 15:00:00
+ * @description 階段一修復：查詢用戶的預設帳本ID，如果不存在則自動初始化，確保BK模組正確調用
  * @param {string} UID - 用戶ID
  * @returns {Promise<Object>} 執行結果包含ledgerId
  */
@@ -4875,8 +4875,8 @@ module.exports = {
   AM_initializeUserSubjects,
   AM_ensureUserSubjects,
 
-  // DCN-0020: 完整帳本初始化功能
-  AM_getUserDefaultLedger,     // ✅ 新增這個關鍵函數的導出
+  // DCN-0020: 完整帳本初始化功能 - 階段一修復
+  AM_getUserDefaultLedger,     // ✅ 關鍵函數導出（階段一修復）
   AM_initializeUserLedger,
   AM_ensureUserLedger,
 
@@ -4909,27 +4909,27 @@ module.exports = {
   AM_processAPIGetModeDefaults,
 
   // 模組版本資訊
-  moduleVersion: '3.2.0',
-  lastUpdate: '2025-11-27',
-  phase: 'DCN-0020階段一完整實作',
-  description: 'AM帳號管理模組 - 完整帳本初始化功能實作'
+  moduleVersion: '3.2.1',
+  lastUpdate: '2025-10-29',
+  phase: 'DCN-0020階段一修復版',
+  description: 'AM帳號管理模組 - 修復AM_getUserDefaultLedger函數導出問題'
 };
 
-console.log('✅ AM模組3.2.0 DCN-0020階段一載入成功！');
+console.log('✅ AM模組3.2.1 DCN-0020階段一修復版載入成功！');
   console.log('📋 功能概覽:');
   console.log('   ├── 核心帳號管理功能 (18個)');
   console.log('   ├── SR模組專用付費功能 (4個)');
   console.log('   ├── DCN-0014 API處理函數 (22個)');
   console.log('   ├── DCN-0015 API處理函數 (19個)');
-  console.log('   ├── DCN-0020 完整帳本初始化 (2個新功能)');
-  console.log('   ├── 階段一緊急修復版本 (v3.0.1-3.0.3)');
-  console.log('   ├── SIT測試修復版本 (v3.0.4-3.0.9)');
-  console.log('   └── 總計: 65個函數完整實作');
-  console.log('🎯 專注領域: 完整帳本初始化，解決註冊後無法記帳問題');
-  console.log('🔧 新增功能: AM_initializeUserLedger() - 完整帳本結構初始化');
-  console.log('🔧 新增功能: AM_ensureUserLedger() - 檢查並補充帳本結構');
-  console.log('📊 資料結構: 帳本主體+交易記錄+帳戶+科目三子集合完整建立');
-  console.log('🎉 MVP改善: 用戶註冊後立即可使用記帳功能！');
+  console.log('   ├── DCN-0020 完整帳本初始化 (3個核心功能)');
+  console.log('   ├── 階段一緊急修復版本 (v3.0.1-3.0.9)');
+  console.log('   └── 總計: 66個函數完整實作');
+  console.log('🔧 階段一修復: AM_getUserDefaultLedger()函數導出問題已解決');
+  console.log('🔧 核心功能: AM_initializeUserLedger() - 完整帳本結構初始化');
+  console.log('🔧 檢查功能: AM_ensureUserLedger() - 檢查並補充帳本結構');
+  console.log('📊 資料流: BK模組 → AM模組帳本初始化 → Firebase完整寫入');
+  console.log('🎯 修復目標: 解決"AM模組函數不可用"的調用失敗問題');
+  console.log('🎉 預期改善: BK_createTransaction能成功調用AM_getUserDefaultLedger！');
 
 
 /**
