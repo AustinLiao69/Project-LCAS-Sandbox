@@ -527,12 +527,18 @@ async function BK_createTransaction(transactionData) {
   const logPrefix = `[${processId}] BK_createTransaction:`;
 
   try {
-    // 載入0692測試資料
+    // 使用0693動態測試資料生成模組
     let testData = {};
     try {
-      testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
+      const dynamicDataGenerator = require('../06. SIT_Test code/0693. 動態生成測試資料.js');
+      const generatedData = dynamicDataGenerator.generateCompleteTestDataSet({
+        userCount: 1,
+        transactionsPerUser: 5,
+        includeStaticData: false
+      });
+      testData = generatedData;
     } catch (error) {
-      console.warn('⚠️ 無法載入0692測試資料，使用預設值');
+      console.warn('⚠️ 無法載入0693動態測試資料，使用預設值');
     }
 
     // 階段四修正：確保帳本透過AM模組正確初始化
@@ -2050,16 +2056,21 @@ async function BK_processAPIGetTransactionDetail(transactionId, queryParams = {}
       return BK_formatErrorResponse("INVALID_TRANSACTION_ID", "無效的交易ID");
     }
 
-    // 階段二修復：從0692測試資料載入測試交易
+    // 階段二修復：從0693動態測試資料載入測試交易
     let testTransactions = {};
     try {
-      const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
-      testTransactions = testData.bookkeeping_test_data?.test_transactions || {};
+      const dynamicDataGenerator = require('../06. SIT_Test code/0693. 動態生成測試資料.js');
+      const generatedData = dynamicDataGenerator.generateCompleteTestDataSet({
+        userCount: 1,
+        transactionsPerUser: 10,
+        includeStaticData: false
+      });
+      testTransactions = generatedData.bookkeeping_test_data?.test_transactions || {};
     } catch (error) {
-      console.warn('⚠️ 無法載入0692測試資料');
+      console.warn('⚠️ 無法載入0693動態測試資料');
     }
 
-    // 階段二修復：檢查0692測試資料中是否存在該交易ID
+    // 階段二修復：檢查0693動態測試資料中是否存在該交易ID
     const testTransaction = testTransactions[transactionId];
     if (testTransaction) {
       // 如果在測試資料中找到，直接返回測試資料
@@ -2079,10 +2090,10 @@ async function BK_processAPIGetTransactionDetail(transactionId, queryParams = {}
         paymentMethod: testTransaction.支付方式,
         userId: testTransaction.UID,
         createdAt: new Date().toISOString(),
-        source: 'test_data_0692'
+        source: 'test_data_0693_dynamic'
       };
 
-      BK_logInfo(`${logPrefix} 交易詳情API處理成功（來自0692測試資料）: ${transactionId}`, "交易詳情", queryParams.userId || "", "BK_processAPIGetTransactionDetail");
+      BK_logInfo(`${logPrefix} 交易詳情API處理成功（來自0693動態測試資料）: ${transactionId}`, "交易詳情", queryParams.userId || "", "BK_processAPIGetTransactionDetail");
       return BK_formatSuccessResponse(transactionDetail, "交易詳情查詢成功");
     }
 
@@ -2090,7 +2101,7 @@ async function BK_processAPIGetTransactionDetail(transactionId, queryParams = {}
     const transactionResult = await BK_getTransactionById(transactionId, queryParams);
 
     if (!transactionResult.success) {
-      return BK_formatErrorResponse("NOT_FOUND", `交易記錄不存在: ${transactionId}（請確認交易ID存在於0692測試資料或Firebase中）`);
+      return BK_formatErrorResponse("NOT_FOUND", `交易記錄不存在: ${transactionId}（請確認交易ID存在於0693動態測試資料或Firebase中）`);
     }
 
     BK_logInfo(`${logPrefix} 交易詳情API處理成功: ${transactionId}`, "交易詳情", queryParams.userId || "", "BK_processAPIGetTransactionDetail");
