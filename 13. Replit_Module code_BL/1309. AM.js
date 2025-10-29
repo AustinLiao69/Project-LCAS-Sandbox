@@ -3205,7 +3205,7 @@ async function AM_processAPIBindLine(requestData) {
       functionName,
     );
 
-    // 階段一修復：確保成功回應包含完整的data欄位結構
+    // 階段一修復：確保成功回應包含完整的data欄位
     return {
       success: true,
       data: {
@@ -4855,7 +4855,7 @@ async function AM_recordAPIUsage(userId, apiEndpoint, userMode, success, process
 
 // 導出模組函數
 module.exports = {
-  // 階段一核心函數
+  // 01-18: 核心帳號管理函數
   AM_createLineAccount,
   AM_createAppAccount,
   AM_linkCrossPlatformAccounts,
@@ -4872,80 +4872,41 @@ module.exports = {
   AM_resolveDataConflict,
   AM_handleAccountError,
   AM_monitorSystemHealth,
+  AM_initializeUserSubjects,
+  AM_ensureUserSubjects,
 
-  // DCN-0020 階段一：完整帳本初始化功能
-  AM_initializeUserLedger,     // 新的完整帳本初始化函數
-  AM_ensureUserLedger,         // 檢查並補充帳本結構
-  AM_getUserDefaultLedger,     // 新增：取得用戶預設帳本ID
+  // DCN-0020: 完整帳本初始化功能
+  AM_getUserDefaultLedger,     // ✅ 新增這個關鍵函數的導出
+  AM_initializeUserLedger,
+  AM_ensureUserLedger,
 
-  // 向後相容性保持（重新導向到新函數）
-  AM_initializeUserSubjects: AM_initializeUserLedger,  // 向後相容
-  AM_ensureUserSubjects: AM_ensureUserLedger,          // 向後相容
-
-  // SR模組付費功能API
+  // 22-25: SR模組專用付費功能API
   AM_validateSRPremiumFeature,
   AM_getSRUserQuota,
   AM_updateSRFeatureUsage,
   AM_processSRUpgrade,
 
-  // 認證服務API處理函數（11個）
+  // 26-44: DCN-0012 階段二 API端點處理函數
   AM_processAPIRegister,
   AM_processAPILogin,
   AM_processAPIGoogleLogin,
   AM_processAPILogout,
-  AM_processAPIRefresh,
+  AM_processAPIRefreshToken,
   AM_processAPIForgotPassword,
   AM_processAPIVerifyResetToken,
   AM_processAPIResetPassword,
   AM_processAPIVerifyEmail,
   AM_processAPIBindLine,
   AM_processAPIBindStatus,
-
-  // 用戶管理API處理函數（8個）
   AM_processAPIGetProfile,
   AM_processAPIUpdateProfile,
   AM_processAPIGetAssessmentQuestions,
   AM_processAPISubmitAssessment,
-  AM_processAPIGetPreferences,
   AM_processAPIUpdatePreferences,
   AM_processAPIUpdateSecurity,
-  AM_processAPISwitchMode,
   AM_processAPIVerifyPin,
-
-  // DCN-0014 階段一：補充缺失的API處理函數（3個）
+  AM_processAPIUpdateUserMode,
   AM_processAPIGetModeDefaults,
-  AM_processAPIBehaviorTracking,
-  AM_processAPIGetModeRecommendations,
-
-  // 統一API回應格式處理機制
-  AM_formatStandardAPIResponse,
-  AM_formatErrorResponse,
-  AM_formatSuccessResponse,
-  AM_generateMetadata,
-  AM_generateModeFeatures,
-
-  // API配額與使用統計
-  AM_checkAPIQuota,
-  AM_getAPIUsageCount,
-  AM_recordAPIUsage,
-
-  // 權限驗證輔助函數
-  AM_validateQueryPermission,
-  AM_validateUpdatePermission,
-  AM_validateSearchPermission,
-
-  // Token管理輔助函數
-  AM_storeTokenSecurely,
-  AM_updateStoredToken,
-  AM_generatePlatformUID,
-
-  // 付費功能輔助函數
-  AM_getSubscriptionInfo,
-  AM_formatAPIResponse,
-  AM_handleSystemError,
-
-  // 模式評估核心函數
-  AM_calculateModeFromAnswers,
 
   // 模組版本資訊
   moduleVersion: '3.2.0',
