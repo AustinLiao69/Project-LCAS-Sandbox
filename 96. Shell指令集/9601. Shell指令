@@ -5,16 +5,16 @@
 cd ~/workspace
 
 2.進入到75. Flutter_Test_code_PL
-cd "75. Flutter_Test_code_PL" 
+cd "75. Flutter_Test_code_PL"
 
 cd "75. Flutter_Test_code_PL"
 && dart test "7501. 系統進入功能群.dart"
 
-cd "75. Flutter_Test_code_PL" 
+cd "75. Flutter_Test_code_PL"
 && dart test "7502. 記帳核心功能群.dart"
 
 6.執行75號資料夾之dart test
-dart test "7501. 系統進入功能群.dart" 
+dart test "7501. 系統進入功能群.dart"
 dart test "7502. 記帳核心功能群.dart"
 
 4.進入資料夾然後安裝dart測試套件
@@ -28,7 +28,7 @@ cd "85. Flutter_Test_code_APL" && dart test "8502. 用戶管理服務_test.dart"
 cd "85. Flutter_Test_code_APL" && dart test "8503. 記帳交易服務_test.dart"
 
 6.執行85號資料夾之dart test
-dart test "8501. 認證服務_test.dart" 
+dart test "8501. 認證服務_test.dart"
 dart test "8502. 用戶管理服務_test.dart"
 dart test "8503. 記帳交易服務_test.dart"
 
@@ -65,7 +65,7 @@ pkill -f node
 
 13. 執行7570
 
-cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart" 
+cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
 
 
 14. 安裝75測試包
@@ -77,7 +77,7 @@ cd "75. Flutter_Test_code_PL" && dart pub intl
 
 15. 執行7571
 
-cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart" 
+cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
 
 16. 執行7582
 
@@ -91,4 +91,38 @@ node -e " const FS = require('./13. Replit_Module code_BL/1311. FS.js'); async f
 
 99. 更新Firebase資料結構
 
-node -e " const FS = require('./13. Replit_Module code_BL/1311. FS.js'); async function updateFirebaseStructure() { try { console.log('🔄 開始更新Firebase文檔架構（階段一重構版）...'); console.log('🔧 系統配置初始化'); const systemResult = await FS.FS_initializeSystemConfig('ADMIN'); console.log('📊 系統配置初始化結果:', systemResult.success ? '成功' : '失敗'); if (systemResult.details) { systemResult.details.forEach(detail => { console.log(' - ' + detail.type + ': ' + (detail.result.success ? '✅' : '❌')); }); } console.log('🏗️ 業務資料結構初始化'); const dataResult = await FS.FS_initializeDataStructure('ADMIN'); console.log('📊 資料結構初始化結果:', dataResult.success ? '成功' : '失敗'); if (dataResult.details) { dataResult.details.forEach(detail => { console.log(' - ' + detail.type + ': ' + (detail.result.success ? '✅' : '❌')); }); } const healthCheck = await FS.FS_performHealthCheck('ADMIN'); console.log('🏥 健康檢查:', healthCheck.success ? '通過' : '失敗'); console.log('✅ Firebase階段一重構版文檔架構更新完成'); console.log('🎯 重構成果確認: 系統配置與業務資料結構已分離'); process.exit(0); } catch (error) { console.error('❌ 更新失敗:', error.message); process.exit(1); } } updateFirebaseStructure(); "
+node -e "
+const FS = require('./13. Replit_Module code_BL/1311. FS.js');
+
+async function updateFirebaseStructure() {
+  try {
+    console.log('🔄 開始更新Firebase文檔架構（階段一重構版）...');
+    console.log('🔧 系統配置初始化');
+    const systemResult = await FS.FS_initializeSystemConfig('ADMIN');
+    console.log('📊 系統配置初始化結果:', systemResult.success ? '成功' : '失敗');
+    if (systemResult.details) {
+      systemResult.details.forEach(detail => {
+        console.log(' - ' + detail.type + ': ' + (detail.result.success ? '✅' : '❌'));
+      });
+    }
+    console.log('🏗️ 業務資料結構初始化');
+    const dataResult = await FS.FS_initializeDataStructure('ADMIN');
+    console.log('📊 資料結構初始化結果:', dataResult.success ? '成功' : '失敗');
+    if (dataResult.details) {
+      dataResult.details.forEach(detail => {
+        console.log(' - ' + detail.type + ': ' + (detail.result.success ? '✅' : '❌'));
+      });
+    }
+    const healthCheck = await FS.FS_performHealthCheck('ADMIN');
+    console.log('🏥 健康檢查:', healthCheck.success ? '通過' : '失敗');
+    console.log('✅ Firebase階段一重構版文檔架構更新完成');
+    console.log('🎯 重構成果確認: 系統配置與業務資料結構已分離');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ 更新失敗:', error.message);
+    process.exit(1);
+  }
+}
+updateFirebaseStructure();
+"
+</original>
