@@ -102,8 +102,8 @@ class TestDataManager {
       }
 
       // 驗證必要欄位是否存在
-      if (userData['email'] == null || userData['ledgerId'] == null) {
-        throw Exception('7598資料中的${userMode}模式用戶資料缺少email或ledgerId欄位');
+      if (userData['email'] == null) {
+        throw Exception('7598資料中的${userMode}模式用戶資料缺少email欄位');
       }
 
       return userData;

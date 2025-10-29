@@ -30,7 +30,6 @@
         "email": "expert.valid@test.lcas.app",
         "displayName": "Expert 測試用戶",
         "userMode": "Expert",
-        "ledgerId": "user_expert.valid@test.lcas.app",
         "preferences": {
           "language": "zh-TW",
           "currency": "TWD",
