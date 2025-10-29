@@ -1,7 +1,7 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.2.0
+ * 1301. BK.js_記帳核心模組_v3.2.1
  * @module 記帳核心模組
- * @description LCAS 2.0 記帳核心ledgers/{ledgerId}/entries功能模組，包含交易管理、分類管理、統計分析等核心功能
+ * @description LCAS 2.0 記帳核心ledgers/{ledgerId}/transactions功能模組，包含交易管理、分類管理、統計分析等核心功能
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
  * @update 2025-09-26: 階段一緊急修復 - 修復快速記帳輸入驗證，強化業務邏輯v3.0.4
  * @update 2025-09-26: 階段一緊急修復v3.0.5 - 修復快速記帳和完整記帳處理邏輯，簡化MVP階段業務處理
@@ -11,7 +11,8 @@
  * @update 2025-10-02: 階段三完整修復v3.1.1 - 統一錯誤處理格式，100%符合DCN-0015規範，修復TC-SIT-007
  * @update 2025-10-02: 階段二簡化優化v3.1.2 - 移除冗餘API包裝函數，簡化調用鏈，提升性能
  * @update 2025-10-02: 階段三清理優化v3.1.3 - 清理module.exports，移除已刪除函數的導出，完成架構簡化
- * @date 2025-10-02
+ * @update 2025-11-27: 路徑標準化v3.2.1 - 統一修正為1311 FS.js標準路徑格式 ledgers/{ledgerId}/transactions，移除entries舊格式相容性
+ * @date 2025-11-27
  */
 
 /**
@@ -383,7 +384,7 @@ const BK_CONFIG = {
   FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED') !== 'false',
   TIMEZONE: getEnvVar('TIMEZONE') || Intl.DateTimeFormat().resolvedOptions().timeZone,
   INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL'), 10) || 300000,
-  VERSION: getEnvVar('BK_VERSION') || '3.2.0',
+  VERSION: getEnvVar('BK_VERSION') || '3.2.1',
   MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT'), 10) || Number.MAX_SAFE_INTEGER,
   DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY') || detectSystemCurrency(),
   DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD') || '現金',
@@ -858,9 +859,9 @@ async function BK_performMinimalQuery(collectionRef, queryParams) {
 
 /**
  * 查詢結果處理 (符合1311 FS.js規範版)
- * @version 2025-10-09-V3.2.0
- * @date 2025-10-09
- * @update: 使用1311 FS.js標準欄位名稱處理查詢結果
+ * @version 2025-11-27-V3.2.1
+ * @date 2025-11-27
+ * @update: 完全使用1311 FS.js標準欄位名稱，移除舊格式相容性
  */
 function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = false) {
   const transactions = [];
@@ -868,7 +869,7 @@ function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = fa
   snapshot.forEach(doc => {
     const data = doc.data();
 
-    // 後端過濾邏輯 - 使用標準欄位名稱
+    // 後端過濾邏輯 - 使用1311 FS.js標準欄位名稱
     if (enableBackendFilter) {
       if (queryParams.userId && data.userId !== queryParams.userId) {
         return;
@@ -883,21 +884,23 @@ function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = fa
       }
     }
 
-    // 使用1311 FS.js標準欄位構建回應
+    // 完全使用1311 FS.js標準欄位構建回應
     transactions.push({
       id: data.id || doc.id,
       amount: parseFloat(data.amount || 0),
       type: data.type || 'expense',
       date: data.date,
       description: data.description || '',
-      categoryId: data.categoryId,
-      accountId: data.accountId,
-      paymentMethod: data.paymentMethod,
+      categoryId: data.categoryId || 'default',
+      accountId: data.accountId || 'default', 
+      paymentMethod: data.paymentMethod || '現金',
       userId: data.userId,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
       status: data.status || 'active',
-      ledgerId: data.ledgerId
+      ledgerId: data.ledgerId,
+      source: data.source || 'manual',
+      verified: data.verified || false
     });
   });
 
@@ -906,7 +909,7 @@ function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = fa
     total: transactions.length,
     page: queryParams.page || 1,
     limit: queryParams.limit || 20,
-    dataFormat: 'FS_STANDARD'
+    dataFormat: 'FS_STANDARD_V3.2.1'
   };
 }
 
@@ -983,9 +986,9 @@ async function BK_getDashboardData(params = {}) {
 
 /**
  * 07. 更新交易記錄 - 支援 PUT /transactions/{id}
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 移除hard coding，使用動態配置
+ * @version 2025-11-27-V3.2.1
+ * @date 2025-11-27
+ * @update: 修正路徑格式為1311 FS.js標準 - ledgers/{ledgerId}/transactions
  */
 async function BK_updateTransaction(transactionId, updateData) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -1010,9 +1013,10 @@ async function BK_updateTransaction(transactionId, updateData) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
+    // 修正：使用1311 FS.js標準路徑格式
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-    const idField = getEnvVar('ID_FIELD', '收支ID');
+    const transactionsCollection = getEnvVar('TRANSACTIONS_COLLECTION', 'transactions');
+    const idField = getEnvVar('ID_FIELD', 'id');
 
     // 階段三修正：ledgerId必須從更新資料中提供
     const ledgerId = updateData.ledgerId;
@@ -1022,7 +1026,7 @@ async function BK_updateTransaction(transactionId, updateData) {
 
     const querySnapshot = await db.collection(ledgerCollection)
       .doc(ledgerId)
-      .collection(entriesCollection)
+      .collection(transactionsCollection)
       .where(idField, '==', transactionId)
       .get();
 
@@ -1080,9 +1084,9 @@ async function BK_updateTransaction(transactionId, updateData) {
 
 /**
  * 08. 刪除交易記錄 - 支援 DELETE /transactions/{id}
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 移除hard coding，使用動態配置
+ * @version 2025-11-27-V3.2.1
+ * @date 2025-11-27
+ * @update: 修正路徑格式為1311 FS.js標準 - ledgers/{ledgerId}/transactions
  */
 async function BK_deleteTransaction(transactionId, params = {}) {
   const processId = require('crypto').randomUUID().substring(0, 8);
@@ -1103,9 +1107,10 @@ async function BK_deleteTransaction(transactionId, params = {}) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
+    // 修正：使用1311 FS.js標準路徑格式
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
-    const idField = getEnvVar('ID_FIELD', '收支ID');
+    const transactionsCollection = getEnvVar('TRANSACTIONS_COLLECTION', 'transactions');
+    const idField = getEnvVar('ID_FIELD', 'id');
 
     // 階段三修正：ledgerId必須從參數中提供
     const ledgerId = params.ledgerId;
@@ -1115,7 +1120,7 @@ async function BK_deleteTransaction(transactionId, params = {}) {
 
     const querySnapshot = await db.collection(ledgerCollection)
       .doc(ledgerId)
-      .collection(entriesCollection)
+      .collection(transactionsCollection)
       .where(idField, '==', transactionId)
       .get();
 
@@ -1390,17 +1395,18 @@ function BK_generateStatistics(transactions, period = 'month') {
 
 /**
  * 13. 交易查詢過濾 - 支援GET /transactions
- * @version 2025-01-28-V2.2.0
- * @date 2025-01-28
- * @update: 移除hard coding，使用動態配置
+ * @version 2025-11-27-V3.2.1
+ * @date 2025-11-27
+ * @update: 修正路徑格式為1311 FS.js標準 - ledgers/{ledgerId}/transactions
  */
 function BK_buildTransactionQuery(queryParams) {
   const processId = require('crypto').randomUUID().substring(0, 8);
   const logPrefix = `[${processId}] BK_buildTransactionQuery:`;
 
   try {
+    // 修正：使用1311 FS.js標準路徑格式
     const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
-    const entriesCollection = getEnvVar('ENTRIES_COLLECTION', 'entries');
+    const transactionsCollection = getEnvVar('TRANSACTIONS_COLLECTION', 'transactions');
 
     // 階段三修正：ledgerId必須從queryParams中提供
     const ledgerId = queryParams.ledgerId;
@@ -1411,7 +1417,7 @@ function BK_buildTransactionQuery(queryParams) {
     let query = BK_INIT_STATUS.firestore_db
       .collection(ledgerCollection)
       .doc(ledgerId)
-      .collection(entriesCollection);
+      .collection(transactionsCollection);
 
     const appliedFilters = [];
 
@@ -3032,12 +3038,12 @@ function BK_processImportResult(result) {
 }
 
 /**
- * 查詢指定日期範圍的交易記錄 (階段二修復版)
- * @version 2025-09-26-V3.0.2
- * @date 2025-09-26
- * @update: 階段二修復 - 使用FS.js進行資料查詢，避免複合索引需求
+ * 查詢指定日期範圍的交易記錄 (路徑修正版)
+ * @version 2025-11-27-V3.2.1
+ * @date 2025-11-27
+ * @update: 修正路徑格式為1311 FS.js標準 - ledgers/{ledgerId}/transactions
  */
-async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
+async function BK_getTransactionsByDateRange(startDate, endDate, userId, ledgerId) {
   const processId = require('crypto').randomUUID().substring(0, 8);
   const logPrefix = `[${processId}] BK_getTransactionsByDateRange:`;
 
@@ -3051,13 +3057,13 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
-    // 階段三修正：ledgerId必須從配置中獲取
-    const ledgerId = BK_CONFIG.DEFAULT_LEDGER_COLLECTION; // 階段三修正：使用測試集合作為預設
+    // 修正：ledgerId必須明確提供
     if (!ledgerId) {
-      throw new Error("MISSING_DEFAULT_LEDGER_COLLECTION: 無法確定用於查詢的Collection");
+      return BK_formatErrorResponse("MISSING_LEDGER_ID", "查詢日期範圍交易需要指定ledgerId");
     }
 
-    const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
+    // 修正：使用1311 FS.js標準路徑格式
+    const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
 
     let query = collectionRef.orderBy('createdAt', 'desc').limit(200);
 
@@ -3202,8 +3208,9 @@ module.exports = {
         throw new Error("MISSING_LEDGER_ID: 獲取交易詳情需要指定ledgerId");
       }
       const ledgerId = queryParams.ledgerId;
-      const collectionRef = db.collection('ledgers').doc(ledgerId).collection('entries');
-      const idField = getEnvVar('ID_FIELD', '收支ID');
+      // 修正：使用1311 FS.js標準路徑格式
+      const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+      const idField = getEnvVar('ID_FIELD', 'id');
 
       const querySnapshot = await collectionRef.where(idField, '==', transactionId).limit(1).get();
 
@@ -3214,36 +3221,23 @@ module.exports = {
       const doc = querySnapshot.docs[0];
       const data = doc.data();
 
-      const fieldNames = {
-        id: getEnvVar('ID_FIELD', '收支ID'),
-        income: getEnvVar('INCOME_FIELD', '收入'),
-        expense: getEnvVar('EXPENSE_FIELD', '支出'),
-        date: getEnvVar('DATE_FIELD', '日期'),
-        time: getEnvVar('TIME_FIELD', '時間'),
-        description: getEnvVar('DESCRIPTION_FIELD', '備註'),
-        category: getEnvVar('CATEGORY_FIELD', '子項名稱'),
-        paymentMethod: getEnvVar('PAYMENT_METHOD_FIELD', '支付方式'),
-        uid: getEnvVar('UID_FIELD', 'UID'),
-        majorCode: getEnvVar('MAJOR_CODE_FIELD', '大項代碼'),
-        minorCode: getEnvVar('MINOR_CODE_FIELD', '子項代碼')
-      };
-
+      // 修正：使用1311 FS.js標準欄位名稱
       const transactionDetail = {
-        id: data[fieldNames.id] || doc.id,
-        amount: parseFloat(data[fieldNames.income] || data[fieldNames.expense] || 0),
-        type: data[fieldNames.income] ? 'income' : 'expense',
-        date: data[fieldNames.date],
-        description: data[fieldNames.description] || '',
-        category: {
-          id: `${data[fieldNames.majorCode]}_${data[fieldNames.minorCode]}`,
-          name: data[fieldNames.category],
-          majorCode: data[fieldNames.majorCode],
-          minorCode: data[fieldNames.minorCode]
-        },
-        paymentMethod: data[fieldNames.paymentMethod],
-        userId: data[fieldNames.uid],
-        createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(),
-        source: 'firestore'
+        id: data.id || doc.id,
+        amount: parseFloat(data.amount || 0),
+        type: data.type || 'expense',
+        date: data.date,
+        description: data.description || '',
+        categoryId: data.categoryId || 'default',
+        accountId: data.accountId || 'default',
+        paymentMethod: data.paymentMethod || '現金',
+        userId: data.userId,
+        createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.() ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
+        status: data.status || 'active',
+        verified: data.verified || false,
+        source: data.source || 'firestore',
+        ledgerId: data.ledgerId
       };
 
       return BK_formatSuccessResponse(transactionDetail, "交易詳情查詢成功");
