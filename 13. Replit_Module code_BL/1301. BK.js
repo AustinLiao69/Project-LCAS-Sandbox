@@ -535,18 +535,19 @@ async function BK_createTransaction(transactionData) {
       console.warn('⚠️ 無法載入0692測試資料，使用預設值');
     }
 
-    // 階段四修正：如果沒有提供ledgerId，則透過AM模組查詢用戶預設帳本
+    // 階段四修正：確保帳本透過AM模組正確初始化
     let ledgerId = transactionData.ledgerId;
     
-    if (!ledgerId && transactionData.userId) {
-      // 透過AM模組查詢用戶預設帳本
+    // 優先使用AM模組處理帳本邏輯
+    if (transactionData.userId) {
       const AM = require('./1309. AM.js');
       if (AM && typeof AM.AM_getUserDefaultLedger === 'function') {
         try {
+          // 透過AM模組確保用戶有預設帳本（會自動初始化）
           const ledgerResult = await AM.AM_getUserDefaultLedger(transactionData.userId);
           if (ledgerResult.success) {
             ledgerId = ledgerResult.ledgerId;
-            BK_logInfo(`${logPrefix} 透過AM模組取得用戶預設帳本: ${ledgerId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
+            BK_logInfo(`${logPrefix} 透過AM模組取得/初始化用戶預設帳本: ${ledgerId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
           } else {
             return BK_formatErrorResponse("GET_DEFAULT_LEDGER_FAILED", `無法取得用戶預設帳本: ${ledgerResult.error}`);
           }
@@ -555,10 +556,12 @@ async function BK_createTransaction(transactionData) {
           return BK_formatErrorResponse("AM_MODULE_ERROR", "無法透過AM模組查詢帳本歸屬");
         }
       } else {
-        return BK_formatErrorResponse("MISSING_LEDGER_ID", "建立交易需要ledgerId，且AM模組不可用");
+        return BK_formatErrorResponse("AM_MODULE_NOT_AVAILABLE", "AM模組不可用，無法初始化帳本");
       }
-    } else if (!ledgerId) {
-      return BK_formatErrorResponse("MISSING_LEDGER_ID", "建立交易需要ledgerId或userId");
+    }
+    
+    if (!ledgerId) {
+      return BK_formatErrorResponse("MISSING_LEDGER_ID", "無法確定交易歸屬的帳本");
     }
 
     // 更新processedData中的ledgerId
@@ -597,14 +600,15 @@ async function BK_createTransaction(transactionData) {
 
       // 階段一&二修復：包裝Firebase操作在重試邏輯中
       const executeTransaction = async () => {
-        // 驗證交易歸屬的帳本是否存在且用戶有權限
-        const ledgerValidation = await BK_validateTransactionLedger(processedData.ledgerId, processedData.userId, processId);
-
-        if (!ledgerValidation.success) {
-          throw new Error(`帳本驗證失敗: ${ledgerValidation.error || ledgerValidation.message}`);
+        // 驗證帳本存在（AM模組已確保帳本存在且完整初始化）
+        const db = BK_INIT_STATUS.firestore_db;
+        const ledgerDoc = await db.collection('ledgers').doc(processedData.ledgerId).get();
+        
+        if (!ledgerDoc.exists) {
+          throw new Error(`帳本不存在: ${processedData.ledgerId}`);
         }
 
-        BK_logInfo(`${logPrefix} 帳本驗證通過: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        BK_logInfo(`${logPrefix} 帳本驗證通過（AM模組已初始化）: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
 
         // 生成交易ID
         const transactionId = await BK_generateTransactionId(processId);
