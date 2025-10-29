@@ -38,6 +38,7 @@ MVP階段的核心問題是測試資料設計完全背離真實業務流程。75
 7571測試 → 7598取得email → PL啟動註冊 → APL處理註冊 → AM生成userId → 
 用戶進行模式評估 → 評估結果存入Firebase users/{userId}.userMode → 
 AM根據模式初始化對應帳本結構
+
 關鍵點：
 •	模式評估結果存儲在Firebase users集合的userMode欄位
 •	7598只提供評估問題，不提供答案
