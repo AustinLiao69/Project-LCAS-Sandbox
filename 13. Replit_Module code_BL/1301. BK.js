@@ -1,5 +1,5 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.2.1
+ * 1301. BK.js_記帳核心模組_v3.2.2
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心ledgers/{ledgerId}/transactions功能模組，包含交易管理、分類管理、統計分析等核心功能
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
@@ -12,7 +12,9 @@
  * @update 2025-10-02: 階段二簡化優化v3.1.2 - 移除冗餘API包裝函數，簡化調用鏈，提升性能
  * @update 2025-10-02: 階段三清理優化v3.1.3 - 清理module.exports，移除已刪除函數的導出，完成架構簡化
  * @update 2025-11-27: 路徑標準化v3.2.1 - 統一修正為1311 FS.js標準路徑格式 ledgers/{ledgerId}/transactions，移除entries舊格式相容性
- * @date 2025-11-27
+ * @update 2025-10-29: 架構重構v3.2.2 - 移除硬編碼帳本ID，透過AM模組正確處理帳本初始化，完全符合0098憲法第3、6、7條
+ * @update 2025-10-29: 階段二強化v3.2.3 - 強化AM模組調用機制，增加重試邏輯和詳細錯誤處理，確保帳本ID正確獲取
+ * @date 2025-10-29
  */
 
 /**
@@ -374,8 +376,17 @@ if (!admin.apps.length) {
 const DL = require('./1310. DL.js');
 const FS = require('./1311. FS.js');
 
-// BK模組不直接載入測試資料，改為接收外部傳入的參數
-console.log('✅ BK模組：使用環境變數設定，不直接讀取測試資料');
+// BK模組完全移除測試資料依賴，使用純業務邏輯
+console.log('✅ BK模組：使用純業務邏輯配置，禁止引用測試資料');
+
+/**
+ * 生成預設用戶ID（業務邏輯版本）
+ */
+function generateDefaultUserId() {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 6);
+  return `business_user_${timestamp}_${random}`;
+}
 
 // 配置參數 - 完全使用環境變數，移除所有硬編碼
 const BK_CONFIG = {
@@ -384,7 +395,7 @@ const BK_CONFIG = {
   FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED') !== 'false',
   TIMEZONE: getEnvVar('TIMEZONE') || Intl.DateTimeFormat().resolvedOptions().timeZone,
   INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL'), 10) || 300000,
-  VERSION: getEnvVar('BK_VERSION') || '3.2.1',
+  VERSION: getEnvVar('BK_VERSION') || '3.2.3',
   MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT'), 10) || Number.MAX_SAFE_INTEGER,
   DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY') || detectSystemCurrency(),
   DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD') || '現金',
@@ -517,71 +528,118 @@ async function BK_initializeFirebase() {
 }
 
 /**
- * 03. 新增交易記錄 - 支援 POST /transactions (階段一&二修復版)
- * @version 2025-10-02-V3.1.0
- * @date 2025-10-02
- * @update: 階段一&二修復 - 簡化MVP邏輯，增加超時保護機制
+ * 03. 新增交易記錄 - 支援 POST /transactions (階段一修復v3.2.2版)
+ * @version 2025-10-29-V3.2.2
+ * @date 2025-10-29
+ * @update: 階段一修復 - 移除硬編碼，透過AM模組正確處理帳本初始化，完全符合0098憲法
  */
 async function BK_createTransaction(transactionData) {
   const processId = require('crypto').randomUUID().substring(0, 8);
   const logPrefix = `[${processId}] BK_createTransaction:`;
 
   try {
-    // 載入0692測試資料
-    let testData = {};
-    try {
-      testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
-    } catch (error) {
-      console.warn('⚠️ 無法載入0692測試資料，使用預設值');
+    // 使用外部注入的預設配置，移除對測試資料的直接依賴
+    const defaultConfig = {
+      defaultPaymentMethod: transactionData.paymentMethod || BK_CONFIG.DEFAULT_PAYMENT_METHOD,
+      defaultUserId: transactionData.userId || generateDefaultUserId(),
+      defaultCurrency: BK_CONFIG.DEFAULT_CURRENCY
+    };
+
+    // 階段二修正：強化AM模組調用機制和錯誤處理
+    let ledgerId = null;
+    
+    // 強制透過AM模組處理帳本邏輯 - 符合0098憲法第6、7條
+    if (!transactionData.userId) {
+      return BK_formatErrorResponse("MISSING_USER_ID", "缺少用戶ID，無法確定帳本歸屬");
     }
 
-    // 階段四修正：確保帳本透過AM模組正確初始化
-    let ledgerId = transactionData.ledgerId;
+    // 階段二修正：確保AM模組正確導入和調用
+    let AM;
+    try {
+      AM = require('./1309. AM.js');
+      BK_logInfo(`${logPrefix} AM模組載入成功`, "新增交易", transactionData.userId, "BK_createTransaction");
+    } catch (importError) {
+      BK_logError(`${logPrefix} AM模組載入失敗: ${importError.message}`, "新增交易", transactionData.userId, "AM_MODULE_IMPORT_ERROR", importError.toString(), "BK_createTransaction");
+      return BK_formatErrorResponse("AM_MODULE_IMPORT_ERROR", "AM模組載入失敗，無法處理帳本邏輯");
+    }
+
+    // 階段二修正：詳細檢查AM模組函數可用性
+    if (!AM || typeof AM.AM_getUserDefaultLedger !== 'function') {
+      BK_logError(`${logPrefix} AM模組函數不可用，AM存在: ${!!AM}, 函數類型: ${typeof AM?.AM_getUserDefaultLedger}`, "新增交易", transactionData.userId, "AM_FUNCTION_NOT_AVAILABLE", "AM_getUserDefaultLedger函數不存在", "BK_createTransaction");
+      return BK_formatErrorResponse("AM_MODULE_NOT_AVAILABLE", "AM模組的AM_getUserDefaultLedger函數不可用，無法初始化帳本");
+    }
+
+    // 階段二修正：強化AM模組調用和重試機制
+    let ledgerResult;
+    let retryCount = 0;
+    const maxRetries = 2; // 階段二修正：增加重試機制
     
-    // 優先使用AM模組處理帳本邏輯
-    if (transactionData.userId) {
-      const AM = require('./1309. AM.js');
-      if (AM && typeof AM.AM_getUserDefaultLedger === 'function') {
-        try {
-          // 透過AM模組確保用戶有預設帳本（會自動初始化）
-          const ledgerResult = await AM.AM_getUserDefaultLedger(transactionData.userId);
-          if (ledgerResult.success) {
-            ledgerId = ledgerResult.ledgerId;
-            BK_logInfo(`${logPrefix} 透過AM模組取得/初始化用戶預設帳本: ${ledgerId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
-          } else {
-            return BK_formatErrorResponse("GET_DEFAULT_LEDGER_FAILED", `無法取得用戶預設帳本: ${ledgerResult.error}`);
+    while (retryCount <= maxRetries) {
+      try {
+        BK_logInfo(`${logPrefix} 第${retryCount + 1}次嘗試透過AM模組處理帳本初始化`, "新增交易", transactionData.userId, "BK_createTransaction");
+        
+        // 呼叫AM模組獲取用戶預設帳本
+        ledgerResult = await AM.AM_getUserDefaultLedger(transactionData.userId);
+        
+        // 階段二修正：詳細記錄AM模組回應
+        BK_logInfo(`${logPrefix} AM模組回應: ${JSON.stringify(ledgerResult)}`, "新增交易", transactionData.userId, "BK_createTransaction");
+        
+        if (ledgerResult && ledgerResult.success && ledgerResult.ledgerId) {
+          ledgerId = ledgerResult.ledgerId;
+          BK_logInfo(`${logPrefix} 透過AM模組成功取得用戶預設帳本: ${ledgerId}`, "新增交易", transactionData.userId, "BK_createTransaction");
+          break; // 成功取得帳本ID，跳出重試迴圈
+        } else {
+          // 階段二修正：記錄詳細的失敗原因
+          const errorDetail = ledgerResult ? 
+            `success: ${ledgerResult.success}, ledgerId: ${ledgerResult.ledgerId}, error: ${ledgerResult.error}` :
+            "AM模組回應為空或undefined";
+          
+          BK_logWarning(`${logPrefix} AM模組取得帳本失敗 (嘗試${retryCount + 1}/${maxRetries + 1}): ${errorDetail}`, "新增交易", transactionData.userId, "BK_createTransaction");
+          
+          if (retryCount === maxRetries) {
+            // 最後一次重試也失敗
+            BK_logError(`${logPrefix} AM模組取得帳本最終失敗: ${errorDetail}`, "新增交易", transactionData.userId, "GET_DEFAULT_LEDGER_FAILED", errorDetail, "BK_createTransaction");
+            return BK_formatErrorResponse("GET_DEFAULT_LEDGER_FAILED", `無法取得用戶預設帳本: ${errorDetail}`);
           }
-        } catch (amError) {
-          BK_logWarning(`${logPrefix} 呼叫AM模組失敗: ${amError.message}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
-          return BK_formatErrorResponse("AM_MODULE_ERROR", "無法透過AM模組查詢帳本歸屬");
         }
-      } else {
-        return BK_formatErrorResponse("AM_MODULE_NOT_AVAILABLE", "AM模組不可用，無法初始化帳本");
+      } catch (amError) {
+        BK_logError(`${logPrefix} 呼叫AM模組發生異常 (嘗試${retryCount + 1}/${maxRetries + 1}): ${amError.message}`, "新增交易", transactionData.userId, "AM_MODULE_ERROR", amError.toString(), "BK_createTransaction");
+        
+        if (retryCount === maxRetries) {
+          // 最後一次重試也異常
+          return BK_formatErrorResponse("AM_MODULE_ERROR", `呼叫AM模組發生異常，已重試${maxRetries + 1}次: ${amError.message}`);
+        }
+      }
+      
+      retryCount++;
+      if (retryCount <= maxRetries) {
+        // 等待後重試
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
       }
     }
     
-    if (!ledgerId) {
-      return BK_formatErrorResponse("MISSING_LEDGER_ID", "無法確定交易歸屬的帳本");
+    // 階段二修正：最終驗證ledgerId
+    if (!ledgerId || typeof ledgerId !== 'string' || ledgerId.trim() === '') {
+      BK_logError(`${logPrefix} AM模組未回傳有效的帳本ID: ${ledgerId}`, "新增交易", transactionData.userId, "INVALID_LEDGER_ID", `回傳的ledgerId: ${ledgerId}`, "BK_createTransaction");
+      return BK_formatErrorResponse("MISSING_LEDGER_ID", `AM模組未回傳有效的帳本ID，回傳值: ${ledgerId}`);
     }
 
-    // 更新processedData中的ledgerId
-    processedData.ledgerId = ledgerId;
+    // 準備處理的交易數據，使用AM模組提供的正確ledgerId
 
-    // 使用0692測試資料補充缺失的欄位
     const processedData = {
       amount: transactionData.amount,
       type: transactionData.type,
       description: transactionData.description,
       categoryId: transactionData.categoryId,
       accountId: transactionData.accountId,
-      ledgerId: transactionData.ledgerId,
-      paymentMethod: transactionData.paymentMethod || testData.bookkeeping_test_data?.default_payment_method || '現金',
+      ledgerId: ledgerId, // 使用AM模組提供的正確帳本ID
+      paymentMethod: defaultConfig.defaultPaymentMethod,
       date: transactionData.date,
-      userId: transactionData.userId || Object.keys(testData.authentication_test_data?.valid_users || {})[0] || 'expert_mode_user_001',
+      userId: transactionData.userId,
       processId: processId
     };
 
-    BK_logInfo(`${logPrefix} 開始處理新增交易請求`, "新增交易", processedData.userId || "", "BK_createTransaction");
+    BK_logInfo(`${logPrefix} 開始處理新增交易請求，帳本ID: ${ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
 
     // 階段二修復：添加超時保護機制
     const processWithTimeout = async () => {
@@ -600,15 +658,16 @@ async function BK_createTransaction(transactionData) {
 
       // 階段一&二修復：包裝Firebase操作在重試邏輯中
       const executeTransaction = async () => {
-        // 驗證帳本存在（AM模組已確保帳本存在且完整初始化）
+        // 信任AM模組已確保帳本存在且完整初始化，移除BK模組的帳本建立邏輯
         const db = BK_INIT_STATUS.firestore_db;
         const ledgerDoc = await db.collection('ledgers').doc(processedData.ledgerId).get();
         
         if (!ledgerDoc.exists) {
-          throw new Error(`帳本不存在: ${processedData.ledgerId}`);
+          // 不在BK模組建立帳本，回傳錯誤要求重新透過AM模組處理
+          throw new Error(`AM模組初始化的帳本不存在: ${processedData.ledgerId}，請聯繫系統管理員`);
         }
 
-        BK_logInfo(`${logPrefix} 帳本驗證通過（AM模組已初始化）: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        BK_logInfo(`${logPrefix} 帳本驗證通過（由AM模組管理）: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
 
         // 生成交易ID
         const transactionId = await BK_generateTransactionId(processId);
@@ -630,7 +689,7 @@ async function BK_createTransaction(transactionData) {
           category: processedData.categoryId,
           date: preparedData.date,
           description: processedData.description,
-          ledgerStatus: ledgerValidation.data // Pass ledger validation data
+          ledgerId: processedData.ledgerId // 回傳AM模組提供的帳本ID
         };
       };
 
@@ -2050,47 +2109,11 @@ async function BK_processAPIGetTransactionDetail(transactionId, queryParams = {}
       return BK_formatErrorResponse("INVALID_TRANSACTION_ID", "無效的交易ID");
     }
 
-    // 階段二修復：從0692測試資料載入測試交易
-    let testTransactions = {};
-    try {
-      const testData = require('../06. SIT_Test code/0692. SIT_TestData_P1.json');
-      testTransactions = testData.bookkeeping_test_data?.test_transactions || {};
-    } catch (error) {
-      console.warn('⚠️ 無法載入0692測試資料');
-    }
-
-    // 階段二修復：檢查0692測試資料中是否存在該交易ID
-    const testTransaction = testTransactions[transactionId];
-    if (testTransaction) {
-      // 如果在測試資料中找到，直接返回測試資料
-      const transactionDetail = {
-        id: testTransaction.收支ID || transactionId,
-        date: testTransaction.日期,
-        time: testTransaction.時間,
-        amount: parseFloat(testTransaction.收入 || testTransaction.支出 || 0),
-        type: testTransaction.收入 ? 'income' : 'expense',
-        description: testTransaction.備註,
-        category: {
-          id: `${testTransaction.大項代碼}${testTransaction.子項代碼}`,
-          name: testTransaction.子項名稱,
-          majorCode: testTransaction.大項代碼,
-          minorCode: testTransaction.子項代碼
-        },
-        paymentMethod: testTransaction.支付方式,
-        userId: testTransaction.UID,
-        createdAt: new Date().toISOString(),
-        source: 'test_data_0692'
-      };
-
-      BK_logInfo(`${logPrefix} 交易詳情API處理成功（來自0692測試資料）: ${transactionId}`, "交易詳情", queryParams.userId || "", "BK_processAPIGetTransactionDetail");
-      return BK_formatSuccessResponse(transactionDetail, "交易詳情查詢成功");
-    }
-
-    // 如果不在測試資料中，嘗試從Firebase查詢
+    // 直接從Firebase查詢，移除測試資料邏輯
     const transactionResult = await BK_getTransactionById(transactionId, queryParams);
 
     if (!transactionResult.success) {
-      return BK_formatErrorResponse("NOT_FOUND", `交易記錄不存在: ${transactionId}（請確認交易ID存在於0692測試資料或Firebase中）`);
+      return BK_formatErrorResponse("NOT_FOUND", `交易記錄不存在: ${transactionId}`);
     }
 
     BK_logInfo(`${logPrefix} 交易詳情API處理成功: ${transactionId}`, "交易詳情", queryParams.userId || "", "BK_processAPIGetTransactionDetail");
