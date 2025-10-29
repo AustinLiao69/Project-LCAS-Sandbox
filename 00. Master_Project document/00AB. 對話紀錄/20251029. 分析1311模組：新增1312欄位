@@ -42,7 +42,6 @@
 •	_system/budget_structure - 預算管理結構定義
 •	_system/ledger_collection_structure - 帳本集合結構定義
 
-
 業務資料結構初始化 (FS_initializeDataStructure)：
 •	建立 users 集合基本索引結構
 •	建立 ledgers 集合基本結構
@@ -50,11 +49,13 @@
 o	ledgers/{ledger_id}/transactions - 交易記錄子集合
 o	ledgers/{ledger_id}/accounts - 帳戶子集合
 o	ledgers/{ledger_id}/categories - 科目子集合
+
 階段三：整合與驗證
 調整現有函數調用邏輯：
 •	Firebase 清空指令中的初始化調用改為 FS_initializeDataStructure
 •	用戶註冊流程中確保調用正確的初始化函數
 •	確保初始化後立即可進行 CRUD 操作
+
 ⚠️ MVP 階段聚焦
 當前核心問題：
 •	用戶註冊後無法立即使用系統，因為缺乏基本的資料結構
@@ -69,8 +70,6 @@ o	ledgers/{ledger_id}/categories - 科目子集合
 3.	將 _system 配置初始化移至獨立函數
 4.	確保初始化完成後，1311.FS.js 的所有 CRUD 函數都能正常運作
 這個重構將解決初始化與實際使用脫節的核心問題，確保系統在初始化後立即可用，符合 MVP 階段用戶體驗的基本要求。
-
-
 
 ------------------------------------------
 20251029. 分析1311模組:新增1312欄位
