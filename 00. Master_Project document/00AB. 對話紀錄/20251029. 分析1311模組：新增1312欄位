@@ -41,7 +41,7 @@
 •	_system/assessment_questions - 評估問卷模板
 •	_system/budget_structure - 預算管理結構定義
 •	_system/ledger_collection_structure - 帳本集合結構定義
-=>為什麼要有這個系統配置？目的是什麼？功能是什麼？
+
 
 業務資料結構初始化 (FS_initializeDataStructure)：
 •	建立 users 集合基本索引結構
