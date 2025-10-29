@@ -554,7 +554,7 @@ async function BK_createTransaction(transactionData) {
       processId: processId
     };
 
-    BK_logInfo(`${logPrefix} 開始處理新增交易請求`, "新增交易", processedData.userId, "BK_createTransaction");
+    BK_logInfo(`${logPrefix} 開始處理新增交易請求`, "新增交易", processedData.userId || "", "BK_createTransaction");
 
     // 階段二修復：添加超時保護機制
     const processWithTimeout = async () => {
@@ -573,18 +573,14 @@ async function BK_createTransaction(transactionData) {
 
       // 階段一&二修復：包裝Firebase操作在重試邏輯中
       const executeTransaction = async () => {
-        // 階段一新增：確保帳本文檔存在
-        const ledgerResult = await BK_ensureLedgerExists(processedData.ledgerId, processedData.userId, processId);
+        // 驗證交易歸屬的帳本是否存在且用戶有權限
+        const ledgerValidation = await BK_validateTransactionLedger(processedData.ledgerId, processedData.userId, processId);
 
-        if (!ledgerResult.success) {
-          throw new Error(`帳本文檔檢查失敗: ${ledgerResult.error || ledgerResult.message}`);
+        if (!ledgerValidation.success) {
+          throw new Error(`帳本驗證失敗: ${ledgerValidation.error || ledgerValidation.message}`);
         }
 
-        if (ledgerResult.data && ledgerResult.data.existed) {
-          BK_logInfo(`${logPrefix} 使用現有帳本: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
-        } else {
-          BK_logInfo(`${logPrefix} 已建立新帳本: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
-        }
+        BK_logInfo(`${logPrefix} 帳本驗證通過: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
 
         // 生成交易ID
         const transactionId = await BK_generateTransactionId(processId);
@@ -606,7 +602,7 @@ async function BK_createTransaction(transactionData) {
           category: processedData.categoryId,
           date: preparedData.date,
           description: processedData.description,
-          ledgerStatus: ledgerResult.data
+          ledgerStatus: ledgerValidation.data // Pass ledger validation data
         };
       };
 
@@ -1899,6 +1895,66 @@ async function BK_ensureLedgerExists(ledgerId, userId, processId) {
   }
 }
 
+/**
+ * 驗證交易歸屬的帳本是否存在且用戶有權限 (新機制)
+ * @param {string} ledgerId - 要驗證的帳本ID
+ * @param {string} userId - 當前用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Promise<Object>}
+ */
+async function BK_validateTransactionLedger(ledgerId, userId, processId) {
+  const functionName = "BK_validateTransactionLedger";
+  try {
+    BK_logInfo(`驗證交易帳本: ${ledgerId} for user: ${userId}`, "帳本驗證", userId || "", functionName);
+
+    await BK_initialize();
+    const db = BK_INIT_STATUS.firestore_db;
+
+    if (!db) {
+      throw new Error("Firebase數據庫未初始化");
+    }
+
+    // 1. 檢查帳本是否存在
+    const ledgerRef = db.collection('ledgers').doc(ledgerId);
+    const ledgerSnapshot = await ledgerRef.get();
+
+    if (!ledgerSnapshot.exists) {
+      BK_logError(`帳本不存在: ${ledgerId}`, "帳本驗證", userId || "", "LEDGER_NOT_FOUND", `Ledger ${ledgerId} does not exist.`, functionName);
+      return {
+        success: false,
+        error: "指定的帳本不存在",
+        errorCode: "LEDGER_NOT_FOUND"
+      };
+    }
+
+    // 2. 檢查帳本的owner_id是否為當前用戶
+    const ledgerData = ledgerSnapshot.data();
+    if (ledgerData.owner_id !== userId) {
+      BK_logError(`權限不足：用戶 ${userId} 無法訪問帳本 ${ledgerId}`, "帳本驗證", userId || "", "PERMISSION_DENIED", `User ${userId} does not own ledger ${ledgerId}.`, functionName);
+      return {
+        success: false,
+        error: "您沒有權限訪問此帳本",
+        errorCode: "PERMISSION_DENIED"
+      };
+    }
+
+    BK_logInfo(`帳本驗證成功: ${ledgerId} for user: ${userId}`, "帳本驗證", userId || "", functionName);
+    return {
+      success: true,
+      data: { validated: true, ledgerId: ledgerId, ownerId: userId },
+      message: "帳本驗證成功"
+    };
+
+  } catch (error) {
+    BK_logError(`帳本驗證失敗: ${error.message}`, "帳本驗證", userId || "", "LEDGER_VALIDATION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message || "帳本驗證過程中發生未知錯誤",
+      errorCode: "LEDGER_VALIDATION_ERROR"
+    };
+  }
+}
+
 
 // === 日誌函數 ===
 
@@ -3061,7 +3117,7 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId, ledgerI
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
-    // 修正：ledgerId必須明確提供
+    // 階段三修正：ledgerId必須明確提供
     if (!ledgerId) {
       return BK_formatErrorResponse("MISSING_LEDGER_ID", "查詢日期範圍交易需要指定ledgerId");
     }
@@ -3144,6 +3200,7 @@ module.exports = {
   generateDefaultLedgerId, // 階段二修復：明確導出帳本ID生成函數
   BK_CONFIG, // 導出配置以供其他模組使用
   BK_ensureLedgerExists, // 階段一新增：帳本檢查/建立函數
+  BK_validateTransactionLedger, // 新增：帳本驗證函數
 
   // === API端點處理函數 ===
   // 階段二修復：新增TC-SIT-039~043所需的API函數
