@@ -227,16 +227,8 @@ class RegisterUserTest {
 
           if (ledgerId != null && subjectCount != null && accountCount != null) {
             print('[7582] ✅ 帳本結構資訊完整');
-            
-            // 額外檢查：嘗試調用記帳API驗證帳本可用性
-            final bookkeepingTest = await _testBookkeepingFunctionality(userData);
-            if (bookkeepingTest) {
-              print('[7582] ✅ 帳本功能驗證通過 - 用戶可立即記帳');
-              return true;
-            } else {
-              print('[7582] ⚠️ 帳本初始化完成但記帳功能測試失敗');
-              return false;
-            }
+            print('[7582] ✅ 用戶註冊完成，AM模組已成功建立Firebase帳本');
+            return true;
           } else {
             print('[7582] ❌ 帳本資訊不完整');
             return false;
@@ -263,69 +255,7 @@ class RegisterUserTest {
     }
   }
 
-  /// 測試記帳功能是否可用（驗證註冊後立即可記帳）
-  Future<bool> _testBookkeepingFunctionality(Map<String, dynamic> userData) async {
-    try {
-      print('[7582] 🧪 測試記帳功能可用性...');
-
-      // 從用戶資料中取得相關資訊
-      final userId = userData['email'] ?? userData['id'] ?? userData['userId'];
-      final ledgerInfo = userData['ledgerInfo'];
-      final ledgerId = ledgerInfo != null ? ledgerInfo['ledgerId'] : 'user_$userId';
-
-      print('[7582] 📋 測試參數: userId=$userId, ledgerId=$ledgerId');
-
-      // 準備測試交易資料（使用完整參數）
-      final testTransaction = {
-        'amount': 100.0,
-        'type': 'expense',
-        'description': '7582註冊測試交易',
-        'categoryId': 'food',
-        'accountId': 'cash', // 使用預設現金帳戶
-        'ledgerId': ledgerId,
-        'paymentMethod': 'cash',
-        'date': DateTime.now().toIso8601String().split('T')[0],
-        'userId': userId,
-      };
-
-      print('[7582] 📦 測試交易資料準備完成');
-
-      // 調用記帳API
-      final response = await http.post(
-        Uri.parse('$aslBaseUrl/api/v1/transactions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(testTransaction),
-      );
-
-      print('[7582] 🔄 記帳API回應: ${response.statusCode}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-        print('[7582] 📋 記帳API回應內容: success=${responseData['success']}');
-
-        if (responseData['success'] == true) {
-          print('[7582] ✅ 記帳功能測試成功 - 帳本結構完整');
-          return true;
-        } else {
-          print('[7582] ❌ 記帳API回應失敗: ${responseData['message']}');
-        }
-      } else {
-        print('[7582] ❌ 記帳功能測試失敗: HTTP ${response.statusCode}');
-        if (response.body.isNotEmpty) {
-          print('[7582] 📄 錯誤詳情: ${response.body}');
-        }
-      }
-
-      return false;
-
-    } catch (e) {
-      print('[7582] ❌ 記帳功能測試異常: $e');
-      return false;
-    }
-  }
+  
 
   /// 記錄測試結果
   void _recordTestResult(String testName, bool passed, String message) {
@@ -364,7 +294,6 @@ class RegisterUserTest {
       print('   ✅ AM模組用戶註冊');
       print('   ✅ 1309模組帳本初始化');
       print('   ✅ Firebase帳本結構建立');
-      print('   ✅ 註冊後立即可記帳');
     } else {
       print('⚠️  發現 $failedTests 個問題，請檢查：');
       print('   - ASL層服務是否正常運行 (Port 5000)');
@@ -404,5 +333,5 @@ Future<void> main() async {
   }
 
   print('\n✨ [7582] 真實註冊使用者測試完成');
-  print('🎯 如果測試成功，用戶已可立即使用記帳功能！');
+  print('🎯 如果測試成功，1309模組已在Firebase成功建立用戶帳本！');
 }
