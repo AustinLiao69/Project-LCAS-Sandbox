@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_2.3.0
+* FS_FirestoreStructure_資料庫結構模組_2.2.0
 * @module 資料庫結構模組
-* @description LCAS 2.0 Firestore資料庫結構模組 - Phase 1核心進入流程專用版本
-* @update 2025-11-27: 階段一重構，升級至2.3.0版本，分離系統配置與業務資料結構初始化
+* @description LCAS 2.0 Firestore資料庫結構模組 - Phase 1核心進入流程專用版本 + 1312.BM.js預算管理支援
+* @update 2025-10-29: 新增預算管理結構支援，升級至2.2.0版本
 */
 
 // 引入Firebase動態配置模組
@@ -78,7 +78,7 @@ function FS_initializeModule() {
       version: '2.2.0',
       projectId: PROJECT_ID,
       timezone: TIMEZONE,
-      message: 'FS模組2.2.0初始化成功'
+      message: 'FS模組2.2.0初始化成功，包含1312.BM.js預算管理支援'
     };
 
   } catch (error) {
@@ -1733,6 +1733,94 @@ async function FS_initializeDefaultAccountTypes() {
 }
 
 /**
+ * 初始化預算管理文檔結構 (1312.BM.js模組支援)
+ * @version 2025-10-29-V1.0.0
+ * @date 2025-10-29
+ * @description 初始化預算管理模組所需的Firebase文檔結構
+ */
+async function FS_initializeBudgetStructure() {
+  const budgetStructure = {
+    version: '1.0.0',
+    description: '1312.BM.js預算管理模組Firebase文檔結構',
+    collections: {
+      budgets: {
+        description: '預算集合',
+        document_structure: {
+          budget_id: 'string - 預算唯一識別碼 (與文檔ID相同，用於查詢)',
+          ledger_id: 'string - 關聯的帳本ID (對應1311中的ledgers集合)',
+          name: 'string - 預算名稱 (如"月度生活費預算")',
+          type: 'string - 預算類型: "monthly"|"yearly"|"quarterly"|"project"|"category"',
+          total_amount: 'number - 預算總金額 (設定的預算上限)',
+          consumed_amount: 'number - 已使用金額 (目前花費總額)',
+          currency: 'string - 貨幣單位 (如"TWD", "USD")',
+          start_date: 'timestamp - 預算生效開始時間',
+          end_date: 'timestamp - 預算結束時間',
+          allocation: 'array - 預算分類配置 (包含各分類的金額分配)',
+          alert_rules: 'object - 警示規則設定 (閾值、通知方式)',
+          created_by: 'string - 建立者ID (對應users集合的email)',
+          createdAt: 'timestamp - 建立時間 (符合1311.FS.js規範)',
+          updatedAt: 'timestamp - 最後更新時間 (符合1311.FS.js規範)',
+          status: 'string - 預算狀態: "active"|"completed"|"archived"'
+        },
+        subcollections: {
+          allocations: {
+            description: '預算分配子集合',
+            document_structure: {
+              category_id: 'string - 科目ID',
+              category_name: 'string - 科目名稱（如"餐飲"、"交通"）',
+              allocated_amount: 'number - 分配金額',
+              consumed_amount: 'number - 已使用金額',
+              percentage: 'number - 占總預算百分比',
+              createdAt: 'timestamp - 建立時間',
+              updatedAt: 'timestamp - 更新時間'
+            }
+          }
+        }
+      },
+      budget_alerts: {
+        description: '預算警示集合',
+        document_structure: {
+          budget_id: 'string - 預算ID',
+          alert_type: 'string - 警示類型: "warning"|"critical"|"exceeded"',
+          trigger_condition: 'object - 觸發條件',
+          triggered_at: 'timestamp - 觸發時間',
+          notification_sent: 'boolean - 通知發送狀態',
+          recipients: 'array - 接收者列表'
+        }
+      }
+    },
+    example_allocation_structure: [
+      {
+        category_id: "food_001",
+        category_name: "餐飲",
+        allocated_amount: 15000,
+        consumed_amount: 8000
+      },
+      {
+        category_id: "transport_001",
+        category_name: "交通",
+        allocated_amount: 5000,
+        consumed_amount: 3200
+      }
+    ],
+    example_alert_rules_structure: {
+      warning_threshold: 80,
+      critical_threshold: 95,
+      enable_notifications: true,
+      notification_channels: ["line", "email"],
+      custom_thresholds: []
+    }
+  };
+
+  try {
+    const result = await FS_createDocument('_system', 'budget_structure', budgetStructure, 'SYSTEM');
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * 初始化評估問卷
  */
 async function FS_initializeAssessmentQuestions() {
@@ -2207,24 +2295,23 @@ module.exports = {
   admin,
 
   // 模組資訊
-  moduleVersion: '2.3.0',
-  phase: 'Phase1-Complete-Refactored',
-  lastUpdate: '2025-11-27'
+  moduleVersion: '2.2.0',
+  phase: 'Phase1-Complete-with-Budget-Support',
+  lastUpdate: '2025-10-29'
 };
 
 // 自動初始化模組
 try {
   const initResult = FS_initializeModule();
   if (initResult.success) {
-    console.log('🎉 FS模組2.3.0階段一重構完成！');
+    console.log('🎉 FS模組2.2.0預算管理支援完成！');
     console.log(`📌 模組版本: ${initResult.version}`);
-    console.log(`🎯 重構成果: 初始化架構分離 - 系統配置 vs 業務資料結構`);
+    console.log(`🎯 新增功能: 1312.BM.js預算管理模組Firebase文檔結構支援`);
     console.log(`📋 階段一功能: 核心基礎操作(9個函數)`);
     console.log(`📋 階段二功能: API端點支援(6個函數)`);
-    console.log(`📋 階段三功能: 整合優化與驗證(6個函數，重構後)`);
-    console.log(`✨ 總計實作: 21個核心函數 + 相容性函數`);
-    console.log(`🔧 系統配置: FS_initializeSystemConfig() - 一次性執行`);
-    console.log(`🔧 資料結構: FS_initializeDataStructure() - 每用戶執行`);
+    console.log(`📋 階段三功能: 整合優化與驗證(6個函數)`);
+    console.log(`💰 預算支援: FS_initializeBudgetStructure() - 預算管理結構初始化`);
+    console.log(`✨ 總計實作: 22個核心函數 + 相容性函數`);
   }
 } catch (error) {
   console.error('❌ FS模組2.3.0初始化失敗:', error.message);
