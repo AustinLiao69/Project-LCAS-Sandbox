@@ -1169,7 +1169,7 @@ async function AM_getUserDefaultLedger(UID) {
 
     // 查詢用戶資料
     const userDoc = await db.collection("users").doc(UID).get();
-    
+
     if (!userDoc.exists) {
       return {
         success: false,
@@ -1179,12 +1179,12 @@ async function AM_getUserDefaultLedger(UID) {
     }
 
     const userData = userDoc.data();
-    
+
     // 檢查是否已有預設帳本
     if (userData.defaultLedgerId) {
       // 驗證帳本是否仍然存在
       const ledgerDoc = await db.collection("ledgers").doc(userData.defaultLedgerId).get();
-      
+
       if (ledgerDoc.exists) {
         console.log(`✅ ${functionName}: 找到用戶預設帳本: ${userData.defaultLedgerId}`);
         return {
@@ -1200,7 +1200,7 @@ async function AM_getUserDefaultLedger(UID) {
     // 如果沒有預設帳本或帳本已不存在，則自動初始化
     console.log(`🔄 ${functionName}: 為用戶 ${UID} 自動初始化預設帳本...`);
     const initResult = await AM_initializeUserLedger(UID);
-    
+
     if (initResult.success) {
       // 更新用戶的預設帳本ID
       await db.collection("users").doc(UID).update({
@@ -1298,7 +1298,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     console.log(`  - 準備導入科目資料...`);
     let subjectData = [];
     let subjectCount = 0;
-    
+
     try {
       // 嘗試載入科目資料
       subjectData = require("../00. Master_Project document/0099. Subject_code.json");
@@ -1314,7 +1314,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         { 大項代碼: "905", 大項名稱: "財務支出", 子項代碼: "90505", 子項名稱: "所得稅", 同義詞: "綜所稅" }
       ];
     }
-    
+
     for (const subject of subjectData) {
       const docId = `${subject.大項代碼}_${subject.子項代碼}`;
       // 修正：使用categories集合而非subjects
@@ -1336,32 +1336,32 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
     // 3. 創建預設帳戶
     const defaultAccounts = [
-      { 
-        accountId: "cash", 
-        name: "現金", 
-        type: "asset", 
+      {
+        accountId: "cash",
+        name: "現金",
+        type: "asset",
         balance: 0,
         currency: "TWD",
         description: "現金帳戶"
       },
-      { 
-        accountId: "bank_checking", 
-        name: "銀行帳戶", 
-        type: "asset", 
+      {
+        accountId: "bank_checking",
+        name: "銀行帳戶",
+        type: "asset",
         balance: 0,
         currency: "TWD",
         description: "主要銀行帳戶"
       },
-      { 
-        accountId: "credit_card", 
-        name: "信用卡", 
-        type: "liability", 
+      {
+        accountId: "credit_card",
+        name: "信用卡",
+        type: "liability",
         balance: 0,
         currency: "TWD",
         description: "主要信用卡"
       }
     ];
-    
+
     let accountCount = 0;
     for (const acc of defaultAccounts) {
       const accountRef = ledgerRef.collection("accounts").doc(acc.accountId);
@@ -1407,7 +1407,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
     // 更新帳本主文檔的 initializationComplete 標誌
     try {
-      await ledgerRef.update({ 
+      await ledgerRef.update({
         initializationComplete: true,
         updatedAt: admin.firestore.Timestamp.now()
       });
@@ -1431,17 +1431,17 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       if (!verifyDoc.exists) {
         throw new Error("帳本文檔驗證失敗：文檔不存在");
       }
-      
+
       // 驗證子集合是否建立
       const categoriesSnapshot = await ledgerRef.collection("categories").limit(1).get();
       const accountsSnapshot = await ledgerRef.collection("accounts").limit(1).get();
       const transactionsCollectionExists = true; // transactions集合結構已建立
-      
+
       console.log(`✅ 帳本 ${userLedgerId} 驗證成功`);
       console.log(`✅ Categories集合: ${!categoriesSnapshot.empty ? '已建立' : '未建立'}`);
       console.log(`✅ Accounts集合: ${!accountsSnapshot.empty ? '已建立' : '未建立'}`);
       console.log(`✅ Transactions集合: 已建立`);
-      
+
     } catch (verifyError) {
       console.error(`❌ 帳本驗證失敗:`, verifyError);
       throw new Error(`帳本驗證失敗: ${verifyError.message}`);
@@ -1713,7 +1713,7 @@ async function AM_getSRUserQuota(userId, featureName, requesterId) {
  * 24. 更新SR功能使用量
  * @version 2025-07-21-V1.1.0
  * @date 2025-07-21 14:00:00
- * @description 更新用戶SR功能的使用量統計
+ * @description  એpdate user SR feature usage statistics
  */
 async function AM_updateSRFeatureUsage(
   userId,
@@ -2082,10 +2082,10 @@ async function AM_processAPIRegister(requestData) {
 
     // DCN-0020: 執行完整帳本初始化 - 直接使用email作為帳本標識
     console.log(`🔧 AM_processAPIRegister: 開始為用戶 ${userData.email} 進行完整帳本初始化...`);
-    
+
     // 直接使用email作為帳本用戶識別，確保帳本ID格式為 user_email@domain.com
     const ledgerInitResult = await AM_initializeUserLedger(userData.email, "user_");
-    
+
     if (ledgerInitResult.success) {
       console.log(`✅ AM_processAPIRegister: 用戶 ${userData.email} 帳本初始化成功`);
       userData.initializationComplete = true;
@@ -2094,7 +2094,7 @@ async function AM_processAPIRegister(requestData) {
         subjectCount: ledgerInitResult.subjectCount,
         accountCount: ledgerInitResult.accountCount
       };
-      
+
       // 更新用戶資料，添加帳本初始化資訊
       try {
         await db.collection("users").doc(userData.email).update({
@@ -2111,7 +2111,7 @@ async function AM_processAPIRegister(requestData) {
       userData.initializationComplete = false;
       userData.ledgerInfo = null;
       userData.initializationError = ledgerInitResult.error;
-      
+
       // 即使帳本初始化失敗，也要更新用戶狀態
       try {
         await db.collection("users").doc(userData.email).update({
@@ -2123,7 +2123,7 @@ async function AM_processAPIRegister(requestData) {
       } catch (updateError) {
         console.error(`⚠️ AM_processAPIRegister: 更新失敗狀態時出錯:`, updateError);
       }
-      
+
       // 繼續返回成功，但標記初始化失敗，允許用戶稍後重試初始化
       console.log(`⚠️ AM_processAPIRegister: 註冊成功但帳本初始化失敗，用戶可稍後重試`);
     }
@@ -4876,6 +4876,7 @@ module.exports = {
   // DCN-0020 階段一：完整帳本初始化功能
   AM_initializeUserLedger,     // 新的完整帳本初始化函數
   AM_ensureUserLedger,         // 檢查並補充帳本結構
+  AM_getUserDefaultLedger,     // 新增：取得用戶預設帳本ID
 
   // 向後相容性保持（重新導向到新函數）
   AM_initializeUserSubjects: AM_initializeUserLedger,  // 向後相容
@@ -4905,8 +4906,8 @@ module.exports = {
   AM_processAPIUpdateProfile,
   AM_processAPIGetAssessmentQuestions,
   AM_processAPISubmitAssessment,
+  AM_processAPIGetPreferences,
   AM_processAPIUpdatePreferences,
-  AM_processAPIGetPreferences,  // 階段一修復：補充缺失的函數導出
   AM_processAPIUpdateSecurity,
   AM_processAPISwitchMode,
   AM_processAPIVerifyPin,
