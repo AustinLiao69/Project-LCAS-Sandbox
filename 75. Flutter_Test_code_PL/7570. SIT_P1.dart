@@ -321,6 +321,14 @@ class SITTestController {
     try {
       final systemEntry = PL7301.SystemEntryFunctionGroup.instance;
 
+      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
+      if (inputData['email'] == null || inputData['ledgerId'] == null) {
+        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      }
+      final testEmail = inputData['email'] as String;
+      final userLedgerId = inputData['ledgerId'] as String;
+
+
       // 測試Email格式驗證
       final email = inputData['email'] as String? ?? '';
       final isValidEmail = systemEntry.validateEmailFormat(email);
@@ -351,12 +359,12 @@ class SITTestController {
 
       final bookkeepingCore = PL7302.BookkeepingCoreFunctionGroupImpl();
 
-      // 統一使用同一個測試用戶ID，避免建立多個帳本
-      const unifiedTestUserId = 'test_user_7570_unified';
-      final userLedgerId = 'user_$unifiedTestUserId';
-      
-      print('[7570] 📋 使用統一測試用戶ID: $unifiedTestUserId');
-      print('[7570] 📋 使用統一帳本ID: $userLedgerId');
+      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
+      if (inputData['email'] == null || inputData['ledgerId'] == null) {
+        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      }
+      final testEmail = inputData['email'] as String;
+      final userLedgerId = inputData['ledgerId'] as String;
 
       // 從7598資料構建記帳資料（完全使用7598資料，無hard coding）
       final realTransactionData = {
@@ -365,8 +373,8 @@ class SITTestController {
         'description': inputData['description'] ?? inputData['valid_transaction']?['description'] ?? '7598測試記帳資料',
         'categoryId': (inputData['categoryId'] ?? inputData['valid_transaction']?['categoryId'] ?? 'default') as String,
         'accountId': (inputData['accountId'] ?? inputData['valid_transaction']?['accountId'] ?? 'default') as String,
-        'ledgerId': userLedgerId,  // 使用統一的帳本ID
-        'userId': unifiedTestUserId,  // 使用統一的測試用戶ID
+        'ledgerId': userLedgerId,  // 來自7598資料倉庫
+        'userId': testEmail,  // 來自7598資料倉庫
         'date': DateTime.now().toIso8601String().split('T')[0],
         'paymentMethod': (inputData['paymentMethod'] ?? '現金') as String,
       };
@@ -421,6 +429,14 @@ class SITTestController {
     try {
       final systemEntry = PL7301.SystemEntryFunctionGroup.instance;
 
+      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
+      if (inputData['email'] == null || inputData['ledgerId'] == null) {
+        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      }
+      final testEmail = inputData['email'] as String;
+      final userLedgerId = inputData['ledgerId'] as String;
+
+
       // 測試函數層級功能
       final email = inputData['email'] as String? ?? '';
       final isValidEmail = systemEntry.validateEmailFormat(email);
@@ -439,6 +455,14 @@ class SITTestController {
   Future<Map<String, dynamic>> _testPL7302Functions(Map<String, dynamic> inputData) async {
     try {
       final bookkeepingCore = PL7302.BookkeepingCoreFunctionGroupImpl();
+
+      // 嚴格使用7598測試資料，禁止hard coding（0098第3條）
+      if (inputData['email'] == null || inputData['ledgerId'] == null) {
+        throw Exception('違反0098第7條：測試資料必須完全來自7598，不得使用fallback預設值');
+      }
+      final testEmail = inputData['email'] as String;
+      final userLedgerId = inputData['ledgerId'] as String;
+
 
       // 測試函數層級功能
       final dashboard = await bookkeepingCore.getDashboardData();
