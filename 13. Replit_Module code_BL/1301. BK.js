@@ -535,10 +535,34 @@ async function BK_createTransaction(transactionData) {
       console.warn('⚠️ 無法載入0692測試資料，使用預設值');
     }
 
-    // 階段三修正：ledgerId必須由AM模組提供，不使用預設值
-    if (!transactionData.ledgerId) {
-      return BK_formatErrorResponse("MISSING_LEDGER_ID", "建立交易需要ledgerId，請確保AM模組已完成帳本初始化");
+    // 階段四修正：如果沒有提供ledgerId，則透過AM模組查詢用戶預設帳本
+    let ledgerId = transactionData.ledgerId;
+    
+    if (!ledgerId && transactionData.userId) {
+      // 透過AM模組查詢用戶預設帳本
+      const AM = require('./1309. AM.js');
+      if (AM && typeof AM.AM_getUserDefaultLedger === 'function') {
+        try {
+          const ledgerResult = await AM.AM_getUserDefaultLedger(transactionData.userId);
+          if (ledgerResult.success) {
+            ledgerId = ledgerResult.ledgerId;
+            BK_logInfo(`${logPrefix} 透過AM模組取得用戶預設帳本: ${ledgerId}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
+          } else {
+            return BK_formatErrorResponse("GET_DEFAULT_LEDGER_FAILED", `無法取得用戶預設帳本: ${ledgerResult.error}`);
+          }
+        } catch (amError) {
+          BK_logWarning(`${logPrefix} 呼叫AM模組失敗: ${amError.message}`, "新增交易", transactionData.userId || "", "BK_createTransaction");
+          return BK_formatErrorResponse("AM_MODULE_ERROR", "無法透過AM模組查詢帳本歸屬");
+        }
+      } else {
+        return BK_formatErrorResponse("MISSING_LEDGER_ID", "建立交易需要ledgerId，且AM模組不可用");
+      }
+    } else if (!ledgerId) {
+      return BK_formatErrorResponse("MISSING_LEDGER_ID", "建立交易需要ledgerId或userId");
     }
+
+    // 更新processedData中的ledgerId
+    processedData.ledgerId = ledgerId;
 
     // 使用0692測試資料補充缺失的欄位
     const processedData = {

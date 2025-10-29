@@ -1151,6 +1151,85 @@ async function AM_ensureUserSubjects(UID) {
 // === DCN-0020 階段一：完整帳本初始化功能 ===
 
 /**
+ * 18.5. 取得用戶預設帳本ID
+ * @version 2025-11-27-V1.0.1
+ * @date 2025-11-27 15:00:00
+ * @description 查詢用戶的預設帳本ID，如果不存在則自動初始化
+ * @param {string} UID - 用戶ID
+ * @returns {Promise<Object>} 執行結果包含ledgerId
+ */
+async function AM_getUserDefaultLedger(UID) {
+  const functionName = "AM_getUserDefaultLedger";
+  try {
+    console.log(`🔍 ${functionName}: 查詢用戶 ${UID} 預設帳本...`);
+
+    if (!UID) {
+      throw new Error("UID參數為必填項目");
+    }
+
+    // 查詢用戶資料
+    const userDoc = await db.collection("users").doc(UID).get();
+    
+    if (!userDoc.exists) {
+      return {
+        success: false,
+        error: "用戶不存在",
+        errorCode: "USER_NOT_FOUND"
+      };
+    }
+
+    const userData = userDoc.data();
+    
+    // 檢查是否已有預設帳本
+    if (userData.defaultLedgerId) {
+      // 驗證帳本是否仍然存在
+      const ledgerDoc = await db.collection("ledgers").doc(userData.defaultLedgerId).get();
+      
+      if (ledgerDoc.exists) {
+        console.log(`✅ ${functionName}: 找到用戶預設帳本: ${userData.defaultLedgerId}`);
+        return {
+          success: true,
+          ledgerId: userData.defaultLedgerId,
+          ledgerExists: true
+        };
+      } else {
+        console.log(`⚠️ ${functionName}: 預設帳本已不存在，將重新初始化`);
+      }
+    }
+
+    // 如果沒有預設帳本或帳本已不存在，則自動初始化
+    console.log(`🔄 ${functionName}: 為用戶 ${UID} 自動初始化預設帳本...`);
+    const initResult = await AM_initializeUserLedger(UID);
+    
+    if (initResult.success) {
+      // 更新用戶的預設帳本ID
+      await db.collection("users").doc(UID).update({
+        defaultLedgerId: initResult.userLedgerId,
+        updatedAt: admin.firestore.Timestamp.now()
+      });
+
+      return {
+        success: true,
+        ledgerId: initResult.userLedgerId,
+        ledgerExists: false,
+        initialized: true
+      };
+    } else {
+      throw new Error(`帳本初始化失敗: ${initResult.error}`);
+    }
+
+  } catch (error) {
+    console.error(`❌ ${functionName} failed:`, error);
+    await DL.DL_error("AM", functionName, error.message, UID);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: "GET_DEFAULT_LEDGER_ERROR"
+    };
+  }
+}
+
+/**
  * 19. 完整初始化用戶帳本結構
  * @version 2025-11-27-V1.0.0
  * @date 2025-11-27 10:00:00
