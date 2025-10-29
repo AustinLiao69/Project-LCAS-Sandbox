@@ -1906,9 +1906,6 @@ async function AM_processAPIRegister(requestData) {
       };
     }
 
-    // 生成用戶ID
-    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
     // 準備用戶資料（完全符合1311 FS.js規範）
     const userData = {
       // 核心用戶資料 - 符合 FS.js 標準
@@ -2004,10 +2001,10 @@ async function AM_processAPIRegister(requestData) {
       };
     }
 
-    // DCN-0020: 執行完整帳本初始化 - 使用email作為用戶識別
+    // DCN-0020: 執行完整帳本初始化 - 直接使用email作為帳本標識
     console.log(`🔧 AM_processAPIRegister: 開始為用戶 ${userData.email} 進行完整帳本初始化...`);
     
-    // 使用email作為用戶識別，確保與1311 FS.js結構一致
+    // 直接使用email作為帳本用戶識別，確保帳本ID格式為 user_email@domain.com
     const ledgerInitResult = await AM_initializeUserLedger(userData.email, "user_");
     
     if (ledgerInitResult.success) {
@@ -2031,7 +2028,7 @@ async function AM_processAPIRegister(requestData) {
         console.error(`⚠️ AM_processAPIRegister: 更新帳本資訊失敗:`, updateError);
       }
     } else {
-      console.error(`❌ AM_processAPIRegister: 用戶 ${userId} 帳本初始化失敗:`, ledgerInitResult.error);
+      console.error(`❌ AM_processAPIRegister: 用戶 ${userData.email} 帳本初始化失敗:`, ledgerInitResult.error);
       userData.initializationComplete = false;
       userData.ledgerInfo = null;
       userData.initializationError = ledgerInitResult.error;
@@ -2053,7 +2050,7 @@ async function AM_processAPIRegister(requestData) {
     }
 
     AM_logInfo(
-      `註冊成功: ${userId}，帳本初始化: ${ledgerInitResult.success ? '成功' : '失敗'}`,
+      `註冊成功: ${userData.email}，帳本初始化: ${ledgerInitResult.success ? '成功' : '失敗'}`,
       "註冊處理",
       requestData.email,
       "",
