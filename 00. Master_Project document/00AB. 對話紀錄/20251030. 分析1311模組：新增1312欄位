@@ -15,6 +15,7 @@ Approved請進行階段一
 •	完全移除7598中collaboration_test_data區塊
 •	移除budget測試中對collaboration ledgerId的依賴
 •	確保budget測試資料使用真實註冊流程產生的ledgerId
+
 階段二：建立7582→7571資料流關聯
 目標：讓7571能夠使用7582註冊的真實用戶帳本
 具體修正：
