@@ -115,20 +115,39 @@ BM.BM_createBudget = async function(requestData) {
     try {
       let collectionPath = 'budgets'; // 預設根集合
       
-      // 如果指定了子集合路徑或ledgerId，使用子集合架構
+      // 強化子集合路徑邏輯
       if (requestData.useSubcollection && requestData.subcollectionPath) {
         collectionPath = requestData.subcollectionPath;
         console.log(`${logPrefix} 使用指定的子集合路徑: ${collectionPath}`);
-      } else if (ledgerId) {
+      } else if (ledgerId && ledgerId !== 'undefined' && ledgerId.trim() !== '') {
         collectionPath = `ledgers/${ledgerId}/budgets`;
         console.log(`${logPrefix} 使用帳本子集合路徑: ${collectionPath}`);
+      } else {
+        // 預設強制使用子集合，避免寫入到頂層集合
+        console.warn(`${logPrefix} 缺少ledgerId，但強制使用子集合架構`);
+        if (userId && userId.includes('@')) {
+          // 從userId推導ledgerId
+          const derivedLedgerId = `user_${userId}`;
+          collectionPath = `ledgers/${derivedLedgerId}/budgets`;
+          console.log(`${logPrefix} 從userId推導子集合路徑: ${collectionPath}`);
+        }
       }
       
+      console.log(`${logPrefix} 最終Firebase寫入路徑: ${collectionPath}`);
       const firestoreResult = await FS.FS_createDocument(collectionPath, budgetId, budget, userId);
       if (!firestoreResult.success) {
         throw new Error(`Firebase寫入失敗: ${firestoreResult.error}`);
       }
-      console.log(`${logPrefix} 預算成功寫入Firebase - 路徑: ${collectionPath}/${budgetId}`);
+      console.log(`${logPrefix} ✅ 預算成功寫入Firebase - 完整路徑: ${collectionPath}/${budgetId}`);
+      
+      // 額外驗證：確認資料確實寫入
+      const verifyResult = await FS.FS_getDocument(collectionPath, budgetId, 'SYSTEM');
+      if (verifyResult.success && verifyResult.exists) {
+        console.log(`${logPrefix} ✅ Firebase寫入驗證成功`);
+      } else {
+        console.warn(`${logPrefix} ⚠️ Firebase寫入驗證失敗`);
+      }
+      
     } catch (firestoreError) {
       console.error(`${logPrefix} Firebase寫入失敗:`, firestoreError);
       throw new Error(`Firebase寫入失敗: ${firestoreError.message}`);

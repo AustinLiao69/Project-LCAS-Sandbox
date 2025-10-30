@@ -334,7 +334,12 @@ class SITP2TestController {
             if (!inputData.containsKey('userId') || inputData['userId'] == null) {
               inputData['userId'] = budgetData['operatorId'] ?? 'user_expert_1697363200000';
             }
-            // 階段一修正：完全通過PL層7304，確保資料流 7571→PL→APL→ASL→BL
+            
+            // 關鍵修正：確保使用子集合架構參數
+            inputData['useSubcollection'] = true;
+            inputData['subcollectionPath'] = 'ledgers/${inputData['ledgerId']}/budgets';
+            
+            print('[7571] 🔄 TC-001修正：強制使用子集合架構 - ${inputData['subcollectionPath']}');
             print('[7571] 🔄 階段一修正：純粹調用PL層7304 - 嚴格遵循資料流');
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.create,
