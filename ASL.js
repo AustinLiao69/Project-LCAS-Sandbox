@@ -1806,21 +1806,40 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
 // 假設 P2 API 端點的基礎路徑為 /api/v1/budgets
 // 請根據實際 API 設計填寫具體路由和調用函數
 
-// 1. 創建預算
+// 1. 創建預算 - 階段三完整修正版
 app.post('/api/v1/budgets', async (req, res) => {
   try {
-    console.log('➕ ASL轉發: 創建預算 -> BM_createBudget');
+    console.log('➕ ASL階段三轉發: 創建預算 -> BM_createBudget');
+    console.log('📋 ASL階段三接收資料:', JSON.stringify(req.body, null, 2));
+    
     if (!BM || typeof BM.BM_createBudget !== 'function') {
       return res.apiError('BM_createBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
+
+    // 階段三驗證：ledgerId必須存在
+    if (!req.body.ledgerId) {
+      console.error('❌ ASL階段三錯誤：缺少ledgerId參數');
+      return res.apiError('階段三驗證失敗：創建預算需要ledgerId參數（子集合架構要求）', 'MISSING_LEDGER_ID', 400);
+    }
+
+    // 階段三日誌：確認真實帳本ID
+    console.log(`🎯 ASL階段三確認帳本ID: ${req.body.ledgerId}`);
+    if (req.body.ledgerId.includes('collab_ledger') || req.body.ledgerId.includes('hardcoded')) {
+      console.warn(`⚠️ ASL階段三警告：檢測到可能的hardcoded ledgerId: ${req.body.ledgerId}`);
+    }
+
     const result = await BM.BM_createBudget(req.body);
+    
     if (result.success) {
+      console.log('✅ ASL階段三成功：預算創建完成');
+      console.log(`📍 Firebase路徑: ${result.data?.firebase_path || 'unknown'}`);
       res.apiSuccess(result.data, result.message || '預算創建成功');
     } else {
+      console.error('❌ ASL階段三失敗：', result.message);
       res.apiError(result.message || '預算創建失敗', result.error?.code || 'CREATE_BUDGET_ERROR', 400, result.error?.details);
     }
   } catch (error) {
-    console.error('❌ ASL轉發錯誤 (create budget):', error);
+    console.error('❌ ASL階段三轉發錯誤 (create budget):', error);
     res.apiError('預算創建轉發失敗', 'CREATE_BUDGET_FORWARD_ERROR', 500);
   }
 });

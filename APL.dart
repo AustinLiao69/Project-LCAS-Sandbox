@@ -640,8 +640,21 @@ class BudgetManagementService {
     );
   }
 
-  /// 2. 建立新預算 (POST /api/v1/budgets)
+  /// 2. 建立新預算 (POST /api/v1/budgets) - 階段三修正版
   Future<UnifiedApiResponse<Map<String, dynamic>>> createBudget(Map<String, dynamic> budgetData) async {
+    // 階段三修正：確保ledgerId參數存在
+    if (!budgetData.containsKey('ledgerId') || budgetData['ledgerId'] == null) {
+      throw ArgumentError('階段三驗證：建立預算需要ledgerId參數（子集合架構要求）');
+    }
+
+    // 階段三驗證：ledgerId格式檢查
+    final ledgerId = budgetData['ledgerId'] as String;
+    print('APL階段三驗證：ledgerId = $ledgerId');
+    
+    if (ledgerId.isEmpty || ledgerId.contains('hardcoded') || ledgerId.contains('collab_ledger')) {
+      print('APL階段三警告：檢測到可能的hardcoded ledgerId: $ledgerId');
+    }
+
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'POST',
       '/api/v1/budgets',

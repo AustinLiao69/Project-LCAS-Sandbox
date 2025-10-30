@@ -792,6 +792,71 @@ function FS_generateTransactionId() {
 }
 
 /**
+ * 階段三新增：預算子集合寫入函數
+ * @version 2025-10-30-V2.2.0
+ * @description 將預算寫入指定帳本的budgets子集合，確保路徑正確性
+ */
+async function FS_createBudgetInLedger(ledgerId, budgetData, requesterId) {
+  const functionName = "FS_createBudgetInLedger";
+  try {
+    FS_logOperation(`階段三：建立預算子集合 - ledgers/${ledgerId}/budgets`, "建立預算", requesterId || "", "", "", functionName);
+
+    // 階段三路徑驗證：確保絕對使用子集合路徑
+    const collectionPath = `ledgers/${ledgerId}/budgets`;
+    console.log(`[${functionName}] 🎯 階段三強制路徑: ${collectionPath}`);
+
+    // 路徑安全驗證
+    if (!collectionPath.startsWith('ledgers/') || !collectionPath.endsWith('/budgets')) {
+      throw new Error(`階段三路徑安全驗證失敗: ${collectionPath}`);
+    }
+
+    // 禁止頂層budgets集合
+    if (collectionPath === 'budgets' || collectionPath.indexOf('ledgers/') === -1) {
+      throw new Error(`階段三禁用頂層budgets集合: ${collectionPath}`);
+    }
+
+    // 生成預算ID
+    const budgetId = budgetData.id || `budget_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
+    // 準備預算數據
+    const finalBudgetData = {
+      ...budgetData,
+      budget_id: budgetId,
+      ledger_id: ledgerId,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      created_by: requesterId || 'system',
+      collection_type: 'budget_subcollection',
+      path_verification: collectionPath
+    };
+
+    // 寫入Firebase子集合
+    const docRef = db.collection(collectionPath).doc(budgetId);
+    await docRef.set(finalBudgetData);
+
+    console.log(`[${functionName}] ✅ 階段三成功：預算已寫入 ${collectionPath}/${budgetId}`);
+    console.log(`[${functionName}] 📋 確認帳本ID: ${ledgerId}`);
+    console.log(`[${functionName}] 📋 確認預算ID: ${budgetId}`);
+
+    return {
+      success: true,
+      budgetId: budgetId,
+      ledgerId: ledgerId,
+      path: `${collectionPath}/${budgetId}`,
+      data: finalBudgetData
+    };
+
+  } catch (error) {
+    FS_handleError(`階段三：預算子集合建立失敗: ${error.message}`, "建立預算", requesterId || "", "FS_CREATE_BUDGET_SUBCOLLECTION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_CREATE_BUDGET_SUBCOLLECTION_ERROR'
+    };
+  }
+}
+
+/**
  * 分析評估結果（簡化實作）
  */
 function FS_analyzeAssessmentResults(answers) {
