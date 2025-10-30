@@ -1,10 +1,10 @@
 /**
  * 1309. AM.js - 帳號管理模組
- * @version v7.3.0
- * @date 2025-10-29
+ * @version v7.4.0
+ * @date 2025-10-30
  * @description 處理用戶註冊、登入、帳本初始化等功能
  * @compliance 嚴格遵守0098憲法 - 禁止hard coding，遵守dataflow
- * @update v7.3.0: 修復AM_getUserDefaultLedger函數導出問題，確保BK模組正常調用
+ * @update v7.4.0: 修復帳本初始化機制，新增budgets和transactions子集合範例文檔建立
  */
 
 // 引入必要模組
@@ -1220,9 +1220,9 @@ async function AM_getUserDefaultLedger(UID) {
 
 /**
  * 19. 完整初始化用戶帳本結構
- * @version 2025-10-29-V1.0.1
- * @date 2025-10-29 10:00:00
- * @description 階段二優化：為新用戶創建完整的帳本結構，強化錯誤處理和性能優化，確保BK模組穩定調用
+ * @version 2025-10-30-V1.1.0
+ * @date 2025-10-30 10:00:00
+ * @description 階段一修復：新增budgets和transactions子集合範例文檔建立，確保完整帳本結構
  * @param {string} UID - 用戶ID
  * @param {string} ledgerIdPrefix - 帳本ID前綴
  * @returns {Promise<Object>} 執行結果
@@ -1419,21 +1419,79 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     }
     console.log(`  - ${accountCount} 個預設帳戶準備寫入`);
 
-    // 4. 創建一個初始交易記錄以建立transactions集合結構
-    const initialTransactionRef = ledgerRef.collection("transactions").doc("init");
-    currentBatch.set(initialTransactionRef, { // Changed from batch.set to currentBatch.set
-      id: "init",
-      description: "帳本初始化記錄",
+    // 4. 創建transactions子集合範例文檔
+    const transactionExample = {
+      transaction_id: 'example_transaction',
+      ledger_id: userLedgerId,
       amount: 0,
-      type: "initialization",
-      categoryId: "system",
-      accountId: "system",
-      date: admin.firestore.Timestamp.now(),
+      type: 'example',
+      description: '範例交易記錄',
+      category_id: 'expense_food',
+      account_id: 'cash',
+      date: new Date().toISOString().split('T')[0],
+      user_id: UID,
+      created_at: admin.firestore.Timestamp.now(),
+      updated_at: admin.firestore.Timestamp.now(),
+      note: '此為確保交易子集合存在的範例文檔'
+    };
+
+    const transactionRef = ledgerRef.collection("transactions").doc("example_transaction");
+    currentBatch.set(transactionRef, transactionExample);
+    console.log(`  - transactions子集合範例文檔準備寫入`);
+
+    // 5. 創建budgets子集合範例文檔
+    const budgetExample = {
+      budget_id: 'example_monthly_budget',
+      ledger_id: userLedgerId,
+      name: '月度預算範例',
+      type: 'monthly',
+      total_amount: 30000,
+      consumed_amount: 0,
+      currency: 'TWD',
+      start_date: admin.firestore.Timestamp.now(),
+      end_date: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30天後
+      allocation: [
+        {
+          category_id: 'expense_food',
+          category_name: '餐飲',
+          allocated_amount: 12000,
+          consumed_amount: 0
+        },
+        {
+          category_id: 'expense_transport', 
+          category_name: '交通',
+          allocated_amount: 6000,
+          consumed_amount: 0
+        },
+        {
+          category_id: 'expense_shopping',
+          category_name: '購物',
+          allocated_amount: 8000,
+          consumed_amount: 0
+        },
+        {
+          category_id: 'expense_entertainment',
+          category_name: '娛樂',
+          allocated_amount: 4000,
+          consumed_amount: 0
+        }
+      ],
+      alert_rules: {
+        warning_threshold: 80,
+        critical_threshold: 95,
+        enable_notifications: true,
+        notification_channels: ['system']
+      },
+      created_by: UID,
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      isInitialization: true
-    });
-    console.log(`  - 初始交易記錄準備寫入以建立transactions集合結構`);
+      status: 'active',
+      note: '此為確保預算子集合存在的範例文檔'
+    };
+
+    const budgetRef = ledgerRef.collection("budgets").doc("example_monthly_budget");
+    currentBatch.set(budgetRef, budgetExample);
+    console.log(`  - budgets子集合範例文檔準備寫入`);
 
     // 階段二優化：將剩餘操作加入最後一個batch
     if (operationCount > 0) {
@@ -1491,12 +1549,12 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       throw new Error(`更新初始化標誌失敗: ${updateError.message}`);
     }
 
-    // 刪除初始化交易記錄
+    // 清理範例文檔（可選，為了避免混淆用戶）
     try {
-      await ledgerRef.collection("transactions").doc("init").delete();
-      console.log(`  - 清理初始化交易記錄`);
+      // 保留範例文檔以確保子集合結構存在
+      console.log(`  - 保留範例文檔以確保子集合結構完整性`);
     } catch (cleanupError) {
-      console.warn(`⚠️ 清理初始化記錄失敗，但不影響整體初始化: ${cleanupError.message}`);
+      console.warn(`⚠️ 範例文檔處理警告: ${cleanupError.message}`);
     }
 
     // 驗證帳本是否真的建立成功
@@ -1509,12 +1567,14 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       // 驗證子集合是否建立
       const categoriesSnapshot = await ledgerRef.collection("categories").limit(1).get();
       const accountsSnapshot = await ledgerRef.collection("accounts").limit(1).get();
-      const transactionsCollectionExists = true; // transactions集合結構已建立
+      const transactionsSnapshot = await ledgerRef.collection("transactions").limit(1).get();
+      const budgetsSnapshot = await ledgerRef.collection("budgets").limit(1).get();
 
       console.log(`✅ 帳本 ${userLedgerId} 驗證成功`);
       console.log(`✅ Categories集合: ${!categoriesSnapshot.empty ? '已建立' : '未建立'}`);
       console.log(`✅ Accounts集合: ${!accountsSnapshot.empty ? '已建立' : '未建立'}`);
-      console.log(`✅ Transactions集合: 已建立`);
+      console.log(`✅ Transactions集合: ${!transactionsSnapshot.empty ? '已建立' : '未建立'}`);
+      console.log(`✅ Budgets集合: ${!budgetsSnapshot.empty ? '已建立' : '未建立'}`);
 
     } catch (verifyError) {
       console.error(`❌ 帳本驗證失敗:`, verifyError);
@@ -1537,7 +1597,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       "AM",
       functionName,
       "INFO",
-      `階段二優化：用戶 ${UID} 完整帳本初始化完成，共導入 ${subjectCount} 筆科目，${accountCount} 個帳戶，執行時間: ${executionTime}ms`,
+      `階段一修復：用戶 ${UID} 完整帳本初始化完成，共導入 ${subjectCount} 筆科目，${accountCount} 個帳戶，1筆交易範例，1筆預算範例，執行時間: ${executionTime}ms`,
       UID,
       userLedgerId,
     );
@@ -1547,9 +1607,11 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       userLedgerId: userLedgerId,
       subjectCount: subjectCount,
       accountCount: accountCount,
+      transactionExampleCount: 1,
+      budgetExampleCount: 1,
       initializationComplete: true,
       performance: performanceMetrics,
-      optimizationStage: "stage2_complete"
+      optimizationStage: "stage1_complete_with_budgets_transactions"
     };
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
