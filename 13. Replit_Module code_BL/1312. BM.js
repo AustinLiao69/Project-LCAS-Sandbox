@@ -139,12 +139,15 @@ BM.BM_createBudget = async function(requestData) {
     try {
       console.log(`${logPrefix} ✅ 最終Firebase子集合寫入路徑: ${collectionPath}/${budgetId}`);
       console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
+      console.log(`${logPrefix} 📋 確認路徑格式: ledgers/${ledgerId}/budgets/${budgetId}`);
       
+      // 強制使用子集合路徑，絕對禁止頂層budgets集合
       const firestoreResult = await FS.FS_createDocument(collectionPath, budgetId, budget, userId);
       if (!firestoreResult.success) {
         throw new Error(`Firebase子集合寫入失敗: ${firestoreResult.error}`);
       }
       console.log(`${logPrefix} ✅ 預算成功寫入子集合 - 完整路徑: ${collectionPath}/${budgetId}`);
+      console.log(`${logPrefix} 🎯 子集合架構驗證: 路徑確實為 ledgers/{ledgerId}/budgets/ 格式`);
 
       // 驗證寫入結果
       const verifyResult = await FS.FS_getDocument(collectionPath, budgetId, 'SYSTEM');
@@ -1511,9 +1514,10 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
       return createStandardResponse(false, null, '查詢預算詳情失敗：缺少ledgerId參數，系統已完全禁用頂層budgets集合', 'MISSING_LEDGER_ID_FOR_SUBCOLLECTION');
     }
 
-    // 完全強制使用子集合路徑查詢
+    // 完全強制使用子集合路徑查詢，絕對禁用頂層budgets集合
     const collectionPath = `ledgers/${ledgerId}/budgets`;
     console.log(`${logPrefix} 🎯 強制子集合查詢路徑: ${collectionPath}/${budgetId}`);
+    console.log(`${logPrefix} 📋 路徑架構確認: ledgers/{ledgerId}/budgets/ 子集合模式`);
 
     // 路徑安全驗證：絕對禁止頂層budgets集合
     if (collectionPath === 'budgets' || !collectionPath.startsWith('ledgers/') || !collectionPath.endsWith('/budgets')) {
