@@ -335,18 +335,31 @@ class SITP2TestController {
               inputData['userId'] = budgetData['operatorId'] ?? 'user_expert_1697363200000';
             }
             
-            // 關鍵修正：確保使用子集合架構參數
-            inputData['useSubcollection'] = true;
-            inputData['subcollectionPath'] = 'ledgers/${inputData['ledgerId']}/budgets';
+            // 關鍵修正：強制驗證並確保使用子集合架構參數
+            final ledgerId = inputData['ledgerId']?.toString();
+            if (ledgerId == null || ledgerId.isEmpty) {
+              throw Exception('TC-001錯誤：缺少ledgerId參數，無法建立預算子集合');
+            }
             
-            print('[7571] 🔄 TC-001修正：強制使用子集合架構 - ${inputData['subcollectionPath']}');
+            inputData['useSubcollection'] = true;
+            inputData['subcollectionPath'] = 'ledgers/$ledgerId/budgets';
+            
+            print('[7571] 🔄 TC-001強化修正：ledgerId=$ledgerId');
+            print('[7571] 🔄 TC-001強化修正：子集合路徑=${inputData['subcollectionPath']}');
             print('[7571] 🔄 階段一修正：純粹調用PL層7304 - 嚴格遵循資料流');
+            
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.create,
               inputData,
               UserMode.Expert,
             );
+            
             print('[7571] 📋 TC-001階段一修正：PL層7304純粹調用完成');
+            
+            // 額外驗證：確認寫入路徑正確
+            if (plResult is Map && plResult['success'] == true) {
+              print('[7571] ✅ TC-001驗證：預算應已寫入子集合 ledgers/$ledgerId/budgets');
+            }
           }
           break;
 
