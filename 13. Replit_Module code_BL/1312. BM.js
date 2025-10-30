@@ -110,30 +110,30 @@ BM.BM_createBudget = async function(requestData) {
       status: 'active'
     };
 
-    // 儲存到 Firestore（支援子集合架構）
+    // 儲存到 Firestore（強制子集合架構）
     console.log(`${logPrefix} 儲存預算到資料庫...`);
     try {
-      let collectionPath = 'budgets'; // 預設根集合
+      let collectionPath = null;
       
-      // 強化子集合路徑邏輯
+      // 階段一修正：強制使用子集合架構，禁止寫入頂層budgets集合
       if (requestData.useSubcollection && requestData.subcollectionPath) {
         collectionPath = requestData.subcollectionPath;
-        console.log(`${logPrefix} 使用指定的子集合路徑: ${collectionPath}`);
+        console.log(`${logPrefix} 使用7571測試指定的子集合路徑: ${collectionPath}`);
       } else if (ledgerId && ledgerId !== 'undefined' && ledgerId.trim() !== '') {
         collectionPath = `ledgers/${ledgerId}/budgets`;
         console.log(`${logPrefix} 使用帳本子集合路徑: ${collectionPath}`);
       } else {
-        // 預設強制使用子集合，避免寫入到頂層集合
-        console.warn(`${logPrefix} 缺少ledgerId，但強制使用子集合架構`);
-        if (userId && userId.includes('@')) {
-          // 從userId推導ledgerId
-          const derivedLedgerId = `user_${userId}`;
-          collectionPath = `ledgers/${derivedLedgerId}/budgets`;
-          console.log(`${logPrefix} 從userId推導子集合路徑: ${collectionPath}`);
-        }
+        // 階段一修正：如果沒有ledgerId，拋出錯誤而不是使用頂層集合
+        console.error(`${logPrefix} 錯誤：缺少有效的ledgerId，無法確定子集合路徑`);
+        throw new Error(`建立預算失敗：缺少有效的ledgerId參數，無法使用子集合架構`);
       }
       
-      console.log(`${logPrefix} 最終Firebase寫入路徑: ${collectionPath}`);
+      // 階段一修正：驗證子集合路徑格式
+      if (!collectionPath || !collectionPath.includes('ledgers/') || !collectionPath.includes('/budgets')) {
+        throw new Error(`無效的預算子集合路徑: ${collectionPath}，必須符合格式 ledgers/{ledger_id}/budgets`);
+      }
+      
+      console.log(`${logPrefix} ✅ 最終Firebase寫入路徑（子集合）: ${collectionPath}`);
       const firestoreResult = await FS.FS_createDocument(collectionPath, budgetId, budget, userId);
       if (!firestoreResult.success) {
         throw new Error(`Firebase寫入失敗: ${firestoreResult.error}`);
