@@ -1440,9 +1440,9 @@ BM.BM_validateAllocation = async function(budgetId, allocationData) {
 };
 
 /**
- * 新增：BM_getBudgetById (ASL.js所需) - 已修正為子集合架構
- * @version 2025-10-30-V2.1.1
- * @description 根據預算ID取得單一預算詳情，強制使用子集合架構
+ * 新增：BM_getBudgetById (ASL.js所需) - 完全子集合架構版
+ * @version 2025-10-30-V2.1.2
+ * @description 根據預算ID取得單一預算詳情，完全禁用頂層budgets集合
  */
 BM.BM_getBudgetById = async function(budgetId, options = {}) {
   const logPrefix = '[BM_getBudgetById]';
@@ -1458,17 +1458,17 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
     const ledgerId = options.ledgerId;
     if (!ledgerId || ledgerId.trim() === '') {
       console.error(`${logPrefix} ❌ 致命錯誤：缺少ledgerId，無法查詢子集合`);
-      return createStandardResponse(false, null, '查詢預算詳情失敗：缺少ledgerId參數，系統已禁用頂層budgets集合', 'MISSING_LEDGER_ID_FOR_SUBCOLLECTION');
+      return createStandardResponse(false, null, '查詢預算詳情失敗：缺少ledgerId參數，系統已完全禁用頂層budgets集合', 'MISSING_LEDGER_ID_FOR_SUBCOLLECTION');
     }
 
-    // 強制使用子集合路徑查詢
+    // 完全強制使用子集合路徑查詢
     const collectionPath = `ledgers/${ledgerId}/budgets`;
-    console.log(`${logPrefix} 🎯 子集合查詢路徑: ${collectionPath}/${budgetId}`);
+    console.log(`${logPrefix} 🎯 強制子集合查詢路徑: ${collectionPath}/${budgetId}`);
     
-    // 路徑安全驗證
-    if (!collectionPath.startsWith('ledgers/') || !collectionPath.endsWith('/budgets')) {
+    // 路徑安全驗證：絕對禁止頂層budgets集合
+    if (collectionPath === 'budgets' || !collectionPath.startsWith('ledgers/') || !collectionPath.endsWith('/budgets')) {
       console.error(`${logPrefix} ❌ 路徑安全驗證失敗: ${collectionPath}`);
-      return createStandardResponse(false, null, '路徑安全驗證失敗，禁止頂層集合操作', 'PATH_SECURITY_ERROR');
+      throw new Error(`路徑安全驗證失敗: ${collectionPath}，系統完全禁用頂層budgets集合`);
     }
     
     try {
