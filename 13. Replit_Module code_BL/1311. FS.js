@@ -2622,13 +2622,10 @@ module.exports = {
   FS_queryBudgetsInLedger: (ledgerId, queryConditions, requesterId, options) => 
     FS_queryCollection(`ledgers/${ledgerId}/budgets`, queryConditions, requesterId, options),
     
-  // 完整子集合管理函數
-  FS_createAccountInLedger: (ledgerId, accountId, accountData, requesterId) => 
-    FS_createDocument(`ledgers/${ledgerId}/accounts`, accountId, accountData, requesterId),
-  FS_createCategoryInLedger: (ledgerId, categoryId, categoryData, requesterId) => 
-    FS_createDocument(`ledgers/${ledgerId}/categories`, categoryId, categoryData, requesterId),
-  FS_createTransactionInLedger: (ledgerId, transactionId, transactionData, requesterId) => 
-    FS_createDocument(`ledgers/${ledgerId}/transactions`, transactionId, transactionData, requesterId),
+  // 完整子集合管理：直接使用 FS_createDocument() 處理各種子集合操作
+  // 範例：FS_createDocument(`ledgers/${ledgerId}/accounts`, accountId, accountData, requesterId)
+  // 範例：FS_createDocument(`ledgers/${ledgerId}/categories`, categoryId, categoryData, requesterId)
+  // 範例：FS_createDocument(`ledgers/${ledgerId}/transactions`, transactionId, transactionData, requesterId)
 
   // MLS.js帳本管理模組支援函數
   FS_initializeLedgerStructure,
