@@ -56,7 +56,7 @@ async function initializeServices() {
     console.log('⚡ 初始化Firebase Admin SDK...');
     const app = firebaseConfig.initializeFirebaseAdmin();
 
-    // 步驟4：確認Firestore實例可用（確保完全初始化）
+    // 步驟 4：確認Firestore實例可用（確保完全初始化）
     console.log('📊 確認Firestore實例...');
     const db = firebaseConfig.getFirestoreInstance();
 
@@ -1806,43 +1806,87 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
 // 假設 P2 API 端點的基礎路徑為 /api/v1/budgets
 // 請根據實際 API 設計填寫具體路由和調用函數
 
-// 1. 創建預算 - 階段三完整修正版
-app.post('/api/v1/budgets', async (req, res) => {
-  try {
-    console.log('➕ ASL階段三轉發: 創建預算 -> BM_createBudget');
-    console.log('📋 ASL階段三接收資料:', JSON.stringify(req.body, null, 2));
-    
-    if (!BM || typeof BM.BM_createBudget !== 'function') {
-      return res.apiError('BM_createBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
-    }
+  // 1. 創建預算 (POST /api/v1/budgets)
+  app.post('/api/v1/budgets', async (req, res) => {
+    try {
+      console.log('➕ ASL階段三轉發: 創建預算 -> BM_createBudget');
+      console.log('📋 ASL階段三接收資料:', JSON.stringify(req.body, null, 2));
 
-    // 階段三驗證：ledgerId必須存在
-    if (!req.body.ledgerId) {
-      console.error('❌ ASL階段三錯誤：缺少ledgerId參數');
-      return res.apiError('階段三驗證失敗：創建預算需要ledgerId參數（子集合架構要求）', 'MISSING_LEDGER_ID', 400);
-    }
+      if (!BM || typeof BM.BM_createBudget !== 'function') {
+        return res.apiError('BM_createBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
+      }
 
-    // 階段三日誌：確認真實帳本ID
-    console.log(`🎯 ASL階段三確認帳本ID: ${req.body.ledgerId}`);
-    if (req.body.ledgerId.includes('collab_ledger') || req.body.ledgerId.includes('hardcoded')) {
-      console.warn(`⚠️ ASL階段三警告：檢測到可能的hardcoded ledgerId: ${req.body.ledgerId}`);
-    }
+      // 檢查必要參數
+      if (!req.body.name || !req.body.amount || !req.body.ledgerId) {
+        return res.apiError('缺少必要參數: name, amount, ledgerId', 'MISSING_REQUIRED_PARAMS', 400);
+      }
 
-    const result = await BM.BM_createBudget(req.body);
-    
-    if (result.success) {
-      console.log('✅ ASL階段三成功：預算創建完成');
-      console.log(`📍 Firebase路徑: ${result.data?.firebase_path || 'unknown'}`);
-      res.apiSuccess(result.data, result.message || '預算創建成功');
-    } else {
-      console.error('❌ ASL階段三失敗：', result.message);
-      res.apiError(result.message || '預算創建失敗', result.error?.code || 'CREATE_BUDGET_ERROR', 400, result.error?.details);
+      // 階段三核心修正：智能提取真實userId
+      let userId = null;
+
+      // 優先級1：從請求body中提取userId
+      if (req.body.userId && req.body.userId !== 'system_user') {
+        userId = req.body.userId;
+        console.log(`🎯 ASL階段三：從userId提取 = ${userId}`);
+      }
+
+      // 優先級2：從ledgerId中提取（如果是user_email格式）
+      if (!userId && req.body.ledgerId && req.body.ledgerId.startsWith('user_')) {
+        userId = req.body.ledgerId.replace('user_', '');
+        console.log(`🎯 ASL階段三：從ledgerId提取 = ${userId}`);
+      }
+
+      // 優先級3：其他可能的用戶ID欄位
+      if (!userId) {
+        userId = req.body.user_id || req.body.operatorId || req.body.created_by;
+        if (userId) {
+          console.log(`🎯 ASL階段三：從其他欄位提取 = ${userId}`);
+        }
+      }
+
+      // 階段三驗證：確保不使用system_user
+      if (!userId || userId === 'system_user') {
+        console.warn('⚠️ ASL階段三警告：無法確定真實userId，將影響audit trail');
+        userId = 'unknown_user';
+      }
+
+      const ledgerId = req.body.ledgerId;
+      console.log(`🎯 ASL階段三確認 - 帳本ID: ${ledgerId}, 用戶ID: ${userId}`);
+
+      // 構建BM_createBudget調用參數（階段三修正版）
+      const budgetRequestData = {
+        ledgerId: ledgerId,
+        userId: userId,  // 階段三修正：使用真實userId
+        name: req.body.name,
+        amount: req.body.amount,
+        type: req.body.type || 'monthly',
+        description: req.body.description,
+        start_date: req.body.startDate,
+        end_date: req.body.endDate,
+        currency: req.body.currency || 'TWD',
+        categories: req.body.categories || [],
+        alert_rules: req.body.alert_rules || req.body.alertRules
+      };
+
+      console.log(`📋 ASL階段三最終傳遞資料 - userId: ${budgetRequestData.userId}`);
+
+      const result = await BM.BM_createBudget(budgetRequestData);
+
+      if (result.success) {
+        console.log('✅ ASL階段三成功：預算創建完成');
+        console.log('📍 Firebase路徑:', result.path || 'unknown');
+        console.log(`👤 ASL階段三驗證：created_by = ${result.data?.created_by || 'unknown'}`);
+        res.apiSuccess(result.data, result.message);
+      } else {
+        console.error('❌ ASL階段三失敗：預算創建錯誤:', result.message);
+        res.apiError(result.message, result.error?.code || 'CREATE_BUDGET_ERROR', 400, result.error?.details);
+      }
+
+    } catch (error) {
+      console.error('❌ ASL階段三轉發錯誤 (budgets create):', error);
+      res.apiError('預算創建轉發失敗', 'CREATE_BUDGET_FORWARD_ERROR', 500);
     }
-  } catch (error) {
-    console.error('❌ ASL階段三轉發錯誤 (create budget):', error);
-    res.apiError('預算創建轉發失敗', 'CREATE_BUDGET_FORWARD_ERROR', 500);
-  }
-});
+  });
 
 // 2. 查詢預算列表
 app.get('/api/v1/budgets', async (req, res) => {
@@ -1940,7 +1984,7 @@ app.delete('/api/v1/budgets/:id', async (req, res) => {
     if (!deleteOptions.confirmationToken) {
       deleteOptions.confirmationToken = `confirm_delete_${req.params.id}`;
     }
-    
+
     const result = await BM.BM_deleteBudget(req.params.id, deleteOptions);
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算刪除成功');
