@@ -1591,21 +1591,8 @@ async function FS_createCollectionFramework() {
     const ledgersResult = await FS_createDocument('ledgers', '_placeholder', ledgersPlaceholder, 'SYSTEM');
     results.push({ collection: 'ledgers', result: ledgersResult });
 
-    // 3. 建立 budgets 集合框架 (階段三標記為已棄用)
-    const budgetsPlaceholder = {
-      type: 'collection_placeholder',
-      purpose: '確保 budgets 集合存在 - 1312.BM.js模組支援',
-      note: '⚠️ 舊架構相容性佔位文檔，新實作請使用 ledgers/{id}/budgets/ 子集合',
-      module_support: '1312.BM.js (legacy compatibility)',
-      stage: 'Phase3-Subcollection-Migration',
-      deprecated: true,
-      recommended_path: 'ledgers/{ledger_id}/budgets/',
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now()
-    };
-
-    const budgetsResult = await FS_createDocument('budgets', '_placeholder', budgetsPlaceholder, 'SYSTEM');
-    results.push({ collection: 'budgets', result: budgetsResult });
+    // 3. 舊的 budgets 集合已完全遷移至子集合架構，不再建立頂層集合
+    console.log('📋 頂層 budgets 集合已棄用，全面採用 ledgers/{id}/budgets/ 子集合架構');
 
     const successCount = results.filter(r => r.result.success).length;
 
@@ -1627,17 +1614,231 @@ async function FS_createCollectionFramework() {
 }
 
 /**
- * 建立預算子集合框架（階段三專用）
- * @version 2025-10-30-V2.0.0 
+ * 建立完整帳本子集合架構（新版本 - 支援所有子集合）
+ * @version 2025-10-30-V3.1.0 
  * @date 2025-10-30
- * @description 確保預算子集合框架存在，支援1312.BM.js模組的新架構
+ * @description 為指定帳本建立完整子集合架構：accounts, transactions, categories, budgets
+ */
+async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTEM') {
+  const functionName = "FS_createCompleteSubcollectionFramework";
+  try {
+    FS_logOperation(`建立完整帳本子集合架構: ${ledgerId}`, "子集合架構建立", userId, "", "", functionName);
+
+    const results = [];
+
+    // 1. 建立帳戶子集合 (accounts)
+    const accountDefaults = [
+      {
+        account_id: 'default_cash',
+        name: '現金',
+        type: 'cash',
+        currency: 'TWD',
+        balance: 0,
+        is_default: true,
+        is_active: true,
+        icon: '💵',
+        color: '#4CAF50'
+      },
+      {
+        account_id: 'default_bank',
+        name: '銀行帳戶',
+        type: 'bank',
+        currency: 'TWD',
+        balance: 0,
+        is_default: false,
+        is_active: true,
+        icon: '🏦',
+        color: '#2196F3'
+      },
+      {
+        account_id: 'default_credit',
+        name: '信用卡',
+        type: 'credit',
+        currency: 'TWD',
+        balance: 0,
+        is_default: false,
+        is_active: true,
+        icon: '💳',
+        color: '#FF9800'
+      }
+    ];
+
+    for (const account of accountDefaults) {
+      const accountData = {
+        ...account,
+        ledger_id: ledgerId,
+        created_at: admin.firestore.Timestamp.now(),
+        updated_at: admin.firestore.Timestamp.now(),
+        created_by: userId
+      };
+
+      const accountResult = await FS_createDocument(
+        `ledgers/${ledgerId}/accounts`,
+        account.account_id,
+        accountData,
+        userId
+      );
+      results.push({ type: 'accounts', id: account.account_id, result: accountResult });
+    }
+
+    // 2. 建立科目子集合 (categories)
+    const categoryDefaults = [
+      // 收入科目
+      { category_id: 'income_salary', name: '薪資收入', type: 'income', icon: '💰', color: '#4CAF50', order: 1 },
+      { category_id: 'income_business', name: '營業收入', type: 'income', icon: '🏢', color: '#2196F3', order: 2 },
+      { category_id: 'income_other', name: '其他收入', type: 'income', icon: '💝', color: '#9C27B0', order: 3 },
+      
+      // 支出科目  
+      { category_id: 'expense_food', name: '餐飲', type: 'expense', icon: '🍽️', color: '#FF5722', order: 1 },
+      { category_id: 'expense_transport', name: '交通', type: 'expense', icon: '🚗', color: '#607D8B', order: 2 },
+      { category_id: 'expense_shopping', name: '購物', type: 'expense', icon: '🛍️', color: '#E91E63', order: 3 },
+      { category_id: 'expense_entertainment', name: '娛樂', type: 'expense', icon: '🎬', color: '#673AB7', order: 4 },
+      { category_id: 'expense_utilities', name: '水電費', type: 'expense', icon: '⚡', color: '#795548', order: 5 },
+      { category_id: 'expense_healthcare', name: '醫療', type: 'expense', icon: '🏥', color: '#009688', order: 6 }
+    ];
+
+    for (const category of categoryDefaults) {
+      const categoryData = {
+        ...category,
+        ledger_id: ledgerId,
+        parent_id: null,
+        level: 1,
+        is_default: true,
+        is_active: true,
+        created_at: admin.firestore.Timestamp.now(),
+        updated_at: admin.firestore.Timestamp.now(),
+        created_by: userId
+      };
+
+      const categoryResult = await FS_createDocument(
+        `ledgers/${ledgerId}/categories`,
+        category.category_id,
+        categoryData,
+        userId
+      );
+      results.push({ type: 'categories', id: category.category_id, result: categoryResult });
+    }
+
+    // 3. 建立交易子集合範例 (transactions) - 建立佔位符確保集合存在
+    const transactionPlaceholder = {
+      transaction_id: '_placeholder',
+      ledger_id: ledgerId,
+      amount: 0,
+      type: 'placeholder',
+      description: '交易子集合佔位符',
+      category_id: 'expense_food',
+      account_id: 'default_cash',
+      date: new Date().toISOString().split('T')[0],
+      user_id: userId,
+      created_at: admin.firestore.Timestamp.now(),
+      updated_at: admin.firestore.Timestamp.now(),
+      note: '此為確保交易子集合存在的佔位文檔，實際交易記錄建立時會有真實數據'
+    };
+
+    const transactionResult = await FS_createDocument(
+      `ledgers/${ledgerId}/transactions`,
+      '_placeholder',
+      transactionPlaceholder,
+      userId
+    );
+    results.push({ type: 'transactions', id: '_placeholder', result: transactionResult });
+
+    // 4. 建立預算子集合 (budgets) - 建立預設月度預算
+    const budgetDefault = {
+      budget_id: 'default_monthly_budget',
+      ledger_id: ledgerId,
+      name: '月度預算',
+      type: 'monthly',
+      total_amount: 30000,
+      consumed_amount: 0,
+      currency: 'TWD',
+      start_date: admin.firestore.Timestamp.now(),
+      end_date: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30天後
+      allocation: [
+        {
+          category_id: 'expense_food',
+          category_name: '餐飲',
+          allocated_amount: 12000,
+          consumed_amount: 0
+        },
+        {
+          category_id: 'expense_transport',
+          category_name: '交通',
+          allocated_amount: 6000,
+          consumed_amount: 0
+        },
+        {
+          category_id: 'expense_shopping',
+          category_name: '購物',
+          allocated_amount: 8000,
+          consumed_amount: 0
+        },
+        {
+          category_id: 'expense_entertainment',
+          category_name: '娛樂',
+          allocated_amount: 4000,
+          consumed_amount: 0
+        }
+      ],
+      alert_rules: {
+        warning_threshold: 80,
+        critical_threshold: 95,
+        enable_notifications: true,
+        notification_channels: ['system']
+      },
+      created_by: userId,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      status: 'active'
+    };
+
+    const budgetResult = await FS_createDocument(
+      `ledgers/${ledgerId}/budgets`,
+      'default_monthly_budget',
+      budgetDefault,
+      userId
+    );
+    results.push({ type: 'budgets', id: 'default_monthly_budget', result: budgetResult });
+
+    // 統計建立結果
+    const successCount = results.filter(r => r.result.success).length;
+    const totalCount = results.length;
+
+    return {
+      success: successCount === totalCount,
+      message: `帳本${ledgerId}完整子集合架構建立${successCount === totalCount ? '成功' : '部分失敗'}`,
+      created_subcollections: {
+        accounts: results.filter(r => r.type === 'accounts' && r.result.success).length,
+        categories: results.filter(r => r.type === 'categories' && r.result.success).length,
+        transactions: results.filter(r => r.type === 'transactions' && r.result.success).length,
+        budgets: results.filter(r => r.type === 'budgets' && r.result.success).length
+      },
+      details: results,
+      success_rate: `${successCount}/${totalCount}`
+    };
+
+  } catch (error) {
+    FS_handleError(`建立完整帳本子集合架構失敗: ${error.message}`, "子集合架構建立", userId, "FS_CREATE_COMPLETE_SUBCOLLECTION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_CREATE_COMPLETE_SUBCOLLECTION_ERROR'
+    };
+  }
+}
+
+/**
+ * 建立完整帳本子集合框架（階段三專用）- 保留相容性
+ * @version 2025-10-30-V3.0.0 
+ * @date 2025-10-30
+ * @description 建立完整帳本子集合架構：accounts, transactions, categories, budgets
  */
 async function FS_createBudgetsSubcollectionFramework() {
   try {
-    // 建立示例帳本以支援預算子集合
+    // 建立示例帳本以支援完整子集合
     const exampleLedger = {
       id: 'example_ledger_for_budgets',
-      name: '預算子集合範例帳本',
+      name: '完整子集合範例帳本',
       type: 'system_example',
       owner_id: 'SYSTEM',
       members: ['SYSTEM'],
@@ -1645,20 +1846,95 @@ async function FS_createBudgetsSubcollectionFramework() {
       created_at: admin.firestore.Timestamp.now(),
       updated_at: admin.firestore.Timestamp.now(),
       status: 'example',
-      note: '此為支援預算子集合的範例帳本'
+      note: '此為支援完整帳本子集合的範例帳本'
     };
 
     // 建立示例帳本
     const ledgerResult = await FS_createDocument('ledgers', 'example_ledger_for_budgets', exampleLedger, 'SYSTEM');
 
-    // 建立預算子集合示例文檔
+    const results = [];
+
+    // 1. 建立帳戶子集合 (accounts)
+    const accountExample = {
+      account_id: 'example_account',
+      ledger_id: 'example_ledger_for_budgets',
+      name: '現金帳戶',
+      type: 'cash',
+      currency: 'TWD',
+      balance: 50000,
+      is_default: true,
+      is_active: true,
+      created_at: admin.firestore.Timestamp.now(),
+      updated_at: admin.firestore.Timestamp.now(),
+      note: '帳戶子集合範例'
+    };
+
+    const accountResult = await FS_createDocument(
+      'ledgers/example_ledger_for_budgets/accounts', 
+      'example_account', 
+      accountExample, 
+      'SYSTEM'
+    );
+    results.push({ type: 'accounts', result: accountResult });
+
+    // 2. 建立交易子集合 (transactions)
+    const transactionExample = {
+      transaction_id: 'example_transaction',
+      ledger_id: 'example_ledger_for_budgets',
+      amount: 1500,
+      type: 'expense',
+      description: '午餐',
+      category_id: 'example_food',
+      account_id: 'example_account',
+      date: new Date().toISOString().split('T')[0],
+      user_id: 'SYSTEM',
+      created_at: admin.firestore.Timestamp.now(),
+      updated_at: admin.firestore.Timestamp.now(),
+      note: '交易子集合範例'
+    };
+
+    const transactionResult = await FS_createDocument(
+      'ledgers/example_ledger_for_budgets/transactions', 
+      'example_transaction', 
+      transactionExample, 
+      'SYSTEM'
+    );
+    results.push({ type: 'transactions', result: transactionResult });
+
+    // 3. 建立科目子集合 (categories)
+    const categoryExample = {
+      category_id: 'example_food',
+      ledger_id: 'example_ledger_for_budgets',
+      name: '餐飲',
+      type: 'expense',
+      icon: '🍽️',
+      color: '#FF5722',
+      parent_id: null,
+      level: 1,
+      order: 1,
+      is_default: true,
+      is_active: true,
+      created_at: admin.firestore.Timestamp.now(),
+      updated_at: admin.firestore.Timestamp.now(),
+      note: '科目子集合範例'
+    };
+
+    const categoryResult = await FS_createDocument(
+      'ledgers/example_ledger_for_budgets/categories', 
+      'example_food', 
+      categoryExample, 
+      'SYSTEM'
+    );
+    results.push({ type: 'categories', result: categoryResult });
+
+    // 4. 建立預算子集合 (budgets)
     const budgetSubcollectionExample = {
       budget_id: 'example_budget_subcollection',
       ledger_id: 'example_ledger_for_budgets',
-      name: '預算子集合結構範例',
-      type: 'example',
+      name: '月度預算',
+      type: 'monthly',
       total_amount: 50000,
-      consumed_amount: 0,
+      consumed_amount: 1500,
       currency: 'TWD',
       start_date: admin.firestore.Timestamp.now(),
       end_date: admin.firestore.Timestamp.now(),
@@ -1667,7 +1943,7 @@ async function FS_createBudgetsSubcollectionFramework() {
           category_id: 'example_food',
           category_name: '餐飲',
           allocated_amount: 20000,
-          consumed_amount: 0
+          consumed_amount: 1500
         }
       ],
       alert_rules: {
@@ -1679,25 +1955,30 @@ async function FS_createBudgetsSubcollectionFramework() {
       created_by: 'SYSTEM',
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      status: 'example',
-      note: '此為預算子集合結構範例文檔'
+      status: 'active',
+      note: '預算子集合範例文檔'
     };
 
-    // 建立預算子集合文檔
     const budgetResult = await FS_createDocument(
       'ledgers/example_ledger_for_budgets/budgets', 
       'example_budget_subcollection', 
       budgetSubcollectionExample, 
       'SYSTEM'
     );
+    results.push({ type: 'budgets', result: budgetResult });
+
+    // 統計成功建立的子集合數量
+    const successCount = results.filter(r => r.result.success).length;
+    const totalCount = results.length;
 
     return {
-      success: ledgerResult.success && budgetResult.success,
-      message: (ledgerResult.success && budgetResult.success) ? 
-        '預算子集合框架建立成功' : '預算子集合框架建立失敗',
+      success: ledgerResult.success && successCount === totalCount,
+      message: `完整帳本子集合框架建立${successCount === totalCount ? '成功' : '部分失敗'} (${successCount}/${totalCount})`,
       details: {
         ledger: ledgerResult,
-        budget_subcollection: budgetResult
+        subcollections: results,
+        created_subcollections: ['accounts', 'transactions', 'categories', 'budgets'],
+        success_rate: `${successCount}/${totalCount}`
       }
     };
 
@@ -1705,7 +1986,7 @@ async function FS_createBudgetsSubcollectionFramework() {
     return {
       success: false,
       error: error.message,
-      errorCode: 'FS_CREATE_BUDGET_SUBCOLLECTION_FRAMEWORK_ERROR'
+      errorCode: 'FS_CREATE_COMPLETE_SUBCOLLECTION_FRAMEWORK_ERROR'
     };
   }
 }
@@ -2329,6 +2610,7 @@ module.exports = {
   // 1312.BM預算管理模組支援函數（階段三子集合版）
   FS_initializeBudgetStructure,
   FS_createBudgetsSubcollectionFramework,
+  FS_createCompleteSubcollectionFramework,
   FS_createBudgetInLedger: (ledgerId, budgetId, budgetData, requesterId) => 
     FS_createDocument(`ledgers/${ledgerId}/budgets`, budgetId, budgetData, requesterId),
   FS_getBudgetFromLedger: (ledgerId, budgetId, requesterId) => 
@@ -2339,6 +2621,11 @@ module.exports = {
     FS_deleteDocument(`ledgers/${ledgerId}/budgets`, budgetId, requesterId),
   FS_queryBudgetsInLedger: (ledgerId, queryConditions, requesterId, options) => 
     FS_queryCollection(`ledgers/${ledgerId}/budgets`, queryConditions, requesterId, options),
+    
+  // 完整子集合管理：直接使用 FS_createDocument() 處理各種子集合操作
+  // 範例：FS_createDocument(`ledgers/${ledgerId}/accounts`, accountId, accountData, requesterId)
+  // 範例：FS_createDocument(`ledgers/${ledgerId}/categories`, categoryId, categoryData, requesterId)
+  // 範例：FS_createDocument(`ledgers/${ledgerId}/transactions`, transactionId, transactionData, requesterId)
 
   // MLS.js帳本管理模組支援函數
   FS_initializeLedgerStructure,
