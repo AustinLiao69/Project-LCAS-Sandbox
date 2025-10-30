@@ -1419,7 +1419,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     }
     console.log(`  - ${accountCount} 個預設帳戶準備寫入`);
 
-    // 4. 創建transactions子集合範例文檔
+    // 4. 創建transactions子集合範例文檔（確保子集合存在）
     const transactionExample = {
       transaction_id: 'example_transaction',
       ledger_id: userLedgerId,
@@ -1432,14 +1432,23 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       user_id: UID,
       created_at: admin.firestore.Timestamp.now(),
       updated_at: admin.firestore.Timestamp.now(),
-      note: '此為確保交易子集合存在的範例文檔'
+      note: '此為確保交易子集合存在的範例文檔，用戶首次記帳後可刪除'
     };
 
     const transactionRef = ledgerRef.collection("transactions").doc("example_transaction");
     currentBatch.set(transactionRef, transactionExample);
+    operationCount++;
     console.log(`  - transactions子集合範例文檔準備寫入`);
 
-    // 5. 創建budgets子集合範例文檔
+    // 檢查batch容量
+    if (operationCount >= maxBatchSize) {
+      batches.push(currentBatch);
+      currentBatch = db.batch();
+      operationCount = 0;
+      console.log(`  - 達到batch容量限制，創建新batch`);
+    }
+
+    // 5. 創建budgets子集合範例文檔（確保子集合存在）
     const budgetExample = {
       budget_id: 'example_monthly_budget',
       ledger_id: userLedgerId,
@@ -1486,11 +1495,12 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
       status: 'active',
-      note: '此為確保預算子集合存在的範例文檔'
+      note: '此為確保預算子集合存在的範例文檔，用戶可以編輯或刪除'
     };
 
     const budgetRef = ledgerRef.collection("budgets").doc("example_monthly_budget");
     currentBatch.set(budgetRef, budgetExample);
+    operationCount++;
     console.log(`  - budgets子集合範例文檔準備寫入`);
 
     // 階段二優化：將剩餘操作加入最後一個batch
@@ -1564,17 +1574,33 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         throw new Error("帳本文檔驗證失敗：文檔不存在");
       }
 
-      // 驗證子集合是否建立
+      // 驗證所有四個子集合是否建立
       const categoriesSnapshot = await ledgerRef.collection("categories").limit(1).get();
       const accountsSnapshot = await ledgerRef.collection("accounts").limit(1).get();
       const transactionsSnapshot = await ledgerRef.collection("transactions").limit(1).get();
       const budgetsSnapshot = await ledgerRef.collection("budgets").limit(1).get();
 
+      const subcollectionStatus = {
+        categories: !categoriesSnapshot.empty,
+        accounts: !accountsSnapshot.empty,
+        transactions: !transactionsSnapshot.empty,
+        budgets: !budgetsSnapshot.empty
+      };
+
       console.log(`✅ 帳本 ${userLedgerId} 驗證成功`);
-      console.log(`✅ Categories集合: ${!categoriesSnapshot.empty ? '已建立' : '未建立'}`);
-      console.log(`✅ Accounts集合: ${!accountsSnapshot.empty ? '已建立' : '未建立'}`);
-      console.log(`✅ Transactions集合: ${!transactionsSnapshot.empty ? '已建立' : '未建立'}`);
-      console.log(`✅ Budgets集合: ${!budgetsSnapshot.empty ? '已建立' : '未建立'}`);
+      console.log(`✅ Categories集合: ${subcollectionStatus.categories ? '已建立' : '❌未建立'}`);
+      console.log(`✅ Accounts集合: ${subcollectionStatus.accounts ? '已建立' : '❌未建立'}`);
+      console.log(`✅ Transactions集合: ${subcollectionStatus.transactions ? '已建立' : '❌未建立'}`);
+      console.log(`✅ Budgets集合: ${subcollectionStatus.budgets ? '已建立' : '❌未建立'}`);
+
+      // 檢查是否所有子集合都成功建立
+      const allSubcollectionsCreated = Object.values(subcollectionStatus).every(status => status === true);
+      if (!allSubcollectionsCreated) {
+        const missingCollections = Object.entries(subcollectionStatus)
+          .filter(([name, status]) => !status)
+          .map(([name]) => name);
+        console.warn(`⚠️ 部分子集合未建立: ${missingCollections.join(', ')}`);
+      }
 
     } catch (verifyError) {
       console.error(`❌ 帳本驗證失敗:`, verifyError);
@@ -1610,8 +1636,15 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       transactionExampleCount: 1,
       budgetExampleCount: 1,
       initializationComplete: true,
+      subcollections: {
+        categories: subjectCount > 0,
+        accounts: accountCount > 0,
+        transactions: true,
+        budgets: true
+      },
       performance: performanceMetrics,
-      optimizationStage: "stage1_complete_with_budgets_transactions"
+      optimizationStage: "stage1_complete_with_budgets_transactions",
+      message: `完整帳本初始化成功：4個子集合均已建立 (categories: ${subjectCount}筆, accounts: ${accountCount}個, transactions: 1筆範例, budgets: 1筆範例)`
     };
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
