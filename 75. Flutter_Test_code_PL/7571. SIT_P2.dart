@@ -29,6 +29,12 @@ class P2TestDataManager {
   P2TestDataManager._internal();
 
   Map<String, dynamic>? _testData;
+  
+  // 測試計數器屬性
+  int totalTests = 0;
+  int passedTests = 0;
+  int failedTests = 0;
+  final List<P2TestResult> testResults = [];
 
   /// 載入P2測試資料
   Future<Map<String, dynamic>> loadP2TestData() async {
@@ -154,7 +160,7 @@ class P2TestDataManager {
     passedTests = 0;
     failedTests = 0;
     testResults.clear();
-    print('[7582] 🧹 測試環境清理完成');
+    print('[7571] 🧹 測試環境清理完成');
   }
 }
 
