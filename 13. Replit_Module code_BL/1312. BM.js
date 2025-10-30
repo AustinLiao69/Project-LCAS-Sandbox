@@ -127,12 +127,53 @@ BM.BM_createBudget = async function(budgetData) {
 
     // 生成預算ID
     const budgetId = `budget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    // 日期處理 - 階段一修正：使用台灣時區Asia/Taipei
-      const currentDate = new Date();
-      // 確保使用當前年份2025和正確時區
-      const taiwanTime = new Date(currentDate.toLocaleString("en-US", {timeZone: "Asia/Taipei"}));
-    const currentTimestamp = taiwanTime.toISOString();
-    const endDate = budgetDataPayload.end_date ? new Date(budgetDataPayload.end_date) : new Date(taiwanTime.getFullYear(), taiwanTime.getMonth() + 1, 0); // 預設為月底
+    // 日期處理 - 階段二修正：時區統一、年份修正、日期格式標準化
+    const currentDate = new Date();
+    
+    // 階段二核心修正1：強制使用台灣時區 Asia/Taipei
+    const taiwanTime = new Date(currentDate.toLocaleString("en-US", {timeZone: "Asia/Taipei"}));
+    
+    // 階段二核心修正2：確保使用當前年份2025
+    if (taiwanTime.getFullYear() !== 2025) {
+      console.warn(`${logPrefix} ⚠️ 年份校正：系統年份${taiwanTime.getFullYear()} -> 強制使用2025年`);
+      taiwanTime.setFullYear(2025);
+    }
+    
+    // 階段二核心修正3：統一使用Timestamp格式（Firebase標準）
+    const currentTimestamp = admin.firestore.Timestamp.fromDate(taiwanTime);
+    
+    // 處理開始和結束日期
+    let startDate, endDate;
+    
+    if (budgetDataPayload.start_date) {
+      const inputStartDate = new Date(budgetDataPayload.start_date);
+      // 強制校正年份為2025
+      if (inputStartDate.getFullYear() !== 2025) {
+        console.warn(`${logPrefix} ⚠️ 開始日期年份校正：${inputStartDate.getFullYear()} -> 2025`);
+        inputStartDate.setFullYear(2025);
+      }
+      startDate = admin.firestore.Timestamp.fromDate(inputStartDate);
+    } else {
+      startDate = currentTimestamp;
+    }
+    
+    if (budgetDataPayload.end_date) {
+      const inputEndDate = new Date(budgetDataPayload.end_date);
+      // 強制校正年份為2025
+      if (inputEndDate.getFullYear() !== 2025) {
+        console.warn(`${logPrefix} ⚠️ 結束日期年份校正：${inputEndDate.getFullYear()} -> 2025`);
+        inputEndDate.setFullYear(2025);
+      }
+      endDate = admin.firestore.Timestamp.fromDate(inputEndDate);
+    } else {
+      // 預設為當月底
+      const monthEndDate = new Date(2025, taiwanTime.getMonth() + 1, 0);
+      endDate = admin.firestore.Timestamp.fromDate(monthEndDate);
+    }
+    
+    console.log(`${logPrefix} 🕐 階段二時區修正：當前台灣時間 ${taiwanTime.toLocaleString('zh-TW', {timeZone: 'Asia/Taipei'})}`);
+    console.log(`${logPrefix} 📅 階段二年份確認：${taiwanTime.getFullYear()}年 (強制校正為2025年)`);
+    console.log(`${logPrefix} ⏰ 階段二格式統一：使用Firebase Timestamp格式`);
 
 
     // 建立預算物件
@@ -146,8 +187,8 @@ BM.BM_createBudget = async function(budgetData) {
         total_amount: budgetDataPayload.amount || budgetDataPayload.total_amount, // 標準欄位：total_amount
         consumed_amount: budgetDataPayload.consumed_amount || 0, // 標準欄位：consumed_amount，初始為0
         currency: budgetDataPayload.currency || 'TWD',
-        start_date: budgetDataPayload.start_date || taiwanTime.toISOString(),
-        end_date: budgetDataPayload.end_date || endDate.toISOString(),
+        start_date: startDate,
+        end_date: endDate,
         categories: budgetDataPayload.categories || [],
         alert_rules: budgetDataPayload.alert_rules || {
           warning_threshold: 80,
@@ -180,11 +221,13 @@ BM.BM_createBudget = async function(budgetData) {
     console.log(`${logPrefix} 📋 確認路徑格式: ${collectionPath}/${budgetId}`);
 
     // 階段一：欄位標準化驗證
-    console.log(`${logPrefix} 🔍 階段一欄位檢查:`);
+    console.log(`${logPrefix} 🔍 階段二欄位與時區檢查:`);
     console.log(`${logPrefix} 📊 total_amount: ${finalBudgetData.total_amount}`);
     console.log(`${logPrefix} 📊 consumed_amount: ${finalBudgetData.consumed_amount}`);
     console.log(`${logPrefix} 👤 created_by: ${finalBudgetData.created_by}`);
-    console.log(`${logPrefix} ⏰ 時區處理: 當前年份${currentDate.getFullYear()}`);
+    console.log(`${logPrefix} 🕐 時區統一: Asia/Taipei (台灣時區)`);
+    console.log(`${logPrefix} 📅 年份校正: 2025年`);
+    console.log(`${logPrefix} ⏰ 格式統一: Firebase Timestamp格式`);
 
     // 驗證是否符合1311.FS.js標準
     if (!finalBudgetData.total_amount) {
