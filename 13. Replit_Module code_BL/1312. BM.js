@@ -110,14 +110,25 @@ BM.BM_createBudget = async function(requestData) {
       status: 'active'
     };
 
-    // 儲存到 Firestore
+    // 儲存到 Firestore（支援子集合架構）
     console.log(`${logPrefix} 儲存預算到資料庫...`);
     try {
-      const firestoreResult = await FS.FS_createDocument('budgets', budgetId, budget, userId);
+      let collectionPath = 'budgets'; // 預設根集合
+      
+      // 如果指定了子集合路徑或ledgerId，使用子集合架構
+      if (requestData.useSubcollection && requestData.subcollectionPath) {
+        collectionPath = requestData.subcollectionPath;
+        console.log(`${logPrefix} 使用指定的子集合路徑: ${collectionPath}`);
+      } else if (ledgerId) {
+        collectionPath = `ledgers/${ledgerId}/budgets`;
+        console.log(`${logPrefix} 使用帳本子集合路徑: ${collectionPath}`);
+      }
+      
+      const firestoreResult = await FS.FS_createDocument(collectionPath, budgetId, budget, userId);
       if (!firestoreResult.success) {
         throw new Error(`Firebase寫入失敗: ${firestoreResult.error}`);
       }
-      console.log(`${logPrefix} 預算成功寫入Firebase - 文檔ID: ${budgetId}`);
+      console.log(`${logPrefix} 預算成功寫入Firebase - 路徑: ${collectionPath}/${budgetId}`);
     } catch (firestoreError) {
       console.error(`${logPrefix} Firebase寫入失敗:`, firestoreError);
       throw new Error(`Firebase寫入失敗: ${firestoreError.message}`);

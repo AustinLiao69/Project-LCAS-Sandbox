@@ -807,7 +807,7 @@ async function AM_refreshLineToken(UID, refreshToken) {
     const { access_token, expires_in } = response.data;
 
     // 更新儲存的 Token
-    await AM_updateStoredToken(UID, access_token, expires_in);
+    await AM_updateStoredToken(UID, access_token, expiresIn);
 
     return {
       success: true,
@@ -1467,7 +1467,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
           consumed_amount: 0
         },
         {
-          category_id: 'expense_transport', 
+          category_id: 'expense_transport',
           category_name: '交通',
           allocated_amount: 6000,
           consumed_amount: 0
