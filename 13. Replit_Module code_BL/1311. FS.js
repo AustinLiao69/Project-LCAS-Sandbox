@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_2.2.0
+* FS_FirestoreStructure_資料庫結構模組_2.5.0
 * @module 資料庫結構模組
-* @description LCAS 2.0 Firestore資料庫結構模組 - Phase 1核心進入流程專用版本 + 1312.BM.js預算管理支援
-* @update 2025-10-29: 新增預算管理結構支援，升級至2.2.0版本
+* @description LCAS 2.5.0 Firestore資料庫結構模組 - Phase 3 預算子集合架構遷移完成
+* @update 2025-10-30: 預算子集合架構遷移完成，升級至2.5.0版本
 */
 
 // 引入Firebase動態配置模組
@@ -26,10 +26,10 @@ try {
   PROJECT_ID = projectInfo.PROJECT_ID;
   UNIVERSE_DOMAIN = projectInfo.UNIVERSE_DOMAIN;
 
-  console.log('✅ FS模組2.1.0：Firebase動態配置載入成功');
+  console.log('✅ FS模組2.5.0：Firebase動態配置載入成功');
 
 } catch (error) {
-  console.error('❌ FS模組2.1.0：Firebase動態配置載入失敗:', error.message);
+  console.error('❌ FS模組2.5.0：Firebase動態配置載入失敗:', error.message);
 
   // 檢查環境變數設定狀態
   try {
@@ -61,7 +61,7 @@ const TIMEZONE = 'Asia/Taipei';
 function FS_initializeModule() {
   const functionName = "FS_initializeModule";
   try {
-    FS_logOperation('FS模組2.1.0初始化', '模組初始化', 'system', '', '', functionName);
+    FS_logOperation('FS模組2.5.0初始化', '模組初始化', 'system', '', '', functionName);
 
     // 驗證Firebase配置
     if (!db) {
@@ -75,10 +75,10 @@ function FS_initializeModule() {
 
     return {
       success: true,
-      version: '2.2.0',
+      version: '2.5.0',
       projectId: PROJECT_ID,
       timezone: TIMEZONE,
-      message: 'FS模組2.2.0初始化成功，包含1312.BM.js預算管理支援'
+      message: 'FS模組2.5.0初始化成功，包含預算子集合架構支援'
     };
 
   } catch (error) {
@@ -988,7 +988,7 @@ async function FS_initializeSystemConfig(requesterId) {
     // 1. 初始化系統配置文檔 (階段二強化版)
     const systemConfig = {
       version: '2.5.0',
-      phase: 'Phase1-Budget-Subcollection-Complete',
+      phase: 'Phase3-Budget-Subcollection-Migration-Complete',
       supportedModes: ['Expert', 'Inertial', 'Cultivation', 'Guiding'],
       features: {
         authentication: true,
@@ -1001,8 +1001,7 @@ async function FS_initializeSystemConfig(requesterId) {
       collections: {
         users: 'initialized',
         ledgers: 'initialized',
-        'ledgers/{id}/budgets': 'subcollection_initialized',
-        _system: 'initialized'
+        '_system': 'initialized'
       },
       budgetSupport: {
         enabled: true,
@@ -1032,11 +1031,11 @@ async function FS_initializeSystemConfig(requesterId) {
     const assessmentQuestions = await FS_initializeAssessmentQuestions();
     initResults.push({ type: '評估問卷', result: assessmentQuestions });
 
-    // 5. 初始化預算管理文檔結構 (1312.BM.js支援)
+    // 5. 初始化預算管理文檔結構 (1312.BM.js支援 - 子集合版)
     const budgetStructure = await FS_initializeBudgetStructure();
-    initResults.push({ type: '預算結構', result: budgetStructure });
+    initResults.push({ type: '預算結構(子集合)', result: budgetStructure });
 
-    // 5.1 建立預算子集合框架（確保子集合存在）
+    // 5.1 建立預算子集合框架（確保預算子集合存在）
     const budgetsSubcollectionFramework = await FS_createBudgetsSubcollectionFramework();
     initResults.push({ type: '預算子集合框架', result: budgetsSubcollectionFramework });
 
@@ -1577,7 +1576,7 @@ async function FS_createCollectionFramework() {
       createdAt: admin.firestore.Timestamp.now(),
       note: '此文檔僅用於確保集合框架存在，實際用戶註冊時會被覆蓋或刪除'
     };
-    
+
     const usersResult = await FS_createDocument('users', '_placeholder', usersPlaceholder, 'SYSTEM');
     results.push({ collection: 'users', result: usersResult });
 
@@ -1592,15 +1591,17 @@ async function FS_createCollectionFramework() {
     const ledgersResult = await FS_createDocument('ledgers', '_placeholder', ledgersPlaceholder, 'SYSTEM');
     results.push({ collection: 'ledgers', result: ledgersResult });
 
-    // 3. 建立 budgets 集合框架 (階段二新增)
+    // 3. 建立 budgets 集合框架 (階段三標記為已棄用)
     const budgetsPlaceholder = {
       type: 'collection_placeholder',
       purpose: '確保 budgets 集合存在 - 1312.BM.js模組支援',
+      note: '⚠️ 舊架構相容性佔位文檔，新實作請使用 ledgers/{id}/budgets/ 子集合',
+      module_support: '1312.BM.js (legacy compatibility)',
+      stage: 'Phase3-Subcollection-Migration',
+      deprecated: true,
+      recommended_path: 'ledgers/{ledger_id}/budgets/',
       createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      note: '此文檔僅用於確保budgets集合框架存在，實際預算建立時會有真實文檔',
-      module_support: '1312.BM.js',
-      stage: 'Phase2-Budget-Management'
+      updatedAt: admin.firestore.Timestamp.now()
     };
 
     const budgetsResult = await FS_createDocument('budgets', '_placeholder', budgetsPlaceholder, 'SYSTEM');
@@ -1739,114 +1740,7 @@ async function FS_initializeDefaultCategories() {
 }
 
 /**
- * 初始化預算管理文檔結構 (1312.BM.js模組支援)
- * @version 2025-10-27-V2.2.0
- * @date 2025-10-27
- * @description 初始化預算管理模組所需的Firebase文檔結構
- */
-async function FS_initializeBudgetStructure() {
-  const budgetStructure = {
-    version: '1.0.0',
-    description: '1312.BM.js預算管理模組Firebase文檔結構',
-    collections: {
-      budgets: {
-        description: '預算集合',
-        document_structure: {
-          budget_id: 'string - 預算唯一識別碼 (與文檔ID相同，用於查詢)',
-          ledger_id: 'string - 關聯的帳本ID (對應1311中的ledgers集合)',
-          name: 'string - 預算名稱 (如"月度生活費預算")',
-          type: 'string - 預算類型: "monthly"|"yearly"|"quarterly"|"project"|"category"',
-          total_amount: 'number - 預算總金額 (設定的預算上限)',
-          consumed_amount: 'number - 已使用金額 (目前花費總額)',
-          currency: 'string - 貨幣單位 (如"TWD", "USD")',
-          start_date: 'timestamp - 預算生效開始時間',
-          end_date: 'timestamp - 預算結束時間',
-          allocation: 'array - 預算分類配置 (包含各分類的金額分配)',
-          alert_rules: 'object - 警示規則設定 (閾值、通知方式)',
-          created_by: 'string - 建立者ID (對應users集合的email)',
-          createdAt: 'timestamp - 建立時間 (符合1311.FS.js規範)',
-          updatedAt: 'timestamp - 最後更新時間 (符合1311.FS.js規範)',
-          status: 'string - 預算狀態: "active"|"completed"|"archived"'
-        },
-        subcollections: {
-          allocations: {
-            description: '預算分配子集合',
-            document_structure: {
-              category_id: 'string - 科目ID',
-              category_name: 'string - 科目名稱（如"餐飲"、"交通"）',
-              allocated_amount: 'number - 分配金額',
-              consumed_amount: 'number - 已使用金額',
-              percentage: 'number - 占總預算百分比',
-              createdAt: 'timestamp - 建立時間',
-              updatedAt: 'timestamp - 更新時間'
-            }
-          }
-        }
-      },
-      budget_alerts: {
-        description: '預算警示集合',
-        document_structure: {
-          budget_id: 'string - 預算ID',
-          alert_type: 'string - 警示類型: "warning"|"critical"|"exceeded"',
-          trigger_condition: 'object - 觸發條件',
-          triggered_at: 'timestamp - 觸發時間',
-          notification_sent: 'boolean - 通知發送狀態',
-          recipients: 'array - 接收者列表'
-        }
-      }
-    },
-    example_allocation_structure: [
-      {
-        category_id: "food_001",
-        category_name: "餐飲",
-        allocated_amount: 15000,
-        consumed_amount: 8000
-      },
-      {
-        category_id: "transport_001",
-        category_name: "交通",
-        allocated_amount: 5000,
-        consumed_amount: 3200
-      }
-    ],
-    example_alert_rules_structure: {
-      warning_threshold: 80,
-      critical_threshold: 95,
-      enable_notifications: true,
-      notification_channels: ["line", "email"],
-      custom_thresholds: []
-    }
-  };
-
-  try {
-    const result = await FS_createDocument('_system', 'budget_structure', budgetStructure, 'SYSTEM');
-    return result;
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * 初始化預設帳戶類型
- */
-async function FS_initializeDefaultAccountTypes() {
-  const defaultAccountTypes = [
-    { code: 'cash', name: '現金', icon: '💵', type: 'asset', order: 1 },
-    { code: 'bank', name: '銀行帳戶', icon: '🏦', type: 'asset', order: 2 },
-    { code: 'credit', name: '信用卡', icon: '💳', type: 'liability', order: 3 },
-    { code: 'investment', name: '投資帳戶', icon: '📊', type: 'asset', order: 4 }
-  ];
-
-  try {
-    const result = await FS_createDocument('_system', 'default_account_types', { types: defaultAccountTypes }, 'SYSTEM');
-    return result;
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * 初始化預算管理文檔結構 (1312.BM.js模組支援) - 子集合架構版
+ * 初始化預算管理文檔結構 (1312.BM.js模組支援) - 子集合版
  * @version 2025-10-30-V3.0.0
  * @date 2025-10-30
  * @description 初始化預算管理模組所需的Firebase子集合文檔結構，階段三完整版
@@ -1953,6 +1847,26 @@ async function FS_initializeBudgetStructure() {
   }
 }
 
+
+/**
+ * 初始化預設帳戶類型
+ */
+async function FS_initializeDefaultAccountTypes() {
+  const defaultAccountTypes = [
+    { code: 'cash', name: '現金', icon: '💵', type: 'asset', order: 1 },
+    { code: 'bank', name: '銀行帳戶', icon: '🏦', type: 'asset', order: 2 },
+    { code: 'credit', name: '信用卡', icon: '💳', type: 'liability', order: 3 },
+    { code: 'investment', name: '投資帳戶', icon: '📊', type: 'asset', order: 4 }
+  ];
+
+  try {
+    const result = await FS_createDocument('_system', 'default_account_types', { types: defaultAccountTypes }, 'SYSTEM');
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 /**
  * 初始化評估問卷
  */
@@ -2004,7 +1918,7 @@ async function FS_initializeLedgerStructure() {
     version: '1.0.0',
     description: 'MLS.js帳本管理模組Firebase帳本集合文檔結構',
     collection: 'ledgers',
-    
+
     // ledgers集合下的文檔結構 (如ledger_structure_001等)
     document_structure: {
       id: 'string - 帳本唯一識別碼 (與文檔ID相同)',
@@ -2024,7 +1938,7 @@ async function FS_initializeLedgerStructure() {
       status: 'string - 帳本狀態: "active"|"completed"|"archived"',
       metadata: 'object - 帳本元數據 (交易總數、總金額、成員數量等)'
     },
-    
+
     // 各帳本文檔下的子集合結構
     subcollections: {
       transactions: {
@@ -2108,7 +2022,7 @@ async function FS_initializeLedgerStructure() {
         }
       }
     },
-    
+
     // 權限結構範例
     permissions_structure: {
       owner: 'string - 擁有者用戶ID',
@@ -2121,7 +2035,7 @@ async function FS_initializeLedgerStructure() {
         allow_delete: 'boolean - 是否允許刪除'
       }
     },
-    
+
     // 帳本設定結構範例
     settings_structure: {
       allow_negative_balance: 'boolean - 是否允許負餘額',
@@ -2131,7 +2045,7 @@ async function FS_initializeLedgerStructure() {
       reminder_settings: 'object - 提醒設定',
       privacy_mode: 'boolean - 隱私模式'
     },
-    
+
     // 元數據結構範例
     metadata_structure: {
       total_entries: 'number - 交易總筆數',
@@ -2440,7 +2354,7 @@ module.exports = {
 
   // 模組資訊
   moduleVersion: '2.5.0',
-  phase: 'Phase1-Stage3-Budget-Subcollection-Migration',
+  phase: 'Phase3-Budget-Subcollection-Migration-Complete',
   lastUpdate: '2025-10-30',
   stage3Features: ['budgets_subcollection_support', 'ledger_budget_integration', 'path_structure_v3']
 };
@@ -2462,5 +2376,5 @@ try {
     console.log(`🚀 準備就緒: 1312.BM.js模組可完整使用預算子集合架構`);
   }
 } catch (error) {
-  console.error('❌ FS模組2.4.0初始化失敗:', error.message);
+  console.error('❌ FS模組2.5.0初始化失敗:', error.message);
 }
