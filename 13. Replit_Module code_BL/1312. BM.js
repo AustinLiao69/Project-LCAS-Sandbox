@@ -1,8 +1,8 @@
 /**
- * BM_預算管理模組_2.1.0
+ * BM_預算管理模組_2.1.1
  * @module BM模組
  * @description 預算管理系統 - 支援預算設定、追蹤、警示與分析
- * @update 2025-10-23: 升級至2.1.0版本，修正P2測試所需函數，統一回傳格式
+ * @update 2025-10-30: 修正Firebase Admin SDK引用，遵守0098規範
  */
 
 console.log('📊 BM 預算管理模組載入中...');
@@ -11,6 +11,10 @@ console.log('📊 BM 預算管理模組載入中...');
 const DL = require('./1310. DL.js');
 const DD = require('./1331. DD1.js');
 const FS = require('./1311. FS.js'); // FS模組包含完整的Firestore操作函數
+
+// 修正：正確引用Firebase Admin SDK，遵守0098規範
+const firebaseConfig = require('./1399. firebase-config.js');
+const admin = firebaseConfig.admin;
 
 // 預算管理模組物件
 const BM = {};
@@ -481,8 +485,8 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
     }
 
     console.log(`${logPrefix} 更新預算到資料庫...`);
-    // 準備更新資料 (階段一修正：使用標準欄位名稱)
-      const updateData = {
+    // 準備更新資料 (階段一修正：使用標準欄位名稱，修正變數重複宣告)
+      const finalUpdateData = {
         name: updateData.name || existingBudget.name,
         description: updateData.description || existingBudget.description,
         type: updateData.type || existingBudget.type,
@@ -494,19 +498,19 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
         categories: updateData.categories || existingBudget.categories,
         alert_rules: updateData.alert_rules || existingBudget.alert_rules,
         updatedAt: admin.firestore.Timestamp.now(),
-        updated_by: 'system' // 假設 userId 為 system
+        updated_by: options.userId || 'system'
       };
 
-    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, updateData, 'system'); // 假設 userId 為 system
+    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, finalUpdateData, options.userId || 'system');
 
     if (!updateResult.success) {
       throw new Error(`Firebase更新失敗: ${updateResult.error}`);
     }
 
-    // 模擬更新操作
+    // 構建更新後的預算資料
     const updatedBudget = {
       id: budgetId,
-      ...updateData,
+      ...finalUpdateData,
       updated_at: new Date().toISOString()
     };
 

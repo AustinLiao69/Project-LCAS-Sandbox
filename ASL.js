@@ -52,7 +52,7 @@ async function initializeServices() {
     console.log('🔍 驗證Firebase配置...');
     await firebaseConfig.validateFirebaseConfig();
 
-    // 步驟3：初始化Firebase Admin SDK（同步等待）
+    // 步驟 3：初始化Firebase Admin SDK（同步等待）
     console.log('⚡ 初始化Firebase Admin SDK...');
     const app = firebaseConfig.initializeFirebaseAdmin();
 
@@ -1844,10 +1844,10 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
         }
       }
 
-      // 階段三驗證：確保不使用system_user
-      if (!userId || userId === 'system_user') {
-        console.warn('⚠️ ASL階段三警告：無法確定真實userId，將影響audit trail');
-        userId = 'unknown_user';
+      // 階段三追蹤鏈完整性檢查（遵守0098規範，移除hard coding）
+      if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+        console.error(`❌ ASL階段三追蹤鏈中斷：userId無效 = ${userId}`);
+        return res.apiError('階段三：用戶身份確認失敗，無法建立預算', 'STAGE3_USER_IDENTITY_ERROR', 400);
       }
 
       const ledgerId = req.body.ledgerId;
