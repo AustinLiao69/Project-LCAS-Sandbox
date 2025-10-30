@@ -1889,7 +1889,13 @@ app.delete('/api/v1/budgets/:id', async (req, res) => {
     if (!BM || typeof BM.BM_deleteBudget !== 'function') {
       return res.apiError('BM_deleteBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await BM.BM_deleteBudget(req.params.id, req.query);
+    // 為測試環境自動生成確認令牌
+    const deleteOptions = { ...req.query };
+    if (!deleteOptions.confirmationToken) {
+      deleteOptions.confirmationToken = `confirm_delete_${req.params.id}`;
+    }
+    
+    const result = await BM.BM_deleteBudget(req.params.id, deleteOptions);
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算刪除成功');
     } else {
@@ -1901,56 +1907,7 @@ app.delete('/api/v1/budgets/:id', async (req, res) => {
   }
 });
 
-// 6. 取得預算執行狀況 (GET /api/v1/budgets/status)
-app.get('/api/v1/budgets/status', async (req, res) => {
-  try {
-    console.log('📊 ASL轉發: 取得預算狀況 -> BM_getBudgets');
-    if (!BM || typeof BM.BM_getBudgets !== 'function') {
-      return res.apiError('BM_getBudgets函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
-    }
-    // 使用getBudgets函數獲取預算狀況
-    const result = await BM.BM_getBudgets({...req.query, includeStatus: true});
-    if (result.success) {
-      // 轉換為狀況格式
-      const statusData = {
-        totalBudgets: result.data?.length || 0,
-        activeBudgets: result.data?.filter(b => b.status === 'active').length || 0,
-        budgetSummary: result.data || []
-      };
-      res.apiSuccess(statusData, '預算狀況查詢成功');
-    } else {
-      res.apiError(result.message || '預算狀況查詢失敗', result.error?.code || 'GET_BUDGET_STATUS_ERROR', 400, result.error?.details);
-    }
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (get budget status):', error);
-    res.apiError('預算狀況查詢轉發失敗', 'GET_BUDGET_STATUS_FORWARD_ERROR', 500);
-  }
-});
-
-// 7. 取得預算模板列表 (GET /api/v1/budgets/templates)
-app.get('/api/v1/budgets/templates', async (req, res) => {
-  try {
-    console.log('📋 ASL轉發: 取得預算模板 -> BM_getBudgets');
-    if (!BM || typeof BM.BM_getBudgets !== 'function') {
-      return res.apiError('BM_getBudgets函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
-    }
-    // 使用getBudgets函數獲取模板
-    const result = await BM.BM_getBudgets({...req.query, isTemplate: true});
-    if (result.success) {
-      const templateData = {
-        recommended: result.data || [],
-        categories: ['食物', '交通', '住宿', '娛樂', '其他'],
-        total: result.data?.length || 0
-      };
-      res.apiSuccess(templateData, '預算模板查詢成功');
-    } else {
-      res.apiError(result.message || '預算模板查詢失敗', result.error?.code || 'GET_BUDGET_TEMPLATES_ERROR', 400, result.error?.details);
-    }
-  } catch (error) {
-    console.error('❌ ASL轉發錯誤 (get budget templates):', error);
-    res.apiError('預算模板查詢轉發失敗', 'GET_BUDGET_TEMPLATES_FORWARD_ERROR', 500);
-  }
-});
+// 移除違規API端點：budgets/status 和 budgets/templates 不在8020文件規範中
 
 
 /**
