@@ -22,6 +22,7 @@ Approved請進行階段一
 •	修正7571測試，直接從7598取得expert.valid@test.lcas.app的email資料
 •	禁止7571從7582直接取得註冊email（避免動態依賴複雜化）
 •	7571通過expert.valid@test.lcas.app查詢該用戶的真實帳本ID，用於budget子集合操作
+
 階段三：驗證子集合架構正確性
 目標：確認budget寫入正確的用戶帳本子集合
 具體修正：
