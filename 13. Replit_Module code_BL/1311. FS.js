@@ -1591,21 +1591,8 @@ async function FS_createCollectionFramework() {
     const ledgersResult = await FS_createDocument('ledgers', '_placeholder', ledgersPlaceholder, 'SYSTEM');
     results.push({ collection: 'ledgers', result: ledgersResult });
 
-    // 3. 建立 budgets 集合框架 (階段三標記為已棄用)
-    const budgetsPlaceholder = {
-      type: 'collection_placeholder',
-      purpose: '確保 budgets 集合存在 - 1312.BM.js模組支援',
-      note: '⚠️ 舊架構相容性佔位文檔，新實作請使用 ledgers/{id}/budgets/ 子集合',
-      module_support: '1312.BM.js (legacy compatibility)',
-      stage: 'Phase3-Subcollection-Migration',
-      deprecated: true,
-      recommended_path: 'ledgers/{ledger_id}/budgets/',
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now()
-    };
-
-    const budgetsResult = await FS_createDocument('budgets', '_placeholder', budgetsPlaceholder, 'SYSTEM');
-    results.push({ collection: 'budgets', result: budgetsResult });
+    // 3. 舊的 budgets 集合已完全遷移至子集合架構，不再建立頂層集合
+    console.log('📋 頂層 budgets 集合已棄用，全面採用 ledgers/{id}/budgets/ 子集合架構');
 
     const successCount = results.filter(r => r.result.success).length;
 

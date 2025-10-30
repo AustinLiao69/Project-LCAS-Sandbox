@@ -7,7 +7,8 @@ import { createStandardResponse } from '../tools/ResponseFormatter';
 import { FS_initializeBudgetStructure, FS_createBudget, FS_getBudgets, FS_getBudgetById, FS_updateBudget, FS_deleteBudget } from './1311.FS';
 import { isUserAuthorized } from '../tools/AuthChecker';
 import { logAction, logError, logInfo } from '../tools/Logger';
-import { BUDGET_COLLECTION_NAME, BUDGET_OPERATIONS } from '../tools/Constants';
+// 預算管理完全採用子集合架構：ledgers/{ledger_id}/budgets/{budget_id}
+// 不再使用頂層 budgets 集合
 
 // 導入環境變量，用於測試環境的特殊處理
 const { NODE_ENV } = process.env;
