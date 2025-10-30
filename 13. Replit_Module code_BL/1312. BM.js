@@ -110,34 +110,45 @@ BM.BM_createBudget = async function(requestData) {
       status: 'active'
     };
 
-    // 儲存到 Firestore（完全強制子集合架構）
+    // 儲存到 Firestore（完全強制子集合架構 - 修正版）
     console.log(`${logPrefix} 儲存預算到資料庫...`);
-    
+
     // 強制驗證ledgerId並拒絕空值
     if (!ledgerId || ledgerId === 'undefined' || ledgerId.trim() === '') {
       console.error(`${logPrefix} ❌ 致命錯誤：缺少有效的ledgerId`);
       console.error(`${logPrefix} 📋 請求資料檢查: ledgerId=${ledgerId}, userId=${userId}`);
       throw new Error(`預算建立失敗：缺少必要的ledgerId參數，無法使用子集合架構`);
     }
-    
-    // 強制使用子集合路徑（完全禁用頂層budgets集合）
+
+    // 完全強制使用子集合路徑（絕對禁用頂層budgets集合）
     const collectionPath = `ledgers/${ledgerId}/budgets`;
-    console.log(`${logPrefix} 🎯 強制子集合路徑: ${collectionPath}`);
-    
-    // 路徑安全驗證：絕對禁止頂層budgets集合
+    console.log(`${logPrefix} 🎯 完全強制子集合路徑: ${collectionPath}`);
+
+    // 雙重路徑安全驗證：絕對禁止頂層budgets集合
     if (collectionPath === 'budgets' || !collectionPath.startsWith('ledgers/') || !collectionPath.endsWith('/budgets')) {
       console.error(`${logPrefix} ❌ 路徑安全驗證失敗: ${collectionPath}`);
-      throw new Error(`路徑安全驗證失敗: ${collectionPath}，系統完全禁止使用頂層budgets集合`);
+      throw new Error(`路徑安全驗證失敗: ${collectionPath}，系統完全禁用頂層budgets集合`);
     }
-    
+
+    // 額外路徑驗證：確保不會意外寫入頂層budgets
+    if (collectionPath.indexOf('/budgets') === -1 || collectionPath === 'budgets') {
+      console.error(`${logPrefix} ❌ 子集合路徑格式驗證失敗: ${collectionPath}`);
+      throw new Error(`子集合路徑格式錯誤: ${collectionPath}，必須為 ledgers/{ledgerId}/budgets 格式`);
+    }
+
     try {
-      console.log(`${logPrefix} ✅ 最終Firebase寫入路徑（強制子集合）: ${collectionPath}/${budgetId}`);
+      console.log(`${logPrefix} ✅ 最終Firebase子集合寫入路徑: ${collectionPath}/${budgetId}`);
+      console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
+      console.log(`${logPrefix} 📋 確認路徑格式: ledgers/${ledgerId}/budgets/${budgetId}`);
+      
+      // 強制使用子集合路徑，絕對禁止頂層budgets集合
       const firestoreResult = await FS.FS_createDocument(collectionPath, budgetId, budget, userId);
       if (!firestoreResult.success) {
         throw new Error(`Firebase子集合寫入失敗: ${firestoreResult.error}`);
       }
-      console.log(`${logPrefix} ✅ 預算成功寫入子集合 - 路徑: ${collectionPath}/${budgetId}`);
-      
+      console.log(`${logPrefix} ✅ 預算成功寫入子集合 - 完整路徑: ${collectionPath}/${budgetId}`);
+      console.log(`${logPrefix} 🎯 子集合架構驗證: 路徑確實為 ledgers/{ledgerId}/budgets/ 格式`);
+
       // 驗證寫入結果
       const verifyResult = await FS.FS_getDocument(collectionPath, budgetId, 'SYSTEM');
       if (verifyResult.success && verifyResult.exists) {
@@ -145,7 +156,7 @@ BM.BM_createBudget = async function(requestData) {
       } else {
         console.warn(`${logPrefix} ⚠️ 子集合寫入驗證失敗`);
       }
-      
+
     } catch (firestoreError) {
       console.error(`${logPrefix} 子集合寫入失敗:`, firestoreError);
       throw new Error(`子集合寫入失敗: ${firestoreError.message}`);
@@ -231,34 +242,50 @@ BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
   const logPrefix = '[BM_getBudgetDetail]';
 
   try {
-    console.log(`${logPrefix} 取得預算詳情 - 預算ID: ${budgetId}`);
-
-    if (!budgetId) {
-      return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
+    console.log(`${logPrefix} 取得預算詳情...`);
+    // 修正：從options中取得ledgerId，使用子集合路徑
+    const ledgerId = options?.ledgerId;
+    if (!ledgerId) {
+      throw new Error('查詢預算詳情需要ledgerId參數（子集合架構）');
     }
 
-    // 模擬預算詳情數據（實際應從Firestore查詢）
-    const budgetDetail = {
-      id: budgetId,
-      name: '測試預算',
-      amount: 50000,
-      used_amount: 32000,
-      remaining: 18000,
-      type: 'monthly',
-      status: 'active',
-      currency: 'TWD',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      progress: 64.0,
-      categories: []
-    };
+    const budgetResult = await FS.FS_getBudgetFromLedger(ledgerId, budgetId, 'system');
 
-    // 如果包含交易記錄
-    if (options.includeTransactions) {
-      budgetDetail.transactions = [];
+    if (!budgetResult.success || !budgetResult.exists) {
+      console.log(`${logPrefix} 預算不存在 - ID: ${budgetId}, ledgerId: ${ledgerId}`);
+      throw new Error(`預算不存在: ${budgetId}`);
+    }
+    return createStandardResponse(true, budgetResult.data, '預算詳情取得成功（子集合）');
+
+  } catch (error) {
+    console.error(`${logPrefix} 預算詳情取得失敗:`, error);
+    return createStandardResponse(false, null, `預算詳情取得失敗: ${error.message}`, 'GET_BUDGET_DETAIL_ERROR');
+  }
+};
+
+/**
+ * 新增：取得預算詳情 (P2測試所需)
+ * @version 2025-10-23-V2.1.0
+ * @description 取得單一預算詳細資訊
+ */
+BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
+  const logPrefix = '[BM_getBudgetDetail]';
+
+  try {
+    console.log(`${logPrefix} 取得預算詳情...`);
+    // 修正：從options中取得ledgerId，使用子集合路徑
+    const ledgerId = options?.ledgerId;
+    if (!ledgerId) {
+      throw new Error('查詢預算詳情需要ledgerId參數（子集合架構）');
     }
 
-    return createStandardResponse(true, budgetDetail, '預算詳情取得成功');
+    const budgetResult = await FS.FS_getBudgetFromLedger(ledgerId, budgetId, 'system');
+
+    if (!budgetResult.success || !budgetResult.exists) {
+      console.log(`${logPrefix} 預算不存在 - ID: ${budgetId}, ledgerId: ${ledgerId}`);
+      throw new Error(`預算不存在: ${budgetId}`);
+    }
+    return createStandardResponse(true, budgetResult.data, '預算詳情取得成功（子集合）');
 
   } catch (error) {
     console.error(`${logPrefix} 預算詳情取得失敗:`, error);
@@ -271,7 +298,7 @@ BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
  * @version 2025-10-23-V2.1.0
  * @description 更新預算資訊
  */
-BM.BM_updateBudget = async function(budgetId, updateData) {
+BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
   const logPrefix = '[BM_updateBudget]';
 
   try {
@@ -283,6 +310,19 @@ BM.BM_updateBudget = async function(budgetId, updateData) {
 
     if (!updateData || Object.keys(updateData).length === 0) {
       return createStandardResponse(false, null, '缺少更新資料', 'MISSING_UPDATE_DATA');
+    }
+
+    // 修正：需要從更新資料中取得ledgerId
+    const ledgerId = updateData.ledgerId || options?.ledgerId;
+    if (!ledgerId) {
+      throw new Error('更新預算需要ledgerId參數（子集合架構）');
+    }
+
+    console.log(`${logPrefix} 更新預算到資料庫...`);
+    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, updateData, 'system'); // 假設 userId 為 system
+
+    if (!updateResult.success) {
+      throw new Error(`Firebase更新失敗: ${updateResult.error}`);
     }
 
     // 模擬更新操作
@@ -326,6 +366,19 @@ BM.BM_deleteBudget = async function(budgetId, options = {}) {
       return createStandardResponse(false, null, '確認令牌無效，請確認刪除操作', 'INVALID_CONFIRMATION_TOKEN');
     }
 
+    // 修正：需要從options中取得ledgerId
+    const ledgerId = options?.ledgerId;
+    if (!ledgerId) {
+      throw new Error('刪除預算需要ledgerId參數（子集合架構）');
+    }
+
+    console.log(`${logPrefix} 執行預算刪除...`);
+    const deleteResult = await FS.FS_deleteBudgetFromLedger(ledgerId, budgetId, 'system'); // 假設 userId 為 system
+
+    if (!deleteResult.success) {
+      throw new Error(`Firebase刪除失敗: ${deleteResult.error}`);
+    }
+
     // 模擬刪除操作
     console.log(`${logPrefix} 預算刪除成功 - ID: ${budgetId}`);
 
@@ -353,7 +406,7 @@ BM.BM_editBudget = async function(budgetId, userId, updateData, ledgerId) {
     console.log(`${logPrefix} 開始編輯預算 - 預算ID: ${budgetId}`);
 
     // 驗證輸入參數
-    if (!budgetId || !userId || !updateData) {
+    if (!budgetId || !userId) {
       throw new Error('缺少必要參數');
     }
 
@@ -376,7 +429,7 @@ BM.BM_editBudget = async function(budgetId, userId, updateData, ledgerId) {
     // 使用子集合路徑更新資料庫
     const collectionPath = `ledgers/${ledgerId}/budgets`;
     console.log(`${logPrefix} 使用子集合路徑更新預算: ${collectionPath}/${budgetId}`);
-    
+
     try {
       const firestoreResult = await FS.FS_updateDocument(collectionPath, budgetId, updateData, userId);
       if (!firestoreResult.success) {
@@ -461,7 +514,7 @@ BM.BM_deleteBudget_Legacy = async function(budgetId, userId, confirmationToken, 
     // 使用子集合路徑更新狀態到資料庫
     const collectionPath = `ledgers/${ledgerId}/budgets`;
     console.log(`${logPrefix} 使用子集合路徑標記刪除: ${collectionPath}/${budgetId}`);
-    
+
     try {
       const firestoreResult = await FS.FS_updateDocument(collectionPath, budgetId, deleteData, userId);
       if (!firestoreResult.success) {
@@ -1461,16 +1514,17 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
       return createStandardResponse(false, null, '查詢預算詳情失敗：缺少ledgerId參數，系統已完全禁用頂層budgets集合', 'MISSING_LEDGER_ID_FOR_SUBCOLLECTION');
     }
 
-    // 完全強制使用子集合路徑查詢
+    // 完全強制使用子集合路徑查詢，絕對禁用頂層budgets集合
     const collectionPath = `ledgers/${ledgerId}/budgets`;
     console.log(`${logPrefix} 🎯 強制子集合查詢路徑: ${collectionPath}/${budgetId}`);
-    
+    console.log(`${logPrefix} 📋 路徑架構確認: ledgers/{ledgerId}/budgets/ 子集合模式`);
+
     // 路徑安全驗證：絕對禁止頂層budgets集合
     if (collectionPath === 'budgets' || !collectionPath.startsWith('ledgers/') || !collectionPath.endsWith('/budgets')) {
       console.error(`${logPrefix} ❌ 路徑安全驗證失敗: ${collectionPath}`);
       throw new Error(`路徑安全驗證失敗: ${collectionPath}，系統完全禁用頂層budgets集合`);
     }
-    
+
     try {
       const firestoreResult = await FS.FS_getDocument(collectionPath, budgetId, 'system');
       if (firestoreResult.success && firestoreResult.exists && firestoreResult.data) {
