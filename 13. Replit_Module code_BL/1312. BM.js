@@ -92,15 +92,15 @@ BM.BM_createBudget = async function(budgetData) {
 
     if (typeof budgetData === 'object' && budgetData !== null) {
       // API格式：{ledgerId, userId, ...budgetDataPayload}
-      
+
       // 階段三核心修正：智能提取真實userId
       userId = budgetData.userId;
-      
+
       // 階段三驗證：確保userId不是預設值
       if (!userId || userId === 'system_user' || userId === 'unknown_user') {
         // 嘗試從其他欄位提取
         userId = budgetData.user_id || budgetData.created_by || budgetData.operatorId;
-        
+
         // 如果still是預設值，從ledgerId提取
         if (!userId || userId === 'system_user') {
           if (budgetData.ledgerId && budgetData.ledgerId.startsWith('user_')) {
@@ -109,9 +109,9 @@ BM.BM_createBudget = async function(budgetData) {
           }
         }
       }
-      
+
       console.log(`${logPrefix} 🎯 階段三用戶身份確認：userId = ${userId}`);
-      
+
       budgetType = budgetData.type || budgetData.budgetType || 'monthly';
 
       // 階段三強化驗證：拒絕無效的userId
@@ -152,22 +152,22 @@ BM.BM_createBudget = async function(budgetData) {
     const budgetId = `budget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     // 日期處理 - 階段二修正：時區統一、年份修正、日期格式標準化
     const currentDate = new Date();
-    
+
     // 階段二核心修正1：強制使用台灣時區 Asia/Taipei
     const taiwanTime = new Date(currentDate.toLocaleString("en-US", {timeZone: "Asia/Taipei"}));
-    
+
     // 階段二核心修正2：確保使用當前年份2025
     if (taiwanTime.getFullYear() !== 2025) {
       console.warn(`${logPrefix} ⚠️ 年份校正：系統年份${taiwanTime.getFullYear()} -> 強制使用2025年`);
       taiwanTime.setFullYear(2025);
     }
-    
+
     // 階段二核心修正3：統一使用Timestamp格式（Firebase標準）
     const currentTimestamp = admin.firestore.Timestamp.fromDate(taiwanTime);
-    
+
     // 處理開始和結束日期
     let startDate, endDate;
-    
+
     if (budgetDataPayload.start_date) {
       const inputStartDate = new Date(budgetDataPayload.start_date);
       // 強制校正年份為2025
@@ -179,7 +179,7 @@ BM.BM_createBudget = async function(budgetData) {
     } else {
       startDate = currentTimestamp;
     }
-    
+
     if (budgetDataPayload.end_date) {
       const inputEndDate = new Date(budgetDataPayload.end_date);
       // 強制校正年份為2025
@@ -193,7 +193,7 @@ BM.BM_createBudget = async function(budgetData) {
       const monthEndDate = new Date(2025, taiwanTime.getMonth() + 1, 0);
       endDate = admin.firestore.Timestamp.fromDate(monthEndDate);
     }
-    
+
     console.log(`${logPrefix} 🕐 階段二時區修正：當前台灣時間 ${taiwanTime.toLocaleString('zh-TW', {timeZone: 'Asia/Taipei'})}`);
     console.log(`${logPrefix} 📅 階段二年份確認：${taiwanTime.getFullYear()}年 (強制校正為2025年)`);
     console.log(`${logPrefix} ⏰ 階段二格式統一：使用Firebase Timestamp格式`);
@@ -250,17 +250,6 @@ BM.BM_createBudget = async function(budgetData) {
     console.log(`${logPrefix} ✅ 最終Firebase子集合寫入路徑: ${collectionPath}/${budgetId}`);
     console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
     console.log(`${logPrefix} 📋 確認路徑格式: ${collectionPath}/${budgetId}`);
-
-    // 階段三：用戶身份正確性驗證
-    console.log(`${logPrefix} 🔍 階段三用戶身份與欄位檢查:`);
-    console.log(`${logPrefix} 👤 userId參數: ${userId}`);
-    console.log(`${logPrefix} 👤 created_by: ${finalBudgetData.created_by}`);
-    console.log(`${logPrefix} 🔒 audit_trail.created_by: ${finalBudgetData.audit_trail.created_by}`);
-    console.log(`${logPrefix} 📊 total_amount: ${finalBudgetData.total_amount}`);
-    console.log(`${logPrefix} 📊 consumed_amount: ${finalBudgetData.consumed_amount}`);
-    console.log(`${logPrefix} 🕐 時區統一: Asia/Taipei (台灣時區)`);
-    console.log(`${logPrefix} 📅 年份校正: 2025年`);
-    console.log(`${logPrefix} ⏰ 格式統一: Firebase Timestamp格式`);
 
     // 階段三：用戶身份與資料完整性驗證
     if (!finalBudgetData.total_amount) {
@@ -498,10 +487,10 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
         categories: updateData.categories || existingBudget.categories,
         alert_rules: updateData.alert_rules || existingBudget.alert_rules,
         updatedAt: admin.firestore.Timestamp.now(),
-        updated_by: options.userId || 'system'
+        updated_by: options.userId || 'unknown_user'
       };
 
-    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, finalUpdateData, options.userId || 'system');
+    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, finalUpdateData, options.userId || 'unknown_user');
 
     if (!updateResult.success) {
       throw new Error(`Firebase更新失敗: ${updateResult.error}`);
