@@ -124,14 +124,14 @@ BM.BM_createBudget = async function(requestData) {
     const collectionPath = `ledgers/${ledgerId}/budgets`;
     console.log(`${logPrefix} 🎯 強制子集合路徑: ${collectionPath}`);
     
-    // 路徑安全驗證：確保絕不會寫入頂層budgets集合
+    // 路徑安全驗證：絕對禁止頂層budgets集合
     if (collectionPath === 'budgets' || !collectionPath.startsWith('ledgers/') || !collectionPath.endsWith('/budgets')) {
       console.error(`${logPrefix} ❌ 路徑安全驗證失敗: ${collectionPath}`);
-      throw new Error(`路徑安全驗證失敗: ${collectionPath}，系統禁止使用頂層budgets集合`);
+      throw new Error(`路徑安全驗證失敗: ${collectionPath}，系統完全禁止使用頂層budgets集合`);
     }
     
     try {
-      console.log(`${logPrefix} ✅ 最終Firebase寫入路徑（子集合）: ${collectionPath}`);
+      console.log(`${logPrefix} ✅ 最終Firebase寫入路徑（強制子集合）: ${collectionPath}/${budgetId}`);
       const firestoreResult = await FS.FS_createDocument(collectionPath, budgetId, budget, userId);
       if (!firestoreResult.success) {
         throw new Error(`Firebase子集合寫入失敗: ${firestoreResult.error}`);
