@@ -1851,7 +1851,18 @@ app.get('/api/v1/budgets/:id', async (req, res) => {
     if (!BM || typeof BM.BM_getBudgetById !== 'function') {
       return res.apiError('BM_getBudgetById函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await BM.BM_getBudgetById(req.params.id, req.query);
+
+    // 強制要求ledgerId參數用於子集合查詢
+    if (!req.query.ledgerId) {
+      return res.apiError('查詢預算詳情需要ledgerId參數', 'MISSING_LEDGER_ID', 400);
+    }
+
+    const options = {
+      ...req.query,
+      ledgerId: req.query.ledgerId
+    };
+
+    const result = await BM.BM_getBudgetById(req.params.id, options);
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算詳情查詢成功');
     } else {
