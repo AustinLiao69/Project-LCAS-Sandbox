@@ -31,40 +31,82 @@ function createStandardResponse(success, data = null, message = '', errorCode = 
 }
 
 /**
- * 01. 建立帳本預算
- * @version 2025-10-23-V2.1.0
- * @date 2025-10-23 12:10:00
- * @description 為指定帳本建立預算計畫，支援統一API格式
+ * 01. 建立預算設定 - 階段三完整修正版
+ * @version 2025-10-30-V2.2.0
+ * @date 2025-10-30 15:00:00
+ * @description 為特定帳本建立新的預算設定（強制使用子集合架構：ledgers/{ledger_id}/budgets/{budget_id}）
+ * @update 階段三修正：完整支援真實用戶帳本ID，移除所有hardcoding
  */
-BM.BM_createBudget = async function(requestData) {
+BM.BM_createBudget = async function(budgetData) {
   const logPrefix = '[BM_createBudget]';
 
   try {
-    // 從requestData中提取參數，支援多種格式
-    let ledgerId, userId, budgetData, budgetType;
+    console.log(`${logPrefix} 📊 階段三完整修正：開始建立預算 - 強制子集合架構`);
+    console.log(`${logPrefix} 🔍 原始輸入資料:`, JSON.stringify(budgetData, null, 2));
 
-    if (typeof requestData === 'object' && requestData !== null) {
-      // API格式：{ledgerId, userId, ...budgetData}
-      ledgerId = requestData.ledgerId || requestData.ledger_id;
+    // 階段三核心修正1：智能ledgerId提取（支援多種格式）
+    let ledgerId = budgetData?.ledgerId;
+
+    // 如果直接沒有ledgerId，嘗試從其他欄位提取
+    if (!ledgerId) {
+      // 從subcollectionPath提取ledgerId
+      if (budgetData?.subcollectionPath) {
+        const pathMatch = budgetData.subcollectionPath.match(/ledgers\/([^\/]+)\/budgets/);
+        if (pathMatch && pathMatch[1]) {
+          ledgerId = pathMatch[1];
+          console.log(`${logPrefix} 🔄 階段三智能提取：從subcollectionPath提取ledgerId = ${ledgerId}`);
+        }
+      }
+
+      // 從用戶ID推導ledgerId（如果符合user_email格式）
+      if (!ledgerId && budgetData?.userId) {
+        if (budgetData.userId.includes('@') || budgetData.userId.startsWith('user_')) {
+          ledgerId = budgetData.userId.startsWith('user_') ? budgetData.userId : `user_${budgetData.userId}`;
+          console.log(`${logPrefix} 🔄 階段三智能推導：從userId推導ledgerId = ${ledgerId}`);
+        }
+      }
+    }
+
+    // 階段三核心修正2：絕對驗證ledgerId存在性
+    console.log(`${logPrefix} 🔍 階段三最終驗證：ledgerId = ${ledgerId}`);
+    if (!ledgerId || typeof ledgerId !== 'string' || ledgerId.trim() === '') {
+      console.error(`${logPrefix} ❌ 階段三嚴重錯誤：無法確定ledgerId`);
+      console.error(`${logPrefix} ❌ budgetData:`, budgetData);
+      throw new Error(`階段三驗證失敗：無法確定ledgerId參數，預算子集合架構要求明確的帳本ID`);
+    }
+
+    // 階段三核心修正3：真實用戶帳本ID格式驗證
+    console.log(`${logPrefix} 🎯 階段三帳本ID確認：${ledgerId}`);
+    if (ledgerId.includes('collab_ledger') || ledgerId.includes('hardcoded')) {
+      console.warn(`${logPrefix} ⚠️ 階段三警告：檢測到可能的hardcoded ledgerId: ${ledgerId}`);
+      console.warn(`${logPrefix} ⚠️ 請確認這是否為真實用戶帳本ID`);
+    }
+
+
+    // 從requestData中提取參數，支援多種格式
+    let userId, budgetDataPayload, budgetType;
+
+    if (typeof budgetData === 'object' && budgetData !== null) {
+      // API格式：{ledgerId, userId, ...budgetDataPayload}
       // userId fallback處理
-      userId = requestData.userId || requestData.user_id || requestData.created_by || requestData.operatorId || 'system_user';
-      budgetType = requestData.type || requestData.budgetType || 'monthly';
+      userId = budgetData.userId || budgetData.user_id || budgetData.created_by || budgetData.operatorId || 'system_user';
+      budgetType = budgetData.type || budgetData.budgetType || 'monthly';
 
       // 驗證必要參數
       if (!userId) {
         return createStandardResponse(false, null, '缺少用戶ID參數', 'MISSING_USER_ID');
       }
 
-      // budgetData包含所有預算相關資料
-      budgetData = {
-        name: requestData.name,
-        amount: requestData.amount,
-        currency: requestData.currency,
-        start_date: requestData.start_date || requestData.startDate,
-        end_date: requestData.end_date || requestData.endDate,
-        categories: requestData.categories,
-        alert_rules: requestData.alert_rules || requestData.alertRules,
-        description: requestData.description
+      // budgetDataPayload包含所有預算相關資料
+      budgetDataPayload = {
+        name: budgetData.name,
+        amount: budgetData.amount,
+        currency: budgetData.currency,
+        start_date: budgetData.start_date || budgetData.startDate,
+        end_date: budgetData.end_date || budgetData.endDate,
+        categories: budgetData.categories,
+        alert_rules: budgetData.alert_rules || budgetData.alertRules,
+        description: budgetData.description
       };
     } else {
       return createStandardResponse(false, null, '無效的請求格式', 'INVALID_REQUEST_FORMAT');
@@ -73,12 +115,12 @@ BM.BM_createBudget = async function(requestData) {
     console.log(`${logPrefix} 開始建立預算 - 帳本ID: ${ledgerId}, 用戶: ${userId}`);
 
     // 驗證輸入參數
-    if (!ledgerId || !userId || !budgetData || !budgetData.name || !budgetData.amount) {
-      return createStandardResponse(false, null, '缺少必要參數: ledgerId, userId, budgetData.name, budgetData.amount', 'MISSING_REQUIRED_PARAMS');
+    if (!budgetDataPayload || !budgetDataPayload.name || !budgetDataPayload.amount) {
+      return createStandardResponse(false, null, '缺少必要參數: budgetDataPayload.name, budgetDataPayload.amount', 'MISSING_REQUIRED_PARAMS');
     }
 
     // 驗證預算數據
-    const validation = await BM.BM_validateBudgetData(budgetData, 'create');
+    const validation = await BM.BM_validateBudgetData(budgetDataPayload, 'create');
     if (!validation.valid) {
       throw new Error(`預算數據驗證失敗: ${validation.errors.join(', ')}`);
     }
@@ -90,16 +132,16 @@ BM.BM_createBudget = async function(requestData) {
     // 建立預算物件
     const budget = {
       budget_id: budgetId,
-      ledger_id: ledgerId,
-      name: budgetData.name || '新預算',
+      ledger_id: ledgerId, // 使用動態取得的 ledgerId
+      name: budgetDataPayload.name || '新預算',
       type: budgetType || 'monthly',
-      amount: parseFloat(budgetData.amount),
+      amount: parseFloat(budgetDataPayload.amount),
       used_amount: 0,
-      currency: budgetData.currency || 'TWD',
-      start_date: budgetData.start_date || now,
-      end_date: budgetData.end_date,
-      categories: budgetData.categories || [],
-      alert_rules: budgetData.alert_rules || {
+      currency: budgetDataPayload.currency || 'TWD',
+      start_date: budgetDataPayload.start_date || now,
+      end_date: budgetDataPayload.end_date,
+      categories: budgetDataPayload.categories || [],
+      alert_rules: budgetDataPayload.alert_rules || {
         warning_threshold: 80,
         critical_threshold: 95,
         enable_notifications: true
@@ -140,7 +182,7 @@ BM.BM_createBudget = async function(requestData) {
       console.log(`${logPrefix} ✅ 最終Firebase子集合寫入路徑: ${collectionPath}/${budgetId}`);
       console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
       console.log(`${logPrefix} 📋 確認路徑格式: ledgers/${ledgerId}/budgets/${budgetId}`);
-      
+
       // 強制使用子集合路徑，絕對禁止頂層budgets集合
       const firestoreResult = await FS.FS_createDocument(collectionPath, budgetId, budget, userId);
       if (!firestoreResult.success) {
