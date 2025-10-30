@@ -355,6 +355,7 @@ MM 	 DD 	 Description 	    Progress
 10	29	 分析1311之資料結構   	 Closed
 10	29	 在firebase裡面建立budgets資料欄位   	 Closed
 10	29	 解1301抓不到使用者帳本問題   	 Closed
-10	30	 解1301抓不到使用者帳本問題   	 Closed
 10	30	 分析1311模組所建立的資料結構：提案新增1351的資料欄位   	 Ongoing
-10	30	 確認firebase之ledger下階設定Budget子集合架構   	 Ongoing
+10	30	 解1301抓不到使用者帳本問題   	 Closed
+10	30	 確認firebase之ledger下階設定Budget子集合架構   	 Closed
+10	30	 檢查Budget子集合架構資料欄位   	 Ongoing
