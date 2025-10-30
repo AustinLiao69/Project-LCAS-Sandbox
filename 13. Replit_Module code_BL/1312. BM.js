@@ -110,7 +110,7 @@ BM.BM_createBudget = async function(requestData) {
       status: 'active'
     };
 
-    // 儲存到 Firestore（完全強制子集合架構）
+    // 儲存到 Firestore（完全強制子集合架構 - 修正版）
     console.log(`${logPrefix} 儲存預算到資料庫...`);
 
     // 強制驗證ledgerId並拒絕空值
@@ -120,23 +120,31 @@ BM.BM_createBudget = async function(requestData) {
       throw new Error(`預算建立失敗：缺少必要的ledgerId參數，無法使用子集合架構`);
     }
 
-    // 強制使用子集合路徑（完全禁用頂層budgets集合）
+    // 完全強制使用子集合路徑（絕對禁用頂層budgets集合）
     const collectionPath = `ledgers/${ledgerId}/budgets`;
-    console.log(`${logPrefix} 🎯 強制子集合路徑: ${collectionPath}`);
+    console.log(`${logPrefix} 🎯 完全強制子集合路徑: ${collectionPath}`);
 
-    // 路徑安全驗證：絕對禁止頂層budgets集合
+    // 雙重路徑安全驗證：絕對禁止頂層budgets集合
     if (collectionPath === 'budgets' || !collectionPath.startsWith('ledgers/') || !collectionPath.endsWith('/budgets')) {
       console.error(`${logPrefix} ❌ 路徑安全驗證失敗: ${collectionPath}`);
-      throw new Error(`路徑安全驗證失敗: ${collectionPath}，系統完全禁止使用頂層budgets集合`);
+      throw new Error(`路徑安全驗證失敗: ${collectionPath}，系統完全禁用頂層budgets集合`);
+    }
+
+    // 額外路徑驗證：確保不會意外寫入頂層budgets
+    if (collectionPath.indexOf('/budgets') === -1 || collectionPath === 'budgets') {
+      console.error(`${logPrefix} ❌ 子集合路徑格式驗證失敗: ${collectionPath}`);
+      throw new Error(`子集合路徑格式錯誤: ${collectionPath}，必須為 ledgers/{ledgerId}/budgets 格式`);
     }
 
     try {
-      console.log(`${logPrefix} ✅ 最終Firebase寫入路徑（強制子集合）: ${collectionPath}/${budgetId}`);
+      console.log(`${logPrefix} ✅ 最終Firebase子集合寫入路徑: ${collectionPath}/${budgetId}`);
+      console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
+      
       const firestoreResult = await FS.FS_createDocument(collectionPath, budgetId, budget, userId);
       if (!firestoreResult.success) {
         throw new Error(`Firebase子集合寫入失敗: ${firestoreResult.error}`);
       }
-      console.log(`${logPrefix} ✅ 預算成功寫入子集合 - 路徑: ${collectionPath}/${budgetId}`);
+      console.log(`${logPrefix} ✅ 預算成功寫入子集合 - 完整路徑: ${collectionPath}/${budgetId}`);
 
       // 驗證寫入結果
       const verifyResult = await FS.FS_getDocument(collectionPath, budgetId, 'SYSTEM');
