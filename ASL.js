@@ -1881,7 +1881,17 @@ app.put('/api/v1/budgets/:id', async (req, res) => {
     if (!BM || typeof BM.BM_updateBudget !== 'function') {
       return res.apiError('BM_updateBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
-    const result = await BM.BM_updateBudget(req.params.id, req.body);
+
+    // 確保傳遞ledgerId參數給BM模組（子集合架構要求）
+    if (!req.body.ledgerId && !req.query.ledgerId) {
+      return res.apiError('更新預算需要ledgerId參數', 'MISSING_LEDGER_ID', 400);
+    }
+
+    const options = {
+      ledgerId: req.body.ledgerId || req.query.ledgerId
+    };
+
+    const result = await BM.BM_updateBudget(req.params.id, req.body, options);
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算更新成功');
     } else {
@@ -1900,6 +1910,12 @@ app.delete('/api/v1/budgets/:id', async (req, res) => {
     if (!BM || typeof BM.BM_deleteBudget !== 'function') {
       return res.apiError('BM_deleteBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
+
+    // 確保傳遞ledgerId參數給BM模組（子集合架構要求）
+    if (!req.query.ledgerId) {
+      return res.apiError('刪除預算需要ledgerId參數', 'MISSING_LEDGER_ID', 400);
+    }
+
     // 為測試環境自動生成確認令牌
     const deleteOptions = { ...req.query };
     if (!deleteOptions.confirmationToken) {
