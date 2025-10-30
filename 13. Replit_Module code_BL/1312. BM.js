@@ -88,13 +88,32 @@ BM.BM_createBudget = async function(budgetData) {
 
     if (typeof budgetData === 'object' && budgetData !== null) {
       // API格式：{ledgerId, userId, ...budgetDataPayload}
-      // userId fallback處理
-      userId = budgetData.userId || budgetData.user_id || budgetData.created_by || budgetData.operatorId || 'system_user';
+      
+      // 階段三核心修正：智能提取真實userId
+      userId = budgetData.userId;
+      
+      // 階段三驗證：確保userId不是預設值
+      if (!userId || userId === 'system_user' || userId === 'unknown_user') {
+        // 嘗試從其他欄位提取
+        userId = budgetData.user_id || budgetData.created_by || budgetData.operatorId;
+        
+        // 如果still是預設值，從ledgerId提取
+        if (!userId || userId === 'system_user') {
+          if (budgetData.ledgerId && budgetData.ledgerId.startsWith('user_')) {
+            userId = budgetData.ledgerId.replace('user_', '');
+            console.log(`${logPrefix} 🔄 階段三：從ledgerId提取userId = ${userId}`);
+          }
+        }
+      }
+      
+      console.log(`${logPrefix} 🎯 階段三用戶身份確認：userId = ${userId}`);
+      
       budgetType = budgetData.type || budgetData.budgetType || 'monthly';
 
-      // 驗證必要參數
-      if (!userId) {
-        return createStandardResponse(false, null, '缺少用戶ID參數', 'MISSING_USER_ID');
+      // 階段三強化驗證：拒絕無效的userId
+      if (!userId || userId === 'system_user' || userId === 'unknown_user') {
+        console.error(`${logPrefix} ❌ 階段三錯誤：無效的用戶身份 userId = ${userId}`);
+        return createStandardResponse(false, null, '階段三：無效的用戶身份參數', 'INVALID_USER_ID');
       }
 
       // budgetDataPayload包含所有預算相關資料
@@ -177,7 +196,7 @@ BM.BM_createBudget = async function(budgetData) {
 
 
     // 建立預算物件
-      // 準備最終預算資料 (階段一修正：完全符合1311.FS.js標準規範)
+      // 準備最終預算資料 (階段三修正：確保created_by使用真實userId)
       const finalBudgetData = {
         budget_id: budgetId,
         ledger_id: ledgerId,
@@ -196,10 +215,18 @@ BM.BM_createBudget = async function(budgetData) {
           enable_notifications: true,
           notification_channels: ['system']
         },
-        created_by: userId,
+        created_by: userId, // 階段三修正：確保使用真實userId
         createdAt: currentTimestamp,
         updatedAt: currentTimestamp,
-        status: 'active'
+        status: 'active',
+        // 階段三新增：審計追蹤欄位
+        audit_trail: {
+          created_by: userId,
+          created_at: currentTimestamp,
+          operation: 'CREATE_BUDGET',
+          source: 'BM_createBudget',
+          ledger_context: ledgerId
+        }
       };
 
 
@@ -220,24 +247,32 @@ BM.BM_createBudget = async function(budgetData) {
     console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
     console.log(`${logPrefix} 📋 確認路徑格式: ${collectionPath}/${budgetId}`);
 
-    // 階段一：欄位標準化驗證
-    console.log(`${logPrefix} 🔍 階段二欄位與時區檢查:`);
+    // 階段三：用戶身份正確性驗證
+    console.log(`${logPrefix} 🔍 階段三用戶身份與欄位檢查:`);
+    console.log(`${logPrefix} 👤 userId參數: ${userId}`);
+    console.log(`${logPrefix} 👤 created_by: ${finalBudgetData.created_by}`);
+    console.log(`${logPrefix} 🔒 audit_trail.created_by: ${finalBudgetData.audit_trail.created_by}`);
     console.log(`${logPrefix} 📊 total_amount: ${finalBudgetData.total_amount}`);
     console.log(`${logPrefix} 📊 consumed_amount: ${finalBudgetData.consumed_amount}`);
-    console.log(`${logPrefix} 👤 created_by: ${finalBudgetData.created_by}`);
     console.log(`${logPrefix} 🕐 時區統一: Asia/Taipei (台灣時區)`);
     console.log(`${logPrefix} 📅 年份校正: 2025年`);
     console.log(`${logPrefix} ⏰ 格式統一: Firebase Timestamp格式`);
 
-    // 驗證是否符合1311.FS.js標準
+    // 階段三：用戶身份與資料完整性驗證
     if (!finalBudgetData.total_amount) {
-      console.error(`${logPrefix} ❌ 階段一錯誤：缺少標準欄位total_amount`);
+      console.error(`${logPrefix} ❌ 階段三錯誤：缺少標準欄位total_amount`);
     }
     if (finalBudgetData.consumed_amount === undefined) {
-      console.error(`${logPrefix} ❌ 階段一錯誤：缺少標準欄位consumed_amount`);
+      console.error(`${logPrefix} ❌ 階段三錯誤：缺少標準欄位consumed_amount`);
     }
-    if (finalBudgetData.created_by === 'system_user') {
-      console.warn(`${logPrefix} ⚠️ 階段一警告：仍在使用system_user，應使用真實用戶ID`);
+    if (finalBudgetData.created_by === 'system_user' || finalBudgetData.created_by === 'unknown_user') {
+      console.error(`${logPrefix} ❌ 階段三嚴重錯誤：created_by仍使用預設值 ${finalBudgetData.created_by}`);
+      throw new Error(`階段三驗證失敗：created_by不能使用預設值 ${finalBudgetData.created_by}`);
+    }
+    if (!finalBudgetData.audit_trail || !finalBudgetData.audit_trail.created_by) {
+      console.error(`${logPrefix} ❌ 階段三錯誤：缺少審計追蹤資訊`);
+    } else {
+      console.log(`${logPrefix} ✅ 階段三驗證通過：用戶身份正確設置`);
     }
 
 
