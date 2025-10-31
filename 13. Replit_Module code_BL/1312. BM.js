@@ -1,8 +1,8 @@
 /**
- * BM_預算管理模組_2.1.0
+ * BM_預算管理模組_2.2.0
  * @module BM模組
  * @description 預算管理系統 - 支援預算設定、追蹤、警示與分析
- * @update 2025-10-23: 升級至2.1.0版本，修正P2測試所需函數，統一回傳格式
+ * @update 2025-10-31: 升級至2.2.0版本，階段一修正：智能使用者識別邏輯，解決created_by顯示問題
  */
 
 console.log('📊 BM 預算管理模組載入中...');
@@ -31,11 +31,11 @@ function createStandardResponse(success, data = null, message = '', errorCode = 
 }
 
 /**
- * 01. 建立預算設定 - 階段三完整修正版
- * @version 2025-10-30-V2.2.0
- * @date 2025-10-30 15:00:00
+ * 01. 建立預算設定 - 階段一created_by問題修正版
+ * @version 2025-10-31-V2.3.0
+ * @date 2025-10-31 06:30:00
  * @description 為特定帳本建立新的預算設定（強制使用子集合架構：ledgers/{ledger_id}/budgets/{budget_id}）
- * @update 階段三修正：完整支援真實用戶帳本ID，移除所有hardcoding
+ * @update 階段一修正：智能使用者識別邏輯，從ledgerId提取真實使用者email，解決created_by顯示system_user問題
  */
 BM.BM_createBudget = async function(budgetData) {
   const logPrefix = '[BM_createBudget]';
@@ -88,8 +88,28 @@ BM.BM_createBudget = async function(budgetData) {
 
     if (typeof budgetData === 'object' && budgetData !== null) {
       // API格式：{ledgerId, userId, ...budgetDataPayload}
-      // userId fallback處理
-      userId = budgetData.userId || budgetData.user_id || budgetData.created_by || budgetData.operatorId || 'system_user';
+      // 階段一核心修正：智能使用者識別邏輯
+      userId = budgetData.userId || budgetData.user_id || budgetData.created_by || budgetData.operatorId;
+      
+      // 階段一智能提取：從ledgerId提取真實使用者email
+      if (!userId && ledgerId) {
+        if (ledgerId.startsWith('user_')) {
+          // 從 "user_expert.valid@test.lcas.app" 提取 "expert.valid@test.lcas.app"
+          userId = ledgerId.replace(/^user_/, '');
+          console.log(`${logPrefix} 🎯 階段一智能提取：從ledgerId提取userId = ${userId}`);
+        } else if (ledgerId.includes('@')) {
+          // 如果ledgerId本身就是email格式，直接使用
+          userId = ledgerId;
+          console.log(`${logPrefix} 🎯 階段一智能識別：使用ledgerId作為userId = ${userId}`);
+        }
+      }
+      
+      // 最後才使用預設值（階段一重要：降低system_user使用機率）
+      if (!userId) {
+        userId = 'system_user';
+        console.warn(`${logPrefix} ⚠️ 階段一警告：無法從ledgerId提取使用者資訊，使用預設值 system_user`);
+      }
+      
       budgetType = budgetData.type || budgetData.budgetType || 'monthly';
 
       // 驗證必要參數
