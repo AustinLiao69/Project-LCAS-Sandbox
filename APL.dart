@@ -640,25 +640,40 @@ class BudgetManagementService {
     );
   }
 
-  /// 2. 建立新預算 (POST /api/v1/budgets) - 階段三修正版
+  /// 2. 建立新預算 (POST /api/v1/budgets) - 階段一修正版
   Future<UnifiedApiResponse<Map<String, dynamic>>> createBudget(Map<String, dynamic> budgetData) async {
-    // 階段三修正：確保ledgerId參數存在
+    // 階段一修正：欄位標準化檢查
     if (!budgetData.containsKey('ledgerId') || budgetData['ledgerId'] == null) {
-      throw ArgumentError('階段三驗證：建立預算需要ledgerId參數（子集合架構要求）');
+      throw ArgumentError('建立預算需要ledgerId參數（子集合架構要求）');
     }
 
-    // 階段三驗證：ledgerId格式檢查
-    final ledgerId = budgetData['ledgerId'] as String;
-    print('APL階段三驗證：ledgerId = $ledgerId');
+    // 階段一修正：標準化預算欄位命名
+    final standardizedData = Map<String, dynamic>.from(budgetData);
     
-    if (ledgerId.isEmpty || ledgerId.contains('hardcoded') || ledgerId.contains('collab_ledger')) {
-      print('APL階段三警告：檢測到可能的hardcoded ledgerId: $ledgerId');
+    // 統一欄位命名：amount → total_amount
+    if (budgetData.containsKey('amount')) {
+      standardizedData['total_amount'] = budgetData['amount'];
+      standardizedData.remove('amount');
     }
+    
+    // 統一欄位命名：used_amount → consumed_amount
+    if (budgetData.containsKey('used_amount')) {
+      standardizedData['consumed_amount'] = budgetData['used_amount'];
+      standardizedData.remove('used_amount');
+    }
+    
+    // 確保consumed_amount有預設值
+    if (!standardizedData.containsKey('consumed_amount')) {
+      standardizedData['consumed_amount'] = 0;
+    }
+
+    final ledgerId = budgetData['ledgerId'] as String;
+    print('APL階段一修正：使用標準化欄位建立預算，ledgerId = $ledgerId');
 
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'POST',
       '/api/v1/budgets',
-      budgetData,
+      standardizedData,
       null,
       (data) => Map<String, dynamic>.from(data ?? {}),
     );

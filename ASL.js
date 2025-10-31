@@ -1,9 +1,9 @@
 /**
- * ASL.js_API服務層模組_2.1.5
+ * ASL.js_API服務層模組_2.2.0
  * @module API服務層模組（統一回應格式）
  * @description LCAS 2.0 API Service Layer - 階段一優化：直接調用核心函數，簡化調用鏈
- * @update 2025-10-02: 階段一優化 - 移除API包裝層，直接調用BK核心函數，降低超時風險
- * @date 2025-10-02
+ * @update 2025-10-30: 階段一修正 - 預算欄位標準化，統一total_amount/consumed_amount命名
+ * @date 2025-10-30
  */
 
 console.log('🚀 LCAS ASL (API Service Layer) P1-2重構版啟動中...');
@@ -611,7 +611,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.1.5',
+    version: '2.2.0',
     status: 'running',
     port: PORT,
     architecture: 'ASL -> BL層直接調用（優化版）',
@@ -646,7 +646,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.1.5',
+    version: '2.2.0',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -1853,12 +1853,13 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
       const ledgerId = req.body.ledgerId;
       console.log(`🎯 ASL階段三確認 - 帳本ID: ${ledgerId}, 用戶ID: ${userId}`);
 
-      // 構建BM_createBudget調用參數（階段三修正版）
+      // 階段一修正：構建BM_createBudget調用參數，使用標準化欄位命名
       const budgetRequestData = {
         ledgerId: ledgerId,
-        userId: userId,  // 階段三修正：使用真實userId
+        userId: userId,
         name: req.body.name,
-        amount: req.body.amount,
+        total_amount: req.body.amount || req.body.total_amount, // 階段一修正：統一使用total_amount
+        consumed_amount: req.body.used_amount || req.body.consumed_amount || 0, // 階段一修正：統一使用consumed_amount
         type: req.body.type || 'monthly',
         description: req.body.description,
         start_date: req.body.startDate,

@@ -5,6 +5,11 @@
  * @update 2025-10-30: 修正Firebase Admin SDK引用，遵守0098規範
  */
 
+// 模組: 1312.BM.js - 預算管理模組
+// 版本: v2.2.0
+// 描述: 處理預算相關的CRUD操作，並包含確認機制。
+// 階段一修正: 統一欄位命名標準，遵循1311.FS.js的budgetStructure規範
+
 console.log('📊 BM 預算管理模組載入中...');
 
 // 導入相關模組
@@ -212,7 +217,7 @@ BM.BM_createBudget = async function(budgetData) {
         description: budgetDataPayload.description || '',
         type: budgetType,
         total_amount: budgetDataPayload.amount || budgetDataPayload.total_amount, // 標準欄位：total_amount
-        consumed_amount: budgetDataPayload.consumed_amount || 0, // 標準欄位：consumed_amount，初始為0
+        consumed_amount: budgetDataPayload.consumed_amount || budgetDataPayload.used_amount || 0, // 標準欄位：consumed_amount，初始為0
         currency: budgetDataPayload.currency || 'TWD',
         start_date: startDate,
         end_date: endDate,
