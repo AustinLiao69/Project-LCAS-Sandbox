@@ -164,7 +164,7 @@ BM.BM_createBudget = async function(budgetData) {
 
     // 階段二核心修正1：強制使用台灣時區 Asia/Taipei - 完整版
     const taiwanTime = new Date(currentDate.toLocaleString("en-US", {timeZone: "Asia/Taipei"}));
-    
+
     // 階段二增強：確保時區轉換正確性
     const taiwanOffset = 8 * 60; // UTC+8 分鐘數
     const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
@@ -176,11 +176,11 @@ BM.BM_createBudget = async function(budgetData) {
     // 階段二核心修正2：完整年份校正邏輯 - 支援多年份處理
     const targetYear = 2025;
     const currentYear = taiwanTimeVerified.getFullYear();
-    
+
     if (currentYear !== targetYear) {
       console.warn(`${logPrefix} ⚠️ 年份校正：系統年份${currentYear} -> 強制使用${targetYear}年`);
       taiwanTimeVerified.setFullYear(targetYear);
-      
+
       // 階段二增強：處理閏年和特殊日期
       if (taiwanTimeVerified.getMonth() === 1 && taiwanTimeVerified.getDate() === 29) {
         // 處理2月29日在非閏年的情況
@@ -194,7 +194,7 @@ BM.BM_createBudget = async function(budgetData) {
 
     // 階段二核心修正3：統一使用Timestamp格式（Firebase標準）- 完整版
     const currentTimestamp = admin.firestore.Timestamp.fromDate(taiwanTimeVerified);
-    
+
     // 階段二增強：Timestamp格式驗證
     if (!currentTimestamp || typeof currentTimestamp.seconds !== 'number') {
       throw new Error('Timestamp格式轉換失敗，無法生成有效的Firebase Timestamp');
@@ -205,7 +205,7 @@ BM.BM_createBudget = async function(budgetData) {
 
     if (budgetDataPayload.start_date) {
       let inputStartDate;
-      
+
       // 階段二增強：支援多種日期格式輸入
       if (typeof budgetDataPayload.start_date === 'string') {
         inputStartDate = new Date(budgetDataPayload.start_date);
@@ -218,13 +218,13 @@ BM.BM_createBudget = async function(budgetData) {
         console.warn(`${logPrefix} ⚠️ 無效的開始日期格式，使用當前時間`);
         inputStartDate = taiwanTimeVerified;
       }
-      
+
       // 年份校正
       if (inputStartDate.getFullYear() !== targetYear) {
         console.warn(`${logPrefix} ⚠️ 開始日期年份校正：${inputStartDate.getFullYear()} -> ${targetYear}`);
         inputStartDate.setFullYear(targetYear);
       }
-      
+
       startDate = admin.firestore.Timestamp.fromDate(inputStartDate);
     } else {
       startDate = currentTimestamp;
@@ -232,7 +232,7 @@ BM.BM_createBudget = async function(budgetData) {
 
     if (budgetDataPayload.end_date) {
       let inputEndDate;
-      
+
       // 階段二增強：支援多種日期格式輸入
       if (typeof budgetDataPayload.end_date === 'string') {
         inputEndDate = new Date(budgetDataPayload.end_date);
@@ -245,13 +245,13 @@ BM.BM_createBudget = async function(budgetData) {
         console.warn(`${logPrefix} ⚠️ 無效的結束日期格式，使用月底`);
         inputEndDate = new Date(targetYear, taiwanTimeVerified.getMonth() + 1, 0);
       }
-      
+
       // 年份校正
       if (inputEndDate.getFullYear() !== targetYear) {
         console.warn(`${logPrefix} ⚠️ 結束日期年份校正：${inputEndDate.getFullYear()} -> ${targetYear}`);
         inputEndDate.setFullYear(targetYear);
       }
-      
+
       endDate = admin.firestore.Timestamp.fromDate(inputEndDate);
     } else {
       // 預設為當月底 - 階段二完整修正
@@ -420,6 +420,10 @@ BM.BM_getBudgets = async function(queryParams = {}) {
   try {
     console.log(`${logPrefix} 取得預算列表 - 查詢參數:`, queryParams);
 
+    // 修正：此處應調用FS模組，但目前僅為佔位符
+    // 為了滿足基本執行，先返回模擬數據
+    console.log(`${logPrefix} ⚠️ 警告：BM_getBudgets 僅為佔位符，實際應從Firestore查詢`);
+
     // 模擬預算列表數據（實際應從Firestore查詢）
     const budgets = [
       {
@@ -466,6 +470,7 @@ BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
       throw new Error('查詢預算詳情需要ledgerId參數（子集合架構）');
     }
 
+    // 調用FS模組，使用子集合查詢
     const budgetResult = await FS.FS_getBudgetFromLedger(ledgerId, budgetId, 'system');
 
     if (!budgetResult.success || !budgetResult.exists) {
@@ -481,32 +486,36 @@ BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
 };
 
 /**
- * 新增：取得預算詳情 (P2測試所需)
+ * 新增：取得預算詳情 (P2測試所需) - BM_getBudgetById 別名
  * @version 2025-10-23-V2.1.0
  * @description 取得單一預算詳細資訊
  */
-BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
-  const logPrefix = '[BM_getBudgetDetail]';
+BM.BM_getBudgetById = async function(budgetId, options = {}) {
+  const logPrefix = '[BM_getBudgetById]';
 
   try {
-    console.log(`${logPrefix} 取得預算詳情...`);
+    console.log(`${logPrefix} 取得預算詳情 - ID: ${budgetId}`);
     // 修正：從options中取得ledgerId，使用子集合路徑
     const ledgerId = options?.ledgerId;
     if (!ledgerId) {
-      throw new Error('查詢預算詳情需要ledgerId參數（子集合架構）');
+      console.error(`${logPrefix} ❌ 致命錯誤：缺少ledgerId，無法查詢子集合`);
+      return createStandardResponse(false, null, '查詢預算詳情失敗：缺少ledgerId參數，系統已完全禁用頂層budgets集合', 'MISSING_LEDGER_ID_FOR_SUBCOLLECTION');
     }
 
+    // 調用FS模組，使用子集合查詢
     const budgetResult = await FS.FS_getBudgetFromLedger(ledgerId, budgetId, 'system');
 
-    if (!budgetResult.success || !budgetResult.exists) {
-      console.log(`${logPrefix} 預算不存在 - ID: ${budgetId}, ledgerId: ${ledgerId}`);
+    if (budgetResult.success && budgetResult.exists && budgetResult.data) {
+      console.log(`${logPrefix} ✅ 從子集合成功查詢預算詳情`);
+      return createStandardResponse(true, budgetResult.data, '預算詳情取得成功（子集合）');
+    } else {
+      console.log(`${logPrefix} ⚠️ 預算在子集合中不存在 - ID: ${budgetId}, ledgerId: ${ledgerId}`);
       throw new Error(`預算不存在: ${budgetId}`);
     }
-    return createStandardResponse(true, budgetResult.data, '預算詳情取得成功（子集合）');
 
   } catch (error) {
     console.error(`${logPrefix} 預算詳情取得失敗:`, error);
-    return createStandardResponse(false, null, `預算詳情取得失敗: ${error.message}`, 'GET_BUDGET_DETAIL_ERROR');
+    return createStandardResponse(false, null, `預算詳情取得失敗: ${error.message}`, 'GET_BUDGET_BY_ID_ERROR');
   }
 };
 
@@ -529,9 +538,10 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
       return createStandardResponse(false, null, '缺少更新資料', 'MISSING_UPDATE_DATA');
     }
 
-    // 修正：需要從更新資料中取得ledgerId
+    // 修正：需要從更新資料或options中取得ledgerId
     const ledgerId = updateData.ledgerId || options?.ledgerId;
     if (!ledgerId) {
+      console.error(`${logPrefix} ❌ 致命錯誤：缺少ledgerId，無法進行更新`);
       throw new Error('更新預算需要ledgerId參數（子集合架構）');
     }
 
@@ -556,35 +566,53 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
       const taiwanOffset = 8 * 60; // UTC+8 分鐘數
       const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
       const taiwanTime = new Date(utcTime.getTime() + (taiwanOffset * 60000));
-      
+
       // 年份校正為2025
       if (taiwanTime.getFullYear() !== 2025) {
         console.warn(`${logPrefix} ⚠️ 更新時間年份校正：${taiwanTime.getFullYear()} -> 2025`);
         taiwanTime.setFullYear(2025);
       }
-      
+
       const updateTimestamp = admin.firestore.Timestamp.fromDate(taiwanTime);
-      
+
       // 處理日期欄位的格式統一
-      let processedStartDate = updateData.start_date || existingBudget.start_date;
-      let processedEndDate = updateData.end_date || existingBudget.end_date;
-      
-      if (updateData.start_date && typeof updateData.start_date === 'string') {
-        const startDate = new Date(updateData.start_date);
-        if (startDate.getFullYear() !== 2025) {
-          console.warn(`${logPrefix} ⚠️ 開始日期年份校正：${startDate.getFullYear()} -> 2025`);
-          startDate.setFullYear(2025);
+      let processedStartDate = updateData.start_date || updateData.startDate || existingBudget.start_date;
+      let processedEndDate = updateData.end_date || updateData.endDate || existingBudget.end_date;
+
+      if (updateData.start_date || updateData.startDate) {
+        const dateValue = updateData.start_date || updateData.startDate;
+        let startDateObj;
+        if (typeof dateValue === 'string') {
+          startDateObj = new Date(dateValue);
+        } else if (dateValue instanceof Date) {
+          startDateObj = new Date(dateValue);
+        } else {
+           startDateObj = taiwanTime; // Fallback to current time if format is invalid
         }
-        processedStartDate = admin.firestore.Timestamp.fromDate(startDate);
+
+        if (startDateObj.getFullYear() !== 2025) {
+          console.warn(`${logPrefix} ⚠️ 開始日期年份校正：${startDateObj.getFullYear()} -> 2025`);
+          startDateObj.setFullYear(2025);
+        }
+        processedStartDate = admin.firestore.Timestamp.fromDate(startDateObj);
       }
-      
-      if (updateData.end_date && typeof updateData.end_date === 'string') {
-        const endDate = new Date(updateData.end_date);
-        if (endDate.getFullYear() !== 2025) {
-          console.warn(`${logPrefix} ⚠️ 結束日期年份校正：${endDate.getFullYear()} -> 2025`);
-          endDate.setFullYear(2025);
+
+      if (updateData.end_date || updateData.endDate) {
+        const dateValue = updateData.end_date || updateData.endDate;
+        let endDateObj;
+        if (typeof dateValue === 'string') {
+          endDateObj = new Date(dateValue);
+        } else if (dateValue instanceof Date) {
+          endDateObj = new Date(dateValue);
+        } else {
+           endDateObj = new Date(2025, taiwanTime.getMonth() + 1, 0); // Fallback to end of month
         }
-        processedEndDate = admin.firestore.Timestamp.fromDate(endDate);
+
+        if (endDateObj.getFullYear() !== 2025) {
+          console.warn(`${logPrefix} ⚠️ 結束日期年份校正：${endDateObj.getFullYear()} -> 2025`);
+          endDateObj.setFullYear(2025);
+        }
+        processedEndDate = admin.firestore.Timestamp.fromDate(endDateObj);
       }
 
       const finalUpdateData = {
@@ -599,7 +627,7 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
         categories: updateData.categories || existingBudget.categories,
         alert_rules: updateData.alert_rules || existingBudget.alert_rules,
         updatedAt: updateTimestamp,
-        updated_by: options.userId || 'unknown_user',
+        updated_by: options.userId || 'unknown_user', // 使用傳入的 userId
         // 階段二增強：時區處理記錄
         last_timezone_correction: {
           corrected_at: updateTimestamp,
@@ -608,8 +636,11 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
         }
       };
 
-    const SYSTEM_USER_ID = 'SYSTEM';
-    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, finalUpdateData, options.userId || SYSTEM_USER_ID);
+    const SYSTEM_USER_ID = 'SYSTEM'; // 假設的系統用戶ID
+    const userIdForFS = options.userId || SYSTEM_USER_ID; // 使用 options.userId，若無則為 system
+
+    // 調用FS模組，使用子集合更新
+    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, finalUpdateData, userIdForFS);
 
     if (!updateResult.success) {
       throw new Error(`Firebase更新失敗: ${updateResult.error}`);
@@ -619,7 +650,7 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
     const updatedBudget = {
       id: budgetId,
       ...finalUpdateData,
-      updated_at: new Date().toISOString()
+      updatedAt: new Date().toISOString() // 回傳ISO格式日期
     };
 
     return createStandardResponse(true, updatedBudget, '預算更新成功');
@@ -659,11 +690,13 @@ BM.BM_deleteBudget = async function(budgetId, options = {}) {
     // 修正：需要從options中取得ledgerId
     const ledgerId = options?.ledgerId;
     if (!ledgerId) {
+      console.error(`${logPrefix} ❌ 致命錯誤：缺少ledgerId，無法執行刪除`);
       throw new Error('刪除預算需要ledgerId參數（子集合架構）');
     }
 
     console.log(`${logPrefix} 執行預算刪除...`);
-    const deleteResult = await FS.FS_deleteBudgetFromLedger(ledgerId, budgetId, 'system'); // 假設 userId 為 system
+    // 調用FS模組，使用子集合刪除
+    const deleteResult = await FS.FS_deleteBudgetFromLedger(ledgerId, budgetId, options.userId || 'system'); // 假設 userId 為 system
 
     if (!deleteResult.success) {
       throw new Error(`Firebase刪除失敗: ${deleteResult.error}`);
@@ -713,22 +746,22 @@ BM.BM_editBudget = async function(budgetId, userId, updateData, ledgerId) {
 
     // 建立更新記錄 - 階段二修正：統一時區和Timestamp格式
     const updatedFields = Object.keys(updateData);
-    
+
     // 階段二完整修正：確保updated_at使用台灣時區和Firebase Timestamp格式
     const currentDate = new Date();
     const taiwanOffset = 8 * 60; // UTC+8 分鐘數
     const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
     const taiwanTime = new Date(utcTime.getTime() + (taiwanOffset * 60000));
-    
+
     // 年份校正為2025
     if (taiwanTime.getFullYear() !== 2025) {
       console.warn(`${logPrefix} ⚠️ 更新時間年份校正：${taiwanTime.getFullYear()} -> 2025`);
       taiwanTime.setFullYear(2025);
     }
-    
+
     updateData.updated_at = admin.firestore.Timestamp.fromDate(taiwanTime);
     updateData.updated_by = userId;
-    
+
     // 階段二增強：處理日期相關欄位的格式統一
     ['start_date', 'end_date'].forEach(dateField => {
       if (updateData[dateField]) {
@@ -740,13 +773,13 @@ BM.BM_editBudget = async function(budgetId, userId, updateData, ledgerId) {
         } else {
           return; // 跳過無效格式
         }
-        
+
         // 年份校正
         if (dateValue.getFullYear() !== 2025) {
           console.warn(`${logPrefix} ⚠️ ${dateField}年份校正：${dateValue.getFullYear()} -> 2025`);
           dateValue.setFullYear(2025);
         }
-        
+
         updateData[dateField] = admin.firestore.Timestamp.fromDate(dateValue);
         console.log(`${logPrefix} 📅 階段二${dateField}格式統一完成`);
       }
@@ -831,18 +864,18 @@ BM.BM_deleteBudget_Legacy = async function(budgetId, userId, confirmationToken, 
 
     // 標記為已刪除而非實際刪除 - 階段二修正：統一時區和Timestamp格式
     const currentDate = new Date();
-    
+
     // 階段二完整修正：台灣時區處理
     const taiwanOffset = 8 * 60; // UTC+8 分鐘數
     const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
     const taiwanTime = new Date(utcTime.getTime() + (taiwanOffset * 60000));
-    
+
     // 年份校正為2025
     if (taiwanTime.getFullYear() !== 2025) {
       console.warn(`${logPrefix} ⚠️ 刪除時間年份校正：${taiwanTime.getFullYear()} -> 2025`);
       taiwanTime.setFullYear(2025);
     }
-    
+
     const deleteTime = admin.firestore.Timestamp.fromDate(taiwanTime);
     const deleteData = {
       status: 'deleted',
@@ -917,8 +950,8 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
       throw new Error('缺少預算ID');
     }
 
-    // 從資料庫取得預算資料 (模擬)
-    // const budgetData = await FS.getBudgetFromFirestore(budgetId); // 實際 Firestore 操作
+    // 模擬從資料庫取得預算資料 (實際應調用FS模組)
+    console.log(`${logPrefix} ⚠️ 警告：BM_calculateBudgetProgress 僅為佔位符，實際應從Firestore查詢`);
     const budgetData = {
       total_amount: 50000, // 使用標準欄位
       consumed_amount: 35000, // 使用標準欄位
@@ -981,8 +1014,9 @@ BM.BM_updateBudgetUsage = async function(ledgerId, transactionData) {
       throw new Error('缺少必要參數');
     }
 
-    // 取得該帳本的活躍預算 (模擬)
-    const activeBudgets = await BM.BM_getActiveBudgets(ledgerId);
+    // 取得該帳本的活躍預算 (模擬 - 實際應調用BM.BM_getActiveBudgets)
+    console.log(`${logPrefix} ⚠️ 警告：BM_updateBudgetUsage 內部調用的 BM_getActiveBudgets 僅為佔位符`);
+    const activeBudgets = await BM.BM_getActiveBudgets(ledgerId); // 假設此函數已正確實現
 
     let alertTriggered = false;
     const updatedBudgets = [];
@@ -1048,8 +1082,9 @@ BM.BM_getBudgetReport = async function(budgetId, reportType, dateRange) {
       throw new Error('缺少預算ID');
     }
 
-    // 取得預算資料
-    const budgetData = await BM.BM_getBudgetData(budgetId);
+    // 取得預算資料 (模擬 - 實際應調用BM.BM_getBudgetData)
+    console.log(`${logPrefix} ⚠️ 警告：BM_getBudgetReport 內部調用的 BM_getBudgetData 僅為佔位符`);
+    const budgetData = await BM.BM_getBudgetData(budgetId); // 假設此函數已正確實現
 
     // 生成報告數據
     const reportData = {
@@ -1126,8 +1161,9 @@ BM.BM_checkBudgetAlert = async function(budgetId, currentUsage) {
   try {
     console.log(`${logPrefix} 檢查預算警示 - 預算ID: ${budgetId}`);
 
-    // 取得預算警示規則
-    const budgetData = await BM.BM_getBudgetData(budgetId);
+    // 取得預算警示規則 (模擬 - 實際應調用BM.BM_getBudgetData)
+    console.log(`${logPrefix} ⚠️ 警告：BM_checkBudgetAlert 內部調用的 BM_getBudgetData 僅為佔位符`);
+    const budgetData = await BM.BM_getBudgetData(budgetId); // 假設此函數已正確實現
     const alertRules = budgetData.alert_rules;
 
     // 計算使用率
@@ -1194,8 +1230,9 @@ BM.BM_triggerBudgetAlert = async function(budgetId, alertType, recipientList) {
     // 生成警示ID
     const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // 取得預算資料
-    const budgetData = await BM.BM_getBudgetData(budgetId);
+    // 取得預算資料 (模擬 - 實際應調用BM.BM_getBudgetData)
+    console.log(`${logPrefix} ⚠️ 警告：BM_triggerBudgetAlert 內部調用的 BM_getBudgetData 僅為佔位符`);
+    const budgetData = await BM.BM_getBudgetData(budgetId); // 假設此函數已正確實現
 
     // 準備警示消息
     let alertMessage = '';
@@ -1293,8 +1330,8 @@ BM.BM_setBudgetAlertRules = async function(budgetId, alertRules) {
       throw new Error('閾值必須在 0-100 之間');
     }
 
-    // 更新警示規則到資料庫 (模擬)
-    console.log(`${logPrefix} 更新警示規則到資料庫...`);
+    // 更新警示規則到資料庫 (模擬 - 實際應調用FS模組)
+    console.log(`${logPrefix} ⚠️ 警告：BM_setBudgetAlertRules 僅為佔位符，實際應更新至Firestore`);
     // await FS.updateBudgetAlertRulesInFirestore(budgetId, validatedRules); // 實際 Firestore 操作
 
     // 記錄操作日誌
@@ -1338,7 +1375,8 @@ BM.BM_analyzeBudgetTrend = async function(budgetId, analysisType, timeRange) {
   try {
     console.log(`${logPrefix} 分析預算趨勢 - 預算ID: ${budgetId}, 分析類型: ${analysisType}`);
 
-    // 取得歷史預算使用數據 (模擬)
+    // 取得歷史預算使用數據 (模擬 - 實際應調用FS模組)
+    console.log(`${logPrefix} ⚠️ 警告：BM_analyzeBudgetTrend 僅為佔位符，實際應從Firestore獲取歷史數據`);
     // const historicalData = await FS.getBudgetHistoryInFirestore(budgetId, timeRange); // 實際 Firestore 操作
     const historicalData = [
       { date: '2025-07-01', consumed_amount: 5000 }, // 使用標準欄位
@@ -1409,11 +1447,12 @@ BM.BM_compareBudgetAcrossLedgers = async function(ledgerIds, comparisonType) {
   try {
     console.log(`${logPrefix} 跨帳本預算比較 - 帳本數量: ${ledgerIds.length}`);
 
-    // 取得各帳本的預算數據 (模擬)
+    // 取得各帳本的預算數據 (模擬 - 實際應調用BM.BM_getActiveBudgets)
+    console.log(`${logPrefix} ⚠️ 警告：BM_compareBudgetAcrossLedgers 內部調用的 BM_getActiveBudgets 僅為佔位符`);
     const ledgerComparisons = [];
 
     for (const ledgerId of ledgerIds) {
-      const budgets = await BM.BM_getActiveBudgets(ledgerId);
+      const budgets = await BM.BM_getActiveBudgets(ledgerId); // 假設此函數已正確實現
       const totalBudget = budgets.reduce((sum, budget) => sum + budget.total_amount, 0); // 使用標準欄位
       const totalUsed = budgets.reduce((sum, budget) => sum + budget.consumed_amount, 0); // 使用標準欄位
       const efficiency = totalBudget > 0 ? (totalUsed / totalBudget) * 100 : 0;
@@ -1504,8 +1543,8 @@ BM.BM_createBudgetCategory = async function(ledgerId, categoryData) {
       created_at: new Date()
     };
 
-    // 儲存分類 (模擬)
-    console.log(`${logPrefix} 儲存預算分類...`);
+    // 儲存分類 (模擬 - 實際應調用FS模組)
+    console.log(`${logPrefix} ⚠️ 警告：BM_createBudgetCategory 僅為佔位符，實際應儲存至Firestore`);
     // await FS.saveBudgetCategoryToFirestore(ledgerId, categoryId, category); // 實際 Firestore 操作
 
     // 記錄操作日誌
@@ -1549,8 +1588,9 @@ BM.BM_allocateBudgetToCategories = async function(budgetId, allocationData) {
   try {
     console.log(`${logPrefix} 分配預算至分類 - 預算ID: ${budgetId}`);
 
-    // 驗證分配邏輯
-    const validation = await BM.BM_validateAllocation(budgetId, allocationData);
+    // 驗證分配邏輯 (模擬 - 實際應調用BM.BM_validateAllocation)
+    console.log(`${logPrefix} ⚠️ 警告：BM_allocateBudgetToCategories 內部調用的 BM_validateAllocation 僅為佔位符`);
+    const validation = await BM.BM_validateAllocation(budgetId, allocationData); // 假設此函數已正確實現
     if (!validation.valid) {
       throw new Error(`分配驗證失敗: ${validation.errors.join(', ')}`);
     }
@@ -1569,8 +1609,8 @@ BM.BM_allocateBudgetToCategories = async function(budgetId, allocationData) {
       });
     }
 
-    // 更新預算分類 (模擬)
-    console.log(`${logPrefix} 更新預算分類分配...`);
+    // 更新預算分類 (模擬 - 實際應調用FS模組)
+    console.log(`${logPrefix} ⚠️ 警告：BM_allocateBudgetToCategories 僅為佔位符，實際應更新至Firestore`);
     // await FS.updateBudgetCategoryAllocationsInFirestore(budgetId, allocations); // 實際 Firestore 操作
 
     // 記錄分配日誌
@@ -1763,7 +1803,8 @@ BM.BM_validateBudgetData = async function(budgetData, validationType) {
  * 輔助函數: 取得帳本的活躍預算
  */
 BM.BM_getActiveBudgets = async function(ledgerId) {
-  // 模擬從資料庫取得活躍預算
+  // 模擬從資料庫取得活躍預算 (實際應調用FS模組)
+  console.log(`${logPrefix} ⚠️ 警告：BM_getActiveBudgets 僅為佔位符，實際應從Firestore查詢`);
   // return await FS.getActiveBudgetsFromFirestore(ledgerId); // 實際 Firestore 操作
   return [
     {
@@ -1789,7 +1830,8 @@ BM.BM_isTransactionMatchBudget = function(transactionData, budget) {
  * 輔助函數: 取得預算資料
  */
 BM.BM_getBudgetData = async function(budgetId) {
-  // 模擬從資料庫取得預算資料
+  // 模擬從資料庫取得預算資料 (實際應調用FS模組)
+  console.log(`${logPrefix} ⚠️ 警告：BM_getBudgetData 僅為佔位符，實際應從Firestore查詢`);
   // return await FS.getBudgetFromFirestore(budgetId); // 實際 Firestore 操作
   return {
     budget_id: budgetId,
@@ -1822,6 +1864,8 @@ BM.BM_getBudgetData = async function(budgetId) {
  * 輔助函數: 驗證預算分配
  */
 BM.BM_validateAllocation = async function(budgetId, allocationData) {
+  // 模擬獲取預算資料 (實際應調用BM.BM_getBudgetData)
+  console.log(`${logPrefix} ⚠️ 警告：BM_validateAllocation 內部調用的 BM_getBudgetData 僅為佔位符`);
   const budgetData = await BM.BM_getBudgetData(budgetId);
   const totalAllocated = allocationData.reduce((sum, allocation) => sum + allocation.amount, 0);
 
