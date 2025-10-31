@@ -849,7 +849,7 @@
   "budget_test_data": {
     "success_scenarios": {
       "create_monthly_budget": {
-        "budgetId": "DYNAMIC_BUDGET_ID_WILL_BE_REPLACED",
+        "budgetId": "REAL_DYNAMIC_BUDGET_ID_FROM_CREATE",
         "name": "十月生活預算",
         "description": "家庭十月份生活費用預算",
         "amount": 50000.0,
@@ -860,16 +860,11 @@
         "currency": "TWD",
         "createdBy": "user_expert_1697363200000",
         "operatorId": "user_expert_1697363200000",
-        "confirmationToken": "DYNAMIC_CONFIRMATION_TOKEN",
-        "testScenario": "使用真實用戶帳本的月度預算建立測試",
-        "updateData": {
-          "name": "十月生活預算_更新版",
-          "amount": 55000.0,
-          "description": "更新後的預算描述"
-        }
+        "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000",
+        "testScenario": "使用真實用戶帳本的月度預算建立測試"
       },
       "create_category_budget": {
-        "budgetId": "DYNAMIC_BUDGET_ID_WILL_BE_REPLACED",
+        "budgetId": "REAL_DYNAMIC_BUDGET_ID_FROM_CREATE",
         "name": "交通費預算",
         "amount": 5000.0,
         "type": "category",
@@ -895,7 +890,7 @@
         "testScenario": "科目預算建立成功測試"
       },
       "budget_execution_tracking": {
-        "budgetId": "DYNAMIC_BUDGET_ID_WILL_BE_REPLACED",
+        "budgetId": "REAL_DYNAMIC_BUDGET_ID_FROM_CREATE",
         "currentAmount": 35000.0,
         "usedAmount": 15000.0,
         "remainingAmount": 35000.0,
@@ -906,7 +901,7 @@
         "operatorId": "user_expert_1697363200000"
       },
       "delete_budget_with_confirmation": {
-        "budgetId": "DYNAMIC_BUDGET_ID_WILL_BE_REPLACED",
+        "budgetId": "REAL_DYNAMIC_BUDGET_ID_FROM_CREATE",
         "operatorId": "user_expert_1697363200000",
         "confirmationToken": "confirm_delete_budget_monthly_001_1697363700000",
         "testScenario": "預算刪除確認測試"

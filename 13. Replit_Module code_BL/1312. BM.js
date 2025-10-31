@@ -32,7 +32,7 @@ function createStandardResponse(success, data = null, message = '', errorCode = 
 
 /**
  * 01. 建立預算設定 - 階段一created_by問題修正版
- * @version 2025-10-31-V2.3.1
+ * @version 2025-10-31-V2.3.0
  * @date 2025-10-31 06:30:00
  * @description 為特定帳本建立新的預算設定（強制使用子集合架構：ledgers/{ledger_id}/budgets/{budget_id}）
  * @update 階段一修正：智能使用者識別邏輯，從ledgerId提取真實使用者email，解決created_by顯示system_user問題
@@ -90,7 +90,7 @@ BM.BM_createBudget = async function(budgetData) {
       // API格式：{ledgerId, userId, ...budgetDataPayload}
       // 階段一核心修正：智能使用者識別邏輯
       userId = budgetData.userId || budgetData.user_id || budgetData.created_by || budgetData.operatorId;
-
+      
       // 階段一智能提取：從ledgerId提取真實使用者email
       if (!userId && ledgerId) {
         if (ledgerId.startsWith('user_')) {
@@ -103,13 +103,13 @@ BM.BM_createBudget = async function(budgetData) {
           console.log(`${logPrefix} 🎯 階段一智能識別：使用ledgerId作為userId = ${userId}`);
         }
       }
-
+      
       // 最後才使用預設值（階段一重要：降低system_user使用機率）
       if (!userId) {
         userId = 'system_user';
         console.warn(`${logPrefix} ⚠️ 階段一警告：無法從ledgerId提取使用者資訊，使用預設值 system_user`);
       }
-
+      
       budgetType = budgetData.type || budgetData.budgetType || 'monthly';
 
       // 驗證必要參數
@@ -123,7 +123,7 @@ BM.BM_createBudget = async function(budgetData) {
         amount: budgetData.amount,
         currency: budgetData.currency,
         start_date: budgetData.start_date || budgetData.startDate,
-        end_date: budgetData.end_date,
+        end_date: budgetData.end_date || budgetData.endDate,
         categories: budgetData.categories,
         alert_rules: budgetData.alert_rules || budgetData.alertRules,
         description: budgetData.description
@@ -207,7 +207,7 @@ BM.BM_createBudget = async function(budgetData) {
       const { admin, db } = require('./1399. firebase-config.js');
       const docRef = db.collection(collectionPath).doc(budgetId);
       await docRef.set(budget);
-
+      
       console.log(`${logPrefix} ✅ 預算成功寫入子集合 - 完整路徑: ${collectionPath}/${budgetId}`);
       console.log(`${logPrefix} 🎯 子集合架構驗證: 路徑確實為 ledgers/{ledgerId}/budgets/ 格式`);
 
@@ -384,7 +384,7 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
     }
 
     console.log(`${logPrefix} 更新預算到資料庫...`);
-
+    
     // 階段一修正：直接調用Firebase Admin SDK
     const { admin, db } = require('./1399. firebase-config.js');
     const docRef = db.collection(`ledgers/${ledgerId}/budgets`).doc(budgetId);
@@ -406,9 +406,9 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
 };
 
 /**
- * 新增：刪除預算 (P2測試所需) - 階段一修正版
- * @version 2025-10-31-V2.3.0
- * @description 刪除預算 - 完善confirmationToken生成與驗證
+ * 新增：刪除預算 (P2測試所需)
+ * @version 2025-10-23-V2.1.0
+ * @description 刪除預算
  */
 BM.BM_deleteBudget = async function(budgetId, options = {}) {
   const logPrefix = '[BM_deleteBudget]';
@@ -420,23 +420,14 @@ BM.BM_deleteBudget = async function(budgetId, options = {}) {
       return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
     }
 
-    // 階段一修正：智能confirmationToken處理
-    let confirmationToken = options.confirmationToken;
-
-    // 如果沒有提供Token，自動生成並要求確認
-    if (!confirmationToken) {
-      const generatedToken = BM.BM_generateConfirmationToken(budgetId);
-      console.log(`${logPrefix} 自動生成確認令牌: ${generatedToken}`);
-      return createStandardResponse(false, {
-        requiredConfirmationToken: generatedToken,
-        message: '請使用生成的確認令牌重新提交刪除請求'
-      }, '刪除操作需要確認令牌', 'CONFIRMATION_TOKEN_REQUIRED');
+    // 檢查確認Token（業務規則：所有刪除操作都需要確認）
+    if (!options.confirmationToken) {
+      return createStandardResponse(false, null, '刪除操作需要確認令牌', 'MISSING_CONFIRMATION_TOKEN');
     }
 
-    // 驗證確認Token
-    if (!BM.BM_validateConfirmationToken(budgetId, confirmationToken)) {
-      const expectedToken = BM.BM_generateConfirmationToken(budgetId);
-      console.log(`${logPrefix} Token驗證失敗 - 期望: ${expectedToken}, 實際: ${confirmationToken}`);
+    const expectedToken = `confirm_delete_${budgetId}`;
+    if (options.confirmationToken !== expectedToken) {
+      console.log(`${logPrefix} Token驗證失敗 - 期望: ${expectedToken}, 實際: ${options.confirmationToken}`);
       return createStandardResponse(false, null, '確認令牌無效，請確認刪除操作', 'INVALID_CONFIRMATION_TOKEN');
     }
 
@@ -447,20 +438,18 @@ BM.BM_deleteBudget = async function(budgetId, options = {}) {
     }
 
     console.log(`${logPrefix} 執行預算刪除...`);
-    console.log(`${logPrefix} 使用子集合路徑: ledgers/${ledgerId}/budgets/${budgetId}`);
-
+    
     // 階段一修正：直接調用Firebase Admin SDK
     const { admin, db } = require('./1399. firebase-config.js');
     const docRef = db.collection(`ledgers/${ledgerId}/budgets`).doc(budgetId);
     await docRef.delete();
 
+    // 模擬刪除操作
     console.log(`${logPrefix} 預算刪除成功 - ID: ${budgetId}`);
 
     return createStandardResponse(true, {
       deletedId: budgetId,
-      deletedAt: new Date().toISOString(),
-      ledgerId: ledgerId,
-      collectionPath: `ledgers/${ledgerId}/budgets`
+      deletedAt: new Date().toISOString()
     }, '預算刪除成功');
 
   } catch (error) {
@@ -1625,7 +1614,7 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
       const { admin, db } = require('./1399. firebase-config.js');
       const docRef = db.collection(collectionPath).doc(budgetId);
       const doc = await docRef.get();
-
+      
       if (doc.exists) {
         console.log(`${logPrefix} ✅ 從子集合成功查詢預算詳情`);
         return createStandardResponse(true, doc.data(), '預算詳情取得成功（子集合）');
