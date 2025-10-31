@@ -869,6 +869,15 @@ async function FS_createBudgetInLedger(ledgerId, budgetData, userId) {
     const budgetRef = db.collection('ledgers').doc(ledgerId).collection('budgets').doc(budgetId);
     await budgetRef.set(completeBudgetData);
 
+    console.log(`[${functionName}] ✅ 預算已成功寫入Firebase - 路徑: ledgers/${ledgerId}/budgets/${budgetId}`);
+    
+    return {
+      success: true,
+      budgetId: budgetId,
+      path: `ledgers/${ledgerId}/budgets/${budgetId}`,
+      data: completeBudgetData
+    };eteBudgetData);
+
     console.log(`[${functionName}] ✅ 預算已寫入 Firebase 路徑: ledgers/${ledgerId}/budgets/${budgetId}`);
 
     return {

@@ -53,6 +53,49 @@ BM.BM_createBudget = async function(budgetData) {
     console.log(`${logPrefix} 階段三完整修正：開始建立預算 - 強制子集合架構`);
     console.log(`${logPrefix} 🔍 原始輸入資料:`, JSON.stringify(budgetData, null, 2));
 
+    // 階段三核心修正：參數驗證與用戶身份確認（容錯增強版）
+    if (!budgetData || typeof budgetData !== 'object') {
+      console.error(`${logPrefix} ❌ 階段三錯誤：budgetData必須為物件`);
+      return {
+        success: false,
+        error: 'budgetData參數必須為有效物件',
+        errorCode: 'INVALID_BUDGET_DATA'
+      };
+    }
+
+    if (!budgetData.ledgerId || typeof budgetData.ledgerId !== 'string' || budgetData.ledgerId.trim() === '') {
+      console.error(`${logPrefix} ❌ 階段三錯誤：缺少有效的ledgerId`);
+      console.error(`${logPrefix} 📋 接收的ledgerId: ${budgetData.ledgerId} (類型: ${typeof budgetData.ledgerId})`);
+      return {
+        success: false,
+        error: 'ledgerId為必要參數且不能為空',
+        errorCode: 'MISSING_LEDGER_ID'
+      };
+    }
+
+    if (!budgetData.name || typeof budgetData.name !== 'string' || budgetData.name.trim() === '') {
+      console.error(`${logPrefix} ❌ 階段三錯誤：缺少有效的預算名稱`);
+      return {
+        success: false,
+        error: '預算名稱為必要參數且不能為空',
+        errorCode: 'MISSING_BUDGET_NAME'
+      };
+    }
+
+    // 階段三修正：確保金額欄位為數字且非負數（增加容錯性）
+    const totalAmount = Number(budgetData.total_amount || budgetData.amount || 0);
+    const consumedAmount = Number(budgetData.consumed_amount || budgetData.used_amount || 0);
+
+    if (isNaN(totalAmount) || totalAmount <= 0) {
+      console.error(`${logPrefix} ❌ 階段三錯誤：預算總額必須大於0，當前值: ${totalAmount}`);
+      return {
+        success: false,
+        error: '預算總額必須為大於0的數字',
+        errorCode: 'INVALID_TOTAL_AMOUNT'
+      };
+    }
+
+
     // 階段三核心修正1：智能ledgerId提取（支援多種格式）
     let ledgerId = budgetData?.ledgerId;
 
@@ -529,34 +572,38 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
 
   try {
     console.log(`${logPrefix} 更新預算 - 預算ID: ${budgetId}`);
+    console.log(`[BM_updateBudget] 更新資料:`, JSON.stringify(updateData, null, 2));
 
-    if (!budgetId) {
-      return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
+    // 確保傳遞ledgerId參數給FS模組（子集合架構要求）
+    let ledgerId = null;
+
+    if (updateData.ledgerId) {
+      ledgerId = updateData.ledgerId;
+    } else if (options && options.ledgerId) {
+      ledgerId = options.ledgerId;
+    } else {
+      console.error(`${logPrefix} ❌ 缺少ledgerId參數`);
+      return {
+        success: false,
+        error: '更新預算需要ledgerId參數',
+        errorCode: 'MISSING_LEDGER_ID'
+      };
     }
 
-    if (!updateData || Object.keys(updateData).length === 0) {
-      return createStandardResponse(false, null, '缺少更新資料', 'MISSING_UPDATE_DATA');
-    }
 
-    // 修正：需要從更新資料或options中取得ledgerId
-    const ledgerId = updateData.ledgerId || options?.ledgerId;
-    if (!ledgerId) {
-      console.error(`${logPrefix} ❌ 致命錯誤：缺少ledgerId，無法進行更新`);
-      throw new Error('更新預算需要ledgerId參數（子集合架構）');
-    }
+    // 獲取現有預算以驗證其存在
+    const budgetPath = `ledgers/${ledgerId}/budgets`;
+    console.log(`[BM_updateBudget] 檢查預算存在性 - 路徑: ${budgetPath}/${budgetId}`);
 
-    // 階段一：欄位名稱修正
-    let existingBudget = {};
-    try {
-      const budgetResult = await FS.FS_getBudgetFromLedger(ledgerId, budgetId, 'system');
-      if (budgetResult.success && budgetResult.exists) {
-        existingBudget = budgetResult.data;
-      } else {
-        throw new Error('預算不存在');
-      }
-    } catch (error) {
-      console.error(`${logPrefix} 獲取預算時出錯:`, error);
-      return createStandardResponse(false, null, '更新預算失敗：找不到預算資料', 'BUDGET_NOT_FOUND_FOR_UPDATE');
+    const existingBudget = await FS.FS_getDocument(budgetPath, budgetId, 'system');
+
+    if (!existingBudget.success) {
+      console.error(`[BM_updateBudget] ❌ 預算不存在 - budgetId: ${budgetId}, ledgerId: ${ledgerId}`);
+      return {
+        success: false,
+        error: `預算不存在 (ID: ${budgetId})`,
+        errorCode: 'BUDGET_NOT_FOUND'
+      };
     }
 
     console.log(`${logPrefix} 更新預算到資料庫...`);
@@ -576,8 +623,8 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
       const updateTimestamp = admin.firestore.Timestamp.fromDate(taiwanTime);
 
       // 處理日期欄位的格式統一
-      let processedStartDate = updateData.start_date || updateData.startDate || existingBudget.start_date;
-      let processedEndDate = updateData.end_date || updateData.endDate || existingBudget.end_date;
+      let processedStartDate = updateData.start_date || updateData.startDate || existingBudget.data.start_date;
+      let processedEndDate = updateData.end_date || updateData.endDate || existingBudget.data.end_date;
 
       if (updateData.start_date || updateData.startDate) {
         const dateValue = updateData.start_date || updateData.startDate;
@@ -616,16 +663,16 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
       }
 
       const finalUpdateData = {
-        name: updateData.name || existingBudget.name,
-        description: updateData.description || existingBudget.description,
-        type: updateData.type || existingBudget.type,
-        total_amount: updateData.total_amount || updateData.amount || existingBudget.total_amount, // 標準欄位：total_amount
-        consumed_amount: updateData.consumed_amount || updateData.used_amount || existingBudget.consumed_amount, // 標準欄位：consumed_amount
-        currency: updateData.currency || existingBudget.currency,
+        name: updateData.name || existingBudget.data.name,
+        description: updateData.description || existingBudget.data.description,
+        type: updateData.type || existingBudget.data.type,
+        total_amount: updateData.total_amount || updateData.amount || existingBudget.data.total_amount, // 標準欄位：total_amount
+        consumed_amount: updateData.consumed_amount || updateData.used_amount || existingBudget.data.consumed_amount, // 標準欄位：consumed_amount
+        currency: updateData.currency || existingBudget.data.currency,
         start_date: processedStartDate,
         end_date: processedEndDate,
-        categories: updateData.categories || existingBudget.categories,
-        alert_rules: updateData.alert_rules || existingBudget.alert_rules,
+        categories: updateData.categories || existingBudget.data.categories,
+        alert_rules: updateData.alert_rules || existingBudget.data.alert_rules,
         updatedAt: updateTimestamp,
         updated_by: options.userId || 'unknown_user', // 使用傳入的 userId
         // 階段二增強：時區處理記錄
@@ -640,10 +687,15 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
     const userIdForFS = options.userId || SYSTEM_USER_ID; // 使用 options.userId，若無則為 system
 
     // 調用FS模組，使用子集合更新
-    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, finalUpdateData, userIdForFS);
+    const updateResult = await FS.FS_updateDocument(budgetPath, budgetId, finalUpdateData, userIdForFS);
 
     if (!updateResult.success) {
-      throw new Error(`Firebase更新失敗: ${updateResult.error}`);
+      console.error(`[BM_updateBudget] ❌ Firebase更新失敗: ${updateResult.error}`);
+      return {
+        success: false,
+        error: `Firebase更新失敗: ${updateResult.error}`,
+        errorCode: 'FIREBASE_UPDATE_ERROR'
+      };
     }
 
     // 構建更新後的預算資料

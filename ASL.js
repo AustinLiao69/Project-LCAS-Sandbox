@@ -1853,7 +1853,7 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
         return res.apiError('缺少必要參數: name, amount, ledgerId', 'MISSING_REQUIRED_PARAMS', 400);
       }
 
-      // 階段三核心修正：智能提取真實userId
+      // 階段三核心修正：智能提取真實userId（增強版）
       let userId = null;
 
       // 優先級1：從請求body中提取userId
@@ -1873,6 +1873,15 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
         userId = req.body.user_id || req.body.operatorId || req.body.created_by;
         if (userId) {
           console.log(`🎯 ASL階段三：從其他欄位提取 = ${userId}`);
+        }
+      }
+
+      // 階段三修復：如果仍無法取得userId，從ledgerId完整提取
+      if (!userId && req.body.ledgerId) {
+        // 處理完整的email格式：user_expert.valid@test.lcas.app
+        if (req.body.ledgerId.includes('@')) {
+          userId = req.body.ledgerId.replace('user_', '');
+          console.log(`🎯 ASL階段三：從完整ledgerId提取 = ${userId}`);
         }
       }
 
