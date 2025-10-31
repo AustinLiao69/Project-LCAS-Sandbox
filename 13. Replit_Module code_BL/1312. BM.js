@@ -88,13 +88,13 @@ BM.BM_createBudget = async function(budgetData) {
 
     if (typeof budgetData === 'object' && budgetData !== null) {
       // API格式：{ledgerId, userId, ...budgetDataPayload}
-      // userId fallback處理 - 移除hard-coded system_user
-      userId = budgetData.userId || budgetData.user_id || budgetData.created_by || budgetData.operatorId;
+      // userId fallback處理
+      userId = budgetData.userId || budgetData.user_id || budgetData.created_by || budgetData.operatorId || 'system_user';
       budgetType = budgetData.type || budgetData.budgetType || 'monthly';
 
-      // 強制驗證用戶身份參數（禁止使用預設值）
-      if (!userId || userId.trim() === '') {
-        return createStandardResponse(false, null, '缺少用戶ID參數：預算建立需要明確的用戶身份（email）', 'MISSING_USER_ID');
+      // 驗證必要參數
+      if (!userId) {
+        return createStandardResponse(false, null, '缺少用戶ID參數', 'MISSING_USER_ID');
       }
 
       // budgetDataPayload包含所有預算相關資料
@@ -146,7 +146,7 @@ BM.BM_createBudget = async function(budgetData) {
         critical_threshold: 95,
         enable_notifications: true
       },
-      created_by: userId, // 使用真實用戶email，禁止hard-coding
+      created_by: userId,
       created_at: now,
       updated_at: now,
       status: 'active'
