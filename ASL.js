@@ -1902,8 +1902,9 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
       };
 
       console.log(`📋 ASL階段三最終傳遞資料 - userId: ${budgetRequestData.userId}`);
+      console.log(`📋 ASL階段三詳細資料:`, JSON.stringify(budgetRequestData, null, 2));
 
-      const result = await BM.BM_createBudget(budgetRequestData);
+      const result = await BM.BM_createBudget(budgetRequestData, userId);
 
       if (result.success) {
         console.log('✅ ASL階段三成功：預算創建完成');

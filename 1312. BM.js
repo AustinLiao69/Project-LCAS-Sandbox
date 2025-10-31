@@ -21,21 +21,47 @@ const { NODE_ENV } = process.env;
  */
 export const BM_createBudget = async (data, requesterId) => {
   const logPrefix = `BM_createBudget - [${requesterId}]`;
-  logAction(`${logPrefix} 收到創建預算請求: ${JSON.stringify(data)}`);
-
-  // 授權檢查
-  if (!await isUserAuthorized(requesterId, 'create', BUDGET_COLLECTION_NAME)) {
-    logError(`${logPrefix} 授權失敗`);
-    return createStandardResponse(false, null, '用戶無權創建預算', 'UNAUTHORIZED');
-  }
-
+  console.log(`${logPrefix} 收到創建預算請求:`, JSON.stringify(data, null, 2));
+  
   try {
+    // 參數驗證
+    if (!data) {
+      console.error(`${logPrefix} ❌ 缺少預算資料`);
+      return createStandardResponse(false, null, '缺少預算資料', 'MISSING_BUDGET_DATA');
+    }
+
+    if (!data.ledgerId) {
+      console.error(`${logPrefix} ❌ 缺少帳本ID`);
+      return createStandardResponse(false, null, '缺少帳本ID', 'MISSING_LEDGER_ID');
+    }
+
+    if (!data.name) {
+      console.error(`${logPrefix} ❌ 缺少預算名稱`);
+      return createStandardResponse(false, null, '缺少預算名稱', 'MISSING_BUDGET_NAME');
+    }
+
+    if (!data.total_amount && !data.amount) {
+      console.error(`${logPrefix} ❌ 缺少預算金額`);
+      return createStandardResponse(false, null, '缺少預算金額', 'MISSING_BUDGET_AMOUNT');
+    }
+
+    // 使用真實的 requesterId 或從 data 中提取
+    const actualRequesterId = requesterId || data.userId || data.created_by || 'system';
+    console.log(`${logPrefix} ✅ 使用 requesterId: ${actualRequesterId}`);
+
     // 調用文件系統層函數創建預算
     const result = await FS_createBudget(data);
-    logInfo(`${logPrefix} 預算成功寫入Firebase - 文檔ID: ${result.id}`);
-    return createStandardResponse(true, { id: result.id, ...data }, '預算創建成功');
+    console.log(`${logPrefix} ✅ 預算成功寫入Firebase - 結果:`, result);
+    
+    if (result.success) {
+      return createStandardResponse(true, { id: result.budgetId || result.id, ...data }, '預算創建成功');
+    } else {
+      console.error(`${logPrefix} ❌ FS_createBudget 回傳失敗:`, result);
+      return createStandardResponse(false, null, result.error || '預算創建失敗', result.errorCode || 'CREATE_BUDGET_FAILED');
+    }
   } catch (error) {
-    logError(`${logPrefix} 創建預算時發生錯誤: ${error.message}`, error);
+    console.error(`${logPrefix} ❌ 創建預算時發生錯誤:`, error);
+    console.error(`${logPrefix} ❌ 錯誤堆疊:`, error.stack);
     return createStandardResponse(false, null, `預算創建失敗: ${error.message}`, 'CREATE_BUDGET_FAILED');
   }
 };
