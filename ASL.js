@@ -1853,39 +1853,86 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
         return res.apiError('缺少必要參數: name, amount, ledgerId', 'MISSING_REQUIRED_PARAMS', 400);
       }
 
-      // 階段三核心修正：智能提取真實userId
+      // 階段一修復：強化智能提取真實userId
       let userId = null;
 
-      // 優先級1：從請求body中提取userId
-      if (req.body.userId && req.body.userId !== 'system_user') {
-        userId = req.body.userId;
-        console.log(`🎯 ASL階段三：從userId提取 = ${userId}`);
+      // 優先級1：從請求body中提取userId（強化驗證）
+      if (req.body.userId && 
+          req.body.userId !== 'system_user' && 
+          req.body.userId !== 'undefined' && 
+          typeof req.body.userId === 'string' &&
+          req.body.userId.trim() !== '') {
+        userId = req.body.userId.trim();
+        console.log(`🎯 ASL階段一修復：從userId提取 = ${userId}`);
       }
 
-      // 優先級2：從ledgerId中提取（如果是user_email格式）
-      if (!userId && req.body.ledgerId && req.body.ledgerId.startsWith('user_')) {
-        userId = req.body.ledgerId.replace('user_', '');
-        console.log(`🎯 ASL階段三：從ledgerId提取 = ${userId}`);
-      }
-
-      // 優先級3：其他可能的用戶ID欄位
-      if (!userId) {
-        userId = req.body.user_id || req.body.operatorId || req.body.created_by;
-        if (userId) {
-          console.log(`🎯 ASL階段三：從其他欄位提取 = ${userId}`);
+      // 優先級2：從ledgerId中提取（增強格式支援）
+      if (!userId && req.body.ledgerId && typeof req.body.ledgerId === 'string') {
+        const ledgerId = req.body.ledgerId.trim();
+        if (ledgerId.startsWith('user_')) {
+          userId = ledgerId.replace('user_', '').trim();
+          console.log(`🎯 ASL階段一修復：從ledgerId提取 = ${userId}`);
         }
       }
 
-      // 階段三追蹤鏈完整性檢查（遵守0098規範，移除hard coding）
-      if (!userId || typeof userId !== 'string' || userId.trim() === '') {
-        console.error(`❌ ASL階段三追蹤鏈中斷：userId無效 = ${userId}`);
-        return res.apiError('階段三：用戶身份確認失敗，無法建立預算', 'STAGE3_USER_IDENTITY_ERROR', 400);
+      // 優先級3：多重欄位fallback機制
+      if (!userId) {
+        const fallbackFields = ['user_id', 'operatorId', 'created_by', 'createdBy', 'ownerId'];
+        for (const field of fallbackFields) {
+          if (req.body[field] && 
+              typeof req.body[field] === 'string' && 
+              req.body[field] !== 'undefined' &&
+              req.body[field].trim() !== '') {
+            userId = req.body[field].trim();
+            console.log(`🎯 ASL階段一修復：從${field}欄位提取 = ${userId}`);
+            break;
+          }
+        }
+      }
+
+      // 優先級4：從header或query參數提取
+      if (!userId) {
+        const headerUserId = req.headers['x-user-id'] || req.query.userId;
+        if (headerUserId && 
+            typeof headerUserId === 'string' && 
+            headerUserId !== 'undefined' &&
+            headerUserId.trim() !== '') {
+          userId = headerUserId.trim();
+          console.log(`🎯 ASL階段一修復：從header/query提取 = ${userId}`);
+        }
+      }
+
+      // 優先級5：智慧推測機制（從email或其他識別資料）
+      if (!userId && req.body.ledgerId) {
+        const ledgerId = req.body.ledgerId;
+        // 如果ledgerId包含email格式，提取為userId
+        if (ledgerId.includes('@') && ledgerId.includes('.')) {
+          userId = ledgerId;
+          console.log(`🎯 ASL階段一修復：智慧推測email格式userId = ${userId}`);
+        }
+      }
+
+      // 階段一修復：追蹤鏈完整性檢查（強化驗證）
+      if (!userId || 
+          typeof userId !== 'string' || 
+          userId.trim() === '' || 
+          userId === 'undefined' ||
+          userId === 'null') {
+        console.error(`❌ ASL階段一修復失敗：userId仍為無效 = ${userId}`);
+        console.error(`📋 ASL階段一診斷資料：`, {
+          bodyUserId: req.body.userId,
+          bodyLedgerId: req.body.ledgerId,
+          bodyKeys: Object.keys(req.body || {}),
+          headerUserId: req.headers['x-user-id'],
+          queryUserId: req.query.userId
+        });
+        return res.apiError('階段一修復：用戶身份提取仍失敗，無法建立預算', 'STAGE1_USER_IDENTITY_EXTRACTION_FAILED', 400);
       }
 
       const ledgerId = req.body.ledgerId;
-      console.log(`🎯 ASL階段三確認 - 帳本ID: ${ledgerId}, 用戶ID: ${userId}`);
+      console.log(`🎯 ASL階段一修復確認 - 帳本ID: ${ledgerId}, 用戶ID: ${userId}`);
 
-      // 階段一修正：構建BM_createBudget調用參數，使用標準化欄位命名
+      // 階段一修復：構建BM_createBudget調用參數，使用標準化欄位命名
       const budgetRequestData = {
         ledgerId: ledgerId,
         userId: userId,
@@ -1901,23 +1948,23 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
         alert_rules: req.body.alert_rules || req.body.alertRules
       };
 
-      console.log(`📋 ASL階段三最終傳遞資料 - userId: ${budgetRequestData.userId}`);
-      console.log(`📋 ASL階段三詳細資料:`, JSON.stringify(budgetRequestData, null, 2));
+      console.log(`📋 ASL階段一修復最終傳遞資料 - userId: ${budgetRequestData.userId}`);
+      console.log(`📋 ASL階段一修復詳細資料:`, JSON.stringify(budgetRequestData, null, 2));
 
       const result = await BM.BM_createBudget(budgetRequestData, userId);
 
       if (result.success) {
-        console.log('✅ ASL階段三成功：預算創建完成');
+        console.log('✅ ASL階段一修復成功：預算創建完成');
         console.log('📍 Firebase路徑:', result.path || 'unknown');
-        console.log(`👤 ASL階段三驗證：created_by = ${result.data?.created_by || 'unknown'}`);
+        console.log(`👤 ASL階段一修復驗證：created_by = ${result.data?.created_by || 'unknown'}`);
         res.apiSuccess(result.data, result.message);
       } else {
-        console.error('❌ ASL階段三失敗：預算創建錯誤:', result.message);
+        console.error('❌ ASL階段一修復失敗：預算創建錯誤:', result.message);
         res.apiError(result.message, result.error?.code || 'CREATE_BUDGET_ERROR', 400, result.error?.details);
       }
 
     } catch (error) {
-      console.error('❌ ASL階段三轉發錯誤 (budgets create):', error);
+      console.error('❌ ASL階段一修復轉發錯誤 (budgets create):', error);
       res.apiError('預算創建轉發失敗', 'CREATE_BUDGET_FORWARD_ERROR', 500);
     }
   });
