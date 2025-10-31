@@ -203,17 +203,17 @@ BM.BM_createBudget = async function(budgetData) {
       console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
       console.log(`${logPrefix} 📋 確認路徑格式: ledgers/${ledgerId}/budgets/${budgetId}`);
 
-      // 強制使用子集合路徑，絕對禁止頂層budgets集合
-      const firestoreResult = await FS.FS_createDocument(collectionPath, budgetId, budget, userId);
-      if (!firestoreResult.success) {
-        throw new Error(`Firebase子集合寫入失敗: ${firestoreResult.error}`);
-      }
+      // 階段一修正：直接調用Firebase Admin SDK，不透過FS模組
+      const { admin, db } = require('./1399. firebase-config.js');
+      const docRef = db.collection(collectionPath).doc(budgetId);
+      await docRef.set(budget);
+      
       console.log(`${logPrefix} ✅ 預算成功寫入子集合 - 完整路徑: ${collectionPath}/${budgetId}`);
       console.log(`${logPrefix} 🎯 子集合架構驗證: 路徑確實為 ledgers/{ledgerId}/budgets/ 格式`);
 
       // 驗證寫入結果
-      const verifyResult = await FS.FS_getDocument(collectionPath, budgetId, 'SYSTEM');
-      if (verifyResult.success && verifyResult.exists) {
+      const verifyDoc = await docRef.get();
+      if (verifyDoc.exists) {
         console.log(`${logPrefix} ✅ 子集合寫入驗證成功`);
       } else {
         console.warn(`${logPrefix} ⚠️ 子集合寫入驗證失敗`);
@@ -381,11 +381,11 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
     }
 
     console.log(`${logPrefix} 更新預算到資料庫...`);
-    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, updateData, 'system'); // 假設 userId 為 system
-
-    if (!updateResult.success) {
-      throw new Error(`Firebase更新失敗: ${updateResult.error}`);
-    }
+    
+    // 階段一修正：直接調用Firebase Admin SDK
+    const { admin, db } = require('./1399. firebase-config.js');
+    const docRef = db.collection(`ledgers/${ledgerId}/budgets`).doc(budgetId);
+    await docRef.update(updateData);
 
     // 模擬更新操作
     const updatedBudget = {
@@ -435,11 +435,11 @@ BM.BM_deleteBudget = async function(budgetId, options = {}) {
     }
 
     console.log(`${logPrefix} 執行預算刪除...`);
-    const deleteResult = await FS.FS_deleteBudgetFromLedger(ledgerId, budgetId, 'system'); // 假設 userId 為 system
-
-    if (!deleteResult.success) {
-      throw new Error(`Firebase刪除失敗: ${deleteResult.error}`);
-    }
+    
+    // 階段一修正：直接調用Firebase Admin SDK
+    const { admin, db } = require('./1399. firebase-config.js');
+    const docRef = db.collection(`ledgers/${ledgerId}/budgets`).doc(budgetId);
+    await docRef.delete();
 
     // 模擬刪除操作
     console.log(`${logPrefix} 預算刪除成功 - ID: ${budgetId}`);
@@ -1537,6 +1537,25 @@ BM.BM_getBudgetData = async function(budgetId) {
 };
 
 /**
+ * 新增：生成確認令牌
+ * @version 2025-10-31-V2.3.0
+ * @description 為預算刪除生成確認令牌
+ */
+BM.BM_generateConfirmationToken = function(budgetId) {
+  return `confirm_delete_${budgetId}`;
+};
+
+/**
+ * 新增：驗證確認令牌
+ * @version 2025-10-31-V2.3.0
+ * @description 驗證預算刪除的確認令牌
+ */
+BM.BM_validateConfirmationToken = function(budgetId, token) {
+  const expectedToken = `confirm_delete_${budgetId}`;
+  return token === expectedToken;
+};
+
+/**
  * 輔助函數: 驗證預算分配
  */
 BM.BM_validateAllocation = async function(budgetId, allocationData) {
@@ -1588,10 +1607,14 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
     }
 
     try {
-      const firestoreResult = await FS.FS_getDocument(collectionPath, budgetId, 'system');
-      if (firestoreResult.success && firestoreResult.exists && firestoreResult.data) {
+      // 階段一修正：直接調用Firebase Admin SDK
+      const { admin, db } = require('./1399. firebase-config.js');
+      const docRef = db.collection(collectionPath).doc(budgetId);
+      const doc = await docRef.get();
+      
+      if (doc.exists) {
         console.log(`${logPrefix} ✅ 從子集合成功查詢預算詳情`);
-        return createStandardResponse(true, firestoreResult.data, '預算詳情取得成功（子集合）');
+        return createStandardResponse(true, doc.data(), '預算詳情取得成功（子集合）');
       } else {
         console.log(`${logPrefix} ⚠️ 預算在子集合中不存在: ${collectionPath}/${budgetId}`);
         return createStandardResponse(false, null, '預算不存在或已被刪除', 'BUDGET_NOT_FOUND_IN_SUBCOLLECTION');
@@ -1607,7 +1630,7 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
   }
 };
 
-// 模組導出 - 已確保所有函數都使用子集合架構
+// 模組導出 - 已確保所有函數都使用子集合架構，階段一修正：移除FS依賴
 module.exports = {
   BM_createBudget: BM.BM_createBudget,
   BM_getBudgets: BM.BM_getBudgets,
@@ -1628,7 +1651,10 @@ module.exports = {
   BM_createBudgetCategory: BM.BM_createBudgetCategory,
   BM_allocateBudgetToCategories: BM.BM_allocateBudgetToCategories,
   BM_handleBudgetError: BM.BM_handleBudgetError,
-  BM_validateBudgetData: BM.BM_validateBudgetData
+  BM_validateBudgetData: BM.BM_validateBudgetData,
+  // 階段一新增：confirmationToken相關函數
+  BM_generateConfirmationToken: BM.BM_generateConfirmationToken,
+  BM_validateConfirmationToken: BM.BM_validateConfirmationToken
 };
 
 console.log('✅ BM 預算管理模組載入完成');
