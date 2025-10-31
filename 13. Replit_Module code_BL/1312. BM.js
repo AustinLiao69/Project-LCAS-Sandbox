@@ -243,7 +243,10 @@ BM.BM_createBudget = async function(budgetData) {
       name: budget.name,
       amount: budget.amount,
       type: budget.type,
-      ledger_id: ledgerId
+      ledger_id: ledgerId,
+      firebase_path: `${collectionPath}/${budgetId}`,
+      collection_path: collectionPath,
+      architecture: 'subcollection'
     }, '預算建立成功');
 
   } catch (error) {
