@@ -1853,11 +1853,11 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
         return res.apiError('缺少必要參數: name, amount, ledgerId', 'MISSING_REQUIRED_PARAMS', 400);
       }
 
-      // 階段三核心修正：智能提取真實userId（修正版）
+      // 階段三核心修正：智能提取真實userId
       let userId = null;
 
       // 優先級1：從請求body中提取userId
-      if (req.body.userId && req.body.userId !== 'system_user' && req.body.userId !== 'undefined') {
+      if (req.body.userId && req.body.userId !== 'system_user') {
         userId = req.body.userId;
         console.log(`🎯 ASL階段三：從userId提取 = ${userId}`);
       }
@@ -1870,20 +1870,14 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
 
       // 優先級3：其他可能的用戶ID欄位
       if (!userId) {
-        userId = req.body.user_id || req.body.operatorId || req.body.created_by || req.body.createdBy;
-        if (userId && userId !== 'undefined') {
+        userId = req.body.user_id || req.body.operatorId || req.body.created_by;
+        if (userId) {
           console.log(`🎯 ASL階段三：從其他欄位提取 = ${userId}`);
         }
       }
 
-      // 優先級4：從7598測試資料預設用戶提取
-      if (!userId) {
-        userId = 'user_expert_1697363200000'; // 7598中expert用戶的userId
-        console.log(`🎯 ASL階段三：使用7598預設expert用戶 = ${userId}`);
-      }
-
       // 階段三追蹤鏈完整性檢查（遵守0098規範，移除hard coding）
-      if (!userId || typeof userId !== 'string' || userId.trim() === '' || userId === 'undefined') {
+      if (!userId || typeof userId !== 'string' || userId.trim() === '') {
         console.error(`❌ ASL階段三追蹤鏈中斷：userId無效 = ${userId}`);
         return res.apiError('階段三：用戶身份確認失敗，無法建立預算', 'STAGE3_USER_IDENTITY_ERROR', 400);
       }
