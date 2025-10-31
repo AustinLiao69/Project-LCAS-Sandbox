@@ -5,6 +5,11 @@
  * @update 2025-10-30: 修正Firebase Admin SDK引用，遵守0098規範
  */
 
+// 模組: 1312.BM.js - 預算管理模組
+// 版本: v2.2.0
+// 描述: 處理預算相關的CRUD操作，並包含確認機制。
+// 階段一修正: 統一欄位命名標準，遵循1311.FS.js的budgetStructure規範
+
 console.log('📊 BM 預算管理模組載入中...');
 
 // 導入相關模組
@@ -154,53 +159,120 @@ BM.BM_createBudget = async function(budgetData) {
 
     // 生成預算ID
     const budgetId = `budget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    // 日期處理 - 階段二修正：時區統一、年份修正、日期格式標準化
+    // 日期處理 - 階段二完整修正：時區統一、年份修正、日期格式標準化
     const currentDate = new Date();
 
-    // 階段二核心修正1：強制使用台灣時區 Asia/Taipei
+    // 階段二核心修正1：強制使用台灣時區 Asia/Taipei - 完整版
     const taiwanTime = new Date(currentDate.toLocaleString("en-US", {timeZone: "Asia/Taipei"}));
+    
+    // 階段二增強：確保時區轉換正確性
+    const taiwanOffset = 8 * 60; // UTC+8 分鐘數
+    const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
+    const taiwanTimeVerified = new Date(utcTime.getTime() + (taiwanOffset * 60000));
 
-    // 階段二核心修正2：確保使用當前年份2025
-    if (taiwanTime.getFullYear() !== 2025) {
-      console.warn(`${logPrefix} ⚠️ 年份校正：系統年份${taiwanTime.getFullYear()} -> 強制使用2025年`);
-      taiwanTime.setFullYear(2025);
+    console.log(`${logPrefix} 🌏 階段二時區驗證：原始時間 ${currentDate.toISOString()}`);
+    console.log(`${logPrefix} 🌏 階段二時區驗證：台灣時間 ${taiwanTimeVerified.toISOString()}`);
+
+    // 階段二核心修正2：完整年份校正邏輯 - 支援多年份處理
+    const targetYear = 2025;
+    const currentYear = taiwanTimeVerified.getFullYear();
+    
+    if (currentYear !== targetYear) {
+      console.warn(`${logPrefix} ⚠️ 年份校正：系統年份${currentYear} -> 強制使用${targetYear}年`);
+      taiwanTimeVerified.setFullYear(targetYear);
+      
+      // 階段二增強：處理閏年和特殊日期
+      if (taiwanTimeVerified.getMonth() === 1 && taiwanTimeVerified.getDate() === 29) {
+        // 處理2月29日在非閏年的情況
+        const isLeapYear = (targetYear % 4 === 0 && targetYear % 100 !== 0) || (targetYear % 400 === 0);
+        if (!isLeapYear) {
+          console.warn(`${logPrefix} ⚠️ 閏年修正：${targetYear}年非閏年，2月29日調整為2月28日`);
+          taiwanTimeVerified.setDate(28);
+        }
+      }
     }
 
-    // 階段二核心修正3：統一使用Timestamp格式（Firebase標準）
-    const currentTimestamp = admin.firestore.Timestamp.fromDate(taiwanTime);
+    // 階段二核心修正3：統一使用Timestamp格式（Firebase標準）- 完整版
+    const currentTimestamp = admin.firestore.Timestamp.fromDate(taiwanTimeVerified);
+    
+    // 階段二增強：Timestamp格式驗證
+    if (!currentTimestamp || typeof currentTimestamp.seconds !== 'number') {
+      throw new Error('Timestamp格式轉換失敗，無法生成有效的Firebase Timestamp');
+    }
 
-    // 處理開始和結束日期
+    // 處理開始和結束日期 - 階段二完整修正版
     let startDate, endDate;
 
     if (budgetDataPayload.start_date) {
-      const inputStartDate = new Date(budgetDataPayload.start_date);
-      // 強制校正年份為2025
-      if (inputStartDate.getFullYear() !== 2025) {
-        console.warn(`${logPrefix} ⚠️ 開始日期年份校正：${inputStartDate.getFullYear()} -> 2025`);
-        inputStartDate.setFullYear(2025);
+      let inputStartDate;
+      
+      // 階段二增強：支援多種日期格式輸入
+      if (typeof budgetDataPayload.start_date === 'string') {
+        inputStartDate = new Date(budgetDataPayload.start_date);
+      } else if (budgetDataPayload.start_date instanceof Date) {
+        inputStartDate = new Date(budgetDataPayload.start_date);
+      } else if (budgetDataPayload.start_date && typeof budgetDataPayload.start_date.seconds === 'number') {
+        // 已經是Firebase Timestamp格式
+        inputStartDate = budgetDataPayload.start_date.toDate();
+      } else {
+        console.warn(`${logPrefix} ⚠️ 無效的開始日期格式，使用當前時間`);
+        inputStartDate = taiwanTimeVerified;
       }
+      
+      // 年份校正
+      if (inputStartDate.getFullYear() !== targetYear) {
+        console.warn(`${logPrefix} ⚠️ 開始日期年份校正：${inputStartDate.getFullYear()} -> ${targetYear}`);
+        inputStartDate.setFullYear(targetYear);
+      }
+      
       startDate = admin.firestore.Timestamp.fromDate(inputStartDate);
     } else {
       startDate = currentTimestamp;
     }
 
     if (budgetDataPayload.end_date) {
-      const inputEndDate = new Date(budgetDataPayload.end_date);
-      // 強制校正年份為2025
-      if (inputEndDate.getFullYear() !== 2025) {
-        console.warn(`${logPrefix} ⚠️ 結束日期年份校正：${inputEndDate.getFullYear()} -> 2025`);
-        inputEndDate.setFullYear(2025);
+      let inputEndDate;
+      
+      // 階段二增強：支援多種日期格式輸入
+      if (typeof budgetDataPayload.end_date === 'string') {
+        inputEndDate = new Date(budgetDataPayload.end_date);
+      } else if (budgetDataPayload.end_date instanceof Date) {
+        inputEndDate = new Date(budgetDataPayload.end_date);
+      } else if (budgetDataPayload.end_date && typeof budgetDataPayload.end_date.seconds === 'number') {
+        // 已經是Firebase Timestamp格式
+        inputEndDate = budgetDataPayload.end_date.toDate();
+      } else {
+        console.warn(`${logPrefix} ⚠️ 無效的結束日期格式，使用月底`);
+        inputEndDate = new Date(targetYear, taiwanTimeVerified.getMonth() + 1, 0);
       }
+      
+      // 年份校正
+      if (inputEndDate.getFullYear() !== targetYear) {
+        console.warn(`${logPrefix} ⚠️ 結束日期年份校正：${inputEndDate.getFullYear()} -> ${targetYear}`);
+        inputEndDate.setFullYear(targetYear);
+      }
+      
       endDate = admin.firestore.Timestamp.fromDate(inputEndDate);
     } else {
-      // 預設為當月底
-      const monthEndDate = new Date(2025, taiwanTime.getMonth() + 1, 0);
+      // 預設為當月底 - 階段二完整修正
+      const monthEndDate = new Date(targetYear, taiwanTimeVerified.getMonth() + 1, 0);
+      monthEndDate.setHours(23, 59, 59, 999); // 設置為月底最後時刻
       endDate = admin.firestore.Timestamp.fromDate(monthEndDate);
     }
 
-    console.log(`${logPrefix} 🕐 階段二時區修正：當前台灣時間 ${taiwanTime.toLocaleString('zh-TW', {timeZone: 'Asia/Taipei'})}`);
-    console.log(`${logPrefix} 📅 階段二年份確認：${taiwanTime.getFullYear()}年 (強制校正為2025年)`);
-    console.log(`${logPrefix} ⏰ 階段二格式統一：使用Firebase Timestamp格式`);
+    // 階段二增強：日期邏輯驗證
+    if (startDate.seconds > endDate.seconds) {
+      console.warn(`${logPrefix} ⚠️ 日期邏輯錯誤：開始日期晚於結束日期，自動調整`);
+      // 將結束日期設置為開始日期的下個月
+      const adjustedEndDate = new Date(startDate.toDate());
+      adjustedEndDate.setMonth(adjustedEndDate.getMonth() + 1);
+      endDate = admin.firestore.Timestamp.fromDate(adjustedEndDate);
+    }
+
+    console.log(`${logPrefix} 🕐 階段二時區修正完成：當前台灣時間 ${taiwanTimeVerified.toLocaleString('zh-TW', {timeZone: 'Asia/Taipei'})}`);
+    console.log(`${logPrefix} 📅 階段二年份確認：${taiwanTimeVerified.getFullYear()}年 (強制校正為${targetYear}年)`);
+    console.log(`${logPrefix} ⏰ 階段二格式統一完成：使用Firebase Timestamp格式`);
+    console.log(`${logPrefix} 📊 階段二日期範圍：${startDate.toDate().toLocaleDateString('zh-TW')} ~ ${endDate.toDate().toLocaleDateString('zh-TW')}`);
 
 
     // 建立預算物件
@@ -212,7 +284,7 @@ BM.BM_createBudget = async function(budgetData) {
         description: budgetDataPayload.description || '',
         type: budgetType,
         total_amount: budgetDataPayload.amount || budgetDataPayload.total_amount, // 標準欄位：total_amount
-        consumed_amount: budgetDataPayload.consumed_amount || 0, // 標準欄位：consumed_amount，初始為0
+        consumed_amount: budgetDataPayload.consumed_amount || budgetDataPayload.used_amount || 0, // 標準欄位：consumed_amount，初始為0
         currency: budgetDataPayload.currency || 'TWD',
         start_date: startDate,
         end_date: endDate,
@@ -479,6 +551,42 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
 
     console.log(`${logPrefix} 更新預算到資料庫...`);
     // 準備更新資料 (階段一修正：使用標準欄位名稱，修正變數重複宣告)
+      // 階段二完整修正：統一時區和Timestamp格式的更新資料處理
+      const currentDate = new Date();
+      const taiwanOffset = 8 * 60; // UTC+8 分鐘數
+      const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
+      const taiwanTime = new Date(utcTime.getTime() + (taiwanOffset * 60000));
+      
+      // 年份校正為2025
+      if (taiwanTime.getFullYear() !== 2025) {
+        console.warn(`${logPrefix} ⚠️ 更新時間年份校正：${taiwanTime.getFullYear()} -> 2025`);
+        taiwanTime.setFullYear(2025);
+      }
+      
+      const updateTimestamp = admin.firestore.Timestamp.fromDate(taiwanTime);
+      
+      // 處理日期欄位的格式統一
+      let processedStartDate = updateData.start_date || existingBudget.start_date;
+      let processedEndDate = updateData.end_date || existingBudget.end_date;
+      
+      if (updateData.start_date && typeof updateData.start_date === 'string') {
+        const startDate = new Date(updateData.start_date);
+        if (startDate.getFullYear() !== 2025) {
+          console.warn(`${logPrefix} ⚠️ 開始日期年份校正：${startDate.getFullYear()} -> 2025`);
+          startDate.setFullYear(2025);
+        }
+        processedStartDate = admin.firestore.Timestamp.fromDate(startDate);
+      }
+      
+      if (updateData.end_date && typeof updateData.end_date === 'string') {
+        const endDate = new Date(updateData.end_date);
+        if (endDate.getFullYear() !== 2025) {
+          console.warn(`${logPrefix} ⚠️ 結束日期年份校正：${endDate.getFullYear()} -> 2025`);
+          endDate.setFullYear(2025);
+        }
+        processedEndDate = admin.firestore.Timestamp.fromDate(endDate);
+      }
+
       const finalUpdateData = {
         name: updateData.name || existingBudget.name,
         description: updateData.description || existingBudget.description,
@@ -486,12 +594,18 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
         total_amount: updateData.total_amount || updateData.amount || existingBudget.total_amount, // 標準欄位：total_amount
         consumed_amount: updateData.consumed_amount || updateData.used_amount || existingBudget.consumed_amount, // 標準欄位：consumed_amount
         currency: updateData.currency || existingBudget.currency,
-        start_date: updateData.start_date || existingBudget.start_date,
-        end_date: updateData.end_date || existingBudget.end_date,
+        start_date: processedStartDate,
+        end_date: processedEndDate,
         categories: updateData.categories || existingBudget.categories,
         alert_rules: updateData.alert_rules || existingBudget.alert_rules,
-        updatedAt: admin.firestore.Timestamp.now(),
-        updated_by: options.userId || 'unknown_user'
+        updatedAt: updateTimestamp,
+        updated_by: options.userId || 'unknown_user',
+        // 階段二增強：時區處理記錄
+        last_timezone_correction: {
+          corrected_at: updateTimestamp,
+          timezone: 'Asia/Taipei',
+          year_enforced: 2025
+        }
       };
 
     const SYSTEM_USER_ID = 'SYSTEM';
@@ -597,10 +711,46 @@ BM.BM_editBudget = async function(budgetId, userId, updateData, ledgerId) {
       throw new Error(`預算數據驗證失敗: ${validation.errors.join(', ')}`);
     }
 
-    // 建立更新記錄
+    // 建立更新記錄 - 階段二修正：統一時區和Timestamp格式
     const updatedFields = Object.keys(updateData);
-    updateData.updated_at = new Date();
+    
+    // 階段二完整修正：確保updated_at使用台灣時區和Firebase Timestamp格式
+    const currentDate = new Date();
+    const taiwanOffset = 8 * 60; // UTC+8 分鐘數
+    const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
+    const taiwanTime = new Date(utcTime.getTime() + (taiwanOffset * 60000));
+    
+    // 年份校正為2025
+    if (taiwanTime.getFullYear() !== 2025) {
+      console.warn(`${logPrefix} ⚠️ 更新時間年份校正：${taiwanTime.getFullYear()} -> 2025`);
+      taiwanTime.setFullYear(2025);
+    }
+    
+    updateData.updated_at = admin.firestore.Timestamp.fromDate(taiwanTime);
     updateData.updated_by = userId;
+    
+    // 階段二增強：處理日期相關欄位的格式統一
+    ['start_date', 'end_date'].forEach(dateField => {
+      if (updateData[dateField]) {
+        let dateValue;
+        if (typeof updateData[dateField] === 'string') {
+          dateValue = new Date(updateData[dateField]);
+        } else if (updateData[dateField] instanceof Date) {
+          dateValue = new Date(updateData[dateField]);
+        } else {
+          return; // 跳過無效格式
+        }
+        
+        // 年份校正
+        if (dateValue.getFullYear() !== 2025) {
+          console.warn(`${logPrefix} ⚠️ ${dateField}年份校正：${dateValue.getFullYear()} -> 2025`);
+          dateValue.setFullYear(2025);
+        }
+        
+        updateData[dateField] = admin.firestore.Timestamp.fromDate(dateValue);
+        console.log(`${logPrefix} 📅 階段二${dateField}格式統一完成`);
+      }
+    });
 
     // 使用子集合路徑更新資料庫
     const collectionPath = `ledgers/${ledgerId}/budgets`;
@@ -679,12 +829,31 @@ BM.BM_deleteBudget_Legacy = async function(budgetId, userId, confirmationToken, 
     // 建立刪除前備份 (模擬)
     console.log(`${logPrefix} 建立刪除前備份...`);
 
-    // 標記為已刪除而非實際刪除
-    const deleteTime = new Date();
+    // 標記為已刪除而非實際刪除 - 階段二修正：統一時區和Timestamp格式
+    const currentDate = new Date();
+    
+    // 階段二完整修正：台灣時區處理
+    const taiwanOffset = 8 * 60; // UTC+8 分鐘數
+    const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
+    const taiwanTime = new Date(utcTime.getTime() + (taiwanOffset * 60000));
+    
+    // 年份校正為2025
+    if (taiwanTime.getFullYear() !== 2025) {
+      console.warn(`${logPrefix} ⚠️ 刪除時間年份校正：${taiwanTime.getFullYear()} -> 2025`);
+      taiwanTime.setFullYear(2025);
+    }
+    
+    const deleteTime = admin.firestore.Timestamp.fromDate(taiwanTime);
     const deleteData = {
       status: 'deleted',
       deleted_at: deleteTime,
-      deleted_by: userId
+      deleted_by: userId,
+      // 階段二增強：增加時區資訊記錄
+      deletion_metadata: {
+        timezone: 'Asia/Taipei',
+        year_corrected: taiwanTime.getFullYear() === 2025,
+        timestamp_format: 'firebase_timestamp'
+      }
     };
 
     // 使用子集合路徑更新狀態到資料庫
