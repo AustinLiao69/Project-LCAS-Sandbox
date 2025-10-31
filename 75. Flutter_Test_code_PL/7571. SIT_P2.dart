@@ -355,6 +355,10 @@ class SITP2TestController {
     print('[7571] 🎉 整合驗證純粹調用完成');
   }
 
+  // 儲存動態生成的預算ID用於測試案例間共享
+  static String? _sharedBudgetId;
+  static String? _sharedLedgerId;
+
   /// 階段一修正：執行單一預算純粹調用（使用真實用戶帳本）
   Future<P2TestResult> _executeBudgetPureCall(String testId) async {
     try {
@@ -372,7 +376,6 @@ class SITP2TestController {
 
       Map<String, dynamic> inputData = {};
       dynamic plResult;
-      String? realBudgetId; // 用於儲存動態生成的預算ID
 
       // 階段一修正：純粹調用PL層7304，使用真實用戶帳本而非collaboration hardcoding
       switch (testId) {
@@ -407,11 +410,14 @@ class SITP2TestController {
               UserMode.Expert,
             );
 
-            // 提取真實創建的預算ID
+            // 提取真實創建的預算ID並保存供後續測試使用
             if (plResult is Map && plResult['success'] == true) {
-              realBudgetId = plResult['data']?['budgetId'] ?? plResult['data']?['id'];
+              _sharedBudgetId = plResult['data']?['budgetId'] ?? plResult['data']?['id'];
+              _sharedLedgerId = realLedgerId; // 同時保存帳本ID
               print('[7571] ✅ TC-001: 預算創建成功');
-              print('   真實預算ID: $realBudgetId');
+              print('   真實預算ID: $_sharedBudgetId');
+              print('   帳本ID: $_sharedLedgerId');
+              print('[7571] 🔄 已保存預算ID供後續測試案例使用');
             } else {
               print('❌ TC-001: 預算創建失敗');
             }
@@ -440,63 +446,58 @@ class SITP2TestController {
           break;
 
         case 'TC-003': // 更新預算
-          final updateBudgetData = successData['updateBudget'];
-          final updateBudgetBody = updateBudgetData['updatedData'];
-          // 使用從步驟1創建的真實預算ID
-          final updateBudgetId = realBudgetId ?? updateBudgetData['budgetId'];
-          if (updateBudgetId != null) {
-            // 階段一修正：使用真實用戶資料
-            // 階段二修正：禁止7571從7582直接取得註冊email，改為直接使用expert.valid@test.lcas.app
-            final expertUserEmail = 'expert.valid@test.lcas.app';
-            final realLedgerId = await P2TestDataManager.instance._getRealUserLedgerId(expertUserEmail);
+          // 階段一修正：使用TC-001創建的真實預算ID
+          if (_sharedBudgetId != null && _sharedLedgerId != null) {
+            final updateData = successData['create_monthly_budget']['updateData'];
             inputData = {
-              'id': updateBudgetId,
-              'name': '${updateBudgetBody['name']}_updated',
-              'amount': (updateBudgetBody['amount'] ?? 0) * 1.1,
-              'ledgerId': realLedgerId,
+              'id': _sharedBudgetId,
+              'name': updateData['name'],
+              'amount': updateData['amount'],
+              'description': updateData['description'],
+              'ledgerId': _sharedLedgerId,
               'userId': realUserId,
             };
+            print('[7571] 🔄 TC-003使用共享預算ID: $_sharedBudgetId');
             // 純粹調用PL層7304
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.update,
               inputData,
               UserMode.Expert,
             );
-            print('[7571] 📋 TC-003階段二修正：PL層7304純粹調用完成（真實帳本）');
+            print('[7571] 📋 TC-003階段一修正：PL層7304純粹調用完成（真實ID）');
           } else {
-            print('[7571] ⚠️ TC-003: 更新預算失敗，缺少真實預算ID');
+            print('[7571] ⚠️ TC-003: 更新預算失敗，缺少共享預算ID');
+            plResult = {'success': false, 'error': '缺少共享預算ID'};
           }
           break;
 
         case 'TC-004': // 刪除預算
-          // 階段一修正：使用真實用戶資料，移除硬編碼
-          // 階段二修正：禁止7571從7582直接取得註冊email，改為直接使用expert.valid@test.lcas.app
-          final deleteBudgetData = successData['deleteBudget'];
-          // 使用從步驟3創建的真實預算ID
-          final deleteBudgetId = realBudgetId ?? deleteBudgetData['budgetId'];
-          if (deleteBudgetId != null) {
-            final expertUserEmail = 'expert.valid@test.lcas.app';
-            final realLedgerId = await P2TestDataManager.instance._getRealUserLedgerId(expertUserEmail);
+          // 階段一修正：使用TC-001創建的真實預算ID
+          if (_sharedBudgetId != null && _sharedLedgerId != null) {
+            final confirmationToken = 'confirm_delete_$_sharedBudgetId';
             inputData = {
-              'id': deleteBudgetId,
+              'id': _sharedBudgetId,
               'confirmed': true,
-              'confirmationToken': deleteBudgetData['confirmationToken'] ?? 'confirm_delete_$deleteBudgetId',
+              'confirmationToken': confirmationToken,
               'operatorId': realUserId,
               'userId': realUserId,
-              'ledgerId': realLedgerId,
+              'ledgerId': _sharedLedgerId,
             };
 
-            print('[7571] 🔄 階段二修正：TC-004使用真實用戶帳本 - LedgerId: $realLedgerId');
-            print('[7571] 🎯 階段二目標：移除collaboration硬編碼依賴');
-            // 階段一修正：刪除預算測試（使用真實帳本）
+            print('[7571] 🔄 TC-004使用共享預算ID: $_sharedBudgetId');
+            print('[7571] 🔄 TC-004使用共享帳本ID: $_sharedLedgerId');
+            print('[7571] 🔐 TC-004確認令牌: $confirmationToken');
+            
+            // 階段一修正：刪除預算測試（使用真實ID）
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.delete,
               inputData,
               UserMode.Expert,
             );
-            print('[7571] 📋 TC-004階段二修正：PL層7304刪除調用完成（真實帳本）');
+            print('[7571] 📋 TC-004階段一修正：PL層7304刪除調用完成（真實ID）');
           } else {
-            print('[7571] ⚠️ TC-004: 刪除預算失敗，缺少真實預算ID');
+            print('[7571] ⚠️ TC-004: 刪除預算失敗，缺少共享預算ID');
+            plResult = {'success': false, 'error': '缺少共享預算ID'};
           }
           break;
 
