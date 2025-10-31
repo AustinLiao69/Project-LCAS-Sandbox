@@ -1,9 +1,9 @@
 /**
- * ASL.js_API服務層模組_2.2.0
+ * ASL.js_API服務層模組_2.1.5
  * @module API服務層模組（統一回應格式）
  * @description LCAS 2.0 API Service Layer - 階段一優化：直接調用核心函數，簡化調用鏈
- * @update 2025-10-30: 階段一修正 - 預算欄位標準化，統一total_amount/consumed_amount命名
- * @date 2025-10-30
+ * @update 2025-10-02: 階段一優化 - 移除API包裝層，直接調用BK核心函數，降低超時風險
+ * @date 2025-10-02
  */
 
 console.log('🚀 LCAS ASL (API Service Layer) P1-2重構版啟動中...');
@@ -52,11 +52,11 @@ async function initializeServices() {
     console.log('🔍 驗證Firebase配置...');
     await firebaseConfig.validateFirebaseConfig();
 
-    // 步驟 3：初始化Firebase Admin SDK（同步等待）
+    // 步驟3：初始化Firebase Admin SDK（同步等待）
     console.log('⚡ 初始化Firebase Admin SDK...');
     const app = firebaseConfig.initializeFirebaseAdmin();
 
-    // 步驟 4：確認Firestore實例可用（確保完全初始化）
+    // 步驟4：確認Firestore實例可用（確保完全初始化）
     console.log('📊 確認Firestore實例...');
     const db = firebaseConfig.getFirestoreInstance();
 
@@ -548,22 +548,6 @@ app.use((req, res, next) => {
 
     // 四模式差異化處理
     response.metadata.modeFeatures = applyModeSpecificFields(detectedUserMode);
-    
-    // 階段二修正：確保時間戳記使用台灣時區且年份為2025
-    const currentDate = new Date();
-    const taiwanOffset = 8 * 60; // UTC+8 分鐘數
-    const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
-    const taiwanTime = new Date(utcTime.getTime() + (taiwanOffset * 60000));
-    
-    // 年份校正為2025
-    if (taiwanTime.getFullYear() !== 2025) {
-      taiwanTime.setFullYear(2025);
-    }
-    
-    // 更新時間戳記為台灣時區且格式統一
-    response.metadata.timestamp = taiwanTime.toISOString();
-    response.metadata.timezone = 'Asia/Taipei';
-    response.metadata.year_corrected = taiwanTime.getFullYear() === 2025;
 
     res.status(200).json(response);
   };
@@ -591,22 +575,6 @@ app.use((req, res, next) => {
 
     // 錯誤回應也包含四模式特定欄位
     response.metadata.modeFeatures = applyModeSpecificFields(detectedUserMode);
-    
-    // 階段二修正：確保錯誤回應的時間戳記也使用台灣時區且年份為2025
-    const currentDate = new Date();
-    const taiwanOffset = 8 * 60; // UTC+8 分鐘數
-    const utcTime = new Date(currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000));
-    const taiwanTime = new Date(utcTime.getTime() + (taiwanOffset * 60000));
-    
-    // 年份校正為2025
-    if (taiwanTime.getFullYear() !== 2025) {
-      taiwanTime.setFullYear(2025);
-    }
-    
-    // 更新錯誤回應的時間戳記
-    response.metadata.timestamp = taiwanTime.toISOString();
-    response.metadata.timezone = 'Asia/Taipei';
-    response.metadata.year_corrected = taiwanTime.getFullYear() === 2025;
 
     res.status(statusCode).json(response);
   };
@@ -643,7 +611,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.2.0',
+    version: '2.1.5',
     status: 'running',
     port: PORT,
     architecture: 'ASL -> BL層直接調用（優化版）',
@@ -678,7 +646,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.2.0',
+    version: '2.1.5',
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -1838,136 +1806,43 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
 // 假設 P2 API 端點的基礎路徑為 /api/v1/budgets
 // 請根據實際 API 設計填寫具體路由和調用函數
 
-  // 1. 創建預算 (POST /api/v1/budgets)
-  app.post('/api/v1/budgets', async (req, res) => {
-    try {
-      console.log('➕ ASL階段三轉發: 創建預算 -> BM_createBudget');
-      console.log('📋 ASL階段三接收資料:', JSON.stringify(req.body, null, 2));
-
-      if (!BM || typeof BM.BM_createBudget !== 'function') {
-        return res.apiError('BM_createBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
-      }
-
-      // 檢查必要參數
-      if (!req.body.name || !req.body.amount || !req.body.ledgerId) {
-        return res.apiError('缺少必要參數: name, amount, ledgerId', 'MISSING_REQUIRED_PARAMS', 400);
-      }
-
-      // 階段一修復：強化智能提取真實userId
-      let userId = null;
-
-      // 優先級1：從請求body中提取userId（強化驗證）
-      if (req.body.userId && 
-          req.body.userId !== 'system_user' && 
-          req.body.userId !== 'undefined' && 
-          typeof req.body.userId === 'string' &&
-          req.body.userId.trim() !== '') {
-        userId = req.body.userId.trim();
-        console.log(`🎯 ASL階段一修復：從userId提取 = ${userId}`);
-      }
-
-      // 優先級2：從ledgerId中提取（增強格式支援）
-      if (!userId && req.body.ledgerId && typeof req.body.ledgerId === 'string') {
-        const ledgerId = req.body.ledgerId.trim();
-        if (ledgerId.startsWith('user_')) {
-          userId = ledgerId.replace('user_', '').trim();
-          console.log(`🎯 ASL階段一修復：從ledgerId提取 = ${userId}`);
-        }
-      }
-
-      // 優先級3：多重欄位fallback機制
-      if (!userId) {
-        const fallbackFields = ['user_id', 'operatorId', 'created_by', 'createdBy', 'ownerId'];
-        for (const field of fallbackFields) {
-          if (req.body[field] && 
-              typeof req.body[field] === 'string' && 
-              req.body[field] !== 'undefined' &&
-              req.body[field].trim() !== '') {
-            userId = req.body[field].trim();
-            console.log(`🎯 ASL階段一修復：從${field}欄位提取 = ${userId}`);
-            break;
-          }
-        }
-      }
-
-      // 優先級4：從header或query參數提取
-      if (!userId) {
-        const headerUserId = req.headers['x-user-id'] || req.query.userId;
-        if (headerUserId && 
-            typeof headerUserId === 'string' && 
-            headerUserId !== 'undefined' &&
-            headerUserId.trim() !== '') {
-          userId = headerUserId.trim();
-          console.log(`🎯 ASL階段一修復：從header/query提取 = ${userId}`);
-        }
-      }
-
-      // 優先級5：智慧推測機制（從email或其他識別資料）
-      if (!userId && req.body.ledgerId) {
-        const ledgerId = req.body.ledgerId;
-        // 如果ledgerId包含email格式，提取為userId
-        if (ledgerId.includes('@') && ledgerId.includes('.')) {
-          userId = ledgerId;
-          console.log(`🎯 ASL階段一修復：智慧推測email格式userId = ${userId}`);
-        }
-      }
-
-      // 階段一修復：追蹤鏈完整性檢查（強化驗證）
-      if (!userId || 
-          typeof userId !== 'string' || 
-          userId.trim() === '' || 
-          userId === 'undefined' ||
-          userId === 'null') {
-        console.error(`❌ ASL階段一修復失敗：userId仍為無效 = ${userId}`);
-        console.error(`📋 ASL階段一診斷資料：`, {
-          bodyUserId: req.body.userId,
-          bodyLedgerId: req.body.ledgerId,
-          bodyKeys: Object.keys(req.body || {}),
-          headerUserId: req.headers['x-user-id'],
-          queryUserId: req.query.userId
-        });
-        return res.apiError('階段一修復：用戶身份提取仍失敗，無法建立預算', 'STAGE1_USER_IDENTITY_EXTRACTION_FAILED', 400);
-      }
-
-      const ledgerId = req.body.ledgerId;
-      console.log(`🎯 ASL階段一修復確認 - 帳本ID: ${ledgerId}, 用戶ID: ${userId}`);
-
-      // 階段一修復：構建BM_createBudget調用參數，使用標準化欄位命名
-      const budgetRequestData = {
-        ledgerId: ledgerId,
-        userId: userId,
-        name: req.body.name,
-        total_amount: req.body.amount || req.body.total_amount, // 階段一修正：統一使用total_amount
-        consumed_amount: req.body.used_amount || req.body.consumed_amount || 0, // 階段一修正：統一使用consumed_amount
-        type: req.body.type || 'monthly',
-        description: req.body.description,
-        start_date: req.body.startDate,
-        end_date: req.body.endDate,
-        currency: req.body.currency || 'TWD',
-        categories: req.body.categories || [],
-        alert_rules: req.body.alert_rules || req.body.alertRules
-      };
-
-      console.log(`📋 ASL階段一修復最終傳遞資料 - userId: ${budgetRequestData.userId}`);
-      console.log(`📋 ASL階段一修復詳細資料:`, JSON.stringify(budgetRequestData, null, 2));
-
-      const result = await BM.BM_createBudget(budgetRequestData, userId);
-
-      if (result.success) {
-        console.log('✅ ASL階段一修復成功：預算創建完成');
-        console.log('📍 Firebase路徑:', result.path || 'unknown');
-        console.log(`👤 ASL階段一修復驗證：created_by = ${result.data?.created_by || 'unknown'}`);
-        res.apiSuccess(result.data, result.message);
-      } else {
-        console.error('❌ ASL階段一修復失敗：預算創建錯誤:', result.message);
-        res.apiError(result.message, result.error?.code || 'CREATE_BUDGET_ERROR', 400, result.error?.details);
-      }
-
-    } catch (error) {
-      console.error('❌ ASL階段一修復轉發錯誤 (budgets create):', error);
-      res.apiError('預算創建轉發失敗', 'CREATE_BUDGET_FORWARD_ERROR', 500);
+// 1. 創建預算 - 階段三完整修正版
+app.post('/api/v1/budgets', async (req, res) => {
+  try {
+    console.log('➕ ASL階段三轉發: 創建預算 -> BM_createBudget');
+    console.log('📋 ASL階段三接收資料:', JSON.stringify(req.body, null, 2));
+    
+    if (!BM || typeof BM.BM_createBudget !== 'function') {
+      return res.apiError('BM_createBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
-  });
+
+    // 階段三驗證：ledgerId必須存在
+    if (!req.body.ledgerId) {
+      console.error('❌ ASL階段三錯誤：缺少ledgerId參數');
+      return res.apiError('階段三驗證失敗：創建預算需要ledgerId參數（子集合架構要求）', 'MISSING_LEDGER_ID', 400);
+    }
+
+    // 階段三日誌：確認真實帳本ID
+    console.log(`🎯 ASL階段三確認帳本ID: ${req.body.ledgerId}`);
+    if (req.body.ledgerId.includes('collab_ledger') || req.body.ledgerId.includes('hardcoded')) {
+      console.warn(`⚠️ ASL階段三警告：檢測到可能的hardcoded ledgerId: ${req.body.ledgerId}`);
+    }
+
+    const result = await BM.BM_createBudget(req.body);
+    
+    if (result.success) {
+      console.log('✅ ASL階段三成功：預算創建完成');
+      console.log(`📍 Firebase路徑: ${result.data?.firebase_path || 'unknown'}`);
+      res.apiSuccess(result.data, result.message || '預算創建成功');
+    } else {
+      console.error('❌ ASL階段三失敗：', result.message);
+      res.apiError(result.message || '預算創建失敗', result.error?.code || 'CREATE_BUDGET_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL階段三轉發錯誤 (create budget):', error);
+    res.apiError('預算創建轉發失敗', 'CREATE_BUDGET_FORWARD_ERROR', 500);
+  }
+});
 
 // 2. 查詢預算列表
 app.get('/api/v1/budgets', async (req, res) => {
@@ -2065,7 +1940,7 @@ app.delete('/api/v1/budgets/:id', async (req, res) => {
     if (!deleteOptions.confirmationToken) {
       deleteOptions.confirmationToken = `confirm_delete_${req.params.id}`;
     }
-
+    
     const result = await BM.BM_deleteBudget(req.params.id, deleteOptions);
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算刪除成功');

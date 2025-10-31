@@ -68,28 +68,6 @@ class APLGateway {
   final http.Client _httpClient;
   final Map<String, String> _defaultHeaders;
 
-  /// 階段二修正：台灣時區處理
-  static DateTime _getTaiwanTime() {
-    final now = DateTime.now().toUtc();
-    return now.add(Duration(hours: 8)); // UTC+8
-  }
-
-  /// 階段二修正：年份校正為2025年
-  static DateTime _correctYear(DateTime dateTime) {
-    if (dateTime.year != 2025) {
-      return DateTime(2025, dateTime.month, dateTime.day, 
-                     dateTime.hour, dateTime.minute, dateTime.second, dateTime.millisecond);
-    }
-    return dateTime;
-  }
-
-  /// 階段二修正：統一時間戳格式
-  static String _getStandardTimestamp() {
-    final taiwanTime = _getTaiwanTime();
-    final correctedTime = _correctYear(taiwanTime);
-    return correctedTime.toIso8601String();
-  }
-
   APLGateway() : 
     _httpClient = http.Client(),
     _defaultHeaders = {
@@ -662,61 +640,25 @@ class BudgetManagementService {
     );
   }
 
-  /// 2. 建立新預算 (POST /api/v1/budgets) - 階段二完整修正版
+  /// 2. 建立新預算 (POST /api/v1/budgets) - 階段三修正版
   Future<UnifiedApiResponse<Map<String, dynamic>>> createBudget(Map<String, dynamic> budgetData) async {
-    // 階段一修正：欄位標準化檢查
+    // 階段三修正：確保ledgerId參數存在
     if (!budgetData.containsKey('ledgerId') || budgetData['ledgerId'] == null) {
-      throw ArgumentError('建立預算需要ledgerId參數（子集合架構要求）');
+      throw ArgumentError('階段三驗證：建立預算需要ledgerId參數（子集合架構要求）');
     }
 
-    // 階段一修正：標準化預算欄位命名
-    final standardizedData = Map<String, dynamic>.from(budgetData);
-
-    // 階段二修正：日期欄位統一處理
-    final taiwanTime = APLGateway._getTaiwanTime();
-    final correctedTime = APLGateway._correctYear(taiwanTime);
-    
-    // 處理開始日期
-    if (budgetData.containsKey('startDate') && budgetData['startDate'] != null) {
-      final startDate = DateTime.parse(budgetData['startDate'].toString());
-      standardizedData['startDate'] = APLGateway._correctYear(startDate).toIso8601String();
-    }
-    
-    // 處理結束日期  
-    if (budgetData.containsKey('endDate') && budgetData['endDate'] != null) {
-      final endDate = DateTime.parse(budgetData['endDate'].toString());
-      standardizedData['endDate'] = APLGateway._correctYear(endDate).toIso8601String();
-    }
-    
-    // 添加標準時間戳
-    standardizedData['clientTimestamp'] = correctedTime.toIso8601String();
-    standardizedData['timezone'] = 'Asia/Taipei';
-    standardizedData['yearCorrected'] = true;
-    
-    // 統一欄位命名：amount → total_amount
-    if (budgetData.containsKey('amount')) {
-      standardizedData['total_amount'] = budgetData['amount'];
-      standardizedData.remove('amount');
-    }
-    
-    // 統一欄位命名：used_amount → consumed_amount
-    if (budgetData.containsKey('used_amount')) {
-      standardizedData['consumed_amount'] = budgetData['used_amount'];
-      standardizedData.remove('used_amount');
-    }
-    
-    // 確保consumed_amount有預設值
-    if (!standardizedData.containsKey('consumed_amount')) {
-      standardizedData['consumed_amount'] = 0;
-    }
-
+    // 階段三驗證：ledgerId格式檢查
     final ledgerId = budgetData['ledgerId'] as String;
-    print('APL階段一修正：使用標準化欄位建立預算，ledgerId = $ledgerId');
+    print('APL階段三驗證：ledgerId = $ledgerId');
+    
+    if (ledgerId.isEmpty || ledgerId.contains('hardcoded') || ledgerId.contains('collab_ledger')) {
+      print('APL階段三警告：檢測到可能的hardcoded ledgerId: $ledgerId');
+    }
 
     return _gateway._forwardRequest<Map<String, dynamic>>(
       'POST',
       '/api/v1/budgets',
-      standardizedData,
+      budgetData,
       null,
       (data) => Map<String, dynamic>.from(data ?? {}),
     );

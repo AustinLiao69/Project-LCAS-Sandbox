@@ -792,108 +792,11 @@ function FS_generateTransactionId() {
 }
 
 /**
- * 階段三新增：預算創建函數 (支援子集合架構)
- * @version 2025-10-30-V2.2.0
- * @description 建立預算記錄，使用子集合架構 ledgers/{ledger_id}/budgets/{budget_id}
- */
-async function FS_createBudget(budgetData) {
-  const functionName = "FS_createBudget";
-  try {
-    console.log(`[${functionName}] 🎯 階段三：建立預算 - 資料:`, JSON.stringify(budgetData, null, 2));
-
-    // 參數驗證
-    if (!budgetData.ledgerId) {
-      throw new Error('缺少帳本ID (ledgerId)');
-    }
-
-    // 使用子集合架構創建預算
-    const result = await FS_createBudgetInLedger(budgetData.ledgerId, budgetData, budgetData.userId || 'system');
-
-    console.log(`[${functionName}] ✅ 預算子集合創建結果:`, result);
-    return result;
-
-  } catch (error) {
-    console.error(`[${functionName}] ❌ 預算創建失敗:`, error);
-    return {
-      success: false,
-      error: error.message,
-      errorCode: 'FS_CREATE_BUDGET_ERROR'
-    };
-  }
-}
-
-/**
- * 在指定帳本中創建預算（子集合架構）
- * @param {string} ledgerId 帳本ID
- * @param {object} budgetData 預算資料
- * @param {string} userId 用戶ID
- * @returns {Promise<object>} 創建結果
- */
-async function FS_createBudgetInLedger(ledgerId, budgetData, userId) {
-  const functionName = "FS_createBudgetInLedger";
-  try {
-    console.log(`[${functionName}] 📊 在帳本 ${ledgerId} 中創建預算`);
-
-    // 確保 Firebase Admin SDK 已初始化
-    const admin = require('firebase-admin');
-    const db = admin.firestore();
-
-    // 生成預算ID
-    const budgetId = `budget_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-
-    // 準備完整的預算資料
-    const timestamp = admin.firestore.Timestamp.now();
-    const completeBudgetData = {
-      id: budgetId,
-      name: budgetData.name,
-      ledger_id: ledgerId,
-      total_amount: Number(budgetData.total_amount) || 0,
-      consumed_amount: Number(budgetData.consumed_amount) || 0,
-      remaining_amount: Number(budgetData.total_amount) - Number(budgetData.consumed_amount || 0),
-      description: budgetData.description || '',
-      currency: budgetData.currency || 'TWD',
-      status: budgetData.status || 'active',
-      start_date: budgetData.start_date ? admin.firestore.Timestamp.fromDate(new Date(budgetData.start_date)) : timestamp,
-      end_date: budgetData.end_date ? admin.firestore.Timestamp.fromDate(new Date(budgetData.end_date)) : admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30天後
-      created_by: userId,
-      created_at: timestamp,
-      updated_at: timestamp,
-      metadata: {
-        version: '2.2.0',
-        architecture: 'subcollection',
-        path: `ledgers/${ledgerId}/budgets/${budgetId}`
-      }
-    };
-
-    // 寫入子集合
-    const budgetRef = db.collection('ledgers').doc(ledgerId).collection('budgets').doc(budgetId);
-    await budgetRef.set(completeBudgetData);
-
-    console.log(`[${functionName}] ✅ 預算已寫入 Firebase 路徑: ledgers/${ledgerId}/budgets/${budgetId}`);
-
-    return {
-      success: true,
-      budgetId: budgetId,
-      path: `ledgers/${ledgerId}/budgets/${budgetId}`,
-      data: completeBudgetData
-    };
-
-  } catch (error) {
-    console.error(`[${functionName}] ❌ 預算創建失敗:`, error);
-    return {
-      success: false,
-      error: error.message,
-      errorCode: 'FS_CREATE_BUDGET_IN_LEDGER_ERROR'
-    };
-  }
-}
-
-/**
  * 階段三新增：預算子集合寫入函數
  * @version 2025-10-30-V2.2.0
  * @description 將預算寫入指定帳本的budgets子集合，確保路徑正確性
  */
-async function FS_createBudgetInLedger_original_unused(ledgerId, budgetData, requesterId) {
+async function FS_createBudgetInLedger(ledgerId, budgetData, requesterId) {
   const functionName = "FS_createBudgetInLedger";
   try {
     FS_logOperation(`階段三：建立預算子集合 - ledgers/${ledgerId}/budgets`, "建立預算", requesterId || "", "", "", functionName);
@@ -1849,7 +1752,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
       { category_id: 'income_salary', name: '薪資收入', type: 'income', icon: '💰', color: '#4CAF50', order: 1 },
       { category_id: 'income_business', name: '營業收入', type: 'income', icon: '🏢', color: '#2196F3', order: 2 },
       { category_id: 'income_other', name: '其他收入', type: 'income', icon: '💝', color: '#9C27B0', order: 3 },
-
+      
       // 支出科目  
       { category_id: 'expense_food', name: '餐飲', type: 'expense', icon: '🍽️', color: '#FF5722', order: 1 },
       { category_id: 'expense_transport', name: '交通', type: 'expense', icon: '🚗', color: '#607D8B', order: 2 },
@@ -2773,9 +2676,8 @@ module.exports = {
   FS_initializeBudgetStructure,
   FS_createBudgetsSubcollectionFramework,
   FS_createCompleteSubcollectionFramework,
-  // 預算子集合專用操作函數 (階段三新增)
-  FS_createBudgetInLedger: FS_createBudgetInLedger, // 新的實作
-  FS_createBudget: FS_createBudget, // 外部調用接口
+  FS_createBudgetInLedger: (ledgerId, budgetId, budgetData, requesterId) => 
+    FS_createDocument(`ledgers/${ledgerId}/budgets`, budgetId, budgetData, requesterId),
   FS_getBudgetFromLedger: (ledgerId, budgetId, requesterId) => 
     FS_getDocument(`ledgers/${ledgerId}/budgets`, budgetId, requesterId),
   FS_updateBudgetInLedger: (ledgerId, budgetId, updateData, requesterId) => 
@@ -2784,7 +2686,7 @@ module.exports = {
     FS_deleteDocument(`ledgers/${ledgerId}/budgets`, budgetId, requesterId),
   FS_queryBudgetsInLedger: (ledgerId, queryConditions, requesterId, options) => 
     FS_queryCollection(`ledgers/${ledgerId}/budgets`, queryConditions, requesterId, options),
-
+    
   // 完整子集合管理：直接使用 FS_createDocument() 處理各種子集合操作
   // 範例：FS_createDocument(`ledgers/${ledgerId}/accounts`, accountId, accountData, requesterId)
   // 範例：FS_createDocument(`ledgers/${ledgerId}/categories`, categoryId, categoryData, requesterId)
