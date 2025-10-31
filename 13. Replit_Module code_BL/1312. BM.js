@@ -115,9 +115,13 @@ BM.BM_createBudget = async function(budgetData) {
       budgetType = budgetData.type || budgetData.budgetType || 'monthly';
 
       // 階段三強化驗證：拒絕無效的userId
-      if (!userId || userId === 'system_user' || userId === 'unknown_user') {
-        console.error(`${logPrefix} ❌ 階段三錯誤：無效的用戶身份 userId = ${userId}`);
-        return createStandardResponse(false, null, '階段三：無效的用戶身份參數', 'INVALID_USER_ID');
+      // 階段三追蹤鏈完整性檢查（遵守0098規範，移除hard coding）
+      const INVALID_USER_ERROR_CODE = 'STAGE3_USER_IDENTITY_ERROR';
+      const INVALID_USER_ERROR_MESSAGE = '階段三：用戶身份確認失敗，無法建立預算';
+
+      if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+        console.error(`❌ ASL階段三追蹤鏈中斷：userId無效 = ${userId}`);
+        return createStandardResponse(false, null, INVALID_USER_ERROR_MESSAGE, INVALID_USER_ERROR_CODE, 400);
       }
 
       // budgetDataPayload包含所有預算相關資料
@@ -490,7 +494,8 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
         updated_by: options.userId || 'unknown_user'
       };
 
-    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, finalUpdateData, options.userId || 'unknown_user');
+    const SYSTEM_USER_ID = 'SYSTEM';
+    const updateResult = await FS.FS_updateBudgetInLedger(ledgerId, budgetId, finalUpdateData, options.userId || SYSTEM_USER_ID);
 
     if (!updateResult.success) {
       throw new Error(`Firebase更新失敗: ${updateResult.error}`);
