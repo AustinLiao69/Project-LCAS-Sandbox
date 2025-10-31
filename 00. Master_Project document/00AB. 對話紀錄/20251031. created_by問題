@@ -4,18 +4,22 @@
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
 作為資深SA，我深入分析了您遇到的 created_by 欄位顯示 "system_user" 的問題。這確實是一個典型的hard coding問題，違反了0098文件第3條規範。
+
 📋 問題分析
 根本原因分析
 1.	Hard Coding問題：在 1312. BM.js 的 BM_createBudget 函數中，userId 被硬編碼為 'system_user'
 2.	參數傳遞問題：API層有正確的使用者資訊，但在傳遞到BL層時被覆蓋
 3.	資料流一致性問題：帳本ID可以正確識別使用者，但 created_by 卻使用預設值
+
 程式碼證據
 從console log可以看到：
 [BM_createBudget] 開始建立預算 - 帳本ID: user_expert.valid@test.lcas.app, 用戶: system_user
 ledgerId 正確為 user_expert.valid@test.lcas.app，但 userId 卻是 system_user。
+
 💡 SA Insight
 核心洞察：您的邏輯思考完全正確！既然系統能夠正確識別使用者帳本（ledgerId: user_expert.valid@test.lcas.app），那麼 created_by 欄位理應使用相同的邏輯來識別使用者。
 這個問題反映了一個更深層的架構設計問題：使用者身份識別的一致性原則。在MVP階段，我們需要確保資料流中的使用者身份在各個層級間保持一致。
+
 🎯 解決方案（三階段實施）
 階段一：修正BM模組參數處理邏輯
 目標：修正 1312. BM.js 中的 userId 參數提取邏輯
@@ -23,9 +27,13 @@ ledgerId 正確為 user_expert.valid@test.lcas.app，但 userId 卻是 system_us
 // 當前問題代碼
 userId = budgetData.userId || budgetData.user_id || budgetData.created_by || budgetData.operatorId || 'system_user';
 解決方案：增加從 ledgerId 提取使用者ID的邏輯
+
 階段二：強化ASL層參數傳遞
 目標：確保ASL層正確傳遞使用者資訊到BL層
 問題位置：ASL.js 中的預算創建API端點缺少使用者資訊傳遞
+=>所以你的意思是每當使用者在PL層啟動設定預算的功能時，預算創建API裡面應該要包含使用者資訊嗎？我滿好奇目前的132個API端點到底都傳了什麼資料?就預算創建API的部分可以舉例嗎？
+
+
 階段三：版本升級與測試驗證
 目標：升級模組版本並驗證修正效果
 📝 詳細修正提案
