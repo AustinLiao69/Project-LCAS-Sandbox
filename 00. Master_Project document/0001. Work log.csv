@@ -361,3 +361,4 @@ MM 	 DD 	 Description 	    Progress
 10	31	 確認firebase之ledger下階設定Budget子集合欄位正確性  	 Ongoing
 10	31	 Review 7571中關於budget設定相關測試案例coverage   	 Ongoing
 11	3	 確認flutter是否有完整安裝   	 Ongoing
+11	3	 規劃前後端代碼分離   	 Ongoing
