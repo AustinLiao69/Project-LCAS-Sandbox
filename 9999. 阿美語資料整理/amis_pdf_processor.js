@@ -1,6 +1,6 @@
 
 const fs = require('fs');
-const pdfParse = require('pdf-parse');
+const pdfParse = require('pdf-parse').default || require('pdf-parse');
 const XLSX = require('xlsx');
 const path = require('path');
 
