@@ -1,6 +1,6 @@
 
 const fs = require('fs');
-const pdf = require('pdf-parse');
+const pdfParse = require('pdf-parse');
 const XLSX = require('xlsx');
 const path = require('path');
 
@@ -25,7 +25,7 @@ class AmisPDFProcessor {
       
       // 讀取PDF檔案
       const dataBuffer = fs.readFileSync(pdfPath);
-      const pdfData = await pdf(dataBuffer);
+      const pdfData = await pdfParse(dataBuffer);
       
       console.log('PDF頁數:', pdfData.numpages);
       console.log('開始解析內容...');
