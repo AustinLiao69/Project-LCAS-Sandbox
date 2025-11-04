@@ -360,4 +360,9 @@ MM 	 DD 	 Description 	    Progress
 10	30	 確認firebase之ledger下階設定Budget子集合架構   	 Ongoing
 10	31	 確認firebase之ledger下階設定Budget子集合欄位正確性  	 Ongoing
 10	31	 Review 7571中關於budget設定相關測試案例coverage   	 Ongoing
-11	3	 確認flutter是否有完整安裝   	 Ongoing
+11	3	 確認flutter是否有完整安裝   	 Closed
+11	3	 規劃前後端代碼分離   	 Ongoing
+11	4	 刪除Firebase中_health_check的欄位   	 Ongoing
+11	4	 Review 7571中關於budget設定相關測試案例coverage   	 Ongoing
+11	4	 確認firebase之ledger下階設定Budget子集合架構與欄位正確性  	 Ongoing
+11	4	 尋找在Replit做CI/CD的方法(問chatgpt)  	 Ongoing
