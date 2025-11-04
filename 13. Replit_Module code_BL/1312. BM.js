@@ -156,7 +156,7 @@ BM.BM_createBudget = async function(budgetData) {
       name: budgetDataPayload.name || '新預算',
       type: budgetType || 'monthly',
       amount: parseFloat(budgetDataPayload.amount),
-      used_amount: 0,
+      consumed_amount: 0,
       currency: budgetDataPayload.currency || 'TWD',
       start_date: budgetDataPayload.start_date || now,
       end_date: budgetDataPayload.end_date,
@@ -274,7 +274,7 @@ BM.BM_getBudgets = async function(queryParams = {}) {
         id: 'budget_001',
         name: '月度預算',
         amount: 50000,
-        used_amount: 32000,
+        consumed_amount: 32000,
         type: 'monthly',
         status: 'active',
         ledger_id: queryParams.ledgerId || 'default_ledger'
@@ -283,7 +283,7 @@ BM.BM_getBudgets = async function(queryParams = {}) {
         id: 'budget_002',
         name: '年度預算',
         amount: 500000,
-        used_amount: 156000,
+        consumed_amount: 156000,
         type: 'yearly',
         status: 'active',
         ledger_id: queryParams.ledgerId || 'default_ledger'
@@ -641,7 +641,7 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
     // const budgetData = await FS.getBudgetFromFirestore(budgetId); // 實際 Firestore 操作
     const budgetData = {
       amount: 50000,
-      used_amount: 35000,
+      consumed_amount: 35000,
       currency: 'TWD',
       start_date: new Date('2025-07-01'),
       end_date: new Date('2025-07-31')
@@ -649,8 +649,8 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
 
 
     // 計算進度
-    const progress = (budgetData.used_amount / budgetData.amount) * 100;
-    const remaining = budgetData.amount - budgetData.used_amount;
+    const progress = (budgetData.consumed_amount / budgetData.amount) * 100;
+    const remaining = budgetData.amount - budgetData.consumed_amount;
 
     // 判斷狀態
     let status = 'normal';
@@ -668,7 +668,7 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
       progress: Math.round(progress * 100) / 100,
       remaining: remaining,
       status: status,
-      used_amount: budgetData.used_amount,
+      consumed_amount: budgetData.consumed_amount,
       total_amount: budgetData.amount
     };
 
@@ -711,10 +711,10 @@ BM.BM_updateBudgetUsage = async function(ledgerId, transactionData) {
     for (const budget of activeBudgets) {
       // 檢查交易是否符合預算分類
       if (BM.BM_isTransactionMatchBudget(transactionData, budget)) {
-        const newUsage = budget.used_amount + Math.abs(transactionData.amount);
+        const newUsage = budget.consumed_amount + Math.abs(transactionData.amount);
 
         // 更新預算使用記錄
-        budget.used_amount = newUsage;
+        budget.consumed_amount = newUsage;
         budget.updated_at = new Date();
 
         updatedBudgets.push(budget.budget_id);
@@ -779,15 +779,15 @@ BM.BM_getBudgetReport = async function(budgetId, reportType, dateRange) {
         end: budgetData.end_date
       },
       usage_analysis: {
-        total_spent: budgetData.used_amount,
-        remaining: budgetData.amount - budgetData.used_amount,
-        usage_rate: (budgetData.used_amount / budgetData.amount) * 100
+        total_spent: budgetData.consumed_amount,
+        remaining: budgetData.amount - budgetData.consumed_amount,
+        usage_rate: (budgetData.consumed_amount / budgetData.amount) * 100
       },
       category_breakdown: budgetData.categories.map(cat => ({
         name: cat.name,
         allocated: cat.allocated_amount,
-        used: cat.used_amount,
-        remaining: cat.allocated_amount - cat.used_amount
+        used: cat.consumed_amount,
+        remaining: cat.allocated_amount - cat.consumed_amount
       }))
     };
 
@@ -939,8 +939,8 @@ BM.BM_triggerBudgetAlert = async function(budgetId, alertType, recipientList) {
       budget_id: budgetId,
       alert_type: alertType,
       trigger_condition: {
-        usage_rate: (budgetData.used_amount / budgetData.amount) * 100,
-        amount_used: budgetData.used_amount,
+        usage_rate: (budgetData.consumed_amount / budgetData.amount) * 100,
+        amount_used: budgetData.consumed_amount,
         amount_total: budgetData.amount
       },
       triggered_at: new Date(),
@@ -1135,7 +1135,7 @@ BM.BM_compareBudgetAcrossLedgers = async function(ledgerIds, comparisonType) {
     for (const ledgerId of ledgerIds) {
       const budgets = await BM.BM_getActiveBudgets(ledgerId);
       const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0);
-      const totalUsed = budgets.reduce((sum, budget) => sum + budget.used_amount, 0);
+      const totalUsed = budgets.reduce((sum, budget) => sum + budget.consumed_amount, 0);
       const efficiency = totalBudget > 0 ? (totalUsed / totalBudget) * 100 : 0;
 
       ledgerComparisons.push({
@@ -1217,7 +1217,7 @@ BM.BM_createBudgetCategory = async function(ledgerId, categoryData) {
       id: categoryId,
       name: categoryData.name,
       allocated_amount: parseFloat(categoryData.allocated_amount),
-      used_amount: 0,
+      consumed_amount: 0,
       percentage: categoryData.percentage || 0,
       alert_threshold: categoryData.alert_threshold || 80,
       description: categoryData.description || '',
@@ -1492,7 +1492,7 @@ BM.BM_getActiveBudgets = async function(ledgerId) {
       ledger_id: ledgerId,
       name: '月度預算',
       amount: 50000,
-      used_amount: 35000,
+      consumed_amount: 35000,
       categories: ['生活費', '交通']
     }
   ];
@@ -1516,7 +1516,7 @@ BM.BM_getBudgetData = async function(budgetId) {
     budget_id: budgetId,
     name: '月度預算',
     amount: 50000,
-    used_amount: 35000,
+    consumed_amount: 35000,
     alert_rules: {
       warning_threshold: 80,
       critical_threshold: 95,
@@ -1526,12 +1526,12 @@ BM.BM_getBudgetData = async function(budgetId) {
       {
         name: '生活費',
         allocated_amount: 30000,
-        used_amount: 20000
+        consumed_amount: 20000
       },
       {
         name: '娛樂',
         allocated_amount: 20000,
-        used_amount: 15000
+        consumed_amount: 15000
       }
     ],
     start_date: new Date('2025-07-01'),
