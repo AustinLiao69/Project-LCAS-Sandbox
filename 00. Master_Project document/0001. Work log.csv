@@ -365,3 +365,4 @@ MM 	 DD 	 Description 	    Progress
 11	4	 刪除Firebase中_health_check的欄位   	 Ongoing
 11	4	 Review 7571中關於budget設定相關測試案例coverage   	 Ongoing
 11	4	 確認firebase之ledger下階設定Budget子集合架構與欄位正確性  	 Ongoing
+11	4	 尋找在Replit做CI/CD的方法(問chatgpt)  	 Ongoing
