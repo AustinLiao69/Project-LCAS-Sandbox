@@ -1188,7 +1188,7 @@ async function FS_initializeDataStructure(requesterId) {
           indices: [
             { field: 'owner_id', type: 'ascending' },
             { field: 'type', type: 'ascending' },
-            { field: 'created_at', type: 'descending' }
+            { field: 'createdAt', type: 'descending' }
           ],
           subcollections: {
             transactions: [
