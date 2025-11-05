@@ -1,0 +1,97 @@
+🔧 解決方案提案
+階段一：擴展1311.FS.js模組支援協作資料結構
+目標：在1311.FS.js中新增協作管理所需的Firebase文檔結構定義
+具體作業：
+1.	新增FS_initializeCollaborationStructure()函數
+2.	在FS_initializeSystemConfig()中整合協作結構初始化
+3.	升級模組版本至v2.6.0
+新增協作集合結構：
+// 新增到1311.FS.js中的協作結構
+collaborationStructure = {
+  version: '1.0.0',
+  description: '1313.CM.js協作管理模組Firebase文檔結構',
+  collections: {
+    collaborations: {
+      document_structure: {
+        ledger_id: 'string - 關聯帳本ID',
+        members: 'array - 成員列表',
+        permissions: 'object - 權限設定',
+        sync_settings: 'object - 同步設定',
+        notification_rules: 'object - 通知規則',
+        createdAt: 'timestamp - 建立時間',
+        updatedAt: 'timestamp - 更新時間'
+      }
+    },
+    member_invitations: {
+      document_structure: {
+        invitation_id: 'string - 邀請ID',
+        ledger_id: 'string - 帳本ID',
+        inviter_id: 'string - 邀請人ID',
+        invitee_email: 'string - 被邀請人email',
+        permission_level: 'string - 權限等級',
+        status: 'string - 邀請狀態',
+        createdAt: 'timestamp - 建立時間',
+        expires_at: 'timestamp - 過期時間'
+      }
+    },
+    collaboration_logs: {
+      document_structure: {
+        log_id: 'string - 日誌ID',
+        ledger_id: 'string - 帳本ID',
+        user_id: 'string - 用戶ID',
+        action_type: 'string - 操作類型',
+        action_data: 'object - 操作資料',
+        timestamp: 'timestamp - 時間戳',
+        ip_address: 'string - IP地址'
+      }
+    }
+  }
+}
+
+階段二：增強現有ledgers集合協作支援
+目標：擴充現有ledgers集合，支援協作功能
+具體作業：
+1.	擴充ledgers文檔結構，新增協作相關欄位
+2.	更新FS_createUserBasicLedger()函數，支援協作設定
+3.	升級相關函數版次
+ledgers集合擴充：
+// 擴充現有ledgers集合
+ledgers: {
+  // 現有欄位保持不變
+  // 新增協作相關欄位
+  collaboration: {
+    enabled: 'boolean - 是否啟用協作',
+    max_members: 'number - 最大成員數',
+    join_policy: 'string - 加入政策',
+    default_permission: 'string - 預設權限'
+  },
+  permissions: {
+    owner: 'string - 擁有者ID',
+    admins: 'array - 管理員列表',
+    members: 'array - 一般成員列表',
+    viewers: 'array - 檢視者列表'
+  }
+}
+
+階段三：建立協作集合框架
+目標：在Firebase中建立完整的協作集合框架
+具體作業：
+1.	建立collaborations、member_invitations、collaboration_logs集合
+2.	建立範例協作文檔，確保集合在Firebase控制台可見
+3.	驗證協作資料結構完整性
+📋 版本升級計畫
+•	1311.FS.js：v2.5.0 → v2.6.0
+•	新增函數：FS_initializeCollaborationStructure() v2025-11-04-V1.0.0
+•	升級函數：FS_initializeSystemConfig() v2025-11-04-V2.4.0
+
+🎯 MVP階段實作重點
+1.	專注核心功能：僅實作基礎協作資料結構，避免複雜的同步機制
+2.	確保相容性：嚴格遵循現有1311.FS.js架構模式
+3.	階段性驗證：每階段完成後都能執行基礎測試，確認資料結構正確建立
+🚀 預期結果
+修正後的Firebase架構將包含：
+1.	完整協作支援：collaborations、member_invitations、collaboration_logs三個核心集合
+2.	增強型帳本：ledgers集合包含完整的協作屬性和權限管理
+3.	向下相容：現有功能完全不受影響，新功能無縫整合
+請確認是否Approve此提案，我將按階段進行實作，確保每階段結束後都能進行測試驗證。
+

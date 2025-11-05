@@ -203,8 +203,9 @@ BM.BM_createBudget = async function(budgetData) {
       console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
       console.log(`${logPrefix} 📋 確認路徑格式: ledgers/${ledgerId}/budgets/${budgetId}`);
 
-      // 階段一修正：直接調用Firebase Admin SDK，不透過FS模組
-      const { admin, db } = require('./1399. firebase-config.js');
+      // 階段一修正：正確獲取Firebase實例
+      const firebaseConfig = require('./1399. firebase-config.js');
+      const db = firebaseConfig.getFirestoreInstance();
       const docRef = db.collection(collectionPath).doc(budgetId);
       await docRef.set(budget);
       
@@ -251,7 +252,8 @@ BM.BM_createBudget = async function(budgetData) {
 
   } catch (error) {
     console.error(`${logPrefix} 預算建立失敗:`, error);
-    DL.DL_error(`預算建立失敗: ${error.message}`, '預算管理', userId || 'unknown');
+    const safeUserId = userId || budgetData?.userId || 'unknown';
+    DL.DL_error(`預算建立失敗: ${error.message}`, '預算管理', safeUserId);
 
     return createStandardResponse(false, null, `預算建立失敗: ${error.message}`, 'CREATE_BUDGET_ERROR');
   }
@@ -385,8 +387,9 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
 
     console.log(`${logPrefix} 更新預算到資料庫...`);
     
-    // 階段一修正：直接調用Firebase Admin SDK
-    const { admin, db } = require('./1399. firebase-config.js');
+    // 階段一修正：正確獲取Firebase實例
+    const firebaseConfig = require('./1399. firebase-config.js');
+    const db = firebaseConfig.getFirestoreInstance();
     const docRef = db.collection(`ledgers/${ledgerId}/budgets`).doc(budgetId);
     await docRef.update(updateData);
 
@@ -439,8 +442,9 @@ BM.BM_deleteBudget = async function(budgetId, options = {}) {
 
     console.log(`${logPrefix} 執行預算刪除...`);
     
-    // 階段一修正：直接調用Firebase Admin SDK
-    const { admin, db } = require('./1399. firebase-config.js');
+    // 階段一修正：正確獲取Firebase實例
+    const firebaseConfig = require('./1399. firebase-config.js');
+    const db = firebaseConfig.getFirestoreInstance();
     const docRef = db.collection(`ledgers/${ledgerId}/budgets`).doc(budgetId);
     await docRef.delete();
 
@@ -1610,8 +1614,9 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
     }
 
     try {
-      // 階段一修正：直接調用Firebase Admin SDK
-      const { admin, db } = require('./1399. firebase-config.js');
+      // 階段一修正：正確獲取Firebase實例
+      const firebaseConfig = require('./1399. firebase-config.js');
+      const db = firebaseConfig.getFirestoreInstance();
       const docRef = db.collection(collectionPath).doc(budgetId);
       const doc = await docRef.get();
       
