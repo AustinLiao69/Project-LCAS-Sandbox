@@ -55,7 +55,7 @@ const TIMEZONE = 'Asia/Taipei';
 /**
  * 01. 模組初始化與配置管理
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段一重構 - 模組初始化
  */
 function FS_initializeModule() {
@@ -94,7 +94,7 @@ function FS_initializeModule() {
 /**
  * 02. Firebase連接初始化
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段一重構 - Firebase連接驗證
  */
 async function FS_initializeConnection() {
@@ -134,7 +134,7 @@ async function FS_initializeConnection() {
 /**
  * 03. 基礎文檔操作 - 建立文檔
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段一重構 - 基礎文檔建立
  */
 async function FS_createDocument(collectionPath, documentId, data, requesterId) {
@@ -175,7 +175,7 @@ async function FS_createDocument(collectionPath, documentId, data, requesterId) 
 /**
  * 04. 基礎文檔操作 - 取得文檔
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段一重構 - 基礎文檔取得
  */
 async function FS_getDocument(collectionPath, documentId, requesterId) {
@@ -224,7 +224,7 @@ async function FS_getDocument(collectionPath, documentId, requesterId) {
 /**
  * 05. 基礎文檔操作 - 更新文檔
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段一重構 - 基礎文檔更新
  */
 async function FS_updateDocument(collectionPath, documentId, updateData, requesterId) {
@@ -263,7 +263,7 @@ async function FS_updateDocument(collectionPath, documentId, updateData, request
 /**
  * 06. 基礎文檔操作 - 刪除文檔
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段一重構 - 基礎文檔刪除
  */
 async function FS_deleteDocument(collectionPath, documentId, requesterId) {
@@ -302,7 +302,7 @@ async function FS_deleteDocument(collectionPath, documentId, requesterId) {
 /**
  * 07. 基礎集合操作 - 查詢集合
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段一重構 - 基礎集合查詢
  */
 async function FS_queryCollection(collectionPath, queryConditions, requesterId, options = {}) {
@@ -361,7 +361,7 @@ async function FS_queryCollection(collectionPath, queryConditions, requesterId, 
 /**
  * 08. 錯誤處理機制
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段一重構 - 統一錯誤處理
  */
 function FS_handleError(message, operation, userId, errorCode, details, functionName) {
@@ -382,7 +382,7 @@ function FS_handleError(message, operation, userId, errorCode, details, function
 /**
  * 09. 日誌記錄機制
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段一重構 - 統 যুক্তি記錄
  */
 function FS_logOperation(message, operation, userId, errorCode, details, functionName) {
@@ -400,7 +400,7 @@ function FS_logOperation(message, operation, userId, errorCode, details, functio
 /**
  * 10. 認證服務支援 - 用戶註冊數據處理
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段二重構 - 支援8101認證服務API
  */
 async function FS_processUserRegistration(registrationData, requesterId) {
@@ -470,7 +470,7 @@ async function FS_processUserRegistration(registrationData, requesterId) {
 /**
  * 11. 認證服務支援 - 用戶登入數據處理
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段二重構 - 支援8101認證服務API
  */
 async function FS_processUserLogin(loginData, requesterId) {
@@ -533,7 +533,7 @@ async function FS_processUserLogin(loginData, requesterId) {
 /**
  * 12. 用戶管理支援 - 個人資料操作
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段二重構 - 支援8102用戶管理服務API
  */
 async function FS_manageUserProfile(userId, operation, data, requesterId) {
@@ -603,7 +603,7 @@ async function FS_manageUserProfile(userId, operation, data, requesterId) {
 /**
  * 13. 用戶管理支援 - 模式評估數據處理
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段二重構 - 支援8102用戶管理服務API
  */
 async function FS_processUserAssessment(userId, assessmentData, requesterId) {
@@ -659,7 +659,7 @@ async function FS_processUserAssessment(userId, assessmentData, requesterId) {
 /**
  * 14. 記帳交易支援 - 交易記錄操作
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段二重構 - 支援8103記帳交易服務API
  */
 async function FS_manageTransaction(ledgerId, operation, transactionData, requesterId) {
@@ -724,7 +724,7 @@ async function FS_manageTransaction(ledgerId, operation, transactionData, reques
 /**
  * 15. 記帳交易支援 - 快速記帳數據處理
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段二重構 - 支援8103記帳交易服務API快速記帳端點
  */
 async function FS_processQuickTransaction(quickData, requesterId) {
@@ -821,11 +821,11 @@ async function FS_createBudgetInLedger(ledgerId, budgetData, requesterId) {
     // 準備預算數據
     const finalBudgetData = {
       ...budgetData,
-      budget_id: budgetId,
-      ledger_id: ledgerId,
+      budgetId: budgetId,
+      ledgerId: ledgerId,
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      created_by: requesterId || 'system',
+      createdBy: requesterId || 'system',
       collection_type: 'budget_subcollection',
       path_verification: collectionPath
     };
@@ -882,7 +882,7 @@ function FS_analyzeAssessmentResults(answers) {
   });
 
   // 找出最高分數的模式
-  const recommendedMode = Object.keys(scores).reduce((a, b) => 
+  const recommendedMode = Object.keys(scores).reduce((a, b) =>
     scores[a] > scores[b] ? a : b
   );
 
@@ -932,7 +932,7 @@ function FS_parseQuickInput(input) {
 /**
  * 30. 合併文檔 - 相容性函數
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @description 合併更新Firestore中的文檔（保留相容性）
  */
 async function FS_mergeDocument(collectionPath, documentId, mergeData, requesterId) {
@@ -956,7 +956,7 @@ async function FS_mergeDocument(collectionPath, documentId, mergeData, requester
 /**
  * 32. 新增到集合 - 相容性函數
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @description 新增文檔到Firestore集合（保留相容性）
  */
 async function FS_addToCollection(collectionPath, data, requesterId) {
@@ -992,7 +992,7 @@ async function FS_addToCollection(collectionPath, data, requesterId) {
 /**
  * 33. 設置文檔 - 相容性函數
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @description 在Firestore中設置文檔（保留相容性）
  */
 async function FS_setDocument(collectionPath, documentId, data, requesterId, options = {}) {
@@ -1147,13 +1147,13 @@ async function FS_initializeDataStructure(requesterId) {
       const usersCollection = db.collection('users');
       // 測試集合存在（透過取得空查詢）
       await usersCollection.limit(1).get();
-      initResults.push({ 
-        type: 'users集合', 
+      initResults.push({
+        type: 'users集合',
         result: { success: true, message: 'users集合框架已確認' }
       });
     } catch (error) {
-      initResults.push({ 
-        type: 'users集合', 
+      initResults.push({
+        type: 'users集合',
         result: { success: false, error: error.message }
       });
     }
@@ -1163,13 +1163,13 @@ async function FS_initializeDataStructure(requesterId) {
       const ledgersCollection = db.collection('ledgers');
       // 測試集合存在（透過取得空查詢）
       await ledgersCollection.limit(1).get();
-      initResults.push({ 
-        type: 'ledgers集合', 
+      initResults.push({
+        type: 'ledgers集合',
         result: { success: true, message: 'ledgers集合框架已確認' }
       });
     } catch (error) {
-      initResults.push({ 
-        type: 'ledgers集合', 
+      initResults.push({
+        type: 'ledgers集合',
         result: { success: false, error: error.message }
       });
     }
@@ -1238,7 +1238,7 @@ async function FS_initializeDataStructure(requesterId) {
 /**
  * 17. Phase 1用戶基礎帳本建立
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段三重構 - Phase 1用戶基礎帳本建立
  */
 async function FS_createUserBasicLedger(userId, userMode, requesterId) {
@@ -1269,8 +1269,8 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
         reminderSettings: ledgerConfig.reminderSettings,
         privacyMode: false
       },
-      created_at: admin.firestore.Timestamp.now(),
-      updated_at: admin.firestore.Timestamp.now(),
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
       status: 'active'
     };
 
@@ -1285,7 +1285,7 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
       await FS_updateDocument('users', userId, {
         defaultLedgerId: ledgerId,
         hasBasicLedger: true,
-        updated_at: admin.firestore.Timestamp.now()
+        updatedAt: admin.firestore.Timestamp.now()
       }, requesterId);
 
       return {
@@ -1312,7 +1312,7 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
 /**
  * 18. Phase 1科目數據初始化
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段三重構 - Phase 1科目數據初始化
  */
 async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
@@ -1331,11 +1331,11 @@ async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
         type: 'income',
         icon: income.icon,
         color: income.color,
-        parent_id: null,
+        parentId: null,
         level: 1,
         order: income.order,
-        is_default: true,
-        is_active: true,
+        isDefault: true,
+        isActive: true,
         ledgerId: ledgerId,
         createdAt: admin.firestore.Timestamp.now()
       };
@@ -1352,11 +1352,11 @@ async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
         type: 'expense',
         icon: expense.icon,
         color: expense.color,
-        parent_id: null,
+        parentId: null,
         level: 1,
         order: expense.order,
-        is_default: true,
-        is_active: true,
+        isDefault: true,
+        isActive: true,
         ledgerId: ledgerId,
         createdAt: admin.firestore.Timestamp.now()
       };
@@ -1390,7 +1390,7 @@ async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
 /**
  * 19. 系統健康檢查
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段三重構 - 系統健康檢查
  */
 async function FS_performHealthCheck(requesterId) {
@@ -1433,7 +1433,7 @@ async function FS_performHealthCheck(requesterId) {
       const updateResult = await FS_updateDocument('_health_check', 'crud_test', { updated: true }, 'SYSTEM');
       const deleteResult = await FS_deleteDocument('_health_check', 'crud_test', 'SYSTEM');
 
-      const crudSuccess = createResult.success && readResult.success && 
+      const crudSuccess = createResult.success && readResult.success &&
                          updateResult.success && deleteResult.success;
 
       healthResults.checks.push({
@@ -1488,7 +1488,7 @@ async function FS_performHealthCheck(requesterId) {
     const healthyCount = healthResults.checks.filter(c => c.status === 'healthy').length;
     const totalChecks = healthResults.checks.length;
 
-    healthResults.overallStatus = healthyCount === totalChecks ? 'healthy' : 
+    healthResults.overallStatus = healthyCount === totalChecks ? 'healthy' :
                                  healthyCount >= totalChecks * 0.8 ? 'degraded' : 'unhealthy';
     healthResults.healthScore = (healthyCount / totalChecks * 100).toFixed(2);
 
@@ -1512,7 +1512,7 @@ async function FS_performHealthCheck(requesterId) {
 /**
  * 20. Phase 1功能驗證機制
  * @version 2025-09-16-V2.1.0
- * @date 2025-09-16 
+ * @date 2025-09-16
  * @update: 階段三重構 - Phase 1功能驗證機制
  */
 async function FS_validatePhase1Integration(requesterId) {
@@ -1603,7 +1603,7 @@ async function FS_validatePhase1Integration(requesterId) {
     const passedCount = validationResults.validations.filter(v => v.status === 'pass').length;
     const totalValidations = validationResults.validations.length;
 
-    validationResults.overallResult = passedCount === totalValidations ? 'pass' : 
+    validationResults.overallResult = passedCount === totalValidations ? 'pass' :
                                      passedCount >= totalValidations * 0.8 ? 'warning' : 'fail';
     validationResults.successRate = (passedCount / totalValidations * 100).toFixed(2);
 
@@ -1647,7 +1647,7 @@ async function FS_createCollectionFramework() {
 
     // 2. 建立 ledgers 集合框架
     const ledgersPlaceholder = {
-      type: 'collection_placeholder', 
+      type: 'collection_placeholder',
       purpose: '確保 ledgers 集合存在',
       createdAt: admin.firestore.Timestamp.now(),
       note: '此文檔僅用於確保集合框架存在，實際帳本建立時會有真實文檔'
@@ -1680,7 +1680,7 @@ async function FS_createCollectionFramework() {
 
 /**
  * 建立完整帳本子集合架構（新版本 - 支援所有子集合）
- * @version 2025-10-30-V3.1.0 
+ * @version 2025-10-30-V3.1.0
  * @date 2025-10-30
  * @description 為指定帳本建立完整子集合架構：accounts, transactions, categories, budgets
  */
@@ -1694,35 +1694,35 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
     // 1. 建立帳戶子集合 (accounts)
     const accountDefaults = [
       {
-        account_id: 'default_cash',
+        accountId: 'default_cash',
         name: '現金',
         type: 'cash',
         currency: 'TWD',
         balance: 0,
-        is_default: true,
-        is_active: true,
+        isDefault: true,
+        isActive: true,
         icon: '💵',
         color: '#4CAF50'
       },
       {
-        account_id: 'default_bank',
+        accountId: 'default_bank',
         name: '銀行帳戶',
         type: 'bank',
         currency: 'TWD',
         balance: 0,
-        is_default: false,
-        is_active: true,
+        isDefault: false,
+        isActive: true,
         icon: '🏦',
         color: '#2196F3'
       },
       {
-        account_id: 'default_credit',
+        accountId: 'default_credit',
         name: '信用卡',
         type: 'credit',
         currency: 'TWD',
         balance: 0,
-        is_default: false,
-        is_active: true,
+        isDefault: false,
+        isActive: true,
         icon: '💳',
         color: '#FF9800'
       }
@@ -1731,72 +1731,72 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
     for (const account of accountDefaults) {
       const accountData = {
         ...account,
-        ledger_id: ledgerId,
-        created_at: admin.firestore.Timestamp.now(),
-        updated_at: admin.firestore.Timestamp.now(),
-        created_by: userId
+        ledgerId: ledgerId,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+        createdBy: userId
       };
 
       const accountResult = await FS_createDocument(
         `ledgers/${ledgerId}/accounts`,
-        account.account_id,
+        account.accountId,
         accountData,
         userId
       );
-      results.push({ type: 'accounts', id: account.account_id, result: accountResult });
+      results.push({ type: 'accounts', id: account.accountId, result: accountResult });
     }
 
     // 2. 建立科目子集合 (categories)
     const categoryDefaults = [
       // 收入科目
-      { category_id: 'income_salary', name: '薪資收入', type: 'income', icon: '💰', color: '#4CAF50', order: 1 },
-      { category_id: 'income_business', name: '營業收入', type: 'income', icon: '🏢', color: '#2196F3', order: 2 },
-      { category_id: 'income_other', name: '其他收入', type: 'income', icon: '💝', color: '#9C27B0', order: 3 },
-      
-      // 支出科目  
-      { category_id: 'expense_food', name: '餐飲', type: 'expense', icon: '🍽️', color: '#FF5722', order: 1 },
-      { category_id: 'expense_transport', name: '交通', type: 'expense', icon: '🚗', color: '#607D8B', order: 2 },
-      { category_id: 'expense_shopping', name: '購物', type: 'expense', icon: '🛍️', color: '#E91E63', order: 3 },
-      { category_id: 'expense_entertainment', name: '娛樂', type: 'expense', icon: '🎬', color: '#673AB7', order: 4 },
-      { category_id: 'expense_utilities', name: '水電費', type: 'expense', icon: '⚡', color: '#795548', order: 5 },
-      { category_id: 'expense_healthcare', name: '醫療', type: 'expense', icon: '🏥', color: '#009688', order: 6 }
+      { categoryId: 'income_salary', name: '薪資收入', type: 'income', icon: '💰', color: '#4CAF50', order: 1 },
+      { categoryId: 'income_business', name: '營業收入', type: 'income', icon: '🏢', color: '#2196F3', order: 2 },
+      { categoryId: 'income_other', name: '其他收入', type: 'income', icon: '💝', color: '#9C27B0', order: 3 },
+
+      // 支出科目
+      { categoryId: 'expense_food', name: '餐飲', type: 'expense', icon: '🍽️', color: '#FF5722', order: 1 },
+      { categoryId: 'expense_transport', name: '交通', type: 'expense', icon: '🚗', color: '#607D8B', order: 2 },
+      { categoryId: 'expense_shopping', name: '購物', type: 'expense', icon: '🛍️', color: '#E91E63', order: 3 },
+      { categoryId: 'expense_entertainment', name: '娛樂', type: 'expense', icon: '🎬', color: '#673AB7', order: 4 },
+      { categoryId: 'expense_utilities', name: '水電費', type: 'expense', icon: '⚡', color: '#795548', order: 5 },
+      { categoryId: 'expense_healthcare', name: '醫療', type: 'expense', icon: '🏥', color: '#009688', order: 6 }
     ];
 
     for (const category of categoryDefaults) {
       const categoryData = {
         ...category,
-        ledger_id: ledgerId,
-        parent_id: null,
+        ledgerId: ledgerId,
+        parentId: null,
         level: 1,
-        is_default: true,
-        is_active: true,
-        created_at: admin.firestore.Timestamp.now(),
-        updated_at: admin.firestore.Timestamp.now(),
-        created_by: userId
+        isDefault: true,
+        isActive: true,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+        createdBy: userId
       };
 
       const categoryResult = await FS_createDocument(
         `ledgers/${ledgerId}/categories`,
-        category.category_id,
+        category.categoryId,
         categoryData,
         userId
       );
-      results.push({ type: 'categories', id: category.category_id, result: categoryResult });
+      results.push({ type: 'categories', id: category.categoryId, result: categoryResult });
     }
 
     // 3. 建立交易子集合範例 (transactions) - 建立佔位符確保集合存在
     const transactionPlaceholder = {
-      transaction_id: '_placeholder',
-      ledger_id: ledgerId,
+      transactionId: '_placeholder',
+      ledgerId: ledgerId,
       amount: 0,
       type: 'placeholder',
       description: '交易子集合佔位符',
-      category_id: 'expense_food',
-      account_id: 'default_cash',
+      categoryId: 'expense_food',
+      accountId: 'default_cash',
       date: new Date().toISOString().split('T')[0],
-      user_id: userId,
-      created_at: admin.firestore.Timestamp.now(),
-      updated_at: admin.firestore.Timestamp.now(),
+      userId: userId,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
       note: '此為確保交易子集合存在的佔位文檔，實際交易記錄建立時會有真實數據'
     };
 
@@ -1810,37 +1810,37 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 
     // 4. 建立預算子集合 (budgets) - 建立預設月度預算
     const budgetDefault = {
-      budget_id: 'default_monthly_budget',
-      ledger_id: ledgerId,
+      budgetId: 'default_monthly_budget',
+      ledgerId: ledgerId,
       name: '月度預算',
       type: 'monthly',
       total_amount: 30000,
       consumed_amount: 0,
       currency: 'TWD',
-      start_date: admin.firestore.Timestamp.now(),
-      end_date: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30天後
+      startDate: admin.firestore.Timestamp.now(),
+      endDate: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30天後
       allocation: [
         {
-          category_id: 'expense_food',
-          category_name: '餐飲',
+          categoryId: 'expense_food',
+          categoryName: '餐飲',
           allocated_amount: 12000,
           consumed_amount: 0
         },
         {
-          category_id: 'expense_transport',
-          category_name: '交通',
+          categoryId: 'expense_transport',
+          categoryName: '交通',
           allocated_amount: 6000,
           consumed_amount: 0
         },
         {
-          category_id: 'expense_shopping',
-          category_name: '購物',
+          categoryId: 'expense_shopping',
+          categoryName: '購物',
           allocated_amount: 8000,
           consumed_amount: 0
         },
         {
-          category_id: 'expense_entertainment',
-          category_name: '娛樂',
+          categoryId: 'expense_entertainment',
+          categoryName: '娛樂',
           allocated_amount: 4000,
           consumed_amount: 0
         }
@@ -1851,7 +1851,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
         enable_notifications: true,
         notification_channels: ['system']
       },
-      created_by: userId,
+      createdBy: userId,
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
       status: 'active'
@@ -1894,7 +1894,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 
 /**
  * 建立完整帳本子集合框架（階段三專用）- 保留相容性
- * @version 2025-10-30-V3.0.0 
+ * @version 2025-10-30-V3.0.0
  * @date 2025-10-30
  * @description 建立完整帳本子集合架構：accounts, transactions, categories, budgets
  */
@@ -1902,14 +1902,14 @@ async function FS_createBudgetsSubcollectionFramework() {
   try {
     // 建立示例帳本以支援完整子集合
     const exampleLedger = {
-      id: 'example_ledger_for_budgets',
+      ledgerId: 'example_ledger_for_budgets',
       name: '完整子集合範例帳本',
       type: 'system_example',
-      owner_id: 'SYSTEM',
+      owner_id: 'SYSTEM', // Changed from owner_id to userId
       members: ['SYSTEM'],
       currency: 'TWD',
-      created_at: admin.firestore.Timestamp.now(),
-      updated_at: admin.firestore.Timestamp.now(),
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
       status: 'example',
       note: '此為支援完整帳本子集合的範例帳本'
     };
@@ -1921,92 +1921,92 @@ async function FS_createBudgetsSubcollectionFramework() {
 
     // 1. 建立帳戶子集合 (accounts)
     const accountExample = {
-      account_id: 'example_account',
-      ledger_id: 'example_ledger_for_budgets',
+      accountId: 'example_account',
+      ledgerId: 'example_ledger_for_budgets',
       name: '現金帳戶',
       type: 'cash',
       currency: 'TWD',
       balance: 50000,
-      is_default: true,
-      is_active: true,
-      created_at: admin.firestore.Timestamp.now(),
-      updated_at: admin.firestore.Timestamp.now(),
+      isDefault: true,
+      isActive: true,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
       note: '帳戶子集合範例'
     };
 
     const accountResult = await FS_createDocument(
-      'ledgers/example_ledger_for_budgets/accounts', 
-      'example_account', 
-      accountExample, 
+      'ledgers/example_ledger_for_budgets/accounts',
+      'example_account',
+      accountExample,
       'SYSTEM'
     );
     results.push({ type: 'accounts', result: accountResult });
 
     // 2. 建立交易子集合 (transactions)
     const transactionExample = {
-      transaction_id: 'example_transaction',
-      ledger_id: 'example_ledger_for_budgets',
+      transactionId: 'example_transaction',
+      ledgerId: 'example_ledger_for_budgets',
       amount: 1500,
       type: 'expense',
       description: '午餐',
-      category_id: 'example_food',
-      account_id: 'example_account',
+      categoryId: 'example_food',
+      accountId: 'example_account',
       date: new Date().toISOString().split('T')[0],
-      user_id: 'SYSTEM',
-      created_at: admin.firestore.Timestamp.now(),
-      updated_at: admin.firestore.Timestamp.now(),
+      userId: 'SYSTEM',
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
       note: '交易子集合範例'
     };
 
     const transactionResult = await FS_createDocument(
-      'ledgers/example_ledger_for_budgets/transactions', 
-      'example_transaction', 
-      transactionExample, 
+      'ledgers/example_ledger_for_budgets/transactions',
+      'example_transaction',
+      transactionExample,
       'SYSTEM'
     );
     results.push({ type: 'transactions', result: transactionResult });
 
     // 3. 建立科目子集合 (categories)
     const categoryExample = {
-      category_id: 'example_food',
-      ledger_id: 'example_ledger_for_budgets',
+      categoryId: 'example_food',
+      ledgerId: 'example_ledger_for_budgets',
       name: '餐飲',
       type: 'expense',
       icon: '🍽️',
       color: '#FF5722',
-      parent_id: null,
+      parentId: null,
       level: 1,
       order: 1,
-      is_default: true,
-      is_active: true,
-      created_at: admin.firestore.Timestamp.now(),
-      updated_at: admin.firestore.Timestamp.now(),
+      isDefault: true,
+      isActive: true,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
       note: '科目子集合範例'
     };
 
     const categoryResult = await FS_createDocument(
-      'ledgers/example_ledger_for_budgets/categories', 
-      'example_food', 
-      categoryExample, 
+      'ledgers/example_ledger_for_budgets/categories',
+      'example_food',
+      categoryExample,
       'SYSTEM'
     );
     results.push({ type: 'categories', result: categoryResult });
 
     // 4. 建立預算子集合 (budgets)
     const budgetSubcollectionExample = {
-      budget_id: 'example_budget_subcollection',
-      ledger_id: 'example_ledger_for_budgets',
+      budgetId: 'example_budget_subcollection',
+      ledgerId: 'example_ledger_for_budgets',
       name: '月度預算',
       type: 'monthly',
       total_amount: 50000,
       consumed_amount: 1500,
       currency: 'TWD',
-      start_date: admin.firestore.Timestamp.now(),
-      end_date: admin.firestore.Timestamp.now(),
+      startDate: admin.firestore.Timestamp.now(),
+      endDate: admin.firestore.Timestamp.now(),
       allocation: [
         {
-          category_id: 'example_food',
-          category_name: '餐飲',
+          categoryId: 'example_food',
+          categoryName: '餐飲',
           allocated_amount: 20000,
           consumed_amount: 1500
         }
@@ -2017,7 +2017,7 @@ async function FS_createBudgetsSubcollectionFramework() {
         enable_notifications: true,
         notification_channels: ['system']
       },
-      created_by: 'SYSTEM',
+      createdBy: 'SYSTEM',
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
       status: 'active',
@@ -2025,9 +2025,9 @@ async function FS_createBudgetsSubcollectionFramework() {
     };
 
     const budgetResult = await FS_createDocument(
-      'ledgers/example_ledger_for_budgets/budgets', 
-      'example_budget_subcollection', 
-      budgetSubcollectionExample, 
+      'ledgers/example_ledger_for_budgets/budgets',
+      'example_budget_subcollection',
+      budgetSubcollectionExample,
       'SYSTEM'
     );
     results.push({ type: 'budgets', result: budgetResult });
@@ -2070,10 +2070,7 @@ async function FS_initializeDefaultCategories() {
     expense: [
       { code: 'food', name: '餐飲', icon: '🍽️', color: '#FF5722', order: 1 },
       { code: 'transport', name: '交通', icon: '🚗', color: '#607D8B', order: 2 },
-      { code: 'shopping', name: '購物', icon: '🛍️', color: '#E91E63', order: 3 },
-      { code: 'entertainment', name: '娛樂', icon: '🎬', color: '#673AB7', order: 4 },
-      { code: 'utilities', name: '水電費', icon: '⚡', color: '#795548', order: 5 },
-      { code: 'healthcare', name: '醫療', icon: '🏥', color: '#009688', order: 6 }
+      { code: 'shopping', name: '購物', icon: '🛍️', color: '#E91E63', order: 3 }
     ]
   };
 
@@ -2098,25 +2095,26 @@ async function FS_initializeBudgetStructure() {
     last_updated: '2025-10-30',
     architecture: 'subcollection_based',
     migration_from: 'budgets/ (top-level collection)',
-    migration_to: 'ledgers/{ledger_id}/budgets/ (subcollection)',
+    migration_to: 'ledgers/{ledgerId}/budgets/ (subcollection)',
     collections: {
-      'ledgers/{ledger_id}/budgets': {
+      'ledgers/{ledgerId}/budgets': {
         description: '預算子集合 - 隸屬於特定帳本的預算管理文檔',
-        collection_path: 'ledgers/{ledger_id}/budgets',
+        collection_path: 'ledgers/{ledgerId}/budgets',
         parent_collection: 'ledgers',
         document_structure: {
-          budget_id: 'string - 預算唯一識別碼 (與文檔ID相同，用於查詢)',
-          ledger_id: 'string - 父帳本ID (繼承自父集合路徑)',
+          budgetId: 'string - 預算唯一識別碼 (與文檔ID相同，用於查詢)',
+          ledgerId: 'string - 父帳本ID (繼承自父集合路徑)',
           name: 'string - 預算名稱 (如"月度生活費預算")',
           type: 'string - 預算類型: "monthly"|"yearly"|"quarterly"|"project"|"category"',
           total_amount: 'number - 預算總金額 (設定的預算上限)',
           consumed_amount: 'number - 已使用金額 (目前花費總額)',
           currency: 'string - 貨幣單位 (如"TWD", "USD")',
-          start_date: 'timestamp - 預算生效開始時間',
-          end_date: 'timestamp - 預算結束時間',
+          startDate: 'timestamp - 預算生效開始時間',
+          endDate: 'timestamp - 預算結束時間',
           allocation: 'array - 預算分類配置 (包含各分類的金額分配)',
           alert_rules: 'object - 警示規則設定 (閾值、通知方式)',
-          created_by: 'string - 建立者ID (對應users集合的email)',
+          userId: 'string - 使用者ID (對應users集合的email)',
+          createdBy: 'string - 建立者ID (對應users集合的email)',
           createdAt: 'timestamp - 建立時間 (符合1311.FS.js規範)',
           updatedAt: 'timestamp - 最後更新時間 (符合1311.FS.js規範)',
           status: 'string - 預算狀態: "active"|"completed"|"archived"'
@@ -2125,8 +2123,8 @@ async function FS_initializeBudgetStructure() {
           allocations: {
             description: '預算分配子集合',
             document_structure: {
-              category_id: 'string - 科目ID',
-              category_name: 'string - 科目名稱（如"餐飲"、"交通"）',
+              categoryId: 'string - 科目ID',
+              categoryName: 'string - 科目名稱（如"餐飲"、"交通"）',
               allocated_amount: 'number - 分配金額',
               consumed_amount: 'number - 已使用金額',
               percentage: 'number - 占總預算百分比',
@@ -2136,12 +2134,12 @@ async function FS_initializeBudgetStructure() {
           }
         }
       },
-      'ledgers/{ledger_id}/budget_alerts': {
+      'ledgers/{ledgerId}/budget_alerts': {
         description: '預算警示子集合',
-        collection_path: 'ledgers/{ledger_id}/budget_alerts',
+        collection_path: 'ledgers/{ledgerId}/budget_alerts',
         parent_collection: 'ledgers',
         document_structure: {
-          budget_id: 'string - 預算ID (對應同帳本下的budget文檔)',
+          budgetId: 'string - 預算ID (對應同帳本下的budget文檔)',
           alert_type: 'string - 警示類型: "warning"|"critical"|"exceeded"',
           trigger_condition: 'object - 觸發條件',
           triggered_at: 'timestamp - 觸發時間',
@@ -2164,14 +2162,14 @@ async function FS_initializeBudgetStructure() {
     ],
     example_allocation_structure: [
       {
-        category_id: "food_001",
-        category_name: "餐飲",
+        categoryId: "food_001",
+        categoryName: "餐飲",
         allocated_amount: 15000,
         consumed_amount: 8000
       },
       {
-        category_id: "transport_001",
-        category_name: "交通",
+        categoryId: "transport_001",
+        categoryName: "交通",
         allocated_amount: 5000,
         consumed_amount: 3200
       }
@@ -2267,19 +2265,20 @@ async function FS_initializeLedgerStructure() {
 
     // ledgers集合下的文檔結構 (如ledger_structure_001等)
     document_structure: {
-      id: 'string - 帳本唯一識別碼 (與文檔ID相同)',
+      ledgerId: 'string - 帳本唯一識別碼 (與文檔ID相同)',
       name: 'string - 帳本名稱 (如"個人記帳本", "專案支出")',
       type: 'string - 帳本類型: "personal"|"project"|"category"|"shared"',
       description: 'string - 帳本描述說明',
-      owner_id: 'string - 帳本擁有者ID (對應users集合)',
+      userId: 'string - 帳本擁有者ID (對應users集合)',
+      createdBy: 'string - 帳本建立者ID (對應users集合)',
       members: 'array - 帳本成員列表 (用戶ID陣列)',
       currency: 'string - 預設貨幣單位 (如"TWD", "USD")',
       timezone: 'string - 時區設定 (如"Asia/Taipei")',
       settings: 'object - 帳本設定',
       permissions: 'object - 權限設定 (擁有者、管理員、成員、檢視者)',
       attributes: 'object - 帳本屬性 (狀態、進度、分類等)',
-      created_at: 'timestamp - 建立時間 (符合1311.FS.js規範)',
-      updated_at: 'timestamp - 最後更新時間 (符合1311.FS.js規範)',
+      createdAt: 'timestamp - 建立時間 (符合1311.FS.js規範)',
+      updatedAt: 'timestamp - 最後更新時間 (符合1311.FS.js規範)',
       archived: 'boolean - 是否已歸檔',
       status: 'string - 帳本狀態: "active"|"completed"|"archived"',
       metadata: 'object - 帳本元數據 (交易總數、總金額、成員數量等)'
@@ -2290,20 +2289,21 @@ async function FS_initializeLedgerStructure() {
       transactions: {
         description: '帳本交易記錄子集合',
         document_structure: {
-          id: 'string - 交易唯一識別碼',
+          transactionId: 'string - 交易唯一識別碼',
+          ledgerId: 'string - 交易所屬帳本ID',
           amount: 'number - 交易金額',
           type: 'string - 交易類型: "income"|"expense"',
           description: 'string - 交易描述',
-          category_id: 'string - 科目ID',
-          category_name: 'string - 科目名稱',
-          account_id: 'string - 帳戶ID',
-          account_name: 'string - 帳戶名稱',
+          categoryId: 'string - 科目ID',
+          categoryName: 'string - 科目名稱',
+          accountId: 'string - 帳戶ID',
+          accountName: 'string - 帳戶名稱',
           date: 'string - 交易日期 (YYYY-MM-DD格式)',
-          user_id: 'string - 記帳用戶ID',
+          userId: 'string - 記帳用戶ID',
           source: 'string - 記帳來源: "manual"|"quick"|"import"',
           tags: 'array - 標籤列表',
           location: 'object - 位置資訊 (可選)',
-          receipt_url: 'string - 收據圖片URL (可選)',
+          receiptUrl: 'string - 收據圖片URL (可選)',
           notes: 'string - 備註 (可選)',
           createdAt: 'timestamp - 建立時間',
           updatedAt: 'timestamp - 最後更新時間'
@@ -2312,17 +2312,17 @@ async function FS_initializeLedgerStructure() {
       categories: {
         description: '帳本科目分類子集合',
         document_structure: {
-          id: 'string - 科目唯一識別碼',
+          categoryId: 'string - 科目唯一識別碼',
           name: 'string - 科目名稱',
           type: 'string - 科目類型: "income"|"expense"',
           icon: 'string - 科目圖示 emoji',
           color: 'string - 科目顏色 hex code',
-          parent_id: 'string - 父科目ID (可選，支援多層級)',
+          parentId: 'string - 父科目ID (可選，支援多層級)',
           level: 'number - 科目層級 (1為頂層)',
           order: 'number - 排序順序',
-          is_default: 'boolean - 是否為預設科目',
-          is_active: 'boolean - 是否啟用',
-          budget_limit: 'number - 預算上限 (可選)',
+          isDefault: 'boolean - 是否為預設科目',
+          isActive: 'boolean - 是否啟用',
+          budgetLimit: 'number - 預算上限 (可選)',
           description: 'string - 科目說明 (可選)',
           createdAt: 'timestamp - 建立時間',
           updatedAt: 'timestamp - 最後更新時間'
@@ -2331,38 +2331,39 @@ async function FS_initializeLedgerStructure() {
       accounts: {
         description: '帳本帳戶子集合',
         document_structure: {
-          id: 'string - 帳戶唯一識別碼',
+          accountId: 'string - 帳戶唯一識別碼',
           name: 'string - 帳戶名稱',
           type: 'string - 帳戶類型: "cash"|"bank"|"credit"|"investment"|"other"',
           icon: 'string - 帳戶圖示 emoji',
           color: 'string - 帳戶顏色 hex code',
           currency: 'string - 貨幣單位',
-          initial_balance: 'number - 初始餘額',
-          current_balance: 'number - 當前餘額',
-          credit_limit: 'number - 信用額度 (信用卡帳戶)',
-          bank_name: 'string - 銀行名稱 (銀行帳戶)',
-          account_number: 'string - 帳號末四碼 (脫敏)',
-          is_default: 'boolean - 是否為預設帳戶',
-          is_active: 'boolean - 是否啟用',
-          include_in_total: 'boolean - 是否計入總資產',
+          initialBalance: 'number - 初始餘額',
+          currentBalance: 'number - 當前餘額',
+          creditLimit: 'number - 信用額度 (信用卡帳戶)',
+          bankName: 'string - 銀行名稱 (銀行帳戶)',
+          accountNumber: 'string - 帳號末四碼 (脫敏)',
+          isDefault: 'boolean - 是否為預設帳戶',
+          isActive: 'boolean - 是否啟用',
+          includeInTotal: 'boolean - 是否計入總資產',
           notes: 'string - 備註 (可選)',
           createdAt: 'timestamp - 建立時間',
           updatedAt: 'timestamp - 最後更新時間'
         }
       },
       budgets: {
-        description: '帳本預算子集合 (與1312.BM.js模組整合)',
+        description: '預算子集合 (與1312.BM.js模組整合)',
         document_structure: {
-          id: 'string - 預算唯一識別碼',
+          budgetId: 'string - 預算唯一識別碼',
+          ledgerId: 'string - 預算所屬帳本ID',
           name: 'string - 預算名稱',
           type: 'string - 預算類型: "monthly"|"yearly"|"custom"',
-          category_ids: 'array - 關聯科目ID列表',
+          categoryIds: 'array - 關聯科目ID列表',
           total_amount: 'number - 預算總金額',
           used_amount: 'number - 已使用金額',
-          start_date: 'timestamp - 預算開始日期',
-          end_date: 'timestamp - 預算結束日期',
+          startDate: 'timestamp - 預算開始日期',
+          endDate: 'timestamp - 預算結束日期',
           alert_percentage: 'number - 警示百分比 (如80%)',
-          is_active: 'boolean - 是否啟用',
+          isActive: 'boolean - 是否啟用',
           createdAt: 'timestamp - 建立時間',
           updatedAt: 'timestamp - 最後更新時間'
         }
@@ -2373,7 +2374,7 @@ async function FS_initializeLedgerStructure() {
     permissions_structure: {
       owner: 'string - 擁有者用戶ID',
       admins: 'array - 管理員用戶ID列表',
-      members: 'array - 一般成員用戶ID列表', 
+      members: 'array - 一般成員用戶ID列表',
       viewers: 'array - 僅檢視用戶ID列表',
       settings: {
         allow_invite: 'boolean - 是否允許邀請成員',
@@ -2676,17 +2677,17 @@ module.exports = {
   FS_initializeBudgetStructure,
   FS_createBudgetsSubcollectionFramework,
   FS_createCompleteSubcollectionFramework,
-  FS_createBudgetInLedger: (ledgerId, budgetId, budgetData, requesterId) => 
-    FS_createDocument(`ledgers/${ledgerId}/budgets`, budgetId, budgetData, requesterId),
-  FS_getBudgetFromLedger: (ledgerId, budgetId, requesterId) => 
+  FS_createBudgetInLedger: (ledgerId, budgetData, requesterId) =>
+    FS_createDocument(`ledgers/${ledgerId}/budgets`, budgetData.budgetId || `budget_${Date.now()}`, budgetData, requesterId), // Using budgetId from data or generating one
+  FS_getBudgetFromLedger: (ledgerId, budgetId, requesterId) =>
     FS_getDocument(`ledgers/${ledgerId}/budgets`, budgetId, requesterId),
-  FS_updateBudgetInLedger: (ledgerId, budgetId, updateData, requesterId) => 
+  FS_updateBudgetInLedger: (ledgerId, budgetId, updateData, requesterId) =>
     FS_updateDocument(`ledgers/${ledgerId}/budgets`, budgetId, updateData, requesterId),
-  FS_deleteBudgetFromLedger: (ledgerId, budgetId, requesterId) => 
+  FS_deleteBudgetFromLedger: (ledgerId, budgetId, requesterId) =>
     FS_deleteDocument(`ledgers/${ledgerId}/budgets`, budgetId, requesterId),
-  FS_queryBudgetsInLedger: (ledgerId, queryConditions, requesterId, options) => 
+  FS_queryBudgetsInLedger: (ledgerId, queryConditions, requesterId, options) =>
     FS_queryCollection(`ledgers/${ledgerId}/budgets`, queryConditions, requesterId, options),
-    
+
   // 完整子集合管理：直接使用 FS_createDocument() 處理各種子集合操作
   // 範例：FS_createDocument(`ledgers/${ledgerId}/accounts`, accountId, accountData, requesterId)
   // 範例：FS_createDocument(`ledgers/${ledgerId}/categories`, categoryId, categoryData, requesterId)
