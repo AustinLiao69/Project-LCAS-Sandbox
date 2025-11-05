@@ -1,0 +1,181 @@
+------------------------------------------
+20251105. 新增1351欄位在Firebase中
+
+請參照9909文件，以資深SA深入思考、分析原因。並提出解決方案。
+提案時請注意以下方向：
+1.	必須等我Approve之後才能開始編修代碼。
+2.	模組板次與函數版次都要升版。
+3.	現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、加強穩定性、測試等手段。
+4.	將任務切分成數個階段處理，切分的依據以每階段結束都能執行一次測試驗證為主。
+5.	請提出你的insight
+6.	請列出問題、詳細說明並提出你的看法
+7.	所有的文件與模組代碼編寫務必遵守0098文件
+8.	分析原因及提出解決方案時，除了列出真實原因外，也必須用簡單的概念解釋(例如公司部門的概念)
+我現在想要進行0090規範的P2其中的協作功能，第一步是將協作相關的資料結構匯入到firebase
+請你
+1.	列出目前1311規範的資料結構
+AL
+
+Assistant1 minute ago
+Read 6 files
+根據9909文件中的資深SA身份，我深入分析了當前1311.FS.js模組的資料結構，並提出P2協作功能實作方案。
+🔍 問題分析
+核心問題識別
+1.	協作功能缺失：當前1311.FS.js模組缺乏協作管理所需的Firebase資料結構
+2.	資料結構不完整：現有結構主要支援單用戶場景，無法支援多用戶協作
+3.	權限管理缺失：缺乏帳本成員管理和權限控制的資料模型
+根本原因分析
+1.	架構設計侷限：1311模組設計時專注於Phase 1功能，未考慮協作需求
+2.	資料模型單一：現有ledgers集合僅支援個人帳本，缺乏協作屬性
+3.	權限體系缺失：沒有建立用戶在不同帳本中的角色和權限管理機制
+💡 SA專業洞察 (Insights)
+🎯 關鍵發現
+1.	部門化概念：就像公司中不同部門需要不同的存取權限，協作帳本也需要成員角色分級
+2.	專案管理概念：協作功能類似專案管理，需要邀請機制、成員管理、權限控制
+3.	資料關聯性：協作資料必須與現有ledgers集合建立強關聯，避免資料孤島
+⚠️ MVP階段聚焦問題
+當前核心問題：缺乏協作功能的基礎資料結構，無法支援P2階段的協作需求
+解決優先級：
+1.	高優先：建立協作相關的Firebase集合結構
+2.	中優先：整合現有ledgers集合，支援協作屬性
+3.	低優先：建立成員邀請和權限管理機制
+📊 當前1311.FS.js規範的資料結構清單
+🔥 現有Firebase Firestore架構
+├── users/                     (集合)
+│   └── {email}/              (文檔)
+│       ├── email: string
+│       ├── displayName: string
+│       ├── userMode: string
+│       ├── emailVerified: boolean
+│       ├── createdAt: timestamp
+│       ├── lastActiveAt: timestamp
+│       └── preferences: object
+├── ledgers/                   (集合)
+│   └── {ledger_id}/          (文檔)
+│       ├── name: string
+│       ├── description: string
+│       ├── owner_id: string
+│       ├── members: array     ← 現有但功能有限
+│       ├── type: string
+│       ├── currency: string
+│       ├── timezone: string
+│       ├── settings: object
+│       ├── created_at: timestamp
+│       ├── updated_at: timestamp
+│       └── status: string
+│       │
+│       ├── transactions/      (子集合)
+│       │   └── {txn_id}/
+│       ├── accounts/          (子集合)
+│       │   └── {acc_id}/
+│       └── categories/        (子集合)
+│           └── {cat_id}/
+└── _system/                   (集合)
+    ├── config/               (文檔)
+    ├── default_categories/   (文檔)
+    ├── default_account_types/ (文檔)
+    └── assessment_questions/ (文檔)
+📋 現有結構分析
+優點：
+•	基礎架構完整，支援單用戶記帳功能
+•	帳本已有基本的members陣列欄位
+•	子集合設計符合協作需求
+缺陷：
+•	缺乏詳細的權限管理機制
+•	沒有成員邀請和加入流程
+•	缺乏協作操作的歷史追蹤
+•	沒有即時協作同步機制
+🔧 解決方案提案
+階段一：擴展1311.FS.js模組支援協作資料結構
+目標：在1311.FS.js中新增協作管理所需的Firebase文檔結構定義
+具體作業：
+1.	新增FS_initializeCollaborationStructure()函數
+2.	在FS_initializeSystemConfig()中整合協作結構初始化
+3.	升級模組版本至v2.6.0
+新增協作集合結構：
+// 新增到1311.FS.js中的協作結構
+collaborationStructure = {
+  version: '1.0.0',
+  description: '1313.CM.js協作管理模組Firebase文檔結構',
+  collections: {
+    collaborations: {
+      document_structure: {
+        ledger_id: 'string - 關聯帳本ID',
+        members: 'array - 成員列表',
+        permissions: 'object - 權限設定',
+        sync_settings: 'object - 同步設定',
+        notification_rules: 'object - 通知規則',
+        createdAt: 'timestamp - 建立時間',
+        updatedAt: 'timestamp - 更新時間'
+      }
+    },
+    member_invitations: {
+      document_structure: {
+        invitation_id: 'string - 邀請ID',
+        ledger_id: 'string - 帳本ID',
+        inviter_id: 'string - 邀請人ID',
+        invitee_email: 'string - 被邀請人email',
+        permission_level: 'string - 權限等級',
+        status: 'string - 邀請狀態',
+        createdAt: 'timestamp - 建立時間',
+        expires_at: 'timestamp - 過期時間'
+      }
+    },
+    collaboration_logs: {
+      document_structure: {
+        log_id: 'string - 日誌ID',
+        ledger_id: 'string - 帳本ID',
+        user_id: 'string - 用戶ID',
+        action_type: 'string - 操作類型',
+        action_data: 'object - 操作資料',
+        timestamp: 'timestamp - 時間戳',
+        ip_address: 'string - IP地址'
+      }
+    }
+  }
+}
+階段二：增強現有ledgers集合協作支援
+目標：擴充現有ledgers集合，支援協作功能
+具體作業：
+1.	擴充ledgers文檔結構，新增協作相關欄位
+2.	更新FS_createUserBasicLedger()函數，支援協作設定
+3.	升級相關函數版次
+ledgers集合擴充：
+// 擴充現有ledgers集合
+ledgers: {
+  // 現有欄位保持不變
+  // 新增協作相關欄位
+  collaboration: {
+    enabled: 'boolean - 是否啟用協作',
+    max_members: 'number - 最大成員數',
+    join_policy: 'string - 加入政策',
+    default_permission: 'string - 預設權限'
+  },
+  permissions: {
+    owner: 'string - 擁有者ID',
+    admins: 'array - 管理員列表',
+    members: 'array - 一般成員列表',
+    viewers: 'array - 檢視者列表'
+  }
+}
+階段三：建立協作集合框架
+目標：在Firebase中建立完整的協作集合框架
+具體作業：
+1.	建立collaborations、member_invitations、collaboration_logs集合
+2.	建立範例協作文檔，確保集合在Firebase控制台可見
+3.	驗證協作資料結構完整性
+📋 版本升級計畫
+•	1311.FS.js：v2.5.0 → v2.6.0
+•	新增函數：FS_initializeCollaborationStructure() v2025-11-04-V1.0.0
+•	升級函數：FS_initializeSystemConfig() v2025-11-04-V2.4.0
+🎯 MVP階段實作重點
+1.	專注核心功能：僅實作基礎協作資料結構，避免複雜的同步機制
+2.	確保相容性：嚴格遵循現有1311.FS.js架構模式
+3.	階段性驗證：每階段完成後都能執行基礎測試，確認資料結構正確建立
+🚀 預期結果
+修正後的Firebase架構將包含：
+1.	完整協作支援：collaborations、member_invitations、collaboration_logs三個核心集合
+2.	增強型帳本：ledgers集合包含完整的協作屬性和權限管理
+3.	向下相容：現有功能完全不受影響，新功能無縫整合
+請確認是否Approve此提案，我將按階段進行實作，確保每階段結束後都能進行測試驗證。
+
