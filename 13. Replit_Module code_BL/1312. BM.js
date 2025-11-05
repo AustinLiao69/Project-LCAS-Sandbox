@@ -2,7 +2,7 @@
  * BM_預算管理模組_2.2.0
  * @module BM模組
  * @description 預算管理系統 - 支援預算設定、追蹤、警示與分析
- * @update 2025-10-31: 升級至2.2.0版本，階段一修正：智能使用者識別邏輯，解決created_by顯示問題
+ * @update 2025-10-31: 升級至2.2.0版本，階段一修正：智能使用者識別邏輯，解決createdBy顯示問題
  */
 
 console.log('📊 BM 預算管理模組載入中...');
@@ -31,11 +31,11 @@ function createStandardResponse(success, data = null, message = '', errorCode = 
 }
 
 /**
- * 01. 建立預算設定 - 階段一created_by問題修正版
+ * 01. 建立預算設定 - 階段一createdBy問題修正版
  * @version 2025-10-31-V2.3.0
  * @date 2025-10-31 06:30:00
- * @description 為特定帳本建立新的預算設定（強制使用子集合架構：ledgers/{ledger_id}/budgets/{budget_id}）
- * @update 階段一修正：智能使用者識別邏輯，從ledgerId提取真實使用者email，解決created_by顯示system_user問題
+ * @description 為特定帳本建立新的預算設定（強制使用子集合架構：ledgers/{ledgerId}/budgets/{budgetId}）
+ * @update 階段一修正：智能使用者識別邏輯，從ledgerId提取真實使用者email，解決createdBy顯示system_user問題
  */
 BM.BM_createBudget = async function(budgetData) {
   const logPrefix = '[BM_createBudget]';
@@ -89,7 +89,7 @@ BM.BM_createBudget = async function(budgetData) {
     if (typeof budgetData === 'object' && budgetData !== null) {
       // API格式：{ledgerId, userId, ...budgetDataPayload}
       // 階段一核心修正：智能使用者識別邏輯
-      userId = budgetData.userId || budgetData.user_id || budgetData.created_by || budgetData.operatorId;
+      userId = budgetData.userId || budgetData.userId || budgetData.createdBy || budgetData.operatorId;
       
       // 階段一智能提取：從ledgerId提取真實使用者email
       if (!userId && ledgerId) {
@@ -114,7 +114,7 @@ BM.BM_createBudget = async function(budgetData) {
 
       // 驗證必要參數
       if (!userId) {
-        return createStandardResponse(false, null, '缺少用戶ID參數', 'MISSING_USER_ID');
+        return createStandardResponse(false, null, '缺少用戶ID參數', 'MISSING_userId');
       }
 
       // budgetDataPayload包含所有預算相關資料
@@ -151,8 +151,8 @@ BM.BM_createBudget = async function(budgetData) {
 
     // 建立預算物件
     const budget = {
-      budget_id: budgetId,
-      ledger_id: ledgerId, // 使用動態取得的 ledgerId
+      budgetId: budgetId,
+      ledgerId: ledgerId, // 使用動態取得的 ledgerId
       name: budgetDataPayload.name || '新預算',
       type: budgetType || 'monthly',
       amount: parseFloat(budgetDataPayload.amount),
@@ -166,8 +166,8 @@ BM.BM_createBudget = async function(budgetData) {
         critical_threshold: 95,
         enable_notifications: true
       },
-      created_by: userId,
-      created_at: now,
+      createdBy: userId,
+      createdAt: now,
       updated_at: now,
       status: 'active'
     };
@@ -244,7 +244,7 @@ BM.BM_createBudget = async function(budgetData) {
       name: budget.name,
       amount: budget.amount,
       type: budget.type,
-      ledger_id: ledgerId,
+      ledgerId: ledgerId,
       firebase_path: `${collectionPath}/${budgetId}`,
       collection_path: collectionPath,
       architecture: 'subcollection'
@@ -279,7 +279,7 @@ BM.BM_getBudgets = async function(queryParams = {}) {
         consumed_amount: 32000,
         type: 'monthly',
         status: 'active',
-        ledger_id: queryParams.ledgerId || 'default_ledger'
+        ledgerId: queryParams.ledgerId || 'default_ledger'
       },
       {
         id: 'budget_002',
@@ -288,7 +288,7 @@ BM.BM_getBudgets = async function(queryParams = {}) {
         consumed_amount: 156000,
         type: 'yearly',
         status: 'active',
-        ledger_id: queryParams.ledgerId || 'default_ledger'
+        ledgerId: queryParams.ledgerId || 'default_ledger'
       }
     ];
 
@@ -372,7 +372,7 @@ BM.BM_updateBudget = async function(budgetId, updateData, options = {}) {
     console.log(`${logPrefix} 更新預算 - 預算ID: ${budgetId}`);
 
     if (!budgetId) {
-      return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
+      return createStandardResponse(false, null, '缺少預算ID', 'MISSING_budgetId');
     }
 
     if (!updateData || Object.keys(updateData).length === 0) {
@@ -420,7 +420,7 @@ BM.BM_deleteBudget = async function(budgetId, options = {}) {
     console.log(`${logPrefix} 刪除預算 - 預算ID: ${budgetId}`);
 
     if (!budgetId) {
-      return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
+      return createStandardResponse(false, null, '缺少預算ID', 'MISSING_budgetId');
     }
 
     // 檢查確認Token（業務規則：所有刪除操作都需要確認）
@@ -721,16 +721,16 @@ BM.BM_updateBudgetUsage = async function(ledgerId, transactionData) {
         budget.consumed_amount = newUsage;
         budget.updated_at = new Date();
 
-        updatedBudgets.push(budget.budget_id);
+        updatedBudgets.push(budget.budgetId);
 
         // 檢查是否觸發警示
-        const alertCheck = await BM.BM_checkBudgetAlert(budget.budget_id, newUsage);
+        const alertCheck = await BM.BM_checkBudgetAlert(budget.budgetId, newUsage);
         if (alertCheck.alertRequired) {
           alertTriggered = true;
-          await BM.BM_triggerBudgetAlert(budget.budget_id, alertCheck.alertLevel, []);
+          await BM.BM_triggerBudgetAlert(budget.budgetId, alertCheck.alertLevel, []);
         }
 
-        // await FS.updateBudgetUsageInFirestore(budget.budget_id, newUsage); // 實際 Firestore 操作
+        // await FS.updateBudgetUsageInFirestore(budget.budgetId, newUsage); // 實際 Firestore 操作
       }
     }
 
@@ -940,7 +940,7 @@ BM.BM_triggerBudgetAlert = async function(budgetId, alertType, recipientList) {
     // 記錄警示
     const alertRecord = {
       alert_id: alertId,
-      budget_id: budgetId,
+      budgetId: budgetId,
       alert_type: alertType,
       trigger_condition: {
         usage_rate: (budgetData.consumed_amount / budgetData.amount) * 100,
@@ -1143,7 +1143,7 @@ BM.BM_compareBudgetAcrossLedgers = async function(ledgerIds, comparisonType) {
       const efficiency = totalBudget > 0 ? (totalUsed / totalBudget) * 100 : 0;
 
       ledgerComparisons.push({
-        ledger_id: ledgerId,
+        ledgerId: ledgerId,
         total_budget: totalBudget,
         total_used: totalUsed,
         efficiency_rate: efficiency,
@@ -1225,7 +1225,7 @@ BM.BM_createBudgetCategory = async function(ledgerId, categoryData) {
       percentage: categoryData.percentage || 0,
       alert_threshold: categoryData.alert_threshold || 80,
       description: categoryData.description || '',
-      created_at: new Date()
+      createdAt: new Date()
     };
 
     // 儲存分類 (模擬)
@@ -1492,8 +1492,8 @@ BM.BM_getActiveBudgets = async function(ledgerId) {
   // return await FS.getActiveBudgetsFromFirestore(ledgerId); // 實際 Firestore 操作
   return [
     {
-      budget_id: 'budget_001',
-      ledger_id: ledgerId,
+      budgetId: 'budget_001',
+      ledgerId: ledgerId,
       name: '月度預算',
       amount: 50000,
       consumed_amount: 35000,
@@ -1517,7 +1517,7 @@ BM.BM_getBudgetData = async function(budgetId) {
   // 模擬從資料庫取得預算資料
   // return await FS.getBudgetFromFirestore(budgetId); // 實際 Firestore 操作
   return {
-    budget_id: budgetId,
+    budgetId: budgetId,
     name: '月度預算',
     amount: 50000,
     consumed_amount: 35000,
@@ -1592,14 +1592,14 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
     console.log(`${logPrefix} 取得預算詳情 - 預算ID: ${budgetId}`);
 
     if (!budgetId) {
-      return createStandardResponse(false, null, '缺少預算ID', 'MISSING_BUDGET_ID');
+      return createStandardResponse(false, null, '缺少預算ID', 'MISSING_budgetId');
     }
 
     // 強制要求ledgerId參數用於子集合查詢
     const ledgerId = options.ledgerId;
     if (!ledgerId || ledgerId.trim() === '') {
       console.error(`${logPrefix} ❌ 致命錯誤：缺少ledgerId，無法查詢子集合`);
-      return createStandardResponse(false, null, '查詢預算詳情失敗：缺少ledgerId參數，系統已完全禁用頂層budgets集合', 'MISSING_LEDGER_ID_FOR_SUBCOLLECTION');
+      return createStandardResponse(false, null, '查詢預算詳情失敗：缺少ledgerId參數，系統已完全禁用頂層budgets集合', 'MISSING_ledgerId_FOR_SUBCOLLECTION');
     }
 
     // 完全強制使用子集合路徑查詢，絕對禁用頂層budgets集合
