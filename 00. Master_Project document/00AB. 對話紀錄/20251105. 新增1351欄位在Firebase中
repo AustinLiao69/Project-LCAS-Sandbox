@@ -8,9 +8,168 @@
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
-=>所有的命名請採用駝峰型命名法
 
-我完全同意你的見解！這是更合理的Firebase架構設計。協作功能確實應該是獨立的頂層集合，與ledgers和users平級，這樣的設計有以下優勢：
+=>請先專注在將協作功能導入到1311及1351(或其他有dependancy的模組)就好。
+將1311修改成駝峰式命名的initiative先不要作。請依照我的指示修改你的提案。
+
+🎯 三階段解決方案
+階段一：修正架構命名規範，整合到1311.FS.js
+目標：將協作架構整合到1311.FS.js，統一命名規範
+具體作業：
+1.	修正提案命名為snake_case格式
+2.	在1311.FS.js中新增FS_initializeCollaborationStructure()函數
+3.	升級1311.FS.js版本至v2.7.0
+修正後的Firebase架構：
+collaborationStructure = {
+  version: '1.0.0',
+  description: '協作管理Firebase文檔結構',
+  collections: {
+    collaborations: {
+      document_structure: {
+        ledger_id: 'string - 帳本ID',
+        owner_id: 'string - 擁有者ID', 
+        collaboration_type: 'string - 協作類型',
+        settings: 'object - 設定',
+        created_at: 'timestamp - 建立時間',
+        updated_at: 'timestamp - 更新時間'
+      },
+      sub_collections: {
+        members: {
+          user_id: 'string - 用戶ID',
+          email: 'string - 電子郵件',
+          role: 'string - 角色',
+          permissions: 'object - 權限',
+          joined_at: 'timestamp - 加入時間',
+          status: 'string - 狀態'
+        },
+        invitations: {
+          invitation_id: 'string - 邀請ID',
+          inviter_id: 'string - 邀請者ID',
+          invitee_email: 'string - 被邀請者郵件',
+          role: 'string - 角色',
+          status: 'string - 狀態',
+          created_at: 'timestamp - 建立時間',
+          expires_at: 'timestamp - 過期時間'
+        },
+        permissions: {
+          permission_id: 'string - 權限ID',
+          user_id: 'string - 用戶ID',
+          resource_type: 'string - 資源類型',
+          permissions: 'object - 權限設定',
+          granted_by: 'string - 授權者',
+          granted_at: 'timestamp - 授權時間'
+        }
+      }
+    }
+  }
+}
+
+階段二：更新相關依賴模組支援協作架構
+目標：修改1351.MLS.js和1313.CM.js支援新架構
+相關模組清單：
+1.	1351.MLS.js - 多帳本管理模組：需要支援協作帳本查詢和管理
+2.	1313.CM.js - 協作管理模組：需要實作協作邀請和成員管理
+3.	1309.AM.js - 帳號管理模組：需要支援協作邀請通知
+4.	1331.DD1.js - 資料分發模組：需要處理協作事件分發
+具體修改：
+•	1351.MLS.js：新增MLS_getCollaborationLedgers()函數
+•	1313.CM.js：新增CM_initializeCollaboration()函數
+•	1309.AM.js：新增AM_processCollaborationInvite()函數
+•	1331.DD1.js：新增DD1_distributeCollaborationEvent()函數
+階段三：建立Firebase集合框架和驗證
+目標：在Firebase中建立完整的協作集合框架
+具體作業：
+1.	執行FS_initializeCollaborationStructure()建立集合框架
+2.	建立範例協作文檔，確保集合在Firebase控制台可見
+3.	驗證所有相關模組能正確讀寫新架構
+📋 版本升級計畫
+•	1311.FS.js：v2.6.0 → v2.7.0
+•	1351.MLS.js：配合新增協作功能支援，升級版本
+•	1313.CM.js：實作完整協作管理功能
+•	1309.AM.js：新增協作邀請處理功能
+•	1331.DD1.js：新增協作事件分發功能
+新增函數：
+•	FS_initializeCollaborationStructure() v2025-11-05-V1.0.0
+•	FS_createCollaborationDocument() v2025-11-05-V1.0.0
+•	FS_manageCollaborationMembers() v2025-11-05-V1.0.0
+🎯 MVP階段實作重點
+1.	專注核心功能：僅實作基礎協作邀請和成員管理，避免複雜的即時同步
+2.	確保相容性：嚴格遵循0098文件規範和現有1311.FS.js架構模式
+3.	階段性驗證：每階段完成後都能執行基礎測試，確認協作功能正常運作
+🚀 預期結果
+修正後的架構將提供：
+1.	統一命名規範：所有協作相關欄位使用snake_case，與現有系統一致
+2.	完整協作支援：collaborations集合包含members、invitations、permissions三個子集合
+3.	模組間協同：相關BL模組都能正確處理協作功能
+4.	向下相容：現有功能完全不受影響，新功能無縫整合
+請確認是否Approve此修正提案，我將按階段進行實作，確保每階段結束後都能進行測試驗證。
+
+
+
+------------------------------------------
+20251106. 新增1351欄位在Firebase中
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+=> 請將以下架構提案如何導入到1311及其dependancies，例如1351模組，如果還有其他模組也請列在你的提案中
+
+🎯 優化後的Firebase架構（駝峰命名法）
+
+├── collaborations/            (集合) ← 獨立的協作集合
+│   └── {ledgerId}/           (文檔)
+│       ├── ledgerId: string
+│       ├── ownerId: string
+│       ├── collaborationType: string
+│       ├── settings: object
+│       ├── createdAt: timestamp
+│       ├── updatedAt: timestamp
+│       │
+│       ├── members/          (子集合) ← 成員管理
+│       │   └── {userId}/
+│       │       ├── userId: string
+│       │       ├── email: string
+│       │       ├── role: string
+│       │       ├── permissions: object
+│       │       ├── joinedAt: timestamp
+│       │       └── status: string
+│       │
+│       ├── invitations/      (子集合) ← 邀請管理
+│       │   └── {invitationId}/
+│       │       ├── invitationId: string
+│       │       ├── inviterId: string
+│       │       ├── inviteeEmail: string
+│       │       ├── role: string
+│       │       ├── status: string
+│       │       ├── createdAt: timestamp
+│       │       └── expiresAt: timestamp
+│       │
+│       └── permissions/      (子集合) ← 權限管理
+│           └── {permissionId}/
+│               ├── userId: string
+│               ├── resourceType: string
+│               ├── permissions: object
+│               ├── grantedBy: string
+│               └── grantedAt: timestamp
+
+------------------------------------------
+20251106. 新增1351欄位在Firebase中
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+請參照9909文件，以資深SA深入思考、分析原因。並提出解決方案。
+提案時請注意以下方向：
+1. 必須等我Approve之後才能開始編修代碼。
+2. 模組板次與函數版次都要升版。
+3. 現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、加強穩定性、測試等手段。
+4. 將任務切分成數個階段處理，切分的依據以每階段結束都能執行一次測試驗證為主。
+5. 請提出你的insight
+6. 請列出問題、詳細說明並提出你的看法
+7. 所有的文件與模組代碼編寫務必遵守0098文件
+8. 分析原因及提出解決方案時，除了列出真實原因外，也必須用簡單的概念解釋(例如公司部門的概念)
+
+=>請修改你的提案，所有的命名請採用駝峰型命名法
+
+
 🎯 優化後的Firebase架構
 ├── users/                     (集合)
 │   └── {email}/              (文檔)
