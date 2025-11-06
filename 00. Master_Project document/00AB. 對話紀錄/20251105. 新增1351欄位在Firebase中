@@ -83,6 +83,7 @@ collaborations/            (集合)
 2.	新增FS_createCollaborationDocument()函數
 3.	新增FS_manageCollaborationMembers()函數
 4.	升級1311.FS.js版本至v2.7.0
+
 階段二：重構1351.MLS.js協作職責
 目標：釐清1351的協作相關功能，專注帳本管理
 職責重新定義：
@@ -93,6 +94,7 @@ collaborations/            (集合)
 •	1351調用1313提供的協作功能API
 •	1351專注帳本層面的協作屬性管理
 •	確保與1311.FS.js協作架構相容
+
 階段三：強化1313.CM.js協作邏輯
 目標：1313成為協作功能的唯一業務邏輯提供者
 功能整合：
