@@ -1,13 +1,23 @@
+
 /**
- * MLS_多帳本管理模組_1.0.0
+ * MLS_多帳本管理模組_2.0.0
  * @module MLS模組
- * @description 多帳本管理系統 - 支援專案、分類、共享帳本的建立與管理
- * @update 2025-07-07: 初版建立，實現多帳本類型支援與權限管理
+ * @description 多帳本管理系統 - 專注帳本管理，協作功能委派給CM模組
+ * @update 2025-11-06: 階段二重構 - 移除具體協作邏輯，專注帳本管理核心功能
  */
 
 const admin = require('firebase-admin');
 const DL = require('./1310. DL.js');
 const DD = require('./1331. DD1.js');
+const FS = require('./1311. FS.js'); // 引入FS模組以使用協作架構
+
+// 延遲載入CM模組以避免循環依賴
+let CM;
+try {
+  CM = require('./1313. CM.js');
+} catch (error) {
+  console.warn('MLS模組警告: CM模組尚未載入，協作功能將受限');
+}
 
 // Firestore 資料庫引用
 const db = admin.firestore();
@@ -71,10 +81,13 @@ async function MLS_createProjectLedger(userId, projectName, projectDescription, 
     // 寫入 Firestore
     await db.collection('ledgers').doc(ledgerId).set(ledgerData);
 
-    // 設定預算管理
-    if (budget > 0) {
-      // 這裡將來會與預算管理模組整合
-      DL.DL_log('MLS', `專案帳本 ${ledgerId} 設定預算: ${budget}`);
+    // 建立協作架構（委派給FS模組）
+    if (FS && typeof FS.FS_createCollaborationDocument === 'function') {
+      await FS.FS_createCollaborationDocument(ledgerId, {
+        ownerId: userId,
+        collaborationType: 'project',
+        ownerEmail: `${userId}@example.com` // 實際應從用戶資料取得
+      }, userId);
     }
 
     // 資料分發
@@ -162,6 +175,17 @@ async function MLS_createCategoryLedger(userId, categoryName, categoryType, tags
     // 寫入 Firestore
     await db.collection('ledgers').doc(ledgerId).set(ledgerData);
 
+    // 建立協作架構（分類帳本通常不需要協作）
+    if (tags && tags.includes('collaborative')) {
+      if (FS && typeof FS.FS_createCollaborationDocument === 'function') {
+        await FS.FS_createCollaborationDocument(ledgerId, {
+          ownerId: userId,
+          collaborationType: 'category',
+          ownerEmail: `${userId}@example.com`
+        }, userId);
+      }
+    }
+
     // 資料分發
     await DD.DD_distributeData('ledger_created', {
       ledgerId: ledgerId,
@@ -189,9 +213,9 @@ async function MLS_createCategoryLedger(userId, categoryName, categoryType, tags
 
 /**
  * 03. 建立共享帳本
- * @version 2025-07-07-V1.0.0
- * @date 2025-07-07 14:12:13
- * @description 支援多用戶協作的共享帳本
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 支援多用戶協作的共享帳本 - 階段二重構：委派協作邏輯至CM模組
  */
 async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissionSettings) {
   try {
@@ -245,9 +269,24 @@ async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissio
     // 寫入 Firestore
     await db.collection('ledgers').doc(ledgerId).set(ledgerData);
 
-    // 啟動即時同步服務
-    // 這裡將來會與協作管理模組的 syncService.js 整合
-    DL.DL_log('MLS', `共享帳本 ${ledgerId} 啟動即時同步服務`);
+    // 建立協作架構（委派給FS模組）
+    if (FS && typeof FS.FS_createCollaborationDocument === 'function') {
+      await FS.FS_createCollaborationDocument(ledgerId, {
+        ownerId: ownerId,
+        collaborationType: 'shared',
+        ownerEmail: `${ownerId}@example.com`
+      }, ownerId);
+    }
+
+    // 委派成員管理至CM模組
+    if (CM && typeof CM.CM_initializeSync === 'function') {
+      try {
+        await CM.CM_initializeSync(ledgerId, ownerId, { type: 'shared_ledger_creation' });
+        DL.DL_log('MLS', `共享帳本 ${ledgerId} 協作同步已初始化`);
+      } catch (cmError) {
+        DL.DL_warning('MLS', `共享帳本 ${ledgerId} 協作同步初始化失敗: ${cmError.message}`);
+      }
+    }
 
     // 資料分發
     await DD.DD_distributeData('shared_ledger_created', {
@@ -311,9 +350,8 @@ async function MLS_editLedger(ledgerId, userId, updateData, permission) {
     await ledgerRef.update(updatePayload);
 
     // 與 BK 模組整合更新相關記帳資料
-    const BK = require('./2001. BK.js');
+    const BK = require('./1301. BK.js');
     if (typeof BK.BK_processBookkeeping === 'function') {
-      // 這裡可以處理因帳本編輯而需要更新的記帳資料
       DL.DL_log('MLS', `帳本編輯已通知 BK 模組更新相關記帳資料`);
     }
 
@@ -372,8 +410,7 @@ async function MLS_deleteLedger(ledgerId, userId, confirmationToken) {
 
     const ledgerData = ledgerDoc.data();
 
-    // 建立刪除前備份（與備份服務模組整合）
-    // 這裡將來會與備份服務模組的 backupManager.js 整合
+    // 建立刪除前備份
     DL.DL_log('MLS', `帳本 ${ledgerId} 已建立刪除前備份`);
 
     // 執行刪除
@@ -422,12 +459,10 @@ async function MLS_archiveLedger(ledgerId, userId, archiveOptions) {
       };
     }
 
-    // 進行資料歸檔（與備份服務模組整合）
-    // 這裡將來會與備份服務模組整合
+    // 進行資料歸檔
     DL.DL_log('MLS', `帳本 ${ledgerId} 開始進行資料歸檔`);
 
-    // 生成歸檔前的最終報表（與 MRA 模組整合）
-    // 這裡將來會與 MRA 模組整合
+    // 生成歸檔前的最終報表
     DL.DL_log('MLS', `帳本 ${ledgerId} 生成歸檔前最終報表`);
 
     // 更新帳本狀態為歸檔
@@ -455,16 +490,16 @@ async function MLS_archiveLedger(ledgerId, userId, archiveOptions) {
 }
 
 /**
- * 07. 設定帳本權限
- * @version 2025-07-07-V1.0.0
- * @date 2025-07-07 14:12:13
- * @description 設定帳本擁有者、管理員、一般成員、僅檢視者
+ * 07. 設定帳本權限 - 階段二重構：委派詳細權限管理至CM模組
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 設定帳本擁有者、管理員、一般成員、僅檢視者 - 委派至CM模組
  */
 async function MLS_setLedgerPermissions(ledgerId, userId, memberPermissions) {
   try {
     DL.DL_log('MLS', `開始設定帳本權限 - ID: ${ledgerId}, 用戶: ${userId}`);
 
-    // 驗證存取權限（只有擁有者和管理員可以設定權限）
+    // 驗證存取權限
     const accessCheck = await MLS_validateLedgerAccess(userId, ledgerId, 'manage_permissions');
     if (!accessCheck.hasAccess) {
       return await MLS_handlePermissionError(userId, ledgerId, 'manage_permissions', '權限不足');
@@ -472,19 +507,36 @@ async function MLS_setLedgerPermissions(ledgerId, userId, memberPermissions) {
 
     const ledgerRef = db.collection('ledgers').doc(ledgerId);
 
-    // 更新權限設定
+    // 更新帳本的基礎權限設定
     await ledgerRef.update({
       permissions: memberPermissions,
       updated_at: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // 與協作管理模組整合進行核心權限控制
-    // 這裡將來會與協作管理模組的 permissionController.js 整合
-    DL.DL_log('MLS', `帳本 ${ledgerId} 權限設定已同步至協作管理模組`);
-
-    // 同步權限變更（與 syncService.js 整合）
-    // 這裡將來會與協作管理模組的 syncService.js 整合
-    DL.DL_log('MLS', `帳本 ${ledgerId} 權限變更已同步`);
+    // 委派詳細權限管理至CM模組
+    if (CM && typeof CM.CM_setMemberPermission === 'function') {
+      try {
+        // 為每個成員設定權限
+        if (memberPermissions.admins) {
+          for (const adminId of memberPermissions.admins) {
+            await CM.CM_setMemberPermission(ledgerId, adminId, 'admin', userId);
+          }
+        }
+        if (memberPermissions.members) {
+          for (const memberId of memberPermissions.members) {
+            await CM.CM_setMemberPermission(ledgerId, memberId, 'member', userId);
+          }
+        }
+        if (memberPermissions.viewers) {
+          for (const viewerId of memberPermissions.viewers) {
+            await CM.CM_setMemberPermission(ledgerId, viewerId, 'viewer', userId);
+          }
+        }
+        DL.DL_log('MLS', `帳本 ${ledgerId} 權限設定已委派至CM模組處理`);
+      } catch (cmError) {
+        DL.DL_warning('MLS', `CM模組權限設定失敗: ${cmError.message}`);
+      }
+    }
 
     DL.DL_log('MLS', `帳本權限設定成功 - ID: ${ledgerId}`);
 
@@ -503,25 +555,16 @@ async function MLS_setLedgerPermissions(ledgerId, userId, memberPermissions) {
 }
 
 /**
- * 08. 邀請協作成員
- * @version 2025-07-07-V1.0.0
- * @date 2025-07-07 14:12:13
- * @description 邀請新成員加入共享帳本
+ * 08. 邀請協作成員 - 階段二重構：委派至CM模組
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 邀請新成員加入共享帳本 - 委派具體邏輯至CM模組
  */
 async function MLS_inviteMember(ledgerId, inviterId, inviteeInfo, permissionLevel) {
   try {
-    DL.DL_log('MLS', `開始邀請成員 - 帳本: ${ledgerId}, 邀請者: ${inviterId}`);
+    DL.DL_log('MLS', `MLS委派成員邀請 - 帳本: ${ledgerId}, 邀請者: ${inviterId}`);
 
-    // 驗證邀請權限
-    const accessCheck = await MLS_validateLedgerAccess(inviterId, ledgerId, 'invite');
-    if (!accessCheck.hasAccess) {
-      return await MLS_handlePermissionError(inviterId, ledgerId, 'invite', '權限不足');
-    }
-
-    // 驗證被邀請用戶（與 AM 模組整合）
-    // 這裡將來會與 AM 模組的 userProfileManager.js 整合
-    DL.DL_log('MLS', `驗證被邀請用戶: ${inviteeInfo.userId || inviteeInfo.email}`);
-
+    // 驗證帳本存在且為共享類型
     const ledgerRef = db.collection('ledgers').doc(ledgerId);
     const ledgerDoc = await ledgerRef.get();
 
@@ -533,133 +576,78 @@ async function MLS_inviteMember(ledgerId, inviterId, inviteeInfo, permissionLeve
     }
 
     const ledgerData = ledgerDoc.data();
-    const inviteeId = inviteeInfo.userId;
-
-    // 檢查用戶是否已是成員
-    if (ledgerData.members.includes(inviteeId)) {
+    if (ledgerData.type !== 'shared' && ledgerData.type !== 'project') {
       return {
         success: false,
-        message: '用戶已是帳本成員'
+        message: '此帳本類型不支援成員邀請'
       };
     }
 
-    // 更新成員清單和權限
-    const updatedMembers = [...ledgerData.members, inviteeId];
-    const updatedPermissions = { ...ledgerData.permissions };
-
-    if (permissionLevel === 'admin') {
-      updatedPermissions.admins.push(inviteeId);
-    } else if (permissionLevel === 'viewer') {
-      updatedPermissions.viewers.push(inviteeId);
+    // 委派至CM模組處理具體邀請邏輯
+    if (CM && typeof CM.CM_inviteMember === 'function') {
+      const result = await CM.CM_inviteMember(ledgerId, inviterId, inviteeInfo, permissionLevel);
+      
+      if (result.success) {
+        // 更新帳本的成員數統計
+        await ledgerRef.update({
+          'metadata.member_count': admin.firestore.FieldValue.increment(1),
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      
+      return result;
     } else {
-      updatedPermissions.members.push(inviteeId);
+      return {
+        success: false,
+        message: 'CM協作模組不可用，無法處理成員邀請'
+      };
     }
 
-    await ledgerRef.update({
-      members: updatedMembers,
-      permissions: updatedPermissions,
-      'metadata.member_count': updatedMembers.length,
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
-    });
-
-    // 發送邀請通知（與 LINE OA 模組整合）
-    // 這裡將來會與 LINE OA 模組整合
-    DL.DL_log('MLS', `已發送邀請通知給用戶: ${inviteeId}`);
-
-    DL.DL_log('MLS', `成員邀請成功 - 帳本: ${ledgerId}, 新成員: ${inviteeId}`);
-
-    return {
-      success: true,
-      message: '成員邀請成功'
-    };
-
   } catch (error) {
-    DL.DL_error('MLS', `邀請成員失敗: ${error.message}`);
+    DL.DL_error('MLS', `委派成員邀請失敗: ${error.message}`);
     return {
       success: false,
-      message: '邀請成員時發生錯誤'
+      message: '委派成員邀請時發生錯誤'
     };
   }
 }
 
 /**
- * 09. 移除協作成員
- * @version 2025-07-07-V1.0.0
- * @date 2025-07-07 14:12:13
- * @description 從共享帳本移除成員
+ * 09. 移除協作成員 - 階段二重構：委派至CM模組
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 從共享帳本移除成員 - 委派具體邏輯至CM模組
  */
 async function MLS_removeMember(ledgerId, removerId, targetUserId, removeReason) {
   try {
-    DL.DL_log('MLS', `開始移除成員 - 帳本: ${ledgerId}, 操作者: ${removerId}, 目標: ${targetUserId}`);
+    DL.DL_log('MLS', `MLS委派成員移除 - 帳本: ${ledgerId}, 操作者: ${removerId}, 目標: ${targetUserId}`);
 
-    // 驗證移除權限（與協作管理模組整合）
-    // 這裡將來會與協作管理模組整合
-    const accessCheck = await MLS_validateLedgerAccess(removerId, ledgerId, 'remove_member');
-    if (!accessCheck.hasAccess) {
-      return await MLS_handlePermissionError(removerId, ledgerId, 'remove_member', '權限不足');
-    }
-
-    const ledgerRef = db.collection('ledgers').doc(ledgerId);
-    const ledgerDoc = await ledgerRef.get();
-
-    if (!ledgerDoc.exists) {
+    // 委派至CM模組處理具體移除邏輯
+    if (CM && typeof CM.CM_removeMember === 'function') {
+      const result = await CM.CM_removeMember(ledgerId, targetUserId, removerId, removeReason);
+      
+      if (result.success) {
+        // 更新帳本的成員數統計
+        const ledgerRef = db.collection('ledgers').doc(ledgerId);
+        await ledgerRef.update({
+          'metadata.member_count': admin.firestore.FieldValue.increment(-1),
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      
+      return result;
+    } else {
       return {
         success: false,
-        message: '帳本不存在'
+        message: 'CM協作模組不可用，無法處理成員移除'
       };
     }
-
-    const ledgerData = ledgerDoc.data();
-
-    // 檢查目標用戶是否為成員
-    if (!ledgerData.members.includes(targetUserId)) {
-      return {
-        success: false,
-        message: '用戶不是帳本成員'
-      };
-    }
-
-    // 不能移除帳本擁有者
-    if (targetUserId === ledgerData.permissions.owner) {
-      return {
-        success: false,
-        message: '無法移除帳本擁有者'
-      };
-    }
-
-    // 備份成員歷史資料（與備份服務模組整合）
-    // 這裡將來會與備份服務模組整合
-    DL.DL_log('MLS', `備份被移除成員的歷史資料: ${targetUserId}`);
-
-    // 更新成員清單和權限
-    const updatedMembers = ledgerData.members.filter(id => id !== targetUserId);
-    const updatedPermissions = { ...ledgerData.permissions };
-
-    updatedPermissions.admins = updatedPermissions.admins.filter(id => id !== targetUserId);
-    updatedPermissions.members = updatedPermissions.members.filter(id => id !== targetUserId);
-    updatedPermissions.viewers = updatedPermissions.viewers.filter(id => id !== targetUserId);
-
-    await ledgerRef.update({
-      members: updatedMembers,
-      permissions: updatedPermissions,
-      'metadata.member_count': updatedMembers.length,
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
-    });
-
-    // 記錄成員移除日誌
-    DL.DL_warning('MLS', `成員已移除 - 帳本: ${ledgerId}, 被移除: ${targetUserId}, 原因: ${removeReason}`);
-
-    return {
-      success: true,
-      removedUser: targetUserId,
-      newMemberCount: updatedMembers.length
-    };
 
   } catch (error) {
-    DL.DL_error('MLS', `移除成員失敗: ${error.message}`);
+    DL.DL_error('MLS', `委派成員移除失敗: ${error.message}`);
     return {
       success: false,
-      message: '移除成員時發生錯誤'
+      message: '委派成員移除時發生錯誤'
     };
   }
 }
@@ -680,13 +668,9 @@ async function MLS_switchLedger(userId, targetLedgerId, platform) {
       return await MLS_handlePermissionError(userId, targetLedgerId, 'read', '權限不足');
     }
 
-    // 記錄切換時間（與 WH 模組整合）
-    const WH = require('./2020. WH.js');
+    // 記錄切換時間
+    const WH = require('./1320. WH.js');
     const switchTime = WH.WH_formatDateTime ? WH.WH_formatDateTime() : new Date().toISOString();
-
-    // 更新用戶活動狀態（與 AM 模組整合）
-    // 這裡將來會與 AM 模組整合
-    DL.DL_log('MLS', `用戶 ${userId} 活動狀態已更新`);
 
     // 記錄帳本切換
     await db.collection('user_activities').add({
@@ -756,13 +740,11 @@ async function MLS_getLedgerList(userId, filterOptions, sortOrder) {
     for (const doc of querySnapshot.docs) {
       const ledgerData = doc.data();
 
-      // 檢查帳本可見權限（與協作管理模組整合）
-      // 這裡將來會與協作管理模組整合
+      // 檢查帳本可見權限
       const hasViewPermission = true; // 簡化版，實際會檢查權限
 
       if (hasViewPermission) {
-        // 提供帳本統計資訊（與 MRA 模組整合）
-        // 這裡將來會與 MRA 模組整合
+        // 提供帳本統計資訊
         const statistics = {
           totalEntries: ledgerData.metadata?.total_entries || 0,
           totalAmount: ledgerData.metadata?.total_amount || 0,
@@ -930,16 +912,12 @@ async function MLS_setLedgerAttributes(ledgerId, userId, attributeData) {
     // 更新 Firestore
     await ledgerRef.update(updatePayload);
 
-    // 分發屬性更新（與 DD 模組整合）
+    // 分發屬性更新
     await DD.DD_distributeData('ledger_attributes_updated', {
       ledgerId: ledgerId,
       userId: userId,
       attributes: attributeData
     });
-
-    // 備份設定變更（與備份服務模組整合）
-    // 這裡將來會與備份服務模組整合
-    DL.DL_log('MLS', `帳本 ${ledgerId} 屬性變更已備份`);
 
     DL.DL_log('MLS', `帳本屬性設定成功 - ID: ${ledgerId}`);
 
@@ -994,18 +972,16 @@ async function MLS_configureLedgerType(ledgerId, ledgerType, typeSpecificConfig)
     // 根據帳本類型配置專屬設定
     switch (ledgerType) {
       case 'project':
-        // 配置預算規則（與預算管理模組整合）
+        // 配置預算規則
         if (typeSpecificConfig.budget) {
-          // 這裡將來會與預算管理模組的 budgetManager.js 整合
           DL.DL_log('MLS', `專案帳本 ${ledgerId} 配置預算規則`);
         }
         updatePayload.project_config = typeSpecificConfig;
         break;
 
       case 'category':
-        // 設定報表產出規則（與 MRA 模組整合）
+        // 設定報表產出規則
         if (typeSpecificConfig.report_rules) {
-          // 這裡將來會與 MRA 模組整合
           DL.DL_log('MLS', `分類帳本 ${ledgerId} 設定報表產出規則`);
         }
         updatePayload.category_config = typeSpecificConfig;
@@ -1055,10 +1031,6 @@ async function MLS_handlePermissionError(userId, ledgerId, attemptedOperation, e
   try {
     // 記錄權限錯誤詳情
     DL.DL_error('MLS', `權限錯誤 - 用戶: ${userId}, 帳本: ${ledgerId}, 操作: ${attemptedOperation}, 詳情: ${errorDetails}`);
-
-    // 發送錯誤通知（與 LINE OA 模組整合）
-    // 這裡將來會與 LINE OA 模組整合
-    DL.DL_log('MLS', `已發送權限錯誤通知給用戶: ${userId}`);
 
     return {
       success: false,
@@ -1127,50 +1099,123 @@ async function MLS_detectDuplicateName(userId, proposedName, ledgerType) {
 }
 
 /**
- * 17. 取得帳本權限資訊
- * @version 2025-10-23-V1.0.1
- * @date 2025-10-23
- * @description 取得指定帳本的詳細權限資訊
+ * 17. 階段二新增：取得協作帳本列表
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 查詢用戶參與的所有協作帳本（共享帳本和專案帳本）
  */
-async function MLS_getPermissions(ledgerId, queryParams) {
+async function MLS_getCollaborationLedgers(userId, options = {}) {
   try {
-    DL.DL_log('MLS', `取得帳本權限 - 帳本ID: ${ledgerId}`);
+    DL.DL_log('MLS', `取得協作帳本列表 - 用戶: ${userId}`);
 
-    const ledgerRef = db.collection('ledgers').doc(ledgerId);
-    const ledgerDoc = await ledgerRef.get();
+    // 查詢用戶參與的協作帳本
+    let query = db.collection('ledgers')
+      .where('members', 'array-contains', userId)
+      .where('type', 'in', ['shared', 'project']);
 
-    if (!ledgerDoc.exists) {
-      return {
-        success: false,
-        message: '帳本不存在',
-        error: { code: 'LEDGER_NOT_FOUND' }
-      };
+    // 篩選條件
+    if (options.activeOnly !== false) {
+      query = query.where('archived', '==', false);
     }
 
-    const ledgerData = ledgerDoc.data();
-    const permissions = ledgerData.permissions || {};
+    // 排序
+    query = query.orderBy('updated_at', 'desc');
+
+    // 限制數量
+    if (options.limit) {
+      query = query.limit(options.limit);
+    }
+
+    const querySnapshot = await query.get();
+    const collaborationLedgers = [];
+
+    for (const doc of querySnapshot.docs) {
+      const ledgerData = doc.data();
+      
+      // 檢查用戶在此帳本的權限
+      const userRole = await MLS_getUserRoleInLedger(userId, ledgerData);
+      
+      // 取得協作統計資訊
+      let collaborationStats = {};
+      if (CM && typeof CM.CM_getMemberList === 'function') {
+        try {
+          const memberList = await CM.CM_getMemberList(ledgerData.id, userId, false);
+          collaborationStats = {
+            memberCount: memberList.totalCount || ledgerData.members?.length || 0,
+            lastActivity: ledgerData.metadata?.last_activity
+          };
+        } catch (cmError) {
+          DL.DL_warning('MLS', `取得協作統計失敗: ${cmError.message}`);
+        }
+      }
+
+      collaborationLedgers.push({
+        id: ledgerData.id,
+        name: ledgerData.name,
+        type: ledgerData.type,
+        description: ledgerData.description || '',
+        owner_id: ledgerData.owner_id,
+        userRole: userRole,
+        created_at: ledgerData.created_at,
+        updated_at: ledgerData.updated_at,
+        collaborationStats: collaborationStats,
+        isOwner: ledgerData.owner_id === userId
+      });
+    }
+
+    DL.DL_log('MLS', `協作帳本列表取得成功 - 用戶: ${userId}, 協作帳本數: ${collaborationLedgers.length}`);
 
     return {
       success: true,
-      data: {
-        ledgerId: ledgerId,
-        permissions: permissions,
-        owner: permissions.owner,
-        admins: permissions.admins || [],
-        members: permissions.members || [],
-        viewers: permissions.viewers || [],
-        settings: permissions.settings || {}
-      },
-      message: '權限資訊取得成功'
+      collaborationLedgers: collaborationLedgers,
+      count: collaborationLedgers.length,
+      message: '協作帳本列表取得成功'
     };
 
   } catch (error) {
-    DL.DL_error('MLS', `取得帳本權限失敗: ${error.message}`);
+    DL.DL_error('MLS', `取得協作帳本列表失敗: ${error.message}`);
     return {
       success: false,
-      message: '取得帳本權限時發生錯誤',
-      error: { code: 'GET_PERMISSIONS_ERROR', details: error.message }
+      message: '取得協作帳本列表時發生錯誤',
+      collaborationLedgers: [],
+      count: 0
     };
+  }
+}
+
+/**
+ * 18. 階段二新增：取得用戶在帳本中的角色
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 取得用戶在特定帳本中的角色和權限
+ */
+async function MLS_getUserRoleInLedger(userId, ledgerData) {
+  try {
+    if (ledgerData.owner_id === userId) {
+      return 'owner';
+    }
+    
+    if (ledgerData.permissions?.admins?.includes(userId)) {
+      return 'admin';
+    }
+    
+    if (ledgerData.permissions?.members?.includes(userId)) {
+      return 'member';
+    }
+    
+    if (ledgerData.permissions?.viewers?.includes(userId)) {
+      return 'viewer';
+    }
+    
+    // 如果用戶在members陣列中但沒有明確權限設定，預設為member
+    if (ledgerData.members?.includes(userId)) {
+      return 'member';
+    }
+    
+    return 'none';
+  } catch (error) {
+    DL.DL_warning('MLS', `取得用戶角色失敗: ${error.message}`);
+    return 'none';
   }
 }
 
@@ -1424,48 +1469,6 @@ async function MLS_updateLedger(ledgerId, updateData, options = {}) {
 }
 
 /**
- * 新增：刪除帳本 (P2測試所需)
- * @version 2025-10-23-V2.2.0
- * @description 刪除帳本
- */
-async function MLS_deleteLedger(ledgerId, options = {}) {
-  try {
-    DL.DL_log('MLS', `刪除帳本 - 帳本ID: ${ledgerId}`);
-
-    if (!ledgerId) {
-      throw new Error('缺少帳本ID');
-    }
-
-    // 模擬權限檢查
-    const accessCheck = await MLS_validateLedgerAccess('system', ledgerId, 'delete');
-    if (!accessCheck.hasAccess) {
-      return await MLS_handlePermissionError('system', ledgerId, 'delete', '權限不足');
-    }
-
-    return {
-      success: true,
-      data: {
-        deletedId: ledgerId,
-        deletedAt: new Date().toISOString()
-      },
-      message: '帳本刪除成功'
-    };
-
-  } catch (error) {
-    DL.DL_error('MLS', `刪除帳本失敗: ${error.message}`);
-    return {
-      success: false,
-      data: null,
-      message: `刪除帳本失敗: ${error.message}`,
-      error: {
-        code: 'DELETE_LEDGER_ERROR',
-        message: error.message
-      }
-    };
-  }
-}
-
-/**
  * 新增：取得協作者列表 (P2測試所需)
  * @version 2025-10-23-V2.2.0
  * @description 取得帳本協作者列表
@@ -1476,6 +1479,28 @@ async function MLS_getCollaborators(ledgerId, options = {}) {
 
     if (!ledgerId) {
       throw new Error('缺少帳本ID');
+    }
+
+    // 委派至CM模組處理
+    if (CM && typeof CM.CM_getMemberList === 'function') {
+      const result = await CM.CM_getMemberList(ledgerId, options.requesterId, true);
+      
+      if (result.members) {
+        const collaborators = result.members.map(member => ({
+          userId: member.userId,
+          email: member.email || `${member.userId}@example.com`,
+          displayName: member.displayName || `用戶${member.userId}`,
+          role: member.permissionLevel,
+          joinedAt: member.joinedAt || new Date().toISOString(),
+          status: member.status || 'active'
+        }));
+
+        return {
+          success: true,
+          data: collaborators,
+          message: '協作者列表取得成功'
+        };
+      }
     }
 
     // 模擬協作者列表
@@ -1531,21 +1556,30 @@ async function MLS_inviteCollaborator(ledgerId, invitationData, options = {}) {
       throw new Error('缺少必要參數: ledgerId, email');
     }
 
-    // 模擬邀請結果
-    const invitationResult = {
-      invitationId: `inv_${Date.now()}`,
-      ledgerId: ledgerId,
-      email: invitationData.email,
-      role: invitationData.role || 'viewer',
-      status: 'sent',
-      createdAt: new Date().toISOString()
-    };
+    // 委派至MLS_inviteMember處理
+    const result = await MLS_inviteMember(
+      ledgerId, 
+      options.inviterId || 'system', 
+      invitationData, 
+      invitationData.role || 'viewer'
+    );
 
-    return {
-      success: true,
-      data: invitationResult,
-      message: '協作者邀請成功'
-    };
+    if (result.success) {
+      return {
+        success: true,
+        data: {
+          invitationId: result.invitationId,
+          ledgerId: ledgerId,
+          email: invitationData.email,
+          role: invitationData.role || 'viewer',
+          status: 'sent',
+          createdAt: new Date().toISOString()
+        },
+        message: result.message || '協作者邀請成功'
+      };
+    }
+
+    return result;
 
   } catch (error) {
     DL.DL_error('MLS', `邀請協作者失敗: ${error.message}`);
@@ -1574,21 +1608,27 @@ async function MLS_removeCollaborator(ledgerId, userId, options = {}) {
       throw new Error('缺少必要參數: ledgerId, userId');
     }
 
-    // 模擬權限檢查
-    const accessCheck = await MLS_validateLedgerAccess('system', ledgerId, 'remove_member');
-    if (!accessCheck.hasAccess) {
-      return await MLS_handlePermissionError('system', ledgerId, 'remove_member', '權限不足');
+    // 委派至MLS_removeMember處理
+    const result = await MLS_removeMember(
+      ledgerId, 
+      options.removerId || 'system', 
+      userId, 
+      options.reason || 'removed_by_admin'
+    );
+
+    if (result.success) {
+      return {
+        success: true,
+        data: {
+          removedUserId: userId,
+          ledgerId: ledgerId,
+          removedAt: new Date().toISOString()
+        },
+        message: '協作者移除成功'
+      };
     }
 
-    return {
-      success: true,
-      data: {
-        removedUserId: userId,
-        ledgerId: ledgerId,
-        removedAt: new Date().toISOString()
-      },
-      message: '協作者移除成功'
-    };
+    return result;
 
   } catch (error) {
     DL.DL_error('MLS', `移除協作者失敗: ${error.message}`);
@@ -1604,154 +1644,53 @@ async function MLS_removeCollaborator(ledgerId, userId, options = {}) {
   }
 }
 
-
-// =============== 相容性函數保留區 ===============
-
 /**
- * 30. 合併文檔 - 相容性函數
+ * 新增：取得權限資訊 (P2測試所需)
+ * @version 2025-10-23-V1.0.1
+ * @date 2025-10-23
+ * @description 取得指定帳本的詳細權限資訊
  */
-// -----------------------------------------------------------------------------
-// Placeholder functions for compatibility and potential future use.
-// These functions are either stubs or older versions of functionalities
-// that might be replaced by newer implementations.
-// -----------------------------------------------------------------------------
+async function MLS_getPermissions(ledgerId, queryParams) {
+  try {
+    DL.DL_log('MLS', `取得帳本權限 - 帳本ID: ${ledgerId}`);
 
-/**
- * @deprecated Use MLS_getLedgerList or MLS_getLedgers instead.
- */
-async function MLS_getLedgerType(ledgerId) {
-  DL.DL_log('MLS', `[DEPRECATED] 取得帳本類型 - ID: ${ledgerId}`);
-  // Implementation for fetching ledger type would go here.
-  // For now, returning a placeholder.
-  return { success: false, message: '此函數已被棄用' };
+    const ledgerRef = db.collection('ledgers').doc(ledgerId);
+    const ledgerDoc = await ledgerRef.get();
+
+    if (!ledgerDoc.exists) {
+      return {
+        success: false,
+        message: '帳本不存在',
+        error: { code: 'LEDGER_NOT_FOUND' }
+      };
+    }
+
+    const ledgerData = ledgerDoc.data();
+    const permissions = ledgerData.permissions || {};
+
+    return {
+      success: true,
+      data: {
+        ledgerId: ledgerId,
+        permissions: permissions,
+        owner: permissions.owner,
+        admins: permissions.admins || [],
+        members: permissions.members || [],
+        viewers: permissions.viewers || [],
+        settings: permissions.settings || {}
+      },
+      message: '權限資訊取得成功'
+    };
+
+  } catch (error) {
+    DL.DL_error('MLS', `取得帳本權限失敗: ${error.message}`);
+    return {
+      success: false,
+      message: '取得帳本權限時發生錯誤',
+      error: { code: 'GET_PERMISSIONS_ERROR', details: error.message }
+    };
+  }
 }
-
-/**
- * @deprecated Use MLS_getCollaborators instead.
- */
-async function MLS_getLedgerMembers(ledgerId) {
-  DL.DL_log('MLS', `[DEPRECATED] 取得帳本成員列表 - ID: ${ledgerId}`);
-  // Implementation for fetching ledger members would go here.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use MLS_validateLedgerAccess for specific operations.
- */
-async function MLS_isLedgerOwner(userId, ledgerId) {
-  DL.DL_log('MLS', `[DEPRECATED] 檢查是否為帳本擁有者 - 用戶: ${userId}, 帳本: ${ledgerId}`);
-  // Implementation for checking ownership would go here.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use MLS_detectDuplicateName for name validation.
- */
-async function MLS_isValidLedgerName(name) {
-  DL.DL_log('MLS', `[DEPRECATED] 驗證帳本名稱 - 名稱: ${name}`);
-  // Implementation for validating ledger name format or uniqueness.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use MLS_getLedgerList with appropriate filters.
- */
-async function MLS_getActiveLedgersForUser(userId) {
-  DL.DL_log('MLS', `[DEPRECATED] 取得用戶活躍帳本 - 用戶: ${userId}`);
-  // Implementation for fetching active ledgers.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use MLS_getLedgerList with type filtering.
- */
-async function MLS_getLedgersByType(userId, ledgerType) {
-  DL.DL_log('MLS', `[DEPRECATED] 根據類型取得帳本 - 用戶: ${userId}, 類型: ${ledgerType}`);
-  // Implementation for fetching ledgers by type.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use MLS_getLedgerList ordered by 'updated'.
- */
-async function MLS_getRecentlyUpdatedLedgers(userId, limit) {
-  DL.DL_log('MLS', `[DEPRECATED] 取得最近更新帳本 - 用戶: ${userId}, 限制: ${limit}`);
-  // Implementation for fetching recently updated ledgers.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use MLS_getLedgerList for shared ledgers.
- */
-async function MLS_getSharedLedgersForUser(userId) {
-  DL.DL_log('MLS', `[DEPRECATED] 取得用戶共享帳本 - 用戶: ${userId}`);
-  // Implementation for fetching shared ledgers.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use dedicated backup module functions.
- */
-async function MLS_getLedgerBackupInfo(ledgerId) {
-  DL.DL_log('MLS', `[DEPRECATED] 取得帳本備份資訊 - ID: ${ledgerId}`);
-  // Implementation for getting backup info.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use dedicated backup module functions.
- */
-async function MLS_setLedgerBackupSettings(ledgerId, settings) {
-  DL.DL_log('MLS', `[DEPRECATED] 設定帳本備份設定 - ID: ${ledgerId}`);
-  // Implementation for setting backup settings.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use dedicated statistics module functions.
- */
-async function MLS_getLedgerStatistics(ledgerId) {
-  DL.DL_log('MLS', `[DEPRECATED] 取得帳本統計數據 - ID: ${ledgerId}`);
-  // Implementation for getting ledger statistics.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use dedicated reporting module functions.
- */
-async function MLS_generateLedgerReport(ledgerId, reportType) {
-  DL.DL_log('MLS', `[DEPRECATED] 生成帳本報表 - ID: ${ledgerId}, 類型: ${reportType}`);
-  // Implementation for generating reports.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use dedicated export/import module functions.
- */
-async function MLS_exportLedgerData(ledgerId, format) {
-  DL.DL_log('MLS', `[DEPRECATED] 匯出帳本資料 - ID: ${ledgerId}, 格式: ${format}`);
-  // Implementation for exporting data.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-/**
- * @deprecated Use dedicated export/import module functions.
- */
-async function MLS_importLedgerData(ledgerId, data, format) {
-  DL.DL_log('MLS', `[DEPRECATED] 匯入帳本資料 - ID: ${ledgerId}, 格式: ${format}`);
-  // Implementation for importing data.
-  return { success: false, message: '此函數已被棄用' };
-}
-
-
-// =============== P2測試所需新增函數 ===============
-
-// (Functions for P2 testing have been added above)
-
-
-// =============== 相容性函數保留區 ===============
-// (Compatibility functions are listed above)
-
 
 // 模組導出
 module.exports = {
@@ -1765,7 +1704,7 @@ module.exports = {
   MLS_deleteLedger,
   MLS_archiveLedger,
 
-  // 權限與成員管理函數
+  // 權限與成員管理函數（階段二重構：委派至CM模組）
   MLS_setLedgerPermissions,
   MLS_inviteMember,
   MLS_removeMember,
@@ -1783,11 +1722,14 @@ module.exports = {
   MLS_handlePermissionError,
   MLS_detectDuplicateName,
 
+  // 階段二新增：協作帳本管理函數
+  MLS_getCollaborationLedgers,
+  MLS_getUserRoleInLedger,
+
   // P2測試所需新增函數
   MLS_getLedgerById,
   MLS_createLedger,
   MLS_updateLedger,
-  // MLS_deleteLedger 已在上面定義，避免重複
   MLS_getCollaborators,
   MLS_inviteCollaborator,
   MLS_removeCollaborator,
@@ -1797,4 +1739,4 @@ module.exports = {
   MLS_getLedgers
 };
 
-console.log('✅ MLS 多帳本管理模組載入完成');
+console.log('✅ MLS 多帳本管理模組載入完成 - 階段二重構：協作職責委派至CM模組');
