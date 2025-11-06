@@ -1,0 +1,92 @@
+------------------------------------------
+20251106. 新增1351欄位在Firebase中
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據您的指示，我將修改提案，移除所有code撰寫建議，專注於協作功能導入的架構整合方案。
+
+=>1313跟1351模組的職責各是什麼？他們有無職責重疊的部分？
+
+🎯 修正後三階段解決方案
+階段一：在1311.FS.js中建立協作架構支援
+目標：為1311.FS.js新增協作功能支援，保持現有snake_case命名規範
+
+=>新增的collaboration部分的資料欄位必須遵循優化後的Firebase架構（駝峰命名法），1311現有的資料欄位命名方式先不要動。
+
+├── collaborations/            (集合) ← 獨立的協作集合
+│   └── {ledgerId}/           (文檔)
+│       ├── ledgerId: string
+│       ├── ownerId: string
+│       ├── collaborationType: string
+│       ├── settings: object
+│       ├── createdAt: timestamp
+│       ├── updatedAt: timestamp
+│       │
+│       ├── members/          (子集合) ← 成員管理
+│       │   └── {userId}/
+│       │       ├── userId: string
+│       │       ├── email: string
+│       │       ├── role: string
+│       │       ├── permissions: object
+│       │       ├── joinedAt: timestamp
+│       │       └── status: string
+│       │
+│       ├── invitations/      (子集合) ← 邀請管理
+│       │   └── {invitationId}/
+│       │       ├── invitationId: string
+│       │       ├── inviterId: string
+│       │       ├── inviteeEmail: string
+│       │       ├── role: string
+│       │       ├── status: string
+│       │       ├── createdAt: timestamp
+│       │       └── expiresAt: timestamp
+│       │
+│       └── permissions/      (子集合) ← 權限管理
+│           └── {permissionId}/
+│               ├── userId: string
+│               ├── resourceType: string
+│               ├── permissions: object
+│               ├── grantedBy: string
+│               └── grantedAt: timestamp
+
+具體作業：
+1.	在1311.FS.js中新增FS_initializeCollaborationStructure()函數
+2.	新增FS_createCollaborationDocument()函數
+3.	新增FS_manageCollaborationMembers()函數
+4.	升級1311.FS.js版本至v2.7.0
+
+Firebase架構定義：
+collaborations集合結構：
+- ledger_id: string - 帳本ID
+- owner_id: string - 擁有者ID
+- collaboration_type: string - 協作類型
+- settings: object - 設定
+- created_at: timestamp - 建立時間
+- updated_at: timestamp - 更新時間
+子集合：
+- members: 成員資訊
+- invitations: 邀請資訊  
+- permissions: 權限設定
+=>請以camelCase方式命名
+
+
+階段二：更新1351.MLS.js支援協作功能
+目標：修改1351.MLS.js模組，新增協作帳本管理功能
+具體作業：
+1.	在MLS模組導出中加入協作功能
+2.	新增MLS_getCollaborationLedgers()函數定義
+3.	確保與1311.FS.js的協作架構相容
+相依性分析：
+•	依賴：1311.FS.js的協作架構支援
+•	影響：需要同步更新相關查詢邏輯
+
+階段三：更新1313.CM.js支援完整協作管理
+目標：確保1313.CM.js能完整支援新的協作架構
+具體作業：
+1.	在CM模組導出中加入協作初始化函數
+2.	新增CM_initializeCollaboration()函數定義
+3.	確保與Firebase協作集合的完整整合
+整合重點：
+•	成員管理：邀請、加入、移除機制
+•	權限控制：四級權限體系實作
+•	狀態同步：協作狀態即時更新
