@@ -1,0 +1,90 @@
+
+------------------------------------------
+20251106. 新增1351欄位在Firebase中
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+=>請先專注在將協作功能導入到1311及1351(或其他有dependancy的模組)就好。
+將1311修改成駝峰式命名的initiative先不要作。請依照我的指示修改你的提案。
+
+🎯 三階段解決方案
+階段一：修正架構命名規範，整合到1311.FS.js
+目標：將協作架構整合到1311.FS.js，統一命名規範
+具體作業：
+1.	修正提案命名為snake_case格式
+2.	在1311.FS.js中新增FS_initializeCollaborationStructure()函數
+3.	升級1311.FS.js版本至v2.7.0
+修正後的Firebase架構：
+collaborationStructure = {
+  version: '1.0.0',
+  description: '協作管理Firebase文檔結構',
+  collections: {
+    collaborations: {
+      document_structure: {
+        ledger_id: 'string - 帳本ID',
+        owner_id: 'string - 擁有者ID', 
+        collaboration_type: 'string - 協作類型',
+        settings: 'object - 設定',
+        created_at: 'timestamp - 建立時間',
+        updated_at: 'timestamp - 更新時間'
+      },
+      sub_collections: {
+        members: {
+          user_id: 'string - 用戶ID',
+          email: 'string - 電子郵件',
+          role: 'string - 角色',
+          permissions: 'object - 權限',
+          joined_at: 'timestamp - 加入時間',
+          status: 'string - 狀態'
+        },
+        invitations: {
+          invitation_id: 'string - 邀請ID',
+          inviter_id: 'string - 邀請者ID',
+          invitee_email: 'string - 被邀請者郵件',
+          role: 'string - 角色',
+          status: 'string - 狀態',
+          created_at: 'timestamp - 建立時間',
+          expires_at: 'timestamp - 過期時間'
+        },
+        permissions: {
+          permission_id: 'string - 權限ID',
+          user_id: 'string - 用戶ID',
+          resource_type: 'string - 資源類型',
+          permissions: 'object - 權限設定',
+          granted_by: 'string - 授權者',
+          granted_at: 'timestamp - 授權時間'
+        }
+      }
+    }
+  }
+}
+
+階段二：更新相關依賴模組支援協作架構
+目標：修改1351.MLS.js和1313.CM.js支援新架構
+相關模組清單：
+1.	1351.MLS.js - 多帳本管理模組：需要支援協作帳本查詢和管理
+2.	1313.CM.js - 協作管理模組：需要實作協作邀請和成員管理
+3.	1309.AM.js - 帳號管理模組：需要支援協作邀請通知
+4.	1331.DD1.js - 資料分發模組：需要處理協作事件分發
+具體修改：
+•	1351.MLS.js：新增MLS_getCollaborationLedgers()函數
+•	1313.CM.js：新增CM_initializeCollaboration()函數
+•	1309.AM.js：新增AM_processCollaborationInvite()函數
+•	1331.DD1.js：新增DD1_distributeCollaborationEvent()函數
+階段三：建立Firebase集合框架和驗證
+目標：在Firebase中建立完整的協作集合框架
+具體作業：
+1.	執行FS_initializeCollaborationStructure()建立集合框架
+2.	建立範例協作文檔，確保集合在Firebase控制台可見
+3.	驗證所有相關模組能正確讀寫新架構
+📋 版本升級計畫
+•	1311.FS.js：v2.6.0 → v2.7.0
+•	1351.MLS.js：配合新增協作功能支援，升級版本
+•	1313.CM.js：實作完整協作管理功能
+•	1309.AM.js：新增協作邀請處理功能
+•	1331.DD1.js：新增協作事件分發功能
+新增函數：
+•	FS_initializeCollaborationStructure() v2025-11-05-V1.0.0
+•	FS_createCollaborationDocument() v2025-11-05-V1.0.0
+•	FS_manageCollaborationMembers() v2025-11-05-V1.0.0
