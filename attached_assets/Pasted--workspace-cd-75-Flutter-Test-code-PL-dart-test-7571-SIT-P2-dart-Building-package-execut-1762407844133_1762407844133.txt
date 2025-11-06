@@ -1,0 +1,114 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
+Building package executable... (1.7s)
+Built test:test.
+00:00 +0: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) (setUpAll)
+[7571] 🎉 SIT P2測試模組 v2.3.0 (純粹調用版-無模擬業務邏輯) 初始化完成
+[7571] ✅ 修正目標：完全移除模擬業務邏輯，純粹調用PL層函數
+[7571] 🔧 核心改善：不進行任何業務邏輯判斷，直接回傳PL層結果
+[7571] 📋 測試範圍：25個P2測試案例（純粹調用）
+[7571] 🎯 資料來源：7598 Data warehouse.json
+[7571] 🚀 重點：符合0098規範第4-5條，禁止模擬業務邏輯
+00:00 +0: ... 執行SIT P2純粹調00:00 +0: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) 執行SIT P2純粹調用測試
+
+[7571] 🚀 開始執行純粹調用版SIT P2測試...
+[7571] 🚀 開始執行純粹調用版SIT P2測試 (v2.3.0)...
+[7571] 🎯 修正重點：完全移除模擬業務邏輯，純粹調用PL層函數
+[7571] 📋 測試策略：純粹調用，無任何業務邏輯判斷
+[7571] 🗄️ 資料來源：7598 Data warehouse.json
+[7571] 🔄 執行預算管理測試 (純粹調用PL層7304)
+[7571] 🔧 純粹調用：TC-001
+[7571] 📊 階段一修正：預算純粹調用: TC-001 - 純粹調用：建立預算測試
+[7571] ✅ P2測試資料載入完成，來源：7598 Data warehouse.json
+[7571] 🔍 階段二修正：開始查詢用戶 expert.valid@test.lcas.app 的真實帳本ID...
+[7571] 📋 階段二修正：預期帳本ID格式: user_expert.valid@test.lcas.app
+[7571] ✅ 階段二修正：確定真實帳本ID: user_expert.valid@test.lcas.app
+[7571] ✅ 階段二修正：禁止7571從7582直接取得註冊email
+[7571] ✅ 階段二修正：使用 expert.valid@test.lcas.app 取得真實帳本ID
+[7571] 🔄 TC-001真實用戶修正：userId=user_expert_1697363200000, operatorId=user_expert_1697363200000
+[7571] 🔄 TC-001真實帳本修正：ledgerId=user_expert.valid@test.lcas.app
+[7571] 🎯 階段二目標達成：使用真實註冊流程產生的帳本ID進行budget子集合操作
+[processBudgetCRUD] 開始統一預算CRUD操作 - 操作類型: create, 模式: Expert
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: true, 錯誤: 0個, 警告: 0個
+[transformBudgetData] 開始資料轉換 - 轉換類型: uiToApi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 8
+APL階段三驗證：ledgerId = user_expert.valid@test.lcas.app
+❌ TC-001: 預算創建失敗
+[7571] 📋 TC-001階段二修正：PL層7304純粹調用完成（真實帳本）
+[7571] ✅ TC-001 PASS - 純粹調用：建立預算測試
+[7571] 🔧 純粹調用：TC-002
+[7571] 📊 階段一修正：預算純粹調用: TC-002 - 純粹調用：查詢預算列表測試
+[7571] ⚠️ TC-002: 查詢預算失敗，缺少動態生成的預算ID
+[7571] 💡 提示：需要先執行TC-001創建預算
+[7571] ❌ TC-002 FAIL - 純粹調用：查詢預算列表測試
+[7571] 🔧 純粹調用：TC-003
+[7571] 📊 階段一修正：預算純粹調用: TC-003 - 純粹調用：更新預算測試
+[7571] ⚠️ TC-003: 更新預算失敗，缺少動態生成的預算ID
+[7571] 💡 提示：需要先執行TC-001創建預算
+[7571] ❌ TC-003 FAIL - 純粹調用：更新預算測試
+[7571] 🔧 純粹調用：TC-004
+[7571] 📊 階段一修正：預算純粹調用: TC-004 - 純粹調用：刪除預算測試
+[7571] ⚠️ TC-004: 刪除預算失敗，缺少動態生成的預算ID
+[7571] 💡 提示：需要先執行TC-001創建預算
+[7571] ❌ TC-004 FAIL - 純粹調用：刪除預算測試
+[7571] 🔧 純粹調用：TC-005
+[7571] 📊 階段一修正：預算純粹調用: TC-005 - 純粹調用：預算執行計算測試
+[7571] ❌ TC-005 FAIL - 純粹調用：預算執行計算測試
+[7571] 失敗原因: 純粹調用失敗: type 'Null' is not a subtype of type 'String'
+[7571] 🔧 純粹調用：TC-006
+[7571] 📊 階段一修正：預算純粹調用: TC-006 - 純粹調用：預算警示測試
+[7571] ❌ TC-006 FAIL - 純粹調用：預算警示測試
+[7571] 失敗原因: 純粹調用失敗: type 'Null' is not a subtype of type 'String'
+[7571] 🔧 純粹調用：TC-007
+[7571] 📊 階段一修正：預算純粹調用: TC-007 - 純粹調用：預算資料驗證測試
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: false, 錯誤: 2個, 警告: 0個
+[7571] 📋 TC-007純粹調用PL層7304完成
+[7571] ✅ TC-007 PASS - 純粹調用：預算資料驗證測試
+[7571] 🔧 純粹調用：TC-008
+[7571] 📊 階段一修正：預算純粹調用: TC-008 - 純粹調用：預算模式差異化測試
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 10
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Inertial
+[transformBudgetData] 轉換完成 - 結果欄位數: 7
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Cultivation
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Guiding
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[7571] 📋 TC-008純粹調用PL層7304完成（四模式測試）
+[7571] ✅ TC-008 PASS - 純粹調用：預算模式差異化測試
+[7571] 🎉 預算管理純粹調用完成
+[7571] 🔄 執行帳本協作測試 (純粹調用PL層7303)
+[7571] 🔧 純粹調用：TC-009
+[7571] 🤝 協作純粹調用: TC-009 - 純粹調用：建立協作帳本測試
+[7571] 📋 TC-009純粹調用PL層7303完成
+[7571] ✅ TC-009 PASS - 純粹調用：建立協作帳本測試
+[7571] 🔧 純粹調用：TC-010
+[7571] 🤝 協作純粹調用: TC-010 - 純粹調用：查詢帳本列表測試
+[7571] ❌ TC-010 FAIL - 純粹調用：查詢帳本列表測試
+[7571] 失敗原因: 純粹調用失敗: CollaborationError: 帳本列表查詢失敗: CollaborationError: 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaDgoKdXBkYXRlZF9hdBACGgwKCF9fbmFtZV9fEAI (Code: GET_LEDGERS_ERROR) (Code: PROCESS_LEDGER_LIST_ERROR)
+[7571] 🔧 純粹調用：TC-011
+[7571] 🤝 協作純粹調用: TC-011 - 純粹調用：更新帳本測試
+[7571] ❌ TC-011 FAIL - 純粹調用：更新帳本測試
+[7571] 失敗原因: 純粹調用失敗: type 'Null' is not a subtype of type 'String'
+[7571] 🔧 純粹調用：TC-012
+[7571] 🤝 協作純粹調用: TC-012 - 純粹調用：刪除帳本測試
+[7571] ❌ TC-012 FAIL - 純粹調用：刪除帳本測試
+[7571] 失敗原因: 純粹調用失敗: type 'Null' is not a subtype of type 'String'
+[7571] 🔧 純粹調用：TC-013
+[7571] 🤝 協作純粹調用: TC-013 - 純粹調用：查詢協作者列表測試
+[7571] ❌ TC-013 FAIL - 純粹調用：查詢協作者列表測試
+[7571] 失敗原因: 純粹調用失敗: type 'Null' is not a subtype of type 'String'
+[7571] 🔧 純粹調用：TC-014
+[7571] 🤝 協作純粹調用: TC-014 - 純粹調用：邀請協作者測試
+[7571] ❌ TC-014 FAIL - 純粹調用：邀請協作者測試
+[7571] 失敗原因: 純粹調用失敗: type 'Null' is not a subtype of type 'String'
+[7571] 🔧 純粹調用：TC-015
+[7571] 🤝 協作純粹調用: TC-015 - 純粹調用：更新協作者權限測試
+權限更新審計：用戶 user_cultivation_1697363320000 在帳本 shared_collaboration_001 的權限即將從舊權限更新為 admin
+[7571] ❌ TC-015 FAIL - 純粹調用：更新協作者權限測試
+[7571] 失敗原因: 純粹調用失敗: CollaborationError: API端點不存在: PUT /api/v1/ledgers/shared_collaboration_001/collaborators/user_cultivation_1697363320000 (Code: ENDPOINT_NOT_FOUND)
+[7571] 🔧 純粹調用：TC-016
+[7571] 🤝 協作純粹調用: TC-016 - 純粹調用：移除協作者測試
+準備清理用戶 user_cultivation_1697363320000 在帳本 shared_collaboration_001 中的相關資料
+[7571] ❌ TC-016 FAIL - 純粹調用：移除協作者測試
