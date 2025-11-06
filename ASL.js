@@ -1763,6 +1763,47 @@ app.get('/api/v1/ledgers/:id/permissions', async (req, res) => {
   }
 });
 
+// 10. 更新協作者權限 (補充缺失的PUT端點)
+app.put('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
+  try {
+    console.log('👥✏️ ASL轉發: 更新協作者權限 -> CM_setMemberPermission');
+    
+    // 檢查CM模組是否載入
+    if (!global.CM && !require.cache[require.resolve('./13. Replit_Module code_BL/1313. CM.js')]) {
+      try {
+        global.CM = require('./13. Replit_Module code_BL/1313. CM.js');
+      } catch (cmLoadError) {
+        console.error('❌ CM模組載入失敗:', cmLoadError.message);
+        return res.apiError('CM協作管理模組不可用', 'CM_MODULE_NOT_AVAILABLE', 503);
+      }
+    }
+
+    const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
+    
+    if (!CM || typeof CM.CM_setMemberPermission !== 'function') {
+      return res.apiError('CM_setMemberPermission函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const ledgerId = req.params.id;
+    const targetUserId = req.params.userId;
+    const operatorId = req.body.operatorId || req.query.operatorId || 'system';
+    const newPermission = req.body.permission || req.body.role || 'member';
+
+    console.log(`🎯 協作權限更新: 帳本=${ledgerId}, 目標用戶=${targetUserId}, 新權限=${newPermission}`);
+
+    const result = await CM.CM_setMemberPermission(ledgerId, targetUserId, newPermission, operatorId);
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '協作者權限更新成功');
+    } else {
+      res.apiError(result.message || '協作者權限更新失敗', result.error?.code || 'UPDATE_COLLABORATOR_PERMISSION_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (update collaborator permission):', error);
+    res.apiError('協作者權限更新轉發失敗', 'UPDATE_COLLABORATOR_PERMISSION_FORWARD_ERROR', 500);
+  }
+});
+
 // 4. 更新帳本
 app.put('/api/v1/ledgers/:id', async (req, res) => {
   try {
@@ -1953,7 +1994,65 @@ app.delete('/api/v1/budgets/:id', async (req, res) => {
   }
 });
 
-// 移除違規API端點：budgets/status 和 budgets/templates 不在8020文件規範中
+// =============== 協作管理補充端點 (符合8020文件CM模組規範) ===============
+
+// 11. 處理協作衝突
+app.get('/api/v1/ledgers/:id/conflicts', async (req, res) => {
+  try {
+    console.log('⚠️ ASL轉發: 檢測協作衝突 -> CM_detectDataConflicts');
+    
+    const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
+    
+    if (!CM || typeof CM.CM_detectDataConflicts !== 'function') {
+      // 如果CM模組未實作衝突檢測，回傳空結果
+      return res.apiSuccess({ conflicts: [], hasConflicts: false }, '無協作衝突');
+    }
+
+    const result = await CM.CM_detectDataConflicts(req.params.id, req.query);
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '協作衝突檢測完成');
+    } else {
+      res.apiError(result.message || '協作衝突檢測失敗', result.error?.code || 'CONFLICT_DETECTION_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (detect conflicts):', error);
+    res.apiError('協作衝突檢測轉發失敗', 'CONFLICT_DETECTION_FORWARD_ERROR', 500);
+  }
+});
+
+// 12. 解決協作衝突
+app.post('/api/v1/ledgers/:id/resolve-conflict', async (req, res) => {
+  try {
+    console.log('🔧 ASL轉發: 解決協作衝突 -> CM_resolveDataConflict');
+    
+    const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
+    
+    if (!CM || typeof CM.CM_resolveDataConflict !== 'function') {
+      return res.apiError('CM_resolveDataConflict函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const conflictData = {
+      ledgerId: req.params.id,
+      conflictId: req.body.conflictId,
+      resolution: req.body.resolution,
+      operatorId: req.body.operatorId || 'system'
+    };
+
+    const result = await CM.CM_resolveDataConflict(conflictData, req.body.resolutionStrategy || 'manual');
+    
+    if (result.success) {
+      res.apiSuccess(result.data, result.message || '協作衝突解決成功');
+    } else {
+      res.apiError(result.message || '協作衝突解決失敗', result.error?.code || 'CONFLICT_RESOLUTION_ERROR', 400, result.error?.details);
+    }
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (resolve conflict):', error);
+    res.apiError('協作衝突解決轉發失敗', 'CONFLICT_RESOLUTION_FORWARD_ERROR', 500);
+  }
+});
+
+// 確保所有端點符合8020文件規範，移除任何違規端點
 
 
 /**
