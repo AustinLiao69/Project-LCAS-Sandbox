@@ -228,13 +228,12 @@ BM.BM_createBudget = async function(budgetData) {
     // 記錄操作日誌
     DL.DL_log(`建立預算成功 - 預算ID: ${budgetId}`, '預算管理', userId);
 
-    // 分發預算建立事件
-    await DD.DD_distributeData('budget_created', {
-      budgetId: budgetId,
-      ledgerId: ledgerId,
-      userId: userId,
-      budgetData: budget
-    });
+    // 階段二修正：清理事件分發，避免意外觸發BK模組
+    // 預算建立不應該觸發記帳相關的邏輯
+    console.log(`${logPrefix} 階段二修正：預算建立完成，不觸發外部事件以維持模組邊界`);
+    
+    // 如果需要通知其他模組，應該由調用方明確處理
+    // await DD.DD_distributeData('budget_created', { budgetId, ledgerId, userId });
 
     console.log(`${logPrefix} 預算建立完成 - ID: ${budgetId}`);
 
@@ -513,14 +512,11 @@ BM.BM_editBudget = async function(budgetId, userId, updateData, ledgerId) {
     // 記錄操作日誌
     DL.DL_log(`編輯預算成功 - 預算ID: ${budgetId}, 更新欄位: ${updatedFields.join(', ')}`, '預算管理', userId);
 
-    // 分發預算更新事件
-    await DD.DD_distributeData('budget_updated', {
-      budgetId: budgetId,
-      userId: userId,
-      ledgerId: ledgerId,
-      updatedFields: updatedFields,
-      updateData: updateData
-    });
+    // 階段二修正：清理事件分發，維持模組職責邊界
+    console.log(`${logPrefix} 階段二修正：預算編輯完成，不觸發外部事件`);
+    
+    // 如果需要通知其他模組，應該由調用方明確處理
+    // await DD.DD_distributeData('budget_updated', { budgetId, userId, ledgerId });
 
     console.log(`${logPrefix} 預算編輯完成`);
 
@@ -598,13 +594,11 @@ BM.BM_deleteBudget_Legacy = async function(budgetId, userId, confirmationToken, 
     // 記錄刪除日誌
     DL.DL_warning(`刪除預算 - 預算ID: ${budgetId}`, '預算管理', userId);
 
-    // 分發預算刪除事件
-    await DD.DD_distributeData('budget_deleted', {
-      budgetId: budgetId,
-      userId: userId,
-      ledgerId: ledgerId,
-      deletedAt: deleteTime
-    });
+    // 階段二修正：清理事件分發，維持模組職責邊界
+    console.log(`${logPrefix} 階段二修正：預算刪除完成，不觸發外部事件`);
+    
+    // 如果需要通知其他模組，應該由調用方明確處理
+    // await DD.DD_distributeData('budget_deleted', { budgetId, userId, ledgerId });
 
     console.log(`${logPrefix} 預算刪除完成`);
 
@@ -689,58 +683,69 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
 };
 
 /**
- * 05. 更新預算使用記錄
- * @version 2025-07-07-V1.0.0
- * @date 2025-07-07 14:15:41
- * @description 當有新記帳時自動更新預算使用狀況
+ * 05. 更新預算使用記錄 (階段二修正：純預算模組職責版)
+ * @version 2025-11-06-V2.1.0
+ * @date 2025-11-06 14:15:41
+ * @description 階段二修正：僅提供預算更新介面，不主動監聽BK事件，避免模組邊界混亂
  */
-BM.BM_updateBudgetUsage = async function(ledgerId, transactionData) {
+BM.BM_updateBudgetUsage = async function(ledgerId, usageData) {
   const logPrefix = '[BM_updateBudgetUsage]';
 
   try {
-    console.log(`${logPrefix} 更新預算使用 - 帳本ID: ${ledgerId}`);
+    console.log(`${logPrefix} 階段二修正：被動更新預算使用 - 帳本ID: ${ledgerId}`);
 
     // 驗證輸入參數
-    if (!ledgerId || !transactionData) {
+    if (!ledgerId || !usageData) {
       throw new Error('缺少必要參數');
     }
 
-    // 取得該帳本的活躍預算 (模擬)
-    const activeBudgets = await BM.BM_getActiveBudgets(ledgerId);
-
-    let alertTriggered = false;
-    const updatedBudgets = [];
-
-    // 更新每個相關預算的使用金額
-    for (const budget of activeBudgets) {
-      // 檢查交易是否符合預算分類
-      if (BM.BM_isTransactionMatchBudget(transactionData, budget)) {
-        const newUsage = budget.consumed_amount + Math.abs(transactionData.amount);
-
-        // 更新預算使用記錄
-        budget.consumed_amount = newUsage;
-        budget.updated_at = new Date();
-
-        updatedBudgets.push(budget.budgetId);
-
-        // 檢查是否觸發警示
-        const alertCheck = await BM.BM_checkBudgetAlert(budget.budgetId, newUsage);
-        if (alertCheck.alertRequired) {
-          alertTriggered = true;
-          await BM.BM_triggerBudgetAlert(budget.budgetId, alertCheck.alertLevel, []);
-        }
-
-        // await FS.updateBudgetUsageInFirestore(budget.budgetId, newUsage); // 實際 Firestore 操作
-      }
+    // 階段二修正：明確要求外部提供預算ID，不再自動搜尋所有預算
+    if (!usageData.budgetId) {
+      console.warn(`${logPrefix} 階段二修正：缺少預算ID，跳過自動預算匹配以避免意外觸發`);
+      return {
+        updated: false,
+        message: '階段二修正：需要明確指定預算ID',
+        updatedBudgets: []
+      };
     }
 
-    console.log(`${logPrefix} 預算使用更新完成，更新了 ${updatedBudgets.length} 個預算`);
+    // 階段二修正：只更新指定的預算，不進行分類匹配
+    const budgetId = usageData.budgetId;
+    const amountDelta = Math.abs(usageData.amount || 0);
+
+    console.log(`${logPrefix} 階段二修正：更新指定預算 ${budgetId}`);
+
+    // 階段二修正：使用FS模組進行純預算更新，不觸發其他模組
+    const firebaseConfig = require('./1399. firebase-config.js');
+    const db = firebaseConfig.getFirestoreInstance();
+    
+    const budgetRef = db.collection(`ledgers/${ledgerId}/budgets`).doc(budgetId);
+    const budgetDoc = await budgetRef.get();
+    
+    if (!budgetDoc.exists) {
+      throw new Error(`預算不存在: ${budgetId}`);
+    }
+
+    const budgetData = budgetDoc.data();
+    const newUsage = (budgetData.consumed_amount || 0) + amountDelta;
+
+    // 階段二修正：純預算資料更新，不觸發事件
+    await budgetRef.update({
+      consumed_amount: newUsage,
+      updated_at: new Date()
+    });
+
+    // 階段二修正：檢查警示但不自動觸發，讓調用方決定
+    const alertCheck = await BM.BM_checkBudgetAlert(budgetId, newUsage);
+
+    console.log(`${logPrefix} 階段二修正：預算使用更新完成，新使用量: ${newUsage}`);
 
     return {
-      updated: updatedBudgets.length > 0,
-      newUsage: transactionData.amount,
-      alertTriggered: alertTriggered,
-      updatedBudgets: updatedBudgets
+      updated: true,
+      budgetId: budgetId,
+      newUsage: newUsage,
+      alertCheck: alertCheck, // 階段二修正：返回警示檢查結果但不自動觸發
+      updatedBudgets: [budgetId]
     };
 
   } catch (error) {
@@ -749,8 +754,10 @@ BM.BM_updateBudgetUsage = async function(ledgerId, transactionData) {
 
     return {
       updated: false,
+      budgetId: usageData?.budgetId,
       newUsage: 0,
-      alertTriggered: false
+      alertCheck: null,
+      updatedBudgets: []
     };
   }
 };
@@ -1503,12 +1510,10 @@ BM.BM_getActiveBudgets = async function(ledgerId) {
 };
 
 /**
- * 輔助函數: 檢查交易是否匹配預算
+ * 階段二修正：移除交易匹配邏輯，避免BM模組依賴BK模組的資料結構
+ * 此函數職責應該屬於整合層，而非BM模組內部
  */
-BM.BM_isTransactionMatchBudget = function(transactionData, budget) {
-  // 簡化的匹配邏輯
-  return budget.categories.includes(transactionData.category) || budget.categories.length === 0;
-};
+// BM.BM_isTransactionMatchBudget 已移除，避免模組邊界混亂
 
 /**
  * 輔助函數: 取得預算資料
@@ -1560,6 +1565,40 @@ BM.BM_generateConfirmationToken = function(budgetId) {
 BM.BM_validateConfirmationToken = function(budgetId, token) {
   const expectedToken = `confirm_delete_${budgetId}`;
   return token === expectedToken;
+};
+
+/**
+ * 階段二新增：模組邊界檢查函數
+ * @version 2025-11-06-V2.1.0
+ * @description 確保BM模組不會意外調用其他模組的功能
+ */
+BM.BM_validateModuleBoundary = function(operation, targetModule) {
+  const logPrefix = '[BM_validateModuleBoundary]';
+  
+  // 階段二修正：BM模組不應該直接調用BK模組
+  if (targetModule === 'BK') {
+    console.warn(`${logPrefix} 階段二警告：BM模組嘗試調用BK模組的${operation}操作`);
+    console.warn(`${logPrefix} 這可能違反模組邊界，請檢查調用邏輯`);
+    return {
+      allowed: false,
+      reason: '階段二修正：BM模組不應直接調用BK模組，請通過整合層處理'
+    };
+  }
+
+  // 其他模組的調用檢查
+  const allowedModules = ['FS', 'DL', 'AM']; // BM模組允許調用的模組
+  if (!allowedModules.includes(targetModule)) {
+    console.warn(`${logPrefix} 階段二警告：BM模組嘗試調用未授權的模組: ${targetModule}`);
+    return {
+      allowed: false,
+      reason: `階段二修正：BM模組不允許調用${targetModule}模組`
+    };
+  }
+
+  return {
+    allowed: true,
+    reason: '模組邊界檢查通過'
+  };
 };
 
 /**

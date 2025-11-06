@@ -85,8 +85,8 @@ class RegisterUserTest {
   Future<void> _runRealRegistrationTests(Map<String, dynamic> successScenarios) async {
     print('📋 執行真實註冊測試（調用ASL → AM → Firebase）...\n');
 
-    // 選擇一個測試用戶進行真實註冊
-    final testScenario = 'expert_user_valid';
+    // 選擇協作測試用戶進行真實註冊（階段一修正：使用collaboration.test@test.lcas.app）
+    final testScenario = 'collaboration_test_user';
     final scenarioData = successScenarios[testScenario] as Map<String, dynamic>;
 
     print('[7582] 🧪 真實註冊測試: $testScenario');
