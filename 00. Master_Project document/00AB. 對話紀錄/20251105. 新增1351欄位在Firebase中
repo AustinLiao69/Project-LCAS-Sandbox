@@ -105,6 +105,7 @@ collaborations/            (集合)
 •	Owner > Admin > Member > Viewer四級權限
 •	細粒度操作權限控制
 •	權限變更的即時同步機制
+
 📋 MVP階段實作重點
 優先級排序
 1.	P1優先：建立基礎協作集合架構（階段一）
