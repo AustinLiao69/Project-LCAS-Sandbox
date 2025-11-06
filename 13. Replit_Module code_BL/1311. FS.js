@@ -2642,6 +2642,395 @@ function FS_getValidationRecommendation(result) {
   return recommendations[result] || '驗證結果異常，建議重新執行驗證';
 }
 
+// =============== 階段一：協作架構支援函數區 ===============
+
+/**
+ * FS_initializeCollaborationStructure - 初始化協作架構
+ * @version 2025-11-06-V2.7.0
+ * @date 2025-11-06
+ * @description 階段一：為1311.FS.js建立協作功能支援架構
+ */
+async function FS_initializeCollaborationStructure(requesterId) {
+  const functionName = "FS_initializeCollaborationStructure";
+  try {
+    FS_logOperation('協作架構初始化', "協作架構初始化", requesterId || "SYSTEM", "", "", functionName);
+
+    // 建立協作集合架構定義
+    const collaborationStructure = {
+      version: '1.0.0',
+      description: '1313.CM.js協作管理模組Firebase集合架構 - camelCase命名',
+      last_updated: '2025-11-06',
+      architecture: 'collaboration_based',
+      collections: {
+        'collaborations': {
+          description: '協作主集合 - 帳本協作資訊管理',
+          collection_path: 'collaborations',
+          document_structure: {
+            ledgerId: 'string - 帳本唯一識別碼',
+            ownerId: 'string - 帳本擁有者ID',
+            collaborationType: 'string - 協作類型: "shared"|"project"|"category"',
+            settings: 'object - 協作設定',
+            createdAt: 'timestamp - 建立時間',
+            updatedAt: 'timestamp - 最後更新時間',
+            status: 'string - 協作狀態: "active"|"archived"|"suspended"'
+          },
+          subcollections: {
+            members: {
+              description: '協作成員子集合',
+              document_structure: {
+                userId: 'string - 用戶唯一識別碼',
+                email: 'string - 用戶電子郵件',
+                role: 'string - 角色: "owner"|"admin"|"member"|"viewer"',
+                permissions: 'object - 權限設定',
+                joinedAt: 'timestamp - 加入時間',
+                status: 'string - 成員狀態: "active"|"invited"|"suspended"'
+              }
+            },
+            invitations: {
+              description: '邀請管理子集合',
+              document_structure: {
+                invitationId: 'string - 邀請唯一識別碼',
+                inviterId: 'string - 邀請者ID',
+                inviteeEmail: 'string - 被邀請者email',
+                role: 'string - 預設角色',
+                status: 'string - 邀請狀態: "pending"|"accepted"|"declined"|"expired"',
+                createdAt: 'timestamp - 邀請建立時間',
+                expiresAt: 'timestamp - 邀請過期時間'
+              }
+            },
+            permissions: {
+              description: '權限管理子集合',
+              document_structure: {
+                userId: 'string - 用戶ID',
+                resourceType: 'string - 資源類型',
+                permissions: 'object - 細粒度權限設定',
+                grantedBy: 'string - 權限授予者ID',
+                grantedAt: 'timestamp - 權限授予時間'
+              }
+            }
+          }
+        }
+      },
+      path_examples: {
+        create_collaboration: 'collaborations/ledger_12345',
+        add_member: 'collaborations/ledger_12345/members/user_67890',
+        create_invitation: 'collaborations/ledger_12345/invitations/inv_abc123',
+        set_permission: 'collaborations/ledger_12345/permissions/perm_xyz789'
+      },
+      integration_notes: [
+        '與1351.MLS.js帳本管理模組整合',
+        '與1313.CM.js協作管理模組業務邏輯整合',
+        '保持1311.FS.js現有snake_case命名不變',
+        '協作功能使用camelCase命名規範'
+      ]
+    };
+
+    // 儲存協作架構定義到系統配置
+    const result = await FS_createDocument('_system', 'collaboration_structure', collaborationStructure, requesterId);
+
+    if (result.success) {
+      FS_logOperation('協作架構初始化成功', "協作架構初始化", requesterId || "SYSTEM", "", "", functionName);
+      return {
+        success: true,
+        message: '協作架構初始化完成',
+        structure: collaborationStructure
+      };
+    } else {
+      return result;
+    }
+
+  } catch (error) {
+    FS_handleError(`協作架構初始化失敗: ${error.message}`, "協作架構初始化", requesterId || "SYSTEM", "FS_COLLABORATION_INIT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_COLLABORATION_INIT_ERROR'
+    };
+  }
+}
+
+/**
+ * FS_createCollaborationDocument - 建立協作文檔
+ * @version 2025-11-06-V2.7.0
+ * @date 2025-11-06
+ * @description 階段一：建立協作主集合文檔
+ */
+async function FS_createCollaborationDocument(ledgerId, collaborationData, requesterId) {
+  const functionName = "FS_createCollaborationDocument";
+  try {
+    FS_logOperation(`建立協作文檔: ${ledgerId}`, "建立協作", requesterId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!ledgerId || !collaborationData) {
+      throw new Error("缺少必要參數: ledgerId, collaborationData");
+    }
+
+    // 準備協作文檔數據（camelCase命名）
+    const finalCollaborationData = {
+      ledgerId: ledgerId,
+      ownerId: collaborationData.ownerId || requesterId,
+      collaborationType: collaborationData.collaborationType || 'shared',
+      settings: collaborationData.settings || {
+        allowInvite: true,
+        allowEdit: true,
+        allowDelete: false,
+        requireApproval: false
+      },
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      status: 'active',
+      metadata: {
+        memberCount: 1,
+        invitationCount: 0,
+        lastActivity: admin.firestore.Timestamp.now()
+      }
+    };
+
+    // 建立協作主文檔
+    const result = await FS_createDocument('collaborations', ledgerId, finalCollaborationData, requesterId);
+
+    if (result.success) {
+      // 初始化擁有者成員記錄
+      await FS_manageCollaborationMembers(ledgerId, 'ADD_OWNER', {
+        userId: finalCollaborationData.ownerId,
+        email: collaborationData.ownerEmail || 'owner@example.com',
+        role: 'owner'
+      }, requesterId);
+
+      FS_logOperation(`協作文檔建立成功: ${ledgerId}`, "建立協作", requesterId || "", "", "", functionName);
+    }
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`建立協作文檔失敗: ${error.message}`, "建立協作", requesterId || "", "FS_CREATE_COLLABORATION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_CREATE_COLLABORATION_ERROR'
+    };
+  }
+}
+
+/**
+ * FS_manageCollaborationMembers - 管理協作成員
+ * @version 2025-11-06-V2.7.0
+ * @date 2025-11-06
+ * @description 階段一：管理協作成員子集合操作
+ */
+async function FS_manageCollaborationMembers(ledgerId, operation, memberData, requesterId) {
+  const functionName = "FS_manageCollaborationMembers";
+  try {
+    FS_logOperation(`管理協作成員: ${operation} - ${ledgerId}`, "管理成員", requesterId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!ledgerId || !operation || !memberData) {
+      throw new Error("缺少必要參數: ledgerId, operation, memberData");
+    }
+
+    const memberPath = `collaborations/${ledgerId}/members`;
+    let result;
+
+    switch (operation) {
+      case 'ADD_OWNER':
+      case 'ADD_MEMBER':
+        // 建立成員記錄
+        const newMemberData = {
+          userId: memberData.userId,
+          email: memberData.email,
+          role: memberData.role || 'member',
+          permissions: memberData.permissions || {
+            canRead: true,
+            canWrite: memberData.role !== 'viewer',
+            canInvite: ['owner', 'admin'].includes(memberData.role),
+            canManagePermissions: memberData.role === 'owner'
+          },
+          joinedAt: admin.firestore.Timestamp.now(),
+          status: 'active',
+          invitedBy: operation === 'ADD_OWNER' ? null : requesterId
+        };
+
+        result = await FS_createDocument(memberPath, memberData.userId, newMemberData, requesterId);
+        break;
+
+      case 'UPDATE_MEMBER':
+        // 更新成員資訊
+        const updateData = {
+          ...memberData,
+          updatedAt: admin.firestore.Timestamp.now()
+        };
+        result = await FS_updateDocument(memberPath, memberData.userId, updateData, requesterId);
+        break;
+
+      case 'REMOVE_MEMBER':
+        // 移除成員
+        result = await FS_deleteDocument(memberPath, memberData.userId, requesterId);
+        break;
+
+      case 'GET_MEMBERS':
+        // 查詢成員清單
+        result = await FS_queryCollection(memberPath, null, requesterId, {
+          orderBy: { field: 'joinedAt', direction: 'desc' }
+        });
+        break;
+
+      default:
+        throw new Error(`不支援的操作: ${operation}`);
+    }
+
+    if (result.success) {
+      FS_logOperation(`協作成員管理成功: ${operation}`, "管理成員", requesterId || "", "", "", functionName);
+    }
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`管理協作成員失敗: ${error.message}`, "管理成員", requesterId || "", "FS_MANAGE_MEMBERS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_MANAGE_MEMBERS_ERROR'
+    };
+  }
+}
+
+/**
+ * FS_manageCollaborationInvitations - 管理協作邀請
+ * @version 2025-11-06-V2.7.0
+ * @date 2025-11-06
+ * @description 階段一：管理協作邀請子集合操作
+ */
+async function FS_manageCollaborationInvitations(ledgerId, operation, invitationData, requesterId) {
+  const functionName = "FS_manageCollaborationInvitations";
+  try {
+    FS_logOperation(`管理協作邀請: ${operation} - ${ledgerId}`, "管理邀請", requesterId || "", "", "", functionName);
+
+    const invitationPath = `collaborations/${ledgerId}/invitations`;
+    let result;
+
+    switch (operation) {
+      case 'CREATE_INVITATION':
+        // 建立邀請記錄
+        const invitationId = invitationData.invitationId || `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const newInvitationData = {
+          invitationId: invitationId,
+          inviterId: requesterId,
+          inviteeEmail: invitationData.inviteeEmail,
+          role: invitationData.role || 'member',
+          status: 'pending',
+          createdAt: admin.firestore.Timestamp.now(),
+          expiresAt: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)), // 7天後過期
+          message: invitationData.message || '邀請您加入協作帳本'
+        };
+
+        result = await FS_createDocument(invitationPath, invitationId, newInvitationData, requesterId);
+        break;
+
+      case 'UPDATE_INVITATION':
+        // 更新邀請狀態
+        const updateData = {
+          status: invitationData.status,
+          respondedAt: admin.firestore.Timestamp.now(),
+          response: invitationData.response
+        };
+        result = await FS_updateDocument(invitationPath, invitationData.invitationId, updateData, requesterId);
+        break;
+
+      case 'GET_INVITATIONS':
+        // 查詢邀請清單
+        const queryConditions = invitationData.status ? [
+          { field: 'status', operator: '==', value: invitationData.status }
+        ] : null;
+        result = await FS_queryCollection(invitationPath, queryConditions, requesterId, {
+          orderBy: { field: 'createdAt', direction: 'desc' }
+        });
+        break;
+
+      default:
+        throw new Error(`不支援的邀請操作: ${operation}`);
+    }
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`管理協作邀請失敗: ${error.message}`, "管理邀請", requesterId || "", "FS_MANAGE_INVITATIONS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_MANAGE_INVITATIONS_ERROR'
+    };
+  }
+}
+
+/**
+ * FS_manageCollaborationPermissions - 管理協作權限
+ * @version 2025-11-06-V2.7.0
+ * @date 2025-11-06
+ * @description 階段一：管理協作權限子集合操作
+ */
+async function FS_manageCollaborationPermissions(ledgerId, operation, permissionData, requesterId) {
+  const functionName = "FS_manageCollaborationPermissions";
+  try {
+    FS_logOperation(`管理協作權限: ${operation} - ${ledgerId}`, "管理權限", requesterId || "", "", "", functionName);
+
+    const permissionPath = `collaborations/${ledgerId}/permissions`;
+    let result;
+
+    switch (operation) {
+      case 'SET_PERMISSION':
+        // 設定權限
+        const permissionId = `perm_${permissionData.userId}_${permissionData.resourceType}`;
+        const newPermissionData = {
+          userId: permissionData.userId,
+          resourceType: permissionData.resourceType || 'ledger',
+          permissions: permissionData.permissions || {
+            read: true,
+            write: false,
+            delete: false,
+            invite: false,
+            manage: false
+          },
+          grantedBy: requesterId,
+          grantedAt: admin.firestore.Timestamp.now()
+        };
+
+        result = await FS_createDocument(permissionPath, permissionId, newPermissionData, requesterId);
+        break;
+
+      case 'UPDATE_PERMISSION':
+        // 更新權限
+        const updateData = {
+          permissions: permissionData.permissions,
+          updatedBy: requesterId,
+          updatedAt: admin.firestore.Timestamp.now()
+        };
+        result = await FS_updateDocument(permissionPath, permissionData.permissionId, updateData, requesterId);
+        break;
+
+      case 'GET_PERMISSIONS':
+        // 查詢權限
+        const queryConditions = permissionData.userId ? [
+          { field: 'userId', operator: '==', value: permissionData.userId }
+        ] : null;
+        result = await FS_queryCollection(permissionPath, queryConditions, requesterId);
+        break;
+
+      default:
+        throw new Error(`不支援的權限操作: ${operation}`);
+    }
+
+    return result;
+
+  } catch (error) {
+    FS_handleError(`管理協作權限失敗: ${error.message}`, "管理權限", requesterId || "", "FS_MANAGE_PERMISSIONS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_MANAGE_PERMISSIONS_ERROR'
+    };
+  }
+}
+
 // =============== 模組導出區 ===============
 
 // 導出階段一、二、三完整函數
@@ -2696,6 +3085,13 @@ module.exports = {
   // MLS.js帳本管理模組支援函數
   FS_initializeLedgerStructure,
 
+  // 階段一：協作架構支援函數 (camelCase命名)
+  FS_initializeCollaborationStructure,
+  FS_createCollaborationDocument,
+  FS_manageCollaborationMembers,
+  FS_manageCollaborationInvitations,
+  FS_manageCollaborationPermissions,
+
   // 相容性函數（保留現有調用）
   FS_mergeDocument,
   FS_addToCollection,
@@ -2706,10 +3102,10 @@ module.exports = {
   admin,
 
   // 模組資訊
-  moduleVersion: '2.5.0',
-  phase: 'Phase3-Budget-Subcollection-Migration-Complete',
-  lastUpdate: '2025-10-30',
-  stage3Features: ['budgets_subcollection_support', 'ledger_budget_integration', 'path_structure_v3']
+  moduleVersion: '2.7.0',
+  phase: 'Phase3-Collaboration-Architecture-Support',
+  lastUpdate: '2025-11-06',
+  stage3Features: ['budgets_subcollection_support', 'ledger_budget_integration', 'path_structure_v3', 'collaboration_architecture_support']
 };
 
 // 自動初始化模組
