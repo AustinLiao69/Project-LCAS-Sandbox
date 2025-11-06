@@ -1,6 +1,6 @@
 /**
  * CM_協作管理模組_2.0.0
- * @module CM模組 
+ * @module CM模組
  * @description 協作管理系統 - 階段三強化：成為協作功能唯一業務邏輯提供者
  * @update 2025-11-06: 階段三強化，新增CM_initializeCollaboration，整合完整協作邏輯
  */
@@ -115,12 +115,25 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
   try {
     CM_logInfo(`初始化協作系統 - 帳本: ${ledgerId}, 擁有者: ${ownerInfo.userId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
 
-    // 1. 建立協作主集合文檔
+    // 建立協作主集合文檔（與1311.FS.js格式對齊）
     if (FS && typeof FS.FS_createCollaborationDocument === 'function') {
       const collaborationResult = await FS.FS_createCollaborationDocument(ledgerId, {
         ownerId: ownerInfo.userId,
-        collaborationType: collaborationType,
         ownerEmail: ownerInfo.email || `${ownerInfo.userId}@example.com`,
+        collaborationType: collaborationType,
+        members: [ownerInfo.userId],
+        permissions: {
+          owner: ownerInfo.userId,
+          admins: [],
+          members: [],
+          viewers: [],
+          settings: {
+            allow_invite: initialSettings.allowInvite !== false,
+            allow_edit: initialSettings.allowEdit !== false,
+            allow_delete: initialSettings.allowDelete || false,
+            require_approval: initialSettings.requireApproval || false
+          }
+        },
         settings: {
           allowInvite: initialSettings.allowInvite !== false,
           allowEdit: initialSettings.allowEdit !== false,
@@ -708,7 +721,7 @@ async function CM_resolveDataConflict(conflictData, resolutionStrategy = "timest
     switch (resolutionStrategy) {
       case "timestamp":
         // 以最新時間戳為準
-        const latestData = conflictData.reduce((latest, current) => 
+        const latestData = conflictData.reduce((latest, current) =>
           new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest
         );
         finalData = latestData.data;
@@ -772,8 +785,8 @@ async function CM_broadcastEvent(ledgerId, eventType, eventData, excludeUsers = 
 
     // 取得該帳本的所有連線用戶
     const targetConnections = Array.from(CM_INIT_STATUS.activeConnections.entries())
-      .filter(([key, conn]) => 
-        conn.ledgerId === ledgerId && 
+      .filter(([key, conn]) =>
+        conn.ledgerId === ledgerId &&
         !excludeUsers.includes(conn.userId)
       );
 
@@ -1229,7 +1242,7 @@ async function CM_updateCollaborationSettings(ledgerId, newSettings, operatorId)
     }
 
     const currentData = collaborationDoc.data();
-    
+
     // 合併新設定
     const updatedSettings = {
       ...currentData.settings,
@@ -1394,7 +1407,7 @@ async function CM_bulkSetMemberPermissions(ledgerId, memberPermissions, operator
       try {
         const { userId, permissionLevel } = memberPermission;
         const result = await CM_setMemberPermission(ledgerId, userId, permissionLevel, operatorId);
-        
+
         results.push({
           userId: userId,
           permissionLevel: permissionLevel,
@@ -1406,9 +1419,9 @@ async function CM_bulkSetMemberPermissions(ledgerId, memberPermissions, operator
           failed.push({ userId, error: result.message || '設定失敗' });
         }
       } catch (memberError) {
-        failed.push({ 
-          userId: memberPermission.userId, 
-          error: memberError.message 
+        failed.push({
+          userId: memberPermission.userId,
+          error: memberError.message
         });
       }
     }
@@ -1473,7 +1486,7 @@ async function CM_getCollaborationStatistics(ledgerId, requesterId, timeRange = 
     // 計算時間範圍
     const now = new Date();
     let startDate = new Date();
-    
+
     switch (timeRange) {
       case '1d':
         startDate.setDate(now.getDate() - 1);
@@ -1515,16 +1528,16 @@ async function CM_getCollaborationStatistics(ledgerId, requesterId, timeRange = 
     // 分析活動類型分布
     activities.forEach(activity => {
       // 活動類型統計
-      statistics.activityBreakdown[activity.actionType] = 
+      statistics.activityBreakdown[activity.actionType] =
         (statistics.activityBreakdown[activity.actionType] || 0) + 1;
 
       // 成員活動度統計
-      statistics.memberActivity[activity.userId] = 
+      statistics.memberActivity[activity.userId] =
         (statistics.memberActivity[activity.userId] || 0) + 1;
 
       // 每日活動統計
       const activityDate = activity.timestamp.toDate().toISOString().split('T')[0];
-      statistics.dailyActivity[activityDate] = 
+      statistics.dailyActivity[activityDate] =
         (statistics.dailyActivity[activityDate] || 0) + 1;
 
       // 活動高峰時段統計
@@ -1537,7 +1550,7 @@ async function CM_getCollaborationStatistics(ledgerId, requesterId, timeRange = 
     statistics.totalMembers = memberListResult.totalCount || 0;
 
     // 計算活躍度指標
-    statistics.activityRate = statistics.totalMembers > 0 
+    statistics.activityRate = statistics.totalMembers > 0
       ? (statistics.activeMembers / statistics.totalMembers * 100).toFixed(2) + '%'
       : '0%';
 
@@ -1582,7 +1595,7 @@ async function CM_monitorCollaborationHealth(ledgerId = null) {
     // 檢查 WebSocket 連線狀態
     if (CM_INIT_STATUS.websocketServer) {
       const totalConnections = CM_INIT_STATUS.activeConnections.size;
-      const specificLedgerConnections = ledgerId 
+      const specificLedgerConnections = ledgerId
         ? Array.from(CM_INIT_STATUS.activeConnections.keys()).filter(key => key.startsWith(ledgerId)).length
         : totalConnections;
 

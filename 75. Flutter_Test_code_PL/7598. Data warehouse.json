@@ -686,6 +686,79 @@
       }
     }
   },
+  "collaboration_test_data": {
+    "success_scenarios": {
+      "create_collaborative_ledger": {
+        "id": "shared_collaboration_001",
+        "name": "協作帳本測試",
+        "type": "shared",
+        "owner_id": "user_expert_1697363200000",
+        "members": ["user_expert_1697363200000", "user_inertial_1697363260000"],
+        "permissions": {
+          "owner": "user_expert_1697363200000",
+          "admins": [],
+          "members": ["user_inertial_1697363260000"],
+          "viewers": [],
+          "settings": {
+            "allow_invite": true,
+            "allow_edit": true,
+            "allow_delete": false
+          }
+        },
+        "collaboration_config": {
+          "ownerId": "user_expert_1697363200000",
+          "collaborationType": "shared",
+          "ownerEmail": "expert.valid@test.lcas.app"
+        },
+        "created_at": "2025-10-15T08:00:00+08:00",
+        "testScenario": "建立協作帳本成功測試"
+      },
+      "invite_collaborator_success": {
+        "ledgerId": "shared_collaboration_001",
+        "inviterId": "user_expert_1697363200000",
+        "inviteeInfo": {
+          "email": "cultivation.valid@test.lcas.app",
+          "displayName": "Cultivation 測試用戶"
+        },
+        "role": "member",
+        "permissions": {
+          "edit": true,
+          "view": true,
+          "invite": false,
+          "delete": false
+        },
+        "testScenario": "邀請協作者成功測試"
+      },
+      "update_collaborator_permissions": {
+        "ledgerId": "shared_collaboration_001",
+        "collaboratorId": "user_cultivation_1697363320000",
+        "newRole": "admin",
+        "newPermissions": {
+          "edit": true,
+          "view": true,
+          "invite": true,
+          "delete": false,
+          "manage_permissions": true
+        },
+        "testScenario": "更新協作者權限成功測試"
+      }
+    },
+    "failure_scenarios": {
+      "insufficient_permissions": {
+        "ledgerId": "shared_collaboration_001",
+        "operatorId": "user_guiding_1697363380000",
+        "attemptedAction": "invite_member",
+        "expectedError": "權限不足：需要 admin 權限",
+        "testScenario": "權限不足測試"
+      },
+      "invalid_collaboration_type": {
+        "ledgerId": "personal_ledger_001",
+        "inviterId": "user_expert_1697363200000",
+        "expectedError": "此帳本類型不支援成員邀請",
+        "testScenario": "無效協作類型測試"
+      }
+    }
+  },
   "test_scenarios": {
     "scenario_001_user_registration_success": {
       "name": "用戶註冊成功流程測試",

@@ -269,12 +269,24 @@ async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissio
     // 寫入 Firestore
     await db.collection('ledgers').doc(ledgerId).set(ledgerData);
 
-    // 建立協作架構（委派給FS模組）
+    // 建立協作架構（委派給FS模組，與1311.FS.js格式對齊）
     if (FS && typeof FS.FS_createCollaborationDocument === 'function') {
       await FS.FS_createCollaborationDocument(ledgerId, {
         ownerId: ownerId,
+        ownerEmail: `${ownerId}@example.com`,
         collaborationType: 'shared',
-        ownerEmail: `${ownerId}@example.com`
+        members: allMembers,
+        permissions: {
+          owner: ownerId,
+          admins: permissionSettings?.admins || [],
+          members: permissionSettings?.members || memberList || [],
+          viewers: permissionSettings?.viewers || [],
+          settings: {
+            allow_invite: permissionSettings?.allow_invite !== false,
+            allow_edit: permissionSettings?.allow_edit !== false,
+            allow_delete: permissionSettings?.allow_delete || false
+          }
+        }
       }, ownerId);
     }
 
