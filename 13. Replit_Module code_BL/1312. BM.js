@@ -1,8 +1,8 @@
 /**
- * BM_預算管理模組_2.2.0
+ * BM_預算管理模組_2.2.1
  * @module BM模組
  * @description 預算管理系統 - 支援預算設定、追蹤、警示與分析
- * @update 2025-10-31: 升級至2.2.0版本，階段一修正：智能使用者識別邏輯，解決createdBy顯示問題
+ * @update 2025-11-06: 升級至2.2.1版本，階段一修正：完全移除對BK模組的不當調用和事件分發，確保BM模組職責純淨
  */
 
 console.log('📊 BM 預算管理模組載入中...');
@@ -228,12 +228,11 @@ BM.BM_createBudget = async function(budgetData) {
     // 記錄操作日誌
     DL.DL_log(`建立預算成功 - 預算ID: ${budgetId}`, '預算管理', userId);
 
-    // 階段二修正：清理事件分發，避免意外觸發BK模組
-    // 預算建立不應該觸發記帳相關的邏輯
-    console.log(`${logPrefix} 階段二修正：預算建立完成，不觸發外部事件以維持模組邊界`);
+    // 階段一修正：完全移除事件分發，確保BM模組純粹專注於預算管理
+    console.log(`${logPrefix} 階段一修正：預算建立完成，BM模組不觸發任何外部事件，維持模組職責純淨`);
     
-    // 如果需要通知其他模組，應該由調用方明確處理
-    // await DD.DD_distributeData('budget_created', { budgetId, ledgerId, userId });
+    // 階段一修正：移除所有可能觸發BK模組的事件分發代碼
+    // 預算管理與記帳核心應完全獨立，不存在自動觸發關係
 
     console.log(`${logPrefix} 預算建立完成 - ID: ${budgetId}`);
 
@@ -512,11 +511,8 @@ BM.BM_editBudget = async function(budgetId, userId, updateData, ledgerId) {
     // 記錄操作日誌
     DL.DL_log(`編輯預算成功 - 預算ID: ${budgetId}, 更新欄位: ${updatedFields.join(', ')}`, '預算管理', userId);
 
-    // 階段二修正：清理事件分發，維持模組職責邊界
-    console.log(`${logPrefix} 階段二修正：預算編輯完成，不觸發外部事件`);
-    
-    // 如果需要通知其他模組，應該由調用方明確處理
-    // await DD.DD_distributeData('budget_updated', { budgetId, userId, ledgerId });
+    // 階段一修正：完全移除事件分發，確保BM模組職責純淨
+    console.log(`${logPrefix} 階段一修正：預算編輯完成，BM模組不觸發任何外部事件`);
 
     console.log(`${logPrefix} 預算編輯完成`);
 
@@ -594,11 +590,8 @@ BM.BM_deleteBudget_Legacy = async function(budgetId, userId, confirmationToken, 
     // 記錄刪除日誌
     DL.DL_warning(`刪除預算 - 預算ID: ${budgetId}`, '預算管理', userId);
 
-    // 階段二修正：清理事件分發，維持模組職責邊界
-    console.log(`${logPrefix} 階段二修正：預算刪除完成，不觸發外部事件`);
-    
-    // 如果需要通知其他模組，應該由調用方明確處理
-    // await DD.DD_distributeData('budget_deleted', { budgetId, userId, ledgerId });
+    // 階段一修正：完全移除事件分發，確保BM模組職責純淨
+    console.log(`${logPrefix} 階段一修正：預算刪除完成，BM模組不觸發任何外部事件`);
 
     console.log(`${logPrefix} 預算刪除完成`);
 
@@ -683,39 +676,40 @@ BM.BM_calculateBudgetProgress = async function(budgetId, dateRange) {
 };
 
 /**
- * 05. 更新預算使用記錄 (階段二修正：純預算模組職責版)
- * @version 2025-11-06-V2.1.0
+ * 05. 更新預算使用記錄 (階段一修正：完全移除BK模組相關邏輯)
+ * @version 2025-11-06-V2.2.1
  * @date 2025-11-06 14:15:41
- * @description 階段二修正：僅提供預算更新介面，不主動監聽BK事件，避免模組邊界混亂
+ * @description 階段一修正：此函數應由外部調用方明確調用，BM模組不主動監聽任何事件
  */
 BM.BM_updateBudgetUsage = async function(ledgerId, usageData) {
   const logPrefix = '[BM_updateBudgetUsage]';
 
   try {
-    console.log(`${logPrefix} 階段二修正：被動更新預算使用 - 帳本ID: ${ledgerId}`);
+    console.log(`${logPrefix} 階段一修正：被動更新預算使用 - 帳本ID: ${ledgerId}`);
+    console.log(`${logPrefix} 階段一修正：BM模組純粹處理預算邏輯，不涉及交易記錄處理`);
 
     // 驗證輸入參數
     if (!ledgerId || !usageData) {
       throw new Error('缺少必要參數');
     }
 
-    // 階段二修正：明確要求外部提供預算ID，不再自動搜尋所有預算
+    // 階段一修正：強制要求外部提供預算ID，BM模組不進行任何自動匹配
     if (!usageData.budgetId) {
-      console.warn(`${logPrefix} 階段二修正：缺少預算ID，跳過自動預算匹配以避免意外觸發`);
+      console.warn(`${logPrefix} 階段一修正：缺少預算ID，BM模組不執行任何自動邏輯`);
       return {
         updated: false,
-        message: '階段二修正：需要明確指定預算ID',
+        message: '階段一修正：BM模組需要明確的預算ID，不進行自動匹配',
         updatedBudgets: []
       };
     }
 
-    // 階段二修正：只更新指定的預算，不進行分類匹配
+    // 階段一修正：只更新指定的預算，完全不涉及交易邏輯
     const budgetId = usageData.budgetId;
     const amountDelta = Math.abs(usageData.amount || 0);
 
-    console.log(`${logPrefix} 階段二修正：更新指定預算 ${budgetId}`);
+    console.log(`${logPrefix} 階段一修正：純預算更新，不涉及交易處理邏輯 ${budgetId}`);
 
-    // 階段二修正：使用FS模組進行純預算更新，不觸發其他模組
+    // 階段一修正：直接使用Firebase更新預算，不觸發任何其他模組
     const firebaseConfig = require('./1399. firebase-config.js');
     const db = firebaseConfig.getFirestoreInstance();
     
@@ -729,22 +723,18 @@ BM.BM_updateBudgetUsage = async function(ledgerId, usageData) {
     const budgetData = budgetDoc.data();
     const newUsage = (budgetData.consumed_amount || 0) + amountDelta;
 
-    // 階段二修正：純預算資料更新，不觸發事件
+    // 階段一修正：純預算資料更新，絕不觸發任何事件
     await budgetRef.update({
       consumed_amount: newUsage,
       updated_at: new Date()
     });
 
-    // 階段二修正：檢查警示但不自動觸發，讓調用方決定
-    const alertCheck = await BM.BM_checkBudgetAlert(budgetId, newUsage);
-
-    console.log(`${logPrefix} 階段二修正：預算使用更新完成，新使用量: ${newUsage}`);
+    console.log(`${logPrefix} 階段一修正：預算使用更新完成，新使用量: ${newUsage}，未觸發任何外部事件`);
 
     return {
       updated: true,
       budgetId: budgetId,
       newUsage: newUsage,
-      alertCheck: alertCheck, // 階段二修正：返回警示檢查結果但不自動觸發
       updatedBudgets: [budgetId]
     };
 
@@ -756,7 +746,6 @@ BM.BM_updateBudgetUsage = async function(ledgerId, usageData) {
       updated: false,
       budgetId: usageData?.budgetId,
       newUsage: 0,
-      alertCheck: null,
       updatedBudgets: []
     };
   }
@@ -1568,36 +1557,37 @@ BM.BM_validateConfirmationToken = function(budgetId, token) {
 };
 
 /**
- * 階段二新增：模組邊界檢查函數
- * @version 2025-11-06-V2.1.0
- * @description 確保BM模組不會意外調用其他模組的功能
+ * 階段一修正：模組邊界檢查機制強化
+ * @version 2025-11-06-V2.2.1
+ * @description 階段一修正：強化BM模組邊界檢查，完全禁止與BK模組的任何互動
  */
 BM.BM_validateModuleBoundary = function(operation, targetModule) {
   const logPrefix = '[BM_validateModuleBoundary]';
   
-  // 階段二修正：BM模組不應該直接調用BK模組
+  // 階段一修正：絕對禁止BM模組調用BK模組
   if (targetModule === 'BK') {
-    console.warn(`${logPrefix} 階段二警告：BM模組嘗試調用BK模組的${operation}操作`);
-    console.warn(`${logPrefix} 這可能違反模組邊界，請檢查調用邏輯`);
+    console.error(`${logPrefix} 階段一錯誤：BM模組嚴格禁止調用BK模組的${operation}操作`);
+    console.error(`${logPrefix} 這違反了模組職責分離原則，預算管理與記帳核心必須完全獨立`);
     return {
       allowed: false,
-      reason: '階段二修正：BM模組不應直接調用BK模組，請通過整合層處理'
+      reason: '階段一修正：BM模組與BK模組必須完全隔離，不存在任何調用關係'
     };
   }
 
-  // 其他模組的調用檢查
-  const allowedModules = ['FS', 'DL', 'AM']; // BM模組允許調用的模組
+  // 階段一修正：嚴格限制允許調用的模組
+  const allowedModules = ['FS', 'DL']; // BM模組僅允許調用Firebase服務和日誌模組
   if (!allowedModules.includes(targetModule)) {
-    console.warn(`${logPrefix} 階段二警告：BM模組嘗試調用未授權的模組: ${targetModule}`);
+    console.warn(`${logPrefix} 階段一警告：BM模組嘗試調用未授權的模組: ${targetModule}`);
     return {
       allowed: false,
-      reason: `階段二修正：BM模組不允許調用${targetModule}模組`
+      reason: `階段一修正：BM模組僅允許調用${allowedModules.join(', ')}模組`
     };
   }
 
+  console.log(`${logPrefix} 階段一驗證通過：BM模組調用${targetModule}模組的${operation}操作`);
   return {
     allowed: true,
-    reason: '模組邊界檢查通過'
+    reason: '階段一修正：模組邊界檢查通過'
   };
 };
 
