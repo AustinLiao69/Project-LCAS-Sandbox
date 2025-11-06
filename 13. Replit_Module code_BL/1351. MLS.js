@@ -237,7 +237,7 @@ async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissio
       id: ledgerId,
       type: 'shared',
       name: ledgerName,
-      owner_id: ownerId,
+      ownerId: ownerId, // 修正：統一使用camelCase
       members: allMembers,
       permissions: {
         owner: ownerId,
@@ -245,9 +245,9 @@ async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissio
         members: permissionSettings?.members || memberList || [],
         viewers: permissionSettings?.viewers || [],
         settings: {
-          allow_invite: permissionSettings?.allow_invite !== false,
-          allow_edit: permissionSettings?.allow_edit !== false,
-          allow_delete: permissionSettings?.allow_delete || false
+          allowInvite: permissionSettings?.allowInvite !== false, // 修正：統一使用camelCase
+          allowEdit: permissionSettings?.allowEdit !== false, // 修正：統一使用camelCase
+          allowDelete: permissionSettings?.allowDelete || false // 修正：統一使用camelCase
         }
       },
       attributes: {
@@ -276,16 +276,11 @@ async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissio
         ownerEmail: `${ownerId}@example.com`,
         collaborationType: 'shared',
         members: allMembers,
-        permissions: {
-          owner: ownerId,
-          admins: permissionSettings?.admins || [],
-          members: permissionSettings?.members || memberList || [],
-          viewers: permissionSettings?.viewers || [],
-          settings: {
-            allow_invite: permissionSettings?.allow_invite !== false,
-            allow_edit: permissionSettings?.allow_edit !== false,
-            allow_delete: permissionSettings?.allow_delete || false
-          }
+        settings: {
+          allowInvite: permissionSettings?.allowInvite !== false,
+          allowEdit: permissionSettings?.allowEdit !== false,
+          allowDelete: permissionSettings?.allowDelete || false,
+          requireApproval: permissionSettings?.requireApproval || false
         }
       }, ownerId);
     }
