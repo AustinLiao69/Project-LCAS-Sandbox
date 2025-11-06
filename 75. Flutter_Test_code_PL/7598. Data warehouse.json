@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "version": "3.2.0",
-    "createdAt": "2025-10-15T14:00:00Z",
-    "description": "SIT P1+P2測試資料倉庫 - 階段一修正：移除collaboration硬編碼，專注budget真實用戶流程測試",
+    "version": "3.2.1",
+    "createdAt": "2025-11-06T03:00:00Z",
+    "description": "SIT P1+P2測試資料倉庫 - 階段一修正：移除hardcoded budgetId，改為動態傳遞機制",
     "dataSource": "STATIC_GENERATION_BUDGET_REAL_USER_FLOW",
     "consumer": ["7570. SIT_P1.dart", "7571. SIT_P2.dart"],
     "totalRecords": 48,
@@ -26,6 +26,12 @@
         "enhanced": "budget測試資料與真實用戶註冊流程整合",
         "improved": "7571使用expert.valid@test.lcas.app真實帳本進行預算測試",
         "focus": "專注預算管理子集合架構驗證"
+      },
+      "v3.2.1": {
+        "removed": "hardcoded budgetId REAL_DYNAMIC_BUDGET_ID_FROM_CREATE",
+        "enhanced": "動態預算ID傳遞機制",
+        "improved": "7571測試流程使用真實創建的預算ID進行後續操作",
+        "focus": "解決測試資料流斷裂問題"
       }
     }
   },
@@ -936,7 +942,7 @@
   "budget_test_data": {
     "success_scenarios": {
       "create_monthly_budget": {
-        "budgetId": "REAL_DYNAMIC_BUDGET_ID_FROM_CREATE",
+        "budgetId": null,
         "name": "十月生活預算",
         "description": "家庭十月份生活費用預算",
         "amount": 50000.0,
