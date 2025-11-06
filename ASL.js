@@ -2209,8 +2209,11 @@ app.use((error, req, res, next) => {
 
     if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.MLS && moduleStatus.BM && moduleStatus.CM) {
       console.log('🚀 ASL v2.1.6已完全就緒，第二階段目標達成');
-    } else {
-      console.log('⚠️ 系統部分就緒，但新功能模組載入不完整');
+    } else if (!moduleStatus.CM) {
+      console.log('⚠️ CM (協作管理) 模組載入失敗，協作管理功能不可用');
+    }
+     else {
+      console.log('❌ 部分P2模組載入失敗，請檢查相關模組狀態');
     }
   });
 

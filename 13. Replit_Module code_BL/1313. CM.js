@@ -132,12 +132,23 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
           status: "active"
         };
         
-        await db.collection('collaborations').doc(ledgerId).update({
+        // 階段二修正：使用參照對象確保更新操作成功
+        const existingRef = db.collection('collaborations').doc(ledgerId);
+        await existingRef.update({
           members: admin.firestore.FieldValue.arrayUnion(ownerMember),
           updatedAt: admin.firestore.Timestamp.now()
         });
         
-        CM_logInfo(`擁有者已加入現有協作帳本: ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
+        // 階段二驗證：確認成員已正確加入
+        const updatedDoc = await existingRef.get();
+        const updatedData = updatedDoc.data();
+        const memberExists = updatedData.members.find(member => member.userId === ownerInfo.userId);
+        
+        if (!memberExists) {
+          throw new Error(`擁有者加入協作帳本失敗：${ledgerId}`);
+        }
+        
+        CM_logInfo(`階段二修正：擁有者已驗證加入現有協作帳本 - ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
       }
     } else {
       // 階段三修正：直接建立協作主集合文檔
@@ -179,8 +190,17 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
         updatedAt: admin.firestore.Timestamp.now()
       };
 
-      await db.collection('collaborations').doc(ledgerId).set(collaborationData);
-      CM_logInfo(`新協作帳本建立成功: ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
+      // 階段二修正：確保使用正確的Firebase集合路徑
+      const collaborationRef = db.collection('collaborations').doc(ledgerId);
+      await collaborationRef.set(collaborationData);
+      
+      // 階段二驗證：確認文檔已成功寫入
+      const verifyDoc = await collaborationRef.get();
+      if (!verifyDoc.exists) {
+        throw new Error(`協作帳本建立失敗：Firebase寫入驗證失敗 - ${ledgerId}`);
+      }
+      
+      CM_logInfo(`階段二修正：協作帳本建立並驗證成功 - ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
     }
 
     // 2. 初始化協作同步（簡化版，避免循環調用）
@@ -194,7 +214,21 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
       syncId: syncId
     });
 
-    CM_logInfo(`階段三修正：協作系統初始化完成 - 帳本: ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
+    // 階段二修正：增加協作系統初始化的詳細日誌
+  CM_logInfo(`階段二&三修正：協作系統初始化完成 - 帳本: ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
+  
+  // 階段二新增：Firebase寫入狀態檢查日誌
+  try {
+    const verifyCollaboration = await db.collection('collaborations').doc(ledgerId).get();
+    if (verifyCollaboration.exists) {
+      const collabData = verifyCollaboration.data();
+      CM_logInfo(`階段二驗證成功：協作帳本已存在於Firebase - 成員數: ${collabData.members?.length || 0}`, "初始化協作", ownerInfo.userId, "", "", functionName);
+    } else {
+      CM_logError(`階段二驗證失敗：協作帳本未在Firebase中找到 - ${ledgerId}`, "初始化協作", ownerInfo.userId, "COLLABORATION_NOT_FOUND", "", functionName);
+    }
+  } catch (verifyError) {
+    CM_logError(`階段二驗證錯誤：無法檢查協作帳本狀態 - ${verifyError.message}`, "初始化協作", ownerInfo.userId, "COLLABORATION_VERIFY_ERROR", verifyError.toString(), functionName);
+  }
 
     return {
       success: true,

@@ -2668,7 +2668,7 @@ async function FS_initializeCollaborationCollection(requesterId) {
 
     if (collaborationResult.success) {
       FS_logOperation('協作集合初始化成功', "協作集合初始化", requesterId || "SYSTEM", "", "", functionName);
-      
+
       return {
         success: true,
         message: 'collaboration集合初始化完成',
@@ -2861,7 +2861,6 @@ async function FS_createCollaborationDocument(ledgerId, collaborationData, reque
     };
   }
 }
-
 
 
 // =============== 模組導出區 ===============
