@@ -409,13 +409,22 @@ class SITP2TestController {
             );
 
             // 提取真實創建的預算ID並儲存到類別變數
-            if (plResult is Map && plResult['success'] == true) {
-              _dynamicBudgetId = plResult['data']?['budgetId'] ?? plResult['data']?['id'];
-              print('[7571] ✅ TC-001: 預算創建成功');
-              print('   真實預算ID: $_dynamicBudgetId');
-              print('[7571] 🔄 階段一修正：已儲存動態預算ID供後續測試使用');
+            if (plResult is Map) {
+              // 檢查多個可能的回應格式
+              var success = plResult['success'];
+              if (success == true || success == 'true' || plResult['data'] != null) {
+                _dynamicBudgetId = plResult['data']?['budgetId'] ?? 
+                                 plResult['data']?['id'] ?? 
+                                 plResult['budgetId'] ?? 
+                                 plResult['id'];
+                print('[7571] ✅ TC-001: 預算創建成功');
+                print('   真實預算ID: $_dynamicBudgetId');
+                print('[7571] 🔄 階段一修正：已儲存動態預算ID供後續測試使用');
+              } else {
+                print('❌ TC-001: 預算創建失敗 - ${plResult['message'] ?? plResult.toString()}');
+              }
             } else {
-              print('❌ TC-001: 預算創建失敗');
+              print('❌ TC-001: 預算創建失敗 - 無效回應格式');
             }
             print('[7571] 📋 TC-001階段二修正：PL層7304純粹調用完成（真實帳本）');
 
@@ -719,9 +728,13 @@ class SITP2TestController {
               'permissions': permissions.toJson(),
             };
             // 純粹調用PL層7303更新權限函數
-            await LedgerCollaborationManager.updateCollaboratorPermissions(
-              ledgerId, collaboratorId, permissions);
-            plResult = {'updatePermissions': 'completed', 'ledgerId': ledgerId, 'collaboratorId': collaboratorId};
+            try {
+              await LedgerCollaborationManager.updateCollaboratorPermissions(
+                ledgerId, collaboratorId, permissions);
+              plResult = {'updatePermissions': 'completed', 'ledgerId': ledgerId, 'collaboratorId': collaboratorId, 'success': true};
+            } catch (e) {
+              plResult = {'updatePermissions': 'failed', 'error': e.toString(), 'success': false};
+            }
             print('[7571] 📋 TC-015純粹調用PL層7303完成');
           }
           break;

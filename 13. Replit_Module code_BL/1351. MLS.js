@@ -1319,13 +1319,13 @@ async function MLS_getLedgers(queryParams = {}) {
       query = query.where('members', 'array-contains', queryParams.userId);
     }
     
-    // 預設只顯示非歸檔的帳本
+    // 預設只顯示非歸檔的帳本（先檢查是否需要索引）
     if (queryParams.archived !== true) {
       query = query.where('archived', '==', false);
     }
     
-    // 按更新時間排序
-    query = query.orderBy('updated_at', 'desc');
+    // 按更新時間排序（移除以避免索引問題）
+    // query = query.orderBy('updated_at', 'desc');
     
     const querySnapshot = await query.get();
     const ledgers = [];
