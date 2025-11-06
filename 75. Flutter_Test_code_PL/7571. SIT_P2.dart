@@ -372,7 +372,9 @@ class SITP2TestController {
 
       Map<String, dynamic> inputData = {};
       dynamic plResult;
-      String? realBudgetId; // 用於儲存動態生成的預算ID
+      
+      // 階段一核心修正：使用類別變數儲存動態生成的預算ID
+      static String? _dynamicBudgetId;
 
       // 階段一修正：純粹調用PL層7304，使用真實用戶帳本而非collaboration hardcoding
       switch (testId) {
@@ -407,11 +409,12 @@ class SITP2TestController {
               UserMode.Expert,
             );
 
-            // 提取真實創建的預算ID
+            // 提取真實創建的預算ID並儲存到類別變數
             if (plResult is Map && plResult['success'] == true) {
-              realBudgetId = plResult['data']?['budgetId'] ?? plResult['data']?['id'];
+              _dynamicBudgetId = plResult['data']?['budgetId'] ?? plResult['data']?['id'];
               print('[7571] ✅ TC-001: 預算創建成功');
-              print('   真實預算ID: $realBudgetId');
+              print('   真實預算ID: $_dynamicBudgetId');
+              print('[7571] 🔄 階段一修正：已儲存動態預算ID供後續測試使用');
             } else {
               print('❌ TC-001: 預算創建失敗');
             }
@@ -425,37 +428,43 @@ class SITP2TestController {
           break;
 
         case 'TC-002': // 查詢預算列表
-          // 階段一修正：使用真實用戶帳本而非硬編碼
-          // 階段二修正：禁止7571從7582直接取得註冊email，改為直接使用expert.valid@test.lcas.app
+          // 階段一修正：使用動態生成的budgetId進行查詢
           final expertUserEmail = 'expert.valid@test.lcas.app';
           final realLedgerId = await P2TestDataManager.instance._getRealUserLedgerId(expertUserEmail);
-          inputData = {'ledgerId': realLedgerId, 'userId': realUserId};
+          inputData = {
+            'ledgerId': realLedgerId, 
+            'userId': realUserId,
+            'budgetId': _dynamicBudgetId // 使用TC-001創建的真實ID
+          };
+          
+          print('[7571] 🔄 階段一修正：使用動態預算ID查詢 - $_dynamicBudgetId');
           // 純粹調用PL層7304
           plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
             BudgetCRUDType.read,
             inputData,
             UserMode.Expert,
           );
-          print('[7571] 📋 TC-002階段二修正：PL層7304純粹調用完成（真實帳本）');
+          print('[7571] 📋 TC-002階段一修正：使用真實預算ID查詢完成');
           break;
 
         case 'TC-003': // 更新預算
           final updateBudgetData = successData['updateBudget'];
           final updateBudgetBody = updateBudgetData['updatedData'];
-          // 使用從步驟1創建的真實預算ID
-          final updateBudgetId = realBudgetId ?? updateBudgetData['budgetId'];
-          if (updateBudgetId != null) {
+          // 階段一修正：使用動態生成的預算ID
+          if (_dynamicBudgetId != null) {
             // 階段一修正：使用真實用戶資料
             // 階段二修正：禁止7571從7582直接取得註冊email，改為直接使用expert.valid@test.lcas.app
             final expertUserEmail = 'expert.valid@test.lcas.app';
             final realLedgerId = await P2TestDataManager.instance._getRealUserLedgerId(expertUserEmail);
             inputData = {
-              'id': updateBudgetId,
+              'id': _dynamicBudgetId,
               'name': '${updateBudgetBody['name']}_updated',
               'amount': (updateBudgetBody['amount'] ?? 0) * 1.1,
               'ledgerId': realLedgerId,
               'userId': realUserId,
             };
+            
+            print('[7571] 🔄 階段一修正：使用動態預算ID更新 - $_dynamicBudgetId');
             // 純粹調用PL層7304
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.update,
@@ -464,30 +473,28 @@ class SITP2TestController {
             );
             print('[7571] 📋 TC-003階段二修正：PL層7304純粹調用完成（真實帳本）');
           } else {
-            print('[7571] ⚠️ TC-003: 更新預算失敗，缺少真實預算ID');
+            print('[7571] ⚠️ TC-003: 更新預算失敗，缺少動態生成的預算ID');
+            print('[7571] 💡 提示：需要先執行TC-001創建預算');
           }
           break;
 
         case 'TC-004': // 刪除預算
-          // 階段一修正：使用真實用戶資料，移除硬編碼
-          // 階段二修正：禁止7571從7582直接取得註冊email，改為直接使用expert.valid@test.lcas.app
-          final deleteBudgetData = successData['deleteBudget'];
-          // 使用從步驟3創建的真實預算ID
-          final deleteBudgetId = realBudgetId ?? deleteBudgetData['budgetId'];
-          if (deleteBudgetId != null) {
+          final deleteBudgetData = successData['delete_budget_with_confirmation'];
+          // 階段一修正：使用動態生成的預算ID
+          if (_dynamicBudgetId != null) {
             final expertUserEmail = 'expert.valid@test.lcas.app';
             final realLedgerId = await P2TestDataManager.instance._getRealUserLedgerId(expertUserEmail);
             inputData = {
-              'id': deleteBudgetId,
+              'id': _dynamicBudgetId,
               'confirmed': true,
-              'confirmationToken': deleteBudgetData['confirmationToken'] ?? 'confirm_delete_$deleteBudgetId',
+              'confirmationToken': deleteBudgetData['confirmationToken'] ?? 'confirm_delete_$_dynamicBudgetId',
               'operatorId': realUserId,
               'userId': realUserId,
               'ledgerId': realLedgerId,
             };
 
-            print('[7571] 🔄 階段二修正：TC-004使用真實用戶帳本 - LedgerId: $realLedgerId');
-            print('[7571] 🎯 階段二目標：移除collaboration硬編碼依賴');
+            print('[7571] 🔄 階段一修正：TC-004使用動態預算ID刪除 - $_dynamicBudgetId');
+            print('[7571] 🎯 階段一目標：移除hardcoded預算ID依賴');
             // 階段一修正：刪除預算測試（使用真實帳本）
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.delete,
@@ -496,7 +503,8 @@ class SITP2TestController {
             );
             print('[7571] 📋 TC-004階段二修正：PL層7304刪除調用完成（真實帳本）');
           } else {
-            print('[7571] ⚠️ TC-004: 刪除預算失敗，缺少真實預算ID');
+            print('[7571] ⚠️ TC-004: 刪除預算失敗，缺少動態生成的預算ID');
+            print('[7571] 💡 提示：需要先執行TC-001創建預算');
           }
           break;
 
