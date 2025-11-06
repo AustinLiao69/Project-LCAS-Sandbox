@@ -689,11 +689,19 @@
   "collaboration_test_data": {
     "success_scenarios": {
       "create_collaborative_ledger": {
-        "id": "shared_collaboration_001",
+        "ledgerId": "shared_collaboration_001",
         "name": "協作帳本測試",
         "type": "shared",
-        "owner_id": "user_expert_1697363200000",
+        "ownerId": "user_expert_1697363200000",
+        "ownerEmail": "expert.valid@test.lcas.app",
+        "collaborationType": "shared",
         "members": ["user_expert_1697363200000", "user_inertial_1697363260000"],
+        "settings": {
+          "allowInvite": true,
+          "allowEdit": true,
+          "allowDelete": false,
+          "requireApproval": false
+        },
         "permissions": {
           "owner": "user_expert_1697363200000",
           "admins": [],
@@ -705,29 +713,35 @@
             "allow_delete": false
           }
         },
-        "collaboration_config": {
-          "ownerId": "user_expert_1697363200000",
-          "collaborationType": "shared",
-          "ownerEmail": "expert.valid@test.lcas.app"
-        },
-        "created_at": "2025-10-15T08:00:00+08:00",
-        "testScenario": "建立協作帳本成功測試"
+        "createdAt": "2025-10-15T08:00:00+08:00",
+        "updatedAt": "2025-10-15T08:00:00+08:00",
+        "status": "active",
+        "testScenario": "建立協作帳本成功測試 - 符合1311.FS.js格式"
       },
       "invite_collaborator_success": {
+        "invitationId": "inv_1697363300000_abc123",
         "ledgerId": "shared_collaboration_001",
         "inviterId": "user_expert_1697363200000",
         "inviteeInfo": {
           "email": "cultivation.valid@test.lcas.app",
-          "displayName": "Cultivation 測試用戶"
+          "displayName": "Cultivation 測試用戶",
+          "userId": "user_cultivation_1697363320000"
         },
-        "role": "member",
-        "permissions": {
-          "edit": true,
-          "view": true,
-          "invite": false,
-          "delete": false
-        },
-        "testScenario": "邀請協作者成功測試"
+        "permissionLevel": "member",
+        "status": "pending",
+        "createdAt": "2025-10-15T08:05:00+08:00",
+        "expiresAt": "2025-10-22T08:05:00+08:00",
+        "testScenario": "邀請協作者成功測試 - 符合1313.CM.js格式"
+      },
+      "collaboration_member_data": {
+        "memberId": "member_1697363400000_def456",
+        "userId": "user_cultivation_1697363320000",
+        "ledgerId": "shared_collaboration_001",
+        "permissionLevel": "member",
+        "joinedAt": "2025-10-15T08:10:00+08:00",
+        "invitedBy": "user_expert_1697363200000",
+        "status": "active",
+        "testScenario": "協作成員資料 - 符合1313.CM.js格式"
       },
       "update_collaborator_permissions": {
         "ledgerId": "shared_collaboration_001",
