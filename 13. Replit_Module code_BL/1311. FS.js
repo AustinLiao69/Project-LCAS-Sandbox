@@ -2645,6 +2645,56 @@ function FS_getValidationRecommendation(result) {
 // =============== 階段一：協作架構支援函數區 ===============
 
 /**
+ * FS_initializeCollaborationCollection - 初始化協作集合
+ * @version 2025-11-06-V2.7.1
+ * @date 2025-11-06
+ * @description 專門初始化collaboration集合，不影響其他集合
+ */
+async function FS_initializeCollaborationCollection(requesterId) {
+  const functionName = "FS_initializeCollaborationCollection";
+  try {
+    FS_logOperation('初始化協作集合', "協作集合初始化", requesterId || "SYSTEM", "", "", functionName);
+
+    // 建立協作集合佔位文檔，確保集合存在
+    const collaborationPlaceholder = {
+      type: 'collection_placeholder',
+      purpose: '確保 collaborations 集合存在',
+      createdAt: admin.firestore.Timestamp.now(),
+      note: '此文檔僅用於確保協作集合框架存在，實際協作建立時會有真實文檔'
+    };
+
+    // 建立協作主集合佔位文檔
+    const collaborationResult = await FS_createDocument('collaborations', '_placeholder', collaborationPlaceholder, requesterId);
+
+    if (collaborationResult.success) {
+      FS_logOperation('協作集合初始化成功', "協作集合初始化", requesterId || "SYSTEM", "", "", functionName);
+      
+      return {
+        success: true,
+        message: 'collaboration集合初始化完成',
+        collection: 'collaborations',
+        placeholderCreated: true,
+        path: 'collaborations/_placeholder'
+      };
+    } else {
+      return {
+        success: false,
+        error: collaborationResult.error,
+        errorCode: collaborationResult.errorCode
+      };
+    }
+
+  } catch (error) {
+    FS_handleError(`協作集合初始化失敗: ${error.message}`, "協作集合初始化", requesterId || "SYSTEM", "FS_COLLABORATION_COLLECTION_INIT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_COLLABORATION_COLLECTION_INIT_ERROR'
+    };
+  }
+}
+
+/**
  * FS_initializeCollaborationStructure - 初始化協作架構
  * @version 2025-11-06-V2.7.0
  * @date 2025-11-06
@@ -2869,6 +2919,7 @@ module.exports = {
   FS_initializeLedgerStructure,
 
   // 階段一：協作架構支援函數 (camelCase命名)
+  FS_initializeCollaborationCollection,
   FS_initializeCollaborationStructure,
   FS_createCollaborationDocument,
 
