@@ -1,8 +1,8 @@
 /**
- * CM_協作管理模組_1.0.0
- * @module CM模組 
- * @description 協作管理系統 - 支援多用戶權限管理、即時同步與協作通知
- * @update 2025-07-07: 初版建立，實現完整協作生態系統
+ * CM_協作管理模組_2.0.0
+ * @module CM模組
+ * @description 協作管理系統 - 階段三強化：成為協作功能唯一業務邏輯提供者
+ * @update 2025-11-06: 階段三強化，新增CM_initializeCollaboration，整合完整協作邏輯
  */
 
 const admin = require('firebase-admin');
@@ -34,23 +34,35 @@ const CM_INIT_STATUS = {
   lastInitTime: null
 };
 
-// 權限等級設定
+// 權限等級設定 - 階段三強化：四級權限體系
 const CM_PERMISSION_LEVELS = {
   owner: {
     level: 4,
-    actions: ["all"]
+    actions: ["all"],
+    description: "擁有者：完整控制權限",
+    canManage: ["admin", "member", "viewer"],
+    restrictions: []
   },
   admin: {
     level: 3,
-    actions: ["invite", "remove", "edit", "view", "manage_permissions"]
+    actions: ["invite", "remove", "edit", "view", "manage_permissions", "manage_settings", "bulk_operations"],
+    description: "管理員：管理權限，無法移除擁有者",
+    canManage: ["member", "viewer"],
+    restrictions: ["cannot_remove_owner", "cannot_change_owner_permission"]
   },
   member: {
     level: 2,
-    actions: ["edit", "view", "invite_limited"]
+    actions: ["edit", "view", "invite_limited", "comment", "collaborate"],
+    description: "成員：編輯權限，受限邀請權限",
+    canManage: [],
+    restrictions: ["cannot_invite_admin", "cannot_manage_permissions", "invite_limit_5_per_day"]
   },
   viewer: {
     level: 1,
-    actions: ["view"]
+    actions: ["view", "comment"],
+    description: "檢視者：唯讀權限，可留言",
+    canManage: [],
+    restrictions: ["read_only", "cannot_edit", "cannot_invite"]
   }
 };
 
@@ -89,6 +101,97 @@ function CM_logWarning(message, operation, userId, errorCode = "", errorDetails 
     DL.DL_warning(message, operation, userId, errorCode, errorDetails, 0, functionName, functionName);
   } else {
     console.warn(`[CM-WARNING] ${message}`);
+  }
+}
+
+/**
+ * 00. 初始化協作系統 - 階段三新增
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 為帳本建立完整的協作架構，成為協作功能統一入口
+ */
+async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType = 'shared', initialSettings = {}) {
+  const functionName = "CM_initializeCollaboration";
+  try {
+    CM_logInfo(`初始化協作系統 - 帳本: ${ledgerId}, 擁有者: ${ownerInfo.userId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
+
+    // 建立協作主集合文檔（與1311.FS.js格式對齊）
+    if (FS && typeof FS.FS_createCollaborationDocument === 'function') {
+      const collaborationResult = await FS.FS_createCollaborationDocument(ledgerId, {
+        ownerId: ownerInfo.userId,
+        ownerEmail: ownerInfo.email || `${ownerInfo.userId}@example.com`,
+        collaborationType: collaborationType,
+        members: [ownerInfo.userId],
+        permissions: {
+          owner: ownerInfo.userId,
+          admins: [],
+          members: [],
+          viewers: [],
+          settings: {
+            allow_invite: initialSettings.allowInvite !== false,
+            allow_edit: initialSettings.allowEdit !== false,
+            allow_delete: initialSettings.allowDelete || false,
+            require_approval: initialSettings.requireApproval || false
+          }
+        },
+        settings: {
+          allowInvite: initialSettings.allowInvite !== false,
+          allowEdit: initialSettings.allowEdit !== false,
+          allowDelete: initialSettings.allowDelete || false,
+          requireApproval: initialSettings.requireApproval || false,
+          ...initialSettings
+        }
+      }, ownerInfo.userId);
+
+      if (!collaborationResult.success) {
+        throw new Error(`建立協作架構失敗: ${collaborationResult.message}`);
+      }
+    }
+
+    // 2. 設定擁有者權限
+    const ownerPermissionResult = await CM_setMemberPermission(ledgerId, ownerInfo.userId, 'owner', ownerInfo.userId);
+    if (!ownerPermissionResult.success) {
+      throw new Error(`設定擁有者權限失敗: ${ownerPermissionResult.message}`);
+    }
+
+    // 3. 初始化協作同步
+    const syncResult = await CM_initializeSync(ledgerId, ownerInfo.userId, {
+      type: 'collaboration_initialization',
+      collaborationType: collaborationType
+    });
+
+    // 4. 記錄協作初始化操作
+    await CM_logCollaborationAction(ledgerId, ownerInfo.userId, 'collaboration_initialized', {
+      collaborationType: collaborationType,
+      settings: initialSettings,
+      syncId: syncResult.syncId
+    });
+
+    // 5. 廣播協作系統就緒事件
+    await CM_broadcastEvent(ledgerId, 'collaboration:system_ready', {
+      ledgerId: ledgerId,
+      owner: ownerInfo.userId,
+      collaborationType: collaborationType,
+      settings: initialSettings
+    });
+
+    CM_logInfo(`協作系統初始化完成 - 帳本: ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
+
+    return {
+      success: true,
+      ledgerId: ledgerId,
+      collaborationType: collaborationType,
+      syncId: syncResult.syncId,
+      message: '協作系統初始化成功'
+    };
+
+  } catch (error) {
+    CM_logError(`協作系統初始化失敗: ${error.message}`, "初始化協作", ownerInfo?.userId || "", "CM_INIT_COLLABORATION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      ledgerId: null,
+      message: error.message
+    };
   }
 }
 
@@ -618,7 +721,7 @@ async function CM_resolveDataConflict(conflictData, resolutionStrategy = "timest
     switch (resolutionStrategy) {
       case "timestamp":
         // 以最新時間戳為準
-        const latestData = conflictData.reduce((latest, current) => 
+        const latestData = conflictData.reduce((latest, current) =>
           new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest
         );
         finalData = latestData.data;
@@ -682,8 +785,8 @@ async function CM_broadcastEvent(ledgerId, eventType, eventData, excludeUsers = 
 
     // 取得該帳本的所有連線用戶
     const targetConnections = Array.from(CM_INIT_STATUS.activeConnections.entries())
-      .filter(([key, conn]) => 
-        conn.ledgerId === ledgerId && 
+      .filter(([key, conn]) =>
+        conn.ledgerId === ledgerId &&
         !excludeUsers.includes(conn.userId)
       );
 
@@ -1050,7 +1153,431 @@ async function CM_handleCollaborationError(errorType, errorData, context) {
 }
 
 /**
- * 16. 監控協作狀態
+ * 16. 取得協作帳本詳情 - 階段三新增
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 取得協作帳本的完整資訊，包括成員、權限、設定等
+ */
+async function CM_getCollaborationDetails(ledgerId, requesterId) {
+  const functionName = "CM_getCollaborationDetails";
+  try {
+    CM_logInfo(`取得協作帳本詳情: ${ledgerId}`, "查詢協作", requesterId, "", "", functionName);
+
+    // 驗證查詢權限
+    const hasPermission = await CM_validatePermission(ledgerId, requesterId, "view");
+    if (!hasPermission.hasPermission) {
+      throw new Error("權限不足：無法查詢協作詳情");
+    }
+
+    // 取得協作主集合資訊
+    const collaborationDoc = await db.collection('collaborations').doc(ledgerId).get();
+    if (!collaborationDoc.exists) {
+      throw new Error("協作帳本不存在");
+    }
+
+    const collaborationData = collaborationDoc.data();
+
+    // 取得成員清單
+    const memberListResult = await CM_getMemberList(ledgerId, requesterId, true);
+
+    // 取得權限矩陣
+    const permissionMatrixResult = await CM_getPermissionMatrix(ledgerId, requesterId);
+
+    // 取得協作歷史摘要
+    const historyResult = await CM_getCollaborationHistory(ledgerId, requesterId, { limit: 10 });
+
+    // 組合完整協作資訊
+    const collaborationDetails = {
+      ledgerId: ledgerId,
+      ownerId: collaborationData.ownerId,
+      collaborationType: collaborationData.collaborationType,
+      status: collaborationData.status,
+      settings: collaborationData.settings,
+      createdAt: collaborationData.createdAt,
+      updatedAt: collaborationData.updatedAt,
+      members: memberListResult.members || [],
+      totalMembers: memberListResult.totalCount || 0,
+      permissions: permissionMatrixResult.permissionMatrix || {},
+      userPermissions: permissionMatrixResult.allowedOperations || [],
+      recentActivity: historyResult.history || []
+    };
+
+    return {
+      success: true,
+      data: collaborationDetails,
+      message: '協作詳情取得成功'
+    };
+
+  } catch (error) {
+    CM_logError(`取得協作詳情失敗: ${error.message}`, "查詢協作", requesterId, "CM_GET_DETAILS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      data: null,
+      message: error.message
+    };
+  }
+}
+
+/**
+ * 17. 更新協作設定 - 階段三新增
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 更新協作帳本的設定，如邀請規則、編輯權限等
+ */
+async function CM_updateCollaborationSettings(ledgerId, newSettings, operatorId) {
+  const functionName = "CM_updateCollaborationSettings";
+  try {
+    CM_logInfo(`更新協作設定: ${ledgerId}`, "更新設定", operatorId, "", "", functionName);
+
+    // 驗證管理權限
+    const hasPermission = await CM_validatePermission(ledgerId, operatorId, "manage_permissions");
+    if (!hasPermission.hasPermission) {
+      throw new Error("權限不足：無法修改協作設定");
+    }
+
+    // 取得現有協作資訊
+    const collaborationDoc = await db.collection('collaborations').doc(ledgerId).get();
+    if (!collaborationDoc.exists) {
+      throw new Error("協作帳本不存在");
+    }
+
+    const currentData = collaborationDoc.data();
+
+    // 合併新設定
+    const updatedSettings = {
+      ...currentData.settings,
+      ...newSettings,
+      updatedAt: admin.firestore.Timestamp.now(),
+      updatedBy: operatorId
+    };
+
+    // 更新協作設定
+    await collaborationDoc.ref.update({
+      settings: updatedSettings,
+      updatedAt: admin.firestore.Timestamp.now()
+    });
+
+    // 記錄設定變更
+    await CM_logCollaborationAction(ledgerId, operatorId, 'settings_updated', {
+      oldSettings: currentData.settings,
+      newSettings: updatedSettings,
+      changes: newSettings
+    });
+
+    // 廣播設定變更事件
+    await CM_broadcastEvent(ledgerId, 'collaboration:settings_updated', {
+      settings: updatedSettings,
+      operatorId: operatorId
+    });
+
+    CM_logInfo(`協作設定更新成功: ${ledgerId}`, "更新設定", operatorId, "", "", functionName);
+
+    return {
+      success: true,
+      settings: updatedSettings,
+      message: '協作設定更新成功'
+    };
+
+  } catch (error) {
+    CM_logError(`更新協作設定失敗: ${error.message}`, "更新設定", operatorId, "CM_UPDATE_SETTINGS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      settings: null,
+      message: error.message
+    };
+  }
+}
+
+/**
+ * 18. 暫停/恢復協作 - 階段三新增
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 暫停或恢復協作帳本，管理協作生命週期
+ */
+async function CM_toggleCollaborationStatus(ledgerId, targetStatus, operatorId, reason = '') {
+  const functionName = "CM_toggleCollaborationStatus";
+  try {
+    CM_logInfo(`切換協作狀態: ${ledgerId} -> ${targetStatus}`, "狀態切換", operatorId, "", "", functionName);
+
+    // 驗證操作權限（只有擁有者或管理員可以暫停協作）
+    const hasPermission = await CM_validatePermission(ledgerId, operatorId, "manage_permissions");
+    if (!hasPermission.hasPermission) {
+      throw new Error("權限不足：無法修改協作狀態");
+    }
+
+    // 驗證狀態有效性
+    const validStatuses = ['active', 'suspended', 'archived'];
+    if (!validStatuses.includes(targetStatus)) {
+      throw new Error(`無效的協作狀態: ${targetStatus}`);
+    }
+
+    // 取得協作資訊
+    const collaborationDoc = await db.collection('collaborations').doc(ledgerId).get();
+    if (!collaborationDoc.exists) {
+      throw new Error("協作帳本不存在");
+    }
+
+    const currentData = collaborationDoc.data();
+    const oldStatus = currentData.status;
+
+    // 更新協作狀態
+    await collaborationDoc.ref.update({
+      status: targetStatus,
+      statusChangedAt: admin.firestore.Timestamp.now(),
+      statusChangedBy: operatorId,
+      statusChangeReason: reason,
+      updatedAt: admin.firestore.Timestamp.now()
+    });
+
+    // 如果暫停協作，關閉所有同步連線
+    if (targetStatus === 'suspended') {
+      const connectedUsers = Array.from(CM_INIT_STATUS.activeConnections.entries())
+        .filter(([key, conn]) => conn.ledgerId === ledgerId);
+
+      for (const [key, conn] of connectedUsers) {
+        if (conn.websocket && conn.websocket.readyState === WebSocket.OPEN) {
+          conn.websocket.send(JSON.stringify({
+            eventType: 'collaboration:suspended',
+            message: '協作已暫停',
+            reason: reason
+          }));
+          conn.websocket.close();
+        }
+        CM_INIT_STATUS.activeConnections.delete(key);
+      }
+    }
+
+    // 記錄狀態變更
+    await CM_logCollaborationAction(ledgerId, operatorId, 'status_changed', {
+      oldStatus: oldStatus,
+      newStatus: targetStatus,
+      reason: reason
+    });
+
+    // 廣播狀態變更事件
+    await CM_broadcastEvent(ledgerId, 'collaboration:status_changed', {
+      oldStatus: oldStatus,
+      newStatus: targetStatus,
+      operatorId: operatorId,
+      reason: reason
+    });
+
+    CM_logInfo(`協作狀態切換成功: ${ledgerId} ${oldStatus} -> ${targetStatus}`, "狀態切換", operatorId, "", "", functionName);
+
+    return {
+      success: true,
+      oldStatus: oldStatus,
+      newStatus: targetStatus,
+      message: `協作狀態已切換至${targetStatus}`
+    };
+
+  } catch (error) {
+    CM_logError(`切換協作狀態失敗: ${error.message}`, "狀態切換", operatorId, "CM_TOGGLE_STATUS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      oldStatus: null,
+      newStatus: null,
+      message: error.message
+    };
+  }
+}
+
+/**
+ * 19. 批量操作成員權限 - 階段三新增
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 批量設定多個成員的權限，提高管理效率
+ */
+async function CM_bulkSetMemberPermissions(ledgerId, memberPermissions, operatorId) {
+  const functionName = "CM_bulkSetMemberPermissions";
+  try {
+    CM_logInfo(`批量設定成員權限: ${ledgerId}, 影響 ${memberPermissions.length} 個成員`, "批量權限", operatorId, "", "", functionName);
+
+    // 驗證操作權限
+    const hasPermission = await CM_validatePermission(ledgerId, operatorId, "manage_permissions");
+    if (!hasPermission.hasPermission) {
+      throw new Error("權限不足：無法管理權限");
+    }
+
+    const results = [];
+    const failed = [];
+
+    // 逐一處理每個成員的權限設定
+    for (const memberPermission of memberPermissions) {
+      try {
+        const { userId, permissionLevel } = memberPermission;
+        const result = await CM_setMemberPermission(ledgerId, userId, permissionLevel, operatorId);
+
+        results.push({
+          userId: userId,
+          permissionLevel: permissionLevel,
+          success: result.success,
+          oldPermission: result.oldPermission
+        });
+
+        if (!result.success) {
+          failed.push({ userId, error: result.message || '設定失敗' });
+        }
+      } catch (memberError) {
+        failed.push({
+          userId: memberPermission.userId,
+          error: memberError.message
+        });
+      }
+    }
+
+    // 記錄批量操作
+    await CM_logCollaborationAction(ledgerId, operatorId, 'bulk_permission_update', {
+      totalMembers: memberPermissions.length,
+      successCount: results.filter(r => r.success).length,
+      failedCount: failed.length,
+      results: results,
+      failed: failed
+    });
+
+    // 廣播批量權限變更事件
+    await CM_broadcastEvent(ledgerId, 'collaboration:bulk_permission_changed', {
+      operatorId: operatorId,
+      results: results,
+      failed: failed
+    });
+
+    const successCount = results.filter(r => r.success).length;
+    CM_logInfo(`批量權限設定完成: ${successCount}/${memberPermissions.length} 成功`, "批量權限", operatorId, "", "", functionName);
+
+    return {
+      success: failed.length === 0,
+      results: results,
+      successCount: successCount,
+      failedCount: failed.length,
+      failed: failed,
+      message: `批量權限設定完成：${successCount} 成功，${failed.length} 失敗`
+    };
+
+  } catch (error) {
+    CM_logError(`批量設定權限失敗: ${error.message}`, "批量權限", operatorId, "CM_BULK_PERMISSION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      results: [],
+      successCount: 0,
+      failedCount: memberPermissions?.length || 0,
+      message: error.message
+    };
+  }
+}
+
+/**
+ * 20. 協作數據統計 - 階段三新增
+ * @version 2025-11-06-V2.0.0
+ * @date 2025-11-06
+ * @description 提供協作帳本的統計資訊，如活躍度、成員參與度等
+ */
+async function CM_getCollaborationStatistics(ledgerId, requesterId, timeRange = '7d') {
+  const functionName = "CM_getCollaborationStatistics";
+  try {
+    CM_logInfo(`取得協作統計: ${ledgerId}, 時間範圍: ${timeRange}`, "協作統計", requesterId, "", "", functionName);
+
+    // 驗證查詢權限
+    const hasPermission = await CM_validatePermission(ledgerId, requesterId, "view");
+    if (!hasPermission.hasPermission) {
+      throw new Error("權限不足：無法查詢協作統計");
+    }
+
+    // 計算時間範圍
+    const now = new Date();
+    let startDate = new Date();
+
+    switch (timeRange) {
+      case '1d':
+        startDate.setDate(now.getDate() - 1);
+        break;
+      case '7d':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(now.getDate() - 30);
+        break;
+      default:
+        startDate.setDate(now.getDate() - 7);
+    }
+
+    // 查詢協作歷史記錄
+    const historyQuery = db.collection('collaboration_logs')
+      .where('ledgerId', '==', ledgerId)
+      .where('timestamp', '>=', admin.firestore.Timestamp.fromDate(startDate));
+
+    const historySnapshot = await historyQuery.get();
+    const activities = [];
+    historySnapshot.forEach(doc => {
+      activities.push(doc.data());
+    });
+
+    // 統計分析
+    const statistics = {
+      timeRange: timeRange,
+      startDate: startDate.toISOString(),
+      endDate: now.toISOString(),
+      totalActivities: activities.length,
+      activeMembers: new Set(activities.map(a => a.userId)).size,
+      activityBreakdown: {},
+      memberActivity: {},
+      dailyActivity: {},
+      peakHours: Array.from({length: 24}, () => 0)
+    };
+
+    // 分析活動類型分布
+    activities.forEach(activity => {
+      // 活動類型統計
+      statistics.activityBreakdown[activity.actionType] =
+        (statistics.activityBreakdown[activity.actionType] || 0) + 1;
+
+      // 成員活動度統計
+      statistics.memberActivity[activity.userId] =
+        (statistics.memberActivity[activity.userId] || 0) + 1;
+
+      // 每日活動統計
+      const activityDate = activity.timestamp.toDate().toISOString().split('T')[0];
+      statistics.dailyActivity[activityDate] =
+        (statistics.dailyActivity[activityDate] || 0) + 1;
+
+      // 活動高峰時段統計
+      const hour = activity.timestamp.toDate().getHours();
+      statistics.peakHours[hour]++;
+    });
+
+    // 取得目前成員清單
+    const memberListResult = await CM_getMemberList(ledgerId, requesterId, false);
+    statistics.totalMembers = memberListResult.totalCount || 0;
+
+    // 計算活躍度指標
+    statistics.activityRate = statistics.totalMembers > 0
+      ? (statistics.activeMembers / statistics.totalMembers * 100).toFixed(2) + '%'
+      : '0%';
+
+    // 找出最活躍的時段
+    const maxActivityHour = statistics.peakHours.indexOf(Math.max(...statistics.peakHours));
+    statistics.peakActivityHour = `${maxActivityHour}:00 - ${maxActivityHour + 1}:00`;
+
+    CM_logInfo(`協作統計取得成功: ${ledgerId}`, "協作統計", requesterId, "", "", functionName);
+
+    return {
+      success: true,
+      statistics: statistics,
+      message: '協作統計取得成功'
+    };
+
+  } catch (error) {
+    CM_logError(`取得協作統計失敗: ${error.message}`, "協作統計", requesterId, "CM_GET_STATISTICS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      statistics: null,
+      message: error.message
+    };
+  }
+}
+
+/**
+ * 21. 監控協作狀態
  * @version 2025-07-07-V1.0.0
  * @date 2025-07-07 14:19:46
  * @description 即時監控協作系統的健康狀態
@@ -1068,7 +1595,7 @@ async function CM_monitorCollaborationHealth(ledgerId = null) {
     // 檢查 WebSocket 連線狀態
     if (CM_INIT_STATUS.websocketServer) {
       const totalConnections = CM_INIT_STATUS.activeConnections.size;
-      const specificLedgerConnections = ledgerId 
+      const specificLedgerConnections = ledgerId
         ? Array.from(CM_INIT_STATUS.activeConnections.keys()).filter(key => key.startsWith(ledgerId)).length
         : totalConnections;
 
@@ -1156,8 +1683,16 @@ async function CM_initialize() {
   }
 }
 
-// 導出模組函數
+// 導出模組函數 - 階段三更新：完整協作業務邏輯提供者
 module.exports = {
+  // 階段三新增：協作系統核心函數
+  CM_initializeCollaboration,
+  CM_getCollaborationDetails,
+  CM_updateCollaborationSettings,
+  CM_toggleCollaborationStatus,
+  CM_bulkSetMemberPermissions,
+  CM_getCollaborationStatistics,
+
   // 成員管理函數
   CM_inviteMember,
   CM_processMemberJoin,
@@ -1199,3 +1734,5 @@ module.exports = {
 CM_initialize().catch(error => {
   console.error('CM 模組自動初始化失敗:', error);
 });
+
+console.log('✅ CM 協作管理模組載入完成 - 階段三強化：成為協作功能唯一業務邏輯提供者');
