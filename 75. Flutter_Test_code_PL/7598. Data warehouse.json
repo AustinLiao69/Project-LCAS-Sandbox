@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "version": "3.2.1",
-    "createdAt": "2025-11-06T03:00:00Z",
-    "description": "SIT P1+P2測試資料倉庫 - 階段一修正：移除hardcoded budgetId，改為動態傳遞機制",
-    "dataSource": "STATIC_GENERATION_BUDGET_REAL_USER_FLOW",
-    "consumer": ["7570. SIT_P1.dart", "7571. SIT_P2.dart"],
+    "version": "3.3.0",
+    "createdAt": "2025-11-06T06:16:00Z",
+    "description": "SIT P1+P2測試資料倉庫 - 階段一修正：移除協作功能硬編碼IDs，新增collaboration.test@test.lcas.app",
+    "dataSource": "REAL_USER_REGISTRATION_COLLABORATION_FLOW",
+    "consumer": ["7570. SIT_P1.dart", "7571. SIT_P2.dart", "7582. 註冊使用者.dart"],
     "totalRecords": 48,
-    "lastUpdated": "2025-10-30T06:00:00Z",
+    "lastUpdated": "2025-11-06T06:16:00Z",
     "compliance": "1311_FS_STANDARD_BUDGET_REAL_USER_INTEGRATION",
     "changes": {
       "v3.0.0": {
@@ -32,6 +32,13 @@
         "enhanced": "動態預算ID傳遞機制",
         "improved": "7571測試流程使用真實創建的預算ID進行後續操作",
         "focus": "解決測試資料流斷裂問題"
+      },
+      "v3.3.0": {
+        "removed": "hardcoded collaboration IDs: shared_collaboration_001, user_cultivation_1697363320000",
+        "added": "collaboration.test@test.lcas.app 真實註冊測試email",
+        "enhanced": "協作測試資料改為template格式，支援動態ID生成",
+        "improved": "7571協作測試流程與7582註冊流程整合",
+        "focus": "階段一修正：清除協作功能硬編碼，建立真實註冊→協作建立流程"
       }
     }
   },
@@ -93,6 +100,22 @@
         "registrationDate": "2025-10-15T08:00:00+08:00",
         "createdAt": "2025-10-15T08:00:00+08:00",
         "testScenario": "正常Cultivation用戶註冊"
+      },
+      "collaboration_test_user": {
+        "email": "collaboration.test@test.lcas.app",
+        "displayName": "協作測試用戶",
+        "userMode": "Expert",
+        "preferences": {
+          "language": "zh-TW",
+          "currency": "TWD",
+          "theme": "expert"
+        },
+        "assessmentAnswers": {
+          "Q1": "A",
+          "Q2": "A",
+          "Q3": "A"
+        },
+        "testScenario": "協作功能測試專用用戶 - 需要真實註冊獲得動態ID"
       },
       "guiding_user_valid": {
         "userId": "user_guiding_1697363380000",
@@ -694,14 +717,11 @@
   },
   "collaboration_test_data": {
     "success_scenarios": {
-      "create_collaborative_ledger": {
-        "ledgerId": "shared_collaboration_001",
+      "create_collaborative_ledger_template": {
         "name": "協作帳本測試",
         "type": "shared",
-        "ownerId": "user_expert_1697363200000",
-        "ownerEmail": "expert.valid@test.lcas.app",
+        "ownerEmail": "collaboration.test@test.lcas.app",
         "collaborationType": "shared",
-        "members": ["user_expert_1697363200000", "user_inertial_1697363260000"],
         "settings": {
           "allowInvite": true,
           "allowEdit": true,
@@ -709,49 +729,24 @@
           "requireApproval": false
         },
         "permissions": {
-          "owner": "user_expert_1697363200000",
-          "admins": [],
-          "members": ["user_inertial_1697363260000"],
-          "viewers": [],
           "settings": {
             "allow_invite": true,
             "allow_edit": true,
             "allow_delete": false
           }
         },
-        "createdAt": "2025-10-15T08:00:00+08:00",
-        "updatedAt": "2025-10-15T08:00:00+08:00",
-        "status": "active",
-        "testScenario": "建立協作帳本成功測試 - 符合1311.FS.js格式"
+        "testScenario": "建立協作帳本成功測試 - 使用真實註冊用戶動態建立"
       },
-      "invite_collaborator_success": {
-        "invitationId": "inv_1697363300000_abc123",
-        "ledgerId": "shared_collaboration_001",
-        "inviterId": "user_expert_1697363200000",
-        "inviteeInfo": {
-          "email": "cultivation.valid@test.lcas.app",
-          "displayName": "Cultivation 測試用戶",
-          "userId": "user_cultivation_1697363320000"
-        },
+      "invite_collaborator_template": {
+        "inviteeEmail": "cultivation.valid@test.lcas.app",
         "permissionLevel": "member",
-        "status": "pending",
-        "createdAt": "2025-10-15T08:05:00+08:00",
-        "expiresAt": "2025-10-22T08:05:00+08:00",
-        "testScenario": "邀請協作者成功測試 - 符合1313.CM.js格式"
+        "testScenario": "邀請協作者測試模板 - 需要動態帳本ID和用戶ID"
       },
-      "collaboration_member_data": {
-        "memberId": "member_1697363400000_def456",
-        "userId": "user_cultivation_1697363320000",
-        "ledgerId": "shared_collaboration_001",
+      "collaboration_member_template": {
         "permissionLevel": "member",
-        "joinedAt": "2025-10-15T08:10:00+08:00",
-        "invitedBy": "user_expert_1697363200000",
-        "status": "active",
-        "testScenario": "協作成員資料 - 符合1313.CM.js格式"
+        "testScenario": "協作成員資料模板 - 需要動態生成IDs"
       },
-      "update_collaborator_permissions": {
-        "ledgerId": "shared_collaboration_001",
-        "collaboratorId": "user_cultivation_1697363320000",
+      "update_collaborator_permissions_template": {
         "newRole": "admin",
         "newPermissions": {
           "edit": true,
@@ -760,22 +755,19 @@
           "delete": false,
           "manage_permissions": true
         },
-        "testScenario": "更新協作者權限成功測試"
+        "testScenario": "更新協作者權限測試模板"
       }
     },
     "failure_scenarios": {
-      "insufficient_permissions": {
-        "ledgerId": "shared_collaboration_001",
-        "operatorId": "user_guiding_1697363380000",
+      "insufficient_permissions_template": {
+        "operatorEmail": "guiding.valid@test.lcas.app",
         "attemptedAction": "invite_member",
         "expectedError": "權限不足：需要 admin 權限",
-        "testScenario": "權限不足測試"
+        "testScenario": "權限不足測試 - 需要動態帳本ID"
       },
-      "invalid_collaboration_type": {
-        "ledgerId": "personal_ledger_001",
-        "inviterId": "user_expert_1697363200000",
+      "invalid_collaboration_type_template": {
         "expectedError": "此帳本類型不支援成員邀請",
-        "testScenario": "無效協作類型測試"
+        "testScenario": "無效協作類型測試 - 需要動態帳本ID"
       }
     }
   },
