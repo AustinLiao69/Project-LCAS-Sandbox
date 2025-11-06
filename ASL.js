@@ -1767,7 +1767,7 @@ app.get('/api/v1/ledgers/:id/permissions', async (req, res) => {
 app.put('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
   try {
     console.log('👥✏️ ASL轉發: 更新協作者權限 -> CM_setMemberPermission');
-    
+
     // 檢查CM模組是否載入
     if (!global.CM && !require.cache[require.resolve('./13. Replit_Module code_BL/1313. CM.js')]) {
       try {
@@ -1779,7 +1779,7 @@ app.put('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
     }
 
     const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
-    
+
     if (!CM || typeof CM.CM_setMemberPermission !== 'function') {
       return res.apiError('CM_setMemberPermission函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
@@ -1792,7 +1792,7 @@ app.put('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
     console.log(`🎯 協作權限更新: 帳本=${ledgerId}, 目標用戶=${targetUserId}, 新權限=${newPermission}`);
 
     const result = await CM.CM_setMemberPermission(ledgerId, targetUserId, newPermission, operatorId);
-    
+
     if (result.success) {
       res.apiSuccess(result.data, result.message || '協作者權限更新成功');
     } else {
@@ -1852,7 +1852,7 @@ app.post('/api/v1/budgets', async (req, res) => {
   try {
     console.log('➕ ASL階段三轉發: 創建預算 -> BM_createBudget');
     console.log('📋 ASL階段三接收資料:', JSON.stringify(req.body, null, 2));
-    
+
     if (!BM || typeof BM.BM_createBudget !== 'function') {
       return res.apiError('BM_createBudget函數不存在', 'BM_FUNCTION_NOT_FOUND', 503);
     }
@@ -1870,7 +1870,7 @@ app.post('/api/v1/budgets', async (req, res) => {
     }
 
     const result = await BM.BM_createBudget(req.body);
-    
+
     if (result.success) {
       console.log('✅ ASL階段三成功：預算創建完成');
       console.log(`📍 Firebase路徑: ${result.data?.firebase_path || 'unknown'}`);
@@ -1981,7 +1981,7 @@ app.delete('/api/v1/budgets/:id', async (req, res) => {
     if (!deleteOptions.confirmationToken) {
       deleteOptions.confirmationToken = `confirm_delete_${req.params.id}`;
     }
-    
+
     const result = await BM.BM_deleteBudget(req.params.id, deleteOptions);
     if (result.success) {
       res.apiSuccess(result.data, result.message || '預算刪除成功');
@@ -2000,16 +2000,16 @@ app.delete('/api/v1/budgets/:id', async (req, res) => {
 app.get('/api/v1/ledgers/:id/conflicts', async (req, res) => {
   try {
     console.log('⚠️ ASL轉發: 檢測協作衝突 -> CM_detectDataConflicts');
-    
+
     const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
-    
+
     if (!CM || typeof CM.CM_detectDataConflicts !== 'function') {
       // 如果CM模組未實作衝突檢測，回傳空結果
       return res.apiSuccess({ conflicts: [], hasConflicts: false }, '無協作衝突');
     }
 
     const result = await CM.CM_detectDataConflicts(req.params.id, req.query);
-    
+
     if (result.success) {
       res.apiSuccess(result.data, result.message || '協作衝突檢測完成');
     } else {
@@ -2025,9 +2025,9 @@ app.get('/api/v1/ledgers/:id/conflicts', async (req, res) => {
 app.post('/api/v1/ledgers/:id/resolve-conflict', async (req, res) => {
   try {
     console.log('🔧 ASL轉發: 解決協作衝突 -> CM_resolveDataConflict');
-    
+
     const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
-    
+
     if (!CM || typeof CM.CM_resolveDataConflict !== 'function') {
       return res.apiError('CM_resolveDataConflict函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
@@ -2040,7 +2040,7 @@ app.post('/api/v1/ledgers/:id/resolve-conflict', async (req, res) => {
     };
 
     const result = await CM.CM_resolveDataConflict(conflictData, req.body.resolutionStrategy || 'manual');
-    
+
     if (result.success) {
       res.apiSuccess(result.data, result.message || '協作衝突解決成功');
     } else {
@@ -2052,7 +2052,7 @@ app.post('/api/v1/ledgers/:id/resolve-conflict', async (req, res) => {
   }
 });
 
-// 確保所有端點符合8020文件規範，移除任何違規端點
+// 移除違規API端點：budgets/status 和 budgets/templates 不在8020文件規範中
 
 
 /**
