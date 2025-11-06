@@ -219,6 +219,8 @@ class SITP2TestController {
   SITP2TestController._internal();
 
   final List<P2TestResult> _results = [];
+  // 階段一修復：使用實例變數儲存動態生成的預算ID
+  String? _dynamicBudgetId;
 
   String get testId => 'SIT-P2-7571-PURE-CALL';
   String get testName => 'SIT P2測試控制器 (純粹調用版-無模擬業務邏輯)';
@@ -372,9 +374,6 @@ class SITP2TestController {
 
       Map<String, dynamic> inputData = {};
       dynamic plResult;
-      
-      // 階段一核心修正：使用類別變數儲存動態生成的預算ID
-      static String? _dynamicBudgetId;
 
       // 階段一修正：純粹調用PL層7304，使用真實用戶帳本而非collaboration hardcoding
       switch (testId) {
@@ -429,22 +428,28 @@ class SITP2TestController {
 
         case 'TC-002': // 查詢預算列表
           // 階段一修正：使用動態生成的budgetId進行查詢
-          final expertUserEmail = 'expert.valid@test.lcas.app';
-          final realLedgerId = await P2TestDataManager.instance._getRealUserLedgerId(expertUserEmail);
-          inputData = {
-            'ledgerId': realLedgerId, 
-            'userId': realUserId,
-            'budgetId': _dynamicBudgetId // 使用TC-001創建的真實ID
-          };
-          
-          print('[7571] 🔄 階段一修正：使用動態預算ID查詢 - $_dynamicBudgetId');
-          // 純粹調用PL層7304
-          plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
-            BudgetCRUDType.read,
-            inputData,
-            UserMode.Expert,
-          );
-          print('[7571] 📋 TC-002階段一修正：使用真實預算ID查詢完成');
+          if (_dynamicBudgetId != null) {
+            final expertUserEmail = 'expert.valid@test.lcas.app';
+            final realLedgerId = await P2TestDataManager.instance._getRealUserLedgerId(expertUserEmail);
+            inputData = {
+              'ledgerId': realLedgerId, 
+              'userId': realUserId,
+              'budgetId': _dynamicBudgetId // 使用TC-001創建的真實ID
+            };
+            
+            print('[7571] 🔄 階段一修正：使用動態預算ID查詢 - $_dynamicBudgetId');
+            // 純粹調用PL層7304
+            plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
+              BudgetCRUDType.read,
+              inputData,
+              UserMode.Expert,
+            );
+            print('[7571] 📋 TC-002階段一修正：使用真實預算ID查詢完成');
+          } else {
+            print('[7571] ⚠️ TC-002: 查詢預算失敗，缺少動態生成的預算ID');
+            print('[7571] 💡 提示：需要先執行TC-001創建預算');
+            plResult = {'error': 'Missing dynamic budget ID', 'success': false};
+          }
           break;
 
         case 'TC-003': // 更新預算
