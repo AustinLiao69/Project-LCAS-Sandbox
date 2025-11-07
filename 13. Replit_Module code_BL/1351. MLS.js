@@ -1435,8 +1435,6 @@ async function MLS_createLedger(ledgerData, options = {}) {
     // 如果是協作帳本，初始化協作架構
     if ((newLedger.type === 'shared' || newLedger.type === 'project') && CM) {
       try {
-        DL.DL_log('MLS', `開始初始化協作架構 - 帳本ID: ${ledgerId}, 類型: ${newLedger.type}`);
-        
         const collaborationResult = await CM.CM_initializeCollaboration(
           ledgerId,
           {
@@ -1448,26 +1446,13 @@ async function MLS_createLedger(ledgerData, options = {}) {
         );
 
         if (collaborationResult.success) {
-          DL.DL_log('MLS', `✅ 協作架構初始化成功 - 帳本ID: ${ledgerId}`);
-          
-          // 驗證協作文檔是否已建立
-          const verifyCollaboration = await db.collection('collaborations').doc(ledgerId).get();
-          if (verifyCollaboration.exists) {
-            DL.DL_log('MLS', `✅ 協作文檔驗證成功 - Firebase已建立collaborations/${ledgerId}`);
-          } else {
-            DL.DL_warning('MLS', `⚠️ 協作文檔驗證失敗 - Firebase未找到collaborations/${ledgerId}`);
-          }
+          DL.DL_log('MLS', `協作架構初始化成功 - 帳本ID: ${ledgerId}`);
         } else {
-          DL.DL_warning('MLS', `❌ 協作架構初始化失敗 - 帳本ID: ${ledgerId}, 錯誤: ${collaborationResult.message}`);
-          throw new Error(`協作初始化失敗: ${collaborationResult.message}`);
+          DL.DL_warning('MLS', `協作架構初始化失敗 - 帳本ID: ${ledgerId}, 錯誤: ${collaborationResult.message}`);
         }
       } catch (cmError) {
-        DL.DL_error('MLS', `💥 協作架構初始化異常 - 帳本ID: ${ledgerId}, 錯誤: ${cmError.message}`);
-        // 協作初始化失敗不應影響帳本建立，但需要記錄錯誤
-        DL.DL_warning('MLS', `⚠️ 協作帳本 ${ledgerId} 已建立但協作功能不可用`);
+        DL.DL_warning('MLS', `協作架構初始化異常 - 帳本ID: ${ledgerId}, 錯誤: ${cmError.message}`);
       }
-    } else if (newLedger.type === 'shared' || newLedger.type === 'project') {
-      DL.DL_warning('MLS', `⚠️ CM模組未載入，協作帳本 ${ledgerId} 的協作功能將不可用`);
     }
 
     // 返回已寫入的資料（替換時間戳為實際值）
