@@ -768,16 +768,15 @@ async function MLS_getLedgerList(userId, filterOptions, sortOrder) {
     }
 
     // 套用排序
-    if (sortOrder) {
       if (sortOrder === 'name') {
         query = query.orderBy('name');
       } else if (sortOrder === 'updated') {
-        query = query.orderBy('updated_at', 'desc');
+        query = query.orderBy('updatedAt', 'desc'); // 修正：統一使用camelCase
       } else if (sortOrder === 'created') {
-        query = query.orderBy('created_at', 'desc');
+        query = query.orderBy('createdAt', 'desc'); // 修正：統一使用camelCase
       }
     } else {
-      query = query.orderBy('updated_at', 'desc');
+      query = query.orderBy('updatedAt', 'desc'); // 修正：統一使用camelCase
     }
 
     const querySnapshot = await query.get();
@@ -792,9 +791,9 @@ async function MLS_getLedgerList(userId, filterOptions, sortOrder) {
       if (hasViewPermission) {
         // 提供帳本統計資訊
         const statistics = {
-          totalEntries: ledgerData.metadata?.total_entries || 0,
-          totalAmount: ledgerData.metadata?.total_amount || 0,
-          lastActivity: ledgerData.metadata?.last_activity
+          totalEntries: ledgerData.metadata?.totalEntries || 0, // 修正：統一使用camelCase
+          totalAmount: ledgerData.metadata?.totalAmount || 0, // 修正：統一使用camelCase
+          lastActivity: ledgerData.metadata?.lastActivity // 修正：統一使用camelCase
         };
 
         ledgers.push({
@@ -802,8 +801,8 @@ async function MLS_getLedgerList(userId, filterOptions, sortOrder) {
           name: ledgerData.name,
           type: ledgerData.type,
           description: ledgerData.description,
-          created_at: ledgerData.created_at,
-          updated_at: ledgerData.updated_at,
+          createdAt: ledgerData.createdAt, // 修正：統一使用camelCase
+          updatedAt: ledgerData.updatedAt, // 修正：統一使用camelCase
           archived: ledgerData.archived,
           member_count: ledgerData.metadata?.member_count || 1,
           statistics: statistics
@@ -1173,7 +1172,7 @@ async function MLS_getCollaborationLedgers(userId, options = {}) {
     }
 
     // 排序
-    query = query.orderBy('updated_at', 'desc');
+    query = query.orderBy('updatedAt', 'desc'); // 修正：統一使用camelCase
 
     // 限制數量
     if (options.limit) {
