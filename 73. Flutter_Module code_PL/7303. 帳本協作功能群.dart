@@ -314,12 +314,83 @@ class LedgerCollaborationManager {
   }
 
   /**
+   * 03. 處理帳本建立
+   * @version 2025-11-06-V2.1.0
+   * @date 2025-11-06
+   * @update: 階段三修復 - 通過APL調用實際API，支援協作帳本初始化
+   */
+  static Future<Ledger> processLedgerCreation(
+    Map<String, dynamic>? request, {
+    String? userMode,
+  }) async {
+    try {
+      // 階段三修復：null安全處理
+      if (request == null) {
+        throw CollaborationError(
+          '帳本建立參數不能為空',
+          'NULL_REQUEST_PARAMETER',
+        );
+      }
+
+      // 驗證建立資料
+      final validation = validateLedgerData(request);
+      if (!validation.isValid) {
+        throw CollaborationError(
+          '帳本資料驗證失敗: ${validation.errors.join(', ')}',
+          'VALIDATION_ERROR',
+        );
+      }
+
+      // 通過APL.dart調用API建立帳本
+      final response = await APL.instance.ledger.createLedger(request);
+
+      // 階段三修復：加強回應null檢查
+      if (response.success) {
+        if (response.data != null) {
+          try {
+            final ledger = Ledger.fromJson(response.data! as Map<String, dynamic>);
+
+            // 如果是協作帳本（shared或project類型），初始化協作功能
+            if (ledger.type == 'shared' || ledger.type == 'project') {
+              await _initializeCollaborationForLedger(ledger, userMode);
+            }
+
+            return ledger;
+          } catch (parseError) {
+            throw CollaborationError(
+              '帳本資料解析失敗: ${parseError.toString()}',
+              'DATA_PARSE_ERROR',
+            );
+          }
+        } else {
+          throw CollaborationError(
+            '帳本建立成功但回傳資料為空',
+            'EMPTY_RESPONSE_DATA',
+          );
+        }
+      } else {
+        throw CollaborationError(
+          response.message ?? '帳本建立失敗',
+          response.error?.code ?? 'LEDGER_CREATION_ERROR',
+          response.error?.details,
+        );
+      }
+    } catch (e) {
+      if (e is CollaborationError) rethrow;
+      throw CollaborationError(
+        '帳本建立處理失敗: ${e.toString()}',
+        'PROCESS_LEDGER_CREATION_ERROR',
+      );
+    }
+  }
+
+  /**
    * 02. 處理帳本建立
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段一實作 - 帳本建立處理
    */
-  static Future<Ledger> processLedgerCreation(
+  static Future<Ledger> processLedgerCreation_old(
     Map<String, dynamic>? request, {
     String? userMode,
   }) async {
@@ -377,8 +448,9 @@ class LedgerCollaborationManager {
     }
   }
 
+
   /**
-   * 03. 處理帳本更新
+   * 04. 處理帳本更新
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段一實作 - 帳本更新處理
@@ -418,7 +490,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 04. 處理帳本刪除
+   * 05. 處理帳本刪除
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段一實作 - 帳本刪除處理
@@ -445,7 +517,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 05. 驗證帳本資料
+   * 06. 驗證帳本資料
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段一實作 - 帳本資料驗證
@@ -466,14 +538,14 @@ class LedgerCollaborationManager {
 
     // 必填欄位驗證 - 加強null檢查
     final name = data['name'];
-    if (name == null || 
+    if (name == null ||
         (name is String && name.trim().isEmpty) ||
         (name is! String)) {
       errors.add('帳本名稱為必填項目且必須為有效字串');
     }
 
     final type = data['type'];
-    if (type == null || 
+    if (type == null ||
         (type is String && type.trim().isEmpty) ||
         (type is! String)) {
       errors.add('帳本類型為必填項目且必須為有效字串');
@@ -504,7 +576,7 @@ class LedgerCollaborationManager {
 
     // 階段三修復：額外驗證常見必要欄位
     final ownerId = data['ownerId'] ?? data['owner_id'];
-    if (ownerId == null || 
+    if (ownerId == null ||
         (ownerId is String && ownerId.trim().isEmpty) ||
         (ownerId is! String)) {
       warnings.add('建議提供有效的擁有者ID');
@@ -518,7 +590,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 06. 載入帳本狀態
+   * 07. 載入帳本狀態
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段一實作 - 載入帳本狀態
@@ -553,7 +625,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 07. 建立新帳本
+   * 08. 建立新帳本
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段一實作 - 建立新帳本
@@ -586,7 +658,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 08. 更新帳本資訊
+   * 09. 更新帳本資訊
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段一實作 - 更新帳本資訊
@@ -618,7 +690,7 @@ class LedgerCollaborationManager {
   /// =============== 階段二：協作管理核心函數（12個函數） ===============
 
   /**
-   * 09. 處理協作者列表查詢（對應S-303協作管理頁）
+   * 10. 處理協作者列表查詢（對應S-303協作管理頁）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 協作者列表查詢處理
@@ -648,7 +720,7 @@ class LedgerCollaborationManager {
           try {
             return response.data!
                 .where((collaboratorData) => collaboratorData != null)
-                .map((collaboratorData) => 
+                .map((collaboratorData) =>
                     Collaborator.fromJson(collaboratorData as Map<String, dynamic>))
                 .toList();
           } catch (parseError) {
@@ -678,7 +750,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 10. 處理協作者邀請（對應S-304邀請協作者頁）
+   * 11. 處理協作者邀請（對應S-304邀請協作者頁）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 協作者邀請處理
@@ -731,7 +803,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 11. 處理協作者權限更新（對應S-305權限設定頁）
+   * 12. 處理協作者權限更新（對應S-305權限設定頁）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 協作者權限更新處理
@@ -778,7 +850,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 12. 處理協作者移除（對應S-303協作管理頁移除功能）
+   * 13. 處理協作者移除（對應S-303協作管理頁移除功能）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 協作者移除處理
@@ -819,7 +891,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 13. 載入協作者（內部狀態管理）
+   * 14. 載入協作者（內部狀態管理）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 載入協作者狀態管理
@@ -850,7 +922,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 14. 邀請協作者（內部業務邏輯）
+   * 15. 邀請協作者（內部業務邏輯）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 邀請協作者業務邏輯
@@ -895,7 +967,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 15. 更新協作者權限（內部業務邏輯）
+   * 16. 更新協作者權限（內部業務邏輯）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 更新協作者權限業務邏輯
@@ -935,7 +1007,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 16. 移除協作者（內部業務邏輯）
+   * 17. 移除協作者（內部業務邏輯）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 移除協作者業務邏輯
@@ -974,7 +1046,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 17. 計算用戶權限（權限系統核心）
+   * 18. 計算用戶權限（權限系統核心）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 計算用戶權限
@@ -1083,7 +1155,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 18. 檢查權限（快速權限驗證）
+   * 19. 檢查權限（快速權限驗證）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 檢查權限
@@ -1118,7 +1190,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 19. 更新用戶角色（角色管理）
+   * 20. 更新用戶角色（角色管理）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 更新用戶角色
@@ -1155,7 +1227,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 20. 驗證權限變更（權限驗證）
+   * 21. 驗證權限變更（權限驗證）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段二實作 - 驗證權限變更
@@ -1222,7 +1294,7 @@ class LedgerCollaborationManager {
   /// =============== 階段三：API整合與錯誤處理函數（5個函數） ===============
 
   /**
-   * 21. 統一API調用處理（API整合核心）
+   * 22. 統一API調用處理（API整合核心）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段三實作 - 統一API調用處理
@@ -1390,7 +1462,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 22. 設定用戶模式（四模式支援）
+   * 23. 設定用戶模式（四模式支援）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段三實作 - 設定用戶模式
@@ -1408,7 +1480,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 23. 獲取模式配置（模式差異化配置）
+   * 24. 獲取模式配置（模式差異化配置）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段三實作 - 獲取模式配置
@@ -1473,7 +1545,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 24. 處理帳本建立錯誤（專用錯誤處理）
+   * 25. 處理帳本建立錯誤（專用錯誤處理）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段三實作 - 處理帳本建立錯誤
@@ -1563,7 +1635,7 @@ class LedgerCollaborationManager {
   }
 
   /**
-   * 25. 處理邀請錯誤（專用錯誤處理）
+   * 26. 處理邀請錯誤（專用錯誤處理）
    * @version 2025-10-22-V2.0.0
    * @date 2025-10-22
    * @update: 階段三實作 - 處理邀請錯誤
@@ -1821,5 +1893,33 @@ class LedgerCollaborationManager {
         '✅ 提供容錯機制和預設值處理'
       ],
     };
+  }
+
+  /**
+   * 內部函數：為協作帳本初始化協作功能
+   * @version 2025-11-06-V2.1.0
+   * @description 當建立共享或專案帳本時，自動初始化協作架構
+   */
+  static Future<void> _initializeCollaborationForLedger(
+    Ledger ledger,
+    String? userMode,
+  ) async {
+    try {
+      // 由於沒有專用的協作初始化端點，我們通過檢查帳本權限來確認協作功能已就緒
+      final permissionResponse = await APL.instance.ledger.getPermissions(
+        ledger.id,
+        userId: ledger.ownerId,
+        operation: 'read',
+      );
+
+      if (permissionResponse.success) {
+        print('協作帳本 ${ledger.id} 協作功能已就緒');
+      } else {
+        print('警告：協作帳本 ${ledger.id} 協作功能初始化可能未完成');
+      }
+    } catch (e) {
+      print('協作初始化檢查失敗: ${e.toString()}');
+      // 不拋出異常，因為這是輔助功能
+    }
   }
 }

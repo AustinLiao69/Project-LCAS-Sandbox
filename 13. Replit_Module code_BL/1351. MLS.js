@@ -1370,8 +1370,8 @@ async function MLS_getLedgers(queryParams = {}) {
 
 /**
  * 新增：建立帳本 (P2測試所需)
- * @version 2025-10-23-V2.2.0
- * @description 建立新帳本
+ * @version 2025-11-06-V2.3.0
+ * @description 建立新帳本 - 確保實際寫入Firestore並驗證
  */
 async function MLS_createLedger(ledgerData, options = {}) {
   try {
@@ -1379,6 +1379,10 @@ async function MLS_createLedger(ledgerData, options = {}) {
 
     if (!ledgerData.name || !ledgerData.type) {
       throw new Error('缺少必要參數: name, type');
+    }
+
+    if (!ledgerData.owner_id) {
+      throw new Error('缺少必要參數: owner_id');
     }
 
     // 生成帳本ID
@@ -1393,6 +1397,7 @@ async function MLS_createLedger(ledgerData, options = {}) {
       currency: ledgerData.currency || 'TWD',
       timezone: ledgerData.timezone || 'Asia/Taipei',
       owner_id: ledgerData.owner_id,
+      ownerId: ledgerData.owner_id, // 相容性欄位
       members: ledgerData.members || [ledgerData.owner_id],
       permissions: ledgerData.permissions || {
         owner: ledgerData.owner_id,
@@ -1405,20 +1410,62 @@ async function MLS_createLedger(ledgerData, options = {}) {
           allow_delete: false
         }
       },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
       archived: false,
       metadata: {
         total_entries: 0,
         total_amount: 0,
-        member_count: 1
+        member_count: ledgerData.members ? ledgerData.members.length : 1
       }
+    };
+
+    // 實際寫入Firestore
+    const ledgerRef = db.collection('ledgers').doc(ledgerId);
+    await ledgerRef.set(newLedger);
+
+    // 驗證寫入成功
+    const verifyDoc = await ledgerRef.get();
+    if (!verifyDoc.exists) {
+      throw new Error('帳本寫入Firestore失敗：驗證文檔不存在');
+    }
+
+    DL.DL_log('MLS', `帳本成功寫入Firestore - ID: ${ledgerId}`);
+
+    // 如果是協作帳本，初始化協作架構
+    if ((newLedger.type === 'shared' || newLedger.type === 'project') && CM) {
+      try {
+        const collaborationResult = await CM.CM_initializeCollaboration(
+          ledgerId,
+          {
+            userId: ledgerData.owner_id,
+            email: ledgerData.ownerEmail || `${ledgerData.owner_id}@example.com`
+          },
+          newLedger.type,
+          newLedger.permissions?.settings || {}
+        );
+
+        if (collaborationResult.success) {
+          DL.DL_log('MLS', `協作架構初始化成功 - 帳本ID: ${ledgerId}`);
+        } else {
+          DL.DL_warning('MLS', `協作架構初始化失敗 - 帳本ID: ${ledgerId}, 錯誤: ${collaborationResult.message}`);
+        }
+      } catch (cmError) {
+        DL.DL_warning('MLS', `協作架構初始化異常 - 帳本ID: ${ledgerId}, 錯誤: ${cmError.message}`);
+      }
+    }
+
+    // 返回已寫入的資料（替換時間戳為實際值）
+    const finalLedger = {
+      ...newLedger,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     return {
       success: true,
-      data: newLedger,
-      message: '帳本建立成功'
+      data: finalLedger,
+      message: '帳本建立成功並已寫入資料庫'
     };
 
   } catch (error) {
