@@ -4,6 +4,186 @@
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
 
+
+------------------------------------------
+20251107. 執行7571
+
+請務必遵守1311所規範的資料格式。approved請進行階段一
+
+基於您的協作帳本建立流程分析，我發現了關鍵的資料欄位不一致問題，現在提出MVP階段的修正方案。
+🔍 關鍵問題分析與Insight
+根本原因：多模組間缺乏統一資料契約
+從流程分析中發現，協作帳本建立失敗的核心問題是資料欄位命名不一致，就像不同部門使用不同格式的表單，導致資料傳遞時發生格式轉換錯誤。
+關鍵Insight
+1.	命名規範演進問題：專案在不同階段採用了不同的命名規範（snake_case vs camelCase）
+2.	模組間缺乏驗證：各層之間沒有統一的資料格式驗證機制
+3.	Firebase寫入失敗：欄位格式不一致導致協作帳本無法正確建立在Firebase中
+📋 三階段解決方案（依您的需求調整）
+🚀 階段一：修正關鍵資料欄位命名不一致（Critical）
+核心問題：用戶ID欄位和時間戳格式不一致導致協作帳本建立失敗
+影響模組：
+•	MLS.js v2.0.0 → v2.0.1
+•	CM.js v2.0.0 → v2.0.1
+具體修正：
+1.	MLS.js欄位統一：
+•	將所有 owner_id 統一改為 ownerId (camelCase)
+•	將所有 created_at, updated_at 統一改為 createdAt, updatedAt
+•	修正 MLS_createSharedLedger() 中的 permissions.settings.allowInvite 格式
+2.	CM.js參數統一：
+•	CM_initializeCollaboration() 接收的ownerInfo統一格式為 {userId, email}
+•	所有內部處理統一使用camelCase命名
+驗證標準：協作帳本建立成功且Firebase中collaborations集合正確建立
+🔧 階段二：統一協作成員資料結構（High）
+核心問題：成員陣列格式不一致，PL層無法正確解析協作者資料
+影響模組：
+•	7303.dart v2.4.0 → v2.5.0
+•	MLS.js v2.0.1 → v2.0.2
+具體修正：
+1.	建立統一成員模型：
+•	MLS.js中members陣列統一為包含完整成員物件格式
+•	7303.dart中Collaborator模型對應調整，確保欄位名稱一致
+2.	資料轉換層：
+•	APL.dart中新增資料格式轉換邏輯，確保PL層收到正確格式
+驗證標準：協作者列表查詢正常，前端能正確顯示協作者資訊
+🎯 階段三：統一權限資料結構（Medium）
+核心問題：權限物件結構層次不一致，影響權限檢查邏輯
+影響模組：所有相關模組小幅升版
+具體修正：
+1.	權限結構標準化：
+•	統一 permissions.settings.allowInvite vs settings.allowInvite 格式
+•	建立標準的權限物件結構
+2.	跨模組驗證：
+•	確保權限資料在各層間正確傳遞
+•	驗證權限檢查邏輯正常運作
+驗證標準：權限設定和檢查功能正常運作
+📊 問題優先級與執行順序
+立即處理（Critical）：
+•	✅ 用戶ID欄位命名統一 (ownerId)
+•	✅ 時間戳格式統一 (camelCase)
+•	✅ CM模組參數格式修正
+次要處理（High）：
+•	✅ 成員資料結構統一
+•	✅ APL.dart資料轉換層
+最後處理（Medium）：
+•	✅ 權限資料結構標準化
+🎯 MVP階段關鍵成功指標
+1.	協作帳本建立成功率100%
+2.	Firebase中collaborations和ledgers兩個集合資料格式完全一致
+3.	7303.dart能正確解析所有回傳資料
+這個解決方案專注於解決當前MVP階段的核心問題，不涉及功能增強，每個階段完成後都能進行測試驗證。修正完成後，協作帳本建立流程將能正常運作。
+
+
+
+
+------------------------------------------
+20251107. 執行7571
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+=>資料格式的部分請嚴格遵守1311所規定的資料格式
+
+
+根據9909文件，作為資深SA，我深入分析了協作帳本建立流程中的資料欄位一致性問題。
+🔍 問題分析與根本原因
+從協作帳本建立流程的資料流分析，我發現了以下關鍵的資料欄位不一致問題：
+1. 用戶ID欄位命名不一致 (最嚴重)
+問題現象：
+•	7303.dart使用 ownerId
+•	MLS.js混合使用 owner_id 和 ownerId
+•	CM.js使用 ownerInfo.userId 和 ownerId
+•	Firebase集合使用不同的命名規範
+簡單概念解釋：
+就像公司三個部門都在討論同一個員工，但前台用「員工編號」、人事用「工號」、財務用「薪資號」，結果沒人知道在講同一個人。
+
+2. 時間戳欄位格式不一致
+問題現象：
+•	7303.dart使用 createdAt, updatedAt (camelCase)
+•	MLS.js使用 created_at, updated_at (snake_case)
+•	CM.js使用 admin.firestore.Timestamp.now()
+
+3. 協作成員資料結構不一致
+問題現象：
+•	MLS.js中的members陣列：[userId]
+•	CM.js中的members陣列：包含完整成員物件
+•	7303.dart期望的Collaborator模型結構
+
+4. 權限欄位結構差異
+問題現象：
+•	MLS.js：permissions.settings.allowInvite
+•	CM.js：settings.allowInvite
+•	7303.dart：permissions Map<String, bool>
+
+💡 核心Insight
+根本問題：這是典型的「多模組開發時缺乏統一資料契約」問題。就像不同部門使用不同版本的表格，雖然內容相同但格式不同，導致資料傳遞時出現轉換錯誤。
+關鍵發現：
+1.	階段性命名演進：專案在不同階段採用了不同命名規範
+2.	模組間缺乏資料驗證：沒有統一的資料格式驗證機制
+3.	欄位映射缺失：各層之間缺少明確的資料轉換邏輯
+
+📋 三階段解決方案
+
+🚀 階段一：修正關鍵資料欄位命名不一致（Critical）
+目標：統一用戶ID和基本資料欄位命名
+影響模組：MLS.js v2.0.0 → v2.0.1, CM.js v2.0.0 → v2.0.1
+修正範圍：
+1.	MLS.js欄位統一：
+•	統一使用 ownerId (camelCase)
+•	統一使用 createdAt, updatedAt
+•	修正 MLS_createSharedLedger() 函數的資料結構
+2.	CM.js參數統一：
+•	CM_initializeCollaboration() 接收統一格式的ownerInfo
+•	統一使用camelCase命名
+驗證標準：協作帳本建立成功且Firebase中兩個集合資料格式一致
+
+🔧 階段二：統一協作成員資料結構（High）
+目標：建立統一的成員資料模型
+影響模組：7303.dart v2.4.0 → v2.5.0, MLS.js v2.0.1 → v2.0.2
+修正範圍：
+1.	建立統一成員模型：
+•	定義標準的Member資料結構
+•	在MLS.js中統一成員陣列格式
+•	在7303.dart中對應調整Collaborator模型
+
+2.	資料轉換層：
+•	在APL.dart中新增資料格式轉換邏輯
+•	確保PL層收到的資料格式符合預期
+驗證標準：協作者列表查詢正常，資料格式前後一致
+
+🎯 階段三：統一權限資料結構（Medium）
+目標：建立統一的權限管理資料格式
+影響模組：所有相關模組小幅升版
+修正範圍：
+1.	權限結構標準化：
+•	統一permissions物件結構
+•	統一settings物件結構
+•	建立權限轉換邏輯
+2.	跨模組驗證：
+•	確保權限資料在各層間正確傳遞
+•	驗證權限檢查邏輯正常運作
+
+📊 具體不一致問題清單
+函數	欄位名稱	期望格式	實際格式	問題等級
+MLS_createSharedLedger	owner_id/ownerId	ownerId	混用	Critical
+CM_initializeCollaboration	ownerInfo.userId	{userId, email}	只有userId	Critical
+processLedgerCreation	createdAt	ISO string	不同格式	High
+members陣列	成員結構	[Member對象]	[string]	High
+permissions	權限結構	Map<String,bool>	nested object	Medium
+🎯 修正優先級建議
+立即處理（Critical）：
+•	❌ 用戶ID欄位命名統一 (ownerId)
+•	❌ CM模組參數格式修正
+次要處理（High）：
+•	❌ 成員資料結構統一
+•	❌ 時間戳格式統一
+最後處理（Medium）：
+•	❌ 權限資料結構標準化
+關鍵成功指標：
+•	✅ 協作帳本建立成功率100%
+•	✅ Firebase兩個集合資料格式完全一致
+•	✅ 7303.dart能正確解析所有回傳資料
+這個解決方案專注於解決當前MVP階段的資料欄位不一致問題，不涉及功能增強或過度優化，每個階段完成後都能進行測試驗證。
+
+
 ------------------------------------------
 20251107. 執行7571
 
