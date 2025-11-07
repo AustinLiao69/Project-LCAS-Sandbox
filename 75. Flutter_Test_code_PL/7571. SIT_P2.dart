@@ -358,12 +358,24 @@ class SITP2TestController {
         }
         if (result.plResult != null) {
           print('[7571]    PL層回應: ${result.plResult}');
+        } else {
+          print('[7571]    PL層回應: null (異常發生或調用失敗)');
         }
         if (result.executionSteps.isNotEmpty) {
           print('[7571]    關鍵步驟:');
           result.executionSteps.forEach((step, detail) {
             print('[7571]      • $step: $detail');
           });
+        } else {
+          print('[7571]    關鍵步驟: 無執行步驟記錄');
+        }
+
+        // 額外的異常類型資訊
+        if (result.executionSteps.containsKey('error_type')) {
+          print('[7571]    異常類型: ${result.executionSteps['error_type']}');
+        }
+        if (result.executionSteps.containsKey('stack_trace_summary')) {
+          print('[7571]    堆疊追蹤: ${result.executionSteps['stack_trace_summary']}');
         }
       } else {
         print('[7571] ✅ 測試成功，PL層回應: ${result.plResult}');
