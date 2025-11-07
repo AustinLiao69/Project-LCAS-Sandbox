@@ -18,3 +18,4 @@ MM 	 DD 	 Description 	    Progress
 10	23	 Firebase裡面為什麼沒有分類帳本與協作的欄位？ 	 Open
 10	23	 各功能的詳細測試應該放在各模組的ubit test裡面，SIT只測試整體 	 Open
 11	6	 建立詳細的log 	 Open
+11	7	 建立沖銷機制：當月的信用卡消費與下月的信用卡帳單相互沖銷 	 Open
