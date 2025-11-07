@@ -77,7 +77,7 @@ class Collaborator {
   factory Collaborator.fromJson(Map<String, dynamic> json) {
     // 階段二修正：更強健的權限解析
     Map<String, bool> parsedPermissions = {};
-    
+
     if (json['permissions'] != null) {
       final rawPermissions = json['permissions'];
       if (rawPermissions is Map) {
@@ -88,7 +88,7 @@ class Collaborator {
         });
       }
     }
-    
+
     // 階段二修正：如果沒有權限資料，根據角色設定預設權限
     if (parsedPermissions.isEmpty) {
       parsedPermissions = _getDefaultPermissionsForRole(json['role'] ?? 'viewer');
@@ -148,9 +148,9 @@ class Collaborator {
   /// 階段二新增：安全的日期時間解析
   static DateTime _parseDateTime(dynamic dateValue) {
     if (dateValue == null) return DateTime.now();
-    
+
     if (dateValue is DateTime) return dateValue;
-    
+
     if (dateValue is String) {
       try {
         return DateTime.parse(dateValue);
@@ -158,7 +158,7 @@ class Collaborator {
         return DateTime.now();
       }
     }
-    
+
     return DateTime.now();
   }
 
@@ -175,9 +175,15 @@ class Collaborator {
     };
   }
 
-  /// 階段二新增：檢查特定權限
+  /// 階段三修正：檢查特定權限（支援統一權限格式）
   bool hasPermission(String permission) {
     return permissions[permission] == true;
+  }
+
+  /// 階段三新增：檢查設定權限（從帳本設定中獲取）
+  bool hasSettingPermission(Map<String, dynamic>? ledgerSettings, String permission) {
+    if (ledgerSettings == null) return false;
+    return ledgerSettings[permission] == true;
   }
 
   /// 階段二新增：是否為管理者

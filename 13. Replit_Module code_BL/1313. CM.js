@@ -1,5 +1,5 @@
 /**
- * CM_協作管理模組_2.0.1
+ * CM_協作管理模組_2.0.2
  * @module CM模組
  * @description 協作管理系統 - 階段三強化：成為協作功能唯一業務邏輯提供者
  * @update 2025-11-07: 階段一修正 - 統一參數格式和內部處理為camelCase命名
@@ -171,13 +171,7 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
           owner: ownerInfo.userId,
           admins: [],
           members: [],
-          viewers: [],
-          settings: {
-            allowInvite: initialSettings.allowInvite !== false, // 修正：統一使用camelCase
-            allowEdit: initialSettings.allowEdit !== false, // 修正：統一使用camelCase
-            allowDelete: initialSettings.allowDelete || false, // 修正：統一使用camelCase
-            requireApproval: initialSettings.requireApproval || false // 修正：統一使用camelCase
-          }
+          viewers: []
         },
         settings: {
           allowInvite: initialSettings.allowInvite !== false,

@@ -68,12 +68,12 @@ async function MLS_createProjectLedger(userId, projectName, projectDescription, 
         owner: userId,
         admins: [],
         members: [],
-        viewers: [],
-        settings: {
-          allowInvite: true, // 修正：統一使用camelCase
-          allowEdit: true, // 修正：統一使用camelCase
-          allowDelete: false // 修正：統一使用camelCase
-        }
+        viewers: []
+      },
+      settings: {
+        allowInvite: true, // 修正：統一使用camelCase
+        allowEdit: true, // 修正：統一使用camelCase
+        allowDelete: false // 修正：統一使用camelCase
       },
       attributes: {
         status: 'active',
@@ -175,12 +175,12 @@ async function MLS_createCategoryLedger(userId, categoryName, categoryType, tags
         owner: userId,
         admins: [],
         members: [],
-        viewers: [],
-        settings: {
-          allowInvite: false, // 修正：統一使用camelCase
-          allowEdit: true, // 修正：統一使用camelCase
-          allowDelete: false // 修正：統一使用camelCase
-        }
+        viewers: []
+      },
+      settings: {
+        allowInvite: false, // 修正：統一使用camelCase
+        allowEdit: true, // 修正：統一使用camelCase
+        allowDelete: false // 修正：統一使用camelCase
       },
       attributes: {
         status: 'active',
@@ -281,12 +281,12 @@ async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissio
         owner: ownerId,
         admins: permissionSettings?.admins || [],
         members: permissionSettings?.members || memberList || [],
-        viewers: permissionSettings?.viewers || [],
-        settings: {
-          allowInvite: permissionSettings?.allowInvite !== false, // 修正：統一使用camelCase
-          allowEdit: permissionSettings?.allowEdit !== false, // 修正：統一使用camelCase
-          allowDelete: permissionSettings?.allowDelete || false // 修正：統一使用camelCase
-        }
+        viewers: permissionSettings?.viewers || []
+      },
+      settings: {
+        allowInvite: permissionSettings?.allowInvite !== false, // 修正：統一使用camelCase
+        allowEdit: permissionSettings?.allowEdit !== false, // 修正：統一使用camelCase
+        allowDelete: permissionSettings?.allowDelete || false // 修正：統一使用camelCase
       },
       attributes: {
         status: 'active',
@@ -554,7 +554,8 @@ async function MLS_setLedgerPermissions(ledgerId, userId, memberPermissions) {
 
     // 更新帳本的基礎權限設定
     await ledgerRef.update({
-      permissions: memberPermissions,
+      permissions: memberPermissions.permissions,
+      settings: memberPermissions.settings,
       updated_at: admin.firestore.FieldValue.serverTimestamp()
     });
 
@@ -562,18 +563,18 @@ async function MLS_setLedgerPermissions(ledgerId, userId, memberPermissions) {
     if (CM && typeof CM.CM_setMemberPermission === 'function') {
       try {
         // 為每個成員設定權限
-        if (memberPermissions.admins) {
-          for (const adminId of memberPermissions.admins) {
+        if (memberPermissions.permissions.admins) {
+          for (const adminId of memberPermissions.permissions.admins) {
             await CM.CM_setMemberPermission(ledgerId, adminId, 'admin', userId);
           }
         }
-        if (memberPermissions.members) {
-          for (const memberId of memberPermissions.members) {
+        if (memberPermissions.permissions.members) {
+          for (const memberId of memberPermissions.permissions.members) {
             await CM.CM_setMemberPermission(ledgerId, memberId, 'member', userId);
           }
         }
-        if (memberPermissions.viewers) {
-          for (const viewerId of memberPermissions.viewers) {
+        if (memberPermissions.permissions.viewers) {
+          for (const viewerId of memberPermissions.permissions.viewers) {
             await CM.CM_setMemberPermission(ledgerId, viewerId, 'viewer', userId);
           }
         }
@@ -856,24 +857,17 @@ async function MLS_validateLedgerAccess(userId, ledgerId, operationType) {
     }
 
     const ledgerData = ledgerDoc.data();
-    const permissions = ledgerData.permissions;
+    const permissions = ledgerData.permissions || {};
+    const settings = ledgerData.settings || {};
 
     // 檢查用戶是否為成員
-    // Note: This check needs to be more robust with the new member structure.
-    // It should ideally check against the `members` array containing objects.
-    // For now, we'll assume `ledgerData.members` is an array of userIds for simplicity,
-    // but this will need refactoring if `members` always contains objects.
     const isMember = ledgerData.members && ledgerData.members.some(member => member.userId === userId);
     if (!isMember) {
-      // Fallback for older data structures or if the check above fails
-      if (!ledgerData.members.includes(userId)) {
-        return {
-          hasAccess: false,
-          reason: 'not_member'
-        };
-      }
+      return {
+        hasAccess: false,
+        reason: 'not_member'
+      };
     }
-
 
     // 根據操作類型檢查權限
     let hasAccess = false;
@@ -887,19 +881,19 @@ async function MLS_validateLedgerAccess(userId, ledgerId, operationType) {
         // Check if the user is the owner or an admin, or if they are a member and editing is allowed
         hasAccess = userId === permissions.owner ||
                    permissions.admins.includes(userId) ||
-                   (permissions.members.includes(userId) && permissions.settings.allow_edit);
+                   (permissions.members.includes(userId) && settings.allowEdit);
         break;
 
       case 'delete':
         // Only the owner can delete if allowed by settings
-        hasAccess = userId === permissions.owner && permissions.settings.allow_delete;
+        hasAccess = userId === permissions.owner && settings.allowDelete;
         break;
 
       case 'invite':
         // Owner or admins can invite if allowed by settings
         hasAccess = (userId === permissions.owner ||
                     permissions.admins.includes(userId)) &&
-                   permissions.settings.allow_invite;
+                   settings.allowInvite;
         break;
 
       case 'remove_member':
@@ -1324,6 +1318,7 @@ async function MLS_getLedgerById(ledgerId, queryParams = {}) {
       owner_id: ledgerData.owner_id,
       members: ledgerData.members || [],
       permissions: ledgerData.permissions || {},
+      settings: ledgerData.settings || {},
       created_at: ledgerData.created_at,
       updated_at: ledgerData.updated_at,
       archived: ledgerData.archived || false,
@@ -1387,6 +1382,8 @@ async function MLS_getLedgers(queryParams = {}) {
         description: ledgerData.description || '',
         owner_id: ledgerData.owner_id,
         members: ledgerData.members || [],
+        permissions: ledgerData.permissions || {},
+        settings: ledgerData.settings || {},
         created_at: ledgerData.created_at,
         updated_at: ledgerData.updated_at,
         archived: ledgerData.archived || false,
@@ -1466,12 +1463,12 @@ async function MLS_createLedger(ledgerData, options = {}) {
         owner: ledgerData.owner_id,
         admins: [],
         members: [],
-        viewers: [],
-        settings: {
-          allow_invite: true,
-          allow_edit: true,
-          allow_delete: false
-        }
+        viewers: []
+      },
+      settings: ledgerData.settings || {
+        allow_invite: true,
+        allow_edit: true,
+        allow_delete: false
       },
       created_at: admin.firestore.FieldValue.serverTimestamp(),
       updated_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -1505,7 +1502,7 @@ async function MLS_createLedger(ledgerData, options = {}) {
             email: ledgerData.ownerEmail || `${ledgerData.owner_id}@example.com`
           },
           newLedger.type,
-          newLedger.permissions?.settings || {}
+          newLedger.settings || {}
         );
 
         if (collaborationResult.success) {
@@ -1784,6 +1781,7 @@ async function MLS_getPermissions(ledgerId, queryParams) {
 
     const ledgerData = ledgerDoc.data();
     const permissions = ledgerData.permissions || {};
+    const settings = ledgerData.settings || {};
 
     return {
       success: true,
@@ -1794,7 +1792,7 @@ async function MLS_getPermissions(ledgerId, queryParams) {
         admins: permissions.admins || [],
         members: permissions.members || [],
         viewers: permissions.viewers || [],
-        settings: permissions.settings || {}
+        settings: settings
       },
       message: '權限資訊取得成功'
     };
