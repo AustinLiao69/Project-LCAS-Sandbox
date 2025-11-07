@@ -1008,7 +1008,7 @@ class SITP2TestController {
       print('[7571] 📝 異常訊息：$e');
       print('[7571] 📚 堆疊追蹤：${stackTrace.toString().split('\n').take(5).join('\n')}');
       
-      return P2TestResult(
+      final errorResult = P2TestResult(
         testId: testId,
         testName: _getCollaborationTestName(testId),
         category: 'collaboration_pure_call',
@@ -1021,6 +1021,18 @@ class SITP2TestController {
           'stack_trace_summary': stackTrace.toString().split('\n').take(3).join(' | ')
         },
       );
+      
+      // 階段一修復：確保錯誤資訊完整輸出
+      print('[7571] ❌ 測試失敗詳情:');
+      print('[7571]    錯誤訊息: ${errorResult.errorMessage}');
+      print('[7571]    異常類型: ${e.runtimeType}');
+      print('[7571]    PL層回應: null (異常發生)');
+      print('[7571]    關鍵步驟:');
+      errorResult.executionSteps.forEach((step, detail) {
+        print('[7571]      • $step: $detail');
+      });
+      
+      return errorResult;
     }
   }
 
