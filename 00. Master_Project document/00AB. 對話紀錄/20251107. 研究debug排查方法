@@ -1,1 +1,116 @@
 https://chatgpt.com/share/690d9e41-fa98-8002-8948-1e5be7dfdef9
+
+以下是 《Debug Checklist》
+（你可以直接貼到 Notion / Confluence / Google Docs 使用）
+________________________________________
+✅ Debug Checklist
+✅ A) 問題確認
+•	 能否穩定重現？
+•	 重現步驟是否明確？
+•	 正常案例 / 異常案例有何差異？
+•	 是否只在特定資料、裝置、帳號、環境發生？
+•	 是否最近才出現？可能是哪次改動引起？
+________________________________________
+✅ B) 範圍縮小
+•	 錯誤發生在哪一層？
+o	UI
+o	API
+o	Business Logic
+o	DB
+o	Infra (config / cloud / permission)
+•	 是否可將流程切成幾段測試？
+•	 最小會壞掉的範圍是？
+________________________________________
+✅ C) 資料層檢查
+•	 欄位名稱一致？
+•	 欄位型別一致？
+•	 null / undefined 處理？
+•	 default value 正確？
+•	 timestamp / timezone 正確？
+•	 資料是否為最新 schema？
+•	 與成功案例資料比較（Diff）
+________________________________________
+✅ D) 代碼層檢查
+•	 有無 hard coding？
+•	 檢查該 function 的 input/output 類型
+•	 code 是否真的有執行？
+•	 分支邏輯是否錯誤（if / else / switch）
+•	 是否打錯變數名稱？
+•	 使用外部 library 時 API 是否正確？
+•	 async / await 是否正確？
+•	 競態問題 (race condition)
+•	 設計是否有隱含假設（Implicit assumptions）
+________________________________________
+✅ E) Log & Error
+•	 是否已加 log？
+•	 有 log 標示正常 flow & error flow？
+•	 例外是否有抓？
+•	 是否能取得 stack trace？
+•	 log 中不同帳號、資料是否一致？
+________________________________________
+✅ F) Config / Environment
+•	 是否 local / staging / prod 行為不一致？
+•	 是否使用正確 API endpoint？
+•	 Config / environment variable 是否正確？
+•	 是否有 cache / CDN？
+•	 是否 restart / redeploy？
+________________________________________
+✅ G) Dependency / Integration
+•	 外部 API 是否正常？
+•	 DB query 是否正確？
+•	 有 mock 過就沒問題 → 代表外部依賴問題
+•	 Token / Auth / RBAC 是否正確？
+•	 Throttling / rate limit？
+________________________________________
+✅ H) Boundary / Edge Case
+•	 空資料 / null
+•	 單筆 / 多筆
+•	 資料長度極大
+•	 0 / 負數
+•	 特殊字元
+•	 順序是否保證固定？
+________________________________________
+✅ I) 版本差異
+•	 前端 / 後端版本一致？
+•	 DB schema 有無版本落差？
+•	 過時 cache？
+•	 套件版本不同？
+________________________________________
+✅ J) 測試
+•	 是否有 unit test？
+•	 是否有 integration test？
+•	 是否有 negative test？（錯誤測試）
+•	 新問題是否先寫測試固定？
+________________________________________
+✅ K) 分析工具
+•	 print log / console
+•	 debugger step-by-step
+•	 request/response trace
+•	 diff 工具
+________________________________________
+✅ L) 如果卡住：請求外援（或 AI）
+•	 提供：
+o	問題描述
+o	重現方法
+o	Log
+o	Data input
+o	預期結果 vs 實際結果
+•	 請 AI 協助：
+o	dataflow review
+o	root cause 推測
+o	propose unit tests
+o	找 implicit assumptions
+o	edge case generation
+________________________________________
+✅ Shortcut Debug 心法
+✅ 1）函數拆到最小
+找最小壞點
+✅ 2）正常 vs 異常 → Diff
+80% 問題靠比較就能找到
+✅ 3）先 mock
+減少外部干擾
+✅ 4）印資料比看直覺重要
+log 是真相
+✅ 5）每次只改一件事
+快、準、不亂
+
