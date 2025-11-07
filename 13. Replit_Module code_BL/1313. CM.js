@@ -1,8 +1,8 @@
 /**
- * CM_協作管理模組_2.0.0
+ * CM_協作管理模組_2.0.1
  * @module CM模組
  * @description 協作管理系統 - 階段三強化：成為協作功能唯一業務邏輯提供者
- * @update 2025-11-06: 階段三強化，新增CM_initializeCollaboration，整合完整協作邏輯
+ * @update 2025-11-07: 階段一修正 - 統一參數格式和內部處理為camelCase命名
  */
 
 const admin = require('firebase-admin');
@@ -173,10 +173,10 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
           members: [],
           viewers: [],
           settings: {
-            allow_invite: initialSettings.allowInvite !== false,
-            allow_edit: initialSettings.allowEdit !== false,
-            allow_delete: initialSettings.allowDelete || false,
-            require_approval: initialSettings.requireApproval || false
+            allowInvite: initialSettings.allowInvite !== false, // 修正：統一使用camelCase
+            allowEdit: initialSettings.allowEdit !== false, // 修正：統一使用camelCase
+            allowDelete: initialSettings.allowDelete || false, // 修正：統一使用camelCase
+            requireApproval: initialSettings.requireApproval || false // 修正：統一使用camelCase
           }
         },
         settings: {

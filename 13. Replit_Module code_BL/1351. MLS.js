@@ -1,9 +1,9 @@
 
 /**
- * MLS_多帳本管理模組_2.0.0
+ * MLS_多帳本管理模組_2.0.1
  * @module MLS模組
  * @description 多帳本管理系統 - 專注帳本管理，協作功能委派給CM模組
- * @update 2025-11-06: 階段二重構 - 移除具體協作邏輯，專注帳本管理核心功能
+ * @update 2025-11-07: 階段一修正 - 統一資料欄位命名為camelCase格式，遵守1311文件規範
  */
 
 const admin = require('firebase-admin');
@@ -47,9 +47,9 @@ async function MLS_createProjectLedger(userId, projectName, projectDescription, 
       type: 'project',
       name: projectName,
       description: projectDescription,
-      owner_id: userId,
-      start_date: startDate,
-      end_date: endDate,
+      ownerId: userId, // 修正：統一使用camelCase
+      startDate: startDate, // 修正：統一使用camelCase
+      endDate: endDate, // 修正：統一使用camelCase
       budget: budget || 0,
       members: [userId],
       permissions: {
@@ -58,9 +58,9 @@ async function MLS_createProjectLedger(userId, projectName, projectDescription, 
         members: [],
         viewers: [],
         settings: {
-          allow_invite: true,
-          allow_edit: true,
-          allow_delete: false
+          allowInvite: true, // 修正：統一使用camelCase
+          allowEdit: true, // 修正：統一使用camelCase
+          allowDelete: false // 修正：統一使用camelCase
         }
       },
       attributes: {
@@ -68,13 +68,13 @@ async function MLS_createProjectLedger(userId, projectName, projectDescription, 
         progress: 0,
         categories: []
       },
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(), // 修正：統一使用camelCase
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(), // 修正：統一使用camelCase
       archived: false,
       metadata: {
-        total_entries: 0,
-        total_amount: 0,
-        last_activity: admin.firestore.FieldValue.serverTimestamp()
+        totalEntries: 0, // 修正：統一使用camelCase
+        totalAmount: 0, // 修正：統一使用camelCase
+        lastActivity: admin.firestore.FieldValue.serverTimestamp() // 修正：統一使用camelCase
       }
     };
 
@@ -140,11 +140,11 @@ async function MLS_createCategoryLedger(userId, categoryName, categoryType, tags
       id: ledgerId,
       type: 'category',
       name: categoryName,
-      category_type: categoryType,
-      category_id: categoryId,
-      owner_id: userId,
+      categoryType: categoryType, // 修正：統一使用camelCase
+      categoryId: categoryId, // 修正：統一使用camelCase
+      ownerId: userId, // 修正：統一使用camelCase
       tags: tags || [],
-      default_subjects: defaultSubjects || [],
+      defaultSubjects: defaultSubjects || [], // 修正：統一使用camelCase
       members: [userId],
       permissions: {
         owner: userId,
@@ -152,23 +152,23 @@ async function MLS_createCategoryLedger(userId, categoryName, categoryType, tags
         members: [],
         viewers: [],
         settings: {
-          allow_invite: false,
-          allow_edit: true,
-          allow_delete: false
+          allowInvite: false, // 修正：統一使用camelCase
+          allowEdit: true, // 修正：統一使用camelCase
+          allowDelete: false // 修正：統一使用camelCase
         }
       },
       attributes: {
         status: 'active',
-        auto_categorize: true,
-        template_rules: []
+        autoCategorize: true, // 修正：統一使用camelCase
+        templateRules: [] // 修正：統一使用camelCase
       },
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(), // 修正：統一使用camelCase
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(), // 修正：統一使用camelCase
       archived: false,
       metadata: {
-        total_entries: 0,
-        total_amount: 0,
-        last_activity: admin.firestore.FieldValue.serverTimestamp()
+        totalEntries: 0, // 修正：統一使用camelCase
+        totalAmount: 0, // 修正：統一使用camelCase
+        lastActivity: admin.firestore.FieldValue.serverTimestamp() // 修正：統一使用camelCase
       }
     };
 
@@ -1072,7 +1072,7 @@ async function MLS_detectDuplicateName(userId, proposedName, ledgerType) {
 
     // 查詢用戶是否已有相同名稱的帳本
     const query = db.collection('ledgers')
-      .where('owner_id', '==', userId)
+      .where('ownerId', '==', userId) // 修正：統一使用camelCase
       .where('name', '==', proposedName)
       .where('type', '==', ledgerType)
       .where('archived', '==', false);
@@ -1149,7 +1149,7 @@ async function MLS_getCollaborationLedgers(userId, options = {}) {
           const memberList = await CM.CM_getMemberList(ledgerData.id, userId, false);
           collaborationStats = {
             memberCount: memberList.totalCount || ledgerData.members?.length || 0,
-            lastActivity: ledgerData.metadata?.last_activity
+            lastActivity: ledgerData.metadata?.lastActivity // 修正：統一使用camelCase
           };
         } catch (cmError) {
           DL.DL_warning('MLS', `取得協作統計失敗: ${cmError.message}`);
@@ -1161,12 +1161,12 @@ async function MLS_getCollaborationLedgers(userId, options = {}) {
         name: ledgerData.name,
         type: ledgerData.type,
         description: ledgerData.description || '',
-        owner_id: ledgerData.owner_id,
+        ownerId: ledgerData.ownerId, // 修正：統一使用camelCase
         userRole: userRole,
-        created_at: ledgerData.created_at,
-        updated_at: ledgerData.updated_at,
+        createdAt: ledgerData.createdAt, // 修正：統一使用camelCase
+        updatedAt: ledgerData.updatedAt, // 修正：統一使用camelCase
         collaborationStats: collaborationStats,
-        isOwner: ledgerData.owner_id === userId
+        isOwner: ledgerData.ownerId === userId // 修正：統一使用camelCase
       });
     }
 
@@ -1198,7 +1198,7 @@ async function MLS_getCollaborationLedgers(userId, options = {}) {
  */
 async function MLS_getUserRoleInLedger(userId, ledgerData) {
   try {
-    if (ledgerData.owner_id === userId) {
+    if (ledgerData.ownerId === userId) { // 修正：統一使用camelCase
       return 'owner';
     }
     
