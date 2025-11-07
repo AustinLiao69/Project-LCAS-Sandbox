@@ -33,27 +33,50 @@ class UnifiedApiResponse<T> {
     dynamic responseData;
     String message = '';
     
-    // 檢查多種成功狀態格式
-    if (json['success'] == true || json['success'] == 'true') {
-      isSuccess = true;
-      responseData = json['data'];
-      message = json['message'] ?? '操作成功';
-    } else if (json.containsKey('budgetId') || json.containsKey('ledgerId')) {
-      // BL層直接返回實體數據的情況
-      isSuccess = true;
-      responseData = json;
-      message = '操作成功';
-    } else if (json.containsKey('id') && !json.containsKey('error')) {
-      // 包含ID且無錯誤的情況
-      isSuccess = true;
-      responseData = json;
-      message = '操作成功';
-    }
-    
-    // 檢查錯誤狀態
+    // 首先檢查錯誤狀態（優先處理錯誤）
     if (json['error'] != null || json.containsKey('errorCode') || json.containsKey('errorMessage')) {
       isSuccess = false;
       message = json['error']?['message'] ?? json['errorMessage'] ?? json['message'] ?? '操作失敗';
+      responseData = null;
+    } else {
+      // 階段一關鍵修正：更智能的成功判定邏輯
+      // 1. 明確的成功標識
+      if (json['success'] == true || json['success'] == 'true') {
+        isSuccess = true;
+        responseData = json['data'];
+        message = json['message'] ?? '操作成功';
+      }
+      // 2. BL層標準回應格式（包含success和data字段）
+      else if (json.containsKey('success') && json.containsKey('data')) {
+        isSuccess = json['success'] == true || json['success'] == 'true';
+        responseData = json['data'];
+        message = json['message'] ?? (isSuccess ? '操作成功' : '操作失敗');
+      }
+      // 3. BL層直接返回實體數據的情況
+      else if (json.containsKey('budgetId') || json.containsKey('ledgerId')) {
+        isSuccess = true;
+        responseData = json;
+        message = json['message'] ?? '操作成功';
+      }
+      // 4. 包含ID且無錯誤的情況
+      else if (json.containsKey('id') && !json.containsKey('error')) {
+        isSuccess = true;
+        responseData = json;
+        message = json['message'] ?? '操作成功';
+      }
+      // 5. 階段一新增：檢查是否有實際的回應內容
+      else if (json.isNotEmpty && !json.containsKey('error')) {
+        // 如果有內容且沒有錯誤，視為成功
+        isSuccess = true;
+        responseData = json;
+        message = json['message'] ?? '操作成功';
+      }
+      // 6. 預設情況
+      else {
+        isSuccess = false;
+        responseData = null;
+        message = json['message'] ?? '無效回應格式';
+      }
     }
 
     return UnifiedApiResponse<T>(
@@ -158,7 +181,24 @@ class APLGateway {
       print('APL階段一調試：HTTP回應狀態 = ${response.statusCode}');
       print('APL階段一調試：回應內容 = $responseData');
       
-      return UnifiedApiResponse.fromJson(responseData, dataParser);
+      // 階段一關鍵修正：特別處理預算創建回應
+      if (endpoint.contains('/budgets') && method.toUpperCase() == 'POST') {
+        // 檢查是否包含budgetId
+        if (responseData is Map && responseData.containsKey('budgetId')) {
+          final budgetId = responseData['budgetId'];
+          print('APL階段一修正：成功提取budgetId = $budgetId');
+        }
+      }
+      
+      final apiResponse = UnifiedApiResponse.fromJson(responseData, dataParser);
+      
+      // 階段一修正：最終狀態確認
+      print('APL階段一最終判定：success = ${apiResponse.success}');
+      if (!apiResponse.success && apiResponse.error != null) {
+        print('APL階段一錯誤：${apiResponse.error!.message}');
+      }
+      
+      return apiResponse;
 
     } on SocketException catch (e) {
       return UnifiedApiResponse<T>(
@@ -699,14 +739,39 @@ class BudgetManagementService {
         
         final result = Map<String, dynamic>.from(data);
         
-        // 確保budgetId被正確提取
-        if (!result.containsKey('budgetId') && result.containsKey('id')) {
-          result['budgetId'] = result['id'];
+        // 階段一關鍵修正：多層級budgetId提取
+        String? extractedBudgetId;
+        
+        // 1. 直接從data中提取budgetId
+        if (result.containsKey('budgetId')) {
+          extractedBudgetId = result['budgetId'];
+        }
+        // 2. 從data.id中提取
+        else if (result.containsKey('id')) {
+          extractedBudgetId = result['id'];
+          result['budgetId'] = extractedBudgetId;
+        }
+        // 3. 從嵌套的data字段中提取
+        else if (result.containsKey('data') && result['data'] is Map) {
+          final nestedData = result['data'] as Map<String, dynamic>;
+          if (nestedData.containsKey('budgetId')) {
+            extractedBudgetId = nestedData['budgetId'];
+            result['budgetId'] = extractedBudgetId;
+          } else if (nestedData.containsKey('id')) {
+            extractedBudgetId = nestedData['id'];
+            result['budgetId'] = extractedBudgetId;
+          }
         }
         
-        // 如果數據中直接包含budgetId，確保格式正確
-        if (result.containsKey('budgetId')) {
-          print('APL階段一修正：成功提取budgetId = ${result['budgetId']}');
+        // 階段一修正：確認budgetId提取結果
+        if (extractedBudgetId != null) {
+          print('APL階段一修正：成功提取budgetId = $extractedBudgetId');
+          // 確保budgetId在頂層可用
+          if (!result.containsKey('budgetId')) {
+            result['budgetId'] = extractedBudgetId;
+          }
+        } else {
+          print('APL階段一警告：未能提取到budgetId，原始資料：$result');
         }
         
         return result;
