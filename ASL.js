@@ -1969,6 +1969,60 @@ app.get('/api/v1/ledgers/:id/permissions', async (req, res) => {
   }
 });
 
+// 11. 初始化協作功能 - 符合8020規範 (新增)
+app.post('/api/v1/ledgers/:id/initialize-collaboration', async (req, res) => {
+  try {
+    console.log('🤝 ASL轉發: 初始化協作功能 -> CM_initializeCollaboration');
+
+    // 檢查CM模組是否載入
+    if (!global.CM && !require.cache[require.resolve('./13. Replit_Module code_BL/1313. CM.js')]) {
+      try {
+        global.CM = require('./13. Replit_Module code_BL/1313. CM.js');
+      } catch (cmLoadError) {
+        console.error('❌ CM模組載入失敗:', cmLoadError.message);
+        return res.apiError('CM協作管理模組不可用', 'CM_MODULE_NOT_AVAILABLE', 503);
+      }
+    }
+
+    const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
+
+    if (!CM || typeof CM.CM_initializeCollaboration !== 'function') {
+      return res.apiError('CM_initializeCollaboration函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const ledgerId = req.params.id;
+    const ownerInfo = {
+      userId: req.body.ownerId || req.body.userId,
+      email: req.body.ownerEmail || `${req.body.ownerId}@example.com`
+    };
+    const collaborationType = req.body.collaborationType || 'shared';
+    const initialSettings = req.body.settings || {};
+
+    console.log(`🎯 協作初始化: 帳本=${ledgerId}, 擁有者=${ownerInfo.userId}, 類型=${collaborationType}`);
+
+    const result = await CM.CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType, initialSettings);
+
+    if (result.success) {
+      res.apiSuccess({
+        ledgerId: result.ledgerId,
+        collaborationType: result.collaborationType,
+        syncId: result.syncId,
+        initialized: true,
+        message: result.message
+      }, '協作功能初始化成功');
+    } else {
+      res.apiError(result.message || '協作功能初始化失敗', 'COLLABORATION_INITIALIZATION_ERROR', 400, {
+        ledgerId: ledgerId,
+        error: result.message
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (initialize collaboration):', error);
+    res.apiError('協作功能初始化轉發失敗', 'INITIALIZE_COLLABORATION_FORWARD_ERROR', 500);
+  }
+});
+
 // =============== BM.js 預算管理 API 轉發 ===============
 
 // 1. 取得預算列表
