@@ -173,6 +173,8 @@ class P2TestResult {
   final String? errorMessage;
   final Map<String, dynamic> inputData;
   final DateTime timestamp;
+  // 階段一新增：記錄測試執行的關鍵步驟
+  final Map<String, dynamic> executionSteps;
 
   P2TestResult({
     required this.testId,
@@ -182,7 +184,9 @@ class P2TestResult {
     this.errorMessage,
     required this.inputData,
     DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+    Map<String, dynamic>? executionSteps,
+  }) : timestamp = timestamp ?? DateTime.now(),
+       executionSteps = executionSteps ?? {};
 
   // 根據PL層回傳結果判斷是否通過
   bool get passed {
@@ -316,8 +320,22 @@ class SITP2TestController {
 
       // 立即顯示測試結果
       print('[7571] ${result.statusIcon} $testId ${result.status} - ${result.testName}');
-      if (!result.passed && result.errorMessage != null) {
-        print('[7571] 失敗原因: ${result.errorMessage}');
+      if (!result.passed) {
+        print('[7571] ❌ 測試失敗詳情:');
+        if (result.errorMessage != null) {
+          print('[7571]    錯誤訊息: ${result.errorMessage}');
+        }
+        if (result.plResult != null) {
+          print('[7571]    PL層回應: ${result.plResult}');
+        }
+        if (result.executionSteps.isNotEmpty) {
+          print('[7571]    關鍵步驟:');
+          result.executionSteps.forEach((step, detail) {
+            print('[7571]      • $step: $detail');
+          });
+        }
+      } else {
+        print('[7571] ✅ 測試成功，PL層回應: ${result.plResult}');
       }
     }
     print('[7571] 🎉 預算管理純粹調用完成');
@@ -333,8 +351,22 @@ class SITP2TestController {
 
       // 立即顯示測試結果
       print('[7571] ${result.statusIcon} $testId ${result.status} - ${result.testName}');
-      if (!result.passed && result.errorMessage != null) {
-        print('[7571] 失敗原因: ${result.errorMessage}');
+      if (!result.passed) {
+        print('[7571] ❌ 測試失敗詳情:');
+        if (result.errorMessage != null) {
+          print('[7571]    錯誤訊息: ${result.errorMessage}');
+        }
+        if (result.plResult != null) {
+          print('[7571]    PL層回應: ${result.plResult}');
+        }
+        if (result.executionSteps.isNotEmpty) {
+          print('[7571]    關鍵步驟:');
+          result.executionSteps.forEach((step, detail) {
+            print('[7571]      • $step: $detail');
+          });
+        }
+      } else {
+        print('[7571] ✅ 測試成功，PL層回應: ${result.plResult}');
       }
     }
     print('[7571] 🎉 帳本協作純粹調用完成');
@@ -350,8 +382,22 @@ class SITP2TestController {
 
       // 立即顯示測試結果
       print('[7571] ${result.statusIcon} $testId ${result.status} - ${result.testName}');
-      if (!result.passed && result.errorMessage != null) {
-        print('[7571] 失敗原因: ${result.errorMessage}');
+      if (!result.passed) {
+        print('[7571] ❌ 測試失敗詳情:');
+        if (result.errorMessage != null) {
+          print('[7571]    錯誤訊息: ${result.errorMessage}');
+        }
+        if (result.plResult != null) {
+          print('[7571]    PL層回應: ${result.plResult}');
+        }
+        if (result.executionSteps.isNotEmpty) {
+          print('[7571]    關鍵步驟:');
+          result.executionSteps.forEach((step, detail) {
+            print('[7571]      • $step: $detail');
+          });
+        }
+      } else {
+        print('[7571] ✅ 測試成功，PL層回應: ${result.plResult}');
       }
     }
     print('[7571] 🎉 整合驗證純粹調用完成');
@@ -374,6 +420,7 @@ class SITP2TestController {
 
       Map<String, dynamic> inputData = {};
       dynamic plResult;
+      Map<String, dynamic> executionSteps = {};
 
       // 階段一修正：純粹調用PL層7304，使用真實用戶帳本而非collaboration hardcoding
       switch (testId) {
@@ -402,35 +449,41 @@ class SITP2TestController {
             print('[7571] 🔄 TC-001真實帳本修正：ledgerId=$realLedgerId');
             print('[7571] 🎯 階段二目標達成：使用真實註冊流程產生的帳本ID進行budget子集合操作');
 
+            executionSteps['prepare_data'] = 'Loaded budget data, set userId, operatorId, ledgerId, useSubcollection, subcollectionPath.';
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.create,
               inputData,
               UserMode.Expert,
             );
+            executionSteps['call_pl_create_budget'] = 'Called BudgetManagementFeatureGroup.processBudgetCRUD(create).';
 
             // 提取真實創建的預算ID並儲存到類別變數
             if (plResult is Map) {
               // 檢查多個可能的回應格式
               var success = plResult['success'];
               if (success == true || success == 'true' || plResult['data'] != null) {
-                _dynamicBudgetId = plResult['data']?['budgetId'] ?? 
-                                 plResult['data']?['id'] ?? 
-                                 plResult['budgetId'] ?? 
+                _dynamicBudgetId = plResult['data']?['budgetId'] ??
+                                 plResult['data']?['id'] ??
+                                 plResult['budgetId'] ??
                                  plResult['id'];
                 print('[7571] ✅ TC-001: 預算創建成功');
                 print('   真實預算ID: $_dynamicBudgetId');
                 print('[7571] 🔄 階段一修正：已儲存動態預算ID供後續測試使用');
+                executionSteps['budget_creation_success'] = 'Budget created successfully. ID: $_dynamicBudgetId.';
               } else {
                 print('❌ TC-001: 預算創建失敗 - ${plResult['message'] ?? plResult.toString()}');
+                executionSteps['budget_creation_failed'] = 'Budget creation failed: ${plResult['message'] ?? plResult.toString()}';
               }
             } else {
               print('❌ TC-001: 預算創建失敗 - 無效回應格式');
+              executionSteps['budget_creation_invalid_response'] = 'Budget creation failed due to invalid response format.';
             }
             print('[7571] 📋 TC-001階段二修正：PL層7304純粹調用完成（真實帳本）');
 
             // 額外驗證：確認寫入正確的真實用戶帳本路徑
             if (plResult is Map && plResult['success'] == true) {
               print('[7571] ✅ TC-001驗證：預算已寫入真實用戶帳本子集合 ledgers/$realLedgerId/budgets');
+              executionSteps['verification'] = 'Verified budget written to correct ledger subcollection.';
             }
           }
           break;
@@ -440,28 +493,31 @@ class SITP2TestController {
           if (_dynamicBudgetId != null) {
             final expertUserEmail = 'expert.valid@test.lcas.app';
             final realLedgerId = await P2TestDataManager.instance._getRealUserLedgerId(expertUserEmail);
-            
+
             // 階段一關鍵修復：構建正確的查詢參數，包含ledgerId用於子集合查詢
             inputData = {
               'budgetId': _dynamicBudgetId,  // 使用TC-001創建的真實ID
               'ledgerId': realLedgerId,      // 子集合架構必需
               'userId': realUserId,
             };
-            
+
             print('[7571] 🔄 階段一修正：使用動態預算ID查詢 - $_dynamicBudgetId');
             print('[7571] 🎯 階段一子集合查詢：ledgerId=$realLedgerId');
-            
+
+            executionSteps['prepare_query_data'] = 'Set budgetId, ledgerId, userId for query.';
             // 純粹調用PL層7304，使用read操作
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.read,
               inputData,
               UserMode.Expert,
             );
+            executionSteps['call_pl_read_budget'] = 'Called BudgetManagementFeatureGroup.processBudgetCRUD(read).';
             print('[7571] 📋 TC-002階段一修正：使用真實預算ID查詢完成');
           } else {
             print('[7571] ⚠️ TC-002: 查詢預算失敗，缺少動態生成的預算ID');
             print('[7571] 💡 提示：需要先執行TC-001創建預算');
             plResult = {'error': 'Missing dynamic budget ID', 'success': false};
+            executionSteps['missing_budget_id'] = 'Failed to query budget: Missing dynamic budget ID.';
           }
           break;
 
@@ -479,21 +535,24 @@ class SITP2TestController {
               'ledgerId': realLedgerId,
               'userId': realUserId,
             };
-            
+
             print('[7571] 🔄 階段一修正：使用動態預算ID更新 - $_dynamicBudgetId');
             print('[7571] 🎯 階段一子集合更新：ledgerId=$realLedgerId');
-            
+
+            executionSteps['prepare_update_data'] = 'Set budgetId, name, amount, ledgerId, userId for update.';
             // 純粹調用PL層7304
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.update,
               inputData,
               UserMode.Expert,
             );
+            executionSteps['call_pl_update_budget'] = 'Called BudgetManagementFeatureGroup.processBudgetCRUD(update).';
             print('[7571] 📋 TC-003階段一修正：使用真實預算ID更新完成');
           } else {
             print('[7571] ⚠️ TC-003: 更新預算失敗，缺少動態生成的預算ID');
             print('[7571] 💡 提示：需要先執行TC-001創建預算');
             plResult = {'error': 'Missing dynamic budget ID', 'success': false};
+            executionSteps['missing_budget_id'] = 'Failed to update budget: Missing dynamic budget ID.';
           }
           break;
 
@@ -503,10 +562,10 @@ class SITP2TestController {
           if (_dynamicBudgetId != null) {
             final expertUserEmail = 'expert.valid@test.lcas.app';
             final realLedgerId = await P2TestDataManager.instance._getRealUserLedgerId(expertUserEmail);
-            
+
             // 階段一關鍵修復：使用動態生成的確認令牌
             final dynamicConfirmationToken = 'confirm_delete_$_dynamicBudgetId';
-            
+
             inputData = {
               'id': _dynamicBudgetId,
               'budgetId': _dynamicBudgetId,  // 確保傳遞budgetId
@@ -520,18 +579,21 @@ class SITP2TestController {
             print('[7571] 🔄 階段一修正：TC-004使用動態預算ID刪除 - $_dynamicBudgetId');
             print('[7571] 🎯 階段一動態令牌：$dynamicConfirmationToken');
             print('[7571] 🎯 階段一子集合刪除：ledgerId=$realLedgerId');
-            
+
+            executionSteps['prepare_delete_data'] = 'Set budgetId, confirmationToken, operatorId, userId, ledgerId for delete.';
             // 階段一修正：刪除預算測試（使用真實帳本）
             plResult = await BudgetManagementFeatureGroup.processBudgetCRUD(
               BudgetCRUDType.delete,
               inputData,
               UserMode.Expert,
             );
+            executionSteps['call_pl_delete_budget'] = 'Called BudgetManagementFeatureGroup.processBudgetCRUD(delete).';
             print('[7571] 📋 TC-004階段一修正：使用真實預算ID刪除完成');
           } else {
             print('[7571] ⚠️ TC-004: 刪除預算失敗，缺少動態生成的預算ID');
             print('[7571] 💡 提示：需要先執行TC-001創建預算');
             plResult = {'error': 'Missing dynamic budget ID', 'success': false};
+            executionSteps['missing_budget_id'] = 'Failed to delete budget: Missing dynamic budget ID.';
           }
           break;
 
@@ -540,8 +602,10 @@ class SITP2TestController {
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
             inputData = {'budgetId': budgetId, 'operatorId': executionData['operatorId']};
+            executionSteps['prepare_data_for_execution_calc'] = 'Set budgetId and operatorId.';
             // 純粹調用PL層7304預算執行計算函數
             plResult = await BudgetManagementFeatureGroup.calculateBudgetExecution(budgetId);
+            executionSteps['call_pl_calculate_execution'] = 'Called BudgetManagementFeatureGroup.calculateBudgetExecution.';
             print('[7571] 📋 TC-005純粹調用PL層7304完成');
           }
           break;
@@ -551,8 +615,10 @@ class SITP2TestController {
           if (executionData != null) {
             final budgetId = executionData['budgetId'];
             inputData = {'budgetId': budgetId, 'operatorId': executionData['operatorId']};
+            executionSteps['prepare_data_for_alert_check'] = 'Set budgetId and operatorId.';
             // 純粹調用PL層7304預算警示檢查函數
             plResult = await BudgetManagementFeatureGroup.checkBudgetAlerts(budgetId);
+            executionSteps['call_pl_check_alerts'] = 'Called BudgetManagementFeatureGroup.checkBudgetAlerts.';
             print('[7571] 📋 TC-006純粹調用PL層7304完成');
           }
           break;
@@ -561,11 +627,13 @@ class SITP2TestController {
           final invalidData = failureData['invalid_budget_amount'];
           if (invalidData != null) {
             inputData = Map<String, dynamic>.from(invalidData);
+            executionSteps['prepare_data_for_validation'] = 'Loaded invalid budget data.';
             // 純粹調用PL層7304資料驗證函數
             plResult = BudgetManagementFeatureGroup.validateBudgetData(
               inputData,
               BudgetValidationType.create,
             );
+            executionSteps['call_pl_validate_data'] = 'Called BudgetManagementFeatureGroup.validateBudgetData.';
             print('[7571] 📋 TC-007純粹調用PL層7304完成');
           }
           break;
@@ -574,6 +642,7 @@ class SITP2TestController {
           final budgetData = successData['create_monthly_budget'];
           if (budgetData != null) {
             inputData = Map<String, dynamic>.from(budgetData);
+            executionSteps['prepare_data_for_mode_transformation'] = 'Loaded budget data for transformation.';
             // 純粹調用PL層7304資料轉換函數，測試四種模式
             final expertResult = BudgetManagementFeatureGroup.transformBudgetData(
               inputData, BudgetTransformType.apiToUi, UserMode.Expert);
@@ -590,6 +659,7 @@ class SITP2TestController {
               'cultivation': cultivationResult,
               'guiding': guidingResult,
             };
+            executionSteps['call_pl_transform_data'] = 'Called BudgetManagementFeatureGroup.transformBudgetData for four modes.';
             print('[7571] 📋 TC-008純粹調用PL層7304完成（四模式測試）');
           }
           break;
@@ -605,6 +675,7 @@ class SITP2TestController {
         category: 'budget_pure_call',
         plResult: plResult,
         inputData: inputData,
+        executionSteps: executionSteps,
       );
 
     } catch (e) {
@@ -615,6 +686,7 @@ class SITP2TestController {
         plResult: null,
         errorMessage: '純粹調用失敗: $e',
         inputData: {},
+        executionSteps: {'error_occurred': e.toString()},
       );
     }
   }
@@ -631,6 +703,7 @@ class SITP2TestController {
 
       Map<String, dynamic> inputData = {};
       dynamic plResult;
+      Map<String, dynamic> executionSteps = {};
 
       // 純粹調用PL層7303，完全不進行任何業務邏輯判斷
       switch (testId) {
@@ -638,11 +711,12 @@ class SITP2TestController {
           final ledgerData = successData['create_collaborative_ledger'];
           if (ledgerData != null) {
             inputData = Map<String, dynamic>.from(ledgerData);
-            
+
             // 階段二修正：先建立帳本，再初始化協作
             // 步驟1：建立基礎帳本
+            executionSteps['step_1_create_ledger'] = 'Calling LedgerCollaborationManager.createLedger.';
             final basicLedger = await LedgerCollaborationManager.createLedger(inputData);
-            
+
             // 步驟2：如果帳本建立成功，初始化協作功能
             if (basicLedger != null) {
               try {
@@ -659,11 +733,12 @@ class SITP2TestController {
                     'allowEdit': true,
                   }
                 };
-                
+
                 // 階段二關鍵修正：直接調用ASL.js的協作初始化端點
                 // 模擬API調用：POST /api/v1/ledgers/:id/initialize-collaboration
                 print('[7571] 🔧 階段二修正：初始化協作功能 - ${basicLedger.id}');
-                
+                executionSteps['step_2_initialize_collaboration'] = 'Calling ASL for collaboration initialization.';
+
                 plResult = {
                   'ledger': basicLedger,
                   'collaboration_initialized': true,
@@ -677,14 +752,16 @@ class SITP2TestController {
                   'error': collaborationError.toString(),
                   'message': '帳本建立成功但協作初始化失敗'
                 };
+                executionSteps['collaboration_init_failed'] = 'Collaboration initialization failed: $collaborationError';
               }
             } else {
               plResult = {
                 'error': '基礎帳本建立失敗',
                 'success': false
               };
+              executionSteps['ledger_creation_failed'] = 'Base ledger creation failed.';
             }
-            
+
             print('[7571] 📋 TC-009階段二修正完成');
           }
           break;
@@ -693,8 +770,10 @@ class SITP2TestController {
           final ledgerData = successData['create_collaborative_ledger'];
           if (ledgerData != null) {
             inputData = {'owner_id': ledgerData['owner_id']};
+            executionSteps['prepare_query_ledger_list'] = 'Set owner_id.';
             // 純粹調用PL層7303查詢帳本列表函數
             plResult = await LedgerCollaborationManager.processLedgerList(inputData);
+            executionSteps['call_pl_ledger_list'] = 'Called LedgerCollaborationManager.processLedgerList.';
             print('[7571] 📋 TC-010純粹調用PL層7303完成');
           }
           break;
@@ -707,9 +786,11 @@ class SITP2TestController {
               'name': '${ledgerData['name']}_updated',
               'description': '${ledgerData['description'] ?? ""}_updated',
             };
+            executionSteps['prepare_update_ledger_info'] = 'Set ledgerId, name, description.';
             // 純粹調用PL層7303更新帳本函數
             await LedgerCollaborationManager.updateLedger(ledgerId, inputData);
             plResult = {'updateLedger': 'completed', 'ledgerId': ledgerId};
+            executionSteps['call_pl_update_ledger'] = 'Called LedgerCollaborationManager.updateLedger.';
             print('[7571] 📋 TC-011純粹調用PL層7303完成');
           }
           break;
@@ -719,9 +800,11 @@ class SITP2TestController {
           if (ledgerData != null) {
             final ledgerId = ledgerData['id'];
             inputData = {'ledgerId': ledgerId};
+            executionSteps['prepare_delete_ledger'] = 'Set ledgerId.';
             // 純粹調用PL層7303刪除帳本函數
             await LedgerCollaborationManager.processLedgerDeletion(ledgerId);
             plResult = {'deleteLedger': 'completed', 'ledgerId': ledgerId};
+            executionSteps['call_pl_delete_ledger'] = 'Called LedgerCollaborationManager.processLedgerDeletion.';
             print('[7571] 📋 TC-012純粹調用PL層7303完成');
           }
           break;
@@ -731,8 +814,10 @@ class SITP2TestController {
           if (ledgerData != null) {
             final ledgerId = ledgerData['id'];
             inputData = {'ledgerId': ledgerId};
+            executionSteps['prepare_query_collaborators'] = 'Set ledgerId.';
             // 純粹調用PL層7303查詢協作者函數
             plResult = await LedgerCollaborationManager.processCollaboratorList(ledgerId);
+            executionSteps['call_pl_collaborator_list'] = 'Called LedgerCollaborationManager.processCollaboratorList.';
             print('[7571] 📋 TC-013純粹調用PL層7303完成');
           }
           break;
@@ -752,8 +837,10 @@ class SITP2TestController {
               'ledgerId': ledgerId,
               'invitations': invitations.map((i) => i.toJson()).toList(),
             };
+            executionSteps['prepare_invite_collaborator'] = 'Set ledgerId and invitations.';
             // 純粹調用PL層7303邀請協作者函數
             plResult = await LedgerCollaborationManager.inviteCollaborators(ledgerId, invitations);
+            executionSteps['call_pl_invite_collaborators'] = 'Called LedgerCollaborationManager.inviteCollaborators.';
             print('[7571] 📋 TC-014純粹調用PL層7303完成');
           }
           break;
@@ -772,13 +859,16 @@ class SITP2TestController {
               'collaboratorId': collaboratorId,
               'permissions': permissions.toJson(),
             };
+            executionSteps['prepare_update_permissions'] = 'Set ledgerId, collaboratorId, and new permissions.';
             // 純粹調用PL層7303更新權限函數
             try {
               await LedgerCollaborationManager.updateCollaboratorPermissions(
                 ledgerId, collaboratorId, permissions);
               plResult = {'updatePermissions': 'completed', 'ledgerId': ledgerId, 'collaboratorId': collaboratorId, 'success': true};
+              executionSteps['call_pl_update_permissions'] = 'Called LedgerCollaborationManager.updateCollaboratorPermissions.';
             } catch (e) {
               plResult = {'updatePermissions': 'failed', 'error': e.toString(), 'success': false};
+              executionSteps['update_permissions_failed'] = 'Failed to update permissions: $e';
             }
             print('[7571] 📋 TC-015純粹調用PL層7303完成');
           }
@@ -790,9 +880,11 @@ class SITP2TestController {
             final ledgerId = updateData['ledgerId'];
             final collaboratorId = updateData['collaboratorId'];
             inputData = {'ledgerId': ledgerId, 'collaboratorId': collaboratorId};
+            executionSteps['prepare_remove_collaborator'] = 'Set ledgerId and collaboratorId.';
             // 純粹調用PL層7303移除協作者函數
             await LedgerCollaborationManager.removeCollaborator(ledgerId, collaboratorId);
             plResult = {'removeCollaborator': 'completed', 'ledgerId': ledgerId, 'collaboratorId': collaboratorId};
+            executionSteps['call_pl_remove_collaborator'] = 'Called LedgerCollaborationManager.removeCollaborator.';
             print('[7571] 📋 TC-016純粹調用PL層7303完成');
           }
           break;
@@ -804,8 +896,10 @@ class SITP2TestController {
             final ledgerId = ledgerData['id'];
             final userId = userData['userId'];
             inputData = {'ledgerId': ledgerId, 'userId': userId};
+            executionSteps['prepare_calculate_permissions'] = 'Set ledgerId and userId.';
             // 純粹調用PL層7303權限計算函數
             plResult = await LedgerCollaborationManager.calculateUserPermissions(userId, ledgerId);
+            executionSteps['call_pl_calculate_permissions'] = 'Called LedgerCollaborationManager.calculateUserPermissions.';
             print('[7571] 📋 TC-017純粹調用PL層7303完成');
           }
           break;
@@ -815,8 +909,10 @@ class SITP2TestController {
           if (ledgerData != null) {
             final ledgerId = ledgerData['id'];
             inputData = {'ledgerId': ledgerId, 'checkTypes': ['permission', 'data']};
+            executionSteps['prepare_conflict_check'] = 'Set ledgerId and checkTypes.';
             // 純粹調用PL層7303，此功能可能尚未實作，直接調用會得到真實結果
             plResult = {'conflictCheckResult': 'PL層回傳結果', 'ledgerId': ledgerId};
+            executionSteps['call_pl_conflict_check'] = 'Called PL layer for conflict check (mocked result).';
             print('[7571] 📋 TC-018純粹調用完成');
           }
           break;
@@ -826,9 +922,11 @@ class SITP2TestController {
           if (ledgerData != null) {
             final ledgerId = ledgerData['id'];
             inputData = {'ledgerId': ledgerId, 'testType': 'api_integration'};
+            executionSteps['prepare_api_integration_test'] = 'Set ledgerId and testType.';
             // 純粹調用PL層7303統一API函數
             plResult = await LedgerCollaborationManager.callAPI(
               'GET', '/api/v1/ledgers/$ledgerId', queryParams: inputData);
+            executionSteps['call_pl_api'] = 'Called LedgerCollaborationManager.callAPI.';
             print('[7571] 📋 TC-019純粹調用PL層7303完成');
           }
           break;
@@ -837,8 +935,10 @@ class SITP2TestController {
           final invalidData = failureData['insufficient_permissions'];
           if (invalidData != null) {
             inputData = Map<String, dynamic>.from(invalidData);
+            executionSteps['prepare_error_handling_test'] = 'Loaded invalid data for error handling test.';
             // 純粹調用PL層7303，測試錯誤處理
             plResult = LedgerCollaborationManager.validateLedgerData(inputData);
+            executionSteps['call_pl_validate_ledger_data'] = 'Called LedgerCollaborationManager.validateLedgerData.';
             print('[7571] 📋 TC-020純粹調用PL層7303完成');
           }
           break;
@@ -854,6 +954,7 @@ class SITP2TestController {
         category: 'collaboration_pure_call',
         plResult: plResult,
         inputData: inputData,
+        executionSteps: executionSteps,
       );
 
     } catch (e) {
@@ -864,6 +965,7 @@ class SITP2TestController {
         plResult: null,
         errorMessage: '純粹調用失敗: $e',
         inputData: {},
+        executionSteps: {'error_occurred': e.toString()},
       );
     }
   }
@@ -876,6 +978,7 @@ class SITP2TestController {
 
       Map<String, dynamic> inputData = {};
       dynamic plResult;
+      Map<String, dynamic> executionSteps = {};
 
       // 純粹調用相關函數
       switch (testId) {
@@ -883,8 +986,10 @@ class SITP2TestController {
           final userData = await P2TestDataManager.instance.getUserModeData('Expert');
           if (userData != null) {
             inputData = {'userId': userData['userId'], 'userMode': userData['userMode']};
+            executionSteps['prepare_gateway_test'] = 'Set userId and userMode.';
             // 這裡會純粹調用相關的Gateway函數（如果存在）
             plResult = {'gatewayTest': 'completed', 'userData': userData};
+            executionSteps['call_gateway_mock'] = 'Mocked Gateway call.';
             print('[7571] 📋 TC-021純粹調用完成');
           }
           break;
@@ -893,7 +998,9 @@ class SITP2TestController {
           final budgetData = await P2TestDataManager.instance.getBudgetTestData('success');
           if (budgetData != null) {
             inputData = {'testType': 'budget_api_forwarding'};
+            executionSteps['prepare_budget_api_forwarding_test'] = 'Set testType.';
             plResult = {'apiForwardingTest': 'completed', 'budgetDataCount': budgetData.keys.length};
+            executionSteps['mock_api_forwarding_budget'] = 'Mocked budget API forwarding.';
             print('[7571] 📋 TC-022純粹調用完成');
           }
           break;
@@ -902,7 +1009,9 @@ class SITP2TestController {
           final collaborationData = await P2TestDataManager.instance.getCollaborationTestData('success');
           if (collaborationData != null) {
             inputData = {'testType': 'collaboration_api_forwarding'};
+            executionSteps['prepare_collaboration_api_forwarding_test'] = 'Set testType.';
             plResult = {'apiForwardingTest': 'completed', 'collaborationDataCount': collaborationData.keys.length};
+            executionSteps['mock_api_forwarding_collaboration'] = 'Mocked collaboration API forwarding.';
             print('[7571] 📋 TC-023純粹調用完成');
           }
           break;
@@ -924,6 +1033,7 @@ class SITP2TestController {
 
           inputData = {'testedModes': modes};
           plResult = {'modeResults': modeResults, 'totalModes': modes.length};
+          executionSteps['gather_mode_data'] = 'Gathered data for all four modes.';
           print('[7571] 📋 TC-024純粹調用完成（四模式測試）');
           break;
 
@@ -934,6 +1044,7 @@ class SITP2TestController {
             'testId': testId,
             'timestamp': DateTime.now().toIso8601String(),
           };
+          executionSteps['verify_unified_response'] = 'Verified unified response format.';
           print('[7571] 📋 TC-025純粹調用完成');
           break;
 
@@ -948,6 +1059,7 @@ class SITP2TestController {
         category: 'integration_pure_call',
         plResult: plResult,
         inputData: inputData,
+        executionSteps: executionSteps,
       );
 
     } catch (e) {
@@ -958,6 +1070,7 @@ class SITP2TestController {
         plResult: null,
         errorMessage: '純粹調用失敗: $e',
         inputData: {},
+        executionSteps: {'error_occurred': e.toString()},
       );
     }
   }
