@@ -28,10 +28,38 @@ class UnifiedApiResponse<T> {
   });
 
   factory UnifiedApiResponse.fromJson(Map<String, dynamic> json, T Function(dynamic) dataParser) {
+    // 階段一修正：智能判斷BL層回應格式
+    bool isSuccess = false;
+    dynamic responseData;
+    String message = '';
+    
+    // 檢查多種成功狀態格式
+    if (json['success'] == true || json['success'] == 'true') {
+      isSuccess = true;
+      responseData = json['data'];
+      message = json['message'] ?? '操作成功';
+    } else if (json.containsKey('budgetId') || json.containsKey('ledgerId')) {
+      // BL層直接返回實體數據的情況
+      isSuccess = true;
+      responseData = json;
+      message = '操作成功';
+    } else if (json.containsKey('id') && !json.containsKey('error')) {
+      // 包含ID且無錯誤的情況
+      isSuccess = true;
+      responseData = json;
+      message = '操作成功';
+    }
+    
+    // 檢查錯誤狀態
+    if (json['error'] != null || json.containsKey('errorCode') || json.containsKey('errorMessage')) {
+      isSuccess = false;
+      message = json['error']?['message'] ?? json['errorMessage'] ?? json['message'] ?? '操作失敗';
+    }
+
     return UnifiedApiResponse<T>(
-      success: json['success'] ?? false,
-      data: json['data'] != null ? dataParser(json['data']) : null,
-      message: json['message'] ?? '',
+      success: isSuccess,
+      data: responseData != null ? dataParser(responseData) : null,
+      message: message,
       metadata: json['metadata'],
       error: json['error'] != null ? ApiError.fromJson(json['error']) : null,
     );
@@ -125,6 +153,11 @@ class APLGateway {
 
       // 解析回應
       final responseData = jsonDecode(response.body);
+      
+      // 階段一修正：記錄回應內容用於debugging
+      print('APL階段一調試：HTTP回應狀態 = ${response.statusCode}');
+      print('APL階段一調試：回應內容 = $responseData');
+      
       return UnifiedApiResponse.fromJson(responseData, dataParser);
 
     } on SocketException catch (e) {
@@ -640,7 +673,7 @@ class BudgetManagementService {
     );
   }
 
-  /// 2. 建立新預算 (POST /api/v1/budgets) - 階段三修正版
+  /// 2. 建立新預算 (POST /api/v1/budgets) - 階段一修正版
   Future<UnifiedApiResponse<Map<String, dynamic>>> createBudget(Map<String, dynamic> budgetData) async {
     // 階段三修正：確保ledgerId參數存在
     if (!budgetData.containsKey('ledgerId') || budgetData['ledgerId'] == null) {
@@ -660,7 +693,24 @@ class BudgetManagementService {
       '/api/v1/budgets',
       budgetData,
       null,
-      (data) => Map<String, dynamic>.from(data ?? {}),
+      (data) {
+        // 階段一修正：智能提取budgetId
+        if (data == null) return <String, dynamic>{};
+        
+        final result = Map<String, dynamic>.from(data);
+        
+        // 確保budgetId被正確提取
+        if (!result.containsKey('budgetId') && result.containsKey('id')) {
+          result['budgetId'] = result['id'];
+        }
+        
+        // 如果數據中直接包含budgetId，確保格式正確
+        if (result.containsKey('budgetId')) {
+          print('APL階段一修正：成功提取budgetId = ${result['budgetId']}');
+        }
+        
+        return result;
+      },
     );
   }
 
