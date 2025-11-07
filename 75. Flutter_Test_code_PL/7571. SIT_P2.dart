@@ -465,7 +465,7 @@ class SITP2TestController {
                   // 嘗試反射或直接從物件屬性獲取budgetId
                   final resultString = plResult.toString();
                   print('[7571] 🔍 TC-001 階段一除錯：BudgetOperationResult內容 = $resultString');
-                  
+
                   // 從APL回應中提取budgetId（已在上面的APL調試資訊中看到）
                   final matches = RegExp(r'budgetId: (budget_\w+)').firstMatch(resultString);
                   if (matches != null) {
@@ -477,7 +477,7 @@ class SITP2TestController {
                     print('[7571] ⚠️ TC-001: 無法從BudgetOperationResult提取budgetId');
                     executionSteps['budget_extraction_failed'] = 'Failed to extract budgetId from BudgetOperationResult.';
                   }
-                } 
+                }
                 // 處理Map格式回應
                 else if (plResult is Map) {
                   var success = plResult['success'];
@@ -632,7 +632,7 @@ class SITP2TestController {
             inputData = {'budgetId': budgetId, 'operatorId': operatorId};
             executionSteps['prepare_data_for_execution_calc'] = 'Set budgetId: $budgetId, operatorId: $operatorId.';
             print('[7571] 🔍 TC-005 輸入參數：budgetId=$budgetId, operatorId=$operatorId');
-            
+
             // 純粹調用PL層7304預算執行計算函數
             plResult = await BudgetManagementFeatureGroup.calculateBudgetExecution(budgetId);
             executionSteps['call_pl_calculate_execution'] = 'Called BudgetManagementFeatureGroup.calculateBudgetExecution with budgetId: $budgetId.';
@@ -652,7 +652,7 @@ class SITP2TestController {
             inputData = {'budgetId': budgetId, 'operatorId': operatorId};
             executionSteps['prepare_data_for_alert_check'] = 'Set budgetId: $budgetId, operatorId: $operatorId.';
             print('[7571] 🔍 TC-006 輸入參數：budgetId=$budgetId, operatorId=$operatorId');
-            
+
             // 純粹調用PL層7304預算警示檢查函數
             plResult = await BudgetManagementFeatureGroup.checkBudgetAlerts(budgetId);
             executionSteps['call_pl_check_alerts'] = 'Called BudgetManagementFeatureGroup.checkBudgetAlerts with budgetId: $budgetId.';
@@ -745,7 +745,7 @@ class SITP2TestController {
       Map<String, dynamic> inputData = {};
       dynamic plResult;
       Map<String, dynamic> executionSteps = {};
-      
+
       print('[7571] 🔍 $testId 載入測試資料完成');
       print('[7571] 📊 成功案例數量: ${successData.keys.length}');
       print('[7571] 📊 失敗案例數量: ${failureData.keys.length}');
@@ -1007,7 +1007,7 @@ class SITP2TestController {
       print('[7571] 🔍 異常類型：${e.runtimeType}');
       print('[7571] 📝 異常訊息：$e');
       print('[7571] 📚 堆疊追蹤：${stackTrace.toString().split('\n').take(5).join('\n')}');
-      
+
       final errorResult = P2TestResult(
         testId: testId,
         testName: _getCollaborationTestName(testId),
@@ -1021,8 +1021,8 @@ class SITP2TestController {
           'stack_trace_summary': stackTrace.toString().split('\n').take(3).join(' | ')
         },
       );
-      
-      // 確保錯誤資訊在主執行流程中被正確輸出
+
+      // 階段一修復：確保錯誤資訊完整輸出
       print('[7571] ❌ 測試失敗詳情:');
       print('[7571]    錯誤訊息: ${errorResult.errorMessage}');
       print('[7571]    異常類型: ${e.runtimeType}');
@@ -1031,7 +1031,7 @@ class SITP2TestController {
       errorResult.executionSteps.forEach((step, detail) {
         print('[7571]      • $step: $detail');
       });
-      
+
       return errorResult;
     }
   }
