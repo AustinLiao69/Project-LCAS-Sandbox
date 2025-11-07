@@ -533,44 +533,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 15. 檢測協作衝突 (GET /api/v1/ledgers/{id}/conflicts)
-  Future<UnifiedApiResponse<List<Map<String, dynamic>>>> detectConflicts(String ledgerId, {
-    String? checkType,
-  }) async {
-    final queryParams = <String, String>{};
-    if (checkType != null) queryParams['checkType'] = checkType;
-
-    return _gateway._forwardRequest<List<Map<String, dynamic>>>(
-      'GET',
-      '/api/v1/ledgers/$ledgerId/conflicts',
-      null,
-      queryParams,
-      (data) => List<Map<String, dynamic>>.from(data?['conflicts'] ?? []),
-    );
-  }
-
-  /// 16. 解決協作衝突 (POST /api/v1/ledgers/{id}/resolve-conflict)
-  Future<UnifiedApiResponse<Map<String, dynamic>>> resolveConflict(String ledgerId, {
-    required String conflictId,
-    required String resolution,
-    String? mergeStrategy,
-    Map<String, dynamic>? manualData,
-  }) async {
-    final requestBody = <String, dynamic>{
-      'conflictId': conflictId,
-      'resolution': resolution,
-    };
-    if (mergeStrategy != null) requestBody['mergeStrategy'] = mergeStrategy;
-    if (manualData != null) requestBody['manualData'] = manualData;
-
-    return _gateway._forwardRequest<Map<String, dynamic>>(
-      'POST',
-      '/api/v1/ledgers/$ledgerId/resolve-conflict',
-      requestBody,
-      null,
-      (data) => Map<String, dynamic>.from(data ?? {}),
-    );
-  }
+  
 }
 
 /// 帳戶管理服務類別 (對應8105 API規格 - 8個API端點)
