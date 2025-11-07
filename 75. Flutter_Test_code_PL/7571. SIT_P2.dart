@@ -1,8 +1,8 @@
 /**
  * 7571. SIT_P2.dart
- * @version v2.3.0
- * @date 2025-10-27
- * @update: 階段三修正 - 完全移除模擬業務邏輯，純粹調用PL層函數
+ * @version v2.4.0
+ * @date 2025-11-07
+ * @update: 階段一修正 - 增強錯誤日誌輸出和動態預算ID管理
  *
  * 🚨 階段三修正重點：
  * - ✅ 移除所有模擬業務邏輯：不進行任何業務判斷
@@ -457,26 +457,53 @@ class SITP2TestController {
             );
             executionSteps['call_pl_create_budget'] = 'Called BudgetManagementFeatureGroup.processBudgetCRUD(create).';
 
-            // 提取真實創建的預算ID並儲存到類別變數
-            if (plResult is Map) {
-              // 檢查多個可能的回應格式
-              var success = plResult['success'];
-              if (success == true || success == 'true' || plResult['data'] != null) {
-                _dynamicBudgetId = plResult['data']?['budgetId'] ??
-                                 plResult['data']?['id'] ??
-                                 plResult['budgetId'] ??
-                                 plResult['id'];
-                print('[7571] ✅ TC-001: 預算創建成功');
-                print('   真實預算ID: $_dynamicBudgetId');
-                print('[7571] 🔄 階段一修正：已儲存動態預算ID供後續測試使用');
-                executionSteps['budget_creation_success'] = 'Budget created successfully. ID: $_dynamicBudgetId.';
-              } else {
-                print('❌ TC-001: 預算創建失敗 - ${plResult['message'] ?? plResult.toString()}');
-                executionSteps['budget_creation_failed'] = 'Budget creation failed: ${plResult['message'] ?? plResult.toString()}';
+            // 階段一修正：從BudgetOperationResult物件提取真實創建的預算ID
+            if (plResult != null) {
+              try {
+                // 處理BudgetOperationResult物件
+                if (plResult.toString().contains('BudgetOperationResult')) {
+                  // 嘗試反射或直接從物件屬性獲取budgetId
+                  final resultString = plResult.toString();
+                  print('[7571] 🔍 TC-001 階段一除錯：BudgetOperationResult內容 = $resultString');
+                  
+                  // 從APL回應中提取budgetId（已在上面的APL調試資訊中看到）
+                  final matches = RegExp(r'budgetId: (budget_\w+)').firstMatch(resultString);
+                  if (matches != null) {
+                    _dynamicBudgetId = matches.group(1);
+                    print('[7571] ✅ TC-001: 預算創建成功，從BudgetOperationResult提取budgetId');
+                    print('[7571] 🔄 真實預算ID: $_dynamicBudgetId');
+                    executionSteps['budget_creation_success'] = 'Budget created successfully. Extracted ID: $_dynamicBudgetId from BudgetOperationResult.';
+                  } else {
+                    print('[7571] ⚠️ TC-001: 無法從BudgetOperationResult提取budgetId');
+                    executionSteps['budget_extraction_failed'] = 'Failed to extract budgetId from BudgetOperationResult.';
+                  }
+                } 
+                // 處理Map格式回應
+                else if (plResult is Map) {
+                  var success = plResult['success'];
+                  if (success == true || success == 'true' || plResult['data'] != null) {
+                    _dynamicBudgetId = plResult['data']?['budgetId'] ??
+                                     plResult['data']?['id'] ??
+                                     plResult['budgetId'] ??
+                                     plResult['id'];
+                    print('[7571] ✅ TC-001: 預算創建成功（Map格式）');
+                    print('[7571] 🔄 真實預算ID: $_dynamicBudgetId');
+                    executionSteps['budget_creation_success'] = 'Budget created successfully. ID: $_dynamicBudgetId.';
+                  } else {
+                    print('[7571] ❌ TC-001: 預算創建失敗 - ${plResult['message'] ?? plResult.toString()}');
+                    executionSteps['budget_creation_failed'] = 'Budget creation failed: ${plResult['message'] ?? plResult.toString()}';
+                  }
+                } else {
+                  print('[7571] ❌ TC-001: 預算創建失敗 - 未知回應格式: ${plResult.runtimeType}');
+                  executionSteps['budget_creation_unknown_format'] = 'Budget creation failed due to unknown response format: ${plResult.runtimeType}.';
+                }
+              } catch (e) {
+                print('[7571] ❌ TC-001: 預算創建結果處理異常 - $e');
+                executionSteps['budget_result_processing_error'] = 'Error processing budget creation result: $e';
               }
             } else {
-              print('❌ TC-001: 預算創建失敗 - 無效回應格式');
-              executionSteps['budget_creation_invalid_response'] = 'Budget creation failed due to invalid response format.';
+              print('[7571] ❌ TC-001: 預算創建失敗 - PL層回應為null');
+              executionSteps['budget_creation_null_response'] = 'Budget creation failed: PL layer returned null.';
             }
             print('[7571] 📋 TC-001階段二修正：PL層7304純粹調用完成（真實帳本）');
 
@@ -599,27 +626,41 @@ class SITP2TestController {
 
         case 'TC-005': // 預算執行狀況計算
           final executionData = successData['budget_execution_tracking'];
-          if (executionData != null) {
-            final budgetId = executionData['budgetId'];
-            inputData = {'budgetId': budgetId, 'operatorId': executionData['operatorId']};
-            executionSteps['prepare_data_for_execution_calc'] = 'Set budgetId and operatorId.';
+          if (executionData != null && executionData['budgetId'] != null) {
+            final budgetId = executionData['budgetId'] as String;
+            final operatorId = executionData['operatorId'] as String? ?? 'unknown_operator';
+            inputData = {'budgetId': budgetId, 'operatorId': operatorId};
+            executionSteps['prepare_data_for_execution_calc'] = 'Set budgetId: $budgetId, operatorId: $operatorId.';
+            print('[7571] 🔍 TC-005 輸入參數：budgetId=$budgetId, operatorId=$operatorId');
+            
             // 純粹調用PL層7304預算執行計算函數
             plResult = await BudgetManagementFeatureGroup.calculateBudgetExecution(budgetId);
-            executionSteps['call_pl_calculate_execution'] = 'Called BudgetManagementFeatureGroup.calculateBudgetExecution.';
+            executionSteps['call_pl_calculate_execution'] = 'Called BudgetManagementFeatureGroup.calculateBudgetExecution with budgetId: $budgetId.';
             print('[7571] 📋 TC-005純粹調用PL層7304完成');
+          } else {
+            print('[7571] ⚠️ TC-005: 測試資料中缺少budget_execution_tracking或budgetId為空');
+            plResult = {'error': 'Missing budget_execution_tracking data or null budgetId', 'success': false};
+            executionSteps['missing_execution_data'] = 'Missing budget_execution_tracking data or null budgetId.';
           }
           break;
 
         case 'TC-006': // 預算警示檢查
           final executionData = successData['budget_execution_tracking'];
-          if (executionData != null) {
-            final budgetId = executionData['budgetId'];
-            inputData = {'budgetId': budgetId, 'operatorId': executionData['operatorId']};
-            executionSteps['prepare_data_for_alert_check'] = 'Set budgetId and operatorId.';
+          if (executionData != null && executionData['budgetId'] != null) {
+            final budgetId = executionData['budgetId'] as String;
+            final operatorId = executionData['operatorId'] as String? ?? 'unknown_operator';
+            inputData = {'budgetId': budgetId, 'operatorId': operatorId};
+            executionSteps['prepare_data_for_alert_check'] = 'Set budgetId: $budgetId, operatorId: $operatorId.';
+            print('[7571] 🔍 TC-006 輸入參數：budgetId=$budgetId, operatorId=$operatorId');
+            
             // 純粹調用PL層7304預算警示檢查函數
             plResult = await BudgetManagementFeatureGroup.checkBudgetAlerts(budgetId);
-            executionSteps['call_pl_check_alerts'] = 'Called BudgetManagementFeatureGroup.checkBudgetAlerts.';
+            executionSteps['call_pl_check_alerts'] = 'Called BudgetManagementFeatureGroup.checkBudgetAlerts with budgetId: $budgetId.';
             print('[7571] 📋 TC-006純粹調用PL層7304完成');
+          } else {
+            print('[7571] ⚠️ TC-006: 測試資料中缺少budget_execution_tracking或budgetId為空');
+            plResult = {'error': 'Missing budget_execution_tracking data or null budgetId', 'success': false};
+            executionSteps['missing_execution_data'] = 'Missing budget_execution_tracking data or null budgetId.';
           }
           break;
 
@@ -704,6 +745,10 @@ class SITP2TestController {
       Map<String, dynamic> inputData = {};
       dynamic plResult;
       Map<String, dynamic> executionSteps = {};
+      
+      print('[7571] 🔍 $testId 載入測試資料完成');
+      print('[7571] 📊 成功案例數量: ${successData.keys.length}');
+      print('[7571] 📊 失敗案例數量: ${failureData.keys.length}');
 
       // 純粹調用PL層7303，完全不進行任何業務邏輯判斷
       switch (testId) {
@@ -957,15 +1002,24 @@ class SITP2TestController {
         executionSteps: executionSteps,
       );
 
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('[7571] ❌ $testId 協作測試異常發生：');
+      print('[7571] 🔍 異常類型：${e.runtimeType}');
+      print('[7571] 📝 異常訊息：$e');
+      print('[7571] 📚 堆疊追蹤：${stackTrace.toString().split('\n').take(5).join('\n')}');
+      
       return P2TestResult(
         testId: testId,
         testName: _getCollaborationTestName(testId),
         category: 'collaboration_pure_call',
         plResult: null,
-        errorMessage: '純粹調用失敗: $e',
+        errorMessage: '純粹調用失敗: $e (Type: ${e.runtimeType})',
         inputData: {},
-        executionSteps: {'error_occurred': e.toString()},
+        executionSteps: {
+          'error_occurred': e.toString(),
+          'error_type': e.runtimeType.toString(),
+          'stack_trace_summary': stackTrace.toString().split('\n').take(3).join(' | ')
+        },
       );
     }
   }
