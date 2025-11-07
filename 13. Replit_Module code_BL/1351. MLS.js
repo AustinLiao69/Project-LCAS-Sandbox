@@ -1,4 +1,3 @@
-
 /**
  * MLS_多帳本管理模組_2.0.1
  * @module MLS模組
@@ -51,7 +50,20 @@ async function MLS_createProjectLedger(userId, projectName, projectDescription, 
       startDate: startDate, // 修正：統一使用camelCase
       endDate: endDate, // 修正：統一使用camelCase
       budget: budget || 0,
-      members: [userId],
+      members: [{
+        userId: userId,
+        email: `${userId}@example.com`, // 實際應從用戶資料取得
+        displayName: `User ${userId.split('_')[1] || userId}`,
+        role: 'owner',
+        status: 'active',
+        joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+        permissions: {
+          read: true,
+          write: true,
+          manage: true,
+          delete: true
+        }
+      }],
       permissions: {
         owner: userId,
         admins: [],
@@ -145,7 +157,20 @@ async function MLS_createCategoryLedger(userId, categoryName, categoryType, tags
       ownerId: userId, // 修正：統一使用camelCase
       tags: tags || [],
       defaultSubjects: defaultSubjects || [], // 修正：統一使用camelCase
-      members: [userId],
+      members: [{
+        userId: userId,
+        email: `${userId}@example.com`, // 實際應從用戶資料取得
+        displayName: `User ${userId.split('_')[1] || userId}`,
+        role: 'owner',
+        status: 'active',
+        joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+        permissions: {
+          read: true,
+          write: true,
+          manage: true,
+          delete: true
+        }
+      }],
       permissions: {
         owner: userId,
         admins: [],
@@ -238,7 +263,20 @@ async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissio
       type: 'shared',
       name: ledgerName,
       ownerId: ownerId, // 修正：統一使用camelCase
-      members: allMembers,
+      members: allMembers.map(memberId => ({
+        userId: memberId,
+        email: `${memberId}@example.com`, // 實際應從用戶資料取得
+        displayName: `User ${memberId.split('_')[1] || memberId}`,
+        role: (memberId === ownerId) ? 'owner' : 'member', // 初始設為 member，除非是 owner
+        status: 'active',
+        joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+        permissions: {
+          read: true,
+          write: (memberId !== ownerId),
+          manage: (memberId === ownerId),
+          delete: (memberId === ownerId)
+        }
+      })),
       permissions: {
         owner: ownerId,
         admins: permissionSettings?.admins || [],
@@ -593,7 +631,7 @@ async function MLS_inviteMember(ledgerId, inviterId, inviteeInfo, permissionLeve
     // 委派至CM模組處理具體邀請邏輯
     if (CM && typeof CM.CM_inviteMember === 'function') {
       const result = await CM.CM_inviteMember(ledgerId, inviterId, inviteeInfo, permissionLevel);
-      
+
       if (result.success) {
         // 更新帳本的成員數統計
         await ledgerRef.update({
@@ -601,7 +639,7 @@ async function MLS_inviteMember(ledgerId, inviterId, inviteeInfo, permissionLeve
           updated_at: admin.firestore.FieldValue.serverTimestamp()
         });
       }
-      
+
       return result;
     } else {
       return {
@@ -632,7 +670,7 @@ async function MLS_removeMember(ledgerId, removerId, targetUserId, removeReason)
     // 委派至CM模組處理具體移除邏輯
     if (CM && typeof CM.CM_removeMember === 'function') {
       const result = await CM.CM_removeMember(ledgerId, targetUserId, removerId, removeReason);
-      
+
       if (result.success) {
         // 更新帳本的成員數統計
         const ledgerRef = db.collection('ledgers').doc(ledgerId);
@@ -641,7 +679,7 @@ async function MLS_removeMember(ledgerId, removerId, targetUserId, removeReason)
           updated_at: admin.firestore.FieldValue.serverTimestamp()
         });
       }
-      
+
       return result;
     } else {
       return {
@@ -821,12 +859,21 @@ async function MLS_validateLedgerAccess(userId, ledgerId, operationType) {
     const permissions = ledgerData.permissions;
 
     // 檢查用戶是否為成員
-    if (!ledgerData.members.includes(userId)) {
-      return {
-        hasAccess: false,
-        reason: 'not_member'
-      };
+    // Note: This check needs to be more robust with the new member structure.
+    // It should ideally check against the `members` array containing objects.
+    // For now, we'll assume `ledgerData.members` is an array of userIds for simplicity,
+    // but this will need refactoring if `members` always contains objects.
+    const isMember = ledgerData.members && ledgerData.members.some(member => member.userId === userId);
+    if (!isMember) {
+      // Fallback for older data structures or if the check above fails
+      if (!ledgerData.members.includes(userId)) {
+        return {
+          hasAccess: false,
+          reason: 'not_member'
+        };
+      }
     }
+
 
     // 根據操作類型檢查權限
     let hasAccess = false;
@@ -837,30 +884,36 @@ async function MLS_validateLedgerAccess(userId, ledgerId, operationType) {
         break;
 
       case 'edit':
+        // Check if the user is the owner or an admin, or if they are a member and editing is allowed
         hasAccess = userId === permissions.owner ||
                    permissions.admins.includes(userId) ||
                    (permissions.members.includes(userId) && permissions.settings.allow_edit);
         break;
 
       case 'delete':
+        // Only the owner can delete if allowed by settings
         hasAccess = userId === permissions.owner && permissions.settings.allow_delete;
         break;
 
       case 'invite':
+        // Owner or admins can invite if allowed by settings
         hasAccess = (userId === permissions.owner ||
                     permissions.admins.includes(userId)) &&
                    permissions.settings.allow_invite;
         break;
 
       case 'remove_member':
+        // Owner or admins can remove members
         hasAccess = userId === permissions.owner || permissions.admins.includes(userId);
         break;
 
       case 'manage_permissions':
+        // Owner or admins can manage permissions
         hasAccess = userId === permissions.owner || permissions.admins.includes(userId);
         break;
 
       case 'archive':
+        // Owner or admins can archive
         hasAccess = userId === permissions.owner || permissions.admins.includes(userId);
         break;
 
@@ -1138,10 +1191,10 @@ async function MLS_getCollaborationLedgers(userId, options = {}) {
 
     for (const doc of querySnapshot.docs) {
       const ledgerData = doc.data();
-      
+
       // 檢查用戶在此帳本的權限
       const userRole = await MLS_getUserRoleInLedger(userId, ledgerData);
-      
+
       // 取得協作統計資訊
       let collaborationStats = {};
       if (CM && typeof CM.CM_getMemberList === 'function') {
@@ -1201,24 +1254,19 @@ async function MLS_getUserRoleInLedger(userId, ledgerData) {
     if (ledgerData.ownerId === userId) { // 修正：統一使用camelCase
       return 'owner';
     }
-    
-    if (ledgerData.permissions?.admins?.includes(userId)) {
-      return 'admin';
+
+    // 檢查 members 陣列中的權限
+    const member = ledgerData.members?.find(m => m.userId === userId);
+    if (member) {
+      if (member.role === 'admin') return 'admin';
+      if (member.role === 'member') return 'member';
+      if (member.role === 'viewer') return 'viewer';
+      // 如果有 permissions 物件，也一併檢查
+      if (ledgerData.permissions?.admins?.includes(userId)) return 'admin';
+      if (ledgerData.permissions?.members?.includes(userId)) return 'member';
+      if (ledgerData.permissions?.viewers?.includes(userId)) return 'viewer';
     }
-    
-    if (ledgerData.permissions?.members?.includes(userId)) {
-      return 'member';
-    }
-    
-    if (ledgerData.permissions?.viewers?.includes(userId)) {
-      return 'viewer';
-    }
-    
-    // 如果用戶在members陣列中但沒有明確權限設定，預設為member
-    if (ledgerData.members?.includes(userId)) {
-      return 'member';
-    }
-    
+
     return 'none';
   } catch (error) {
     DL.DL_warning('MLS', `取得用戶角色失敗: ${error.message}`);
@@ -1313,23 +1361,23 @@ async function MLS_getLedgers(queryParams = {}) {
 
     // 實際從Firestore查詢帳本列表
     let query = db.collection('ledgers');
-    
+
     // 如果有userId參數，篩選該用戶的帳本
     if (queryParams.userId) {
       query = query.where('members', 'array-contains', queryParams.userId);
     }
-    
+
     // 預設只顯示非歸檔的帳本（先檢查是否需要索引）
     if (queryParams.archived !== true) {
       query = query.where('archived', '==', false);
     }
-    
+
     // 按更新時間排序（移除以避免索引問題）
     // query = query.orderBy('updated_at', 'desc');
-    
+
     const querySnapshot = await query.get();
     const ledgers = [];
-    
+
     querySnapshot.forEach(doc => {
       const ledgerData = doc.data();
       ledgers.push({
@@ -1398,7 +1446,22 @@ async function MLS_createLedger(ledgerData, options = {}) {
       timezone: ledgerData.timezone || 'Asia/Taipei',
       owner_id: ledgerData.owner_id,
       ownerId: ledgerData.owner_id, // 相容性欄位
-      members: ledgerData.members || [ledgerData.owner_id],
+      members: ledgerData.members || [
+        {
+          userId: ledgerData.owner_id,
+          email: ledgerData.ownerEmail || `${ledgerData.owner_id}@example.com`,
+          displayName: `User ${ledgerData.owner_id.split('_')[1] || ledgerData.owner_id}`,
+          role: 'owner',
+          status: 'active',
+          joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+          permissions: {
+            read: true,
+            write: true,
+            manage: true,
+            delete: true
+          }
+        }
+      ],
       permissions: ledgerData.permissions || {
         owner: ledgerData.owner_id,
         admins: [],
@@ -1538,7 +1601,7 @@ async function MLS_getCollaborators(ledgerId, options = {}) {
     // 委派至CM模組處理
     if (CM && typeof CM.CM_getMemberList === 'function') {
       const result = await CM.CM_getMemberList(ledgerId, options.requesterId, true);
-      
+
       if (result.members) {
         const collaborators = result.members.map(member => ({
           userId: member.userId,
@@ -1612,9 +1675,9 @@ async function MLS_inviteCollaborator(ledgerId, invitationData, options = {}) {
 
     // 委派至MLS_inviteMember處理
     const result = await MLS_inviteMember(
-      ledgerId, 
-      options.inviterId || 'system', 
-      invitationData, 
+      ledgerId,
+      options.inviterId || 'system',
+      invitationData,
       invitationData.role || 'viewer'
     );
 
@@ -1664,9 +1727,9 @@ async function MLS_removeCollaborator(ledgerId, userId, options = {}) {
 
     // 委派至MLS_removeMember處理
     const result = await MLS_removeMember(
-      ledgerId, 
-      options.removerId || 'system', 
-      userId, 
+      ledgerId,
+      options.removerId || 'system',
+      userId,
       options.reason || 'removed_by_admin'
     );
 

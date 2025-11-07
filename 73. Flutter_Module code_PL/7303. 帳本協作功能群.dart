@@ -1,8 +1,8 @@
 /**
- * 7303_帳本協作功能群_2.4.0
+ * 7303_帳本協作功能群_2.5.0
  * @module 帳本協作功能群
  * @description LCAS 2.0帳本協作功能群模組 - Phase 2帳本管理與協作記帳業務邏輯
- * @update 2025-11-06: 階段三修復 - 加強null值安全處理，防止null相關錯誤
+ * @update 2025-11-07: 階段二修正 - 統一協作成員資料結構，確保欄位名稱一致
  */
 
 import 'dart:async';
@@ -54,13 +54,13 @@ class Ledger {
   }
 }
 
-/// 協作者資料模型
+/// 協作者資料模型 - 階段二修正版
 class Collaborator {
   final String userId;
   final String email;
   final String displayName;
   final String role;
-  final Map<String, dynamic> permissions;
+  final Map<String, bool> permissions; // 階段二修正：明確定義為bool型權限映射
   final String status;
   final DateTime joinedAt;
 
@@ -75,16 +75,119 @@ class Collaborator {
   });
 
   factory Collaborator.fromJson(Map<String, dynamic> json) {
+    // 階段二修正：更強健的權限解析
+    Map<String, bool> parsedPermissions = {};
+    
+    if (json['permissions'] != null) {
+      final rawPermissions = json['permissions'];
+      if (rawPermissions is Map) {
+        rawPermissions.forEach((key, value) {
+          if (key is String) {
+            parsedPermissions[key] = value == true || value == 'true';
+          }
+        });
+      }
+    }
+    
+    // 階段二修正：如果沒有權限資料，根據角色設定預設權限
+    if (parsedPermissions.isEmpty) {
+      parsedPermissions = _getDefaultPermissionsForRole(json['role'] ?? 'viewer');
+    }
+
     return Collaborator(
-      userId: json['userId'] ?? '',
-      email: json['email'] ?? '',
-      displayName: json['displayName'] ?? '',
-      role: json['role'] ?? '',
-      permissions: Map<String, dynamic>.from(json['permissions'] ?? {}),
-      status: json['status'] ?? '',
-      joinedAt: DateTime.parse(json['joinedAt'] ?? DateTime.now().toIso8601String()),
+      userId: json['userId']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      displayName: json['displayName']?.toString() ?? json['display_name']?.toString() ?? '',
+      role: json['role']?.toString() ?? 'viewer',
+      permissions: parsedPermissions,
+      status: json['status']?.toString() ?? 'active',
+      joinedAt: _parseDateTime(json['joinedAt'] ?? json['joined_at']),
     );
   }
+
+  /// 階段二新增：根據角色取得預設權限
+  static Map<String, bool> _getDefaultPermissionsForRole(String role) {
+    switch (role.toLowerCase()) {
+      case 'owner':
+        return {
+          'read': true,
+          'write': true,
+          'manage': true,
+          'delete': true,
+          'invite': true,
+        };
+      case 'admin':
+        return {
+          'read': true,
+          'write': true,
+          'manage': true,
+          'delete': false,
+          'invite': true,
+        };
+      case 'editor':
+      case 'member':
+        return {
+          'read': true,
+          'write': true,
+          'manage': false,
+          'delete': false,
+          'invite': false,
+        };
+      case 'viewer':
+      default:
+        return {
+          'read': true,
+          'write': false,
+          'manage': false,
+          'delete': false,
+          'invite': false,
+        };
+    }
+  }
+
+  /// 階段二新增：安全的日期時間解析
+  static DateTime _parseDateTime(dynamic dateValue) {
+    if (dateValue == null) return DateTime.now();
+    
+    if (dateValue is DateTime) return dateValue;
+    
+    if (dateValue is String) {
+      try {
+        return DateTime.parse(dateValue);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+    
+    return DateTime.now();
+  }
+
+  /// 階段二新增：轉換為JSON格式
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'email': email,
+      'displayName': displayName,
+      'role': role,
+      'permissions': permissions,
+      'status': status,
+      'joinedAt': joinedAt.toIso8601String(),
+    };
+  }
+
+  /// 階段二新增：檢查特定權限
+  bool hasPermission(String permission) {
+    return permissions[permission] == true;
+  }
+
+  /// 階段二新增：是否為管理者
+  bool get isManager => role == 'owner' || role == 'admin';
+
+  /// 階段二新增：是否可編輯
+  bool get canEdit => hasPermission('write');
+
+  /// 階段二新增：是否可邀請他人
+  bool get canInvite => hasPermission('invite');
 }
 
 /// 邀請資料模型

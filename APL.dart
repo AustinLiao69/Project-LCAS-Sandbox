@@ -2,9 +2,9 @@
  * APL.dart - 統一API Gateway模組
  * @module 統一APL Gateway
  * @description LCAS 2.0 APL層統一Gateway - P2階段完整實作並為P3-P7建立擴展基礎
- * @version v1.2.1
- * @date 2025-10-23
- * @update 修正getPermissions方法支援queryParams參數
+ * @version v1.2.2
+ * @date 2025-11-07
+ * @update 階段二修正：新增協作者資料格式轉換邏輯，統一成員資料結構
  */
 
 import 'dart:convert';
@@ -376,7 +376,7 @@ class AccountLedgerService {
     );
   }
 
-  /// 6. 取得協作者 (GET /api/v1/ledgers/{id}/collaborators)
+  /// 6. 取得協作者 (GET /api/v1/ledgers/{id}/collaborators) - 階段二修正版
   Future<UnifiedApiResponse<List<Map<String, dynamic>>>> getCollaborators(String ledgerId, {
     String? role,
   }) async {
@@ -388,8 +388,92 @@ class AccountLedgerService {
       '/api/v1/ledgers/$ledgerId/collaborators',
       null,
       queryParams,
-      (data) => List<Map<String, dynamic>>.from(data?['collaborators'] ?? []),
+      (data) {
+        // 階段二修正：標準化協作者資料格式
+        if (data == null) return <Map<String, dynamic>>[];
+        
+        List<Map<String, dynamic>> collaborators = [];
+        
+        // 處理不同的回應格式
+        if (data is List) {
+          collaborators = List<Map<String, dynamic>>.from(data);
+        } else if (data is Map) {
+          if (data.containsKey('collaborators') && data['collaborators'] is List) {
+            collaborators = List<Map<String, dynamic>>.from(data['collaborators']);
+          } else if (data.containsKey('data') && data['data'] is List) {
+            collaborators = List<Map<String, dynamic>>.from(data['data']);
+          } else {
+            collaborators = [Map<String, dynamic>.from(data)];
+          }
+        }
+        
+        // 階段二修正：確保每個協作者都有必要欄位
+        return collaborators.map((collaborator) {
+          final standardizedCollaborator = Map<String, dynamic>.from(collaborator);
+          
+          // 確保必要欄位存在
+          standardizedCollaborator['userId'] ??= standardizedCollaborator['user_id'] ?? '';
+          standardizedCollaborator['displayName'] ??= standardizedCollaborator['display_name'] ?? 
+                                                    standardizedCollaborator['name'] ?? 
+                                                    'User ${standardizedCollaborator['userId']}';
+          standardizedCollaborator['joinedAt'] ??= standardizedCollaborator['joined_at'] ?? 
+                                                  DateTime.now().toIso8601String();
+          standardizedCollaborator['status'] ??= 'active';
+          standardizedCollaborator['role'] ??= 'viewer';
+          standardizedCollaborator['email'] ??= '${standardizedCollaborator['userId']}@example.com';
+          
+          // 階段二修正：確保權限格式正確
+          if (standardizedCollaborator['permissions'] == null || 
+              standardizedCollaborator['permissions'] is! Map) {
+            standardizedCollaborator['permissions'] = _getDefaultPermissionsForRole(
+              standardizedCollaborator['role'] ?? 'viewer'
+            );
+          }
+          
+          return standardizedCollaborator;
+        }).toList();
+      },
     );
+  }
+
+  /// 階段二新增：根據角色取得預設權限（APL層輔助函數）
+  static Map<String, bool> _getDefaultPermissionsForRole(String role) {
+    switch (role.toLowerCase()) {
+      case 'owner':
+        return {
+          'read': true,
+          'write': true,
+          'manage': true,
+          'delete': true,
+          'invite': true,
+        };
+      case 'admin':
+        return {
+          'read': true,
+          'write': true,
+          'manage': true,
+          'delete': false,
+          'invite': true,
+        };
+      case 'editor':
+      case 'member':
+        return {
+          'read': true,
+          'write': true,
+          'manage': false,
+          'delete': false,
+          'invite': false,
+        };
+      case 'viewer':
+      default:
+        return {
+          'read': true,
+          'write': false,
+          'manage': false,
+          'delete': false,
+          'invite': false,
+        };
+    }
   }
 
   /// 7. 邀請協作者 (POST /api/v1/ledgers/{id}/invitations)
