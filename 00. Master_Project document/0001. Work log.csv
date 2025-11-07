@@ -370,3 +370,5 @@ MM 	 DD 	 Description 	    Progress
 11	5	 整理1311的資料欄位   	 Closed
 11	6	 1311模組所建立的資料結構：提案新增1313的資料欄位   	 Ongoing
 11	6	 整理1311的資料欄位：全部採用駝峰式命名法camelCase   	 Ongoing
+11	6	 研究Vibe coding流程如何優化   	 Ongoing
+11	7	 研究CI/CD流程   	 Ongoing
