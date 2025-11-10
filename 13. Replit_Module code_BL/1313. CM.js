@@ -1,8 +1,8 @@
 /**
- * CM_協作管理模組_2.0.3
+ * CM_協作與帳本管理模組_2.1.0
  * @module CM模組
- * @description 協作管理系統 - 階段一修正：確保協作帳本正確建立到Firebase
- * @update 2025-11-07: 階段一修正 - 修復協作帳本建立Firebase寫入機制
+ * @description 協作與帳本管理系統 - 負責所有後續帳本（第2本以上）的完整生命週期管理，包含協作功能和多帳本管理功能
+ * @update 2025-11-10: 階段一準備 - 整合MLS功能準備，更新為協作與帳本管理模組
  */
 
 const admin = require('firebase-admin');
@@ -1871,7 +1871,34 @@ async function CM_initialize() {
   }
 }
 
-// 導出模組函數 - 階段三更新：完整協作業務邏輯提供者
+/**
+ * ========================================
+ * MLS功能遷移區域 - 階段二將實作以下函數
+ * ========================================
+ * 
+ * 核心帳本管理函數（將從MLS遷移）:
+ * - CM_createLedger (MLS_createLedger)
+ * - CM_getLedgerList (MLS_getLedgerList) 
+ * - CM_getLedgerById (MLS_getLedgerById)
+ * - CM_updateLedger (MLS_updateLedger)
+ * - CM_deleteLedger (MLS_deleteLedger)
+ * - CM_editLedger (MLS_editLedger)
+ * 
+ * 特定類型帳本函數（將從MLS遷移）:
+ * - CM_createProjectLedger (MLS_createProjectLedger)
+ * - CM_createSharedLedger (MLS_createSharedLedger)
+ * - CM_createCategoryLedger (MLS_createCategoryLedger)
+ * 
+ * 協作管理函數（將從MLS遷移）:
+ * - CM_getCollaborators (MLS_getCollaborators)
+ * - CM_inviteCollaborator (MLS_inviteCollaborator) 
+ * - CM_removeCollaborator (MLS_removeCollaborator)
+ * - CM_getPermissions (MLS_getPermissions)
+ * 
+ * 階段二實作時將在此區域新增上述函數
+ */
+
+// 導出模組函數 - 階段一更新：準備整合MLS功能
 module.exports = {
   // 階段三新增：協作系統核心函數
   CM_initializeCollaboration,
@@ -1915,7 +1942,11 @@ module.exports = {
   // 常數與配置
   CM_PERMISSION_LEVELS,
   CM_WEBSOCKET_EVENTS,
-  CM_INIT_STATUS
+  CM_INIT_STATUS,
+
+  // 階段二將新增：MLS遷移函數
+  // CM_createLedger, CM_getLedgerList, CM_getLedgerById, etc.
+  // (函數將在階段二實作)
 };
 
 // 自動初始化模組
