@@ -35,7 +35,7 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('🔥 ASL階段二升級：優先初始化Firebase...');
 
 let firebaseInitialized = false;
-let AM, BK, DL, FS, MLS, BM, CM; // CM: Collaboration Management module (P2)
+let AM, BK, DL, FS, BM, CM; // CM: Collaboration Management module (P2)
 
 /**
  * Firebase服務初始化函數（階段一修復版）
@@ -168,7 +168,6 @@ async function loadBLModules() {
     BK: false,
     DL: false,
     FS: false,
-    MLS: false, // P2 模組：帳本管理 (Ledgers)
     BM: false,  // P2 模組：預算管理 (Budgets)
     CM: false   // P2 模組：協作管理 (Collaboration Management)
   };
@@ -290,14 +289,15 @@ async function loadBLModules() {
     console.error('❌ FS 模組載入失敗:', error.message);
   }
 
-  // 階段三：MLS模組已整合至CM，不再單獨載入
-    console.log('📦 P2階段模組 - MLS功能已整合至CM模組...');
-    moduleStatus.MLS = moduleStatus.CM; // MLS功能狀態等同CM狀態
-    if (moduleStatus.MLS) {
-      console.log('✅ MLS功能 (已整合至CM協作與帳本管理模組) 可用');
-    } else {
-      console.log('❌ MLS功能不可用 (CM模組載入失敗)');
-    }
+  // 階段四：MLS模組已完全移除，功能已整合至CM
+  console.log('📦 P2階段模組 - MLS功能已完全移除，整合至CM模組...');
+  moduleStatus.MLS = false; // MLS模組不再單獨存在
+  if (moduleStatus.CM) {
+    console.log('✅ MLS功能 (已整合至CM協作與帳本管理模組) 可用');
+  } else {
+    console.log('❌ MLS功能不可用 (CM模組載入失敗)');
+  }
+
 
     try {
       console.log('📦 載入P2階段模組 - BM (預算管理)...');
@@ -327,18 +327,18 @@ async function loadBLModules() {
     console.log(`   ${status ? '✅' : '❌'} ${module.toUpperCase()}: ${status ? '已載入' : '載入失敗'}`);
   });
 
-  // P2階段模組評估 - 階段三更新
-  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM) {
-    console.log('🎉 P2階段模組完整載入：Firebase + AM + BK + CM(含帳本管理) + BM');
-    console.log('🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、帳本管理和協作管理功能');
-    console.log('✨ DCN-0021整合完成：MLS功能已整合至CM協作與帳本管理模組');
-  } else if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK) {
-    console.log('🎉 P1-2基礎模組正常載入：Firebase + AM + BK');
-    console.log('⚠️ P2階段新功能模組狀態：CM(含MLS功能)(' + (moduleStatus.CM ? '✅' : '❌') + '), BM(' + (moduleStatus.BM ? '✅' : '❌') + ')');
-    console.log('🚀 系統已準備好處理P1-2基礎功能，P2功能視模組載入狀況而定');
-  } else {
-    console.log('❌ 關鍵模組載入失敗：需執行進一步調查');
-  }
+  // P2階段模組評估 - 階段四完成：MLS功能完全整合至CM
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM) {
+      console.log('🎉 P2階段模組完整載入：Firebase + AM + BK + CM(完整帳本與協作管理) + BM');
+      console.log('🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、帳本管理和協作管理功能');
+      console.log('✨ DCN-0021階段四完成：MLS模組已完全移除，功能完整整合至CM模組');
+    } else if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK) {
+      console.log('🎉 P1-2基礎模組正常載入：Firebase + AM + BK');
+      console.log('⚠️ P2階段新功能模組狀態：CM(完整帳本管理)(' + (moduleStatus.CM ? '✅' : '❌') + '), BM(' + (moduleStatus.BM ? '✅' : '❌') + ')');
+      console.log('🚀 系統已準備好處理P1-2基礎功能，P2功能視模組載入狀況而定');
+    } else {
+      console.log('❌ 關鍵模組載入失敗：需執行進一步調查');
+    }
 
 
   const successCount = Object.values(moduleStatus).filter(Boolean).length;
@@ -639,18 +639,16 @@ app.get('/', (req, res) => {
       total: 34
     },
     p2_endpoints: {
-      mls_ledgers: 5, // 帳本管理
       bm_budgets: 5, // 預算管理
       cm_collaboration: 4, // 協作管理 (邀請, 移除, 更新權限, 取得列表)
-      total: 14
+      total: 9
     },
-    total_endpoints: 34 + 14, // P1-2 + P2
+    total_endpoints: 34 + 9, // P1-2 + P2
     modules: {
       AM: !!AM ? 'loaded' : 'not loaded',
       BK: !!BK ? 'loaded' : 'not loaded',
       DL: !!DL ? 'loaded' : 'not loaded',
       FS: !!FS ? 'loaded' : 'not loaded',
-      MLS: !!CM ? 'integrated_in_CM' : 'not_available', // P2 模組 - 已整合至CM
       BM: !!BM ? 'loaded' : 'not loaded',  // P2 模組
       CM: !!CM ? 'loaded' : 'not loaded'   // P2 模組 - 包含帳本管理功能
     },
@@ -672,7 +670,6 @@ app.get('/health', (req, res) => {
       BK: !!BK ? 'ready' : 'unavailable',
       DL: !!DL ? 'ready' : 'unavailable',
       FS: !!FS ? 'ready' : 'unavailable',
-      MLS: !!CM ? 'integrated_in_CM' : 'unavailable', // P2 模組 - 已整合至CM
       BM: !!BM ? 'ready' : 'unavailable',  // P2 模組
       CM: !!CM ? 'ready_with_ledger_mgmt' : 'unavailable'   // P2 模組 - 包含帳本管理功能
     },
@@ -693,7 +690,6 @@ app.get('/health', (req, res) => {
     },
     stage2_enhancements: {
       collaboration_management_added: !!CM,
-      ledger_management_added: !!MLS,
       budget_management_added: !!BM
     },
     stage1_fix: {
@@ -2079,24 +2075,23 @@ app.use((error, req, res, next) => {
     console.log(`🔗 健康檢查: http://0.0.0.0:${PORT}/health`);
     console.log(`🎯 DCN-0015第二階段完成: ASL格式驗證強化`);
     // P1-2範圍API端點: AM(19) + BK(15) = 34個端點
-    // P2範圍API端點: 帳本(5) + 預算(5) + 協作(4) = 14個端點
-    // 總計: 34 + 14 = 48個端點
-    console.log(`📋 P1-2 + P2 API端點: AM(19) + BK(15) + MLS(5) + BM(5) + CM(4) = 48個端點`);
+    // P2範圍API端點: 預算(5) + 協作(4) = 9個端點
+    // 總計: 34 + 9 = 43個端點
+    console.log(`📋 P1-2 + P2 API端點: AM(19) + BK(15) + BM(5) + CM(4) = 43個端點`);
 
     // 第二階段完成狀態報告
     const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
     const amStatus = moduleStatus.AM ? '✅' : '❌';
-    const mlsStatus = moduleStatus.MLS ? '✅' : '❌';
     const bmStatus = moduleStatus.BM ? '✅' : '❌';
     const cmStatus = moduleStatus.CM ? '✅' : '❌';
-    const overallStatus = moduleStatus.firebase && moduleStatus.AM && moduleStatus.MLS && moduleStatus.BM && moduleStatus.CM ? '完全就緒' : '部分就緒';
+    const overallStatus = moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM ? '完全就緒' : '部分就緒';
 
     console.log(`🔧 第二階段完成狀態: ${overallStatus}`);
-    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), MLS(${mlsStatus}), BM(${bmStatus}), CM(${cmStatus})`);
+    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), BM(${bmStatus}), CM(${cmStatus})`);
     console.log(`✨ 容錯機制完全移除: 100%信任BL層標準格式`);
     console.log(`🎉 第二階段修正完成: 協作管理API端點補完`);
 
-    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.MLS && moduleStatus.BM && moduleStatus.CM) {
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM) {
       console.log('🚀 ASL v2.1.6已完全就緒，第二階段目標達成');
     } else if (!moduleStatus.CM) {
       console.log('⚠️ CM (協作管理) 模組載入失敗，協作管理功能不可用');
@@ -2129,13 +2124,13 @@ process.on('SIGINT', () => {
 });
 
 console.log('🎉 LCAS ASL階段二升級完成：協作管理API端點補完！');
-  console.log(`📦 P1-2 + P2 範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'}), MLS(${moduleStatus.MLS ? '✅' : '❌'}), BM(${moduleStatus.BM ? '✅' : '❌'}), CM(${moduleStatus.CM ? '✅' : '❌'})`);
-  console.log('🔧 純轉發機制: 48個API端點 -> 統一使用BL層標準格式');
+  console.log(`📦 P1-2 + P2 範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'}), BM(${moduleStatus.BM ? '✅' : '❌'}), CM(${moduleStatus.CM ? '✅' : '❌'})`);
+  console.log('🔧 純轉發機制: 43個API端點 -> 統一使用BL層標準格式');
   console.log('✨ 階段二升級: 協作管理API端點補完，符合8020文件規範');
   console.log('🎯 協作管理功能: 帳本創建/讀取/更新/刪除，協作者管理（邀請/移除/權限更新），衝突檢測與解決');
   console.log('🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict');
 
-  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.MLS && moduleStatus.BM && moduleStatus.CM) {
+  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM) {
     console.log('🚀 階段二升級完成，ASL v2.1.6完全就緒！');
     console.log('🌐 ASL服務器已啟動於 Port 5000');
   } else if (!moduleStatus.CM) {

@@ -1,13 +1,15 @@
 
 /**
- * 3151. TC_MLS_多帳本管理模組測試套件
- * @description 依據 TP_MLS_多帳本管理模組 Test Plan v1.0 編寫
- * @version 1.0.0
- * @date 2025-07-07
+ * 1551. TC_MLS_多帳本管理模組測試套件 [DEPRECATED -> UPDATED TO CM]
+ * @description 原依據 TP_MLS_多帳本管理模組 Test Plan v1.0，現已更新為測試CM模組的帳本管理功能
+ * @version 2.0.0 - 更新為CM模組測試
+ * @date 2025-11-10 - DCN-0021階段四：轉換為CM模組測試
  * @author SQA Team
+ * @deprecated MLS模組已整合至CM，此測試套件現測試CM模組的帳本管理功能
  */
 
-const MLS = require('../Modules/2051. MLS.js');
+// MLS模組已整合至CM模組
+const CM = require('../13. Replit_Module code_BL/1313. CM.js');
 
 // 測試環境設定
 const testEnv = {
