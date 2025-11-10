@@ -1,8 +1,8 @@
 /**
- * CM_協作管理模組_2.0.2
+ * CM_協作管理模組_2.0.3
  * @module CM模組
- * @description 協作管理系統 - 階段三強化：成為協作功能唯一業務邏輯提供者
- * @update 2025-11-07: 階段一修正 - 統一參數格式和內部處理為camelCase命名
+ * @description 協作管理系統 - 階段一修正：確保協作帳本正確建立到Firebase
+ * @update 2025-11-07: 階段一修正 - 修復協作帳本建立Firebase寫入機制
  */
 
 const admin = require('firebase-admin');
@@ -184,17 +184,29 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
         updatedAt: admin.firestore.Timestamp.now()
       };
 
-      // 階段二修正：確保使用正確的Firebase集合路徑
+      // 階段一修正：確保使用正確的Firebase集合路徑並增強寫入驗證
       const collaborationRef = db.collection('collaborations').doc(ledgerId);
-      await collaborationRef.set(collaborationData);
       
-      // 階段二驗證：確認文檔已成功寫入
-      const verifyDoc = await collaborationRef.get();
-      if (!verifyDoc.exists) {
-        throw new Error(`協作帳本建立失敗：Firebase寫入驗證失敗 - ${ledgerId}`);
+      try {
+        await collaborationRef.set(collaborationData);
+        CM_logInfo(`階段一修正：協作帳本已寫入Firebase - ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
+        
+        // 階段一修正：立即驗證文檔是否成功寫入
+        const verifyDoc = await collaborationRef.get();
+        if (!verifyDoc.exists) {
+          throw new Error(`階段一修正：協作帳本建立失敗，Firebase寫入驗證失敗 - ${ledgerId}`);
+        }
+        
+        const verifyData = verifyDoc.data();
+        if (!verifyData || !verifyData.members || verifyData.members.length === 0) {
+          throw new Error(`階段一修正：協作帳本建立失敗，成員資料寫入不完整 - ${ledgerId}`);
+        }
+        
+        CM_logInfo(`階段一修正：協作帳本建立並驗證成功 - ${ledgerId}, 成員數: ${verifyData.members.length}`, "初始化協作", ownerInfo.userId, "", "", functionName);
+      } catch (writeError) {
+        CM_logError(`階段一修正：Firebase寫入失敗 - ${writeError.message}`, "初始化協作", ownerInfo.userId, "FIREBASE_WRITE_ERROR", writeError.toString(), functionName);
+        throw new Error(`階段一修正：協作帳本Firebase寫入失敗 - ${writeError.message}`);
       }
-      
-      CM_logInfo(`階段二修正：協作帳本建立並驗證成功 - ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
     }
 
     // 2. 初始化協作同步（簡化版，避免循環調用）

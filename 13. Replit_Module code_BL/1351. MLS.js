@@ -1,8 +1,8 @@
 /**
- * MLS_多帳本管理模組_2.0.1
+ * MLS_多帳本管理模組_2.0.2
  * @module MLS模組
  * @description 多帳本管理系統 - 專注帳本管理，協作功能委派給CM模組
- * @update 2025-11-07: 階段一修正 - 統一資料欄位命名為camelCase格式，遵守1311文件規範
+ * @update 2025-11-07: 階段一修正 - 修復協作帳本建立觸發機制
  */
 
 const admin = require('firebase-admin');
@@ -92,6 +92,33 @@ async function MLS_createProjectLedger(userId, projectName, projectDescription, 
 
     // 寫入 Firestore
     await db.collection('ledgers').doc(ledgerId).set(ledgerData);
+
+    // 階段一修正：確保CM協作初始化被正確調用
+    if (CM && typeof CM.CM_initializeCollaboration === 'function') {
+      try {
+        const collaborationResult = await CM.CM_initializeCollaboration(
+          ledgerId,
+          {
+            userId: userId,
+            email: `${userId}@example.com`
+          },
+          'project',
+          {
+            allowInvite: true,
+            allowEdit: true,
+            allowDelete: false
+          }
+        );
+
+        if (collaborationResult.success) {
+          DL.DL_log('MLS', `階段一修正：專案帳本 ${ledgerId} 協作初始化成功`);
+        } else {
+          DL.DL_warning('MLS', `階段一修正：專案帳本 ${ledgerId} 協作初始化失敗: ${collaborationResult.message}`);
+        }
+      } catch (cmError) {
+        DL.DL_error('MLS', `階段一修正：專案帳本CM協作初始化異常 - ${cmError.message}`);
+      }
+    }
 
     // 建立協作架構（委派給FS模組）
     if (FS && typeof FS.FS_createCollaborationDocument === 'function') {
@@ -307,6 +334,36 @@ async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissio
     // 寫入 Firestore
     await db.collection('ledgers').doc(ledgerId).set(ledgerData);
 
+    // 階段一修正：確保CM協作初始化被正確調用
+    if (CM && typeof CM.CM_initializeCollaboration === 'function') {
+      try {
+        const collaborationResult = await CM.CM_initializeCollaboration(
+          ledgerId,
+          {
+            userId: ownerId,
+            email: `${ownerId}@example.com`
+          },
+          'shared',
+          {
+            allowInvite: permissionSettings?.allowInvite !== false,
+            allowEdit: permissionSettings?.allowEdit !== false,
+            allowDelete: permissionSettings?.allowDelete || false,
+            requireApproval: permissionSettings?.requireApproval || false
+          }
+        );
+
+        if (collaborationResult.success) {
+          DL.DL_log('MLS', `階段一修正：共享帳本 ${ledgerId} 協作初始化成功`);
+        } else {
+          DL.DL_warning('MLS', `階段一修正：共享帳本 ${ledgerId} 協作初始化失敗: ${collaborationResult.message}`);
+        }
+      } catch (cmError) {
+        DL.DL_error('MLS', `階段一修正：CM協作初始化異常 - ${cmError.message}`);
+      }
+    } else {
+      DL.DL_warning('MLS', '階段一修正：CM_initializeCollaboration函數不可用，協作功能將無法正常運作');
+    }
+
     // 建立協作架構（委派給FS模組，與1311.FS.js格式對齊）
     if (FS && typeof FS.FS_createCollaborationDocument === 'function') {
       await FS.FS_createCollaborationDocument(ledgerId, {
@@ -321,16 +378,6 @@ async function MLS_createSharedLedger(ownerId, ledgerName, memberList, permissio
           requireApproval: permissionSettings?.requireApproval || false
         }
       }, ownerId);
-    }
-
-    // 委派成員管理至CM模組
-    if (CM && typeof CM.CM_initializeSync === 'function') {
-      try {
-        await CM.CM_initializeSync(ledgerId, ownerId, { type: 'shared_ledger_creation' });
-        DL.DL_log('MLS', `共享帳本 ${ledgerId} 協作同步已初始化`);
-      } catch (cmError) {
-        DL.DL_warning('MLS', `共享帳本 ${ledgerId} 協作同步初始化失敗: ${cmError.message}`);
-      }
     }
 
     // 資料分發

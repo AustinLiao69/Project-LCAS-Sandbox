@@ -356,21 +356,23 @@ MM 	 DD 	 Description 	    Progress
 10	29	 在firebase裡面建立budgets資料欄位   	 Closed
 10	29	 解1301抓不到使用者帳本問題   	 Closed
 10	30	 解1301抓不到使用者帳本問題   	 Closed
-10	30	 分析1311模組所建立的資料結構：提案新增1351的資料欄位   	 Ongoing
-10	30	 確認firebase之ledger下階設定Budget子集合架構   	 Ongoing
-10	31	 確認firebase之ledger下階設定Budget子集合欄位正確性  	 Ongoing
+10	30	 分析1311模組所建立的資料結構：提案新增1313的資料欄位   	 Closed
+10	30	 確認firebase之ledger下階設定Budget子集合架構   	 Closed
+10	31	 確認firebase之ledger下階設定Budget子集合欄位正確性  	 Closed
 10	31	 Review 7571中關於budget設定相關測試案例coverage   	 Ongoing
 11	3	 確認flutter是否有完整安裝   	 Closed
 11	3	 規劃前後端代碼分離   	 Ongoing
 11	4	 刪除Firebase中_health_check的欄位   	 Ongoing
 11	4	 Review 7571中關於budget設定相關測試案例coverage   	 Ongoing
-11	4	 確認firebase之ledger下階設定Budget子集合架構與欄位正確性  	 Ongoing
+11	4	 確認firebase之ledger下階設定Budget子集合架構與欄位正確性  	 Closed
 11	4	 尋找在Replit做CI/CD的方法(問chatgpt)  	 Ongoing
 11	4	 Fork一個project出去，一個用assistant開發，一個用agent開發，去比較品質   	 Ongoing
 11	5	 整理1311的資料欄位   	 Closed
-11	6	 1311模組所建立的資料結構：提案新增1313的資料欄位   	 Ongoing
+11	6	 1311模組所建立的資料結構：提案新增1313的資料欄位   	 Closed
 11	6	 整理1311的資料欄位：全部採用駝峰式命名法camelCase   	 Ongoing
 11	6	 研究Vibe coding流程如何優化   	 Ongoing
 11	7	 研究CI/CD流程   	 Ongoing
 11	7	 Review APL，將APL的業務邏輯刪除   	 Ongoing
 11	7	 在firebase建立協作帳本   	 Ongoing
+11	7	 研究debug排查方法   	 Ongoing
+11	10	 在firebase建立協作帳本   	 Ongoing
