@@ -1917,7 +1917,7 @@ async function CM_createLedger(ledgerData, options = {}) {
           displayName: `User ${ledgerData.owner_id.split('_')[1] || ledgerData.owner_id}`,
           role: 'owner',
           status: 'active',
-          joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+          joinedAt: admin.firestore.Timestamp.now(),
           permissions: {
             read: true,
             write: true,
@@ -2450,7 +2450,7 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
         displayName: `User ${memberId.split('_')[1] || memberId}`,
         role: (memberId === ownerId) ? 'owner' : 'member',
         status: 'active',
-        joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+        joinedAt: admin.firestore.Timestamp.now(),
         permissions: {
           read: true,
           write: (memberId !== ownerId),
