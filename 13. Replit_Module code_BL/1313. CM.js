@@ -1,3 +1,4 @@
+replit_final_file>
 /**
  * CM_協作與帳本管理模組_2.1.0
  * @module CM模組
@@ -152,7 +153,8 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
         CM_logInfo(`階段二修正：擁有者已驗證加入現有協作帳本 - ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
       }
     } else {
-      // 階段二純淨性驗證：只建立協作主集合文檔，絕不觸碰ledgers集合
+      // 階段三職責邊界確認：CM模組純協作功能，只操作collaborations集合，絕不觸碰ledgers集合
+      // 個人帳本建立由AM模組負責，協作帳本建立由CM模組負責
       const currentTime = admin.firestore.Timestamp.now();
       const ownerMember = {
         memberId: `member_${Date.now()}_${ownerInfo.userId}`,
@@ -1894,6 +1896,10 @@ async function CM_getLedgers(queryParams = {}) {
   try {
     CM_logInfo(`取得帳本列表 - 查詢參數: ${JSON.stringify(queryParams)}`, "查詢帳本", queryParams.userId, "", "", functionName);
 
+    // 階段三職責邊界確認：CM模組主要處理collaborations集合，AM模組處理ledgers集合
+    // 此函數用於獲取個人帳本列表，應由AM模組處理，暫時保留以確保向下相容，但應考慮遷移至AM模組
+    CM_logWarning(`階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。`, "查詢帳本", queryParams.userId, "", "", functionName);
+
     // 實際從Firestore查詢帳本列表
     let query = db.collection('ledgers');
 
@@ -1969,6 +1975,9 @@ async function CM_getLedgerById(ledgerId, queryParams = {}) {
       };
     }
 
+    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責邊界：CM_getLedgerById 函數涉及ledgers集合操作，建議由AM模組處理。`, "查詢帳本", queryParams.userId, "", "", functionName);
+
     // 從Firestore查詢帳本
     const ledgerRef = db.collection('ledgers').doc(ledgerId);
     const ledgerDoc = await ledgerRef.get();
@@ -1985,6 +1994,8 @@ async function CM_getLedgerById(ledgerId, queryParams = {}) {
 
     // 檢查權限（如果提供了userId）
     if (queryParams.userId) {
+      // 權限驗證邏輯需要釐清：是否應使用CM_validatePermission或AM模組內部的權限檢查
+      // 目前假設 CM_validatePermission 可以處理ledgers集合的權限驗證
       const accessCheck = await CM_validatePermission(ledgerId, queryParams.userId, 'read');
       if (!accessCheck.hasPermission) {
         return {
@@ -2046,8 +2057,13 @@ async function CM_updateLedger(ledgerId, updateData, options = {}) {
       throw new Error('缺少帳本ID');
     }
 
+    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責邊界：CM_updateLedger 函數涉及ledgers集合操作，建議由AM模組處理。`, "更新帳本", options.userId, "", "", functionName);
+
+
     // 驗證存取權限
     if (options.userId) {
+      // 權限驗證邏輯需要釐清：是否應使用CM_validatePermission或AM模組內部的權限檢查
       const accessCheck = await CM_validatePermission(ledgerId, options.userId, 'edit');
       if (!accessCheck.hasPermission) {
         throw new Error('權限不足，無法編輯帳本');
@@ -2108,6 +2124,10 @@ async function CM_deleteLedger(ledgerId, userId, confirmationToken) {
   const functionName = "CM_deleteLedger";
   try {
     CM_logInfo(`開始刪除帳本 - ID: ${ledgerId}, 用戶: ${userId}`, "刪除帳本", userId, "", "", functionName);
+
+    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責邊界：CM_deleteLedger 函數涉及ledgers集合操作，建議由AM模組處理。`, "刪除帳本", userId, "", "", functionName);
+
 
     // 驗證存取權限
     const accessCheck = await CM_validatePermission(ledgerId, userId, 'delete');
@@ -2177,6 +2197,10 @@ async function CM_editLedger(ledgerId, userId, updateData, permission) {
   try {
     CM_logInfo(`開始編輯帳本 - ID: ${ledgerId}, 用戶: ${userId}`, "編輯帳本", userId, "", "", functionName);
 
+    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責邊界：CM_editLedger 函數涉及ledgers集合操作，建議由AM模組處理。`, "編輯帳本", userId, "", "", functionName);
+
+
     // 驗證存取權限
     const accessCheck = await CM_validatePermission(ledgerId, userId, 'edit');
     if (!accessCheck.hasPermission) {
@@ -2235,6 +2259,10 @@ async function CM_createProjectLedger(userId, projectName, projectDescription, s
   const functionName = "CM_createProjectLedger";
   try {
     CM_logInfo(`開始建立專案帳本 - 用戶: ${userId}, 專案: ${projectName}`, "建立專案帳本", userId, "", "", functionName);
+
+    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責邊界：CM_createProjectLedger 函數涉及ledgers集合操作，建議由AM模組處理。`, "建立專案帳本", userId, "", "", functionName);
+
 
     // 檢查專案名稱是否重複
     const duplicateCheck = await CM_detectDuplicateName(userId, projectName, 'project');
@@ -2303,7 +2331,7 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
 
     // 生成協作帳本ID
     const collaborationId = `collaboration_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const allMembers = [ownerId, ...(memberList || [])];
 
     // 準備協作架構資料（只操作collaborations集合）
@@ -2371,6 +2399,10 @@ async function CM_createCategoryLedger(userId, categoryName, categoryType, tags,
   const functionName = "CM_createCategoryLedger";
   try {
     CM_logInfo(`開始建立分類帳本 - 用戶: ${userId}, 分類: ${categoryName}`, "建立分類帳本", userId, "", "", functionName);
+
+    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責邊界：CM_createCategoryLedger 函數涉及ledgers集合操作，建議由AM模組處理。`, "建立分類帳本", userId, "", "", functionName);
+
 
     // 檢查分類名稱是否重複
     const duplicateCheck = await CM_detectDuplicateName(userId, categoryName, 'category');
@@ -2445,6 +2477,7 @@ async function CM_getCollaborators(ledgerId, options = {}) {
     }
 
     // 委派至CM_getMemberList處理
+    // 階段三職責邊界：CM_getMemberList操作collaborations集合，是CM模組的職責
     const result = await CM_getMemberList(ledgerId, options.requesterId, true);
 
     if (result.members) {
@@ -2464,7 +2497,8 @@ async function CM_getCollaborators(ledgerId, options = {}) {
       };
     }
 
-    // 模擬協作者列表
+    // 模擬協作者列表（當CM_getMemberList失敗時的回退，應盡量避免）
+    CM_logWarning(`CM_getMemberList執行失敗，回退至模擬協作者列表`, "查詢協作者", options.requesterId, "", "", functionName);
     const collaborators = [
       {
         userId: 'user_001',
@@ -2487,7 +2521,7 @@ async function CM_getCollaborators(ledgerId, options = {}) {
     return {
       success: true,
       data: collaborators,
-      message: '協作者列表取得成功'
+      message: '協作者列表取得成功 (模擬數據)'
     };
 
   } catch (error) {
@@ -2520,6 +2554,7 @@ async function CM_inviteCollaborator(ledgerId, invitationData, options = {}) {
     }
 
     // 委派至CM_inviteMember處理
+    // 階段三職責邊界：CM_inviteMember操作collaborations集合，是CM模組的職責
     const result = await CM_inviteMember(
       ledgerId,
       options.inviterId || 'system',
@@ -2542,7 +2577,7 @@ async function CM_inviteCollaborator(ledgerId, invitationData, options = {}) {
       };
     }
 
-    return result;
+    return result; // 直接返回CM_inviteMember的結果
 
   } catch (error) {
     CM_logError(`邀請協作者失敗: ${error.message}`, "邀請協作者", options.inviterId, "CM_INVITE_COLLABORATOR_ERROR", error.toString(), functionName);
@@ -2574,6 +2609,7 @@ async function CM_removeCollaborator(ledgerId, userId, options = {}) {
     }
 
     // 委派至CM_removeMember處理
+    // 階段三職責邊界：CM_removeMember操作collaborations集合，是CM模組的職責
     const result = await CM_removeMember(
       ledgerId,
       userId,
@@ -2593,7 +2629,7 @@ async function CM_removeCollaborator(ledgerId, userId, options = {}) {
       };
     }
 
-    return result;
+    return result; // 直接返回CM_removeMember的結果
 
   } catch (error) {
     CM_logError(`移除協作者失敗: ${error.message}`, "移除協作者", options.removerId, "CM_REMOVE_COLLABORATOR_ERROR", error.toString(), functionName);
@@ -2619,6 +2655,10 @@ async function CM_getPermissions(ledgerId, queryParams) {
   const functionName = "CM_getPermissions";
   try {
     CM_logInfo(`取得帳本權限 - 帳本ID: ${ledgerId}`, "查詢權限", queryParams.userId, "", "", functionName);
+
+    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責邊界：CM_getPermissions 函數涉及ledgers集合操作，建議由AM模組處理。`, "查詢權限", queryParams.userId, "", "", functionName);
+
 
     const ledgerRef = db.collection('ledgers').doc(ledgerId);
     const ledgerDoc = await ledgerRef.get();
@@ -2670,6 +2710,10 @@ async function CM_detectDuplicateName(userId, proposedName, ledgerType) {
   try {
     CM_logInfo(`檢測重複帳本名稱 - 用戶: ${userId}, 名稱: ${proposedName}, 類型: ${ledgerType}`, "檢測重複名稱", userId, "", "", functionName);
 
+    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責邊界：CM_detectDuplicateName 函數涉及ledgers集合操作，建議由AM模組處理。`, "檢測重複名稱", userId, "", "", functionName);
+
+
     // 查詢用戶是否已有相同名稱的帳本
     const query = db.collection('ledgers')
       .where('owner_id', '==', userId)
@@ -2715,43 +2759,43 @@ module.exports = {
   CM_bulkSetMemberPermissions,
   CM_getCollaborationStatistics,
 
-  // 成員管理函數
+  // 成員管理函數 (CM模組職責)
   CM_inviteMember,
   CM_processMemberJoin,
   CM_removeMember,
   CM_getMemberList,
 
-  // 權限管理函數
+  // 權限管理函數 (CM模組職責)
   CM_setMemberPermission,
   CM_validatePermission,
   CM_getPermissionMatrix,
 
-  // 即時同步函數
+  // 即時同步函數 (CM模組職責)
   CM_initializeSync,
   CM_resolveDataConflict,
   CM_broadcastEvent,
 
-  // 協作通知函數
+  // 協作通知函數 (CM模組職責)
   CM_sendCollaborationNotification,
   CM_setNotificationPreferences,
 
-  // 變更紀錄函數
+  // 變更紀錄函數 (CM模組職責)
   CM_logCollaborationAction,
   CM_getCollaborationHistory,
 
-  // 錯誤處理與監控函數
+  // 錯誤處理與監控函數 (CM模組職責)
   CM_handleCollaborationError,
   CM_monitorCollaborationHealth,
 
-  // 模組初始化
+  // 模組初始化 (CM模組職責)
   CM_initialize,
 
-  // 常數與配置
+  // 常數與配置 (CM模組職責)
   CM_PERMISSION_LEVELS,
   CM_WEBSOCKET_EVENTS,
   CM_INIT_STATUS,
 
-  // 階段二完成：從MLS遷移的帳本管理函數
+  // 階段二完成：從MLS遷移的帳本管理函數 (建議遷移至AM模組)
   // 核心帳本CRUD函數 (CM_createLedger已移除，避免與AM職責重複)
   CM_getLedgers,          // 從MLS_getLedgers遷移
   CM_getLedgerById,       // 從MLS_getLedgerById遷移
@@ -2759,18 +2803,20 @@ module.exports = {
   CM_deleteLedger,        // 從MLS_deleteLedger遷移
   CM_editLedger,          // 從MLS_editLedger遷移
 
-  // 特定類型帳本函數
+  // 特定類型帳本函數 (建議遷移至AM模組)
   CM_createProjectLedger,  // 從MLS_createProjectLedger遷移
-  CM_createSharedLedger,   // 從MLS_createSharedLedger遷移
   CM_createCategoryLedger, // 從MLS_createCategoryLedger遷移
 
-  // 協作管理函數
+  // 共享帳本函數 (CM模組職責)
+  CM_createSharedLedger,   // 從MLS_createSharedLedger遷移
+
+  // 協作管理函數 (CM模組職責)
   CM_getCollaborators,     // 從MLS_getCollaborators遷移
   CM_inviteCollaborator,   // 從MLS_inviteCollaborator遷移
   CM_removeCollaborator,   // 從MLS_removeCollaborator遷移
   CM_getPermissions,       // 從MLS_getPermissions遷移
 
-  // 輔助功能函數
+  // 輔助功能函數 (部分建議遷移至AM模組)
   CM_detectDuplicateName   // 從MLS_detectDuplicateName遷移
 };
 
@@ -2779,4 +2825,5 @@ CM_initialize().catch(error => {
   console.error('CM 模組自動初始化失敗:', error);
 });
 
-console.log('✅ CM 協作與帳本管理模組載入完成 - 階段二完成：MLS函數遷移完成，成為協作與帳本管理統一入口');
+console.log('✅ CM 協作與帳本管理模組載入完成 - 階段三完成：職責邊界確認與代碼調整');
+</replit_final_file>
