@@ -102,6 +102,7 @@
         "testScenario": "正常Cultivation用戶註冊"
       },
       "collaboration_test_user": {
+        "userId": "user_collaboration_test_1697363500000",
         "email": "collaboration.test@test.lcas.app",
         "displayName": "協作測試用戶",
         "userMode": "Expert",
@@ -115,7 +116,15 @@
           "Q2": "A",
           "Q3": "A"
         },
-        "testScenario": "協作功能測試專用用戶 - 需要真實註冊獲得動態ID"
+        "registrationDate": "2025-11-11T09:00:00+08:00",
+        "createdAt": "2025-11-11T09:00:00+08:00",
+        "testScenario": "協作功能測試專用用戶 - 階段二修正：支援email→userId解析測試",
+        "collaborationCapabilities": {
+          "canCreateSharedLedgers": true,
+          "canInviteCollaborators": true,
+          "canManagePermissions": true,
+          "maxCollaborators": 10
+        }
       },
       "guiding_user_valid": {
         "userId": "user_guiding_1697363380000",
@@ -717,6 +726,36 @@
   },
   "collaboration_test_data": {
     "success_scenarios": {
+      "create_collaborative_ledger_email_based": {
+        "name": "協作帳本測試_Email流程",
+        "type": "shared",
+        "description": "階段二修正：基於email識別的協作帳本建立測試",
+        "ownerEmail": "collaboration.test@test.lcas.app",
+        "collaborationType": "shared",
+        "currency": "TWD",
+        "timezone": "Asia/Taipei",
+        "settings": {
+          "allowInvite": true,
+          "allowEdit": true,
+          "allowDelete": false,
+          "requireApproval": false
+        },
+        "permissions": {
+          "settings": {
+            "allow_invite": true,
+            "allow_edit": true,
+            "allow_delete": false
+          }
+        },
+        "expectedFlow": {
+          "step1": "從7598載入collaboration.test@test.lcas.app用戶資料",
+          "step2": "調用LedgerCollaborationManager.createLedger()傳入email",
+          "step3": "PL層查詢email對應的真實userId",
+          "step4": "建立基礎帳本並初始化協作結構",
+          "step5": "設置擁有者權限完成協作帳本建立"
+        },
+        "testScenario": "階段二修正：完整email→協作帳本建立流程測試"
+      },
       "create_collaborative_ledger_template": {
         "name": "協作帳本測試",
         "type": "shared",
