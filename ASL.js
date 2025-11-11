@@ -35,7 +35,7 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('🔥 ASL階段二升級：優先初始化Firebase...');
 
 let firebaseInitialized = false;
-let AM, BK, DL, FS, MLS, BM, CM; // CM: Collaboration Management module (P2)
+let AM, BK, DL, FS, BM, CM; // CM: Collaboration Management module (P2)
 
 /**
  * Firebase服務初始化函數（階段一修復版）
@@ -168,7 +168,6 @@ async function loadBLModules() {
     BK: false,
     DL: false,
     FS: false,
-    MLS: false, // P2 模組：帳本管理 (Ledgers)
     BM: false,  // P2 模組：預算管理 (Budgets)
     CM: false   // P2 模組：協作管理 (Collaboration Management)
   };
@@ -290,19 +289,15 @@ async function loadBLModules() {
     console.error('❌ FS 模組載入失敗:', error.message);
   }
 
-  // 階段二新增：載入P2階段模組 (使用正確路徑)
-    try {
-      console.log('📦 載入P2階段模組 - MLS (帳本管理)...');
-      // ASL.js 預期 MLS 和 BM 模組會導出以下方法
-      // MLS: MLS_getLedgers, MLS_createLedger, MLS_updateLedger, MLS_deleteLedger, MLS_getLedgerById, MLS_getCollaborators, MLS_getPermissions
-      // BM: BM_getBudgets, BM_createBudget, BM_getBudgetDetail, BM_updateBudget, BM_deleteBudget
-      MLS = require('./13. Replit_Module code_BL/1351. MLS.js'); // 修正為正確路徑
-      moduleStatus.MLS = true;
-      console.log('✅ MLS (帳本管理) 模組載入成功');
-    } catch (error) {
-      console.error('❌ MLS 模組載入失敗:', error.message);
-      moduleStatus.MLS = false;
-    }
+  // 階段四：MLS模組已完全移除，功能已整合至CM
+  console.log('📦 P2階段模組 - MLS功能已完全移除，整合至CM模組...');
+  moduleStatus.MLS = false; // MLS模組不再單獨存在
+  if (moduleStatus.CM) {
+    console.log('✅ MLS功能 (已整合至CM協作與帳本管理模組) 可用');
+  } else {
+    console.log('❌ MLS功能不可用 (CM模組載入失敗)');
+  }
+
 
     try {
       console.log('📦 載入P2階段模組 - BM (預算管理)...');
@@ -332,17 +327,18 @@ async function loadBLModules() {
     console.log(`   ${status ? '✅' : '❌'} ${module.toUpperCase()}: ${status ? '已載入' : '載入失敗'}`);
   });
 
-  // P2階段模組評估
-  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.MLS && moduleStatus.BM && moduleStatus.CM) {
-    console.log('🎉 P2階段模組完整載入：Firebase + AM + BK + MLS + BM + CM');
-    console.log('🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、帳本管理和協作管理功能');
-  } else if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK) {
-    console.log('🎉 P1-2基礎模組正常載入：Firebase + AM + BK');
-    console.log('⚠️ P2階段新功能模組狀態：MLS(' + (moduleStatus.MLS ? '✅' : '❌') + '), BM(' + (moduleStatus.BM ? '✅' : '❌') + '), CM(' + (moduleStatus.CM ? '✅' : '❌') + ')');
-    console.log('🚀 系統已準備好處理P1-2基礎功能，P2功能視模組載入狀況而定');
-  } else {
-    console.log('❌ 關鍵模組載入失敗：需執行進一步調查');
-  }
+  // P2階段模組評估 - 階段四完成：MLS功能完全整合至CM
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM) {
+      console.log('🎉 P2階段模組完整載入：Firebase + AM + BK + CM(完整帳本與協作管理) + BM');
+      console.log('🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、帳本管理和協作管理功能');
+      console.log('✨ DCN-0021階段四完成：MLS模組已完全移除，功能完整整合至CM模組');
+    } else if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK) {
+      console.log('🎉 P1-2基礎模組正常載入：Firebase + AM + BK');
+      console.log('⚠️ P2階段新功能模組狀態：CM(完整帳本管理)(' + (moduleStatus.CM ? '✅' : '❌') + '), BM(' + (moduleStatus.BM ? '✅' : '❌') + ')');
+      console.log('🚀 系統已準備好處理P1-2基礎功能，P2功能視模組載入狀況而定');
+    } else {
+      console.log('❌ 關鍵模組載入失敗：需執行進一步調查');
+    }
 
 
   const successCount = Object.values(moduleStatus).filter(Boolean).length;
@@ -643,20 +639,18 @@ app.get('/', (req, res) => {
       total: 34
     },
     p2_endpoints: {
-      mls_ledgers: 5, // 帳本管理
       bm_budgets: 5, // 預算管理
       cm_collaboration: 4, // 協作管理 (邀請, 移除, 更新權限, 取得列表)
-      total: 14
+      total: 9
     },
-    total_endpoints: 34 + 14, // P1-2 + P2
+    total_endpoints: 34 + 9, // P1-2 + P2
     modules: {
       AM: !!AM ? 'loaded' : 'not loaded',
       BK: !!BK ? 'loaded' : 'not loaded',
       DL: !!DL ? 'loaded' : 'not loaded',
       FS: !!FS ? 'loaded' : 'not loaded',
-      MLS: !!MLS ? 'loaded' : 'not loaded', // P2 模組
       BM: !!BM ? 'loaded' : 'not loaded',  // P2 模組
-      CM: !!CM ? 'loaded' : 'not loaded'   // P2 模組
+      CM: !!CM ? 'loaded' : 'not loaded'   // P2 模組 - 包含帳本管理功能
     },
     supported_modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding']
   }, 'ASL統一回應格式運行正常');
@@ -676,9 +670,8 @@ app.get('/health', (req, res) => {
       BK: !!BK ? 'ready' : 'unavailable',
       DL: !!DL ? 'ready' : 'unavailable',
       FS: !!FS ? 'ready' : 'unavailable',
-      MLS: !!MLS ? 'ready' : 'unavailable', // P2 模組
       BM: !!BM ? 'ready' : 'unavailable',  // P2 模組
-      CM: !!CM ? 'ready' : 'unavailable'   // P2 模組
+      CM: !!CM ? 'ready_with_ledger_mgmt' : 'unavailable'   // P2 模組 - 包含帳本管理功能
     },
     dcn_0015_phase1: {
       unified_response_implemented: true,
@@ -697,7 +690,6 @@ app.get('/health', (req, res) => {
     },
     stage2_enhancements: {
       collaboration_management_added: !!CM,
-      ledger_management_added: !!MLS,
       budget_management_added: !!BM
     },
     stage1_fix: {
@@ -1619,18 +1611,18 @@ app.delete('/api/v1/transactions/:id/attachments/:attachmentId', async (req, res
  * 實作階段二規劃的帳本(Ledgers)和預算(Budgets)相關API端點
  */
 
-// =============== MLS.js 帳本管理 API 轉發 ===============
+// =============== CM.js 協作與帳本管理 API 轉發 ===============
 
 // 1. 取得帳本列表
 app.get('/api/v1/ledgers', async (req, res) => {
   try {
-    console.log('📖 ASL轉發: 取得帳本列表 -> MLS_getLedgers');
+    console.log('📖 ASL轉發: 取得帳本列表 -> CM_getLedgers');
 
-    if (!MLS || typeof MLS.MLS_getLedgers !== 'function') {
-      return res.apiError('MLS_getLedgers函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    if (!CM || typeof CM.CM_getLedgers !== 'function') {
+      return res.apiError('CM_getLedgers函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await MLS.MLS_getLedgers(req.query);
+    const result = await CM.CM_getLedgers(req.query);
 
     if (result.success) {
       res.apiSuccess(result.data, result.message);
@@ -1647,13 +1639,13 @@ app.get('/api/v1/ledgers', async (req, res) => {
 // 2. 建立帳本
 app.post('/api/v1/ledgers', async (req, res) => {
   try {
-    console.log('📝 ASL轉發: 建立帳本 -> MLS_createLedger');
+    console.log('📝 ASL轉發: 建立帳本 -> CM_createLedger');
 
-    if (!MLS || typeof MLS.MLS_createLedger !== 'function') {
-      return res.apiError('MLS_createLedger函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    if (!CM || typeof CM.CM_createLedger !== 'function') {
+      return res.apiError('CM_createLedger函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await MLS.MLS_createLedger(req.body);
+    const result = await CM.CM_createLedger(req.body);
 
     if (result.success) {
       res.apiSuccess(result.data, result.message);
@@ -1670,13 +1662,13 @@ app.post('/api/v1/ledgers', async (req, res) => {
 // 3. 取得帳本詳情
 app.get('/api/v1/ledgers/:id', async (req, res) => {
   try {
-    console.log('🔍 ASL轉發: 取得帳本詳情 -> MLS_getLedgerById');
+    console.log('🔍 ASL轉發: 取得帳本詳情 -> CM_getLedgerById');
 
-    if (!MLS || typeof MLS.MLS_getLedgerById !== 'function') {
-      return res.apiError('MLS_getLedgerById函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    if (!CM || typeof CM.CM_getLedgerById !== 'function') {
+      return res.apiError('CM_getLedgerById函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await MLS.MLS_getLedgerById(req.params.id, req.query);
+    const result = await CM.CM_getLedgerById(req.params.id, req.query);
 
     if (result.success) {
       res.apiSuccess(result.data, result.message);
@@ -1693,13 +1685,13 @@ app.get('/api/v1/ledgers/:id', async (req, res) => {
 // 4. 更新帳本
 app.put('/api/v1/ledgers/:id', async (req, res) => {
   try {
-    console.log('✏️ ASL轉發: 更新帳本 -> MLS_updateLedger');
+    console.log('✏️ ASL轉發: 更新帳本 -> CM_updateLedger');
 
-    if (!MLS || typeof MLS.MLS_updateLedger !== 'function') {
-      return res.apiError('MLS_updateLedger函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    if (!CM || typeof CM.CM_updateLedger !== 'function') {
+      return res.apiError('CM_updateLedger函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await MLS.MLS_updateLedger(req.params.id, req.body);
+    const result = await CM.CM_updateLedger(req.params.id, req.body);
 
     if (result.success) {
       res.apiSuccess(result.data, result.message);
@@ -1716,13 +1708,13 @@ app.put('/api/v1/ledgers/:id', async (req, res) => {
 // 5. 刪除帳本
 app.delete('/api/v1/ledgers/:id', async (req, res) => {
   try {
-    console.log('🗑️ ASL轉發: 刪除帳本 -> MLS_deleteLedger');
+    console.log('🗑️ ASL轉發: 刪除帳本 -> CM_deleteLedger');
 
-    if (!MLS || typeof MLS.MLS_deleteLedger !== 'function') {
-      return res.apiError('MLS_deleteLedger函數不存在', 'MLS_FUNCTION_NOT_FOUND', 503);
+    if (!CM || typeof CM.CM_deleteLedger !== 'function') {
+      return res.apiError('CM_deleteLedger函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await MLS.MLS_deleteLedger(req.params.id, req.query);
+    const result = await CM.CM_deleteLedger(req.params.id, req.query);
 
     if (result.success) {
       res.apiSuccess(result.data, result.message);
@@ -1739,40 +1731,20 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
 // 6. 取得協作者列表 - 符合8020規範
 app.get('/api/v1/ledgers/:id/collaborators', async (req, res) => {
   try {
-    console.log('👥 ASL轉發: 取得協作者列表 -> CM_getMemberList');
+    console.log('👥 ASL轉發: 取得協作者列表 -> CM_getCollaborators');
 
-    // 檢查CM模組是否載入
-    if (!global.CM && !require.cache[require.resolve('./13. Replit_Module code_BL/1313. CM.js')]) {
-      try {
-        global.CM = require('./13. Replit_Module code_BL/1313. CM.js');
-      } catch (cmLoadError) {
-        console.error('❌ CM模組載入失敗:', cmLoadError.message);
-        return res.apiError('CM協作管理模組不可用', 'CM_MODULE_NOT_AVAILABLE', 503);
-      }
+    if (!CM || typeof CM.CM_getCollaborators !== 'function') {
+      return res.apiError('CM_getCollaborators函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
+    const result = await CM.CM_getCollaborators(req.params.id, {
+      requesterId: req.query.userId || req.body.userId || 'system'
+    });
 
-    if (!CM || typeof CM.CM_getMemberList !== 'function') {
-      return res.apiError('CM_getMemberList函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const ledgerId = req.params.id;
-    const requesterId = req.query.userId || req.body.userId || 'system';
-    const includePermissions = req.query.includePermissions !== 'false';
-
-    console.log(`🎯 協作者查詢: 帳本=${ledgerId}, 請求者=${requesterId}`);
-
-    const result = await CM.CM_getMemberList(ledgerId, requesterId, includePermissions);
-
-    if (result.members) {
-      res.apiSuccess({
-        collaborators: result.members,
-        totalCount: result.totalCount,
-        permissions: result.permissions
-      }, '協作者列表取得成功');
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError('協作者列表取得失敗', 'GET_COLLABORATORS_ERROR', 400);
+      res.apiError(result.message, result.error?.code || 'GET_COLLABORATORS_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
@@ -1784,50 +1756,21 @@ app.get('/api/v1/ledgers/:id/collaborators', async (req, res) => {
 // 7. 邀請協作者 - 符合8020規範
 app.post('/api/v1/ledgers/:id/invitations', async (req, res) => {
   try {
-    console.log('📧 ASL轉發: 邀請協作者 -> CM_inviteMember');
+    console.log('📧 ASL轉發: 邀請協作者 -> CM_inviteCollaborator');
 
-    // 檢查CM模組是否載入
-    if (!global.CM && !require.cache[require.resolve('./13. Replit_Module code_BL/1313. CM.js')]) {
-      try {
-        global.CM = require('./13. Replit_Module code_BL/1313. CM.js');
-      } catch (cmLoadError) {
-        console.error('❌ CM模組載入失敗:', cmLoadError.message);
-        return res.apiError('CM協作管理模組不可用', 'CM_MODULE_NOT_AVAILABLE', 503);
-      }
+    if (!CM || typeof CM.CM_inviteCollaborator !== 'function') {
+      return res.apiError('CM_inviteCollaborator函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
+    const result = await CM.CM_inviteCollaborator(req.params.id, req.body, {
+      inviterId: req.body.inviterId || req.body.operatorId || 'system'
+    });
 
-    if (!CM || typeof CM.CM_inviteMember !== 'function') {
-      return res.apiError('CM_inviteMember函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message, result.error?.code || 'INVITE_COLLABORATOR_ERROR', 400, result.error?.details);
     }
-
-    const ledgerId = req.params.id;
-    const inviterId = req.body.inviterId || req.body.operatorId || 'system';
-    const invitations = req.body.invitations || [req.body];
-
-    console.log(`🎯 協作者邀請: 帳本=${ledgerId}, 邀請者=${inviterId}, 邀請數量=${invitations.length}`);
-
-    const results = [];
-
-    for (const invitation of invitations) {
-      const result = await CM.CM_inviteMember(
-        ledgerId,
-        inviterId,
-        invitation.inviteeInfo || { email: invitation.email, displayName: invitation.displayName },
-        invitation.role || invitation.permissionLevel || 'member'
-      );
-      results.push(result);
-    }
-
-    const successCount = results.filter(r => r.success).length;
-
-    res.apiSuccess({
-      results: results,
-      totalInvitations: invitations.length,
-      successCount: successCount,
-      failedCount: invitations.length - successCount
-    }, `協作者邀請完成：${successCount}/${invitations.length} 成功`);
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (invite collaborators):', error);
@@ -1840,33 +1783,19 @@ app.put('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
   try {
     console.log('👥✏️ ASL轉發: 更新協作者權限 -> CM_setMemberPermission');
 
-    // 檢查CM模組是否載入
-    if (!global.CM && !require.cache[require.resolve('./13. Replit_Module code_BL/1313. CM.js')]) {
-      try {
-        global.CM = require('./13. Replit_Module code_BL/1313. CM.js');
-      } catch (cmLoadError) {
-        console.error('❌ CM模組載入失敗:', cmLoadError.message);
-        return res.apiError('CM協作管理模組不可用', 'CM_MODULE_NOT_AVAILABLE', 503);
-      }
-    }
-
-    const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
-
     if (!CM || typeof CM.CM_setMemberPermission !== 'function') {
       return res.apiError('CM_setMemberPermission函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const ledgerId = req.params.id;
-    const targetUserId = req.params.userId;
-    const operatorId = req.body.operatorId || req.query.operatorId || 'system';
-    const newPermission = req.body.permission || req.body.role || 'member';
-
-    console.log(`🎯 協作權限更新: 帳本=${ledgerId}, 目標用戶=${targetUserId}, 新權限=${newPermission}`);
-
-    const result = await CM.CM_setMemberPermission(ledgerId, targetUserId, newPermission, operatorId);
+    const result = await CM.CM_setMemberPermission(
+      req.params.id,
+      req.params.userId,
+      req.body.permission || req.body.role || 'member',
+      req.body.operatorId || req.query.operatorId || 'system'
+    );
 
     if (result.success) {
-      res.apiSuccess(result.data, result.message || '協作者權限更新成功');
+      res.apiSuccess(result, result.message || '協作者權限更新成功');
     } else {
       res.apiError(result.message || '協作者權限更新失敗', result.error?.code || 'UPDATE_COLLABORATOR_PERMISSION_ERROR', 400, result.error?.details);
     }
@@ -1879,38 +1808,19 @@ app.put('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
 // 9. 移除協作者 - 符合8020規範
 app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
   try {
-    console.log('👥🗑️ ASL轉發: 移除協作者 -> CM_removeMember');
+    console.log('👥🗑️ ASL轉發: 移除協作者 -> CM_removeCollaborator');
 
-    // 檢查CM模組是否載入
-    if (!global.CM && !require.cache[require.resolve('./13. Replit_Module code_BL/1313. CM.js')]) {
-      try {
-        global.CM = require('./13. Replit_Module code_BL/1313. CM.js');
-      } catch (cmLoadError) {
-        console.error('❌ CM模組載入失敗:', cmLoadError.message);
-        return res.apiError('CM協作管理模組不可用', 'CM_MODULE_NOT_AVAILABLE', 503);
-      }
+    if (!CM || typeof CM.CM_removeCollaborator !== 'function') {
+      return res.apiError('CM_removeCollaborator函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
-
-    if (!CM || typeof CM.CM_removeMember !== 'function') {
-      return res.apiError('CM_removeMember函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const ledgerId = req.params.id;
-    const targetUserId = req.params.userId;
-    const operatorId = req.body.operatorId || req.query.operatorId || 'system';
-    const removeType = req.body.removeType || 'kicked';
-
-    console.log(`🎯 移除協作者: 帳本=${ledgerId}, 目標用戶=${targetUserId}, 類型=${removeType}`);
-
-    const result = await CM.CM_removeMember(ledgerId, targetUserId, operatorId, removeType);
+    const result = await CM.CM_removeCollaborator(req.params.id, req.params.userId, {
+      removerId: req.body.operatorId || req.query.operatorId || 'system',
+      reason: req.body.removeType || 'kicked'
+    });
 
     if (result.success) {
-      res.apiSuccess({
-        removedUser: result.removedUser,
-        newMemberCount: result.newMemberCount
-      }, '協作者移除成功');
+      res.apiSuccess(result.data, result.message);
     } else {
       res.apiError(result.message || '協作者移除失敗', result.error?.code || 'REMOVE_COLLABORATOR_ERROR', 400, result.error?.details);
     }
@@ -1924,43 +1834,18 @@ app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
 // 10. 取得權限狀態 - 符合8020規範
 app.get('/api/v1/ledgers/:id/permissions', async (req, res) => {
   try {
-    console.log('🔐 ASL轉發: 取得權限狀態 -> CM_getPermissionMatrix');
+    console.log('🔐 ASL轉發: 取得權限狀態 -> CM_getPermissions');
 
-    // 檢查CM模組是否載入
-    if (!global.CM && !require.cache[require.resolve('./13. Replit_Module code_BL/1313. CM.js')]) {
-      try {
-        global.CM = require('./13. Replit_Module code_BL/1313. CM.js');
-      } catch (cmLoadError) {
-        console.error('❌ CM模組載入失敗:', cmLoadError.message);
-        return res.apiError('CM協作管理模組不可用', 'CM_MODULE_NOT_AVAILABLE', 503);
-      }
+    if (!CM || typeof CM.CM_getPermissions !== 'function') {
+      return res.apiError('CM_getPermissions函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const CM = global.CM || require('./13. Replit_Module code_BL/1313. CM.js');
+    const result = await CM.CM_getPermissions(req.params.id, req.query);
 
-    if (!CM || typeof CM.CM_getPermissionMatrix !== 'function') {
-      return res.apiError('CM_getPermissionMatrix函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
-    }
-
-    const ledgerId = req.params.id;
-    const userId = req.query.userId || 'system';
-    const operation = req.query.operation || 'read';
-
-    console.log(`🎯 權限檢查: 帳本=${ledgerId}, 用戶=${userId}, 操作=${operation}`);
-
-    const result = await CM.CM_getPermissionMatrix(ledgerId, userId);
-
-    if (result.permissionMatrix) {
-      res.apiSuccess({
-        hasAccess: result.allowedOperations && result.allowedOperations.length > 0,
-        permissions: result.permissionMatrix,
-        allowedOperations: result.allowedOperations,
-        currentLevel: result.currentLevel,
-        canManagePermissions: result.canManagePermissions,
-        reason: result.allowedOperations && result.allowedOperations.includes(operation) ? 'allowed' : 'denied'
-      }, '權限狀態取得成功');
+    if (result.success) {
+      res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError('權限狀態取得失敗', 'GET_PERMISSIONS_ERROR', 400);
+      res.apiError(result.message, result.error?.code || 'GET_PERMISSIONS_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
@@ -2190,24 +2075,23 @@ app.use((error, req, res, next) => {
     console.log(`🔗 健康檢查: http://0.0.0.0:${PORT}/health`);
     console.log(`🎯 DCN-0015第二階段完成: ASL格式驗證強化`);
     // P1-2範圍API端點: AM(19) + BK(15) = 34個端點
-    // P2範圍API端點: 帳本(5) + 預算(5) + 協作(4) = 14個端點
-    // 總計: 34 + 14 = 48個端點
-    console.log(`📋 P1-2 + P2 API端點: AM(19) + BK(15) + MLS(5) + BM(5) + CM(4) = 48個端點`);
+    // P2範圍API端點: 預算(5) + 協作(4) = 9個端點
+    // 總計: 34 + 9 = 43個端點
+    console.log(`📋 P1-2 + P2 API端點: AM(19) + BK(15) + BM(5) + CM(4) = 43個端點`);
 
     // 第二階段完成狀態報告
     const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
     const amStatus = moduleStatus.AM ? '✅' : '❌';
-    const mlsStatus = moduleStatus.MLS ? '✅' : '❌';
     const bmStatus = moduleStatus.BM ? '✅' : '❌';
     const cmStatus = moduleStatus.CM ? '✅' : '❌';
-    const overallStatus = moduleStatus.firebase && moduleStatus.AM && moduleStatus.MLS && moduleStatus.BM && moduleStatus.CM ? '完全就緒' : '部分就緒';
+    const overallStatus = moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM ? '完全就緒' : '部分就緒';
 
     console.log(`🔧 第二階段完成狀態: ${overallStatus}`);
-    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), MLS(${mlsStatus}), BM(${bmStatus}), CM(${cmStatus})`);
+    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), BM(${bmStatus}), CM(${cmStatus})`);
     console.log(`✨ 容錯機制完全移除: 100%信任BL層標準格式`);
     console.log(`🎉 第二階段修正完成: 協作管理API端點補完`);
 
-    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.MLS && moduleStatus.BM && moduleStatus.CM) {
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM) {
       console.log('🚀 ASL v2.1.6已完全就緒，第二階段目標達成');
     } else if (!moduleStatus.CM) {
       console.log('⚠️ CM (協作管理) 模組載入失敗，協作管理功能不可用');
@@ -2240,13 +2124,13 @@ process.on('SIGINT', () => {
 });
 
 console.log('🎉 LCAS ASL階段二升級完成：協作管理API端點補完！');
-  console.log(`📦 P1-2 + P2 範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'}), MLS(${moduleStatus.MLS ? '✅' : '❌'}), BM(${moduleStatus.BM ? '✅' : '❌'}), CM(${moduleStatus.CM ? '✅' : '❌'})`);
-  console.log('🔧 純轉發機制: 48個API端點 -> 統一使用BL層標準格式');
+  console.log(`📦 P1-2 + P2 範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'}), BM(${moduleStatus.BM ? '✅' : '❌'}), CM(${moduleStatus.CM ? '✅' : '❌'})`);
+  console.log('🔧 純轉發機制: 43個API端點 -> 統一使用BL層標準格式');
   console.log('✨ 階段二升級: 協作管理API端點補完，符合8020文件規範');
   console.log('🎯 協作管理功能: 帳本創建/讀取/更新/刪除，協作者管理（邀請/移除/權限更新），衝突檢測與解決');
   console.log('🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict');
 
-  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.MLS && moduleStatus.BM && moduleStatus.CM) {
+  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM) {
     console.log('🚀 階段二升級完成，ASL v2.1.6完全就緒！');
     console.log('🌐 ASL服務器已啟動於 Port 5000');
   } else if (!moduleStatus.CM) {
