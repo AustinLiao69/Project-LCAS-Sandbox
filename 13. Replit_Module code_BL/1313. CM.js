@@ -105,10 +105,11 @@ function CM_logWarning(message, operation, userId, errorCode = "", errorDetails 
 }
 
 /**
- * 00. 初始化協作系統 - 階段三修正
- * @version 2025-11-06-V2.0.0
- * @date 2025-11-06
- * @description 為帳本建立完整的協作架構，階段三修正：直接使用Firestore確保協作帳本建立
+ * 00. 初始化協作系統 - 階段二純淨性驗證
+ * @version 2025-11-11-V2.1.0
+ * @date 2025-11-11
+ * @description 為帳本建立完整的協作架構，階段二驗證：確保只操作collaborations集合，符合職責分離原則
+ * @purity_check 階段二驗證：此函數只操作collaborations集合，不觸碰ledgers集合
  */
 async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType = 'shared', initialSettings = {}) {
   const functionName = "CM_initializeCollaboration";
@@ -151,7 +152,7 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
         CM_logInfo(`階段二修正：擁有者已驗證加入現有協作帳本 - ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
       }
     } else {
-      // 階段三修正：直接建立協作主集合文檔
+      // 階段二純淨性驗證：只建立協作主集合文檔，絕不觸碰ledgers集合
       const currentTime = admin.firestore.Timestamp.now();
       const ownerMember = {
         memberId: `member_${Date.now()}_${ownerInfo.userId}`,
@@ -185,7 +186,7 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
         updatedAt: admin.firestore.Timestamp.now()
       };
 
-      // 階段一修正：確保使用正確的Firebase集合路徑並增強寫入驗證
+      // 階段二純淨性驗證：只使用collaborations集合，符合職責分離原則
       const collaborationRef = db.collection('collaborations').doc(ledgerId);
 
       try {
