@@ -9,15 +9,14 @@ const admin = require('firebase-admin');
 const WebSocket = require('ws');
 
 // 引入依賴模組
-let DL, AM, DD, BK, LINE_OA, FS; // Removed MLS here
+let DL, AM, DD, BK, LINE_OA, FS;
 try {
   DL = require('./1310. DL.js');
-  // MLS = require('./1351. MLS.js'); // Commented out MLS
-  // AM = require('./1309. AM.js');
+  AM = require('./1309. AM.js');
   DD = require('./1331. DD1.js');
   BK = require('./1301. BK.js');
-  // LINE_OA = require('./1320. WH.js');
-  FS = require('./1311. FS.js'); // FS模組包含完整的Firestore操作函數 - Corrected path
+  LINE_OA = require('./1320. WH.js');
+  FS = require('./1311. FS.js'); // FS模組包含完整的Firestore操作函數
 } catch (error) {
   console.warn('CM模組依賴載入警告:', error.message);
 }
@@ -2737,4 +2736,4 @@ CM_initialize().catch(error => {
   console.error('CM 模組自動初始化失敗:', error);
 });
 
-console.log('✅ CM 協作與帳本管理模組載入完成 - 階段一整合：CM_initializeCollaboration功能已整合至CM_createSharedLedger');
+console.log('✅ CM 協作與帳本管理模組載入完成 - 階段一整合：CM功能已整合完成');
