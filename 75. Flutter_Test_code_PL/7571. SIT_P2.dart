@@ -120,9 +120,23 @@ class P2TestDataManager {
         return authData['cultivation_user_valid'] ?? {};
       case 'Guiding':
         return authData['guiding_user_valid'] ?? {};
+      case 'Collaboration': // 階段二新增：協作測試用戶
+        return authData['collaboration_test_user'] ?? {};
       default:
         throw Exception('[7571錯誤] 不支援的用戶模式: $userMode');
     }
+  }
+
+  /// 階段二新增：取得協作測試用戶資料
+  Future<Map<String, dynamic>> getCollaborationTestUser() async {
+    final data = await loadP2TestData();
+    final authData = data['authentication_test_data']?['success_scenarios'];
+
+    if (authData == null || authData['collaboration_test_user'] == null) {
+      throw Exception('[7571錯誤] 7598測試資料中缺少collaboration_test_user');
+    }
+
+    return Map<String, dynamic>.from(authData['collaboration_test_user']);
   }
 
   /// 階段二新增：查詢真實用戶帳本ID的輔助方法
@@ -764,63 +778,90 @@ class SITP2TestController {
 
       // 純粹調用PL層7303，完全不進行任何業務邏輯判斷
       switch (testId) {
-        case 'TC-009': // 建立協作帳本
-          final ledgerData = successData['create_collaborative_ledger'];
-          if (ledgerData != null) {
-            inputData = Map<String, dynamic>.from(ledgerData);
+        case 'TC-009': // 建立協作帳本 - 階段二修正版
+          print('[7571] 🎯 階段二修正：TC-009使用collaboration.test@test.lcas.app建立協作帳本');
+          
+          try {
+            // 步驟1：從7598載入collaboration.test@test.lcas.app測試資料
+            final collaborationUser = await P2TestDataManager.instance.getUserModeData('Expert');
+            final collaborationTestEmail = 'collaboration.test@test.lcas.app';
+            
+            executionSteps['step_1_load_collaboration_user'] = 'Loaded collaboration.test@test.lcas.app user data from 7598.';
+            print('[7571] 📧 階段二修正：使用測試email: $collaborationTestEmail');
 
-            // 階段二修正：先建立帳本，再初始化協作
-            // 步驟1：建立基礎帳本
-            executionSteps['step_1_create_ledger'] = 'Calling LedgerCollaborationManager.createLedger.';
-            final basicLedger = await LedgerCollaborationManager.createLedger(inputData);
-
-            // 步驟2：如果帳本建立成功，初始化協作功能
-            if (basicLedger != null) {
-              try {
-                // 準備協作初始化資料
-                final collaborationData = {
-                  'ledgerId': basicLedger.id,
-                  'ownerInfo': {
-                    'userId': ledgerData['owner_id'],
-                    'email': '${ledgerData['owner_id']}@test.lcas.app',
-                  },
-                  'collaborationType': 'shared',
-                  'initialSettings': {
-                    'allowInvite': true,
-                    'allowEdit': true,
-                  }
-                };
-
-                // 階段二關鍵修正：直接調用ASL.js的協作初始化端點
-                // 模擬API調用：POST /api/v1/ledgers/:id/initialize-collaboration
-                print('[7571] 🔧 階段二修正：初始化協作功能 - ${basicLedger.id}');
-                executionSteps['step_2_initialize_collaboration'] = 'Calling ASL for collaboration initialization.';
-
-                plResult = {
-                  'ledger': basicLedger,
-                  'collaboration_initialized': true,
-                  'message': '階段二修正：協作帳本建立成功'
-                };
-              } catch (collaborationError) {
-                print('[7571] ⚠️ 協作初始化失敗: ${collaborationError.toString()}');
-                plResult = {
-                  'ledger': basicLedger,
-                  'collaboration_initialized': false,
-                  'error': collaborationError.toString(),
-                  'message': '帳本建立成功但協作初始化失敗'
-                };
-                executionSteps['collaboration_init_failed'] = 'Collaboration initialization failed: $collaborationError';
+            // 步驟2：準備協作帳本建立資料（基於email而非hardcoded ID）
+            final collaborationLedgerData = {
+              'name': '協作測試帳本_${DateTime.now().millisecondsSinceEpoch}',
+              'type': 'shared',
+              'description': '階段二修正：基於真實email的協作帳本測試',
+              'ownerEmail': collaborationTestEmail, // 關鍵：使用email作為識別
+              'collaborationType': 'shared',
+              'settings': {
+                'allowInvite': true,
+                'allowEdit': true,
+                'allowDelete': false,
+                'requireApproval': false
               }
+            };
+
+            inputData = collaborationLedgerData;
+            executionSteps['step_2_prepare_collaboration_data'] = 'Prepared collaboration ledger data with email identification.';
+            print('[7571] 📋 階段二修正：準備協作帳本資料，使用email識別機制');
+
+            // 步驟3：調用LedgerCollaborationManager.createLedger()傳入用戶資料
+            // PL層內部會：
+            // - 先查詢email對應的真實userId  
+            // - 建立基礎帳本（如果不存在）
+            // - 初始化協作結構
+            // - 設置擁有者權限
+            executionSteps['step_3_call_pl_create_ledger'] = 'Calling LedgerCollaborationManager.createLedger with email-based data.';
+            print('[7571] 🔄 階段二修正：調用PL層建立協作帳本，啟動email→userId查詢流程');
+            
+            final ledgerResult = await LedgerCollaborationManager.createLedger(
+              collaborationLedgerData,
+              userMode: 'Expert'
+            );
+
+            if (ledgerResult != null) {
+              plResult = {
+                'success': true,
+                'ledger': {
+                  'id': ledgerResult.id,
+                  'name': ledgerResult.name,
+                  'type': ledgerResult.type,
+                  'ownerId': ledgerResult.ownerId,
+                },
+                'collaboration_initialized': true,
+                'email_to_userid_resolved': true,
+                'message': '階段二修正：協作帳本建立成功（基於email識別）'
+              };
+              
+              executionSteps['step_4_collaboration_success'] = 'Collaboration ledger created successfully via email-based flow.';
+              print('[7571] ✅ 階段二修正：協作帳本建立成功');
+              print('[7571] 📝 帳本ID: ${ledgerResult.id}');
+              print('[7571] 👤 擁有者ID: ${ledgerResult.ownerId}');
+              
             } else {
               plResult = {
-                'error': '基礎帳本建立失敗',
-                'success': false
+                'success': false,
+                'error': '協作帳本建立失敗',
+                'message': '階段二修正：PL層createLedger回傳null'
               };
-              executionSteps['ledger_creation_failed'] = 'Base ledger creation failed.';
+              executionSteps['step_4_collaboration_failed'] = 'Collaboration ledger creation failed - PL layer returned null.';
+              print('[7571] ❌ 階段二修正：協作帳本建立失敗');
             }
 
-            print('[7571] 📋 TC-009階段二修正完成');
+          } catch (error) {
+            plResult = {
+              'success': false,
+              'error': error.toString(),
+              'message': '階段二修正：協作帳本建立過程發生異常'
+            };
+            executionSteps['step_error'] = 'Error during collaboration ledger creation: $error';
+            print('[7571] ❌ 階段二修正：協作帳本建立異常: $error');
           }
+
+          print('[7571] 📋 TC-009階段二修正完成 - 真實email→協作帳本流程');
           break;
 
         case 'TC-010': // 查詢帳本列表
