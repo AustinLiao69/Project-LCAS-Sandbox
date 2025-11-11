@@ -8,6 +8,68 @@
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+
+根據您的描述和附件圖片，我分析了協作帳本測試的問題：
+問題分析
+主要問題：協作帳本創建邏輯錯誤
+從附件可以看到：
+1.	ledgers集合中已經有 user_collaboration.test@test.lcas.app 個人帳本
+2.	collaborations集合中有 ledger_1762832499751_ecy34duhf 協作結構
+問題是 TC-009 測試執行時：
+•	CM_createLedger() 在 ledgers 集合創建了新帳本 ledger_1762832499751_ecy34duhf
+•	然後才在 collaborations 集合創建對應的協作結構
+根本原因
+CM_createLedger() 混合了兩個職責：
+1.	個人帳本創建：應該在 ledgers 集合
+2.	協作帳本創建：應該只在 collaborations 集合
+Insight
+當前架構把協作帳本當作"個人帳本+協作結構"的組合，但實際上協作帳本應該是獨立的概念，直接存在於 collaborations 集合中，不需要在 ledgers 中創建對應帳本。
+=>CM不需要創建個人帳本，創建個人帳本是AM的職責，這個邏輯根本不應該存在
+
+
+解決方案
+需要修正 CM_createLedger() 的邏輯：
+•	當 type: 'shared' 時，只在 collaborations 集合創建文檔
+•	不要在 ledgers 集合創建任何文檔
+•	協作帳本的 ID 應該直接作為 collaborations 集合的文檔 ID
+Fork Branch 測試方案
+要像 GitHub 一樣 fork 出測試分支，您可以：
+方案1：使用 Replit Projects (推薦)
+1.	在當前 Repl 中點擊右上角的 Fork 按鈕
+2.	選擇 "Fork & start a Project" 選項
+3.	這會創建一個新的 fork 供您獨立測試
+4.	完成測試後可以將更改合併回主分支
+方案2：創建測試專用 Firebase 環境
+1.	在當前 Repl 中創建測試分支邏輯
+2.	使用不同的 Firebase collection 前綴（如 test_ledgers, test_collaborations）
+3.	通過環境變量控制使用哪個集合前綴
+建議使用方案1，因為它提供完整的代碼隔離，符合您的 GitHub fork 需求。
+
+
+
+------------------------------------------
+20251111. 通過SIT_P2(7571)
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+------------------------------------------
+20251111. 通過SIT_P2(7571)
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+我們目前請專注在協作帳本的部分，預算的部分之後再處理。關於協作帳本測試問題：
+1. 請參考附件圖片，現在的狀況是使用者已經用collaboration.test@test.lcas.app註冊並且已經在ledgers集合之下創建了user_collaboration.test@test.lcas.app這個帳本。執行7571的創建協作帳本時，不應該在ledgers集合下再創建一個帳本，而是要在collaborations創建帳本才對。
+
+2. 我想要像github一樣fork一個branch 出來單獨測試，請問我要如何作到？
+
+
+
+
+------------------------------------------
+20251111. 通過SIT_P2(7571)
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 我理解你的需求。根據你的回覆，我需要修改階段二的action plan來符合真實情境的測試流程。
 🎯 更新後的解決方案提案（修正版）
 階段一：建立APL.dart協作轉接機制（不違反職責）
