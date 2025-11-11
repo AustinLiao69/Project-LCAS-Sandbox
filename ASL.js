@@ -168,8 +168,8 @@ async function loadBLModules() {
     BK: false,
     DL: false,
     FS: false,
-    BM: false,  // P2 模組：預算管理 (Budgets)
-    CM: false   // P2 模組：協作管理 (Collaboration Management)
+    BM: false,  // P2 模組：預算管理
+    CM: false   // P2 模組：協作與帳本管理
   };
 
   // 只有在Firebase成功初始化後才載入AM模組
@@ -289,14 +289,8 @@ async function loadBLModules() {
     console.error('❌ FS 模組載入失敗:', error.message);
   }
 
-  // 階段四：MLS模組已完全移除，功能已整合至CM
-  console.log('📦 P2階段模組 - MLS功能已完全移除，整合至CM模組...');
-  moduleStatus.MLS = false; // MLS模組不再單獨存在
-  if (moduleStatus.CM) {
-    console.log('✅ MLS功能 (已整合至CM協作與帳本管理模組) 可用');
-  } else {
-    console.log('❌ MLS功能不可用 (CM模組載入失敗)');
-  }
+  // 階段四完成：原MLS功能已完全整合至CM模組
+  console.log('📦 P2階段模組 - 帳本與協作管理功能統一由CM模組提供...');
 
 
     try {
@@ -321,20 +315,22 @@ async function loadBLModules() {
     }
 
 
-  // 階段三修復：詳細模組載入狀態報告
-  console.log('📋 階段三模組載入狀態報告:');
+  // 模組載入狀態報告
+  console.log('📋 模組載入狀態報告:');
   Object.entries(moduleStatus).forEach(([module, status]) => {
-    console.log(`   ${status ? '✅' : '❌'} ${module.toUpperCase()}: ${status ? '已載入' : '載入失敗'}`);
+    if (module !== 'MLS') { // 跳過已廢棄的MLS模組
+      console.log(`   ${status ? '✅' : '❌'} ${module.toUpperCase()}: ${status ? '已載入' : '載入失敗'}`);
+    }
   });
 
-  // P2階段模組評估 - 階段四完成：MLS功能完全整合至CM
+  // P2階段模組評估
     if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM) {
-      console.log('🎉 P2階段模組完整載入：Firebase + AM + BK + CM(完整帳本與協作管理) + BM');
-      console.log('🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、帳本管理和協作管理功能');
-      console.log('✨ DCN-0021階段四完成：MLS模組已完全移除，功能完整整合至CM模組');
+      console.log('🎉 P2階段模組完整載入：Firebase + AM + BK + CM(協作與帳本管理) + BM');
+      console.log('🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、協作管理功能');
+      console.log('✨ 協作與帳本管理功能完全整合至CM模組');
     } else if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK) {
       console.log('🎉 P1-2基礎模組正常載入：Firebase + AM + BK');
-      console.log('⚠️ P2階段新功能模組狀態：CM(完整帳本管理)(' + (moduleStatus.CM ? '✅' : '❌') + '), BM(' + (moduleStatus.BM ? '✅' : '❌') + ')');
+      console.log('⚠️ P2階段新功能模組狀態：CM(協作管理)(' + (moduleStatus.CM ? '✅' : '❌') + '), BM(' + (moduleStatus.BM ? '✅' : '❌') + ')');
       console.log('🚀 系統已準備好處理P1-2基礎功能，P2功能視模組載入狀況而定');
     } else {
       console.log('❌ 關鍵模組載入失敗：需執行進一步調查');

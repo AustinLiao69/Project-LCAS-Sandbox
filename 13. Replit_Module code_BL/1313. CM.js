@@ -1,4 +1,3 @@
-replit_final_file>
 /**
  * CM_協作與帳本管理模組_2.1.1
  * @module CM模組
@@ -10,10 +9,10 @@ const admin = require('firebase-admin');
 const WebSocket = require('ws');
 
 // 引入依賴模組
-let DL, MLS, AM, DD, BK, LINE_OA, FS; // Added FS here
+let DL, AM, DD, BK, LINE_OA, FS; // Removed MLS here
 try {
   DL = require('./1310. DL.js');
-  // MLS = require('./1351. MLS.js');
+  // MLS = require('./1351. MLS.js'); // Commented out MLS
   // AM = require('./1309. AM.js');
   DD = require('./1331. DD1.js');
   BK = require('./1301. BK.js');
@@ -2391,7 +2390,7 @@ async function CM_getCollaborators(ledgerId, options = {}) {
     }
 
     // 委派至CM_getMemberList處理
-    // 階段三職責邊界：CM_getMemberList操作collaborations集合，是CM模組的職責
+    // 階段三職責：CM_getMemberList操作collaborations集合，是CM模組的職責
     const result = await CM_getMemberList(ledgerId, options.requesterId, true);
 
     if (result.members) {
@@ -2468,7 +2467,7 @@ async function CM_inviteCollaborator(ledgerId, invitationData, options = {}) {
     }
 
     // 委派至CM_inviteMember處理
-    // 階段三職責邊界：CM_inviteMember操作collaborations集合，是CM模組的職責
+    // 階段三職責：CM_inviteMember操作collaborations集合，是CM模組的職責
     const result = await CM_inviteMember(
       ledgerId,
       options.inviterId || 'system',
@@ -2523,7 +2522,7 @@ async function CM_removeCollaborator(ledgerId, userId, options = {}) {
     }
 
     // 委派至CM_removeMember處理
-    // 階段三職責邊界：CM_removeMember操作collaborations集合，是CM模組的職責
+    // 階段三職責：CM_removeMember操作collaborations集合，是CM模組的職責
     const result = await CM_removeMember(
       ledgerId,
       userId,
@@ -2570,8 +2569,8 @@ async function CM_getPermissions(ledgerId, queryParams) {
   try {
     CM_logInfo(`取得帳本權限 - 帳本ID: ${ledgerId}`, "查詢權限", queryParams.userId, "", "", functionName);
 
-    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
-    CM_logWarning(`階段三職責邊界：CM_getPermissions 函數涉及ledgers集合操作，建議由AM模組處理。`, "查詢權限", queryParams.userId, "", "", functionName);
+    // 階段三職責確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責確認：CM_getPermissions 函數涉及ledgers集合操作，建議由AM模組處理。`, "查詢權限", queryParams.userId, "", "", functionName);
 
 
     const ledgerRef = db.collection('ledgers').doc(ledgerId);
@@ -2624,8 +2623,8 @@ async function CM_detectDuplicateName(userId, proposedName, ledgerType) {
   try {
     CM_logInfo(`檢測重複帳本名稱 - 用戶: ${userId}, 名稱: ${proposedName}, 類型: ${ledgerType}`, "檢測重複名稱", userId, "", "", functionName);
 
-    // 階段三職責邊界確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
-    CM_logWarning(`階段三職責邊界：CM_detectDuplicateName 函數涉及ledgers集合操作，建議由AM模組處理。`, "檢測重複名稱", userId, "", "", functionName);
+    // 階段三職責確認：此函數涉及ledgers集合，應由AM模組處理，暫時保留以確保向下相容
+    CM_logWarning(`階段三職責確認：CM_detectDuplicateName 函數涉及ledgers集合操作，建議由AM模組處理。`, "檢測重複名稱", userId, "", "", functionName);
 
 
     // 查詢用戶是否已有相同名稱的帳本
@@ -2739,4 +2738,3 @@ CM_initialize().catch(error => {
 });
 
 console.log('✅ CM 協作與帳本管理模組載入完成 - 階段一整合：CM_initializeCollaboration功能已整合至CM_createSharedLedger');
-</replit_final_file>
