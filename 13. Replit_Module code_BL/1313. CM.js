@@ -117,11 +117,11 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
 
     // 階段三修正：檢查協作帳本是否已存在
     const existingCollaboration = await db.collection('collaborations').doc(ledgerId).get();
-    
+
     if (existingCollaboration.exists) {
       CM_logInfo(`協作帳本已存在: ${ledgerId}，檢查權限設定`, "初始化協作", ownerInfo.userId, "", "", functionName);
       const existingData = existingCollaboration.data();
-      
+
       // 確保擁有者在成員清單中
       if (!existingData.members.find(member => member.userId === ownerInfo.userId)) {
         const ownerMember = {
@@ -131,23 +131,23 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
           joinedAt: admin.firestore.Timestamp.now(),
           status: "active"
         };
-        
+
         // 階段二修正：使用參照對象確保更新操作成功
         const existingRef = db.collection('collaborations').doc(ledgerId);
         await existingRef.update({
           members: admin.firestore.FieldValue.arrayUnion(ownerMember),
           updatedAt: admin.firestore.Timestamp.now()
         });
-        
+
         // 階段二驗證：確認成員已正確加入
         const updatedDoc = await existingRef.get();
         const updatedData = updatedDoc.data();
         const memberExists = updatedData.members.find(member => member.userId === ownerInfo.userId);
-        
+
         if (!memberExists) {
           throw new Error(`擁有者加入協作帳本失敗：${ledgerId}`);
         }
-        
+
         CM_logInfo(`階段二修正：擁有者已驗證加入現有協作帳本 - ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
       }
     } else {
@@ -187,22 +187,22 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
 
       // 階段一修正：確保使用正確的Firebase集合路徑並增強寫入驗證
       const collaborationRef = db.collection('collaborations').doc(ledgerId);
-      
+
       try {
         await collaborationRef.set(collaborationData);
         CM_logInfo(`階段一修正：協作帳本已寫入Firebase - ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
-        
+
         // 階段一修正：立即驗證文檔是否成功寫入
         const verifyDoc = await collaborationRef.get();
         if (!verifyDoc.exists) {
           throw new Error(`階段一修正：協作帳本建立失敗，Firebase寫入驗證失敗 - ${ledgerId}`);
         }
-        
+
         const verifyData = verifyDoc.data();
         if (!verifyData || !verifyData.members || verifyData.members.length === 0) {
           throw new Error(`階段一修正：協作帳本建立失敗，成員資料寫入不完整 - ${ledgerId}`);
         }
-        
+
         CM_logInfo(`階段一修正：協作帳本建立並驗證成功 - ${ledgerId}, 成員數: ${verifyData.members.length}`, "初始化協作", ownerInfo.userId, "", "", functionName);
       } catch (writeError) {
         CM_logError(`階段一修正：Firebase寫入失敗 - ${writeError.message}`, "初始化協作", ownerInfo.userId, "FIREBASE_WRITE_ERROR", writeError.toString(), functionName);
@@ -223,7 +223,7 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
 
     // 階段二修正：增加協作系統初始化的詳細日誌
   CM_logInfo(`階段二&三修正：協作系統初始化完成 - 帳本: ${ledgerId}`, "初始化協作", ownerInfo.userId, "", "", functionName);
-  
+
   // 階段二新增：Firebase寫入狀態檢查日誌
   try {
     const verifyCollaboration = await db.collection('collaborations').doc(ledgerId).get();
@@ -538,7 +538,7 @@ async function CM_setMemberPermission(ledgerId, targetUserId, newPermission, ope
     // 階段三修正：系統用戶或初始化時跳過權限驗證
     const isSystemOperation = operatorId === targetUserId || operatorId === 'system' || !operatorId;
     const isOwnerSetup = newPermission === 'owner' && operatorId === targetUserId;
-    
+
     if (!isSystemOperation && !isOwnerSetup) {
       // 驗證操作者權限
       const hasPermission = await CM_validatePermission(ledgerId, operatorId, "manage_permissions");
@@ -560,7 +560,7 @@ async function CM_setMemberPermission(ledgerId, targetUserId, newPermission, ope
       // 階段三修正：如果協作帳本不存在且是擁有者設置，創建基礎協作結構
       if (newPermission === 'owner') {
         CM_logInfo(`階段三修正：協作帳本不存在，為擁有者建立基礎結構`, "設定權限", operatorId, "", "", functionName);
-        
+
         const ownerMember = {
           memberId: `member_${Date.now()}_${targetUserId}`,
           userId: targetUserId,
@@ -592,9 +592,9 @@ async function CM_setMemberPermission(ledgerId, targetUserId, newPermission, ope
         };
 
         await db.collection('collaborations').doc(ledgerId).set(collaborationData);
-        
+
         CM_logInfo(`階段三修正：基礎協作結構建立成功，擁有者權限設定完成`, "設定權限", operatorId, "", "", functionName);
-        
+
         return {
           success: true,
           oldPermission: null,
@@ -611,7 +611,7 @@ async function CM_setMemberPermission(ledgerId, targetUserId, newPermission, ope
 
     // 找到目標成員並更新權限
     const targetMemberIndex = members.findIndex(member => member.userId === targetUserId);
-    
+
     if (targetMemberIndex === -1) {
       // 階段三修正：如果成員不存在，且是有效權限設置，則新增成員
       if (CM_PERMISSION_LEVELS[newPermission]) {
@@ -623,16 +623,16 @@ async function CM_setMemberPermission(ledgerId, targetUserId, newPermission, ope
           invitedBy: operatorId || targetUserId,
           status: "active"
         };
-        
+
         members.push(newMember);
-        
+
         await collaborationDoc.ref.update({
           members,
           updatedAt: admin.firestore.Timestamp.now()
         });
-        
+
         CM_logInfo(`階段三修正：新成員權限設定成功: ${targetUserId} -> ${newPermission}`, "設定權限", operatorId, "", "", functionName);
-        
+
         return {
           success: true,
           oldPermission: null,
@@ -749,7 +749,7 @@ async function CM_validatePermission(ledgerId, userId, operationType) {
           requiredLevel: "owner"
         };
       }
-      
+
       return {
         hasPermission: false,
         currentLevel: null,
@@ -776,7 +776,7 @@ async function CM_validatePermission(ledgerId, userId, operationType) {
     if (operationType === "manage_permissions") {
       requiredLevel = "admin";
     } else if (operationType === "remove" || operationType === "invite") {
-      requiredLevel = "admin";  
+      requiredLevel = "admin";
     } else if (operationType === "view" || operationType === "edit") {
       requiredLevel = "member";
     }
@@ -2397,7 +2397,7 @@ async function CM_createProjectLedger(userId, projectName, projectDescription, s
 
     if (result.success) {
       CM_logInfo(`專案帳本建立成功 - ID: ${result.data.id}`, "建立專案帳本", userId, "", "", functionName);
-      
+
       return {
         success: true,
         ledgerId: result.data.id,
@@ -2417,7 +2417,7 @@ async function CM_createProjectLedger(userId, projectName, projectDescription, s
 }
 
 /**
- * 29. 建立共享帳本 - 從MLS遷移  
+ * 29. 建立共享帳本 - 從MLS遷移
  * @version 2025-11-10-V1.0.0
  * @date 2025-11-10
  * @description 支援多用戶協作的共享帳本 - 從MLS_createSharedLedger遷移而來
