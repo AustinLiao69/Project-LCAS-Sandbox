@@ -1,9 +1,9 @@
 replit_final_file>
 /**
- * CM_協作與帳本管理模組_2.1.0
+ * CM_協作與帳本管理模組_2.1.1
  * @module CM模組
  * @description 協作與帳本管理系統 - 負責所有後續帳本（第2本以上）的完整生命週期管理，包含協作功能和多帳本管理功能
- * @update 2025-11-10: 階段一準備 - 整合MLS功能準備，更新為協作與帳本管理模組
+ * @update 2025-11-11: 階段一修復 - 修復語法錯誤，確保模組正常載入
  */
 
 const admin = require('firebase-admin');
