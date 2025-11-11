@@ -6,6 +6,178 @@
 ------------------------------------------
 20251111. 通過SIT_P2(7571)
 
+Approved請進行階段一
+
+SIT_P2(7571) TC-009問題分階段解決方案
+問題確認與Insight
+我完全同意您的分析，並提出以下重要insight：
+Insight 1: CM_createLedger()確實應該被移除
+•	從程式碼可以看出，CM_createLedger()同時在ledgers和collaborations集合寫入資料，這違反了模組職責分離原則
+•	AM模組負責個人帳本創建，CM模組應專注於協作功能
+•	保留這個函數會持續造成職責混淆
+Insight 2: 協作帳本≠個人帳本的獨立性
+•	協作帳本本質上是協作空間，不需要在ledgers集合中建立對應記錄
+•	collaborations集合已包含所有必要的協作資訊
+分階段解決方案（MVP）
+階段一：函數職責清理（立即執行）
+1.	移除CM_createLedger()函數
+•	完全移除此函數，避免與AM職責重複
+•	這是根本性解決方案，而非修補
+2.	確認CM_createSharedLedger()為協作帳本唯一入口
+•	檢查此函數是否只操作collaborations集合
+•	確保不會觸碰ledgers集合
+階段二：測試流程修正（立即執行）
+1.	修正TC-009調用路徑
+•	將CM_createLedger()調用改為CM_createSharedLedger()
+•	確保測試流程符合職責分離原則
+2.	驗證CM_initializeCollaboration()純淨性
+•	確認此函數只操作collaborations集合
+•	移除任何ledgers集合相關邏輯
+階段三：職責邊界確認（驗證階段）
+1.	確認資料流向
+協作帳本創建: PL → CM_createSharedLedger() → CM_initializeCollaboration() → collaborations集合
+個人帳本創建: PL → AM相關函數 → ledgers集合
+2.	模組職責清晰化
+•	CM：純協作功能（collaborations集合）
+•	AM：個人帳本管理（ledgers集合）
+立即行動建議
+基於您的分析，我建議：
+1.	**優先移除CM_createLedger()**而非修正它
+2.	檢查7571.dart中TC-009的函數調用
+3.	確保CM模組完全不碰ledgers集合
+這個分階段方案專注於解決當前TC-009測試失敗的根本問題，符合MVP原則，避免過度工程化。
+您認為這個分階段approach是否符合當前需求？
+
+
+
+
+------------------------------------------
+20251111. 通過SIT_P2(7571)
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+SIT_P2(7571) 問題分析與解決方案更新
+問題確認與代碼檢查
+您說得對，我需要先檢查CM模組的實際代碼。根據13. Replit_Module code_BL/1313. CM.js的代碼檢查：
+現有協作相關函數：
+•	CM_createSharedLedger() - 建立共享帳本
+•	CM_createProjectLedger() - 建立專案帳本
+•	CM_createLedger() - 通用帳本建立函數（問題所在）
+•	CM_initializeCollaboration() - 初始化協作架構
+根本問題分析
+核心問題：CM_createLedger() 職責混亂
+從代碼可以看出：
+1.	CM_createLedger() 同時在 ledgers 集合創建帳本記錄
+2.	然後才調用 CM_initializeCollaboration() 在 collaborations 集合創建協作結構
+3.	這造成了數據重複：同一個協作帳本同時存在於兩個集合中
+
+Insight 深化
+協作帳本的本質錯誤理解
+•	當前架構：協作帳本 = 個人帳本 + 協作結構（錯誤）
+•	正確理解：協作帳本是獨立的協作空間，不需要在 ledgers 集合中存在
+職責邊界混淆
+•	CM模組不應該創建任何個人帳本記錄
+•	CM_createLedger() 函數名稱本身就是誤導性的
+
+解決方案（MVP階段）
+=>請將你的方案分階段
+
+
+1. 修正函數職責
+•	使用現有的 CM_createSharedLedger() 作為協作帳本創建的正確入口
+•	移除 CM_createLedger() 中的 ledgers 集合寫入邏輯
+=>我認為CM_createLedger()應該被移除，避免與AM的職責重複，你認為呢？
+
+•	保留 CM_initializeCollaboration() 作為純協作空間創建
+2. 修正TC-009測試流程
+TC-009: 建立協作帳本
+├── PL層調用 CM_createSharedLedger() 
+├── 直接調用 CM_initializeCollaboration()
+├── 只在 collaborations 集合創建協作空間
+└── 完全不觸碰 ledgers 集合
+
+3. 最小化修正重點
+
+1.	修改 CM_createLedger()：移除 ledgers 集合寫入，只保留 collaborations 集合操作
+2.	重新導向測試調用：TC-009 應該直接調用 CM_createSharedLedger() 而不是 CM_createLedger()
+3.	確保單一職責：CM模組只負責協作，不碰個人帳本
+立即行動項目
+1.	檢查 7571.dart 中 TC-009 是否調用正確的函數
+2.	修正 CM_createLedger() 移除個人帳本創建邏輯
+3.	確保協作帳本測試流程 不經過 ledgers 集合
+這樣修正後：
+•	TC-009測試將直接測試協作功能
+•	不會產生重複的帳本記錄
+•	符合單一職責原則
+•	解決當前的測試失敗問題
+
+
+
+------------------------------------------
+20251111. 通過SIT_P2(7571)
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+SIT_P2(7571) 協作帳本測試問題分析與解決方案
+問題確認
+根據您的分析和附件日誌，我完全同意您的診斷：
+核心問題：CM_createLedger() 職責混亂
+•	CM模組錯誤地承擔了個人帳本創建的職責
+•	協作帳本應該直接存在於 collaborations 集合，不需要在 ledgers 集合創建對應帳本
+•	當前架構造成數據重複和邏輯混淆
+根本原因分析
+1.	職責邊界模糊：CM模組侵犯了AM模組的職責範圍
+2.	架構設計錯誤：把協作帳本視為"個人帳本+協作結構"的錯誤組合
+3.	資料流混亂：個人帳本創建應該是 7571 → PL → APL → ASL → AM，而不是經過CM
+Insight
+協作帳本 ≠ 個人帳本
+協作帳本本質上是一個獨立的協作空間，它：
+•	直接存在於 collaborations 集合
+•	有自己的生命週期和管理邏輯
+•	不依賴於任何個人帳本的存在
+•	成員可以是多個不同用戶的組合
+
+解決方案
+1. 明確模組職責分工
+•	AM模組：負責個人帳本創建（ledgers 集合）
+•	CM模組：純粹負責協作功能（collaborations 集合）
+
+2. 修正TC-009測試流程
+
+應該改為：
+TC-009: 建立協作帳本
+├── PL層調用 CM_createCollaborationSpace() 
+├── 直接在 collaborations 集合創建協作空間
+└── 不觸碰 ledgers 集合
+=>CM裡面並沒有CM_createCollaborationSpace()這個函數，不要瞎掰，請在CM裡面搜尋相同功能的函數，應該是CM_createSharedLedger這個吧？我不確定，請檢查CM的代碼。
+
+
+3. 資料架構修正
+collaborations/{collaboration_id}
+├── type: "shared"
+├── name: "協作測試帳本"
+├── members: [...]
+├── settings: {...}
+└── 不需要對應的 ledgers 文檔
+=>先不要修正資料架構
+
+
+修正重點
+1.	移除CM模組中的個人帳本創建邏輯
+2.	CM_createLedger() 重命名為 CM_createCollaboration()
+3.	確保協作功能完全獨立於個人帳本系統
+
+這樣的修正將使：
+•	TC-009測試邏輯更清晰
+•	模組職責邊界更明確
+•	資料架構更簡潔
+•	符合0098憲法的單一職責原則
+
+
+
+------------------------------------------
+20251111. 通過SIT_P2(7571)
+
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
 
@@ -47,10 +219,6 @@ Fork Branch 測試方案
 
 
 
-------------------------------------------
-20251111. 通過SIT_P2(7571)
-
-不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
 ------------------------------------------
 20251111. 通過SIT_P2(7571)
