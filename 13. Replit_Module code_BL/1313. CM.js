@@ -152,11 +152,12 @@ async function CM_initializeCollaboration(ledgerId, ownerInfo, collaborationType
       }
     } else {
       // 階段三修正：直接建立協作主集合文檔
+      const currentTime = admin.firestore.Timestamp.now();
       const ownerMember = {
         memberId: `member_${Date.now()}_${ownerInfo.userId}`,
         userId: ownerInfo.userId,
         permissionLevel: 'owner',
-        joinedAt: admin.firestore.Timestamp.now(),
+        joinedAt: currentTime,
         invitedBy: ownerInfo.userId,
         status: "active"
       };
@@ -429,8 +430,8 @@ async function CM_removeMember(ledgerId, targetUserId, operatorId, removeType) {
     // 取得協作資訊
     const collaborationDoc = await db.collection('collaborations').doc(ledgerId).get();
     if (!collaborationDoc.exists) {
-      throw new Error("協作帳本不存在");
-    }
+        throw new Error("協作帳本不存在");
+      }
 
     const collaborationData = collaborationDoc.data();
     const updatedMembers = collaborationData.members.filter(member => member.userId !== targetUserId);
