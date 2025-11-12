@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_2.5.0
+* FS_FirestoreStructure_資料庫結構模組_2.7.1
 * @module 資料庫結構模組
-* @description LCAS 2.5.0 Firestore資料庫結構模組 - Phase 3 預算子集合架構遷移完成
-* @update 2025-10-30: 預算子集合架構遷移完成，升級至2.5.0版本
+* @description LCAS 2.7.1 Firestore資料庫結構模組 - Phase 3 預算子集合架構遷移完成 + 協作架構資料驗證強化
+* @update 2025-11-12: 階段一修復 - 新增協作帳本資料結構驗證函數，確保資料一致性
 */
 
 // 引入Firebase動態配置模組
@@ -2800,10 +2800,65 @@ async function FS_initializeCollaborationStructure(requesterId) {
 }
 
 /**
+ * FS_validateCollaborationData - 驗證協作帳本資料結構
+ * @version 2025-11-12-V2.7.1
+ * @date 2025-11-12
+ * @description 階段一：驗證協作帳本資料是否符合標準結構
+ */
+function FS_validateCollaborationData(collaborationData) {
+  const requiredFields = ['ledgerId', 'ownerId', 'collaborationType', 'settings', 'createdAt', 'updatedAt', 'status'];
+  const validCollaborationTypes = ['shared', 'project', 'category'];
+  const validStatuses = ['active', 'archived', 'suspended'];
+
+  // 檢查必要欄位
+  for (const field of requiredFields) {
+    if (!collaborationData.hasOwnProperty(field)) {
+      return {
+        valid: false,
+        error: `缺少必要欄位: ${field}`,
+        field: field
+      };
+    }
+  }
+
+  // 驗證協作類型
+  if (!validCollaborationTypes.includes(collaborationData.collaborationType)) {
+    return {
+      valid: false,
+      error: `無效的協作類型: ${collaborationData.collaborationType}`,
+      field: 'collaborationType'
+    };
+  }
+
+  // 驗證狀態
+  if (!validStatuses.includes(collaborationData.status)) {
+    return {
+      valid: false,
+      error: `無效的狀態: ${collaborationData.status}`,
+      field: 'status'
+    };
+  }
+
+  // 驗證設定結構
+  if (!collaborationData.settings || typeof collaborationData.settings !== 'object') {
+    return {
+      valid: false,
+      error: '設定欄位必須是物件類型',
+      field: 'settings'
+    };
+  }
+
+  return {
+    valid: true,
+    message: '協作帳本資料結構驗證通過'
+  };
+}
+
+/**
  * FS_createCollaborationDocument - 建立協作文檔
- * @version 2025-11-06-V2.7.0
- * @date 2025-11-06
- * @description 階段一：建立協作主集合文檔
+ * @version 2025-11-12-V2.7.1
+ * @date 2025-11-12
+ * @description 階段一：建立協作主集合文檔，包含資料驗證
  */
 async function FS_createCollaborationDocument(ledgerId, collaborationData, requesterId) {
   const functionName = "FS_createCollaborationDocument";
@@ -2813,6 +2868,12 @@ async function FS_createCollaborationDocument(ledgerId, collaborationData, reque
     // 驗證必要參數
     if (!ledgerId || !collaborationData) {
       throw new Error("缺少必要參數: ledgerId, collaborationData");
+    }
+
+    // 階段一：資料結構驗證
+    const validationResult = FS_validateCollaborationData(collaborationData);
+    if (!validationResult.valid) {
+      throw new Error(`資料結構驗證失敗: ${validationResult.error}`);
     }
 
     // 準備協作文檔數據（camelCase命名）
@@ -2921,6 +2982,7 @@ module.exports = {
   FS_initializeCollaborationCollection,
   FS_initializeCollaborationStructure,
   FS_createCollaborationDocument,
+  FS_validateCollaborationData,
 
   // 相容性函數（保留現有調用）
   FS_mergeDocument,
