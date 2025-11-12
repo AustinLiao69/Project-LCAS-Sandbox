@@ -1,0 +1,303 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
+Building package executable... (1.0(1.1s)
+Built test:test.
+00:00 +0: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) (setUpAll)
+[7571] 🎉 SIT P2測試模組 v2.3.0 (純粹調用版-無模擬業務邏輯) 初始化完成
+[7571] ✅ 修正目標：完全移除模擬業務邏輯，純粹調用PL層函數
+[7571] 🔧 核心改善：不進行任何業務邏輯判斷，直接回傳PL層結果
+[7571] 📋 測試範圍：25個P2測試案例（純粹調用）
+[7571] 🎯 資料來源：7598 Data warehouse.json
+[7571] 🚀 重點：符合0098規範第4-5條，禁止模擬業務邏輯
+00:00 +0: ... 執行SIT P2純粹調用測00:00 +0: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) 執行SIT P2純粹調用測試
+
+[7571] 🚀 開始執行純粹調用版SIT P2測試...
+[7571] 🚀 開始執行純粹調用版SIT P2測試 (v2.3.0)...
+[7571] 🎯 修正重點：完全移除模擬業務邏輯，純粹調用PL層函數
+[7571] 📋 測試策略：純粹調用，無任何業務邏輯判斷
+[7571] 🗄️ 資料來源：7598 Data warehouse.json
+[7571] 🔄 執行預算管理測試 (純粹調用PL層7304)
+[7571] 🔧 純粹調用：TC-001
+[7571] 📊 階段一修正：預算純粹調用: TC-001 - 純粹調用：建立預算測試
+[7571] ✅ P2測試資料載入完成，來源：7598 Data warehouse.json
+[7571] 🔍 階段二修正：開始查詢用戶 expert.valid@test.lcas.app 的真實帳本ID...
+[7571] 📋 階段二修正：預期帳本ID格式: user_expert.valid@test.lcas.app
+[7571] ✅ 階段二修正：確定真實帳本ID: user_expert.valid@test.lcas.app
+[7571] ✅ 階段二修正：禁止7571從7582直接取得註冊email
+[7571] ✅ 階段二修正：使用 expert.valid@test.lcas.app 取得真實帳本ID
+[7571] 🔄 TC-001真實用戶修正：userId=user_expert_1697363200000, operatorId=user_expert_1697363200000
+[7571] 🔄 TC-001真實帳本修正：ledgerId=user_expert.valid@test.lcas.app
+[7571] 🎯 階段二目標達成：使用真實註冊流程產生的帳本ID進行budget子集合操作
+[processBudgetCRUD] 開始統一預算CRUD操作 - 操作類型: create, 模式: Expert
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: true, 錯誤: 0個, 警告: 0個
+[transformBudgetData] 開始資料轉換 - 轉換類型: uiToApi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 8
+APL階段三驗證：ledgerId = user_expert.valid@test.lcas.app
+APL階段一調試：HTTP回應狀態 = 200
+APL階段一調試：回應內容 = {success: true, data: {id: budget_1762911462292_jj0f6n63r, budgetId: budget_1762911462292_jj0f6n63r, name: 十月生活預算, amount: 50000, type: monthly, ledgerId: user_expert.valid@test.lcas.app, firebase_path: ledgers/user_expert.valid@test.lcas.app/budgets/budget_1762911462292_jj0f6n63r, collection_path: ledgers/user_expert.valid@test.lcas.app/budgets, architecture: subcollection}, error: null, message: 預算建立成功, metadata: {timestamp: 2025-11-12T01:37:42.698Z, requestId: req_1762911462698_zg4zxz, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 409, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一修正：成功提取budgetId = budget_1762911462292_jj0f6n63r
+APL階段一最終判定：success = true
+[7571] 🔍 TC-001 階段一除錯：BudgetOperationResult內容 = Instance of 'BudgetOperationResult'
+[7571] ⚠️ TC-001: 無法從BudgetOperationResult提取budgetId
+[7571] 📋 TC-001階段二修正：PL層7304純粹調用完成（真實帳本）
+[7571] ✅ TC-001 PASS - 純粹調用：建立預算測試
+[7571] ✅ 測試成功，PL層回應: Instance of 'BudgetOperationResult'
+[7571] 🔧 純粹調用：TC-002
+[7571] 📊 階段一修正：預算純粹調用: TC-002 - 純粹調用：查詢預算列表測試
+[7571] ⚠️ TC-002: 查詢預算失敗，缺少動態生成的預算ID
+[7571] 💡 提示：需要先執行TC-001創建預算
+[7571] ❌ TC-002 FAIL - 純粹調用：查詢預算列表測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing dynamic budget ID, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_budget_id: Failed to query budget: Missing dynamic budget ID.
+[7571] 🔧 純粹調用：TC-003
+[7571] 📊 階段一修正：預算純粹調用: TC-003 - 純粹調用：更新預算測試
+[7571] ⚠️ TC-003: 更新預算失敗，缺少動態生成的預算ID
+[7571] 💡 提示：需要先執行TC-001創建預算
+[7571] ❌ TC-003 FAIL - 純粹調用：更新預算測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing dynamic budget ID, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_budget_id: Failed to update budget: Missing dynamic budget ID.
+[7571] 🔧 純粹調用：TC-004
+[7571] 📊 階段一修正：預算純粹調用: TC-004 - 純粹調用：刪除預算測試
+[7571] ⚠️ TC-004: 刪除預算失敗，缺少動態生成的預算ID
+[7571] 💡 提示：需要先執行TC-001創建預算
+[7571] ❌ TC-004 FAIL - 純粹調用：刪除預算測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing dynamic budget ID, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_budget_id: Failed to delete budget: Missing dynamic budget ID.
+[7571] 🔧 純粹調用：TC-005
+[7571] 📊 階段一修正：預算純粹調用: TC-005 - 純粹調用：預算執行計算測試
+[7571] ⚠️ TC-005: 測試資料中缺少budget_execution_tracking或budgetId為空
+[7571] ❌ TC-005 FAIL - 純粹調用：預算執行計算測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing budget_execution_tracking data or null budgetId, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_execution_data: Missing budget_execution_tracking data or null budgetId.
+[7571] 🔧 純粹調用：TC-006
+[7571] 📊 階段一修正：預算純粹調用: TC-006 - 純粹調用：預算警示測試
+[7571] ⚠️ TC-006: 測試資料中缺少budget_execution_tracking或budgetId為空
+[7571] ❌ TC-006 FAIL - 純粹調用：預算警示測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing budget_execution_tracking data or null budgetId, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_execution_data: Missing budget_execution_tracking data or null budgetId.
+[7571] 🔧 純粹調用：TC-007
+[7571] 📊 階段一修正：預算純粹調用: TC-007 - 純粹調用：預算資料驗證測試
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: false, 錯誤: 2個, 警告: 0個
+[7571] 📋 TC-007純粹調用PL層7304完成
+[7571] ✅ TC-007 PASS - 純粹調用：預算資料驗證測試
+[7571] ✅ 測試成功，PL層回應: Instance of 'ValidationResult'
+[7571] 🔧 純粹調用：TC-008
+[7571] 📊 階段一修正：預算純粹調用: TC-008 - 純粹調用：預算模式差異化測試
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 10
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Inertial
+[transformBudgetData] 轉換完成 - 結果欄位數: 7
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Cultivation
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Guiding
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[7571] 📋 TC-008純粹調用PL層7304完成（四模式測試）
+[7571] ✅ TC-008 PASS - 純粹調用：預算模式差異化測試
+[7571] ✅ 測試成功，PL層回應: {expert: {id: null, name: 十月生活預算, amount: 50000.0, usedAmount: 0.0, currency: TWD, type: monthly, status: active, details: {}, analytics: {}, metadata: {}}, inertial: {id: null, name: 十月生活預算, amount: 50000.0, usedAmount: 0.0, currency: TWD, type: monthly, status: active}, cultivation: {id: null, name: 十月生活預算, amount: 50000.0, usedAmount: 0.0, currency: TWD, type: monthly, status: active, progress: 0.0, achievement: {level: safe, message: 預算使用在安全範圍內, icon: ✅, color: #45B7D1}}, guiding: {id: null, name: 十月生活預算, amount: 50000.0, usedAmount: 0.0, currency: TWD, type: monthly, status: active, simpleStatus: 充足, nextAction: 按計畫執行}}
+[7571] 🎉 預算管理純粹調用完成
+[7571] 🔄 執行帳本協作測試 (純粹調用PL層7303)
+[7571] 🔧 純粹調用：TC-009
+[7571] 🤝 協作純粹調用: TC-009 - 純粹調用：建立協作帳本測試
+[7571] 🔍 TC-009 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] 🎯 階段三測試流程修正：TC-009確保調用CM_createSharedLedger()而非已移除的CM_createLedger()
+[7571] 📧 階段三測試流程修正：使用測試email: collaboration.test@test.lcas.app
+[7571] 📋 階段三測試流程修正：準備純協作帳本資料，確保走CM_createSharedLedger路徑
+[7571] 🔄 階段三測試流程修正：調用PL層，確保路由至CM_createSharedLedger()
+[7303] 🚀 階段二修正：開始建立帳本，檢查是否為email-based協作帳本
+[7303] 📧 階段二修正：檢測到email-based協作帳本建立請求
+[7303] 👤 擁有者Email: user_collaboration.test@test.lcas.app
+[7303] 🔍 階段一修正：通過APL→AM模組查詢email對應的userId...
+APL階段一調試：HTTP回應狀態 = 200
+APL階段一調試：回應內容 = {success: true, data: [{id: _placeholder, userId: _placeholder, email: _placeholder, displayName: , userMode: , status: active, createdAt: {_seconds: 1761793965, _nanoseconds: 852000000}}, {id: collaboration.test@test.lcas.app, userId: collaboration.test@test.lcas.app, email: collaboration.test@test.lcas.app, displayName: 協作測試用戶, userMode: Expert, status: active, createdAt: {_seconds: 1762411591, _nanoseconds: 327000000}, lastActiveAt: {_seconds: 1762411591, _nanoseconds: 327000000}}, {id: expert.valid@test.lcas.app, userId: expert.valid@test.lcas.app, email: expert.valid@test.lcas.app, displayName: Expert 測試用戶, userMode: Expert, status: active, createdAt: {_seconds: 1762411420, _nanoseconds: 446000000}, lastActiveAt: {_seconds: 1762411420, _nanoseconds: 446000000}}], error: null, message: 成功查詢到 3 個帳戶, metadata: {timestamp: 2025-11-12T01:37:42.969Z, requestId: req_1762911462969_qz4cpx, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 218, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+[7303] ❌ 階段一修正：真實email→userId解析失敗 - Stage: apl_service_call, Error: type 'String' is not a subtype of type 'int' of 'index'
+[7303] ❌ 階段一修正：email解析過程發生錯誤: CollaborationError: 無法解析email對應的userId: user_collaboration.test@test.lcas.app - type 'String' is not a subtype of type 'int' of 'index' (Code: EMAIL_RESOLUTION_FAILED)
+[7303] ❌ 階段二修正：建立帳本失敗: CollaborationError: Email解析失敗: CollaborationError: 無法解析email對應的userId: user_collaboration.test@test.lcas.app - type 'String' is not a subtype of type 'int' of 'index' (Code: EMAIL_RESOLUTION_FAILED) (Code: EMAIL_RESOLUTION_ERROR)
+[7571] ❌ 階段三修正：協作帳本建立異常: CollaborationError: Email解析失敗: CollaborationError: 無法解析email對應的userId: user_collaboration.test@test.lcas.app - type 'String' is not a subtype of type 'int' of 'index' (Code: EMAIL_RESOLUTION_FAILED) (Code: EMAIL_RESOLUTION_ERROR)
+[7571] 📋 TC-009階段三修正完成 - 純協作帳本流程
+[7571] ❌ TC-009 FAIL - 純粹調用：建立協作帳本測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {success: false, error: CollaborationError: Email解析失敗: CollaborationError: 無法解析email對應的userId: user_collaboration.test@test.lcas.app - type 'String' is not a subtype of type 'int' of 'index' (Code: EMAIL_RESOLUTION_FAILED) (Code: EMAIL_RESOLUTION_ERROR), message: 階段三修正：協作帳本建立過程發生異常}
+[7571]    關鍵步驟:
+[7571]      • step_1_load_collaboration_user: Loaded collaboration.test@test.lcas.app user data from 7598.
+[7571]      • step_2_prepare_pure_collaboration_data: Prepared pure collaboration data for CM_createSharedLedger path.
+[7571]      • step_3_call_pl_create_shared_ledger: Calling PL layer to route to CM_createSharedLedger (not removed CM_createLedger).
+[7571]      • step_error: Error during collaboration ledger creation: CollaborationError: Email解析失敗: CollaborationError: 無法解析email對應的userId: user_collaboration.test@test.lcas.app - type 'String' is not a subtype of type 'int' of 'index' (Code: EMAIL_RESOLUTION_FAILED) (Code: EMAIL_RESOLUTION_ERROR)
+[7571] 🔧 純粹調用：TC-010
+[7571] 🤝 協作純粹調用: TC-010 - 純粹調用：查詢帳本列表測試
+[7571] 🔍 TC-010 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-010 FAIL - 純粹調用：查詢帳本列表測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-011
+[7571] 🤝 協作純粹調用: TC-011 - 純粹調用：更新帳本測試
+[7571] 🔍 TC-011 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-011 FAIL - 純粹調用：更新帳本測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-012
+[7571] 🤝 協作純粹調用: TC-012 - 純粹調用：刪除帳本測試
+[7571] 🔍 TC-012 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-012 FAIL - 純粹調用：刪除帳本測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-013
+[7571] 🤝 協作純粹調用: TC-013 - 純粹調用：查詢協作者列表測試
+[7571] 🔍 TC-013 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-013 FAIL - 純粹調用：查詢協作者列表測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-014
+[7571] 🤝 協作純粹調用: TC-014 - 純粹調用：邀請協作者測試
+[7571] 🔍 TC-014 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-014 FAIL - 純粹調用：邀請協作者測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-015
+[7571] 🤝 協作純粹調用: TC-015 - 純粹調用：更新協作者權限測試
+[7571] 🔍 TC-015 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-015 FAIL - 純粹調用：更新協作者權限測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-016
+[7571] 🤝 協作純粹調用: TC-016 - 純粹調用：移除協作者測試
+[7571] 🔍 TC-016 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-016 FAIL - 純粹調用：移除協作者測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-017
+[7571] 🤝 協作純粹調用: TC-017 - 純粹調用：權限矩陣計算測試
+[7571] 🔍 TC-017 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-017 FAIL - 純粹調用：權限矩陣計算測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-018
+[7571] 🤝 協作純粹調用: TC-018 - 純粹調用：協作衝突檢測測試
+[7571] 🔍 TC-018 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-018 FAIL - 純粹調用：協作衝突檢測測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-019
+[7571] 🤝 協作純粹調用: TC-019 - 純粹調用：API整合測試
+[7571] 🔍 TC-019 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-019 FAIL - 純粹調用：API整合測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🔧 純粹調用：TC-020
+[7571] 🤝 協作純粹調用: TC-020 - 純粹調用：錯誤處理測試
+[7571] 🔍 TC-020 載入測試資料完成
+[7571] 📊 成功案例數量: 5
+[7571] 📊 失敗案例數量: 2
+[7571] ❌ TC-020 FAIL - 純粹調用：錯誤處理測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: null (異常發生或調用失敗)
+[7571]    關鍵步驟: 無執行步驟記錄
+[7571] 🎉 帳本協作純粹調用完成
+[7571] 🔄 執行整合驗證測試 (純粹調用)
+[7571] 🔧 純粹調用：TC-021
+[7571] 🌐 整合純粹調用: TC-021 - 純粹調用：APL.dart統一Gateway驗證
+[7571] 📋 TC-021純粹調用完成
+[7571] ✅ TC-021 PASS - 純粹調用：APL.dart統一Gateway驗證
+[7571] ✅ 測試成功，PL層回應: {gatewayTest: completed, userData: {userId: user_expert_1697363200000, email: expert.valid@test.lcas.app, displayName: Expert 測試用戶, userMode: Expert, preferences: {language: zh-TW, currency: TWD, theme: expert}, assessmentAnswers: {Q1: A, Q2: A, Q3: A}, registrationDate: 2025-10-15T08:00:00+08:00, createdAt: 2025-10-15T08:00:00+08:00, testScenario: 正常Expert用戶註冊}}
+[7571] 🔧 純粹調用：TC-022
+[7571] 🌐 整合純粹調用: TC-022 - 純粹調用：預算管理API轉發驗證
+[7571] 📋 TC-022純粹調用完成
+[7571] ✅ TC-022 PASS - 純粹調用：預算管理API轉發驗證
+[7571] ✅ 測試成功，PL層回應: {apiForwardingTest: completed, budgetDataCount: 4}
+[7571] 🔧 純粹調用：TC-023
+[7571] 🌐 整合純粹調用: TC-023 - 純粹調用：帳本協作API轉發驗證
+[7571] 📋 TC-023純粹調用完成
+[7571] ✅ TC-023 PASS - 純粹調用：帳本協作API轉發驗證
+[7571] ✅ 測試成功，PL層回應: {apiForwardingTest: completed, collaborationDataCount: 5}
+[7571] 🔧 純粹調用：TC-024
+[7571] 🌐 整合純粹調用: TC-024 - 純粹調用：四模式差異化測試
+[7571] 📋 TC-024純粹調用完成（四模式測試）
+[7571] ✅ TC-024 PASS - 純粹調用：四模式差異化測試
+[7571] ✅ 測試成功，PL層回應: {modeResults: {Expert: {userId: user_expert_1697363200000, userMode: Expert, preferences: {language: zh-TW, currency: TWD, theme: expert}}, Inertial: {userId: user_inertial_1697363260000, userMode: Inertial, preferences: {language: zh-TW, currency: TWD, theme: inertial}}, Cultivation: {userId: user_cultivation_1697363320000, userMode: Cultivation, preferences: {language: zh-TW, currency: TWD, theme: cultivation}}, Guiding: {userId: user_guiding_1697363380000, userMode: Guiding, preferences: {language: zh-TW, currency: TWD, theme: guiding}}}, totalModes: 4}
+[7571] 🔧 純粹調用：TC-025
+[7571] 🌐 整合純粹調用: TC-025 - 純粹調用：統一回應格式測試
+[7571] 📋 TC-025純粹調用完成
+[7571] ✅ TC-025 PASS - 純粹調用：統一回應格式測試
+[7571] ✅ 測試成功，PL層回應: {formatTest: completed, testId: TC-025, timestamp: 2025-11-12T01:37:42.991375}
+[7571] 🎉 整合驗證純粹調用完成
+
+[7571] 📊 純粹調用版 SIT P2測試完成報告:
+[7571]    🎯 測試策略: P2_PURE_CALL_NO_MOCK_LOGIC
+[7571]    📋 總測試數: 25
+[7571]    ✅ 通過數: 8
+[7571]    ❌ 失敗數: 17
+[7571]    📈 成功率: 32.0%
+[7571]    ⏱️ 執行時間: 840ms
+[7571]    🚨 失敗的測試案例: TC-002, TC-003, TC-004, TC-005, TC-006, TC-009, TC-010, TC-011, TC-012, TC-013, TC-014, TC-015, TC-016, TC-017, TC-018, TC-019, TC-020
+[7571]    📊 分類結果:
+[7571]       budget_pure_call: 3/8 (37.5%)
+[7571]       collaboration_pure_call: 0/12 (0.0%)
+[7571]       integration_pure_call: 5/5 (100.0%)
+[7571]    🔧 合規狀況:
+[7571]       ✅ 無模擬業務邏輯: true
+[7571]       ✅ 純粹PL層調用: true
+[7571]       ✅ 無業務邏輯判斷: true
+[7571]       ✅ 完全依賴7598: true
+[7571] 🎉 純粹調用版 SIT P2測試完成
+[7571] ✅ 0098文件規範第4-5條完全合規：移除所有模擬業務邏輯
+[7571] 🗄️ 100%純粹調用PL層函數，無任何業務邏輯判斷
+
+00:01 +1: ... 執行SIT P2純粹調用測00:01 +1: ... v2.3.0) P2測試資料載00:01 +1: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) P2測試資料載入驗證
+
+[7571] 🔧 執行P2測試資料載入驗證...
+[7571] ✅ P2測試資料載入成功
+[7571] ✅ 協作測試資料驗證通過
+[7571] ✅ 預算測試資料驗證通過
+[7571] ✅ P2測試資料載入驗證完成
+00:01 +2: ... v2.3.0) P2測試資料載00:01 +2: ... P2四模式資料完整性驗00:01 +2: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) P2四模式資料完整性驗證
+
+[7571] 🎯 執行P2四模式資料完整性驗證...
+[7571] ✅ Expert 模式資料完整性驗證通過
+[7571] ✅ Inertial 模式資料完整性驗證通過
+[7571] ✅ Cultivation 模式資料完整性驗證通過
+[7571] ✅ Guiding 模式資料完整性驗證通過
+[7571] ✅ P2四模式資料完整性驗證完成
+00:01 +3: ... P2四模式資料完整性驗00:01 +3: All tests passed!       
+~/workspace/75. Flutter_Test_code_P
