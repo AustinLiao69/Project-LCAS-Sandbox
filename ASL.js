@@ -2053,6 +2053,54 @@ app.post('/api/v1/ledgers/:id/resolve-conflict', async (req, res) => {
   }
 });
 
+// P2階段：帳本管理API (4個端點) - CM模組
+  app.post('/api/v1/ledgers', async (req, res) => {
+    logRequest(req);
+    const { action } = req.body;
+
+    try {
+      if (!CM) {
+        throw new Error('CM模組未載入');
+      }
+
+      let result;
+
+      if (action === 'create_shared_ledger' || req.body.use_cm_create_shared_ledger) {
+        console.log('📝 ASL轉發: 建立協作帳本 -> CM_createSharedLedger');
+        const { ledger_data } = req.body;
+
+        result = await CM.CM_createSharedLedger(
+          ledger_data.ownerEmail || ledger_data.ownerId,
+          ledger_data.name,
+          ledger_data.memberList || [],
+          ledger_data.settings || {}
+        );
+      } else {
+        console.log('📝 ASL轉發: 建立帳本 -> CM_createLedger (不存在)');
+        throw new Error('CM_createLedger函數不存在，請使用create_shared_ledger action');
+      }
+
+      if (result && result.success) {
+        res.status(200).json(result);
+      } else {
+        res.status(400).json(result || {
+          success: false,
+          message: 'CM模組處理失敗'
+        });
+      }
+
+    } catch (error) {
+      console.error(`❌ ASL錯誤: ${error.message}`);
+      res.status(503).json({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      logResponse(req, res);
+    }
+  });
+
 // 移除違規API端點：budgets/status 和 budgets/templates 不在8020文件規範中
 
 
