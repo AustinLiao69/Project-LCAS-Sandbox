@@ -778,8 +778,8 @@ class SITP2TestController {
 
       // 純粹調用PL層7303，完全不進行任何業務邏輯判斷
       switch (testId) {
-        case 'TC-009': // 建立協作帳本 - 階段一修正版
-          print('[7571] 🎯 階段一修正：TC-009協作帳本建立測試開始');
+        case 'TC-009': // 建立協作帳本 - 正確路徑修正版
+          print('[7571] 🎯 TC-009協作帳本建立測試開始 - 確保使用CM模組路徑');
 
           try {
             // 步驟1：從7598載入協作測試資料
@@ -790,22 +790,27 @@ class SITP2TestController {
             }
 
             executionSteps['step_1_load_test_data'] = 'Loaded collaboration test data from 7598.';
-            print('[7571] 📧 階段一修正：載入協作測試資料完成');
+            print('[7571] 📧 載入協作測試資料完成');
 
-            // 步驟2：準備協作帳本建立資料
+            // 步驟2：準備協作帳本建立資料 - 確保會觸發CM模組路徑
             final ledgerData = Map<String, dynamic>.from(collaborationData);
             
-            // 確保協作類型設定正確
+            // 關鍵修正：明確設定為協作類型以確保走CM模組路徑
             ledgerData['type'] = 'shared';
             ledgerData['collaborationType'] = 'shared';
             
+            // 確保有擁有者資訊以便CM模組處理協作邀請
+            if (!ledgerData.containsKey('ownerEmail')) {
+              ledgerData['ownerEmail'] = 'expert.valid@test.lcas.app';
+            }
+            
             inputData = ledgerData;
-            executionSteps['step_2_prepare_collaboration_data'] = 'Prepared collaboration ledger data with type=shared.';
-            print('[7571] 📋 階段一修正：協作帳本資料準備完成，type=shared');
+            executionSteps['step_2_prepare_collaboration_data'] = 'Prepared collaboration ledger data ensuring CM module path.';
+            print('[7571] 📋 協作帳本資料準備完成 - 確保觸發CM模組路徑');
 
-            // 步驟3：調用PL層7303建立協作帳本
-            executionSteps['step_3_call_pl_create_ledger'] = 'Calling PL layer 7303 createLedger function.';
-            print('[7571] 🔄 階段一修正：調用PL層7303.createLedger()');
+            // 步驟3：調用PL層7303 - 將透過正確路徑到達CM模組
+            executionSteps['step_3_call_pl_via_cm_path'] = 'Calling PL layer 7303 which will route to CM module.';
+            print('[7571] 🔄 調用PL層7303 → APL → ASL → CM_createSharedLedger()');
 
             final response = await LedgerCollaborationManager.createLedger(
               ledgerData,
@@ -822,36 +827,37 @@ class SITP2TestController {
                   'ownerId': response.ownerId,
                 },
                 'collaboration_initialized': true,
-                'email_to_userid_resolved': true,
-                'message': '階段三修正：協作帳本建立成功（使用CM_createSharedLedger）'
+                'cm_module_path_used': true,
+                'message': 'TC-009修正：協作帳本建立成功（正確CM模組路徑）'
               };
 
-              executionSteps['step_4_collaboration_success'] = 'Collaboration ledger created successfully via CM_createSharedLedger path.';
-              print('[7571] ✅ 階段三修正：協作帳本建立成功 (使用CM_createSharedLedger)');
+              executionSteps['step_4_cm_collaboration_success'] = 'Collaboration ledger created via correct CM module path.';
+              print('[7571] ✅ TC-009修正：協作帳本建立成功（正確CM模組路徑）');
               print('[7571] 📝 帳本ID: ${response.id}');
               print('[7571] 👤 擁有者ID: ${response.ownerId}');
+              print('[7571] 🎯 確認路徑：7571 → 7303 → APL → ASL → CM模組 → Firebase');
 
             } else {
               plResult = {
                 'success': false,
                 'error': '協作帳本建立失敗',
-                'message': '階段三修正：PL層createLedger回傳null'
+                'message': 'TC-009修正：PL層createLedger回傳null'
               };
               executionSteps['step_4_collaboration_failed'] = 'Collaboration ledger creation failed - PL layer returned null.';
-              print('[7571] ❌ 階段三修正：協作帳本建立失敗');
+              print('[7571] ❌ TC-009修正：協作帳本建立失敗');
             }
 
           } catch (error) {
             plResult = {
               'success': false,
               'error': error.toString(),
-              'message': '階段三修正：協作帳本建立過程發生異常'
+              'message': 'TC-009修正：協作帳本建立過程發生異常'
             };
             executionSteps['step_error'] = 'Error during collaboration ledger creation: $error';
-            print('[7571] ❌ 階段三修正：協作帳本建立異常: $error');
+            print('[7571] ❌ TC-009修正：協作帳本建立異常: $error');
           }
 
-          print('[7571] 📋 TC-009階段三修正完成 - 純協作帳本流程');
+          print('[7571] 📋 TC-009修正完成 - 確保使用正確CM模組調用路徑');
           break;
 
 

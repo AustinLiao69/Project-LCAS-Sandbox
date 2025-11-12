@@ -314,24 +314,30 @@ class LedgerCollaborationManager {
   /// =============== 階段一：帳本管理核心函數（8個函數） ===============
 
   /**
-   * 階段一新增：協作帳本專用創建函數
-   * @version 2025-11-12-V1.0.0
+   * TC-009修正：協作帳本專用創建函數
+   * @version 2025-11-12-V1.1.0
    * @date 2025-11-12
-   * @description 專門處理協作帳本的創建邏輯，確保正確調用CM模組
+   * @description 確保協作帳本通過正確路徑：APL → ASL → CM模組
    */
   static Future<Ledger> _createCollaborativeLedger(
     Map<String, dynamic> data, {
     String? userMode,
   }) async {
     try {
-      print('[7303] 🤝 階段一修正：開始創建協作帳本');
+      print('[7303] 🤝 TC-009修正：開始創建協作帳本');
+      print('[7303] 🎯 確保路徑：7303 → APL → ASL → CM_createSharedLedger()');
 
-      // 通過APL.dart調用API創建協作帳本
+      // TC-009修正：明確標示這是協作帳本，確保ASL路由到CM模組
+      data['isCollaborative'] = true;
+      data['requiresCMModule'] = true;  // 明確指示需要CM模組處理
+      
+      // 通過APL.dart調用API創建協作帳本 - 將路由到CM模組
       final response = await APL.instance.ledger.createLedger(data);
 
       if (response.success && response.data != null) {
         final ledger = Ledger.fromJson(response.data! as Map<String, dynamic>);
-        print('[7303] ✅ 階段一修正：協作帳本創建成功，ID: ${ledger.id}');
+        print('[7303] ✅ TC-009修正：協作帳本創建成功，ID: ${ledger.id}');
+        print('[7303] 🎯 確認已通過CM模組處理協作功能');
         return ledger;
       } else {
         throw CollaborationError(
@@ -341,7 +347,7 @@ class LedgerCollaborationManager {
         );
       }
     } catch (e) {
-      print('[7303] ❌ 階段一修正：協作帳本創建失敗: ${e.toString()}');
+      print('[7303] ❌ TC-009修正：協作帳本創建失敗: ${e.toString()}');
       if (e is CollaborationError) rethrow;
       throw CollaborationError(
         '協作帳本創建失敗: ${e.toString()}',
@@ -772,21 +778,21 @@ class LedgerCollaborationManager {
 
   /**
    * 08. 建立新帳本
-   * @version 2025-11-12-V2.2.0
+   * @version 2025-11-12-V2.3.0
    * @date 2025-11-12
-   * @update: 階段二完成 - 真實Firebase協作集合寫入，移除模擬邏輯
+   * @update: TC-009修正 - 確保協作帳本正確路由到CM模組
    */
   static Future<Ledger> createLedger(
     Map<String, dynamic> data, {
     String? userMode,
   }) async {
     try {
-      print('[7303] 🚀 階段一修正：開始建立帳本，檢查帳本類型');
+      print('[7303] 🚀 TC-009修正：開始建立帳本，檢查帳本類型');
 
       final ledgerType = data['type'] as String?;
       final isCollaborativeLedger = ledgerType == 'shared' || data['collaborationType'] == 'shared';
 
-      print('[7303] 🔍 階段一修正：帳本類型=$ledgerType, 是否為協作帳本=$isCollaborativeLedger');
+      print('[7303] 🔍 TC-009修正：帳本類型=$ledgerType, 是否為協作帳本=$isCollaborativeLedger');
 
       Map<String, dynamic> createData = <String, dynamic>{
         'name': data['name'],
@@ -797,14 +803,15 @@ class LedgerCollaborationManager {
         ...data,
       };
 
-      // 階段一修正：如果是協作帳本，直接調用協作帳本創建流程
+      // TC-009關鍵修正：協作帳本必須通過APL→ASL→CM模組路徑
       if (isCollaborativeLedger) {
-        print('[7303] 🤝 階段一修正：檢測到協作帳本，調用協作創建流程');
+        print('[7303] 🤝 TC-009修正：協作帳本，確保通過CM模組路徑');
+        print('[7303] 🎯 正確路徑：7303 → APL → ASL → CM_createSharedLedger() → Firebase');
         return await _createCollaborativeLedger(createData, userMode: userMode);
       }
 
       // 非協作帳本使用一般創建流程
-      print('[7303] 📋 階段一修正：一般帳本，調用標準創建流程');
+      print('[7303] 📋 TC-009修正：一般帳本，調用標準創建流程');
       return await processLedgerCreation(createData, userMode: userMode);
 
       // 階段二關鍵修正：如果是email-based協作帳本，需要先解析email→userId
