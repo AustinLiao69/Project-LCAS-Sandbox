@@ -726,56 +726,6 @@
   },
   "collaboration_test_data": {
     "success_scenarios": {
-      "create_collaborative_ledger_email_based": {
-        "name": "協作帳本測試_Email流程",
-        "type": "shared",
-        "description": "階段二修正：基於email識別的協作帳本建立測試",
-        "ownerEmail": "collaboration.test@test.lcas.app",
-        "collaborationType": "shared",
-        "currency": "TWD",
-        "timezone": "Asia/Taipei",
-        "settings": {
-          "allowInvite": true,
-          "allowEdit": true,
-          "allowDelete": false,
-          "requireApproval": false
-        },
-        "permissions": {
-          "settings": {
-            "allow_invite": true,
-            "allow_edit": true,
-            "allow_delete": false
-          }
-        },
-        "expectedFlow": {
-          "step1": "從7598載入collaboration.test@test.lcas.app用戶資料",
-          "step2": "調用LedgerCollaborationManager.createLedger()傳入email",
-          "step3": "PL層查詢email對應的真實userId",
-          "step4": "建立基礎帳本並初始化協作結構",
-          "step5": "設置擁有者權限完成協作帳本建立"
-        },
-        "testScenario": "階段二修正：完整email→協作帳本建立流程測試"
-      },
-      "create_collaborative_ledger_template": {
-        "name": "協作帳本測試",
-        "type": "shared",
-        "ownerEmail": "collaboration.test@test.lcas.app",
-        "collaborationType": "shared",
-        "settings": {
-          "allowInvite": true,
-          "allowEdit": true,
-          "allowDelete": false,
-          "requireApproval": false
-        },
-        "permissions": {
-          "settings": {
-            "allow_invite": true,
-            "allow_edit": true,
-            "allow_delete": false
-          }
-        },
-        "testScenario": "建立協作帳本成功測試 - 使用真實註冊用戶動態建立"
-      },
       "invite_collaborator_template": {
         "inviteeEmail": "cultivation.valid@test.lcas.app",
         "permissionLevel": "member",
