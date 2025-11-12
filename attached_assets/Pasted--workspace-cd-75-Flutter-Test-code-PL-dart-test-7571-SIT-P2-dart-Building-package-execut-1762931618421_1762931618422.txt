@@ -1,0 +1,357 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
+Building package executable... (1.0(1.3s)
+Built test:test.
+00:00 +0: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) (setUpAll)
+[7571] 🎉 SIT P2測試模組 v2.3.0 (純粹調用版-無模擬業務邏輯) 初始化完成
+[7571] ✅ 修正目標：完全移除模擬業務邏輯，純粹調用PL層函數
+[7571] 🔧 核心改善：不進行任何業務邏輯判斷，直接回傳PL層結果
+[7571] 📋 測試範圍：25個P2測試案例（純粹調用）
+[7571] 🎯 資料來源：7598 Data warehouse.json
+[7571] 🚀 重點：符合0098規範第4-5條，禁止模擬業務邏輯
+00:00 +0: ... 執行SIT P2純粹調用測00:00 +0: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) 執行SIT P2純粹調用測試
+
+[7571] 🚀 開始執行純粹調用版SIT P2測試...
+[7571] 🚀 開始執行純粹調用版SIT P2測試 (v2.3.0)...
+[7571] 🎯 修正重點：完全移除模擬業務邏輯，純粹調用PL層函數
+[7571] 📋 測試策略：純粹調用，無任何業務邏輯判斷
+[7571] 🗄️ 資料來源：7598 Data warehouse.json
+[7571] 🔄 執行預算管理測試 (純粹調用PL層7304)
+[7571] 🔧 純粹調用：TC-001
+[7571] 📊 階段一修正：預算純粹調用: TC-001 - 純粹調用：建立預算測試
+[7571] ✅ P2測試資料載入完成，來源：7598 Data warehouse.json
+[7571] 🔍 階段二修正：開始查詢用戶 expert.valid@test.lcas.app 的真實帳本ID...
+[7571] 📋 階段二修正：預期帳本ID格式: user_expert.valid@test.lcas.app
+[7571] ✅ 階段二修正：確定真實帳本ID: user_expert.valid@test.lcas.app
+[7571] ✅ 階段二修正：禁止7571從7582直接取得註冊email
+[7571] ✅ 階段二修正：使用 expert.valid@test.lcas.app 取得真實帳本ID
+[7571] 🔄 TC-001真實用戶修正：userId=user_expert_1697363200000, operatorId=user_expert_1697363200000
+[7571] 🔄 TC-001真實帳本修正：ledgerId=user_expert.valid@test.lcas.app
+[7571] 🎯 階段二目標達成：使用真實註冊流程產生的帳本ID進行budget子集合操作
+[processBudgetCRUD] 開始統一預算CRUD操作 - 操作類型: create, 模式: Expert
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: true, 錯誤: 0個, 警告: 0個
+[transformBudgetData] 開始資料轉換 - 轉換類型: uiToApi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 8
+APL階段三驗證：ledgerId = user_expert.valid@test.lcas.app
+APL階段一調試：HTTP回應狀態 = 200
+APL階段一調試：回應內容 = {success: true, data: {id: budget_1762931578599_j515og6gz, budgetId: budget_1762931578599_j515og6gz, name: 十月生活預算, amount: 50000, type: monthly, ledgerId: user_expert.valid@test.lcas.app, firebase_path: ledgers/user_expert.valid@test.lcas.app/budgets/budget_1762931578599_j515og6gz, collection_path: ledgers/user_expert.valid@test.lcas.app/budgets, architecture: subcollection}, error: null, message: 預算建立成功, metadata: {timestamp: 2025-11-12T07:12:58.996Z, requestId: req_1762931578996_5e3vpj, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 400, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一修正：成功提取budgetId = budget_1762931578599_j515og6gz
+APL階段一最終判定：success = true
+[7571] 🔍 TC-001 階段一除錯：BudgetOperationResult內容 = Instance of 'BudgetOperationResult'
+[7571] ⚠️ TC-001: 無法從BudgetOperationResult提取budgetId
+[7571] 📋 TC-001階段二修正：PL層7304純粹調用完成（真實帳本）
+[7571] ✅ TC-001 PASS - 純粹調用：建立預算測試
+[7571] ✅ 測試成功，PL層回應: Instance of 'BudgetOperationResult'
+[7571] 🔧 純粹調用：TC-002
+[7571] 📊 階段一修正：預算純粹調用: TC-002 - 純粹調用：查詢預算列表測試
+[7571] ⚠️ TC-002: 查詢預算失敗，缺少動態生成的預算ID
+[7571] 💡 提示：需要先執行TC-001創建預算
+[7571] ❌ TC-002 FAIL - 純粹調用：查詢預算列表測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing dynamic budget ID, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_budget_id: Failed to query budget: Missing dynamic budget ID.
+[7571] 🔧 純粹調用：TC-003
+[7571] 📊 階段一修正：預算純粹調用: TC-003 - 純粹調用：更新預算測試
+[7571] ⚠️ TC-003: 更新預算失敗，缺少動態生成的預算ID
+[7571] 💡 提示：需要先執行TC-001創建預算
+[7571] ❌ TC-003 FAIL - 純粹調用：更新預算測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing dynamic budget ID, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_budget_id: Failed to update budget: Missing dynamic budget ID.
+[7571] 🔧 純粹調用：TC-004
+[7571] 📊 階段一修正：預算純粹調用: TC-004 - 純粹調用：刪除預算測試
+[7571] ⚠️ TC-004: 刪除預算失敗，缺少動態生成的預算ID
+[7571] 💡 提示：需要先執行TC-001創建預算
+[7571] ❌ TC-004 FAIL - 純粹調用：刪除預算測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing dynamic budget ID, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_budget_id: Failed to delete budget: Missing dynamic budget ID.
+[7571] 🔧 純粹調用：TC-005
+[7571] 📊 階段一修正：預算純粹調用: TC-005 - 純粹調用：預算執行計算測試
+[7571] ⚠️ TC-005: 測試資料中缺少budget_execution_tracking或budgetId為空
+[7571] ❌ TC-005 FAIL - 純粹調用：預算執行計算測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing budget_execution_tracking data or null budgetId, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_execution_data: Missing budget_execution_tracking data or null budgetId.
+[7571] 🔧 純粹調用：TC-006
+[7571] 📊 階段一修正：預算純粹調用: TC-006 - 純粹調用：預算警示測試
+[7571] ⚠️ TC-006: 測試資料中缺少budget_execution_tracking或budgetId為空
+[7571] ❌ TC-006 FAIL - 純粹調用：預算警示測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing budget_execution_tracking data or null budgetId, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_execution_data: Missing budget_execution_tracking data or null budgetId.
+[7571] 🔧 純粹調用：TC-007
+[7571] 📊 階段一修正：預算純粹調用: TC-007 - 純粹調用：預算資料驗證測試
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: false, 錯誤: 2個, 警告: 0個
+[7571] 📋 TC-007純粹調用PL層7304完成
+[7571] ✅ TC-007 PASS - 純粹調用：預算資料驗證測試
+[7571] ✅ 測試成功，PL層回應: Instance of 'ValidationResult'
+[7571] 🔧 純粹調用：TC-008
+[7571] 📊 階段一修正：預算純粹調用: TC-008 - 純粹調用：預算模式差異化測試
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 10
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Inertial
+[transformBudgetData] 轉換完成 - 結果欄位數: 7
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Cultivation
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Guiding
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[7571] 📋 TC-008純粹調用PL層7304完成（四模式測試）
+[7571] ✅ TC-008 PASS - 純粹調用：預算模式差異化測試
+[7571] ✅ 測試成功，PL層回應: {expert: {id: null, name: 十月生活預算, amount: 50000.0, usedAmount: 0.0, currency: TWD, type: monthly, status: active, details: {}, analytics: {}, metadata: {}}, inertial: {id: null, name: 十月生活預算, amount: 50000.0, usedAmount: 0.0, currency: TWD, type: monthly, status: active}, cultivation: {id: null, name: 十月生活預算, amount: 50000.0, usedAmount: 0.0, currency: TWD, type: monthly, status: active, progress: 0.0, achievement: {level: safe, message: 預算使用在安全範圍內, icon: ✅, color: #45B7D1}}, guiding: {id: null, name: 十月生活預算, amount: 50000.0, usedAmount: 0.0, currency: TWD, type: monthly, status: active, simpleStatus: 充足, nextAction: 按計畫執行}}
+[7571] 🎉 預算管理純粹調用完成
+[7571] 🔄 執行帳本協作測試 (純粹調用PL層7303)
+[7571] 🔧 純粹調用：TC-009
+[7571] 🤝 協作純粹調用: TC-009 - 純粹調用：建立協作帳本測試
+[7571] 🔍 TC-009 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] 🎯 TC-009協作帳本建立測試開始 - 測試真實CM模組路徑
+[7571] 📧 取得協作測試用戶email: collaboration.test@test.lcas.app
+[7571] 📋 協作帳本真實資料準備完成 - email: collaboration.test@test.lcas.app
+[7571] 🔄 調用PL層7303真實路徑：email→userId解析→APL→ASL→CM_createSharedLedger()
+[7303] 🚀 TC-009階段一：開始建立帳本，檢查帳本類型
+[7303] 🔍 TC-009階段一：帳本類型=shared, 協作類型=shared, 是否為協作帳本=true
+[7303] 🤝 TC-009階段一：協作帳本確認，強制路由到CM模組
+[7303] 🎯 強制路徑：7303 → APL → ASL → CM_createSharedLedger() → Firebase collaborations
+[7303] 🤝 TC-009階段一：開始創建協作帳本
+[7303] 🎯 階段一強化：確保路徑 7303 → APL → ASL → CM_createSharedLedger()
+[7303] 🔧 階段一路由標記：isCollaborative=true, requiresCMModule=true, routeToCM=true
+APL階段一調試：HTTP回應狀態 = 200
+APL階段一調試：回應內容 = {success: true, data: {success: true, ledgerId: collaboration_1762931579106_dg1ozk1eb, memberCount: 1, collaborationType: shared, message: 階段二：協作帳本建立成功，完全符合FS規範}, error: null, message: 階段二：協作帳本建立成功，完全符合FS規範, metadata: {timestamp: 2025-11-12T07:12:59.688Z, requestId: req_1762931579688_w0pouo, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 584, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = true
+[7303] ✅ TC-009階段一：協作帳本創建成功，ID: 
+[7303] 🎯 階段一驗證：確認已通過CM模組處理協作功能
+[7303] ⚠️ 階段一警告：協作帳本類型可能未正確設定
+[7571] ✅ TC-009：協作帳本真實CM模組路徑測試成功
+[7571] 📝 帳本ID: 
+[7571] 👤 擁有者ID: 
+[7571] 📧 測試email: collaboration.test@test.lcas.app
+[7571] 🎯 確認路徑：7571 → 7303 → email解析 → APL → ASL → CM模組 → Firebase collaborations
+[7571] 📋 TC-009完成 - 真實CM模組路徑測試完成
+[7571] ✅ TC-009 PASS - 純粹調用：建立協作帳本測試
+[7571] ✅ 測試成功，PL層回應: {success: true, ledger: {id: , name: , type: , ownerId: }, collaboration_initialized: true, cm_module_tested: true, email_to_userid_resolved: true, real_cm_path_used: true, test_email: collaboration.test@test.lcas.app, message: TC-009：協作帳本真實CM模組路徑測試成功}
+[7571] 🔧 純粹調用：TC-010
+[7571] 🤝 協作純粹調用: TC-010 - 純粹調用：查詢帳本列表測試
+[7571] 🔍 TC-010 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] ⚠️ TC-010: 測試資料中缺少create_collaborative_ledger
+[7571] ❌ TC-010 FAIL - 純粹調用：查詢帳本列表測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing create_collaborative_ledger test data, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_test_data: create_collaborative_ledger data not found in test data.
+[7571] 🔧 純粹調用：TC-011
+[7571] 🤝 協作純粹調用: TC-011 - 純粹調用：更新帳本測試
+[7571] 🔍 TC-011 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] ⚠️ TC-011: 測試資料中缺少create_collaborative_ledger
+[7571] ❌ TC-011 FAIL - 純粹調用：更新帳本測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing create_collaborative_ledger test data, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_test_data: create_collaborative_ledger data not found.
+[7571] 🔧 純粹調用：TC-012
+[7571] 🤝 協作純粹調用: TC-012 - 純粹調用：刪除帳本測試
+[7571] 🔍 TC-012 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] ⚠️ TC-012: 測試資料中缺少create_collaborative_ledger
+[7571] ❌ TC-012 FAIL - 純粹調用：刪除帳本測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: Missing create_collaborative_ledger test data, success: false}
+[7571]    關鍵步驟:
+[7571]      • missing_test_data: create_collaborative_ledger data not found.
+[7571] 🔧 純粹調用：TC-013
+[7571] 🤝 協作純粹調用: TC-013 - 純粹調用：查詢協作者列表測試
+[7571] 🔍 TC-013 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] 🔍 TC-013 輸入參數：ledgerId=collaboration_test_ledger_dynamic
+APL階段一調試：HTTP回應狀態 = 200
+APL階段一調試：回應內容 = {success: true, data: [], error: null, message: 協作者列表取得成功, metadata: {timestamp: 2025-11-12T07:12:59.887Z, requestId: req_1762931579887_vwi8la, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 144, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = true
+[7571] 📋 TC-013純粹調用PL層7303完成 - 結果: []
+[7571] ✅ TC-013 PASS - 純粹調用：查詢協作者列表測試
+[7571] ✅ 測試成功，PL層回應: []
+[7571] 🔧 純粹調用：TC-014
+[7571] 🤝 協作純粹調用: TC-014 - 純粹調用：邀請協作者測試
+[7571] 🔍 TC-014 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] 🔍 TC-014 輸入參數：ledgerId=collaboration_test_ledger_dynamic, invitations=1
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: INVITE_COLLABORATOR_ERROR, message: 邀請協作者失敗: 缺少必要參數: ledgerId, email, details: null}, message: 邀請協作者失敗: 缺少必要參數: ledgerId, email, metadata: {timestamp: 2025-11-12T07:12:59.898Z, requestId: req_1762931579898_8406h1, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 1, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：邀請協作者失敗: 缺少必要參數: ledgerId, email
+[7571] ❌ TC-014 調用異常: CollaborationError: 邀請協作者失敗: 缺少必要參數: ledgerId, email (Code: INVITE_COLLABORATOR_ERROR)
+[7571] 📚 堆疊追蹤: #0      LedgerCollaborationManager.processCollaboratorInvitation (file:///home/runner/workspace/73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1056:9)
+<asynchronous suspension>
+[7571] ❌ TC-014 FAIL - 純粹調用：邀請協作者測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: TC-014 inviteCollaborators failed: CollaborationError: 邀請協作者失敗: 缺少必要參數: ledgerId, email (Code: INVITE_COLLABORATOR_ERROR), success: false}
+[7571]    關鍵步驟:
+[7571]      • prepare_invite_collaborator: Set ledgerId: collaboration_test_ledger_dynamic and invitations count: 1
+[7571]      • function_call_error: LedgerCollaborationManager.inviteCollaborators threw exception: CollaborationError: 邀請協作者失敗: 缺少必要參數: ledgerId, email (Code: INVITE_COLLABORATOR_ERROR)
+[7571]      • stack_trace: #0      LedgerCollaborationManager.processCollaboratorInvitation (file:///home/runner/workspace/73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1056:9) | <asynchronous suspension> | #1      LedgerCollaborationManager.inviteCollaborators (file:///home/runner/workspace/73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1217:22)
+[7571] 🔧 純粹調用：TC-015
+[7571] 🤝 協作純粹調用: TC-015 - 純粹調用：更新協作者權限測試
+[7571] 🔍 TC-015 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] 🔍 TC-015 輸入參數：ledgerId=collaboration_test_ledger_dynamic, collaboratorId=user_cultivation_1697363320000
+權限更新審計：用戶 user_cultivation_1697363320000 在帳本 collaboration_test_ledger_dynamic 的權限即將從舊權限更新為 admin
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: UPDATE_COLLABORATOR_PERMISSION_ERROR, message: 階段三修正：協作帳本不存在，且非擁有者權限設置, details: null}, message: 階段三修正：協作帳本不存在，且非擁有者權限設置, metadata: {timestamp: 2025-11-12T07:13:00.061Z, requestId: req_1762931580061_uv8qr7, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 127, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：階段三修正：協作帳本不存在，且非擁有者權限設置
+[7571] ❌ TC-015 調用異常: CollaborationError: 階段三修正：協作帳本不存在，且非擁有者權限設置 (Code: UPDATE_COLLABORATOR_PERMISSION_ERROR)
+[7571] 📚 堆疊追蹤: #0      LedgerCollaborationManager.processCollaboratorPermissionUpdate (file:///home/runner/workspace/73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1103:9)
+<asynchronous suspension>
+[7571] ❌ TC-015 FAIL - 純粹調用：更新協作者權限測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: TC-015 updateCollaboratorPermissions failed: CollaborationError: 階段三修正：協作帳本不存在，且非擁有者權限設置 (Code: UPDATE_COLLABORATOR_PERMISSION_ERROR), success: false}
+[7571]    關鍵步驟:
+[7571]      • prepare_update_permissions: Set ledgerId: collaboration_test_ledger_dynamic, collaboratorId: user_cultivation_1697363320000, role: admin
+[7571]      • function_call_error: LedgerCollaborationManager.updateCollaboratorPermissions threw exception: CollaborationError: 階段三修正：協作帳本不存在，且非擁有者權限設置 (Code: UPDATE_COLLABORATOR_PERMISSION_ERROR)
+[7571]      • stack_trace: #0      LedgerCollaborationManager.processCollaboratorPermissionUpdate (file:///home/runner/workspace/73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1103:9) | <asynchronous suspension> | #1      LedgerCollaborationManager.updateCollaboratorPermissions (file:///home/runner/workspace/73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1254:7)
+[7571] 🔧 純粹調用：TC-016
+[7571] 🤝 協作純粹調用: TC-016 - 純粹調用：移除協作者測試
+[7571] 🔍 TC-016 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] 🔍 TC-016 輸入參數：ledgerId=collaboration_test_ledger_dynamic, collaboratorId=user_cultivation_1697363320000
+準備清理用戶 user_cultivation_1697363320000 在帳本 collaboration_test_ledger_dynamic 中的相關資料
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: REMOVE_COLLABORATOR_ERROR, message: 協作者移除失敗, details: null}, message: 協作者移除失敗, metadata: {timestamp: 2025-11-12T07:13:00.202Z, requestId: req_1762931580202_u7sjon, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 132, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：協作者移除失敗
+[7571] ❌ TC-016 調用異常: CollaborationError: 協作者移除失敗 (Code: REMOVE_COLLABORATOR_ERROR)
+[7571] 📚 堆疊追蹤: #0      LedgerCollaborationManager.processCollaboratorRemoval (file:///home/runner/workspace/73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1144:9)
+<asynchronous suspension>
+[7571] ❌ TC-016 FAIL - 純粹調用：移除協作者測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {error: TC-016 removeCollaborator failed: CollaborationError: 協作者移除失敗 (Code: REMOVE_COLLABORATOR_ERROR), success: false}
+[7571]    關鍵步驟:
+[7571]      • prepare_remove_collaborator: Set ledgerId: collaboration_test_ledger_dynamic, collaboratorId: user_cultivation_1697363320000
+[7571]      • function_call_error: LedgerCollaborationManager.removeCollaborator threw exception: CollaborationError: 協作者移除失敗 (Code: REMOVE_COLLABORATOR_ERROR)
+[7571]      • stack_trace: #0      LedgerCollaborationManager.processCollaboratorRemoval (file:///home/runner/workspace/73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1144:9) | <asynchronous suspension> | #1      LedgerCollaborationManager.removeCollaborator (file:///home/runner/workspace/73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:1294:7)
+[7571] 🔧 純粹調用：TC-017
+[7571] 🤝 協作純粹調用: TC-017 - 純粹調用：權限矩陣計算測試
+[7571] 🔍 TC-017 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] 🔍 TC-017 輸入參數：ledgerId=collaboration_test_ledger_dynamic, userId=user_expert_1697363200000
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: LEDGER_NOT_FOUND, message: 帳本不存在, details: null}, message: 帳本不存在, metadata: {timestamp: 2025-11-12T07:13:00.334Z, requestId: req_1762931580334_w69ho8, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 119, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：帳本不存在
+[7571] 📋 TC-017純粹調用PL層7303完成 - 結果: Instance of 'PermissionMatrix'
+[7571] ✅ TC-017 PASS - 純粹調用：權限矩陣計算測試
+[7571] ✅ 測試成功，PL層回應: Instance of 'PermissionMatrix'
+[7571] 🔧 純粹調用：TC-018
+[7571] 🤝 協作純粹調用: TC-018 - 純粹調用：協作衝突檢測測試
+[7571] 🔍 TC-018 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] 🔍 TC-018 輸入參數：ledgerId=collaboration_test_ledger_dynamic
+[7571] 📋 TC-018純粹調用完成 - 結果: {conflictCheckResult: PL層回傳結果, ledgerId: collaboration_test_ledger_dynamic, success: true}
+[7571] ✅ TC-018 PASS - 純粹調用：協作衝突檢測測試
+[7571] ✅ 測試成功，PL層回應: {conflictCheckResult: PL層回傳結果, ledgerId: collaboration_test_ledger_dynamic, success: true}
+[7571] 🔧 純粹調用：TC-019
+[7571] 🤝 協作純粹調用: TC-019 - 純粹調用：API整合測試
+[7571] 🔍 TC-019 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] 🔍 TC-019 輸入參數：ledgerId=collaboration_test_ledger_dynamic
+[7571] 📋 TC-019純粹調用PL層7303完成 - 結果: {success: false, data: null, message: Generic GET for ledger endpoints is deprecated. Use specific functions., error: DEPRECATED_ENDPOINT, errorCode: DEPRECATED_ENDPOINT}
+[7571] ❌ TC-019 FAIL - 純粹調用：API整合測試
+[7571] ❌ 測試失敗詳情:
+[7571]    PL層回應: {success: false, data: null, message: Generic GET for ledger endpoints is deprecated. Use specific functions., error: DEPRECATED_ENDPOINT, errorCode: DEPRECATED_ENDPOINT}
+[7571]    關鍵步驟:
+[7571]      • prepare_api_integration_test: Set ledgerId: collaboration_test_ledger_dynamic, testType: api_integration
+[7571]      • call_pl_api: Called LedgerCollaborationManager.callAPI successfully.
+[7571] 🔧 純粹調用：TC-020
+[7571] 🤝 協作純粹調用: TC-020 - 純粹調用：錯誤處理測試
+[7571] 🔍 TC-020 載入測試資料完成
+[7571] 📊 成功案例數量: 3
+[7571] 📊 失敗案例數量: 2
+[7571] 🔍 TC-020 輸入參數：invalidData={operatorEmail: guiding.valid@test.lcas.app, attemptedAction: invite_member}
+[7571] 📋 TC-020純粹調用PL層7303完成 - 結果: Instance of 'ValidationResult'
+[7571] ✅ TC-020 PASS - 純粹調用：錯誤處理測試
+[7571] ✅ 測試成功，PL層回應: Instance of 'ValidationResult'
+[7571] 🎉 帳本協作純粹調用完成
+[7571] 🔄 執行整合驗證測試 (純粹調用)
+[7571] 🔧 純粹調用：TC-021
+[7571] 🌐 整合純粹調用: TC-021 - 純粹調用：APL.dart統一Gateway驗證
+[7571] 📋 TC-021純粹調用完成
+[7571] ✅ TC-021 PASS - 純粹調用：APL.dart統一Gateway驗證
+[7571] ✅ 測試成功，PL層回應: {gatewayTest: completed, userData: {userId: user_expert_1697363200000, email: expert.valid@test.lcas.app, displayName: Expert 測試用戶, userMode: Expert, preferences: {language: zh-TW, currency: TWD, theme: expert}, assessmentAnswers: {Q1: A, Q2: A, Q3: A}, registrationDate: 2025-10-15T08:00:00+08:00, createdAt: 2025-10-15T08:00:00+08:00, testScenario: 正常Expert用戶註冊}}
+[7571] 🔧 純粹調用：TC-022
+[7571] 🌐 整合純粹調用: TC-022 - 純粹調用：預算管理API轉發驗證
+[7571] 📋 TC-022純粹調用完成
+[7571] ✅ TC-022 PASS - 純粹調用：預算管理API轉發驗證
+[7571] ✅ 測試成功，PL層回應: {apiForwardingTest: completed, budgetDataCount: 4}
+[7571] 🔧 純粹調用：TC-023
+[7571] 🌐 整合純粹調用: TC-023 - 純粹調用：帳本協作API轉發驗證
+[7571] 📋 TC-023純粹調用完成
+[7571] ✅ TC-023 PASS - 純粹調用：帳本協作API轉發驗證
+[7571] ✅ 測試成功，PL層回應: {apiForwardingTest: completed, collaborationDataCount: 3}
+[7571] 🔧 純粹調用：TC-024
+[7571] 🌐 整合純粹調用: TC-024 - 純粹調用：四模式差異化測試
+[7571] 📋 TC-024純粹調用完成（四模式測試）
+[7571] ✅ TC-024 PASS - 純粹調用：四模式差異化測試
+[7571] ✅ 測試成功，PL層回應: {modeResults: {Expert: {userId: user_expert_1697363200000, userMode: Expert, preferences: {language: zh-TW, currency: TWD, theme: expert}}, Inertial: {userId: user_inertial_1697363260000, userMode: Inertial, preferences: {language: zh-TW, currency: TWD, theme: inertial}}, Cultivation: {userId: user_cultivation_1697363320000, userMode: Cultivation, preferences: {language: zh-TW, currency: TWD, theme: cultivation}}, Guiding: {userId: user_guiding_1697363380000, userMode: Guiding, preferences: {language: zh-TW, currency: TWD, theme: guiding}}}, totalModes: 4}
+[7571] 🔧 純粹調用：TC-025
+[7571] 🌐 整合純粹調用: TC-025 - 純粹調用：統一回應格式測試
+[7571] 📋 TC-025純粹調用完成
+[7571] ✅ TC-025 PASS - 純粹調用：統一回應格式測試
+[7571] ✅ 測試成功，PL層回應: {formatTest: completed, testId: TC-025, timestamp: 2025-11-12T07:13:00.349384}
+[7571] 🎉 整合驗證純粹調用完成
+
+[7571] 📊 純粹調用版 SIT P2測試完成報告:
+[7571]    🎯 測試策略: P2_PURE_CALL_NO_MOCK_LOGIC
+[7571]    📋 總測試數: 25
+[7571]    ✅ 通過數: 13
+[7571]    ❌ 失敗數: 12
+[7571]    📈 成功率: 52.0%
+[7571]    ⏱️ 執行時間: 1942ms
+[7571]    🚨 失敗的測試案例: TC-002, TC-003, TC-004, TC-005, TC-006, TC-010, TC-011, TC-012, TC-014, TC-015, TC-016, TC-019
+[7571]    📊 分類結果:
+[7571]       budget_pure_call: 3/8 (37.5%)
+[7571]       collaboration_pure_call: 5/12 (41.7%)
+[7571]       integration_pure_call: 5/5 (100.0%)
+[7571]    🔧 合規狀況:
+[7571]       ✅ 無模擬業務邏輯: true
+[7571]       ✅ 純粹PL層調用: true
+[7571]       ✅ 無業務邏輯判斷: true
+[7571]       ✅ 完全依賴7598: true
+[7571] 🎉 純粹調用版 SIT P2測試完成
+[7571] ✅ 0098文件規範第4-5條完全合規：移除所有模擬業務邏輯
+[7571] 🗄️ 100%純粹調用PL層函數，無任何業務邏輯判斷
+
+00:02 +1: ... 執行SIT P2純粹調用測00:02 +1: ... v2.3.0) P2測試資料載00:02 +1: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) P2測試資料載入驗證
+
+[7571] 🔧 執行P2測試資料載入驗證...
+[7571] ✅ P2測試資料載入成功
+[7571] ✅ 協作測試資料驗證通過
+[7571] ✅ 預算測試資料驗證通過
+[7571] ✅ P2測試資料載入驗證完成
+00:02 +2: ... v2.3.0) P2測試資料載00:02 +2: ... P2四模式資料完整性驗00:02 +2: SIT P2測試 - 7571 (純粹調用版-無模擬業務邏輯 v2.3.0) P2四模式資料完整性驗證
+
+[7571] 🎯 執行P2四模式資料完整性驗證...
+[7571] ✅ Expert 模式資料完整性驗證通過
+[7571] ✅ Inertial 模式資料完整性驗證通過
+[7571] ✅ Cultivation 模式資料完整性驗證通過
+[7571] ✅ Guiding 模式資料完整性驗證通過
+[7571] ✅ P2四模式資料完整性驗證完成
+00:02 +3: ... P2四模式資料完整性驗00:02 +3: All tests passed!       
+~/workspace/75. Flutter_Test_code_P
