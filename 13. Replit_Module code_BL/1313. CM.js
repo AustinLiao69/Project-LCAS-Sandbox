@@ -1,8 +1,8 @@
 /**
- * CM_協作與帳本管理模組_2.1.3
+ * CM_協作與帳本管理模組_2.1.4
  * @module CM模組
  * @description 協作與帳本管理系統 - 負責所有後續帳本（第2本以上）的完整生命週期管理，包含協作功能和多帳本管理功能
- * @update 2025-11-12: 階段一修復 - 資料結構完全符合FS標準，補齊ledgerId欄位，移除多餘欄位，members改為子集合
+ * @update 2025-11-12: 階段二優化 - CM_createSharedLedger函數完全符合FS規範，移除ownerEmail等多餘欄位，優化子集合架構
  */
 
 const admin = require('firebase-admin');
@@ -2178,147 +2178,126 @@ async function CM_createProjectLedger(userId, projectName, projectDescription, s
 }
 
 /**
- * 29. 建立共享帳本 - 階段三：0098完全合規版本
- * @version 2025-11-12-V2.0.0
+ * 29. 建立共享帳本 - 階段二：協作帳本建立流程優化
+ * @version 2025-11-12-V2.1.0
  * @date 2025-11-12
- * @description 完全符合0098憲法，禁止hard coding，嚴格遵守業務邏輯規範
+ * @description 階段二優化：完全符合FS規範，移除多餘欄位，補齊必要欄位，優化子集合架構
  */
 async function CM_createSharedLedger(ownerId, ledgerName, memberList, permissionSettings) {
   const functionName = "CM_createSharedLedger";
   try {
-    CM_logInfo(`建立協作帳本 - 擁有者: ${ownerId}, 帳本: ${ledgerName}`, "建立共享帳本", ownerId, "", "", functionName);
+    CM_logInfo(`階段二：建立協作帳本 - 擁有者: ${ownerId}, 帳本: ${ledgerName}`, "建立共享帳本", ownerId, "", "", functionName);
 
-    // 階段一修復：使用CM模組內部函數生成ID，移除對FS模組的依賴
+    // 生成協作帳本ID
     const collaborationId = CM_generateCollaborationId();
 
-    const allMembers = [ownerId, ...(memberList || [])];
-
-    // 階段三：0098合規 - 通過FS模組標準查詢檢查存在性
+    // 檢查協作帳本是否已存在
     const existingCollaboration = await FS.FS_getDocument('collaborations', collaborationId);
-
-    if (!existingCollaboration.success || !existingCollaboration.data) {
-      // 階段一修復：使用簡單邏輯生成成員ID
-      const memberId = `member_${Date.now()}_${ownerId}`;
-
-      const currentTime = admin.firestore.Timestamp.now();
-      const ownerMember = {
-        memberId: memberId,
-        userId: ownerId,
-        permissionLevel: 'owner',
-        joinedAt: currentTime,
-        invitedBy: ownerId,
-        status: "active"
-      };
-
-      const collaborationData = {
-        ledgerId: collaborationId,  // 階段一修復：補齊 ledgerId 欄位
-        ownerId: ownerId,
-        collaborationType: 'shared',
-        settings: {
-          allowInvite: permissionSettings?.allowInvite !== false,
-          allowEdit: permissionSettings?.allowEdit !== false,
-          allowDelete: permissionSettings?.allowDelete || false,
-          requireApproval: false,
-          ...(permissionSettings || {})
-        },
-        createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now(),
-        status: 'active'
-      };
-
-      // 階段一整合：直接處理Firebase寫入
-      const collaborationRef = db.collection('collaborations').doc(collaborationId);
-
-      try {
-        await collaborationRef.set(collaborationData);
-        CM_logInfo(`階段一整合：協作帳本已寫入Firebase - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
-        
-        // 階段一修復：將members建立為子集合
-        await collaborationRef.collection('members').doc(ownerId).set({
-          userId: ownerId,
-          email: null,
-          role: 'owner',
-          permissions: {
-            canInvite: true,
-            canEdit: true,
-            canDelete: true,
-            canManagePermissions: true
-          },
-          joinedAt: admin.firestore.Timestamp.now(),
-          status: 'active'
-        });
-
-        // 階段一整合：立即驗證文檔是否成功寫入
-        const verifyDoc = await collaborationRef.get();
-        if (!verifyDoc.exists) {
-          throw new Error(`階段一整合：協作帳本建立失敗，Firebase寫入驗證失敗 - ${collaborationId}`);
-        }
-
-        const verifyData = verifyDoc.data();
-        if (!verifyData || !verifyData.members || verifyData.members.length === 0) {
-          throw new Error(`階段一整合：協作帳本建立失敗，成員資料寫入不完整 - ${collaborationId}`);
-        }
-
-        CM_logInfo(`階段一整合：協作帳本建立並驗證成功 - ${collaborationId}, 成員數: ${verifyData.members.length}`, "建立共享帳本", ownerId, "", "", functionName);
-      } catch (writeError) {
-        CM_logError(`階段一整合：Firebase寫入失敗 - ${writeError.message}`, "建立共享帳本", ownerId, "FIREBASE_WRITE_ERROR", writeError.toString(), functionName);
-        throw new Error(`階段一整合：協作帳本Firebase寫入失敗 - ${writeError.message}`);
-      }
+    if (existingCollaboration.success && existingCollaboration.exists) {
+      throw new Error(`協作帳本ID已存在: ${collaborationId}`);
     }
 
-    // 階段一整合：添加其他成員到協作
+    // 階段二：建立完全符合FS規範的協作帳本資料結構
+    const collaborationData = {
+      ledgerId: collaborationId,          // 明確加入ledgerId欄位
+      ownerId: ownerId,                   // 擁有者ID
+      collaborationType: 'shared',        // 協作類型
+      settings: {
+        allowInvite: permissionSettings?.allowInvite !== false,
+        allowEdit: permissionSettings?.allowEdit !== false,
+        allowDelete: permissionSettings?.allowDelete || false,
+        requireApproval: false,
+        ...(permissionSettings || {})
+      },
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      status: 'active'
+      // 階段二移除：ownerEmail欄位 (FS標準中沒有)
+      // 階段二移除：直接存放的members陣列 (改用子集合)
+      // 階段二移除：直接存放的permissions物件 (改用子集合)
+    };
+
+    // 階段二：使用FS模組標準函數建立協作文檔
+    const createResult = await FS.FS_createCollaborationDocument(collaborationId, collaborationData, ownerId);
+    if (!createResult.success) {
+      throw new Error(`建立協作文檔失敗: ${createResult.error}`);
+    }
+
+    CM_logInfo(`階段二：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
+
+    // 階段二：建立擁有者成員記錄（子集合架構）
+    const ownerMemberData = {
+      userId: ownerId,
+      role: 'owner',
+      permissions: {
+        canInvite: true,
+        canEdit: true,
+        canDelete: true,
+        canManagePermissions: true
+      },
+      joinedAt: admin.firestore.Timestamp.now(),
+      status: 'active'
+      // 階段二移除：email欄位 (子集合中不需要)
+    };
+
+    const ownerMemberResult = await FS.FS_createDocument(
+      `collaborations/${collaborationId}/members`,
+      ownerId,
+      ownerMemberData,
+      ownerId
+    );
+
+    if (!ownerMemberResult.success) {
+      CM_logWarning(`擁有者成員記錄建立失敗: ${ownerMemberResult.error}`, "建立共享帳本", ownerId, "", "", functionName);
+    }
+
+    // 階段二：添加其他成員到子集合
+    let successfulMembers = 1; // 擁有者已成功
     for (const memberId of memberList || []) {
       if (memberId !== ownerId) {
-        await CM_setMemberPermission(
+        const memberResult = await CM_setMemberPermission(
           collaborationId,
           memberId,
           'member',
           ownerId
         );
+        if (memberResult.success) {
+          successfulMembers++;
+        }
       }
     }
 
-    // 階段一整合：初始化協作同步
-    const syncId = `sync_${Date.now()}_${ownerId}`;
-    const channelId = `channel_${collaborationId}`;
-
-    // 階段一整合：記錄協作建立操作
+    // 階段二：記錄協作建立操作
     await CM_logCollaborationAction(collaborationId, ownerId, 'collaboration_created', {
       collaborationType: 'shared',
-      memberCount: allMembers.length,
-      settings: permissionSettings,
-      syncId: syncId
+      ledgerName: ledgerName,
+      totalMembers: (memberList?.length || 0) + 1,
+      successfulMembers: successfulMembers,
+      settings: permissionSettings
     });
 
-    // 階段一整合：Firebase寫入狀態檢查日誌
-    try {
-      const verifyCollaboration = await db.collection('collaborations').doc(collaborationId).get();
-      if (verifyCollaboration.exists) {
-        const collabData = verifyCollaboration.data();
-        CM_logInfo(`階段一整合驗證成功：協作帳本已存在於Firebase - 成員數: ${collabData.members?.length || 0}`, "建立共享帳本", ownerId, "", "", functionName);
-      } else {
-        CM_logError(`階段一整合驗證失敗：協作帳本未在Firebase中找到 - ${collaborationId}`, "建立共享帳本", ownerId, "COLLABORATION_NOT_FOUND", "", functionName);
-      }
-    } catch (verifyError) {
-      CM_logError(`階段一整合驗證錯誤：無法檢查協作帳本狀態 - ${verifyError.message}`, "建立共享帳本", ownerId, "COLLABORATION_VERIFY_ERROR", verifyError.toString(), functionName);
+    // 階段二：最終驗證協作帳本是否建立成功
+    const finalVerification = await FS.FS_getDocument('collaborations', collaborationId, ownerId);
+    if (!finalVerification.success || !finalVerification.exists) {
+      throw new Error('協作帳本建立後驗證失敗');
     }
 
-    CM_logInfo(`階段一整合：協作帳本建立成功 - ID: ${collaborationId}, 成員數: ${allMembers.length}`, "建立共享帳本", ownerId, "", "", functionName);
+    CM_logInfo(`階段二：協作帳本建立完成 - ID: ${collaborationId}, 成功加入成員數: ${successfulMembers}`, "建立共享帳本", ownerId, "", "", functionName);
 
     return {
       success: true,
       ledgerId: collaborationId,
-      memberCount: allMembers.length,
+      memberCount: successfulMembers,
       collaborationType: 'shared',
-      syncId: syncId,
-      message: '階段一整合：協作帳本建立成功（統一錯誤處理機制）'
+      message: '階段二：協作帳本建立成功，完全符合FS規範'
     };
 
   } catch (error) {
-    CM_logError(`階段一整合：建立協作帳本失敗: ${error.message}`, "建立共享帳本", ownerId, "CM_CREATE_SHARED_LEDGER_ERROR", error.toString(), functionName);
+    CM_logError(`階段二：建立協作帳本失敗: ${error.message}`, "建立共享帳本", ownerId, "CM_CREATE_SHARED_LEDGER_ERROR", error.toString(), functionName);
     return {
       success: false,
-      message: `階段一整合：建立協作帳本失敗: ${error.message}`
+      ledgerId: null,
+      message: `階段二：建立協作帳本失敗: ${error.message}`
     };
   }
 }
