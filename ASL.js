@@ -1602,6 +1602,34 @@ app.delete('/api/v1/transactions/:id/attachments/:attachmentId', async (req, res
   }
 });
 
+// =============== 帳戶管理API轉發（新增支援協作功能） ===============
+
+// 16. 查詢用戶帳戶列表（用於email→userId解析）- 嚴格遵守8020文件規範
+app.get('/api/v1/accounts', async (req, res) => {
+  try {
+    console.log('👤 ASL轉發: 查詢用戶帳戶 -> AM_processAPIGetAccounts');
+
+    if (!AM || typeof AM.AM_processAPIGetAccounts !== 'function') {
+      return res.apiError('AM_processAPIGetAccounts函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await AM.AM_processAPIGetAccounts(req.query);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else if (result && result.success === false) {
+      res.apiError(result.message || '帳戶查詢失敗', result.error?.code || 'GET_ACCOUNTS_ERROR', 400, result.error?.details);
+    } else {
+      console.error('❌ AM_processAPIGetAccounts回應格式異常:', result);
+      res.apiError('BL層回應格式異常', 'INVALID_BL_RESPONSE', 500);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get accounts):', error);
+    res.apiError('帳戶查詢轉發失敗', 'GET_ACCOUNTS_FORWARD_ERROR', 500);
+  }
+});
+
 /**
  * =============== P2 階段 API 端點轉發 ===============
  * 實作階段二規劃的帳本(Ledgers)和預算(Budgets)相關API端點
