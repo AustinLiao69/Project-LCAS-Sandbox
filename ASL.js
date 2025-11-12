@@ -2065,20 +2065,32 @@ app.post('/api/v1/ledgers/:id/resolve-conflict', async (req, res) => {
 
       let result;
 
-      if (action === 'create_shared_ledger' || req.body.use_cm_create_shared_ledger) {
-        console.log('📝 ASL轉發: 建立協作帳本 -> CM_createSharedLedger');
-        const { ledger_data } = req.body;
+      // 階段一修正：所有帳本創建都默認路由到CM_createSharedLedger
+      console.log('📝 ASL轉發: 建立帳本 -> CM_createSharedLedger (統一路由)');
+      console.log('🔍 接收到的請求資料:', JSON.stringify(req.body, null, 2));
 
-        result = await CM.CM_createSharedLedger(
-          ledger_data.ownerEmail || ledger_data.ownerId,
-          ledger_data.name,
-          ledger_data.memberList || [],
-          ledger_data.settings || {}
-        );
-      } else {
-        console.log('📝 ASL轉發: 建立帳本 -> CM_createLedger (不存在)');
-        throw new Error('CM_createLedger函數不存在，請使用create_shared_ledger action');
-      }
+      // 從請求中提取必要的帳本資料
+      const ledgerData = {
+        name: req.body.name,
+        type: req.body.type || 'shared',
+        description: req.body.description || '',
+        ownerEmail: req.body.ownerEmail,
+        ownerId: req.body.ownerId,
+        settings: req.body.settings || {},
+        isCollaborative: req.body.isCollaborative || true,
+        requiresCMModule: req.body.requiresCMModule || true,
+        ...req.body
+      };
+
+      // 調用CM_createSharedLedger函數
+      result = await CM.CM_createSharedLedger(
+        ledgerData.ownerEmail || ledgerData.ownerId,
+        ledgerData.name,
+        ledgerData.memberList || [],
+        ledgerData.settings || {}
+      );
+
+      console.log('🎯 CM_createSharedLedger調用結果:', result);
 
       if (result && result.success) {
         res.status(200).json(result);
