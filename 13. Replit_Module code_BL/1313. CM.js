@@ -1,8 +1,8 @@
 /**
- * CM_協作與帳本管理模組_2.1.2
+ * CM_協作與帳本管理模組_2.1.3
  * @module CM模組
  * @description 協作與帳本管理系統 - 負責所有後續帳本（第2本以上）的完整生命週期管理，包含協作功能和多帳本管理功能
- * @update 2025-11-12: 階段一修復 - 移除FS.FS_generateUniqueId依賴，新增CM_generateCollaborationId函數
+ * @update 2025-11-12: 階段一修復 - 資料結構完全符合FS標準，補齊ledgerId欄位，移除多餘欄位，members改為子集合
  */
 
 const admin = require('firebase-admin');
@@ -2211,17 +2211,9 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
       };
 
       const collaborationData = {
+        ledgerId: collaborationId,  // 階段一修復：補齊 ledgerId 欄位
         ownerId: ownerId,
-        ownerEmail: null, // 階段三：0098合規 - 移除hard coding的email格式
         collaborationType: 'shared',
-        status: 'active',
-        members: [ownerMember],
-        permissions: {
-          owner: ownerId,
-          admins: [],
-          members: [],
-          viewers: []
-        },
         settings: {
           allowInvite: permissionSettings?.allowInvite !== false,
           allowEdit: permissionSettings?.allowEdit !== false,
@@ -2230,7 +2222,8 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
           ...(permissionSettings || {})
         },
         createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now()
+        updatedAt: admin.firestore.Timestamp.now(),
+        status: 'active'
       };
 
       // 階段一整合：直接處理Firebase寫入
@@ -2239,6 +2232,21 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
       try {
         await collaborationRef.set(collaborationData);
         CM_logInfo(`階段一整合：協作帳本已寫入Firebase - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
+        
+        // 階段一修復：將members建立為子集合
+        await collaborationRef.collection('members').doc(ownerId).set({
+          userId: ownerId,
+          email: null,
+          role: 'owner',
+          permissions: {
+            canInvite: true,
+            canEdit: true,
+            canDelete: true,
+            canManagePermissions: true
+          },
+          joinedAt: admin.firestore.Timestamp.now(),
+          status: 'active'
+        });
 
         // 階段一整合：立即驗證文檔是否成功寫入
         const verifyDoc = await collaborationRef.get();
