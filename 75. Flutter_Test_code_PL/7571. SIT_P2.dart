@@ -807,7 +807,7 @@ class SITP2TestController {
             executionSteps['step_3_call_pl_create_ledger'] = 'Calling PL layer 7303 createLedger function.';
             print('[7571] 🔄 階段一修正：調用PL層7303.createLedger()');
 
-            plResult = await LedgerCollaborationManager.createLedger(
+            final response = await LedgerCollaborationManager.createLedger(
               ledgerData,
               userMode: 'Expert'
             );

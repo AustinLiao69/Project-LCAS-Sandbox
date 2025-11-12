@@ -308,7 +308,7 @@ class CollaborationError implements Exception {
 
 /// 帳本協作功能群主類別
 class LedgerCollaborationManager {
-  static const String moduleVersion = '2.6.0';
+  static const String moduleVersion = '2.7.0';
   static const String moduleDate = '2025-11-12';
 
   /// =============== 階段一：帳本管理核心函數（8個函數） ===============
@@ -325,10 +325,10 @@ class LedgerCollaborationManager {
   }) async {
     try {
       print('[7303] 🤝 階段一修正：開始創建協作帳本');
-      
+
       // 通過APL.dart調用API創建協作帳本
       final response = await APL.instance.ledger.createLedger(data);
-      
+
       if (response.success && response.data != null) {
         final ledger = Ledger.fromJson(response.data! as Map<String, dynamic>);
         print('[7303] ✅ 階段一修正：協作帳本創建成功，ID: ${ledger.id}');
@@ -808,59 +808,52 @@ class LedgerCollaborationManager {
       return await processLedgerCreation(createData, userMode: userMode);
 
       // 階段二關鍵修正：如果是email-based協作帳本，需要先解析email→userId
+      // 從傳入資料中取得擁有者Email
+      final ownerEmail = data['ownerEmail'] ?? data['owner_email'];
+
       if (ownerEmail != null && isCollaborativeLedger) {
-        print('[7303] 📧 階段二修正：檢測到email-based協作帳本建立請求');
+        // 階段一核心修正：將email轉換為真實userId
         print('[7303] 👤 擁有者Email: $ownerEmail');
+        print('[7303] 🔄 階段一修正：開始email→userId解析流程');
 
         try {
-          // 步驟1：查詢email對應的userId（階段一修正：真實APL調用）
-          print('[7303] 🔍 階段一修正：通過APL→AM模組查詢email對應的userId...');
-
+          // 呼叫email→userId解析功能
           final emailToUserIdResult = await _resolveEmailToUserId(ownerEmail);
 
           if (emailToUserIdResult['success'] == true) {
             final resolvedUserId = emailToUserIdResult['userId'];
-            final userData = emailToUserIdResult['userData'];
-
             print('[7303] ✅ 階段一修正：真實email→userId解析成功: $ownerEmail → $resolvedUserId');
 
-            // 更新建立資料，使用解析出的真實userId
-            createData['owner_id'] = resolvedUserId;
+            // 使用解析後的真實userId
             createData['ownerId'] = resolvedUserId;
-            createData['userId'] = resolvedUserId;
-
-            // 保留原始email和用戶資料用於協作功能
+            createData['ownerUserId'] = resolvedUserId; // 確保相容性
             createData['ownerEmail'] = ownerEmail;
-            if (userData.isNotEmpty) {
-              createData['ownerDisplayName'] = userData['displayName'] ?? userData['name'];
-              createData['ownerUserMode'] = userData['userMode'] ?? userData['userType'];
-            }
 
+            print('[7303] 🎯 階段一修正：協作帳本創建資料已更新為真實userId');
+            print('[7303] 📋 真實擁有者ID: $resolvedUserId');
           } else {
             final errorMsg = emailToUserIdResult['error'] ?? 'Unknown error';
-            final stage = emailToUserIdResult['stage'] ?? 'unknown';
+            print('[7303] ❌ 階段一修正：email→userId解析失敗');
 
-            print('[7303] ❌ 階段一修正：真實email→userId解析失敗 - Stage: $stage, Error: $errorMsg');
-
+            // 這裡應該拋出錯誤而不是返回LedgerOperationResult，因為createLedger的返回類型是Ledger
             throw CollaborationError(
               '無法解析email對應的userId: $ownerEmail - $errorMsg',
               'EMAIL_RESOLUTION_FAILED',
               {
                 'email': ownerEmail,
-                'stage': stage,
-                'originalError': errorMsg
+                'error': errorMsg,
               }
             );
           }
-
-        } catch (resolutionError) {
-          print('[7303] ❌ 階段一修正：email解析過程發生錯誤: $resolutionError');
+        } catch (e) {
+          print('[7303] ❌ 階段一修正：email→userId解析異常: $e');
+          // 這裡應該拋出錯誤而不是返回LedgerOperationResult
           throw CollaborationError(
-            'Email解析失敗: ${resolutionError.toString()}',
+            '協作帳本創建失敗：email解析異常: ${e.toString()}',
             'EMAIL_RESOLUTION_ERROR',
             {
               'email': ownerEmail,
-              'errorType': resolutionError.runtimeType.toString()
+              'exception': e.toString(),
             }
           );
         }
@@ -2123,7 +2116,7 @@ class LedgerCollaborationManager {
       'modeSupport': '完整四模式差異化支援',
       'nullSafety': '✅ 完整null值安全處理機制',
       'collaborationFeatures': '✅ 真實Firebase collaborations集合寫入',
-      'compliance0098': '✅ 完全符合0098憲法規範',
+      'compliance0098': '✅ 完全符合0098憲法所有條款',
       'dataFlow': '✅ 嚴格遵守PL→APL→ASL→BL→Firebase資料流',
       'fixes': [
         '✅ 階段三：0098合規性驗證完成',
