@@ -240,6 +240,8 @@ class SITP2TestController {
   final List<P2TestResult> _results = [];
   // 階段一修復：使用實例變數儲存動態生成的預算ID
   String? _dynamicBudgetId;
+  // 階段一修正：新增動態協作帳本ID管理
+  String? _dynamicCollaborationId;
 
   String get testId => 'SIT-P2-7571-PURE-CALL';
   String get testName => 'SIT P2測試控制器 (純粹調用版-無模擬業務邏輯)';
@@ -825,6 +827,9 @@ class SITP2TestController {
             );
 
             if (response != null) {
+              // 階段一修正：提取並儲存動態協作帳本ID
+              _dynamicCollaborationId = response.id;
+              
               plResult = {
                 'success': true,
                 'ledger': {
@@ -842,8 +847,11 @@ class SITP2TestController {
               };
 
               executionSteps['step_4_real_cm_collaboration_success'] = 'Real collaboration ledger created via CM module with email resolution.';
+              executionSteps['step_5_store_dynamic_collaboration_id'] = 'Stored dynamic collaboration ID: $_dynamicCollaborationId for TC-010~TC-020';
+              
               print('[7571] ✅ TC-009：協作帳本真實CM模組路徑測試成功');
               print('[7571] 📝 帳本ID: ${response.id}');
+              print('[7571] 🔄 階段一修正：已儲存動態協作帳本ID: $_dynamicCollaborationId');
               print('[7571] 👤 擁有者ID: ${response.ownerId}');
               print('[7571] 📧 測試email: $testUserEmail');
               print('[7571] 🎯 確認路徑：7571 → 7303 → email解析 → APL → ASL → CM模組 → Firebase collaborations');
@@ -877,20 +885,20 @@ class SITP2TestController {
 
         case 'TC-010': // 查詢帳本列表
           try {
-            final ledgerData = successData['create_collaborative_ledger'];
-            if (ledgerData != null) {
-              inputData = {'owner_id': ledgerData['owner_id']};
-              executionSteps['prepare_query_ledger_list'] = 'Set owner_id: ${ledgerData['owner_id']}.';
-              print('[7571] 🔍 TC-010 輸入參數：owner_id=${ledgerData['owner_id']}');
+            // 階段一修正：使用動態協作帳本ID進行查詢
+            if (_dynamicCollaborationId != null) {
+              inputData = {'ledgerId': _dynamicCollaborationId, 'type': 'shared'};
+              executionSteps['prepare_query_ledger_list'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId';
+              print('[7571] 🔍 階段一修正：TC-010使用動態協作帳本ID: $_dynamicCollaborationId');
               
               // 純粹調用PL層7303查詢帳本列表函數
               plResult = await LedgerCollaborationManager.processLedgerList(inputData);
               executionSteps['call_pl_ledger_list'] = 'Called LedgerCollaborationManager.processLedgerList successfully.';
               print('[7571] 📋 TC-010純粹調用PL層7303完成 - 結果: $plResult');
             } else {
-              plResult = {'error': 'Missing create_collaborative_ledger test data', 'success': false};
-              executionSteps['missing_test_data'] = 'create_collaborative_ledger data not found in test data.';
-              print('[7571] ⚠️ TC-010: 測試資料中缺少create_collaborative_ledger');
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-010: 缺少動態協作帳本ID，需要先執行TC-009');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-010 processLedgerList failed: $e', 'success': false};
@@ -903,25 +911,24 @@ class SITP2TestController {
 
         case 'TC-011': // 更新帳本資訊
           try {
-            final ledgerData = successData['create_collaborative_ledger'];
-            if (ledgerData != null) {
-              final ledgerId = ledgerData['id'];
+            // 階段一修正：使用動態協作帳本ID
+            if (_dynamicCollaborationId != null) {
               inputData = {
-                'name': '${ledgerData['name']}_updated',
-                'description': '${ledgerData['description'] ?? ""}_updated',
+                'name': '協作帳本測試_${DateTime.now().millisecondsSinceEpoch}_updated',
+                'description': 'TC-011更新帳本資訊測試 - 使用動態ID',
               };
-              executionSteps['prepare_update_ledger_info'] = 'Set ledgerId: $ledgerId, name, description.';
-              print('[7571] 🔍 TC-011 輸入參數：ledgerId=$ledgerId');
+              executionSteps['prepare_update_ledger_info'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId';
+              print('[7571] 🔍 階段一修正：TC-011使用動態協作帳本ID: $_dynamicCollaborationId');
               
               // 純粹調用PL層7303更新帳本函數
-              await LedgerCollaborationManager.updateLedger(ledgerId, inputData);
-              plResult = {'updateLedger': 'completed', 'ledgerId': ledgerId, 'success': true};
+              await LedgerCollaborationManager.updateLedger(_dynamicCollaborationId!, inputData);
+              plResult = {'updateLedger': 'completed', 'ledgerId': _dynamicCollaborationId, 'success': true};
               executionSteps['call_pl_update_ledger'] = 'Called LedgerCollaborationManager.updateLedger successfully.';
               print('[7571] 📋 TC-011純粹調用PL層7303完成');
             } else {
-              plResult = {'error': 'Missing create_collaborative_ledger test data', 'success': false};
-              executionSteps['missing_test_data'] = 'create_collaborative_ledger data not found.';
-              print('[7571] ⚠️ TC-011: 測試資料中缺少create_collaborative_ledger');
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-011: 缺少動態協作帳本ID，需要先執行TC-009');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-011 updateLedger failed: $e', 'success': false};
@@ -934,22 +941,21 @@ class SITP2TestController {
 
         case 'TC-012': // 刪除帳本
           try {
-            final ledgerData = successData['create_collaborative_ledger'];
-            if (ledgerData != null) {
-              final ledgerId = ledgerData['id'];
-              inputData = {'ledgerId': ledgerId};
-              executionSteps['prepare_delete_ledger'] = 'Set ledgerId: $ledgerId.';
-              print('[7571] 🔍 TC-012 輸入參數：ledgerId=$ledgerId');
+            // 階段一修正：使用動態協作帳本ID
+            if (_dynamicCollaborationId != null) {
+              inputData = {'ledgerId': _dynamicCollaborationId};
+              executionSteps['prepare_delete_ledger'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId';
+              print('[7571] 🔍 階段一修正：TC-012使用動態協作帳本ID: $_dynamicCollaborationId');
               
               // 純粹調用PL層7303刪除帳本函數
-              await LedgerCollaborationManager.processLedgerDeletion(ledgerId);
-              plResult = {'deleteLedger': 'completed', 'ledgerId': ledgerId, 'success': true};
+              await LedgerCollaborationManager.processLedgerDeletion(_dynamicCollaborationId!);
+              plResult = {'deleteLedger': 'completed', 'ledgerId': _dynamicCollaborationId, 'success': true};
               executionSteps['call_pl_delete_ledger'] = 'Called LedgerCollaborationManager.processLedgerDeletion successfully.';
               print('[7571] 📋 TC-012純粹調用PL層7303完成');
             } else {
-              plResult = {'error': 'Missing create_collaborative_ledger test data', 'success': false};
-              executionSteps['missing_test_data'] = 'create_collaborative_ledger data not found.';
-              print('[7571] ⚠️ TC-012: 測試資料中缺少create_collaborative_ledger');
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-012: 缺少動態協作帳本ID，需要先執行TC-009');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-012 processLedgerDeletion failed: $e', 'success': false};
@@ -962,16 +968,21 @@ class SITP2TestController {
 
         case 'TC-013': // 查詢協作者列表
           try {
-            // 使用TC-009創建的協作帳本ID
-            final ledgerId = 'collaboration_test_ledger_dynamic';
-            inputData = {'ledgerId': ledgerId};
-            executionSteps['prepare_query_collaborators'] = 'Set ledgerId: $ledgerId';
-            print('[7571] 🔍 TC-013 輸入參數：ledgerId=$ledgerId');
-            
-            // 純粹調用PL層7303查詢協作者函數
-            plResult = await LedgerCollaborationManager.processCollaboratorList(ledgerId);
-            executionSteps['call_pl_collaborator_list'] = 'Called LedgerCollaborationManager.processCollaboratorList successfully.';
-            print('[7571] 📋 TC-013純粹調用PL層7303完成 - 結果: $plResult');
+            // 階段一修正：使用動態協作帳本ID
+            if (_dynamicCollaborationId != null) {
+              inputData = {'ledgerId': _dynamicCollaborationId};
+              executionSteps['prepare_query_collaborators'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId';
+              print('[7571] 🔍 階段一修正：TC-013使用動態協作帳本ID: $_dynamicCollaborationId');
+              
+              // 純粹調用PL層7303查詢協作者函數
+              plResult = await LedgerCollaborationManager.processCollaboratorList(_dynamicCollaborationId!);
+              executionSteps['call_pl_collaborator_list'] = 'Called LedgerCollaborationManager.processCollaboratorList successfully.';
+              print('[7571] 📋 TC-013純粹調用PL層7303完成 - 結果: $plResult');
+            } else {
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-013: 缺少動態協作帳本ID，需要先執行TC-009');
+            }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-013 processCollaboratorList failed: $e', 'success': false};
             executionSteps['function_call_error'] = 'LedgerCollaborationManager.processCollaboratorList threw exception: $e';
@@ -983,26 +994,46 @@ class SITP2TestController {
 
         case 'TC-014': // 邀請協作者
           try {
-            // 構造測試邀請資料
-            final ledgerId = 'collaboration_test_ledger_dynamic';
-            final invitations = [
-              InvitationData(
-                email: 'cultivation.valid@test.lcas.app',
-                role: 'member',
-                permissions: {'read': true, 'write': false},
-              )
-            ];
-            inputData = {
-              'ledgerId': ledgerId,
-              'invitations': invitations.map((i) => i.toJson()).toList(),
-            };
-            executionSteps['prepare_invite_collaborator'] = 'Set ledgerId: $ledgerId and invitations count: ${invitations.length}';
-            print('[7571] 🔍 TC-014 輸入參數：ledgerId=$ledgerId, invitations=${invitations.length}');
-            
-            // 純粹調用PL層7303邀請協作者函數
-            plResult = await LedgerCollaborationManager.inviteCollaborators(ledgerId, invitations);
-            executionSteps['call_pl_invite_collaborators'] = 'Called LedgerCollaborationManager.inviteCollaborators successfully.';
-            print('[7571] 📋 TC-014純粹調用PL層7303完成 - 結果: $plResult');
+            // 階段二修正：使用動態協作帳本ID和從7598載入的正確email
+            if (_dynamicCollaborationId != null) {
+              // 階段二修正：從7598載入協作測試用戶資料
+              final collaborationUser = await P2TestDataManager.instance.getCollaborationTestUser();
+              final collaborationTestEmail = collaborationUser['email']; // collaboration.test@test.lcas.app
+
+              final invitations = [
+                InvitationData(
+                  email: collaborationTestEmail, // 階段二修正：使用7598中的正確email
+                  role: 'member',
+                  permissions: {'read': true, 'write': false},
+                )
+              ];
+
+              // 階段二修正：確保參數完整傳遞
+              inputData = {
+                'ledgerId': _dynamicCollaborationId, // 使用動態協作帳本ID
+                'email': collaborationTestEmail,     // 確保email參數存在
+                'invitations': invitations.map((i) => i.toJson()).toList(),
+              };
+
+              executionSteps['load_collaboration_test_user'] = 'Loaded collaboration test user from 7598: $collaborationTestEmail';
+              executionSteps['prepare_invite_collaborator'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId and email: $collaborationTestEmail';
+              
+              print('[7571] 🔍 階段二修正：TC-014使用動態協作帳本ID: $_dynamicCollaborationId');
+              print('[7571] 📧 階段二修正：從7598載入email: $collaborationTestEmail');
+              print('[7571] 🎯 階段二修正：確保ledgerId和email參數完整傳遞');
+              
+              // 純粹調用PL層7303邀請協作者函數，傳遞完整參數
+              plResult = await LedgerCollaborationManager.inviteCollaborators(_dynamicCollaborationId!, invitations);
+              executionSteps['call_pl_invite_collaborators'] = 'Called LedgerCollaborationManager.inviteCollaborators with complete parameters.';
+              
+              print('[7571] 📋 TC-014階段二修正：純粹調用PL層7303完成 - 結果: $plResult');
+              print('[7571] ✅ 階段二目標達成：使用真實協作帳本ID和正確email參數');
+              
+            } else {
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-014: 缺少動態協作帳本ID，需要先執行TC-009');
+            }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-014 inviteCollaborators failed: $e', 'success': false};
             executionSteps['function_call_error'] = 'LedgerCollaborationManager.inviteCollaborators threw exception: $e';
@@ -1014,26 +1045,32 @@ class SITP2TestController {
 
         case 'TC-015': // 更新協作者權限
           try {
-            final ledgerId = 'collaboration_test_ledger_dynamic';
-            final collaboratorId = 'user_cultivation_1697363320000';
-            final permissions = PermissionData(
-              role: 'admin',
-              permissions: {'read': true, 'write': true, 'manage': true},
-            );
-            inputData = {
-              'ledgerId': ledgerId,
-              'collaboratorId': collaboratorId,
-              'permissions': permissions.toJson(),
-            };
-            executionSteps['prepare_update_permissions'] = 'Set ledgerId: $ledgerId, collaboratorId: $collaboratorId, role: admin';
-            print('[7571] 🔍 TC-015 輸入參數：ledgerId=$ledgerId, collaboratorId=$collaboratorId');
-            
-            // 純粹調用PL層7303更新權限函數
-            await LedgerCollaborationManager.updateCollaboratorPermissions(
-              ledgerId, collaboratorId, permissions);
-            plResult = {'updatePermissions': 'completed', 'ledgerId': ledgerId, 'collaboratorId': collaboratorId, 'success': true};
-            executionSteps['call_pl_update_permissions'] = 'Called LedgerCollaborationManager.updateCollaboratorPermissions successfully.';
-            print('[7571] 📋 TC-015純粹調用PL層7303完成 - 結果: $plResult');
+            // 階段一修正：使用動態協作帳本ID
+            if (_dynamicCollaborationId != null) {
+              final collaboratorId = 'user_collaboration_test_1697363500000'; // 使用7598中的協作測試用戶ID
+              final permissions = PermissionData(
+                role: 'admin',
+                permissions: {'read': true, 'write': true, 'manage': true},
+              );
+              inputData = {
+                'ledgerId': _dynamicCollaborationId,
+                'collaboratorId': collaboratorId,
+                'permissions': permissions.toJson(),
+              };
+              executionSteps['prepare_update_permissions'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId, collaboratorId: $collaboratorId, role: admin';
+              print('[7571] 🔍 階段一修正：TC-015使用動態協作帳本ID: $_dynamicCollaborationId');
+              
+              // 純粹調用PL層7303更新權限函數
+              await LedgerCollaborationManager.updateCollaboratorPermissions(
+                _dynamicCollaborationId!, collaboratorId, permissions);
+              plResult = {'updatePermissions': 'completed', 'ledgerId': _dynamicCollaborationId, 'collaboratorId': collaboratorId, 'success': true};
+              executionSteps['call_pl_update_permissions'] = 'Called LedgerCollaborationManager.updateCollaboratorPermissions successfully.';
+              print('[7571] 📋 TC-015純粹調用PL層7303完成 - 結果: $plResult');
+            } else {
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-015: 缺少動態協作帳本ID，需要先執行TC-009');
+            }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-015 updateCollaboratorPermissions failed: $e', 'success': false};
             executionSteps['function_call_error'] = 'LedgerCollaborationManager.updateCollaboratorPermissions threw exception: $e';
@@ -1045,17 +1082,23 @@ class SITP2TestController {
 
         case 'TC-016': // 移除協作者
           try {
-            final ledgerId = 'collaboration_test_ledger_dynamic';
-            final collaboratorId = 'user_cultivation_1697363320000';
-            inputData = {'ledgerId': ledgerId, 'collaboratorId': collaboratorId};
-            executionSteps['prepare_remove_collaborator'] = 'Set ledgerId: $ledgerId, collaboratorId: $collaboratorId';
-            print('[7571] 🔍 TC-016 輸入參數：ledgerId=$ledgerId, collaboratorId=$collaboratorId');
-            
-            // 純粹調用PL層7303移除協作者函數
-            await LedgerCollaborationManager.removeCollaborator(ledgerId, collaboratorId);
-            plResult = {'removeCollaborator': 'completed', 'ledgerId': ledgerId, 'collaboratorId': collaboratorId, 'success': true};
-            executionSteps['call_pl_remove_collaborator'] = 'Called LedgerCollaborationManager.removeCollaborator successfully.';
-            print('[7571] 📋 TC-016純粹調用PL層7303完成 - 結果: $plResult');
+            // 階段一修正：使用動態協作帳本ID
+            if (_dynamicCollaborationId != null) {
+              final collaboratorId = 'user_collaboration_test_1697363500000'; // 使用7598中的協作測試用戶ID
+              inputData = {'ledgerId': _dynamicCollaborationId, 'collaboratorId': collaboratorId};
+              executionSteps['prepare_remove_collaborator'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId, collaboratorId: $collaboratorId';
+              print('[7571] 🔍 階段一修正：TC-016使用動態協作帳本ID: $_dynamicCollaborationId');
+              
+              // 純粹調用PL層7303移除協作者函數
+              await LedgerCollaborationManager.removeCollaborator(_dynamicCollaborationId!, collaboratorId);
+              plResult = {'removeCollaborator': 'completed', 'ledgerId': _dynamicCollaborationId, 'collaboratorId': collaboratorId, 'success': true};
+              executionSteps['call_pl_remove_collaborator'] = 'Called LedgerCollaborationManager.removeCollaborator successfully.';
+              print('[7571] 📋 TC-016純粹調用PL層7303完成 - 結果: $plResult');
+            } else {
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-016: 缺少動態協作帳本ID，需要先執行TC-009');
+            }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-016 removeCollaborator failed: $e', 'success': false};
             executionSteps['function_call_error'] = 'LedgerCollaborationManager.removeCollaborator threw exception: $e';
@@ -1067,16 +1110,22 @@ class SITP2TestController {
 
         case 'TC-017': // 權限矩陣計算
           try {
-            final ledgerId = 'collaboration_test_ledger_dynamic';
-            final userId = 'user_expert_1697363200000';
-            inputData = {'ledgerId': ledgerId, 'userId': userId};
-            executionSteps['prepare_calculate_permissions'] = 'Set ledgerId: $ledgerId, userId: $userId';
-            print('[7571] 🔍 TC-017 輸入參數：ledgerId=$ledgerId, userId=$userId');
-            
-            // 純粹調用PL層7303權限計算函數
-            plResult = await LedgerCollaborationManager.calculateUserPermissions(userId, ledgerId);
-            executionSteps['call_pl_calculate_permissions'] = 'Called LedgerCollaborationManager.calculateUserPermissions successfully.';
-            print('[7571] 📋 TC-017純粹調用PL層7303完成 - 結果: $plResult');
+            // 階段一修正：使用動態協作帳本ID
+            if (_dynamicCollaborationId != null) {
+              final userId = 'user_expert_1697363200000';
+              inputData = {'ledgerId': _dynamicCollaborationId, 'userId': userId};
+              executionSteps['prepare_calculate_permissions'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId, userId: $userId';
+              print('[7571] 🔍 階段一修正：TC-017使用動態協作帳本ID: $_dynamicCollaborationId');
+              
+              // 純粹調用PL層7303權限計算函數
+              plResult = await LedgerCollaborationManager.calculateUserPermissions(userId, _dynamicCollaborationId!);
+              executionSteps['call_pl_calculate_permissions'] = 'Called LedgerCollaborationManager.calculateUserPermissions successfully.';
+              print('[7571] 📋 TC-017純粹調用PL層7303完成 - 結果: $plResult');
+            } else {
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-017: 缺少動態協作帳本ID，需要先執行TC-009');
+            }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-017 calculateUserPermissions failed: $e', 'success': false};
             executionSteps['function_call_error'] = 'LedgerCollaborationManager.calculateUserPermissions threw exception: $e';
@@ -1088,15 +1137,21 @@ class SITP2TestController {
 
         case 'TC-018': // 協作衝突檢測
           try {
-            final ledgerId = 'collaboration_test_ledger_dynamic';
-            inputData = {'ledgerId': ledgerId, 'checkTypes': ['permission', 'data']};
-            executionSteps['prepare_conflict_check'] = 'Set ledgerId: $ledgerId, checkTypes: permission,data';
-            print('[7571] 🔍 TC-018 輸入參數：ledgerId=$ledgerId');
-            
-            // 純粹調用PL層7303，此功能可能尚未實作，直接調用會得到真實結果
-            plResult = {'conflictCheckResult': 'PL層回傳結果', 'ledgerId': ledgerId, 'success': true};
-            executionSteps['call_pl_conflict_check'] = 'Called PL layer for conflict check (mocked result).';
-            print('[7571] 📋 TC-018純粹調用完成 - 結果: $plResult');
+            // 階段一修正：使用動態協作帳本ID
+            if (_dynamicCollaborationId != null) {
+              inputData = {'ledgerId': _dynamicCollaborationId, 'checkTypes': ['permission', 'data']};
+              executionSteps['prepare_conflict_check'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId, checkTypes: permission,data';
+              print('[7571] 🔍 階段一修正：TC-018使用動態協作帳本ID: $_dynamicCollaborationId');
+              
+              // 純粹調用PL層7303，此功能可能尚未實作，直接調用會得到真實結果
+              plResult = {'conflictCheckResult': 'PL層回傳結果', 'ledgerId': _dynamicCollaborationId, 'success': true};
+              executionSteps['call_pl_conflict_check'] = 'Called PL layer for conflict check (mocked result).';
+              print('[7571] 📋 TC-018純粹調用完成 - 結果: $plResult');
+            } else {
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-018: 缺少動態協作帳本ID，需要先執行TC-009');
+            }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-018 conflict check failed: $e', 'success': false};
             executionSteps['function_call_error'] = 'Conflict check threw exception: $e';
@@ -1108,16 +1163,22 @@ class SITP2TestController {
 
         case 'TC-019': // API整合驗證
           try {
-            final ledgerId = 'collaboration_test_ledger_dynamic';
-            inputData = {'ledgerId': ledgerId, 'testType': 'api_integration'};
-            executionSteps['prepare_api_integration_test'] = 'Set ledgerId: $ledgerId, testType: api_integration';
-            print('[7571] 🔍 TC-019 輸入參數：ledgerId=$ledgerId');
-            
-            // 純粹調用PL層7303統一API函數
-            plResult = await LedgerCollaborationManager.callAPI(
-              'GET', '/api/v1/ledgers/$ledgerId', queryParams: inputData);
-            executionSteps['call_pl_api'] = 'Called LedgerCollaborationManager.callAPI successfully.';
-            print('[7571] 📋 TC-019純粹調用PL層7303完成 - 結果: $plResult');
+            // 階段一修正：使用動態協作帳本ID
+            if (_dynamicCollaborationId != null) {
+              inputData = {'ledgerId': _dynamicCollaborationId, 'testType': 'api_integration'};
+              executionSteps['prepare_api_integration_test'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId, testType: api_integration';
+              print('[7571] 🔍 階段一修正：TC-019使用動態協作帳本ID: $_dynamicCollaborationId');
+              
+              // 純粹調用PL層7303統一API函數
+              plResult = await LedgerCollaborationManager.callAPI(
+                'GET', '/api/v1/ledgers/$_dynamicCollaborationId', queryParams: inputData);
+              executionSteps['call_pl_api'] = 'Called LedgerCollaborationManager.callAPI successfully.';
+              print('[7571] 📋 TC-019純粹調用PL層7303完成 - 結果: $plResult');
+            } else {
+              plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
+              executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
+              print('[7571] ⚠️ TC-019: 缺少動態協作帳本ID，需要先執行TC-009');
+            }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-019 callAPI failed: $e', 'success': false};
             executionSteps['function_call_error'] = 'LedgerCollaborationManager.callAPI threw exception: $e';
@@ -1129,13 +1190,14 @@ class SITP2TestController {
 
         case 'TC-020': // 錯誤處理驗證
           try {
-            // 構造無效資料測試錯誤處理
+            // 階段一修正：構造無效資料測試錯誤處理，使用動態協作帳本ID
             inputData = {
+              'ledgerId': _dynamicCollaborationId, // 使用動態ID（可能為null來測試錯誤處理）
               'operatorEmail': 'guiding.valid@test.lcas.app',
               'attemptedAction': 'invite_member'
             };
-            executionSteps['prepare_error_handling_test'] = 'Loaded invalid data for error handling test.';
-            print('[7571] 🔍 TC-020 輸入參數：invalidData=$inputData');
+            executionSteps['prepare_error_handling_test'] = 'Using dynamic collaboration ID for error handling test.';
+            print('[7571] 🔍 階段一修正：TC-020錯誤處理測試，動態協作帳本ID: $_dynamicCollaborationId');
             
             // 純粹調用PL層7303，測試錯誤處理
             plResult = LedgerCollaborationManager.validateLedgerData(inputData);
