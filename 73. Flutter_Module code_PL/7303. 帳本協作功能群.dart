@@ -1,8 +1,8 @@
 /**
- * 7303_帳本協作功能群_2.5.0
+ * 7303_帳本協作功能群_2.6.0
  * @module 帳本協作功能群
  * @description LCAS 2.0帳本協作功能群模組 - Phase 2帳本管理與協作記帳業務邏輯
- * @update 2025-11-07: 階段二修正 - 統一協作成員資料結構，確保欄位名稱一致
+ * @update 2025-11-12: 階段一修正 - 移除違反0098的模擬邏輯，實作真實email→userId解析機制
  */
 
 import 'dart:async';
@@ -308,8 +308,8 @@ class CollaborationError implements Exception {
 
 /// 帳本協作功能群主類別
 class LedgerCollaborationManager {
-  static const String moduleVersion = '2.4.0';
-  static const String moduleDate = '2025-11-06';
+  static const String moduleVersion = '2.6.0';
+  static const String moduleDate = '2025-11-12';
 
   /// =============== 階段一：帳本管理核心函數（8個函數） ===============
 
@@ -765,38 +765,55 @@ class LedgerCollaborationManager {
         print('[7303] 👤 擁有者Email: $ownerEmail');
 
         try {
-          // 步驟1：查詢email對應的userId（通過APL調用AM模組）
-          print('[7303] 🔍 階段二修正：查詢email對應的userId...');
+          // 步驟1：查詢email對應的userId（階段一修正：真實APL調用）
+          print('[7303] 🔍 階段一修正：通過APL→AM模組查詢email對應的userId...');
 
-          // 模擬email→userId解析過程
-          // 實際上這裡應該調用AM模組的用戶查詢功能
           final emailToUserIdResult = await _resolveEmailToUserId(ownerEmail);
 
           if (emailToUserIdResult['success'] == true) {
             final resolvedUserId = emailToUserIdResult['userId'];
-            print('[7303] ✅ 階段二修正：email→userId解析成功: $ownerEmail → $resolvedUserId');
+            final userData = emailToUserIdResult['userData'];
+            
+            print('[7303] ✅ 階段一修正：真實email→userId解析成功: $ownerEmail → $resolvedUserId');
 
-            // 更新建立資料，使用解析出的userId
+            // 更新建立資料，使用解析出的真實userId
             createData['owner_id'] = resolvedUserId;
             createData['ownerId'] = resolvedUserId;
             createData['userId'] = resolvedUserId;
 
-            // 保留原始email用於協作功能
+            // 保留原始email和用戶資料用於協作功能
             createData['ownerEmail'] = ownerEmail;
+            if (userData != null) {
+              createData['ownerDisplayName'] = userData['displayName'] ?? userData['name'];
+              createData['ownerUserMode'] = userData['userMode'] ?? userData['userType'];
+            }
 
           } else {
-            print('[7303] ❌ 階段二修正：email→userId解析失敗');
+            final errorMsg = emailToUserIdResult['error'] ?? 'Unknown error';
+            final stage = emailToUserIdResult['stage'] ?? 'unknown';
+            
+            print('[7303] ❌ 階段一修正：真實email→userId解析失敗 - Stage: $stage, Error: $errorMsg');
+            
             throw CollaborationError(
-              '無法解析email對應的userId: $ownerEmail',
+              '無法解析email對應的userId: $ownerEmail - $errorMsg',
               'EMAIL_RESOLUTION_FAILED',
+              {
+                'email': ownerEmail,
+                'stage': stage,
+                'originalError': errorMsg
+              }
             );
           }
 
         } catch (resolutionError) {
-          print('[7303] ❌ 階段二修正：email解析過程發生錯誤: $resolutionError');
+          print('[7303] ❌ 階段一修正：email解析過程發生錯誤: $resolutionError');
           throw CollaborationError(
             'Email解析失敗: ${resolutionError.toString()}',
             'EMAIL_RESOLUTION_ERROR',
+            {
+              'email': ownerEmail,
+              'errorType': resolutionError.runtimeType.toString()
+            }
           );
         }
       }
@@ -2097,43 +2114,71 @@ class LedgerCollaborationManager {
     }
   }
 
-  /// 階段二新增：email→userId解析輔助函數
+  /// 階段一修正：真實email→userId解析函數（移除模擬邏輯）
   static Future<Map<String, dynamic>> _resolveEmailToUserId(String email) async {
     try {
-      print('[7303] 🔍 解析email→userId: $email');
+      print('[7303] 🔍 階段一修正：開始真實email→userId解析: $email');
 
-      // 階段二修正：實際應該通過APL調用AM模組查詢用戶
-      // 這裡先提供基本實作，後續可以擴展
-
-      // 模擬真實的用戶查詢流程
-      if (email == 'collaboration.test@test.lcas.app') {
-        // 為測試用戶提供一個動態生成的userId
-        final testUserId = 'user_collaboration_test_${DateTime.now().millisecondsSinceEpoch}';
-        print('[7303] 🧪 階段二測試：為測試email生成userId: $testUserId');
-
+      // 階段一修正：完全移除模擬邏輯，實作真實的APL→AM模組調用
+      // 嚴格遵守0098憲法：禁止模擬業務邏輯
+      
+      // 步驟1: 驗證email格式
+      final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+      if (!emailRegex.test(email)) {
         return {
-          'success': true,
-          'userId': testUserId,
+          'success': false,
+          'error': 'Invalid email format',
           'email': email,
-          'source': 'test_user_generation'
+          'stage': 'email_validation'
         };
       }
 
-      // 其他email的處理邏輯
-      // TODO: 實際實作中應該調用 APL.instance.account.getUserByEmail() 
-
-      return {
-        'success': false,
-        'error': 'Email not found or not implemented',
-        'email': email
-      };
+      // 步驟2: 通過APL.dart調用AM模組的用戶查詢功能
+      try {
+        // 調用APL統一Gateway的用戶管理服務
+        final response = await APL.instance.account.getUserByEmail(email);
+        
+        if (response.success && response.data != null) {
+          // 成功找到用戶
+          final userData = response.data!;
+          final userId = userData['id'] ?? userData['userId'] ?? userData['email'];
+          
+          print('[7303] ✅ 階段一修正：email→userId解析成功: $email → $userId');
+          
+          return {
+            'success': true,
+            'userId': userId,
+            'email': email,
+            'userData': userData,
+            'source': 'apl_am_query'
+          };
+        } else {
+          // 用戶不存在
+          print('[7303] ⚠️ 階段一修正：用戶不存在: $email');
+          return {
+            'success': false,
+            'error': 'User not found',
+            'email': email,
+            'stage': 'user_lookup'
+          };
+        }
+      } catch (aplError) {
+        print('[7303] ❌ 階段一修正：APL調用失敗: $aplError');
+        return {
+          'success': false,
+          'error': 'APL service error: ${aplError.toString()}',
+          'email': email,
+          'stage': 'apl_service_call'
+        };
+      }
 
     } catch (error) {
-      print('[7303] ❌ email→userId解析錯誤: $error');
+      print('[7303] ❌ 階段一修正：email→userId解析錯誤: $error');
       return {
         'success': false,
         'error': error.toString(),
-        'email': email
+        'email': email,
+        'stage': 'general_error'
       };
     }
   }
