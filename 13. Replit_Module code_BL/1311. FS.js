@@ -2889,12 +2889,8 @@ async function FS_createCollaborationDocument(ledgerId, collaborationData, reque
       },
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      status: 'active',
-      metadata: {
-        memberCount: 1,
-        invitationCount: 0,
-        lastActivity: admin.firestore.Timestamp.now()
-      }
+      status: 'active'
+      // 移除metadata欄位，確保完全符合FS驗證標準
     };
 
     // 建立協作主文檔
