@@ -333,9 +333,9 @@ class LedgerCollaborationManager {
       data['routeToCM'] = true;
       data['cmFunction'] = 'CM_createSharedLedger';  // 明確指定CM函數
       data['collaborationEnabled'] = true;  // 啟用協作功能
-      
+
       print('[7303] 🔧 階段一路由標記：isCollaborative=true, requiresCMModule=true, routeToCM=true');
-      
+
       // 通過APL.dart調用API創建協作帳本 - APL應該路由到ASL的CM端點
       final response = await APL.instance.ledger.createLedger(data);
 
@@ -343,14 +343,14 @@ class LedgerCollaborationManager {
         final ledger = Ledger.fromJson(response.data! as Map<String, dynamic>);
         print('[7303] ✅ TC-009階段一：協作帳本創建成功，ID: ${ledger.id}');
         print('[7303] 🎯 階段一驗證：確認已通過CM模組處理協作功能');
-        
+
         // 階段一新增：驗證協作帳本是否正確建立
         if (ledger.type == 'shared' || ledger.metadata['isCollaborative'] == true) {
           print('[7303] ✅ 階段一驗證：協作帳本類型確認正確');
         } else {
           print('[7303] ⚠️ 階段一警告：協作帳本類型可能未正確設定');
         }
-        
+
         return ledger;
       } else {
         throw CollaborationError(
@@ -804,9 +804,9 @@ class LedgerCollaborationManager {
 
       final ledgerType = data['type'] as String?;
       final collaborationType = data['collaborationType'] as String?;
-      
+
       // TC-009階段一關鍵修正：更精確的協作帳本判斷
-      final isCollaborativeLedger = ledgerType == 'shared' || 
+      final isCollaborativeLedger = ledgerType == 'shared' ||
                                   collaborationType == 'shared' ||
                                   data['isCollaborative'] == true ||
                                   data['requiresCMModule'] == true;
@@ -826,12 +826,14 @@ class LedgerCollaborationManager {
       if (isCollaborativeLedger) {
         print('[7303] 🤝 TC-009階段一：協作帳本確認，強制路由到CM模組');
         print('[7303] 🎯 強制路徑：7303 → APL → ASL → CM_createSharedLedger() → Firebase collaborations');
-        
-        // 明確標記需要CM模組處理
+
+        // 明確標記需要CM模組處理，並指示使用CM_createSharedLedger
         createData['isCollaborative'] = true;
         createData['requiresCMModule'] = true;
         createData['routeToCM'] = true;  // 新增：明確路由指示
-        
+        createData['action'] = 'create_shared_ledger'; // 修正：指定正確的action
+        createData['use_cm_create_shared_ledger'] = true; // 新增：明確標記使用CM_createSharedLedger
+
         return await _createCollaborativeLedger(createData, userMode: userMode);
       }
 
