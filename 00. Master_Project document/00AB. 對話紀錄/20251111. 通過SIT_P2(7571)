@@ -6,6 +6,62 @@
 ------------------------------------------
 20251112. 通過SIT_P2(7571)
 
+Approved請進行階段一
+
+🎯 更新後提案分析（專注協作功能）
+感謝您的澄清！我已深入分析log和代碼，完全理解問題核心：
+
+🔍 Insight 深度分析
+關於TC-014邀請協作者參數問題
+您的分析完全正確！log顯示：
+[2025-11-12T07:12:59.897Z] [ERROR] [CM] 邀請協作者失敗: 缺少必要參數: ledgerId, email
+真實問題：
+1.	缺少被邀請人的email - 7571沒有傳遞collaboration.test@test.lcas.app
+2.	使用錯誤的ledgerId - 使用hardcode的collaboration_test_ledger_dynamic而非TC-009動態創建的collaboration_1762931579106_dg1ozk1eb
+關於動態ID共用策略
+您的觀察非常精準！Log顯示：
+•	✅ TC-009成功創建：collaboration_1762931579106_dg1ozk1eb
+•	❌ TC-010~TC-020使用：collaboration_test_ledger_dynamic（不存在）
+這就像「會議室已預約但通知用了錯誤房號」的問題。
+
+🚀 更新後解決方案
+階段一：統一協作帳本ID管理（優先級：最高）
+目標：讓TC-009創建的真實ID被TC-010~TC-020共用
+修改檔案：75. Flutter_Test_code_PL/7571. SIT_P2.dart
+修改內容：
+1.	在SITP2TestController類中新增實例變數String? _dynamicCollaborationId
+2.	TC-009成功後，從APL回應中提取並儲存真實的ledgerId
+3.	TC-010~TC-020全部改為使用_dynamicCollaborationId，移除所有collaboration_test_ledger_dynamic
+Before/After差異：
+•	Before：TC-009創建真實ID，但後續測試用假ID，導致「協作帳本不存在」錯誤
+•	After：所有協作測試使用同一個真實創建的協作帳本ID
+
+階段二：修正TC-014邀請參數格式（優先級：高）
+目標：傳遞正確的email和真實ledgerId給CM模組
+修改檔案：75. Flutter_Test_code_PL/7571. SIT_P2.dart
+修改內容：
+1.	TC-014使用_dynamicCollaborationId而非hardcode ID
+2.	InvitationData使用7598中的collaboration.test@test.lcas.app
+3.	確保inviteCollaborators函數參數完整傳遞
+Before/After差異：
+•	Before：缺少必要參數: ledgerId, email → ASL回傳400錯誤
+•	After：使用真實協作帳本ID和正確email，成功發送邀請
+💡 關鍵Insight
+1.	ID一致性問題：就像「先訂會議室A，後續通知卻寫會議室B」
+2.	參數完整性問題：就像「發邀請函卻忘記寫收件人地址」
+3.	動態vs靜態策略：TC-009已證明動態創建可行，應該延續這個模式
+🔧 實施重點
+1.	不修改7598 - 保持純動態創建流程的正確性
+2.	專注協作功能 - 暫時跳過預算功能問題
+3.	確保ID傳遞鏈 - TC-009 → TC-010~TC-020的ID傳遞機制
+4.	完整參數傳遞 - 確保CM模組獲得所需的ledgerId和email
+這個方案遵循「動態創建 → 共用使用」的正確測試模式，解決了目前協作測試的核心問題。
+
+
+
+------------------------------------------
+20251112. 通過SIT_P2(7571)
+
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
 感謝您的澄清，讓我重新分析並更新提案：
