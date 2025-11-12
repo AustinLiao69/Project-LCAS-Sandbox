@@ -1161,6 +1161,130 @@ app.post('/api/v1/users/verify-pin', async (req, res) => {
   }
 });
 
+// =============== P2階段：協作管理API端點補完 ===============
+
+// 階段二修正：補完協作帳本刪除端點
+app.delete('/api/v1/ledgers/:id', async (req, res) => {
+  try {
+    console.log('🗑️ ASL轉發: 刪除協作帳本 -> CM_deleteLedger');
+    
+    if (!CM || typeof CM.CM_deleteLedger !== 'function') {
+      console.error('❌ CM模組或CM_deleteLedger函數不存在');
+      return res.apiError('CM_deleteLedger函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const ledgerId = req.params.id;
+    if (!ledgerId || ledgerId.trim() === '') {
+      return res.apiError('帳本ID不能為空', 'MISSING_LEDGER_ID', 400);
+    }
+
+    console.log(`📋 刪除協作帳本ID: ${ledgerId}`);
+    
+    // 調用CM模組刪除協作帳本
+    const result = await CM.CM_deleteLedger(ledgerId, req.query.operatorId || 'system');
+
+    if (result && result.success) {
+      res.apiSuccess(result.data || {}, result.message || '協作帳本刪除成功');
+    } else {
+      res.apiError(
+        result?.message || '協作帳本刪除失敗',
+        result?.error?.code || 'DELETE_LEDGER_ERROR',
+        400,
+        result?.error?.details
+      );
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (delete ledger):', error);
+    res.apiError('刪除協作帳本轉發失敗', 'DELETE_LEDGER_FORWARD_ERROR', 500);
+  }
+});
+
+// 階段二修正：補完協作者邀請端點
+app.post('/api/v1/ledgers/:id/invitations', async (req, res) => {
+  try {
+    console.log('📧 ASL轉發: 邀請協作者 -> CM_inviteCollaborators');
+    
+    if (!CM || typeof CM.CM_inviteCollaborators !== 'function') {
+      console.error('❌ CM模組或CM_inviteCollaborators函數不存在');
+      return res.apiError('CM_inviteCollaborators函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const ledgerId = req.params.id;
+    if (!ledgerId || ledgerId.trim() === '') {
+      return res.apiError('帳本ID不能為空', 'MISSING_LEDGER_ID', 400);
+    }
+
+    const invitations = req.body.invitations || [];
+    if (!Array.isArray(invitations) || invitations.length === 0) {
+      return res.apiError('邀請清單不能為空', 'MISSING_INVITATIONS', 400);
+    }
+
+    console.log(`📋 邀請協作者到帳本: ${ledgerId}, 邀請數量: ${invitations.length}`);
+    
+    // 調用CM模組邀請協作者
+    const result = await CM.CM_inviteCollaborators(ledgerId, invitations, req.body.operatorId || 'system');
+
+    if (result && result.success) {
+      res.apiSuccess(result.data || [], result.message || '協作者邀請成功');
+    } else {
+      res.apiError(
+        result?.message || '協作者邀請失敗',
+        result?.error?.code || 'INVITE_COLLABORATORS_ERROR',
+        400,
+        result?.error?.details
+      );
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (invite collaborators):', error);
+    res.apiError('邀請協作者轉發失敗', 'INVITE_COLLABORATORS_FORWARD_ERROR', 500);
+  }
+});
+
+// 階段二修正：補完移除協作者端點
+app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
+  try {
+    console.log('👤 ASL轉發: 移除協作者 -> CM_removeCollaborator');
+    
+    if (!CM || typeof CM.CM_removeCollaborator !== 'function') {
+      console.error('❌ CM模組或CM_removeCollaborator函數不存在');
+      return res.apiError('CM_removeCollaborator函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const ledgerId = req.params.id;
+    const userId = req.params.userId;
+    
+    if (!ledgerId || ledgerId.trim() === '') {
+      return res.apiError('帳本ID不能為空', 'MISSING_LEDGER_ID', 400);
+    }
+    
+    if (!userId || userId.trim() === '') {
+      return res.apiError('用戶ID不能為空', 'MISSING_USER_ID', 400);
+    }
+
+    console.log(`📋 從帳本 ${ledgerId} 移除協作者: ${userId}`);
+    
+    // 調用CM模組移除協作者
+    const result = await CM.CM_removeCollaborator(ledgerId, userId, req.query.operatorId || 'system');
+
+    if (result && result.success) {
+      res.apiSuccess(result.data || {}, result.message || '協作者移除成功');
+    } else {
+      res.apiError(
+        result?.message || '協作者移除失敗',
+        result?.error?.code || 'REMOVE_COLLABORATOR_ERROR',
+        400,
+        result?.error?.details
+      );
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (remove collaborator):', error);
+    res.apiError('移除協作者轉發失敗', 'REMOVE_COLLABORATOR_FORWARD_ERROR', 500);
+  }
+});
+
 // =============== BK.js 記帳交易API轉發（15個端點） ===============
 
 // 1. 新增交易記錄

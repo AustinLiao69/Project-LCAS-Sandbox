@@ -827,13 +827,55 @@ class SITP2TestController {
             );
 
             if (response != null) {
-              // 階段一修正：提取並儲存動態協作帳本ID
-              _dynamicCollaborationId = response.id;
+              // 階段一修正：強化協作帳本ID提取與驗證邏輯
+              String? extractedLedgerId = response.id;
+              
+              // 多層級ID提取邏輯
+              if (extractedLedgerId == null || extractedLedgerId.isEmpty) {
+                print('[7571] ⚠️ 階段一修正：response.id為空，嘗試其他欄位提取');
+                
+                // 嘗試從response的其他欄位提取ID
+                if (response.metadata != null && response.metadata!.containsKey('ledgerId')) {
+                  extractedLedgerId = response.metadata!['ledgerId']?.toString();
+                  print('[7571] 🔍 階段一修正：從metadata.ledgerId提取: $extractedLedgerId');
+                }
+                
+                // 如果還是沒有，檢查response的toString是否包含ID
+                if (extractedLedgerId == null || extractedLedgerId.isEmpty) {
+                  final responseStr = response.toString();
+                  final idMatch = RegExp(r'collaboration_\d+_\w+').firstMatch(responseStr);
+                  if (idMatch != null) {
+                    extractedLedgerId = idMatch.group(0);
+                    print('[7571] 🔍 階段一修正：從toString提取ID: $extractedLedgerId');
+                  }
+                }
+              }
+              
+              // 階段一核心修正：確保_dynamicCollaborationId正確設置
+              if (extractedLedgerId != null && extractedLedgerId.isNotEmpty) {
+                _dynamicCollaborationId = extractedLedgerId;
+                print('[7571] ✅ 階段一修正：成功提取並儲存協作帳本ID: $_dynamicCollaborationId');
+                executionSteps['step_4_id_extraction_success'] = 'Successfully extracted and stored collaboration ID: $_dynamicCollaborationId';
+                
+                // ID驗證邏輯
+                if (_dynamicCollaborationId!.startsWith('collaboration_')) {
+                  print('[7571] ✅ 階段一驗證：協作帳本ID格式正確');
+                  executionSteps['step_5_id_format_validation'] = 'Collaboration ID format validation passed';
+                } else {
+                  print('[7571] ⚠️ 階段一警告：協作帳本ID格式異常: $_dynamicCollaborationId');
+                  executionSteps['step_5_id_format_warning'] = 'Collaboration ID format unexpected: $_dynamicCollaborationId';
+                }
+                
+              } else {
+                print('[7571] ❌ 階段一錯誤：無法從任何來源提取協作帳本ID');
+                executionSteps['step_4_id_extraction_failed'] = 'Failed to extract collaboration ID from any source';
+                _dynamicCollaborationId = null;
+              }
               
               plResult = {
                 'success': true,
                 'ledger': {
-                  'id': response.id,
+                  'id': extractedLedgerId ?? 'unknown',
                   'name': response.name,
                   'type': response.type,
                   'ownerId': response.ownerId,
@@ -843,43 +885,52 @@ class SITP2TestController {
                 'email_to_userid_resolved': true,
                 'real_cm_path_used': true,
                 'test_email': testUserEmail,
+                'dynamic_id_stored': _dynamicCollaborationId != null,
+                'extracted_id': extractedLedgerId,
                 'message': 'TC-009：協作帳本真實CM模組路徑測試成功'
               };
 
-              executionSteps['step_4_real_cm_collaboration_success'] = 'Real collaboration ledger created via CM module with email resolution.';
-              executionSteps['step_5_store_dynamic_collaboration_id'] = 'Stored dynamic collaboration ID: $_dynamicCollaborationId for TC-010~TC-020';
+              executionSteps['step_6_real_cm_collaboration_success'] = 'Real collaboration ledger created via CM module with email resolution.';
               
               print('[7571] ✅ TC-009：協作帳本真實CM模組路徑測試成功');
-              print('[7571] 📝 帳本ID: ${response.id}');
-              print('[7571] 🔄 階段一修正：已儲存動態協作帳本ID: $_dynamicCollaborationId');
+              print('[7571] 📝 帳本ID: ${extractedLedgerId ?? 'unknown'}');
+              print('[7571] 🔄 階段一修正：_dynamicCollaborationId = $_dynamicCollaborationId');
               print('[7571] 👤 擁有者ID: ${response.ownerId}');
               print('[7571] 📧 測試email: $testUserEmail');
               print('[7571] 🎯 確認路徑：7571 → 7303 → email解析 → APL → ASL → CM模組 → Firebase collaborations');
 
             } else {
+              print('[7571] ❌ 階段一錯誤：PL層createLedger回傳null');
+              _dynamicCollaborationId = null;
+              
               plResult = {
                 'success': false,
                 'error': '協作帳本建立失敗',
                 'message': 'TC-009：PL層createLedger回傳null，CM模組路徑可能未正確執行',
                 'test_email': testUserEmail,
-                'path_tested': '7303 → email解析 → APL → ASL → CM模組'
+                'path_tested': '7303 → email解析 → APL → ASL → CM模組',
+                'dynamic_id_stored': false
               };
               executionSteps['step_4_real_collaboration_failed'] = 'Real collaboration ledger creation failed - CM module path may not be working.';
               print('[7571] ❌ TC-009：協作帳本建立失敗，CM模組路徑可能有問題');
             }
 
           } catch (error) {
+            print('[7571] ❌ 階段一異常：協作帳本測試發生異常: $error');
+            _dynamicCollaborationId = null;
+            
             plResult = {
               'success': false,
               'error': error.toString(),
               'message': 'TC-009：協作帳本真實CM模組路徑測試異常',
-              'cm_module_path_error': true
+              'cm_module_path_error': true,
+              'dynamic_id_stored': false
             };
             executionSteps['step_error'] = 'Error during real CM module path test: $error';
             print('[7571] ❌ TC-009：協作帳本真實CM模組路徑測試異常: $error');
           }
 
-          print('[7571] 📋 TC-009完成 - 真實CM模組路徑測試完成');
+          print('[7571] 📋 TC-009完成 - 真實CM模組路徑測試完成，_dynamicCollaborationId = $_dynamicCollaborationId');
           break;
 
 
