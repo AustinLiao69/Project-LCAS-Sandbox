@@ -1,0 +1,66 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
+Building package executable... (1.1(4.5s)
+Built test:test.
+00:01 +0 -1: loading 7571. SIT_P2.dart [E]
+  Failed to load "7571. SIT_P2.dart":
+  7571.%20SIT_P2.dart:815:17: Error: The getter 'response' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'response'.
+              if (response != null) {
+                  ^^^^^^^^
+  7571.%20SIT_P2.dart:819:25: Error: The getter 'response' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'response'.
+                    'id': response.id,
+                          ^^^^^^^^
+  7571.%20SIT_P2.dart:820:27: Error: The getter 'response' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'response'.
+                    'name': response.name,
+                            ^^^^^^^^
+  7571.%20SIT_P2.dart:821:27: Error: The getter 'response' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'response'.
+                    'type': response.type,
+                            ^^^^^^^^
+  7571.%20SIT_P2.dart:822:30: Error: The getter 'response' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'response'.
+                    'ownerId': response.ownerId,
+                               ^^^^^^^^
+  7571.%20SIT_P2.dart:831:40: Error: The getter 'response' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'response'.
+                print('[7571] 📝 帳本ID: ${response.id}');
+                                         ^^^^^^^^
+  7571.%20SIT_P2.dart:832:41: Error: The getter 'response' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'response'.
+                print('[7571] 👤 擁有者ID: ${response.ownerId}');
+                                          ^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:811:11: Error: Undefined name 'ownerEmail'.
+        if (ownerEmail != null && isCollaborativeLedger) {
+            ^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:813:37: Error: Undefined name 'ownerEmail'.
+          print('[7303] 👤 擁有者Email: $ownerEmail');
+                                      ^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:819:67: Error: Undefined name 'ownerEmail'.
+            final emailToUserIdResult = await _resolveEmailToUserId(ownerEmail);
+                                                                    ^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:825:56: Error: Undefined name 'ownerEmail'.
+              print('[7303] ✅ 階段一修正：真實email→userId解析成功: $ownerEmail → $resolvedUserId');
+                                                         ^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:833:40: Error: Undefined name 'ownerEmail'.
+              createData['ownerEmail'] = ownerEmail;
+                                         ^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:846:37: Error: Undefined name 'ownerEmail'.
+                '無法解析email對應的userId: $ownerEmail - $errorMsg',
+                                      ^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:849:26: Error: Undefined name 'ownerEmail'.
+                  'email': ownerEmail,
+                           ^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:862:24: Error: Undefined name 'ownerEmail'.
+                'email': ownerEmail,
+                         ^^^^^^^^^^
+
+To run this test again: dart test 7571. SIT_P2.dart -p vm --plain-name 'loading 7571. SIT_P2.dart'

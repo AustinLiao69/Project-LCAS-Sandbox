@@ -1,8 +1,8 @@
 /**
  * 7571. SIT_P2.dart
- * @version v2.4.0
- * @date 2025-11-07
- * @update: 階段一修正 - 增強錯誤日誌輸出和動態預算ID管理
+ * @version v2.4.1
+ * @date 2025-11-12
+ * @update: 階段一修正 - 修復TC-009協作帳本創建調用邏輯
  *
  * 🚨 階段三修正重點：
  * - ✅ 移除所有模擬業務邏輯：不進行任何業務判斷
@@ -778,49 +778,38 @@ class SITP2TestController {
 
       // 純粹調用PL層7303，完全不進行任何業務邏輯判斷
       switch (testId) {
-        case 'TC-009': // 建立協作帳本 - 階段三修正版（確保調用CM_createSharedLedger）
-          print('[7571] 🎯 階段三測試流程修正：TC-009確保調用CM_createSharedLedger()而非已移除的CM_createLedger()');
+        case 'TC-009': // 建立協作帳本 - 階段一修正版
+          print('[7571] 🎯 階段一修正：TC-009協作帳本建立測試開始');
 
           try {
-            // 步驟1：從7598載入collaboration.test@test.lcas.app測試資料
-            final collaborationUser = await P2TestDataManager.instance.getUserModeData('Expert');
-            final collaborationTestEmail = 'collaboration.test@test.lcas.app';
+            // 步驟1：從7598載入協作測試資料
+            final collaborationData = successData['create_collaborative_ledger'];
+            
+            if (collaborationData == null) {
+              throw Exception('[7571] ❌ 7598中缺少create_collaborative_ledger測試資料');
+            }
 
-            executionSteps['step_1_load_collaboration_user'] = 'Loaded collaboration.test@test.lcas.app user data from 7598.';
-            print('[7571] 📧 階段三測試流程修正：使用測試email: $collaborationTestEmail');
+            executionSteps['step_1_load_test_data'] = 'Loaded collaboration test data from 7598.';
+            print('[7571] 📧 階段一修正：載入協作測試資料完成');
 
-            // 步驟2：準備純協作帳本建立資料（符合CM_createSharedLedger的職責分離）
-            final ledgerData = {
-              'name': '協作測試帳本_${DateTime.now().millisecondsSinceEpoch}',
-              'type': 'shared',
-              'description': '測試協作帳本功能',
-              'ownerEmail': 'user_collaboration.test@test.lcas.app',
-              'collaborationType': 'shared',
-              'settings': {
-                'allowInvite': true,
-                'allowEdit': true,
-                'allowDelete': false,
-                'requireApproval': false
-              },
-              '_useSharedLedgerAPI': true  // 階段三標記：確保使用協作帳本API
-            };
-
+            // 步驟2：準備協作帳本建立資料
+            final ledgerData = Map<String, dynamic>.from(collaborationData);
+            
+            // 確保協作類型設定正確
+            ledgerData['type'] = 'shared';
+            ledgerData['collaborationType'] = 'shared';
+            
             inputData = ledgerData;
-            executionSteps['step_2_prepare_pure_collaboration_data'] = 'Prepared pure collaboration data for CM_createSharedLedger path.';
-            print('[7571] 📋 階段三測試流程修正：準備純協作帳本資料，確保走CM_createSharedLedger路徑');
+            executionSteps['step_2_prepare_collaboration_data'] = 'Prepared collaboration ledger data with type=shared.';
+            print('[7571] 📋 階段一修正：協作帳本資料準備完成，type=shared');
 
-            // 步驟3：調用PL層建立協作帳本（確保內部調用CM_createSharedLedger而非已移除的CM_createLedger）
-            // PL層內部應該：
-            // - 識別type='shared'和_useSharedLedgerAPI=true
-            // - 調用CM_createSharedLedger()（只操作collaborations集合）
-            // - 避免調用已移除的CM_createLedger()
-            // - 維持職責分離原則
-            executionSteps['step_3_call_pl_create_shared_ledger'] = 'Calling PL layer to route to CM_createSharedLedger (not removed CM_createLedger).';
-            print('[7571] 🔄 階段三測試流程修正：調用PL層，確保路由至CM_createSharedLedger()');
+            // 步驟3：調用PL層7303建立協作帳本
+            executionSteps['step_3_call_pl_create_ledger'] = 'Calling PL layer 7303 createLedger function.';
+            print('[7571] 🔄 階段一修正：調用PL層7303.createLedger()');
 
-            final response = await LedgerCollaborationManager.createLedger(
+            plResult = await LedgerCollaborationManager.createLedger(
               ledgerData,
-              userMode: 'Expert' // 假設Expert用戶模式用於測試
+              userMode: 'Expert'
             );
 
             if (response != null) {
