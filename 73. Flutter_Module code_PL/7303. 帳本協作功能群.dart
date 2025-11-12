@@ -773,7 +773,7 @@ class LedgerCollaborationManager {
           if (emailToUserIdResult['success'] == true) {
             final resolvedUserId = emailToUserIdResult['userId'];
             final userData = emailToUserIdResult['userData'];
-            
+
             print('[7303] ✅ 階段一修正：真實email→userId解析成功: $ownerEmail → $resolvedUserId');
 
             // 更新建立資料，使用解析出的真實userId
@@ -783,7 +783,7 @@ class LedgerCollaborationManager {
 
             // 保留原始email和用戶資料用於協作功能
             createData['ownerEmail'] = ownerEmail;
-            if (userData != null) {
+            if (userData.isNotEmpty) {
               createData['ownerDisplayName'] = userData['displayName'] ?? userData['name'];
               createData['ownerUserMode'] = userData['userMode'] ?? userData['userType'];
             }
@@ -791,9 +791,9 @@ class LedgerCollaborationManager {
           } else {
             final errorMsg = emailToUserIdResult['error'] ?? 'Unknown error';
             final stage = emailToUserIdResult['stage'] ?? 'unknown';
-            
+
             print('[7303] ❌ 階段一修正：真實email→userId解析失敗 - Stage: $stage, Error: $errorMsg');
-            
+
             throw CollaborationError(
               '無法解析email對應的userId: $ownerEmail - $errorMsg',
               'EMAIL_RESOLUTION_FAILED',
@@ -1485,7 +1485,7 @@ class LedgerCollaborationManager {
   /// =============== 階段三：API整合與錯誤處理函數（5個函數） ===============
 
   /**
-   * 22. 統一API調用處理 - 階段三：0098完全合規版本
+   * 22. 統一API調用處理 - 階段三：0098合規版本
    * @version 2025-11-12-V2.0.0
    * @date 2025-11-12
    * @update: 階段三完成 - 嚴格遵守PL→APL→ASL→BL→Firebase資料流
@@ -1503,7 +1503,7 @@ class LedgerCollaborationManager {
       // 階段三：0098合規驗證 - 確保所有調用通過APL統一Gateway
       // 嚴格遵守資料流：PL → APL → ASL → BL → Firebase
       // 禁止直接調用BL層或跨層調用
-      
+
       // 設定超時時間（從配置取得，非hard coding）
       final timeoutDuration = Duration(seconds: timeout ?? 30);
 
@@ -2103,7 +2103,7 @@ class LedgerCollaborationManager {
     try {
       // 階段二修正：移除模擬檢查邏輯，直接調用真實的協作結構初始化
       print('[7303] 🚀 階段二修正：為協作帳本初始化協作功能: ${ledger.id}');
-      
+
       // 準備協作初始化資料
       final collaborationInitData = {
         'ledgerId': ledger.id,
@@ -2124,7 +2124,7 @@ class LedgerCollaborationManager {
 
       // 調用真實的協作結構初始化
       await _initializeCollaborationStructure(ledger, collaborationInitData);
-      
+
       print('[7303] ✅ 階段二修正：協作帳本協作功能初始化完成');
 
     } catch (e) {
@@ -2146,7 +2146,7 @@ class LedgerCollaborationManager {
   static Future<Map<String, dynamic>> _resolveEmailToUserId(String email) async {
     try {
       // 階段三：0098合規驗證 - 嚴格遵守資料流 PL → APL → ASL → BL → Firebase
-      
+
       // 驗證email格式
       final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
       if (!emailRegex.hasMatch(email)) {
@@ -2166,16 +2166,16 @@ class LedgerCollaborationManager {
           page: 1,
           limit: 1,
         );
-        
+
         if (response.success && response.data != null) {
           final userData = response.data!.firstWhere(
             (user) => user['email'] == email,
             orElse: () => null,
           );
-          
+
           if (userData != null) {
             final userId = userData['id'] ?? userData['userId'];
-            
+
             return {
               'success': true,
               'userId': userId,
