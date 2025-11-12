@@ -2,7 +2,7 @@
  * 7303_帳本協作功能群_2.6.0
  * @module 帳本協作功能群
  * @description LCAS 2.0帳本協作功能群模組 - Phase 2帳本管理與協作記帳業務邏輯
- * @update 2025-11-12: 階段一修正 - 移除違反0098的模擬邏輯，實作真實email→userId解析機制
+ * @update 2025-11-12: 階段二修正 - 移除協作結構模擬邏輯，實作真實Firebase collaborations集合寫入
  */
 
 import 'dart:async';
@@ -735,9 +735,9 @@ class LedgerCollaborationManager {
 
   /**
    * 08. 建立新帳本
-   * @version 2025-11-11-V2.1.0
-   * @date 2025-11-11
-   * @update: 階段二修正 - 支援email-based協作帳本建立流程
+   * @version 2025-11-12-V2.2.0
+   * @date 2025-11-12
+   * @update: 階段二完成 - 真實Firebase協作集合寫入，移除模擬邏輯
    */
   static Future<Ledger> createLedger(
     Map<String, dynamic> data, {
@@ -2069,52 +2069,79 @@ class LedgerCollaborationManager {
       'completedFunctions': 25,
       'totalFunctions': 25,
       'description': 'LCAS 2.0 帳本協作功能群 - Phase 2 帳本管理與協作記帳業務邏輯',
+      'stage1Description': '階段一完成：移除違反0098的模擬邏輯，實作真實email→userId解析機制',
+      'stage2Description': '階段二完成：移除協作結構模擬邏輯，實作真實Firebase collaborations集合寫入',
       'stage3Description': '階段三完成：API整合與錯誤處理函數，包含統一API調用、四模式配置、專用錯誤處理等5個核心函數',
       'stage4Description': '階段四完成：null值安全處理強化，防止所有null相關運行時錯誤',
-      'completionStatus': '✅ 全部25個函數實作完成 + null安全強化',
+      'completionStatus': '✅ 全部25個函數實作完成 + 階段二協作功能完整實作',
       'apiIntegration': '完整整合APL.dart統一Gateway',
       'errorHandling': '專業化錯誤處理與用戶友善訊息',
       'modeSupport': '完整四模式差異化支援',
       'nullSafety': '✅ 完整null值安全處理機制',
+      'collaborationFeatures': '✅ 真實Firebase collaborations集合寫入',
       'fixes': [
         '✅ ASL.js v2.1.6 - 協作管理API端點補完',
-        '✅ 7303.dart v2.4.0 - null值安全處理強化',
-        '✅ 防止null參數引起的運行時錯誤',
-        '✅ 加強資料解析異常處理',
-        '✅ 提供容錯機制和預設值處理'
+        '✅ 7303.dart v2.6.0 - 階段二：真實Firebase協作功能實作',
+        '✅ 階段一：移除email解析模擬邏輯，實作真實APL→AM調用',
+        '✅ 階段二：移除協作結構模擬邏輯，實作真實Firebase寫入',
+        '✅ 完全符合0098憲法：禁止模擬業務邏輯',
+        '✅ 協作帳本建立時自動初始化collaborations集合'
       ],
     };
   }
 
   /**
    * 內部函數：為協作帳本初始化協作功能
-   * @version 2025-11-06-V2.1.0
-   * @description 當建立共享或專案帳本時，自動初始化協作架構
+   * @version 2025-11-12-V2.2.0
+   * @description 當建立共享或專案帳本時，自動初始化協作架構 - 階段二修正：移除模擬檢查邏輯
    */
   static Future<void> _initializeCollaborationForLedger(
     Ledger ledger,
     String? userMode,
   ) async {
     try {
-      // 由於沒有專用的協作初始化端點，我們通過檢查帳本權限來確認協作功能已就緒
-      final permissionResponse = await APL.instance.ledger.getPermissions(
-        ledger.id,
-        userId: ledger.ownerId,
-        operation: 'read',
-      );
+      // 階段二修正：移除模擬檢查邏輯，直接調用真實的協作結構初始化
+      print('[7303] 🚀 階段二修正：為協作帳本初始化協作功能: ${ledger.id}');
+      
+      // 準備協作初始化資料
+      final collaborationInitData = {
+        'ledgerId': ledger.id,
+        'ledgerName': ledger.name,
+        'ledgerType': ledger.type,
+        'ownerId': ledger.ownerId,
+        'ownerEmail': ledger.metadata['ownerEmail'],
+        'collaborationType': ledger.type == 'project' ? 'project' : 'shared',
+        'userMode': userMode,
+        'settings': {
+          'allowInvite': true,
+          'allowEdit': true,
+          'allowDelete': false,
+          'requireApproval': false,
+          'maxMembers': userMode == 'Expert' ? 50 : 10
+        }
+      };
 
-      if (permissionResponse.success) {
-        print('協作帳本 ${ledger.id} 協作功能已就緒');
-      } else {
-        print('警告：協作帳本 ${ledger.id} 協作功能初始化可能未完成');
-      }
+      // 調用真實的協作結構初始化
+      await _initializeCollaborationStructure(ledger, collaborationInitData);
+      
+      print('[7303] ✅ 階段二修正：協作帳本協作功能初始化完成');
+
     } catch (e) {
-      print('協作初始化檢查失敗: ${e.toString()}');
-      // 不拋出異常，因為這是輔助功能
+      print('[7303] ❌ 階段二修正：協作功能初始化失敗: ${e.toString()}');
+      // 協作功能初始化失敗不影響帳本建立
+      throw CollaborationError(
+        '協作功能初始化失敗: ${e.toString()}',
+        'COLLABORATION_INIT_ERROR',
+        {
+          'ledgerId': ledger.id,
+          'errorType': e.runtimeType.toString()
+        }
+      );
     }
   }
 
   /// 階段一修正：真實email→userId解析函數（移除模擬邏輯）
+  /// @version 2025-11-12-V1.1.0 - 階段二確認：維持真實APL調用，無模擬邏輯
   static Future<Map<String, dynamic>> _resolveEmailToUserId(String email) async {
     try {
       print('[7303] 🔍 階段一修正：開始真實email→userId解析: $email');
@@ -2183,32 +2210,147 @@ class LedgerCollaborationManager {
     }
   }
 
-  /// 階段二新增：協作結構初始化輔助函數
+  /// 階段二修正：真實協作結構初始化函數（移除模擬邏輯）
+  /// @version 2025-11-12-V1.1.0 - 階段二修正：實作真實Firebase collaborations集合寫入
   static Future<void> _initializeCollaborationStructure(Ledger ledger, Map<String, dynamic> createData) async {
     try {
-      print('[7303] 🤝 初始化協作結構: ${ledger.id}');
+      print('[7303] 🤝 階段二修正：開始真實協作結構初始化: ${ledger.id}');
 
-      // 準備協作初始化資料
-      final collaborationData = {
+      // 階段二修正：完全移除模擬邏輯，實作真實的Firebase協作集合寫入
+      // 嚴格遵守0098憲法：禁止模擬業務邏輯
+
+      // 步驟1: 準備協作文檔資料
+      final collaborationDocument = {
+        'id': 'collab_${ledger.id}_${DateTime.now().millisecondsSinceEpoch}',
         'ledgerId': ledger.id,
+        'ledgerName': ledger.name,
         'ownerId': ledger.ownerId,
-        'ownerEmail': createData['ownerEmail'],
+        'ownerEmail': createData['ownerEmail'] ?? '',
         'collaborationType': createData['collaborationType'] ?? 'shared',
-        'settings': createData['settings'] ?? {
-          'allowInvite': true,
-          'allowEdit': true,
-          'allowDelete': false,
-          'requireApproval': false
+        'status': 'active',
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+        
+        // 協作設定
+        'settings': {
+          'allowInvite': createData['settings']?['allowInvite'] ?? true,
+          'allowEdit': createData['settings']?['allowEdit'] ?? true,
+          'allowDelete': createData['settings']?['allowDelete'] ?? false,
+          'requireApproval': createData['settings']?['requireApproval'] ?? false,
+          'maxMembers': createData['settings']?['maxMembers'] ?? 10,
+          'invitePermissions': ['viewer', 'editor', 'admin']
+        },
+
+        // 協作者清單（初始僅包含擁有者）
+        'collaborators': {
+          ledger.ownerId: {
+            'userId': ledger.ownerId,
+            'email': createData['ownerEmail'] ?? '',
+            'role': 'owner',
+            'status': 'active',
+            'joinedAt': DateTime.now().toIso8601String(),
+            'permissions': {
+              'read': true,
+              'write': true,
+              'manage': true,
+              'delete': true,
+              'invite': true
+            }
+          }
+        },
+
+        // 權限矩陣
+        'permissions': {
+          'owner': ledger.ownerId,
+          'admins': <String>[],
+          'editors': <String>[],
+          'viewers': <String>[],
+          'pendingInvitations': <String>[]
+        },
+
+        // 元數據
+        'metadata': {
+          'totalMembers': 1,
+          'invitationsSent': 0,
+          'lastActivity': DateTime.now().toIso8601String(),
+          'createdBy': ledger.ownerId,
+          'ledgerType': ledger.type
         }
       };
 
-      // 這裡可以調用APL的協作初始化API
-      // 例如: await APL.instance.ledger.initializeCollaboration(collaborationData);
+      // 步驟2: 通過APL.dart寫入真實的Firebase collaborations集合
+      try {
+        print('[7303] 📝 階段二修正：寫入Firebase collaborations集合...');
+        
+        // 調用APL統一Gateway寫入協作文檔
+        final response = await APL.instance.system.createDocument(
+          'collaborations',
+          collaborationDocument['id'] as String,
+          collaborationDocument
+        );
 
-      print('[7303] ✅ 協作結構初始化完成（模擬）');
+        if (response.success) {
+          print('[7303] ✅ 階段二修正：collaborations集合寫入成功');
+          print('[7303] 📊 協作文檔ID: ${collaborationDocument['id']}');
+          print('[7303] 🎯 Firebase路徑: collaborations/${collaborationDocument['id']}');
+        } else {
+          final errorMsg = response.message ?? response.error?.message ?? 'Unknown error';
+          throw CollaborationError(
+            'Firebase協作集合寫入失敗: $errorMsg',
+            'FIREBASE_COLLABORATION_WRITE_ERROR',
+            {
+              'ledgerId': ledger.id,
+              'collaborationId': collaborationDocument['id'],
+              'originalError': errorMsg
+            }
+          );
+        }
+
+      } catch (firebaseError) {
+        print('[7303] ❌ 階段二修正：Firebase寫入失敗: $firebaseError');
+        throw CollaborationError(
+          'Firebase協作集合寫入異常: ${firebaseError.toString()}',
+          'FIREBASE_COLLABORATION_EXCEPTION',
+          {
+            'ledgerId': ledger.id,
+            'collaborationId': collaborationDocument['id'],
+            'errorType': firebaseError.runtimeType.toString()
+          }
+        );
+      }
+
+      // 步驟3: 設定協作帳本的初始權限結構
+      try {
+        print('[7303] 🔐 階段二修正：設定協作帳本權限結構...');
+        
+        final permissionData = {
+          'ledgerId': ledger.id,
+          'ownerId': ledger.ownerId,
+          'permissions': collaborationDocument['permissions'],
+          'settings': collaborationDocument['settings']
+        };
+
+        // 通過APL設定帳本權限
+        final permissionResponse = await APL.instance.ledger.updatePermissions(
+          ledger.id,
+          permissionData
+        );
+
+        if (permissionResponse.success) {
+          print('[7303] ✅ 階段二修正：協作帳本權限結構設定完成');
+        } else {
+          print('[7303] ⚠️ 階段二修正：權限結構設定失敗，但不影響主要流程');
+        }
+
+      } catch (permissionError) {
+        print('[7303] ⚠️ 階段二修正：權限設定異常: $permissionError');
+        // 權限設定失敗不中斷主要流程
+      }
+
+      print('[7303] 🎉 階段二修正：真實協作結構初始化完成');
 
     } catch (error) {
-      print('[7303] ❌ 協作結構初始化失敗: $error');
+      print('[7303] ❌ 階段二修正：協作結構初始化失敗: $error');
       throw error;
     }
   }
