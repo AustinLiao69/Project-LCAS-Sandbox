@@ -1660,21 +1660,43 @@ app.get('/api/v1/ledgers', async (req, res) => {
   }
 });
 
-// 2. 建立帳本
+// 2. 建立帳本 - 統一使用CM_createSharedLedger
 app.post('/api/v1/ledgers', async (req, res) => {
   try {
-    console.log('📝 ASL轉發: 建立帳本 -> CM_createLedger');
+    console.log('📝 ASL轉發: 建立帳本 -> CM_createSharedLedger (統一路由)');
+    console.log('🔍 接收到的請求資料:', JSON.stringify(req.body, null, 2));
 
-    if (!CM || typeof CM.CM_createLedger !== 'function') {
-      return res.apiError('CM_createLedger函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    if (!CM || typeof CM.CM_createSharedLedger !== 'function') {
+      return res.apiError('CM_createSharedLedger函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await CM.CM_createLedger(req.body);
+    // 從請求中提取必要的帳本資料
+    const ledgerData = {
+      name: req.body.name,
+      type: req.body.type || 'shared',
+      description: req.body.description || '',
+      ownerEmail: req.body.ownerEmail,
+      ownerId: req.body.ownerId,
+      settings: req.body.settings || {},
+      isCollaborative: req.body.isCollaborative || true,
+      requiresCMModule: req.body.requiresCMModule || true,
+      ...req.body
+    };
 
-    if (result.success) {
-      res.apiSuccess(result.data, result.message);
+    // 調用CM_createSharedLedger函數
+    const result = await CM.CM_createSharedLedger(
+      ledgerData.ownerEmail || ledgerData.ownerId,
+      ledgerData.name,
+      ledgerData.memberList || [],
+      ledgerData.settings || {}
+    );
+
+    console.log('🎯 CM_createSharedLedger調用結果:', result);
+
+    if (result && result.success) {
+      res.apiSuccess(result, result.message || '協作帳本建立成功');
     } else {
-      res.apiError(result.message, result.error?.code || 'CREATE_LEDGER_ERROR', 400, result.error?.details);
+      res.apiError(result?.message || '帳本建立失敗', result?.error?.code || 'CREATE_LEDGER_ERROR', 400, result?.error?.details);
     }
 
   } catch (error) {
@@ -2053,65 +2075,16 @@ app.post('/api/v1/ledgers/:id/resolve-conflict', async (req, res) => {
   }
 });
 
-// P2階段：帳本管理API (4個端點) - CM模組
-  app.post('/api/v1/ledgers', async (req, res) => {
-    logRequest(req);
-    const { action } = req.body;
+// 註解：此重複的帳本建立端點已移除，統一使用上方的/api/v1/ledgers POST端點
 
-    try {
-      if (!CM) {
-        throw new Error('CM模組未載入');
-      }
+// 輔助函數：請求日誌記錄（如果需要）
+function logRequest(req) {
+  console.log(`📥 [${new Date().toISOString()}] ${req.method} ${req.path}`);
+}
 
-      let result;
-
-      // 階段一修正：所有帳本創建都默認路由到CM_createSharedLedger
-      console.log('📝 ASL轉發: 建立帳本 -> CM_createSharedLedger (統一路由)');
-      console.log('🔍 接收到的請求資料:', JSON.stringify(req.body, null, 2));
-
-      // 從請求中提取必要的帳本資料
-      const ledgerData = {
-        name: req.body.name,
-        type: req.body.type || 'shared',
-        description: req.body.description || '',
-        ownerEmail: req.body.ownerEmail,
-        ownerId: req.body.ownerId,
-        settings: req.body.settings || {},
-        isCollaborative: req.body.isCollaborative || true,
-        requiresCMModule: req.body.requiresCMModule || true,
-        ...req.body
-      };
-
-      // 調用CM_createSharedLedger函數
-      result = await CM.CM_createSharedLedger(
-        ledgerData.ownerEmail || ledgerData.ownerId,
-        ledgerData.name,
-        ledgerData.memberList || [],
-        ledgerData.settings || {}
-      );
-
-      console.log('🎯 CM_createSharedLedger調用結果:', result);
-
-      if (result && result.success) {
-        res.status(200).json(result);
-      } else {
-        res.status(400).json(result || {
-          success: false,
-          message: 'CM模組處理失敗'
-        });
-      }
-
-    } catch (error) {
-      console.error(`❌ ASL錯誤: ${error.message}`);
-      res.status(503).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
-    } finally {
-      logResponse(req, res);
-    }
-  });
+function logResponse(req, res) {
+  console.log(`📤 [${new Date().toISOString()}] ${req.method} ${req.path} - ${res.statusCode}`);
+}
 
 // 移除違規API端點：budgets/status 和 budgets/templates 不在8020文件規範中
 
