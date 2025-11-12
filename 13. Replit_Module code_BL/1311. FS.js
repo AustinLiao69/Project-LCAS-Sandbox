@@ -2855,10 +2855,10 @@ function FS_validateCollaborationData(collaborationData) {
 }
 
 /**
- * FS_createCollaborationDocument - 建立協作文檔
+ * FS_createCollaborationDocument - 建立協作文檔 (簡化版)
  * @version 2025-11-12-V2.7.1
  * @date 2025-11-12
- * @description 階段一：建立協作主集合文檔，包含資料驗證
+ * @description 階段一：建立協作主集合文檔，僅負責基礎文檔創建和資料驗證，避免與CM模組職責重複
  */
 async function FS_createCollaborationDocument(ledgerId, collaborationData, requesterId) {
   const functionName = "FS_createCollaborationDocument";
@@ -2890,20 +2890,12 @@ async function FS_createCollaborationDocument(ledgerId, collaborationData, reque
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
       status: 'active'
-      // 移除metadata欄位，確保完全符合FS驗證標準
     };
 
-    // 建立協作主文檔
+    // 建立協作主文檔 - 僅負責文檔創建，成員管理由CM模組處理
     const result = await FS_createDocument('collaborations', ledgerId, finalCollaborationData, requesterId);
 
     if (result.success) {
-      // 初始化擁有者成員記錄
-      await FS_manageCollaborationMembers(ledgerId, 'ADD_OWNER', {
-        userId: finalCollaborationData.ownerId,
-        email: collaborationData.ownerEmail || 'owner@example.com',
-        role: 'owner'
-      }, requesterId);
-
       FS_logOperation(`協作文檔建立成功: ${ledgerId}`, "建立協作", requesterId || "", "", "", functionName);
     }
 
