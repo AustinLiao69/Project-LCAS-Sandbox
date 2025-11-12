@@ -2178,8 +2178,70 @@ async function CM_createProjectLedger(userId, projectName, projectDescription, s
 }
 
 /**
+ * CM_manageCollaborationMembers - 協作成員管理
+ * @version 2025-11-12-V2.1.1
+ * @date 2025-11-12
+ * @description 管理協作帳本成員，支援添加、移除、更新等操作
+ */
+async function CM_manageCollaborationMembers(ledgerId, operation, memberData, operatorId) {
+  const functionName = "CM_manageCollaborationMembers";
+  try {
+    CM_logInfo(`協作成員管理: ${operation} - ${ledgerId}`, "成員管理", operatorId, "", "", functionName);
+
+    const collectionPath = `collaborations/${ledgerId}/members`;
+
+    switch (operation) {
+      case 'ADD_OWNER':
+      case 'ADD_MEMBER':
+        const newMemberData = {
+          userId: memberData.userId,
+          email: memberData.email || `${memberData.userId}@example.com`,
+          role: memberData.role || 'member',
+          permissions: memberData.permissions || {
+            canInvite: false,
+            canEdit: true,
+            canDelete: false,
+            canManagePermissions: false
+          },
+          joinedAt: admin.firestore.Timestamp.now(),
+          status: 'active',
+          invitedBy: operatorId
+        };
+
+        return await FS.FS_createDocument(collectionPath, memberData.userId, newMemberData, operatorId);
+
+      case 'REMOVE_MEMBER':
+        return await FS.FS_deleteDocument(collectionPath, memberData.userId, operatorId);
+
+      case 'UPDATE_MEMBER':
+        const updateData = {
+          ...memberData,
+          updatedAt: admin.firestore.Timestamp.now(),
+          updatedBy: operatorId
+        };
+        return await FS.FS_updateDocument(collectionPath, memberData.userId, updateData, operatorId);
+
+      default:
+        return {
+          success: false,
+          error: `不支援的成員操作: ${operation}`,
+          errorCode: 'UNSUPPORTED_MEMBER_OPERATION'
+        };
+    }
+
+  } catch (error) {
+    CM_logError(`協作成員管理失敗: ${error.message}`, "成員管理", operatorId, "CM_MANAGE_MEMBERS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'CM_MANAGE_MEMBERS_ERROR'
+    };
+  }
+}
+
+/**
  * 29. 建立共享帳本 - 階段二：協作帳本建立流程優化
- * @version 2025-11-12-V2.1.0
+ * @version 2025-11-12-V2.1.1
  * @date 2025-11-12
  * @description 階段二優化：完全符合FS規範，移除多餘欄位，補齊必要欄位，優化子集合架構
  */
@@ -2217,8 +2279,8 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
       // 階段二移除：直接存放的permissions物件 (改用子集合)
     };
 
-    // 階段二：使用FS模組標準函數建立協作文檔
-    const createResult = await FS.FS_createCollaborationDocument(collaborationId, collaborationData, ownerId);
+    // 階段二：直接使用FS標準函數建立協作文檔，避免職責重複
+    const createResult = await FS.FS_createDocument('collaborations', collaborationId, collaborationData, ownerId);
     if (!createResult.success) {
       throw new Error(`建立協作文檔失敗: ${createResult.error}`);
     }
@@ -2226,33 +2288,18 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
     CM_logInfo(`階段二：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
 
     // 階段二：建立擁有者成員記錄（子集合架構）
-    const ownerMemberData = {
+    const ownerMemberResult = await CM_manageCollaborationMembers(collaborationId, 'ADD_OWNER', {
       userId: ownerId,
-      role: 'owner',
-      permissions: {
-        canInvite: true,
-        canEdit: true,
-        canDelete: true,
-        canManagePermissions: true
-      },
-      joinedAt: admin.firestore.Timestamp.now(),
-      status: 'active'
-      // 階段二移除：email欄位 (子集合中不需要)
-    };
-
-    const ownerMemberResult = await FS.FS_createDocument(
-      `collaborations/${collaborationId}/members`,
-      ownerId,
-      ownerMemberData,
-      ownerId
-    );
+      email: `${ownerId}@example.com`,
+      role: 'owner'
+    }, ownerId);
 
     if (!ownerMemberResult.success) {
       CM_logWarning(`擁有者成員記錄建立失敗: ${ownerMemberResult.error}`, "建立共享帳本", ownerId, "", "", functionName);
     }
 
     // 階段二：添加其他成員到子集合
-    let successfulMembers = 1; // 擁有者已成功
+    let successfulMembers = ownerMemberResult.success ? 1 : 0;
     for (const memberId of memberList || []) {
       if (memberId !== ownerId) {
         const memberResult = await CM_setMemberPermission(
@@ -2664,7 +2711,7 @@ async function CM_detectDuplicateName(userId, proposedName, ledgerType) {
 
 // 模組導出
 module.exports = {
-  // 階段一：成員管理函數 (7個) - 移除不存在的CM_loadCollaborators
+  // 階段一：成員管理函數 (8個) - 新增CM_manageCollaborationMembers
   CM_inviteMember,
   CM_processMemberJoin,
   CM_removeMember,
@@ -2672,6 +2719,7 @@ module.exports = {
   CM_setMemberPermission,
   CM_validatePermission,
   CM_getPermissionMatrix,
+  CM_manageCollaborationMembers,
 
   // 階段二：協作同步函數 (7個)
   CM_initializeSync,
