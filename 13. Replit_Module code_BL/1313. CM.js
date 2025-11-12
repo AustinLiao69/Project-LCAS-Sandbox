@@ -1,8 +1,8 @@
 /**
- * CM_協作與帳本管理模組_2.1.1
+ * CM_協作與帳本管理模組_2.1.2
  * @module CM模組
  * @description 協作與帳本管理系統 - 負責所有後續帳本（第2本以上）的完整生命週期管理，包含協作功能和多帳本管理功能
- * @update 2025-11-11: 階段一修復 - 修復語法錯誤，確保模組正常載入
+ * @update 2025-11-12: 階段一修復 - 移除FS.FS_generateUniqueId依賴，新增CM_generateCollaborationId函數
  */
 
 const admin = require('firebase-admin');
@@ -75,6 +75,18 @@ const CM_WEBSOCKET_EVENTS = {
   SYNC_REQUIRED: 'collaboration:sync_required',
   NOTIFICATION: 'collaboration:notification'
 };
+
+/**
+ * 階段一修復：生成協作帳本ID
+ * @version 2025-11-12-V2.1.2
+ * @date 2025-11-12
+ * @description 內部ID生成函數，替代對FS.FS_generateUniqueId的依賴
+ */
+function CM_generateCollaborationId() {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 9);
+  return `collaboration_${timestamp}_${random}`;
+}
 
 /**
  * 日誌函數封裝
@@ -2176,8 +2188,8 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
   try {
     CM_logInfo(`建立協作帳本 - 擁有者: ${ownerId}, 帳本: ${ledgerName}`, "建立共享帳本", ownerId, "", "", functionName);
 
-    // 階段三：0098合規 - 使用FS模組標準函數生成ID，禁止hard coding
-    const collaborationId = await FS.FS_generateUniqueId('collaboration');
+    // 階段一修復：使用CM模組內部函數生成ID，移除對FS模組的依賴
+    const collaborationId = CM_generateCollaborationId();
 
     const allMembers = [ownerId, ...(memberList || [])];
 
@@ -2185,9 +2197,8 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
     const existingCollaboration = await FS.FS_getDocument('collaborations', collaborationId);
 
     if (!existingCollaboration.success || !existingCollaboration.data) {
-      // 階段三：0098合規 - 使用FS模組標準函數生成成員ID
-      const memberIdResult = await FS.FS_generateUniqueId('member');
-      const memberId = memberIdResult.success ? memberIdResult.id : `member_${Date.now()}`;
+      // 階段一修復：使用簡單邏輯生成成員ID
+      const memberId = `member_${Date.now()}_${ownerId}`;
 
       const currentTime = admin.firestore.Timestamp.now();
       const ownerMember = {
@@ -2723,4 +2734,4 @@ CM_initialize().catch(error => {
   console.error('CM 模組自動初始化失敗:', error);
 });
 
-console.log('✅ CM 協作與帳本管理模組載入完成 - 階段一整合：CM功能已整合完成');
+console.log('✅ CM 協作與帳本管理模組載入完成 - 階段一修復：ID生成依賴問題已解決');
