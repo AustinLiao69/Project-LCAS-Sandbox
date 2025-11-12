@@ -2094,6 +2094,92 @@ async function AM_processSRUpgrade(
 }
 
 /**
+ * =============== 帳戶查詢API端點（支援協作功能） ===============
+ */
+
+/**
+ * 處理用戶帳戶查詢API - GET /api/v1/accounts
+ * @version 2025-11-12-V1.0.0
+ * @date 2025-11-12
+ * @description 查詢用戶帳戶資訊，主要用於協作功能中的email→userId解析
+ */
+async function AM_processAPIGetAccounts(requestData) {
+  const functionName = "AM_processAPIGetAccounts";
+  try {
+    AM_logInfo(
+      "開始處理帳戶查詢API請求",
+      "帳戶查詢",
+      requestData.email || "",
+      "",
+      "",
+      functionName,
+    );
+
+    // 查詢所有用戶帳戶（簡化實作，實際應該支援分頁和篩選）
+    const usersSnapshot = await db.collection("users").get();
+    
+    if (usersSnapshot.empty) {
+      return {
+        success: true,
+        data: [],
+        message: "查詢完成，無用戶資料"
+      };
+    }
+
+    const accountsList = [];
+    usersSnapshot.forEach((doc) => {
+      const userData = doc.data();
+      accountsList.push({
+        id: doc.id,
+        userId: doc.id,
+        email: userData.email || doc.id,
+        displayName: userData.displayName || "",
+        userMode: userData.userMode || "",
+        status: userData.status || userData.accountStatus || "active",
+        createdAt: userData.createdAt,
+        lastActiveAt: userData.lastActiveAt || userData.lastActive
+      });
+    });
+
+    AM_logInfo(
+      `帳戶查詢成功，找到 ${accountsList.length} 個帳戶`,
+      "帳戶查詢",
+      "",
+      "",
+      "",
+      functionName,
+    );
+
+    return {
+      success: true,
+      data: accountsList,
+      message: `成功查詢到 ${accountsList.length} 個帳戶`
+    };
+
+  } catch (error) {
+    AM_logError(
+      `帳戶查詢API處理失敗: ${error.message}`,
+      "帳戶查詢",
+      requestData.email || "",
+      "",
+      "",
+      "AM_API_GET_ACCOUNTS_ERROR",
+      functionName,
+    );
+    return {
+      success: false,
+      data: null,
+      message: "系統錯誤，請稍後再試",
+      error: {
+        code: "SYSTEM_ERROR",
+        message: "系統錯誤，請稍後再試",
+        details: { error: error.message }
+      }
+    };
+  }
+}
+
+/**
  * =============== DCN-0012 階段二：API端點處理函數實作 ===============
  * 基於P1-2範圍，實作11個認證服務API端點的處理函數
  */
@@ -5070,6 +5156,7 @@ module.exports = {
   AM_processSRUpgrade,
 
   // 26-44: DCN-0012 階段二 API端點處理函數
+  AM_processAPIGetAccounts,
   AM_processAPIRegister,
   AM_processAPILogin,
   AM_processAPIGoogleLogin,
