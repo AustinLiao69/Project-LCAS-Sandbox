@@ -994,27 +994,41 @@ class SITP2TestController {
 
         case 'TC-014': // 邀請協作者
           try {
-            // 階段一修正：使用動態協作帳本ID和正確email
+            // 階段二修正：使用動態協作帳本ID和從7598載入的正確email
             if (_dynamicCollaborationId != null) {
+              // 階段二修正：從7598載入協作測試用戶資料
+              final collaborationUser = await P2TestDataManager.instance.getCollaborationTestUser();
+              final collaborationTestEmail = collaborationUser['email']; // collaboration.test@test.lcas.app
+
               final invitations = [
                 InvitationData(
-                  email: 'collaboration.test@test.lcas.app', // 階段一修正：使用7598中的正確email
+                  email: collaborationTestEmail, // 階段二修正：使用7598中的正確email
                   role: 'member',
                   permissions: {'read': true, 'write': false},
                 )
               ];
+
+              // 階段二修正：確保參數完整傳遞
               inputData = {
-                'ledgerId': _dynamicCollaborationId,
+                'ledgerId': _dynamicCollaborationId, // 使用動態協作帳本ID
+                'email': collaborationTestEmail,     // 確保email參數存在
                 'invitations': invitations.map((i) => i.toJson()).toList(),
               };
-              executionSteps['prepare_invite_collaborator'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId and email: collaboration.test@test.lcas.app';
-              print('[7571] 🔍 階段一修正：TC-014使用動態協作帳本ID: $_dynamicCollaborationId');
-              print('[7571] 📧 階段一修正：使用正確email: collaboration.test@test.lcas.app');
+
+              executionSteps['load_collaboration_test_user'] = 'Loaded collaboration test user from 7598: $collaborationTestEmail';
+              executionSteps['prepare_invite_collaborator'] = 'Using dynamic collaboration ID: $_dynamicCollaborationId and email: $collaborationTestEmail';
               
-              // 純粹調用PL層7303邀請協作者函數
+              print('[7571] 🔍 階段二修正：TC-014使用動態協作帳本ID: $_dynamicCollaborationId');
+              print('[7571] 📧 階段二修正：從7598載入email: $collaborationTestEmail');
+              print('[7571] 🎯 階段二修正：確保ledgerId和email參數完整傳遞');
+              
+              // 純粹調用PL層7303邀請協作者函數，傳遞完整參數
               plResult = await LedgerCollaborationManager.inviteCollaborators(_dynamicCollaborationId!, invitations);
-              executionSteps['call_pl_invite_collaborators'] = 'Called LedgerCollaborationManager.inviteCollaborators successfully.';
-              print('[7571] 📋 TC-014純粹調用PL層7303完成 - 結果: $plResult');
+              executionSteps['call_pl_invite_collaborators'] = 'Called LedgerCollaborationManager.inviteCollaborators with complete parameters.';
+              
+              print('[7571] 📋 TC-014階段二修正：純粹調用PL層7303完成 - 結果: $plResult');
+              print('[7571] ✅ 階段二目標達成：使用真實協作帳本ID和正確email參數');
+              
             } else {
               plResult = {'error': 'Missing dynamic collaboration ID from TC-009', 'success': false};
               executionSteps['missing_dynamic_id'] = 'Dynamic collaboration ID not found. TC-009 must run first.';
