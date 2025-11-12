@@ -6,6 +6,151 @@
 ------------------------------------------
 20251112. 通過SIT_P2(7571)
 
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+感謝您的澄清，讓我重新分析並更新提案：
+🎯 Insight 深度分析
+關於TC-014邀請協作者參數問題
+您問得很對！我重新檢視log發現，問題不是缺少「被邀請人的ledgerId」，而是：
+1.	缺少被邀請人的email - 邀請時沒有傳遞要邀請的人員email
+=>被邀請人的email請用7598裡面的collaboration.test@test.lcas.app
+
+2.	使用錯誤的ledgerId - 使用hardcode的collaboration_test_ledger_dynamic而非TC-009動態創建的真實ID
+就像公司要發邀請函，卻忘記寫「收件人地址」和用了「錯誤的會議室編號」。
+關於協作測試資料策略
+您的指正完全正確！TC-009已經展示了正確的動態創建模式：
+•	✅ 正確流程：7571 → 7303 → APL → ASL → CM_createSharedLedger → 動態生成協作帳本
+•	❌ 錯誤概念：在7598中預設靜態協作帳本資料
+這就像「現場申請會議室」vs「預先印好固定會議室清單」的差異。
+
+🚀 更新後解決方案（專注協作功能）
+階段一：統一協作帳本ID管理（優先級：最高）
+目標：讓TC-009創建的真實協作帳本ID被後續測試使用
+修改檔案：75. Flutter_Test_code_PL/7571. SIT_P2.dart
+修改內容：
+1.	在_executeCollaborationPureCall函數中新增實例變數_dynamicCollaborationId
+2.	TC-009成功創建協作帳本後，儲存真實的ledgerId
+3.	TC-010~TC-020全部使用這個動態ID，移除hardcode的collaboration_test_ledger_dynamic
+Before/After差異：
+•	Before：TC-009創建collaboration_1762931579106_dg1ozk1eb，但TC-010~TC-020使用假的collaboration_test_ledger_dynamic
+•	After：所有測試案例使用同一個真實創建的協作帳本ID
+
+階段二：修正TC-014邀請參數格式（優先級：高）
+目標：確保邀請協作者時傳遞正確的email和真實ledgerId
+修改檔案：75. Flutter_Test_code_PL/7571. SIT_P2.dart
+修改內容：
+1.	TC-014使用動態的協作帳本ID（而非hardcode）
+2.	確保InvitationData物件包含完整的email參數
+3.	驗證inviteCollaborators函數參數傳遞格式正確
+Before/After差異：
+•	Before：缺少必要參數: ledgerId, email - ASL回傳400錯誤
+•	After：使用真實協作帳本ID和正確email參數，成功發送邀請
+關鍵修正點
+1.	不修改7598 - 保持純動態創建流程
+2.	專注協作功能 - 暫時跳過預算功能問題
+3.	解決ID一致性 - 確保測試流程使用同一個動態創建的協作帳本
+4.	修正參數傳遞 - 確保邀請功能獲得正確的ledgerId和email參數
+這個方案遵循「動態創建 → 共用ID」的正確協作測試模式，就像「先預約會議室，然後所有相關活動都在這個會議室進行」。
+
+
+
+------------------------------------------
+20251112. 通過SIT_P2(7571)
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據9909文件的資深SA角色，我來深入分析7571 SIT P2測試執行結果中協作帳本的問題。
+
+問題深度分析
+🎯 Insight
+測試結果顯示的核心問題就像公司內部系統整合問題：前台部門（7571測試）向後台部門（CM模組）申請服務，但中間的協調部門（APL/ASL）在資料傳遞過程中出現了「格式不匹配」和「ID不一致」的問題。
+
+📋 具體問題列表
+1. 預算ID提取問題 (TC-002~TC-006失敗)
+問題描述：TC-001雖然成功創建預算，但無法從BudgetOperationResult物件中正確提取budgetId，導致後續的查詢、更新、刪除操作失敗。
+真實原因：PL層7571無法正確解析Dart物件結構
+簡單概念解釋：就像業務部門收到IT部門的回覆單據，但無法從單據中找到後續作業需要的「案件編號」
+
+2. 測試資料結構不匹配 (TC-010~TC-012失敗)
+問題描述：7598測試資料中缺少create_collaborative_ledger欄位，但測試代碼期望此欄位存在。
+真實原因：測試資料結構與測試邏輯期望不一致
+簡單概念解釋：就像採購部門拿著舊版的供應商清單去找新的供應商類別
+
+3. 協作帳本ID不一致問題 (TC-013~TC-017部分失敗)
+問題描述：TC-009創建的協作帳本ID是動態生成的（例如：collaboration_1762931579106_dg1ozk1eb），但後續測試使用hardcode的ID（collaboration_test_ledger_dynamic）
+真實原因：動態創建的資源ID與測試期望的ID不匹配
+簡單概念解釋：就像會議室預約系統分配了「會議室A-1127-001」，但後續的設備申請表卻填寫「測試會議室」
+
+4. API參數傳遞問題 (TC-014邀請失敗)
+問題描述：邀請協作者時缺少必要參數ledgerId和email
+真實原因：PL層向APL層傳遞資料時，參數結構不正確
+簡單概念解釋：就像人事部門向IT部門申請帳號時，忘記填寫「部門代碼」和「員工信箱」
+
+=>你的意思是缺少被邀請人的email和被邀請人的ledgerid嗎？
+
+🚀 解決方案階段規劃
+階段一：修正預算ID提取機制（優先級：高）
+目標：讓TC-002~TC-006能正確使用TC-001創建的預算ID
+修改檔案：75. Flutter_Test_code_PL/7571. SIT_P2.dart
+修改內容：
+1.	在_executeBudgetPureCall函數中，修正TC-001的budgetId提取邏輯
+2.	將BudgetOperationResult物件轉換為可讀取的格式
+3.	確保動態budgetId能正確傳遞給後續測試案例
+Before/After差異：
+•	Before：TC-001創建成功但budgetId為null，TC-002~TC-006全部失敗
+•	After：TC-001創建並提取到真實budgetId，TC-002~TC-006能使用該ID進行操作
+
+=>請先專注協作功能，預算功能先不要處理
+
+階段二：補充協作測試資料結構（優先級：中）
+目標：解決TC-010~TC-012的資料缺失問題
+修改檔案：75. Flutter_Test_code_PL/7598. Data warehouse.json
+修改內容：
+1.	在collaboration_test_data.success_scenarios中新增create_collaborative_ledger資料結構
+
+=>不對，要創建協作帳本需要發需求到CM，而由CM的creatsharedledger函數去處理，而不是由7598生成靜態測試資料，請參考TC-009的成功案例。
+
+
+2.	提供測試所需的基本帳本資訊（id、name、owner_id等）
+Before/After差異：
+•	Before：TC-010~TC-012因缺少測試資料而失敗
+•	After：TC-010~TC-012能正確載入測試資料進行帳本操作測試
+
+階段三：統一協作帳本ID管理（優先級：中）
+目標：解決動態ID與hardcode ID不一致問題
+修改檔案：75. Flutter_Test_code_PL/7571. SIT_P2.dart
+修改內容：
+1.	修改_executeCollaborationPureCall函數，讓TC-009創建的帳本ID能被後續測試案例使用
+2.	將hardcode的collaboration_test_ledger_dynamic替換為動態變數
+3.	確保協作帳本ID在整個測試流程中保持一致
+Before/After差異：
+•	Before：TC-009創建帳本ID與TC-013~TC-017使用的ID不同，造成「帳本不存在」錯誤
+•	After：所有協作測試使用同一個動態創建的帳本ID
+
+階段四：修正API參數傳遞格式（優先級：高）
+目標：解決TC-014邀請協作者參數缺失問題
+修改檔案：75. Flutter_Test_code_PL/7571. SIT_P2.dart
+修改內容：
+1.	檢查inviteCollaborators函數的參數傳遞格式
+2.	確保InvitationData物件正確轉換為API所需的格式
+3.	驗證ledgerId和email參數確實包含在請求中
+Before/After差異：
+•	Before：TC-014因參數格式錯誤而API回傳400錯誤
+•	After：TC-014能正確傳遞參數並成功邀請協作者
+
+實施計畫時程
+1.	階段一：預計修改5個函數，影響範圍TC-002~TC-006，完成後可立即測試驗證
+2.	階段二：預計新增1個資料結構，影響範圍TC-010~TC-012，完成後可立即測試驗證
+3.	階段三：預計修改3個函數，影響範圍TC-013~TC-017，完成後可立即測試驗證
+4.	階段四：預計修改2個函數，影響範圍TC-014，完成後可立即測試驗證
+每個階段完成後都能執行dart test "7571. SIT_P2.dart"進行驗證，確保修正效果。
+等待您的Approve後，我將開始實施階段一的修正。
+
+
+
+------------------------------------------
+20251112. 通過SIT_P2(7571)
+
 Approved請進行階段一
 
 作為資深系統架構師，我已詳細分析您的更新需求。根據您要求專注於協作功能問題，我提出以下簡化解決方案：
