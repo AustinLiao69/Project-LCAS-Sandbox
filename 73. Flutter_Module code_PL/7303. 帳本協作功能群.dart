@@ -2168,12 +2168,12 @@ class LedgerCollaborationManager {
         );
 
         if (response.success && response.data != null) {
-          final userData = response.data!.firstWhere(
+          final userData = response.data!.cast<Map<String, dynamic>>().firstWhere(
             (user) => user['email'] == email,
-            orElse: () => null,
+            orElse: () => <String, dynamic>{},
           );
 
-          if (userData != null) {
+          if (userData.isNotEmpty) {
             final userId = userData['id'] ?? userData['userId'];
 
             return {
