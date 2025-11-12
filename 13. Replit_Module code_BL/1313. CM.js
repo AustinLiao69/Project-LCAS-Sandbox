@@ -1,8 +1,8 @@
 /**
- * CM_協作與帳本管理模組_2.1.4
+ * CM_協作與帳本管理模組_2.2.0
  * @module CM模組
  * @description 協作與帳本管理系統 - 負責所有後續帳本（第2本以上）的完整生命週期管理，包含協作功能和多帳本管理功能
- * @update 2025-11-12: 階段二優化 - CM_createSharedLedger函數完全符合FS規範，移除ownerEmail等多餘欄位，優化子集合架構
+ * @update 2025-11-12: 階段一修正 - 統一日誌架構，CM_logCollaborationAction完全使用DL模組統一介面，移除直接Firebase寫入
  */
 
 const admin = require('firebase-admin');
@@ -1002,37 +1002,51 @@ async function CM_setNotificationPreferences(userId, ledgerId, preferences) {
 }
 
 /**
- * 13. 記錄協作操作
- * @version 2025-07-07-V1.0.0
- * @date 2025-07-07 14:19:46
- * @description 詳細記錄所有協作相關的操作日誌
+ * 13. 記錄協作操作 - 階段一修正：統一日誌架構
+ * @version 2025-11-12-V2.2.0
+ * @date 2025-11-12
+ * @description 統一使用DL模組記錄協作操作，移除直接Firebase寫入
  */
 async function CM_logCollaborationAction(ledgerId, userId, actionType, actionData) {
   const functionName = "CM_logCollaborationAction";
   try {
     const logId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    const logData = {
+    // 階段一修正：完全移除直接Firebase寫入，統一使用DL模組
+    const logMessage = `協作操作記錄: ${actionType} - 帳本: ${ledgerId}`;
+    const logDetails = JSON.stringify({
       logId,
       ledgerId,
-      userId,
       actionType,
-      actionData,
-      timestamp: admin.firestore.Timestamp.now(),
-      ipAddress: actionData.ipAddress || "unknown",
-      userAgent: actionData.userAgent || "unknown"
-    };
+      actionData: actionData || {},
+      ipAddress: actionData?.ipAddress || "unknown",
+      userAgent: actionData?.userAgent || "unknown"
+    });
 
-    // 儲存到 Firestore
-    await db.collection('collaboration_logs').add(logData);
-
-    // 整合系統日誌
-    CM_logInfo(`協作操作記錄: ${actionType}`, actionType, userId, "", JSON.stringify(actionData), functionName);
+    // 階段一修正：統一使用DL.DL_log介面
+    if (DL && typeof DL.DL_log === 'function') {
+      await DL.DL_log({
+        message: logMessage,
+        operation: actionType,
+        userId: userId,
+        errorCode: "",
+        details: logDetails,
+        retryCount: 0,
+        location: functionName,
+        function: functionName,
+        severity: "INFO",
+        source: "CM"
+      });
+    } else {
+      // 降級處理：使用CM內部日誌函數
+      CM_logInfo(logMessage, actionType, userId, "", logDetails, functionName);
+    }
 
     return {
       logged: true,
       logId,
-      timestamp: logData.timestamp.toDate().toISOString()
+      timestamp: new Date().toISOString(),
+      method: "DL_unified_logging"
     };
 
   } catch (error) {
@@ -1040,7 +1054,8 @@ async function CM_logCollaborationAction(ledgerId, userId, actionType, actionDat
     return {
       logged: false,
       logId: null,
-      timestamp: null
+      timestamp: null,
+      error: error.message
     };
   }
 }
