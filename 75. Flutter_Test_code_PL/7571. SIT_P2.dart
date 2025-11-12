@@ -1,14 +1,15 @@
 /**
  * 7571. SIT_P2.dart
- * @version v2.4.1
+ * @version v2.5.0
  * @date 2025-11-12
- * @update: 階段一修正 - 修復TC-009協作帳本創建調用邏輯
+ * @update: 階段一修正 - 增強錯誤捕獲機制，提供TC-010~TC-020詳細失敗日誌
  *
- * 🚨 階段三修正重點：
+ * 🚨 階段四修正重點：
  * - ✅ 移除所有模擬業務邏輯：不進行任何業務判斷
  * - ✅ 純粹調用PL層函數：只調用7303、7304模組函數
  * - ✅ 遵守正確資料流：7598 → 7571 → PL層 → APL → ASL → BL → Firebase
  * - ✅ 100%符合0098規範：禁止模擬業務邏輯
+ * - ✅ 新增：增強錯誤捕獲，提供具體失敗原因而非null回應
  */
 
 import 'dart:async';
@@ -875,45 +876,87 @@ class SITP2TestController {
 
 
         case 'TC-010': // 查詢帳本列表
-          final ledgerData = successData['create_collaborative_ledger'];
-          if (ledgerData != null) {
-            inputData = {'owner_id': ledgerData['owner_id']};
-            executionSteps['prepare_query_ledger_list'] = 'Set owner_id.';
-            // 純粹調用PL層7303查詢帳本列表函數
-            plResult = await LedgerCollaborationManager.processLedgerList(inputData);
-            executionSteps['call_pl_ledger_list'] = 'Called LedgerCollaborationManager.processLedgerList.';
-            print('[7571] 📋 TC-010純粹調用PL層7303完成');
+          try {
+            final ledgerData = successData['create_collaborative_ledger'];
+            if (ledgerData != null) {
+              inputData = {'owner_id': ledgerData['owner_id']};
+              executionSteps['prepare_query_ledger_list'] = 'Set owner_id: ${ledgerData['owner_id']}.';
+              print('[7571] 🔍 TC-010 輸入參數：owner_id=${ledgerData['owner_id']}');
+              
+              // 純粹調用PL層7303查詢帳本列表函數
+              plResult = await LedgerCollaborationManager.processLedgerList(inputData);
+              executionSteps['call_pl_ledger_list'] = 'Called LedgerCollaborationManager.processLedgerList successfully.';
+              print('[7571] 📋 TC-010純粹調用PL層7303完成 - 結果: $plResult');
+            } else {
+              plResult = {'error': 'Missing create_collaborative_ledger test data', 'success': false};
+              executionSteps['missing_test_data'] = 'create_collaborative_ledger data not found in test data.';
+              print('[7571] ⚠️ TC-010: 測試資料中缺少create_collaborative_ledger');
+            }
+          } catch (e, stackTrace) {
+            plResult = {'error': 'TC-010 processLedgerList failed: $e', 'success': false};
+            executionSteps['function_call_error'] = 'LedgerCollaborationManager.processLedgerList threw exception: $e';
+            executionSteps['stack_trace'] = stackTrace.toString().split('\n').take(3).join(' | ');
+            print('[7571] ❌ TC-010 調用異常: $e');
+            print('[7571] 📚 堆疊追蹤: ${stackTrace.toString().split('\n').take(2).join('\n')}');
           }
           break;
 
         case 'TC-011': // 更新帳本資訊
-          final ledgerData = successData['create_collaborative_ledger'];
-          if (ledgerData != null) {
-            final ledgerId = ledgerData['id'];
-            inputData = {
-              'name': '${ledgerData['name']}_updated',
-              'description': '${ledgerData['description'] ?? ""}_updated',
-            };
-            executionSteps['prepare_update_ledger_info'] = 'Set ledgerId, name, description.';
-            // 純粹調用PL層7303更新帳本函數
-            await LedgerCollaborationManager.updateLedger(ledgerId, inputData);
-            plResult = {'updateLedger': 'completed', 'ledgerId': ledgerId};
-            executionSteps['call_pl_update_ledger'] = 'Called LedgerCollaborationManager.updateLedger.';
-            print('[7571] 📋 TC-011純粹調用PL層7303完成');
+          try {
+            final ledgerData = successData['create_collaborative_ledger'];
+            if (ledgerData != null) {
+              final ledgerId = ledgerData['id'];
+              inputData = {
+                'name': '${ledgerData['name']}_updated',
+                'description': '${ledgerData['description'] ?? ""}_updated',
+              };
+              executionSteps['prepare_update_ledger_info'] = 'Set ledgerId: $ledgerId, name, description.';
+              print('[7571] 🔍 TC-011 輸入參數：ledgerId=$ledgerId');
+              
+              // 純粹調用PL層7303更新帳本函數
+              await LedgerCollaborationManager.updateLedger(ledgerId, inputData);
+              plResult = {'updateLedger': 'completed', 'ledgerId': ledgerId, 'success': true};
+              executionSteps['call_pl_update_ledger'] = 'Called LedgerCollaborationManager.updateLedger successfully.';
+              print('[7571] 📋 TC-011純粹調用PL層7303完成');
+            } else {
+              plResult = {'error': 'Missing create_collaborative_ledger test data', 'success': false};
+              executionSteps['missing_test_data'] = 'create_collaborative_ledger data not found.';
+              print('[7571] ⚠️ TC-011: 測試資料中缺少create_collaborative_ledger');
+            }
+          } catch (e, stackTrace) {
+            plResult = {'error': 'TC-011 updateLedger failed: $e', 'success': false};
+            executionSteps['function_call_error'] = 'LedgerCollaborationManager.updateLedger threw exception: $e';
+            executionSteps['stack_trace'] = stackTrace.toString().split('\n').take(3).join(' | ');
+            print('[7571] ❌ TC-011 調用異常: $e');
+            print('[7571] 📚 堆疊追蹤: ${stackTrace.toString().split('\n').take(2).join('\n')}');
           }
           break;
 
         case 'TC-012': // 刪除帳本
-          final ledgerData = successData['create_collaborative_ledger'];
-          if (ledgerData != null) {
-            final ledgerId = ledgerData['id'];
-            inputData = {'ledgerId': ledgerId};
-            executionSteps['prepare_delete_ledger'] = 'Set ledgerId.';
-            // 純粹調用PL層7303刪除帳本函數
-            await LedgerCollaborationManager.processLedgerDeletion(ledgerId);
-            plResult = {'deleteLedger': 'completed', 'ledgerId': ledgerId};
-            executionSteps['call_pl_delete_ledger'] = 'Called LedgerCollaborationManager.processLedgerDeletion.';
-            print('[7571] 📋 TC-012純粹調用PL層7303完成');
+          try {
+            final ledgerData = successData['create_collaborative_ledger'];
+            if (ledgerData != null) {
+              final ledgerId = ledgerData['id'];
+              inputData = {'ledgerId': ledgerId};
+              executionSteps['prepare_delete_ledger'] = 'Set ledgerId: $ledgerId.';
+              print('[7571] 🔍 TC-012 輸入參數：ledgerId=$ledgerId');
+              
+              // 純粹調用PL層7303刪除帳本函數
+              await LedgerCollaborationManager.processLedgerDeletion(ledgerId);
+              plResult = {'deleteLedger': 'completed', 'ledgerId': ledgerId, 'success': true};
+              executionSteps['call_pl_delete_ledger'] = 'Called LedgerCollaborationManager.processLedgerDeletion successfully.';
+              print('[7571] 📋 TC-012純粹調用PL層7303完成');
+            } else {
+              plResult = {'error': 'Missing create_collaborative_ledger test data', 'success': false};
+              executionSteps['missing_test_data'] = 'create_collaborative_ledger data not found.';
+              print('[7571] ⚠️ TC-012: 測試資料中缺少create_collaborative_ledger');
+            }
+          } catch (e, stackTrace) {
+            plResult = {'error': 'TC-012 processLedgerDeletion failed: $e', 'success': false};
+            executionSteps['function_call_error'] = 'LedgerCollaborationManager.processLedgerDeletion threw exception: $e';
+            executionSteps['stack_trace'] = stackTrace.toString().split('\n').take(3).join(' | ');
+            print('[7571] ❌ TC-012 調用異常: $e');
+            print('[7571] 📚 堆疊追蹤: ${stackTrace.toString().split('\n').take(2).join('\n')}');
           }
           break;
 
