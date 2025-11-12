@@ -2666,7 +2666,7 @@ async function CM_detectDuplicateName(userId, proposedName, ledgerType) {
 
 // 模組導出
 module.exports = {
-  // 階段一：成員管理函數 (8個)
+  // 階段一：成員管理函數 (7個) - 移除不存在的CM_loadCollaborators
   CM_inviteMember,
   CM_processMemberJoin,
   CM_removeMember,
@@ -2674,7 +2674,6 @@ module.exports = {
   CM_setMemberPermission,
   CM_validatePermission,
   CM_getPermissionMatrix,
-  CM_loadCollaborators,
 
   // 階段二：協作同步函數 (7個)
   CM_initializeSync,
@@ -2698,12 +2697,25 @@ module.exports = {
   // 階段一修正：協作帳本創建函數
   CM_createSharedLedger,
 
+  // MLS功能遷移區域 - 帳本管理函數
+  CM_getLedgers,
+  CM_getLedgerById,
+  CM_updateLedger,
+  CM_deleteLedger,
+  CM_editLedger,
+  CM_createProjectLedger,
+  CM_createCategoryLedger,
+  CM_getCollaborators,
+  CM_inviteCollaborator,
+  CM_removeCollaborator,
+  CM_getPermissions,
+  CM_detectDuplicateName,
+
   // 系統監控函數 (1個)
   CM_monitorCollaborationHealth,
 
   // 模組初始化函數
   CM_initialize,
-  CM_initializeCollaboration,
 };
 
 // 自動初始化模組
