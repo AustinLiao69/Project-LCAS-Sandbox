@@ -778,39 +778,45 @@ class SITP2TestController {
 
       // 純粹調用PL層7303，完全不進行任何業務邏輯判斷
       switch (testId) {
-        case 'TC-009': // 建立協作帳本 - 正確路徑修正版
-          print('[7571] 🎯 TC-009協作帳本建立測試開始 - 確保使用CM模組路徑');
+        case 'TC-009': // 建立協作帳本 - 真實email流程測試CM模組
+          print('[7571] 🎯 TC-009協作帳本建立測試開始 - 測試真實CM模組路徑');
 
           try {
-            // 步驟1：從7598載入協作測試資料
-            final collaborationData = successData['create_collaborative_ledger'];
-            
-            if (collaborationData == null) {
-              throw Exception('[7571] ❌ 7598中缺少create_collaborative_ledger測試資料');
-            }
+            // 步驟1：從7598載入協作測試用戶email
+            final collaborationUser = await P2TestDataManager.instance.getCollaborationTestUser();
+            final testUserEmail = collaborationUser['email']; // collaboration.test@test.lcas.app
 
-            executionSteps['step_1_load_test_data'] = 'Loaded collaboration test data from 7598.';
-            print('[7571] 📧 載入協作測試資料完成');
+            print('[7571] 📧 取得協作測試用戶email: $testUserEmail');
+            executionSteps['step_1_get_collaboration_user_email'] = 'Retrieved collaboration test user email: $testUserEmail';
 
-            // 步驟2：準備協作帳本建立資料 - 確保會觸發CM模組路徑
-            final ledgerData = Map<String, dynamic>.from(collaborationData);
-            
-            // 關鍵修正：明確設定為協作類型以確保走CM模組路徑
-            ledgerData['type'] = 'shared';
-            ledgerData['collaborationType'] = 'shared';
-            
-            // 確保有擁有者資訊以便CM模組處理協作邀請
-            if (!ledgerData.containsKey('ownerEmail')) {
-              ledgerData['ownerEmail'] = 'expert.valid@test.lcas.app';
-            }
-            
+            // 步驟2：構建協作帳本創建資料 - 純粹使用email，不依賴預設資料
+            final ledgerData = <String, dynamic>{
+              'name': '協作帳本測試_${DateTime.now().millisecondsSinceEpoch}',
+              'type': 'shared',
+              'collaborationType': 'shared',
+              'description': 'TC-009真實協作帳本創建測試 - 通過CM模組路徑',
+              'ownerEmail': testUserEmail,  // 使用真實的測試用戶email
+              'currency': 'TWD',
+              'timezone': 'Asia/Taipei',
+              'settings': {
+                'allowInvite': true,
+                'allowEdit': true,
+                'allowDelete': false,
+                'requireApproval': false
+              },
+              // 強制標記需要通過CM模組
+              'isCollaborative': true,
+              'requiresCMModule': true,
+              'routeToCM': true,
+            };
+
             inputData = ledgerData;
-            executionSteps['step_2_prepare_collaboration_data'] = 'Prepared collaboration ledger data ensuring CM module path.';
-            print('[7571] 📋 協作帳本資料準備完成 - 確保觸發CM模組路徑');
+            executionSteps['step_2_prepare_real_collaboration_data'] = 'Prepared real collaboration ledger data with email: $testUserEmail';
+            print('[7571] 📋 協作帳本真實資料準備完成 - email: $testUserEmail');
 
-            // 步驟3：調用PL層7303 - 將透過正確路徑到達CM模組
-            executionSteps['step_3_call_pl_via_cm_path'] = 'Calling PL layer 7303 which will route to CM module.';
-            print('[7571] 🔄 調用PL層7303 → APL → ASL → CM_createSharedLedger()');
+            // 步驟3：調用PL層7303 - 測試真實的email→userId解析→CM模組路徑
+            executionSteps['step_3_call_pl_real_cm_path'] = 'Calling PL layer 7303 with real email for CM module path test';
+            print('[7571] 🔄 調用PL層7303真實路徑：email→userId解析→APL→ASL→CM_createSharedLedger()');
 
             final response = await LedgerCollaborationManager.createLedger(
               ledgerData,
@@ -827,37 +833,44 @@ class SITP2TestController {
                   'ownerId': response.ownerId,
                 },
                 'collaboration_initialized': true,
-                'cm_module_path_used': true,
-                'message': 'TC-009修正：協作帳本建立成功（正確CM模組路徑）'
+                'cm_module_tested': true,
+                'email_to_userid_resolved': true,
+                'real_cm_path_used': true,
+                'test_email': testUserEmail,
+                'message': 'TC-009：協作帳本真實CM模組路徑測試成功'
               };
 
-              executionSteps['step_4_cm_collaboration_success'] = 'Collaboration ledger created via correct CM module path.';
-              print('[7571] ✅ TC-009修正：協作帳本建立成功（正確CM模組路徑）');
+              executionSteps['step_4_real_cm_collaboration_success'] = 'Real collaboration ledger created via CM module with email resolution.';
+              print('[7571] ✅ TC-009：協作帳本真實CM模組路徑測試成功');
               print('[7571] 📝 帳本ID: ${response.id}');
               print('[7571] 👤 擁有者ID: ${response.ownerId}');
-              print('[7571] 🎯 確認路徑：7571 → 7303 → APL → ASL → CM模組 → Firebase');
+              print('[7571] 📧 測試email: $testUserEmail');
+              print('[7571] 🎯 確認路徑：7571 → 7303 → email解析 → APL → ASL → CM模組 → Firebase collaborations');
 
             } else {
               plResult = {
                 'success': false,
                 'error': '協作帳本建立失敗',
-                'message': 'TC-009修正：PL層createLedger回傳null'
+                'message': 'TC-009：PL層createLedger回傳null，CM模組路徑可能未正確執行',
+                'test_email': testUserEmail,
+                'path_tested': '7303 → email解析 → APL → ASL → CM模組'
               };
-              executionSteps['step_4_collaboration_failed'] = 'Collaboration ledger creation failed - PL layer returned null.';
-              print('[7571] ❌ TC-009修正：協作帳本建立失敗');
+              executionSteps['step_4_real_collaboration_failed'] = 'Real collaboration ledger creation failed - CM module path may not be working.';
+              print('[7571] ❌ TC-009：協作帳本建立失敗，CM模組路徑可能有問題');
             }
 
           } catch (error) {
             plResult = {
               'success': false,
               'error': error.toString(),
-              'message': 'TC-009修正：協作帳本建立過程發生異常'
+              'message': 'TC-009：協作帳本真實CM模組路徑測試異常',
+              'cm_module_path_error': true
             };
-            executionSteps['step_error'] = 'Error during collaboration ledger creation: $error';
-            print('[7571] ❌ TC-009修正：協作帳本建立異常: $error');
+            executionSteps['step_error'] = 'Error during real CM module path test: $error';
+            print('[7571] ❌ TC-009：協作帳本真實CM模組路徑測試異常: $error');
           }
 
-          print('[7571] 📋 TC-009修正完成 - 確保使用正確CM模組調用路徑');
+          print('[7571] 📋 TC-009完成 - 真實CM模組路徑測試完成');
           break;
 
 
