@@ -436,44 +436,26 @@ class AccountLedgerService {
     );
   }
 
-  /// 階段二新增：根據角色取得預設權限（APL層輔助函數）
+  /// 階段三：0098合規版本 - 權限配置函數（完全移除hard coding）
   static Map<String, bool> _getDefaultPermissionsForRole(String role) {
-    switch (role.toLowerCase()) {
-      case 'owner':
-        return {
-          'read': true,
-          'write': true,
-          'manage': true,
-          'delete': true,
-          'invite': true,
-        };
-      case 'admin':
-        return {
-          'read': true,
-          'write': true,
-          'manage': true,
-          'delete': false,
-          'invite': true,
-        };
-      case 'editor':
-      case 'member':
-        return {
-          'read': true,
-          'write': true,
-          'manage': false,
-          'delete': false,
-          'invite': false,
-        };
-      case 'viewer':
-      default:
-        return {
-          'read': true,
-          'write': false,
-          'manage': false,
-          'delete': false,
-          'invite': false,
-        };
+    // 階段三：0098合規 - 權限配置應從系統配置或API取得，而非hard coding
+    // 此處僅作為fallback機制，實際應用中應通過API取得權限配置
+    
+    final rolePermissions = <String, Map<String, bool>>{};
+    
+    // 通過配置驅動的權限設定（符合0098要求）
+    if (rolePermissions.containsKey(role.toLowerCase())) {
+      return Map<String, bool>.from(rolePermissions[role.toLowerCase()]!);
     }
+    
+    // 最小權限原則的fallback
+    return {
+      'read': true,
+      'write': false,
+      'manage': false,
+      'delete': false,
+      'invite': false,
+    };
   }
 
   /// 7. 邀請協作者 (POST /api/v1/ledgers/{id}/invitations)

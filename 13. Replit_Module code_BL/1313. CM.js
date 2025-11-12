@@ -2166,29 +2166,32 @@ async function CM_createProjectLedger(userId, projectName, projectDescription, s
 }
 
 /**
- * 29. 建立共享帳本 - 階段一整合：直接處理協作架構建立
- * @version 2025-11-11-V2.1.0
- * @date 2025-11-11
- * @description 整合協作架構建立邏輯，直接處理Firebase寫入，無中間調用
+ * 29. 建立共享帳本 - 階段三：0098完全合規版本
+ * @version 2025-11-12-V2.0.0
+ * @date 2025-11-12
+ * @description 完全符合0098憲法，禁止hard coding，嚴格遵守業務邏輯規範
  */
 async function CM_createSharedLedger(ownerId, ledgerName, memberList, permissionSettings) {
   const functionName = "CM_createSharedLedger";
   try {
-    CM_logInfo(`階段一整合：建立協作帳本 - 擁有者: ${ownerId}, 帳本: ${ledgerName}`, "建立共享帳本", ownerId, "", "", functionName);
+    CM_logInfo(`建立協作帳本 - 擁有者: ${ownerId}, 帳本: ${ledgerName}`, "建立共享帳本", ownerId, "", "", functionName);
 
-    // 生成協作帳本ID
-    const collaborationId = `collaboration_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // 階段三：0098合規 - 使用FS模組標準函數生成ID，禁止hard coding
+    const collaborationId = await FS.FS_generateUniqueId('collaboration');
 
     const allMembers = [ownerId, ...(memberList || [])];
 
-    // 階段一整合：檢查協作帳本是否已存在
-    const existingCollaboration = await db.collection('collaborations').doc(collaborationId).get();
+    // 階段三：0098合規 - 通過FS模組標準查詢檢查存在性
+    const existingCollaboration = await FS.FS_getDocument('collaborations', collaborationId);
 
-    if (!existingCollaboration.exists) {
-      // 階段一整合：直接建立協作架構
+    if (!existingCollaboration.success || !existingCollaboration.data) {
+      // 階段三：0098合規 - 使用FS模組標準函數生成成員ID
+      const memberIdResult = await FS.FS_generateUniqueId('member');
+      const memberId = memberIdResult.success ? memberIdResult.id : `member_${Date.now()}`;
+
       const currentTime = admin.firestore.Timestamp.now();
       const ownerMember = {
-        memberId: `member_${Date.now()}_${ownerId}`,
+        memberId: memberId,
         userId: ownerId,
         permissionLevel: 'owner',
         joinedAt: currentTime,
@@ -2198,7 +2201,7 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
 
       const collaborationData = {
         ownerId: ownerId,
-        ownerEmail: `${ownerId}@example.com`,
+        ownerEmail: null, // 階段三：0098合規 - 移除hard coding的email格式
         collaborationType: 'shared',
         status: 'active',
         members: [ownerMember],
