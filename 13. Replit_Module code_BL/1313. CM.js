@@ -2251,9 +2251,9 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
     for (const memberId of memberList || []) {
       if (memberId !== ownerId) {
         await CM_setMemberPermission(
-          collaborationId, 
-          memberId, 
-          'member', 
+          collaborationId,
+          memberId,
+          'member',
           ownerId
         );
       }
@@ -2664,74 +2664,46 @@ async function CM_detectDuplicateName(userId, proposedName, ledgerType) {
   }
 }
 
-// 導出模組函數 - 階段一更新：移除CM_initializeCollaboration
+// 模組導出
 module.exports = {
-  // 階段三新增：協作系統核心函數（移除CM_initializeCollaboration）
+  // 階段一：成員管理函數 (8個)
+  CM_inviteMember,
+  CM_processMemberJoin,
+  CM_removeMember,
+  CM_getMemberList,
+  CM_setMemberPermission,
+  CM_validatePermission,
+  CM_getPermissionMatrix,
+  CM_loadCollaborators,
+
+  // 階段二：協作同步函數 (7個)
+  CM_initializeSync,
+  CM_resolveDataConflict,
+  CM_broadcastEvent,
+  CM_sendCollaborationNotification,
+  CM_setNotificationPreferences,
+  CM_logCollaborationAction,
+  CM_getCollaborationHistory,
+
+  // 階段三：錯誤處理函數 (1個)
+  CM_handleCollaborationError,
+
+  // 階段三：協作帳本管理函數 (6個)
   CM_getCollaborationDetails,
   CM_updateCollaborationSettings,
   CM_toggleCollaborationStatus,
   CM_bulkSetMemberPermissions,
   CM_getCollaborationStatistics,
 
-  // 成員管理函數 (CM模組職責)
-  CM_inviteMember,
-  CM_processMemberJoin,
-  CM_removeMember,
-  CM_getMemberList,
+  // 階段一修正：協作帳本創建函數
+  CM_createSharedLedger,
 
-  // 權限管理函數 (CM模組職責)
-  CM_setMemberPermission,
-  CM_validatePermission,
-  CM_getPermissionMatrix,
-
-  // 即時同步函數 (CM模組職責)
-  CM_initializeSync,
-  CM_resolveDataConflict,
-  CM_broadcastEvent,
-
-  // 協作通知函數 (CM模組職責)
-  CM_sendCollaborationNotification,
-  CM_setNotificationPreferences,
-
-  // 變更紀錄函數 (CM模組職責)
-  CM_logCollaborationAction,
-  CM_getCollaborationHistory,
-
-  // 錯誤處理與監控函數 (CM模組職責)
-  CM_handleCollaborationError,
+  // 系統監控函數 (1個)
   CM_monitorCollaborationHealth,
 
-  // 模組初始化 (CM模組職責)
+  // 模組初始化函數
   CM_initialize,
-
-  // 常數與配置 (CM模組職責)
-  CM_PERMISSION_LEVELS,
-  CM_WEBSOCKET_EVENTS,
-  CM_INIT_STATUS,
-
-  // 階段二完成：從MLS遷移的帳本管理函數 (建議遷移至AM模組)
-  // 核心帳本CRUD函數 (CM_createLedger已移除，避免與AM職責重複)
-  CM_getLedgers,          // 從MLS_getLedgers遷移
-  CM_getLedgerById,       // 從MLS_getLedgerById遷移
-  CM_updateLedger,        // 從MLS_updateLedger遷移
-  CM_deleteLedger,        // 從MLS_deleteLedger遷移
-  CM_editLedger,          // 從MLS_editLedger遷移
-
-  // 特定類型帳本函數 (建議遷移至AM模組)
-  CM_createProjectLedger,  // 從MLS_createProjectLedger遷移
-  CM_createCategoryLedger, // 從MLS_createCategoryLedger遷移
-
-  // 共享帳本函數 (CM模組職責)
-  CM_createSharedLedger,   // 從MLS_createSharedLedger遷移
-
-  // 協作管理函數 (CM模組職責)
-  CM_getCollaborators,     // 從MLS_getCollaborators遷移
-  CM_inviteCollaborator,   // 從MLS_inviteCollaborator遷移
-  CM_removeCollaborator,   // 從MLS_removeCollaborator遷移
-  CM_getPermissions,       // 從MLS_getPermissions遷移
-
-  // 輔助功能函數 (部分建議遷移至AM模組)
-  CM_detectDuplicateName   // 從MLS_detectDuplicateName遷移
+  CM_initializeCollaboration,
 };
 
 // 自動初始化模組

@@ -1,8 +1,8 @@
 /**
- * 7303_帳本協作功能群_2.6.0
+ * 7303_帳本協作功能群_2.7.0
  * @module 帳本協作功能群
  * @description LCAS 2.0帳本協作功能群模組 - Phase 2帳本管理與協作記帳業務邏輯
- * @update 2025-11-12: 階段二修正 - 移除協作結構模擬邏輯，實作真實Firebase collaborations集合寫入
+ * @update 2025-11-12: 階段一修正 - 修正協作帳本創建路由邏輯，新增協作專用創建函數
  */
 
 import 'dart:async';
@@ -312,6 +312,43 @@ class LedgerCollaborationManager {
   static const String moduleDate = '2025-11-12';
 
   /// =============== 階段一：帳本管理核心函數（8個函數） ===============
+
+  /**
+   * 階段一新增：協作帳本專用創建函數
+   * @version 2025-11-12-V1.0.0
+   * @date 2025-11-12
+   * @description 專門處理協作帳本的創建邏輯，確保正確調用CM模組
+   */
+  static Future<Ledger> _createCollaborativeLedger(
+    Map<String, dynamic> data, {
+    String? userMode,
+  }) async {
+    try {
+      print('[7303] 🤝 階段一修正：開始創建協作帳本');
+      
+      // 通過APL.dart調用API創建協作帳本
+      final response = await APL.instance.ledger.createLedger(data);
+      
+      if (response.success && response.data != null) {
+        final ledger = Ledger.fromJson(response.data! as Map<String, dynamic>);
+        print('[7303] ✅ 階段一修正：協作帳本創建成功，ID: ${ledger.id}');
+        return ledger;
+      } else {
+        throw CollaborationError(
+          response.message ?? '協作帳本創建失敗',
+          response.error?.code ?? 'COLLABORATIVE_LEDGER_CREATION_ERROR',
+          response.error?.details,
+        );
+      }
+    } catch (e) {
+      print('[7303] ❌ 階段一修正：協作帳本創建失敗: ${e.toString()}');
+      if (e is CollaborationError) rethrow;
+      throw CollaborationError(
+        '協作帳本創建失敗: ${e.toString()}',
+        'CREATE_COLLABORATIVE_LEDGER_ERROR',
+      );
+    }
+  }
 
   /**
    * 01. 處理帳本列表查詢
@@ -744,20 +781,31 @@ class LedgerCollaborationManager {
     String? userMode,
   }) async {
     try {
-      print('[7303] 🚀 階段二修正：開始建立帳本，檢查是否為email-based協作帳本');
+      print('[7303] 🚀 階段一修正：開始建立帳本，檢查帳本類型');
 
-      // 階段二修正：檢查是否為email-based的協作帳本建立
-      final ownerEmail = data['ownerEmail'] as String?;
-      final isCollaborativeLedger = data['type'] == 'shared' || data['collaborationType'] == 'shared';
+      final ledgerType = data['type'] as String?;
+      final isCollaborativeLedger = ledgerType == 'shared' || data['collaborationType'] == 'shared';
+
+      print('[7303] 🔍 階段一修正：帳本類型=$ledgerType, 是否為協作帳本=$isCollaborativeLedger');
 
       Map<String, dynamic> createData = <String, dynamic>{
         'name': data['name'],
-        'type': data['type'] ?? 'personal',
+        'type': ledgerType ?? 'personal',
         'description': data['description'] ?? '',
         'currency': data['currency'] ?? 'TWD',
         'timezone': data['timezone'] ?? 'Asia/Taipei',
         ...data,
       };
+
+      // 階段一修正：如果是協作帳本，直接調用協作帳本創建流程
+      if (isCollaborativeLedger) {
+        print('[7303] 🤝 階段一修正：檢測到協作帳本，調用協作創建流程');
+        return await _createCollaborativeLedger(createData, userMode: userMode);
+      }
+
+      // 非協作帳本使用一般創建流程
+      print('[7303] 📋 階段一修正：一般帳本，調用標準創建流程');
+      return await processLedgerCreation(createData, userMode: userMode);
 
       // 階段二關鍵修正：如果是email-based協作帳本，需要先解析email→userId
       if (ownerEmail != null && isCollaborativeLedger) {
