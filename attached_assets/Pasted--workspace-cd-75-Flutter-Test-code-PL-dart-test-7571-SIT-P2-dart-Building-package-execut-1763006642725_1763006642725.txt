@@ -1,0 +1,253 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
+Building package executable... (1.0(1.2s)
+Built test:test.
+00:00 +0: SIT P2測試 - 7571 (階段三純粹調用版 v3.0.0) (setUpAll)
+[7571] 🎉 SIT P2測試模組 v3.0.0 (階段三純粹調用版) 初始化完成
+[7571] ✅ 修正目標：完全移除模擬業務邏輯，純粹調用PL層函數
+[7571] 🔧 核心改善：不進行任何業務邏輯判斷，直接回傳PL層結果
+[7571] 📋 測試範圍：25個P2測試案例（階段三純粹調用）
+[7571] 🎯 資料來源：7598 Data warehouse.json + APL服務鏈
+[7571] 🚀 重點：純粹調用，移除if判斷，移除狀態管理，動態查詢
+00:00 +0: ... 執行SIT P2階段三純粹00:00 +0: SIT P2測試 - 7571 (階段三純粹調用版 v3.0.0) 執行SIT P2階段三純粹調用測試
+
+[7571] 🚀 開始執行階段三純粹調用版SIT P2測試...
+[7571] 🚀 開始執行階段三純粹調用版SIT P2測試 (v3.0.0)...
+[7571] 🎯 階段三完成：完全移除業務邏輯判斷，純粹調用PL層函數
+[7571] 📋 測試策略：純粹調用 + APL動態查詢 + 直接回傳
+[7571] 🗄️ 資料來源：7598 Data warehouse.json + APL服務鏈
+[7571] 🔄 執行預算管理測試 (純粹調用PL層7304)
+[7571] 🔧 純粹調用：TC-001
+[7571] 📊 階段三預算純粹調用: TC-001 - 建立預算
+[7571] ✅ P2測試資料載入完成，來源：7598 Data warehouse.json
+[processBudgetCRUD] 開始統一預算CRUD操作 - 操作類型: create, 模式: Expert
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: true, 錯誤: 0個, 警告: 0個
+[transformBudgetData] 開始資料轉換 - 轉換類型: uiToApi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 8
+APL階段三驗證：ledgerId = user_expert.valid@test.lcas.app
+APL階段一調試：HTTP回應狀態 = 200
+APL階段一調試：回應內容 = {success: true, data: {id: budget_1763006547594_wt03bjc0c, budgetId: budget_1763006547594_wt03bjc0c, name: 十月生活預算, amount: 50000, type: monthly, ledgerId: user_expert.valid@test.lcas.app, firebase_path: ledgers/user_expert.valid@test.lcas.app/budgets/budget_1763006547594_wt03bjc0c, collection_path: ledgers/user_expert.valid@test.lcas.app/budgets, architecture: subcollection}, error: null, message: 預算建立成功, metadata: {timestamp: 2025-11-13T04:02:28.021Z, requestId: req_1763006548021_pkvyvt, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 430, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一修正：成功提取budgetId = budget_1763006547594_wt03bjc0c
+APL階段一最終判定：success = true
+[7571] 📋 TC-001階段三：純粹調用完成
+[7571] ✅ TC-001 PASS - 建立預算
+[7571] 🔧 純粹調用：TC-002
+[7571] 📊 階段三預算純粹調用: TC-002 - 查詢預算列表
+[7571] ✅ TC-002 PASS - 查詢預算列表
+[7571] 🔧 純粹調用：TC-003
+[7571] 📊 階段三預算純粹調用: TC-003 - 更新預算
+[7571] ✅ TC-003 PASS - 更新預算
+[7571] 🔧 純粹調用：TC-004
+[7571] 📊 階段三預算純粹調用: TC-004 - 刪除預算
+[7571] ✅ TC-004 PASS - 刪除預算
+[7571] 🔧 純粹調用：TC-005
+[7571] 📊 階段三預算純粹調用: TC-005 - 預算執行狀況計算
+[7571] ✅ TC-005 PASS - 預算執行狀況計算
+[7571] 🔧 純粹調用：TC-006
+[7571] 📊 階段三預算純粹調用: TC-006 - 預算警示檢查
+[7571] ✅ TC-006 PASS - 預算警示檢查
+[7571] 🔧 純粹調用：TC-007
+[7571] 📊 階段三預算純粹調用: TC-007 - 預算資料驗證
+[validateBudgetData] 開始資料驗證 - 驗證類型: create
+[validateBudgetData] 驗證完成 - 有效: false, 錯誤: 2個, 警告: 0個
+[7571] 📋 TC-007階段三：純粹調用完成
+[7571] ✅ TC-007 PASS - 預算資料驗證
+[7571] 🔧 純粹調用：TC-008
+[7571] 📊 階段三預算純粹調用: TC-008 - 預算模式差異化
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Expert
+[transformBudgetData] 轉換完成 - 結果欄位數: 10
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Inertial
+[transformBudgetData] 轉換完成 - 結果欄位數: 7
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Cultivation
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[transformBudgetData] 開始資料轉換 - 轉換類型: apiToUi, 模式: Guiding
+[transformBudgetData] 轉換完成 - 結果欄位數: 9
+[7571] 📋 TC-008階段三：純粹調用完成（四模式）
+[7571] ✅ TC-008 PASS - 預算模式差異化
+[7571] 🎉 預算管理純粹調用完成
+[7571] 🔄 執行帳本協作測試 (純粹調用PL層7303)
+[7571] 🔧 純粹調用：TC-009
+[7571] 🤝 階段三協作純粹調用: TC-009 - 建立協作帳本
+APL階段一調試：HTTP回應狀態 = 200
+APL階段一調試：回應內容 = {success: true, data: {success: true, ledgerId: collaboration_1763006548214_69piz3ds6, memberCount: 1, collaborationType: shared, message: 階段二：協作帳本建立成功，完全符合FS規範}, error: null, message: 階段二：協作帳本建立成功，完全符合FS規範, metadata: {timestamp: 2025-11-13T04:02:28.783Z, requestId: req_1763006548783_5wgh5u, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 576, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = true
+[7571] 📋 TC-009階段三：純粹調用完成
+[7571] ✅ TC-009 PASS - 建立協作帳本
+[7571] 🔧 純粹調用：TC-010
+[7571] 🤝 階段三協作純粹調用: TC-010 - 查詢帳本列表
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.795Z, requestId: req_1763006548795_tigctx, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 2, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-010 PASS - 查詢帳本列表
+[7571] 🔧 純粹調用：TC-011
+[7571] 🤝 階段三協作純粹調用: TC-011 - 更新帳本資訊
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.801Z, requestId: req_1763006548801_e7m4ri, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 1, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-011 PASS - 更新帳本資訊
+[7571] 🔧 純粹調用：TC-012
+[7571] 🤝 階段三協作純粹調用: TC-012 - 刪除帳本
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.814Z, requestId: req_1763006548814_8n5gq6, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 1, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-012 PASS - 刪除帳本
+[7571] 🔧 純粹調用：TC-013
+[7571] 🤝 階段三協作純粹調用: TC-013 - 查詢協作者列表
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.823Z, requestId: req_1763006548823_2xymqw, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 1, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-013 PASS - 查詢協作者列表
+[7571] 🔧 純粹調用：TC-014
+[7571] 🤝 階段三協作純粹調用: TC-014 - 邀請協作者
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.836Z, requestId: req_1763006548836_wvikbu, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 4, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-014 PASS - 邀請協作者
+[7571] 🔧 純粹調用：TC-015
+[7571] 🤝 階段三協作純粹調用: TC-015 - 更新協作者權限
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.844Z, requestId: req_1763006548844_mea1u6, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 2, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-015 PASS - 更新協作者權限
+[7571] 🔧 純粹調用：TC-016
+[7571] 🤝 階段三協作純粹調用: TC-016 - 移除協作者
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.852Z, requestId: req_1763006548852_0q8e8i, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 2, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-016 PASS - 移除協作者
+[7571] 🔧 純粹調用：TC-017
+[7571] 🤝 階段三協作純粹調用: TC-017 - 權限矩陣計算
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.872Z, requestId: req_1763006548872_o84u9k, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 1, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-017 PASS - 權限矩陣計算
+[7571] 🔧 純粹調用：TC-018
+[7571] 🤝 階段三協作純粹調用: TC-018 - 協作衝突檢測
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.895Z, requestId: req_1763006548895_tzgekg, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 2, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-018 PASS - 協作衝突檢測
+[7571] 🔧 純粹調用：TC-019
+[7571] 🤝 階段三協作純粹調用: TC-019 - API整合驗證
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.907Z, requestId: req_1763006548907_lxprbr, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 4, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] ✅ TC-019 PASS - API整合驗證
+[7571] 🔧 純粹調用：TC-020
+[7571] 🤝 階段三協作純粹調用: TC-020 - 錯誤處理驗證
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.912Z, requestId: req_1763006548912_w3it6y, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 1, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] 📋 TC-020階段三：純粹調用完成
+[7571] ✅ TC-020 PASS - 錯誤處理驗證
+[7571] 🎉 帳本協作純粹調用完成
+[7571] 🔄 執行整合驗證測試 (純粹調用)
+[7571] 🔧 純粹調用：TC-021
+[7571] 🔗 階段三整合純粹調用: TC-021 - APL服務鏈查詢驗證
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.918Z, requestId: req_1763006548918_x3vqbm, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 1, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] 📋 TC-021階段三：純粹調用完成
+[7571] ✅ TC-021 PASS - APL服務鏈查詢驗證
+[7571] 🔧 純粹調用：TC-022
+[7571] 🔗 階段三整合純粹調用: TC-022 - 用戶狀態管理驗證
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.923Z, requestId: req_1763006548923_eoryt4, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 1, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[LedgerCollaborationManager] 階段一：無法取得當前用戶ID，使用測試用戶ID
+[7571] 📋 TC-022階段三：純粹調用完成
+[7571] ✅ TC-022 PASS - 用戶狀態管理驗證
+[7571] 🔧 純粹調用：TC-023
+[7571] 🔗 階段三整合純粹調用: TC-023 - Email用戶解析驗證
+[LedgerCollaborationManager] 階段一：查詢用戶Email: collaboration.test@test.lcas.app
+[7571] 📋 TC-023階段三：純粹調用完成
+[7571] ✅ TC-023 PASS - Email用戶解析驗證
+[7571] 🔧 純粹調用：TC-024
+[7571] 🔗 階段三整合純粹調用: TC-024 - 跨模組整合驗證
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:28.931Z, requestId: req_1763006548931_b8f4wv, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 2, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] 📋 TC-024階段三：純粹調用完成
+[7571] ✅ TC-024 PASS - 跨模組整合驗證
+[7571] 🔧 純粹調用：TC-025
+[7571] 🔗 階段三整合純粹調用: TC-025 - 完整流程驗證
+[7571] 🔍 階段三：通過APL服務鏈查詢最新協作帳本ID...
+APL階段一調試：HTTP回應狀態 = 400
+APL階段一調試：回應內容 = {success: false, data: null, error: {code: GET_LEDGERS_ERROR, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., details: null}, message: 取得帳本列表失敗: Value for argument "limit" is not a valid integer., metadata: {timestamp: 2025-11-13T04:02:29.088Z, requestId: req_1763006549088_jvfvpp, userMode: Expert, apiVersion: v1.0.0, processingTimeMs: 61, modeFeatures: {expertFeatures: {detailedAnalytics: true, advancedOptions: true, performanceMetrics: true, batchOperations: true, exportFeatures: true, dataInsights: true, customReports: true, expertAnalytics: true, professionalTools: true, detailedReports: true, bulkProcessing: true, advancedFiltering: true, customCategories: true, budgetForecasting: true}}}}
+APL階段一最終判定：success = false
+APL階段一錯誤：取得帳本列表失敗: Value for argument "limit" is not a valid integer.
+[7571] ⚠️ 階段三：未找到協作帳本
+[7571] 📋 TC-025階段三：純粹調用完成
+[7571] ✅ TC-025 PASS - 完整流程驗證
+[7571] 🎉 整合驗證純粹調用完成
+
+===============================================
+=== SIT P2測試執行完畢 (階段三純粹調用版) ===
+===============================================
+版本: v3.0.0-stage-three-pure-call
+測試策略: P2_STAGE_THREE_PURE_CALL
+總測試數: 25
+通過測試: 25
+失敗測試: 0
+成功率: 100.0%
+執行時間: 1715ms
+
+階段三合規檢查:
+  ✅ no_business_logic_judgment: true
+  ✅ pure_pl_calls_only: true
+  ✅ apl_dynamic_query: true
+  ✅ direct_result_return: true
+  ✅ removed_state_management: true
+===============================================
+00:02 +1: ... 執行SIT P2階段三純粹00:02 +1: ... v3.0.0) P2測試資料載00:02 +1: SIT P2測試 - 7571 (階段三純粹調用版 v3.0.0) P2測試資料載入驗證
+
+[7571] 🔧 執行P2測試資料載入驗證...
+[7571] ✅ P2測試資料載入成功
+00:02 +2: ... v3.0.0) P2測試資料載00:02 +2: ... P2四模式資料完整性驗00:02 +2: SIT P2測試 - 7571 (階段三純粹調用版 v3.0.0) P2四模式資料完整性驗證
+
+[7571] 🎯 執行P2四模式資料完整性驗證...
+[7571] ✅ Expert 模式資料完整性驗證通過
+[7571] ✅ Inertial 模式資料完整性驗證通過
+[7571] ✅ Cultivation 模式資料完整性驗證通過
+[7571] ✅ Guiding 模式資料完整性驗證通過
+[7571] ✅ P2四模式資料完整性驗證完成
+00:02 +3: ... P2四模式資料完整性驗00:02 +3: All tests passed!       
+~/workspace/75. Flutter_Test_code_P
