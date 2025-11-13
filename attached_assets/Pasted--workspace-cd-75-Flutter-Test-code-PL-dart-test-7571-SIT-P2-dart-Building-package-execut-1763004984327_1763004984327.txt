@@ -1,0 +1,35 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
+Building package executable... (1.0(1.1s)
+Built test:test.
+00:00 +0 -1: loading 7571. SIT_P2.dart [E]
+  Failed to load "7571. SIT_P2.dart":
+  7571.%20SIT_P2.dart:295:57: Error: Expected ';' after this.
+        final testId = 'TC-${i.toString().padLeft(3, '0')}');
+                                                          ^
+  7571.%20SIT_P2.dart:295:58: Error: Expected an identifier, but got ')'.
+  Try inserting an identifier before ')'.
+        final testId = 'TC-${i.toString().padLeft(3, '0')}');
+                                                           ^
+  7571.%20SIT_P2.dart:295:58: Error: Unexpected token ')'.
+        final testId = 'TC-${i.toString().padLeft(3, '0')}');
+                                                           ^
+  7571.%20SIT_P2.dart:311:57: Error: Expected ';' after this.
+        final testId = 'TC-${i.toString().padLeft(3, '0')}');
+                                                          ^
+  7571.%20SIT_P2.dart:311:58: Error: Expected an identifier, but got ')'.
+  Try inserting an identifier before ')'.
+        final testId = 'TC-${i.toString().padLeft(3, '0')}');
+                                                           ^
+  7571.%20SIT_P2.dart:311:58: Error: Unexpected token ')'.
+        final testId = 'TC-${i.toString().padLeft(3, '0')}');
+                                                           ^
+  7571.%20SIT_P2.dart:789:67: Error: No named parameter with the name 'queryParams'.
+                  'GET', '/api/v1/ledgers/$currentCollaborationId', queryParams: inputData);
+                                                                    ^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:225:26: Context: Found this candidate, but the arguments don't match.
+    static Future<dynamic> callAPI(String method, String path, {Map<String, dynamic>? data}) async {
+                           ^^^^^^^
+
+To run this test again: dart test 7571. SIT_P2.dart -p vm --plain-name 'loading 7571. SIT_P2.dart'
+00:00 +0 -1: Some tests failed.   
+~/workspace/75. Flutter_Test_code_PL$ 
