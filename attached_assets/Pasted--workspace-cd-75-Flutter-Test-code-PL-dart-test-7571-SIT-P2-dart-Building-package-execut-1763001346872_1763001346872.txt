@@ -1,0 +1,41 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
+Building package executable... (1.0s)
+Built test:test.
+00:00 +0 -1: loading 7571. SIT_P2.dart [E]
+  Failed to load "7571. SIT_P2.dart":
+  7571.%20SIT_P2.dart:1108:59: Error: Member not found: 'LedgerCollaborationManager.processCollaboratorList'.
+                plResult = await LedgerCollaborationManager.processCollaboratorList(currentCollaborationId);
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1219:17: Error: No named parameter with the name 'permissions'.
+                  permissions: {'read': true, 'write': true, 'manage': true},
+                  ^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:264:3: Context: Found this candidate, but the arguments don't match.
+    PermissionData({
+    ^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1412:67: Error: No named parameter with the name 'queryParams'.
+                  'GET', '/api/v1/ledgers/$currentCollaborationId', queryParams: inputData);
+                                                                    ^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:195:26: Context: Found this candidate, but the arguments don't match.
+    static Future<dynamic> callAPI(String method, String path, {Map<String, dynamic>? data}) async {
+                           ^^^^^^^
+  7571.%20SIT_P2.dart:1459:51: Error: Member not found: 'LedgerCollaborationManager.validateLedgerData'.
+              plResult = LedgerCollaborationManager.validateLedgerData(inputData);
+                                                    ^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:928:13: Error: The setter '_dynamicCollaborationId' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing setter, or defining a setter or field named '_dynamicCollaborationId'.
+              _dynamicCollaborationId = null;
+              ^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:941:79: Error: The getter '_dynamicCollaborationId' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named '_dynamicCollaborationId'.
+            print('[7571] 📋 TC-009完成 - 真實CM模組路徑測試完成，_dynamicCollaborationId = $_dynamicCollaborationId');
+                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1152:17: Error: The method 'InvitationData' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'InvitationData'.
+                  InvitationData(
+                  ^^^^^^^^^^^^^^
+
+To run this test again: dart test 7571. SIT_P2.dart -p vm --plain-name 'loading 7571. SIT_P2.dart'
+00:00 +0 -1: Some tests failed.   
