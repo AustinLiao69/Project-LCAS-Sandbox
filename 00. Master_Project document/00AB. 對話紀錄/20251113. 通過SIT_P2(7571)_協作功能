@@ -6,8 +6,190 @@
 ------------------------------------------
 20251113. 通過SIT_P2(7571)_協作功能
 
+Approved請進行階段一
+
+您的觀察非常精準！確實，階段二的提案違反了0098憲法第2章第1條「禁止7570/7571含有業務邏輯的功能」。讓我更新提案：
+📊 重新檢視：0098合規性問題
+關鍵發現
+您提到的三個缺失函數確實違反了0098規範：
+1.	CM_getRecentCollaborationId - 這是業務邏輯，應該在APL→ASL→BL鏈中處理
+2.	processCollaboratorList - 同樣是業務邏輯處理
+3.	validateLedgerData - 資料驗證邏輯
+💡 深度SQA Insights
+1.	測試驅動開發陷阱：7571測試代碼假設了不該存在的函數，這是典型的「為了測試而修改業務邏輯」反模式
+2.	架構邊界模糊：PL層7303應該是純粹的介面轉接層，不應包含這些業務邏輯函數
+3.	0098違規根源：原提案試圖在PL層補全業務功能，這正是憲法禁止的行為
+
+🎯 修正後的解決方案（完全符合0098）
+階段一：修復7303模組的APL調用方式（保持不變）
+目標：讓7303正確使用APL.dart現有的Service介面
+修改檔案：7303. 帳本協作功能群.dart
+
+階段二：修正7571測試代碼假設（替代原階段二）
+目標：調整7571測試邏輯，使用正確的APL服務鏈
+修改檔案：7571. SIT_P2.dart
+核心修正：
+•	移除對不存在PL函數的調用
+•	改為透過正確的APL服務鏈獲取資料
+•	例如：透過APL.instance.ledger.getLedgers()查詢協作帳本ID
+
+階段三：修正函數簽名不匹配（保持不變）
+目標：確保7303函數簽名與實際APL介面一致
+
+
+🔍 為什麼以前可以跑？（更新分析）
+根本原因：
+1.	以前可能使用了不同的測試路徑，沒有調用這些不存在的函數
+2.	或者存在已被移除的舊版本實作
+3.	Mock機制可能掩蓋了這些問題
+MVP重點：專注修復架構不一致問題，絕不在PL層增加業務邏輯函數，完全符合0098憲法要求。
+這樣的修正方案是否符合您的要求？我們避免了在PL層添加業務邏輯，改為修正測試代碼的假設。
+
+
+
+------------------------------------------
+20251113. 通過SIT_P2(7571)_協作功能
+
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+作為資深SQA，我根據您的回覆重新檢視了APL.dart的現狀，確實發現了關鍵問題。讓我更新提案：
+📊 重新分析：APL.dart HTTP方法現狀
+關鍵發現
+檢視現有APL.dart文件，確實已經有HTTP方法實作：
+•	_forwardRequest<T> 方法支援GET、POST、PUT、DELETE
+•	透過 switch (method.toUpperCase()) 處理各種HTTP方法
+真實問題所在
+根本原因：7303模組中的LedgerCollaborationManager直接調用了不存在的APL層方法：
+// 7303中的錯誤調用
+await APL.instance.post('/api/v1/ledgers', data: data)
+await APL.instance.get('/api/v1/ledgers', queryParams: params)
+但APL.dart中實際的介面是：
+// APLGateway的實際介面
+await APL.instance.ledger.createLedger(ledgerData)
+await APL.instance.ledger.getLedgers(queryParams: params)
+💡 SQA深度Insights
+1.	架構理解錯誤：開發者將APL.dart誤認為類似ASL.js的純HTTP Gateway，但實際上APL.dart已經是Service-based架構
+2.	測試假設錯誤：7571測試代碼基於錯誤的架構理解編寫，假設了不存在的直接HTTP方法
+3.	文件脫節：實作與設計文件不一致，導致開發者困惑
+🎯 更新解決方案（MVP專注版）
+階段一：修復7303模組的APL調用方式
+目標：讓7303正確使用APL.dart現有的Service介面
+修改檔案：7303. 帳本協作功能群.dart
+核心修正：
+// 錯誤的調用方式 (目前)
+await APL.instance.post('/api/v1/ledgers', data: data)
+// 正確的調用方式 (應修正為)
+await APL.instance.ledger.createLedger(data)
+
+階段二：補全7303缺失的函數
+目標：實作7571測試中調用但不存在的函數
+修改檔案：7303. 帳本協作功能群.dart
+需新增函數：
+1.	CM_getRecentCollaborationId - 查詢最近協作帳本ID
+2.	processCollaboratorList - 處理協作者列表
+3.	validateLedgerData - 驗證帳本資料
+=>這樣是不是違反了0098第2章第1條？
+
+階段三：修正函數簽名不匹配
+目標：確保7303函數簽名與7571測試期望一致
+關鍵修正：
+1.	createLedger加入userMode參數
+2.	PermissionData構造函數加入role參數
+3.	updateCollaboratorPermissions參數順序調整
+
+🔍 為什麼以前可以跑？
+分析結果：以前的測試可能：
+1.	使用了Mock或Fake Service Switch（8599檔案顯示有Fake service機制）
+2.	測試範圍較小，未涵蓋這些協作功能
+3.	使用了不同的測試資料或測試路徑
+MVP重點：專注解決當前7571測試執行的直接障礙，不進行架構重構或優化。
+請您確認這個更新後的分析和解決方案是否符合您的要求？
+
+
+
+------------------------------------------
+20251113. 通過SIT_P2(7571)_協作功能
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+作為資深SQA，我深入分析了7571測試執行的錯誤情況。根據9904文件規範，我將系統性地診斷問題並提出解決方案。
+📊 錯誤分析報告
+1. 錯誤種類分類
+A. 函數簽名不匹配錯誤（16個）
+•	createLedger 缺少 userMode 參數
+•	PermissionData 構造函數缺少 role 參數
+•	updateCollaboratorPermissions 參數數量不正確
+•	callAPI 缺少 queryParams 參數
+B. 成員函數不存在錯誤（9個）
+•	CM_getRecentCollaborationId 函數未定義
+•	processCollaboratorList 函數未定義
+•	validateLedgerData 函數未定義
+C. APL層HTTP方法錯誤（12個）
+•	post, get, put, delete 方法在APLGateway中未定義
+D. 類成員訪問錯誤（3個）
+•	_dynamicCollaborationId 變數未定義
+•	InvitationData 構造函數未定義
+🔍 根本原因分析
+核心問題：PL層與APL層介面不一致
+簡單解釋（部門概念）：
+就像公司的研發部（PL層）和業務部（APL層）使用不同的溝通格式，導致訊息無法正確傳遞。研發部準備的產品規格與業務部的銷售手冊不一致，造成客戶（測試代碼）無法正確使用服務。
+具體分析：
+1.	7303模組設計問題：PL層協作管理模組嘗試直接調用APL層方法，違反了0098文件第6條資料流規範
+2.	APL.dart介面缺失：APLGateway類缺少基本HTTP方法實作
+3.	測試代碼與實作不同步：7571測試代碼調用的函數在7303中不存在或簽名不匹配
+💡 SQA Insights
+1.	架構違規：7303模組違反了分層架構原則，直接依賴APL層
+2.	測試驅動問題：測試代碼編寫時假設了不存在的函數介面
+3.	版本管理失控：模組間的介面版本不同步
+🎯 解決方案
+階段一：修復APL.dart基礎介面
+目標：提供基本HTTP方法支援，解決APL層調用問題
+修改檔案：
+•	APL.dart
+實施計畫：
+1.	在APLGateway類中新增HTTP方法（get, post, put, delete）
+=>我不明白，以前APL.dart沒有HTTP方法（get, post, put, delete）嗎？為什麼以前沒有也可以跑，現在就不行？還是說APL已經有了只是沒有看到？請確認
+
+2.	實作基本的HTTP請求處理邏輯
+3.	確保方法簽名與7303模組期望一致
+
+階段二：修復7303模組函數簽名
+目標：修正PL層協作管理模組的函數介面
+修改檔案：
+•	7303. 帳本協作功能群.dart
+實施計畫：
+1.	修正createLedger函數簽名，加入userMode參數
+2.	修正updateCollaboratorPermissions函數參數順序
+3.	新增缺失的工具函數（CM_getRecentCollaborationId等）
+4.	修正PermissionData和InvitationData類定義
+
+階段三：修復7571測試代碼
+目標：同步測試代碼與實際模組介面
+修改檔案：
+•	7571. SIT_P2.dart
+實施計畫：
+1.	移除未定義的成員變數引用
+2.	修正函數調用參數
+3.	調整測試邏輯以符合實際模組行為
+
+🚀 實施計畫
+我建議採用三階段修復策略，每個階段結束後都可以執行測試驗證進展。請您Approve後，我將開始實施：
+階段一完成標準：APL.dart編譯通過，基本HTTP方法可用
+階段二完成標準：7303模組編譯通過，所有函數簽名正確
+階段三完成標準：7571測試代碼編譯通過，可執行基本測試
+每個階段的修改都會：
+•	升級模組版本號
+•	遵守0098文件規範
+•	專注解決當前問題，不進行額外優化
+•	確保資料流正確性（PL → APL → ASL → BL → Firebase）
+請您確認是否Approve此修復計畫？
+
+
+
+------------------------------------------
+20251113. 通過SIT_P2(7571)_協作功能
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
 作為資深SA，我深入分析了7571測試執行失敗的問題。這個問題反映了架構設計中的依賴管理和模組邊界問題。
 🔍 問題分析
