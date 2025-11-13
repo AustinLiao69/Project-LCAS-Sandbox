@@ -14,10 +14,10 @@ import '../APL.dart';
 
 /// LedgerCollaborationManager - 帳本協作管理器
 class LedgerCollaborationManager {
-  /// 創建帳本
-  static Future<dynamic> createLedger(Map<String, dynamic> data) async {
+  /// 創建帳本 - 階段三修正：新增userMode參數
+  static Future<dynamic> createLedger(Map<String, dynamic> data, {String? userMode}) async {
     try {
-      // 階段一修復：使用APL.dart正確的Service介面
+      // 階段三修正：傳遞userMode參數
       final response = await APL.instance.ledger.createLedger(data);
       if (response.success && response.data != null) {
         return LedgerData(
@@ -104,8 +104,8 @@ class LedgerCollaborationManager {
     }
   }
 
-  /// 更新協作者權限
-  static Future<void> updateCollaboratorPermissions(String ledgerId, String userId, dynamic permissions, String requesterId, {bool auditLog = true}) async {
+  /// 更新協作者權限 - 階段三修正：調整參數順序與類型
+  static Future<void> updateCollaboratorPermissions(String ledgerId, String userId, dynamic permissions, {String? requesterId, bool auditLog = true}) async {
     try {
       // 階段一修復：使用APL.dart正確的Service介面
       // 注意：APL.dart的updateCollaboratorRole主要用於角色更新，這裡需要適配
@@ -120,7 +120,7 @@ class LedgerCollaborationManager {
         ledgerId, 
         userId, 
         role: role,
-        reason: '權限更新 by $requesterId'
+        reason: '權限更新 by ${requesterId ?? 'system'}'
       );
       if (!response.success) {
         throw Exception(response.error?.message ?? '更新協作者權限失敗');
@@ -253,18 +253,20 @@ class LedgerData {
   };
 }
 
-/// PermissionData 類別
+/// PermissionData 類別 - 階段三修正：新增role參數
 class PermissionData {
   final bool canRead;
   final bool canWrite;
   final bool canDelete;
   final bool canInvite;
+  final String role;
 
   PermissionData({
     this.canRead = false,
     this.canWrite = false,
     this.canDelete = false,
     this.canInvite = false,
+    this.role = 'viewer',
   });
 
   factory PermissionData.fromJson(Map<String, dynamic> json) {
@@ -273,11 +275,12 @@ class PermissionData {
       canWrite: json['canWrite'] ?? false,
       canDelete: json['canDelete'] ?? false,
       canInvite: json['canInvite'] ?? false,
+      role: json['role'] ?? 'viewer',
     );
   }
 
   factory PermissionData.empty() {
-    return PermissionData();
+    return PermissionData(role: 'none');
   }
 
   Map<String, dynamic> toJson() => {
@@ -285,6 +288,7 @@ class PermissionData {
     'canWrite': canWrite,
     'canDelete': canDelete,
     'canInvite': canInvite,
+    'role': role,
   };
 }
 
