@@ -2,7 +2,7 @@
  * CM_協作與帳本管理模組_2.2.0
  * @module CM模組
  * @description 協作與帳本管理系統 - 負責所有後續帳本（第2本以上）的完整生命週期管理，包含協作功能和多帳本管理功能
- * @update 2025-11-12: 階段一修正 - 統一日誌架構，CM_logCollaborationAction完全使用DL模組統一介面，移除直接Firebase寫入
+ * @update 2025-11-12: 階段一修正 - 統 যুক্তি日誌架構，CM_logCollaborationAction完全使用DL模組統一介面，移除直接Firebase寫入
  */
 
 const admin = require('firebase-admin');
@@ -1002,7 +1002,7 @@ async function CM_setNotificationPreferences(userId, ledgerId, preferences) {
 }
 
 /**
- * 13. 記錄協作操作 - 階段一修正：統一日誌架構
+ * 13. 記錄協作操作 - 階段一修正：統 যুক্তি日誌架構
  * @version 2025-11-12-V2.2.0
  * @date 2025-11-12
  * @description 統一使用DL模組記錄協作操作，移除直接Firebase寫入
@@ -1787,6 +1787,36 @@ async function CM_getLedgers(queryParams = {}) {
       query = query.where('archived', '==', false);
     }
 
+    // 階段一：新增對 type 和 sortOrder 的支援
+    if (queryParams.type) {
+      query = query.where('type', '==', queryParams.type);
+    }
+
+    // 階段一：支援排序 (sortBy 和 sortOrder)
+    let orderByField = 'created_at';
+    let orderByDirection = 'desc';
+
+    if (queryParams.sortBy) {
+      orderByField = queryParams.sortBy;
+      if (queryParams.sortOrder && queryParams.sortOrder.toLowerCase() === 'asc') {
+        orderByDirection = 'asc';
+      }
+    }
+    query = query.orderBy(orderByField, orderByDirection);
+
+    // 階段一：支援 limit
+    if (queryParams.limit) {
+      query = query.limit(queryParams.limit);
+    }
+
+    // 階段一：新增 active 參數過濾
+    if (queryParams.active === true) {
+      query = query.where('status', '==', 'active');
+    } else if (queryParams.active === false) {
+      query = query.where('status', '!=', 'active');
+    }
+
+
     const querySnapshot = await query.get();
     const ledgers = [];
 
@@ -1804,7 +1834,8 @@ async function CM_getLedgers(queryParams = {}) {
         created_at: ledgerData.created_at,
         updated_at: ledgerData.updated_at,
         archived: ledgerData.archived || false,
-        metadata: ledgerData.metadata || {}
+        metadata: ledgerData.metadata || {},
+        ledgerId: ledgerData.id // 階段一：確保ledgerId欄位存在
       });
     });
 
@@ -2724,9 +2755,99 @@ async function CM_detectDuplicateName(userId, proposedName, ledgerType) {
   }
 }
 
+/**
+ * 階段一新增：取得最近的協作帳本ID - 8020合規版
+ * @version 2025-11-13-V2.2.1
+ * @date 2025-11-13
+ * @description 通過8020現有端點查詢最近建立的協作帳本ID，解決狀態管理問題
+ */
+async function CM_getRecentCollaborationId(userId) {
+  const functionName = "CM_getRecentCollaborationId";
+  try {
+    CM_logInfo(`階段一：查詢最近協作帳本ID - 用戶: ${userId}`, "狀態管理", userId, "", "", functionName);
+
+    // 階段一：完全符合8020規範 - 使用現有端點查詢
+    const queryParams = {
+      userId: userId,
+      type: 'collaborative',
+      sortBy: 'created_at',
+      sortOrder: 'desc',
+      limit: 1,
+      active: true
+    };
+
+    // 階段一：通過CM_getLedgers現有函數實現（符合0098規範）
+    const ledgersResult = await CM_getLedgers(queryParams);
+
+    if (!ledgersResult.success) {
+      CM_logWarning(`階段一：查詢協作帳本失敗: ${ledgersResult.message}`, "狀態管理", userId, "", "", functionName);
+      return {
+        success: false,
+        collaborationId: null,
+        message: ledgersResult.message || '查詢協作帳本失敗',
+        error: ledgersResult.error
+      };
+    }
+
+    // 階段一：從查詢結果提取最近的協作帳本ID
+    const ledgers = ledgersResult.data || [];
+
+    if (ledgers.length === 0) {
+      CM_logInfo(`階段一：用戶 ${userId} 尚未有協作帳本`, "狀態管理", userId, "", "", functionName);
+      return {
+        success: true,
+        collaborationId: null,
+        message: '尚未建立協作帳本',
+        hasCollaboration: false
+      };
+    }
+
+    const recentLedger = ledgers[0];
+    const collaborationId = recentLedger.id || recentLedger.ledgerId;
+
+    // 階段一：驗證協作帳本ID有效性
+    if (!collaborationId) {
+      CM_logError(`階段一：協作帳本ID為空`, "狀態管理", userId, "CM_INVALID_COLLABORATION_ID", "", functionName);
+      return {
+        success: false,
+        collaborationId: null,
+        message: '協作帳本ID無效',
+        error: {
+          code: 'CM_INVALID_COLLABORATION_ID',
+          message: '協作帳本ID為空'
+        }
+      };
+    }
+
+    CM_logInfo(`階段一：成功取得最近協作帳本ID: ${collaborationId}`, "狀態管理", userId, "", "", functionName);
+
+    return {
+      success: true,
+      collaborationId: collaborationId,
+      ledgerName: recentLedger.name || '協作帳本',
+      ledgerType: recentLedger.type || 'collaborative',
+      createdAt: recentLedger.created_at || recentLedger.createdAt,
+      hasCollaboration: true,
+      message: '階段一：最近協作帳本ID取得成功'
+    };
+
+  } catch (error) {
+    CM_logError(`階段一：取得協作帳本ID失敗: ${error.message}`, "狀態管理", userId, "CM_GET_COLLABORATION_ID_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      collaborationId: null,
+      message: `階段一：取得協作帳本ID失敗: ${error.message}`,
+      error: {
+        code: 'CM_GET_COLLABORATION_ID_ERROR',
+        message: error.message
+      }
+    };
+  }
+}
+
 // 模組導出
 module.exports = {
-  // 階段一：成員管理函數 (8個) - 新增CM_manageCollaborationMembers
+  // 階段一：成員管理函數 (9個) - 新增CM_getRecentCollaborationId
   CM_inviteMember,
   CM_processMemberJoin,
   CM_removeMember,
@@ -2735,6 +2856,7 @@ module.exports = {
   CM_validatePermission,
   CM_getPermissionMatrix,
   CM_manageCollaborationMembers,
+  CM_getRecentCollaborationId,
 
   // 階段二：協作同步函數 (7個)
   CM_initializeSync,
