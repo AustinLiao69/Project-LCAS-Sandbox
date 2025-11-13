@@ -1,0 +1,163 @@
+dart"
+Building package executable... (1.0s)
+Built test:test.
+00:00 +0 -1: loading 7571. SIT_P2.dart [E]
+  Failed to load "7571. SIT_P2.dart":
+  7571.%20SIT_P2.dart:831:15: Error: No named parameter with the name 'userMode'.
+                userMode: 'Expert'
+                ^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:18:26: Context: Found this candidate, but the arguments don't match.
+    static Future<dynamic> createLedger(Map<String, dynamic> data) async {
+                           ^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:956:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1002:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1044:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1083:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1099:59: Error: Member not found: 'LedgerCollaborationManager.processCollaboratorList'.
+                plResult = await LedgerCollaborationManager.processCollaboratorList(currentCollaborationId);
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1121:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1184:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1197:17: Error: No named parameter with the name 'role'.
+                  role: 'admin',
+                  ^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:204:3: Context: Found this candidate, but the arguments don't match.
+    PermissionData({
+    ^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1209:77: Error: Too few positional arguments: 4 required, 3 given.
+                await LedgerCollaborationManager.updateCollaboratorPermissions(
+                                                                              ^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:82:23: Context: Found this candidate, but the arguments don't match.
+    static Future<void> updateCollaboratorPermissions(String ledgerId, String userId, dynamic permissions, String requesterId, {bool auditLog = true}) async {
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1233:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1273:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1312:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1350:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1367:67: Error: No named parameter with the name 'queryParams'.
+                  'GET', '/api/v1/ledgers/$currentCollaborationId', queryParams: inputData);
+                                                                    ^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:142:26: Context: Found this candidate, but the arguments don't match.
+    static Future<dynamic> callAPI(String method, String path, {Map<String, dynamic>? data}) async {
+                           ^^^^^^^
+  7571.%20SIT_P2.dart:1390:73: Error: Member not found: 'LedgerCollaborationManager.CM_getRecentCollaborationId'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1408:51: Error: Member not found: 'LedgerCollaborationManager.validateLedgerData'.
+              plResult = LedgerCollaborationManager.validateLedgerData(inputData);
+                                                    ^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:926:13: Error: The setter '_dynamicCollaborationId' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing setter, or defining a setter or field named '_dynamicCollaborationId'.
+              _dynamicCollaborationId = null;
+              ^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:939:79: Error: The getter '_dynamicCollaborationId' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named '_dynamicCollaborationId'.
+            print('[7571] 📋 TC-009完成 - 真實CM模組路徑測試完成，_dynamicCollaborationId = $_dynamicCollaborationId');
+                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1137:17: Error: The method 'InvitationData' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'InvitationData'.
+                  InvitationData(
+                  ^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:21:43: Error: The method 'post' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'post'.
+        final response = await APL.instance.post('/api/v1/ledgers', data: data);
+                                            ^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:39:43: Error: The method 'get' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'get'.
+        final response = await APL.instance.get('/api/v1/ledgers', queryParams: params);
+                                            ^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:50:26: Error: The method 'put' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'put'.
+        await APL.instance.put('/api/v1/ledgers/$ledgerId', data: data);
+                           ^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:60:26: Error: The method 'delete' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'delete'.
+        await APL.instance.delete('/api/v1/ledgers/$ledgerId');
+                           ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:70:43: Error: The method 'post' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'post'.
+        final response = await APL.instance.post('/api/v1/ledgers/$ledgerId/collaborators', data: {
+                                            ^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:84:26: Error: The method 'put' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'put'.
+        await APL.instance.put('/api/v1/ledgers/$ledgerId/collaborators/$userId', data: {
+                           ^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:98:26: Error: The method 'delete' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'delete'.
+        await APL.instance.delete('/api/v1/ledgers/$ledgerId/collaborators/$userId?cleanup=$cleanupData');
+                           ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:108:43: Error: The method 'get' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'get'.
+        final response = await APL.instance.get('/api/v1/ledgers/$ledgerId/permissions/$userId');
+                                            ^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:125:26: Error: The method 'put' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'put'.
+        await APL.instance.put('/api/v1/ledgers/$ledgerId/collaborators/$userId/role', data: {
+                           ^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:146:37: Error: The method 'get' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'get'.
+            return await APL.instance.get(path);
+                                      ^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:148:37: Error: The method 'post' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'post'.
+            return await APL.instance.post(path, data: data);
+                                      ^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:150:37: Error: The method 'put' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'put'.
+            return await APL.instance.put(path, data: data);
+                                      ^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:152:37: Error: The method 'delete' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'delete'.
+            return await APL.instance.delete(path);
+                                      ^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:165:43: Error: The method 'get' isn't defined for the class 'APLGateway'.
+   - 'APLGateway' is from '../APL.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'get'.
+        final response = await APL.instance.get('/api/v1/ledgers?type=shared&limit=1&orderBy=lastActivity');
+                                            ^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:445:71: Error: Too few positional arguments: 4 required, 3 given.
+          await LedgerCollaborationManager.updateCollaboratorPermissions(
+                                                                        ^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:82:23: Context: Found this candidate, but the arguments don't match.
+    static Future<void> updateCollaboratorPermissions(String ledgerId, String userId, dynamic permissions, String requesterId, {bool auditLog = true}) async {
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To run this test again: dart test 7571. SIT_P2.dart -p vm --plain-name 'loading 7571. SIT_P2.dart'
+00:00 +0 -1: Some tests failed.   
+~/workspace/75. Flutter_Test_code_PL$ 
