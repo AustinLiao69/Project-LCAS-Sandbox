@@ -1,6 +1,6 @@
 /**
  * 7571. SIT_P2.dart
- * @version v3.0.0 - 階段三重構：純粹調用架構
+ * @version v3.0.1 - 階段三重構：純粹調用架構（語法修正）
  * @date 2025-11-13
  * @update: 階段三完成 - 移除所有業務邏輯判斷，建立純粹PL層調用架構
  *
@@ -786,7 +786,7 @@ class SITP2TestController {
 
               // 階段三：純粹調用PL層，直接接收結果
               plResult = await LedgerCollaborationManager.callAPI(
-                'GET', '/api/v1/ledgers/$currentCollaborationId', queryParams: inputData);
+                'GET', '/api/v1/ledgers/$currentCollaborationId', data: inputData);
               print('[7571] 📋 TC-019階段三：純粹調用完成');
             } else {
               plResult = {'error': '無法從APL查詢到協作帳本ID'};
