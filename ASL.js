@@ -1777,7 +1777,12 @@ app.get('/api/v1/ledgers', async (req, res) => {
       return res.apiError('CM_getLedgers函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await CM.CM_getLedgers(req.query);
+    // 階段一修正：確保數值型參數轉換為整數傳遞給CM模組
+    const queryParams = { ...req.query };
+    if (queryParams.limit) queryParams.limit = parseInt(queryParams.limit, 10);
+    if (queryParams.page) queryParams.page = parseInt(queryParams.page, 10);
+
+    const result = await CM.CM_getLedgers(queryParams);
 
     if (result.success) {
       res.apiSuccess(result.data, result.message);
