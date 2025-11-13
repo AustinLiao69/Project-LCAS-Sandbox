@@ -1,0 +1,117 @@
+🚀 LCAS ASL (API Service Layer) P2重構版啟動中...
+📅 啟動時間: 2025/11/13 上午9:43:41
+🔥 ASL階段二升級：優先初始化Firebase...
+📦 ASL載入P1-2範圍BL層模組...
+🔄 Firebase初始化嘗試 1/3...
+📡 載入Firebase配置模組...
+ ✅ Firebase配置驗證通過
+🔍 驗證Firebase配置...
+✅ Firebase配置驗證通過
+⚡ 初始化Firebase Admin SDK...
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+📊 確認Firestore實例...
+✅ Firestore實例取得成功
+🔗 驗證Firebase連線...
+✅ Firebase連線驗證成功
+✅ Firebase完全初始化完成，準備載入BL模組...
+🎯 Firebase初始化成功 (嘗試次數: 1)
+🔥 Firebase已就緒，開始載入AM模組...
+✅ DL模組：Firebase動態配置載入成功
+✅ AM模組7.3.0 DCN-0020階段二優化版載入成功！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 完整帳本初始化 (3個核心功能) - 階段二優化
+   └── 總計: 66個函數完整實作
+🚀 階段二優化: 智能batch分割提升大量數據寫入成功率
+🔧 性能提升: AM_initializeUserLedger() - 多重重試機制和錯誤恢復
+🔧 穩定性強化: AM_getUserDefaultLedger() - 增強參數驗證和錯誤處理
+📊 資料流優化: BK模組 → AM模組 → 智能batch處理 → Firebase高效寫入
+🎯 優化目標: 提升帳本初始化的成功率和執行效率
+🎉 階段二成果: 大幅提升系統穩定性和用戶體驗！
+✅ AM (認證管理) 模組載入成功
+🔄 開始載入BK模組...
+✅ Firebase Admin SDK已初始化
+✅ FS模組2.5.0：Firebase動態配置載入成功
+[FS_LOG_v2.1.0] 2025-11-13T01:43:44.373Z | 模組初始化 | FS模組2.5.0初始化 | User: system | Function: FS_initializeModule
+🎉 FS模組2.5.0階段三預算子集合架構完成！
+📌 模組版本: 2.5.0
+🎯 階段三成果: Firebase預算子集合架構遷移完成
+💰 預算架構: budgets/ → ledgers/{id}/budgets/ (子集合)
+📋 階段一功能: 核心基礎操作(9個函數)
+📋 階段二功能: API端點支援(6個函數)
+📋 階段三功能: 整合優化與驗證(6個函數)
+🔧 階段三新增: FS_createBudgetsSubcollectionFramework() - 預算子集合框架
+🔧 階段三新增: 5個預算子集合專用操作函數
+✨ 總計實作: 28個核心函數 + 相容性函數
+🚀 準備就緒: 1312.BM.js模組可完整使用預算子集合架構
+✅ BK模組：使用純業務邏輯配置，禁止引用測試資料
+✓ BK_processBookkeeping: 可用
+✓ BK_processAPIGetDashboard: 可用
+✓ BK_processAPIGetTransactionDetail: 可用
+✓ BK_processAPIUpdateTransaction: 可用
+✓ BK_processAPIDeleteTransaction: 可用
+✓ BK_processAPIGetStatistics: 可用
+✓ BK_processAPIGetRecent: 可用
+✓ BK_processAPIGetCharts: 可用
+✓ BK_createTransaction: 可用
+✓ BK_getTransactions: 可用
+📊 BK模組函數完整性檢查: 10/10
+✅ BK (記帳核心) 模組載入成功，所有函數可用
+✅ DL (診斷日誌) 模組載入成功
+✅ FS (Firestore) 模組載入成功
+📦 P2階段模組 - 帳本與協作管理功能統一由CM模組提供...
+📦 載入P2階段模組 - BM (預算管理)...
+📊 BM 預算管理模組載入中...
+📅 SR 排程提醒模組初始化中...
+FS模組載入異常，將採用降級模式
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.2.0 (2025-01-28) - 純業務邏輯模組
+✅ BM 預算管理模組載入完成
+✅ BM (預算管理) 模組載入成功
+📦 載入P2階段模組 - CM (協作管理)...
+🤝 CM 協作管理模組初始化中...
+[2025-11-13T01:43:44.467Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組載入完成 - 階段一修復：ID生成依賴問題已解決
+✅ CM (協作管理) 模組載入成功
+📋 模組載入狀態報告:
+   ✅ FIREBASE: 已載入
+   ✅ AM: 已載入
+   ✅ BK: 已載入
+   ✅ DL: 已載入
+   ✅ FS: 已載入
+   ✅ BM: 已載入
+   ✅ CM: 已載入
+🎉 P2階段模組完整載入：Firebase + AM + BK + CM(協作與帳本管理) + BM
+🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、協作管理功能
+✨ 協作與帳本管理功能完全整合至CM模組
+📊 載入成功率: 7/7 (100%)
+🎉 階段三修復成功：Firebase + AM + BK模組正常載入
+🚀 系統已準備好處理所有P1-2範圍API請求
+🎉 LCAS ASL階段二升級完成：協作管理API端點補完！
+📦 P1-2 + P2 範圍BL模組載入狀態: Firebase(✅), AM(✅), BK(✅), DL(✅), FS(✅), BM(✅), CM(✅)
+🔧 純轉發機制: 43個API端點 -> 統一使用BL層標準格式
+✨ 階段二升級: 協作管理API端點補完，符合8020文件規範
+🎯 協作管理功能: 帳本創建/讀取/更新/刪除，協作者管理（邀請/移除/權限更新），衝突檢測與解決
+🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict
+🚀 階段二升級完成，ASL v2.1.6完全就緒！
+🌐 ASL服務器已啟動於 Port 5000
+🌐 LCAS ASL純轉發窗口已啟動於 Port 5000
+📍 服務地址: http://0.0.0.0:5000
+🔗 健康檢查: http://0.0.0.0:5000/health
+🎯 DCN-0015第二階段完成: ASL格式驗證強化
+📋 P1-2 + P2 API端點: AM(19) + BK(15) + BM(5) + CM(4) = 43個端點
+🔧 第二階段完成狀態: 完全就緒
+📦 核心模組狀態: Firebase(✅), AM(✅), BM(✅), CM(✅)
+✨ 容錯機制完全移除: 100%信任BL層標準格式
+🎉 第二階段修正完成: 協作管理API端點補完
+🚀 ASL v2.1.6已完全就緒，第二階段目標達成
+成功寫入 1 條日誌到 Firestore
+📅 已載入 0 個排程設定
+[2025-11-13T01:43:45.362Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動

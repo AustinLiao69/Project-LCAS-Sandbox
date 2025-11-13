@@ -1,0 +1,157 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
+Building package executable... (1.6(3.4s)
+Built test:test.
+00:00 +0 -1: loading 7571. SIT_P2.dart [E]
+  Failed to load "7571. SIT_P2.dart":
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:14:8: Error: Error when reading '../7303_LedgerCollaborationManager.dart': No such file or directory
+  import '../7303_LedgerCollaborationManager.dart'; // 引入PL層的帳本協作管理器
+         ^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:15:8: Error: Error when reading '../ASL.dart': No such file or directory
+  import '../ASL.dart'; // 引入ASL層
+         ^
+  7571.%20SIT_P2.dart:829:36: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+              final response = await LedgerCollaborationManager.createLedger(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:926:13: Error: The setter '_dynamicCollaborationId' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing setter, or defining a setter or field named '_dynamicCollaborationId'.
+              _dynamicCollaborationId = null;
+              ^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:939:79: Error: The getter '_dynamicCollaborationId' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named '_dynamicCollaborationId'.
+            print('[7571] 📋 TC-009完成 - 真實CM模組路徑測試完成，_dynamicCollaborationId = $_dynamicCollaborationId');
+                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:956:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:980:32: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                plResult = await LedgerCollaborationManager.processLedgerList(inputData);
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1002:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1021:21: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                await LedgerCollaborationManager.updateLedger(currentCollaborationId, inputData);
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1044:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1060:21: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                await LedgerCollaborationManager.processLedgerDeletion(currentCollaborationId);
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1083:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1099:32: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                plResult = await LedgerCollaborationManager.processCollaboratorList(currentCollaborationId);
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1121:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1137:17: Error: The method 'InvitationData' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'InvitationData'.
+                  InvitationData(
+                  ^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1159:32: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                plResult = await LedgerCollaborationManager.inviteCollaborators(currentCollaborationId, invitations);
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1184:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1196:35: Error: The method 'PermissionData' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing method, or defining a method named 'PermissionData'.
+                final permissions = PermissionData(
+                                    ^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1209:21: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                await LedgerCollaborationManager.updateCollaboratorPermissions(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1233:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1250:21: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                await LedgerCollaborationManager.removeCollaborator(currentCollaborationId, collaboratorId);
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1273:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1290:32: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                plResult = await LedgerCollaborationManager.calculateUserPermissions(userId, currentCollaborationId);
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1312:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1350:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1366:32: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                plResult = await LedgerCollaborationManager.callAPI(
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1390:46: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+                currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7571.%20SIT_P2.dart:1408:24: Error: The getter 'LedgerCollaborationManager' isn't defined for the class 'SITP2TestController'.
+   - 'SITP2TestController' is from '7571.%20SIT_P2.dart'.
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'LedgerCollaborationManager'.
+              plResult = LedgerCollaborationManager.validateLedgerData(inputData);
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:62:35: Error: Undefined name 'LedgerCollaborationManager'.
+        final createdLedger = await LedgerCollaborationManager.createLedger(ledgerData);
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:106:26: Error: Undefined name 'LedgerCollaborationManager'.
+          plResult = await LedgerCollaborationManager.processLedgerList(inputData);
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:139:15: Error: Undefined name 'LedgerCollaborationManager'.
+          await LedgerCollaborationManager.updateLedger(_dynamicCollaborationId!, inputData);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:167:15: Error: Undefined name 'LedgerCollaborationManager'.
+          await LedgerCollaborationManager.processLedgerDeletion(_dynamicCollaborationId!);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%94%E4%BD%9C%E5%8A%9F%E8%83%BD%E7%BE%A4.dart:196:26: Error: Undefined name 'LedgerCollaborationManager'.
+          plResult = await LedgerCollaborationManager.inviteCollaborators(
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ../73.%20Flutter_Module%20code_PL/7303.%20%E5%B8%B3%E6%9C%AC%E5%8D%9
