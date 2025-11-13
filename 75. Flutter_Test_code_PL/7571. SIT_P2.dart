@@ -292,7 +292,7 @@ class SITP2TestController {
   /// 執行帳本協作純粹調用
   Future<void> _executeCollaborationPureCalls() async {
     for (int i = 9; i <= 20; i++) {
-      final testId = 'TC-${i.toString().padLeft(3, '0')}');
+      final testId = 'TC-${i.toString().padLeft(3, '0')};
       print('[7571] 🔧 純粹調用：$testId');
       final result = await _executeCollaborationPureCall(testId);
       _results.add(result);
@@ -308,7 +308,7 @@ class SITP2TestController {
   /// 執行整合驗證純粹調用
   Future<void> _executeIntegrationPureCalls() async {
     for (int i = 21; i <= 25; i++) {
-      final testId = 'TC-${i.toString().padLeft(3, '0')}');
+      final testId = 'TC-${i.toString().padLeft(3, '0')};
       print('[7571] 🔧 純粹調用：$testId');
       final result = await _executeIntegrationPureCall(testId);
       _results.add(result);
