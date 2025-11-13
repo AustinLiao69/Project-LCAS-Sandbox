@@ -945,12 +945,29 @@ class SITP2TestController {
             // 階段三修正：統一的協作帳本ID查詢機制
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              final expertUserData = await P2TestDataManager.instance.getUserModeData('Expert');
+              final userId = expertUserData['userId'] ?? 'expert_test_user';
+              
+              // 階段三修正：參數驗證
+              if (userId.isEmpty) {
+                throw ArgumentError('階段三驗證失敗：用戶ID不能為空');
+              }
+              
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                userId,
+                type: 'shared',
+              );
+              
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              
+              // 階段三驗證：確保ID有效
+              if (currentCollaborationId != null && currentCollaborationId.isEmpty) {
+                print('[7571] ❌ 階段三驗證失敗：查詢到的帳本ID為空字串');
+                currentCollaborationId = null;
+              }
+              
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
               currentCollaborationId = null;
             }
 
@@ -982,13 +999,13 @@ class SITP2TestController {
             // 階段三修正：通過PL層查詢_dynamicCollaborationId
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1024,13 +1041,13 @@ class SITP2TestController {
             // 階段三修正：通過PL層查詢_dynamicCollaborationId
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1063,13 +1080,13 @@ class SITP2TestController {
             // 階段三修正：通過PL層查詢_dynamicCollaborationId
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1101,13 +1118,13 @@ class SITP2TestController {
             // 階段三修正：通過PL層查詢_dynamicCollaborationId
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             // 階段二修正：使用動態協作帳本ID和從7598載入的正確email
@@ -1164,13 +1181,13 @@ class SITP2TestController {
             // 階段三修正：通過PL層查詢_dynamicCollaborationId
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1213,13 +1230,13 @@ class SITP2TestController {
             // 階段三修正：通過PL層查詢_dynamicCollaborationId
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1253,13 +1270,13 @@ class SITP2TestController {
             // 階段三修正：通過PL層查詢_dynamicCollaborationId
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1292,13 +1309,13 @@ class SITP2TestController {
             // 階段三修正：通過PL層查詢_dynamicCollaborationId
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1330,13 +1347,13 @@ class SITP2TestController {
             // 階段三修正：通過PL層查詢_dynamicCollaborationId
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1346,10 +1363,8 @@ class SITP2TestController {
               print('[7571] 🔍 階段三修正：TC-019使用查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303統一API函數
-              // 階段二修正：callAPI 方法參數修改，使用data而不是queryParams
-              final response = await LedgerCollaborationManager.callAPI(
-                'GET', '/api/v1/ledgers/$currentCollaborationId', data: inputData);
-              plResult = response;
+              plResult = await LedgerCollaborationManager.callAPI(
+                'GET', '/api/v1/ledgers/$currentCollaborationId', queryParams: inputData);
               executionSteps['call_pl_api'] = 'Called LedgerCollaborationManager.callAPI successfully.';
               print('[7571] 📋 TC-019純粹調用PL層7303完成 - 結果: $plResult');
             } else {
@@ -1372,13 +1387,13 @@ class SITP2TestController {
             // 階段三修正：嘗試通過PL層查詢_dynamicCollaborationId，如果失敗則使用null
             String? currentCollaborationId;
             try {
-              // 階段二修正：getRecentCollaborationId() 不再需要 userId 和 type
-              final recentLedger = await LedgerCollaborationManager.getRecentCollaborationId();
-              currentCollaborationId = recentLedger?.id;
-              print('[7571] 🔍 階段二修正：成功通過getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
+                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+                type: 'shared',
+              );
+              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
             } catch (e) {
-              print('[7571] ⚠️ 階段二修正：getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
             }
 
             inputData = {
