@@ -337,6 +337,44 @@ class LedgerCollaborationTests {
   }
 
   //============================================================================
+  // 階段三：狀態管理重構與參數驗證 (TC-021 onwards)
+  //============================================================================
+
+  /**
+   * TC-021: 驗證7571能否獲取最近的協作帳本ID
+   * @version 2025-11-12-V3.0.0 - 階段三測試
+   * @description 驗證7571在移除本地狀態管理後，是否能通過PL層獲取協作帳本ID
+   */
+  static Future<void> testGetRecentCollaborationId() async {
+    print('\n[7571] 🚀 TC-021: 開始測試獲取最近協作帳本ID (階段三重構)');
+    executionSteps.clear();
+    plResult = null;
+
+    try {
+      // 調用PL層新增的函數
+      final ledgerData = await LedgerCollaborationManager.getRecentCollaborationId();
+
+      if (ledgerData != null && ledgerData.id.isNotEmpty) {
+        print('[7571] ✅ TC-021: 成功獲取最近協作帳本ID: ${ledgerData.id}');
+        _dynamicCollaborationId = ledgerData.id; // 為了後續測試，仍然儲存下來
+        executionSteps['id_retrieved'] = '成功透過PL層獲取最近協作帳本ID';
+        plResult = {'success': true, 'ledgerId': ledgerData.id};
+      } else {
+        print('[7571] ❌ TC-021: 未能獲取最近協作帳本ID');
+        executionSteps['id_retrieval_failed'] = '透過PL層獲取最近協作帳本ID失敗';
+        plResult = {'success': false, 'error': '未獲取到最近協作帳本ID'};
+      }
+    } catch (e) {
+      print('[7571] ❌ TC-021 執行異常: $e');
+      executionSteps['exception'] = 'TC-021執行異常: $e';
+      plResult = {'success': false, 'error': 'TC-021異常: $e'};
+    } finally {
+      print('[7571] 🏁 TC-021 測試結束');
+    }
+  }
+
+
+  //============================================================================
   // 輔助函數
   //============================================================================
 
@@ -380,6 +418,10 @@ class LedgerCollaborationTests {
       await testCreateCollaborativeLedger(); // TC-009
       _testLogs.add('TC-009: ${plResult?['success'] == true ? "成功" : "失敗"}');
 
+      // 根據階段三的重構，優先執行TC-021獲取最近ID
+      await testGetRecentCollaborationId(); // TC-021
+
+      // 僅當成功獲取到ID後，才執行後續依賴ID的測試
       if (_dynamicCollaborationId != null && _dynamicCollaborationId!.isNotEmpty) {
         await testQueryLedgerListWithCollaborativeId(); // TC-010
         await testUpdateLedgerWithCollaborativeId(); // TC-011
@@ -395,7 +437,7 @@ class LedgerCollaborationTests {
 
         _testLogs.add('TC-010至TC-020: 依序執行完成');
       } else {
-        _testLogs.add('跳過TC-010至TC-020: TC-009未成功創建協作帳本');
+        _testLogs.add('跳過TC-010至TC-020: 無效的協作帳本ID');
       }
 
     } catch (e) {
