@@ -240,7 +240,7 @@ class SITP2TestController {
   final List<P2TestResult> _results = [];
   // 階段一修正：使用實例變數儲存動態生成的預算ID
   String? _dynamicBudgetId;
-  // 階段三修正：移除_dynamicCollaborationId狀態管理，改為通過PL層查詢
+  // 階段三修正：完全移除_dynamicCollaborationId本地狀態管理
   // 全局測試日誌
   static final List<String> _testLogs = [];
   // 執行步驟記錄
@@ -942,34 +942,48 @@ class SITP2TestController {
 
         case 'TC-010': // 查詢帳本列表
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段三修正：統一的協作帳本ID查詢機制
             String? currentCollaborationId;
             try {
+              final expertUserData = await P2TestDataManager.instance.getUserModeData('Expert');
+              final userId = expertUserData['userId'] ?? 'expert_test_user';
+              
+              // 階段三修正：參數驗證
+              if (userId.isEmpty) {
+                throw ArgumentError('階段三驗證失敗：用戶ID不能為空');
+              }
+              
               currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                // 階段三修正：這裡需要傳遞一個有效的userId，例如從7598獲取的Expert用戶ID
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
-                type: 'shared', // 假設我們要查詢shared類型的帳本
+                userId,
+                type: 'shared',
               );
+              
               print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+              
+              // 階段三驗證：確保ID有效
+              if (currentCollaborationId != null && currentCollaborationId.isEmpty) {
+                print('[7571] ❌ 階段三驗證失敗：查詢到的帳本ID為空字串');
+                currentCollaborationId = null;
+              }
+              
             } catch (e) {
               print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
-              print('[7571] 💡 提示：可能沒有協作帳本存在或查詢參數有誤');
+              currentCollaborationId = null;
             }
 
-            // 階段一修正：使用動態協作帳本ID進行查詢
             if (currentCollaborationId != null) {
               inputData = {'ledgerId': currentCollaborationId, 'type': 'shared'};
-              executionSteps['prepare_query_ledger_list'] = 'Using queried collaboration ID: $currentCollaborationId';
-              print('[7571] 🔍 階段三修正：TC-010使用查詢到的協作帳本ID: $currentCollaborationId');
+              executionSteps['prepare_query_ledger_list'] = 'Using queried collaboration ID with validation: $currentCollaborationId';
+              print('[7571] 🔍 階段三修正：TC-010使用驗證後的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303查詢帳本列表函數
               plResult = await LedgerCollaborationManager.processLedgerList(inputData);
               executionSteps['call_pl_ledger_list'] = 'Called LedgerCollaborationManager.processLedgerList successfully.';
               print('[7571] 📋 TC-010純粹調用PL層7303完成 - 結果: $plResult');
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found. CM_getRecentCollaborationId failed.';
-              print('[7571] ⚠️ TC-010: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Failed to obtain valid collaboration ID after validation', 'success': false};
+              executionSteps['missing_validated_id'] = 'No valid collaboration ID available after validation process';
+              print('[7571] ❌ TC-010: 階段三驗證：無法取得有效的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-010 processLedgerList failed: $e', 'success': false};
