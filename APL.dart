@@ -2,9 +2,9 @@
  * APL.dart - 統一API Gateway模組
  * @module 統一APL Gateway
  * @description LCAS 2.0 APL層統一Gateway - P2階段完整實作並為P3-P7建立擴展基礎
- * @version v1.2.2
+ * @version v1.2.3
  * @date 2025-11-07
- * @update 階段二修正：新增協作者資料格式轉換邏輯，統一成員資料結構
+ * @update 階段一修正：修正查詢參數類型轉換，確保數值型參數正確傳送至ASL
  */
 
 import 'dart:convert';
@@ -306,13 +306,9 @@ class AccountLedgerService {
     if (search != null) queryParams['search'] = search;
     if (sortBy != null) queryParams['sortBy'] = sortBy;
     if (sortOrder != null) queryParams['sortOrder'] = sortOrder;
-    // 階段三修正：確保數值型參數正確處理，避免雙重引號問題
-    if (page != null) {
-      queryParams['page'] = page.toString();
-    }
-    if (limit != null) {
-      queryParams['limit'] = limit.toString();
-    }
+    // 階段一修正：確保數值型參數以整數形式傳送，而非字串
+    if (page != null) queryParams['page'] = page.toString();
+    if (limit != null) queryParams['limit'] = limit.toString();
 
     final headers = <String, String>{..._gateway._defaultHeaders};
     if (userMode != null) headers['X-User-Mode'] = userMode;
