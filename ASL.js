@@ -1163,6 +1163,8 @@ app.post('/api/v1/users/verify-pin', async (req, res) => {
 
 // =============== P2階段：協作管理API端點補完 ===============
 
+// =============== P2階段：協作管理API端點補完 ===============
+
 // 階段二修正：補完協作帳本刪除端點
 app.delete('/api/v1/ledgers/:id', async (req, res) => {
   try {
@@ -1203,11 +1205,11 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
 // 階段二修正：補完協作者邀請端點
 app.post('/api/v1/ledgers/:id/invitations', async (req, res) => {
   try {
-    console.log('📧 ASL轉發: 邀請協作者 -> CM_inviteCollaborators');
+    console.log('📧 ASL轉發: 邀請協作者 -> CM_inviteCollaborator');
     
-    if (!CM || typeof CM.CM_inviteCollaborators !== 'function') {
-      console.error('❌ CM模組或CM_inviteCollaborators函數不存在');
-      return res.apiError('CM_inviteCollaborators函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    if (!CM || typeof CM.CM_inviteCollaborator !== 'function') {
+      console.error('❌ CM模組或CM_inviteCollaborator函數不存在');
+      return res.apiError('CM_inviteCollaborator函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
     }
 
     const ledgerId = req.params.id;
@@ -1215,30 +1217,32 @@ app.post('/api/v1/ledgers/:id/invitations', async (req, res) => {
       return res.apiError('帳本ID不能為空', 'MISSING_LEDGER_ID', 400);
     }
 
-    const invitations = req.body.invitations || [];
-    if (!Array.isArray(invitations) || invitations.length === 0) {
-      return res.apiError('邀請清單不能為空', 'MISSING_INVITATIONS', 400);
+    const invitationData = req.body;
+    if (!invitationData.email) {
+      return res.apiError('邀請Email不能為空', 'MISSING_EMAIL', 400);
     }
 
-    console.log(`📋 邀請協作者到帳本: ${ledgerId}, 邀請數量: ${invitations.length}`);
+    console.log(`📋 邀請協作者到帳本: ${ledgerId}, 邀請Email: ${invitationData.email}`);
     
     // 調用CM模組邀請協作者
-    const result = await CM.CM_inviteCollaborators(ledgerId, invitations, req.body.operatorId || 'system');
+    const result = await CM.CM_inviteCollaborator(ledgerId, invitationData, {
+      inviterId: req.body.operatorId || req.body.inviterId || 'system'
+    });
 
     if (result && result.success) {
-      res.apiSuccess(result.data || [], result.message || '協作者邀請成功');
+      res.apiSuccess(result.data || {}, result.message || '協作者邀請成功');
     } else {
       res.apiError(
         result?.message || '協作者邀請失敗',
-        result?.error?.code || 'INVITE_COLLABORATORS_ERROR',
+        result?.error?.code || 'INVITE_COLLABORATOR_ERROR',
         400,
         result?.error?.details
       );
     }
 
   } catch (error) {
-    console.error('❌ ASL轉發錯誤 (invite collaborators):', error);
-    res.apiError('邀請協作者轉發失敗', 'INVITE_COLLABORATORS_FORWARD_ERROR', 500);
+    console.error('❌ ASL轉發錯誤 (invite collaborator):', error);
+    res.apiError('邀請協作者轉發失敗', 'INVITE_COLLABORATOR_FORWARD_ERROR', 500);
   }
 });
 
@@ -1266,7 +1270,10 @@ app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
     console.log(`📋 從帳本 ${ledgerId} 移除協作者: ${userId}`);
     
     // 調用CM模組移除協作者
-    const result = await CM.CM_removeCollaborator(ledgerId, userId, req.query.operatorId || 'system');
+    const result = await CM.CM_removeCollaborator(ledgerId, userId, {
+      removerId: req.query.operatorId || 'system',
+      reason: req.body.reason || req.query.reason || 'removed_by_admin'
+    });
 
     if (result && result.success) {
       res.apiSuccess(result.data || {}, result.message || '協作者移除成功');
