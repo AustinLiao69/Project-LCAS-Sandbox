@@ -724,6 +724,32 @@
       }
     }
   },
+  "collaboration_test_roles": {
+    "admin": {
+      "canManage": true,
+      "canInvite": true,
+      "canEdit": true,
+      "canDelete": true,
+      "createdAt": "2025-11-13T09:00:00+08:00",
+      "level": "admin"
+    },
+    "member": {
+      "canManage": false,
+      "canInvite": false,
+      "canEdit": true,
+      "canDelete": false,
+      "createdAt": "2025-11-13T09:00:00+08:00",
+      "level": "member"
+    },
+    "viewer": {
+      "canManage": false,
+      "canInvite": false,
+      "canEdit": false,
+      "canDelete": false,
+      "createdAt": "2025-11-13T09:00:00+08:00",
+      "level": "viewer"
+    }
+  },
   "collaboration_test_data": {
     "success_scenarios": {
       "invite_collaborator_template": {
