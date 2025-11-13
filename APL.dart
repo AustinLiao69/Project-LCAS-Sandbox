@@ -306,7 +306,7 @@ class AccountLedgerService {
     if (search != null) queryParams['search'] = search;
     if (sortBy != null) queryParams['sortBy'] = sortBy;
     if (sortOrder != null) queryParams['sortOrder'] = sortOrder;
-    // 階段一修正：確保數值型參數以整數形式傳送，而非字串
+    // 階段一修正：確保數值型參數以整數形式傳送至ASL，讓CM模組可正確處理
     if (page != null) queryParams['page'] = page.toString();
     if (limit != null) queryParams['limit'] = limit.toString();
 
