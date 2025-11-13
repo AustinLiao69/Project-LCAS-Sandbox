@@ -191,6 +191,36 @@ class LedgerCollaborationManager {
     return ValidationResult(isValid: true, message: 'Valid');
   }
 
+  /// 處理協作者列表查詢
+  static Future<dynamic> processCollaboratorList(String ledgerId) async {
+    try {
+      // 使用APL.dart正確的Service介面
+      final response = await APL.instance.ledger.getCollaborators(ledgerId);
+      if (response.success) {
+        return {'success': true, 'data': {'collaborators': response.data}};
+      } else {
+        return {'success': false, 'error': response.error?.message ?? '查詢協作者失敗'};
+      }
+    } catch (e) {
+      print('[LedgerCollaborationManager] processCollaboratorList error: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  /// 驗證帳本資料
+  static ValidationResult validateLedgerData(Map<String, dynamic> data) {
+    try {
+      // 基本資料驗證
+      if (data['ledgerId'] == null || data['ledgerId'].toString().isEmpty) {
+        return ValidationResult(isValid: false, message: 'ledgerId不能為空');
+      }
+      
+      return ValidationResult(isValid: true, message: 'Valid');
+    } catch (e) {
+      return ValidationResult(isValid: false, message: '驗證失敗: $e');
+    }
+  }
+
   /// API調用 - 階段一修復：遵循0098憲法，移除直接HTTP調用
   static Future<dynamic> callAPI(String method, String path, {Map<String, dynamic>? data}) async {
     try {
@@ -260,6 +290,7 @@ class PermissionData {
   final bool canDelete;
   final bool canInvite;
   final String role;
+  final Map<String, dynamic>? permissions;
 
   PermissionData({
     this.canRead = false,
@@ -267,6 +298,7 @@ class PermissionData {
     this.canDelete = false,
     this.canInvite = false,
     this.role = 'viewer',
+    this.permissions,
   });
 
   factory PermissionData.fromJson(Map<String, dynamic> json) {
@@ -303,6 +335,33 @@ class ValidationResult {
     'isValid': isValid,
     'message': message,
   };
+}
+
+/// InvitationData 類別
+class InvitationData {
+  final String email;
+  final String role;
+  final Map<String, dynamic>? permissions;
+
+  InvitationData({
+    required this.email,
+    required this.role,
+    this.permissions,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'email': email,
+    'role': role,
+    'permissions': permissions,
+  };
+
+  factory InvitationData.fromJson(Map<String, dynamic> json) {
+    return InvitationData(
+      email: json['email'] ?? '',
+      role: json['role'] ?? 'viewer',
+      permissions: json['permissions'],
+    );
+  }
 }
 
 /// 測試腳本主類別
