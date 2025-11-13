@@ -1792,6 +1792,18 @@ async function CM_getLedgers(queryParams = {}) {
       query = query.where('type', '==', queryParams.type);
     }
 
+    // 階段一修正：處理分頁參數
+    if (queryParams.page) {
+      const pageValue = typeof queryParams.page === 'string' 
+        ? parseInt(queryParams.page, 10) 
+        : queryParams.page;
+      
+      if (!isNaN(pageValue) && pageValue > 0) {
+        const offset = (pageValue - 1) * (queryParams.limit || 10);
+        query = query.offset(offset);
+      }
+    }
+
     // 階段一：支援排序 (sortBy 和 sortOrder)
     let orderByField = 'created_at';
     let orderByDirection = 'desc';
@@ -1804,9 +1816,15 @@ async function CM_getLedgers(queryParams = {}) {
     }
     query = query.orderBy(orderByField, orderByDirection);
 
-    // 階段一：支援 limit
+    // 階段一修正：確保limit參數為整數型別
     if (queryParams.limit) {
-      query = query.limit(queryParams.limit);
+      const limitValue = typeof queryParams.limit === 'string' 
+        ? parseInt(queryParams.limit, 10) 
+        : queryParams.limit;
+      
+      if (!isNaN(limitValue) && limitValue > 0) {
+        query = query.limit(limitValue);
+      }
     }
 
     // 階段一：新增 active 參數過濾
