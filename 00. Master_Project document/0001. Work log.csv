@@ -373,14 +373,15 @@ MM 	 DD 	 Description 	    Progress
 11	6	 研究Vibe coding流程如何優化   	 Ongoing
 11	7	 研究CI/CD流程   	 Ongoing
 11	7	 Review APL，將APL的業務邏輯刪除   	 Ongoing
-11	7	 在firebase建立協作帳本   	 Ongoing
+11	7	 在firebase建立協作帳本   	 Closed
 11	7	 研究debug排查方法   	 Ongoing
-11	10	 在firebase建立協作帳本   	 Ongoing
+11	10	 在firebase建立協作帳本   	 Closed
 11	10	 撰寫DCN-0021   	 Closed
 11	10	 執行DCN-0021   	 Closed
-11	11	 在firebase建立協作帳本   	 Ongoing
+11	11	 在firebase建立協作帳本   	 Closed
 11	11	 修復1313. CM模組   	 Closed
-11	12	 在firebase建立協作帳本   	 Ongoing
+11	12	 在firebase建立協作帳本   	 Closed
 11	12	 研究user story轉成test case   	 Ongoing
 11	12	 研究如何review code diff  	 Ongoing
-11	12	 打通TC-009  	 Ongoing
+11	12	 打通TC-009  	 Closed
+11	13	 打通TC-010~TC-020  	 Ongoing
