@@ -20,6 +20,8 @@ import 'package:test/test.dart';
 // 導入PL層模組
 import '../73. Flutter_Module code_PL/7303. 帳本協作功能群.dart';
 import '../73. Flutter_Module code_PL/7304. 預算管理功能群.dart';
+// 導入APL服務鏈
+import '../APL.dart';
 
 // ==========================================
 // P2測試資料管理器
@@ -942,48 +944,37 @@ class SITP2TestController {
 
         case 'TC-010': // 查詢帳本列表
           try {
-            // 階段三修正：統一的協作帳本ID查詢機制
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              final expertUserData = await P2TestDataManager.instance.getUserModeData('Expert');
-              final userId = expertUserData['userId'] ?? 'expert_test_user';
-              
-              // 階段三修正：參數驗證
-              if (userId.isEmpty) {
-                throw ArgumentError('階段三驗證失敗：用戶ID不能為空');
-              }
-              
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                userId,
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
-              
-              // 階段三驗證：確保ID有效
-              if (currentCollaborationId != null && currentCollaborationId.isEmpty) {
-                print('[7571] ❌ 階段三驗證失敗：查詢到的帳本ID為空字串');
-                currentCollaborationId = null;
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
               }
-              
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
-              currentCollaborationId = null;
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             if (currentCollaborationId != null) {
               inputData = {'ledgerId': currentCollaborationId, 'type': 'shared'};
               executionSteps['prepare_query_ledger_list'] = 'Using queried collaboration ID with validation: $currentCollaborationId';
-              print('[7571] 🔍 階段三修正：TC-010使用驗證後的協作帳本ID: $currentCollaborationId');
+              print('[7571] 🔍 階段二修正：TC-010使用APL查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303查詢帳本列表函數
               plResult = await LedgerCollaborationManager.processLedgerList(inputData);
               executionSteps['call_pl_ledger_list'] = 'Called LedgerCollaborationManager.processLedgerList successfully.';
               print('[7571] 📋 TC-010純粹調用PL層7303完成 - 結果: $plResult');
             } else {
-              plResult = {'error': 'Failed to obtain valid collaboration ID after validation', 'success': false};
-              executionSteps['missing_validated_id'] = 'No valid collaboration ID available after validation process';
-              print('[7571] ❌ TC-010: 階段三驗證：無法取得有效的協作帳本ID');
+              plResult = {'error': 'Failed to obtain valid collaboration ID using APL service chain', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'No valid collaboration ID available from APL service chain query.';
+              print('[7571] ❌ TC-010: 階段二修正：無法從APL服務鏈取得有效的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-010 processLedgerList failed: $e', 'success': false};
@@ -996,16 +987,22 @@ class SITP2TestController {
 
         case 'TC-011': // 更新帳本資訊
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1014,8 +1011,8 @@ class SITP2TestController {
                 'name': '協作帳本測試_${DateTime.now().millisecondsSinceEpoch}_updated',
                 'description': 'TC-011更新帳本資訊測試 - 使用查詢到的ID',
               };
-              executionSteps['prepare_update_ledger_info'] = 'Using queried collaboration ID: $currentCollaborationId';
-              print('[7571] 🔍 階段三修正：TC-011使用查詢到的協作帳本ID: $currentCollaborationId');
+              executionSteps['prepare_update_ledger_info'] = 'Using queried collaboration ID from APL: $currentCollaborationId';
+              print('[7571] 🔍 階段二修正：TC-011使用APL查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303更新帳本函數
               await LedgerCollaborationManager.updateLedger(currentCollaborationId, inputData);
@@ -1023,9 +1020,9 @@ class SITP2TestController {
               executionSteps['call_pl_update_ledger'] = 'Called LedgerCollaborationManager.updateLedger successfully.';
               print('[7571] 📋 TC-011純粹調用PL層7303完成');
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found.';
-              print('[7571] ⚠️ TC-011: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Missing collaboration ID from APL service chain query', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'Queried collaboration ID from APL not found.';
+              print('[7571] ⚠️ TC-011: 缺少從APL服務鏈查詢到的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-011 updateLedger failed: $e', 'success': false};
@@ -1038,23 +1035,29 @@ class SITP2TestController {
 
         case 'TC-012': // 刪除帳本
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
             if (currentCollaborationId != null) {
               inputData = {'ledgerId': currentCollaborationId};
-              executionSteps['prepare_delete_ledger'] = 'Using queried collaboration ID: $currentCollaborationId';
-              print('[7571] 🔍 階段三修正：TC-012使用查詢到的協作帳本ID: $currentCollaborationId');
+              executionSteps['prepare_delete_ledger'] = 'Using queried collaboration ID from APL: $currentCollaborationId';
+              print('[7571] 🔍 階段二修正：TC-012使用APL查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303刪除帳本函數
               await LedgerCollaborationManager.processLedgerDeletion(currentCollaborationId);
@@ -1062,9 +1065,9 @@ class SITP2TestController {
               executionSteps['call_pl_delete_ledger'] = 'Called LedgerCollaborationManager.processLedgerDeletion successfully.';
               print('[7571] 📋 TC-012純粹調用PL層7303完成');
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found.';
-              print('[7571] ⚠️ TC-012: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Missing collaboration ID from APL service chain query', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'Queried collaboration ID from APL not found.';
+              print('[7571] ⚠️ TC-012: 缺少從APL服務鏈查詢到的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-012 processLedgerDeletion failed: $e', 'success': false};
@@ -1077,32 +1080,38 @@ class SITP2TestController {
 
         case 'TC-013': // 查詢協作者列表
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
             if (currentCollaborationId != null) {
               inputData = {'ledgerId': currentCollaborationId};
-              executionSteps['prepare_query_collaborators'] = 'Using queried collaboration ID: $currentCollaborationId';
-              print('[7571] 🔍 階段三修正：TC-013使用查詢到的協作帳本ID: $currentCollaborationId');
+              executionSteps['prepare_query_collaborators'] = 'Using queried collaboration ID from APL: $currentCollaborationId';
+              print('[7571] 🔍 階段二修正：TC-013使用APL查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303查詢協作者函數
               plResult = await LedgerCollaborationManager.processCollaboratorList(currentCollaborationId);
               executionSteps['call_pl_collaborator_list'] = 'Called LedgerCollaborationManager.processCollaboratorList successfully.';
               print('[7571] 📋 TC-013純粹調用PL層7303完成 - 結果: $plResult');
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found.';
-              print('[7571] ⚠️ TC-013: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Missing collaboration ID from APL service chain query', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'Queried collaboration ID from APL not found.';
+              print('[7571] ⚠️ TC-013: 缺少從APL服務鏈查詢到的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-013 processCollaboratorList failed: $e', 'success': false};
@@ -1115,16 +1124,22 @@ class SITP2TestController {
 
         case 'TC-014': // 邀請協作者
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             // 階段二修正：使用動態協作帳本ID和從7598載入的正確email
@@ -1149,9 +1164,9 @@ class SITP2TestController {
               };
 
               executionSteps['load_collaboration_test_user'] = 'Loaded collaboration test user from 7598: $collaborationTestEmail';
-              executionSteps['prepare_invite_collaborator'] = 'Using queried collaboration ID: $currentCollaborationId and email: $collaborationTestEmail';
+              executionSteps['prepare_invite_collaborator'] = 'Using queried collaboration ID from APL: $currentCollaborationId and email: $collaborationTestEmail';
 
-              print('[7571] 🔍 階段三修正：TC-014使用查詢到的協作帳本ID: $currentCollaborationId');
+              print('[7571] 🔍 階段二修正：TC-014使用APL查詢到的協作帳本ID: $currentCollaborationId');
               print('[7571] 📧 階段二修正：從7598載入email: $collaborationTestEmail');
               print('[7571] 🎯 階段二修正：確保ledgerId和email參數完整傳遞');
 
@@ -1163,9 +1178,9 @@ class SITP2TestController {
               print('[7571] ✅ 階段二目標達成：使用真實協作帳本ID和正確email參數');
 
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found.';
-              print('[7571] ⚠️ TC-014: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Missing collaboration ID from APL service chain query', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'Queried collaboration ID from APL not found.';
+              print('[7571] ⚠️ TC-014: 缺少從APL服務鏈查詢到的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-014 inviteCollaborators failed: $e', 'success': false};
@@ -1178,16 +1193,22 @@ class SITP2TestController {
 
         case 'TC-015': // 更新協作者權限
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
@@ -1202,8 +1223,8 @@ class SITP2TestController {
                 'collaboratorId': collaboratorId,
                 'permissions': permissions.toJson(),
               };
-              executionSteps['prepare_update_permissions'] = 'Using queried collaboration ID: $currentCollaborationId, collaboratorId: $collaboratorId, role: admin';
-              print('[7571] 🔍 階段三修正：TC-015使用查詢到的協作帳本ID: $currentCollaborationId');
+              executionSteps['prepare_update_permissions'] = 'Using queried collaboration ID from APL: $currentCollaborationId, collaboratorId: $collaboratorId, role: admin';
+              print('[7571] 🔍 階段二修正：TC-015使用APL查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303更新權限函數
               await LedgerCollaborationManager.updateCollaboratorPermissions(
@@ -1212,9 +1233,9 @@ class SITP2TestController {
               executionSteps['call_pl_update_permissions'] = 'Called LedgerCollaborationManager.updateCollaboratorPermissions successfully.';
               print('[7571] 📋 TC-015純粹調用PL層7303完成 - 結果: $plResult');
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found.';
-              print('[7571] ⚠️ TC-015: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Missing collaboration ID from APL service chain query', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'Queried collaboration ID from APL not found.';
+              print('[7571] ⚠️ TC-015: 缺少從APL服務鏈查詢到的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-015 updateCollaboratorPermissions failed: $e', 'success': false};
@@ -1227,24 +1248,30 @@ class SITP2TestController {
 
         case 'TC-016': // 移除協作者
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
             if (currentCollaborationId != null) {
               final collaboratorId = 'user_collaboration_test_1697363500000'; // 使用7598中的協作測試用戶ID
               inputData = {'ledgerId': currentCollaborationId, 'collaboratorId': collaboratorId};
-              executionSteps['prepare_remove_collaborator'] = 'Using queried collaboration ID: $currentCollaborationId, collaboratorId: $collaboratorId';
-              print('[7571] 🔍 階段三修正：TC-016使用查詢到的協作帳本ID: $currentCollaborationId');
+              executionSteps['prepare_remove_collaborator'] = 'Using queried collaboration ID from APL: $currentCollaborationId, collaboratorId: $collaboratorId';
+              print('[7571] 🔍 階段二修正：TC-016使用APL查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303移除協作者函數
               await LedgerCollaborationManager.removeCollaborator(currentCollaborationId, collaboratorId);
@@ -1252,9 +1279,9 @@ class SITP2TestController {
               executionSteps['call_pl_remove_collaborator'] = 'Called LedgerCollaborationManager.removeCollaborator successfully.';
               print('[7571] 📋 TC-016純粹調用PL層7303完成 - 結果: $plResult');
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found.';
-              print('[7571] ⚠️ TC-016: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Missing collaboration ID from APL service chain query', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'Queried collaboration ID from APL not found.';
+              print('[7571] ⚠️ TC-016: 缺少從APL服務鏈查詢到的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-016 removeCollaborator failed: $e', 'success': false};
@@ -1267,33 +1294,39 @@ class SITP2TestController {
 
         case 'TC-017': // 權限矩陣計算
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
             if (currentCollaborationId != null) {
               final userId = 'user_expert_1697363200000';
               inputData = {'ledgerId': currentCollaborationId, 'userId': userId};
-              executionSteps['prepare_calculate_permissions'] = 'Using queried collaboration ID: $currentCollaborationId, userId: $userId';
-              print('[7571] 🔍 階段三修正：TC-017使用查詢到的協作帳本ID: $currentCollaborationId');
+              executionSteps['prepare_calculate_permissions'] = 'Using queried collaboration ID from APL: $currentCollaborationId, userId: $userId';
+              print('[7571] 🔍 階段二修正：TC-017使用APL查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303權限計算函數
               plResult = await LedgerCollaborationManager.calculateUserPermissions(userId, currentCollaborationId);
               executionSteps['call_pl_calculate_permissions'] = 'Called LedgerCollaborationManager.calculateUserPermissions successfully.';
               print('[7571] 📋 TC-017純粹調用PL層7303完成 - 結果: $plResult');
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found.';
-              print('[7571] ⚠️ TC-017: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Missing collaboration ID from APL service chain query', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'Queried collaboration ID from APL not found.';
+              print('[7571] ⚠️ TC-017: 缺少從APL服務鏈查詢到的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-017 calculateUserPermissions failed: $e', 'success': false};
@@ -1306,32 +1339,38 @@ class SITP2TestController {
 
         case 'TC-018': // 協作衝突檢測
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
             if (currentCollaborationId != null) {
               inputData = {'ledgerId': currentCollaborationId, 'checkTypes': ['permission', 'data']};
-              executionSteps['prepare_conflict_check'] = 'Using queried collaboration ID: $currentCollaborationId, checkTypes: permission,data';
-              print('[7571] 🔍 階段三修正：TC-018使用查詢到的協作帳本ID: $currentCollaborationId');
+              executionSteps['prepare_conflict_check'] = 'Using queried collaboration ID from APL: $currentCollaborationId, checkTypes: permission,data';
+              print('[7571] 🔍 階段二修正：TC-018使用APL查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303，此功能可能尚未實作，直接調用會得到真實結果
               plResult = {'conflictCheckResult': 'PL層回傳結果', 'ledgerId': currentCollaborationId, 'success': true};
               executionSteps['call_pl_conflict_check'] = 'Called PL layer for conflict check (mocked result).';
               print('[7571] 📋 TC-018純粹調用完成 - 結果: $plResult');
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found.';
-              print('[7571] ⚠️ TC-018: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Missing collaboration ID from APL service chain query', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'Queried collaboration ID from APL not found.';
+              print('[7571] ⚠️ TC-018: 缺少從APL服務鏈查詢到的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-018 conflict check failed: $e', 'success': false};
@@ -1344,23 +1383,29 @@ class SITP2TestController {
 
         case 'TC-019': // API整合驗證
           try {
-            // 階段三修正：通過PL層查詢_dynamicCollaborationId
+            // 階段二修正：使用APL服務鏈查詢協作帳本ID
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             // 階段一修正：使用動態協作帳本ID
             if (currentCollaborationId != null) {
               inputData = {'ledgerId': currentCollaborationId, 'testType': 'api_integration'};
-              executionSteps['prepare_api_integration_test'] = 'Using queried collaboration ID: $currentCollaborationId, testType: api_integration';
-              print('[7571] 🔍 階段三修正：TC-019使用查詢到的協作帳本ID: $currentCollaborationId');
+              executionSteps['prepare_api_integration_test'] = 'Using queried collaboration ID from APL: $currentCollaborationId, testType: api_integration';
+              print('[7571] 🔍 階段二修正：TC-019使用APL查詢到的協作帳本ID: $currentCollaborationId');
 
               // 純粹調用PL層7303統一API函數
               plResult = await LedgerCollaborationManager.callAPI(
@@ -1368,9 +1413,9 @@ class SITP2TestController {
               executionSteps['call_pl_api'] = 'Called LedgerCollaborationManager.callAPI successfully.';
               print('[7571] 📋 TC-019純粹調用PL層7303完成 - 結果: $plResult');
             } else {
-              plResult = {'error': 'Missing collaboration ID from CM_getRecentCollaborationId', 'success': false};
-              executionSteps['missing_queried_id'] = 'Queried collaboration ID not found.';
-              print('[7571] ⚠️ TC-019: 缺少查詢到的協作帳本ID');
+              plResult = {'error': 'Missing collaboration ID from APL service chain query', 'success': false};
+              executionSteps['missing_apl_queried_id'] = 'Queried collaboration ID from APL not found.';
+              print('[7571] ⚠️ TC-019: 缺少從APL服務鏈查詢到的協作帳本ID');
             }
           } catch (e, stackTrace) {
             plResult = {'error': 'TC-019 callAPI failed: $e', 'success': false};
@@ -1384,16 +1429,22 @@ class SITP2TestController {
         case 'TC-020': // 錯誤處理驗證
           try {
             // 階段一修正：構造無效資料測試錯誤處理，使用動態協作帳本ID
-            // 階段三修正：嘗試通過PL層查詢_dynamicCollaborationId，如果失敗則使用null
+            // 階段二修正：嘗試通過APL服務鏈查詢_dynamicCollaborationId，如果失敗則使用null
             String? currentCollaborationId;
             try {
-              currentCollaborationId = await LedgerCollaborationManager.CM_getRecentCollaborationId(
-                await P2TestDataManager.instance.getUserModeData('Expert').then((data) => data['userId']),
+              final response = await APL.instance.ledger.getLedgers(
                 type: 'shared',
+                limit: 1,
+                sortBy: 'updated_at',
+                sortOrder: 'desc'
               );
-              print('[7571] 🔍 階段三修正：成功通過CM_getRecentCollaborationId查詢到帳本ID: $currentCollaborationId');
+
+              if (response.success && response.data != null && response.data!.isNotEmpty) {
+                currentCollaborationId = response.data!.first['id'] ?? response.data!.first['ledgerId'];
+                print('[7571] 🔍 階段二修正：透過APL服務鏈成功查詢到協作帳本ID: $currentCollaborationId');
+              }
             } catch (e) {
-              print('[7571] ⚠️ 階段三修正：CM_getRecentCollaborationId查詢失敗: $e');
+              print('[7571] ⚠️ 階段二修正：APL服務鏈查詢失敗: $e');
             }
 
             inputData = {
@@ -1401,8 +1452,8 @@ class SITP2TestController {
               'operatorEmail': 'guiding.valid@test.lcas.app',
               'attemptedAction': 'invite_member'
             };
-            executionSteps['prepare_error_handling_test'] = 'Using queried collaboration ID for error handling test.';
-            print('[7571] 🔍 階段三修正：TC-020錯誤處理測試，查詢到的協作帳本ID: $currentCollaborationId');
+            executionSteps['prepare_error_handling_test'] = 'Using queried collaboration ID from APL for error handling test.';
+            print('[7571] 🔍 階段二修正：TC-020錯誤處理測試，查詢到的協作帳本ID: $currentCollaborationId');
 
             // 純粹調用PL層7303，測試錯誤處理
             plResult = LedgerCollaborationManager.validateLedgerData(inputData);
