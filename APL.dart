@@ -32,7 +32,7 @@ class UnifiedApiResponse<T> {
     bool isSuccess = false;
     dynamic responseData;
     String message = '';
-    
+
     // 首先檢查錯誤狀態（優先處理錯誤）
     if (json['error'] != null || json.containsKey('errorCode') || json.containsKey('errorMessage')) {
       isSuccess = false;
@@ -119,7 +119,7 @@ class APLGateway {
   final http.Client _httpClient;
   final Map<String, String> _defaultHeaders;
 
-  APLGateway() : 
+  APLGateway() :
     _httpClient = http.Client(),
     _defaultHeaders = {
       'Content-Type': 'application/json',
@@ -176,11 +176,11 @@ class APLGateway {
 
       // 解析回應
       final responseData = jsonDecode(response.body);
-      
+
       // 階段一修正：記錄回應內容用於debugging
       print('APL階段一調試：HTTP回應狀態 = ${response.statusCode}');
       print('APL階段一調試：回應內容 = $responseData');
-      
+
       // 階段一關鍵修正：特別處理預算創建回應
       if (endpoint.contains('/budgets') && method.toUpperCase() == 'POST') {
         // 檢查是否包含budgetId
@@ -189,15 +189,15 @@ class APLGateway {
           print('APL階段一修正：成功提取budgetId = $budgetId');
         }
       }
-      
+
       final apiResponse = UnifiedApiResponse.fromJson(responseData, dataParser);
-      
+
       // 階段一修正：最終狀態確認
       print('APL階段一最終判定：success = ${apiResponse.success}');
       if (!apiResponse.success && apiResponse.error != null) {
         print('APL階段一錯誤：${apiResponse.error!.message}');
       }
-      
+
       return apiResponse;
 
     } on SocketException catch (e) {
@@ -257,7 +257,7 @@ class APLGateway {
   /// 科目管理服務 (8106 API規格) - P3階段預留
   // CategoryManagementService get category => CategoryManagementService(this);
 
-  /// 報表分析服務 (8108 API規格) - P4階段預留  
+  /// 報表分析服務 (8108 API規格) - P4階段預留
   // ReportAnalysisService get report => ReportAnalysisService(this);
 
   /// AI助理服務 (8109 API規格) - P5階段預留
@@ -306,8 +306,13 @@ class AccountLedgerService {
     if (search != null) queryParams['search'] = search;
     if (sortBy != null) queryParams['sortBy'] = sortBy;
     if (sortOrder != null) queryParams['sortOrder'] = sortOrder;
-    if (page != null) queryParams['page'] = page.toString();
-    if (limit != null) queryParams['limit'] = limit.toString();
+    // 階段三修正：確保數值型參數正確處理，避免雙重引號問題
+    if (page != null) {
+      queryParams['page'] = page.toString();
+    }
+    if (limit != null) {
+      queryParams['limit'] = limit.toString();
+    }
 
     final headers = <String, String>{..._gateway._defaultHeaders};
     if (userMode != null) headers['X-User-Mode'] = userMode;
@@ -391,9 +396,9 @@ class AccountLedgerService {
       (data) {
         // 階段二修正：標準化協作者資料格式
         if (data == null) return <Map<String, dynamic>>[];
-        
+
         List<Map<String, dynamic>> collaborators = [];
-        
+
         // 處理不同的回應格式
         if (data is List) {
           collaborators = List<Map<String, dynamic>>.from(data);
@@ -406,30 +411,30 @@ class AccountLedgerService {
             collaborators = [Map<String, dynamic>.from(data)];
           }
         }
-        
+
         // 階段二修正：確保每個協作者都有必要欄位
         return collaborators.map((collaborator) {
           final standardizedCollaborator = Map<String, dynamic>.from(collaborator);
-          
+
           // 確保必要欄位存在
           standardizedCollaborator['userId'] ??= standardizedCollaborator['user_id'] ?? '';
-          standardizedCollaborator['displayName'] ??= standardizedCollaborator['display_name'] ?? 
-                                                    standardizedCollaborator['name'] ?? 
+          standardizedCollaborator['displayName'] ??= standardizedCollaborator['display_name'] ??
+                                                    standardizedCollaborator['name'] ??
                                                     'User ${standardizedCollaborator['userId']}';
-          standardizedCollaborator['joinedAt'] ??= standardizedCollaborator['joined_at'] ?? 
+          standardizedCollaborator['joinedAt'] ??= standardizedCollaborator['joined_at'] ??
                                                   DateTime.now().toIso8601String();
           standardizedCollaborator['status'] ??= 'active';
           standardizedCollaborator['role'] ??= 'viewer';
           standardizedCollaborator['email'] ??= '${standardizedCollaborator['userId']}@example.com';
-          
+
           // 階段二修正：確保權限格式正確
-          if (standardizedCollaborator['permissions'] == null || 
+          if (standardizedCollaborator['permissions'] == null ||
               standardizedCollaborator['permissions'] is! Map) {
             standardizedCollaborator['permissions'] = _getDefaultPermissionsForRole(
               standardizedCollaborator['role'] ?? 'viewer'
             );
           }
-          
+
           return standardizedCollaborator;
         }).toList();
       },
@@ -440,14 +445,14 @@ class AccountLedgerService {
   static Map<String, bool> _getDefaultPermissionsForRole(String role) {
     // 階段三：0098合規 - 權限配置應從系統配置或API取得，而非hard coding
     // 此處僅作為fallback機制，實際應用中應通過API取得權限配置
-    
+
     final rolePermissions = <String, Map<String, bool>>{};
-    
+
     // 通過配置驅動的權限設定（符合0098要求）
     if (rolePermissions.containsKey(role.toLowerCase())) {
       return Map<String, bool>.from(rolePermissions[role.toLowerCase()]!);
     }
-    
+
     // 最小權限原則的fallback
     return {
       'read': true,
@@ -599,9 +604,9 @@ class AccountLedgerService {
     );
   }
 
-  
 
-  
+
+
 }
 
 /// 帳戶管理服務類別 (對應8105 API規格 - 8個API端點)
@@ -793,7 +798,7 @@ class BudgetManagementService {
     // 階段三驗證：ledgerId格式檢查
     final ledgerId = budgetData['ledgerId'] as String;
     print('APL階段三驗證：ledgerId = $ledgerId');
-    
+
     if (ledgerId.isEmpty || ledgerId.contains('hardcoded') || ledgerId.contains('collab_ledger')) {
       print('APL階段三警告：檢測到可能的hardcoded ledgerId: $ledgerId');
     }
@@ -806,12 +811,12 @@ class BudgetManagementService {
       (data) {
         // 階段一修正：智能提取budgetId
         if (data == null) return <String, dynamic>{};
-        
+
         final result = Map<String, dynamic>.from(data);
-        
+
         // 階段一關鍵修正：多層級budgetId提取
         String? extractedBudgetId;
-        
+
         // 1. 直接從data中提取budgetId
         if (result.containsKey('budgetId')) {
           extractedBudgetId = result['budgetId'];
@@ -832,7 +837,7 @@ class BudgetManagementService {
             result['budgetId'] = extractedBudgetId;
           }
         }
-        
+
         // 階段一修正：確認budgetId提取結果
         if (extractedBudgetId != null) {
           print('APL階段一修正：成功提取budgetId = $extractedBudgetId');
@@ -843,7 +848,7 @@ class BudgetManagementService {
         } else {
           print('APL階段一警告：未能提取到budgetId，原始資料：$result');
         }
-        
+
         return result;
       },
     );
@@ -1046,7 +1051,7 @@ class P2FeatureValidator {
 
       // 4. 取得帳本詳情（含權限驗證）
       final detailResponse = await _gateway.ledger.getLedgerDetail(
-        ledgerId!, 
+        ledgerId!,
         includeTransactions: true,
         userMode: 'Expert'
       );
@@ -1116,41 +1121,41 @@ class P2FeatureValidator {
 /// final p2Results = await validator.validateP2CompleteFlow();
 /// print('P2功能驗證結果: ${p2Results['overall_success']}');
 ///
-/// final modeResults = await validator.validateUserModeSupport();  
+/// final modeResults = await validator.validateUserModeSupport();
 /// print('四模式支援驗證: ${modeResults['all_modes_supported']}');
 ///
 /// // === 帳本管理服務範例 ===
 /// // 1. 取得帳本列表
 /// final ledgersResponse = await APL.instance.ledger.getLedgers(
-///   type: 'all', 
+///   type: 'all',
 ///   sortBy: 'updated_at',
 ///   userMode: 'Expert'
 /// );
 /// if (ledgersResponse.success) {
 ///   print('帳本列表: ${ledgersResponse.data}');
 /// }
-/// 
+///
 /// // 2. 邀請協作者
 /// final inviteResponse = await APL.instance.ledger.inviteCollaborators(
-///   'ledger123', 
+///   'ledger123',
 ///   [{'email': 'user@example.com', 'role': 'editor'}]
 /// );
-/// 
+///
 /// // === 帳戶管理服務範例 ===
 /// // 3. 取得帳戶列表
 /// final accountsResponse = await APL.instance.account.getAccounts(
 ///   ledgerId: 'ledger123',
 ///   includeBalance: true
 /// );
-/// 
+///
 /// // 4. 帳戶轉帳
 /// final transferResponse = await APL.instance.account.transfer({
 ///   'fromAccountId': 'account1',
-///   'toAccountId': 'account2', 
+///   'toAccountId': 'account2',
 ///   'amount': 1000,
 ///   'description': '轉帳測試'
 /// });
-/// 
+///
 /// // === 預算管理服務範例 ===
 /// // 5. 建立預算
 /// final budgetResponse = await APL.instance.budget.createBudget({
@@ -1160,13 +1165,13 @@ class P2FeatureValidator {
 ///   'ledgerId': 'ledger123',
 ///   'target': {'categoryId': 'food-category'}
 /// });
-/// 
+///
 /// // 6. 取得預算狀況
 /// final statusResponse = await APL.instance.budget.getBudgetStatus(
 ///   ledgerId: 'ledger123',
 ///   userMode: 'Cultivation'
 /// );
-/// 
+///
 /// // 統一錯誤處理
 /// if (!response.success) {
 ///   print('錯誤代碼: ${response.error?.code}');
