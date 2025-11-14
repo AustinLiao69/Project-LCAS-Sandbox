@@ -391,7 +391,9 @@ MM 	 DD 	 Description 	    Progress
 11	13	 帳戶管理應該要放在科目管理功能群裡面  	 Ongoing
 11	14	 Review BL層架構：考慮刪除DD1  	 Closed
 11	14	 Review SIT_P3文件  	 Ongoing
-11	14	 撰寫DCN-0022  	 Ongoing
-11	14	 撰寫DCN-0023  	 Ongoing
+11	14	 撰寫DCN-0022  	 Closed
+11	14	 撰寫DCN-0023  	 Closed
 11	14	 想一下周末要修改什麼文件  	 Closed
 11	14	 整合7021文件至7001  	 Closed
+11	14	 Review DCN-0022  	 Ongoing
+11	14	 Review DCN-0023  	 Ongoing
