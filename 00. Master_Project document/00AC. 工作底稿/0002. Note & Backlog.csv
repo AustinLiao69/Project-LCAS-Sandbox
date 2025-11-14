@@ -22,7 +22,8 @@ MM 	 DD 	 Description 	    Progress
 11	7	 每週五要跟Chaaty研究一個與Porject LCAS相關的議題	 Open
 11	12	 User story直接轉成test case(測試案例)再去寫test plan	 Open
 11	12	 從SIT P3開始導入uesr story轉成test case	 Open
-11	13	 帳戶管理跟帳號管理的英文名稱需要分開。帳戶管理指的是銀行帳戶、現金帳戶、花旗銀行等等；帳號指的是使用者帳號，帳戶叫Wallet	 Open
+11	13	 帳戶管理跟帳號管理的英文名稱需要分開。帳戶管理指的是銀行帳戶、現金帳戶、花旗銀行等等；帳號指的是account，帳戶叫Wallet	 Open
 11	14	 SIT P2的預算的CRUD有無成功？在Firebase如何呈現？	 Open
 11	14	 我的精力要專心在撰寫文件與設計架構上	 Open
 11	14	 SIT_P1：LINE OA的部分，LBK串接firebase好像還沒打通	 Open
+11	14	 希望有帳戶間的轉帳功能	 Open
