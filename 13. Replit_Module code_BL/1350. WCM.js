@@ -507,6 +507,61 @@ async function WCM_validateCategoryExists(categoryId, userId) {
   }
 }
 
+/**
+ * 07. 取得帳戶餘額
+ * @version 2025-11-17-V1.0.0
+ * @description 從BK模組遷移，計算帳戶餘額
+ * @param {string} walletId - 帳戶ID
+ * @param {string} userId - 用戶ID
+ * @returns {Promise<Object>} 標準化回應格式
+ */
+async function WCM_getWalletBalance(walletId, userId) {
+  const functionName = "WCM_getWalletBalance";
+  
+  try {
+    WCM_logInfo(`開始查詢帳戶餘額: ${walletId}`, "查詢餘額", userId || "", functionName);
+
+    if (!walletId || typeof walletId !== 'string') {
+      return WCM_formatErrorResponse("INVALID_WALLET_ID", "無效的帳戶ID");
+    }
+
+    if (!userId) {
+      return WCM_formatErrorResponse("MISSING_USER_ID", "用戶ID不能為空");
+    }
+
+    // 先驗證帳戶存在
+    const walletValidation = await WCM_validateWalletExists(walletId, userId);
+    if (!walletValidation.success) {
+      return walletValidation;
+    }
+
+    await WCM_initialize();
+
+    const db = admin.firestore();
+    const walletDoc = await db.collection('wallets').doc(walletId).get();
+
+    if (!walletDoc.exists) {
+      return WCM_formatErrorResponse("WALLET_NOT_FOUND", "帳戶不存在");
+    }
+
+    const walletData = walletDoc.data();
+
+    WCM_logInfo(`帳戶餘額查詢成功: ${walletId}, 餘額: ${walletData.balance}`, "查詢餘額", userId, functionName);
+
+    return WCM_formatSuccessResponse({
+      walletId: walletId,
+      name: walletData.name,
+      balance: walletData.balance || 0,
+      currency: walletData.currency || WCM_CONFIG.DEFAULT_CURRENCY,
+      lastUpdated: walletData.updatedAt?.toDate?.() ? walletData.updatedAt.toDate().toISOString() : null
+    }, "帳戶餘額查詢成功");
+
+  } catch (error) {
+    WCM_logError(`查詢帳戶餘額失敗: ${error.message}`, "查詢餘額", userId || "", "GET_WALLET_BALANCE_ERROR", error.toString(), functionName);
+    return WCM_formatErrorResponse("GET_WALLET_BALANCE_ERROR", error.message, error.toString());
+  }
+}
+
 // =================== 日誌函數 ===================
 
 function WCM_logInfo(message, category, userId, functionName) {
@@ -552,6 +607,7 @@ module.exports = {
   WCM_createWallet,
   WCM_getWalletList,
   WCM_validateWalletExists,
+  WCM_getWalletBalance,
   
   // 科目管理函數
   WCM_createCategory,
