@@ -14,7 +14,7 @@
  * @update 2025-11-27: 路徑標準化v3.2.1 - 統一修正為1311 FS.js標準路徑格式 ledgers/{ledgerId}/transactions，移除entries舊格式相容性
  * @update 2025-10-29: 架構重構v3.2.2 - 移除硬編碼帳本ID，透過AM模組正確處理帳本初始化，完全符合0098憲法第3、6、7條
  * @update 2025-10-29: 階段二強化v3.2.3 - 強化AM模組調用機制，增加重試邏輯和詳細錯誤處理，確保帳本ID正確獲取
- * @update 2025-11-17: DCN-0023階段三v3.3.0 - 建立對WCM模組的依賴，記帳流程整合帳戶科目驗證，專注記帳核心邏輯
+ * @update 2025-11-17: DCN-0023階段三v3.3.0 - 移除帳戶管理功能，建立對WCM模組的依賴，記帳流程整合帳戶科目驗證，專注記帳核心邏輯
  * @date 2025-11-17
  */
 
@@ -2812,40 +2812,8 @@ async function BK_getTransactionsByCategory(categoryId, userId) {
   }
 }
 
-/**
- * 取得帳戶餘額
- */
-async function BK_getAccountBalance(accountId, userId) {
-  try {
-    const result = await BK_getTransactions({
-      userId: userId,
-      accountId: accountId
-    });
-
-    let balance = 0;
-    if (result.success && result.data?.transactions) {
-      result.data.transactions.forEach(transaction => {
-        if (transaction.type === 'income') {
-          balance += transaction.amount;
-        } else {
-          balance -= transaction.amount;
-        }
-      });
-    }
-
-    if (result.success) {
-        return BK_formatSuccessResponse({
-            accountId: accountId,
-            balance: balance,
-            currency: BK_CONFIG.DEFAULT_CURRENCY
-        }, "帳戶餘額取得成功");
-    } else {
-        return BK_formatErrorResponse("ACCOUNT_BALANCE_FAILED", "無法取得帳戶餘額", result.error);
-    }
-  } catch (error) {
-    return BK_formatErrorResponse("QUERY_ERROR", error.toString(), error.toString());
-  }
-}
+// BK_getAccountBalance 函數已遷移至 WCM 模組
+// 記帳流程中如需帳戶餘額驗證，請調用 WCM.WCM_getWalletBalance
 
 /**
  * 格式化貨幣顯示
@@ -3318,7 +3286,7 @@ module.exports = {
   // === 基礎函數與輔助函數 ===
   BK_getTransactionsByDateRange,
   BK_getTransactionsByCategory,
-  BK_getAccountBalance,
+  
   BK_parseQuickInput,
   BK_processBookkeeping,
   BK_validateTransactionData,
