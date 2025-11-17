@@ -1,12 +1,13 @@
 /**
- * ASL.js_API服務層模組_2.1.6
+ * ASL.js_API服務層模組_2.2.0
  * @module API服務層模組（統一回應格式）
  * @description LCAS 2.0 API Service Layer - 階段二升級：協作管理API端點補完
  * @update 2025-10-03: 階段二升級 - 補完MLS.js和BM.js的API端點，並引入CM.js進行協作管理
- * @date 2025-10-03
+ * @update 2025-10-10: DCN-0023階段二 - 新增WCM模組，處理帳戶與科目管理API端點轉發
+ * @date 2025-10-10
  */
 
-console.log('🚀 LCAS ASL (API Service Layer) P2重構版啟動中...');
+console.log('🚀 LCAS ASL (API Service Layer) v2.2.0 啟動中...');
 console.log('📅 啟動時間:', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
 
 /**
@@ -35,7 +36,7 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('🔥 ASL階段二升級：優先初始化Firebase...');
 
 let firebaseInitialized = false;
-let AM, BK, DL, FS, BM, CM; // CM: Collaboration Management module (P2)
+let AM, BK, DL, FS, BM, CM, WCM; // WCM: Wallet and Category Management module (DCN-0023)
 
 /**
  * Firebase服務初始化函數（階段一修復版）
@@ -169,7 +170,8 @@ async function loadBLModules() {
     DL: false,
     FS: false,
     BM: false,  // P2 模組：預算管理
-    CM: false   // P2 模組：協作與帳本管理
+    CM: false,  // P2 模組：協作與帳本管理
+    WCM: false  // DCN-0023 模組：帳戶與科目管理
   };
 
   // 只有在Firebase成功初始化後才載入AM模組
@@ -314,6 +316,17 @@ async function loadBLModules() {
       moduleStatus.CM = false;
     }
 
+    // DCN-0023階段二：載入WCM模組（帳戶與科目管理）
+    try {
+      console.log('📦 載入DCN-0023階段二模組 - WCM (帳戶與科目管理)...');
+      WCM = require('./13. Replit_Module code_BL/1314. WCM.js'); // WCM模組
+      moduleStatus.WCM = true;
+      console.log('✅ WCM (帳戶與科目管理) 模組載入成功');
+    } catch (error) {
+      console.error('❌ WCM 模組載入失敗:', error.message);
+      moduleStatus.WCM = false;
+    }
+
 
   // 模組載入狀態報告
   console.log('📋 模組載入狀態報告:');
@@ -324,13 +337,14 @@ async function loadBLModules() {
   });
 
   // P2階段模組評估
-    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM) {
-      console.log('🎉 P2階段模組完整載入：Firebase + AM + BK + CM(協作與帳本管理) + BM');
-      console.log('🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、協作管理功能');
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM) {
+      console.log('🎉 P2階段模組完整載入：Firebase + AM + BK + CM(協作與帳本管理) + BM + WCM');
+      console.log('🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、協作管理、帳戶與科目管理功能');
       console.log('✨ 協作與帳本管理功能完全整合至CM模組');
+      console.log('📦 帳戶與科目管理功能整合至WCM模組');
     } else if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK) {
       console.log('🎉 P1-2基礎模組正常載入：Firebase + AM + BK');
-      console.log('⚠️ P2階段新功能模組狀態：CM(協作管理)(' + (moduleStatus.CM ? '✅' : '❌') + '), BM(' + (moduleStatus.BM ? '✅' : '❌') + ')');
+      console.log('⚠️ P2階段新功能模組狀態：CM(協作管理)(' + (moduleStatus.CM ? '✅' : '❌') + '), BM(' + (moduleStatus.BM ? '✅' : '❌') + '), WCM(' + (moduleStatus.WCM ? '✅' : '❌') + ')');
       console.log('🚀 系統已準備好處理P1-2基礎功能，P2功能視模組載入狀況而定');
     } else {
       console.log('❌ 關鍵模組載入失敗：需執行進一步調查');
@@ -615,7 +629,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.1.6', // 升級到v2.1.6
+    version: '2.2.0', // 升級到v2.2.0
     status: 'running',
     port: PORT,
     architecture: 'ASL -> BL層直接調用（優化版）',
@@ -639,14 +653,20 @@ app.get('/', (req, res) => {
       cm_collaboration: 4, // 協作管理 (邀請, 移除, 更新權限, 取得列表)
       total: 9
     },
-    total_endpoints: 34 + 9, // P1-2 + P2
+    dcn_0023_endpoints: {
+      wcm_accounts: 8, // 帳戶管理
+      wcm_categories: 6, // 科目管理
+      total: 14
+    },
+    total_endpoints: 34 + 9 + 14, // P1-2 + P2 + DCN-0023
     modules: {
       AM: !!AM ? 'loaded' : 'not loaded',
       BK: !!BK ? 'loaded' : 'not loaded',
       DL: !!DL ? 'loaded' : 'not loaded',
       FS: !!FS ? 'loaded' : 'not loaded',
       BM: !!BM ? 'loaded' : 'not loaded',  // P2 模組
-      CM: !!CM ? 'loaded' : 'not loaded'   // P2 模組 - 包含帳本管理功能
+      CM: !!CM ? 'loaded' : 'not loaded',   // P2 模組 - 包含帳本管理功能
+      WCM: !!WCM ? 'loaded' : 'not loaded' // DCN-0023 模組
     },
     supported_modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding']
   }, 'ASL統一回應格式運行正常');
@@ -656,7 +676,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.1.6', // 升級到v2.1.6
+    version: '2.2.0', // 升級到v2.2.0
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -667,7 +687,8 @@ app.get('/health', (req, res) => {
       DL: !!DL ? 'ready' : 'unavailable',
       FS: !!FS ? 'ready' : 'unavailable',
       BM: !!BM ? 'ready' : 'unavailable',  // P2 模組
-      CM: !!CM ? 'ready_with_ledger_mgmt' : 'unavailable'   // P2 模組 - 包含帳本管理功能
+      CM: !!CM ? 'ready_with_ledger_mgmt' : 'unavailable',   // P2 模組 - 包含帳本管理功能
+      WCM: !!WCM ? 'ready' : 'unavailable' // DCN-0023 模組
     },
     dcn_0015_phase1: {
       unified_response_implemented: true,
@@ -687,6 +708,9 @@ app.get('/health', (req, res) => {
     stage2_enhancements: {
       collaboration_management_added: !!CM,
       budget_management_added: !!BM
+    },
+    dcn_0023_enhancements: {
+      account_category_management_added: !!WCM
     },
     stage1_fix: {
       applied: true,
@@ -1169,7 +1193,7 @@ app.post('/api/v1/users/verify-pin', async (req, res) => {
 app.delete('/api/v1/ledgers/:id', async (req, res) => {
   try {
     console.log('🗑️ ASL轉發: 刪除協作帳本 -> CM_deleteLedger');
-    
+
     if (!CM || typeof CM.CM_deleteLedger !== 'function') {
       console.error('❌ CM模組或CM_deleteLedger函數不存在');
       return res.apiError('CM_deleteLedger函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
@@ -1181,7 +1205,7 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
     }
 
     console.log(`📋 刪除協作帳本ID: ${ledgerId}`);
-    
+
     // 調用CM模組刪除協作帳本
     const result = await CM.CM_deleteLedger(ledgerId, req.query.operatorId || 'system');
 
@@ -1206,7 +1230,7 @@ app.delete('/api/v1/ledgers/:id', async (req, res) => {
 app.post('/api/v1/ledgers/:id/invitations', async (req, res) => {
   try {
     console.log('📧 ASL轉發: 邀請協作者 -> CM_inviteCollaborator');
-    
+
     if (!CM || typeof CM.CM_inviteCollaborator !== 'function') {
       console.error('❌ CM模組或CM_inviteCollaborator函數不存在');
       return res.apiError('CM_inviteCollaborator函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
@@ -1223,7 +1247,7 @@ app.post('/api/v1/ledgers/:id/invitations', async (req, res) => {
     }
 
     console.log(`📋 邀請協作者到帳本: ${ledgerId}, 邀請Email: ${invitationData.email}`);
-    
+
     // 調用CM模組邀請協作者
     const result = await CM.CM_inviteCollaborator(ledgerId, invitationData, {
       inviterId: req.body.operatorId || req.body.inviterId || 'system'
@@ -1250,7 +1274,7 @@ app.post('/api/v1/ledgers/:id/invitations', async (req, res) => {
 app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
   try {
     console.log('👤 ASL轉發: 移除協作者 -> CM_removeCollaborator');
-    
+
     if (!CM || typeof CM.CM_removeCollaborator !== 'function') {
       console.error('❌ CM模組或CM_removeCollaborator函數不存在');
       return res.apiError('CM_removeCollaborator函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
@@ -1258,17 +1282,17 @@ app.delete('/api/v1/ledgers/:id/collaborators/:userId', async (req, res) => {
 
     const ledgerId = req.params.id;
     const userId = req.params.userId;
-    
+
     if (!ledgerId || ledgerId.trim() === '') {
       return res.apiError('帳本ID不能為空', 'MISSING_LEDGER_ID', 400);
     }
-    
+
     if (!userId || userId.trim() === '') {
       return res.apiError('用戶ID不能為空', 'MISSING_USER_ID', 400);
     }
 
     console.log(`📋 從帳本 ${ledgerId} 移除協作者: ${userId}`);
-    
+
     // 調用CM模組移除協作者
     const result = await CM.CM_removeCollaborator(ledgerId, userId, {
       removerId: req.query.operatorId || 'system',
@@ -1738,20 +1762,20 @@ app.delete('/api/v1/transactions/:id/attachments/:attachmentId', async (req, res
 // 16. 查詢用戶帳戶列表（用於email→userId解析）- 嚴格遵守8020文件規範
 app.get('/api/v1/accounts', async (req, res) => {
   try {
-    console.log('👤 ASL轉發: 查詢用戶帳戶 -> AM_processAPIGetAccounts');
+    console.log('👤 ASL轉發: 查詢用戶帳戶 -> WCM_getAccounts'); // Modified to WCM
 
-    if (!AM || typeof AM.AM_processAPIGetAccounts !== 'function') {
-      return res.apiError('AM_processAPIGetAccounts函數不存在', 'AM_FUNCTION_NOT_FOUND', 503);
+    if (!WCM || typeof WCM.WCM_getAccounts !== 'function') {
+      return res.apiError('WCM_getAccounts函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await AM.AM_processAPIGetAccounts(req.query);
+    const result = await WCM.WCM_getAccounts(req.query);
 
     if (result && result.success) {
       res.apiSuccess(result.data, result.message);
     } else if (result && result.success === false) {
       res.apiError(result.message || '帳戶查詢失敗', result.error?.code || 'GET_ACCOUNTS_ERROR', 400, result.error?.details);
     } else {
-      console.error('❌ AM_processAPIGetAccounts回應格式異常:', result);
+      console.error('❌ WCM_getAccounts回應格式異常:', result);
       res.apiError('BL層回應格式異常', 'INVALID_BL_RESPONSE', 500);
     }
 
@@ -1761,10 +1785,306 @@ app.get('/api/v1/accounts', async (req, res) => {
   }
 });
 
-/**
- * =============== P2 階段 API 端點轉發 ===============
- * 實作階段二規劃的帳本(Ledgers)和預算(Budgets)相關API端點
- */
+// 17. 創建帳戶
+app.post('/api/v1/accounts', async (req, res) => {
+  try {
+    console.log('➕ ASL轉發: 創建帳戶 -> WCM_createAccount'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_createAccount !== 'function') {
+      return res.apiError('WCM_createAccount函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_createAccount(req.body);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '帳戶創建失敗', result.error?.code || 'CREATE_ACCOUNT_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (create account):', error);
+    res.apiError('帳戶創建轉發失敗', 'CREATE_ACCOUNT_FORWARD_ERROR', 500);
+  }
+});
+
+// 18. 取得特定帳戶詳情
+app.get('/api/v1/accounts/:id', async (req, res) => {
+  try {
+    console.log('🔍 ASL轉發: 取得帳戶詳情 -> WCM_getAccountById'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_getAccountById !== 'function') {
+      return res.apiError('WCM_getAccountById函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_getAccountById(req.params.id, req.query);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '帳戶詳情查詢失敗', result.error?.code || 'GET_ACCOUNT_DETAIL_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get account detail):', error);
+    res.apiError('帳戶詳情轉發失敗', 'GET_ACCOUNT_DETAIL_FORWARD_ERROR', 500);
+  }
+});
+
+// 19. 更新特定帳戶
+app.put('/api/v1/accounts/:id', async (req, res) => {
+  try {
+    console.log('✏️ ASL轉發: 更新帳戶 -> WCM_updateAccount'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_updateAccount !== 'function') {
+      return res.apiError('WCM_updateAccount函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_updateAccount(req.params.id, req.body);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '帳戶更新失敗', result.error?.code || 'UPDATE_ACCOUNT_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (update account):', error);
+    res.apiError('帳戶更新轉發失敗', 'UPDATE_ACCOUNT_FORWARD_ERROR', 500);
+  }
+});
+
+// 20. 刪除特定帳戶
+app.delete('/api/v1/accounts/:id', async (req, res) => {
+  try {
+    console.log('🗑️ ASL轉發: 刪除帳戶 -> WCM_deleteAccount'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_deleteAccount !== 'function') {
+      return res.apiError('WCM_deleteAccount函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_deleteAccount(req.params.id, req.query);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '帳戶刪除失敗', result.error?.code || 'DELETE_ACCOUNT_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (delete account):', error);
+    res.apiError('帳戶刪除轉發失敗', 'DELETE_ACCOUNT_FORWARD_ERROR', 500);
+  }
+});
+
+// 21. 取得帳戶餘額
+app.get('/api/v1/accounts/:id/balance', async (req, res) => {
+  try {
+    console.log('💰 ASL轉發: 取得帳戶餘額 -> WCM_getAccountBalance'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_getAccountBalance !== 'function') {
+      return res.apiError('WCM_getAccountBalance函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_getAccountBalance(req.params.id, req.query);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '帳戶餘額查詢失敗', result.error?.code || 'GET_ACCOUNT_BALANCE_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get account balance):', error);
+    res.apiError('帳戶餘額轉發失敗', 'GET_ACCOUNT_BALANCE_FORWARD_ERROR', 500);
+  }
+});
+
+// 22. 取得帳戶類型列表
+app.get('/api/v1/accounts/types', async (req, res) => {
+  try {
+    console.log('🏷️ ASL轉發: 取得帳戶類型 -> WCM_getAccountTypes'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_getAccountTypes !== 'function') {
+      return res.apiError('WCM_getAccountTypes函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_getAccountTypes(req.query);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '帳戶類型查詢失敗', result.error?.code || 'GET_ACCOUNT_TYPES_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get account types):', error);
+    res.apiError('帳戶類型轉發失敗', 'GET_ACCOUNT_TYPES_FORWARD_ERROR', 500);
+  }
+});
+
+// 23. 帳戶轉帳
+app.post('/api/v1/accounts/transfer', async (req, res) => {
+  try {
+    console.log('💸 ASL轉發: 帳戶轉帳 -> WCM_transferFunds'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_transferFunds !== 'function') {
+      return res.apiError('WCM_transferFunds函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_transferFunds(req.body);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '帳戶轉帳失敗', result.error?.code || 'TRANSFER_FUNDS_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (transfer funds):', error);
+    res.apiError('帳戶轉帳轉發失敗', 'TRANSFER_FUNDS_FORWARD_ERROR', 500);
+  }
+});
+
+// =============== 科目管理API轉發 ===============
+
+// 24. 取得科目列表
+app.get('/api/v1/categories', async (req, res) => {
+  try {
+    console.log('📚 ASL轉發: 取得科目列表 -> WCM_getCategories'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_getCategories !== 'function') {
+      return res.apiError('WCM_getCategories函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_getCategories(req.query);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '科目列表查詢失敗', result.error?.code || 'GET_CATEGORIES_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get categories):', error);
+    res.apiError('科目列表轉發失敗', 'GET_CATEGORIES_FORWARD_ERROR', 500);
+  }
+});
+
+// 25. 創建科目
+app.post('/api/v1/categories', async (req, res) => {
+  try {
+    console.log('➕ ASL轉發: 創建科目 -> WCM_createCategory'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_createCategory !== 'function') {
+      return res.apiError('WCM_createCategory函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_createCategory(req.body);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '科目創建失敗', result.error?.code || 'CREATE_CATEGORY_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (create category):', error);
+    res.apiError('科目創建轉發失敗', 'CREATE_CATEGORY_FORWARD_ERROR', 500);
+  }
+});
+
+// 26. 取得特定科目詳情
+app.get('/api/v1/categories/:id', async (req, res) => {
+  try {
+    console.log('🔍 ASL轉發: 取得科目詳情 -> WCM_getCategoryById'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_getCategoryById !== 'function') {
+      return res.apiError('WCM_getCategoryById函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_getCategoryById(req.params.id, req.query);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '科目詳情查詢失敗', result.error?.code || 'GET_CATEGORY_DETAIL_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get category detail):', error);
+    res.apiError('科目詳情轉發失敗', 'GET_CATEGORY_DETAIL_FORWARD_ERROR', 500);
+  }
+});
+
+// 27. 更新特定科目
+app.put('/api/v1/categories/:id', async (req, res) => {
+  try {
+    console.log('✏️ ASL轉發: 更新科目 -> WCM_updateCategory'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_updateCategory !== 'function') {
+      return res.apiError('WCM_updateCategory函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_updateCategory(req.params.id, req.body);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '科目更新失敗', result.error?.code || 'UPDATE_CATEGORY_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (update category):', error);
+    res.apiError('科目更新轉發失敗', 'UPDATE_CATEGORY_FORWARD_ERROR', 500);
+  }
+});
+
+// 28. 刪除特定科目
+app.delete('/api/v1/categories/:id', async (req, res) => {
+  try {
+    console.log('🗑️ ASL轉發: 刪除科目 -> WCM_deleteCategory'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_deleteCategory !== 'function') {
+      return res.apiError('WCM_deleteCategory函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_deleteCategory(req.params.id, req.query);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '科目刪除失敗', result.error?.code || 'DELETE_CATEGORY_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (delete category):', error);
+    res.apiError('科目刪除轉發失敗', 'DELETE_CATEGORY_FORWARD_ERROR', 500);
+  }
+});
+
+// 29. 取得科目樹狀結構
+app.get('/api/v1/categories/tree', async (req, res) => {
+  try {
+    console.log('🌳 ASL轉發: 取得科目樹狀結構 -> WCM_getCategoryTree'); // Modified to WCM
+
+    if (!WCM || typeof WCM.WCM_getCategoryTree !== 'function') {
+      return res.apiError('WCM_getCategoryTree函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    const result = await WCM.WCM_getCategoryTree(req.query);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data, result.message);
+    } else {
+      res.apiError(result.message || '科目樹狀結構查詢失敗', result.error?.code || 'GET_CATEGORY_TREE_ERROR', 400, result.error?.details);
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (get category tree):', error);
+    res.apiError('科目樹狀結構轉發失敗', 'GET_CATEGORY_TREE_FORWARD_ERROR', 500);
+  }
+});
 
 // =============== CM.js 協作與帳本管理 API 轉發 ===============
 
@@ -2269,28 +2589,31 @@ app.use((error, req, res, next) => {
     console.log(`🎯 DCN-0015第二階段完成: ASL格式驗證強化`);
     // P1-2範圍API端點: AM(19) + BK(15) = 34個端點
     // P2範圍API端點: 預算(5) + 協作(4) = 9個端點
-    // 總計: 34 + 9 = 43個端點
-    console.log(`📋 P1-2 + P2 API端點: AM(19) + BK(15) + BM(5) + CM(4) = 43個端點`);
+    // DCN-0023範圍API端點: 帳戶(8) + 科目(6) = 14個端點
+    // 總計: 34 + 9 + 14 = 57個端點
+    console.log(`📋 P1-2 + P2 + DCN-0023 API端點: AM(19) + BK(15) + BM(5) + CM(4) + WCM(14) = 57個端點`);
 
     // 第二階段完成狀態報告
     const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
     const amStatus = moduleStatus.AM ? '✅' : '❌';
     const bmStatus = moduleStatus.BM ? '✅' : '❌';
     const cmStatus = moduleStatus.CM ? '✅' : '❌';
-    const overallStatus = moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM ? '完全就緒' : '部分就緒';
+    const wcmStatus = moduleStatus.WCM ? '✅' : '❌';
+    const overallStatus = moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM ? '完全就緒' : '部分就緒';
 
     console.log(`🔧 第二階段完成狀態: ${overallStatus}`);
-    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), BM(${bmStatus}), CM(${cmStatus})`);
+    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), BM(${bmStatus}), CM(${cmStatus}), WCM(${wcmStatus})`);
     console.log(`✨ 容錯機制完全移除: 100%信任BL層標準格式`);
     console.log(`🎉 第二階段修正完成: 協作管理API端點補完`);
+    console.log(`🚀 DCN-0023階段二更新: 帳戶與科目管理API端點已整合`);
 
-    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM) {
-      console.log('🚀 ASL v2.1.6已完全就緒，第二階段目標達成');
-    } else if (!moduleStatus.CM) {
-      console.log('⚠️ CM (協作管理) 模組載入失敗，協作管理功能不可用');
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM) {
+      console.log('🚀 ASL v2.2.0已完全就緒，階段二及DCN-0023目標達成');
+    } else if (!moduleStatus.WCM) {
+      console.log('⚠️ WCM (帳戶與科目管理) 模組載入失敗，帳戶與科目管理功能不可用');
     }
      else {
-      console.log('❌ 部分P2模組載入失敗，請檢查相關模組狀態');
+      console.log('❌ 部分P2或DCN-0023模組載入失敗，請檢查相關模組狀態');
     }
   });
 
@@ -2316,21 +2639,22 @@ process.on('SIGINT', () => {
   });
 });
 
-console.log('🎉 LCAS ASL階段二升級完成：協作管理API端點補完！');
-  console.log(`📦 P1-2 + P2 範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'}), BM(${moduleStatus.BM ? '✅' : '❌'}), CM(${moduleStatus.CM ? '✅' : '❌'})`);
-  console.log('🔧 純轉發機制: 43個API端點 -> 統一使用BL層標準格式');
-  console.log('✨ 階段二升級: 協作管理API端點補完，符合8020文件規範');
+console.log('🎉 LCAS ASL階段二及DCN-0023更新完成！');
+  console.log(`📦 P1-2 + P2 + DCN-0023 範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'}), BM(${moduleStatus.BM ? '✅' : '❌'}), CM(${moduleStatus.CM ? '✅' : '❌'}), WCM(${moduleStatus.WCM ? '✅' : '❌'})`);
+  console.log('🔧 純轉發機制: 57個API端點 -> 統一使用BL層標準格式');
+  console.log('✨ 階段二及DCN-0023更新: 協作管理API端點補完，帳戶與科目管理API端點整合');
   console.log('🎯 協作管理功能: 帳本創建/讀取/更新/刪除，協作者管理（邀請/移除/權限更新），衝突檢測與解決');
-  console.log('🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict');
+  console.log('🎯 帳戶與科目管理功能: 帳戶CRUD，餘額查詢，轉帳，科目CRUD，科目樹狀結構');
+  console.log('🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict, /api/v1/accounts, /api/v1/accounts/:id, /api/v1/accounts/:id/balance, /api/v1/accounts/types, /api/v1/accounts/transfer, /api/v1/categories, /api/v1/categories/:id, /api/v1/categories/tree');
 
-  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM) {
-    console.log('🚀 階段二升級完成，ASL v2.1.6完全就緒！');
+  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM) {
+    console.log('🚀 ASL v2.2.0完全就緒，所有階段目標達成！');
     console.log('🌐 ASL服務器已啟動於 Port 5000');
-  } else if (!moduleStatus.CM) {
-    console.log('⚠️ CM (協作管理) 模組載入失敗，協作管理功能不可用');
-    console.log('🔧 建議檢查CM.js文件完整性及依賴關係');
+  } else if (!moduleStatus.WCM) {
+    console.log('⚠️ WCM (帳戶與科目管理) 模組載入失敗，帳戶與科目管理功能不可用');
+    console.log('🔧 建議檢查WCM.js文件完整性及依賴關係');
   } else {
-    console.log('❌ 部分P2模組載入失敗，請檢查相關模組狀態');
+    console.log('❌ 部分P2或DCN-0023模組載入失敗，請檢查相關模組狀態');
   }
 
   return server;
