@@ -1,0 +1,92 @@
+
+------------------------------------------
+20251117. 撰寫DCN-0023
+
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據您的指示，我將以資深SA的角色分析DCN-0022並提出修正提案。
+DCN-0022 修正提案
+=>是DCN-0023不是0022
+
+
+問題分析
+問題1：命名規範不一致
+•	現象：新建帳戶管理函數使用account命名，與系統整體規範不符
+•	原因：缺乏統一的命名標準，導致新舊代碼混用不同術語
+•	簡單概念解釋：就像公司內部對同一個部門有人叫「會計部」有人叫「財務部」，造成溝通混亂
+
+問題2：API端點數量統計錯誤
+•	現象：文件中聲稱16個端點，實際清單只有14個
+•	原因：統計時可能包含了不需要轉移的端點，或遺漏計算
+•	簡單概念解釋：就像搬家時清單上寫16箱物品，實際只準備了14箱
+
+問題3：函數命名遷移不完整
+•	現象：從BK和DD1遷移的函數仍保留account命名
+•	原因：遷移計劃未考慮命名統一性
+•	簡單概念解釋：部門重組後，員工職稱沒有同步更新
+SA Insight
+1.	架構一致性原則：WCM模組作為新的統一管理模組，必須建立一致的命名規範，避免概念混淆
+2.	漸進式重構策略：在MVP階段，優先解決核心功能遷移，命名統一可降低後續維護成本
+3.	文件準確性重要性：DCN文件作為實施依據，統計錯誤會直接影響開發
+
+工作量估算
+解決方案
+階段一：命名規範統一（預估1天）
+目標：建立WCM模組統一命名規範
+修改內容：
+1.	更新DCN-0022文件中所有account相關命名為wallet
+2.	確認API端點實際數量並修正文件
+=>是DCN-0023不是0022
+
+修改檔案：
+•	07. DCN/DCN-0022 移除DD1模組.md
+Before/After行為差異：
+•	Before: 文件中混用account/wallet命名，數量統計不準確
+•	After: 統一使用wallet命名，準確統計14個API端點
+
+階段二：函數命名規劃更新（預估0.5天）
+目標：更新遷移函數的命名規劃
+修改內容：
+1.	將createAccount() → createWallet()
+2.	將validateAccountExists() → validateWalletExists()
+3.	將getAccountBalance() → getWalletBalance()
+4.	將updateAccountBalance() → updateWalletBalance()
+修改檔案：
+•	07. DCN/DCN-0022 移除DD1模組.md
+=>是DCN-0023不是0022
+
+Before/After行為差異：
+•	Before: 函數名稱使用account，與整體wallet概念不一致
+•	After: 函數名稱統一使用wallet，保持命名一致性
+API端點數量確認
+根據您提供的清單：
+從BK模組轉移（8個）：
+1.	GET /api/v1/accounts
+2.	POST /api/v1/accounts
+3.	GET /api/v1/accounts/{id}
+4.	PUT /api/v1/accounts/{id}
+5.	DELETE /api/v1/accounts/{id}
+6.	GET /api/v1/accounts/{id}/balance
+7.	GET /api/v1/accounts/types
+8.	POST /api/v1/accounts/transfer
+從DD1模組轉移（6個）：
+1.	GET /api/v1/categories
+2.	POST /api/v1/categories
+3.	GET /api/v1/categories/{id}
+4.	PUT /api/v1/categories/{id}
+5.	DELETE /api/v1/categories/{id}
+6.	GET /api/v1/categories/tree
+總計：14個API端點（非16個）
+=>14個API端點是你在DCN-0023寫的，請檢查BK、DD1、ASL與8020確認到底是幾個？
+
+
+
+版本升級規劃
+•	WCM.js: 新建模組，版本v1.0.0
+•	BK.js: v3.2.4 → v3.3.0（移除wallet管理功能）
+•	ASL.js: v2.1.7 → v2.2.0（更新API轉發目標）
+•	DCN-0022: v1.0.0 → v1.1.0（修正命名規範和數量統計）
+實施計劃
+第一階段驗證點：DCN-0022文件更新完成，命名統一，數量準確
+第二階段驗證點：函數遷移規劃更新完成，為實際代碼實施做準備
+此提案專注於解決MVP階段的核心問題：命名一致性和文件準確性，為後續代碼實施奠定正確基礎。

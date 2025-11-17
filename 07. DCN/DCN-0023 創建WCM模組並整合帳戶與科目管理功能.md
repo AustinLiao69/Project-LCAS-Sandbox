@@ -1,9 +1,9 @@
 
 # DCN-0023 創建WCM模組並整合帳戶與科目管理功能
 
-**版本**: v1.0.0  
+**版本**: v1.1.0  
 **建立日期**: 2025-11-14  
-**最後更新**: 2025-11-14  
+**最後更新**: 2025-11-17  
 **建立者**: LCAS PM Team  
 
 ---
@@ -74,12 +74,12 @@
 // WCM模組核心功能架構
 const WCM = {
   // 帳戶管理功能
-  createAccount: async (accountData) => { /* 創建帳戶 */ },
-  updateAccount: async (accountId, updateData) => { /* 更新帳戶 */ },
-  deleteAccount: async (accountId) => { /* 刪除帳戶 */ },
-  getAccountList: async (userId, filters) => { /* 取得帳戶列表 */ },
-  getAccountById: async (accountId) => { /* 取得帳戶詳情 */ },
-  getAccountBalance: async (accountId) => { /* 取得帳戶餘額 */ },
+  createWallet: async (walletData) => { /* 創建帳戶 */ },
+  updateWallet: async (walletId, updateData) => { /* 更新帳戶 */ },
+  deleteWallet: async (walletId) => { /* 刪除帳戶 */ },
+  getWalletList: async (userId, filters) => { /* 取得帳戶列表 */ },
+  getWalletById: async (walletId) => { /* 取得帳戶詳情 */ },
+  getWalletBalance: async (walletId) => { /* 取得帳戶餘額 */ },
   
   // 科目管理功能
   createCategory: async (categoryData) => { /* 創建科目 */ },
@@ -118,10 +118,10 @@ const WCM = {
 #### 3.3.1 從BK.js遷移功能
 ```javascript
 // 從BK.js遷移至WCM.js的功能
-- createAccount() // 帳戶創建邏輯
-- validateAccountExists() // 帳戶存在驗證
-- getAccountBalance() // 餘額查詢
-- updateAccountBalance() // 餘額更新（保留給BK調用）
+- createWallet() // 帳戶創建邏輯
+- validateWalletExists() // 帳戶存在驗證
+- getWalletBalance() // 餘額查詢
+- updateWalletBalance() // 餘額更新（保留給BK調用）
 ```
 
 #### 3.3.2 從DD1.js遷移功能
@@ -213,7 +213,7 @@ ASL → WCM → FS (直接操作accounts/categories集合)
 
 **具體任務**：
 1. 建立 `13. Replit_Module code_BL/1350. WCM.js`
-2. 實作基礎帳戶管理函數：createAccount, getAccountList, validateAccountExists
+2. 實作基礎帳戶管理函數：createWallet, getWalletList, validateWalletExists
 3. 實作基礎科目管理函數：createCategory, getCategoryList, validateCategoryExists
 4. 建立統一錯誤處理和日誌記錄機制
 
@@ -231,7 +231,7 @@ ASL → WCM → FS (直接操作accounts/categories集合)
 **具體任務**：
 1. 更新ASL.js中accounts相關端點，轉發目標從BK改為WCM
 2. 更新ASL.js中categories相關端點，轉發目標從DD1改為WCM  
-3. 測試所有16個重新分配的API端點
+3. 測試所有14個重新分配的API端點
 4. 更新8025.md API-BL mapping文件
 
 **版本升級**：ASL.js v2.1.7 → v2.2.0
@@ -254,7 +254,7 @@ ASL → WCM → FS (直接操作accounts/categories集合)
 **版本升級**：BK.js v3.2.4 → v3.3.0
 
 **驗收標準**：
-- BK專注記帳核心邏輯，不再包含主數據管理
+- BK專注記帳核心邏輯，不再包含帳戶管理
 - 記帳流程通過WCM驗證正常運作
 - 所有existing測試案例通過
 
