@@ -1,7 +1,7 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.2.2
+ * 1301. BK.js_記帳核心模組_v3.3.0
  * @module 記帳核心模組
- * @description LCAS 2.0 記帳核心ledgers/{ledgerId}/transactions功能模組，包含交易管理、分類管理、統計分析等核心功能
+ * @description LCAS 2.0 記帳核心ledgers/{ledgerId}/transactions功能模組，專注於記帳邏輯，透過WCM模組進行帳戶科目驗證
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
  * @update 2025-09-26: 階段一緊急修復 - 修復快速記帳輸入驗證，強化業務邏輯v3.0.4
  * @update 2025-09-26: 階段一緊急修復v3.0.5 - 修復快速記帳和完整記帳處理邏輯，簡化MVP階段業務處理
@@ -14,7 +14,8 @@
  * @update 2025-11-27: 路徑標準化v3.2.1 - 統一修正為1311 FS.js標準路徑格式 ledgers/{ledgerId}/transactions，移除entries舊格式相容性
  * @update 2025-10-29: 架構重構v3.2.2 - 移除硬編碼帳本ID，透過AM模組正確處理帳本初始化，完全符合0098憲法第3、6、7條
  * @update 2025-10-29: 階段二強化v3.2.3 - 強化AM模組調用機制，增加重試邏輯和詳細錯誤處理，確保帳本ID正確獲取
- * @date 2025-10-29
+ * @update 2025-11-17: DCN-0023階段三v3.3.0 - 建立對WCM模組的依賴，記帳流程整合帳戶科目驗證，專注記帳核心邏輯
+ * @date 2025-11-17
  */
 
 /**
@@ -181,7 +182,7 @@ let BK_ERROR_STATS = {
 };
 
 function BK_trackError(errorType) {
-  BK_ERROR_STATS.total_errors++;
+     BK_ERROR_STATS.total_errors++;
 
   switch (errorType) {
     case 'FIREBASE_CONNECTION_ERROR':
@@ -372,12 +373,13 @@ if (!admin.apps.length) {
   }
 }
 
-// 引入DL和FS模組
+// 引入依賴模組
 const DL = require('./1310. DL.js');
 const FS = require('./1311. FS.js');
+const WCM = require('./1350. WCM.js'); // DCN-0023階段三：引入WCM模組進行帳戶科目驗證
 
-// BK模組完全移除測試資料依賴，使用純業務邏輯
-console.log('✅ BK模組：使用純業務邏輯配置，禁止引用測試資料');
+// BK模組專注記帳核心邏輯，透過WCM處理帳戶科目驗證
+console.log('✅ BK模組v3.3.0：專注記帳核心邏輯，整合WCM帳戶科目驗證');
 
 /**
  * 生成預設用戶ID（業務邏輯版本）
@@ -395,7 +397,7 @@ const BK_CONFIG = {
   FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED') !== 'false',
   TIMEZONE: getEnvVar('TIMEZONE') || Intl.DateTimeFormat().resolvedOptions().timeZone,
   INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL'), 10) || 300000,
-  VERSION: getEnvVar('BK_VERSION') || '3.2.3',
+  VERSION: getEnvVar('BK_VERSION') || '3.3.0', // DCN-0023階段三：版本升級
   MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT'), 10) || Number.MAX_SAFE_INTEGER,
   DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY') || detectSystemCurrency(),
   DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD') || '現金',
@@ -425,6 +427,7 @@ let BK_INIT_STATUS = {
   lastInitTime: 0,
   initialized: false,
   DL_initialized: false,
+  WCM_initialized: false, // DCN-0023階段三：新增WCM初始化狀態
   firestore_db: null,
   moduleVersion: BK_CONFIG.VERSION,
   subjectCache: new Map(),
@@ -463,6 +466,23 @@ async function BK_initialize() {
       } else {
         BK_logWarning("DL模組未找到，將使用原生日誌系統", "系統初始化", "", "BK_initialize");
         initMessages.push("DL模組初始化: 失敗 (未找到DL模組)");
+      }
+    }
+
+    // DCN-0023階段三：初始化WCM模組
+    if (!BK_INIT_STATUS.WCM_initialized) {
+      if (typeof WCM.WCM_initialize === 'function') {
+        const wcmInit = await WCM.WCM_initialize();
+        if (wcmInit) {
+          BK_INIT_STATUS.WCM_initialized = true;
+          initMessages.push("WCM模組初始化: 成功");
+        } else {
+          BK_logWarning("WCM模組初始化失敗", "系統初始化", "", "BK_initialize");
+          initMessages.push("WCM模組初始化: 失敗");
+        }
+      } else {
+        BK_logWarning("WCM模組未找到，將跳過帳戶科目驗證", "系統初始化", "", "BK_initialize");
+        initMessages.push("WCM模組初始化: 失敗 (未找到WCM模組)");
       }
     }
 
@@ -625,7 +645,6 @@ async function BK_createTransaction(transactionData) {
     }
 
     // 準備處理的交易數據，使用AM模組提供的正確ledgerId
-
     const processedData = {
       amount: transactionData.amount,
       type: transactionData.type,
@@ -640,6 +659,41 @@ async function BK_createTransaction(transactionData) {
     };
 
     BK_logInfo(`${logPrefix} 開始處理新增交易請求，帳本ID: ${ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+
+    // DCN-0023階段三：透過WCM模組進行帳戶科目驗證
+    if (BK_INIT_STATUS.WCM_initialized && processedData.accountId) {
+      BK_logInfo(`${logPrefix} 透過WCM驗證帳戶: ${processedData.accountId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+      
+      try {
+        const accountValidation = await WCM.WCM_validateWalletExists(processedData.accountId, processedData.userId);
+        if (!accountValidation.success) {
+          BK_logWarning(`${logPrefix} WCM帳戶驗證失敗: ${accountValidation.message}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+          // MVP階段：帳戶驗證失敗時記錄警告但不阻斷交易
+        } else {
+          BK_logInfo(`${logPrefix} WCM帳戶驗證通過: ${processedData.accountId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        }
+      } catch (wcmError) {
+        BK_logWarning(`${logPrefix} WCM帳戶驗證異常: ${wcmError.message}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        // MVP階段：驗證異常時記錄警告但不阻斷交易
+      }
+    }
+
+    if (BK_INIT_STATUS.WCM_initialized && processedData.categoryId) {
+      BK_logInfo(`${logPrefix} 透過WCM驗證科目: ${processedData.categoryId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+      
+      try {
+        const categoryValidation = await WCM.WCM_validateCategoryExists(processedData.categoryId, processedData.userId);
+        if (!categoryValidation.success) {
+          BK_logWarning(`${logPrefix} WCM科目驗證失敗: ${categoryValidation.message}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+          // MVP階段：科目驗證失敗時記錄警告但不阻斷交易
+        } else {
+          BK_logInfo(`${logPrefix} WCM科目驗證通過: ${processedData.categoryId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        }
+      } catch (wcmError) {
+        BK_logWarning(`${logPrefix} WCM科目驗證異常: ${wcmError.message}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        // MVP階段：驗證異常時記錄警告但不阻斷交易
+      }
+    }
 
     // 階段二修復：添加超時保護機制
     const processWithTimeout = async () => {
