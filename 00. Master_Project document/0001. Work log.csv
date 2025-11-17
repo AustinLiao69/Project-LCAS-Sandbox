@@ -387,10 +387,15 @@ MM 	 DD 	 Description 	    Progress
 11	13	 打通TC-010~TC-020  	 Closed
 11	13	 通過SIT_P2！  	 Closed
 11	13	 Review 0090文件檢視Sprint計畫  	 Ongoing
-11	13	 S304、S305 帳戶管理頁屬於7302(P1)  	 Ongoing
 11	13	 修改7001：依照0090新增功能群  	 Ongoing
 11	13	 帳戶管理應該要放在科目管理功能群裡面  	 Ongoing
-11	14	 Review BL層架構：考慮刪除DD1  	 Ongoing
+11	14	 Review BL層架構：考慮刪除DD1  	 Closed
 11	14	 Review SIT_P3文件  	 Ongoing
-11	14	 撰寫DCN-0022  	 Ongoing
-11	14	 撰寫DCN-0023  	 Ongoing
+11	14	 撰寫DCN-0022  	 Closed
+11	14	 撰寫DCN-0023  	 Closed
+11	14	 想一下周末要修改什麼文件  	 Closed
+11	14	 整合7021文件至7001  	 Closed
+11	14	 Review DCN-0022  	 Ongoing
+11	14	 Review DCN-0023  	 Ongoing
+11	14	 更新0098文件  	 Closed
+11	15	 設定firebase authentication  	 Ongoing
