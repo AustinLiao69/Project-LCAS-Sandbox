@@ -182,7 +182,7 @@ let BK_ERROR_STATS = {
 };
 
 function BK_trackError(errorType) {
-  BK_ERROR_STATS.total_errors++;
+     BK_ERROR_STATS.total_errors++;
 
   switch (errorType) {
     case 'FIREBASE_CONNECTION_ERROR':
