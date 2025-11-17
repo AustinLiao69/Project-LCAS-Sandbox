@@ -32,11 +32,11 @@
 
 ## 1. 需求說明
 
-本次變更目標為：創建WCM（Wallet and Category Management）模組，整合帳戶管理和科目管理功能，解決功能分散和維護複雜度問題。根據DCN-0022移除DD1模組的決策，科目管理功能需要重新歸屬，與帳戶管理功能整合具有業務邏輯合理性。
+本次變更目標為：創建WCM（Wallet and Category Management）模組，整合錢包管理和科目管理功能，解決功能分散和維護複雜度問題。根據DCN-0022移除DD1模組的決策，科目管理功能需要重新歸屬，與錢包管理功能整合具有業務邏輯合理性。
 
 此變更將實現：
-1. 創建統一的WCM模組處理帳戶與科目管理
-2. 從BK.js中遷移帳戶管理功能至WCM
+1. 創建統一的WCM模組處理錢包與科目管理
+2. 從BK.js中遷移錢包管理功能至WCM
 3. 從DD1.js中遷移科目管理功能至WCM（配合DCN-0022）
 4. 重新分配相關API端點至WCM模組
 5. 優化BL層模組間依賴關係
@@ -46,7 +46,7 @@
 ## 2. 業務背景與價值主張
 
 ### 2.1 業務需求
-- **功能整合需求**：帳戶和科目都是記帳的基礎主數據，整合管理符合業務邏輯
+- **功能整合需求**：錢包和科目都是記帳的基礎主數據，整合管理符合業務邏輯
 - **維護效率提升**：統一管理減少跨模組調用，降低維護複雜度
 - **架構簡化需求**：配合MVP階段架構簡化原則，避免功能過度分散
 - **職責邊界清晰化**：明確WCM負責基礎主數據管理，BK專注記帳核心邏輯
@@ -55,7 +55,7 @@
 - **開發效率提升**：統一的主數據管理介面，減少重複開發工作
 - **維護成本降低**：單一模組管理相關功能，降低跨模組維護複雜度
 - **資料一致性提升**：統一的驗證邏輯和處理流程
-- **記帳流程優化**：BK模組調用WCM進行帳戶科目驗證，流程更順暢
+- **記帳流程優化**：BK模組調用WCM進行錢包科目驗證，流程更順暢
 
 ---
 
@@ -73,13 +73,13 @@
 ```javascript
 // WCM模組核心功能架構
 const WCM = {
-  // 帳戶管理功能
-  createAccount: async (accountData) => { /* 創建帳戶 */ },
-  updateAccount: async (accountId, updateData) => { /* 更新帳戶 */ },
-  deleteAccount: async (accountId) => { /* 刪除帳戶 */ },
-  getAccountList: async (userId, filters) => { /* 取得帳戶列表 */ },
-  getAccountById: async (accountId) => { /* 取得帳戶詳情 */ },
-  getAccountBalance: async (accountId) => { /* 取得帳戶餘額 */ },
+  // 錢包管理功能
+  createWallet: async (walletData) => { /* 創建錢包 */ },
+  updateWallet: async (walletId, updateData) => { /* 更新錢包 */ },
+  deleteWallet: async (walletId) => { /* 刪除錢包 */ },
+  getWalletList: async (userId, filters) => { /* 取得錢包列表 */ },
+  getWalletById: async (walletId) => { /* 取得錢包詳情 */ },
+  getWalletBalance: async (walletId) => { /* 取得錢包餘額 */ },
   
   // 科目管理功能
   createCategory: async (categoryData) => { /* 創建科目 */ },
@@ -94,15 +94,15 @@ const WCM = {
 ### 3.2 API端點重新分配
 
 #### 3.2.1 從BK模組轉移的API端點
-根據8020.md API list文件，以下帳戶相關端點將轉移至WCM：
-- `GET /api/v1/accounts` - 取得帳戶列表
-- `POST /api/v1/accounts` - 創建帳戶  
-- `GET /api/v1/accounts/{id}` - 取得帳戶詳情
-- `PUT /api/v1/accounts/{id}` - 更新帳戶
-- `DELETE /api/v1/accounts/{id}` - 刪除帳戶
-- `GET /api/v1/accounts/{id}/balance` - 取得帳戶餘額
-- `GET /api/v1/accounts/types` - 取得帳戶類型
-- `POST /api/v1/accounts/transfer` - 帳戶轉帳
+根據8020.md API list文件，以下錢包相關端點將轉移至WCM：
+- `GET /api/v1/accounts` - 取得錢包列表
+- `POST /api/v1/accounts` - 創建錢包  
+- `GET /api/v1/accounts/{id}` - 取得錢包詳情
+- `PUT /api/v1/accounts/{id}` - 更新錢包
+- `DELETE /api/v1/accounts/{id}` - 刪除錢包
+- `GET /api/v1/accounts/{id}/balance` - 取得錢包餘額
+- `GET /api/v1/accounts/types` - 取得錢包類型
+- `POST /api/v1/accounts/transfer` - 錢包轉帳
 
 #### 3.2.2 從DD1模組轉移的API端點
 根據8020.md API list文件，以下科目相關端點將轉移至WCM：
@@ -118,10 +118,10 @@ const WCM = {
 #### 3.3.1 從BK.js遷移功能
 ```javascript
 // 從BK.js遷移至WCM.js的功能
-- createAccount() // 帳戶創建邏輯
-- validateAccountExists() // 帳戶存在驗證
-- getAccountBalance() // 餘額查詢
-- updateAccountBalance() // 餘額更新（保留給BK調用）
+- createWallet() // 錢包創建邏輯
+- validateWalletExists() // 錢包存在驗證
+- getWalletBalance() // 餘額查詢
+- updateWalletBalance() // 餘額更新（保留給BK調用）
 ```
 
 #### 3.3.2 從DD1.js遷移功能
@@ -137,7 +137,7 @@ const WCM = {
 
 #### 3.4.1 版本規劃
 - **WCM.js**: v1.0.0 (新建)
-- **BK.js**: v3.2.4 → v3.3.0 (移除帳戶管理功能)
+- **BK.js**: v3.2.4 → v3.3.0 (移除錢包管理功能)
 - **ASL.js**: v2.1.7 → v2.2.0 (更新API轉發目標)
 - **DD1.js**: 配合DCN-0022移除
 
@@ -154,9 +154,9 @@ const WCM = {
 #### 4.1.1 模組分層設計
 ```
 WCM模組架構:
-├── 帳戶管理層
-│   ├── 帳戶CRUD操作
-│   ├── 帳戶驗證邏輯
+├── 錢包管理層
+│   ├── 錢包CRUD操作
+│   ├── 錢包驗證邏輯
 │   └── 餘額查詢功能
 ├── 科目管理層
 │   ├── 科目CRUD操作  
@@ -179,9 +179,9 @@ WCM模組架構:
 #### 4.2.1 新的依賴結構
 ```
 重構後的模組依賴關係:
-BK → WCM (帳戶科目驗證) + FS + DL + AM
+BK → WCM (錢包科目驗證) + FS + DL + AM
 WCM → FS (資料存取) + DL (日誌記錄) + AM (權限驗證)
-ASL → WCM (帳戶科目API) + BK (記帳核心) + 其他模組
+ASL → WCM (錢包科目API) + BK (記帳核心) + 其他模組
 ```
 
 #### 4.2.2 循環依賴防範
@@ -194,7 +194,7 @@ ASL → WCM (帳戶科目API) + BK (記帳核心) + 其他模組
 #### 4.3.1 記帳流程優化
 ```
 優化後記帳資料流:
-ASL → BK → WCM (驗證帳戶+科目) → FS (寫入交易)
+ASL → BK → WCM (驗證錢包+科目) → FS (寫入交易)
 ```
 
 #### 4.3.2 主數據管理流程
@@ -213,7 +213,7 @@ ASL → WCM → FS (直接操作accounts/categories集合)
 
 **具體任務**：
 1. 建立 `13. Replit_Module code_BL/1350. WCM.js`
-2. 實作基礎帳戶管理函數：createAccount, getAccountList, validateAccountExists
+2. 實作基礎錢包管理函數：createWallet, getWalletList, validateWalletExists
 3. 實作基礎科目管理函數：createCategory, getCategoryList, validateCategoryExists
 4. 建立統一錯誤處理和日誌記錄機制
 
@@ -231,7 +231,7 @@ ASL → WCM → FS (直接操作accounts/categories集合)
 **具體任務**：
 1. 更新ASL.js中accounts相關端點，轉發目標從BK改為WCM
 2. 更新ASL.js中categories相關端點，轉發目標從DD1改為WCM  
-3. 測試所有16個重新分配的API端點
+3. 測試所有14個重新分配的API端點
 4. 更新8025.md API-BL mapping文件
 
 **版本升級**：ASL.js v2.1.7 → v2.2.0
@@ -246,15 +246,15 @@ ASL → WCM → FS (直接操作accounts/categories集合)
 **目標**：清理BK.js帳戶管理代碼，建立對WCM的依賴
 
 **具體任務**：
-1. 從BK.js中移除帳戶管理相關函數
-2. 更新BK.js記帳流程，調用WCM進行帳戶科目驗證
+1. 從BK.js中移除錢包管理相關函數
+2. 更新BK.js記帳流程，調用WCM進行錢包科目驗證
 3. 更新BK.js函數版次和依賴聲明
 4. 完整的記帳流程端到端測試
 
 **版本升級**：BK.js v3.2.4 → v3.3.0
 
 **驗收標準**：
-- BK專注記帳核心邏輯，不再包含主數據管理
+- BK專注記帳核心邏輯，不再包含錢包管理
 - 記帳流程通過WCM驗證正常運作
 - 所有existing測試案例通過
 
@@ -262,17 +262,17 @@ ASL → WCM → FS (直接操作accounts/categories集合)
 
 ## 6. API端點重新分配清單
 
-### 6.1 帳戶管理端點（8個）- BK → WCM
+### 6.1 錢包管理端點（8個）- BK → WCM
 ```javascript
 // 從BK模組轉移至WCM模組的API端點
-'GET /api/v1/accounts'                    // 取得帳戶列表 (BK → WCM)
-'POST /api/v1/accounts'                   // 創建帳戶 (BK → WCM)
-'GET /api/v1/accounts/{id}'               // 取得帳戶詳情 (BK → WCM)
-'PUT /api/v1/accounts/{id}'               // 更新帳戶 (BK → WCM)  
-'DELETE /api/v1/accounts/{id}'            // 刪除帳戶 (BK → WCM)
-'GET /api/v1/accounts/{id}/balance'       // 取得帳戶餘額 (BK → WCM)
-'GET /api/v1/accounts/types'              // 取得帳戶類型 (BK → WCM)
-'POST /api/v1/accounts/transfer'          // 帳戶轉帳 (BK → WCM)
+'GET /api/v1/accounts'                    // 取得錢包列表 (BK → WCM)
+'POST /api/v1/accounts'                   // 創建錢包 (BK → WCM)
+'GET /api/v1/accounts/{id}'               // 取得錢包詳情 (BK → WCM)
+'PUT /api/v1/accounts/{id}'               // 更新錢包 (BK → WCM)  
+'DELETE /api/v1/accounts/{id}'            // 刪除錢包 (BK → WCM)
+'GET /api/v1/accounts/{id}/balance'       // 取得錢包餘額 (BK → WCM)
+'GET /api/v1/accounts/types'              // 取得錢包類型 (BK → WCM)
+'POST /api/v1/accounts/transfer'          // 錢包轉帳 (BK → WCM)
 ```
 
 ### 6.2 科目管理端點（6個）- DD1 → WCM  
@@ -336,4 +336,4 @@ ASL → WCM → FS (直接操作accounts/categories集合)
 
 > **MVP原則堅持**：本次重構專注於解決功能分散問題，建立統一的主數據管理模組。避免過度工程化設計，確保在提升維護效率的同時保持架構簡潔性。
 
-> **關鍵Insight**：帳戶與科目作為記帳的基礎主數據，統一管理不僅符合業務邏輯，更能有效降低模組間耦合度。WCM模組的創建為LCAS 2.0建立了穩固的主數據管理基礎，支持後續功能擴展需求。
+> **關鍵Insight**：錢包與科目作為記帳的基礎主數據，統一管理不僅符合業務邏輯，更能有效降低模組間耦合度。WCM模組的創建為LCAS 2.0建立了穩固的主數據管理基礎，支持後續功能擴展需求。
