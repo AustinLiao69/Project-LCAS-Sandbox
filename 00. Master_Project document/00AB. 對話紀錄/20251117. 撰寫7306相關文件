@@ -39,7 +39,7 @@ Insight：這是典型的領域模型轉換，每層使用適合該層的術語�
 階段二：建立轉換對應表
 在7206 LLD中明確標示對應關係：
 PL層wallet → APL層accounts → BL層account
-=>BL層的WCM模組我也適用wallet
+=>BL層的WCM模組我用wallet
 
 階段三：7306實作
 UI層使用wallet相關術語，確保使用者體驗的語義正確性
