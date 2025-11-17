@@ -207,7 +207,7 @@ ASL → WCM → FS (直接操作accounts/categories集合)
 
 ## 5. 實作階段規劃
 
-### Phase 1：WCM模組框架建立（Week 1）
+### Phase 1：WCM模組框架建立
 
 **目標**：建立WCM.js基礎框架和核心函數
 
