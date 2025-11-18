@@ -1,3 +1,9 @@
+/**
+* 0301.Default_config.json_1.0.0
+* @description 系統config
+* @update 2025-11-18: 初版
+*/
+
 
 {
   "version": "1.0.0",
