@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "version": "3.3.0",
-    "createdAt": "2025-11-06T06:16:00Z",
-    "description": "SIT P1+P2測試資料倉庫 - 階段一修正：移除協作功能硬編碼IDs，新增collaboration.test@test.lcas.app",
-    "dataSource": "REAL_USER_REGISTRATION_COLLABORATION_FLOW",
-    "consumer": ["7570. SIT_P1.dart", "7571. SIT_P2.dart", "7582. 註冊使用者.dart"],
+    "version": "3.4.0",
+    "createdAt": "2025-11-18T09:00:00Z",
+    "description": "SIT P1+P2+P3測試資料倉庫 - 新增P3帳戶與科目管理測試資料",
+    "dataSource": "REAL_USER_REGISTRATION_COLLABORATION_ACCOUNT_CATEGORY_FLOW",
+    "consumer": ["7570. SIT_P1.dart", "7571. SIT_P2.dart", "7572. SIT_P3.dart", "7582. 註冊使用者.dart"],</old_str>
     "totalRecords": 48,
     "lastUpdated": "2025-11-06T06:16:00Z",
     "compliance": "1311_FS_STANDARD_BUDGET_REAL_USER_INTEGRATION",
@@ -39,7 +39,15 @@
         "enhanced": "協作測試資料改為template格式，支援動態ID生成",
         "improved": "7571協作測試流程與7582註冊流程整合",
         "focus": "階段一修正：清除協作功能硬編碼，建立真實註冊→協作建立流程"
-      }
+      },
+      "v3.4.0": {
+        "added": "wallet_test_data: 完整帳戶管理測試資料（創建、更新、查詢、刪除、餘額）",
+        "added": "category_test_data: 完整科目管理測試資料（創建、更新、階層、個人化）",
+        "added": "p3_integration_test_data: P3整合測試資料（API轉發、錯誤處理）",
+        "enhanced": "支援7572 SIT_P3測試執行",
+        "improved": "P3測試資料與真實用戶註冊流程整合",
+        "focus": "Phase 3帳戶與科目管理功能測試資料完整覆蓋"
+      }</old_str>
     }
   },
   "authentication_test_data": {
@@ -1046,6 +1054,250 @@
       }
     }
   },
+  "wallet_test_data": {
+    "success_scenarios": {
+      "create_cash_wallet": {
+        "name": "測試現金帳戶",
+        "type": "cash",
+        "currency": "TWD",
+        "initialBalance": 10000.0,
+        "description": "P3帳戶管理測試用現金帳戶",
+        "icon": "cash_wallet_icon",
+        "color": "#4CAF50",
+        "createdBy": "user_expert_1697363200000",
+        "testScenario": "現金帳戶建立成功測試"
+      },
+      "create_bank_wallet": {
+        "name": "測試銀行帳戶",
+        "type": "bank",
+        "currency": "TWD",
+        "initialBalance": 50000.0,
+        "description": "P3帳戶管理測試用銀行帳戶",
+        "bankName": "測試銀行",
+        "accountNumber": "1234567890",
+        "icon": "bank_wallet_icon",
+        "color": "#2196F3",
+        "createdBy": "user_expert_1697363200000",
+        "testScenario": "銀行帳戶建立成功測試"
+      },
+      "create_credit_wallet": {
+        "name": "測試信用卡帳戶",
+        "type": "credit",
+        "currency": "TWD",
+        "creditLimit": 100000.0,
+        "currentBalance": 0.0,
+        "description": "P3帳戶管理測試用信用卡帳戶",
+        "bankName": "測試信用卡銀行",
+        "cardNumber": "****1234",
+        "icon": "credit_wallet_icon",
+        "color": "#FF9800",
+        "createdBy": "user_expert_1697363200000",
+        "testScenario": "信用卡帳戶建立成功測試"
+      },
+      "update_wallet_info": {
+        "walletId": "DYNAMIC_WALLET_ID",
+        "name": "更新後的測試帳戶",
+        "description": "P3帳戶更新測試",
+        "color": "#9C27B0",
+        "testScenario": "帳戶資訊更新成功測試"
+      },
+      "wallet_balance_query": {
+        "walletId": "DYNAMIC_WALLET_ID",
+        "expectedFields": ["walletId", "name", "type", "balance", "currency", "lastUpdated"],
+        "testScenario": "帳戶餘額查詢成功測試"
+      }
+    },
+    "failure_scenarios": {
+      "invalid_wallet_name": {
+        "name": "",
+        "type": "cash",
+        "currency": "TWD",
+        "initialBalance": 1000.0,
+        "expectedError": "帳戶名稱不能為空",
+        "testScenario": "帳戶名稱驗證失敗測試"
+      },
+      "invalid_wallet_type": {
+        "name": "測試帳戶",
+        "type": "invalid_type",
+        "currency": "TWD",
+        "initialBalance": 1000.0,
+        "expectedError": "無效的帳戶類型",
+        "testScenario": "帳戶類型驗證失敗測試"
+      },
+      "negative_initial_balance": {
+        "name": "測試帳戶",
+        "type": "cash",
+        "currency": "TWD",
+        "initialBalance": -1000.0,
+        "expectedError": "現金帳戶初始餘額不能為負數",
+        "testScenario": "負數餘額驗證失敗測試"
+      },
+      "missing_currency": {
+        "name": "測試帳戶",
+        "type": "cash",
+        "initialBalance": 1000.0,
+        "expectedError": "貨幣類型為必填欄位",
+        "testScenario": "缺少貨幣類型驗證失敗測試"
+      },
+      "duplicate_wallet_name": {
+        "name": "測試現金帳戶",
+        "type": "cash",
+        "currency": "TWD",
+        "initialBalance": 1000.0,
+        "expectedError": "帳戶名稱已存在",
+        "testScenario": "重複帳戶名稱驗證失敗測試"
+      }
+    }
+  },
+  "category_test_data": {
+    "success_scenarios": {
+      "create_expense_category": {
+        "name": "測試支出科目",
+        "type": "expense",
+        "color": "#FF5722",
+        "icon": "expense_icon",
+        "description": "P3科目管理測試用支出科目",
+        "parentCategoryId": null,
+        "level": 1,
+        "isSystemCategory": false,
+        "createdBy": "user_expert_1697363200000",
+        "testScenario": "支出科目建立成功測試"
+      },
+      "create_income_category": {
+        "name": "測試收入科目",
+        "type": "income",
+        "color": "#4CAF50",
+        "icon": "income_icon",
+        "description": "P3科目管理測試用收入科目",
+        "parentCategoryId": null,
+        "level": 1,
+        "isSystemCategory": false,
+        "createdBy": "user_expert_1697363200000",
+        "testScenario": "收入科目建立成功測試"
+      },
+      "create_sub_category": {
+        "name": "測試子科目",
+        "type": "expense",
+        "color": "#FF8A65",
+        "icon": "sub_category_icon",
+        "description": "P3科目階層測試用子科目",
+        "parentCategoryId": "DYNAMIC_PARENT_CATEGORY_ID",
+        "level": 2,
+        "isSystemCategory": false,
+        "createdBy": "user_expert_1697363200000",
+        "testScenario": "子科目建立成功測試"
+      },
+      "update_category_info": {
+        "categoryId": "DYNAMIC_CATEGORY_ID",
+        "name": "更新後的測試科目",
+        "description": "P3科目更新測試",
+        "color": "#673AB7",
+        "testScenario": "科目資訊更新成功測試"
+      },
+      "category_hierarchy_validation": {
+        "categoryId": "DYNAMIC_CATEGORY_ID",
+        "expectedLevel": 2,
+        "expectedParent": "DYNAMIC_PARENT_CATEGORY_ID",
+        "maxDepth": 5,
+        "testScenario": "科目階層驗證成功測試"
+      },
+      "category_personalization": {
+        "userId": "user_expert_1697363200000",
+        "personalizationSettings": {
+          "showIcons": true,
+          "customColors": true,
+          "sortOrder": "usage",
+          "favoriteCategories": ["DYNAMIC_CATEGORY_ID"],
+          "hiddenCategories": []
+        },
+        "testScenario": "科目個人化設定成功測試"
+      }
+    },
+    "failure_scenarios": {
+      "invalid_category_name": {
+        "name": "",
+        "type": "expense",
+        "color": "#FF5722",
+        "expectedError": "科目名稱不能為空",
+        "testScenario": "科目名稱驗證失敗測試"
+      },
+      "invalid_category_type": {
+        "name": "測試科目",
+        "type": "invalid_type",
+        "color": "#FF5722",
+        "expectedError": "無效的科目類型",
+        "testScenario": "科目類型驗證失敗測試"
+      },
+      "invalid_parent_category": {
+        "name": "測試子科目",
+        "type": "expense",
+        "parentCategoryId": "non_existent_category",
+        "expectedError": "父科目不存在",
+        "testScenario": "無效父科目驗證失敗測試"
+      },
+      "exceeded_hierarchy_depth": {
+        "name": "深層子科目",
+        "type": "expense",
+        "parentCategoryId": "LEVEL_5_CATEGORY_ID",
+        "expectedError": "科目階層深度超過限制（最大5層）",
+        "testScenario": "階層深度限制驗證失敗測試"
+      },
+      "circular_hierarchy": {
+        "categoryId": "DYNAMIC_CATEGORY_ID",
+        "parentCategoryId": "DYNAMIC_CATEGORY_ID",
+        "expectedError": "不能設定自己為父科目",
+        "testScenario": "循環階層驗證失敗測試"
+      },
+      "duplicate_category_name": {
+        "name": "測試支出科目",
+        "type": "expense",
+        "color": "#FF5722",
+        "expectedError": "科目名稱已存在",
+        "testScenario": "重複科目名稱驗證失敗測試"
+      }
+    }
+  },
+  "p3_integration_test_data": {
+    "api_forwarding_test": {
+      "wallet_api_endpoints": [
+        "POST /api/v1/wallets",
+        "GET /api/v1/wallets",
+        "PUT /api/v1/wallets/{id}",
+        "DELETE /api/v1/wallets/{id}",
+        "GET /api/v1/wallets/{id}/balance"
+      ],
+      "category_api_endpoints": [
+        "POST /api/v1/categories",
+        "GET /api/v1/categories",
+        "PUT /api/v1/categories/{id}",
+        "DELETE /api/v1/categories/{id}",
+        "GET /api/v1/categories/tree"
+      ],
+      "expected_response_format": {
+        "success": true,
+        "message": "string",
+        "data": "object",
+        "error": null
+      }
+    },
+    "error_handling_test": {
+      "network_error_simulation": {
+        "scenario": "網路連線失敗",
+        "expectedError": "NETWORK_ERROR",
+        "expectedMessage": "網路連線失敗，請檢查網路連線"
+      },
+      "validation_error_simulation": {
+        "scenario": "資料驗證失敗",
+        "expectedError": "VALIDATION_ERROR",
+        "expectedMessage": "資料格式不正確"
+      },
+      "business_error_simulation": {
+        "scenario": "業務邏輯錯誤",
+        "expectedError": "BUSINESS_ERROR",
+        "expectedMessage": "業務邏輯執行失敗"
+      }
+    }
+  },
   "data_validation": {
     "schema_version": "3.0.0",
     "fs_compliance": {
@@ -1067,15 +1319,18 @@
       }
     },
     "test_coverage": {
-      "success_scenarios": 12,
-      "failure_scenarios": 32,
+      "success_scenarios": 18,
+      "failure_scenarios": 43,
       "boundary_scenarios": 10,
-      "total_scenarios": 10,
+      "total_scenarios": 13,
       "phase_1_scenarios": 54,
       "phase_2_scenarios": 4,
+      "phase_3_scenarios": 13,</old_str>
       "user_modes_covered": ["Expert", "Inertial", "Cultivation", "Guiding"],
       "transaction_types_covered": ["income", "expense", "transfer"],
       "budget_features_covered": ["budget_creation", "execution_tracking", "alert_management", "period_validation", "real_ledger_integration"],
+      "wallet_features_covered": ["wallet_creation", "wallet_update", "wallet_query", "wallet_deletion", "balance_management", "multi_currency_support"],
+      "category_features_covered": ["category_creation", "category_update", "category_query", "hierarchy_management", "personalization", "type_validation"],</old_str>
       "error_types_covered": ["validation", "format", "missing_field", "invalid_value", "boundary", "duplicate", "null_value", "empty_value", "permission_denied", "resource_conflict"],
       "validation_categories": [
         "email_format_validation",
