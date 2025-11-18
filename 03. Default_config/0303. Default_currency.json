@@ -1,0 +1,33 @@
+/**
+* 0303.Default_currency.json_1.0.0
+* @description 預設貨幣
+* @update 2025-11-18: 初版
+*/
+
+{
+  "version": "1.0.0",
+  "last_updated": "2025-11-18",
+  "currencies": {
+    "default": "TWD",
+    "supported": [
+      {
+        "code": "TWD",
+        "name": "新台幣",
+        "symbol": "NT$",
+        "decimal_places": 0
+      },
+      {
+        "code": "USD",
+        "name": "美元",
+        "symbol": "$",
+        "decimal_places": 2
+      },
+      {
+        "code": "JPY",
+        "name": "日圓",
+        "symbol": "¥",
+        "decimal_places": 0
+      }
+    ]
+  }
+}
