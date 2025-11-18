@@ -1,7 +1,8 @@
+
 /**
 * 0303.Default_currency.json_1.0.0
 * @description 預設貨幣
-* @update 2025-11-18: 初版
+* @update 2025-11-18: 初版，新增多種國際貨幣支援
 */
 
 {
@@ -23,10 +24,34 @@
         "decimal_places": 2
       },
       {
+        "code": "CNY",
+        "name": "人民幣",
+        "symbol": "¥",
+        "decimal_places": 2
+      },
+      {
+        "code": "EUR",
+        "name": "歐元",
+        "symbol": "€",
+        "decimal_places": 2
+      },
+      {
         "code": "JPY",
         "name": "日圓",
         "symbol": "¥",
         "decimal_places": 0
+      },
+      {
+        "code": "HKD",
+        "name": "港幣",
+        "symbol": "HK$",
+        "decimal_places": 2
+      },
+      {
+        "code": "SGD",
+        "name": "新加坡元",
+        "symbol": "S$",
+        "decimal_places": 2
       }
     ]
   }
