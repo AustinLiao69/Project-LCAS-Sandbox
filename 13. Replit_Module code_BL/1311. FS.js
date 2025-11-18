@@ -1699,7 +1699,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
         type: 'cash',
         currency: 'TWD',
         balance: 0,
-        isDefault: true,
+        isDefau  lt: true,
         isActive: true,
         icon: '💵',
         color: '#4CAF50'
@@ -2263,7 +2263,7 @@ async function FS_initializeLedgerStructure() {
     description: 'CM.js帳本管理模組Firebase帳本集合文檔結構',
     collection: 'ledgers',
 
-    // ledgers集合下的文檔結構 (如ledger_structure_001等)
+    // ledgers集合下的文檔結構
     document_structure: {
       ledgerId: 'string - 帳本唯一識別碼 (與文檔ID相同)',
       name: 'string - 帳本名稱 (如"個人記帳本", "專案支出")',
