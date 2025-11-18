@@ -1,4 +1,3 @@
-
 {
   "version": "1.0.0",
   "last_updated": "2025-11-18",
@@ -7,7 +6,7 @@
       "accountId": "default_cash",
       "name": "現金",
       "type": "cash",
-      "currency": "TWD",
+      "currency": "{{default_currency}}",
       "balance": 0,
       "isDefault": true,
       "isActive": true,
@@ -19,7 +18,7 @@
       "accountId": "default_bank",
       "name": "銀行帳戶",
       "type": "bank",
-      "currency": "TWD",
+      "currency": "{{default_currency}}",
       "balance": 0,
       "isDefault": false,
       "isActive": true,
@@ -31,7 +30,7 @@
       "accountId": "default_credit",
       "name": "信用卡",
       "type": "credit",
-      "currency": "TWD",
+      "currency": "{{default_currency}}",
       "balance": 0,
       "isDefault": false,
       "isActive": true,
