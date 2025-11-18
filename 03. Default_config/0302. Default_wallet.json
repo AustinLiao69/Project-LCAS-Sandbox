@@ -3,7 +3,7 @@
   "last_updated": "2025-11-18",
   "default_wallets": [
     {
-      "accountId": "default_cash",
+      "walletId": "default_cash",
       "name": "現金",
       "type": "cash",
       "currency": "{{default_currency}}",
@@ -15,7 +15,7 @@
       "description": "現金帳戶"
     },
     {
-      "accountId": "default_bank",
+      "walletId": "default_bank",
       "name": "銀行帳戶",
       "type": "bank",
       "currency": "{{default_currency}}",
@@ -27,7 +27,7 @@
       "description": "銀行帳戶"
     },
     {
-      "accountId": "default_credit",
+      "walletId": "default_credit",
       "name": "信用卡",
       "type": "credit",
       "currency": "{{default_currency}}",

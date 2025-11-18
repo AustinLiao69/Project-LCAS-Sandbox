@@ -1706,18 +1706,18 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
     // 1. 建立帳戶子集合 (accounts)
     const accountDefaults = [
       {
-        accountId: 'default_cash',
+        walletId: 'default_cash',
         name: '現金',
         type: 'cash',
         currency: 'TWD',
         balance: 0,
-        isDefau  lt: true,
+        isDefault: true,
         isActive: true,
         icon: '💵',
         color: '#4CAF50'
       },
       {
-        accountId: 'default_bank',
+        walletId: 'default_bank',
         name: '銀行帳戶',
         type: 'bank',
         currency: 'TWD',
@@ -1728,7 +1728,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
         color: '#2196F3'
       },
       {
-        accountId: 'default_credit',
+        walletId: 'default_credit',
         name: '信用卡',
         type: 'credit',
         currency: 'TWD',
@@ -1751,11 +1751,11 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 
       const accountResult = await FS_createDocument(
         `ledgers/${ledgerId}/accounts`,
-        account.accountId,
+        account.walletId, // Use walletId as documentId
         accountData,
         userId
       );
-      results.push({ type: 'accounts', id: account.accountId, result: accountResult });
+      results.push({ type: 'accounts', id: account.walletId, result: accountResult });
     }
 
     // 2. 建立科目子集合 (categories)
@@ -1804,7 +1804,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
       type: 'placeholder',
       description: '交易子集合佔位符',
       categoryId: 'expense_food',
-      accountId: 'default_cash',
+      accountId: 'default_cash', // Changed to default_cash
       date: new Date().toISOString().split('T')[0],
       userId: userId,
       createdAt: admin.firestore.Timestamp.now(),
@@ -1962,7 +1962,7 @@ async function FS_createBudgetsSubcollectionFramework() {
       type: 'expense',
       description: '午餐',
       categoryId: 'example_food',
-      accountId: 'example_account',
+      accountId: 'example_account', // Changed to example_account
       date: new Date().toISOString().split('T')[0],
       userId: 'SYSTEM',
       createdAt: admin.firestore.Timestamp.now(),
