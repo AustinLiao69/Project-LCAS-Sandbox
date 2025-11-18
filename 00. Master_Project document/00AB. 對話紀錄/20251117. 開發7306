@@ -1,7 +1,75 @@
 ------------------------------------------
-20251117. 開發7306
+20251118. 開發7306
 
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+基於對7306模組的詳細檢查，我發現以下違反0098憲法的問題：
+
+🚨 違反0098憲法條款清單
+1. 違反 1.4 禁止hard coding 條款
+違反位置：
+•	第28行：static const String _baseUrl = 'http://0.0.0.0:3000/api/v1';
+•	第32-35行：
+static const Map<String, String> _headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+};
+問題說明：
+•	API基礎URL應該從環境變數或配置文件讀取，不應硬編碼
+•	HTTP標頭應該動態配置，而非硬編碼常數
+2. 違反 1.8 禁止自創API端點 條款
+違反位置：
+•	第56行：final String apiUrl = '$_baseUrl/accounts?ledgerId=$ledgerId';
+•	第138行：final String apiUrl = '$_baseUrl/accounts';
+•	第220行：final String apiUrl = '$_baseUrl/accounts/$walletId';
+•	第280行：final String apiUrl = '$_baseUrl/accounts/$walletId/balance';
+•	第554行：String apiUrl = '$_baseUrl/categories?ledgerId=$ledgerId';
+•	第652行：final String apiUrl = '$_baseUrl/categories';
+•	第745行：final String apiUrl = '$_baseUrl/categories/$categoryId';
+問題說明：
+•	所有API端點路徑必須遵守8020文件所制定之API端點
+•	代碼中使用的端點（如 /accounts、/categories）未經確認是否符合8020規範
+3. 違反 1.3 禁止hard coding 條款（資料驗證）
+違反位置：
+•	第128-129行：
+final List<String> validWalletTypes = ['cash', 'bank', 'credit', 'ewallet'];
+•	第561-562行：
+final List<String> validCategoryTypes = ['income', 'expense', 'transfer'];
+•	第422-423行：
+static bool _validateWalletType(String type) {
+  final validTypes = ['cash', 'bank', 'credit', 'ewallet'];
+•	第429-430行：
+static bool _validateCurrency(String currency) {
+  final validCurrencies = ['TWD', 'USD', 'CNY', 'EUR', 'JPY', 'HKD', 'SGD'];
+問題說明：
+•	帳戶類型、科目類型、幣別等枚舉值應該從配置或資料庫讀取，不應硬編碼
+4. 違反 1.5 禁止實作模擬(Mock)回應確保測試通過 條款
+違反位置：
+•	第841行：return true; // MVP階段簡化驗證，始終返回true
+•	第879-880行：
+// MVP階段簡化實作：直接重新載入資料
+問題說明：
+•	validateCategoryHierarchy 函數直接返回 true 而非實作真正驗證邏輯
+•	這違反了不能為了測試通過而實作Mock回應的規範
+5. 違反 1.10 時區設定為台灣(UTC+8) 條款
+違反位置：
+•	第25行：DateTime.now().toIso8601String()（多處使用）
+問題說明：
+•	所有時間處理都使用 DateTime.now() 但未指定時區為台灣（UTC+8）
+6. 違反 1.13 編寫模組代碼須參考相關文件 條款
+問題說明：
+•	代碼中的API端點、資料欄位命名未完全符合7206 LLD文件規範
+•	部分函數實作方式與LLD文件描述不一致
+🎯 修正建議
+1.	移除硬編碼：所有常數應從配置文件或環境變數讀取
+2.	確認API端點：所有API路徑必須對照8020文件進行驗證
+3.	完善業務邏輯：移除Mock實作，完成真實業務邏輯
+4.	時區處理：統一使用台灣時區（UTC+8）
+5.	文件對照：確保所有實作完全符合7206 LLD規範
+這些違規項目需要在正式部署前完成修正，以確保代碼品質和規範遵循。
+
+
+
 
 ------------------------------------------
 20251117. 開發7306
