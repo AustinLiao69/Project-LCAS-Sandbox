@@ -1104,7 +1104,7 @@ async function FS_initializeSystemConfig(requesterId) {
     const budgetsSubcollectionFramework = await FS_createBudgetsSubcollectionFramework();
     initResults.push({ type: '預算子集合框架', result: budgetsSubcollectionFramework });
 
-    // 6. 初始化帳本集合文檔結構 (MLS.js模組支援)
+    // 6. 初始化帳本集合文檔結構 (CM.js模組支援)
     const ledgerStructure = await FS_initializeLedgerStructure();
     initResults.push({ type: '帳本結構', result: ledgerStructure });
 
@@ -2252,7 +2252,7 @@ async function FS_initializeAssessmentQuestions() {
 }
 
 /**
- * 初始化帳本集合文檔結構 (MLS.js模組支援)
+ * 初始化帳本集合文檔結構 (CM.js模組支援)
  * @version 2025-10-27-V2.2.0
  * @date 2025-10-27
  * @description 初始化帳本管理模組所需的Firebase帳本集合文檔結構，包含實際帳本文檔欄位
@@ -2260,7 +2260,7 @@ async function FS_initializeAssessmentQuestions() {
 async function FS_initializeLedgerStructure() {
   const ledgerStructure = {
     version: '1.0.0',
-    description: 'MLS.js帳本管理模組Firebase帳本集合文檔結構',
+    description: 'CM.js帳本管理模組Firebase帳本集合文檔結構',
     collection: 'ledgers',
 
     // ledgers集合下的文檔結構 (如ledger_structure_001等)
@@ -2768,7 +2768,7 @@ async function FS_initializeCollaborationStructure(requesterId) {
         set_permission: 'collaborations/ledger_12345/permissions/perm_xyz789'
       },
       integration_notes: [
-        '與1351.MLS.js帳本管理模組整合',
+        '與1351.CM.js帳本管理模組整合',
         '與1313.CM.js協作管理模組業務邏輯整合',
         '保持1311.FS.js現有snake_case命名不變',
         '協作功能使用camelCase命名規範'
@@ -2963,7 +2963,7 @@ module.exports = {
   // 範例：FS_createDocument(`ledgers/${ledgerId}/categories`, categoryId, categoryData, requesterId)
   // 範例：FS_createDocument(`ledgers/${ledgerId}/transactions`, transactionId, transactionData, requesterId)
 
-  // MLS.js帳本管理模組支援函數
+  // CM.js帳本管理模組支援函數
   FS_initializeLedgerStructure,
 
   // 階段一：協作架構支援函數 (camelCase命名)
