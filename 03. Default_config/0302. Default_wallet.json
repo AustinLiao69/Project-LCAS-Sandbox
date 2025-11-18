@@ -1,0 +1,31 @@
+
+{
+  "version": "1.0.0",
+  "last_updated": "2025-11-18",
+  "default_wallets": [
+    {
+      "code": "cash",
+      "name": "現金",
+      "icon": "💵",
+      "type": "asset",
+      "order": 1,
+      "description": "現金錢包"
+    },
+    {
+      "code": "bank",
+      "name": "銀行",
+      "icon": "🏦",
+      "type": "asset",
+      "order": 2,
+      "description": "銀行帳戶"
+    },
+    {
+      "code": "credit",
+      "name": "信用卡",
+      "icon": "💳",
+      "type": "liability",
+      "order": 3,
+      "description": "信用卡帳戶"
+    }
+  ]
+}

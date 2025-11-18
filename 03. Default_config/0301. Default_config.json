@@ -1,0 +1,25 @@
+
+{
+  "version": "1.0.0",
+  "last_updated": "2025-11-18",
+  "assessment_questions": {
+    "version": "1.0",
+    "questions": [
+      {
+        "id": 1,
+        "question": "您認為記帳的主要目的是什麼？",
+        "type": "single_choice",
+        "options": [
+          {"id": "a", "text": "詳細追蹤每筆收支", "weight": {"Expert": 3}},
+          {"id": "b", "text": "簡單記錄大概金額", "weight": {"Inertial": 3}}
+        ]
+      }
+    ]
+  },
+  "system_config": {
+    "timezone": "Asia/Taipei",
+    "version": "2.7.1",
+    "default_language": "zh-TW",
+    "date_format": "YYYY/MM/DD"
+  }
+}
