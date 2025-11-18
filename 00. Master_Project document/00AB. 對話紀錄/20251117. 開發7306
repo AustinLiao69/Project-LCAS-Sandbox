@@ -16,7 +16,14 @@ static const Map<String, String> _headers = {
 };
 問題說明：
 •	API基礎URL應該從環境變數或配置文件讀取，不應硬編碼
+
+=>你認為此API基礎URL是否應存在secret裡面方便模組調用？
+如果可以，請問要如何進行？請提供方案
+
 •	HTTP標頭應該動態配置，而非硬編碼常數
+=>要如何做？請提供方案
+
+
 2. 違反 1.8 禁止自創API端點 條款
 違反位置：
 •	第56行：final String apiUrl = '$_baseUrl/accounts?ledgerId=$ledgerId';
@@ -29,6 +36,7 @@ static const Map<String, String> _headers = {
 問題說明：
 •	所有API端點路徑必須遵守8020文件所制定之API端點
 •	代碼中使用的端點（如 /accounts、/categories）未經確認是否符合8020規範
+
 3. 違反 1.3 禁止hard coding 條款（資料驗證）
 違反位置：
 •	第128-129行：
@@ -43,6 +51,7 @@ static bool _validateCurrency(String currency) {
   final validCurrencies = ['TWD', 'USD', 'CNY', 'EUR', 'JPY', 'HKD', 'SGD'];
 問題說明：
 •	帳戶類型、科目類型、幣別等枚舉值應該從配置或資料庫讀取，不應硬編碼
+
 4. 違反 1.5 禁止實作模擬(Mock)回應確保測試通過 條款
 違反位置：
 •	第841行：return true; // MVP階段簡化驗證，始終返回true
@@ -51,6 +60,7 @@ static bool _validateCurrency(String currency) {
 問題說明：
 •	validateCategoryHierarchy 函數直接返回 true 而非實作真正驗證邏輯
 •	這違反了不能為了測試通過而實作Mock回應的規範
+
 5. 違反 1.10 時區設定為台灣(UTC+8) 條款
 違反位置：
 •	第25行：DateTime.now().toIso8601String()（多處使用）
