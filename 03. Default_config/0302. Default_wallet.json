@@ -4,28 +4,40 @@
   "last_updated": "2025-11-18",
   "default_wallets": [
     {
-      "code": "cash",
+      "accountId": "default_cash",
       "name": "現金",
+      "type": "cash",
+      "currency": "TWD",
+      "balance": 0,
+      "isDefault": true,
+      "isActive": true,
       "icon": "💵",
-      "type": "asset",
-      "order": 1,
-      "description": "現金"
+      "color": "#4CAF50",
+      "description": "現金帳戶"
     },
     {
-      "code": "bank",
-      "name": "銀行",
+      "accountId": "default_bank",
+      "name": "銀行帳戶",
+      "type": "bank",
+      "currency": "TWD",
+      "balance": 0,
+      "isDefault": false,
+      "isActive": true,
       "icon": "🏦",
-      "type": "asset",
-      "order": 2,
+      "color": "#2196F3",
       "description": "銀行帳戶"
     },
     {
-      "code": "credit",
+      "accountId": "default_credit",
       "name": "信用卡",
+      "type": "credit",
+      "currency": "TWD",
+      "balance": 0,
+      "isDefault": false,
+      "isActive": true,
       "icon": "💳",
-      "type": "liability",
-      "order": 3,
-      "description": "信用卡"
+      "color": "#FF9800",
+      "description": "信用卡帳戶"
     }
   ]
 }
