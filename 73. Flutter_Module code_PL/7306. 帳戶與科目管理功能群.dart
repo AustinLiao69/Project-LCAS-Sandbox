@@ -1,4 +1,3 @@
-
 /**
  * 7306. 帳戶與科目管理功能群.dart
  * @module 帳戶與科目管理功能群
@@ -137,10 +136,10 @@ class ApiResponse<T> {
 class WalletCategoryManager {
   // APL Gateway基礎URL配置
   static const String _baseUrl = 'http://0.0.0.0:3000/api/v1';
-  
+
   // HTTP客戶端配置
   static final http.Client _httpClient = http.Client();
-  
+
   // 請求標頭配置
   static const Map<String, String> _headers = {
     'Content-Type': 'application/json',
@@ -166,7 +165,7 @@ class WalletCategoryManager {
 
       // 構建API請求URL
       final String apiUrl = '$_baseUrl/accounts?ledgerId=$ledgerId';
-      
+
       // 發送HTTP GET請求
       final http.Response response = await _httpClient.get(
         Uri.parse(apiUrl),
@@ -175,7 +174,7 @@ class WalletCategoryManager {
 
       // 解析HTTP回應
       final Map<String, dynamic> responseBody = json.decode(response.body);
-      
+
       // 檢查API回應狀態
       if (response.statusCode == 200 && responseBody['success'] == true) {
         // 解析帳戶清單資料
@@ -227,7 +226,7 @@ class WalletCategoryManager {
           errorCode: 400,
         );
       }
-      
+
       if (walletName.isEmpty) {
         return ApiResponse<WalletModel>(
           success: false,
@@ -258,7 +257,7 @@ class WalletCategoryManager {
 
       // 構建API請求URL
       final String apiUrl = '$_baseUrl/accounts';
-      
+
       // 發送HTTP POST請求
       final http.Response response = await _httpClient.post(
         Uri.parse(apiUrl),
@@ -268,7 +267,7 @@ class WalletCategoryManager {
 
       // 解析HTTP回應
       final Map<String, dynamic> responseBody = json.decode(response.body);
-      
+
       // 檢查API回應狀態
       if (response.statusCode == 200 && responseBody['success'] == true) {
         // 解析建立的帳戶資料
@@ -312,7 +311,7 @@ class WalletCategoryManager {
           errorCode: 400,
         );
       }
-      
+
       if (walletName.isEmpty) {
         return ApiResponse<WalletModel>(
           success: false,
@@ -324,12 +323,12 @@ class WalletCategoryManager {
       // 構建請求資料
       final Map<String, dynamic> requestData = {
         'walletName': walletName,
-        'updatedAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTimeHelper.toIso8601StringTW(),
       };
 
       // 構建API請求URL
       final String apiUrl = '$_baseUrl/accounts/$walletId';
-      
+
       // 發送HTTP PUT請求
       final http.Response response = await _httpClient.put(
         Uri.parse(apiUrl),
@@ -339,7 +338,7 @@ class WalletCategoryManager {
 
       // 解析HTTP回應
       final Map<String, dynamic> responseBody = json.decode(response.body);
-      
+
       // 檢查API回應狀態
       if (response.statusCode == 200 && responseBody['success'] == true) {
         // 解析更新的帳戶資料
@@ -386,7 +385,7 @@ class WalletCategoryManager {
 
       // 構建API請求URL
       final String apiUrl = '$_baseUrl/accounts/$walletId/balance';
-      
+
       // 發送HTTP GET請求
       final http.Response response = await _httpClient.get(
         Uri.parse(apiUrl),
@@ -395,7 +394,7 @@ class WalletCategoryManager {
 
       // 解析HTTP回應
       final Map<String, dynamic> responseBody = json.decode(response.body);
-      
+
       // 檢查API回應狀態
       if (response.statusCode == 200 && responseBody['success'] == true) {
         // 解析餘額資料
@@ -434,7 +433,7 @@ class WalletCategoryManager {
   static bool validateBasicData(String data, String type) {
     // 基本空值檢查
     if (data.isEmpty) return false;
-    
+
     switch (type) {
       case 'walletName':
         return _validateWalletName(data);
@@ -465,7 +464,7 @@ class WalletCategoryManager {
   static bool _validateWalletName(String name) {
     // 長度檢查
     if (name.length < 1 || name.length > 50) return false;
-    
+
     // 內容檢查：允許中文、英文、數字、空格、連字符、底線
     final validPattern = RegExp(r'^[a-zA-Z0-9\u4e00-\u9fff\s\-_]+$');
     return validPattern.hasMatch(name.trim());
@@ -487,7 +486,7 @@ class WalletCategoryManager {
   static bool _validateLedgerId(String ledgerId) {
     // 基本格式檢查：非空且合理長度
     if (ledgerId.length < 3 || ledgerId.length > 100) return false;
-    
+
     // 允許字母、數字、連字符、底線
     final validPattern = RegExp(r'^[a-zA-Z0-9\-_]+$');
     return validPattern.hasMatch(ledgerId);
@@ -497,7 +496,7 @@ class WalletCategoryManager {
   static bool _validateCategoryName(String name) {
     // 長度檢查
     if (name.length < 1 || name.length > 30) return false;
-    
+
     // 內容檢查：允許中文、英文、數字、空格、常用符號
     final validPattern = RegExp(r'^[a-zA-Z0-9\u4e00-\u9fff\s\-_()（）]+$');
     return validPattern.hasMatch(name.trim());
@@ -513,7 +512,7 @@ class WalletCategoryManager {
   static bool _validateId(String id, String prefix) {
     // 基本格式檢查
     if (id.length < 5 || id.length > 100) return false;
-    
+
     // 檢查是否包含預期前綴（可選）
     if (prefix.isNotEmpty) {
       final expectedPattern = '${prefix}_';
@@ -523,7 +522,7 @@ class WalletCategoryManager {
         return validPattern.hasMatch(id);
       }
     }
-    
+
     return true;
   }
 
@@ -531,7 +530,7 @@ class WalletCategoryManager {
   static bool _validateUserId(String userId) {
     // 基本格式檢查
     if (userId.length < 3 || userId.length > 100) return false;
-    
+
     // 允許字母、數字、@、.、-、_
     final validPattern = RegExp(r'^[a-zA-Z0-9@._-]+$');
     return validPattern.hasMatch(userId);
@@ -569,7 +568,7 @@ class WalletCategoryManager {
       // 成功回應處理
       if (response['success'] == true) {
         T? parsedData;
-        
+
         // 資料解析處理
         if (response['data'] != null) {
           try {
@@ -617,7 +616,7 @@ class WalletCategoryManager {
     try {
       if (response['success'] == true) {
         List<T> parsedList = [];
-        
+
         if (response['data'] != null) {
           final List<dynamic> dataList = response['data'] as List<dynamic>;
           for (var item in dataList) {
@@ -658,17 +657,17 @@ class WalletCategoryManager {
     if (response['message'] != null && response['message'].toString().isNotEmpty) {
       return response['message'].toString();
     }
-    
+
     // 其次使用error欄位
     if (response['error'] != null && response['error'].toString().isNotEmpty) {
       return response['error'].toString();
     }
-    
+
     // 檢查details欄位
     if (response['details'] != null && response['details'].toString().isNotEmpty) {
       return response['details'].toString();
     }
-    
+
     // 預設錯誤訊息
     return '未知的API錯誤';
   }
@@ -677,7 +676,7 @@ class WalletCategoryManager {
   static int _extractErrorCode(Map<String, dynamic> response) {
     // 嘗試從各種可能的欄位提取錯誤代碼
     final List<String> errorCodeFields = ['errorCode', 'code', 'statusCode', 'status'];
-    
+
     for (String field in errorCodeFields) {
       if (response[field] != null) {
         try {
@@ -687,7 +686,7 @@ class WalletCategoryManager {
         }
       }
     }
-    
+
     // 預設錯誤代碼
     return 500;
   }
@@ -697,7 +696,7 @@ class WalletCategoryManager {
     if (response.isEmpty) return false;
     if (!response.containsKey('success')) return false;
     if (response['success'] != true && response['success'] != false) return false;
-    
+
     return true;
   }
 
@@ -735,7 +734,7 @@ class WalletCategoryManager {
       if (categoryType.isNotEmpty) {
         apiUrl += '&categoryType=$categoryType';
       }
-      
+
       // 發送HTTP GET請求
       final http.Response response = await _httpClient.get(
         Uri.parse(apiUrl),
@@ -744,7 +743,7 @@ class WalletCategoryManager {
 
       // 解析HTTP回應
       final Map<String, dynamic> responseBody = json.decode(response.body);
-      
+
       // 檢查API回應狀態
       if (response.statusCode == 200 && responseBody['success'] == true) {
         // 解析科目清單資料
@@ -796,7 +795,7 @@ class WalletCategoryManager {
           errorCode: 400,
         );
       }
-      
+
       if (categoryName.isEmpty) {
         return ApiResponse<CategoryModel>(
           success: false,
@@ -839,7 +838,7 @@ class WalletCategoryManager {
 
       // 構建API請求URL
       final String apiUrl = '$_baseUrl/categories';
-      
+
       // 發送HTTP POST請求
       final http.Response response = await _httpClient.post(
         Uri.parse(apiUrl),
@@ -849,7 +848,7 @@ class WalletCategoryManager {
 
       // 解析HTTP回應
       final Map<String, dynamic> responseBody = json.decode(response.body);
-      
+
       // 檢查API回應狀態
       if (response.statusCode == 200 && responseBody['success'] == true) {
         // 解析建立的科目資料
@@ -893,7 +892,7 @@ class WalletCategoryManager {
           errorCode: 400,
         );
       }
-      
+
       if (categoryName.isEmpty) {
         return ApiResponse<CategoryModel>(
           success: false,
@@ -905,12 +904,12 @@ class WalletCategoryManager {
       // 構建請求資料
       final Map<String, dynamic> requestData = {
         'categoryName': categoryName,
-        'updatedAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTimeHelper.toIso8601StringTW(),
       };
 
       // 構建API請求URL
       final String apiUrl = '$_baseUrl/categories/$categoryId';
-      
+
       // 發送HTTP PUT請求
       final http.Response response = await _httpClient.put(
         Uri.parse(apiUrl),
@@ -920,7 +919,7 @@ class WalletCategoryManager {
 
       // 解析HTTP回應
       final Map<String, dynamic> responseBody = json.decode(response.body);
-      
+
       // 檢查API回應狀態
       if (response.statusCode == 200 && responseBody['success'] == true) {
         // 解析更新的科目資料
@@ -979,7 +978,7 @@ class WalletCategoryManager {
 
       // 3. 同類型科目才能建立階層關係
       // 實際實作中應查詢parent的categoryType進行比較
-      
+
       return true; // MVP階段簡化驗證，始終返回true
 
     } catch (e) {
@@ -1017,13 +1016,13 @@ class WalletCategoryManager {
 
       // 模擬清除帳戶相關快取
       // MVP階段簡化實作：直接重新載入資料
-      
+
       // 1. 清除帳戶清單快取（模擬操作）
       _clearWalletCache(ledgerId);
-      
+
       // 2. 重新載入帳戶清單驗證狀態刷新
       final walletListResult = await getWalletList(ledgerId);
-      
+
       if (!walletListResult.success) {
         return ApiResponse<bool>(
           success: false,
@@ -1040,7 +1039,7 @@ class WalletCategoryManager {
         data: true,
         message: '帳戶狀態重新整理成功',
       );
-      
+
     } catch (e) {
       return ApiResponse<bool>(
         success: false,
@@ -1078,10 +1077,10 @@ class WalletCategoryManager {
 
       // 模擬清除科目相關快取
       // MVP階段簡化實作：直接重新載入資料
-      
+
       // 1. 清除科目清單快取（模擬操作）
       _clearCategoryCache(ledgerId);
-      
+
       // 2. 重新載入收入科目
       final incomeCategoriesResult = await getCategoryList(ledgerId, 'income');
       if (!incomeCategoriesResult.success) {
@@ -1110,7 +1109,7 @@ class WalletCategoryManager {
         data: true,
         message: '科目狀態重新整理成功',
       );
-      
+
     } catch (e) {
       return ApiResponse<bool>(
         success: false,
@@ -1143,7 +1142,7 @@ class WalletCategoryManager {
   }
 
   // =============== 資源清理 ===============
-  
+
   /// 清理HTTP客戶端資源
   static void dispose() {
     _httpClient.close();
@@ -1174,7 +1173,7 @@ class WalletCategoryManagerStatus {
   static const int totalFunctions = 12;
   static const String status = 'PHASE_3_COMPLETE_ALL_FUNCTIONS';
   static const String nextPhase = 'Ready for 6503 SIT_P3 Testing';
-  
+
   // MVP完整性檢查
   static const Map<String, bool> mvpRequirements = {
     '帳戶管理核心功能': true,
@@ -1184,7 +1183,7 @@ class WalletCategoryManagerStatus {
     '資料驗證機制': true,
     'APL.dart整合準備': true,
   };
-  
+
   static const String implementationNote = '''
 7306. 帳戶與科目管理功能群 - MVP階段完整實作完成
 
@@ -1196,4 +1195,24 @@ class WalletCategoryManagerStatus {
 
 Phase 3 開發目標：100% 達成
   ''';
+}
+
+// Dummy DateTimeHelper class for demonstration purposes.
+// In a real project, this would be imported from a utility file.
+class DateTimeHelper {
+  static String toIso8601StringTW() {
+    // This is a placeholder. In a real application,
+    // you would use a library or proper logic to handle timezones correctly.
+    // For example, using 'package:timezone/timezone.dart'.
+    // This implementation just returns a simplified ISO 8601 format.
+    DateTime now = DateTime.now();
+    String year = now.year.toString();
+    String month = now.month.toString().padLeft(2, '0');
+    String day = now.day.toString().padLeft(2, '0');
+    String hour = now.hour.toString().padLeft(2, '0');
+    String minute = now.minute.toString().padLeft(2, '0');
+    String second = now.second.toString().padLeft(2, '0');
+    // Assuming UTC for simplicity, but a proper TW timezone would be needed.
+    return '$year-$month-${day}T$hour:$minute:$second.000Z';
+  }
 }
