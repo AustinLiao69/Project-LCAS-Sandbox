@@ -6,6 +6,74 @@
 20251118. 準備firebase P3資料欄位
 不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+根據9909文件SA角色要求，我將深入分析您提出的Firebase P3資料欄位不一致問題。
+🔍 根本原因分析
+問題核心：1311.FS.js初始化邏輯與實際資料來源脫節
+關鍵發現：您已經讓1311.FS.js初始化Firebase，但Firebase實際欄位卻不是1311規定的結構，這說明存在資料來源混用問題。
+根本原因：
+1.	初始化函數職責分離：1311.FS.js的FS_initializeLedgerStructure僅定義結構規範，實際資料初始化可能由其他模組執行
+2.	資料來源衝突：從1309.AM.js代碼可見，實際科目資料是從0099. Subject_code.json載入，該檔案使用中文欄位名稱
+3.	階段性開發殘留：Firebase中的metadata.stage2_optimized顯示這是AM模組在階段二優化時寫入的資料
+💡 SA核心Insight
+1.	架構設計脫節：1311.FS.js作為結構定義模組與實際資料初始化模組之間缺乏統一控制機制
+2.	資料源頭混亂：0099.json使用中文欄位（符合台灣記帳習慣），但1311.FS.js定義使用英文欄位
+3.	初始化責任分散：結構定義在FS模組，實際初始化在AM模組，造成標準不一致
+🔧 MVP階段解決方案
+階段一：讓Firebase實際欄位與1311.FS.js定義對齊
+目標：修正1311.FS.js中categories結構定義，使其符合Firebase實際使用的欄位結構
+修正策略：更新FS_initializeLedgerStructure函數中的categories結構定義，改用實際的中文欄位名稱：
+categories: {
+  document_structure: {
+    大項代碼: 'string - 科目大項代碼 (如"999")',
+    大項名稱: 'string - 科目大項名稱 (如"測試支出")', 
+    子項代碼: 'string - 科目子項代碼 (如"99999")',
+    子項名稱: 'string - 科目子項名稱 (如"測試支出")',
+    同義詞: 'string - 科目同義詞，提供搜尋便利性',
+    sortOrder: 'number - 科目排序順序',
+    isActive: 'boolean - 是否啟用',
+    metadata: {
+      batchIndex: 'number - 批次索引',
+      stage: 'string - 處理階段標識'
+    },
+    createdAt: 'timestamp - 建立時間',
+    updatedAt: 'timestamp - 最後更新時間'
+  }
+}
+階段二：統一accounts子集合ID命名
+目標：將所有accounts相關的accountId統一改為walletId
+修正範圍：
+1.	1311.FS.js模組：accounts結構定義中的主鍵欄位
+2.	相關BL模組：BK.js、WCM.js中使用accountId的地方
+3.	API層面：ASL.js中accounts相關端點的參數處理
+具體修正內容：
+accounts: {
+  document_structure: {
+    walletId: 'string - 帳戶唯一識別碼', // 原accountId改名
+    name: 'string - 帳戶名稱',
+    type: 'string - 帳戶類型',
+    // ... 其他欄位保持不變
+  }
+}
+⚠️ MVP階段實施重點
+優先級排序
+1.	高優先：階段一 - categories結構定義對齊（解決當前核心不一致問題）
+2.	中優先：階段二 - walletId命名統一（提升API調用一致性）
+風險控制
+•	向下相容：保留舊欄位的映射機制，避免既有資料無法存取
+•	逐步遷移：新建資料使用新結構，既有資料維持現狀直到自然汰換
+📊 預期效益
+1.	資料一致性提升：Firebase實際結構與代碼定義對齊，消除開發困惑
+2.	維護效率改善：統一的欄位命名減少跨模組溝通成本
+3.	本土化支援：中文欄位名稱符合台灣用戶使用習慣
+4.	API調用統一：walletId命名統一後，減少參數混淆問題
+此方案專注解決當前Firebase欄位不一致的核心問題，避免過度重構，符合MVP階段的務實原則。
+
+
+
+------------------------------------------
+20251118. 準備firebase P3資料欄位
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 根據9909文件SA角色要求，我將深入分析您提出的Firebase P3資料欄位問題。
 🔍 問題分析
 1. categories子集合欄位不一致問題
