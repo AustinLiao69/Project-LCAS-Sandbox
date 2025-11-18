@@ -2191,7 +2191,6 @@ async function FS_initializeBudgetStructure() {
   }
 }
 
-
 /**
  * 初始化預設帳戶類型
  */
@@ -2414,7 +2413,6 @@ async function FS_initializeLedgerStructure() {
     return { success: false, error: error.message };
   }
 }
-
 
 /**
  * 根據用戶模式取得帳本配置
