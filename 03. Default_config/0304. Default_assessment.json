@@ -1,0 +1,378 @@
+
+/**
+* 0304. Default_assessment.json_1.0.0
+* @description 模式評估問卷統一配置檔案
+* @update 2025-11-18: 初版建立，支援四模式評估邏輯
+*/
+
+{
+  "version": "1.0.0",
+  "last_updated": "2025-11-18",
+  "metadata": {
+    "title": "LCAS 2.0 使用者模式評估問卷",
+    "description": "透過 5 道題目了解使用者的記帳習慣，推薦最適合的使用模式",
+    "estimatedTime": 3,
+    "language": "zh-TW",
+    "questionnaireId": "assessment_v2.1"
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "order": 1,
+      "question": "您對記帳軟體的功能需求程度？",
+      "type": "single_choice",
+      "required": true,
+      "category": "feature_complexity",
+      "options": [
+        {
+          "id": "advanced",
+          "text": "需要完整專業功能",
+          "weight": {
+            "expert": 5,
+            "cultivation": 1,
+            "guiding": 0,
+            "inertial": 0
+          }
+        },
+        {
+          "id": "intermediate", 
+          "text": "需要中等程度功能",
+          "weight": {
+            "expert": 2,
+            "cultivation": 3,
+            "guiding": 1,
+            "inertial": 1
+          }
+        },
+        {
+          "id": "basic",
+          "text": "基本功能即可",
+          "weight": {
+            "expert": 0,
+            "cultivation": 2,
+            "guiding": 3,
+            "inertial": 2
+          }
+        },
+        {
+          "id": "minimal",
+          "text": "越簡單越好",
+          "weight": {
+            "expert": 0,
+            "cultivation": 0,
+            "guiding": 3,
+            "inertial": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "order": 2,
+      "question": "您希望記帳資料的詳細程度？",
+      "type": "single_choice",
+      "required": true,
+      "category": "data_detail",
+      "options": [
+        {
+          "id": "detailed",
+          "text": "詳細記錄每筆交易",
+          "weight": {
+            "expert": 5,
+            "cultivation": 2,
+            "guiding": 0,
+            "inertial": 0
+          }
+        },
+        {
+          "id": "moderate",
+          "text": "記錄主要支出項目",
+          "weight": {
+            "expert": 1,
+            "cultivation": 3,
+            "guiding": 2,
+            "inertial": 1
+          }
+        },
+        {
+          "id": "simple",
+          "text": "簡單記錄大概金額",
+          "weight": {
+            "expert": 0,
+            "cultivation": 1,
+            "guiding": 4,
+            "inertial": 2
+          }
+        },
+        {
+          "id": "minimal",
+          "text": "只記錄重要支出",
+          "weight": {
+            "expert": 0,
+            "cultivation": 0,
+            "guiding": 2,
+            "inertial": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "order": 3,
+      "question": "您偏好的介面複雜度？",
+      "type": "single_choice",
+      "required": true,
+      "category": "interface_complexity",
+      "options": [
+        {
+          "id": "complex",
+          "text": "豐富功能，複雜介面",
+          "weight": {
+            "expert": 5,
+            "cultivation": 0,
+            "guiding": 0,
+            "inertial": 0
+          }
+        },
+        {
+          "id": "standard",
+          "text": "標準功能介面",
+          "weight": {
+            "expert": 2,
+            "cultivation": 2,
+            "guiding": 2,
+            "inertial": 2
+          }
+        },
+        {
+          "id": "simplified",
+          "text": "簡化功能介面",
+          "weight": {
+            "expert": 0,
+            "cultivation": 1,
+            "guiding": 4,
+            "inertial": 2
+          }
+        },
+        {
+          "id": "minimal",
+          "text": "極簡介面",
+          "weight": {
+            "expert": 0,
+            "cultivation": 0,
+            "guiding": 2,
+            "inertial": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "q4",
+      "order": 4,
+      "question": "您希望的報表分析程度？",
+      "type": "single_choice",
+      "required": true,
+      "category": "analysis_depth",
+      "options": [
+        {
+          "id": "comprehensive",
+          "text": "完整詳細的分析報表",
+          "weight": {
+            "expert": 5,
+            "cultivation": 1,
+            "guiding": 0,
+            "inertial": 0
+          }
+        },
+        {
+          "id": "standard",
+          "text": "基本統計報表",
+          "weight": {
+            "expert": 2,
+            "cultivation": 2,
+            "guiding": 2,
+            "inertial": 1
+          }
+        },
+        {
+          "id": "simple",
+          "text": "簡單圖表即可",
+          "weight": {
+            "expert": 0,
+            "cultivation": 1,
+            "guiding": 3,
+            "inertial": 2
+          }
+        },
+        {
+          "id": "minimal",
+          "text": "不需要報表",
+          "weight": {
+            "expert": 0,
+            "cultivation": 0,
+            "guiding": 2,
+            "inertial": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "q5",
+      "order": 5,
+      "question": "您希望的功能引導程度？",
+      "type": "single_choice",
+      "required": true,
+      "category": "guidance_level",
+      "options": [
+        {
+          "id": "none",
+          "text": "不需要引導，自行探索",
+          "weight": {
+            "expert": 5,
+            "cultivation": 0,
+            "guiding": 0,
+            "inertial": 1
+          }
+        },
+        {
+          "id": "minimal",
+          "text": "最少的提示即可",
+          "weight": {
+            "expert": 2,
+            "cultivation": 1,
+            "guiding": 1,
+            "inertial": 3
+          }
+        },
+        {
+          "id": "moderate",
+          "text": "適度的功能引導",
+          "weight": {
+            "expert": 1,
+            "cultivation": 3,
+            "guiding": 2,
+            "inertial": 1
+          }
+        },
+        {
+          "id": "comprehensive",
+          "text": "詳細的步驟引導",
+          "weight": {
+            "expert": 0,
+            "cultivation": 2,
+            "guiding": 5,
+            "inertial": 0
+          }
+        }
+      ]
+    }
+  ],
+  "scoring": {
+    "method": "weighted_sum",
+    "weights": {
+      "expert": 1.0,
+      "inertial": 1.0,
+      "cultivation": 1.0,
+      "guiding": 1.0
+    },
+    "thresholds": {
+      "expert": {
+        "min_score": 15,
+        "confidence_threshold": 0.7
+      },
+      "inertial": {
+        "min_score": 10,
+        "confidence_threshold": 0.6
+      },
+      "cultivation": {
+        "min_score": 8,
+        "confidence_threshold": 0.6
+      },
+      "guiding": {
+        "min_score": 6,
+        "confidence_threshold": 0.7
+      }
+    }
+  },
+  "modes": {
+    "expert": {
+      "name": "專家模式",
+      "description": "適合有豐富記帳經驗，需要完整功能的用戶",
+      "characteristics": [
+        "熟悉財務管理概念",
+        "需要詳細的分析功能",
+        "偏好複雜但功能完整的介面",
+        "自主性強，不需要過多引導"
+      ],
+      "recommended_features": [
+        "進階報表分析",
+        "多幣別支援",
+        "投資組合追蹤",
+        "自訂科目與標籤",
+        "批量操作功能"
+      ]
+    },
+    "inertial": {
+      "name": "慣性模式",
+      "description": "適合已有記帳習慣，偏好簡單穩定操作的用戶",
+      "characteristics": [
+        "已建立記帳習慣",
+        "偏好簡單一致的操作",
+        "不喜歡頻繁的功能變化",
+        "重視操作效率"
+      ],
+      "recommended_features": [
+        "快速記帳功能",
+        "重複交易範本",
+        "簡化的介面設計",
+        "固定的操作流程",
+        "基本統計報表"
+      ]
+    },
+    "cultivation": {
+      "name": "養成模式",
+      "description": "適合正在培養記帳習慣，需要動機維持的用戶",
+      "characteristics": [
+        "記帳經驗有限",
+        "需要動機維持習慣",
+        "喜歡成就感和進度追蹤",
+        "需要適度的功能引導"
+      ],
+      "recommended_features": [
+        "習慣追蹤儀表板",
+        "成就系統",
+        "記帳提醒功能",
+        "進度視覺化",
+        "簡化的分類建議"
+      ]
+    },
+    "guiding": {
+      "name": "引導模式", 
+      "description": "適合初學者或需要詳細引導的用戶",
+      "characteristics": [
+        "記帳初學者",
+        "需要詳細的操作引導",
+        "偏好簡單的介面",
+        "需要學習財務管理概念"
+      ],
+      "recommended_features": [
+        "step-by-step引導",
+        "教學和提示系統",
+        "簡化的操作介面",
+        "預設的支出分類",
+        "基礎財務知識提供"
+      ]
+    }
+  },
+  "validation_rules": {
+    "all_questions_required": true,
+    "min_questions_answered": 5,
+    "valid_option_ids": true,
+    "confidence_calculation": "max_score / total_score"
+  },
+  "fallback": {
+    "default_mode": "inertial",
+    "error_message": "評估過程發生錯誤，將使用預設的慣性模式",
+    "retry_allowed": true
+  }
+}

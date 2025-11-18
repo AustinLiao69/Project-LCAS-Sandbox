@@ -1,0 +1,88 @@
+------------------------------------------
+20251118. 準備firebase P3資料欄位
+不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據9909文件SA角色要求，我將深入分析您提出的Firebase P3資料欄位問題。
+🔍 問題分析
+1. categories子集合欄位不一致問題
+根本原因分析：
+從Firebase實際欄位與1311.FS.js模組定義對比，發現存在嚴重的結構不一致：
+1311.FS.js模組定義的categories結構：
+•	categoryId, name, type, icon, color, parentId, level, order, isDefault, isActive, createdAt, updatedAt
+Firebase實際存在的欄位：
+•	中文欄位名稱：大項代碼、大項名稱、子項代碼、子項名稱、同義詞
+•	系統欄位：metadata.batchIndex, metadata.stage, sortOrder
+•	標準欄位：isActive, createdAt, updatedAt
+
+=>重點是我已經讓1311去初始化firebase了，為什麼firebase的實際欄位卻不是1311所規定的？
+
+
+2. accounts子集合accountId欄位問題
+問題識別：
+1311.FS.js定義使用accountId，但實際需求要求改為walletId，這涉及整個系統的ID命名一致性問題。
+💡 SA Insight
+核心洞察
+1.	資料結構設計脫節：1311.FS.js模組中的理想化結構定義與實際業務需求存在巨大差異
+2.	中文欄位的業務合理性：Firebase實際欄位使用中文命名（大項代碼、子項名稱等），顯示這是為了符合台灣記帳習慣的本土化設計
+3.	階段性資料殘留：metadata中的stage2_optimized和batchIndex暗示這是從早期開發階段殘留的測試資料結構
+
+業務邏輯分析
+Categories結構的合理性：
+•	大項代碼/子項代碼：符合台灣會計科目編碼慣例（如999/99999）
+•	中文命名：提升用戶理解度，符合本土化需求
+•	sortOrder：提供科目排序功能，實用性高
+🔧 具體實施方案
+階段一：統一categories子集合結構定義
+=>不對，是firebase實際欄位要與1311對齊。
+
+**目標：**修正1311.FS.js中categories結構定義，與Firebase實際欄位對齊
+修正內容：
+更新1311.FS.js中FS_initializeLedgerStructure函數的categories結構定義：
+categories: {
+  document_structure: {
+    // 移除原有的英文欄位定義
+    // categoryId: 'string - 科目唯一識別碼',
+    // name: 'string - 科目名稱',
+    // type: 'string - 科目類型',
+
+    // 新增實際使用的中文欄位
+    大項代碼: 'string - 科目大項代碼 (如"999")',
+    大項名稱: 'string - 科目大項名稱 (如"測試支出")', 
+    子項代碼: 'string - 科目子項代碼 (如"99999")',
+    子項名稱: 'string - 科目子項名稱 (如"測試支出")',
+    同義詞: 'string - 科目同義詞，提供搜尋便利性',
+    sortOrder: 'number - 科目排序順序',
+    isActive: 'boolean - 是否啟用',
+    metadata: {
+      batchIndex: 'number - 批次索引',
+      stage: 'string - 處理階段標識'
+    },
+    createdAt: 'timestamp - 建立時間',
+    updatedAt: 'timestamp - 最後更新時間'
+  }
+}
+
+階段二：統一accounts子集合ID命名
+**目標：**將所有accounts相關的accountId統一改為walletId
+修正範圍：
+1.	1311.FS.js模組：accounts結構定義中的主鍵欄位
+2.	相關BL模組：BK.js、WCM.js中使用accountId的地方
+3.	API層面：ASL.js中accounts相關端點的參數處理
+具體修正內容：
+更新1311.FS.js中accounts結構定義：
+accounts: {
+  document_structure: {
+    walletId: 'string - 帳戶唯一識別碼', // 原accountId改名
+    name: 'string - 帳戶名稱',
+    type: 'string - 帳戶類型',
+    // ... 其他欄位保持不變
+  }
+}
+
+階段三：更新系統配置與預設資料
+**目標：**確保系統初始化時建立的範例資料符合新的欄位結構
+修正內容：
+1.	更新FS_createCompleteSubcollectionFramework函數：使用新的欄位名稱建立範例資料
+2.	更新預設配置檔案：確保03. Default_config中的資料結構一致
+
+=>請刪除階段三
