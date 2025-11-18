@@ -2,7 +2,7 @@
 * FS_FirestoreStructure_資料庫結構模組_2.7.1
 * @module 資料庫結構模組
 * @description LCAS 2.7.1 Firestore資料庫結構模組 - Phase 3 預算子集合架構遷移完成 + 協作架構資料驗證強化
-* @update 2025-11-12: 階段一修復 - 新增協作帳本資料結構驗證函數，確保資料一致性
+* @update 2025-11-18: 階段一修復 - 函數表頭重新編碼，統一版本格式
 */
 
 // 引入Firebase動態配置模組
@@ -54,8 +54,8 @@ const TIMEZONE = 'Asia/Taipei';
 
 /**
  * 01. 模組初始化與配置管理
- * @version 2025-09-16-V2.1.0
- * @date 2025-09-16
+ * @version 2025-11-18-V2.7.1
+ * @date 2025-11-18
  * @description 初始化FS模組，驗證Firebase配置和專案資訊
  */
 function FS_initializeModule() {
@@ -93,8 +93,8 @@ function FS_initializeModule() {
 
 /**
  * 02. Firebase連接初始化
- * @version 2025-09-16-V2.1.0
- * @date 2025-09-16
+ * @version 2025-11-18-V2.7.1
+ * @date 2025-11-18
  * @description 初始化並測試Firebase連接，確保Firestore可正常存取
  */
 async function FS_initializeConnection() {
@@ -133,8 +133,8 @@ async function FS_initializeConnection() {
 
 /**
  * 03. 基礎文檔操作 - 建立文檔
- * @version 2025-09-16-V2.1.0
- * @date 2025-09-16
+ * @version 2025-11-18-V2.7.1
+ * @date 2025-11-18
  * @description 在指定集合路徑建立新文檔，支援自訂文檔ID和數據
  */
 async function FS_createDocument(collectionPath, documentId, data, requesterId) {
@@ -174,8 +174,8 @@ async function FS_createDocument(collectionPath, documentId, data, requesterId) 
 
 /**
  * 04. 基礎文檔操作 - 取得文檔
- * @version 2025-09-16-V2.1.0
- * @date 2025-09-16
+ * @version 2025-11-18-V2.7.1
+ * @date 2025-11-18
  * @description 從指定集合路徑取得文檔數據，檢查文檔存在性
  */
 async function FS_getDocument(collectionPath, documentId, requesterId) {
@@ -783,8 +783,8 @@ async function FS_processQuickTransaction(quickData, requesterId) {
 // =============== 階段二：輔助函數 ===============
 
 /**
- * 47. 生成交易ID
- * @version 2025-11-18-V1.0.0
+ * 16. 生成交易ID
+ * @version 2025-11-18-V2.7.1
  * @date 2025-11-18
  * @description 生成唯一的交易識別碼，包含時間戳記和隨機字串
  */
@@ -795,9 +795,9 @@ function FS_generateTransactionId() {
 }
 
 /**
- * 25. 階段三新增：預算子集合寫入函數
- * @version 2025-10-30-V2.2.0
- * @date 2025-10-30
+ * 17. 階段三新增：預算子集合寫入函數
+ * @version 2025-11-18-V2.7.1
+ * @date 2025-11-18
  * @description 將預算寫入指定帳本的budgets子集合，確保路徑正確性和安全驗證
  */
 async function FS_createBudgetInLedger(ledgerId, budgetData, requesterId) {
@@ -861,8 +861,8 @@ async function FS_createBudgetInLedger(ledgerId, budgetData, requesterId) {
 }
 
 /**
- * 48. 分析評估結果（簡化實作）
- * @version 2025-11-18-V1.0.0
+ * 18. 分析評估結果（簡化實作）
+ * @version 2025-11-18-V2.7.1
  * @date 2025-11-18
  * @description 分析用戶評估問卷答案，推薦適合的記帳模式
  */
@@ -906,8 +906,8 @@ function FS_analyzeAssessmentResults(answers) {
 }
 
 /**
- * 49. 解析快速輸入（簡化實作）
- * @version 2025-11-18-V1.0.0
+ * 19. 解析快速輸入（簡化實作）
+ * @version 2025-11-18-V2.7.1
  * @date 2025-11-18
  * @description 解析快速記帳的自然語言輸入，提取金額、類型和描述
  */
@@ -940,9 +940,9 @@ function FS_parseQuickInput(input) {
 // =============== 相容性函數保留區 ===============
 
 /**
- * 22. 合併文檔 - 相容性函數
- * @version 2025-09-16-V2.1.0
- * @date 2025-09-16
+ * 20. 合併文檔 - 相容性函數
+ * @version 2025-11-18-V2.7.1
+ * @date 2025-11-18
  * @description 合併更新Firestore中的文檔，保留現有欄位並新增或更新指定欄位
  */
 async function FS_mergeDocument(collectionPath, documentId, mergeData, requesterId) {
@@ -1044,9 +1044,9 @@ async function FS_setDocument(collectionPath, documentId, data, requesterId, opt
 // =============== 階段三：整合優化與驗證函數區 ===============
 
 /**
- * 16. 系統配置初始化（一次性執行）
- * @version 2025-11-27-V2.3.0
- * @date 2025-11-27
+ * 21. 系統配置初始化（一次性執行）
+ * @version 2025-11-18-V2.7.1
+ * @date 2025-11-18
  * @description 一次性系統配置初始化，建立集合框架、預設數據和預算結構
  */
 async function FS_initializeSystemConfig(requesterId) {
@@ -3028,9 +3028,9 @@ module.exports = {
   admin,
 
   // 模組資訊
-  moduleVersion: '2.7.0',
+  moduleVersion: '2.7.1',
   phase: 'Phase3-Collaboration-Architecture-Support',
-  lastUpdate: '2025-11-06',
+  lastUpdate: '2025-11-18',
   stage3Features: ['budgets_subcollection_support', 'ledger_budget_integration', 'path_structure_v3', 'collaboration_architecture_support']
 };
 
