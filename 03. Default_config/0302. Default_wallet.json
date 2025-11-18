@@ -9,7 +9,7 @@
       "icon": "💵",
       "type": "asset",
       "order": 1,
-      "description": "現金錢包"
+      "description": "現金"
     },
     {
       "code": "bank",
@@ -25,7 +25,7 @@
       "icon": "💳",
       "type": "liability",
       "order": 3,
-      "description": "信用卡帳戶"
+      "description": "信用卡"
     }
   ]
 }
