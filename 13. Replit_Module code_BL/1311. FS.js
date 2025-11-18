@@ -56,7 +56,7 @@ const TIMEZONE = 'Asia/Taipei';
  * 01. 模組初始化與配置管理
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一重構 - 模組初始化
+ * @description 初始化FS模組，驗證Firebase配置和專案資訊
  */
 function FS_initializeModule() {
   const functionName = "FS_initializeModule";
@@ -95,7 +95,7 @@ function FS_initializeModule() {
  * 02. Firebase連接初始化
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一重構 - Firebase連接驗證
+ * @description 初始化並測試Firebase連接，確保Firestore可正常存取
  */
 async function FS_initializeConnection() {
   const functionName = "FS_initializeConnection";
@@ -135,7 +135,7 @@ async function FS_initializeConnection() {
  * 03. 基礎文檔操作 - 建立文檔
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一重構 - 基礎文檔建立
+ * @description 在指定集合路徑建立新文檔，支援自訂文檔ID和數據
  */
 async function FS_createDocument(collectionPath, documentId, data, requesterId) {
   const functionName = "FS_createDocument";
@@ -176,7 +176,7 @@ async function FS_createDocument(collectionPath, documentId, data, requesterId) 
  * 04. 基礎文檔操作 - 取得文檔
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一重構 - 基礎文檔取得
+ * @description 從指定集合路徑取得文檔數據，檢查文檔存在性
  */
 async function FS_getDocument(collectionPath, documentId, requesterId) {
   const functionName = "FS_getDocument";
@@ -225,7 +225,7 @@ async function FS_getDocument(collectionPath, documentId, requesterId) {
  * 05. 基礎文檔操作 - 更新文檔
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一重構 - 基礎文檔更新
+ * @description 更新指定文檔的部分欄位，支援增量更新操作
  */
 async function FS_updateDocument(collectionPath, documentId, updateData, requesterId) {
   const functionName = "FS_updateDocument";
@@ -264,7 +264,7 @@ async function FS_updateDocument(collectionPath, documentId, updateData, request
  * 06. 基礎文檔操作 - 刪除文檔
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一重構 - 基礎文檔刪除
+ * @description 從指定集合路徑永久刪除文檔
  */
 async function FS_deleteDocument(collectionPath, documentId, requesterId) {
   const functionName = "FS_deleteDocument";
@@ -303,7 +303,7 @@ async function FS_deleteDocument(collectionPath, documentId, requesterId) {
  * 07. 基礎集合操作 - 查詢集合
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一重構 - 基礎集合查詢
+ * @description 查詢集合中的文檔，支援條件篩選、排序和分頁
  */
 async function FS_queryCollection(collectionPath, queryConditions, requesterId, options = {}) {
   const functionName = "FS_queryCollection";
@@ -362,7 +362,7 @@ async function FS_queryCollection(collectionPath, queryConditions, requesterId, 
  * 08. 錯誤處理機制
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一重構 - 統一錯誤處理
+ * @description 統一錯誤處理機制，記錄錯誤詳情和操作上下文
  */
 function FS_handleError(message, operation, userId, errorCode, details, functionName) {
   try {
@@ -383,7 +383,7 @@ function FS_handleError(message, operation, userId, errorCode, details, function
  * 09. 日誌記錄機制
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段一重構 - 統 যুক্তি記錄
+ * @description 統一日誌記錄機制，記錄操作詳情和時間戳記
  */
 function FS_logOperation(message, operation, userId, errorCode, details, functionName) {
   try {
@@ -401,7 +401,7 @@ function FS_logOperation(message, operation, userId, errorCode, details, functio
  * 10. 認證服務支援 - 用戶註冊數據處理
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段二重構 - 支援8101認證服務API
+ * @description 處理用戶註冊數據，建立用戶文檔並檢查重複註冊
  */
 async function FS_processUserRegistration(registrationData, requesterId) {
   const functionName = "FS_processUserRegistration";
@@ -471,7 +471,7 @@ async function FS_processUserRegistration(registrationData, requesterId) {
  * 11. 認證服務支援 - 用戶登入數據處理
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段二重構 - 支援8101認證服務API
+ * @description 處理用戶登入驗證，更新最後登入時間和登入歷史
  */
 async function FS_processUserLogin(loginData, requesterId) {
   const functionName = "FS_processUserLogin";
@@ -534,7 +534,7 @@ async function FS_processUserLogin(loginData, requesterId) {
  * 12. 用戶管理支援 - 個人資料操作
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段二重構 - 支援8102用戶管理服務API
+ * @description 管理用戶個人資料，支援查詢、更新偏好設定和安全設定
  */
 async function FS_manageUserProfile(userId, operation, data, requesterId) {
   const functionName = "FS_manageUserProfile";
@@ -604,7 +604,7 @@ async function FS_manageUserProfile(userId, operation, data, requesterId) {
  * 13. 用戶管理支援 - 模式評估數據處理
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段二重構 - 支援8102用戶管理服務API
+ * @description 處理用戶模式評估，分析問卷結果並更新用戶模式設定
  */
 async function FS_processUserAssessment(userId, assessmentData, requesterId) {
   const functionName = "FS_processUserAssessment";
@@ -660,7 +660,7 @@ async function FS_processUserAssessment(userId, assessmentData, requesterId) {
  * 14. 記帳交易支援 - 交易記錄操作
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段二重構 - 支援8103記帳交易服務API
+ * @description 管理交易記錄，支援新增、查詢、更新、刪除和批次查詢操作
  */
 async function FS_manageTransaction(ledgerId, operation, transactionData, requesterId) {
   const functionName = "FS_manageTransaction";
@@ -725,7 +725,7 @@ async function FS_manageTransaction(ledgerId, operation, transactionData, reques
  * 15. 記帳交易支援 - 快速記帳數據處理
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段二重構 - 支援8103記帳交易服務API快速記帳端點
+ * @description 處理快速記帳輸入，解析自然語言並轉換為標準交易格式
  */
 async function FS_processQuickTransaction(quickData, requesterId) {
   const functionName = "FS_processQuickTransaction";
@@ -783,7 +783,10 @@ async function FS_processQuickTransaction(quickData, requesterId) {
 // =============== 階段二：輔助函數 ===============
 
 /**
- * 生成交易ID
+ * 47. 生成交易ID
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 生成唯一的交易識別碼，包含時間戳記和隨機字串
  */
 function FS_generateTransactionId() {
   const timestamp = Date.now();
@@ -792,9 +795,10 @@ function FS_generateTransactionId() {
 }
 
 /**
- * 階段三新增：預算子集合寫入函數
+ * 25. 階段三新增：預算子集合寫入函數
  * @version 2025-10-30-V2.2.0
- * @description 將預算寫入指定帳本的budgets子集合，確保路徑正確性
+ * @date 2025-10-30
+ * @description 將預算寫入指定帳本的budgets子集合，確保路徑正確性和安全驗證
  */
 async function FS_createBudgetInLedger(ledgerId, budgetData, requesterId) {
   const functionName = "FS_createBudgetInLedger";
@@ -857,7 +861,10 @@ async function FS_createBudgetInLedger(ledgerId, budgetData, requesterId) {
 }
 
 /**
- * 分析評估結果（簡化實作）
+ * 48. 分析評估結果（簡化實作）
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 分析用戶評估問卷答案，推薦適合的記帳模式
  */
 function FS_analyzeAssessmentResults(answers) {
   // 簡化的評估邏輯
@@ -899,7 +906,10 @@ function FS_analyzeAssessmentResults(answers) {
 }
 
 /**
- * 解析快速輸入（簡化實作）
+ * 49. 解析快速輸入（簡化實作）
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 解析快速記帳的自然語言輸入，提取金額、類型和描述
  */
 function FS_parseQuickInput(input) {
   try {
@@ -930,10 +940,10 @@ function FS_parseQuickInput(input) {
 // =============== 相容性函數保留區 ===============
 
 /**
- * 30. 合併文檔 - 相容性函數
+ * 22. 合併文檔 - 相容性函數
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @description 合併更新Firestore中的文檔（保留相容性）
+ * @description 合併更新Firestore中的文檔，保留現有欄位並新增或更新指定欄位
  */
 async function FS_mergeDocument(collectionPath, documentId, mergeData, requesterId) {
   const functionName = "FS_mergeDocument";
@@ -954,10 +964,10 @@ async function FS_mergeDocument(collectionPath, documentId, mergeData, requester
 }
 
 /**
- * 32. 新增到集合 - 相容性函數
+ * 23. 新增到集合 - 相容性函數
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @description 新增文檔到Firestore集合（保留相容性）
+ * @description 新增文檔到Firestore集合，自動生成文檔ID
  */
 async function FS_addToCollection(collectionPath, data, requesterId) {
   const functionName = "FS_addToCollection";
@@ -990,10 +1000,10 @@ async function FS_addToCollection(collectionPath, data, requesterId) {
 }
 
 /**
- * 33. 設置文檔 - 相容性函數
+ * 24. 設置文檔 - 相容性函數
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @description 在Firestore中設置文檔（保留相容性）
+ * @description 在Firestore中設置文檔，支援覆寫模式和合併模式
  */
 async function FS_setDocument(collectionPath, documentId, data, requesterId, options = {}) {
   const functionName = "FS_setDocument";
@@ -1037,7 +1047,7 @@ async function FS_setDocument(collectionPath, documentId, data, requesterId, opt
  * 16. 系統配置初始化（一次性執行）
  * @version 2025-11-27-V2.3.0
  * @date 2025-11-27
- * @update: 階段一重構 - 分離系統配置初始化，包含集合框架建立
+ * @description 一次性系統配置初始化，建立集合框架、預設數據和預算結構
  */
 async function FS_initializeSystemConfig(requesterId) {
   const functionName = "FS_initializeSystemConfig";
@@ -1133,7 +1143,7 @@ async function FS_initializeSystemConfig(requesterId) {
  * 17. 業務資料結構初始化（為每個新用戶執行）
  * @version 2025-11-27-V2.3.0
  * @date 2025-11-27
- * @update: 階段一重構 - 業務資料結構初始化
+ * @description 為每個新用戶初始化業務資料結構，確保基礎集合存在
  */
 async function FS_initializeDataStructure(requesterId) {
   const functionName = "FS_initializeDataStructure";
@@ -1236,10 +1246,10 @@ async function FS_initializeDataStructure(requesterId) {
 }
 
 /**
- * 17. Phase 1用戶基礎帳本建立
+ * 18. Phase 1用戶基礎帳本建立
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段三重構 - Phase 1用戶基礎帳本建立
+ * @description 為新用戶建立基礎帳本，包含預設帳戶和科目設定
  */
 async function FS_createUserBasicLedger(userId, userMode, requesterId) {
   const functionName = "FS_createUserBasicLedger";
@@ -1310,10 +1320,10 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
 }
 
 /**
- * 18. Phase 1科目數據初始化
+ * 19. Phase 1科目數據初始化
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段三重構 - Phase 1科目數據初始化
+ * @description 為指定帳本初始化科目數據，依據用戶模式建立適當的收支科目
  */
 async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
   const functionName = "FS_initializePhase1Categories";
@@ -1388,10 +1398,10 @@ async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
 }
 
 /**
- * 19. 系統健康檢查
+ * 20. 系統健康檢查
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段三重構 - 系統健康檢查
+ * @description 執行系統健康檢查，驗證Firebase連接、CRUD操作和核心功能
  */
 async function FS_performHealthCheck(requesterId) {
   const functionName = "FS_performHealthCheck";
@@ -1510,10 +1520,10 @@ async function FS_performHealthCheck(requesterId) {
 }
 
 /**
- * 20. Phase 1功能驗證機制
+ * 21. Phase 1功能驗證機制
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
- * @update: 階段三重構 - Phase 1功能驗證機制
+ * @description 驗證Phase 1功能整合，測試用戶註冊、記帳功能和API端點
  */
 async function FS_validatePhase1Integration(requesterId) {
   const functionName = "FS_validatePhase1Integration";
@@ -1627,8 +1637,10 @@ async function FS_validatePhase1Integration(requesterId) {
 // =============== 階段三：輔助函數區 ===============
 
 /**
- * 建立基礎集合框架（透過建立佔位文檔確保集合存在）
+ * 26. 建立基礎集合框架
  * @version 2025-10-29-V2.4.0
+ * @date 2025-10-29
+ * @description 透過建立佔位文檔確保基礎集合存在，包含users和ledgers集合
  */
 async function FS_createCollectionFramework() {
   try {
@@ -1679,7 +1691,7 @@ async function FS_createCollectionFramework() {
 }
 
 /**
- * 建立完整帳本子集合架構（新版本 - 支援所有子集合）
+ * 27. 建立完整帳本子集合架構（新版本 - 支援所有子集合）
  * @version 2025-10-30-V3.1.0
  * @date 2025-10-30
  * @description 為指定帳本建立完整子集合架構：accounts, transactions, categories, budgets
@@ -1893,10 +1905,10 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 }
 
 /**
- * 建立完整帳本子集合框架（階段三專用）- 保留相容性
+ * 28. 建立完整帳本子集合框架（階段三專用）
  * @version 2025-10-30-V3.0.0
  * @date 2025-10-30
- * @description 建立完整帳本子集合架構：accounts, transactions, categories, budgets
+ * @description 建立完整帳本子集合架構範例，包含所有子集合的示例文檔
  */
 async function FS_createBudgetsSubcollectionFramework() {
   try {
@@ -2057,7 +2069,10 @@ async function FS_createBudgetsSubcollectionFramework() {
 }
 
 /**
- * 初始化預設科目
+ * 29. 初始化預設科目
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 初始化系統預設科目，包含收入和支出分類
  */
 async function FS_initializeDefaultCategories() {
   const defaultCategories = {
@@ -2083,10 +2098,10 @@ async function FS_initializeDefaultCategories() {
 }
 
 /**
- * 初始化預算管理文檔結構 (1312.BM.js模組支援) - 子集合版
+ * 30. 初始化預算管理文檔結構
  * @version 2025-10-30-V3.0.0
  * @date 2025-10-30
- * @description 初始化預算管理模組所需的Firebase子集合文檔結構，階段三完整版
+ * @description 初始化預算管理模組所需的Firebase子集合文檔結構，支援1312.BM.js模組
  */
 async function FS_initializeBudgetStructure() {
   const budgetStructure = {
@@ -2192,7 +2207,10 @@ async function FS_initializeBudgetStructure() {
 }
 
 /**
- * 初始化預設帳戶類型
+ * 31. 初始化預設帳戶類型
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 初始化系統預設帳戶類型，包含現金、銀行、信用卡等基本帳戶
  */
 async function FS_initializeDefaultAccountTypes() {
   const defaultAccountTypes = [
@@ -2211,7 +2229,10 @@ async function FS_initializeDefaultAccountTypes() {
 }
 
 /**
- * 初始化評估問卷
+ * 32. 初始化評估問卷
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 初始化用戶模式評估問卷，用於判定用戶適合的記帳模式
  */
 async function FS_initializeAssessmentQuestions() {
   const assessmentQuestions = {
@@ -2251,10 +2272,10 @@ async function FS_initializeAssessmentQuestions() {
 }
 
 /**
- * 初始化帳本集合文檔結構 (CM.js模組支援)
+ * 33. 初始化帳本集合文檔結構
  * @version 2025-10-27-V2.2.0
  * @date 2025-10-27
- * @description 初始化帳本管理模組所需的Firebase帳本集合文檔結構，包含實際帳本文檔欄位
+ * @description 初始化帳本管理模組所需的Firebase帳本集合文檔結構，支援CM.js模組
  */
 async function FS_initializeLedgerStructure() {
   const ledgerStructure = {
@@ -2415,7 +2436,10 @@ async function FS_initializeLedgerStructure() {
 }
 
 /**
- * 根據用戶模式取得帳本配置
+ * 34. 根據用戶模式取得帳本配置
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 根據用戶模式（Expert/Inertial/Cultivation/Guiding）返回對應的帳本配置
  */
 function FS_getLedgerConfigByMode(userMode) {
   const configs = {
@@ -2453,7 +2477,10 @@ function FS_getLedgerConfigByMode(userMode) {
 }
 
 /**
- * 根據用戶模式取得科目配置
+ * 35. 根據用戶模式取得科目配置
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 根據用戶模式返回適合的收支科目配置，Expert模式包含更多詳細科目
  */
 function FS_getCategoryConfigByMode(userMode) {
   const baseConfig = {
@@ -2485,7 +2512,10 @@ function FS_getCategoryConfigByMode(userMode) {
 }
 
 /**
- * 建立基礎帳戶
+ * 36. 建立基礎帳戶
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 為新帳本建立基礎帳戶，包含現金和銀行帳戶
  */
 async function FS_createBasicAccounts(ledgerId, userMode, requesterId) {
   const accounts = [
@@ -2526,7 +2556,10 @@ async function FS_createBasicAccounts(ledgerId, userMode, requesterId) {
 }
 
 /**
- * 驗證Phase 1功能
+ * 37. 驗證Phase 1功能
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 驗證Phase 1核心功能是否正常運作，檢查各模組可用性
  */
 async function FS_verifyPhase1Functions() {
   const functions = [
@@ -2555,7 +2588,10 @@ async function FS_verifyPhase1Functions() {
 }
 
 /**
- * 取得功能描述
+ * 38. 取得功能描述
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 返回指定函數的中文描述，用於系統診斷和報告
  */
 function FS_getFunctionDescription(funcName) {
   const descriptions = {
@@ -2570,7 +2606,10 @@ function FS_getFunctionDescription(funcName) {
 }
 
 /**
- * 檢查數據一致性
+ * 39. 檢查數據一致性
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 檢查系統數據一致性，驗證關鍵配置文檔是否正常
  */
 async function FS_checkDataConsistency() {
   try {
@@ -2592,7 +2631,10 @@ async function FS_checkDataConsistency() {
 }
 
 /**
- * 驗證API端點
+ * 40. 驗證API端點
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 驗證主要API端點功能是否可用，檢查函數可調用性
  */
 async function FS_validateAPIEndpoints() {
   const endpoints = [
@@ -2617,7 +2659,10 @@ async function FS_validateAPIEndpoints() {
 }
 
 /**
- * 取得健康建議
+ * 41. 取得健康建議
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 根據系統健康狀態提供對應的維護建議
  */
 function FS_getHealthRecommendation(status) {
   const recommendations = {
@@ -2629,7 +2674,10 @@ function FS_getHealthRecommendation(status) {
 }
 
 /**
- * 取得驗證建議
+ * 42. 取得驗證建議
+ * @version 2025-11-18-V1.0.0
+ * @date 2025-11-18
+ * @description 根據功能驗證結果提供後續操作建議
  */
 function FS_getValidationRecommendation(result) {
   const recommendations = {
@@ -2643,10 +2691,10 @@ function FS_getValidationRecommendation(result) {
 // =============== 階段一：協作架構支援函數區 ===============
 
 /**
- * FS_initializeCollaborationCollection - 初始化協作集合
+ * 43. 初始化協作集合
  * @version 2025-11-06-V2.7.1
  * @date 2025-11-06
- * @description 專門初始化collaboration集合，不影響其他集合
+ * @description 專門初始化collaboration集合，確保協作功能集合框架存在
  */
 async function FS_initializeCollaborationCollection(requesterId) {
   const functionName = "FS_initializeCollaborationCollection";
@@ -2693,10 +2741,10 @@ async function FS_initializeCollaborationCollection(requesterId) {
 }
 
 /**
- * FS_initializeCollaborationStructure - 初始化協作架構
+ * 44. 初始化協作架構
  * @version 2025-11-06-V2.7.0
  * @date 2025-11-06
- * @description 階段一：為1311.FS.js建立協作功能支援架構
+ * @description 為FS模組建立協作功能支援架構，定義協作集合結構
  */
 async function FS_initializeCollaborationStructure(requesterId) {
   const functionName = "FS_initializeCollaborationStructure";
@@ -2798,10 +2846,10 @@ async function FS_initializeCollaborationStructure(requesterId) {
 }
 
 /**
- * FS_validateCollaborationData - 驗證協作帳本資料結構
+ * 45. 驗證協作帳本資料結構
  * @version 2025-11-12-V2.7.1
  * @date 2025-11-12
- * @description 階段一：驗證協作帳本資料是否符合標準結構
+ * @description 驗證協作帳本資料是否符合標準結構，確保資料一致性
  */
 function FS_validateCollaborationData(collaborationData) {
   const requiredFields = ['ledgerId', 'ownerId', 'collaborationType', 'settings', 'createdAt', 'updatedAt', 'status'];
@@ -2853,10 +2901,10 @@ function FS_validateCollaborationData(collaborationData) {
 }
 
 /**
- * FS_createCollaborationDocument - 建立協作文檔 (簡化版)
+ * 46. 建立協作文檔（簡化版）
  * @version 2025-11-12-V2.7.1
  * @date 2025-11-12
- * @description 階段一：建立協作主集合文檔，僅負責基礎文檔創建和資料驗證，避免與CM模組職責重複
+ * @description 建立協作主集合文檔，僅負責基礎文檔創建和資料驗證
  */
 async function FS_createCollaborationDocument(ledgerId, collaborationData, requesterId) {
   const functionName = "FS_createCollaborationDocument";
