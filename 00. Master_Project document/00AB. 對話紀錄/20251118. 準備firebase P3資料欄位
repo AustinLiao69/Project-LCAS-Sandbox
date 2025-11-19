@@ -2,6 +2,72 @@
 20251119. 準備firebase P3資料欄位
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+根據您的要求，我來檢查各模組的資料欄位與1311.FS.js的一致性，並列出資料流。
+1. 各模組資料欄位與1311.FS.js一致性檢查
+1.1 BK模組 (交易記錄)
+•	路徑: ledgers/{ledgerId}/transactions
+•	一致性: ✅ 符合1311.FS.js的子集合架構
+•	欄位: BK模組建立的交易記錄欄位包含基本的交易資訊，與1311.FS.js定義的結構相符
+1.2 BM模組 (預算管理)
+•	路徑: ledgers/{ledgerId}/budgets
+•	一致性: ✅ 完全符合，已在階段一修正中強制使用子集合架構
+•	欄位: 預算相關欄位如budgetId、amount、consumed_amount等與1311.FS.js一致
+1.3 CM模組 (協作管理)
+•	路徑: collaborations/{ledgerId}
+•	一致性: ✅ 符合協作集合設計
+•	欄位: 協作相關欄位如ownerId、members、permissions等
+1.4 AM模組 (帳號管理)
+•	路徑: ledgers/{ledgerId} (帳本主文檔)
+•	一致性: ✅ 符合1311.FS.js的帳本結構定義
+•	欄位: 帳本基本資訊與1311.FS.js一致
+1.5 WCM模組 (帳戶與科目管理)
+•	路徑: wallets/{walletId} 和 categories/{categoryId}
+•	一致性: ⚠️ 需要注意 - WCM使用頂層集合，而1311.FS.js定義的是子集合架構
+•	建議: 應調整為 ledgers/{ledgerId}/wallets 和 ledgers/{ledgerId}/categories
+2. 資料流分析
+2.1 Ledgers集合建立資料流
+用戶註冊/登入 → AM模組
+    ↓
+AM_initializeUserLedger()
+    ↓
+1. 呼叫 1311.FS.js 的 FS_createCompleteSubcollectionFramework()
+2. 建立帳本主文檔: ledgers/{ledgerId}
+3. 建立子集合框架:
+   - ledgers/{ledgerId}/categories (科目)
+   - ledgers/{ledgerId}/wallets (帳戶，原accounts)
+   - ledgers/{ledgerId}/transactions (交易記錄)
+   - ledgers/{ledgerId}/budgets (預算)
+    ↓
+載入0099科目資料到 categories 子集合
+    ↓
+建立預設帳戶到 wallets 子集合
+2.2 Collaboration集合建立資料流
+帳本擁有者發起協作 → CM模組
+    ↓
+CM_setMemberPermission() (owner設置)
+    ↓
+建立協作文檔: collaborations/{ledgerId}
+包含欄位:
+- ownerId: 擁有者ID
+- collaborationType: 'shared'
+- status: 'active'
+- members: [成員陣列]
+- permissions: 權限配置
+- settings: 協作設定
+    ↓
+其他成員透過邀請加入
+CM_inviteMember() → CM_processMemberJoin()
+    ↓
+更新 collaborations/{ledgerId} 的 members 陣列
+主要發現與建議
+1.	WCM模組不一致: WCM使用頂層集合而非子集合架構，建議修正
+2.	1311.FS.js已更新: 確實有更新，包含完整的子集合架構支援
+3.	資料流清晰: ledgers由AM模組建立，collaboration由CM模組建立
+4.	模組職責分工明確: 每個模組負責特定的Firebase集合操作
+建議優先修正WCM模組使其符合1311.FS.js的子集合架構設計。
+
+
+
 ------------------------------------------
 20251119. 準備firebase P3資料欄位
 Approved請進行階段一
