@@ -4,7 +4,8 @@
     "createdAt": "2025-11-18T09:00:00Z",
     "description": "SIT P1+P2+P3測試資料倉庫 - 新增P3帳戶與科目管理測試資料",
     "dataSource": "REAL_USER_REGISTRATION_COLLABORATION_ACCOUNT_CATEGORY_FLOW",
-    "consumer": ["7570. SIT_P1.dart", "7571. SIT_P2.dart", "7572. SIT_P3.dart", "7582. 註冊使用者.dart"],</old_str>
+    "consumer": ["7570. SIT_P1.dart", "7571. SIT_P2.dart", "7572. SIT_P3.dart", "7582. 註冊使用者.dart"],
+    "totalRecords": 48,</old_str>
     "totalRecords": 48,
     "lastUpdated": "2025-11-06T06:16:00Z",
     "compliance": "1311_FS_STANDARD_BUDGET_REAL_USER_INTEGRATION",
