@@ -712,16 +712,17 @@ async function BK_createTransaction(transactionData) {
 
       // 階段一&二修復：包裝Firebase操作在重試邏輯中
       const executeTransaction = async () => {
-        // 信任AM模組已確保帳本存在且完整初始化，移除BK模組的帳本建立邏輯
-        const db = BK_INIT_STATUS.firestore_db;
-        const ledgerDoc = await db.collection('ledgers').doc(processedData.ledgerId).get();
+        // 階段一修正：確保透過1311.FS.js驗證帳本結構存在
+        const FS = require('./1311. FS.js');
         
-        if (!ledgerDoc.exists) {
-          // 不在BK模組建立帳本，回傳錯誤要求重新透過AM模組處理
-          throw new Error(`AM模組初始化的帳本不存在: ${processedData.ledgerId}，請聯繫系統管理員`);
+        // 透過1311.FS.js驗證帳本存在
+        const ledgerCheck = await FS.FS_getDocument('ledgers', processedData.ledgerId, 'SYSTEM');
+        
+        if (!ledgerCheck.success || !ledgerCheck.exists) {
+          throw new Error(`帳本不存在或無法存取: ${processedData.ledgerId}，請確認AM模組已正確初始化`);
         }
 
-        BK_logInfo(`${logPrefix} 帳本驗證通過（由AM模組管理）: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        BK_logInfo(`${logPrefix} 帳本驗證通過（透過1311.FS.js）: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
 
         // 生成交易ID
         const transactionId = await BK_generateTransactionId(processId);
@@ -729,8 +730,9 @@ async function BK_createTransaction(transactionData) {
         // 準備交易數據
         const preparedData = await BK_prepareTransactionData(transactionId, processedData, processId);
 
-        // 儲存到Firestore
-        const result = await BK_saveTransactionToFirestore(preparedData, processId);
+        // 階段一修正：透過1311.FS.js儲存交易記錄
+        const FS = require('./1311. FS.js');
+        const result = await FS.FS_manageTransaction(processedData.ledgerId, 'CREATE', preparedData, processedData.userId);
 
         if (!result.success) {
           throw new Error(`交易儲存失敗: ${result.error}`);
@@ -872,8 +874,44 @@ async function BK_getTransactions(queryParams = {}) {
         return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
       }
 
-      // 修正：使用與儲存一致的transactions路徑
-      const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+      // 階段一修正：透過1311.FS.js查詢交易記錄
+      const FS = require('./1311. FS.js');
+      const queryConditions = [];
+      
+      // 構建查詢條件
+      if (queryParams.userId) {
+        queryConditions.push({ field: 'userId', operator: '==', value: queryParams.userId });
+      }
+      if (queryParams.type) {
+        queryConditions.push({ field: 'type', operator: '==', value: queryParams.type });
+      }
+      
+      const queryOptions = {
+        orderBy: { field: 'createdAt', direction: 'desc' },
+        limit: queryParams.limit ? Math.min(parseInt(queryParams.limit), 50) : 20
+      };
+      
+      const fsQueryResult = await FS.FS_manageTransaction(ledgerId, 'QUERY', 
+        { conditions: queryConditions, options: queryOptions }, 
+        queryParams.userId || 'SYSTEM');
+      
+      if (!fsQueryResult.success) {
+        throw new Error(`1311.FS.js查詢失敗: ${fsQueryResult.error}`);
+      }
+      
+      // 轉換結果格式
+      const transactions = fsQueryResult.results.map(result => ({
+        id: result.id,
+        ...result.data
+      }));
+      
+      const queryResult = {
+        transactions: transactions,
+        total: transactions.length,
+        page: queryParams.page || 1,
+        limit: queryParams.limit || 20,
+        dataFormat: 'FS_MANAGED_V1.0'
+      };
 
       // 階段二修復：實作降級查詢策略
       let queryResult = null;

@@ -1315,225 +1315,41 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     operationCount++;
     console.log(`  - 帳本主文檔 ${userLedgerId} 準備寫入（階段二優化版）`);
 
-    // 2. 階段二優化：智能導入預設科目數據 - 修正為categories集合
-    console.log(`  - 階段二優化：準備導入科目資料...`);
-    let subjectData = [];
-    let subjectCount = 0;
+    // 階段一修正：確保透過1311.FS.js建立完整帳本結構
+    console.log(`  - 階段一修正：確保帳本結構存在...`);
+    
+    // 引入1311.FS.js確保結構存在
+    const FS = require('./1311. FS.js');
+    
+    // 使用1311.FS.js建立完整帳本子集合架構
+    const structureResult = await FS.FS_createCompleteSubcollectionFramework(userLedgerId, UID);
+    
+    if (!structureResult.success) {
+      console.warn(`  - 1311.FS.js結構建立警告: ${structureResult.error || '未知錯誤'}`);
+      // 降級處理：繼續執行但記錄警告
+    } else {
+      console.log(`  - 1311.FS.js結構建立成功: ${JSON.stringify(structureResult.created_subcollections)}`);
+    }
+    
+    // AM模組專注於帳本業務邏輯，不再直接定義Firebase結構
 
+    // 階段一修正：預設帳戶由1311.FS.js統一處理，AM模組不再直接建立
+    console.log(`  - 階段一修正：預設帳戶由1311.FS.js統一處理`);
+
+    // 階段一修正：交易和預算子集合由1311.FS.js統一處理，AM模組專注帳本業務邏輯
+    console.log(`  - 階段一修正：交易和預算子集合由1311.FS.js統一處理`);
+
+    // 階段一修正：簡化為帳本主文檔建立，其他結構由1311.FS.js處理
+    console.log(`🔄 階段一修正：建立帳本主文檔...`);
+    
+    // 只建立帳本主文檔，其他結構已由1311.FS.js處理
     try {
-      // 嘗試載入科目資料
-      subjectData = require("../00. Master_Project document/0099. Subject_code.json");
-      console.log(`  - 成功載入科目資料，共 ${subjectData.length} 筆`);
+      await ledgerRef.set(mainLedgerData);
+      console.log(`✅ 帳本主文檔建立成功: ${userLedgerId}`);
     } catch (error) {
-      console.warn(`  - 無法載入0099科目資料: ${error.message}，使用預設科目`);
-
-    // 階段二優化：智能batch分割處理科目數據
-    for (const subject of subjectData) {
-      const docId = `${subject.大項代碼}_${subject.子項代碼}`;
-      const categoryRef = ledgerRef.collection("categories").doc(docId);
-      const categoryData = {
-        大項代碼: String(subject.大項代碼),
-        大項名稱: subject.大項名稱 || "",
-        子項代碼: String(subject.子項代碼),
-        子項名稱: subject.子項名稱 || "",
-        同義詞: subject.同義詞 || "",
-        isActive: true,
-        sortOrder: subjectCount,
-        createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now(),
-        metadata: {
-          stage: "stage2_optimized",
-          batchIndex: Math.floor(operationCount / maxBatchSize)
-        }
-      };
-
-      currentBatch.set(categoryRef, categoryData);
-      operationCount++;
-      subjectCount++;
-
-      // 階段二優化：達到batch限制時創建新batch
-      if (operationCount >= maxBatchSize) {
-        batches.push(currentBatch);
-        currentBatch = db.batch();
-        operationCount = 0;
-        console.log(`  - Batch ${batches.length} 已滿，準備下一個batch`);
-      }
+      console.error(`❌ 帳本主文檔建立失敗:`, error);
+      throw new Error(`帳本主文檔建立失敗: ${error.message}`);
     }
-    console.log(`  - ${subjectCount} 筆科目資料準備寫入到categories集合（分為${batches.length + 1}個batch）`);
-
-    // 3. 創建預設帳戶
-    const defaultAccounts = [
-      {
-        accountId: "cash",
-        name: "現金",
-        type: "asset",
-        balance: 0,
-        currency: "TWD",
-        description: "現金帳戶"
-      },
-      {
-        accountId: "bank_checking",
-        name: "銀行帳戶",
-        type: "asset",
-        balance: 0,
-        currency: "TWD",
-        description: "主要銀行帳戶"
-      },
-      {
-        accountId: "credit_card",
-        name: "信用卡",
-        type: "liability",
-        balance: 0,
-        currency: "TWD",
-        description: "主要信用卡"
-      }
-    ];
-
-    let accountCount = 0;
-    for (const acc of defaultAccounts) {
-      const accountRef = ledgerRef.collection("accounts").doc(acc.accountId);
-      currentBatch.set(accountRef, { // Changed from batch.set to currentBatch.set
-        id: acc.accountId,
-        name: acc.name,
-        type: acc.type,
-        balance: acc.balance,
-        currency: acc.currency,
-        description: acc.description,
-        isActive: true,
-        createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now(),
-      });
-      accountCount++;
-    }
-    console.log(`  - ${accountCount} 個預設帳戶準備寫入`);
-
-    // 4. 創建transactions子集合範例文檔（確保子集合存在）
-    const transactionExample = {
-      transaction_id: 'example_transaction',
-      ledger_id: userLedgerId,
-      amount: 0,
-      type: 'example',
-      description: '範例交易記錄',
-      category_id: 'expense_food',
-      account_id: 'cash',
-      date: new Date().toISOString().split('T')[0],
-      user_id: UID,
-      created_at: admin.firestore.Timestamp.now(),
-      updated_at: admin.firestore.Timestamp.now(),
-      note: '此為確保交易子集合存在的範例文檔，用戶首次記帳後可刪除'
-    };
-
-    const transactionRef = ledgerRef.collection("transactions").doc("example_transaction");
-    currentBatch.set(transactionRef, transactionExample);
-    operationCount++;
-    console.log(`  - transactions子集合範例文檔準備寫入`);
-
-    // 檢查batch容量
-    if (operationCount >= maxBatchSize) {
-      batches.push(currentBatch);
-      currentBatch = db.batch();
-      operationCount = 0;
-      console.log(`  - 達到batch容量限制，創建新batch`);
-    }
-
-    // 5. 創建budgets子集合範例文檔（確保子集合存在）
-    const budgetExample = {
-      budget_id: 'example_monthly_budget',
-      ledger_id: userLedgerId,
-      name: '月度預算範例',
-      type: 'monthly',
-      total_amount: 30000,
-      consumed_amount: 0,
-      currency: 'TWD',
-      start_date: admin.firestore.Timestamp.now(),
-      end_date: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30天後
-      allocation: [
-        {
-          category_id: 'expense_food',
-          category_name: '餐飲',
-          allocated_amount: 12000,
-          consumed_amount: 0
-        },
-        {
-          category_id: 'expense_transport',
-          category_name: '交通',
-          allocated_amount: 6000,
-          consumed_amount: 0
-        },
-        {
-          category_id: 'expense_shopping',
-          category_name: '購物',
-          allocated_amount: 8000,
-          consumed_amount: 0
-        },
-        {
-          category_id: 'expense_entertainment',
-          category_name: '娛樂',
-          allocated_amount: 4000,
-          consumed_amount: 0
-        }
-      ],
-      alert_rules: {
-        warning_threshold: 80,
-        critical_threshold: 95,
-        enable_notifications: true,
-        notification_channels: ['system']
-      },
-      created_by: UID,
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      status: 'active',
-      note: '此為確保預算子集合存在的範例文檔，用戶可以編輯或刪除'
-    };
-
-    const budgetRef = ledgerRef.collection("budgets").doc("example_monthly_budget");
-    currentBatch.set(budgetRef, budgetExample);
-    operationCount++;
-    console.log(`  - budgets子集合範例文檔準備寫入`);
-
-    // 階段二優化：將剩餘操作加入最後一個batch
-    if (operationCount > 0) {
-      batches.push(currentBatch);
-    }
-
-    // 階段二優化：序列化提交所有batch，包含重試機制
-    console.log(`🔄 階段二優化：準備提交 ${batches.length} 個batch...`);
-    let successfulBatches = 0;
-    let failedBatches = 0;
-
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
-      const batchNumber = i + 1;
-      let retryCount = 0;
-      const maxRetries = 3;
-
-      while (retryCount <= maxRetries) {
-        try {
-          await batch.commit();
-          console.log(`✅ Batch ${batchNumber}/${batches.length} 提交成功！`);
-          successfulBatches++;
-          break; // 成功，跳出重試迴圈
-        } catch (batchError) {
-          retryCount++;
-          console.error(`❌ Batch ${batchNumber} 提交失敗 (嘗試${retryCount}/${maxRetries + 1}):`, batchError.message);
-
-          if (retryCount > maxRetries) {
-            console.error(`❌ Batch ${batchNumber} 最終失敗，已重試${maxRetries}次`);
-            failedBatches++;
-            // 對於非關鍵batch失敗，記錄錯誤但繼續處理
-            if (i === 0) {
-              // 如果是包含主文檔的第一個batch失敗，則拋出錯誤
-              throw new Error(`關鍵Batch寫入失敗: ${batchError.message}`);
-            }
-          } else {
-            // 等待後重試
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-          }
-        }
-      }
-    }
-
-    console.log(`📊 Batch提交統計: 成功 ${successfulBatches}/${batches.length}, 失敗 ${failedBatches}/${batches.length}`);
 
     // 更新帳本主文檔的 initializationComplete 標誌
     try {
@@ -1619,20 +1435,11 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     return {
       success: true,
       userLedgerId: userLedgerId,
-      subjectCount: subjectCount,
-      accountCount: accountCount,
-      transactionExampleCount: 1,
-      budgetExampleCount: 1,
+      structureHandledBy: "1311.FS.js",
+      fsStructureResult: structureResult,
       initializationComplete: true,
-      subcollections: {
-        categories: subjectCount > 0,
-        accounts: accountCount > 0,
-        transactions: true,
-        budgets: true
-      },
-      performance: performanceMetrics,
-      optimizationStage: "stage1_complete_with_budgets_transactions",
-      message: `完整帳本初始化成功：4個子集合均已建立 (categories: ${subjectCount}筆, accounts: ${accountCount}個, transactions: 1筆範例, budgets: 1筆範例)`
+      stage: "phase1_firebase_structure_delegation",
+      message: `階段一修正完成：帳本 ${userLedgerId} 建立成功，結構由1311.FS.js統一處理`
     };
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
