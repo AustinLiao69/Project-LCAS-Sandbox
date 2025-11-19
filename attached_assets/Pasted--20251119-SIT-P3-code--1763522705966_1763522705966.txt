@@ -1,0 +1,94 @@
+------------------------------------------
+20251119. SIT_P3 前置準備
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+解決方案 - 分階段實施（更新版）
+階段一：建立P3專屬測試用戶 (7582模組修正)
+目標：參考expert.valid@test.lcas.app生成方式，新增sit_p3@sit.com測試用戶
+修改檔案：75. Flutter_Test_code_PL/7582. 註冊使用者.dart
+實施計畫：
+•	在success_scenarios中新增sit_p3_test_user，參考collaboration_test_user格式
+=>這個不用
+
+•	設定email為"sit_p3@sit.com"
+=>7582只要拿這個email去註冊就好，其它不用管
+
+•	設定userMode為"Expert"（確保功能完整性）
+=>這個不用
+•	設定userId為"user_sit_p3_1697363600000"
+=>這個不用
+•	確保該用戶觸發AM模組完整帳本初始化
+=>這個不用
+•	驗證ledgerId生成為user_sit_p3@sit.com格式
+=>這個不用
+
+=> 1. 我搞錯了，sit_p3@sit.com應該要設在7598裡面才對，請協助修改，並且要注意7598只能寫sit_p3@sit.com，其它什麼usrid之類的嚴禁寫入
+
+
+
+階段二：7598測試資料擴展 (符合1311規範)
+目標：新增完整的P3測試資料集
+修改檔案：75. Flutter_Test_code_PL/7598. Data warehouse.json
+實施計畫：
+•	新增sit_p3_test_data區塊，包含：
+o	wallet_test_data：現金帳戶、銀行帳戶、信用卡帳戶
+o	category_test_data：收入科目(薪資、獎金)、支出科目(食物、交通、娛樂)
+
+=>當AM去建立新使用者sit_p3@sit.com的第一本帳本時，BL層模組自己會去引用0302, 0303以及0099，7598的wallet_test_data以及category_test_data只要負責創建帳戶及科目管理的CRUD相關的測試資料，亦即需要新增、刪除、更新就好。
+
+o	integration_test_data：API轉發測試、錯誤處理測試
+=>7598僅是靜態測試資料，此項請不用。
+
+•	所有欄位遵守1311 FS模組子集合架構規範
+•	支援CRUD完整操作流程的測試案例
+
+階段三：確認模組配置正確性（無需修改）
+重要修正：經檢視現有模組，AM、BM、CM、WCM模組已支援動態ledgerId處理，無需版本升級。
+確認要點：
+•	AM模組：已支援任意email用戶註冊和帳本初始化
+•	BM模組：已使用ledgers/{ledgerId}/budgets子集合路徑
+•	CM模組：已支援協作功能在指定帳本下運作
+•	WCM模組：已使用ledgers/{ledgerId}/wallets和ledgers/{ledgerId}/categories路徑
+
+階段四：7572 SIT_P3測試代碼整合（具體Action Plan）
+目標：從PL層觸發完整資料流測試，而非BL層直接操作
+修改檔案：75. Flutter_Test_code_PL/7572. SIT_P3.dart
+具體Action Plan：
+
+1.	新增測試資料載入函數：
+•	loadSitP3TestData() - 載入7598的sit_p3_test_data
+•	getSitP3UserData() - 取得sit_p3@sit.com用戶資料
+=>以上函數請檢查7572是否已有，若有相同類型函數則勿新增
+
+2.	新增帳戶管理測試函數：
+•	testCreateWallet() - 通過PL層7306創建帳戶
+•	testGetWalletList() - 通過PL層查詢帳戶列表
+•	testUpdateWallet() - 通過PL層更新帳戶資訊
+•	testDeleteWallet() - 通過PL層刪除帳戶
+=>以上函數請檢查7572是否已有，若有相同類型函數則勿新增
+
+
+3.	新增科目管理測試函數：
+•	testCreateCategory() - 通過PL層7306創建科目
+•	testGetCategoryList() - 通過PL層查詢科目列表
+•	testUpdateCategory() - 通過PL層更新科目資訊
+•	testValidateCategoryHierarchy() - 驗證科目階層結構
+=>以上函數請檢查7572是否已有，若有相同類型函數則勿新增
+
+4.	新增整合驗證函數：
+•	testEndToEndWalletFlow() - 完整帳戶生命週期測試
+•	testEndToEndCategoryFlow() - 完整科目生命週期測試
+•	testCrossModuleIntegration() - 跨模組整合測試
+=>以上函數請檢查7572是否已有，若有相同類型函數則勿新增
+
+
+測試流程設計：
+7572 (PL測試) → 7306 (PL功能群) → APL → ASL → WCM (BL) → Firebase
+驗證重點：
+•	所有操作都在user_sit_p3@sit.com帳本下進行
+•	資料正確寫入子集合路徑
+•	錯誤處理機制正常運作
+•	測試結果符合預期
+這個設計確保了真實的端到端測試流程，避免了直接在BL層操作的問題。
+
