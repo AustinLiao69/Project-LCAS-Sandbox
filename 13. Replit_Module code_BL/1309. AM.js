@@ -4931,7 +4931,7 @@ async function AM_recordAPIUsage(userId, apiEndpoint, userMode, success, process
 
 // 導出模組函數
 module.exports = {
-  // 01-18: 核心帳號管理函數
+  // 基本帳號管理功能
   AM_createLineAccount,
   AM_createAppAccount,
   AM_linkCrossPlatformAccounts,
@@ -4941,6 +4941,8 @@ module.exports = {
   AM_getUserInfo,
   AM_validateAccountExists,
   AM_searchUserAccounts,
+
+  // LINE OAuth 相關功能
   AM_handleLineOAuth,
   AM_refreshLineToken,
   AM_verifyLineIdentity,
@@ -4948,21 +4950,26 @@ module.exports = {
   AM_resolveDataConflict,
   AM_handleAccountError,
   AM_monitorSystemHealth,
+
+  // 帳本初始化功能 (v7.4.0新增)
+  AM_initializeUserLedger,
+  AM_ensureUserLedger,
+  AM_getUserDefaultLedger,
+
+  // 0099科目資料載入 (v7.4.0新增)
+  AM_load0099SubjectData,
+
+  // 相容性函數 (v7.0.0保留)
   AM_initializeUserSubjects,
   AM_ensureUserSubjects,
 
-  // DCN-0020: 完整帳本初始化功能 - 階段一修復
-  AM_getUserDefaultLedger,     // ✅ 關鍵函數導出（階段一修復）
-  AM_initializeUserLedger,
-  AM_ensureUserLedger,
-
-  // 22-25: SR模組專用付費功能API
+  // SR模組專用付費功能API
   AM_validateSRPremiumFeature,
   AM_getSRUserQuota,
   AM_updateSRFeatureUsage,
   AM_processSRUpgrade,
 
-  // 26-44: DCN-0012 階段二 API端點處理函數
+  // DCN-0012 階段二 API端點處理函數
   AM_processAPIGetAccounts,
   AM_processAPIRegister,
   AM_processAPILogin,
@@ -4995,7 +5002,7 @@ module.exports = {
   AM_processAPIGetModeRecommendations,
 
   // 補充函數
-  AM_load0099SubjectData, // 新增：AM模組自行載入0099資料
+  // AM_load0099SubjectData, // 新增：AM模組自行載入0099資料 - Moved up to be with other v7.4.0 additions
 
   // 模組版本資訊
   moduleVersion: '7.4.0', // Updated version
