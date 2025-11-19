@@ -153,6 +153,10 @@
         "createdAt": "2025-10-15T08:00:00+08:00",
         "testScenario": "正常Guiding用戶註冊"
       },
+      "sit_p3_user": {
+        "email": "sit_p3@sit.com",
+        "testScenario": "SIT P3測試專用用戶 - 帳戶與科目管理測試"
+      },
       "user_with_special_characters": {
         "userId": "user_special_1697363440000",
         "email": "test+special@test.lcas.app",
