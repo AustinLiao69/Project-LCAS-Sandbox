@@ -1,0 +1,54 @@
+------------------------------------------
+20251119. 0099欄位映射
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+=>請針對我如下的需求提出方案
+
+0099.json資料適配
+目標：讓0099.json的中文欄位資料適配1311.FS.js的英文欄位結構
+具體行動：
+1.	在1311.FS.js中建立欄位映射：
+•	大項代碼 → categoryCode
+•	大項名稱 → categoryName
+•	子項代碼 → subCategoryCode
+•	子項名稱 → subCategoryName
+•	同義詞 → synonyms
+
+=>關於categories子集合下的欄位我有以下需求：
+
+categories子集合 (科目分類)
+ledgers/{ledgerId}/categories/{categoryId}/
+├── categoryId: string           // 科目唯一識別碼
+=>此categoryId是對應到0099的子項代碼，例如10101
+
+├── name: string                 // 科目名稱
+=>此項請拆分成categoryName以及subCategoryName，分別對應到0099的大項代碼與子項代碼。
+
+├── type: string                 // 科目類型: "income"|"expense"
+├── icon: string                 // 科目圖示 emoji
+=>請刪除
+
+├── color: string                // 科目顏色 hex code
+=>請刪除
+
+├── parentId: string             // 父科目ID (可選，支援多層級)
+此parentId是對應到0099的大項代碼，例如101
+
+├── level: number                // 科目層級 (1為頂層)
+=>請刪除
+
+├── order: number                // 排序順序
+=>請刪除
+
+├── isDefault: boolean           // 是否為預設科目
+├── isActive: boolean            // 是否啟用
+├── createdAt: timestamp         // 建立時間
+└── updatedAt: timestamp         // 最後更新時間
+
+=>請新增一個資料欄位synonyms，對應到0099的同義詞
+
+•	大項代碼 → categoryCode
+•	大項名稱 → categoryName
+•	子項代碼 → subCategoryCode
+•	子項名稱 → subCategoryName
+•	同義詞 → synonyms
