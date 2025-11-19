@@ -1,8 +1,8 @@
 /**
 * FS_FirestoreStructure_資料庫結構模組_2.7.2
-* @module 資料庫結構模組
-* @description LCAS 2.7.2 Firestore資料庫結構模組 - 0099科目映射支援 + categories子集合動態初始化
-* @update 2025-11-19: 階段一與階段二 - 引用0099.json科目資料，移除hard-coding，新增動態科目初始化
+* @module 資料庫結構模組  
+* @description LCAS 2.7.2 Firestore資料庫結構模組 - Firebase架構管理專用，提供0099科目資料載入支援
+* @update 2025-11-19: 階段一與階段二 - 職責明確化：FS負責Firebase結構，AM負責業務資料初始化
 */
 
 // 引入Firebase動態配置模組
@@ -2069,134 +2069,58 @@ async function FS_createBudgetsSubcollectionFramework() {
 }
 
 /**
- * 29. 初始化0099科目資料到帳本categories子集合
+ * 29. 保留：供AM模組使用的0099科目資料載入函數
  * @version 2025-11-19-V2.7.2
  * @date 2025-11-19
- * @description 從0099.json讀取科目資料並初始化到指定帳本的categories子集合
+ * @description 僅提供載入0099.json科目資料的基礎功能，供AM模組在用戶註冊時使用
+ * @note 1311.FS.js專注於Firebase結構管理，科目資料的業務邏輯初始化由AM模組處理
  */
-async function FS_initialize0099CategoriesForLedger(ledgerId, requesterId) {
-  const functionName = "FS_initialize0099CategoriesForLedger";
-  try {
-    console.log(`[${functionName}] 📋 開始為帳本 ${ledgerId} 初始化0099科目資料...`);
-
-    // 載入0099科目資料
-    const subjectResult = FS_load0099SubjectData();
-    
-    if (!subjectResult.success) {
-      throw new Error(`載入0099科目資料失敗: ${subjectResult.error}`);
-    }
-
-    const results = [];
-    const collectionPath = `ledgers/${ledgerId}/categories`;
-
-    // 定義收入和支出的parentId
-    const incomeParentIds = [801, 899];
-    const expenseParentIds = [101, 102, 103, 105, 108, 109, 110, 905, 999];
-
-    for (const item of subjectResult.data) {
-      // 判斷科目類型
-      let type = 'expense'; // 預設為支出
-      if (incomeParentIds.includes(item.parentId)) {
-        type = 'income';
-      }
-
-      // 準備科目資料
-      const categoryData = {
-        categoryId: item.categoryId,
-        parentId: item.parentId,
-        categoryName: item.categoryName,
-        subCategoryName: item.subCategoryName,
-        synonyms: item.synonyms || '',
-        type: type,
-        isDefault: true,
-        isActive: true,
-        ledgerId: ledgerId,
-        createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now(),
-        createdBy: requesterId || 'SYSTEM',
-        dataSource: '0099. Subject_code.json'
-      };
-
-      // 建立科目文檔
-      const result = await FS_createDocument(
-        collectionPath,
-        item.categoryId.toString(),
-        categoryData,
-        requesterId
-      );
-
-      results.push({
-        categoryId: item.categoryId,
-        categoryName: item.categoryName,
-        subCategoryName: item.subCategoryName,
-        type: type,
-        result: result
-      });
-    }
-
-    const successCount = results.filter(r => r.result.success).length;
-    const totalCount = results.length;
-
-    console.log(`[${functionName}] ✅ 0099科目資料初始化完成: ${successCount}/${totalCount}`);
-
-    return {
-      success: successCount === totalCount,
-      ledgerId: ledgerId,
-      created: successCount,
-      total: totalCount,
-      results: results,
-      message: `0099科目資料初始化${successCount === totalCount ? '完成' : '部分成功'}`
-    };
-
-  } catch (error) {
-    console.error(`[${functionName}] ❌ 0099科目資料初始化失敗:`, error.message);
-    return {
-      success: false,
-      error: error.message,
-      errorCode: 'FS_INIT_0099_CATEGORIES_ERROR'
-    };
-  }
-}
 
 /**
- * 30. 初始化預設科目（保留相容性）
+ * 30. 初始化預設科目結構定義（僅系統配置）
  * @version 2025-11-19-V2.7.2
  * @date 2025-11-19
- * @description 保留原有預設科目初始化功能，同時記錄0099資料來源
+ * @description 僅建立科目結構的系統配置文檔，實際科目資料由AM模組在用戶註冊時從0099.json載入
  */
 async function FS_initializeDefaultCategories() {
   const functionName = "FS_initializeDefaultCategories";
   try {
-    // 載入0099科目資料作為參考
+    // 載入0099科目資料作為參考統計
     const subjectResult = FS_load0099SubjectData();
     
-    const defaultCategories = {
+    const categoryStructure = {
       version: '2.7.2',
+      description: 'Firebase categories子集合結構定義，實際科目資料由AM模組管理',
       data_source: '0099. Subject_code.json',
-      subject_loaded: subjectResult.success,
-      subject_count: subjectResult.count,
-      note: '建議使用 FS_initialize0099CategoriesForLedger() 直接從0099.json初始化科目',
-      legacy_categories: {
-        income: [
-          { code: 'salary', name: '薪資收入', icon: '💰', color: '#4CAF50', order: 1 },
-          { code: 'business', name: '營業收入', icon: '🏢', color: '#2196F3', order: 2 },
-          { code: 'investment', name: '投資收入', icon: '📈', color: '#FF9800', order: 3 },
-          { code: 'other', name: '其他收入', icon: '💝', color: '#9C27B0', order: 4 }
-        ],
-        expense: [
-          { code: 'food', name: '餐飲', icon: '🍽️', color: '#FF5722', order: 1 },
-          { code: 'transport', name: '交通', icon: '🚗', color: '#607D8B', order: 2 },
-          { code: 'shopping', name: '購物', icon: '🛍️', color: '#E91E63', order: 3 }
-        ]
-      }
+      subject_reference: {
+        loaded: subjectResult.success,
+        count: subjectResult.count || 0,
+        note: '0099科目資料由AM模組在用戶註冊時初始化到個別帳本'
+      },
+      structure_definition: {
+        categoryId: 'number - 科目ID (對應0099 categoryId)',
+        parentId: 'number - 大項代碼 (對應0099 parentId)', 
+        categoryName: 'string - 大項名稱 (對應0099 categoryName)',
+        subCategoryName: 'string - 子項名稱 (對應0099 subCategoryName)',
+        synonyms: 'string - 同義詞 (對應0099 synonyms)',
+        type: 'string - 科目類型: "income"|"expense"',
+        isDefault: 'boolean - 是否為預設科目',
+        isActive: 'boolean - 是否啟用',
+        ledgerId: 'string - 所屬帳本ID',
+        createdAt: 'timestamp - 建立時間',
+        updatedAt: 'timestamp - 更新時間',
+        createdBy: 'string - 建立者',
+        dataSource: 'string - 資料來源標識'
+      },
+      responsibility_note: '1311.FS.js專注於Firebase結構管理，科目資料初始化由AM模組負責'
     };
 
-    console.log(`[${functionName}] ✅ 預設科目定義已更新，建議使用0099科目資料`);
+    console.log(`[${functionName}] ✅ 科目結構定義已建立，科目資料由AM模組管理`);
 
-    const result = await FS_createDocument('_system', 'default_categories', defaultCategories, 'SYSTEM');
+    const result = await FS_createDocument('_system', 'category_structure', categoryStructure, 'SYSTEM');
     return result;
   } catch (error) {
-    console.error(`[${functionName}] ❌ 預設科目初始化失敗:`, error.message);
+    console.error(`[${functionName}] ❌ 科目結構定義建立失敗:`, error.message);
     return { success: false, error: error.message };
   }
 }
@@ -3182,10 +3106,9 @@ module.exports = {
   FS_createCollaborationDocument,
   FS_validateCollaborationData,
 
-  // 2.7.2版本新增：0099科目映射支援函數
-  FS_load0099SubjectData,
-  FS_initialize0099CategoriesForLedger,
-  FS_initializeDefaultCategories, // 更新版本，引用0099資料
+  // 2.7.2版本新增：0099科目資料載入支援（供AM模組使用）
+  FS_load0099SubjectData, // 提供給AM模組載入0099科目資料
+  FS_initializeDefaultCategories, // 僅建立科目結構定義，不進行實際資料初始化
 
   // 相容性函數（保留現有調用）
   FS_mergeDocument,
