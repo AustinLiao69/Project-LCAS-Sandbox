@@ -2,6 +2,10 @@
 20251119. 準備firebase P3資料欄位
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+------------------------------------------
+20251119. 準備firebase P3資料欄位
+Approved請進行階段一
+
 根據9909文件SA角色要求，我重新分析您的Firebase P3資料欄位對齊問題。
 🔍 重新分析問題根源
 根本原因分析
@@ -16,6 +20,7 @@
 •	CM.js：在既定結構下建立協作帳本
 
 🔧 修正後的MVP階段解決方案
+
 階段一：清除非1311模組的Firebase集合結構初始化代碼
 目標：移除其他模組的Firebase結構初始化代碼，保留業務資料建立功能
 具體行動：
@@ -29,29 +34,35 @@
 •	所有Firebase操作必須透過1311.FS.js定義的結構
 
 階段二：確認1311.FS.js結構完整性和其他模組職責
+
 1311.FS.js結構確認：
 查看FS_initializeLedgerStructure函數，確認是否包含：
 •	categories（科目子集合）
 •	wallets（帳戶子集合，原accounts改名為wallets）
 •	transactions（交易子集合）
 •	budgets（預算子集合）
+
 其他模組Firebase初始化職責檢視：
 經檢視代碼，發現以下模組有Firebase操作：
 1.	AM.js：
 •	職責：建立用戶第一個帳本（業務資料）
 •	應保留：在ledgers集合下建立具體帳本文檔
 •	應移除：Firebase集合結構定義
+
 2.	BM.js：
 •	職責：在特定帳本下建立預算（業務資料）
 •	應保留：在ledgers/{ledgerId}/budgets下建立預算文檔
 •	應移除：budgets子集合結構定義
+
 3.	CM.js：
 •	職責：建立協作帳本（業務資料）
 •	應保留：在collaborations集合下建立協作文檔
 •	應移除：collaborations集合結構定義
+
 建議統一調用介面：
 •	其他模組透過1311.FS.js的FS_initializeConnection確保Firebase已初始化
 •	但各模組可保留其特定業務資料的建立功能
+
 ⚠️ MVP階段實施重點
 優先級排序：
 1.	最高優先：確認1311.FS.js包含完整的四個子集合結構定義
