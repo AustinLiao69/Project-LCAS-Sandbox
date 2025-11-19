@@ -35,3 +35,4 @@ MM 	 DD 	 Description 	    Progress
 11	18	 SIT_P3：要先確認1311以及7598的資料欄位與測試資料，再來去開發代碼	 Open
 11	18	 記得要建置一個json儲存問卷，讓其他模組可以引用	 Open
 11	18	 firebase資料欄位的整理是一個大問題，因為技術債的關係必須要重新整理(也許只管好P3就好，其他的放到後面再說？)，猜想是非1311的模組有hard-coding firebase的資料欄位，也許先優先清除？	 Open
+11	19	 用AI開發方式：有多個initiatives分成不同的chat讓AI生成提案，當AI在執行A方案時我就可以去Review B方案	 Open
