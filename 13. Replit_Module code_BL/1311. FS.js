@@ -1,8 +1,8 @@
 /**
-* FS_FirestoreStructure_資料庫結構模組_2.7.1
+* FS_FirestoreStructure_資料庫結構模組_2.7.2
 * @module 資料庫結構模組
-* @description LCAS 2.7.1 Firestore資料庫結構模組 - Phase 3 預算子集合架構遷移完成 + 協作架構資料驗證強化
-* @update 2025-11-18: 階段一修復 - 函數表頭重新編碼，統一版本格式
+* @description LCAS 2.7.2 Firestore資料庫結構模組 - 0099科目映射支援 + categories子集合動態初始化
+* @update 2025-11-19: 階段一與階段二 - 引用0099.json科目資料，移除hard-coding，新增動態科目初始化
 */
 
 // 引入Firebase動態配置模組
@@ -2069,30 +2069,134 @@ async function FS_createBudgetsSubcollectionFramework() {
 }
 
 /**
- * 29. 初始化預設科目
- * @version 2025-11-18-V1.0.0
- * @date 2025-11-18
- * @description 初始化系統預設科目，包含收入和支出分類
+ * 29. 初始化0099科目資料到帳本categories子集合
+ * @version 2025-11-19-V2.7.2
+ * @date 2025-11-19
+ * @description 從0099.json讀取科目資料並初始化到指定帳本的categories子集合
+ */
+async function FS_initialize0099CategoriesForLedger(ledgerId, requesterId) {
+  const functionName = "FS_initialize0099CategoriesForLedger";
+  try {
+    console.log(`[${functionName}] 📋 開始為帳本 ${ledgerId} 初始化0099科目資料...`);
+
+    // 載入0099科目資料
+    const subjectResult = FS_load0099SubjectData();
+    
+    if (!subjectResult.success) {
+      throw new Error(`載入0099科目資料失敗: ${subjectResult.error}`);
+    }
+
+    const results = [];
+    const collectionPath = `ledgers/${ledgerId}/categories`;
+
+    // 定義收入和支出的parentId
+    const incomeParentIds = [801, 899];
+    const expenseParentIds = [101, 102, 103, 105, 108, 109, 110, 905, 999];
+
+    for (const item of subjectResult.data) {
+      // 判斷科目類型
+      let type = 'expense'; // 預設為支出
+      if (incomeParentIds.includes(item.parentId)) {
+        type = 'income';
+      }
+
+      // 準備科目資料
+      const categoryData = {
+        categoryId: item.categoryId,
+        parentId: item.parentId,
+        categoryName: item.categoryName,
+        subCategoryName: item.subCategoryName,
+        synonyms: item.synonyms || '',
+        type: type,
+        isDefault: true,
+        isActive: true,
+        ledgerId: ledgerId,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+        createdBy: requesterId || 'SYSTEM',
+        dataSource: '0099. Subject_code.json'
+      };
+
+      // 建立科目文檔
+      const result = await FS_createDocument(
+        collectionPath,
+        item.categoryId.toString(),
+        categoryData,
+        requesterId
+      );
+
+      results.push({
+        categoryId: item.categoryId,
+        categoryName: item.categoryName,
+        subCategoryName: item.subCategoryName,
+        type: type,
+        result: result
+      });
+    }
+
+    const successCount = results.filter(r => r.result.success).length;
+    const totalCount = results.length;
+
+    console.log(`[${functionName}] ✅ 0099科目資料初始化完成: ${successCount}/${totalCount}`);
+
+    return {
+      success: successCount === totalCount,
+      ledgerId: ledgerId,
+      created: successCount,
+      total: totalCount,
+      results: results,
+      message: `0099科目資料初始化${successCount === totalCount ? '完成' : '部分成功'}`
+    };
+
+  } catch (error) {
+    console.error(`[${functionName}] ❌ 0099科目資料初始化失敗:`, error.message);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_INIT_0099_CATEGORIES_ERROR'
+    };
+  }
+}
+
+/**
+ * 30. 初始化預設科目（保留相容性）
+ * @version 2025-11-19-V2.7.2
+ * @date 2025-11-19
+ * @description 保留原有預設科目初始化功能，同時記錄0099資料來源
  */
 async function FS_initializeDefaultCategories() {
-  const defaultCategories = {
-    income: [
-      { code: 'salary', name: '薪資收入', icon: '💰', color: '#4CAF50', order: 1 },
-      { code: 'business', name: '營業收入', icon: '🏢', color: '#2196F3', order: 2 },
-      { code: 'investment', name: '投資收入', icon: '📈', color: '#FF9800', order: 3 },
-      { code: 'other', name: '其他收入', icon: '💝', color: '#9C27B0', order: 4 }
-    ],
-    expense: [
-      { code: 'food', name: '餐飲', icon: '🍽️', color: '#FF5722', order: 1 },
-      { code: 'transport', name: '交通', icon: '🚗', color: '#607D8B', order: 2 },
-      { code: 'shopping', name: '購物', icon: '🛍️', color: '#E91E63', order: 3 }
-    ]
-  };
-
+  const functionName = "FS_initializeDefaultCategories";
   try {
+    // 載入0099科目資料作為參考
+    const subjectResult = FS_load0099SubjectData();
+    
+    const defaultCategories = {
+      version: '2.7.2',
+      data_source: '0099. Subject_code.json',
+      subject_loaded: subjectResult.success,
+      subject_count: subjectResult.count,
+      note: '建議使用 FS_initialize0099CategoriesForLedger() 直接從0099.json初始化科目',
+      legacy_categories: {
+        income: [
+          { code: 'salary', name: '薪資收入', icon: '💰', color: '#4CAF50', order: 1 },
+          { code: 'business', name: '營業收入', icon: '🏢', color: '#2196F3', order: 2 },
+          { code: 'investment', name: '投資收入', icon: '📈', color: '#FF9800', order: 3 },
+          { code: 'other', name: '其他收入', icon: '💝', color: '#9C27B0', order: 4 }
+        ],
+        expense: [
+          { code: 'food', name: '餐飲', icon: '🍽️', color: '#FF5722', order: 1 },
+          { code: 'transport', name: '交通', icon: '🚗', color: '#607D8B', order: 2 },
+          { code: 'shopping', name: '購物', icon: '🛍️', color: '#E91E63', order: 3 }
+        ]
+      }
+    };
+
+    console.log(`[${functionName}] ✅ 預設科目定義已更新，建議使用0099科目資料`);
+
     const result = await FS_createDocument('_system', 'default_categories', defaultCategories, 'SYSTEM');
     return result;
   } catch (error) {
+    console.error(`[${functionName}] ❌ 預設科目初始化失敗:`, error.message);
     return { success: false, error: error.message };
   }
 }
@@ -2272,165 +2376,225 @@ async function FS_initializeAssessmentQuestions() {
 }
 
 /**
- * 33. 初始化帳本集合文檔結構
- * @version 2025-10-27-V2.2.0
- * @date 2025-10-27
- * @description 初始化帳本管理模組所需的Firebase帳本集合文檔結構，支援CM.js模組
+ * 33. 讀取0099.json科目資料
+ * @version 2025-11-19-V2.7.2
+ * @date 2025-11-19
+ * @description 讀取並解析0099.json科目代碼檔案，提供科目映射功能
+ */
+function FS_load0099SubjectData() {
+  const functionName = "FS_load0099SubjectData";
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    // 讀取0099.json檔案
+    const subjectDataPath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
+    
+    if (!fs.existsSync(subjectDataPath)) {
+      throw new Error('找不到0099.json科目資料檔案');
+    }
+    
+    const subjectData = JSON.parse(fs.readFileSync(subjectDataPath, 'utf8'));
+    
+    console.log(`[${functionName}] ✅ 成功載入${subjectData.length}筆0099科目資料`);
+    
+    return {
+      success: true,
+      data: subjectData,
+      count: subjectData.length
+    };
+    
+  } catch (error) {
+    console.error(`[${functionName}] ❌ 載入0099科目資料失敗:`, error.message);
+    return {
+      success: false,
+      error: error.message,
+      data: []
+    };
+  }
+}
+
+/**
+ * 34. 初始化帳本集合文檔結構（更新版）
+ * @version 2025-11-19-V2.7.2
+ * @date 2025-11-19
+ * @description 初始化帳本管理模組所需的Firebase帳本集合文檔結構，引用0099科目資料
  */
 async function FS_initializeLedgerStructure() {
-  const ledgerStructure = {
-    version: '1.0.0',
-    description: 'CM.js帳本管理模組Firebase帳本集合文檔結構',
-    collection: 'ledgers',
-
-    // ledgers集合下的文檔結構
-    document_structure: {
-      ledgerId: 'string - 帳本唯一識別碼 (與文檔ID相同)',
-      name: 'string - 帳本名稱 (如"個人記帳本", "專案支出")',
-      type: 'string - 帳本類型: "personal"|"project"|"category"|"shared"',
-      description: 'string - 帳本描述說明',
-      userId: 'string - 帳本擁有者ID (對應users集合)',
-      createdBy: 'string - 帳本建立者ID (對應users集合)',
-      members: 'array - 帳本成員列表 (用戶ID陣列)',
-      currency: 'string - 預設貨幣單位 (如"TWD", "USD")',
-      timezone: 'string - 時區設定 (如"Asia/Taipei")',
-      settings: 'object - 帳本設定',
-      permissions: 'object - 權限設定 (擁有者、管理員、成員、檢視者)',
-      attributes: 'object - 帳本屬性 (狀態、進度、分類等)',
-      createdAt: 'timestamp - 建立時間 (符合1311.FS.js規範)',
-      updatedAt: 'timestamp - 最後更新時間 (符合1311.FS.js規範)',
-      archived: 'boolean - 是否已歸檔',
-      status: 'string - 帳本狀態: "active"|"completed"|"archived"',
-      metadata: 'object - 帳本元數據 (交易總數、總金額、成員數量等)'
-    },
-
-    // 各帳本文檔下的子集合結構
-    subcollections: {
-      transactions: {
-        description: '帳本交易記錄子集合',
-        document_structure: {
-          transactionId: 'string - 交易唯一識別碼',
-          ledgerId: 'string - 交易所屬帳本ID',
-          amount: 'number - 交易金額',
-          type: 'string - 交易類型: "income"|"expense"',
-          description: 'string - 交易描述',
-          categoryId: 'string - 科目ID',
-          categoryName: 'string - 科目名稱',
-          accountId: 'string - 帳戶ID',
-          accountName: 'string - 帳戶名稱',
-          date: 'string - 交易日期 (YYYY-MM-DD格式)',
-          userId: 'string - 記帳用戶ID',
-          source: 'string - 記帳來源: "manual"|"quick"|"import"',
-          tags: 'array - 標籤列表',
-          location: 'object - 位置資訊 (可選)',
-          receiptUrl: 'string - 收據圖片URL (可選)',
-          notes: 'string - 備註 (可選)',
-          createdAt: 'timestamp - 建立時間',
-          updatedAt: 'timestamp - 最後更新時間'
-        }
-      },
-      categories: {
-        description: '帳本科目分類子集合',
-        document_structure: {
-          categoryId: 'string - 科目唯一識別碼',
-          name: 'string - 科目名稱',
-          type: 'string - 科目類型: "income"|"expense"',
-          icon: 'string - 科目圖示 emoji',
-          color: 'string - 科目顏色 hex code',
-          parentId: 'string - 父科目ID (可選，支援多層級)',
-          level: 'number - 科目層級 (1為頂層)',
-          order: 'number - 排序順序',
-          isDefault: 'boolean - 是否為預設科目',
-          isActive: 'boolean - 是否啟用',
-          budgetLimit: 'number - 預算上限 (可選)',
-          description: 'string - 科目說明 (可選)',
-          createdAt: 'timestamp - 建立時間',
-          updatedAt: 'timestamp - 最後更新時間'
-        }
-      },
-      accounts: {
-        description: '帳本帳戶子集合',
-        document_structure: {
-          accountId: 'string - 帳戶唯一識別碼',
-          name: 'string - 帳戶名稱',
-          type: 'string - 帳戶類型: "cash"|"bank"|"credit"|"investment"|"other"',
-          icon: 'string - 帳戶圖示 emoji',
-          color: 'string - 帳戶顏色 hex code',
-          currency: 'string - 貨幣單位',
-          initialBalance: 'number - 初始餘額',
-          currentBalance: 'number - 當前餘額',
-          creditLimit: 'number - 信用額度 (信用卡帳戶)',
-          bankName: 'string - 銀行名稱 (銀行帳戶)',
-          accountNumber: 'string - 帳號末四碼 (脫敏)',
-          isDefault: 'boolean - 是否為預設帳戶',
-          isActive: 'boolean - 是否啟用',
-          includeInTotal: 'boolean - 是否計入總資產',
-          notes: 'string - 備註 (可選)',
-          createdAt: 'timestamp - 建立時間',
-          updatedAt: 'timestamp - 最後更新時間'
-        }
-      },
-      budgets: {
-        description: '預算子集合 (與1312.BM.js模組整合)',
-        document_structure: {
-          budgetId: 'string - 預算唯一識別碼',
-          ledgerId: 'string - 預算所屬帳本ID',
-          name: 'string - 預算名稱',
-          type: 'string - 預算類型: "monthly"|"yearly"|"custom"',
-          categoryIds: 'array - 關聯科目ID列表',
-          total_amount: 'number - 預算總金額',
-          used_amount: 'number - 已使用金額',
-          startDate: 'timestamp - 預算開始日期',
-          endDate: 'timestamp - 預算結束日期',
-          alert_percentage: 'number - 警示百分比 (如80%)',
-          isActive: 'boolean - 是否啟用',
-          createdAt: 'timestamp - 建立時間',
-          updatedAt: 'timestamp - 最後更新時間'
-        }
-      }
-    },
-
-    // 權限結構範例
-    permissions_structure: {
-      owner: 'string - 擁有者用戶ID',
-      admins: 'array - 管理員用戶ID列表',
-      members: 'array - 一般成員用戶ID列表',
-      viewers: 'array - 僅檢視用戶ID列表',
-      settings: {
-        allow_invite: 'boolean - 是否允許邀請成員',
-        allow_edit: 'boolean - 是否允許編輯',
-        allow_delete: 'boolean - 是否允許刪除'
-      }
-    },
-
-    // 帳本設定結構範例
-    settings_structure: {
-      allow_negative_balance: 'boolean - 是否允許負餘額',
-      auto_categorization: 'boolean - 是否自動分類',
-      default_account_id: 'string - 預設帳戶ID',
-      default_currency: 'string - 預設貨幣',
-      reminder_settings: 'object - 提醒設定',
-      privacy_mode: 'boolean - 隱私模式'
-    },
-
-    // 元數據結構範例
-    metadata_structure: {
-      total_entries: 'number - 交易總筆數',
-      total_income: 'number - 收入總額',
-      total_expense: 'number - 支出總額',
-      total_amount: 'number - 淨額',
-      last_activity: 'timestamp - 最後活動時間',
-      member_count: 'number - 成員總數',
-      categories_count: 'number - 科目總數',
-      accounts_count: 'number - 帳戶總數',
-      budgets_count: 'number - 預算總數'
-    }
-  };
-
+  const functionName = "FS_initializeLedgerStructure";
   try {
+    // 載入0099科目資料
+    const subjectResult = FS_load0099SubjectData();
+    
+    const ledgerStructure = {
+      version: '2.7.2',
+      description: 'CM.js帳本管理模組Firebase帳本集合文檔結構 - 引用0099科目資料',
+      collection: 'ledgers',
+      subject_data_source: '0099. Subject_code.json',
+      subject_data_loaded: subjectResult.success,
+      subject_count: subjectResult.count,
+
+      // ledgers集合下的文檔結構
+      document_structure: {
+        ledgerId: 'string - 帳本唯一識別碼 (與文檔ID相同)',
+        name: 'string - 帳本名稱 (如"個人記帳本", "專案支出")',
+        type: 'string - 帳本類型: "personal"|"project"|"category"|"shared"',
+        description: 'string - 帳本描述說明',
+        userId: 'string - 帳本擁有者ID (對應users集合)',
+        createdBy: 'string - 帳本建立者ID (對應users集合)',
+        members: 'array - 帳本成員列表 (用戶ID陣列)',
+        currency: 'string - 預設貨幣單位 (如"TWD", "USD")',
+        timezone: 'string - 時區設定 (如"Asia/Taipei")',
+        settings: 'object - 帳本設定',
+        permissions: 'object - 權限設定 (擁有者、管理員、成員、檢視者)',
+        attributes: 'object - 帳本屬性 (狀態、進度、分類等)',
+        createdAt: 'timestamp - 建立時間 (符合1311.FS.js規範)',
+        updatedAt: 'timestamp - 最後更新時間 (符合1311.FS.js規範)',
+        archived: 'boolean - 是否已歸檔',
+        status: 'string - 帳本狀態: "active"|"completed"|"archived"',
+        metadata: 'object - 帳本元數據 (交易總數、總金額、成員數量等)'
+      },
+
+      // 各帳本文檔下的子集合結構
+      subcollections: {
+        transactions: {
+          description: '帳本交易記錄子集合',
+          document_structure: {
+            transactionId: 'string - 交易唯一識別碼',
+            ledgerId: 'string - 交易所屬帳本ID',
+            amount: 'number - 交易金額',
+            type: 'string - 交易類型: "income"|"expense"',
+            description: 'string - 交易描述',
+            categoryId: 'string - 科目ID (對應0099 categoryId)',
+            categoryName: 'string - 科目名稱 (對應0099 categoryName)',
+            subCategoryName: 'string - 子科目名稱 (對應0099 subCategoryName)',
+            accountId: 'string - 帳戶ID',
+            accountName: 'string - 帳戶名稱',
+            date: 'string - 交易日期 (YYYY-MM-DD格式)',
+            userId: 'string - 記帳用戶ID',
+            source: 'string - 記帳來源: "manual"|"quick"|"import"',
+            tags: 'array - 標籤列表',
+            location: 'object - 位置資訊 (可選)',
+            receiptUrl: 'string - 收據圖片URL (可選)',
+            notes: 'string - 備註 (可選)',
+            createdAt: 'timestamp - 建立時間',
+            updatedAt: 'timestamp - 最後更新時間'
+          }
+        },
+        categories: {
+          description: '帳本科目分類子集合 - 基於0099科目資料結構',
+          data_source: '引用0099. Subject_code.json',
+          document_structure: {
+            categoryId: 'number - 科目ID (對應0099 categoryId)',
+            parentId: 'number - 大項代碼 (對應0099 parentId)',
+            categoryName: 'string - 大項名稱 (對應0099 categoryName)',
+            subCategoryName: 'string - 子項名稱 (對應0099 subCategoryName)',
+            synonyms: 'string - 同義詞 (對應0099 synonyms，可選)',
+            type: 'string - 科目類型: "income"|"expense" (根據parentId判定)',
+            isDefault: 'boolean - 是否為預設科目',
+            isActive: 'boolean - 是否啟用',
+            budgetLimit: 'number - 預算上限 (可選)',
+            createdAt: 'timestamp - 建立時間',
+            updatedAt: 'timestamp - 最後更新時間'
+          },
+          mapping_rules: {
+            income_parent_ids: [801, 899],
+            expense_parent_ids: [101, 102, 103, 105, 108, 109, 110, 905, 999]
+          }
+        },
+        accounts: {
+          description: '帳本帳戶子集合',
+          document_structure: {
+            accountId: 'string - 帳戶唯一識別碼',
+            name: 'string - 帳戶名稱',
+            type: 'string - 帳戶類型: "cash"|"bank"|"credit"|"investment"|"other"',
+            icon: 'string - 帳戶圖示 emoji',
+            color: 'string - 帳戶顏色 hex code',
+            currency: 'string - 貨幣單位',
+            initialBalance: 'number - 初始餘額',
+            currentBalance: 'number - 當前餘額',
+            creditLimit: 'number - 信用額度 (信用卡帳戶)',
+            bankName: 'string - 銀行名稱 (銀行帳戶)',
+            accountNumber: 'string - 帳號末四碼 (脫敏)',
+            isDefault: 'boolean - 是否為預設帳戶',
+            isActive: 'boolean - 是否啟用',
+            includeInTotal: 'boolean - 是否計入總資產',
+            notes: 'string - 備註 (可選)',
+            createdAt: 'timestamp - 建立時間',
+            updatedAt: 'timestamp - 最後更新時間'
+          }
+        },
+        budgets: {
+          description: '預算子集合 (與1312.BM.js模組整合)',
+          document_structure: {
+            budgetId: 'string - 預算唯一識別碼',
+            ledgerId: 'string - 預算所屬帳本ID',
+            name: 'string - 預算名稱',
+            type: 'string - 預算類型: "monthly"|"yearly"|"custom"',
+            categoryIds: 'array - 關聯科目ID列表 (對應0099 categoryId)',
+            total_amount: 'number - 預算總金額',
+            used_amount: 'number - 已使用金額',
+            startDate: 'timestamp - 預算開始日期',
+            endDate: 'timestamp - 預算結束日期',
+            alert_percentage: 'number - 警示百分比 (如80%)',
+            isActive: 'boolean - 是否啟用',
+            createdAt: 'timestamp - 建立時間',
+            updatedAt: 'timestamp - 最後更新時間'
+          }
+        }
+      },
+
+      // 0099科目資料摘要
+      subject_data_summary: subjectResult.success ? {
+        total_categories: subjectResult.count,
+        income_categories: subjectResult.data.filter(item => [801, 899].includes(item.parentId)).length,
+        expense_categories: subjectResult.data.filter(item => [101, 102, 103, 105, 108, 109, 110, 905, 999].includes(item.parentId)).length,
+        unique_parent_ids: [...new Set(subjectResult.data.map(item => item.parentId))]
+      } : null,
+
+      // 權限結構範例
+      permissions_structure: {
+        owner: 'string - 擁有者用戶ID',
+        admins: 'array - 管理員用戶ID列表',
+        members: 'array - 一般成員用戶ID列表',
+        viewers: 'array - 僅檢視用戶ID列表',
+        settings: {
+          allow_invite: 'boolean - 是否允許邀請成員',
+          allow_edit: 'boolean - 是否允許編輯',
+          allow_delete: 'boolean - 是否允許刪除'
+        }
+      },
+
+      // 帳本設定結構範例
+      settings_structure: {
+        allow_negative_balance: 'boolean - 是否允許負餘額',
+        auto_categorization: 'boolean - 是否自動分類',
+        default_account_id: 'string - 預設帳戶ID',
+        default_currency: 'string - 預設貨幣',
+        reminder_settings: 'object - 提醒設定',
+        privacy_mode: 'boolean - 隱私模式'
+      },
+
+      // 元數據結構範例
+      metadata_structure: {
+        total_entries: 'number - 交易總筆數',
+        total_income: 'number - 收入總額',
+        total_expense: 'number - 支出總額',
+        total_amount: 'number - 淨額',
+        last_activity: 'timestamp - 最後活動時間',
+        member_count: 'number - 成員總數',
+        categories_count: 'number - 科目總數',
+        accounts_count: 'number - 帳戶總數',
+        budgets_count: 'number - 預算總數'
+      }
+    };
+
+    console.log(`[${functionName}] ✅ 帳本結構定義已更新，包含${subjectResult.count}筆0099科目資料引用`);
+
     const result = await FS_createDocument('_system', 'ledger_collection_structure', ledgerStructure, 'SYSTEM');
     return result;
   } catch (error) {
+    console.error(`[${functionName}] ❌ 帳本結構初始化失敗:`, error.message);
     return { success: false, error: error.message };
   }
 }
@@ -2960,7 +3124,7 @@ async function FS_createCollaborationDocument(ledgerId, collaborationData, reque
 
 // =============== 模組導出區 ===============
 
-// 導出階段一、二、三完整函數
+// 導出階段一、二、三完整函數（2.7.2版本 - 0099科目映射支援）
 module.exports = {
   // 階段一核心基礎函數
   FS_initializeModule,
@@ -2994,7 +3158,7 @@ module.exports = {
   FS_createBudgetsSubcollectionFramework,
   FS_createCompleteSubcollectionFramework,
   FS_createBudgetInLedger: (ledgerId, budgetData, requesterId) =>
-    FS_createDocument(`ledgers/${ledgerId}/budgets`, budgetData.budgetId || `budget_${Date.now()}`, budgetData, requesterId), // Using budgetId from data or generating one
+    FS_createDocument(`ledgers/${ledgerId}/budgets`, budgetData.budgetId || `budget_${Date.now()}`, budgetData, requesterId),
   FS_getBudgetFromLedger: (ledgerId, budgetId, requesterId) =>
     FS_getDocument(`ledgers/${ledgerId}/budgets`, budgetId, requesterId),
   FS_updateBudgetInLedger: (ledgerId, budgetId, updateData, requesterId) =>
@@ -3018,6 +3182,11 @@ module.exports = {
   FS_createCollaborationDocument,
   FS_validateCollaborationData,
 
+  // 2.7.2版本新增：0099科目映射支援函數
+  FS_load0099SubjectData,
+  FS_initialize0099CategoriesForLedger,
+  FS_initializeDefaultCategories, // 更新版本，引用0099資料
+
   // 相容性函數（保留現有調用）
   FS_mergeDocument,
   FS_addToCollection,
@@ -3028,28 +3197,37 @@ module.exports = {
   admin,
 
   // 模組資訊
-  moduleVersion: '2.7.1',
-  phase: 'Phase3-Collaboration-Architecture-Support',
-  lastUpdate: '2025-11-18',
-  stage3Features: ['budgets_subcollection_support', 'ledger_budget_integration', 'path_structure_v3', 'collaboration_architecture_support']
+  moduleVersion: '2.7.2',
+  phase: 'Phase3-0099-Subject-Mapping-Support',
+  lastUpdate: '2025-11-19',
+  stage3Features: [
+    'budgets_subcollection_support',
+    'ledger_budget_integration', 
+    'path_structure_v3', 
+    'collaboration_architecture_support',
+    '0099_subject_data_mapping',
+    'categories_dynamic_initialization'
+  ]
 };
 
 // 自動初始化模組
 try {
   const initResult = FS_initializeModule();
   if (initResult.success) {
-    console.log('🎉 FS模組2.5.0階段三預算子集合架構完成！');
-    console.log(`📌 模組版本: ${initResult.version}`);
-    console.log(`🎯 階段三成果: Firebase預算子集合架構遷移完成`);
-    console.log(`💰 預算架構: budgets/ → ledgers/{id}/budgets/ (子集合)`);
+    console.log('🎉 FS模組2.7.2階段一階段二完成：0099科目映射支援！');
+    console.log(`📌 模組版本: 2.7.2`);
+    console.log(`🎯 階段一成果: 引用0099.json科目資料，移除hard-coding`);
+    console.log(`🎯 階段二成果: categories子集合動態初始化支援`);
+    console.log(`📋 0099科目映射: 自動讀取 Subject_code.json`);
+    console.log(`📋 categories結構: parentId(大項) + categoryId(子項) + synonyms(同義詞)`);
     console.log(`📋 階段一功能: 核心基礎操作(9個函數)`);
     console.log(`📋 階段二功能: API端點支援(6個函數)`);
     console.log(`📋 階段三功能: 整合優化與驗證(6個函數)`);
-    console.log(`🔧 階段三新增: FS_createBudgetsSubcollectionFramework() - 預算子集合框架`);
-    console.log(`🔧 階段三新增: 5個預算子集合專用操作函數`);
-    console.log(`✨ 總計實作: 28個核心函數 + 相容性函數`);
-    console.log(`🚀 準備就緒: 1312.BM.js模組可完整使用預算子集合架構`);
+    console.log(`🔧 2.7.2新增: FS_load0099SubjectData() - 讀取0099科目資料`);
+    console.log(`🔧 2.7.2新增: FS_initialize0099CategoriesForLedger() - 動態初始化科目`);
+    console.log(`✨ 總計實作: 30個核心函數 + 相容性函數`);
+    console.log(`🚀 準備就緒: categories子集合可動態從0099.json初始化`);
   }
 } catch (error) {
-  console.error('❌ FS模組2.5.0初始化失敗:', error.message);
+  console.error('❌ FS模組2.7.2初始化失敗:', error.message);
 }
