@@ -1,4 +1,3 @@
-
 /**
  * 7572. SIT_P3.dart
  * @version v1.0.0
@@ -358,7 +357,7 @@ class SITP3TestController {
 
       final expertUserData = await P3TestDataManager.instance.getUserModeData('Expert');
       final realUserId = expertUserData['userId'];
-      final expertUserEmail = 'expert.valid@test.lcas.app';
+      final sitP3UserEmail = 'sit_p3@sit.com'; // Updated to sit_p3@sit.com
 
       Map<String, dynamic> inputData = {};
       dynamic plResult;
@@ -371,12 +370,12 @@ class SITP3TestController {
           if (createWalletData != null) {
             inputData = Map<String, dynamic>.from(createWalletData);
             inputData['userId'] = realUserId;
-            inputData['email'] = expertUserEmail;
+            inputData['email'] = sitP3UserEmail; // Updated
 
             // 純粹調用PL層7306，直接接收結果
             if (PL7306.AccountCategoryManagementFeatureGroup != null) {
               plResult = await PL7306.AccountCategoryManagementFeatureGroup.createWallet(inputData);
-              
+
               // 提取帳戶ID供後續測試使用
               if (plResult != null && plResult.toString().contains('walletId')) {
                 final matches = RegExp(r'walletId: (wallet_\w+)').firstMatch(plResult.toString());
@@ -395,7 +394,7 @@ class SITP3TestController {
         case 'TC-002': // 查詢帳戶列表
           inputData = {
             'userId': realUserId,
-            'email': expertUserEmail,
+            'email': sitP3UserEmail, // Updated
           };
 
           // 純粹調用PL層7306，直接接收結果
@@ -499,7 +498,7 @@ class SITP3TestController {
 
       final expertUserData = await P3TestDataManager.instance.getUserModeData('Expert');
       final realUserId = expertUserData['userId'];
-      final expertUserEmail = 'expert.valid@test.lcas.app';
+      final sitP3UserEmail = 'sit_p3@sit.com'; // Updated to sit_p3@sit.com
 
       Map<String, dynamic> inputData = {};
       dynamic plResult;
@@ -512,12 +511,12 @@ class SITP3TestController {
           if (createCategoryData != null) {
             inputData = Map<String, dynamic>.from(createCategoryData);
             inputData['userId'] = realUserId;
-            inputData['email'] = expertUserEmail;
+            inputData['email'] = sitP3UserEmail; // Updated
 
             // 純粹調用PL層7306，直接接收結果
             if (PL7306.AccountCategoryManagementFeatureGroup != null) {
               plResult = await PL7306.AccountCategoryManagementFeatureGroup.createCategory(inputData);
-              
+
               // 提取科目ID供後續測試使用
               if (plResult != null && plResult.toString().contains('categoryId')) {
                 final matches = RegExp(r'categoryId: (category_\w+)').firstMatch(plResult.toString());
@@ -536,7 +535,7 @@ class SITP3TestController {
         case 'TC-007': // 查詢科目列表
           inputData = {
             'userId': realUserId,
-            'email': expertUserEmail,
+            'email': sitP3UserEmail, // Updated
             'type': 'expense',
           };
 
