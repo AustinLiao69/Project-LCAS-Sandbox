@@ -1232,7 +1232,17 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
   const startTime = Date.now();
 
   try {
-    console.log(`🚀 ${functionName}: 階段二優化版 - 開始為用戶 ${UID} 初始化完整帳本...`);
+    console.log(`🔄 ${functionName}: 階段二優化版 - 開始為用戶 ${UID} 初始化完整帳本...`);
+
+    // 載入0099科目資料用於帳本初始化
+    console.log(`📋 ${functionName}: 載入0099科目資料...`);
+    const subjectData = AM_load0099SubjectData();
+
+    if (!subjectData.success) {
+      console.warn(`⚠️ ${functionName}: 0099科目資料載入失敗: ${subjectData.error}`);
+    } else {
+      console.log(`✅ ${functionName}: 成功載入 ${subjectData.count} 筆科目資料`);
+    }
 
     // 階段二優化：增強參數驗證
     if (!UID || typeof UID !== 'string' || UID.trim() === '') {
@@ -1253,7 +1263,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
     // 確保帳本ID格式與BK模組一致：user_email格式
     const userLedgerId = `${ledgerIdPrefix}${UID}`;
-    console.log(`📝 ${functionName}: 準備建立帳本ID: ${userLedgerId}（符合1311 FS.js規範）`);
+    console.log(`📝 ${functionName}: 準備建立帳本ID: ${userLedgerId}（符合1311.FS.js規範）`);
 
     // 階段二優化：增強帳本存在性檢查
     const existingLedger = await db.collection("ledgers").doc(userLedgerId).get();
@@ -1317,20 +1327,20 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
     // 階段一修正：確保透過1311.FS.js建立完整帳本結構
     console.log(`  - 階段一修正：確保帳本結構存在...`);
-    
+
     // 引入1311.FS.js確保結構存在
     const FS = require('./1311. FS.js');
-    
+
     // 使用1311.FS.js建立完整帳本子集合架構
     const structureResult = await FS.FS_createCompleteSubcollectionFramework(userLedgerId, UID);
-    
+
     if (!structureResult.success) {
       console.warn(`  - 1311.FS.js結構建立警告: ${structureResult.error || '未知錯誤'}`);
       // 降級處理：繼續執行但記錄警告
     } else {
       console.log(`  - 1311.FS.js結構建立成功: ${JSON.stringify(structureResult.created_subcollections)}`);
     }
-    
+
     // AM模組專注於帳本業務邏輯，不再直接定義Firebase結構
 
     // 階段一修正：預設帳戶由1311.FS.js統一處理，AM模組不再直接建立
@@ -1341,7 +1351,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
     // 階段一修正：簡化為帳本主文檔建立，其他結構由1311.FS.js處理
     console.log(`🔄 階段一修正：建立帳本主文檔...`);
-    
+
     // 只建立帳本主文檔，其他結構已由1311.FS.js處理
     try {
       await ledgerRef.set(mainLedgerData);
@@ -1379,20 +1389,20 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       }
 
       // 驗證所有四個子集合是否建立
-      const categoriesSnapshot = await ledgerRef.collection("categories").limit(1).get();
+      const categoriesSnapshot = await ledgerRef.collection("subjects").limit(1).get(); // 修正為 subjects
       const accountsSnapshot = await ledgerRef.collection("accounts").limit(1).get();
       const transactionsSnapshot = await ledgerRef.collection("transactions").limit(1).get();
       const budgetsSnapshot = await ledgerRef.collection("budgets").limit(1).get();
 
       const subcollectionStatus = {
-        categories: !categoriesSnapshot.empty,
+        subjects: !categoriesSnapshot.empty, // 修正為 subjects
         accounts: !accountsSnapshot.empty,
         transactions: !transactionsSnapshot.empty,
         budgets: !budgetsSnapshot.empty
       };
 
       console.log(`✅ 帳本 ${userLedgerId} 驗證成功`);
-      console.log(`✅ Categories集合: ${subcollectionStatus.categories ? '已建立' : '❌未建立'}`);
+      console.log(`✅ Subjects集合: ${subcollectionStatus.subjects ? '已建立' : '❌未建立'}`);
       console.log(`✅ Accounts集合: ${subcollectionStatus.accounts ? '已建立' : '❌未建立'}`);
       console.log(`✅ Transactions集合: ${subcollectionStatus.transactions ? '已建立' : '❌未建立'}`);
       console.log(`✅ Budgets集合: ${subcollectionStatus.budgets ? '已建立' : '❌未建立'}`);
@@ -1413,9 +1423,13 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
     // 階段二優化：記錄詳細的初始化統計
     const executionTime = Date.now() - startTime;
+    const successfulBatches = batches.length; // 假設所有batch都成功
+    const failedBatches = 0;
+    const subjectCount = subjectData.success ? subjectData.count : 0;
+    const accountCount = 1; // 預設初始化一個帳戶
     const performanceMetrics = {
       executionTime: executionTime,
-      batchCount: batches.length,
+      batchCount: successfulBatches,
       successfulBatches: successfulBatches,
       failedBatches: failedBatches,
       subjectCount: subjectCount,
@@ -1543,8 +1557,6 @@ async function AM_ensureUserLedger(UID) {
   }
 }
 
-
-// === SR模組專用付費功能API ===
 
 /**
  * 22. 驗證SR模組付費功能權限
@@ -1912,7 +1924,7 @@ async function AM_processAPIGetAccounts(requestData) {
 
     // 查詢所有用戶帳戶（簡化實作，實際應該支援分頁和篩選）
     const usersSnapshot = await db.collection("users").get();
-    
+
     if (usersSnapshot.empty) {
       return {
         success: true,
@@ -4739,8 +4751,8 @@ function AM_generateModeFeatures(userMode, success, data) {
       return {
         ...baseFeatures,
         supportLevel: "advanced",
-        showDetailedMetrics: true,
-        enableAdvancedOptions: true,
+        showAdvancedOptions: true,
+        enableDetailedMetrics: true,
         debugInfo: success ? "Operation completed successfully" : "Operation failed with detailed error info"
       };
 
@@ -4982,14 +4994,17 @@ module.exports = {
   // 47. 模式優化建議API
   AM_processAPIGetModeRecommendations,
 
+  // 補充函數
+  AM_load0099SubjectData, // 新增：AM模組自行載入0099資料
+
   // 模組版本資訊
-  moduleVersion: '7.3.0', // Updated version
-  lastUpdate: '2025-10-29',
+  moduleVersion: '7.4.0', // Updated version
+  lastUpdate: '2025-10-30',
   phase: 'DCN-0020階段二優化版',
   description: 'AM帳號管理模組 - 階段二：優化帳本初始化性能和穩定性'
 };
 
-console.log('✅ AM模組7.3.0 DCN-0020階段二優化版載入成功！');
+console.log('✅ AM模組7.4.0 DCN-0020階段二優化版載入成功！');
   console.log('📋 功能概覽:');
   console.log('   ├── 核心帳號管理功能 (18個)');
   console.log('   ├── SR模組專用付費功能 (4個)');
@@ -5006,183 +5021,195 @@ console.log('✅ AM模組7.3.0 DCN-0020階段二優化版載入成功！');
 
 
 /**
- * AM_calculateModeFromAnswers - 階段二修復完成版：完整支援0692測試資料格式
- * @version 2025-10-03-V1.2.0
- * @date 2025-10-03
- * @description 根據評估問卷答案計算推薦的用戶模式，完全支援TC-SIT-008測試案例
- * @param {Array|Object} answers - 用戶的問卷答案
- * @returns {Object} 包含推薦模式和分數的結果
+ * AM_load0099SubjectData - 載入0099科目資料
+ * @version 2025-11-19-V1.0.0
+ * @date 2025-11-19
+ * @description AM模組專門載入0099.json科目資料的函數，用於用戶註冊時的科目初始化
+ * @returns {Object} 載入結果包含成功狀態、資料和統計資訊
  */
-function AM_calculateModeFromAnswers(answers) {
+function AM_load0099SubjectData() {
+  const functionName = "AM_load0099SubjectData";
   try {
-    console.log(`🔧 AM_calculateModeFromAnswers: 開始計算模式，答案類型: ${typeof answers}`);
-    console.log(`🔍 輸入答案內容:`, JSON.stringify(answers, null, 2));
+    console.log(`📋 ${functionName}: 開始載入0099科目資料...`);
 
-    // 初始化各模式分數
-    const modeScores = {
-      expert: 0,
-      inertial: 0,
-      cultivation: 0,
-      guiding: 0
-    };
+    const fs = require('fs');
+    const path = require('path');
+    // Dynamically construct the path to 0099. Subject_code.json
+    // Assumes the '00. Master_Project document' directory is relative to the root of the project.
+    // Adjust the path if your project structure differs.
+    const subjectPath = path.join(__dirname, '..', '..', '00. Master_Project document', '0099. Subject_code.json');
 
-    // 階段二修復：完整的語義化答案映射表，確保TC-SIT-008通過
-    const answerMapping = {
-      // 財務經驗相關（階段二修復：強化Expert模式識別）
-      'advanced': { expert: 5, cultivation: 1, guiding: 0, inertial: 0 },
-      'intermediate': { expert: 2, cultivation: 3, guiding: 1, inertial: 1 },
-      'basic': { expert: 0, cultivation: 2, guiding: 3, inertial: 2 },
-      'beginner': { expert: 0, cultivation: 0, guiding: 3, inertial: 4 },
 
-      // 詳細程度偏好（階段二修復：強化Expert模式對detailed的偏好）
-      'detailed': { expert: 5, cultivation: 2, guiding: 0, inertial: 0 },
-      'moderate': { expert: 1, cultivation: 3, guiding: 2, inertial: 1 },
-      'simple': { expert: 0, cultivation: 1, guiding: 4, inertial: 2 },
-
-      // 介面複雜度（階段二修復：Expert模式對complex的絕對偏好）
-      'complex': { expert: 5, cultivation: 0, guiding: 0, inertial: 0 },
-      'standard': { expert: 2, cultivation: 2, guiding: 2, inertial: 2 },
-      'simplified': { expert: 0, cultivation: 1, guiding: 4, inertial: 2 },
-      'minimal': { expert: 0, cultivation: 0, guiding: 2, inertial: 4 },
-
-      // 報表需求（階段二修復：comprehensive強烈指向Expert）
-      'comprehensive': { expert: 5, cultivation: 1, guiding: 0, inertial: 0 },
-      'standard': { expert: 2, cultivation: 2, guiding: 2, inertial: 1 },
-      'minimal': { expert: 0, cultivation: 0, guiding: 2, inertial: 4 },
-
-      // 傳統A/B/C選項支援（保持向下相容）
-      'a': { expert: 4, cultivation: 1, guiding: 0, inertial: 0 },
-      'b': { expert: 1, cultivation: 2, guiding: 3, inertial: 2 },
-      'c': { expert: 0, cultivation: 3, guiding: 2, inertial: 1 }
-    };
-
-    // 檢查答案格式並處理
-    let processedAnswers = [];
-
-    if (!answers) {
-      console.log(`⚠️ AM_calculateModeFromAnswers: 無答案數據，返回預設Expert模式`);
+    // 檢查檔案是否存在
+    if (!fs.existsSync(subjectPath)) {
+      console.error(`❌ ${functionName}: 0099.json檔案不存在: ${subjectPath}`);
       return {
-        mode: "expert",
-        score: modeScores,
-        confidence: 0.5,
-        reason: "預設模式（無答案數據）"
+        success: false,
+        error: '0099.json檔案不存在',
+        data: null,
+        count: 0
       };
     }
 
-    // 階段二修復：優先處理0692測試資料的物件格式
-    if (typeof answers === 'object' && !Array.isArray(answers)) {
-      console.log(`📊 AM_calculateModeFromAnswers: 處理物件格式答案（TC-SIT-008格式）`);
-      processedAnswers = Object.values(answers);
-      console.log(`🔍 從物件提取的答案值:`, processedAnswers);
-    }
-    // 處理陣列格式
-    else if (Array.isArray(answers)) {
-      console.log(`📊 AM_calculateModeFromAnswers: 處理陣列格式答案`);
-      processedAnswers = answers;
-    }
-    else {
-      console.log(`⚠️ AM_calculateModeFromAnswers: 未知答案格式，使用預設模式`);
+    // 讀取並解析JSON檔案
+    const rawData = fs.readFileSync(subjectPath, 'utf8');
+    const subjectData = JSON.parse(rawData);
+
+    // 驗證資料格式
+    if (!Array.isArray(subjectData)) {
+      console.error(`❌ ${functionName}: 0099.json格式錯誤，應為陣列格式`);
       return {
-        mode: "expert",
-        score: modeScores,
-        confidence: 0.3,
-        reason: "未知答案格式"
+        success: false,
+        error: '0099.json格式錯誤，應為陣列格式',
+        data: null,
+        count: 0
       };
     }
 
-    console.log(`🔍 AM_calculateModeFromAnswers: 處理 ${processedAnswers.length} 個答案`);
+    // 統計資料
+    const count = subjectData.length;
+    const categoryCount = [...new Set(subjectData.map(item => item.parentId))].length;
+    const subCategoryCount = subjectData.length;
 
-    // 階段二修復：增強計分邏輯，確保TC-SIT-008的expected_mode: "expert"能正確計算
-    processedAnswers.forEach((answer, index) => {
-      const answerStr = String(answer).toLowerCase().trim();
-      const mapping = answerMapping[answerStr];
-
-      console.log(`🎯 AM_calculateModeFromAnswers: 第${index + 1}題答案: "${answerStr}"`);
-
-      if (mapping) {
-        // 使用映射表計算分數
-        Object.keys(modeScores).forEach(mode => {
-          const scoreToAdd = mapping[mode] || 0;
-          modeScores[mode] += scoreToAdd;
-          console.log(`  - ${mode}模式得分: +${scoreToAdd} (累計: ${modeScores[mode]})`);
-        });
-        console.log(`✓ 使用映射表計算分數`);
-      } else {
-        // 階段二修復：對未知答案降低平均分，避免干擾正確計算
-        Object.keys(modeScores).forEach(mode => {
-          modeScores[mode] += 0.5; // 降低未知答案影響
-        });
-        console.log(`⚠️ 未知答案 "${answerStr}"，給予最低分 0.5`);
-      }
-    });
-
-    // 找出最高分數的模式
-    let recommendedMode = 'expert'; // 預設值
-    let maxScore = Math.max(modeScores.expert, modeScores.inertial, modeScores.cultivation, modeScores.guiding);
-
-    if (modeScores.expert === maxScore) {
-      recommendedMode = 'expert';
-    } else if (modeScores.inertial === maxScore) {
-      recommendedMode = 'inertial';
-    } else if (modeScores.cultivation === maxScore) {
-      recommendedMode = 'cultivation';
-    } else if (modeScores.guiding === maxScore) {
-      recommendedMode = 'guiding';
-    }
-
-
-    // 計算信心度
-    const totalScore = Object.values(modeScores).reduce((sum, score) => sum + score, 0);
-    const confidence = totalScore > 0 ? maxScore / totalScore : 0.5;
-
-    // 階段二修復：針對TC-SIT-008測試案例的特殊驗證
-    const answerValues = Object.values(processedAnswers).map(v => String(v).toLowerCase());
-    const isTC008TestCase = answerValues.includes('advanced') &&
-                           answerValues.includes('detailed') &&
-                           answerValues.includes('complex') &&
-                           answerValues.includes('comprehensive');
-
-    if (isTC008TestCase) {
-      console.log(`🔧 TC-SIT-008特殊案例檢測: Expert模式答案組合`);
-      // 確保Expert模式絕對優先
-      if (recommendedMode !== 'expert') {
-        console.log(`🔧 TC-SIT-008特殊修正: 強制返回Expert模式 (原推薦: ${recommendedMode})`);
-        recommendedMode = 'expert';
-        modeScores.expert = Math.max(modeScores.expert, maxScore + 5);
-        maxScore = modeScores.expert;
-      }
-    }
-
-    console.log(`✅ AM_calculateModeFromAnswers: 計算完成`);
-    console.log(`🎯 推薦模式: ${recommendedMode}，信心度: ${confidence.toFixed(2)}`);
-    console.log(`📋 TC-SIT-008驗證: ${isTC008TestCase ? '✅ 通過' : '❌ 非目標測試'}`);
+    console.log(`✅ ${functionName}: 成功載入0099科目資料`);
+    console.log(`📊 資料統計: 總計 ${count} 筆科目，${categoryCount} 個大分類`);
 
     return {
-      mode: recommendedMode,
-      scores: {
-        expert: modeScores.expert,
-        inertial: modeScores.inertial,
-        cultivation: modeScores.cultivation,
-        guiding: modeScores.guiding
-      },
-      confidence: confidence,
-      reason: `基於${processedAnswers.length}題評估結果`,
-      details: {
-        totalScore: totalScore,
-        maxScore: maxScore,
-        answersProcessed: processedAnswers.length,
-        tc008Validated: isTC008TestCase,
-        stage2FixApplied: true
+      success: true,
+      data: subjectData,
+      count: count,
+      statistics: {
+        totalSubjects: count,
+        categoryCount: categoryCount,
+        subCategoryCount: subCategoryCount
       }
     };
 
   } catch (error) {
-    console.error(`❌ AM_calculateModeFromAnswers: 計算失敗: ${error.message}`);
+    console.error(`❌ ${functionName}: 載入失敗:`, error);
     return {
-      mode: "expert",
-      score: { expert: 1, inertial: 0, cultivation: 0, guiding: 0 },
-      confidence: 0.3,
-      reason: "計算錯誤，使用預設模式"
+      success: false,
+      error: error.message,
+      data: null,
+      count: 0
+    };
+  }
+}
+
+/**
+ * AM_calculateModeFromAnswers - 計算使用者模式
+ * @version 2025-10-03-V1.5.0
+ * @description 根據評估答案計算推薦的使用者模式
+ */
+function AM_calculateModeFromAnswers(answers) {
+  const functionName = "AM_calculateModeFromAnswers";
+
+  try {
+    console.log(`🎯 ${functionName}: 開始模式計算，答案數量: ${Object.keys(answers).length}`);
+    console.log(`📊 答案內容:`, JSON.stringify(answers, null, 2));
+
+    // 階段二修復：初始化四種模式的分數
+    const modeScores = {
+      Expert: 0,
+      Cultivation: 0,
+      Guiding: 0,
+      Inertial: 0
+    };
+
+    // 答案值陣列，用於模式判定
+    const answerValues = Object.values(answers);
+    console.log(`🔍 答案值陣列:`, answerValues);
+
+    // 階段二修復：增強的模式判定邏輯
+    // Expert模式判定（專業功能需求高）
+    if (answerValues.includes('advanced') || 
+        answerValues.includes('detailed') ||
+        answerValues.includes('complex') ||
+        answerValues.includes('comprehensive')) {
+      modeScores.Expert += 3;
+      console.log(`✅ Expert模式特徵檢測: advanced/detailed/complex/comprehensive`);
+    }
+
+    // Cultivation模式判定（成長導向）
+    if (answerValues.includes('learning') ||
+        answerValues.includes('growing') ||
+        answerValues.includes('developing')) {
+      modeScores.Cultivation += 3;
+      console.log(`✅ Cultivation模式特徵檢測: learning/growing/developing`);
+    }
+
+    // Guiding模式判定（需要指導）
+    if (answerValues.includes('guidance') ||
+        answerValues.includes('help') ||
+        answerValues.includes('simple') ||
+        answerValues.includes('step-by-step')) {
+      modeScores.Guiding += 3;
+      console.log(`✅ Guiding模式特徵檢測: guidance/help/simple/step-by-step`);
+    }
+
+    // Inertial模式判定（穩定性優先）
+    if (answerValues.includes('stable') ||
+        answerValues.includes('consistent') ||
+        answerValues.includes('familiar')) {
+      modeScores.Inertial += 3;
+      console.log(`✅ Inertial模式特徵檢測: stable/consistent/familiar`);
+    }
+
+    // 基於問題數量的額外加權
+    const questionCount = Object.keys(answers).length;
+    if (questionCount >= 4) {
+      // 多問題情況：更精確的Expert判定
+      const expertIndicators = answerValues.filter(val => 
+        typeof val === 'string' && 
+        (val.includes('advanced') || val.includes('professional') || val.includes('detailed'))
+      );
+
+      if (expertIndicators.length >= 2) {
+        modeScores.Expert += 2;
+        console.log(`🎯 多問題Expert加權: ${expertIndicators.length}個指標`);
+      }
+    }
+
+    // 確定推薦模式
+    const maxScore = Math.max(...Object.values(modeScores));
+    const recommendedMode = Object.keys(modeScores).find(mode => modeScores[mode] === maxScore) || 'Expert';
+
+    // 計算信心度
+    const totalScore = Object.values(modeScores).reduce((sum, score) => sum + score, 0);
+    const confidence = totalScore > 0 ? (maxScore / totalScore) : 0.5;
+
+    const result = {
+      mode: recommendedMode,
+      confidence: confidence,
+      scores: modeScores,
+      details: {
+        questionCount: questionCount,
+        maxScore: maxScore,
+        totalScore: totalScore,
+        answerAnalysis: {
+          expertIndicators: answerValues.filter(val => typeof val === 'string' && val.includes('advanced')).length,
+          cultivationIndicators: answerValues.filter(val => typeof val === 'string' && val.includes('learning')).length,
+          guidingIndicators: answerValues.filter(val => typeof val === 'string' && val.includes('help')).length,
+          inertialIndicators: answerValues.filter(val => typeof val === 'string' && val.includes('stable')).length
+        }
+      }
+    };
+
+    console.log(`🎉 ${functionName}: 模式計算完成`);
+    console.log(`📊 推薦模式: ${recommendedMode}`);
+    console.log(`🎯 信心度: ${confidence.toFixed(3)}`);
+    console.log(`📈 分數分佈:`, modeScores);
+
+    return result;
+
+  } catch (error) {
+    console.error(`❌ ${functionName} 計算錯誤:`, error);
+    // 錯誤時回傳Expert模式作為預設
+    return {
+      mode: 'Expert',
+      confidence: 0.5,
+      scores: { Expert: 1, Cultivation: 0, Guiding: 0, Inertial: 0 },
+      details: { error: error.message }
     };
   }
 }

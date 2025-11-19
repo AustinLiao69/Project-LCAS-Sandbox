@@ -1,6 +1,6 @@
 /**
 * FS_FirestoreStructure_資料庫結構模組_2.7.2
-* @module 資料庫結構模組  
+* @module 資料庫結構模組
 * @description LCAS 2.7.2 Firestore資料庫結構模組 - Firebase架構管理專用，提供0099科目資料載入支援
 * @update 2025-11-19: 階段一與階段二 - 職責明確化：FS負責Firebase結構，AM負責業務資料初始化
 */
@@ -1377,7 +1377,7 @@ async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
     }
 
     const successCount = categoryResults.filter(r => r.result.success).length;
-    const success = successCount > 0;
+    const success = categoryResults.length > 0 && successCount === categoryResults.length; // Ensure at least one category was attempted and all succeeded
 
     return {
       success: success,
@@ -2086,20 +2086,20 @@ async function FS_initializeDefaultCategories() {
   const functionName = "FS_initializeDefaultCategories";
   try {
     // 載入0099科目資料作為參考統計
-    const subjectResult = FS_load0099SubjectData();
-    
+    // const subjectResult = FS_load0099SubjectData(); // This function is removed
+
     const categoryStructure = {
       version: '2.7.2',
       description: 'Firebase categories子集合結構定義，實際科目資料由AM模組管理',
       data_source: '0099. Subject_code.json',
       subject_reference: {
-        loaded: subjectResult.success,
-        count: subjectResult.count || 0,
+        // loaded: subjectResult.success, // Removed as FS_load0099SubjectData is removed
+        // count: subjectResult.count || 0, // Removed as FS_load0099SubjectData is removed
         note: '0099科目資料由AM模組在用戶註冊時初始化到個別帳本'
       },
       structure_definition: {
         categoryId: 'number - 科目ID (對應0099 categoryId)',
-        parentId: 'number - 大項代碼 (對應0099 parentId)', 
+        parentId: 'number - 大項代碼 (對應0099 parentId)',
         categoryName: 'string - 大項名稱 (對應0099 categoryName)',
         subCategoryName: 'string - 子項名稱 (對應0099 subCategoryName)',
         synonyms: 'string - 同義詞 (對應0099 synonyms)',
@@ -2305,38 +2305,7 @@ async function FS_initializeAssessmentQuestions() {
  * @date 2025-11-19
  * @description 讀取並解析0099.json科目代碼檔案，提供科目映射功能
  */
-function FS_load0099SubjectData() {
-  const functionName = "FS_load0099SubjectData";
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    
-    // 讀取0099.json檔案
-    const subjectDataPath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
-    
-    if (!fs.existsSync(subjectDataPath)) {
-      throw new Error('找不到0099.json科目資料檔案');
-    }
-    
-    const subjectData = JSON.parse(fs.readFileSync(subjectDataPath, 'utf8'));
-    
-    console.log(`[${functionName}] ✅ 成功載入${subjectData.length}筆0099科目資料`);
-    
-    return {
-      success: true,
-      data: subjectData,
-      count: subjectData.length
-    };
-    
-  } catch (error) {
-    console.error(`[${functionName}] ❌ 載入0099科目資料失敗:`, error.message);
-    return {
-      success: false,
-      error: error.message,
-      data: []
-    };
-  }
-}
+// Function FS_load0099SubjectData was removed as per user request.
 
 /**
  * 34. 初始化帳本集合文檔結構（更新版）
@@ -2348,15 +2317,15 @@ async function FS_initializeLedgerStructure() {
   const functionName = "FS_initializeLedgerStructure";
   try {
     // 載入0099科目資料
-    const subjectResult = FS_load0099SubjectData();
-    
+    // const subjectResult = FS_load0099SubjectData(); // Removed as FS_load0099SubjectData is removed
+
     const ledgerStructure = {
       version: '2.7.2',
       description: 'CM.js帳本管理模組Firebase帳本集合文檔結構 - 引用0099科目資料',
       collection: 'ledgers',
       subject_data_source: '0099. Subject_code.json',
-      subject_data_loaded: subjectResult.success,
-      subject_count: subjectResult.count,
+      // subject_data_loaded: subjectResult.success, // Removed as FS_load0099SubjectData is removed
+      // subject_count: subjectResult.count,         // Removed as FS_load0099SubjectData is removed
 
       // ledgers集合下的文檔結構
       document_structure: {
@@ -2469,12 +2438,12 @@ async function FS_initializeLedgerStructure() {
       },
 
       // 0099科目資料摘要
-      subject_data_summary: subjectResult.success ? {
-        total_categories: subjectResult.count,
-        income_categories: subjectResult.data.filter(item => [801, 899].includes(item.parentId)).length,
-        expense_categories: subjectResult.data.filter(item => [101, 102, 103, 105, 108, 109, 110, 905, 999].includes(item.parentId)).length,
-        unique_parent_ids: [...new Set(subjectResult.data.map(item => item.parentId))]
-      } : null,
+      // subject_data_summary: subjectResult.success ? { // Removed as FS_load0099SubjectData is removed
+      //   total_categories: subjectResult.count,
+      //   income_categories: subjectResult.data.filter(item => [801, 899].includes(item.parentId)).length,
+      //   expense_categories: subjectResult.data.filter(item => [101, 102, 103, 105, 108, 109, 110, 905, 999].includes(item.parentId)).length,
+      //   unique_parent_ids: [...new Set(subjectResult.data.map(item => item.parentId))]
+      // } : null,
 
       // 權限結構範例
       permissions_structure: {
@@ -2513,7 +2482,8 @@ async function FS_initializeLedgerStructure() {
       }
     };
 
-    console.log(`[${functionName}] ✅ 帳本結構定義已更新，包含${subjectResult.count}筆0099科目資料引用`);
+    // console.log(`[${functionName}] ✅ 帳本結構定義已更新，包含${subjectResult.count}筆0099科目資料引用`); // Removed as FS_load0099SubjectData is removed
+    console.log(`[${functionName}] ✅ 帳本結構定義已更新`);
 
     const result = await FS_createDocument('_system', 'ledger_collection_structure', ledgerStructure, 'SYSTEM');
     return result;
@@ -3107,7 +3077,7 @@ module.exports = {
   FS_validateCollaborationData,
 
   // 2.7.2版本新增：0099科目資料載入支援（供AM模組使用）
-  FS_load0099SubjectData, // 提供給AM模組載入0099科目資料
+  // FS_load0099SubjectData, // Removed as it violates single responsibility principle
   FS_initializeDefaultCategories, // 僅建立科目結構定義，不進行實際資料初始化
 
   // 相容性函數（保留現有調用）
@@ -3125,8 +3095,8 @@ module.exports = {
   lastUpdate: '2025-11-19',
   stage3Features: [
     'budgets_subcollection_support',
-    'ledger_budget_integration', 
-    'path_structure_v3', 
+    'ledger_budget_integration',
+    'path_structure_v3',
     'collaboration_architecture_support',
     '0099_subject_data_mapping',
     'categories_dynamic_initialization'
@@ -3146,7 +3116,7 @@ try {
     console.log(`📋 階段一功能: 核心基礎操作(9個函數)`);
     console.log(`📋 階段二功能: API端點支援(6個函數)`);
     console.log(`📋 階段三功能: 整合優化與驗證(6個函數)`);
-    console.log(`🔧 2.7.2新增: FS_load0099SubjectData() - 讀取0099科目資料`);
+    // console.log(`🔧 2.7.2新增: FS_load0099SubjectData() - 讀取0099科目資料`); // Removed as function is removed
     console.log(`🔧 2.7.2新增: FS_initialize0099CategoriesForLedger() - 動態初始化科目`);
     console.log(`✨ 總計實作: 30個核心函數 + 相容性函數`);
     console.log(`🚀 準備就緒: categories子集合可動態從0099.json初始化`);
