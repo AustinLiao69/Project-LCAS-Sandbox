@@ -24,6 +24,9 @@
 •	路徑: wallets/{walletId} 和 categories/{categoryId}
 •	一致性: ⚠️ 需要注意 - WCM使用頂層集合，而1311.FS.js定義的是子集合架構
 •	建議: 應調整為 ledgers/{ledgerId}/wallets 和 ledgers/{ledgerId}/categories
+=>請立刻修改
+
+
 2. 資料流分析
 2.1 Ledgers集合建立資料流
 用戶註冊/登入 → AM模組
@@ -59,6 +62,7 @@ CM_setMemberPermission() (owner設置)
 CM_inviteMember() → CM_processMemberJoin()
     ↓
 更新 collaborations/{ledgerId} 的 members 陣列
+
 主要發現與建議
 1.	WCM模組不一致: WCM使用頂層集合而非子集合架構，建議修正
 2.	1311.FS.js已更新: 確實有更新，包含完整的子集合架構支援
