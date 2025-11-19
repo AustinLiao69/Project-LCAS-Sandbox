@@ -46,9 +46,3 @@ ledgers/{ledgerId}/categories/{categoryId}/
 └── updatedAt: timestamp         // 最後更新時間
 
 =>請新增一個資料欄位synonyms，對應到0099的同義詞
-
-•	大項代碼 → categoryCode
-•	大項名稱 → categoryName
-•	子項代碼 → subCategoryCode
-•	子項名稱 → subCategoryName
-•	同義詞 → synonyms
