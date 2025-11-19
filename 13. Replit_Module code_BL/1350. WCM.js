@@ -1,10 +1,10 @@
 
 /**
- * 1350. WCM.js_帳戶與科目管理模組_v1.0.0
+ * 1350. WCM.js_帳戶與科目管理模組_v1.1.0
  * @module 帳戶與科目管理模組
- * @description LCAS 2.0 Wallet and Category Management - 統一處理帳戶與科目的基礎主數據管理
- * @update 2025-11-17: DCN-0023階段一 - 建立WCM模組基礎框架
- * @date 2025-11-17
+ * @description LCAS 2.0 Wallet and Category Management - 統一處理帳戶與科目的基礎主數據管理 (子集合架構)
+ * @update 2025-11-19: 階段二修正 - 調整為子集合架構 ledgers/{ledgerId}/wallets 和 ledgers/{ledgerId}/categories
+ * @date 2025-11-19
  */
 
 /**
@@ -20,7 +20,7 @@ const AM = require('./1309. AM.js');
 
 // WCM模組配置
 const WCM_CONFIG = {
-  VERSION: '1.0.0',
+  VERSION: '1.1.0',
   DEBUG: process.env.WCM_DEBUG === 'true',
   TIMEZONE: process.env.TIMEZONE || 'Asia/Taipei',
   DEFAULT_CURRENCY: process.env.DEFAULT_CURRENCY || 'TWD',
@@ -37,7 +37,7 @@ let WCM_INIT_STATUS = {
 
 /**
  * WCM統一成功回應格式
- * @version 2025-11-17-V1.0.0
+ * @version 2025-11-19-V1.1.0
  * @description 確保所有WCM函數回傳格式符合DCN-0015規範
  */
 function WCM_formatSuccessResponse(data, message = "操作成功", error = null) {
@@ -51,7 +51,7 @@ function WCM_formatSuccessResponse(data, message = "操作成功", error = null)
 
 /**
  * WCM統一錯誤回應格式
- * @version 2025-11-17-V1.0.0
+ * @version 2025-11-19-V1.1.0
  * @description 統一錯誤處理格式，符合DCN-0015規範
  */
 function WCM_formatErrorResponse(errorCode, message, details = null) {
@@ -72,7 +72,7 @@ function WCM_formatErrorResponse(errorCode, message, details = null) {
 
 /**
  * WCM模組初始化
- * @version 2025-11-17-V1.0.0
+ * @version 2025-11-19-V1.1.0
  * @description 初始化WCM模組，建立與Firebase的連接
  */
 async function WCM_initialize() {
@@ -84,7 +84,7 @@ async function WCM_initialize() {
   }
 
   try {
-    WCM_logInfo(`WCM模組v${WCM_CONFIG.VERSION}初始化開始`, "系統初始化", "", "WCM_initialize");
+    WCM_logInfo(`WCM模組v${WCM_CONFIG.VERSION}初始化開始 - 子集合架構`, "系統初始化", "", "WCM_initialize");
 
     // 檢查Firebase連接
     if (!admin.apps.length) {
@@ -99,7 +99,7 @@ async function WCM_initialize() {
     WCM_INIT_STATUS.initialized = true;
     WCM_INIT_STATUS.lastInitTime = currentTime;
 
-    WCM_logInfo(`WCM模組初始化完成v${WCM_CONFIG.VERSION}`, "系統初始化", "", "WCM_initialize");
+    WCM_logInfo(`WCM模組初始化完成v${WCM_CONFIG.VERSION} - 子集合架構`, "系統初始化", "", "WCM_initialize");
     return true;
 
   } catch (error) {
@@ -108,22 +108,27 @@ async function WCM_initialize() {
   }
 }
 
-// =================== 帳戶管理函數 ===================
+// =================== 帳戶管理函數 (子集合架構) ===================
 
 /**
- * 01. 創建帳戶
- * @version 2025-11-17-V1.0.0
- * @description 創建新的帳戶記錄
+ * 01. 創建帳戶 (子集合架構)
+ * @version 2025-11-19-V1.1.0
+ * @description 創建新的帳戶記錄到 ledgers/{ledgerId}/wallets
+ * @param {string} ledgerId - 帳本ID
  * @param {Object} walletData - 帳戶資料
  * @returns {Promise<Object>} 標準化回應格式
  */
-async function WCM_createWallet(walletData) {
+async function WCM_createWallet(ledgerId, walletData) {
   const functionName = "WCM_createWallet";
   
   try {
-    WCM_logInfo(`開始創建帳戶: ${walletData.name}`, "創建帳戶", walletData.userId || "", functionName);
+    WCM_logInfo(`開始創建帳戶: ${walletData.name} (帳本: ${ledgerId})`, "創建帳戶", walletData.userId || "", functionName);
 
     // 基本參數驗證
+    if (!ledgerId || typeof ledgerId !== 'string') {
+      return WCM_formatErrorResponse("INVALID_LEDGER_ID", "無效的帳本ID");
+    }
+
     if (!walletData || typeof walletData !== 'object') {
       return WCM_formatErrorResponse("INVALID_WALLET_DATA", "無效的帳戶資料");
     }
@@ -153,6 +158,7 @@ async function WCM_createWallet(walletData) {
       currency: walletData.currency || WCM_CONFIG.DEFAULT_CURRENCY,
       balance: parseFloat(walletData.balance) || 0,
       userId: walletData.userId,
+      ledgerId: ledgerId,
       description: walletData.description || '',
       status: 'active',
       createdAt: now,
@@ -161,18 +167,21 @@ async function WCM_createWallet(walletData) {
       version: WCM_CONFIG.VERSION
     };
 
-    // 儲存至Firebase
+    // 儲存至Firebase子集合
     const db = admin.firestore();
-    await db.collection('wallets').doc(walletId).set(wallet);
+    const collectionPath = `ledgers/${ledgerId}/wallets`;
+    await db.collection(collectionPath).doc(walletId).set(wallet);
 
-    WCM_logInfo(`帳戶創建成功: ${walletId}`, "創建帳戶", walletData.userId, functionName);
+    WCM_logInfo(`帳戶創建成功: ${walletId} (路徑: ${collectionPath}/${walletId})`, "創建帳戶", walletData.userId, functionName);
 
     return WCM_formatSuccessResponse({
       walletId: walletId,
       name: wallet.name,
       type: wallet.type,
       currency: wallet.currency,
-      balance: wallet.balance
+      balance: wallet.balance,
+      ledgerId: ledgerId,
+      path: `${collectionPath}/${walletId}`
     }, "帳戶創建成功");
 
   } catch (error) {
@@ -182,17 +191,22 @@ async function WCM_createWallet(walletData) {
 }
 
 /**
- * 02. 取得帳戶列表
- * @version 2025-11-17-V1.0.0
- * @description 取得用戶的帳戶列表
+ * 02. 取得帳戶列表 (子集合架構)
+ * @version 2025-11-19-V1.1.0
+ * @description 取得指定帳本的帳戶列表
+ * @param {string} ledgerId - 帳本ID
  * @param {Object} queryParams - 查詢參數
  * @returns {Promise<Object>} 標準化回應格式
  */
-async function WCM_getWalletList(queryParams = {}) {
+async function WCM_getWalletList(ledgerId, queryParams = {}) {
   const functionName = "WCM_getWalletList";
   
   try {
-    WCM_logInfo("開始查詢帳戶列表", "查詢帳戶", queryParams.userId || "", functionName);
+    WCM_logInfo(`開始查詢帳戶列表 (帳本: ${ledgerId})`, "查詢帳戶", queryParams.userId || "", functionName);
+
+    if (!ledgerId || typeof ledgerId !== 'string') {
+      return WCM_formatErrorResponse("INVALID_LEDGER_ID", "無效的帳本ID");
+    }
 
     if (!queryParams.userId) {
       return WCM_formatErrorResponse("MISSING_USER_ID", "用戶ID不能為空");
@@ -201,7 +215,8 @@ async function WCM_getWalletList(queryParams = {}) {
     await WCM_initialize();
 
     const db = admin.firestore();
-    let query = db.collection('wallets')
+    const collectionPath = `ledgers/${ledgerId}/wallets`;
+    let query = db.collection(collectionPath)
       .where('userId', '==', queryParams.userId)
       .where('status', '==', 'active')
       .orderBy('createdAt', 'desc');
@@ -222,17 +237,20 @@ async function WCM_getWalletList(queryParams = {}) {
         currency: data.currency,
         balance: data.balance,
         description: data.description,
+        ledgerId: data.ledgerId,
         createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : null,
         updatedAt: data.updatedAt?.toDate?.() ? data.updatedAt.toDate().toISOString() : null
       });
     });
 
-    WCM_logInfo(`查詢帳戶列表完成，返回${wallets.length}筆記錄`, "查詢帳戶", queryParams.userId, functionName);
+    WCM_logInfo(`查詢帳戶列表完成，返回${wallets.length}筆記錄 (路徑: ${collectionPath})`, "查詢帳戶", queryParams.userId, functionName);
 
     return WCM_formatSuccessResponse({
       wallets: wallets,
       total: wallets.length,
-      limit: limit
+      limit: limit,
+      ledgerId: ledgerId,
+      collectionPath: collectionPath
     }, "帳戶列表查詢成功");
 
   } catch (error) {
@@ -242,18 +260,23 @@ async function WCM_getWalletList(queryParams = {}) {
 }
 
 /**
- * 03. 驗證帳戶存在
- * @version 2025-11-17-V1.0.0
+ * 03. 驗證帳戶存在 (子集合架構)
+ * @version 2025-11-19-V1.1.0
  * @description 驗證指定帳戶是否存在且屬於用戶
+ * @param {string} ledgerId - 帳本ID
  * @param {string} walletId - 帳戶ID
  * @param {string} userId - 用戶ID
  * @returns {Promise<Object>} 標準化回應格式
  */
-async function WCM_validateWalletExists(walletId, userId) {
+async function WCM_validateWalletExists(ledgerId, walletId, userId) {
   const functionName = "WCM_validateWalletExists";
   
   try {
-    WCM_logInfo(`開始驗證帳戶存在: ${walletId}`, "驗證帳戶", userId || "", functionName);
+    WCM_logInfo(`開始驗證帳戶存在: ${walletId} (帳本: ${ledgerId})`, "驗證帳戶", userId || "", functionName);
+
+    if (!ledgerId || typeof ledgerId !== 'string') {
+      return WCM_formatErrorResponse("INVALID_LEDGER_ID", "無效的帳本ID");
+    }
 
     if (!walletId || typeof walletId !== 'string') {
       return WCM_formatErrorResponse("INVALID_WALLET_ID", "無效的帳戶ID");
@@ -266,7 +289,8 @@ async function WCM_validateWalletExists(walletId, userId) {
     await WCM_initialize();
 
     const db = admin.firestore();
-    const walletDoc = await db.collection('wallets').doc(walletId).get();
+    const collectionPath = `ledgers/${ledgerId}/wallets`;
+    const walletDoc = await db.collection(collectionPath).doc(walletId).get();
 
     if (!walletDoc.exists) {
       return WCM_formatErrorResponse("WALLET_NOT_FOUND", "帳戶不存在");
@@ -284,7 +308,7 @@ async function WCM_validateWalletExists(walletId, userId) {
       return WCM_formatErrorResponse("WALLET_INACTIVE", "帳戶已停用");
     }
 
-    WCM_logInfo(`帳戶驗證成功: ${walletId}`, "驗證帳戶", userId, functionName);
+    WCM_logInfo(`帳戶驗證成功: ${walletId} (路徑: ${collectionPath}/${walletId})`, "驗證帳戶", userId, functionName);
 
     return WCM_formatSuccessResponse({
       walletId: walletId,
@@ -292,8 +316,10 @@ async function WCM_validateWalletExists(walletId, userId) {
       type: walletData.type,
       currency: walletData.currency,
       balance: walletData.balance,
+      ledgerId: walletData.ledgerId,
       exists: true,
-      valid: true
+      valid: true,
+      collectionPath: collectionPath
     }, "帳戶驗證成功");
 
   } catch (error) {
@@ -302,22 +328,27 @@ async function WCM_validateWalletExists(walletId, userId) {
   }
 }
 
-// =================== 科目管理函數 ===================
+// =================== 科目管理函數 (子集合架構) ===================
 
 /**
- * 04. 創建科目
- * @version 2025-11-17-V1.0.0
- * @description 創建新的科目記錄
+ * 04. 創建科目 (子集合架構)
+ * @version 2025-11-19-V1.1.0
+ * @description 創建新的科目記錄到 ledgers/{ledgerId}/categories
+ * @param {string} ledgerId - 帳本ID
  * @param {Object} categoryData - 科目資料
  * @returns {Promise<Object>} 標準化回應格式
  */
-async function WCM_createCategory(categoryData) {
+async function WCM_createCategory(ledgerId, categoryData) {
   const functionName = "WCM_createCategory";
   
   try {
-    WCM_logInfo(`開始創建科目: ${categoryData.name}`, "創建科目", categoryData.userId || "", functionName);
+    WCM_logInfo(`開始創建科目: ${categoryData.name} (帳本: ${ledgerId})`, "創建科目", categoryData.userId || "", functionName);
 
     // 基本參數驗證
+    if (!ledgerId || typeof ledgerId !== 'string') {
+      return WCM_formatErrorResponse("INVALID_LEDGER_ID", "無效的帳本ID");
+    }
+
     if (!categoryData || typeof categoryData !== 'object') {
       return WCM_formatErrorResponse("INVALID_CATEGORY_DATA", "無效的科目資料");
     }
@@ -347,6 +378,7 @@ async function WCM_createCategory(categoryData) {
       parentId: categoryData.parentId || null,
       level: categoryData.parentId ? 2 : 1,
       userId: categoryData.userId,
+      ledgerId: ledgerId,
       description: categoryData.description || '',
       color: categoryData.color || '#007bff',
       icon: categoryData.icon || 'default',
@@ -357,11 +389,12 @@ async function WCM_createCategory(categoryData) {
       version: WCM_CONFIG.VERSION
     };
 
-    // 儲存至Firebase
+    // 儲存至Firebase子集合
     const db = admin.firestore();
-    await db.collection('categories').doc(categoryId).set(category);
+    const collectionPath = `ledgers/${ledgerId}/categories`;
+    await db.collection(collectionPath).doc(categoryId).set(category);
 
-    WCM_logInfo(`科目創建成功: ${categoryId}`, "創建科目", categoryData.userId, functionName);
+    WCM_logInfo(`科目創建成功: ${categoryId} (路徑: ${collectionPath}/${categoryId})`, "創建科目", categoryData.userId, functionName);
 
     return WCM_formatSuccessResponse({
       categoryId: categoryId,
@@ -369,7 +402,9 @@ async function WCM_createCategory(categoryData) {
       type: category.type,
       level: category.level,
       color: category.color,
-      icon: category.icon
+      icon: category.icon,
+      ledgerId: ledgerId,
+      path: `${collectionPath}/${categoryId}`
     }, "科目創建成功");
 
   } catch (error) {
@@ -379,17 +414,22 @@ async function WCM_createCategory(categoryData) {
 }
 
 /**
- * 05. 取得科目列表
- * @version 2025-11-17-V1.0.0
- * @description 取得用戶的科目列表
+ * 05. 取得科目列表 (子集合架構)
+ * @version 2025-11-19-V1.1.0
+ * @description 取得指定帳本的科目列表
+ * @param {string} ledgerId - 帳本ID
  * @param {Object} queryParams - 查詢參數
  * @returns {Promise<Object>} 標準化回應格式
  */
-async function WCM_getCategoryList(queryParams = {}) {
+async function WCM_getCategoryList(ledgerId, queryParams = {}) {
   const functionName = "WCM_getCategoryList";
   
   try {
-    WCM_logInfo("開始查詢科目列表", "查詢科目", queryParams.userId || "", functionName);
+    WCM_logInfo(`開始查詢科目列表 (帳本: ${ledgerId})`, "查詢科目", queryParams.userId || "", functionName);
+
+    if (!ledgerId || typeof ledgerId !== 'string') {
+      return WCM_formatErrorResponse("INVALID_LEDGER_ID", "無效的帳本ID");
+    }
 
     if (!queryParams.userId) {
       return WCM_formatErrorResponse("MISSING_USER_ID", "用戶ID不能為空");
@@ -398,7 +438,8 @@ async function WCM_getCategoryList(queryParams = {}) {
     await WCM_initialize();
 
     const db = admin.firestore();
-    let query = db.collection('categories')
+    const collectionPath = `ledgers/${ledgerId}/categories`;
+    let query = db.collection(collectionPath)
       .where('userId', '==', queryParams.userId)
       .where('status', '==', 'active')
       .orderBy('level', 'asc')
@@ -427,17 +468,20 @@ async function WCM_getCategoryList(queryParams = {}) {
         description: data.description,
         color: data.color,
         icon: data.icon,
+        ledgerId: data.ledgerId,
         createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : null,
         updatedAt: data.updatedAt?.toDate?.() ? data.updatedAt.toDate().toISOString() : null
       });
     });
 
-    WCM_logInfo(`查詢科目列表完成，返回${categories.length}筆記錄`, "查詢科目", queryParams.userId, functionName);
+    WCM_logInfo(`查詢科目列表完成，返回${categories.length}筆記錄 (路徑: ${collectionPath})`, "查詢科目", queryParams.userId, functionName);
 
     return WCM_formatSuccessResponse({
       categories: categories,
       total: categories.length,
-      limit: limit
+      limit: limit,
+      ledgerId: ledgerId,
+      collectionPath: collectionPath
     }, "科目列表查詢成功");
 
   } catch (error) {
@@ -447,18 +491,23 @@ async function WCM_getCategoryList(queryParams = {}) {
 }
 
 /**
- * 06. 驗證科目存在
- * @version 2025-11-17-V1.0.0
+ * 06. 驗證科目存在 (子集合架構)
+ * @version 2025-11-19-V1.1.0
  * @description 驗證指定科目是否存在且屬於用戶
+ * @param {string} ledgerId - 帳本ID
  * @param {string} categoryId - 科目ID
  * @param {string} userId - 用戶ID
  * @returns {Promise<Object>} 標準化回應格式
  */
-async function WCM_validateCategoryExists(categoryId, userId) {
+async function WCM_validateCategoryExists(ledgerId, categoryId, userId) {
   const functionName = "WCM_validateCategoryExists";
   
   try {
-    WCM_logInfo(`開始驗證科目存在: ${categoryId}`, "驗證科目", userId || "", functionName);
+    WCM_logInfo(`開始驗證科目存在: ${categoryId} (帳本: ${ledgerId})`, "驗證科目", userId || "", functionName);
+
+    if (!ledgerId || typeof ledgerId !== 'string') {
+      return WCM_formatErrorResponse("INVALID_LEDGER_ID", "無效的帳本ID");
+    }
 
     if (!categoryId || typeof categoryId !== 'string') {
       return WCM_formatErrorResponse("INVALID_CATEGORY_ID", "無效的科目ID");
@@ -471,7 +520,8 @@ async function WCM_validateCategoryExists(categoryId, userId) {
     await WCM_initialize();
 
     const db = admin.firestore();
-    const categoryDoc = await db.collection('categories').doc(categoryId).get();
+    const collectionPath = `ledgers/${ledgerId}/categories`;
+    const categoryDoc = await db.collection(collectionPath).doc(categoryId).get();
 
     if (!categoryDoc.exists) {
       return WCM_formatErrorResponse("CATEGORY_NOT_FOUND", "科目不存在");
@@ -489,7 +539,7 @@ async function WCM_validateCategoryExists(categoryId, userId) {
       return WCM_formatErrorResponse("CATEGORY_INACTIVE", "科目已停用");
     }
 
-    WCM_logInfo(`科目驗證成功: ${categoryId}`, "驗證科目", userId, functionName);
+    WCM_logInfo(`科目驗證成功: ${categoryId} (路徑: ${collectionPath}/${categoryId})`, "驗證科目", userId, functionName);
 
     return WCM_formatSuccessResponse({
       categoryId: categoryId,
@@ -497,8 +547,10 @@ async function WCM_validateCategoryExists(categoryId, userId) {
       type: categoryData.type,
       level: categoryData.level,
       parentId: categoryData.parentId,
+      ledgerId: categoryData.ledgerId,
       exists: true,
-      valid: true
+      valid: true,
+      collectionPath: collectionPath
     }, "科目驗證成功");
 
   } catch (error) {
@@ -508,18 +560,23 @@ async function WCM_validateCategoryExists(categoryId, userId) {
 }
 
 /**
- * 07. 取得帳戶餘額
- * @version 2025-11-17-V1.0.0
+ * 07. 取得帳戶餘額 (子集合架構)
+ * @version 2025-11-19-V1.1.0
  * @description 從BK模組遷移，計算帳戶餘額
+ * @param {string} ledgerId - 帳本ID
  * @param {string} walletId - 帳戶ID
  * @param {string} userId - 用戶ID
  * @returns {Promise<Object>} 標準化回應格式
  */
-async function WCM_getWalletBalance(walletId, userId) {
+async function WCM_getWalletBalance(ledgerId, walletId, userId) {
   const functionName = "WCM_getWalletBalance";
   
   try {
-    WCM_logInfo(`開始查詢帳戶餘額: ${walletId}`, "查詢餘額", userId || "", functionName);
+    WCM_logInfo(`開始查詢帳戶餘額: ${walletId} (帳本: ${ledgerId})`, "查詢餘額", userId || "", functionName);
+
+    if (!ledgerId || typeof ledgerId !== 'string') {
+      return WCM_formatErrorResponse("INVALID_LEDGER_ID", "無效的帳本ID");
+    }
 
     if (!walletId || typeof walletId !== 'string') {
       return WCM_formatErrorResponse("INVALID_WALLET_ID", "無效的帳戶ID");
@@ -530,7 +587,7 @@ async function WCM_getWalletBalance(walletId, userId) {
     }
 
     // 先驗證帳戶存在
-    const walletValidation = await WCM_validateWalletExists(walletId, userId);
+    const walletValidation = await WCM_validateWalletExists(ledgerId, walletId, userId);
     if (!walletValidation.success) {
       return walletValidation;
     }
@@ -538,7 +595,8 @@ async function WCM_getWalletBalance(walletId, userId) {
     await WCM_initialize();
 
     const db = admin.firestore();
-    const walletDoc = await db.collection('wallets').doc(walletId).get();
+    const collectionPath = `ledgers/${ledgerId}/wallets`;
+    const walletDoc = await db.collection(collectionPath).doc(walletId).get();
 
     if (!walletDoc.exists) {
       return WCM_formatErrorResponse("WALLET_NOT_FOUND", "帳戶不存在");
@@ -546,13 +604,15 @@ async function WCM_getWalletBalance(walletId, userId) {
 
     const walletData = walletDoc.data();
 
-    WCM_logInfo(`帳戶餘額查詢成功: ${walletId}, 餘額: ${walletData.balance}`, "查詢餘額", userId, functionName);
+    WCM_logInfo(`帳戶餘額查詢成功: ${walletId}, 餘額: ${walletData.balance} (路徑: ${collectionPath}/${walletId})`, "查詢餘額", userId, functionName);
 
     return WCM_formatSuccessResponse({
       walletId: walletId,
       name: walletData.name,
       balance: walletData.balance || 0,
       currency: walletData.currency || WCM_CONFIG.DEFAULT_CURRENCY,
+      ledgerId: walletData.ledgerId,
+      collectionPath: collectionPath,
       lastUpdated: walletData.updatedAt?.toDate?.() ? walletData.updatedAt.toDate().toISOString() : null
     }, "帳戶餘額查詢成功");
 
@@ -603,13 +663,13 @@ function WCM_logError(message, category, userId, errorType, errorDetail, functio
 // =================== 模組導出 ===================
 
 module.exports = {
-  // 帳戶管理函數
+  // 帳戶管理函數 (子集合架構)
   WCM_createWallet,
   WCM_getWalletList,
   WCM_validateWalletExists,
   WCM_getWalletBalance,
   
-  // 科目管理函數
+  // 科目管理函數 (子集合架構)
   WCM_createCategory,
   WCM_getCategoryList,
   WCM_validateCategoryExists,
@@ -620,5 +680,32 @@ module.exports = {
   WCM_formatErrorResponse,
   
   // 配置
-  WCM_CONFIG
+  WCM_CONFIG,
+  
+  // 模組資訊
+  moduleVersion: '1.1.0',
+  architecture: 'subcollection_based',
+  collections: {
+    wallets: 'ledgers/{ledgerId}/wallets',
+    categories: 'ledgers/{ledgerId}/categories'
+  },
+  lastUpdate: '2025-11-19',
+  features: [
+    'subcollection_architecture',
+    'ledger_based_collections',
+    'consistent_with_1311_FS',
+    'wallet_management',
+    'category_management'
+  ]
 };
+
+// 自動初始化模組
+try {
+  console.log('🔧 WCM模組v1.1.0初始化：子集合架構');
+  console.log('📋 架構調整：wallets/{walletId} → ledgers/{ledgerId}/wallets/{walletId}');
+  console.log('📋 架構調整：categories/{categoryId} → ledgers/{ledgerId}/categories/{categoryId}');
+  console.log('✅ 與1311.FS.js子集合架構保持一致');
+  console.log('🎯 WCM模組已準備就緒');
+} catch (error) {
+  console.error('❌ WCM模組初始化失敗:', error.message);
+}
