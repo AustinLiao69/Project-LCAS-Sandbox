@@ -1,6 +1,160 @@
 ------------------------------------------
-20251118. 準備firebase P3資料欄位
-不要寫code，請根據我的回覆更新提案。現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+20251119. 準備firebase P3資料欄位
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據9909文件SA角色要求，我重新分析您的Firebase P3資料欄位對齊問題。
+🔍 重新分析問題根源
+根本原因分析
+您已經明確指出：1311.FS.js必須成為唯一能夠初始化Firebase的模組，但目前有其他模組繞過1311直接操作Firebase，導致欄位不一致。
+
+💡 SA核心Insight
+關鍵發現：問題在於模組職責混亂。1311.FS.js應該負責Firebase集合結構定義和初始化，而其他模組（如AM、BM、CM）應該負責具體業務資料的建立，但都必須透過1311定義的標準結構。
+職責釐清：
+•	1311.FS.js：定義和初始化Firebase集合結構（空架構）
+•	AM.js：在既定結構下建立用戶的第一個帳本
+•	BM.js：在既定結構下建立特定帳本的預算
+•	CM.js：在既定結構下建立協作帳本
+
+🔧 修正後的MVP階段解決方案
+階段一：清除非1311模組的Firebase集合結構初始化代碼
+目標：移除其他模組的Firebase結構初始化代碼，保留業務資料建立功能
+具體行動：
+1.	AM.js模組修正：
+•	保留AM_initializeUserLedger函數的帳本建立功能
+•	移除Firebase集合結構定義部分
+•	改為先調用1311.FS.js確保結構存在，再建立具體帳本資料
+
+2.	BK.js模組清理：
+•	移除任何Firebase結構初始化代碼
+•	所有Firebase操作必須透過1311.FS.js定義的結構
+
+階段二：確認1311.FS.js結構完整性和其他模組職責
+1311.FS.js結構確認：
+查看FS_initializeLedgerStructure函數，確認是否包含：
+•	categories（科目子集合）
+•	wallets（帳戶子集合，原accounts改名為wallets）
+•	transactions（交易子集合）
+•	budgets（預算子集合）
+其他模組Firebase初始化職責檢視：
+經檢視代碼，發現以下模組有Firebase操作：
+1.	AM.js：
+•	職責：建立用戶第一個帳本（業務資料）
+•	應保留：在ledgers集合下建立具體帳本文檔
+•	應移除：Firebase集合結構定義
+2.	BM.js：
+•	職責：在特定帳本下建立預算（業務資料）
+•	應保留：在ledgers/{ledgerId}/budgets下建立預算文檔
+•	應移除：budgets子集合結構定義
+3.	CM.js：
+•	職責：建立協作帳本（業務資料）
+•	應保留：在collaborations集合下建立協作文檔
+•	應移除：collaborations集合結構定義
+建議統一調用介面：
+•	其他模組透過1311.FS.js的FS_initializeConnection確保Firebase已初始化
+•	但各模組可保留其特定業務資料的建立功能
+⚠️ MVP階段實施重點
+優先級排序：
+1.	最高優先：確認1311.FS.js包含完整的四個子集合結構定義
+2.	高優先：移除AM.js中的Firebase結構定義，保留帳本建立邏輯
+3.	中優先：統一其他模組通過1311.FS.js進行結構驗證
+風險控制：
+•	功能保持：確保AM模組仍能為新用戶建立帳本
+•	職責分離：結構定義歸1311，業務資料歸各模組
+📊 預期效益
+1.	職責清晰化：1311負責結構，其他模組負責業務資料
+2.	欄位一致性：所有Firebase欄位結構由1311統一定義
+3.	維護簡化：結構變更只需修改1311.FS.js
+4.	功能完整性：保留各模組的核心業務功能
+此方案專注解決當前Firebase欄位不一致的核心問題：建立1311.FS.js的Firebase結構定義權威性，同時保留各模組的業務邏輯功能。
+
+
+
+------------------------------------------
+20251119. 準備firebase P3資料欄位
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據9909文件SA角色要求，我重新分析您的Firebase P3資料欄位對齊問題。
+🔍 重新分析問題根源
+核心問題識別
+您已經明確指出：1311.FS.js必須成為唯一能夠初始化Firebase的模組，但目前有其他模組繞過1311直接操作Firebase，導致欄位不一致。
+
+根本原因分析
+1.	多點初始化混亂：AM.js的AM_initializeUserLedger函數直接調用Firebase API，繞過了1311.FS.js的標準結構定義
+2.	架構職責模糊：BL層模組直接操作DL層資源，違反了分層架構原則
+3.	資料來源衝突：AM模組從0099.json載入資料時使用中文欄位，而1311定義使用英文欄位
+
+💡 SA核心Insight
+架構設計脫節的本質：問題不在於欄位映射，而在於初始化職責分散。當前架構允許多個模組都有初始化Firebase的能力，這違反了單一責任原則，必然導致資料結構不一致。
+解決方向：建立1311.FS.js的Firebase初始化壟斷權，所有其他模組都必須透過1311進行Firebase操作。
+
+🔧 MVP階段解決方案
+階段一：清除非1311模組的Firebase直接操作
+目標：移除所有繞過1311.FS.js的Firebase初始化代碼
+具體行動：
+1.	修改AM.js模組：
+•	移除AM_initializeUserLedger中的直接Firebase操作
+•	改為調用1311.FS.js的標準初始化函數
+•	刪除直接的db.collection().set()操作
+=>請注意AM有一個職責是幫助初次註冊的使用者建立ledgers集合下的帳本，該函數請勿刪除。
+
+2.	清理BK.js模組：
+•	移除任何直接Firebase初始化代碼
+•	所有Firebase操作必須透過1311.FS.js
+
+3.	統一其他BL模組：
+•	BM.js、CM.js等模組禁止直接初始化Firebase結構
+•	僅能透過1311.FS.js進行資料操作
+=>請注意，這兩個功能跟1311的職責不相關的。1311是初始化所有firebase資料欄位，BM可以在ledgerId下面建一個buget，CM可以在collboration集合下面建立一個帳本，
+
+階段二：強化1311.FS.js為唯一Firebase初始化入口
+目標：確保所有Firebase結構初始化都透過1311.FS.js執行
+具體行動：
+1.	增強1311.FS.js初始化函數：
+•	FS_initializeLedgerStructure必須包含完整的帳本結構定義
+•	包含categories、accounts、transactions、budgets四個子集合
+=>1. 請確認FS_initializeLedgerStructureaccounts是否已經包含categories、accounts、transactions、budgets四個子集合
+2. account 的名稱請改為wallet
+
+•	使用1311定義的英文欄位結構
+2.	建立統一調用介面：
+•	其他模組透過1311.FS.js的FS_initializeUserLedger函數初始化
+=>請確認其他模組是否有firebase初始化的職責，若有請列出。我不覺得其它模組需要。
+
+•	禁止其他模組直接操作Firebase Admin SDK
+
+階段三：0099.json資料適配
+目標：讓0099.json的中文欄位資料適配1311.FS.js的英文欄位結構
+具體行動：
+1.	在1311.FS.js中建立欄位映射：
+•	大項代碼 → categoryCode
+•	大項名稱 → categoryName
+•	子項代碼 → subCategoryCode
+•	子項名稱 → subCategoryName
+•	同義詞 → synonyms
+
+=>此階段三請刪除，我會放在別的計畫去做。
+
+
+
+2.	統一資料載入邏輯：
+•	1311.FS.js負責載入0099.json並進行欄位映射
+•	確保Firebase中儲存的是1311定義的英文欄位結構
+
+⚠️ MVP階段實施重點
+優先級排序
+1.	最高優先：清除AM.js中的直接Firebase操作
+2.	高優先：建立1311.FS.js的壟斷權機制
+3.	中優先：欄位映射邏輯實作
+風險控制
+•	向下相容：保留既有Firebase資料的讀取能力
+•	漸進遷移：新建資料使用1311標準，既有資料逐步遷移
+•	功能連續性：確保使用者註冊到記帳流程不中斷
+📊 預期效益
+1.	架構純淨化：1311.FS.js成為Firebase操作的唯一入口點
+2.	資料一致性：所有Firebase欄位結構符合1311定義
+3.	維護簡化：集中式Firebase初始化，降低維護複雜度
+4.	擴展性保證：未來新增欄位只需修改1311.FS.js
+此方案專注解決當前Firebase欄位不一致的核心問題：建立1311.FS.js的Firebase初始化壟斷權，符合MVP階段的務實原則。
 
 ------------------------------------------
 20251118. 準備firebase P3資料欄位
@@ -204,6 +358,13 @@ ledgers/{ledgerId}/categories/{categoryId}/
 ├── isActive: boolean            // 是否啟用
 ├── createdAt: timestamp         // 建立時間
 └── updatedAt: timestamp         // 最後更新時間
+
+•	大項代碼 → categoryCode
+•	大項名稱 → categoryName
+•	子項代碼 → subCategoryCode
+•	子項名稱 → subCategoryName
+•	同義詞 → synonyms
+
 
 3. accounts子集合 (帳戶管理)
 ledgers/{ledgerId}/accounts/{accountId}/
