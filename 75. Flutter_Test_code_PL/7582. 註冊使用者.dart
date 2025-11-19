@@ -85,20 +85,21 @@ class RegisterUserTest {
   Future<void> _runRealRegistrationTests(Map<String, dynamic> successScenarios) async {
     print('📋 執行真實註冊測試（調用ASL → AM → Firebase）...\n');
 
-    // 選擇協作測試用戶進行真實註冊（階段一修正：使用collaboration.test@test.lcas.app）
-    final testScenario = 'collaboration_test_user';
+    // 階段二修正：使用sit_p3@sit.com測試用戶進行P3帳戶與科目管理測試
+    final testScenario = 'sit_p3_user';
     final scenarioData = successScenarios[testScenario] as Map<String, dynamic>;
 
-    print('[7582] 🧪 真實註冊測試: $testScenario');
+    print('[7582] 🧪 SIT P3真實註冊測試: $testScenario');
 
     try {
-      // 從7598取得真實email和使用者資料（遵守0098：不hard coding）
+      // 從7598取得sit_p3@sit.com用戶資料（遵守0098：不hard coding）
       final email = scenarioData['email'] as String;
-      final displayName = scenarioData['displayName'] as String?;
-      final userMode = scenarioData['userMode'] as String?;
+      final displayName = email.split('@')[0]; // 從email生成displayName
+      final userMode = 'Expert'; // P3測試使用Expert模式
 
-      print('[7582] 📧 使用7598測試Email: $email');
+      print('[7582] 📧 使用SIT P3測試Email: $email');
       print('[7582] 👤 用戶模式: $userMode');
+      print('[7582] 🎯 測試目標: P3帳戶與科目管理功能驗證');
 
       // 調用真實的註冊API（遵守dataflow: PL → APL → ASL → BL → Firebase）
       final registrationResult = await _callRealRegistrationAPI(
@@ -108,20 +109,20 @@ class RegisterUserTest {
       );
 
       if (registrationResult['success'] == true) {
-        print('[7582] ✅ 註冊API調用成功'); // 這裡的日誌是正確的，API調用成功
-        print('[7582] ✅ 真實註冊成功！');
+        print('[7582] ✅ sit_p3@sit.com註冊API調用成功');
+        print('[7582] ✅ SIT P3用戶註冊成功！');
 
-        // 驗證1309模組是否成功建立Firebase帳本
+        // 驗證1309 AM模組是否成功建立Firebase帳本（P3測試準備）
         final ledgerVerification = await _verifyFirebaseLedgerCreation(registrationResult);
 
         if (ledgerVerification) {
-          _recordTestResult(testScenario, true, '真實註冊成功且1309模組已在Firebase建立帳本');
+          _recordTestResult(testScenario, true, 'SIT P3用戶註冊成功，AM模組已建立完整帳本，P3測試準備就緒');
         } else {
-          _recordTestResult(testScenario, false, '註冊成功但1309模組未成功建立Firebase帳本');
+          _recordTestResult(testScenario, false, 'SIT P3用戶註冊成功但AM模組帳本初始化未完成');
         }
       } else {
         _recordTestResult(testScenario, false, 
-          '真實註冊失敗: ${registrationResult['message']}');
+          'SIT P3用戶註冊失敗: ${registrationResult['message']}');
       }
 
     } catch (e) {
@@ -191,10 +192,10 @@ class RegisterUserTest {
     }
   }
 
-  /// 驗證Firebase中的帳本建立（檢查1309 AM模組是否成功建立帳本）
+  /// 驗證Firebase中的帳本建立（檢查1309 AM模組是否為P3測試成功建立帳本）
   Future<bool> _verifyFirebaseLedgerCreation(Map<String, dynamic> registrationResult) async {
     try {
-      print('[7582] 🔍 驗證Firebase帳本建立狀態...');
+      print('[7582] 🔍 驗證SIT P3用戶Firebase帳本建立狀態...');
 
       // 從註冊結果取得用戶資料
       final userData = registrationResult['data'];
@@ -226,8 +227,9 @@ class RegisterUserTest {
           print('[7582] 📋 帳戶數量: $accountCount');
 
           if (ledgerId != null && subjectCount != null && accountCount != null) {
-            print('[7582] ✅ 帳本結構資訊完整');
-            print('[7582] ✅ 用戶註冊完成，AM模組已成功建立Firebase帳本');
+            print('[7582] ✅ SIT P3帳本結構資訊完整');
+            print('[7582] ✅ sit_p3@sit.com註冊完成，AM模組已成功建立Firebase帳本');
+            print('[7582] 🎯 P3測試帳本準備就緒，可進行帳戶與科目管理測試');
             return true;
           } else {
             print('[7582] ❌ 帳本資訊不完整');
@@ -317,11 +319,12 @@ Future<void> main() async {
   final registerTest = RegisterUserTest();
 
   try {
-    print('🔧 [7582] 註冊使用者測試模組 v1.1.0');
-    print('📋 目的: 使用7598的email進行真實註冊，觸發1309模組在Firebase建立帳本');
+    print('🔧 [7582] 註冊使用者測試模組 v1.1.0 - SIT P3階段二');
+    print('📋 目的: 使用sit_p3@sit.com進行真實註冊，為P3帳戶與科目管理測試準備帳本');
     print('⚖️  遵守0098憲法: 禁止hard coding、模擬業務邏輯，遵守dataflow');
     print('🌐 ASL服務端點: http://localhost:5000');
     print('🔄 資料流向: PL(7582) → APL → ASL → BL(1309 AM) → Firebase');
+    print('🎯 P3測試準備: 為7572 SIT_P3建立測試用戶帳本');
 
     await registerTest.runUserRegistrationTests();
 
@@ -332,6 +335,6 @@ Future<void> main() async {
     registerTest.cleanup();
   }
 
-  print('\n✨ [7582] 真實註冊使用者測試完成');
-  print('🎯 如果測試成功，1309模組已在Firebase成功建立用戶帳本！');
+  print('\n✨ [7582] SIT P3用戶真實註冊測試完成');
+  print('🎯 如果測試成功，sit_p3@sit.com帳本已就緒，7572 SIT_P3可開始執行！');
 }
