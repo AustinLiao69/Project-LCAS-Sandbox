@@ -5,7 +5,7 @@
     "description": "SIT P1+P2+P3測試資料倉庫 - 新增P3帳戶與科目管理測試資料",
     "dataSource": "REAL_USER_REGISTRATION_COLLABORATION_ACCOUNT_CATEGORY_FLOW",
     "consumer": ["7570. SIT_P1.dart", "7571. SIT_P2.dart", "7572. SIT_P3.dart", "7582. 註冊使用者.dart"],
-    "totalRecords": 48,</old_str>
+    "totalRecords": 48,
     "totalRecords": 48,
     "lastUpdated": "2025-11-06T06:16:00Z",
     "compliance": "1311_FS_STANDARD_BUDGET_REAL_USER_INTEGRATION",
@@ -48,7 +48,7 @@
         "enhanced": "支援7572 SIT_P3測試執行",
         "improved": "P3測試資料與真實用戶註冊流程整合",
         "focus": "Phase 3帳戶與科目管理功能測試資料完整覆蓋"
-      }</old_str>
+      }
     }
   },
   "authentication_test_data": {
@@ -1330,12 +1330,12 @@
       "total_scenarios": 13,
       "phase_1_scenarios": 54,
       "phase_2_scenarios": 4,
-      "phase_3_scenarios": 13,</old_str>
+      "phase_3_scenarios": 13,
       "user_modes_covered": ["Expert", "Inertial", "Cultivation", "Guiding"],
       "transaction_types_covered": ["income", "expense", "transfer"],
       "budget_features_covered": ["budget_creation", "execution_tracking", "alert_management", "period_validation", "real_ledger_integration"],
       "wallet_features_covered": ["wallet_creation", "wallet_update", "wallet_query", "wallet_deletion", "balance_management", "multi_currency_support"],
-      "category_features_covered": ["category_creation", "category_update", "category_query", "hierarchy_management", "personalization", "type_validation"],</old_str>
+      "category_features_covered": ["category_creation", "category_update", "category_query", "hierarchy_management", "personalization", "type_validation"],
       "error_types_covered": ["validation", "format", "missing_field", "invalid_value", "boundary", "duplicate", "null_value", "empty_value", "permission_denied", "resource_conflict"],
       "validation_categories": [
         "email_format_validation",
