@@ -3,6 +3,333 @@
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+------------------------------------------
+20251119. SIT_P3 前置準備
+
+Approved請進行階段一
+
+根據您的回覆，我需要先檢查7572. SIT_P3.dart中的現有函數，以確保遵守0098憲法第1.12條規定。
+檢查7572現有函數狀況
+查看 7572. SIT_P3.dart 的現有函數：
+現有函數清單：
+1.	P3TestDataManager.loadP3TestData() - 已存在測試資料載入函數
+2.	P3TestDataManager.getUserModeData() - 已存在用戶模式資料取得函數
+3.	P3TestDataManager.getWalletTestData() - 已存在帳戶測試資料取得函數
+4.	P3TestDataManager.getCategoryTestData() - 已存在科目測試資料取得函數
+5.	SITP3TestController.executeSITP3Tests() - 已存在完整P3測試執行函數
+6.	帳戶管理測試函數 (TC-001~005)：全部已實作
+7.	科目管理測試函數 (TC-006~010)：全部已實作
+8.	整合驗證測試函數 (TC-011~013)：全部已實作
+
+問題分析與Insight
+主要發現
+7572已經包含完整的P3測試函數實作：
+•	所有宣稱需要新增的函數都已經存在
+•	測試資料載入、帳戶管理、科目管理、整合測試功能都已完整實作
+•	違反了0098憲法1.12條：「禁止未經同意新增函數」
+根本原因分析
+這是典型的重複開發風險：
+1.	函數重複定義：建議的新增函數與現有函數功能重疊
+2.	架構認知落差：對7572現有結構的了解不完整
+3.	憲法合規性檢查缺失：未執行1.12條的事前檢查
+Insight 洞察
+從測試模組設計角度，這反映了測試架構成熟度問題：
+1.	7572已經是完整的P3測試模組，具備所有必要的測試功能
+2.	當前問題不在於缺少函數，而在於測試資料的準備和配置
+3.	解決重點應該放在測試資料準備，而非重複開發已有功能
+
+解決方案 - 修正版（聚焦測試資料準備）
+階段一：7598測試資料修正（簡化版）
+目標：僅新增必要的sit_p3@sit.com測試資料
+修改檔案：75. Flutter_Test_code_PL/7598. Data warehouse.json
+實施計畫：
+•	在authentication_test_data的success_scenarios中新增sit_p3_user
+•	僅設定email為"sit_p3@sit.com"（遵守您的要求）
+•	其他BL模組負責的欄位一律不新增
+
+階段二：7582註冊邏輯調整（保持不變）
+目標：7582使用sit_p3@sit.com進行註冊測試
+修改檔案：75. Flutter_Test_code_PL/7582. 註冊使用者.dart
+實施計畫：
+•	從7598載入sit_p3@sit.com用戶資料
+•	執行真實註冊API調用
+•	觸發AM模組帳本初始化
+
+階段三：7572測試配置調整（取代函數新增）
+目標：調整7572使用sit_p3@sit.com測試資料
+修改檔案：75. Flutter_Test_code_PL/7572. SIT_P3.dart
+實施計畫：
+1.	配置調整（非新增函數）：
+•	調整現有P3TestDataManager.getUserModeData()使用sit_p3@sit.com
+•	確保現有測試函數使用正確的測試用戶資料
+
+2.	遵守1.12條原則：
+•	不新增任何函數（避免重複現有功能）
+•	僅調整現有函數的配置和參數
+
+階段四：刪除（按您要求）
+按您的指示，此階段僅為執行測試，故予以刪除。
+修正後的解決方案專注於測試資料準備和配置調整，避免重複開發，完全遵守0098憲法1.12條規定。
+
+
+
+------------------------------------------
+20251119. SIT_P3 前置準備
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據您的回覆，我更新提案如下：
+問題分析與Insight
+主要問題識別
+1.	測試用戶資料放錯位置：sit_p3@sit.com應該在7598測試資料中，而非7582
+2.	測試資料範圍過廣：7598應專注CRUD測試資料，不需要複製系統預設資料
+3.	函數重複定義風險：7572可能已有相似測試函數
+根本原因分析
+就像資料庫設計一樣：
+•	資料分離原則：7598負責測試資料，7582負責註冊邏輯
+•	職責單一性：測試資料與業務邏輯應分離
+•	避免重複：系統已有的預設資料不應在測試資料中重複定義
+Insight 洞察
+從測試架構角度，這是典型的測試資料管理問題：
+1.	7598應純粹作為測試資料倉庫，專注CRUD測試案例
+2.	系統預設資料(0302, 0303, 0099)與測試CRUD資料應分離
+3.	測試函數應檢查現有實作，避免重複定義
+
+解決方案 - 分階段實施（修正版）
+階段一：7598測試資料修正
+目標：在7598中新增sit_p3@sit.com用戶，專注CRUD測試資料
+修改檔案：75. Flutter_Test_code_PL/7598. Data warehouse.json
+
+實施計畫：
+•	在authentication_test_data的success_scenarios中新增sit_p3_user
+•	email設為"sit_p3@sit.com"，其他欄位遵循現有格式
+=>我只要有email就好，其它欄位禁止新增，因為其它欄位是BL其他模組負責的。
+
+•	新增wallet_test_data：專注帳戶CRUD測試（新增、刪除、更新測試案例）
+•	新增category_test_data：專注科目CRUD測試（新增、刪除、更新測試案例）
+•	不包含系統預設資料（AM模組會自動引用0302, 0303, 0099）
+
+階段二：7582註冊邏輯調整
+目標：7582使用sit_p3@sit.com進行註冊測試
+修改檔案：75. Flutter_Test_code_PL/7582. 註冊使用者.dart
+實施計畫：
+•	從7598載入sit_p3@sit.com用戶資料
+•	執行真實註冊API調用
+•	觸發AM模組帳本初始化（自動引用系統預設資料）
+•	不需要設定userId、userMode等額外參數
+
+階段三：7572測試函數檢查與補完
+目標：檢查現有函數，僅補充缺失的測試案例
+修改檔案：75. Flutter_Test_code_PL/7572. SIT_P3.dart
+實施計畫：
+1.	檢查現有函數：
+•	檢查是否已有loadSitP3TestData()類似函數
+•	檢查是否已有帳戶管理測試函數
+•	檢查是否已有科目管理測試函數
+•	檢查是否已有整合驗證函數
+2.	僅補充缺失函數：
+•	若無相同類型函數才新增
+•	確保測試流程：7572(PL) → 7306(PL) → APL → ASL → BL → Firebase
+•	專注CRUD操作測試，不重複系統初始化邏輯
+=>請你現在檢查7572是否有你宣稱需要新增的函數，請你這樣做的目的是為了不違背0098的1.12
+
+1.	新增測試資料載入函數：
+•	loadSitP3TestData() - 載入7598的sit_p3_test_data
+•	getSitP3UserData() - 取得sit_p3@sit.com用戶資料
+
+2.	新增帳戶管理測試函數：
+•	testCreateWallet() - 通過PL層7306創建帳戶
+•	testGetWalletList() - 通過PL層查詢帳戶列表
+•	testUpdateWallet() - 通過PL層更新帳戶資訊
+•	testDeleteWallet() - 通過PL層刪除帳戶
+
+3.	新增科目管理測試函數：
+•	testCreateCategory() - 通過PL層7306創建科目
+•	testGetCategoryList() - 通過PL層查詢科目列表
+•	testUpdateCategory() - 通過PL層更新科目資訊
+•	testValidateCategoryHierarchy() - 驗證科目階層結構
+
+4.	新增整合驗證函數：
+•	testEndToEndWalletFlow() - 完整帳戶生命週期測試
+•	testEndToEndCategoryFlow() - 完整科目生命週期測試
+•	testCrossModuleIntegration() - 跨模組整合測試
+
+階段四：測試資料流驗證
+目標：確保測試資料流程正確
+驗證要點：
+•	7598提供純測試資料（sit_p3@sit.com + CRUD測試案例）
+•	7582執行註冊邏輯（使用7598資料）
+•	AM模組自動引用系統預設資料（0302, 0303, 0099）
+•	7572執行CRUD測試（通過PL層7306）
+=>此階段若僅有執行測試的部分就請你刪除。
+
+
+這個修正設計確保了資料職責分離，避免重複定義，並維持了清晰的測試架構。
+
+
+
+------------------------------------------
+20251119. SIT_P3 前置準備
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+解決方案 - 分階段實施（更新版）
+階段一：建立P3專屬測試用戶 (7582模組修正)
+目標：參考expert.valid@test.lcas.app生成方式，新增sit_p3@sit.com測試用戶
+修改檔案：75. Flutter_Test_code_PL/7582. 註冊使用者.dart
+實施計畫：
+•	在success_scenarios中新增sit_p3_test_user，參考collaboration_test_user格式
+=>這個不用
+
+•	設定email為"sit_p3@sit.com"
+=>7582只要拿這個email去註冊就好，其它不用管
+
+•	設定userMode為"Expert"（確保功能完整性）
+=>這個不用
+•	設定userId為"user_sit_p3_1697363600000"
+=>這個不用
+•	確保該用戶觸發AM模組完整帳本初始化
+=>這個不用
+•	驗證ledgerId生成為user_sit_p3@sit.com格式
+=>這個不用
+
+=> 1. 我搞錯了，sit_p3@sit.com應該要設在7598裡面才對，請協助修改，並且要注意7598只能寫sit_p3@sit.com，其它什麼usrid之類的嚴禁寫入
+
+階段二：7598測試資料擴展 (符合1311規範)
+目標：新增完整的P3測試資料集
+修改檔案：75. Flutter_Test_code_PL/7598. Data warehouse.json
+實施計畫：
+•	新增sit_p3_test_data區塊，包含：
+o	wallet_test_data：現金帳戶、銀行帳戶、信用卡帳戶
+o	category_test_data：收入科目(薪資、獎金)、支出科目(食物、交通、娛樂)
+
+=>當AM去建立新使用者sit_p3@sit.com的第一本帳本時，BL層模組自己會去引用0302, 0303以及0099，7598的wallet_test_data以及category_test_data只要負責創建帳戶及科目管理的CRUD相關的測試資料，亦即需要新增、刪除、更新就好。
+
+o	integration_test_data：API轉發測試、錯誤處理測試
+=>7598僅是靜態測試資料，此項請不用。
+
+•	所有欄位遵守1311 FS模組子集合架構規範
+•	支援CRUD完整操作流程的測試案例
+
+階段三：確認模組配置正確性（無需修改）
+重要修正：經檢視現有模組，AM、BM、CM、WCM模組已支援動態ledgerId處理，無需版本升級。
+確認要點：
+•	AM模組：已支援任意email用戶註冊和帳本初始化
+•	BM模組：已使用ledgers/{ledgerId}/budgets子集合路徑
+•	CM模組：已支援協作功能在指定帳本下運作
+•	WCM模組：已使用ledgers/{ledgerId}/wallets和ledgers/{ledgerId}/categories路徑
+
+階段四：7572 SIT_P3測試代碼整合（具體Action Plan）
+目標：從PL層觸發完整資料流測試，而非BL層直接操作
+修改檔案：75. Flutter_Test_code_PL/7572. SIT_P3.dart
+具體Action Plan：
+
+1.	新增測試資料載入函數：
+•	loadSitP3TestData() - 載入7598的sit_p3_test_data
+•	getSitP3UserData() - 取得sit_p3@sit.com用戶資料
+=>以上函數請檢查7572是否已有，若有相同類型函數則勿新增
+
+2.	新增帳戶管理測試函數：
+•	testCreateWallet() - 通過PL層7306創建帳戶
+•	testGetWalletList() - 通過PL層查詢帳戶列表
+•	testUpdateWallet() - 通過PL層更新帳戶資訊
+•	testDeleteWallet() - 通過PL層刪除帳戶
+=>以上函數請檢查7572是否已有，若有相同類型函數則勿新增
+
+3.	新增科目管理測試函數：
+•	testCreateCategory() - 通過PL層7306創建科目
+•	testGetCategoryList() - 通過PL層查詢科目列表
+•	testUpdateCategory() - 通過PL層更新科目資訊
+•	testValidateCategoryHierarchy() - 驗證科目階層結構
+=>以上函數請檢查7572是否已有，若有相同類型函數則勿新增
+
+4.	新增整合驗證函數：
+•	testEndToEndWalletFlow() - 完整帳戶生命週期測試
+•	testEndToEndCategoryFlow() - 完整科目生命週期測試
+•	testCrossModuleIntegration() - 跨模組整合測試
+=>以上函數請檢查7572是否已有，若有相同類型函數則勿新增
+
+
+測試流程設計：
+7572 (PL測試) → 7306 (PL功能群) → APL → ASL → WCM (BL) → Firebase
+驗證重點：
+•	所有操作都在user_sit_p3@sit.com帳本下進行
+•	資料正確寫入子集合路徑
+•	錯誤處理機制正常運作
+•	測試結果符合預期
+這個設計確保了真實的端到端測試流程，避免了直接在BL層操作的問題。
+
+
+
+
+------------------------------------------
+20251119. SIT_P3 前置準備
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+解決方案 - 分階段實施
+
+階段一：建立P3專屬測試用戶 (7582模組修正)
+目標：新增sit_p3@sit.com測試用戶，確保註冊流程完整
+修改檔案：75. Flutter_Test_code_PL/7582. 註冊使用者.dart
+實施計畫：
+•	在7582模組的測試場景中新增sit_p3@sit.com
+•	確保該用戶觸發AM模組的完整帳本初始化
+•	驗證ledgerId生成為 user_sit_p3@sit.com 格式
+影響範圍：7582模組內部，不影響其他模組
+Before/After差異：Before只有collaboration.test用戶，After新增P3專屬測試用戶
+
+=>OK，也請參考7582中expert.valid@test.lcas.app的生成方式
+
+階段二：7598測試資料擴展 (符合1311規範)
+目標：在7598中新增wallet和category測試資料
+修改檔案：75. Flutter_Test_code_PL/7598. Data warehouse.json
+實施計畫：
+•	新增 sit_p3_test_data 區塊
+•	包含wallet測試資料（現金、銀行、信用卡帳戶）
+•	包含category測試資料（收入、支出科目階層）
+•	所有欄位嚴格遵守1311 FS模組子集合架構
+影響範圍：僅影響7598資料檔案，為後續階段提供資料來源
+Before/After差異：Before缺少P3測試資料，After具備完整P3測試資料集
+=>ok
+
+
+階段三：模組配置調整 (確保帳本一致性)
+目標：確保AM, BM, CM, WCM模組都使用sit_p3用戶帳本
+修改檔案：
+•	13. Replit_Module code_BL/1309. AM.js (版本升級至v7.5.0)
+•	13. Replit_Module code_BL/1312. BM.js (版本升級至v2.3.0)
+•	13. Replit_Module code_BL/1313. CM.js (版本升級至v2.3.0)
+•	13. Replit_Module code_BL/1350. WCM.js (版本升級至v1.2.0)
+實施計畫：
+•	AM模組：確保sit_p3用戶註冊後正確初始化ledgerId
+•	BM模組：預算操作使用 user_sit_p3@sit.com 帳本路徑
+•	CM模組：協作功能在P3帳本下運作
+•	WCM模組：帳戶與科目管理使用正確的子集合路徑
+
+=>請確認是否做下列事項：
+由7572去調用sit_p3@sit.com觸發相關測試案例，例如新增帳戶(Wallet)、新增科目、刪除科目等等，從PL流到BL去做處理，而不是由BL直接指定用sit_p3@sit.com底下的帳本
+
+影響範圍：四個核心模組的帳本ID處理邏輯
+Before/After差異：Before各模組可能使用不同帳本，After統一使用P3測試帳本
+
+
+
+
+階段四：7572 SIT_P3測試代碼整合
+目標：確保7572能正確調用擴展後的測試資料
+修改檔案：75. Flutter_Test_code_PL/7572. SIT_P3.dart
+實施計畫：
+•	載入7598的sit_p3測試資料
+•	驗證帳戶管理功能（創建、查詢、更新、刪除）
+•	驗證科目管理功能（階層結構、個人化設定）
+•	確保所有操作都在sit_p3用戶帳本下進行
+影響範圍：7572測試代碼，使用新的測試資料結構
+Before/After差異：Before可能缺少完整測試，After具備完整P3功能測試
+=>請說明具體action plan是什麼？例如新增或修改哪些函數？
+
+
+
 
 ------------------------------------------
 20251119. SIT_P3 前置準備
