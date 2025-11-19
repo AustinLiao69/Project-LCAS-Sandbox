@@ -2375,24 +2375,34 @@ async function FS_initializeLedgerStructure() {
           }
         },
         categories: {
-          description: '帳本科目分類子集合 - 基於0099科目資料結構',
-          data_source: '引用0099. Subject_code.json',
+          description: '帳本科目分類子集合 - 階段一：直接對應0099科目資料結構',
+          data_source: '直接引用0099. Subject_code.json格式',
           document_structure: {
-            categoryId: 'number - 科目ID (對應0099 categoryId)',
-            parentId: 'number - 大項代碼 (對應0099 parentId)',
+            categoryId: 'number - 科目ID (對應0099子項代碼，如10101)',
+            parentId: 'number - 大項代碼 (對應0099大項代碼，如101)', 
             categoryName: 'string - 大項名稱 (對應0099 categoryName)',
             subCategoryName: 'string - 子項名稱 (對應0099 subCategoryName)',
-            synonyms: 'string - 同義詞 (對應0099 synonyms，可選)',
+            synonyms: 'string - 同義詞 (對應0099 synonyms)',
             type: 'string - 科目類型: "income"|"expense" (根據parentId判定)',
             isDefault: 'boolean - 是否為預設科目',
             isActive: 'boolean - 是否啟用',
-            budgetLimit: 'number - 預算上限 (可選)',
+            ledgerId: 'string - 所屬帳本ID',
             createdAt: 'timestamp - 建立時間',
-            updatedAt: 'timestamp - 最後更新時間'
+            updatedAt: 'timestamp - 最後更新時間',
+            createdBy: 'string - 建立者',
+            dataSource: 'string - 資料來源標識(固定值: "0099_subject_code")'
           },
+          removed_fields: ['name', 'icon', 'color', 'level', 'order', 'budgetLimit'],
           mapping_rules: {
             income_parent_ids: [801, 899],
-            expense_parent_ids: [101, 102, 103, 105, 108, 109, 110, 905, 999]
+            expense_parent_ids: [101, 102, 103, 105, 108, 109, 110, 905, 999],
+            field_mapping: {
+              '0099_parentId': 'parentId',
+              '0099_categoryId': 'categoryId', 
+              '0099_categoryName': 'categoryName',
+              '0099_subCategoryName': 'subCategoryName',
+              '0099_synonyms': 'synonyms'
+            }
           }
         },
         accounts: {
@@ -3091,14 +3101,21 @@ module.exports = {
 
   // 模組資訊
   moduleVersion: '2.7.2',
-  phase: 'Phase3-0099-Subject-Mapping-Support',
+  phase: 'Phase3-0099-Subject-Mapping-Stage1-Complete',
   lastUpdate: '2025-11-19',
+  stage1_0099_features: [
+    'categories_structure_updated',
+    '0099_field_mapping_ready',
+    'removed_deprecated_fields',
+    'synonyms_field_added',
+    'parentId_categoryId_alignment'
+  ],
   stage3Features: [
     'budgets_subcollection_support',
     'ledger_budget_integration',
     'path_structure_v3',
     'collaboration_architecture_support',
-    '0099_subject_data_mapping',
+    '0099_subject_data_mapping_stage1_complete',
     'categories_dynamic_initialization'
   ]
 };
