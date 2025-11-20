@@ -1069,7 +1069,7 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
     const createResult = await FS_createDocument('ledgers', ledgerId, ledgerData, requesterId);
 
     if (createResult.success) {
-      // 建立基礎錢包
+      // 建立基礎帳戶
       const walletResults = await FS_createBasicWallets(ledgerId, userMode, requesterId);
 
       // 更新用戶預設帳本
@@ -1572,7 +1572,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 
     // 4. 建立預算子集合 (budgets) - 建立預設月度預算
     const budgetDefault = {
-      budgetId: 'default_monthly_budget',
+      budgetId: 'placeholder',
       ledgerId: ledgerId,
       name: '月度預算',
       type: 'monthly',
@@ -1682,20 +1682,20 @@ async function FS_createBudgetsSubcollectionFramework() {
 
     const results = [];
 
-    // 1. 錢包子集合範例 - 階段一修正：移除UI欄位，符合0302配置格式
+    // 1. 帳戶子集合範例 - 階段一修正：移除UI欄位，符合0302配置格式
     const walletExample = {
       walletId: 'example_wallet',
       ledgerId: 'example_ledger_for_budgets',
-      name: '現金錢包',
+      name: '現金帳戶',
       type: 'cash',
       currency: 'TWD',
       balance: 50000,
       isDefault: true,
       isActive: true,
-      description: '現金錢包',
+      description: '現金帳戶',
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      note: '錢包子集合結構展示，符合0302配置檔案格式'
+      note: '帳戶子集合結構展示，符合0302配置檔案格式'
     };
 
     const walletResult = await FS_createDocument(
@@ -2109,8 +2109,8 @@ async function FS_initializeLedgerStructure() {
             categoryId: 'string - 科目ID (對應0099 categoryId)',
             categoryName: 'string - 科目名稱 (對應0099 categoryName)',
             subCategoryName: 'string - 子科目名稱 (對應0099 subCategoryName)',
-            walletId: 'string - 錢包ID',
-            walletName: 'string - 錢包名稱',
+            walletId: 'string - 帳戶ID',
+            walletName: 'string - 帳戶名稱',
             date: 'string - 交易日期 (YYYY-MM-DD格式)',
             userId: 'string - 記帳用戶ID',
             source: 'string - 記帳來源: "manual"|"quick"|"import"',
@@ -2154,20 +2154,20 @@ async function FS_initializeLedgerStructure() {
           }
         },
         wallets: {
-          description: '帳本錢包子集合',
+          description: '帳本帳戶子集合',
           document_structure: {
-            walletId: 'string - 錢包唯一識別碼',
-            name: 'string - 錢包名稱',
-            type: 'string - 錢包類型: "cash"|"bank"|"credit"|"investment"|"other"',
-            icon: 'string - 錢包圖示 emoji',
-            color: 'string - 錢包顏色 hex code',
+            walletId: 'string - 帳戶唯一識別碼',
+            name: 'string - 帳戶名稱',
+            type: 'string - 帳戶類型: "cash"|"bank"|"credit"|"investment"|"other"',
+            icon: 'string - 帳戶圖示 emoji',
+            color: 'string - 帳戶顏色 hex code',
             currency: 'string - 貨幣單位',
             initialBalance: 'number - 初始餘額',
             currentBalance: 'number - 當前餘額',
-            creditLimit: 'number - 信用額度 (信用卡錢包)',
-            bankName: 'string - 銀行名稱 (銀行錢包)',
+            creditLimit: 'number - 信用額度 (信用卡帳戶)',
+            bankName: 'string - 銀行名稱 (銀行帳戶)',
             accountNumber: 'string - 帳號末四碼 (脫敏)',
-            isDefault: 'boolean - 是否為預設錢包',
+            isDefault: 'boolean - 是否為預設帳戶',
             isActive: 'boolean - 是否啟用',
             includeInTotal: 'boolean - 是否計入總資產',
             notes: 'string - 備註 (可選)',
@@ -2331,10 +2331,10 @@ function FS_getLedgerConfigByMode(userMode) {
 // }
 
 /**
- * 36. 建立基礎錢包
+ * 36. 建立基礎帳戶
  * @version 2025-11-20-V1.1.0
  * @date 2025-11-20
- * @description 為新帳本建立基礎錢包，包含現金和銀行錢包
+ * @description 為新帳本建立基礎帳戶，包含現金和銀行帳戶
  */
 async function FS_createBasicWallets(ledgerId, userMode, requesterId) {
   const wallets = [

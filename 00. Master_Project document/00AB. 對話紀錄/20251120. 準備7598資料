@@ -1,0 +1,227 @@
+------------------------------------------
+20251120. 準備7598資料
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+作為資深SA，我將深入分析6503文件和當前P3 SIT的Wallet測試資料需求。
+🔍 SA深度分析
+📋 問題識別
+根據6503. SIT_P3.md文件分析，Phase 3著重於帳戶與科目管理功能測試，其中TC-001~005為帳戶管理功能測試，但目前7598.json的wallet_test_data不足以支援完整的P3測試需求。
+
+🎯 SA Insight
+1.	架構視角：P3測試就像公司財務部門要測試新的帳戶管理系統，需要涵蓋各種帳戶類型和操作情境
+2.	資料完整性：當前7598僅有基礎wallet測試資料，缺乏符合1311.FS.js規範的完整測試案例
+3.	測試覆蓋度：需要支援5個核心測試案例(TC-001~005)的全流程驗證
+
+📊 詳細問題說明
+當前7598 Wallet測試資料缺口：
+1.	缺少動態ID測試資料：所有walletId都是hardcode，無法測試真實的動態生成場景
+=> 不需要，7598只需要email，其它ID由BL層去生成。請重新提案
+=> TC-011, TC-012是API轉發測試，但是TC-001~TC-010只要測試成功，不就是代表整條路都是通的嗎？
+
+2.	測試情境不完整：缺乏邊界值測試、錯誤處理測試的wallet資料
+3.	1311規範不符：部分欄位不符合FS.js的標準資料結構
+4.	缺少整合測試資料：無法支援TC-011~013的API轉發驗證
+
+💡 解決方案提案
+
+階段一：擴充Wallet核心測試資料
+目標：為TC-001~005提供完整的wallet測試支援
+修改檔案：
+•	75. Flutter_Test_code_PL/7598. Data warehouse.json
+修改內容：在wallet_test_data中新增以下測試資料結構：
+
+
+
+"wallet_test_data": {
+  "success_scenarios": {
+    "create_cash_wallet": {
+      "walletId": "DYNAMIC_WALLET_ID_CASH", // 支援動態替換
+      "name": "測試現金帳戶",
+      "type": "cash",
+      "currency": "TWD",
+      "balance": 10000.0,
+      "isDefault": true,
+      "isActive": true,
+      "description": "P3帳戶管理測試用現金帳戶",
+      "ledgerId": "DYNAMIC_LEDGER_ID", // 支援動態替換
+      "createdBy": "DYNAMIC_USER_ID", // 支援動態替換
+      "createdAt": "DYNAMIC_TIMESTAMP",
+      "updatedAt": "DYNAMIC_TIMESTAMP",
+      "testScenario": "現金帳戶建立成功測試"
+    },
+    "create_bank_wallet": {
+      "walletId": "DYNAMIC_WALLET_ID_BANK",
+      "name": "測試銀行帳戶", 
+      "type": "bank",
+      "currency": "TWD",
+      "balance": 50000.0,
+      "bankName": "測試銀行",
+      "accountNumber": "****1234", // 脫敏處理
+      "isDefault": false,
+      "isActive": true,
+      "description": "P3帳戶管理測試用銀行帳戶",
+      "ledgerId": "DYNAMIC_LEDGER_ID",
+      "createdBy": "DYNAMIC_USER_ID",
+      "testScenario": "銀行帳戶建立成功測試"
+    },
+    "create_credit_wallet": {
+      "walletId": "DYNAMIC_WALLET_ID_CREDIT",
+      "name": "測試信用卡帳戶",
+      "type": "credit", 
+      "currency": "TWD",
+      "balance": 0.0,
+      "creditLimit": 100000.0,
+      "bankName": "測試信用卡銀行",
+      "cardNumber": "****5678",
+      "isDefault": false,
+      "isActive": true,
+      "description": "P3帳戶管理測試用信用卡帳戶",
+      "testScenario": "信用卡帳戶建立成功測試"
+    },
+    "update_wallet_info": {
+      "walletId": "DYNAMIC_WALLET_ID",
+      "name": "更新後的測試帳戶",
+      "description": "P3帳戶更新測試",
+      "testScenario": "帳戶資訊更新成功測試"
+    },
+    "wallet_balance_query": {
+      "walletId": "DYNAMIC_WALLET_ID", 
+      "expectedFields": ["walletId", "name", "type", "balance", "currency", "lastUpdated"],
+      "testScenario": "帳戶餘額查詢成功測試"
+    }
+  },
+  "failure_scenarios": {
+    "invalid_wallet_name": {
+      "name": "",
+      "type": "cash",
+      "currency": "TWD", 
+      "balance": 1000.0,
+      "expectedError": "帳戶名稱不能為空",
+      "testScenario": "帳戶名稱驗證失敗測試"
+    },
+    "invalid_wallet_type": {
+      "name": "測試帳戶",
+      "type": "invalid_type",
+      "currency": "TWD",
+      "balance": 1000.0, 
+      "expectedError": "無效的帳戶類型",
+      "testScenario": "帳戶類型驗證失敗測試"
+    },
+    "negative_balance": {
+      "name": "測試帳戶",
+      "type": "cash",
+      "currency": "TWD",
+      "balance": -1000.0,
+      "expectedError": "現金帳戶餘額不能為負數", 
+      "testScenario": "負數餘額驗證失敗測試"
+    },
+    "missing_currency": {
+      "name": "測試帳戶",
+      "type": "cash",
+      "balance": 1000.0,
+      "expectedError": "貨幣類型為必填欄位",
+      "testScenario": "缺少貨幣類型驗證失敗測試"
+    },
+    "duplicate_wallet_name": {
+      "name": "測試現金帳戶", // 與success_scenarios中重複
+      "type": "cash", 
+      "currency": "TWD",
+      "balance": 1000.0,
+      "expectedError": "帳戶名稱已存在",
+      "testScenario": "重複帳戶名稱驗證失敗測試"
+    }
+  },
+  "boundary_scenarios": {
+    "minimum_balance": {
+      "walletId": "wallet_min_balance",
+      "name": "最小餘額測試帳戶",
+      "type": "cash",
+      "currency": "TWD",
+      "balance": 0.01,
+      "testScenario": "最小餘額邊界測試"
+    },
+    "maximum_balance": {
+      "walletId": "wallet_max_balance", 
+      "name": "最大餘額測試帳戶",
+      "type": "bank",
+      "currency": "TWD",
+      "balance": 999999999.99,
+      "testScenario": "最大餘額邊界測試"
+    },
+    "long_wallet_name": {
+      "walletId": "wallet_long_name",
+      "name": "這是一個非常非常長的帳戶名稱用來測試系統對於超長帳戶名稱的處理能力和邊界值驗證機制的完整性測試",
+      "type": "cash",
+      "currency": "TWD", 
+      "balance": 1000.0,
+      "testScenario": "超長帳戶名稱邊界測試"
+    }
+  }
+}
+
+階段二：新增P3整合測試資料
+目標：支援TC-011~013的API轉發驗證
+修改內容：在7598.json中新增p3_integration_test_data：
+"p3_integration_test_data": {
+  "api_forwarding_test": {
+    "wallet_api_endpoints": [
+      "POST /api/v1/wallets",
+      "GET /api/v1/wallets", 
+      "PUT /api/v1/wallets/{id}",
+      "DELETE /api/v1/wallets/{id}",
+      "GET /api/v1/wallets/{id}/balance"
+    ],
+    "expected_response_format": {
+      "success": true,
+      "message": "string", 
+      "data": "object",
+      "error": null
+    }
+  },
+  "error_handling_test": {
+    "network_error_simulation": {
+      "scenario": "網路連線失敗",
+      "expectedError": "NETWORK_ERROR",
+      "expectedMessage": "網路連線失敗，請檢查網路連線"
+    },
+    "validation_error_simulation": {
+      "scenario": "資料驗證失敗", 
+      "expectedError": "VALIDATION_ERROR", 
+      "expectedMessage": "資料格式不正確"
+    },
+    "business_error_simulation": {
+      "scenario": "業務邏輯錯誤",
+      "expectedError": "BUSINESS_ERROR",
+      "expectedMessage": "業務邏輯執行失敗"
+    }
+  }
+}
+
+🔄 實施計畫
+Phase 1: 核心Wallet測試資料擴充
+•	時間估計: 1工作日
+•	驗證方式: 執行TC-001建立帳戶測試
+•	影響範圍: 僅影響測試資料，不影響業務邏輯
+Phase 2: P3整合測試資料補強
+•	時間估計: 0.5工作日
+•	驗證方式: 執行TC-011 API轉發驗證測試
+•	影響範圍: 僅影響測試資料，不影響業務邏輯
+📋 Before/After行為差異
+Before：
+•	7598僅有基礎wallet測試資料
+•	無法支援完整P3測試流程
+•	缺乏邊界值和錯誤處理測試資料
+After：
+•	完整支援TC-001~013所有測試案例
+•	提供動態ID替換機制，符合真實測試場景
+•	涵蓋成功、失敗、邊界值三大測試情境
+•	完全符合1311.FS.js資料結構規範
+✅ 待Approve項目
+1.	修改7598. Data warehouse.json：新增完整的wallet_test_data和p3_integration_test_data
+2.	版本升級：7598版本升級至v3.5.0，新增P3帳戶管理測試資料支援
+請Approve後，我將立即實施上述修改方案。
+Scroll to latest
+Assistant mode
+
+Over
+
