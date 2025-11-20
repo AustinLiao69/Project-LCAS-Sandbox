@@ -1484,7 +1484,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 
     const results = [];
 
-    // 1. 建立帳戶子集合 (wallets)
+    // 1. 建立帳戶子集合 (wallets) - 階段一修正：移除UI欄位，與0302配置匹配
     const walletDefaults = [
       {
         walletId: 'default_cash',
@@ -1494,8 +1494,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
         balance: 0,
         isDefault: true,
         isActive: true,
-        icon: '💵',
-        color: '#4CAF50'
+        description: '現金帳戶'
       },
       {
         walletId: 'default_bank',
@@ -1505,8 +1504,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
         balance: 0,
         isDefault: false,
         isActive: true,
-        icon: '🏦',
-        color: '#2196F3'
+        description: '銀行帳戶'
       },
       {
         walletId: 'default_credit',
@@ -1516,14 +1514,20 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
         balance: 0,
         isDefault: false,
         isActive: true,
-        icon: '💳',
-        color: '#FF9800'
+        description: '信用卡帳戶'
       }
     ];
 
     for (const wallet of walletDefaults) {
       const walletData = {
-        ...wallet,
+        walletId: wallet.walletId,
+        name: wallet.name,
+        type: wallet.type,
+        currency: wallet.currency,
+        balance: wallet.balance,
+        isDefault: wallet.isDefault,
+        isActive: wallet.isActive,
+        description: wallet.description,
         ledgerId: ledgerId,
         createdAt: admin.firestore.Timestamp.now(),
         updatedAt: admin.firestore.Timestamp.now(),
@@ -1539,28 +1543,29 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
       results.push({ type: 'wallets', id: wallet.walletId, result: walletResult });
     }
 
-    // 2. 建立科目子集合 (categories)
+    // 2. 建立科目子集合 (categories) - 階段一修正：僅包含業務必要欄位
     const categoryDefaults = [
       // 收入科目
-      { categoryId: 'income_salary', name: '薪資收入', type: 'income', icon: '💰', color: '#4CAF50', order: 1 },
-      { categoryId: 'income_business', name: '營業收入', type: 'income', icon: '🏢', color: '#2196F3', order: 2 },
-      { categoryId: 'income_other', name: '其他收入', type: 'income', icon: '💝', color: '#9C27B0', order: 3 },
+      { categoryId: 'income_salary', name: '薪資收入', type: 'income' },
+      { categoryId: 'income_business', name: '營業收入', type: 'income' },
+      { categoryId: 'income_other', name: '其他收入', type: 'income' },
 
       // 支出科目
-      { categoryId: 'expense_food', name: '餐飲', type: 'expense', icon: '🍽️', color: '#FF5722', order: 1 },
-      { categoryId: 'expense_transport', name: '交通', type: 'expense', icon: '🚗', color: '#607D8B', order: 2 },
-      { categoryId: 'expense_shopping', name: '購物', type: 'expense', icon: '🛍️', color: '#E91E63', order: 3 },
-      { categoryId: 'expense_entertainment', name: '娛樂', type: 'expense', icon: '🎬', color: '#673AB7', order: 4 },
-      { categoryId: 'expense_utilities', name: '水電費', type: 'expense', icon: '⚡', color: '#795548', order: 5 },
-      { categoryId: 'expense_healthcare', name: '醫療', type: 'expense', icon: '🏥', color: '#009688', order: 6 }
+      { categoryId: 'expense_food', name: '餐飲', type: 'expense' },
+      { categoryId: 'expense_transport', name: '交通', type: 'expense' },
+      { categoryId: 'expense_shopping', name: '購物', type: 'expense' },
+      { categoryId: 'expense_entertainment', name: '娛樂', type: 'expense' },
+      { categoryId: 'expense_utilities', name: '水電費', type: 'expense' },
+      { categoryId: 'expense_healthcare', name: '醫療', type: 'expense' }
     ];
 
     for (const category of categoryDefaults) {
       const categoryData = {
-        ...category,
+        categoryId: category.categoryId,
+        name: category.name,
+        type: category.type,
         ledgerId: ledgerId,
         parentId: null,
-        level: 1,
         isDefault: true,
         isActive: true,
         createdAt: admin.firestore.Timestamp.now(),
@@ -1712,7 +1717,7 @@ async function FS_createBudgetsSubcollectionFramework() {
 
     const results = [];
 
-    // 1. 建立錢包子集合 (wallets)
+    // 1. 建立錢包子集合 (wallets) - 階段一修正：移除UI欄位
     const walletExample = {
       walletId: 'example_wallet',
       ledgerId: 'example_ledger_for_budgets',
@@ -1722,6 +1727,7 @@ async function FS_createBudgetsSubcollectionFramework() {
       balance: 50000,
       isDefault: true,
       isActive: true,
+      description: '現金錢包',
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
       note: '錢包子集合範例'
@@ -1759,17 +1765,13 @@ async function FS_createBudgetsSubcollectionFramework() {
     );
     results.push({ type: 'transactions', result: transactionResult });
 
-    // 3. 建立科目子集合 (categories)
+    // 3. 建立科目子集合 (categories) - 階段一修正：移除UI欄位
     const categoryExample = {
       categoryId: 'example_food',
       ledgerId: 'example_ledger_for_budgets',
       name: '餐飲',
       type: 'expense',
-      icon: '🍽️',
-      color: '#FF5722',
       parentId: null,
-      level: 1,
-      order: 1,
       isDefault: true,
       isActive: true,
       createdAt: admin.firestore.Timestamp.now(),
@@ -2374,26 +2376,31 @@ async function FS_createBasicWallets(ledgerId, userMode, requesterId) {
     {
       name: '現金',
       type: 'cash',
-      icon: '💵',
       currency: 'TWD',
       balance: 0,
-      isDefault: true
+      isDefault: true,
+      description: '現金帳戶'
     },
     {
       name: '銀行帳戶',
       type: 'bank',
-      icon: '🏦',
       currency: 'TWD',
       balance: 0,
-      isDefault: false
+      isDefault: false,
+      description: '銀行帳戶'
     }
   ];
 
   const results = [];
   for (const wallet of wallets) {
     const walletData = {
-      ...wallet,
       walletId: `${wallet.type}_${ledgerId}_${Date.now()}`,
+      name: wallet.name,
+      type: wallet.type,
+      currency: wallet.currency,
+      balance: wallet.balance,
+      isDefault: wallet.isDefault,
+      description: wallet.description,
       ledgerId: ledgerId,
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
@@ -2883,8 +2890,8 @@ module.exports = {
   admin,
 
   // 模組資訊
-  moduleVersion: '2.5.1',
-  phase: 'Phase2-Missing-Functions-Complete',
+  moduleVersion: '2.7.3',
+  phase: 'Phase1-Field-Compatibility-Fixed',
   lastUpdate: '2025-11-20',
   stage1_0099_features: [
     'categories_structure_updated',
