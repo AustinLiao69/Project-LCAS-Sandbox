@@ -1,0 +1,55 @@
+~/workspace$ cd "75. Flutter_Test_code_PL" && dart run "7582. 註冊使用者.dart"
+🔧 [7582] 註冊使用者測試模組 v1.1.0 - SIT P3階段二
+📋 目的: 使用sit_p3@sit.com進行真實註冊，為P3帳戶與科目管理測試準備帳本
+⚖️  遵守0098憲法: 禁止hard coding、模擬業務邏輯，遵守dataflow
+🌐 ASL服務端點: http://localhost:5000
+🔄 資料流向: PL(7582) → APL → ASL → BL(1309 AM) → Firebase
+🎯 P3測試準備: 為7572 SIT_P3建立測試用戶帳本
+
+🚀 [7582] 開始執行使用者註冊測試...
+
+[7582] ✅ 成功載入7598測試資料
+
+🔍 檢查ASL服務狀態...
+✅ ASL服務正常運行
+📋 執行真實註冊測試（調用ASL → AM → Firebase）...
+
+[7582] 🧪 SIT P3真實註冊測試: sit_p3_user
+[7582] 📧 使用SIT P3測試Email: sit_p3@sit.com
+[7582] 👤 用戶模式: Expert
+[7582] 🎯 測試目標: P3帳戶與科目管理功能驗證
+[7582] 📡 調用真實註冊API: POST http://localhost:5000/api/v1/auth/register
+[7582] 📋 註冊資料: email, password, displayName, userMode, language, currency, timezone
+[7582] 🔄 HTTP回應狀態: 200
+[7582] 📊 回應格式: success=true
+[7582] ✅ sit_p3@sit.com註冊API調用成功
+[7582] ✅ SIT P3用戶註冊成功！
+[7582] 🔍 驗證SIT P3用戶Firebase帳本建立狀態...
+[7582] 📋 用戶資料內容: {email: sit_p3@sit.com, displayName: sit_p3, userMode: Expert, emailVerified: false, createdAt: {_seconds: 1763621939, _nanoseconds: 437000000}, lastActiveAt: {_seconds: 1763621939, _nanoseconds: 437000000}, updatedAt: {_seconds: 1763621939, _nanoseconds: 437000000}, preferences: {language: zh-TW, timezone: Asia/Taipei, currency: TWD, theme: auto, notifications: {email: true, push: false, sms: false, inApp: true}, dateFormat: YYYY/MM/DD, numberFormat: comma}, security: {hasAppLock: false, biometricEnabled: false, privacyModeEnabled: false, twoFactorEnabled: false, securityLevel: standard, lastPasswordChange: {_seconds: 1763621939, _nanoseconds: 437000000}, loginAttempts: 0}, status: active, accountStatus: active, profileCompletion: {basic: true, preferences: false, security: false, percentage: 30}, linkedAccounts: {LINE_UID: , iOS_UID: , Android_UID: , Google_UID: , Apple_UID: }, statistics: {totalTransactions: 0, totalLedgers: 0, lastActivity: {_seconds: 1763621939, _nanoseconds: 437000000}, loginCount: 1}, metadata: {source: registration, version: v1.0.0, createdBy: AM_MODULE}, initializationComplete: true, ledgerInfo: {ledgerId: user_sit_p3@sit.com, subjectCount: 0, walletCount: 0}}
+[7582] 🔍 初始化完成標誌: true
+[7582] ✅ 1309模組帳本初始化完成標誌確認
+[7582] 📋 帳本資訊: {ledgerId: user_sit_p3@sit.com, subjectCount: 0, walletCount: 0}
+[7582] 📋 帳本ID: user_sit_p3@sit.com
+[7582] 📋 科目數量: 0
+[7582] 📋 帳戶數量: null
+[7582] ❌ 帳本資訊不完整
+
+============================================================
+📊 [7582] 真實註冊測試結果統計
+============================================================
+總測試數: 1
+通過: 0
+失敗: 1
+成功率: 0.0%
+
+📋 詳細結果:
+❌ sit_p3_user: SIT P3用戶註冊成功但AM模組帳本初始化未完成
+============================================================
+⚠️  發現 1 個問題，請檢查：
+   - ASL層服務是否正常運行 (Port 5000)
+   - 1309 AM模組帳本初始化功能
+   - Firebase連線和權限設定
+[7582] 🧹 測試環境清理完成
+
+✨ [7582] SIT P3用戶真實註冊測試完成
+🎯 如果測試成功，sit_p3@sit.com帳本已就緒，7572 SIT_P3可開始執行！
