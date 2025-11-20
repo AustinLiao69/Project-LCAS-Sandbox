@@ -780,267 +780,6 @@ async function FS_processQuickTransaction(quickData, requesterId) {
   }
 }
 
-// =============== 階段二：輔助函數 ===============
-
-/**
- * 16. 生成交易ID
- * @version 2025-11-18-V2.7.1
- * @date 2025-11-18
- * @description 生成唯一的交易識別碼，包含時間戳記和隨機字串
- */
-function FS_generateTransactionId() {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 8);
-  return `txn_${timestamp}_${random}`;
-}
-
-/**
- * 17. 階段三新增：預算子集合寫入函數
- * @version 2025-11-18-V2.7.1
- * @date 2025-11-18
- * @description 將預算寫入指定帳本的budgets子集合，確保路徑正確性和安全驗證
- */
-async function FS_createBudgetInLedger(ledgerId, budgetData, requesterId) {
-  const functionName = "FS_createBudgetInLedger";
-  try {
-    FS_logOperation(`階段三：建立預算子集合 - ledgers/${ledgerId}/budgets`, "建立預算", requesterId || "", "", "", functionName);
-
-    // 階段三路徑驗證：確保絕對使用子集合路徑
-    const collectionPath = `ledgers/${ledgerId}/budgets`;
-    console.log(`[${functionName}] 🎯 階段三強制路徑: ${collectionPath}`);
-
-    // 路徑安全驗證
-    if (!collectionPath.startsWith('ledgers/') || !collectionPath.endsWith('/budgets')) {
-      throw new Error(`階段三路徑安全驗證失敗: ${collectionPath}`);
-    }
-
-    // 禁止頂層budgets集合
-    if (collectionPath === 'budgets' || collectionPath.indexOf('ledgers/') === -1) {
-      throw new Error(`階段三禁用頂層budgets集合: ${collectionPath}`);
-    }
-
-    // 生成預算ID
-    const budgetId = budgetData.id || `budget_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-
-    // 準備預算數據
-    const finalBudgetData = {
-      ...budgetData,
-      budgetId: budgetId,
-      ledgerId: ledgerId,
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      createdBy: requesterId || 'system',
-      collection_type: 'budget_subcollection',
-      path_verification: collectionPath
-    };
-
-    // 寫入Firebase子集合
-    const docRef = db.collection(collectionPath).doc(budgetId);
-    await docRef.set(finalBudgetData);
-
-    console.log(`[${functionName}] ✅ 階段三成功：預算已寫入 ${collectionPath}/${budgetId}`);
-    console.log(`[${functionName}] 📋 確認帳本ID: ${ledgerId}`);
-    console.log(`[${functionName}] 📋 確認預算ID: ${budgetId}`);
-
-    return {
-      success: true,
-      budgetId: budgetId,
-      ledgerId: ledgerId,
-      path: `${collectionPath}/${budgetId}`,
-      data: finalBudgetData
-    };
-
-  } catch (error) {
-    FS_handleError(`階段三：預算子集合建立失敗: ${error.message}`, "建立預算", requesterId || "", "FS_CREATE_BUDGET_SUBCOLLECTION_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.message,
-      errorCode: 'FS_CREATE_BUDGET_SUBCOLLECTION_ERROR'
-    };
-  }
-}
-
-/**
- * 18. 分析評估結果（簡化實作）
- * @version 2025-11-18-V2.7.1
- * @date 2025-11-18
- * @description 分析用戶評估問卷答案，推薦適合的記帳模式
- */
-function FS_analyzeAssessmentResults(answers) {
-  // 簡化的評估邏輯
-  const scores = {
-    Expert: 0,
-    Inertial: 0,
-    Cultivation: 0,
-    Guiding: 0
-  };
-
-  // 根據答案計算分數（這裡需要實際的評估邏輯）
-  answers.forEach(answer => {
-    if (answer.selectedOptions) {
-      answer.selectedOptions.forEach(option => {
-        // 根據選項權重加分
-        scores.Expert += Math.random() * 5;
-        scores.Inertial += Math.random() * 5;
-        scores.Cultivation += Math.random() * 5;
-        scores.Guiding += Math.random() * 5;
-      });
-    }
-  });
-
-  // 找出最高分數的模式
-  const recommendedMode = Object.keys(scores).reduce((a, b) =>
-    scores[a] > scores[b] ? a : b
-  );
-
-  const maxScore = scores[recommendedMode];
-  const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
-  const confidence = totalScore > 0 ? (maxScore / totalScore) * 100 : 0;
-
-  return {
-    recommendedMode: recommendedMode,
-    confidence: confidence,
-    scores: scores,
-    explanation: `基於您的回答，推薦使用${recommendedMode}模式`
-  };
-}
-
-/**
- * 19. 解析快速輸入（簡化實作）
- * @version 2025-11-18-V2.7.1
- * @date 2025-11-18
- * @description 解析快速記帳的自然語言輸入，提取金額、類型和描述
- */
-function FS_parseQuickInput(input) {
-  try {
-    // 簡化的解析邏輯：尋找數字和描述
-    const amountMatch = input.match(/(\d+)/);
-    const amount = amountMatch ? parseInt(amountMatch[1]) : null;
-
-    if (!amount) {
-      return { success: false, error: "找不到金額" };
-    }
-
-    const description = input.replace(/\d+/g, '').trim() || '未分類';
-    const type = input.includes('收入') || input.includes('薪水') ? 'income' : 'expense';
-
-    return {
-      success: true,
-      amount: amount,
-      type: type,
-      description: description,
-      confidence: 0.8
-    };
-
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
-
-// =============== 相容性函數保留區 ===============
-
-/**
- * 20. 合併文檔 - 相容性函數
- * @version 2025-11-18-V2.7.1
- * @date 2025-11-18
- * @description 合併更新Firestore中的文檔，保留現有欄位並新增或更新指定欄位
- */
-async function FS_mergeDocument(collectionPath, documentId, mergeData, requesterId) {
-  const functionName = "FS_mergeDocument";
-  try {
-    FS_logOperation(`合併文檔: ${collectionPath}/${documentId}`, "合併文檔", requesterId || "", "", "", functionName);
-
-    // 使用 FS_setDocument 進行合併操作
-    return await FS_setDocument(collectionPath, documentId, mergeData, requesterId, { merge: true });
-
-  } catch (error) {
-    FS_handleError(`合併文檔失敗: ${error.message}`, "合併文檔", requesterId || "", "FS_MERGE_DOCUMENT_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.message,
-      errorCode: 'FS_MERGE_DOCUMENT_ERROR'
-    };
-  }
-}
-
-/**
- * 23. 新增到集合 - 相容性函數
- * @version 2025-09-16-V2.1.0
- * @date 2025-09-16
- * @description 新增文檔到Firestore集合，自動生成文檔ID
- */
-async function FS_addToCollection(collectionPath, data, requesterId) {
-  const functionName = "FS_addToCollection";
-  try {
-    FS_logOperation(`新增到集合: ${collectionPath}`, "新增文檔", requesterId || "", "", "", functionName);
-
-    // 驗證必要參數
-    if (!collectionPath || !data) {
-      throw new Error("缺少必要參數: collectionPath, data");
-    }
-
-    // 新增文檔
-    const docRef = await db.collection(collectionPath).add(data);
-
-    return {
-      success: true,
-      documentId: docRef.id,
-      path: `${collectionPath}/${docRef.id}`,
-      data: data
-    };
-
-  } catch (error) {
-    FS_handleError(`新增到集合失敗: ${error.message}`, "新增文檔", requesterId || "", "FS_ADD_TO_COLLECTION_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.message,
-      errorCode: 'FS_ADD_TO_COLLECTION_ERROR'
-    };
-  }
-}
-
-/**
- * 24. 設置文檔 - 相容性函數
- * @version 2025-09-16-V2.1.0
- * @date 2025-09-16
- * @description 在Firestore中設置文檔，支援覆寫模式和合併模式
- */
-async function FS_setDocument(collectionPath, documentId, data, requesterId, options = {}) {
-  const functionName = "FS_setDocument";
-  try {
-    FS_logOperation(`設置文檔: ${collectionPath}/${documentId}`, "設置文檔", requesterId || "", "", "", functionName);
-
-    // 驗證必要參數
-    if (!collectionPath || !documentId || !data) {
-      throw new Error("缺少必要參數: collectionPath, documentId, data");
-    }
-
-    // 準備文檔引用
-    const docRef = db.collection(collectionPath).doc(documentId);
-
-    // 設置選項
-    const setOptions = options.merge ? { merge: true } : {};
-
-    // 執行設置操作
-    await docRef.set(data, setOptions);
-
-    return {
-      success: true,
-      documentId: documentId,
-      path: `${collectionPath}/${documentId}`,
-      operation: options.merge ? 'merge' : 'overwrite'
-    };
-
-  } catch (error) {
-    FS_handleError(`設置文檔失敗: ${error.message}`, "設置文檔", requesterId || "", "FS_SET_DOCUMENT_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.message,
-      errorCode: 'FS_SET_DOCUMENT_ERROR'
-    };
-  }
-}
-
 // =============== 階段三：整合優化與驗證函數區 ===============
 
 /**
@@ -2379,7 +2118,7 @@ async function FS_initializeLedgerStructure() {
           data_source: '直接引用0099. Subject_code.json格式',
           document_structure: {
             categoryId: 'number - 科目ID (對應0099子項代碼，如10101)',
-            parentId: 'number - 大項代碼 (對應0099大項代碼，如101)', 
+            parentId: 'number - 大項代碼 (對應0099大項代碼，如101)',
             categoryName: 'string - 大項名稱 (對應0099 categoryName)',
             subCategoryName: 'string - 子項名稱 (對應0099 subCategoryName)',
             synonyms: 'string - 同義詞 (對應0099 synonyms)',
@@ -2398,7 +2137,7 @@ async function FS_initializeLedgerStructure() {
             expense_parent_ids: [101, 102, 103, 105, 108, 109, 110, 905, 999],
             field_mapping: {
               '0099_parentId': 'parentId',
-              '0099_categoryId': 'categoryId', 
+              '0099_categoryId': 'categoryId',
               '0099_categoryName': 'categoryName',
               '0099_subCategoryName': 'subCategoryName',
               '0099_synonyms': 'synonyms'
@@ -2550,34 +2289,37 @@ function FS_getLedgerConfigByMode(userMode) {
  * @date 2025-11-18
  * @description 根據用戶模式返回適合的收支科目配置，Expert模式包含更多詳細科目
  */
-function FS_getCategoryConfigByMode(userMode) {
-  const baseConfig = {
-    incomeCategories: [
-      { code: 'salary', name: '薪資收入', icon: '💰', color: '#4CAF50', order: 1 },
-      { code: 'other', name: '其他收入', icon: '💝', color: '#9C27B0', order: 2 }
-    ],
-    expenseCategories: [
-      { code: 'food', name: '餐飲', icon: '🍽️', color: '#FF5722', order: 1 },
-      { code: 'transport', name: '交通', icon: '🚗', color: '#607D8B', order: 2 },
-      { code: 'shopping', name: '購物', icon: '🛍️', color: '#E91E63', order: 3 }
-    ]
-  };
+// 階段一修正：移除所有業務資料配置函數
+// FS模組不再處理科目、帳戶等業務邏輯配置
+// 這些功能已移至AM模組，由0099.json和03資料夾提供
+// function FS_getCategoryConfigByMode(userMode) {
+//   const baseConfig = {
+//     incomeCategories: [
+//       { code: 'salary', name: '薪資收入', icon: '💰', color: '#4CAF50', order: 1 },
+//       { code: 'other', name: '其他收入', icon: '💝', color: '#9C27B0', order: 2 }
+//     ],
+//     expenseCategories: [
+//       { code: 'food', name: '餐飲', icon: '🍽️', color: '#FF5722', order: 1 },
+//       { code: 'transport', name: '交通', icon: '🚗', color: '#607D8B', order: 2 },
+//       { code: 'shopping', name: '購物', icon: '🛍️', color: '#E91E63', order: 3 }
+//     ]
+//   };
 
-  // Expert模式增加更多科目
-  if (userMode === 'Expert') {
-    baseConfig.incomeCategories.push(
-      { code: 'business', name: '營業收入', icon: '🏢', color: '#2196F3', order: 3 },
-      { code: 'investment', name: '投資收入', icon: '📈', color: '#FF9800', order: 4 }
-    );
-    baseConfig.expenseCategories.push(
-      { code: 'entertainment', name: '娛樂', icon: '🎬', color: '#673AB7', order: 4 },
-      { code: 'utilities', name: '水電費', icon: '⚡', color: '#795548', order: 5 },
-      { code: 'healthcare', name: '醫療', icon: '🏥', color: '#009688', order: 6 }
-    );
-  }
+//   // Expert模式增加更多科目
+//   if (userMode === 'Expert') {
+//     baseConfig.incomeCategories.push(
+//       { code: 'business', name: '營業收入', icon: '🏢', color: '#2196F3', order: 3 },
+//       { code: 'investment', name: '投資收入', icon: '📈', color: '#FF9800', order: 4 }
+//     );
+//     baseConfig.expenseCategories.push(
+//       { code: 'entertainment', name: '娛樂', icon: '🎬', color: '#673AB7', order: 4 },
+//       { code: 'utilities', name: '水電費', icon: '⚡', color: '#795548', order: 5 },
+//       { code: 'healthcare', name: '醫療', icon: '🏥', color: '#009688', order: 6 }
+//     );
+//   }
 
-  return baseConfig;
-}
+//   return baseConfig;
+// }
 
 /**
  * 36. 建立基礎帳戶
