@@ -1,0 +1,332 @@
+🚀 LCAS ASL (API Service Layer) v2.2.0 啟動中...
+📅 啟動時間: 2025/11/20 下午2:58:25
+🔥 ASL階段二升級：優先初始化Firebase...
+📦 ASL載入P1-2範圍BL層模組...
+🔄 Firebase初始化嘗試 1/3...
+📡 載入Firebase配置模組...
+✅ Firebase配置驗證通過
+🔍 驗證Firebase配置...
+✅ Firebase配置驗證通過
+⚡ 初始化Firebase Admin SDK...
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+📊 確認Firestore實例...
+ ✅ Firestore實例取得成功
+🔗 驗證Firebase連線...
+✅ Firebase連線驗證成功
+✅ Firebase完全初始化完成，準備載入BL模組...
+🎯 Firebase初始化成功 (嘗試次數: 1)
+🔥 Firebase已就緒，開始載入AM模組...
+✅ DL模組：Firebase動態配置載入成功
+✅ AM模組7.5.0 DCN-0020階段二優化版載入成功！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 完整帳本初始化 (3個核心功能) - 階段二優化
+   └── 總計: 66個函數完整實作
+🚀 階段二優化: 智能batch分割提升大量數據寫入成功率
+🔧 性能提升: AM_initializeUserLedger() - 多重重試機制和錯誤恢復
+🔧 穩定性強化: AM_getUserDefaultLedger() - 增強參數驗證和錯誤處理
+📊 資料流優化: BK模組 → AM模組 → 智能batch處理 → Firebase高效寫入
+🎯 優化目標: 提升帳本初始化的成功率和執行效率
+🎉 階段二成果: 大幅提升系統穩定性和用戶體驗！
+✅ AM (認證管理) 模組載入成功
+🔄 開始載入BK模組...
+✅ Firebase Admin SDK已初始化
+✅ FS模組2.5.0：Firebase動態配置載入成功
+[FS_LOG_v2.1.0] 2025-11-20T06:58:26.880Z | 模組初始化 | FS模組2.5.0初始化 | User: system | Function: FS_initializeModule
+✅ FS模組v2.5.1階段二完成：缺失函數修復！
+📌 模組版本: 2.5.1
+🎯 階段二成果: 補完FS_mergeDocument函數，修復依賴模組載入問題
+🔧 階段二修復: FS_mergeDocument() - 文檔合併操作
+📋 階段一功能: 核心基礎操作(9個函數)
+📋 階段二功能: API端點支援(6個函數)
+📋 階段三功能: 整合優化與驗證(6個函數)
+✨ 總計實作: 30+個核心函數 + 相容性函數
+🚀 準備就緒: BM、WCM模組依賴問題已修復
+🔧 WCM模組v1.1.0初始化：子集合架構
+📋 架構調整：wallets/{walletId} → ledgers/{ledgerId}/wallets/{walletId}
+📋 架構調整：categories/{categoryId} → ledgers/{ledgerId}/categories/{categoryId}
+✅ 與1311.FS.js子集合架構保持一致
+🎯 WCM模組已準備就緒
+✅ BK模組v3.3.0：專注記帳核心邏輯，整合WCM帳戶科目驗證
+✓ BK_processBookkeeping: 可用
+✓ BK_processAPIGetDashboard: 可用
+✓ BK_processAPIGetTransactionDetail: 可用
+✓ BK_processAPIUpdateTransaction: 可用
+✓ BK_processAPIDeleteTransaction: 可用
+✓ BK_processAPIGetStatistics: 可用
+✓ BK_processAPIGetRecent: 可用
+✓ BK_processAPIGetCharts: 可用
+✓ BK_createTransaction: 可用
+✓ BK_getTransactions: 可用
+📊 BK模組函數完整性檢查: 10/10
+✅ BK (記帳核心) 模組載入成功，所有函數可用
+✅ DL (診斷日誌) 模組載入成功
+✅ FS (Firestore) 模組載入成功
+📦 P2階段模組 - 帳本與協作管理功能統一由CM模組提供...
+📦 載入P2階段模組 - BM (預算管理)...
+📊 BM 預算管理模組載入中...
+📅 SR 排程提醒模組初始化中...
+FS模組載入異常，將採用降級模式
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.2.0 (2025-01-28) - 純業務邏輯模組
+✅ BM 預算管理模組載入完成
+✅ BM (預算管理) 模組載入成功
+📦 載入P2階段模組 - CM (協作管理)...
+🤝 CM 協作管理模組初始化中...
+[2025-11-20T06:58:26.916Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組載入完成 - 階段一修復：ID生成依賴問題已解決
+✅ CM (協作管理) 模組載入成功
+📦 載入DCN-0023階段二模組 - WCM (帳戶與科目管理)...
+✅ WCM (帳戶與科目管理) 模組載入成功
+📋 模組載入狀態報告:
+   ✅ FIREBASE: 已載入
+   ✅ AM: 已載入
+   ✅ BK: 已載入
+   ✅ DL: 已載入
+   ✅ FS: 已載入
+   ✅ BM: 已載入
+   ✅ CM: 已載入
+   ✅ WCM: 已載入
+🎉 P2階段模組完整載入：Firebase + AM + BK + CM(協作與帳本管理) + BM + WCM
+🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、協作管理、帳戶與科目管理功能
+✨ 協作與帳本管理功能完全整合至CM模組
+📦 帳戶與科目管理功能整合至WCM模組
+📊 載入成功率: 8/8 (100%)
+🎉 階段三修復成功：Firebase + AM + BK模組正常載入
+🚀 系統已準備好處理所有P1-2範圍API請求
+🎉 LCAS ASL階段二及DCN-0023更新完成！
+📦 P1-2 + P2 + DCN-0023 範圍BL模組載入狀態: Firebase(✅), AM(✅), BK(✅), DL(✅), FS(✅), BM(✅), CM(✅), WCM(✅)
+🔧 純轉發機制: 57個API端點 -> 統一使用BL層標準格式
+✨ 階段二及DCN-0023更新: 協作管理API端點補完，帳戶與科目管理API端點整合
+🎯 協作管理功能: 帳本創建/讀取/更新/刪除，協作者管理（邀請/移除/權限更新），衝突檢測與解決
+🎯 帳戶與科目管理功能: 帳戶CRUD，餘額查詢，轉帳，科目CRUD，科目樹狀結構
+🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict, /api/v1/accounts, /api/v1/accounts/:id, /api/v1/accounts/:id/balance, /api/v1/accounts/types, /api/v1/accounts/transfer, /api/v1/categories, /api/v1/categories/:id, /api/v1/categories/tree
+🚀 ASL v2.2.0完全就緒，所有階段目標達成！
+🌐 ASL服務器已啟動於 Port 5000
+🌐 LCAS ASL純轉發窗口已啟動於 Port 5000
+📍 服務地址: http://0.0.0.0:5000
+🔗 健康檢查: http://0.0.0.0:5000/health
+🎯 DCN-0015第二階段完成: ASL格式驗證強化
+📋 P1-2 + P2 + DCN-0023 API端點: AM(19) + BK(15) + BM(5) + CM(4) + WCM(14) = 57個端點
+🔧 第二階段完成狀態: 完全就緒
+📦 核心模組狀態: Firebase(✅), AM(✅), BM(✅), CM(✅), WCM(✅)
+✨ 容錯機制完全移除: 100%信任BL層標準格式
+🎉 第二階段修正完成: 協作管理API端點補完
+🚀 DCN-0023階段二更新: 帳戶與科目管理API端點已整合
+🚀 ASL v2.2.0已完全就緒，階段二及DCN-0023目標達成
+成功寫入 1 條日誌到 Firestore
+📅 已載入 0 個排程設定
+[2025-11-20T06:58:27.710Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+📥 [2025-11-20T06:58:44.536Z] ASL轉發: POST /api/v1/budgets
+📝 ASL轉發: 建立預算 -> BM_createBudget
+[BM_createBudget] 📊 階段三完整修正：開始建立預算 - 強制子集合架構
+[BM_createBudget] 🔍 原始輸入資料: {
+  "name": "十月生活預算",
+  "amount": 50000,
+  "ledgerId": "user_expert.valid@test.lcas.app",
+  "description": "家庭十月份生活費用預算",
+  "startDate": "2025-11-01T00:00:00Z",
+  "endDate": "2025-11-30T23:59:59Z",
+  "userMode": "Expert",
+  "timestamp": "2025-11-20T06:58:44.409204"
+}
+[BM_createBudget] 🔍 階段三最終驗證：ledgerId = user_expert.valid@test.lcas.app
+[BM_createBudget] 🎯 階段三帳本ID確認：user_expert.valid@test.lcas.app
+[BM_createBudget] 🎯 階段一智能提取：從ledgerId提取userId = expert.valid@test.lcas.app
+[BM_createBudget] 開始建立預算 - 帳本ID: user_expert.valid@test.lcas.app, 用戶: expert.valid@test.lcas.app
+[BM_validateBudgetData] 驗證預算數據 - 驗證類型: create
+[BM_validateBudgetData] 預算數據驗證完成 - 錯誤: 0個
+[BM_createBudget] ⚠️ 無法載入預設配置，使用內建預設值: Unexpected token '/', "/**
+* 0301"... is not valid JSON
+[BM_createBudget] 儲存預算到資料庫...
+[BM_createBudget] 🎯 完全強制子集合路徑: ledgers/user_expert.valid@test.lcas.app/budgets
+[BM_createBudget] ✅ 最終Firebase子集合寫入路徑: ledgers/user_expert.valid@test.lcas.app/budgets/budget_1763621924543_upe24ohbc
+[BM_createBudget] 🔒 路徑驗證通過，絕對禁用頂層budgets集合
+[BM_createBudget] 📋 確認路徑格式: ledgers/user_expert.valid@test.lcas.app/budgets/budget_1763621924543_upe24ohbc
+[BM_createBudget] ✅ 預算成功寫入子集合 - 完整路徑: ledgers/user_expert.valid@test.lcas.app/budgets/budget_1763621924543_upe24ohbc
+[BM_createBudget] 🎯 子集合架構驗證: 路徑確實為 ledgers/{ledgerId}/budgets/ 格式
+[BM_createBudget] ✅ 子集合寫入驗證成功
+[2025-11-20T06:58:44.832Z] [INFO] [DL] 建立預算成功 - 預算ID: budget_1763621924543_upe24ohbc [Location: BM.BM_createBudget]
+[BM_createBudget] 階段一修正：預算建立完成，BM模組不觸發任何外部事件，維持模組職責純淨
+[BM_createBudget] 預算建立完成 - ID: budget_1763621924543_upe24ohbc
+📤 [2025-11-20T06:58:44.536Z] ASL回應: POST /api/v1/budgets - 200 (301ms)
+📥 [2025-11-20T06:58:44.925Z] ASL轉發: POST /api/v1/ledgers
+📝 ASL轉發: 建立帳本 -> CM_createSharedLedger (統一路由)
+🔍 接收到的請求資料: {
+  "name": "協作帳本測試_1763621924920",
+  "type": "shared",
+  "description": "TC-009階段三純粹調用測試",
+  "ownerEmail": "collaboration.test@test.lcas.app",
+  "currency": "TWD",
+  "timezone": "Asia/Taipei",
+  "isCollaborative": true
+}
+[2025-11-20T06:58:44.926Z] [INFO] [CM] 階段二：建立協作帳本 - 擁有者: collaboration.test@test.lcas.app, 帳本: 協作帳本測試_1763621924920 [User: collaboration.test@test.lcas.app] [Location: CM_createSharedLedger]
+[FS_LOG_v2.1.0] 2025-11-20T06:58:44.927Z | 取得文檔 | 取得文檔: collaborations/collaboration_1763621924926_ccoqywqej | User:  | Function: FS_getDocument
+[2025-11-20T06:58:45.055Z] [WARNING] [CM] 階段四：無法載入協作預設設定，使用內建預設值: Unexpected token '/', "/**
+* 0301"... is not valid JSON [User: collaboration.test@test.lcas.app] [Location: CM_createSharedLedger]
+[FS_LOG_v2.1.0] 2025-11-20T06:58:45.056Z | 建立文檔 | 建立文檔: collaborations/collaboration_1763621924926_ccoqywqej | User: collaboration.test@test.lcas.app | Function: FS_createDocument
+✅ Firebase文檔建立成功: collaborations/collaboration_1763621924926_ccoqywqej
+[2025-11-20T06:58:45.193Z] [INFO] [CM] 階段二：協作主文檔建立成功 - collaboration_1763621924926_ccoqywqej [User: collaboration.test@test.lcas.app] [Location: CM_createSharedLedger]
+[2025-11-20T06:58:45.193Z] [INFO] [CM] 協作成員管理: ADD_OWNER - collaboration_1763621924926_ccoqywqej [User: collaboration.test@test.lcas.app] [Location: CM_manageCollaborationMembers]
+[FS_LOG_v2.1.0] 2025-11-20T06:58:45.194Z | 建立文檔 | 建立文檔: collaborations/collaboration_1763621924926_ccoqywqej/members/collaboration.test@test.lcas.app | User: collaboration.test@test.lcas.app | Function: FS_createDocument
+✅ Firebase文檔建立成功: collaborations/collaboration_1763621924926_ccoqywqej/members/collaboration.test@test.lcas.app
+[2025-11-20T06:58:45.319Z] [INFO] [CM] 協作操作記錄: collaboration_created - 帳本: collaboration_1763621924926_ccoqywqej [User: collaboration.test@test.lcas.app] [Location: CM_logCollaborationAction]
+[FS_LOG_v2.1.0] 2025-11-20T06:58:45.319Z | 取得文檔 | 取得文檔: collaborations/collaboration_1763621924926_ccoqywqej | User: collaboration.test@test.lcas.app | Function: FS_getDocument
+[2025-11-20T06:58:45.452Z] [INFO] [CM] 階段二：協作帳本建立完成 - ID: collaboration_1763621924926_ccoqywqej, 成功加入成員數: 1 [User: collaboration.test@test.lcas.app] [Location: CM_createSharedLedger]
+🎯 CM_createSharedLedger調用結果: {
+  success: true,
+  ledgerId: 'collaboration_1763621924926_ccoqywqej',
+  memberCount: 1,
+  collaborationType: 'shared',
+  message: '階段二：協作帳本建立成功，完全符合FS規範'
+}
+📤 [2025-11-20T06:58:44.925Z] ASL回應: POST /api/v1/ledgers - 200 (531ms)
+📥 [2025-11-20T06:58:45.469Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:45.470Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:45.470Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:45.614Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:45.469Z] ASL回應: GET /api/v1/ledgers - 400 (147ms)
+📥 [2025-11-20T06:58:45.631Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:45.632Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:45.632Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:45.762Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:45.631Z] ASL回應: GET /api/v1/ledgers - 400 (134ms)
+📥 [2025-11-20T06:58:45.768Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:45.768Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:45.769Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:45.886Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:45.768Z] ASL回應: GET /api/v1/ledgers - 400 (121ms)
+📥 [2025-11-20T06:58:45.898Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:45.899Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:45.899Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:46.030Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:45.898Z] ASL回應: GET /api/v1/ledgers - 400 (133ms)
+📥 [2025-11-20T06:58:46.037Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:46.037Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:46.038Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:46.169Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:46.037Z] ASL回應: GET /api/v1/ledgers - 400 (134ms)
+📥 [2025-11-20T06:58:46.189Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:46.189Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:46.189Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:46.313Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:46.189Z] ASL回應: GET /api/v1/ledgers - 400 (125ms)
+📥 [2025-11-20T06:58:46.326Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:46.327Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:46.327Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:46.446Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:46.326Z] ASL回應: GET /api/v1/ledgers - 400 (122ms)
+📥 [2025-11-20T06:58:46.451Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:46.451Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:46.452Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:46.574Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:46.451Z] ASL回應: GET /api/v1/ledgers - 400 (125ms)
+📥 [2025-11-20T06:58:46.579Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:46.579Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:46.580Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:46.719Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:46.579Z] ASL回應: GET /api/v1/ledgers - 400 (141ms)
+📥 [2025-11-20T06:58:46.723Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:46.724Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:46.724Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:46.847Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:46.723Z] ASL回應: GET /api/v1/ledgers - 400 (125ms)
+📥 [2025-11-20T06:58:46.852Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:46.853Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:46.853Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:46.973Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:46.852Z] ASL回應: GET /api/v1/ledgers - 400 (128ms)
+📥 [2025-11-20T06:58:46.987Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:46.987Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"lastActivity","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:46.987Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:47.108Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGhAKDGxhc3RBY3Rpdml0eRACGgwKCF9fbmFtZV9fEAI [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:46.987Z] ASL回應: GET /api/v1/ledgers - 400 (126ms)
+📥 [2025-11-20T06:58:47.127Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:47.127Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:47.128Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:47.258Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaDgoKY3JlYXRlZF9hdBACGgwKCF9fbmFtZV9fEAI [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:47.127Z] ASL回應: GET /api/v1/ledgers - 400 (132ms)
+📥 [2025-11-20T06:58:47.269Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:47.269Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:47.270Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:47.394Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:47.269Z] ASL回應: GET /api/v1/ledgers - 400 (150ms)
+📥 [2025-11-20T06:58:47.434Z] ASL轉發: GET /api/v1/ledgers
+📖 ASL轉發: 取得帳本列表 -> CM_getLedgers
+[2025-11-20T06:58:47.437Z] [INFO] [CM] 取得帳本列表 - 查詢參數: {"type":"shared","sortBy":"updated_at","sortOrder":"desc","limit":1} [Location: CM_getLedgers]
+[2025-11-20T06:58:47.449Z] [WARNING] [CM] 階段三職責邊界：CM_getLedgers 函數涉及ledgers集合操作，建議由AM模組處理。 [Location: CM_getLedgers]
+[2025-11-20T06:58:47.610Z] [ERROR] [CM] 取得帳本列表失敗: 9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/spheric-crow-352809/firestore/indexes?create_composite=ClNwcm9qZWN0cy9zcGhlcmljLWNyb3ctMzUyODA5L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9sZWRnZXJzL2luZGV4ZXMvXxABGgwKCGFyY2hpdmVkEAEaCAoEdHlwZRABGg4KCnVwZGF0ZWRfYXQQAhoMCghfX25hbWVfXxAC [Code: CM_GET_LEDGERS_ERROR] [Location: CM_getLedgers]
+📤 [2025-11-20T06:58:47.434Z] ASL回應: GET /api/v1/ledgers - 400 (189ms)
+成功寫入 53 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+📥 [2025-11-20T06:58:59.060Z] ASL轉發: GET /health
+📤 [2025-11-20T06:58:59.060Z] ASL回應: GET /health - 200 (12ms)
+📥 [2025-11-20T06:58:59.283Z] ASL轉發: POST /api/v1/auth/register
+🔐 ASL轉發: 使用者註冊 -> AM_processAPIRegister
+[2025-11-20T06:58:59.287Z] [INFO] [DL] AM [Location: AM_logInfo]
+✅ AM_processAPIRegister: 用戶基本資料已建立: sit_p3@sit.com
+🔧 AM_processAPIRegister: 開始為用戶 sit_p3@sit.com 進行完整帳本初始化...
+🔄 AM_initializeUserLedger: 階段二修正版 - 開始為用戶 sit_p3@sit.com 初始化完整帳本...
+📋 AM_initializeUserLedger: 載入0099科目資料和預設配置...
+📋 AM_load0099SubjectData: 開始載入0099科目資料...
+❌ AM_load0099SubjectData: 0099.json檔案不存在: /home/runner/00. Master_Project document/0099. Subject_code.json
+📋 AM_loadDefaultConfigs: 開始載入預設配置資料...
+✅ AM_loadDefaultConfigs: 成功載入所有預設配置
+⚠️ AM_initializeUserLedger: 0099科目資料載入失敗: 0099.json檔案不存在
+✅ AM_initializeUserLedger: 成功載入預設配置: 
+📝 AM_initializeUserLedger: 準備建立帳本ID: user_sit_p3@sit.com（符合1311.FS.js規範）
+  - 帳本主文檔 user_sit_p3@sit.com 準備寫入（階段二優化版）
+  - 階段一修正：確保帳本結構存在...
+[FS_LOG_v2.1.0] 2025-11-20T06:58:59.817Z | 子集合架構建立 | 建立完整帳本子集合架構: user_sit_p3@sit.com | User: sit_p3@sit.com | Function: FS_createCompleteSubcollectionFramework
+[FS_LOG_v2.1.0] 2025-11-20T06:58:59.817Z | 建立文檔 | 建立文檔: ledgers/user_sit_p3@sit.com/wallets/default_cash | User: sit_p3@sit.com | Function: FS_createDocument
+✅ Firebase文檔建立成功: ledgers/user_sit_p3@sit.com/wallets/default_cash
+[FS_LOG_v2.1.0] 2025-11-20T06:58:59.942Z | 建立文檔 | 建立文檔: ledgers/user_sit_p3@sit.com/wallets/default_bank | User: sit_p3@sit.com | Function: FS_createDocument
+✅ Firebase文檔建立成功: ledgers/user_sit_p3@sit.com/wallets/default_bank
+[FS_LOG_v2.1.0] 2025-11-20T06:59:00.067Z | 建立文檔 | 建立文檔: ledgers/user_sit_p3@sit.com/wallets/default_credit | User: sit_p3@sit.com | Function: FS_createDocument
+✅ Firebase文檔建立成功: ledgers/user_sit_p3@sit.com/wallets/default_credit
+[FS_LOG_v2.1.0] 2025-11-20T06:59:00.194Z | 建立文檔 | 建立文檔: ledgers/user_sit_p3@sit.com/transactions/_placeholder | User: sit_p3@sit.com | Function: FS_createDocument
+✅ Firebase文檔建立成功: ledgers/user_sit_p3@sit.com/transactions/_placeholder
+[FS_LOG_v2.1.0] 2025-11-20T06:59:00.313Z | 建立文檔 | 建立文檔: ledgers/user_sit_p3@sit.com/budgets/default_monthly_budget | User: sit_p3@sit.com | Function: FS_createDocument
+✅ Firebase文檔建立成功: ledgers/user_sit_p3@sit.com/budgets/default_monthly_budget
+  - 1311.FS.js結構建立成功: {"wallets":3,"categories":0,"transactions":1,"budgets":1}
+  - 階段一修正：預設帳戶由1311.FS.js統一處理
+  - 階段一修正：交易和預算子集合由1311.FS.js統一處理
+🔄 階段一修正：建立帳本主文檔...
+✅ 帳本主文檔建立成功: user_sit_p3@sit.com
+  - 帳本 user_sit_p3@sit.com 初始化標誌更新為 true
+  - 保留範例文檔以確保子集合結構完整性
+✅ 帳本 user_sit_p3@sit.com 驗證成功
+✅ Categories集合: ❌未建立
+✅ Accounts集合: ❌未建立
+✅ Transactions集合: 已建立
+✅ Budgets集合: 已建立
+⚠️ 部分子集合未建立: categories, accounts
+[2025-11-20T06:59:01.315Z] [INFO] [DL] AM [Location: AM_initializeUserLedger]
+✅ AM_processAPIRegister: 用戶 sit_p3@sit.com 帳本初始化成功
+✅ AM_processAPIRegister: 用戶 sit_p3@sit.com 帳本資訊已更新
+[2025-11-20T06:59:01.451Z] [INFO] [DL] AM [Location: AM_logInfo]
+📤 [2025-11-20T06:58:59.283Z] ASL回應: POST /api/v1/auth/register - 200 (2170ms)
