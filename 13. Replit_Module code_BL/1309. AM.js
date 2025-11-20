@@ -1,3 +1,4 @@
+replit_final_file>
 /**
  * 1309. AM.js - 帳號管理模組
  * @version v7.5.0
@@ -1109,9 +1110,9 @@ function AM_load0099SubjectData() {
   const functionName = "AM_load0099SubjectData";
   try {
     console.log(`📋 ${functionName}: 開始載入0099科目資料...`);
-    
+
     const subjectFilePath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
-    
+
     if (!fs.existsSync(subjectFilePath)) {
       console.error(`❌ ${functionName}: 0099. Subject_code.json 檔案不存在: ${subjectFilePath}`);
       return {
@@ -1130,7 +1131,7 @@ function AM_load0099SubjectData() {
     }
 
     console.log(`✅ ${functionName}: 成功載入 ${subjectData.length} 筆科目資料`);
-    
+
     return {
       success: true,
       count: subjectData.length,
@@ -1160,7 +1161,7 @@ function AM_loadDefaultConfigs() {
   const functionName = "AM_loadDefaultConfigs";
   try {
     console.log(`📋 ${functionName}: 開始載入預設配置資料...`);
-    
+
     const configBasePath = path.join(__dirname, '../03. Default_config');
     const configs = {};
 
@@ -1197,7 +1198,7 @@ function AM_loadDefaultConfigs() {
     }
 
     console.log(`✅ ${functionName}: 成功載入所有預設配置`);
-    
+
     return {
       success: true,
       configs: configs,
@@ -1404,7 +1405,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
           success: true,
           userLedgerId: userLedgerId,
           subjectCount: ledgerData.subjectCount || 0,
-          accountCount: ledgerData.accountCount || 0,
+          walletCount: ledgerData.walletCount || 0, // 修正：統計資訊中的accountCount改為walletCount
           initializationComplete: true,
           message: "帳本已存在且完整",
           performance: {
@@ -1426,7 +1427,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     // 階段二修正：從03預設配置取得設定值
     const systemConfig = defaultConfigs.configs.system?.system_config || {};
     const currencyConfig = defaultConfigs.configs.currency?.currencies || {};
-    
+
     // 1. 創建帳本主文檔 - 符合Firebase集合結構，使用03配置資料
     const ledgerRef = db.collection("ledgers").doc(userLedgerId);
     const mainLedgerData = {
@@ -1480,7 +1481,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     // 階段二修正：填入0099科目資料到categories子集合
     if (subjectData.success && subjectData.data.length > 0) {
       console.log(`📋 ${functionName}: 開始填入0099科目資料到categories子集合...`);
-      
+
       for (const subject of subjectData.data.slice(0, 20)) { // 限制數量避免過度寫入
         const categoryData = {
           categoryId: subject.categoryId,
@@ -1504,17 +1505,17 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
           console.warn(`⚠️ 建立科目 ${subject.categoryId} 失敗: ${error.message}`);
         }
       }
-      
+
       console.log(`✅ ${functionName}: 0099科目資料填入完成`);
     }
 
     // 階段二修正：填入03預設帳戶資料到accounts子集合
     if (defaultConfigs.success && defaultConfigs.configs.wallets) {
       console.log(`💳 ${functionName}: 開始填入預設帳戶資料到accounts子集合...`);
-      
+
       const wallets = defaultConfigs.configs.wallets.default_wallets || [];
       const defaultCurrency = currencyConfig.default || 'TWD';
-      
+
       for (const wallet of wallets) {
         const accountData = {
           ...wallet,
@@ -1532,7 +1533,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
           console.warn(`⚠️ 建立帳戶 ${wallet.walletId} 失敗: ${error.message}`);
         }
       }
-      
+
       console.log(`✅ ${functionName}: 預設帳戶資料填入完成`);
     }
 
@@ -1584,20 +1585,20 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       }
 
       // 驗證所有四個子集合是否建立
-      const categoriesSnapshot = await ledgerRef.collection("subjects").limit(1).get(); // 修正為 subjects
+      const categoriesSnapshot = await ledgerRef.collection("categories").limit(1).get(); // 修正科目集合名稱
       const accountsSnapshot = await ledgerRef.collection("accounts").limit(1).get();
       const transactionsSnapshot = await ledgerRef.collection("transactions").limit(1).get();
       const budgetsSnapshot = await ledgerRef.collection("budgets").limit(1).get();
 
       const subcollectionStatus = {
-        subjects: !categoriesSnapshot.empty, // 修正為 subjects
+        categories: !categoriesSnapshot.empty, // 修正科目集合名稱
         accounts: !accountsSnapshot.empty,
         transactions: !transactionsSnapshot.empty,
         budgets: !budgetsSnapshot.empty
       };
 
       console.log(`✅ 帳本 ${userLedgerId} 驗證成功`);
-      console.log(`✅ Subjects集合: ${subcollectionStatus.subjects ? '已建立' : '❌未建立'}`);
+      console.log(`✅ Categories集合: ${subcollectionStatus.categories ? '已建立' : '❌未建立'}`);
       console.log(`✅ Accounts集合: ${subcollectionStatus.accounts ? '已建立' : '❌未建立'}`);
       console.log(`✅ Transactions集合: ${subcollectionStatus.transactions ? '已建立' : '❌未建立'}`);
       console.log(`✅ Budgets集合: ${subcollectionStatus.budgets ? '已建立' : '❌未建立'}`);
@@ -1621,14 +1622,14 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     const successfulBatches = batches.length; // 假設所有batch都成功
     const failedBatches = 0;
     const subjectCount = subjectData.success ? subjectData.count : 0;
-    const accountCount = 1; // 預設初始化一個帳戶
+    const walletCount = defaultConfigs.success && defaultConfigs.configs.wallets ? defaultConfigs.configs.wallets.default_wallets.length : 0; // 修正：walletCount
     const performanceMetrics = {
       executionTime: executionTime,
       batchCount: successfulBatches,
       successfulBatches: successfulBatches,
       failedBatches: failedBatches,
       subjectCount: subjectCount,
-      accountCount: accountCount,
+      walletCount: walletCount, // 修正：walletCount
       averageBatchTime: executionTime / batches.length
     };
 
@@ -1636,7 +1637,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       "AM",
       functionName,
       "INFO",
-      `階段一修復：用戶 ${UID} 完整帳本初始化完成，共導入 ${subjectCount} 筆科目，${accountCount} 個帳戶，1筆交易範例，1筆預算範例，執行時間: ${executionTime}ms`,
+      `階段二修正：用戶 ${UID} 完整帳本初始化完成，共導入 ${subjectCount} 筆科目，${walletCount} 個預設帳戶，執行時間: ${executionTime}ms`,
       UID,
       userLedgerId,
     );
@@ -1658,6 +1659,8 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       },
       initializationComplete: true,
       stage: "stage2_data_source_correction",
+      subjectCount: subjectCount, // 修正：確保傳回subjectCount
+      walletCount: walletCount, // 修正：傳回walletCount
       message: `階段二修正完成：帳本 ${userLedgerId} 建立成功，結構由FS處理，資料從0099.json和03配置載入`
     };
   } catch (error) {
@@ -1697,11 +1700,11 @@ async function AM_ensureUserLedger(UID) {
     } else {
       console.log(`  - 帳本 ${userLedgerId} 已存在`);
       // 檢查科目集合
-      const subjectsCollection = await ledgerRef.collection("subjects").limit(1).get();
+      const subjectsCollection = await ledgerRef.collection("categories").limit(1).get(); // 修正集合名稱
       if (subjectsCollection.empty) {
         console.log(`  - 科目集合缺失`);
         needsInitialization = true;
-        missingParts.push("subjects_collection");
+        missingParts.push("categories_collection"); // 修正集合名稱
       } else {
         console.log(`  - 科目集合存在`);
       }
@@ -2373,7 +2376,7 @@ async function AM_processAPIRegister(requestData) {
       userData.ledgerInfo = {
         ledgerId: ledgerInitResult.userLedgerId,
         subjectCount: ledgerInitResult.subjectCount,
-        accountCount: ledgerInitResult.accountCount
+        walletCount: ledgerInitResult.walletCount // 修正：從初始化結果取walletCount
       };
 
       // 更新用戶資料，添加帳本初始化資訊
@@ -5210,13 +5213,13 @@ module.exports = {
   // AM_load0099SubjectData, // 新增：AM模組自行載入0099資料 - Moved up to be with other v7.4.0 additions
 
   // 模組版本資訊
-  moduleVersion: '7.4.0', // Updated version
-  lastUpdate: '2025-10-30',
+  moduleVersion: '7.5.0', // Updated version
+  lastUpdate: '2025-11-20',
   phase: 'DCN-0020階段二優化版',
-  description: 'AM帳號管理模組 - 階段二：優化帳本初始化性能和穩定性'
+  description: 'AM帳號管理模組 - 階段二：優化帳本初始化性能和穩定性，修正科目集合名稱'
 };
 
-console.log('✅ AM模組7.4.0 DCN-0020階段二優化版載入成功！');
+console.log('✅ AM模組7.5.0 DCN-0020階段二優化版載入成功！');
   console.log('📋 功能概覽:');
   console.log('   ├── 核心帳號管理功能 (18個)');
   console.log('   ├── SR模組專用付費功能 (4個)');
@@ -5515,3 +5518,4 @@ async function AM_logError(
     action,
   );
 }
+</replit_final_file>
