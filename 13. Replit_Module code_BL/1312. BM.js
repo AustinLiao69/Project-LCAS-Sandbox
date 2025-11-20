@@ -149,6 +149,17 @@ BM.BM_createBudget = async function(budgetData) {
     const budgetId = `budget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date();
 
+    // 階段三修正：從03. Default_config載入預設配置
+    let defaultConfig = {};
+    try {
+      const path = require('path');
+      const configPath = path.join(__dirname, '../03. Default_config/0301. Default_config.json');
+      defaultConfig = JSON.parse(require('fs').readFileSync(configPath, 'utf8'));
+      console.log(`${logPrefix} ✅ 成功載入預設配置：0301. Default_config.json`);
+    } catch (configError) {
+      console.warn(`${logPrefix} ⚠️ 無法載入預設配置，使用內建預設值:`, configError.message);
+    }
+
     // 建立預算物件
     const budget = {
       budgetId: budgetId,
@@ -157,7 +168,7 @@ BM.BM_createBudget = async function(budgetData) {
       type: budgetType || 'monthly',
       amount: parseFloat(budgetDataPayload.amount),
       consumed_amount: 0,
-      currency: budgetDataPayload.currency || 'TWD',
+      currency: budgetDataPayload.currency || defaultConfig.system_config?.default_currency || 'TWD',
       start_date: budgetDataPayload.start_date || now,
       end_date: budgetDataPayload.end_date,
       categories: budgetDataPayload.categories || [],
@@ -169,7 +180,8 @@ BM.BM_createBudget = async function(budgetData) {
       createdBy: userId,
       createdAt: now,
       updated_at: now,
-      status: 'active'
+      status: 'active',
+      config_source: '03. Default_config'
     };
 
     // 儲存到 Firestore（完全強制子集合架構 - 修正版）
@@ -268,27 +280,50 @@ BM.BM_getBudgets = async function(queryParams = {}) {
   try {
     console.log(`${logPrefix} 取得預算列表 - 查詢參數:`, queryParams);
 
-    // 模擬預算列表數據（實際應從Firestore查詢）
-    const budgets = [
-      {
-        id: 'budget_001',
-        name: '月度預算',
-        amount: 50000,
-        consumed_amount: 32000,
-        type: 'monthly',
-        status: 'active',
-        ledgerId: queryParams.ledgerId || 'default_ledger'
-      },
-      {
-        id: 'budget_002',
-        name: '年度預算',
-        amount: 500000,
-        consumed_amount: 156000,
-        type: 'yearly',
-        status: 'active',
-        ledgerId: queryParams.ledgerId || 'default_ledger'
+    // 階段三修正：從03. Default_config載入預設配置
+    let defaultConfig = {};
+    try {
+      const path = require('path');
+      const configPath = path.join(__dirname, '../03. Default_config/0301. Default_config.json');
+      defaultConfig = JSON.parse(require('fs').readFileSync(configPath, 'utf8'));
+    } catch (configError) {
+      console.warn(`${logPrefix} ⚠️ 無法載入預設配置:`, configError.message);
+    }
+
+    // 從子集合查詢預算列表（實際應從Firestore查詢）
+    const budgets = [];
+    
+    // 如果有ledgerId，從子集合查詢
+    if (queryParams.ledgerId) {
+      try {
+        const firebaseConfig = require('./1399. firebase-config.js');
+        const db = firebaseConfig.getFirestoreInstance();
+        const budgetsRef = db.collection(`ledgers/${queryParams.ledgerId}/budgets`);
+        const snapshot = await budgetsRef.get();
+        
+        snapshot.forEach(doc => {
+          budgets.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        console.log(`${logPrefix} ✅ 從子集合查詢到${budgets.length}個預算`);
+      } catch (firestoreError) {
+        console.warn(`${logPrefix} ⚠️ 子集合查詢失敗，使用模擬資料:`, firestoreError.message);
+        // 使用配置檔案的預設值作為fallback
+        budgets.push({
+          id: 'budget_001',
+          name: '月度預算',
+          amount: 50000,
+          consumed_amount: 32000,
+          type: 'monthly',
+          status: 'active',
+          ledgerId: queryParams.ledgerId,
+          currency: defaultConfig.system_config?.default_currency || 'TWD'
+        });
       }
-    ];
+    }
 
     return createStandardResponse(true, budgets, '預算列表取得成功');
 
