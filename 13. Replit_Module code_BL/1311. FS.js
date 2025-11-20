@@ -261,6 +261,48 @@ async function FS_updateDocument(collectionPath, documentId, updateData, request
 }
 
 /**
+ * 05a. 基礎文檔操作 - 合併文檔
+ * @version 2025-11-20-V2.5.1
+ * @date 2025-11-20
+ * @description 合併文檔數據，如果文檔不存在則建立，存在則合併更新
+ */
+async function FS_mergeDocument(collectionPath, documentId, mergeData, requesterId) {
+  const functionName = "FS_mergeDocument";
+  try {
+    FS_logOperation(`合併文檔: ${collectionPath}/${documentId}`, "合併文檔", requesterId || "", "", "", functionName);
+
+    // 驗證必要參數
+    if (!collectionPath || !documentId || !mergeData) {
+      throw new Error("缺少必要參數: collectionPath, documentId, mergeData");
+    }
+
+    // 準備文檔引用
+    const docRef = db.collection(collectionPath).doc(documentId);
+
+    // 執行合併操作（使用merge選項）
+    await docRef.set(mergeData, { merge: true });
+
+    console.log(`✅ Firebase文檔合併成功: ${collectionPath}/${documentId}`);
+
+    return {
+      success: true,
+      documentId: documentId,
+      path: `${collectionPath}/${documentId}`,
+      operation: 'merged',
+      mergedFields: Object.keys(mergeData)
+    };
+
+  } catch (error) {
+    FS_handleError(`合併文檔失敗: ${error.message}`, "合併文檔", requesterId || "", "FS_MERGE_DOCUMENT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'FS_MERGE_DOCUMENT_ERROR'
+    };
+  }
+}
+
+/**
  * 06. 基礎文檔操作 - 刪除文檔
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
@@ -2770,7 +2812,7 @@ async function FS_createCollaborationDocument(ledgerId, collaborationData, reque
 
 // =============== 模組導出區 ===============
 
-// 導出階段一、二、三完整函數（2.7.2版本 - 0099科目映射支援）
+// 導出階段一、二、三完整函數（2.5.1版本 - 缺失函數補完）
 module.exports = {
   // 階段一核心基礎函數
   FS_initializeModule,
@@ -2780,7 +2822,7 @@ module.exports = {
   FS_updateDocument,
   FS_deleteDocument,
   FS_queryCollection,
-  FS_mergeDocument, // Added FS_mergeDocument
+  FS_mergeDocument, // 階段二新增：補完缺失的FS_mergeDocument函數
 
   // 階段二 Phase 1 API端點支援函數
   FS_processUserRegistration,
@@ -2833,17 +2875,17 @@ module.exports = {
 
   // 相容性函數（保留現有調用）
   FS_mergeDocument,
-  FS_addToCollection,
-  FS_setDocument,
+  FS_addToCollection: FS_createDocument, // 相容性映射
+  FS_setDocument: FS_createDocument, // 相容性映射
 
   // 基礎配置
   db,
   admin,
 
   // 模組資訊
-  moduleVersion: '2.7.2',
-  phase: 'Phase3-0099-Subject-Mapping-Stage1-Complete',
-  lastUpdate: '2025-11-19',
+  moduleVersion: '2.5.1',
+  phase: 'Phase2-Missing-Functions-Complete',
+  lastUpdate: '2025-11-20',
   stage1_0099_features: [
     'categories_structure_updated',
     '0099_field_mapping_ready',
@@ -2865,20 +2907,16 @@ module.exports = {
 try {
   const initResult = FS_initializeModule();
   if (initResult.success) {
-    console.log('🎉 FS模組2.7.2階段一階段二完成：0099科目映射支援！');
-    console.log(`📌 模組版本: 2.7.2`);
-    console.log(`🎯 階段一成果: 引用0099.json科目資料，移除hard-coding`);
-    console.log(`🎯 階段二成果: categories子集合動態初始化支援`);
-    console.log(`📋 0099科目映射: 自動讀取 Subject_code.json`);
-    console.log(`📋 categories結構: parentId(大項) + categoryId(子項) + synonyms(同義詞)`);
+    console.log('✅ FS模組v2.5.1階段二完成：缺失函數修復！');
+    console.log(`📌 模組版本: 2.5.1`);
+    console.log(`🎯 階段二成果: 補完FS_mergeDocument函數，修復依賴模組載入問題`);
+    console.log(`🔧 階段二修復: FS_mergeDocument() - 文檔合併操作`);
     console.log(`📋 階段一功能: 核心基礎操作(9個函數)`);
     console.log(`📋 階段二功能: API端點支援(6個函數)`);
     console.log(`📋 階段三功能: 整合優化與驗證(6個函數)`);
-    // console.log(`🔧 2.7.2新增: FS_load0099SubjectData() - 讀取0099科目資料`); // Removed as function is removed
-    console.log(`🔧 2.7.2新增: FS_initialize0099CategoriesForLedger() - 動態初始化科目`);
-    console.log(`✨ 總計實作: 30個核心函數 + 相容性函數`);
-    console.log(`🚀 準備就緒: categories子集合可動態從0099.json初始化`);
+    console.log(`✨ 總計實作: 30+個核心函數 + 相容性函數`);
+    console.log(`🚀 準備就緒: BM、WCM模組依賴問題已修復`);
   }
 } catch (error) {
-  console.error('❌ FS模組2.7.2初始化失敗:', error.message);
+  console.error('❌ FS模組v2.5.1初始化失敗:', error.message);
 }
