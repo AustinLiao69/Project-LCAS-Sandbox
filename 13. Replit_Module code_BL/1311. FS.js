@@ -1027,8 +1027,8 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
     const createResult = await FS_createDocument('ledgers', ledgerId, ledgerData, requesterId);
 
     if (createResult.success) {
-      // 建立基礎帳戶
-      const accountResults = await FS_createBasicAccounts(ledgerId, userMode, requesterId);
+      // 建立基礎錢包
+      const walletResults = await FS_createBasicWallets(ledgerId, userMode, requesterId);
 
       // 更新用戶預設帳本
       await FS_updateDocument('users', userId, {
@@ -1041,7 +1041,7 @@ async function FS_createUserBasicLedger(userId, userMode, requesterId) {
         success: true,
         ledgerId: ledgerId,
         ledgerData: ledgerData,
-        accounts: accountResults,
+        wallets: walletResults,
         userMode: userMode
       };
     }
@@ -1442,8 +1442,8 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 
     const results = [];
 
-    // 1. 建立帳戶子集合 (accounts)
-    const accountDefaults = [
+    // 1. 建立帳戶子集合 (wallets)
+    const walletDefaults = [
       {
         walletId: 'default_cash',
         name: '現金',
@@ -1479,22 +1479,22 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
       }
     ];
 
-    for (const account of accountDefaults) {
-      const accountData = {
-        ...account,
+    for (const wallet of walletDefaults) {
+      const walletData = {
+        ...wallet,
         ledgerId: ledgerId,
         createdAt: admin.firestore.Timestamp.now(),
         updatedAt: admin.firestore.Timestamp.now(),
         createdBy: userId
       };
 
-      const accountResult = await FS_createDocument(
-        `ledgers/${ledgerId}/accounts`,
-        account.walletId, // Use walletId as documentId
-        accountData,
+      const walletResult = await FS_createDocument(
+        `ledgers/${ledgerId}/wallets`,
+        wallet.walletId, // Use walletId as documentId
+        walletData,
         userId
       );
-      results.push({ type: 'accounts', id: account.walletId, result: accountResult });
+      results.push({ type: 'wallets', id: wallet.walletId, result: walletResult });
     }
 
     // 2. 建立科目子集合 (categories)
@@ -1543,7 +1543,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
       type: 'placeholder',
       description: '交易子集合佔位符',
       categoryId: 'expense_food',
-      accountId: 'default_cash', // Changed to default_cash
+      walletId: 'default_cash', // 改用walletId代替accountId
       date: new Date().toISOString().split('T')[0],
       userId: userId,
       createdAt: admin.firestore.Timestamp.now(),
@@ -1624,7 +1624,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
       success: successCount === totalCount,
       message: `帳本${ledgerId}完整子集合架構建立${successCount === totalCount ? '成功' : '部分失敗'}`,
       created_subcollections: {
-        accounts: results.filter(r => r.type === 'accounts' && r.result.success).length,
+        wallets: results.filter(r => r.type === 'wallets' && r.result.success).length,
         categories: results.filter(r => r.type === 'categories' && r.result.success).length,
         transactions: results.filter(r => r.type === 'transactions' && r.result.success).length,
         budgets: results.filter(r => r.type === 'budgets' && r.result.success).length
@@ -1670,11 +1670,11 @@ async function FS_createBudgetsSubcollectionFramework() {
 
     const results = [];
 
-    // 1. 建立帳戶子集合 (accounts)
-    const accountExample = {
-      accountId: 'example_account',
+    // 1. 建立錢包子集合 (wallets)
+    const walletExample = {
+      walletId: 'example_wallet',
       ledgerId: 'example_ledger_for_budgets',
-      name: '現金帳戶',
+      name: '現金錢包',
       type: 'cash',
       currency: 'TWD',
       balance: 50000,
@@ -1682,16 +1682,16 @@ async function FS_createBudgetsSubcollectionFramework() {
       isActive: true,
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      note: '帳戶子集合範例'
+      note: '錢包子集合範例'
     };
 
-    const accountResult = await FS_createDocument(
-      'ledgers/example_ledger_for_budgets/accounts',
-      'example_account',
-      accountExample,
+    const walletResult = await FS_createDocument(
+      'ledgers/example_ledger_for_budgets/wallets',
+      'example_wallet',
+      walletExample,
       'SYSTEM'
     );
-    results.push({ type: 'accounts', result: accountResult });
+    results.push({ type: 'wallets', result: walletResult });
 
     // 2. 建立交易子集合 (transactions)
     const transactionExample = {
@@ -1701,7 +1701,7 @@ async function FS_createBudgetsSubcollectionFramework() {
       type: 'expense',
       description: '午餐',
       categoryId: 'example_food',
-      accountId: 'example_account', // Changed to example_account
+      walletId: 'example_wallet', // Changed to example_wallet
       date: new Date().toISOString().split('T')[0],
       userId: 'SYSTEM',
       createdAt: admin.firestore.Timestamp.now(),
@@ -1793,7 +1793,7 @@ async function FS_createBudgetsSubcollectionFramework() {
       details: {
         ledger: ledgerResult,
         subcollections: results,
-        created_subcollections: ['accounts', 'transactions', 'categories', 'budgets'],
+        created_subcollections: ['wallets', 'transactions', 'categories', 'budgets'],
         success_rate: `${successCount}/${totalCount}`
       }
     };
@@ -2100,8 +2100,8 @@ async function FS_initializeLedgerStructure() {
             categoryId: 'string - 科目ID (對應0099 categoryId)',
             categoryName: 'string - 科目名稱 (對應0099 categoryName)',
             subCategoryName: 'string - 子科目名稱 (對應0099 subCategoryName)',
-            accountId: 'string - 帳戶ID',
-            accountName: 'string - 帳戶名稱',
+            walletId: 'string - 錢包ID',
+            walletName: 'string - 錢包名稱',
             date: 'string - 交易日期 (YYYY-MM-DD格式)',
             userId: 'string - 記帳用戶ID',
             source: 'string - 記帳來源: "manual"|"quick"|"import"',
@@ -2144,21 +2144,21 @@ async function FS_initializeLedgerStructure() {
             }
           }
         },
-        accounts: {
-          description: '帳本帳戶子集合',
+        wallets: {
+          description: '帳本錢包子集合',
           document_structure: {
-            accountId: 'string - 帳戶唯一識別碼',
-            name: 'string - 帳戶名稱',
-            type: 'string - 帳戶類型: "cash"|"bank"|"credit"|"investment"|"other"',
-            icon: 'string - 帳戶圖示 emoji',
-            color: 'string - 帳戶顏色 hex code',
+            walletId: 'string - 錢包唯一識別碼',
+            name: 'string - 錢包名稱',
+            type: 'string - 錢包類型: "cash"|"bank"|"credit"|"investment"|"other"',
+            icon: 'string - 錢包圖示 emoji',
+            color: 'string - 錢包顏色 hex code',
             currency: 'string - 貨幣單位',
             initialBalance: 'number - 初始餘額',
             currentBalance: 'number - 當前餘額',
-            creditLimit: 'number - 信用額度 (信用卡帳戶)',
-            bankName: 'string - 銀行名稱 (銀行帳戶)',
+            creditLimit: 'number - 信用額度 (信用卡錢包)',
+            bankName: 'string - 銀行名稱 (銀行錢包)',
             accountNumber: 'string - 帳號末四碼 (脫敏)',
-            isDefault: 'boolean - 是否為預設帳戶',
+            isDefault: 'boolean - 是否為預設錢包',
             isActive: 'boolean - 是否啟用',
             includeInTotal: 'boolean - 是否計入總資產',
             notes: 'string - 備註 (可選)',
@@ -2322,13 +2322,13 @@ function FS_getLedgerConfigByMode(userMode) {
 // }
 
 /**
- * 36. 建立基礎帳戶
- * @version 2025-11-18-V1.0.0
- * @date 2025-11-18
- * @description 為新帳本建立基礎帳戶，包含現金和銀行帳戶
+ * 36. 建立基礎錢包
+ * @version 2025-11-20-V1.1.0
+ * @date 2025-11-20
+ * @description 為新帳本建立基礎錢包，包含現金和銀行錢包
  */
-async function FS_createBasicAccounts(ledgerId, userMode, requesterId) {
-  const accounts = [
+async function FS_createBasicWallets(ledgerId, userMode, requesterId) {
+  const wallets = [
     {
       name: '現金',
       type: 'cash',
@@ -2348,18 +2348,18 @@ async function FS_createBasicAccounts(ledgerId, userMode, requesterId) {
   ];
 
   const results = [];
-  for (const account of accounts) {
-    const accountData = {
-      ...account,
+  for (const wallet of wallets) {
+    const walletData = {
+      ...wallet,
+      walletId: `${wallet.type}_${ledgerId}_${Date.now()}`,
       ledgerId: ledgerId,
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
       isActive: true
     };
 
-    const accountId = `${account.type}_${ledgerId}_${Date.now()}`;
-    const result = await FS_createDocument(`ledgers/${ledgerId}/accounts`, accountId, accountData, requesterId);
-    results.push({ name: account.name, result });
+    const result = await FS_createDocument(`ledgers/${ledgerId}/wallets`, walletData.walletId, walletData, requesterId);
+    results.push({ name: wallet.name, result });
   }
 
   return results;
