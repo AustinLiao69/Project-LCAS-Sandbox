@@ -1530,11 +1530,11 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         try {
           await ledgerRef.collection('wallets').doc(wallet.walletId).set(walletData);
         } catch (error) {
-          console.warn(`⚠️ 建立錢包 ${wallet.walletId} 失敗: ${error.message}`);
+          console.warn(`⚠️ 建立帳戶 ${wallet.walletId} 失敗: ${error.message}`);
         }
       }
 
-      console.log(`✅ ${functionName}: 預設錢包資料填入完成`);
+      console.log(`✅ ${functionName}: 預設帳戶資料填入完成`);
     }
 
     // AM模組專注於帳本業務邏輯和資料載入，FS負責結構建立
