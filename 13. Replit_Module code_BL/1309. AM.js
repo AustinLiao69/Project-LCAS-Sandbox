@@ -1212,7 +1212,7 @@ function AM_load0099SubjectData() {
   try {
     console.log(`📋 ${functionName}: 開始載入0099科目資料...`);
 
-    const subjectFilePath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
+    const subjectFilePath = path.join(__dirname, '../../00. Master_Project document/0099. Subject_code.json');
 
     if (!fs.existsSync(subjectFilePath)) {
       console.error(`❌ ${functionName}: 0099. Subject_code.json 檔案不存在: ${subjectFilePath}`);
@@ -1269,13 +1269,20 @@ function AM_loadDefaultConfigs() {
   try {
     console.log(`📋 ${functionName}: 開始載入預設配置資料...`);
 
-    const configBasePath = path.join(__dirname, '../03. Default_config');
+    const configBasePath = path.join(__dirname, '../../03. Default_config');
     const configs = {};
 
     // 載入系統配置
     const systemConfigPath = path.join(configBasePath, '0301. Default_config.json');
     if (fs.existsSync(systemConfigPath)) {
-      const systemConfig = JSON.parse(fs.readFileSync(systemConfigPath, 'utf8'));
+      // 讀取檔案並移除JavaScript風格的註解
+      const configContent = fs.readFileSync(systemConfigPath, 'utf8');
+      const cleanContent = configContent
+        .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
+        .replace(/\/\/.*$/gm, '') // 移除單行註解
+        .replace(/^\s*\/\*\*[\s\S]*?\*\/\s*$/gm, '') // 移除JSDoc風格註解
+        .trim(); // 移除首尾空白
+      const systemConfig = JSON.parse(cleanContent);
       configs.system = systemConfig;
       console.log(`✅ 載入系統配置: ${systemConfig.version}`);
     }
@@ -1283,7 +1290,13 @@ function AM_loadDefaultConfigs() {
     // 載入預設帳戶配置
     const walletConfigPath = path.join(configBasePath, '0302. Default_wallet.json');
     if (fs.existsSync(walletConfigPath)) {
-      const walletConfig = JSON.parse(fs.readFileSync(walletConfigPath, 'utf8'));
+      const configContent = fs.readFileSync(walletConfigPath, 'utf8');
+      const cleanContent = configContent
+        .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
+        .replace(/\/\/.*$/gm, '') // 移除單行註解
+        .replace(/^\s*\/\*\*[\s\S]*?\*\/\s*$/gm, '') // 移除JSDoc風格註解
+        .trim();
+      const walletConfig = JSON.parse(cleanContent);
       configs.wallets = walletConfig;
       console.log(`✅ 載入預設帳戶配置: ${walletConfig.default_wallets.length} 個帳戶`);
     }
@@ -1291,7 +1304,13 @@ function AM_loadDefaultConfigs() {
     // 載入貨幣配置
     const currencyConfigPath = path.join(configBasePath, '0303. Default_currency.json');
     if (fs.existsSync(currencyConfigPath)) {
-      const currencyConfig = JSON.parse(fs.readFileSync(currencyConfigPath, 'utf8'));
+      const configContent = fs.readFileSync(currencyConfigPath, 'utf8');
+      const cleanContent = configContent
+        .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
+        .replace(/\/\/.*$/gm, '') // 移除單行註解
+        .replace(/^\s*\/\*\*[\s\S]*?\*\/\s*$/gm, '') // 移除JSDoc風格註解
+        .trim();
+      const currencyConfig = JSON.parse(cleanContent);
       configs.currency = currencyConfig;
       console.log(`✅ 載入貨幣配置: 預設貨幣 ${currencyConfig.currencies.default}`);
     }
@@ -1299,7 +1318,13 @@ function AM_loadDefaultConfigs() {
     // 載入評估問卷配置
     const assessmentConfigPath = path.join(configBasePath, '0304. Default_assessment.json');
     if (fs.existsSync(assessmentConfigPath)) {
-      const assessmentConfig = JSON.parse(fs.readFileSync(assessmentConfigPath, 'utf8'));
+      const configContent = fs.readFileSync(assessmentConfigPath, 'utf8');
+      const cleanContent = configContent
+        .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
+        .replace(/\/\/.*$/gm, '') // 移除單行註解
+        .replace(/^\s*\/\*\*[\s\S]*?\*\/\s*$/gm, '') // 移除JSDoc風格註解
+        .trim();
+      const assessmentConfig = JSON.parse(cleanContent);
       configs.assessment = assessmentConfig;
       console.log(`✅ 載入評估問卷配置: ${assessmentConfig.questions.length} 道題目`);
     }
