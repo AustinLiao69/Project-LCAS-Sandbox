@@ -2324,21 +2324,43 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
       throw new Error(`協作帳本ID已存在: ${collaborationId}`);
     }
 
+    // 階段四修正：從03. Default_config載入協作預設設定
+    let defaultCollaborationSettings = {
+      allowInvite: true,
+      allowEdit: true,
+      allowDelete: false,
+      requireApproval: false
+    };
+    
+    try {
+      const path = require('path');
+      const configPath = path.join(__dirname, '../03. Default_config/0301. Default_config.json');
+      const defaultConfig = JSON.parse(require('fs').readFileSync(configPath, 'utf8'));
+      
+      if (defaultConfig.collaboration_settings) {
+        defaultCollaborationSettings = {
+          ...defaultCollaborationSettings,
+          ...defaultConfig.collaboration_settings
+        };
+        CM_logInfo(`階段四：成功載入協作預設設定：0301. Default_config.json`, "建立共享帳本", ownerId, "", "", functionName);
+      }
+    } catch (configError) {
+      CM_logWarning(`階段四：無法載入協作預設設定，使用內建預設值: ${configError.message}`, "建立共享帳本", ownerId, "", "", functionName);
+    }
+
     // 階段二：建立完全符合FS規範的協作帳本資料結構
     const collaborationData = {
       ledgerId: collaborationId,          // 明確加入ledgerId欄位
       ownerId: ownerId,                   // 擁有者ID
       collaborationType: 'shared',        // 協作類型
       settings: {
-        allowInvite: permissionSettings?.allowInvite !== false,
-        allowEdit: permissionSettings?.allowEdit !== false,
-        allowDelete: permissionSettings?.allowDelete || false,
-        requireApproval: false,
-        ...(permissionSettings || {})
+        ...defaultCollaborationSettings,
+        ...(permissionSettings || {})     // 用戶自訂設定覆蓋預設值
       },
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      status: 'active'
+      status: 'active',
+      config_source: '03. Default_config'  // 標記配置來源
       // 階段二移除：ownerEmail欄位 (FS標準中沒有)
       // 階段二移除：直接存放的members陣列 (改用子集合)
       // 階段二移除：直接存放的permissions物件 (改用子集合)
