@@ -14,5 +14,15 @@
     "version": "2.7.1",
     "default_language": "zh-TW",
     "date_format": "YYYY/MM/DD"
+  },
+  
+  "collaboration_settings": {
+    "allowInvite": true,
+    "allowEdit": true,
+    "allowDelete": false,
+    "requireApproval": false,
+    "defaultRole": "member",
+    "maxMembers": 50,
+    "inviteExpireDays": 7
   }
 }

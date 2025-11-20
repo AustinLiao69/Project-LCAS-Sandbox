@@ -654,7 +654,7 @@ app.get('/', (req, res) => {
       total: 9
     },
     dcn_0023_endpoints: {
-      wcm_accounts: 8, // 帳戶管理
+      wcm_wallets: 8, // 錢包管理
       wcm_categories: 6, // 科目管理
       total: 14
     },
@@ -710,7 +710,7 @@ app.get('/health', (req, res) => {
       budget_management_added: !!BM
     },
     dcn_0023_enhancements: {
-      account_category_management_added: !!WCM
+      wallet_category_management_added: !!WCM
     },
     stage1_fix: {
       applied: true,
@@ -1757,176 +1757,184 @@ app.delete('/api/v1/transactions/:id/attachments/:attachmentId', async (req, res
   }
 });
 
-// =============== 帳戶管理API轉發（新增支援協作功能） ===============
+// =============== 錢包管理API轉發（新增支援協作功能） ===============
 
-// 16. 查詢用戶帳戶列表（用於email→userId解析）- 嚴格遵守8020文件規範
+// 15. 取得錢包列表
 app.get('/api/v1/accounts', async (req, res) => {
   try {
-    console.log('👤 ASL轉發: 查詢用戶帳戶 -> WCM_getAccounts'); // Modified to WCM
+    console.log('📋 ASL轉發: 取得錢包列表 -> WCM_getWalletList'); // Modified to WCM
+    // Note: The API endpoint remains /api/v1/accounts as per the requirement to update the path.
 
-    if (!WCM || typeof WCM.WCM_getAccounts !== 'function') {
-      return res.apiError('WCM_getAccounts函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    if (!WCM || typeof WCM.WCM_getWalletList !== 'function') {
+      return res.apiError('WCM_getWalletList函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await WCM.WCM_getAccounts(req.query);
+    const result = await WCM.WCM_getWalletList(req.query);
 
     if (result && result.success) {
       res.apiSuccess(result.data, result.message);
     } else if (result && result.success === false) {
-      res.apiError(result.message || '帳戶查詢失敗', result.error?.code || 'GET_ACCOUNTS_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '錢包列表查詢失敗', result.error?.code || 'GET_WALLET_LIST_ERROR', 400, result.error?.details);
     } else {
-      console.error('❌ WCM_getAccounts回應格式異常:', result);
+      console.error('❌ WCM_getWalletList回應格式異常:', result);
       res.apiError('BL層回應格式異常', 'INVALID_BL_RESPONSE', 500);
     }
 
   } catch (error) {
-    console.error('❌ ASL轉發錯誤 (get accounts):', error);
-    res.apiError('帳戶查詢轉發失敗', 'GET_ACCOUNTS_FORWARD_ERROR', 500);
+    console.error('❌ ASL轉發錯誤 (get wallet list):', error);
+    res.apiError('錢包列表轉發失敗', 'GET_WALLET_LIST_FORWARD_ERROR', 500);
   }
 });
 
-// 17. 創建帳戶
+// 16. 建立錢包
 app.post('/api/v1/accounts', async (req, res) => {
   try {
-    console.log('➕ ASL轉發: 創建帳戶 -> WCM_createAccount'); // Modified to WCM
+    console.log('➕ ASL轉發: 建立錢包 -> WCM_createWallet'); // Modified to WCM
+    // Note: The API endpoint remains /api/v1/accounts as per the requirement to update the path.
 
-    if (!WCM || typeof WCM.WCM_createAccount !== 'function') {
-      return res.apiError('WCM_createAccount函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    if (!WCM || typeof WCM.WCM_createWallet !== 'function') {
+      return res.apiError('WCM_createWallet函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await WCM.WCM_createAccount(req.body);
+    const result = await WCM.WCM_createWallet(req.body);
 
     if (result && result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError(result.message || '帳戶創建失敗', result.error?.code || 'CREATE_ACCOUNT_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '錢包創建失敗', result.error?.code || 'CREATE_WALLET_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
-    console.error('❌ ASL轉發錯誤 (create account):', error);
-    res.apiError('帳戶創建轉發失敗', 'CREATE_ACCOUNT_FORWARD_ERROR', 500);
+    console.error('❌ ASL轉發錯誤 (create wallet):', error);
+    res.apiError('錢包創建轉發失敗', 'CREATE_WALLET_FORWARD_ERROR', 500);
   }
 });
 
-// 18. 取得特定帳戶詳情
+// 17. 取得特定錢包詳情
 app.get('/api/v1/accounts/:id', async (req, res) => {
   try {
-    console.log('🔍 ASL轉發: 取得帳戶詳情 -> WCM_getAccountById'); // Modified to WCM
+    console.log('🔍 ASL轉發: 取得錢包詳情 -> WCM_getWalletById'); // Modified to WCM
+    // Note: The API endpoint remains /api/v1/accounts/:id as per the requirement to update the path.
 
-    if (!WCM || typeof WCM.WCM_getAccountById !== 'function') {
-      return res.apiError('WCM_getAccountById函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    if (!WCM || typeof WCM.WCM_getWalletById !== 'function') {
+      return res.apiError('WCM_getWalletById函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await WCM.WCM_getAccountById(req.params.id, req.query);
+    const result = await WCM.WCM_getWalletById(req.params.id, req.query);
 
     if (result && result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError(result.message || '帳戶詳情查詢失敗', result.error?.code || 'GET_ACCOUNT_DETAIL_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '錢包詳情查詢失敗', result.error?.code || 'GET_WALLET_DETAIL_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
-    console.error('❌ ASL轉發錯誤 (get account detail):', error);
-    res.apiError('帳戶詳情轉發失敗', 'GET_ACCOUNT_DETAIL_FORWARD_ERROR', 500);
+    console.error('❌ ASL轉發錯誤 (get wallet detail):', error);
+    res.apiError('錢包詳情轉發失敗', 'GET_WALLET_DETAIL_FORWARD_ERROR', 500);
   }
 });
 
-// 19. 更新特定帳戶
+// 18. 更新特定錢包
 app.put('/api/v1/accounts/:id', async (req, res) => {
   try {
-    console.log('✏️ ASL轉發: 更新帳戶 -> WCM_updateAccount'); // Modified to WCM
+    console.log('✏️ ASL轉發: 更新錢包 -> WCM_updateWallet'); // Modified to WCM
+    // Note: The API endpoint remains /api/v1/accounts/:id as per the requirement to update the path.
 
-    if (!WCM || typeof WCM.WCM_updateAccount !== 'function') {
-      return res.apiError('WCM_updateAccount函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    if (!WCM || typeof WCM.WCM_updateWallet !== 'function') {
+      return res.apiError('WCM_updateWallet函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await WCM.WCM_updateAccount(req.params.id, req.body);
+    const result = await WCM.WCM_updateWallet(req.params.id, req.body);
 
     if (result && result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError(result.message || '帳戶更新失敗', result.error?.code || 'UPDATE_ACCOUNT_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '錢包更新失敗', result.error?.code || 'UPDATE_WALLET_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
-    console.error('❌ ASL轉發錯誤 (update account):', error);
-    res.apiError('帳戶更新轉發失敗', 'UPDATE_ACCOUNT_FORWARD_ERROR', 500);
+    console.error('❌ ASL轉發錯誤 (update wallet):', error);
+    res.apiError('錢包更新轉發失敗', 'UPDATE_WALLET_FORWARD_ERROR', 500);
   }
 });
 
-// 20. 刪除特定帳戶
+// 19. 刪除特定錢包
 app.delete('/api/v1/accounts/:id', async (req, res) => {
   try {
-    console.log('🗑️ ASL轉發: 刪除帳戶 -> WCM_deleteAccount'); // Modified to WCM
+    console.log('🗑️ ASL轉發: 刪除錢包 -> WCM_deleteWallet'); // Modified to WCM
+    // Note: The API endpoint remains /api/v1/accounts/:id as per the requirement to update the path.
 
-    if (!WCM || typeof WCM.WCM_deleteAccount !== 'function') {
-      return res.apiError('WCM_deleteAccount函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    if (!WCM || typeof WCM.WCM_deleteWallet !== 'function') {
+      return res.apiError('WCM_deleteWallet函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await WCM.WCM_deleteAccount(req.params.id, req.query);
+    const result = await WCM.WCM_deleteWallet(req.params.id, req.query);
 
     if (result && result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError(result.message || '帳戶刪除失敗', result.error?.code || 'DELETE_ACCOUNT_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '錢包刪除失敗', result.error?.code || 'DELETE_WALLET_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
-    console.error('❌ ASL轉發錯誤 (delete account):', error);
-    res.apiError('帳戶刪除轉發失敗', 'DELETE_ACCOUNT_FORWARD_ERROR', 500);
+    console.error('❌ ASL轉發錯誤 (delete wallet):', error);
+    res.apiError('錢包刪除轉發失敗', 'DELETE_WALLET_FORWARD_ERROR', 500);
   }
 });
 
-// 21. 取得帳戶餘額
+// 20. 取得錢包餘額
 app.get('/api/v1/accounts/:id/balance', async (req, res) => {
   try {
-    console.log('💰 ASL轉發: 取得帳戶餘額 -> WCM_getAccountBalance'); // Modified to WCM
+    console.log('💰 ASL轉發: 取得錢包餘額 -> WCM_getWalletBalance'); // Modified to WCM
+    // Note: The API endpoint remains /api/v1/accounts/:id/balance as per the requirement to update the path.
 
-    if (!WCM || typeof WCM.WCM_getAccountBalance !== 'function') {
-      return res.apiError('WCM_getAccountBalance函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    if (!WCM || typeof WCM.WCM_getWalletBalance !== 'function') {
+      return res.apiError('WCM_getWalletBalance函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await WCM.WCM_getAccountBalance(req.params.id, req.query);
+    const result = await WCM.WCM_getWalletBalance(req.params.id, req.query);
 
     if (result && result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError(result.message || '帳戶餘額查詢失敗', result.error?.code || 'GET_ACCOUNT_BALANCE_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '錢包餘額查詢失敗', result.error?.code || 'GET_WALLET_BALANCE_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
-    console.error('❌ ASL轉發錯誤 (get account balance):', error);
-    res.apiError('帳戶餘額轉發失敗', 'GET_ACCOUNT_BALANCE_FORWARD_ERROR', 500);
+    console.error('❌ ASL轉發錯誤 (get wallet balance):', error);
+    res.apiError('錢包餘額轉發失敗', 'GET_WALLET_BALANCE_FORWARD_ERROR', 500);
   }
 });
 
-// 22. 取得帳戶類型列表
+// 21. 取得錢包類型列表
 app.get('/api/v1/accounts/types', async (req, res) => {
   try {
-    console.log('🏷️ ASL轉發: 取得帳戶類型 -> WCM_getAccountTypes'); // Modified to WCM
+    console.log('🏷️ ASL轉發: 取得錢包類型 -> WCM_getWalletTypes'); // Modified to WCM
+    // Note: The API endpoint remains /api/v1/accounts/types as per the requirement to update the path.
 
-    if (!WCM || typeof WCM.WCM_getAccountTypes !== 'function') {
-      return res.apiError('WCM_getAccountTypes函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
+    if (!WCM || typeof WCM.WCM_getWalletTypes !== 'function') {
+      return res.apiError('WCM_getWalletTypes函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
     }
 
-    const result = await WCM.WCM_getAccountTypes(req.query);
+    const result = await WCM.WCM_getWalletTypes(req.query);
 
     if (result && result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError(result.message || '帳戶類型查詢失敗', result.error?.code || 'GET_ACCOUNT_TYPES_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '錢包類型查詢失敗', result.error?.code || 'GET_WALLET_TYPES_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
-    console.error('❌ ASL轉發錯誤 (get account types):', error);
-    res.apiError('帳戶類型轉發失敗', 'GET_ACCOUNT_TYPES_FORWARD_ERROR', 500);
+    console.error('❌ ASL轉發錯誤 (get wallet types):', error);
+    res.apiError('錢包類型轉發失敗', 'GET_WALLET_TYPES_FORWARD_ERROR', 500);
   }
 });
 
-// 23. 帳戶轉帳
+// 22. 錢包轉帳
 app.post('/api/v1/accounts/transfer', async (req, res) => {
   try {
-    console.log('💸 ASL轉發: 帳戶轉帳 -> WCM_transferFunds'); // Modified to WCM
+    console.log('💸 ASL轉發: 錢包轉帳 -> WCM_transferFunds'); // Modified to WCM
+    // Note: The API endpoint remains /api/v1/accounts/transfer as per the requirement to update the path.
 
     if (!WCM || typeof WCM.WCM_transferFunds !== 'function') {
       return res.apiError('WCM_transferFunds函數不存在', 'WCM_FUNCTION_NOT_FOUND', 503);
@@ -1937,18 +1945,18 @@ app.post('/api/v1/accounts/transfer', async (req, res) => {
     if (result && result.success) {
       res.apiSuccess(result.data, result.message);
     } else {
-      res.apiError(result.message || '帳戶轉帳失敗', result.error?.code || 'TRANSFER_FUNDS_ERROR', 400, result.error?.details);
+      res.apiError(result.message || '錢包轉帳失敗', result.error?.code || 'TRANSFER_FUNDS_ERROR', 400, result.error?.details);
     }
 
   } catch (error) {
     console.error('❌ ASL轉發錯誤 (transfer funds):', error);
-    res.apiError('帳戶轉帳轉發失敗', 'TRANSFER_FUNDS_FORWARD_ERROR', 500);
+    res.apiError('錢包轉帳轉發失敗', 'TRANSFER_FUNDS_FORWARD_ERROR', 500);
   }
 });
 
 // =============== 科目管理API轉發 ===============
 
-// 24. 取得科目列表
+// 23. 取得科目列表
 app.get('/api/v1/categories', async (req, res) => {
   try {
     console.log('📚 ASL轉發: 取得科目列表 -> WCM_getCategories'); // Modified to WCM
@@ -1971,7 +1979,7 @@ app.get('/api/v1/categories', async (req, res) => {
   }
 });
 
-// 25. 創建科目
+// 24. 創建科目
 app.post('/api/v1/categories', async (req, res) => {
   try {
     console.log('➕ ASL轉發: 創建科目 -> WCM_createCategory'); // Modified to WCM
@@ -1994,7 +2002,7 @@ app.post('/api/v1/categories', async (req, res) => {
   }
 });
 
-// 26. 取得特定科目詳情
+// 25. 取得特定科目詳情
 app.get('/api/v1/categories/:id', async (req, res) => {
   try {
     console.log('🔍 ASL轉發: 取得科目詳情 -> WCM_getCategoryById'); // Modified to WCM
@@ -2017,7 +2025,7 @@ app.get('/api/v1/categories/:id', async (req, res) => {
   }
 });
 
-// 27. 更新特定科目
+// 26. 更新特定科目
 app.put('/api/v1/categories/:id', async (req, res) => {
   try {
     console.log('✏️ ASL轉發: 更新科目 -> WCM_updateCategory'); // Modified to WCM
@@ -2040,7 +2048,7 @@ app.put('/api/v1/categories/:id', async (req, res) => {
   }
 });
 
-// 28. 刪除特定科目
+// 27. 刪除特定科目
 app.delete('/api/v1/categories/:id', async (req, res) => {
   try {
     console.log('🗑️ ASL轉發: 刪除科目 -> WCM_deleteCategory'); // Modified to WCM
@@ -2063,7 +2071,7 @@ app.delete('/api/v1/categories/:id', async (req, res) => {
   }
 });
 
-// 29. 取得科目樹狀結構
+// 28. 取得科目樹狀結構
 app.get('/api/v1/categories/tree', async (req, res) => {
   try {
     console.log('🌳 ASL轉發: 取得科目樹狀結構 -> WCM_getCategoryTree'); // Modified to WCM
@@ -2590,7 +2598,6 @@ app.use((error, req, res, next) => {
     // P1-2範圍API端點: AM(19) + BK(15) = 34個端點
     // P2範圍API端點: 預算(5) + 協作(4) = 9個端點
     // DCN-0023範圍API端點: 帳戶(8) + 科目(6) = 14個端點
-    // 總計: 34 + 9 + 14 = 57個端點
     console.log(`📋 P1-2 + P2 + DCN-0023 API端點: AM(19) + BK(15) + BM(5) + CM(4) + WCM(14) = 57個端點`);
 
     // 第二階段完成狀態報告
