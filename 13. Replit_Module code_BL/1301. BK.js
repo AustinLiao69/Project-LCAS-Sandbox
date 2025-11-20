@@ -567,7 +567,7 @@ async function BK_createTransaction(transactionData) {
 
     // 階段二修正：強化AM模組調用機制和錯誤處理
     let ledgerId = null;
-    
+
     // 強制透過AM模組處理帳本邏輯 - 符合0098憲法第6、7條
     if (!transactionData.userId) {
       return BK_formatErrorResponse("MISSING_USER_ID", "缺少用戶ID，無法確定帳本歸屬");
@@ -593,17 +593,17 @@ async function BK_createTransaction(transactionData) {
     let ledgerResult;
     let retryCount = 0;
     const maxRetries = 2; // 階段二修正：增加重試機制
-    
+
     while (retryCount <= maxRetries) {
       try {
         BK_logInfo(`${logPrefix} 第${retryCount + 1}次嘗試透過AM模組處理帳本初始化`, "新增交易", transactionData.userId, "BK_createTransaction");
-        
+
         // 呼叫AM模組獲取用戶預設帳本
         ledgerResult = await AM.AM_getUserDefaultLedger(transactionData.userId);
-        
+
         // 階段二修正：詳細記錄AM模組回應
         BK_logInfo(`${logPrefix} AM模組回應: ${JSON.stringify(ledgerResult)}`, "新增交易", transactionData.userId, "BK_createTransaction");
-        
+
         if (ledgerResult && ledgerResult.success && ledgerResult.ledgerId) {
           ledgerId = ledgerResult.ledgerId;
           BK_logInfo(`${logPrefix} 透過AM模組成功取得用戶預設帳本: ${ledgerId}`, "新增交易", transactionData.userId, "BK_createTransaction");
@@ -613,9 +613,9 @@ async function BK_createTransaction(transactionData) {
           const errorDetail = ledgerResult ? 
             `success: ${ledgerResult.success}, ledgerId: ${ledgerResult.ledgerId}, error: ${ledgerResult.error}` :
             "AM模組回應為空或undefined";
-          
+
           BK_logWarning(`${logPrefix} AM模組取得帳本失敗 (嘗試${retryCount + 1}/${maxRetries + 1}): ${errorDetail}`, "新增交易", transactionData.userId, "BK_createTransaction");
-          
+
           if (retryCount === maxRetries) {
             // 最後一次重試也失敗
             BK_logError(`${logPrefix} AM模組取得帳本最終失敗: ${errorDetail}`, "新增交易", transactionData.userId, "GET_DEFAULT_LEDGER_FAILED", errorDetail, "BK_createTransaction");
@@ -624,20 +624,20 @@ async function BK_createTransaction(transactionData) {
         }
       } catch (amError) {
         BK_logError(`${logPrefix} 呼叫AM模組發生異常 (嘗試${retryCount + 1}/${maxRetries + 1}): ${amError.message}`, "新增交易", transactionData.userId, "AM_MODULE_ERROR", amError.toString(), "BK_createTransaction");
-        
+
         if (retryCount === maxRetries) {
           // 最後一次重試也異常
           return BK_formatErrorResponse("AM_MODULE_ERROR", `呼叫AM模組發生異常，已重試${maxRetries + 1}次: ${amError.message}`);
         }
       }
-      
+
       retryCount++;
       if (retryCount <= maxRetries) {
         // 等待後重試
         await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
       }
     }
-    
+
     // 階段二修正：最終驗證ledgerId
     if (!ledgerId || typeof ledgerId !== 'string' || ledgerId.trim() === '') {
       BK_logError(`${logPrefix} AM模組未回傳有效的帳本ID: ${ledgerId}`, "新增交易", transactionData.userId, "INVALID_LEDGER_ID", `回傳的ledgerId: ${ledgerId}`, "BK_createTransaction");
@@ -663,7 +663,7 @@ async function BK_createTransaction(transactionData) {
     // DCN-0023階段三：透過WCM模組進行帳戶科目驗證
     if (BK_INIT_STATUS.WCM_initialized && processedData.accountId) {
       BK_logInfo(`${logPrefix} 透過WCM驗證帳戶: ${processedData.accountId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
-      
+
       try {
         const accountValidation = await WCM.WCM_validateWalletExists(processedData.accountId, processedData.userId);
         if (!accountValidation.success) {
@@ -680,7 +680,7 @@ async function BK_createTransaction(transactionData) {
 
     if (BK_INIT_STATUS.WCM_initialized && processedData.categoryId) {
       BK_logInfo(`${logPrefix} 透過WCM驗證科目: ${processedData.categoryId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
-      
+
       try {
         const categoryValidation = await WCM.WCM_validateCategoryExists(processedData.categoryId, processedData.userId);
         if (!categoryValidation.success) {
@@ -707,17 +707,14 @@ async function BK_createTransaction(transactionData) {
       }
 
       // 階段一&二修復：增加重試機制
-      let retryCount = 0;
-      const maxRetries = 1;
-
-      // 階段一&二修復：包裝Firebase操作在重試邏輯中
       const executeTransaction = async () => {
-        // 階段一修正：確保透過1311.FS.js驗證帳本結構存在
+        // 階段一修正：透過1311.FS.js驗證帳本結構存在
+        // FS已在模組頂部載入，無需重複宣告
         const FS = require('./1311. FS.js');
-        
+
         // 透過1311.FS.js驗證帳本存在
         const ledgerCheck = await FS.FS_getDocument('ledgers', processedData.ledgerId, 'SYSTEM');
-        
+
         if (!ledgerCheck.success || !ledgerCheck.exists) {
           throw new Error(`帳本不存在或無法存取: ${processedData.ledgerId}，請確認AM模組已正確初始化`);
         }
@@ -731,6 +728,7 @@ async function BK_createTransaction(transactionData) {
         const preparedData = await BK_prepareTransactionData(transactionId, processedData, processId);
 
         // 階段一修正：透過1311.FS.js儲存交易記錄
+        // FS已在模組頂部載入，無需重複宣告
         const FS = require('./1311. FS.js');
         const result = await FS.FS_manageTransaction(processedData.ledgerId, 'CREATE', preparedData, processedData.userId);
 
@@ -751,6 +749,9 @@ async function BK_createTransaction(transactionData) {
 
       // 執行交易處理，失敗時重試一次
       let lastError;
+      let retryCount = 0; // Reset retryCount for this specific operation
+      const maxRetries = 1; // Only retry once
+
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
           const transactionResult = await executeTransaction();
@@ -762,13 +763,13 @@ async function BK_createTransaction(transactionData) {
           lastError = error;
           if (attempt < maxRetries) {
             BK_logWarning(`${logPrefix} 交易新增失敗，重試中... (${attempt + 1}/${maxRetries + 1})`, "新增交易", transactionData.userId || "", "BK_createTransaction");
-            await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒後重試
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
           }
         }
       }
 
-      // 所有重試都失敗
-      return BK_formatErrorResponse("STORAGE_ERROR", "交易儲存失敗", lastError.message);
+      // All retries failed
+      throw lastError || new Error("Unknown error during transaction execution after retries");
     };
 
     // 階段一&二修復：調整超時時間以解決SIT測試失敗問題
@@ -877,7 +878,7 @@ async function BK_getTransactions(queryParams = {}) {
       // 階段一修正：透過1311.FS.js查詢交易記錄
       const FS = require('./1311. FS.js');
       const queryConditions = [];
-      
+
       // 構建查詢條件
       if (queryParams.userId) {
         queryConditions.push({ field: 'userId', operator: '==', value: queryParams.userId });
@@ -885,26 +886,26 @@ async function BK_getTransactions(queryParams = {}) {
       if (queryParams.type) {
         queryConditions.push({ field: 'type', operator: '==', value: queryParams.type });
       }
-      
+
       const queryOptions = {
         orderBy: { field: 'createdAt', direction: 'desc' },
         limit: queryParams.limit ? Math.min(parseInt(queryParams.limit), 50) : 20
       };
-      
+
       const fsQueryResult = await FS.FS_manageTransaction(ledgerId, 'QUERY', 
         { conditions: queryConditions, options: queryOptions }, 
         queryParams.userId || 'SYSTEM');
-      
+
       if (!fsQueryResult.success) {
         throw new Error(`1311.FS.js查詢失敗: ${fsQueryResult.error}`);
       }
-      
+
       // 轉換結果格式
       const transactions = fsQueryResult.results.map(result => ({
         id: result.id,
         ...result.data
       }));
-      
+
       const queryResult = {
         transactions: transactions,
         total: transactions.length,
@@ -919,6 +920,7 @@ async function BK_getTransactions(queryParams = {}) {
 
       try {
         // 嘗試標準查詢
+        const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions'); // Use the correct collection path
         queryResult = await BK_performStandardQuery(collectionRef, queryParams);
         queryMethod = 'standard';
       } catch (error) {
@@ -930,12 +932,14 @@ async function BK_getTransactions(queryParams = {}) {
 
         // 降級查詢策略
         try {
+          const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions'); // Use the correct collection path
           queryResult = await BK_performDegradedQuery(collectionRef, queryParams);
           queryMethod = 'degraded';
         } catch (degradedError) {
           BK_logError(`${logPrefix} 降級查詢也失敗: ${degradedError.message}`, "查詢交易", queryParams.userId || "", "DEGRADED_QUERY_ERROR", degradedError.toString(), "BK_getTransactions");
 
           // 最後嘗試最簡單的查詢
+          const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions'); // Use the correct collection path
           queryResult = await BK_performMinimalQuery(collectionRef, queryParams);
           queryMethod = 'minimal';
         }
@@ -1073,9 +1077,9 @@ function BK_processQuerySnapshot(snapshot, queryParams, enableBackendFilter = fa
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
       status: data.status || 'active',
-      ledgerId: data.ledgerId,
+      verified: data.verified || false,
       source: data.source || 'manual',
-      verified: data.verified || false
+      ledgerId: data.ledgerId
     });
   });
 
@@ -3324,7 +3328,7 @@ module.exports = {
   // === 基礎函數與輔助函數 ===
   BK_getTransactionsByDateRange,
   BK_getTransactionsByCategory,
-  
+
   BK_parseQuickInput,
   BK_processBookkeeping,
   BK_validateTransactionData,

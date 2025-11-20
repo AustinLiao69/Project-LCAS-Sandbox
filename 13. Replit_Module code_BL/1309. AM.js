@@ -1,4 +1,3 @@
-replit_final_file>
 /**
  * 1309. AM.js - 帳號管理模組
  * @version v7.5.0

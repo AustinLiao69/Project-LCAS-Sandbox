@@ -319,7 +319,7 @@ async function loadBLModules() {
     // DCN-0023階段二：載入WCM模組（帳戶與科目管理）
     try {
       console.log('📦 載入DCN-0023階段二模組 - WCM (帳戶與科目管理)...');
-      WCM = require('./13. Replit_Module code_BL/1314. WCM.js'); // WCM模組
+      WCM = require('./13. Replit_Module code_BL/1350. WCM.js'); // WCM模組
       moduleStatus.WCM = true;
       console.log('✅ WCM (帳戶與科目管理) 模組載入成功');
     } catch (error) {
