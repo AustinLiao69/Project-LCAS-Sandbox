@@ -414,9 +414,10 @@ MM 	 DD 	 Description 	    Progress
 11	18	 建置0304. Default_assessment.json  	 Closed
 11	18	 撰寫DCN-0024  	 Ongoing
 11	18	 重新初始化firebase  	 Ongoing
-11	18	 將account改成wallet  	 Ongoing
+11	18	 將account改成wallet  	 Closed
 11	19	 準備firebase P3資料欄位  	 Ongoing
-11	19	 處理0099欄位映射  	 Ongoing
+11	19	 處理0099欄位映射  	 Closed
 11	19	 SIT_P3 前置準備  	 Ongoing
 11	19	 Debug：7598  	 Closed
 11	19	 Debug：1309建立帳本問題  	 Ongoing
+11	20	 釐清BL(AM, BM, CM)在firebase建立子集合與文檔問題  	 Ongoing
