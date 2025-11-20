@@ -573,7 +573,7 @@ async function BK_createTransaction(transactionData) {
       return BK_formatErrorResponse("MISSING_USER_ID", "缺少用戶ID，無法確定帳本歸屬");
     }
 
-    // 階段二修正：確保AM模組正確導入和調用
+    // 階段二修正：確保AM模組導入和調用
     let AM;
     try {
       AM = require('./1309. AM.js');
@@ -610,7 +610,7 @@ async function BK_createTransaction(transactionData) {
           break; // 成功取得帳本ID，跳出重試迴圈
         } else {
           // 階段二修正：記錄詳細的失敗原因
-          const errorDetail = ledgerResult ? 
+          const errorDetail = ledgerResult ?
             `success: ${ledgerResult.success}, ledgerId: ${ledgerResult.ledgerId}, error: ${ledgerResult.error}` :
             "AM模組回應為空或undefined";
 
@@ -708,9 +708,9 @@ async function BK_createTransaction(transactionData) {
 
       // 階段一&二修復：增加重試機制
       const executeTransaction = async () => {
-        // 階段一修正：透過1311.FS.js驗證帳本結構存在
+        // 階段一修復：透過1311.FS.js驗證帳本結構存在
         // FS已在模組頂部載入，無需重複宣告
-        const FS = require('./1311. FS.js');
+        // const FS = require('./1311. FS.js'); // Removed redundant require
 
         // 透過1311.FS.js驗證帳本存在
         const ledgerCheck = await FS.FS_getDocument('ledgers', processedData.ledgerId, 'SYSTEM');
@@ -727,9 +727,9 @@ async function BK_createTransaction(transactionData) {
         // 準備交易數據
         const preparedData = await BK_prepareTransactionData(transactionId, processedData, processId);
 
-        // 階段一修正：透過1311.FS.js儲存交易記錄
+        // 階段一修復：透過1311.FS.js儲存交易記錄
         // FS已在模組頂部載入，無需重複宣告
-        const FS = require('./1311. FS.js');
+        // const FS = require('./1311. FS.js'); // Removed redundant require
         const result = await FS.FS_manageTransaction(processedData.ledgerId, 'CREATE', preparedData, processedData.userId);
 
         if (!result.success) {
@@ -772,7 +772,7 @@ async function BK_createTransaction(transactionData) {
       throw lastError || new Error("Unknown error during transaction execution after retries");
     };
 
-    // 階段一&二修復：調整超時時間以解決SIT測試失敗問題
+    // 階段二修復：調整超時時間以解決SIT測試失敗問題
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('交易新增處理超時')), 15000); // 15秒超時
     });
@@ -892,8 +892,8 @@ async function BK_getTransactions(queryParams = {}) {
         limit: queryParams.limit ? Math.min(parseInt(queryParams.limit), 50) : 20
       };
 
-      const fsQueryResult = await FS.FS_manageTransaction(ledgerId, 'QUERY', 
-        { conditions: queryConditions, options: queryOptions }, 
+      const fsQueryResult = await FS.FS_manageTransaction(ledgerId, 'QUERY',
+        { conditions: queryConditions, options: queryOptions },
         queryParams.userId || 'SYSTEM');
 
       if (!fsQueryResult.success) {
@@ -1302,9 +1302,9 @@ async function BK_deleteTransaction(transactionId, params = {}) {
     await doc.ref.delete();
 
     const logCollection = getEnvVar('LOG_COLLECTION', 'log');
-    await db.collection(ledgerCollection)
+    await db.collection(logCollection) // 修正：應為db.collection(logCollection)
       .doc(ledgerId)
-      .collection(logCollection)
+      .collection('log') // 修正：應為.add()方法
       .add({
         時間: admin.firestore.Timestamp.now(),
         訊息: `交易記錄已刪除: ${transactionId}`,
@@ -3408,13 +3408,22 @@ module.exports = {
         accountId: data.accountId || 'default',
         paymentMethod: data.paymentMethod || '現金',
         userId: data.userId,
-        createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-        updatedAt: data.updatedAt?.toDate?.() ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
+        createdAt: data.createdAt, // Kept as Firestore Timestamp or Date object
+        updatedAt: data.updatedAt, // Kept as Firestore Timestamp or Date object
         status: data.status || 'active',
         verified: data.verified || false,
         source: data.source || 'firestore',
         ledgerId: data.ledgerId
       };
+
+      // Convert Firestore Timestamps to ISO strings if they exist
+      if (transactionDetail.createdAt && typeof transactionDetail.createdAt.toDate === 'function') {
+        transactionDetail.createdAt = transactionDetail.createdAt.toDate().toISOString();
+      }
+      if (transactionDetail.updatedAt && typeof transactionDetail.updatedAt.toDate === 'function') {
+        transactionDetail.updatedAt = transactionDetail.updatedAt.toDate().toISOString();
+      }
+
 
       return BK_formatSuccessResponse(transactionDetail, "交易詳情查詢成功");
 

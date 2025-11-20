@@ -1789,7 +1789,7 @@ async function FS_createBudgetsSubcollectionFramework() {
 
     return {
       success: ledgerResult.success && successCount === totalCount,
-      message: `完整帳本子集合框架建立${successCount === totalCount ? '成功' : '部分失敗'} (${successCount}/${totalCount})`,
+      message: `完整帳本子集合架構建立${successCount === totalCount ? '成功' : '部分失敗'} (${successCount}/${totalCount})`,
       details: {
         ledger: ledgerResult,
         subcollections: results,
@@ -2780,7 +2780,7 @@ module.exports = {
   FS_updateDocument,
   FS_deleteDocument,
   FS_queryCollection,
-  FS_mergeDocument,
+  FS_mergeDocument, // Added FS_mergeDocument
 
   // 階段二 Phase 1 API端點支援函數
   FS_processUserRegistration,

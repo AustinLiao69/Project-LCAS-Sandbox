@@ -193,7 +193,13 @@ async function AM_createLineAccount(lineUID, lineProfile, userType = "S") {
       subjectCount: subjectInit.importCount || 0,
     };
   } catch (error) {
-    await DL.DL_error("AM", "createLineAccount", error.message, lineUID);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "createLineAccount", error.message, lineUID);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -268,7 +274,13 @@ async function AM_createAppAccount(platform, appProfile, deviceInfo) {
       userType: userData.userType,
     };
   } catch (error) {
-    await DL.DL_error("AM", "createAppAccount", error.message, "");
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "createAppAccount", error.message, "");
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -343,12 +355,18 @@ async function AM_linkCrossPlatformAccounts(primaryUID, linkedAccountInfo) {
       mappingId: primaryUID,
     };
   } catch (error) {
-    await DL.DL_error(
-      "AM",
-      "linkCrossPlatformAccounts",
-      error.message,
-      primaryUID,
-    );
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error(
+          "AM",
+          "linkCrossPlatformAccounts",
+          error.message,
+          primaryUID,
+        );
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -397,7 +415,13 @@ async function AM_updateAccountInfo(UID, updateData, operatorId) {
       syncStatus: { completed: true },
     };
   } catch (error) {
-    await DL.DL_error("AM", "updateAccountInfo", error.message, operatorId);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "updateAccountInfo", error.message, operatorId);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -445,7 +469,13 @@ async function AM_changeUserType(UID, newUserType, operatorId, reason) {
       affectedLedgers: userData.joined_ledgers || [],
     };
   } catch (error) {
-    await DL.DL_error("AM", "changeUserType", error.message, operatorId);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "changeUserType", error.message, operatorId);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -487,12 +517,18 @@ async function AM_deactivateAccount(UID, deactivationReason, transferData) {
       updated_at: admin.firestore.Timestamp.now(),
     });
 
-    await DL.DL_error(
-      "AM",
-      "deactivateAccount",
-      `帳號註銷: ${UID}, 原因: ${deactivationReason}`,
-      UID,
-    );
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error(
+          "AM",
+          "deactivateAccount",
+          `帳號註銷: ${UID}, 原因: ${deactivationReason}`,
+          UID,
+        );
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
 
     return {
       success: true,
@@ -500,7 +536,13 @@ async function AM_deactivateAccount(UID, deactivationReason, transferData) {
       transferredLedgers: userData.joined_ledgers || [],
     };
   } catch (error) {
-    await DL.DL_error("AM", "deactivateAccount", error.message, UID);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "deactivateAccount", error.message, UID);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -559,7 +601,13 @@ async function AM_getUserInfo(UID, requesterId, includeLinkedAccounts = true) {
       linkedAccounts: linkedAccounts,
     };
   } catch (error) {
-    await DL.DL_error("AM", "getUserInfo", error.message, requesterId);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "getUserInfo", error.message, requesterId);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -632,7 +680,13 @@ async function AM_validateAccountExists(identifier, platform = "LINE") {
       accountStatus: "not_found",
     };
   } catch (error) {
-    await DL.DL_error("AM", "validateAccountExists", error.message, "");
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "validateAccountExists", error.message, "");
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       exists: false,
       UID: null,
@@ -703,7 +757,13 @@ async function AM_searchUserAccounts(
       totalCount: results.length,
     };
   } catch (error) {
-    await DL.DL_error("AM", "searchUserAccounts", error.message, requesterId);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "searchUserAccounts", error.message, requesterId);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -773,7 +833,13 @@ async function AM_handleLineOAuth(authCode, state, redirectUri) {
       userProfile: userProfile,
     };
   } catch (error) {
-    await DL.DL_error("AM", "handleLineOAuth", error.message, "");
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "handleLineOAuth", error.message, "");
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -819,7 +885,13 @@ async function AM_refreshLineToken(UID, refreshToken) {
       expiresIn: expires_in,
     };
   } catch (error) {
-    await DL.DL_error("AM", "refreshLineToken", error.message, UID);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "refreshLineToken", error.message, UID);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -860,12 +932,18 @@ async function AM_verifyLineIdentity(accessToken, expectedUID) {
       riskScore: verified ? 0 : 100,
     };
   } catch (error) {
-    await DL.DL_warning(
-      "AM",
-      "verifyLineIdentity",
-      `身份驗證錯誤: ${error.message}`,
-      expectedUID,
-    );
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_warning(
+          "AM",
+          "verifyLineIdentity",
+          `身份驗證錯誤: ${error.message}`,
+          expectedUID,
+        );
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       verified: false,
       userProfile: null,
@@ -928,7 +1006,13 @@ async function AM_syncCrossPlatformData(
       conflicts: conflicts,
     };
   } catch (error) {
-    await DL.DL_error("AM", "syncCrossPlatformData", error.message, UID);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "syncCrossPlatformData", error.message, UID);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -980,7 +1064,13 @@ async function AM_resolveDataConflict(
       appliedStrategy: resolutionStrategy,
     };
   } catch (error) {
-    await DL.DL_error("AM", "resolveDataConflict", error.message, "");
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "resolveDataConflict", error.message, "");
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       resolved: false,
       finalData: null,
@@ -1007,12 +1097,18 @@ async function AM_handleAccountError(
       retryCount < maxRetries &&
       ["NETWORK_ERROR", "TIMEOUT"].includes(errorType);
 
-    await DL.DL_error(
-      "AM",
-      "handleAccountError",
-      `錯誤類型: ${errorType}, 重試次數: ${retryCount}`,
-      context.UID || "",
-    );
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error(
+          "AM",
+          "handleAccountError",
+          `錯誤類型: ${errorType}, 重試次數: ${retryCount}`,
+          context.UID || "",
+        );
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
 
     if (shouldRetry) {
       // 排程重試（簡化實作）
@@ -1089,7 +1185,13 @@ async function AM_monitorSystemHealth() {
       performance: performance,
     };
   } catch (error) {
-    await DL.DL_error("AM", "monitorSystemHealth", error.message, "");
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "monitorSystemHealth", error.message, "");
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       healthy: false,
       activeUsers: 0,
@@ -1140,7 +1242,13 @@ function AM_load0099SubjectData() {
 
   } catch (error) {
     console.error(`❌ ${functionName}: 載入0099科目資料失敗:`, error.message);
-    await DL.DL_error("AM", functionName, error.message, "SYSTEM");
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", functionName, error.message, "SYSTEM");
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -1206,7 +1314,13 @@ function AM_loadDefaultConfigs() {
 
   } catch (error) {
     console.error(`❌ ${functionName}: 載入預設配置失敗:`, error.message);
-    await DL.DL_error("AM", functionName, error.message, "SYSTEM");
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", functionName, error.message, "SYSTEM");
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -1228,7 +1342,13 @@ async function AM_initializeUserSubjects(UID, ledgerIdPrefix = "user_") {
     return await AM_initializeUserLedger(UID, ledgerIdPrefix);
   } catch (error) {
     console.error(`❌ (舊函數) 用戶 ${UID} 科目初始化失敗:`, error);
-    await DL.DL_error("AM", "initializeUserSubjects", error.message, UID);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "initializeUserSubjects", error.message, UID);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -1249,7 +1369,13 @@ async function AM_ensureUserSubjects(UID) {
     return await AM_ensureUserLedger(UID);
   } catch (error) {
     console.error(`❌ (舊函數) 檢查用戶 ${UID} 科目失敗:`, error);
-    await DL.DL_error("AM", "ensureUserSubjects", error.message, UID);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", "ensureUserSubjects", error.message, UID);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -1329,7 +1455,13 @@ async function AM_getUserDefaultLedger(UID) {
 
   } catch (error) {
     console.error(`❌ ${functionName} failed:`, error);
-    await DL.DL_error("AM", functionName, error.message, UID);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", functionName, error.message, UID);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -1664,7 +1796,13 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     };
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
-    await DL.DL_error("AM", functionName, error.message, UID);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", functionName, error.message, UID);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -1756,7 +1894,13 @@ async function AM_ensureUserLedger(UID) {
     }
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
-    await DL.DL_error("AM", functionName, error.message, UID);
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", functionName, error.message, UID);
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -3830,7 +3974,8 @@ async function AM_processAPIGetProfile(queryParams) {
       message: "系統錯誤，請稍後再試",
       error: {
         code: "SYSTEM_ERROR",
-        message: "系統錯誤，請稍後再試"
+        message: "系統錯誤，請稍後再試",
+        details: { error: error.message }
       }
     };
   }
@@ -5336,7 +5481,7 @@ function AM_calculateModeFromAnswers(answers) {
 
     // 階段二修復：增強的模式判定邏輯
     // Expert模式判定（專業功能需求高）
-    if (answerValues.includes('advanced') || 
+    if (answerValues.includes('advanced') ||
         answerValues.includes('detailed') ||
         answerValues.includes('complex') ||
         answerValues.includes('comprehensive')) {
@@ -5373,8 +5518,8 @@ function AM_calculateModeFromAnswers(answers) {
     const questionCount = Object.keys(answers).length;
     if (questionCount >= 4) {
       // 多問題情況：更精確的Expert判定
-      const expertIndicators = answerValues.filter(val => 
-        typeof val === 'string' && 
+      const expertIndicators = answerValues.filter(val =>
+        typeof val === 'string' &&
         (val.includes('advanced') || val.includes('professional') || val.includes('detailed'))
       );
 
@@ -5505,16 +5650,21 @@ async function AM_logError(
   errorCode = "AM_Error",
   functionName = "AM_Function",
 ) {
-  DL.DL_error(
-    "AM",
-    functionName,
-    "ERROR",
-    logMessage,
-    userId,
-    ledgerId,
-    objectId,
-    errorCode,
-    action,
-  );
+  if (DL && typeof DL.DL_error === 'function') {
+    try {
+      DL.DL_error(
+        "AM",
+        functionName,
+        "ERROR",
+        logMessage,
+        userId,
+        ledgerId,
+        objectId,
+        errorCode,
+        action,
+      );
+    } catch (dlError) {
+      console.error(`DL模組調用失敗: ${dlError.message}`);
+    }
+  }
 }
-</replit_final_file>
