@@ -1212,7 +1212,7 @@ function AM_load0099SubjectData() {
   try {
     console.log(`📋 ${functionName}: 開始載入0099科目資料...`);
 
-    const subjectFilePath = path.join(__dirname, '..', '..', '..', '00. Master_Project document', '0099. Subject_code.json');
+    const subjectFilePath = path.join(__dirname, '..', '..', '00. Master_Project document', '0099. Subject_code.json');
 
     if (!fs.existsSync(subjectFilePath)) {
       console.error(`❌ ${functionName}: 0099. Subject_code.json 檔案不存在: ${subjectFilePath}`);
