@@ -1,0 +1,122 @@
+  LCAS ASL (API Service Layer) v2.2.0 啟動中...
+📅 啟動時間: 2025/11/20 上午11:00:28
+🔥 ASL階段二升級：優先初始化Firebase...
+📦 ASL載入P1-2範圍BL層模組...
+🔄 Firebase初始化嘗試 1/3...
+📡 載入Firebase配置模組...
+✅ Firebase配置驗證通過
+🔍 驗證Firebase配置...
+✅ Firebase配置驗證通過
+⚡ 初始化Firebase Admin SDK...
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+📊 確認Firestore實例...
+✅ Firestore實例取得成功
+🔗 驗證Firebase連線...
+ ✅ Firebase連線驗證成功
+✅ Firebase完全初始化完成，準備載入BL模組...
+🎯 Firebase初始化成功 (嘗試次數: 1)
+🔥 Firebase已就緒，開始載入AM模組...
+❌ AM 模組載入失敗: await is only valid in async functions and the top level bodies of modules
+❌ AM 模組錯誤堆疊: /home/runner/workspace/13. Replit_Module code_BL/1309. AM.js:1143
+    await DL.DL_error("AM", functionName, error.message, "SYSTEM");
+    ^^^^^
+
+SyntaxError: await is only valid in async functions and the top level bodies of modules
+    at wrapSafe (node:internal/modules/cjs/loader:1662:18)
+    at Module._compile (node:internal/modules/cjs/loader:1704:20)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at loadBLModules (/home/runner/workspace/ASL.js:181:12)
+🔄 開始載入BK模組...
+❌ BK 模組載入失敗: Identifier 'FS' has already been declared
+❌ BK 載入錯誤堆疊: /home/runner/workspace/13. Replit_Module code_BL/1301. BK.js:732
+        const FS = require('./1311. FS.js');
+              ^
+
+SyntaxError: Identifier 'FS' has already been declared
+    at wrapSafe (node:internal/modules/cjs/loader:1662:18)
+    at Module._compile (node:internal/modules/cjs/loader:1704:20)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at loadBLModules (/home/runner/workspace/ASL.js:200:10)
+🔄 BK模組載入失敗，嘗試重新載入...
+❌ BK模組重試載入錯誤: Identifier 'FS' has already been declared
+✅ DL模組：Firebase動態配置載入成功
+✅ DL (診斷日誌) 模組載入成功
+✅ Firebase Admin SDK已初始化
+✅ FS模組2.5.0：Firebase動態配置載入成功
+❌ FS 模組載入失敗: FS_mergeDocument is not defined
+📦 P2階段模組 - 帳本與協作管理功能統一由CM模組提供...
+📦 載入P2階段模組 - BM (預算管理)...
+📊 BM 預算管理模組載入中...
+BK模組載入失敗: Identifier 'FS' has already been declared
+SR模組依賴載入警告: await is only valid in async functions and the top level bodies of modules
+📅 SR 排程提醒模組初始化中...
+AM模組載入失敗: await is only valid in async functions and the top level bodies of modules
+✅ Firebase Admin SDK已初始化
+✅ FS模組2.5.0：Firebase動態配置載入成功
+FS模組載入失敗: FS_mergeDocument is not defined
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.2.0 (2025-01-28) - 純業務邏輯模組
+✅ Firebase Admin SDK已初始化
+✅ FS模組2.5.0：Firebase動態配置載入成功
+❌ BM 模組載入失敗: FS_mergeDocument is not defined
+📦 載入P2階段模組 - CM (協作管理)...
+CM模組依賴載入警告: await is only valid in async functions and the top level bodies of modules
+🤝 CM 協作管理模組初始化中...
+[2025-11-20T03:00:29.640Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組載入完成 - 階段一修復：ID生成依賴問題已解決
+✅ CM (協作管理) 模組載入成功
+📦 載入DCN-0023階段二模組 - WCM (帳戶與科目管理)...
+✅ Firebase Admin SDK已初始化
+✅ FS模組2.5.0：Firebase動態配置載入成功
+❌ WCM 模組載入失敗: FS_mergeDocument is not defined
+📋 模組載入狀態報告:
+   ✅ FIREBASE: 已載入
+   ❌ AM: 載入失敗
+   ❌ BK: 載入失敗
+   ✅ DL: 已載入
+   ❌ FS: 載入失敗
+   ❌ BM: 載入失敗
+   ✅ CM: 已載入
+   ❌ WCM: 載入失敗
+❌ 關鍵模組載入失敗：需執行進一步調查
+📊 載入成功率: 3/8 (38%)
+❌ 階段三修復失敗：需執行進一步調查
+🎉 LCAS ASL階段二及DCN-0023更新完成！
+📦 P1-2 + P2 + DCN-0023 範圍BL模組載入狀態: Firebase(✅), AM(❌), BK(❌), DL(✅), FS(❌), BM(❌), CM(✅), WCM(❌)
+🔧 純轉發機制: 57個API端點 -> 統一使用BL層標準格式
+✨ 階段二及DCN-0023更新: 協作管理API端點補完，帳戶與科目管理API端點整合
+🎯 協作管理功能: 帳本創建/讀取/更新/刪除，協作者管理（邀請/移除/權限更新），衝突檢測與解決
+🎯 帳戶與科目管理功能: 帳戶CRUD，餘額查詢，轉帳，科目CRUD，科目樹狀結構
+🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict, /api/v1/accounts, /api/v1/accounts/:id, /api/v1/accounts/:id/balance, /api/v1/accounts/types, /api/v1/accounts/transfer, /api/v1/categories, /api/v1/categories/:id, /api/v1/categories/tree
+⚠️ WCM (帳戶與科目管理) 模組載入失敗，帳戶與科目管理功能不可用
+🔧 建議檢查WCM.js文件完整性及依賴關係
+🌐 LCAS ASL純轉發窗口已啟動於 Port 5000
+📍 服務地址: http://0.0.0.0:5000
+🔗 健康檢查: http://0.0.0.0:5000/health
+🎯 DCN-0015第二階段完成: ASL格式驗證強化
+📋 P1-2 + P2 + DCN-0023 API端點: AM(19) + BK(15) + BM(5) + CM(4) + WCM(14) = 57個端點
+🔧 第二階段完成狀態: 部分就緒
+📦 核心模組狀態: Firebase(✅), AM(❌), BM(❌), CM(✅), WCM(❌)
+✨ 容錯機制完全移除: 100%信任BL層標準格式
+🎉 第二階段修正完成: 協作管理API端點補完
+🚀 DCN-0023階段二更新: 帳戶與科目管理API端點已整合
+⚠️ WCM (帳戶與科目管理) 模組載入失敗，帳戶與科目管理功能不可用
+成功寫入 1 條日誌到 Firestore
+📅 已載入 0 個排程設定
+[2025-11-20T03:00:30.327Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
