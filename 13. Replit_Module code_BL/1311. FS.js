@@ -2780,8 +2780,7 @@ module.exports = {
   FS_updateDocument,
   FS_deleteDocument,
   FS_queryCollection,
-  FS_handleError,
-  FS_logOperation,
+  FS_mergeDocument,
 
   // 階段二 Phase 1 API端點支援函數
   FS_processUserRegistration,
