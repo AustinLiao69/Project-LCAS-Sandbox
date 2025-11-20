@@ -1484,7 +1484,7 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 
     const results = [];
 
-    // 1. 建立帳戶子集合 (wallets) - 階段一修正：移除UI欄位，與0302配置匹配
+    // 1. 建立帳戶子集合 (wallets) - 階段一修正：移除UI欄位，完全符合0302配置
     const walletDefaults = [
       {
         walletId: 'default_cash',
@@ -1543,44 +1543,8 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
       results.push({ type: 'wallets', id: wallet.walletId, result: walletResult });
     }
 
-    // 2. 建立科目子集合 (categories) - 階段一修正：僅包含業務必要欄位
-    const categoryDefaults = [
-      // 收入科目
-      { categoryId: 'income_salary', name: '薪資收入', type: 'income' },
-      { categoryId: 'income_business', name: '營業收入', type: 'income' },
-      { categoryId: 'income_other', name: '其他收入', type: 'income' },
-
-      // 支出科目
-      { categoryId: 'expense_food', name: '餐飲', type: 'expense' },
-      { categoryId: 'expense_transport', name: '交通', type: 'expense' },
-      { categoryId: 'expense_shopping', name: '購物', type: 'expense' },
-      { categoryId: 'expense_entertainment', name: '娛樂', type: 'expense' },
-      { categoryId: 'expense_utilities', name: '水電費', type: 'expense' },
-      { categoryId: 'expense_healthcare', name: '醫療', type: 'expense' }
-    ];
-
-    for (const category of categoryDefaults) {
-      const categoryData = {
-        categoryId: category.categoryId,
-        name: category.name,
-        type: category.type,
-        ledgerId: ledgerId,
-        parentId: null,
-        isDefault: true,
-        isActive: true,
-        createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now(),
-        createdBy: userId
-      };
-
-      const categoryResult = await FS_createDocument(
-        `ledgers/${ledgerId}/categories`,
-        category.categoryId,
-        categoryData,
-        userId
-      );
-      results.push({ type: 'categories', id: category.categoryId, result: categoryResult });
-    }
+    // 2. 科目子集合 (categories) - 階段一修正：完全移除範例建立，由AM模組負責
+    // Categories完全由AM模組從0099.json載入，FS模組不建立任何科目範例
 
     // 3. 建立交易子集合範例 (transactions) - 建立佔位符確保集合存在
     const transactionPlaceholder = {
@@ -1669,15 +1633,16 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 
     return {
       success: successCount === totalCount,
-      message: `帳本${ledgerId}完整子集合架構建立${successCount === totalCount ? '成功' : '部分失敗'}`,
+      message: `帳本${ledgerId}子集合架構建立${successCount === totalCount ? '成功' : '部分失敗'}（Categories由AM模組負責）`,
       created_subcollections: {
         wallets: results.filter(r => r.type === 'wallets' && r.result.success).length,
-        categories: results.filter(r => r.type === 'categories' && r.result.success).length,
+        categories: 0, // 階段一修正：Categories完全由AM模組負責
         transactions: results.filter(r => r.type === 'transactions' && r.result.success).length,
         budgets: results.filter(r => r.type === 'budgets' && r.result.success).length
       },
       details: results,
-      success_rate: `${successCount}/${totalCount}`
+      success_rate: `${successCount}/${totalCount}`,
+      note: 'Categories子集合完全由AM模組從0099.json初始化'
     };
 
   } catch (error) {
@@ -1717,7 +1682,7 @@ async function FS_createBudgetsSubcollectionFramework() {
 
     const results = [];
 
-    // 1. 建立錢包子集合 (wallets) - 階段一修正：移除UI欄位
+    // 1. 錢包子集合範例 - 階段一修正：移除UI欄位，符合0302配置格式
     const walletExample = {
       walletId: 'example_wallet',
       ledgerId: 'example_ledger_for_budgets',
@@ -1730,7 +1695,7 @@ async function FS_createBudgetsSubcollectionFramework() {
       description: '現金錢包',
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      note: '錢包子集合範例'
+      note: '錢包子集合結構展示，符合0302配置檔案格式'
     };
 
     const walletResult = await FS_createDocument(
@@ -1765,7 +1730,7 @@ async function FS_createBudgetsSubcollectionFramework() {
     );
     results.push({ type: 'transactions', result: transactionResult });
 
-    // 3. 建立科目子集合 (categories) - 階段一修正：移除UI欄位
+    // 3. 科目子集合範例 - 階段一修正：僅作為結構展示，實際科目由AM模組管理
     const categoryExample = {
       categoryId: 'example_food',
       ledgerId: 'example_ledger_for_budgets',
@@ -1776,7 +1741,7 @@ async function FS_createBudgetsSubcollectionFramework() {
       isActive: true,
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
-      note: '科目子集合範例'
+      note: '科目子集合結構展示，實際科目由AM模組從0099.json初始化'
     };
 
     const categoryResult = await FS_createDocument(
