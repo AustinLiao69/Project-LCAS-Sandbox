@@ -573,7 +573,7 @@ async function BK_createTransaction(transactionData) {
       return BK_formatErrorResponse("MISSING_USER_ID", "缺少用戶ID，無法確定帳本歸屬");
     }
 
-    // 階段二修正：確保AM模組正確導入和調用
+    // 階段二修正：確保AM模組導入和調用
     let AM;
     try {
       AM = require('./1309. AM.js');
@@ -708,9 +708,9 @@ async function BK_createTransaction(transactionData) {
 
       // 階段一&二修復：增加重試機制
       const executeTransaction = async () => {
-        // 階段一修正：透過1311.FS.js驗證帳本結構存在
+        // 階段一修復：透過1311.FS.js驗證帳本結構存在
         // FS已在模組頂部載入，無需重複宣告
-        const FS = require('./1311. FS.js');
+        // const FS = require('./1311. FS.js'); // Removed redundant require
 
         // 透過1311.FS.js驗證帳本存在
         const ledgerCheck = await FS.FS_getDocument('ledgers', processedData.ledgerId, 'SYSTEM');
@@ -727,9 +727,9 @@ async function BK_createTransaction(transactionData) {
         // 準備交易數據
         const preparedData = await BK_prepareTransactionData(transactionId, processedData, processId);
 
-        // 階段一修正：透過1311.FS.js儲存交易記錄
+        // 階段一修復：透過1311.FS.js儲存交易記錄
         // FS已在模組頂部載入，無需重複宣告
-        const FS = require('./1311. FS.js');
+        // const FS = require('./1311. FS.js'); // Removed redundant require
         const result = await FS.FS_manageTransaction(processedData.ledgerId, 'CREATE', preparedData, processedData.userId);
 
         if (!result.success) {
