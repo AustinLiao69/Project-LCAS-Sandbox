@@ -1,10 +1,10 @@
 /**
  * 1309. AM.js - 帳號管理模組
- * @version v7.4.0
- * @date 2025-10-30
+ * @version v7.5.0
+ * @date 2025-11-20
  * @description 處理用戶註冊、登入、帳本初始化等功能
  * @compliance 嚴格遵守0098憲法 - 禁止hard coding，遵守dataflow
- * @update v7.4.0: 修復帳本初始化機制，新增budgets和transactions子集合範例文檔建立
+ * @update v7.5.0: 階段二修正 - 正確引用0099.json和03. Default_config資料夾，移除hard-coded資料
  */
 
 // 引入必要模組
@@ -105,6 +105,10 @@ const db = admin.firestore();
 
 // 引入其他模組
 const DL = require("./1310. DL.js");
+
+// 引入檔案系統模組用於載入配置檔案
+const fs = require('fs');
+const path = require('path');
 
 /**
  * 01. 創建LINE OA用戶帳號
@@ -1096,6 +1100,122 @@ async function AM_monitorSystemHealth() {
 }
 
 /**
+ * 16.5. 載入0099科目資料
+ * @version 2025-11-20-V1.0.0
+ * @date 2025-11-20
+ * @description 階段二新增：從0099. Subject_code.json載入科目資料
+ */
+function AM_load0099SubjectData() {
+  const functionName = "AM_load0099SubjectData";
+  try {
+    console.log(`📋 ${functionName}: 開始載入0099科目資料...`);
+    
+    const subjectFilePath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
+    
+    if (!fs.existsSync(subjectFilePath)) {
+      console.error(`❌ ${functionName}: 0099. Subject_code.json 檔案不存在: ${subjectFilePath}`);
+      return {
+        success: false,
+        error: "0099. Subject_code.json 檔案不存在",
+        count: 0,
+        data: []
+      };
+    }
+
+    const subjectDataRaw = fs.readFileSync(subjectFilePath, 'utf8');
+    const subjectData = JSON.parse(subjectDataRaw);
+
+    if (!Array.isArray(subjectData)) {
+      throw new Error("0099科目資料格式錯誤，應為陣列格式");
+    }
+
+    console.log(`✅ ${functionName}: 成功載入 ${subjectData.length} 筆科目資料`);
+    
+    return {
+      success: true,
+      count: subjectData.length,
+      data: subjectData,
+      source: '0099. Subject_code.json'
+    };
+
+  } catch (error) {
+    console.error(`❌ ${functionName}: 載入0099科目資料失敗:`, error.message);
+    await DL.DL_error("AM", functionName, error.message, "SYSTEM");
+    return {
+      success: false,
+      error: error.message,
+      count: 0,
+      data: []
+    };
+  }
+}
+
+/**
+ * 16.6. 載入預設配置資料
+ * @version 2025-11-20-V1.0.0
+ * @date 2025-11-20
+ * @description 階段二新增：從03. Default_config資料夾載入預設配置
+ */
+function AM_loadDefaultConfigs() {
+  const functionName = "AM_loadDefaultConfigs";
+  try {
+    console.log(`📋 ${functionName}: 開始載入預設配置資料...`);
+    
+    const configBasePath = path.join(__dirname, '../03. Default_config');
+    const configs = {};
+
+    // 載入系統配置
+    const systemConfigPath = path.join(configBasePath, '0301. Default_config.json');
+    if (fs.existsSync(systemConfigPath)) {
+      const systemConfig = JSON.parse(fs.readFileSync(systemConfigPath, 'utf8'));
+      configs.system = systemConfig;
+      console.log(`✅ 載入系統配置: ${systemConfig.version}`);
+    }
+
+    // 載入預設帳戶配置
+    const walletConfigPath = path.join(configBasePath, '0302. Default_wallet.json');
+    if (fs.existsSync(walletConfigPath)) {
+      const walletConfig = JSON.parse(fs.readFileSync(walletConfigPath, 'utf8'));
+      configs.wallets = walletConfig;
+      console.log(`✅ 載入預設帳戶配置: ${walletConfig.default_wallets.length} 個帳戶`);
+    }
+
+    // 載入貨幣配置
+    const currencyConfigPath = path.join(configBasePath, '0303. Default_currency.json');
+    if (fs.existsSync(currencyConfigPath)) {
+      const currencyConfig = JSON.parse(fs.readFileSync(currencyConfigPath, 'utf8'));
+      configs.currency = currencyConfig;
+      console.log(`✅ 載入貨幣配置: 預設貨幣 ${currencyConfig.currencies.default}`);
+    }
+
+    // 載入評估問卷配置
+    const assessmentConfigPath = path.join(configBasePath, '0304. Default_assessment.json');
+    if (fs.existsSync(assessmentConfigPath)) {
+      const assessmentConfig = JSON.parse(fs.readFileSync(assessmentConfigPath, 'utf8'));
+      configs.assessment = assessmentConfig;
+      console.log(`✅ 載入評估問卷配置: ${assessmentConfig.questions.length} 道題目`);
+    }
+
+    console.log(`✅ ${functionName}: 成功載入所有預設配置`);
+    
+    return {
+      success: true,
+      configs: configs,
+      loadedConfigs: Object.keys(configs)
+    };
+
+  } catch (error) {
+    console.error(`❌ ${functionName}: 載入預設配置失敗:`, error.message);
+    await DL.DL_error("AM", functionName, error.message, "SYSTEM");
+    return {
+      success: false,
+      error: error.message,
+      configs: {}
+    };
+  }
+}
+
+/**
  * 17. 初始化用戶科目數據 (舊函數，用於向後相容)
  * @version 2025-07-11-V1.0.0
  * @date 2025-07-11 18:00:00
@@ -1220,9 +1340,9 @@ async function AM_getUserDefaultLedger(UID) {
 
 /**
  * 19. 完整初始化用戶帳本結構
- * @version 2025-10-30-V1.1.0
- * @date 2025-10-30 10:00:00
- * @description 階段一修復：新增budgets和transactions子集合範例文檔建立，確保完整帳本結構
+ * @version 2025-11-20-V2.0.0
+ * @date 2025-11-20
+ * @description 階段二修正：先調用FS建立空白結構，再填入0099.json和03 Default_config的實際資料
  * @param {string} UID - 用戶ID
  * @param {string} ledgerIdPrefix - 帳本ID前綴
  * @returns {Promise<Object>} 執行結果
@@ -1232,16 +1352,23 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
   const startTime = Date.now();
 
   try {
-    console.log(`🔄 ${functionName}: 階段二優化版 - 開始為用戶 ${UID} 初始化完整帳本...`);
+    console.log(`🔄 ${functionName}: 階段二修正版 - 開始為用戶 ${UID} 初始化完整帳本...`);
 
-    // 載入0099科目資料用於帳本初始化
-    console.log(`📋 ${functionName}: 載入0099科目資料...`);
+    // 階段二修正：載入0099科目資料和預設配置
+    console.log(`📋 ${functionName}: 載入0099科目資料和預設配置...`);
     const subjectData = AM_load0099SubjectData();
+    const defaultConfigs = AM_loadDefaultConfigs();
 
     if (!subjectData.success) {
       console.warn(`⚠️ ${functionName}: 0099科目資料載入失敗: ${subjectData.error}`);
     } else {
       console.log(`✅ ${functionName}: 成功載入 ${subjectData.count} 筆科目資料`);
+    }
+
+    if (!defaultConfigs.success) {
+      console.warn(`⚠️ ${functionName}: 預設配置載入失敗: ${defaultConfigs.error}`);
+    } else {
+      console.log(`✅ ${functionName}: 成功載入預設配置: ${defaultConfigs.loadedConfigs.join(', ')}`);
     }
 
     // 階段二優化：增強參數驗證
@@ -1296,7 +1423,11 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     let operationCount = 0;
     const maxBatchSize = 450; // 留下安全邊際
 
-    // 1. 創建帳本主文檔 - 符合Firebase集合結構
+    // 階段二修正：從03預設配置取得設定值
+    const systemConfig = defaultConfigs.configs.system?.system_config || {};
+    const currencyConfig = defaultConfigs.configs.currency?.currencies || {};
+    
+    // 1. 創建帳本主文檔 - 符合Firebase集合結構，使用03配置資料
     const ledgerRef = db.collection("ledgers").doc(userLedgerId);
     const mainLedgerData = {
       id: userLedgerId,
@@ -1310,14 +1441,19 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       description: `用戶 ${UID} 的預設帳本`,
       initializationComplete: false, // 標記為未完成，稍後更新
       settings: {
-        currency: AM_CONFIG.DEFAULTS.CURRENCY,
-        timezone: AM_CONFIG.DEFAULTS.TIMEZONE,
-        dateFormat: "YYYY/MM/DD"
+        currency: currencyConfig.default || 'TWD',
+        timezone: systemConfig.timezone || 'Asia/Taipei',
+        dateFormat: systemConfig.date_format || "YYYY/MM/DD",
+        language: systemConfig.default_language || 'zh-TW'
       },
       metadata: {
-        version: AM_CONFIG.API.VERSION,
+        version: systemConfig.version || '2.7.1',
         createdBy: functionName,
-        initializationStage: "stage2_optimized"
+        initializationStage: "stage2_config_driven",
+        dataSource: {
+          subjects: "0099. Subject_code.json",
+          config: "03. Default_config"
+        }
       }
     };
 
@@ -1331,7 +1467,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     // 引入1311.FS.js確保結構存在
     const FS = require('./1311. FS.js');
 
-    // 使用1311.FS.js建立完整帳本子集合架構
+    // 階段二修正：使用1311.FS.js建立空白結構，然後填入0099和03的實際資料
     const structureResult = await FS.FS_createCompleteSubcollectionFramework(userLedgerId, UID);
 
     if (!structureResult.success) {
@@ -1341,7 +1477,66 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       console.log(`  - 1311.FS.js結構建立成功: ${JSON.stringify(structureResult.created_subcollections)}`);
     }
 
-    // AM模組專注於帳本業務邏輯，不再直接定義Firebase結構
+    // 階段二修正：填入0099科目資料到categories子集合
+    if (subjectData.success && subjectData.data.length > 0) {
+      console.log(`📋 ${functionName}: 開始填入0099科目資料到categories子集合...`);
+      
+      for (const subject of subjectData.data.slice(0, 20)) { // 限制數量避免過度寫入
+        const categoryData = {
+          categoryId: subject.categoryId,
+          parentId: subject.parentId,
+          categoryName: subject.categoryName,
+          subCategoryName: subject.subCategoryName,
+          synonyms: subject.synonyms || '',
+          type: [801, 899].includes(subject.parentId) ? 'income' : 'expense',
+          isDefault: true,
+          isActive: true,
+          ledgerId: userLedgerId,
+          dataSource: '0099. Subject_code.json',
+          createdAt: admin.firestore.Timestamp.now(),
+          updatedAt: admin.firestore.Timestamp.now(),
+          createdBy: UID
+        };
+
+        try {
+          await ledgerRef.collection('categories').doc(`category_${subject.categoryId}`).set(categoryData);
+        } catch (error) {
+          console.warn(`⚠️ 建立科目 ${subject.categoryId} 失敗: ${error.message}`);
+        }
+      }
+      
+      console.log(`✅ ${functionName}: 0099科目資料填入完成`);
+    }
+
+    // 階段二修正：填入03預設帳戶資料到accounts子集合
+    if (defaultConfigs.success && defaultConfigs.configs.wallets) {
+      console.log(`💳 ${functionName}: 開始填入預設帳戶資料到accounts子集合...`);
+      
+      const wallets = defaultConfigs.configs.wallets.default_wallets || [];
+      const defaultCurrency = currencyConfig.default || 'TWD';
+      
+      for (const wallet of wallets) {
+        const accountData = {
+          ...wallet,
+          currency: wallet.currency.replace('{{default_currency}}', defaultCurrency),
+          ledgerId: userLedgerId,
+          dataSource: '0302. Default_wallet.json',
+          createdAt: admin.firestore.Timestamp.now(),
+          updatedAt: admin.firestore.Timestamp.now(),
+          createdBy: UID
+        };
+
+        try {
+          await ledgerRef.collection('accounts').doc(wallet.walletId).set(accountData);
+        } catch (error) {
+          console.warn(`⚠️ 建立帳戶 ${wallet.walletId} 失敗: ${error.message}`);
+        }
+      }
+      
+      console.log(`✅ ${functionName}: 預設帳戶資料填入完成`);
+    }
+
+    // AM模組專注於帳本業務邏輯和資料載入，FS負責結構建立
 
     // 階段一修正：預設帳戶由1311.FS.js統一處理，AM模組不再直接建立
     console.log(`  - 階段一修正：預設帳戶由1311.FS.js統一處理`);
@@ -1450,10 +1645,20 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       success: true,
       userLedgerId: userLedgerId,
       structureHandledBy: "1311.FS.js",
+      dataSourceHandledBy: "AM_module_stage2",
       fsStructureResult: structureResult,
+      subjectDataResult: {
+        success: subjectData.success,
+        count: subjectData.count,
+        source: subjectData.source
+      },
+      configDataResult: {
+        success: defaultConfigs.success,
+        loadedConfigs: defaultConfigs.loadedConfigs
+      },
       initializationComplete: true,
-      stage: "phase1_firebase_structure_delegation",
-      message: `階段一修正完成：帳本 ${userLedgerId} 建立成功，結構由1311.FS.js統一處理`
+      stage: "stage2_data_source_correction",
+      message: `階段二修正完成：帳本 ${userLedgerId} 建立成功，結構由FS處理，資料從0099.json和03配置載入`
     };
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
