@@ -1212,7 +1212,7 @@ function AM_load0099SubjectData() {
   try {
     console.log(`📋 ${functionName}: 開始載入0099科目資料...`);
 
-    const subjectFilePath = path.join(process.cwd(), '00. Master_Project document', '0099. Subject_code.json');
+    const subjectFilePath = '/home/runner/workspace/00. Master_Project document/0099. Subject_code.json';
 
     if (!fs.existsSync(subjectFilePath)) {
       console.error(`❌ ${functionName}: 0099. Subject_code.json 檔案不存在: ${subjectFilePath}`);
@@ -5407,83 +5407,6 @@ console.log('✅ AM模組7.5.0 DCN-0020階段二優化版載入成功！');
   console.log('📊 資料流優化: BK模組 → AM模組 → 智能batch處理 → Firebase高效寫入');
   console.log('🎯 優化目標: 提升帳本初始化的成功率和執行效率');
   console.log('🎉 階段二成果: 大幅提升系統穩定性和用戶體驗！');
-
-
-/**
- * AM_load0099SubjectData - 載入0099科目資料
- * @version 2025-11-19-V1.0.0
- * @date 2025-11-19
- * @description AM模組專門載入0099.json科目資料的函數，用於用戶註冊時的科目初始化
- * @returns {Object} 載入結果包含成功狀態、資料和統計資訊
- */
-function AM_load0099SubjectData() {
-  const functionName = "AM_load0099SubjectData";
-  try {
-    console.log(`📋 ${functionName}: 開始載入0099科目資料...`);
-
-    const fs = require('fs');
-    const path = require('path');
-    // Dynamically construct the path to 0099. Subject_code.json
-    // Assumes the '00. Master_Project document' directory is relative to the root of the project.
-    // Adjust the path if your project structure differs.
-    const subjectPath = path.join(__dirname, '..', '..', '00. Master_Project document', '0099. Subject_code.json');
-
-
-    // 檢查檔案是否存在
-    if (!fs.existsSync(subjectPath)) {
-      console.error(`❌ ${functionName}: 0099.json檔案不存在: ${subjectPath}`);
-      return {
-        success: false,
-        error: '0099.json檔案不存在',
-        data: null,
-        count: 0
-      };
-    }
-
-    // 讀取並解析JSON檔案
-    const rawData = fs.readFileSync(subjectPath, 'utf8');
-    const subjectData = JSON.parse(rawData);
-
-    // 驗證資料格式
-    if (!Array.isArray(subjectData)) {
-      console.error(`❌ ${functionName}: 0099.json格式錯誤，應為陣列格式`);
-      return {
-        success: false,
-        error: '0099.json格式錯誤，應為陣列格式',
-        data: null,
-        count: 0
-      };
-    }
-
-    // 統計資料
-    const count = subjectData.length;
-    const categoryCount = [...new Set(subjectData.map(item => item.parentId))].length;
-    const subCategoryCount = subjectData.length;
-
-    console.log(`✅ ${functionName}: 成功載入0099科目資料`);
-    console.log(`📊 資料統計: 總計 ${count} 筆科目，${categoryCount} 個大分類`);
-
-    return {
-      success: true,
-      data: subjectData,
-      count: count,
-      statistics: {
-        totalSubjects: count,
-        categoryCount: categoryCount,
-        subCategoryCount: subCategoryCount
-      }
-    };
-
-  } catch (error) {
-    console.error(`❌ ${functionName}: 載入失敗:`, error);
-    return {
-      success: false,
-      error: error.message,
-      data: null,
-      count: 0
-    };
-  }
-}
 
 /**
  * AM_calculateModeFromAnswers - 計算使用者模式
