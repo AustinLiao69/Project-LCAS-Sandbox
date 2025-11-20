@@ -1509,15 +1509,15 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       console.log(`✅ ${functionName}: 0099科目資料填入完成`);
     }
 
-    // 階段二修正：填入03預設帳戶資料到accounts子集合
+    // 階段二修正：填入03預設帳戶資料到wallets子集合
     if (defaultConfigs.success && defaultConfigs.configs.wallets) {
-      console.log(`💳 ${functionName}: 開始填入預設帳戶資料到accounts子集合...`);
+      console.log(`💳 ${functionName}: 開始填入預設帳戶資料到wallets子集合...`);
 
       const wallets = defaultConfigs.configs.wallets.default_wallets || [];
       const defaultCurrency = currencyConfig.default || 'TWD';
 
       for (const wallet of wallets) {
-        const accountData = {
+        const walletData = {
           ...wallet,
           currency: wallet.currency.replace('{{default_currency}}', defaultCurrency),
           ledgerId: userLedgerId,
@@ -1528,13 +1528,13 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         };
 
         try {
-          await ledgerRef.collection('accounts').doc(wallet.walletId).set(accountData);
+          await ledgerRef.collection('wallets').doc(wallet.walletId).set(walletData);
         } catch (error) {
-          console.warn(`⚠️ 建立帳戶 ${wallet.walletId} 失敗: ${error.message}`);
+          console.warn(`⚠️ 建立錢包 ${wallet.walletId} 失敗: ${error.message}`);
         }
       }
 
-      console.log(`✅ ${functionName}: 預設帳戶資料填入完成`);
+      console.log(`✅ ${functionName}: 預設錢包資料填入完成`);
     }
 
     // AM模組專注於帳本業務邏輯和資料載入，FS負責結構建立
