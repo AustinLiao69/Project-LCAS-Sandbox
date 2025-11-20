@@ -1,0 +1,72 @@
+------------------------------------------
+20251120. SIT_P3 前置準備 (Review中)
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+問題分析與Insight
+作為資深SA，我深入分析了當前SIT_P3前置準備中發現的問題，以下是詳細分析：
+
+=>我認為建立子集合和文檔的正確流程應該如下：
+
+資料結構(子集合、文檔)：各模組在建立資料結構時必須調用FS來建立。
+預設資料：例如wallet, category等等，必須調用03資料夾與0099。
+
+現在的問題是：
+1. AM引用錯誤的科目，應該引用0099
+2. FS的資料結構有混入科目的範例，理想情況是FS提供資料結構與範例兩種：資料結構讓各模組引用，範例是用在初次建立firebase資料結構時使用。
+
+所以請全部盤點BL層需要在firebase建立子集合和文檔的模組(AM, BM, CM)，是否有確實引用FS的資料結構，與確認不會引用到FS的範例。
+
+1. Categories科目初始化問題
+現狀問題：AM模組在AM_initializeUserLedger()中調用1311 FS模組來建立子集合架構，但科目資料來源混亂，未正確引用0099.json。
+根本原因：職責邊界模糊。就像公司組織中，人事部門（AM）不應該直接操作IT基礎設施（FS），應該透過標準流程來初始化員工工作環境。
+
+2. Accounts vs Wallets命名不一致
+現狀問題：程式碼中使用accounts集合名稱，與P3階段的wallets概念不符。
+根本原因：歷史遺留命名問題，就像公司部門改組後，舊的職位名稱仍在使用。
+
+3. AM與FS職責重疊
+現狀問題：AM模組直接調用FS的子集合建立功能，違反了模組職責分離原則。
+根本原因：架構設計中界限不清，就像業務部門直接操作資料庫，跳過了資料存取層。
+
+解決方案
+階段一：修正AM模組科目初始化邏輯
+目標：讓AM模組正確從0099.json載入科目資料，移除對FS的直接依賴
+修改檔案：13. Replit_Module code_BL/1309. AM.js
+版本升級：v7.4.0 → v7.5.0
+實施計畫：
+1.	修正AM_load0099SubjectData()函數路徑問題
+2.	在AM_initializeUserLedger()中移除對FS子集合建立的依賴
+3.	新增AM_initialize0099Categories()函數專門處理科目初始化
+
+用途：確保AM模組專注於業務邏輯，科目資料來源統一為0099.json
+影響範圍：AM模組內部科目初始化邏輯
+Before/After差異：Before依賴FS模組建立預設科目，After直接從0099.json載入標準科目
+
+階段二：修正Firebase集合命名一致性
+目標：將accounts集合重新命名為wallets，符合P3階段規範
+修改檔案：
+•	13. Replit_Module code_BL/1311. FS.js (v2.7.2 → v2.7.3)
+•	
+xiii.	Replit_Module code_BL/1350. WCM.js (如存在，版本升級)
+實施計畫：
+1.	在FS模組中將accounts相關路徑改為wallets
+2.	更新子集合路徑：ledgers/{ledgerId}/accounts → ledgers/{ledgerId}/wallets
+3.	確保所有相關函數使用正確的集合名稱
+用途：統一命名規範，符合P3階段的wallets概念
+影響範圍：Firebase子集合結構和相關CRUD操作
+Before/After差異：Before使用accounts命名，After統一使用wallets命名
+
+階段三：重構AM模組職責邊界
+目標：清理AM與FS模組間的職責重疊，建立清晰界限
+修改檔案：13. Replit_Module code_BL/1309. AM.js
+函數版次升級：AM_initializeUserLedger v2025-11-19-V1.1.0
+實施計畫：
+1.	AM模組專注於業務邏輯：科目資料載入、用戶帳本配置
+2.	FS模組專注於Firebase結構：集合建立、文檔CRUD
+3.	移除AM模組中直接調用FS子集合建立的程式碼
+4.	建立標準化的模組間通信介面
+
+用途：建立清晰的模組職責邊界，提升程式碼可維護性
+影響範圍：AM和FS模組間的交互邏輯
+Before/After差異：Before AM直接操作Firebase結構，After AM透過標準介面與FS通信
