@@ -1140,7 +1140,13 @@ function AM_load0099SubjectData() {
 
   } catch (error) {
     console.error(`❌ ${functionName}: 載入0099科目資料失敗:`, error.message);
-    await DL.DL_error("AM", functionName, error.message, "SYSTEM");
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", functionName, error.message, "SYSTEM");
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
@@ -1206,7 +1212,13 @@ function AM_loadDefaultConfigs() {
 
   } catch (error) {
     console.error(`❌ ${functionName}: 載入預設配置失敗:`, error.message);
-    await DL.DL_error("AM", functionName, error.message, "SYSTEM");
+    if (DL && typeof DL.DL_error === 'function') {
+      try {
+        DL.DL_error("AM", functionName, error.message, "SYSTEM");
+      } catch (dlError) {
+        console.error(`DL模組調用失敗: ${dlError.message}`);
+      }
+    }
     return {
       success: false,
       error: error.message,
