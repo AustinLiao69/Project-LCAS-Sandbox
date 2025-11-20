@@ -1,5 +1,5 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.3.0
+ * 1301. BK.js_記帳核心模組_v3.3.1
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心ledgers/{ledgerId}/transactions功能模組，專注於記帳邏輯，透過WCM模組進行帳戶科目驗證
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
@@ -15,7 +15,8 @@
  * @update 2025-10-29: 架構重構v3.2.2 - 移除硬編碼帳本ID，透過AM模組正確處理帳本初始化，完全符合0098憲法第3、6、7條
  * @update 2025-10-29: 階段二強化v3.2.3 - 強化AM模組調用機制，增加重試邏輯和詳細錯誤處理，確保帳本ID正確獲取
  * @update 2025-11-17: DCN-0023階段三v3.3.0 - 移除帳戶管理功能，建立對WCM模組的依賴，記帳流程整合帳戶科目驗證，專注記帳核心邏輯
- * @date 2025-11-17
+ * @update 2025-11-20: 階段一修復v3.3.1 - 修復BK_getTransactions中queryResult重複變數宣告問題，確保模組正常載入
+ * @date 2025-11-20
  */
 
 /**
@@ -397,7 +398,7 @@ const BK_CONFIG = {
   FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED') !== 'false',
   TIMEZONE: getEnvVar('TIMEZONE') || Intl.DateTimeFormat().resolvedOptions().timeZone,
   INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL'), 10) || 300000,
-  VERSION: getEnvVar('BK_VERSION') || '3.3.0', // DCN-0023階段三：版本升級
+  VERSION: getEnvVar('BK_VERSION') || '3.3.1', // 階段一修復：版本升級
   MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT'), 10) || Number.MAX_SAFE_INTEGER,
   DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY') || detectSystemCurrency(),
   DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD') || '現金',
@@ -915,13 +916,13 @@ async function BK_getTransactions(queryParams = {}) {
       };
 
       // 階段二修復：實作降級查詢策略
-      let queryResult = null;
+      let transactionQueryResult = null;
       let queryMethod = 'standard';
 
       try {
         // 嘗試標準查詢
-        const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions'); // Use the correct collection path
-        queryResult = await BK_performStandardQuery(collectionRef, queryParams);
+        const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+        transactionQueryResult = await BK_performStandardQuery(collectionRef, queryParams);
         queryMethod = 'standard';
       } catch (error) {
         BK_logWarning(`${logPrefix} 標準查詢失敗，嘗試降級查詢: ${error.message}`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
@@ -932,23 +933,23 @@ async function BK_getTransactions(queryParams = {}) {
 
         // 降級查詢策略
         try {
-          const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions'); // Use the correct collection path
-          queryResult = await BK_performDegradedQuery(collectionRef, queryParams);
+          const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+          transactionQueryResult = await BK_performDegradedQuery(collectionRef, queryParams);
           queryMethod = 'degraded';
         } catch (degradedError) {
           BK_logError(`${logPrefix} 降級查詢也失敗: ${degradedError.message}`, "查詢交易", queryParams.userId || "", "DEGRADED_QUERY_ERROR", degradedError.toString(), "BK_getTransactions");
 
           // 最後嘗試最簡單的查詢
-          const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions'); // Use the correct collection path
-          queryResult = await BK_performMinimalQuery(collectionRef, queryParams);
+          const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+          transactionQueryResult = await BK_performMinimalQuery(collectionRef, queryParams);
           queryMethod = 'minimal';
         }
       }
 
-      BK_logInfo(`${logPrefix} 查詢完成，使用${queryMethod}方法，返回${queryResult.transactions.length}筆交易`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
+      BK_logInfo(`${logPrefix} 查詢完成，使用${queryMethod}方法，返回${transactionQueryResult.transactions.length}筆交易`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
 
       return BK_formatSuccessResponse({
-        ...queryResult,
+        ...transactionQueryResult,
         queryMethod: queryMethod,
         performance: {
           method: queryMethod,
