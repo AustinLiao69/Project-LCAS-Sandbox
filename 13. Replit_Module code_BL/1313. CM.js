@@ -1,22 +1,22 @@
 /**
- * CM_協作與帳本管理模組_2.2.0
+ * CM_協作與帳本管理模組_2.3.0
  * @module CM模組
  * @description 協作與帳本管理系統 - 負責所有後續帳本（第2本以上）的完整生命週期管理，包含協作功能和多帳本管理功能
- * @update 2025-11-12: 階段一修正 - 統 যুক্তি日誌架構，CM_logCollaborationAction完全使用DL模組統一介面，移除直接Firebase寫入
+ * @update 2025-11-21: 階段三整合 - 接管所有協作相關初始化，整合FS協作邏輯，成為協作功能的統一入口
  */
 
 const admin = require('firebase-admin');
 const WebSocket = require('ws');
 
 // 引入依賴模組
-let DL, AM, DD, BK, LINE_OA, FS;
+let DL, AM, DD, BK, LINE_OA;
 try {
   DL = require('./1310. DL.js');
   AM = require('./1309. AM.js');
   DD = require('./1331. DD1.js');
   BK = require('./1301. BK.js');
   LINE_OA = require('./1320. WH.js');
-  FS = require('./1311. FS.js'); // FS模組包含完整的Firestore操作函數
+  // FS模組已移除 - CM模組直接使用Firebase實例
 } catch (error) {
   console.warn('CM模組依賴載入警告:', error.message);
 }
@@ -75,6 +75,171 @@ const CM_WEBSOCKET_EVENTS = {
   SYNC_REQUIRED: 'collaboration:sync_required',
   NOTIFICATION: 'collaboration:notification'
 };
+
+/**
+ * 階段三：協作系統完整初始化
+ * @version 2025-11-21-V2.3.0
+ * @date 2025-11-21
+ * @description 初始化協作系統的完整架構，包含集合、結構定義和預設設定
+ */
+async function CM_initializeCollaborationSystem(requesterId = 'SYSTEM') {
+  const functionName = "CM_initializeCollaborationSystem";
+  try {
+    CM_logInfo(`階段三：開始初始化協作系統完整架構`, "協作系統初始化", requesterId, "", "", functionName);
+
+    const initResults = [];
+
+    // 1. 建立協作架構定義（從FS模組遷移）
+    const collaborationStructure = {
+      version: '2.3.0',
+      description: '1313.CM.js協作管理模組Firebase集合架構 - 階段三完整整合版',
+      last_updated: '2025-11-21',
+      architecture: 'collaboration_based',
+      collections: {
+        'collaborations': {
+          description: '協作主集合 - 帳本協作資訊管理',
+          collection_path: 'collaborations',
+          document_structure: {
+            ledgerId: 'string - 帳本唯一識別碼',
+            ownerId: 'string - 帳本擁有者ID',
+            collaborationType: 'string - 協作類型: "shared"|"project"|"category"',
+            settings: 'object - 協作設定',
+            createdAt: 'timestamp - 建立時間',
+            updatedAt: 'timestamp - 最後更新時間',
+            status: 'string - 協作狀態: "active"|"archived"|"suspended"'
+          },
+          subcollections: {
+            members: {
+              description: '協作成員子集合',
+              document_structure: {
+                userId: 'string - 用戶唯一識別碼',
+                email: 'string - 用戶電子郵件',
+                role: 'string - 角色: "owner"|"admin"|"member"|"viewer"',
+                permissions: 'object - 權限設定',
+                joinedAt: 'timestamp - 加入時間',
+                status: 'string - 成員狀態: "active"|"invited"|"suspended"'
+              }
+            },
+            invitations: {
+              description: '邀請管理子集合',
+              document_structure: {
+                invitationId: 'string - 邀請唯一識別碼',
+                inviterId: 'string - 邀請者ID',
+                inviteeEmail: 'string - 被邀請者email',
+                role: 'string - 預設角色',
+                status: 'string - 邀請狀態: "pending"|"accepted"|"declined"|"expired"',
+                createdAt: 'timestamp - 邀請建立時間',
+                expiresAt: 'timestamp - 邀請過期時間'
+              }
+            },
+            permissions: {
+              description: '權限管理子集合',
+              document_structure: {
+                userId: 'string - 用戶ID',
+                resourceType: 'string - 資源類型',
+                permissions: 'object - 細粒度權限設定',
+                grantedBy: 'string - 權限授予者ID',
+                grantedAt: 'timestamp - 權限授予時間'
+              }
+            }
+          }
+        }
+      },
+      path_examples: {
+        create_collaboration: 'collaborations/ledger_12345',
+        add_member: 'collaborations/ledger_12345/members/user_67890',
+        create_invitation: 'collaborations/ledger_12345/invitations/inv_abc123',
+        set_permission: 'collaborations/ledger_12345/permissions/perm_xyz789'
+      },
+      integration_notes: [
+        '與1313.CM.js協作管理模組完全整合',
+        '階段三：CM模組接管所有協作相關初始化',
+        '保持camelCase命名規範'
+      ]
+    };
+
+    // 直接使用Firebase實例進行文檔操作（FS模組已移除）
+    try {
+      // 儲存協作架構定義
+      await db.collection('_system').doc('collaboration_structure_v2_3').set(collaborationStructure);
+      initResults.push({ 
+        type: '協作架構定義', 
+        result: { success: true, message: '協作架構定義已儲存' }
+      });
+
+      // 2. 建立協作集合框架
+      const collaborationPlaceholder = {
+        type: 'collection_placeholder',
+        purpose: '確保 collaborations 集合存在',
+        version: '2.3.0',
+        createdAt: admin.firestore.Timestamp.now(),
+        note: '此文檔由CM模組管理，確保協作集合框架存在'
+      };
+
+      await db.collection('collaborations').doc('_placeholder_v2_3').set(collaborationPlaceholder);
+      initResults.push({ 
+        type: '協作集合框架', 
+        result: { success: true, message: '協作集合框架已建立' }
+      });
+
+      // 3. 建立協作預設設定
+      const defaultCollaborationSettings = {
+        version: '2.3.0',
+        default_settings: {
+          allowInvite: true,
+          allowEdit: true,
+          allowDelete: false,
+          requireApproval: false,
+          maxMembers: 10,
+          invitationExpireDays: 7
+        },
+        permission_levels: CM_PERMISSION_LEVELS,
+        notification_settings: {
+          member_joined: true,
+          member_left: true,
+          permission_changed: true,
+          data_updated: false,
+          conflict_detected: true
+        },
+        createdBy: 'CM_v2.3.0',
+        createdAt: admin.firestore.Timestamp.now()
+      };
+
+      await db.collection('_system').doc('collaboration_default_settings').set(defaultCollaborationSettings);
+      initResults.push({ 
+        type: '協作預設設定', 
+        result: { success: true, message: '協作預設設定已儲存' }
+      });
+
+    } catch (firebaseError) {
+      initResults.push({ 
+        type: 'Firebase操作', 
+        result: { success: false, error: firebaseError.message }
+      });
+    }
+
+    const successCount = initResults.filter(r => r.result && r.result.success).length;
+    const success = successCount === initResults.length;
+
+    CM_logInfo(`階段三：協作系統初始化完成 - 成功: ${successCount}/${initResults.length}`, "協作系統初始化", requesterId, "", "", functionName);
+
+    return {
+      success: success,
+      initialized: successCount,
+      total: initResults.length,
+      details: initResults,
+      message: success ? '階段三：協作系統初始化完成，CM模組已接管所有協作功能' : '階段三：部分協作系統初始化失敗'
+    };
+
+  } catch (error) {
+    CM_logError(`階段三：協作系統初始化失敗: ${error.message}`, "協作系統初始化", requesterId, "CM_INIT_COLLABORATION_SYSTEM_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      errorCode: 'CM_INIT_COLLABORATION_SYSTEM_ERROR'
+    };
+  }
+}
 
 /**
  * 階段一修復：生成協作帳本ID
@@ -2918,6 +3083,9 @@ module.exports = {
   CM_bulkSetMemberPermissions,
   CM_getCollaborationStatistics,
 
+  // 階段三：協作系統初始化函數 (1個) - 新增
+  CM_initializeCollaborationSystem,
+
   // 階段一修正：協作帳本創建函數
   CM_createSharedLedger,
 
@@ -2947,4 +3115,4 @@ CM_initialize().catch(error => {
   console.error('CM 模組自動初始化失敗:', error);
 });
 
-console.log('✅ CM 協作與帳本管理模組載入完成 - 階段一修復：ID生成依賴問題已解決');
+console.log('✅ CM 協作與帳本管理模組v2.3.0載入完成 - 階段三整合：已接管所有協作相關初始化');

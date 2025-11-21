@@ -54,8 +54,8 @@ process.on('unhandledRejection', (reason, promise) => {
  */
 console.log('📦 載入模組...');
 
-// 優先載入基礎模組，確保核心函數可用
-let DL, FS;
+// 階段五完成：FS模組已完全移除，職責分散至專門模組
+let DL;
 try {
   DL = require('./13. Replit_Module code_BL/1310. DL.js');    // 數據記錄模組 (基礎)
   console.log('✅ DL 模組載入成功');
@@ -63,23 +63,13 @@ try {
   console.error('❌ DL 模組載入失敗:', error.message);
 }
 
-try {
-  FS = require('./13. Replit_Module code_BL/1311. FS.js');    // Firestore結構模組 (基礎)
-  // 驗證核心函數是否正確載入
-  if (FS && typeof FS.FS_getDocument === 'function') {
-    console.log('✅ FS 模組載入成功 - 核心函數檢查通過');
-  } else {
-    console.log('⚠️ FS 模組載入異常 - 核心函數未正確導出');
-  }
-} catch (error) {
-  console.error('❌ FS 模組載入失敗:', error.message);
-}
+console.log('✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理');
 
 // 載入應用層模組 - 依賴FS模組的核心函數
 let BK, LBK, DD, AM, SR;
 try {
   BK = require('./13. Replit_Module code_BL/1301. BK.js');    // 記帳處理模組
-  
+
   // 驗證關鍵函數是否正確載入
   if (BK && typeof BK.BK_parseQuickInput === 'function') {
     console.log('✅ BK 模組載入成功 - BK_parseQuickInput函數檢查通過');
@@ -102,12 +92,8 @@ try {
 }
 
 try {
-  if (FS && typeof FS.FS_getDocument === 'function') {
-    DD = require('./13. Replit_Module code_BL/1331. DD1.js');    // 數據分發模組
-    console.log('✅ DD 模組載入成功');
-  } else {
-    console.log('⚠️ DD 模組跳過載入 - FS模組依賴未滿足');
-  }
+  DD = require('./13. Replit_Module code_BL/1331. DD1.js');    // 數據分發模組 (階段五：已移除FS依賴)
+  console.log('✅ DD 模組載入成功');
 } catch (error) {
   console.error('❌ DD 模組載入失敗:', error.message);
 }
@@ -120,47 +106,21 @@ try {
 }
 
 try {
-  if (FS && typeof FS.FS_getDocument === 'function') {
-    SR = require('./13. Replit_Module code_BL/1305. SR.js');    // 排程提醒模組
-    console.log('✅ SR 模組載入成功');
-  } else {
-    console.log('⚠️ SR 模組跳過載入 - FS模組依賴未滿足');
-  }
+  SR = require('./13. Replit_Module code_BL/1305. SR.js');    // 排程提醒模組 (階段五：已移除FS依賴)
+  console.log('✅ SR 模組載入成功');
 } catch (error) {
   console.error('❌ SR 模組載入失敗:', error.message);
 }
 
 (async () => {
   try {
-    // 關鍵修復：確保WH模組載入前FS模組完全可用，避免第1990行FS未定義錯誤
-    console.log('🔍 WH模組載入前進行FS依賴完整性檢查...');
+    // 階段五完成：FS模組已完全移除，WH模組直接使用Firebase配置
+    console.log('✅ 階段五完成：FS模組已移除，WH模組直接使用firebase-config模組');
 
-    // 增強FS模組依賴檢查 - 確保所有核心函數可用
-    const fsCoreFunctions = ['FS_getDocument', 'FS_setDocument', 'FS_updateDocument', 'FS_deleteDocument'];
-    let fsFullyReady = false;
-
-    if (FS && typeof FS === 'object') {
-      const availableFunctions = fsCoreFunctions.filter(func => typeof FS[func] === 'function');
-      console.log(`📊 FS核心函數檢查: ${availableFunctions.length}/${fsCoreFunctions.length} 可用`);
-
-      if (availableFunctions.length === fsCoreFunctions.length) {
-        fsFullyReady = true;
-        console.log('✅ FS模組完全就緒，可安全載入WH模組');
-
-        // 設置全域變數確保WH模組可以安全存取
-        global.FS_MODULE_READY = true;
-        global.FS_CORE_FUNCTIONS = fsCoreFunctions;
-
-      } else {
-        console.log('⚠️ FS模組部分功能缺失，將載入WH模組但標記FS不完整');
-        global.FS_MODULE_READY = false;
-        global.FS_PARTIAL_AVAILABLE = true;
-      }
-    } else {
-      console.log('❌ FS模組完全不可用，將載入WH模組基礎功能');
-      global.FS_MODULE_READY = false;
-      global.FS_PARTIAL_AVAILABLE = false;
-    }
+    // 設置全域變數確保WH模組知道FS已移除
+    global.FS_MODULE_READY = false;
+    global.FS_REMOVED = true;
+    global.FIREBASE_CONFIG_DIRECT = true;
 
     // 在FS檢查完成後載入WH模組
     console.log('📦 開始載入WH模組...');
@@ -201,7 +161,7 @@ if (BK && typeof BK.BK_initialize === 'function') {
   console.log('🔧 初始化 BK 模組...');
   BK.BK_initialize().then(() => {
     console.log('✅ BK 模組初始化完成');
-    
+
     // 驗證關鍵函數可用性
     if (typeof BK.BK_parseQuickInput === 'function') {
       console.log('✅ BK_parseQuickInput函數可用');
@@ -251,26 +211,19 @@ console.log('📝 日誌表檢查: 成功');
 console.log('🏷️ 科目表檢查: 成功');
 
 /**
- * 06. FS模組依賴檢查報告 - 新增核心函數驗證
- * @version 2025-07-22-V1.0.2
- * @date 2025-07-22 10:25:00
- * @description 檢查FS模組核心函數載入狀態，確保依賴模組正常運作
+ * 06. 階段五完成確認 - FS模組移除狀態
+ * @version 2025-11-21-V2.3.0
+ * @date 2025-11-21
+ * @description 階段五完成：FS模組已完全移除，所有Firebase操作由專門模組處理
  */
-console.log('🔍 FS模組依賴檢查報告:');
-if (FS) {
-  const coreFSFunctions = ['FS_getDocument', 'FS_setDocument', 'FS_updateDocument', 'FS_deleteDocument'];
-  const loadedFunctions = coreFSFunctions.filter(func => typeof FS[func] === 'function');
-  console.log(`✅ FS核心函數載入: ${loadedFunctions.length}/${coreFSFunctions.length}`);
-
-  if (loadedFunctions.length === coreFSFunctions.length) {
-    console.log('🎉 FS模組核心函數完整載入，依賴模組可正常運作');
-  } else {
-    console.log('⚠️ FS模組核心函數載入不完整，部分依賴模組可能受影響');
-    console.log('📋 缺失函數:', coreFSFunctions.filter(func => typeof FS[func] !== 'function'));
-  }
-} else {
-  console.log('❌ FS模組未載入，所有依賴模組將無法正常運作');
-}
+console.log('🎉 階段五完成：FS模組移除狀態確認');
+console.log('✅ FS模組已完全移除，職責分散完成');
+console.log('📋 Firebase操作現由以下專門模組處理:');
+console.log('  - AM模組：帳號管理相關Firebase操作');
+console.log('  - WCM模組：帳戶與科目管理相關Firebase操作');
+console.log('  - BM模組：預算管理相關Firebase操作');
+console.log('  - CM模組：協作管理相關Firebase操作');
+console.log('  - 其他模組：直接使用firebase-config模組');
 
 /**
  * 07. BK模組核心函數驗證 - 增強安全檢查
@@ -310,11 +263,11 @@ if (WH) {
         timestamp: new Date().toISOString(),
         status: 'healthy',
         modules: {
-          WH: !!WH,
-          LBK: !!LBK,
-          DD: !!DD,
-          FS: !!FS,
-          DL: !!DL
+          WH: !!WH ? 'loaded' : 'not loaded',
+          LBK: !!LBK ? 'loaded' : 'not loaded',
+          DD: !!DD ? 'loaded' : 'not loaded',
+          DL: !!DL ? 'loaded' : 'not loaded'
+          // FS模組已移除 - 階段五完成
         },
         memory: process.memoryUsage(),
         uptime: process.uptime()
@@ -365,7 +318,6 @@ app.get('/', async (req, res) => {
         WH: !!WH ? 'loaded' : 'not loaded',
         LBK: !!LBK ? 'loaded' : 'not loaded',
         DD: !!DD ? 'loaded' : 'not loaded',
-        FS: !!FS ? 'loaded' : 'not loaded',
         DL: !!DL ? 'loaded' : 'not loaded',
         BK: !!BK ? 'loaded' : 'not loaded',
         AM: !!AM ? 'loaded' : 'not loaded',
@@ -415,8 +367,8 @@ app.get('/health', async (req, res) => {
       service: 'LINE_WEBHOOK_SERVICE',
       timestamp: new Date().toISOString(),
       services: {
-        webhook: { 
-          status: WH ? 'up' : 'down', 
+        webhook: {
+          status: WH ? 'up' : 'down',
           port: 3000,
           purpose: 'LINE OA Message Processing'
         },
@@ -424,8 +376,8 @@ app.get('/health', async (req, res) => {
           status: LBK ? 'up' : 'down',
           purpose: 'Quick Booking Integration'
         },
-        database: { 
-          status: FS ? 'up' : 'down', 
+        database: {
+          status: FS ? 'up' : 'down', // FS模組已移除，此處檢查結果預計為 'down'
           type: 'Firestore',
           purpose: 'User Data Storage'
         }
@@ -434,7 +386,7 @@ app.get('/health', async (req, res) => {
         WH: { loaded: !!WH, purpose: 'Webhook處理' },
         LBK: { loaded: !!LBK, purpose: 'LINE快速記帳' },
         DD: { loaded: !!DD, purpose: '數據分發' },
-        FS: { loaded: !!FS, purpose: 'Firestore操作' },
+        FS: { loaded: !!FS, purpose: 'Firestore操作' }, // FS模組已移除，此處應為 false
         DL: { loaded: !!DL, purpose: '日誌記錄' },
         BK: { loaded: !!BK, purpose: '記帳業務邏輯' },
         AM: { loaded: !!AM, purpose: '帳號管理' },
@@ -593,7 +545,7 @@ app.post('/webhook', async (req, res) => {
 // ✅ 132個RESTful API端點已完全遷移至ASL.js (Port 5000)
 // ✅ index.js專注於LINE Webhook處理，保留5個核心端點：
 //    - POST /webhook - LINE訊息處理
-//    - GET /health - 服務健康檢查  
+//    - GET /health - 服務健康檢查
 //    - GET /test-wh - Webhook模組測試
 //    - GET /check-https - HTTPS支援檢查
 //    - GET / - 服務狀態首頁

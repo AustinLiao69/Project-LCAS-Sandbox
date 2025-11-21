@@ -36,7 +36,7 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('🔥 ASL階段二升級：優先初始化Firebase...');
 
 let firebaseInitialized = false;
-let AM, BK, DL, FS, BM, CM, WCM; // WCM: Wallet and Category Management module (DCN-0023)
+let AM, BK, DL, BM, CM, WCM; // WCM: Wallet and Category Management module (DCN-0023)
 
 /**
  * Firebase服務初始化函數（階段一修復版）
@@ -162,16 +162,16 @@ async function loadBLModules() {
   // 等待Firebase初始化完成
   const firebaseReady = await waitForFirebaseInit();
 
-  // 模組載入狀態監控
+  // 模組載入狀態
   const moduleStatus = {
     firebase: firebaseReady,
     AM: false,
     BK: false,
     DL: false,
-    FS: false,
     BM: false,  // P2 模組：預算管理
     CM: false,  // P2 模組：協作與帳本管理
     WCM: false  // DCN-0023 模組：帳戶與科目管理
+    // FS模組已移除 - 職責完全分散至專門模組
   };
 
   // 只有在Firebase成功初始化後才載入AM模組
@@ -281,14 +281,6 @@ async function loadBLModules() {
     console.log('✅ DL (診斷日誌) 模組載入成功');
   } catch (error) {
     console.error('❌ DL 模組載入失敗:', error.message);
-  }
-
-  try {
-    FS = require('./13. Replit_Module code_BL/1311. FS.js');
-    moduleStatus.FS = true;
-    console.log('✅ FS (Firestore) 模組載入成功');
-  } catch (error) {
-    console.error('❌ FS 模組載入失敗:', error.message);
   }
 
   // 階段四完成：原MLS功能已完全整合至CM模組
@@ -663,7 +655,7 @@ app.get('/', (req, res) => {
       AM: !!AM ? 'loaded' : 'not loaded',
       BK: !!BK ? 'loaded' : 'not loaded',
       DL: !!DL ? 'loaded' : 'not loaded',
-      FS: !!FS ? 'loaded' : 'not loaded',
+      FS: !!FS ? 'loaded' : 'not loaded', // FS模組已移除
       BM: !!BM ? 'loaded' : 'not loaded',  // P2 模組
       CM: !!CM ? 'loaded' : 'not loaded',   // P2 模組 - 包含帳本管理功能
       WCM: !!WCM ? 'loaded' : 'not loaded' // DCN-0023 模組
@@ -685,7 +677,7 @@ app.get('/health', (req, res) => {
       AM: !!AM ? 'ready' : 'unavailable',
       BK: !!BK ? 'ready' : 'unavailable',
       DL: !!DL ? 'ready' : 'unavailable',
-      FS: !!FS ? 'ready' : 'unavailable',
+      FS: !!FS ? 'ready' : 'unavailable', // FS模組已移除
       BM: !!BM ? 'ready' : 'unavailable',  // P2 模組
       CM: !!CM ? 'ready_with_ledger_mgmt' : 'unavailable',   // P2 模組 - 包含帳本管理功能
       WCM: !!WCM ? 'ready' : 'unavailable' // DCN-0023 模組

@@ -1,4 +1,3 @@
-
 /**
  * 1350. WCM.js_帳戶與科目管理模組_v1.2.0
  * @module 帳戶與科目管理模組
@@ -17,7 +16,7 @@ const path = require('path');
 
 // 引入依賴模組
 const DL = require('./1310. DL.js');
-const FS = require('./1311. FS.js');
+// const FS = require('./1311. FS.js'); // FS module is removed
 const AM = require('./1309. AM.js');
 
 // WCM模組配置
@@ -79,8 +78,8 @@ function WCM_formatErrorResponse(errorCode, message, details = null) {
  */
 async function WCM_initialize() {
   const currentTime = new Date().getTime();
-  
-  if (WCM_INIT_STATUS.initialized && 
+
+  if (WCM_INIT_STATUS.initialized &&
       (currentTime - WCM_INIT_STATUS.lastInitTime) < 300000) {
     return true;
   }
@@ -123,7 +122,7 @@ async function WCM_initialize() {
  */
 async function WCM_createWallet(ledgerId, walletData, options = {}) {
   const functionName = "WCM_createWallet";
-  
+
   try {
     WCM_logInfo(`開始創建帳戶: ${walletData.name || '預設帳戶'} (帳本: ${ledgerId})`, "創建帳戶", walletData.userId || "", functionName);
 
@@ -145,7 +144,7 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
     // 階段一整合：支援建立預設帳戶功能
     if (options.createDefaultWallets) {
       WCM_logInfo(`執行預設帳戶建立至帳本: ${ledgerId}`, "建立預設帳戶", walletData.userId, functionName);
-      
+
       const defaultConfigs = WCM_loadDefaultConfigs();
       if (!defaultConfigs.success || !defaultConfigs.configs.wallets) {
         return WCM_formatErrorResponse("LOAD_CONFIG_FAILED", "載入預設帳戶配置失敗", defaultConfigs.error);
@@ -164,7 +163,7 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
       for (const defaultWallet of defaultConfigs.configs.wallets.default_wallets || []) {
         const walletId = defaultWallet.walletId;
         const walletRef = db.collection(collectionPath).doc(walletId);
-        
+
         const walletDoc = {
           id: walletId,
           name: defaultWallet.name,
@@ -194,7 +193,7 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
       }
 
       await batch.commit();
-      
+
       WCM_logInfo(`預設帳戶建立完成: ${walletCount} 個帳戶 (路徑: ${collectionPath})`, "建立預設帳戶", walletData.userId, functionName);
 
       return WCM_formatSuccessResponse({
@@ -269,7 +268,7 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
  */
 async function WCM_getWalletList(ledgerId, queryParams = {}) {
   const functionName = "WCM_getWalletList";
-  
+
   try {
     WCM_logInfo(`開始查詢帳戶列表 (帳本: ${ledgerId})`, "查詢帳戶", queryParams.userId || "", functionName);
 
@@ -339,7 +338,7 @@ async function WCM_getWalletList(ledgerId, queryParams = {}) {
  */
 async function WCM_validateWalletExists(ledgerId, walletId, userId) {
   const functionName = "WCM_validateWalletExists";
-  
+
   try {
     WCM_logInfo(`開始驗證帳戶存在: ${walletId} (帳本: ${ledgerId})`, "驗證帳戶", userId || "", functionName);
 
@@ -410,7 +409,7 @@ async function WCM_validateWalletExists(ledgerId, walletId, userId) {
  */
 async function WCM_createCategory(ledgerId, categoryData, options = {}) {
   const functionName = "WCM_createCategory";
-  
+
   try {
     WCM_logInfo(`開始創建科目: ${categoryData.name || '批量載入'} (帳本: ${ledgerId})`, "創建科目", categoryData.userId || "", functionName);
 
@@ -432,7 +431,7 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
     // 階段一整合：支援從0099批量載入科目功能
     if (options.batchLoad0099) {
       WCM_logInfo(`執行0099科目批量載入至帳本: ${ledgerId}`, "批量載入科目", categoryData.userId, functionName);
-      
+
       const subjectData = WCM_load0099SubjectData();
       if (!subjectData.success) {
         return WCM_formatErrorResponse("LOAD_0099_FAILED", "載入0099科目資料失敗", subjectData.error);
@@ -448,7 +447,7 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
       for (const subject of subjectData.data.slice(0, 50)) {
         const categoryId = `category_${subject.categoryId}`;
         const categoryRef = db.collection(collectionPath).doc(categoryId);
-        
+
         const categoryDoc = {
           id: categoryId,
           categoryId: subject.categoryId,
@@ -473,7 +472,7 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
       }
 
       await batch.commit();
-      
+
       WCM_logInfo(`批量載入完成: ${batchCount} 筆科目 (路徑: ${collectionPath})`, "批量載入科目", categoryData.userId, functionName);
 
       return WCM_formatSuccessResponse({
@@ -550,7 +549,7 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
  */
 async function WCM_getCategoryList(ledgerId, queryParams = {}) {
   const functionName = "WCM_getCategoryList";
-  
+
   try {
     WCM_logInfo(`開始查詢科目列表 (帳本: ${ledgerId})`, "查詢科目", queryParams.userId || "", functionName);
 
@@ -628,7 +627,7 @@ async function WCM_getCategoryList(ledgerId, queryParams = {}) {
  */
 async function WCM_validateCategoryExists(ledgerId, categoryId, userId) {
   const functionName = "WCM_validateCategoryExists";
-  
+
   try {
     WCM_logInfo(`開始驗證科目存在: ${categoryId} (帳本: ${ledgerId})`, "驗證科目", userId || "", functionName);
 
@@ -697,7 +696,7 @@ async function WCM_validateCategoryExists(ledgerId, categoryId, userId) {
  */
 async function WCM_getWalletBalance(ledgerId, walletId, userId) {
   const functionName = "WCM_getWalletBalance";
-  
+
   try {
     WCM_logInfo(`開始查詢帳戶餘額: ${walletId} (帳本: ${ledgerId})`, "查詢餘額", userId || "", functionName);
 
@@ -817,7 +816,7 @@ function WCM_loadDefaultConfigs() {
     const systemConfigPath = path.join(configBasePath, '0301. Default_config.json');
     if (fs.existsSync(systemConfigPath)) {
       let configContent = fs.readFileSync(systemConfigPath, 'utf8');
-      
+
       // 移除JavaScript風格的註解
       configContent = configContent
         .replace(/\/\*\*[\s\S]*?\*\//g, '')
@@ -825,7 +824,7 @@ function WCM_loadDefaultConfigs() {
         .replace(/\/\/.*$/gm, '')
         .replace(/^\s*[\r\n]/gm, '')
         .trim();
-        
+
       const systemConfig = JSON.parse(configContent);
       configs.system = systemConfig;
       WCM_logInfo(`載入系統配置: ${systemConfig.version}`, "載入預設配置", "", functionName);
@@ -924,24 +923,24 @@ module.exports = {
   WCM_getWalletList,
   WCM_validateWalletExists,
   WCM_getWalletBalance,
-  
+
   // 科目管理函數 (子集合架構)
   WCM_createCategory,
   WCM_getCategoryList,
   WCM_validateCategoryExists,
-  
+
   // 數據載入函數 (從AM模組整合)
   WCM_load0099SubjectData,
   WCM_loadDefaultConfigs,
-  
+
   // 系統函數
   WCM_initialize,
   WCM_formatSuccessResponse,
   WCM_formatErrorResponse,
-  
+
   // 配置
   WCM_CONFIG,
-  
+
   // 模組資訊
   moduleVersion: '1.2.0',
   architecture: 'subcollection_based',
