@@ -1,10 +1,10 @@
 /**
  * 1309. AM.js - 帳號管理模組
- * @version v7.5.0
- * @date 2025-11-20
+ * @version v8.0.0
+ * @date 2025-11-21
  * @description 處理用戶註冊、登入、帳本初始化等功能
  * @compliance 嚴格遵守0098憲法 - 禁止hard coding，遵守dataflow
- * @update v7.5.0: 階段二修正 - 正確引用0099.json和03. Default_config資料夾，移除hard-coded資料
+ * @update v8.0.0: 階段一職責重構 - 移除0099載入功能至WCM模組，專注帳號管理核心功能
  */
 
 // 引入必要模組
@@ -1201,163 +1201,9 @@ async function AM_monitorSystemHealth() {
   }
 }
 
-/**
- * 16.5. 載入0099科目資料
- * @version 2025-11-20-V1.0.0
- * @date 2025-11-20
- * @description 階段二新增：從0099. Subject_code.json載入科目資料
- */
-function AM_load0099SubjectData() {
-  const functionName = "AM_load0099SubjectData";
-  try {
-    console.log(`📋 ${functionName}: 開始載入0099科目資料...`);
+// AM_load0099SubjectData 函數已移至 WCM 模組 (v8.0.0 職責重構)
 
-    const subjectFilePath = '/home/runner/workspace/00. Master_Project document/0099. Subject_code.json';
-
-    if (!fs.existsSync(subjectFilePath)) {
-      console.error(`❌ ${functionName}: 0099. Subject_code.json 檔案不存在: ${subjectFilePath}`);
-      return {
-        success: false,
-        error: "0099. Subject_code.json 檔案不存在",
-        count: 0,
-        data: []
-      };
-    }
-
-    const subjectDataRaw = fs.readFileSync(subjectFilePath, 'utf8');
-    const subjectData = JSON.parse(subjectDataRaw);
-
-    if (!Array.isArray(subjectData)) {
-      throw new Error("0099科目資料格式錯誤，應為陣列格式");
-    }
-
-    console.log(`✅ ${functionName}: 成功載入 ${subjectData.length} 筆科目資料`);
-
-    return {
-      success: true,
-      count: subjectData.length,
-      data: subjectData,
-      source: '0099. Subject_code.json'
-    };
-
-  } catch (error) {
-    console.error(`❌ ${functionName}: 載入0099科目資料失敗:`, error.message);
-    if (DL && typeof DL.DL_error === 'function') {
-      try {
-        DL.DL_error("AM", functionName, error.message, "SYSTEM");
-      } catch (dlError) {
-        console.error(`DL模組調用失敗: ${dlError.message}`);
-      }
-    }
-    return {
-      success: false,
-      error: error.message,
-      count: 0,
-      data: []
-    };
-  }
-}
-
-/**
- * 16.6. 載入預設配置資料
- * @version 2025-11-20-V1.0.0
- * @date 2025-11-20
- * @description 階段二新增：從03. Default_config資料夾載入預設配置
- */
-function AM_loadDefaultConfigs() {
-  const functionName = "AM_loadDefaultConfigs";
-  try {
-    console.log(`📋 ${functionName}: 開始載入預設配置資料...`);
-
-    const configBasePath = path.join(__dirname, '../..', '03. Default_config');
-    const configs = {};
-
-    // 載入系統配置
-    const systemConfigPath = path.join(configBasePath, '0301. Default_config.json');
-    if (fs.existsSync(systemConfigPath)) {
-      // 讀取檔案並移除JavaScript風格的註解
-      let configContent = fs.readFileSync(systemConfigPath, 'utf8');
-      
-      // 更強健的註解移除邏輯
-      configContent = configContent
-        .replace(/\/\*\*[\s\S]*?\*\//g, '') // 移除JSDoc註解
-        .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
-        .replace(/\/\/.*$/gm, '') // 移除單行註解
-        .replace(/^\s*[\r\n]/gm, '') // 移除空行
-        .trim(); // 移除首尾空白
-        
-      const systemConfig = JSON.parse(configContent);
-      configs.system = systemConfig;
-      console.log(`✅ 載入系統配置: ${systemConfig.version}`);
-    }
-
-    // 載入預設帳戶配置
-    const walletConfigPath = path.join(configBasePath, '0302. Default_wallet.json');
-    if (fs.existsSync(walletConfigPath)) {
-      let configContent = fs.readFileSync(walletConfigPath, 'utf8');
-      configContent = configContent
-        .replace(/\/\*\*[\s\S]*?\*\//g, '') // 移除JSDoc註解
-        .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
-        .replace(/\/\/.*$/gm, '') // 移除單行註解
-        .replace(/^\s*[\r\n]/gm, '') // 移除空行
-        .trim();
-      const walletConfig = JSON.parse(configContent);
-      configs.wallets = walletConfig;
-      console.log(`✅ 載入預設帳戶配置: ${walletConfig.default_wallets.length} 個帳戶`);
-    }
-
-    // 載入貨幣配置
-    const currencyConfigPath = path.join(configBasePath, '0303. Default_currency.json');
-    if (fs.existsSync(currencyConfigPath)) {
-      const configContent = fs.readFileSync(currencyConfigPath, 'utf8');
-      const cleanContent = configContent
-        .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
-        .replace(/\/\/.*$/gm, '') // 移除單行註解
-        .replace(/^\s*\/\*\*[\s\S]*?\*\/\s*$/gm, '') // 移除JSDoc風格註解
-        .trim();
-      const currencyConfig = JSON.parse(cleanContent);
-      configs.currency = currencyConfig;
-      console.log(`✅ 載入貨幣配置: 預設貨幣 ${currencyConfig.currencies.default}`);
-    }
-
-    // 載入評估問卷配置
-    const assessmentConfigPath = path.join(configBasePath, '0304. Default_assessment.json');
-    if (fs.existsSync(assessmentConfigPath)) {
-      const configContent = fs.readFileSync(assessmentConfigPath, 'utf8');
-      const cleanContent = configContent
-        .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
-        .replace(/\/\/.*$/gm, '') // 移除單行註解
-        .replace(/^\s*\/\*\*[\s\S]*?\*\/\s*$/gm, '') // 移除JSDoc風格註解
-        .trim();
-      const assessmentConfig = JSON.parse(cleanContent);
-      configs.assessment = assessmentConfig;
-      console.log(`✅ 載入評估問卷配置: ${assessmentConfig.questions.length} 道題目`);
-    }
-
-    console.log(`✅ ${functionName}: 成功載入所有預設配置`);
-
-    return {
-      success: true,
-      configs: configs,
-      loadedConfigs: Object.keys(configs)
-    };
-
-  } catch (error) {
-    console.error(`❌ ${functionName}: 載入預設配置失敗:`, error.message);
-    if (DL && typeof DL.DL_error === 'function') {
-      try {
-        DL.DL_error("AM", functionName, error.message, "SYSTEM");
-      } catch (dlError) {
-        console.error(`DL模組調用失敗: ${dlError.message}`);
-      }
-    }
-    return {
-      success: false,
-      error: error.message,
-      configs: {}
-    };
-  }
-}
+// AM_loadDefaultConfigs 函數已移至 WCM 模組 (v8.0.0 職責重構)
 
 /**
  * 17. 初始化用戶科目數據 (舊函數，用於向後相容)
@@ -1516,21 +1362,13 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
   try {
     console.log(`🔄 ${functionName}: 階段二修正版 - 開始為用戶 ${UID} 初始化完整帳本...`);
 
-    // 階段二修正：載入0099科目資料和預設配置
-    console.log(`📋 ${functionName}: 載入0099科目資料和預設配置...`);
-    const subjectData = AM_load0099SubjectData();
-    const defaultConfigs = AM_loadDefaultConfigs();
-
-    if (!subjectData.success) {
-      console.warn(`⚠️ ${functionName}: 0099科目資料載入失敗: ${subjectData.error}`);
-    } else {
-      console.log(`✅ ${functionName}: 成功載入 ${subjectData.count} 筆科目資料`);
-    }
-
-    if (!defaultConfigs.success) {
-      console.warn(`⚠️ ${functionName}: 預設配置載入失敗: ${defaultConfigs.error}`);
-    } else {
-      console.log(`✅ ${functionName}: 成功載入預設配置: ${defaultConfigs.loadedConfigs.join(', ')}`);
+    // v8.0.0 職責重構：科目和帳戶初始化已移至 WCM 模組
+    console.log(`📋 ${functionName}: v8.0.0 - 科目和帳戶初始化將由WCM模組處理`);
+    
+    // 引入WCM模組處理科目和帳戶管理
+    const WCM = require('./1350. WCM.js');
+    if (!WCM) {
+      console.warn(`⚠️ ${functionName}: WCM模組未找到，將跳過科目和帳戶初始化`);
     }
 
     // 階段二優化：增強參數驗證
@@ -1585,11 +1423,8 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     let operationCount = 0;
     const maxBatchSize = 450; // 留下安全邊際
 
-    // 階段二修正：從03預設配置取得設定值
-    const systemConfig = defaultConfigs.configs.system?.system_config || {};
-    const currencyConfig = defaultConfigs.configs.currency?.currencies || {};
-
-    // 1. 創建帳本主文檔 - 符合Firebase集合結構，使用03配置資料
+    // v8.0.0 簡化：建立基本帳本結構，科目和帳戶由WCM處理
+    // 1. 創建帳本主文檔 - 基礎結構
     const ledgerRef = db.collection("ledgers").doc(userLedgerId);
     const mainLedgerData = {
       id: userLedgerId,
@@ -1603,19 +1438,15 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       description: `用戶 ${UID} 的預設帳本`,
       initializationComplete: false, // 標記為未完成，稍後更新
       settings: {
-        currency: currencyConfig.default || 'TWD',
-        timezone: systemConfig.timezone || 'Asia/Taipei',
-        dateFormat: systemConfig.date_format || "YYYY/MM/DD",
-        language: systemConfig.default_language || 'zh-TW'
+        currency: 'TWD',
+        timezone: 'Asia/Taipei',
+        dateFormat: "YYYY/MM/DD",
+        language: 'zh-TW'
       },
       metadata: {
-        version: systemConfig.version || '2.7.1',
+        version: '8.0.0',
         createdBy: functionName,
-        initializationStage: "stage2_config_driven",
-        dataSource: {
-          subjects: "0099. Subject_code.json",
-          config: "03. Default_config"
-        }
+        initializationStage: "am_ledger_structure_only"
       }
     };
 
@@ -1639,63 +1470,34 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       console.log(`  - 1311.FS.js結構建立成功: ${JSON.stringify(structureResult.created_subcollections)}`);
     }
 
-    // 階段二修正：填入0099科目資料到categories子集合
-    if (subjectData.success && subjectData.data.length > 0) {
-      console.log(`📋 ${functionName}: 開始填入0099科目資料到categories子集合...`);
-
-      for (const subject of subjectData.data.slice(0, 20)) { // 限制數量避免過度寫入
-        const categoryData = {
-          categoryId: subject.categoryId,
-          parentId: subject.parentId,
-          categoryName: subject.categoryName,
-          subCategoryName: subject.subCategoryName,
-          synonyms: subject.synonyms || '',
-          type: [801, 899].includes(subject.parentId) ? 'income' : 'expense',
-          isDefault: true,
-          isActive: true,
-          ledgerId: userLedgerId,
-          dataSource: '0099. Subject_code.json',
-          createdAt: admin.firestore.Timestamp.now(),
-          updatedAt: admin.firestore.Timestamp.now(),
-          createdBy: UID
-        };
-
-        try {
-          await ledgerRef.collection('categories').doc(`category_${subject.categoryId}`).set(categoryData);
-        } catch (error) {
-          console.warn(`⚠️ 建立科目 ${subject.categoryId} 失敗: ${error.message}`);
+    // v8.0.0 職責重構：科目和帳戶初始化移至WCM模組
+    let subjectCount = 0;
+    let walletCount = 0;
+    
+    if (WCM) {
+      try {
+        // 調用WCM模組進行科目初始化
+        console.log(`📋 ${functionName}: 調用WCM模組進行科目初始化...`);
+        const categoryResult = await WCM.WCM_createCategory(userLedgerId, { userId: UID }, { batchLoad0099: true });
+        if (categoryResult.success) {
+          subjectCount = categoryResult.data.totalCategories || 0;
+          console.log(`✅ ${functionName}: WCM科目初始化完成，載入${subjectCount}筆科目`);
+        } else {
+          console.warn(`⚠️ ${functionName}: WCM科目初始化失敗: ${categoryResult.error?.message}`);
         }
-      }
 
-      console.log(`✅ ${functionName}: 0099科目資料填入完成`);
-    }
-
-    // 階段二修正：填入03預設帳戶資料到wallets子集合
-    if (defaultConfigs.success && defaultConfigs.configs.wallets) {
-      console.log(`💳 ${functionName}: 開始填入預設帳戶資料到wallets子集合...`);
-
-      const wallets = defaultConfigs.configs.wallets.default_wallets || [];
-      const defaultCurrency = currencyConfig.default || 'TWD';
-
-      for (const wallet of wallets) {
-        const walletData = {
-          ...wallet,
-          currency: wallet.currency.replace('{{default_currency}}', defaultCurrency),
-          ledgerId: userLedgerId,
-          dataSource: '0302. Default_wallet.json',
-          createdAt: admin.firestore.Timestamp.now(),
-          updatedAt: admin.firestore.Timestamp.now(),
-          createdBy: UID
-        };
-
-        try {
-          await ledgerRef.collection('wallets').doc(wallet.walletId).set(walletData);
-        } catch (error) {
-          console.warn(`⚠️ 建立帳戶 ${wallet.walletId} 失敗: ${error.message}`);
+        // 調用WCM模組進行帳戶初始化
+        console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
+        const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
+        if (walletResult.success) {
+          walletCount = walletResult.data.totalWallets || 0;
+          console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
+        } else {
+          console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message}`);
         }
+      } catch (wcmError) {
+        console.warn(`⚠️ ${functionName}: WCM模組調用失敗: ${wcmError.message}`);
       }
-
-      console.log(`✅ ${functionName}: 預設帳戶資料填入完成`);
     }
 
     // AM模組專注於帳本業務邏輯和資料載入，FS負責結構建立
@@ -1778,27 +1580,14 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       throw new Error(`帳本驗證失敗: ${verifyError.message}`);
     }
 
-    // 階段二優化：記錄詳細的初始化統計
+    // v8.0.0 職責重構：記錄詳細的初始化統計
     const executionTime = Date.now() - startTime;
-    const successfulBatches = batches.length; // 假設所有batch都成功
-    const failedBatches = 0;
-    const subjectCount = subjectData.success ? subjectData.count : 0;
-    const walletCount = defaultConfigs.success && defaultConfigs.configs.wallets ? defaultConfigs.configs.wallets.default_wallets.length : 0; // 修正：walletCount
-    const performanceMetrics = {
-      executionTime: executionTime,
-      batchCount: successfulBatches,
-      successfulBatches: successfulBatches,
-      failedBatches: failedBatches,
-      subjectCount: subjectCount,
-      walletCount: walletCount, // 修正：walletCount
-      averageBatchTime: executionTime / batches.length
-    };
 
     await DL.DL_log(
       "AM",
       functionName,
       "INFO",
-      `階段二修正：用戶 ${UID} 完整帳本初始化完成，共導入 ${subjectCount} 筆科目，${walletCount} 個預設帳戶，執行時間: ${executionTime}ms`,
+      `v8.0.0 職責重構：用戶 ${UID} 帳本初始化完成，FS結構建立 + WCM資料初始化，共載入 ${subjectCount} 筆科目，${walletCount} 個帳戶，執行時間: ${executionTime}ms`,
       UID,
       userLedgerId,
     );
@@ -1807,22 +1596,18 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       success: true,
       userLedgerId: userLedgerId,
       structureHandledBy: "1311.FS.js",
-      dataSourceHandledBy: "AM_module_stage2",
+      dataHandledBy: "1350.WCM.js",
+      wcmIntegration: {
+        subjectCount: subjectCount,
+        walletCount: walletCount,
+        wcmAvailable: !!WCM
+      },
       fsStructureResult: structureResult,
-      subjectDataResult: {
-        success: subjectData.success,
-        count: subjectData.count,
-        source: subjectData.source
-      },
-      configDataResult: {
-        success: defaultConfigs.success,
-        loadedConfigs: defaultConfigs.loadedConfigs
-      },
       initializationComplete: true,
-      stage: "stage2_data_source_correction",
-      subjectCount: subjectCount, // 修正：確保傳回subjectCount
-      walletCount: walletCount, // 修正：傳回walletCount
-      message: `階段二修正完成：帳本 ${userLedgerId} 建立成功，結構由FS處理，資料從0099.json和03配置載入`
+      stage: "v8.0.0_wcm_integration",
+      subjectCount: subjectCount,
+      walletCount: walletCount,
+      message: `v8.0.0 職責重構完成：帳本 ${userLedgerId} 建立成功，結構由FS處理，科目和帳戶由WCM處理`
     };
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
@@ -5338,8 +5123,7 @@ module.exports = {
   AM_ensureUserLedger,
   AM_getUserDefaultLedger,
 
-  // 0099科目資料載入 (v7.4.0新增)
-  AM_load0099SubjectData,
+  // AM_load0099SubjectData 已移至 WCM 模組 (v8.0.0 職責重構)
 
   // 相容性函數 (v7.0.0保留)
   AM_initializeUserSubjects,
@@ -5387,26 +5171,32 @@ module.exports = {
   // AM_load0099SubjectData, // 新增：AM模組自行載入0099資料 - Moved up to be with other v7.4.0 additions
 
   // 模組版本資訊
-  moduleVersion: '7.5.0', // Updated version
-  lastUpdate: '2025-11-20',
-  phase: 'DCN-0020階段二優化版',
-  description: 'AM帳號管理模組 - 階段二：優化帳本初始化性能和穩定性，修正科目集合名稱'
+  moduleVersion: '8.0.0', // Major version upgrade
+  lastUpdate: '2025-11-21',
+  phase: '階段一職責重構完成',
+  description: 'AM帳號管理模組 - v8.0.0：職責重構，科目和帳戶管理移至WCM模組，專注帳號管理核心功能',
+  refactoring: {
+    migratedToWCM: ['AM_load0099SubjectData', 'AM_loadDefaultConfigs'],
+    wcmIntegration: true,
+    newBehavior: 'AM調用WCM函數進行科目和帳戶初始化'
+  }
 };
 
-console.log('✅ AM模組7.5.0 DCN-0020階段二優化版載入成功！');
+console.log('✅ AM模組8.0.0 階段一職責重構完成！');
   console.log('📋 功能概覽:');
   console.log('   ├── 核心帳號管理功能 (18個)');
   console.log('   ├── SR模組專用付費功能 (4個)');
   console.log('   ├── DCN-0012 API端點處理函數 (22個)');
   console.log('   ├── DCN-0014 API處理函數 (19個)');
-  console.log('   ├── DCN-0020 完整帳本初始化 (3個核心功能) - 階段二優化');
-  console.log('   └── 總計: 66個函數完整實作');
-  console.log('🚀 階段二優化: 智能batch分割提升大量數據寫入成功率');
-  console.log('🔧 性能提升: AM_initializeUserLedger() - 多重重試機制和錯誤恢復');
-  console.log('🔧 穩定性強化: AM_getUserDefaultLedger() - 增強參數驗證和錯誤處理');
-  console.log('📊 資料流優化: BK模組 → AM模組 → 智能batch處理 → Firebase高效寫入');
-  console.log('🎯 優化目標: 提升帳本初始化的成功率和執行效率');
-  console.log('🎉 階段二成果: 大幅提升系統穩定性和用戶體驗！');
+  console.log('   ├── DCN-0020 帳本結構初始化 (專注結構建立)');
+  console.log('   └── 總計: 63個函數 (移除3個至WCM模組)');
+  console.log('🔄 階段一重構: 科目和帳戶管理功能移至WCM模組');
+  console.log('🎯 職責專注: AM專注帳號管理，WCM負責科目和帳戶管理');
+  console.log('🔧 整合模式: AM_initializeUserLedger() 現在調用WCM模組進行資料初始化');
+  console.log('📊 新資料流: AM → WCM (科目+帳戶) → FS (結構) → Firebase');
+  console.log('✨ Before: AM直接載入0099.json + FS輔助');
+  console.log('✨ After: AM調用WCM函數，WCM成為科目和帳戶管理唯一入口');
+  console.log('🎉 階段一成果: WCM模組功能整合完成，職責邊界清晰化！');
 
 /**
  * AM_calculateModeFromAnswers - 計算使用者模式

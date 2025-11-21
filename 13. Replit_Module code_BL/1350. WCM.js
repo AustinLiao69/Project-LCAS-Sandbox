@@ -1,10 +1,10 @@
 
 /**
- * 1350. WCM.js_帳戶與科目管理模組_v1.1.0
+ * 1350. WCM.js_帳戶與科目管理模組_v1.2.0
  * @module 帳戶與科目管理模組
  * @description LCAS 2.0 Wallet and Category Management - 統一處理帳戶與科目的基礎主數據管理 (子集合架構)
- * @update 2025-11-19: 階段二修正 - 調整為子集合架構 ledgers/{ledgerId}/wallets 和 ledgers/{ledgerId}/categories
- * @date 2025-11-19
+ * @update 2025-11-21: 階段一整合 - 整合AM模組的0099載入功能，成為科目和帳戶管理的唯一入口
+ * @date 2025-11-21
  */
 
 /**
@@ -12,6 +12,8 @@
  */
 const moment = require('moment-timezone');
 const admin = require('firebase-admin');
+const fs = require('fs');
+const path = require('path');
 
 // 引入依賴模組
 const DL = require('./1310. DL.js');
@@ -20,7 +22,7 @@ const AM = require('./1309. AM.js');
 
 // WCM模組配置
 const WCM_CONFIG = {
-  VERSION: '1.1.0',
+  VERSION: '1.2.0',
   DEBUG: process.env.WCM_DEBUG === 'true',
   TIMEZONE: process.env.TIMEZONE || 'Asia/Taipei',
   DEFAULT_CURRENCY: process.env.DEFAULT_CURRENCY || 'TWD',
@@ -111,18 +113,19 @@ async function WCM_initialize() {
 // =================== 帳戶管理函數 (子集合架構) ===================
 
 /**
- * 01. 創建帳戶 (子集合架構)
- * @version 2025-11-19-V1.1.0
- * @description 創建新的帳戶記錄到 ledgers/{ledgerId}/wallets
+ * 01. 創建帳戶 (子集合架構) - 強化版本，支援預設帳戶建立
+ * @version 2025-11-21-V1.2.0
+ * @description 創建新的帳戶記錄到 ledgers/{ledgerId}/wallets，支援建立預設帳戶功能
  * @param {string} ledgerId - 帳本ID
  * @param {Object} walletData - 帳戶資料
+ * @param {Object} options - 選項參數 { createDefaultWallets: boolean }
  * @returns {Promise<Object>} 標準化回應格式
  */
-async function WCM_createWallet(ledgerId, walletData) {
+async function WCM_createWallet(ledgerId, walletData, options = {}) {
   const functionName = "WCM_createWallet";
   
   try {
-    WCM_logInfo(`開始創建帳戶: ${walletData.name} (帳本: ${ledgerId})`, "創建帳戶", walletData.userId || "", functionName);
+    WCM_logInfo(`開始創建帳戶: ${walletData.name || '預設帳戶'} (帳本: ${ledgerId})`, "創建帳戶", walletData.userId || "", functionName);
 
     // 基本參數驗證
     if (!ledgerId || typeof ledgerId !== 'string') {
@@ -133,6 +136,78 @@ async function WCM_createWallet(ledgerId, walletData) {
       return WCM_formatErrorResponse("INVALID_WALLET_DATA", "無效的帳戶資料");
     }
 
+    if (!walletData.userId) {
+      return WCM_formatErrorResponse("MISSING_USER_ID", "用戶ID不能為空");
+    }
+
+    await WCM_initialize();
+
+    // 階段一整合：支援建立預設帳戶功能
+    if (options.createDefaultWallets) {
+      WCM_logInfo(`執行預設帳戶建立至帳本: ${ledgerId}`, "建立預設帳戶", walletData.userId, functionName);
+      
+      const defaultConfigs = WCM_loadDefaultConfigs();
+      if (!defaultConfigs.success || !defaultConfigs.configs.wallets) {
+        return WCM_formatErrorResponse("LOAD_CONFIG_FAILED", "載入預設帳戶配置失敗", defaultConfigs.error);
+      }
+
+      const db = admin.firestore();
+      const collectionPath = `ledgers/${ledgerId}/wallets`;
+      const batch = db.batch();
+      const now = admin.firestore.Timestamp.now();
+      const defaultCurrency = defaultConfigs.configs.currency?.currencies?.default || WCM_CONFIG.DEFAULT_CURRENCY;
+
+      let walletCount = 0;
+      const createdWallets = [];
+
+      // 批量建立預設帳戶
+      for (const defaultWallet of defaultConfigs.configs.wallets.default_wallets || []) {
+        const walletId = defaultWallet.walletId;
+        const walletRef = db.collection(collectionPath).doc(walletId);
+        
+        const walletDoc = {
+          id: walletId,
+          name: defaultWallet.name,
+          type: defaultWallet.type,
+          currency: defaultWallet.currency.replace('{{default_currency}}', defaultCurrency),
+          balance: defaultWallet.balance || 0,
+          description: defaultWallet.description || '',
+          isDefault: true,
+          userId: walletData.userId,
+          ledgerId: ledgerId,
+          status: 'active',
+          dataSource: '0302. Default_wallet.json',
+          createdAt: now,
+          updatedAt: now,
+          module: 'WCM',
+          version: WCM_CONFIG.VERSION
+        };
+
+        batch.set(walletRef, walletDoc);
+        walletCount++;
+        createdWallets.push({
+          walletId: walletId,
+          name: walletDoc.name,
+          type: walletDoc.type,
+          currency: walletDoc.currency
+        });
+      }
+
+      await batch.commit();
+      
+      WCM_logInfo(`預設帳戶建立完成: ${walletCount} 個帳戶 (路徑: ${collectionPath})`, "建立預設帳戶", walletData.userId, functionName);
+
+      return WCM_formatSuccessResponse({
+        defaultWalletsCreated: true,
+        totalWallets: walletCount,
+        wallets: createdWallets,
+        ledgerId: ledgerId,
+        collectionPath: collectionPath,
+        dataSource: '0302. Default_wallet.json'
+      }, `成功建立 ${walletCount} 個預設帳戶`);
+    }
+
+    // 單一帳戶創建邏輯
     if (!walletData.name || walletData.name.trim() === '') {
       return WCM_formatErrorResponse("MISSING_WALLET_NAME", "帳戶名稱不能為空");
     }
@@ -140,12 +215,6 @@ async function WCM_createWallet(ledgerId, walletData) {
     if (walletData.name.length > WCM_CONFIG.MAX_WALLET_NAME_LENGTH) {
       return WCM_formatErrorResponse("WALLET_NAME_TOO_LONG", `帳戶名稱不能超過${WCM_CONFIG.MAX_WALLET_NAME_LENGTH}字元`);
     }
-
-    if (!walletData.userId) {
-      return WCM_formatErrorResponse("MISSING_USER_ID", "用戶ID不能為空");
-    }
-
-    await WCM_initialize();
 
     // 準備帳戶資料
     const walletId = `wallet_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -331,18 +400,19 @@ async function WCM_validateWalletExists(ledgerId, walletId, userId) {
 // =================== 科目管理函數 (子集合架構) ===================
 
 /**
- * 04. 創建科目 (子集合架構)
- * @version 2025-11-19-V1.1.0
- * @description 創建新的科目記錄到 ledgers/{ledgerId}/categories
+ * 04. 創建科目 (子集合架構) - 強化版本，支援0099批量載入
+ * @version 2025-11-21-V1.2.0
+ * @description 創建新的科目記錄到 ledgers/{ledgerId}/categories，支援從0099.json批量載入科目功能
  * @param {string} ledgerId - 帳本ID
  * @param {Object} categoryData - 科目資料
+ * @param {Object} options - 選項參數 { batchLoad0099: boolean }
  * @returns {Promise<Object>} 標準化回應格式
  */
-async function WCM_createCategory(ledgerId, categoryData) {
+async function WCM_createCategory(ledgerId, categoryData, options = {}) {
   const functionName = "WCM_createCategory";
   
   try {
-    WCM_logInfo(`開始創建科目: ${categoryData.name} (帳本: ${ledgerId})`, "創建科目", categoryData.userId || "", functionName);
+    WCM_logInfo(`開始創建科目: ${categoryData.name || '批量載入'} (帳本: ${ledgerId})`, "創建科目", categoryData.userId || "", functionName);
 
     // 基本參數驗證
     if (!ledgerId || typeof ledgerId !== 'string') {
@@ -353,6 +423,69 @@ async function WCM_createCategory(ledgerId, categoryData) {
       return WCM_formatErrorResponse("INVALID_CATEGORY_DATA", "無效的科目資料");
     }
 
+    if (!categoryData.userId) {
+      return WCM_formatErrorResponse("MISSING_USER_ID", "用戶ID不能為空");
+    }
+
+    await WCM_initialize();
+
+    // 階段一整合：支援從0099批量載入科目功能
+    if (options.batchLoad0099) {
+      WCM_logInfo(`執行0099科目批量載入至帳本: ${ledgerId}`, "批量載入科目", categoryData.userId, functionName);
+      
+      const subjectData = WCM_load0099SubjectData();
+      if (!subjectData.success) {
+        return WCM_formatErrorResponse("LOAD_0099_FAILED", "載入0099科目資料失敗", subjectData.error);
+      }
+
+      const db = admin.firestore();
+      const collectionPath = `ledgers/${ledgerId}/categories`;
+      const batch = db.batch();
+      let batchCount = 0;
+      const now = admin.firestore.Timestamp.now();
+
+      // 批量建立科目（限制數量避免過度寫入）
+      for (const subject of subjectData.data.slice(0, 50)) {
+        const categoryId = `category_${subject.categoryId}`;
+        const categoryRef = db.collection(collectionPath).doc(categoryId);
+        
+        const categoryDoc = {
+          id: categoryId,
+          categoryId: subject.categoryId,
+          parentId: subject.parentId,
+          categoryName: subject.categoryName,
+          subCategoryName: subject.subCategoryName,
+          synonyms: subject.synonyms || '',
+          type: [801, 899].includes(subject.parentId) ? 'income' : 'expense',
+          isDefault: true,
+          isActive: true,
+          userId: categoryData.userId,
+          ledgerId: ledgerId,
+          dataSource: '0099. Subject_code.json',
+          createdAt: now,
+          updatedAt: now,
+          module: 'WCM',
+          version: WCM_CONFIG.VERSION
+        };
+
+        batch.set(categoryRef, categoryDoc);
+        batchCount++;
+      }
+
+      await batch.commit();
+      
+      WCM_logInfo(`批量載入完成: ${batchCount} 筆科目 (路徑: ${collectionPath})`, "批量載入科目", categoryData.userId, functionName);
+
+      return WCM_formatSuccessResponse({
+        batchLoaded: true,
+        totalCategories: batchCount,
+        ledgerId: ledgerId,
+        collectionPath: collectionPath,
+        dataSource: '0099. Subject_code.json'
+      }, `成功批量載入 ${batchCount} 筆科目`);
+    }
+
+    // 單一科目創建邏輯
     if (!categoryData.name || categoryData.name.trim() === '') {
       return WCM_formatErrorResponse("MISSING_CATEGORY_NAME", "科目名稱不能為空");
     }
@@ -360,12 +493,6 @@ async function WCM_createCategory(ledgerId, categoryData) {
     if (categoryData.name.length > WCM_CONFIG.MAX_CATEGORY_NAME_LENGTH) {
       return WCM_formatErrorResponse("CATEGORY_NAME_TOO_LONG", `科目名稱不能超過${WCM_CONFIG.MAX_CATEGORY_NAME_LENGTH}字元`);
     }
-
-    if (!categoryData.userId) {
-      return WCM_formatErrorResponse("MISSING_USER_ID", "用戶ID不能為空");
-    }
-
-    await WCM_initialize();
 
     // 準備科目資料
     const categoryId = `category_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -622,6 +749,135 @@ async function WCM_getWalletBalance(ledgerId, walletId, userId) {
   }
 }
 
+/**
+ * 08. 載入0099科目資料 (從AM模組移植)
+ * @version 2025-11-21-V1.2.0
+ * @description 從0099. Subject_code.json載入科目資料 - 從AM_load0099SubjectData移植而來
+ * @returns {Object} 載入結果
+ */
+function WCM_load0099SubjectData() {
+  const functionName = "WCM_load0099SubjectData";
+  try {
+    WCM_logInfo(`開始載入0099科目資料...`, "載入科目資料", "", functionName);
+
+    const subjectFilePath = '/home/runner/workspace/00. Master_Project document/0099. Subject_code.json';
+
+    if (!fs.existsSync(subjectFilePath)) {
+      WCM_logError(`0099. Subject_code.json 檔案不存在: ${subjectFilePath}`, "載入科目資料", "", "FILE_NOT_FOUND", "", functionName);
+      return {
+        success: false,
+        error: "0099. Subject_code.json 檔案不存在",
+        count: 0,
+        data: []
+      };
+    }
+
+    const subjectDataRaw = fs.readFileSync(subjectFilePath, 'utf8');
+    const subjectData = JSON.parse(subjectDataRaw);
+
+    if (!Array.isArray(subjectData)) {
+      throw new Error("0099科目資料格式錯誤，應為陣列格式");
+    }
+
+    WCM_logInfo(`成功載入 ${subjectData.length} 筆科目資料`, "載入科目資料", "", functionName);
+
+    return {
+      success: true,
+      count: subjectData.length,
+      data: subjectData,
+      source: '0099. Subject_code.json'
+    };
+
+  } catch (error) {
+    WCM_logError(`載入0099科目資料失敗: ${error.message}`, "載入科目資料", "", "LOAD_0099_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      count: 0,
+      data: []
+    };
+  }
+}
+
+/**
+ * 09. 載入預設配置資料 (從AM模組移植)
+ * @version 2025-11-21-V1.2.0
+ * @description 從03. Default_config資料夾載入預設配置 - 從AM_loadDefaultConfigs移植而來
+ * @returns {Object} 載入結果
+ */
+function WCM_loadDefaultConfigs() {
+  const functionName = "WCM_loadDefaultConfigs";
+  try {
+    WCM_logInfo(`開始載入預設配置資料...`, "載入預設配置", "", functionName);
+
+    const configBasePath = path.join(__dirname, '../..', '03. Default_config');
+    const configs = {};
+
+    // 載入系統配置
+    const systemConfigPath = path.join(configBasePath, '0301. Default_config.json');
+    if (fs.existsSync(systemConfigPath)) {
+      let configContent = fs.readFileSync(systemConfigPath, 'utf8');
+      
+      // 移除JavaScript風格的註解
+      configContent = configContent
+        .replace(/\/\*\*[\s\S]*?\*\//g, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/.*$/gm, '')
+        .replace(/^\s*[\r\n]/gm, '')
+        .trim();
+        
+      const systemConfig = JSON.parse(configContent);
+      configs.system = systemConfig;
+      WCM_logInfo(`載入系統配置: ${systemConfig.version}`, "載入預設配置", "", functionName);
+    }
+
+    // 載入預設帳戶配置
+    const walletConfigPath = path.join(configBasePath, '0302. Default_wallet.json');
+    if (fs.existsSync(walletConfigPath)) {
+      let configContent = fs.readFileSync(walletConfigPath, 'utf8');
+      configContent = configContent
+        .replace(/\/\*\*[\s\S]*?\*\//g, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/.*$/gm, '')
+        .replace(/^\s*[\r\n]/gm, '')
+        .trim();
+      const walletConfig = JSON.parse(configContent);
+      configs.wallets = walletConfig;
+      WCM_logInfo(`載入預設帳戶配置: ${walletConfig.default_wallets.length} 個帳戶`, "載入預設配置", "", functionName);
+    }
+
+    // 載入貨幣配置
+    const currencyConfigPath = path.join(configBasePath, '0303. Default_currency.json');
+    if (fs.existsSync(currencyConfigPath)) {
+      const configContent = fs.readFileSync(currencyConfigPath, 'utf8');
+      const cleanContent = configContent
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/.*$/gm, '')
+        .replace(/^\s*\/\*\*[\s\S]*?\*\/\s*$/gm, '')
+        .trim();
+      const currencyConfig = JSON.parse(cleanContent);
+      configs.currency = currencyConfig;
+      WCM_logInfo(`載入貨幣配置: 預設貨幣 ${currencyConfig.currencies.default}`, "載入預設配置", "", functionName);
+    }
+
+    WCM_logInfo(`成功載入所有預設配置`, "載入預設配置", "", functionName);
+
+    return {
+      success: true,
+      configs: configs,
+      loadedConfigs: Object.keys(configs)
+    };
+
+  } catch (error) {
+    WCM_logError(`載入預設配置失敗: ${error.message}`, "載入預設配置", "", "LOAD_CONFIG_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      configs: {}
+    };
+  }
+}
+
 // =================== 日誌函數 ===================
 
 function WCM_logInfo(message, category, userId, functionName) {
@@ -674,6 +930,10 @@ module.exports = {
   WCM_getCategoryList,
   WCM_validateCategoryExists,
   
+  // 數據載入函數 (從AM模組整合)
+  WCM_load0099SubjectData,
+  WCM_loadDefaultConfigs,
+  
   // 系統函數
   WCM_initialize,
   WCM_formatSuccessResponse,
@@ -683,29 +943,39 @@ module.exports = {
   WCM_CONFIG,
   
   // 模組資訊
-  moduleVersion: '1.1.0',
+  moduleVersion: '1.2.0',
   architecture: 'subcollection_based',
   collections: {
     wallets: 'ledgers/{ledgerId}/wallets',
     categories: 'ledgers/{ledgerId}/categories'
   },
-  lastUpdate: '2025-11-19',
+  lastUpdate: '2025-11-21',
   features: [
     'subcollection_architecture',
     'ledger_based_collections',
     'consistent_with_1311_FS',
     'wallet_management',
-    'category_management'
-  ]
+    'category_management',
+    'batch_0099_subject_loading',
+    'default_wallet_creation',
+    'am_module_integration'
+  ],
+  integratedFrom: {
+    'AM_load0099SubjectData': 'AM模組v7.5.0',
+    'AM_loadDefaultConfigs': 'AM模組v7.5.0'
+  }
 };
 
 // 自動初始化模組
 try {
-  console.log('🔧 WCM模組v1.1.0初始化：子集合架構');
+  console.log('🔧 WCM模組v1.2.0初始化：階段一整合完成');
   console.log('📋 架構調整：wallets/{walletId} → ledgers/{ledgerId}/wallets/{walletId}');
   console.log('📋 架構調整：categories/{categoryId} → ledgers/{ledgerId}/categories/{categoryId}');
   console.log('✅ 與1311.FS.js子集合架構保持一致');
-  console.log('🎯 WCM模組已準備就緒');
+  console.log('🎯 新增功能：從AM模組整合0099科目載入功能');
+  console.log('🎯 新增功能：預設帳戶批量建立功能');
+  console.log('🔥 WCM模組現在是科目和帳戶管理的唯一入口');
+  console.log('✨ 階段一：WCM功能整合已完成');
 } catch (error) {
   console.error('❌ WCM模組初始化失敗:', error.message);
 }
