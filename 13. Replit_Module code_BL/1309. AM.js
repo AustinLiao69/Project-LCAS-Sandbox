@@ -2,9 +2,9 @@
  * 1309. AM.js - 帳號管理模組
  * @version v8.0.0
  * @date 2025-11-21
- * @description 處理用戶註冊、登入、帳本初始化等功能
+ * @description 處理用戶註冊、登入、帳本基礎結構初始化等功能
  * @compliance 嚴格遵守0098憲法 - 禁止hard coding，遵守dataflow
- * @update v8.0.0: 階段一職責重構 - 移除0099載入功能至WCM模組，專注帳號管理核心功能
+ * @update v8.0.0: 階段四完成 - 移除所有科目相關函數，專注帳號管理和帳本基礎結構，整合WCM、BM、CM模組
  */
 
 // 引入必要模組
@@ -106,9 +106,10 @@ const db = admin.firestore();
 // 引入其他模組
 const DL = require("./1310. DL.js");
 
-// 引入檔案系統模組用於載入配置檔案
-const fs = require('fs');
-const path = require('path');
+// 階段四整合：引入WCM、BM、CM模組
+const WCM = require("./1350. WCM.js");
+const BM = require("./1312. BM.js");
+const CM = require("./1313. CM.js");
 
 /**
  * 01. 創建LINE OA用戶帳號
@@ -1206,57 +1207,27 @@ async function AM_monitorSystemHealth() {
 // AM_loadDefaultConfigs 函數已移至 WCM 模組 (v8.0.0 職責重構)
 
 /**
- * 17. 初始化用戶科目數據 (舊函數，用於向後相容)
- * @version 2025-07-11-V1.0.0
- * @date 2025-07-11 18:00:00
- * @description 為新用戶初始化預設科目數據
+ * 17. 初始化用戶科目數據 (階段四移除：已整合至WCM模組)
+ * @deprecated 請使用WCM.WCM_createCategory進行科目初始化
+ * @version 2025-11-21-V8.0.0
+ * @description 向後相容函數，重導向至完整帳本初始化
  */
 async function AM_initializeUserSubjects(UID, ledgerIdPrefix = "user_") {
-  try {
-    console.log(`🔄 (舊函數) AM模組開始為用戶 ${UID} 初始化科目數據...`);
-    // 呼叫新的完整帳本初始化函數
-    return await AM_initializeUserLedger(UID, ledgerIdPrefix);
-  } catch (error) {
-    console.error(`❌ (舊函數) 用戶 ${UID} 科目初始化失敗:`, error);
-    if (DL && typeof DL.DL_error === 'function') {
-      try {
-        DL.DL_error("AM", "initializeUserSubjects", error.message, UID);
-      } catch (dlError) {
-        console.error(`DL模組調用失敗: ${dlError.message}`);
-      }
-    }
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+  console.log(`⚠️ AM_initializeUserSubjects已棄用，請使用WCM模組進行科目管理`);
+  // 為向後相容，仍調用完整初始化
+  return await AM_initializeUserLedger(UID, ledgerIdPrefix);
 }
 
 /**
- * 18. 檢查並補充用戶科目數據 (舊函數，用於向後相容)
- * @version 2025-07-11-V1.0.0
- * @date 2025-07-11 18:00:00
- * @description 檢查用戶科目是否存在，不存在則自動初始化
+ * 18. 檢查並補充用戶科目數據 (階段四移除：已整合至WCM模組)
+ * @deprecated 請使用WCM.WCM_validateCategoryExists進行科目驗證
+ * @version 2025-11-21-V8.0.0
+ * @description 向後相容函數，重導向至完整帳本檢查
  */
 async function AM_ensureUserSubjects(UID) {
-  try {
-    console.log(`🔄 (舊函數) 檢查用戶 ${UID} 科目數據...`);
-    // 呼叫新的完整帳本檢查函數
-    return await AM_ensureUserLedger(UID);
-  } catch (error) {
-    console.error(`❌ (舊函數) 檢查用戶 ${UID} 科目失敗:`, error);
-    if (DL && typeof DL.DL_error === 'function') {
-      try {
-        DL.DL_error("AM", "ensureUserSubjects", error.message, UID);
-      } catch (dlError) {
-        console.error(`DL模組調用失敗: ${dlError.message}`);
-      }
-    }
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+  console.log(`⚠️ AM_ensureUserSubjects已棄用，請使用WCM模組進行科目管理`);
+  // 為向後相容，仍調用完整檢查
+  return await AM_ensureUserLedger(UID);
 }
 
 // === DCN-0020 階段一：完整帳本初始化功能 ===
@@ -1348,9 +1319,9 @@ async function AM_getUserDefaultLedger(UID) {
 
 /**
  * 19. 完整初始化用戶帳本結構
- * @version 2025-11-20-V2.0.0
- * @date 2025-11-20
- * @description 階段二修正：先調用FS建立空白結構，再填入0099.json和03 Default_config的實際資料
+ * @version 2025-11-21-V8.0.0
+ * @date 2025-11-21
+ * @description 階段四完成：AM專注帳本基礎結構，調用WCM、BM、CM模組處理具體功能
  * @param {string} UID - 用戶ID
  * @param {string} ledgerIdPrefix - 帳本ID前綴
  * @returns {Promise<Object>} 執行結果
@@ -1360,16 +1331,8 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
   const startTime = Date.now();
 
   try {
-    console.log(`🔄 ${functionName}: 階段二修正版 - 開始為用戶 ${UID} 初始化完整帳本...`);
-
-    // v8.0.0 職責重構：科目和帳戶初始化已移至 WCM 模組
-    console.log(`📋 ${functionName}: v8.0.0 - 科目和帳戶初始化將由WCM模組處理`);
-    
-    // 引入WCM模組處理科目和帳戶管理
-    const WCM = require('./1350. WCM.js');
-    if (!WCM) {
-      console.warn(`⚠️ ${functionName}: WCM模組未找到，將跳過科目和帳戶初始化`);
-    }
+    console.log(`🔄 ${functionName}: 階段四完成版 - AM專注帳本基礎結構，整合其他模組功能`);
+    console.log(`📋 ${functionName}: v8.0.0 - 調用WCM、BM、CM模組處理科目、帳戶、預算、協作功能`);
 
     // 階段二優化：增強參數驗證
     if (!UID || typeof UID !== 'string' || UID.trim() === '') {
@@ -1470,34 +1433,55 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       console.log(`  - 1311.FS.js結構建立成功: ${JSON.stringify(structureResult.created_subcollections)}`);
     }
 
-    // v8.0.0 職責重構：科目和帳戶初始化移至WCM模組
+    // 階段四完成：調用各模組處理具體功能
     let subjectCount = 0;
     let walletCount = 0;
+    let budgetInitialized = false;
+    let collaborationInitialized = false;
     
-    if (WCM) {
-      try {
-        // 調用WCM模組進行科目初始化
-        console.log(`📋 ${functionName}: 調用WCM模組進行科目初始化...`);
-        const categoryResult = await WCM.WCM_createCategory(userLedgerId, { userId: UID }, { batchLoad0099: true });
-        if (categoryResult.success) {
-          subjectCount = categoryResult.data.totalCategories || 0;
-          console.log(`✅ ${functionName}: WCM科目初始化完成，載入${subjectCount}筆科目`);
-        } else {
-          console.warn(`⚠️ ${functionName}: WCM科目初始化失敗: ${categoryResult.error?.message}`);
-        }
-
-        // 調用WCM模組進行帳戶初始化
-        console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
-        const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
-        if (walletResult.success) {
-          walletCount = walletResult.data.totalWallets || 0;
-          console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
-        } else {
-          console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message}`);
-        }
-      } catch (wcmError) {
-        console.warn(`⚠️ ${functionName}: WCM模組調用失敗: ${wcmError.message}`);
+    try {
+      // 1. 調用WCM模組進行科目初始化
+      console.log(`📋 ${functionName}: 調用WCM模組進行科目初始化...`);
+      const categoryResult = await WCM.WCM_createCategory(userLedgerId, { userId: UID }, { batchLoad0099: true });
+      if (categoryResult.success) {
+        subjectCount = categoryResult.data.totalCategories || 0;
+        console.log(`✅ ${functionName}: WCM科目初始化完成，載入${subjectCount}筆科目`);
+      } else {
+        console.warn(`⚠️ ${functionName}: WCM科目初始化失敗: ${categoryResult.error?.message}`);
       }
+
+      // 2. 調用WCM模組進行帳戶初始化
+      console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
+      const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
+      if (walletResult.success) {
+        walletCount = walletResult.data.totalWallets || 0;
+        console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
+      } else {
+        console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message}`);
+      }
+
+      // 3. 調用BM模組進行預算結構初始化
+      console.log(`💰 ${functionName}: 調用BM模組進行預算結構初始化...`);
+      const budgetStructureResult = await BM.BM_createBudgetsSubcollectionFramework(userLedgerId, UID);
+      if (budgetStructureResult.success) {
+        budgetInitialized = true;
+        console.log(`✅ ${functionName}: BM預算結構初始化完成`);
+      } else {
+        console.warn(`⚠️ ${functionName}: BM預算結構初始化失敗: ${budgetStructureResult.message}`);
+      }
+
+      // 4. 調用CM模組進行協作結構初始化
+      console.log(`🤝 ${functionName}: 調用CM模組進行協作結構初始化...`);
+      const collaborationResult = await CM.CM_initializeCollaborationSystem(UID);
+      if (collaborationResult.success) {
+        collaborationInitialized = true;
+        console.log(`✅ ${functionName}: CM協作結構初始化完成`);
+      } else {
+        console.warn(`⚠️ ${functionName}: CM協作結構初始化失敗: ${collaborationResult.message}`);
+      }
+
+    } catch (moduleError) {
+      console.warn(`⚠️ ${functionName}: 模組調用過程中發生錯誤: ${moduleError.message}`);
     }
 
     // AM模組專注於帳本業務邏輯和資料載入，FS負責結構建立
@@ -1580,14 +1564,14 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       throw new Error(`帳本驗證失敗: ${verifyError.message}`);
     }
 
-    // v8.0.0 職責重構：記錄詳細的初始化統計
+    // 階段四完成：記錄詳細的模組整合統計
     const executionTime = Date.now() - startTime;
 
     await DL.DL_log(
       "AM",
       functionName,
       "INFO",
-      `v8.0.0 職責重構：用戶 ${UID} 帳本初始化完成，FS結構建立 + WCM資料初始化，共載入 ${subjectCount} 筆科目，${walletCount} 個帳戶，執行時間: ${executionTime}ms`,
+      `階段四完成：用戶 ${UID} 帳本初始化完成，整合WCM/BM/CM模組，共載入 ${subjectCount} 筆科目，${walletCount} 個帳戶，預算結構: ${budgetInitialized ? '完成' : '失敗'}，協作結構: ${collaborationInitialized ? '完成' : '失敗'}，執行時間: ${executionTime}ms`,
       UID,
       userLedgerId,
     );
@@ -1595,19 +1579,27 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     return {
       success: true,
       userLedgerId: userLedgerId,
-      structureHandledBy: "1311.FS.js",
-      dataHandledBy: "1350.WCM.js",
-      wcmIntegration: {
-        subjectCount: subjectCount,
-        walletCount: walletCount,
-        wcmAvailable: !!WCM
+      moduleIntegration: {
+        wcm: {
+          subjectCount: subjectCount,
+          walletCount: walletCount,
+          available: !!WCM
+        },
+        bm: {
+          budgetStructureInitialized: budgetInitialized,
+          available: !!BM
+        },
+        cm: {
+          collaborationStructureInitialized: collaborationInitialized,
+          available: !!CM
+        }
       },
       fsStructureResult: structureResult,
       initializationComplete: true,
-      stage: "v8.0.0_wcm_integration",
+      stage: "v8.0.0_module_integration_complete",
       subjectCount: subjectCount,
       walletCount: walletCount,
-      message: `v8.0.0 職責重構完成：帳本 ${userLedgerId} 建立成功，結構由FS處理，科目和帳戶由WCM處理`
+      message: `階段四完成：帳本 ${userLedgerId} 建立成功，AM專注基礎結構，WCM處理主數據，BM處理預算，CM處理協作`
     };
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
