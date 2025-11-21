@@ -736,9 +736,9 @@ async function BK_createTransaction(transactionData) {
           .doc(processedData.ledgerId)
           .collection('transactions')
           .doc(preparedData.id);
-        
+
         await transactionRef.set(preparedData);
-        
+
         BK_logInfo(`${logPrefix} 交易直接儲存至Firebase成功: ${preparedData.id}`, "新增交易", processedData.userId || "", "BK_createTransaction");
 
         return {
@@ -872,20 +872,19 @@ async function BK_getTransactions(queryParams = {}) {
 
 
     // 階段二修復：添加超時保護和降級處理機制
-    const processWithTimeout = async () => {
-      await BK_initialize();
-      const db = BK_INIT_STATUS.firestore_db;
+      const processWithTimeout = async () => {
+        await BK_initialize();
+        const firebaseDb = BK_INIT_STATUS.firestore_db;
 
-      if (!db) {
-        return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
-      }
+        if (!firebaseDb) {
+          return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
+        }
 
-      // 階段五完成：直接使用Firebase查詢交易記錄，移除FS依賴
-      const db = BK_INIT_STATUS.firestore_db;
-      let query = db.collection('ledgers')
-        .doc(ledgerId)
-        .collection('transactions')
-        .orderBy('createdAt', 'desc');
+        // 階段五完成：直接使用Firebase查詢交易記錄，移除FS依賴
+        let query = firebaseDb.collection('ledgers')
+          .doc(ledgerId)
+          .collection('transactions')
+          .orderBy('createdAt', 'desc');
 
       // 構建查詢條件
       if (queryParams.userId) {
@@ -923,7 +922,7 @@ async function BK_getTransactions(queryParams = {}) {
 
       try {
         // 嘗試標準查詢
-        const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+        const collectionRef = firebaseDb.collection('ledgers').doc(ledgerId).collection('transactions');
         transactionQueryResult = await BK_performStandardQuery(collectionRef, queryParams);
         queryMethod = 'standard';
       } catch (error) {
@@ -934,18 +933,18 @@ async function BK_getTransactions(queryParams = {}) {
         BK_trackError(firebaseError.type);
 
         // 降級查詢策略
-        try {
-          const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
-          transactionQueryResult = await BK_performDegradedQuery(collectionRef, queryParams);
-          queryMethod = 'degraded';
-        } catch (degradedError) {
-          BK_logError(`${logPrefix} 降級查詢也失敗: ${degradedError.message}`, "查詢交易", queryParams.userId || "", "DEGRADED_QUERY_ERROR", degradedError.toString(), "BK_getTransactions");
+          try {
+            const collectionRef = firebaseDb.collection('ledgers').doc(ledgerId).collection('transactions');
+            transactionQueryResult = await BK_performDegradedQuery(collectionRef, queryParams);
+            queryMethod = 'degraded';
+          } catch (degradedError) {
+            BK_logError(`${logPrefix} 降級查詢也失敗: ${degradedError.message}`, "查詢交易", queryParams.userId || "", "DEGRADED_QUERY_ERROR", degradedError.toString(), "BK_getTransactions");
 
-          // 最後嘗試最簡單的查詢
-          const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
-          transactionQueryResult = await BK_performMinimalQuery(collectionRef, queryParams);
-          queryMethod = 'minimal';
-        }
+            // 最後嘗試最簡單的查詢
+            const collectionRef = firebaseDb.collection('ledgers').doc(ledgerId).collection('transactions');
+            transactionQueryResult = await BK_performMinimalQuery(collectionRef, queryParams);
+            queryMethod = 'minimal';
+          }
       }
 
       BK_logInfo(`${logPrefix} 查詢完成，使用${queryMethod}方法，返回${transactionQueryResult.transactions.length}筆交易`, "查詢交易", queryParams.userId || "", "BK_getTransactions");
@@ -1189,9 +1188,9 @@ async function BK_updateTransaction(transactionId, updateData) {
     }
 
     await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
+    const firebaseDb = BK_INIT_STATUS.firestore_db;
 
-    if (!db) {
+    if (!firebaseDb) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
@@ -1201,7 +1200,7 @@ async function BK_updateTransaction(transactionId, updateData) {
       return BK_formatErrorResponse("MISSING_LEDGER_ID", "更新交易需要指定ledgerId");
     }
 
-    const querySnapshot = await db.collection('ledgers')
+    const querySnapshot = await firebaseDb.collection('ledgers')
       .doc(ledgerId)
       .collection('transactions')
       .where('id', '==', transactionId)
@@ -1278,9 +1277,9 @@ async function BK_deleteTransaction(transactionId, params = {}) {
     }
 
     await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
+    const firebaseDb = BK_INIT_STATUS.firestore_db;
 
-    if (!db) {
+    if (!firebaseDb) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
@@ -1290,7 +1289,7 @@ async function BK_deleteTransaction(transactionId, params = {}) {
       return BK_formatErrorResponse("MISSING_LEDGER_ID", "刪除交易需要指定ledgerId");
     }
 
-    const querySnapshot = await db.collection('ledgers')
+    const querySnapshot = await firebaseDb.collection('ledgers')
       .doc(ledgerId)
       .collection('transactions')
       .where('id', '==', transactionId)
@@ -1305,9 +1304,9 @@ async function BK_deleteTransaction(transactionId, params = {}) {
     await doc.ref.delete();
 
     const logCollection = getEnvVar('LOG_COLLECTION', 'log');
-    await db.collection(logCollection) // 修正：應為db.collection(logCollection)
+    await firebaseDb.collection(logCollection)
       .doc(ledgerId)
-      .collection('log') // 修正：應為.add()方法
+      .collection('log')
       .add({
         時間: admin.firestore.Timestamp.now(),
         訊息: `交易記錄已刪除: ${transactionId}`,
@@ -3229,9 +3228,9 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId, ledgerI
     BK_logInfo(`${logPrefix} 查詢日期範圍交易: ${startDate} 到 ${endDate}`, "日期範圍查詢", userId || "", "BK_getTransactionsByDateRange");
 
     await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
+    const firebaseDb = BK_INIT_STATUS.firestore_db;
 
-    if (!db) {
+    if (!firebaseDb) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
@@ -3241,7 +3240,7 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId, ledgerI
     }
 
     // 修正：使用1311 FS.js標準路徑格式
-    const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+    const collectionRef = firebaseDb.collection('ledgers').doc(ledgerId).collection('transactions');
 
     let query = collectionRef.orderBy('createdAt', 'desc').limit(200);
 
@@ -3381,14 +3380,14 @@ module.exports = {
   BK_getTransactionById: async function(transactionId, queryParams = {}) {
     try {
       await BK_initialize();
-      const db = BK_INIT_STATUS.firestore_db;
+      const firebaseDb = BK_INIT_STATUS.firestore_db;
       // 階段三修正：ledgerId必須從queryParams中提供
       if (!queryParams.ledgerId) {
         throw new Error("MISSING_LEDGER_ID: 獲取交易詳情需要指定ledgerId");
       }
       const ledgerId = queryParams.ledgerId;
       // 修正：使用1311 FS.js標準路徑格式
-      const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+      const collectionRef = firebaseDb.collection('ledgers').doc(ledgerId).collection('transactions');
       const idField = getEnvVar('ID_FIELD', 'id');
 
       const querySnapshot = await collectionRef.where(idField, '==', transactionId).limit(1).get();
