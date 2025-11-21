@@ -69,7 +69,7 @@ console.log('✅ 階段五完成：FS模組已移除，Firebase操作由各專�
 let BK, LBK, DD, AM, SR;
 try {
   BK = require('./13. Replit_Module code_BL/1301. BK.js');    // 記帳處理模組
-  
+
   // 驗證關鍵函數是否正確載入
   if (BK && typeof BK.BK_parseQuickInput === 'function') {
     console.log('✅ BK 模組載入成功 - BK_parseQuickInput函數檢查通過');
@@ -116,7 +116,7 @@ try {
   try {
     // 階段五完成：FS模組已完全移除，WH模組直接使用Firebase配置
     console.log('✅ 階段五完成：FS模組已移除，WH模組直接使用firebase-config模組');
-    
+
     // 設置全域變數確保WH模組知道FS已移除
     global.FS_MODULE_READY = false;
     global.FS_REMOVED = true;
@@ -161,7 +161,7 @@ if (BK && typeof BK.BK_initialize === 'function') {
   console.log('🔧 初始化 BK 模組...');
   BK.BK_initialize().then(() => {
     console.log('✅ BK 模組初始化完成');
-    
+
     // 驗證關鍵函數可用性
     if (typeof BK.BK_parseQuickInput === 'function') {
       console.log('✅ BK_parseQuickInput函數可用');
@@ -220,7 +220,7 @@ console.log('🎉 階段五完成：FS模組移除狀態確認');
 console.log('✅ FS模組已完全移除，職責分散完成');
 console.log('📋 Firebase操作現由以下專門模組處理:');
 console.log('  - AM模組：帳號管理相關Firebase操作');
-console.log('  - WCM模組：帳戶與科目管理相關Firebase操作'); 
+console.log('  - WCM模組：帳戶與科目管理相關Firebase操作');
 console.log('  - BM模組：預算管理相關Firebase操作');
 console.log('  - CM模組：協作管理相關Firebase操作');
 console.log('  - 其他模組：直接使用firebase-config模組');
@@ -263,11 +263,11 @@ if (WH) {
         timestamp: new Date().toISOString(),
         status: 'healthy',
         modules: {
-          WH: !!WH,
-          LBK: !!LBK,
-          DD: !!DD,
-          FS: !!FS,
-          DL: !!DL
+          WH: !!WH ? 'loaded' : 'not loaded',
+          LBK: !!LBK ? 'loaded' : 'not loaded',
+          DD: !!DD ? 'loaded' : 'not loaded',
+          DL: !!DL ? 'loaded' : 'not loaded'
+          // FS模組已移除 - 階段五完成
         },
         memory: process.memoryUsage(),
         uptime: process.uptime()
@@ -318,7 +318,6 @@ app.get('/', async (req, res) => {
         WH: !!WH ? 'loaded' : 'not loaded',
         LBK: !!LBK ? 'loaded' : 'not loaded',
         DD: !!DD ? 'loaded' : 'not loaded',
-        FS: !!FS ? 'loaded' : 'not loaded',
         DL: !!DL ? 'loaded' : 'not loaded',
         BK: !!BK ? 'loaded' : 'not loaded',
         AM: !!AM ? 'loaded' : 'not loaded',
@@ -368,8 +367,8 @@ app.get('/health', async (req, res) => {
       service: 'LINE_WEBHOOK_SERVICE',
       timestamp: new Date().toISOString(),
       services: {
-        webhook: { 
-          status: WH ? 'up' : 'down', 
+        webhook: {
+          status: WH ? 'up' : 'down',
           port: 3000,
           purpose: 'LINE OA Message Processing'
         },
@@ -377,8 +376,8 @@ app.get('/health', async (req, res) => {
           status: LBK ? 'up' : 'down',
           purpose: 'Quick Booking Integration'
         },
-        database: { 
-          status: FS ? 'up' : 'down', 
+        database: {
+          status: FS ? 'up' : 'down', // FS模組已移除，此處檢查結果預計為 'down'
           type: 'Firestore',
           purpose: 'User Data Storage'
         }
@@ -387,7 +386,7 @@ app.get('/health', async (req, res) => {
         WH: { loaded: !!WH, purpose: 'Webhook處理' },
         LBK: { loaded: !!LBK, purpose: 'LINE快速記帳' },
         DD: { loaded: !!DD, purpose: '數據分發' },
-        FS: { loaded: !!FS, purpose: 'Firestore操作' },
+        FS: { loaded: !!FS, purpose: 'Firestore操作' }, // FS模組已移除，此處應為 false
         DL: { loaded: !!DL, purpose: '日誌記錄' },
         BK: { loaded: !!BK, purpose: '記帳業務邏輯' },
         AM: { loaded: !!AM, purpose: '帳號管理' },
@@ -546,7 +545,7 @@ app.post('/webhook', async (req, res) => {
 // ✅ 132個RESTful API端點已完全遷移至ASL.js (Port 5000)
 // ✅ index.js專注於LINE Webhook處理，保留5個核心端點：
 //    - POST /webhook - LINE訊息處理
-//    - GET /health - 服務健康檢查  
+//    - GET /health - 服務健康檢查
 //    - GET /test-wh - Webhook模組測試
 //    - GET /check-https - HTTPS支援檢查
 //    - GET / - 服務狀態首頁

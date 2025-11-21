@@ -374,13 +374,13 @@ if (!admin.apps.length) {
   }
 }
 
-// 引入依賴模組
+// 引入依賴模組 - 階段五完成：移除FS模組依賴
 const DL = require('./1310. DL.js');
-const FS = require('./1311. FS.js');
 const WCM = require('./1350. WCM.js'); // DCN-0023階段三：引入WCM模組進行帳戶科目驗證
+// FS模組已完全移除 - 階段五完成
 
-// BK模組專注記帳核心邏輯，透過WCM處理帳戶科目驗證
-console.log('✅ BK模組v3.3.0：專注記帳核心邏輯，整合WCM帳戶科目驗證');
+// BK模組專注記帳核心邏輯，透過WCM處理帳戶科目驗證，直接使用Firebase
+console.log('✅ BK模組v3.3.1：階段五完成 - 移除FS依賴，專注記帳核心邏輯，整合WCM帳戶科目驗證');
 
 /**
  * 生成預設用戶ID（業務邏輯版本）
@@ -713,14 +713,16 @@ async function BK_createTransaction(transactionData) {
         // FS已在模組頂部載入，無需重複宣告
         // const FS = require('./1311. FS.js'); // Removed redundant require
 
-        // 透過1311.FS.js驗證帳本存在
-        const ledgerCheck = await FS.FS_getDocument('ledgers', processedData.ledgerId, 'SYSTEM');
+        // 階段五完成：直接使用Firebase驗證帳本存在，移除FS依賴
+        const db = BK_INIT_STATUS.firestore_db;
+        const ledgerRef = db.collection('ledgers').doc(processedData.ledgerId);
+        const ledgerDoc = await ledgerRef.get();
 
-        if (!ledgerCheck.success || !ledgerCheck.exists) {
+        if (!ledgerDoc.exists) {
           throw new Error(`帳本不存在或無法存取: ${processedData.ledgerId}，請確認AM模組已正確初始化`);
         }
 
-        BK_logInfo(`${logPrefix} 帳本驗證通過（透過1311.FS.js）: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
+        BK_logInfo(`${logPrefix} 帳本驗證通過（直接Firebase）: ${processedData.ledgerId}`, "新增交易", processedData.userId || "", "BK_createTransaction");
 
         // 生成交易ID
         const transactionId = await BK_generateTransactionId(processId);
@@ -728,14 +730,16 @@ async function BK_createTransaction(transactionData) {
         // 準備交易數據
         const preparedData = await BK_prepareTransactionData(transactionId, processedData, processId);
 
-        // 階段一修復：透過1311.FS.js儲存交易記錄
-        // FS已在模組頂部載入，無需重複宣告
-        // const FS = require('./1311. FS.js'); // Removed redundant require
-        const result = await FS.FS_manageTransaction(processedData.ledgerId, 'CREATE', preparedData, processedData.userId);
-
-        if (!result.success) {
-          throw new Error(`交易儲存失敗: ${result.error}`);
-        }
+        // 階段五完成：直接使用Firebase儲存交易記錄，移除FS依賴
+        const db = BK_INIT_STATUS.firestore_db;
+        const transactionRef = db.collection('ledgers')
+          .doc(processedData.ledgerId)
+          .collection('transactions')
+          .doc(preparedData.id);
+        
+        await transactionRef.set(preparedData);
+        
+        BK_logInfo(`${logPrefix} 交易直接儲存至Firebase成功: ${preparedData.id}`, "新增交易", processedData.userId || "", "BK_createTransaction");
 
         return {
           transactionId: transactionId,
@@ -876,43 +880,41 @@ async function BK_getTransactions(queryParams = {}) {
         return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
       }
 
-      // 階段一修正：透過1311.FS.js查詢交易記錄
-      const FS = require('./1311. FS.js');
-      const queryConditions = [];
+      // 階段五完成：直接使用Firebase查詢交易記錄，移除FS依賴
+      const db = BK_INIT_STATUS.firestore_db;
+      let query = db.collection('ledgers')
+        .doc(ledgerId)
+        .collection('transactions')
+        .orderBy('createdAt', 'desc');
 
       // 構建查詢條件
       if (queryParams.userId) {
-        queryConditions.push({ field: 'userId', operator: '==', value: queryParams.userId });
+        query = query.where('userId', '==', queryParams.userId);
       }
       if (queryParams.type) {
-        queryConditions.push({ field: 'type', operator: '==', value: queryParams.type });
+        query = query.where('type', '==', queryParams.type);
       }
 
-      const queryOptions = {
-        orderBy: { field: 'createdAt', direction: 'desc' },
-        limit: queryParams.limit ? Math.min(parseInt(queryParams.limit), 50) : 20
-      };
+      const limit = queryParams.limit ? Math.min(parseInt(queryParams.limit), 50) : 20;
+      query = query.limit(limit);
 
-      const fsQueryResult = await FS.FS_manageTransaction(ledgerId, 'QUERY',
-        { conditions: queryConditions, options: queryOptions },
-        queryParams.userId || 'SYSTEM');
+      const snapshot = await query.get();
+      const transactions = [];
 
-      if (!fsQueryResult.success) {
-        throw new Error(`1311.FS.js查詢失敗: ${fsQueryResult.error}`);
-      }
-
-      // 轉換結果格式
-      const transactions = fsQueryResult.results.map(result => ({
-        id: result.id,
-        ...result.data
-      }));
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        transactions.push({
+          id: data.id || doc.id,
+          ...data
+        });
+      });
 
       const queryResult = {
         transactions: transactions,
         total: transactions.length,
         page: queryParams.page || 1,
         limit: queryParams.limit || 20,
-        dataFormat: 'FS_MANAGED_V1.0'
+        dataFormat: 'DIRECT_FIREBASE_V3.3.1'
       };
 
       // 階段二修復：實作降級查詢策略
