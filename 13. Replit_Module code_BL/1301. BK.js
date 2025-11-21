@@ -1188,9 +1188,9 @@ async function BK_updateTransaction(transactionId, updateData) {
     }
 
     await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
+    const firebaseDb = BK_INIT_STATUS.firestore_db;
 
-    if (!db) {
+    if (!firebaseDb) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
@@ -1200,7 +1200,7 @@ async function BK_updateTransaction(transactionId, updateData) {
       return BK_formatErrorResponse("MISSING_LEDGER_ID", "更新交易需要指定ledgerId");
     }
 
-    const querySnapshot = await db.collection('ledgers')
+    const querySnapshot = await firebaseDb.collection('ledgers')
       .doc(ledgerId)
       .collection('transactions')
       .where('id', '==', transactionId)
@@ -1277,9 +1277,9 @@ async function BK_deleteTransaction(transactionId, params = {}) {
     }
 
     await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
+    const firebaseDb = BK_INIT_STATUS.firestore_db;
 
-    if (!db) {
+    if (!firebaseDb) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
@@ -1289,7 +1289,7 @@ async function BK_deleteTransaction(transactionId, params = {}) {
       return BK_formatErrorResponse("MISSING_LEDGER_ID", "刪除交易需要指定ledgerId");
     }
 
-    const querySnapshot = await db.collection('ledgers')
+    const querySnapshot = await firebaseDb.collection('ledgers')
       .doc(ledgerId)
       .collection('transactions')
       .where('id', '==', transactionId)
@@ -1304,9 +1304,9 @@ async function BK_deleteTransaction(transactionId, params = {}) {
     await doc.ref.delete();
 
     const logCollection = getEnvVar('LOG_COLLECTION', 'log');
-    await db.collection(logCollection) // 修正：應為db.collection(logCollection)
+    await firebaseDb.collection(logCollection)
       .doc(ledgerId)
-      .collection('log') // 修正：應為.add()方法
+      .collection('log')
       .add({
         時間: admin.firestore.Timestamp.now(),
         訊息: `交易記錄已刪除: ${transactionId}`,
@@ -3228,9 +3228,9 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId, ledgerI
     BK_logInfo(`${logPrefix} 查詢日期範圍交易: ${startDate} 到 ${endDate}`, "日期範圍查詢", userId || "", "BK_getTransactionsByDateRange");
 
     await BK_initialize();
-    const db = BK_INIT_STATUS.firestore_db;
+    const firebaseDb = BK_INIT_STATUS.firestore_db;
 
-    if (!db) {
+    if (!firebaseDb) {
       return BK_formatErrorResponse("DB_NOT_INITIALIZED", "Firebase數據庫未初始化");
     }
 
@@ -3240,7 +3240,7 @@ async function BK_getTransactionsByDateRange(startDate, endDate, userId, ledgerI
     }
 
     // 修正：使用1311 FS.js標準路徑格式
-    const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+    const collectionRef = firebaseDb.collection('ledgers').doc(ledgerId).collection('transactions');
 
     let query = collectionRef.orderBy('createdAt', 'desc').limit(200);
 
