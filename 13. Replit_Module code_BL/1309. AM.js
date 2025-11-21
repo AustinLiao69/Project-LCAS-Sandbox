@@ -1424,7 +1424,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     console.log(`🔧 ${functionName}: 直接使用Firebase建立帳本子集合結構...`);
     
     // 建立基本子集合結構
-    const subcollections = ['transactions', 'categories', 'accounts', 'budgets'];
+    const subcollections = ['transactions', 'categories', 'wallets', 'budgets'];
     const structureResult = {
       success: true,
       created_subcollections: subcollections
@@ -1551,20 +1551,20 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
       // 驗證所有四個子集合是否建立
       const categoriesSnapshot = await ledgerRef.collection("categories").limit(1).get(); // 修正科目集合名稱
-      const accountsSnapshot = await ledgerRef.collection("accounts").limit(1).get();
+      const walletsSnapshot = await ledgerRef.collection("wallets").limit(1).get();
       const transactionsSnapshot = await ledgerRef.collection("transactions").limit(1).get();
       const budgetsSnapshot = await ledgerRef.collection("budgets").limit(1).get();
 
       const subcollectionStatus = {
         categories: !categoriesSnapshot.empty, // 修正科目集合名稱
-        accounts: !accountsSnapshot.empty,
+        wallets: !walletsSnapshot.empty,
         transactions: !transactionsSnapshot.empty,
         budgets: !budgetsSnapshot.empty
       };
 
       console.log(`✅ 帳本 ${userLedgerId} 驗證成功`);
       console.log(`✅ Categories集合: ${subcollectionStatus.categories ? '已建立' : '❌未建立'}`);
-      console.log(`✅ Accounts集合: ${subcollectionStatus.accounts ? '已建立' : '❌未建立'}`);
+      console.log(`✅ wallets集合: ${subcollectionStatus.wallets ? '已建立' : '❌未建立'}`);
       console.log(`✅ Transactions集合: ${subcollectionStatus.transactions ? '已建立' : '❌未建立'}`);
       console.log(`✅ Budgets集合: ${subcollectionStatus.budgets ? '已建立' : '❌未建立'}`);
 
@@ -1672,11 +1672,11 @@ async function AM_ensureUserLedger(UID) {
       }
 
       // 檢查帳戶集合
-      const accountsCollection = await ledgerRef.collection("accounts").limit(1).get();
-      if (accountsCollection.empty) {
+      const walletsCollection = await ledgerRef.collection("wallets").limit(1).get();
+      if (walletsCollection.empty) {
         console.log(`  - 帳戶集合缺失`);
         needsInitialization = true;
-        missingParts.push("accounts_collection");
+        missingParts.push("wallets_collection");
       } else {
         console.log(`  - 帳戶集合存在`);
       }
