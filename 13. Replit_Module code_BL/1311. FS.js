@@ -1389,61 +1389,6 @@ async function FS_initializeCollaborationStructure(requesterId) {
 }
 
 /**
- * 45. 驗證協作帳本資料結構
- * @version 2025-11-12-V2.7.1
- * @date 2025-11-12
- * @description 驗證協作帳本資料是否符合標準結構，確保資料一致性
- */
-function FS_validateCollaborationData(collaborationData) {
-  const requiredFields = ['ledgerId', 'ownerId', 'collaborationType', 'settings', 'createdAt', 'updatedAt', 'status'];
-  const validCollaborationTypes = ['shared', 'project', 'category'];
-  const validStatuses = ['active', 'archived', 'suspended'];
-
-  // 檢查必要欄位
-  for (const field of requiredFields) {
-    if (!collaborationData.hasOwnProperty(field)) {
-      return {
-        valid: false,
-        error: `缺少必要欄位: ${field}`,
-        field: field
-      };
-    }
-  }
-
-  // 驗證協作類型
-  if (!validCollaborationTypes.includes(collaborationData.collaborationType)) {
-    return {
-      valid: false,
-      error: `無效的協作類型: ${collaborationData.collaborationType}`,
-      field: 'collaborationType'
-    };
-  }
-
-  // 驗證狀態
-  if (!validStatuses.includes(collaborationData.status)) {
-    return {
-      valid: false,
-      error: `無效的狀態: ${collaborationData.status}`,
-      field: 'status'
-    };
-  }
-
-  // 驗證設定結構
-  if (!collaborationData.settings || typeof collaborationData.settings !== 'object') {
-    return {
-      valid: false,
-      error: '設定欄位必須是物件類型',
-      field: 'settings'
-    };
-  }
-
-  return {
-    valid: true,
-    message: '協作帳本資料結構驗證通過'
-  };
-}
-
-/**
  * 46. 建立協作文檔（簡化版）
  * @version 2025-11-12-V2.7.1
  * @date 2025-11-12
