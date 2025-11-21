@@ -9,14 +9,14 @@ const admin = require('firebase-admin');
 const WebSocket = require('ws');
 
 // 引入依賴模組
-let DL, AM, DD, BK, LINE_OA, FS;
+let DL, AM, DD, BK, LINE_OA;
 try {
   DL = require('./1310. DL.js');
   AM = require('./1309. AM.js');
   DD = require('./1331. DD1.js');
   BK = require('./1301. BK.js');
   LINE_OA = require('./1320. WH.js');
-  FS = require('./1311. FS.js'); // FS模組包含完整的Firestore操作函數
+  // FS模組已移除 - CM模組直接使用Firebase實例
 } catch (error) {
   console.warn('CM模組依賴載入警告:', error.message);
 }
@@ -158,52 +158,64 @@ async function CM_initializeCollaborationSystem(requesterId = 'SYSTEM') {
       ]
     };
 
-    // 儲存協作架構定義
-    if (FS && typeof FS.FS_createDocument === 'function') {
-      const structureResult = await FS.FS_createDocument('_system', 'collaboration_structure_v2_3', collaborationStructure, requesterId);
-      initResults.push({ type: '協作架構定義', result: structureResult });
-    }
+    // 直接使用Firebase實例進行文檔操作（FS模組已移除）
+    try {
+      // 儲存協作架構定義
+      await db.collection('_system').doc('collaboration_structure_v2_3').set(collaborationStructure);
+      initResults.push({ 
+        type: '協作架構定義', 
+        result: { success: true, message: '協作架構定義已儲存' }
+      });
 
-    // 2. 建立協作集合框架
-    const collaborationPlaceholder = {
-      type: 'collection_placeholder',
-      purpose: '確保 collaborations 集合存在',
-      version: '2.3.0',
-      createdAt: admin.firestore.Timestamp.now(),
-      note: '此文檔由CM模組管理，確保協作集合框架存在'
-    };
+      // 2. 建立協作集合框架
+      const collaborationPlaceholder = {
+        type: 'collection_placeholder',
+        purpose: '確保 collaborations 集合存在',
+        version: '2.3.0',
+        createdAt: admin.firestore.Timestamp.now(),
+        note: '此文檔由CM模組管理，確保協作集合框架存在'
+      };
 
-    if (FS && typeof FS.FS_createDocument === 'function') {
-      const collectionResult = await FS.FS_createDocument('collaborations', '_placeholder_v2_3', collaborationPlaceholder, requesterId);
-      initResults.push({ type: '協作集合框架', result: collectionResult });
-    }
+      await db.collection('collaborations').doc('_placeholder_v2_3').set(collaborationPlaceholder);
+      initResults.push({ 
+        type: '協作集合框架', 
+        result: { success: true, message: '協作集合框架已建立' }
+      });
 
-    // 3. 建立協作預設設定
-    const defaultCollaborationSettings = {
-      version: '2.3.0',
-      default_settings: {
-        allowInvite: true,
-        allowEdit: true,
-        allowDelete: false,
-        requireApproval: false,
-        maxMembers: 10,
-        invitationExpireDays: 7
-      },
-      permission_levels: CM_PERMISSION_LEVELS,
-      notification_settings: {
-        member_joined: true,
-        member_left: true,
-        permission_changed: true,
-        data_updated: false,
-        conflict_detected: true
-      },
-      createdBy: 'CM_v2.3.0',
-      createdAt: admin.firestore.Timestamp.now()
-    };
+      // 3. 建立協作預設設定
+      const defaultCollaborationSettings = {
+        version: '2.3.0',
+        default_settings: {
+          allowInvite: true,
+          allowEdit: true,
+          allowDelete: false,
+          requireApproval: false,
+          maxMembers: 10,
+          invitationExpireDays: 7
+        },
+        permission_levels: CM_PERMISSION_LEVELS,
+        notification_settings: {
+          member_joined: true,
+          member_left: true,
+          permission_changed: true,
+          data_updated: false,
+          conflict_detected: true
+        },
+        createdBy: 'CM_v2.3.0',
+        createdAt: admin.firestore.Timestamp.now()
+      };
 
-    if (FS && typeof FS.FS_createDocument === 'function') {
-      const settingsResult = await FS.FS_createDocument('_system', 'collaboration_default_settings', defaultCollaborationSettings, requesterId);
-      initResults.push({ type: '協作預設設定', result: settingsResult });
+      await db.collection('_system').doc('collaboration_default_settings').set(defaultCollaborationSettings);
+      initResults.push({ 
+        type: '協作預設設定', 
+        result: { success: true, message: '協作預設設定已儲存' }
+      });
+
+    } catch (firebaseError) {
+      initResults.push({ 
+        type: 'Firebase操作', 
+        result: { success: false, error: firebaseError.message }
+      });
     }
 
     const successCount = initResults.filter(r => r.result && r.result.success).length;
