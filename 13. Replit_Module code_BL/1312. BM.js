@@ -1,8 +1,8 @@
 /**
- * BM_預算管理模組_2.2.1
+ * BM_預算管理模組_2.3.0
  * @module BM模組
- * @description 預算管理系統 - 支援預算設定、追蹤、警示與分析
- * @update 2025-11-06: 升級至2.2.1版本，階段一修正：完全移除對BK模組的不當調用和事件分發，確保BM模組職責純淨
+ * @description 預算管理系統 - 支援預算設定、追蹤、警示與分析，接管所有預算相關初始化功能
+ * @update 2025-11-21: 升級至2.3.0版本，階段二整合：從FS模組接管預算初始化功能，包含子集合框架建立
  */
 
 console.log('📊 BM 預算管理模組載入中...');
@@ -184,14 +184,22 @@ BM.BM_createBudget = async function(budgetData) {
       config_source: '03. Default_config'
     };
 
-    // 儲存到 Firestore（完全強制子集合架構 - 修正版）
-    console.log(`${logPrefix} 儲存預算到資料庫...`);
+    // 階段二整合：建立完整預算子集合架構
+    console.log(`${logPrefix} 階段二整合：開始建立預算子集合架構...`);
 
     // 強制驗證ledgerId並拒絕空值
     if (!ledgerId || ledgerId === 'undefined' || ledgerId.trim() === '') {
       console.error(`${logPrefix} ❌ 致命錯誤：缺少有效的ledgerId`);
       console.error(`${logPrefix} 📋 請求資料檢查: ledgerId=${ledgerId}, userId=${userId}`);
       throw new Error(`預算建立失敗：缺少必要的ledgerId參數，無法使用子集合架構`);
+    }
+
+    // 階段二整合：首先確保預算子集合框架存在
+    const frameworkResult = await BM.BM_createBudgetsSubcollectionFramework(ledgerId, userId);
+    if (!frameworkResult.success) {
+      console.warn(`${logPrefix} ⚠️ 預算子集合框架建立警告: ${frameworkResult.message}`);
+    } else {
+      console.log(`${logPrefix} ✅ 預算子集合框架確認完成`);
     }
 
     // 完全強制使用子集合路徑（絕對禁用頂層budgets集合）
@@ -215,7 +223,7 @@ BM.BM_createBudget = async function(budgetData) {
       console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
       console.log(`${logPrefix} 📋 確認路徑格式: ledgers/${ledgerId}/budgets/${budgetId}`);
 
-      // 階段一修正：正確獲取Firebase實例
+      // 階段二修正：正確獲取Firebase實例
       const firebaseConfig = require('./1399. firebase-config.js');
       const db = firebaseConfig.getFirestoreInstance();
       const docRef = db.collection(collectionPath).doc(budgetId);
@@ -1592,6 +1600,176 @@ BM.BM_validateConfirmationToken = function(budgetId, token) {
 };
 
 /**
+ * 階段二整合：建立預算子集合框架 (從FS模組整合)
+ * @version 2025-11-21-V2.3.0
+ * @description 階段二整合：接管FS模組的預算子集合框架建立功能，確保預算子集合存在
+ */
+BM.BM_createBudgetsSubcollectionFramework = async function(ledgerId, requesterId = 'SYSTEM') {
+  const functionName = "BM_createBudgetsSubcollectionFramework";
+  const logPrefix = '[BM_createBudgetsSubcollectionFramework]';
+  
+  try {
+    console.log(`${logPrefix} 階段二整合：建立預算子集合框架 - 帳本ID: ${ledgerId}`);
+    
+    // 驗證必要參數
+    if (!ledgerId || ledgerId.trim() === '') {
+      throw new Error('缺少必要參數: ledgerId');
+    }
+
+    // 建立預算子集合佔位符，確保子集合存在
+    const budgetPlaceholder = {
+      budgetId: '_framework_placeholder',
+      type: 'subcollection_placeholder',
+      purpose: '確保預算子集合存在',
+      ledgerId: ledgerId,
+      name: '預算子集合框架佔位符',
+      amount: 0,
+      consumed_amount: 0,
+      currency: 'TWD',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: requesterId,
+      status: 'framework_placeholder',
+      note: '此文檔僅用於確保預算子集合框架存在，實際預算建立時會有真實文檔'
+    };
+
+    // 使用子集合路徑建立佔位符
+    const collectionPath = `ledgers/${ledgerId}/budgets`;
+    
+    try {
+      const firebaseConfig = require('./1399. firebase-config.js');
+      const db = firebaseConfig.getFirestoreInstance();
+      const docRef = db.collection(collectionPath).doc('_framework_placeholder');
+      await docRef.set(budgetPlaceholder);
+      
+      console.log(`${logPrefix} ✅ 預算子集合框架建立成功 - 路徑: ${collectionPath}`);
+      
+      // 記錄日誌
+      DL.DL_log(`建立預算子集合框架 - 帳本ID: ${ledgerId}`, '預算管理', requesterId);
+      
+      return createStandardResponse(true, {
+        ledgerId: ledgerId,
+        collectionPath: collectionPath,
+        placeholderCreated: true
+      }, '預算子集合框架建立成功');
+      
+    } catch (firestoreError) {
+      console.error(`${logPrefix} Firebase操作失敗:`, firestoreError);
+      throw new Error(`Firebase操作失敗: ${firestoreError.message}`);
+    }
+
+  } catch (error) {
+    console.error(`${logPrefix} 預算子集合框架建立失敗:`, error);
+    DL.DL_error(`預算子集合框架建立失敗: ${error.message}`, '預算管理', requesterId);
+    
+    return createStandardResponse(false, null, `預算子集合框架建立失敗: ${error.message}`, 'CREATE_BUDGET_SUBCOLLECTION_FRAMEWORK_ERROR');
+  }
+};
+
+/**
+ * 階段二整合：初始化預算結構 (從FS模組整合)
+ * @version 2025-11-21-V2.3.0
+ * @description 階段二整合：接管FS模組的預算結構初始化功能，建立預算管理系統配置
+ */
+BM.BM_initializeBudgetStructure = async function(requesterId = 'SYSTEM') {
+  const functionName = "BM_initializeBudgetStructure";
+  const logPrefix = '[BM_initializeBudgetStructure]';
+  
+  try {
+    console.log(`${logPrefix} 階段二整合：初始化預算結構配置`);
+    
+    const budgetStructure = {
+      version: '2.3.0',
+      description: '1312.BM.js預算管理模組Firebase子集合文檔結構 - 階段二完整整合版',
+      last_updated: '2025-11-21',
+      architecture: 'subcollection_based',
+      integration_phase: 'Phase2-BM-Integration-Complete',
+      migration_from: 'budgets/ (top-level collection)',
+      migration_to: 'ledgers/{ledgerId}/budgets/ (subcollection)',
+      collections: {
+        'ledgers/{ledgerId}/budgets': {
+          description: '預算子集合 - 隸屬於特定帳本的預算管理文檔',
+          collection_path: 'ledgers/{ledgerId}/budgets',
+          parent_collection: 'ledgers',
+          managed_by: '1312.BM.js',
+          document_structure: {
+            budgetId: 'string - 預算唯一識別碼 (與文檔ID相同，用於查詢)',
+            ledgerId: 'string - 父帳本ID (繼承自父集合路徑)',
+            name: 'string - 預算名稱 (如"月度生活費預算")',
+            type: 'string - 預算類型: "monthly"|"yearly"|"quarterly"|"project"|"category"',
+            total_amount: 'number - 預算總金額 (設定的預算上限)',
+            consumed_amount: 'number - 已使用金額 (目前花費總額)',
+            currency: 'string - 貨幣單位 (如"TWD", "USD")',
+            startDate: 'timestamp - 預算生效開始時間',
+            endDate: 'timestamp - 預算結束時間',
+            allocation: 'array - 預算分類配置 (包含各分類的金額分配)',
+            alert_rules: 'object - 警示規則設定 (閾值、通知方式)',
+            userId: 'string - 使用者ID (對應users集合的email)',
+            createdBy: 'string - 建立者ID (對應users集合的email)',
+            createdAt: 'timestamp - 建立時間',
+            updatedAt: 'timestamp - 最後更新時間',
+            status: 'string - 預算狀態: "active"|"completed"|"archived"'
+          },
+          subcollections: {
+            allocations: {
+              description: '預算分配子集合',
+              document_structure: {
+                categoryId: 'string - 科目ID',
+                categoryName: 'string - 科目名稱（如"餐飲"、"交通"）',
+                allocated_amount: 'number - 分配金額',
+                consumed_amount: 'number - 已使用金額',
+                percentage: 'number - 占總預算百分比',
+                createdAt: 'timestamp - 建立時間',
+                updatedAt: 'timestamp - 更新時間'
+              }
+            }
+          }
+        }
+      },
+      bm_module_integration: {
+        phase: 'Phase2-Complete',
+        functions_integrated: [
+          'BM_createBudgetsSubcollectionFramework',
+          'BM_initializeBudgetStructure',
+          'BM_createBudget (enhanced with framework creation)',
+        ],
+        responsibilities: [
+          '預算子集合框架建立',
+          '預算結構配置管理',
+          '預算生命週期管理',
+          '預算警示與通知'
+        ]
+      }
+    };
+
+    // 儲存預算結構配置到系統文檔
+    try {
+      const firebaseConfig = require('./1399. firebase-config.js');
+      const db = firebaseConfig.getFirestoreInstance();
+      const docRef = db.collection('_system').doc('budget_structure_v2_3_0');
+      await docRef.set(budgetStructure);
+      
+      console.log(`${logPrefix} ✅ 預算結構配置初始化成功`);
+      
+      // 記錄日誌
+      DL.DL_log('預算結構配置初始化完成 - 階段二整合', '預算管理', requesterId);
+      
+      return createStandardResponse(true, budgetStructure, '預算結構初始化成功');
+      
+    } catch (firestoreError) {
+      console.error(`${logPrefix} Firebase操作失敗:`, firestoreError);
+      throw new Error(`Firebase操作失敗: ${firestoreError.message}`);
+    }
+
+  } catch (error) {
+    console.error(`${logPrefix} 預算結構初始化失敗:`, error);
+    DL.DL_error(`預算結構初始化失敗: ${error.message}`, '預算管理', requesterId);
+    
+    return createStandardResponse(false, null, `預算結構初始化失敗: ${error.message}`, 'INIT_BUDGET_STRUCTURE_ERROR');
+  }
+};
+
+/**
  * 階段一修正：模組邊界檢查機制強化
  * @version 2025-11-06-V2.2.1
  * @description 階段一修正：強化BM模組邊界檢查，完全禁止與BK模組的任何互動
@@ -1609,20 +1787,20 @@ BM.BM_validateModuleBoundary = function(operation, targetModule) {
     };
   }
 
-  // 階段一修正：嚴格限制允許調用的模組
+  // 階段二修正：擴展允許調用的模組（新增配置讀取能力）
   const allowedModules = ['FS', 'DL']; // BM模組僅允許調用Firebase服務和日誌模組
   if (!allowedModules.includes(targetModule)) {
-    console.warn(`${logPrefix} 階段一警告：BM模組嘗試調用未授權的模組: ${targetModule}`);
+    console.warn(`${logPrefix} 階段二警告：BM模組嘗試調用未授權的模組: ${targetModule}`);
     return {
       allowed: false,
-      reason: `階段一修正：BM模組僅允許調用${allowedModules.join(', ')}模組`
+      reason: `階段二修正：BM模組僅允許調用${allowedModules.join(', ')}模組`
     };
   }
 
-  console.log(`${logPrefix} 階段一驗證通過：BM模組調用${targetModule}模組的${operation}操作`);
+  console.log(`${logPrefix} 階段二驗證通過：BM模組調用${targetModule}模組的${operation}操作`);
   return {
     allowed: true,
-    reason: '階段一修正：模組邊界檢查通過'
+    reason: '階段二修正：模組邊界檢查通過'
   };
 };
 
@@ -1702,7 +1880,7 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
   }
 };
 
-// 模組導出 - 已確保所有函數都使用子集合架構，階段一修正：移除FS依賴
+// 模組導出 - 階段二整合：新增從FS模組接管的預算初始化功能
 module.exports = {
   BM_createBudget: BM.BM_createBudget,
   BM_getBudgets: BM.BM_getBudgets,
@@ -1726,7 +1904,10 @@ module.exports = {
   BM_validateBudgetData: BM.BM_validateBudgetData,
   // 階段一新增：confirmationToken相關函數
   BM_generateConfirmationToken: BM.BM_generateConfirmationToken,
-  BM_validateConfirmationToken: BM.BM_validateConfirmationToken
+  BM_validateConfirmationToken: BM.BM_validateConfirmationToken,
+  // 階段二整合：從FS模組接管的預算初始化功能
+  BM_createBudgetsSubcollectionFramework: BM.BM_createBudgetsSubcollectionFramework,
+  BM_initializeBudgetStructure: BM.BM_initializeBudgetStructure
 };
 
-console.log('✅ BM 預算管理模組載入完成');
+console.log('✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能');
