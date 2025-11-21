@@ -1179,126 +1179,11 @@ async function FS_initializePhase1Categories(ledgerId, userMode, requesterId) {
 }
 
 /**
- * 20. 系統健康檢查
+ * 20. 系統健康檢查 - 刪除
  * @version 2025-09-16-V2.1.0
  * @date 2025-09-16
  * @description 執行系統健康檢查，驗證Firebase連接、CRUD操作和核心功能
  */
-async function FS_performHealthCheck(requesterId) {
-  const functionName = "FS_performHealthCheck";
-  try {
-    FS_logOperation('系統健康檢查開始', "健康檢查", requesterId || "SYSTEM", "", "", functionName);
-
-    const healthResults = {
-      timestamp: new Date().toISOString(),
-      version: '2.1.0',
-      checks: []
-    };
-
-    // 1. Firebase連接檢查
-    try {
-      await FS_initializeConnection();
-      healthResults.checks.push({
-        component: 'Firebase連接',
-        status: 'healthy',
-        responseTime: '< 100ms'
-      });
-    } catch (error) {
-      healthResults.checks.push({
-        component: 'Firebase連接',
-        status: 'unhealthy',
-        error: error.message
-      });
-    }
-
-    // 2. 基礎CRUD操作檢查
-    try {
-      const testDoc = {
-        type: 'health_check',
-        timestamp: admin.firestore.Timestamp.now(),
-        testData: 'system_health_verification'
-      };
-
-      const createResult = await FS_createDocument('_health_check', 'crud_test', testDoc, 'SYSTEM');
-      const readResult = await FS_getDocument('_health_check', 'crud_test', 'SYSTEM');
-      const updateResult = await FS_updateDocument('_health_check', 'crud_test', { updated: true }, 'SYSTEM');
-      const deleteResult = await FS_deleteDocument('_health_check', 'crud_test', 'SYSTEM');
-
-      const crudSuccess = createResult.success && readResult.success &&
-                         updateResult.success && deleteResult.success;
-
-      healthResults.checks.push({
-        component: 'CRUD操作',
-        status: crudSuccess ? 'healthy' : 'unhealthy',
-        operations: {
-          create: createResult.success,
-          read: readResult.success,
-          update: updateResult.success,
-          delete: deleteResult.success
-        }
-      });
-    } catch (error) {
-      healthResults.checks.push({
-        component: 'CRUD操作',
-        status: 'unhealthy',
-        error: error.message
-      });
-    }
-
-    // 3. Phase 1核心功能檢查
-    try {
-      const phase1Check = await FS_verifyPhase1Functions();
-      healthResults.checks.push({
-        component: 'Phase 1功能',
-        status: phase1Check.allFunctional ? 'healthy' : 'degraded',
-        functionalModules: phase1Check.functionalCount,
-        totalModules: phase1Check.totalCount,
-        details: phase1Check.moduleStatus
-      });
-    } catch (error) {
-      healthResults.checks.push({
-        component: 'Phase 1功能',
-        status: 'unhealthy',
-        error: error.message
-      });
-    }
-
-    // 4. 系統資源檢查
-    const memoryUsage = process.memoryUsage();
-    healthResults.checks.push({
-      component: '系統資源',
-      status: memoryUsage.heapUsed < 100 * 1024 * 1024 ? 'healthy' : 'warning', // 100MB threshold
-      memory: {
-        heapUsed: `${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`,
-        heapTotal: `${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)}MB`,
-        external: `${(memoryUsage.external / 1024 / 1024).toFixed(2)}MB`
-      }
-    });
-
-    // 計算整體健康狀態
-    const healthyCount = healthResults.checks.filter(c => c.status === 'healthy').length;
-    const totalChecks = healthResults.checks.length;
-
-    healthResults.overallStatus = healthyCount === totalChecks ? 'healthy' :
-                                 healthyCount >= totalChecks * 0.8 ? 'degraded' : 'unhealthy';
-    healthResults.healthScore = (healthyCount / totalChecks * 100).toFixed(2);
-
-    return {
-      success: true,
-      healthResults: healthResults,
-      overallStatus: healthResults.overallStatus,
-      recommendation: FS_getHealthRecommendation(healthResults.overallStatus)
-    };
-
-  } catch (error) {
-    FS_handleError(`系統健康檢查失敗: ${error.message}`, "健康檢查", requesterId || "SYSTEM", "FS_HEALTH_CHECK_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.message,
-      errorCode: 'FS_HEALTH_CHECK_ERROR'
-    };
-  }
-}
 
 /**
  * 21. Phase 1功能驗證機制
@@ -1656,168 +1541,14 @@ async function FS_createCompleteSubcollectionFramework(ledgerId, userId = 'SYSTE
 }
 
 /**
- * 28. 建立完整帳本子集合框架（階段三專用）
+ * 28. 建立完整帳本子集合框架 - 刪除
  * @version 2025-10-30-V3.0.0
- * @date 2025-10-30
+ * @date 2025-11-21
  * @description 建立完整帳本子集合架構範例，包含所有子集合的示例文檔
  */
-async function FS_createBudgetsSubcollectionFramework() {
-  try {
-    // 建立示例帳本以支援完整子集合
-    const exampleLedger = {
-      ledgerId: 'example_ledger_for_budgets',
-      name: '完整子集合範例帳本',
-      type: 'system_example',
-      owner_id: 'SYSTEM', // Changed from owner_id to userId
-      members: ['SYSTEM'],
-      currency: 'TWD',
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      status: 'example',
-      note: '此為支援完整帳本子集合的範例帳本'
-    };
-
-    // 建立示例帳本
-    const ledgerResult = await FS_createDocument('ledgers', 'example_ledger_for_budgets', exampleLedger, 'SYSTEM');
-
-    const results = [];
-
-    // 1. 帳戶子集合範例 - 階段一修正：移除UI欄位，符合0302配置格式
-    const walletExample = {
-      walletId: 'example_wallet',
-      ledgerId: 'example_ledger_for_budgets',
-      name: '現金帳戶',
-      type: 'cash',
-      currency: 'TWD',
-      balance: 50000,
-      isDefault: true,
-      isActive: true,
-      description: '現金帳戶',
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      note: '帳戶子集合結構展示，符合0302配置檔案格式'
-    };
-
-    const walletResult = await FS_createDocument(
-      'ledgers/example_ledger_for_budgets/wallets',
-      'example_wallet',
-      walletExample,
-      'SYSTEM'
-    );
-    results.push({ type: 'wallets', result: walletResult });
-
-    // 2. 建立交易子集合 (transactions)
-    const transactionExample = {
-      transactionId: 'example_transaction',
-      ledgerId: 'example_ledger_for_budgets',
-      amount: 1500,
-      type: 'expense',
-      description: '午餐',
-      categoryId: 'example_food',
-      walletId: 'example_wallet', // Changed to example_wallet
-      date: new Date().toISOString().split('T')[0],
-      userId: 'SYSTEM',
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      note: '交易子集合範例'
-    };
-
-    const transactionResult = await FS_createDocument(
-      'ledgers/example_ledger_for_budgets/transactions',
-      'example_transaction',
-      transactionExample,
-      'SYSTEM'
-    );
-    results.push({ type: 'transactions', result: transactionResult });
-
-    // 3. 科目子集合範例 - 階段一修正：僅作為結構展示，實際科目由AM模組管理
-    const categoryExample = {
-      categoryId: 'example_food',
-      ledgerId: 'example_ledger_for_budgets',
-      name: '餐飲',
-      type: 'expense',
-      parentId: null,
-      isDefault: true,
-      isActive: true,
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      note: '科目子集合結構展示，實際科目由AM模組從0099.json初始化'
-    };
-
-    const categoryResult = await FS_createDocument(
-      'ledgers/example_ledger_for_budgets/categories',
-      'example_food',
-      categoryExample,
-      'SYSTEM'
-    );
-    results.push({ type: 'categories', result: categoryResult });
-
-    // 4. 建立預算子集合 (budgets)
-    const budgetSubcollectionExample = {
-      budgetId: 'example_budget_subcollection',
-      ledgerId: 'example_ledger_for_budgets',
-      name: '月度預算',
-      type: 'monthly',
-      total_amount: 50000,
-      consumed_amount: 1500,
-      currency: 'TWD',
-      startDate: admin.firestore.Timestamp.now(),
-      endDate: admin.firestore.Timestamp.now(),
-      allocation: [
-        {
-          categoryId: 'example_food',
-          categoryName: '餐飲',
-          allocated_amount: 20000,
-          consumed_amount: 1500
-        }
-      ],
-      alert_rules: {
-        warning_threshold: 80,
-        critical_threshold: 95,
-        enable_notifications: true,
-        notification_channels: ['system']
-      },
-      createdBy: 'SYSTEM',
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      status: 'active',
-      note: '預算子集合範例文檔'
-    };
-
-    const budgetResult = await FS_createDocument(
-      'ledgers/example_ledger_for_budgets/budgets',
-      'example_budget_subcollection',
-      budgetSubcollectionExample,
-      'SYSTEM'
-    );
-    results.push({ type: 'budgets', result: budgetResult });
-
-    // 統計成功建立的子集合數量
-    const successCount = results.filter(r => r.result.success).length;
-    const totalCount = results.length;
-
-    return {
-      success: ledgerResult.success && successCount === totalCount,
-      message: `完整帳本子集合架構建立${successCount === totalCount ? '成功' : '部分失敗'} (${successCount}/${totalCount})`,
-      details: {
-        ledger: ledgerResult,
-        subcollections: results,
-        created_subcollections: ['wallets', 'transactions', 'categories', 'budgets'],
-        success_rate: `${successCount}/${totalCount}`
-      }
-    };
-
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-      errorCode: 'FS_CREATE_COMPLETE_SUBCOLLECTION_FRAMEWORK_ERROR'
-    };
-  }
-}
 
 /**
- * 29. 保留：供AM模組使用的0099科目資料載入函數
+ * 29. 保留：供AM模組使用的0099科目資料載入函數 - 刪除
  * @version 2025-11-19-V2.7.2
  * @date 2025-11-19
  * @description 僅提供載入0099.json科目資料的基礎功能，供AM模組在用戶註冊時使用
@@ -2048,7 +1779,7 @@ async function FS_initializeAssessmentQuestions() {
 }
 
 /**
- * 33. 讀取0099.json科目資料
+ * 33. 讀取0099.json科目資料 - 刪除
  * @version 2025-11-19-V2.7.2
  * @date 2025-11-19
  * @description 讀取並解析0099.json科目代碼檔案，提供科目映射功能
@@ -2293,42 +2024,10 @@ function FS_getLedgerConfigByMode(userMode) {
 }
 
 /**
- * 35. 根據用戶模式取得科目配置
+ * 35. 根據用戶模式取得科目配置 - 刪除
  * @version 2025-11-18-V1.0.0
  * @date 2025-11-18
  * @description 根據用戶模式返回適合的收支科目配置，Expert模式包含更多詳細科目
- */
-// 階段一修正：移除所有業務資料配置函數
-// FS模組不再處理科目、帳戶等業務邏輯配置
-// 這些功能已移至AM模組，由0099.json和03資料夾提供
-// function FS_getCategoryConfigByMode(userMode) {
-//   const baseConfig = {
-//     incomeCategories: [
-//       { code: 'salary', name: '薪資收入', icon: '💰', color: '#4CAF50', order: 1 },
-//       { code: 'other', name: '其他收入', icon: '💝', color: '#9C27B0', order: 2 }
-//     ],
-//     expenseCategories: [
-//       { code: 'food', name: '餐飲', icon: '🍽️', color: '#FF5722', order: 1 },
-//       { code: 'transport', name: '交通', icon: '🚗', color: '#607D8B', order: 2 },
-//       { code: 'shopping', name: '購物', icon: '🛍️', color: '#E91E63', order: 3 }
-//     ]
-//   };
-
-//   // Expert模式增加更多科目
-//   if (userMode === 'Expert') {
-//     baseConfig.incomeCategories.push(
-//       { code: 'business', name: '營業收入', icon: '🏢', color: '#2196F3', order: 3 },
-//       { code: 'investment', name: '投資收入', icon: '📈', color: '#FF9800', order: 4 }
-//     );
-//     baseConfig.expenseCategories.push(
-//       { code: 'entertainment', name: '娛樂', icon: '🎬', color: '#673AB7', order: 4 },
-//       { code: 'utilities', name: '水電費', icon: '⚡', color: '#795548', order: 5 },
-//       { code: 'healthcare', name: '醫療', icon: '🏥', color: '#009688', order: 6 }
-//     );
-//   }
-
-//   return baseConfig;
-// }
 
 /**
  * 36. 建立基礎帳戶
