@@ -881,7 +881,6 @@ async function BK_getTransactions(queryParams = {}) {
       }
 
       // 階段五完成：直接使用Firebase查詢交易記錄，移除FS依賴
-      const db = BK_INIT_STATUS.firestore_db;
       let query = db.collection('ledgers')
         .doc(ledgerId)
         .collection('transactions')
@@ -3381,14 +3380,14 @@ module.exports = {
   BK_getTransactionById: async function(transactionId, queryParams = {}) {
     try {
       await BK_initialize();
-      const db = BK_INIT_STATUS.firestore_db;
+      const firebaseDb = BK_INIT_STATUS.firestore_db;
       // 階段三修正：ledgerId必須從queryParams中提供
       if (!queryParams.ledgerId) {
         throw new Error("MISSING_LEDGER_ID: 獲取交易詳情需要指定ledgerId");
       }
       const ledgerId = queryParams.ledgerId;
       // 修正：使用1311 FS.js標準路徑格式
-      const collectionRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+      const collectionRef = firebaseDb.collection('ledgers').doc(ledgerId).collection('transactions');
       const idField = getEnvVar('ID_FIELD', 'id');
 
       const querySnapshot = await collectionRef.where(idField, '==', transactionId).limit(1).get();
