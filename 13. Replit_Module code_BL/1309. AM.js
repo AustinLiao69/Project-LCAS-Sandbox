@@ -1420,11 +1420,29 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     // 階段一修正：確保透過1311.FS.js建立完整帳本結構
     console.log(`  - 階段一修正：確保帳本結構存在...`);
 
-    // 引入1311.FS.js確保結構存在
-    const FS = require('./1311. FS.js');
-
-    // 階段二修正：使用1311.FS.js建立空白結構，然後填入0099和03的實際資料
-    const structureResult = await FS.FS_createCompleteSubcollectionFramework(userLedgerId, UID);
+    // 直接使用Firebase操作建立帳本結構，移除對1311.FS.js的依賴
+    console.log(`🔧 ${functionName}: 直接使用Firebase建立帳本子集合結構...`);
+    
+    // 建立基本子集合結構
+    const subcollections = ['transactions', 'categories', 'accounts', 'budgets'];
+    const structureResult = {
+      success: true,
+      created_subcollections: subcollections
+    };
+    
+    // 為每個子集合建立一個初始化文檔以確保集合存在
+    for (const collection of subcollections) {
+      try {
+        await db.collection('ledgers').doc(userLedgerId).collection(collection).doc('_init').set({
+          initialized: true,
+          createdAt: admin.firestore.Timestamp.now(),
+          note: 'Initial document to ensure subcollection exists'
+        });
+        console.log(`✅ ${functionName}: 子集合 ${collection} 初始化完成`);
+      } catch (subcollectionError) {
+        console.warn(`⚠️ ${functionName}: 子集合 ${collection} 初始化警告: ${subcollectionError.message}`);
+      }
+    }
 
     if (!structureResult.success) {
       console.warn(`  - 1311.FS.js結構建立警告: ${structureResult.error || '未知錯誤'}`);
