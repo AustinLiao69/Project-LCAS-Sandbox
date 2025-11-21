@@ -1,5 +1,5 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.3.1
+ * 1301. BK.js_記帳核心模組_v3.3.2
  * @module 記帳核心模組
  * @description LCAS 2.0 記帳核心ledgers/{ledgerId}/transactions功能模組，專注於記帳邏輯，透過WCM模組進行帳戶科目驗證
  * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
@@ -16,6 +16,7 @@
  * @update 2025-10-29: 階段二強化v3.2.3 - 強化AM模組調用機制，增加重試邏輯和詳細錯誤處理，確保帳本ID正確獲取
  * @update 2025-11-17: DCN-0023階段三v3.3.0 - 移除帳戶管理功能，建立對WCM模組的依賴，記帳流程整合帳戶科目驗證，專注記帳核心邏輯
  * @update 2025-11-20: 階段一修復v3.3.1 - 修復BK_getTransactions中queryResult重複變數宣告問題，確保模組正常載入
+ * @update 2025-11-21: 階段一修復v3.3.2 - 修復db變數重複宣告問題，解決模組載入失敗
  * @date 2025-11-20
  */
 
@@ -398,7 +399,7 @@ const BK_CONFIG = {
   FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED') !== 'false',
   TIMEZONE: getEnvVar('TIMEZONE') || Intl.DateTimeFormat().resolvedOptions().timeZone,
   INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL'), 10) || 300000,
-  VERSION: getEnvVar('BK_VERSION') || '3.3.1', // 階段一修復：版本升級
+  VERSION: getEnvVar('BK_VERSION') || '3.3.2', // 階段一修復：版本升級
   MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT'), 10) || Number.MAX_SAFE_INTEGER,
   DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY') || detectSystemCurrency(),
   DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD') || '現金',
@@ -714,8 +715,8 @@ async function BK_createTransaction(transactionData) {
         // const FS = require('./1311. FS.js'); // Removed redundant require
 
         // 階段五完成：直接使用Firebase驗證帳本存在，移除FS依賴
-        const db = BK_INIT_STATUS.firestore_db;
-        const ledgerRef = db.collection('ledgers').doc(processedData.ledgerId);
+        const firebaseDb = BK_INIT_STATUS.firestore_db;
+        const ledgerRef = firebaseDb.collection('ledgers').doc(processedData.ledgerId);
         const ledgerDoc = await ledgerRef.get();
 
         if (!ledgerDoc.exists) {
@@ -731,8 +732,7 @@ async function BK_createTransaction(transactionData) {
         const preparedData = await BK_prepareTransactionData(transactionId, processedData, processId);
 
         // 階段五完成：直接使用Firebase儲存交易記錄，移除FS依賴
-        const db = BK_INIT_STATUS.firestore_db;
-        const transactionRef = db.collection('ledgers')
+        const transactionRef = firebaseDb.collection('ledgers')
           .doc(processedData.ledgerId)
           .collection('transactions')
           .doc(preparedData.id);
