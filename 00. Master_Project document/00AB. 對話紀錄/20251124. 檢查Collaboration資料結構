@@ -111,21 +111,32 @@ Before行為：CM模組調用FS模組進行Firebase操作，因FS模組不存在
 After行為：CM模組直接使用Firebase Admin SDK進行操作，避免依賴問題
 
 階段二：創建Firebase複合索引（預計10分鐘）
-問題：ledgers集合缺少查詢所需的複合索引
-解決：在Firebase Console中創建必要的複合索引
+問題：collaborations集合缺少查詢所需的複合索引
+解決：在Firebase Console中創建必要的複合索引，支援CM模組作為collaborations集合的完整代理
 修改檔案：
 •	Firebase Console設定（非程式碼修改）
 修改內容：
-根據錯誤訊息提供的連結，創建以下複合索引：
-•	集合：ledgers
-•	欄位：archived (Ascending), type (Ascending), updated_at (Descending)
-•	欄位：archived (Ascending), type (Ascending), lastActivity (Descending)
-•	欄位：archived (Ascending), created_at (Descending)
-用途：支援CM_getLedgers函數的複雜查詢操作
-影響範圍：所有涉及ledgers集合的排序查詢
-Before行為：查詢因缺少索引而失敗，返回400錯誤
-After行為：查詢能夠正常執行，返回符合條件的帳本列表
-=>請解釋一下原本1311 FS模組在的時候是怎麼處理這段流程的？
+根據CM模組的協作查詢需求，創建以下複合索引：
+collaborations集合索引：
+•	欄位：ownerId (Ascending), status (Ascending), createdAt (Descending)
+•	欄位：status (Ascending), collaborationType (Ascending), updatedAt (Descending)
+•	欄位：ownerId (Ascending), collaborationType (Ascending), createdAt (Descending)
+collaborations/{ledgerId}/members子集合索引：
+•	欄位：status (Ascending), joinedAt (Descending)
+•	欄位：role (Ascending), status (Ascending), joinedAt (Descending)
+用途：支援CM模組作為collaborations集合完整代理的複雜查詢操作
+影響範圍：所有CM模組的協作帳本查詢和成員管理功能
+Before行為：CM模組查詢collaborations集合因缺少索引而失敗，返回400錯誤
+After行為：CM模組能夠正常代理所有collaborations集合操作，返回符合條件的協作資料
+總結
+CM模組不僅可以，而且應該成為collaborations集合的完整代理，因為這符合：
+•	✅ 專業分工原則
+•	✅ 單一職責原則
+•	✅ 清晰的架構邊界
+•	✅ Firebase最佳實踐
+這與FS模組的問題截然不同，是健康的模組設計模式。
+
+
 
 
 
