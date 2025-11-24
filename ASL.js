@@ -655,7 +655,7 @@ app.get('/', (req, res) => {
       AM: !!AM ? 'loaded' : 'not loaded',
       BK: !!BK ? 'loaded' : 'not loaded',
       DL: !!DL ? 'loaded' : 'not loaded',
-      FS: !!FS ? 'loaded' : 'not loaded', // FS模組已移除
+      // FS模組已移除，功能整合至其他專門模組
       BM: !!BM ? 'loaded' : 'not loaded',  // P2 模組
       CM: !!CM ? 'loaded' : 'not loaded',   // P2 模組 - 包含帳本管理功能
       WCM: !!WCM ? 'loaded' : 'not loaded' // DCN-0023 模組
@@ -677,7 +677,6 @@ app.get('/health', (req, res) => {
       AM: !!AM ? 'ready' : 'unavailable',
       BK: !!BK ? 'ready' : 'unavailable',
       DL: !!DL ? 'ready' : 'unavailable',
-      FS: !!FS ? 'ready' : 'unavailable', // FS模組已移除
       BM: !!BM ? 'ready' : 'unavailable',  // P2 模組
       CM: !!CM ? 'ready_with_ledger_mgmt' : 'unavailable',   // P2 模組 - 包含帳本管理功能
       WCM: !!WCM ? 'ready' : 'unavailable' // DCN-0023 模組
@@ -709,7 +708,9 @@ app.get('/health', (req, res) => {
       syntax_error_fixed: true,
       commonjs_compatibility: true,
       firebase_async_init: firebaseInitialized,
-      am_module_status: !!AM ? 'loaded' : 'failed'
+      am_module_status: !!AM ? 'loaded' : 'failed',
+      fs_module_removed: true, // FS模組已移除
+      cm_module_independent: !!CM ? 'ready' : 'unavailable'
     }
   };
 
