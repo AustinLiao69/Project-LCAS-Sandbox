@@ -443,8 +443,8 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
       let batchCount = 0;
       const now = admin.firestore.Timestamp.now();
 
-      // 批量建立科目（限制數量避免過度寫入）
-      for (const subject of subjectData.data.slice(0, 50)) {
+      // 批量建立所有科目
+      for (const subject of subjectData.data) {
         const categoryId = `category_${subject.categoryId}`;
         const categoryRef = db.collection(collectionPath).doc(categoryId);
 

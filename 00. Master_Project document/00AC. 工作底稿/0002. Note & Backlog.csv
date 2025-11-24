@@ -35,8 +35,9 @@ MM 	 DD 	 Description 	    Progress
 11	18	 SIT_P3：要先確認1311以及7598的資料欄位與測試資料，再來去開發代碼	 Open
 11	18	 記得要建置一個json儲存問卷，讓其他模組可以引用	 Open
 11	18	 firebase資料欄位的整理是一個大問題，因為技術債的關係必須要重新整理(也許只管好P3就好，其他的放到後面再說？)，猜想是非1311的模組有hard-coding firebase的資料欄位，也許先優先清除？	 Open
-11	19	 用AI開發方式：有多個initiatives分成不同的chat讓AI生成提案，當AI在執行A方案時我就可以去Review B方案	 Open
+11	19	 用AI開發方式：有多個initiatives分成不同的chat讓AI生成提案，當AI在執行A方案時我就可以去Review B方案：11/21嘗試過，不能同時用2個AI	 Closed
 11	19	 P3前置作業的path是什麼？現在準備狀況如何？	 Open
 11	20	 在collboration帳本下面的子集合有什麼？member, budgets, transactions, categories, wallets	 Open
 11	20	 承上，collaborations集合應該要做member管理(屬於CM職責)	 Open
 11	20	 1311應該要只有初始化firebase的功能，資料欄位(1311 27號函數)的部分統一放到03資料夾的json檔去？	 Open
+11	24	 7582有點壞掉，但還是可以註冊	 Open
