@@ -1,8 +1,8 @@
 /**
- * CM_協作與帳本管理模組_2.3.0
+ * CM_協作與帳本管理模組_2.3.1
  * @module CM模組
  * @description 協作與帳本管理系統 - 負責所有後續帳本（第2本以上）的完整生命週期管理，包含協作功能和多帳本管理功能
- * @update 2025-11-21: 階段三整合 - 接管所有協作相關初始化，整合FS協作邏輯，成為協作功能的統一入口
+ * @update 2025-11-24: 階段一修復 - 移除FS模組依賴，直接使用Firebase Admin SDK
  */
 
 const admin = require('firebase-admin');
@@ -16,7 +16,7 @@ try {
   DD = require('./1331. DD1.js');
   BK = require('./1301. BK.js');
   LINE_OA = require('./1320. WH.js');
-  // FS模組已移除 - CM模組直接使用Firebase實例
+  // 階段一修復：FS模組已移除，CM模組直接使用Firebase Admin SDK
 } catch (error) {
   console.warn('CM模組依賴載入警告:', error.message);
 }
@@ -158,33 +158,34 @@ async function CM_initializeCollaborationSystem(requesterId = 'SYSTEM') {
       ]
     };
 
-    // 直接使用Firebase實例進行文檔操作（FS模組已移除）
+    // 階段一修復：直接使用Firebase Admin SDK進行文檔操作
     try {
-      // 儲存協作架構定義
-      await db.collection('_system').doc('collaboration_structure_v2_3').set(collaborationStructure);
+      // 1. 儲存協作架構定義
+      collaborationStructure.version = '2.3.1'; // 階段一修復：升級版本號
+      await db.collection('_system').doc('collaboration_structure_v2_3_1').set(collaborationStructure);
       initResults.push({ 
         type: '協作架構定義', 
-        result: { success: true, message: '協作架構定義已儲存' }
+        result: { success: true, message: '階段一修復：協作架構定義已儲存' }
       });
 
       // 2. 建立協作集合框架
       const collaborationPlaceholder = {
         type: 'collection_placeholder',
         purpose: '確保 collaborations 集合存在',
-        version: '2.3.0',
+        version: '2.3.1', // 階段一修復：升級版本號
         createdAt: admin.firestore.Timestamp.now(),
-        note: '此文檔由CM模組管理，確保協作集合框架存在'
+        note: '階段一修復：此文檔由CM模組管理，確保協作集合框架存在'
       };
 
-      await db.collection('collaborations').doc('_placeholder_v2_3').set(collaborationPlaceholder);
+      await db.collection('collaborations').doc('_placeholder_v2_3_1').set(collaborationPlaceholder);
       initResults.push({ 
         type: '協作集合框架', 
-        result: { success: true, message: '協作集合框架已建立' }
+        result: { success: true, message: '階段一修復：協作集合框架已建立' }
       });
 
       // 3. 建立協作預設設定
       const defaultCollaborationSettings = {
-        version: '2.3.0',
+        version: '2.3.1', // 階段一修復：升級版本號
         default_settings: {
           allowInvite: true,
           allowEdit: true,
@@ -201,20 +202,20 @@ async function CM_initializeCollaborationSystem(requesterId = 'SYSTEM') {
           data_updated: false,
           conflict_detected: true
         },
-        createdBy: 'CM_v2.3.0',
+        createdBy: 'CM_v2.3.1', // 階段一修復：升級版本號
         createdAt: admin.firestore.Timestamp.now()
       };
 
       await db.collection('_system').doc('collaboration_default_settings').set(defaultCollaborationSettings);
       initResults.push({ 
         type: '協作預設設定', 
-        result: { success: true, message: '協作預設設定已儲存' }
+        result: { success: true, message: '階段一修復：協作預設設定已儲存' }
       });
 
     } catch (firebaseError) {
       initResults.push({ 
         type: 'Firebase操作', 
-        result: { success: false, error: firebaseError.message }
+        result: { success: false, error: `階段一修復：${firebaseError.message}` }
       });
     }
 
@@ -2409,16 +2410,16 @@ async function CM_createProjectLedger(userId, projectName, projectDescription, s
 
 /**
  * CM_manageCollaborationMembers - 協作成員管理
- * @version 2025-11-12-V2.1.1
- * @date 2025-11-12
- * @description 管理協作帳本成員，支援添加、移除、更新等操作
+ * @version 2025-11-24-V2.3.1
+ * @date 2025-11-24
+ * @description 階段一修復：管理協作帳本成員，直接使用Firebase Admin SDK，移除FS依賴
  */
 async function CM_manageCollaborationMembers(ledgerId, operation, memberData, operatorId) {
   const functionName = "CM_manageCollaborationMembers";
   try {
-    CM_logInfo(`協作成員管理: ${operation} - ${ledgerId}`, "成員管理", operatorId, "", "", functionName);
+    CM_logInfo(`階段一修復：協作成員管理: ${operation} - ${ledgerId}`, "成員管理", operatorId, "", "", functionName);
 
-    const collectionPath = `collaborations/${ledgerId}/members`;
+    const collectionRef = db.collection('collaborations').doc(ledgerId).collection('members');
 
     switch (operation) {
       case 'ADD_OWNER':
@@ -2438,10 +2439,21 @@ async function CM_manageCollaborationMembers(ledgerId, operation, memberData, op
           invitedBy: operatorId
         };
 
-        return await FS.FS_createDocument(collectionPath, memberData.userId, newMemberData, operatorId);
+        // 階段一修復：直接使用Firebase Admin SDK
+        await collectionRef.doc(memberData.userId).set(newMemberData);
+        return {
+          success: true,
+          message: '階段一修復：成員添加成功',
+          data: newMemberData
+        };
 
       case 'REMOVE_MEMBER':
-        return await FS.FS_deleteDocument(collectionPath, memberData.userId, operatorId);
+        // 階段一修復：直接使用Firebase Admin SDK
+        await collectionRef.doc(memberData.userId).delete();
+        return {
+          success: true,
+          message: '階段一修復：成員移除成功'
+        };
 
       case 'UPDATE_MEMBER':
         const updateData = {
@@ -2449,7 +2461,13 @@ async function CM_manageCollaborationMembers(ledgerId, operation, memberData, op
           updatedAt: admin.firestore.Timestamp.now(),
           updatedBy: operatorId
         };
-        return await FS.FS_updateDocument(collectionPath, memberData.userId, updateData, operatorId);
+        // 階段一修復：直接使用Firebase Admin SDK
+        await collectionRef.doc(memberData.userId).update(updateData);
+        return {
+          success: true,
+          message: '階段一修復：成員更新成功',
+          data: updateData
+        };
 
       default:
         return {
@@ -2460,7 +2478,7 @@ async function CM_manageCollaborationMembers(ledgerId, operation, memberData, op
     }
 
   } catch (error) {
-    CM_logError(`協作成員管理失敗: ${error.message}`, "成員管理", operatorId, "CM_MANAGE_MEMBERS_ERROR", error.toString(), functionName);
+    CM_logError(`階段一修復：協作成員管理失敗: ${error.message}`, "成員管理", operatorId, "CM_MANAGE_MEMBERS_ERROR", error.toString(), functionName);
     return {
       success: false,
       error: error.message,
@@ -2531,10 +2549,12 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
       // 階段二移除：直接存放的permissions物件 (改用子集合)
     };
 
-    // 階段二：直接使用FS標準函數建立協作文檔，避免職責重複
-    const createResult = await FS.FS_createDocument('collaborations', collaborationId, collaborationData, ownerId);
-    if (!createResult.success) {
-      throw new Error(`建立協作文檔失敗: ${createResult.error}`);
+    // 階段一修復：直接使用Firebase Admin SDK建立協作文檔，避免FS依賴
+    try {
+      await db.collection('collaborations').doc(collaborationId).set(collaborationData);
+      CM_logInfo(`階段一修復：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
+    } catch (firebaseError) {
+      throw new Error(`階段一修復：建立協作文檔失敗: ${firebaseError.message}`);
     }
 
     CM_logInfo(`階段二：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
@@ -3115,4 +3135,4 @@ CM_initialize().catch(error => {
   console.error('CM 模組自動初始化失敗:', error);
 });
 
-console.log('✅ CM 協作與帳本管理模組v2.3.0載入完成 - 階段三整合：已接管所有協作相關初始化');
+console.log('✅ CM 協作與帳本管理模組v2.3.1載入完成 - 階段一修復：移除FS模組依賴，直接使用Firebase Admin SDK');
