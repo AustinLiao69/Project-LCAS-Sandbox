@@ -163,8 +163,8 @@ async function CM_initializeCollaborationSystem(requesterId = 'SYSTEM') {
       // 1. 儲存協作架構定義
       collaborationStructure.version = '2.3.1'; // 階段一修復：升級版本號
       await db.collection('_system').doc('collaboration_structure_v2_3_1').set(collaborationStructure);
-      initResults.push({ 
-        type: '協作架構定義', 
+      initResults.push({
+        type: '協作架構定義',
         result: { success: true, message: '階段一修復：協作架構定義已儲存' }
       });
 
@@ -178,8 +178,8 @@ async function CM_initializeCollaborationSystem(requesterId = 'SYSTEM') {
       };
 
       await db.collection('collaborations').doc('_placeholder_v2_3_1').set(collaborationPlaceholder);
-      initResults.push({ 
-        type: '協作集合框架', 
+      initResults.push({
+        type: '協作集合框架',
         result: { success: true, message: '階段一修復：協作集合框架已建立' }
       });
 
@@ -207,14 +207,14 @@ async function CM_initializeCollaborationSystem(requesterId = 'SYSTEM') {
       };
 
       await db.collection('_system').doc('collaboration_default_settings').set(defaultCollaborationSettings);
-      initResults.push({ 
-        type: '協作預設設定', 
+      initResults.push({
+        type: '協作預設設定',
         result: { success: true, message: '階段一修復：協作預設設定已儲存' }
       });
 
     } catch (firebaseError) {
-      initResults.push({ 
-        type: 'Firebase操作', 
+      initResults.push({
+        type: 'Firebase操作',
         result: { success: false, error: `階段一修復：${firebaseError.message}` }
       });
     }
@@ -282,7 +282,7 @@ async function CM_superProxy(operation, collectionPath, documentId, data = null,
         if (!documentId) {
           documentId = CM_generateCollaborationId();
         }
-        
+
         // 添加系統欄位
         const createData = {
           ...data,
@@ -314,7 +314,7 @@ async function CM_superProxy(operation, collectionPath, documentId, data = null,
         if (!documentId) {
           throw new Error('更新操作需要文檔ID');
         }
-        
+
         const updateData = {
           ...data,
           updatedAt: admin.firestore.Timestamp.now(),
@@ -329,25 +329,25 @@ async function CM_superProxy(operation, collectionPath, documentId, data = null,
         if (!documentId) {
           throw new Error('刪除操作需要文檔ID');
         }
-        
+
         await db.collection(collectionPath).doc(documentId).delete();
         result = { id: documentId, deleted: true };
         break;
 
       case 'query':
         let query = db.collection(collectionPath);
-        
+
         // 處理查詢條件
         if (options.where) {
           for (const condition of options.where) {
             query = query.where(condition.field, condition.operator, condition.value);
           }
         }
-        
+
         if (options.orderBy) {
           query = query.orderBy(options.orderBy.field, options.orderBy.direction || 'asc');
         }
-        
+
         if (options.limit) {
           query = query.limit(options.limit);
         }
@@ -364,7 +364,7 @@ async function CM_superProxy(operation, collectionPath, documentId, data = null,
     }
 
     CM_logInfo(`CM超級代理成功: ${operation} ${collectionPath}`, "超級代理", options.requesterId || 'system', "", "", functionName);
-    
+
     return {
       success: true,
       data: result,
@@ -395,11 +395,11 @@ async function CM_ensureCollectionStructure(collectionPath) {
   const functionName = "CM_ensureCollectionStructure";
   try {
     const db = admin.firestore();
-    
+
     // 如果是collaborations主集合
     if (collectionPath === 'collaborations') {
       const placeholderDoc = await db.collection('collaborations').doc('_structure_placeholder').get();
-      
+
       if (!placeholderDoc.exists) {
         await db.collection('collaborations').doc('_structure_placeholder').set({
           purpose: 'CM模組自動創建的集合結構佔位符',
@@ -411,18 +411,18 @@ async function CM_ensureCollectionStructure(collectionPath) {
             version: '2.3.1'
           }
         });
-        
+
         CM_logInfo(`自動創建collaborations集合結構`, "集合管理", 'CM_superProxy', "", "", functionName);
       }
     }
-    
+
     // 如果是子集合路徑，確保父文檔存在
     if (collectionPath.includes('/')) {
       const pathParts = collectionPath.split('/');
       if (pathParts.length >= 3 && pathParts[0] === 'collaborations') {
         const parentDocId = pathParts[1];
         const subCollectionName = pathParts[2];
-        
+
         const parentDoc = await db.collection('collaborations').doc(parentDocId).get();
         if (!parentDoc.exists) {
           // 自動創建父文檔
@@ -433,7 +433,7 @@ async function CM_ensureCollectionStructure(collectionPath) {
             status: 'active',
             note: `由CM超級代理自動創建以支援子集合: ${subCollectionName}`
           });
-          
+
           CM_logInfo(`自動創建collaborations父文檔: ${parentDocId}`, "集合管理", 'CM_superProxy', "", "", functionName);
         }
       }
@@ -452,51 +452,51 @@ const CM_proxy = {
   createCollaboration: async (data, options = {}) => {
     return await CM_superProxy('create', 'collaborations', null, data, options);
   },
-  
+
   // 獲取協作文檔
   getCollaboration: async (collaborationId, options = {}) => {
     return await CM_superProxy('get', 'collaborations', collaborationId, null, options);
   },
-  
+
   // 更新協作文檔
   updateCollaboration: async (collaborationId, data, options = {}) => {
     return await CM_superProxy('update', 'collaborations', collaborationId, data, options);
   },
-  
+
   // 刪除協作文檔
   deleteCollaboration: async (collaborationId, options = {}) => {
     return await CM_superProxy('delete', 'collaborations', collaborationId, null, options);
   },
-  
+
   // 查詢協作文檔
   queryCollaborations: async (queryOptions = {}) => {
     return await CM_superProxy('query', 'collaborations', null, null, queryOptions);
   },
-  
+
   // 成員管理
   addMember: async (collaborationId, memberData, options = {}) => {
     const memberId = memberData.userId || CM_generateCollaborationId();
     return await CM_superProxy('create', `collaborations/${collaborationId}/members`, memberId, memberData, options);
   },
-  
+
   getMember: async (collaborationId, memberId, options = {}) => {
     return await CM_superProxy('get', `collaborations/${collaborationId}/members`, memberId, null, options);
   },
-  
+
   updateMember: async (collaborationId, memberId, memberData, options = {}) => {
     return await CM_superProxy('update', `collaborations/${collaborationId}/members`, memberId, memberData, options);
   },
-  
+
   removeMember: async (collaborationId, memberId, options = {}) => {
     return await CM_superProxy('delete', `collaborations/${collaborationId}/members`, memberId, null, options);
   },
-  
+
   // 邀請管理
   createInvitation: async (collaborationId, invitationData, options = {}) => {
     const invitationId = invitationData.invitationId || CM_generateCollaborationId();
     return await CM_superProxy('create', `collaborations/${collaborationId}/invitations`, invitationId, invitationData, options);
   },
-  
+
   // 權限管理
   setPermission: async (collaborationId, permissionData, options = {}) => {
     const permissionId = permissionData.userId || CM_generateCollaborationId();
@@ -2210,8 +2210,8 @@ async function CM_getLedgers(queryParams = {}) {
 
     // 階段一修正：處理分頁參數
     if (queryParams.page) {
-      let pageValue = typeof queryParams.page === 'string' 
-        ? parseInt(queryParams.page, 10) 
+      let pageValue = typeof queryParams.page === 'string'
+        ? parseInt(queryParams.page, 10)
         : parseInt(queryParams.page, 10);
 
       if (!isNaN(pageValue) && pageValue > 0) {
@@ -2235,8 +2235,8 @@ async function CM_getLedgers(queryParams = {}) {
 
     // 階段一修正：確保limit參數為整數型別
     if (queryParams.limit) {
-      const limitValue = typeof queryParams.limit === 'string' 
-        ? parseInt(queryParams.limit, 10) 
+      const limitValue = typeof queryParams.limit === 'string'
+        ? parseInt(queryParams.limit, 10)
         : parseInt(queryParams.limit, 10);
 
       if (!isNaN(limitValue) && limitValue > 0) {
@@ -2743,10 +2743,10 @@ async function CM_manageCollaborationMembers(ledgerId, operation, memberData, op
  * @date 2025-11-12
  * @description 階段二優化：完全符合FS規範，移除多餘欄位，補齊必要欄位，優化子集合架構
  */
-async function CM_createSharedLedger(ownerId, ledgerName, memberList, permissionSettings) {
+async function CM_createSharedLedger(ledgerData, requesterId = 'system') {
   const functionName = "CM_createSharedLedger";
   try {
-    CM_logInfo(`階段二：建立協作帳本 - 擁有者: ${ownerId}, 帳本: ${ledgerName}`, "建立共享帳本", ownerId, "", "", functionName);
+    CM_logInfo(`階段二：建立協作帳本 - 擁有者: ${ledgerData.ownerEmail}, 帳本: ${ledgerData.name}`, "建立共享帳本", ledgerData.ownerEmail, "", "", functionName);
 
     // 生成協作帳本ID
     const collaborationId = CM_generateCollaborationId();
@@ -2764,31 +2764,31 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
       allowDelete: false,
       requireApproval: false
     };
-    
+
     try {
       const path = require('path');
       const configPath = path.join(__dirname, '../03. Default_config/0301. Default_config.json');
       const defaultConfig = JSON.parse(require('fs').readFileSync(configPath, 'utf8'));
-      
+
       if (defaultConfig.collaboration_settings) {
         defaultCollaborationSettings = {
           ...defaultCollaborationSettings,
           ...defaultConfig.collaboration_settings
         };
-        CM_logInfo(`階段四：成功載入協作預設設定：0301. Default_config.json`, "建立共享帳本", ownerId, "", "", functionName);
+        CM_logInfo(`階段四：成功載入協作預設設定：0301. Default_config.json`, "建立共享帳本", ledgerData.ownerEmail, "", "", functionName);
       }
     } catch (configError) {
-      CM_logWarning(`階段四：無法載入協作預設設定，使用內建預設值: ${configError.message}`, "建立共享帳本", ownerId, "", "", functionName);
+      CM_logWarning(`階段四：無法載入協作預設設定，使用內建預設值: ${configError.message}`, "建立共享帳本", ledgerData.ownerEmail, "", "", functionName);
     }
 
     // 階段二：建立完全符合FS規範的協作帳本資料結構
     const collaborationData = {
       ledgerId: collaborationId,          // 明確加入ledgerId欄位
-      ownerId: ownerId,                   // 擁有者ID
+      ownerId: `user_${ledgerData.ownerEmail}`,                   // 擁有者ID
       collaborationType: 'shared',        // 協作類型
       settings: {
         ...defaultCollaborationSettings,
-        ...(permissionSettings || {})     // 用戶自訂設定覆蓋預設值
+        ...(ledgerData.permissionSettings || {})     // 用戶自訂設定覆蓋預設值
       },
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
@@ -2801,37 +2801,37 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
 
     // 使用CM超級代理建立協作文檔
     const createResult = await CM_superProxy('create', 'collaborations', collaborationId, collaborationData, {
-      requesterId: ownerId
+      requesterId: `user_${ledgerData.ownerEmail}`
     });
-    
+
     if (!createResult.success) {
       throw new Error(`CM超級代理建立協作文檔失敗: ${createResult.error}`);
     }
-    
-    CM_logInfo(`CM超級代理：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
 
-    CM_logInfo(`階段二：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
+    CM_logInfo(`CM超級代理：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ledgerData.ownerEmail, "", "", functionName);
+
+    CM_logInfo(`階段二：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ledgerData.ownerEmail, "", "", functionName);
 
     // 階段二：建立擁有者成員記錄（子集合架構）
     const ownerMemberResult = await CM_manageCollaborationMembers(collaborationId, 'ADD_OWNER', {
-      userId: ownerId,
-      email: `${ownerId}@example.com`,
+      userId: `user_${ledgerData.ownerEmail}`,
+      email: ledgerData.ownerEmail,
       role: 'owner'
-    }, ownerId);
+    }, `user_${ledgerData.ownerEmail}`);
 
     if (!ownerMemberResult.success) {
-      CM_logWarning(`擁有者成員記錄建立失敗: ${ownerMemberResult.error}`, "建立共享帳本", ownerId, "", "", functionName);
+      CM_logWarning(`擁有者成員記錄建立失敗: ${ownerMemberResult.error}`, "建立共享帳本", ledgerData.ownerEmail, "", "", functionName);
     }
 
     // 階段二：添加其他成員到子集合
     let successfulMembers = ownerMemberResult.success ? 1 : 0;
-    for (const memberId of memberList || []) {
-      if (memberId !== ownerId) {
+    for (const memberId of ledgerData.memberList || []) {
+      if (memberId !== `user_${ledgerData.ownerEmail}`) {
         const memberResult = await CM_setMemberPermission(
           collaborationId,
           memberId,
           'member',
-          ownerId
+          `user_${ledgerData.ownerEmail}`
         );
         if (memberResult.success) {
           successfulMembers++;
@@ -2840,21 +2840,21 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
     }
 
     // 階段二：記錄協作建立操作
-    await CM_logCollaborationAction(collaborationId, ownerId, 'collaboration_created', {
+    await CM_logCollaborationAction(collaborationId, `user_${ledgerData.ownerEmail}`, 'collaboration_created', {
       collaborationType: 'shared',
-      ledgerName: ledgerName,
-      totalMembers: (memberList?.length || 0) + 1,
+      ledgerName: ledgerData.name,
+      totalMembers: (ledgerData.memberList?.length || 0) + 1,
       successfulMembers: successfulMembers,
-      settings: permissionSettings
+      settings: ledgerData.permissionSettings
     });
 
     // 階段二：最終驗證協作帳本是否建立成功
-    const finalVerification = await FS.FS_getDocument('collaborations', collaborationId, ownerId);
+    const finalVerification = await FS.FS_getDocument('collaborations', collaborationId, `user_${ledgerData.ownerEmail}`);
     if (!finalVerification.success || !finalVerification.exists) {
       throw new Error('協作帳本建立後驗證失敗');
     }
 
-    CM_logInfo(`階段二：協作帳本建立完成 - ID: ${collaborationId}, 成功加入成員數: ${successfulMembers}`, "建立共享帳本", ownerId, "", "", functionName);
+    CM_logInfo(`階段二：協作帳本建立完成 - ID: ${collaborationId}, 成功加入成員數: ${successfulMembers}`, "建立共享帳本", ledgerData.ownerEmail, "", "", functionName);
 
     return {
       success: true,
@@ -2865,7 +2865,7 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
     };
 
   } catch (error) {
-    CM_logError(`階段二：建立協作帳本失敗: ${error.message}`, "建立共享帳本", ownerId, "CM_CREATE_SHARED_LEDGER_ERROR", error.toString(), functionName);
+    CM_logError(`階段二：建立協作帳本失敗: ${error.message}`, "建立共享帳本", ledgerData.ownerEmail, "CM_CREATE_SHARED_LEDGER_ERROR", error.toString(), functionName);
     return {
       success: false,
       ledgerId: null,
@@ -3320,6 +3320,89 @@ async function CM_getRecentCollaborationId(userId) {
         code: 'CM_GET_COLLABORATION_ID_ERROR',
         message: error.message
       }
+    };
+  }
+}
+
+/**
+ * 36. 建立共享協作帳本 - 階段三修復版
+ * @version 2025-11-24-V2.3.1
+ * @date 2025-11-24
+ * @description 階段三修復：移除FS依賴，直接使用Firebase Admin SDK生成ID
+ */
+async function CM_createSharedLedger(ledgerData, requesterId = 'system') {
+  const functionName = "CM_createSharedLedger";
+  try {
+    CM_logInfo(`階段三修復：建立協作帳本 - 擁有者: ${ledgerData.ownerEmail}, 帳本: ${ledgerData.name}`, "建立協作帳本", ledgerData.ownerEmail, "", "", functionName);
+
+    // 生成帳本ID（移除FS依賴）
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 9);
+    const ledgerId = `ledger_${timestamp}_${random}`;
+    const ownerId = `user_${ledgerData.ownerEmail}`;
+
+    // 建立帳本基本資料
+    const ledgerInfo = {
+      id: ledgerId,
+      name: ledgerData.name,
+      type: ledgerData.type || 'shared',
+      description: ledgerData.description || '',
+      owner_id: ownerId,
+      owner_email: ledgerData.ownerEmail,
+      currency: ledgerData.currency || 'TWD',
+      timezone: ledgerData.timezone || 'Asia/Taipei',
+      is_collaborative: true,
+      created_at: admin.firestore.Timestamp.now(),
+      updated_at: admin.firestore.Timestamp.now(),
+      status: 'active',
+      archived: false, // 添加索引需要的欄位
+      lastActivity: admin.firestore.Timestamp.now() // 添加索引需要的欄位
+    };
+
+    // 儲存至 Firestore ledgers 集合
+    const ledgerRef = db.collection('ledgers').doc(ledgerId);
+    await ledgerRef.set(ledgerInfo);
+
+    // 建立協作設定
+    const collaborationData = {
+      ledgerId: ledgerId,
+      ownerId: ownerId,
+      collaborationType: 'shared',
+      settings: {
+        allowInvite: true,
+        allowEdit: true,
+        allowDelete: false,
+        requireApproval: false
+      },
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      status: 'active'
+    };
+
+    // 儲存協作設定到 collaborations 集合
+    await db.collection('collaborations').doc(ledgerId).set(collaborationData);
+
+    // 設定擁有者權限
+    await CM_setMemberPermission(ledgerId, ownerId, 'owner', ownerId);
+
+    // 記錄協作日誌
+    CM_logCollaborationAction(ledgerId, ownerId, 'create_ledger', { ledgerName: ledgerData.name });
+
+    CM_logInfo(`階段三修復：協作帳本建立成功 - ID: ${ledgerId}`, "建立協作帳本", ledgerData.ownerEmail, "", "", functionName);
+
+    return {
+      success: true,
+      ledgerId: ledgerId,
+      message: '階段三修復：協作帳本建立成功',
+      ledgerInfo: ledgerInfo
+    };
+
+  } catch (error) {
+    CM_logError(`階段三修復：建立協作帳本失敗: ${error.message}`, "建立協作帳本", ledgerData.ownerEmail, "CM_CREATE_SHARED_LEDGER_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      ledgerId: null,
+      message: `階段三修復：建立協作帳本失敗: ${error.message}`
     };
   }
 }
