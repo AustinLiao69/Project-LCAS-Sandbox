@@ -255,6 +255,256 @@ function CM_generateCollaborationId() {
 }
 
 /**
+ * CM超級代理：自動管理collaborations集合
+ * @version 2025-11-24-V2.3.1
+ * @date 2025-11-24
+ * @description CM模組的超級代理功能，自動創建和管理collaborations集合及其子集合
+ */
+async function CM_superProxy(operation, collectionPath, documentId, data = null, options = {}) {
+  const functionName = "CM_superProxy";
+  try {
+    CM_logInfo(`CM超級代理執行: ${operation} ${collectionPath}/${documentId || ''}`, "超級代理", options.requesterId || 'system', "", "", functionName);
+
+    // 確保Firebase已初始化
+    if (!admin.apps.length) {
+      throw new Error('Firebase Admin SDK未初始化');
+    }
+
+    const db = admin.firestore();
+    let result = null;
+
+    // 自動創建集合結構
+    await CM_ensureCollectionStructure(collectionPath);
+
+    switch (operation.toLowerCase()) {
+      case 'create':
+      case 'set':
+        if (!documentId) {
+          documentId = CM_generateCollaborationId();
+        }
+        
+        // 添加系統欄位
+        const createData = {
+          ...data,
+          createdAt: admin.firestore.Timestamp.now(),
+          updatedAt: admin.firestore.Timestamp.now(),
+          createdBy: options.requesterId || 'CM_superProxy',
+          managedBy: 'CM_v2.3.1'
+        };
+
+        await db.collection(collectionPath).doc(documentId).set(createData);
+        result = { id: documentId, ...createData };
+        break;
+
+      case 'get':
+      case 'read':
+        if (documentId) {
+          const doc = await db.collection(collectionPath).doc(documentId).get();
+          result = doc.exists ? { id: doc.id, ...doc.data() } : null;
+        } else {
+          const snapshot = await db.collection(collectionPath).get();
+          result = [];
+          snapshot.forEach(doc => {
+            result.push({ id: doc.id, ...doc.data() });
+          });
+        }
+        break;
+
+      case 'update':
+        if (!documentId) {
+          throw new Error('更新操作需要文檔ID');
+        }
+        
+        const updateData = {
+          ...data,
+          updatedAt: admin.firestore.Timestamp.now(),
+          updatedBy: options.requesterId || 'CM_superProxy'
+        };
+
+        await db.collection(collectionPath).doc(documentId).update(updateData);
+        result = { id: documentId, updated: true };
+        break;
+
+      case 'delete':
+        if (!documentId) {
+          throw new Error('刪除操作需要文檔ID');
+        }
+        
+        await db.collection(collectionPath).doc(documentId).delete();
+        result = { id: documentId, deleted: true };
+        break;
+
+      case 'query':
+        let query = db.collection(collectionPath);
+        
+        // 處理查詢條件
+        if (options.where) {
+          for (const condition of options.where) {
+            query = query.where(condition.field, condition.operator, condition.value);
+          }
+        }
+        
+        if (options.orderBy) {
+          query = query.orderBy(options.orderBy.field, options.orderBy.direction || 'asc');
+        }
+        
+        if (options.limit) {
+          query = query.limit(options.limit);
+        }
+
+        const snapshot = await query.get();
+        result = [];
+        snapshot.forEach(doc => {
+          result.push({ id: doc.id, ...doc.data() });
+        });
+        break;
+
+      default:
+        throw new Error(`不支援的操作: ${operation}`);
+    }
+
+    CM_logInfo(`CM超級代理成功: ${operation} ${collectionPath}`, "超級代理", options.requesterId || 'system', "", "", functionName);
+    
+    return {
+      success: true,
+      data: result,
+      operation: operation,
+      collectionPath: collectionPath,
+      documentId: documentId,
+      message: `CM超級代理${operation}操作成功`
+    };
+
+  } catch (error) {
+    CM_logError(`CM超級代理失敗: ${error.message}`, "超級代理", options.requesterId || 'system', "CM_SUPER_PROXY_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      operation: operation,
+      collectionPath: collectionPath,
+      documentId: documentId
+    };
+  }
+}
+
+/**
+ * 自動創建集合結構
+ * @version 2025-11-24-V2.3.1
+ * @description 確保collaborations集合及其子集合結構存在
+ */
+async function CM_ensureCollectionStructure(collectionPath) {
+  const functionName = "CM_ensureCollectionStructure";
+  try {
+    const db = admin.firestore();
+    
+    // 如果是collaborations主集合
+    if (collectionPath === 'collaborations') {
+      const placeholderDoc = await db.collection('collaborations').doc('_structure_placeholder').get();
+      
+      if (!placeholderDoc.exists) {
+        await db.collection('collaborations').doc('_structure_placeholder').set({
+          purpose: 'CM模組自動創建的集合結構佔位符',
+          createdAt: admin.firestore.Timestamp.now(),
+          managedBy: 'CM_v2.3.1',
+          structure: {
+            mainCollection: 'collaborations',
+            subCollections: ['members', 'invitations', 'permissions'],
+            version: '2.3.1'
+          }
+        });
+        
+        CM_logInfo(`自動創建collaborations集合結構`, "集合管理", 'CM_superProxy', "", "", functionName);
+      }
+    }
+    
+    // 如果是子集合路徑，確保父文檔存在
+    if (collectionPath.includes('/')) {
+      const pathParts = collectionPath.split('/');
+      if (pathParts.length >= 3 && pathParts[0] === 'collaborations') {
+        const parentDocId = pathParts[1];
+        const subCollectionName = pathParts[2];
+        
+        const parentDoc = await db.collection('collaborations').doc(parentDocId).get();
+        if (!parentDoc.exists) {
+          // 自動創建父文檔
+          await db.collection('collaborations').doc(parentDocId).set({
+            autoCreated: true,
+            createdAt: admin.firestore.Timestamp.now(),
+            managedBy: 'CM_v2.3.1',
+            status: 'active',
+            note: `由CM超級代理自動創建以支援子集合: ${subCollectionName}`
+          });
+          
+          CM_logInfo(`自動創建collaborations父文檔: ${parentDocId}`, "集合管理", 'CM_superProxy', "", "", functionName);
+        }
+      }
+    }
+
+  } catch (error) {
+    CM_logWarning(`集合結構創建警告: ${error.message}`, "集合管理", 'CM_superProxy', "", "", functionName);
+  }
+}
+
+/**
+ * CM超級代理便捷方法
+ */
+const CM_proxy = {
+  // 創建協作文檔
+  createCollaboration: async (data, options = {}) => {
+    return await CM_superProxy('create', 'collaborations', null, data, options);
+  },
+  
+  // 獲取協作文檔
+  getCollaboration: async (collaborationId, options = {}) => {
+    return await CM_superProxy('get', 'collaborations', collaborationId, null, options);
+  },
+  
+  // 更新協作文檔
+  updateCollaboration: async (collaborationId, data, options = {}) => {
+    return await CM_superProxy('update', 'collaborations', collaborationId, data, options);
+  },
+  
+  // 刪除協作文檔
+  deleteCollaboration: async (collaborationId, options = {}) => {
+    return await CM_superProxy('delete', 'collaborations', collaborationId, null, options);
+  },
+  
+  // 查詢協作文檔
+  queryCollaborations: async (queryOptions = {}) => {
+    return await CM_superProxy('query', 'collaborations', null, null, queryOptions);
+  },
+  
+  // 成員管理
+  addMember: async (collaborationId, memberData, options = {}) => {
+    const memberId = memberData.userId || CM_generateCollaborationId();
+    return await CM_superProxy('create', `collaborations/${collaborationId}/members`, memberId, memberData, options);
+  },
+  
+  getMember: async (collaborationId, memberId, options = {}) => {
+    return await CM_superProxy('get', `collaborations/${collaborationId}/members`, memberId, null, options);
+  },
+  
+  updateMember: async (collaborationId, memberId, memberData, options = {}) => {
+    return await CM_superProxy('update', `collaborations/${collaborationId}/members`, memberId, memberData, options);
+  },
+  
+  removeMember: async (collaborationId, memberId, options = {}) => {
+    return await CM_superProxy('delete', `collaborations/${collaborationId}/members`, memberId, null, options);
+  },
+  
+  // 邀請管理
+  createInvitation: async (collaborationId, invitationData, options = {}) => {
+    const invitationId = invitationData.invitationId || CM_generateCollaborationId();
+    return await CM_superProxy('create', `collaborations/${collaborationId}/invitations`, invitationId, invitationData, options);
+  },
+  
+  // 權限管理
+  setPermission: async (collaborationId, permissionData, options = {}) => {
+    const permissionId = permissionData.userId || CM_generateCollaborationId();
+    return await CM_superProxy('create', `collaborations/${collaborationId}/permissions`, permissionId, permissionData, options);
+  }
+};
+
+/**
  * 日誌函數封裝
  */
 function CM_logInfo(message, operation, userId, errorCode = "", errorDetails = "", functionName = "") {
@@ -2549,13 +2799,16 @@ async function CM_createSharedLedger(ownerId, ledgerName, memberList, permission
       // 階段二移除：直接存放的permissions物件 (改用子集合)
     };
 
-    // 階段一修復：直接使用Firebase Admin SDK建立協作文檔，避免FS依賴
-    try {
-      await db.collection('collaborations').doc(collaborationId).set(collaborationData);
-      CM_logInfo(`階段一修復：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
-    } catch (firebaseError) {
-      throw new Error(`階段一修復：建立協作文檔失敗: ${firebaseError.message}`);
+    // 使用CM超級代理建立協作文檔
+    const createResult = await CM_superProxy('create', 'collaborations', collaborationId, collaborationData, {
+      requesterId: ownerId
+    });
+    
+    if (!createResult.success) {
+      throw new Error(`CM超級代理建立協作文檔失敗: ${createResult.error}`);
     }
+    
+    CM_logInfo(`CM超級代理：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
 
     CM_logInfo(`階段二：協作主文檔建立成功 - ${collaborationId}`, "建立共享帳本", ownerId, "", "", functionName);
 
@@ -3128,6 +3381,11 @@ module.exports = {
 
   // 模組初始化函數
   CM_initialize,
+
+  // CM超級代理功能 - 新增
+  CM_superProxy,
+  CM_ensureCollectionStructure,
+  CM_proxy,
 };
 
 // 自動初始化模組
