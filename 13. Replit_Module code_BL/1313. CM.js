@@ -3325,15 +3325,80 @@ async function CM_getRecentCollaborationId(userId) {
 }
 
 /**
- * 36. 建立共享協作帳本 - 階段三修復版
+ * 36. 建立共享協作帳本 - 階段一修復版
  * @version 2025-11-24-V2.3.1
  * @date 2025-11-24
- * @description 階段三修復：移除FS依賴，直接使用Firebase Admin SDK生成ID
+ * @description 階段一修復：強化參數驗證，移除FS依賴，直接使用Firebase Admin SDK生成ID
  */
 async function CM_createSharedLedger(ledgerData, requesterId = 'system') {
   const functionName = "CM_createSharedLedger";
   try {
-    CM_logInfo(`階段三修復：建立協作帳本 - 擁有者: ${ledgerData.ownerEmail}, 帳本: ${ledgerData.name}`, "建立協作帳本", ledgerData.ownerEmail, "", "", functionName);
+    CM_logInfo(`階段一修復：開始建立協作帳本`, "建立協作帳本", requesterId, "", "", functionName);
+
+    // 階段一修復：參數完整性驗證
+    if (!ledgerData || typeof ledgerData !== 'object') {
+      const errorMsg = 'ledgerData參數為必填且必須為物件類型';
+      CM_logError(errorMsg, "建立協作帳本", requesterId, "CM_INVALID_LEDGER_DATA", "", functionName);
+      return {
+        success: false,
+        ledgerId: null,
+        message: errorMsg,
+        error: {
+          code: 'CM_INVALID_LEDGER_DATA',
+          details: '參數驗證失敗：ledgerData無效'
+        }
+      };
+    }
+
+    // 階段一修復：必要參數檢查
+    const requiredFields = [
+      { field: 'name', type: 'string', description: '帳本名稱' },
+      { field: 'ownerEmail', type: 'string', description: '擁有者Email' }
+    ];
+
+    const validationErrors = [];
+
+    for (const req of requiredFields) {
+      if (!ledgerData[req.field]) {
+        validationErrors.push(`缺少必要參數：${req.field} (${req.description})`);
+      } else if (typeof ledgerData[req.field] !== req.type) {
+        validationErrors.push(`參數類型錯誤：${req.field}必須為${req.type}類型`);
+      } else if (req.type === 'string' && ledgerData[req.field].trim() === '') {
+        validationErrors.push(`參數不能為空：${req.field} (${req.description})`);
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      const errorMsg = `參數驗證失敗：${validationErrors.join('; ')}`;
+      CM_logError(errorMsg, "建立協作帳本", requesterId, "CM_VALIDATION_ERROR", "", functionName);
+      return {
+        success: false,
+        ledgerId: null,
+        message: errorMsg,
+        error: {
+          code: 'CM_VALIDATION_ERROR',
+          details: validationErrors
+        }
+      };
+    }
+
+    // 階段一修復：Email格式驗證
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(ledgerData.ownerEmail)) {
+      const errorMsg = `ownerEmail格式無效：${ledgerData.ownerEmail}`;
+      CM_logError(errorMsg, "建立協作帳本", requesterId, "CM_INVALID_EMAIL", "", functionName);
+      return {
+        success: false,
+        ledgerId: null,
+        message: errorMsg,
+        error: {
+          code: 'CM_INVALID_EMAIL',
+          details: 'Email格式驗證失敗'
+        }
+      };
+    }
+
+    CM_logInfo(`階段一修復：參數驗證通過 - 擁有者: ${ledgerData.ownerEmail}, 帳本: ${ledgerData.name}`, "建立協作帳本", requesterId, "", "", functionName);
 
     // 生成帳本ID（移除FS依賴）
     const timestamp = Date.now();
@@ -3388,21 +3453,32 @@ async function CM_createSharedLedger(ledgerData, requesterId = 'system') {
     // 記錄協作日誌
     CM_logCollaborationAction(ledgerId, ownerId, 'create_ledger', { ledgerName: ledgerData.name });
 
-    CM_logInfo(`階段三修復：協作帳本建立成功 - ID: ${ledgerId}`, "建立協作帳本", ledgerData.ownerEmail, "", "", functionName);
+    CM_logInfo(`階段一修復：協作帳本建立成功 - ID: ${ledgerId}`, "建立協作帳本", ledgerData.ownerEmail, "", "", functionName);
 
     return {
       success: true,
       ledgerId: ledgerId,
-      message: '階段三修復：協作帳本建立成功',
-      ledgerInfo: ledgerInfo
+      message: '階段一修復：協作帳本建立成功',
+      data: {
+        ledgerId: ledgerId,
+        name: ledgerData.name,
+        type: ledgerData.type || 'shared',
+        ownerEmail: ledgerData.ownerEmail,
+        createdAt: new Date().toISOString()
+      }
     };
 
   } catch (error) {
-    CM_logError(`階段三修復：建立協作帳本失敗: ${error.message}`, "建立協作帳本", ledgerData.ownerEmail, "CM_CREATE_SHARED_LEDGER_ERROR", error.toString(), functionName);
+    const ownerEmail = ledgerData?.ownerEmail || 'unknown';
+    CM_logError(`階段一修復：建立協作帳本失敗: ${error.message}`, "建立協作帳本", ownerEmail, "CM_CREATE_SHARED_LEDGER_ERROR", error.toString(), functionName);
     return {
       success: false,
       ledgerId: null,
-      message: `階段三修復：建立協作帳本失敗: ${error.message}`
+      message: `階段一修復：建立協作帳本失敗: ${error.message}`,
+      error: {
+        code: 'CM_CREATE_SHARED_LEDGER_ERROR',
+        details: error.toString()
+      }
     };
   }
 }
