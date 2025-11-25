@@ -28,10 +28,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "ledgerId",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "status",
           "order": "ASCENDING"
         },
@@ -49,10 +45,6 @@
       "collectionGroup": "budgets",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "ledgerId",
-          "order": "ASCENDING"
-        },
         {
           "fieldPath": "status",
           "order": "ASCENDING"
