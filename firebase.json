@@ -1,0 +1,7 @@
+
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "08. Firebase initializer/0890. firestore.indexes.json"
+  }
+}
