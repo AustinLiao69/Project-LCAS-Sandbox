@@ -3485,7 +3485,10 @@ async function CM_createSharedLedger(ledgerData, requesterId = 'system') {
 
 // 模組導出
 module.exports = {
-  // 階段一：成員管理函數 (9個) - 新增CM_getRecentCollaborationId
+  // 階段一修復新增函數
+  CM_createSharedLedger,
+
+  // 協作成員管理
   CM_inviteMember,
   CM_processMemberJoin,
   CM_removeMember,
@@ -3493,58 +3496,36 @@ module.exports = {
   CM_setMemberPermission,
   CM_validatePermission,
   CM_getPermissionMatrix,
-  CM_manageCollaborationMembers,
-  CM_getRecentCollaborationId,
 
-  // 階段二：協作同步函數 (7個)
+  // 協作同步與衝突處理
   CM_initializeSync,
   CM_resolveDataConflict,
   CM_broadcastEvent,
+
+  // 通知與偏好設定
   CM_sendCollaborationNotification,
   CM_setNotificationPreferences,
+
+  // 日誌與歷史記錄
   CM_logCollaborationAction,
   CM_getCollaborationHistory,
 
-  // 階段三：錯誤處理函數 (1個)
+  // 錯誤處理
   CM_handleCollaborationError,
 
-  // 階段三：協作帳本管理函數 (6個)
+  // 階段三新增函數
   CM_getCollaborationDetails,
   CM_updateCollaborationSettings,
-  CM_toggleCollaborationStatus,
-  CM_bulkSetMemberPermissions,
-  CM_getCollaborationStatistics,
 
-  // 階段三：協作系統初始化函數 (1個) - 新增
+  // 協作系統初始化
   CM_initializeCollaborationSystem,
 
-  // 階段一修正：協作帳本創建函數
-  CM_createSharedLedger,
-
-  // MLS功能遷移區域 - 帳本管理函數
-  CM_getLedgers,
-  CM_getLedgerById,
-  CM_updateLedger,
-  CM_deleteLedger,
-  CM_editLedger,
-  CM_createProjectLedger,
-  CM_createCategoryLedger,
-  CM_getCollaborators,
-  CM_inviteCollaborator,
-  CM_removeCollaborator,
-  CM_getPermissions,
-  CM_detectDuplicateName,
-
-  // 系統監控函數 (1個)
-  CM_monitorCollaborationHealth,
-
-  // 模組初始化函數
-  CM_initialize,
-
-  // CM超級代理功能 - 新增
+  // CM超級代理
   CM_superProxy,
-  CM_ensureCollectionStructure,
   CM_proxy,
+
+  // 內部工具函數
+  CM_generateCollaborationId
 };
 
 // 自動初始化模組

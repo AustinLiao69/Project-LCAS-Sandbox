@@ -1182,6 +1182,87 @@ app.post('/api/v1/users/verify-pin', async (req, res) => {
 
 // =============== P2階段：協作管理API端點補完 ===============
 
+// 階段一修復：新增POST /api/v1/ledgers端點 - 創建協作帳本
+app.post('/api/v1/ledgers', async (req, res) => {
+  try {
+    console.log('🏗️ ASL轉發: 創建協作帳本 -> CM_createSharedLedger');
+
+    if (!CM || typeof CM.CM_createSharedLedger !== 'function') {
+      console.error('❌ CM模組或CM_createSharedLedger函數不存在');
+      return res.apiError('CM_createSharedLedger函數不存在', 'CM_FUNCTION_NOT_FOUND', 503);
+    }
+
+    // 階段一修復：參數映射修復 - 從request body正確提取參數
+    const ownerEmail = req.body.ownerEmail;
+    const name = req.body.name;
+    const type = req.body.type;
+    const description = req.body.description;
+    const currency = req.body.currency;
+    const timezone = req.body.timezone;
+
+    // 階段一修復：參數完整性檢查 - 確保必要參數不為空
+    const missingParams = [];
+    if (!ownerEmail || typeof ownerEmail !== 'string' || ownerEmail.trim() === '') {
+      missingParams.push('ownerEmail');
+    }
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      missingParams.push('name');
+    }
+    if (!type || typeof type !== 'string' || type.trim() === '') {
+      missingParams.push('type');
+    }
+
+    if (missingParams.length > 0) {
+      return res.apiError(
+        `缺少必要參數: ${missingParams.join(', ')}`,
+        'MISSING_REQUIRED_PARAMETERS',
+        400,
+        { missingParams: missingParams }
+      );
+    }
+
+    // 階段一修復：參數類型驗證
+    if (currency && typeof currency !== 'string') {
+      return res.apiError('currency參數必須是字串類型', 'INVALID_PARAMETER_TYPE', 400);
+    }
+    if (timezone && typeof timezone !== 'string') {
+      return res.apiError('timezone參數必須是字串類型', 'INVALID_PARAMETER_TYPE', 400);
+    }
+
+    // 構建傳遞給CM模組的參數
+    const ledgerData = {
+      ownerEmail: ownerEmail.trim(),
+      name: name.trim(),
+      type: type.trim(),
+      description: description ? description.trim() : '',
+      currency: currency ? currency.trim() : 'TWD',
+      timezone: timezone ? timezone.trim() : 'Asia/Taipei',
+      isCollaborative: true,
+      createdBy: ownerEmail.trim()
+    };
+
+    console.log(`📋 創建協作帳本參數: 擁有者=${ownerEmail}, 名稱=${name}, 類型=${type}`);
+
+    // 調用CM模組創建協作帳本
+    const result = await CM.CM_createSharedLedger(ledgerData, ownerEmail);
+
+    if (result && result.success) {
+      res.apiSuccess(result.data || {}, result.message || '協作帳本創建成功');
+    } else {
+      res.apiError(
+        result?.message || '協作帳本創建失敗',
+        result?.error?.code || 'CREATE_LEDGER_ERROR',
+        400,
+        result?.error?.details
+      );
+    }
+
+  } catch (error) {
+    console.error('❌ ASL轉發錯誤 (create ledger):', error);
+    res.apiError('創建協作帳本轉發失敗', 'CREATE_LEDGER_FORWARD_ERROR', 500);
+  }
+});
+
 // 階段二修正：補完協作帳本刪除端點
 app.delete('/api/v1/ledgers/:id', async (req, res) => {
   try {
