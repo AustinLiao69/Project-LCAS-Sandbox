@@ -1,23 +1,9 @@
 /**
- * 1301. BK.js_記帳核心模組_v3.3.2
+ * 1301. BK.js_記帳核心模組_v3.3.3
  * @module 記帳核心模組
- * @description LCAS 2.0 記帳核心ledgers/{ledgerId}/transactions功能模組，專注於記帳邏輯，透過WCM模組進行帳戶科目驗證
- * @update 2025-09-26: DCN-0015第一階段 - 標準化回應格式100%符合規範
- * @update 2025-09-26: 階段一緊急修復 - 修復快速記帳輸入驗證，強化業務邏輯v3.0.4
- * @update 2025-09-26: 階段一緊急修復v3.0.5 - 修復快速記帳和完整記帳處理邏輯，簡化MVP階段業務處理
- * @update 2025-09-26: 階段一緊急修復v3.0.6 - 修復TC-SIT-004,005核心邏輯缺陷，確保SIT測試通過
- * @update 2025-09-26: 階段一緊急修復v3.0.7 - 修復SIT測試TC-SIT-004~006核心邏輯，簡化MVP階段處理，避免超時問題
- * @update 2025-10-02: 階段一&二修復v3.1.0 - 完整修復SIT測試問題：參數驗證、超時保護
- * @update 2025-10-02: 階段三完整修復v3.1.1 - 統一錯誤處理格式，100%符合DCN-0015規範，修復TC-SIT-007
- * @update 2025-10-02: 階段二簡化優化v3.1.2 - 移除冗餘API包裝函數，簡化調用鏈，提升性能
- * @update 2025-10-02: 階段三清理優化v3.1.3 - 清理module.exports，移除已刪除函數的導出，完成架構簡化
- * @update 2025-11-27: 路徑標準化v3.2.1 - 統一修正為1311 FS.js標準路徑格式 ledgers/{ledgerId}/transactions，移除entries舊格式相容性
- * @update 2025-10-29: 架構重構v3.2.2 - 移除硬編碼帳本ID，透過AM模組正確處理帳本初始化，完全符合0098憲法第3、6、7條
- * @update 2025-10-29: 階段二強化v3.2.3 - 強化AM模組調用機制，增加重試邏輯和詳細錯誤處理，確保帳本ID正確獲取
- * @update 2025-11-17: DCN-0023階段三v3.3.0 - 移除帳戶管理功能，建立對WCM模組的依賴，記帳流程整合帳戶科目驗證，專注記帳核心邏輯
- * @update 2025-11-20: 階段一修復v3.3.1 - 修復BK_getTransactions中queryResult重複變數宣告問題，確保模組正常載入
- * @update 2025-11-21: 階段一修復v3.3.2 - 修復db變數重複宣告問題，解決模組載入失敗
- * @date 2025-11-20
+ * @description LCAS 2.0 記帳核心功能模組，支援動態路徑判斷（ledgers/{ledgerId}/transactions 及 collaborations/{ledgerId}/transactions），透過WCM模組進行帳戶科目驗證
+ * @update 2025-11-27: 階段二路徑擴展v3.3.3 - 新增協作帳本路徑支援，實作動態路徑解析機制
+ * @date 2025-11-27
  */
 
 /**
@@ -313,13 +299,11 @@ function BK_getErrorSeverity(errorCode) {
 }
 
 /**
- * BK.js_記帳核心模組_v3.0.3
+ * 1301. BK.js_記帳核心模組_v3.3.3
  * @module 記帳核心模組
- * @description LCAS 2.0 記帳核心功能，處理交易記錄、分類管理、數據分析等核心記帳邏輯
- * @update 2025-09-26: 階段二修復 - 將Firebase查詢邏輯遷移到FS.js，修正模組職責分工
- * @update 2025-09-24: 第一階段修復 - 補全BK_getTransactionsByDateRange函數導出
- * @update 2025-01-27: DCN-0015階段二 - 實作標準化API處理函數，統一回傳格式
- * @date 2025-09-26
+ * @description LCAS 2.0 記帳核心功能模組，支援動態路徑判斷（ledgers/{ledgerId}/transactions 及 collaborations/{ledgerId}/transactions），透過WCM模組進行帳戶科目驗證
+ * @update 2025-11-27: 階段二路徑擴展v3.3.3 - 新增協作帳本路徑支援，實作動態路徑解析機制
+ * @date 2025-11-27
  */
 
 /**
@@ -381,7 +365,7 @@ const WCM = require('./1350. WCM.js'); // DCN-0023階段三：引入WCM模組進
 // FS模組已完全移除 - 階段五完成
 
 // BK模組專注記帳核心邏輯，透過WCM處理帳戶科目驗證，直接使用Firebase
-console.log('✅ BK模組v3.3.1：階段五完成 - 移除FS依賴，專注記帳核心邏輯，整合WCM帳戶科目驗證');
+console.log('✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析');
 
 /**
  * 生成預設用戶ID（業務邏輯版本）
@@ -399,7 +383,7 @@ const BK_CONFIG = {
   FIRESTORE_ENABLED: getEnvVar('FIRESTORE_ENABLED') !== 'false',
   TIMEZONE: getEnvVar('TIMEZONE') || Intl.DateTimeFormat().resolvedOptions().timeZone,
   INITIALIZATION_INTERVAL: parseInt(getEnvVar('BK_INIT_INTERVAL'), 10) || 300000,
-  VERSION: getEnvVar('BK_VERSION') || '3.3.2', // 階段一修復：版本升級
+  VERSION: getEnvVar('BK_VERSION') || '3.3.3', // 階段一修復：版本升級
   MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT'), 10) || Number.MAX_SAFE_INTEGER,
   DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY') || detectSystemCurrency(),
   DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD') || '現金',
@@ -710,10 +694,6 @@ async function BK_createTransaction(transactionData) {
 
       // 階段一&二修復：增加重試機制
       const executeTransaction = async () => {
-        // 階段一修復：透過1311.FS.js驗證帳本結構存在
-        // FS已在模組頂部載入，無需重複宣告
-        // const FS = require('./1311. FS.js'); // Removed redundant require
-
         // 階段五完成：直接使用Firebase驗證帳本存在，移除FS依賴
         const firebaseDb = BK_INIT_STATUS.firestore_db;
         const ledgerRef = firebaseDb.collection('ledgers').doc(processedData.ledgerId);
@@ -1200,9 +1180,13 @@ async function BK_updateTransaction(transactionId, updateData) {
       return BK_formatErrorResponse("MISSING_LEDGER_ID", "更新交易需要指定ledgerId");
     }
 
-    const querySnapshot = await firebaseDb.collection('ledgers')
-      .doc(ledgerId)
-      .collection('transactions')
+    // 階段二修正：使用動態路徑解析
+    const pathInfo = BK_resolveLedgerPath(ledgerId, 'transactions');
+    if (!pathInfo.success) {
+      return BK_formatErrorResponse("PATH_RESOLVE_ERROR", `路徑解析失敗: ${pathInfo.error}`);
+    }
+
+    const querySnapshot = await firebaseDb.collection(pathInfo.collectionPath)
       .where('id', '==', transactionId)
       .get();
 
@@ -1289,9 +1273,13 @@ async function BK_deleteTransaction(transactionId, params = {}) {
       return BK_formatErrorResponse("MISSING_LEDGER_ID", "刪除交易需要指定ledgerId");
     }
 
-    const querySnapshot = await firebaseDb.collection('ledgers')
-      .doc(ledgerId)
-      .collection('transactions')
+    // 階段二修正：使用動態路徑解析
+    const pathInfo = BK_resolveLedgerPath(ledgerId, 'transactions');
+    if (!pathInfo.success) {
+      return BK_formatErrorResponse("PATH_RESOLVE_ERROR", `路徑解析失敗: ${pathInfo.error}`);
+    }
+
+    const querySnapshot = await firebaseDb.collection(pathInfo.collectionPath)
       .where('id', '==', transactionId)
       .get();
 
@@ -2136,6 +2124,79 @@ async function BK_validateTransactionLedger(ledgerId, userId, processId) {
       success: false,
       error: error.message || "帳本驗證過程中發生未知錯誤",
       errorCode: "LEDGER_VALIDATION_ERROR"
+    };
+  }
+}
+
+/**
+ * 階段二新增：解析帳本路徑
+ * @param {string} ledgerId - 帳本ID
+ * @param {string} resource - 資源名稱 (e.g., 'transactions', 'budgets')
+ * @returns {Object} 包含成功狀態、路徑集合名稱和文件路徑的物件
+ */
+function BK_resolveLedgerPath(ledgerId, resource) {
+  try {
+    const ledgerCollection = getEnvVar('LEDGER_COLLECTION', 'ledgers');
+    const collaborationCollection = getEnvVar('COLLABORATION_COLLECTION', 'collaborations');
+    const transactionsSubcollection = getEnvVar('TRANSACTIONS_COLLECTION', 'transactions');
+    const budgetsSubcollection = getEnvVar('BUDGETS_COLLECTION', 'budgets');
+    const categoriesSubcollection = getEnvVar('CATEGORIES_COLLECTION', 'categories');
+    const walletsSubcollection = getEnvVar('WALLETS_COLLECTION', 'wallets');
+
+    let collectionPath;
+
+    // 判斷是標準帳本還是協作帳本
+    // 簡易判斷：如果ledgerId格式符合協作帳本ID（例如，包含特定前綴或GUID），則視為協作帳本
+    // 實際應用中，可能需要更複雜的邏輯，例如查詢帳本元數據來確定類型
+    const isCollaborationLedger = ledgerId.startsWith('collab_') || ledgerId.includes('-'); // 假設協作帳本ID有特殊格式
+
+    if (isCollaborationLedger) {
+      collectionPath = `${collaborationCollection}/${ledgerId}/${resource}`;
+    } else {
+      collectionPath = `${ledgerCollection}/${ledgerId}/${resource}`;
+    }
+
+    // 根據資源名映射到對應的子集合名稱
+    let subcollectionName;
+    switch (resource.toLowerCase()) {
+      case 'transactions':
+        subcollectionName = transactionsSubcollection;
+        break;
+      case 'budgets':
+        subcollectionName = budgetsSubcollection;
+        break;
+      case 'categories':
+        subcollectionName = categoriesSubcollection;
+        break;
+      case 'wallets':
+        subcollectionName = walletsSubcollection;
+        break;
+      default:
+        // 如果資源名稱不匹配，則直接使用資源名作為子集合名
+        subcollectionName = resource;
+    }
+
+    // 重新組合路徑
+    if (isCollaborationLedger) {
+      collectionPath = `${collaborationCollection}/${ledgerId}/${subcollectionName}`;
+    } else {
+      collectionPath = `${ledgerCollection}/${ledgerId}/${subcollectionName}`;
+    }
+
+
+    return {
+      success: true,
+      collectionPath: collectionPath,
+      resource: resource,
+      ledgerId: ledgerId,
+      isCollaboration: isCollaborationLedger
+    };
+
+  } catch (error) {
+    BK_logError(`路徑解析失敗: ${error.message}`, "路徑解析", "", "PATH_RESOLUTION_ERROR", error.toString(), "BK_resolveLedgerPath");
+    return {
+      success: false,
+      error: error.message
     };
   }
 }
@@ -3376,6 +3437,9 @@ module.exports = {
   BK_getErrorStats,
   BK_resetErrorStats,
 
+  // 階段二新增：路徑解析函數
+  BK_resolveLedgerPath,
+
   // 輔助函數 BK_getTransactionById - 為了BK_processAPIGetTransactionDetail 函數調用
   BK_getTransactionById: async function(transactionId, queryParams = {}) {
     try {
@@ -3387,7 +3451,13 @@ module.exports = {
       }
       const ledgerId = queryParams.ledgerId;
       // 修正：使用1311 FS.js標準路徑格式
-      const collectionRef = firebaseDb.collection('ledgers').doc(ledgerId).collection('transactions');
+      // 階段二修正：使用動態路徑解析
+      const pathInfo = BK_resolveLedgerPath(ledgerId, 'transactions');
+      if (!pathInfo.success) {
+        throw new Error(`路徑解析失敗: ${pathInfo.error}`);
+      }
+
+      const collectionRef = firebaseDb.collection(pathInfo.collectionPath);
       const idField = getEnvVar('ID_FIELD', 'id');
 
       const querySnapshot = await collectionRef.where(idField, '==', transactionId).limit(1).get();

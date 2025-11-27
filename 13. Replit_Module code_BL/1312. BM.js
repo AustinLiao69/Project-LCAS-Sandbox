@@ -212,12 +212,6 @@ BM.BM_createBudget = async function(budgetData) {
       throw new Error(`路徑安全驗證失敗: ${collectionPath}，系統完全禁用頂層budgets集合`);
     }
 
-    // 額外路徑驗證：確保不會意外寫入頂層budgets
-    if (collectionPath.indexOf('/budgets') === -1 || collectionPath === 'budgets') {
-      console.error(`${logPrefix} ❌ 子集合路徑格式驗證失敗: ${collectionPath}`);
-      throw new Error(`子集合路徑格式錯誤: ${collectionPath}，必須為 ledgers/{ledgerId}/budgets 格式`);
-    }
-
     try {
       console.log(`${logPrefix} ✅ 最終Firebase子集合寫入路徑: ${collectionPath}/${budgetId}`);
       console.log(`${logPrefix} 🔒 路徑驗證通過，絕對禁用頂層budgets集合`);
@@ -359,7 +353,14 @@ BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
 
     const firebaseConfig = require('./1399. firebase-config.js');
     const db = firebaseConfig.getFirestoreInstance();
-    const docRef = db.collection(`ledgers/${ledgerId}/budgets`).doc(budgetId);
+
+    // 階段二修正：使用動態路徑解析
+    const pathInfo = BM_resolveBudgetPath(ledgerId);
+    if (!pathInfo.success) {
+      return createStandardResponse(false, null, `預算路徑解析失敗: ${pathInfo.error}`, "BUDGET_PATH_RESOLVE_ERROR");
+    }
+
+    const docRef = db.collection(pathInfo.collectionPath).doc(budgetId);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -392,7 +393,14 @@ BM.BM_getBudgetDetail = async function(budgetId, options = {}) {
 
     const firebaseConfig = require('./1399. firebase-config.js');
     const db = firebaseConfig.getFirestoreInstance();
-    const docRef = db.collection(`ledgers/${ledgerId}/budgets`).doc(budgetId);
+
+    // 階段二修正：使用動態路徑解析
+    const pathInfo = BM_resolveBudgetPath(ledgerId);
+    if (!pathInfo.success) {
+      return createStandardResponse(false, null, `預算路徑解析失敗: ${pathInfo.error}`, "BUDGET_PATH_RESOLVE_ERROR");
+    }
+
+    const docRef = db.collection(pathInfo.collectionPath).doc(budgetId);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -1888,6 +1896,46 @@ BM.BM_getBudgetById = async function(budgetId, options = {}) {
   }
 };
 
+/**
+ * 階段二新增：路徑解析函數 (新增)
+ * @version 2025-11-20-V2.3.1
+ * @description 支援動態判斷預算相關文檔的路徑，包括支援協作帳本
+ */
+function BM_resolveBudgetPath(ledgerId) {
+  const logPrefix = '[BM_resolveBudgetPath]';
+
+  try {
+    // 階段二核心：判斷ledgerId是否為協作帳本
+    // 協作帳本ID通常帶有 "collab_ledger_" 前綴
+    if (ledgerId && typeof ledgerId === 'string' && ledgerId.startsWith('collab_ledger_')) {
+      console.log(`${logPrefix} 偵測到協作帳本ID: ${ledgerId}，使用協作帳本路徑`);
+      // 協作帳本預算路徑格式：ledgers/collaborations/{collabLedgerId}/budgets/{budgetId}
+      const collabLedgerId = ledgerId.replace('collab_ledger_', ''); // 提取實際的協作帳本ID
+      return {
+        success: true,
+        collectionPath: `ledgers/collaborations/${collabLedgerId}/budgets`,
+        documentPath: `ledgers/collaborations/${collabLedgerId}/budgets/{budgetId}`
+      };
+    } else if (ledgerId && typeof ledgerId === 'string') {
+      console.log(`${logPrefix} 偵測到標準帳本ID: ${ledgerId}，使用標準帳本路徑`);
+      // 標準帳本預算路徑格式：ledgers/{ledgerId}/budgets/{budgetId}
+      return {
+        success: true,
+        collectionPath: `ledgers/${ledgerId}/budgets`,
+        documentPath: `ledgers/${ledgerId}/budgets/{budgetId}`
+      };
+    } else {
+      throw new Error('無效的ledgerId格式');
+    }
+  } catch (error) {
+    console.error(`${logPrefix} 路徑解析失敗:`, error.message);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
 // 模組導出 - 階段二整合：新增從FS模組接管的預算初始化功能
 module.exports = {
   BM_createBudget: BM.BM_createBudget,
@@ -1915,7 +1963,9 @@ module.exports = {
   BM_validateConfirmationToken: BM.BM_validateConfirmationToken,
   // 階段二整合：從FS模組接管的預算初始化功能
   BM_createBudgetsSubcollectionFramework: BM.BM_createBudgetsSubcollectionFramework,
-  BM_initializeBudgetStructure: BM.BM_initializeBudgetStructure
+  BM_initializeBudgetStructure: BM.BM_initializeBudgetStructure,
+  // 階段二新增：路徑解析函數
+  BM_resolveBudgetPath: BM_resolveBudgetPath
 };
 
 console.log('✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能');

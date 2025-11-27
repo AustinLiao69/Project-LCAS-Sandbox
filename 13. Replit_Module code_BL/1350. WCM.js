@@ -282,8 +282,14 @@ async function WCM_getWalletList(ledgerId, queryParams = {}) {
 
     await WCM_initialize();
 
+    // 階段二修正：使用動態路徑解析
+    const pathInfo = WCM_resolveLedgerPath(ledgerId, 'wallets');
+    if (!pathInfo.success) {
+      return WCM_formatErrorResponse("PATH_RESOLVE_ERROR", `帳戶列表路徑解析失敗: ${pathInfo.error}`);
+    }
+
     const db = admin.firestore();
-    const collectionPath = `ledgers/${ledgerId}/wallets`;
+    const collectionPath = pathInfo.collectionPath;
     let query = db.collection(collectionPath)
       .where('userId', '==', queryParams.userId)
       .where('status', '==', 'active')
@@ -356,8 +362,14 @@ async function WCM_validateWalletExists(ledgerId, walletId, userId) {
 
     await WCM_initialize();
 
+    // 階段二修正：使用動態路徑解析
+    const pathInfo = WCM_resolveLedgerPath(ledgerId, 'wallets');
+    if (!pathInfo.success) {
+      return WCM_formatErrorResponse("PATH_RESOLVE_ERROR", `帳戶驗證路徑解析失敗: ${pathInfo.error}`);
+    }
+
     const db = admin.firestore();
-    const collectionPath = `ledgers/${ledgerId}/wallets`;
+    const collectionPath = pathInfo.collectionPath;
     const walletDoc = await db.collection(collectionPath).doc(walletId).get();
 
     if (!walletDoc.exists) {
@@ -563,8 +575,14 @@ async function WCM_getCategoryList(ledgerId, queryParams = {}) {
 
     await WCM_initialize();
 
+    // 階段二修正：使用動態路徑解析
+    const pathInfo = WCM_resolveLedgerPath(ledgerId, 'categories');
+    if (!pathInfo.success) {
+      return WCM_formatErrorResponse("PATH_RESOLVE_ERROR", `科目列表路徑解析失敗: ${pathInfo.error}`);
+    }
+
     const db = admin.firestore();
-    const collectionPath = `ledgers/${ledgerId}/categories`;
+    const collectionPath = pathInfo.collectionPath;
     let query = db.collection(collectionPath)
       .where('userId', '==', queryParams.userId)
       .where('status', '==', 'active')
@@ -645,8 +663,14 @@ async function WCM_validateCategoryExists(ledgerId, categoryId, userId) {
 
     await WCM_initialize();
 
+    // 階段二修正：使用動態路徑解析
+    const pathInfo = WCM_resolveLedgerPath(ledgerId, 'categories');
+    if (!pathInfo.success) {
+      return WCM_formatErrorResponse("PATH_RESOLVE_ERROR", `科目驗證路徑解析失敗: ${pathInfo.error}`);
+    }
+
     const db = admin.firestore();
-    const collectionPath = `ledgers/${ledgerId}/categories`;
+    const collectionPath = pathInfo.collectionPath;
     const categoryDoc = await db.collection(collectionPath).doc(categoryId).get();
 
     if (!categoryDoc.exists) {
@@ -720,8 +744,14 @@ async function WCM_getWalletBalance(ledgerId, walletId, userId) {
 
     await WCM_initialize();
 
+    // 階段二修正：使用動態路徑解析
+    const pathInfo = WCM_resolveLedgerPath(ledgerId, 'wallets');
+    if (!pathInfo.success) {
+      return WCM_formatErrorResponse("PATH_RESOLVE_ERROR", `帳戶餘額路徑解析失敗: ${pathInfo.error}`);
+    }
+
     const db = admin.firestore();
-    const collectionPath = `ledgers/${ledgerId}/wallets`;
+    const collectionPath = pathInfo.collectionPath;
     const walletDoc = await db.collection(collectionPath).doc(walletId).get();
 
     if (!walletDoc.exists) {
@@ -877,6 +907,43 @@ function WCM_loadDefaultConfigs() {
   }
 }
 
+/**
+ * 10. 解析帳本/協作帳本路徑
+ * @version 2025-11-22-V2.0.0
+ * @description 根據ledgerId和操作類型，動態解析Firestore的集合路徑
+ * @param {string} ledgerId - 帳本ID
+ * @param {string} operationType - 操作類型，例如 'wallets', 'categories', 'transactions'
+ * @returns {Object} { success: boolean, collectionPath: string, error: string }
+ */
+function WCM_resolveLedgerPath(ledgerId, operationType) {
+  const functionName = "WCM_resolveLedgerPath";
+  try {
+    WCM_logInfo(`解析路徑：帳本ID=${ledgerId}, 操作=${operationType}`, "路徑解析", "", functionName);
+
+    if (!ledgerId || typeof ledgerId !== 'string') {
+      return { success: false, error: "無效的帳本ID" };
+    }
+    if (!operationType || typeof operationType !== 'string') {
+      return { success: false, error: "無效的操作類型" };
+    }
+
+    // 檢查 ledgerId 是否為協作帳本 ID (例如: 'collaboration_XXXX')
+    if (ledgerId.startsWith('collaboration_')) {
+      const collectionPath = `collaborations/${ledgerId}/${operationType}`;
+      WCM_logInfo(`動態路徑解析成功 (協作帳本): ${collectionPath}`, "路徑解析", "", functionName);
+      return { success: true, collectionPath: collectionPath };
+    } else {
+      // 預設為獨立帳本路徑
+      const collectionPath = `ledgers/${ledgerId}/${operationType}`;
+      WCM_logInfo(`動態路徑解析成功 (獨立帳本): ${collectionPath}`, "路徑解析", "", functionName);
+      return { success: true, collectionPath: collectionPath };
+    }
+  } catch (error) {
+    WCM_logError(`路徑解析失敗: ${error.message}`, "路徑解析", "", "PATH_RESOLVE_ERROR", error.toString(), functionName);
+    return { success: false, error: error.message };
+  }
+}
+
 // =================== 日誌函數 ===================
 
 function WCM_logInfo(message, category, userId, functionName) {
@@ -938,17 +1005,20 @@ module.exports = {
   WCM_formatSuccessResponse,
   WCM_formatErrorResponse,
 
+  // 路徑解析函數
+  WCM_resolveLedgerPath,
+
   // 配置
   WCM_CONFIG,
 
   // 模組資訊
-  moduleVersion: '1.2.0',
+  moduleVersion: '1.2.1', // 版本升級至 1.2.1
   architecture: 'subcollection_based',
   collections: {
-    wallets: 'ledgers/{ledgerId}/wallets',
-    categories: 'ledgers/{ledgerId}/categories'
+    wallets: 'ledgers/{ledgerId}/{wallets}' , // 預設路徑
+    categories: 'ledgers/{ledgerId}/{categories}' // 預設路徑
   },
-  lastUpdate: '2025-11-21',
+  lastUpdate: '2025-11-22', // 更新日期
   features: [
     'subcollection_architecture',
     'ledger_based_collections',
@@ -957,7 +1027,8 @@ module.exports = {
     'category_management',
     'batch_0099_subject_loading',
     'default_wallet_creation',
-    'am_module_integration'
+    'am_module_integration',
+    'dynamic_ledger_path_support' // 新增支援動態路徑
   ],
   integratedFrom: {
     'AM_load0099SubjectData': 'AM模組v7.5.0',
@@ -967,14 +1038,13 @@ module.exports = {
 
 // 自動初始化模組
 try {
-  console.log('🔧 WCM模組v1.2.0初始化：階段一整合完成');
-  console.log('📋 架構調整：wallets/{walletId} → ledgers/{ledgerId}/wallets/{walletId}');
-  console.log('📋 架構調整：categories/{categoryId} → ledgers/{ledgerId}/categories/{categoryId}');
+  console.log('🔧 WCM模組v1.2.1 初始化：階段二路徑動態化支援完成');
+  console.log('📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})');
   console.log('✅ 與1311.FS.js子集合架構保持一致');
-  console.log('🎯 新增功能：從AM模組整合0099科目載入功能');
-  console.log('🎯 新增功能：預設帳戶批量建立功能');
-  console.log('🔥 WCM模組現在是科目和帳戶管理的唯一入口');
-  console.log('✨ 階段一：WCM功能整合已完成');
+  console.log('🎯 增強功能：WCM_validateWalletExists, WCM_getWalletList, WCM_getWalletBalance 支援動態路徑');
+  console.log('🎯 增強功能：WCM_createCategory, WCM_getCategoryList, WCM_validateCategoryExists 支援動態路徑');
+  console.log('🚀 WCM模組現已全面支援協作帳本路徑');
+  console.log('✨ 階段二：WCM路徑動態化支援已完成');
 } catch (error) {
   console.error('❌ WCM模組初始化失敗:', error.message);
 }
