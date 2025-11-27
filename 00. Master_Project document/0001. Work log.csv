@@ -429,3 +429,4 @@ MM 	 DD 	 Description 	    Progress
 11	25	 檢視collaboration帳本欄位與邏輯  	 Ongoing
 11	25	 處理firebase複合式索引及firebase CLI認證問題  	 Ongoing
 11	26	 處理firebase CLI認證問題：更新service account key in secrets  	 Ongoing
+11	27	 處理firebase CLI認證問題：review 0890文件確認索引內容  	 Ongoing

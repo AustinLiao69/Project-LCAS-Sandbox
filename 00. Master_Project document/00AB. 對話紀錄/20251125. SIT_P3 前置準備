@@ -1,7 +1,159 @@
 ------------------------------------------
-20251125. SIT_P3 前置準備_釐清BL(AM, BM, CM)在firebase建立子集合與文檔問題
+20251127. SIT_P3 前置準備_釐清BL(AM, BM, CM, WCM)在firebase建立子集合與文檔問題
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據0890. firestore.indexes.json文件中的索引配置，我來解釋每個索引的意思、用途以及對應的模組查詢功能：
+1. collaborations 索引（協作管理）
+{
+  "collectionGroup": "collaborations",
+  "queryScope": "COLLECTION",
+  "fields": [
+    {"fieldPath": "ledgerId", "order": "ASCENDING"},
+    {"fieldPath": "userId", "order": "ASCENDING"}, 
+    {"fieldPath": "status", "order": "ASCENDING"},
+    {"fieldPath": "createdAt", "order": "DESCENDING"}
+  ]
+}
+用途：支援協作關係的複合查詢
+對應模組：1313. CM.js（協作管理模組）
+查詢功能：
+•	查詢特定帳本的特定用戶協作記錄
+•	按狀態篩選協作關係（active/pending/rejected）
+•	按建立時間排序顯示最新的協作邀請
+2. budgets 索引 1（預算執行監控）
+{
+  "collectionGroup": "budgets",
+  "queryScope": "COLLECTION", 
+  "fields": [
+    {"fieldPath": "status", "order": "ASCENDING"},
+    {"fieldPath": "type", "order": "ASCENDING"},
+    {"fieldPath": "start_date", "order": "ASCENDING"}
+  ]
+}
+用途：支援預算列表查詢和執行狀況監控
+對應模組：1312. BM.js（預算管理模組）
+查詢功能：
+•	查詢特定狀態的預算（active/archived/suspended）
+•	按預算類型篩選（monthly/yearly/project-based）
+•	按開始日期排序，用於預算執行時間線顯示
+3. budgets 索引 2（預算週期管理）
+{
+  "collectionGroup": "budgets",
+  "queryScope": "COLLECTION",
+  "fields": [
+    {"fieldPath": "status", "order": "ASCENDING"},
+    {"fieldPath": "type", "order": "ASCENDING"}, 
+    {"fieldPath": "end_date", "order": "ASCENDING"}
+  ]
+}
+用途：支援預算到期提醒和週期管理
+對應模組：1312. BM.js（預算管理模組）
+查詢功能：
+•	查詢即將到期的預算
+•	按結束日期排序，用於預算到期警示
+•	結合狀態和類型進行精確的預算週期管理
+4. wallets 索引（帳戶管理）
+{
+  "collectionGroup": "wallets", 
+  "queryScope": "COLLECTION",
+  "fields": [
+    {"fieldPath": "userId", "order": "ASCENDING"},
+    {"fieldPath": "status", "order": "ASCENDING"},
+    {"fieldPath": "type", "order": "ASCENDING"},
+    {"fieldPath": "createdAt", "order": "DESCENDING"}
+  ]
+}
+用途：支援帳戶列表查詢和管理
+對應模組：1350. WCM.js（帳戶與科目管理模組）
+查詢功能：
+•	查詢特定用戶的所有帳戶
+•	按帳戶狀態篩選（active/inactive/archived）
+•	按帳戶類型分類（cash/bank/credit/ewallet）
+•	按建立時間排序顯示最新帳戶
+5. categories 索引（科目管理）
+{
+  "collectionGroup": "categories",
+  "queryScope": "COLLECTION", 
+  "fields": [
+    {"fieldPath": "userId", "order": "ASCENDING"},
+    {"fieldPath": "status", "order": "ASCENDING"},
+    {"fieldPath": "type", "order": "ASCENDING"},
+    {"fieldPath": "createdAt", "order": "DESCENDING"}
+  ]
+}
+用途：支援科目列表查詢和分類管理
+對應模組：1350. WCM.js（帳戶與科目管理模組）
+查詢功能：
+•	查詢特定用戶的所有科目
+•	按科目狀態篩選（active/inactive）
+•	按科目類型分類（income/expense）
+•	按建立時間排序顯示最新科目
+6. users 索引（用戶管理）
+{
+  "collectionGroup": "users",
+  "queryScope": "COLLECTION",
+  "fields": [
+    {"fieldPath": "userType", "order": "ASCENDING"},
+    {"fieldPath": "status", "order": "ASCENDING"},
+    {"fieldPath": "createdAt", "order": "DESCENDING"}
+  ]
+}
+用途：支援用戶列表查詢和管理
+對應模組：1309. AM.js（帳號管理模組）
+查詢功能：
+•	按用戶類型查詢（M/S/J等級）
+•	按用戶狀態篩選（active/inactive/suspended）
+•	按註冊時間排序顯示新用戶
+7. collaboration_logs 索引（協作日誌）
+{
+  "collectionGroup": "collaboration_logs",
+  "queryScope": "COLLECTION",
+  "fields": [
+    {"fieldPath": "ledgerId", "order": "ASCENDING"},
+    {"fieldPath": "actionType", "order": "ASCENDING"}, 
+    {"fieldPath": "timestamp", "order": "DESCENDING"}
+  ]
+}
+用途：支援協作操作日誌查詢和審計
+對應模組：1313. CM.js（協作管理模組）
+查詢功能：
+•	查詢特定帳本的協作操作記錄
+•	按操作類型篩選（invite/remove/permission_change）
+•	按時間倒序顯示最新的協作活動
+8. member_invitations 索引（成員邀請）
+{
+  "collectionGroup": "member_invitations",
+  "queryScope": "COLLECTION",
+  "fields": [
+    {"fieldPath": "ledgerId", "order": "ASCENDING"},
+    {"fieldPath": "status", "order": "ASCENDING"},
+    {"fieldPath": "createdAt", "order": "DESCENDING"}
+  ]
+}
+用途：支援成員邀請狀態管理和追蹤
+對應模組：1313. CM.js（協作管理模組）
+查詢功能：
+•	查詢特定帳本的所有邀請記錄
+•	按邀請狀態篩選（pending/accepted/declined/expired）
+•	按邀請時間排序，用於邀請管理和提醒
+重要說明
+子集合架構設計：
+•	所有索引都使用 collectionGroup 而非具體路徑
+•	支援子集合查詢，如 ledgers/{ledgerId}/budgets, ledgers/{ledgerId}/wallets
+•	Firebase 會自動匹配所有同名集合，無論在哪個路徑下
+索引效能：
+•	這些複合索引支援多欄位同時查詢和排序
+•	避免了 Firebase 查詢中的 "requires an index" 錯誤
+•	提升了複雜查詢的執行效能
+模組對應關係：
+•	CM模組：collaborations, collaboration_logs, member_invitations
+•	BM模組：budgets（兩個索引）
+•	WCM模組：wallets, categories
+•	AM模組：users
+
+
+
 
 ------------------------------------------
 20251120. SIT_P3 前置準備_釐清BL(AM, BM, CM)在firebase建立子集合與文檔問題
