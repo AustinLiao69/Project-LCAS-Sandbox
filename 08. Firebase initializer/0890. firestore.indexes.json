@@ -28,10 +28,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "ledgerId",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "status",
           "order": "ASCENDING"
         },
@@ -49,10 +45,6 @@
       "collectionGroup": "budgets",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "ledgerId",
-          "order": "ASCENDING"
-        },
         {
           "fieldPath": "status",
           "order": "ASCENDING"
@@ -166,51 +158,4 @@
       ]
     }
   ],
-  "fieldOverrides": [
-    {
-      "collectionGroup": "collaborations",
-      "fieldPath": "createdAt",
-      "ttl": false,
-      "indexes": [
-        {
-          "order": "ASCENDING",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "order": "DESCENDING",
-          "queryScope": "COLLECTION"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "budgets",
-      "fieldPath": "start_date",
-      "ttl": false,
-      "indexes": [
-        {
-          "order": "ASCENDING",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "order": "DESCENDING",
-          "queryScope": "COLLECTION"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "budgets",
-      "fieldPath": "end_date",
-      "ttl": false,
-      "indexes": [
-        {
-          "order": "ASCENDING",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "order": "DESCENDING",
-          "queryScope": "COLLECTION"
-        }
-      ]
-    }
-  ]
-}
+
