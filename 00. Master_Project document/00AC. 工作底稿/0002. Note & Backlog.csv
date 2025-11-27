@@ -42,3 +42,4 @@ MM 	 DD 	 Description 	    Progress
 11	20	 1311應該要只有初始化firebase的功能，資料欄位(1311 27號函數)的部分統一放到03資料夾的json檔去？	 Open
 11	24	 7582有點壞掉，但還是可以註冊	 Open
 11	25	 擬定一個由firebase搬移到replit的計劃	 Open
+11	27	 要重新reivew 6503 test plan, 把P2的協作帳本重新測一次(CRUD)部分；而且要新增0090關於7302新增功能	 Open
