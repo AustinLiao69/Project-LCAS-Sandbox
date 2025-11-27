@@ -426,7 +426,9 @@ MM 	 DD 	 Description 	    Progress
 11	21	 研究github spec kit  	 Ongoing
 11	21	 執行regression test_P1, P2  	 Ongoing
 11	24	 檢視collaboration帳本欄位與邏輯  	 Ongoing
-11	25	 檢視collaboration帳本欄位與邏輯  	 Ongoing
+11	25	 檢視collaboration帳本欄位與邏輯  	 Closed
 11	25	 處理firebase複合式索引及firebase CLI認證問題  	 Ongoing
-11	26	 處理firebase CLI認證問題：更新service account key in secrets  	 Ongoing
+11	26	 處理firebase CLI認證問題：更新service account key in secrets  	 Closed
 11	27	 處理firebase CLI認證問題：review 0890文件確認索引內容  	 Ongoing
+11	27	 檢視collaboration帳本欄位與邏輯  	 Closed
+11	27	 Review 6503 新增0090關於7302新增功能  	 Closed
