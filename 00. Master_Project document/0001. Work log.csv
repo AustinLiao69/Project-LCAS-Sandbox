@@ -419,8 +419,8 @@ MM 	 DD 	 Description 	    Progress
 11	19	 處理0099欄位映射  	 Closed
 11	19	 SIT_P3 前置準備  	 Ongoing
 11	19	 Debug：7598  	 Closed
-11	19	 Debug：1309建立帳本問題  	 Ongoing
-11	20	 釐清BL(AM, BM, CM)在firebase建立子集合與文檔問題  	 Ongoing
+11	19	 Debug：1309建立帳本問題  	 Closed
+11	20	 釐清BL(AM, BM, CM, WCM)在firebase建立、管理子集合與文檔問題  	 Ongoing
 11	20	 Review 6503文件：需新增7302. 記帳核心功能群 - 處理S-204~S-210的業務邏輯的部分  	 Ongoing
 11	21	 盤點1311建立firebase資料欄位職責，並分給負責BL模組  	 Ongoing
 11	21	 研究github spec kit  	 Ongoing
