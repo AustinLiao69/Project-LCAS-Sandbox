@@ -1,13 +1,14 @@
 /**
- * ASL.js_API服務層模組_2.2.0
+ * ASL.js_API服務層模組_2.2.1
  * @module API服務層模組（統一回應格式）
- * @description LCAS 2.0 API Service Layer - 階段二升級：協作管理API端點補完
+ * @description LCAS 2.0 API Service Layer - 階段三升級：ASL路由動態化
  * @update 2025-10-03: 階段二升級 - 補完MLS.js和BM.js的API端點，並引入CM.js進行協作管理
  * @update 2025-10-10: DCN-0023階段二 - 新增WCM模組，處理帳戶與科目管理API端點轉發
- * @date 2025-10-10
+ * @update 2025-10-15: 階段三 - ASL路由動態化 (帳本類型識別與動態轉發)
+ * @date 2025-10-15
  */
 
-console.log('🚀 LCAS ASL (API Service Layer) v2.2.0 啟動中...');
+console.log('🚀 LCAS ASL (API Service Layer) v2.2.1 啟動中...');
 console.log('📅 啟動時間:', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
 
 /**
@@ -621,7 +622,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.2.0', // 升級到v2.2.0
+    version: '2.2.1', // 升級到v2.2.1
     status: 'running',
     port: PORT,
     architecture: 'ASL -> BL層直接調用（優化版）',
@@ -668,7 +669,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.2.0', // 升級到v2.2.0
+    version: '2.2.1', // 升級到v2.2.1
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -2710,16 +2711,18 @@ app.use((error, req, res, next) => {
     const bmStatus = moduleStatus.BM ? '✅' : '❌';
     const cmStatus = moduleStatus.CM ? '✅' : '❌';
     const wcmStatus = moduleStatus.WCM ? '✅' : '❌';
-    const overallStatus = moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM ? '完全就緒' : '部分就緒';
+    const overallStatus = moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM ? '完全就緒' : '部分就緒';
 
     console.log(`🔧 第二階段完成狀態: ${overallStatus}`);
-    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), BM(${bmStatus}), CM(${cmStatus}), WCM(${wcmStatus})`);
+    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), BK(${moduleStatus.BK ? '✅' : '❌'}), BM(${bmStatus}), CM(${cmStatus}), WCM(${wcmStatus})`);
     console.log(`✨ 容錯機制完全移除: 100%信任BL層標準格式`);
     console.log(`🎉 第二階段修正完成: 協作管理API端點補完`);
     console.log(`🚀 DCN-0023階段二更新: 帳戶與科目管理API端點已整合`);
 
-    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM) {
-      console.log('🚀 ASL v2.2.0已完全就緒，階段二及DCN-0023目標達成');
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM) {
+      console.log('🚀 ASL v2.2.1已完全就緒，階段三動態路由功能已啟用！');
+      console.log('🔗 路由策略: 一般帳本 → ledgers/*, 協作帳本 → collaborations/*');
+      console.log('🌐 ASL服務器已啟動於 Port 5000');
     } else if (!moduleStatus.WCM) {
       console.log('⚠️ WCM (帳戶與科目管理) 模組載入失敗，帳戶與科目管理功能不可用');
     }
@@ -2758,15 +2761,16 @@ console.log('🎉 LCAS ASL階段二及DCN-0023更新完成！');
   console.log('🎯 帳戶與科目管理功能: 帳戶CRUD，餘額查詢，轉帳，科目CRUD，科目樹狀結構');
   console.log('🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict, /api/v1/accounts, /api/v1/accounts/:id, /api/v1/accounts/:id/balance, /api/v1/accounts/types, /api/v1/accounts/transfer, /api/v1/categories, /api/v1/categories/:id, /api/v1/categories/tree');
 
-  if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM) {
-    console.log('🚀 ASL v2.2.0完全就緒，所有階段目標達成！');
-    console.log('🌐 ASL服務器已啟動於 Port 5000');
-  } else if (!moduleStatus.WCM) {
-    console.log('⚠️ WCM (帳戶與科目管理) 模組載入失敗，帳戶與科目管理功能不可用');
-    console.log('🔧 建議檢查WCM.js文件完整性及依賴關係');
-  } else {
-    console.log('❌ 部分P2或DCN-0023模組載入失敗，請檢查相關模組狀態');
-  }
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM) {
+      console.log('🚀 ASL v2.2.1已完全就緒，階段三動態路由功能已啟用！');
+      console.log('🔗 路由策略: 一般帳本 → ledgers/*, 協作帳本 → collaborations/*');
+      console.log('🌐 ASL服務器已啟動於 Port 5000');
+    } else if (!moduleStatus.WCM) {
+      console.log('⚠️ WCM (帳戶與科目管理) 模組載入失敗，帳戶與科目管理功能不可用');
+    }
+     else {
+      console.log('❌ 部分P2或DCN-0023模組載入失敗，請檢查相關模組狀態');
+    }
 
   return server;
 }
