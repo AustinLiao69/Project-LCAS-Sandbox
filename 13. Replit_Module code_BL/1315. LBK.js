@@ -214,7 +214,7 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
 
     // 根據科目代碼判斷收支類型，並設定正確的支付方式
     const isIncome = subjectResult.data.isIncome;
-    const finalPaymentMethod = parseResult.paymentMethod === "刷卡" ? 
+    const finalPaymentMethod = parseResult.paymentMethod === "刷卡" ?
       subjectResult.data.defaultPaymentMethod : parseResult.paymentMethod;
 
     return {
@@ -864,7 +864,7 @@ async function LBK_saveToFirestore(bookkeepingData, processId) {
 
       // bookkeepingData現在是1301標準格式的物件
       const ledgerId = bookkeepingData.ledgerId;
-      
+
       LBK_logInfo(`使用1301標準路徑儲存: ledgers/${ledgerId}/transactions [${processId}]`, "資料儲存", bookkeepingData.userId, "LBK_saveToFirestore");
 
       // 使用事務確保併發安全性
@@ -895,7 +895,7 @@ async function LBK_saveToFirestore(bookkeepingData, processId) {
           savedAt: admin.firestore.Timestamp.now(),
           attempt: attempt
         });
-        
+
         return docRef;
       });
 
@@ -1614,7 +1614,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
     // 建構postbackData
     const postbackDataMap = {
       'daily': '今日統計',
-      'weekly': '本週統計', 
+      'weekly': '本週統計',
       'monthly': '本月統計'
     };
 
@@ -1645,7 +1645,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
         message: errorMessage,
         responseMessage: errorMessage,
         moduleCode: "SR",
-        module: "SR", 
+        module: "SR",
         processingTime: 0,
         moduleVersion: "1.4.2",
         errorType: "STATISTICS_ERROR"
@@ -1674,8 +1674,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
 /**
  * 47. 建立統計Quick Reply按鈕
  * @version 2025-07-22-V1.1.0
- * @date 2025-07-22 10:30:00This commit modifies the `LBK_saveToFirestore` function to use the correct user-specific ledger ID when saving data.
-```javascript
+ * @date 2025-07-22 10:30:00
  * @description 為統計查詢結果建立Quick Reply按鈕選項
  */
 function LBK_buildStatisticsQuickReply(userId, currentType) {
