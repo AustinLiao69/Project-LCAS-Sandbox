@@ -2,7 +2,7 @@
  * LBK_快速記帳模組_1.3.0
  * @module LBK模組
  * @description LINE OA 專用快速記帳處理模組 - 完全對齊1301 BK模組資料格式標準
- * @update 2025-12-10: 升級至v1.3.0，整合統計查詢功能，實現LBK統計功能自主性
+ * @update 2025-12-10: 升級至v1.3.0，實現統計功能完全獨立，移除對SR模組統計功能的依賴
  */
 
 // 引入所需模組
@@ -26,12 +26,12 @@ if (!admin.apps.length) {
 // 引入依賴模組
 const DL = require('./1310. DL.js');
 
-// 引入SR模組 (延遲載入避免循環依賴)
+// 引入SR模組 (保留用於其他非統計功能，如推播服務等)
 let SR = null;
 try {
   SR = require('./1305. SR.js');
 } catch (error) {
-  console.warn('LBK模組: SR模組載入失敗，統計功能將受限:', error.message);
+  console.warn('LBK模組: SR模組載入失敗，部分進階功能將受限:', error.message);
 }
 
 // 配置參數
@@ -1528,10 +1528,10 @@ function LBK_logError(message, operationType = "", userId = "", errorCode = "", 
 }
 
 /**
- * 45. 檢查統計查詢關鍵字 - 直接使用SR模組關鍵字配置
- * @version 2025-01-09-V1.1.0
- * @date 2025-01-09 20:30:00
- * @description 直接從SR模組讀取統計查詢關鍵字配置，確保關鍵字統一管理和自動同步
+ * 45. 檢查統計查詢關鍵字 - LBK獨立關鍵字配置
+ * @version 2025-12-10-V1.3.0
+ * @date 2025-12-10 20:30:00
+ * @description 使用LBK獨立的統計關鍵字配置，完全移除對SR模組的依賴
  */
 async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
   try {
@@ -1541,38 +1541,21 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
 
     const normalizedText = messageText.trim().toLowerCase();
 
-    // 直接使用SR模組的關鍵字配置，確保一致性
-    let statisticsKeywords = {};
+    // LBK獨立的統計關鍵字配置
+    const statisticsKeywords = {
+      '今日統計': { type: 'daily', postbackData: '今日統計' },
+      '本週統計': { type: 'weekly', postbackData: '本週統計' },
+      '本月統計': { type: 'monthly', postbackData: '本月統計' },
+      '週統計': { type: 'weekly', postbackData: '本週統計' },
+      '月統計': { type: 'monthly', postbackData: '本月統計' },
+      '統計': { type: 'daily', postbackData: '今日統計' },
+      'stats': { type: 'daily', postbackData: '今日統計' },
+      'today': { type: 'daily', postbackData: '今日統計' },
+      'week': { type: 'weekly', postbackData: '本週統計' },
+      'month': { type: 'monthly', postbackData: '本月統計' }
+    };
 
-    // 檢查SR模組是否可用並有配置
-    if (SR && SR.SR_QUICK_REPLY_CONFIG && SR.SR_QUICK_REPLY_CONFIG.STATISTICS) {
-      const srConfig = SR.SR_QUICK_REPLY_CONFIG.STATISTICS;
-      statisticsKeywords = {
-        [srConfig.TODAY.label]: { type: 'daily', postbackData: srConfig.TODAY.postbackData },
-        [srConfig.WEEKLY.label]: { type: 'weekly', postbackData: srConfig.WEEKLY.postbackData },
-        [srConfig.MONTHLY.label]: { type: 'monthly', postbackData: srConfig.MONTHLY.postbackData },
-        // 額外的常用別名
-        '週統計': { type: 'weekly', postbackData: srConfig.WEEKLY.postbackData },
-        '月統計': { type: 'monthly', postbackData: srConfig.MONTHLY.postbackData },
-        '統計': { type: 'daily', postbackData: srConfig.TODAY.postbackData },
-        'stats': { type: 'daily', postbackData: srConfig.TODAY.postbackData }
-      };
-
-      LBK_logDebug(`從SR模組載入統計關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
-    } else {
-      // SR模組不可用時的備用配置
-      statisticsKeywords = {
-        '今日統計': { type: 'daily', postbackData: '今日統計' },
-        '本週統計': { type: 'weekly', postbackData: '本週統計' },
-        '本月統計': { type: 'monthly', postbackData: '本月統計' },
-        '週統計': { type: 'weekly', postbackData: '本週統計' },
-        '月統計': { type: 'monthly', postbackData: '本月統計' },
-        '統計': { type: 'daily', postbackData: '今日統計' },
-        'stats': { type: 'daily', postbackData: '今日統計' }
-      };
-
-      LBK_logWarning(`SR模組不可用，使用備用關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
-    }
+    LBK_logDebug(`使用LBK獨立統計關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
 
     // 精確匹配檢查
     for (const [keyword, config] of Object.entries(statisticsKeywords)) {
@@ -1597,10 +1580,10 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
 }
 
 /**
- * 46. 處理統計查詢請求 - 重構為獨立處理
+ * 46. 處理統計查詢請求 - 完全獨立處理
  * @version 2025-12-10-V1.3.0
  * @date 2025-12-10 20:00:00
- * @description 移除對SR模組的依賴，改為調用內部統計函數
+ * @description 完全移除對SR模組的依賴，LBK統計功能自主運作
  */
 async function LBK_handleStatisticsRequest(statisticsType, inputData, processId) {
   try {
@@ -1667,41 +1650,56 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
 }
 
 /**
- * 47. 建立統計Quick Reply按鈕
- * @version 2025-07-22-V1.1.0
- * @date 2025-07-22 10:30:00
- * @description 為統計查詢結果建立Quick Reply按鈕選項
+ * 47. 建立統計Quick Reply按鈕 - LBK獨立版本
+ * @version 2025-12-10-V1.3.0
+ * @date 2025-12-10 20:30:00
+ * @description LBK獨立建立統計查詢結果的Quick Reply按鈕選項
  */
 function LBK_buildStatisticsQuickReply(userId, currentType) {
   try {
     const quickReplyItems = [];
 
-    // 基礎統計選項
-    if (currentType !== 'daily') {
-      quickReplyItems.push({ label: '今日統計', postbackData: '今日統計' });
-    }
-    if (currentType !== 'weekly') {
-      quickReplyItems.push({ label: '本週統計', postbackData: '本週統計' });
-    }
-    if (currentType !== 'monthly') {
-      quickReplyItems.push({ label: '本月統計', postbackData: '本月統計' });
-    }
+    // LBK獨立的統計選項配置
+    const statisticsOptions = [
+      { type: 'daily', label: '今日統計', postbackData: '今日統計' },
+      { type: 'weekly', label: '本週統計', postbackData: '本週統計' },
+      { type: 'monthly', label: '本月統計', postbackData: '本月統計' }
+    ];
+
+    // 排除當前類型，提供其他選項
+    statisticsOptions.forEach(option => {
+      if (option.type !== currentType) {
+        quickReplyItems.push({
+          label: option.label,
+          postbackData: option.postbackData
+        });
+      }
+    });
 
     // 確保至少有一個選項
     if (quickReplyItems.length === 0) {
       quickReplyItems.push({ label: '今日統計', postbackData: '今日統計' });
     }
 
+    // 添加記帳相關快速操作
+    if (quickReplyItems.length < 3) {
+      quickReplyItems.push({ label: '快速記帳', postbackData: 'quick_add' });
+    }
+
     // 限制最多4個選項
     return {
       type: 'quick_reply',
-      items: quickReplyItems.slice(0, 4)
+      items: quickReplyItems.slice(0, 4),
+      source: 'LBK_independent'
     };
 
   } catch (error) {
+    LBK_logError(`建立Quick Reply失敗: ${error.toString()}`, "Quick Reply", userId, "QUICK_REPLY_ERROR", error.toString(), "LBK_buildStatisticsQuickReply");
+    
     return {
       type: 'quick_reply',
-      items: [{ label: '今日統計', postbackData: '今日統計' }]
+      items: [{ label: '今日統計', postbackData: '今日統計' }],
+      source: 'LBK_fallback'
     };
   }
 }
