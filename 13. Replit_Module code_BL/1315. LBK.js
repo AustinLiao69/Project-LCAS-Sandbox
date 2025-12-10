@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.1.3
+ * LBK_快速記帳模組_1.2.0
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 修復循環依賴和回覆格式問題
- * @update 2025-07-22: 升級至v1.1.1，修復循環依賴問題，統一回覆格式標準，確保與WH模組相容性
+ * @description LINE OA 專用快速記帳處理模組 - 完全對齊1301 BK模組資料格式標準
+ * @update 2025-12-09: 升級至v1.2.0，完全對齊1301資料格式，使用標準英文欄位和ledgers/{ledgerId}/transactions路徑
  */
 
 // 引入所需模組
@@ -214,7 +214,7 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
 
     // 根據科目代碼判斷收支類型，並設定正確的支付方式
     const isIncome = subjectResult.data.isIncome;
-    const finalPaymentMethod = parseResult.paymentMethod === "刷卡" ? 
+    const finalPaymentMethod = parseResult.paymentMethod === "刷卡" ?
       subjectResult.data.defaultPaymentMethod : parseResult.paymentMethod;
 
     return {
@@ -848,11 +848,10 @@ function LBK_validateBookkeepingData(data, processId) {
 }
 
 /**
- * 11. 儲存記帳資料至Firestore - 加入併發處理優化
- * @version 2025-07-```javascript
-15-V1.0.1
- * @date 2025-07-15 19:10:00
- * @description 將記帳資料儲存至Firestore，確保資料一致性和併發安全性
+ * 11. 儲存記帳資料至Firestore - 完全對齊1301 BK模組標準
+ * @version 2025-12-09-V1.2.0
+ * @date 2025-12-09
+ * @description 使用1301標準路徑和資料格式儲存至Firestore
  */
 async function LBK_saveToFirestore(bookkeepingData, processId) {
   const maxRetries = 3;
@@ -863,70 +862,56 @@ async function LBK_saveToFirestore(bookkeepingData, processId) {
       await LBK_initializeFirestore();
       const db = LBK_INIT_STATUS.firestore_db;
 
-      const firestoreData = {
-        收支ID: bookkeepingData[0],
-        使用者類型: bookkeepingData[1],
-        日期: bookkeepingData[2],
-        時間: bookkeepingData[3],
-        大項代碼: bookkeepingData[4],
-        子項代碼: bookkeepingData[5],
-        支付方式: bookkeepingData[6],
-        子項名稱: bookkeepingData[7],
-        UID: bookkeepingData[8],
-        備註: bookkeepingData[9],
-        收入: bookkeepingData[10] || null,
-        支出: bookkeepingData[11] || null,
-        同義詞: bookkeepingData[12] || '',
-        currency: 'NTD',
-        timestamp: admin.firestore.Timestamp.now(),
-        processId: processId || '',
-        attempt: attempt
-      };
+      // bookkeepingData現在是1301標準格式的物件
+      const ledgerId = bookkeepingData.ledgerId;
 
-      // 確保使用正確的用戶帳本格式
-    const userId = bookkeepingData[8];
-    const ledgerId = `user_${userId}`;
+      LBK_logInfo(`使用1301標準路徑儲存: ledgers/${ledgerId}/transactions [${processId}]`, "資料儲存", bookkeepingData.userId, "LBK_saveToFirestore");
 
-    LBK_logInfo(`使用用戶帳本: ${ledgerId} [${processId}]`, "資料儲存", userId, "LBK_saveToFirestore");
+      // 使用事務確保併發安全性
+      const result = await db.runTransaction(async (transaction) => {
+        // 檢查是否已存在相同的ID - 使用1301標準欄位
+        const existingQuery = await db
+          .collection('ledgers')
+          .doc(ledgerId)
+          .collection('transactions')
+          .where('id', '==', bookkeepingData.id)
+          .limit(1)
+          .get();
 
-    // 使用事務確保併發安全性
-    const result = await db.runTransaction(async (transaction) => {
-      // 檢查是否已存在相同的收支ID
-      const existingQuery = await db
-        .collection('ledgers')
-        .doc(ledgerId)
-        .collection('entries')
-        .where('收支ID', '==', bookkeepingData[0])
-        .limit(1)
-        .get();
+        if (!existingQuery.empty) {
+          throw new Error(`交易ID已存在: ${bookkeepingData.id}`);
+        }
 
-      if (!existingQuery.empty) {
-        throw new Error(`收支ID已存在: ${bookkeepingData[0]}`);
-      }
+        // 使用1301標準路徑：ledgers/{ledgerId}/transactions
+        const docRef = db
+          .collection('ledgers')
+          .doc(ledgerId)
+          .collection('transactions')
+          .doc(bookkeepingData.id);
 
-      // 新增文檔到正確的用戶帳本
-      const docRef = db
-        .collection('ledgers')
-        .doc(ledgerId)
-        .collection('entries')
-        .doc();
+        // 儲存1301標準格式資料
+        transaction.set(docRef, {
+          ...bookkeepingData,
+          savedAt: admin.firestore.Timestamp.now(),
+          attempt: attempt
+        });
 
-      transaction.set(docRef, firestoreData);
-      return docRef;
-    });
+        return docRef;
+      });
 
       return {
         success: true,
         docId: result.id,
-        firestoreData: firestoreData,
-        attempt: attempt
+        transactionData: bookkeepingData,
+        attempt: attempt,
+        path: `ledgers/${ledgerId}/transactions`
       };
 
     } catch (error) {
       lastError = error.toString();
 
       if (attempt < maxRetries) {
-        LBK_logWarning(`Firestore儲存嘗試 ${attempt} 失敗，準備重試: ${error.toString()} [${processId}]`, "資料儲存", "", "LBK_saveToFirestore");
+        LBK_logWarning(`Firestore儲存嘗試 ${attempt} 失敗，準備重試: ${error.toString()} [${processId}]`, "資料儲存", bookkeepingData.userId, "LBK_saveToFirestore");
 
         // 指數退避延遲
         const delay = Math.pow(2, attempt - 1) * 500 + Math.random() * 500;
@@ -934,7 +919,7 @@ async function LBK_saveToFirestore(bookkeepingData, processId) {
         continue;
       }
 
-      LBK_logError(`儲存到Firestore失敗 (${maxRetries}次重試後): ${error.toString()} [${processId}]`, "資料儲存", "", "SAVE_ERROR", error.toString(), "LBK_saveToFirestore");
+      LBK_logError(`儲存到Firestore失敗 (${maxRetries}次重試後): ${error.toString()} [${processId}]`, "資料儲存", bookkeepingData.userId, "SAVE_ERROR", error.toString(), "LBK_saveToFirestore");
     }
   }
 
@@ -946,42 +931,54 @@ async function LBK_saveToFirestore(bookkeepingData, processId) {
 }
 
 /**
- * 12. 準備記帳資料
- * @version 2025-07-15-V1.0.0
- * @date 2025-07-15 09:30:00
- * @description 將解析後的資料轉換為Firestore格式
+ * 12. 準備記帳資料 - 完全對齊1301 BK模組標準
+ * @version 2025-12-09-V1.2.0
+ * @date 2025-12-09
+ * @description 將解析後的資料轉換為1301 BK標準的Firestore格式
  */
 function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
   try {
-    const today = new Date();
-    const formattedDate = moment(today).tz(LBK_CONFIG.TIMEZONE).format("YYYY/MM/DD");
-    const formattedTime = moment(today).tz(LBK_CONFIG.TIMEZONE).format("HH:mm");
+    const now = moment().tz(LBK_CONFIG.TIMEZONE);
+    const currentTimestamp = admin.firestore.Timestamp.now();
 
-    let income = '', expense = '';
+    // 完全使用1301 BK標準欄位格式
+    const preparedData = {
+      // 核心欄位 - 符合1301標準
+      id: bookkeepingId,
+      amount: parseFloat(data.amount) || 0,
+      type: data.action === "收入" ? "income" : "expense",
+      description: data.subject || '',
+      categoryId: data.subjectCode || 'default',
+      accountId: 'default',
 
-    if (data.action === "收入") {
-      income = data.amount.toString();
-    } else {
-      expense = data.amount.toString();
-    }
+      // 時間欄位 - 1301標準格式
+      date: now.format('YYYY-MM-DD'),
+      createdAt: currentTimestamp,
+      updatedAt: currentTimestamp,
 
-    const remarkContent = data.subject || '';
+      // 來源和用戶資訊 - 1301標準
+      source: 'quick',
+      userId: data.userId || '',
+      paymentMethod: data.paymentMethod || LBK_CONFIG.DEFAULT_PAYMENT_METHOD || '現金',
 
-    return [
-      bookkeepingId,                    // 1. 收支ID
-      "J",                             // 2. 使用者類型
-      formattedDate,                   // 3. 日期
-      formattedTime,                   // 4. 時間
-      data.majorCode,                  // 5. 大項代碼
-      data.subjectCode,                // 6. 子項代碼
-      data.paymentMethod,              // 7. 支付方式
-      data.subjectName,                // 8. 子項名稱
-      data.userId,                     // 9. UID
-      remarkContent,                   // 10. 備註
-      income,                          // 11. 收入
-      expense,                         // 12. 支出
-      ''                              // 13. 同義詞
-    ];
+      // 記帳特定欄位 - 1301標準
+      ledgerId: `user_${data.userId}`,
+
+      // 狀態欄位 - 1301標準
+      status: 'active',
+      verified: false,
+
+      // 元數據 - 1301標準
+      metadata: {
+        processId: processId,
+        module: 'LBK',
+        version: '1.2.0',
+        majorCode: data.majorCode,
+        subjectName: data.subjectName
+      }
+    };
+
+    return preparedData;
 
   } catch (error) {
     LBK_logError(`準備記帳資料失敗: ${error.toString()} [${processId}]`, "資料準備", "", "PREPARE_ERROR", error.toString(), "LBK_prepareBookkeepingData");
@@ -1006,20 +1003,20 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
       minute: "2-digit"
     });
 
-    // 檢查是否為成功的記帳結果
+    // 檢查是否為成功的記帳結果 - 1301標準格式
     if (resultData && resultData.id) {
       // 從原始資料中提取用戶輸入的備註（去除金額後的部分）
-      const originalInput = options.originalInput || resultData.subject;
+      const originalInput = options.originalInput || resultData.description;
       const remark = LBK_removeAmountFromText(originalInput, resultData.amount, resultData.paymentMethod);
 
       return `記帳成功！\n` +
              `金額：${resultData.amount}元 (${resultData.type === 'income' ? '收入' : '支出'})\n` +
              `支付方式：${resultData.paymentMethod}\n` +
              `時間：${currentDateTime}\n` +
-             `科目：${resultData.subject}\n` +
+             `科目：${resultData.description}\n` +
              `備註：${remark}\n` +
-             `收支ID：${resultData.id}\n` +
-             `使用者類型：J`;
+             `交易ID：${resultData.id}\n` +
+             `狀態：${resultData.status || 'active'}`;
     } else {
       // 處理錯誤情況 - 統一使用7行詳細格式
       const errorMessage = options.error || "處理失敗";
@@ -1617,7 +1614,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
     // 建構postbackData
     const postbackDataMap = {
       'daily': '今日統計',
-      'weekly': '本週統計', 
+      'weekly': '本週統計',
       'monthly': '本月統計'
     };
 
@@ -1648,7 +1645,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
         message: errorMessage,
         responseMessage: errorMessage,
         moduleCode: "SR",
-        module: "SR", 
+        module: "SR",
         processingTime: 0,
         moduleVersion: "1.4.2",
         errorType: "STATISTICS_ERROR"
@@ -1677,8 +1674,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
 /**
  * 47. 建立統計Quick Reply按鈕
  * @version 2025-07-22-V1.1.0
- * @date 2025-07-22 10:30:00This commit modifies the `LBK_saveToFirestore` function to use the correct user-specific ledger ID when saving data.
-```javascript
+ * @date 2025-07-22 10:30:00
  * @description 為統計查詢結果建立Quick Reply按鈕選項
  */
 function LBK_buildStatisticsQuickReply(userId, currentType) {
@@ -1746,7 +1742,7 @@ const LBK_MODULE = {
   LBK_buildStatisticsQuickReply: LBK_buildStatisticsQuickReply,
 
   // 版本資訊
-  MODULE_VERSION: "1.1.3",
+  MODULE_VERSION: "1.2.0",
   MODULE_NAME: "LBK"
 };
 
