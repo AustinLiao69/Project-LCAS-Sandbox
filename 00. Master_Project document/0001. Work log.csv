@@ -435,4 +435,4 @@ MM 	 DD 	 Description 	    Progress
 11	27	 修改協作帳本資料結構  	 Ongoing
 12	09	 重構1315. LBK模組  	 Ongoing
 12	09	 修改0098，修正1311資料格式的條目  	 Ongoing
-12	10	 確認LINE收支統計功能  	 Ongoing
+12	10	 重構LBK：搬移LINE收支統計功能  	 Ongoing
