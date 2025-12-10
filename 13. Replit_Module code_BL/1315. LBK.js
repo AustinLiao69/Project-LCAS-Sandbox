@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.2.0
+ * LBK_快速記帳模組_1.3.0
  * @module LBK模組
  * @description LINE OA 專用快速記帳處理模組 - 完全對齊1301 BK模組資料格式標準
- * @update 2025-12-09: 升級至v1.2.0，完全對齊1301資料格式，使用標準英文欄位和ledgers/{ledgerId}/transactions路徑
+ * @update 2025-12-10: 升級至v1.3.0，實現統計功能完全獨立，移除對SR模組統計功能的依賴
  */
 
 // 引入所需模組
@@ -26,12 +26,12 @@ if (!admin.apps.length) {
 // 引入依賴模組
 const DL = require('./1310. DL.js');
 
-// 引入SR模組 (延遲載入避免循環依賴)
+// 引入SR模組 (保留用於其他非統計功能，如推播服務等)
 let SR = null;
 try {
   SR = require('./1305. SR.js');
 } catch (error) {
-  console.warn('LBK模組: SR模組載入失敗，統計功能將受限:', error.message);
+  console.warn('LBK模組: SR模組載入失敗，部分進階功能將受限:', error.message);
 }
 
 // 配置參數
@@ -1528,10 +1528,10 @@ function LBK_logError(message, operationType = "", userId = "", errorCode = "", 
 }
 
 /**
- * 45. 檢查統計查詢關鍵字 - 直接使用SR模組關鍵字配置
- * @version 2025-01-09-V1.1.0
- * @date 2025-01-09 20:30:00
- * @description 直接從SR模組讀取統計查詢關鍵字配置，確保關鍵字統一管理和自動同步
+ * 45. 檢查統計查詢關鍵字 - LBK獨立關鍵字配置
+ * @version 2025-12-10-V1.3.0
+ * @date 2025-12-10 20:30:00
+ * @description 使用LBK獨立的統計關鍵字配置，完全移除對SR模組的依賴
  */
 async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
   try {
@@ -1541,38 +1541,21 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
 
     const normalizedText = messageText.trim().toLowerCase();
 
-    // 直接使用SR模組的關鍵字配置，確保一致性
-    let statisticsKeywords = {};
+    // LBK獨立的統計關鍵字配置
+    const statisticsKeywords = {
+      '今日統計': { type: 'daily', postbackData: '今日統計' },
+      '本週統計': { type: 'weekly', postbackData: '本週統計' },
+      '本月統計': { type: 'monthly', postbackData: '本月統計' },
+      '週統計': { type: 'weekly', postbackData: '本週統計' },
+      '月統計': { type: 'monthly', postbackData: '本月統計' },
+      '統計': { type: 'daily', postbackData: '今日統計' },
+      'stats': { type: 'daily', postbackData: '今日統計' },
+      'today': { type: 'daily', postbackData: '今日統計' },
+      'week': { type: 'weekly', postbackData: '本週統計' },
+      'month': { type: 'monthly', postbackData: '本月統計' }
+    };
 
-    // 檢查SR模組是否可用並有配置
-    if (SR && SR.SR_QUICK_REPLY_CONFIG && SR.SR_QUICK_REPLY_CONFIG.STATISTICS) {
-      const srConfig = SR.SR_QUICK_REPLY_CONFIG.STATISTICS;
-      statisticsKeywords = {
-        [srConfig.TODAY.label]: { type: 'daily', postbackData: srConfig.TODAY.postbackData },
-        [srConfig.WEEKLY.label]: { type: 'weekly', postbackData: srConfig.WEEKLY.postbackData },
-        [srConfig.MONTHLY.label]: { type: 'monthly', postbackData: srConfig.MONTHLY.postbackData },
-        // 額外的常用別名
-        '週統計': { type: 'weekly', postbackData: srConfig.WEEKLY.postbackData },
-        '月統計': { type: 'monthly', postbackData: srConfig.MONTHLY.postbackData },
-        '統計': { type: 'daily', postbackData: srConfig.TODAY.postbackData },
-        'stats': { type: 'daily', postbackData: srConfig.TODAY.postbackData }
-      };
-
-      LBK_logDebug(`從SR模組載入統計關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
-    } else {
-      // SR模組不可用時的備用配置
-      statisticsKeywords = {
-        '今日統計': { type: 'daily', postbackData: '今日統計' },
-        '本週統計': { type: 'weekly', postbackData: '本週統計' },
-        '本月統計': { type: 'monthly', postbackData: '本月統計' },
-        '週統計': { type: 'weekly', postbackData: '本週統計' },
-        '月統計': { type: 'monthly', postbackData: '本月統計' },
-        '統計': { type: 'daily', postbackData: '今日統計' },
-        'stats': { type: 'daily', postbackData: '今日統計' }
-      };
-
-      LBK_logWarning(`SR模組不可用，使用備用關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
-    }
+    LBK_logDebug(`使用LBK獨立統計關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
 
     // 精確匹配檢查
     for (const [keyword, config] of Object.entries(statisticsKeywords)) {
@@ -1597,19 +1580,14 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
 }
 
 /**
- * 46. 處理統計查詢請求
- * @version 2025-07-22-V1.1.0
- * @date 2025-07-22 10:30:00
- * @description 呼叫SR模組處理統計查詢，並格式化回應訊息
+ * 46. 處理統計查詢請求 - 完全獨立處理
+ * @version 2025-12-10-V1.3.0
+ * @date 2025-12-10 20:00:00
+ * @description 完全移除對SR模組的依賴，LBK統計功能自主運作
  */
 async function LBK_handleStatisticsRequest(statisticsType, inputData, processId) {
   try {
     LBK_logInfo(`處理統計請求: ${statisticsType} [${processId}]`, "統計處理", inputData.userId || "", "LBK_handleStatisticsRequest");
-
-    // 檢查SR模組可用性
-    if (!SR || typeof SR.SR_processQuickReplyStatistics !== 'function') {
-      throw new Error('SR模組不可用或缺少必要函數');
-    }
 
     // 建構postbackData
     const postbackDataMap = {
@@ -1620,20 +1598,20 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
 
     const postbackData = postbackDataMap[statisticsType] || '今日統計';
 
-    // 呼叫SR模組處理統計
-    const srResult = await SR.SR_processQuickReplyStatistics(inputData.userId, postbackData);
+    // 調用內部統計處理函數
+    const statsResult = await LBK_processDirectStatistics(inputData.userId, postbackData);
 
-    if (srResult.success) {
+    if (statsResult.success) {
       // 統計查詢成功
       return {
         success: true,
-        message: srResult.message,
-        responseMessage: srResult.message,
-        quickReply: srResult.quickReply,
-        moduleCode: "SR",
-        module: "SR",
+        message: statsResult.message,
+        responseMessage: statsResult.message,
+        quickReply: statsResult.quickReply,
+        moduleCode: "LBK",
+        module: "LBK",
         processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-        moduleVersion: "1.4.2",
+        moduleVersion: "1.3.0",
         statisticsType: statisticsType
       };
     } else {
@@ -1644,10 +1622,10 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
         success: false,
         message: errorMessage,
         responseMessage: errorMessage,
-        moduleCode: "SR",
-        module: "SR",
+        moduleCode: "LBK",
+        module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.4.2",
+        moduleVersion: "1.3.0",
         errorType: "STATISTICS_ERROR"
       };
     }
@@ -1665,50 +1643,259 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
       moduleCode: "LBK",
       module: "LBK",
       processingTime: 0,
-      moduleVersion: "1.1.0",
+      moduleVersion: "1.3.0",
       errorType: "SYSTEM_ERROR"
     };
   }
 }
 
 /**
- * 47. 建立統計Quick Reply按鈕
- * @version 2025-07-22-V1.1.0
- * @date 2025-07-22 10:30:00
- * @description 為統計查詢結果建立Quick Reply按鈕選項
+ * 47. 建立統計Quick Reply按鈕 - LBK獨立版本
+ * @version 2025-12-10-V1.3.0
+ * @date 2025-12-10 20:30:00
+ * @description LBK獨立建立統計查詢結果的Quick Reply按鈕選項
  */
 function LBK_buildStatisticsQuickReply(userId, currentType) {
   try {
     const quickReplyItems = [];
 
-    // 基礎統計選項
-    if (currentType !== 'daily') {
-      quickReplyItems.push({ label: '今日統計', postbackData: '今日統計' });
-    }
-    if (currentType !== 'weekly') {
-      quickReplyItems.push({ label: '本週統計', postbackData: '本週統計' });
-    }
-    if (currentType !== 'monthly') {
-      quickReplyItems.push({ label: '本月統計', postbackData: '本月統計' });
-    }
+    // LBK獨立的統計選項配置
+    const statisticsOptions = [
+      { type: 'daily', label: '今日統計', postbackData: '今日統計' },
+      { type: 'weekly', label: '本週統計', postbackData: '本週統計' },
+      { type: 'monthly', label: '本月統計', postbackData: '本月統計' }
+    ];
+
+    // 排除當前類型，提供其他選項
+    statisticsOptions.forEach(option => {
+      if (option.type !== currentType) {
+        quickReplyItems.push({
+          label: option.label,
+          postbackData: option.postbackData
+        });
+      }
+    });
 
     // 確保至少有一個選項
     if (quickReplyItems.length === 0) {
       quickReplyItems.push({ label: '今日統計', postbackData: '今日統計' });
     }
 
+    // 添加記帳相關快速操作
+    if (quickReplyItems.length < 3) {
+      quickReplyItems.push({ label: '快速記帳', postbackData: 'quick_add' });
+    }
+
     // 限制最多4個選項
     return {
       type: 'quick_reply',
-      items: quickReplyItems.slice(0, 4)
+      items: quickReplyItems.slice(0, 4),
+      source: 'LBK_independent'
     };
 
   } catch (error) {
+    LBK_logError(`建立Quick Reply失敗: ${error.toString()}`, "Quick Reply", userId, "QUICK_REPLY_ERROR", error.toString(), "LBK_buildStatisticsQuickReply");
+    
     return {
       type: 'quick_reply',
-      items: [{ label: '今日統計', postbackData: '今日統計' }]
+      items: [{ label: '今日統計', postbackData: '今日統計' }],
+      source: 'LBK_fallback'
     };
   }
+}
+
+/**
+ * 48. 處理直接統計查詢 - 複製自SR模組
+ * @version 2025-12-10-V1.3.0
+ * @date 2025-12-10 20:00:00
+ * @description 複製SR的SR_processQuickReplyStatistics邏輯，實現LBK獨立統計查詢
+ */
+async function LBK_processDirectStatistics(userId, postbackData) {
+  const functionName = "LBK_processDirectStatistics";
+  try {
+    LBK_logInfo(`處理直接統計查詢: ${postbackData}`, "統計查詢", userId, "", "", functionName);
+
+    let statsResult = null;
+    let period = '';
+
+    // 根據 postback 資料取得對應統計
+    switch (postbackData) {
+      case '今日統計':
+        period = 'today';
+        statsResult = await LBK_getDirectStatistics(userId, 'daily');
+        break;
+
+      case '本週統計':
+        period = 'week';
+        statsResult = await LBK_getDirectStatistics(userId, 'weekly');
+        break;
+
+      case '本月統計':
+        period = 'month';
+        statsResult = await LBK_getDirectStatistics(userId, 'monthly');
+        break;
+    }
+
+    // 建立統計回覆訊息
+    const replyMessage = LBK_formatStatisticsMessage(period, statsResult?.success ? statsResult.data : null);
+
+    // 建立基礎 Quick Reply 按鈕
+    const quickReplyButtons = LBK_buildStatisticsQuickReply(userId, period.replace('today', 'daily').replace('week', 'weekly').replace('month', 'monthly'));
+
+    return {
+      success: true,
+      message: replyMessage,
+      quickReply: quickReplyButtons,
+      period: period
+    };
+
+  } catch (error) {
+    LBK_logError(`處理直接統計查詢失敗: ${error.message}`, "統計查詢", userId, "LBK_STATS_ERROR", error.toString(), functionName);
+
+    return {
+      success: false,
+      message: '統計查詢失敗，請稍後再試',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * 49. 直接統計查詢函數 - 複製自SR模組
+ * @version 2025-12-10-V1.3.0
+ * @date 2025-12-10 20:00:00
+ * @description 複製SR的SR_getDirectStatistics邏輯，直接查詢Firestore取得統計資料
+ */
+async function LBK_getDirectStatistics(userId, period) {
+  const functionName = "LBK_getDirectStatistics";
+  try {
+    LBK_logInfo(`直接查詢統計資料: ${period}`, "統計查詢", userId, "", "", functionName);
+
+    const ledgerId = `user_${userId}`;
+    const now = moment().tz(LBK_CONFIG.TIMEZONE);
+    let startDate, endDate;
+
+    // 設定查詢時間範圍
+    switch (period) {
+      case 'daily':
+        startDate = now.clone().startOf('day').toDate();
+        endDate = now.clone().endOf('day').toDate();
+        break;
+      case 'weekly':  
+        startDate = now.clone().startOf('week').toDate();
+        endDate = now.clone().endOf('week').toDate();
+        break;
+      case 'monthly':
+        startDate = now.clone().startOf('month').toDate();
+        endDate = now.clone().endOf('month').toDate();
+        break;
+      default:
+        startDate = now.clone().startOf('day').toDate();
+        endDate = now.clone().endOf('day').toDate();
+    }
+
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+
+    // 查詢Firestore transactions集合 - 使用1301標準路徑
+    const transactionsRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+    const snapshot = await transactionsRef
+      .where('createdAt', '>=', admin.firestore.Timestamp.fromDate(startDate))
+      .where('createdAt', '<=', admin.firestore.Timestamp.fromDate(endDate))
+      .get();
+
+    if (snapshot.empty) {
+      LBK_logInfo(`無統計資料: ${period}`, "統計查詢", userId, "", "", functionName);
+      return {
+        success: true,
+        data: {
+          totalIncome: 0,
+          totalExpense: 0,
+          recordCount: 0
+        }
+      };
+    }
+
+    // 計算統計資料
+    let totalIncome = 0;
+    let totalExpense = 0;
+    let recordCount = snapshot.size;
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const amount = parseFloat(data.amount || 0);
+      const type = data.type;
+
+      if (type === 'income') {
+        totalIncome += amount;
+      } else if (type === 'expense') {
+        totalExpense += amount;
+      }
+    });
+
+    const statsData = {
+      totalIncome,
+      totalExpense,
+      recordCount
+    };
+
+    LBK_logInfo(`統計查詢成功: 收入${totalIncome}，支出${totalExpense}，${recordCount}筆`, "統計查詢", userId, "", "", functionName);
+
+    return {
+      success: true,
+      data: statsData
+    };
+
+  } catch (error) {
+    LBK_logError(`直接統計查詢失敗: ${error.message}`, "統計查詢", userId, "LBK_DIRECT_STATS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      data: {
+        totalIncome: 0,
+        totalExpense: 0, 
+        recordCount: 0
+      }
+    };
+  }
+}
+
+/**
+ * 50. 格式化統計訊息 - 複製自SR模組
+ * @version 2025-12-10-V1.3.0
+ * @date 2025-12-10 20:00:00
+ * @description 複製SR的SR_buildStatisticsReplyMessage邏輯，建立LINE友善的統計回覆訊息
+ */
+function LBK_formatStatisticsMessage(period, statsData) {
+  const periodNames = {
+    'today': '今日',
+    'week': '本週', 
+    'month': '本月'
+  };
+
+  const periodName = periodNames[period] || period;
+
+  if (!statsData) {
+    return `📊 ${periodName}統計
+
+暫無記帳數據
+
+💡 開始記帳以獲得統計分析`;
+  }
+
+  const totalIncome = statsData.totalIncome || 0;
+  const totalExpense = statsData.totalExpense || 0;
+  const balance = totalIncome - totalExpense;
+  const recordCount = statsData.recordCount || 0;
+
+  return `📊 ${periodName}統計
+
+💰 收入：${totalIncome}元
+💸 支出：${totalExpense}元  
+📈 淨額：${balance >= 0 ? '+' : ''}${balance}元
+📝 筆數：${recordCount}筆
+
+${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
 }
 
 // 確保所有函數都正確導出，避免循環依賴問題
@@ -1736,13 +1923,16 @@ const LBK_MODULE = {
   LBK_validateDataInternal: LBK_validateDataInternal,
   LBK_calculateStringSimilarity: LBK_calculateStringSimilarity,
 
-  // 新增函數
+  // 統計查詢函數 - v1.3.0新增
   LBK_checkStatisticsKeyword: LBK_checkStatisticsKeyword,
   LBK_handleStatisticsRequest: LBK_handleStatisticsRequest,
   LBK_buildStatisticsQuickReply: LBK_buildStatisticsQuickReply,
+  LBK_processDirectStatistics: LBK_processDirectStatistics,
+  LBK_getDirectStatistics: LBK_getDirectStatistics,
+  LBK_formatStatisticsMessage: LBK_formatStatisticsMessage,
 
   // 版本資訊
-  MODULE_VERSION: "1.2.0",
+  MODULE_VERSION: "1.3.0",
   MODULE_NAME: "LBK"
 };
 
