@@ -1,0 +1,145 @@
+  LCAS ASL (API Service Layer) v2.2.1 啟動中...
+📅 啟動時間: 2025/12/10 下午4:31:53
+🔥 ASL階段二升級：優先初始化Firebase...
+📦 ASL載入P1-2範圍BL層模組...
+🔄 Firebase初始化嘗試 1/3...
+📡 載入Firebase配置模組...
+ ✅ Firebase配置驗證通過
+🔍 驗證Firebase配置...
+✅ Firebase配置驗證通過
+⚡ 初始化Firebase Admin SDK...
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+📊 確認Firestore實例...
+✅ Firestore實例取得成功
+🔗 驗證Firebase連線...
+✅ Firebase連線驗證成功
+✅ Firebase完全初始化完成，準備載入BL模組...
+🎯 Firebase初始化成功 (嘗試次數: 1)
+🔥 Firebase已就緒，開始載入AM模組...
+✅ DL模組：Firebase動態配置載入成功
+🔧 WCM模組v1.2.1 初始化：階段二路徑動態化支援完成
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🎯 增強功能：WCM_validateWalletExists, WCM_getWalletList, WCM_getWalletBalance 支援動態路徑
+🎯 增強功能：WCM_createCategory, WCM_getCategoryList, WCM_validateCategoryExists 支援動態路徑
+🚀 WCM模組現已全面支援協作帳本路徑
+✨ 階段二：WCM路徑動態化支援已完成
+📊 BM 預算管理模組載入中...
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+SR模組依賴載入警告: Cannot find module './1311. FS.js'
+Require stack:
+- /home/runner/workspace/13. Replit_Module code_BL/1305. SR.js
+- /home/runner/workspace/13. Replit_Module code_BL/1320. WH.js
+- /home/runner/workspace/13. Replit_Module code_BL/1331. DD1.js
+- /home/runner/workspace/13. Replit_Module code_BL/1312. BM.js
+- /home/runner/workspace/13. Replit_Module code_BL/1309. AM.js
+- /home/runner/workspace/ASL.js
+📅 SR 排程提醒模組初始化中...
+FS模組載入失敗: Cannot find module './1311. FS.js'
+Require stack:
+- /home/runner/workspace/13. Replit_Module code_BL/1320. WH.js
+- /home/runner/workspace/13. Replit_Module code_BL/1331. DD1.js
+- /home/runner/workspace/13. Replit_Module code_BL/1312. BM.js
+- /home/runner/workspace/13. Replit_Module code_BL/1309. AM.js
+- /home/runner/workspace/ASL.js
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.3.0 (2025-01-28) - 純業務邏輯模組
+WH模組環境變數檢查結果:
+  ✅ LINE_CHANNEL_SECRET: 已設定(32字符)
+  ✅ LINE_CHANNEL_ACCESS_TOKEN: 已設定(172字符)
+  ❌ WEBHOOK_URL: 未設定或為空
+⚠️  缺少必要環境變數: WEBHOOK_URL
+💡 請在Replit Secrets中設定這些環境變數
+[WH 2.0.16 LOG] WH 2.3.0: 環境變數檢查未通過，缺少: WEBHOOK_URL (WARNING)
+✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能
+🤝 CM 協作管理模組初始化中...
+[2025-12-10T08:31:56.797Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組v2.4.0載入完成 - 階段一擴展：建立完整協作帳本子集合架構（members, transactions, wallets, budgets, categories）
+✅ AM模組8.0.0 階段一職責重構完成！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 帳本結構初始化 (專注結構建立)
+   └── 總計: 63個函數 (移除3個至WCM模組)
+🔄 階段一重構: 科目和帳戶管理功能移至WCM模組
+🎯 職責專注: AM專注帳號管理，WCM負責科目和帳戶管理
+🔧 整合模式: AM_initializeUserLedger() 現在調用WCM模組進行資料初始化
+📊 新資料流: AM → WCM (科目+帳戶) → FS (結構) → Firebase
+✨ Before: AM直接載入0099.json + FS輔助
+✨ After: AM調用WCM函數，WCM成為科目和帳戶管理唯一入口
+🎉 階段一成果: WCM模組功能整合完成，職責邊界清晰化！
+✅ AM (認證管理) 模組載入成功
+🔄 開始載入BK模組...
+✓ BK_processBookkeeping: 可用
+✓ BK_processAPIGetDashboard: 可用
+✓ BK_processAPIGetTransactionDetail: 可用
+✓ BK_processAPIUpdateTransaction: 可用
+✓ BK_processAPIDeleteTransaction: 可用
+✓ BK_processAPIGetStatistics: 可用
+✓ BK_processAPIGetRecent: 可用
+✓ BK_processAPIGetCharts: 可用
+✓ BK_createTransaction: 可用
+✓ BK_getTransactions: 可用
+📊 BK模組函數完整性檢查: 10/10
+✅ BK (記帳核心) 模組載入成功，所有函數可用
+✅ DL (診斷日誌) 模組載入成功
+📦 P2階段模組 - 帳本與協作管理功能統一由CM模組提供...
+📦 載入P2階段模組 - BM (預算管理)...
+✅ BM (預算管理) 模組載入成功
+📦 載入P2階段模組 - CM (協作管理)...
+✅ CM (協作管理) 模組載入成功
+📦 載入DCN-0023階段二模組 - WCM (帳戶與科目管理)...
+✅ WCM (帳戶與科目管理) 模組載入成功
+📋 模組載入狀態報告:
+   ✅ FIREBASE: 已載入
+   ✅ AM: 已載入
+   ✅ BK: 已載入
+   ✅ DL: 已載入
+   ✅ BM: 已載入
+   ✅ CM: 已載入
+   ✅ WCM: 已載入
+🎉 P2階段模組完整載入：Firebase + AM + BK + CM(協作與帳本管理) + BM + WCM
+🚀 系統已準備好處理所有P1-2範圍API請求以及P2預算管理、協作管理、帳戶與科目管理功能
+✨ 協作與帳本管理功能完全整合至CM模組
+📦 帳戶與科目管理功能整合至WCM模組
+📊 載入成功率: 7/7 (100%)
+🎉 階段三修復成功：Firebase + AM + BK模組正常載入
+🚀 系統已準備好處理所有P1-2範圍API請求
+🎉 LCAS ASL階段二及DCN-0023更新完成！
+📦 P1-2 + P2 + DCN-0023 範圍BL模組載入狀態: Firebase(✅), AM(✅), BK(✅), DL(✅), FS(❌), BM(✅), CM(✅), WCM(✅)
+🔧 純轉發機制: 57個API端點 -> 統一使用BL層標準格式
+✨ 階段二及DCN-0023更新: 協作管理API端點補完，帳戶與科目管理API端點整合
+🎯 協作管理功能: 帳本創建/讀取/更新/刪除，協作者管理（邀請/移除/權限更新），衝突檢測與解決
+🎯 帳戶與科目管理功能: 帳戶CRUD，餘額查詢，轉帳，科目CRUD，科目樹狀結構
+🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict, /api/v1/accounts, /api/v1/accounts/:id, /api/v1/accounts/:id/balance, /api/v1/accounts/types, /api/v1/accounts/transfer, /api/v1/categories, /api/v1/categories/:id, /api/v1/categories/tree
+🚀 ASL v2.2.1已完全就緒，階段三動態路由功能已啟用！
+🔗 路由策略: 一般帳本 → ledgers/*, 協作帳本 → collaborations/*
+🌐 ASL服務器已啟動於 Port 5000
+🌐 LCAS ASL純轉發窗口已啟動於 Port 5000
+📍 服務地址: http://0.0.0.0:5000
+🔗 健康檢查: http://0.0.0.0:5000/health
+🎯 DCN-0015第二階段完成: ASL格式驗證強化
+📋 P1-2 + P2 + DCN-0023 API端點: AM(19) + BK(15) + BM(5) + CM(4) + WCM(14) = 57個端點
+🔧 第二階段完成狀態: 完全就緒
+📦 核心模組狀態: Firebase(✅), AM(✅), BK(✅), BM(✅), CM(✅), WCM(✅)
+✨ 容錯機制完全移除: 100%信任BL層標準格式
+🎉 第二階段修正完成: 協作管理API端點補完
+🚀 DCN-0023階段二更新: 帳戶與科目管理API端點已整合
+🚀 ASL v2.2.1已完全就緒，階段三動態路由功能已啟用！
+🔗 路由策略: 一般帳本 → ledgers/*, 協作帳本 → collaborations/*
+🌐 ASL服務器已啟動於 Port 5000
+成功寫入 1 條日誌到 Firestore
+📅 已載入 0 個排程設定
+[2025-12-10T08:31:57.628Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+📥 [2025-12-10T08:32:01.827Z] ASL轉發: POST /webhook
+❌ ASL未知端點: POST /webhook
+📤 [2025-12-10T08:32:01.827Z] ASL回應: POST /webhook - 404 (5ms)
+📥 [2025-12-10T08:32:31.893Z] ASL轉發: POST /webhook
+❌ ASL未知端點: POST /webhook
+📤 [2025-12-10T08:32:31.893Z] ASL回應: POST /webhook - 404 (2ms)

@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.2.0
+ * WH_Webhook處理模組_2.3.0
  * @module Webhook模組  
  * @description LINE Webhook處理模組 - 移除內部Express服務器，專注業務邏輯處理
- * @update 2025-01-28: 升級至v2.2.0，移除Express服務器邏輯，解決端口衝突問題
+ * @update 2025-01-28: 升級至v2.3.0，新增WEBHOOK_URL環境變數配置和完整性檢查
  */
 
 // 首先引入其他模組 - 增強安全載入
@@ -113,6 +113,7 @@ const WH_CONFIG = {
   LINE: {
     CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET, // 從環境變數獲取 LINE Channel Secret
     CHANNEL_ACCESS_TOKEN: process.env.LINE_CHANNEL_ACCESS_TOKEN, // 從環境變數獲取 LINE Channel Access Token
+    WEBHOOK_URL: process.env.WEBHOOK_URL, // 從環境變數獲取 Webhook URL
   },
   RETRY: {
     MAX_COUNT: 2, // 減少重試次數
@@ -129,8 +130,81 @@ const WH_QUICK_REPLY_CONFIG = {
   REMINDER_KEYWORDS: ['setup_daily_reminder', 'setup_weekly_reminder', 'setup_monthly_reminder']
 };
 
+/**
+ * 環境變數完整性檢查函數
+ * @version 2025-01-28-V2.3.0
+ * @description 檢查所有必要的環境變數是否已正確設定
+ */
+function WH_checkEnvironmentVariables() {
+  const requiredEnvVars = [
+    'LINE_CHANNEL_SECRET',
+    'LINE_CHANNEL_ACCESS_TOKEN', 
+    'WEBHOOK_URL'
+  ];
+
+  const missingVars = [];
+  const envStatus = {};
+
+  // 檢查每個必要的環境變數
+  requiredEnvVars.forEach(varName => {
+    const value = process.env[varName];
+    envStatus[varName] = {
+      exists: !!value,
+      hasValue: value && value.trim() !== '',
+      length: value ? value.length : 0
+    };
+
+    if (!value || value.trim() === '') {
+      missingVars.push(varName);
+    }
+  });
+
+  const isComplete = missingVars.length === 0;
+
+  // 記錄檢查結果
+  console.log('WH模組環境變數檢查結果:');
+  requiredEnvVars.forEach(varName => {
+    const status = envStatus[varName];
+    const statusText = status.hasValue ? '✅' : '❌';
+    console.log(`  ${statusText} ${varName}: ${status.hasValue ? `已設定(${status.length}字符)` : '未設定或為空'}`);
+  });
+
+  if (!isComplete) {
+    console.warn(`⚠️  缺少必要環境變數: ${missingVars.join(', ')}`);
+    console.warn('💡 請在Replit Secrets中設定這些環境變數');
+  } else {
+    console.log('✅ 所有必要環境變數已正確設定');
+  }
+
+  return {
+    isComplete,
+    missingVars,
+    envStatus,
+    requiredVars: requiredEnvVars
+  };
+}
+
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.2.0 (2025-01-28) - 純業務邏輯模組");
+console.log("WH模組初始化，版本: 2.3.0 (2025-01-28) - 純業務邏輯模組");
+
+// 執行環境變數完整性檢查
+const envCheckResult = WH_checkEnvironmentVariables();
+
+// 如果環境變數不完整，記錄警告但不阻止模組載入
+if (!envCheckResult.isComplete) {
+  WH_directLogWrite([
+    WH_formatDateTime(new Date()),
+    `WH 2.3.0: 環境變數檢查未通過，缺少: ${envCheckResult.missingVars.join(', ')}`,
+    "模組初始化",
+    "",
+    "ENV_INCOMPLETE",
+    "WH",
+    "部分必要環境變數未設定，請檢查Replit Secrets配置",
+    0,
+    "WH_init",
+    "WARNING",
+  ]);
+}
 
 // 創建緩存服務 - 保留核心功能
 const cache = new NodeCache({ stdTTL: 600 }); // 10分鐘緩存
@@ -1977,6 +2051,9 @@ module.exports = {
 
   // 新增依賴注入函數
   setDependencies,
+
+  // 環境變數檢查函數
+  WH_checkEnvironmentVariables,
 
   // 配置導出
   WH_CONFIG,
