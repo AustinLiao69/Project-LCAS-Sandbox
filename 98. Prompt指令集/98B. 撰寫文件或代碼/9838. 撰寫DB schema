@@ -1,0 +1,122 @@
+範本如下：
+
+🔷 Firestore NoSQL DB Schema Template
+
+________________________________________
+1. Overview
+描述整體資料庫架構。
+Database Type: Firestore (NoSQL, document-based)
+Structure Style: Collections → Documents → Subcollections
+Version: v1.0
+Last Update: YYYY-MM-DD
+Maintainers:
+Notes:
+簡述整體架構原則，例如：
+•	每個主集合都使用自動生成的 ID
+•	嚴格區分主集合與子集合
+•	所有時間欄位使用 Firestore Timestamp
+•	所有 module 都必須維護 backward compatibility
+________________________________________
+2. Naming Conventions
+定義命名規則（非常重要）
+Collections: lowercase_with_underscores
+Documents: autoId 或 meaningfulId
+Fields: camelCase
+Timestamps: createdAt, updatedAt
+User Reference: userId
+Ledger Reference: ledgerId
+________________________________________
+3. Global Rules
+適用於整個資料庫的 schema 規則：
+•	所有 document 必須包含 createdAt
+•	所有可修改 document 必須包含 updatedAt
+•	status 欄位必須為 enum：active / archived / deleted
+•	Boolean 一律使用 true / false
+•	避免 null（使用空字串、空物件、空陣列）
+________________________________________
+4. Collections Schema
+以下為主模板，你只要複製 sections，依照自己專案替換。
+________________________________________
+🔹 4.1 Collection: users
+Document ID
+UID（來自 Firebase Auth）
+Fields
+Field	Type	Required	Description	Constraints
+displayName	string	optional	顯示名稱	max 50 chars
+email	string	required	Email	unique
+userType	string	required	M/S/J	enum
+timezone	string	optional	User timezone	default: Asia/Taipei
+linkedAccounts	object	optional	跨平台帳號	LINE/iOS/Android
+settings	object	optional	使用者設定	see below
+status	string	required	User status	enum: active/suspended/deleted
+createdAt	timestamp	required	創建時間	
+updatedAt	timestamp	required	更新時間	
+Substructures
+settings:
+settings: {
+  notifications: boolean,
+  language: string
+}
+________________________________________
+🔹 4.2 Collection: ledgers
+Document ID
+ledgerId（autoId 或 custom）
+Fields
+Field	Type	Required	Description	Constraints
+name	string	required	帳本名稱	max 50 chars
+owner	string	required	owner userId	must exist
+type	string	required	帳本類型	enum
+status	string	required	active/archived	
+settings	object	optional	帳本設定	
+createdAt	timestamp	required		
+updatedAt	timestamp	required		
+Subcollections
+Subcollection	Description
+wallets	帳戶列表
+categories	科目列表
+budgets	預算設定
+________________________________________
+🔹 4.3 Subcollection Template
+Collection: ledgers/{ledgerId}/wallets
+Fields
+Field	Type	Required	Description
+id	string	required	帳戶 ID
+name	string	required	帳戶名稱
+type	string	required	cash/bank/card
+balance	number	required	帳戶餘額
+userId	string	required	所屬用戶
+status	string	required	active/inactive
+createdAt	timestamp	required	建立時間
+updatedAt	timestamp	required	更新時間
+________________________________________
+5. Relations
+描述集合與集合的關聯：
+•	users.uid → ledgers.owner
+•	ledgers.ledgerId → budgets.ledgerId
+•	ledgers.ledgerId → collaborations.ledgerId
+•	collaborations.members.userId → users.uid
+格式：
+users (1) — (many) ledgers  
+ledgers (1) — (many) wallets  
+ledgers (1) — (many) categories
+________________________________________
+6. Validation Rules
+你可以加：
+•	Firestore Security Rules
+•	Cloud Functions validation
+•	型別定義（例如 TypeScript interfaces）
+________________________________________
+7. Lifecycle
+描述每個資料狀態的生命週期，如：
+active → archived → deleted
+________________________________________
+8. Indexes
+記錄 Firestore Index（重要）
+collaborations:
+  - ledgerId ASC, userId ASC
+ledgers:
+  - owner ASC, status ASC
+________________________________________
+9. Versioning
+記錄每次 schema 改動：
+
