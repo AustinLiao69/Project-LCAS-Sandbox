@@ -1,0 +1,66 @@
+------------------------------------------
+20251211. 撰寫0070文件
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+------------------------------------------
+20251211. 撰寫0070文件(Review中)
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+我來檢查0070文件第四章集合架構中提及的資料欄位，並對比AM、BM、CM、WCM模組實際擁有的欄位。
+檢查結果
+1. AM模組缺失的欄位
+在0070文件的users集合中提及但AM模組缺失：
+•	userMode - 用戶模式
+•	emailVerified - 電子郵件驗證狀態
+•	preferences - 用戶偏好設定（完整結構）
+•	security - 安全設定（完整結構）
+•	profileCompletion - 個人資料完成度
+•	statistics - 用戶統計資料
+=>明明在firebase裡面都有，AM模組裡面的代碼也找得到，你在胡說什麼？
+
+
+2. BM模組缺失的欄位
+在0070文件的budgets子集合中提及但BM模組缺失：
+•	config_source - 配置來源
+=>這個有，不用刪除
+
+
+•	module - 模組標識
+•	version - 版本號
+=>請在0070文件中刪除上述兩個欄位
+
+
+3. CM模組缺失的欄位
+在0070文件的collaborations集合中提及但CM模組缺失：
+•	subcollections - 子集合架構描述物件
+•	managedBy - 管理模組標識（預設值CM_v2.4.0）
+=>請在0070文件中刪除上述兩個欄位
+
+4. WCM模組缺失的欄位
+在wallets子集合中：
+•	無明顯缺失，WCM模組實作相當完整
+在categories子集合中：
+•	categoryId - 科目代碼（雖然實際使用但可能命名不一致）
+•	synonyms - 同義詞
+•	subCategoryName - 子科目名稱
+•	isActive - 是否啟用（與status欄位可能重複但概念不同）
+
+5. 跨模組通用欄位缺失
+所有模組普遍缺失的0070文件標準欄位：
+•	module - 模組標識欄位
+•	version - 版本號欄位
+•	部分模組缺少managedBy欄位的標準化實作
+=>先放著
+
+
+
+總結
+主要缺失集中在：
+1.	標準化系統欄位：module、version、managedBy
+2.	使用者相關進階欄位：userMode、emailVerified、preferences結構
+3.	科目管理細節欄位：categoryId、synonyms、subCategoryName
+4.	協作管理描述欄位：subcollections架構描述
+這些缺失主要反映了0070文件作為標準規範與實際模組實作之間的差距。
+
