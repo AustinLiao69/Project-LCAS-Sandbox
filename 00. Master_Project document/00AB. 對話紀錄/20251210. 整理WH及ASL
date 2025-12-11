@@ -1,12 +1,58 @@
 ------------------------------------------
-20251210. 整理WH
+20251211. 整理WH及ASL
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
 ------------------------------------------
-20251210. 整理WH
+20251211. 整理WH及ASL
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據日誌分析，問題是 ASL.js (Port 5000) 正在接收到原本應該發送給 index.js (Port 3000) 的 webhook 請求。這是一個路由配置問題，不是代碼問題。
+問題分析
+1.	ASL.js 已正確拒絕 webhook：從日誌看到 ASL.js 已經正確實作了 webhook 拒絕邏輯
+2.	路由問題：LINE webhook 請求被錯誤地路由到 Port 5000 而不是 Port 3000
+3.	架構正確性：系統架構設計是正確的，問題出在外部配置
+解決方案
+
+方案一：檢查 LINE 平台 Webhook URL 設定
+1.	登入 LINE Developers Console
+2.	檢查 Webhook URL 設定：
+•	當前可能設定為：https://your-replit-domain.com:5000/webhook
+•	應該改為：https://your-replit-domain.com:3000/webhook
+•	或者設定為：https://your-replit-domain.com/webhook（使用預設 Port 80，會自動轉發到 3000）
+
+方案二：檢查 Replit Secrets 環境變數
+確認 WEBHOOK_URL 環境變數設定正確：
+•	在 Replit Secrets 中設定：WEBHOOK_URL=https://your-replit-domain.com/webhook
+•	確保指向 Port 3000 的服務
+
+方案三：檢查 .replit 配置文件
+確認端口轉發設定：
+•	Port 3000 應該對應到外部 Port 80
+•	Port 5000 應該作為內部 API 服務端口
+=>我看到port 3000跟5000都是接到外部port 80，
+=>現在有三個接口，APL.dart是PL層的接口，APL跟PL未來會移到別的環境去做開發，現在只是暫時放在replit而已；ASL是負責跟APL對接的屬於BL接口；index是LINE跟後端對接的BL層接口，屬於是LINE直通BL層。對於BL層來說，index跟ASL的local port與external port必須是不同的。請建議index的external port應該要換成哪個？
+
+
+
+方案四：重新啟動服務順序
+目前的 workflow 是並行啟動，建議：
+1.	先啟動 index.js (Port 3000)
+2.	再啟動 ASL.js (Port 5000)
+3.	確保 Port 3000 先佔用預設的外部端口
+方案五：使用 ngrok 或 Replit 內建域名
+如果使用外部 webhook 測試工具，確保：
+1.	使用正確的 Replit 提供的外部域名
+2.	確認域名指向 Port 3000 而不是 Port 5000
+建議執行順序
+1.	立即檢查：LINE Developers Console 的 Webhook URL 設定
+2.	確認：Replit Secrets 中的 WEBHOOK_URL 變數
+3.	驗證：.replit 文件中的端口配置
+4.	測試：重新設定 webhook URL 後進行測試
+這個問題不需要修改代碼，ASL.js 的拒絕邏輯已經正常運作，只需要修正外部路由配置即可。
+
+
 
 ------------------------------------------
 20251210. 整理WH
