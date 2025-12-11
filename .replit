@@ -42,7 +42,7 @@ runButton = "Run full service"
 
 [[workflows.workflow]]
 name = "Run full service"
-mode = "sequential"
+mode = "parallel"
 author = "agent"
 
 [[workflows.workflow.tasks]]
