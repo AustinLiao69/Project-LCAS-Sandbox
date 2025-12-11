@@ -2662,10 +2662,28 @@ function logResponse(req, res) {
  * 08. 404錯誤處理
  * @version 2025-09-22-V2.0.0
  * @date 2025-09-22 10:00:00
- * @description 處理不存在的API端點
+ * @description 處理不存在的API端點，明確拒絕webhook請求
  */
 app.use((req, res) => {
   console.log(`❌ ASL未知端點: ${req.method} ${req.path}`);
+  
+  // 特別處理webhook請求 - ASL不處理webhook
+  if (req.path === '/webhook') {
+    console.log(`🚫 ASL拒絕webhook請求: webhook應由index.js (Port 3000)處理`);
+    res.apiError(
+      'Webhook請求應發送至Port 3000，ASL僅處理RESTful API端點',
+      'WEBHOOK_NOT_SUPPORTED',
+      404,
+      {
+        suggestion: '請將webhook請求發送至正確的服務端口',
+        correctPort: 3000,
+        currentService: 'ASL RESTful API Service (Port 5000)',
+        webhookService: 'LINE Webhook Service (Port 3000)'
+      }
+    );
+    return;
+  }
+  
   res.apiError(
     `API端點不存在: ${req.method} ${req.path}`,
     'ENDPOINT_NOT_FOUND',
