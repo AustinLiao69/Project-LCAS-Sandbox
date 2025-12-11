@@ -1326,7 +1326,7 @@ async function WH_callLBKSafely(inputData) {
   try {
     // 動態載入LBK模組
     if (!LBK) {
-      LBK = require("./2015. LBK.js");
+      LBK = require("./1315. LBK.js");
     }
 
     // 驗證函數存在性

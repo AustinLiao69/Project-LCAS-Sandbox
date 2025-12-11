@@ -21,7 +21,7 @@ localPort = 3001
 
 [[ports]]
 localPort = 5000
-externalPort = 80
+externalPort = 5173
 
 [[ports]]
 localPort = 9005
@@ -42,16 +42,16 @@ runButton = "Run full service"
 
 [[workflows.workflow]]
 name = "Run full service"
-mode = "sequential"
+mode = "parallel"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node ASL.js"
+args = "node index.js"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node index.js"
+args = "node ASL.js"
 
 [workflows.workflow.metadata]
 outputType = "console"
