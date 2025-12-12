@@ -1,0 +1,39 @@
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [7ada8bba] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [7ada8bba]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [7ada8bba] (INFO)
+開始非同步處理請求 [7ada8bba]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [7ada8bba] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [7ada8bba] (INFO)
+處理消息事件: text [7ada8bba]
+收到文本消息: "測試支出22222" [7ada8bba]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "測試支出22222" [7ada8bba] (INFO)
+開始AM用戶驗證流程 [7ada8bba]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [7ada8bba] (INFO)
+DD_distributeData調用失敗: TypeError: AM.AM_validateAccountExists is not a function [7ada8bba]
+錯誤堆疊: TypeError: AM.AM_validateAccountExists is not a function
+    at WH_processEventAsync (/home/runner/workspace/13. Replit_Module code_BL/1320. WH.js:1483:46)
+    at processWebhookAsync (/home/runner/workspace/13. Replit_Module code_BL/1320. WH.js:482:21)
+    at Object.doPost (/home/runner/workspace/13. Replit_Module code_BL/1320. WH.js:288:9)
+    at /home/runner/workspace/index.js:533:14
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12) [7ada8bba]
+[WH 2.0.16 LOG] WH 2.0.3: 捕獲DD_distributeData異常，生成預設回覆 [7ada8bba] (ERROR)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","responseMessage","error","partialData"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"responseMessage":"處理記帳時發生系統錯誤，請稍後再試或聯繫管理員。","error":"TypeError: AM.AM_validateAccountExists is not a function","partialData":{"subject":"測試支出22222","amount":"0","rawAmount":"0","paym...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=24
+WH_replyMessage: 使用responseMessage屬性 (處理記帳時發生系統錯誤，請稍後再試或聯繫管理員。...)
+WH_replyMessage: 開始回覆訊息: 處理記帳時發生系統錯誤，請稍後再試或聯繫管理員。
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 處理記帳時發生系統錯誤，請稍後再試或聯繫管理員。 (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+(node:3147) Warning: Accessing non-existent property 'AM_validateAccountExists' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+非同步處理完成，已清理數據 [7ada8bba]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [7ada8bba] (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)

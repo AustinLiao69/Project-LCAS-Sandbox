@@ -1,12 +1,12 @@
 /**
- * WH_Webhook處理模組_2.3.0
+ * WH_Webhook處理模組_2.4.0
  * @module Webhook模組  
- * @description LINE Webhook處理模組 - 移除內部Express服務器，專注業務邏輯處理
- * @update 2025-01-28: 升級至v2.3.0，新增WEBHOOK_URL環境變數配置和完整性檢查
+ * @description LINE Webhook處理模組 - 階段五完成：移除FS模組依賴，使用NodeCache進行消息去重
+ * @update 2025-12-12: 升級至v2.4.0，移除FS模組依賴，完全基於NodeCache運作
  */
 
 // 首先引入其他模組 - 增強安全載入
-let DD, BK, LBK, SR, DL, AM, FS;
+let DD, BK, LBK, SR, DL, AM;
 
 try {
   DD = require("./1331. DD1.js");
@@ -38,27 +38,8 @@ try {
   console.log("AM模組載入失敗:", error.message);
 }
 
-// 關鍵修復：增強FS模組安全載入，檢查index.js設置的全域狀態
-try {
-  FS = require("./1311. FS.js");
-
-  // 檢查index.js設置的FS模組就緒狀態
-  const fsModuleReady = global.FS_MODULE_READY || false;
-  const fsPartialAvailable = global.FS_PARTIAL_AVAILABLE || false;
-
-  if (fsModuleReady && FS && typeof FS.FS_getDocument === 'function') {
-    console.log("FS模組載入成功，全功能可用 (index.js驗證通過)");
-  } else if (fsPartialAvailable && FS) {
-    console.log("FS模組部分載入，將採用安全存取模式");
-    // 在需要使用FS函數的地方增加額外檢查
-  } else {
-    console.log("FS模組載入異常，將採用降級模式");
-    FS = null;
-  }
-} catch (error) {
-  console.log("FS模組載入失敗:", error.message);
-  FS = null;
-}
+// FS模組已移除 - 階段五完成：職責分散至專門模組
+console.log("✅ 階段五完成：FS模組已移除，消息去重使用NodeCache");
 
 // 引入必要的 Node.js 模組 - 移除Express相關依賴
 const axios = require("axios");
@@ -185,7 +166,7 @@ function WH_checkEnvironmentVariables() {
 }
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.3.0 (2025-01-28) - 純業務邏輯模組");
+console.log("WH模組初始化，版本: 2.4.0 (2025-12-12) - 階段五完成：FS模組已移除");
 
 // 執行環境變數完整性檢查
 const envCheckResult = WH_checkEnvironmentVariables();
@@ -434,7 +415,7 @@ async function processWebhookAsync(e) {
             continue; // 跳過此事件的處理
           }
 
-          // 檢查消息去重 - 關鍵修復：第1990行區域增強FS依賴檢查
+          // 檢查消息去重 - 使用NodeCache進行去重檢查
           if (
             WH_CONFIG.MESSAGE_DEDUPLICATION &&
             event.type === "message" &&
@@ -445,56 +426,34 @@ async function processWebhookAsync(e) {
             // 安全訪問message.id屬性
             const messageId = event.message.id;
             if (messageId && typeof messageId === 'string') {
-              // 在非同步處理中檢查重複 - 關鍵修復：增強FS模組多層次依賴檢查
-              const fsModuleReady = global.FS_MODULE_READY || false;
-              const hasFS = FS && typeof FS === 'object';
-              const hasFSFunction = hasFS && typeof FS.FS_getDocument === 'function';
-
-              if (fsModuleReady && hasFS && hasFSFunction) {
-                // FS模組完全可用，執行正常去重檢查
-                try {
-                  const isDuplicate = WH_checkDuplicateMessage(messageId, requestId);
-                  if (isDuplicate) {
-                    WH_directLogWrite([
-                      WH_formatDateTime(new Date()),
-                      `WH 2.1.5: 跳過重複消息ID: ${messageId} [${requestId}]`,
-                      "消息去重",
-                      userId,
-                      "",
-                      "WH",
-                      "",
-                      0,
-                      "processWebhookAsync",
-                      "INFO",
-                    ], userId);
-                    continue; // 跳過此消息的處理
-                  }
-                } catch (fsError) {
-                  console.log(`FS模組函數調用失敗，跳過去重檢查: ${fsError.message} [${requestId}]`);
+              // 使用NodeCache進行消息去重檢查
+              try {
+                const isDuplicate = WH_checkDuplicateMessage(messageId, requestId);
+                if (isDuplicate) {
                   WH_directLogWrite([
                     WH_formatDateTime(new Date()),
-                    `WH 2.1.5: FS模組函數調用失敗，跳過去重檢查: ${fsError.message} [${requestId}]`,
-                    "依賴檢查",
+                    `WH 2.4.0: 跳過重複消息ID: ${messageId} [${requestId}]`,
+                    "消息去重",
                     userId,
-                    "FS_FUNCTION_ERROR",
+                    "",
                     "WH",
-                    fsError.toString(),
+                    "",
                     0,
                     "processWebhookAsync",
-                    "WARNING",
+                    "INFO",
                   ], userId);
+                  continue; // 跳過此消息的處理
                 }
-              } else {
-                // FS模組不完全可用，記錄並跳過去重檢查
-                console.log(`FS模組狀態檢查 - ready:${fsModuleReady}, hasFS:${hasFS}, hasFunction:${hasFSFunction} [${requestId}]`);
+              } catch (cacheError) {
+                console.log(`NodeCache去重檢查失敗: ${cacheError.message} [${requestId}]`);
                 WH_directLogWrite([
                   WH_formatDateTime(new Date()),
-                  `WH 2.1.5: FS模組不完全可用(ready:${fsModuleReady}/obj:${hasFS}/func:${hasFSFunction})，跳過消息去重檢查 [${requestId}]`,
-                  "依賴檢查",
+                  `WH 2.4.0: NodeCache去重檢查失敗: ${cacheError.message} [${requestId}]`,
+                  "消息去重",
                   userId,
-                  "FS_MODULE_INCOMPLETE",
+                  "CACHE_ERROR",
                   "WH",
-                  "FS模組未完全載入或函數不可用",
+                  cacheError.toString(),
                   0,
                   "processWebhookAsync",
                   "WARNING",
@@ -504,7 +463,7 @@ async function processWebhookAsync(e) {
               console.log(`訊息ID格式無效: ${JSON.stringify(event.message)} [${requestId}]`);
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.1.4: 訊息ID格式無效 [${requestId}]`,
+                `WH 2.4.0: 訊息ID格式無效 [${requestId}]`,
                 "消息驗證",
                 userId,
                 "INVALID_MESSAGE_ID",
@@ -1502,28 +1461,15 @@ async function WH_processEventAsync(event, requestId, userId) {
           "INFO",
         ]);
 
-        // 準備分發參數 - 明確包含replyToken
-        const messageData = {
-          text: text,
-          userId: userId,
-          timestamp: event.timestamp,
-          replyToken: event.replyToken, // 確保replyToken被傳遞
-        };
-
-        // 記錄完整的消息數據
-        console.log(
-          `準備訊息數據: ${JSON.stringify(messageData)} [${requestId}]`,
-        );
-
         // 根據事件類型實現完全路徑分離
         try {
-          // 強制路徑分離：所有 LINE 文字訊息走 LBK 直連路徑
-          console.log(`LINE文字訊息強制走LBK直連路徑 [${requestId}]`);
+          // 階段一：實施WH→AM→LBK直接轉發流程
+          console.log(`開始AM用戶驗證流程 [${requestId}]`);
 
           WH_directLogWrite([
             WH_formatDateTime(new Date()),
-            `WH 2.0.20: LINE文字訊息強制走LBK直連路徑，不經過DD模組 [${requestId}]`,
-            "LBK簡化路徑",
+            `WH 階段一: 開始AM用戶驗證流程 [${requestId}]`,
+            "AM驗證",
             userId,
             "",
             "WH",
@@ -1533,13 +1479,79 @@ async function WH_processEventAsync(event, requestId, userId) {
             "INFO",
           ]);
 
-          // 準備 LBK 處理所需的數據
+          // 步驟1：文字訊息處理前，直接調用 AM.AM_validateAccountExists
+          const accountValidation = await AM.AM_validateAccountExists(userId, "LINE");
+          
+          if (!accountValidation.exists) {
+            // 用戶不存在，直接回覆錯誤訊息
+            const errorMessage = "您尚未註冊，請先完成註冊流程";
+            
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 階段一: 用戶不存在 ${userId} [${requestId}]`,
+              "AM驗證",
+              userId,
+              "USER_NOT_EXISTS",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "ERROR",
+            ]);
+
+            await WH_replyMessage(event.replyToken, errorMessage);
+            return;
+          }
+
+          console.log(`用戶存在性驗證通過: ${userId} [${requestId}]`);
+
+          // 步驟2：驗證通過後，直接調用 AM.AM_getUserDefaultLedger
+          const ledgerResult = await AM.AM_getUserDefaultLedger(userId);
+          
+          if (!ledgerResult.success) {
+            // 帳本初始化失敗，直接回覆錯誤訊息
+            const errorMessage = "帳本初始化失敗，請稍後再試";
+            
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 階段一: 帳本初始化失敗 ${userId}: ${ledgerResult.error} [${requestId}]`,
+              "AM驗證",
+              userId,
+              "LEDGER_INIT_FAILED",
+              "WH",
+              ledgerResult.error,
+              0,
+              "WH_processEventAsync",
+              "ERROR",
+            ]);
+
+            await WH_replyMessage(event.replyToken, errorMessage);
+            return;
+          }
+
+          console.log(`用戶帳本驗證通過: ${ledgerResult.ledgerId} [${requestId}]`);
+
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 階段一: AM驗證完成，轉發至LBK處理記帳 [${requestId}]`,
+            "AM→LBK轉發",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO",
+          ]);
+
+          // 步驟3：初始化完成後，轉發給 LBK 處理記帳
           const lbkInputData = {
             userId: userId,
             messageText: text,
             replyToken: event.replyToken,
             timestamp: event.timestamp,
-            processId: requestId
+            processId: requestId,
+            ledgerId: ledgerResult.ledgerId // 傳遞已驗證的帳本ID
           };
 
           // 動態載入LBK模組並調用處理函數
