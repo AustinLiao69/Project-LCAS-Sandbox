@@ -1773,57 +1773,107 @@ function LBK_buildStatisticsQuickReply(userId, currentType) {
 }
 
 /**
- * 48. 處理直接統計查詢 - 複製自SR模組
+ * 48. 直接處理統計查詢 - LBK完全獨立版本
  * @version 2025-12-10-V1.3.0
- * @date 2025-12-10 20:00:00
- * @description 複製SR的SR_processQuickReplyStatistics邏輯，實現LBK獨立統計查詢
+ * @date 2025-12-10 20:30:00
+ * @description LBK模組內建統計處理功能，完全移除對SR模組的依賴
  */
 async function LBK_processDirectStatistics(userId, postbackData) {
-  const functionName = "LBK_processDirectStatistics";
   try {
-    LBK_logInfo(`處理直接統計查詢: ${postbackData}`, "統計查詢", userId, "", "", functionName);
+    const processId = crypto.randomUUID().substring(0, 8);
+    LBK_logInfo(`LBK直接處理統計查詢: ${postbackData} [${processId}]`, "統計查詢", userId, "LBK_processDirectStatistics");
 
-    let statsResult = null;
-    let period = '';
+    // 初始化Firestore
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
 
-    // 根據 postback 資料取得對應統計
+    const ledgerId = `user_${userId}`;
+    const now = moment().tz(LBK_CONFIG.TIMEZONE);
+
+    let startDate, endDate, periodText;
+
+    // 根據統計類型設定時間範圍
     switch (postbackData) {
       case '本日統計':
-        period = 'today';
-        statsResult = await LBK_getDirectStatistics(userId, 'daily');
+        startDate = now.clone().startOf('day');
+        endDate = now.clone().endOf('day');
+        periodText = '本日';
         break;
-
       case '本週統計':
-        period = 'week';
-        statsResult = await LBK_getDirectStatistics(userId, 'weekly');
+        startDate = now.clone().startOf('week');
+        endDate = now.clone().endOf('week');
+        periodText = '本週';
         break;
-
       case '本月統計':
-        period = 'month';
-        statsResult = await LBK_getDirectStatistics(userId, 'monthly');
+        startDate = now.clone().startOf('month');
+        endDate = now.clone().endOf('month');
+        periodText = '本月';
         break;
+      default:
+        startDate = now.clone().startOf('day');
+        endDate = now.clone().endOf('day');
+        periodText = '本日';
     }
 
-    // 建立統計回覆訊息
-    const replyMessage = LBK_formatStatisticsMessage(period, statsResult?.success ? statsResult.data : null);
+    // 查詢交易記錄
+    const transactionsRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+    const snapshot = await transactionsRef
+      .where('date', '>=', startDate.format('YYYY-MM-DD'))
+      .where('date', '<=', endDate.format('YYYY-MM-DD'))
+      .get();
 
-    // 建立基礎 Quick Reply 按鈕
-    const quickReplyButtons = LBK_buildStatisticsQuickReply(userId, period.replace('today', 'daily').replace('week', 'weekly').replace('month', 'monthly'));
+    // 計算統計資料，過濾掉_init等非交易文檔
+    let totalIncome = 0;
+    let totalExpense = 0;
+    let recordCount = 0;
+
+    snapshot.forEach(doc => {
+      // 過濾掉_init等系統文檔
+      if (doc.id === '_init' || doc.id.startsWith('_')) {
+        return;
+      }
+
+      const data = doc.data();
+      const amount = parseFloat(data.amount || 0);
+      const type = data.type;
+
+      // 確保這是有效的交易記錄
+      if (type && amount > 0) {
+        recordCount++;
+        if (type === 'income') {
+          totalIncome += amount;
+        } else if (type === 'expense') {
+          totalExpense += amount;
+        }
+      }
+    });
+
+    const balance = totalIncome - totalExpense;
+    const currentTime = now.format('MM/DD HH:mm');
+
+    // 格式化統計訊息
+    const statsMessage = `📊 ${periodText}統計\n\n` +
+      `💰 總收入：${totalIncome.toLocaleString()}元\n` +
+      `💸 總支出：${totalExpense.toLocaleString()}元\n` +
+      `📈 結餘：${balance >= 0 ? '+' : ''}${balance.toLocaleString()}元\n` +
+      `📝 筆數：${recordCount}筆\n` +
+      `⏰ 查詢時間：${currentTime}`;
+
+    // 建立Quick Reply選項
+    const quickReply = LBK_buildStatisticsQuickReply(userId, postbackData === '本日統計' ? 'daily' :
+                                                            postbackData === '本週統計' ? 'weekly' : 'monthly');
 
     return {
       success: true,
-      message: replyMessage,
-      quickReply: quickReplyButtons,
-      period: period
+      message: statsMessage,
+      quickReply: quickReply
     };
 
   } catch (error) {
-    LBK_logError(`處理直接統計查詢失敗: ${error.message}`, "統計查詢", userId, "LBK_STATS_ERROR", error.toString(), functionName);
-
+    LBK_logError(`直接統計處理失敗: ${error.toString()}`, "統計查詢", userId, "DIRECT_STATISTICS_ERROR", error.toString(), "LBK_processDirectStatistics");
     return {
       success: false,
-      message: '統計查詢失敗，請稍後再試',
-      error: error.message
+      error: error.toString()
     };
   }
 }
@@ -1969,7 +2019,7 @@ function LBK_formatStatisticsMessage(period, statsData) {
 
 💰 收入：${totalIncome}元
 💸 支出：${totalExpense}元
-📈 淨額：${balance >= 0 ? '+' : ''}${balance}元
+📈 結餘：${balance >= 0 ? '+' : ''}${balance}元
 📝 筆數：${recordCount}筆
 
 
@@ -2042,46 +2092,28 @@ async function LBK_parsePaymentMethod(text, userId, processId) {
   }
 }
 
-// 確保所有函數都正確導出，避免循環依賴問題
-const LBK_MODULE = {
-  // Core Functions
-  LBK_processQuickBookkeeping: LBK_processQuickBookkeeping,
-  LBK_parseUserMessage: LBK_parseUserMessage,
-  LBK_parseInputFormat: LBK_parseInputFormat,
-  LBK_extractAmount: LBK_extractAmount,
-  LBK_getSubjectCode: LBK_getSubjectCode,
-  LBK_fuzzyMatch: LBK_fuzzyMatch,
-  LBK_getAllSubjects: LBK_getAllSubjects,
-  LBK_executeBookkeeping: LBK_executeBookkeeping,
-  LBK_generateBookkeepingId: LBK_generateBookkeepingId,
-  LBK_validateBookkeepingData: LBK_validateBookkeepingData,
-  LBK_saveToFirestore: LBK_saveToFirestore,
-  LBK_prepareBookkeepingData: LBK_prepareBookkeepingData,
-  LBK_formatReplyMessage: LBK_formatReplyMessage,
-  LBK_removeAmountFromText: LBK_removeAmountFromText,
-  LBK_validatePaymentMethod: LBK_validatePaymentMethod,
-  LBK_formatDateTime: LBK_formatDateTime,
-  LBK_initialize: LBK_initialize,
-  LBK_handleError: LBK_handleError,
-  LBK_processAmountInternal: LBK_processAmountInternal,
-  LBK_validateDataInternal: LBK_validateDataInternal,
-  LBK_calculateStringSimilarity: LBK_calculateStringSimilarity,
+// 確保所有函數都正確導出，修復模組載入問題
+module.exports = {
+  LBK_processQuickBookkeeping,
+  LBK_parseUserMessage,
+  LBK_executeBookkeeping,
+  LBK_initialize,
+  LBK_formatReplyMessage,
+  LBK_validatePaymentMethod,
+  LBK_formatDateTime,
+  LBK_handleError,
+  LBK_checkStatisticsKeyword,
+  LBK_handleStatisticsRequest,
+  LBK_processDirectStatistics,
+  LBK_buildStatisticsQuickReply,
+  LBK_parsePaymentMethod,
 
-  // Statistics Functions (v1.3.0 New)
-  LBK_checkStatisticsKeyword: LBK_checkStatisticsKeyword,
-  LBK_handleStatisticsRequest: LBK_handleStatisticsRequest,
-  LBK_buildStatisticsQuickReply: LBK_buildStatisticsQuickReply,
-  LBK_processDirectStatistics: LBK_processDirectStatistics,
-  LBK_getDirectStatistics: LBK_getDirectStatistics,
-  LBK_formatStatisticsMessage: LBK_formatStatisticsMessage,
+  // 日誌函數
+  LBK_logDebug,
+  LBK_logInfo,
+  LBK_logWarning,
+  LBK_logError,
 
-  // New Payment Method Parsing Function
-  LBK_parsePaymentMethod: LBK_parsePaymentMethod,
-
-  // Version Information
-  MODULE_VERSION: "1.3.0",
-  MODULE_NAME: "LBK"
+  // 配置
+  LBK_CONFIG
 };
-
-// Export Module
-module.exports = LBK_MODULE;
