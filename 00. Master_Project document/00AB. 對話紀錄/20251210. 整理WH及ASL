@@ -32,6 +32,7 @@
 總體架構調整
 Before行為： WH → LBK → Firestore（直接記帳，無身份驗證）
 After行為： WH → AM(身份檢核) → LBK → Firestore（先驗證身份再記帳）
+
 階段一：重構WH模組整合AM身份檢核（Week 1）
 修改範圍：
 •	13. Replit_Module code_BL/1320. WH.js - 版本升級至v2.4.0
