@@ -1901,20 +1901,29 @@ async function LBK_getDirectStatistics(userId, period) {
       };
     }
 
-    // 計算統計資料
+    // 計算統計資料，過濾掉_init等非交易文檔
     let totalIncome = 0;
     let totalExpense = 0;
-    let recordCount = snapshot.size;
+    let recordCount = 0;
 
     snapshot.forEach(doc => {
+      // 過濾掉_init等系統文檔
+      if (doc.id === '_init' || doc.id.startsWith('_')) {
+        return;
+      }
+      
       const data = doc.data();
       const amount = parseFloat(data.amount || 0);
       const type = data.type;
 
-      if (type === 'income') {
-        totalIncome += amount;
-      } else if (type === 'expense') {
-        totalExpense += amount;
+      // 確保這是有效的交易記錄
+      if (type && amount > 0) {
+        recordCount++;
+        if (type === 'income') {
+          totalIncome += amount;
+        } else if (type === 'expense') {
+          totalExpense += amount;
+        }
       }
     });
 

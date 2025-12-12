@@ -1473,8 +1473,10 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       created_subcollections: subcollections
     };
     
-    // 為每個子集合建立一個初始化文檔以確保集合存在
-    for (const collection of subcollections) {
+    // 為非transactions子集合建立初始化文檔以確保集合存在
+    // transactions子集合不建立_init文檔，避免影響統計功能
+    const collectionsNeedInit = ['categories', 'wallets', 'budgets'];
+    for (const collection of collectionsNeedInit) {
       try {
         await db.collection('ledgers').doc(userLedgerId).collection(collection).doc('_init').set({
           initialized: true,
@@ -1486,6 +1488,9 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         console.warn(`⚠️ ${functionName}: 子集合 ${collection} 初始化警告: ${subcollectionError.message}`);
       }
     }
+    
+    // transactions子集合不建立_init文檔，保持空集合狀態
+    console.log(`✅ ${functionName}: transactions子集合保持空集合狀態（無_init文檔）`);
 
     if (!structureResult.success) {
       console.warn(`  - 1311.FS.js結構建立警告: ${structureResult.error || '未知錯誤'}`);
