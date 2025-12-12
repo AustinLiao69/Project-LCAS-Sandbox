@@ -473,6 +473,19 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
               LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
             }
           }
+          
+          // 新增：反向包含匹配（例如：停車費 可以匹配到 停車）
+          if (normalizedInput.includes(synonymLower) && synonymLower.length >= 2) {
+            if (!synonymMatch) { // 只在沒有精確匹配時使用
+              synonymMatch = {
+                majorCode: String(data.parentId || data.categoryId),
+                majorName: String(data.categoryName || ''),
+                subCode: String(data.categoryId || ''),
+                subName: String(data.subCategoryName || data.categoryName || '')
+              };
+              LBK_logDebug(`找到反向包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+            }
+          }
         }
       }
 
@@ -587,10 +600,11 @@ async function LBK_fuzzyMatch(input, threshold, userId, processId) {
               matchType: "synonym_contains_input"
             });
           } else if (inputLower.includes(synonym) && synonym.length >= 2) {
-            const score = (synonym.length / inputLower.length) * 0.8;
+            // 反向包含匹配，例如：停車費 → 停車，給予較高分數
+            const score = Math.min(0.95, (synonym.length / inputLower.length) * 0.95);
             matches.push({
               ...subject,
-              score: Math.min(0.8, score),
+              score: score,
               matchType: "input_contains_synonym"
             });
           }
