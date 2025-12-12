@@ -990,9 +990,7 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
              `支付方式：${resultData.paymentMethod}\n` +
              `時間：${currentDateTime}\n` +
              `科目：${resultData.description}\n` +
-             `備註：${remark}\n` +
-             `交易ID：${resultData.id}\n` +
-             `狀態：${resultData.status || 'active'}`;
+             `備註：${remark}`;
     } else {
       // 處理錯誤情況 - 統一使用7行詳細格式
       const errorMessage = options.error || "處理失敗";
