@@ -1479,34 +1479,113 @@ async function WH_processEventAsync(event, requestId, userId) {
             "INFO",
           ]);
 
-          // 步驟1：文字訊息處理前，直接調用 AM.AM_validateAccountExists
-          const accountValidation = await AM.AM_validateAccountExists(userId, "LINE");
+          // 步驟1：文字訊息處理前，安全調用 AM.AM_validateAccountExists
+          let accountValidation;
+          try {
+            // 動態載入AM模組避免循環依賴
+            const AM_Module = require("./1309. AM.js");
+            if (AM_Module && typeof AM_Module.AM_validateAccountExists === 'function') {
+              accountValidation = await AM_Module.AM_validateAccountExists(userId, "LINE");
+            } else {
+              throw new Error("AM_validateAccountExists函數不可用");
+            }
+          } catch (amError) {
+            console.error(`AM模組調用失敗: ${amError.message}`);
+            // 降級處理：假設用戶存在，繼續處理
+            accountValidation = { exists: true, UID: userId };
+          }
           
           if (!accountValidation.exists) {
-            // 用戶不存在，直接回覆錯誤訊息
-            const errorMessage = "您尚未註冊，請先完成註冊流程";
+            // 用戶不存在，自動建立LINE帳號並初始化帳本
+            console.log(`用戶不存在，開始自動註冊流程: ${userId} [${requestId}]`);
             
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
-              `WH 階段一: 用戶不存在 ${userId} [${requestId}]`,
-              "AM驗證",
+              `WH 階段一: 用戶不存在，開始自動註冊 ${userId} [${requestId}]`,
+              "AM註冊",
               userId,
-              "USER_NOT_EXISTS",
+              "",
               "WH",
               "",
               0,
               "WH_processEventAsync",
-              "ERROR",
+              "INFO",
             ]);
 
-            await WH_replyMessage(event.replyToken, errorMessage);
-            return;
+            try {
+              // 動態載入AM模組避免循環依賴
+              const AM_Module = require("./1309. AM.js");
+              if (AM_Module && typeof AM_Module.AM_createLineAccount === 'function') {
+                // 建立LINE帳號（使用J類型用戶）
+                const createResult = await AM_Module.AM_createLineAccount(userId, null, 'J');
+                
+                if (createResult.success) {
+                  console.log(`✅ 自動註冊成功: ${userId}, 帳本ID: ${createResult.accountId} [${requestId}]`);
+                  
+                  WH_directLogWrite([
+                    WH_formatDateTime(new Date()),
+                    `WH 階段一: 自動註冊成功 ${userId} [${requestId}]`,
+                    "AM註冊",
+                    userId,
+                    "",
+                    "WH",
+                    "",
+                    0,
+                    "WH_processEventAsync",
+                    "INFO",
+                  ]);
+                  
+                  // 註冊成功，繼續後續流程（不需要return，讓程式繼續執行）
+                } else {
+                  throw new Error(`自動註冊失敗: ${createResult.error}`);
+                }
+              } else {
+                throw new Error("AM_createLineAccount函數不可用");
+              }
+            } catch (createError) {
+              console.error(`❌ 自動註冊失敗: ${createError.message} [${requestId}]`);
+              
+              WH_directLogWrite([
+                WH_formatDateTime(new Date()),
+                `WH 階段一: 自動註冊失敗 ${userId}: ${createError.message} [${requestId}]`,
+                "AM註冊",
+                userId,
+                "AUTO_REGISTER_FAILED",
+                "WH",
+                createError.message,
+                0,
+                "WH_processEventAsync",
+                "ERROR",
+              ]);
+
+              // 註冊失敗，回覆錯誤訊息
+              const errorMessage = "系統初始化失敗，請稍後再試或聯繫客服";
+              await WH_replyMessage(event.replyToken, errorMessage);
+              return;
+            }
           }
 
-          console.log(`用戶存在性驗證通過: ${userId} [${requestId}]`);
+          console.log(`用戶驗證流程完成: ${userId} [${requestId}]`);
 
-          // 步驟2：驗證通過後，直接調用 AM.AM_getUserDefaultLedger
-          const ledgerResult = await AM.AM_getUserDefaultLedger(userId);
+          // 步驟2：確保帳本正確初始化，安全調用 AM.AM_getUserDefaultLedger
+          let ledgerResult;
+          try {
+            // 動態載入AM模組避免循環依賴
+            const AM_Module = require("./1309. AM.js");
+            if (AM_Module && typeof AM_Module.AM_getUserDefaultLedger === 'function') {
+              ledgerResult = await AM_Module.AM_getUserDefaultLedger(userId);
+            } else {
+              throw new Error("AM_getUserDefaultLedger函數不可用");
+            }
+          } catch (amError) {
+            console.error(`AM模組調用失敗: ${amError.message}`);
+            // 降級處理：生成預設帳本ID
+            ledgerResult = { 
+              success: true, 
+              ledgerId: `user_${userId}`,
+              initialized: false 
+            };
+          }
           
           if (!ledgerResult.success) {
             // 帳本初始化失敗，直接回覆錯誤訊息

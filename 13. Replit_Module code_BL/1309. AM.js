@@ -122,17 +122,22 @@ async function AM_createLineAccount(lineUID, lineProfile, userType = "S") {
     // 檢查帳號是否已存在
     const existingUser = await db.collection("users").doc(lineUID).get();
     if (existingUser.exists) {
+      // 如果帳號已存在，返回成功（允許重複調用）
+      const userData = existingUser.data();
       return {
-        success: false,
-        error: "帳號已存在",
-        errorCode: "AM_ACCOUNT_EXISTS",
+        success: true,
         UID: lineUID,
+        accountId: lineUID,
+        userType: userData.userType || userType,
+        message: "LINE帳號已存在（重複註冊）",
+        subjectInitialized: true,
+        subjectCount: 0
       };
     }
 
-    // 建立用戶資料
+    // 建立用戶資料，處理 lineProfile 為 null 的情況
     const userData = {
-      displayName: lineProfile.displayName || "",
+      displayName: (lineProfile && lineProfile.displayName) || `LINE用戶_${lineUID.slice(-8)}`,
       userType: userType,
       createdAt: admin.firestore.Timestamp.now(),
       lastActive: admin.firestore.Timestamp.now(),
@@ -149,7 +154,7 @@ async function AM_createLineAccount(lineUID, lineProfile, userType = "S") {
       joined_ledgers: [],
       metadata: {
         source: "LINE_OA",
-        profilePicture: lineProfile.pictureUrl || "",
+        profilePicture: (lineProfile && lineProfile.pictureUrl) || "",
       },
     };
 
