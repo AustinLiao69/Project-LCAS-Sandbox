@@ -106,7 +106,7 @@ const WH_CONFIG = {
 // Quick Reply 配置
 const WH_QUICK_REPLY_CONFIG = {
   MAX_ITEMS: 4,
-  STATISTICS_KEYWORDS: ['今日統計', '本週統計', '本月統計'],
+  STATISTICS_KEYWORDS: ['本日統計', '本週統計', '本月統計'],
   PREMIUM_KEYWORDS: ['upgrade_premium', '試用', '功能介紹'],
   REMINDER_KEYWORDS: ['setup_daily_reminder', 'setup_weekly_reminder', 'setup_monthly_reminder']
 };
@@ -2475,7 +2475,7 @@ function WH_buildHelpMessage() {
       "1. 直接輸入訊息即可快速記帳，例如：'午餐-100'\n" +
       "2. 支援自定義科目，例如：'交通-50'\n" +
       "3. 輸入 '幫助' 或 '?' 獲取使用說明\n" +
-      "4. 輸入 '今日統計'、'本週統計'、'本月統計' 查詢統計資訊"
+      "4. 輸入 '本日統計'、'本週統計'、'本月統計' 查詢統計資訊"
   };
 }
 
