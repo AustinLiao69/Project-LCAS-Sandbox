@@ -1571,43 +1571,21 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       // 2. 調用WCM模組進行帳戶初始化（強化版本，確保預設錢包創建成功）
       console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
       
-      // 強制執行錢包初始化，確保預設錢包創建成功
-      let walletInitSuccess = false;
-      
       // 優先使用WCM模組
       if (WCM && typeof WCM.WCM_createWallet === 'function') {
         console.log(`📦 ${functionName}: 使用WCM模組創建預設錢包...`);
-        try {
-          const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
-          if (walletResult.success) {
-            walletCount = walletResult.data.totalWallets || 0;
-            console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
-            walletInitSuccess = true;
-            
-            // 驗證錢包是否真的創建成功
-            const verifyWallets = await db.collection(`ledgers/${userLedgerId}/wallets`).get();
-            const actualWalletCount = verifyWallets.size;
-            console.log(`🔍 ${functionName}: 驗證錢包創建結果，實際錢包數量: ${actualWalletCount}`);
-            if (actualWalletCount === 0) {
-              console.warn(`⚠️ ${functionName}: WCM模組回報成功但實際無錢包，執行備用方案`);
-              walletInitSuccess = false;
-            }
-          } else {
-            console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message || walletResult.message}`);
-            walletInitSuccess = false;
-          }
-        } catch (wcmError) {
-          console.error(`❌ ${functionName}: WCM模組調用異常: ${wcmError.message}`);
-          walletInitSuccess = false;
+        const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
+        if (walletResult.success) {
+          walletCount = walletResult.data.totalWallets || 0;
+          console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
+        } else {
+          console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message || walletResult.message}`);
+          // WCM失敗時強制使用備用方案
+          console.log(`🔄 ${functionName}: 強制執行備用帳戶初始化...`);
+          await executeBackupWalletInitialization();
         }
       } else {
-        console.warn(`⚠️ ${functionName}: WCM模組不可用`);
-        walletInitSuccess = false;
-      }
-      
-      // 如果WCM失敗，強制執行備用方案
-      if (!walletInitSuccess) {
-        console.log(`🔄 ${functionName}: 強制執行備用帳戶初始化...`);
+        console.warn(`⚠️ ${functionName}: WCM模組不可用，直接使用備用帳戶初始化`);
         await executeBackupWalletInitialization();
       }
 

@@ -386,7 +386,7 @@ const BK_CONFIG = {
   VERSION: getEnvVar('BK_VERSION') || '3.3.3', // 階段一修復：版本升級
   MAX_AMOUNT: parseInt(getEnvVar('BK_MAX_AMOUNT'), 10) || Number.MAX_SAFE_INTEGER,
   DEFAULT_CURRENCY: getEnvVar('DEFAULT_CURRENCY') || detectSystemCurrency(),
-  // 移除hardcoded預設支付方式，改為從用戶錢包動態取得
+  DEFAULT_PAYMENT_METHOD: getEnvVar('DEFAULT_PAYMENT_METHOD') || '現金',
   BATCH_SIZE: parseInt(getEnvVar('BK_BATCH_SIZE', '10'), 10),
   MAX_CONCURRENCY: parseInt(getEnvVar('BK_MAX_CONCURRENCY', '5'), 10),
   DESCRIPTION_MAX_LENGTH: parseInt(getEnvVar('BK_DESC_MAX_LENGTH', '200'), 10),
@@ -638,7 +638,7 @@ async function BK_createTransaction(transactionData) {
       categoryId: transactionData.categoryId,
       accountId: transactionData.accountId,
       ledgerId: ledgerId, // 使用AM模組提供的正確帳本ID
-      paymentMethod: transactionData.paymentMethod || 'cash', // 使用傳入的支付方式或預設為cash type
+      paymentMethod: defaultConfig.defaultPaymentMethod,
       date: transactionData.date,
       userId: transactionData.userId,
       processId: processId
