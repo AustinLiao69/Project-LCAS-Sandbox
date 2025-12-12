@@ -41,11 +41,11 @@ try {
 // 關鍵修復：增強FS模組安全載入，檢查index.js設置的全域狀態
 try {
   FS = require("./1311. FS.js");
-  
+
   // 檢查index.js設置的FS模組就緒狀態
   const fsModuleReady = global.FS_MODULE_READY || false;
   const fsPartialAvailable = global.FS_PARTIAL_AVAILABLE || false;
-  
+
   if (fsModuleReady && FS && typeof FS.FS_getDocument === 'function') {
     console.log("FS模組載入成功，全功能可用 (index.js驗證通過)");
   } else if (fsPartialAvailable && FS) {
@@ -78,18 +78,18 @@ let admin, db;
 try {
   // 取得Firebase Admin實例
   admin = firebaseConfig.admin;
-  
+
   // 初始化Firebase（如果尚未初始化）
   firebaseConfig.initializeFirebaseAdmin();
-  
+
   // 取得 Firestore 實例
   db = firebaseConfig.getFirestoreInstance();
-  
+
   console.log("✅ WH模組：Firebase動態配置初始化成功");
-  
+
 } catch (error) {
   console.error("❌ WH模組：Firebase動態配置初始化失敗:", error.message);
-  
+
   // 檢查環境變數設定狀態
   const envCheck = firebaseConfig.checkEnvironmentVariables();
   if (!envCheck.isComplete) {
@@ -449,7 +449,7 @@ async function processWebhookAsync(e) {
               const fsModuleReady = global.FS_MODULE_READY || false;
               const hasFS = FS && typeof FS === 'object';
               const hasFSFunction = hasFS && typeof FS.FS_getDocument === 'function';
-              
+
               if (fsModuleReady && hasFS && hasFSFunction) {
                 // FS模組完全可用，執行正常去重檢查
                 try {
@@ -924,7 +924,7 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
   try {
     // 擴展格式驗證：支援字串訊息和格式化物件訊息
     let isValidFormat = false;
-    
+
     if (typeof message === 'string') {
       // 直接接受字串格式
       isValidFormat = true;
@@ -932,8 +932,8 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
       // 檢查是否為有效的格式化物件
       if (message.responseMessage || message.message) {
         isValidFormat = true;
-      } else if (message.moduleCode === 'BK' || message.moduleCode === 'LBK' || 
-                message.module === 'BK' || message.module === 'LBK') {
+      } else if (message.moduleCode === 'BK' || message.module === 'BK' || 
+                message.moduleCode === 'LBK' || message.module === 'LBK') {
         isValidFormat = true;
       }
     }
@@ -1093,7 +1093,7 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
       console.log(`WH_replyMessage: 未知訊息類型: ${typeof message}`);
     }
 
-    // 3. 確保消息不超過LINE的最大長度
+    // 3. 確保消息不超過LINE Makarna長度
     const maxLength = 5000; // LINE消息最大長度
     if (textMessage.length > maxLength) {
       console.log(
@@ -1347,7 +1347,7 @@ async function WH_callLBKSafely(inputData) {
 
   } catch (error) {
     console.log(`WH_callLBKSafely 調用失敗: ${error.toString()}`);
-    
+
     // 返回標準格式的錯誤回覆
     const currentDateTime = new Date().toLocaleString("zh-TW", {
       timeZone: "Asia/Taipei",
@@ -1404,7 +1404,7 @@ async function WH_processEventAsync(event, requestId, userId) {
     ]);
     return;
   }
-  
+
   if (!event.type) {
     console.log(`事件缺少type屬性: ${JSON.stringify(event)} [${requestId}]`);
     WH_directLogWrite([
@@ -1421,7 +1421,7 @@ async function WH_processEventAsync(event, requestId, userId) {
     ]);
     return;
   }
-  
+
   // 確保userId存在
   if (!userId) {
     console.log(`缺少用戶ID: ${JSON.stringify(event)} [${requestId}]`);
@@ -2405,20 +2405,32 @@ async function WH_handleWebhook(event, reqId) {
       messageText = event.message.text;
       WH_logInfo(`用戶發送文字訊息: ${messageText}`, "處理訊息", userId, "", "", functionName);
 
-      // 檢查是否為Quick Reply統計查詢
-      if (WH_QUICK_REPLY_CONFIG.STATISTICS_KEYWORDS.includes(messageText)) {
-        await WH_handleQuickReplyEvent(userId, messageText, { messageText }, event);
+      // 先調用AM模組進行用戶驗證和帳本初始化
+      const userValidation = await AM.AM_validateAccountExists(userId, "LINE");
+
+      if (!userValidation.exists) {
+        // 用戶不存在，自動建立帳號
+        const createResult = await AM.AM_createLineAccount(userId, null, 'J');
+        if (!createResult.success) {
+          await WH_replyMessage(event.replyToken, [{
+            type: 'text',
+            text: '系統初始化失敗，請稍後再試'
+          }]);
+          return;
+        }
+      }
+
+      // 確保用戶帳本完整初始化
+      const ledgerResult = await AM.AM_getUserDefaultLedger(userId);
+      if (!ledgerResult.success) {
+        await WH_replyMessage(event.replyToken, [{
+          type: 'text',
+          text: '帳本初始化失敗，請稍後再試'
+        }]);
         return;
       }
 
-      // 添加特殊指令檢查 - 輸入「?」時觸發使用說明
-      if (messageText === '?') {
-        const helpMessage = WH_buildHelpMessage();
-        await WH_replyMessage(event.replyToken, [helpMessage]);
-        return;
-      }
-
-      // 先嘗試使用 LBK 快速記帳處理
+      // AM驗證完成後，調用LBK處理記帳
       await WH_processTextMessageWithLBK(userId, messageText, event.replyToken, event);
 
     } else if (eventType === 'postback') {
@@ -2427,7 +2439,7 @@ async function WH_handleWebhook(event, reqId) {
 
       // 檢查是否為SR模組相關的Quick Reply postback
       if (WH_isQuickReplyPostback(postbackData)) {
-        await WH_handleQuickReplyEvent(userId, postbackData, { postbackData }, event);
+        await WH_handleQuickReplyEvent(event);
       } else {
         // 處理其他 postback 事件的邏輯
         await WH_handlePostbackEvent(userId, postbackData, event);
@@ -2537,4 +2549,3 @@ async function WH_sendPushMessage(userId, message, messageType = 'text') {
 
 
 // ✅ 健康檢查API已移除 - 由index.js統一提供
-
