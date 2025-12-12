@@ -388,9 +388,6 @@ function LBK_extractAmount(text, processId) {
 async function LBK_getSubjectCode(subjectName, userId, processId) {
   try {
     LBK_logDebug(`查詢科目代碼: "${subjectName}" [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
-    
-    // 記錄同義詞匹配過程
-    LBK_logDebug(`開始同義詞匹配，輸入: "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
 
     if (!subjectName || !userId) {
       throw new Error("科目名稱或用戶ID為空");
@@ -401,6 +398,9 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
 
     const ledgerId = `user_${userId}`;
     const normalizedInput = String(subjectName).trim().toLowerCase();
+    
+    // 記錄同義詞匹配過程
+    LBK_logDebug(`開始同義詞匹配，輸入: "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
 
     const snapshot = await db.collection("ledgers").doc(ledgerId).collection("categories").where("isActive", "==", true).get();
 
