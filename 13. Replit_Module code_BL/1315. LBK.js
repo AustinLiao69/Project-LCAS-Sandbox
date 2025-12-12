@@ -1972,8 +1972,6 @@ function LBK_formatStatisticsMessage(period, statsData) {
 📈 淨額：${balance >= 0 ? '+' : ''}${balance}元
 📝 筆數：${recordCount}筆
 
-${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
-}
 
 /**
  * 解析支付方式 - 動態從用戶錢包取得
