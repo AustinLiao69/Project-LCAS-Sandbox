@@ -1405,37 +1405,36 @@ function BK_validateTransactionData(data) {
 }
 
 /**
- * 10. 生成唯一交易ID - 支援POST相關端點（使用FS.js標準格式）
- * @version 2025-10-08-V3.2.0
- * @date 2025-10-08
- * @update: 使用1311.FS.js標準ID生成格式，確保單一真實來源
+ * 10. 生成唯一交易ID - 支援POST相關端點（使用毫秒時間戳格式）
+ * @version 2025-12-12-V3.4.0
+ * @date 2025-12-12
+ * @update: 簡化ID格式為純毫秒時間戳
  */
 async function BK_generateTransactionId(processId) {
   const logPrefix = `[${processId}] BK_generateTransactionId:`;
 
   try {
-    // 使用FS.js的標準ID生成格式
+    // 使用毫秒時間戳作為交易ID
     const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8);
-    const transactionId = `txn_${timestamp}_${random}`;
+    const transactionId = timestamp.toString();
 
     // 檢查唯一性
     const uniqueCheck = await BK_checkTransactionIdUnique(transactionId);
     if (!uniqueCheck.success) {
-      // 如果重複，生成新的ID
-      const newRandom = Math.random().toString(36).substring(2, 8);
-      const fallbackId = `txn_${Date.now()}_${newRandom}`;
+      // 如果重複，等待1毫秒後重新生成
+      await new Promise(resolve => setTimeout(resolve, 1));
+      const fallbackId = Date.now().toString();
       BK_logWarning(`${logPrefix} 交易ID重複，使用備用ID: ${fallbackId}`, "ID生成", "", "BK_generateTransactionId");
       return fallbackId;
     }
 
-    BK_logInfo(`${logPrefix} 交易ID生成成功（FS標準格式）: ${transactionId}`, "ID生成", "", "BK_generateTransactionId");
+    BK_logInfo(`${logPrefix} 交易ID生成成功（毫秒時間戳格式）: ${transactionId}`, "ID生成", "", "BK_generateTransactionId");
     return transactionId;
 
   } catch (error) {
     BK_logError(`${logPrefix} 交易ID生成失敗: ${error.toString()}`, "ID生成", "", "ID_GENERATION_ERROR", error.toString(), "BK_generateTransactionId");
-    // 使用FS.js標準格式的備用ID
-    const fallbackId = `txn_${Date.now()}_backup`;
+    // 備用ID使用當前時間戳
+    const fallbackId = Date.now().toString();
     return fallbackId;
   }
 }

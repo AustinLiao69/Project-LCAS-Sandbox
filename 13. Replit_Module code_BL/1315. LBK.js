@@ -805,17 +805,16 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
 }
 
 /**
- * 09. 生成唯一記帳ID - 使用與BK模組一致的格式
- * @version 2025-12-12-V1.3.1
+ * 09. 生成唯一記帳ID - 使用毫秒時間戳格式
+ * @version 2025-12-12-V1.3.2
  * @date 2025-12-12 12:00:00
- * @description 生成格式為txn_timestamp_random的唯一記帳ID，與BK模組保持一致
+ * @description 生成格式為毫秒時間戳的唯一記帳ID，與BK模組保持一致
  */
 async function LBK_generateBookkeepingId(userId, processId) {
   try {
-    // 使用與BK模組相同的ID生成格式
+    // 使用毫秒時間戳作為交易ID
     const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8);
-    const transactionId = `txn_${timestamp}_${random}`;
+    const transactionId = timestamp.toString();
 
     // 檢查ID唯一性
     await LBK_initializeFirestore();
@@ -831,21 +830,21 @@ async function LBK_generateBookkeepingId(userId, processId) {
       .get();
 
     if (!existingDoc.empty) {
-      // 如果ID重複，生成新的ID
-      const newRandom = Math.random().toString(36).substring(2, 8);
-      const fallbackId = `txn_${Date.now()}_${newRandom}`;
+      // 如果ID重複，等待1毫秒後重新生成
+      await new Promise(resolve => setTimeout(resolve, 1));
+      const fallbackId = Date.now().toString();
       LBK_logWarning(`記帳ID重複，使用備用ID: ${fallbackId} [${processId}]`, "ID生成", userId, "LBK_generateBookkeepingId");
       return fallbackId;
     }
 
-    LBK_logInfo(`記帳ID生成成功（BK標準格式）: ${transactionId} [${processId}]`, "ID生成", userId, "LBK_generateBookkeepingId");
+    LBK_logInfo(`記帳ID生成成功（毫秒時間戳格式）: ${transactionId} [${processId}]`, "ID生成", userId, "LBK_generateBookkeepingId");
     return transactionId;
 
   } catch (error) {
     LBK_logError(`生成記帳ID失敗: ${error.toString()} [${processId}]`, "ID生成", userId, "ID_GEN_ERROR", error.toString(), "LBK_generateBookkeepingId");
 
-    // 備用ID生成（使用BK標準格式）
-    const fallbackId = `txn_${Date.now()}_backup`;
+    // 備用ID生成（使用毫秒時間戳）
+    const fallbackId = Date.now().toString();
     return fallbackId;
   }
 }
@@ -1051,7 +1050,8 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
              `支付方式：${resultData.paymentMethod}\n` +
              `時間：${currentDateTime}\n` +
              `科目：${subjectDisplay}\n` +
-             `備註：${remark}`;
+             `備註：${remark}\n` +
+             `收支ID：${resultData.id}`;
       return replyText;
     } else {
       // 處理錯誤情況 - 統一使用7行詳細格式
