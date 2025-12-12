@@ -1621,14 +1621,14 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
 
     // LBK獨立的統計關鍵字配置
     const statisticsKeywords = {
-      '今日統計': { type: 'daily', postbackData: '今日統計' },
+      '本日統計': { type: 'daily', postbackData: '本日統計' },
       '本週統計': { type: 'weekly', postbackData: '本週統計' },
       '本月統計': { type: 'monthly', postbackData: '本月統計' },
       '週統計': { type: 'weekly', postbackData: '本週統計' },
       '月統計': { type: 'monthly', postbackData: '本月統計' },
-      '統計': { type: 'daily', postbackData: '今日統計' },
-      'stats': { type: 'daily', postbackData: '今日統計' },
-      'today': { type: 'daily', postbackData: '今日統計' },
+      '統計': { type: 'daily', postbackData: '本日統計' },
+      'stats': { type: 'daily', postbackData: '本日統計' },
+      'today': { type: 'daily', postbackData: '本日統計' },
       'week': { type: 'weekly', postbackData: '本週統計' },
       'month': { type: 'monthly', postbackData: '本月統計' }
     };
@@ -1669,12 +1669,12 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
 
     // 建構postbackData
     const postbackDataMap = {
-      'daily': '今日統計',
+      'daily': '本日統計',
       'weekly': '本週統計',
       'monthly': '本月統計'
     };
 
-    const postbackData = postbackDataMap[statisticsType] || '今日統計';
+    const postbackData = postbackDataMap[statisticsType] || '本日統計';
 
     // 調用內部統計處理函數
     const statsResult = await LBK_processDirectStatistics(inputData.userId, postbackData);
@@ -1739,7 +1739,7 @@ function LBK_buildStatisticsQuickReply(userId, currentType) {
 
     // LBK獨立的統計選項配置
     const statisticsOptions = [
-      { type: 'daily', label: '今日統計', postbackData: '今日統計' },
+      { type: 'daily', label: '本日統計', postbackData: '本日統計' },
       { type: 'weekly', label: '本週統計', postbackData: '本週統計' },
       { type: 'monthly', label: '本月統計', postbackData: '本月統計' }
     ];
@@ -1756,7 +1756,7 @@ function LBK_buildStatisticsQuickReply(userId, currentType) {
 
     // 確保至少有一個選項
     if (quickReplyItems.length === 0) {
-      quickReplyItems.push({ label: '今日統計', postbackData: '今日統計' });
+      quickReplyItems.push({ label: '本日統計', postbackData: '本日統計' });
     }
 
     // 添加記帳相關快速操作
@@ -1776,7 +1776,7 @@ function LBK_buildStatisticsQuickReply(userId, currentType) {
 
     return {
       type: 'quick_reply',
-      items: [{ label: '今日統計', postbackData: '今日統計' }],
+      items: [{ label: '本日統計', postbackData: '本日統計' }],
       source: 'LBK_fallback'
     };
   }
@@ -1798,7 +1798,7 @@ async function LBK_processDirectStatistics(userId, postbackData) {
 
     // 根據 postback 資料取得對應統計
     switch (postbackData) {
-      case '今日統計':
+      case '本日統計':
         period = 'today';
         statsResult = await LBK_getDirectStatistics(userId, 'daily');
         break;
