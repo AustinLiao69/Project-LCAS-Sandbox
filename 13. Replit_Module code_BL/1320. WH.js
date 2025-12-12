@@ -1502,28 +1502,15 @@ async function WH_processEventAsync(event, requestId, userId) {
           "INFO",
         ]);
 
-        // 準備分發參數 - 明確包含replyToken
-        const messageData = {
-          text: text,
-          userId: userId,
-          timestamp: event.timestamp,
-          replyToken: event.replyToken, // 確保replyToken被傳遞
-        };
-
-        // 記錄完整的消息數據
-        console.log(
-          `準備訊息數據: ${JSON.stringify(messageData)} [${requestId}]`,
-        );
-
         // 根據事件類型實現完全路徑分離
         try {
-          // 強制路徑分離：所有 LINE 文字訊息走 LBK 直連路徑
-          console.log(`LINE文字訊息強制走LBK直連路徑 [${requestId}]`);
+          // 階段一：實施WH→AM→LBK直接轉發流程
+          console.log(`開始AM用戶驗證流程 [${requestId}]`);
 
           WH_directLogWrite([
             WH_formatDateTime(new Date()),
-            `WH 2.0.20: LINE文字訊息強制走LBK直連路徑，不經過DD模組 [${requestId}]`,
-            "LBK簡化路徑",
+            `WH 階段一: 開始AM用戶驗證流程 [${requestId}]`,
+            "AM驗證",
             userId,
             "",
             "WH",
@@ -1533,13 +1520,79 @@ async function WH_processEventAsync(event, requestId, userId) {
             "INFO",
           ]);
 
-          // 準備 LBK 處理所需的數據
+          // 步驟1：文字訊息處理前，直接調用 AM.AM_validateAccountExists
+          const accountValidation = await AM.AM_validateAccountExists(userId, "LINE");
+          
+          if (!accountValidation.exists) {
+            // 用戶不存在，直接回覆錯誤訊息
+            const errorMessage = "您尚未註冊，請先完成註冊流程";
+            
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 階段一: 用戶不存在 ${userId} [${requestId}]`,
+              "AM驗證",
+              userId,
+              "USER_NOT_EXISTS",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "ERROR",
+            ]);
+
+            await WH_replyMessage(event.replyToken, errorMessage);
+            return;
+          }
+
+          console.log(`用戶存在性驗證通過: ${userId} [${requestId}]`);
+
+          // 步驟2：驗證通過後，直接調用 AM.AM_getUserDefaultLedger
+          const ledgerResult = await AM.AM_getUserDefaultLedger(userId);
+          
+          if (!ledgerResult.success) {
+            // 帳本初始化失敗，直接回覆錯誤訊息
+            const errorMessage = "帳本初始化失敗，請稍後再試";
+            
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 階段一: 帳本初始化失敗 ${userId}: ${ledgerResult.error} [${requestId}]`,
+              "AM驗證",
+              userId,
+              "LEDGER_INIT_FAILED",
+              "WH",
+              ledgerResult.error,
+              0,
+              "WH_processEventAsync",
+              "ERROR",
+            ]);
+
+            await WH_replyMessage(event.replyToken, errorMessage);
+            return;
+          }
+
+          console.log(`用戶帳本驗證通過: ${ledgerResult.ledgerId} [${requestId}]`);
+
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 階段一: AM驗證完成，轉發至LBK處理記帳 [${requestId}]`,
+            "AM→LBK轉發",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO",
+          ]);
+
+          // 步驟3：初始化完成後，轉發給 LBK 處理記帳
           const lbkInputData = {
             userId: userId,
             messageText: text,
             replyToken: event.replyToken,
             timestamp: event.timestamp,
-            processId: requestId
+            processId: requestId,
+            ledgerId: ledgerResult.ledgerId // 傳遞已驗證的帳本ID
           };
 
           // 動態載入LBK模組並調用處理函數
