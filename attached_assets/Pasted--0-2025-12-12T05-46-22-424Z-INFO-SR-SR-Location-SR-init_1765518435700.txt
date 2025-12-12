@@ -1,0 +1,66 @@
+  已載入 0 個排程設定
+[2025-12-12T05:46:22.424Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+✅ SR 模組初始化完成
+📅 已載入 0 個排程設定
+[2025-12-12T05:46:22.427Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+✅ WH模組初始化等待完成
+✅ LBK模組初始化完成
+✅ LBK 模組初始化完成
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [0cdeec1c] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [0cdeec1c]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [0cdeec1c] (INFO)
+開始非同步處理請求 [0cdeec1c]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [0cdeec1c] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [0cdeec1c] (INFO)
+處理消息事件: text [0cdeec1c]
+收到文本消息: "飯糰4649486" [0cdeec1c]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "飯糰4649486" [0cdeec1c] (INFO)
+開始AM用戶驗證流程 [0cdeec1c]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [0cdeec1c] (INFO)
+[2025-12-12T05:46:44.575Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [0cdeec1c]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [0cdeec1c]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [0cdeec1c] (INFO)
+[INFO] [LBK] 開始處理LINE OA請求 [0cdeec1c] | 智慧路由 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_processQuickBookkeeping
+[DEBUG] [LBK] 使用LBK獨立統計關鍵字配置 [0cdeec1c] | 關鍵字檢核 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_checkStatisticsKeyword
+[INFO] [LBK] 執行記帳處理流程 [0cdeec1c] | 快速記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_processQuickBookkeeping
+[DEBUG] [LBK] 解析用戶訊息: "飯糰4649486" [0cdeec1c] | 訊息解析 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_parseUserMessage
+[DEBUG] [LBK] 開始解析格式: "飯糰4649486" [0cdeec1c] | 格式解析 |  | LBK_parseInputFormat
+[DEBUG] [LBK] 提取金額: "飯糰4649486" [0cdeec1c] | 金額提取 |  | LBK_extractAmount
+[DEBUG] [LBK] 開始識別科目: "飯糰" | 科目識別 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_identifySubject
+[DEBUG] [LBK] 查詢科目代碼: "飯糰" [0cdeec1c] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_getSubjectCode
+[ERROR] [LBK] 查詢科目代碼失敗: ReferenceError: Cannot access 'normalizedInput' before initialization [0cdeec1c] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | SUBJECT_ERROR | ReferenceError: Cannot access 'normalizedInput' before initialization | LBK_getSubjectCode
+[ERROR] [LBK] 識別科目失敗: ReferenceError: Cannot access 'normalizedInput' before initialization | 科目識別 | Uae47d9d496e4596d70ed724a7d6e2948 | IDENTIFY_ERROR | ReferenceError: Cannot access 'normalizedInput' before initialization | LBK_identifySubject
+[ERROR] [LBK] 科目識別失敗: 飯糰 | 訊息解析 | Uae47d9d496e4596d70ed724a7d6e2948 | SUBJECT_NOT_FOUND | ReferenceError: Cannot access 'normalizedInput' before initialization | LBK_parseUserMessage
+DD_distributeData處理完成，結果預覽: {"success":false,"hasResponseMessage":true,"responseMsgLength":82,"errorType":"SUBJECT_NOT_FOUND","moduleCode":"LBK","hasPartialData":false} [0cdeec1c]
+準備回覆已驗證的訊息 [0cdeec1c]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","processingTime","moduleVersion","errorType"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"message":"記帳失敗！\n金額：4649486元\n支付方式：未指定\n時間：2025/12/12 下午01:46\n科目：飯糰\n備註：飯糰4649486\n錯誤原因：找不到科目: 飯糰","responseMessage":"記帳失敗！\n金額：4649486元\n支付方式：未指定\n時間：2025/12/12 下午01:46\n科目：飯糰\n備註：...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=82
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (記帳失敗！
+金額：4649486元
+支付方式：未指定
+時間：...)
+WH_replyMessage: 開始回覆訊息: 記帳失敗！
+金額：4649486元
+支付方式：未指定
+時間：2025/12/12 下午01:46
+科...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳失敗！
+金額：4649486元
+支付方式：未指定
+時間：2025/12/12 下午01:46
+科... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+訊息回覆結果: {} [0cdeec1c]
+非同步處理完成，已清理數據 [0cdeec1c]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [0cdeec1c] (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)

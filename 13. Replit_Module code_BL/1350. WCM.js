@@ -147,8 +147,14 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
       WCM_logInfo(`執行預設帳戶建立至帳本: ${ledgerId}`, "建立預設帳戶", walletData.userId, functionName);
 
       const defaultConfigs = WCM_loadDefaultConfigs();
-      if (!defaultConfigs.success || !defaultConfigs.configs.wallets) {
+      if (!defaultConfigs.success) {
+        WCM_logWarning(`載入預設配置失敗: ${defaultConfigs.error}`, "建立預設帳戶", walletData.userId, functionName);
         return WCM_formatErrorResponse("LOAD_CONFIG_FAILED", "載入預設帳戶配置失敗", defaultConfigs.error);
+      }
+      
+      if (!defaultConfigs.configs || !defaultConfigs.configs.wallets) {
+        WCM_logWarning("預設配置中缺少錢包配置", "建立預設帳戶", walletData.userId, functionName);
+        return WCM_formatErrorResponse("LOAD_CONFIG_FAILED", "載入預設帳戶配置失敗: 缺少錢包配置", "錢包配置不存在");
       }
 
       const db = admin.firestore();
@@ -864,16 +870,23 @@ function WCM_loadDefaultConfigs() {
     // 載入預設帳戶配置
     const walletConfigPath = path.join(configBasePath, '0302. Default_wallet.json');
     if (fs.existsSync(walletConfigPath)) {
-      let configContent = fs.readFileSync(walletConfigPath, 'utf8');
-      configContent = configContent
-        .replace(/\/\*\*[\s\S]*?\*\//g, '')
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        .replace(/\/\/.*$/gm, '')
-        .replace(/^\s*[\r\n]/gm, '')
-        .trim();
-      const walletConfig = JSON.parse(configContent);
-      configs.wallets = walletConfig;
-      WCM_logInfo(`載入預設帳戶配置: ${walletConfig.default_wallets.length} 個帳戶`, "載入預設配置", "", functionName);
+      try {
+        let configContent = fs.readFileSync(walletConfigPath, 'utf8');
+        configContent = configContent
+          .replace(/\/\*\*[\s\S]*?\*\//g, '')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/.*$/gm, '')
+          .replace(/^\s*[\r\n]/gm, '')
+          .trim();
+        const walletConfig = JSON.parse(configContent);
+        configs.wallets = walletConfig;
+        const walletCount = walletConfig.default_wallets ? walletConfig.default_wallets.length : 0;
+        WCM_logInfo(`載入預設帳戶配置: ${walletCount} 個帳戶`, "載入預設配置", "", functionName);
+      } catch (parseError) {
+        WCM_logError(`解析預設帳戶配置失敗: ${parseError.message}`, "載入預設配置", "", "WALLET_CONFIG_PARSE_ERROR", parseError.toString(), functionName);
+      }
+    } else {
+      WCM_logWarning(`預設帳戶配置檔案不存在: ${walletConfigPath}`, "載入預設配置", "", functionName);
     }
 
     // 載入貨幣配置

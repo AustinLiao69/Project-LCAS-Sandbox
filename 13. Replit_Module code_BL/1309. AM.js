@@ -255,21 +255,7 @@ async function AM_createLineAccount(lineUID, lineProfile, userType = "S") {
     // 寫入 Firestore
     await db.collection("users").doc(lineUID).set(userData);
 
-    // 建立帳號映射記錄
-    const mappingData = {
-      primary_UID: lineUID,
-      platform_accounts: {
-        LINE: lineUID,
-        iOS: "",
-        Android: "",
-      },
-      email: "",
-      created_at: admin.firestore.Timestamp.now(),
-      updated_at: admin.firestore.Timestamp.now(),
-      status: "active",
-    };
-
-    await db.collection("account_mappings").doc(lineUID).set(mappingData);
+    // 跨平台帳號映射已整合在users集合的linkedAccounts欄位中，遵循0070規範
 
     // 初始化用戶科目數據
     const subjectInit = await AM_initializeUserSubjects(lineUID);
@@ -343,21 +329,7 @@ async function AM_createAppAccount(platform, appProfile, deviceInfo) {
 
     await db.collection("users").doc(primaryUID).set(userData);
 
-    // 建立帳號映射
-    const mappingData = {
-      primary_UID: primaryUID,
-      platform_accounts: {
-        LINE: "",
-        iOS: platform === "iOS" ? platformUID : "",
-        Android: platform === "Android" ? platformUID : "",
-      },
-      email: appProfile.email || "",
-      created_at: admin.firestore.Timestamp.now(),
-      updated_at: admin.firestore.Timestamp.now(),
-      status: "active",
-    };
-
-    await db.collection("account_mappings").doc(primaryUID).set(mappingData);
+    // 跨平台帳號映射已整合在users集合的linkedAccounts欄位中，遵循0070規範
 
     await DL.DL_log(
       "AM",
@@ -420,27 +392,7 @@ async function AM_linkCrossPlatformAccounts(primaryUID, linkedAccountInfo) {
       updatedAt: admin.firestore.Timestamp.now(),
     });
 
-    // 更新帳號映射
-    const mappingDoc = await db
-      .collection("account_mappings")
-      .doc(primaryUID)
-      .get();
-    if (mappingDoc.exists) {
-      const mappingData = mappingDoc.data();
-      const updatedPlatformAccounts = {
-        ...mappingData.platform_accounts,
-        LINE: linkedAccountInfo.LINE_UID || mappingData.platform_accounts.LINE,
-        iOS: linkedAccountInfo.iOS_UID || mappingData.platform_accounts.iOS,
-        Android:
-          linkedAccountInfo.Android_UID ||
-          mappingData.platform_accounts.Android,
-      };
-
-      await db.collection("account_mappings").doc(primaryUID).update({
-        platform_accounts: updatedPlatformAccounts,
-        updated_at: admin.firestore.Timestamp.now(),
-      });
-    }
+    // 跨平台帳號映射已完全整合在users集合的linkedAccounts欄位中
 
     await DL.DL_info(
       "AM",
@@ -611,11 +563,7 @@ async function AM_deactivateAccount(UID, deactivationReason, transferData) {
       lastActive: userData.lastActive,
     });
 
-    // 更新帳號映射狀態
-    await db.collection("account_mappings").doc(UID).update({
-      status: "deactivated",
-      updated_at: admin.firestore.Timestamp.now(),
-    });
+    // 帳號狀態已統一在users集合管理，遵循0070規範
 
     if (DL && typeof DL.DL_error === 'function') {
       try {
@@ -729,30 +677,26 @@ async function AM_validateAccountExists(identifier, platform = "LINE") {
     if (platform === "LINE") {
       userDoc = await db.collection("users").doc(identifier).get();
     } else if (platform === "email") {
-      // 透過 email 查詢 account_mappings
-      const mappingQuery = await db
-        .collection("account_mappings")
+      // 直接查詢users集合，遵循0070規範
+      const emailQuery = await db
+        .collection("users")
         .where("email", "==", identifier)
         .limit(1)
         .get();
 
-      if (!mappingQuery.empty) {
-        const mappingDoc = mappingQuery.docs[0];
-        const primaryUID = mappingDoc.data().primary_UID;
-        userDoc = await db.collection("users").doc(primaryUID).get();
+      if (!emailQuery.empty) {
+        userDoc = emailQuery.docs[0];
       }
     } else {
-      // 對於其他平台，透過 account_mappings 查詢
-      const mappingQuery = await db
-        .collection("account_mappings")
-        .where(`platform_accounts.${platform}`, "==", identifier)
+      // 查詢users集合的linkedAccounts欄位，遵循0070規範
+      const platformQuery = await db
+        .collection("users")
+        .where(`linkedAccounts.${platform}_UID`, "==", identifier)
         .limit(1)
         .get();
 
-      if (!mappingQuery.empty) {
-        const mappingDoc = mappingQuery.docs[0];
-        const primaryUID = mappingDoc.data().primary_UID;
-        userDoc = await db.collection("users").doc(primaryUID).get();
+      if (!platformQuery.empty) {
+        userDoc = platformQuery.docs[0];
       }
     }
 
