@@ -1405,16 +1405,16 @@ function BK_validateTransactionData(data) {
 }
 
 /**
- * 10. 生成唯一交易ID - 支援POST相關端點（使用毫秒時間戳格式）
- * @version 2025-12-12-V3.4.0
+ * 10. 生成唯一交易ID - 支援POST相關端點（純毫秒時間戳格式）
+ * @version 2025-12-12-V3.4.1
  * @date 2025-12-12
- * @update: 簡化ID格式為純毫秒時間戳
+ * @update: 移除txn前綴，使用純毫秒時間戳
  */
 async function BK_generateTransactionId(processId) {
   const logPrefix = `[${processId}] BK_generateTransactionId:`;
 
   try {
-    // 使用毫秒時間戳作為交易ID
+    // 使用純毫秒時間戳作為交易ID
     const timestamp = Date.now();
     const transactionId = timestamp.toString();
 
@@ -1428,7 +1428,7 @@ async function BK_generateTransactionId(processId) {
       return fallbackId;
     }
 
-    BK_logInfo(`${logPrefix} 交易ID生成成功（毫秒時間戳格式）: ${transactionId}`, "ID生成", "", "BK_generateTransactionId");
+    BK_logInfo(`${logPrefix} 交易ID生成成功（純毫秒時間戳）: ${transactionId}`, "ID生成", "", "BK_generateTransactionId");
     return transactionId;
 
   } catch (error) {

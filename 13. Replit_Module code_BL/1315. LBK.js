@@ -805,14 +805,14 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
 }
 
 /**
- * 09. 生成唯一記帳ID - 使用毫秒時間戳格式
- * @version 2025-12-12-V1.3.2
+ * 09. 生成唯一記帳ID - 純毫秒時間戳格式
+ * @version 2025-12-12-V1.3.3
  * @date 2025-12-12 12:00:00
- * @description 生成格式為毫秒時間戳的唯一記帳ID，與BK模組保持一致
+ * @description 生成純毫秒時間戳的唯一記帳ID，與BK模組保持一致
  */
 async function LBK_generateBookkeepingId(userId, processId) {
   try {
-    // 使用毫秒時間戳作為交易ID
+    // 使用純毫秒時間戳作為交易ID
     const timestamp = Date.now();
     const transactionId = timestamp.toString();
 
@@ -837,13 +837,13 @@ async function LBK_generateBookkeepingId(userId, processId) {
       return fallbackId;
     }
 
-    LBK_logInfo(`記帳ID生成成功（毫秒時間戳格式）: ${transactionId} [${processId}]`, "ID生成", userId, "LBK_generateBookkeepingId");
+    LBK_logInfo(`記帳ID生成成功（純毫秒時間戳）: ${transactionId} [${processId}]`, "ID生成", userId, "LBK_generateBookkeepingId");
     return transactionId;
 
   } catch (error) {
     LBK_logError(`生成記帳ID失敗: ${error.toString()} [${processId}]`, "ID生成", userId, "ID_GEN_ERROR", error.toString(), "LBK_generateBookkeepingId");
 
-    // 備用ID生成（使用毫秒時間戳）
+    // 備用ID生成（使用純毫秒時間戳）
     const fallbackId = Date.now().toString();
     return fallbackId;
   }
