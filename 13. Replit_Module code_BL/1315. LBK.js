@@ -13,27 +13,6 @@ const crypto = require('crypto');
 // 引入Firebase動態配置模組
 const firebaseConfig = require('./1399. firebase-config');
 
-// 確保 Firebase Admin 在模組載入時就初始化
-if (!admin.apps.length) {
-  try {
-    firebaseConfig.initializeFirebaseAdmin();
-    console.log('🔥 LBK模組: Firebase Admin 動態配置初始化完成');
-  } catch (error) {
-    console.error('❌ LBK模組: Firebase Admin 動態配置初始化失敗:', error);
-  }
-}
-
-// 引入依賴模組
-const DL = require('./1310. DL.js');
-
-// 引入SR模組 (保留用於其他非統計功能，如推播服務等)
-let SR = null;
-try {
-  SR = require('./1305. SR.js');
-} catch (error) {
-  console.warn('LBK模組: SR模組載入失敗，部分進階功能將受限:', error.message);
-}
-
 // 配置參數
 const LBK_CONFIG = {
   DEBUG: true,
@@ -45,6 +24,7 @@ const LBK_CONFIG = {
     MIN_AMOUNT_DIGITS: 3,
     MAX_REMARK_LENGTH: 20
   }
+  // 移除hardcoded預設支付方式，改為從用戶錢包動態取得
 };
 
 // 初始化狀態追蹤
@@ -63,24 +43,25 @@ let LBK_INIT_STATUS = {
  */
 async function LBK_processQuickBookkeeping(inputData) {
   const processId = inputData.processId || crypto.randomUUID().substring(0, 8);
+  const userId = inputData.userId; // 獲取 userId
 
   try {
-    LBK_logInfo(`開始處理LINE OA請求 [${processId}]`, "智慧路由", inputData.userId || "", "LBK_processQuickBookkeeping");
+    LBK_logInfo(`開始處理LINE OA請求 [${processId}]`, "智慧路由", userId || "", "LBK_processQuickBookkeeping");
 
     // 第一步：檢查是否為統計查詢關鍵字
-    const keywordCheckResult = await LBK_checkStatisticsKeyword(inputData.messageText, inputData.userId, processId);
+    const keywordCheckResult = await LBK_checkStatisticsKeyword(inputData.messageText, userId, processId);
 
     if (keywordCheckResult.isStatisticsRequest) {
       // 路由到SR模組處理統計查詢
-      LBK_logInfo(`檢測到統計查詢關鍵字，路由至SR模組 [${processId}]`, "統計路由", inputData.userId || "", "LBK_processQuickBookkeeping");
+      LBK_logInfo(`檢測到統計查詢關鍵字，路由至SR模組 [${processId}]`, "統計路由", userId || "", "LBK_processQuickBookkeeping");
       return await LBK_handleStatisticsRequest(keywordCheckResult.statisticsType, inputData, processId);
     }
 
     // 第二步：執行記帳處理邏輯
-    LBK_logInfo(`執行記帳處理流程 [${processId}]`, "快速記帳", inputData.userId || "", "LBK_processQuickBookkeeping");
+    LBK_logInfo(`執行記帳處理流程 [${processId}]`, "快速記帳", userId || "", "LBK_processQuickBookkeeping");
 
     // 解析用戶訊息
-    const parseResult = await LBK_parseUserMessage(inputData.messageText, inputData.userId, processId);
+    const parseResult = await LBK_parseUserMessage(inputData.messageText, userId, processId);
 
     if (!parseResult.success) {
       const errorMessage = parseResult.error || "解析失敗";
@@ -102,6 +83,12 @@ async function LBK_processQuickBookkeeping(inputData) {
         errorType: parseResult.errorType || "PARSE_ERROR"
       };
     }
+
+    // 解析支付方式（使用動態錢包查詢）
+    const paymentMethodResult = await LBK_parsePaymentMethod(inputData.messageText, userId, processId);
+    const paymentMethod = paymentMethodResult.method;
+    const walletId = paymentMethodResult.walletId;
+    const walletName = paymentMethodResult.walletName;
 
     // 執行記帳
     const bookkeepingResult = await LBK_executeBookkeeping(parseResult.data, processId);
@@ -133,7 +120,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       originalInput: parseResult.data.subject
     });
 
-    LBK_logInfo(`快速記帳完成 [${processId}]`, "快速記帳", inputData.userId || "", "LBK_processQuickBookkeeping");
+    LBK_logInfo(`快速記帳完成 [${processId}]`, "快速記帳", userId || "", "LBK_processQuickBookkeeping");
 
     return {
       success: true,
@@ -147,7 +134,7 @@ async function LBK_processQuickBookkeeping(inputData) {
     };
 
   } catch (error) {
-    LBK_logError(`快速記帳處理失敗: ${error.toString()} [${processId}]`, "快速記帳", inputData.userId || "", "PROCESS_ERROR", error.toString(), "LBK_processQuickBookkeeping");
+    LBK_logError(`快速記帳處理失敗: ${error.toString()} [${processId}]`, "快速記帳", userId || "", "PROCESS_ERROR", error.toString(), "LBK_processQuickBookkeeping");
 
     // 使用LBK_formatReplyMessage統一格式化系統錯誤回覆
     const formattedErrorMessage = LBK_formatReplyMessage(null, "LBK", {
@@ -398,7 +385,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
 
     const ledgerId = `user_${userId}`;
     const normalizedInput = String(subjectName).trim().toLowerCase();
-    
+
     // 記錄同義詞匹配過程
     LBK_logDebug(`開始同義詞匹配，輸入: "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
 
@@ -460,7 +447,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
             };
             break;
           }
-          
+
           // 新增：同義詞包含匹配（例如：飯糰 可以匹配到 御飯糰）
           if (synonymLower.includes(normalizedInput) && normalizedInput.length >= 2) {
             if (!synonymMatch) { // 只在沒有精確匹配時使用
@@ -473,7 +460,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
               LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
             }
           }
-          
+
           // 新增：反向包含匹配（例如：停車費 可以匹配到 停車）
           if (normalizedInput.includes(synonymLower) && synonymLower.length >= 2) {
             if (!synonymMatch) { // 只在沒有精確匹配時使用
@@ -1554,13 +1541,16 @@ async function LBK_initializeFirestore() {
       return LBK_INIT_STATUS.firestore_db;
     }
 
-    // 檢查 Firebase Admin 是否已初始化
+    // 確保 Firebase Admin 在模組載入時就初始化
     if (!admin.apps.length) {
       console.log('🔄 LBK模組: Firebase Admin 尚未初始化，開始初始化...');
-
-      firebaseConfig.initializeFirebaseAdmin();
-
-      console.log('✅ LBK模組: Firebase Admin 動態配置初始化完成');
+      try {
+        firebaseConfig.initializeFirebaseAdmin();
+        console.log('✅ LBK模組: Firebase Admin 動態配置初始化完成');
+      } catch (error) {
+        console.error('❌ LBK模組: Firebase Admin 動態配置初始化失敗:', error);
+        throw error; // 重新拋出錯誤，以便LBK_initializeFirestore捕獲
+      }
     }
 
     // 取得 Firestore 實例
@@ -1859,7 +1849,7 @@ async function LBK_getDirectStatistics(userId, period) {
         startDate = now.clone().startOf('day').toDate();
         endDate = now.clone().endOf('day').toDate();
         break;
-      case 'weekly':  
+      case 'weekly':
         startDate = now.clone().startOf('week').toDate();
         endDate = now.clone().endOf('week').toDate();
         break;
@@ -1894,20 +1884,29 @@ async function LBK_getDirectStatistics(userId, period) {
       };
     }
 
-    // 計算統計資料
+    // 計算統計資料，過濾掉_init等非交易文檔
     let totalIncome = 0;
     let totalExpense = 0;
-    let recordCount = snapshot.size;
+    let recordCount = 0;
 
     snapshot.forEach(doc => {
+      // 過濾掉_init等系統文檔
+      if (doc.id === '_init' || doc.id.startsWith('_')) {
+        return;
+      }
+
       const data = doc.data();
       const amount = parseFloat(data.amount || 0);
       const type = data.type;
 
-      if (type === 'income') {
-        totalIncome += amount;
-      } else if (type === 'expense') {
-        totalExpense += amount;
+      // 確保這是有效的交易記錄
+      if (type && amount > 0) {
+        recordCount++;
+        if (type === 'income') {
+          totalIncome += amount;
+        } else if (type === 'expense') {
+          totalExpense += amount;
+        }
       }
     });
 
@@ -1931,7 +1930,7 @@ async function LBK_getDirectStatistics(userId, period) {
       error: error.message,
       data: {
         totalIncome: 0,
-        totalExpense: 0, 
+        totalExpense: 0,
         recordCount: 0
       }
     };
@@ -1947,7 +1946,7 @@ async function LBK_getDirectStatistics(userId, period) {
 function LBK_formatStatisticsMessage(period, statsData) {
   const periodNames = {
     'today': '今日',
-    'week': '本週', 
+    'week': '本週',
     'month': '本月'
   };
 
@@ -1969,16 +1968,83 @@ function LBK_formatStatisticsMessage(period, statsData) {
   return `📊 ${periodName}統計
 
 💰 收入：${totalIncome}元
-💸 支出：${totalExpense}元  
+💸 支出：${totalExpense}元
 📈 淨額：${balance >= 0 ? '+' : ''}${balance}元
 📝 筆數：${recordCount}筆
 
-${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
+
+/**
+ * 解析支付方式 - 動態從用戶錢包取得
+ * @version 2025-12-12-V2.0.0
+ * @description 從用戶的錢包子集合中動態取得支付方式，移除hardcoded邏輯
+ */
+async function LBK_parsePaymentMethod(text, userId, processId) {
+  try {
+    // 取得用戶預設帳本ID
+    const ledgerId = `user_${userId}`;
+
+    // 從Firestore取得用戶的錢包列表
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    const walletsSnapshot = await db.collection(`ledgers/${ledgerId}/wallets`)
+      .where('userId', '==', userId)
+      .where('status', '==', 'active')
+      .get();
+
+    if (walletsSnapshot.empty) {
+      LBK_logWarning(`用戶 ${userId} 沒有可用的錢包，使用預設現金 [${processId}]`, "支付方式解析", userId, "LBK_parsePaymentMethod");
+      return { method: 'cash', walletId: 'default_cash', walletName: '現金' };
+    }
+
+    // 建立錢包關鍵字映射
+    const userWallets = [];
+    walletsSnapshot.forEach(doc => {
+      const walletData = doc.data();
+      userWallets.push({
+        id: walletData.id,
+        name: walletData.name,
+        type: walletData.type,
+        isDefault: walletData.isDefault || false
+      });
+    });
+
+    LBK_logDebug(`找到 ${userWallets.length} 個可用錢包 [${processId}]`, "支付方式解析", userId, "LBK_parsePaymentMethod");
+
+    // 在文字中尋找匹配的錢包名稱
+    const normalizedText = text.toLowerCase();
+    for (const wallet of userWallets) {
+      const walletNameLower = wallet.name.toLowerCase();
+      if (normalizedText.includes(walletNameLower)) {
+        LBK_logInfo(`匹配到錢包: ${wallet.name} (${wallet.id}) [${processId}]`, "支付方式解析", userId, "LBK_parsePaymentMethod");
+        return {
+          method: wallet.type,
+          walletId: wallet.id,
+          walletName: wallet.name
+        };
+      }
+    }
+
+    // 如果沒有匹配到特定錢包，使用預設錢包
+    const defaultWallet = userWallets.find(w => w.isDefault) || userWallets[0];
+    LBK_logInfo(`使用預設錢包: ${defaultWallet.name} (${defaultWallet.id}) [${processId}]`, "支付方式解析", userId, "LBK_parsePaymentMethod");
+
+    return {
+      method: defaultWallet.type,
+      walletId: defaultWallet.id,
+      walletName: defaultWallet.name
+    };
+
+  } catch (error) {
+    LBK_logError(`解析支付方式失敗: ${error.message} [${processId}]`, "支付方式解析", userId, "PAYMENT_METHOD_PARSE_ERROR", error.toString(), "LBK_parsePaymentMethod");
+
+    // 錯誤時返回預設值
+    return { method: 'cash', walletId: 'default_cash', walletName: '現金' };
+  }
 }
 
 // 確保所有函數都正確導出，避免循環依賴問題
 const LBK_MODULE = {
-  // 核心函數 - 確保正確導出
+  // Core Functions
   LBK_processQuickBookkeeping: LBK_processQuickBookkeeping,
   LBK_parseUserMessage: LBK_parseUserMessage,
   LBK_parseInputFormat: LBK_parseInputFormat,
@@ -2001,7 +2067,7 @@ const LBK_MODULE = {
   LBK_validateDataInternal: LBK_validateDataInternal,
   LBK_calculateStringSimilarity: LBK_calculateStringSimilarity,
 
-  // 統計查詢函數 - v1.3.0新增
+  // Statistics Functions (v1.3.0 New)
   LBK_checkStatisticsKeyword: LBK_checkStatisticsKeyword,
   LBK_handleStatisticsRequest: LBK_handleStatisticsRequest,
   LBK_buildStatisticsQuickReply: LBK_buildStatisticsQuickReply,
@@ -2009,10 +2075,13 @@ const LBK_MODULE = {
   LBK_getDirectStatistics: LBK_getDirectStatistics,
   LBK_formatStatisticsMessage: LBK_formatStatisticsMessage,
 
-  // 版本資訊
+  // New Payment Method Parsing Function
+  LBK_parsePaymentMethod: LBK_parsePaymentMethod,
+
+  // Version Information
   MODULE_VERSION: "1.3.0",
   MODULE_NAME: "LBK"
 };
 
-// 導出模組
+// Export Module
 module.exports = LBK_MODULE;

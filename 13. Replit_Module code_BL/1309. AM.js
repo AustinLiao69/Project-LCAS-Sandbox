@@ -1473,8 +1473,10 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       created_subcollections: subcollections
     };
     
-    // 為每個子集合建立一個初始化文檔以確保集合存在
-    for (const collection of subcollections) {
+    // 為非transactions子集合建立初始化文檔以確保集合存在
+    // transactions子集合不建立_init文檔，避免影響統計功能
+    const collectionsNeedInit = ['categories', 'wallets', 'budgets'];
+    for (const collection of collectionsNeedInit) {
       try {
         await db.collection('ledgers').doc(userLedgerId).collection(collection).doc('_init').set({
           initialized: true,
@@ -1486,6 +1488,9 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         console.warn(`⚠️ ${functionName}: 子集合 ${collection} 初始化警告: ${subcollectionError.message}`);
       }
     }
+    
+    // transactions子集合不建立_init文檔，保持空集合狀態
+    console.log(`✅ ${functionName}: transactions子集合保持空集合狀態（無_init文檔）`);
 
     if (!structureResult.success) {
       console.warn(`  - 1311.FS.js結構建立警告: ${structureResult.error || '未知錯誤'}`);
@@ -1563,21 +1568,51 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         }
       }
 
-      // 2. 調用WCM模組進行帳戶初始化（添加容錯處理）
+      // 2. 調用WCM模組進行帳戶初始化（強化版本，確保預設錢包創建成功）
       console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
       
+      // 強制執行錢包初始化，確保預設錢包創建成功
+      let walletInitSuccess = false;
+      
+      // 優先使用WCM模組
       if (WCM && typeof WCM.WCM_createWallet === 'function') {
-        const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
-        if (walletResult.success) {
-          walletCount = walletResult.data.totalWallets || 0;
-          console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
-        } else {
-          console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message}`);
+        console.log(`📦 ${functionName}: 使用WCM模組創建預設錢包...`);
+        try {
+          const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
+          if (walletResult.success) {
+            walletCount = walletResult.data.totalWallets || 0;
+            console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
+            walletInitSuccess = true;
+            
+            // 驗證錢包是否真的創建成功
+            const verifyWallets = await db.collection(`ledgers/${userLedgerId}/wallets`).get();
+            const actualWalletCount = verifyWallets.size;
+            console.log(`🔍 ${functionName}: 驗證錢包創建結果，實際錢包數量: ${actualWalletCount}`);
+            if (actualWalletCount === 0) {
+              console.warn(`⚠️ ${functionName}: WCM模組回報成功但實際無錢包，執行備用方案`);
+              walletInitSuccess = false;
+            }
+          } else {
+            console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message || walletResult.message}`);
+            walletInitSuccess = false;
+          }
+        } catch (wcmError) {
+          console.error(`❌ ${functionName}: WCM模組調用異常: ${wcmError.message}`);
+          walletInitSuccess = false;
         }
       } else {
-        console.warn(`⚠️ ${functionName}: WCM模組不可用，使用備用帳戶初始化`);
-        
-        // 備用帳戶初始化：直接從0302.json載入預設帳戶
+        console.warn(`⚠️ ${functionName}: WCM模組不可用`);
+        walletInitSuccess = false;
+      }
+      
+      // 如果WCM失敗，強制執行備用方案
+      if (!walletInitSuccess) {
+        console.log(`🔄 ${functionName}: 強制執行備用帳戶初始化...`);
+        await executeBackupWalletInitialization();
+      }
+
+      // 備用帳戶初始化函數
+      async function executeBackupWalletInitialization() {
         try {
           const defaultConfigs = WCM_loadDefaultConfigs();
           if (defaultConfigs.success && defaultConfigs.configs.wallets) {
@@ -1598,7 +1633,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
                 currency: defaultWallet.currency.replace('{{default_currency}}', defaultCurrency),
                 balance: defaultWallet.balance || 0,
                 description: defaultWallet.description || '',
-                isDefault: true,
+                isDefault: defaultWallet.walletId === 'default_cash' ? true : false,
                 userId: UID,
                 ledgerId: userLedgerId,
                 status: 'active',
@@ -1606,21 +1641,28 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
                 createdAt: now,
                 updatedAt: now,
                 module: 'AM_BACKUP',
-                version: '8.0.1'
+                version: '8.0.2'
               };
 
               batch.set(walletRef, walletDoc);
               batchCount++;
+              console.log(`📝 ${functionName}: 準備創建錢包: ${walletDoc.name} (${walletId})`);
             }
 
             await batch.commit();
             walletCount = batchCount;
             console.log(`✅ ${functionName}: 備用帳戶初始化完成，載入${walletCount}個帳戶`);
+
+            // 驗證錢包是否真的創建成功
+            const verifySnapshot = await db.collection(`ledgers/${userLedgerId}/wallets`).get();
+            console.log(`🔍 ${functionName}: 驗證錢包創建結果，實際創建數量: ${verifySnapshot.size}`);
           } else {
             console.warn(`⚠️ ${functionName}: 無法載入0302帳戶資料，帳戶初始化失敗`);
+            console.warn(`⚠️ ${functionName}: 配置載入結果: ${JSON.stringify(defaultConfigs)}`);
           }
         } catch (backupError) {
           console.error(`❌ ${functionName}: 備用帳戶初始化失敗: ${backupError.message}`);
+          console.error(`❌ ${functionName}: 錯誤詳情: ${backupError.stack}`);
         }
       }
 
