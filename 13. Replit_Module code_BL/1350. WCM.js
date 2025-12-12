@@ -17,7 +17,8 @@ const path = require('path');
 // 引入依賴模組
 const DL = require('./1310. DL.js');
 // const FS = require('./1311. FS.js'); // FS module is removed
-const AM = require('./1309. AM.js');
+// 移除AM模組的直接引用以避免循環依賴
+// const AM = require('./1309. AM.js');
 
 // WCM模組配置
 const WCM_CONFIG = {
@@ -984,6 +985,7 @@ function WCM_logError(message, category, userId, errorType, errorDetail, functio
 
 // =================== 模組導出 ===================
 
+// 確保所有函數都被正確定義後再導出
 module.exports = {
   // 帳戶管理函數 (子集合架構)
   WCM_createWallet,
@@ -1012,13 +1014,13 @@ module.exports = {
   WCM_CONFIG,
 
   // 模組資訊
-  moduleVersion: '1.2.1', // 版本升級至 1.2.1
+  moduleVersion: '1.2.2', // 版本升級至 1.2.2 (修復循環依賴)
   architecture: 'subcollection_based',
   collections: {
-    wallets: 'ledgers/{ledgerId}/{wallets}' , // 預設路徑
-    categories: 'ledgers/{ledgerId}/{categories}' // 預設路徑
+    wallets: 'ledgers/{ledgerId}/wallets',
+    categories: 'ledgers/{ledgerId}/categories'
   },
-  lastUpdate: '2025-11-22', // 更新日期
+  lastUpdate: '2025-12-12', // 更新日期
   features: [
     'subcollection_architecture',
     'ledger_based_collections',
@@ -1027,8 +1029,7 @@ module.exports = {
     'category_management',
     'batch_0099_subject_loading',
     'default_wallet_creation',
-    'am_module_integration',
-    'dynamic_ledger_path_support' // 新增支援動態路徑
+    'circular_dependency_resolved' // 新增：已解決循環依賴
   ],
   integratedFrom: {
     'AM_load0099SubjectData': 'AM模組v7.5.0',
@@ -1038,13 +1039,16 @@ module.exports = {
 
 // 自動初始化模組
 try {
-  console.log('🔧 WCM模組v1.2.1 初始化：階段二路徑動態化支援完成');
+  console.log('🔧 WCM模組v1.2.2 初始化：循環依賴修復版');
+  console.log('🔄 循環依賴修復：移除AM模組直接引用');
+  console.log('✅ 函數導出驗證：WCM_createCategory =', typeof WCM_createCategory);
+  console.log('✅ 函數導出驗證：WCM_createWallet =', typeof WCM_createWallet);
+  console.log('✅ 函數導出驗證：WCM_load0099SubjectData =', typeof WCM_load0099SubjectData);
+  console.log('✅ 函數導出驗證：WCM_loadDefaultConfigs =', typeof WCM_loadDefaultConfigs);
   console.log('📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})');
   console.log('✅ 與1311.FS.js子集合架構保持一致');
-  console.log('🎯 增強功能：WCM_validateWalletExists, WCM_getWalletList, WCM_getWalletBalance 支援動態路徑');
-  console.log('🎯 增強功能：WCM_createCategory, WCM_getCategoryList, WCM_validateCategoryExists 支援動態路徑');
   console.log('🚀 WCM模組現已全面支援協作帳本路徑');
-  console.log('✨ 階段二：WCM路徑動態化支援已完成');
+  console.log('✨ 循環依賴修復完成，所有函數應可正常調用');
 } catch (error) {
   console.error('❌ WCM模組初始化失敗:', error.message);
 }
