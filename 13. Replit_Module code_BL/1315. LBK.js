@@ -205,10 +205,21 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
     const subjectResult = await LBK_identifySubject(parseResult.subject, userId, processId);
 
     if (!subjectResult.success) {
+      LBK_logError(`科目識別失敗: ${parseResult.subject}`, "訊息解析", userId, "SUBJECT_NOT_FOUND", subjectResult.error || "科目不存在", "LBK_parseUserMessage");
       return {
         success: false,
         error: `找不到科目: ${parseResult.subject}`,
         errorType: "SUBJECT_NOT_FOUND"
+      };
+    }
+
+    // 驗證科目資料完整性
+    if (!subjectResult.data || !subjectResult.data.subjectCode || !subjectResult.data.subjectName) {
+      LBK_logError(`科目資料不完整: ${JSON.stringify(subjectResult.data)}`, "訊息解析", userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", "LBK_parseUserMessage");
+      return {
+        success: false,
+        error: `科目資料不完整: ${parseResult.subject}`,
+        errorType: "SUBJECT_DATA_INCOMPLETE"
       };
     }
 
@@ -396,7 +407,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
       // 嘗試查詢所有categories文檔（不限制isActive）
       const allSnapshot = await db.collection("ledgers").doc(ledgerId).collection("categories").get();
       LBK_logDebug(`categories集合總數: ${allSnapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
-      
+
       if (!allSnapshot.empty) {
         // 列出所有文檔的基本信息用於調試
         allSnapshot.forEach(doc => {
@@ -404,7 +415,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
           LBK_logDebug(`文檔 ${doc.id}: categoryId=${data.categoryId}, subCategoryName=${data.subCategoryName}, isActive=${data.isActive}`, "科目查詢", userId, "LBK_getSubjectCode");
         });
       }
-      
+
       throw new Error("科目表為空或無啟用的科目");
     }
 
@@ -685,11 +696,48 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
         };
       }
 
+      // 識別科目
+      const subjectResult = await LBK_identifySubject(bookkeepingData.subject, bookkeepingData.userId, processId);
+
+      if (!subjectResult.success) {
+        LBK_logError(`科目識別失敗: ${bookkeepingData.subject}`, "記帳執行", bookkeepingData.userId, "SUBJECT_NOT_FOUND", subjectResult.error || "科目不存在", "LBK_executeBookkeeping");
+        return {
+          success: false,
+          error: `找不到科目: ${bookkeepingData.subject}`,
+          errorType: "SUBJECT_NOT_FOUND"
+        };
+      }
+
+      // 驗證科目資料完整性
+      if (!subjectResult.data || !subjectResult.data.subjectCode || !subjectResult.data.subjectName) {
+        LBK_logError(`科目資料不完整: ${JSON.stringify(subjectResult.data)}`, "記帳執行", bookkeepingData.userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", "LBK_executeBookkeeping");
+        return {
+          success: false,
+          error: `科目資料不完整: ${bookkeepingData.subject}`,
+          errorType: "SUBJECT_DATA_INCOMPLETE"
+        };
+      }
+
+      // 根據科目代碼判斷收支類型，並設定正確的支付方式
+      const isIncome = subjectResult.data.isIncome;
+      const finalPaymentMethod = bookkeepingData.paymentMethod === "刷卡" ?
+        subjectResult.data.defaultPaymentMethod : bookkeepingData.paymentMethod;
+
+      // 更新記帳資料，加入科目資訊和正確的支付方式
+      const updatedBookkeepingData = {
+        ...bookkeepingData,
+        subjectCode: subjectResult.data.subjectCode,
+        subjectName: subjectResult.data.subjectName,
+        majorCode: subjectResult.data.majorCode,
+        action: isIncome ? "收入" : "支出",
+        paymentMethod: finalPaymentMethod
+      };
+
       // 生成記帳ID
-      const bookkeepingId = await LBK_generateBookkeepingId(bookkeepingData.userId, processId);
+      const bookkeepingId = await LBK_generateBookkeepingId(updatedBookkeepingData.userId, processId);
 
       // 準備記帳資料
-      const preparedData = LBK_prepareBookkeepingData(bookkeepingId, bookkeepingData, processId);
+      const preparedData = LBK_prepareBookkeepingData(bookkeepingId, updatedBookkeepingData, processId);
 
       // 儲存到Firestore（帶重試）
       const saveResult = await LBK_saveToFirestore(preparedData, processId);
@@ -711,16 +759,26 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
         };
       }
 
+      // 格式化返回的記帳資料，確保包含所有必要的欄位
+      const processedData = {
+        id: bookkeepingId,
+        transactionId: bookkeepingId,
+        amount: updatedBookkeepingData.amount,
+        type: updatedBookkeepingData.action === "收入" ? "income" : "expense",
+        category: updatedBookkeepingData.subjectCode,
+        subject: updatedBookkeepingData.subjectName,
+        subjectName: updatedBookkeepingData.subjectName,
+        description: updatedBookkeepingData.subject, // 使用原始科目作為描述
+        paymentMethod: updatedBookkeepingData.paymentMethod,
+        date: preparedData.date,
+        timestamp: new Date().toISOString(),
+        ledgerId: preparedData.ledgerId,
+        remark: updatedBookkeepingData.subject || ""
+      };
+
       return {
         success: true,
-        data: {
-          id: bookkeepingId,
-          amount: bookkeepingData.amount,
-          type: bookkeepingData.action === "收入" ? "income" : "expense",
-          subject: bookkeepingData.subjectName,
-          paymentMethod: bookkeepingData.paymentMethod,
-          timestamp: new Date().toISOString()
-        }
+        data: processedData
       };
 
     } catch (error) {
@@ -985,12 +1043,16 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
       const originalInput = options.originalInput || resultData.description;
       const remark = LBK_removeAmountFromText(originalInput, resultData.amount, resultData.paymentMethod);
 
-      return `記帳成功！\n` +
+      // 確保科目名稱正確顯示
+      const subjectDisplay = resultData.subjectName || resultData.subject || resultData.description || "未知科目";
+
+      let replyText = `記帳成功！\n` +
              `金額：${resultData.amount}元 (${resultData.type === 'income' ? '收入' : '支出'})\n` +
              `支付方式：${resultData.paymentMethod}\n` +
              `時間：${currentDateTime}\n` +
-             `科目：${resultData.description}\n` +
+             `科目：${subjectDisplay}\n` +
              `備註：${remark}`;
+      return replyText;
     } else {
       // 處理錯誤情況 - 統一使用7行詳細格式
       const errorMessage = options.error || "處理失敗";
@@ -1395,50 +1457,52 @@ function LBK_calculateStringSimilarity(str1, str2) {
 }
 
 // 輔助函數：識別科目
-async function LBK_identifySubject(subject, userId, processId) {
+async function LBK_identifySubject(subjectText, userId, processId) {
   try {
-    // 首先嘗試精確匹配
-    const exactMatch = await LBK_getSubjectCode(subject, userId, processId);
+    LBK_logDebug(`開始識別科目: "${subjectText}"`, "科目識別", userId, "LBK_identifySubject");
 
-    // 判斷收支類型：8和9開頭為收入，其他為支出
-    const majorCode = exactMatch.majorCode;
-    const isIncome = String(majorCode).startsWith('8') || String(majorCode).startsWith('9');
+    const subjectCode = await LBK_getSubjectCode(subjectText, userId, processId);
+
+    if (!subjectCode) {
+      LBK_logWarning(`找不到匹配的科目: ${subjectText}`, "科目識別", userId, "LBK_identifySubject");
+      return {
+        success: false,
+        error: "找不到匹配的科目"
+      };
+    }
+
+    // 檢查返回的科目資料完整性
+    if (!subjectCode.subCode || !subjectCode.subName) {
+      LBK_logError(`科目資料不完整: ${JSON.stringify(subjectCode)}`, "科目識別", userId, "SUBJECT_DATA_ERROR", "缺少必要欄位", "LBK_identifySubject");
+      return {
+        success: false,
+        error: "科目資料不完整"
+      };
+    }
+
+    // 根據科目代碼判斷收支類型和預設支付方式
+    const majorCodeNum = parseInt(subjectCode.majorCode);
+    const isIncome = [801, 899].includes(majorCodeNum);
+    const defaultPaymentMethod = isIncome ? "轉帳" : "刷卡";
+
+    LBK_logDebug(`科目識別成功: ${subjectCode.subName} (代碼: ${subjectCode.subCode})`, "科目識別", userId, "LBK_identifySubject");
 
     return {
       success: true,
       data: {
-        subjectCode: exactMatch.subCode,
-        subjectName: exactMatch.subName,
-        majorCode: exactMatch.majorCode,
+        subjectCode: subjectCode.subCode,
+        subjectName: subjectCode.subName,
+        majorCode: subjectCode.majorCode,
         isIncome: isIncome,
-        defaultPaymentMethod: isIncome ? "現金" : "刷卡"
+        defaultPaymentMethod: defaultPaymentMethod
       }
     };
 
   } catch (error) {
-    // 嘗試模糊匹配
-    const fuzzyMatch = await LBK_fuzzyMatch(subject, 0.7, userId, processId);
-
-    if (fuzzyMatch) {
-      // 判斷收支類型
-      const majorCode = fuzzyMatch.majorCode;
-      const isIncome = String(majorCode).startsWith('8') || String(majorCode).startsWith('9');
-
-      return {
-        success: true,
-        data: {
-          subjectCode: fuzzyMatch.subCode,
-          subjectName: fuzzyMatch.subName,
-          majorCode: fuzzyMatch.majorCode,
-          isIncome: isIncome,
-          defaultPaymentMethod: isIncome ? "現金" : "刷卡"
-        }
-      };
-    }
-
+    LBK_logError(`識別科目失敗: ${error.toString()}`, "科目識別", userId, "IDENTIFY_ERROR", error.toString(), "LBK_identifySubject");
     return {
       success: false,
-      error: `找不到科目: ${subject}`
+      error: error.toString()
     };
   }
 }
@@ -1669,7 +1733,7 @@ function LBK_buildStatisticsQuickReply(userId, currentType) {
 
   } catch (error) {
     LBK_logError(`建立Quick Reply失敗: ${error.toString()}`, "Quick Reply", userId, "QUICK_REPLY_ERROR", error.toString(), "LBK_buildStatisticsQuickReply");
-    
+
     return {
       type: 'quick_reply',
       items: [{ label: '今日統計', postbackData: '今日統計' }],
