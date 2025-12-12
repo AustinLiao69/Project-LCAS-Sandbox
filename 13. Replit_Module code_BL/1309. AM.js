@@ -107,9 +107,52 @@ const db = admin.firestore();
 const DL = require("./1310. DL.js");
 
 // 階段四整合：引入WCM、BM、CM模組
-const WCM = require("./1350. WCM.js");
+let WCM;
+try {
+  WCM = require("./1350. WCM.js");
+} catch (error) {
+  console.warn('⚠️ WCM模組載入失敗，將使用備用函數:', error.message);
+}
+
 const BM = require("./1312. BM.js");
 const CM = require("./1313. CM.js");
+
+// 備用函數：載入0099科目資料
+function WCM_load0099SubjectData() {
+  try {
+    const fs = require('fs');
+    const subjectFilePath = '/home/runner/workspace/00. Master_Project document/0099. Subject_code.json';
+
+    if (!fs.existsSync(subjectFilePath)) {
+      return {
+        success: false,
+        error: "0099. Subject_code.json 檔案不存在",
+        data: []
+      };
+    }
+
+    const subjectDataRaw = fs.readFileSync(subjectFilePath, 'utf8');
+    const subjectData = JSON.parse(subjectDataRaw);
+
+    if (!Array.isArray(subjectData)) {
+      throw new Error("0099科目資料格式錯誤，應為陣列格式");
+    }
+
+    return {
+      success: true,
+      count: subjectData.length,
+      data: subjectData,
+      source: '0099. Subject_code.json'
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      data: []
+    };
+  }
+}
 
 /**
  * 01. 創建LINE OA用戶帳號
@@ -1463,24 +1506,81 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     let collaborationInitialized = false;
     
     try {
-      // 1. 調用WCM模組進行科目初始化
+      // 1. 調用WCM模組進行科目初始化（添加容錯處理）
       console.log(`📋 ${functionName}: 調用WCM模組進行科目初始化...`);
-      const categoryResult = await WCM.WCM_createCategory(userLedgerId, { userId: UID }, { batchLoad0099: true });
-      if (categoryResult.success) {
-        subjectCount = categoryResult.data.totalCategories || 0;
-        console.log(`✅ ${functionName}: WCM科目初始化完成，載入${subjectCount}筆科目`);
+      
+      // 檢查WCM模組是否可用且函數存在
+      if (WCM && typeof WCM.WCM_createCategory === 'function') {
+        const categoryResult = await WCM.WCM_createCategory(userLedgerId, { userId: UID }, { batchLoad0099: true });
+        if (categoryResult.success) {
+          subjectCount = categoryResult.data.totalCategories || 0;
+          console.log(`✅ ${functionName}: WCM科目初始化完成，載入${subjectCount}筆科目`);
+        } else {
+          console.warn(`⚠️ ${functionName}: WCM科目初始化失敗: ${categoryResult.error?.message}`);
+        }
       } else {
-        console.warn(`⚠️ ${functionName}: WCM科目初始化失敗: ${categoryResult.error?.message}`);
+        console.warn(`⚠️ ${functionName}: WCM模組不可用或函數不存在，使用備用科目初始化`);
+        
+        // 備用科目初始化：直接從0099.json載入科目
+        try {
+          const subjectData = WCM_load0099SubjectData();
+          if (subjectData.success && subjectData.data.length > 0) {
+            const db = admin.firestore();
+            const batch = db.batch();
+            const now = admin.firestore.Timestamp.now();
+            
+            let batchCount = 0;
+            for (const subject of subjectData.data) {
+              const categoryId = `category_${subject.categoryId}`;
+              const categoryRef = db.collection(`ledgers/${userLedgerId}/categories`).doc(categoryId);
+              
+              const categoryDoc = {
+                id: categoryId,
+                categoryId: subject.categoryId,
+                parentId: subject.parentId,
+                categoryName: subject.categoryName,
+                subCategoryName: subject.subCategoryName,
+                synonyms: subject.synonyms || '',
+                type: [801, 899].includes(subject.parentId) ? 'income' : 'expense',
+                isDefault: true,
+                isActive: true,
+                userId: UID,
+                ledgerId: userLedgerId,
+                dataSource: '0099. Subject_code.json',
+                createdAt: now,
+                updatedAt: now,
+                module: 'AM_BACKUP',
+                version: '8.0.1'
+              };
+              
+              batch.set(categoryRef, categoryDoc);
+              batchCount++;
+            }
+            
+            await batch.commit();
+            subjectCount = batchCount;
+            console.log(`✅ ${functionName}: 備用科目初始化完成，載入${subjectCount}筆科目`);
+          } else {
+            console.warn(`⚠️ ${functionName}: 無法載入0099科目資料，科目初始化失敗`);
+          }
+        } catch (backupError) {
+          console.error(`❌ ${functionName}: 備用科目初始化失敗: ${backupError.message}`);
+        }
       }
 
-      // 2. 調用WCM模組進行帳戶初始化
+      // 2. 調用WCM模組進行帳戶初始化（添加容錯處理）
       console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
-      const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
-      if (walletResult.success) {
-        walletCount = walletResult.data.totalWallets || 0;
-        console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
+      
+      if (WCM && typeof WCM.WCM_createWallet === 'function') {
+        const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
+        if (walletResult.success) {
+          walletCount = walletResult.data.totalWallets || 0;
+          console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
+        } else {
+          console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message}`);
+        }
       } else {
-        console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message}`);
+        console.warn(`⚠️ ${functionName}: WCM模組不可用，跳過帳戶初始化`);
       }
 
       // 3. 調用BM模組進行預算結構初始化
