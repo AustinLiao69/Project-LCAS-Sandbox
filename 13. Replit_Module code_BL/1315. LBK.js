@@ -388,10 +388,24 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
     const ledgerId = `user_${userId}`;
     const normalizedInput = String(subjectName).trim().toLowerCase();
 
-    const snapshot = await db.collection("ledgers").doc(ledgerId).collection("subjects").where("isActive", "==", true).get();
+    const snapshot = await db.collection("ledgers").doc(ledgerId).collection("categories").where("isActive", "==", true).get();
+
+    LBK_logDebug(`查詢categories集合結果: ${snapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
 
     if (snapshot.empty) {
-      throw new Error("科目表為空");
+      // 嘗試查詢所有categories文檔（不限制isActive）
+      const allSnapshot = await db.collection("ledgers").doc(ledgerId).collection("categories").get();
+      LBK_logDebug(`categories集合總數: ${allSnapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
+      
+      if (!allSnapshot.empty) {
+        // 列出所有文檔的基本信息用於調試
+        allSnapshot.forEach(doc => {
+          const data = doc.data();
+          LBK_logDebug(`文檔 ${doc.id}: categoryId=${data.categoryId}, subCategoryName=${data.subCategoryName}, isActive=${data.isActive}`, "科目查詢", userId, "LBK_getSubjectCode");
+        });
+      }
+      
+      throw new Error("科目表為空或無啟用的科目");
     }
 
     // 優化的匹配算法
@@ -403,31 +417,32 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
       if (doc.id === "template") continue;
 
       const data = doc.data();
-      const subName = String(data.子項名稱).trim().toLowerCase();
+      // 使用WCM標準欄位名稱
+      const subName = String(data.subCategoryName || data.categoryName || '').trim().toLowerCase();
 
       // 1. 精確匹配 - 最高優先級
       if (subName === normalizedInput) {
         exactMatch = {
-          majorCode: String(data.大項代碼),
-          majorName: String(data.大項名稱),
-          subCode: String(data.子項代碼),
-          subName: String(data.子項名稱)
+          majorCode: String(data.parentId || data.categoryId),
+          majorName: String(data.categoryName || ''),
+          subCode: String(data.categoryId || ''),
+          subName: String(data.subCategoryName || data.categoryName || '')
         };
         break;
       }
 
       // 2. 同義詞精確匹配 - 第二優先級
-      const synonymsStr = data.同義詞 || "";
+      const synonymsStr = data.synonyms || "";
       if (synonymsStr) {
         const synonyms = synonymsStr.split(",");
         for (const synonym of synonyms) {
           const synonymLower = synonym.trim().toLowerCase();
           if (synonymLower === normalizedInput) {
             synonymMatch = {
-              majorCode: String(data.大項代碼),
-              majorName: String(data.大項名稱),
-              subCode: String(data.子項代碼),
-              subName: String(data.子項名稱)
+              majorCode: String(data.parentId || data.categoryId),
+              majorName: String(data.categoryName || ''),
+              subCode: String(data.categoryId || ''),
+              subName: String(data.subCategoryName || data.categoryName || '')
             };
             break;
           }
@@ -437,10 +452,10 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
       // 3. 部分匹配 - 包含關係
       if (subName.includes(normalizedInput) || normalizedInput.includes(subName)) {
         partialMatches.push({
-          majorCode: String(data.大項代碼),
-          majorName: String(data.大項名稱),
-          subCode: String(data.子項代碼),
-          subName: String(data.子項名稱),
+          majorCode: String(data.parentId || data.categoryId),
+          majorName: String(data.categoryName || ''),
+          subCode: String(data.categoryId || ''),
+          subName: String(data.subCategoryName || data.categoryName || ''),
           score: subName.length === normalizedInput.length ? 1.0 : 0.8
         });
       }
@@ -616,24 +631,25 @@ async function LBK_getAllSubjects(userId, processId) {
     const db = LBK_INIT_STATUS.firestore_db;
 
     const ledgerId = `user_${userId}`;
-    const subjectsRef = db.collection("ledgers").doc(ledgerId).collection("subjects");
-    const snapshot = await subjectsRef.where("isActive", "==", true).get();
+    const categoriesRef = db.collection("ledgers").doc(ledgerId).collection("categories");
+    const snapshot = await categoriesRef.where("isActive", "==", true).get();
 
     if (snapshot.empty) {
+      LBK_logWarning(`用戶 ${userId} 的categories集合為空`, "科目查詢", userId, "LBK_getAllSubjects");
       return [];
     }
 
     const subjects = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      if (doc.id === "template") return;
+      if (doc.id === "template" || doc.id === "_init") return;
 
       subjects.push({
-        majorCode: data.大項代碼,
-        majorName: data.大項名稱,
-        subCode: data.子項代碼,
-        subName: data.子項名稱,
-        synonyms: data.同義詞 || ""
+        majorCode: data.parentId || data.categoryId,
+        majorName: data.categoryName || '',
+        subCode: data.categoryId || '',
+        subName: data.subCategoryName || data.categoryName || '',
+        synonyms: data.synonyms || ""
       });
     });
 
