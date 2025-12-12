@@ -440,4 +440,5 @@ MM 	 DD 	 Description 	    Progress
 12	11	 修改ASL  	 Ongoing
 12	11	 修改LINE記帳流程：WH->LBK->AM註冊並在firebase開一個帳戶及帳本後->在firebase記帳  	 Ongoing
 12	11	 重新設計firebase的user集合之資料欄位  	 Ongoing
-12	11	 撰寫0070. DB schema文件  	 Ongoing
+12	11	 撰寫0070. DB schema文件  	 Closed
+12	12	 修改LINE記帳流程：WH->LBK->AM註冊並在firebase開一個帳戶及帳本後->在firebase記帳  	 Ongoing
