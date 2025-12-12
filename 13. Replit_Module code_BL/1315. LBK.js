@@ -747,87 +747,47 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
 }
 
 /**
- * 09. 生成唯一記帳ID - 強化唯一性保證
- * @version 2025-07-15-V1.0.7
- * @date 2025-07-15 19:10:00
- * @description 生成格式為YYYYMMDD-NNNNN的唯一記帳ID，加強併發安全性和唯一性保證
+ * 09. 生成唯一記帳ID - 使用與BK模組一致的格式
+ * @version 2025-12-12-V1.3.1
+ * @date 2025-12-12 12:00:00
+ * @description 生成格式為txn_timestamp_random的唯一記帳ID，與BK模組保持一致
  */
 async function LBK_generateBookkeepingId(userId, processId) {
   try {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const day = today.getDate().toString().padStart(2, '0');
-    const dateStr = `${year}${month}${day}`;
+    // 使用與BK模組相同的ID生成格式
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    const transactionId = `txn_${timestamp}_${random}`;
 
+    // 檢查ID唯一性
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
 
-    // 使用事務確保併發安全性
-    const result = await db.runTransaction(async (transaction) => {
-      // 查詢當天的所有記錄
-      const todayQuery = await db
-        .collection('ledgers')
-        .doc(`user_${userId}`)
-        .collection('entries')
-        .where('收支ID', '>=', dateStr + '-00000')
-        .where('收支ID', '<=', dateStr + '-99999')
-        .orderBy('收支ID', 'desc')
-        .limit(1)
-        .get();
+    // 檢查是否已存在相同的ID
+    const existingDoc = await db
+      .collection('ledgers')
+      .doc(`user_${userId}`)
+      .collection('transactions')
+      .where('id', '==', transactionId)
+      .limit(1)
+      .get();
 
-      let maxSerialNumber = 0;
+    if (!existingDoc.empty) {
+      // 如果ID重複，生成新的ID
+      const newRandom = Math.random().toString(36).substring(2, 8);
+      const fallbackId = `txn_${Date.now()}_${newRandom}`;
+      LBK_logWarning(`記帳ID重複，使用備用ID: ${fallbackId} [${processId}]`, "ID生成", userId, "LBK_generateBookkeepingId");
+      return fallbackId;
+    }
 
-      if (!todayQuery.empty) {
-        const lastDoc = todayQuery.docs[0];
-        const lastId = lastDoc.data().收支ID;
-        if (lastId && lastId.startsWith(dateStr + '-')) {
-          const serialPart = lastId.split('-')[1];
-          if (serialPart) {
-            const serialNumber = parseInt(serialPart, 10);
-            if (!isNaN(serialNumber)) {
-              maxSerialNumber = serialNumber;
-            }
-          }
-        }
-      }
-
-      // 生成新的序列號
-      const nextSerialNumber = maxSerialNumber + 1;
-      const formattedNumber = nextSerialNumber.toString().padStart(5, '0');
-      const bookkeepingId = `${dateStr}-${formattedNumber}`;
-
-      // 加入微秒時間戳確保唯一性
-      const microTimestamp = Date.now() * 1000 + Math.floor(Math.random() * 1000);
-      const uniqueId = `${bookkeepingId}-${microTimestamp.toString(36)}`;
-
-      // 檢查ID是否已存在（雙重驗證）
-      const existingDoc = await db
-        .collection('ledgers')
-        .doc(`user_${userId}`)
-        .collection('entries')
-        .where('收支ID', '==', bookkeepingId)
-        .limit(1)
-        .get();
-
-      if (!existingDoc.empty) {
-        // 如果ID已存在，使用帶時間戳的唯一ID
-        return uniqueId;
-      }
-
-      return bookkeepingId;
-    });
-
-    return result;
+    LBK_logInfo(`記帳ID生成成功（BK標準格式）: ${transactionId} [${processId}]`, "ID生成", userId, "LBK_generateBookkeepingId");
+    return transactionId;
 
   } catch (error) {
     LBK_logError(`生成記帳ID失敗: ${error.toString()} [${processId}]`, "ID生成", userId, "ID_GEN_ERROR", error.toString(), "LBK_generateBookkeepingId");
 
-    // 強化的備用ID生成
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
-    const processHash = processId ? processId.slice(-4) : '0000';
-    const fallbackId = `F${timestamp}-${random}-${processHash}`;
+    // 備用ID生成（使用BK標準格式）
+    const fallbackId = `txn_${Date.now()}_backup`;
     return fallbackId;
   }
 }
