@@ -1,0 +1,110 @@
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [3841e283] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [3841e283]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [3841e283] (INFO)
+開始非同步處理請求 [3841e283]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [3841e283] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [3841e283] (INFO)
+處理消息事件: text [3841e283]
+收到文本消息: "測試支出777777" [3841e283]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "測試支出777777" [3841e283] (INFO)
+開始AM用戶驗證流程 [3841e283]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [3841e283] (INFO)
+用戶不存在，開始自動註冊流程: Uae47d9d496e4596d70ed724a7d6e2948 [3841e283]
+[WH 2.0.16 LOG] WH 階段一: 用戶不存在，開始自動註冊 Uae47d9d496e4596d70ed724a7d6e2948 [3841e283] (INFO)
+⚠️ AM_initializeUserSubjects已棄用，請使用WCM模組進行科目管理
+🔄 AM_initializeUserLedger: 階段四完成版 - AM專注帳本基礎結構，整合其他模組功能
+📋 AM_initializeUserLedger: v8.0.0 - 調用WCM、BM、CM模組處理科目、帳戶、預算、協作功能
+📝 AM_initializeUserLedger: 準備建立帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948（符合1311.FS.js規範）
+  - 帳本主文檔 user_Uae47d9d496e4596d70ed724a7d6e2948 準備寫入（階段二優化版）
+  - 階段一修正：確保帳本結構存在...
+🔧 AM_initializeUserLedger: 直接使用Firebase建立帳本子集合結構...
+✅ AM_initializeUserLedger: 子集合 transactions 初始化完成
+✅ AM_initializeUserLedger: 子集合 categories 初始化完成
+✅ AM_initializeUserLedger: 子集合 wallets 初始化完成
+✅ AM_initializeUserLedger: 子集合 budgets 初始化完成
+  - 1311.FS.js結構建立成功: ["transactions","categories","wallets","budgets"]
+📋 AM_initializeUserLedger: 調用WCM模組進行科目初始化...
+[2025-12-12T02:46:21.383Z] [INFO] [DL] 開始創建科目: 批量載入 (帳本: user_Uae47d9d496e4596d70ed724a7d6e2948) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-12T02:46:21.384Z] [INFO] [DL] WCM模組v1.2.0初始化開始 - 子集合架構 [Location: Object.DL_info]
+[2025-12-12T02:46:21.385Z] [INFO] [DL] WCM模組初始化完成v1.2.0 - 子集合架構 [Location: Object.DL_info]
+[2025-12-12T02:46:21.385Z] [INFO] [DL] 執行0099科目批量載入至帳本: user_Uae47d9d496e4596d70ed724a7d6e2948 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-12T02:46:21.385Z] [INFO] [DL] 開始載入0099科目資料... [Location: Object.DL_info]
+[2025-12-12T02:46:21.386Z] [INFO] [DL] 成功載入 63 筆科目資料 [Location: Object.DL_info]
+[2025-12-12T02:46:21.866Z] [INFO] [DL] 批量載入完成: 63 筆科目 (路徑: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/categories) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+✅ AM_initializeUserLedger: WCM科目初始化完成，載入63筆科目
+💳 AM_initializeUserLedger: 調用WCM模組進行帳戶初始化...
+[2025-12-12T02:46:21.867Z] [INFO] [DL] 開始創建帳戶: 預設帳戶 (帳本: user_Uae47d9d496e4596d70ed724a7d6e2948) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-12T02:46:21.867Z] [INFO] [DL] 執行預設帳戶建立至帳本: user_Uae47d9d496e4596d70ed724a7d6e2948 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-12T02:46:21.867Z] [INFO] [DL] 開始載入預設配置資料... [Location: Object.DL_info]
+[2025-12-12T02:46:21.868Z] [INFO] [DL] 成功載入所有預設配置 [Location: Object.DL_info]
+⚠️ AM_initializeUserLedger: WCM帳戶初始化失敗: 載入預設帳戶配置失敗
+💰 AM_initializeUserLedger: 調用BM模組進行預算結構初始化...
+[BM_createBudgetsSubcollectionFramework] 階段二整合：建立預算子集合框架 - 帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948
+[BM_createBudgetsSubcollectionFramework] ✅ 預算子集合框架建立成功 - 路徑: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/budgets
+[2025-12-12T02:46:21.983Z] [INFO] [DL] 建立預算子集合框架 - 帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948 [Location: BM.BM_createBudgetsSubcollectionFramework]
+✅ AM_initializeUserLedger: BM預算結構初始化完成
+🤝 AM_initializeUserLedger: 調用CM模組進行協作結構初始化...
+[2025-12-12T02:46:21.983Z] [INFO] [CM] 階段三：開始初始化協作系統完整架構 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: CM_initializeCollaborationSystem]
+[2025-12-12T02:46:22.330Z] [INFO] [CM] 階段三：協作系統初始化完成 - 成功: 3/3 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: CM_initializeCollaborationSystem]
+✅ AM_initializeUserLedger: CM協作結構初始化完成
+  - 階段一修正：預設帳戶由1311.FS.js統一處理
+  - 階段一修正：交易和預算子集合由1311.FS.js統一處理
+🔄 階段一修正：建立帳本主文檔...
+✅ 帳本主文檔建立成功: user_Uae47d9d496e4596d70ed724a7d6e2948
+  - 帳本 user_Uae47d9d496e4596d70ed724a7d6e2948 初始化標誌更新為 true
+  - 保留範例文檔以確保子集合結構完整性
+✅ 帳本 user_Uae47d9d496e4596d70ed724a7d6e2948 驗證成功
+✅ Categories集合: 已建立
+✅ wallets集合: 已建立
+✅ Transactions集合: 已建立
+✅ Budgets集合: 已建立
+[2025-12-12T02:46:23.153Z] [INFO] [DL] AM [Location: AM_initializeUserLedger]
+[2025-12-12T02:46:23.153Z] [INFO] [DL] AM [Location: Object.AM_createLineAccount]
+✅ 自動註冊成功: Uae47d9d496e4596d70ed724a7d6e2948, 帳本ID: Uae47d9d496e4596d70ed724a7d6e2948 [3841e283]
+[WH 2.0.16 LOG] WH 階段一: 自動註冊成功 Uae47d9d496e4596d70ed724a7d6e2948 [3841e283] (INFO)
+用戶驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [3841e283]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+🔄 AM_getUserDefaultLedger: 為用戶 Uae47d9d496e4596d70ed724a7d6e2948 自動初始化預設帳本...
+🔄 AM_initializeUserLedger: 階段四完成版 - AM專注帳本基礎結構，整合其他模組功能
+📋 AM_initializeUserLedger: v8.0.0 - 調用WCM、BM、CM模組處理科目、帳戶、預算、協作功能
+📝 AM_initializeUserLedger: 準備建立帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948（符合1311.FS.js規範）
+⚠️ AM_initializeUserLedger: 帳本 user_Uae47d9d496e4596d70ed724a7d6e2948 已存在，檢查完整性...
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [3841e283]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [3841e283] (INFO)
+[INFO] [LBK] 開始處理LINE OA請求 [3841e283] | 智慧路由 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_processQuickBookkeeping
+[DEBUG] [LBK] 使用LBK獨立統計關鍵字配置 [3841e283] | 關鍵字檢核 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_checkStatisticsKeyword
+[INFO] [LBK] 執行記帳處理流程 [3841e283] | 快速記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_processQuickBookkeeping
+[DEBUG] [LBK] 解析用戶訊息: "測試支出777777" [3841e283] | 訊息解析 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_parseUserMessage
+[DEBUG] [LBK] 開始解析格式: "測試支出777777" [3841e283] | 格式解析 |  | LBK_parseInputFormat
+[DEBUG] [LBK] 提取金額: "測試支出777777" [3841e283] | 金額提取 |  | LBK_extractAmount
+[DEBUG] [LBK] 查詢科目代碼: "測試支出" [3841e283] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_getSubjectCode
+[ERROR] [LBK] 查詢科目代碼失敗: Error: 科目表為空 [3841e283] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | SUBJECT_ERROR | Error: 科目表為空 | LBK_getSubjectCode
+[DEBUG] [LBK] 模糊匹配: "測試支出" [3841e283] | 模糊匹配 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_fuzzyMatch
+DD_distributeData處理完成，結果預覽: {"success":false,"hasResponseMessage":true,"responseMsgLength":94,"errorType":"SUBJECT_NOT_FOUND","moduleCode":"LBK","hasPartialData":false} [3841e283]
+準備回覆已驗證的訊息 [3841e283]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","processingTime","moduleVersion","errorType"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"message":"記帳失敗！\n金額：777777元\n支付方式：未指定\n時間：2025/12/12 上午10:46\n科目：測試支出\n備註：測試支出777777\n使用者類型：J\n錯誤原因：找不到科目: 測試支出","responseMessage":"記帳失敗！\n金額：777777元\n支付方式：未指定\n時間：2025/12/12 上午10:46...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=94
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (記帳失敗！
+金額：777777元
+支付方式：未指定
+時間：2...)
+WH_replyMessage: 開始回覆訊息: 記帳失敗！
+金額：777777元
+支付方式：未指定
+時間：2025/12/12 上午10:46
+科目...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳失敗！
+金額：777777元
+支付方式：未指定
+時間：2025/12/12 上午10:46
+科目... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+訊息回覆結果: {} [3841e283]
+非同步處理完成，已清理數據 [3841e283]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [3841e283] (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
