@@ -388,6 +388,9 @@ function LBK_extractAmount(text, processId) {
 async function LBK_getSubjectCode(subjectName, userId, processId) {
   try {
     LBK_logDebug(`查詢科目代碼: "${subjectName}" [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
+    
+    // 記錄同義詞匹配過程
+    LBK_logDebug(`開始同義詞匹配，輸入: "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
 
     if (!subjectName || !userId) {
       throw new Error("科目名稱或用戶ID為空");
@@ -419,7 +422,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
       throw new Error("科目表為空或無啟用的科目");
     }
 
-    // 優化的匹配算法
+    // 強化的匹配算法 - 支援同義詞模糊匹配
     let exactMatch = null;
     let synonymMatch = null;
     let partialMatches = [];
@@ -456,6 +459,19 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
               subName: String(data.subCategoryName || data.categoryName || '')
             };
             break;
+          }
+          
+          // 新增：同義詞包含匹配（例如：飯糰 可以匹配到 御飯糰）
+          if (synonymLower.includes(normalizedInput) && normalizedInput.length >= 2) {
+            if (!synonymMatch) { // 只在沒有精確匹配時使用
+              synonymMatch = {
+                majorCode: String(data.parentId || data.categoryId),
+                majorName: String(data.categoryName || ''),
+                subCode: String(data.categoryId || ''),
+                subName: String(data.subCategoryName || data.categoryName || '')
+              };
+              LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+            }
           }
         }
       }
@@ -552,7 +568,7 @@ async function LBK_fuzzyMatch(input, threshold, userId, processId) {
         });
       }
 
-      // 3. 同義詞匹配
+      // 3. 強化同義詞匹配（支援部分匹配）
       if (subject.synonyms) {
         const synonymsList = subject.synonyms.split(",").map(syn => syn.trim().toLowerCase());
         for (const synonym of synonymsList) {
@@ -563,10 +579,11 @@ async function LBK_fuzzyMatch(input, threshold, userId, processId) {
               matchType: "synonym_exact_match"
             });
           } else if (synonym.includes(inputLower) && inputLower.length >= 2) {
-            const score = (inputLower.length / synonym.length) * 0.85;
+            // 提高包含匹配的分數，例如：飯糰 → 御飯糰
+            const score = Math.min(0.9, (inputLower.length / synonym.length) * 0.9);
             matches.push({
               ...subject,
-              score: Math.min(0.85, score),
+              score: score,
               matchType: "synonym_contains_input"
             });
           } else if (inputLower.includes(synonym) && synonym.length >= 2) {
@@ -576,6 +593,17 @@ async function LBK_fuzzyMatch(input, threshold, userId, processId) {
               score: Math.min(0.8, score),
               matchType: "input_contains_synonym"
             });
+          }
+          // 新增：模糊相似度匹配（例如：飯糰 vs 飯团）
+          else {
+            const similarity = LBK_calculateStringSimilarity(inputLower, synonym);
+            if (similarity > 0.7) {
+              matches.push({
+                ...subject,
+                score: similarity * 0.75,
+                matchType: "synonym_fuzzy_match"
+              });
+            }
           }
         }
       }
@@ -1093,14 +1121,13 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
         }
       }
 
-      // 統一的7行錯誤格式
+      // 統一的6行錯誤格式（移除使用者類型）
       return `記帳失敗！\n` +
              `金額：${amount}元\n` +
              `支付方式：${paymentMethod}\n` +
              `時間：${currentDateTime}\n` +
              `科目：${subject}\n` +
              `備註：${originalInput}\n` +
-             `使用者類型：J\n` +
              `錯誤原因：${errorMessage}`;
     }
 
@@ -1121,7 +1148,6 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
            `時間：${currentDateTime}\n` +
            `科目：未知科目\n` +
            `備註：${options.originalInput || ''}\n` +
-           `使用者類型：J\n` +
            `錯誤原因：訊息格式化錯誤`;
   }
 }
