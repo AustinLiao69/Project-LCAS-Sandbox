@@ -63,24 +63,25 @@ let LBK_INIT_STATUS = {
  */
 async function LBK_processQuickBookkeeping(inputData) {
   const processId = inputData.processId || crypto.randomUUID().substring(0, 8);
+  const userId = inputData.userId; // 獲取 userId
 
   try {
-    LBK_logInfo(`開始處理LINE OA請求 [${processId}]`, "智慧路由", inputData.userId || "", "LBK_processQuickBookkeeping");
+    LBK_logInfo(`開始處理LINE OA請求 [${processId}]`, "智慧路由", userId || "", "LBK_processQuickBookkeeping");
 
     // 第一步：檢查是否為統計查詢關鍵字
-    const keywordCheckResult = await LBK_checkStatisticsKeyword(inputData.messageText, inputData.userId, processId);
+    const keywordCheckResult = await LBK_checkStatisticsKeyword(inputData.messageText, userId, processId);
 
     if (keywordCheckResult.isStatisticsRequest) {
       // 路由到SR模組處理統計查詢
-      LBK_logInfo(`檢測到統計查詢關鍵字，路由至SR模組 [${processId}]`, "統計路由", inputData.userId || "", "LBK_processQuickBookkeeping");
+      LBK_logInfo(`檢測到統計查詢關鍵字，路由至SR模組 [${processId}]`, "統計路由", userId || "", "LBK_processQuickBookkeeping");
       return await LBK_handleStatisticsRequest(keywordCheckResult.statisticsType, inputData, processId);
     }
 
     // 第二步：執行記帳處理邏輯
-    LBK_logInfo(`執行記帳處理流程 [${processId}]`, "快速記帳", inputData.userId || "", "LBK_processQuickBookkeeping");
+    LBK_logInfo(`執行記帳處理流程 [${processId}]`, "快速記帳", userId || "", "LBK_processQuickBookkeeping");
 
     // 解析用戶訊息
-    const parseResult = await LBK_parseUserMessage(inputData.messageText, inputData.userId, processId);
+    const parseResult = await LBK_parseUserMessage(inputData.messageText, userId, processId);
 
     if (!parseResult.success) {
       const errorMessage = parseResult.error || "解析失敗";
@@ -102,6 +103,12 @@ async function LBK_processQuickBookkeeping(inputData) {
         errorType: parseResult.errorType || "PARSE_ERROR"
       };
     }
+
+    // 解析支付方式（使用動態錢包查詢）
+    const paymentMethodResult = await LBK_parsePaymentMethod(inputData.messageText, userId, processId);
+    const paymentMethod = paymentMethodResult.method;
+    const walletId = paymentMethodResult.walletId;
+    const walletName = paymentMethodResult.walletName;
 
     // 執行記帳
     const bookkeepingResult = await LBK_executeBookkeeping(parseResult.data, processId);
@@ -133,7 +140,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       originalInput: parseResult.data.subject
     });
 
-    LBK_logInfo(`快速記帳完成 [${processId}]`, "快速記帳", inputData.userId || "", "LBK_processQuickBookkeeping");
+    LBK_logInfo(`快速記帳完成 [${processId}]`, "快速記帳", userId || "", "LBK_processQuickBookkeeping");
 
     return {
       success: true,
@@ -147,7 +154,7 @@ async function LBK_processQuickBookkeeping(inputData) {
     };
 
   } catch (error) {
-    LBK_logError(`快速記帳處理失敗: ${error.toString()} [${processId}]`, "快速記帳", inputData.userId || "", "PROCESS_ERROR", error.toString(), "LBK_processQuickBookkeeping");
+    LBK_logError(`快速記帳處理失敗: ${error.toString()} [${processId}]`, "快速記帳", userId || "", "PROCESS_ERROR", error.toString(), "LBK_processQuickBookkeeping");
 
     // 使用LBK_formatReplyMessage統一格式化系統錯誤回覆
     const formattedErrorMessage = LBK_formatReplyMessage(null, "LBK", {
@@ -398,7 +405,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
 
     const ledgerId = `user_${userId}`;
     const normalizedInput = String(subjectName).trim().toLowerCase();
-    
+
     // 記錄同義詞匹配過程
     LBK_logDebug(`開始同義詞匹配，輸入: "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
 
@@ -460,7 +467,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
             };
             break;
           }
-          
+
           // 新增：同義詞包含匹配（例如：飯糰 可以匹配到 御飯糰）
           if (synonymLower.includes(normalizedInput) && normalizedInput.length >= 2) {
             if (!synonymMatch) { // 只在沒有精確匹配時使用
@@ -473,7 +480,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
               LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
             }
           }
-          
+
           // 新增：反向包含匹配（例如：停車費 可以匹配到 停車）
           if (normalizedInput.includes(synonymLower) && synonymLower.length >= 2) {
             if (!synonymMatch) { // 只在沒有精確匹配時使用
@@ -1976,6 +1983,75 @@ function LBK_formatStatisticsMessage(period, statsData) {
 ${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
 }
 
+/**
+ * 解析支付方式 - 動態從用戶錢包取得
+ * @version 2025-12-12-V2.0.0
+ * @description 從用戶的錢包子集合中動態取得支付方式，移除hardcoded邏輯
+ */
+async function LBK_parsePaymentMethod(text, userId, processId) {
+  try {
+    // 取得用戶預設帳本ID
+    const ledgerId = `user_${userId}`;
+
+    // 從Firestore取得用戶的錢包列表
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    const walletsSnapshot = await db.collection(`ledgers/${ledgerId}/wallets`)
+      .where('userId', '==', userId)
+      .where('status', '==', 'active')
+      .get();
+
+    if (walletsSnapshot.empty) {
+      LBK_logWarning(`用戶 ${userId} 沒有可用的錢包，使用預設現金 [${processId}]`, "支付方式解析", userId, "LBK_parsePaymentMethod");
+      return { method: 'cash', walletId: 'default_cash', walletName: '現金' };
+    }
+
+    // 建立錢包關鍵字映射
+    const userWallets = [];
+    walletsSnapshot.forEach(doc => {
+      const walletData = doc.data();
+      userWallets.push({
+        id: walletData.id,
+        name: walletData.name,
+        type: walletData.type,
+        isDefault: walletData.isDefault || false
+      });
+    });
+
+    LBK_logDebug(`找到 ${userWallets.length} 個可用錢包 [${processId}]`, "支付方式解析", userId, "LBK_parsePaymentMethod");
+
+    // 在文字中尋找匹配的錢包名稱
+    const normalizedText = text.toLowerCase();
+    for (const wallet of userWallets) {
+      const walletNameLower = wallet.name.toLowerCase();
+      if (normalizedText.includes(walletNameLower)) {
+        LBK_logInfo(`匹配到錢包: ${wallet.name} (${wallet.id}) [${processId}]`, "支付方式解析", userId, "LBK_parsePaymentMethod");
+        return {
+          method: wallet.type,
+          walletId: wallet.id,
+          walletName: wallet.name
+        };
+      }
+    }
+
+    // 如果沒有匹配到特定錢包，使用預設錢包
+    const defaultWallet = userWallets.find(w => w.isDefault) || userWallets[0];
+    LBK_logInfo(`使用預設錢包: ${defaultWallet.name} (${defaultWallet.id}) [${processId}]`, "支付方式解析", userId, "LBK_parsePaymentMethod");
+
+    return {
+      method: defaultWallet.type,
+      walletId: defaultWallet.id,
+      walletName: defaultWallet.name
+    };
+
+  } catch (error) {
+    LBK_logError(`解析支付方式失敗: ${error.message} [${processId}]`, "支付方式解析", userId, "PAYMENT_METHOD_PARSE_ERROR", error.toString(), "LBK_parsePaymentMethod");
+
+    // 錯誤時返回預設值
+    return { method: 'cash', walletId: 'default_cash', walletName: '現金' };
+  }
+}
+
 // 確保所有函數都正確導出，避免循環依賴問題
 const LBK_MODULE = {
   // 核心函數 - 確保正確導出
@@ -2008,6 +2084,9 @@ const LBK_MODULE = {
   LBK_processDirectStatistics: LBK_processDirectStatistics,
   LBK_getDirectStatistics: LBK_getDirectStatistics,
   LBK_formatStatisticsMessage: LBK_formatStatisticsMessage,
+
+  // 新增支付方式解析函數
+  LBK_parsePaymentMethod: LBK_parsePaymentMethod,
 
   // 版本資訊
   MODULE_VERSION: "1.3.0",
