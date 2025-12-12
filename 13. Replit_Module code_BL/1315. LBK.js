@@ -13,27 +13,6 @@ const crypto = require('crypto');
 // 引入Firebase動態配置模組
 const firebaseConfig = require('./1399. firebase-config');
 
-// 確保 Firebase Admin 在模組載入時就初始化
-if (!admin.apps.length) {
-  try {
-    firebaseConfig.initializeFirebaseAdmin();
-    console.log('🔥 LBK模組: Firebase Admin 動態配置初始化完成');
-  } catch (error) {
-    console.error('❌ LBK模組: Firebase Admin 動態配置初始化失敗:', error);
-  }
-}
-
-// 引入依賴模組
-const DL = require('./1310. DL.js');
-
-// 引入SR模組 (保留用於其他非統計功能，如推播服務等)
-let SR = null;
-try {
-  SR = require('./1305. SR.js');
-} catch (error) {
-  console.warn('LBK模組: SR模組載入失敗，部分進階功能將受限:', error.message);
-}
-
 // 配置參數
 const LBK_CONFIG = {
   DEBUG: true,
@@ -45,6 +24,7 @@ const LBK_CONFIG = {
     MIN_AMOUNT_DIGITS: 3,
     MAX_REMARK_LENGTH: 20
   }
+  // 移除hardcoded預設支付方式，改為從用戶錢包動態取得
 };
 
 // 初始化狀態追蹤
@@ -1561,13 +1541,16 @@ async function LBK_initializeFirestore() {
       return LBK_INIT_STATUS.firestore_db;
     }
 
-    // 檢查 Firebase Admin 是否已初始化
+    // 確保 Firebase Admin 在模組載入時就初始化
     if (!admin.apps.length) {
       console.log('🔄 LBK模組: Firebase Admin 尚未初始化，開始初始化...');
-
-      firebaseConfig.initializeFirebaseAdmin();
-
-      console.log('✅ LBK模組: Firebase Admin 動態配置初始化完成');
+      try {
+        firebaseConfig.initializeFirebaseAdmin();
+        console.log('✅ LBK模組: Firebase Admin 動態配置初始化完成');
+      } catch (error) {
+        console.error('❌ LBK模組: Firebase Admin 動態配置初始化失敗:', error);
+        throw error; // 重新拋出錯誤，以便LBK_initializeFirestore捕獲
+      }
     }
 
     // 取得 Firestore 實例
@@ -1866,7 +1849,7 @@ async function LBK_getDirectStatistics(userId, period) {
         startDate = now.clone().startOf('day').toDate();
         endDate = now.clone().endOf('day').toDate();
         break;
-      case 'weekly':  
+      case 'weekly':
         startDate = now.clone().startOf('week').toDate();
         endDate = now.clone().endOf('week').toDate();
         break;
@@ -1911,7 +1894,7 @@ async function LBK_getDirectStatistics(userId, period) {
       if (doc.id === '_init' || doc.id.startsWith('_')) {
         return;
       }
-      
+
       const data = doc.data();
       const amount = parseFloat(data.amount || 0);
       const type = data.type;
@@ -1947,7 +1930,7 @@ async function LBK_getDirectStatistics(userId, period) {
       error: error.message,
       data: {
         totalIncome: 0,
-        totalExpense: 0, 
+        totalExpense: 0,
         recordCount: 0
       }
     };
@@ -1963,7 +1946,7 @@ async function LBK_getDirectStatistics(userId, period) {
 function LBK_formatStatisticsMessage(period, statsData) {
   const periodNames = {
     'today': '今日',
-    'week': '本週', 
+    'week': '本週',
     'month': '本月'
   };
 
@@ -1985,7 +1968,7 @@ function LBK_formatStatisticsMessage(period, statsData) {
   return `📊 ${periodName}統計
 
 💰 收入：${totalIncome}元
-💸 支出：${totalExpense}元  
+💸 支出：${totalExpense}元
 📈 淨額：${balance >= 0 ? '+' : ''}${balance}元
 📝 筆數：${recordCount}筆
 
@@ -2063,7 +2046,7 @@ async function LBK_parsePaymentMethod(text, userId, processId) {
 
 // 確保所有函數都正確導出，避免循環依賴問題
 const LBK_MODULE = {
-  // 核心函數 - 確保正確導出
+  // Core Functions
   LBK_processQuickBookkeeping: LBK_processQuickBookkeeping,
   LBK_parseUserMessage: LBK_parseUserMessage,
   LBK_parseInputFormat: LBK_parseInputFormat,
@@ -2086,7 +2069,7 @@ const LBK_MODULE = {
   LBK_validateDataInternal: LBK_validateDataInternal,
   LBK_calculateStringSimilarity: LBK_calculateStringSimilarity,
 
-  // 統計查詢函數 - v1.3.0新增
+  // Statistics Functions (v1.3.0 New)
   LBK_checkStatisticsKeyword: LBK_checkStatisticsKeyword,
   LBK_handleStatisticsRequest: LBK_handleStatisticsRequest,
   LBK_buildStatisticsQuickReply: LBK_buildStatisticsQuickReply,
@@ -2094,13 +2077,13 @@ const LBK_MODULE = {
   LBK_getDirectStatistics: LBK_getDirectStatistics,
   LBK_formatStatisticsMessage: LBK_formatStatisticsMessage,
 
-  // 新增支付方式解析函數
+  // New Payment Method Parsing Function
   LBK_parsePaymentMethod: LBK_parsePaymentMethod,
 
-  // 版本資訊
+  // Version Information
   MODULE_VERSION: "1.3.0",
   MODULE_NAME: "LBK"
 };
 
-// 導出模組
+// Export Module
 module.exports = LBK_MODULE;
