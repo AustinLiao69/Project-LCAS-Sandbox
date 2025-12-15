@@ -65,7 +65,64 @@
 - 缺乏標準化的新科目歸類流程
 - 同義詞管理複雜，影響辨識精準度
 
-#### 3.1.2 優化策略
+#### 3.1.2 新科目辨識流程設計（基於0071文件第三章）
+
+**步驟1: 使用者輸入**
+```
+使用者在LINE輸入: "飯糰28"
+```
+
+**步驟2: 科目識別失敗處理**
+```
+系統檢測：預設科目庫中無「飯糰」科目
+觸發：新科目歸類流程
+```
+
+**步驟3: 主科目選擇介面**
+```
+系統回覆：
+"您的科目庫無此科目，請問這是屬於什麼科目？"
+101 生鮮雜貨
+102 生活家用
+103 交通費用  
+104 餐飲費用
+105 娛樂消遣
+106 運動嗜好
+107 寵物生活
+201 財務收入
+301 財務支出
+000 不歸類"
+```
+
+**步驟4: 使用者選擇主科目**
+```
+使用者輸入: "104"
+系統識別：選擇「餐飲費用」類別
+```
+
+**步驟5: 完成歸類確認並顯示記帳成功訊息**
+```
+系統回覆：
+"已將飯糰歸類至 104 餐飲費用"
+記帳成功！
+金額：28元(支出)
+支付方式：
+時間：2025/12/15 下午02:00
+科目：餐飲費用
+備註：飯糰
+收支ID：xxxxxxxxxxxxx
+```
+
+**特殊處理：000 不歸類選項**
+```
+若使用者輸入000 不歸類，則將此輸入計入000 不歸類的同義詞下。
+
+系統回覆：
+"已將飯糰歸類至 000 不歸類！
+後續若需變更，請至Sophr APP端編輯"
+```
+
+#### 3.1.3 優化策略核心原則
 ```
 簡化策略核心原則：
 1. categoryName保留 - 提供基本科目分類
@@ -178,36 +235,133 @@ Firebase儲存（完整記帳資料）
 - **AM → LBK**：帳本ID傳遞，科目資料準備
 - **LBK內部**：科目識別 → 新科目處理 → 使用者歸類
 
-### 4.2 三步驟辨識流程
+### 4.2 新科目辨識流程技術實作
 
-#### 4.2.1 步驟1：輸入解析
+#### 4.2.1 標準記帳流程
+```javascript
+// 標準流程：使用者輸入 → 科目識別 → 直接記帳完成
+// 例：「午餐150」→ 識別為「餐飲費用」→ 記帳成功
+const standardFlow = async (userInput, userId) => {
+  const parseResult = parseUserInput(userInput); // 解析輸入
+  const subjectResult = await LBK_identifySubject(parseResult.subject, userId);
+  
+  if (subjectResult.success) {
+    return await completeTransaction(parseResult, subjectResult.categoryInfo);
+  } else {
+    // 觸發新科目辨識流程
+    return await newSubjectClassificationFlow(parseResult, userId);
+  }
+};
+```
+
+#### 4.2.2 新科目辨識五步驟流程
+
+**步驟1：輸入解析**
 ```javascript
 // 解析使用者輸入：「飯糰28」
-const parseResult = {
-  subject: "飯糰",
-  amount: 28,
-  paymentMethod: "刷卡" // 預設值
-}
+const parseUserInput = (input) => {
+  // 從輸入中提取科目名稱、金額等資訊
+  return {
+    subject: "飯糰",
+    amount: 28,
+    paymentMethod: "刷卡", // 預設值
+    type: "expense" // 預設支出
+  };
+};
 ```
 
-#### 4.2.2 步驟2：科目識別
+**步驟2：科目識別失敗處理**
 ```javascript
-// 在簡化的0099資料中查找
-const subjectResult = await LBK_identifySubject("飯糰", userId);
-if (!subjectResult.success) {
-  // 觸發新科目歸類流程
-  return LBK_handleNewSubjectClassification(parseResult);
-}
+// 在簡化的0099資料中查找，觸發新科目歸類流程
+const LBK_identifySubject = async (subject, userId) => {
+  const categories = await getSimplifiedCategories(userId);
+  const foundCategory = categories.find(cat => 
+    cat.categoryName.includes(subject) || 
+    cat.synonyms.includes(subject)
+  );
+  
+  return {
+    success: !!foundCategory,
+    categoryInfo: foundCategory || null
+  };
+};
 ```
 
-#### 4.2.3 步驟3：歸類處理
+**步驟3：主科目選擇介面生成**
 ```javascript
-// 呈現歸類選項給使用者
-const classificationOptions = {
-  "101": "生活家用",
-  "102": "餐飲費用", 
-  "103": "交通費用",
-  "000": "不歸類"
+// 生成科目選擇介面訊息
+const buildClassificationInterface = () => {
+  const options = [
+    "101 生鮮雜貨",
+    "102 生活家用", 
+    "103 交通費用",
+    "104 餐飲費用",
+    "105 娛樂消遣",
+    "106 運動嗜好",
+    "107 寵物生活",
+    "201 財務收入",
+    "301 財務支出",
+    "000 不歸類"
+  ];
+  
+  return `您的科目庫無此科目，請問這是屬於什麼科目？\n${options.join('\n')}`;
+};
+```
+
+**步驟4：使用者選擇處理**
+```javascript
+// 處理使用者科目選擇
+const processUserSelection = async (selection, originalInput, userId) => {
+  const categoryMapping = {
+    "101": { name: "生鮮雜貨", parentId: 101 },
+    "102": { name: "生活家用", parentId: 102 },
+    "103": { name: "交通費用", parentId: 103 },
+    "104": { name: "餐飲費用", parentId: 104 },
+    "105": { name: "娛樂消遣", parentId: 105 },
+    "106": { name: "運動嗜好", parentId: 106 },
+    "107": { name: "寵物生活", parentId: 107 },
+    "201": { name: "財務收入", parentId: 201 },
+    "301": { name: "財務支出", parentId: 301 },
+    "000": { name: "不歸類", parentId: 0 }
+  };
+  
+  return categoryMapping[selection] || null;
+};
+```
+
+**步驟5：完成歸類並記帳**
+```javascript
+// 完成新科目歸類並執行記帳
+const completeClassificationAndTransaction = async (parseResult, categoryInfo, userId) => {
+  // 1. 建立新科目記錄（加入同義詞）
+  await createNewSubjectRecord(parseResult.subject, categoryInfo, userId);
+  
+  // 2. 執行記帳
+  const transactionResult = await completeTransaction(parseResult, categoryInfo);
+  
+  // 3. 回覆確認訊息
+  return buildSuccessMessage(parseResult, categoryInfo, transactionResult);
+};
+```
+
+**000 不歸類特殊處理**
+```javascript
+// 處理「000 不歸類」的特殊邏輯
+const handleUncategorized = async (parseResult, userId) => {
+  const uncategorizedInfo = { 
+    name: "不歸類", 
+    parentId: 0,
+    categoryId: null,
+    subCategoryName: null
+  };
+  
+  // 將原始輸入加入「不歸類」的同義詞
+  await addToUncategorizedSynonyms(parseResult.subject, userId);
+  
+  return {
+    message: `已將${parseResult.subject}歸類至 000 不歸類！\n後續若需變更，請至Sophr APP端編輯`,
+    categoryInfo: uncategorizedInfo
+  };
 };
 ```
 
