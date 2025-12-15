@@ -444,4 +444,5 @@ MM 	 DD 	 Description 	    Progress
 12	12	 修改LINE記帳流程：WH->LBK->AM註冊並在firebase開一個帳戶及帳本後->在firebase記帳  	 Closed
 12	12	 研究導出firebase資料  	 Closed
 12	15	 部署本專案  	 Closed
-12	15	 思考在LINE快速記帳模式下，user輸入的帳目要如何匹配到科目(categories)  	 Ongoing
+12	15	 思考在LINE快速記帳模式下，user輸入的帳目要如何匹配到科目(categories)  	 Closed
+12	15	 撰寫0071文件  	 Ongoing
