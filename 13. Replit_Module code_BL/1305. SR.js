@@ -13,12 +13,11 @@ const moment = require('moment-timezone');
 const firebaseConfig = require('./1399. firebase-config');
 
 // 引入依賴模組
-let DL, WH, AM, FS, DD1, BK, LBK;
+let DL, WH, AM, DD1, BK, LBK;
 try {
   DL = require('./1310. DL.js');
   WH = require('./1320. WH.js');
   AM = require('./1309. AM.js');
-  FS = require('./1311. FS.js');
   DD1 = require('./1331. DD1.js');
   BK = require('./1301. BK.js');
   LBK = require('./1315. LBK.js');
@@ -58,7 +57,7 @@ const SR_CONFIG = {
 // Quick Reply 按鈕配置
 const SR_QUICK_REPLY_CONFIG = {
   STATISTICS: {
-    TODAY: { label: '今日統計', postbackData: '今日統計' },
+    TODAY: { label: '本日統計', postbackData: '本日統計' },
     WEEKLY: { label: '本週統計', postbackData: '本週統計' },
     MONTHLY: { label: '本月統計', postbackData: '本月統計' }
   },
@@ -1163,7 +1162,7 @@ async function SR_sendDailyFinancialSummary(userId) {
 
     SR_logInfo(`發送每日財務摘要: ${userId}`, "每日摘要", userId, "", "", functionName);
 
-    // 透過 DD 模組取得今日統計
+    // 透過 DD 模組取得本日統計
     let todayStats = null;
     if (DD1 && typeof DD1.DD_getStatistics === 'function') {
       const today = moment().tz(TIMEZONE).format('YYYY-MM-DD');
@@ -1320,7 +1319,7 @@ async function SR_processQuickReplyStatistics(userId, postbackData) {
 
     // 根據 postback 資料取得對應統計
     switch (postbackData) {
-      case '今日統計':
+      case '本日統計':
         period = 'today';
         statsResult = await SR_getDirectStatistics(userId, 'daily');
         break;
@@ -1564,7 +1563,7 @@ async function SR_handleQuickReplyInteraction(userId, postbackData, messageConte
     let interactionType = 'unknown';
 
     // 直接路由分發，不使用複雜會話管理
-    if (['今日統計', '本週統計', '本月統計'].includes(postbackData)) {
+    if (['本日統計', '本週統計', '本月統計'].includes(postbackData)) {
       interactionType = 'statistics';
 
       // 檢查統計查詢權限
@@ -1622,7 +1621,7 @@ async function SR_handleQuickReplyInteraction(userId, postbackData, messageConte
       quickReply: {
         type: 'quick_reply',
         items: [
-          { label: '今日統計', postbackData: '今日統計' }
+          { label: '本日統計', postbackData: '本日統計' }
         ]
       },
       error: error.message,
@@ -1675,7 +1674,7 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
 
         options.push(SR_QUICK_REPLY_CONFIG.PREMIUM.UPGRADE);
         options.push(SR_QUICK_REPLY_CONFIG.PREMIUM.INFO);
-        options.push({ label: '查看統計', postbackData: '今日統計' });
+        options.push({ label: '查看統計', postbackData: '本日統計' });
         break;
 
       case 'upgrade_prompt':
@@ -1683,7 +1682,7 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
         options = [
           SR_QUICK_REPLY_CONFIG.PREMIUM.UPGRADE,
           { label: '功能比較', postbackData: '功能介紹' },
-          { label: '繼續免費', postbackData: '今日統計' }
+          { label: '繼續免費', postbackData: '本日統計' }
         ];
 
         if (!trialStatus.hasUsedTrial) {
@@ -1730,7 +1729,7 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
     return {
       type: 'quick_reply',
       items: [
-        { label: '今日統計', postbackData: '今日統計' }
+        { label: '本日統計', postbackData: '本日統計' }
       ],
       context: 'error_fallback',
       error: error.message
@@ -1779,7 +1778,7 @@ async function SR_handlePaywallQuickReply(userId, actionType, context = {}) {
             items: [
               { label: '立即升級', postbackData: 'confirm_upgrade' },
               { label: '功能比較', postbackData: '功能介紹' },
-              { label: '繼續免費', postbackData: '今日統計' }
+              { label: '繼續免費', postbackData: '本日統計' }
             ]
           }
         };
@@ -1804,7 +1803,7 @@ async function SR_handlePaywallQuickReply(userId, actionType, context = {}) {
               items: [
                 { label: '升級會員', postbackData: 'upgrade_premium' },
                 { label: '功能對比', postbackData: '功能介紹' },
-                { label: '繼續免費', postbackData: '今日統計' }
+                { label: '繼續免費', postbackData: '本日統計' }
               ]
             }
           };
@@ -1827,7 +1826,7 @@ async function SR_handlePaywallQuickReply(userId, actionType, context = {}) {
               items: [
                 { label: '立即升級', postbackData: 'upgrade_premium' },
                 { label: '設定提醒', postbackData: 'setup_reminder' },
-                { label: '使用統計', postbackData: '今日統計' }
+                { label: '使用統計', postbackData: '本日統計' }
               ]
             }
           };
@@ -1852,7 +1851,7 @@ async function SR_handlePaywallQuickReply(userId, actionType, context = {}) {
                 { label: '聯繫客服', postbackData: 'contact_support' },
                 { label: '升級會員', postbackData: 'upgrade_premium' },
                 { label: '了解功能', postbackData: '功能介紹' },
-                { label: '繼續免費', postbackData: '今日統計' }
+                { label: '繼續免費', postbackData: '本日統計' }
               ]
             }
           };
@@ -1883,7 +1882,7 @@ async function SR_handlePaywallQuickReply(userId, actionType, context = {}) {
             items: [
               { label: '立即升級', postbackData: 'upgrade_premium' },
               { label: '價格方案', postbackData: 'upgrade_premium' },
-              { label: '繼續免費', postbackData: '今日統計' }
+              { label: '繼續免費', postbackData: '本日統計' }
             ]
           }
         };
@@ -1910,7 +1909,7 @@ ${trialStatus.hasUsedTrial ? '立即升級享受完整體驗' : '也可以先免
               { label: '立即升級', postbackData: 'upgrade_premium' },
               ...(trialStatus.hasUsedTrial ? [] : [{ label: '免費試用', postbackData: '試用' }]),
               { label: '了解更多', postbackData: '功能介紹' },
-              { label: '繼續免費', postbackData: '今日統計' }
+              { label: '繼續免費', postbackData: '本日統計' }
             ]
           }
         };
@@ -1935,7 +1934,7 @@ ${trialStatus.hasUsedTrial ? '立即升級享受完整體驗' : '也可以先免
       quickReply: {
         type: 'quick_reply',
         items: [
-          { label: '今日統計', postbackData: '今日統計' }
+          { label: '本日統計', postbackData: '本日統計' }
         ]
       },
       error: error.message
