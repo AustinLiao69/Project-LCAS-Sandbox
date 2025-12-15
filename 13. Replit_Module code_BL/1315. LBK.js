@@ -2064,27 +2064,80 @@ async function LBK_handleNewSubjectClassification(originalSubject, parsedData, i
 }
 
 /**
- * 建立科目歸類選單訊息
+ * 建立科目歸類選單訊息 - 動態讀取0099.json
  * @version 2025-12-15-V1.4.0
- * @description 生成標準化的科目選擇介面訊息
+ * @description 生成標準化的科目選擇介面訊息，從0099.json動態讀取主科目選項
  */
 function LBK_buildClassificationMessage(originalSubject) {
-  const classificationOptions = [
-    "101 生鮮雜貨",
-    "102 生活家用", 
-    "103 交通費用",
-    "104 餐飲費用",
-    "105 娛樂消遣",
-    "106 運動嗜好",
-    "107 寵物生活",
-    "201 財務收入",
-    "301 財務支出",
-    "000 不歸類"
-  ];
+  try {
+    // 動態讀取0099.json檔案
+    const fs = require('fs');
+    const path = require('path');
+    const subjectCodePath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
+    
+    let classificationOptions = [];
+    
+    if (fs.existsSync(subjectCodePath)) {
+      const subjectCodeData = JSON.parse(fs.readFileSync(subjectCodePath, 'utf8'));
+      
+      // 取得唯一的主科目清單
+      const uniqueCategories = new Map();
+      
+      subjectCodeData.forEach(item => {
+        if (item.parentId && item.categoryName) {
+          const key = `${item.parentId} ${item.categoryName}`;
+          if (!uniqueCategories.has(key)) {
+            uniqueCategories.set(key, {
+              parentId: item.parentId,
+              categoryName: item.categoryName
+            });
+          }
+        }
+      });
+      
+      // 轉換為選項格式並排序
+      classificationOptions = Array.from(uniqueCategories.values())
+        .sort((a, b) => a.parentId - b.parentId)
+        .map(item => `${item.parentId} ${item.categoryName}`);
+      
+      // 添加不歸類選項
+      classificationOptions.push("000 不歸類");
+      
+    } else {
+      // 若檔案不存在，使用預設選項作為備案
+      LBK_logWarning(`找不到0099.json檔案，使用預設科目選項`, "科目歸類", "", "LBK_buildClassificationMessage");
+      
+      classificationOptions = [
+        "101 生活家用",
+        "102 交通費用", 
+        "103 餐飲費用",
+        "105 寵物生活",
+        "108 運動嗜好",
+        "801 個人收入",
+        "905 財務支出",
+        "000 不歸類"
+      ];
+    }
 
-  const message = `您的科目庫無此科目，請問這是屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
-  
-  return message;
+    const message = `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
+    
+    LBK_logInfo(`生成科目歸類選單，共 ${classificationOptions.length} 個選項`, "科目歸類", "", "LBK_buildClassificationMessage");
+    
+    return message;
+    
+  } catch (error) {
+    LBK_logError(`建立科目歸類選單失敗: ${error.toString()}`, "科目歸類", "", "CLASSIFICATION_MESSAGE_ERROR", error.toString(), "LBK_buildClassificationMessage");
+    
+    // 錯誤時使用最基本的備案選項
+    const fallbackOptions = [
+      "101 生活家用",
+      "102 交通費用",
+      "103 餐飲費用", 
+      "000 不歸類"
+    ];
+    
+    return `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${fallbackOptions.join('\n')}`;
+  }
 }
 
 /**
