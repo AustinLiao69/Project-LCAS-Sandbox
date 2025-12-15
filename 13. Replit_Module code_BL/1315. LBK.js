@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.3.0
+ * LBK_快速記帳模組_1.4.0
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 完全對齊1301 BK模組資料格式標準
- * @update 2025-12-10: 升級至v1.3.0，實現統計功能完全獨立，移除對SR模組統計功能的依賴
+ * @description LINE OA 專用快速記帳處理模組 - 新增新科目辨識與歸類機制
+ * @update 2025-12-15: 升級至v1.4.0，新增新科目辨識與歸類機制，實現使用者主導的科目分類
  */
 
 // 引入所需模組
@@ -84,6 +84,12 @@ async function LBK_processQuickBookkeeping(inputData) {
     const parseResult = await LBK_parseUserMessage(inputData.messageText, userId, processId);
 
     if (!parseResult.success) {
+      // 檢查是否需要新科目歸類
+      if (parseResult.requiresClassification) {
+        LBK_logInfo(`觸發新科目歸類流程: ${parseResult.originalSubject} [${processId}]`, "新科目歸類", userId, "LBK_processQuickBookkeeping");
+        return await LBK_handleNewSubjectClassification(parseResult.originalSubject, parseResult.parsedData, inputData, processId);
+      }
+
       const errorMessage = parseResult.error || "解析失敗";
       // 使用LBK_formatReplyMessage統一格式化錯誤回覆
       const formattedErrorMessage = LBK_formatReplyMessage(null, "LBK", {
@@ -99,7 +105,7 @@ async function LBK_processQuickBookkeeping(inputData) {
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
-        moduleVersion: "1.1.1",
+        moduleVersion: "1.4.0",
         errorType: parseResult.errorType || "PARSE_ERROR"
       };
     }
@@ -212,6 +218,25 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
     const subjectResult = await LBK_identifySubject(parseResult.subject, userId, processId);
 
     if (!subjectResult.success) {
+      // 檢查是否需要新科目歸類
+      if (subjectResult.requiresClassification) {
+        LBK_logInfo(`需要新科目歸類: ${parseResult.subject}`, "訊息解析", userId, "LBK_parseUserMessage");
+        return {
+          success: false,
+          error: `找不到科目: ${parseResult.subject}`,
+          errorType: "SUBJECT_NOT_FOUND",
+          requiresClassification: true,
+          originalSubject: subjectResult.originalSubject,
+          parsedData: {
+            subject: parseResult.subject,
+            amount: parseResult.amount,
+            rawAmount: parseResult.rawAmount,
+            paymentMethod: parseResult.paymentMethod,
+            userId: userId
+          }
+        };
+      }
+
       LBK_logError(`科目識別失敗: ${parseResult.subject}`, "訊息解析", userId, "SUBJECT_NOT_FOUND", subjectResult.error || "科目不存在", "LBK_parseUserMessage");
       return {
         success: false,
@@ -1511,10 +1536,12 @@ async function LBK_identifySubject(subjectText, userId, processId) {
     const subjectCode = await LBK_getSubjectCode(subjectText, userId, processId);
 
     if (!subjectCode) {
-      LBK_logWarning(`找不到匹配的科目: ${subjectText}`, "科目識別", userId, "LBK_identifySubject");
+      LBK_logWarning(`找不到匹配的科目: ${subjectText}，觸發新科目歸類流程`, "科目識別", userId, "LBK_identifySubject");
       return {
         success: false,
-        error: "找不到匹配的科目"
+        error: "找不到匹配的科目",
+        requiresClassification: true,
+        originalSubject: subjectText
       };
     }
 
@@ -1993,6 +2020,127 @@ ${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
 }
 
 /**
+ * 處理新科目歸類流程
+ * @version 2025-12-15-V1.4.0
+ * @description 當科目不存在時，引導使用者進行科目歸類
+ */
+async function LBK_handleNewSubjectClassification(originalSubject, parsedData, inputData, processId) {
+  try {
+    LBK_logInfo(`處理新科目歸類: ${originalSubject} [${processId}]`, "新科目歸類", inputData.userId, "LBK_handleNewSubjectClassification");
+
+    // 生成主科目選單訊息
+    const classificationMessage = LBK_buildClassificationMessage(originalSubject);
+
+    return {
+      success: true,
+      message: classificationMessage,
+      responseMessage: classificationMessage,
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
+      moduleVersion: "1.4.0",
+      requiresUserSelection: true,
+      pendingData: {
+        originalSubject: originalSubject,
+        parsedData: parsedData,
+        inputData: inputData
+      }
+    };
+
+  } catch (error) {
+    LBK_logError(`處理新科目歸類失敗: ${error.toString()} [${processId}]`, "新科目歸類", inputData.userId, "CLASSIFICATION_ERROR", error.toString(), "LBK_handleNewSubjectClassification");
+    
+    return {
+      success: false,
+      message: "系統處理新科目時發生錯誤，請稍後再試",
+      responseMessage: "系統處理新科目時發生錯誤，請稍後再試",
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.4.0",
+      errorType: "CLASSIFICATION_ERROR"
+    };
+  }
+}
+
+/**
+ * 建立科目歸類選單訊息 - 動態讀取0099.json
+ * @version 2025-12-15-V1.4.0
+ * @description 生成標準化的科目選擇介面訊息，從0099.json動態讀取主科目選項
+ */
+function LBK_buildClassificationMessage(originalSubject) {
+  try {
+    // 動態讀取0099.json檔案
+    const fs = require('fs');
+    const path = require('path');
+    const subjectCodePath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
+    
+    let classificationOptions = [];
+    
+    if (fs.existsSync(subjectCodePath)) {
+      const subjectCodeData = JSON.parse(fs.readFileSync(subjectCodePath, 'utf8'));
+      
+      // 取得唯一的主科目清單
+      const uniqueCategories = new Map();
+      
+      subjectCodeData.forEach(item => {
+        if (item.parentId && item.categoryName) {
+          const key = `${item.parentId} ${item.categoryName}`;
+          if (!uniqueCategories.has(key)) {
+            uniqueCategories.set(key, {
+              parentId: item.parentId,
+              categoryName: item.categoryName
+            });
+          }
+        }
+      });
+      
+      // 轉換為選項格式並排序
+      classificationOptions = Array.from(uniqueCategories.values())
+        .sort((a, b) => a.parentId - b.parentId)
+        .map(item => `${item.parentId} ${item.categoryName}`);
+      
+      // 添加不歸類選項
+      classificationOptions.push("000 不歸類");
+      
+    } else {
+      // 若檔案不存在，使用預設選項作為備案
+      LBK_logWarning(`找不到0099.json檔案，使用預設科目選項`, "科目歸類", "", "LBK_buildClassificationMessage");
+      
+      classificationOptions = [
+        "101 生活家用",
+        "102 交通費用", 
+        "103 餐飲費用",
+        "105 寵物生活",
+        "108 運動嗜好",
+        "801 個人收入",
+        "905 財務支出",
+        "000 不歸類"
+      ];
+    }
+
+    const message = `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
+    
+    LBK_logInfo(`生成科目歸類選單，共 ${classificationOptions.length} 個選項`, "科目歸類", "", "LBK_buildClassificationMessage");
+    
+    return message;
+    
+  } catch (error) {
+    LBK_logError(`建立科目歸類選單失敗: ${error.toString()}`, "科目歸類", "", "CLASSIFICATION_MESSAGE_ERROR", error.toString(), "LBK_buildClassificationMessage");
+    
+    // 錯誤時使用最基本的備案選項
+    const fallbackOptions = [
+      "101 生活家用",
+      "102 交通費用",
+      "103 餐飲費用", 
+      "000 不歸類"
+    ];
+    
+    return `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${fallbackOptions.join('\n')}`;
+  }
+}
+
+/**
  * 解析支付方式 - 動態從用戶錢包取得
  * @version 2025-12-12-V2.0.0
  * @description 從用戶的錢包子集合中動態取得支付方式，移除hardcoded邏輯
@@ -2097,8 +2245,12 @@ const LBK_MODULE = {
   // 新增支付方式解析函數
   LBK_parsePaymentMethod: LBK_parsePaymentMethod,
 
+  // 新科目歸類函數 - v1.4.0新增
+  LBK_handleNewSubjectClassification: LBK_handleNewSubjectClassification,
+  LBK_buildClassificationMessage: LBK_buildClassificationMessage,
+
   // 版本資訊
-  MODULE_VERSION: "1.3.0",
+  MODULE_VERSION: "1.4.0",
   MODULE_NAME: "LBK"
 };
 

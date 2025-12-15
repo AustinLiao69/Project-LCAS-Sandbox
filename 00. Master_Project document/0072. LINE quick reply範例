@@ -1,0 +1,77 @@
+LINE OA Quick Reply 範例（Node.js + Replit）
+1️⃣ 安裝套件
+npm install express @line/bot-sdk
+________________________________________
+2️⃣ index.js 範例程式
+const express = require('express');
+const line = require('@line/bot-sdk');
+
+const app = express();
+
+// 設定 LINE Bot 資訊
+const config = {
+  channelSecret: '你的ChannelSecret',
+  channelAccessToken: '你的ChannelAccessToken'
+};
+
+const client = new line.Client(config);
+
+// Webhook middleware
+app.post('/webhook', line.middleware(config), (req, res) => {
+  Promise
+    .all(req.body.events.map(handleEvent))
+    .then((result) => res.json(result));
+});
+
+// 處理事件
+async function handleEvent(event) {
+  if (event.type === 'message' && event.message.type === 'text') {
+    // 回 Quick Reply
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '請選擇你要查詢的項目：',
+      quickReply: {
+        items: [
+          {
+            type: 'action',
+            action: { type: 'postback', label: '今日統計', data: 'action=today' }
+          },
+          {
+            type: 'action',
+            action: { type: 'postback', label: '本週統計', data: 'action=week' }
+          },
+          {
+            type: 'action',
+            action: { type: 'postback', label: '本月統計', data: 'action=month' }
+          }
+        ]
+      }
+    });
+  } else if (event.type === 'postback') {
+    // 使用者點選 Quick Reply 後
+    const data = event.postback.data; // action=today / week / month
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `你選擇的是: ${data}`
+      // 這裡可以改成去 Firebase 查資料再回傳
+    });
+  }
+}
+
+// 啟動 server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+________________________________________
+3️⃣ 使用流程
+1.	使用者傳訊息 → webhook 收到
+2.	Bot 回 Quick Reply（三個選項：今日 / 本週 / 本月）
+3.	使用者點選 → webhook 收到 postback
+4.	可以用 data 去查 Firebase / 回傳統計結果
+________________________________________
+4️⃣ 注意事項
+•	Quick Reply 是程式端控制，LINE OA 後台沒有 UI 設定按鈕
+•	回覆訊息會消耗 LINE OA 訊息配額（但點選 Quick Reply 本身不額外消耗）
+•	webhook URL 必須是 https，LINE 才能成功送訊息
+
