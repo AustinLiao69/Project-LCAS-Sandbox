@@ -47,106 +47,96 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 /**
- * 03. 模組載入與初始化 - 修復CommonJS頂層await語法錯誤
- * @version 2025-01-23-V1.1.1
- * @date 2025-01-23 11:30:00
- * @description 載入所有功能模組，修復頂層await語法錯誤，使用async IIFE確保CommonJS相容性
+ * 03. 模組載入與初始化 - 部署優化版
+ * @version 2025-12-15-V2.4.1
+ * @date 2025-12-15
+ * @description 部署環境優化：延遲載入非關鍵模組，優先啟動HTTP服務器
  */
-console.log('📦 載入模組...');
+console.log('📦 部署模式載入模組...');
 
-// 階段五完成：FS模組已完全移除，職責分散至專門模組
-let DL;
-try {
-  DL = require('./13. Replit_Module code_BL/1310. DL.js');    // 數據記錄模組 (基礎)
-  console.log('✅ DL 模組載入成功');
-} catch (error) {
-  console.error('❌ DL 模組載入失敗:', error.message);
+// 部署環境優化：只載入關鍵模組
+let DL, WH;
+
+// 快速載入關鍵模組
+function loadCriticalModules() {
+  try {
+    DL = require('./13. Replit_Module code_BL/1310. DL.js');
+    console.log('✅ DL 模組載入成功');
+  } catch (error) {
+    console.error('❌ DL 模組載入失敗:', error.message);
+  }
 }
 
 console.log('✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理');
 
-// 載入應用層模組 - 依賴FS模組的核心函數
+// 部署優化：延遲載入非關鍵模組
 let BK, LBK, DD, AM, SR;
-try {
-  BK = require('./13. Replit_Module code_BL/1301. BK.js');    // 記帳處理模組
 
-  // 驗證關鍵函數是否正確載入
-  if (BK && typeof BK.BK_parseQuickInput === 'function') {
-    console.log('✅ BK 模組載入成功 - BK_parseQuickInput函數檢查通過');
-  } else if (BK) {
-    console.log('⚠️ BK 模組載入異常 - BK_parseQuickInput函數缺失');
-    console.log('📋 BK模組導出的函數:', Object.keys(BK));
-  } else {
-    console.log('❌ BK 模組完全載入失敗');
-  }
-} catch (error) {
-  console.error('❌ BK 模組載入失敗:', error.message);
-  console.error('錯誤詳情:', error.stack);
-}
-
-try {
-  LBK = require('./13. Replit_Module code_BL/1315. LBK.js');  // LINE快速記帳模組
-  console.log('✅ LBK 模組載入成功');
-} catch (error) {
-  console.error('❌ LBK 模組載入失敗:', error.message);
-}
-
-try {
-  DD = require('./13. Replit_Module code_BL/1331. DD1.js');    // 數據分發模組 (階段五：已移除FS依賴)
-  console.log('✅ DD 模組載入成功');
-} catch (error) {
-  console.error('❌ DD 模組載入失敗:', error.message);
-}
-
-try {
-  AM = require('./13. Replit_Module code_BL/1309. AM.js');    // 帳號管理模組
-  console.log('✅ AM 模組載入成功');
-} catch (error) {
-  console.error('❌ AM 模組載入失敗:', error.message);
-}
-
-try {
-  SR = require('./13. Replit_Module code_BL/1305. SR.js');    // 排程提醒模組 (階段五：已移除FS依賴)
-  console.log('✅ SR 模組載入成功');
-} catch (error) {
-  console.error('❌ SR 模組載入失敗:', error.message);
-}
-
-(async () => {
+// 延遲載入函數
+async function loadApplicationModules() {
+  console.log('🔄 延遲載入應用模組...');
+  
   try {
-    // 階段五完成：FS模組已完全移除，WH模組直接使用Firebase配置
-    console.log('✅ 階段五完成：FS模組已移除，WH模組直接使用firebase-config模組');
+    BK = require('./13. Replit_Module code_BL/1301. BK.js');
+    if (BK && typeof BK.BK_parseQuickInput === 'function') {
+      console.log('✅ BK 模組載入成功');
+    } else {
+      console.log('⚠️ BK 模組載入異常');
+    }
+  } catch (error) {
+    console.error('❌ BK 模組載入失敗:', error.message);
+  }
 
-    // 設置全域變數確保WH模組知道FS已移除
-    global.FS_MODULE_READY = false;
-    global.FS_REMOVED = true;
-    global.FIREBASE_CONFIG_DIRECT = true;
+try {
+    LBK = require('./13. Replit_Module code_BL/1315. LBK.js');
+    console.log('✅ LBK 模組載入成功');
+  } catch (error) {
+    console.error('❌ LBK 模組載入失敗:', error.message);
+  }
 
-    // 在FS檢查完成後載入WH模組
-    console.log('📦 開始載入WH模組...');
-    WH = require('./13. Replit_Module code_BL/1320. WH.js');    // Webhook處理模組 (最後載入)
+  try {
+    DD = require('./13. Replit_Module code_BL/1331. DD1.js');
+    console.log('✅ DD 模組載入成功');
+  } catch (error) {
+    console.error('❌ DD 模組載入失敗:', error.message);
+  }
+
+  try {
+    AM = require('./13. Replit_Module code_BL/1309. AM.js');
+    console.log('✅ AM 模組載入成功');
+  } catch (error) {
+    console.error('❌ AM 模組載入失敗:', error.message);
+  }
+
+  try {
+    SR = require('./13. Replit_Module code_BL/1305. SR.js');
+    console.log('✅ SR 模組載入成功');
+  } catch (error) {
+    console.error('❌ SR 模組載入失敗:', error.message);
+  }
+}
+
+// 部署優化：立即載入關鍵模組並啟動服務器
+loadCriticalModules();
+
+// 設置全域變數
+global.FS_MODULE_READY = false;
+global.FS_REMOVED = true;
+global.FIREBASE_CONFIG_DIRECT = true;
+
+// 延遲載入WH模組的函數
+async function loadWebhookModule() {
+  try {
+    console.log('📦 載入WH模組...');
+    WH = require('./13. Replit_Module code_BL/1320. WH.js');
     console.log('✅ WH 模組載入成功');
-
-    // 驗證WH模組的關鍵函數
+    
     if (typeof WH.doPost === 'function') {
       console.log('✅ WH模組核心函數檢查通過');
-    } else {
-      console.log('⚠️ WH模組核心函數檢查失敗');
     }
-
-    // 等待WH模組內部初始化完成
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('✅ WH模組初始化等待完成');
-
   } catch (error) {
     console.error('❌ WH 模組載入失敗:', error.message);
-    // 記錄詳細錯誤信息
-    console.error('錯誤詳情:', error.stack);
-
-    // 嘗試基礎模式載入
     try {
-      console.log('🔄 嘗試WH模組基礎模式載入...');
-      global.FS_MODULE_READY = false;
       global.WH_BASIC_MODE = true;
       WH = require('./13. Replit_Module code_BL/1320. WH.js');
       console.log('✅ WH 模組基礎模式載入成功');
@@ -154,7 +144,7 @@ try {
       console.error('❌ WH 模組基礎模式載入也失敗:', basicError.message);
     }
   }
-})();
+}
 
 // 預先初始化各模組（安全初始化）
 if (BK && typeof BK.BK_initialize === 'function') {
@@ -615,16 +605,24 @@ process.on('SIGINT', () => {
   });
 });
 
-// =============== 啟動LINE Webhook專用服務器 ===============
-server.listen(PORT, '0.0.0.0', () => {
+// =============== 立即啟動LINE Webhook專用服務器 ===============
+server.listen(PORT, '0.0.0.0', async () => {
   console.log(`🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port ${PORT}`);
-  console.log(`📡 LINE Webhook 專用端點已就緒: 5個端點`);
-  console.log(`🔌 WebSocket 服務已啟用，支援即時協作同步`);
-  console.log(`📋 DCN-0011 Phase 4 重構統計:`);
-  console.log(`   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)`);
-  console.log(`   🎯 Webhook端點保留: 5個 (LINE OA專用)`);
-  console.log(`   🏗️ 雙服務架構: 職責完全分離`);
-  console.log(`   📈 系統維護性提升: 單一職責原則`);
+  console.log(`📡 基礎服務已就緒，正在背景載入完整功能...`);
+  
+  // 在背景中載入其他模組
+  try {
+    await loadWebhookModule();
+    await loadApplicationModules();
+    
+    console.log(`✅ 完整功能載入完成`);
+    console.log(`📋 DCN-0011 Phase 4 重構統計:`);
+    console.log(`   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)`);
+    console.log(`   🎯 Webhook端點保留: 5個 (LINE OA專用)`);
+    console.log(`   🏗️ 雙服務架構: 職責完全分離`);
+  } catch (error) {
+    console.error('❌ 背景模組載入失敗:', error.message);
+  }
 });
 
 console.log('🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！');
