@@ -1,4 +1,3 @@
-
 # DCN-0024 LINE訊息辨識新科目
 
 **版本**: v1.0.0  
@@ -244,7 +243,7 @@ Firebase儲存（完整記帳資料）
 const standardFlow = async (userInput, userId) => {
   const parseResult = parseUserInput(userInput); // 解析輸入
   const subjectResult = await LBK_identifySubject(parseResult.subject, userId);
-  
+
   if (subjectResult.success) {
     return await completeTransaction(parseResult, subjectResult.categoryInfo);
   } else {
@@ -279,7 +278,7 @@ const LBK_identifySubject = async (subject, userId) => {
     cat.categoryName.includes(subject) || 
     cat.synonyms.includes(subject)
   );
-  
+
   return {
     success: !!foundCategory,
     categoryInfo: foundCategory || null
@@ -303,7 +302,7 @@ const buildClassificationInterface = () => {
     "301 財務支出",
     "000 不歸類"
   ];
-  
+
   return `您的科目庫無此科目，請問這是屬於什麼科目？\n${options.join('\n')}`;
 };
 ```
@@ -324,7 +323,7 @@ const processUserSelection = async (selection, originalInput, userId) => {
     "301": { name: "財務支出", parentId: 301 },
     "000": { name: "不歸類", parentId: 0 }
   };
-  
+
   return categoryMapping[selection] || null;
 };
 ```
@@ -335,10 +334,10 @@ const processUserSelection = async (selection, originalInput, userId) => {
 const completeClassificationAndTransaction = async (parseResult, categoryInfo, userId) => {
   // 1. 建立新科目記錄（加入同義詞）
   await createNewSubjectRecord(parseResult.subject, categoryInfo, userId);
-  
+
   // 2. 執行記帳
   const transactionResult = await completeTransaction(parseResult, categoryInfo);
-  
+
   // 3. 回覆確認訊息
   return buildSuccessMessage(parseResult, categoryInfo, transactionResult);
 };
@@ -354,10 +353,10 @@ const handleUncategorized = async (parseResult, userId) => {
     categoryId: null,
     subCategoryName: null
   };
-  
+
   // 將原始輸入加入「不歸類」的同義詞
   await addToUncategorizedSynonyms(parseResult.subject, userId);
-  
+
   return {
     message: `已將${parseResult.subject}歸類至 000 不歸類！\n後續若需變更，請至Sophr APP端編輯`,
     categoryInfo: uncategorizedInfo
@@ -394,7 +393,7 @@ const lineSubjectData = {
 async function LBK_handleNewSubjectClassification(inputData) {
   // 1. 回覆科目選擇介面
   const replyMessage = buildClassificationInterface();
-  
+
   // 2. 等待使用者選擇
   // 3. 根據選擇建立新科目記錄
   // 4. 完成記帳流程
@@ -425,20 +424,26 @@ async function LBK_handleNewSubjectClassification(inputData) {
 - 歸類介面格式符合0071文件規範
 - 歸類結果能正確儲存至Firebase
 
-### Phase 2：資料流整合驗證（Week 2）
+### Phase 2：LBK模組多輪次對話機制（Week 2）
 
-**目標**：驗證WH → AM → LBK完整資料流
+**目標**：在LBK模組內實現兩階段對話處理（科目歸類 + 記帳確認）
 
 **具體任務**：
-1. 確認WH模組正確轉發新科目請求
-2. 驗證AM模組的用戶驗證與帳本初始化
-3. 測試完整的新科目歸類流程
-4. 優化錯誤處理機制
+1. 在LBK模組內新增狀態追蹤機制，識別使用者當前處於科目歸類階段
+2. 修改`LBK_processQuickBookkeeping`支援多輪次對話處理
+3. 實作科目歸類選擇解析邏輯（如使用者回覆"104"代表選擇餐飲費用）
+4. 完成科目歸類後自動執行記帳並回覆確認訊息
+
+**版本規劃**：LBK.js v1.4.1
+
+**修改檔案**：
+- `13. Replit_Module code_BL/1315. LBK.js`
 
 **驗收標準**：
-- 完整資料流運作正常
-- 新用戶能自動註冊並歸類科目
-- 錯誤情況有適當處理
+- LBK模組能識別使用者處於科目歸類回應階段
+- 正確解析使用者的科目選擇（101-301, 000）
+- 完成歸類後自動執行記帳流程
+- WH模組無需修改，維持純轉發職責
 
 ### Phase 3：0099簡化策略實施（Week 3）
 
@@ -466,12 +471,12 @@ async function LBK_handleNewSubjectClassification(inputData) {
   id: string,
   parentId: number,        // 保留：維持主分類
   categoryName: string,    // 保留：基本科目名稱
-  
+
   // 簡化調整
   categoryId: null,        // 設為null：移除細分代碼
   subCategoryName: null,   // 設為null：移除子分類名稱
   synonyms: "",            // 清空：避免模糊匹配
-  
+
   // 系統欄位
   type: string,           // income/expense
   isActive: boolean,
