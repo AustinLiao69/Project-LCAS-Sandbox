@@ -13,12 +13,11 @@ const moment = require('moment-timezone');
 const firebaseConfig = require('./1399. firebase-config');
 
 // 引入依賴模組
-let DL, WH, AM, FS, DD1, BK, LBK;
+let DL, WH, AM, DD1, BK, LBK;
 try {
   DL = require('./1310. DL.js');
   WH = require('./1320. WH.js');
   AM = require('./1309. AM.js');
-  FS = require('./1311. FS.js');
   DD1 = require('./1331. DD1.js');
   BK = require('./1301. BK.js');
   LBK = require('./1315. LBK.js');

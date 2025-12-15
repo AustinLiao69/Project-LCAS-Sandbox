@@ -78,20 +78,40 @@ async function loadApplicationModules() {
   
   try {
     BK = require('./13. Replit_Module code_BL/1301. BK.js');
-    if (BK && typeof BK.BK_parseQuickInput === 'function') {
+    
+    // 驗證BK模組關鍵函數
+    const requiredBKFunctions = ['BK_processBookkeeping', 'BK_processAPIGetDashboard'];
+    let bkFunctionsOk = true;
+    
+    for (const funcName of requiredBKFunctions) {
+      if (typeof BK[funcName] !== 'function') {
+        console.error(`❌ BK模組缺少函數: ${funcName}`);
+        bkFunctionsOk = false;
+      }
+    }
+    
+    if (bkFunctionsOk) {
       console.log('✅ BK 模組載入成功');
     } else {
-      console.log('⚠️ BK 模組載入異常');
+      console.log('⚠️ BK 模組載入異常 - 缺少必要函數');
     }
   } catch (error) {
     console.error('❌ BK 模組載入失敗:', error.message);
+    console.error('❌ BK 錯誤詳情:', error.stack);
   }
 
 try {
     LBK = require('./13. Replit_Module code_BL/1315. LBK.js');
-    console.log('✅ LBK 模組載入成功');
+    
+    // 驗證LBK模組關鍵函數
+    if (typeof LBK.LBK_processQuickBookkeeping === 'function') {
+      console.log('✅ LBK 模組載入成功');
+    } else {
+      console.log('⚠️ LBK 模組載入異常 - 缺少LBK_processQuickBookkeeping函數');
+    }
   } catch (error) {
     console.error('❌ LBK 模組載入失敗:', error.message);
+    console.error('❌ LBK 錯誤詳情:', error.stack);
   }
 
   try {
@@ -185,9 +205,13 @@ if (SR && typeof SR.SR_initialize === 'function') {
     console.log('✅ SR 模組初始化完成');
   }).catch((error) => {
     console.log('❌ SR 模組初始化失敗:', error.message);
+    console.log('❌ SR 初始化錯誤詳情:', error.stack);
   });
 } else {
   console.log('⚠️ SR 模組未正確載入，跳過初始化');
+  if (SR) {
+    console.log('📋 SR模組可用函數:', Object.keys(SR));
+  }
 }
 
 /**

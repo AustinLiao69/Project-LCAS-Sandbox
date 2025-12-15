@@ -10,7 +10,8 @@ channel = "stable-24_11"
 packages = ["undollar", "wget", "zulu"]
 
 [deployment]
-run = "node index.js"
+run = ["node", "index.js"]
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 3000
@@ -47,11 +48,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node index.js"
+args = ["node", "index.js"]
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node ASL.js"
+args = ["node", "ASL.js"]
 
 [workflows.workflow.metadata]
 outputType = "console"
@@ -63,7 +64,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node index.js"
+args = ["node", "index.js"]
 
 [workflows.workflow.metadata]
 outputType = "console"
@@ -75,7 +76,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node index.js"
+args = ["node", "index.js"]
 
 [workflows.workflow.metadata]
 outputType = "console"
@@ -86,7 +87,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -c \"import os; print('LLD文檔已生成，位置：82. Flutter_LLD_APL/'); print('已完成文檔：'); [print(f'- {f}') for f in os.listdir('82. Flutter_LLD_APL') if f.endswith('.md')]; import time; time.sleep(30)\""
+args = ["python", "-c", "import os; print('LLD文檔已生成，位置：82. Flutter_LLD_APL/'); print('已完成文檔：'); [print(f'- {f}') for f in os.listdir('82. Flutter_LLD_APL') if f.endswith('.md')]; import time; time.sleep(30)"]
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[run.env]
+WEBHOOK_URL = "https://your-repl-name.your-username.repl.co/webhook"

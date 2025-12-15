@@ -173,6 +173,7 @@ const envCheckResult = WH_checkEnvironmentVariables();
 
 // 如果環境變數不完整，記錄警告但不阻止模組載入
 if (!envCheckResult.isComplete) {
+  console.warn('⚠️ WH模組環境變數不完整，建議在部署前設定完整');
   WH_directLogWrite([
     WH_formatDateTime(new Date()),
     `WH 2.3.0: 環境變數檢查未通過，缺少: ${envCheckResult.missingVars.join(', ')}`,
@@ -185,6 +186,8 @@ if (!envCheckResult.isComplete) {
     "WH_init",
     "WARNING",
   ]);
+} else {
+  console.log('✅ WH模組環境變數檢查完整');
 }
 
 // 創建緩存服務 - 保留核心功能
