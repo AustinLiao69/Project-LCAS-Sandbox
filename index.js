@@ -122,10 +122,55 @@ try {
   }
 
   try {
+    console.log('🔍 開始載入 AM 模組...');
     AM = require('./13. Replit_Module code_BL/1309. AM.js');
     console.log('✅ AM 模組載入成功');
+    
+    // 驗證AM模組的關鍵函數
+    if (typeof AM.AM_createLineAccount === 'function') {
+      console.log('✅ AM_createLineAccount函數檢查通過');
+    } else {
+      console.log('⚠️ AM_createLineAccount函數不存在');
+    }
+    
+    if (typeof AM.moduleVersion !== 'undefined') {
+      console.log(`✅ AM模組版本: ${AM.moduleVersion}`);
+    }
   } catch (error) {
-    console.error('❌ AM 模組載入失敗:', error.message);
+    console.error('❌ AM 模組載入失敗詳細資訊:');
+    console.error('❌ 錯誤訊息:', error.message);
+    console.error('❌ 錯誤堆疊:', error.stack);
+    console.error('❌ 錯誤類型:', error.name);
+    
+    // 嘗試讀取檔案內容來檢查語法錯誤位置
+    try {
+      const fs = require('fs');
+      const fileContent = fs.readFileSync('./13. Replit_Module code_BL/1309. AM.js', 'utf8');
+      const lines = fileContent.split('\n');
+      
+      console.error('❌ 檔案總行數:', lines.length);
+      console.error('❌ 正在檢查語法錯誤...');
+      
+      // 檢查常見的語法錯誤模式
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const lineNum = i + 1;
+        
+        // 檢查可能的冒號語法錯誤
+        if (line.includes(':') && (line.includes('::') || line.match(/}:/))) {
+          console.error(`❌ 可能的語法錯誤在第 ${lineNum} 行:`, line.trim());
+        }
+        
+        // 檢查不匹配的括號
+        const openBraces = (line.match(/{/g) || []).length;
+        const closeBraces = (line.match(/}/g) || []).length;
+        if (openBraces !== closeBraces && (openBraces > 0 || closeBraces > 0)) {
+          console.error(`❌ 第 ${lineNum} 行括號不匹配:`, line.trim());
+        }
+      }
+    } catch (fileError) {
+      console.error('❌ 無法讀取AM.js檔案:', fileError.message);
+    }
   }
 
   try {
