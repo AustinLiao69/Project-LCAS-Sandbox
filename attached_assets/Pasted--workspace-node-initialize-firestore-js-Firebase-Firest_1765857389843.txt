@@ -1,0 +1,40 @@
+~/workspace$ node initialize_firestore.js
+✅ Firebase配置驗證通過
+🔥 開始初始化 Firestore 資料庫...
+✅ Firebase動態配置建立成功
+❌ Firebase Admin SDK初始化失敗: Failed to parse private key: Error: Invalid PEM formatted message.
+❌ 初始化失敗: FirebaseAppError: Failed to parse private key: Error: Invalid PEM formatted message.
+    at new ServiceAccount (/home/runner/workspace/node_modules/firebase-admin/lib/app/credential-internal.js:182:19)
+    at new ServiceAccountCredential (/home/runner/workspace/node_modules/firebase-admin/lib/app/credential-internal.js:118:15)
+    at Object.cert (/home/runner/workspace/node_modules/firebase-admin/lib/app/credential-factory.js:105:54)
+    at Object.initializeFirebaseAdmin (/home/runner/workspace/13. Replit_Module code_BL/1399. firebase-config.js:84:36)
+    at initializeFirestore (/home/runner/workspace/initialize_firestore.js:15:32)
+    at Object.<anonymous> (/home/runner/workspace/initialize_firestore.js:232:3)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12) {
+  errorInfo: {
+    code: 'app/invalid-credential',
+    message: 'Failed to parse private key: Error: Invalid PEM formatted message.'
+  },
+  codePrefix: 'app'
+}
+FirebaseAppError: Failed to parse private key: Error: Invalid PEM formatted message.
+    at new ServiceAccount (/home/runner/workspace/node_modules/firebase-admin/lib/app/credential-internal.js:182:19)
+    at new ServiceAccountCredential (/home/runner/workspace/node_modules/firebase-admin/lib/app/credential-internal.js:118:15)
+    at Object.cert (/home/runner/workspace/node_modules/firebase-admin/lib/app/credential-factory.js:105:54)
+    at Object.initializeFirebaseAdmin (/home/runner/workspace/13. Replit_Module code_BL/1399. firebase-config.js:84:36)
+    at initializeFirestore (/home/runner/workspace/initialize_firestore.js:15:32)
+    at Object.<anonymous> (/home/runner/workspace/initialize_firestore.js:232:3)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12) {
+  errorInfo: {
+    code: 'app/invalid-credential',
+    message: 'Failed to parse private key: Error: Invalid PEM formatted message.'
+  },
+  codePrefix: 'app'
+}
+~/workspace$ 
