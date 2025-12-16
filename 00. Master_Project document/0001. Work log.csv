@@ -455,3 +455,6 @@ MM 	 DD 	 Description 	    Progress
 12	16	 檢查AM, WCM有無模擬業務及回應  	 Ongoing
 12	16	 修復AM(用9601裡面的語法檢查器檢查)  	 Closed
 12	16	 建立LINE quick reply  	 Ongoing
+12	16	 執行DCN-0024  	 Ongoing
+12	16	 設定ASL.js, index.js在PROD環境同時運行  	 Ongoing
+12	16	 設定ASL.js, index.js, ASL.dart在Sandbox環境同時運行  	 Ongoing
