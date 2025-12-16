@@ -110,8 +110,19 @@ console.log('🔥 AM.js: 開始引入Firebase動態配置模組...');
 const firebaseConfig = require("./1399. firebase-config");
 console.log('✅ AM.js: Firebase動態配置模組引入成功');
 
-// 取得 Firestore 實例
-const db = admin.firestore();
+// 初始化Firebase並取得 Firestore 實例
+console.log('🔧 AM.js: 初始化Firebase Admin SDK...');
+let db;
+try {
+  // 確保Firebase已初始化
+  firebaseConfig.initializeFirebaseAdmin();
+  db = firebaseConfig.getFirestoreInstance();
+  console.log('✅ AM.js: Firebase初始化完成，Firestore實例已取得');
+} catch (error) {
+  console.error('❌ AM.js: Firebase初始化失敗:', error.message);
+  // 設置一個空的db物件避免後續錯誤
+  db = null;
+}
 
 // 引入其他模組
 const DL = require("./1310. DL.js");
@@ -223,6 +234,16 @@ function WCM_loadDefaultConfigs() {
  */
 async function AM_createLineAccount(lineUID, lineProfile, userType = "S") {
   try {
+    // 安全檢查：確保db實例可用
+    if (!db) {
+      console.error('❌ AM_createLineAccount: Firestore實例未初始化');
+      return {
+        success: false,
+        error: "Firestore資料庫未初始化",
+        errorCode: "DB_NOT_INITIALIZED",
+      };
+    }
+
     // 檢查帳號是否已存在
     const existingUser = await db.collection("users").doc(lineUID).get();
     if (existingUser.exists) {
@@ -1300,6 +1321,16 @@ async function AM_getUserDefaultLedger(UID) {
 
     if (!UID) {
       throw new Error("UID參數為必填項目");
+    }
+
+    // 安全檢查：確保db實例可用
+    if (!db) {
+      console.error('❌ AM_getUserDefaultLedger: Firestore實例未初始化');
+      return {
+        success: false,
+        error: "Firestore資料庫未初始化",
+        errorCode: "DB_NOT_INITIALIZED"
+      };
     }
 
     // 查詢用戶資料
