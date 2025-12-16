@@ -447,7 +447,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
         // 列出所有文檔的基本信息用於調試
         allSnapshot.forEach(doc => {
           const data = doc.data();
-          LBK_logDebug(`文檔 ${doc.id}: categoryId=${data.categoryId}, subCategoryName=${data.subCategoryName}, isActive=${data.isActive}`, "科目查詢", userId, "LBK_getSubjectCode");
+          LBK_logDebug(`文檔 ${doc.id}: subCategoryId=${data.subCategoryId}, name=${data.name}, categoryName=${data.categoryName}, isActive=${data.isActive}`, "科目查詢", userId, "LBK_getSubjectCode");
         });
       }
 
@@ -463,16 +463,16 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
       if (doc.id === "template") continue;
 
       const data = doc.data();
-      // 使用WCM標準欄位名稱
-      const subName = String(data.subCategoryName || data.categoryName || '').trim().toLowerCase();
+      // 使用0070標準欄位名稱
+      const subName = String(data.name || data.subCategoryName || data.categoryName || '').trim().toLowerCase();
 
       // 1. 精確匹配 - 最高優先級
       if (subName === normalizedInput) {
         exactMatch = {
-          majorCode: String(data.parentId || data.categoryId),
+          majorCode: String(data.categoryId || data.parentId),
           majorName: String(data.categoryName || ''),
-          subCode: String(data.categoryId || ''),
-          subName: String(data.subCategoryName || data.categoryName || '')
+          subCode: String(data.subCategoryId || data.categoryId),
+          subName: String(data.name || data.subCategoryName || data.categoryName || '')
         };
         break;
       }
@@ -489,10 +489,10 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
         const synonymLower = synonym.toLowerCase();
         if (synonymLower === normalizedInput) {
           synonymMatch = {
-            majorCode: String(data.parentId || data.categoryId),
+            majorCode: String(data.categoryId || data.parentId),
             majorName: String(data.categoryName || ''),
-            subCode: String(data.categoryId || ''),
-            subName: String(data.subCategoryName || data.categoryName || '')
+            subCode: String(data.subCategoryId || data.categoryId),
+            subName: String(data.name || data.subCategoryName || data.categoryName || '')
           };
           break;
         }
@@ -527,10 +527,10 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
       // 3. 部分匹配 - 包含關係
       if (subName.includes(normalizedInput) || normalizedInput.includes(subName)) {
         partialMatches.push({
-          majorCode: String(data.parentId || data.categoryId),
+          majorCode: String(data.categoryId || data.parentId),
           majorName: String(data.categoryName || ''),
-          subCode: String(data.categoryId || ''),
-          subName: String(data.subCategoryName || data.categoryName || ''),
+          subCode: String(data.subCategoryId || data.categoryId),
+          subName: String(data.name || data.subCategoryName || data.categoryName || ''),
           score: subName.length === normalizedInput.length ? 1.0 : 0.8
         });
       }
@@ -738,10 +738,10 @@ async function LBK_getAllSubjects(userId, processId) {
       if (doc.id === "template" || doc.id === "_init") return;
 
       subjects.push({
-        majorCode: data.parentId || data.categoryId,
+        majorCode: data.categoryId || data.parentId,
         majorName: data.categoryName || '',
-        subCode: data.categoryId || '',
-        subName: data.subCategoryName || data.categoryName || '',
+        subCode: data.subCategoryId || data.categoryId,
+        subName: data.name || data.subCategoryName || data.categoryName || '',
         synonyms: data.synonyms || ""
       });
     });

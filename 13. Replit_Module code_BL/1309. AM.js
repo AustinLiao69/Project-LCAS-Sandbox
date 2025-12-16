@@ -3,7 +3,7 @@
  * @version v8.0.2
  * @date 2025-12-16
  * @description 處理用戶註冊、登入、帳本基礎結構初始化等功能
- * @compliance 嚴格遵守0098憲法 - 禁止hard coding，遵守dataflow
+ * @compliance 嚴格遵守0070文件 - 禁止hard coding，遵守dataflow
  * @update v8.0.2: DCN-0024階段一修復 - 增加載入日誌，修復語法錯誤
  */
 
@@ -1575,23 +1575,30 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
               const categoryId = `category_${subject.categoryId}`;
               const categoryRef = db.collection(`ledgers/${userLedgerId}/categories`).doc(categoryId);
 
+              // 更新 categories 資料欄位以符合 0070 規範
               const categoryDoc = {
                 id: categoryId,
-                categoryId: subject.categoryId,
-                parentId: subject.parentId,
+                subCategoryId: subject.categoryId.toString(), // subject.categoryId 可能是 number
+                categoryId: subject.parentId, // subject.parentId 為父科目ID
                 categoryName: subject.categoryName,
                 subCategoryName: subject.subCategoryName,
                 synonyms: subject.synonyms || '',
-                type: [801, 899].includes(subject.parentId) ? 'income' : 'expense',
-                isDefault: true,
-                isActive: true,
+                name: subject.subCategoryName || subject.categoryName, // 顯示名稱，優先子科目名稱
+                type: [801, 899].includes(subject.parentId) ? 'income' : 'expense', // 根據父科目ID判斷類型
+                level: subject.parentId ? 2 : 1, // 預設層級，1為主科目，2為子科目
+                color: '#007bff', // 預設顏色
+                icon: 'default', // 預設圖示
+                description: '', // 預設描述
+                isDefault: true, // 預設科目
+                isActive: true, // 預設啟用
                 userId: UID,
                 ledgerId: userLedgerId,
+                status: 'active', // 預設狀態
                 dataSource: '0099. Subject_code.json',
                 createdAt: now,
                 updatedAt: now,
-                module: 'AM_BACKUP',
-                version: '8.0.1'
+                module: 'AM_BACKUP', // 標記來源模組
+                version: '8.0.1' // 版本號
               };
 
               batch.set(categoryRef, categoryDoc);
@@ -5374,17 +5381,11 @@ module.exports = {
   AM_processAPIUpdatePreferences,
   AM_processAPIUpdateSecurity,
   AM_processAPIVerifyPin,
+  AM_processAPIGetModeDefaults, // Added for completeness based on function definition
+  AM_processAPIBehaviorTracking, // Added for completeness based on function definition
+  AM_processAPIGetModeRecommendations, // Added for completeness based on function definition
   AM_processAPIUpdateUserMode: AM_processAPISwitchMode, // Alias for clarity if needed
-  AM_processAPIGetModeDefaults,
-
-  // 45. PIN碼驗證API
-  AM_processAPIVerifyPin,
-
-  // 46. 行為追蹤API
-  AM_processAPIBehaviorTracking,
-
-  // 47. 模式優化建議API
-  AM_processAPIGetModeRecommendations,
+  AM_processAPIVerifyPin, // Added for completeness based on function definition
 
   // 補充函數
   // AM_load0099SubjectData, // 新增：AM模組自行載入0099資料 - Moved up to be with other v7.4.0 additions
