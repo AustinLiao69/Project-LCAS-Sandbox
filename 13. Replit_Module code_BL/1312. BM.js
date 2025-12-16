@@ -1635,7 +1635,7 @@ BM.BM_createBudgetsSubcollectionFramework = async function(ledgerId, requesterId
     // 建立預算子集合初始化文檔，確保子集合存在
     const admin = require("firebase-admin");
     const db = admin.firestore();
-    
+
     const budgetInitDoc = {
       initialized: true,
       createdAt: admin.firestore.Timestamp.now(),
@@ -1648,9 +1648,9 @@ BM.BM_createBudgetsSubcollectionFramework = async function(ledgerId, requesterId
 
     // 寫入初始化文檔到budgets子集合
     await db.collection('ledgers').doc(ledgerId).collection('budgets').doc('_init').set(budgetInitDoc);
-    
+
     console.log(`${logPrefix} 預算子集合框架建立成功`);
-    
+
     // 記錄操作日誌
     if (DL && typeof DL.DL_log === 'function') {
       DL.DL_log(`預算子集合框架建立成功 - 帳本: ${ledgerId}`, '預算管理', requesterId);
@@ -1664,7 +1664,7 @@ BM.BM_createBudgetsSubcollectionFramework = async function(ledgerId, requesterId
 
   } catch (error) {
     console.error(`${logPrefix} 預算子集合框架建立失敗:`, error);
-    
+
     if (DL && typeof DL.DL_error === 'function') {
       DL.DL_error(`預算子集合框架建立失敗: ${error.message}`, '預算管理', requesterId);
     }
@@ -1674,7 +1674,28 @@ BM.BM_createBudgetsSubcollectionFramework = async function(ledgerId, requesterId
       error: error.message,
       message: `預算子集合框架建立失敗: ${error.message}`
     };
-  }tId: '_framework_placeholder',
+  }
+};
+
+/**
+ * 階段二新增：建立預算子集合框架佔位符 (新增)
+ * @version 2025-11-20-V2.3.1
+ * @description 確保預算子集合存在，防止在無任何預算時無法創建集合
+ */
+BM.BM_createBudgetsSubcollectionFramework = async function(ledgerId, requesterId = 'SYSTEM') {
+  const logPrefix = '[BM_createBudgetsSubcollectionFramework]';
+
+  try {
+    console.log(`${logPrefix} 階段二新增：建立預算子集合框架佔位符 - 帳本ID: ${ledgerId}`);
+
+    // 驗證必要參數
+    if (!ledgerId || typeof ledgerId !== 'string' || ledgerId.trim() === '') {
+      throw new Error('缺少必要參數: ledgerId');
+    }
+
+    // 創建一個預算佔位符文檔，用於確保子集合的存在
+    const budgetPlaceholder = {
+      budgetId: '_framework_placeholder',
       type: 'subcollection_placeholder',
       purpose: '確保預算子集合存在',
       ledgerId: ledgerId,
