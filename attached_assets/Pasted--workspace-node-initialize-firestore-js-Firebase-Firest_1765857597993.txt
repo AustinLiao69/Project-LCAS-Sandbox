@@ -1,0 +1,80 @@
+~/workspace$ node initialize_firestore.js
+✅ Firebase配置驗證通過
+🔥 開始初始化 Firestore 資料庫...
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ Firebase 連接成功
+📋 建立系統配置...
+⚠️ 預設配置載入失敗: Unexpected token '/', "/**
+* 0301"... is not valid JSON
+📊 建立索引配置...
+❌ 初始化失敗: Error: 2 UNKNOWN: Getting metadata from plugin failed with error: error:1E08010C:DECODER routines::unsupported
+    at callErrorFromStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/call.js:32:19)
+    at Object.onReceiveStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client.js:193:76)
+    at Object.onReceiveStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:361:141)
+    at Object.onReceiveStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:324:181)
+    at /home/runner/workspace/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client.js:161:32)
+    at ServiceClientImpl.<anonymous> (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/v1/firestore_client.js:237:29
+    at /home/runner/workspace/node_modules/google-gax/build/src/normalCalls/timeout.js:44:16
+    at repeat (/home/runner/workspace/node_modules/google-gax/build/src/normalCalls/retries.js:82:25)
+    at /home/runner/workspace/node_modules/google-gax/build/src/normalCalls/retries.js:125:13
+    at OngoingCallPromise.call (/home/runner/workspace/node_modules/google-gax/build/src/call.js:67:27)
+    at NormalApiCaller.call (/home/runner/workspace/node_modules/google-gax/build/src/normalCalls/normalApiCaller.js:34:19)
+    at /home/runner/workspace/node_modules/google-gax/build/src/createApiCall.js:112:30
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Caused by: Error
+    at _firestore._traceUtil.startActiveSpan (/home/runner/workspace/node_modules/@google-cloud/firestore/build/src/write-batch.js:438:27)
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30
+    at NoopContextManager.with (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+    at ContextAPI.with (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+    at NoopTracer.startActiveSpan (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+    at ProxyTracer.startActiveSpan (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+    at EnabledTraceUtil.startActiveSpan (/home/runner/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:102:28)
+    at WriteBatch.commit (/home/runner/workspace/node_modules/@google-cloud/firestore/build/src/write-batch.js:436:43)
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/reference/document-reference.js:350:31
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30 {
+  code: 2,
+  details: 'Getting metadata from plugin failed with error: error:1E08010C:DECODER routines::unsupported',
+  metadata: Metadata { internalRepr: Map(0) {}, options: {} },
+  note: 'Exception occurred in retry method that was not classified as transient'
+}
+Error: 2 UNKNOWN: Getting metadata from plugin failed with error: error:1E08010C:DECODER routines::unsupported
+    at callErrorFromStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/call.js:32:19)
+    at Object.onReceiveStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client.js:193:76)
+    at Object.onReceiveStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:361:141)
+    at Object.onReceiveStatus (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:324:181)
+    at /home/runner/workspace/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+for call at
+    at ServiceClientImpl.makeUnaryRequest (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/client.js:161:32)
+    at ServiceClientImpl.<anonymous> (/home/runner/workspace/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/v1/firestore_client.js:237:29
+    at /home/runner/workspace/node_modules/google-gax/build/src/normalCalls/timeout.js:44:16
+    at repeat (/home/runner/workspace/node_modules/google-gax/build/src/normalCalls/retries.js:82:25)
+    at /home/runner/workspace/node_modules/google-gax/build/src/normalCalls/retries.js:125:13
+    at OngoingCallPromise.call (/home/runner/workspace/node_modules/google-gax/build/src/call.js:67:27)
+    at NormalApiCaller.call (/home/runner/workspace/node_modules/google-gax/build/src/normalCalls/normalApiCaller.js:34:19)
+    at /home/runner/workspace/node_modules/google-gax/build/src/createApiCall.js:112:30
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Caused by: Error
+    at _firestore._traceUtil.startActiveSpan (/home/runner/workspace/node_modules/@google-cloud/firestore/build/src/write-batch.js:438:27)
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30
+    at NoopContextManager.with (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+    at ContextAPI.with (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+    at NoopTracer.startActiveSpan (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+    at ProxyTracer.startActiveSpan (/home/runner/workspace/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+    at EnabledTraceUtil.startActiveSpan (/home/runner/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:102:28)
+    at WriteBatch.commit (/home/runner/workspace/node_modules/@google-cloud/firestore/build/src/write-batch.js:436:43)
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/reference/document-reference.js:350:31
+    at /home/runner/workspace/node_modules/@google-cloud/firestore/build/src/telemetry/enabled-trace-util.js:110:30 {
+  code: 2,
+  details: 'Getting metadata from plugin failed with error: error:1E08010C:DECODER routines::unsupported',
+  metadata: Metadata { internalRepr: Map(0) {}, options: {} },
+  note: 'Exception occurred in retry method that was not classified as transient'
+}
+~/workspace$ 
