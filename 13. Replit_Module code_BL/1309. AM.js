@@ -159,7 +159,7 @@ function WCM_loadDefaultConfigs() {
   try {
     const path = require('path');
     const fs = require('fs');
-    
+
     const configBasePath = path.join(__dirname, '../..', '03. Default_config');
     const configs = {};
 
@@ -1465,14 +1465,14 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
     // 直接使用Firebase操作建立帳本結構，移除對1311.FS.js的依賴
     console.log(`🔧 ${functionName}: 直接使用Firebase建立帳本子集合結構...`);
-    
+
     // 建立基本子集合結構
     const subcollections = ['transactions', 'categories', 'wallets', 'budgets'];
     const structureResult = {
       success: true,
       created_subcollections: subcollections
     };
-    
+
     // 為非transactions子集合建立初始化文檔以確保集合存在
     // transactions子集合不建立_init文檔，避免影響統計功能
     const collectionsNeedInit = ['categories', 'wallets', 'budgets'];
@@ -1488,7 +1488,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         console.warn(`⚠️ ${functionName}: 子集合 ${collection} 初始化警告: ${subcollectionError.message}`);
       }
     }
-    
+
     // transactions子集合不建立_init文檔，保持空集合狀態
     console.log(`✅ ${functionName}: transactions子集合保持空集合狀態（無_init文檔）`);
 
@@ -1504,11 +1504,11 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     let walletCount = 0;
     let budgetInitialized = false;
     let collaborationInitialized = false;
-    
+
     try {
       // 1. 調用WCM模組進行科目初始化（添加容錯處理）
       console.log(`📋 ${functionName}: 調用WCM模組進行科目初始化...`);
-      
+
       // 檢查WCM模組是否可用且函數存在
       if (WCM && typeof WCM.WCM_createCategory === 'function') {
         const categoryResult = await WCM.WCM_createCategory(userLedgerId, { userId: UID }, { batchLoad0099: true });
@@ -1520,7 +1520,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         }
       } else {
         console.warn(`⚠️ ${functionName}: WCM模組不可用或函數不存在，使用備用科目初始化`);
-        
+
         // 備用科目初始化：直接從0099.json載入科目
         try {
           const subjectData = WCM_load0099SubjectData();
@@ -1528,12 +1528,12 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
             const db = admin.firestore();
             const batch = db.batch();
             const now = admin.firestore.Timestamp.now();
-            
+
             let batchCount = 0;
             for (const subject of subjectData.data) {
               const categoryId = `category_${subject.categoryId}`;
               const categoryRef = db.collection(`ledgers/${userLedgerId}/categories`).doc(categoryId);
-              
+
               const categoryDoc = {
                 id: categoryId,
                 categoryId: subject.categoryId,
@@ -1552,11 +1552,11 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
                 module: 'AM_BACKUP',
                 version: '8.0.1'
               };
-              
+
               batch.set(categoryRef, categoryDoc);
               batchCount++;
             }
-            
+
             await batch.commit();
             subjectCount = batchCount;
             console.log(`✅ ${functionName}: 備用科目初始化完成，載入${subjectCount}筆科目`);
@@ -1570,7 +1570,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
       // 2. 調用WCM模組進行帳戶初始化（強化版本，確保預設錢包創建成功）
       console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
-      
+
       // 優先使用WCM模組
       if (WCM && typeof WCM.WCM_createWallet === 'function') {
         console.log(`📦 ${functionName}: 使用WCM模組創建預設錢包...`);
@@ -3368,7 +3368,7 @@ async function AM_processAPIResetPassword(requestData) {
       functionName,
     );
 
-    // 階段一修復：確保成功回應包含有效的data欄位
+    // 階段一修復：確保成功回應包含完整的data欄位
     return {
       success: true,
       data: {
@@ -5353,8 +5353,7 @@ module.exports = {
   description: 'AM帳號管理模組 - v8.0.1：修復語法錯誤，確保模組正常載入，專注帳號管理核心功能',
   refactoring: {
     migratedToWCM: ['AM_load0099SubjectData', 'AM_loadDefaultConfigs'],
-    wcmIntegration: true,
-    newBehavior: 'AM調用WCM函數進行科目和帳戶初始化'
+    wcmIntegration: true
   }
 };
 
