@@ -1716,13 +1716,13 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       }
 
       // 驗證所有四個子集合是否建立
-      const categoriesSnapshot = await ledgerRef.collection("categories").limit(1).get(); // 修正科目集合名稱
+      const categoriesSnapshot = await ledgerRef.collection("categories").limit(1).get();
       const walletsSnapshot = await ledgerRef.collection("wallets").limit(1).get();
       const transactionsSnapshot = await ledgerRef.collection("transactions").limit(1).get();
       const budgetsSnapshot = await ledgerRef.collection("budgets").limit(1).get();
 
       const subcollectionStatus = {
-        categories: !categoriesSnapshot.empty, // 修正科目集合名稱
+        categories: !categoriesSnapshot.empty,
         wallets: !walletsSnapshot.empty,
         transactions: !transactionsSnapshot.empty,
         budgets: !budgetsSnapshot.empty
@@ -1730,7 +1730,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
       console.log(`✅ 帳本 ${userLedgerId} 驗證成功`);
       console.log(`✅ Categories集合: ${subcollectionStatus.categories ? '已建立' : '❌未建立'}`);
-      console.log(`✅ wallets集合: ${subcollectionStatus.wallets ? '已建立' : '❌未建立'}`);
+      console.log(`✅ Wallets集合: ${subcollectionStatus.wallets ? '已建立' : '❌未建立'}`);
       console.log(`✅ Transactions集合: ${subcollectionStatus.transactions ? '已建立' : '❌未建立'}`);
       console.log(`✅ Budgets集合: ${subcollectionStatus.budgets ? '已建立' : '❌未建立'}`);
 

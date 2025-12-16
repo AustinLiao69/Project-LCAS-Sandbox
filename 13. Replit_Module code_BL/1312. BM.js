@@ -1632,9 +1632,49 @@ BM.BM_createBudgetsSubcollectionFramework = async function(ledgerId, requesterId
       throw new Error('缺少必要參數: ledgerId');
     }
 
-    // 建立預算子集合佔位符，確保子集合存在
-    const budgetPlaceholder = {
-      budgetId: '_framework_placeholder',
+    // 建立預算子集合初始化文檔，確保子集合存在
+    const admin = require("firebase-admin");
+    const db = admin.firestore();
+    
+    const budgetInitDoc = {
+      initialized: true,
+      createdAt: admin.firestore.Timestamp.now(),
+      ledgerId: ledgerId,
+      note: 'Initial document to ensure budgets subcollection exists',
+      module: 'BM',
+      version: '2.3.0',
+      requesterId: requesterId
+    };
+
+    // 寫入初始化文檔到budgets子集合
+    await db.collection('ledgers').doc(ledgerId).collection('budgets').doc('_init').set(budgetInitDoc);
+    
+    console.log(`${logPrefix} 預算子集合框架建立成功`);
+    
+    // 記錄操作日誌
+    if (DL && typeof DL.DL_log === 'function') {
+      DL.DL_log(`預算子集合框架建立成功 - 帳本: ${ledgerId}`, '預算管理', requesterId);
+    }
+
+    return {
+      success: true,
+      ledgerId: ledgerId,
+      message: '預算子集合框架建立成功'
+    };
+
+  } catch (error) {
+    console.error(`${logPrefix} 預算子集合框架建立失敗:`, error);
+    
+    if (DL && typeof DL.DL_error === 'function') {
+      DL.DL_error(`預算子集合框架建立失敗: ${error.message}`, '預算管理', requesterId);
+    }
+
+    return {
+      success: false,
+      error: error.message,
+      message: `預算子集合框架建立失敗: ${error.message}`
+    };
+  }tId: '_framework_placeholder',
       type: 'subcollection_placeholder',
       purpose: '確保預算子集合存在',
       ledgerId: ledgerId,
