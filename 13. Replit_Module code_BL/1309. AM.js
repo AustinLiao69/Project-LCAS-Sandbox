@@ -1547,10 +1547,9 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     let collaborationInitialized = false;
 
     try {
-      // 1. 調用WCM模組進行科目初始化（添加容錯處理）
+      // 1. 調用WCM模組進行科目初始化
       console.log(`📋 ${functionName}: 調用WCM模組進行科目初始化...`);
 
-      // 檢查WCM模組是否可用且函數存在
       if (WCM && typeof WCM.WCM_createCategory === 'function') {
         const categoryResult = await WCM.WCM_createCategory(userLedgerId, { userId: UID }, { batchLoad0099: true });
         if (categoryResult.success) {
@@ -1560,136 +1559,22 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
           console.warn(`⚠️ ${functionName}: WCM科目初始化失敗: ${categoryResult.error?.message}`);
         }
       } else {
-        console.warn(`⚠️ ${functionName}: WCM模組不可用或函數不存在，使用備用科目初始化`);
-
-        // 備用科目初始化：直接從0099.json載入科目
-        try {
-          const subjectData = WCM_load0099SubjectData();
-          if (subjectData.success && subjectData.data.length > 0) {
-            const db = admin.firestore();
-            const batch = db.batch();
-            const now = admin.firestore.Timestamp.now();
-
-            let batchCount = 0;
-            for (const subject of subjectData.data) {
-              const categoryId = `category_${subject.categoryId}`;
-              const categoryRef = db.collection(`ledgers/${userLedgerId}/categories`).doc(categoryId);
-
-              // 更新 categories 資料欄位以符合 0070 規範
-              const categoryDoc = {
-                id: categoryId,
-                subCategoryId: subject.categoryId.toString(), // subject.categoryId 可能是 number
-                categoryId: subject.parentId, // subject.parentId 為父科目ID
-                categoryName: subject.categoryName,
-                subCategoryName: subject.subCategoryName,
-                synonyms: subject.synonyms || '',
-                name: subject.subCategoryName || subject.categoryName, // 顯示名稱，優先子科目名稱
-                type: [801, 899].includes(subject.parentId) ? 'income' : 'expense', // 根據父科目ID判斷類型
-                level: subject.parentId ? 2 : 1, // 預設層級，1為主科目，2為子科目
-                color: '#007bff', // 預設顏色
-                icon: 'default', // 預設圖示
-                description: '', // 預設描述
-                isDefault: true, // 預設科目
-                isActive: true, // 預設啟用
-                userId: UID,
-                ledgerId: userLedgerId,
-                status: 'active', // 預設狀態
-                dataSource: '0099. Subject_code.json',
-                createdAt: now,
-                updatedAt: now,
-                module: 'AM_BACKUP', // 標記來源模組
-                version: '8.0.1' // 版本號
-              };
-
-              batch.set(categoryRef, categoryDoc);
-              batchCount++;
-            }
-
-            await batch.commit();
-            subjectCount = batchCount;
-            console.log(`✅ ${functionName}: 備用科目初始化完成，載入${subjectCount}筆科目`);
-          } else {
-            console.warn(`⚠️ ${functionName}: 無法載入0099科目資料，科目初始化失敗`);
-          }
-        } catch (backupError) {
-          console.error(`❌ ${functionName}: 備用科目初始化失敗: ${backupError.message}`);
-        }
+        console.warn(`⚠️ ${functionName}: WCM模組不可用，科目初始化跳過`);
       }
 
-      // 2. 調用WCM模組進行帳戶初始化（強化版本，確保預設錢包創建成功）
+      // 2. 調用WCM模組進行帳戶初始化
       console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
 
-      // 優先使用WCM模組
       if (WCM && typeof WCM.WCM_createWallet === 'function') {
-        console.log(`📦 ${functionName}: 使用WCM模組創建預設錢包...`);
         const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
         if (walletResult.success) {
           walletCount = walletResult.data.totalWallets || 0;
           console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
         } else {
           console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message || walletResult.message}`);
-          // WCM失敗時強制使用備用方案
-          console.log(`🔄 ${functionName}: 強制執行備用帳戶初始化...`);
-          await executeBackupWalletInitialization();
         }
       } else {
-        console.warn(`⚠️ ${functionName}: WCM模組不可用，直接使用備用帳戶初始化`);
-        await executeBackupWalletInitialization();
-      }
-
-      // 備用帳戶初始化函數
-      async function executeBackupWalletInitialization() {
-        try {
-          const defaultConfigs = WCM_loadDefaultConfigs();
-          if (defaultConfigs.success && defaultConfigs.configs.wallets) {
-            const db = admin.firestore();
-            const batch = db.batch();
-            const now = admin.firestore.Timestamp.now();
-            const defaultCurrency = defaultConfigs.configs.currency?.currencies?.default || 'TWD';
-
-            let batchCount = 0;
-            for (const defaultWallet of defaultConfigs.configs.wallets.default_wallets || []) {
-              const walletId = defaultWallet.walletId;
-              const walletRef = db.collection(`ledgers/${userLedgerId}/wallets`).doc(walletId);
-
-              const walletDoc = {
-                id: walletId,
-                name: defaultWallet.name,
-                type: defaultWallet.type,
-                currency: defaultWallet.currency.replace('{{default_currency}}', defaultCurrency),
-                balance: defaultWallet.balance || 0,
-                description: defaultWallet.description || '',
-                isDefault: defaultWallet.walletId === 'default_cash' ? true : false,
-                userId: UID,
-                ledgerId: userLedgerId,
-                status: 'active',
-                dataSource: '0302. Default_wallet.json',
-                createdAt: now,
-                updatedAt: now,
-                module: 'AM_BACKUP',
-                version: '8.0.2'
-              };
-
-              batch.set(walletRef, walletDoc);
-              batchCount++;
-              console.log(`📝 ${functionName}: 準備創建錢包: ${walletDoc.name} (${walletId})`);
-            }
-
-            await batch.commit();
-            walletCount = batchCount;
-            console.log(`✅ ${functionName}: 備用帳戶初始化完成，載入${walletCount}個帳戶`);
-
-            // 驗證錢包是否真的創建成功
-            const verifySnapshot = await db.collection(`ledgers/${userLedgerId}/wallets`).get();
-            console.log(`🔍 ${functionName}: 驗證錢包創建結果，實際創建數量: ${verifySnapshot.size}`);
-          } else {
-            console.warn(`⚠️ ${functionName}: 無法載入0302帳戶資料，帳戶初始化失敗`);
-            console.warn(`⚠️ ${functionName}: 配置載入結果: ${JSON.stringify(defaultConfigs)}`);
-          }
-        } catch (backupError) {
-          console.error(`❌ ${functionName}: 備用帳戶初始化失敗: ${backupError.message}`);
-          console.error(`❌ ${functionName}: 錯誤詳情: ${backupError.stack}`);
-        }
+        console.warn(`⚠️ ${functionName}: WCM模組不可用，帳戶初始化跳過`);
       }
 
       // 3. 調用BM模組進行預算結構初始化
