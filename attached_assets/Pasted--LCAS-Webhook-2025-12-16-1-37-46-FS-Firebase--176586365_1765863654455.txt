@@ -1,0 +1,109 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/12/16 下午1:37:46
+📦 部署模式載入模組...
+✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理
+✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+⚠️ BK 模組未正確載入，跳過初始化
+⚠️ LBK 模組未正確載入，跳過初始化
+⚠️ SR 模組未正確載入，跳過初始化
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🎉 階段五完成：FS模組移除狀態確認
+✅ FS模組已完全移除，職責分散完成
+📋 Firebase操作現由以下專門模組處理:
+  - AM模組：帳號管理相關Firebase操作
+  - WCM模組：帳戶與科目管理相關Firebase操作
+  - BM模組：預算管理相關Firebase操作
+  - CM模組：協作管理相關Firebase操作
+  - 其他模組：直接使用firebase-config模組
+❌ BK模組載入失敗，無法檢查函數
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！
+📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore
+🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000
+⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能
+📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制
+🏥 健康檢查機制已優化：專注LINE服務監控
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構
+📦 API端點遷移完成統計：
+   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點
+   📱 保留LINE Webhook專用：5個核心端點
+   ✅ 完美職責分離：RESTful API ↔ LINE Webhook
+🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現
+📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性
+🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port 3000
+📡 基礎服務已就緒，正在背景載入完整功能...
+📦 載入WH模組...
+🔧 WCM模組v1.2.2 初始化：循環依賴修復版
+🔄 循環依賴修復：移除AM模組直接引用
+✅ 函數導出驗證：WCM_createCategory = function
+✅ 函數導出驗證：WCM_createWallet = function
+✅ 函數導出驗證：WCM_load0099SubjectData = function
+✅ 函數導出驗證：WCM_loadDefaultConfigs = function
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🚀 WCM模組現已全面支援協作帳本路徑
+✨ 循環依賴修復完成，所有函數應可正常調用
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+📊 BM 預算管理模組載入中...
+✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能
+🤝 CM 協作管理模組初始化中...
+[2025-12-16T05:37:47.641Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組v2.4.0載入完成 - 階段一擴展：建立完整協作帳本子集合架構（members, transactions, wallets, budgets, categories）
+✅ AM模組8.0.0 階段一職責重構完成！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 帳本結構初始化 (專注結構建立)
+   └── 總計: 63個函數 (移除3個至WCM模組)
+🔄 階段一重構: 科目和帳戶管理功能移至WCM模組
+🎯 職責專注: AM專注帳號管理，WCM負責科目和帳戶管理
+🔧 整合模式: AM_initializeUserLedger() 現在調用WCM模組進行資料初始化
+📊 新資料流: AM → WCM (科目+帳戶) → FS (結構) → Firebase
+✨ Before: AM直接載入0099.json + FS輔助
+✨ After: AM調用WCM函數，WCM成為科目和帳戶管理唯一入口
+🎉 階段一成果: WCM模組功能整合完成，職責邊界清晰化！
+📅 SR 排程提醒模組初始化中...
+✅ 階段五完成：FS模組已移除，消息去重使用NodeCache
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.4.0 (2025-12-12) - 階段五完成：FS模組已移除
+WH模組環境變數檢查結果:
+  ✅ LINE_CHANNEL_SECRET: 已設定(32字符)
+  ✅ LINE_CHANNEL_ACCESS_TOKEN: 已設定(172字符)
+  ❌ WEBHOOK_URL: 未設定或為空
+⚠️  缺少必要環境變數: WEBHOOK_URL
+💡 請在Replit Secrets中設定這些環境變數
+⚠️ WH模組環境變數不完整，建議在部署前設定完整
+[WH 2.0.16 LOG] WH 2.3.0: 環境變數檢查未通過，缺少: WEBHOOK_URL (WARNING)
+✅ WH 模組載入成功
+✅ WH模組核心函數檢查通過
+🔄 延遲載入應用模組...
+✅ BK 模組載入成功
+✅ LBK 模組載入成功
+✅ DD 模組載入成功
+✅ AM 模組載入成功
+✅ SR 模組載入成功
+✅ 完整功能載入完成
+📋 DCN-0011 Phase 4 重構統計:
+   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)
+   🎯 Webhook端點保留: 5個 (LINE OA專用)
+   🏗️ 雙服務架構: 職責完全分離
+📅 已載入 0 個排程設定
+[2025-12-16T05:37:48.809Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+成功寫入 2 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
