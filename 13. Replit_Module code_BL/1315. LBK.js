@@ -2078,35 +2078,27 @@ async function LBK_handleNewSubjectClassification(originalSubject, parsedData, i
 }
 
 /**
- * 處理使用者科目選擇 - v1.4.0 新增函數
- * @version 2025-12-16-V1.4.0
- * @description 處理使用者的科目選擇並儲存至categories集合，確保歸類結果正確儲存
+ * 處理使用者科目選擇 - v1.4.1 基於0099配置
+ * @version 2025-12-16-V1.4.1
+ * @description 使用0099.json動態配置處理使用者的科目選擇
  */
 async function LBK_processUserSelection(selection, originalSubject, parsedData, inputData, processId) {
   try {
     LBK_logInfo(`處理使用者選擇: ${selection} for ${originalSubject} [${processId}]`, "科目歸類", inputData.userId, "LBK_processUserSelection");
 
-    // DCN-0024 規範的科目映射
-    const categoryMapping = {
-      "101": { parentId: 101, categoryName: "生活家用", type: "expense" },
-      "102": { parentId: 102, categoryName: "交通費用", type: "expense" },
-      "103": { parentId: 103, categoryName: "餐飲費用", type: "expense" },
-      "105": { parentId: 105, categoryName: "寵物生活", type: "expense" },
-      "108": { parentId: 108, categoryName: "運動嗜好", type: "expense" },
-      "801": { parentId: 801, categoryName: "個人收入", type: "income" },
-      "905": { parentId: 905, categoryName: "財務支出", type: "expense" },
-      "000": { parentId: 0, categoryName: "不歸類", type: "expense" }
-    };
-
+    // 使用動態的科目映射（基於0099.json）
+    const categoryMapping = LBK_buildCategoryMapping();
     const selectedCategory = categoryMapping[selection];
     
     if (!selectedCategory) {
-      LBK_logError(`無效的科目選擇: ${selection}`, "科目歸類", inputData.userId, "INVALID_SELECTION", "", "LBK_processUserSelection");
+      LBK_logError(`無效的科目選擇: ${selection}，可用選項: ${Object.keys(categoryMapping).join(', ')}`, "科目歸類", inputData.userId, "INVALID_SELECTION", "", "LBK_processUserSelection");
       return {
         success: false,
         error: "無效的科目選擇"
       };
     }
+    
+    LBK_logInfo(`選擇科目: ${selectedCategory.parentId} ${selectedCategory.categoryName} (${selectedCategory.type})`, "科目歸類", inputData.userId, "LBK_processUserSelection");
 
     // 建立新的科目記錄並儲存到categories集合
     const newCategoryResult = await LBK_saveNewCategoryToFirestore(
@@ -2216,105 +2208,154 @@ async function LBK_saveNewCategoryToFirestore(originalSubject, selectedCategory,
 }
 
 /**
- * 建立科目歸類選單訊息 - v1.4.0 優化版本
- * @version 2025-12-16-V1.4.0
- * @description 生成標準化的科目選擇介面訊息，依據DCN-0024規範動態讀取0099.json
+ * 載入0099科目配置 - v1.4.1 統一科目管理
+ * @version 2025-12-16-V1.4.1
+ * @description 統一的0099.json檔案讀取函數，提供完整的科目配置數據
  */
-function LBK_buildClassificationMessage(originalSubject) {
+function LBK_load0099SubjectConfig() {
   try {
-    // 動態讀取0099.json檔案
     const fs = require('fs');
     const path = require('path');
     const subjectCodePath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
     
-    let classificationOptions = [];
-    
-    if (fs.existsSync(subjectCodePath)) {
-      const subjectCodeData = JSON.parse(fs.readFileSync(subjectCodePath, 'utf8'));
-      
-      // DCN-0024 規範：取得唯一的主科目清單，專注LINE記帳需求
-      const uniqueCategories = new Map();
-      
-      // 過濾並整理主科目
-      const targetParentIds = [101, 102, 103, 105, 108, 801, 905]; // DCN-0024 指定的主科目
-      
-      subjectCodeData.forEach(item => {
-        if (item.parentId && item.categoryName && targetParentIds.includes(item.parentId)) {
-          const key = `${item.parentId}`;
-          if (!uniqueCategories.has(key)) {
-            uniqueCategories.set(key, {
-              parentId: item.parentId,
-              categoryName: item.categoryName
-            });
-          }
-        }
-      });
-      
-      // 轉換為選項格式並排序（依據DCN-0024順序）
-      const sortOrder = [101, 102, 103, 105, 108, 801, 905];
-      classificationOptions = sortOrder
-        .filter(id => uniqueCategories.has(id.toString()))
-        .map(id => {
-          const item = uniqueCategories.get(id.toString());
-          return `${item.parentId} ${item.categoryName}`;
-        });
-      
-      // 確保包含必要選項（DCN-0024 備案）
-      if (classificationOptions.length === 0) {
-        classificationOptions = [
-          "101 生活家用",
-          "102 交通費用", 
-          "103 餐飲費用",
-          "105 寵物生活",
-          "108 運動嗜好",
-          "801 個人收入",
-          "905 財務支出"
-        ];
-      }
-      
-      // 添加不歸類選項
-      classificationOptions.push("000 不歸類");
-      
-    } else {
-      // 若檔案不存在，使用DCN-0024預設選項
-      LBK_logWarning(`找不到0099.json檔案，使用DCN-0024預設科目選項`, "科目歸類", "", "LBK_buildClassificationMessage");
-      
-      classificationOptions = [
-        "101 生活家用",
-        "102 交通費用", 
-        "103 餐飲費用",
-        "105 寵物生活",
-        "108 運動嗜好",
-        "801 個人收入",
-        "905 財務支出",
-        "000 不歸類"
-      ];
+    if (!fs.existsSync(subjectCodePath)) {
+      LBK_logError(`0099.json檔案不存在: ${subjectCodePath}`, "科目配置", "", "CONFIG_FILE_MISSING", "", "LBK_load0099SubjectConfig");
+      return null;
     }
 
+    const subjectCodeData = JSON.parse(fs.readFileSync(subjectCodePath, 'utf8'));
+    LBK_logDebug(`成功載入0099.json，共${subjectCodeData.length}筆科目資料`, "科目配置", "", "LBK_load0099SubjectConfig");
+    
+    return subjectCodeData;
+    
+  } catch (error) {
+    LBK_logError(`載入0099.json失敗: ${error.toString()}`, "科目配置", "", "CONFIG_LOAD_ERROR", error.toString(), "LBK_load0099SubjectConfig");
+    return null;
+  }
+}
+
+/**
+ * 取得LINE記帳主科目清單 - v1.4.1 基於0099配置
+ * @version 2025-12-16-V1.4.1
+ * @description 從0099.json動態取得適用於LINE記帳的主科目清單
+ */
+function LBK_getLineMainCategories() {
+  try {
+    const subjectCodeData = LBK_load0099SubjectConfig();
+    
+    if (!subjectCodeData) {
+      LBK_logWarning(`無法載入0099配置，返回空陣列`, "科目配置", "", "LBK_getLineMainCategories");
+      return [];
+    }
+
+    // DCN-0024 規範：取得唯一的主科目清單，專注LINE記帳需求
+    const uniqueCategories = new Map();
+    
+    // 動態取得所有有效的主科目ID（排除測試和特殊科目）
+    const validParentIds = [...new Set(
+      subjectCodeData
+        .filter(item => 
+          item.parentId && 
+          item.categoryName && 
+          item.parentId !== 999 && // 排除測試科目
+          item.parentId !== 899   // 排除測試收入
+        )
+        .map(item => item.parentId)
+    )];
+    
+    // 建立科目映射
+    subjectCodeData.forEach(item => {
+      if (item.parentId && item.categoryName && validParentIds.includes(item.parentId)) {
+        const key = `${item.parentId}`;
+        if (!uniqueCategories.has(key)) {
+          uniqueCategories.set(key, {
+            parentId: item.parentId,
+            categoryName: item.categoryName
+          });
+        }
+      }
+    });
+    
+    // 轉換為陣列並排序（數字由小到大）
+    const categories = Array.from(uniqueCategories.values())
+      .sort((a, b) => a.parentId - b.parentId);
+    
+    LBK_logInfo(`從0099配置取得${categories.length}個主科目`, "科目配置", "", "LBK_getLineMainCategories");
+    
+    return categories;
+    
+  } catch (error) {
+    LBK_logError(`取得LINE主科目失敗: ${error.toString()}`, "科目配置", "", "GET_CATEGORIES_ERROR", error.toString(), "LBK_getLineMainCategories");
+    return [];
+  }
+}
+
+/**
+ * 科目選擇映射表 - v1.4.1 基於0099配置
+ * @version 2025-12-16-V1.4.1
+ * @description 從0099.json動態建立科目選擇映射表
+ */
+function LBK_buildCategoryMapping() {
+  try {
+    const categories = LBK_getLineMainCategories();
+    const mapping = {};
+    
+    categories.forEach(category => {
+      const key = category.parentId.toString();
+      mapping[key] = {
+        parentId: category.parentId,
+        categoryName: category.categoryName,
+        type: (category.parentId >= 200 && category.parentId < 300) ? "income" : "expense"
+      };
+    });
+    
+    // 確保包含不歸類選項
+    mapping["000"] = { parentId: 0, categoryName: "不歸類", type: "expense" };
+    
+    LBK_logDebug(`建立科目映射表，共${Object.keys(mapping).length}個選項`, "科目配置", "", "LBK_buildCategoryMapping");
+    
+    return mapping;
+    
+  } catch (error) {
+    LBK_logError(`建立科目映射失敗: ${error.toString()}`, "科目配置", "", "BUILD_MAPPING_ERROR", error.toString(), "LBK_buildCategoryMapping");
+    return {
+      "000": { parentId: 0, categoryName: "不歸類", type: "expense" }
+    };
+  }
+}
+
+/**
+ * 建立科目歸類選單訊息 - v1.4.1 完全基於0099配置
+ * @version 2025-12-16-V1.4.1
+ * @description 完全依賴0099.json生成科目選擇介面，移除所有硬編碼
+ */
+function LBK_buildClassificationMessage(originalSubject) {
+  try {
+    const categories = LBK_getLineMainCategories();
+    
+    if (categories.length === 0) {
+      LBK_logError(`無法從0099配置取得科目清單`, "科目歸類", "", "NO_CATEGORIES_AVAILABLE", "", "LBK_buildClassificationMessage");
+      return `系統錯誤：無法載入科目配置，請稍後再試或聯絡系統管理員`;
+    }
+    
+    // 轉換為選項格式
+    const classificationOptions = categories.map(category => 
+      `${category.parentId} ${category.categoryName}`
+    );
+    
+    // 添加不歸類選項
+    classificationOptions.push("000 不歸類");
+    
     const message = `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
     
-    LBK_logInfo(`v1.4.0 生成科目歸類選單，共 ${classificationOptions.length} 個選項（符合DCN-0024規範）`, "科目歸類", "", "LBK_buildClassificationMessage");
+    LBK_logInfo(`v1.4.1 基於0099配置生成科目歸類選單，共${classificationOptions.length}個選項`, "科目歸類", "", "LBK_buildClassificationMessage");
     
     return message;
     
   } catch (error) {
     LBK_logError(`建立科目歸類選單失敗: ${error.toString()}`, "科目歸類", "", "CLASSIFICATION_MESSAGE_ERROR", error.toString(), "LBK_buildClassificationMessage");
     
-    // 錯誤時使用DCN-0024最基本的備案選項
-    const fallbackOptions = [
-      "101 生鮮雜貨",
-      "102 生活家用",
-      "103 交通費用", 
-      "104 餐飲費用",
-      "105 娛樂消遣",
-      "106 運動嗜好",
-      "107 寵物生活",
-      "201 財務收入",
-      "301 財務支出",
-      "000 不歸類"
-    ];
-    
-    return `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${fallbackOptions.join('\n')}`;
+    return `系統錯誤：無法建立科目選單 (${error.message})，請稍後再試`;
   }
 }
 
@@ -2423,14 +2464,19 @@ const LBK_MODULE = {
   // 新增支付方式解析函數
   LBK_parsePaymentMethod: LBK_parsePaymentMethod,
 
-  // 新科目歸類函數 - v1.4.0新增及增強
+  // 新科目歸類函數 - v1.4.1增強（完全基於0099配置）
   LBK_handleNewSubjectClassification: LBK_handleNewSubjectClassification,
   LBK_buildClassificationMessage: LBK_buildClassificationMessage,
   LBK_processUserSelection: LBK_processUserSelection,
   LBK_saveNewCategoryToFirestore: LBK_saveNewCategoryToFirestore,
 
+  // 0099科目配置調用函數 - v1.4.1新增
+  LBK_load0099SubjectConfig: LBK_load0099SubjectConfig,
+  LBK_getLineMainCategories: LBK_getLineMainCategories,
+  LBK_buildCategoryMapping: LBK_buildCategoryMapping,
+
   // 版本資訊
-  MODULE_VERSION: "1.4.0",
+  MODULE_VERSION: "1.4.1",
   MODULE_NAME: "LBK"
 };
 
