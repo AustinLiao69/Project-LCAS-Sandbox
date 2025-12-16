@@ -3,78 +3,78 @@
   {
     "parentId": 101,
     "categoryName": "生活家用",
-    "categoryId": 10101,
-    "subCategoryName": "生活家用",
-    "synonyms": "生活用品,日用品,居家用品,家用品,孝親費,Helper薪資,房租,房東,掛號費,掛號,醫療,藥品,尿布,才藝課程,學校費用,學費,奶粉,兒童衣服,兒童用品,串流訂閱,菸品,娛樂,人情禮品,旅遊票券,家庭攝影,住宿休息"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 102,
     "categoryName": "交通費用",
-    "categoryId": 10201,
-    "subCategoryName": "交通費用",
-    "synonyms": "計程車費,大眾運輸費,共享機車費,租車費,車輛相關,加油費,停車,ETC,違規罰單"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 103,
     "categoryName": "餐飲費用",
-    "categoryId": 10301,
-    "subCategoryName": "餐飲費用",
-    "synonyms": "餐飲,早餐,午餐,晚餐,漢堡,麥當勞,便當,臭豆腐,滷味,雞排,鹽酥雞,珍珠奶茶"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 105,
     "categoryName": "寵物生活",
-    "categoryId": 10501,
-    "subCategoryName": "寵物生活",
-    "synonyms": "寵物糧食,寵物醫療,寵物零食,寵物用品,狗食,貓食,狗糧,貓糧"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 108,
     "categoryName": "運動嗜好",
-    "categoryId": 10801,
-    "subCategoryName": "運動嗜好",
-    "synonyms": "運動相關,書籍費用,進修課程,射箭,瑜珈,羽球,游泳,健身"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 109,
     "categoryName": "咖啡",
-    "categoryId": 10901,
-    "subCategoryName": "咖啡",
-    "synonyms": "咖啡,拿鐵,美式,卡布奇諾,摩卡,星巴克,85度C"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 110,
     "categoryName": "零食",
-    "categoryId": 11001,
-    "subCategoryName": "零食",
-    "synonyms": "零食,布丁,小吃,餅乾,糖果,洋芋片,薯片,爆米花,巧克力"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 801,
     "categoryName": "個人收入",
-    "categoryId": 80101,
-    "subCategoryName": "個人收入",
-    "synonyms": "薪資,投資收入,退稅收入,其他收入,獎金,薪水,工資,收入,利息,存款"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 905,
     "categoryName": "財務支出",
-    "categoryId": 90501,
-    "subCategoryName": "財務支出",
-    "synonyms": "勞保,健保,保險費,股票投資,所得稅,銀行手續費,信用卡費,無卡分期,公司刷卡代墊,銀行貸款,慈善捐款,規費,虛擬貨幣,其他支出"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 999,
     "categoryName": "測試支出",
-    "categoryId": 99999,
-    "subCategoryName": "測試支出",
-    "synonyms": "測試"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   },
   {
     "parentId": 899,
     "categoryName": "測試收入",
-    "categoryId": 89999,
-    "subCategoryName": "測試收入",
-    "synonyms": "測試"
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
   }
 ]
