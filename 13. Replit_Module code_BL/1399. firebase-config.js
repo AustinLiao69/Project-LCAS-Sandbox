@@ -24,7 +24,7 @@ function createFirebaseConfig() {
       project_id: process.env.FIREBASE_PROJECT_ID,
       private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
       private_key: process.env.FIREBASE_PRIVATE_KEY ? 
-        process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : null,
+        process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n').trim() : null,
       client_email: process.env.FIREBASE_CLIENT_EMAIL,
       client_id: process.env.FIREBASE_CLIENT_ID,
       auth_uri: process.env.FIREBASE_AUTH_URI || "https://accounts.google.com/o/oauth2/auth",
@@ -39,6 +39,14 @@ function createFirebaseConfig() {
       if (!firebaseConfig[field]) {
         throw new Error(`缺少必要的Firebase配置: ${field}`);
       }
+    }
+
+    // 驗證私鑰格式
+    if (!firebaseConfig.private_key.includes('-----BEGIN PRIVATE KEY-----') || 
+        !firebaseConfig.private_key.includes('-----END PRIVATE KEY-----')) {
+      console.error('⚠️ 私鑰格式異常，長度:', firebaseConfig.private_key.length);
+      console.error('⚠️ 私鑰前100字元:', firebaseConfig.private_key.substring(0, 100));
+      throw new Error('私鑰格式不正確：缺少 PEM 標頭或標尾');
     }
 
     console.log('✅ Firebase動態配置建立成功');
