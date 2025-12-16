@@ -79,6 +79,12 @@ cd "75. Flutter_Test_code_PL" && dart pub intl
 
 cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
 
+16. 語法檢查
+
+node --check "13. Replit_Module code_BL/1309. AM.js"
+
+node -e "try { require('./13. Replit_Module code_BL/1309. AM.js'); console.log('模块加载成功'); } catch(e) { console.error('模块加载失败:', e.message); console.error('错误位置:', e.stack); }"
+
 16. 執行7582(註冊使用者)
 
 cd "75. Flutter_Test_code_PL" && dart run "7582. 註冊使用者.dart"
