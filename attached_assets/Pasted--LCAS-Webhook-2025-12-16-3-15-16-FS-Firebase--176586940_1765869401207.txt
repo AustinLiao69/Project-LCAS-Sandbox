@@ -1,0 +1,141 @@
+  LCAS Webhook 啟動中...
+📅 啟動時間: 2025/12/16 下午3:15:16
+📦 部署模式載入模組...
+✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理
+✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+⚠️ BK 模組未正確載入，跳過初始化
+⚠️ LBK 模組未正確載入，跳過初始化
+⚠️ SR 模組未正確載入，跳過初始化
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🎉 階段五完成：FS模組移除狀態確認
+✅ FS模組已完全移除，職責分散完成
+📋 Firebase操作現由以下專門模組處理:
+  - AM模組：帳號管理相關Firebase操作
+  - WCM模組：帳戶與科目管理相關Firebase操作
+  - BM模組：預算管理相關Firebase操作
+  - CM模組：協作管理相關Firebase操作
+  - 其他模組：直接使用firebase-config模組
+❌ BK模組載入失敗，無法檢查函數
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！
+📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore
+🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000
+⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能
+📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制
+🏥 健康檢查機制已優化：專注LINE服務監控
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構
+📦 API端點遷移完成統計：
+   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點
+   📱 保留LINE Webhook專用：5個核心端點
+   ✅ 完美職責分離：RESTful API ↔ LINE Webhook
+🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現
+📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性
+🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port 3000
+📡 基礎服務已就緒，正在背景載入完整功能...
+📦 載入WH模組...
+🔧 WCM模組v1.2.2 初始化：循環依賴修復版
+🔄 循環依賴修復：移除AM模組直接引用
+✅ 函數導出驗證：WCM_createCategory = function
+✅ 函數導出驗證：WCM_createWallet = function
+✅ 函數導出驗證：WCM_load0099SubjectData = function
+✅ 函數導出驗證：WCM_loadDefaultConfigs = function
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🚀 WCM模組現已全面支援協作帳本路徑
+✨ 循環依賴修復完成，所有函數應可正常調用
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+SR模組依賴載入警告: Unexpected token ':'
+📅 SR 排程提醒模組初始化中...
+AM模組載入失敗: Unexpected token ':'
+✅ 階段五完成：FS模組已移除，消息去重使用NodeCache
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.5.0 (2025-12-16) - 階段六完成：支援DCN-0024科目歸類流程
+WH模組環境變數檢查結果:
+  ✅ LINE_CHANNEL_SECRET: 已設定(32字符)
+  ✅ LINE_CHANNEL_ACCESS_TOKEN: 已設定(172字符)
+  ✅ Webhook_URL: 已設定(84字符)
+✅ 所有必要環境變數已正確設定
+✅ WH模組環境變數檢查完整
+✅ WH 模組載入成功
+✅ WH模組核心函數檢查通過
+🔄 延遲載入應用模組...
+✅ BK 模組載入成功
+✅ LBK 模組載入成功
+✅ DD 模組載入成功
+❌ AM 模組載入失敗: Unexpected token ':'
+✅ SR 模組載入成功
+✅ 完整功能載入完成
+📋 DCN-0011 Phase 4 重構統計:
+   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)
+   🎯 Webhook端點保留: 5個 (LINE OA專用)
+   🏗️ 雙服務架構: 職責完全分離
+📅 已載入 0 個排程設定
+[2025-12-16T07:15:17.597Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+成功寫入 1 條日誌到 Firestore
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [bec81e2f] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [bec81e2f]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [bec81e2f] (INFO)
+開始非同步處理請求 [bec81e2f]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [bec81e2f] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [bec81e2f] (INFO)
+處理消息事件: text [bec81e2f]
+收到文本消息: "測試支出6666" [bec81e2f]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "測試支出6666" [bec81e2f] (INFO)
+開始AM用戶驗證流程 [bec81e2f]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [bec81e2f] (INFO)
+AM模組調用失敗: Unexpected token ':'
+用戶驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [bec81e2f]
+AM模組調用失敗: Unexpected token ':'
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [bec81e2f]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [bec81e2f] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 測試支出6666
+[INFO] [LBK] 開始處理LINE OA請求 [bec81e2f] | 智慧路由 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_processQuickBookkeeping
+[DEBUG] [LBK] 使用LBK獨立統計關鍵字配置 [bec81e2f] | 關鍵字檢核 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_checkStatisticsKeyword
+[INFO] [LBK] 執行記帳處理流程 [bec81e2f] | 快速記帳 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_processQuickBookkeeping
+[DEBUG] [LBK] 解析用戶訊息: "測試支出6666" [bec81e2f] | 訊息解析 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_parseUserMessage
+[DEBUG] [LBK] 開始解析格式: "測試支出6666" [bec81e2f] | 格式解析 |  | LBK_parseInputFormat
+[DEBUG] [LBK] 提取金額: "測試支出6666" [bec81e2f] | 金額提取 |  | LBK_extractAmount
+[DEBUG] [LBK] 開始識別科目: "測試支出" | 科目識別 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_identifySubject
+[DEBUG] [LBK] 查詢科目代碼: "測試支出" [bec81e2f] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_getSubjectCode
+[DEBUG] [LBK] 開始同義詞匹配，輸入: "測試支出" [bec81e2f] | 同義詞匹配 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_getSubjectCode
+[DEBUG] [LBK] 查詢categories集合結果: 0 筆資料 [bec81e2f] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_getSubjectCode
+[DEBUG] [LBK] categories集合總數: 0 筆資料 [bec81e2f] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_getSubjectCode
+[ERROR] [LBK] 查詢科目代碼失敗: Error: 科目表為空或無啟用的科目 [bec81e2f] | 科目查詢 | Uae47d9d496e4596d70ed724a7d6e2948 | SUBJECT_ERROR | Error: 科目表為空或無啟用的科目 | LBK_getSubjectCode
+[ERROR] [LBK] 識別科目失敗: Error: 科目表為空或無啟用的科目 | 科目識別 | Uae47d9d496e4596d70ed724a7d6e2948 | IDENTIFY_ERROR | Error: 科目表為空或無啟用的科目 | LBK_identifySubject
+[INFO] [LBK] 需要新科目歸類: 測試支出 | 訊息解析 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_parseUserMessage
+[INFO] [LBK] 觸發新科目歸類流程: 測試支出 [bec81e2f] | 新科目歸類 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_processQuickBookkeeping
+[INFO] [LBK] 處理新科目歸類: 測試支出 [bec81e2f] | 新科目歸類 | Uae47d9d496e4596d70ed724a7d6e2948 | LBK_handleNewSubjectClassification
+[DEBUG] [LBK] 成功載入0099.json，共10筆科目資料 | 科目配置 |  | LBK_load0099SubjectConfig
+[INFO] [LBK] 從0099配置取得0個主科目 | 科目配置 |  | LBK_getLineMainCategories
+[ERROR] [LBK] 無法從0099配置取得科目清單 | 科目歸類 |  | NO_CATEGORIES_AVAILABLE |  | LBK_buildClassificationMessage
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":27,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [bec81e2f]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [bec81e2f]
+[WH 2.0.16 LOG] WH 2.5.0: DCN-0024 純粹轉發機制 - 信任LBK處理結果 [bec81e2f] (INFO)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","pendingData"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"系統錯誤：無法載入科目配置，請稍後再試或聯絡系統管理員","responseMessage":"系統錯誤：無法載入科目配置，請稍後再試或聯絡系統管理員","moduleCode":"LBK","module":"LBK","processingTime":1762668588.876,"moduleVersion":"1.4.0","requi...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=27
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (系統錯誤：無法載入科目配置，請稍後再試或聯絡系統管理員...)
+WH_replyMessage: 開始回覆訊息: 系統錯誤：無法載入科目配置，請稍後再試或聯絡系統管理員
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 系統錯誤：無法載入科目配置，請稍後再試或聯絡系統管理員 (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+訊息回覆結果: {} [bec81e2f]
+非同步處理完成，已清理數據 [bec81e2f]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [bec81e2f] (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
