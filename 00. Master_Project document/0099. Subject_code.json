@@ -64,22 +64,8 @@
     "synonyms": ""
   },
   {
-    "parentId": 0,
+    "parentId": 000,
     "categoryName": "不歸類",
-    "categoryId": null,
-    "subCategoryName": null,
-    "synonyms": ""
-  },
-  {
-    "parentId": 999,
-    "categoryName": "測試支出",
-    "categoryId": null,
-    "subCategoryName": null,
-    "synonyms": ""
-  },
-  {
-    "parentId": 899,
-    "categoryName": "測試收入",
     "categoryId": null,
     "subCategoryName": null,
     "synonyms": ""
