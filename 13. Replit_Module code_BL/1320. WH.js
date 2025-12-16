@@ -94,7 +94,7 @@ const WH_CONFIG = {
   LINE: {
     CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET, // 從環境變數獲取 LINE Channel Secret
     CHANNEL_ACCESS_TOKEN: process.env.LINE_CHANNEL_ACCESS_TOKEN, // 從環境變數獲取 LINE Channel Access Token
-    WEBHOOK_URL: process.env.WEBHOOK_URL, // 從環境變數獲取 Webhook URL
+    Webhook_URL: process.env.Webhook_URL, // 從環境變數獲取 Webhook URL
   },
   RETRY: {
     MAX_COUNT: 2, // 減少重試次數
@@ -120,7 +120,7 @@ function WH_checkEnvironmentVariables() {
   const requiredEnvVars = [
     'LINE_CHANNEL_SECRET',
     'LINE_CHANNEL_ACCESS_TOKEN', 
-    'WEBHOOK_URL'
+    'Webhook_URL'
   ];
 
   const missingVars = [];
