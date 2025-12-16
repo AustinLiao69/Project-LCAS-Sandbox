@@ -1,0 +1,67 @@
+~/workspace$ node -e "try { require('./13. Replit_Module code_BL/1309. AM.js'); console.log('✅ AM.js 模組載入成功'); } catch(e) { console.error('❌ AM.js 模組載入失敗:', e.message); console.error('❌ 錯 誤位置:', e.stack); }"
+🔍 AM.js 模組開始載入...
+📋 AM.js 版本: v8.0.2
+📦 AM.js: 開始引入依賴模組...
+✅ AM.js: firebase-admin 引入成功
+✅ AM.js: axios 引入成功
+✅ AM.js: crypto 引入成功
+⚙️ AM.js: 開始定義AM_CONFIG配置物件...
+🔥 AM.js: 開始引入Firebase動態配置模組...
+✅ Firebase配置驗證通過
+✅ AM.js: Firebase動態配置模組引入成功
+🔧 AM.js: 初始化Firebase Admin SDK...
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ AM.js: Firebase初始化完成，Firestore實例已取得
+✅ DL模組：Firebase動態配置載入成功
+🔧 WCM模組v1.2.2 初始化：循環依賴修復版
+🔄 循環依賴修復：移除AM模組直接引用
+✅ 函數導出驗證：WCM_createCategory = function
+✅ 函數導出驗證：WCM_createWallet = function
+✅ 函數導出驗證：WCM_load0099SubjectData = function
+✅ 函數導出驗證：WCM_loadDefaultConfigs = function
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🚀 WCM模組現已全面支援協作帳本路徑
+✨ 循環依賴修復完成，所有函數應可正常調用
+📊 BM 預算管理模組載入中...
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+📅 SR 排程提醒模組初始化中...
+✅ 階段五完成：FS模組已移除，消息去重使用NodeCache
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.5.0 (2025-12-16) - 階段六完成：支援DCN-0024科目歸類流程
+WH模組環境變數檢查結果:
+  ✅ LINE_CHANNEL_SECRET: 已設定(32字符)
+  ✅ LINE_CHANNEL_ACCESS_TOKEN: 已設定(172字符)
+  ✅ Webhook_URL: 已設定(84字符)
+✅ 所有必要環境變數已正確設定
+✅ WH模組環境變數檢查完整
+✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能
+🤝 CM 協作管理模組初始化中...
+[2025-12-16T08:26:43.877Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組v2.4.0載入完成 - 階段一擴展：建立完整協作帳本子集合架構（members, transactions, wallets, budgets, categories）
+📤 AM.js: 開始導出模組函數...
+✅ AM.js: 所有函數定義完成，準備導出
+✅ AM模組8.0.2 DCN-0024階段一修復完成！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 帳本結構初始化 (專注結構建立)
+   └── 總計: 63個函數
+🔧 DCN-0024階段一: 修復語法錯誤，確保模組正常載入
+🎯 職責專注: AM專注帳號管理，WCM負責科目和帳戶管理
+🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行資料初始化
+📊 資料流: AM → WCM (科目+帳戶) → Firebase
+✨ v8.0.2修復內容: 增加詳細載入日誌，語法錯誤修復
+🎉 階段一成果: AM模組載入修復，詳細日誌增強除錯能力！
+🎯 AM.js 模組載入完成，所有函數已成功導出
+✅ AM.js 模組載入成功
+📅 已載入 0 個排程設定
+[2025-12-16T08:26:44.840Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+成功寫入 2 條日誌到 Firestore
