@@ -467,18 +467,34 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
         const categoryId = `category_${subject.categoryId}`;
         const categoryRef = db.collection(collectionPath).doc(categoryId);
 
+        // 根據0070文件4.3.2節完整欄位架構建立科目文檔
         const categoryDoc = {
+          // 基本識別欄位
           id: categoryId,
-          categoryId: subject.categoryId,
-          parentId: subject.parentId,
+          subCategoryId: subject.categoryId, // 子科目代碼（0099的categoryId對應0070的subCategoryId）
+          categoryId: subject.categoryId,    // 保持相容性
           categoryName: subject.categoryName,
-          subCategoryName: subject.subCategoryName,
+          subCategoryName: subject.subCategoryName || subject.categoryName,
           synonyms: subject.synonyms || '',
-          type: [801, 899].includes(subject.parentId) ? 'income' : 'expense',
+          
+          // 顯示與分類欄位
+          name: subject.categoryName, // 顯示名稱
+          type: WCM_determineCategoryType(subject.categoryId), // 根據categoryId判斷收支類型
+          level: subject.subCategoryName ? 2 : 1, // 有子分類名稱為第2層，否則為第1層
+          color: WCM_getDefaultColor(subject.categoryId), // 預設顏色
+          icon: 'default', // 預設圖示
+          description: subject.subCategoryName || '', // 描述
+          
+          // 狀態與設定欄位
           isDefault: true,
           isActive: true,
+          
+          // 關聯欄位
           userId: categoryData.userId,
           ledgerId: ledgerId,
+          status: 'active',
+          
+          // 元數據欄位
           dataSource: '0099. Subject_code.json',
           createdAt: now,
           updatedAt: now,
@@ -958,6 +974,43 @@ function WCM_resolveLedgerPath(ledgerId, operationType) {
   }
 }
 
+// =================== 科目輔助函數 ===================
+
+/**
+ * 判斷科目類型（根據categoryId）
+ * @version 2025-12-16-V1.2.1
+ * @description 根據0099科目代碼判斷收支類型
+ */
+function WCM_determineCategoryType(categoryId) {
+  // 根據0099資料：201為財務收入，其他為支出
+  if (categoryId === 201) {
+    return 'income';
+  }
+  return 'expense';
+}
+
+/**
+ * 取得預設科目顏色
+ * @version 2025-12-16-V1.2.1
+ * @description 根據categoryId分配預設顏色
+ */
+function WCM_getDefaultColor(categoryId) {
+  const colorMap = {
+    101: '#4CAF50', // 生鮮雜貨 - 綠色
+    102: '#2196F3', // 生活家用 - 藍色
+    103: '#FF9800', // 交通費用 - 橘色
+    104: '#F44336', // 餐飲費用 - 紅色
+    105: '#9C27B0', // 娛樂消遣 - 紫色
+    106: '#00BCD4', // 運動嗜好 - 青色
+    107: '#795548', // 寵物生活 - 棕色
+    201: '#8BC34A', // 財務收入 - 淺綠色
+    301: '#E91E63', // 財務支出 - 粉紅色
+    0: '#9E9E9E'    // 不歸類 - 灰色
+  };
+  
+  return colorMap[categoryId] || '#607D8B'; // 預設為藍灰色
+}
+
 // =================== 日誌函數 ===================
 
 function WCM_logInfo(message, category, userId, functionName) {
@@ -1027,13 +1080,13 @@ module.exports = {
   WCM_CONFIG,
 
   // 模組資訊
-  moduleVersion: '1.2.2', // 版本升級至 1.2.2 (修復循環依賴)
+  moduleVersion: '1.2.3', // 版本升級至 1.2.3 (0070文件categories欄位對齊)
   architecture: 'subcollection_based',
   collections: {
     wallets: 'ledgers/{ledgerId}/wallets',
     categories: 'ledgers/{ledgerId}/categories'
   },
-  lastUpdate: '2025-12-12', // 更新日期
+  lastUpdate: '2025-12-16', // 更新日期
   features: [
     'subcollection_architecture',
     'ledger_based_collections',

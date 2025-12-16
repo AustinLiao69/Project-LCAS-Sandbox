@@ -1534,23 +1534,39 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
               const categoryId = `category_${subject.categoryId}`;
               const categoryRef = db.collection(`ledgers/${userLedgerId}/categories`).doc(categoryId);
               
+              // 根據0070文件4.3.2節完整欄位架構建立科目文檔
               const categoryDoc = {
+                // 基本識別欄位
                 id: categoryId,
-                categoryId: subject.categoryId,
-                parentId: subject.parentId,
+                subCategoryId: subject.categoryId, // 子科目代碼
+                categoryId: subject.categoryId,    // 保持相容性
                 categoryName: subject.categoryName,
-                subCategoryName: subject.subCategoryName,
+                subCategoryName: subject.subCategoryName || subject.categoryName,
                 synonyms: subject.synonyms || '',
-                type: [801, 899].includes(subject.parentId) ? 'income' : 'expense',
+                
+                // 顯示與分類欄位
+                name: subject.categoryName,
+                type: subject.categoryId === 201 ? 'income' : 'expense', // 201為收入，其他為支出
+                level: subject.subCategoryName ? 2 : 1,
+                color: AM_getDefaultColor(subject.categoryId),
+                icon: 'default',
+                description: subject.subCategoryName || '',
+                
+                // 狀態與設定欄位
                 isDefault: true,
                 isActive: true,
+                
+                // 關聯欄位
                 userId: UID,
                 ledgerId: userLedgerId,
+                status: 'active',
+                
+                // 元數據欄位
                 dataSource: '0099. Subject_code.json',
                 createdAt: now,
                 updatedAt: now,
                 module: 'AM_BACKUP',
-                version: '8.0.1'
+                version: '8.0.2'
               };
               
               batch.set(categoryRef, categoryDoc);
@@ -5347,10 +5363,10 @@ module.exports = {
   // AM_load0099SubjectData, // 新增：AM模組自行載入0099資料 - Moved up to be with other v7.4.0 additions
 
   // 模組版本資訊
-  moduleVersion: '8.0.0', // Major version upgrade
-  lastUpdate: '2025-11-21',
-  phase: '階段一職責重構完成',
-  description: 'AM帳號管理模組 - v8.0.0：職責重構，科目和帳戶管理移至WCM模組，專注帳號管理核心功能',
+  moduleVersion: '8.0.3', // Minor version upgrade (0070文件categories欄位對齊)
+  lastUpdate: '2025-12-16',
+  phase: '階段一職責重構完成+0070文件對齊',
+  description: 'AM帳號管理模組 - v8.0.3：備用科目初始化對齊0070文件categories欄位規範',
   refactoring: {
     migratedToWCM: ['AM_load0099SubjectData', 'AM_loadDefaultConfigs'],
     wcmIntegration: true,
@@ -5373,6 +5389,28 @@ console.log('✅ AM模組8.0.0 階段一職責重構完成！');
   console.log('✨ Before: AM直接載入0099.json + FS輔助');
   console.log('✨ After: AM調用WCM函數，WCM成為科目和帳戶管理唯一入口');
   console.log('🎉 階段一成果: WCM模組功能整合完成，職責邊界清晰化！');
+
+/**
+ * AM模組預設科目顏色配置
+ * @version 2025-12-16-V8.0.2
+ * @description 為備用科目初始化提供顏色配置
+ */
+function AM_getDefaultColor(categoryId) {
+  const colorMap = {
+    101: '#4CAF50', // 生鮮雜貨 - 綠色
+    102: '#2196F3', // 生活家用 - 藍色
+    103: '#FF9800', // 交通費用 - 橘色
+    104: '#F44336', // 餐飲費用 - 紅色
+    105: '#9C27B0', // 娛樂消遣 - 紫色
+    106: '#00BCD4', // 運動嗜好 - 青色
+    107: '#795548', // 寵物生活 - 棕色
+    201: '#8BC34A', // 財務收入 - 淺綠色
+    301: '#E91E63', // 財務支出 - 粉紅色
+    0: '#9E9E9E'    // 不歸類 - 灰色
+  };
+  
+  return colorMap[categoryId] || '#607D8B'; // 預設為藍灰色
+}
 
 /**
  * AM_calculateModeFromAnswers - 計算使用者模式
