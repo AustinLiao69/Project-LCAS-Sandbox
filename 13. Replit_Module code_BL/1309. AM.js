@@ -202,15 +202,12 @@ async function AM_createLineAccount(lineUID, lineProfile, userType = "S") {
 
     // 跨平台帳號映射已整合在users集合的linkedAccounts欄位中，遵循0070規範
 
-    // 初始化用戶科目數據
-    const subjectInit = await AM_initializeUserSubjects(lineUID);
-
     // 記錄操作日誌
     await DL.DL_log(
       "AM",
       "createLineAccount",
       "INFO",
-      `LINE帳號創建成功: ${lineUID}, 科目初始化: ${subjectInit.success ? "成功" : "失敗"}`,
+      `LINE帳號創建成功: ${lineUID}`,
       lineUID,
     );
 
@@ -219,9 +216,7 @@ async function AM_createLineAccount(lineUID, lineProfile, userType = "S") {
       UID: lineUID,
       accountId: lineUID,
       userType: userType,
-      message: "LINE帳號創建成功",
-      subjectInitialized: subjectInit.success,
-      subjectCount: subjectInit.importCount || 0,
+      message: "LINE帳號創建成功"
     };
   } catch (error) {
     if (DL && typeof DL.DL_error === 'function') {
