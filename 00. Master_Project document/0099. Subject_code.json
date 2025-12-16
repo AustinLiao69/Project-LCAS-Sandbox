@@ -2,20 +2,27 @@
 [
   {
     "parentId": 101,
-    "categoryName": "生活家用",
+    "categoryName": "生鮮雜貨",
     "categoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
     "parentId": 102,
-    "categoryName": "交通費用",
+    "categoryName": "生活家用",
     "categoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
     "parentId": 103,
+    "categoryName": "交通費用",
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
+  },
+  {
+    "parentId": 104,
     "categoryName": "餐飲費用",
     "categoryId": null,
     "subCategoryName": null,
@@ -23,42 +30,42 @@
   },
   {
     "parentId": 105,
-    "categoryName": "寵物生活",
+    "categoryName": "娛樂消遣",
     "categoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 108,
+    "parentId": 106,
     "categoryName": "運動嗜好",
     "categoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 109,
-    "categoryName": "咖啡",
+    "parentId": 107,
+    "categoryName": "寵物生活",
     "categoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 110,
-    "categoryName": "零食",
+    "parentId": 201,
+    "categoryName": "財務收入",
     "categoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 801,
-    "categoryName": "個人收入",
-    "categoryId": null,
-    "subCategoryName": null,
-    "synonyms": ""
-  },
-  {
-    "parentId": 905,
+    "parentId": 301,
     "categoryName": "財務支出",
+    "categoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
+  },
+  {
+    "parentId": 0,
+    "categoryName": "不歸類",
     "categoryId": null,
     "subCategoryName": null,
     "synonyms": ""
