@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.4.0
+ * LBK_快速記帳模組_1.4.1
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 新增新科目辨識與歸類機制
- * @update 2025-12-15: 升級至v1.4.0，新增新科目辨識與歸類機制，實現使用者主導的科目分類
+ * @description LINE OA 專用快速記帳處理模組 - DCN-0024階段二：完善新科目歸類流程
+ * @update 2025-12-16: 升級至v1.4.1，修正0099.json科目提取邏輯，完善新科目歸類機制
  */
 
 // 引入所需模組
@@ -2098,7 +2098,7 @@ async function LBK_processUserSelection(selection, originalSubject, parsedData, 
       };
     }
     
-    LBK_logInfo(`選擇科目: ${selectedCategory.parentId} ${selectedCategory.categoryName} (${selectedCategory.type})`, "科目歸類", inputData.userId, "LBK_processUserSelection");
+    LBK_logInfo(`選擇科目: ${selectedCategory.categoryId} ${selectedCategory.categoryName} (${selectedCategory.type})`, "科目歸類", inputData.userId, "LBK_processUserSelection");
 
     // 建立新的科目記錄並儲存到categories集合
     const newCategoryResult = await LBK_saveNewCategoryToFirestore(
@@ -2120,7 +2120,7 @@ async function LBK_processUserSelection(selection, originalSubject, parsedData, 
       ...parsedData,
       subjectCode: newCategoryResult.categoryId,
       subjectName: selectedCategory.categoryName,
-      majorCode: selectedCategory.parentId,
+      majorCode: selectedCategory.categoryId,
       action: selectedCategory.type === "income" ? "收入" : "支出"
     };
 
@@ -2153,8 +2153,8 @@ async function LBK_processUserSelection(selection, originalSubject, parsedData, 
 }
 
 /**
- * 儲存新科目至categories集合 - v1.4.0 新增函數
- * @version 2025-12-16-V1.4.0
+ * 儲存新科目至categories集合 - v1.4.1 基於categoryId
+ * @version 2025-12-16-V1.4.1
  * @description 將新歸類的科目儲存至Firestore categories集合
  */
 async function LBK_saveNewCategoryToFirestore(originalSubject, selectedCategory, userId, processId) {
@@ -2163,12 +2163,12 @@ async function LBK_saveNewCategoryToFirestore(originalSubject, selectedCategory,
     const db = LBK_INIT_STATUS.firestore_db;
     
     const ledgerId = `user_${userId}`;
-    const categoryId = `${selectedCategory.parentId}${Date.now().toString().slice(-6)}`; // 生成唯一ID
+    const categoryId = `${selectedCategory.categoryId}${Date.now().toString().slice(-6)}`; // 生成唯一ID
     
     const newCategoryData = {
       id: categoryId,
       categoryId: categoryId,
-      parentId: selectedCategory.parentId,
+      parentId: selectedCategory.categoryId,
       categoryName: selectedCategory.categoryName,
       subCategoryName: selectedCategory.categoryName, // DCN-0024 簡化策略
       synonyms: originalSubject, // 將原始輸入作為同義詞
@@ -2176,11 +2176,11 @@ async function LBK_saveNewCategoryToFirestore(originalSubject, selectedCategory,
       isActive: true,
       userId: userId,
       ledgerId: ledgerId,
-      dataSource: "USER_CLASSIFICATION_v1.4.0",
+      dataSource: "USER_CLASSIFICATION_v1.4.1",
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
       module: "LBK",
-      version: "1.4.0"
+      version: "1.4.1"
     };
 
     const docRef = db.collection("ledgers")
@@ -2248,28 +2248,16 @@ function LBK_getLineMainCategories() {
       return [];
     }
 
-    // DCN-0024 規範：取得唯一的主科目清單，專注LINE記帳需求
+    // DCN-0024 規範：使用0099.json中的categoryId作為主科目ID
     const uniqueCategories = new Map();
     
-    // 動態取得所有有效的主科目ID（排除測試和特殊科目）
-    const validParentIds = [...new Set(
-      subjectCodeData
-        .filter(item => 
-          item.parentId && 
-          item.categoryName && 
-          item.parentId !== 999 && // 排除測試科目
-          item.parentId !== 899   // 排除測試收入
-        )
-        .map(item => item.parentId)
-    )];
-    
-    // 建立科目映射
+    // 從0099.json提取所有有效的主科目
     subjectCodeData.forEach(item => {
-      if (item.parentId && item.categoryName && validParentIds.includes(item.parentId)) {
-        const key = `${item.parentId}`;
+      if (item.categoryId && item.categoryName) {
+        const key = `${item.categoryId}`;
         if (!uniqueCategories.has(key)) {
           uniqueCategories.set(key, {
-            parentId: item.parentId,
+            categoryId: item.categoryId,
             categoryName: item.categoryName
           });
         }
@@ -2278,7 +2266,7 @@ function LBK_getLineMainCategories() {
     
     // 轉換為陣列並排序（數字由小到大）
     const categories = Array.from(uniqueCategories.values())
-      .sort((a, b) => a.parentId - b.parentId);
+      .sort((a, b) => a.categoryId - b.categoryId);
     
     LBK_logInfo(`從0099配置取得${categories.length}個主科目`, "科目配置", "", "LBK_getLineMainCategories");
     
@@ -2301,16 +2289,16 @@ function LBK_buildCategoryMapping() {
     const mapping = {};
     
     categories.forEach(category => {
-      const key = category.parentId.toString();
+      const key = category.categoryId.toString();
       mapping[key] = {
-        parentId: category.parentId,
+        categoryId: category.categoryId,
         categoryName: category.categoryName,
-        type: (category.parentId >= 200 && category.parentId < 300) ? "income" : "expense"
+        type: (category.categoryId === 201) ? "income" : "expense"
       };
     });
     
     // 確保包含不歸類選項
-    mapping["000"] = { parentId: 0, categoryName: "不歸類", type: "expense" };
+    mapping["000"] = { categoryId: 0, categoryName: "不歸類", type: "expense" };
     
     LBK_logDebug(`建立科目映射表，共${Object.keys(mapping).length}個選項`, "科目配置", "", "LBK_buildCategoryMapping");
     
@@ -2319,7 +2307,7 @@ function LBK_buildCategoryMapping() {
   } catch (error) {
     LBK_logError(`建立科目映射失敗: ${error.toString()}`, "科目配置", "", "BUILD_MAPPING_ERROR", error.toString(), "LBK_buildCategoryMapping");
     return {
-      "000": { parentId: 0, categoryName: "不歸類", type: "expense" }
+      "000": { categoryId: 0, categoryName: "不歸類", type: "expense" }
     };
   }
 }
@@ -2340,7 +2328,7 @@ function LBK_buildClassificationMessage(originalSubject) {
     
     // 轉換為選項格式
     const classificationOptions = categories.map(category => 
-      `${category.parentId} ${category.categoryName}`
+      `${category.categoryId} ${category.categoryName}`
     );
     
     // 添加不歸類選項
@@ -2477,7 +2465,8 @@ const LBK_MODULE = {
 
   // 版本資訊
   MODULE_VERSION: "1.4.1",
-  MODULE_NAME: "LBK"
+  MODULE_NAME: "LBK",
+  MODULE_UPDATE: "DCN-0024階段二：修正0099.json科目提取，完善新科目歸類流程"
 };
 
 // 導出模組
