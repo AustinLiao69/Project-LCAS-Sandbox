@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.4.0
+ * WH_Webhook處理模組_2.5.0
  * @module Webhook模組  
- * @description LINE Webhook處理模組 - 階段五完成：移除FS模組依賴，使用NodeCache進行消息去重
- * @update 2025-12-12: 升級至v2.4.0，移除FS模組依賴，完全基於NodeCache運作
+ * @description LINE Webhook處理模組 - 階段六完成：支援DCN-0024科目歸類流程，純粹轉發機制
+ * @update 2025-12-16: 升級至v2.5.0，支援新科目歸類兩階段對話，移除業務邏輯
  */
 
 // 首先引入其他模組 - 增強安全載入
@@ -166,7 +166,7 @@ function WH_checkEnvironmentVariables() {
 }
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.4.0 (2025-12-12) - 階段五完成：FS模組已移除");
+console.log("WH模組初始化，版本: 2.5.0 (2025-12-16) - 階段六完成：支援DCN-0024科目歸類流程");
 
 // 執行環境變數完整性檢查
 const envCheckResult = WH_checkEnvironmentVariables();
@@ -1280,9 +1280,9 @@ function setDependencies(ddModule, bkModule, dlModule) {
 
 /**
  * 06. 安全調用LBK模組處理函數
- * @version 2025-07-22-V2.1.2
- * @date 2025-07-22 11:35:00
- * @description 動態載入LBK模組並安全調用，避免循環依賴問題
+ * @version 2025-12-16-V2.5.0
+ * @date 2025-12-16 14:00:00
+ * @description DCN-0024階段二：純粹轉發機制，支援科目歸類兩階段對話
  */
 async function WH_callLBKSafely(inputData) {
   try {
@@ -1296,42 +1296,27 @@ async function WH_callLBKSafely(inputData) {
       throw new Error('LBK模組不可用或函數不存在');
     }
 
-    // 調用LBK處理函數
+    // v2.5.0: 純粹調用LBK處理函數，不做任何業務判斷
+    console.log(`WH v2.5.0: 純粹轉發至LBK處理 - ${inputData.messageText}`);
     const result = await LBK.LBK_processQuickBookkeeping(inputData);
 
-    // 確保回覆格式符合WH規範
+    // v2.5.0: 最小化格式調整，確保模組標識
     if (result && !result.moduleCode) {
       result.moduleCode = 'LBK';
       result.module = 'LBK';
     }
 
+    // v2.5.0: 完全信任LBK結果，包含科目歸類流程
     return result;
 
   } catch (error) {
-    console.log(`WH_callLBKSafely 調用失敗: ${error.toString()}`);
+    console.log(`WH v2.5.0: LBK調用失敗，返回最小錯誤格式: ${error.toString()}`);
 
-    // 返回標準格式的錯誤回覆
-    const currentDateTime = new Date().toLocaleString("zh-TW", {
-      timeZone: "Asia/Taipei",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-
-    const errorMessage = `記帳失敗！\n` +
-                        `金額：未知元\n` +
-                        `支付方式：未指定\n` +
-                        `時間：${currentDateTime}\n` +
-                        `科目：未知科目\n` +
-                        `備註：${inputData.messageText || ''}\n` +
-                        `使用者類型：J\n` +
-                        `錯誤原因：系統暫時無法處理，請稍後再試`;
-
+    // v2.5.0: 最小化錯誤回覆格式
     return {
       success: false,
-      responseMessage: errorMessage,
+      message: "系統暫時無法處理您的請求，請稍後再試",
+      responseMessage: "系統暫時無法處理您的請求，請稍後再試",
       moduleCode: 'LBK',
       module: 'LBK',
       error: error.toString()
@@ -1626,17 +1611,18 @@ async function WH_processEventAsync(event, requestId, userId) {
             "INFO",
           ]);
 
-          // 步驟3：初始化完成後，轉發給 LBK 處理記帳
+          // 步驟3：初始化完成後，轉發給 LBK 處理（包含科目歸類）
           const lbkInputData = {
             userId: userId,
             messageText: text,
             replyToken: event.replyToken,
             timestamp: event.timestamp,
             processId: requestId,
-            ledgerId: ledgerResult.ledgerId // 傳遞已驗證的帳本ID
+            ledgerId: ledgerResult.ledgerId, // 傳遞已驗證的帳本ID
+            eventType: 'text_message' // v2.5.0: 標記事件類型
           };
 
-          // 動態載入LBK模組並調用處理函數
+          // v2.5.0: 純粹轉發機制 - 不做任何業務判斷
           result = await WH_callLBKSafely(lbkInputData);
 
           // 記錄DD_distributeData處理結果預覽
@@ -1667,15 +1653,13 @@ async function WH_processEventAsync(event, requestId, userId) {
             console.log(`DD_distributeData返回空結果 [${requestId}]`);
           }
 
-          // 驗證結果是否正確格式化（支援 LBK 和 BK 模組）
-          if (!result || !result.message) {
-            // LBK 模組已經提供格式化的結果，WH 模組不再自行格式化
-          console.log(`信任 LBK 模組的格式化結果 [${requestId}]`);
+          // v2.5.0: 完全信任LBK模組處理結果，包含科目歸類流程
+          console.log(`WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [${requestId}]`);
 
           WH_directLogWrite([
             WH_formatDateTime(new Date()),
-            `WH 2.0.23: 信任並使用LBK模組的格式化結果 [${requestId}]`,
-            "訊息處理",
+            `WH 2.5.0: DCN-0024 純粹轉發機制 - 信任LBK處理結果 [${requestId}]`,
+            "純粹轉發",
             userId,
             "",
             "WH",
@@ -1684,10 +1668,8 @@ async function WH_processEventAsync(event, requestId, userId) {
             "WH_processEventAsync",
             "INFO",
           ]);
-          }
 
-          // 只有經過驗證的訊息才能回覆
-          console.log(`準備回覆已驗證的訊息 [${requestId}]`);
+          // v2.5.0: 純粹轉發，不做任何業務驗證
           const replyResult = WH_replyMessage(event.replyToken, result);
 
           // 記錄回覆結果
@@ -2529,15 +2511,21 @@ async function WH_handleWebhook(event, reqId) {
 
     } else if (eventType === 'postback') {
       const postbackData = event.postback.data;
-      WH_logInfo(`用戶觸發 postback: ${postbackData}`, "處理訊息", userId, "", "", functionName);
+      console.log(`WH v2.5.0: 收到postback事件，純粹轉發: ${postbackData}`);
 
-      // 檢查是否為SR模組相關的Quick Reply postback
-      if (WH_isQuickReplyPostback(postbackData)) {
-        await WH_handleQuickReplyEvent(event);
-      } else {
-        // 處理其他 postback 事件的邏輯
-        await WH_handlePostbackEvent(userId, postbackData, event);
-      }
+      // v2.5.0: 所有postback事件都轉發給LBK處理（包含科目歸類選擇）
+      const postbackInputData = {
+        userId: userId,
+        messageText: postbackData,
+        replyToken: event.replyToken,
+        timestamp: event.timestamp,
+        processId: generateProcessId(),
+        eventType: 'postback', // 標記為postback事件
+        postbackData: postbackData
+      };
+
+      // v2.5.0: 純粹轉發，讓LBK判斷是統計查詢還是科目歸類
+      await WH_callLBKSafely(postbackInputData);
 
     } else if (eventType === 'follow') {
       // 處理加入好友事件
