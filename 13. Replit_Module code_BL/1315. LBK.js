@@ -477,46 +477,49 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
         break;
       }
 
-      // 2. 同義詞精確匹配 - 第二優先級
+      // 2. 同義詞精確匹配 - 第二優先級（不跳過，即使synonyms為空）
       const synonymsStr = data.synonyms || "";
-      if (synonymsStr) {
-        const synonyms = synonymsStr.split(",");
-        for (const synonym of synonyms) {
-          const synonymLower = synonym.trim().toLowerCase();
-          if (synonymLower === normalizedInput) {
+      // 將同義詞字串分割為陣列，即使為空字串也進行處理
+      const synonyms = synonymsStr ? synonymsStr.split(",").map(s => s.trim()).filter(s => s.length > 0) : [];
+      
+      // 即使synonyms陣列為空，也記錄此步驟以利後續歸類機制
+      LBK_logDebug(`處理同義詞匹配: "${normalizedInput}"，科目: "${data.categoryName}"，同義詞數量: ${synonyms.length} [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+      
+      for (const synonym of synonyms) {
+        const synonymLower = synonym.toLowerCase();
+        if (synonymLower === normalizedInput) {
+          synonymMatch = {
+            majorCode: String(data.parentId || data.categoryId),
+            majorName: String(data.categoryName || ''),
+            subCode: String(data.categoryId || ''),
+            subName: String(data.subCategoryName || data.categoryName || '')
+          };
+          break;
+        }
+
+        // 新增：同義詞包含匹配（例如：飯糰 可以匹配到 御飯糰）
+        if (synonymLower.includes(normalizedInput) && normalizedInput.length >= 2) {
+          if (!synonymMatch) { // 只在沒有精確匹配時使用
             synonymMatch = {
               majorCode: String(data.parentId || data.categoryId),
               majorName: String(data.categoryName || ''),
               subCode: String(data.categoryId || ''),
               subName: String(data.subCategoryName || data.categoryName || '')
             };
-            break;
+            LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
           }
+        }
 
-          // 新增：同義詞包含匹配（例如：飯糰 可以匹配到 御飯糰）
-          if (synonymLower.includes(normalizedInput) && normalizedInput.length >= 2) {
-            if (!synonymMatch) { // 只在沒有精確匹配時使用
-              synonymMatch = {
-                majorCode: String(data.parentId || data.categoryId),
-                majorName: String(data.categoryName || ''),
-                subCode: String(data.categoryId || ''),
-                subName: String(data.subCategoryName || data.categoryName || '')
-              };
-              LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
-            }
-          }
-
-          // 新增：反向包含匹配（例如：停車費 可以匹配到 停車）
-          if (normalizedInput.includes(synonymLower) && synonymLower.length >= 2) {
-            if (!synonymMatch) { // 只在沒有精確匹配時使用
-              synonymMatch = {
-                majorCode: String(data.parentId || data.categoryId),
-                majorName: String(data.categoryName || ''),
-                subCode: String(data.categoryId || ''),
-                subName: String(data.subCategoryName || data.categoryName || '')
-              };
-              LBK_logDebug(`找到反向包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
-            }
+        // 新增：反向包含匹配（例如：停車費 可以匹配到 停車）
+        if (normalizedInput.includes(synonymLower) && synonymLower.length >= 2) {
+          if (!synonymMatch) { // 只在沒有精確匹配時使用
+            synonymMatch = {
+              majorCode: String(data.parentId || data.categoryId),
+              majorName: String(data.categoryName || ''),
+              subCode: String(data.categoryId || ''),
+              subName: String(data.subCategoryName || data.categoryName || '')
+            };
+            LBK_logDebug(`找到反向包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
           }
         }
       }
@@ -613,43 +616,48 @@ async function LBK_fuzzyMatch(input, threshold, userId, processId) {
         });
       }
 
-      // 3. 強化同義詞匹配（支援部分匹配）
-      if (subject.synonyms) {
-        const synonymsList = subject.synonyms.split(",").map(syn => syn.trim().toLowerCase());
-        for (const synonym of synonymsList) {
-          if (synonym === inputLower) {
+      // 3. 強化同義詞匹配（支援部分匹配，不跳過空同義詞）
+      const synonymsStr = subject.synonyms || "";
+      const synonymsList = synonymsStr ? synonymsStr.split(",").map(syn => syn.trim().toLowerCase()).filter(syn => syn.length > 0) : [];
+      
+      // 記錄同義詞處理過程，即使為空也記錄
+      if (synonymsList.length === 0) {
+        LBK_logDebug(`模糊匹配：科目 "${subject.subName}" 無同義詞，跳過同義詞匹配但保持流程完整 [${processId}]`, "模糊匹配", userId, "LBK_fuzzyMatch");
+      }
+      
+      for (const synonym of synonymsList) {
+        if (synonym === inputLower) {
+          matches.push({
+            ...subject,
+            score: 0.98,
+            matchType: "synonym_exact_match"
+          });
+        } else if (synonym.includes(inputLower) && inputLower.length >= 2) {
+          // 提高包含匹配的分數，例如：飯糰 → 御飯糰
+          const score = Math.min(0.9, (inputLower.length / synonym.length) * 0.9);
+          matches.push({
+            ...subject,
+            score: score,
+            matchType: "synonym_contains_input"
+          });
+        } else if (inputLower.includes(synonym) && synonym.length >= 2) {
+          // 反向包含匹配，例如：停車費 → 停車，給予較高分數
+          const score = Math.min(0.95, (synonym.length / inputLower.length) * 0.95);
+          matches.push({
+            ...subject,
+            score: score,
+            matchType: "input_contains_synonym"
+          });
+        }
+        // 新增：模糊相似度匹配（例如：飯糰 vs 飯团）
+        else {
+          const similarity = LBK_calculateStringSimilarity(inputLower, synonym);
+          if (similarity > 0.7) {
             matches.push({
               ...subject,
-              score: 0.98,
-              matchType: "synonym_exact_match"
+              score: similarity * 0.75,
+              matchType: "synonym_fuzzy_match"
             });
-          } else if (synonym.includes(inputLower) && inputLower.length >= 2) {
-            // 提高包含匹配的分數，例如：飯糰 → 御飯糰
-            const score = Math.min(0.9, (inputLower.length / synonym.length) * 0.9);
-            matches.push({
-              ...subject,
-              score: score,
-              matchType: "synonym_contains_input"
-            });
-          } else if (inputLower.includes(synonym) && synonym.length >= 2) {
-            // 反向包含匹配，例如：停車費 → 停車，給予較高分數
-            const score = Math.min(0.95, (synonym.length / inputLower.length) * 0.95);
-            matches.push({
-              ...subject,
-              score: score,
-              matchType: "input_contains_synonym"
-            });
-          }
-          // 新增：模糊相似度匹配（例如：飯糰 vs 飯团）
-          else {
-            const similarity = LBK_calculateStringSimilarity(inputLower, synonym);
-            if (similarity > 0.7) {
-              matches.push({
-                ...subject,
-                score: similarity * 0.75,
-                matchType: "synonym_fuzzy_match"
-              });
-            }
           }
         }
       }
