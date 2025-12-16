@@ -1,10 +1,10 @@
 /**
  * 1309. AM.js - 帳號管理模組
- * @version v8.0.0
- * @date 2025-11-21
+ * @version v8.0.1
+ * @date 2025-12-16
  * @description 處理用戶註冊、登入、帳本基礎結構初始化等功能
  * @compliance 嚴格遵守0098憲法 - 禁止hard coding，遵守dataflow
- * @update v8.0.0: 階段四完成 - 移除所有科目相關函數，專注帳號管理和帳本基礎結構，整合WCM、BM、CM模組
+ * @update v8.0.1: DCN-0024階段一 - 修復語法錯誤，確保AM模組正常載入
  */
 
 // 引入必要模組
@@ -5347,10 +5347,10 @@ module.exports = {
   // AM_load0099SubjectData, // 新增：AM模組自行載入0099資料 - Moved up to be with other v7.4.0 additions
 
   // 模組版本資訊
-  moduleVersion: '8.0.0', // Major version upgrade
-  lastUpdate: '2025-11-21',
-  phase: '階段一職責重構完成',
-  description: 'AM帳號管理模組 - v8.0.0：職責重構，科目和帳戶管理移至WCM模組，專注帳號管理核心功能',
+  moduleVersion: '8.0.1', // DCN-0024階段一修復版
+  lastUpdate: '2025-12-16',
+  phase: 'DCN-0024階段一：語法錯誤修復完成',
+  description: 'AM帳號管理模組 - v8.0.1：修復語法錯誤，確保模組正常載入，專注帳號管理核心功能',
   refactoring: {
     migratedToWCM: ['AM_load0099SubjectData', 'AM_loadDefaultConfigs'],
     wcmIntegration: true,
@@ -5358,21 +5358,20 @@ module.exports = {
   }
 };
 
-console.log('✅ AM模組8.0.0 階段一職責重構完成！');
+console.log('✅ AM模組8.0.1 DCN-0024階段一修復完成！');
   console.log('📋 功能概覽:');
   console.log('   ├── 核心帳號管理功能 (18個)');
   console.log('   ├── SR模組專用付費功能 (4個)');
   console.log('   ├── DCN-0012 API端點處理函數 (22個)');
   console.log('   ├── DCN-0014 API處理函數 (19個)');
   console.log('   ├── DCN-0020 帳本結構初始化 (專注結構建立)');
-  console.log('   └── 總計: 63個函數 (移除3個至WCM模組)');
-  console.log('🔄 階段一重構: 科目和帳戶管理功能移至WCM模組');
+  console.log('   └── 總計: 63個函數');
+  console.log('🔧 DCN-0024階段一: 修復語法錯誤，確保模組正常載入');
   console.log('🎯 職責專注: AM專注帳號管理，WCM負責科目和帳戶管理');
-  console.log('🔧 整合模式: AM_initializeUserLedger() 現在調用WCM模組進行資料初始化');
-  console.log('📊 新資料流: AM → WCM (科目+帳戶) → FS (結構) → Firebase');
-  console.log('✨ Before: AM直接載入0099.json + FS輔助');
-  console.log('✨ After: AM調用WCM函數，WCM成為科目和帳戶管理唯一入口');
-  console.log('🎉 階段一成果: WCM模組功能整合完成，職責邊界清晰化！');
+  console.log('🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行資料初始化');
+  console.log('📊 資料流: AM → WCM (科目+帳戶) → Firebase');
+  console.log('✨ 修復內容: 語法錯誤修復，模組載入正常');
+  console.log('🎉 階段一成果: AM模組載入修復，為DCN-0024後續階段奠定基礎！');
 
 /**
  * AM_calculateModeFromAnswers - 計算使用者模式
