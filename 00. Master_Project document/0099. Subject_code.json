@@ -1,72 +1,72 @@
 
 [
   {
-    "parentId": 101,
+    "categoryId": 101,
     "categoryName": "生鮮雜貨",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 102,
+    "categoryId": 102,
     "categoryName": "生活家用",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 103,
+    "categoryId": 103,
     "categoryName": "交通費用",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 104,
+    "categoryId": 104,
     "categoryName": "餐飲費用",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 105,
+    "categoryId": 105,
     "categoryName": "娛樂消遣",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 106,
+    "categoryId": 106,
     "categoryName": "運動嗜好",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 107,
+    "categoryId": 107,
     "categoryName": "寵物生活",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 201,
+    "categoryId": 201,
     "categoryName": "財務收入",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 301,
+    "categoryId": 301,
     "categoryName": "財務支出",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   },
   {
-    "parentId": 0,
+    "categoryId": 0,
     "categoryName": "不歸類",
-    "categoryId": null,
+    "subCategoryId": null,
     "subCategoryName": null,
     "synonyms": ""
   }
