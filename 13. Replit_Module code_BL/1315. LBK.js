@@ -77,16 +77,16 @@ async function LBK_processQuickBookkeeping(inputData) {
     // v1.4.3 新增：檢查是否為 postback 事件且包含科目歸類資料
     if (inputData.eventType === 'postback' && inputData.messageText && inputData.messageText.startsWith('classify_')) {
       LBK_logInfo(`檢測到科目歸類postback格式訊息 [${processId}]`, "科目歸類", userId, "LBK_processQuickBookkeeping");
-      
+
       // 解析 postback 資料
       const postbackParts = inputData.messageText.split('_');
       if (postbackParts.length >= 3) {
         const subjectId = postbackParts[1];
         const jsonPart = postbackParts.slice(2).join('_');
-        
+
         try {
           const pendingData = JSON.parse(jsonPart);
-          
+
           // 構建分類資料
           const classificationData = {
             success: true,
@@ -2094,7 +2094,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     const selectedCategory = categoryMapping[subjectId];
     if (!selectedCategory) {
       LBK_logError(`無效的科目ID: ${subjectId} [${processId}]`, "科目歸類", inputData.userId, "INVALID_CATEGORY", `可用科目: ${Object.keys(categoryMapping).join(', ')}`, "LBK_handleClassificationPostback");
-      
+
       return {
         success: false,
         message: `無效的科目ID: ${subjectId}，請重新選擇`,
@@ -2116,8 +2116,8 @@ async function LBK_handleClassificationPostback(inputData, processId) {
 
       return {
         success: true,
-        message: `已完成科目歸類！\n選擇科目：${subjectId} ${selectedCategory.name}\n歸類狀態：完成\n\n💡 後續相同輸入將自動歸類至此科目\n\n⚠️ 原始記帳資料遺失，請重新輸入進行記帳`,
-        responseMessage: `已完成科目歸類！\n選擇科目：${subjectId} ${selectedCategory.name}\n歸類狀態：完成\n\n💡 後續相同輸入將自動歸類至此科目\n\n⚠️ 原始記帳資料遺失，請重新輸入進行記帳`,
+        message: `已完成科目歸類！\n選擇科目：${subjectId} ${selectedCategory.categoryName}\n歸類狀態：完成\n\n💡 後續相同輸入將自動歸類至此科目\n\n⚠️ 原始記帳資料遺失，請重新輸入進行記帳`,
+        responseMessage: `已完成科目歸類！\n選擇科目：${subjectId} ${selectedCategory.categoryName}\n歸類狀態：完成\n\n💡 後續相同輸入將自動歸類至此科目\n\n⚠️ 原始記帳資料遺失，請重新輸入進行記帳`,
         moduleCode: "LBK",
         module: "LBK",
         processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
@@ -2137,7 +2137,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     // 步驟2：準備記帳資料，直接使用選擇的科目資訊進行記帳（不再依賴科目識別）
     const transactionId = Date.now().toString();
     const now = moment().tz(LBK_CONFIG.TIMEZONE);
-    
+
     // 直接準備1301標準格式的記帳資料
     const preparedData = {
       // 核心欄位 - 符合1301標準
@@ -2180,7 +2180,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
 
     // 步驟3：直接儲存記帳資料到Firestore
     const saveResult = await LBK_saveToFirestore(preparedData, processId);
-    
+
     let bookkeepingResult;
     if (saveResult.success) {
       bookkeepingResult = {
@@ -2526,9 +2526,9 @@ function LBK_getLineMainCategories() {
 }
 
 /**
- * 科目選擇映射表 - v1.4.1 基於0099配置
- * @version 2025-12-16-V1.4.1
- * @description 從0099.json動態建立科目選擇映射表
+ * 科目選擇映射表 - v1.4.4 直接使用0099配置
+ * @version 2025-12-17-V1.4.4
+ * @description 直接從0099.json建立科目選擇映射表，不進行額外映射
  */
 function LBK_buildCategoryMapping() {
   try {
@@ -2542,7 +2542,7 @@ function LBK_buildCategoryMapping() {
 
     const mapping = {};
 
-    // 從0099.json建立完整的科目映射表
+    // 直接從0099.json建立科目映射表，不做額外映射
     subjectConfig.forEach(category => {
       if (category.categoryId && category.categoryName) {
         const key = category.categoryId.toString();
@@ -2553,15 +2553,6 @@ function LBK_buildCategoryMapping() {
         };
       }
     });
-
-    // 修復：正確映射000到999，使用從0099.json載入的名稱
-    if (mapping["999"]) {
-      mapping["000"] = { 
-        categoryId: 999, 
-        categoryName: mapping["999"].categoryName, 
-        type: "expense" 
-      };
-    }
 
     LBK_logDebug(`建立科目映射表，共${Object.keys(mapping).length}個選項 (來源:0099.json)`, "科目配置", "", "LBK_buildCategoryMapping");
 
@@ -2629,7 +2620,7 @@ function LBK_buildClassificationMessageInternal(originalSubject, parsedData, cat
     // 建立符合LINE API格式的Quick Reply按鈕陣列，限制最多13個按鈕
     const maxButtons = 13; // LINE Quick Reply最多支援13個按鈕
     const limitedCategories = categories.slice(0, maxButtons);
-    
+
     const quickReplyItems = limitedCategories.map(category => {
       const categoryCode = category.categoryId === 999 ? "000" : category.categoryId.toString();
       const displayLabel = `${categoryCode} ${category.categoryName}`;
@@ -2764,7 +2755,7 @@ async function LBK_addSubjectSynonym(originalSubject, subjectId, subjectName, us
 
     if (categoryQuery.empty) {
       LBK_logWarning(`嘗試按categoryId查找失敗，改用文檔ID查找: ${subjectId} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
-      
+
       // 備用：直接嘗試用subjectId作為文檔ID
       const categoryRef = db.collection("ledgers").doc(ledgerId).collection("categories").doc(subjectId);
       const categoryDoc = await categoryRef.get();
@@ -2772,7 +2763,7 @@ async function LBK_addSubjectSynonym(originalSubject, subjectId, subjectName, us
       if (!categoryDoc.exists) {
         // 如果都找不到，創建新的科目記錄
         LBK_logInfo(`科目不存在，創建新科目記錄: ${subjectId} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
-        
+
         const newCategoryData = {
           categoryId: parseInt(subjectId),
           categoryName: subjectName,
