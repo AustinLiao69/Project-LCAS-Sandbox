@@ -74,6 +74,40 @@ async function LBK_processQuickBookkeeping(inputData) {
       return await LBK_handleClassificationPostback(inputData, processId);
     }
 
+    // v1.4.3 新增：檢查是否為 postback 事件且包含科目歸類資料
+    if (inputData.eventType === 'postback' && inputData.messageText && inputData.messageText.startsWith('classify_')) {
+      LBK_logInfo(`檢測到科目歸類postback格式訊息 [${processId}]`, "科目歸類", userId, "LBK_processQuickBookkeeping");
+      
+      // 解析 postback 資料
+      const postbackParts = inputData.messageText.split('_');
+      if (postbackParts.length >= 3) {
+        const subjectId = postbackParts[1];
+        const jsonPart = postbackParts.slice(2).join('_');
+        
+        try {
+          const pendingData = JSON.parse(jsonPart);
+          
+          // 構建分類資料
+          const classificationData = {
+            success: true,
+            subjectId: subjectId,
+            pendingData: pendingData
+          };
+
+          // 構建分類輸入資料
+          const classificationInput = {
+            ...inputData,
+            eventType: 'classification_postback',
+            classificationData: classificationData
+          };
+
+          return await LBK_handleClassificationPostback(classificationInput, processId);
+        } catch (jsonError) {
+          LBK_logError(`解析postback JSON失敗: ${jsonError.message} [${processId}]`, "科目歸類", userId, "JSON_PARSE_ERROR", jsonError.toString(), "LBK_processQuickBookkeeping");
+        }
+      }
+    }
+
     // 第一步：檢查是否為統計查詢關鍵字
     const keywordCheckResult = await LBK_checkStatisticsKeyword(inputData.messageText, userId, processId);
 
@@ -2433,7 +2467,7 @@ function LBK_buildCategoryMapping() {
     if (!subjectConfig || !Array.isArray(subjectConfig)) {
       LBK_logWarning(`無法載入0099配置，使用最小映射表`, "科目配置", "", "LBK_buildCategoryMapping");
       return {
-        "999": { categoryId: 999, categoryName: "不歸類", type: "expense" }
+        "999": { categoryId: 999, categoryName: "其他", type: "expense" }
       };
     }
 
@@ -2451,9 +2485,9 @@ function LBK_buildCategoryMapping() {
       }
     });
 
-    // 特殊處理：將999不歸類映射到000以保持向後兼容
+    // 修復：正確映射000到999，使用從0099.json載入的名稱
     if (mapping["999"]) {
-      mapping["0"] = { 
+      mapping["000"] = { 
         categoryId: 999, 
         categoryName: mapping["999"].categoryName, 
         type: "expense" 
@@ -2467,7 +2501,7 @@ function LBK_buildCategoryMapping() {
   } catch (error) {
     LBK_logError(`建立科目映射失敗: ${error.toString()}`, "科目配置", "", "BUILD_MAPPING_ERROR", error.toString(), "LBK_buildCategoryMapping");
     return {
-      "999": { categoryId: 999, categoryName: "不歸類", type: "expense" }
+      "999": { categoryId: 999, categoryName: "其他", type: "expense" }
     };
   }
 }

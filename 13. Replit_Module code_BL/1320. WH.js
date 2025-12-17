@@ -2914,8 +2914,8 @@ async function WH_sendPushMessage(userId, message, messageType = 'text') {
  * @returns {boolean} - 如果是科目歸類 postback，則返回 true
  */
 function WH_isSubjectClassificationPostback(postbackData) {
-  // 識別規則：postbackData 格式為 "category_XXX"，其中 XXX 是科目 ID
-  return postbackData && postbackData.startsWith("category_");
+  // 修復識別規則：postbackData 格式為 "classify_XXX_..."，其中 XXX 是科目 ID
+  return postbackData && postbackData.startsWith("classify_");
 }
 
 // 階段三新增函數：解析科目歸類 postback 數據
@@ -2926,13 +2926,30 @@ function WH_isSubjectClassificationPostback(postbackData) {
  */
 function WH_parseClassificationPostback(postbackData) {
   try {
+    // 修復解析邏輯：postbackData 格式為 "classify_XXX_JSON"
+    if (!postbackData.startsWith("classify_")) {
+      throw new Error("Postback data 格式不正確，不是科目歸類事件");
+    }
+
+    // 解析格式：classify_104_{"subject":"飯糰","amount":28,...}
     const parts = postbackData.split("_");
-    if (parts.length >= 2 && parts[0] === "category") {
-      const subjectId = parts.slice(1).join("_"); // 重新組合 ID，以防科目 ID 中包含 '_'
+    if (parts.length >= 3 && parts[0] === "classify") {
+      const subjectId = parts[1]; // 科目 ID
+      const jsonPart = parts.slice(2).join("_"); // 重新組合 JSON 部分
+      
+      let pendingData = null;
+      try {
+        pendingData = JSON.parse(jsonPart);
+      } catch (jsonError) {
+        console.log(`JSON 解析失敗，使用基本資料: ${jsonError.message}`);
+        // 如果 JSON 解析失敗，仍然返回基本的科目 ID
+      }
+
       return {
         success: true,
-        originalSubject: postbackData, // 記錄原始 postback data
-        subjectId: subjectId
+        originalSubject: pendingData ? pendingData.subject : "未知科目",
+        subjectId: subjectId,
+        pendingData: pendingData
       };
     } else {
       throw new Error("Postback data 格式不正確，無法解析科目 ID");
