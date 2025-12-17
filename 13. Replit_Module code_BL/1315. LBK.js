@@ -2624,7 +2624,7 @@ function LBK_buildClassificationMessageInternal(originalSubject, parsedData, cat
       return `${id} ${category.categoryName}`;
     });
 
-    const message = `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
+    const message = `您的科目庫無此科目，請問「${originalSubject}」屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
 
     // 建立符合LINE API格式的Quick Reply按鈕陣列，限制最多13個按鈕
     const maxButtons = 13; // LINE Quick Reply最多支援13個按鈕
