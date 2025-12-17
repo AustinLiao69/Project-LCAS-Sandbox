@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.4.4
+ * LBK_快速記帳模組_1.4.5
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - DCN-0024階段二：建立wallet驗證機制，階段三：修復科目歸類後記帳邏輯
- * @update 2025-12-17: 升級至v1.4.4，新增wallet驗證機制，確保記帳使用的wallet都是用戶已定義的
+ * @description LINE OA 專用快速記帳處理模組 - DCN-0024階段一：修復訊息解析邏輯，正確識別支付方式
+ * @update 2025-12-17: 升級至v1.4.5，修復LBK_parseInputFormat函數邏輯，增強支付方式識別準確度
  */
 
 // 引入所需模組
@@ -381,9 +381,9 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
 
 /**
  * 03. 解析輸入格式
- * @version 2025-07-15-V1.0.3
- * @date 2025-07-15 09:30:00
- * @description 解析標準輸入格式，移除正負號邏輯，基於科目代碼判斷收支類型
+ * @version 2025-12-17-V1.4.5
+ * @date 2025-12-17 15:30:00
+ * @description 修復版：正確解析包含銀行名稱的輸入格式，增強支付方式識別準確度
  */
 function LBK_parseInputFormat(message, processId) {
   LBK_logDebug(`開始解析格式: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
@@ -395,59 +395,89 @@ function LBK_parseInputFormat(message, processId) {
   message = message.trim();
 
   try {
-    // 只支援標準格式處理 (早餐33333)
-    const standardPattern = /^(.+?)(\d+)(.*)$/;
-    const standardMatch = message.match(standardPattern);
+    // v1.4.5 修復：改用更精確的正則表達式，支援銀行名稱識別
+    // 匹配格式：科目名稱 + 數字金額 + 可選的支付方式/銀行名稱
+    const enhancedPattern = /^(.+?)(\d+)(.*)$/;
+    const match = message.match(enhancedPattern);
 
-    if (standardMatch) {
-      const subject = standardMatch[1].trim();
-      const rawAmount = standardMatch[2];
-      const amount = parseInt(rawAmount, 10);
+    if (!match) {
+      LBK_logWarning(`無法匹配輸入格式: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+      return null;
+    }
 
-      // 檢查前導零
-      if (rawAmount.length > 1 && rawAmount.startsWith('0')) {
-        LBK_logWarning(`金額格式錯誤：前導零不被允許 "${rawAmount}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
-        return null;
+    const rawSubject = match[1].trim();
+    const rawAmount = match[2];
+    const suffixPart = match[3].trim();
+
+    // 驗證金額格式
+    if (rawAmount.length > 1 && rawAmount.startsWith('0')) {
+      LBK_logWarning(`金額格式錯誤：前導零不被允許 "${rawAmount}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+      return null;
+    }
+
+    const amount = parseInt(rawAmount, 10);
+    if (amount <= 0) {
+      LBK_logWarning(`金額錯誤：金額必須大於0 [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+      return null;
+    }
+
+    // v1.4.5 增強：支付方式識別邏輯
+    let paymentMethod = "刷卡"; // 預設值
+    let finalSubject = rawSubject;
+    let processedSuffix = suffixPart;
+
+    // 移除幣別單位
+    const supportedUnits = /(元|塊|圓)$/i;
+    const unsupportedUnits = /(NT|USD|\$)$/i;
+
+    if (unsupportedUnits.test(processedSuffix)) {
+      LBK_logWarning(`不支援的幣別單位 "${processedSuffix}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+      return null;
+    }
+
+    processedSuffix = processedSuffix.replace(supportedUnits, '').trim();
+
+    // v1.4.5 增強的銀行名稱識別
+    const bankNames = [
+      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山", 
+      "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大", 
+      "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀", 
+      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛"
+    ];
+
+    // 檢查是否包含銀行名稱（優先級最高）
+    let detectedBank = null;
+    for (const bankName of bankNames) {
+      if (processedSuffix.includes(bankName)) {
+        detectedBank = bankName;
+        paymentMethod = bankName; // 直接使用銀行名稱作為支付方式
+        LBK_logDebug(`檢測到銀行名稱: ${bankName} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+        break;
       }
+    }
 
-      if (amount <= 0) {
-        LBK_logWarning(`金額錯誤：金額必須大於0 [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
-        return null;
-      }
-
-      // 預設支付方式為刷卡（後續會根據科目代碼調整）
-      let paymentMethod = "刷卡";
-      let remainingText = standardMatch[3].trim();
-
-      // 移除支援的幣別單位
-      const supportedUnits = /(元|塊|圓)$/i;
-      const unsupportedUnits = /(NT|USD|\$)$/i;
-
-      if (unsupportedUnits.test(remainingText)) {
-        LBK_logWarning(`不支援的幣別單位 "${remainingText}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
-        return null;
-      }
-
-      remainingText = remainingText.replace(supportedUnits, '').trim();
-
-      // 檢查是否指定支付方式
+    // 如果沒有檢測到銀行，檢查標準支付方式關鍵字
+    if (!detectedBank) {
       const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
       for (const method of paymentMethods) {
-        if (remainingText.includes(method)) {
+        if (processedSuffix.includes(method)) {
           paymentMethod = method;
+          LBK_logDebug(`檢測到支付方式: ${method} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
           break;
         }
       }
-
-      return {
-        subject: subject,
-        amount: amount,
-        rawAmount: rawAmount,
-        paymentMethod: paymentMethod
-      };
     }
 
-    return null;
+    // v1.4.5 修復：確保科目名稱正確提取
+    // 例如：「飯糰28星展」→ 科目「飯糰」、金額「28」、支付方式「星展」
+    LBK_logInfo(`解析結果: 科目="${finalSubject}", 金額=${amount}, 支付方式="${paymentMethod}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+
+    return {
+      subject: finalSubject,
+      amount: amount,
+      rawAmount: rawAmount,
+      paymentMethod: paymentMethod
+    };
 
   } catch (error) {
     LBK_logError(`解析格式錯誤: ${error.toString()} [${processId}]`, "格式解析", "", "PARSE_ERROR", error.toString(), "LBK_parseInputFormat");
@@ -3417,9 +3447,9 @@ const LBK_MODULE = {
   LBK_handleNewWallet: LBK_handleNewWallet, // Kept for backward compatibility, though now LBK_handleWalletConfirmationPostback is the primary handler
 
   // 版本資訊
-  MODULE_VERSION: "1.4.5", // Updated version
+  MODULE_VERSION: "1.4.5",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一：將支付方式postback處理邏輯整合至LBK模組，並統一管理" // Updated description
+  MODULE_UPDATE: "階段一：修復訊息解析邏輯，正確識別支付方式，增強銀行名稱識別準確度"
 };
 
 // 導出模組
