@@ -445,9 +445,9 @@ function LBK_parseInputFormat(message, processId) {
 
     // v1.4.5 增強的銀行名稱識別
     const bankNames = [
-      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山", 
-      "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大", 
-      "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀", 
+      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
+      "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
+      "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
       "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛"
     ];
 
@@ -1936,8 +1936,6 @@ function LBK_buildStatisticsQuickReply(userId, currentType) {
       quickReplyItems.push({ label: '本日統計', postbackData: '本日統計' });
     }
 
-    // 移除快速記帳按鈕，只保留統計查詢選項
-
     // 限制最多4個選項
     return {
       type: 'quick_reply',
@@ -2877,8 +2875,7 @@ async function LBK_parsePaymentMethod(text, userId, processId) {
       userWallets.push({
         id: walletData.id,
         name: walletData.name,
-        type: walletData.type,
-        isDefault: walletData.isDefault || false
+        type: walletData.type
       });
     });
 
@@ -2936,8 +2933,8 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
     // 增強的銀行名稱識別
     const bankNames = [
       "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山", "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託",
-      "聯邦", "遠東", "元大", "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀", "高雄銀", "花旗", "渣打",
-      "匯豐", "星展", "澳盛", "法國巴黎", "瑞士銀行", "德意志", "荷蘭", "比利時", "奧地利", "義大利", "西班牙", "葡萄牙"
+      "聯邦", "遠東", "元大", "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
+      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "法國巴黎", "瑞士銀行", "德意志", "荷蘭", "比利時", "奧地利", "義大利", "西班牙", "葡萄牙"
     ];
 
     // 檢查是否包含特定支付方式關鍵字
@@ -3044,6 +3041,7 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
   }
 }
 
+
 /**
  * 22. 處理新wallet確認流程 - 階段三：整合WCM模組建立錢包流程
  * @version 2025-12-17-V1.4.1
@@ -3106,7 +3104,11 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
       moduleVersion: "1.4.1",
       requiresUserSelection: true,
       walletConfirmation: true,
-      pendingWalletData: pendingWalletData
+      pendingWalletData: {
+        key: shortKey,
+        expiresAt: Date.now() + (600 * 1000), // 5分鐘
+        walletName: walletName
+      }
     };
 
   } catch (error) {
@@ -3142,7 +3144,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
     }
 
     const action = parts[1]; // yes 或 no
-    const shortKey = parts[2]; // 快取key
+    const shortKey = parts.slice(2).join('_'); // 重組pending key
 
     // 從快取中取得原始資料
     let walletData = null;
@@ -3156,6 +3158,12 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
     }
 
     if (!walletData) {
+      throw new Error('wallet確認資料已過期');
+    }
+
+    // 檢查是否過期
+    if (Date.now() > walletData.expiresAt) {
+      cacheInstance.del(shortKey);
       throw new Error('wallet確認資料已過期');
     }
 
@@ -3276,7 +3284,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
       }
     } else if (action === 'no') {
       // 用戶選擇「取消記帳」
-      LBK_logInfo(`用戶取消wallet新增和記帳 [${processId}]`, "Wallet確認", userId, functionName);
+      LBK_logInfo(`用戶取消wallet確認記帳`, "Wallet確認", userId, functionName);
 
       const currentDateTime = new Date().toLocaleString("zh-TW", {
         timeZone: "Asia/Taipei",
@@ -3490,9 +3498,9 @@ const LBK_MODULE = {
   LBK_handleNewWallet: LBK_handleNewWallet, // Kept for backward compatibility, though now LBK_handleWalletConfirmationPostback is the primary handler
 
   // 版本資訊
-  MODULE_VERSION: "1.4.1",
+  MODULE_VERSION: "1.4.6",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段三：整合支付方式驗證與錢包建立流程，確保WCM錢包記錄正確建立"
+  MODULE_UPDATE: "階段四：支付方式未知時，導入歸類邏輯，並更新相關處理函數"
 };
 
 // 導出模組
