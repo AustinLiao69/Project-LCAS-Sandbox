@@ -1314,6 +1314,12 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
       "INFO",
     ]);
 
+    // 設定請求標頭
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${CHANNEL_ACCESS_TOKEN}`
+    };
+
     // 使用 axios 發送 HTTP 請求
     return axios
       .post(url, replyData, {
