@@ -151,89 +151,11 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
 
       const defaultConfigs = WCM_loadDefaultConfigs();
       if (!defaultConfigs.success || !defaultConfigs.configs || !defaultConfigs.configs.wallets) {
-        // 如果無法載入預設配置，建立基本的預設錢包
-        WCM_logWarning("無法載入預設錢包配置，將建立基本預設錢包", "建立預設帳戶", walletData.userId, functionName);
-
-        const basicWallets = [
-          {
-            walletId: "default_cash",
-            name: "現金",
-            type: "cash",
-            currency: WCM_CONFIG.DEFAULT_CURRENCY,
-            balance: 0,
-            isDefault: true,
-            description: "現金帳戶"
-          },
-          {
-            walletId: "default_bank",
-            name: "銀行帳戶",
-            type: "bank",
-            currency: WCM_CONFIG.DEFAULT_CURRENCY,
-            balance: 0,
-            isDefault: false,
-            description: "銀行帳戶"
-          },
-          {
-            walletId: "default_credit",
-            name: "信用卡",
-            type: "credit",
-            currency: WCM_CONFIG.DEFAULT_CURRENCY,
-            balance: 0,
-            isDefault: false,
-            description: "信用卡帳戶"
-          }
-        ];
-
-        const collectionPath = `ledgers/${ledgerId}/wallets`;
-        const batch = db.batch();
-        const now = admin.firestore.Timestamp.now();
-        let walletCount = 0;
-        const createdWallets = [];
-
-        for (const defaultWallet of basicWallets) {
-          const walletId = defaultWallet.walletId;
-          const walletRef = db.collection(collectionPath).doc(walletId);
-
-          const walletDoc = {
-            id: walletId,
-            name: defaultWallet.name,
-            type: defaultWallet.type,
-            currency: defaultWallet.currency,
-            balance: defaultWallet.balance || 0,
-            description: defaultWallet.description || '',
-            isDefault: defaultWallet.isDefault || false,
-            userId: walletData.userId,
-            ledgerId: ledgerId,
-            status: 'active',
-            dataSource: 'basic_default_wallets',
-            createdAt: now,
-            updatedAt: now,
-            module: 'WCM',
-            version: WCM_CONFIG.VERSION
-          };
-
-          batch.set(walletRef, walletDoc);
-          walletCount++;
-          createdWallets.push({
-            walletId: walletId,
-            name: walletDoc.name,
-            type: walletDoc.type,
-            currency: walletDoc.currency
-          });
-        }
-
-        await batch.commit();
-
-        WCM_logInfo(`基本預設帳戶建立完成: ${walletCount} 個帳戶 (路徑: ${collectionPath})`, "建立預設帳戶", walletData.userId, functionName);
-
-        return WCM_formatSuccessResponse({
-          defaultWalletsCreated: true,
-          totalWallets: walletCount,
-          wallets: createdWallets,
-          ledgerId: ledgerId,
-          collectionPath: collectionPath,
-          dataSource: 'basic_default_wallets'
-        }, `成功建立 ${walletCount} 個基本預設帳戶`);
+        WCM_logError(`載入0302預設錢包配置失敗: ${defaultConfigs.error || '未知錯誤'}`, "建立預設帳戶", walletData.userId, "LOAD_0302_CONFIG_FAILED", defaultConfigs.error || '', functionName);
+        
+        return WCM_formatErrorResponse("LOAD_0302_CONFIG_FAILED", 
+          `無法載入0302. Default_wallet.json配置檔案，預設帳戶建立失敗: ${defaultConfigs.error || '配置檔案不存在或格式錯誤'}`, 
+          defaultConfigs.error);
       }
 
       const collectionPath = `ledgers/${ledgerId}/wallets`;
@@ -975,26 +897,51 @@ function WCM_loadDefaultConfigs() {
       WCM_logInfo(`載入系統配置: ${systemConfig.version}`, "載入預設配置", "", functionName);
     }
 
-    // 載入預設帳戶配置
+    // 載入預設帳戶配置 - 0302. Default_wallet.json (必需檔案)
     const walletConfigPath = path.join(configBasePath, '0302. Default_wallet.json');
-    if (fs.existsSync(walletConfigPath)) {
-      try {
-        let configContent = fs.readFileSync(walletConfigPath, 'utf8');
-        configContent = configContent
-          .replace(/\/\*\*[\s\S]*?\*\//g, '')
-          .replace(/\/\*[\s\S]*?\*\//g, '')
-          .replace(/\/\/.*$/gm, '')
-          .replace(/^\s*[\r\n]/gm, '')
-          .trim();
-        const walletConfig = JSON.parse(configContent);
-        configs.wallets = walletConfig;
-        const walletCount = walletConfig.default_wallets ? walletConfig.default_wallets.length : 0;
-        WCM_logInfo(`載入預設帳戶配置: ${walletCount} 個帳戶`, "載入預設配置", "", functionName);
-      } catch (parseError) {
-        WCM_logError(`解析預設帳戶配置失敗: ${parseError.message}`, "載入預設配置", "", "WALLET_CONFIG_PARSE_ERROR", parseError.toString(), functionName);
+    if (!fs.existsSync(walletConfigPath)) {
+      const error = `0302. Default_wallet.json 檔案不存在: ${walletConfigPath}`;
+      WCM_logError(error, "載入預設配置", "", "WALLET_CONFIG_FILE_NOT_FOUND", error, functionName);
+      return {
+        success: false,
+        error: error,
+        configs: {}
+      };
+    }
+
+    try {
+      let configContent = fs.readFileSync(walletConfigPath, 'utf8');
+      configContent = configContent
+        .replace(/\/\*\*[\s\S]*?\*\//g, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/.*$/gm, '')
+        .replace(/^\s*[\r\n]/gm, '')
+        .trim();
+      const walletConfig = JSON.parse(configContent);
+      
+      // 驗證配置結構
+      if (!walletConfig.default_wallets || !Array.isArray(walletConfig.default_wallets)) {
+        const error = `0302. Default_wallet.json 格式錯誤：缺少 default_wallets 陣列`;
+        WCM_logError(error, "載入預設配置", "", "WALLET_CONFIG_INVALID_FORMAT", error, functionName);
+        return {
+          success: false,
+          error: error,
+          configs: {}
+        };
       }
-    } else {
-      WCM_logWarning(`預設帳戶配置檔案不存在: ${walletConfigPath}`, "載入預設配置", "", functionName);
+
+      configs.wallets = walletConfig;
+      const walletCount = walletConfig.default_wallets.length;
+      WCM_logInfo(`成功載入0302預設帳戶配置: ${walletCount} 個帳戶`, "載入預設配置", "", functionName);
+      
+    } catch (parseError) {
+      const error = `解析0302. Default_wallet.json失敗: ${parseError.message}`;
+      WCM_logError(error, "載入預設配置", "", "WALLET_CONFIG_PARSE_ERROR", parseError.toString(), functionName);
+      return {
+        success: false,
+        error: error,
+        configs: {}
+      };
     }
 
     // 載入貨幣配置
