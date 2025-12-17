@@ -1,15 +1,15 @@
 /**
-* 0302.Default_wallet.json_1.0.0
+* 0302.Default_wallet.json_1.0.1
 * @description 預設帳戶
-* @update 2025-11-18: 初版
+* @update 2025-12-17
 */
 
 {
-  "version": "1.0.0",
-  "last_updated": "2025-11-18",
+  "version": "1.0.1",
+  "last_updated": "2025-12-17",
   "default_wallets": [
     {
-      "walletId": "default_cash",
+      "walletId": "cash",
       "name": "現金",
       "type": "cash",
       "currency": "{{default_currency}}",
@@ -18,10 +18,10 @@
       "isActive": true,
       "icon": "💵",
       "color": "#4CAF50",
-      "description": "現金帳戶"
+      "synonyms": "現金帳戶"
     },
     {
-      "walletId": "default_bank",
+      "walletId": "debit",
       "name": "銀行",
       "type": "bank",
       "currency": "{{default_currency}}",
@@ -30,10 +30,10 @@
       "isActive": true,
       "icon": "🏦",
       "color": "#2196F3",
-      "description": "銀行帳戶"
+      "synonyms": "銀行帳戶"
     },
     {
-      "walletId": "default_credit",
+      "walletId": "credit",
       "name": "刷卡",
       "type": "credit",
       "currency": "{{default_currency}}",
@@ -42,7 +42,7 @@
       "isActive": true,
       "icon": "💳",
       "color": "#FF9800",
-      "description": "信用卡帳戶"
+      "synonyms": "信用卡帳戶"
     }
   ]
 }
