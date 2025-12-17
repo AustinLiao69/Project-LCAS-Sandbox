@@ -142,6 +142,9 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
 
     await WCM_initialize();
 
+    // 獲取Firestore實例
+    const db = admin.firestore();
+
     // 階段一整合：支援建立預設帳戶功能
     if (options.createDefaultWallets) {
       WCM_logInfo(`執行預設帳戶建立至帳本: ${ledgerId}`, "建立預設帳戶", walletData.userId, functionName);
@@ -150,7 +153,7 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
       if (!defaultConfigs.success || !defaultConfigs.configs || !defaultConfigs.configs.wallets) {
         // 如果無法載入預設配置，建立基本的預設錢包
         WCM_logWarning("無法載入預設錢包配置，將建立基本預設錢包", "建立預設帳戶", walletData.userId, functionName);
-        
+
         const basicWallets = [
           {
             walletId: "default_cash",
@@ -163,7 +166,7 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
           },
           {
             walletId: "default_bank",
-            name: "銀行帳戶", 
+            name: "銀行帳戶",
             type: "bank",
             currency: WCM_CONFIG.DEFAULT_CURRENCY,
             balance: 0,
@@ -173,7 +176,7 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
           {
             walletId: "default_credit",
             name: "信用卡",
-            type: "credit", 
+            type: "credit",
             currency: WCM_CONFIG.DEFAULT_CURRENCY,
             balance: 0,
             isDefault: false,
@@ -181,6 +184,9 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
           }
         ];
 
+        const collectionPath = `ledgers/${ledgerId}/wallets`;
+        const batch = db.batch();
+        const now = admin.firestore.Timestamp.now();
         let walletCount = 0;
         const createdWallets = [];
 
@@ -230,7 +236,6 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
         }, `成功建立 ${walletCount} 個基本預設帳戶`);
       }
 
-      const db = admin.firestore();
       const collectionPath = `ledgers/${ledgerId}/wallets`;
       const batch = db.batch();
       const now = admin.firestore.Timestamp.now();
@@ -316,7 +321,6 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
     };
 
     // 儲存至Firebase子集合
-    const db = admin.firestore();
     const collectionPath = `ledgers/${ledgerId}/wallets`;
     await db.collection(collectionPath).doc(walletId).set(wallet);
 
@@ -520,6 +524,9 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
 
     await WCM_initialize();
 
+    // 獲取Firestore實例
+    const db = admin.firestore();
+
     // 階段一整合：支援從0099批量載入科目功能
     if (options.batchLoad0099) {
       WCM_logInfo(`執行0099科目批量載入至帳本: ${ledgerId}`, "批量載入科目", categoryData.userId, functionName);
@@ -529,7 +536,6 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
         return WCM_formatErrorResponse("LOAD_0099_FAILED", "載入0099科目資料失敗", subjectData.error);
       }
 
-      const db = admin.firestore();
       const collectionPath = `ledgers/${ledgerId}/categories`;
       const batch = db.batch();
       let batchCount = 0;
@@ -626,7 +632,6 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
     };
 
     // 儲存至Firebase子集合
-    const db = admin.firestore();
     const collectionPath = `ledgers/${ledgerId}/categories`;
     await db.collection(collectionPath).doc(categoryId).set(category);
 
