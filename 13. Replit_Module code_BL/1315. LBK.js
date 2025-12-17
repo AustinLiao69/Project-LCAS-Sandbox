@@ -2317,60 +2317,50 @@ function LBK_buildCategoryMapping() {
 /**
  * 建立科目歸類選單訊息和Quick Reply - v1.4.2 支援LINE Quick Reply
  * @version 2025-12-16-V1.4.2
- * @description 同時生成文字訊息和Quick Reply按鈕陣列，完全基於0099配置
+ * @description 同時生成文字訊息和Quick Reply按鈕陣列，使用階段一指定的10個固定選項
  */
 function LBK_buildClassificationMessage(originalSubject) {
   try {
-    const categories = LBK_getLineMainCategories();
-    
-    if (categories.length === 0) {
-      LBK_logError(`無法從0099配置取得科目清單`, "科目歸類", "", "NO_CATEGORIES_AVAILABLE", "", "LBK_buildClassificationMessage");
-      return {
-        message: `系統錯誤：無法載入科目配置，請稍後再試或聯絡系統管理員`,
-        quickReply: null
-      };
-    }
+    // 階段一指定的10個固定科目選項
+    const fixedCategories = [
+      { categoryId: 101, categoryName: "生鮮雜貨" },
+      { categoryId: 102, categoryName: "生活家用" },
+      { categoryId: 103, categoryName: "交通費用" },
+      { categoryId: 104, categoryName: "餐飲費用" },
+      { categoryId: 105, categoryName: "娛樂消遣" },
+      { categoryId: 106, categoryName: "運動嗜好" },
+      { categoryId: 107, categoryName: "寵物生活" },
+      { categoryId: 201, categoryName: "財務收入" },
+      { categoryId: 301, categoryName: "財務支出" },
+      { categoryId: 0, categoryName: "不歸類" }
+    ];
     
     // 建立文字訊息選項格式
-    const classificationOptions = categories.map(category => 
-      `${category.categoryId} ${category.categoryName}`
-    );
-    
-    // 添加不歸類選項
-    classificationOptions.push("000 不歸類");
+    const classificationOptions = fixedCategories.map(category => {
+      const id = category.categoryId === 0 ? "000" : category.categoryId.toString();
+      return `${id} ${category.categoryName}`;
+    });
     
     const message = `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
     
     // 建立Quick Reply按鈕陣列
-    const quickReplyItems = [];
-    
-    // 從categories建立Quick Reply按鈕
-    categories.forEach(category => {
-      quickReplyItems.push({
+    const quickReplyItems = fixedCategories.map(category => {
+      const categoryCode = category.categoryId === 0 ? "000" : category.categoryId.toString();
+      return {
         type: "action",
         action: {
           type: "postback",
-          label: `${category.categoryId} ${category.categoryName}`,
-          data: `action=classify_subject&category=${category.categoryId}&name=${encodeURIComponent(category.categoryName)}&subject=${encodeURIComponent(originalSubject)}`
+          label: `${categoryCode} ${category.categoryName}`,
+          data: `category_${category.categoryId}`
         }
-      });
-    });
-    
-    // 添加不歸類按鈕
-    quickReplyItems.push({
-      type: "action", 
-      action: {
-        type: "postback",
-        label: "000 不歸類",
-        data: `action=classify_subject&category=000&name=${encodeURIComponent("不歸類")}&subject=${encodeURIComponent(originalSubject)}`
-      }
+      };
     });
     
     const quickReply = {
-      items: quickReplyItems.slice(0, 13) // LINE限制最多13個選項
+      items: quickReplyItems
     };
     
-    LBK_logInfo(`v1.4.2 生成科目歸類選單和Quick Reply，共${classificationOptions.length}個選項`, "科目歸類", "", "LBK_buildClassificationMessage");
+    LBK_logInfo(`v1.4.2 生成科目歸類選單和Quick Reply，共10個固定選項`, "科目歸類", "", "LBK_buildClassificationMessage");
     
     return {
       message: message,
