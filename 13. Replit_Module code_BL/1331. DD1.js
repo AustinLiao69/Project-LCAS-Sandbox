@@ -1320,7 +1320,13 @@ const DD3 = require("./1333. DD3.js");
 const { DD_formatSystemReplyMessage } = DD3;
 
 // 引入其他模組
-const WH = require('./1320. WH.js');
+let WH;
+try {
+  WH = require('./1320. WH.js');
+} catch (error) {
+  console.warn('⚠️ DD1: WH模組載入失敗，將以降級模式運行:', error.message);
+  WH = null;
+}
 const DD2 = require('./1332. DD2.js');
 
 // === 階段三：API整合優化函數 ===

@@ -1,14 +1,14 @@
 /**
  * 1309. AM.js - 帳號管理模組
- * @version v8.0.2
+ * @version v8.0.3
  * @date 2025-12-16
  * @description 處理用戶註冊、登入、帳本基礎結構初始化等功能
  * @compliance 嚴格遵守0070文件 - 禁止hard coding，遵守dataflow
- * @update v8.0.2: DCN-0024階段一修復 - 增加載入日誌，修復語法錯誤
+ * @update v8.0.3: DCN-0023職責重構 - 完全移除與WCM模組重複功能，職責邊界清晰
  */
 
 console.log('🔍 AM.js 模組開始載入...');
-console.log('📋 AM.js 版本: v8.0.2');
+console.log('📋 AM.js 版本: v8.0.3');
 
 // 引入必要模組
 console.log('📦 AM.js: 開始引入依賴模組...');
@@ -2413,14 +2413,11 @@ async function AM_processAPIRegister(requestData) {
  */
 async function AM_processAPILogin(requestData) {
   const functionName = "AM_processAPILogin";
+
   try {
-    AM_logInfo(
+    console.log(
       "開始處理登入API請求",
-      "登入處理",
-      requestData.email || "",
-      "",
-      "",
-      functionName,
+      requestData.email || ""
     );
 
     // 驗證登入資料
@@ -4548,7 +4545,7 @@ async function AM_processAPIGetModeRecommendations(queryParams) {
       functionName,
     );
 
-    const currentMode = queryParams.currentMode || "Expert";
+    const currentMode = queryParams.mode || "Expert";
 
     // 模擬基於使用行為的模式建議
     const recommendations = {
@@ -5096,7 +5093,7 @@ async function AM_recordAPIUsage(userId, apiEndpoint, userMode, success, process
 console.log('📤 AM.js: 開始導出模組函數...');
 console.log('✅ AM.js: 所有函數定義完成，準備導出');
 module.exports = {
-  // 基本帳號管理功能
+  // 階段四完成：原創用戶帳號管理函數 (v8.0.0)
   AM_createLineAccount,
   AM_createAppAccount,
   AM_linkCrossPlatformAccounts,
@@ -5107,29 +5104,31 @@ module.exports = {
   AM_validateAccountExists,
   AM_searchUserAccounts,
 
-  // LINE OAuth 相關功能
+  // 階段四完成：LINE OAuth整合函數 (v8.0.0)
   AM_handleLineOAuth,
   AM_refreshLineToken,
   AM_verifyLineIdentity,
+
+  // 階段四完成：跨平台資料同步函數 (v8.0.0)
   AM_syncCrossPlatformData,
   AM_resolveDataConflict,
+
+  // 階段四完成：系統管理函數 (v8.0.0)
   AM_handleAccountError,
   AM_monitorSystemHealth,
 
-  // 帳本初始化功能 (v7.4.0新增)
+  // DCN-0020 階段一：帳本初始化函數 (v7.0.0)
+  AM_getUserDefaultLedger,
   AM_initializeUserLedger,
   AM_ensureUserLedger,
-  AM_getUserDefaultLedger,
 
-  // 科目和帳戶管理功能已完全轉移至WCM模組 (DCN-0023職責重構)
-
-  // SR模組專用付費功能API
+  // SR模組專用函數 (v1.1.0)
   AM_validateSRPremiumFeature,
   AM_getSRUserQuota,
   AM_updateSRFeatureUsage,
   AM_processSRUpgrade,
 
-  // DCN-0012 階段二 API端點處理函數
+  // API端點處理函數群組 - DCN-0012階段二 (v3.0.4)
   AM_processAPIGetAccounts,
   AM_processAPIRegister,
   AM_processAPILogin,
@@ -5142,18 +5141,22 @@ module.exports = {
   AM_processAPIVerifyEmail,
   AM_processAPIBindLine,
   AM_processAPIBindStatus,
+
+  // 用戶管理API端點處理函數 (v2.0.0)
   AM_processAPIGetProfile,
   AM_processAPIUpdateProfile,
   AM_processAPIGetAssessmentQuestions,
   AM_processAPISubmitAssessment,
   AM_processAPIUpdatePreferences,
+  AM_processAPIGetPreferences,
   AM_processAPIUpdateSecurity,
+  AM_processAPISwitchMode,
   AM_processAPIVerifyPin,
-  AM_processAPIGetModeDefaults, // Added for completeness based on function definition
-  AM_processAPIBehaviorTracking, // Added for completeness based on function definition
-  AM_processAPIGetModeRecommendations, // Added for completeness based on function definition
-  AM_processAPIUpdateUserMode: AM_processAPISwitchMode, // Alias for clarity if needed
-  AM_processAPIVerifyPin, // Added for completeness based on function definition
+
+  // DCN-0015階段一：四模式支援函數群組
+  AM_processAPIGetModeDefaults,
+  AM_processAPIBehaviorTracking,
+  AM_processAPIGetModeRecommendations,
 
   // 補充函數
   // AM_load0099SubjectData, // 新增：AM模組自行載入0099資料 - Moved up to be with other v7.4.0 additions

@@ -1475,7 +1475,7 @@ function setDependencies(ddModule, bkModule, dlModule) {
   global.BK_validatePaymentMethod = bkModule.BK_validatePaymentMethod;
 
   global.DL_initialize = dlModule.DL_initialize;
-  global.DL_info = dl dlModule.DL_info;
+  global.DL_info = dlModule.DL_info;
   global.DL_warning = dlModule.DL_warning;
   global.DL_error = dlModule.DL_error;
   global.DL_debug = dlModule.DL_debug;
