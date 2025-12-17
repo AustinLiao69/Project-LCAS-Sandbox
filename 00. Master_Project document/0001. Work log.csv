@@ -460,5 +460,5 @@ MM 	 DD 	 Description 	    Progress
 12	16	 設定ASL.js, index.js, ASL.dart在Sandbox環境同時運行  	 Ongoing
 12	17	 建立LINE quick reply功能：科目歸類  	 Closed
 12	17	 建立LINE quick reply功能：帳戶(wallets,支付方式)  	 Ongoing
-12	17	 檢視transactions的DB schema(paymentmethod跟wallet的連動)  	 Ongoing
-12	17	 研究Replit裡面sandbox改的代碼要如何push到PROD環境(用git branch去控制?)  	 Ongoing
+12	17	 修改transactions的DB schema(paymentmethod跟wallet的連動)  	 Ongoing
+12	17	 研究Replit裡面sandbox改的代碼要如何push到PROD環境(用git branch去控制?)  	 Closed
