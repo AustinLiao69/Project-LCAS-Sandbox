@@ -1836,20 +1836,61 @@ async function WH_processEventAsync(event, requestId, userId) {
           };
 
           // v2.5.0: 純粹轉發機制 - 不做任何業務判斷
-          result = await WH_callLBKSafely(lbkInputData);
+          const lbkResult = await WH_callLBKSafely(lbkInputData);
+
+          if (lbkResult && event.replyToken) {
+            // 修復：如果LBK返回需要用戶選擇的結果，將pending資料儲存到快取
+            if (lbkResult.requiresUserSelection && lbkResult.pendingData) {
+              try {
+                const pendingDataKey = `WH_PENDING_${userId}`;
+                cache.set(pendingDataKey, JSON.stringify(lbkResult.pendingData), 600); // 10分鐘過期
+                console.log(`已儲存pending記帳資料到快取: ${pendingDataKey} [${requestId}]`);
+
+                WH_directLogWrite([
+                  WH_formatDateTime(new Date()),
+                  `WH 2.5.1: 已儲存pending記帳資料，等待用戶選擇科目 [${requestId}]`,
+                  "科目歸類",
+                  userId,
+                  "",
+                  "WH",
+                  "",
+                  0,
+                  "WH_processEventAsync",
+                  "INFO",
+                ]);
+              } catch (cacheError) {
+                console.log(`儲存pending資料失敗: ${cacheError.message} [${requestId}]`);
+              }
+            }
+
+            await WH_replyMessage(event.replyToken, lbkResult, lbkResult.quickReply);
+
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 階段一: LBK處理完成，已回覆用戶 [${requestId}]`,
+              "記帳處理",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO",
+            ]);
+          }
 
           // 記錄DD_distributeData處理結果預覽
-          if (result) {
+          if (lbkResult) {
             // 安全地記錄結果預覽，避免過大物件導致日誌問題
             const resultPreview = {
-              success: result.success,
-              hasResponseMessage: !!result.responseMessage,
-              responseMsgLength: result.responseMessage
-                ? result.responseMessage.length
+              success: lbkResult.success,
+              hasResponseMessage: !!lbkResult.responseMessage,
+              responseMsgLength: lbkResult.responseMessage
+                ? lbkResult.responseMessage.length
                 : 0,
-              errorType: result.errorType || "無",
-              moduleCode: result.moduleCode || "無",
-              hasPartialData: !!result.partialData,
+              errorType: lbkResult.errorType || "無",
+              moduleCode: lbkResult.moduleCode || "無",
+              hasPartialData: !!lbkResult.partialData,
             };
 
             console.log(
@@ -1857,9 +1898,9 @@ async function WH_processEventAsync(event, requestId, userId) {
             );
 
             // 詳細記錄partialData內容，這對於診斷負數金額和支付方式問題很關鍵
-            if (result.partialData) {
+            if (lbkResult.partialData) {
               console.log(
-                `partialData內容: ${JSON.stringify(result.partialData)} [${requestId}]`,
+                `partialData內容: ${JSON.stringify(lbkResult.partialData)} [${requestId}]`,
               );
             }
           } else {
@@ -1883,7 +1924,7 @@ async function WH_processEventAsync(event, requestId, userId) {
           ]);
 
           // v2.5.1: 階段二修改 - 正確傳遞quickReply參數
-          const replyResult = WH_replyMessage(event.replyToken, result, result.quickReply);
+          const replyResult = WH_replyMessage(event.replyToken, lbkResult, lbkResult.quickReply);
 
           // 記錄回覆結果
           console.log(
