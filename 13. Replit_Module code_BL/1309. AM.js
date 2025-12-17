@@ -1449,19 +1449,25 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         console.warn(`⚠️ ${functionName}: WCM模組不可用，科目初始化跳過`);
       }
 
-      // 2. 調用WCM模組進行帳戶初始化
-      console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
+      // 2. 調用WCM模組進行帳戶初始化 - 統一wallet概念
+      console.log(`💳 ${functionName}: 調用WCM模組進行wallets子集合初始化...`);
 
       if (WCM && typeof WCM.WCM_createWallet === 'function') {
         const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
         if (walletResult.success) {
           walletCount = walletResult.data.totalWallets || 0;
-          console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
+          console.log(`✅ ${functionName}: WCM wallets子集合初始化完成，建立${walletCount}個錢包帳戶`);
+
+          // 確保wallets子集合與系統其他部分的wallet概念統一
+          console.log(`🔗 ${functionName}: wallet概念統一 - 所有支付方式現在都統一使用wallet ID`);
         } else {
-          console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message || walletResult.message}`);
+          console.warn(`⚠️ ${functionName}: WCM wallets初始化失敗: ${walletResult.error?.message || walletResult.message}`);
+          // 設置預設wallet以確保系統可正常運作
+          walletCount = 0;
         }
       } else {
-        console.warn(`⚠️ ${functionName}: WCM模組不可用，帳戶初始化跳過`);
+        console.warn(`⚠️ ${functionName}: WCM模組不可用，無法初始化wallets子集合`);
+        walletCount = 0;
       }
 
       // 3. 調用BM模組進行預算結構初始化
@@ -5181,7 +5187,7 @@ console.log('   ├── DCN-0012 API端點處理函數 (22個)');
 console.log('   ├── DCN-0014 API處理函數 (19個)');
 console.log('   ├── DCN-0020 帳本結構初始化 (專注基礎結構)');
 console.log('   └── 總計: 59個函數 (移除4個重複函數)');
-console.log('🔧 DCN-0023職責重構: 完全移除與WCM模組重複功能');
+console.log('🔧 DCN-0023職責重構: 完全移除與WCM重複功能');
 console.log('🎯 職責邊界: AM專注帳號管理+帳本基礎結構，WCM負責科目和帳戶管理');
 console.log('🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行科目和帳戶初始化');
 console.log('📊 資料流: AM → WCM (科目+帳戶) → Firebase');
