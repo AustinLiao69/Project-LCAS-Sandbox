@@ -108,7 +108,8 @@ const WH_QUICK_REPLY_CONFIG = {
   MAX_ITEMS: 4,
   STATISTICS_KEYWORDS: ['本日統計', '本週統計', '本月統計'],
   PREMIUM_KEYWORDS: ['upgrade_premium', '試用', '功能介紹'],
-  REMINDER_KEYWORDS: ['setup_daily_reminder', 'setup_weekly_reminder', 'setup_monthly_reminder']
+  REMINDER_KEYWORDS: ['setup_daily_reminder', 'setup_weekly_reminder', 'setup_monthly_reminder'],
+  WALLET_KEYWORDS: ['wallet_confirm_yes', 'wallet_confirm_no']
 };
 
 /**
@@ -2336,6 +2337,10 @@ module.exports = {
   WH_directLogWrite,
   WH_ReceiveDDdata,
 
+  // Wallet處理函數 (階段三新增)
+  WH_isWalletConfirmationPostback,
+  WH_handleWalletConfirmationPostback,
+
   // 新增依賴注入函數
   setDependencies,
 
@@ -2344,6 +2349,7 @@ module.exports = {
 
   // 配置導出
   WH_CONFIG,
+  WH_QUICK_REPLY_CONFIG,
 };
 
 /**
@@ -2770,7 +2776,159 @@ async function WH_handleWebhook(event, reqId) {
 }
 
 /**
- * 20. 檢查是否為Quick Reply相關的postback
+ * 19. 檢查是否為wallet確認postback事件
+ * @version 2025-12-17-V2.5.2
+ * @description 檢查postback事件是否為wallet確認相關
+ */
+function WH_isWalletConfirmationPostback(postbackData) {
+  try {
+    if (!postbackData || typeof postbackData !== 'string') {
+      return false;
+    }
+
+    // 檢查是否為wallet確認格式：wallet_confirm_yes_walletName 或 wallet_confirm_no_walletName
+    const walletConfirmPattern = /^wallet_confirm_(yes|no)_.+/;
+    return walletConfirmPattern.test(postbackData);
+
+  } catch (error) {
+    WH_logError(`檢查wallet確認postback失敗: ${error.message}`, "Postback檢查", "", "WALLET_POSTBACK_CHECK_ERROR", error.toString(), "WH_isWalletConfirmationPostback");
+    return false;
+  }
+}
+
+/**
+ * 20. 處理wallet確認postback事件
+ * @version 2025-12-17-V2.5.2
+ * @description 處理用戶對新wallet的確認回應
+ */
+async function WH_handleWalletConfirmationPostback(postbackData, userId, replyToken, processId) {
+  const functionName = "WH_handleWalletConfirmationPostback";
+  try {
+    WH_logInfo(`處理wallet確認postback: ${postbackData}`, "Wallet確認", userId, functionName);
+
+    // 解析postback資料：wallet_confirm_yes_walletName 或 wallet_confirm_no_walletName
+    const parts = postbackData.split('_');
+    if (parts.length < 4) {
+      throw new Error('無效的wallet確認postback格式');
+    }
+
+    const action = parts[2]; // yes 或 no
+    const walletName = parts.slice(3).join('_'); // 支援wallet名稱包含底線
+
+    if (action === 'yes') {
+      // 用戶選擇「是」- 新增wallet到wallets子集合
+      WH_logInfo(`用戶確認新增wallet: ${walletName}`, "Wallet確認", userId, functionName);
+      
+      try {
+        // 動態載入WCM模組
+        const WCM = require("./1350. WCM.js");
+        
+        // 準備wallet資料
+        const walletData = {
+          name: walletName,
+          type: 'custom',
+          currency: 'TWD',
+          balance: 0,
+          userId: userId,
+          description: `用戶自訂錢包：${walletName}`
+        };
+
+        // 建立wallet
+        const ledgerId = `user_${userId}`;
+        const createResult = await WCM.WCM_createWallet(ledgerId, walletData);
+
+        if (createResult.success) {
+          // 取得pending記帳資料並完成記帳
+          const pendingDataKey = `WH_PENDING_${userId}`;
+          const pendingDataRaw = cache.get(pendingDataKey);
+          
+          let responseMessage = `✅ 已新增支付方式「${walletName}」`;
+          
+          if (pendingDataRaw) {
+            const pendingData = JSON.parse(pendingDataRaw);
+            
+            // 更新pending資料的支付方式
+            pendingData.paymentMethod = walletName;
+            pendingData.walletId = createResult.data.walletId;
+            
+            // 完成記帳
+            const lbkInputData = {
+              userId: userId,
+              messageText: `${pendingData.subject}${pendingData.amount}`,
+              replyToken: replyToken,
+              timestamp: Date.now(),
+              processId: processId,
+              walletData: pendingData
+            };
+
+            const lbkResult = await WH_callLBKSafely(lbkInputData);
+            
+            if (lbkResult.success) {
+              responseMessage += `\n\n${lbkResult.responseMessage}`;
+            } else {
+              responseMessage += `\n\n⚠️ 支付方式已新增，但記帳失敗：${lbkResult.error || '未知錯誤'}`;
+            }
+            
+            // 清理pending資料
+            cache.del(pendingDataKey);
+          }
+
+          return {
+            success: true,
+            message: responseMessage,
+            responseMessage: responseMessage,
+            walletCreated: true,
+            walletName: walletName
+          };
+          
+        } else {
+          throw new Error(createResult.error || 'wallet建立失敗');
+        }
+
+      } catch (wcmError) {
+        WH_logError(`WCM模組建立wallet失敗: ${wcmError.message}`, "Wallet確認", userId, "WCM_CREATE_ERROR", wcmError.toString(), functionName);
+        
+        return {
+          success: false,
+          message: `❌ 新增支付方式失敗：${wcmError.message}`,
+          responseMessage: `❌ 新增支付方式失敗：${wcmError.message}`,
+          error: wcmError.message
+        };
+      }
+
+    } else if (action === 'no') {
+      // 用戶選擇「否」- 取消記帳操作
+      WH_logInfo(`用戶取消新增wallet: ${walletName}`, "Wallet確認", userId, functionName);
+      
+      // 清理pending資料
+      const pendingDataKey = `WH_PENDING_${userId}`;
+      cache.del(pendingDataKey);
+      
+      return {
+        success: true,
+        message: `❌ 已取消記帳操作\n\n💡 您可以使用系統認可的支付方式重新記帳`,
+        responseMessage: `❌ 已取消記帳操作\n\n💡 您可以使用系統認可的支付方式重新記帳`,
+        cancelled: true
+      };
+
+    } else {
+      throw new Error(`未知的wallet確認動作: ${action}`);
+    }
+
+  } catch (error) {
+    WH_logError(`處理wallet確認postback失敗: ${error.message}`, "Wallet確認", userId, "WALLET_CONFIRM_ERROR", error.toString(), functionName);
+    
+    return {
+      success: false,
+      message: '處理wallet確認時發生錯誤，請稍後再試',
+      responseMessage: '處理wallet確認時發生錯誤，請稍後再試',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * 21. 檢查是否為Quick Reply相關的postback
  * @version 2025-07-21-V1.0.0
  * @date 2025-07-21 10:30:00
  * @description 判斷postback資料是否屬於Quick Reply系統
