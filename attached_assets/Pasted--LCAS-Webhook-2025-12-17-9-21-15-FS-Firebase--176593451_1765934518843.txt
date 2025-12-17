@@ -1,0 +1,1538 @@
+  LCAS Webhook 啟動中...
+📅 啟動時間: 2025/12/17 上午9:21:15
+📦 部署模式載入模組...
+✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理
+✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+⚠️ BK 模組未正確載入，跳過初始化
+⚠️ LBK 模組未正確載入，跳過初始化
+⚠️ SR 模組未正確載入，跳過初始化
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🎉 階段五完成：FS模組移除狀態確認
+✅ FS模組已完全移除，職責分散完成
+📋 Firebase操作現由以下專門模組處理:
+  - AM模組：帳號管理相關Firebase操作
+  - WCM模組：帳戶與科目管理相關Firebase操作
+  - BM模組：預算管理相關Firebase操作
+  - CM模組：協作管理相關Firebase操作
+  - 其他模組：直接使用firebase-config模組
+❌ BK模組載入失敗，無法檢查函數
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！
+📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore
+🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000
+⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能
+📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制
+🏥 健康檢查機制已優化：專注LINE服務監控
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構
+📦 API端點遷移完成統計：
+   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點
+   📱 保留LINE Webhook專用：5個核心端點
+   ✅ 完美職責分離：RESTful API ↔ LINE Webhook
+🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現
+📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性
+🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port 3000
+📡 基礎服務已就緒，正在背景載入完整功能...
+📦 載入WH模組...
+❌ WH 模組載入失敗: Unexpected identifier 'dlModule'
+❌ WH 模組基礎模式載入也失敗: Unexpected identifier 'dlModule'
+🔄 延遲載入應用模組...
+🔧 WCM模組v1.2.2 初始化：循環依賴修復版
+🔄 循環依賴修復：移除AM模組直接引用
+✅ 函數導出驗證：WCM_createCategory = function
+✅ 函數導出驗證：WCM_createWallet = function
+✅ 函數導出驗證：WCM_load0099SubjectData = function
+✅ 函數導出驗證：WCM_loadDefaultConfigs = function
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🚀 WCM模組現已全面支援協作帳本路徑
+✨ 循環依賴修復完成，所有函數應可正常調用
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+✅ BK 模組載入成功
+SR模組依賴載入警告: Unexpected identifier 'dlModule'
+📅 SR 排程提醒模組初始化中...
+⚠️ WH 模組不可用，推播功能將受限
+✅ LBK 模組載入成功
+❌ DD 模組載入失敗: Unexpected identifier 'dlModule'
+🔍 開始載入 AM 模組...
+🔍 AM.js 模組開始載入...
+📋 AM.js 版本: v8.0.2
+📦 AM.js: 開始引入依賴模組...
+✅ AM.js: firebase-admin 引入成功
+✅ AM.js: axios 引入成功
+✅ AM.js: crypto 引入成功
+⚙️ AM.js: 開始定義AM_CONFIG配置物件...
+🔥 AM.js: 開始引入Firebase動態配置模組...
+✅ AM.js: Firebase動態配置模組引入成功
+🔧 AM.js: 初始化Firebase Admin SDK...
+✅ Firebase Admin SDK已初始化
+✅ AM.js: Firebase初始化完成，Firestore實例已取得
+📊 BM 預算管理模組載入中...
+❌ AM 模組載入失敗詳細資訊:
+❌ 錯誤訊息: Unexpected identifier 'dlModule'
+❌ 錯誤堆疊: /home/runner/workspace/13. Replit_Module code_BL/1320. WH.js:1478
+  global.DL_info = dl dlModule.DL_info;
+                      ^^^^^^^^
+
+SyntaxError: Unexpected identifier 'dlModule'
+    at wrapSafe (node:internal/modules/cjs/loader:1662:18)
+    at Module._compile (node:internal/modules/cjs/loader:1704:20)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (/home/runner/workspace/13. Replit_Module code_BL/1331. DD1.js:1323:12)
+❌ 錯誤類型: SyntaxError
+❌ 檔案總行數: 5401
+❌ 正在檢查語法錯誤...
+❌ 第 24 行括號不匹配: const AM_CONFIG = {
+❌ 第 25 行括號不匹配: TIMEOUTS: {
+❌ 第 29 行括號不匹配: },
+❌ 第 30 行括號不匹配: RETRY: {
+❌ 第 34 行括號不匹配: },
+❌ 第 35 行括號不匹配: API: {
+❌ 第 38 行括號不匹配: },
+❌ 第 39 行括號不匹配: DEFAULTS: {
+❌ 第 44 行括號不匹配: }
+❌ 第 45 行括號不匹配: };
+❌ 第 48 行括號不匹配: function getDefaultTimeout(type) {
+❌ 第 51 行括號不匹配: }
+❌ 第 53 行括號不匹配: function getDefaultRetryConfig(type) {
+❌ 第 56 行括號不匹配: }
+❌ 第 58 行括號不匹配: function detectAPIVersion() {
+❌ 第 59 行括號不匹配: try {
+❌ 第 63 行括號不匹配: }
+❌ 第 64 行括號不匹配: }
+❌ 第 66 行括號不匹配: function getDefaultTokenExpiry() {
+❌ 第 68 行括號不匹配: }
+❌ 第 70 行括號不匹配: function detectDefaultUserType() {
+❌ 第 72 行括號不匹配: }
+❌ 第 74 行括號不匹配: function detectSystemLanguage() {
+❌ 第 75 行括號不匹配: try {
+❌ 第 84 行括號不匹配: }
+❌ 第 85 行括號不匹配: }
+❌ 第 87 行括號不匹配: function detectSystemTimezone() {
+❌ 第 88 行括號不匹配: try {
+❌ 第 92 行括號不匹配: }
+❌ 第 93 行括號不匹配: }
+❌ 第 95 行括號不匹配: function detectSystemCurrency() {
+❌ 第 96 行括號不匹配: try {
+❌ 第 105 行括號不匹配: }
+❌ 第 106 行括號不匹配: }
+❌ 第 116 行括號不匹配: try {
+❌ 第 125 行括號不匹配: }
+❌ 第 132 行括號不匹配: try {
+❌ 第 136 行括號不匹配: }
+❌ 第 149 行括號不匹配: async function AM_createLineAccount(lineUID, lineProfile, userType = "S") {
+❌ 第 150 行括號不匹配: try {
+❌ 第 152 行括號不匹配: if (!db) {
+❌ 第 154 行括號不匹配: return {
+❌ 第 158 行括號不匹配: };
+❌ 第 159 行括號不匹配: }
+❌ 第 163 行括號不匹配: if (existingUser.exists) {
+❌ 第 166 行括號不匹配: return {
+❌ 第 174 行括號不匹配: };
+❌ 第 175 行括號不匹配: }
+❌ 第 178 行括號不匹配: const userData = {
+❌ 第 184 行括號不匹配: linkedAccounts: {
+❌ 第 188 行括號不匹配: },
+❌ 第 189 行括號不匹配: settings: {
+❌ 第 192 行括號不匹配: },
+❌ 第 194 行括號不匹配: metadata: {
+❌ 第 197 行括號不匹配: },
+❌ 第 198 行括號不匹配: };
+❌ 第 214 行括號不匹配: return {
+❌ 第 220 行括號不匹配: };
+❌ 第 222 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 223 行括號不匹配: try {
+❌ 第 227 行括號不匹配: }
+❌ 第 228 行括號不匹配: }
+❌ 第 229 行括號不匹配: return {
+❌ 第 233 行括號不匹配: };
+❌ 第 234 行括號不匹配: }
+❌ 第 235 行括號不匹配: }
+❌ 第 243 行括號不匹配: async function AM_createAppAccount(platform, appProfile, deviceInfo) {
+❌ 第 244 行括號不匹配: try {
+❌ 第 248 行括號不匹配: const userData = {
+❌ 第 254 行括號不匹配: linkedAccounts: {
+❌ 第 257 行括號不匹配: },
+❌ 第 258 行括號不匹配: settings: {
+❌ 第 261 行括號不匹配: },
+❌ 第 263 行括號不匹配: metadata: {
+❌ 第 267 行括號不匹配: },
+❌ 第 268 行括號不匹配: };
+❌ 第 282 行括號不匹配: return {
+❌ 第 287 行括號不匹配: };
+❌ 第 289 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 290 行括號不匹配: try {
+❌ 第 294 行括號不匹配: }
+❌ 第 295 行括號不匹配: }
+❌ 第 296 行括號不匹配: return {
+❌ 第 300 行括號不匹配: };
+❌ 第 301 行括號不匹配: }
+❌ 第 302 行括號不匹配: }
+❌ 第 310 行括號不匹配: async function AM_linkCrossPlatformAccounts(primaryUID, linkedAccountInfo) {
+❌ 第 311 行括號不匹配: try {
+❌ 第 314 行括號不匹配: if (!userDoc.exists) {
+❌ 第 315 行括號不匹配: return {
+❌ 第 319 行括號不匹配: };
+❌ 第 320 行括號不匹配: }
+❌ 第 325 行括號不匹配: const updatedLinkedAccounts = {
+❌ 第 328 行括號不匹配: };
+❌ 第 330 行括號不匹配: await db.collection("users").doc(primaryUID).update({
+❌ 第 333 行括號不匹配: });
+❌ 第 344 行括號不匹配: return {
+❌ 第 348 行括號不匹配: };
+❌ 第 350 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 351 行括號不匹配: try {
+❌ 第 360 行括號不匹配: }
+❌ 第 361 行括號不匹配: }
+❌ 第 362 行括號不匹配: return {
+❌ 第 366 行括號不匹配: };
+❌ 第 367 行括號不匹配: }
+❌ 第 368 行括號不匹配: }
+❌ 第 376 行括號不匹配: async function AM_updateAccountInfo(UID, updateData, operatorId) {
+❌ 第 377 行括號不匹配: try {
+❌ 第 380 行括號不匹配: if (!hasPermission) {
+❌ 第 381 行括號不匹配: return {
+❌ 第 385 行括號不匹配: };
+❌ 第 386 行括號不匹配: }
+❌ 第 389 行括號不匹配: const updateFields = {
+❌ 第 392 行括號不匹配: };
+❌ 第 404 行括號不匹配: return {
+❌ 第 408 行括號不匹配: };
+❌ 第 410 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 411 行括號不匹配: try {
+❌ 第 415 行括號不匹配: }
+❌ 第 416 行括號不匹配: }
+❌ 第 417 行括號不匹配: return {
+❌ 第 421 行括號不匹配: };
+❌ 第 422 行括號不匹配: }
+❌ 第 423 行括號不匹配: }
+❌ 第 431 行括號不匹配: async function AM_changeUserType(UID, newUserType, operatorId, reason) {
+❌ 第 432 行括號不匹配: try {
+❌ 第 434 行括號不匹配: if (!userDoc.exists) {
+❌ 第 435 行括號不匹配: return {
+❌ 第 439 行括號不匹配: };
+❌ 第 440 行括號不匹配: }
+❌ 第 445 行括號不匹配: await db.collection("users").doc(UID).update({
+❌ 第 448 行括號不匹配: });
+❌ 第 457 行括號不匹配: return {
+❌ 第 462 行括號不匹配: };
+❌ 第 464 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 465 行括號不匹配: try {
+❌ 第 469 行括號不匹配: }
+❌ 第 470 行括號不匹配: }
+❌ 第 471 行括號不匹配: return {
+❌ 第 475 行括號不匹配: };
+❌ 第 476 行括號不匹配: }
+❌ 第 477 行括號不匹配: }
+❌ 第 485 行括號不匹配: async function AM_deactivateAccount(UID, deactivationReason, transferData) {
+❌ 第 486 行括號不匹配: try {
+❌ 第 488 行括號不匹配: if (!userDoc.exists) {
+❌ 第 489 行括號不匹配: return {
+❌ 第 493 行括號不匹配: };
+❌ 第 494 行括號不匹配: }
+❌ 第 499 行括號不匹配: await db.collection("users").doc(UID).update({
+❌ 第 504 行括號不匹配: });
+❌ 第 508 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 509 行括號不匹配: try {
+❌ 第 518 行括號不匹配: }
+❌ 第 519 行括號不匹配: }
+❌ 第 521 行括號不匹配: return {
+❌ 第 525 行括號不匹配: };
+❌ 第 527 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 528 行括號不匹配: try {
+❌ 第 532 行括號不匹配: }
+❌ 第 533 行括號不匹配: }
+❌ 第 534 行括號不匹配: return {
+❌ 第 538 行括號不匹配: };
+❌ 第 539 行括號不匹配: }
+❌ 第 540 行括號不匹配: }
+❌ 第 548 行括號不匹配: async function AM_getUserInfo(UID, requesterId, includeLinkedAccounts = true) {
+❌ 第 549 行括號不匹配: try {
+❌ 第 552 行括號不匹配: if (!hasPermission) {
+❌ 第 553 行括號不匹配: return {
+❌ 第 557 行括號不匹配: };
+❌ 第 558 行括號不匹配: }
+❌ 第 561 行括號不匹配: if (!userDoc.exists) {
+❌ 第 562 行括號不匹配: return {
+❌ 第 566 行括號不匹配: };
+❌ 第 567 行括號不匹配: }
+❌ 第 572 行括號不匹配: if (includeLinkedAccounts) {
+❌ 第 574 行括號不匹配: }
+❌ 第 578 行括號不匹配: return {
+❌ 第 580 行括號不匹配: userData: {
+❌ 第 588 行括號不匹配: },
+❌ 第 590 行括號不匹配: };
+❌ 第 592 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 593 行括號不匹配: try {
+❌ 第 597 行括號不匹配: }
+❌ 第 598 行括號不匹配: }
+❌ 第 599 行括號不匹配: return {
+❌ 第 603 行括號不匹配: };
+❌ 第 604 行括號不匹配: }
+❌ 第 605 行括號不匹配: }
+❌ 第 613 行括號不匹配: async function AM_validateAccountExists(identifier, platform = "LINE") {
+❌ 第 614 行括號不匹配: try {
+❌ 第 617 行括號不匹配: if (platform === "LINE") {
+❌ 第 627 行括號不匹配: if (!emailQuery.empty) {
+❌ 第 629 行括號不匹配: }
+❌ 第 638 行括號不匹配: if (!platformQuery.empty) {
+❌ 第 640 行括號不匹配: }
+❌ 第 641 行括號不匹配: }
+❌ 第 643 行括號不匹配: if (userDoc && userDoc.exists) {
+❌ 第 654 行括號不匹配: return {
+❌ 第 658 行括號不匹配: };
+❌ 第 659 行括號不匹配: }
+❌ 第 661 行括號不匹配: return {
+❌ 第 665 行括號不匹配: };
+❌ 第 667 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 668 行括號不匹配: try {
+❌ 第 672 行括號不匹配: }
+❌ 第 673 行括號不匹配: }
+❌ 第 674 行括號不匹配: return {
+❌ 第 678 行括號不匹配: };
+❌ 第 679 行括號不匹配: }
+❌ 第 680 行括號不匹配: }
+❌ 第 692 行括號不匹配: ) {
+❌ 第 693 行括號不匹配: try {
+❌ 第 696 行括號不匹配: if (!hasPermission) {
+❌ 第 697 行括號不匹配: return {
+❌ 第 701 行括號不匹配: };
+❌ 第 702 行括號不匹配: }
+❌ 第 707 行括號不匹配: if (searchCriteria.userType) {
+❌ 第 709 行括號不匹配: }
+❌ 第 711 行括號不匹配: if (searchCriteria.status) {
+❌ 第 713 行括號不匹配: }
+❌ 第 719 行括號不匹配: querySnapshot.forEach((doc) => {
+❌ 第 721 行括號不匹配: results.push({
+❌ 第 728 行括號不匹配: });
+❌ 第 729 行括號不匹配: });
+❌ 第 738 行括號不匹配: return {
+❌ 第 742 行括號不匹配: };
+❌ 第 744 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 745 行括號不匹配: try {
+❌ 第 749 行括號不匹配: }
+❌ 第 750 行括號不匹配: }
+❌ 第 751 行括號不匹配: return {
+❌ 第 755 行括號不匹配: };
+❌ 第 756 行括號不匹配: }
+❌ 第 757 行括號不匹配: }
+❌ 第 765 行括號不匹配: async function AM_handleLineOAuth(authCode, state, redirectUri) {
+❌ 第 766 行括號不匹配: try {
+❌ 第 768 行括號不匹配: const tokenData = {
+❌ 第 774 行括號不匹配: };
+❌ 第 779 行括號不匹配: {
+❌ 第 780 行括號不匹配: headers: {
+❌ 第 782 行括號不匹配: },
+❌ 第 783 行括號不匹配: },
+❌ 第 789 行括號不匹配: const profileResponse = await axios.get("https://api.line.me/v2/profile", {
+❌ 第 790 行括號不匹配: headers: {
+❌ 第 792 行括號不匹配: },
+❌ 第 793 行括號不匹配: });
+❌ 第 813 行括號不匹配: return {
+❌ 第 818 行括號不匹配: };
+❌ 第 820 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 821 行括號不匹配: try {
+❌ 第 825 行括號不匹配: }
+❌ 第 826 行括號不匹配: }
+❌ 第 827 行括號不匹配: return {
+❌ 第 831 行括號不匹配: };
+❌ 第 832 行括號不匹配: }
+❌ 第 833 行括號不匹配: }
+❌ 第 841 行括號不匹配: async function AM_refreshLineToken(UID, refreshToken) {
+❌ 第 842 行括號不匹配: try {
+❌ 第 844 行括號不匹配: const tokenData = {
+❌ 第 849 行括號不匹配: };
+❌ 第 854 行括號不匹配: {
+❌ 第 855 行括號不匹配: headers: {
+❌ 第 857 行括號不匹配: },
+❌ 第 858 行括號不匹配: },
+❌ 第 866 行括號不匹配: return {
+❌ 第 870 行括號不匹配: };
+❌ 第 872 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 873 行括號不匹配: try {
+❌ 第 877 行括號不匹配: }
+❌ 第 878 行括號不匹配: }
+❌ 第 879 行括號不匹配: return {
+❌ 第 883 行括號不匹配: };
+❌ 第 884 行括號不匹配: }
+❌ 第 885 行括號不匹配: }
+❌ 第 893 行括號不匹配: async function AM_verifyLineIdentity(accessToken, expectedUID) {
+❌ 第 894 行括號不匹配: try {
+❌ 第 895 行括號不匹配: const response = await axios.get("https://api.line.me/v2/profile", {
+❌ 第 896 行括號不匹配: headers: {
+❌ 第 898 行括號不匹配: },
+❌ 第 899 行括號不匹配: });
+❌ 第 904 行括號不匹配: if (!verified) {
+❌ 第 911 行括號不匹配: }
+❌ 第 913 行括號不匹配: return {
+❌ 第 917 行括號不匹配: };
+❌ 第 919 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 920 行括號不匹配: try {
+❌ 第 929 行括號不匹配: }
+❌ 第 930 行括號不匹配: }
+❌ 第 931 行括號不匹配: return {
+❌ 第 935 行括號不匹配: };
+❌ 第 936 行括號不匹配: }
+❌ 第 937 行括號不匹配: }
+❌ 第 949 行括號不匹配: ) {
+❌ 第 950 行括號不匹配: try {
+❌ 第 952 行括號不匹配: if (!userDoc.exists) {
+❌ 第 953 行括號不匹配: return {
+❌ 第 957 行括號不匹配: };
+❌ 第 958 行括號不匹配: }
+❌ 第 965 行括號不匹配: if (targetPlatforms.includes("ALL") || targetPlatforms.includes("LINE")) {
+❌ 第 967 行括號不匹配: }
+❌ 第 969 行括號不匹配: if (targetPlatforms.includes("ALL") || targetPlatforms.includes("iOS")) {
+❌ 第 971 行括號不匹配: }
+❌ 第 976 行括號不匹配: ) {
+❌ 第 978 行括號不匹配: }
+❌ 第 987 行括號不匹配: return {
+❌ 第 991 行括號不匹配: };
+❌ 第 993 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 994 行括號不匹配: try {
+❌ 第 998 行括號不匹配: }
+❌ 第 999 行括號不匹配: }
+❌ 第 1000 行括號不匹配: return {
+❌ 第 1004 行括號不匹配: };
+❌ 第 1005 行括號不匹配: }
+❌ 第 1006 行括號不匹配: }
+❌ 第 1017 行括號不匹配: ) {
+❌ 第 1018 行括號不匹配: try {
+❌ 第 1021 行括號不匹配: switch (resolutionStrategy) {
+❌ 第 1024 行括號不匹配: finalData = conflictData.reduce((latest, current) => {
+❌ 第 1026 行括號不匹配: });
+❌ 第 1036 行括號不匹配: }
+❌ 第 1045 行括號不匹配: return {
+❌ 第 1049 行括號不匹配: };
+❌ 第 1051 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 1052 行括號不匹配: try {
+❌ 第 1056 行括號不匹配: }
+❌ 第 1057 行括號不匹配: }
+❌ 第 1058 行括號不匹配: return {
+❌ 第 1062 行括號不匹配: };
+❌ 第 1063 行括號不匹配: }
+❌ 第 1064 行括號不匹配: }
+❌ 第 1077 行括號不匹配: ) {
+❌ 第 1078 行括號不匹配: try {
+❌ 第 1084 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 1085 行括號不匹配: try {
+❌ 第 1094 行括號不匹配: }
+❌ 第 1095 行括號不匹配: }
+❌ 第 1097 行括號不匹配: if (shouldRetry) {
+❌ 第 1100 行括號不匹配: () => {
+❌ 第 1102 行括號不匹配: },
+❌ 第 1105 行括號不匹配: }
+❌ 第 1107 行括號不匹配: return {
+❌ 第 1111 行括號不匹配: };
+❌ 第 1114 行括號不匹配: return {
+❌ 第 1118 行括號不匹配: };
+❌ 第 1119 行括號不匹配: }
+❌ 第 1120 行括號不匹配: }
+❌ 第 1128 行括號不匹配: async function AM_monitorSystemHealth() {
+❌ 第 1129 行括號不匹配: try {
+❌ 第 1134 行括號不匹配: .set({
+❌ 第 1137 行括號不匹配: });
+❌ 第 1154 行括號不匹配: const apiStatus = {
+❌ 第 1157 行括號不匹配: };
+❌ 第 1159 行括號不匹配: const performance = {
+❌ 第 1163 行括號不匹配: };
+❌ 第 1165 行括號不匹配: return {
+❌ 第 1170 行括號不匹配: };
+❌ 第 1172 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 1173 行括號不匹配: try {
+❌ 第 1177 行括號不匹配: }
+❌ 第 1178 行括號不匹配: }
+❌ 第 1179 行括號不匹配: return {
+❌ 第 1184 行括號不匹配: };
+❌ 第 1185 行括號不匹配: }
+❌ 第 1186 行括號不匹配: }
+❌ 第 1204 行括號不匹配: async function AM_getUserDefaultLedger(UID) {
+❌ 第 1206 行括號不匹配: try {
+❌ 可能的語法錯誤在第 1207 行: console.log(`🔍 ${functionName}: 查詢用戶 ${UID} 預設帳本...`);
+❌ 第 1209 行括號不匹配: if (!UID) {
+❌ 第 1211 行括號不匹配: }
+❌ 第 1214 行括號不匹配: if (!db) {
+❌ 第 1216 行括號不匹配: return {
+❌ 第 1220 行括號不匹配: };
+❌ 第 1221 行括號不匹配: }
+❌ 第 1226 行括號不匹配: if (!userDoc.exists) {
+❌ 第 1227 行括號不匹配: return {
+❌ 第 1231 行括號不匹配: };
+❌ 第 1232 行括號不匹配: }
+❌ 第 1237 行括號不匹配: if (userData.defaultLedgerId) {
+❌ 第 1241 行括號不匹配: if (ledgerDoc.exists) {
+❌ 可能的語法錯誤在第 1242 行: console.log(`✅ ${functionName}: 找到用戶預設帳本: ${userData.defaultLedgerId}`);
+❌ 第 1243 行括號不匹配: return {
+❌ 第 1247 行括號不匹配: };
+❌ 可能的語法錯誤在第 1249 行: console.log(`⚠️ ${functionName}: 預設帳本已不存在，將重新初始化`);
+❌ 第 1250 行括號不匹配: }
+❌ 第 1251 行括號不匹配: }
+❌ 可能的語法錯誤在第 1254 行: console.log(`🔄 ${functionName}: 為用戶 ${UID} 自動初始化預設帳本...`);
+❌ 第 1257 行括號不匹配: if (initResult.success) {
+❌ 第 1259 行括號不匹配: await db.collection("users").doc(UID).update({
+❌ 第 1262 行括號不匹配: });
+❌ 第 1264 行括號不匹配: return {
+❌ 第 1269 行括號不匹配: };
+❌ 第 1272 行括號不匹配: }
+❌ 第 1276 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 1277 行括號不匹配: try {
+❌ 第 1281 行括號不匹配: }
+❌ 第 1282 行括號不匹配: }
+❌ 第 1283 行括號不匹配: return {
+❌ 第 1287 行括號不匹配: };
+❌ 第 1288 行括號不匹配: }
+❌ 第 1289 行括號不匹配: }
+❌ 第 1300 行括號不匹配: async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
+❌ 第 1304 行括號不匹配: try {
+❌ 可能的語法錯誤在第 1305 行: console.log(`🔄 ${functionName}: 階段四完成版 - AM專注帳本基礎結構，整合其他模組功能`);
+❌ 可能的語法錯誤在第 1306 行: console.log(`📋 ${functionName}: v8.0.0 - 調用WCM、BM、CM模組處理科目、帳戶、預算、協作功能`);
+❌ 第 1309 行括號不匹配: if (!UID || typeof UID !== 'string' || UID.trim() === '') {
+❌ 第 1311 行括號不匹配: }
+❌ 第 1314 行括號不匹配: if (!db) {
+❌ 第 1316 行括號不匹配: }
+❌ 第 1319 行括號不匹配: try {
+❌ 第 1323 行括號不匹配: }
+❌ 可能的語法錯誤在第 1327 行: console.log(`📝 ${functionName}: 準備建立帳本ID: ${userLedgerId}（符合1311.FS.js規範）`);
+❌ 第 1331 行括號不匹配: if (existingLedger.exists) {
+❌ 可能的語法錯誤在第 1333 行: console.log(`⚠️ ${functionName}: 帳本 ${userLedgerId} 已存在，檢查完整性...`);
+❌ 第 1336 行括號不匹配: if (ledgerData.initializationComplete) {
+❌ 第 1337 行括號不匹配: return {
+❌ 第 1344 行括號不匹配: performance: {
+❌ 第 1347 行括號不匹配: }
+❌ 第 1348 行括號不匹配: };
+❌ 可能的語法錯誤在第 1350 行: console.log(`🔧 ${functionName}: 帳本存在但未完整初始化，繼續初始化流程...`);
+❌ 第 1351 行括號不匹配: }
+❌ 第 1352 行括號不匹配: }
+❌ 第 1363 行括號不匹配: const mainLedgerData = {
+❌ 第 1374 行括號不匹配: settings: {
+❌ 第 1379 行括號不匹配: },
+❌ 第 1380 行括號不匹配: metadata: {
+❌ 第 1384 行括號不匹配: }
+❌ 第 1385 行括號不匹配: };
+❌ 可能的語法錯誤在第 1395 行: console.log(`🔧 ${functionName}: 直接使用Firebase建立帳本子集合結構...`);
+❌ 第 1399 行括號不匹配: const structureResult = {
+❌ 第 1402 行括號不匹配: };
+❌ 第 1407 行括號不匹配: for (const collection of collectionsNeedInit) {
+❌ 第 1408 行括號不匹配: try {
+❌ 第 1409 行括號不匹配: await db.collection('ledgers').doc(userLedgerId).collection(collection).doc('_init').set({
+❌ 第 1413 行括號不匹配: });
+❌ 可能的語法錯誤在第 1414 行: console.log(`✅ ${functionName}: 子集合 ${collection} 初始化完成`);
+❌ 可能的語法錯誤在第 1416 行: console.warn(`⚠️ ${functionName}: 子集合 ${collection} 初始化警告: ${subcollectionError.message}`);
+❌ 第 1417 行括號不匹配: }
+❌ 第 1418 行括號不匹配: }
+❌ 可能的語法錯誤在第 1421 行: console.log(`✅ ${functionName}: transactions子集合保持空集合狀態（無_init文檔）`);
+❌ 第 1423 行括號不匹配: if (!structureResult.success) {
+❌ 第 1428 行括號不匹配: }
+❌ 第 1436 行括號不匹配: try {
+❌ 可能的語法錯誤在第 1438 行: console.log(`📋 ${functionName}: 調用WCM模組進行科目初始化...`);
+❌ 第 1440 行括號不匹配: if (WCM && typeof WCM.WCM_createCategory === 'function') {
+❌ 第 1442 行括號不匹配: if (categoryResult.success) {
+❌ 可能的語法錯誤在第 1444 行: console.log(`✅ ${functionName}: WCM科目初始化完成，載入${subjectCount}筆科目`);
+❌ 可能的語法錯誤在第 1446 行: console.warn(`⚠️ ${functionName}: WCM科目初始化失敗: ${categoryResult.error?.message}`);
+❌ 第 1447 行括號不匹配: }
+❌ 可能的語法錯誤在第 1449 行: console.warn(`⚠️ ${functionName}: WCM模組不可用，科目初始化跳過`);
+❌ 第 1450 行括號不匹配: }
+❌ 可能的語法錯誤在第 1453 行: console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
+❌ 第 1455 行括號不匹配: if (WCM && typeof WCM.WCM_createWallet === 'function') {
+❌ 第 1457 行括號不匹配: if (walletResult.success) {
+❌ 可能的語法錯誤在第 1459 行: console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
+❌ 可能的語法錯誤在第 1461 行: console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message || walletResult.message}`);
+❌ 第 1462 行括號不匹配: }
+❌ 可能的語法錯誤在第 1464 行: console.warn(`⚠️ ${functionName}: WCM模組不可用，帳戶初始化跳過`);
+❌ 第 1465 行括號不匹配: }
+❌ 可能的語法錯誤在第 1468 行: console.log(`💰 ${functionName}: 調用BM模組進行預算結構初始化...`);
+❌ 第 1470 行括號不匹配: if (budgetStructureResult.success) {
+❌ 可能的語法錯誤在第 1472 行: console.log(`✅ ${functionName}: BM預算結構初始化完成`);
+❌ 可能的語法錯誤在第 1474 行: console.warn(`⚠️ ${functionName}: BM預算結構初始化失敗: ${budgetStructureResult.message}`);
+❌ 第 1475 行括號不匹配: }
+❌ 可能的語法錯誤在第 1478 行: console.log(`🤝 ${functionName}: 調用CM模組進行協作結構初始化...`);
+❌ 第 1480 行括號不匹配: if (collaborationResult.success) {
+❌ 可能的語法錯誤在第 1482 行: console.log(`✅ ${functionName}: CM協作結構初始化完成`);
+❌ 可能的語法錯誤在第 1484 行: console.warn(`⚠️ ${functionName}: CM協作結構初始化失敗: ${collaborationResult.message}`);
+❌ 第 1485 行括號不匹配: }
+❌ 可能的語法錯誤在第 1488 行: console.warn(`⚠️ ${functionName}: 模組調用過程中發生錯誤: ${moduleError.message}`);
+❌ 第 1489 行括號不匹配: }
+❌ 第 1503 行括號不匹配: try {
+❌ 第 1509 行括號不匹配: }
+❌ 第 1512 行括號不匹配: try {
+❌ 第 1513 行括號不匹配: await ledgerRef.update({
+❌ 第 1516 行括號不匹配: });
+❌ 第 1521 行括號不匹配: }
+❌ 第 1524 行括號不匹配: try {
+❌ 第 1529 行括號不匹配: }
+❌ 第 1532 行括號不匹配: try {
+❌ 第 1534 行括號不匹配: if (!verifyDoc.exists) {
+❌ 第 1536 行括號不匹配: }
+❌ 第 1544 行括號不匹配: const subcollectionStatus = {
+❌ 第 1549 行括號不匹配: };
+❌ 第 1559 行括號不匹配: if (!allSubcollectionsCreated) {
+❌ 第 1564 行括號不匹配: }
+❌ 第 1569 行括號不匹配: }
+❌ 第 1583 行括號不匹配: return {
+❌ 第 1586 行括號不匹配: moduleIntegration: {
+❌ 第 1587 行括號不匹配: wcm: {
+❌ 第 1591 行括號不匹配: },
+❌ 第 1592 行括號不匹配: bm: {
+❌ 第 1595 行括號不匹配: },
+❌ 第 1596 行括號不匹配: cm: {
+❌ 第 1599 行括號不匹配: }
+❌ 第 1600 行括號不匹配: },
+❌ 第 1607 行括號不匹配: };
+❌ 第 1610 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 1611 行括號不匹配: try {
+❌ 第 1615 行括號不匹配: }
+❌ 第 1616 行括號不匹配: }
+❌ 第 1617 行括號不匹配: return {
+❌ 第 1620 行括號不匹配: };
+❌ 第 1621 行括號不匹配: }
+❌ 第 1622 行括號不匹配: }
+❌ 第 1632 行括號不匹配: async function AM_ensureUserLedger(UID) {
+❌ 第 1634 行括號不匹配: try {
+❌ 可能的語法錯誤在第 1635 行: console.log(`🔍 ${functionName}: 開始檢查用戶 ${UID} 帳本結構...`);
+❌ 第 1644 行括號不匹配: if (!ledgerDoc.exists) {
+❌ 第 1652 行括號不匹配: if (subjectsCollection.empty) {
+❌ 第 1658 行括號不匹配: }
+❌ 第 1662 行括號不匹配: if (walletsCollection.empty) {
+❌ 第 1668 行括號不匹配: }
+❌ 第 1672 行括號不匹配: if (!ledgerData.initializationComplete) {
+❌ 第 1676 行括號不匹配: }
+❌ 第 1677 行括號不匹配: }
+❌ 第 1679 行括號不匹配: if (needsInitialization) {
+❌ 第 1683 行括號不匹配: if (initResult.success) {
+❌ 可能的語法錯誤在第 1684 行: console.log(`✅ ${functionName}: 帳本結構已成功初始化`);
+❌ 第 1685 行括號不匹配: return {
+❌ 第 1691 行括號不匹配: };
+❌ 可能的語法錯誤在第 1693 行: console.error(`❌ ${functionName}: 初始化帳本失敗`);
+❌ 第 1695 行括號不匹配: }
+❌ 可能的語法錯誤在第 1697 行: console.log(`✅ ${functionName}: 用戶 ${UID} 帳本結構完整`);
+❌ 第 1698 行括號不匹配: return {
+❌ 第 1704 行括號不匹配: };
+❌ 第 1705 行括號不匹配: }
+❌ 第 1708 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 1709 行括號不匹配: try {
+❌ 第 1713 行括號不匹配: }
+❌ 第 1714 行括號不匹配: }
+❌ 第 1715 行括號不匹配: return {
+❌ 第 1718 行括號不匹配: };
+❌ 第 1719 行括號不匹配: }
+❌ 第 1720 行括號不匹配: }
+❌ 第 1729 行括號不匹配: async function AM_validateSRPremiumFeature(userId, featureName, requesterId) {
+❌ 第 1731 行括號不匹配: try {
+❌ 第 1743 行括號不匹配: if (!subscriptionInfo.success) {
+❌ 第 1744 行括號不匹配: return AM_formatAPIResponse(null, {
+❌ 第 1747 行括號不匹配: });
+❌ 第 1748 行括號不匹配: }
+❌ 第 1753 行括號不匹配: const srFeatureMatrix = {
+❌ 第 1760 行括號不匹配: };
+❌ 第 1763 行括號不匹配: if (!feature) {
+❌ 第 1764 行括號不匹配: return AM_formatAPIResponse(null, {
+❌ 第 1767 行括號不匹配: });
+❌ 第 1768 行括號不匹配: }
+❌ 第 1771 行括號不匹配: if (feature.level === "premium" && subscription.plan !== "premium") {
+❌ 第 1772 行括號不匹配: return AM_formatAPIResponse(null, {
+❌ 第 1777 行括號不匹配: });
+❌ 第 1778 行括號不匹配: }
+❌ 第 1781 行括號不匹配: if (feature.quota > 0) {
+❌ 第 1787 行括號不匹配: if (usageInfo.success && usageInfo.currentUsage >= feature.quota) {
+❌ 第 1788 行括號不匹配: return AM_formatAPIResponse(null, {
+❌ 第 1794 行括號不匹配: });
+❌ 第 1795 行括號不匹配: }
+❌ 第 1796 行括號不匹配: }
+❌ 第 1798 行括號不匹配: return AM_formatAPIResponse({
+❌ 第 1803 行括號不匹配: });
+❌ 第 1806 行括號不匹配: }
+❌ 第 1807 行括號不匹配: }
+❌ 第 1815 行括號不匹配: async function AM_getSRUserQuota(userId, featureName, requesterId) {
+❌ 第 1817 行括號不匹配: try {
+❌ 第 1821 行括號不匹配: if (userId !== requesterId && requesterId !== "SYSTEM") {
+❌ 第 1824 行括號不匹配: }
+❌ 第 1828 行括號不匹配: if (FS && typeof FS.FS_getDocument === "function") {
+❌ 第 1832 行括號不匹配: if (quotaDoc.success && quotaDoc.data) {
+❌ 第 1834 行括號不匹配: }
+❌ 第 1838 行括號不匹配: return {
+❌ 第 1843 行括號不匹配: };
+❌ 第 1846 行括號不匹配: }
+❌ 第 1857 行括號不匹配: return {
+❌ 第 1860 行括號不匹配: };
+❌ 第 1861 行括號不匹配: }
+❌ 第 1862 行括號不匹配: }
+❌ 第 1875 行括號不匹配: ) {
+❌ 第 1877 行括號不匹配: try {
+❌ 第 1888 行括號不匹配: if (requesterId !== "SYSTEM" && requesterId !== "SR_MODULE") {
+❌ 第 1889 行括號不匹配: return {
+❌ 第 1892 行括號不匹配: };
+❌ 第 1893 行括號不匹配: }
+❌ 第 1897 行括號不匹配: if (FS && typeof FS.FS_updateDocument === "function") {
+❌ 第 1898 行括號不匹配: const updateData = {
+❌ 第 1901 行括號不匹配: };
+❌ 第 1910 行括號不匹配: if (updateResult.success) {
+❌ 第 1911 行括號不匹配: return {
+❌ 第 1916 行括號不匹配: };
+❌ 第 1917 行括號不匹配: }
+❌ 第 1919 行括號不匹配: return {
+❌ 第 1922 行括號不匹配: };
+❌ 第 1925 行括號不匹配: }
+❌ 第 1936 行括號不匹配: return {
+❌ 第 1939 行括號不匹配: };
+❌ 第 1940 行括號不匹配: }
+❌ 第 1941 行括號不匹配: }
+❌ 第 1954 行括號不匹配: ) {
+❌ 第 1956 行括號不匹配: try {
+❌ 第 1967 行括號不匹配: if (requesterId !== userId) {
+❌ 第 1968 行括號不匹配: return {
+❌ 第 1971 行括號不匹配: };
+❌ 第 1972 行括號不匹配: }
+❌ 第 1976 行括號不匹配: if (!validUpgradeTypes.includes(upgradeType)) {
+❌ 第 1977 行括號不匹配: return {
+❌ 第 1980 行括號不匹配: };
+❌ 第 1981 行括號不匹配: }
+❌ 第 1987 行括號不匹配: switch (upgradeType) {
+❌ 第 1997 行括號不匹配: }
+❌ 第 2000 行括號不匹配: const subscriptionData = {
+❌ 第 2014 行括號不匹配: };
+❌ 第 2022 行括號不匹配: if (updateResult.success) {
+❌ 第 2026 行括號不匹配: if (FS && typeof FS.FS_setDocument === "function") {
+❌ 第 2027 行括號不匹配: const quotaData = {
+❌ 第 2031 行括號不匹配: };
+❌ 第 2034 行括號不匹配: }
+❌ 第 2036 行括號不匹配: return {
+❌ 第 2041 行括號不匹配: };
+❌ 第 2042 行括號不匹配: }
+❌ 第 2044 行括號不匹配: return {
+❌ 第 2047 行括號不匹配: };
+❌ 第 2058 行括號不匹配: return {
+❌ 第 2061 行括號不匹配: };
+❌ 第 2062 行括號不匹配: }
+❌ 第 2063 行括號不匹配: }
+❌ 第 2075 行括號不匹配: async function AM_processAPIGetAccounts(requestData) {
+❌ 第 2077 行括號不匹配: try {
+❌ 第 2090 行括號不匹配: if (usersSnapshot.empty) {
+❌ 第 2091 行括號不匹配: return {
+❌ 第 2095 行括號不匹配: };
+❌ 第 2096 行括號不匹配: }
+❌ 第 2099 行括號不匹配: usersSnapshot.forEach((doc) => {
+❌ 第 2101 行括號不匹配: accountsList.push({
+❌ 第 2110 行括號不匹配: });
+❌ 第 2111 行括號不匹配: });
+❌ 第 2122 行括號不匹配: return {
+❌ 第 2126 行括號不匹配: };
+❌ 第 2138 行括號不匹配: return {
+❌ 第 2142 行括號不匹配: error: {
+❌ 第 2146 行括號不匹配: }
+❌ 第 2147 行括號不匹配: };
+❌ 第 2148 行括號不匹配: }
+❌ 第 2149 行括號不匹配: }
+❌ 第 2162 行括號不匹配: async function AM_processAPIRegister(requestData) {
+❌ 第 2164 行括號不匹配: try {
+❌ 第 2175 行括號不匹配: if (!requestData.email || !requestData.password) {
+❌ 第 2176 行括號不匹配: return {
+❌ 第 2180 行括號不匹配: error: {
+❌ 第 2183 行括號不匹配: details: {
+❌ 第 2188 行括號不匹配: }
+❌ 第 2189 行括號不匹配: }
+❌ 第 2190 行括號不匹配: };
+❌ 第 2191 行括號不匹配: }
+❌ 第 2195 行括號不匹配: if (!emailRegex.test(requestData.email)) {
+❌ 第 2196 行括號不匹配: return {
+❌ 第 2200 行括號不匹配: error: {
+❌ 第 2204 行括號不匹配: }
+❌ 第 2205 行括號不匹配: };
+❌ 第 2206 行括號不匹配: }
+❌ 第 2213 行括號不匹配: if (existsResult.exists) {
+❌ 第 2214 行括號不匹配: return {
+❌ 第 2218 行括號不匹配: error: {
+❌ 第 2222 行括號不匹配: }
+❌ 第 2223 行括號不匹配: };
+❌ 第 2224 行括號不匹配: }
+❌ 第 2227 行括號不匹配: const userData = {
+❌ 第 2240 行括號不匹配: preferences: {
+❌ 第 2245 行括號不匹配: notifications: {
+❌ 第 2250 行括號不匹配: },
+❌ 第 2253 行括號不匹配: },
+❌ 第 2256 行括號不匹配: security: {
+❌ 第 2264 行括號不匹配: },
+❌ 第 2271 行括號不匹配: profileCompletion: {
+❌ 第 2276 行括號不匹配: },
+❌ 第 2279 行括號不匹配: linkedAccounts: {
+❌ 第 2285 行括號不匹配: },
+❌ 第 2288 行括號不匹配: statistics: {
+❌ 第 2293 行括號不匹配: },
+❌ 第 2296 行括號不匹配: metadata: {
+❌ 第 2300 行括號不匹配: }
+❌ 第 2301 行括號不匹配: };
+❌ 第 2304 行括號不匹配: try {
+❌ 第 2309 行括號不匹配: return {
+❌ 第 2313 行括號不匹配: error: {
+❌ 第 2317 行括號不匹配: }
+❌ 第 2318 行括號不匹配: };
+❌ 第 2319 行括號不匹配: }
+❌ 第 2327 行括號不匹配: if (ledgerInitResult.success) {
+❌ 第 2330 行括號不匹配: userData.ledgerInfo = {
+❌ 第 2334 行括號不匹配: };
+❌ 第 2337 行括號不匹配: try {
+❌ 第 2338 行括號不匹配: await db.collection("users").doc(userData.email).update({
+❌ 第 2342 行括號不匹配: });
+❌ 第 2346 行括號不匹配: }
+❌ 第 2354 行括號不匹配: try {
+❌ 第 2355 行括號不匹配: await db.collection("users").doc(userData.email).update({
+❌ 第 2360 行括號不匹配: });
+❌ 第 2363 行括號不匹配: }
+❌ 第 2367 行括號不匹配: }
+❌ 第 2379 行括號不匹配: return {
+❌ 第 2383 行括號不匹配: };
+❌ 第 2395 行括號不匹配: return {
+❌ 第 2399 行括號不匹配: error: {
+❌ 第 2403 行括號不匹配: }
+❌ 第 2404 行括號不匹配: };
+❌ 第 2405 行括號不匹配: }
+❌ 第 2406 行括號不匹配: }
+❌ 第 2414 行括號不匹配: async function AM_processAPILogin(requestData) {
+❌ 第 2416 行括號不匹配: try {
+❌ 第 2427 行括號不匹配: if (!requestData.email || !requestData.password) {
+❌ 第 2428 行括號不匹配: return {
+❌ 第 2432 行括號不匹配: error: {
+❌ 第 2435 行括號不匹配: }
+❌ 第 2436 行括號不匹配: };
+❌ 第 2437 行括號不匹配: }
+❌ 第 2442 行括號不匹配: if (!emailRegex.test(requestData.email)) {
+❌ 第 2443 行括號不匹配: return {
+❌ 第 2447 行括號不匹配: error: {
+❌ 第 2450 行括號不匹配: }
+❌ 第 2451 行括號不匹配: };
+❌ 第 2452 行括號不匹配: }
+❌ 第 2457 行括號不匹配: if (!accountExists.exists) {
+❌ 第 2458 行括號不匹配: return {
+❌ 第 2462 行括號不匹配: error: {
+❌ 第 2465 行括號不匹配: details: {
+❌ 第 2468 行括號不匹配: }
+❌ 第 2469 行括號不匹配: }
+❌ 第 2470 行括號不匹配: };
+❌ 第 2471 行括號不匹配: }
+❌ 第 2477 行括號不匹配: if (userInfo.success) {
+❌ 第 2478 行括號不匹配: userData = {
+❌ 第 2484 行括號不匹配: preferences: userInfo.userData.preferences || {
+❌ 第 2488 行括號不匹配: }
+❌ 第 2489 行括號不匹配: };
+❌ 第 2492 行括號不匹配: userData = {
+❌ 第 2498 行括號不匹配: preferences: {
+❌ 第 2502 行括號不匹配: }
+❌ 第 2503 行括號不匹配: };
+❌ 第 2504 行括號不匹配: }
+❌ 第 2519 行括號不匹配: return {
+❌ 第 2521 行括號不匹配: data: {
+❌ 第 2526 行括號不匹配: },
+❌ 第 2528 行括號不匹配: };
+❌ 第 2540 行括號不匹配: return {
+❌ 第 2544 行括號不匹配: error: {
+❌ 第 2547 行括號不匹配: }
+❌ 第 2548 行括號不匹配: };
+❌ 第 2549 行括號不匹配: }
+❌ 第 2550 行括號不匹配: }
+❌ 第 2558 行括號不匹配: async function AM_processAPIGoogleLogin(requestData) {
+❌ 第 2560 行括號不匹配: try {
+❌ 第 2571 行括號不匹配: if (!requestData.googleToken) {
+❌ 第 2572 行括號不匹配: return {
+❌ 第 2576 行括號不匹配: };
+❌ 第 2577 行括號不匹配: }
+❌ 第 2580 行括號不匹配: const googleUserInfo = {
+❌ 第 2584 行括號不匹配: };
+❌ 第 2593 行括號不匹配: if (existsResult.exists) {
+❌ 第 2600 行括號不匹配: {
+❌ 第 2604 行括號不匹配: },
+❌ 第 2605 行括號不匹配: {
+❌ 第 2608 行括號不匹配: },
+❌ 第 2611 行括號不匹配: if (!createResult.success) {
+❌ 第 2612 行括號不匹配: return {
+❌ 第 2616 行括號不匹配: };
+❌ 第 2617 行括號不匹配: }
+❌ 第 2619 行括號不匹配: }
+❌ 第 2624 行括號不匹配: if (userInfo.success) {
+❌ 第 2636 行括號不匹配: return {
+❌ 第 2638 行括號不匹配: data: {
+❌ 第 2644 行括號不匹配: },
+❌ 第 2646 行括號不匹配: };
+❌ 第 2648 行括號不匹配: return {
+❌ 第 2652 行括號不匹配: };
+❌ 第 2653 行括號不匹配: }
+❌ 第 2664 行括號不匹配: return {
+❌ 第 2668 行括號不匹配: };
+❌ 第 2669 行括號不匹配: }
+❌ 第 2670 行括號不匹配: }
+❌ 第 2678 行括號不匹配: async function AM_processAPILogout(requestData) {
+❌ 第 2680 行括號不匹配: try {
+❌ 第 2691 行括號不匹配: if (!requestData.token && !requestData.userId) {
+❌ 第 2692 行括號不匹配: return {
+❌ 第 2695 行括號不匹配: error: {
+❌ 第 2698 行括號不匹配: },
+❌ 第 2700 行括號不匹配: };
+❌ 第 2701 行括號不匹配: }
+❌ 第 2713 行括號不匹配: return {
+❌ 第 2715 行括號不匹配: data: {
+❌ 第 2717 行括號不匹配: },
+❌ 第 2719 行括號不匹配: };
+❌ 第 2730 行括號不匹配: return {
+❌ 第 2733 行括號不匹配: error: {
+❌ 第 2736 行括號不匹配: },
+❌ 第 2738 行括號不匹配: };
+❌ 第 2739 行括號不匹配: }
+❌ 第 2740 行括號不匹配: }
+❌ 第 2748 行括號不匹配: async function AM_processAPIRefresh(requestData) {
+❌ 第 2750 行括號不匹配: try {
+❌ 第 2763 行括號不匹配: if (!refreshToken) {
+❌ 第 2764 行括號不匹配: return {
+❌ 第 2768 行括號不匹配: error: {
+❌ 第 2771 行括號不匹配: details: {
+❌ 第 2774 行括號不匹配: }
+❌ 第 2775 行括號不匹配: }
+❌ 第 2776 行括號不匹配: };
+❌ 第 2777 行括號不匹配: }
+❌ 第 2780 行括號不匹配: if (!refreshToken || (typeof refreshToken !== 'string' && typeof refreshToken !== 'number')) {
+❌ 第 2781 行括號不匹配: return {
+❌ 第 2785 行括號不匹配: error: {
+❌ 第 2789 行括號不匹配: }
+❌ 第 2790 行括號不匹配: };
+❌ 第 2791 行括號不匹配: }
+❌ 第 2798 行括號不匹配: if (tokenStr.includes('_') && tokenStr.split('_').length >= 2) {
+❌ 第 2812 行括號不匹配: }
+❌ 第 2815 行括號不匹配: try {
+❌ 第 2820 行括號不匹配: if (validUsers[userId]) {
+❌ 第 2824 行括號不匹配: if (validUsers.expert_mode_user_001) {
+❌ 第 2827 行括號不匹配: }
+❌ 第 2828 行括號不匹配: }
+❌ 第 2831 行括號不匹配: }
+❌ 第 2834 行括號不匹配: if (!userId) {
+❌ 第 2837 行括號不匹配: }
+❌ 第 2854 行括號不匹配: return {
+❌ 第 2856 行括號不匹配: data: {
+❌ 第 2863 行括號不匹配: },
+❌ 第 2865 行括號不匹配: };
+❌ 第 2877 行括號不匹配: return {
+❌ 第 2881 行括號不匹配: error: {
+❌ 第 2885 行括號不匹配: }
+❌ 第 2886 行括號不匹配: };
+❌ 第 2887 行括號不匹配: }
+❌ 第 2888 行括號不匹配: }
+❌ 第 2896 行括號不匹配: async function AM_processAPIForgotPassword(requestData) {
+❌ 第 2898 行括號不匹配: try {
+❌ 第 2909 行括號不匹配: if (!requestData.email) {
+❌ 第 2910 行括號不匹配: return {
+❌ 第 2914 行括號不匹配: };
+❌ 第 2915 行括號不匹配: }
+❌ 第 2922 行括號不匹配: if (!existsResult.exists) {
+❌ 第 2924 行括號不匹配: return {
+❌ 第 2926 行括號不匹配: data: {
+❌ 第 2928 行括號不匹配: },
+❌ 第 2930 行括號不匹配: };
+❌ 第 2931 行括號不匹配: }
+❌ 第 2949 行括號不匹配: return {
+❌ 第 2951 行括號不匹配: data: {
+❌ 第 2954 行括號不匹配: },
+❌ 第 2956 行括號不匹配: };
+❌ 第 2967 行括號不匹配: return {
+❌ 第 2971 行括號不匹配: };
+❌ 第 2972 行括號不匹配: }
+❌ 第 2973 行括號不匹配: }
+❌ 第 2981 行括號不匹配: async function AM_processAPIVerifyResetToken(queryParams) {
+❌ 第 2983 行括號不匹配: try {
+❌ 第 2994 行括號不匹配: if (!queryParams.token) {
+❌ 第 2995 行括號不匹配: return {
+❌ 第 2999 行括號不匹配: };
+❌ 第 3000 行括號不匹配: }
+❌ 第 3006 行括號不匹配: if (tokenParts.length < 4 || tokenParts[0] !== "reset") {
+❌ 第 3007 行括號不匹配: return {
+❌ 第 3011 行括號不匹配: };
+❌ 第 3012 行括號不匹配: }
+❌ 第 3022 行括號不匹配: if (tokenAge > maxAge) {
+❌ 第 3023 行括號不匹配: return {
+❌ 第 3027 行括號不匹配: };
+❌ 第 3028 行括號不匹配: }
+❌ 第 3032 行括號不匹配: if (!userInfo.success) {
+❌ 第 3033 行括號不匹配: return {
+❌ 第 3037 行括號不匹配: };
+❌ 第 3038 行括號不匹配: }
+❌ 第 3049 行括號不匹配: return {
+❌ 第 3051 行括號不匹配: data: {
+❌ 第 3055 行括號不匹配: },
+❌ 第 3057 行括號不匹配: };
+❌ 第 3068 行括號不匹配: return {
+❌ 第 3072 行括號不匹配: };
+❌ 第 3073 行括號不匹配: }
+❌ 第 3074 行括號不匹配: }
+❌ 第 3082 行括號不匹配: async function AM_processAPIResetPassword(requestData) {
+❌ 第 3084 行括號不匹配: try {
+❌ 第 3095 行括號不匹配: if (!requestData.resetToken) {
+❌ 第 3096 行括號不匹配: return {
+❌ 第 3100 行括號不匹配: error: {
+❌ 第 3104 行括號不匹配: }
+❌ 第 3105 行括號不匹配: };
+❌ 第 3106 行括號不匹配: }
+❌ 第 3109 行括號不匹配: if (!requestData.newPassword) {
+❌ 第 3110 行括號不匹配: return {
+❌ 第 3114 行括號不匹配: error: {
+❌ 第 3118 行括號不匹配: }
+❌ 第 3119 行括號不匹配: };
+❌ 第 3120 行括號不匹配: }
+❌ 第 3124 行括號不匹配: if (tokenParts.length < 4 || tokenParts[0] !== "reset") {
+❌ 第 3125 行括號不匹配: return {
+❌ 第 3129 行括號不匹配: error: {
+❌ 第 3133 行括號不匹配: }
+❌ 第 3134 行括號不匹配: };
+❌ 第 3135 行括號不匹配: }
+❌ 第 3145 行括號不匹配: if (tokenAge > maxAge) {
+❌ 第 3146 行括號不匹配: return {
+❌ 第 3150 行括號不匹配: error: {
+❌ 第 3153 行括號不匹配: details: {
+❌ 第 3156 行括號不匹配: }
+❌ 第 3157 行括號不匹配: }
+❌ 第 3158 行括號不匹配: };
+❌ 第 3159 行括號不匹配: }
+❌ 第 3163 行括號不匹配: if (!userInfo.success) {
+❌ 第 3164 行括號不匹配: return {
+❌ 第 3168 行括號不匹配: error: {
+❌ 第 3172 行括號不匹配: }
+❌ 第 3173 行括號不匹配: };
+❌ 第 3174 行括號不匹配: }
+❌ 第 3192 行括號不匹配: return {
+❌ 第 3194 行括號不匹配: data: {
+❌ 第 3200 行括號不匹配: },
+❌ 第 3202 行括號不匹配: };
+❌ 第 3213 行括號不匹配: return {
+❌ 第 3217 行括號不匹配: error: {
+❌ 第 3221 行括號不匹配: }
+❌ 第 3222 行括號不匹配: };
+❌ 第 3223 行括號不匹配: }
+❌ 第 3224 行括號不匹配: }
+❌ 第 3232 行括號不匹配: async function AM_processAPIVerifyEmail(requestData) {
+❌ 第 3234 行括號不匹配: try {
+❌ 第 3245 行括號不匹配: if (!requestData.verificationCode || !requestData.email) {
+❌ 第 3246 行括號不匹配: return {
+❌ 第 3250 行括號不匹配: error: {
+❌ 第 3253 行括號不匹配: }
+❌ 第 3254 行括號不匹配: };
+❌ 第 3255 行括號不匹配: }
+❌ 第 3262 行括號不匹配: if (!existsResult.exists) {
+❌ 第 3263 行括號不匹配: return {
+❌ 第 3267 行括號不匹配: error: {
+❌ 第 3270 行括號不匹配: }
+❌ 第 3271 行括號不匹配: };
+❌ 第 3272 行括號不匹配: }
+❌ 第 3276 行括號不匹配: if (requestData.verificationCode !== validCode) {
+❌ 第 3277 行括號不匹配: return {
+❌ 第 3281 行括號不匹配: error: {
+❌ 第 3284 行括號不匹配: }
+❌ 第 3285 行括號不匹配: };
+❌ 第 3286 行括號不匹配: }
+❌ 第 3291 行括號不匹配: {
+❌ 第 3294 行括號不匹配: },
+❌ 第 3298 行括號不匹配: if (updateResult.success) {
+❌ 第 3308 行括號不匹配: return {
+❌ 第 3310 行括號不匹配: data: {
+❌ 第 3313 行括號不匹配: },
+❌ 第 3315 行括號不匹配: };
+❌ 第 3317 行括號不匹配: return {
+❌ 第 3321 行括號不匹配: error: {
+❌ 第 3324 行括號不匹配: }
+❌ 第 3325 行括號不匹配: };
+❌ 第 3326 行括號不匹配: }
+❌ 第 3337 行括號不匹配: return {
+❌ 第 3341 行括號不匹配: error: {
+❌ 第 3344 行括號不匹配: }
+❌ 第 3345 行括號不匹配: };
+❌ 第 3346 行括號不匹配: }
+❌ 第 3347 行括號不匹配: }
+❌ 第 3355 行括號不匹配: async function AM_processAPIBindLine(requestData) {
+❌ 第 3357 行括號不匹配: try {
+❌ 第 3368 行括號不匹配: if (!requestData.userId) {
+❌ 第 3369 行括號不匹配: return {
+❌ 第 3373 行括號不匹配: error: {
+❌ 第 3377 行括號不匹配: }
+❌ 第 3378 行括號不匹配: };
+❌ 第 3379 行括號不匹配: }
+❌ 第 3381 行括號不匹配: if (!requestData.lineAccessToken) {
+❌ 第 3382 行括號不匹配: return {
+❌ 第 3386 行括號不匹配: error: {
+❌ 第 3390 行括號不匹配: }
+❌ 第 3391 行括號不匹配: };
+❌ 第 3392 行括號不匹配: }
+❌ 第 3395 行括號不匹配: const lineProfile = {
+❌ 第 3399 行括號不匹配: };
+❌ 第 3403 行括號不匹配: if (userInfo.success && userInfo.linkedAccounts?.LINE_UID) {
+❌ 第 3404 行括號不匹配: return {
+❌ 第 3408 行括號不匹配: error: {
+❌ 第 3411 行括號不匹配: details: {
+❌ 第 3414 行括號不匹配: }
+❌ 第 3415 行括號不匹配: }
+❌ 第 3416 行括號不匹配: };
+❌ 第 3417 行括號不匹配: }
+❌ 第 3420 行括號不匹配: const bindResult = await AM_linkCrossPlatformAccounts(requestData.userId, {
+❌ 第 3422 行括號不匹配: });
+❌ 第 3424 行括號不匹配: if (!bindResult.success) {
+❌ 第 3425 行括號不匹配: return {
+❌ 第 3429 行括號不匹配: error: {
+❌ 第 3433 行括號不匹配: }
+❌ 第 3434 行括號不匹配: };
+❌ 第 3435 行括號不匹配: }
+❌ 第 3447 行括號不匹配: return {
+❌ 第 3449 行括號不匹配: data: {
+❌ 第 3451 行括號不匹配: bindingResult: {
+❌ 第 3455 行括號不匹配: },
+❌ 第 3456 行括號不匹配: lineProfile: {
+❌ 第 3460 行括號不匹配: },
+❌ 第 3461 行括號不匹配: bindingStatus: {
+❌ 第 3465 行括號不匹配: },
+❌ 第 3467 行括號不匹配: },
+❌ 第 3469 行括號不匹配: };
+❌ 第 3480 行括號不匹配: return {
+❌ 第 3484 行括號不匹配: error: {
+❌ 第 3488 行括號不匹配: }
+❌ 第 3489 行括號不匹配: };
+❌ 第 3490 行括號不匹配: }
+❌ 第 3491 行括號不匹配: }
+❌ 第 3499 行括號不匹配: async function AM_processAPIBindStatus(requestData) {
+❌ 第 3501 行括號不匹配: try {
+❌ 第 3515 行括號不匹配: if (!userId) {
+❌ 第 3517 行括號不匹配: const anonymousBindingStatus = {
+❌ 第 3519 行括號不匹配: platforms: {
+❌ 第 3520 行括號不匹配: LINE: {
+❌ 第 3525 行括號不匹配: },
+❌ 第 3526 行括號不匹配: iOS: {
+❌ 第 3531 行括號不匹配: },
+❌ 第 3532 行括號不匹配: Android: {
+❌ 第 3537 行括號不匹配: }
+❌ 第 3538 行括號不匹配: },
+❌ 第 3542 行括號不匹配: };
+❌ 第 3544 行括號不匹配: return {
+❌ 第 3548 行括號不匹配: };
+❌ 第 3549 行括號不匹配: }
+❌ 第 3553 行括號不匹配: try {
+❌ 第 3555 行括號不匹配: if (userInfo.success && userInfo.linkedAccounts) {
+❌ 第 3557 行括號不匹配: }
+❌ 第 3561 行括號不匹配: }
+❌ 第 3564 行括號不匹配: const bindingStatus = {
+❌ 第 3566 行括號不匹配: platforms: {
+❌ 第 3567 行括號不匹配: LINE: {
+❌ 第 3573 行括號不匹配: },
+❌ 第 3574 行括號不匹配: iOS: {
+❌ 第 3580 行括號不匹配: },
+❌ 第 3581 行括號不匹配: Android: {
+❌ 第 3587 行括號不匹配: }
+❌ 第 3588 行括號不匹配: },
+❌ 第 3597 行括號不匹配: };
+❌ 第 3600 行括號不匹配: if (userId.includes('demo_user_bind_status')) {
+❌ 第 3615 行括號不匹配: }
+❌ 第 3626 行括號不匹配: return {
+❌ 第 3630 行括號不匹配: };
+❌ 第 3642 行括號不匹配: return {
+❌ 第 3646 行括號不匹配: error: {
+❌ 第 3650 行括號不匹配: }
+❌ 第 3651 行括號不匹配: };
+❌ 第 3652 行括號不匹配: }
+❌ 第 3653 行括號不匹配: }
+❌ 第 3666 行括號不匹配: async function AM_processAPIGetProfile(queryParams) {
+❌ 第 3668 行括號不匹配: try {
+❌ 第 3681 行括號不匹配: if (!userId) {
+❌ 第 3682 行括號不匹配: try {
+❌ 第 3687 行括號不匹配: if (validUsers.expert_mode_user_001) {
+❌ 第 3693 行括號不匹配: }
+❌ 第 3699 行括號不匹配: }
+❌ 第 3700 行括號不匹配: }
+❌ 第 3705 行括號不匹配: if (userInfo.success) {
+❌ 第 3720 行括號不匹配: try {
+❌ 第 3725 行括號不匹配: if (userData) {
+❌ 第 3729 行括號不匹配: }
+❌ 第 3732 行括號不匹配: }
+❌ 第 3734 行括號不匹配: return {
+❌ 第 3736 行括號不匹配: data: {
+❌ 第 3744 行括號不匹配: preferences: {
+❌ 第 3748 行括號不匹配: },
+❌ 第 3749 行括號不匹配: security: {
+❌ 第 3752 行括號不匹配: },
+❌ 第 3753 行括號不匹配: statistics: {
+❌ 第 3757 行括號不匹配: }
+❌ 第 3758 行括號不匹配: },
+❌ 第 3760 行括號不匹配: };
+❌ 第 3762 行括號不匹配: return {
+❌ 第 3766 行括號不匹配: error: {
+❌ 第 3769 行括號不匹配: }
+❌ 第 3770 行括號不匹配: };
+❌ 第 3771 行括號不匹配: }
+❌ 第 3782 行括號不匹配: return {
+❌ 第 3786 行括號不匹配: error: {
+❌ 第 3790 行括號不匹配: }
+❌ 第 3791 行括號不匹配: };
+❌ 第 3792 行括號不匹配: }
+❌ 第 3793 行括號不匹配: }
+❌ 第 3801 行括號不匹配: async function AM_processAPIUpdateProfile(requestData) {
+❌ 第 3803 行括號不匹配: try {
+❌ 第 3816 行括號不匹配: if (!userId) {
+❌ 第 3817 行括號不匹配: try {
+❌ 第 3822 行括號不匹配: if (validUsers.expert_mode_user_001) {
+❌ 第 3827 行括號不匹配: }
+❌ 第 3833 行括號不匹配: }
+❌ 第 3834 行括號不匹配: }
+❌ 第 3851 行括號不匹配: if (updateResult.success) {
+❌ 第 3862 行括號不匹配: return {
+❌ 第 3864 行括號不匹配: data: {
+❌ 第 3870 行括號不匹配: },
+❌ 第 3872 行括號不匹配: };
+❌ 第 3875 行括號不匹配: return {
+❌ 第 3879 行括號不匹配: error: {
+❌ 第 3883 行括號不匹配: }
+❌ 第 3884 行括號不匹配: };
+❌ 第 3885 行括號不匹配: }
+❌ 第 3897 行括號不匹配: return {
+❌ 第 3901 行括號不匹配: error: {
+❌ 第 3905 行括號不匹配: }
+❌ 第 3906 行括號不匹配: };
+❌ 第 3907 行括號不匹配: }
+❌ 第 3908 行括號不匹配: }
+❌ 第 3916 行括號不匹配: async function AM_processAPIGetAssessmentQuestions(queryParams) {
+❌ 第 3918 行括號不匹配: try {
+❌ 第 3929 行括號不匹配: const questionnaire = {
+❌ 第 3936 行括號不匹配: {
+❌ 第 3942 行括號不匹配: {
+❌ 第 3946 行括號不匹配: },
+❌ 第 3947 行括號不匹配: {
+❌ 第 3951 行括號不匹配: },
+❌ 第 3952 行括號不匹配: {
+❌ 第 3956 行括號不匹配: },
+❌ 第 3958 行括號不匹配: },
+❌ 第 3960 行括號不匹配: };
+❌ 第 3964 行括號不匹配: return {
+❌ 第 3968 行括號不匹配: };
+❌ 第 3979 行括號不匹配: return {
+❌ 第 3983 行括號不匹配: };
+❌ 第 3984 行括號不匹配: }
+❌ 第 3985 行括號不匹配: }
+❌ 第 3993 行括號不匹配: async function AM_processAPISubmitAssessment(requestData) {
+❌ 第 3995 行括號不匹配: try {
+❌ 第 4009 行括號不匹配: if (!requestData.answers) {
+❌ 第 4011 行括號不匹配: return {
+❌ 第 4015 行括號不匹配: error: {
+❌ 第 4019 行括號不匹配: }
+❌ 第 4020 行括號不匹配: };
+❌ 第 4021 行括號不匹配: }
+❌ 第 4028 行括號不匹配: if (Array.isArray(requestData.answers)) {
+❌ 第 4031 行括號不匹配: requestData.answers.forEach((answer, index) => {
+❌ 第 4032 行括號不匹配: if (answer.selectedOptions && answer.selectedOptions.length > 0) {
+❌ 第 4036 行括號不匹配: }
+❌ 第 4037 行括號不匹配: });
+❌ 第 4049 行括號不匹配: answerValues.includes('complex') && answerValues.includes('comprehensive')) {
+❌ 第 4051 行括號不匹配: }
+❌ 第 4054 行括號不匹配: return {
+❌ 第 4058 行括號不匹配: error: {
+❌ 第 4062 行括號不匹配: }
+❌ 第 4063 行括號不匹配: };
+❌ 第 4064 行括號不匹配: }
+❌ 第 4069 行括號不匹配: if (!userId) {
+❌ 第 4073 行括號不匹配: }
+❌ 第 4086 行括號不匹配: const assessmentResult = {
+❌ 第 4097 行括號不匹配: };
+❌ 第 4110 行括號不匹配: return {
+❌ 第 4112 行括號不匹配: data: {
+❌ 第 4114 行括號不匹配: },
+❌ 第 4116 行括號不匹配: };
+❌ 第 4130 行括號不匹配: return {
+❌ 第 4133 行括號不匹配: error: {
+❌ 第 4137 行括號不匹配: }
+❌ 第 4138 行括號不匹配: };
+❌ 第 4139 行括號不匹配: }
+❌ 第 4140 行括號不匹配: }
+❌ 第 4145 行括號不匹配: async function AM_processAPIUpdatePreferences(requestData) {
+❌ 第 4146 行括號不匹配: return {
+❌ 第 4150 行括號不匹配: };
+❌ 第 4151 行括號不匹配: }
+❌ 第 4153 行括號不匹配: async function AM_processAPIGetPreferences(queryParams) {
+❌ 第 4155 行括號不匹配: try {
+❌ 第 4168 行括號不匹配: if (!userId) {
+❌ 第 4169 行括號不匹配: try {
+❌ 第 4173 行括號不匹配: if (validUsers.expert_mode_user_001) {
+❌ 第 4178 行括號不匹配: }
+❌ 第 4184 行括號不匹配: }
+❌ 第 4185 行括號不匹配: }
+❌ 第 4187 行括號不匹配: const preferences = {
+❌ 第 4192 行括號不匹配: notifications: {
+❌ 第 4196 行括號不匹配: },
+❌ 第 4197 行括號不匹配: displaySettings: {
+❌ 第 4201 行括號不匹配: },
+❌ 第 4202 行括號不匹配: privacy: {
+❌ 第 4205 行括號不匹配: },
+❌ 第 4207 行括號不匹配: };
+❌ 第 4219 行括號不匹配: return {
+❌ 第 4223 行括號不匹配: };
+❌ 第 4235 行括號不匹配: return {
+❌ 第 4239 行括號不匹配: error: {
+❌ 第 4242 行括號不匹配: }
+❌ 第 4243 行括號不匹配: };
+❌ 第 4244 行括號不匹配: }
+❌ 第 4245 行括號不匹配: }
+❌ 第 4247 行括號不匹配: async function AM_processAPIUpdateSecurity(requestData) {
+❌ 第 4248 行括號不匹配: return {
+❌ 第 4252 行括號不匹配: };
+❌ 第 4253 行括號不匹配: }
+❌ 第 4255 行括號不匹配: async function AM_processAPISwitchMode(requestData) {
+❌ 第 4256 行括號不匹配: return {
+❌ 第 4260 行括號不匹配: };
+❌ 第 4261 行括號不匹配: }
+❌ 第 4269 行括號不匹配: async function AM_processAPIVerifyPin(requestData) {
+❌ 第 4271 行括號不匹配: try {
+❌ 第 4282 行括號不匹配: if (!requestData.pin || typeof requestData.pin !== 'string') {
+❌ 第 4283 行括號不匹配: return {
+❌ 第 4287 行括號不匹配: error: {
+❌ 第 4291 行括號不匹配: }
+❌ 第 4292 行括號不匹配: };
+❌ 第 4293 行括號不匹配: }
+❌ 第 4301 行括號不匹配: if (!userId) {
+❌ 第 4302 行括號不匹配: try {
+❌ 第 4306 行括號不匹配: if (validUsers.expert_mode_user_001) {
+❌ 第 4311 行括號不匹配: }
+❌ 第 4317 行括號不匹配: }
+❌ 第 4318 行括號不匹配: }
+❌ 第 4324 行括號不匹配: if (!isValidFormat) {
+❌ 第 4325 行括號不匹配: return {
+❌ 第 4329 行括號不匹配: error: {
+❌ 第 4333 行括號不匹配: }
+❌ 第 4334 行括號不匹配: };
+❌ 第 4335 行括號不匹配: }
+❌ 第 4350 行括號不匹配: return {
+❌ 第 4352 行括號不匹配: data: {
+❌ 第 4360 行括號不匹配: },
+❌ 第 4362 行括號不匹配: };
+❌ 第 4375 行括號不匹配: return {
+❌ 第 4379 行括號不匹配: error: {
+❌ 第 4383 行括號不匹配: }
+❌ 第 4384 行括號不匹配: };
+❌ 第 4385 行括號不匹配: }
+❌ 第 4386 行括號不匹配: }
+❌ 第 4398 行括號不匹配: async function AM_processAPIGetModeDefaults(queryParams) {
+❌ 第 4400 行括號不匹配: try {
+❌ 第 4413 行括號不匹配: const modeDefaults = {
+❌ 第 4414 行括號不匹配: Expert: {
+❌ 第 4420 行括號不匹配: },
+❌ 第 4421 行括號不匹配: Cultivation: {
+❌ 第 4428 行括號不匹配: },
+❌ 第 4429 行括號不匹配: Guiding: {
+❌ 第 4437 行括號不匹配: },
+❌ 第 4438 行括號不匹配: Inertial: {
+❌ 第 4445 行括號不匹配: }
+❌ 第 4446 行括號不匹配: };
+❌ 第 4470 行括號不匹配: }
+❌ 第 4471 行括號不匹配: }
+❌ 第 4479 行括號不匹配: async function AM_processAPIBehaviorTracking(requestData) {
+❌ 第 4481 行括號不匹配: try {
+❌ 第 4492 行括號不匹配: const behaviorData = {
+❌ 第 4499 行括號不匹配: };
+❌ 第 4530 行括號不匹配: }
+❌ 第 4531 行括號不匹配: }
+❌ 第 4539 行括號不匹配: async function AM_processAPIGetModeRecommendations(queryParams) {
+❌ 第 4541 行括號不匹配: try {
+❌ 第 4554 行括號不匹配: const recommendations = {
+❌ 第 4555 行括號不匹配: Expert: {
+❌ 第 4561 行括號不匹配: },
+❌ 第 4562 行括號不匹配: Cultivation: {
+❌ 第 4568 行括號不匹配: },
+❌ 第 4569 行括號不匹配: Guiding: {
+❌ 第 4575 行括號不匹配: },
+❌ 第 4576 行括號不匹配: Inertial: {
+❌ 第 4582 行括號不匹配: }
+❌ 第 4583 行括號不匹配: };
+❌ 第 4588 行括號不匹配: {
+❌ 第 4593 行括號不匹配: },
+❌ 第 4611 行括號不匹配: }
+❌ 第 4612 行括號不匹配: }
+❌ 第 4619 行括號不匹配: function AM_formatSuccessResponse(data, message = "操作成功", error = null) {
+❌ 第 4620 行括號不匹配: return {
+❌ 第 4625 行括號不匹配: };
+❌ 第 4626 行括號不匹配: }
+❌ 第 4633 行括號不匹配: function AM_formatErrorResponse(errorCode, message, details = null) {
+❌ 第 4634 行括號不匹配: return {
+❌ 第 4638 行括號不匹配: error: {
+❌ 第 4642 行括號不匹配: }
+❌ 第 4643 行括號不匹配: };
+❌ 第 4644 行括號不匹配: }
+❌ 第 4651 行括號不匹配: async function AM_validateQueryPermission(targetUID, requesterId) {
+❌ 第 4652 行括號不匹配: try {
+❌ 第 4654 行括號不匹配: if (targetUID === requesterId) {
+❌ 第 4656 行括號不匹配: }
+❌ 第 4659 行括號不匹配: if (requesterId === "SYSTEM" || requesterId === "AM_MODULE") {
+❌ 第 4661 行括號不匹配: }
+❌ 第 4669 行括號不匹配: }
+❌ 第 4670 行括號不匹配: }
+❌ 第 4677 行括號不匹配: async function AM_validateUpdatePermission(targetUID, operatorId) {
+❌ 第 4678 行括號不匹配: try {
+❌ 第 4680 行括號不匹配: if (targetUID === operatorId) {
+❌ 第 4682 行括號不匹配: }
+❌ 第 4685 行括號不匹配: if (operatorId === "SYSTEM" || operatorId === "AM_MODULE") {
+❌ 第 4687 行括號不匹配: }
+❌ 第 4694 行括號不匹配: }
+❌ 第 4695 行括號不匹配: }
+❌ 第 4702 行括號不匹配: async function AM_validateSearchPermission(requesterId) {
+❌ 第 4703 行括號不匹配: try {
+❌ 第 4705 行括號不匹配: if (requesterId === "SYSTEM" || requesterId === "AM_MODULE") {
+❌ 第 4707 行括號不匹配: }
+❌ 第 4714 行括號不匹配: }
+❌ 第 4715 行括號不匹配: }
+❌ 第 4727 行括號不匹配: ) {
+❌ 第 4728 行括號不匹配: try {
+❌ 第 4729 行括號不匹配: const tokenData = {
+❌ 第 4736 行括號不匹配: };
+❌ 第 4743 行括號不匹配: }
+❌ 第 4744 行括號不匹配: }
+❌ 第 4751 行括號不匹配: async function AM_updateStoredToken(userId, accessToken, expiresIn) {
+❌ 第 4752 行括號不匹配: try {
+❌ 第 4753 行括號不匹配: const updateData = {
+❌ 第 4759 行括號不匹配: };
+❌ 第 4766 行括號不匹配: }
+❌ 第 4767 行括號不匹配: }
+❌ 第 4774 行括號不匹配: function AM_generatePlatformUID(platform, deviceId) {
+❌ 第 4778 行括號不匹配: }
+❌ 第 4785 行括號不匹配: async function AM_getSubscriptionInfo(userId, requesterId) {
+❌ 第 4786 行括號不匹配: try {
+❌ 第 4788 行括號不匹配: if (userId !== requesterId && requesterId !== "SYSTEM") {
+❌ 第 4790 行括號不匹配: }
+❌ 第 4794 行括號不匹配: if (!userDoc.exists) {
+❌ 第 4796 行括號不匹配: }
+❌ 第 4799 行括號不匹配: const subscription = userData.subscription || {
+❌ 第 4803 行括號不匹配: };
+❌ 第 4805 行括號不匹配: return {
+❌ 第 4808 行括號不匹配: };
+❌ 第 4812 行括號不匹配: }
+❌ 第 4813 行括號不匹配: }
+❌ 第 4820 行括號不匹配: function AM_formatAPIResponse(data, error = null) {
+❌ 第 4821 行括號不匹配: if (error) {
+❌ 第 4822 行括號不匹配: return {
+❌ 第 4826 行括號不匹配: };
+❌ 第 4827 行括號不匹配: }
+❌ 第 4829 行括號不匹配: return {
+❌ 第 4833 行括號不匹配: };
+❌ 第 4834 行括號不匹配: }
+❌ 第 4841 行括號不匹配: function AM_handleSystemError(error, context = {}) {
+❌ 第 4845 行括號不匹配: return {
+❌ 第 4850 行括號不匹配: };
+❌ 第 4851 行括號不匹配: }
+❌ 第 4872 行括號不匹配: function AM_formatStandardAPIResponse(success, data = null, message = "", errorCode = null, userMode = "Expert", requestId = null, processingStartTime = null) {
+❌ 第 4881 行括號不匹配: return {
+❌ 第 4884 行括號不匹配: error: success ? null : {
+❌ 第 4888 行括號不匹配: },
+❌ 第 4890 行括號不匹配: metadata: {
+❌ 第 4897 行括號不匹配: }
+❌ 第 4898 行括號不匹配: };
+❌ 第 4899 行括號不匹配: }
+❌ 第 4906 行括號不匹配: function AM_generateModeFeatures(userMode, success, data) {
+❌ 第 4907 行括號不匹配: const baseFeatures = {
+❌ 第 4910 行括號不匹配: };
+❌ 第 4912 行括號不匹配: switch (userMode) {
+❌ 第 4914 行括號不匹配: return {
+❌ 第 4920 行括號不匹配: };
+❌ 第 4923 行括號不匹配: return {
+❌ 第 4929 行括號不匹配: };
+❌ 第 4932 行括號不匹配: return {
+❌ 第 4939 行括號不匹配: };
+❌ 第 4942 行括號不匹配: return {
+❌ 第 4950 行括號不匹配: };
+❌ 第 4954 行括號不匹配: }
+❌ 第 4955 行括號不匹配: }
+❌ 第 4963 行括號不匹配: function AM_formatErrorResponse(errorCode, message, details = {}, userMode = "Expert", requestId = null) {
+❌ 第 4965 行括號不匹配: }
+❌ 第 4973 行括號不匹配: function AM_formatSuccessResponse(data, message = "操作成功", userMode = "Expert", requestId = null) {
+❌ 第 4975 行括號不匹配: }
+❌ 第 4983 行括號不匹配: function AM_generateMetadata(userMode = "Expert", requestId = null, additionalInfo = {}) {
+❌ 第 4984 行括號不匹配: return {
+❌ 第 4991 行括號不匹配: };
+❌ 第 4992 行括號不匹配: }
+❌ 第 4999 行括號不匹配: async function AM_checkAPIQuota(userId, apiEndpoint, userMode = "Expert") {
+❌ 第 5001 行括號不匹配: try {
+❌ 第 5003 行括號不匹配: const quotaLimits = {
+❌ 第 5008 行括號不匹配: };
+❌ 第 5017 行括號不匹配: if (dailyUsage >= userQuota.daily) {
+❌ 第 5018 行括號不匹配: return {
+❌ 第 5024 行括號不匹配: };
+❌ 第 5025 行括號不匹配: }
+❌ 第 5029 行括號不匹配: if (hourlyUsage >= userQuota.hourly) {
+❌ 第 5030 行括號不匹配: return {
+❌ 第 5036 行括號不匹配: };
+❌ 第 5037 行括號不匹配: }
+❌ 第 5039 行括號不匹配: return {
+❌ 第 5041 行括號不匹配: remaining: {
+❌ 第 5044 行括號不匹配: }
+❌ 第 5045 行括號不匹配: };
+❌ 第 5051 行括號不匹配: }
+❌ 第 5052 行括號不匹配: }
+❌ 第 5057 行括號不匹配: async function AM_getAPIUsageCount(userId, apiEndpoint, sinceTime) {
+❌ 第 5058 行括號不匹配: try {
+❌ 第 5070 行括號不匹配: }
+❌ 第 5071 行括號不匹配: }
+❌ 第 5076 行括號不匹配: async function AM_recordAPIUsage(userId, apiEndpoint, userMode, success, processingTime) {
+❌ 第 5077 行括號不匹配: try {
+❌ 第 5078 行括號不匹配: const usageRecord = {
+❌ 第 5086 行括號不匹配: };
+❌ 第 5092 行括號不匹配: }
+❌ 第 5093 行括號不匹配: }
+❌ 第 5098 行括號不匹配: module.exports = {
+❌ 第 5166 行括號不匹配: refactoring: {
+❌ 第 5170 行括號不匹配: }
+❌ 第 5171 行括號不匹配: };
+❌ 第 5194 行括號不匹配: function AM_calculateModeFromAnswers(answers) {
+❌ 第 5197 行括號不匹配: try {
+❌ 可能的語法錯誤在第 5198 行: console.log(`🎯 ${functionName}: 開始模式計算，答案數量: ${Object.keys(answers).length}`);
+❌ 第 5202 行括號不匹配: const modeScores = {
+❌ 第 5207 行括號不匹配: };
+❌ 第 5218 行括號不匹配: answerValues.includes('comprehensive')) {
+❌ 第 5221 行括號不匹配: }
+❌ 第 5226 行括號不匹配: answerValues.includes('developing')) {
+❌ 第 5229 行括號不匹配: }
+❌ 第 5235 行括號不匹配: answerValues.includes('step-by-step')) {
+❌ 第 5238 行括號不匹配: }
+❌ 第 5243 行括號不匹配: answerValues.includes('familiar')) {
+❌ 第 5246 行括號不匹配: }
+❌ 第 5250 行括號不匹配: if (questionCount >= 4) {
+❌ 第 5257 行括號不匹配: if (expertIndicators.length >= 2) {
+❌ 第 5260 行括號不匹配: }
+❌ 第 5261 行括號不匹配: }
+❌ 第 5271 行括號不匹配: const result = {
+❌ 第 5275 行括號不匹配: details: {
+❌ 第 5279 行括號不匹配: answerAnalysis: {
+❌ 第 5284 行括號不匹配: }
+❌ 第 5285 行括號不匹配: }
+❌ 第 5286 行括號不匹配: };
+❌ 可能的語法錯誤在第 5288 行: console.log(`🎉 ${functionName}: 模式計算完成`);
+❌ 第 5298 行括號不匹配: return {
+❌ 第 5303 行括號不匹配: };
+❌ 第 5304 行括號不匹配: }
+❌ 第 5305 行括號不匹配: }
+❌ 第 5323 行括號不匹配: ) {
+❌ 第 5334 行括號不匹配: }
+❌ 第 5352 行括號不匹配: ) {
+❌ 第 5363 行括號不匹配: }
+❌ 第 5383 行括號不匹配: ) {
+❌ 第 5384 行括號不匹配: if (DL && typeof DL.DL_error === 'function') {
+❌ 第 5385 行括號不匹配: try {
+❌ 第 5399 行括號不匹配: }
+❌ 第 5400 行括號不匹配: }
+❌ 第 5401 行括號不匹配: }
+✅ SR 模組載入成功
+✅ 完整功能載入完成
+📋 DCN-0011 Phase 4 重構統計:
+   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)
+   🎯 Webhook端點保留: 5個 (LINE OA專用)
+   🏗️ 雙服務架構: 職責完全分離
+📅 已載入 0 個排程設定
+[2025-12-17T01:21:16.995Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+成功寫入 1 條日誌到 Firestore
