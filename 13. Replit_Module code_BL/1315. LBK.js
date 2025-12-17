@@ -2127,30 +2127,88 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     }
 
     // 步驟1：建立同義詞關聯到Firebase
-    try {
-      await LBK_addSubjectSynonym(pendingData.subject, subjectId, selectedCategory.name, inputData.userId, processId);
-      LBK_logInfo(`成功建立同義詞關聯: ${pendingData.subject} → ${selectedCategory.name} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
-    } catch (synonymError) {
-      LBK_logWarning(`同義詞建立失敗但繼續處理: ${synonymError.message} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
+    const synonymResult = await LBK_addSubjectSynonym(pendingData.subject, subjectId, selectedCategory.categoryName, inputData.userId, processId);
+    if (synonymResult.success) {
+      LBK_logInfo(`成功建立同義詞關聯: ${pendingData.subject} → ${selectedCategory.categoryName} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
+    } else {
+      LBK_logWarning(`同義詞建立失敗但繼續處理: ${synonymResult.error} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
     }
 
-    // 步驟2：準備記帳資料，使用歸類後的科目資訊
-    const bookkeepingData = {
-      subject: pendingData.subject,
-      amount: pendingData.amount,
-      rawAmount: pendingData.rawAmount,
-      paymentMethod: pendingData.paymentMethod,
-      subjectCode: subjectId,
-      subjectName: selectedCategory.categoryName,
-      majorCode: subjectId,
-      action: selectedCategory.categoryName.includes('收入') ? '收入' : '支出',
-      userId: inputData.userId
+    // 步驟2：準備記帳資料，直接使用選擇的科目資訊進行記帳（不再依賴科目識別）
+    const transactionId = Date.now().toString();
+    const now = moment().tz(LBK_CONFIG.TIMEZONE);
+    
+    // 直接準備1301標準格式的記帳資料
+    const preparedData = {
+      // 核心欄位 - 符合1301標準
+      id: transactionId,
+      amount: parseFloat(pendingData.amount) || 0,
+      type: selectedCategory.categoryName.includes('收入') ? "income" : "expense",
+      description: pendingData.subject,
+      categoryId: subjectId,
+      accountId: 'default',
+
+      // 時間欄位 - 1301標準格式
+      date: now.format('YYYY-MM-DD'),
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+
+      // 來源和用戶資訊 - 1301標準
+      source: 'classification',
+      userId: inputData.userId,
+      paymentMethod: pendingData.paymentMethod || '刷卡',
+
+      // 記帳特定欄位 - 1301標準
+      ledgerId: `user_${inputData.userId}`,
+
+      // 狀態欄位 - 1301標準
+      status: 'active',
+      verified: false,
+
+      // 元數據 - 1301標準
+      metadata: {
+        processId: processId,
+        module: 'LBK',
+        version: '1.4.3',
+        majorCode: subjectId,
+        subjectName: selectedCategory.categoryName,
+        classificationSource: 'user_selection'
+      }
     };
 
     LBK_logInfo(`開始執行歸類後記帳: ${pendingData.subject} ${pendingData.amount}元 → ${selectedCategory.categoryName} [${processId}]`, "記帳執行", inputData.userId, "LBK_handleClassificationPostback");
 
-    // 步驟3：執行記帳
-    const bookkeepingResult = await LBK_executeBookkeeping(bookkeepingData, processId);
+    // 步驟3：直接儲存記帳資料到Firestore
+    const saveResult = await LBK_saveToFirestore(preparedData, processId);
+    
+    let bookkeepingResult;
+    if (saveResult.success) {
+      bookkeepingResult = {
+        success: true,
+        data: {
+          id: transactionId,
+          transactionId: transactionId,
+          amount: preparedData.amount,
+          type: preparedData.type,
+          category: preparedData.categoryId,
+          subject: selectedCategory.categoryName,
+          subjectName: selectedCategory.categoryName,
+          description: preparedData.description,
+          paymentMethod: preparedData.paymentMethod,
+          date: preparedData.date,
+          timestamp: new Date().toISOString(),
+          ledgerId: preparedData.ledgerId,
+          remark: pendingData.subject
+        }
+      };
+      LBK_logInfo(`歸類後記帳成功: ID=${transactionId} [${processId}]`, "記帳執行", inputData.userId, "LBK_handleClassificationPostback");
+    } else {
+      bookkeepingResult = {
+        success: false,
+        error: saveResult.error
+      };
+      LBK_logError(`歸類後記帳失敗: ${saveResult.error} [${processId}]`, "記帳執行", inputData.userId, "BOOKKEEPING_SAVE_ERROR", saveResult.error, "LBK_handleClassificationPostback");
+    }
 
     if (!bookkeepingResult.success) {
       LBK_logError(`歸類後記帳執行失敗: ${bookkeepingResult.error} [${processId}]`, "記帳執行", inputData.userId, "BOOKKEEPING_AFTER_CLASSIFICATION_ERROR", bookkeepingResult.error, "LBK_handleClassificationPostback");
@@ -2689,57 +2747,87 @@ async function LBK_parsePaymentMethod(text, userId, processId) {
   }
 }
 
-// 輔助函數：建立科目同義詞關聯
+// 輔助函數：建立科目同義詞關聯 - 修復版：正確查找科目文檔
 async function LBK_addSubjectSynonym(originalSubject, subjectId, subjectName, userId, processId) {
   try {
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
     const ledgerId = `user_${userId}`;
 
-    // 檢查是否已存在同義詞
-    const existingSynonymQuery = await db.collection(`ledgers/${ledgerId}/categories`)
-      .where('synonyms', 'array-contains', originalSubject)
+    LBK_logInfo(`開始新增同義詞: ${originalSubject} → 科目ID ${subjectId} (${subjectName}) [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
+
+    // 修復：查找與 categoryId 匹配的文檔，而不是使用 subjectId 作為文檔ID
+    const categoryQuery = await db.collection("ledgers").doc(ledgerId).collection("categories")
+      .where("categoryId", "==", parseInt(subjectId))
       .limit(1)
       .get();
 
-    if (!existingSynonymQuery.empty) {
-      LBK_logInfo(`同義詞已存在: ${originalSubject} → ${subjectName} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
-      // 如果已存在，更新原有記錄的`updatedAt`時間戳
-      const existingDoc = existingSynonymQuery.docs[0];
-      await existingDoc.ref.update({
-        updatedAt: admin.firestore.Timestamp.now()
-      });
-      return { success: true, message: "同義詞已存在" };
-    }
+    if (categoryQuery.empty) {
+      LBK_logWarning(`嘗試按categoryId查找失敗，改用文檔ID查找: ${subjectId} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
+      
+      // 備用：直接嘗試用subjectId作為文檔ID
+      const categoryRef = db.collection("ledgers").doc(ledgerId).collection("categories").doc(subjectId);
+      const categoryDoc = await categoryRef.get();
 
-    // 新增同義詞到對應科目的synonyms陣列
-    const categoryRef = db.collection("ledgers").doc(ledgerId).collection("categories").doc(subjectId);
-    const categoryDoc = await categoryRef.get();
+      if (!categoryDoc.exists) {
+        // 如果都找不到，創建新的科目記錄
+        LBK_logInfo(`科目不存在，創建新科目記錄: ${subjectId} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
+        
+        const newCategoryData = {
+          categoryId: parseInt(subjectId),
+          categoryName: subjectName,
+          name: subjectName,
+          synonyms: originalSubject,
+          isActive: true,
+          userId: userId,
+          ledgerId: ledgerId,
+          dataSource: "USER_CLASSIFICATION_LBK",
+          createdAt: admin.firestore.Timestamp.now(),
+          updatedAt: admin.firestore.Timestamp.now()
+        };
 
-    if (!categoryDoc.exists) {
-      throw new Error(`科目ID ${subjectId} 不存在`);
-    }
+        await categoryRef.set(newCategoryData);
+        LBK_logInfo(`成功創建科目並新增同義詞: ${originalSubject} → ${subjectName} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
+        return { success: true, message: "科目已創建並新增同義詞" };
+      } else {
+        // 文檔存在，更新同義詞
+        const categoryData = categoryDoc.data();
+        const currentSynonyms = categoryData.synonyms ? categoryData.synonyms.split(',') : [];
 
-    const categoryData = categoryDoc.data();
-    const currentSynonyms = categoryData.synonyms ? categoryData.synonyms.split(',') : [];
-
-    // 確保不重複添加
-    if (!currentSynonyms.includes(originalSubject)) {
-      currentSynonyms.push(originalSubject);
-      await categoryRef.update({
-        synonyms: currentSynonyms.join(','),
-        updatedAt: admin.firestore.Timestamp.now()
-      });
-      LBK_logInfo(`成功新增同義詞: ${originalSubject} → ${subjectName} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
+        if (!currentSynonyms.includes(originalSubject)) {
+          currentSynonyms.push(originalSubject);
+          await categoryRef.update({
+            synonyms: currentSynonyms.join(','),
+            updatedAt: admin.firestore.Timestamp.now()
+          });
+          LBK_logInfo(`成功新增同義詞到現有科目: ${originalSubject} → ${subjectName} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
+        }
+        return { success: true };
+      }
     } else {
-      LBK_logInfo(`同義詞 ${originalSubject} 已存在於科目 ${subjectName} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
-    }
+      // 找到匹配的科目，更新同義詞
+      const categoryDoc = categoryQuery.docs[0];
+      const categoryData = categoryDoc.data();
+      const currentSynonyms = categoryData.synonyms ? categoryData.synonyms.split(',') : [];
 
-    return { success: true };
+      if (!currentSynonyms.includes(originalSubject)) {
+        currentSynonyms.push(originalSubject);
+        await categoryDoc.ref.update({
+          synonyms: currentSynonyms.join(','),
+          updatedAt: admin.firestore.Timestamp.now()
+        });
+        LBK_logInfo(`成功新增同義詞: ${originalSubject} → ${subjectName} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
+      } else {
+        LBK_logInfo(`同義詞已存在: ${originalSubject} → ${subjectName} [${processId}]`, "科目同義詞", userId, "LBK_addSubjectSynonym");
+      }
+
+      return { success: true };
+    }
 
   } catch (error) {
     LBK_logError(`新增科目同義詞失敗: ${error.toString()} [${processId}]`, "科目同義詞", userId, "ADD_SYNONYM_ERROR", error.toString(), "LBK_addSubjectSynonym");
-    throw error; // 拋出錯誤以便上層函數處理
+    // 不拋出錯誤，讓上層函數繼續處理記帳
+    return { success: false, error: error.toString() };
   }
 }
 
