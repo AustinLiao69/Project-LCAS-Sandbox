@@ -498,8 +498,101 @@ async function processWebhookAsync(e) {
                 "ERROR",
               ]);
             }
+          } else if (event.type === 'postback') {
+              const postbackData = event.postback.data;
+              console.log(`WH v2.5.2: 收到postback事件，強化處理: ${postbackData}`);
+
+              WH_directLogWrite([
+                WH_formatDateTime(new Date()),
+                `WH 2.5.2: 階段三 - 處理postback事件: ${postbackData} [${requestId}]`,
+                "Postback處理",
+                userId,
+                "",
+                "WH",
+                "",
+                0,
+                "WH_processEventAsync",
+                "INFO",
+              ]);
+
+              // v2.5.2: 階段三 - 識別科目歸類postback事件
+              if (WH_isSubjectClassificationPostback(postbackData)) {
+                console.log(`檢測到科目歸類postback事件: ${postbackData} [${requestId}]`);
+
+                WH_directLogWrite([
+                  WH_formatDateTime(new Date()),
+                  `WH 2.5.2: 檢測到科目歸類postback，調用專門處理邏輯 [${requestId}]`,
+                  "科目歸類",
+                  userId,
+                  "",
+                  "WH",
+                  "",
+                  0,
+                  "WH_processEventAsync",
+                  "INFO",
+                ]);
+
+                // 解析科目歸類postback數據
+                const classificationData = WH_parseClassificationPostback(postbackData);
+
+                if (classificationData.success) {
+                  // 調用LBK處理科目歸類完成流程
+                  const classificationInputData = {
+                    userId: userId,
+                    messageText: classificationData.originalSubject,
+                    replyToken: event.replyToken,
+                    timestamp: event.timestamp,
+                    processId: requestId,
+                    eventType: 'classification_postback',
+                    classificationData: classificationData
+                  };
+
+                  const classificationResult = await WH_callLBKSafely(classificationInputData);
+
+                  if (classificationResult && event.replyToken) {
+                    await WH_replyMessage(event.replyToken, classificationResult, classificationResult.quickReply);
+                  }
+                } else {
+                  console.log(`科目歸類postback解析失敗: ${classificationData.error} [${requestId}]`);
+                  WH_directLogWrite([
+                    WH_formatDateTime(new Date()),
+                    `WH 2.5.2: 科目歸類postback解析失敗: ${classificationData.error} [${requestId}]`,
+                    "科目歸類",
+                    userId,
+                    "PARSE_ERROR",
+                    "WH",
+                    classificationData.error,
+                    0,
+                    "WH_processEventAsync",
+                    "ERROR",
+                  ]);
+
+                  // 發送錯誤回覆
+                  await WH_replyMessage(event.replyToken, "科目歸類處理失敗，請稍後再試");
+                }
+              } else {
+                // v2.5.2: 非科目歸類的其他postback事件，保持原有處理方式
+                console.log(`WH v2.5.2: 處理一般postback事件: ${postbackData}`);
+
+                const postbackInputData = {
+                  userId: userId,
+                  messageText: postbackData,
+                  replyToken: event.replyToken,
+                  timestamp: event.timestamp,
+                  processId: requestId,
+                  eventType: 'postback',
+                  postbackData: postbackData
+                };
+
+                const postbackResult = await WH_callLBKSafely(postbackInputData);
+
+                if (postbackResult && event.replyToken) {
+                  await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
+                }
+              }
           } else {
-            // 記錄其他類型事件
+            // 處理非消息事件 (follow, unfollow, join 等)
+            console.log(`收到非消息事件: ${event.type} [${requestId}]`);
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
               `WH 2.0.7: 收到${event.type}事件 [${requestId}]`,
@@ -512,6 +605,102 @@ async function processWebhookAsync(e) {
               "processWebhookAsync",
               "INFO",
             ]);
+
+            // 處理特定非消息事件類型
+            if (event.type === "follow") {
+              // 處理用戶關注事件 - 自動建立帳號
+              try {
+                console.log(`處理用戶關注事件: ${userId} [${requestId}]`);
+
+                // 調用AM模組建立LINE帳號
+                const createResult = await AM.AM_createLineAccount(userId, null, 'J');
+
+                if (createResult.success) {
+                  console.log(`成功為用戶 ${userId} 建立帳號 [${requestId}]`);
+
+                  // 記錄成功日誌
+                  WH_directLogWrite([
+                    WH_formatDateTime(new Date()),
+                    `WH 2.0.3: 用戶關注事件 - 成功建立帳號 ${userId} [${requestId}]`,
+                    "用戶關注",
+                    userId,
+                    "",
+                    "WH",
+                    "",
+                    0,
+                    "processWebhookAsync",
+                    "INFO",
+                  ]);
+
+                  // 回覆歡迎訊息
+                  WH_replyMessage(event.replyToken, {
+                    success: true,
+                    responseMessage:
+                      "🎉 感謝您加入LCAS記帳助手！\n\n您的帳號已自動建立完成。\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
+                  });
+
+                } else {
+                  // 帳號建立失敗的處理
+                  console.log(`用戶 ${userId} 帳號建立失敗: ${createResult.error} [${requestId}]`);
+
+                  // 記錄失敗日誌
+                  WH_directLogWrite([
+                    WH_formatDateTime(new Date()),
+                    `WH 2.0.3: 用戶關注事件 - 帳號建立失敗 ${userId}: ${createResult.error} [${requestId}]`,
+                    "用戶關注",
+                    userId,
+                    "ACCOUNT_CREATE_FAILED",
+                    "WH",
+                    createResult.error,
+                    0,
+                    "processWebhookAsync",
+                    "ERROR",
+                  ]);
+
+                  // 即使建立失敗，仍然歡迎用戶（可能是重複加入）
+                  WH_replyMessage(event.replyToken, {
+                    success: true,
+                    responseMessage:
+                      "感謝您加入LCAS記帳助手！\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
+                  });
+                }
+
+              } catch (followError) {
+                console.log(`處理用戶關注事件錯誤: ${followError} [${requestId}]`);
+
+                // 記錄錯誤日誌
+                WH_directLogWrite([
+                  WH_formatDateTime(new Date()),
+                  `WH 2.0.3: 處理用戶關注事件錯誤 ${userId}: ${followError.toString()} [${requestId}]`,
+                  "用戶關注",
+                  userId,
+                  "FOLLOW_EVENT_ERROR",
+                  "WH",
+                  followError.toString(),
+                  0,
+                  "processWebhookAsync",
+                  "ERROR",
+                ]);
+
+                // 發送簡化的歡迎訊息
+                WH_replyMessage(event.replyToken, {
+                  success: true,
+                  responseMessage:
+                    "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
+                });
+              }
+            } else if (event.type === "unfollow") {
+              // 處理用戶取消關注事件 - 無法回覆
+              console.log(`用戶 ${userId} 取消關注 [${requestId}]`);
+            } else if (event.type === "join") {
+              // 處理加入群組事件
+              WH_replyMessage(event.replyToken, {
+                success: true,
+                responseMessage:
+                  "感謝邀請記帳助手加入！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
+              });
+            }
+            // 可處理其他事件類型...
           }
         } catch (eventError) {
           console.log(`處理事件錯誤: ${eventError} [${requestId}]`);
@@ -1482,11 +1671,11 @@ async function WH_processEventAsync(event, requestId, userId) {
             // 降級處理：假設用戶存在，繼續處理
             accountValidation = { exists: true, UID: userId };
           }
-          
+
           if (!accountValidation.exists) {
             // 用戶不存在，自動建立LINE帳號並初始化帳本
             console.log(`用戶不存在，開始自動註冊流程: ${userId} [${requestId}]`);
-            
+
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
               `WH 階段一: 用戶不存在，開始自動註冊 ${userId} [${requestId}]`,
@@ -1506,10 +1695,10 @@ async function WH_processEventAsync(event, requestId, userId) {
               if (AM_Module && typeof AM_Module.AM_createLineAccount === 'function') {
                 // 建立LINE帳號（使用J類型用戶）
                 const createResult = await AM_Module.AM_createLineAccount(userId, null, 'J');
-                
+
                 if (createResult.success) {
                   console.log(`✅ 自動註冊成功: ${userId}, 帳本ID: ${createResult.accountId} [${requestId}]`);
-                  
+
                   WH_directLogWrite([
                     WH_formatDateTime(new Date()),
                     `WH 階段一: 自動註冊成功 ${userId} [${requestId}]`,
@@ -1522,7 +1711,7 @@ async function WH_processEventAsync(event, requestId, userId) {
                     "WH_processEventAsync",
                     "INFO",
                   ]);
-                  
+
                   // 註冊成功，繼續後續流程（不需要return，讓程式繼續執行）
                 } else {
                   throw new Error(`自動註冊失敗: ${createResult.error}`);
@@ -1532,7 +1721,7 @@ async function WH_processEventAsync(event, requestId, userId) {
               }
             } catch (createError) {
               console.error(`❌ 自動註冊失敗: ${createError.message} [${requestId}]`);
-              
+
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
                 `WH 階段一: 自動註冊失敗 ${userId}: ${createError.message} [${requestId}]`,
@@ -1574,11 +1763,11 @@ async function WH_processEventAsync(event, requestId, userId) {
               initialized: false 
             };
           }
-          
+
           if (!ledgerResult.success) {
             // 帳本初始化失敗，直接回覆錯誤訊息
             const errorMessage = "帳本初始化失敗，請稍後再試";
-            
+
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
               `WH 階段一: 帳本初始化失敗 ${userId}: ${ledgerResult.error} [${requestId}]`,
@@ -1771,15 +1960,103 @@ async function WH_processEventAsync(event, requestId, userId) {
         });
       }
     } else if (event.type === 'postback') {
-        console.log(`收到Quick Reply事件: ${event.postback.data}`);
-        const result = await WH_handleQuickReplyEvent(event);
-        allResults.push(result);
-      } else {
+        const postbackData = event.postback.data;
+        console.log(`WH v2.5.2: 收到postback事件，強化處理: ${postbackData}`);
+
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.2: 階段三 - 處理postback事件: ${postbackData} [${requestId}]`,
+          "Postback處理",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          "WH_processEventAsync",
+          "INFO",
+        ]);
+
+        // v2.5.2: 階段三 - 識別科目歸類postback事件
+        if (WH_isSubjectClassificationPostback(postbackData)) {
+          console.log(`檢測到科目歸類postback事件: ${postbackData} [${requestId}]`);
+
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.5.2: 檢測到科目歸類postback，調用專門處理邏輯 [${requestId}]`,
+            "科目歸類",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO",
+          ]);
+
+          // 解析科目歸類postback數據
+          const classificationData = WH_parseClassificationPostback(postbackData);
+
+          if (classificationData.success) {
+            // 調用LBK處理科目歸類完成流程
+            const classificationInputData = {
+              userId: userId,
+              messageText: classificationData.originalSubject,
+              replyToken: event.replyToken,
+              timestamp: event.timestamp,
+              processId: requestId,
+              eventType: 'classification_postback',
+              classificationData: classificationData
+            };
+
+            const classificationResult = await WH_callLBKSafely(classificationInputData);
+
+            if (classificationResult && event.replyToken) {
+              await WH_replyMessage(event.replyToken, classificationResult, classificationResult.quickReply);
+            }
+          } else {
+            console.log(`科目歸類postback解析失敗: ${classificationData.error} [${requestId}]`);
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.5.2: 科目歸類postback解析失敗: ${classificationData.error} [${requestId}]`,
+              "科目歸類",
+              userId,
+              "PARSE_ERROR",
+              "WH",
+              classificationData.error,
+              0,
+              "WH_processEventAsync",
+              "ERROR",
+            ]);
+
+            // 發送錯誤回覆
+            await WH_replyMessage(event.replyToken, "科目歸類處理失敗，請稍後再試");
+          }
+        } else {
+          // v2.5.2: 非科目歸類的其他postback事件，保持原有處理方式
+          console.log(`WH v2.5.2: 處理一般postback事件: ${postbackData}`);
+
+          const postbackInputData = {
+            userId: userId,
+            messageText: postbackData,
+            replyToken: event.replyToken,
+            timestamp: event.timestamp,
+            processId: requestId,
+            eventType: 'postback',
+            postbackData: postbackData
+          };
+
+          const postbackResult = await WH_callLBKSafely(postbackInputData);
+
+          if (postbackResult && event.replyToken) {
+            await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
+          }
+        }
+    } else {
       // 處理非消息事件 (follow, unfollow, join 等)
       console.log(`收到非消息事件: ${event.type} [${requestId}]`);
       WH_directLogWrite([
         WH_formatDateTime(new Date()),
-        `WH 2.0.3: 收到非消息事件: ${event.type} [${requestId}]`,
+        `WH 2.0.7: 收到${event.type}事件 [${requestId}]`,
         "事件處理",
         userId,
         "",
@@ -1812,7 +2089,7 @@ async function WH_processEventAsync(event, requestId, userId) {
               "WH",
               "",
               0,
-              "WH_processEventAsync",
+              "processWebhookAsync",
               "INFO",
             ]);
 
@@ -1837,7 +2114,7 @@ async function WH_processEventAsync(event, requestId, userId) {
               "WH",
               createResult.error,
               0,
-              "WH_processEventAsync",
+              "processWebhookAsync",
               "ERROR",
             ]);
 
@@ -1862,7 +2139,7 @@ async function WH_processEventAsync(event, requestId, userId) {
             "WH",
             followError.toString(),
             0,
-            "WH_processEventAsync",
+            "processWebhookAsync",
             "ERROR",
           ]);
 
@@ -1917,9 +2194,9 @@ async function WH_processEventAsync(event, requestId, userId) {
 }
 /**
  * 15. 處理Quick Reply事件
- * @version 2025-07-21-V2.1.0
+ * @version 2025-07-21-V1.0.0
  * @date 2025-07-21 10:30:00
- * @description 處理LINE Quick Reply按鈕點擊事件，路由到SR模組
+ * @description 統一處理 Quick Reply 按鈕點擊事件，路由到對應的SR模組處理
  */
 async function WH_handleQuickReplyEvent(event) {
   const processId = uuidv4().substring(0, 8);
@@ -1963,11 +2240,12 @@ async function WH_handleQuickReplyEvent(event) {
 
 /**
  * 16. 路由到SR模組
- * @version 2025-07-21-V2.1.0
+ * @version 2025-07-21-V1.0.0
  * @date 2025-07-21 10:30:00
  * @description 將Quick Reply事件路由到SR模組處理
  */
 async function WH_routeToSRModule(userId, postbackData, eventContext) {
+  const functionName = "WH_routeToSRModule";
   try {
     WH_logInfo(`路由到SR模組: ${postbackData}`, "模組路由", userId, "WH_routeToSRModule");
 
@@ -2526,7 +2804,7 @@ async function WH_handleWebhook(event, reqId) {
 
       // v2.5.1: 階段二 - 確保postback事件也正確處理quickReply
       const postbackResult = await WH_callLBKSafely(postbackInputData);
-      
+
       // 如果有回應結果，確保正確傳遞quickReply
       if (postbackResult && event.replyToken) {
         await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
@@ -2634,5 +2912,42 @@ async function WH_sendPushMessage(userId, message, messageType = 'text') {
   }
 }
 
+// 階段三新增函數：科目歸類 Postback 識別
+/**
+ * 識別科目歸類 postback 事件
+ * @param {string} postbackData - postback 事件的 data 欄位
+ * @returns {boolean} - 如果是科目歸類 postback，則返回 true
+ */
+function WH_isSubjectClassificationPostback(postbackData) {
+  // 識別規則：postbackData 格式為 "category_XXX"，其中 XXX 是科目 ID
+  return postbackData && postbackData.startsWith("category_");
+}
+
+// 階段三新增函數：解析科目歸類 postback 數據
+/**
+ * 解析科目歸類 postback 數據
+ * @param {string} postbackData - postback 事件的 data 欄位
+ * @returns {object} - 包含 success 狀態、原始科目、解析後的科目 ID 等資訊的物件
+ */
+function WH_parseClassificationPostback(postbackData) {
+  try {
+    const parts = postbackData.split("_");
+    if (parts.length >= 2 && parts[0] === "category") {
+      const subjectId = parts.slice(1).join("_"); // 重新組合 ID，以防科目 ID 中包含 '_'
+      return {
+        success: true,
+        originalSubject: postbackData, // 記錄原始 postback data
+        subjectId: subjectId
+      };
+    } else {
+      throw new Error("Postback data 格式不正確，無法解析科目 ID");
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
 
 // ✅ 健康檢查API已移除 - 由index.js統一提供
