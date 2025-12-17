@@ -1847,10 +1847,7 @@ function LBK_buildStatisticsQuickReply(userId, currentType) {
       quickReplyItems.push({ label: '本日統計', postbackData: '本日統計' });
     }
 
-    // 添加記帳相關快速操作
-    if (quickReplyItems.length < 3) {
-      quickReplyItems.push({ label: '快速記帳', postbackData: 'quick_add' });
-    }
+    // 移除快速記帳按鈕，只保留統計查詢選項
 
     // 限制最多4個選項
     return {
