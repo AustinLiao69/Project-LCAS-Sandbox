@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.4.1
+ * LBK_快速記帳模組_1.4.2
  * @module LBK模組
  * @description LINE OA 專用快速記帳處理模組 - DCN-0024階段二：完善新科目歸類流程
- * @update 2025-12-16: 升級至v1.4.1，修正0099.json科目提取邏輯，完善新科目歸類機制
+ * @update 2025-12-16: 升級至v1.4.2，新增LINE Quick Reply支援，優化科目選擇介面
  */
 
 // 引入所需模組
@@ -2034,25 +2034,26 @@ ${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
 }
 
 /**
- * 處理新科目歸類流程 - v1.4.0 增強版本
- * @version 2025-12-16-V1.4.0
- * @description 當科目不存在時，引導使用者進行科目歸類
+ * 處理新科目歸類流程 - v1.4.2 支援Quick Reply輸出
+ * @version 2025-12-16-V1.4.2
+ * @description 當科目不存在時，引導使用者進行科目歸類，同時輸出Quick Reply選項
  */
 async function LBK_handleNewSubjectClassification(originalSubject, parsedData, inputData, processId) {
   try {
     LBK_logInfo(`處理新科目歸類: ${originalSubject} [${processId}]`, "新科目歸類", inputData.userId, "LBK_handleNewSubjectClassification");
 
-    // 生成主科目選單訊息
-    const classificationMessage = LBK_buildClassificationMessage(originalSubject);
+    // 生成主科目選單訊息和Quick Reply
+    const classificationResult = LBK_buildClassificationMessage(originalSubject);
 
     return {
       success: true,
-      message: classificationMessage,
-      responseMessage: classificationMessage,
+      message: classificationResult.message,
+      responseMessage: classificationResult.message,
+      quickReply: classificationResult.quickReply,
       moduleCode: "LBK",
       module: "LBK",
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.4.0",
+      moduleVersion: "1.4.2",
       requiresUserSelection: true,
       pendingData: {
         originalSubject: originalSubject,
@@ -2068,10 +2069,11 @@ async function LBK_handleNewSubjectClassification(originalSubject, parsedData, i
       success: false,
       message: "系統處理新科目時發生錯誤，請稍後再試",
       responseMessage: "系統處理新科目時發生錯誤，請稍後再試",
+      quickReply: null,
       moduleCode: "LBK",
       module: "LBK",
       processingTime: 0,
-      moduleVersion: "1.4.0",
+      moduleVersion: "1.4.2",
       errorType: "CLASSIFICATION_ERROR"
     };
   }
@@ -2313,9 +2315,9 @@ function LBK_buildCategoryMapping() {
 }
 
 /**
- * 建立科目歸類選單訊息 - v1.4.1 完全基於0099配置
- * @version 2025-12-16-V1.4.1
- * @description 完全依賴0099.json生成科目選擇介面，移除所有硬編碼
+ * 建立科目歸類選單訊息和Quick Reply - v1.4.2 支援LINE Quick Reply
+ * @version 2025-12-16-V1.4.2
+ * @description 同時生成文字訊息和Quick Reply按鈕陣列，完全基於0099配置
  */
 function LBK_buildClassificationMessage(originalSubject) {
   try {
@@ -2323,10 +2325,13 @@ function LBK_buildClassificationMessage(originalSubject) {
     
     if (categories.length === 0) {
       LBK_logError(`無法從0099配置取得科目清單`, "科目歸類", "", "NO_CATEGORIES_AVAILABLE", "", "LBK_buildClassificationMessage");
-      return `系統錯誤：無法載入科目配置，請稍後再試或聯絡系統管理員`;
+      return {
+        message: `系統錯誤：無法載入科目配置，請稍後再試或聯絡系統管理員`,
+        quickReply: null
+      };
     }
     
-    // 轉換為選項格式
+    // 建立文字訊息選項格式
     const classificationOptions = categories.map(category => 
       `${category.categoryId} ${category.categoryName}`
     );
@@ -2336,14 +2341,49 @@ function LBK_buildClassificationMessage(originalSubject) {
     
     const message = `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
     
-    LBK_logInfo(`v1.4.1 基於0099配置生成科目歸類選單，共${classificationOptions.length}個選項`, "科目歸類", "", "LBK_buildClassificationMessage");
+    // 建立Quick Reply按鈕陣列
+    const quickReplyItems = [];
     
-    return message;
+    // 從categories建立Quick Reply按鈕
+    categories.forEach(category => {
+      quickReplyItems.push({
+        type: "action",
+        action: {
+          type: "postback",
+          label: `${category.categoryId} ${category.categoryName}`,
+          data: `action=classify_subject&category=${category.categoryId}&name=${encodeURIComponent(category.categoryName)}&subject=${encodeURIComponent(originalSubject)}`
+        }
+      });
+    });
+    
+    // 添加不歸類按鈕
+    quickReplyItems.push({
+      type: "action", 
+      action: {
+        type: "postback",
+        label: "000 不歸類",
+        data: `action=classify_subject&category=000&name=${encodeURIComponent("不歸類")}&subject=${encodeURIComponent(originalSubject)}`
+      }
+    });
+    
+    const quickReply = {
+      items: quickReplyItems.slice(0, 13) // LINE限制最多13個選項
+    };
+    
+    LBK_logInfo(`v1.4.2 生成科目歸類選單和Quick Reply，共${classificationOptions.length}個選項`, "科目歸類", "", "LBK_buildClassificationMessage");
+    
+    return {
+      message: message,
+      quickReply: quickReply
+    };
     
   } catch (error) {
     LBK_logError(`建立科目歸類選單失敗: ${error.toString()}`, "科目歸類", "", "CLASSIFICATION_MESSAGE_ERROR", error.toString(), "LBK_buildClassificationMessage");
     
-    return `系統錯誤：無法建立科目選單 (${error.message})，請稍後再試`;
+    return {
+      message: `系統錯誤：無法建立科目選單 (${error.message})，請稍後再試`,
+      quickReply: null
+    };
   }
 }
 
@@ -2464,9 +2504,9 @@ const LBK_MODULE = {
   LBK_buildCategoryMapping: LBK_buildCategoryMapping,
 
   // 版本資訊
-  MODULE_VERSION: "1.4.1",
+  MODULE_VERSION: "1.4.2",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "DCN-0024階段二：修正0099.json科目提取，完善新科目歸類流程"
+  MODULE_UPDATE: "DCN-0024階段二：新增LINE Quick Reply支援，優化科目選擇介面"
 };
 
 // 導出模組
