@@ -458,4 +458,5 @@ MM 	 DD 	 Description 	    Progress
 12	16	 執行DCN-0024  	 Ongoing
 12	16	 設定ASL.js, index.js在PROD環境同時運行  	 Ongoing
 12	16	 設定ASL.js, index.js, ASL.dart在Sandbox環境同時運行  	 Ongoing
-12	17	 建立LINE quick reply功能  	 Ongoing
+12	17	 建立LINE quick reply功能：科目歸類  	 Closed
+12	17	 建立LINE quick reply功能：帳戶(wallets,支付方式)Ongoing
