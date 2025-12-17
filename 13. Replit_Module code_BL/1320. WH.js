@@ -516,9 +516,10 @@ async function processWebhookAsync(e) {
 
             // 階段三：檢查是否為wallet確認postback事件
             if (WH_isWalletConfirmationPostback(postbackData)) {
-              console.log(`WH v2.5.2: 識別為wallet確認postback事件`);
+              console.log(`WH v2.5.2: 識別為wallet確認postback事件，轉發至LBK統一處理`);
 
-              const walletPostbackResult = await WH_handleWalletConfirmationPostback(postbackData, userId, event.replyToken, requestId);
+              // 轉發給LBK模組統一處理（與科目歸類邏輯一致）
+              const walletPostbackResult = await LBK.LBK_handleWalletConfirmationPostback(postbackData, userId, requestId);
 
               if (walletPostbackResult && event.replyToken) {
                 await WH_replyMessage(event.replyToken, walletPostbackResult.responseMessage ? [{ type: 'text', text: walletPostbackResult.responseMessage }] : walletPostbackResult, walletPostbackResult.quickReply);
