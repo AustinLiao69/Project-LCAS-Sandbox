@@ -2429,65 +2429,106 @@ function LBK_getLineMainCategories() {
  */
 function LBK_buildCategoryMapping() {
   try {
-    const categories = LBK_getLineMainCategories();
+    const subjectConfig = LBK_load0099SubjectConfig();
+    if (!subjectConfig || !Array.isArray(subjectConfig)) {
+      LBK_logWarning(`無法載入0099配置，使用最小映射表`, "科目配置", "", "LBK_buildCategoryMapping");
+      return {
+        "999": { categoryId: 999, categoryName: "不歸類", type: "expense" }
+      };
+    }
+
     const mapping = {};
 
-    categories.forEach(category => {
-      const key = category.categoryId.toString();
-      mapping[key] = {
-        categoryId: category.categoryId,
-        categoryName: category.categoryName,
-        type: (category.categoryId === 201) ? "income" : "expense"
-      };
+    // 從0099.json建立完整的科目映射表
+    subjectConfig.forEach(category => {
+      if (category.categoryId && category.categoryName) {
+        const key = category.categoryId.toString();
+        mapping[key] = {
+          categoryId: category.categoryId,
+          categoryName: category.categoryName,
+          type: (category.categoryId === 201) ? "income" : "expense"
+        };
+      }
     });
 
-    // 確保包含不歸類選項
-    mapping["000"] = { categoryId: 0, categoryName: "不歸類", type: "expense" };
+    // 特殊處理：將999不歸類映射到000以保持向後兼容
+    if (mapping["999"]) {
+      mapping["0"] = { 
+        categoryId: 999, 
+        categoryName: mapping["999"].categoryName, 
+        type: "expense" 
+      };
+    }
 
-    LBK_logDebug(`建立科目映射表，共${Object.keys(mapping).length}個選項`, "科目配置", "", "LBK_buildCategoryMapping");
+    LBK_logDebug(`建立科目映射表，共${Object.keys(mapping).length}個選項 (來源:0099.json)`, "科目配置", "", "LBK_buildCategoryMapping");
 
     return mapping;
 
   } catch (error) {
     LBK_logError(`建立科目映射失敗: ${error.toString()}`, "科目配置", "", "BUILD_MAPPING_ERROR", error.toString(), "LBK_buildCategoryMapping");
     return {
-      "000": { categoryId: 0, categoryName: "不歸類", type: "expense" }
+      "999": { categoryId: 999, categoryName: "不歸類", type: "expense" }
     };
   }
 }
 
 /**
- * 建立科目歸類選單訊息和Quick Reply - v1.4.2 支援LINE Quick Reply
- * @version 2025-12-16-V1.4.2
- * @description 同時生成文字訊息和Quick Reply按鈕陣列，使用階段一指定的10個固定選項
+ * 建立科目歸類選單訊息和Quick Reply - v1.4.3 動態調用0099.json配置
+ * @version 2025-12-17-V1.4.3
+ * @description 同時生成文字訊息和Quick Reply按鈕陣列，動態從0099.json載入科目選項
  */
 function LBK_buildClassificationMessage(originalSubject, parsedData, processId) {
   try {
-    // 階段一指定的10個固定科目選項
-    const fixedCategories = [
-      { categoryId: 101, categoryName: "生鮮雜貨" },
-      { categoryId: 102, categoryName: "生活家用" },
-      { categoryId: 103, categoryName: "交通費用" },
-      { categoryId: 104, categoryName: "餐飲費用" },
-      { categoryId: 105, categoryName: "娛樂消遣" },
-      { categoryId: 106, categoryName: "運動嗜好" },
-      { categoryId: 107, categoryName: "寵物生活" },
-      { categoryId: 201, categoryName: "財務收入" },
-      { categoryId: 301, categoryName: "財務支出" },
-      { categoryId: 0, categoryName: "不歸類" }
-    ];
+    // 從0099.json動態載入科目選項
+    const subjectConfig = LBK_load0099SubjectConfig();
+    if (!subjectConfig || !Array.isArray(subjectConfig)) {
+      LBK_logError(`無法載入0099科目配置 [${processId}]`, "科目歸類", "", "CONFIG_LOAD_ERROR", "0099.json載入失敗", "LBK_buildClassificationMessage");
+      // 使用備用的最小配置
+      const fallbackCategories = [
+        { categoryId: 104, categoryName: "餐飲費用" },
+        { categoryId: 999, categoryName: "不歸類" }
+      ];
+      return LBK_buildClassificationMessageInternal(originalSubject, parsedData, fallbackCategories, processId);
+    }
 
+    // 從0099.json提取所有科目並排序
+    const dynamicCategories = subjectConfig
+      .filter(item => item.categoryId && item.categoryName)
+      .sort((a, b) => a.categoryId - b.categoryId);
+
+    return LBK_buildClassificationMessageInternal(originalSubject, parsedData, dynamicCategories, processId);
+
+  } catch (error) {
+    LBK_logError(`建立科目歸類選單失敗: ${error.toString()}`, "科目歸類", "", "CLASSIFICATION_MESSAGE_ERROR", error.toString(), "LBK_buildClassificationMessage");
+
+    return {
+      success: false,
+      error: `系統錯誤：無法建立科目選單 (${error.message})，請稍後再試`
+    };
+  }
+}
+
+/**
+ * 內部函數：建立科目歸類訊息和Quick Reply
+ * @version 2025-12-17-V1.4.3
+ * @description 根據傳入的科目陣列生成選單訊息和Quick Reply按鈕
+ */
+function LBK_buildClassificationMessageInternal(originalSubject, parsedData, categories, processId) {
+  try {
     // 建立文字訊息選項格式
-    const classificationOptions = fixedCategories.map(category => {
-      const id = category.categoryId === 0 ? "000" : category.categoryId.toString();
+    const classificationOptions = categories.map(category => {
+      const id = category.categoryId === 999 ? "000" : category.categoryId.toString();
       return `${id} ${category.categoryName}`;
     });
 
     const message = `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
 
-    // 建立符合LINE API格式的Quick Reply按鈕陣列
-    const quickReplyItems = fixedCategories.map(category => {
-      const categoryCode = category.categoryId === 0 ? "000" : category.categoryId.toString();
+    // 建立符合LINE API格式的Quick Reply按鈕陣列，限制最多13個按鈕
+    const maxButtons = 13; // LINE Quick Reply最多支援13個按鈕
+    const limitedCategories = categories.slice(0, maxButtons);
+    
+    const quickReplyItems = limitedCategories.map(category => {
+      const categoryCode = category.categoryId === 999 ? "000" : category.categoryId.toString();
       const displayLabel = `${categoryCode} ${category.categoryName}`;
 
       // 確保label不超過20字符限制
@@ -2516,7 +2557,7 @@ function LBK_buildClassificationMessage(originalSubject, parsedData, processId) 
       items: quickReplyItems
     };
 
-    LBK_logInfo(`v1.4.2 生成科目歸類選單和Quick Reply，共10個固定選項`, "科目歸類", "", "LBK_buildClassificationMessage");
+    LBK_logInfo(`v1.4.3 生成科目歸類選單和Quick Reply，共${limitedCategories.length}個動態選項 (來源:0099.json)`, "科目歸類", "", "LBK_buildClassificationMessage");
 
     return {
       success: true,
@@ -2698,6 +2739,7 @@ const LBK_MODULE = {
   LBK_handleNewSubjectClassification: LBK_handleNewSubjectClassification,
   LBK_handleClassificationPostback: LBK_handleClassificationPostback,
   LBK_buildClassificationMessage: LBK_buildClassificationMessage,
+  LBK_buildClassificationMessageInternal: LBK_buildClassificationMessageInternal,
   LBK_processUserSelection: LBK_processUserSelection,
   LBK_saveNewCategoryToFirestore: LBK_saveNewCategoryToFirestore,
 
@@ -2710,9 +2752,9 @@ const LBK_MODULE = {
   LBK_addSubjectSynonym: LBK_addSubjectSynonym,
 
   // 版本資訊
-  MODULE_VERSION: "1.4.3",
+  MODULE_VERSION: "1.4.4",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "DCN-0024階段二：完善新科目歸類流程，階段三：修復科目歸類後記帳邏輯"
+  MODULE_UPDATE: "移除hard coding科目選項，改為動態調用0099.json配置"
 };
 
 // 導出模組
