@@ -22,7 +22,7 @@
     },
     {
       "walletId": "default_bank",
-      "name": "銀行帳戶",
+      "name": "銀行",
       "type": "bank",
       "currency": "{{default_currency}}",
       "balance": 0,
@@ -34,7 +34,7 @@
     },
     {
       "walletId": "default_credit",
-      "name": "信用卡",
+      "name": "刷卡",
       "type": "credit",
       "currency": "{{default_currency}}",
       "balance": 0,
