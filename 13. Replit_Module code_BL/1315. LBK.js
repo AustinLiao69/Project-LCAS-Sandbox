@@ -3011,10 +3011,13 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
   try {
     LBK_logInfo(`處理新wallet確認: ${walletName} [${processId}]`, "新wallet處理", parsedData.userId, functionName);
 
-    // 儲存pending記帳資料到快取
+    // 儲存pending記帳資料到快取 - 使用簡短的key
     const cache = require("node-cache");
     const cacheInstance = new cache({ stdTTL: 600 }); // 10分鐘
 
+    // 生成短的快取key
+    const shortKey = `W_${processId.slice(-6)}_${Date.now().toString().slice(-4)}`;
+    
     const pendingWalletData = {
       walletName: walletName,
       originalData: parsedData,
@@ -3022,19 +3025,11 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
       processId: processId
     };
 
-    const pendingKey = `WALLET_PENDING_${parsedData.userId}`;
-    cacheInstance.set(pendingKey, JSON.stringify(pendingWalletData));
+    // 使用短key儲存資料
+    cacheInstance.set(shortKey, JSON.stringify(pendingWalletData), 600);
 
-    // 生成wallet確認Quick Reply - 修復data字段長度限制
+    // 生成wallet確認Quick Reply - 使用超短data避免長度限制
     LBK_logInfo(`生成wallet確認選單: ${walletName} [${processId}]`, "新wallet處理", parsedData.userId, functionName);
-
-    // 將資料儲存到快取，Quick Reply只傳遞簡短的key
-    const walletConfirmKey = `wallet_${processId}_${Date.now().toString().slice(-6)}`;
-    cacheInstance.set(walletConfirmKey, JSON.stringify({
-      walletName: walletName,
-      parsedData: parsedData,
-      processId: processId
-    }), 600);
 
     const quickReply = {
       items: [
@@ -3043,7 +3038,7 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
           action: {
             type: 'postback',
             label: '✅ 確認新增',
-            data: `wallet_confirm_yes_${walletConfirmKey}`,
+            data: `wallet_yes_${shortKey}`, // 超短格式
             displayText: '確認新增此支付方式'
           }
         },
@@ -3052,7 +3047,7 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
           action: {
             type: 'postback',
             label: '❌ 取消記帳',
-            data: `wallet_confirm_no_${processId}`,
+            data: `wallet_no_${shortKey}`, // 超短格式
             displayText: '取消記帳'
           }
         }

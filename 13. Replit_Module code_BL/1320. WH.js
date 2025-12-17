@@ -2815,8 +2815,8 @@ function WH_isWalletConfirmationPostback(postbackData) {
       return false;
     }
 
-    // 檢查是否為wallet確認格式：wallet_confirm_yes_walletName 或 wallet_confirm_no_walletName
-    const walletConfirmPattern = /^wallet_confirm_(yes|no)_.+/;
+    // 檢查是否為wallet確認格式：wallet_yes_xxx 或 wallet_no_xxx（新的短格式）
+    const walletConfirmPattern = /^wallet_(yes|no)_.+/;
     return walletConfirmPattern.test(postbackData);
 
   } catch (error) {
@@ -2847,14 +2847,43 @@ async function WH_handleWalletConfirmationPostback(postbackData, userId, replyTo
       "INFO",
     ]);
 
-    // 解析postback資料：wallet_confirm_yes_walletName 或 wallet_confirm_no_walletName
+    // 解析postback資料：wallet_yes_shortKey 或 wallet_no_shortKey（新的短格式）
     const parts = postbackData.split('_');
-    if (parts.length < 4) {
+    if (parts.length < 3) {
       throw new Error('無效的wallet確認postback格式');
     }
 
-    const action = parts[2]; // yes 或 no
-    const walletName = parts.slice(3).join('_'); // 支援wallet名稱包含底線
+    const action = parts[1]; // yes 或 no
+    const shortKey = parts[2]; // 快取key
+
+    // 從快取中取得原始資料
+    let walletData = null;
+    try {
+      const cachedData = cache.get(shortKey);
+      if (cachedData) {
+        walletData = JSON.parse(cachedData);
+      }
+    } catch (cacheError) {
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.5.2: 無法從快取取得wallet資料: ${cacheError.message} [${processId}]`,
+        "Wallet確認",
+        userId,
+        "CACHE_ERROR",
+        "WH",
+        cacheError.message,
+        0,
+        functionName,
+        "ERROR",
+      ]);
+      throw new Error('無法取得wallet確認資料');
+    }
+
+    if (!walletData) {
+      throw new Error('wallet確認資料已過期');
+    }
+
+    const walletName = walletData.walletName;
 
     if (action === 'yes') {
       // 用戶選擇「是」- 新增wallet到wallets子集合
