@@ -2415,15 +2415,21 @@ function LBK_buildClassificationMessage(originalSubject) {
     
     const message = `您的科目庫無此科目，請問「${originalSubject}」是屬於什麼科目？\n\n${classificationOptions.join('\n')}`;
     
-    // 建立Quick Reply按鈕陣列
+    // 建立符合LINE API格式的Quick Reply按鈕陣列
     const quickReplyItems = fixedCategories.map(category => {
       const categoryCode = category.categoryId === 0 ? "000" : category.categoryId.toString();
+      const displayLabel = `${categoryCode} ${category.categoryName}`;
+      
+      // 確保label不超過20字符限制
+      const truncatedLabel = displayLabel.length > 20 ? displayLabel.substring(0, 17) + "..." : displayLabel;
+      
       return {
         type: "action",
         action: {
           type: "postback",
-          label: `${categoryCode} ${category.categoryName}`,
-          data: `category_${category.categoryId}`
+          label: truncatedLabel,
+          data: `category_${category.categoryId}`,
+          displayText: truncatedLabel
         }
       };
     });

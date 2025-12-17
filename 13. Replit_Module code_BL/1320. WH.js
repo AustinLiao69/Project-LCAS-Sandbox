@@ -1339,14 +1339,24 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
     // 如果有Quick Reply，加入快速回覆選項
     if (quickReply && quickReply.items && quickReply.items.length > 0) {
       messageObj.quickReply = {
-        items: quickReply.items.map(item => ({
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: item.label,
-            data: item.postbackData
+        items: quickReply.items.map(item => {
+          // 處理不同的item格式
+          if (item.type === 'action' && item.action) {
+            // 已經是正確的LINE格式
+            return item;
+          } else {
+            // 舊格式，需要轉換
+            return {
+              type: 'action',
+              action: {
+                type: 'postback',
+                label: item.label || item.text || 'Unknown',
+                data: item.postbackData || item.data || 'unknown',
+                displayText: item.label || item.text || 'Unknown'
+              }
+            };
           }
-        }))
+        })
       };
     }
 
