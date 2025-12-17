@@ -2611,7 +2611,7 @@ function LBK_buildClassificationMessageInternal(originalSubject, parsedData, cat
   try {
     // 建立文字訊息選項格式
     const classificationOptions = categories.map(category => {
-      const id = category.categoryId === 999 ? "000" : category.categoryId.toString();
+      const id = category.categoryId.toString();
       return `${id} ${category.categoryName}`;
     });
 
@@ -2622,7 +2622,7 @@ function LBK_buildClassificationMessageInternal(originalSubject, parsedData, cat
     const limitedCategories = categories.slice(0, maxButtons);
 
     const quickReplyItems = limitedCategories.map(category => {
-      const categoryCode = category.categoryId === 999 ? "000" : category.categoryId.toString();
+      const categoryCode = category.categoryId.toString();
       const displayLabel = `${categoryCode} ${category.categoryName}`;
 
       // 確保label不超過20字符限制
