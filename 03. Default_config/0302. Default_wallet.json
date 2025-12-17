@@ -10,39 +10,36 @@
   "default_wallets": [
     {
       "walletId": "cash",
-      "name": "現金",
-      "type": "cash",
+      "walletName": "現金",
+      "subWalletId": null,
+      "subWalletName": null,
       "currency": "{{default_currency}}",
       "balance": 0,
       "isDefault": true,
       "isActive": true,
-      "icon": "💵",
-      "color": "#4CAF50",
-      "synonyms": "現金帳戶"
+      "synonyms": ""
     },
     {
       "walletId": "debit",
-      "name": "銀行",
-      "type": "bank",
+      "walletName": "銀行",
+      "subWalletId": null,
+      "subWalletName": null,
       "currency": "{{default_currency}}",
       "balance": 0,
       "isDefault": false,
       "isActive": true,
-      "icon": "🏦",
-      "color": "#2196F3",
-      "synonyms": "銀行帳戶"
+      "synonyms": ""
     },
     {
       "walletId": "credit",
-      "name": "刷卡",
-      "type": "credit",
+      "walletName": "信用卡",
+      "subWalletId": null,
+      "subWalletName": null,
       "currency": "{{default_currency}}",
       "balance": 0,
       "isDefault": false,
       "isActive": true,
-      "icon": "💳",
-      "color": "#FF9800",
-      "synonyms": "信用卡帳戶"
+      "synonyms": ""
     }
   ]
 }
