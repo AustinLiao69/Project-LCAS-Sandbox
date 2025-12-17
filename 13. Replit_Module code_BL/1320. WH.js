@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.5.0
+ * WH_Webhook處理模組_2.5.1
  * @module Webhook模組  
- * @description LINE Webhook處理模組 - 階段六完成：支援DCN-0024科目歸類流程，純粹轉發機制
- * @update 2025-12-16: 升級至v2.5.0，支援新科目歸類兩階段對話，移除業務邏輯
+ * @description LINE Webhook處理模組 - 階段二完成：確保Quick Reply參數正確傳遞
+ * @update 2025-12-16: 升級至v2.5.1，修正WH_replyMessage調用，正確傳遞quickReply參數
  */
 
 // 首先引入其他模組 - 增強安全載入
@@ -166,7 +166,7 @@ function WH_checkEnvironmentVariables() {
 }
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.5.0 (2025-12-16) - 階段六完成：支援DCN-0024科目歸類流程");
+console.log("WH模組初始化，版本: 2.5.1 (2025-12-16) - 階段二完成：確保Quick Reply參數正確傳遞");
 
 // 執行環境變數完整性檢查
 const envCheckResult = WH_checkEnvironmentVariables();
@@ -1658,7 +1658,7 @@ async function WH_processEventAsync(event, requestId, userId) {
 
           WH_directLogWrite([
             WH_formatDateTime(new Date()),
-            `WH 2.5.0: DCN-0024 純粹轉發機制 - 信任LBK處理結果 [${requestId}]`,
+            `WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [${requestId}]`,
             "純粹轉發",
             userId,
             "",
@@ -1669,8 +1669,8 @@ async function WH_processEventAsync(event, requestId, userId) {
             "INFO",
           ]);
 
-          // v2.5.0: 純粹轉發，不做任何業務驗證
-          const replyResult = WH_replyMessage(event.replyToken, result);
+          // v2.5.1: 階段二修改 - 正確傳遞quickReply參數
+          const replyResult = WH_replyMessage(event.replyToken, result, result.quickReply);
 
           // 記錄回覆結果
           console.log(
@@ -1729,8 +1729,8 @@ async function WH_processEventAsync(event, requestId, userId) {
             "ERROR",
           ]);
 
-          // 仍然嘗試回覆用戶 - 使用完整的result對象
-          WH_replyMessage(event.replyToken, result);
+          // 仍然嘗試回覆用戶 - 使用完整的result對象，包含quickReply
+          WH_replyMessage(event.replyToken, result, result.quickReply);
         }
       } else if (event.message.type === "location") {
         console.log(`收到位置消息 [${requestId}]`);
@@ -2524,8 +2524,13 @@ async function WH_handleWebhook(event, reqId) {
         postbackData: postbackData
       };
 
-      // v2.5.0: 純粹轉發，讓LBK判斷是統計查詢還是科目歸類
-      await WH_callLBKSafely(postbackInputData);
+      // v2.5.1: 階段二 - 確保postback事件也正確處理quickReply
+      const postbackResult = await WH_callLBKSafely(postbackInputData);
+      
+      // 如果有回應結果，確保正確傳遞quickReply
+      if (postbackResult && event.replyToken) {
+        await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
+      }
 
     } else if (eventType === 'follow') {
       // 處理加入好友事件
