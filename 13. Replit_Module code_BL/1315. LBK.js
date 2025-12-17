@@ -93,6 +93,12 @@ async function LBK_processQuickBookkeeping(inputData) {
       return await LBK_handleWalletConfirmationPostback(inputData.postbackData, userId, processId);
     }
 
+    // v1.4.5 新增：檢查是否為 wallet postback 格式的訊息文本
+    if (inputData.messageText && (inputData.messageText.startsWith('wallet_yes_') || inputData.messageText.startsWith('wallet_no_'))) {
+      LBK_logInfo(`檢測到wallet postback格式訊息 [${processId}]`, "Wallet確認", userId, "LBK_processQuickBookkeeping");
+      return await LBK_handleWalletConfirmationPostback(inputData.messageText, userId, processId);
+    }
+
     // v1.4.3 新增：檢查是否為 postback 事件且包含科目歸類資料
     if (inputData.eventType === 'postback' && inputData.messageText && inputData.messageText.startsWith('classify_')) {
       LBK_logInfo(`檢測到科目歸類postback格式訊息 [${processId}]`, "科目歸類", userId, "LBK_processQuickBookkeeping");

@@ -1003,18 +1003,27 @@ function WCM_loadDefaultConfigs() {
 
     // 載入預設帳戶配置 - 0302. Default_wallet.json (必需檔案)
     const walletConfigPath = path.join(configBasePath, '0302. Default_wallet.json');
+    
+    // 如果相對路徑不存在，嘗試絕對路徑
+    let finalWalletConfigPath = walletConfigPath;
     if (!fs.existsSync(walletConfigPath)) {
-      const error = `0302. Default_wallet.json 檔案不存在: ${walletConfigPath}`;
-      WCM_logError(error, "載入預設配置", "", "WALLET_CONFIG_FILE_NOT_FOUND", error, functionName);
-      return {
-        success: false,
-        error: error,
-        configs: {}
-      };
+      const alternativePath = path.join(__dirname, '../../03. Default_config/0302. Default_wallet.json');
+      if (fs.existsSync(alternativePath)) {
+        finalWalletConfigPath = alternativePath;
+        WCM_logInfo(`使用替代路徑載入0302配置: ${alternativePath}`, "載入預設配置", "", functionName);
+      } else {
+        const error = `0302. Default_wallet.json 檔案不存在，已嘗試路徑: ${walletConfigPath}, ${alternativePath}`;
+        WCM_logError(error, "載入預設配置", "", "WALLET_CONFIG_FILE_NOT_FOUND", error, functionName);
+        return {
+          success: false,
+          error: error,
+          configs: {}
+        };
+      }
     }
 
     try {
-      let configContent = fs.readFileSync(walletConfigPath, 'utf8');
+      let configContent = fs.readFileSync(finalWalletConfigPath, 'utf8');
       configContent = configContent
         .replace(/\/\*\*[\s\S]*?\*\//g, '')
         .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -1039,7 +1048,7 @@ function WCM_loadDefaultConfigs() {
       WCM_logInfo(`成功載入0302預設帳戶配置: ${walletCount} 個帳戶`, "載入預設配置", "", functionName);
       
     } catch (parseError) {
-      const error = `解析0302. Default_wallet.json失敗: ${parseError.message}`;
+      const error = `解析0302. Default_wallet.json失敗 (路徑: ${finalWalletConfigPath}): ${parseError.message}`;
       WCM_logError(error, "載入預設配置", "", "WALLET_CONFIG_PARSE_ERROR", parseError.toString(), functionName);
       return {
         success: false,
