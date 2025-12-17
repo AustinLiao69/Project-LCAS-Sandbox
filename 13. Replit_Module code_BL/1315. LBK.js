@@ -2527,8 +2527,8 @@ function LBK_getLineMainCategories() {
 
 /**
  * 科目選擇映射表 - v1.4.1 基於0099配置
- * @version 2025-12-17-V1.4.3
- * @description 從0099.json動態建立科目選擇映射表，修復000映射問題
+ * @version 2025-12-16-V1.4.1
+ * @description 從0099.json動態建立科目選擇映射表
  */
 function LBK_buildCategoryMapping() {
   try {
@@ -2536,8 +2536,7 @@ function LBK_buildCategoryMapping() {
     if (!subjectConfig || !Array.isArray(subjectConfig)) {
       LBK_logWarning(`無法載入0099配置，使用最小映射表`, "科目配置", "", "LBK_buildCategoryMapping");
       return {
-        "999": { categoryId: 999, categoryName: "其他", type: "expense" },
-        "000": { categoryId: 999, categoryName: "其他", type: "expense" }
+        "999": { categoryId: 999, categoryName: "其他", type: "expense" }
       };
     }
 
@@ -2555,20 +2554,13 @@ function LBK_buildCategoryMapping() {
       }
     });
 
-    // 修復v1.4.3：確保000正確映射到999的完整資訊
-    const otherCategory = mapping["999"];
-    if (otherCategory) {
+    // 修復：正確映射000到999，使用從0099.json載入的名稱
+    if (mapping["999"]) {
       mapping["000"] = { 
-        categoryId: otherCategory.categoryId,  // 使用999作為真實的categoryId
-        categoryName: otherCategory.categoryName, 
-        type: otherCategory.type 
+        categoryId: 999, 
+        categoryName: mapping["999"].categoryName, 
+        type: "expense" 
       };
-      LBK_logDebug(`000映射設定: categoryId=${mapping["000"].categoryId}, name=${mapping["000"].categoryName}`, "科目配置", "", "LBK_buildCategoryMapping");
-    } else {
-      // 備用處理：如果沒有999科目，創建預設的
-      mapping["999"] = { categoryId: 999, categoryName: "其他", type: "expense" };
-      mapping["000"] = { categoryId: 999, categoryName: "其他", type: "expense" };
-      LBK_logWarning(`沒有找到999科目，創建預設映射`, "科目配置", "", "LBK_buildCategoryMapping");
     }
 
     LBK_logDebug(`建立科目映射表，共${Object.keys(mapping).length}個選項 (來源:0099.json)`, "科目配置", "", "LBK_buildCategoryMapping");
@@ -2578,8 +2570,7 @@ function LBK_buildCategoryMapping() {
   } catch (error) {
     LBK_logError(`建立科目映射失敗: ${error.toString()}`, "科目配置", "", "BUILD_MAPPING_ERROR", error.toString(), "LBK_buildCategoryMapping");
     return {
-      "999": { categoryId: 999, categoryName: "其他", type: "expense" },
-      "000": { categoryId: 999, categoryName: "其他", type: "expense" }
+      "999": { categoryId: 999, categoryName: "其他", type: "expense" }
     };
   }
 }
