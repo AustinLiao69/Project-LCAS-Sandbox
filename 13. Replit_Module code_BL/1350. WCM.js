@@ -980,11 +980,15 @@ function WCM_loadDefaultConfigs() {
   try {
     WCM_logInfo(`開始載入預設配置資料...`, "載入預設配置", "", functionName);
 
-    const configBasePath = path.join(__dirname, '../../03. Default_config');
+    // 使用絕對路徑解析，確保正確處理包含空格的目錄名稱
+    const configBasePath = path.resolve(__dirname, '../..', '03. Default_config');
     const configs = {};
+
+    WCM_logInfo(`配置檔案基礎路徑: ${configBasePath}`, "載入預設配置", "", functionName);
 
     // 載入系統配置
     const systemConfigPath = path.join(configBasePath, '0301. Default_config.json');
+    WCM_logInfo(`嘗試載入系統配置: ${systemConfigPath}`, "載入預設配置", "", functionName);
     if (fs.existsSync(systemConfigPath)) {
       let configContent = fs.readFileSync(systemConfigPath, 'utf8');
 
@@ -1004,32 +1008,34 @@ function WCM_loadDefaultConfigs() {
     // 載入預設帳戶配置 - 0302. Default_wallet.json (必需檔案)
     const walletConfigPath = path.join(configBasePath, '0302. Default_wallet.json');
     
-    // 如果相對路徑不存在，嘗試絕對路徑
-    let finalWalletConfigPath = walletConfigPath;
-    if (!fs.existsSync(walletConfigPath)) {
-      // 修正：使用正確的專案根目錄路徑
-      const projectRootPath = path.join(__dirname, '../..');
-      const alternativePath = path.join(projectRootPath, '03. Default_config', '0302. Default_wallet.json');
-      
-      if (fs.existsSync(alternativePath)) {
-        finalWalletConfigPath = alternativePath;
-        WCM_logInfo(`使用替代路徑載入0302配置: ${alternativePath}`, "載入預設配置", "", functionName);
-      } else {
-        // 嘗試第三個路徑：直接從專案根目錄
-        const thirdPath = './03. Default_config/0302. Default_wallet.json';
-        if (fs.existsSync(thirdPath)) {
-          finalWalletConfigPath = thirdPath;
-          WCM_logInfo(`使用第三路徑載入0302配置: ${thirdPath}`, "載入預設配置", "", functionName);
-        } else {
-          const error = `0302. Default_wallet.json 檔案不存在，已嘗試路徑: ${walletConfigPath}, ${alternativePath}, ${thirdPath}`;
-          WCM_logError(error, "載入預設配置", "", "WALLET_CONFIG_FILE_NOT_FOUND", error, functionName);
-          return {
-            success: false,
-            error: error,
-            configs: {}
-          };
-        }
+    // 定義多個可能的路徑，確保處理包含空格的目錄名稱
+    const possiblePaths = [
+      walletConfigPath, // 首先嘗試相對路徑
+      path.resolve(__dirname, '../..', '03. Default_config', '0302. Default_wallet.json'), // 絕對路徑
+      path.resolve(process.cwd(), '03. Default_config', '0302. Default_wallet.json'), // 從工作目錄
+      './03. Default_config/0302. Default_wallet.json', // 直接相對路徑
+      '03. Default_config/0302. Default_wallet.json' // 不含 ./
+    ];
+    
+    let finalWalletConfigPath = null;
+    
+    for (const testPath of possiblePaths) {
+      WCM_logInfo(`嘗試路徑: ${testPath}`, "載入預設配置", "", functionName);
+      if (fs.existsSync(testPath)) {
+        finalWalletConfigPath = testPath;
+        WCM_logInfo(`成功找到0302配置文件: ${testPath}`, "載入預設配置", "", functionName);
+        break;
       }
+    }
+    
+    if (!finalWalletConfigPath) {
+      const error = `0302. Default_wallet.json 檔案不存在，已嘗試所有路徑: ${possiblePaths.join(', ')}`;
+      WCM_logError(error, "載入預設配置", "", "WALLET_CONFIG_FILE_NOT_FOUND", error, functionName);
+      return {
+        success: false,
+        error: error,
+        configs: {}
+      };
     }
 
     try {
@@ -1069,6 +1075,7 @@ function WCM_loadDefaultConfigs() {
 
     // 載入貨幣配置
     const currencyConfigPath = path.join(configBasePath, '0303. Default_currency.json');
+    WCM_logInfo(`嘗試載入貨幣配置: ${currencyConfigPath}`, "載入預設配置", "", functionName);
     if (fs.existsSync(currencyConfigPath)) {
       const configContent = fs.readFileSync(currencyConfigPath, 'utf8');
       const cleanContent = configContent
