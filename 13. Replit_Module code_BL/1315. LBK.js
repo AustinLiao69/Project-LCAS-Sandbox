@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.4.3
+ * LBK_快速記帳模組_1.4.4
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - DCN-0024階段二：完善新科目歸類流程，階段三：修復科目歸類後記帳邏輯
- * @update 2025-12-17: 升級至v1.4.3，修復科目歸類後自動記帳邏輯，正確儲存pending記帳資料
+ * @description LINE OA 專用快速記帳處理模組 - DCN-0024階段二：建立wallet驗證機制，階段三：修復科目歸類後記帳邏輯
+ * @update 2025-12-17: 升級至v1.4.4，新增wallet驗證機制，確保記帳使用的wallet都是用戶已定義的
  */
 
 // 引入所需模組
@@ -155,6 +155,40 @@ async function LBK_processQuickBookkeeping(inputData) {
     const paymentMethod = paymentMethodResult.method;
     const walletId = paymentMethodResult.walletId;
     const walletName = paymentMethodResult.walletName;
+
+    // 階段二：驗證wallet存在性
+    const walletValidationResult = await LBK_validateWalletExists(userId, walletId, walletName, processId);
+    
+    if (!walletValidationResult.success) {
+      // 檢查是否需要新wallet確認流程
+      if (walletValidationResult.requiresUserConfirmation) {
+        LBK_logInfo(`觸發新wallet確認流程: ${walletName} [${processId}]`, "wallet驗證", userId, "LBK_processQuickBookkeeping");
+        return await LBK_handleNewWallet(walletName, parseResult.data, inputData, processId);
+      }
+
+      const errorMessage = walletValidationResult.error || "wallet驗證失敗";
+      const formattedErrorMessage = LBK_formatReplyMessage(null, "LBK", {
+        originalInput: inputData.messageText,
+        error: `非指定支付方式，請使用系統認可的支付方式`,
+        success: false,
+        partialData: parseResult.data
+      });
+
+      return {
+        success: false,
+        message: formattedErrorMessage,
+        responseMessage: formattedErrorMessage,
+        moduleCode: "LBK",
+        module: "LBK",
+        processingTime: 0,
+        moduleVersion: "1.4.4",
+        errorType: walletValidationResult.errorType || "WALLET_VALIDATION_ERROR"
+      };
+    }
+
+    // 使用驗證過的wallet資訊更新記帳資料
+    parseResult.data.paymentMethod = walletValidationResult.walletName;
+    parseResult.data.walletId = walletValidationResult.walletId;
 
     // 執行記帳
     const bookkeepingResult = await LBK_executeBookkeeping(parseResult.data, processId);
@@ -2667,6 +2701,100 @@ function LBK_buildClassificationMessageInternal(originalSubject, parsedData, cat
 }
 
 /**
+ * 驗證wallet是否存在於用戶的wallets子集合中
+ * @version 2025-12-17-V1.4.4
+ * @description 階段二：檢查指定的wallet是否存在於用戶的wallets子集合中
+ */
+async function LBK_validateWalletExists(userId, walletId, walletName, processId) {
+  try {
+    LBK_logInfo(`開始驗證wallet存在性: ${walletName} (${walletId}) [${processId}]`, "wallet驗證", userId, "LBK_validateWalletExists");
+
+    // 取得用戶預設帳本ID
+    const ledgerId = `user_${userId}`;
+
+    // 從Firestore查詢用戶的錢包列表
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    
+    // 如果walletId是預設值，直接查詢對應的錢包
+    if (walletId === 'default_cash' || walletId === 'default_bank' || walletId === 'default_credit') {
+      const walletDoc = await db.collection(`ledgers/${ledgerId}/wallets`)
+        .doc(walletId)
+        .get();
+      
+      if (walletDoc.exists) {
+        const walletData = walletDoc.data();
+        if (walletData.userId === userId && walletData.status === 'active') {
+          LBK_logInfo(`wallet驗證成功: ${walletName} (${walletId}) [${processId}]`, "wallet驗證", userId, "LBK_validateWalletExists");
+          return {
+            success: true,
+            walletId: walletId,
+            walletName: walletData.name,
+            walletType: walletData.type
+          };
+        }
+      }
+    }
+
+    // 查詢用戶所有可用的錢包
+    const walletsSnapshot = await db.collection(`ledgers/${ledgerId}/wallets`)
+      .where('userId', '==', userId)
+      .where('status', '==', 'active')
+      .get();
+
+    if (walletsSnapshot.empty) {
+      LBK_logWarning(`用戶 ${userId} 沒有可用的錢包 [${processId}]`, "wallet驗證", userId, "LBK_validateWalletExists");
+      return {
+        success: false,
+        error: "用戶沒有可用的錢包",
+        errorType: "NO_WALLETS_FOUND",
+        requiresUserConfirmation: true
+      };
+    }
+
+    // 檢查是否存在匹配的錢包
+    let foundWallet = null;
+    walletsSnapshot.forEach(doc => {
+      const walletData = doc.data();
+      // 精確匹配wallet ID或名稱
+      if (walletData.id === walletId || 
+          walletData.name.toLowerCase() === walletName.toLowerCase()) {
+        foundWallet = {
+          walletId: walletData.id,
+          walletName: walletData.name,
+          walletType: walletData.type
+        };
+      }
+    });
+
+    if (foundWallet) {
+      LBK_logInfo(`wallet驗證成功: ${foundWallet.walletName} (${foundWallet.walletId}) [${processId}]`, "wallet驗證", userId, "LBK_validateWalletExists");
+      return {
+        success: true,
+        ...foundWallet
+      };
+    }
+
+    // 如果找不到匹配的錢包，觸發用戶確認流程
+    LBK_logWarning(`找不到匹配的錢包: ${walletName} [${processId}]`, "wallet驗證", userId, "LBK_validateWalletExists");
+    return {
+      success: false,
+      error: `找不到錢包: ${walletName}`,
+      errorType: "WALLET_NOT_FOUND",
+      requiresUserConfirmation: true
+    };
+
+  } catch (error) {
+    LBK_logError(`驗證wallet存在性失敗: ${error.message} [${processId}]`, "wallet驗證", userId, "WALLET_VALIDATION_ERROR", error.toString(), "LBK_validateWalletExists");
+    return {
+      success: false,
+      error: error.message,
+      errorType: "WALLET_VALIDATION_ERROR"
+    };
+  }
+}
+
+/**
  * 解析支付方式 - 動態從用戶錢包取得
  * @version 2025-12-12-V2.0.0
  * @description 從用戶的錢包子集合中動態取得支付方式，移除hardcoded邏輯
@@ -2732,6 +2860,88 @@ async function LBK_parsePaymentMethod(text, userId, processId) {
 
     // 錯誤時返回預設值
     return { method: 'cash', walletId: 'default_cash', walletName: '現金' };
+  }
+}
+
+/**
+ * 處理新wallet確認流程 - v1.4.4
+ * @version 2025-12-17-V1.4.4
+ * @description 階段二：處理未知wallet，生成確認流程並提供用戶選擇
+ */
+async function LBK_handleNewWallet(walletName, parsedData, inputData, processId) {
+  try {
+    LBK_logInfo(`處理新wallet確認: ${walletName} [${processId}]`, "新wallet處理", inputData.userId, "LBK_handleNewWallet");
+
+    // 建立wallet確認訊息
+    const confirmationMessage = `檢測到未知支付方式「${walletName}」\n\n請選擇處理方式：\n\n1️⃣ 確認新增此支付方式\n2️⃣ 取消記帳，使用系統認可的支付方式`;
+
+    // 建立Quick Reply選項
+    const quickReplyItems = [
+      {
+        type: "action",
+        action: {
+          type: "postback",
+          label: "確認新增",
+          data: `confirm_wallet_${JSON.stringify({
+            walletName: walletName,
+            originalData: parsedData,
+            userId: inputData.userId,
+            originalInput: inputData.messageText
+          })}`,
+          displayText: "確認新增支付方式"
+        }
+      },
+      {
+        type: "action",
+        action: {
+          type: "postback",
+          label: "取消記帳",
+          data: `cancel_wallet_${JSON.stringify({
+            walletName: walletName,
+            reason: "user_cancelled"
+          })}`,
+          displayText: "取消記帳"
+        }
+      }
+    ];
+
+    const quickReply = {
+      items: quickReplyItems
+    };
+
+    LBK_logInfo(`生成wallet確認選單: ${walletName} [${processId}]`, "新wallet處理", inputData.userId, "LBK_handleNewWallet");
+
+    return {
+      success: true,
+      message: confirmationMessage,
+      responseMessage: confirmationMessage,
+      quickReply: quickReply,
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
+      moduleVersion: "1.4.4",
+      requiresUserSelection: true,
+      walletConfirmation: true,
+      pendingWalletData: {
+        walletName: walletName,
+        parsedData: parsedData,
+        originalInput: inputData.messageText
+      }
+    };
+
+  } catch (error) {
+    LBK_logError(`新wallet確認處理失敗: ${error.toString()} [${processId}]`, "新wallet處理", inputData.userId, "NEW_WALLET_CONFIRMATION_ERROR", error.toString(), "LBK_handleNewWallet");
+
+    return {
+      success: false,
+      message: "wallet確認處理失敗，請稍後再試",
+      responseMessage: "wallet確認處理失敗，請稍後再試",
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.4.4",
+      errorType: "NEW_WALLET_CONFIRMATION_ERROR"
+    };
   }
 }
 
@@ -2872,10 +3082,14 @@ const LBK_MODULE = {
   // 新增同義詞管理函數
   LBK_addSubjectSynonym: LBK_addSubjectSynonym,
 
+  // 新增wallet驗證函數 - v1.4.4
+  LBK_validateWalletExists: LBK_validateWalletExists,
+  LBK_handleNewWallet: LBK_handleNewWallet,
+
   // 版本資訊
   MODULE_VERSION: "1.4.4",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "移除hard coding科目選項，改為動態調用0099.json配置"
+  MODULE_UPDATE: "階段二：新增wallet驗證機制，確保記帳使用的wallet都是用戶已定義的"
 };
 
 // 導出模組
