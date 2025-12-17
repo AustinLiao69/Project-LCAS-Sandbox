@@ -68,6 +68,12 @@ async function LBK_processQuickBookkeeping(inputData) {
   try {
     LBK_logInfo(`開始處理LINE OA請求 [${processId}]`, "智慧路由", userId || "", "LBK_processQuickBookkeeping");
 
+    // v1.4.2 階段三：檢查是否為科目歸類postback事件
+    if (inputData.eventType === 'classification_postback' && inputData.classificationData) {
+      LBK_logInfo(`檢測到科目歸類postback事件 [${processId}]`, "科目歸類", userId, "LBK_processQuickBookkeeping");
+      return await LBK_handleClassificationPostback(inputData, processId);
+    }
+
     // 第一步：檢查是否為統計查詢關鍵字
     const keywordCheckResult = await LBK_checkStatisticsKeyword(inputData.messageText, userId, processId);
 
@@ -2034,6 +2040,72 @@ ${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
 }
 
 /**
+ * 處理科目歸類postback事件 - v1.4.2 階段三新增
+ * @version 2025-12-16-V1.4.2
+ * @description 處理用戶點擊Quick Reply按鈕後的科目歸類完成流程
+ */
+async function LBK_handleClassificationPostback(inputData, processId) {
+  try {
+    const userId = inputData.userId;
+    const classificationData = inputData.classificationData;
+    const subjectId = classificationData.subjectId;
+    
+    LBK_logInfo(`處理科目歸類postback: subjectId=${subjectId} [${processId}]`, "科目歸類", userId, "LBK_handleClassificationPostback");
+
+    // 從postback中取得選擇的科目ID
+    const categoryMapping = LBK_buildCategoryMapping();
+    const selectedCategory = categoryMapping[subjectId];
+    
+    if (!selectedCategory) {
+      LBK_logError(`無效的科目選擇: ${subjectId} [${processId}]`, "科目歸類", userId, "INVALID_SELECTION", "", "LBK_handleClassificationPostback");
+      return {
+        success: false,
+        message: "選擇的科目無效，請重新選擇",
+        responseMessage: "選擇的科目無效，請重新選擇",
+        moduleCode: "LBK",
+        module: "LBK",
+        errorType: "INVALID_SELECTION"
+      };
+    }
+
+    LBK_logInfo(`科目歸類選擇: ${selectedCategory.categoryName} [${processId}]`, "科目歸類", userId, "LBK_handleClassificationPostback");
+
+    // 回覆科目歸類確認訊息
+    const confirmationMessage = `已完成科目歸類！
+    
+選擇科目：${subjectId} ${selectedCategory.categoryName}
+歸類狀態：完成
+
+💡 後續相同輸入將自動歸類至此科目`;
+
+    return {
+      success: true,
+      message: confirmationMessage,
+      responseMessage: confirmationMessage,
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
+      moduleVersion: "1.4.2",
+      classificationCompleted: true
+    };
+
+  } catch (error) {
+    LBK_logError(`處理科目歸類postback失敗: ${error.toString()} [${processId}]`, "科目歸類", inputData.userId, "POSTBACK_ERROR", error.toString(), "LBK_handleClassificationPostback");
+    
+    return {
+      success: false,
+      message: "科目歸類處理失敗，請稍後再試",
+      responseMessage: "科目歸類處理失敗，請稍後再試",
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.4.2",
+      errorType: "POSTBACK_ERROR"
+    };
+  }
+}
+
+/**
  * 處理新科目歸類流程 - v1.4.2 支援Quick Reply輸出
  * @version 2025-12-16-V1.4.2
  * @description 當科目不存在時，引導使用者進行科目歸類，同時輸出Quick Reply選項
@@ -2482,8 +2554,9 @@ const LBK_MODULE = {
   // 新增支付方式解析函數
   LBK_parsePaymentMethod: LBK_parsePaymentMethod,
 
-  // 新科目歸類函數 - v1.4.1增強（完全基於0099配置）
+  // 新科目歸類函數 - v1.4.2增強（支援Quick Reply和postback處理）
   LBK_handleNewSubjectClassification: LBK_handleNewSubjectClassification,
+  LBK_handleClassificationPostback: LBK_handleClassificationPostback,
   LBK_buildClassificationMessage: LBK_buildClassificationMessage,
   LBK_processUserSelection: LBK_processUserSelection,
   LBK_saveNewCategoryToFirestore: LBK_saveNewCategoryToFirestore,

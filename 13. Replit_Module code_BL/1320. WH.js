@@ -500,11 +500,11 @@ async function processWebhookAsync(e) {
             }
           } else if (event.type === 'postback') {
               const postbackData = event.postback.data;
-              console.log(`WH v2.5.2: 收到postback事件，強化處理: ${postbackData}`);
+              console.log(`WH v2.5.1: 階段三 - 收到postback事件: ${postbackData}`);
 
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.5.2: 階段三 - 處理postback事件: ${postbackData} [${requestId}]`,
+                `WH 2.5.1: 階段三 - 處理postback事件: ${postbackData} [${requestId}]`,
                 "Postback處理",
                 userId,
                 "",
@@ -515,13 +515,13 @@ async function processWebhookAsync(e) {
                 "INFO",
               ]);
 
-              // v2.5.2: 階段三 - 識別科目歸類postback事件
+              // 階段三：識別科目歸類postback事件
               if (WH_isSubjectClassificationPostback(postbackData)) {
-                console.log(`檢測到科目歸類postback事件: ${postbackData} [${requestId}]`);
+                console.log(`階段三：檢測到科目歸類postback事件: ${postbackData} [${requestId}]`);
 
                 WH_directLogWrite([
                   WH_formatDateTime(new Date()),
-                  `WH 2.5.2: 檢測到科目歸類postback，調用專門處理邏輯 [${requestId}]`,
+                  `WH 2.5.1: 階段三 - 科目歸類postback識別成功 [${requestId}]`,
                   "科目歸類",
                   userId,
                   "",
@@ -536,27 +536,41 @@ async function processWebhookAsync(e) {
                 const classificationData = WH_parseClassificationPostback(postbackData);
 
                 if (classificationData.success) {
-                  // 調用LBK處理科目歸類完成流程
+                  // 階段三：調用LBK處理科目歸類完成流程
                   const classificationInputData = {
                     userId: userId,
-                    messageText: classificationData.originalSubject,
+                    messageText: postbackData, // 直接使用postback數據
                     replyToken: event.replyToken,
                     timestamp: event.timestamp,
                     processId: requestId,
                     eventType: 'classification_postback',
-                    classificationData: classificationData
+                    classificationData: classificationData,
+                    subjectId: classificationData.subjectId
                   };
 
                   const classificationResult = await WH_callLBKSafely(classificationInputData);
 
                   if (classificationResult && event.replyToken) {
                     await WH_replyMessage(event.replyToken, classificationResult, classificationResult.quickReply);
+
+                    WH_directLogWrite([
+                      WH_formatDateTime(new Date()),
+                      `WH 2.5.1: 階段三 - 科目歸類完成，已回覆用戶 [${requestId}]`,
+                      "科目歸類",
+                      userId,
+                      "",
+                      "WH",
+                      "",
+                      0,
+                      "WH_processEventAsync",
+                      "INFO",
+                    ]);
                   }
                 } else {
                   console.log(`科目歸類postback解析失敗: ${classificationData.error} [${requestId}]`);
                   WH_directLogWrite([
                     WH_formatDateTime(new Date()),
-                    `WH 2.5.2: 科目歸類postback解析失敗: ${classificationData.error} [${requestId}]`,
+                    `WH 2.5.1: 科目歸類postback解析失敗: ${classificationData.error} [${requestId}]`,
                     "科目歸類",
                     userId,
                     "PARSE_ERROR",
@@ -571,8 +585,8 @@ async function processWebhookAsync(e) {
                   await WH_replyMessage(event.replyToken, "科目歸類處理失敗，請稍後再試");
                 }
               } else {
-                // v2.5.2: 非科目歸類的其他postback事件，保持原有處理方式
-                console.log(`WH v2.5.2: 處理一般postback事件: ${postbackData}`);
+                // 階段三：非科目歸類的其他postback事件
+                console.log(`WH v2.5.1: 處理一般postback事件: ${postbackData}`);
 
                 const postbackInputData = {
                   userId: userId,
@@ -1461,7 +1475,7 @@ function setDependencies(ddModule, bkModule, dlModule) {
   global.BK_validatePaymentMethod = bkModule.BK_validatePaymentMethod;
 
   global.DL_initialize = dlModule.DL_initialize;
-  global.DL_info = dlModule.DL_info;
+  global.DL_info = dl dlModule.DL_info;
   global.DL_warning = dlModule.DL_warning;
   global.DL_error = dlModule.DL_error;
   global.DL_debug = dlModule.DL_debug;
@@ -1993,7 +2007,7 @@ async function WH_processEventAsync(event, requestId, userId) {
         "WH",
         "",
         0,
-        "WH_processEventAsync",
+        "processWebhookAsync",
         "INFO",
       ]);
 
