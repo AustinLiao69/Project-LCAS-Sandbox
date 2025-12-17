@@ -2088,15 +2088,26 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     // 載入0099配置以取得科目資訊
     const subjectConfig = LBK_load0099SubjectConfig();
     const mainCategories = LBK_getLineMainCategories();
-    const categoryMapping = LBK_buildCategoryMapping(mainCategories);
+    const categoryMapping = LBK_buildCategoryMapping();
 
-    // 找到選擇的科目
-    const selectedCategory = categoryMapping.find(cat => cat.id === subjectId);
+    // 找到選擇的科目 - categoryMapping 是對象，不是數組
+    const selectedCategory = categoryMapping[subjectId];
     if (!selectedCategory) {
-      return LBK_formatErrorResponse("INVALID_CATEGORY", `無效的科目ID: ${subjectId}`);
+      LBK_logError(`無效的科目ID: ${subjectId} [${processId}]`, "科目歸類", inputData.userId, "INVALID_CATEGORY", `可用科目: ${Object.keys(categoryMapping).join(', ')}`, "LBK_handleClassificationPostback");
+      
+      return {
+        success: false,
+        message: `無效的科目ID: ${subjectId}，請重新選擇`,
+        responseMessage: `無效的科目ID: ${subjectId}，請重新選擇`,
+        moduleCode: "LBK",
+        module: "LBK",
+        processingTime: 0,
+        moduleVersion: "1.4.3",
+        errorType: "INVALID_CATEGORY"
+      };
     }
 
-    LBK_logInfo(`科目歸類選擇: ${selectedCategory.name} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
+    LBK_logInfo(`科目歸類選擇: ${selectedCategory.categoryName} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
 
     // 階段三修復：從pendingData中取得原始記帳資料
     const pendingData = inputData.classificationData.pendingData;
@@ -2130,13 +2141,13 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       rawAmount: pendingData.rawAmount,
       paymentMethod: pendingData.paymentMethod,
       subjectCode: subjectId,
-      subjectName: selectedCategory.name,
+      subjectName: selectedCategory.categoryName,
       majorCode: subjectId,
-      action: selectedCategory.name.includes('收入') ? '收入' : '支出',
+      action: selectedCategory.categoryName.includes('收入') ? '收入' : '支出',
       userId: inputData.userId
     };
 
-    LBK_logInfo(`開始執行歸類後記帳: ${pendingData.subject} ${pendingData.amount}元 → ${selectedCategory.name} [${processId}]`, "記帳執行", inputData.userId, "LBK_handleClassificationPostback");
+    LBK_logInfo(`開始執行歸類後記帳: ${pendingData.subject} ${pendingData.amount}元 → ${selectedCategory.categoryName} [${processId}]`, "記帳執行", inputData.userId, "LBK_handleClassificationPostback");
 
     // 步驟3：執行記帳
     const bookkeepingResult = await LBK_executeBookkeeping(bookkeepingData, processId);
@@ -2160,7 +2171,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     const successMessage = LBK_formatReplyMessage(bookkeepingResult.data, "LBK", {
       originalInput: `${pendingData.subject}${pendingData.rawAmount}`,
       classificationCompleted: true,
-      selectedCategory: selectedCategory.name
+      selectedCategory: selectedCategory.categoryName
     });
 
     LBK_logInfo(`科目歸類+記帳完整流程成功完成 [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
