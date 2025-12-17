@@ -500,11 +500,11 @@ async function processWebhookAsync(e) {
             }
           } else if (event.type === 'postback') {
               const postbackData = event.postback.data;
-              console.log(`WH v2.5.1: 階段三 - 收到postback事件: ${postbackData}`);
+              console.log(`WH v2.5.1: 收到postback事件: ${postbackData}`);
 
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.5.1: 階段三 - 處理postback事件: ${postbackData} [${requestId}]`,
+                `WH 2.5.1: 處理postback事件: ${postbackData} [${requestId}]`,
                 "Postback處理",
                 userId,
                 "",
@@ -515,94 +515,21 @@ async function processWebhookAsync(e) {
                 "INFO",
               ]);
 
-              // 階段三：識別科目歸類postback事件
-              if (WH_isSubjectClassificationPostback(postbackData)) {
-                console.log(`階段三：檢測到科目歸類postback事件: ${postbackData} [${requestId}]`);
+              // 統一處理所有postback事件，由LBK決定如何處理
+              const postbackInputData = {
+                userId: userId,
+                messageText: postbackData,
+                replyToken: event.replyToken,
+                timestamp: event.timestamp,
+                processId: requestId,
+                eventType: 'postback',
+                postbackData: postbackData
+              };
 
-                WH_directLogWrite([
-                  WH_formatDateTime(new Date()),
-                  `WH 2.5.1: 階段三 - 科目歸類postback識別成功 [${requestId}]`,
-                  "科目歸類",
-                  userId,
-                  "",
-                  "WH",
-                  "",
-                  0,
-                  "WH_processEventAsync",
-                  "INFO",
-                ]);
+              const postbackResult = await WH_callLBKSafely(postbackInputData);
 
-                // 解析科目歸類postback數據
-                const classificationData = WH_parseClassificationPostback(postbackData);
-
-                if (classificationData.success) {
-                  // 階段三：調用LBK處理科目歸類完成流程
-                  const classificationInputData = {
-                    userId: userId,
-                    messageText: postbackData, // 直接使用postback數據
-                    replyToken: event.replyToken,
-                    timestamp: event.timestamp,
-                    processId: requestId,
-                    eventType: 'classification_postback',
-                    classificationData: classificationData,
-                    subjectId: classificationData.subjectId
-                  };
-
-                  const classificationResult = await WH_callLBKSafely(classificationInputData);
-
-                  if (classificationResult && event.replyToken) {
-                    await WH_replyMessage(event.replyToken, classificationResult, classificationResult.quickReply);
-
-                    WH_directLogWrite([
-                      WH_formatDateTime(new Date()),
-                      `WH 2.5.1: 階段三 - 科目歸類完成，已回覆用戶 [${requestId}]`,
-                      "科目歸類",
-                      userId,
-                      "",
-                      "WH",
-                      "",
-                      0,
-                      "WH_processEventAsync",
-                      "INFO",
-                    ]);
-                  }
-                } else {
-                  console.log(`科目歸類postback解析失敗: ${classificationData.error} [${requestId}]`);
-                  WH_directLogWrite([
-                    WH_formatDateTime(new Date()),
-                    `WH 2.5.1: 科目歸類postback解析失敗: ${classificationData.error} [${requestId}]`,
-                    "科目歸類",
-                    userId,
-                    "PARSE_ERROR",
-                    "WH",
-                    classificationData.error,
-                    0,
-                    "WH_processEventAsync",
-                    "ERROR",
-                  ]);
-
-                  // 發送錯誤回覆
-                  await WH_replyMessage(event.replyToken, "科目歸類處理失敗，請稍後再試");
-                }
-              } else {
-                // 階段三：非科目歸類的其他postback事件
-                console.log(`WH v2.5.1: 處理一般postback事件: ${postbackData}`);
-
-                const postbackInputData = {
-                  userId: userId,
-                  messageText: postbackData,
-                  replyToken: event.replyToken,
-                  timestamp: event.timestamp,
-                  processId: requestId,
-                  eventType: 'postback',
-                  postbackData: postbackData
-                };
-
-                const postbackResult = await WH_callLBKSafely(postbackInputData);
-
-                if (postbackResult && event.replyToken) {
-                  await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
-                }
+              if (postbackResult && event.replyToken) {
+                await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
               }
           } else {
             // 處理非消息事件 (follow, unfollow, join 等)
