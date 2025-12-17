@@ -50,6 +50,13 @@
     "synonyms": ""
   },
   {
+    "categoryId": 108,
+    "categoryName": "醫療費用",
+    "subCategoryId": null,
+    "subCategoryName": null,
+    "synonyms": ""
+  },
+  {
     "categoryId": 201,
     "categoryName": "財務收入",
     "subCategoryId": null,
