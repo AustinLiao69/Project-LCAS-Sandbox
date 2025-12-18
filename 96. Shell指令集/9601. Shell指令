@@ -86,9 +86,9 @@ cd "75. Flutter_Test_code_PL" && dart test "7571. SIT_P2.dart"
 
 16. 語法檢查
 
-node --check "13. Replit_Module code_BL/1309. AM.js"
+node --check "13. Replit_Module code_BL/1315. LBK.js"
 
-node -e "try { require('./13. Replit_Module code_BL/1309. AM.js'); console.log('模組載入成功'); } catch(e) { console.error('模組載入失敗:', e.message); console.error('錯誤位置:', e.stack); }"
+node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log('模組載入成功'); } catch(e) { console.error('模組載入失敗:', e.message); console.error('錯誤位置:', e.stack); }"
 
 16. 執行7582(註冊使用者)
 
