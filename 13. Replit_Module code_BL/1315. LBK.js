@@ -3553,15 +3553,12 @@ module.exports = {
 
   // 新增wallet驗證函數 - v1.4.4
   LBK_validateWalletExists: LBK_validateWalletExists,
-  
-  // 新增wallet顯示名稱函數 - v1.4.7
-  LBK_getWalletDisplayName: LBK_getWalletDisplayName,
   LBK_handleNewWallet: LBK_handleNewWallet, // Kept for backward compatibility, though now LBK_handleWalletConfirmationPostback is the primary handler
 
   // 階段一新增：wallet類型postback識別函數 - v1.4.7
   LBK_isWalletTypePostback: LBK_isWalletTypePostback,
 
-  // 階段一新增：wallet synonyms更新函數 - v1.4.6
+  // 階段一新增：wallet synonyms更新函數 - v1.4.7
   LBK_updateWalletSynonyms: LBK_updateWalletSynonyms,
   LBK_getWalletDisplayName: LBK_getWalletDisplayName,
 
