@@ -4,7 +4,7 @@
 
 ------------------------------------------
 20251218. 支付方式導入LINE quick reply
-不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+Approved請進行階段一
 
 Debug分析報告
 版本: v1.1.0
@@ -43,43 +43,63 @@ B. Root Causes（共6條）
 •	解決方案：修正LBK_handleWalletConfirmationPostback函數中的wallet類型映射邏輯
 ________________________________________
 解決方案階段規劃
-階段一：修正錢包ID映射和路徑解析邏輯
-目標：統一LBK與WCM模組間的錢包ID標準，確保正確的文件路徑解析
+階段一：修正LBK錢包查詢邏輯（簡化版）
+目標：讓LBK錢包查詢邏輯與科目查詢邏輯保持一致
 修改檔案：
 •	13. Replit_Module code_BL/1315. LBK.js
 修改內容：
-1.	更新LBK_parsePaymentMethod函數中的wallet ID生成邏輯，使用WCM標準ID
-2.	修正walletTypeMapping對象，將類型正確映射到WCM建立的錢包ID
-3.	強化LBK_validateWalletExists函數的查找邏輯，支援多種匹配方式
-4.	確保使用WCM_resolveLedgerPath函數進行路徑解析
+1.	修正LBK_parsePaymentMethod函數
+•	移除自行生成wallet ID的邏輯
+•	改為查詢WCM建立的wallets子集合
+•	通過synonyms欄位進行匹配（類似LBK_getSubjectCode的做法）
+2.	建立LBK_getWalletByName函數
+•	參考LBK_getSubjectCode的實作模式
+•	查詢ledgers/{ledgerId}/wallets子集合
+•	檢查每個wallet的synonyms欄位是否包含輸入的支付方式名稱
+3.	修正LBK_updateWalletSynonyms函數
+•	確保正確查找現有錢包文件
+•	修正路徑解析邏輯，使用正確的Firestore路徑
 Before/After行為差異：
-•	Before：銀行類型支付方式映射到bank_星展等自定義ID，無法找到WCM建立的錢包
-•	After：正確映射到WCM標準錢包ID（如debit），能夠找到並更新現有錢包
+•	Before：LBK使用hardcoded mapping查找錢包，無法找到WCM建立的錢包，錯誤創建新文件
+•	After：LBK使用與科目一致的synonyms查詢機制，正確找到WCM建立的錢包並更新synonyms
 
-階段二：修正synonyms更新機制
-目標：確保synonyms更新到正確的現有錢包文件，而非創建新文件
+階段二：移除LBK的錢包創建能力（架構修正版）
+目標：恢復LBK模組的正確職責邊界，移除錢包創建邏輯
 修改檔案：
 •	13. Replit_Module code_BL/1315. LBK.js
 修改內容：
-1.	修正LBK_updateWalletSynonyms函數的錢包查找邏輯
-2.	移除或修正LBK_createDefaultWalletData中的錯誤映射
-3.	強化錢包存在性檢查，避免重複創建
-4.	確保synonyms更新使用正確的文件路徑
+1.	完全移除LBK_createDefaultWalletData函數
+•	刪除所有錢包創建相關代碼
+•	LBK不應該有任何創建錢包的能力
+2.	修正LBK_updateWalletSynonyms函數
+•	移除錢包創建的降級邏輯
+•	找不到錢包時直接返回錯誤，不嘗試創建
+•	專注於synonyms更新功能
+3.	修正LBK_validateWalletExists函數
+•	移除任何錢包創建邏輯
+•	純粹進行存在性驗證，不創建任何資源
+4.	確保正確的錯誤處理流程
+•	當錢包不存在時，返回明確的錯誤訊息
+•	建議用戶通過正確的管道（AM→WCM）創建錢包
+Before/After行為差異：
+•	Before：LBK越權創建錢包，違反架構設計原則
+•	After：LBK專注記帳邏輯，錢包相關操作通過正確的模組流程處理
+
+
+
+階段三：修正synonyms更新機制（簡化版）
+目標：修正LBK模組的wallet synonyms更新邏輯，確保正確更新現有錢包而非創建新文件
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+1.	修正LBK_updateWalletSynonyms函數中的錢包查找邏輯
+2.	確保使用正確的Firestore路徑（ledgers/{ledgerId}/wallets/{walletId}）
+3.	移除或修正錯誤的預設錢包創建邏輯
 Before/After行為差異：
 •	Before：無法找到現有錢包時自動創建default_credit等新文件
-•	After：正確找到WCM建立的錢包文件並更新其synonyms欄位
+•	After：正確找到WCM建立的credit錢包文件並更新其synonyms欄位
 
-階段三：完善跨模組錢包操作協調機制
-目標：建立LBK與WCM模組間的標準化協調機制
-修改檔案：
-•	13. Replit_Module code_BL/1315. LBK.js
-修改內容：
-1.	建立標準化的錢包查找函數，統一查找邏輯
-2.	實施錢包ID與類型的標準映射表
-3.	確保所有錢包操作都遵循WCM模組建立的標準
-Before/After行為差異：
-•	Before：LBK模組獨立處理錢包操作，可能與WCM建立的錢包不一致
-•	After：LBK模組完全遵循WCM建立的錢包標準，實現無縫協作
+
 ________________________________________
 用簡單概念解釋：
 這個問題就像公司裡的「財務部門」(WCM)已經建立了標準的帳戶分類系統，但「業務部門」(LBK)在處理業務時沒有按照標準分類，而是自己創建了新的帳戶分類，導致同一個客戶的資料分散在不同的系統中，無法統一管理。解決方案就是讓業務部門嚴格按照財務部門建立的標準來操作，確保資料一致性。
