@@ -3635,8 +3635,8 @@ async function LBK_confirmWalletSynonymsUpdate(ledgerId, walletId, originalPayme
 }
 
 /**
- * 更新wallet同義詞 - 階段二：移除錢包創建降級邏輯
- * @version 2025-12-18-V1.4.10
+ * 更新wallet同義詞 - 階段三：修正錢包查找邏輯和路徑解析
+ * @version 2025-12-18-V1.4.11
  * @param {string} ledgerId - 帳本ID  
  * @param {string} walletId - 錢包ID
  * @param {string} originalPaymentMethod - 原始支付方式名稱
@@ -3652,42 +3652,111 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
       return { success: false, message: "參數不完整" };
     }
 
-    LBK_logInfo(`階段二：專注synonyms更新功能: ${originalPaymentMethod} → ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", functionName);
+    LBK_logInfo(`階段三：修正錢包查找和路徑邏輯: ${originalPaymentMethod} → ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", functionName);
 
     // 初始化Firestore連接
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
 
-    // 使用正確的Firestore路徑，與WCM建立的錢包路徑一致
-    const walletPath = `ledgers/${ledgerId}/wallets`;
-    LBK_logDebug(`使用wallet路徑: ${walletPath}/${walletId}`, "Wallet同義詞", "", functionName);
+    // 階段三修正：使用正確的Firestore路徑格式
+    const walletCollectionPath = `ledgers/${ledgerId}/wallets`;
+    LBK_logDebug(`階段三：使用正確的錢包集合路徑: ${walletCollectionPath}`, "Wallet同義詞", "", functionName);
 
-    // 從Firestore讀取現有wallet資料
-    const walletRef = db.collection(walletPath).doc(walletId);
-    let walletDoc;
-    
+    // 階段三核心修正：改進錢包查找邏輯 - 先嘗試直接查找，再嘗試映射查找
+    let targetWalletRef = null;
+    let targetWalletDoc = null;
+
+    // 方法1：直接用walletId查找
     try {
-      walletDoc = await walletRef.get();
-    } catch (firestoreError) {
-      LBK_logError(`Firestore讀取失敗: ${firestoreError.message}`, "Wallet同義詞", "", "FIRESTORE_READ_ERROR", firestoreError.toString(), functionName);
-      return { success: false, message: `Firestore讀取失敗: ${firestoreError.message}` };
+      const directRef = db.collection(walletCollectionPath).doc(walletId);
+      const directDoc = await directRef.get();
+      
+      if (directDoc.exists) {
+        targetWalletRef = directRef;
+        targetWalletDoc = directDoc;
+        LBK_logInfo(`階段三：直接查找成功: ${walletId}`, "Wallet同義詞", "", functionName);
+      }
+    } catch (directSearchError) {
+      LBK_logWarning(`階段三：直接查找失敗: ${directSearchError.message}`, "Wallet同義詞", "", functionName);
     }
 
-    // 階段二核心修正：找不到錢包時直接返回錯誤，不嘗試創建
-    if (!walletDoc.exists) {
-      LBK_logError(`Wallet不存在: ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", "WALLET_NOT_FOUND", `路徑: ${walletPath}/${walletId}`, functionName);
+    // 方法2：如果直接查找失敗，嘗試通過WCM標準映射查找
+    if (!targetWalletRef) {
+      LBK_logInfo(`階段三：直接查找失敗，嘗試WCM標準映射查找`, "Wallet同義詞", "", functionName);
+      
+      // WCM標準錢包映射
+      const walletMappings = {
+        'default_cash': ['cash', 'default_cash', '現金'],
+        'default_bank': ['bank', 'default_bank', '銀行帳戶', 'debit'],  
+        'default_credit': ['credit', 'default_credit', '信用卡', 'credit_card']
+      };
+
+      // 查找所有錢包，尋找符合條件的
+      try {
+        const walletsSnapshot = await db.collection(walletCollectionPath)
+          .where('status', '==', 'active')
+          .get();
+
+        if (!walletsSnapshot.empty) {
+          for (const doc of walletsSnapshot.docs) {
+            const walletData = doc.data();
+            const docWalletId = walletData.walletId || doc.id;
+            const walletType = walletData.type || '';
+            const walletName = walletData.walletName || walletData.name || '';
+
+            // 檢查是否匹配目標walletId或其映射
+            let isMatch = false;
+
+            // 精確匹配
+            if (docWalletId === walletId || doc.id === walletId) {
+              isMatch = true;
+            }
+
+            // 映射匹配
+            for (const [standardId, aliases] of Object.entries(walletMappings)) {
+              if (aliases.includes(walletId) && aliases.includes(walletType.toLowerCase())) {
+                isMatch = true;
+                break;
+              }
+            }
+
+            if (isMatch) {
+              targetWalletRef = doc.ref;
+              targetWalletDoc = doc;
+              LBK_logInfo(`階段三：映射查找成功: ${walletId} → ${doc.id} (${walletName})`, "Wallet同義詞", "", functionName);
+              break;
+            }
+          }
+        }
+      } catch (mappingSearchError) {
+        LBK_logError(`階段三：映射查找失敗: ${mappingSearchError.message}`, "Wallet同義詞", "", "MAPPING_SEARCH_ERROR", mappingSearchError.toString(), functionName);
+      }
+    }
+
+    // 階段三修正：如果仍未找到錢包，記錄詳細信息並返回錯誤
+    if (!targetWalletRef || !targetWalletDoc || !targetWalletDoc.exists) {
+      LBK_logError(`階段三：錢包查找失敗: ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", "WALLET_NOT_FOUND", `集合路徑: ${walletCollectionPath}`, functionName);
+      
+      // 提供更詳細的錯誤信息
       return { 
         success: false, 
-        message: `錢包不存在: ${walletId}`,
+        message: `錢包不存在或不可用: ${walletId}`,
         errorType: "WALLET_NOT_FOUND",
-        suggestion: "請通過正確的管道（AM→WCM）創建錢包後再進行synonyms更新"
+        suggestion: "請確認錢包已通過WCM模組創建且狀態為active",
+        searchDetails: {
+          ledgerId: ledgerId,
+          targetWalletId: walletId,
+          searchPath: walletCollectionPath,
+          searchMethods: ['direct_lookup', 'mapping_lookup'],
+          bothFailed: true
+        }
       };
     }
 
-    const walletData = walletDoc.data();
+    const walletData = targetWalletDoc.data();
     const currentSynonyms = walletData.synonyms || '';
     
-    LBK_logInfo(`當前synonyms: "${currentSynonyms}"`, "Wallet同義詞", "", functionName);
+    LBK_logInfo(`階段三：找到目標錢包，當前synonyms: "${currentSynonyms}"`, "Wallet同義詞", "", functionName);
 
     // 正規化同義詞處理
     const synonymsList = currentSynonyms ? 
@@ -3701,47 +3770,51 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
       synonymsList.push(normalizedOriginal);
       const newSynonyms = synonymsList.join(',');
 
-      LBK_logInfo(`準備更新synonyms: "${currentSynonyms}" → "${newSynonyms}"`, "Wallet同義詞", "", functionName);
+      LBK_logInfo(`階段三：準備更新synonyms: "${currentSynonyms}" → "${newSynonyms}"`, "Wallet同義詞", "", functionName);
 
       // 使用事務確保更新一致性
       try {
         await db.runTransaction(async (transaction) => {
-          const freshWalletDoc = await transaction.get(walletRef);
+          const freshWalletDoc = await transaction.get(targetWalletRef);
           if (!freshWalletDoc.exists) {
             throw new Error('Wallet在事務執行期間被刪除');
           }
 
-          transaction.update(walletRef, {
+          transaction.update(targetWalletRef, {
             synonyms: newSynonyms,
             updatedAt: admin.firestore.Timestamp.now(),
             lastSynonymUpdate: admin.firestore.Timestamp.now(),
-            synonymsCount: synonymsList.length
+            synonymsCount: synonymsList.length,
+            lastUpdatedBy: 'LBK_updateWalletSynonyms_v1.4.11'
           });
         });
 
-        LBK_logInfo(`Wallet synonyms更新成功: ${normalizedOriginal} 已加入 ${walletId}`, "Wallet同義詞", "", functionName);
+        LBK_logInfo(`階段三：Wallet synonyms更新成功: ${normalizedOriginal} 已加入錢包 ${targetWalletDoc.id}`, "Wallet同義詞", "", functionName);
         return { 
           success: true, 
           message: 'Wallet synonyms更新成功', 
           updatedSynonyms: newSynonyms,
-          addedSynonym: normalizedOriginal
+          addedSynonym: normalizedOriginal,
+          targetWalletId: targetWalletDoc.id,
+          updateMethod: 'transaction_update'
         };
       } catch (transactionError) {
-        LBK_logError(`事務更新失敗: ${transactionError.message}`, "Wallet同義詞", "", "TRANSACTION_ERROR", transactionError.toString(), functionName);
+        LBK_logError(`階段三：事務更新失敗: ${transactionError.message}`, "Wallet同義詞", "", "TRANSACTION_ERROR", transactionError.toString(), functionName);
         return { success: false, message: `更新失敗: ${transactionError.message}` };
       }
     } else {
-      LBK_logInfo(`同義詞已存在，跳過更新: ${normalizedOriginal}`, "Wallet同義詞", "", functionName);
+      LBK_logInfo(`階段三：同義詞已存在，跳過更新: ${normalizedOriginal}`, "Wallet同義詞", "", functionName);
       return { 
         success: true, 
         message: '同義詞已存在', 
         currentSynonyms: currentSynonyms,
-        skipped: true 
+        skipped: true,
+        targetWalletId: targetWalletDoc.id
       };
     }
 
   } catch (error) {
-    LBK_logError(`更新wallet同義詞異常: ${error.toString()}`, "Wallet同義詞", "", "UPDATE_SYNONYMS_EXCEPTION", error.toString(), functionName);
+    LBK_logError(`階段三：更新wallet同義詞異常: ${error.toString()}`, "Wallet同義詞", "", "UPDATE_SYNONYMS_EXCEPTION", error.toString(), functionName);
     return { success: false, message: `系統錯誤: ${error.message}` };
   }
 }
@@ -3908,7 +3981,7 @@ module.exports = {
   LBK_getWalletByName: LBK_getWalletByName,
 
   // 版本資訊
-  MODULE_VERSION: "1.4.10",
+  MODULE_VERSION: "1.4.11",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段二：移除LBK的錢包創建能力 - 恢復LBK模組的正確職責邊界，專注記帳邏輯，錢包相關操作通過正確的模組流程處理"
+  MODULE_UPDATE: "階段三：修正synonyms更新機制 - 修正錢包查找邏輯，確保使用正確的Firestore路徑，移除錯誤的預設錢包創建邏輯，正確找到WCM建立的錢包文件並更新synonyms欄位"
 };
