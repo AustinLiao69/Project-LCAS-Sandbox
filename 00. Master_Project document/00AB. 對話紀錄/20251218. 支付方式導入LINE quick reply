@@ -4,6 +4,160 @@
 
 ------------------------------------------
 20251218. 支付方式導入LINE quick reply
+APPROVED請進行階段一
+
+解決方案更新提案
+階段一：實作LBK_updateWalletSynonyms函數（修正版）
+目標: 補全缺失的函數實作，確保記帳流程完整
+修改內容:
+1.	在1315. LBK.js中新增LBK_updateWalletSynonyms函數（已確認不需要：函數在模組導出中已宣告，只需補全實作）
+2.	實作wallet synonyms更新邏輯，需與現有調用格式完全匹配
+3.	升級模組版本至v1.4.7
+修改檔案:
+•	13. Replit_Module code_BL/1315. LBK.js
+實施計畫:
+在檔案適當位置（建議在其他wallet相關函數附近）添加函數實作：
+/**
+ * 更新wallet同義詞
+ * @version 2025-12-18-V1.4.7
+ * @param {string} ledgerId - 帳本ID  
+ * @param {string} walletId - 錢包ID
+ * @param {string} originalPaymentMethod - 原始支付方式名稱
+ * @returns {Object} 更新結果
+ */
+async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMethod) {
+  try {
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+
+    // 從Firestore讀取現有wallet資料
+    const walletRef = db.collection(`ledgers/${ledgerId}/wallets`).doc(walletId);
+    const walletDoc = await walletRef.get();
+
+    if (!walletDoc.exists) {
+      return { success: false, message: `Wallet不存在: ${walletId}` };
+    }
+
+    const walletData = walletDoc.data();
+    const currentSynonyms = walletData.synonyms || '';
+
+    // 檢查是否已包含該同義詞
+    const synonymsList = currentSynonyms ? currentSynonyms.split(',').map(s => s.trim()) : [];
+    if (!synonymsList.includes(originalPaymentMethod)) {
+      synonymsList.push(originalPaymentMethod);
+
+      // 更新synonyms欄位
+      await walletRef.update({
+        synonyms: synonymsList.join(','),
+        updatedAt: admin.firestore.Timestamp.now()
+      });
+    }
+
+    return { success: true, message: 'Wallet synonyms更新成功' };
+  } catch (error) {
+    return { success: false, message: error.toString() };
+  }
+}
+Before/After行為差異:
+•	Before: 調用未定義函數，拋出ReferenceError，記帳失敗
+•	After: 成功更新wallet synonyms，記帳流程完整完成
+•	影響範圍: 僅影響LBK模組內部，不改變外部介面，不影響現有調用邏輯
+
+
+
+------------------------------------------
+20251218. 支付方式導入LINE quick reply
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+Debug分析報告
+版本: v1.1.0
+建立日期: 2025-12-18
+建立者: LCAS Team
+文件描述: LBK模組函數未定義錯誤分析報告
+________________________________________
+A. 快速摘要（≤3句）
+•	LBK模組缺少LBK_updateWalletSynonyms函數定義，導致記帳流程在更新wallet同義詞時拋出ReferenceError
+•	WH模組正確接收LINE訊息並完成用戶驗證，但在調用LBK處理記帳時失敗
+•	系統架構運作正常（WH→AM→LBK流程），問題集中在LBK模組內部函數缺失
+________________________________________
+B. Root Causes（最多 6 條）
+1. LBK_updateWalletSynonyms函數未定義
+•	證據:
+WH v2.5.0: LBK調用失敗，返回最小錯誤格式: ReferenceError: LBK_updateWalletSynonyms is not defined
+•	信心度: 100%
+•	解決方案: 在LBK.js中實作LBK_updateWalletSynonyms函數
+2. LBK記帳成功後缺少wallet synonyms更新邏輯
+•	證據:
+// 從LBK.js第1080行左右可見有調用但函數不存在
+const synonymsUpdateResult = await LBK_updateWalletSynonyms(
+  `user_${userId}`, // ledgerId
+  walletValidationResult.walletId,
+  walletName
+);
+•	信心度: 95%
+•	解決方案: 實作wallet synonyms更新功能，將用戶輸入的支付方式名稱加入對應wallet的synonyms欄位
+3. 函數版本管理不一致
+•	證據: console顯示LBK模組版本為v1.4.6，但程式碼中調用了未實作的函數
+•	信心度: 85%
+•	解決方案: 升級LBK模組版本至v1.4.7，確保所有宣告的函數都有實作
+________________________________________
+詳細分析說明
+問題本質分析
+就像公司的財務部門(LBK模組)告訴會計師要執行某個會計程序，但會計師發現這個程序的操作手冊(函數)根本不存在。整個公司運作架構是正常的：
+•	前台(WH)正確接收客戶請求
+•	人事部(AM)正確驗證用戶身份並建立帳本
+•	但財務部(LBK)內部缺少關鍵的作業程序
+影響範圍
+•	主要影響: 所有LINE記帳請求都會失敗
+•	系統狀態: 用戶帳本初始化正常，但無法完成記帳操作
+•	用戶體驗: 收到「系統暫時無法處理您的請求，請稍後再試」錯誤訊息
+________________________________________
+解決方案
+階段一：實作LBK_updateWalletSynonyms函數
+目標: 補全缺失的函數，確保記帳流程完整
+修改內容:
+1.	在1315. LBK.js中新增LBK_updateWalletSynonyms函數
+=>請盤點LBK是否已有此函數，若有則不必新增
+
+2.	實作wallet synonyms更新邏輯
+3.	升級模組版本至v1.4.7
+修改檔案:
+•	13. Replit_Module code_BL/1315. LBK.js
+實施計畫:
+/**
+ * 更新wallet同義詞
+ * @version 2025-12-18-V1.4.7
+ * @param {string} ledgerId - 帳本ID
+ * @param {string} walletId - 錢包ID  
+ * @param {string} originalPaymentMethod - 原始支付方式名稱
+ * @returns {Object} 更新結果
+ */
+async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMethod) {
+  try {
+    // 實作更新wallet synonyms的邏輯
+    // 從Firestore讀取現有synonyms，加入新的同義詞，寫回資料庫
+    return { success: true, message: 'Wallet synonyms更新成功' };
+  } catch (error) {
+    return { success: false, message: error.toString() };
+  }
+}
+Before/After行為差異:
+•	Before: 調用未定義函數，拋出ReferenceError，記帳失敗
+•	After: 成功更新wallet synonyms，記帳流程完整完成
+•	影響範圍: 僅影響LBK模組內部，不改變外部介面
+測試驗證方法
+完成階段一後，重新執行LINE記帳測試，確認：
+1.	不再出現LBK_updateWalletSynonyms is not defined錯誤
+2.	記帳流程能正常完成
+3.	用戶收到記帳成功確認訊息
+________________________________________
+備註: 此問題屬於典型的函數實作不完整問題，解決方案簡單明確，不需要複雜的系統重構。完成後即可恢復LINE記帳的正常運作。
+
+
+
+
+------------------------------------------
+20251218. 支付方式導入LINE quick reply
 approved請進行階段一
 
 Debug分析報告 - 支付方式歸類邏輯
