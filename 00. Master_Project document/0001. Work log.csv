@@ -463,3 +463,4 @@ MM 	 DD 	 Description 	    Progress
 12	17	 修改transactions的DB schema(paymentmethod跟wallet的連動)  	 Ongoing
 12	17	 研究Replit裡面sandbox改的代碼要如何push到PROD環境(用git branch去控制?)  	 Closed
 12	17	 修改wallets子集合資料欄位  	 Ongoing
+12	18	 建立LINE quick reply功能：帳戶(wallets,支付方式)  	 Ongoing

@@ -28,5 +28,5 @@ git push origin main
 這個流程是標準的Git合併流程，適合將功能branch合併到main branch。
 
 
-比較兩個branch的差異
+01. 比較兩個branch的差異
 git diff main sandbox
