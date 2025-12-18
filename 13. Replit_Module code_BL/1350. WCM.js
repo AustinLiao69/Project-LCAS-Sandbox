@@ -258,10 +258,15 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
 
         const walletDoc = {
           id: walletId,
+          walletId: walletId,                           // 新增：符合DB schema的walletId欄位
           name: walletName,
+          walletName: walletName,                       // 新增：符合DB schema的walletName欄位
+          subWalletId: defaultWallet.subWalletId || walletId, // 新增：子帳戶ID映射
+          subWalletName: defaultWallet.subWalletName || walletName, // 新增：子帳戶名稱映射
           type: walletType,
           currency: currency,
           balance: parseFloat(defaultWallet.balance) || 0,
+          synonyms: defaultWallet.synonyms || '',       // 修復：新增遺漏的synonyms欄位映射
           description: defaultWallet.description || '',
           isDefault: defaultWallet.isDefault !== false, // 預設為true
           isActive: defaultWallet.isActive !== false,   // 預設為true
@@ -1286,13 +1291,13 @@ module.exports = {
   WCM_CONFIG,
 
   // 模組資訊
-  moduleVersion: '1.2.3', // 版本升級至 1.2.3 (修復預設錢包建立機制)
+  moduleVersion: '1.2.4', // 版本升級至 1.2.4 (修復預設錢包欄位映射)
   architecture: 'subcollection_based',
   collections: {
     wallets: 'ledgers/{ledgerId}/wallets',
     categories: 'ledgers/{ledgerId}/categories'
   },
-  lastUpdate: '2025-12-17', // 更新日期
+  lastUpdate: '2025-12-18', // 更新日期
   features: [
     'subcollection_architecture',
     'ledger_based_collections',
@@ -1302,7 +1307,9 @@ module.exports = {
     'batch_0099_subject_loading',
     'default_wallet_creation',
     'circular_dependency_resolved', // 新增：已解決循環依賴
-    'enhanced_default_wallet_creation' // 新增：強化預設錢包建立機制
+    'enhanced_default_wallet_creation', // 新增：強化預設錢包建立機制
+    'complete_field_mapping_0302_config', // 新增：完整0302配置欄位映射
+    'synonyms_field_support' // 新增：支援synonyms欄位映射
   ],
   integratedFrom: {
     'AM_load0099SubjectData': 'AM模組v7.5.0',
@@ -1312,7 +1319,7 @@ module.exports = {
 
 // 自動初始化模組
 try {
-  console.log('🔧 WCM模組v1.2.3 初始化：預設錢包建立機制強化版');
+  console.log('🔧 WCM模組v1.2.4 初始化：預設錢包欄位映射修復版');
   console.log('🔄 循環依賴修復：移除AM模組直接引用');
   console.log('💰 預設錢包建立強化：完整錯誤處理和批次處理邏輯');
   console.log('✅ 函數導出驗證：WCM_createCategory =', typeof WCM_createCategory);
@@ -1323,7 +1330,9 @@ try {
   console.log('✅ 與1311.FS.js子集合架構保持一致');
   console.log('🚀 WCM模組現已全面支援協作帳本路徑');
   console.log('💎 預設錢包建立機制：強化配置驗證、錯誤處理和批次處理');
-  console.log('✨ 階段二修復完成，預設錢包建立功能已優化');
+  console.log('🔧 欄位映射修復：完整映射0302配置檔案所有欄位，包含synonyms支援');
+  console.log('📝 符合0070 DB schema：確保wallets子集合欄位完整性');
+  console.log('✨ 階段二修復完成，預設錢包欄位映射已完全符合配置檔案驅動');
 } catch (error) {
   console.error('❌ WCM模組初始化失敗:', error.message);
 }
