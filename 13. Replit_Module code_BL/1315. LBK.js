@@ -93,6 +93,12 @@ async function LBK_processQuickBookkeeping(inputData) {
       return await LBK_handleWalletConfirmationPostback(inputData.postbackData, userId, processId);
     }
 
+    // v1.4.7 階段一新增：檢查是否為wallet類型選擇postback事件
+    if (inputData.messageText && LBK_isWalletTypePostback(inputData.messageText)) {
+      LBK_logInfo(`檢測到wallet類型選擇postback事件: ${inputData.messageText} [${processId}]`, "支付方式分類", userId, "LBK_processQuickBookkeeping");
+      return await LBK_handleWalletConfirmationPostback(inputData.messageText, userId, processId);
+    }
+
     // v1.4.5 新增：檢查是否為 wallet postback 格式的訊息文本
     if (inputData.messageText && (inputData.messageText.startsWith('wallet_yes_') || inputData.messageText.startsWith('wallet_no_'))) {
       LBK_logInfo(`檢測到wallet postback格式訊息 [${processId}]`, "Wallet確認", userId, "LBK_processQuickBookkeeping");
@@ -2158,6 +2164,26 @@ ${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
 }
 
 /**
+ * 階段一新增：識別wallet類型postback事件
+ * @version 2025-12-18-V1.4.7
+ * @date 2025-12-18 15:30:00
+ * @description 識別wallet_type_開頭的postback事件，用於支付方式類型選擇流程
+ */
+function LBK_isWalletTypePostback(messageText) {
+  try {
+    if (!messageText || typeof messageText !== 'string') {
+      return false;
+    }
+
+    // 檢查是否為wallet_type_開頭的postback格式
+    return messageText.startsWith('wallet_type_');
+  } catch (error) {
+    LBK_logError(`檢查wallet類型postback失敗: ${error.toString()}`, "Postback識別", "", "WALLET_TYPE_CHECK_ERROR", error.toString(), "LBK_isWalletTypePostback");
+    return false;
+  }
+}
+
+/**
  * v1.4.2 處理科目歸類postback事件 - 完整版：歸類+記帳
  * @version 2025-12-17-V1.4.3
  * @date 2025-12-17 09:30:00
@@ -3421,10 +3447,13 @@ const LBK_MODULE = {
   LBK_validateWalletExists: LBK_validateWalletExists,
   LBK_handleNewWallet: LBK_handleNewWallet, // Kept for backward compatibility, though now LBK_handleWalletConfirmationPostback is the primary handler
 
+  // 階段一新增：wallet類型postback識別函數 - v1.4.7
+  LBK_isWalletTypePostback: LBK_isWalletTypePostback,
+
   // 版本資訊
-  MODULE_VERSION: "1.4.6",
+  MODULE_VERSION: "1.4.7",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段二：支付方式導入LINE quick reply - 修改wallet確認流程為支付方式類型選擇模式"
+  MODULE_UPDATE: "階段一：修復LBK模組wallet postback事件識別 - 新增wallet_type_開頭postback識別功能"
 };
 
 // 導出模組
