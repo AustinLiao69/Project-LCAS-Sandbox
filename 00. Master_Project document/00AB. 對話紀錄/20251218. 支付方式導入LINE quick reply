@@ -55,6 +55,7 @@ ________________________________________
 Before/After行為差異：
 •	Before：銀行類型支付方式映射到bank_星展等自定義ID，無法找到WCM建立的錢包
 •	After：正確映射到WCM標準錢包ID（如debit），能夠找到並更新現有錢包
+
 階段二：修正synonyms更新機制
 目標：確保synonyms更新到正確的現有錢包文件，而非創建新文件
 修改檔案：
@@ -67,6 +68,7 @@ Before/After行為差異：
 Before/After行為差異：
 •	Before：無法找到現有錢包時自動創建default_credit等新文件
 •	After：正確找到WCM建立的錢包文件並更新其synonyms欄位
+
 階段三：完善跨模組錢包操作協調機制
 目標：建立LBK與WCM模組間的標準化協調機制
 修改檔案：
