@@ -3375,7 +3375,10 @@ function LBK_getWalletDisplayName(walletId, ledgerId = null) {
  * @returns {Object} 更新結果
  */
 async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMethod) {
+  const functionName = "LBK_updateWalletSynonyms";
   try {
+    LBK_logInfo(`開始更新wallet同義詞: ${originalPaymentMethod} → ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", functionName);
+
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
 
@@ -3384,26 +3387,39 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
     const walletDoc = await walletRef.get();
 
     if (!walletDoc.exists) {
+      LBK_logError(`Wallet不存在: ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", "WALLET_NOT_FOUND", `路徑: ledgers/${ledgerId}/wallets/${walletId}`, functionName);
       return { success: false, message: `Wallet不存在: ${walletId}` };
     }
 
     const walletData = walletDoc.data();
     const currentSynonyms = walletData.synonyms || '';
+    
+    LBK_logInfo(`當前synonyms: "${currentSynonyms}"`, "Wallet同義詞", "", functionName);
 
     // 檢查是否已包含該同義詞
-    const synonymsList = currentSynonyms ? currentSynonyms.split(',').map(s => s.trim()) : [];
+    const synonymsList = currentSynonyms ? currentSynonyms.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+    
     if (!synonymsList.includes(originalPaymentMethod)) {
       synonymsList.push(originalPaymentMethod);
+      const newSynonyms = synonymsList.join(',');
+
+      LBK_logInfo(`準備更新synonyms: "${currentSynonyms}" → "${newSynonyms}"`, "Wallet同義詞", "", functionName);
 
       // 更新synonyms欄位
       await walletRef.update({
-        synonyms: synonymsList.join(','),
+        synonyms: newSynonyms,
         updatedAt: admin.firestore.Timestamp.now()
       });
+
+      LBK_logInfo(`Wallet synonyms更新成功: ${originalPaymentMethod} 已加入 ${walletId}`, "Wallet同義詞", "", functionName);
+      return { success: true, message: 'Wallet synonyms更新成功', updatedSynonyms: newSynonyms };
+    } else {
+      LBK_logInfo(`同義詞已存在，跳過更新: ${originalPaymentMethod}`, "Wallet同義詞", "", functionName);
+      return { success: true, message: '同義詞已存在', currentSynonyms: currentSynonyms };
     }
 
-    return { success: true, message: 'Wallet synonyms更新成功' };
   } catch (error) {
+    LBK_logError(`更新wallet同義詞失敗: ${error.toString()}`, "Wallet同義詞", "", "UPDATE_SYNONYMS_ERROR", error.toString(), functionName);
     return { success: false, message: error.toString() };
   }
 }
