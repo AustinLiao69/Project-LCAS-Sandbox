@@ -3336,6 +3336,37 @@ function LBK_determineWalletType(walletName) {
 }
 
 /**
+ * 獲取wallet顯示名稱
+ * @version 2025-12-18-V1.4.7
+ * @param {string} walletId - 錢包ID
+ * @param {string} ledgerId - 帳本ID
+ * @returns {string} wallet顯示名稱
+ */
+function LBK_getWalletDisplayName(walletId, ledgerId = null) {
+  try {
+    // 預設wallet顯示名稱映射
+    const defaultWalletNames = {
+      'default_cash': '現金',
+      'default_bank': '銀行帳戶', 
+      'default_credit': '信用卡',
+      'default_mobile': '行動支付'
+    };
+
+    // 如果是預設wallet，直接返回對應名稱
+    if (defaultWalletNames[walletId]) {
+      return defaultWalletNames[walletId];
+    }
+
+    // 如果不是預設wallet，返回wallet ID本身作為顯示名稱
+    return walletId || '未知錢包';
+
+  } catch (error) {
+    LBK_logError(`獲取wallet顯示名稱失敗: ${error.toString()}`, "Wallet顯示", "", "GET_WALLET_DISPLAY_ERROR", error.toString(), "LBK_getWalletDisplayName");
+    return walletId || '未知錢包';
+  }
+}
+
+/**
  * 更新wallet同義詞
  * @version 2025-12-18-V1.4.7
  * @param {string} ledgerId - 帳本ID  
@@ -3522,6 +3553,9 @@ module.exports = {
 
   // 新增wallet驗證函數 - v1.4.4
   LBK_validateWalletExists: LBK_validateWalletExists,
+  
+  // 新增wallet顯示名稱函數 - v1.4.7
+  LBK_getWalletDisplayName: LBK_getWalletDisplayName,
   LBK_handleNewWallet: LBK_handleNewWallet, // Kept for backward compatibility, though now LBK_handleWalletConfirmationPostback is the primary handler
 
   // 階段一新增：wallet類型postback識別函數 - v1.4.7
