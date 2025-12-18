@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.4.5
+ * LBK_快速記帳模組_1.4.6
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - DCN-0024階段一：修復訊息解析邏輯，正確識別支付方式
- * @update 2025-12-17: 升級至v1.4.5，修復LBK_parseInputFormat函數邏輯，增強支付方式識別準確度
+ * @description LINE OA 專用快速記帳處理模組 - DCN-0024階段一：修復wallet確認流程邏輯，正確更新wallet synonyms
+ * @update 2025-12-18: 升級至v1.4.6，修復LBK_handleWalletConfirmationPostback函數邏輯，確保支付方式類型選擇後更新wallet synonyms欄位
  */
 
 // 引入所需模組
@@ -2607,6 +2607,97 @@ function LBK_getLineMainCategories() {
     const uniqueCategories = new Map();
 
     // 從0099.json提取所有有效的主科目
+
+
+/**
+ * 更新wallet synonyms欄位 - 階段一新增：將原始支付方式名稱加入對應wallet的synonyms欄位
+ * @version 2025-12-18-V1.4.6
+ * @date 2025-12-18 15:30:00
+ * @description 將用戶輸入的原始支付方式名稱加入到對應wallet的synonyms欄位中，讓下次相同輸入可直接識別
+ */
+async function LBK_updateWalletSynonyms(userId, walletId, originalWalletName, processId) {
+  const functionName = "LBK_updateWalletSynonyms";
+  try {
+    LBK_logInfo(`開始更新wallet synonyms: ${originalWalletName} → ${walletId} [${processId}]`, "Wallet同義詞", userId, functionName);
+
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    const ledgerId = `user_${userId}`;
+
+    // 查找對應的wallet記錄
+    const walletRef = db.collection("ledgers").doc(ledgerId).collection("wallets").doc(walletId);
+    const walletDoc = await walletRef.get();
+
+    if (!walletDoc.exists) {
+      // wallet不存在，建立新的wallet記錄
+      LBK_logInfo(`wallet不存在，建立新wallet記錄: ${walletId} [${processId}]`, "Wallet同義詞", userId, functionName);
+
+      const newWalletData = {
+        id: walletId,
+        walletId: walletId,
+        walletName: LBK_getWalletDisplayName(walletId),
+        subWalletId: 'TWD',
+        subWalletName: 'TWD',
+        currency: 'TWD',
+        balance: 0,
+        synonyms: originalWalletName, // 將原始輸入作為同義詞
+        isDefault: walletId.startsWith('default_'),
+        userId: userId,
+        ledgerId: ledgerId,
+        status: 'active',
+        dataSource: 'LBK_WALLET_CLASSIFICATION',
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now()
+      };
+
+      await walletRef.set(newWalletData);
+      LBK_logInfo(`成功建立wallet並新增同義詞: ${originalWalletName} → ${walletId} [${processId}]`, "Wallet同義詞", userId, functionName);
+      return { success: true, message: "wallet已建立並新增同義詞", created: true };
+
+    } else {
+      // wallet已存在，更新synonyms欄位
+      const walletData = walletDoc.data();
+      const currentSynonyms = walletData.synonyms ? walletData.synonyms.split(',').map(s => s.trim()) : [];
+
+      if (!currentSynonyms.includes(originalWalletName)) {
+        currentSynonyms.push(originalWalletName);
+        const updatedSynonyms = currentSynonyms.filter(s => s.length > 0).join(',');
+
+        await walletRef.update({
+          synonyms: updatedSynonyms,
+          updatedAt: admin.firestore.Timestamp.now()
+        });
+
+        LBK_logInfo(`成功更新wallet同義詞: ${originalWalletName} → ${walletId} [${processId}]`, "Wallet同義詞", userId, functionName);
+        return { success: true, message: "同義詞已更新", updated: true };
+      } else {
+        LBK_logInfo(`同義詞已存在，無需更新: ${originalWalletName} → ${walletId} [${processId}]`, "Wallet同義詞", userId, functionName);
+        return { success: true, message: "同義詞已存在", exists: true };
+      }
+    }
+
+  } catch (error) {
+    LBK_logError(`更新wallet synonyms失敗: ${error.toString()} [${processId}]`, "Wallet同義詞", userId, "UPDATE_WALLET_SYNONYMS_ERROR", error.toString(), functionName);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * 根據walletId取得顯示名稱 - 輔助函數
+ * @version 2025-12-18-V1.4.6
+ * @description 將預設wallet ID轉換為對應的顯示名稱
+ */
+function LBK_getWalletDisplayName(walletId) {
+  const walletDisplayNames = {
+    'default_cash': '現金',
+    'default_bank': '銀行帳戶',
+    'default_credit': '信用卡',
+    'default_mobile': '行動支付'
+  };
+
+  return walletDisplayNames[walletId] || walletId;
+}
+
     subjectCodeData.forEach(item => {
       if (item.categoryId && item.categoryName) {
         const key = `${item.categoryId}`;
@@ -3163,9 +3254,9 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
 }
 
 /**
- * 處理支付方式類型選擇postback事件 - 階段二：支付方式分類選擇模式
+ * 處理支付方式類型選擇postback事件 - 階段一：支付方式分類選擇模式，加入wallet synonyms更新邏輯
  * @version 2025-12-18-V1.4.6
- * @description 處理用戶對支付方式類型的選擇，直接將記帳資料映射到對應的預設錢包類型
+ * @description 處理用戶對支付方式類型的選擇，直接將記帳資料映射到對應的預設錢包類型，並更新wallet synonyms欄位
  */
 async function LBK_handleWalletConfirmationPostback(postbackData, userId, processId) {
   const functionName = "LBK_handleWalletConfirmationPostback";
@@ -3213,6 +3304,14 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
 
     LBK_logInfo(`用戶選擇支付方式類型: ${walletName} → ${selectedWallet.displayName} [${processId}]`, "支付方式分類", userId, functionName);
 
+    // 階段一修復：更新對應wallet的synonyms欄位
+    const walletSynonymResult = await LBK_updateWalletSynonyms(userId, selectedWallet.walletId, walletName, processId);
+    if (walletSynonymResult.success) {
+      LBK_logInfo(`成功更新wallet synonyms: ${walletName} → ${selectedWallet.walletId} [${processId}]`, "支付方式分類", userId, functionName);
+    } else {
+      LBK_logWarning(`更新wallet synonyms失敗但繼續處理: ${walletSynonymResult.error} [${processId}]`, "支付方式分類", userId, functionName);
+    }
+
     // 更新記帳資料的支付方式資訊
     originalData.paymentMethod = selectedWallet.walletName;
     originalData.walletId = selectedWallet.walletId;
@@ -3241,7 +3340,8 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
         mappedWalletType: selectedWallet.displayName,
         walletId: selectedWallet.walletId,
         bookkeepingCompleted: true,
-        transactionId: bookkeepingResult.data.id
+        transactionId: bookkeepingResult.data.id,
+        synonymsUpdated: walletSynonymResult.success
       };
     } else {
       LBK_logError(`支付方式分類後記帳失敗: ${bookkeepingResult.error} [${processId}]`, "支付方式分類", userId, "BOOKKEEPING_AFTER_TYPE_SELECTION_ERROR", bookkeepingResult.error, functionName);
@@ -3450,10 +3550,14 @@ const LBK_MODULE = {
   // 階段一新增：wallet類型postback識別函數 - v1.4.7
   LBK_isWalletTypePostback: LBK_isWalletTypePostback,
 
+  // 階段一新增：wallet synonyms更新函數 - v1.4.6
+  LBK_updateWalletSynonyms: LBK_updateWalletSynonyms,
+  LBK_getWalletDisplayName: LBK_getWalletDisplayName,
+
   // 版本資訊
-  MODULE_VERSION: "1.4.7",
+  MODULE_VERSION: "1.4.6",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一：修復LBK模組wallet postback事件識別 - 新增wallet_type_開頭postback識別功能"
+  MODULE_UPDATE: "階段一：修復wallet確認流程邏輯 - 確保支付方式類型選擇後更新wallet synonyms欄位，讓下次相同輸入可直接識別"
 };
 
 // 導出模組
