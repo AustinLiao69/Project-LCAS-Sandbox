@@ -3930,57 +3930,7 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
       LBK_logInfo(`階段三：同義詞已存在，跳過更新: ${normalizedOriginal}`, "Wallet同義詞", "", functionName);
 
 
-/**
- * 階段二新增：檢查用戶wallets子集合存在性
- * @version 2025-12-18-V1.4.13
- * @date 2025-12-18 17:00:00
- * @description 檢查用戶是否有可用的錢包，為歧義消除流程提供基礎驗證
- */
-async function LBK_checkUserWalletsExistence(userId, processId) {
-  const functionName = "LBK_checkUserWalletsExistence";
-  try {
-    LBK_logDebug(`階段二：檢查用戶錢包存在性: ${userId} [${processId}]`, "錢包存在性檢查", userId, functionName);
 
-    if (!userId) {
-      return {
-        exists: false,
-        walletCount: 0,
-        error: "用戶ID為空"
-      };
-    }
-
-    await LBK_initializeFirestore();
-    const db = LBK_INIT_STATUS.firestore_db;
-
-    const ledgerId = `user_${userId}`;
-    const walletsSnapshot = await db.collection(`ledgers/${ledgerId}/wallets`)
-      .where('userId', '==', userId)
-      .where('status', '==', 'active')
-      .limit(1) // 只需要知道是否存在，不需要全部
-      .get();
-
-    const exists = !walletsSnapshot.empty;
-    const walletCount = walletsSnapshot.size;
-
-    LBK_logDebug(`階段二：錢包存在性檢查結果: exists=${exists}, count=${walletCount} [${processId}]`, "錢包存在性檢查", userId, functionName);
-
-    return {
-      exists: exists,
-      walletCount: walletCount,
-      ledgerId: ledgerId,
-      checkedAt: new Date().toISOString()
-    };
-
-  } catch (error) {
-    LBK_logError(`階段二：檢查錢包存在性異常: ${error.toString()} [${processId}]`, "錢包存在性檢查", userId, "CHECK_WALLETS_EXCEPTION", error.toString(), functionName);
-    return {
-      exists: false,
-      walletCount: 0,
-      error: error.message,
-      systemError: true
-    };
-  }
-}
 
 
       return { 
@@ -4159,8 +4109,7 @@ module.exports = {
   // 階段一新增：錢包查詢函數 - v1.4.9
   LBK_getWalletByName: LBK_getWalletByName,
 
-  // 階段二新增：錢包存在性檢查函數 - v1.4.13
-  LBK_checkUserWalletsExistence: LBK_checkUserWalletsExistence,
+  
 
 
   // 版本資訊
