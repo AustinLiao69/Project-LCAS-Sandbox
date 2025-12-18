@@ -3377,18 +3377,57 @@ function LBK_getWalletDisplayName(walletId, ledgerId = null) {
 async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMethod) {
   const functionName = "LBK_updateWalletSynonyms";
   try {
+    // 參數驗證
+    if (!ledgerId || !walletId || !originalPaymentMethod) {
+      const errorMsg = `參數不完整: ledgerId=${ledgerId}, walletId=${walletId}, originalPaymentMethod=${originalPaymentMethod}`;
+      LBK_logError(errorMsg, "Wallet同義詞", "", "INVALID_PARAMETERS", errorMsg, functionName);
+      return { success: false, message: "參數不完整" };
+    }
+
     LBK_logInfo(`開始更新wallet同義詞: ${originalPaymentMethod} → ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", functionName);
 
+    // 初始化Firestore連接
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
 
-    // 從Firestore讀取現有wallet資料
-    const walletRef = db.collection(`ledgers/${ledgerId}/wallets`).doc(walletId);
-    const walletDoc = await walletRef.get();
+    // 正確的Firestore路徑解析
+    const walletPath = `ledgers/${ledgerId}/wallets`;
+    LBK_logDebug(`使用wallet路徑: ${walletPath}/${walletId}`, "Wallet同義詞", "", functionName);
+
+    // 從Firestore讀取現有wallet資料，使用重試機制
+    const walletRef = db.collection(walletPath).doc(walletId);
+    let walletDoc;
+    
+    try {
+      walletDoc = await walletRef.get();
+    } catch (firestoreError) {
+      LBK_logError(`Firestore讀取失敗: ${firestoreError.message}`, "Wallet同義詞", "", "FIRESTORE_READ_ERROR", firestoreError.toString(), functionName);
+      return { success: false, message: `Firestore讀取失敗: ${firestoreError.message}` };
+    }
 
     if (!walletDoc.exists) {
-      LBK_logError(`Wallet不存在: ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", "WALLET_NOT_FOUND", `路徑: ledgers/${ledgerId}/wallets/${walletId}`, functionName);
-      return { success: false, message: `Wallet不存在: ${walletId}` };
+      // 嘗試創建預設wallet如果不存在
+      LBK_logWarning(`Wallet不存在，嘗試創建預設wallet: ${walletId}`, "Wallet同義詞", "", functionName);
+      
+      const defaultWalletData = LBK_createDefaultWalletData(walletId, ledgerId, originalPaymentMethod);
+      if (defaultWalletData) {
+        try {
+          await walletRef.set(defaultWalletData);
+          LBK_logInfo(`成功創建預設wallet並加入同義詞: ${walletId}`, "Wallet同義詞", "", functionName);
+          return { 
+            success: true, 
+            message: '成功創建預設wallet並更新synonyms', 
+            updatedSynonyms: originalPaymentMethod,
+            created: true 
+          };
+        } catch (createError) {
+          LBK_logError(`創建預設wallet失敗: ${createError.message}`, "Wallet同義詞", "", "WALLET_CREATE_ERROR", createError.toString(), functionName);
+          return { success: false, message: `創建預設wallet失敗: ${createError.message}` };
+        }
+      } else {
+        LBK_logError(`Wallet不存在且無法創建: ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", "WALLET_NOT_FOUND", `路徑: ${walletPath}/${walletId}`, functionName);
+        return { success: false, message: `Wallet不存在: ${walletId}` };
+      }
     }
 
     const walletData = walletDoc.data();
@@ -3396,31 +3435,112 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
     
     LBK_logInfo(`當前synonyms: "${currentSynonyms}"`, "Wallet同義詞", "", functionName);
 
-    // 檢查是否已包含該同義詞
-    const synonymsList = currentSynonyms ? currentSynonyms.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+    // 正規化同義詞處理
+    const synonymsList = currentSynonyms ? 
+      currentSynonyms.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
     
-    if (!synonymsList.includes(originalPaymentMethod)) {
-      synonymsList.push(originalPaymentMethod);
+    // 檢查是否已包含該同義詞（不區分大小寫）
+    const normalizedOriginal = originalPaymentMethod.trim();
+    const synonymsLowerCase = synonymsList.map(s => s.toLowerCase());
+    
+    if (!synonymsLowerCase.includes(normalizedOriginal.toLowerCase())) {
+      synonymsList.push(normalizedOriginal);
       const newSynonyms = synonymsList.join(',');
 
       LBK_logInfo(`準備更新synonyms: "${currentSynonyms}" → "${newSynonyms}"`, "Wallet同義詞", "", functionName);
 
-      // 更新synonyms欄位
-      await walletRef.update({
-        synonyms: newSynonyms,
-        updatedAt: admin.firestore.Timestamp.now()
-      });
+      // 使用事務確保更新一致性
+      try {
+        await db.runTransaction(async (transaction) => {
+          const freshWalletDoc = await transaction.get(walletRef);
+          if (!freshWalletDoc.exists) {
+            throw new Error('Wallet在事務執行期間被刪除');
+          }
 
-      LBK_logInfo(`Wallet synonyms更新成功: ${originalPaymentMethod} 已加入 ${walletId}`, "Wallet同義詞", "", functionName);
-      return { success: true, message: 'Wallet synonyms更新成功', updatedSynonyms: newSynonyms };
+          transaction.update(walletRef, {
+            synonyms: newSynonyms,
+            updatedAt: admin.firestore.Timestamp.now(),
+            lastSynonymUpdate: admin.firestore.Timestamp.now(),
+            synonymsCount: synonymsList.length
+          });
+        });
+
+        LBK_logInfo(`Wallet synonyms更新成功: ${normalizedOriginal} 已加入 ${walletId}`, "Wallet同義詞", "", functionName);
+        return { 
+          success: true, 
+          message: 'Wallet synonyms更新成功', 
+          updatedSynonyms: newSynonyms,
+          addedSynonym: normalizedOriginal
+        };
+      } catch (transactionError) {
+        LBK_logError(`事務更新失敗: ${transactionError.message}`, "Wallet同義詞", "", "TRANSACTION_ERROR", transactionError.toString(), functionName);
+        return { success: false, message: `更新失敗: ${transactionError.message}` };
+      }
     } else {
-      LBK_logInfo(`同義詞已存在，跳過更新: ${originalPaymentMethod}`, "Wallet同義詞", "", functionName);
-      return { success: true, message: '同義詞已存在', currentSynonyms: currentSynonyms };
+      LBK_logInfo(`同義詞已存在，跳過更新: ${normalizedOriginal}`, "Wallet同義詞", "", functionName);
+      return { 
+        success: true, 
+        message: '同義詞已存在', 
+        currentSynonyms: currentSynonyms,
+        skipped: true 
+      };
     }
 
   } catch (error) {
-    LBK_logError(`更新wallet同義詞失敗: ${error.toString()}`, "Wallet同義詞", "", "UPDATE_SYNONYMS_ERROR", error.toString(), functionName);
-    return { success: false, message: error.toString() };
+    LBK_logError(`更新wallet同義詞異常: ${error.toString()}`, "Wallet同義詞", "", "UPDATE_SYNONYMS_EXCEPTION", error.toString(), functionName);
+    return { success: false, message: `系統錯誤: ${error.message}` };
+  }
+}
+
+/**
+ * 創建預設wallet資料
+ * @version 2025-12-18-V1.4.7
+ * @param {string} walletId - 錢包ID
+ * @param {string} ledgerId - 帳本ID
+ * @param {string} initialSynonym - 初始同義詞
+ * @returns {Object|null} 預設wallet資料或null
+ */
+function LBK_createDefaultWalletData(walletId, ledgerId, initialSynonym) {
+  try {
+    // 僅為預設wallet類型創建資料
+    const defaultWalletMapping = {
+      'default_cash': { name: '現金', type: 'cash', currency: 'TWD' },
+      'default_bank': { name: '銀行帳戶', type: 'bank', currency: 'TWD' },
+      'default_credit': { name: '信用卡', type: 'credit', currency: 'TWD' },
+      'default_mobile': { name: '行動支付', type: 'mobile', currency: 'TWD' }
+    };
+
+    const walletConfig = defaultWalletMapping[walletId];
+    if (!walletConfig) {
+      return null; // 不是預設wallet，不自動創建
+    }
+
+    const userId = ledgerId.replace('user_', '');
+    
+    return {
+      id: walletId,
+      walletId: walletId,
+      walletName: walletConfig.name,
+      subWalletId: walletConfig.currency,
+      subWalletName: walletConfig.currency,
+      name: walletConfig.name,
+      type: walletConfig.type,
+      currency: walletConfig.currency,
+      balance: 0,
+      synonyms: initialSynonym,
+      isDefault: true,
+      userId: userId,
+      ledgerId: ledgerId,
+      status: 'active',
+      dataSource: 'LBK_AUTO_CREATED',
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      synonymsCount: 1,
+      lastSynonymUpdate: admin.firestore.Timestamp.now()
+    };
+  } catch (error) {
+    LBK_logError(`創建預設wallet資料失敗: ${error.toString()}`, "Wallet同義詞", "", "CREATE_DEFAULT_WALLET_ERROR", error.toString(), "LBK_createDefaultWalletData");
+    return null;
   }
 }
 
