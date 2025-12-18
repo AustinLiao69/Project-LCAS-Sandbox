@@ -3158,25 +3158,12 @@ async function LBK_parsePaymentMethod(text, userId, processId) {
  * 25. 解析支付方式 - 階段二：修正synonyms匹配失敗處理邏輯
  * @version 2025-12-18-V1.4.13
  * @date 2025-12-18 17:00:00
- * @description 階段二修正：當synonyms查詢失敗時，觸發歧義消除流程而非返回錯誤
+ * @description 階段二修正：當synonyms查詢失敗時，觸發歧義消除流程而非返回錯誤，使用LBK_validateWalletExists替代LBK_checkUserWalletsExistence
  */
 async function LBK_parsePaymentMethod(messageText, userId, processId) {
   const functionName = "LBK_parsePaymentMethod";
   try {
     LBK_logDebug(`階段二：解析支付方式，修正synonyms匹配失敗處理: "${messageText}" [${processId}]`, "支付方式解析", userId, functionName);
-
-    // 階段二新增：檢查用戶wallets子集合存在性
-    const walletsExistResult = await LBK_checkUserWalletsExistence(userId, processId);
-    if (!walletsExistResult.exists) {
-      LBK_logError(`階段二：用戶無任何錢包，返回系統錯誤 [${processId}]`, "支付方式解析", userId, "NO_WALLETS_EXISTS", "用戶帳本下無wallets子集合", functionName);
-      return {
-        method: null,
-        walletId: null,
-        walletName: null,
-        error: "您尚未建立任何錢包，請先透過帳戶管理功能建立錢包",
-        systemError: true
-      };
-    }
 
     // 進行synonyms查詢
     const walletResult = await LBK_getWalletByName(messageText, userId, processId);
@@ -3190,15 +3177,39 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
       };
     }
 
-    // 階段二核心修正：synonyms匹配失敗時，觸發歧義消除而非返回錯誤
-    LBK_logInfo(`階段二：synonyms查詢失敗，觸發歧義消除流程: ${messageText} [${processId}]`, "支付方式解析", userId, functionName);
+    // 階段二核心修正：使用LBK_validateWalletExists檢查錢包存在性並觸發歧義消除
+    const walletValidationResult = await LBK_validateWalletExists(userId, null, messageText, processId);
+    
+    if (!walletValidationResult.success) {
+      if (walletValidationResult.requiresUserConfirmation) {
+        // 觸發歧義消除流程
+        LBK_logInfo(`階段二：wallet驗證失敗，觸發歧義消除流程: ${messageText} [${processId}]`, "支付方式解析", userId, functionName);
+        return {
+          method: messageText,
+          walletId: null,
+          walletName: messageText,
+          requiresWalletConfirmation: true,
+          availableWallets: walletValidationResult.walletsCount || 0,
+          originalInput: messageText
+        };
+      } else {
+        // 系統錯誤
+        LBK_logError(`階段二：wallet驗證系統錯誤 [${processId}]`, "支付方式解析", userId, "WALLET_VALIDATION_SYSTEM_ERROR", walletValidationResult.error, functionName);
+        return {
+          method: null,
+          walletId: null,
+          walletName: null,
+          error: walletValidationResult.error || "錢包驗證失敗",
+          systemError: true
+        };
+      }
+    }
+
+    // 驗證成功，返回錢包資訊
     return {
-      method: messageText,
-      walletId: null,
-      walletName: messageText,
-      requiresWalletConfirmation: true, // 階段二：觸發歧義消除標記
-      availableWallets: walletsExistResult.walletCount,
-      originalInput: messageText
+      method: walletValidationResult.walletName,
+      walletId: walletValidationResult.walletId,
+      walletName: walletValidationResult.walletName
     };
 
   } catch (error) {
@@ -4128,8 +4139,7 @@ module.exports = {
   // 階段一新增：錢包查詢函數 - v1.4.9
   LBK_getWalletByName: LBK_getWalletByName,
 
-  // 階段二新增：錢包存在性檢查函數 - v1.4.13
-  LBK_checkUserWalletsExistence: LBK_checkUserWalletsExistence,
+  
 
   // 版本資訊
   MODULE_VERSION: "1.4.13",
