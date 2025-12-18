@@ -20,9 +20,54 @@ Insight: LBK模組目前的智慧路由邏輯過於依賴文字格式解析，�
 2.	新增LBK_isWalletTypePostback函數識別wallet_type_開頭的postback
 3.	修改事件路由邏輯，將wallet類型postback導向現有的LBK_handleWalletConfirmationPostback函數
 
-階段二：修復WCM模組預設錢包初始化
-分析：WCM模組的WCM_loadDefaultConfigs函數已經具備路徑解析邏輯，但從錯誤訊息看來可能存在配置讀取問題。
-Insight: 問題根源在於WCM模組未被正確調用來建立預設錢包。當用戶首次使用支付方式時，系統應該要有預設的錢包可以選擇，但目前看起來預設錢包建立流程可能沒有執行。
+階段二：修復WCM模組預設錢包初始化（更新版）
+問題根因分析
+發現的問題：Firebase中預設wallets子集合資料缺少synonyms欄位，懷疑存在hard coding問題
+深層分析：
+1.	配置與實際不符：0302. Default_wallet.json配置檔案中定義了synonyms欄位，但實際寫入Firebase的資料缺少此欄位
+2.	欄位映射問題：WCM_createWallet函數在建立預設錢包時，可能沒有正確映射所有配置欄位
+3.	批次處理遺漏：預設錢包建立的批次處理邏輯可能跳過了某些欄位
+真正的問題根源
+通過分析WCM.js代碼，問題出現在WCM_createWallet函數的預設錢包建立邏輯：
+// 第258-280行的walletDoc建立邏輯
+const walletDoc = {
+  id: walletId,
+  name: walletName,
+  type: walletType,
+  currency: currency,
+  balance: parseFloat(defaultWallet.balance) || 0,
+  description: defaultWallet.description || '',
+  isDefault: defaultWallet.isDefault !== false,
+  isActive: defaultWallet.isActive !== false,
+  icon: defaultWallet.icon || '',
+  color: defaultWallet.color || '#4CAF50',
+  // 缺少 synonyms 欄位映射！
+  userId: walletData.userId,
+  ledgerId: ledgerId,
+  // ... 其他系統欄位
+};
+關鍵Insight
+Hard Coding確實存在：WCM模組在建立預設錢包時，直接在代碼中定義walletDoc結構，而不是完全依照0302配置檔案的完整欄位映射。這導致：
+1.	欄位遺漏：synonyms欄位雖然在配置檔案中定義，但在批次建立時被遺漏
+2.	配置檔案未完全利用：雖然載入了0302. Default_wallet.json，但建立時使用了hard coded的欄位結構
+3.	0070 schema不一致：實際建立的資料結構與DB schema定義不完全符合
+解決方案更新
+階段二：修復WCM模組預設錢包欄位映射
+目標：確保預設錢包建立時完整映射0302配置檔案的所有欄位，符合0070 DB schema
+修改內容：
+1.	修復WCM_createWallet函數中的walletDoc建立邏輯，新增遺漏的synonyms欄位映射
+2.	確保所有0302. Default_wallet.json中定義的欄位都正確映射到Firebase
+3.	按照0070. DB schema規範，確保wallets子集合欄位完整性
+影響範圍：WCM模組的預設錢包建立流程和欄位映射邏輯
+Before行為：預設錢包建立時遺漏synonyms等配置欄位，使用hard coded欄位結構
+After行為：完整映射0302配置檔案的所有欄位，符合DB schema規範
+關鍵修復點：
+•	在walletDoc建立時新增：synonyms: defaultWallet.synonyms || ''
+•	確保配置檔案與實際建立的資料結構完全一致
+•	避免hard coding，完全依賴配置檔案驅動
+這個修復將解決支付方式Quick Reply功能中預設錢包資料不完整的問題，確保錢包選擇功能有正確的同義詞支援。
+
+
 
 階段三：統一postback事件處理機制
 盤點結果：
