@@ -48,8 +48,7 @@ const LBK_CONFIG = {
     MIN_AMOUNT_DIGITS: 3,
     MAX_REMARK_LENGTH: 20
   },
-  // 新增預設支付方式配置
-  DEFAULT_PAYMENT_METHOD: "現金",
+  // 階段一修正：移除預設支付方式配置，確保無硬編碼
   // 新增 cache 配置
   CACHE_CONFIG: {
     stdTTL: 600, // 10 minutes
@@ -181,8 +180,31 @@ async function LBK_processQuickBookkeeping(inputData) {
       };
     }
 
-    // 解析支付方式（使用動態錢包查詢）
+    // 階段一修正：解析支付方式，檢查系統錯誤
     const paymentMethodResult = await LBK_parsePaymentMethod(inputData.messageText, userId, processId);
+    
+    // 階段一核心修正：檢查是否為系統錯誤
+    if (paymentMethodResult.systemError) {
+      LBK_logError(`支付方式解析失敗: ${paymentMethodResult.error} [${processId}]`, "快速記帳", userId, "PAYMENT_METHOD_SYSTEM_ERROR", paymentMethodResult.error, "LBK_processQuickBookkeeping");
+      
+      const formattedErrorMessage = LBK_formatReplyMessage(null, "LBK", {
+        originalInput: inputData.messageText,
+        error: paymentMethodResult.error,
+        success: false
+      });
+
+      return {
+        success: false,
+        message: formattedErrorMessage,
+        responseMessage: formattedErrorMessage,
+        moduleCode: "LBK",
+        module: "LBK",
+        processingTime: 0,
+        moduleVersion: "1.4.12",
+        errorType: "PAYMENT_METHOD_SYSTEM_ERROR"
+      };
+    }
+
     const paymentMethod = paymentMethodResult.method;
     const walletId = paymentMethodResult.walletId;
     const walletName = paymentMethodResult.walletName;
@@ -1214,7 +1236,7 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
       // 來源和用戶資訊 - 1301標準
       source: 'quick',
       userId: data.userId || '',
-      paymentMethod: data.paymentMethod || LBK_CONFIG.DEFAULT_PAYMENT_METHOD || '現金',
+      paymentMethod: data.paymentMethod || '',
 
       // 記帳特定欄位 - 1301標準
       ledgerId: `user_${data.userId}`,
@@ -3079,21 +3101,21 @@ async function LBK_parsePaymentMethod(text, userId, processId) {
 
 
 /**
- * 25. 解析支付方式 - 使用synonyms查詢機制（與科目查詢邏輯一致）
- * @version 2025-12-18-V1.4.9
- * @date 2025-12-18 16:00:00
- * @description 修正版：移除hardcoded mapping，使用synonyms查詢機制，與LBK_getSubjectCode保持一致
+ * 25. 解析支付方式 - 階段一：移除hard-coded預設值，完全依賴用戶wallets子集合
+ * @version 2025-12-18-V1.4.12
+ * @date 2025-12-18 16:30:00
+ * @description 階段一修正：移除所有hardcoded預設值，當synonyms查詢失敗時返回系統錯誤
  */
 async function LBK_parsePaymentMethod(messageText, userId, processId) {
   const functionName = "LBK_parsePaymentMethod";
   try {
-    LBK_logDebug(`解析支付方式: "${messageText}" [${processId}]`, "支付方式解析", userId, functionName);
+    LBK_logDebug(`階段一：解析支付方式，移除預設值邏輯: "${messageText}" [${processId}]`, "支付方式解析", userId, functionName);
 
-    // 階段一修正：移除hardcoded mapping，改用synonyms查詢
+    // 階段一核心修正：移除hardcoded mapping，純粹使用synonyms查詢
     const walletResult = await LBK_getWalletByName(messageText, userId, processId);
     
     if (walletResult && walletResult.walletId) {
-      LBK_logDebug(`通過synonyms查詢找到錢包: ${walletResult.walletName} (${walletResult.walletId})`, "支付方式解析", userId, functionName);
+      LBK_logDebug(`通過synonyms查詢找到錢包: ${walletResult.walletName} (${walletResult.walletId}) [${processId}]`, "支付方式解析", userId, functionName);
       return {
         method: walletResult.walletName,
         walletId: walletResult.walletId,
@@ -3101,22 +3123,26 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
       };
     }
 
-    // 如果沒找到匹配的錢包，返回預設現金
-    LBK_logDebug(`未找到匹配的錢包，返回預設現金`, "支付方式解析", userId, functionName);
+    // 階段一核心修正：查詢失敗直接返回系統錯誤，不返回預設現金
+    LBK_logError(`階段一：synonyms查詢失敗，返回系統錯誤而非預設現金 [${processId}]`, "支付方式解析", userId, "WALLET_NOT_FOUND", "用戶無可用錢包", functionName);
     return {
-      method: "現金",
-      walletId: "cash", // 使用WCM標準ID
-      walletName: "現金"
+      method: null,
+      walletId: null,
+      walletName: null,
+      error: "找不到匹配的支付方式，請確認您的錢包設定",
+      systemError: true
     };
 
   } catch (error) {
-    LBK_logError(`解析支付方式失敗: ${error.toString()} [${processId}]`, "支付方式解析", userId, "PARSE_PAYMENT_ERROR", error.toString(), functionName);
+    LBK_logError(`階段一：解析支付方式異常，返回系統錯誤: ${error.toString()} [${processId}]`, "支付方式解析", userId, "PARSE_PAYMENT_SYSTEM_ERROR", error.toString(), functionName);
 
-    // 發生錯誤時返回預設現金
+    // 階段一修正：發生錯誤時也返回系統錯誤，而非預設現金
     return {
-      method: "現金",
-      walletId: "cash",
-      walletName: "現金"
+      method: null,
+      walletId: null,
+      walletName: null,
+      error: `系統錯誤: ${error.message}`,
+      systemError: true
     };
   }
 }
@@ -3981,7 +4007,7 @@ module.exports = {
   LBK_getWalletByName: LBK_getWalletByName,
 
   // 版本資訊
-  MODULE_VERSION: "1.4.11",
+  MODULE_VERSION: "1.4.12",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段三：修正synonyms更新機制 - 修正錢包查找邏輯，確保使用正確的Firestore路徑，移除錯誤的預設錢包創建邏輯，正確找到WCM建立的錢包文件並更新synonyms欄位"
+  MODULE_UPDATE: "階段一：移除所有Hard-coded支付方式 - 修正LBK_parsePaymentMethod函數移除預設現金返回邏輯，當synonyms查詢失敗時返回系統錯誤，移除LBK_CONFIG中的預設支付方式配置，確保系統完全依賴用戶wallets子集合"
 };
