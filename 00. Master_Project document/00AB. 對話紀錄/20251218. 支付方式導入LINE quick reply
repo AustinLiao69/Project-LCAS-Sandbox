@@ -64,6 +64,7 @@ B. Root causes（最多 6 條）
 1.	新增用戶wallets子集合存在性檢查
 2.	synonyms匹配失敗時，觸發requiresWalletConfirmation標記
 3.	修正LBK_validateWalletExists函數，專注於真正的synonyms匹配驗證
+
 核心Insight：
 當前問題的根本原因是系統設計違背了「用戶wallets子集合為唯一數據來源」的原則，通過移除所有hard-coded預設值並正確實施synonyms匹配邏輯，可以讓現有的歧義消除機制正確運作，無需重新開發任何新功能。
 
