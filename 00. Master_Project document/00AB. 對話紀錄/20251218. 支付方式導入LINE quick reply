@@ -6,6 +6,168 @@
 20251218. 支付方式導入LINE quick reply
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+根據你的要求，我來重新分析問題並更新解決方案提案。
+A. 快速摘要（≤3句）
+•	LBK模組在支付方式名稱提取上缺乏專門函數，導致synonyms更新時使用完整輸入「刈包55555中信」而非「中信」
+•	LBK_handleWalletConfirmationPostback函數中synonyms參數傳遞邏輯錯誤，未正確提取支付方式名稱
+•	現有LBK_parseInputFormat函數已具備支付方式識別邏輯，但未被synonyms更新流程使用
+B. Root causes（最多 6 條）
+1. 支付方式名稱提取功能重複但未整合
+證據：檢查LBK.js發現LBK_parseInputFormat函數(第103行)已有銀行名稱識別邏輯
+// v1.4.5 增強的銀行名稱識別
+const bankNames = ["台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山", ...];
+信心度：95%
+解決方案：重用現有函數邏輯，避免0098規範中禁止的重複函數創建
+2. synonyms更新參數源頭錯誤
+證據：LBK_handleWalletConfirmationPostback函數使用walletName作為synonyms參數，但walletName包含完整原始輸入
+信心度：90%
+解決方案：修正參數傳遞，使用提取的支付方式名稱而非原始輸入
+3. 支付方式識別與synonyms更新間的資料流斷層
+證據：LBK_parseInputFormat能識別「中信」，但此結果未傳遞到synonyms更新階段
+信心度：85%
+解決方案：建立完整資料流，確保識別結果正確傳遞
+
+
+C. 解決方案
+Insight: 問題核心在於LBK模組已有支付方式名稱識別能力，但在synonyms更新流程中未被正確利用，導致資料傳遞錯誤。
+
+階段一：重用現有支付方式識別邏輯
+實施計畫：
+•	修改檔案：13. Replit_Module code_BL/1315. LBK.js
+•	修改函數：LBK_handleWalletConfirmationPostback
+•	重用現有：LBK_parseInputFormat 的銀行名稱識別邏輯來提取實際支付方式名稱
+用途說明：
+•	避免創建新函數，符合0098規範，重用已有的bankNames陣列和識別邏輯
+•	影響範圍：支付方式處理流程
+•	Before：直接使用完整輸入「刈包55555中信」作為支付方式名稱
+•	After：重用現有識別邏輯提取「中信」作為支付方式名稱
+
+階段二：修正synonyms更新參數傳遞
+實施計畫：
+•	修改檔案：13. Replit_Module code_BL/1315. LBK.js
+•	修改函數：LBK_handleWalletConfirmationPostback 中的synonyms更新邏輯
+•	使用階段一提取的實際支付方式名稱作為LBK_executeWalletSynonymsUpdate的參數
+用途說明：
+•	修正synonyms參數傳遞，確保寫入正確的支付方式名稱
+•	影響範圍：synonyms更新流程
+•	Before：synonyms寫入「刈包55555中信」
+•	After：synonyms寫入「中信」
+簡單概念解釋：
+這就像是公司的名片管理系統。當客戶說「我是台積電張經理聯絡電話0912345678」時，現有系統能正確識別公司名稱是「台積電」，但在建立通訊錄時卻把整句話「台積電張經理聯絡電話0912345678」當作公司名稱儲存。
+正確做法是重用已有的公司名稱識別邏輯，在通訊錄中只記錄「台積電」，這樣下次客戶說「台積電李協理手機0987654321」時，系統就能正確識別是同一家公司。
+版本升級計畫：
+•	模組版本：LBK v1.4.13 → v1.4.14
+•	相關函數版本升級：
+o	LBK_handleWalletConfirmationPostback: v1.4.8 → v1.4.9
+
+
+
+------------------------------------------
+20251218. 支付方式導入LINE quick reply
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+Debug分析報告
+版本: v1.1.0
+建立日期: 2025-12-18
+建立者: LCAS SQA Team
+文件描述: LBK模組支付方式synonyms寫入錯誤分析報告
+________________________________________
+A. 快速摘要（≤3句）
+•	LBK模組在處理支付方式synonyms更新時，將完整輸入文字「刈包55555中信」寫入synonyms，而非預期的支付方式名稱「中信」
+•	問題出現在LBK_handleWalletConfirmationPostback函數中，synonyms更新邏輯使用了錯誤的參數
+•	導致後續相同模式的輸入無法正確匹配，重複觸發支付方式歧義消除流程
+________________________________________
+B. Root causes（最多 6 條）
+1. synonyms參數傳遞錯誤
+證據：從console日誌可見LBK_executeWalletSynonymsUpdate被調用時傳入了完整的原始輸入文字
+階段三：立即執行wallet synonyms更新: 刈包55555中信 → default_credit
+信心度：95%
+解決方案：修正LBK_handleWalletConfirmationPostback函數中的synonyms更新邏輯，應傳入支付方式名稱而非完整原始輸入
+2. 支付方式名稱提取邏輯缺失
+證據：從LBK_parseInputFormat的設計可見，該函數能正確識別銀行名稱如「中信」，但在synonyms更新時未使用提取的支付方式名稱
+信心度：90%
+解決方案：在synonyms更新前，先提取實際的支付方式名稱（如「中信」），而非使用完整輸入文字
+3. 階段三優化邏輯中參數混用
+證據：LBK_handleWalletConfirmationPostback函數中使用了walletName作為synonyms參數，但walletName包含完整原始輸入
+const synonymsResult = await LBK_executeWalletSynonymsUpdate(
+  `user_${userId}`,
+  selectedWallet.walletId,
+  walletName, // 這裡使用了完整輸入，應該是支付方式名稱
+  processId
+);
+信心度：85%
+解決方案：修正參數傳遞邏輯，提取並使用正確的支付方式名稱
+4. 支付方式識別與synonyms更新間的資料流斷層
+證據：LBK_parseInputFormat能正確識別「中信」作為支付方式，但這個識別結果未正確傳遞到synonyms更新階段
+信心度：80%
+解決方案：建立完整的資料流，確保支付方式識別結果能正確傳遞到synonyms更新
+5. 快取資料結構不完整
+證據：pendingWalletData中儲存了walletName但未儲存提取的支付方式名稱
+信心度：75%
+解決方案：擴展快取資料結構，儲存提取的支付方式名稱供後續使用
+6. 函數職責混淆
+證據：LBK_handleWalletConfirmationPostback函數同時處理用戶選擇和synonyms更新，導致參數使用混亂
+信心度：70%
+解決方案：明確函數職責，確保正確的資料在正確的階段使用
+________________________________________
+C. 解決方案
+階段一：修正支付方式名稱提取邏輯
+實施計畫：
+•	修改檔案：13. Replit_Module code_BL/1315. LBK.js
+•	新增函數：LBK_extractPaymentMethodName 用於從完整輸入中提取實際支付方式名稱
+=>0098有註明不可任意新增函數，請先盤點LBK是否有相同功能函數，我記得有
+
+•	修改函數：LBK_handleNewWallet 在快取資料中同時儲存原始輸入和提取的支付方式名稱
+用途說明：
+•	新增專門的支付方式名稱提取函數，確保能從「刈包55555中信」中正確提取「中信」
+•	影響範圍：支付方式處理流程
+•	Before：直接使用完整輸入作為支付方式名稱
+•	After：使用提取的實際支付方式名稱
+
+階段二：修正synonyms更新參數傳遞
+實施計畫：
+•	修改檔案：13. Replit_Module code_BL/1315. LBK.js
+•	修改函數：LBK_handleWalletConfirmationPostback 中的synonyms更新邏輯
+•	使用階段一提取的支付方式名稱作為synonyms參數
+用途說明：
+•	修正LBK_executeWalletSynonymsUpdate的參數傳遞，使用實際支付方式名稱而非完整輸入
+•	影響範圍：synonyms更新流程
+•	Before：synonyms寫入「刈包55555中信」
+•	After：synonyms寫入「中信」
+
+階段三：擴展快取資料結構
+實施計畫：
+•	修改檔案：13. Replit_Module code_BL/1315. LBK.js
+•	修改函數：LBK_handleNewWallet 的快取資料結構
+•	新增欄位：extractedPaymentMethodName 儲存提取的支付方式名稱
+用途說明：
+•	完善快取資料結構，確保關鍵資訊不會遺失
+•	影響範圍：支付方式處理的資料傳遞
+•	Before：只快取原始輸入
+•	After：同時快取原始輸入和提取的支付方式名稱
+=>請刪除此階段
+
+
+簡單概念解釋：
+這就像是公司裡的文件處理流程。當業務部門收到客戶需求「訂購產品A 100個 急件」時，應該分別提取：
+•	產品名稱：產品A
+•	數量：100個
+•	特殊要求：急件
+但目前的問題是，在建立產品資料庫時，把整句「訂購產品A 100個 急件」都寫成了產品名稱，導致下次客戶說「訂購產品A 200個 急件」時，系統認為這是不同產品，又要重新確認一遍。
+正確做法是在資料庫中只記錄「產品A」作為產品名稱，這樣不管客戶怎麼下單，都能正確識別是同一個產品。
+版本升級計畫：
+•	模組版本：LBK v1.4.13 → v1.4.14
+•	相關函數版本升級：
+o	LBK_handleNewWallet: v1.4.6 → v1.4.7
+o	LBK_handleWalletConfirmationPostback: v1.4.8 → v1.4.9
+o	新增 LBK_extractPaymentMethodName: v1.4.7
+請確認是否Approve此解決方案，我將按階段執行修改。
+
+
+------------------------------------------
+20251218. 支付方式導入LINE quick reply
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 根據您的回覆，我更新Debug分析報告如下：
 Debug分析報告更新
 A. 快速摘要（≤3句）
