@@ -1676,6 +1676,147 @@ function LBK_calculateStringSimilarity(str1, str2) {
   return 1 - (editDistance / maxLen);
 }
 
+/**
+ * 新增：根據支付方式名稱查詢錢包ID - 參考LBK_getSubjectCode實作模式
+ * @version 2025-12-18-V1.4.9
+ * @description 階段一新增：查詢ledgers/{ledgerId}/wallets子集合，通過synonyms欄位匹配
+ */
+async function LBK_getWalletByName(paymentMethodName, userId, processId) {
+  const functionName = "LBK_getWalletByName";
+  try {
+    LBK_logDebug(`查詢錢包: "${paymentMethodName}" [${processId}]`, "錢包查詢", userId, functionName);
+
+    if (!paymentMethodName || !userId) {
+      throw new Error("支付方式名稱或用戶ID為空");
+    }
+
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+
+    const ledgerId = `user_${userId}`;
+    const normalizedInput = String(paymentMethodName).trim().toLowerCase();
+
+    // 記錄同義詞匹配過程
+    LBK_logDebug(`開始同義詞匹配，輸入: "${normalizedInput}" [${processId}]`, "錢包同義詞匹配", userId, functionName);
+
+    const snapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets").where("status", "==", "active").get();
+
+    LBK_logDebug(`查詢wallets集合結果: ${snapshot.size} 筆資料 [${processId}]`, "錢包查詢", userId, functionName);
+
+    if (snapshot.empty) {
+      // 嘗試查詢所有wallets文檔（不限制status）
+      const allSnapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets").get();
+      LBK_logDebug(`wallets集合總數: ${allSnapshot.size} 筆資料 [${processId}]`, "錢包查詢", userId, functionName);
+
+      if (!allSnapshot.empty) {
+        // 列出所有文檔的基本信息用於調試
+        allSnapshot.forEach(doc => {
+          const data = doc.data();
+          LBK_logDebug(`文檔 ${doc.id}: walletId=${data.walletId}, name=${data.walletName || data.name}, status=${data.status}`, "錢包查詢", userId, functionName);
+        });
+      }
+
+      return null; // 沒有可用的錢包
+    }
+
+    // 強化的匹配算法 - 支援同義詞模糊匹配（與LBK_getSubjectCode一致）
+    let exactMatch = null;
+    let synonymMatch = null;
+    let partialMatches = [];
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const walletName = String(data.walletName || data.name || '').trim().toLowerCase();
+
+      // 1. 精確匹配 - 最高優先級
+      if (walletName === normalizedInput) {
+        exactMatch = {
+          walletId: data.walletId || doc.id,
+          walletName: data.walletName || data.name,
+          type: data.type
+        };
+        break;
+      }
+
+      // 2. 同義詞精確匹配 - 第二優先級
+      const synonymsStr = data.synonyms || "";
+      const synonyms = synonymsStr ? synonymsStr.split(",").map(s => s.trim()).filter(s => s.length > 0) : [];
+
+      LBK_logDebug(`處理同義詞匹配: "${normalizedInput}"，錢包: "${data.walletName || data.name}"，同義詞數量: ${synonyms.length} [${processId}]`, "錢包同義詞匹配", userId, functionName);
+
+      for (const synonym of synonyms) {
+        const synonymLower = synonym.toLowerCase();
+        if (synonymLower === normalizedInput) {
+          synonymMatch = {
+            walletId: data.walletId || doc.id,
+            walletName: data.walletName || data.name,
+            type: data.type
+          };
+          break;
+        }
+
+        // 同義詞包含匹配
+        if (synonymLower.includes(normalizedInput) && normalizedInput.length >= 2) {
+          if (!synonymMatch) {
+            synonymMatch = {
+              walletId: data.walletId || doc.id,
+              walletName: data.walletName || data.name,
+              type: data.type
+            };
+            LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.walletName}" [${processId}]`, "錢包同義詞匹配", userId, functionName);
+          }
+        }
+
+        // 反向包含匹配
+        if (normalizedInput.includes(synonymLower) && synonymLower.length >= 2) {
+          if (!synonymMatch) {
+            synonymMatch = {
+              walletId: data.walletId || doc.id,
+              walletName: data.walletName || data.name,
+              type: data.type
+            };
+            LBK_logDebug(`找到反向包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.walletName}" [${processId}]`, "錢包同義詞匹配", userId, functionName);
+          }
+        }
+      }
+
+      // 3. 部分匹配 - 包含關係
+      if (walletName.includes(normalizedInput) || normalizedInput.includes(walletName)) {
+        partialMatches.push({
+          walletId: data.walletId || doc.id,
+          walletName: data.walletName || data.name,
+          type: data.type,
+          score: walletName.length === normalizedInput.length ? 1.0 : 0.8
+        });
+      }
+    }
+
+    // 按優先級返回結果
+    if (exactMatch) {
+      return exactMatch;
+    }
+    if (synonymMatch) {
+      return synonymMatch;
+    }
+    if (partialMatches.length > 0) {
+      // 返回評分最高的部分匹配
+      partialMatches.sort((a, b) => b.score - a.score);
+      const bestMatch = partialMatches[0];
+      return {
+        walletId: bestMatch.walletId,
+        walletName: bestMatch.walletName,
+        type: bestMatch.type
+      };
+    }
+
+    return null; // 沒有找到匹配的錢包
+
+  } catch (error) {
+    LBK_logError(`查詢錢包失敗: ${error.toString()} [${processId}]`, "錢包查詢", userId, "WALLET_QUERY_ERROR", error.toString(), functionName);
+    return null;
+  }
+}
+
 // 輔助函數：識別科目 - v1.4.0 增強新科目檢測邏輯
 async function LBK_identifySubject(subjectText, userId, processId) {
   try {
@@ -2945,127 +3086,43 @@ async function LBK_parsePaymentMethod(text, userId, processId) {
 
 
 /**
- * 25. 解析支付方式 - 動態錢包查詢版本，增強銀行識別
- * @version 2025-12-17-V1.4.4
- * @date 2025-12-17 15:30:00
- * @description 從文字中解析支付方式，支援動態錢包查詢，並增強銀行名稱識別
+ * 25. 解析支付方式 - 使用synonyms查詢機制（與科目查詢邏輯一致）
+ * @version 2025-12-18-V1.4.9
+ * @date 2025-12-18 16:00:00
+ * @description 修正版：移除hardcoded mapping，使用synonyms查詢機制，與LBK_getSubjectCode保持一致
  */
 async function LBK_parsePaymentMethod(messageText, userId, processId) {
   const functionName = "LBK_parsePaymentMethod";
   try {
     LBK_logDebug(`解析支付方式: "${messageText}" [${processId}]`, "支付方式解析", userId, functionName);
 
-    // 預設支付方式邏輯
-    let detectedMethod = "刷卡"; // 預設值
-    let walletId = "default_credit"; // 對應刷卡的預設wallet
-    let walletName = "信用卡";
-
-    // 增強的銀行名稱識別
-    const bankNames = [
-      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山", "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託",
-      "聯邦", "遠東", "元大", "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
-      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "法國巴黎", "瑞士銀行", "德意志", "荷蘭", "比利時", "奧地利", "義大利", "西班牙", "葡萄牙"
-    ];
-
-    // 檢查是否包含特定支付方式關鍵字
-    const paymentKeywords = [
-      { keywords: ["現金"], method: "現金", walletId: "default_cash", walletName: "現金" },
-      { keywords: ["刷卡", "信用卡"], method: "刷卡", walletId: "default_credit", walletName: "信用卡" },
-      { keywords: ["轉帳", "銀行"], method: "轉帳", walletId: "default_bank", walletName: "銀行帳戶" },
-      { keywords: ["行動支付", "支付寶", "微信", "Apple Pay", "Google Pay", "LINE Pay"], method: "行動支付", walletId: "default_mobile", walletName: "行動支付" }
-    ];
-
-    // 先檢查銀行名稱
-    let detectedBank = null;
-    for (const bankName of bankNames) {
-      if (messageText.includes(bankName)) {
-        detectedBank = bankName;
-        detectedMethod = "轉帳"; // 檢測到銀行名稱時，預設為轉帳
-        walletId = `bank_${bankName.toLowerCase()}`;
-        walletName = `${bankName}銀行`;
-        LBK_logDebug(`檢測到銀行名稱: ${bankName} → 轉帳`, "支付方式解析", userId, functionName);
-        break;
-      }
-    }
-
-    // 如果沒有檢測到銀行，再檢查一般支付方式關鍵字
-    if (!detectedBank) {
-      for (const paymentType of paymentKeywords) {
-        for (const keyword of paymentType.keywords) {
-          if (messageText.includes(keyword)) {
-            detectedMethod = paymentType.method;
-            walletId = paymentType.walletId;
-            walletName = paymentType.walletName;
-            LBK_logDebug(`檢測到支付方式關鍵字: ${keyword} → ${detectedMethod}`, "支付方式解析", userId, functionName);
-            break;
-          }
-        }
-        if (detectedMethod !== "刷卡") break; // 如果找到了就停止搜尋
-      }
-    }
-
-    // 查詢用戶的可用錢包
-    let userWallets = [];
-    try {
-      await LBK_initializeFirestore();
-      const db = LBK_INIT_STATUS.firestore_db;
-      const ledgerId = `user_${userId}`;
-
-      const walletsSnapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets")
-        .where("status", "==", "active")
-        .where("userId", "==", userId)
-        .get();
-
-      walletsSnapshot.forEach(doc => {
-        const walletData = doc.data();
-        userWallets.push({
-          id: walletData.id || doc.id,
-          name: walletData.name,
-          type: walletData.type
-        });
-      });
-
-      LBK_logDebug(`查詢到 ${userWallets.length} 個可用錢包`, "支付方式解析", userId, functionName);
-
-    } catch (walletQueryError) {
-      LBK_logWarning(`查詢用戶錢包失敗: ${walletQueryError.message}，使用預設設定`, "支付方式解析", userId, functionName);
-    }
-
-    // 嘗試在用戶錢包中找到匹配的支付方式
-    const matchedWallet = userWallets.find(wallet => {
-      // 精確匹配錢包名稱
-      if (wallet.name === walletName) return true;
-      // 如果檢測到銀行，嘗試匹配包含銀行名稱的錢包
-      if (detectedBank && wallet.name.includes(detectedBank)) return true;
-      // 匹配錢包類型
-      if (wallet.type === detectedMethod.toLowerCase().replace("支付", "payment")) return true;
-      return false;
-    });
-
-    if (matchedWallet) {
-      LBK_logDebug(`在用戶錢包中找到匹配: ${matchedWallet.name}`, "支付方式解析", userId, functionName);
+    // 階段一修正：移除hardcoded mapping，改用synonyms查詢
+    const walletResult = await LBK_getWalletByName(messageText, userId, processId);
+    
+    if (walletResult && walletResult.walletId) {
+      LBK_logDebug(`通過synonyms查詢找到錢包: ${walletResult.walletName} (${walletResult.walletId})`, "支付方式解析", userId, functionName);
       return {
-        method: matchedWallet.name,
-        walletId: matchedWallet.id,
-        walletName: matchedWallet.name
-      };
-    } else {
-      // 沒找到匹配的錢包，返回檢測到的方式（用於新wallet流程）
-      LBK_logDebug(`未在用戶錢包中找到 ${detectedMethod}(${walletName})，返回檢測結果用於新wallet流程`, "支付方式解析", userId, functionName);
-      return {
-        method: detectedMethod,
-        walletId: walletId,
-        walletName: walletName
+        method: walletResult.walletName,
+        walletId: walletResult.walletId,
+        walletName: walletResult.walletName
       };
     }
+
+    // 如果沒找到匹配的錢包，返回預設現金
+    LBK_logDebug(`未找到匹配的錢包，返回預設現金`, "支付方式解析", userId, functionName);
+    return {
+      method: "現金",
+      walletId: "cash", // 使用WCM標準ID
+      walletName: "現金"
+    };
 
   } catch (error) {
     LBK_logError(`解析支付方式失敗: ${error.toString()} [${processId}]`, "支付方式解析", userId, "PARSE_PAYMENT_ERROR", error.toString(), functionName);
 
-    // 發生錯誤時返回預設預設現金
+    // 發生錯誤時返回預設現金
     return {
       method: "現金",
-      walletId: "default_cash",
+      walletId: "cash",
       walletName: "現金"
     };
   }
@@ -3585,8 +3642,8 @@ async function LBK_confirmWalletSynonymsUpdate(ledgerId, walletId, originalPayme
 }
 
 /**
- * 更新wallet同義詞
- * @version 2025-12-18-V1.4.8
+ * 更新wallet同義詞 - 修正路徑解析邏輯
+ * @version 2025-12-18-V1.4.9
  * @param {string} ledgerId - 帳本ID  
  * @param {string} walletId - 錢包ID
  * @param {string} originalPaymentMethod - 原始支付方式名稱
@@ -3602,17 +3659,17 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
       return { success: false, message: "參數不完整" };
     }
 
-    LBK_logInfo(`開始更新wallet同義詞: ${originalPaymentMethod} → ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", functionName);
+    LBK_logInfo(`階段一修正：開始更新wallet同義詞: ${originalPaymentMethod} → ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", functionName);
 
     // 初始化Firestore連接
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
 
-    // 正確的Firestore路徑解析
+    // 階段一修正：使用正確的Firestore路徑解析，確保與WCM建立的錢包路徑一致
     const walletPath = `ledgers/${ledgerId}/wallets`;
-    LBK_logDebug(`使用wallet路徑: ${walletPath}/${walletId}`, "Wallet同義詞", "", functionName);
+    LBK_logDebug(`修正後使用wallet路徑: ${walletPath}/${walletId}`, "Wallet同義詞", "", functionName);
 
-    // 從Firestore讀取現有wallet資料，使用重試機制
+    // 從Firestore讀取現有wallet資料
     const walletRef = db.collection(walletPath).doc(walletId);
     let walletDoc;
     
@@ -3624,28 +3681,9 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
     }
 
     if (!walletDoc.exists) {
-      // 嘗試創建預設wallet如果不存在
-      LBK_logWarning(`Wallet不存在，嘗試創建預設wallet: ${walletId}`, "Wallet同義詞", "", functionName);
-      
-      const defaultWalletData = LBK_createDefaultWalletData(walletId, ledgerId, originalPaymentMethod);
-      if (defaultWalletData) {
-        try {
-          await walletRef.set(defaultWalletData);
-          LBK_logInfo(`成功創建預設wallet並加入同義詞: ${walletId}`, "Wallet同義詞", "", functionName);
-          return { 
-            success: true, 
-            message: '成功創建預設wallet並更新synonyms', 
-            updatedSynonyms: originalPaymentMethod,
-            created: true 
-          };
-        } catch (createError) {
-          LBK_logError(`創建預設wallet失敗: ${createError.message}`, "Wallet同義詞", "", "WALLET_CREATE_ERROR", createError.toString(), functionName);
-          return { success: false, message: `創建預設wallet失敗: ${createError.message}` };
-        }
-      } else {
-        LBK_logError(`Wallet不存在且無法創建: ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", "WALLET_NOT_FOUND", `路徑: ${walletPath}/${walletId}`, functionName);
-        return { success: false, message: `Wallet不存在: ${walletId}` };
-      }
+      // 階段一修正：移除錢包創建邏輯，LBK不應該創建錢包
+      LBK_logError(`Wallet不存在: ${walletId} (帳本: ${ledgerId})，LBK模組不負責創建錢包`, "Wallet同義詞", "", "WALLET_NOT_FOUND", `路徑: ${walletPath}/${walletId}`, functionName);
+      return { success: false, message: `Wallet不存在: ${walletId}，請先通過WCM模組創建錢包` };
     }
 
     const walletData = walletDoc.data();
@@ -3918,8 +3956,11 @@ module.exports = {
   LBK_confirmWalletSynonymsUpdate: LBK_confirmWalletSynonymsUpdate,
   LBK_getWalletDisplayName: LBK_getWalletDisplayName,
 
+  // 階段一新增：錢包查詢函數 - v1.4.9
+  LBK_getWalletByName: LBK_getWalletByName,
+
   // 版本資訊
-  MODULE_VERSION: "1.4.8",
+  MODULE_VERSION: "1.4.9",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段三：優化synonyms更新執行時機 - 將synonyms更新提前至支付方式類型確認時執行，確保更新操作獨立於記帳流程，增加同義詞更新成功的確認機制"
+  MODULE_UPDATE: "階段一：修正LBK錢包查詢邏輯 - 移除hardcoded mapping，使用synonyms查詢機制，與科目查詢邏輯保持一致，確保正確找到WCM建立的錢包"
 };
