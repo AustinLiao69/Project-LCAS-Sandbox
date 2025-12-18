@@ -1,8 +1,48 @@
 ------------------------------------------
-
-20251218. 科目與支付方式歸類邏輯一次性互動方案
+20251218. 科目與支付方式歸類邏輯一次性互動方案(Review中)
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+參考網址 https://chatgpt.com/share/6943bd8a-2a8c-8002-8074-849a8210f13c
+
+使用者 LINE 輸入
+        │
+        ▼
+LINE Webhook 收到事件
+        │
+        ▼
+解析輸入 → item, amount, paymentHint
+        │
+        ▼
+建立 Pending Record
+        │
+        ▼
+Reply 問科目 (Quick Reply)
+        │
+        ▼
+使用者選科目
+        │
+        ▼
+更新 Pending Record → 填 category, step = ASK_PAYMENT
+        │
+        ▼
+Reply 問支付方式 (Quick Reply)
+        │
+        ▼
+使用者選支付方式
+        │
+        ▼
+更新 Pending Record → 填 paymentMethod, step = COMPLETED
+        │
+        ▼
+搬到 Completed Records 或標記完成
+        │
+        ▼
+刪除 Pending Record 或保留歷史
+        │
+        ▼
+使用者完成記帳
+
 
 ------------------------------------------
 
