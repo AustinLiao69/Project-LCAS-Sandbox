@@ -30,3 +30,6 @@ git push origin main
 
 01. 比較兩個branch的差異
 git diff main sandbox
+
+02. 刪除branch
+git branch -d 科目與支付方式歸類邏輯一次性互動方案
