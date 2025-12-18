@@ -247,27 +247,8 @@ async function LBK_processQuickBookkeeping(inputData) {
       };
     }
 
-    // 記帳成功後，更新wallet synonyms
-    console.log(`✅ wallet確認後記帳成功: ${bookkeepingResult.data.transactionId}`);
-
-    try {
-      // 更新wallet synonyms - 將原始支付方式名稱加入synonyms
-      const synonymsUpdateResult = await LBK_updateWalletSynonyms(
-        `user_${userId}`, // ledgerId
-        walletValidationResult.walletId, // Use the validated walletId
-        walletName // originalPaymentMethod is the name detected from input text
-      );
-
-      if (synonymsUpdateResult.success) {
-        LBK_logInfo(`wallet synonyms更新成功: ${walletName} -> ${walletValidationResult.walletId}`, "LBK_processQuickBookkeeping");
-      } else {
-        LBK_logWarning(`wallet synonyms更新失敗: ${synonymsUpdateResult.message}`, "LBK_processQuickBookkeeping");
-        // 不影響記帳結果，只記錄警告
-      }
-    } catch (synonymsError) {
-      LBK_logError(`wallet synonyms更新異常: ${synonymsError.message}`, "LBK_processQuickBookkeeping");
-      // 不影響記帳結果，只記錄錯誤
-    }
+    // 階段三改進：移除主記帳流程中的synonyms更新，這部分邏輯已移至wallet確認時執行
+    console.log(`✅ 記帳成功: ${bookkeepingResult.data.transactionId}`);
 
 
     // 格式化回覆訊息，傳遞原始輸入作為參考
@@ -3186,14 +3167,14 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
 }
 
 /**
- * 處理支付方式類型選擇postback事件 - 階段二：強化wallet類型選擇postback處理
- * @version 2025-12-18-V1.4.7
- * @description 處理用戶對支付方式類型的選擇，直接將記帳資料映射到對應的預設錢包類型，強化synonyms更新邏輯和錯誤處理
+ * 處理支付方式類型選擇postback事件 - 階段三：優化synonyms更新執行時機
+ * @version 2025-12-18-V1.4.8
+ * @description 將synonyms更新提前至支付方式類型確認時執行，確保更新操作獨立於記帳流程，增加同義詞更新成功的確認機制
  */
 async function LBK_handleWalletConfirmationPostback(postbackData, userId, processId) {
   const functionName = "LBK_handleWalletConfirmationPostback";
   try {
-    LBK_logInfo(`階段二：處理支付方式類型選擇postback: ${postbackData} [${processId}]`, "支付方式分類", userId, functionName);
+    LBK_logInfo(`階段三：處理支付方式類型選擇postback: ${postbackData} [${processId}]`, "支付方式分類", userId, functionName);
 
     // 解析postback資料：wallet_type_{type}_{shortKey} 格式
     const parts = postbackData.split('_');
@@ -3228,7 +3209,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
     const walletName = walletData.walletName;
     const originalData = walletData.originalData;
 
-    // 階段二強化：擴展wallet類型映射，加入更多選項和驗證
+    // 階段三優化：擴展wallet類型映射，加入更多選項和驗證
     const walletTypeMapping = {
       'cash': { walletId: 'default_cash', walletName: '現金', displayName: '現金', type: 'cash' },
       'bank': { walletId: 'default_bank', walletName: '銀行帳戶', displayName: '銀行帳戶', type: 'bank' },
@@ -3242,50 +3223,31 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
 
     LBK_logInfo(`用戶選擇支付方式類型: "${walletName}" → ${selectedWallet.displayName} (${selectedWallet.walletId}) [${processId}]`, "支付方式分類", userId, functionName);
 
-    // 階段二強化：優先更新wallet synonyms，並加強錯誤處理和重試機制
-    let synonymsUpdateAttempts = 0;
-    let synonymsUpdateSuccess = false;
-    const maxSynonymsRetries = 3;
+    // 階段三核心改進：提前執行synonyms更新，完全獨立於記帳流程
+    LBK_logInfo(`階段三：立即執行wallet synonyms更新: ${walletName} → ${selectedWallet.walletId} [${processId}]`, "支付方式分類", userId, functionName);
+    
+    const synonymsResult = await LBK_executeWalletSynonymsUpdate(
+      `user_${userId}`, // ledgerId
+      selectedWallet.walletId, // 映射的walletId
+      walletName, // 原始支付方式名稱
+      processId
+    );
 
-    while (synonymsUpdateAttempts < maxSynonymsRetries && !synonymsUpdateSuccess) {
-      synonymsUpdateAttempts++;
-      LBK_logInfo(`嘗試更新wallet synonyms (第${synonymsUpdateAttempts}次): ${walletName} → ${selectedWallet.walletId} [${processId}]`, "支付方式分類", userId, functionName);
+    // 階段三：新增同義詞更新成功的確認機制
+    let synonymsConfirmation = {};
+    if (synonymsResult.success) {
+      LBK_logInfo(`階段三：wallet synonyms更新成功確認: ${walletName} → ${selectedWallet.walletId} [${processId}]`, "支付方式分類", userId, functionName);
       
-      try {
-        const walletSynonymResult = await LBK_updateWalletSynonyms(
-          `user_${userId}`, // ledgerId
-          selectedWallet.walletId, // 映射的walletId
-          walletName // 原始支付方式名稱
-        );
-
-        if (walletSynonymResult.success) {
-          synonymsUpdateSuccess = true;
-          LBK_logInfo(`wallet synonyms更新成功 (第${synonymsUpdateAttempts}次嘗試): ${walletName} → ${selectedWallet.walletId} [${processId}]`, "支付方式分類", userId, functionName);
-          break;
-        } else {
-          LBK_logWarning(`wallet synonyms更新失敗 (第${synonymsUpdateAttempts}次嘗試): ${walletSynonymResult.message} [${processId}]`, "支付方式分類", userId, functionName);
-          
-          // 如果不是最後一次嘗試，等待後重試
-          if (synonymsUpdateAttempts < maxSynonymsRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * synonymsUpdateAttempts)); // 遞增延遲
-          }
-        }
-      } catch (synonymsError) {
-        LBK_logError(`wallet synonyms更新異常 (第${synonymsUpdateAttempts}次嘗試): ${synonymsError.message} [${processId}]`, "支付方式分類", userId, "SYNONYMS_UPDATE_EXCEPTION", synonymsError.toString(), functionName);
-        
-        // 如果不是最後一次嘗試，等待後重試
-        if (synonymsUpdateAttempts < maxSynonymsRetries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * synonymsUpdateAttempts));
-        }
-      }
+      // 執行確認查詢，驗證synonyms是否正確更新
+      synonymsConfirmation = await LBK_confirmWalletSynonymsUpdate(
+        `user_${userId}`,
+        selectedWallet.walletId,
+        walletName,
+        processId
+      );
     }
 
-    // 階段二強化：即使synonyms更新失敗，也記錄詳細狀態並繼續處理記帳
-    if (!synonymsUpdateSuccess) {
-      LBK_logWarning(`wallet synonyms更新最終失敗 (${synonymsUpdateAttempts}次嘗試)，但繼續處理記帳 [${processId}]`, "支付方式分類", userId, functionName);
-    }
-
-    // 階段二強化：確保記帳資料完整性，加入更多驗證
+    // 階段三：確保記帳資料完整性，加入更多驗證
     if (!originalData.subject || !originalData.amount) {
       throw new Error('原始記帳資料不完整');
     }
@@ -3295,16 +3257,19 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
     originalData.walletId = selectedWallet.walletId;
     originalData.walletType = selectedWallet.type;
 
-    LBK_logInfo(`準備執行記帳: ${originalData.subject} ${originalData.amount}元 使用${selectedWallet.displayName} [${processId}]`, "支付方式分類", userId, functionName);
+    LBK_logInfo(`階段三：準備執行記帳流程，synonyms已獨立完成: ${originalData.subject} ${originalData.amount}元 使用${selectedWallet.displayName} [${processId}]`, "支付方式分類", userId, functionName);
 
-    // 執行記帳
+    // 執行記帳（此時synonyms更新已完成且確認）
     const bookkeepingResult = await LBK_executeBookkeeping(originalData, processId);
 
     if (bookkeepingResult.success) {
-      LBK_logInfo(`支付方式分類+記帳完整流程成功: ${walletName} → ${selectedWallet.displayName} [${processId}]`, "支付方式分類", userId, functionName);
+      LBK_logInfo(`階段三：支付方式分類+記帳完整流程成功: ${walletName} → ${selectedWallet.displayName} [${processId}]`, "支付方式分類", userId, functionName);
 
-      // 階段二強化：優化成功訊息格式，顯示更詳細的處理狀態
-      const synonymsStatusText = synonymsUpdateSuccess ? '✅ 同義詞已更新' : '⚠️ 同義詞更新失敗';
+      // 階段三：優化成功訊息格式，顯示詳細的synonyms處理狀態
+      const synonymsStatusText = synonymsResult.success ? 
+        (synonymsConfirmation.verified ? '✅ 同義詞已更新並確認' : '✅ 同義詞已更新') : 
+        '⚠️ 同義詞更新失敗';
+      
       const successMessage = `✅ 已將「${walletName}」歸類為${selectedWallet.displayName}並完成記帳！\n${synonymsStatusText}\n\n${LBK_formatReplyMessage(bookkeepingResult.data, "LBK", { originalInput: `${originalData.subject}${originalData.rawAmount}` })}`;
 
       // 清除快取資料
@@ -3322,28 +3287,33 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
         moduleCode: "LBK",
         module: "LBK",
         processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-        moduleVersion: "1.4.7", // 階段二版本
+        moduleVersion: "1.4.8", // 階段三版本
         walletTypeMapped: true,
         originalWalletName: walletName,
         mappedWalletType: selectedWallet.displayName,
         walletId: selectedWallet.walletId,
         bookkeepingCompleted: true,
         transactionId: bookkeepingResult.data.id,
-        synonymsUpdated: synonymsUpdateSuccess,
-        synonymsUpdateAttempts: synonymsUpdateAttempts,
+        synonymsUpdated: synonymsResult.success,
+        synonymsConfirmed: synonymsConfirmation.verified || false,
+        synonymsUpdateAttempts: synonymsResult.attempts || 1,
         processingSummary: {
           postbackParsed: true,
           cacheDataRetrieved: true,
           walletTypeMapped: true,
-          synonymsUpdateStatus: synonymsUpdateSuccess ? 'SUCCESS' : 'FAILED_BUT_CONTINUED',
+          synonymsUpdateStatus: synonymsResult.success ? 'SUCCESS_EARLY' : 'FAILED_EARLY',
+          synonymsConfirmationStatus: synonymsConfirmation.verified ? 'VERIFIED' : 'UNVERIFIED',
           bookkeepingStatus: 'SUCCESS'
         }
       };
     } else {
-      LBK_logError(`支付方式分類後記帳失敗: ${bookkeepingResult.error} [${processId}]`, "支付方式分類", userId, "BOOKKEEPING_AFTER_TYPE_SELECTION_ERROR", bookkeepingResult.error, functionName);
+      LBK_logError(`階段三：支付方式分類後記帳失敗: ${bookkeepingResult.error} [${processId}]`, "支付方式分類", userId, "BOOKKEEPING_AFTER_TYPE_SELECTION_ERROR", bookkeepingResult.error, functionName);
 
-      // 階段二強化：錯誤訊息中也包含synonyms處理狀態
-      const synonymsStatusText = synonymsUpdateSuccess ? '✅ 同義詞已更新' : '⚠️ 同義詞更新失敗';
+      // 階段三：錯誤訊息中也包含詳細的synonyms處理狀態
+      const synonymsStatusText = synonymsResult.success ? 
+        (synonymsConfirmation.verified ? '✅ 同義詞已更新並確認' : '✅ 同義詞已更新') : 
+        '⚠️ 同義詞更新失敗';
+      
       const errorMessage = `✅ 已將「${walletName}」歸類為${selectedWallet.displayName}\n${synonymsStatusText}\n❌ 但記帳失敗：${bookkeepingResult.error}\n\n請重新輸入記帳資訊`;
 
       return {
@@ -3352,27 +3322,29 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
         responseMessage: errorMessage,
         moduleCode: "LBK",
         module: "LBK",
-        moduleVersion: "1.4.7", // 階段二版本
+        moduleVersion: "1.4.8", // 階段三版本
         walletTypeMapped: true,
         originalWalletName: walletName,
         mappedWalletType: selectedWallet.displayName,
         bookkeepingCompleted: false,
         bookkeepingError: bookkeepingResult.error,
-        synonymsUpdated: synonymsUpdateSuccess,
-        synonymsUpdateAttempts: synonymsUpdateAttempts,
+        synonymsUpdated: synonymsResult.success,
+        synonymsConfirmed: synonymsConfirmation.verified || false,
+        synonymsUpdateAttempts: synonymsResult.attempts || 1,
         errorType: "BOOKKEEPING_AFTER_TYPE_SELECTION_ERROR",
         processingSummary: {
           postbackParsed: true,
           cacheDataRetrieved: true,
           walletTypeMapped: true,
-          synonymsUpdateStatus: synonymsUpdateSuccess ? 'SUCCESS' : 'FAILED_BUT_CONTINUED',
+          synonymsUpdateStatus: synonymsResult.success ? 'SUCCESS_EARLY' : 'FAILED_EARLY',
+          synonymsConfirmationStatus: synonymsConfirmation.verified ? 'VERIFIED' : 'UNVERIFIED',
           bookkeepingStatus: 'FAILED'
         }
       };
     }
 
   } catch (error) {
-    LBK_logError(`支付方式類型選擇postback處理失敗: ${error.toString()} [${processId}]`, "支付方式分類", userId, "WALLET_TYPE_POSTBACK_ERROR", error.toString(), functionName);
+    LBK_logError(`階段三：支付方式類型選擇postback處理失敗: ${error.toString()} [${processId}]`, "支付方式分類", userId, "WALLET_TYPE_POSTBACK_ERROR", error.toString(), functionName);
 
     return {
       success: false,
@@ -3380,7 +3352,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
       responseMessage: "處理支付方式類型選擇時發生錯誤",
       moduleCode: "LBK",
       module: "LBK",
-      moduleVersion: "1.4.7", // 階段二版本
+      moduleVersion: "1.4.8", // 階段三版本
       errorType: "WALLET_TYPE_POSTBACK_ERROR",
       systemError: error.toString(),
       processingSummary: {
@@ -3388,6 +3360,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
         cacheDataRetrieved: false,
         walletTypeMapped: false,
         synonymsUpdateStatus: 'NOT_ATTEMPTED',
+        synonymsConfirmationStatus: 'NOT_ATTEMPTED',
         bookkeepingStatus: 'NOT_ATTEMPTED'
       }
     };
@@ -3445,8 +3418,175 @@ function LBK_getWalletDisplayName(walletId, ledgerId = null) {
 }
 
 /**
+ * 階段三：執行wallet synonyms更新（獨立於記帳流程）
+ * @version 2025-12-18-V1.4.8
+ * @param {string} ledgerId - 帳本ID  
+ * @param {string} walletId - 錢包ID
+ * @param {string} originalPaymentMethod - 原始支付方式名稱
+ * @param {string} processId - 處理ID
+ * @returns {Object} 更新結果
+ */
+async function LBK_executeWalletSynonymsUpdate(ledgerId, walletId, originalPaymentMethod, processId) {
+  const functionName = "LBK_executeWalletSynonymsUpdate";
+  const maxRetries = 3;
+  let attempts = 0;
+  let lastError = null;
+
+  try {
+    LBK_logInfo(`階段三：獨立執行wallet synonyms更新: ${originalPaymentMethod} → ${walletId} [${processId}]`, "Wallet同義詞", "", functionName);
+
+    while (attempts < maxRetries) {
+      attempts++;
+      LBK_logInfo(`synonyms更新嘗試 ${attempts}/${maxRetries}: ${originalPaymentMethod} → ${walletId} [${processId}]`, "Wallet同義詞", "", functionName);
+
+      try {
+        const updateResult = await LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMethod);
+        
+        if (updateResult.success) {
+          LBK_logInfo(`階段三：synonyms更新成功 (第${attempts}次嘗試): ${originalPaymentMethod} → ${walletId} [${processId}]`, "Wallet同義詞", "", functionName);
+          return {
+            success: true,
+            message: `synonyms更新成功 (${attempts}次嘗試)`,
+            attempts: attempts,
+            updatedSynonyms: updateResult.updatedSynonyms,
+            addedSynonym: updateResult.addedSynonym || originalPaymentMethod,
+            walletId: walletId,
+            executionTime: new Date().toISOString()
+          };
+        } else {
+          lastError = updateResult.message;
+          LBK_logWarning(`synonyms更新失敗 (第${attempts}次嘗試): ${updateResult.message} [${processId}]`, "Wallet同義詞", "", functionName);
+          
+          if (attempts < maxRetries) {
+            const delay = Math.pow(2, attempts - 1) * 1000; // 指數退避
+            LBK_logInfo(`等待 ${delay}ms 後重試... [${processId}]`, "Wallet同義詞", "", functionName);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      } catch (updateError) {
+        lastError = updateError.message;
+        LBK_logError(`synonyms更新異常 (第${attempts}次嘗試): ${updateError.message} [${processId}]`, "Wallet同義詞", "", "SYNONYMS_UPDATE_EXCEPTION", updateError.toString(), functionName);
+        
+        if (attempts < maxRetries) {
+          const delay = Math.pow(2, attempts - 1) * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    // 所有嘗試都失敗
+    LBK_logError(`階段三：synonyms更新最終失敗 (${attempts}次嘗試): ${lastError} [${processId}]`, "Wallet同義詞", "", "SYNONYMS_UPDATE_FINAL_FAILURE", lastError, functionName);
+    return {
+      success: false,
+      message: `synonyms更新失敗 (${attempts}次嘗試): ${lastError}`,
+      attempts: attempts,
+      walletId: walletId,
+      originalPaymentMethod: originalPaymentMethod,
+      lastError: lastError,
+      executionTime: new Date().toISOString()
+    };
+
+  } catch (error) {
+    LBK_logError(`階段三：executeWalletSynonymsUpdate異常: ${error.toString()} [${processId}]`, "Wallet同義詞", "", "EXECUTE_SYNONYMS_EXCEPTION", error.toString(), functionName);
+    return {
+      success: false,
+      message: `系統異常: ${error.message}`,
+      attempts: attempts,
+      walletId: walletId,
+      originalPaymentMethod: originalPaymentMethod,
+      systemError: error.message,
+      executionTime: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * 階段三：確認wallet synonyms更新結果
+ * @version 2025-12-18-V1.4.8
+ * @param {string} ledgerId - 帳本ID  
+ * @param {string} walletId - 錢包ID
+ * @param {string} originalPaymentMethod - 原始支付方式名稱
+ * @param {string} processId - 處理ID
+ * @returns {Object} 確認結果
+ */
+async function LBK_confirmWalletSynonymsUpdate(ledgerId, walletId, originalPaymentMethod, processId) {
+  const functionName = "LBK_confirmWalletSynonymsUpdate";
+  try {
+    LBK_logInfo(`階段三：確認wallet synonyms更新: ${originalPaymentMethod} in ${walletId} [${processId}]`, "Wallet同義詞", "", functionName);
+
+    // 初始化Firestore連接
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+
+    // 讀取wallet資料進行確認
+    const walletPath = `ledgers/${ledgerId}/wallets`;
+    const walletRef = db.collection(walletPath).doc(walletId);
+    const walletDoc = await walletRef.get();
+
+    if (!walletDoc.exists) {
+      LBK_logWarning(`確認時發現wallet不存在: ${walletId} [${processId}]`, "Wallet同義詞", "", functionName);
+      return {
+        verified: false,
+        reason: 'WALLET_NOT_FOUND',
+        message: `Wallet不存在: ${walletId}`,
+        walletId: walletId,
+        checkTime: new Date().toISOString()
+      };
+    }
+
+    const walletData = walletDoc.data();
+    const currentSynonyms = walletData.synonyms || '';
+    
+    // 檢查synonyms是否包含原始支付方式名稱
+    const synonymsList = currentSynonyms ? 
+      currentSynonyms.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+    
+    const normalizedOriginal = originalPaymentMethod.trim();
+    const synonymsLowerCase = synonymsList.map(s => s.toLowerCase());
+    const isIncluded = synonymsLowerCase.includes(normalizedOriginal.toLowerCase());
+
+    if (isIncluded) {
+      LBK_logInfo(`階段三：synonyms更新確認成功: "${originalPaymentMethod}" 已存在於 ${walletId} synonyms中 [${processId}]`, "Wallet同義詞", "", functionName);
+      return {
+        verified: true,
+        reason: 'SYNONYM_CONFIRMED',
+        message: `已確認 "${originalPaymentMethod}" 存在於synonyms中`,
+        currentSynonyms: currentSynonyms,
+        synonymsCount: synonymsList.length,
+        walletId: walletId,
+        checkTime: new Date().toISOString()
+      };
+    } else {
+      LBK_logWarning(`階段三：synonyms更新確認失敗: "${originalPaymentMethod}" 不在 ${walletId} synonyms中 [${processId}]`, "Wallet同義詞", "", functionName);
+      return {
+        verified: false,
+        reason: 'SYNONYM_NOT_FOUND',
+        message: `"${originalPaymentMethod}" 不在synonyms中`,
+        currentSynonyms: currentSynonyms,
+        synonymsCount: synonymsList.length,
+        expectedSynonym: normalizedOriginal,
+        walletId: walletId,
+        checkTime: new Date().toISOString()
+      };
+    }
+
+  } catch (error) {
+    LBK_logError(`階段三：synonyms確認異常: ${error.toString()} [${processId}]`, "Wallet同義詞", "", "SYNONYMS_CONFIRM_EXCEPTION", error.toString(), functionName);
+    return {
+      verified: false,
+      reason: 'CONFIRMATION_ERROR',
+      message: `確認過程異常: ${error.message}`,
+      walletId: walletId,
+      originalPaymentMethod: originalPaymentMethod,
+      systemError: error.message,
+      checkTime: new Date().toISOString()
+    };
+  }
+}
+
+/**
  * 更新wallet同義詞
- * @version 2025-12-18-V1.4.7
+ * @version 2025-12-18-V1.4.8
  * @param {string} ledgerId - 帳本ID  
  * @param {string} walletId - 錢包ID
  * @param {string} originalPaymentMethod - 原始支付方式名稱
@@ -3772,12 +3912,14 @@ module.exports = {
   // 階段一新增：wallet類型postback識別函數 - v1.4.7
   LBK_isWalletTypePostback: LBK_isWalletTypePostback,
 
-  // 階段一新增：wallet synonyms更新函數 - v1.4.7
+  // 階段三新增：wallet synonyms更新函數 - v1.4.8
   LBK_updateWalletSynonyms: LBK_updateWalletSynonyms,
+  LBK_executeWalletSynonymsUpdate: LBK_executeWalletSynonymsUpdate,
+  LBK_confirmWalletSynonymsUpdate: LBK_confirmWalletSynonymsUpdate,
   LBK_getWalletDisplayName: LBK_getWalletDisplayName,
 
   // 版本資訊
-  MODULE_VERSION: "1.4.7",
+  MODULE_VERSION: "1.4.8",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一：實作LBK_updateWalletSynonyms函數 - 補全缺失的wallet synonyms更新邏輯，確保記帳流程完整"
+  MODULE_UPDATE: "階段三：優化synonyms更新執行時機 - 將synonyms更新提前至支付方式類型確認時執行，確保更新操作獨立於記帳流程，增加同義詞更新成功的確認機制"
 };
