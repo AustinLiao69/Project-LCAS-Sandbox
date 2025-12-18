@@ -3321,9 +3321,9 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
 }
 
 /**
- * 處理支付方式類型選擇postback事件 - 階段三：優化synonyms更新執行時機
- * @version 2025-12-18-V1.4.8
- * @description 將synonyms更新提前至支付方式類型確認時執行，確保更新操作獨立於記帳流程，增加同義詞更新成功的確認機制
+ * 處理支付方式類型選擇postback事件 - 階段一：重用現有識別邏輯提取支付方式名稱
+ * @version 2025-12-18-V1.4.9
+ * @description 階段一：重用LBK_parseInputFormat的銀行名稱識別邏輯，從完整輸入中提取實際支付方式名稱，避免創建新函數符合0098規範
  */
 async function LBK_handleWalletConfirmationPostback(postbackData, userId, processId) {
   const functionName = "LBK_handleWalletConfirmationPostback";
@@ -3377,13 +3377,32 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
 
     LBK_logInfo(`用戶選擇支付方式類型: "${walletName}" → ${selectedWallet.displayName} (${selectedWallet.walletId}) [${processId}]`, "支付方式分類", userId, functionName);
 
-    // 階段三核心改進：提前執行synonyms更新，完全獨立於記帳流程
-    LBK_logInfo(`階段三：立即執行wallet synonyms更新: ${walletName} → ${selectedWallet.walletId} [${processId}]`, "支付方式分類", userId, functionName);
+    // 階段一：重用現有識別邏輯提取實際支付方式名稱
+    let extractedPaymentMethodName = walletName;
+    
+    // 重用LBK_parseInputFormat的銀行名稱識別邏輯
+    const bankNames = [
+      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
+      "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
+      "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
+      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛"
+    ];
+    
+    // 從完整輸入中提取銀行名稱
+    for (const bankName of bankNames) {
+      if (walletName.includes(bankName)) {
+        extractedPaymentMethodName = bankName;
+        LBK_logInfo(`階段一：從「${walletName}」提取到銀行名稱「${bankName}」 [${processId}]`, "支付方式分類", userId, functionName);
+        break;
+      }
+    }
+    
+    LBK_logInfo(`階段一：使用提取的支付方式名稱執行synonyms更新: ${extractedPaymentMethodName} → ${selectedWallet.walletId} [${processId}]`, "支付方式分類", userId, functionName);
     
     const synonymsResult = await LBK_executeWalletSynonymsUpdate(
       `user_${userId}`, // ledgerId
       selectedWallet.walletId, // 映射的walletId
-      walletName, // 原始支付方式名稱
+      extractedPaymentMethodName, // 階段一：使用提取的支付方式名稱
       processId
     );
 
@@ -3396,7 +3415,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
       synonymsConfirmation = await LBK_confirmWalletSynonymsUpdate(
         `user_${userId}`,
         selectedWallet.walletId,
-        walletName,
+        extractedPaymentMethodName, // 階段一：使用提取的支付方式名稱
         processId
       );
     }
@@ -3424,7 +3443,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
         (synonymsConfirmation.verified ? '✅ 同義詞已更新並確認' : '✅ 同義詞已更新') : 
         '⚠️ 同義詞更新失敗';
       
-      const successMessage = `✅ 已將「${walletName}」歸類為${selectedWallet.displayName}並完成記帳！\n${synonymsStatusText}\n\n${LBK_formatReplyMessage(bookkeepingResult.data, "LBK", { originalInput: `${originalData.subject}${originalData.rawAmount}` })}`;
+      const successMessage = `✅ 已將「${walletName}」歸類為${selectedWallet.displayName}並完成記帳！\n${synonymsStatusText}\n支付方式同義詞：「${extractedPaymentMethodName}」\n\n${LBK_formatReplyMessage(bookkeepingResult.data, "LBK", { originalInput: `${originalData.subject}${originalData.rawAmount}` })}`;
 
       // 清除快取資料
       try {
@@ -3441,7 +3460,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
         moduleCode: "LBK",
         module: "LBK",
         processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-        moduleVersion: "1.4.8", // 階段三版本
+        moduleVersion: "1.4.9", // 階段一版本
         walletTypeMapped: true,
         originalWalletName: walletName,
         mappedWalletType: selectedWallet.displayName,
@@ -3468,7 +3487,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
         (synonymsConfirmation.verified ? '✅ 同義詞已更新並確認' : '✅ 同義詞已更新') : 
         '⚠️ 同義詞更新失敗';
       
-      const errorMessage = `✅ 已將「${walletName}」歸類為${selectedWallet.displayName}\n${synonymsStatusText}\n❌ 但記帳失敗：${bookkeepingResult.error}\n\n請重新輸入記帳資訊`;
+      const errorMessage = `✅ 已將「${walletName}」歸類為${selectedWallet.displayName}\n${synonymsStatusText}\n支付方式同義詞：「${extractedPaymentMethodName}」\n❌ 但記帳失敗：${bookkeepingResult.error}\n\n請重新輸入記帳資訊`;
 
       return {
         success: false,
@@ -3476,7 +3495,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
         responseMessage: errorMessage,
         moduleCode: "LBK",
         module: "LBK",
-        moduleVersion: "1.4.8", // 階段三版本
+        moduleVersion: "1.4.9", // 階段一版本
         walletTypeMapped: true,
         originalWalletName: walletName,
         mappedWalletType: selectedWallet.displayName,
@@ -3506,7 +3525,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
       responseMessage: "處理支付方式類型選擇時發生錯誤",
       moduleCode: "LBK",
       module: "LBK",
-      moduleVersion: "1.4.8", // 階段三版本
+      moduleVersion: "1.4.9", // 階段一版本
       errorType: "WALLET_TYPE_POSTBACK_ERROR",
       systemError: error.toString(),
       processingSummary: {
@@ -4142,7 +4161,7 @@ module.exports = {
   
 
   // 版本資訊
-  MODULE_VERSION: "1.4.13",
+  MODULE_VERSION: "1.4.14",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段二：修正synonyms匹配失敗處理邏輯 - 新增用戶wallets子集合存在性檢查，synonyms匹配失敗時觸發requiresWalletConfirmation標記，修正LBK_validateWalletExists函數專注於真正的synonyms匹配驗證，確保歧義消除流程正確觸發"
+  MODULE_UPDATE: "階段一：重用現有支付方式識別邏輯 - 修改LBK_handleWalletConfirmationPostback函數，重用LBK_parseInputFormat的銀行名稱識別邏輯提取實際支付方式名稱，避免創建新函數符合0098規範，從完整輸入「刈包55555中信」正確提取「中信」作為synonyms"
 };
