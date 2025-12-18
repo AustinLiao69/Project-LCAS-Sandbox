@@ -2923,13 +2923,13 @@ function LBK_buildClassificationMessageInternal(originalSubject, parsedData, cat
 }
 
 /**
- * 驗證wallet是否存在於用戶的wallets子集合中
- * @version 2025-12-17-V1.4.4
- * @description 階段二：檢查指定的wallet是否存在於用戶的wallets子集合中
+ * 驗證wallet是否存在於用戶的wallets子集合中 - 階段二：純粹存在性驗證
+ * @version 2025-12-18-V1.4.10
+ * @description 階段二：純粹進行存在性驗證，不創建任何資源
  */
 async function LBK_validateWalletExists(userId, walletId, walletName, processId) {
   try {
-    LBK_logInfo(`開始驗證wallet存在性: ${walletName} (${walletId}) [${processId}]`, "wallet驗證", userId, "LBK_validateWalletExists");
+    LBK_logInfo(`階段二：純粹wallet存在性驗證: ${walletName} (${walletId}) [${processId}]`, "wallet驗證", userId, "LBK_validateWalletExists");
 
     // 取得用戶預設帳本ID
     const ledgerId = `user_${userId}`;
@@ -2938,26 +2938,6 @@ async function LBK_validateWalletExists(userId, walletId, walletName, processId)
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
 
-    // 如果walletId是預設值，直接查詢對應的錢包
-    if (walletId === 'default_cash' || walletId === 'default_bank' || walletId === 'default_credit') {
-      const walletDoc = await db.collection(`ledgers/${ledgerId}/wallets`)
-        .doc(walletId)
-        .get();
-
-      if (walletDoc.exists) {
-        const walletData = walletDoc.data();
-        if (walletData.userId === userId && walletData.status === 'active') {
-          LBK_logInfo(`wallet驗證成功: ${walletName} (${walletId}) [${processId}]`, "wallet驗證", userId, "LBK_validateWalletExists");
-          return {
-            success: true,
-            walletId: walletId,
-            walletName: walletData.name,
-            walletType: walletData.type
-          };
-        }
-      }
-    }
-
     // 查詢用戶所有可用的錢包
     const walletsSnapshot = await db.collection(`ledgers/${ledgerId}/wallets`)
       .where('userId', '==', userId)
@@ -2965,11 +2945,12 @@ async function LBK_validateWalletExists(userId, walletId, walletName, processId)
       .get();
 
     if (walletsSnapshot.empty) {
-      LBK_logWarning(`用戶 ${userId} 沒有可用的錢包 [${processId}]`, "wallet驗證", userId, "NO_WALLETS_FOUND", "", "LBK_validateWalletExists");
+      LBK_logError(`用戶 ${userId} 沒有可用的錢包 [${processId}]`, "wallet驗證", userId, "NO_WALLETS_FOUND", "", "LBK_validateWalletExists");
       return {
         success: false,
-        error: "用戶沒有可用的錢包",
+        error: "用戶沒有可用的錢包，請先通過正確的管道（AM→WCM）創建錢包",
         errorType: "NO_WALLETS_FOUND",
+        suggestion: "請使用帳戶管理功能創建錢包後再進行記帳",
         requiresUserConfirmation: true
       };
     }
@@ -2980,10 +2961,12 @@ async function LBK_validateWalletExists(userId, walletId, walletName, processId)
       const walletData = doc.data();
       // 精確匹配wallet ID或名稱
       if (walletData.id === walletId ||
-          walletData.name.toLowerCase() === walletName.toLowerCase()) {
+          walletData.walletId === walletId ||
+          walletData.name?.toLowerCase() === walletName?.toLowerCase() ||
+          walletData.walletName?.toLowerCase() === walletName?.toLowerCase()) {
         foundWallet = {
-          walletId: walletData.id,
-          walletName: walletData.name,
+          walletId: walletData.id || walletData.walletId,
+          walletName: walletData.name || walletData.walletName,
           walletType: walletData.type
         };
       }
@@ -2997,12 +2980,21 @@ async function LBK_validateWalletExists(userId, walletId, walletName, processId)
       };
     }
 
-    // 如果找不到匹配的錢包，觸發用戶確認流程
-    LBK_logWarning(`找不到匹配的錢包: ${walletName} [${processId}]`, "wallet驗證", userId, "WALLET_NOT_FOUND", "", "LBK_validateWalletExists");
+    // 階段二核心修正：找不到錢包時返回明確錯誤訊息，建議正確的創建管道
+    LBK_logError(`找不到匹配的錢包: ${walletName} [${processId}]`, "wallet驗證", userId, "WALLET_NOT_FOUND", "", "LBK_validateWalletExists");
     return {
       success: false,
       error: `找不到錢包: ${walletName}`,
       errorType: "WALLET_NOT_FOUND",
+      suggestion: "請通過正確的管道（AM→WCM）創建錢包後再進行記帳",
+      availableWallets: walletsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: data.id || data.walletId,
+          name: data.name || data.walletName,
+          type: data.type
+        };
+      }),
       requiresUserConfirmation: true
     };
 
@@ -3010,8 +3002,9 @@ async function LBK_validateWalletExists(userId, walletId, walletName, processId)
     LBK_logError(`驗證wallet存在性失敗: ${error.message} [${processId}]`, "wallet驗證", userId, "WALLET_VALIDATION_ERROR", error.toString(), "LBK_validateWalletExists");
     return {
       success: false,
-      error: error.message,
-      errorType: "WALLET_VALIDATION_ERROR"
+      error: `驗證失敗: ${error.message}`,
+      errorType: "WALLET_VALIDATION_ERROR",
+      suggestion: "系統錯誤，請稍後再試或聯繫支援"
     };
   }
 }
@@ -3642,8 +3635,8 @@ async function LBK_confirmWalletSynonymsUpdate(ledgerId, walletId, originalPayme
 }
 
 /**
- * 更新wallet同義詞 - 修正路徑解析邏輯
- * @version 2025-12-18-V1.4.9
+ * 更新wallet同義詞 - 階段二：移除錢包創建降級邏輯
+ * @version 2025-12-18-V1.4.10
  * @param {string} ledgerId - 帳本ID  
  * @param {string} walletId - 錢包ID
  * @param {string} originalPaymentMethod - 原始支付方式名稱
@@ -3659,15 +3652,15 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
       return { success: false, message: "參數不完整" };
     }
 
-    LBK_logInfo(`階段一修正：開始更新wallet同義詞: ${originalPaymentMethod} → ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", functionName);
+    LBK_logInfo(`階段二：專注synonyms更新功能: ${originalPaymentMethod} → ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", functionName);
 
     // 初始化Firestore連接
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
 
-    // 階段一修正：使用正確的Firestore路徑解析，確保與WCM建立的錢包路徑一致
+    // 使用正確的Firestore路徑，與WCM建立的錢包路徑一致
     const walletPath = `ledgers/${ledgerId}/wallets`;
-    LBK_logDebug(`修正後使用wallet路徑: ${walletPath}/${walletId}`, "Wallet同義詞", "", functionName);
+    LBK_logDebug(`使用wallet路徑: ${walletPath}/${walletId}`, "Wallet同義詞", "", functionName);
 
     // 從Firestore讀取現有wallet資料
     const walletRef = db.collection(walletPath).doc(walletId);
@@ -3680,10 +3673,15 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
       return { success: false, message: `Firestore讀取失敗: ${firestoreError.message}` };
     }
 
+    // 階段二核心修正：找不到錢包時直接返回錯誤，不嘗試創建
     if (!walletDoc.exists) {
-      // 階段一修正：移除錢包創建邏輯，LBK不應該創建錢包
-      LBK_logError(`Wallet不存在: ${walletId} (帳本: ${ledgerId})，LBK模組不負責創建錢包`, "Wallet同義詞", "", "WALLET_NOT_FOUND", `路徑: ${walletPath}/${walletId}`, functionName);
-      return { success: false, message: `Wallet不存在: ${walletId}，請先通過WCM模組創建錢包` };
+      LBK_logError(`Wallet不存在: ${walletId} (帳本: ${ledgerId})`, "Wallet同義詞", "", "WALLET_NOT_FOUND", `路徑: ${walletPath}/${walletId}`, functionName);
+      return { 
+        success: false, 
+        message: `錢包不存在: ${walletId}`,
+        errorType: "WALLET_NOT_FOUND",
+        suggestion: "請通過正確的管道（AM→WCM）創建錢包後再進行synonyms更新"
+      };
     }
 
     const walletData = walletDoc.data();
@@ -3748,57 +3746,7 @@ async function LBK_updateWalletSynonyms(ledgerId, walletId, originalPaymentMetho
   }
 }
 
-/**
- * 創建預設wallet資料
- * @version 2025-12-18-V1.4.7
- * @param {string} walletId - 錢包ID
- * @param {string} ledgerId - 帳本ID
- * @param {string} initialSynonym - 初始同義詞
- * @returns {Object|null} 預設wallet資料或null
- */
-function LBK_createDefaultWalletData(walletId, ledgerId, initialSynonym) {
-  try {
-    // 僅為預設wallet類型創建資料
-    const defaultWalletMapping = {
-      'default_cash': { name: '現金', type: 'cash', currency: 'TWD' },
-      'default_bank': { name: '銀行帳戶', type: 'bank', currency: 'TWD' },
-      'default_credit': { name: '信用卡', type: 'credit', currency: 'TWD' },
-      'default_mobile': { name: '行動支付', type: 'mobile', currency: 'TWD' }
-    };
 
-    const walletConfig = defaultWalletMapping[walletId];
-    if (!walletConfig) {
-      return null; // 不是預設wallet，不自動創建
-    }
-
-    const userId = ledgerId.replace('user_', '');
-    
-    return {
-      id: walletId,
-      walletId: walletId,
-      walletName: walletConfig.name,
-      subWalletId: walletConfig.currency,
-      subWalletName: walletConfig.currency,
-      name: walletConfig.name,
-      type: walletConfig.type,
-      currency: walletConfig.currency,
-      balance: 0,
-      synonyms: initialSynonym,
-      isDefault: true,
-      userId: userId,
-      ledgerId: ledgerId,
-      status: 'active',
-      dataSource: 'LBK_AUTO_CREATED',
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-      synonymsCount: 1,
-      lastSynonymUpdate: admin.firestore.Timestamp.now()
-    };
-  } catch (error) {
-    LBK_logError(`創建預設wallet資料失敗: ${error.toString()}`, "Wallet同義詞", "", "CREATE_DEFAULT_WALLET_ERROR", error.toString(), "LBK_createDefaultWalletData");
-    return null;
-  }
-}
 
 /**
  * 輔助函數：建立科目同義詞關聯 - 修復版：正確查找科目文檔
@@ -3960,7 +3908,7 @@ module.exports = {
   LBK_getWalletByName: LBK_getWalletByName,
 
   // 版本資訊
-  MODULE_VERSION: "1.4.9",
+  MODULE_VERSION: "1.4.10",
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一：修正LBK錢包查詢邏輯 - 移除hardcoded mapping，使用synonyms查詢機制，與科目查詢邏輯保持一致，確保正確找到WCM建立的錢包"
+  MODULE_UPDATE: "階段二：移除LBK的錢包創建能力 - 恢復LBK模組的正確職責邊界，專注記帳邏輯，錢包相關操作通過正確的模組流程處理"
 };
