@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.7.0
+ * LBK_快速記帳模組_1.8.0
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 階段三：修復同義詞更新目標錢包查詢，移除硬編碼錢包ID
- * @update 2025-12-19: 階段三版本，修復同義詞更新目標錢包查詢，移除硬編碼錢包ID，改為動態查詢正確的錢包ID後更新同義詞。
+ * @description LINE OA 專用快速記帳處理模組 - 階段四：修復科目重複查詢問題，避免重複觸發歧義消除
+ * @update 2025-12-19: 階段四版本，修復LBK_completePendingRecord函數，優先使用Pending Record中已選擇的科目資訊，跳過重新查詢，直接使用stageData完成記帳。
  */
 
 // 引入所需模組
@@ -4305,14 +4305,16 @@ function LBK_generateWalletSelectionQuickReply(pendingId) {
 
 
 /**
- * 階段四增強：將Pending Record轉換為正式交易
- * @version 2025-12-19-V1.4.9
+ * 階段四修復：將Pending Record轉換為正式交易
+ * @version 2025-12-19-V1.5.0
  * @param {string} userId - 用戶ID
  * @param {string} pendingId - Pending Record ID
  * @param {string} processId - 處理ID
  * @returns {Object} 轉換結果
+ * @description 階段四修復：優先使用Pending Record中已選擇的科目資訊，避免重複觸發科目查詢
  */
 async function LBK_completePendingRecord(userId, pendingId, processId) {
+  const functionName = "LBK_completePendingRecord";
   try {
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
@@ -4325,40 +4327,116 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     }
 
     const pendingData = doc.data();
+    const stageData = pendingData.stageData || {};
 
-    // 階段四：從 stageData 中獲取選擇結果
+    LBK_logInfo(`階段四：開始完成Pending Record，科目已選: ${stageData.subjectSelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "記帳完成", userId, functionName);
+
+    // 階段四修復：構建最終記帳資料，優先使用已選擇的資訊
     const finalBookkeepingData = {
       ...pendingData.parsedData,
       userId: userId,
       ledgerId: ledgerId
     };
 
-    // 如果有選擇的科目，使用選擇結果
-    if (pendingData.stageData.selectedSubject) {
-      finalBookkeepingData.subjectCode = pendingData.stageData.selectedSubject.subjectCode;
-      finalBookkeepingData.subjectName = pendingData.stageData.selectedSubject.subjectName;
-      finalBookkeepingData.majorCode = pendingData.stageData.selectedSubject.majorCode;
+    // 階段四修復：如果有選擇的科目，直接使用選擇結果，跳過重新查詢
+    if (stageData.selectedSubject && stageData.subjectSelected) {
+      finalBookkeepingData.subjectCode = stageData.selectedSubject.subjectCode;
+      finalBookkeepingData.subjectName = stageData.selectedSubject.subjectName;
+      finalBookkeepingData.majorCode = stageData.selectedSubject.majorCode;
+      
+      // 根據科目代碼判斷收支類型
+      const isIncome = String(stageData.selectedSubject.majorCode || stageData.selectedSubject.subjectCode).startsWith('2');
+      finalBookkeepingData.action = isIncome ? "收入" : "支出";
+      
+      LBK_logInfo(`階段四：直接使用已選擇的科目: ${finalBookkeepingData.subjectName} (代碼: ${finalBookkeepingData.subjectCode}) [${processId}]`, "記帳完成", userId, functionName);
+    } else {
+      LBK_logWarning(`階段四：Pending Record 中缺少科目選擇資訊，將使用原始解析資料 [${processId}]`, "記帳完成", userId, functionName);
     }
 
-    // 如果有選擇的錢包，使用選擇結果
-    if (pendingData.stageData.selectedWallet) {
-      finalBookkeepingData.paymentMethod = pendingData.stageData.selectedWallet.walletName;
-      finalBookkeepingData.walletId = pendingData.stageData.selectedWallet.walletId;
+    // 階段四修復：如果有選擇的錢包，直接使用選擇結果
+    if (stageData.selectedWallet && stageData.walletSelected) {
+      finalBookkeepingData.paymentMethod = stageData.selectedWallet.walletName;
+      finalBookkeepingData.walletId = stageData.selectedWallet.walletId;
+      
+      LBK_logInfo(`階段四：直接使用已選擇的錢包: ${finalBookkeepingData.paymentMethod} (ID: ${finalBookkeepingData.walletId}) [${processId}]`, "記帳完成", userId, functionName);
     }
 
-    // 執行記帳
-    const bookkeepingResult = await LBK_executeBookkeeping(finalBookkeepingData, processId);
+    // 階段四修復：直接進行記帳，跳過 LBK_executeBookkeeping 中的重複科目查詢
+    const transactionId = Date.now().toString();
+    const now = moment().tz(LBK_CONFIG.TIMEZONE);
 
-    if (!bookkeepingResult.success) {
-      throw new Error(bookkeepingResult.error);
+    // 直接準備1301標準格式的記帳資料
+    const preparedData = {
+      // 核心欄位 - 符合1301標準
+      id: transactionId,
+      amount: parseFloat(finalBookkeepingData.amount) || 0,
+      type: finalBookkeepingData.action === "收入" ? "income" : "expense",
+      description: finalBookkeepingData.subject || pendingData.parsedData?.subject,
+      categoryId: finalBookkeepingData.subjectCode || 'default',
+      accountId: 'default',
+
+      // 時間欄位 - 1301標準格式
+      date: now.format('YYYY-MM-DD'),
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+
+      // 來源和用戶資訊 - 1301標準
+      source: 'pending_completion',
+      userId: userId,
+      paymentMethod: finalBookkeepingData.paymentMethod || 'default',
+
+      // 記帳特定欄位 - 1301標準
+      ledgerId: ledgerId,
+
+      // 狀態欄位 - 1301標準
+      status: 'active',
+      verified: false,
+
+      // 元數據 - 1301標準
+      metadata: {
+        processId: processId,
+        module: 'LBK',
+        version: '1.5.0',
+        pendingId: pendingId,
+        majorCode: finalBookkeepingData.majorCode,
+        subjectName: finalBookkeepingData.subjectName,
+        completionSource: 'pending_record_stage4'
+      }
+    };
+
+    LBK_logInfo(`階段四：直接執行記帳儲存，跳過重複科目查詢 [${processId}]`, "記帳完成", userId, functionName);
+
+    // 直接儲存記帳資料到Firestore
+    const saveResult = await LBK_saveToFirestore(preparedData, processId);
+
+    if (!saveResult.success) {
+      throw new Error(`記帳儲存失敗: ${saveResult.error}`);
     }
+
+    // 構建記帳結果資料
+    const bookkeepingData = {
+      id: transactionId,
+      transactionId: transactionId,
+      amount: preparedData.amount,
+      type: preparedData.type,
+      category: preparedData.categoryId,
+      subject: finalBookkeepingData.subjectName || preparedData.description,
+      subjectName: finalBookkeepingData.subjectName || preparedData.description,
+      description: preparedData.description,
+      paymentMethod: preparedData.paymentMethod,
+      date: preparedData.date,
+      timestamp: new Date().toISOString(),
+      ledgerId: preparedData.ledgerId,
+      remark: pendingData.parsedData?.subject || preparedData.description
+    };
 
     // 更新狀態為 COMPLETED
     await LBK_updatePendingRecord(
       userId,
       pendingId,
       {
-        completedTransactionId: bookkeepingResult.data.id
+        completedTransactionId: transactionId,
+        completedAt: admin.firestore.Timestamp.now()
       },
       PENDING_STATES.COMPLETED,
       processId
@@ -4368,28 +4446,34 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     setTimeout(async () => {
       try {
         await db.collection('ledgers').doc(ledgerId).collection('pendingTransactions').doc(pendingId).delete();
+        LBK_logDebug(`延遲刪除 Pending Record 成功: ${pendingId} [${processId}]`, "Pending Record", userId, functionName);
       } catch (deleteError) {
-        LBK_logError(`延遲刪除 Pending Record 失敗: ${deleteError.toString()} [${processId}]`, "Pending Record", userId, "PENDING_DELETE_ERROR", deleteError.toString(), "LBK_completePendingRecord");
+        LBK_logError(`延遲刪除 Pending Record 失敗: ${deleteError.toString()} [${processId}]`, "Pending Record", userId, "PENDING_DELETE_ERROR", deleteError.toString(), functionName);
       }
     }, 30000); // 30秒後刪除
 
-    LBK_logInfo(`Pending Record 完成記帳: ${pendingId} → ${bookkeepingResult.data.id} [${processId}]`, "Pending Record", userId, "LBK_completePendingRecord");
+    LBK_logInfo(`階段四：Pending Record 記帳完成: ${pendingId} → ${transactionId} [${processId}]`, "記帳完成", userId, functionName);
 
     return {
       success: true,
       action: 'transaction_completed',
-      transactionId: bookkeepingResult.data.id,
-      bookkeepingData: bookkeepingResult.data,
-      message: LBK_formatReplyMessage(bookkeepingResult.data, "LBK", {
+      transactionId: transactionId,
+      bookkeepingData: bookkeepingData,
+      message: LBK_formatReplyMessage(bookkeepingData, "LBK", {
+        originalInput: pendingData.originalInput
+      }),
+      responseMessage: LBK_formatReplyMessage(bookkeepingData, "LBK", {
         originalInput: pendingData.originalInput
       })
     };
 
   } catch (error) {
-    LBK_logError(`完成Pending Record失敗: ${error.toString()} [${processId}]`, "Pending Record", userId, "PENDING_COMPLETE_ERROR", error.toString(), "LBK_completePendingRecord");
+    LBK_logError(`階段四：完成Pending Record失敗: ${error.toString()} [${processId}]`, "記帳完成", userId, "PENDING_COMPLETE_ERROR", error.toString(), functionName);
     return {
       success: false,
-      error: error.toString()
+      error: error.toString(),
+      message: "記帳完成失敗，請稍後再試",
+      responseMessage: "記帳完成失敗，請稍後再試"
     };
   }
 }
@@ -4676,7 +4760,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.7.0", // 階段三版本
+  MODULE_VERSION: "1.8.0", // 階段四版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段三：修復同義詞更新目標錢包查詢，移除硬編碼錢包ID，改為動態查詢正確的錢包ID後更新同義詞，解決錢包同義詞學習功能中的錢包不存在錯誤。"
+  MODULE_UPDATE: "階段四：修復科目重複查詢問題，修改LBK_completePendingRecord函數優先使用Pending Record中已選擇的科目資訊，跳過LBK_getSubjectCode重新查詢，直接使用stageData中的selectedSubject，避免科目選擇完成後重複觸發歧義消除導致「找不到科目」錯誤。"
 };
