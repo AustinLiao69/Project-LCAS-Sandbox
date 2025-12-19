@@ -1535,41 +1535,79 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
 }
 
 /**
- * 14. 移除文字中的金額和支付方式
- * @version 2025-07-15-V1.0.0
- * @date 2025-07-15 09:30:00
- * @description 從文字中移除金額和支付方式，保留備註內容
+ * 14. 移除文字中的金額和支付方式 - 階段二修復版
+ * @version 2025-12-19-V1.6.0
+ * @date 2025-12-19 16:45:00
+ * @description 階段二修復：從文字中移除金額和支付方式，確保備註只保留科目部分
  */
 function LBK_removeAmountFromText(text, amount, paymentMethod, processId) {
   if (!text || !amount) return text;
 
   try {
+    LBK_logDebug(`階段二：開始處理備註文字: "${text}", 金額: ${amount}, 支付方式: "${paymentMethod}" [${processId}]`, "備註處理", "", "LBK_removeAmountFromText");
+
     const amountStr = String(amount);
     let result = text;
 
-    // 移除金額
+    // 階段二修復：先移除金額部分
     if (text.includes(" " + amountStr)) {
       result = text.replace(" " + amountStr, "").trim();
     } else if (text.endsWith(amountStr)) {
       result = text.substring(0, text.length - amountStr.length).trim();
+    } else {
+      // 階段二新增：處理金額直接連接在科目後面的情況
+      const amountIndex = text.indexOf(amountStr);
+      if (amountIndex > 0) {
+        result = text.substring(0, amountIndex).trim();
+      }
     }
 
-    // 移除支付方式
+    // 階段二修復：移除支付方式，增強識別邏輯
     if (paymentMethod && result.includes(paymentMethod)) {
       result = result.replace(paymentMethod, "").trim();
     }
 
-    // 移除幣別單位
+    // 階段二新增：移除常見的銀行名稱，確保「一銀」等被移除
+    const bankNames = [
+      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
+      "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
+      "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
+      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀" // 階段二重點：確保「一銀」被移除
+    ];
+
+    for (const bankName of bankNames) {
+      if (result.includes(bankName)) {
+        result = result.replace(bankName, "").trim();
+        LBK_logDebug(`階段二：移除銀行名稱: "${bankName}" [${processId}]`, "備註處理", "", "LBK_removeAmountFromText");
+        break; // 只移除第一個匹配的銀行名稱
+      }
+    }
+
+    // 階段二新增：移除常見支付方式關鍵字
+    const paymentKeywords = ["現金", "刷卡", "行動支付", "轉帳", "信用卡"];
+    for (const keyword of paymentKeywords) {
+      if (result.includes(keyword)) {
+        result = result.replace(keyword, "").trim();
+        LBK_logDebug(`階段二：移除支付方式關鍵字: "${keyword}" [${processId}]`, "備註處理", "", "LBK_removeAmountFromText");
+      }
+    }
+
+    // 階段二保留：移除幣別單位
     const amountEndRegex = new RegExp(amountStr + "(元|塊|圓)$", "i");
     const match = result.match(amountEndRegex);
     if (match && match.index > 0) {
       result = result.substring(0, match.index).trim();
     }
 
+    // 階段二新增：清理多餘的空格和標點符號
+    result = result.replace(/\s+/g, ' ').trim();
+    
+    LBK_logInfo(`階段二：備註處理完成: "${text}" → "${result}" [${processId}]`, "備註處理", "", "LBK_removeAmountFromText");
+
     return result || text;
 
   } catch (error) {
-    LBK_logError(`移除金額和支付方式失敗: ${error.toString()}`, "文本處理", "", "TEXT_PROCESS_ERROR", error.toString(), "LBK_removeAmountFromText");
+    LBK_logError(`階段二：移除金額和支付方式失敗: ${error.toString()} [${processId}]`, "文本處理", "", "TEXT_PROCESS_ERROR", error.toString(), "LBK_removeAmountFromText");
     return text;
   }
 }
