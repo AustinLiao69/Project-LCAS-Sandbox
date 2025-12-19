@@ -1,11 +1,5 @@
 9601. Shell指令
 
-
-
-
-
-
-
 1.回到根目錄
 cd ~/workspace
 
@@ -72,13 +66,11 @@ pkill -f node
 
 cd "75. Flutter_Test_code_PL" && dart test "7570. SIT_P1.dart"
 
-
 14. 安裝75測試包
 
 cd "75. Flutter_Test_code_PL" && dart pub get
 
 cd "75. Flutter_Test_code_PL" && dart pub intl
-
 
 15. 執行7571(SIT_P2)
 
