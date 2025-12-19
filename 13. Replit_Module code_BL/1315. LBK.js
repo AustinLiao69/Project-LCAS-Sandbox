@@ -2380,45 +2380,6 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
 }
 
 /**
- * 確認錢包同義詞更新
- * @version 2025-12-19-V1.4.9
- * @param {string} originalInput - 原始輸入
- * @param {string} targetWalletId - 目標錢包ID
- * @param {string} userId - 用戶ID
- * @param {string} processId - 處理ID
- * @returns {Object} 確認結果
- */
-async function LBK_confirmWalletSynonymsUpdate(originalInput, targetWalletId, userId, processId) {
-  const functionName = "LBK_confirmWalletSynonymsUpdate";
-  try {
-    LBK_logInfo(`確認錢包同義詞更新: ${originalInput} → ${targetWalletId} [${processId}]`, "錢包同義詞", userId, functionName);
-
-    // 驗證更新是否成功
-    const wallet = await LBK_getWalletByName(originalInput, userId, processId);
-
-    if (wallet && wallet.walletId === targetWalletId) {
-      return {
-        success: true,
-        message: "同義詞更新確認成功",
-        wallet: wallet
-      };
-    } else {
-      return {
-        success: false,
-        message: "同義詞更新確認失敗"
-      };
-    }
-
-  } catch (error) {
-    LBK_logError(`確認錢包同義詞更新失敗: ${error.toString()} [${processId}]`, "錢包同義詞", userId, "CONFIRM_WALLET_SYNONYMS_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.toString()
-    };
-  }
-}
-
-/**
  * 階段三新增：取得錢包顯示名稱
  * @version 2025-12-19-V1.4.9
  * @param {string} walletId - 錢包ID
@@ -2784,531 +2745,6 @@ async function LBK_getWalletByName(paymentMethodName, userId, processId) {
     LBK_logError(`階段二：查詢錢包失敗: ${error.toString()} [${processId}]`, "錢包查詢", userId, "WALLET_QUERY_ERROR", error.toString(), functionName);
     return null;
   }
-}
-
-// 輔助函數：識別科目 - v1.4.0 增強新科目檢測邏輯
-async function LBK_identifySubject(subjectText, userId, processId) {
-  try {
-    LBK_logDebug(`開始識別科目: "${subjectText}"`, "科目識別", userId, "LBK_identifySubject");
-
-    const subjectCode = await LBK_getSubjectCode(subjectText, userId, processId);
-
-    if (!subjectCode) {
-      LBK_logWarning(`找不到匹配的科目: ${subjectText}，觸發新科目歸類流程`, "科目識別", userId, "LBK_identifySubject");
-      return {
-        success: false,
-        error: "找不到匹配的科目",
-        requiresClassification: true,
-        originalSubject: subjectText
-      };
-    }
-
-    // 檢查返回的科目資料完整性
-    if (!subjectCode.subCode || !subjectCode.subName) {
-      LBK_logError(`科目資料不完整: ${JSON.stringify(subjectCode)}`, "科目識別", userId, "SUBJECT_DATA_ERROR", "缺少必要欄位", "LBK_identifySubject");
-      return {
-        success: false,
-        error: "科目資料不完整",
-        requiresClassification: true,
-        originalSubject: subjectText
-      };
-    }
-
-    // 根據科目代碼判斷收支類型和預設支付方式
-    const majorCodeNum = parseInt(subjectCode.majorCode);
-    const isIncome = [801, 899].includes(majorCodeNum);
-    const defaultPaymentMethod = isIncome ? "轉帳" : "刷卡";
-
-    LBK_logDebug(`科目識別成功: ${subjectCode.subName} (代碼: ${subjectCode.subCode})`, "科目識別", userId, "LBK_identifySubject");
-
-    return {
-      success: true,
-      data: {
-        subjectCode: subjectCode.subCode,
-        subjectName: subjectCode.subName,
-        majorCode: subjectCode.majorCode,
-        isIncome: isIncome,
-        defaultPaymentMethod: defaultPaymentMethod
-      }
-    };
-
-  } catch (error) {
-    LBK_logError(`識別科目失敗: ${error.toString()}`, "科目識別", userId, "IDENTIFY_ERROR", error.toString(), "LBK_identifySubject");
-
-    // v1.4.0: 當發生錯誤時也觸發新科目歸類流程
-    return {
-      success: false,
-      error: error.toString(),
-      requiresClassification: true,
-      originalSubject: subjectText
-    };
-  }
-}
-
-// 輔助函數：初始化Firestore
-async function LBK_initializeFirestore() {
-  try {
-    if (LBK_INIT_STATUS.firestore_db) {
-      return LBK_INIT_STATUS.firestore_db;
-    }
-
-    // 檢查 Firebase Admin 是否已初始化
-    if (!admin.apps.length) {
-      console.log('🔄 LBK模組: Firebase Admin 尚未初始化，開始初始化...');
-
-      firebaseConfig.initializeFirebaseAdmin();
-
-      console.log('✅ LBK模組: Firebase Admin 動態配置初始化完成');
-    }
-
-    // 取得 Firestore 實例
-    const db = admin.firestore();
-
-    // 測試連線
-    await db.collection('_health_check').doc('lbk_init_test').set({
-      timestamp: admin.firestore.Timestamp.now(),
-      module: 'LBK',
-      status: 'initialized'
-    });
-
-    // 刪除測試文檔
-    await db.collection('_health_check').doc('lbk_init_test').delete();
-
-    LBK_INIT_STATUS.firestore_db = db;
-
-    return db;
-
-  } catch (error) {
-    console.error('❌ LBK模組: Firestore初始化失敗:', error);
-    throw error;
-  }
-}
-
-// 日誌函數
-function LBK_logDebug(message, operationType = "", userId = "", location = "") {
-  if (LBK_CONFIG.DEBUG) {
-    console.log(`[DEBUG] [LBK] ${message} | ${operationType} | ${userId} | ${location}`);
-  }
-}
-
-function LBK_logInfo(message, operationType = "", userId = "", location = "") {
-  console.log(`[INFO] [LBK] ${message} | ${operationType} | ${userId} | ${location}`);
-}
-
-function LBK_logWarning(message, operationType = "", userId = "", location = "") {
-  console.warn(`[WARNING] [LBK] ${message} | ${operationType} | ${userId} | ${location}`);
-}
-
-function LBK_logError(message, operationType = "", userId = "", errorCode = "", errorDetails = "", location = "") {
-  console.error(`[ERROR] [LBK] ${message} | ${operationType} | ${userId} | ${errorCode} | ${errorDetails} | ${location}`);
-}
-
-/**
- * 階段四新增：提取支付方式名稱，用於同義詞更新
- * @version 2025-12-20-V1.7.0
- * @param {string} inputText - 用戶輸入的文本
- * @param {string} processId - 處理ID
- * @returns {string|null} 提取到的支付方式名稱，或 null
- * @description 從原始輸入中提取支付方式名稱，用於觸發同義詞學習
- */
-function LBK_extractPaymentMethodFromInput(inputText, processId) {
-  try {
-    if (!inputText) return null;
-
-    const lowerInput = inputText.toLowerCase();
-
-    // 優先匹配已知錢包名稱或同義詞
-    const knownWallets = ["現金", "銀行帳戶", "信用卡", "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山", "台新", "永豐", "兆豐", "聯邦", "星展", "花旗", "渣打", "匯豐", "澳盛"];
-    for (const wallet of knownWallets) {
-      if (lowerInput.includes(wallet.toLowerCase())) {
-        return wallet;
-      }
-    }
-
-    // 嘗試從 parseInputFormat 的輸出中提取（如果可用）
-    // 注意：這裡需要更精確的邏輯來確定原始輸入與parseResult的關係
-    // 暫時返回 null，如果需要更精確，可能需要修改 parseInputFormat 或傳遞更多上下文
-    return null;
-
-  } catch (error) {
-    LBK_logError(`提取支付方式名稱失敗: ${error.toString()} [${processId}]`, "支付方式提取", "", "PAYMENT_METHOD_EXTRACTION_ERROR", error.toString(), "LBK_extractPaymentMethodFromInput");
-    return null;
-  }
-}
-
-/**
- * 45. 檢查統計查詢關鍵字 - LBK獨立關鍵字配置
- * @version 2025-12-10-V1.3.0
- * @date 2025-12-10 20:30:00
- * @description 使用LBK獨立的統計關鍵字配置，完全移除對SR模組的依賴
- */
-async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
-  try {
-    if (!messageText || typeof messageText !== 'string') {
-      return { isStatisticsRequest: false };
-    }
-
-    const normalizedText = messageText.trim().toLowerCase();
-
-    // LBK獨立的統計關鍵字配置
-    const statisticsKeywords = {
-      '本日統計': { type: 'daily', postbackData: '本日統計' },
-      '本週統計': { type: 'weekly', postbackData: '本週統計' },
-      '本月統計': { type: 'monthly', postbackData: '本月統計' },
-      '週統計': { type: 'weekly', postbackData: '本週統計' },
-      '月統計': { type: 'monthly', postbackData: '本月統計' },
-      '統計': { type: 'daily', postbackData: '本日統計' },
-      'stats': { type: 'daily', postbackData: '本日統計' },
-      'today': { type: 'daily', postbackData: '本日統計' },
-      'week': { type: 'weekly', postbackData: '本週統計' },
-      'month': { type: 'monthly', postbackData: '本月統計' }
-    };
-
-    LBK_logDebug(`使用LBK獨立統計關鍵字配置 [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
-
-    // 精確匹配檢查
-    for (const [keyword, config] of Object.entries(statisticsKeywords)) {
-      if (normalizedText === keyword.toLowerCase() || normalizedText === keyword) {
-        LBK_logInfo(`匹配統計關鍵字: "${keyword}" → ${config.type} [${processId}]`, "關鍵字檢核", userId, "LBK_checkStatisticsKeyword");
-
-        return {
-          isStatisticsRequest: true,
-          statisticsType: config.type,
-          originalKeyword: keyword,
-          postbackData: config.postbackData
-        };
-      }
-    }
-
-    return { isStatisticsRequest: false };
-
-  } catch (error) {
-    LBK_logError(`檢查統計關鍵字失敗: ${error.toString()} [${processId}]`, "關鍵字檢核", userId, "KEYWORD_CHECK_ERROR", error.toString(), "LBK_checkStatisticsKeyword");
-    return { isStatisticsRequest: false };
-  }
-}
-
-/**
- * 46. 處理統計查詢請求 - 完全獨立處理
- * @version 2025-12-10-V1.3.0
- * @date 2025-12-10 20:00:00
- * @description 完全移除對SR模組的依賴，LBK統計功能自主運作
- */
-async function LBK_handleStatisticsRequest(statisticsType, inputData, processId) {
-  try {
-    LBK_logInfo(`處理統計請求: ${statisticsType} [${processId}]`, "統計處理", inputData.userId || "", "LBK_handleStatisticsRequest");
-
-    // 建構postbackData
-    const postbackDataMap = {
-      'daily': '本日統計',
-      'weekly': '本週統計',
-      'monthly': '本月統計'
-    };
-
-    const postbackData = postbackDataMap[statisticsType] || '本日統計';
-
-    // 調用內部統計處理函數
-    const statsResult = await LBK_processDirectStatistics(inputData.userId, postbackData);
-
-    if (statsResult.success) {
-      // 統計查詢成功
-      return {
-        success: true,
-        message: statsResult.message,
-        responseMessage: statsResult.message,
-        quickReply: statsResult.quickReply,
-        moduleCode: "LBK",
-        module: "LBK",
-        processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-        moduleVersion: "1.3.0",
-        statisticsType: statisticsType
-      };
-    } else {
-      // 統計查詢失敗，返回友善錯誤訊息
-      const errorMessage = `📊 ${postbackData}\n\n暫時無法取得統計資料，請稍後再試。\n\n💡 您也可以嘗試輸入記帳格式開始記帳`;
-
-      return {
-        success: false,
-        message: errorMessage,
-        responseMessage: errorMessage,
-        moduleCode: "LBK",
-        module: "LBK",
-        processingTime: 0,
-        moduleVersion: "1.3.0",
-        errorType: "STATISTICS_ERROR"
-      };
-    }
-
-  } catch (error) {
-    LBK_logError(`處理統計請求失敗: ${error.toString()} [${processId}]`, "統計處理", inputData.userId || "", "STATISTICS_HANDLE_ERROR", error.toString(), "LBK_handleStatisticsRequest");
-
-    // 返回統一格式的錯誤訊息
-    const fallbackMessage = `📊 統計查詢\n\n系統暫時無法處理統計查詢，請稍後再試。\n\n💡 您可以繼續使用記帳功能`;
-
-    return {
-      success: false,
-      message: fallbackMessage,
-      responseMessage: fallbackMessage,
-      moduleCode: "LBK",
-      module: "LBK",
-      processingTime: 0,
-      moduleVersion: "1.3.0",
-      errorType: "SYSTEM_ERROR"
-    };
-  }
-}
-
-/**
- * 47. 建立統計Quick Reply按鈕 - LBK獨立版本
- * @version 2025-12-10-V1.3.0
- * @date 2025-12-10 20:30:00
- * @description LBK獨立建立統計查詢結果的Quick Reply按鈕選項
- */
-function LBK_buildStatisticsQuickReply(userId, currentType) {
-  try {
-    const quickReplyItems = [];
-
-    // LBK獨立的統計選項配置
-    const statisticsOptions = [
-      { type: 'daily', label: '本日統計', postbackData: '本日統計' },
-      { type: 'weekly', label: '本週統計', postbackData: '本週統計' },
-      { type: 'monthly', label: '本月統計', postbackData: '本月統計' }
-    ];
-
-    // 排除當前類型，提供其他選項
-    statisticsOptions.forEach(option => {
-      if (option.type !== currentType) {
-        quickReplyItems.push({
-          label: option.label,
-          postbackData: option.postbackData
-        });
-      }
-    });
-
-    // 確保至少有一個選項
-    if (quickReplyItems.length === 0) {
-      quickReplyItems.push({ label: '本日統計', postbackData: '本日統計' });
-    }
-
-    // 限制最多4個選項
-    return {
-      type: 'quick_reply',
-      items: quickReplyItems.slice(0, 4),
-      source: 'LBK_independent'
-    };
-
-  } catch (error) {
-    LBK_logError(`建立Quick Reply失敗: ${error.toString()}`, "Quick Reply", userId, "QUICK_REPLY_ERROR", error.toString(), "LBK_buildStatisticsQuickReply");
-
-    return {
-      type: 'quick_reply',
-      items: [{ label: '本日統計', postbackData: '本日統計' }],
-      source: 'LBK_fallback'
-    };
-  }
-}
-
-/**
- * 48. 處理直接統計查詢 - 複製自SR模組
- * @version 2025-12-10-V1.3.0
- * @date 2025-12-10 20:00:00
- * @description 複製SR的SR_processQuickReplyStatistics邏輯，實現LBK獨立統計查詢
- */
-async function LBK_processDirectStatistics(userId, postbackData) {
-  const functionName = "LBK_processDirectStatistics";
-  try {
-    LBK_logInfo(`處理直接統計查詢: ${postbackData}`, "統計查詢", userId, "", "", functionName);
-
-    let statsResult = null;
-    let period = '';
-
-    // 根據 postback 資料取得對應統計
-    switch (postbackData) {
-      case '本日統計':
-        period = 'today';
-        statsResult = await LBK_getDirectStatistics(userId, 'daily');
-        break;
-
-      case '本週統計':
-        period = 'week';
-        statsResult = await LBK_getDirectStatistics(userId, 'weekly');
-        break;
-
-      case '本月統計':
-        period = 'month';
-        statsResult = await LBK_getDirectStatistics(userId, 'monthly');
-        break;
-    }
-
-    // 建立統計回覆訊息
-    const replyMessage = LBK_formatStatisticsMessage(period, statsResult?.success ? statsResult.data : null);
-
-    // 建立基礎 Quick Reply 按鈕
-    const quickReplyButtons = LBK_buildStatisticsQuickReply(userId, period.replace('today', 'daily').replace('week', 'weekly').replace('month', 'monthly'));
-
-    return {
-      success: true,
-      message: replyMessage,
-      quickReply: quickReplyButtons,
-      period: period
-    };
-
-  } catch (error) {
-    LBK_logError(`處理直接統計查詢失敗: ${error.message}`, "統計查詢", userId, "LBK_STATS_ERROR", error.toString(), functionName);
-
-    return {
-      success: false,
-      message: '統計查詢失敗，請稍後再試',
-      error: error.message
-    };
-  }
-}
-
-/**
- * 49. 直接統計查詢函數 - 複製自SR模組
- * @version 2025-12-10-V1.3.0
- * @date 2025-12-10 20:00:00
- * @description 複製SR的SR_getDirectStatistics邏輯，直接查詢Firestore取得統計資料
- */
-async function LBK_getDirectStatistics(userId, period) {
-  const functionName = "LBK_getDirectStatistics";
-  try {
-    LBK_logInfo(`直接查詢統計資料: ${period}`, "統計查詢", userId, "", "", functionName);
-
-    const ledgerId = `user_${userId}`;
-    const now = moment().tz(LBK_CONFIG.TIMEZONE);
-    let startDate, endDate;
-
-    // 設定查詢時間範圍
-    switch (period) {
-      case 'daily':
-        startDate = now.clone().startOf('day').toDate();
-        endDate = now.clone().endOf('day').toDate();
-        break;
-      case 'weekly':
-        startDate = now.clone().startOf('week').toDate();
-        endDate = now.clone().endOf('week').toDate();
-        break;
-      case 'monthly':
-        startDate = now.clone().startOf('month').toDate();
-        endDate = now.clone().endOf('month').toDate();
-        break;
-      default:
-        startDate = now.clone().startOf('day').toDate();
-        endDate = now.clone().endOf('day').toDate();
-    }
-
-    await LBK_initializeFirestore();
-    const db = LBK_INIT_STATUS.firestore_db;
-
-    // 查詢Firestore transactions集合 - 使用1301標準路徑
-    const transactionsRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
-    const snapshot = await transactionsRef
-      .where('createdAt', '>=', admin.firestore.Timestamp.fromDate(startDate))
-      .where('createdAt', '<=', admin.firestore.Timestamp.fromDate(endDate))
-      .get();
-
-    if (snapshot.empty) {
-      LBK_logInfo(`無統計資料: ${period}`, "統計查詢", userId, "", "", functionName);
-      return {
-        success: true,
-        data: {
-          totalIncome: 0,
-          totalExpense: 0,
-          recordCount: 0
-        }
-      };
-    }
-
-    // 計算統計資料，過濾掉_init等非交易文檔
-    let totalIncome = 0;
-    let totalExpense = 0;
-    let recordCount = 0;
-
-    snapshot.forEach(doc => {
-      // 過濾掉_init等系統文檔
-      if (doc.id === '_init' || doc.id.startsWith('_')) {
-        return;
-      }
-
-      const data = doc.data();
-      const amount = parseFloat(data.amount || 0);
-      const type = data.type;
-
-      // 確保這是有效的交易記錄
-      if (type && amount > 0) {
-        recordCount++;
-        if (type === 'income') {
-          totalIncome += amount;
-        } else if (type === 'expense') {
-          totalExpense += amount;
-        }
-      }
-    });
-
-    const statsData = {
-      totalIncome,
-      totalExpense,
-      recordCount
-    };
-
-    LBK_logInfo(`統計查詢成功: 收入${totalIncome}，支出${totalExpense}，${recordCount}筆`, "統計查詢", userId, "", "", functionName);
-
-    return {
-      success: true,
-      data: statsData
-    };
-
-  } catch (error) {
-    LBK_logError(`直接統計查詢失敗: ${error.message}`, "統計查詢", userId, "LBK_DIRECT_STATS_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.message,
-      data: {
-        totalIncome: 0,
-        totalExpense: 0,
-        recordCount: 0
-      }
-    };
-  }
-}
-
-/**
- * 50. 格式化統計訊息 - 複製自SR模組
- * @version 2025-12-10-V1.3.0
- * @date 2025-12-10 20:00:00
- * @description 複製SR的SR_buildStatisticsReplyMessage邏輯，建立LINE友善的統計回覆訊息
- */
-function LBK_formatStatisticsMessage(period, statsData) {
-  const periodNames = {
-    'today': '今日',
-    'week': '本週',
-    'month': '本月'
-  };
-
-  const periodName = periodNames[period] || period;
-
-  if (!statsData) {
-    return `📊 ${periodName}統計
-
-暫無記帳數據
-
-💡 開始記帳以獲得統計分析`;
-  }
-
-  const totalIncome = statsData.totalIncome || 0;
-  const totalExpense = statsData.totalExpense || 0;
-  const balance = totalIncome - totalExpense;
-  const recordCount = statsData.recordCount || 0;
-
-  return `📊 ${periodName}統計
-
-💰 收入：${totalIncome}元
-💸 支出：${totalExpense}元
-📈 淨額：${balance >= 0 ? '+' : ''}${balance}元
-📝 筆數：${recordCount}筆
-
-${balance >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}`;
 }
 
 /**
@@ -4053,7 +3489,7 @@ async function LBK_handleSubjectSelectionComplete(classificationResult, processI
       throw new Error(`無效的科目ID: ${subjectId}`);
     }
 
-    // 更新Pending Record的科目選擇資訊
+    // 更新Pending Record的stageData
     await LBK_updatePendingRecord(
       userId,
       pendingData.pendingId,
@@ -4074,7 +3510,7 @@ async function LBK_handleSubjectSelectionComplete(classificationResult, processI
     // 建立同義詞關聯
     await LBK_addSubjectSynonym(pendingData.subject, subjectId, selectedCategory.categoryName, userId, processId);
 
-    // 推進流程，檢查是否需要支付方式選擇
+    // 推進流程，檢查是否需要選擇錢包
     return await LBK_advancePendingFlow(userId, pendingData.pendingId, processId);
 
   } catch (error) {
@@ -4213,8 +3649,428 @@ function LBK_generateWalletSelectionQuickReply(pendingId) {
             label: '🏦 銀行帳戶',
             data: `wallet_type_bank_${pendingId}`,
             displayText: '選擇銀行帳戶'
+          }        },
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '💳 信用卡',
+            data: `wallet_type_credit_${pendingId}`,
+            displayText: '選擇信用卡'
+          }
+        }
+      ]
+    };
+  } catch (error) {
+    LBK_logError(`生成支付方式選擇 Quick Reply 失敗: ${error.toString()}`, "Quick Reply", "", "WALLET_QR_GEN_ERROR", error.toString(), "LBK_generateWalletSelectionQuickReply");
+    return {}; // 返回空物件以避免錯誤
+  }
+}
+
+
+/**
+ * 階段四增強：將Pending Record轉換為正式交易
+ * @version 2025-12-19-V1.4.9
+ * @param {string} userId - 用戶ID
+ * @param {string} pendingId - Pending Record ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 轉換結果
+ */
+async function LBK_completePendingRecord(userId, pendingId, processId) {
+  try {
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+
+    const ledgerId = `user_${userId}`;
+    const doc = await db.collection('ledgers').doc(ledgerId).collection('pendingTransactions').doc(pendingId).get();
+
+    if (!doc.exists) {
+      throw new Error(`Pending Record 不存在: ${pendingId}`);
+    }
+
+    const pendingData = doc.data();
+
+    // 階段四：從 stageData 中獲取選擇結果
+    const finalBookkeepingData = {
+      ...pendingData.parsedData,
+      userId: userId,
+      ledgerId: ledgerId
+    };
+
+    // 如果有選擇的科目，使用選擇結果
+    if (pendingData.stageData.selectedSubject) {
+      finalBookkeepingData.subjectCode = pendingData.stageData.selectedSubject.subjectCode;
+      finalBookbuildingData.subjectName = pendingData.stageData.selectedSubject.subjectName;
+      finalBookkeepingData.majorCode = pendingData.stageData.selectedSubject.majorCode;
+    }
+
+    // 如果有選擇的錢包，使用選擇結果
+    if (pendingData.stageData.selectedWallet) {
+      finalBookkeepingData.paymentMethod = pendingData.stageData.selectedWallet.walletName;
+      finalBookkeepingData.walletId = pendingData.stageData.selectedWallet.walletId;
+    }
+
+    // 執行記帳
+    const bookkeepingResult = await LBK_executeBookkeeping(finalBookkeepingData, processId);
+
+    if (!bookkeepingResult.success) {
+      throw new Error(bookkeepingResult.error);
+    }
+
+    // 更新狀態為 COMPLETED
+    await LBK_updatePendingRecord(
+      userId,
+      pendingId,
+      {
+        completedTransactionId: bookkeepingResult.data.id
+      },
+      PENDING_STATES.COMPLETED,
+      processId
+    );
+
+    // 可選：延遲刪除 Pending Record（用於審計）
+    setTimeout(async () => {
+      try {
+        await db.collection('ledgers').doc(ledgerId).collection('pendingTransactions').doc(pendingId).delete();
+      } catch (deleteError) {
+        LBK_logError(`延遲刪除 Pending Record 失敗: ${deleteError.toString()} [${processId}]`, "Pending Record", userId, "PENDING_DELETE_ERROR", deleteError.toString(), "LBK_completePendingRecord");
+      }
+    }, 30000); // 30秒後刪除
+
+    LBK_logInfo(`Pending Record 完成記帳: ${pendingId} → ${bookkeepingResult.data.id} [${processId}]`, "Pending Record", userId, "LBK_completePendingRecord");
+
+    return {
+      success: true,
+      action: 'transaction_completed',
+      transactionId: bookkeepingResult.data.id,
+      bookkeepingData: bookkeepingResult.data,
+      message: LBK_formatReplyMessage(bookkeepingResult.data, "LBK", {
+        originalInput: pendingData.originalInput
+      })
+    };
+
+  } catch (error) {
+    LBK_logError(`完成Pending Record失敗: ${error.toString()} [${processId}]`, "Pending Record", userId, "PENDING_COMPLETE_ERROR", error.toString(), "LBK_completePendingRecord");
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 階段五新增：初始化 pendingTransactions 子集合
+ * @version 2025-12-19-V1.5.0
+ * @param {string} userLedgerId - 用戶帳本ID
+ * @param {object} context - 上下文資訊，包含 userId
+ * @param {object} options - 選項，支援 createStructure 等
+ * @returns {Promise<Object>} 初始化結果
+ * @description 為用戶建立 pendingTransactions 子集合基礎結構，類似 WCM 模組的批量初始化機制
+ */
+async function LBK_initializePendingTransactionsSubcollection(userLedgerId, context, options = {}) {
+  const functionName = "LBK_initializePendingTransactionsSubcollection";
+  try {
+    LBK_logInfo(`開始初始化 pendingTransactions 子集合: ${userLedgerId}`, "子集合初始化", context.userId, functionName);
+
+    if (!userLedgerId || !context.userId) {
+      throw new Error("userLedgerId 和 context.userId 為必填參數");
+    }
+
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+
+    // 檢查是否已經初始化
+    const existingInit = await db
+      .collection('ledgers')
+      .doc(userLedgerId)
+      .collection('pendingTransactions')
+      .doc('_init')
+      .get();
+
+    if (existingInit.exists) {
+      LBK_logInfo(`pendingTransactions 子集合已存在: ${userLedgerId}`, "子集合初始化", context.userId, functionName);
+      return {
+        success: true,
+        data: {
+          alreadyExists: true,
+          subcollectionCreated: false,
+          message: "pendingTransactions 子集合已存在"
+        }
+      };
+    }
+
+    // 建立初始化文檔，確保子集合存在
+    const initDocData = {
+      initialized: true,
+      createdAt: admin.firestore.Timestamp.now(),
+      userId: context.userId,
+      ledgerId: userLedgerId,
+      module: "LBK",
+      version: "v1.5.0",
+      note: "Initial document to ensure pendingTransactions subcollection exists",
+      configVersion: "0305",
+      structure: {
+        stateTransitions: ["PENDING_SUBJECT", "PENDING_WALLET", "COMPLETED", "CANCELLED"],
+        defaultExpirationMinutes: 30,
+        autoCleanupEnabled: true
+      }
+    };
+
+    await db
+      .collection('ledgers')
+      .doc(userLedgerId)
+      .collection('pendingTransactions')
+      .doc('_init')
+      .set(initDocData);
+
+    LBK_logInfo(`pendingTransactions 子集合初始化完成: ${userLedgerId}`, "子集合初始化", context.userId, functionName);
+
+    return {
+      success: true,
+      data: {
+        subcollectionCreated: true,
+        initDocId: "_init",
+        structure: initDocData.structure,
+        message: "pendingTransactions 子集合初始化成功"
+      }
+    };
+
+  } catch (error) {
+    LBK_logError(`初始化 pendingTransactions 子集合失敗: ${error.toString()}`, "子集合初始化", context.userId, "INIT_PENDING_SUBCOLLECTION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      data: null
+    };
+  }
+}
+
+/**
+ * 階段四新增：推進Pending Record流程
+ * @version 2025-12-19-V1.4.9
+ * @param {string} userId - 用戶ID
+ * @param {string} pendingId - Pending Record ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 推進結果
+ * @description 檢查Pending Record當前狀態，並推進到下一階段處理
+ */
+async function LBK_advancePendingFlow(userId, pendingId, processId) {
+  const functionName = "LBK_advancePendingFlow";
+  try {
+    LBK_logInfo(`推進Pending Record流程: pendingId=${pendingId} [${processId}]`, "狀態機", userId, functionName);
+
+    // 獲取Pending Record的當前狀態
+    const pendingRecordResult = await LBK_getPendingRecord(userId, pendingId, processId);
+    if (!pendingRecordResult.success) {
+      throw new Error(pendingRecordResult.error);
+    }
+
+    const pendingData = pendingRecordResult.data;
+    const currentStage = pendingData.processingStage;
+    const stageData = pendingData.stageData || {};
+
+    LBK_logInfo(`當前狀態: ${currentStage}, 科目已選: ${stageData.subjectSelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "狀態機", userId, functionName);
+
+    // 根據當前狀態決定下一步動作
+    if (currentStage === PENDING_STATES.PENDING_SUBJECT) {
+      // 如果科目已選，檢查是否需要選擇錢包
+      if (stageData.subjectSelected) {
+        // 檢查支付方式是否需要歧義消除
+        const walletResult = await LBK_parsePaymentMethod(pendingData.originalInput, userId, processId);
+
+        if (walletResult.requiresWalletConfirmation) {
+          // 轉入錢包選擇狀態
+          await LBK_updatePendingRecord(
+            userId,
+            pendingId,
+            {},
+            PENDING_STATES.PENDING_WALLET,
+            processId
+          );
+
+          // 返回錢包選擇介面
+          return await LBK_handleNewWallet(
+            walletResult.walletName,
+            { ...pendingData.parsedData, pendingId: pendingId },
+            { userId: userId, messageText: pendingData.originalInput },
+            processId
+          );
+        } else {
+          // 支付方式明確，直接完成記帳
+          return await LBK_completePendingRecord(userId, pendingId, processId);
+        }
+      } else {
+        // 科目未選，需要用戶選擇科目
+        return {
+          success: false,
+          error: "科目尚未選擇，請先選擇科目",
+          action: "requires_subject_selection"
+        };
+      }
+    } else if (currentStage === PENDING_STATES.PENDING_WALLET) {
+      // 如果錢包已選，完成記帳
+      if (stageData.walletSelected) {
+        return await LBK_completePendingRecord(userId, pendingId, processId);
+      } else {
+        // 錢包未選，需要用戶選擇錢包
+        return {
+          success: false,
+          error: "支付方式尚未選擇，請先選擇支付方式",
+          action: "requires_wallet_selection"
+        };
+      }
+    } else if (currentStage === PENDING_STATES.COMPLETED) {
+      // 已完成，無需進一步處理
+      return {
+        success: true,
+        message: "記帳已完成",
+        action: "already_completed"
+      };
+    }
+
+    // 未知狀態
+    return {
+      success: false,
+      error: `未知的處理狀態: ${currentStage}`,
+      action: "unknown_state"
+    };
+
+  } catch (error) {
+    LBK_logError(`推進Pending Record流程失敗: ${error.toString()} [${processId}]`, "狀態機", userId, "ADVANCE_PENDING_FLOW_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 階段四新增：根據用戶選擇的支付方式類型，更新Pending Record狀態
+ * @version 2025-12-19-V1.4.9
+ * @param {string} userId - 用戶ID
+ * @param {string} pendingId - Pending Record ID
+ * @param {string} selectedWalletType - 用戶選擇的錢包類型 (cash, bank, credit)
+ * @param {string} processId - 處理ID
+ * @returns {Object} 更新結果
+ */
+async function LBK_handleWalletTypeSelection(userId, pendingId, selectedWalletType, processId) {
+  const functionName = "LBK_handleWalletTypeSelection";
+  try {
+    LBK_logInfo(`階段四：處理支付方式類型選擇: type=${selectedWalletType}, pendingId=${pendingId} [${processId}]`, "狀態機", userId, functionName);
+
+    // 獲取Pending Record資料
+    const pendingRecordResult = await LBK_getPendingRecord(userId, pendingId, processId);
+    if (!pendingRecordResult.success) {
+      throw new Error(pendingRecordResult.error);
+    }
+    const pendingData = pendingRecordResult.data;
+
+    // 根據用戶選擇的類型，查找對應的預設錢包
+    let resolvedWallet = null;
+    switch (selectedWalletType) {
+      case 'cash':
+        resolvedWallet = { walletId: 'default_cash', walletName: '現金', type: 'cash' };
+        break;
+      case 'bank':
+        resolvedWallet = { walletId: 'default_bank', walletName: '銀行帳戶', type: 'bank' };
+        break;
+      case 'credit':
+        resolvedWallet = { walletId: 'default_credit', walletName: '信用卡', type: 'credit_card' };
+        break;
+      default:
+        throw new Error(`未知的錢包類型: ${selectedWalletType}`);
+    }
+
+    // 更新Pending Record的stageData
+    const updateResult = await LBK_updatePendingRecord(
+      userId,
+      pendingId,
+      {
+        stageData: {
+          walletSelected: true,
+          selectedWallet: resolvedWallet
+        }
+      },
+      PENDING_STATES.PENDING_WALLET, // 保持在PENDING_WALLET狀態，因為下一步是完整記帳
+      processId
+    );
+
+    if (!updateResult.success) {
+      throw new Error(updateResult.error);
+    }
+
+    // 階段四：執行同義詞學習
+    // 獲取原始輸入中的支付方式名稱
+    const paymentMethodName = LBK_extractPaymentMethodFromInput(pendingData.originalInput, processId);
+    if (paymentMethodName) {
+      const synonymsResult = await LBK_executeWalletSynonymsUpdate(
+        paymentMethodName,
+        resolvedWallet.walletId, // 使用解析出的錢包ID
+        userId,
+        processId
+      );
+      if (!synonymsResult.success) {
+        LBK_logWarning(`階段四：執行wallet synonyms更新失敗: ${synonymsResult.error} [${processId}]`, "同義詞學習", userId, functionName);
+      } else {
+        LBK_logInfo(`階段四：同義詞學習完成: ${paymentMethodName} → ${resolvedWallet.walletName} [${processId}]`, "同義詞學習", userId, functionName);
+      }
+    }
+
+    // 推進流程，完成記帳
+    const completionResult = await LBK_completePendingRecord(userId, pendingId, processId);
+
+    // 階段四：在成功回覆中提及同義詞學習
+    if (completionResult.success && paymentMethodName) {
+      const originalMessage = completionResult.message || "記帳成功";
+      const enhancedMessage = originalMessage + `\n\n💡 系統已學習支付方式「${paymentMethodName}」，下次輸入相同方式將自動識別`;
+
+      return {
+        ...completionResult,
+        message: enhancedMessage,
+        responseMessage: enhancedMessage,
+        moduleVersion: "1.7.0", // 更新版本號
+        synonymsLearned: true
+      };
+    }
+
+    return completionResult;
+
+  } catch (error) {
+    LBK_logError(`階段四：處理支付方式類型選擇失敗: ${error.toString()} [${processId}]`, "狀態機", userId, "WALLET_TYPE_SELECTION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 階段四新增：生成支付方式選擇 Quick Reply
+ * @version 2025-12-19-V1.4.9
+ * @param {string} pendingId - Pending Record ID
+ * @returns {object} Quick Reply 配置
+ */
+function LBK_generateWalletSelectionQuickReply(pendingId) {
+  try {
+    return {
+      items: [
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '💵 現金',
+            data: `wallet_type_cash_${pendingId}`,
+            displayText: '選擇現金'
           }
         },
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '🏦 銀行帳戶',
+            data: `wallet_type_bank_${pendingId}`,
+            displayText: '選擇銀行帳戶'
+          }        },
         {
           type: 'action',
           action: {
@@ -4406,6 +4262,105 @@ async function LBK_initializePendingTransactionsSubcollection(userLedgerId, cont
       success: false,
       error: error.message,
       data: null
+    };
+  }
+}
+
+/**
+ * 階段四新增：推進Pending Record流程
+ * @version 2025-12-19-V1.4.9
+ * @param {string} userId - 用戶ID
+ * @param {string} pendingId - Pending Record ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 推進結果
+ * @description 檢查Pending Record當前狀態，並推進到下一階段處理
+ */
+async function LBK_advancePendingFlow(userId, pendingId, processId) {
+  const functionName = "LBK_advancePendingFlow";
+  try {
+    LBK_logInfo(`推進Pending Record流程: pendingId=${pendingId} [${processId}]`, "狀態機", userId, functionName);
+
+    // 獲取Pending Record的當前狀態
+    const pendingRecordResult = await LBK_getPendingRecord(userId, pendingId, processId);
+    if (!pendingRecordResult.success) {
+      throw new Error(pendingRecordResult.error);
+    }
+
+    const pendingData = pendingRecordResult.data;
+    const currentStage = pendingData.processingStage;
+    const stageData = pendingData.stageData || {};
+
+    LBK_logInfo(`當前狀態: ${currentStage}, 科目已選: ${stageData.subjectSelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "狀態機", userId, functionName);
+
+    // 根據當前狀態決定下一步動作
+    if (currentStage === PENDING_STATES.PENDING_SUBJECT) {
+      // 如果科目已選，檢查是否需要選擇錢包
+      if (stageData.subjectSelected) {
+        // 檢查支付方式是否需要歧義消除
+        const walletResult = await LBK_parsePaymentMethod(pendingData.originalInput, userId, processId);
+
+        if (walletResult.requiresWalletConfirmation) {
+          // 轉入錢包選擇狀態
+          await LBK_updatePendingRecord(
+            userId,
+            pendingId,
+            {},
+            PENDING_STATES.PENDING_WALLET,
+            processId
+          );
+
+          // 返回錢包選擇介面
+          return await LBK_handleNewWallet(
+            walletResult.walletName,
+            { ...pendingData.parsedData, pendingId: pendingId },
+            { userId: userId, messageText: pendingData.originalInput },
+            processId
+          );
+        } else {
+          // 支付方式明確，直接完成記帳
+          return await LBK_completePendingRecord(userId, pendingId, processId);
+        }
+      } else {
+        // 科目未選，需要用戶選擇科目
+        return {
+          success: false,
+          error: "科目尚未選擇，請先選擇科目",
+          action: "requires_subject_selection"
+        };
+      }
+    } else if (currentStage === PENDING_STATES.PENDING_WALLET) {
+      // 如果錢包已選，完成記帳
+      if (stageData.walletSelected) {
+        return await LBK_completePendingRecord(userId, pendingId, processId);
+      } else {
+        // 錢包未選，需要用戶選擇錢包
+        return {
+          success: false,
+          error: "支付方式尚未選擇，請先選擇支付方式",
+          action: "requires_wallet_selection"
+        };
+      }
+    } else if (currentStage === PENDING_STATES.COMPLETED) {
+      // 已完成，無需進一步處理
+      return {
+        success: true,
+        message: "記帳已完成",
+        action: "already_completed"
+      };
+    }
+
+    // 未知狀態
+    return {
+      success: false,
+      error: `未知的處理狀態: ${currentStage}`,
+      action: "unknown_state"
+    };
+
+  } catch (error) {
+    LBK_logError(`推進Pending Record流程失敗: ${error.toString()} [${processId}]`, "狀態機", userId, "ADVANCE_PENDING_FLOW_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
     };
   }
 }
@@ -4820,7 +4775,9 @@ module.exports = {
 
   // 階段四新增：狀態機相關函數
   LBK_advancePendingFlow,
-  LBK_transitionToPendingWallet,
+  LBK_transitionToPendingWallet: async (userId, pendingId, processId) => { // Alias for backward compatibility if needed
+    await LBK_updatePendingRecord(userId, pendingId, {}, PENDING_STATES.PENDING_WALLET, processId);
+  },
   LBK_completePendingRecord, // Now handles the final transaction completion
   LBK_generateWalletSelectionQuickReply,
   LBK_handleWalletTypeSelection,
