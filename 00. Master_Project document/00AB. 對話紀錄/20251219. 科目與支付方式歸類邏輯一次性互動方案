@@ -82,11 +82,17 @@ After行為：只有在 wallets 子集合 synonyms 中明確定義的支付方�
 1.	0305配置檔案更新：
 •	paymentMethod改名為walletSynonyms
 •	新增walletId和walletType欄位
+=>walletId和walletType欄位請舉例這兩個欄位是對應到wallet子集合的哪些欄位？
+
+
 2.	0070架構文件更新：
 •	更新pendingTransactions子集合欄位定義
 •	說明與wallets子集合的關聯關係
 Before行為：pendingTransaction使用paymentMethod欄位，無明確關聯
 After行為：使用walletSynonyms欄位，建立與wallets子集合的明確關聯
+
+
+
 階段四：實作支付方式同義詞學習機制
 目標：當用戶確認支付方式對應關係後，自動更新wallets子集合的synonyms欄位
 修改檔案：
