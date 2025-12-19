@@ -56,6 +56,45 @@
         }
       }
     },
+    "walletSynonyms": {
+      "type": "string",
+      "required": false,
+      "description": "用戶原始輸入的支付方式，來自wallets子集合的synonyms",
+      "example": "花旗"
+    },
+    "walletId": {
+      "type": "string",
+      "required": false,
+      "description": "對應wallets子集合的walletId主鍵，建立直接關聯",
+      "example": "debit"
+    },
+    "parsedData": {
+      "type": "object",
+      "required": true,
+      "description": "已解析的資料",
+      "structure": {
+        "amount": {
+          "type": "number",
+          "required": true,
+          "description": "金額"
+        },
+        "description": {
+          "type": "string", 
+          "required": false,
+          "description": "描述"
+        },
+        "rawSubject": {
+          "type": "string",
+          "required": false,
+          "description": "原始科目關鍵字"
+        },
+        "rawWallet": {
+          "type": "string",
+          "required": false,
+          "description": "原始支付方式關鍵字"
+        }
+      }
+    },
     "processingStage": {
       "type": "string",
       "required": true,
@@ -83,10 +122,15 @@
           "required": false,
           "description": "已選擇的支付方式ID"
         },
+        "walletId": {
+          "type": "string",
+          "required": false,
+          "description": "已選擇的錢包ID，對應wallets子集合的walletId主鍵"
+        },
         "walletName": {
           "type": "string",
           "required": false,
-          "description": "已選擇的支付方式名稱"
+          "description": "已選擇的錢包名稱，對應wallets子集合的walletName"
         }
       }
     },
@@ -189,10 +233,11 @@
       },
       "PENDING_WALLET": {
         "requiredFields": ["originalInput", "parsedData.amount", "resolvedData.subjectId"],
-        "optionalFields": ["parsedData.description", "parsedData.rawWallet"]
+        "optionalFields": ["parsedData.description", "parsedData.rawWallet", "walletSynonyms"]
       },
       "COMPLETED": {
-        "requiredFields": ["originalInput", "parsedData.amount", "resolvedData.subjectId", "resolvedData.walletId"]
+        "requiredFields": ["originalInput", "parsedData.amount", "resolvedData.subjectId", "resolvedData.walletId", "walletId"],
+        "optionalFields": ["walletSynonyms"]
       }
     },
     "cleanup": {
@@ -205,9 +250,14 @@
   "integration": {
     "relatedCollections": {
       "ledgers": "parent collection",
-      "categories": "reference for subject resolution",
-      "wallets": "reference for wallet resolution",
+      "categories": "reference for subject resolution", 
+      "wallets": "reference for wallet resolution via walletId primary key",
       "transactions": "target collection after completion"
+    },
+    "walletRelationship": {
+      "walletSynonyms": "stores user original input, maps to wallets.synonyms field",
+      "walletId": "direct foreign key reference to wallets.walletId primary key",
+      "purpose": "establish precise database relationship and preserve user input for synonym learning"
     },
     "eventTriggers": {
       "onCreate": ["validate_structure", "set_expiration"],
