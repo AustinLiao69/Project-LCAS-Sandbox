@@ -6,6 +6,174 @@
 ------------------------------------------
 20251219.科目與支付方式歸類邏輯一次性互動方案
 
+approved請進行階段一
+
+階段一：修復錢包ID動態查詢機制
+目標：將硬編碼的錢包ID改為動態查詢用戶wallets子集合
+修改檔案：1315. LBK.js
+修改內容：
+•	修改 LBK_handleWalletTypeSelection 函數，移除所有硬編碼錢包ID
+•	使用現有的 LBK_getWalletByName 函數根據錢包類型查詢實際存在的錢包
+•	根據0302配置，查詢順序：現金→cash，銀行→debit，信用卡→credit
+Before：硬編碼 default_credit 等不存在的錢包ID
+After：動態查詢用戶wallets子集合中實際存在的錢包
+影響範圍：所有錢包類型選擇流程
+
+階段二：修復支付方式名稱提取邏輯
+目標：解決undefined支付方式顯示問題
+修改檔案：1315. LBK.js
+修改內容：
+•	修復 LBK_extractPaymentMethodFromInput 函數，確保正確從原始輸入中提取支付方式名稱
+•	修改 LBK_handleClassificationPostback 中的支付方式驗證邏輯，使用提取到的實際名稱而非undefined
+Before：顯示「undefined」支付方式
+After：顯示實際的支付方式名稱（如「合庫」）
+影響範圍：科目歸類完成後的支付方式檢查流程
+
+階段三：修復同義詞更新目標錢包查詢
+目標：確保同義詞更新使用正確的目標錢包ID
+修改檔案：1315. LBK.js
+修改內容：
+•	修復 LBK_executeWalletSynonymsUpdate 函數，在更新同義詞前先使用 LBK_getWalletByName 查詢正確的錢包ID
+•	移除硬編碼的錢包ID參數，改為動態查詢
+Before：使用硬編碼錢包ID導致「錢包不存在」錯誤
+After：動態查詢正確的錢包ID後更新同義詞
+影響範圍：錢包同義詞學習功能
+
+階段四：修復科目重複查詢問題
+目標：避免科目選擇完成後重複觸發歧義消除
+修改檔案：1315. LBK.js
+修改內容：
+•	修改 LBK_completePendingRecord 函數，優先使用Pending Record中已選擇的科目資訊
+•	跳過 LBK_getSubjectCode 重新查詢，直接使用stageData中的selectedSubject
+Before：重新查詢科目導致「找不到科目: 口香糖」錯誤
+After：直接使用已選擇的科目資訊完成記帳
+影響範圍：記帳完成流程
+
+階段五：清理資料結構一致性
+目標：統一資料欄位命名，移除冗餘欄位
+修改檔案：1315. LBK.js
+修改內容：
+•	統一使用 walletId 欄位，移除 paymentMethod 混用
+•	清理 stageData 中的 type 欄位
+•	升級模組版本至v1.7.0
+Before：欄位命名不一致，資料結構混亂
+After：統一欄位命名，清理冗餘資料
+影響範圍：整個LBK模組資料流
+
+
+
+
+
+
+------------------------------------------
+20251219.科目與支付方式歸類邏輯一次性互動方案
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+Debug分析報告
+版本: v1.1.0
+建立日期: 2025-12-19
+分析者: LCAS SQA Team (按照9904規範)
+________________________________________
+A. 快速摘要（≤3句）
+1.	科目同義詞學習失效：用戶選擇科目後，系統沒有正確保存科目同義詞，導致後續記帳時重複觸發科目歧義消除。
+2.	錢包ID硬編碼問題：系統使用了不存在的default_credit錢包ID，而非從wallets子集合中取得正確ID。
+3.	支付方式同義詞未建立：用戶選擇信用卡後，"合庫"沒有正確加入到credit錢包的synonyms欄位中。
+________________________________________
+B. Root causes（最多 6 條）
+1. 科目同義詞學習機制失效
+證據：
+[2025-12-19T06:29:55.094Z] [DEBUG] [DL] 查詢科目代碼: "口香糖" [5e732188]
+[2025-12-19T06:29:55.212Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "餐飲費用"，同義詞數量: 0
+信心度：95%
+解決方案：修復LBK_completePendingRecord函數，確保科目選擇完成後正確使用Pending Record中的科目資訊，而非重新查詢科目。
+2. 硬編碼錢包ID問題
+證據：
+[2025-12-19T06:29:54.879Z] [INFO] [DL] 執行錢包同義詞更新: 合庫 → default_credit
+[2025-12-19T06:29:54.986Z] [ERROR] [DL] 執行錢包同義詞更新失敗: Error: 錢包不存在: default_credit
+信心度：100%
+解決方案：修改LBK_handleWalletTypeSelection函數，使用實際存在的錢包ID（如credit）而非硬編碼的default_credit。
+3. 支付方式顯示為undefined
+證據：
+檢測到未知支付方式「undefined」，請問這屬於何種支付方式：
+信心度：90%
+解決方案：修復LBK_handleClassificationPostback中的錢包名稱傳遞，確保正確傳遞支付方式名稱而非undefined。
+4. Pending Record資料結構不一致
+證據：用戶反映parsedData中仍有paymentMethod欄位，應為walletId
+信心度：85%
+解決方案：統一Pending Record資料結構，將paymentMethod改為walletId並移除多餘的type欄位。
+5. 錢包同義詞更新邏輯錯誤
+證據：
+[2025-12-19T06:29:54.945Z] [DEBUG] [DL] 階段二：檢查同義詞: "合庫"，錢包: "信用卡"，同義詞: []
+信心度：90%
+解決方案：修復同義詞更新機制，確保用戶選擇錢包類型後，正確將原始輸入加入對應錢包的synonyms欄位。
+6. stageData資料完整性問題
+證據：用戶反映stageData中應移除不必要的type欄位
+信心度：75%
+解決方案：清理Pending Record的stageData結構，移除冗餘欄位，只保留必要的狀態資訊。
+________________________________________
+C. 解決方案階段規劃
+階段一：修復錢包ID硬編碼問題
+目標：解決default_credit不存在的問題
+修改檔案：1315. LBK.js
+修改內容：
+•	修改LBK_handleWalletTypeSelection函數中的錢包ID映射
+•	將硬編碼的default_credit改為實際存在的credit
+=>你這樣做是把硬編碼的default_credit改為硬編碼的credit嗎？ 你應該要去檢查該user的wallets子集合吧？請確認LBK裡面是否有此像功能的函數
+
+
+•	同步更新現金和銀行帳戶的映射
+Before：使用不存在的default_credit
+After：使用實際存在的credit錢包ID
+影響範圍：錢包類型選擇流程
+
+階段二：修復科目同義詞學習機制
+目標：確保科目選擇後不會重複觸發歧義消除
+修改檔案：1315. LBK.js
+修改內容：
+•	修改LBK_completePendingRecord函數，優先使用Pending Record中已選擇的科目資訊
+•	確保科目同義詞正確儲存到Firebase
+Before：重新查詢科目導致歧義消除重複觸發
+After：直接使用已選擇的科目資訊
+影響範圍：記帳完成流程
+
+階段三：修復支付方式名稱傳遞
+目標：解決undefined支付方式顯示問題
+修改檔案：1315. LBK.js
+修改內容：
+•	修改LBK_handleClassificationPostback中的錢包驗證邏輯
+•	確保正確傳遞支付方式名稱給Quick Reply生成
+Before：顯示「undefined」支付方式
+After：顯示實際的支付方式名稱（如「合庫」）
+影響範圍：Quick Reply訊息顯示
+
+階段四：修復同義詞更新機制
+目標：確保「合庫」正確加入credit錢包的synonyms
+修改檔案：1315. LBK.js
+修改內容：
+•	修復LBK_executeWalletSynonymsUpdate函數，使用正確的錢包ID
+•	確保同義詞更新成功執行
+Before：同義詞更新失敗
+After：成功將「合庫」加入credit錢包synonyms
+影響範圍：錢包同義詞學習功能
+階段五：清理資料結構
+目標：統一Pending Record資料格式
+修改檔案：1315. LBK.js
+修改內容：
+•	將paymentMethod欄位改名為walletId
+•	移除stageData中多餘的type欄位
+•	升級模組版本至v1.6.1
+Before：資料結構混亂，欄位命名不一致
+After：統一使用walletId，清理冗餘欄位
+影響範圍：整個LBK模組資料流
+________________________________________
+等待您的Approve後即可開始實施修復方案。
+
+
+
+------------------------------------------
+20251219.科目與支付方式歸類邏輯一次性互動方案
+
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
 專案角色：資深系統架構師 (Senior System Architect)
