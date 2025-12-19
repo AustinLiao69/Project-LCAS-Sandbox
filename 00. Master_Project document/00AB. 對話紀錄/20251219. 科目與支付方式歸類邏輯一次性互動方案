@@ -60,19 +60,19 @@ C. 解決方案
 2.	模組版本升級：1.5.0 → 1.6.0
 Before行為：科目選擇完成後直接執行記帳
 After行為：科目選擇完成後檢查支付方式，如需歧義消除則進入PENDING_WALLET狀態
-階段二：完善支付方式歧義消除機制
-目標：實作完整的支付方式驗證和歧義消除流程
-修改檔案：
-•	13. Replit_Module code_BL/1315. LBK.js
+
+階段二修正提案：
+目標：收緊支付方式識別邏輯，確保未在 wallets 子集合中的支付方式觸發歧義消除
+
 修改內容：
-1.	LBK_validateWalletExists函數優化：
-•	強化與wallets子集合synonyms的匹配邏輯
-•	當找不到匹配的wallet時，觸發歧義消除流程
-2.	新增LBK_handleWalletAmbiguityResolution函數：
-•	處理支付方式歧義消除邏輯
-•	生成支付方式選擇Quick Reply
-Before行為：未知支付方式直接寫入交易記錄
-After行為：未知支付方式觸發歧義消除，用戶需選擇對應的wallet類型
+
+優化 LBK_parsePaymentMethod：更嚴格的支付方式驗證
+強化 LBK_getWalletByName：確保只匹配 wallets 子集合中的確實存在項目
+修正 LBK_validateWalletExists：移除自動接受未知銀行名稱的邏輯
+Before行為：銀行名稱（如「花旗」）被自動視為有效支付方式
+After行為：只有在 wallets 子集合 synonyms 中明確定義的支付方式才被視為有效
+
+
 階段三：更新pendingTransaction資料結構
 目標：修正pendingTransaction的欄位設計，建立與wallets子集合的正確關聯
 修改檔案：
