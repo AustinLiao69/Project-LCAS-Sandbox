@@ -8,6 +8,77 @@
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+
+我來盤點LBK模組中是否有相同功能的函數，並檢查你提到的LBK_checkStatisticsKey函數。
+從LBK模組的代碼中，我發現以下幾個統計相關的函數：
+統計查詢相關函數
+1.	LBK_checkStatisticsKeyword - 檢查統計查詢關鍵字
+2.	LBK_handleStatisticsRequest - 處理統計查詢請求
+3.	LBK_buildStatisticsQuickReply - 建立統計Quick Reply
+4.	LBK_processDirectStatistics - 處理直接統計查詢
+5.	LBK_getDirectStatistics - 取得直接統計資料
+6.	LBK_formatStatisticsMessage - 格式化統計訊息
+
+重複或相似功能的函數
+1. 科目識別相關
+•	LBK_getSubjectCode 和 LBK_identifySubject - 都在處理科目識別，功能重疊
+=>請刪除LBK_identifySubject，若有其他依賴請指向LBK_getSubjectCode
+
+
+•	LBK_fuzzyMatch 和 LBK_calculateStringSimilarity - 都在做字符串相似度匹配
+=>請刪除LBK_calculateStringSimilarity，若有其他依賴請指向LBK_fuzzyMatch
+
+
+2. 錢包處理相關
+•	LBK_parsePaymentMethod 和 LBK_validateWalletExists - 都在驗證錢包/支付方式
+=>請刪除LBK_parsePaymentMethod，若有其他依賴請指向LBK_validateWalletExists
+
+
+•	LBK_handleNewWallet 和 LBK_handleWalletConfirmationPostback - 都在處理新錢包流程
+=>請刪除LBK_handleNewWallet，若有其他依賴請指向LBK_handleWalletConfirmationPostback
+
+3. Pending Record相關
+•	LBK_completePendingRecord 被定義了兩次（重複函數）
+•	LBK_handleWalletTypeSelection 被定義了兩次（重複函數）
+•	LBK_generateWalletSelectionQuickReply 被定義了兩次（重複函數）
+=>請刪除重複的函數／
+
+
+4. 關於你提到的函數
+你提到的 LBK_checkStatisticsKey 函數在代碼中並不存在，但有一個類似的函數 LBK_checkStatisticsKeyword，這個函數確實存在於模組導出中，但我在代碼中沒有看到它的實現。
+=>請刪除LBK_checkStatisticsKey，若有其他依賴請指向LBK_checkStatisticsKeyword
+
+=>請實作LBK_checkStatisticsKeyword
+
+
+
+建議優化
+1.	移除重複定義的函數：
+•	LBK_completePendingRecord
+•	LBK_handleWalletTypeSelection
+•	LBK_generateWalletSelectionQuickReply
+=>ok
+
+
+2.	合併相似功能：
+•	統一科目識別邏輯
+•	整合錢包驗證流程
+3.	檢查缺失的函數實現：
+•	LBK_checkStatisticsKeyword 在導出中但代碼中沒有實現
+•	其他幾個統計相關函數也在導出中但代碼中找不到實現
+=>OK
+
+需要我詳細檢查這些重複函數並提供清理建議嗎？
+
+
+
+
+
+------------------------------------------
+20251219.科目與支付方式歸類邏輯一次性互動方案
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 Debug分析報告
 版本: v1.1.0
 建立日期: 2025-12-19
