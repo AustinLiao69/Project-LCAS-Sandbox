@@ -1771,6 +1771,71 @@ function LBK_calculateStringSimilarity(str1, str2) {
 }
 
 /**
+ * 階段二新增：解析支付方式 - 檢查是否需要歧義消除
+ * @version 2025-12-19-V1.4.9
+ * @param {string} messageText - 用戶輸入訊息
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 支付方式解析結果
+ * @description 解析用戶輸入中的支付方式，檢查是否需要歧義消除
+ */
+async function LBK_parsePaymentMethod(messageText, userId, processId) {
+  const functionName = "LBK_parsePaymentMethod";
+  try {
+    LBK_logDebug(`解析支付方式: "${messageText}" [${processId}]`, "支付方式解析", userId, functionName);
+
+    if (!messageText || !userId) {
+      return {
+        success: false,
+        systemError: true,
+        error: "缺少必要參數"
+      };
+    }
+
+    // 使用 LBK_parseInputFormat 解析輸入
+    const parseResult = LBK_parseInputFormat(messageText, processId);
+    if (!parseResult || !parseResult.paymentMethod) {
+      return {
+        success: false,
+        systemError: true,
+        error: "無法解析支付方式"
+      };
+    }
+
+    const paymentMethodName = parseResult.paymentMethod;
+
+    // 查詢錢包
+    const wallet = await LBK_getWalletByName(paymentMethodName, userId, processId);
+
+    if (wallet) {
+      // 找到匹配的錢包
+      return {
+        success: true,
+        walletId: wallet.walletId,
+        walletName: wallet.walletName,
+        requiresWalletConfirmation: false
+      };
+    } else {
+      // 未找到匹配錢包，需要歧義消除
+      return {
+        success: false,
+        walletName: paymentMethodName,
+        requiresWalletConfirmation: true,
+        systemError: false
+      };
+    }
+
+  } catch (error) {
+    LBK_logError(`解析支付方式失敗: ${error.toString()} [${processId}]`, "支付方式解析", userId, "PAYMENT_METHOD_PARSE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      systemError: true,
+      error: error.toString()
+    };
+  }
+}
+
+/**
  * 新增：根據支付方式名稱查詢錢包ID - 參考LBK_getSubjectCode實作模式
  * @version 2025-12-18-V1.4.9
  * @description 階段一新增：查詢ledgers/{ledgerId}/wallets子集合，通過synonyms欄位匹配
