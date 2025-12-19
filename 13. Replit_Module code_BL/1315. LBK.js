@@ -116,7 +116,7 @@ async function LBK_processQuickBookkeeping(inputData) {
     if (inputData.eventType === 'postback' && inputData.messageText && inputData.messageText.startsWith('classify_')) {
       LBK_logInfo(`檢測到科目歸類postback格式訊息 [${processId}]`, "科目歸類", userId, "LBK_processQuickBookkeeping");
 
-      // 解析 postback 資料
+      // 階段一修復：改進 postback 解析邏輯
       const postbackParts = inputData.messageText.split('_');
       if (postbackParts.length >= 3) {
         const subjectId = postbackParts[1];
@@ -132,21 +132,28 @@ async function LBK_processQuickBookkeeping(inputData) {
             pendingData: pendingData
           };
 
-          // 構建分類輸入資料
-          const classificationInput = {
+          // 階段一修復：直接調用完成記帳，避免重新觸發歧義消除
+          LBK_logInfo(`科目選擇完成，開始執行記帳: subjectId=${subjectId} [${processId}]`, "科目歧義消除", userId, "LBK_processQuickBookkeeping");
+          
+          return await LBK_handleClassificationPostback({
             ...inputData,
             eventType: 'classification_postback',
             classificationData: classificationData
-          };
-
-          // 階段四：整合狀態機邏輯
-          if (classificationData.pendingData) {
-            return await LBK_handleSubjectSelectionComplete(classificationData, processId);
-          }
-
-          return await LBK_handleClassificationPostback(classificationInput, processId);
+          }, processId);
+          
         } catch (jsonError) {
           LBK_logError(`解析postback JSON失敗: ${jsonError.message} [${processId}]`, "科目歸類", userId, "JSON_PARSE_ERROR", jsonError.toString(), "LBK_processQuickBookkeeping");
+          
+          return {
+            success: false,
+            message: "科目選擇資料解析失敗，請重新選擇",
+            responseMessage: "科目選擇資料解析失敗，請重新選擇",
+            moduleCode: "LBK",
+            module: "LBK",
+            processingTime: 0,
+            moduleVersion: "1.4.3",
+            errorType: "JSON_PARSE_ERROR"
+          };
         }
       }
     }
@@ -504,6 +511,12 @@ function LBK_parseInputFormat(message, processId) {
   }
 
   message = message.trim();
+
+  // 階段一修復：檢測系統內部 postback 格式，直接返回 null
+  if (message.startsWith('classify_')) {
+    LBK_logDebug(`檢測到系統內部postback格式，跳過解析: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    return null;
+  }
 
   try {
     // v1.4.5 修復：改用更精確的正則表達式，支援銀行名稱識別

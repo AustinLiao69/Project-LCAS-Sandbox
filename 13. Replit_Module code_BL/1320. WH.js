@@ -413,7 +413,7 @@ async function processWebhookAsync(e) {
               0,
               "processWebhookAsync",
               "WARNING",
-            ]);
+            ], userId);
             continue; // 跳過此事件的處理
           }
 
@@ -501,10 +501,11 @@ async function processWebhookAsync(e) {
             const postbackData = event.postback.data;
             console.log(`WH v2.5.3: 收到postback事件: ${postbackData}`);
 
+            // 階段一修復：明確標記postback事件類型並正確路由
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
-              `WH 2.5.3: 處理postback事件: ${postbackData} [${requestId}]`,
-              "Postback處理",
+              `WH 2.5.3: 階段一修復 - 識別postback事件類型: ${postbackData} [${requestId}]`,
+              "Postback路由",
               userId,
               "",
               "WH",
@@ -514,15 +515,27 @@ async function processWebhookAsync(e) {
               "INFO",
             ]);
 
-            // v2.5.3: 階段三新增 - 識別Pending Record相關的postback事件
-            const pendingRecordResult = await WH_handlePendingRecordPostback(postbackData, userId, event.replyToken, requestId);
-            
-            if (pendingRecordResult.handled) {
-              // Pending Record相關的postback已處理完成
+            const postbackInputData = {
+              userId: userId,
+              messageText: postbackData,
+              replyToken: event.replyToken,
+              timestamp: event.timestamp,
+              processId: requestId,
+              eventType: 'postback', // 階段一修復：明確標記為postback事件
+              postbackData: postbackData
+            };
+
+            // 階段一修復：統一路由到LBK處理
+            const postbackResult = await WH_callLBKSafely(postbackInputData);
+
+            // 確保正確傳遞quickReply和回覆結果
+            if (postbackResult && event.replyToken) {
+              await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
+
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.5.3: Pending Record postback處理完成: ${postbackData} [${requestId}]`,
-                "Pending Record",
+                `WH 2.5.3: postback處理完成並回覆用戶 [${requestId}]`,
+                "Postback完成",
                 userId,
                 "",
                 "WH",
@@ -531,27 +544,6 @@ async function processWebhookAsync(e) {
                 "WH_processEventAsync",
                 "INFO",
               ]);
-              
-              if (pendingRecordResult.result && event.replyToken) {
-                await WH_replyMessage(event.replyToken, pendingRecordResult.result, pendingRecordResult.result.quickReply);
-              }
-            } else {
-              // 非Pending Record相關的postback，使用原有邏輯處理
-              const postbackInputData = {
-                userId: userId,
-                messageText: postbackData,
-                replyToken: event.replyToken,
-                timestamp: event.timestamp,
-                processId: requestId,
-                eventType: 'postback',
-                postbackData: postbackData
-              };
-
-              const postbackResult = await WH_callLBKSafely(postbackInputData);
-
-              if (postbackResult && event.replyToken) {
-                await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
-              }
             }
           } else {
             // 處理非消息事件 (follow, unfollow, join 等)
@@ -2216,7 +2208,7 @@ async function WH_handleQuickReplyEvent(event) {
  * @date 2025-07-21 10:30:00
  * @description 將Quick Reply事件路由到SR模組處理
  */
-async function WH_routeToSRModule(userId, postbackData, eventContext) {
+async function WH_routeToSRModule(userId, postbackData, event) {
   const functionName = "WH_routeToSRModule";
   try {
     WH_logInfo(`路由到SR模組: ${postbackData}`, "模組路由", userId, "WH_routeToSRModule");
@@ -2226,7 +2218,7 @@ async function WH_routeToSRModule(userId, postbackData, eventContext) {
     }
 
     // 調用SR模組處理Quick Reply
-    const result = await SR.SR_handleQuickReplyInteraction(userId, postbackData, eventContext);
+    const result = await SR.SR_handleQuickReplyInteraction(userId, postbackData, event);
 
     return result;
 
@@ -3479,11 +3471,11 @@ function WH_identifyPostbackType(postbackData) {
     }
 
     // 支付方式確認：多種格式
-    if (postbackData.startsWith('wallet_type_') || 
-        postbackData.startsWith('confirm_wallet_') || 
-        postbackData.startsWith('cancel_wallet_') ||
-        postbackData.startsWith('wallet_yes_') ||
-        postbackData.startsWith('wallet_no_')) {
+    if (postbackData.startsWith('wallet_type_') ||
+      postbackData.startsWith('confirm_wallet_') ||
+      postbackData.startsWith('cancel_wallet_') ||
+      postbackData.startsWith('wallet_yes_') ||
+      postbackData.startsWith('wallet_no_')) {
       return 'WALLET_CONFIRMATION';
     }
 
