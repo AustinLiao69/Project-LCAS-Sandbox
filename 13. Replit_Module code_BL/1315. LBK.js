@@ -26,6 +26,30 @@ if (!admin.apps.length) {
   }
 }
 
+/**
+ * 初始化Firestore連線
+ * @version 2025-12-19-V1.6.0
+ */
+async function LBK_initializeFirestore() {
+  try {
+    if (LBK_INIT_STATUS.firestore_db) {
+      return LBK_INIT_STATUS.firestore_db;
+    }
+
+    if (!admin.apps.length) {
+      throw new Error('Firebase Admin SDK 未初始化');
+    }
+
+    LBK_INIT_STATUS.firestore_db = admin.firestore();
+    LBK_logInfo('Firestore連線初始化成功', '資料庫', '', 'LBK_initializeFirestore');
+    
+    return LBK_INIT_STATUS.firestore_db;
+  } catch (error) {
+    LBK_logError(`Firestore連線初始化失敗: ${error.toString()}`, '資料庫', '', 'FIRESTORE_INIT_ERROR', error.toString(), 'LBK_initializeFirestore');
+    throw error;
+  }
+}
+
 // 引入依賴模組
 const DL = require('./1310. DL.js');
 
@@ -58,6 +82,39 @@ const LBK_CONFIG = {
 
 // 初始化快取實例
 const cacheInstance = new cache(LBK_CONFIG.CACHE_CONFIG);
+
+// 日誌輔助函數
+function LBK_logInfo(message, category, userId, functionName) {
+  if (typeof DL !== 'undefined' && DL && typeof DL.DL_info === 'function') {
+    DL.DL_info(message, category, userId, 'INFO', '', 0, functionName, 'LBK');
+  } else {
+    console.log(`[INFO] [LBK] ${message}`);
+  }
+}
+
+function LBK_logDebug(message, category, userId, functionName) {
+  if (LBK_CONFIG.DEBUG && typeof DL !== 'undefined' && DL && typeof DL.DL_debug === 'function') {
+    DL.DL_debug(message, category, userId, 'DEBUG', '', 0, functionName, 'LBK');
+  } else if (LBK_CONFIG.DEBUG) {
+    console.log(`[DEBUG] [LBK] ${message}`);
+  }
+}
+
+function LBK_logWarning(message, category, userId, functionName) {
+  if (typeof DL !== 'undefined' && DL && typeof DL.DL_warning === 'function') {
+    DL.DL_warning(message, category, userId, 'WARNING', '', 0, functionName, 'LBK');
+  } else {
+    console.warn(`[WARNING] [LBK] ${message}`);
+  }
+}
+
+function LBK_logError(message, category, userId, errorType, errorDetails, functionName) {
+  if (typeof DL !== 'undefined' && DL && typeof DL.DL_error === 'function') {
+    DL.DL_error(message, category, userId, errorType, errorDetails, 0, functionName, 'LBK');
+  } else {
+    console.error(`[ERROR] [LBK] ${message}`);
+  }
+}
 
 // 初始化狀態追蹤
 let LBK_INIT_STATUS = {
@@ -1785,6 +1842,316 @@ function LBK_calculateStringSimilarity(str1, str2) {
 
   const editDistance = matrix[len1][len2];
   return 1 - (editDistance / maxLen);
+}
+
+/**
+ * 統計查詢相關函數 - v1.3.0新增
+ */
+
+/**
+ * 檢查統計查詢關鍵字
+ * @version 2025-12-19-V1.3.0
+ * @param {string} messageText - 用戶輸入訊息
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 檢查結果
+ */
+async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
+  const functionName = "LBK_checkStatisticsKeyword";
+  try {
+    LBK_logDebug(`檢查統計查詢關鍵字: "${messageText}" [${processId}]`, "統計查詢", userId, functionName);
+
+    if (!messageText || typeof messageText !== 'string') {
+      return {
+        isStatisticsRequest: false,
+        statisticsType: null
+      };
+    }
+
+    const normalizedText = messageText.trim().toLowerCase();
+
+    // 統計查詢關鍵字
+    const statisticsKeywords = [
+      { keywords: ['統計', '報表', '分析'], type: 'general_statistics' },
+      { keywords: ['月統計', '月報表'], type: 'monthly_statistics' },
+      { keywords: ['年統計', '年報表'], type: 'yearly_statistics' },
+      { keywords: ['支出統計', '支出報表'], type: 'expense_statistics' },
+      { keywords: ['收入統計', '收入報表'], type: 'income_statistics' }
+    ];
+
+    for (const keywordGroup of statisticsKeywords) {
+      for (const keyword of keywordGroup.keywords) {
+        if (normalizedText.includes(keyword)) {
+          LBK_logInfo(`檢測到統計查詢關鍵字: "${keyword}" → ${keywordGroup.type} [${processId}]`, "統計查詢", userId, functionName);
+          return {
+            isStatisticsRequest: true,
+            statisticsType: keywordGroup.type,
+            matchedKeyword: keyword
+          };
+        }
+      }
+    }
+
+    return {
+      isStatisticsRequest: false,
+      statisticsType: null
+    };
+
+  } catch (error) {
+    LBK_logError(`檢查統計查詢關鍵字失敗: ${error.toString()} [${processId}]`, "統計查詢", userId, "CHECK_STATISTICS_KEYWORD_ERROR", error.toString(), functionName);
+    return {
+      isStatisticsRequest: false,
+      statisticsType: null,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 處理統計查詢請求
+ * @version 2025-12-19-V1.3.0
+ * @param {string} statisticsType - 統計類型
+ * @param {object} inputData - 輸入資料
+ * @param {string} processId - 處理ID
+ * @returns {Object} 處理結果
+ */
+async function LBK_handleStatisticsRequest(statisticsType, inputData, processId) {
+  const functionName = "LBK_handleStatisticsRequest";
+  try {
+    LBK_logInfo(`處理統計查詢請求: ${statisticsType} [${processId}]`, "統計查詢", inputData.userId, functionName);
+
+    // 如果有SR模組，委派給SR模組處理
+    if (SR && typeof SR.SR_processQuickStatistics === 'function') {
+      LBK_logInfo(`委派統計查詢給SR模組處理 [${processId}]`, "統計查詢", inputData.userId, functionName);
+      return await SR.SR_processQuickStatistics({
+        ...inputData,
+        statisticsType: statisticsType
+      });
+    }
+
+    // 備用處理：返回簡單的統計訊息
+    const message = `統計查詢功能需要SR模組支援。\n請檢查SR模組是否正常載入。\n\n查詢類型：${statisticsType}`;
+
+    return {
+      success: true,
+      message: message,
+      responseMessage: message,
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
+      moduleVersion: "1.3.0",
+      statisticsHandled: false,
+      fallbackMessage: true
+    };
+
+  } catch (error) {
+    LBK_logError(`處理統計查詢請求失敗: ${error.toString()} [${processId}]`, "統計查詢", inputData.userId, "HANDLE_STATISTICS_REQUEST_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      message: "統計查詢處理失敗，請稍後再試",
+      responseMessage: "統計查詢處理失敗，請稍後再試",
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.3.0",
+      errorType: "HANDLE_STATISTICS_REQUEST_ERROR"
+    };
+  }
+}
+
+/**
+ * 建立統計Quick Reply
+ * @version 2025-12-19-V1.3.0
+ * @param {string} statisticsType - 統計類型
+ * @param {string} processId - 處理ID
+ * @returns {Object} Quick Reply配置
+ */
+function LBK_buildStatisticsQuickReply(statisticsType, processId) {
+  const functionName = "LBK_buildStatisticsQuickReply";
+  try {
+    LBK_logDebug(`建立統計Quick Reply: ${statisticsType} [${processId}]`, "統計查詢", "", functionName);
+
+    const quickReplyItems = [
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: '📊 本月統計',
+          data: 'statistics_monthly',
+          displayText: '本月統計'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: '📈 年度統計',
+          data: 'statistics_yearly',
+          displayText: '年度統計'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: '💸 支出分析',
+          data: 'statistics_expense',
+          displayText: '支出分析'
+        }
+      }
+    ];
+
+    return {
+      items: quickReplyItems
+    };
+
+  } catch (error) {
+    LBK_logError(`建立統計Quick Reply失敗: ${error.toString()} [${processId}]`, "統計查詢", "", "BUILD_STATISTICS_QR_ERROR", error.toString(), functionName);
+    return { items: [] };
+  }
+}
+
+/**
+ * 處理直接統計查詢
+ * @version 2025-12-19-V1.3.0
+ * @param {string} query - 查詢內容
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 處理結果
+ */
+async function LBK_processDirectStatistics(query, userId, processId) {
+  const functionName = "LBK_processDirectStatistics";
+  try {
+    LBK_logInfo(`處理直接統計查詢: ${query} [${processId}]`, "統計查詢", userId, functionName);
+
+    // 備用實現：返回提示訊息
+    return {
+      success: true,
+      data: {
+        query: query,
+        result: "統計功能需要SR模組完整支援",
+        timestamp: new Date().toISOString()
+      }
+    };
+
+  } catch (error) {
+    LBK_logError(`處理直接統計查詢失敗: ${error.toString()} [${processId}]`, "統計查詢", userId, "PROCESS_DIRECT_STATISTICS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 取得直接統計資料
+ * @version 2025-12-19-V1.3.0
+ * @param {string} statisticsType - 統計類型
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 統計資料
+ */
+async function LBK_getDirectStatistics(statisticsType, userId, processId) {
+  const functionName = "LBK_getDirectStatistics";
+  try {
+    LBK_logInfo(`取得直接統計資料: ${statisticsType} [${processId}]`, "統計查詢", userId, functionName);
+
+    // 備用實現：返回空資料結構
+    return {
+      success: true,
+      data: {
+        type: statisticsType,
+        userId: userId,
+        statistics: [],
+        summary: {
+          totalTransactions: 0,
+          totalAmount: 0,
+          period: "未指定"
+        },
+        generatedAt: new Date().toISOString(),
+        note: "需要SR模組提供完整統計功能"
+      }
+    };
+
+  } catch (error) {
+    LBK_logError(`取得直接統計資料失敗: ${error.toString()} [${processId}]`, "統計查詢", userId, "GET_DIRECT_STATISTICS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 格式化統計訊息
+ * @version 2025-12-19-V1.3.0
+ * @param {object} statisticsData - 統計資料
+ * @param {string} processId - 處理ID
+ * @returns {string} 格式化的訊息
+ */
+function LBK_formatStatisticsMessage(statisticsData, processId) {
+  const functionName = "LBK_formatStatisticsMessage";
+  try {
+    LBK_logDebug(`格式化統計訊息 [${processId}]`, "統計查詢", "", functionName);
+
+    if (!statisticsData || !statisticsData.data) {
+      return "統計資料格式錯誤";
+    }
+
+    const data = statisticsData.data;
+    const currentDateTime = new Date().toLocaleString("zh-TW", {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    let message = `📊 統計報表\n`;
+    message += `類型：${data.type || '未指定'}\n`;
+    message += `時間：${currentDateTime}\n`;
+    message += `交易筆數：${data.summary?.totalTransactions || 0}\n`;
+    message += `總金額：${data.summary?.totalAmount || 0}元\n`;
+    message += `統計期間：${data.summary?.period || '未指定'}\n`;
+
+    if (data.note) {
+      message += `\n📝 ${data.note}`;
+    }
+
+    return message;
+
+  } catch (error) {
+    LBK_logError(`格式化統計訊息失敗: ${error.toString()} [${processId}]`, "統計查詢", "", "FORMAT_STATISTICS_MESSAGE_ERROR", error.toString(), functionName);
+    return "統計訊息格式化失敗";
+  }
+}
+
+/**
+ * 從輸入中提取支付方式名稱
+ * @version 2025-12-19-V1.4.9
+ * @param {string} originalInput - 原始輸入
+ * @param {string} processId - 處理ID
+ * @returns {string|null} 支付方式名稱
+ */
+function LBK_extractPaymentMethodFromInput(originalInput, processId) {
+  const functionName = "LBK_extractPaymentMethodFromInput";
+  try {
+    if (!originalInput) return null;
+
+    // 使用 LBK_parseInputFormat 解析輸入
+    const parseResult = LBK_parseInputFormat(originalInput, processId);
+    if (parseResult && parseResult.paymentMethod) {
+      LBK_logDebug(`從輸入中提取支付方式: "${originalInput}" → "${parseResult.paymentMethod}" [${processId}]`, "支付方式提取", "", functionName);
+      return parseResult.paymentMethod;
+    }
+
+    return null;
+
+  } catch (error) {
+    LBK_logError(`從輸入中提取支付方式失敗: ${error.toString()} [${processId}]`, "支付方式提取", "", "EXTRACT_PAYMENT_METHOD_ERROR", error.toString(), functionName);
+    return null;
+  }
 }
 
 /**
@@ -4193,6 +4560,10 @@ module.exports = {
   LBK_processDirectStatistics: LBK_processDirectStatistics,
   LBK_getDirectStatistics: LBK_getDirectStatistics,
   LBK_formatStatisticsMessage: LBK_formatStatisticsMessage,
+  
+  // 輔助函數
+  LBK_extractPaymentMethodFromInput: LBK_extractPaymentMethodFromInput,
+  LBK_initializeFirestore: LBK_initializeFirestore,
 
   // 新增支付方式解析函數
   LBK_parsePaymentMethod: LBK_parsePaymentMethod,
