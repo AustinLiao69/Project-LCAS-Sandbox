@@ -27,6 +27,10 @@
 9. 若無修改文件或代碼的action，請勿寫在解決方案中
 10. 若有修改代碼，務必解釋每次code改動的用途、影響範圍、Before/After行為差異。
 11. 禁止因為是MVP階段而模擬業務邏輯、hard coding、模擬回應等情事發生。
+12. 若有修改代碼，務必於修改代碼後執行語法檢查，代碼範例如下：
+```bash
+node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log('模組載入成功'); } catch(e) { console.error('模組載入失敗:', e.message); console.error('錯誤位置:', e.stack); }"
+```
 
 請參照9902文件，以資深PM深入思考、分析原因。並提出解決方案。
 提案時請注意以下方向：
