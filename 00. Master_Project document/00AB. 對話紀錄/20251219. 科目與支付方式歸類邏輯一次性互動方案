@@ -8,6 +8,154 @@
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+專案角色：資深系統架構師 (Senior System Architect)
+我將以資深SA的角度，深入分析LCAS LINE記帳系統的data flow，並詳細說明科目歸類邏輯與支付方式歸類邏輯。
+LINE記帳系統Data Flow分析
+整體架構概述
+LINE記帳系統採用分層架構，類似於企業組織結構：
+•	WH模組：如同客服部門，負責接收LINE用戶請求
+•	LBK模組：如同業務處理部門，負責快速記帳核心邏輯
+•	AM模組：如同人事部門，負責用戶身份驗證與帳本管理
+•	Firestore：如同檔案室，負責資料儲存
+主要Data Flow路徑
+路徑1：標準記帳流程 (WH → LBK → Firestore)
+用戶LINE輸入 → WH.js接收 → LBK.js處理 → Firestore儲存 → 回覆用戶
+路徑2：新用戶註冊流程 (WH → AM → LBK)
+新用戶輸入 → WH.js檢測 → AM.js建立帳號 → LBK.js處理記帳
+詳細Data Flow分析
+階段一：請求接收與用戶驗證
+檔案：WH.js (1320. WH.js)
+1.	接收LINE Webhook
+doPost(req, res) → processWebhookAsync(event) → WH_processEventAsync(event, requestId, userId)
+2.	用戶身份驗證
+// 在WH_processEventAsync中
+AM_Module.AM_validateAccountExists(userId, "LINE") // 檢查用戶是否存在
+3.	新用戶自動註冊
+// 若用戶不存在
+AM_Module.AM_createLineAccount(userId, null, 'J') // 建立LINE帳號
+AM_Module.AM_getUserDefaultLedger(userId) // 獲取預設帳本
+階段二：訊息解析與科目識別
+檔案：LBK.js (1315. LBK.js)
+1.	訊息解析
+LBK_processQuickBookkeeping(inputData) → LBK_parseUserMessage(messageText, userId, processId)
+2.	輸入格式解析
+LBK_parseInputFormat(messageText, processId)
+// 解析：科目名稱 + 金額 + 支付方式
+// 例如："飯糰28元現金" → {subject: "飯糰", amount: 28, paymentMethod: "現金"}
+階段三：科目歸類邏輯
+核心函數：LBK_getSubjectCode()
+3.1 科目匹配優先級
+// 1. 精確匹配（最高優先級）
+if (subName === normalizedInput) { exactMatch = true; }
+// 2. 同義詞匹配（第二優先級）
+synonyms.forEach(synonym => {
+    if (synonymLower === normalizedInput) { synonymMatch = true; }
+});
+// 3. 部分匹配（第三優先級）
+if (subName.includes(normalizedInput) || normalizedInput.includes(subName)) {
+    partialMatches.push(...);
+}
+3.2 科目歧義消除流程
+當科目無法識別時：
+1.	觸發新科目歧義消除
+// 在LBK_processQuickBookkeeping中
+if (!subjectResult.success && parseResult.requiresClassification) {
+    return await LBK_handleNewSubjectClassification(originalSubject, parsedData, inputData, processId);
+}
+2.	建立Pending Record
+LBK_createPendingRecord(userId, inputData.messageText, parseResult.parsedData, PENDING_STATES.PENDING_SUBJECT, processId)
+3.	生成科目選擇Quick Reply
+•	根據0099. Subject_code.json生成選項
+•	包含：101生鮮雜貨、102生活家用、103交通費用、104餐飲費用等
+階段四：支付方式歸類邏輯
+核心函數：LBK_validateWalletExists()
+4.1 支付方式解析流程
+// 在LBK_parseInputFormat中解析支付方式
+const bankNames = ["台銀", "土銀", "合庫", "第一", "華南", ...];
+const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
+4.2 錢包驗證邏輯
+// 階段二修正：嚴格驗證錢包存在性
+LBK_validateWalletExists(userId, walletId, walletName, processId)
+// 1. 優先使用walletId查詢
+// 2. 其次使用walletName在wallets子集合中查詢
+// 3. 若未找到，觸發用戶確認流程
+4.3 支付方式歧義消除流程
+當支付方式無法確定時：
+1.	觸發Wallet確認流程
+if (!walletResult.walletId && walletResult.requiresUserConfirmation) {
+    // 創建Pending Record，狀態為PENDING_WALLET
+    return await LBK_handleNewWallet(walletResult.walletName, parsedData, inputData, processId);
+}
+2.	生成錢包類型選擇Quick Reply
+// 在LBK_handleNewWallet中
+quickReply: {
+    items: [
+        { label: '💵 現金', data: 'wallet_yes_{"walletName":"現金","walletId":"default_cash"}' },
+        { label: '🏦 銀行帳戶', data: 'wallet_yes_{"walletName":"銀行帳戶","walletId":"default_bank"}' },
+        { label: '💳 信用卡', data: 'wallet_yes_{"walletName":"信用卡","walletId":"default_credit"}' }
+    ]
+}
+階段五：記帳執行
+核心函數：LBK_executeBookkeeping()
+1.	資料準備
+LBK_prepareBookkeepingData(bookkeepingId, updatedBookkeepingData, processId)
+// 轉換為1301 BK標準格式
+2.	Firestore儲存
+LBK_saveToFirestore(preparedData, processId)
+// 路徑：ledgers/{ledgerId}/transactions
+階段六：Postback事件處理
+處理用戶選擇回應：
+6.1 科目歸類Postback
+// 格式：classify_{subjectId}_{JSON}
+if (inputData.messageText.startsWith('classify_')) {
+    return await LBK_handleClassificationPostback(inputData, processId);
+}
+6.2 錢包確認Postback
+// 格式：wallet_yes_{JSON} 或 wallet_no_{JSON}
+if (inputData.messageText.startsWith('wallet_yes_') || inputData.messageText.startsWith('wallet_no_')) {
+    return await LBK_handleWalletConfirmationPostback(inputData.messageText, userId, processId);
+}
+完整Data Flow時序圖
+用戶輸入"飯糰28現金"
+      ↓
+1. WH.js接收Webhook
+      ↓
+2. AM.js驗證用戶身份
+      ↓
+3. LBK.js解析訊息
+      ↓
+4. 科目識別："飯糰"
+   ├── 找到 → 繼續
+   └── 未找到 → 科目歧義消除流程
+      ↓
+5. 支付方式識別："現金"
+   ├── 在wallets子集合找到 → 繼續
+   └── 未找到 → 錢包歧義消除流程
+      ↓
+6. 執行記帳
+      ↓
+7. 儲存至Firestore
+      ↓
+8. 回覆用戶成功訊息
+關鍵設計決策
+1. 兩階段歧義消除
+•	科目歧義：基於0099.json的標準科目分類
+•	支付方式歧義：基於wallets子集合的嚴格驗證
+2. Pending Record機制
+•	暫存用戶輸入，等待用戶選擇
+•	狀態管理：PENDING_SUBJECT、PENDING_WALLET、COMPLETED
+3. Quick Reply互動
+•	提供視覺化選項，降低用戶輸入負擔
+•	使用postback機制處理用戶選擇
+這個data flow設計確保了LINE記帳的準確性與用戶體驗，通過分層處理和歧義消除機制，實現了自動化記帳與用戶主導分類的平衡。
+
+
+
+------------------------------------------
+20251219.科目與支付方式歸類邏輯一次性互動方案
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 
 我來盤點LBK模組中是否有相同功能的函數，並檢查你提到的LBK_checkStatisticsKey函數。
 從LBK模組的代碼中，我發現以下幾個統計相關的函數：
