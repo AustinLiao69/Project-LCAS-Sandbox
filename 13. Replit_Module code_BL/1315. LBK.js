@@ -3390,12 +3390,29 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     }
 
     // 步驟3：檢查支付方式是否需要歧義消除
-    LBK_logInfo(`科目選擇完成，檢查支付方式: ${pendingData.paymentMethod} [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
+    // 階段二修復：正確提取支付方式名稱
+    let paymentMethodName = pendingData.paymentMethod;
+    
+    // 如果 paymentMethod 為空或無效，從原始輸入中重新解析
+    if (!paymentMethodName || paymentMethodName === 'undefined') {
+      const parseResult3 = LBK_parseInputFormat(pendingData.originalInput || inputData.messageText, processId);
+      paymentMethodName = parseResult3?.paymentMethod;
+      
+      // 如果仍然為空，嘗試從 Pending Record 中的其他欄位獲取
+      if (!paymentMethodName && pendingData.parsedData?.paymentMethod) {
+        paymentMethodName = pendingData.parsedData.paymentMethod;
+      }
+      
+      // 最後備選：使用預設值
+      if (!paymentMethodName) {
+        paymentMethodName = '刷卡';
+      }
+    }
+    
+    LBK_logInfo(`階段二修復：科目選擇完成，檢查支付方式: ${paymentMethodName} [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
 
-    // 解析支付方式，檢查是否需要歧義消除
-    // 更新調用：替換 LBK_parsePaymentMethod 為 LBK_validateWalletExists
-    const parseResult3 = LBK_parseInputFormat(pendingData.originalInput || `${pendingData.subject}${pendingData.rawAmount}${pendingData.paymentMethod}`, processId);
-    const walletResult = await LBK_validateWalletExists(inputData.userId, null, parseResult3?.paymentMethod, processId);
+    // 使用修復後的支付方式名稱進行驗證
+    const walletResult = await LBK_validateWalletExists(inputData.userId, null, paymentMethodName, processId);
 
     if (walletResult.systemError) {
       LBK_logError(`支付方式解析系統錯誤: ${walletResult.error} [${processId}]`, "支付方式檢查", inputData.userId, "PAYMENT_METHOD_SYSTEM_ERROR", walletResult.error, "LBK_handleClassificationPostback");
@@ -3447,8 +3464,8 @@ async function LBK_handleClassificationPostback(inputData, processId) {
 
       return {
         success: true,
-        message: `科目歸類完成！已選擇「${selectedCategory.categoryName}」\n\n檢測到未知支付方式「${walletResult.walletName}」，請問這屬於何種支付方式：`,
-        responseMessage: `科目歸類完成！已選擇「${selectedCategory.categoryName}」\n\n檢測到未知支付方式「${walletResult.walletName}」，請問這屬於何種支付方式：`,
+        message: `科目歸類完成！已選擇「${selectedCategory.categoryName}」\n\n檢測到未知支付方式「${paymentMethodName}」，請問這屬於何種支付方式：`,
+        responseMessage: `科目歸類完成！已選擇「${selectedCategory.categoryName}」\n\n檢測到未知支付方式「${paymentMethodName}」，請問這屬於何種支付方式：`,
         quickReply: walletQuickReply,
         moduleCode: "LBK",
         module: "LBK",
@@ -3461,7 +3478,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     }
 
     // 步驟4：支付方式明確，直接進行記帳
-    LBK_logInfo(`支付方式明確: ${walletResult.walletName}，開始執行記帳 [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
+    LBK_logInfo(`階段二修復：支付方式明確: ${walletResult.walletName || paymentMethodName}，開始執行記帳 [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
 
     const transactionId = Date.now().toString();
     const now = moment().tz(LBK_CONFIG.TIMEZONE);
@@ -3484,7 +3501,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       // 來源和用戶資訊 - 1301標準
       source: 'classification',
       userId: inputData.userId,
-      paymentMethod: walletResult.walletName || pendingData.paymentMethod || '刷卡',
+      paymentMethod: walletResult.walletName || paymentMethodName || '刷卡',
 
       // 記帳特定欄位 - 1301標準
       ledgerId: `user_${inputData.userId}`,
