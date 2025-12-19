@@ -121,21 +121,42 @@ After行為：
 
 
 
-階段四：實作支付方式同義詞學習機制
-目標：當用戶確認支付方式對應關係後，自動更新wallets子集合的synonyms欄位
+階段四修復提案
+目標：修復支付方式同義詞學習機制，確保在用戶確認支付方式後自動執行學習
 修改檔案：
 •	13. Replit_Module code_BL/1315. LBK.js
 修改內容：
-1.	新增LBK_updateWalletSynonyms函數：
-•	將用戶確認的支付方式同義詞添加到對應wallet的synonyms欄位
-=>我記得LBK有相同功能的函數，請盤點。
-=>如果LBK已經有相同功能的函數，是否代表問題不在LBK沒有自動更新wallets子集合的synonyms欄位呢?
-
-•	確保後續相同輸入可以直接匹配
-2.	整合到歧義消除完成流程：
-•	在支付方式歧義消除完成後自動更新synonyms
+1. 修復執行時機問題
+•	問題：LBK_processConfirmedWallet 中的同義詞更新邏輯沒有在正確時機執行
+•	修復：在 LBK_completePendingRecord 函數中，當 Pending Record 完成記帳時，自動執行同義詞學習
+•	Before行為：用戶確認支付方式後直接完成記帳，不執行同義詞學習
+•	After行為：用戶確認支付方式後，先執行同義詞學習，再完成記帳
+2. 修復資料傳遞問題
+•	問題：原始用戶輸入在 Pending Record 流程中可能丟失
+•	修復：確保 pendingData.originalInput 正確保存用戶的原始輸入，包含支付方式名稱
+•	Before行為：原始輸入可能在多階段處理中丟失
+•	After行為：原始輸入完整保存在 Pending Record 中，供同義詞學習使用
+3. 整合到歧義消除完成流程
+•	問題：支付方式歧義消除完成後沒有自動觸發同義詞學習
+•	修復：在 LBK_handleWalletTypeSelection 完成後，自動調用同義詞學習機制
+•	Before行為：用戶選擇支付方式類型後直接完成記帳
+•	After行為：用戶選擇支付方式類型後，先更新同義詞，再完成記帳
+修復邏輯流程
+1.	用戶確認支付方式 → LBK_handleWalletTypeSelection
+2.	提取原始輸入 → 從 Pending Record 中取得 originalInput
+3.	執行同義詞學習 → 調用 LBK_executeWalletSynonymsUpdate
+4.	完成記帳 → 調用 LBK_completePendingRecord
+預期效果
 Before行為：用戶每次輸入相同支付方式都需要重新歧義消除
-After行為：支付方式同義詞自動學習，提升用戶體驗
+After行為：支付方式同義詞自動學習，第二次輸入相同支付方式時直接識別，不再觸發歧義消除
+影響範圍
+•	修復現有的同義詞學習機制執行時機
+•	確保原始用戶輸入完整保存和傳遞
+•	整合同義詞學習到 Pending Record 完成流程中
+•	提升用戶體驗，減少重複的歧義消除操作
+
+
+
 
 
 
