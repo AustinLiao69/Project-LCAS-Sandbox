@@ -558,13 +558,13 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
 }
 
 /**
- * 03. 解析輸入格式
- * @version 2025-12-17-V1.4.5
- * @date 2025-12-17 15:30:00
- * @description 修復版：正確解析包含銀行名稱的輸入格式，增強支付方式識別準確度
+ * 03. 解析輸入格式 - 階段一修復版
+ * @version 2025-12-19-V1.7.0
+ * @date 2025-12-19 16:30:00
+ * @description 階段一修復：添加「一銀」支援，移除硬編碼預設值，實現動態支付方式查詢
  */
 function LBK_parseInputFormat(message, processId) {
-  LBK_logDebug(`開始解析格式: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+  LBK_logDebug(`階段一：開始解析格式: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
   if (!message || message.trim() === "") {
     return null;
@@ -579,7 +579,7 @@ function LBK_parseInputFormat(message, processId) {
   }
 
   try {
-    // v1.4.5 修復：改用更精確的正則表達式，支援銀行名稱識別
+    // 階段一修復：改用更精確的正則表達式，支援銀行名稱識別
     // 匹配格式：科目名稱 + 數字金額 + 可選的支付方式/銀行名稱
     const enhancedPattern = /^(.+?)(\d+)(.*)$/;
     const match = message.match(enhancedPattern);
@@ -605,8 +605,8 @@ function LBK_parseInputFormat(message, processId) {
       return null;
     }
 
-    // v1.4.5 增強：支付方式識別邏輯
-    let paymentMethod = "刷卡"; // 預設值
+    // 階段一修復：支付方式識別邏輯 - 移除硬編碼預設值
+    let paymentMethod = null; // 階段一修復：移除硬編碼「刷卡」預設值
     let finalSubject = rawSubject;
     let processedSuffix = suffixPart;
 
@@ -621,12 +621,12 @@ function LBK_parseInputFormat(message, processId) {
 
     processedSuffix = processedSuffix.replace(supportedUnits, '').trim();
 
-    // v1.4.5 增強的銀行名稱識別
+    // 階段一修復：增強的銀行名稱識別，添加「一銀」
     const bankNames = [
       "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
       "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
       "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
-      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛"
+      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀" // 階段一修復：添加「一銀」
     ];
 
     // 檢查是否包含銀行名稱（優先級最高）
@@ -635,7 +635,7 @@ function LBK_parseInputFormat(message, processId) {
       if (processedSuffix.includes(bankName)) {
         detectedBank = bankName;
         paymentMethod = bankName; // 直接使用銀行名稱作為支付方式
-        LBK_logDebug(`檢測到銀行名稱: ${bankName} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+        LBK_logDebug(`階段一：檢測到銀行名稱: ${bankName} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
         break;
       }
     }
@@ -646,21 +646,27 @@ function LBK_parseInputFormat(message, processId) {
       for (const method of paymentMethods) {
         if (processedSuffix.includes(method)) {
           paymentMethod = method;
-          LBK_logDebug(`檢測到支付方式: ${method} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+          LBK_logDebug(`階段一：檢測到支付方式: ${method} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
           break;
         }
       }
     }
 
-    // v1.4.5 修復：確保科目名稱正確提取
-    // 例如：「飯糰28星展」→ 科目「飯糰」、金額「28」、支付方式「星展」
-    LBK_logInfo(`解析結果: 科目="${finalSubject}", 金額=${amount}, 支付方式="${paymentMethod}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    // 階段一修復：如果未檢測到任何支付方式，返回 null 而非硬編碼預設值
+    // 這將觸發後續的動態查詢邏輯
+    if (!paymentMethod) {
+      LBK_logDebug(`階段一：未檢測到明確支付方式，將觸發動態查詢 [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    }
+
+    // 階段一修復：確保科目名稱正確提取
+    // 例如：「滷味555555一銀」→ 科目「滷味」、金額「555555」、支付方式「一銀」
+    LBK_logInfo(`階段一：解析結果: 科目="${finalSubject}", 金額=${amount}, 支付方式="${paymentMethod || '未指定'}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
     return {
       subject: finalSubject,
       amount: amount,
       rawAmount: rawAmount,
-      paymentMethod: paymentMethod
+      paymentMethod: paymentMethod // 可能為 null，將觸發動態查詢
     };
 
   } catch (error) {
@@ -2340,18 +2346,18 @@ async function LBK_processConfirmedWallet(walletData, userId, processId) {
 }
 
 /**
- * 階段二強化：解析支付方式 - 更嚴格的支付方式驗證
- * @version 2025-12-19-V1.6.0
+ * 階段一修復：解析支付方式 - 整合動態預設查詢邏輯
+ * @version 2025-12-19-V1.7.0
  * @param {string} messageText - 用戶輸入訊息
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Object} 支付方式解析結果
- * @description 階段二修正：實施嚴格的支付方式驗證，只接受 wallets 子集合中明確定義的支付方式
+ * @description 階段一修復：移除硬編碼預設值，當用戶未輸入支付方式時動態查詢預設值
  */
 async function LBK_parsePaymentMethod(messageText, userId, processId) {
   const functionName = "LBK_parsePaymentMethod";
   try {
-    LBK_logDebug(`階段二：嚴格解析支付方式: "${messageText}" [${processId}]`, "支付方式解析", userId, functionName);
+    LBK_logDebug(`階段一：解析支付方式: "${messageText}" [${processId}]`, "支付方式解析", userId, functionName);
 
     if (!messageText || !userId) {
       return {
@@ -2363,23 +2369,52 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
 
     // 使用 LBK_parseInputFormat 解析輸入
     const parseResult = LBK_parseInputFormat(messageText, processId);
-    if (!parseResult || !parseResult.paymentMethod) {
+    if (!parseResult) {
       return {
         success: false,
         systemError: true,
-        error: "無法解析支付方式"
+        error: "無法解析輸入格式"
       };
     }
 
-    const paymentMethodName = parseResult.paymentMethod;
-    LBK_logDebug(`階段二：提取的支付方式名稱: "${paymentMethodName}" [${processId}]`, "支付方式解析", userId, functionName);
+    let paymentMethodName = parseResult.paymentMethod;
+    
+    // 階段一修復：如果未檢測到支付方式，動態查詢預設值
+    if (!paymentMethodName) {
+      LBK_logInfo(`階段一：未檢測到支付方式，開始動態查詢預設值 [${processId}]`, "支付方式解析", userId, functionName);
+      
+      const defaultResult = await LBK_getDefaultPaymentMethod(userId, processId);
+      if (defaultResult.success) {
+        paymentMethodName = defaultResult.walletName;
+        LBK_logInfo(`階段一：使用動態查詢的預設支付方式: "${paymentMethodName}" [${processId}]`, "支付方式解析", userId, functionName);
+        
+        // 直接返回成功結果，因為已從 wallets 子集合查詢得到
+        return {
+          success: true,
+          walletId: defaultResult.walletId,
+          walletName: defaultResult.walletName,
+          requiresWalletConfirmation: false,
+          isDefault: true
+        };
+      } else {
+        // 動態查詢失敗
+        LBK_logError(`階段一：動態查詢預設支付方式失敗: ${defaultResult.error} [${processId}]`, "支付方式解析", userId, "DEFAULT_QUERY_FAILED", defaultResult.error, functionName);
+        return {
+          success: false,
+          systemError: true,
+          error: `動態查詢預設支付方式失敗: ${defaultResult.error}`
+        };
+      }
+    }
 
-    // 階段二修正：嚴格驗證 - 只有在 wallets 子集合中存在的支付方式才被接受
+    LBK_logDebug(`階段一：提取的支付方式名稱: "${paymentMethodName}" [${processId}]`, "支付方式解析", userId, functionName);
+
+    // 階段一：嚴格驗證 - 只有在 wallets 子集合中存在的支付方式才被接受
     const wallet = await LBK_getWalletByName(paymentMethodName, userId, processId);
 
     if (wallet && wallet.walletId) {
-      // 階段二：找到匹配的錢包且有有效的 walletId
-      LBK_logInfo(`階段二：支付方式驗證通過: "${paymentMethodName}" → 錢包ID: ${wallet.walletId} [${processId}]`, "支付方式解析", userId, functionName);
+      // 階段一：找到匹配的錢包且有有效的 walletId
+      LBK_logInfo(`階段一：支付方式驗證通過: "${paymentMethodName}" → 錢包ID: ${wallet.walletId} [${processId}]`, "支付方式解析", userId, functionName);
       return {
         success: true,
         walletId: wallet.walletId,
@@ -2387,8 +2422,8 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
         requiresWalletConfirmation: false
       };
     } else {
-      // 階段二修正：未在 wallets 子集合中找到匹配項目，觸發歧義消除
-      LBK_logInfo(`階段二：支付方式未在 wallets 子集合中找到: "${paymentMethodName}"，觸發歧義消除 [${processId}]`, "支付方式解析", userId, functionName);
+      // 階段一：未在 wallets 子集合中找到匹配項目，觸發歧義消除
+      LBK_logInfo(`階段一：支付方式未在 wallets 子集合中找到: "${paymentMethodName}"，觸發歧義消除 [${processId}]`, "支付方式解析", userId, functionName);
       return {
         success: false,
         walletName: paymentMethodName,
@@ -2399,7 +2434,7 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
     }
 
   } catch (error) {
-    LBK_logError(`階段二：解析支付方式失敗: ${error.toString()} [${processId}]`, "支付方式解析", userId, "PAYMENT_METHOD_PARSE_ERROR", error.toString(), functionName);
+    LBK_logError(`階段一：解析支付方式失敗: ${error.toString()} [${processId}]`, "支付方式解析", userId, "PAYMENT_METHOD_PARSE_ERROR", error.toString(), functionName);
     return {
       success: false,
       systemError: true,
@@ -3180,6 +3215,83 @@ function LBK_formatErrorResponse(errorType, errorMessage) {
     moduleVersion: "1.4.9",
     errorType: errorType
   };
+}
+
+/**
+ * 階段一新增：動態查詢用戶預設支付方式
+ * @version 2025-12-19-V1.7.0
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Promise<Object>} 查詢結果
+ * @description 階段一新增：當用戶未輸入支付方式時，動態查詢 wallets 子集合中的「信用卡」項目作為預設值
+ */
+async function LBK_getDefaultPaymentMethod(userId, processId) {
+  const functionName = "LBK_getDefaultPaymentMethod";
+  try {
+    LBK_logDebug(`階段一：動態查詢預設支付方式 [${processId}]`, "預設支付方式", userId, functionName);
+
+    if (!userId) {
+      LBK_logDebug(`階段一：缺少用戶ID，無法查詢預設支付方式 [${processId}]`, "預設支付方式", userId, functionName);
+      return { success: false, error: "缺少用戶ID" };
+    }
+
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    const ledgerId = `user_${userId}`;
+
+    // 階段一：優先查找「信用卡」作為預設支付方式
+    const preferredDefaults = ["信用卡", "刷卡", "現金"];
+    
+    for (const defaultName of preferredDefaults) {
+      const wallet = await LBK_getWalletByName(defaultName, userId, processId);
+      if (wallet && wallet.walletId) {
+        LBK_logInfo(`階段一：找到預設支付方式: ${defaultName} → ${wallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
+        return {
+          success: true,
+          walletId: wallet.walletId,
+          walletName: wallet.walletName,
+          type: wallet.type,
+          isDefault: true
+        };
+      }
+    }
+
+    // 階段一：如果找不到預設項目，查找任何活躍的錢包作為備選
+    const snapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets").where("status", "==", "active").limit(1).get();
+
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      const fallbackWallet = {
+        walletId: data.walletId || doc.id,
+        walletName: data.walletName || data.name || '預設支付方式',
+        type: data.type || 'unknown'
+      };
+      
+      LBK_logWarning(`階段一：使用第一個活躍錢包作為預設支付方式: ${fallbackWallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
+      return {
+        success: true,
+        ...fallbackWallet,
+        isDefault: false,
+        isFallback: true
+      };
+    }
+
+    // 階段一：如果完全沒有錢包，返回失敗
+    LBK_logError(`階段一：用戶沒有可用的錢包，無法設置預設支付方式 [${processId}]`, "預設支付方式", userId, "NO_WALLETS_AVAILABLE", "用戶錢包子集合為空", functionName);
+    return { 
+      success: false, 
+      error: "用戶沒有可用的錢包",
+      requiresWalletSetup: true
+    };
+
+  } catch (error) {
+    LBK_logError(`階段一：動態查詢預設支付方式失敗: ${error.toString()} [${processId}]`, "預設支付方式", userId, "DEFAULT_PAYMENT_METHOD_ERROR", error.toString(), functionName);
+    return { 
+      success: false, 
+      error: error.toString() 
+    };
+  }
 }
 
 /**
@@ -4793,6 +4905,8 @@ module.exports = {
 
   // 新增支付方式解析函數
   LBK_parsePaymentMethod: LBK_parsePaymentMethod,
+  // 階段一新增：動態預設支付方式查詢函數
+  LBK_getDefaultPaymentMethod: LBK_getDefaultPaymentMethod,
   // 新增wallet確認postback處理函數 v1.4.5
   LBK_handleWalletConfirmationPostback: LBK_handleWalletConfirmationPostback,
   LBK_processConfirmedWallet: LBK_processConfirmedWallet,
@@ -4847,7 +4961,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.8.1", // 階段一修復版本
+  MODULE_VERSION: "1.7.0", // 階段一修復版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一修復：修復科目資訊遺失問題，在LBK_handleClassificationPostback函數中正確更新Pending Record的selectedSubject資訊，確保包含majorCode、subjectCode、subjectName等完整科目資料，解決後續記帳時科目資訊undefined導致Firestore儲存失敗的問題。"
+  MODULE_UPDATE: "階段一修復：修復支付方式識別邏輯。1)在LBK_parseInputFormat函數中添加「一銀」到銀行名稱陣列。2)移除所有硬編碼「刷卡」預設值。3)實現LBK_getDefaultPaymentMethod函數，當用戶未輸入支付方式時動態查詢wallets子集合中的「信用卡」項目。4)修改LBK_parsePaymentMethod函數整合動態預設查詢邏輯。確保從「滷味555555一銀」正確識別出支付方式「一銀」而非硬編碼「刷卡」。"
 };
