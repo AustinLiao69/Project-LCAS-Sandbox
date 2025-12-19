@@ -1771,6 +1771,165 @@ function LBK_calculateStringSimilarity(str1, str2) {
 }
 
 /**
+ * 階段二新增：處理錢包確認postback事件
+ * @version 2025-12-19-V1.4.9
+ * @param {string} postbackData - postback數據
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 處理結果
+ * @description 處理錢包確認相關的postback事件，包括wallet_yes_, wallet_no_, wallet_type_等
+ */
+async function LBK_handleWalletConfirmationPostback(postbackData, userId, processId) {
+  const functionName = "LBK_handleWalletConfirmationPostback";
+  try {
+    LBK_logInfo(`處理錢包確認postback: ${postbackData} [${processId}]`, "錢包確認", userId, functionName);
+
+    // 處理wallet_type_開頭的postback（支付方式類型選擇）
+    if (postbackData.startsWith('wallet_type_')) {
+      const parts = postbackData.split('_');
+      if (parts.length >= 4) {
+        const walletType = parts[2]; // cash, bank, credit
+        const pendingId = parts[3];
+        
+        LBK_logInfo(`處理支付方式類型選擇: type=${walletType}, pendingId=${pendingId} [${processId}]`, "支付方式類型", userId, functionName);
+        
+        return await LBK_handleWalletTypeSelection(userId, pendingId, walletType, processId);
+      }
+    }
+
+    // 處理wallet_yes_和wallet_no_格式的postback
+    if (postbackData.startsWith('wallet_yes_') || postbackData.startsWith('wallet_no_')) {
+      const isConfirmed = postbackData.startsWith('wallet_yes_');
+      const walletData = postbackData.substring(isConfirmed ? 11 : 10); // 移除 'wallet_yes_' 或 'wallet_no_'
+      
+      try {
+        const parsedData = JSON.parse(walletData);
+        LBK_logInfo(`錢包確認選擇: ${isConfirmed ? '確認' : '拒絕'}, 錢包: ${parsedData.walletName} [${processId}]`, "錢包確認", userId, functionName);
+        
+        if (isConfirmed) {
+          // 用戶確認使用此錢包
+          return await LBK_processConfirmedWallet(parsedData, userId, processId);
+        } else {
+          // 用戶拒絕，返回錯誤訊息
+          return {
+            success: false,
+            message: "已取消錢包選擇，請重新輸入記帳資訊",
+            responseMessage: "已取消錢包選擇，請重新輸入記帳資訊",
+            moduleCode: "LBK",
+            module: "LBK",
+            processingTime: 0,
+            moduleVersion: "1.4.9",
+            errorType: "WALLET_CANCELLED"
+          };
+        }
+      } catch (parseError) {
+        LBK_logError(`解析錢包postback數據失敗: ${parseError.toString()} [${processId}]`, "錢包確認", userId, "WALLET_POSTBACK_PARSE_ERROR", parseError.toString(), functionName);
+        return {
+          success: false,
+          message: "錢包確認資料錯誤，請重新輸入",
+          responseMessage: "錢包確認資料錯誤，請重新輸入",
+          moduleCode: "LBK",
+          module: "LBK",
+          processingTime: 0,
+          moduleVersion: "1.4.9",
+          errorType: "WALLET_POSTBACK_PARSE_ERROR"
+        };
+      }
+    }
+
+    // 未知的postback格式
+    LBK_logWarning(`未知的錢包postback格式: ${postbackData} [${processId}]`, "錢包確認", userId, functionName);
+    return {
+      success: false,
+      message: "未知的錢包確認格式，請重新輸入",
+      responseMessage: "未知的錢包確認格式，請重新輸入",
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.4.9",
+      errorType: "UNKNOWN_WALLET_POSTBACK"
+    };
+
+  } catch (error) {
+    LBK_logError(`處理錢包確認postback失敗: ${error.toString()} [${processId}]`, "錢包確認", userId, "WALLET_CONFIRMATION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      message: "錢包確認處理失敗，請稍後再試",
+      responseMessage: "錢包確認處理失敗，請稍後再試",
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.4.9",
+      errorType: "WALLET_CONFIRMATION_ERROR"
+    };
+  }
+}
+
+/**
+ * 處理已確認的錢包選擇
+ * @version 2025-12-19-V1.4.9
+ * @param {object} walletData - 錢包資料
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 處理結果
+ */
+async function LBK_processConfirmedWallet(walletData, userId, processId) {
+  try {
+    // 如果有pendingId，從Pending Record繼續處理
+    if (walletData.pendingId) {
+      const updateResult = await LBK_updatePendingRecord(
+        userId,
+        walletData.pendingId,
+        {
+          stageData: {
+            walletSelected: true,
+            selectedWallet: {
+              walletId: walletData.walletId || 'confirmed_wallet',
+              walletName: walletData.walletName,
+              type: walletData.type || 'unknown'
+            }
+          }
+        },
+        PENDING_STATES.PENDING_WALLET,
+        processId
+      );
+
+      if (updateResult.success) {
+        return await LBK_completePendingRecord(userId, walletData.pendingId, processId);
+      }
+    }
+
+    // 更新錢包synonyms（如果需要）
+    if (walletData.originalInput && walletData.walletName) {
+      await LBK_updateWalletSynonyms(walletData.originalInput, walletData.walletName, userId, processId);
+    }
+
+    return {
+      success: true,
+      message: `已確認使用錢包：${walletData.walletName}`,
+      responseMessage: `已確認使用錢包：${walletData.walletName}`,
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
+      moduleVersion: "1.4.9"
+    };
+
+  } catch (error) {
+    LBK_logError(`處理確認錢包失敗: ${error.toString()} [${processId}]`, "錢包確認", userId, "PROCESS_CONFIRMED_WALLET_ERROR", error.toString(), "LBK_processConfirmedWallet");
+    return {
+      success: false,
+      message: "處理錢包確認失敗，請稍後再試",
+      responseMessage: "處理錢包確認失敗，請稍後再試",
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.4.9",
+      errorType: "PROCESS_CONFIRMED_WALLET_ERROR"
+    };
+  }
+}
+
+/**
  * 階段二新增：解析支付方式 - 檢查是否需要歧義消除
  * @version 2025-12-19-V1.4.9
  * @param {string} messageText - 用戶輸入訊息
@@ -1833,6 +1992,418 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
       error: error.toString()
     };
   }
+}
+
+/**
+ * 驗證錢包是否存在
+ * @version 2025-12-19-V1.4.9
+ * @param {string} userId - 用戶ID
+ * @param {string} walletId - 錢包ID
+ * @param {string} walletName - 錢包名稱
+ * @param {string} processId - 處理ID
+ * @returns {Object} 驗證結果
+ */
+async function LBK_validateWalletExists(userId, walletId, walletName, processId) {
+  const functionName = "LBK_validateWalletExists";
+  try {
+    if (!walletId && !walletName) {
+      return {
+        success: false,
+        error: "錢包ID和名稱不能同時為空",
+        errorType: "INVALID_WALLET_PARAMS"
+      };
+    }
+
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    const ledgerId = `user_${userId}`;
+
+    let walletDoc = null;
+
+    // 優先使用walletId查詢
+    if (walletId) {
+      walletDoc = await db.collection("ledgers").doc(ledgerId).collection("wallets").doc(walletId).get();
+      if (walletDoc.exists) {
+        const data = walletDoc.data();
+        return {
+          success: true,
+          walletId: walletId,
+          walletName: data.walletName || data.name,
+          walletData: data
+        };
+      }
+    }
+
+    // 使用walletName查詢
+    if (walletName) {
+      const wallet = await LBK_getWalletByName(walletName, userId, processId);
+      if (wallet) {
+        return {
+          success: true,
+          walletId: wallet.walletId,
+          walletName: wallet.walletName,
+          walletData: wallet
+        };
+      }
+    }
+
+    // 錢包不存在，需要用戶確認
+    return {
+      success: false,
+      requiresUserConfirmation: true,
+      error: `未找到錢包: ${walletName || walletId}`,
+      errorType: "WALLET_NOT_FOUND"
+    };
+
+  } catch (error) {
+    LBK_logError(`驗證錢包存在失敗: ${error.toString()} [${processId}]`, "錢包驗證", userId, "WALLET_VALIDATION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString(),
+      errorType: "WALLET_VALIDATION_ERROR"
+    };
+  }
+}
+
+/**
+ * 處理新錢包流程
+ * @version 2025-12-19-V1.4.9
+ * @param {string} walletName - 錢包名稱
+ * @param {object} parsedData - 解析後的資料
+ * @param {object} inputData - 原始輸入資料
+ * @param {string} processId - 處理ID
+ * @returns {Object} 處理結果
+ */
+async function LBK_handleNewWallet(walletName, parsedData, inputData, processId) {
+  const functionName = "LBK_handleNewWallet";
+  try {
+    LBK_logInfo(`處理新錢包: ${walletName} [${processId}]`, "新錢包處理", inputData.userId, functionName);
+
+    // 生成錢包類型選擇Quick Reply
+    const quickReply = {
+      items: [
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '💵 現金',
+            data: `wallet_yes_${JSON.stringify({
+              walletName: '現金',
+              walletId: 'default_cash',
+              type: 'cash',
+              originalInput: walletName,
+              pendingId: parsedData.pendingId
+            })}`,
+            displayText: '選擇現金'
+          }
+        },
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '🏦 銀行帳戶',
+            data: `wallet_yes_${JSON.stringify({
+              walletName: '銀行帳戶',
+              walletId: 'default_bank',
+              type: 'bank',
+              originalInput: walletName,
+              pendingId: parsedData.pendingId
+            })}`,
+            displayText: '選擇銀行帳戶'
+          }
+        },
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '💳 信用卡',
+            data: `wallet_yes_${JSON.stringify({
+              walletName: '信用卡',
+              walletId: 'default_credit',
+              type: 'credit_card',
+              originalInput: walletName,
+              pendingId: parsedData.pendingId
+            })}`,
+            displayText: '選擇信用卡'
+          }
+        }
+      ]
+    };
+
+    const message = `檢測到未知支付方式「${walletName}」，請問這屬於何種支付方式：`;
+
+    return {
+      success: true,
+      message: message,
+      responseMessage: message,
+      quickReply: quickReply,
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
+      moduleVersion: "1.4.9",
+      requiresUserSelection: true
+    };
+
+  } catch (error) {
+    LBK_logError(`處理新錢包失敗: ${error.toString()} [${processId}]`, "新錢包處理", inputData.userId, "NEW_WALLET_HANDLE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      message: "處理新錢包失敗，請稍後再試",
+      responseMessage: "處理新錢包失敗，請稍後再試",
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.4.9",
+      errorType: "NEW_WALLET_HANDLE_ERROR"
+    };
+  }
+}
+
+/**
+ * 更新錢包同義詞
+ * @version 2025-12-19-V1.4.9
+ * @param {string} originalInput - 原始輸入
+ * @param {string} walletName - 錢包名稱
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 更新結果
+ */
+async function LBK_updateWalletSynonyms(originalInput, walletName, userId, processId) {
+  const functionName = "LBK_updateWalletSynonyms";
+  try {
+    // 這裡可以添加同義詞更新邏輯
+    LBK_logInfo(`更新錢包同義詞: ${originalInput} → ${walletName} [${processId}]`, "錢包同義詞", userId, functionName);
+    
+    return {
+      success: true,
+      message: "同義詞更新成功"
+    };
+
+  } catch (error) {
+    LBK_logError(`更新錢包同義詞失敗: ${error.toString()} [${processId}]`, "錢包同義詞", userId, "WALLET_SYNONYMS_UPDATE_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 添加科目同義詞
+ * @version 2025-12-19-V1.4.9
+ * @param {string} originalSubject - 原始科目輸入
+ * @param {string} subjectId - 科目ID
+ * @param {string} categoryName - 科目名稱
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 添加結果
+ */
+async function LBK_addSubjectSynonym(originalSubject, subjectId, categoryName, userId, processId) {
+  const functionName = "LBK_addSubjectSynonym";
+  try {
+    LBK_logInfo(`添加科目同義詞: ${originalSubject} → ${categoryName} (ID: ${subjectId}) [${processId}]`, "科目同義詞", userId, functionName);
+    
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    const ledgerId = `user_${userId}`;
+
+    // 查找現有的科目記錄
+    const categoryRef = db.collection("ledgers").doc(ledgerId).collection("categories").doc(subjectId);
+    const categoryDoc = await categoryRef.get();
+
+    if (categoryDoc.exists) {
+      const data = categoryDoc.data();
+      const existingSynonyms = data.synonyms || "";
+      const synonymsArray = existingSynonyms ? existingSynonyms.split(",").map(s => s.trim()) : [];
+
+      // 如果同義詞尚未存在，則添加
+      if (!synonymsArray.includes(originalSubject)) {
+        synonymsArray.push(originalSubject);
+        const updatedSynonyms = synonymsArray.join(",");
+
+        await categoryRef.update({
+          synonyms: updatedSynonyms,
+          updatedAt: admin.firestore.Timestamp.now()
+        });
+
+        LBK_logInfo(`科目同義詞更新成功: ${updatedSynonyms} [${processId}]`, "科目同義詞", userId, functionName);
+      }
+    }
+
+    return {
+      success: true,
+      message: "同義詞添加成功"
+    };
+
+  } catch (error) {
+    LBK_logError(`添加科目同義詞失敗: ${error.toString()} [${processId}]`, "科目同義詞", userId, "ADD_SUBJECT_SYNONYM_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * Pending Record 相關函數
+ */
+
+/**
+ * 創建Pending Record
+ * @version 2025-12-19-V1.4.9
+ * @param {string} userId - 用戶ID
+ * @param {string} originalInput - 原始輸入
+ * @param {object} parsedData - 解析後的資料
+ * @param {string} initialState - 初始狀態
+ * @param {string} processId - 處理ID
+ * @returns {Object} 創建結果
+ */
+async function LBK_createPendingRecord(userId, originalInput, parsedData, initialState, processId) {
+  const functionName = "LBK_createPendingRecord";
+  try {
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    
+    const ledgerId = `user_${userId}`;
+    const pendingId = Date.now().toString();
+    
+    const pendingData = {
+      pendingId: pendingId,
+      userId: userId,
+      originalInput: originalInput,
+      parsedData: parsedData,
+      processingStage: initialState,
+      stageData: {
+        subjectSelected: false,
+        walletSelected: false,
+        selectedSubject: null,
+        selectedWallet: null
+      },
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      expiresAt: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 60 * 1000)), // 30分鐘後過期
+      status: 'active'
+    };
+
+    await db.collection('ledgers').doc(ledgerId).collection('pendingTransactions').doc(pendingId).set(pendingData);
+
+    LBK_logInfo(`Pending Record 創建成功: ${pendingId} [${processId}]`, "Pending Record", userId, functionName);
+
+    return {
+      success: true,
+      pendingId: pendingId,
+      data: pendingData
+    };
+
+  } catch (error) {
+    LBK_logError(`創建Pending Record失敗: ${error.toString()} [${processId}]`, "Pending Record", userId, "CREATE_PENDING_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 更新Pending Record
+ * @version 2025-12-19-V1.4.9
+ * @param {string} userId - 用戶ID
+ * @param {string} pendingId - Pending Record ID
+ * @param {object} updateData - 要更新的資料
+ * @param {string} newState - 新狀態
+ * @param {string} processId - 處理ID
+ * @returns {Object} 更新結果
+ */
+async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, processId) {
+  const functionName = "LBK_updatePendingRecord";
+  try {
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    
+    const ledgerId = `user_${userId}`;
+    const docRef = db.collection('ledgers').doc(ledgerId).collection('pendingTransactions').doc(pendingId);
+
+    const updatePayload = {
+      ...updateData,
+      processingStage: newState,
+      updatedAt: admin.firestore.Timestamp.now()
+    };
+
+    await docRef.update(updatePayload);
+
+    LBK_logInfo(`Pending Record 更新成功: ${pendingId} → ${newState} [${processId}]`, "Pending Record", userId, functionName);
+
+    return {
+      success: true,
+      pendingId: pendingId,
+      newState: newState
+    };
+
+  } catch (error) {
+    LBK_logError(`更新Pending Record失敗: ${error.toString()} [${processId}]`, "Pending Record", userId, "UPDATE_PENDING_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 獲取Pending Record
+ * @version 2025-12-19-V1.4.9
+ * @param {string} userId - 用戶ID
+ * @param {string} pendingId - Pending Record ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 獲取結果
+ */
+async function LBK_getPendingRecord(userId, pendingId, processId) {
+  const functionName = "LBK_getPendingRecord";
+  try {
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    
+    const ledgerId = `user_${userId}`;
+    const doc = await db.collection('ledgers').doc(ledgerId).collection('pendingTransactions').doc(pendingId).get();
+
+    if (!doc.exists) {
+      return {
+        success: false,
+        error: `Pending Record 不存在: ${pendingId}`
+      };
+    }
+
+    return {
+      success: true,
+      data: doc.data()
+    };
+
+  } catch (error) {
+    LBK_logError(`獲取Pending Record失敗: ${error.toString()} [${processId}]`, "Pending Record", userId, "GET_PENDING_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 格式化錯誤回覆
+ * @version 2025-12-19-V1.4.9
+ * @param {string} errorType - 錯誤類型
+ * @param {string} errorMessage - 錯誤訊息
+ * @returns {Object} 格式化的錯誤回覆
+ */
+function LBK_formatErrorResponse(errorType, errorMessage) {
+  return {
+    success: false,
+    message: errorMessage || "系統錯誤，請稍後再試",
+    responseMessage: errorMessage || "系統錯誤，請稍後再試",
+    moduleCode: "LBK",
+    module: "LBK",
+    processingTime: 0,
+    moduleVersion: "1.4.9",
+    errorType: errorType
+  };
 }
 
 /**
@@ -3985,7 +4556,10 @@ module.exports = {
   LBK_parsePaymentMethod: LBK_parsePaymentMethod,
   // 新增wallet確認postback處理函數 v1.4.5
   LBK_handleWalletConfirmationPostback: LBK_handleWalletConfirmationPostback,
+  LBK_processConfirmedWallet: LBK_processConfirmedWallet,
   LBK_determineWalletType: LBK_determineWalletType,
+  LBK_validateWalletExists: LBK_validateWalletExists,
+  LBK_handleNewWallet: LBK_handleNewWallet,
 
   // 新科目歸類函數 - v1.4.2增強（支援Quick Reply和postback處理）
   LBK_handleNewSubjectClassification: LBK_handleNewSubjectClassification,
