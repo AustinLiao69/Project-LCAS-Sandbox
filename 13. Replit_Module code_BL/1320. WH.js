@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.5.2
+ * WH_Webhook處理模組_2.5.3
  * @module Webhook模組
- * @description LINE Webhook處理模組 - 階段三完成：建立wallet Quick Reply處理功能
- * @update 2025-12-17: 升級至v2.5.2，新增wallet postback事件處理，支援wallet確認流程
+ * @description LINE Webhook處理模組 - 階段三完成：支援連續性Quick Reply處理，識別Pending Record相關事件
+ * @update 2025-12-19: 升級至v2.5.3，新增Pending Record postback識別和路由邏輯，支援多階段處理流程
  */
 
 // 首先引入其他模組 - 增強安全載入
@@ -167,7 +167,7 @@ function WH_checkEnvironmentVariables() {
 }
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.5.2 (2025-12-17) - 階段三完成：建立wallet Quick Reply處理功能");
+console.log("WH模組初始化，版本: 2.5.3 (2025-12-19) - 階段三完成：支援連續性Quick Reply處理，識別Pending Record相關事件");
 
 // 執行環境變數完整性檢查
 const envCheckResult = WH_checkEnvironmentVariables();
@@ -499,11 +499,11 @@ async function processWebhookAsync(e) {
             }
           } else if (event.type === 'postback') {
             const postbackData = event.postback.data;
-            console.log(`WH v2.5.2: 收到postback事件: ${postbackData}`);
+            console.log(`WH v2.5.3: 收到postback事件: ${postbackData}`);
 
             WH_directLogWrite([
               WH_formatDateTime(new Date()),
-              `WH 2.5.2: 處理postback事件: ${postbackData} [${requestId}]`,
+              `WH 2.5.3: 處理postback事件: ${postbackData} [${requestId}]`,
               "Postback處理",
               userId,
               "",
@@ -514,21 +514,44 @@ async function processWebhookAsync(e) {
               "INFO",
             ]);
 
-            // 統一處理所有postback事件，由LBK模組決定如何處理（包含wallet確認和科目歸類）
-            const postbackInputData = {
-              userId: userId,
-              messageText: postbackData,
-              replyToken: event.replyToken,
-              timestamp: event.timestamp,
-              processId: requestId,
-              eventType: 'postback',
-              postbackData: postbackData
-            };
+            // v2.5.3: 階段三新增 - 識別Pending Record相關的postback事件
+            const pendingRecordResult = await WH_handlePendingRecordPostback(postbackData, userId, event.replyToken, requestId);
+            
+            if (pendingRecordResult.handled) {
+              // Pending Record相關的postback已處理完成
+              WH_directLogWrite([
+                WH_formatDateTime(new Date()),
+                `WH 2.5.3: Pending Record postback處理完成: ${postbackData} [${requestId}]`,
+                "Pending Record",
+                userId,
+                "",
+                "WH",
+                "",
+                0,
+                "WH_processEventAsync",
+                "INFO",
+              ]);
+              
+              if (pendingRecordResult.result && event.replyToken) {
+                await WH_replyMessage(event.replyToken, pendingRecordResult.result, pendingRecordResult.result.quickReply);
+              }
+            } else {
+              // 非Pending Record相關的postback，使用原有邏輯處理
+              const postbackInputData = {
+                userId: userId,
+                messageText: postbackData,
+                replyToken: event.replyToken,
+                timestamp: event.timestamp,
+                processId: requestId,
+                eventType: 'postback',
+                postbackData: postbackData
+              };
 
-            const postbackResult = await WH_callLBKSafely(postbackInputData);
+              const postbackResult = await WH_callLBKSafely(postbackInputData);
 
-            if (postbackResult && event.replyToken) {
-              await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
+              if (postbackResult && event.replyToken) {
+                await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
+              }
             }
           } else {
             // 處理非消息事件 (follow, unfollow, join 等)
@@ -2356,6 +2379,10 @@ module.exports = {
   WH_isWalletConfirmationPostback,
   WH_handleWalletConfirmationPostback,
 
+  // 階段三新增：Pending Record處理函數
+  WH_handlePendingRecordPostback,
+  WH_identifyPostbackType,
+
   // 新增依賴注入函數
   setDependencies,
 
@@ -3263,6 +3290,214 @@ function WH_determineWalletType(walletName) {
     return 'mobile_payment';
   } else {
     return 'other';
+  }
+}
+
+/**
+ * 階段三新增：處理Pending Record相關的postback事件
+ * @version 2025-12-19-V2.5.3
+ * @description 識別和處理科目歧義、支付方式歧義等Pending Record相關的postback事件
+ * @param {string} postbackData - postback事件的data欄位
+ * @param {string} userId - 用戶ID
+ * @param {string} replyToken - LINE回覆Token
+ * @param {string} requestId - 請求ID
+ * @returns {Promise<Object>} 處理結果，包含handled標記和result
+ */
+async function WH_handlePendingRecordPostback(postbackData, userId, replyToken, requestId) {
+  const functionName = "WH_handlePendingRecordPostback";
+
+  try {
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.5.3: 開始識別Pending Record postback: ${postbackData} [${requestId}]`,
+      "Pending Record",
+      userId,
+      "",
+      "WH",
+      "",
+      0,
+      functionName,
+      "INFO",
+    ]);
+
+    // 階段三核心邏輯：識別不同類型的Pending Record postback
+    let postbackType = WH_identifyPostbackType(postbackData);
+    let handled = false;
+    let result = null;
+
+    switch (postbackType) {
+      case 'SUBJECT_CLASSIFICATION':
+        // 科目歧義消除的postback (格式: classify_XXX_...)
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.3: 識別為科目歧義消除postback [${requestId}]`,
+          "科目歧義",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          functionName,
+          "INFO",
+        ]);
+
+        const classificationInputData = {
+          userId: userId,
+          messageText: postbackData,
+          replyToken: replyToken,
+          timestamp: Date.now(),
+          processId: requestId,
+          eventType: 'classification_postback',
+          postbackData: postbackData
+        };
+
+        result = await WH_callLBKSafely(classificationInputData);
+        handled = true;
+        break;
+
+      case 'WALLET_CONFIRMATION':
+        // 支付方式確認的postback (格式: wallet_type_XXX_... 或 confirm_wallet_... 等)
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.3: 識別為支付方式確認postback [${requestId}]`,
+          "支付方式確認",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          functionName,
+          "INFO",
+        ]);
+
+        const walletInputData = {
+          userId: userId,
+          messageText: postbackData,
+          replyToken: replyToken,
+          timestamp: Date.now(),
+          processId: requestId,
+          eventType: 'wallet_confirmation_postback',
+          postbackData: postbackData
+        };
+
+        result = await WH_callLBKSafely(walletInputData);
+        handled = true;
+        break;
+
+      case 'STATISTICS_REQUEST':
+        // 統計查詢的postback (格式: 本日統計, 本週統計, 本月統計)
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.3: 識別為統計查詢postback [${requestId}]`,
+          "統計查詢",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          functionName,
+          "INFO",
+        ]);
+
+        const statisticsInputData = {
+          userId: userId,
+          messageText: postbackData,
+          replyToken: replyToken,
+          timestamp: Date.now(),
+          processId: requestId,
+          eventType: 'statistics_postback',
+          postbackData: postbackData
+        };
+
+        result = await WH_callLBKSafely(statisticsInputData);
+        handled = true;
+        break;
+
+      case 'UNKNOWN':
+      default:
+        // 非Pending Record相關的postback，交由原有邏輯處理
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.3: 未識別為Pending Record postback，交由原有邏輯: ${postbackData} [${requestId}]`,
+          "Postback路由",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          functionName,
+          "INFO",
+        ]);
+        handled = false;
+        break;
+    }
+
+    return {
+      handled: handled,
+      result: result,
+      postbackType: postbackType
+    };
+
+  } catch (error) {
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.5.3: Pending Record postback處理失敗: ${error.toString()} [${requestId}]`,
+      "Pending Record",
+      userId,
+      "PENDING_POSTBACK_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      functionName,
+      "ERROR",
+    ]);
+
+    return {
+      handled: false,
+      result: null,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 階段三輔助函數：識別postback類型
+ * @version 2025-12-19-V2.5.3
+ * @description 根據postback data格式識別事件類型
+ * @param {string} postbackData - postback事件的data欄位
+ * @returns {string} postback類型
+ */
+function WH_identifyPostbackType(postbackData) {
+  try {
+    if (!postbackData || typeof postbackData !== 'string') {
+      return 'UNKNOWN';
+    }
+
+    // 科目歧義消除：classify_XXX_...格式
+    if (postbackData.startsWith('classify_')) {
+      return 'SUBJECT_CLASSIFICATION';
+    }
+
+    // 支付方式確認：多種格式
+    if (postbackData.startsWith('wallet_type_') || 
+        postbackData.startsWith('confirm_wallet_') || 
+        postbackData.startsWith('cancel_wallet_') ||
+        postbackData.startsWith('wallet_yes_') ||
+        postbackData.startsWith('wallet_no_')) {
+      return 'WALLET_CONFIRMATION';
+    }
+
+    // 統計查詢：特定關鍵字
+    const statisticsKeywords = ['本日統計', '本週統計', '本月統計'];
+    if (statisticsKeywords.includes(postbackData)) {
+      return 'STATISTICS_REQUEST';
+    }
+
+    return 'UNKNOWN';
+
+  } catch (error) {
+    console.log(`識別postback類型失敗: ${error.toString()}`);
+    return 'UNKNOWN';
   }
 }
 
