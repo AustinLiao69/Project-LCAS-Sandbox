@@ -3,6 +3,71 @@
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+基於9904文件要求，作為資深SQA，我將深入分析當前問題。
+A. 快速摘要（≤3句）
+•	問題1：科目同義詞學習失敗，豬耳朵未寫入categories子集合104餐飲費用的synonyms欄位
+•	問題2：支付方式解析hard coding「刷卡」，未正確動態查詢用戶wallets子集合中的信用卡
+•	問題3：LBK模組寫入transactions子集合的欄位可能違反0070規範
+________________________________________
+B. Root causes（最多 6 條）
+1. 科目同義詞學習機制失效
+證據：Console日誌顯示科目歸類成功但synonyms未更新
+[2025-12-19T09:06:47.831Z] [INFO] [DL] 科目歸類完成，選擇科目: 餐飲費用 (104) [bd3ff07b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+信心度：95%
+解決方案：修復LBK_handleClassificationPostback中的同義詞更新邏輯，確保在科目歸類成功後正確調用同義詞寫入函數
+2. 支付方式解析Hard Coding問題
+證據：系統提示歧義消除「刷卡」而非動態查詢wallets
+檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：
+信心度：90%
+解決方案：修改LBK_parsePaymentMethod函數，移除hard coding預設值，改為動態查詢用戶wallets子集合
+3. LBK模組Firestore資料欄位違規
+證據：根據日誌顯示transactions寫入路徑和欄位結構需驗證
+[2025-12-19T09:06:50.150Z] [INFO] [DL] 使用1301標準路徑儲存: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/transactions
+信心度：85%
+解決方案：審查LBK_prepareBookkeepingData函數，確保所有欄位符合0070規範
+4. 階段五動態查詢機制未完全實現
+證據：日誌顯示「階段五修復」但實際未實現動態查詢
+[2025-12-19T09:06:49.041Z] [DEBUG] [DL] 階段五：未檢測到明確支付方式，將觸發動態查詢機制
+信心度：88%
+解決方案：完善LBK_getDefaultPaymentMethod函數，實現真正的動態查詢機制
+5. Pending Record狀態機同義詞學習時機錯誤
+證據：同義詞學習應在確認階段執行，但可能在錯誤時機觸發
+[2025-12-19T09:06:50.503Z] [INFO] [DL] 階段四：Pending Record 記帳完成: 1766134867999 → 1766135210150
+信心度：80%
+解決方案：調整同義詞學習觸發時機，確保在用戶確認後才執行學習邏輯
+6. 錢包類型映射邏輯不完整
+證據：用戶選擇信用卡類型後，系統成功匹配但同義詞學習可能未執行
+[2025-12-19T09:06:49.908Z] [INFO] [DL] 階段五：動態查詢成功匹配錢包: 信用卡 → 信用卡
+信心度：75%
+解決方案：完善錢包類型確認後的同義詞學習邏輯，確保原始輸入被正確學習
+________________________________________
+解決方案實施計畫
+階段一：修復科目同義詞學習機制
+目標：確保科目歸類成功後正確更新synonyms
+修改檔案：13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+•	修復LBK_handleClassificationPostback函數中同義詞更新邏輯
+•	確保在科目確認後調用LBK_addSubjectSynonym函數
+•	版本升級至v1.9.1
+階段二：移除支付方式Hard Coding
+目標：實現支付方式動態查詢機制
+修改檔案：13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+•	修改LBK_parsePaymentMethod函數，移除「刷卡」hard coding
+•	完善LBK_getDefaultPaymentMethod函數，實現真正動態查詢
+•	修復LBK_parseInputFormat中的預設值邏輯
+•	版本升級至v1.9.2
+階段三：驗證並修復Firestore欄位違規
+目標：確保transactions子集合欄位符合0070規範
+修改檔案：13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+•	審查LBK_prepareBookkeepingData函數的欄位結構
+•	移除或修正不符合0070規範的欄位
+•	確保所有欄位命名和資料類型符合規範
+•	版本升級至v1.9.3
+每個階段完成後可透過LINE輸入測試進行驗證，確保問題逐步解決。請Approve後開始實施。
+
+
 
 ------------------------------------------
 20251219.科目與支付方式歸類邏輯一次性互動方案
