@@ -2751,6 +2751,73 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
 }
 
 /**
+ * 確認錢包同義詞更新
+ * @version 2025-12-19-V1.4.9
+ * @param {string} originalInput - 原始輸入
+ * @param {string} targetWalletId - 目標錢包ID
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 確認結果
+ * @description 確認並驗證錢包同義詞更新結果，可用於後續驗證或回滾
+ */
+async function LBK_confirmWalletSynonymsUpdate(originalInput, targetWalletId, userId, processId) {
+  const functionName = "LBK_confirmWalletSynonymsUpdate";
+  try {
+    LBK_logInfo(`確認錢包同義詞更新: ${originalInput} → ${targetWalletId} [${processId}]`, "錢包同義詞確認", userId, functionName);
+
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+    const ledgerId = `user_${userId}`;
+
+    // 查找目標錢包並驗證同義詞是否已正確更新
+    const walletRef = db.collection("ledgers").doc(ledgerId).collection("wallets").doc(targetWalletId);
+    const walletDoc = await walletRef.get();
+
+    if (!walletDoc.exists) {
+      return {
+        success: false,
+        error: `錢包不存在: ${targetWalletId}`,
+        confirmed: false
+      };
+    }
+
+    const walletData = walletDoc.data();
+    const existingSynonyms = walletData.synonyms || "";
+    const synonymsArray = existingSynonyms ? existingSynonyms.split(",").map(s => s.trim()) : [];
+
+    // 檢查同義詞是否已成功加入
+    const isConfirmed = synonymsArray.includes(originalInput);
+
+    if (isConfirmed) {
+      LBK_logInfo(`錢包同義詞更新確認成功: ${originalInput} 已存在於 ${targetWalletId} 的同義詞中 [${processId}]`, "錢包同義詞確認", userId, functionName);
+      return {
+        success: true,
+        message: "同義詞更新確認成功",
+        confirmed: true,
+        synonyms: synonymsArray,
+        walletName: walletData.walletName || walletData.name
+      };
+    } else {
+      LBK_logWarning(`錢包同義詞更新確認失敗: ${originalInput} 未在 ${targetWalletId} 的同義詞中找到 [${processId}]`, "錢包同義詞確認", userId, functionName);
+      return {
+        success: false,
+        error: "同義詞更新確認失敗，同義詞未找到",
+        confirmed: false,
+        synonyms: synonymsArray
+      };
+    }
+
+  } catch (error) {
+    LBK_logError(`確認錢包同義詞更新失敗: ${error.toString()} [${processId}]`, "錢包同義詞確認", userId, "CONFIRM_WALLET_SYNONYMS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString(),
+      confirmed: false
+    };
+  }
+}
+
+/**
  * 階段三新增：取得錢包顯示名稱
  * @version 2025-12-19-V1.4.9
  * @param {string} walletId - 錢包ID
@@ -4600,7 +4667,7 @@ module.exports = {
   // 階段三新增：wallet synonyms更新函數 - v1.4.8
   LBK_updateWalletSynonyms: LBK_updateWalletSynonyms,
   LBK_executeWalletSynonymsUpdate: LBK_executeWalletSynonymsUpdate,
-  LBK_confirmWalletSynonymsUpdate: LBK_confirmWalletSynonymsUpdate, // This function seems unused in the provided context, but kept for completeness
+  LBK_confirmWalletSynonymsUpdate: LBK_confirmWalletSynonymsUpdate, // 已實作：確認錢包同義詞更新結果
   LBK_getWalletDisplayName: LBK_getWalletDisplayName,
 
   // 階段二新增：Pending Record 函數
@@ -4612,9 +4679,7 @@ module.exports = {
 
   // 階段四新增：狀態機相關函數
   LBK_advancePendingFlow,
-  LBK_transitionToPendingWallet: async (userId, pendingId, processId) => { // Alias for backward compatibility if needed
-    await LBK_updatePendingRecord(userId, pendingId, {}, PENDING_STATES.PENDING_WALLET, processId);
-  },
+  LBK_updatePendingRecord, // 使用原函數名稱，不使用別名
   LBK_completePendingRecord, // Now handles the final transaction completion
   LBK_generateWalletSelectionQuickReply,
   LBK_handleWalletTypeSelection,
