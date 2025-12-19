@@ -73,23 +73,51 @@ Before行為：銀行名稱（如「花旗」）被自動視為有效支付方�
 After行為：只有在 wallets 子集合 synonyms 中明確定義的支付方式才被視為有效
 
 
-階段三：更新pendingTransaction資料結構
+階段三修正提案：更新pendingTransaction資料結構
 目標：修正pendingTransaction的欄位設計，建立與wallets子集合的正確關聯
 修改檔案：
-•	03. Default_config/0305. Default_pendingTransaction.json
-•	00. Master_Project document/0070. DB schema.md
+• 03. Default_config/0305. Default_pendingTransaction.json
+• 00. Master_Project document/0070. DB schema.md
 修改內容：
-1.	0305配置檔案更新：
-•	paymentMethod改名為walletSynonyms
-•	新增walletId和walletType欄位
-=>walletId和walletType欄位請舉例這兩個欄位是對應到wallet子集合的哪些欄位？
-
-
-2.	0070架構文件更新：
-•	更新pendingTransactions子集合欄位定義
-•	說明與wallets子集合的關聯關係
+1. 0305配置檔案更新：
+• paymentMethod改名為walletSynonyms
+•	walletSynonyms定義：代表著去wallets子集合裡面查詢到的synonym（可能是debit, cash或credit），確保此映射關係正確
+• 新增walletId欄位（刪除walletType）
+walletId 欄位對應關係：
+•	walletId 欄位對應到 wallets 子集合的 walletId 欄位（主鍵）
+•	用途：建立 pendingTransaction 與特定錢包記錄的直接關聯
+•	例子：
+o	pendingTransaction 中："walletId": "cash"
+o	對應 wallets 子集合中："walletId": "cash"
+2. 0070架構文件更新：
+• 更新pendingTransactions子集合欄位定義
+• 說明與wallets子集合的關聯關係
 Before行為：pendingTransaction使用paymentMethod欄位，無明確關聯
-After行為：使用walletSynonyms欄位，建立與wallets子集合的明確關聯
+After行為：
+• 使用walletSynonyms欄位保留用戶原始輸入
+• 使用walletId欄位建立與wallets子集合的明確關聯
+• 透過walletId實現精確的資料庫關聯查詢
+實際應用場景：
+// pendingTransaction 記錄
+{
+  "walletSynonyms": "花旗",  // 用戶原始輸入，來自wallets子集合的synonyms
+  "walletId": "debit"       // 直接對應wallets子集合的walletId主鍵
+}
+// 對應的 wallets 記錄（基於0302預設）
+{
+  "walletId": "debit",
+  "walletName": "銀行",
+  "currency": "TWD",
+  "synonyms": "花旗,citibank,花旗銀行"
+}
+這樣的設計確保了：
+• 精確關聯：walletId 提供直接的資料庫關聯
+• 用戶友好：walletSynonyms 保留用戶原始輸入，便於後續同義詞學習
+• 資料完整性：確保walletSynonyms與wallets子集合的synonyms欄位保持映射關係
+
+
+
+
 
 
 
