@@ -2781,14 +2781,14 @@ function LBK_determineWalletType(walletName, userId, processId) {
 }
 
 /**
- * 階段三修復：執行錢包同義詞更新 - 動態查詢目標錢包ID
- * @version 2025-12-19-V1.7.0
+ * 階段三修復：執行錢包同義詞更新 - 確保使用正確提取的支付方式名稱
+ * @version 2025-12-19-V1.8.0
  * @param {string} originalInput - 原始輸入
  * @param {string} targetWalletType - 目標錢包類型 (cash, bank, credit等)
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Object} 執行結果
- * @description 階段三修復：移除硬編碼錢包ID，改為根據錢包類型動態查詢正確的錢包ID
+ * @description 階段三修復：確保同義詞學習使用正確提取的支付方式名稱，而非硬編碼的「刷卡」
  */
 async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, userId, processId) {
   const functionName = "LBK_executeWalletSynonymsUpdate";
@@ -2798,6 +2798,42 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
     const ledgerId = `user_${userId}`;
+
+    // 階段三修復：正確提取支付方式名稱，確保不使用硬編碼的「刷卡」
+    let paymentMethodToLearn = null;
+    
+    // 從原始輸入中重新提取支付方式名稱
+    const parseResult = LBK_parseInputFormat(originalInput, processId);
+    if (parseResult && parseResult.paymentMethod) {
+      paymentMethodToLearn = parseResult.paymentMethod;
+      LBK_logInfo(`階段三：從原始輸入正確提取支付方式名稱: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
+    } else {
+      // 如果解析失敗，嘗試直接從輸入字串中識別銀行名稱
+      const bankNames = [
+        "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
+        "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
+        "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
+        "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀"
+      ];
+
+      for (const bankName of bankNames) {
+        if (originalInput.includes(bankName)) {
+          paymentMethodToLearn = bankName;
+          LBK_logInfo(`階段三：從輸入中直接識別銀行名稱: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
+          break;
+        }
+      }
+    }
+
+    // 如果仍無法識別，記錄警告但繼續處理
+    if (!paymentMethodToLearn) {
+      LBK_logWarning(`階段三：無法從原始輸入中提取支付方式名稱: "${originalInput}"，跳過同義詞學習 [${processId}]`, "錢包同義詞", userId, functionName);
+      return {
+        success: false,
+        error: "無法提取支付方式名稱",
+        skipped: true
+      };
+    }
 
     // 階段三修復：根據錢包類型動態查詢目標錢包
     let targetWalletId = null;
@@ -2816,7 +2852,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
         // 如果傳入的是錢包ID格式，嘗試直接使用
         if (typeof targetWalletType === 'string' && targetWalletType.includes('_')) {
           LBK_logWarning(`階段三：收到疑似錢包ID格式，嘗試動態查詢: ${targetWalletType} [${processId}]`, "錢包同義詞", userId, functionName);
-          targetWalletName = originalInput; // 使用原始輸入作為查詢條件
+          targetWalletName = paymentMethodToLearn; // 階段三修復：使用正確提取的支付方式名稱
         } else {
           targetWalletName = targetWalletType;
         }
@@ -2887,9 +2923,9 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
     const existingSynonyms = walletData.synonyms || "";
     const synonymsArray = existingSynonyms ? existingSynonyms.split(",").map(s => s.trim()) : [];
 
-    // 如果同義詞尚未存在，則添加
-    if (!synonymsArray.includes(originalInput)) {
-      synonymsArray.push(originalInput);
+    // 階段三修復：使用正確提取的支付方式名稱作為同義詞
+    if (!synonymsArray.includes(paymentMethodToLearn)) {
+      synonymsArray.push(paymentMethodToLearn);
       const updatedSynonyms = synonymsArray.join(",");
 
       await walletRef.update({
@@ -2897,9 +2933,9 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
         updatedAt: admin.firestore.Timestamp.now()
       });
 
-      LBK_logInfo(`階段三：錢包同義詞更新成功: ${updatedSynonyms} (錢包: ${targetWalletName}) [${processId}]`, "錢包同義詞", userId, functionName);
+      LBK_logInfo(`階段三：錢包同義詞更新成功，學習到正確支付方式: "${paymentMethodToLearn}" → 錢包: "${targetWalletName}" [${processId}]`, "錢包同義詞", userId, functionName);
     } else {
-      LBK_logInfo(`階段三：同義詞已存在，無需重複添加: ${originalInput} [${processId}]`, "錢包同義詞", userId, functionName);
+      LBK_logInfo(`階段三：同義詞已存在，無需重複添加: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
     }
 
     return {
@@ -2907,7 +2943,8 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
       message: "同義詞更新成功",
       targetWalletId: targetWalletId,
       targetWalletName: targetWalletName,
-      synonymsUpdated: !synonymsArray.includes(originalInput)
+      learnedPaymentMethod: paymentMethodToLearn, // 階段三新增：記錄學習到的支付方式
+      synonymsUpdated: !synonymsArray.includes(paymentMethodToLearn)
     };
 
   } catch (error) {
