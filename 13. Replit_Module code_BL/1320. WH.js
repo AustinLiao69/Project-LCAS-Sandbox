@@ -1891,12 +1891,9 @@ async function WH_processEventAsync(event, requestId, userId) {
             "INFO",
           ]);
 
-          // v2.5.1: 階段二修改 - 正確傳遞quickReply參數
-          const replyResult = WH_replyMessage(event.replyToken, lbkResult, lbkResult.quickReply);
-
-          // 記錄回覆結果
+          // 記錄處理結果
           console.log(
-            `訊息回覆結果: ${JSON.stringify(replyResult)} [${requestId}]`,
+            `訊息處理結果: ${JSON.stringify(lbkResult)} [${requestId}]`,
           );
         } catch (ddError) {
           // 異常捕獲處理 - 保留所有可用資訊
