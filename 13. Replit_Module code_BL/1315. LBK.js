@@ -1384,38 +1384,38 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
     const now = moment().tz(LBK_CONFIG.TIMEZONE);
     const currentTimestamp = admin.firestore.Timestamp.now();
 
-    // 完全使用1301 BK標準欄位格式
+    // 階段四修復：使用0070規範標準欄位格式，移除違規欄位
     const preparedData = {
-      // 核心欄位 - 符合1301標準
+      // 核心欄位 - 符合0070規範
       id: bookkeepingId,
       amount: parseFloat(data.amount) || 0,
       type: data.action === "收入" ? "income" : "expense",
       description: data.subject || '',
       categoryId: data.subjectCode || 'default',
-      accountId: 'default',
+      // 階段四修復：移除accountId欄位（不符合0070規範）
 
-      // 時間欄位 - 1301標準格式
+      // 時間欄位 - 0070標準格式
       date: now.format('YYYY-MM-DD'),
       createdAt: currentTimestamp,
       updatedAt: currentTimestamp,
 
-      // 來源和用戶資訊 - 1301標準
+      // 來源和用戶資訊 - 0070標準
       source: 'quick',
       userId: data.userId || '',
       paymentMethod: data.paymentMethod || '',
 
-      // 記帳特定欄位 - 1301標準
+      // 記帳特定欄位 - 0070標準
       ledgerId: `user_${data.userId}`,
 
-      // 狀態欄位 - 1301標準
+      // 狀態欄位 - 0070標準
       status: 'active',
       verified: false,
 
-      // 元數據 - 1301標準
+      // 元數據 - 0070標準
       metadata: {
         processId: processId,
         module: 'LBK',
-        version: '1.2.0',
+        version: '1.8.0', // 階段四版本
         majorCode: data.majorCode,
         subjectName: data.subjectName
       }
@@ -3153,17 +3153,37 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
     const ledgerId = `user_${userId}`;
     const pendingId = Date.now().toString();
 
+    // 階段四修復：調整Pending Record資料結構，符合0070規範
     const pendingData = {
       pendingId: pendingId,
       userId: userId,
+      ledgerId: `user_${userId}`, // 階段四新增：符合0070規範的ledgerId欄位
       originalInput: originalInput,
-      parsedData: parsedData,
+      parsedData: {
+        // 階段四修復：移除parsedData中的paymentMethod，避免欄位重複
+        amount: parsedData.amount,
+        description: parsedData.subject,
+        rawSubject: parsedData.subject,
+        rawWallet: parsedData.paymentMethod // 階段四：改用rawWallet儲存原始支付方式
+      },
       processingStage: initialState,
       stageData: {
         subjectSelected: false,
         walletSelected: false,
         selectedSubject: null,
         selectedWallet: null
+      },
+      // 階段四新增：符合0070規範的ambiguityInfo和metadata欄位
+      ambiguityInfo: {
+        currentAmbiguity: initialState === PENDING_STATES.PENDING_SUBJECT ? 'subject' : 
+                          initialState === PENDING_STATES.PENDING_WALLET ? 'wallet' : 'none',
+        subjectOptions: [],
+        walletOptions: []
+      },
+      metadata: {
+        source: 'LINE',
+        module: 'LBK',
+        version: '1.8.0' // 階段四版本
       },
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
@@ -3670,38 +3690,38 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     const transactionId = Date.now().toString();
     const now = moment().tz(LBK_CONFIG.TIMEZONE);
 
-    // 直接準備1301標準格式的記帳資料
+    // 階段四修復：準備0070規範格式的記帳資料，移除違規欄位
     const preparedData = {
-      // 核心欄位 - 符合1301標準
+      // 核心欄位 - 符合0070規範
       id: transactionId,
       amount: parseFloat(pendingData.amount) || 0,
       type: selectedCategory.type === "income" ? "income" : "expense", // 使用 type 屬性
       description: pendingData.subject,
       categoryId: subjectId,
-      accountId: 'default',
+      // 階段四修復：移除accountId欄位（不符合0070規範）
 
-      // 時間欄位 - 1301標準格式
+      // 時間欄位 - 0070標準格式
       date: now.format('YYYY-MM-DD'),
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
 
-      // 來源和用戶資訊 - 1301標準
+      // 來源和用戶資訊 - 0070標準
       source: 'classification',
       userId: inputData.userId,
       paymentMethod: walletResult.walletName || paymentMethodName || '刷卡',
 
-      // 記帳特定欄位 - 1301標準
+      // 記帳特定欄位 - 0070標準
       ledgerId: `user_${inputData.userId}`,
 
-      // 狀態欄位 - 1301標準
+      // 狀態欄位 - 0070標準
       status: 'active',
       verified: false,
 
-      // 元數據 - 1301標準
+      // 元數據 - 0070標準
       metadata: {
         processId: processId,
         module: 'LBK',
-        version: '1.6.0',
+        version: '1.8.0', // 階段四版本
         majorCode: subjectId,
         subjectName: selectedCategory.categoryName,
         classificationSource: 'user_selection'
@@ -4624,42 +4644,42 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     const transactionId = Date.now().toString();
     const now = moment().tz(LBK_CONFIG.TIMEZONE);
 
-    // 階段三修復：準備1301標準格式記帳資料，嚴格防止undefined值
+    // 階段四修復：準備0070規範格式記帳資料，移除違規欄位
     const preparedData = {
-      // 核心欄位 - 符合1301標準，全面驗證
+      // 核心欄位 - 符合0070規範，全面驗證
       id: transactionId,
       amount: parseFloat(finalBookkeepingData.amount) || 0,
       type: (finalBookkeepingData.action === "收入") ? "income" : "expense",
       description: finalBookkeepingData.subject || pendingData.parsedData?.subject || '記帳項目',
       categoryId: finalBookkeepingData.subjectCode || 'default',
-      accountId: 'default',
+      // 階段四修復：移除accountId欄位（不符合0070規範）
 
-      // 時間欄位 - 1301標準格式
+      // 時間欄位 - 0070標準格式
       date: now.format('YYYY-MM-DD'),
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
 
-      // 來源和用戶資訊 - 1301標準，增加容錯處理
+      // 來源和用戶資訊 - 0070標準，增加容錯處理
       source: 'pending_completion',
       userId: userId || '',
       paymentMethod: finalBookkeepingData.paymentMethod || '刷卡',
 
-      // 記帳特定欄位 - 1301標準
+      // 記帳特定欄位 - 0070標準
       ledgerId: ledgerId || `user_${userId}`,
 
-      // 狀態欄位 - 1301標準
+      // 狀態欄位 - 0070標準
       status: 'active',
       verified: false,
 
-      // 階段三修復：元數據完整驗證，確保無undefined值
+      // 階段四修復：元數據完整驗證，確保無undefined值，符合0070規範
       metadata: {
         processId: processId || 'unknown',
         module: 'LBK',
-        version: '1.6.0', // 更新為階段三版本
+        version: '1.8.0', // 階段四版本
         pendingId: pendingId || 'unknown',
         majorCode: finalBookkeepingData.majorCode || 'default',
         subjectName: finalBookkeepingData.subjectName || '未知科目',
-        completionSource: 'pending_record_stage3',
+        completionSource: 'pending_record_stage4',
         dataValidation: {
           amountValidated: !isNaN(parseFloat(finalBookkeepingData.amount)),
           subjectValidated: !!finalBookkeepingData.subjectName,
@@ -5036,7 +5056,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.7.0", // 階段一修復版本
+  MODULE_VERSION: "1.8.0", // 階段四修復版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一修復：修復支付方式識別邏輯。1)在LBK_parseInputFormat函數中添加「一銀」到銀行名稱陣列。2)移除所有硬編碼「刷卡」預設值。3)實現LBK_getDefaultPaymentMethod函數，當用戶未輸入支付方式時動態查詢wallets子集合中的「信用卡」項目。4)修改LBK_parsePaymentMethod函數整合動態預設查詢邏輯。確保從「滷味555555一銀」正確識別出支付方式「一銀」而非硬編碼「刷卡」。"
+  MODULE_UPDATE: "階段四修復：移除違規資料欄位。1)移除LBK_prepareBookkeepingData中的accountId欄位。2)調整LBK_createPendingRecord資料結構，移除paymentMethod欄位重複定義，改用rawWallet儲存。3)移除LBK_completePendingRecord中的accountId欄位。4)更新所有資料結構以符合0070文件規範。5)確保transactions和pendingTransactions集合僅包含合規欄位。影響範圍：資料庫結構一致性，完全符合架構規範。"
 };
