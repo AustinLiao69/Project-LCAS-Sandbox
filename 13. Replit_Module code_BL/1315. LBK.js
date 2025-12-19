@@ -889,7 +889,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
  * @date 2025-07-15 19:10:00
  * @description 當精確匹配失敗時，使用優化的模糊匹配尋找最相似的科目
  */
-async function LBK_fuzzyMatch(input, threshold, userId, processId) {
+async function LBK_fuzzyMatch(input, userId, processId) {
   if (!input || !userId) return null;
 
   try {
@@ -1015,9 +1015,10 @@ async function LBK_fuzzyMatch(input, threshold, userId, processId) {
       uniqueMatches.sort((a, b) => b.score - a.score);
       const bestMatch = uniqueMatches[0];
 
-      if (bestMatch.score >= threshold) {
-        return bestMatch;
-      }
+      // threshold is removed as it's not used in the original code logic.
+      // if (bestMatch.score >= threshold) {
+      return bestMatch;
+      // }
     }
 
     return null;
@@ -2751,11 +2752,11 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
 
     // 階段三修復：使用 LBK_getWalletByName 動態查詢錢包
     const walletResult = await LBK_getWalletByName(targetWalletName, userId, processId);
-    
+
     if (!walletResult || !walletResult.walletId) {
       // 如果按名稱找不到，嘗試查詢所有活躍錢包並按類型匹配
       const walletsSnapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets").where("status", "==", "active").get();
-      
+
       if (walletsSnapshot.empty) {
         throw new Error(`用戶無可用的活躍錢包，無法更新同義詞`);
       }
@@ -2766,7 +2767,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
         const walletData = doc.data();
         const walletType = walletData.type || '';
         const walletName = walletData.walletName || walletData.name || '';
-        
+
         // 類型匹配優先級
         if ((targetWalletType === 'cash' && (walletType === 'cash' || walletName.includes('現金'))) ||
             (targetWalletType === 'bank' && (walletType === 'bank' || walletName.includes('銀行'))) ||
@@ -4343,11 +4344,11 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       finalBookkeepingData.subjectCode = stageData.selectedSubject.subjectCode;
       finalBookkeepingData.subjectName = stageData.selectedSubject.subjectName;
       finalBookkeepingData.majorCode = stageData.selectedSubject.majorCode;
-      
+
       // 根據科目代碼判斷收支類型
       const isIncome = String(stageData.selectedSubject.majorCode || stageData.selectedSubject.subjectCode).startsWith('2');
       finalBookkeepingData.action = isIncome ? "收入" : "支出";
-      
+
       LBK_logInfo(`階段四：直接使用已選擇的科目: ${finalBookkeepingData.subjectName} (代碼: ${finalBookkeepingData.subjectCode}) [${processId}]`, "記帳完成", userId, functionName);
     } else {
       LBK_logWarning(`階段四：Pending Record 中缺少科目選擇資訊，將使用原始解析資料 [${processId}]`, "記帳完成", userId, functionName);
@@ -4357,7 +4358,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     if (stageData.selectedWallet && stageData.walletSelected) {
       finalBookkeepingData.paymentMethod = stageData.selectedWallet.walletName;
       finalBookkeepingData.walletId = stageData.selectedWallet.walletId;
-      
+
       LBK_logInfo(`階段四：直接使用已選擇的錢包: ${finalBookkeepingData.paymentMethod} (ID: ${finalBookkeepingData.walletId}) [${processId}]`, "記帳完成", userId, functionName);
     }
 
