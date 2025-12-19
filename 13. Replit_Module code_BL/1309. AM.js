@@ -1440,6 +1440,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     let walletCount = 0;
     let budgetInitialized = false;
     let collaborationInitialized = false;
+    let pendingTransactionsInitialized = false; // 移到函數開始定義
 
     try {
       // 1. 調用WCM模組進行科目初始化
@@ -1500,7 +1501,6 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
       // 5. 階段五新增：調用LBK模組進行pendingTransactions子集合初始化
       console.log(`📋 ${functionName}: 調用LBK模組進行pendingTransactions子集合初始化...`);
-      let pendingTransactionsInitialized = false;
       
       if (LBK && typeof LBK.LBK_initializePendingTransactionsSubcollection === 'function') {
         const pendingResult = await LBK.LBK_initializePendingTransactionsSubcollection(userLedgerId, { userId: UID });
