@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.5.0
+ * LBK_快速記帳模組_1.6.0
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - DCN-0098階段五：建立 LBK 模組初始化功能至 AM 模組整合
- * @update 2025-12-19: 升級至v1.5.0，實作階段五的 pendingTransactions 子集合初始化功能
+ * @description LINE OA 專用快速記帳處理模組 - 階段一：修復科目歧義消除後的支付方式檢查邏輯
+ * @update 2025-12-19: 升級至v1.6.0，修復科目歧義消除完成後的支付方式檢查邏輯
  */
 
 // 引入所需模組
@@ -3363,7 +3363,78 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       LBK_logWarning(`同義詞建立失敗但繼續處理: ${synonymResult.error} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
     }
 
-    // 步驟2：準備記帳資料，直接使用選擇的科目資訊進行記帳（不再依賴科目識別）
+    // 步驟2：階段一新增 - 檢查支付方式是否需要歧義消除
+    LBK_logInfo(`科目選擇完成，檢查支付方式: ${pendingData.paymentMethod} [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
+    
+    // 解析支付方式，檢查是否需要歧義消除
+    const walletResult = await LBK_parsePaymentMethod(pendingData.originalInput || `${pendingData.subject}${pendingData.rawAmount}${pendingData.paymentMethod}`, inputData.userId, processId);
+    
+    if (walletResult.systemError) {
+      LBK_logError(`支付方式解析系統錯誤: ${walletResult.error} [${processId}]`, "支付方式檢查", inputData.userId, "PAYMENT_METHOD_SYSTEM_ERROR", walletResult.error, "LBK_handleClassificationPostback");
+      
+      return {
+        success: false,
+        message: `科目歸類完成，但支付方式檢查失敗：${walletResult.error}`,
+        responseMessage: `科目歸類完成，但支付方式檢查失敗：${walletResult.error}`,
+        moduleCode: "LBK",
+        module: "LBK",
+        processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
+        moduleVersion: "1.6.0",
+        errorType: "PAYMENT_METHOD_SYSTEM_ERROR"
+      };
+    }
+
+    // 如果支付方式需要歧義消除
+    if (walletResult.requiresWalletConfirmation) {
+      LBK_logInfo(`支付方式需要歧義消除: ${walletResult.walletName}，轉入PENDING_WALLET狀態 [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
+
+      // 更新Pending Record狀態為PENDING_WALLET
+      if (pendingData.pendingId) {
+        const updateResult = await LBK_updatePendingRecord(
+          inputData.userId,
+          pendingData.pendingId,
+          {
+            stageData: {
+              subjectSelected: true,
+              selectedSubject: {
+                subjectId: subjectId,
+                subjectName: selectedCategory.categoryName,
+                majorCode: subjectId
+              },
+              walletSelected: false,
+              selectedWallet: null
+            }
+          },
+          PENDING_STATES.PENDING_WALLET,
+          processId
+        );
+
+        if (!updateResult.success) {
+          LBK_logError(`更新Pending Record狀態失敗: ${updateResult.error} [${processId}]`, "支付方式檢查", inputData.userId, "PENDING_UPDATE_ERROR", updateResult.error, "LBK_handleClassificationPostback");
+        }
+      }
+
+      // 生成支付方式選擇 Quick Reply
+      const walletQuickReply = LBK_generateWalletSelectionQuickReply(pendingData.pendingId);
+
+      return {
+        success: true,
+        message: `科目歸類完成！已選擇「${selectedCategory.categoryName}」\n\n檢測到未知支付方式「${walletResult.walletName}」，請問這屬於何種支付方式：`,
+        responseMessage: `科目歸類完成！已選擇「${selectedCategory.categoryName}」\n\n檢測到未知支付方式「${walletResult.walletName}」，請問這屬於何種支付方式：`,
+        quickReply: walletQuickReply,
+        moduleCode: "LBK",
+        module: "LBK",
+        processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
+        moduleVersion: "1.6.0",
+        requiresUserSelection: true,
+        classificationCompleted: true,
+        nextStage: "PENDING_WALLET"
+      };
+    }
+
+    // 步驟3：支付方式明確，直接進行記帳
+    LBK_logInfo(`支付方式明確: ${walletResult.walletName}，開始執行記帳 [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
+
     const transactionId = Date.now().toString();
     const now = moment().tz(LBK_CONFIG.TIMEZONE);
 
@@ -3385,7 +3456,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       // 來源和用戶資訊 - 1301標準
       source: 'classification',
       userId: inputData.userId,
-      paymentMethod: pendingData.paymentMethod || '刷卡',
+      paymentMethod: walletResult.walletName || pendingData.paymentMethod || '刷卡',
 
       // 記帳特定欄位 - 1301標準
       ledgerId: `user_${inputData.userId}`,
@@ -3398,7 +3469,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       metadata: {
         processId: processId,
         module: 'LBK',
-        version: '1.4.3',
+        version: '1.6.0',
         majorCode: subjectId,
         subjectName: selectedCategory.categoryName,
         classificationSource: 'user_selection'
@@ -3407,7 +3478,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
 
     LBK_logInfo(`開始執行歸類後記帳: ${pendingData.subject} ${pendingData.amount}元 → ${selectedCategory.categoryName} [${processId}]`, "記帳執行", inputData.userId, "LBK_handleClassificationPostback");
 
-    // 步驟3：直接儲存記帳資料到Firestore
+    // 步驟4：直接儲存記帳資料到Firestore
     const saveResult = await LBK_saveToFirestore(preparedData, processId);
 
     let bookkeepingResult;
@@ -3449,12 +3520,12 @@ async function LBK_handleClassificationPostback(inputData, processId) {
         moduleCode: "LBK",
         module: "LBK",
         processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-        moduleVersion: "1.4.3",
+        moduleVersion: "1.6.0",
         errorType: "BOOKKEEPING_AFTER_CLASSIFICATION_ERROR"
       };
     }
 
-    // 步驟4：格式化成功回覆訊息
+    // 步驟5：格式化成功回覆訊息
     const successMessage = LBK_formatReplyMessage(bookkeepingResult.data, "LBK", {
       originalInput: `${pendingData.subject}${pendingData.rawAmount}`,
       classificationCompleted: true,
@@ -3471,7 +3542,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       module: "LBK",
       data: bookkeepingResult.data,
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.4.3",
+      moduleVersion: "1.6.0",
       classificationCompleted: true,
       bookkeepingCompleted: true
     };
@@ -4852,7 +4923,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.5.0", // 階段五版本
+  MODULE_VERSION: "1.6.0", // 階段一版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段五：建立 LBK 模組初始化功能至 AM 模組整合"
+  MODULE_UPDATE: "階段一：修復科目歧義消除後的支付方式檢查邏輯"
 };
