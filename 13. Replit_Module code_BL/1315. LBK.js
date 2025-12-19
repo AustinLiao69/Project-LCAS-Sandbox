@@ -3361,7 +3361,35 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       LBK_logWarning(`同義詞建立失敗但繼續處理: ${synonymResult.error} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
     }
 
-    // 步驟2：階段一新增 - 檢查支付方式是否需要歧義消除
+    // 步驟2：階段一修復 - 更新 Pending Record 的科目資訊
+    if (pendingData.pendingId) {
+      const updateResult = await LBK_updatePendingRecord(
+        inputData.userId,
+        pendingData.pendingId,
+        {
+          stageData: {
+            subjectSelected: true,
+            selectedSubject: {
+              subjectCode: subjectId,
+              subjectName: selectedCategory.categoryName,
+              majorCode: selectedCategory.categoryId
+            },
+            walletSelected: false,
+            selectedWallet: null
+          }
+        },
+        PENDING_STATES.PENDING_SUBJECT,
+        processId
+      );
+
+      if (!updateResult.success) {
+        LBK_logError(`階段一修復：更新 Pending Record 科目資訊失敗: ${updateResult.error} [${processId}]`, "科目歸類", inputData.userId, "PENDING_UPDATE_ERROR", updateResult.error, "LBK_handleClassificationPostback");
+      } else {
+        LBK_logInfo(`階段一修復：Pending Record 科目資訊更新成功: ${selectedCategory.categoryName} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
+      }
+    }
+
+    // 步驟3：檢查支付方式是否需要歧義消除
     LBK_logInfo(`科目選擇完成，檢查支付方式: ${pendingData.paymentMethod} [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
 
     // 解析支付方式，檢查是否需要歧義消除
@@ -3432,7 +3460,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       };
     }
 
-    // 步驟3：支付方式明確，直接進行記帳
+    // 步驟4：支付方式明確，直接進行記帳
     LBK_logInfo(`支付方式明確: ${walletResult.walletName}，開始執行記帳 [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
 
     const transactionId = Date.now().toString();
@@ -3478,7 +3506,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
 
     LBK_logInfo(`開始執行歸類後記帳: ${pendingData.subject} ${pendingData.amount}元 → ${selectedCategory.categoryName} [${processId}]`, "記帳執行", inputData.userId, "LBK_handleClassificationPostback");
 
-    // 步驟4：直接儲存記帳資料到Firestore
+    // 步驟5：直接儲存記帳資料到Firestore
     const saveResult = await LBK_saveToFirestore(preparedData, processId);
 
     let bookkeepingResult;
@@ -3525,7 +3553,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       };
     }
 
-    // 步驟5：格式化成功回覆訊息
+    // 步驟6：格式化成功回覆訊息
     const successMessage = LBK_formatReplyMessage(bookkeepingResult.data, "LBK", {
       originalInput: `${pendingData.subject}${pendingData.rawAmount}`,
       classificationCompleted: true,
@@ -4761,7 +4789,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.8.0", // 階段四版本
+  MODULE_VERSION: "1.8.1", // 階段一修復版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段四：修復科目重複查詢問題，修改LBK_completePendingRecord函數優先使用Pending Record中已選擇的科目資訊，跳過LBK_getSubjectCode重新查詢，直接使用stageData中的selectedSubject，避免科目選擇完成後重複觸發歧義消除導致「找不到科目」錯誤。"
+  MODULE_UPDATE: "階段一修復：修復科目資訊遺失問題，在LBK_handleClassificationPostback函數中正確更新Pending Record的selectedSubject資訊，確保包含majorCode、subjectCode、subjectName等完整科目資料，解決後續記帳時科目資訊undefined導致Firestore儲存失敗的問題。"
 };
