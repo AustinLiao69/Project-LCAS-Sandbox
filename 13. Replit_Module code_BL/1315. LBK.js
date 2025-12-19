@@ -3788,14 +3788,101 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
   }
 }
 
-// 模組版本升級至 v1.4.9
-// 階段四：整合完整的一次性互動流程
-// - 完善 Pending Record 狀態機 (PENDING_SUBJECT → PENDING_WALLET → COMPLETED)
-// - 整合 Quick Reply 生成邏輯，根據 Pending Record 狀態生成對應 Quick Reply
-// - 實現自動流程推進，科目選擇完成後自動檢查支付方式並進入下一階段
-// - 升級 LBK 模組版本至 v1.4.9
+/**
+ * 階段五新增：初始化 pendingTransactions 子集合
+ * @version 2025-12-19-V1.5.0
+ * @param {string} userLedgerId - 用戶帳本ID
+ * @param {object} context - 上下文資訊，包含 userId
+ * @param {object} options - 選項，支援 createStructure 等
+ * @returns {Promise<Object>} 初始化結果
+ * @description 為用戶建立 pendingTransactions 子集合基礎結構，類似 WCM 模組的批量初始化機制
+ */
+async function LBK_initializePendingTransactionsSubcollection(userLedgerId, context, options = {}) {
+  const functionName = "LBK_initializePendingTransactionsSubcollection";
+  try {
+    LBK_logInfo(`開始初始化 pendingTransactions 子集合: ${userLedgerId}`, "子集合初始化", context.userId, functionName);
 
-// 更新模組導出，添加 Pending Record 函數和狀態機常量
+    if (!userLedgerId || !context.userId) {
+      throw new Error("userLedgerId 和 context.userId 為必填參數");
+    }
+
+    await LBK_initializeFirestore();
+    const db = LBK_INIT_STATUS.firestore_db;
+
+    // 檢查是否已經初始化
+    const existingInit = await db
+      .collection('ledgers')
+      .doc(userLedgerId)
+      .collection('pendingTransactions')
+      .doc('_init')
+      .get();
+
+    if (existingInit.exists) {
+      LBK_logInfo(`pendingTransactions 子集合已存在: ${userLedgerId}`, "子集合初始化", context.userId, functionName);
+      return {
+        success: true,
+        data: {
+          alreadyExists: true,
+          subcollectionCreated: false,
+          message: "pendingTransactions 子集合已存在"
+        }
+      };
+    }
+
+    // 建立初始化文檔，確保子集合存在
+    const initDocData = {
+      initialized: true,
+      createdAt: admin.firestore.Timestamp.now(),
+      userId: context.userId,
+      ledgerId: userLedgerId,
+      module: "LBK",
+      version: "v1.5.0",
+      note: "Initial document to ensure pendingTransactions subcollection exists",
+      configVersion: "0305",
+      structure: {
+        stateTransitions: ["PENDING_SUBJECT", "PENDING_WALLET", "COMPLETED", "CANCELLED"],
+        defaultExpirationMinutes: 30,
+        autoCleanupEnabled: true
+      }
+    };
+
+    await db
+      .collection('ledgers')
+      .doc(userLedgerId)
+      .collection('pendingTransactions')
+      .doc('_init')
+      .set(initDocData);
+
+    LBK_logInfo(`pendingTransactions 子集合初始化完成: ${userLedgerId}`, "子集合初始化", context.userId, functionName);
+
+    return {
+      success: true,
+      data: {
+        subcollectionCreated: true,
+        initDocId: "_init",
+        structure: initDocData.structure,
+        message: "pendingTransactions 子集合初始化成功"
+      }
+    };
+
+  } catch (error) {
+    LBK_logError(`初始化 pendingTransactions 子集合失敗: ${error.toString()}`, "子集合初始化", context.userId, "INIT_PENDING_SUBCOLLECTION_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      data: null
+    };
+  }
+}
+
+// 模組版本升級至 v1.5.0
+// 階段五：新增 pendingTransactions 子集合初始化功能
+// - 新增 LBK_initializePendingTransactionsSubcollection 函數
+// - 支援與 AM 模組整合，在用戶初次註冊時自動建立 pendingTransactions 子集合
+// - 確保所有新用戶都具備完整的多階段記帳功能基礎結構
+// - 升級 LBK 模組版本至 v1.5.0
+
+// 更新模組導出，添加新的初始化函數
 module.exports = {
   LBK_processQuickBookkeeping: LBK_processQuickBookkeeping,
   LBK_parseUserMessage: LBK_parseUserMessage,
@@ -3814,6 +3901,8 @@ module.exports = {
   LBK_validatePaymentMethod: LBK_validatePaymentMethod,
   LBK_formatDateTime: LBK_formatDateTime,
   LBK_initialize: LBK_initialize,
+  // 階段五新增：子集合初始化函數
+  LBK_initializePendingTransactionsSubcollection: LBK_initializePendingTransactionsSubcollection,
   LBK_handleError: LBK_handleError,
   LBK_processAmountInternal: LBK_processAmountInternal,
   LBK_validateDataInternal: LBK_validateDataInternal,

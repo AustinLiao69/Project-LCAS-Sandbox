@@ -1,14 +1,14 @@
 /**
  * 1309. AM.js - 帳號管理模組
- * @version v8.0.3
- * @date 2025-12-16
+ * @version v8.0.4
+ * @date 2025-12-19
  * @description 處理用戶註冊、登入、帳本基礎結構初始化等功能
  * @compliance 嚴格遵守0070文件 - 禁止hard coding，遵守dataflow
- * @update v8.0.3: DCN-0023職責重構 - 完全移除與WCM模組重複功能，職責邊界清晰
+ * @update v8.0.4: 階段五整合 - 新增LBK模組pendingTransactions子集合初始化功能
  */
 
 console.log('🔍 AM.js 模組開始載入...');
-console.log('📋 AM.js 版本: v8.0.3');
+console.log('📋 AM.js 版本: v8.0.4');
 
 // 引入必要模組
 console.log('📦 AM.js: 開始引入依賴模組...');
@@ -137,6 +137,14 @@ try {
 
 const BM = require("./1312. BM.js");
 const CM = require("./1313. CM.js");
+
+// 階段五新增：引入LBK模組用於pendingTransactions子集合初始化
+let LBK;
+try {
+  LBK = require("./1315. LBK.js");
+} catch (error) {
+  console.warn('⚠️ LBK模組載入失敗，pendingTransactions初始化將跳過:', error.message);
+}
 
 // 備用函數已移除 - 科目和配置管理功能已轉移至WCM模組 (DCN-0023)
 
@@ -1490,6 +1498,22 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         console.warn(`⚠️ ${functionName}: CM協作結構初始化失敗: ${collaborationResult.message}`);
       }
 
+      // 5. 階段五新增：調用LBK模組進行pendingTransactions子集合初始化
+      console.log(`📋 ${functionName}: 調用LBK模組進行pendingTransactions子集合初始化...`);
+      let pendingTransactionsInitialized = false;
+      
+      if (LBK && typeof LBK.LBK_initializePendingTransactionsSubcollection === 'function') {
+        const pendingResult = await LBK.LBK_initializePendingTransactionsSubcollection(userLedgerId, { userId: UID });
+        if (pendingResult.success) {
+          pendingTransactionsInitialized = true;
+          console.log(`✅ ${functionName}: LBK pendingTransactions子集合初始化完成`);
+        } else {
+          console.warn(`⚠️ ${functionName}: LBK pendingTransactions子集合初始化失敗: ${pendingResult.error}`);
+        }
+      } else {
+        console.warn(`⚠️ ${functionName}: LBK模組不可用，無法初始化pendingTransactions子集合`);
+      }
+
     } catch (moduleError) {
       console.warn(`⚠️ ${functionName}: 模組調用過程中發生錯誤: ${moduleError.message}`);
     }
@@ -1574,14 +1598,14 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       throw new Error(`帳本驗證失敗: ${verifyError.message}`);
     }
 
-    // 階段四完成：記錄詳細的模組整合統計
+    // 階段五完成：記錄詳細的模組整合統計
     const executionTime = Date.now() - startTime;
 
     await DL.DL_log(
       "AM",
       functionName,
       "INFO",
-      `階段四完成：用戶 ${UID} 帳本初始化完成，整合WCM/BM/CM模組，共載入 ${subjectCount} 筆科目，${walletCount} 個帳戶，預算結構: ${budgetInitialized ? '完成' : '失敗'}，協作結構: ${collaborationInitialized ? '完成' : '失敗'}，執行時間: ${executionTime}ms`,
+      `階段五完成：用戶 ${UID} 帳本初始化完成，整合WCM/BM/CM/LBK模組，共載入 ${subjectCount} 筆科目，${walletCount} 個帳戶，預算結構: ${budgetInitialized ? '完成' : '失敗'}，協作結構: ${collaborationInitialized ? '完成' : '失敗'}，pendingTransactions: ${pendingTransactionsInitialized ? '完成' : '失敗'}，執行時間: ${executionTime}ms`,
       UID,
       userLedgerId,
     );
@@ -1602,14 +1626,18 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         cm: {
           collaborationStructureInitialized: collaborationInitialized,
           available: !!CM
+        },
+        lbk: {
+          pendingTransactionsInitialized: pendingTransactionsInitialized,
+          available: !!LBK
         }
       },
       fsStructureResult: structureResult,
       initializationComplete: true,
-      stage: "v8.0.0_module_integration_complete",
+      stage: "v8.0.4_complete_integration",
       subjectCount: subjectCount,
       walletCount: walletCount,
-      message: `階段四完成：帳本 ${userLedgerId} 建立成功，AM專注基礎結構，WCM處理主數據，BM處理預算，CM處理協作`
+      message: `階段五完成：帳本 ${userLedgerId} 建立成功，AM專注基礎結構，WCM處理主數據，BM處理預算，CM處理協作，LBK處理多階段記帳`
     };
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
