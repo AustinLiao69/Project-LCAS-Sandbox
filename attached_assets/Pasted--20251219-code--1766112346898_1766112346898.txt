@@ -1,0 +1,93 @@
+------------------------------------------
+20251219.科目與支付方式歸類邏輯一次性互動方案
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據9904文件要求，以資深SQA角度進行深度分析：
+A. 快速摘要（≤3句）
+•	postback解析邏輯錯誤：classify_104_...格式的postback被錯誤解析為科目名稱classify_，導致無限循環的科目歧義消除流程。
+•	AM模組帳本初始化異常：用戶輸入叉燒飯3333元大時，AM模組的帳本驗證或初始化流程失敗，但具體錯誤資訊未在日誌中顯示。
+•	LBK_parseInputFormat函數混淆業務邏輯：該函數將postback內部格式當作用戶輸入處理，違反了模組職責分離原則。
+________________________________________
+B. Root causes（最多 6 條）
+1. LBK_parseInputFormat函數職責混亂
+•	證據：
+[DEBUG] 開始解析格式: "classify_104_{"subject":"叉鴨飯","amount":4444,...
+=>為什麼前面要加classify_？可以不要嗎？
+
+[INFO] 解析結果: 科目="classify_", 金額=104, 支付方式="刷卡"
+•	信心度：95%
+•	解決方案：修復LBK_parseInputFormat函數，新增postback格式識別邏輯，區分用戶輸入和系統內部postback格式
+
+2. WH模組postback路由機制缺陷
+•	證據：
+WH v2.5.3: 收到postback事件: classify_104_...
+WH v2.5.0: 純粹轉發至LBK處理
+•	信心度：90%
+•	解決方案：修復WH模組的postback識別邏輯，確保科目歧義消除的postback正確構建inputData結構
+
+3. LBK模組科目歧義消除流程狀態管理錯誤
+•	證據：
+[ERROR] 查詢科目代碼失敗: Error: 找不到科目: classify_
+[INFO] 需要新科目歸類: classify_
+[INFO] 觸發新科目歧義消除流程: classify_
+•	信心度：100%
+•	解決方案：修復LBK_handleClassificationPostback函數，確保正確解析postback數據並執行記帳而非重新進入歧義消除
+
+4. AM模組帳本初始化流程異常處理不完整
+•	證據：用戶輸入叉燒飯3333元大回覆帳本初始化失敗，請稍後再試，但日誌中無對應錯誤資訊
+•	信心度：70%
+•	解決方案：檢查AM模組的AM_getUserDefaultLedger函數，完善錯誤處理和日誌記錄機制
+
+5. postback數據結構解析邏輯錯誤
+•	證據：
+classify_104_{"subject":"叉鴨飯","amount":4444,"rawAmount":"4444",...}
+應解析為科目ID=104和記帳數據，但被當作classify_科目處理
+•	信心度：100%
+•	解決方案：修復LBK_handleClassificationPostback中的JSON解析邏輯，正確提取科目ID和pendingData
+
+6. 用戶輸入格式識別邏輯混亂
+•	證據：叉燒飯3333元大中的元大應識別為銀行名稱，但可能導致解析錯誤
+•	信心度：60%
+•	解決方案：優化LBK_parseInputFormat的銀行名稱識別規則，確保正確處理複合銀行名稱
+
+解決方案階段規劃
+階段一：修復postback解析核心邏輯
+目標：解決科目歧義消除無限循環問題
+修改檔案：
+1.	13. Replit_Module code_BL/1315. LBK.js
+2.	13. Replit_Module code_BL/1320. WH.js
+修改內容：
+1.	LBK_parseInputFormat函數：新增postback格式檢測，直接返回null避免錯誤解析
+2.	LBK_handleClassificationPostback函數：修復JSON解析邏輯，正確提取科目ID和記帳資料
+3.	WH_handlePendingRecordPostback函數：確保正確構建科目歧義消除的inputData
+影響範圍：所有LINE科目歧義消除流程
+Before/After差異：
+•	Before：postback被當作新記帳輸入，產生無限循環
+•	After：postback正確執行科目選擇並完成記帳
+
+階段二：強化AM模組錯誤處理
+目標：解決帳本初始化失敗問題
+修改檔案：
+1.	13. Replit_Module code_BL/1309. AM.js
+2.	13. Replit_Module code_BL/1320. WH.js
+修改內容：
+1.	AM_getUserDefaultLedger函數：增加詳細錯誤日誌記錄
+2.	WH_processEventAsync函數：優化AM模組調用的錯誤處理邏輯
+影響範圍：所有用戶的帳本驗證和初始化流程
+Before/After差異：
+•	Before：帳本初始化失敗時僅返回通用錯誤訊息
+•	After：提供具體錯誤原因並記錄詳細日誌
+=>我在firebase db裡面看到pendingtransactions有被建立，所以應該不是帳本初始化失敗，請再查明原因。
+
+階段三：優化輸入格式解析邏輯
+目標：提升複合銀行名稱識別準確度
+修改檔案：
+1.	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+1.	LBK_parseInputFormat函數：優化銀行名稱識別規則，處理元大等複合名稱
+影響範圍：所有包含銀行名稱的記帳輸入解析
+Before/After差異：
+•	Before：元大可能被誤識別或解析錯誤
+•	After：正確識別元大為銀行名稱並設定為支付方式
+=>不用去識別，而是要跑出支付方式歸類邏輯讓user自己去歸類支付方式，此階段請刪除。
