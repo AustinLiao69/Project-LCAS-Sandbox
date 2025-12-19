@@ -6,6 +6,109 @@
 ------------------------------------------
 20251219.科目與支付方式歸類邏輯一次性互動方案
 
+Approved請進行階段一
+
+
+Debug分析報告
+版本: v1.1.0
+建立日期: 2025-12-19
+建立者: LCAS Team
+分析師: SQA (依據9904文件)
+________________________________________
+A. 快速摘要（≤3句）
+1.	主要問題：Firestore儲存失敗，因為metadata.majorCode欄位值為undefined，違反Firestore不允許undefined值的規則。
+2.	連鎖問題：科目歸類完成後，支付方式歧義消除過程中顯示「undefined」而非實際的支付方式名稱「彰銀」。
+3.	根本原因：Pending Record在完成階段未正確保存已選擇的科目資訊，導致記帳時缺少必要的majorCode資料。
+________________________________________
+B. Root causes（最多 6 條）
+1. Firestore儲存undefined值錯誤
+•	證據：
+Error: Value for argument "data" is not a valid Firestore document. 
+Cannot use "undefined" as a Firestore value (found in field "metadata.majorCode").
+•	信心度：100%
+•	解決方案：在LBK_completePendingRecord函數中補強科目資料解析邏輯，確保majorCode不為undefined
+2. Pending Record科目資訊遺失
+•	證據：
+[WARNING] 階段四：Pending Record 中缺少科目選擇資訊，將使用原始解析資料
+階段四：開始完成Pending Record，科目已選: undefined, 錢包已選: true
+•	信心度：95%
+•	解決方案：修復LBK_updatePendingRecord函數，確保科目選擇完成後正確更新stageData.selectedSubject
+3. 支付方式歧義消除顯示undefined
+•	證據：
+檢測到未知支付方式「undefined」，請問這屬於何種支付方式：
+•	信心度：90%
+•	解決方案：修復支付方式名稱傳遞邏輯，確保從原始輸入中正確提取支付方式名稱
+4. 科目代碼映射缺失
+•	證據：科目歸類選擇「餐飲費用」(ID:104)，但儲存時majorCode為undefined
+•	信心度：85%
+•	解決方案：修復0099.json科目配置與Pending Record的映射邏輯
+5. 資料結構不一致
+•	證據：Pending Record結構與最終記帳資料結構之間的欄位映射不完整
+•	信心度：80%
+•	解決方案：統一Pending Record與記帳資料的欄位結構，確保完整映射
+________________________________________
+C. 解決方案（分階段實施）
+重要提醒：這是MVP階段，專注解決當前問題，不進行不必要的優化或強化。
+階段一：修復科目資訊遺失問題
+目標：確保科目歸類完成後，科目資訊正確保存到Pending Record
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+1.	修改LBK_handleClassificationPostback函數，在科目歸類完成後正確更新Pending Record的selectedSubject資訊
+2.	確保包含majorCode、subjectCode、subjectName等完整科目資料
+Before：科目歸類後Pending Record中selectedSubject為空或undefined
+After：科目歸類後Pending Record包含完整科目資訊
+影響範圍：科目歧義消除流程
+________________________________________
+階段二：修復支付方式名稱顯示問題
+目標：修正支付方式歧義消除時顯示「undefined」的問題
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+1.	修改支付方式歧義消除訊息生成邏輯
+2.	確保從原始輸入或Pending Record中正確提取支付方式名稱
+Before：顯示「檢測到未知支付方式「undefined」」
+After：顯示「檢測到未知支付方式「彰銀」」
+影響範圍：支付方式歧義消除用戶體驗
+________________________________________
+階段三：修復Firestore儲存undefined值問題
+目標：防止undefined值被儲存到Firestore，確保記帳成功
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+1.	修改LBK_completePendingRecord函數，在記帳前驗證所有必要欄位
+2.	確保metadata.majorCode等欄位有有效值
+3.	新增資料驗證邏輯，處理undefined值
+Before：Firestore儲存因undefined值失敗
+After：記帳成功完成，所有欄位都有有效值
+影響範圍：記帳完成流程
+________________________________________
+階段四：版本升級
+目標：更新模組版本號
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+•	模組版本：v1.4.3 → v1.4.4
+•	函數版次：相關函數版次升級
+Before：v1.4.3版本
+After：v1.4.4版本，修復科目與支付方式處理問題
+影響範圍：版本管理
+________________________________________
+D. 簡單概念解釋
+這個問題就像公司部門間的資料傳遞出現斷層：
+1.	客戶服務部（WH模組）接收到客戶需求「餅乾333333彰銀」
+2.	分類部門（LBK科目歧義消除）正確分類為「餐飲費用」
+3.	暫存部門（Pending Record）應該記住分類結果，但記錄不完整
+4.	財務部門（記帳儲存）發現缺少必要資訊（majorCode），無法完成作業
+5.	支付部門（支付方式處理）顯示錯誤的「undefined」而非「彰銀」
+解決方案就是修復部門間的資料傳遞鏈，確保每個環節都正確保存和傳遞完整資訊。
+________________________________________
+請Approve後開始實施修復。
+
+
+------------------------------------------
+20251219.科目與支付方式歸類邏輯一次性互動方案
+
 approved請進行階段一
 
 階段一：修復錢包ID動態查詢機制
