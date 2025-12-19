@@ -862,11 +862,24 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
       };
     }
 
-    throw new Error(`找不到科目: ${subjectName}`);
+    // 觸發科目歧義消除流程
+    return {
+      success: false,
+      requiresClassification: true,
+      originalSubject: subjectName,
+      error: `找不到科目: ${subjectName}`
+    };
 
   } catch (error) {
     LBK_logError(`查詢科目代碼失敗: ${error.toString()} [${processId}]`, "科目查詢", userId, "SUBJECT_ERROR", error.toString(), "LBK_getSubjectCode");
-    throw error;
+    
+    // 如果是查詢錯誤，也觸發科目歧義消除流程
+    return {
+      success: false,
+      requiresClassification: true,
+      originalSubject: subjectName,
+      error: error.toString()
+    };
   }
 }
 
