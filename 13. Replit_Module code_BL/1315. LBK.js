@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.4.9
+ * LBK_快速記帳模組_1.5.0
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - DCN-0024階段四：整合一次性互動流程
- * @update 2025-12-19: 升級至v1.4.9，實作階段四的完整狀態機流程
+ * @description LINE OA 專用快速記帳處理模組 - DCN-0098階段五：建立 LBK 模組初始化功能至 AM 模組整合
+ * @update 2025-12-19: 升級至v1.5.0，實作階段五的 pendingTransactions 子集合初始化功能
  */
 
 // 引入所需模組
@@ -716,7 +716,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
       // 將同義詞字串分割為陣列，即使為空字串也進行處理
       const synonyms = synonymsStr ? synonymsStr.split(",").map(s => s.trim()).filter(s => s.length > 0) : [];
 
-      // 即使synonyms陣列為空，也記錄此步驟以利後續歸類機制
+      // 記錄同義詞處理過程，即使為空也記錄
       LBK_logDebug(`處理同義詞匹配: "${normalizedInput}"，科目: "${data.categoryName}"，同義詞數量: ${synonyms.length} [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
 
       for (const synonym of synonyms) {
@@ -3222,7 +3222,7 @@ function LBK_generateWalletSelectionQuickReply(pendingId) {
 
 
 /**
- * 階段四新增：將Pending Record轉換為正式交易
+ * 階段四增強：將Pending Record轉換為正式交易
  * @version 2025-12-19-V1.4.9
  * @param {string} userId - 用戶ID
  * @param {string} pendingId - Pending Record ID
@@ -3435,7 +3435,7 @@ async function LBK_transitionToPendingWallet(userId, pendingId, processId) {
 }
 
 /**
- * 階段四增強：將Pending Record轉換為正式交易
+ * 階段四新增：將Pending Record轉換為正式交易
  * @version 2025-12-19-V1.4.9
  * @param {string} userId - 用戶ID
  * @param {string} pendingId - Pending Record ID
@@ -3562,7 +3562,7 @@ async function LBK_handleSubjectSelectionComplete(classificationResult, processI
           }
         }
       },
-      PENDING_STATES.PENDING_SUBJECT, // 保持在PENDING_SUBJECT狀態，等待下一步處理
+      PENDING_STATES.PENDING_SUBJECT, // 保持在PENDING_SUBJECT狀態
       processId
     );
 
@@ -3954,22 +3954,22 @@ module.exports = {
   // 階段二新增：Pending Record 函數
   LBK_createPendingRecord,
   LBK_updatePendingRecord,
-  LBK_processPendingToTransaction: LBK_completePendingRecord, // Rename for phase 4
   LBK_getPendingRecord,
+  LBK_processPendingToTransaction: LBK_completePendingRecord, // Rename for phase 4
+  LBK_handleSubjectSelectionComplete, // Exported for phase 4 integration
 
   // 階段四新增：狀態機相關函數
   LBK_advancePendingFlow,
   LBK_transitionToPendingWallet,
   LBK_completePendingRecord, // Now handles the final transaction completion
-  LBK_handleSubjectSelectionComplete,
-  LBK_handleWalletTypeSelection,
   LBK_generateWalletSelectionQuickReply,
+  LBK_handleWalletTypeSelection,
 
   // PENDING_STATES constants for the state machine
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.4.9", // 階段四版本
+  MODULE_VERSION: "1.5.0", // 階段五版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段四：整合一次性互動流程，完善狀態機"
+  MODULE_UPDATE: "階段五：建立 LBK 模組初始化功能至 AM 模組整合"
 };
