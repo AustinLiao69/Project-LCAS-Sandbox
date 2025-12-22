@@ -527,7 +527,7 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
     }
 
     // 根據科目代碼判斷收支類型，並設定正確的支付方式
-    const isIncome = String(subjectResult.majorCode).startsWith('2'); // majorCode is removed in this commit. This line needs to be reviewed.
+    const isIncome = String(subjectResult.categoryId).startsWith('2'); // categoryId is used instead of majorCode
     const finalPaymentMethod = parseResult.paymentMethod === "刷卡" ?
       subjectResult.defaultPaymentMethod : parseResult.paymentMethod;
 
@@ -538,9 +538,9 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
         amount: parseResult.amount,
         rawAmount: parseResult.rawAmount,
         paymentMethod: finalPaymentMethod,
-        subjectCode: subjectResult.subCode,
-        categoryName: subjectResult.subName,
-        // majorCode: subjectResult.majorCode, // majorCode removed
+        subjectCode: subjectResult.subCategoryId, // Use subCategoryId for subjectCode
+        categoryName: subjectResult.name,        // Use name for categoryName
+        // categoryId: subjectResult.categoryId, // categoryId is the major category
         action: isIncome ? "收入" : "支出",
         userId: userId
       }
@@ -753,7 +753,7 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
         // 列出所有文檔的基本信息用於調試
         allSnapshot.forEach(doc => {
           const data = doc.data();
-          LBK_logDebug(`文檔 ${doc.id}: subCategoryId=${data.subCategoryId}, name=${data.name}, categoryName=${data.categoryName}, isActive=${data.isActive}`, "科目查詢", userId, "LBK_getSubjectCode");
+          LBK_logDebug(`文檔 ${doc.id}: categoryId=${data.categoryId}, categoryName=${data.categoryName}, name=${data.name}, isActive=${data.isActive}`, "科目查詢", userId, "LBK_getSubjectCode");
         });
       }
 
@@ -775,10 +775,10 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
       // 1. 精確匹配 - 最高優先級
       if (subName === normalizedInput) {
         exactMatch = {
-          majorCode: String(data.categoryId || data.parentId),
-          majorName: String(data.categoryName || ''),
-          subCode: String(data.subCategoryId || data.categoryId),
-          subName: String(data.name || data.subCategoryName || data.categoryName || '')
+          categoryId: String(data.categoryId || data.parentId),
+          categoryName: String(data.categoryName || ''),
+          subCategoryId: String(data.subCategoryId || data.categoryId),
+          name: String(data.name || data.subCategoryName || data.categoryName || '')
         };
         break;
       }
@@ -795,10 +795,10 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
         const synonymLower = synonym.toLowerCase();
         if (synonymLower === normalizedInput) {
           synonymMatch = {
-            majorCode: String(data.categoryId || data.parentId),
-            majorName: String(data.categoryName || ''),
-            subCode: String(data.subCategoryId || data.categoryId),
-            subName: String(data.name || data.subCategoryName || data.categoryName || '')
+            categoryId: String(data.categoryId || data.parentId),
+            categoryName: String(data.categoryName || ''),
+            subCategoryId: String(data.subCategoryId || data.categoryId),
+            name: String(data.name || data.subCategoryName || data.categoryName || '')
           };
           break;
         }
@@ -807,12 +807,12 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
         if (synonymLower.includes(normalizedInput) && normalizedInput.length >= 2) {
           if (!synonymMatch) { // 只在沒有精確匹配時使用
             synonymMatch = {
-              majorCode: String(data.parentId || data.categoryId),
-              majorName: String(data.categoryName || ''),
-              subCode: String(data.categoryId || ''),
-              subName: String(data.subCategoryName || data.categoryName || '')
+              categoryId: String(data.parentId || data.categoryId),
+              categoryName: String(data.categoryName || ''),
+              subCategoryId: String(data.categoryId || ''),
+              name: String(data.subCategoryName || data.categoryName || '')
             };
-            LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+            LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.name}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
           }
         }
 
@@ -820,12 +820,12 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
         if (normalizedInput.includes(synonymLower) && synonymLower.length >= 2) {
           if (!synonymMatch) { // 只在沒有精確匹配時使用
             synonymMatch = {
-              majorCode: String(data.parentId || data.categoryId),
-              majorName: String(data.categoryName || ''),
-              subCode: String(data.categoryId || ''),
-              subName: String(data.subCategoryName || data.categoryName || '')
+              categoryId: String(data.parentId || data.categoryId),
+              categoryName: String(data.categoryName || ''),
+              subCategoryId: String(data.categoryId || ''),
+              name: String(data.subCategoryName || data.categoryName || '')
             };
-            LBK_logDebug(`找到反向包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.subName}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+            LBK_logDebug(`找到反向包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.name}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
           }
         }
       }
@@ -833,10 +833,10 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
       // 3. 部分匹配 - 包含關係
       if (subName.includes(normalizedInput) || normalizedInput.includes(subName)) {
         partialMatches.push({
-          majorCode: String(data.categoryId || data.parentId),
-          majorName: String(data.categoryName || ''),
-          subCode: String(data.subCategoryId || data.categoryId),
-          subName: String(data.name || data.subCategoryName || data.categoryName || ''),
+          categoryId: String(data.categoryId || data.parentId),
+          categoryName: String(data.categoryName || ''),
+          subCategoryId: String(data.subCategoryId || data.categoryId),
+          name: String(data.name || data.subCategoryName || data.categoryName || ''),
           score: subName.length === normalizedInput.length ? 1.0 : 0.8
         });
       }
@@ -854,10 +854,10 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
       partialMatches.sort((a, b) => b.score - a.score);
       const bestMatch = partialMatches[0];
       return {
-        majorCode: bestMatch.majorCode,
-        majorName: bestMatch.majorName,
-        subCode: bestMatch.subCode,
-        subName: bestMatch.subName
+        categoryId: bestMatch.categoryId,
+        categoryName: bestMatch.categoryName,
+        subCategoryId: bestMatch.subCategoryId,
+        name: bestMatch.name
       };
     }
 
@@ -904,7 +904,7 @@ async function LBK_fuzzyMatch(input, userId, processId) {
     const matches = [];
 
     allSubjects.forEach((subject) => {
-      const subNameLower = subject.subName.toLowerCase();
+      const subNameLower = subject.name.toLowerCase(); // Use 'name' for subject name
 
       // 1. 精確匹配（最高分）
       if (subNameLower === inputLower) {
@@ -941,7 +941,7 @@ async function LBK_fuzzyMatch(input, userId, processId) {
 
       // 記錄同義詞處理過程，即使為空也記錄
       if (synonymsList.length === 0) {
-        LBK_logDebug(`模糊匹配：科目 "${subject.subName}" 無同義詞，跳過同義詞匹配但保持流程完整 [${processId}]`, "模糊匹配", userId, "LBK_fuzzyMatch");
+        LBK_logDebug(`模糊匹配：科目 "${subject.name}" 無同義詞，跳過同義詞匹配但保持流程完整 [${processId}]`, "模糊匹配", userId, "LBK_fuzzyMatch");
       }
 
       for (const synonym of synonymsList) {
@@ -998,13 +998,13 @@ async function LBK_fuzzyMatch(input, userId, processId) {
       const seen = new Set();
 
       matches.forEach(match => {
-        const key = `${match.majorCode}-${match.subCode}`;
+        const key = `${match.categoryId}-${match.subCategoryId}`; // Use categoryId and subCategoryId for uniqueness
         if (!seen.has(key)) {
           seen.add(key);
           uniqueMatches.push(match);
         } else {
           // 如果已存在，保留分數更高的
-          const existingIndex = uniqueMatches.findIndex(m => `${m.majorCode}-${m.subCode}` === key);
+          const existingIndex = uniqueMatches.findIndex(m => `${m.categoryId}-${m.subCategoryId}` === key);
           if (existingIndex >= 0 && match.score > uniqueMatches[existingIndex].score) {
             uniqueMatches[existingIndex] = match;
           }
@@ -1057,10 +1057,10 @@ async function LBK_getAllSubjects(userId, processId) {
       if (doc.id === "template" || doc.id === "_init") return;
 
       subjects.push({
-        majorCode: data.categoryId || data.parentId,
-        majorName: data.categoryName || '',
-        subCode: data.subCategoryId || data.categoryId,
-        subName: data.name || data.subCategoryName || data.categoryName || '',
+        categoryId: data.categoryId || data.parentId, // Use categoryId as majorCode
+        categoryName: data.categoryName || '',
+        subCategoryId: data.subCategoryId || data.categoryId, // Use subCategoryId for subCode
+        name: data.name || data.subCategoryName || data.categoryName || '', // Use name for subName
         synonyms: data.synonyms || ""
       });
     });
@@ -1111,7 +1111,7 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
       }
 
       // 驗證科目資料完整性
-      if (!subjectResult.subCode || !subjectResult.subName) {
+      if (!subjectResult.subCategoryId || !subjectResult.name) { // Check for subCategoryId and name
         LBK_logError(`科目資料不完整: ${JSON.stringify(subjectResult)}`, "記帳執行", bookkeepingData.userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", "LBK_executeBookkeeping");
         return {
           success: false,
@@ -1121,17 +1121,16 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
       }
 
       // 根據科目代碼判斷收支類型，並設定正確的支付方式
-      // majorCode is removed in this commit. This line needs to be reviewed.
-      const isIncome = String(subjectResult.majorCode).startsWith('2');
+      const isIncome = String(subjectResult.categoryId).startsWith('2'); // Use categoryId
       const finalPaymentMethod = bookkeepingData.paymentMethod === "刷卡" ?
         subjectResult.defaultPaymentMethod : bookkeepingData.paymentMethod;
 
       // 更新記帳資料，加入科目資訊和正確的支付方式
       const updatedBookkeepingData = {
         ...bookkeepingData,
-        subjectCode: subjectResult.subCode,
-        categoryName: subjectResult.subName,
-        // majorCode: subjectResult.majorCode, // majorCode removed
+        subjectCode: subjectResult.subCategoryId, // Use subCategoryId for subjectCode
+        categoryName: subjectResult.name,        // Use name for categoryName
+        categoryId: subjectResult.categoryId,     // Use categoryId for categoryId
         action: isIncome ? "收入" : "支出",
         paymentMethod: finalPaymentMethod
       };
@@ -1168,10 +1167,10 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
         transactionId: bookkeepingId,
         amount: updatedBookkeepingData.amount,
         type: updatedBookkeepingData.action === "收入" ? "income" : "expense",
-        category: updatedBookkeepingData.subjectCode,
-        subject: updatedBookkeepingData.categoryName,
+        category: updatedBookkeepingData.subjectCode, // Use subjectCode as category
+        subject: updatedBookkeepingData.categoryName, // Use categoryName as subject
         categoryName: updatedBookkeepingData.categoryName,
-        description: updatedBookkeepingData.subject, // 使用原始科目作為描述
+        description: updatedBookkeepingData.subject, // Use original subject as description
         paymentMethod: updatedBookkeepingData.paymentMethod,
         date: preparedData.date,
         timestamp: new Date().toISOString(),
@@ -1384,7 +1383,7 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
       amount: parseFloat(data.amount) || 0,
       type: data.action === "收入" ? "income" : "expense",
       description: data.subject || '',
-      categoryId: data.subjectCode || 'default',
+      categoryId: data.subjectCode || 'default', // Use subjectCode for categoryId
       // 階段四修復：移除accountId欄位（不符合0070規範）
 
       // 時間欄位 - 0070標準格式
@@ -1409,7 +1408,7 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
         processId: processId,
         module: 'LBK',
         version: '1.9.0',
-        categoryName: data.categoryName
+        categoryName: data.categoryName // Added categoryName to metadata
       }
     };
 
@@ -3657,7 +3656,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     LBK_logInfo(`階段二修復：支付方式明確: ${walletResult.walletName || paymentMethodName}，開始執行記帳 [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
 
     const transactionId = Date.now().toString();
-    const now = moment().tz(LBK_CONFIG.TIME_CONFIG.TIMEZONE);
+    const now = moment().tz(LBK_CONFIG.TIMEZONE);
 
     // 階段四修復：準備0070規範格式的記帳資料，移除違規欄位
     const preparedData = {
@@ -4585,7 +4584,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     if (electedCategory && categorySelected) {
       // 階段一修復：支援多種科目欄位名稱格式，確保相容性
       const subjectCode = electedCategory.subjectCode || electedCategory.categoryId;
-      const categoryName = electedCategory.categoryName || selectedCategory.categoryName;
+      const categoryName = electedCategory.categoryName || electedCategory.name;
       // const majorCode = electedCategory.majorCode || selectedCategory.categoryId; // majorCode removed
 
       LBK_logInfo(`階段一修復：科目欄位提取結果 - subjectCode: ${subjectCode}, categoryName: ${categoryName} [${processId}]`, "記帳完成", userId, functionName);
@@ -4653,7 +4652,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       amount: parseFloat(finalBookkeepingData.amount) || 0,
       type: (finalBookkeepingData.action === "收入") ? "income" : "expense",
       description: finalBookkeepingData.description || '記帳項目',
-      categoryId: finalBookkeepingData.subjectCode || 'default', // Use subjectCode as categoryId
+      categoryId: finalBookkeepingData.subjectCode || 'default', // Use subjectCode for categoryId
       // 階段四修復：移除accountId欄位（不符合0070規範）
 
       // 時間欄位 - 0070標準格式
@@ -4692,7 +4691,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     };
 
     // 階段三新增：記帳前最終驗證日誌
-    LBK_logInfo(`階段三：Firestore記帳資料最終驗證 - ID: ${preparedData.id}, 金額: ${preparedData.amount}, 類型: ${preparedData.type}, 科目: ${preparedData.metadata.categoryName}, subjectCode: ${preparedData.categoryId} [${processId}]`, "記帳完成", userId, functionName);
+    LBK_logInfo(`階段三：Firestore記帳資料最終驗證 - ID: ${preparedData.id}, 金額: ${preparedData.amount}, 類型: ${preparedData.type}, 科目: ${preparedData.metadata.categoryName}, categoryId: ${preparedData.categoryId} [${processId}]`, "記帳完成", userId, functionName);
 
     LBK_logInfo(`階段四：直接執行記帳儲存，跳過重複科目查詢 [${processId}]`, "記帳完成", userId, functionName);
 
