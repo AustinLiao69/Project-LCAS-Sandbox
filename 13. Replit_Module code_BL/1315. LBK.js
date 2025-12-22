@@ -747,7 +747,7 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
     if (snapshot.empty) {
       // 嘗試查詢所有categories文檔（不限制isActive）
       const allSnapshot = await db.collection("ledgers").doc(ledgerId).collection("categories").get();
-      LBK_logDebug(`categories集合總數: ${allAllSnapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
+      LBK_logDebug(`categories集合總數: ${allSnapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
 
       if (!allSnapshot.empty) {
         // 列出所有文檔的基本信息用於調試
@@ -1077,7 +1077,7 @@ async function LBK_getAllSubjects(userId, processId) {
  * 08. 執行記帳操作 - 加入重試機制
  * @version 2025-07-15-V1.0.1
  * @date 2025-07-15 19:10:00
- * @description 執行實際的記帳操作，包含資料驗證、儲存和重試機制
+ * @description 執行實際的記帳操作，包含資料驗證、儲存和重retry機制
  */
 async function LBK_executeBookkeeping(bookkeepingData, processId) {
   const maxRetries = 3;
@@ -1142,14 +1142,14 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
       // 準備記帳資料
       const preparedData = LBK_prepareBookkeepingData(bookkeepingId, updatedBookkeepingData, processId);
 
-      // 儲存到Firestore（帶重試）
+      // 儲存到Firestore（帶重retry）
       const saveResult = await LBK_saveToFirestore(preparedData, processId);
 
       if (!saveResult.success) {
         lastError = saveResult.error;
 
         if (attempt < maxRetries) {
-          // 等待遞增延遲後重試
+          // 等待遞增延遲後重retry
           const delay = Math.pow(2, attempt - 1) * 1000; // 指數退避
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
@@ -1157,7 +1157,7 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
 
         return {
           success: false,
-          error: `儲存失敗 (${maxRetries}次重試後): ${lastError}`,
+          error: `儲存失敗 (${maxRetries}次重retry後): ${lastError}`,
           errorType: "STORAGE_ERROR"
         };
       }
@@ -1188,21 +1188,21 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
       lastError = error.toString();
 
       if (attempt < maxRetries) {
-        LBK_logWarning(`記帳操作嘗試 ${attempt} 失敗，準備重試: ${error.toString()} [${processId}]`, "記帳執行", bookkeepingData.userId, "LBK_executeBookkeeping");
+        LBK_logWarning(`記帳操作嘗試 ${attempt} 失敗，準備重retry: ${error.toString()} [${processId}]`, "記帳執行", bookkeepingData.userId, "LBK_executeBookkeeping");
 
-        // 等待後重試
+        // 等待後重retry
         const delay = Math.pow(2, attempt - 1) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
 
-      LBK_logError(`執行記帳操作失敗 (${maxRetries}次重試後): ${error.toString()} [${processId}]`, "記帳執行", bookkeepingData.userId, "EXECUTE_ERROR", error.toString(), "LBK_executeBookkeeping");
+      LBK_logError(`執行記帳操作失敗 (${maxRetries}次重retry後): ${error.toString()} [${processId}]`, "記帳執行", bookkeepingData.userId, "EXECUTE_ERROR", error.toString(), "LBK_executeBookkeeping");
     }
   }
 
   return {
     success: false,
-    error: `記帳操作失敗 (${maxRetries}次重試後): ${lastError}`,
+    error: `記帳操作失敗 (${maxRetries}次重retry後): ${lastError}`,
     errorType: "EXECUTE_ERROR"
   };
 }
@@ -1347,7 +1347,7 @@ async function LBK_saveToFirestore(bookkeepingData, processId) {
       lastError = error.toString();
 
       if (attempt < maxRetries) {
-        LBK_logWarning(`Firestore儲存嘗試 ${attempt} 失敗，準備重試: ${error.toString()} [${processId}]`, "資料儲存", bookkeepingData.userId, "LBK_saveToFirestore");
+        LBK_logWarning(`Firestore儲存嘗試 ${attempt} 失敗，準備重retry: ${error.toString()} [${processId}]`, "資料儲存", bookkeepingData.userId, "LBK_saveToFirestore");
 
         // 指數退避延遲
         const delay = Math.pow(2, attempt - 1) * 500 + Math.random() * 500;
@@ -1355,13 +1355,13 @@ async function LBK_saveToFirestore(bookkeepingData, processId) {
         continue;
       }
 
-      LBK_logError(`儲存到Firestore失敗 (${maxRetries}次重試後): ${error.toString()} [${processId}]`, "資料儲存", bookkeepingData.userId, "SAVE_ERROR", error.toString(), "LBK_saveToFirestore");
+      LBK_logError(`儲存到Firestore失敗 (${maxRetries}次重retry後): ${error.toString()} [${processId}]`, "資料儲存", bookkeepingData.userId, "SAVE_ERROR", error.toString(), "LBK_saveToFirestore");
     }
   }
 
   return {
     success: false,
-    error: `儲存失敗 (${maxRetries}次重試後): ${lastError}`,
+    error: `儲存失敗 (${maxRetries}次重retry後): ${lastError}`,
     totalAttempts: maxRetries
   };
 }
@@ -2011,7 +2011,7 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
 }
 
 /**
- * 建立統計Quick Reply
+ * 建立統計 Quick Reply
  * @version 2025-12-19-V1.3.0
  * @param {string} statisticsType - 統計類型
  * @param {string} processId - 處理ID
@@ -2383,7 +2383,7 @@ async function LBK_processConfirmedWallet(walletData, userId, processId) {
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Object} 支付方式解析結果
- * @description 階段五修復：完全移除硬編碼值，所有支付方式處理改為從用戶wallets子集合動態查詢
+ * @description 階段五修復：完全移除硬編碼，所有支付方式處理改為從用戶wallets子集合動態查詢
  */
 async function LBK_parsePaymentMethod(messageText, userId, processId) {
   const functionName = "LBK_parsePaymentMethod";
@@ -3520,7 +3520,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
           stageData: {
             categorySelected: true,
             electedCategory: {
-              categoryId: selectedCategory.categoryId,
+              categoryId: categoryId,
               categoryName: selectedCategory.categoryName,
               // majorCode: selectedCategory.categoryId // majorCode removed
             },
@@ -4027,8 +4027,7 @@ function LBK_getLineMainCategories() {
     // 從0099.json提取所有有效的主科目
     subjectCodeData.forEach(item => {
       if (item.categoryId && item.categoryName) {
-        const key = `${item.categoryId}`;
-        if (!uniqueCategories.has(key)) {
+        const key = `${item.categoryId}`;        if (!uniqueCategories.has(key)) {
           uniqueCategories.set(key, {
             categoryId: item.categoryId,
             categoryName: item.categoryName
@@ -4567,7 +4566,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
 
       if (subjectCode && categoryName) {
         finalBookkeepingData.subjectCode = subjectCode;
-        finalBookhandlingData.categoryName = categoryName;
+        finalBookkeepingData.categoryName = categoryName;
         // finalBookkeepingData.majorCode = majorCode; // majorCode removed
 
         // 根據科目代碼判斷收支類型，增加容錯處理
@@ -4982,7 +4981,7 @@ module.exports = {
   // 新增wallet確認postback處理函數 v1.4.5
   LBK_handleWalletConfirmationPostback: LBK_handleWalletConfirmationPostback,
   LBK_processConfirmedWallet: LBK_processConfirmedWallet,
-  
+
   LBK_validateWalletExists: LBK_validateWalletExists,
   LBK_handleNewWallet: LBK_handleNewWallet,
 
