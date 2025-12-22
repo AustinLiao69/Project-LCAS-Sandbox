@@ -3013,12 +3013,6 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
         rawCategory: parsedData.subject || parsedData.categoryName || '未知科目',
         rawWallet: parsedData.paymentMethod || '未指定'
       },
-        // 階段四修復：移除parsedData中的paymentMethod，避免欄位重複
-        amount: parsedData.amount,
-        description: parsedData.category,
-        rawCategory: parsedData.category,
-        rawWallet: parsedData.paymentMethod // 階段四：改用rawWallet儲存原始支付方式
-      },
       processingStage: initialState,
       stageData: {
         categorySelected: false,
