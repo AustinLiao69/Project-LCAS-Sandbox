@@ -2697,25 +2697,28 @@ async function LBK_updateWalletSynonyms(originalInput, walletName, userId, proce
  * @returns {Object} 執行結果
  * @description 階段三修復：確保同義詞學習使用正確提取的支付方式名稱，而非硬編碼的「刷卡」
  */
-async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, userId, processId) {
+async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, userId, processId) {
   const functionName = "LBK_executeWalletSynonymsUpdate";
   try {
-    LBK_logInfo(`階段三：執行錢包同義詞更新: ${originalInput} → ID:${targetWalletId} [${processId}]`, "錢包同義詞", userId, functionName);
+    LBK_logInfo(`階段一修復：執行錢包同義詞更新: ${originalInput} → 類型:${targetWalletType} [${processId}]`, "錢包同義詞", userId, functionName);
+
+    // 階段一修復：確保所有變數在使用前都已正確初始化
+    let paymentMethodToLearn = null;
+    let resolvedWallet = null;
+    let finalTargetWalletId = null;
+    let finalTargetWalletName = null;
 
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
     const ledgerId = `user_${userId}`;
 
-    // 階段三修復：正確提取支付方式名稱，確保不使用硬編碼的「刷卡」
-    let paymentMethodToLearn = null;
-
-    // 從原始輸入中重新提取支付方式名稱
+    // 階段一修復：正確提取支付方式名稱，確保不使用硬編碼的「刷卡」
     const parseResult = LBK_parseInputFormat(originalInput, processId);
     if (parseResult && parseResult.paymentMethod) {
       paymentMethodToLearn = parseResult.paymentMethod;
-      LBK_logInfo(`階段三：從原始輸入正確提取支付方式名稱: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
+      LBK_logInfo(`階段一修復：從原始輸入正確提取支付方式名稱: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
     } else {
-      // 如果解析失敗，嘗試直接從輸入字串中識別銀行名稱
+      // 階段一修復：如果解析失敗，嘗試直接從輸入字串中識別銀行名稱
       const bankNames = [
         "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
         "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
@@ -2726,15 +2729,15 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
       for (const bankName of bankNames) {
         if (originalInput.includes(bankName)) {
           paymentMethodToLearn = bankName;
-          LBK_logInfo(`階段三：從輸入中直接識別銀行名稱: "${paymentMethodName}" [${processId}]`, "錢包同義詞", userId, functionName);
+          LBK_logInfo(`階段一修復：從輸入中直接識別銀行名稱: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
           break;
         }
       }
     }
 
-    // 如果仍無法識別，記錄警告但繼續處理
+    // 階段一修復：如果仍無法識別，記錄警告但繼續處理
     if (!paymentMethodToLearn) {
-      LBK_logWarning(`階段三：無法從原始輸入中提取支付方式名稱: "${originalInput}"，跳過同義詞學習 [${processId}]`, "錢包同義詞", userId, functionName);
+      LBK_logWarning(`階段一修復：無法從原始輸入中提取支付方式名稱: "${originalInput}"，跳過同義詞學習 [${processId}]`, "錢包同義詞", userId, functionName);
       return {
         success: false,
         error: "無法提取支付方式名稱",
@@ -2742,23 +2745,17 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
       };
     }
 
-    // 階段三修復：根據錢包類型動態查詢目標錢包
-    let targetWalletId = null;
-    let targetWalletName = null;
-
-    // 按類型匹配邏輯
+    // 階段一修復：根據錢包類型動態查詢目標錢包，確保變數正確初始化
     const walletTypeMapping = {
       'cash': ['現金', 'cash'],
-      'bank': ['銀行帳戶', '銀行', 'bank'],
+      'bank': ['銀行帳戶', '銀行', 'bank'], 
       'credit': ['信用卡', '信用', 'credit']
     };
 
-    let resolvedWallet = null;
-
-    // 階段三修復：動態查詢匹配的錢包
-    const possibleNames = walletTypeMapping[targetWalletId];
+    // 階段一修復：動態查詢匹配的錢包
+    const possibleNames = walletTypeMapping[targetWalletType];
     if (!possibleNames) {
-      throw new Error(`階段三：未知的錢包類型: ${targetWalletId}`);
+      throw new Error(`階段一修復：未知的錢包類型: ${targetWalletType}`);
     }
 
     for (const walletName of possibleNames) {
@@ -2767,32 +2764,32 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
         resolvedWallet = {
           walletId: dynamicWallet.walletId,
           walletName: dynamicWallet.walletName,
-          type: targetWalletId
+          type: targetWalletType
         };
-        LBK_logInfo(`階段三：動態查詢成功匹配錢包: ${walletName} → ${resolvedWallet.walletName} [${processId}]`, "錢包同義詞", userId, functionName);
+        LBK_logInfo(`階段一修復：動態查詢成功匹配錢包: ${walletName} → ${resolvedWallet.walletName} [${processId}]`, "錢包同義詞", userId, functionName);
         break;
       }
     }
 
     if (!resolvedWallet) {
-      // 如果都沒匹配到，嘗試查詢所有活躍錢包並按類型匹配
+      // 階段一修復：如果都沒匹配到，嘗試查詢所有活躍錢包並按類型匹配
       const walletsSnapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets").where("status", "==", "active").get();
 
       if (walletsSnapshot.empty) {
         throw new Error(`用戶無可用的活躍錢包，無法更新同義詞`);
       }
 
-      // 按類型匹配邏輯
+      // 階段一修復：按類型匹配邏輯，確保變數正確初始化
       let matchedWallet = null;
       for (const doc of walletsSnapshot.docs) {
         const walletData = doc.data();
         const walletType = walletData.type || '';
         const walletName = walletData.walletName || walletData.name || '';
 
-        // 類型匹配優先級
-        if ((targetWalletId === 'cash' && (walletType === 'cash' || walletName.includes('現金'))) ||
-            (targetWalletId === 'bank' && (walletType === 'bank' || walletName.includes('銀行'))) ||
-            (targetWalletId === 'credit' && (walletType === 'credit_card' || walletName.includes('信用卡')))) {
+        // 階段一修復：類型匹配優先級
+        if ((targetWalletType === 'cash' && (walletType === 'cash' || walletName.includes('現金'))) ||
+            (targetWalletType === 'bank' && (walletType === 'bank' || walletName.includes('銀行'))) ||
+            (targetWalletType === 'credit' && (walletType === 'credit_card' || walletName.includes('信用卡')))) {
           matchedWallet = {
             walletId: walletData.walletId || doc.id,
             walletName: walletName,
@@ -2803,7 +2800,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
       }
 
       if (!matchedWallet) {
-        // 如果都沒匹配到，使用第一個活躍錢包作為備選
+        // 階段一修復：如果都沒匹配到，使用第一個活躍錢包作為備選
         const firstWallet = walletsSnapshot.docs[0];
         const firstWalletData = firstWallet.data();
         matchedWallet = {
@@ -2811,7 +2808,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
           walletName: firstWalletData.walletName || firstWalletData.name || '預設錢包',
           type: firstWalletData.type || 'unknown'
         };
-        LBK_logWarning(`階段三：無法精確匹配錢包類型，使用第一個活躍錢包: ${matchedWallet.walletName} [${processId}]`, "錢包同義詞", userId, functionName);
+        LBK_logWarning(`階段一修復：無法精確匹配錢包類型，使用第一個活躍錢包: ${matchedWallet.walletName} [${processId}]`, "錢包同義詞", userId, functionName);
       }
 
       resolvedWallet = matchedWallet;
@@ -2821,49 +2818,61 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
       throw new Error(`無法動態解析或匹配到有效的錢包`);
     }
 
-    targetWalletId = resolvedWallet.walletId;
-    targetWalletName = resolvedWallet.walletName;
+    // 階段一修復：確保變數正確賦值
+    finalTargetWalletId = resolvedWallet.walletId;
+    finalTargetWalletName = resolvedWallet.walletName;
 
-    LBK_logInfo(`階段三：動態查詢到目標錢包: ID=${targetWalletId}, 名稱=${targetWalletName} [${processId}]`, "錢包同義詞", userId, functionName);
+    LBK_logInfo(`階段一修復：動態查詢到目標錢包: ID=${finalTargetWalletId}, 名稱=${finalTargetWalletName} [${processId}]`, "錢包同義詞", userId, functionName);
 
-    // 查找目標錢包文檔
-    const walletRef = db.collection("ledgers").doc(ledgerId).collection("wallets").doc(targetWalletId);
+    // 階段一修復：查找目標錢包文檔並更新同義詞
+    const walletRef = db.collection("ledgers").doc(ledgerId).collection("wallets").doc(finalTargetWalletId);
     const walletDoc = await walletRef.get();
 
     if (!walletDoc.exists) {
-      throw new Error(`動態查詢的錢包不存在: ${targetWalletId}`);
+      throw new Error(`動態查詢的錢包不存在: ${finalTargetWalletId}`);
     }
 
     const walletData = walletDoc.data();
     const existingSynonyms = walletData.synonyms || "";
-    const synonymsArray = existingSynonyms ? existingSynonyms.split(",").map(s => s.trim()) : [];
+    const synonymsArray = existingSynonyms ? existingSynonyms.split(",").map(s => s.trim()).filter(s => s.length > 0) : [];
 
-    // 階段三修復：使用正確提取的支付方式名稱作為同義詞
-    if (!synonymsArray.includes(paymentMethodToLearn)) {
-      synonymsArray.push(paymentMethodToLearn);
+    // 階段一修復：使用正確提取的支付方式名稱作為同義詞，並確保不重複
+    const trimmedPaymentMethod = paymentMethodToLearn.trim();
+    if (!synonymsArray.includes(trimmedPaymentMethod) && trimmedPaymentMethod.length > 0) {
+      synonymsArray.push(trimmedPaymentMethod);
       const updatedSynonyms = synonymsArray.join(",");
 
-      await walletRef.update({
-        synonyms: updatedSynonyms,
-        updatedAt: admin.firestore.Timestamp.now()
+      // 階段一修復：使用事務確保更新成功
+      await db.runTransaction(async (transaction) => {
+        const docSnapshot = await transaction.get(walletRef);
+        if (docSnapshot.exists) {
+          transaction.update(walletRef, {
+            synonyms: updatedSynonyms,
+            updatedAt: admin.firestore.Timestamp.now(),
+            lastSynonymAdded: trimmedPaymentMethod,
+            synonymsCount: synonymsArray.length
+          });
+        } else {
+          throw new Error(`錢包文檔不存在: ${finalTargetWalletId}`);
+        }
       });
 
-      LBK_logInfo(`階段三：錢包同義詞更新成功，學習到正確支付方式: "${paymentMethodToLearn}" → 錢包: "${targetWalletName}" [${processId}]`, "錢包同義詞", userId, functionName);
+      LBK_logInfo(`階段一修復：錢包同義詞事務更新成功: "${trimmedPaymentMethod}" → 錢包: "${finalTargetWalletName}" [${processId}]`, "錢包同義詞", userId, functionName);
     } else {
-      LBK_logInfo(`階段三：同義詞已存在，無需重複添加: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
+      LBK_logInfo(`階段一修復：同義詞已存在，無需重複添加: "${trimmedPaymentMethod}" [${processId}]`, "錢包同義詞", userId, functionName);
     }
 
     return {
       success: true,
-      message: "同義詞更新成功",
-      targetWalletId: targetWalletId,
-      targetWalletName: targetWalletName,
-      learnedPaymentMethod: paymentMethodToLearn, // 階段三新增：記錄學習到的支付方式
-      synonymsUpdated: !synonymsArray.includes(paymentMethodToLearn)
+      message: "階段一修復：同義詞更新成功",
+      targetWalletId: finalTargetWalletId,
+      targetWalletName: finalTargetWalletName,
+      learnedPaymentMethod: trimmedPaymentMethod,
+      synonymsUpdated: !synonymsArray.includes(trimmedPaymentMethod)
     };
 
   } catch (error) {
-    LBK_logError(`階段三：執行錢包同義詞更新失敗: ${error.toString()} [${processId}]`, "錢包同義詞", userId, "EXECUTE_WALLET_SYNONYMS_ERROR", error.toString(), functionName);
+    LBK_logError(`階段一修復：執行錢包同義詞更新失敗: ${error.toString()} [${processId}]`, "錢包同義詞", userId, "EXECUTE_WALLET_SYNONYMS_ERROR", error.toString(), functionName);
     return {
       success: false,
       error: error.toString()
@@ -2935,42 +2944,68 @@ async function LBK_getWalletDisplayName(walletId, userId, processId) {
 async function LBK_addSubjectSynonym(originalSubject, categoryId, categoryName, userId, processId) {
   const functionName = "LBK_addSubjectSynonym";
   try {
-    LBK_logInfo(`添加科目同義詞: ${originalSubject} → ${categoryName} (ID: ${categoryId}) [${processId}]`, "科目同義詞", userId, functionName);
+    LBK_logInfo(`階段一修復：添加科目同義詞: ${originalSubject} → ${categoryName} (ID: ${categoryId}) [${processId}]`, "科目同義詞", userId, functionName);
 
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
     const ledgerId = `user_${userId}`;
 
-    // 查找現有的科目記錄
+    // 階段一修復：增強的科目記錄查找邏輯
     const categoryRef = db.collection("ledgers").doc(ledgerId).collection("categories").doc(categoryId);
     const categoryDoc = await categoryRef.get();
 
     if (categoryDoc.exists) {
       const data = categoryDoc.data();
       const existingSynonyms = data.synonyms || "";
-      const synonymsArray = existingSynonyms ? existingSynonyms.split(",").map(s => s.trim()) : [];
+      const synonymsArray = existingSynonyms ? existingSynonyms.split(",").map(s => s.trim()).filter(s => s.length > 0) : [];
 
-      // 如果同義詞尚未存在，則添加
-      if (!synonymsArray.includes(originalSubject)) {
-        synonymsArray.push(originalSubject);
+      LBK_logInfo(`階段一修復：現有同義詞: [${synonymsArray.join(', ')}] [${processId}]`, "科目同義詞", userId, functionName);
+
+      // 階段一修復：確保同義詞不重複且有效
+      if (!synonymsArray.includes(originalSubject.trim()) && originalSubject.trim().length > 0) {
+        synonymsArray.push(originalSubject.trim());
         const updatedSynonyms = synonymsArray.join(",");
 
-        await categoryRef.update({
-          synonyms: updatedSynonyms,
-          updatedAt: admin.firestore.Timestamp.now()
+        // 階段一修復：使用事務確保寫入成功
+        await db.runTransaction(async (transaction) => {
+          const docSnapshot = await transaction.get(categoryRef);
+          if (docSnapshot.exists) {
+            transaction.update(categoryRef, {
+              synonyms: updatedSynonyms,
+              updatedAt: admin.firestore.Timestamp.now(),
+              lastSynonymAdded: originalSubject.trim(),
+              synonymsCount: synonymsArray.length
+            });
+          } else {
+            throw new Error(`科目文檔不存在: ${categoryId}`);
+          }
         });
 
-        LBK_logInfo(`科目同義詞更新成功: ${updatedSynonyms} [${processId}]`, "科目同義詞", userId, functionName);
+        LBK_logInfo(`階段一修復：科目同義詞事務寫入成功: [${updatedSynonyms}] [${processId}]`, "科目同義詞", userId, functionName);
+        
+        // 階段一修復：驗證寫入結果
+        const verificationDoc = await categoryRef.get();
+        if (verificationDoc.exists) {
+          const verificationData = verificationDoc.data();
+          const actualSynonyms = verificationData.synonyms || "";
+          LBK_logInfo(`階段一修復：寫入驗證成功，實際同義詞: [${actualSynonyms}] [${processId}]`, "科目同義詞", userId, functionName);
+        }
+      } else {
+        LBK_logInfo(`階段一修復：同義詞已存在或無效，跳過添加: "${originalSubject}" [${processId}]`, "科目同義詞", userId, functionName);
       }
+    } else {
+      // 階段一修復：科目文檔不存在時的詳細錯誤處理
+      LBK_logError(`階段一修復：科目文檔不存在: ${categoryId}，路徑: ${categoryRef.path} [${processId}]`, "科目同義詞", userId, "CATEGORY_DOC_NOT_FOUND", "科目文檔不存在", functionName);
+      throw new Error(`科目文檔不存在: ${categoryId}`);
     }
 
     return {
       success: true,
-      message: "同義詞添加成功"
+      message: "階段一修復：同義詞添加成功"
     };
 
   } catch (error) {
-    LBK_logError(`添加科目同義詞失敗: ${error.toString()} [${processId}]`, "科目同義詞", userId, "ADD_SUBJECT_SYNONYM_ERROR", error.toString(), functionName);
+    LBK_logError(`階段一修復：添加科目同義詞失敗: ${error.toString()} [${processId}]`, "科目同義詞", userId, "ADD_SUBJECT_SYNONYM_ERROR", error.toString(), functionName);
     return {
       success: false,
       error: error.toString()
@@ -5029,7 +5064,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.9.2", // 階段一修復完成版本
+  MODULE_VERSION: "1.9.3", // 階段一同義詞學習修復完成版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一修復完成：修復Pending Record科目資訊傳遞機制。1)修復LBK_updatePendingRecord函數，實現stageData深度合併更新，確保electedCategory資訊不被覆蓋。2)修復LBK_completePendingRecord函數，強化科目資訊讀取邏輯，支援多種欄位名稱格式，增加詳細調試日誌。3)移除硬編碼預設值，嚴格遵守0098規範，科目資訊不完整時提供詳細錯誤資訊。4)確保科目歸類完成後的記帳流程能正確讀取並使用用戶選擇的科目資訊。修復範圍：解決用戶選擇科目「餐飲費用」但最終記帳顯示「其他支出」的核心問題。"
+  MODULE_UPDATE: "階段一同義詞學習修復完成：1)修復LBK_addSubjectSynonym函數Firebase寫入邏輯，使用事務確保科目同義詞正確寫入categories子集合，添加寫入驗證機制。2)修復LBK_executeWalletSynonymsUpdate函數變數初始化錯誤，解決targetWalletId變數提前使用問題，確保所有變數在使用前正確初始化。3)強化同義詞寫入的事務性操作和錯誤處理，確保同義詞學習機制能正常運作。4)添加詳細的調試日誌和驗證機制，便於追蹤同義詞寫入狀態。修復範圍：解決科目和錢包同義詞學習機制完全失效的問題，確保用戶歧義消除後的學習結果能正確保存並在後續辨識中生效。"
 };
