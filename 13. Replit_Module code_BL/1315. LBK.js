@@ -3638,7 +3638,8 @@ async function LBK_handleClassificationPostback(inputData, processId) {
             selectedSubject: {
               subjectCode: subjectId,
               subjectName: selectedCategory.categoryName,
-              majorCode: selectedCategory.categoryId
+              majorCode: selectedCategory.categoryId,
+              categoryId: selectedCategory.categoryId // 階段一新增：確保categoryId正確傳遞
             },
             walletSelected: false,
             selectedWallet: null
@@ -4346,7 +4347,8 @@ async function LBK_handleSubjectSelectionComplete(classificationResult, processI
           selectedSubject: {
             subjectCode: subjectId,
             subjectName: selectedCategory.categoryName,
-            majorCode: selectedCategory.categoryId
+            majorCode: selectedCategory.categoryId,
+            categoryId: selectedCategory.categoryId // 階段一新增：確保categoryId正確傳遞
           }
         }
       },
@@ -4668,31 +4670,31 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       ledgerId: ledgerId
     };
 
-    // 階段三修復：驗證並設置科目資訊，確保無undefined值
+    // 階段一修復：嚴格驗證科目資訊，移除硬編碼預設值
     if (stageData.selectedSubject && stageData.subjectSelected) {
       // 嚴格驗證科目資料完整性
-      const subjectCode = stageData.selectedSubject.subjectCode || stageData.selectedSubject.categoryId || 'default';
-      const subjectName = stageData.selectedSubject.subjectName || stageData.selectedSubject.categoryName || '未知科目';
-      const majorCode = stageData.selectedSubject.majorCode || stageData.selectedSubject.categoryId || subjectCode;
+      const subjectCode = stageData.selectedSubject.subjectCode || stageData.selectedSubject.categoryId;
+      const subjectName = stageData.selectedSubject.subjectName || stageData.selectedSubject.categoryName;
+      const majorCode = stageData.selectedSubject.majorCode || stageData.selectedSubject.categoryId;
 
-      finalBookkeepingData.subjectCode = subjectCode;
-      finalBookkeepingData.subjectName = subjectName;
-      finalBookkeepingData.majorCode = majorCode;
+      if (subjectCode && subjectName) {
+        finalBookkeepingData.subjectCode = subjectCode;
+        finalBookkeepingData.subjectName = subjectName;
+        finalBookkeepingData.majorCode = majorCode;
 
-      // 根據科目代碼判斷收支類型，增加容錯處理
-      const codeToCheck = String(majorCode || subjectCode || '1');
-      const isIncome = codeToCheck.startsWith('2');
-      finalBookkeepingData.action = isIncome ? "收入" : "支出";
+        // 根據科目代碼判斷收支類型，增加容錯處理
+        const codeToCheck = String(majorCode || subjectCode || '1');
+        const isIncome = codeToCheck.startsWith('2');
+        finalBookkeepingData.action = isIncome ? "收入" : "支出";
 
-      LBK_logInfo(`階段三：科目資料驗證完成: ${subjectName} (代碼: ${subjectCode}, 主代碼: ${majorCode}) [${processId}]`, "記帳完成", userId, functionName);
+        LBK_logInfo(`階段一：科目資料驗證完成: ${subjectName} (代碼: ${subjectCode}, 主代碼: ${majorCode}) [${processId}]`, "記帳完成", userId, functionName);
+      } else {
+        // 階段一修復：科目資料不完整時拋出錯誤，不使用硬編碼預設值
+        throw new Error(`階段一：Pending Record 科目資料不完整: subjectCode=${subjectCode}, subjectName=${subjectName}`);
+      }
     } else {
-      // 階段五修復：為缺少科目選擇的情況動態設置預設值
-      finalBookkeepingData.subjectCode = 'dynamic_default';
-      finalBookkeepingData.subjectName = '其他支出';
-      finalBookkeepingData.majorCode = '999';
-      finalBookkeepingData.action = '支出';
-
-      LBK_logWarning(`階段五：Pending Record 缺少科目資訊，使用動態預設值 [${processId}]`, "記帳完成", userId, functionName);
+      // 階段一修復：完全缺少科目選擇時拋出錯誤，移除硬編碼預設值
+      throw new Error(`階段一：Pending Record 缺少科目資訊，無法使用硬編碼預設值 (違反0098規範)`);
     }
 
     // 階段五修復：動態驗證並設置錢包資訊，移除硬編碼
@@ -4736,7 +4738,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       amount: parseFloat(finalBookkeepingData.amount) || 0,
       type: (finalBookkeepingData.action === "收入") ? "income" : "expense",
       description: finalBookkeepingData.subject || pendingData.parsedData?.subject || '記帳項目',
-      categoryId: finalBookkeepingData.subjectCode || 'default',
+      categoryId: finalBookkeepingData.subjectCode, // 階段一修復：移除'default'備選值，確保使用正確科目ID
       // 階段四修復：移除accountId欄位（不符合0070規範）
 
       // 時間欄位 - 0070標準格式
@@ -5141,7 +5143,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.9.1", // 階段三完成版本
+  MODULE_VERSION: "1.9.2", // 階段一完成版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段三完成：強化動態支付方式查詢機制。1)完善LBK_getDefaultPaymentMethod函數，移除所有殘留硬編碼邏輯。2)實現基於wallets子集合配置的完全動態查詢優先序列：支援用戶自定義預設錢包、優先級設定、按實際存在類型動態選擇。3)移除任何預設支付方式的硬編碼陣列，查詢結果完全基於用戶wallets子集合內容。4)新增詳細的查詢方法追蹤(queryMethod)便於調試。影響範圍：所有未明確指定支付方式的記帳請求現在完全基於用戶個人化錢包配置。"
+  MODULE_UPDATE: "階段一完成：修復Pending Record資料傳遞機制。1)修復LBK_updatePendingRecord函數，確保科目選擇資訊正確存儲至stageData.selectedSubject。2)修復LBK_completePendingRecord函數，正確讀取用戶選擇的科目資訊，嚴格驗證資料完整性。3)移除硬編碼預設科目'其他支出'和'dynamic_default'，科目資料不完整時拋出錯誤而非使用預設值。4)強化categoryId正確傳遞，確保transactions子集合存儲正確的科目ID。影響範圍：所有科目歸類流程現在嚴格要求完整科目資訊，移除0098規範禁止的硬編碼預設值。"
 };
