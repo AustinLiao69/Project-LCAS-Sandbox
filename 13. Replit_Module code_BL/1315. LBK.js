@@ -847,16 +847,29 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
 
     // 按優先級返回結果
     if (exactMatch) {
-      return exactMatch;
+      return {
+        success: true,
+        categoryId: exactMatch.categoryId,
+        categoryName: exactMatch.categoryName,
+        subCategoryId: exactMatch.subCategoryId,
+        name: exactMatch.name
+      };
     }
     if (synonymMatch) {
-      return synonymMatch;
+      return {
+        success: true,
+        categoryId: synonymMatch.categoryId,
+        categoryName: synonymMatch.categoryName,
+        subCategoryId: synonymMatch.subCategoryId,
+        name: synonymMatch.name
+      };
     }
     if (partialMatches.length > 0) {
       // 返回評分最高的部分匹配
       partialMatches.sort((a, b) => b.score - a.score);
       const bestMatch = partialMatches[0];
       return {
+        success: true,
         categoryId: bestMatch.categoryId,
         categoryName: bestMatch.categoryName,
         subCategoryId: bestMatch.subCategoryId,
