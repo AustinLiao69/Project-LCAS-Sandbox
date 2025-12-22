@@ -249,24 +249,18 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
           currency = currency.replace('{{default_currency}}', defaultCurrency);
         }
 
-        // 錢包類型映射
-        let walletType = 'cash'; // 預設類型
-        if (walletId === 'cash') walletType = 'cash';
-        else if (walletId === 'debit') walletType = 'bank';
-        else if (walletId === 'credit') walletType = 'credit_card';
-        else walletType = defaultWallet.type || 'cash';
+        // 階段二修復：移除walletType映射，不再設定type欄位
 
         const walletDoc = {
           id: walletId,
-          walletId: walletId,                           // 新增：符合DB schema的walletId欄位
+          walletId: walletId,                           // 符合DB schema的walletId欄位
           name: walletName,
-          walletName: walletName,                       // 新增：符合DB schema的walletName欄位
-          subWalletId: defaultWallet.subWalletId || walletId, // 新增：子帳戶ID映射
-          subWalletName: defaultWallet.subWalletName || walletName, // 新增：子帳戶名稱映射
-          type: walletType,
+          walletName: walletName,                       // 符合DB schema的walletName欄位
+          subWalletId: defaultWallet.subWalletId || walletId, // 子帳戶ID映射
+          subWalletName: defaultWallet.subWalletName || walletName, // 子帳戶名稱映射
           currency: currency,
           balance: parseFloat(defaultWallet.balance) || 0,
-          synonyms: defaultWallet.synonyms || '',       // 修復：新增遺漏的synonyms欄位映射
+          synonyms: defaultWallet.synonyms || '',       // synonyms欄位映射
           description: defaultWallet.description || '',
           isDefault: defaultWallet.isDefault !== false, // 預設為true
           isActive: defaultWallet.isActive !== false,   // 預設為true
@@ -287,7 +281,6 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
         createdWallets.push({
           walletId: walletId,
           name: walletDoc.name,
-          type: walletDoc.type,
           currency: walletDoc.currency,
           balance: walletDoc.balance,
           isDefault: walletDoc.isDefault,
@@ -352,7 +345,6 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
     const wallet = {
       id: walletId,
       name: walletData.name.trim(),
-      type: walletData.type || 'cash',
       currency: walletData.currency || WCM_CONFIG.DEFAULT_CURRENCY,
       balance: parseFloat(walletData.balance) || 0,
       userId: walletData.userId,
@@ -374,7 +366,6 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
     return WCM_formatSuccessResponse({
       walletId: walletId,
       name: wallet.name,
-      type: wallet.type,
       currency: wallet.currency,
       balance: wallet.balance,
       ledgerId: ledgerId,
@@ -436,7 +427,6 @@ async function WCM_getWalletList(ledgerId, queryParams = {}) {
       wallets.push({
         id: data.id || doc.id,
         name: data.name,
-        type: data.type,
         currency: data.currency,
         balance: data.balance,
         description: data.description,
