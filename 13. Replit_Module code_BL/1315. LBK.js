@@ -3204,8 +3204,8 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
 }
 
 /**
- * 更新Pending Record
- * @version 2025-12-19-V1.4.9
+ * 階段一修復：更新Pending Record - 確保 stageData 正確更新
+ * @version 2025-12-22-V1.9.2
  * @param {string} userId - 用戶ID
  * @param {string} pendingId - Pending Record ID
  * @param {object} updateData - 要更新的資料
@@ -3222,11 +3222,38 @@ async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, 
     const ledgerId = `user_${userId}`;
     const docRef = db.collection('ledgers').doc(ledgerId).collection('pendingTransactions').doc(pendingId);
 
+    // 階段一修復：先讀取現有資料，確保合併更新
+    const existingDoc = await docRef.get();
+    if (!existingDoc.exists) {
+      throw new Error(`Pending Record 不存在: ${pendingId}`);
+    }
+
+    const existingData = existingDoc.data();
+    const existingStageData = existingData.stageData || {};
+
+    // 階段一修復：深度合併 stageData，確保不覆蓋現有欄位
+    let mergedStageData = { ...existingStageData };
+    if (updateData.stageData) {
+      mergedStageData = {
+        ...existingStageData,
+        ...updateData.stageData,
+        // 階段一修復：確保重要欄位不被意外清空
+        selectedSubject: updateData.stageData.selectedSubject || existingStageData.selectedSubject,
+        selectedWallet: updateData.stageData.selectedWallet || existingStageData.selectedWallet,
+        subjectSelected: updateData.stageData.subjectSelected !== undefined ? updateData.stageData.subjectSelected : existingStageData.subjectSelected,
+        walletSelected: updateData.stageData.walletSelected !== undefined ? updateData.stageData.walletSelected : existingStageData.walletSelected
+      };
+    }
+
     const updatePayload = {
       ...updateData,
+      stageData: mergedStageData, // 使用合併後的 stageData
       processingStage: newState,
       updatedAt: admin.firestore.Timestamp.now()
     };
+
+    // 階段一修復：記錄更新詳細資訊以便調試
+    LBK_logInfo(`階段一修復：更新 Pending Record 詳細資訊 - pendingId: ${pendingId}, subjectSelected: ${mergedStageData.subjectSelected}, selectedSubject: ${JSON.stringify(mergedStageData.selectedSubject)} [${processId}]`, "Pending Record", userId, functionName);
 
     await docRef.update(updatePayload);
 
@@ -3235,7 +3262,8 @@ async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, 
     return {
       success: true,
       pendingId: pendingId,
-      newState: newState
+      newState: newState,
+      updatedStageData: mergedStageData // 階段一修復：返回更新後的 stageData 供驗證
     };
 
   } catch (error) {
@@ -4670,12 +4698,19 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       ledgerId: ledgerId
     };
 
-    // 階段一修復：嚴格驗證科目資訊，移除硬編碼預設值
-    if (stageData.selectedSubject && stageData.subjectSelected) {
-      // 嚴格驗證科目資料完整性
-      const subjectCode = stageData.selectedSubject.subjectCode || stageData.selectedSubject.categoryId;
-      const subjectName = stageData.selectedSubject.subjectName || stageData.selectedSubject.categoryName;
-      const majorCode = stageData.selectedSubject.majorCode || stageData.selectedSubject.categoryId;
+    // 階段一修復：強化科目資訊驗證，支援多種欄位名稱格式
+    LBK_logInfo(`階段一修復：開始驗證科目資訊 - stageData: ${JSON.stringify(stageData)} [${processId}]`, "記帳完成", userId, functionName);
+    
+    const selectedSubject = stageData.selectedSubject;
+    const subjectSelected = stageData.subjectSelected;
+    
+    if (selectedSubject && subjectSelected) {
+      // 階段一修復：支援多種科目欄位名稱格式，確保相容性
+      const subjectCode = selectedSubject.subjectCode || selectedSubject.categoryId;
+      const subjectName = selectedSubject.subjectName || selectedSubject.categoryName;
+      const majorCode = selectedSubject.majorCode || selectedSubject.categoryId;
+
+      LBK_logInfo(`階段一修復：科目欄位提取結果 - subjectCode: ${subjectCode}, subjectName: ${subjectName}, majorCode: ${majorCode} [${processId}]`, "記帳完成", userId, functionName);
 
       if (subjectCode && subjectName) {
         finalBookkeepingData.subjectCode = subjectCode;
@@ -4687,14 +4722,16 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
         const isIncome = codeToCheck.startsWith('2');
         finalBookkeepingData.action = isIncome ? "收入" : "支出";
 
-        LBK_logInfo(`階段一：科目資料驗證完成: ${subjectName} (代碼: ${subjectCode}, 主代碼: ${majorCode}) [${processId}]`, "記帳完成", userId, functionName);
+        LBK_logInfo(`階段一修復：科目資料驗證完成: ${subjectName} (代碼: ${subjectCode}, 主代碼: ${majorCode}) [${processId}]`, "記帳完成", userId, functionName);
       } else {
-        // 階段一修復：科目資料不完整時拋出錯誤，不使用硬編碼預設值
-        throw new Error(`階段一：Pending Record 科目資料不完整: subjectCode=${subjectCode}, subjectName=${subjectName}`);
+        // 階段一修復：科目資料不完整時拋出詳細錯誤，便於調試
+        LBK_logError(`階段一修復：科目資料不完整詳細資訊 - selectedSubject: ${JSON.stringify(selectedSubject)}, 提取結果: subjectCode=${subjectCode}, subjectName=${subjectName} [${processId}]`, "記帳完成", userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", functionName);
+        throw new Error(`階段一修復：Pending Record 科目資料不完整: subjectCode=${subjectCode}, subjectName=${subjectName}`);
       }
     } else {
-      // 階段一修復：完全缺少科目選擇時拋出錯誤，移除硬編碼預設值
-      throw new Error(`階段一：Pending Record 缺少科目資訊，無法使用硬編碼預設值 (違反0098規範)`);
+      // 階段一修復：提供詳細的調試資訊，便於排查問題
+      LBK_logError(`階段一修復：科目選擇狀態檢查失敗 - selectedSubject存在: ${!!selectedSubject}, subjectSelected: ${subjectSelected}, stageData完整內容: ${JSON.stringify(stageData)} [${processId}]`, "記帳完成", userId, "MISSING_SUBJECT_INFO", "科目資訊缺失", functionName);
+      throw new Error(`階段一修復：Pending Record 缺少科目資訊，selectedSubject: ${!!selectedSubject}, subjectSelected: ${subjectSelected} (違反0098規範)`);
     }
 
     // 階段五修復：動態驗證並設置錢包資訊，移除硬編碼
@@ -5143,7 +5180,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.9.2", // 階段一完成版本
+  MODULE_VERSION: "1.9.2", // 階段一修復完成版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一完成：修復Pending Record資料傳遞機制。1)修復LBK_updatePendingRecord函數，確保科目選擇資訊正確存儲至stageData.selectedSubject。2)修復LBK_completePendingRecord函數，正確讀取用戶選擇的科目資訊，嚴格驗證資料完整性。3)移除硬編碼預設科目'其他支出'和'dynamic_default'，科目資料不完整時拋出錯誤而非使用預設值。4)強化categoryId正確傳遞，確保transactions子集合存儲正確的科目ID。影響範圍：所有科目歸類流程現在嚴格要求完整科目資訊，移除0098規範禁止的硬編碼預設值。"
+  MODULE_UPDATE: "階段一修復完成：修復Pending Record科目資訊傳遞機制。1)修復LBK_updatePendingRecord函數，實現stageData深度合併更新，確保selectedSubject資訊不被覆蓋。2)修復LBK_completePendingRecord函數，強化科目資訊讀取邏輯，支援多種欄位名稱格式，增加詳細調試日誌。3)移除硬編碼預設值，嚴格遵守0098規範，科目資訊不完整時提供詳細錯誤資訊。4)確保科目歸類完成後的記帳流程能正確讀取並使用用戶選擇的科目資訊。修復範圍：解決用戶選擇科目「餐飲費用」但最終記帳顯示「其他支出」的核心問題。"
 };
