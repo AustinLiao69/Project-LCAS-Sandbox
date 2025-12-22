@@ -1013,7 +1013,6 @@ async function LBK_fuzzyMatch(input, userId, processId) {
 
       uniqueMatches.sort((a, b) => b.score - a.score);
       const bestMatch = uniqueMatches[0];
-
       // threshold is removed as it's not used in the original code logic.
       // if (bestMatch.score >= threshold) {
       return bestMatch;
@@ -2477,11 +2476,6 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
 /**
  * 階段二修正：驗證錢包是否存在 - 移除自動接受未知銀行名稱的邏輯
  * @version 2025-12-19-V1.6.0
- * @param {string} userId - 用戶ID
- * @param {string} walletId - 錢包ID
- * @param {string} walletName - 錢包名稱
- * @param {string} processId - 處理ID
- * @returns {Object} 驗證結果
  * @description 階段二修正：嚴格驗證錢包存在性，不自動接受任何未在 wallets 子集合中定義的支付方式
  */
 async function LBK_validateWalletExists(userId, walletId, walletName, processId) {
@@ -2693,94 +2687,10 @@ async function LBK_updateWalletSynonyms(originalInput, walletName, userId, proce
 }
 
 /**
- * 階段三新增：確定錢包類型
- * @version 2025-12-19-V1.4.9
- * @param {string} walletName - 錢包名稱
- * @param {string} userId - 用戶ID
- * @param {string} processId - 處理ID
- * @returns {Object} 錢包類型判定結果
- * @description 根據錢包名稱判斷錢包類型（現金、銀行、信用卡等）
- */
-function LBK_determineWalletType(walletName, userId, processId) {
-  const functionName = "LBK_determineWalletType";
-  try {
-    LBK_logDebug(`確定錢包類型: "${walletName}" [${processId}]`, "錢包類型", userId, functionName);
-
-    if (!walletName) {
-      return {
-        success: false,
-        error: "錢包名稱為空"
-      };
-    }
-
-    const normalizedName = walletName.toLowerCase().trim();
-
-    // 現金類型關鍵字
-    const cashKeywords = ['現金', 'cash', '零錢'];
-    if (cashKeywords.some(keyword => normalizedName.includes(keyword))) {
-      return {
-        success: true,
-        walletType: 'cash',
-        displayName: '現金',
-        category: 'cash'
-      };
-    }
-
-    // 銀行帳戶關鍵字
-    const bankKeywords = ['銀行', '帳戶', 'bank', '台銀', '土銀', '合庫', '第一', '華南', '彰銀', '上海', '國泰', '中信', '玉山', '台新', '永豐', '兆豐'];
-    if (bankKeywords.some(keyword => normalizedName.includes(keyword))) {
-      return {
-        success: true,
-        walletType: 'bank',
-        displayName: '銀行帳戶',
-        category: 'bank_account'
-      };
-    }
-
-    // 信用卡關鍵字
-    const creditKeywords = ['信用卡', '刷卡', 'credit', 'card', '卡片'];
-    if (creditKeywords.some(keyword => normalizedName.includes(keyword))) {
-      return {
-        success: true,
-        walletType: 'credit_card',
-        displayName: '信用卡',
-        category: 'credit_card'
-      };
-    }
-
-    // 行動支付關鍵字
-    const mobileKeywords = ['行動支付', 'pay', '支付寶', '微信', 'linepay', 'applepay', 'googlepay'];
-    if (mobileKeywords.some(keyword => normalizedName.includes(keyword))) {
-      return {
-        success: true,
-        walletType: 'mobile_payment',
-        displayName: '行動支付',
-        category: 'mobile_payment'
-      };
-    }
-
-    // 預設為其他類型
-    return {
-      success: true,
-      walletType: 'other',
-      displayName: '其他',
-      category: 'other'
-    };
-
-  } catch (error) {
-    LBK_logError(`確定錢包類型失敗: ${error.toString()} [${processId}]`, "錢包類型", userId, "WALLET_TYPE_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.toString()
-    };
-  }
-}
-
-/**
  * 階段三修復：執行錢包同義詞更新 - 確保使用正確提取的支付方式名稱
  * @version 2025-12-19-V1.8.0
  * @param {string} originalInput - 原始輸入
- * @param {string} targetWalletType - 目標錢包類型 (cash, bank, credit等)
+ * @param {string} targetWalletId - 目標錢包ID
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Object} 執行結果
@@ -2835,28 +2745,36 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
     let targetWalletId = null;
     let targetWalletName = null;
 
-    // 根據類型查詢對應的錢包ID和名稱
-    switch (targetWalletId) { // 這裡 targetWalletId 實際上是傳入的類型標識符
-      case 'cash':
-        targetWalletName = '現金';
-        break;
-      case 'bank':
-        targetWalletName = '銀行帳戶';
-        break;
-      case 'credit':
-        targetWalletName = '信用卡';
-        break;
-      default:
-        // 如果傳入的不是標準類型，嘗試直接使用支付方式名稱
-        targetWalletName = paymentMethodToLearn;
-        break;
+    // 按類型匹配邏輯
+    const walletTypeMapping = {
+      'cash': ['現金', 'cash'],
+      'bank': ['銀行帳戶', '銀行', 'bank'],
+      'credit': ['信用卡', '信用', 'credit']
+    };
+
+    let resolvedWallet = null;
+
+    // 階段三修復：動態查詢匹配的錢包
+    const possibleNames = walletTypeMapping[targetWalletId];
+    if (!possibleNames) {
+      throw new Error(`階段三：未知的錢包類型: ${targetWalletId}`);
     }
 
-    // 階段三修復：使用 LBK_getWalletByName 動態查詢錢包
-    const walletResult = await LBK_getWalletByName(targetWalletName, userId, processId);
+    for (const walletName of possibleNames) {
+      const dynamicWallet = await LBK_getWalletByName(walletName, userId, processId);
+      if (dynamicWallet && dynamicWallet.walletId) {
+        resolvedWallet = {
+          walletId: dynamicWallet.walletId,
+          walletName: dynamicWallet.walletName,
+          type: targetWalletId
+        };
+        LBK_logInfo(`階段三：動態查詢成功匹配錢包: ${walletName} → ${resolvedWallet.walletName} [${processId}]`, "錢包同義詞", userId, functionName);
+        break;
+      }
+    }
 
-    if (!walletResult || !walletResult.walletId) {
-      // 如果按名稱找不到，嘗試查詢所有活躍錢包並按類型匹配
+    if (!resolvedWallet) {
+      // 如果都沒匹配到，嘗試查詢所有活躍錢包並按類型匹配
       const walletsSnapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets").where("status", "==", "active").get();
 
       if (walletsSnapshot.empty) {
@@ -2895,12 +2813,15 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
         LBK_logWarning(`階段三：無法精確匹配錢包類型，使用第一個活躍錢包: ${matchedWallet.walletName} [${processId}]`, "錢包同義詞", userId, functionName);
       }
 
-      targetWalletId = matchedWallet.walletId;
-      targetWalletName = matchedWallet.walletName;
-    } else {
-      targetWalletId = walletResult.walletId;
-      targetWalletName = walletResult.walletName;
+      resolvedWallet = matchedWallet;
     }
+
+    if (!resolvedWallet) {
+      throw new Error(`無法動態解析或匹配到有效的錢包`);
+    }
+
+    targetWalletId = resolvedWallet.walletId;
+    targetWalletName = resolvedWallet.walletName;
 
     LBK_logInfo(`階段三：動態查詢到目標錢包: ID=${targetWalletId}, 名稱=${targetWalletName} [${processId}]`, "錢包同義詞", userId, functionName);
 
@@ -2945,73 +2866,6 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
     return {
       success: false,
       error: error.toString()
-    };
-  }
-}
-
-/**
- * 確認錢包同義詞更新
- * @version 2025-12-19-V1.4.9
- * @param {string} originalInput - 原始輸入
- * @param {string} targetWalletId - 目標錢包ID
- * @param {string} userId - 用戶ID
- * @param {string} processId - 處理ID
- * @returns {Object} 確認結果
- * @description 確認並驗證錢包同義詞更新結果，可用於後續驗證或回滾
- */
-async function LBK_confirmWalletSynonymsUpdate(originalInput, targetWalletId, userId, processId) {
-  const functionName = "LBK_confirmWalletSynonymsUpdate";
-  try {
-    LBK_logInfo(`確認錢包同義詞更新: ${originalInput} → ${targetWalletId} [${processId}]`, "錢包同義詞確認", userId, functionName);
-
-    await LBK_initializeFirestore();
-    const db = LBK_INIT_STATUS.firestore_db;
-    const ledgerId = `user_${userId}`;
-
-    // 查找目標錢包並驗證同義詞是否已正確更新
-    const walletRef = db.collection("ledgers").doc(ledgerId).collection("wallets").doc(targetWalletId);
-    const walletDoc = await walletRef.get();
-
-    if (!walletDoc.exists) {
-      return {
-        success: false,
-        error: `錢包不存在: ${targetWalletId}`,
-        confirmed: false
-      };
-    }
-
-    const walletData = walletDoc.data();
-    const existingSynonyms = walletData.synonyms || "";
-    const synonymsArray = existingSynonyms ? existingSynonyms.split(",").map(s => s.trim()) : [];
-
-    // 檢查同義詞是否已成功加入
-    const isConfirmed = synonymsArray.includes(originalInput);
-
-    if (isConfirmed) {
-      LBK_logInfo(`錢包同義詞更新確認成功: ${originalInput} 已存在於 ${targetWalletId} 的同義詞中 [${processId}]`, "錢包同義詞確認", userId, functionName);
-      return {
-        success: true,
-        message: "同義詞更新確認成功",
-        confirmed: true,
-        synonyms: synonymsArray,
-        walletName: walletData.walletName || walletData.name
-      };
-    } else {
-      LBK_logWarning(`錢包同義詞更新確認失敗: ${originalInput} 未在 ${targetWalletId} 的同義詞中找到 [${processId}]`, "錢包同義詞確認", userId, functionName);
-      return {
-        success: false,
-        error: "同義詞更新確認失敗，同義詞未找到",
-        confirmed: false,
-        synonyms: synonymsArray
-      };
-    }
-
-  } catch (error) {
-    LBK_logError(`確認錢包同義詞更新失敗: ${error.toString()} [${processId}]`, "錢包同義詞確認", userId, "CONFIRM_WALLET_SYNONYMS_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.toString(),
-      confirmed: false
     };
   }
 }
@@ -3370,7 +3224,7 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
     if (!snapshot.empty) {
       // 階段三修復：完全動態優先序列 - 基於wallets子集合中的實際配置
       const availableWallets = [];
-      
+
       snapshot.docs.forEach(doc => {
         const data = doc.data();
         const wallet = {
@@ -3381,7 +3235,7 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
           isDefault: data.isDefault === true, // 階段三：支援用戶自定義預設錢包
           createdAt: data.createdAt
         };
-        
+
         // 階段三修復：只添加有有效名稱的錢包
         if (wallet.walletName) {
           availableWallets.push(wallet);
@@ -3409,10 +3263,10 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
 
       // 2. 如無明確預設，選擇自定義優先級最高的錢包
       if (!selectedWallet) {
-        const highestPriorityWallet = availableWallets.reduce((prev, current) => 
+        const highestPriorityWallet = availableWallets.reduce((prev, current) =>
           (current.priority > prev.priority) ? current : prev
         );
-        
+
         if (highestPriorityWallet.priority > 0) {
           selectedWallet = highestPriorityWallet;
           LBK_logInfo(`階段三：選擇最高優先級錢包: ${selectedWallet.walletName} (優先級: ${selectedWallet.priority}) [${processId}]`, "預設支付方式", userId, functionName);
@@ -4259,7 +4113,7 @@ function LBK_buildClassificationMessage(originalSubject, parsedData, processId) 
 
     // 從0099.json提取所有科目並排序
     const dynamicCategories = subjectConfig
-      .filter(item => item.categoryId && item.categoryName)
+      ..filter(item => item.categoryId && item.categoryName)
       .sort((a, b) => a.categoryId - b.categoryId);
 
     return LBK_buildClassificationMessageInternal(originalSubject, parsedData, dynamicCategories, processId);
@@ -4700,10 +4554,10 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
 
     // 階段一修復：強化科目資訊驗證，支援多種欄位名稱格式
     LBK_logInfo(`階段一修復：開始驗證科目資訊 - stageData: ${JSON.stringify(stageData)} [${processId}]`, "記帳完成", userId, functionName);
-    
+
     const selectedSubject = stageData.selectedSubject;
     const subjectSelected = stageData.subjectSelected;
-    
+
     if (selectedSubject && subjectSelected) {
       // 階段一修復：支援多種科目欄位名稱格式，確保相容性
       const subjectCode = selectedSubject.subjectCode || selectedSubject.categoryId;
@@ -4770,7 +4624,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
 
     // 階段四修復：準備0070規範格式記帳資料，移除違規欄位
     const preparedData = {
-      // 核心欄位 - 符合0070規範，全面驗證
+      // 核心欄位 - 符合0070規範
       id: transactionId,
       amount: parseFloat(finalBookkeepingData.amount) || 0,
       type: (finalBookkeepingData.action === "收入") ? "income" : "expense",
