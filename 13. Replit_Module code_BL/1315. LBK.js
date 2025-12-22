@@ -460,7 +460,7 @@ async function LBK_processQuickBookkeeping(inputData) {
  */
 async function LBK_parseUserMessage(messageText, userId, processId) {
   try {
-    LBK_logDebug(`解析用戶訊息: "${messageText}" [${processId}]`, "訊息解析", userId, "LBK_parseUserMessage");
+    LBK_logDebug(`用戶訊息解析: "${messageText}" [${processId}]`, "訊息解析", userId, "LBK_parseUserMessage");
 
     if (!messageText || messageText.trim() === "") {
       return {
@@ -547,7 +547,7 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
     };
 
   } catch (error) {
-    LBK_logError(`解析用戶訊息失敗: ${error.toString()} [${processId}]`, "訊息解析", userId, "PARSE_ERROR", error.toString(), "LBK_parseUserMessage");
+    LBK_logError(`用戶訊息解析失敗: ${error.toString()} [${processId}]`, "訊息解析", userId, "PARSE_ERROR", error.toString(), "LBK_parseUserMessage");
 
     return {
       success: false,
@@ -564,7 +564,7 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
  * @description 階段一修復：添加「一銀」支援，移除硬編碼預設值，實現動態支付方式查詢
  */
 function LBK_parseInputFormat(message, processId) {
-  LBK_logDebug(`階段一：開始解析格式: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+  LBK_logDebug(`階段一：開始格式解析: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
   if (!message || message.trim() === "") {
     return null;
@@ -663,7 +663,7 @@ function LBK_parseInputFormat(message, processId) {
     };
 
   } catch (error) {
-    LBK_logError(`解析格式錯誤: ${error.toString()} [${processId}]`, "格式解析", "", "PARSE_ERROR", error.toString(), "LBK_parseInputFormat");
+    LBK_logError(`格式解析錯誤: ${error.toString()} [${processId}]`, "格式解析", "", "PARSE_ERROR", error.toString(), "LBK_parseInputFormat");
     return null;
   }
 }
@@ -1074,7 +1074,7 @@ async function LBK_getAllSubjects(userId, processId) {
 }
 
 /**
- * 08. 執行記帳操作 - 加入重試機制
+ * 08. 執行記帳操作 - 加入重retry機制
  * @version 2025-07-15-V1.0.1
  * @date 2025-07-15 19:10:00
  * @description 執行實際的記帳操作，包含資料驗證、儲存和重retry機制
@@ -2691,7 +2691,7 @@ async function LBK_updateWalletSynonyms(originalInput, walletName, userId, proce
  * 階段三修復：執行錢包同義詞更新 - 確保使用正確提取的支付方式名稱
  * @version 2025-12-19-V1.8.0
  * @param {string} originalInput - 原始輸入
- * @param {string} targetWalletId - 目標錢包ID
+ * @param {string} targetWalletType - 目標錢包類型
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Object} 執行結果
@@ -2748,7 +2748,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
     // 階段一修復：根據錢包類型動態查詢目標錢包，確保變數正確初始化
     const walletTypeMapping = {
       'cash': ['現金', 'cash'],
-      'bank': ['銀行帳戶', '銀行', 'bank'], 
+      'bank': ['銀行帳戶', '銀行', 'bank'],
       'credit': ['信用卡', '信用', 'credit']
     };
 
@@ -2849,7 +2849,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
           transaction.update(walletRef, {
             synonyms: updatedSynonyms,
             updatedAt: admin.firestore.Timestamp.now(),
-            lastSynonymAdded: trimmedPaymentMethod,
+            // lastSynonymAdded: trimmedPaymentMethod, // 移除不符合0070規範的欄位
             synonymsCount: synonymsArray.length
           });
         } else {
@@ -2881,7 +2881,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
 }
 
 /**
- * 階段三新增：取得錢包顯示名稱
+ * 階段五新增：取得錢包顯示名稱
  * @version 2025-12-19-V1.4.9
  * @param {string} walletId - 錢包ID
  * @param {string} userId - 用戶ID
@@ -2973,7 +2973,7 @@ async function LBK_addSubjectSynonym(originalSubject, categoryId, categoryName, 
             transaction.update(categoryRef, {
               synonyms: updatedSynonyms,
               updatedAt: admin.firestore.Timestamp.now(),
-              lastSynonymAdded: originalSubject.trim(),
+              // lastSynonymAdded: originalSubject.trim(), // 移除不符合0070規範的欄位
               synonymsCount: synonymsArray.length
             });
           } else {
@@ -2981,15 +2981,7 @@ async function LBK_addSubjectSynonym(originalSubject, categoryId, categoryName, 
           }
         });
 
-        LBK_logInfo(`階段一修復：科目同義詞事務寫入成功: [${updatedSynonyms}] [${processId}]`, "科目同義詞", userId, functionName);
-        
-        // 階段一修復：驗證寫入結果
-        const verificationDoc = await categoryRef.get();
-        if (verificationDoc.exists) {
-          const verificationData = verificationDoc.data();
-          const actualSynonyms = verificationData.synonyms || "";
-          LBK_logInfo(`階段一修復：寫入驗證成功，實際同義詞: [${actualSynonyms}] [${processId}]`, "科目同義詞", userId, functionName);
-        }
+        LBK_logInfo(`階段一修復：科目同義詞事務更新成功: "${updatedSynonyms}" [${processId}]`, "科目同義詞", userId, functionName);
       } else {
         LBK_logInfo(`階段一修復：同義詞已存在或無效，跳過添加: "${originalSubject}" [${processId}]`, "科目同義詞", userId, functionName);
       }
@@ -3665,7 +3657,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     LBK_logInfo(`階段二修復：支付方式明確: ${walletResult.walletName || paymentMethodName}，開始執行記帳 [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
 
     const transactionId = Date.now().toString();
-    const now = moment().tz(LBK_CONFIG.TIMEZONE);
+    const now = moment().tz(LBK_CONFIG.TIME_CONFIG.TIMEZONE);
 
     // 階段四修復：準備0070規範格式的記帳資料，移除違規欄位
     const preparedData = {
@@ -4266,7 +4258,7 @@ async function LBK_handleSubjectSelectionComplete(classificationResult, processI
           }
         }
       },
-      PENDING_STATES.PENDING_CATEGORY, // 保持在PENDING_CATEGORY狀態
+      PENDING_STATES.PENDING_CATEGORY, // 保持在PENDING_CATEGORY狀態，等待下一步處理
       processId
     );
 
