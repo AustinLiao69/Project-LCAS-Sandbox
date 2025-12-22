@@ -611,7 +611,7 @@ function LBK_parseInputFormat(message, processId) {
     let processedSuffix = suffixPart;
 
     // 移除幣別單位
-    const supportedUnits = /(元|塊|圓)$/i;
+    const supportedUnits = /(元|塊)$/i;
     const unsupportedUnits = /(NT|USD|\$)$/i;
 
     if (unsupportedUnits.test(processedSuffix)) {
@@ -1487,7 +1487,7 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
           }
 
           // 嘗試提取科目（移除數字和支付方式後的文字）
-          const subjectMatch = originalInput.replace(/\d+/g, '').replace(/(現金|刷卡|行動支付|轉帳|元|塊|圓)/g, '').trim();
+          const subjectMatch = originalInput.replace(/\d+/g, '').replace(/(現金|刷卡|行動支付|轉帳|元|塊)/g, '').trim();
           if (subjectMatch) {
             subject = subjectMatch;
           }
@@ -1584,7 +1584,7 @@ function LBK_removeAmountFromText(text, amount, paymentMethod, processId) {
     }
 
     // 階段二保留：移除幣別單位
-    const amountEndRegex = new RegExp(amountStr + "(元|塊|圓)$", "i");
+    const amountEndRegex = new RegExp(amountStr + "(元|塊)$", "i");
     const match = result.match(amountEndRegex);
     if (match && match.index > 0) {
       result = result.substring(0, match.index).trim();
@@ -1746,7 +1746,7 @@ function LBK_processAmountInternal(text, processId) {
     }
 
     // 金額正則表達式
-    const amountRegex = /(-?\d+)(元|塊|圓)?/g;
+    const amountRegex = /(-?\d+)(元|塊)?/g;
     const matches = [...text.matchAll(amountRegex)];
 
     if (matches.length === 0) {
