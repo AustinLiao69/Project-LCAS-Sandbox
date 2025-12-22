@@ -1,0 +1,503 @@
+  LCAS Webhook 啟動中...
+📅 啟動時間: 2025/12/22 下午4:44:40
+📦 部署模式載入模組...
+✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理
+✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+⚠️ BK 模組未正確載入，跳過初始化
+⚠️ LBK 模組未正確載入，跳過初始化
+⚠️ SR 模組未正確載入，跳過初始化
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🎉 階段五完成：FS模組移除狀態確認
+✅ FS模組已完全移除，職責分散完成
+📋 Firebase操作現由以下專門模組處理:
+  - AM模組：帳號管理相關Firebase操作
+  - WCM模組：帳戶與科目管理相關Firebase操作
+  - BM模組：預算管理相關Firebase操作
+  - CM模組：協作管理相關Firebase操作
+  - 其他模組：直接使用firebase-config模組
+❌ BK模組載入失敗，無法檢查函數
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！
+📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore
+🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000
+⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能
+📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制
+🏥 健康檢查機制已優化：專注LINE服務監控
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構
+📦 API端點遷移完成統計：
+   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點
+   📱 保留LINE Webhook專用：5個核心端點
+   ✅ 完美職責分離：RESTful API ↔ LINE Webhook
+🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現
+📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性
+🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port 3000
+📡 基礎服務已就緒，正在背景載入完整功能...
+📦 載入WH模組...
+🔧 WCM模組v1.2.4 初始化：預設錢包欄位映射修復版
+🔄 循環依賴修復：移除AM模組直接引用
+💰 預設錢包建立強化：完整錯誤處理和批次處理邏輯
+✅ 函數導出驗證：WCM_createCategory = function
+✅ 函數導出驗證：WCM_createWallet = function
+✅ 函數導出驗證：WCM_load0099SubjectData = function
+✅ 函數導出驗證：WCM_loadDefaultConfigs = function
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🚀 WCM模組現已全面支援協作帳本路徑
+💎 預設錢包建立機制：強化配置驗證、錯誤處理和批次處理
+🔧 欄位映射修復：完整映射0302配置檔案所有欄位，包含synonyms支援
+📝 符合0070 DB schema：確保wallets子集合欄位完整性
+✨ 階段二修復完成，預設錢包欄位映射已完全符合配置檔案驅動
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+🔍 AM.js 模組開始載入...
+📋 AM.js 版本: v8.0.4
+📦 AM.js: 開始引入依賴模組...
+✅ AM.js: firebase-admin 引入成功
+✅ AM.js: axios 引入成功
+✅ AM.js: crypto 引入成功
+⚙️ AM.js: 開始定義AM_CONFIG配置物件...
+🔥 AM.js: 開始引入Firebase動態配置模組...
+✅ AM.js: Firebase動態配置模組引入成功
+🔧 AM.js: 初始化Firebase Admin SDK...
+✅ Firebase Admin SDK已初始化
+✅ AM.js: Firebase初始化完成，Firestore實例已取得
+📊 BM 預算管理模組載入中...
+✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能
+🤝 CM 協作管理模組初始化中...
+[2025-12-22T08:44:41.590Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組v2.4.0載入完成 - 階段一擴展：建立完整協作帳本子集合架構（members, transactions, wallets, budgets, categories）
+📤 AM.js: 開始導出模組函數...
+✅ AM.js: 所有函數定義完成，準備導出
+✅ AM模組8.0.3 DCN-0023職責重構完成！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 帳本結構初始化 (專注基礎結構)
+   └── 總計: 59個函數 (移除4個重複函數)
+🔧 DCN-0023職責重構: 完全移除與WCM重複功能
+🎯 職責邊界: AM專注帳號管理+帳本基礎結構，WCM負責科目和帳戶管理
+🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行科目和帳戶初始化
+📊 資料流: AM → WCM (科目+帳戶) → Firebase
+✨ v8.0.3重構成果: 移除重複函數，職責邊界清晰，避免功能衝突
+🎉 重構完成: AM模組功能精簡，與WCM模組職責劃分明確！
+🎯 AM.js 模組載入完成，59個函數已成功導出
+📅 SR 排程提醒模組初始化中...
+✅ 階段五完成：FS模組已移除，消息去重使用NodeCache
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.5.3 (2025-12-19) - 階段三完成：支援連續性Quick Reply處理，識別Pending Record相關事件
+WH模組環境變數檢查結果:
+  ✅ LINE_CHANNEL_SECRET: 已設定(32字符)
+  ✅ LINE_CHANNEL_ACCESS_TOKEN: 已設定(172字符)
+  ✅ Webhook_URL: 已設定(84字符)
+✅ 所有必要環境變數已正確設定
+✅ WH模組環境變數檢查完整
+✅ WH 模組載入成功
+✅ WH模組核心函數檢查通過
+🔄 延遲載入應用模組...
+✅ BK 模組載入成功
+✅ LBK 模組載入成功
+✅ DD 模組載入成功
+🔍 開始載入 AM 模組...
+✅ AM 模組載入成功
+✅ AM_createLineAccount函數檢查通過
+✅ AM模組版本: 8.0.3
+✅ SR 模組載入成功
+✅ 完整功能載入完成
+📋 DCN-0011 Phase 4 重構統計:
+   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)
+   🎯 Webhook端點保留: 5個 (LINE OA專用)
+   🏗️ 雙服務架構: 職責完全分離
+📅 已載入 0 個排程設定
+[2025-12-22T08:44:42.637Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+成功寫入 2 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [6353eb06] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [6353eb06]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [6353eb06] (INFO)
+開始非同步處理請求 [6353eb06]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [6353eb06] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [6353eb06] (INFO)
+處理消息事件: text [6353eb06]
+收到文本消息: "香腸88888中信" [6353eb06]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "香腸88888中信" [6353eb06] (INFO)
+開始AM用戶驗證流程 [6353eb06]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [6353eb06] (INFO)
+用戶不存在，開始自動註冊流程: Uae47d9d496e4596d70ed724a7d6e2948 [6353eb06]
+[WH 2.0.16 LOG] WH 階段一: 用戶不存在，開始自動註冊 Uae47d9d496e4596d70ed724a7d6e2948 [6353eb06] (INFO)
+[2025-12-22T08:45:02.356Z] [INFO] [DL] AM [Location: Object.AM_createLineAccount]
+✅ 自動註冊成功: Uae47d9d496e4596d70ed724a7d6e2948, 帳本ID: Uae47d9d496e4596d70ed724a7d6e2948 [6353eb06]
+[WH 2.0.16 LOG] WH 階段一: 自動註冊成功 Uae47d9d496e4596d70ed724a7d6e2948 [6353eb06] (INFO)
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [6353eb06]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+🔄 AM_getUserDefaultLedger: 為用戶 Uae47d9d496e4596d70ed724a7d6e2948 自動初始化預設帳本...
+🔄 AM_initializeUserLedger: 階段四完成版 - AM專注帳本基礎結構，整合其他模組功能
+📋 AM_initializeUserLedger: v8.0.0 - 調用WCM、BM、CM模組處理科目、帳戶、預算、協作功能
+📝 AM_initializeUserLedger: 準備建立帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948（符合1311.FS.js規範）
+  - 帳本主文檔 user_Uae47d9d496e4596d70ed724a7d6e2948 準備寫入（階段二優化版）
+  - 階段一修正：確保帳本結構存在...
+🔧 AM_initializeUserLedger: 直接使用Firebase建立帳本子集合結構...
+✅ AM_initializeUserLedger: 子集合 categories 初始化完成
+✅ AM_initializeUserLedger: 子集合 wallets 初始化完成
+✅ AM_initializeUserLedger: 子集合 budgets 初始化完成
+✅ AM_initializeUserLedger: transactions子集合保持空集合狀態（無_init文檔）
+  - 1311.FS.js結構建立成功: ["transactions","categories","wallets","budgets"]
+📋 AM_initializeUserLedger: 調用WCM模組進行科目初始化...
+[2025-12-22T08:45:03.260Z] [INFO] [DL] 開始創建科目: 批量載入 (帳本: user_Uae47d9d496e4596d70ed724a7d6e2948) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-22T08:45:03.261Z] [INFO] [DL] WCM模組v1.2.0初始化開始 - 子集合架構 [Location: Object.DL_info]
+[2025-12-22T08:45:03.261Z] [INFO] [DL] WCM模組初始化完成v1.2.0 - 子集合架構 [Location: Object.DL_info]
+[2025-12-22T08:45:03.261Z] [INFO] [DL] 執行0099科目批量載入至帳本: user_Uae47d9d496e4596d70ed724a7d6e2948 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-22T08:45:03.261Z] [INFO] [DL] 開始載入0099科目資料... [Location: Object.DL_info]
+[2025-12-22T08:45:03.262Z] [INFO] [DL] 成功載入 11 筆科目資料 [Location: Object.DL_info]
+[2025-12-22T08:45:03.425Z] [INFO] [DL] 批量載入完成: 11 筆科目 (路徑: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/categories) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+✅ AM_initializeUserLedger: WCM科目初始化完成，載入11筆科目
+💳 AM_initializeUserLedger: 調用WCM模組進行wallets子集合初始化...
+[2025-12-22T08:45:03.426Z] [INFO] [DL] 開始創建帳戶: 預設帳戶 (帳本: user_Uae47d9d496e4596d70ed724a7d6e2948) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-22T08:45:03.426Z] [INFO] [DL] 執行預設帳戶建立至帳本: user_Uae47d9d496e4596d70ed724a7d6e2948 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-22T08:45:03.427Z] [INFO] [DL] 開始載入預設配置資料... [Location: Object.DL_info]
+[2025-12-22T08:45:03.427Z] [INFO] [DL] 檢查配置目錄路徑: /home/runner/03. Default_config [Location: Object.DL_info]
+[2025-12-22T08:45:03.427Z] [INFO] [DL] 檢查配置目錄路徑: /home/runner/workspace/03. Default_config [Location: Object.DL_info]
+[2025-12-22T08:45:03.427Z] [INFO] [DL] 成功找到配置目錄: /home/runner/workspace/03. Default_config [Location: Object.DL_info]
+[2025-12-22T08:45:03.428Z] [INFO] [DL] 嘗試載入系統配置: /home/runner/workspace/03. Default_config/0301. Default_config.json [Location: Object.DL_info]
+[2025-12-22T08:45:03.428Z] [INFO] [DL] 載入系統配置成功: 1.0.0 [Location: Object.DL_info]
+[2025-12-22T08:45:03.428Z] [INFO] [DL] 載入0302預設錢包配置: /home/runner/workspace/03. Default_config/0302. Default_wallet.json [Location: Object.DL_info]
+[2025-12-22T08:45:03.428Z] [INFO] [DL] 成功載入0302預設帳戶配置: 3個帳戶定義 [Location: Object.DL_info]
+[2025-12-22T08:45:03.429Z] [INFO] [DL] 嘗試載入貨幣配置: /home/runner/workspace/03. Default_config/0303. Default_currency.json [Location: Object.DL_info]
+[2025-12-22T08:45:03.429Z] [INFO] [DL] 載入貨幣配置成功: 預設貨幣 TWD [Location: Object.DL_info]
+[2025-12-22T08:45:03.429Z] [INFO] [DL] 預設配置載入完成，成功載入: system, wallets, currency [Location: Object.DL_info]
+[2025-12-22T08:45:03.429Z] [INFO] [DL] 解析路徑：帳本ID=user_Uae47d9d496e4596d70ed724a7d6e2948, 操作=wallets [Location: Object.DL_info]
+[2025-12-22T08:45:03.429Z] [INFO] [DL] 動態路徑解析成功 (獨立帳本): ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/wallets [Location: Object.DL_info]
+[2025-12-22T08:45:03.430Z] [INFO] [DL] 開始批量建立3個預設錢包至路徑: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/wallets [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-22T08:45:03.430Z] [INFO] [DL] 準備建立錢包: 現金 (cash) - undefined [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-22T08:45:03.430Z] [INFO] [DL] 準備建立錢包: 銀行 (debit) - undefined [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-22T08:45:03.430Z] [INFO] [DL] 準備建立錢包: 信用卡 (credit) - undefined [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-22T08:45:03.554Z] [INFO] [DL] 預設帳戶建立成功: 3個帳戶已建立至 ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/wallets [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+✅ AM_initializeUserLedger: WCM wallets子集合初始化完成，建立3個錢包帳戶
+🔗 AM_initializeUserLedger: wallet概念統一 - 所有支付方式現在都統一使用wallet ID
+💰 AM_initializeUserLedger: 調用BM模組進行預算結構初始化...
+[BM_createBudgetsSubcollectionFramework] 階段二新增：建立預算子集合框架佔位符 - 帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948
+[BM_createBudgetsSubcollectionFramework] ✅ 預算子集合框架建立成功 - 路徑: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/budgets
+[2025-12-22T08:45:03.669Z] [INFO] [DL] 建立預算子集合框架 - 帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948 [Location: BM.BM_createBudgetsSubcollectionFramework]
+✅ AM_initializeUserLedger: BM預算結構初始化完成
+🤝 AM_initializeUserLedger: 調用CM模組進行協作結構初始化...
+[2025-12-22T08:45:03.671Z] [INFO] [CM] 階段三：開始初始化協作系統完整架構 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: CM_initializeCollaborationSystem]
+[2025-12-22T08:45:04.014Z] [INFO] [CM] 階段三：協作系統初始化完成 - 成功: 3/3 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: CM_initializeCollaborationSystem]
+✅ AM_initializeUserLedger: CM協作結構初始化完成
+📋 AM_initializeUserLedger: 調用LBK模組進行pendingTransactions子集合初始化...
+[2025-12-22T08:45:04.015Z] [INFO] [DL] 開始初始化 pendingTransactions 子集合: user_Uae47d9d496e4596d70ed724a7d6e2948 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_initializePendingTransactionsSubcollection]
+[2025-12-22T08:45:04.015Z] [INFO] [DL] Firestore連線初始化成功 [Code: INFO] [Location: LBK_initializeFirestore]
+[2025-12-22T08:45:04.247Z] [INFO] [DL] pendingTransactions 子集合初始化完成: user_Uae47d9d496e4596d70ed724a7d6e2948 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_initializePendingTransactionsSubcollection]
+✅ AM_initializeUserLedger: LBK pendingTransactions子集合初始化完成
+  - 階段一修正：預設帳戶由1311.FS.js統一處理
+  - 階段一修正：交易和預算子集合由1311.FS.js統一處理
+🔄 階段一修正：建立帳本主文檔...
+✅ 帳本主文檔建立成功: user_Uae47d9d496e4596d70ed724a7d6e2948
+  - 帳本 user_Uae47d9d496e4596d70ed724a7d6e2948 初始化標誌更新為 true
+  - 保留範例文檔以確保子集合結構完整性
+✅ 帳本 user_Uae47d9d496e4596d70ed724a7d6e2948 驗證成功
+✅ Categories集合: 已建立
+✅ Wallets集合: 已建立
+✅ Transactions集合: ❌未建立
+✅ Budgets集合: 已建立
+⚠️ 部分子集合未建立: transactions
+[2025-12-22T08:45:05.049Z] [INFO] [DL] AM [Location: AM_initializeUserLedger]
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [6353eb06]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [6353eb06] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 香腸88888中信
+[2025-12-22T08:45:05.163Z] [INFO] [DL] 開始處理LINE OA請求 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T08:45:05.164Z] [DEBUG] [DL] 檢查統計查詢關鍵字: "香腸88888中信" [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-22T08:45:05.164Z] [DEBUG] [DL] 解析用戶訊息: "香腸88888中信" [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-22T08:45:05.164Z] [DEBUG] [DL] 階段一：開始解析格式: "香腸88888中信" [6353eb06] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:05.165Z] [DEBUG] [DL] 階段一：檢測到銀行名稱: 中信 [6353eb06] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:05.165Z] [INFO] [DL] 階段一：解析結果: 科目="香腸", 金額=88888, 支付方式="中信" [6353eb06] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:05.165Z] [DEBUG] [DL] 提取金額: "香腸88888" [6353eb06] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-22T08:45:05.166Z] [DEBUG] [DL] 查詢科目代碼: "香腸" [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.166Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "香腸" [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.286Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.286Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "生鮮雜貨"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.287Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "生活家用"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.287Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "交通費用"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.287Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "餐飲費用"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.287Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "娛樂消遣"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.290Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "運動嗜好"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.294Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "寵物生活"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.297Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "醫療費用"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.299Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "財務收入"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.304Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "財務支出"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.307Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "其他"，同義詞數量: 0 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:05.313Z] [INFO] [DL] 需要新科目歸類: 香腸 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parseUserMessage]
+[2025-12-22T08:45:05.317Z] [INFO] [DL] 觸發新科目歸類流程: 香腸 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T08:45:05.319Z] [INFO] [DL] 觸發新科目歧義消除流程: 香腸 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+成功寫入 59 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[2025-12-22T08:45:05.595Z] [INFO] [DL] Pending Record 創建成功: 1766393105343 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_createPendingRecord]
+[2025-12-22T08:45:05.596Z] [INFO] [DL] 處理新科目歸類: 香腸 [6353eb06] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleNewSubjectClassification]
+[2025-12-22T08:45:05.596Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-22T08:45:05.597Z] [INFO] [DL] v1.4.3 生成科目歸類選單和Quick Reply，共11個動態選項 (來源:0099.json) [Code: INFO] [Location: LBK_buildClassificationMessage]
+已儲存pending記帳資料到快取: WH_PENDING_Uae47d9d496e4596d70ed724a7d6e2948 [6353eb06]
+[WH 2.0.16 LOG] WH 2.5.1: 已儲存pending記帳資料，等待用戶選擇科目 [6353eb06] (INFO)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","pendingData"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"您的科目庫無此科目，請問「香腸」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「香腸」屬於什...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=121
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (您的科目庫無此科目，請問「香腸」屬於什麼科目？
+
+101 生...)
+WH_replyMessage: 開始回覆訊息: 您的科目庫無此科目，請問「香腸」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交通費...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 您的科目庫無此科目，請問「香腸」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交通費... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+成功寫入 4 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成，已回覆用戶 [6353eb06] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":121,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [6353eb06]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [6353eb06]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [6353eb06] (INFO)
+訊息處理結果: {"success":true,"message":"您的科目庫無此科目，請問「香腸」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「香腸」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"101 生鮮雜貨","data":"classify_101_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"101 生鮮雜貨"}},{"type":"action","action":{"type":"postback","label":"102 生活家用","data":"classify_102_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"102 生活家用"}},{"type":"action","action":{"type":"postback","label":"103 交通費用","data":"classify_103_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"103 交通費用"}},{"type":"action","action":{"type":"postback","label":"104 餐飲費用","data":"classify_104_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"104 餐飲費用"}},{"type":"action","action":{"type":"postback","label":"105 娛樂消遣","data":"classify_105_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"105 娛樂消遣"}},{"type":"action","action":{"type":"postback","label":"106 運動嗜好","data":"classify_106_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"106 運動嗜好"}},{"type":"action","action":{"type":"postback","label":"107 寵物生活","data":"classify_107_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"107 寵物生活"}},{"type":"action","action":{"type":"postback","label":"108 醫療費用","data":"classify_108_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"108 醫療費用"}},{"type":"action","action":{"type":"postback","label":"201 財務收入","data":"classify_201_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"201 財務收入"}},{"type":"action","action":{"type":"postback","label":"301 財務支出","data":"classify_301_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"301 財務支出"}},{"type":"action","action":{"type":"postback","label":"999 其他","data":"classify_999_{\"subject\":\"香腸\",\"amount\":88888,\"rawAmount\":\"88888\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766393105343\"}","displayText":"999 其他"}}]},"moduleCode":"LBK","module":"LBK","processingTime":1764726661.559,"moduleVersion":"1.4.3","requiresUserSelection":true,"pendingData":{"subject":"香腸","amount":88888,"rawAmount":"88888","paymentMethod":"中信","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":"2025-12-22T08:45:05.597Z","processId":"6353eb06","originalInput":"香腸88888中信","stageData":{"electedCategory":{},"categorySelected":true}}} [6353eb06]
+非同步處理完成，已清理數據 [6353eb06]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [6353eb06] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [71379763] (INFO)
+非回覆事件，使用非同步處理 [71379763]
+開始非同步處理請求 [71379763]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [71379763] (INFO)
+WH v2.5.3: 收到postback事件: classify_104_{"subject":"香腸","amount":88888,"rawAmount":"88888","paymentMethod":"中信","userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766393105343"}
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: classify_104_{"subject":"香腸","amount":88888,"rawAmount":"88888","paymentMethod":"中信","userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766393105343"} [71379763] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - classify_104_{"subject":"香腸","amount":88888,"rawAmount":"88888","paymentMethod":"中信","userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766393105343"}
+[2025-12-22T08:45:10.520Z] [INFO] [DL] 開始處理LINE OA請求 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T08:45:10.521Z] [INFO] [DL] 檢測到科目歸類postback格式訊息 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T08:45:10.521Z] [INFO] [DL] 科目選擇完成，開始執行記帳: categoryId=104 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T08:45:10.521Z] [INFO] [DL] 處理科目歸類postback: categoryId=104 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T08:45:10.522Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-22T08:45:10.522Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-22T08:45:10.522Z] [DEBUG] [DL] 建立科目映射表，共11個選項 (來源:0099.json) [Code: DEBUG] [Location: LBK_buildCategoryMapping]
+[2025-12-22T08:45:10.523Z] [INFO] [DL] 科目歸類選擇: 餐飲費用 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T08:45:10.523Z] [INFO] [DL] 階段一修復：添加科目同義詞: 香腸 → 餐飲費用 (ID: 104) [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-22T08:45:10.631Z] [INFO] [DL] 階段一修復：現有同義詞: [] [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-22T08:45:10.864Z] [INFO] [DL] 階段一修復：科目同義詞事務寫入成功: [香腸] [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-22T08:45:10.969Z] [INFO] [DL] 階段一修復：寫入驗證成功，實際同義詞: [香腸] [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-22T08:45:10.969Z] [INFO] [DL] 成功建立同義詞關聯: 香腸 → 餐飲費用 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T08:45:11.080Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766393105343, categorySelected: true, electedCategory: {"categoryId":"104","categoryName":"餐飲費用"} [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-22T08:45:11.207Z] [INFO] [DL] Pending Record 更新成功: 1766393105343 → PENDING_CATEGORY [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-22T08:45:11.207Z] [INFO] [DL] 階段一修復：Pending Record 科目資訊更新成功: 餐飲費用 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T08:45:11.208Z] [INFO] [DL] 階段二修復：科目選擇完成，檢查支付方式: 中信 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T08:45:11.208Z] [DEBUG] [DL] 階段二：嚴格驗證錢包存在: walletId="null", walletName="中信" [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-22T08:45:11.208Z] [DEBUG] [DL] 階段二：使用 walletName 嚴格查詢: "中信" [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-22T08:45:11.208Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "中信" [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:11.208Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "中信" [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:11.420Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:11.421Z] [DEBUG] [DL] 階段二：檢查同義詞: "中信"，錢包: "現金"，同義詞: [] [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:11.421Z] [DEBUG] [DL] 階段二：檢查同義詞: "中信"，錢包: "信用卡"，同義詞: [] [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:11.421Z] [DEBUG] [DL] 階段二：檢查同義詞: "中信"，錢包: "銀行"，同義詞: [] [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:11.421Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: "中信" [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:11.421Z] [INFO] [DL] 階段二：錢包未在 wallets 子集合中找到，觸發用戶確認: 中信 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_validateWalletExists]
+[2025-12-22T08:45:11.421Z] [INFO] [DL] 支付方式需要歧義消除: undefined，轉入PENDING_WALLET狀態 [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T08:45:11.636Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766393105343, categorySelected: true, electedCategory: {"categoryId":"104","categoryName":"餐飲費用"} [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-22T08:45:11.757Z] [INFO] [DL] Pending Record 更新成功: 1766393105343 → PENDING_WALLET [71379763] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","classificationCompleted","nextStage"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"科目歸類完成！已選擇「餐飲費用」\n\n檢測到未知支付方式「中信」，請問這屬於何種支付方式：","responseMessage":"科目歸類完成！已選擇「餐飲費用」\n\n檢測到未知支付方式「中信」，請問這屬於何種支付方式：","quickReply":{"items":[{"type":"action","action":{"type":"...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=44
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「中信...)
+WH_replyMessage: 開始回覆訊息: 科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「中信」，請問這屬於何種支付方式：
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「中信」，請問這屬於何種支付方式： (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [71379763] (INFO)
+非同步處理完成，已清理數據 [71379763]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [71379763] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [50de3e16] (INFO)
+非回覆事件，使用非同步處理 [50de3e16]
+開始非同步處理請求 [50de3e16]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [50de3e16] (INFO)
+WH v2.5.3: 收到postback事件: wallet_type_credit_1766393105343
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: wallet_type_credit_1766393105343 [50de3e16] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - wallet_type_credit_1766393105343
+[2025-12-22T08:45:15.661Z] [INFO] [DL] 開始處理LINE OA請求 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T08:45:15.661Z] [INFO] [DL] 檢測到wallet類型選擇postback事件: wallet_type_credit_1766393105343 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T08:45:15.662Z] [INFO] [DL] 處理錢包確認postback: wallet_type_credit_1766393105343 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-22T08:45:15.662Z] [INFO] [DL] 處理支付方式類型選擇: type=credit, pendingId=1766393105343 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-22T08:45:15.662Z] [INFO] [DL] 階段四：處理支付方式類型選擇: type=credit, pendingId=1766393105343 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-22T08:45:15.786Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "信用卡" [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:15.786Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "信用卡" [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:15.919Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:15.919Z] [DEBUG] [DL] 階段二：檢查同義詞: "信用卡"，錢包: "現金"，同義詞: [] [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:15.919Z] [INFO] [DL] 階段二：找到精確錢包名稱匹配: "信用卡" → "信用卡" [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:15.919Z] [INFO] [DL] 階段二：返回錢包名稱精確匹配結果: 信用卡 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:15.919Z] [INFO] [DL] 階段五：動態查詢成功匹配錢包: 信用卡 → 信用卡 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-22T08:45:16.037Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766393105343, categorySelected: true, electedCategory: {"categoryName":"餐飲費用","categoryId":"104"} [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-22T08:45:16.151Z] [INFO] [DL] Pending Record 更新成功: 1766393105343 → PENDING_WALLET [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-22T08:45:16.152Z] [DEBUG] [DL] 階段一：開始解析格式: "香腸88888中信" [50de3e16] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:16.152Z] [DEBUG] [DL] 階段一：檢測到銀行名稱: 中信 [50de3e16] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:16.152Z] [INFO] [DL] 階段一：解析結果: 科目="香腸", 金額=88888, 支付方式="中信" [50de3e16] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:16.152Z] [DEBUG] [DL] 從輸入中提取支付方式: "香腸88888中信" → "中信" [50de3e16] [Code: DEBUG] [Location: LBK_extractPaymentMethodFromInput]
+[2025-12-22T08:45:16.153Z] [INFO] [DL] 階段一修復：執行錢包同義詞更新: 中信 → 類型:credit [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-22T08:45:16.153Z] [DEBUG] [DL] 階段一：開始解析格式: "中信" [50de3e16] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:16.156Z] [WARNING] [DL] 無法匹配輸入格式: "中信" [50de3e16] [Code: WARNING] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:16.160Z] [INFO] [DL] 階段一修復：從輸入中直接識別銀行名稱: "中信" [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-22T08:45:16.162Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "信用卡" [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:16.165Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "信用卡" [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+成功寫入 54 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[2025-12-22T08:45:16.442Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:16.442Z] [DEBUG] [DL] 階段二：檢查同義詞: "信用卡"，錢包: "現金"，同義詞: [] [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:16.443Z] [INFO] [DL] 階段二：找到精確錢包名稱匹配: "信用卡" → "信用卡" [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:16.443Z] [INFO] [DL] 階段二：返回錢包名稱精確匹配結果: 信用卡 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-22T08:45:16.443Z] [INFO] [DL] 階段一修復：動態查詢成功匹配錢包: 信用卡 → 信用卡 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-22T08:45:16.443Z] [INFO] [DL] 階段一修復：動態查詢到目標錢包: ID=credit, 名稱=信用卡 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+成功寫入 6 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[2025-12-22T08:45:16.792Z] [INFO] [DL] 階段一修復：錢包同義詞事務更新成功: "中信" → 錢包: "信用卡" [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-22T08:45:16.792Z] [INFO] [DL] 階段三：同義詞學習完成: 中信 → 信用卡 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-22T08:45:16.910Z] [INFO] [DL] 階段四：開始完成Pending Record，科目已選: true, 錢包已選: true [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:16.910Z] [INFO] [DL] 階段一修復：開始驗證科目資訊 - stageData: {"walletSelected":true,"categorySelected":true,"electedCategory":{"categoryId":"104","categoryName":"餐飲費用"},"selectedWallet":{"type":"credit","walletId":"credit","walletName":"信用卡"}} [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:16.910Z] [INFO] [DL] 階段一修復：科目欄位提取結果 - subjectCode: 104, categoryName: 餐飲費用 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:16.910Z] [INFO] [DL] 階段一修復：科目資料驗證完成: 餐飲費用 (代碼: 104) [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:16.910Z] [INFO] [DL] 階段五：錢包資料驗證完成: 信用卡 (ID: credit) [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:16.910Z] [INFO] [DL] 階段三：最終記帳資料驗證 - 金額: 88888, 科目: 餐飲費用, 支付方式: 信用卡 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:16.910Z] [INFO] [DL] 階段三：Firestore記帳資料最終驗證 - ID: 1766393116910, 金額: 88888, 類型: expense, 科目: 餐飲費用, subjectCode: 104 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:16.910Z] [INFO] [DL] 階段四：直接執行記帳儲存，跳過重複科目查詢 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:16.911Z] [INFO] [DL] 使用1301標準路徑儲存: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/transactions [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_saveToFirestore]
+[2025-12-22T08:45:17.141Z] [INFO] [DL] 階段三：記帳結果資料構建完成 - 所有欄位已驗證無undefined值 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:17.248Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766393105343, categorySelected: true, electedCategory: {"categoryId":"104","categoryName":"餐飲費用"} [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-22T08:45:17.361Z] [INFO] [DL] Pending Record 更新成功: 1766393105343 → COMPLETED [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-22T08:45:17.361Z] [INFO] [DL] 階段四：Pending Record 記帳完成: 1766393105343 → 1766393116910 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T08:45:17.362Z] [DEBUG] [DL] 階段二：開始處理備註文字: "香腸88888中信", 金額: 88888, 支付方式: "信用卡" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-22T08:45:17.363Z] [INFO] [DL] 階段二：備註處理完成: "香腸88888中信" → "香腸" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+[2025-12-22T08:45:17.363Z] [DEBUG] [DL] 階段二：開始處理備註文字: "香腸88888中信", 金額: 88888, 支付方式: "信用卡" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-22T08:45:17.363Z] [INFO] [DL] 階段二：備註處理完成: "香腸88888中信" → "香腸" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","action","transactionId","bookkeepingData","message","responseMessage","moduleVersion","synonymsLearned","moduleCode","module"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"action":"transaction_completed","transactionId":"1766393116910","bookkeepingData":{"id":"1766393116910","transactionId":"1766393116910","amount":88888,"type":"expense","category":"104...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=116
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (記帳成功！
+金額：88888元 (支出)
+支付方式：信用卡
+...)
+WH_replyMessage: 開始回覆訊息: 記帳成功！
+金額：88888元 (支出)
+支付方式：信用卡
+時間：2025/12/22 下午04:4...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳成功！
+金額：88888元 (支出)
+支付方式：信用卡
+時間：2025/12/22 下午04:4... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [50de3e16] (INFO)
+非同步處理完成，已清理數據 [50de3e16]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [50de3e16] (INFO)
+[2025-12-22T08:45:47.485Z] [DEBUG] [DL] 延遲刪除 Pending Record 成功: 1766393105343 [50de3e16] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_completePendingRecord]
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [07f6795b] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [07f6795b]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [07f6795b] (INFO)
+開始非同步處理請求 [07f6795b]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [07f6795b] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [07f6795b] (INFO)
+處理消息事件: text [07f6795b]
+收到文本消息: "香腸9999中信" [07f6795b]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "香腸9999中信" [07f6795b] (INFO)
+開始AM用戶驗證流程 [07f6795b]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [07f6795b] (INFO)
+[2025-12-22T08:45:48.074Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [07f6795b]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [07f6795b]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [07f6795b] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 香腸9999中信
+[2025-12-22T08:45:48.303Z] [INFO] [DL] 開始處理LINE OA請求 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T08:45:48.303Z] [DEBUG] [DL] 檢查統計查詢關鍵字: "香腸9999中信" [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-22T08:45:48.303Z] [DEBUG] [DL] 解析用戶訊息: "香腸9999中信" [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-22T08:45:48.303Z] [DEBUG] [DL] 階段一：開始解析格式: "香腸9999中信" [07f6795b] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:48.303Z] [DEBUG] [DL] 階段一：檢測到銀行名稱: 中信 [07f6795b] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:48.303Z] [INFO] [DL] 階段一：解析結果: 科目="香腸", 金額=9999, 支付方式="中信" [07f6795b] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-22T08:45:48.304Z] [DEBUG] [DL] 提取金額: "香腸9999" [07f6795b] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-22T08:45:48.304Z] [DEBUG] [DL] 查詢科目代碼: "香腸" [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.304Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "香腸" [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.425Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.425Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "生鮮雜貨"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.425Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "生活家用"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.425Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "交通費用"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.426Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "餐飲費用"，同義詞數量: 1 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.426Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "娛樂消遣"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.426Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "運動嗜好"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.426Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "寵物生活"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.426Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "醫療費用"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.426Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "財務收入"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.426Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "財務支出"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.426Z] [DEBUG] [DL] 處理同義詞匹配: "香腸"，科目: "其他"，同義詞數量: 0 [07f6795b] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T08:45:48.427Z] [ERROR] [DL] 科目識別失敗: 香腸 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: SUBJECT_NOT_FOUND] [Location: LBK_parseUserMessage]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","processingTime","moduleVersion","errorType"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"message":"記帳失敗！\n金額：9999元\n支付方式：未指定\n時間：2025/12/22 下午04:45\n科目：香腸中信\n備註：香腸9999中信\n錯誤原因：找不到科目: 香腸","responseMessage":"記帳失敗！\n金額：9999元\n支付方式：未指定\n時間：2025/12/22 下午04:45\n科目：香腸中信\n備註：香腸9...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=80
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (記帳失敗！
+金額：9999元
+支付方式：未指定
+時間：202...)
+WH_replyMessage: 開始回覆訊息: 記帳失敗！
+金額：9999元
+支付方式：未指定
+時間：2025/12/22 下午04:45
+科目：香...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳失敗！
+金額：9999元
+支付方式：未指定
+時間：2025/12/22 下午04:45
+科目：香... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成，已回覆用戶 [07f6795b] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":false,"hasResponseMessage":true,"responseMsgLength":80,"errorType":"SUBJECT_NOT_FOUND","moduleCode":"LBK","hasPartialData":false} [07f6795b]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [07f6795b]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [07f6795b] (INFO)
+訊息處理結果: {"success":false,"message":"記帳失敗！\n金額：9999元\n支付方式：未指定\n時間：2025/12/22 下午04:45\n科目：香腸中信\n備註：香腸9999中信\n錯誤原因：找不到科目: 香腸","responseMessage":"記帳失敗！\n金額：9999元\n支付方式：未指定\n時間：2025/12/22 下午04:45\n科目：香腸中信\n備註：香腸9999中信\n錯誤原因：找不到科目: 香腸","moduleCode":"LBK","module":"LBK","processingTime":0,"moduleVersion":"1.4.0","errorType":"SUBJECT_NOT_FOUND"} [07f6795b]
+非同步處理完成，已清理數據 [07f6795b]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [07f6795b] (INFO)
