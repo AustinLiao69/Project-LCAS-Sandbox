@@ -44,7 +44,7 @@
           "required": false,
           "description": "描述"
         },
-        "rawSubject": {
+        "rawCategoryName": {
           "type": "string",
           "required": false,
           "description": "原始科目關鍵字"
