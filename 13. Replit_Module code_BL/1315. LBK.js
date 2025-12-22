@@ -747,7 +747,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
     if (snapshot.empty) {
       // 嘗試查詢所有categories文檔（不限制isActive）
       const allSnapshot = await db.collection("ledgers").doc(ledgerId).collection("categories").get();
-      LBK_logDebug(`categories集合總數: ${allSnapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
+      LBK_logDebug(`categories集合總數: ${allAllSnapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
 
       if (!allSnapshot.empty) {
         // 列出所有文檔的基本信息用於調試
@@ -3522,8 +3522,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
             selectedSubject: {
               subjectCode: subjectId,
               subjectName: selectedCategory.categoryName,
-              // majorCode: selectedCategory.categoryId, // majorCode removed
-              categoryId: selectedCategory.categoryId // 階段一新增：確保categoryId正確傳遞
+              // majorCode: selectedCategory.categoryId // majorCode removed
             },
             walletSelected: false,
             selectedWallet: null
@@ -4568,7 +4567,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
 
       if (subjectCode && subjectName) {
         finalBookkeepingData.subjectCode = subjectCode;
-        finalBookkeepingData.subjectName = subjectName;
+        finalBookhandlingData.subjectName = subjectName;
         // finalBookkeepingData.majorCode = majorCode; // majorCode removed
 
         // 根據科目代碼判斷收支類型，增加容錯處理
