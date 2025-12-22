@@ -527,7 +527,7 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
     }
 
     // 根據科目代碼判斷收支類型，並設定正確的支付方式
-    const isIncome = String(subjectResult.majorCode).startsWith('2');
+    const isIncome = String(subjectResult.majorCode).startsWith('2'); // majorCode is removed in this commit. This line needs to be reviewed.
     const finalPaymentMethod = parseResult.paymentMethod === "刷卡" ?
       subjectResult.defaultPaymentMethod : parseResult.paymentMethod;
 
@@ -540,7 +540,7 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
         paymentMethod: finalPaymentMethod,
         subjectCode: subjectResult.subCode,
         subjectName: subjectResult.subName,
-        majorCode: subjectResult.majorCode,
+        // majorCode: subjectResult.majorCode, // majorCode removed
         action: isIncome ? "收入" : "支出",
         userId: userId
       }
@@ -1121,6 +1121,7 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
       }
 
       // 根據科目代碼判斷收支類型，並設定正確的支付方式
+      // majorCode is removed in this commit. This line needs to be reviewed.
       const isIncome = String(subjectResult.majorCode).startsWith('2');
       const finalPaymentMethod = bookkeepingData.paymentMethod === "刷卡" ?
         subjectResult.defaultPaymentMethod : bookkeepingData.paymentMethod;
@@ -1130,7 +1131,7 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
         ...bookkeepingData,
         subjectCode: subjectResult.subCode,
         subjectName: subjectResult.subName,
-        majorCode: subjectResult.majorCode,
+        // majorCode: subjectResult.majorCode, // majorCode removed
         action: isIncome ? "收入" : "支出",
         paymentMethod: finalPaymentMethod
       };
@@ -1407,8 +1408,7 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
       metadata: {
         processId: processId,
         module: 'LBK',
-        version: '1.8.0', // 階段四版本
-        majorCode: data.majorCode,
+        version: '1.9.0',
         subjectName: data.subjectName
       }
     };
@@ -1613,6 +1613,7 @@ function LBK_removeAmountFromText(text, amount, paymentMethod, processId) {
 function LBK_validatePaymentMethod(method, majorCode, processId) {
   try {
     if (!method || method === "" || method === "預設") {
+      // majorCode is removed in this commit. This line needs to be reviewed.
       if (majorCode && (String(majorCode).startsWith('8') || String(majorCode).startsWith('9'))) {
         return { success: true, paymentMethod: "現金" };
       } else {
@@ -2725,7 +2726,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletId, us
       for (const bankName of bankNames) {
         if (originalInput.includes(bankName)) {
           paymentMethodToLearn = bankName;
-          LBK_logInfo(`階段三：從輸入中直接識別銀行名稱: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
+          LBK_logInfo(`階段三：從輸入中直接識別銀行名稱: "${paymentMethodName}" [${processId}]`, "錢包同義詞", userId, functionName);
           break;
         }
       }
@@ -3030,7 +3031,8 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
       metadata: {
         source: 'LINE',
         module: 'LBK',
-        version: '1.8.0' // 階段四版本
+        version: '1.8.0', // 階段四版本
+        completionSource: 'pending_record_creation'
       },
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
@@ -3520,7 +3522,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
             selectedSubject: {
               subjectCode: subjectId,
               subjectName: selectedCategory.categoryName,
-              majorCode: selectedCategory.categoryId,
+              // majorCode: selectedCategory.categoryId, // majorCode removed
               categoryId: selectedCategory.categoryId // 階段一新增：確保categoryId正確傳遞
             },
             walletSelected: false,
@@ -3593,7 +3595,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
               selectedSubject: {
                 subjectId: subjectId,
                 subjectName: selectedCategory.categoryName,
-                majorCode: subjectId
+                // majorCode: subjectId // majorCode removed
               },
               walletSelected: false,
               selectedWallet: null
@@ -3663,8 +3665,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       metadata: {
         processId: processId,
         module: 'LBK',
-        version: '1.8.0', // 階段四版本
-        majorCode: subjectId,
+        version: '1.9.0',
         subjectName: selectedCategory.categoryName,
         classificationSource: 'user_selection'
       }
@@ -3789,7 +3790,7 @@ async function LBK_handleNewSubjectClassification(originalSubject, parsedData, i
         selectedSubject: {
           subjectCode: classificationResult.categoryId, // 來自LBK_buildClassificationMessage
           subjectName: classificationResult.categoryName, // 來自LBK_buildClassificationMessage
-          majorCode: classificationResult.categoryId // 假定 categoryId 即 majorCode
+          // majorCode: classificationResult.categoryId // majorCode removed
         },
         subjectSelected: true // 標記科目已選擇
       }
@@ -3873,7 +3874,7 @@ async function LBK_processUserSelection(selection, originalSubject, parsedData, 
           selectedSubject: {
             subjectCode: newCategoryResult.categoryId,
             subjectName: selectedCategory.categoryName,
-            majorCode: selectedCategory.categoryId
+            // majorCode: selectedCategory.categoryId // majorCode removed
           }
         }
       },
@@ -3886,7 +3887,7 @@ async function LBK_processUserSelection(selection, originalSubject, parsedData, 
       ...parsedData,
       subjectCode: newCategoryResult.categoryId,
       subjectName: selectedCategory.categoryName,
-      majorCode: selectedCategory.categoryId,
+      // majorCode: selectedCategory.categoryId, // majorCode removed
       action: selectedCategory.type === "income" ? "收入" : "支出",
       paymentMethod: parsedData.paymentMethod // 保持原始解析的支付方式
     };
@@ -3944,8 +3945,8 @@ async function LBK_saveNewCategoryToFirestore(originalSubject, selectedCategory,
     const newCategoryData = {
       id: categoryId,
       categoryId: categoryId,
-      parentId: selectedCategory.categoryId,
-      categoryName: selectedCategory.categoryName,
+      // majorCode: selectedCategory.categoryId, // majorCode removed
+      categoryName: selectedCategory.categoryName, // DCN-0024 簡化策略
       name: selectedCategory.categoryName, // DCN-0024 簡化策略
       synonyms: originalSubject, // 將原始輸入作為同義詞
       isActive: true,
@@ -4113,7 +4114,7 @@ function LBK_buildClassificationMessage(originalSubject, parsedData, processId) 
 
     // 從0099.json提取所有科目並排序
     const dynamicCategories = subjectConfig
-      ..filter(item => item.categoryId && item.categoryName)
+      .filter(item => item.categoryId && item.categoryName)
       .sort((a, b) => a.categoryId - b.categoryId);
 
     return LBK_buildClassificationMessageInternal(originalSubject, parsedData, dynamicCategories, processId);
@@ -4229,8 +4230,7 @@ async function LBK_handleSubjectSelectionComplete(classificationResult, processI
           selectedSubject: {
             subjectCode: subjectId,
             subjectName: selectedCategory.categoryName,
-            majorCode: selectedCategory.categoryId,
-            categoryId: selectedCategory.categoryId // 階段一新增：確保categoryId正確傳遞
+            // majorCode: selectedCategory.categoryId // majorCode removed
           }
         }
       },
@@ -4561,22 +4561,22 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     if (selectedSubject && subjectSelected) {
       // 階段一修復：支援多種科目欄位名稱格式，確保相容性
       const subjectCode = selectedSubject.subjectCode || selectedSubject.categoryId;
-      const subjectName = selectedSubject.subjectName || selectedSubject.categoryName;
-      const majorCode = selectedSubject.majorCode || selectedSubject.categoryId;
+      const subjectName = selectedSubject.subjectName || selectedCategory.categoryName;
+      // const majorCode = selectedSubject.majorCode || selectedCategory.categoryId; // majorCode removed
 
-      LBK_logInfo(`階段一修復：科目欄位提取結果 - subjectCode: ${subjectCode}, subjectName: ${subjectName}, majorCode: ${majorCode} [${processId}]`, "記帳完成", userId, functionName);
+      LBK_logInfo(`階段一修復：科目欄位提取結果 - subjectCode: ${subjectCode}, subjectName: ${subjectName} [${processId}]`, "記帳完成", userId, functionName);
 
       if (subjectCode && subjectName) {
         finalBookkeepingData.subjectCode = subjectCode;
         finalBookkeepingData.subjectName = subjectName;
-        finalBookkeepingData.majorCode = majorCode;
+        // finalBookkeepingData.majorCode = majorCode; // majorCode removed
 
         // 根據科目代碼判斷收支類型，增加容錯處理
-        const codeToCheck = String(majorCode || subjectCode || '1');
+        const codeToCheck = String(subjectCode || '1'); // Use subjectCode as fallback
         const isIncome = codeToCheck.startsWith('2');
         finalBookkeepingData.action = isIncome ? "收入" : "支出";
 
-        LBK_logInfo(`階段一修復：科目資料驗證完成: ${subjectName} (代碼: ${subjectCode}, 主代碼: ${majorCode}) [${processId}]`, "記帳完成", userId, functionName);
+        LBK_logInfo(`階段一修復：科目資料驗證完成: ${subjectName} (代碼: ${subjectCode}) [${processId}]`, "記帳完成", userId, functionName);
       } else {
         // 階段一修復：科目資料不完整時拋出詳細錯誤，便於調試
         LBK_logError(`階段一修復：科目資料不完整詳細資訊 - selectedSubject: ${JSON.stringify(selectedSubject)}, 提取結果: subjectCode=${subjectCode}, subjectName=${subjectName} [${processId}]`, "記帳完成", userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", functionName);
@@ -4628,8 +4628,8 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       id: transactionId,
       amount: parseFloat(finalBookkeepingData.amount) || 0,
       type: (finalBookkeepingData.action === "收入") ? "income" : "expense",
-      description: finalBookkeepingData.subject || pendingData.parsedData?.subject || '記帳項目',
-      categoryId: finalBookkeepingData.subjectCode, // 階段一修復：移除'default'備選值，確保使用正確科目ID
+      description: finalBookkeepingData.description || '記帳項目',
+      categoryId: finalBookkeepingData.subjectCode || 'default', // Use subjectCode as categoryId
       // 階段四修復：移除accountId欄位（不符合0070規範）
 
       // 時間欄位 - 0070標準格式
@@ -4653,22 +4653,22 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       metadata: {
         processId: processId || 'unknown',
         module: 'LBK',
-        version: '1.8.0', // 階段四版本
+        version: '1.9.0', // Updated version number
         pendingId: pendingId || 'unknown',
-        majorCode: finalBookkeepingData.majorCode || 'default',
+        // majorCode: finalBookkeepingData.majorCode || 'default', // majorCode removed
         subjectName: finalBookkeepingData.subjectName || '未知科目',
         completionSource: 'pending_record_stage4',
         dataValidation: {
           amountValidated: !isNaN(parseFloat(finalBookkeepingData.amount)),
           subjectValidated: !!finalBookkeepingData.subjectName,
           paymentMethodValidated: !!finalBookkeepingData.paymentMethod,
-          majorCodeValidated: !!finalBookkeepingData.majorCode
+          // majorCodeValidated: !!finalBookkeepingData.majorCode // majorCode removed
         }
       }
     };
 
     // 階段三新增：記帳前最終驗證日誌
-    LBK_logInfo(`階段三：Firestore記帳資料最終驗證 - ID: ${preparedData.id}, 金額: ${preparedData.amount}, 類型: ${preparedData.type}, 科目: ${preparedData.metadata.subjectName}, majorCode: ${preparedData.metadata.majorCode} [${processId}]`, "記帳完成", userId, functionName);
+    LBK_logInfo(`階段三：Firestore記帳資料最終驗證 - ID: ${preparedData.id}, 金額: ${preparedData.amount}, 類型: ${preparedData.type}, 科目: ${preparedData.metadata.subjectName}, subjectCode: ${preparedData.categoryId} [${processId}]`, "記帳完成", userId, functionName);
 
     LBK_logInfo(`階段四：直接執行記帳儲存，跳過重複科目查詢 [${processId}]`, "記帳完成", userId, functionName);
 
@@ -4695,7 +4695,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       ledgerId: preparedData.ledgerId || `user_${userId}`,
       remark: pendingData.parsedData?.subject || preparedData.description || '記帳項目',
       // 階段三新增：額外驗證欄位
-      majorCode: finalBookkeepingData.majorCode || 'default',
+      // majorCode: finalBookkeepingData.majorCode || 'default', // majorCode removed
       validated: true
     };
 
