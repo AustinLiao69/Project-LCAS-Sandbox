@@ -5012,7 +5012,6 @@ module.exports = {
   // 階段三新增：wallet synonyms更新函數 - v1.4.8
   LBK_updateWalletSynonyms: LBK_updateWalletSynonyms,
   LBK_executeWalletSynonymsUpdate: LBK_executeWalletSynonymsUpdate,
-  LBK_confirmWalletSynonymsUpdate: LBK_confirmWalletSynonymsUpdate, // 已實作：確認錢包同義詞更新結果
   LBK_getWalletDisplayName: LBK_getWalletDisplayName,
 
   // 階段二新增：Pending Record 函數
@@ -5024,7 +5023,6 @@ module.exports = {
 
   // 階段四新增：狀態機相關函數
   LBK_advancePendingFlow,
-  LBK_updatePendingRecord, // 使用原函數名稱，不使用別名
   LBK_completePendingRecord, // Now handles the final transaction completion
   LBK_generateWalletSelectionQuickReply,
   LBK_handleWalletTypeSelection, // Exported for phase 4 integration
