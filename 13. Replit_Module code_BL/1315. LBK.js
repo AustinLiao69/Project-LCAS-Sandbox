@@ -3008,6 +3008,11 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
       ledgerId: `user_${userId}`, // 階段四新增：符合0070規範的ledgerId欄位
       originalInput: originalInput,
       parsedData: {
+        amount: parsedData.amount || 0,
+        description: parsedData.subject || parsedData.description || originalInput || '未知科目',
+        rawCategory: parsedData.subject || parsedData.categoryName || '未知科目',
+        rawWallet: parsedData.paymentMethod || '未指定'
+      },
         // 階段四修復：移除parsedData中的paymentMethod，避免欄位重複
         amount: parsedData.amount,
         description: parsedData.category,
