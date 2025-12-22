@@ -1,0 +1,81 @@
+------------------------------------------
+20251222.科目與支付方式歸類邏輯一次性互動方案
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+=> 我想要把LBK內所有的名稱叫做subject的全部改成叫做category，請修正LBK，並且在不違反0070文件的原則之下。
+
+subjectcode = categoryid
+subjectName = categoryName
+majorCode   = categoryid
+
+根據9909. Character_SA文件要求，作為資深SA，我將深入分析LBK模組與0070文件的差異，並提出解決方案。
+問題分析
+經過詳細比對LBK.js與0070. DB schema.md文件，我發現以下關鍵差異：
+1. 資料欄位不符合0070規範的問題
+真實原因：LBK模組在記帳資料準備階段使用了多個0070文件未規範的欄位名稱
+簡單概念解釋：就像公司財務部門有統一的報表格式，但某個分部門自創了新的欄位名稱，導致資料無法正確整合
+具體差異如下：
+1.	LBK_prepareBookkeepingData函數違規欄位：
+•	accountId：0070文件無此欄位定義
+•	remark：0070文件無此欄位，應使用description
+•	verified：0070文件無此欄位定義
+2.	pendingTransactions子集合結構不完整：
+•	缺少stageData欄位的詳細定義
+•	ambiguityInfo結構與實際使用不一致
+3.	時間欄位格式不統一：
+•	部分使用字串格式，應統一使用Firestore Timestamp
+2. 模組版本資訊不一致
+真實原因：模組內部版本標記與實際功能版本不同步
+簡單概念解釋：就像產品版本號碼混亂，讓使用者無法確定目前使用的是哪個版本
+解決方案
+我提出分為3個階段的解決方案，每個階段結束都能執行測試驗證：
+
+階段一：修正資料欄位規範違規問題
+目標：移除0070文件未定義的欄位，確保完全符合規範
+修改內容：
+1.	修正LBK_prepareBookkeepingData函數，移除違規欄位
+2.	更新模組版本至1.9.2
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+Before行為：記帳資料包含accountId、verified等0070未定義欄位
+After行為：記帳資料完全符合0070規範，僅使用已定義欄位
+階段二：完善pendingTransactions子集合結構
+目標：補全pendingTransactions的欄位定義，與0070文件保持一致
+修改內容：
+1.	補充stageData欄位的完整結構定義
+2.	修正ambiguityInfo欄位結構
+3.	更新相關函數的資料處理邏輯
+修改檔案：
+•	00. Master_Project document/0070. DB schema.md
+•	13. Replit_Module code_BL/1315. LBK.js
+Before行為：pendingTransactions結構定義不完整
+After行為：pendingTransactions結構完整定義，支援多階段記帳流程
+階段三：統一時間欄位格式
+目標：確保所有時間相關欄位使用Firestore Timestamp格式
+修改內容：
+1.	統一時間欄位格式為Firestore Timestamp
+2.	更新相關時間處理函數
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+Before行為：時間欄位格式不統一，部分使用字串格式
+After行為：所有時間欄位統一使用Firestore Timestamp格式
+實施計畫
+階段一實施計畫
+1.	修改LBK_prepareBookkeepingData函數，移除accountId、verified欄位
+2.	將remark欄位改為使用description
+3.	更新模組版本號至1.9.2
+4.	執行語法檢查驗證
+階段二實施計畫
+1.	在0070文件中補充完整的pendingTransactions結構定義
+2.	更新LBK模組中相關的資料處理函數
+3.	確保stageData和ambiguityInfo結構一致性
+4.	執行語法檢查驗證
+階段三實施計畫
+1.	檢查並統一所有時間欄位格式
+2.	更新時間處理相關函數
+3.	確保與0070規範完全一致
+4.	執行最終語法檢查驗證
+請您Approve後，我將開始執行階段一的修改。每個階段完成後都會執行語法檢查：
+node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log('模組載入成功'); } catch(e) { console.error('模組載入失敗:', e.message); console.error('錯誤位置:', e.stack); }"
+請問是否Approve開始執行階段一的修改？
