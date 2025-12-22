@@ -583,7 +583,8 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
           continue;
         }
 
-        const categoryId = `category_${subject.categoryId || Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        // 使用純數字格式作為文檔ID，與0099.json中的categoryId保持一致
+        const categoryId = subject.categoryId ? subject.categoryId.toString() : `${Date.now()}`;
         const categoryRef = db.collection(collectionPath).doc(categoryId);
 
         const categoryDoc = {
@@ -638,7 +639,8 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
     }
 
     // 準備科目資料
-    const categoryId = `category_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    // 使用純數字格式作為文檔ID，確保與查詢邏輯一致
+    const categoryId = `${Date.now()}`;
     const now = admin.firestore.Timestamp.now();
 
     const category = {
