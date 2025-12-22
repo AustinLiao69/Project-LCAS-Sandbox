@@ -4982,7 +4982,7 @@ module.exports = {
   // 新增wallet確認postback處理函數 v1.4.5
   LBK_handleWalletConfirmationPostback: LBK_handleWalletConfirmationPostback,
   LBK_processConfirmedWallet: LBK_processConfirmedWallet,
-  LBK_determineWalletType: LBK_determineWalletType,
+  
   LBK_validateWalletExists: LBK_validateWalletExists,
   LBK_handleNewWallet: LBK_handleNewWallet,
 
