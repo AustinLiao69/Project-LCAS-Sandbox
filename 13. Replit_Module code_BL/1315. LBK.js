@@ -126,7 +126,7 @@ let LBK_INIT_STATUS = {
 
 // 定義 Pending Record 狀態機常量
 const PENDING_STATES = {
-  PENDING_SUBJECT: "PENDING_SUBJECT",
+  PENDING_CATEGORY: "PENDING_CATEGORY",
   PENDING_WALLET: "PENDING_WALLET",
   COMPLETED: "COMPLETED"
 };
@@ -176,7 +176,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       // 階段一修復：改進 postback 解析邏輯
       const postbackParts = inputData.messageText.split('_');
       if (postbackParts.length >= 3) {
-        const subjectId = postbackParts[1];
+        const categoryId = postbackParts[1];
         const jsonPart = postbackParts.slice(2).join('_');
 
         try {
@@ -185,12 +185,12 @@ async function LBK_processQuickBookkeeping(inputData) {
           // 構建分類資料
           const classificationData = {
             success: true,
-            subjectId: subjectId,
+            categoryId: categoryId,
             pendingData: pendingData
           };
 
           // 階段一修復：直接調用完成記帳，避免重新觸發歧義消除
-          LBK_logInfo(`科目選擇完成，開始執行記帳: subjectId=${subjectId} [${processId}]`, "科目歧義消除", userId, "LBK_processQuickBookkeeping");
+          LBK_logInfo(`科目選擇完成，開始執行記帳: categoryId=${categoryId} [${processId}]`, "科目歧義消除", userId, "LBK_processQuickBookkeeping");
 
           return await LBK_handleClassificationPostback({
             ...inputData,
@@ -241,7 +241,7 @@ async function LBK_processQuickBookkeeping(inputData) {
             userId,
             inputData.messageText,
             parseResult.parsedData,
-            PENDING_STATES.PENDING_SUBJECT, // 初始狀態
+            PENDING_STATES.PENDING_CATEGORY, // 初始狀態
             processId
           );
 
@@ -539,7 +539,7 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
         rawAmount: parseResult.rawAmount,
         paymentMethod: finalPaymentMethod,
         subjectCode: subjectResult.subCode,
-        subjectName: subjectResult.subName,
+        categoryName: subjectResult.subName,
         // majorCode: subjectResult.majorCode, // majorCode removed
         action: isIncome ? "收入" : "支出",
         userId: userId
@@ -589,7 +589,7 @@ function LBK_parseInputFormat(message, processId) {
       return null;
     }
 
-    const rawSubject = match[1].trim();
+    const rawCategory = match[1].trim();
     const rawAmount = match[2];
     const suffixPart = match[3].trim();
 
@@ -607,7 +607,7 @@ function LBK_parseInputFormat(message, processId) {
 
     // 階段一修復：支付方式識別邏輯 - 移除硬編碼預設值
     let paymentMethod = null; // 階段一修復：移除硬編碼「刷卡」預設值
-    let finalSubject = rawSubject;
+    let finalSubject = rawCategory;
     let processedSuffix = suffixPart;
 
     // 移除幣別單位
@@ -723,11 +723,11 @@ function LBK_extractAmount(text, processId) {
  * @date 2025-07-15 19:10:00
  * @description 根據科目名稱查詢對應的科目代碼，強化匹配算法精準度
  */
-async function LBK_getSubjectCode(subjectName, userId, processId) {
+async function LBK_getSubjectCode(categoryName, userId, processId) {
   try {
-    LBK_logDebug(`查詢科目代碼: "${subjectName}" [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
+    LBK_logDebug(`查詢科目代碼: "${categoryName}" [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
 
-    if (!subjectName || !userId) {
+    if (!categoryName || !userId) {
       throw new Error("科目名稱或用戶ID為空");
     }
 
@@ -735,7 +735,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
     const db = LBK_INIT_STATUS.firestore_db;
 
     const ledgerId = `user_${userId}`;
-    const normalizedInput = String(subjectName).trim().toLowerCase();
+    const normalizedInput = String(categoryName).trim().toLowerCase();
 
     // 記錄同義詞匹配過程
     LBK_logDebug(`開始同義詞匹配，輸入: "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
@@ -865,8 +865,8 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
     return {
       success: false,
       requiresClassification: true,
-      originalSubject: subjectName,
-      error: `找不到科目: ${subjectName}`
+      originalSubject: categoryName,
+      error: `找不到科目: ${categoryName}`
     };
 
   } catch (error) {
@@ -876,7 +876,7 @@ async function LBK_getSubjectCode(subjectName, userId, processId) {
     return {
       success: false,
       requiresClassification: true,
-      originalSubject: subjectName,
+      originalSubject: categoryName,
       error: error.toString()
     };
   }
@@ -1130,7 +1130,7 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
       const updatedBookkeepingData = {
         ...bookkeepingData,
         subjectCode: subjectResult.subCode,
-        subjectName: subjectResult.subName,
+        categoryName: subjectResult.subName,
         // majorCode: subjectResult.majorCode, // majorCode removed
         action: isIncome ? "收入" : "支出",
         paymentMethod: finalPaymentMethod
@@ -1169,8 +1169,8 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
         amount: updatedBookkeepingData.amount,
         type: updatedBookkeepingData.action === "收入" ? "income" : "expense",
         category: updatedBookkeepingData.subjectCode,
-        subject: updatedBookkeepingData.subjectName,
-        subjectName: updatedBookkeepingData.subjectName,
+        subject: updatedBookkeepingData.categoryName,
+        categoryName: updatedBookkeepingData.categoryName,
         description: updatedBookkeepingData.subject, // 使用原始科目作為描述
         paymentMethod: updatedBookkeepingData.paymentMethod,
         date: preparedData.date,
@@ -1409,7 +1409,7 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
         processId: processId,
         module: 'LBK',
         version: '1.9.0',
-        subjectName: data.subjectName
+        categoryName: data.categoryName
       }
     };
 
@@ -1445,7 +1445,7 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
       const remark = LBK_removeAmountFromText(originalInput, resultData.amount, resultData.paymentMethod);
 
       // 確保科目名稱正確顯示
-      const subjectDisplay = resultData.subjectName || resultData.subject || resultData.description || "未知科目";
+      const subjectDisplay = resultData.categoryName || resultData.subject || resultData.description || "未知科目";
 
       let replyText = `記帳成功！\n` +
              `金額：${resultData.amount}元 (${resultData.type === 'income' ? '收入' : '支出'})\n` +
@@ -2926,23 +2926,23 @@ async function LBK_getWalletDisplayName(walletId, userId, processId) {
  * 添加科目同義詞
  * @version 2025-12-19-V1.4.9
  * @param {string} originalSubject - 原始科目輸入
- * @param {string} subjectId - 科目ID
+ * @param {string} categoryId - 科目ID
  * @param {string} categoryName - 科目名稱
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Object} 添加結果
  */
-async function LBK_addSubjectSynonym(originalSubject, subjectId, categoryName, userId, processId) {
+async function LBK_addSubjectSynonym(originalSubject, categoryId, categoryName, userId, processId) {
   const functionName = "LBK_addSubjectSynonym";
   try {
-    LBK_logInfo(`添加科目同義詞: ${originalSubject} → ${categoryName} (ID: ${subjectId}) [${processId}]`, "科目同義詞", userId, functionName);
+    LBK_logInfo(`添加科目同義詞: ${originalSubject} → ${categoryName} (ID: ${categoryId}) [${processId}]`, "科目同義詞", userId, functionName);
 
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
     const ledgerId = `user_${userId}`;
 
     // 查找現有的科目記錄
-    const categoryRef = db.collection("ledgers").doc(ledgerId).collection("categories").doc(subjectId);
+    const categoryRef = db.collection("ledgers").doc(ledgerId).collection("categories").doc(categoryId);
     const categoryDoc = await categoryRef.get();
 
     if (categoryDoc.exists) {
@@ -3010,22 +3010,22 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
       parsedData: {
         // 階段四修復：移除parsedData中的paymentMethod，避免欄位重複
         amount: parsedData.amount,
-        description: parsedData.subject,
-        rawSubject: parsedData.subject,
+        description: parsedData.category,
+        rawCategory: parsedData.category,
         rawWallet: parsedData.paymentMethod // 階段四：改用rawWallet儲存原始支付方式
       },
       processingStage: initialState,
       stageData: {
-        subjectSelected: false,
+        categorySelected: false,
         walletSelected: false,
-        selectedSubject: null,
+        electedCategory: null,
         selectedWallet: null
       },
       // 階段四新增：符合0070規範的ambiguityInfo和metadata欄位
       ambiguityInfo: {
-        currentAmbiguity: initialState === PENDING_STATES.PENDING_SUBJECT ? 'subject' :
+        currentAmbiguity: initialState === PENDING_STATES.PENDING_CATEGORY ? 'subject' :
                           initialState === PENDING_STATES.PENDING_WALLET ? 'wallet' : 'none',
-        subjectOptions: [],
+        categoryOptionss: [],
         walletOptions: []
       },
       metadata: {
@@ -3094,9 +3094,9 @@ async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, 
         ...existingStageData,
         ...updateData.stageData,
         // 階段一修復：確保重要欄位不被意外清空
-        selectedSubject: updateData.stageData.selectedSubject || existingStageData.selectedSubject,
+        electedCategory: updateData.stageData.electedCategory || existingStageData.electedCategory,
         selectedWallet: updateData.stageData.selectedWallet || existingStageData.selectedWallet,
-        subjectSelected: updateData.stageData.subjectSelected !== undefined ? updateData.stageData.subjectSelected : existingStageData.subjectSelected,
+        categorySelected: updateData.stageData.categorySelected !== undefined ? updateData.stageData.categorySelected : existingStageData.categorySelected,
         walletSelected: updateData.stageData.walletSelected !== undefined ? updateData.stageData.walletSelected : existingStageData.walletSelected
       };
     }
@@ -3109,7 +3109,7 @@ async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, 
     };
 
     // 階段一修復：記錄更新詳細資訊以便調試
-    LBK_logInfo(`階段一修復：更新 Pending Record 詳細資訊 - pendingId: ${pendingId}, subjectSelected: ${mergedStageData.subjectSelected}, selectedSubject: ${JSON.stringify(mergedStageData.selectedSubject)} [${processId}]`, "Pending Record", userId, functionName);
+    LBK_logInfo(`階段一修復：更新 Pending Record 詳細資訊 - pendingId: ${pendingId}, categorySelected: ${mergedStageData.categorySelected}, electedCategory: ${JSON.stringify(mergedStageData.electedCategory)} [${processId}]`, "Pending Record", userId, functionName);
 
     await docRef.update(updatePayload);
 
@@ -3459,23 +3459,23 @@ function LBK_isWalletTypePostback(messageText) {
  */
 async function LBK_handleClassificationPostback(inputData, processId) {
   try {
-    LBK_logInfo(`處理科目歸類postback: subjectId=${inputData.classificationData.subjectId} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
+    LBK_logInfo(`處理科目歸類postback: categoryId=${inputData.classificationData.categoryId} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
 
-    const subjectId = inputData.classificationData.subjectId;
+    const categoryId = inputData.classificationData.categoryId;
 
     // 載入0099配置以取得科目資訊
     const subjectConfig = LBK_load0099SubjectConfig();
     const categoryMapping = LBK_buildCategoryMapping();
 
     // 找到選擇的科目 - categoryMapping 是對象，不是數組
-    const selectedCategory = categoryMapping[subjectId];
+    const selectedCategory = categoryMapping[categoryId];
     if (!selectedCategory) {
-      LBK_logError(`無效的科目ID: ${subjectId} [${processId}]`, "科目歸類", inputData.userId, "INVALID_CATEGORY", `可用科目: ${Object.keys(categoryMapping).join(', ')}`, "LBK_handleClassificationPostback");
+      LBK_logError(`無效的科目ID: ${categoryId} [${processId}]`, "科目歸類", inputData.userId, "INVALID_CATEGORY", `可用科目: ${Object.keys(categoryMapping).join(', ')}`, "LBK_handleClassificationPostback");
 
       return {
         success: false,
-        message: `無效的科目ID: ${subjectId}，請重新選擇`,
-        responseMessage: `無效的科目ID: ${subjectId}，請重新選擇`,
+        message: `無效的科目ID: ${categoryId}，請重新選擇`,
+        responseMessage: `無效的科目ID: ${categoryId}，請重新選擇`,
         moduleCode: "LBK",
         module: "LBK",
         processingTime: 0,
@@ -3493,8 +3493,8 @@ async function LBK_handleClassificationPostback(inputData, processId) {
 
       return {
         success: true,
-        message: `已完成科目歸類！\n選擇科目：${subjectId} ${selectedCategory.categoryName}\n歸類狀態：完成\n\n💡 後續相同輸入將自動歸類至此科目\n\n⚠️ 原始記帳資料遺失，請重新輸入進行記帳`,
-        responseMessage: `已完成科目歸類！\n選擇科目：${subjectId} ${selectedCategory.categoryName}\n歸類狀態：完成\n\n💡 後續相同輸入將自動歸類至此科目\n\n⚠️ 原始記帳資料遺失，請重新輸入進行記帳`,
+        message: `已完成科目歸類！\n選擇科目：${categoryId} ${selectedCategory.categoryName}\n歸類狀態：完成\n\n💡 後續相同輸入將自動歸類至此科目\n\n⚠️ 原始記帳資料遺失，請重新輸入進行記帳`,
+        responseMessage: `已完成科目歸類！\n選擇科目：${categoryId} ${selectedCategory.categoryName}\n歸類狀態：完成\n\n💡 後續相同輸入將自動歸類至此科目\n\n⚠️ 原始記帳資料遺失，請重新輸入進行記帳`,
         moduleCode: "LBK",
         module: "LBK",
         processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
@@ -3504,7 +3504,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
     }
 
     // 步驟1：建立同義詞關聯到Firebase
-    const synonymResult = await LBK_addSubjectSynonym(pendingData.subject, subjectId, selectedCategory.categoryName, inputData.userId, processId);
+    const synonymResult = await LBK_addSubjectSynonym(pendingData.subject, categoryId, selectedCategory.categoryName, inputData.userId, processId);
     if (synonymResult.success) {
       LBK_logInfo(`成功建立同義詞關聯: ${pendingData.subject} → ${selectedCategory.categoryName} [${processId}]`, "科目歸類", inputData.userId, "LBK_handleClassificationPostback");
     } else {
@@ -3518,17 +3518,17 @@ async function LBK_handleClassificationPostback(inputData, processId) {
         pendingData.pendingId,
         {
           stageData: {
-            subjectSelected: true,
-            selectedSubject: {
-              subjectCode: subjectId,
-              subjectName: selectedCategory.categoryName,
+            categorySelected: true,
+            electedCategory: {
+              categoryId: selectedCategory.categoryId,
+              categoryName: selectedCategory.categoryName,
               // majorCode: selectedCategory.categoryId // majorCode removed
             },
             walletSelected: false,
             selectedWallet: null
           }
         },
-        PENDING_STATES.PENDING_SUBJECT,
+        PENDING_STATES.PENDING_CATEGORY,
         processId
       );
 
@@ -3590,11 +3590,11 @@ async function LBK_handleClassificationPostback(inputData, processId) {
           pendingData.pendingId,
           {
             stageData: {
-              subjectSelected: true,
-              selectedSubject: {
-                subjectId: subjectId,
-                subjectName: selectedCategory.categoryName,
-                // majorCode: subjectId // majorCode removed
+              categorySelected: true,
+              electedCategory: {
+                categoryId: categoryId,
+                categoryName: selectedCategory.categoryName,
+                // majorCode: categoryId // majorCode removed
               },
               walletSelected: false,
               selectedWallet: null
@@ -3640,7 +3640,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
       amount: parseFloat(pendingData.amount) || 0,
       type: selectedCategory.type === "income" ? "income" : "expense", // 使用 type 屬性
       description: pendingData.subject,
-      categoryId: subjectId,
+      categoryId: categoryId,
       // 階段四修復：移除accountId欄位（不符合0070規範）
 
       // 時間欄位 - 0070標準格式
@@ -3665,7 +3665,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
         processId: processId,
         module: 'LBK',
         version: '1.9.0',
-        subjectName: selectedCategory.categoryName,
+        categoryName: selectedCategory.categoryName,
         classificationSource: 'user_selection'
       }
     };
@@ -3686,7 +3686,7 @@ async function LBK_handleClassificationPostback(inputData, processId) {
           type: preparedData.type,
           category: preparedData.categoryId,
           subject: selectedCategory.categoryName,
-          subjectName: selectedCategory.categoryName,
+          categoryName: selectedCategory.categoryName,
           description: preparedData.description,
           paymentMethod: preparedData.paymentMethod,
           date: preparedData.date,
@@ -3784,14 +3784,14 @@ async function LBK_handleNewSubjectClassification(originalSubject, parsedData, i
       timestamp: new Date().toISOString(),
       processId: processId,
       originalInput: inputData.messageText,
-      // 階段四：將 subjectCode, subjectName, majorCode 存入 stageData
+      // 階段四：將 subjectCode, categoryName, majorCode 存入 stageData
       stageData: {
-        selectedSubject: {
+        electedCategory: {
           subjectCode: classificationResult.categoryId, // 來自LBK_buildClassificationMessage
-          subjectName: classificationResult.categoryName, // 來自LBK_buildClassificationMessage
+          categoryName: classificationResult.categoryName, // 來自LBK_buildClassificationMessage
           // majorCode: classificationResult.categoryId // majorCode removed
         },
-        subjectSelected: true // 標記科目已選擇
+        categorySelected: true // 標記科目已選擇
       }
     };
 
@@ -3869,15 +3869,15 @@ async function LBK_processUserSelection(selection, originalSubject, parsedData, 
       parsedData.pendingId, // 從parsedData中獲取pendingId
       {
         stageData: {
-          subjectSelected: true,
-          selectedSubject: {
+          categorySelected: true,
+          electedCategory: {
             subjectCode: newCategoryResult.categoryId,
-            subjectName: selectedCategory.categoryName,
+            categoryName: selectedCategory.categoryName,
             // majorCode: selectedCategory.categoryId // majorCode removed
           }
         }
       },
-      PENDING_STATES.PENDING_SUBJECT, // 保持在PENDING_SUBJECT狀態，等待下一步處理
+      PENDING_STATES.PENDING_CATEGORY, // 保持在PENDING_CATEGORY狀態，等待下一步處理
       processId
     );
 
@@ -3885,7 +3885,7 @@ async function LBK_processUserSelection(selection, originalSubject, parsedData, 
     const updatedParsedData = {
       ...parsedData,
       subjectCode: newCategoryResult.categoryId,
-      subjectName: selectedCategory.categoryName,
+      categoryName: selectedCategory.categoryName,
       // majorCode: selectedCategory.categoryId, // majorCode removed
       action: selectedCategory.type === "income" ? "收入" : "支出",
       paymentMethod: parsedData.paymentMethod // 保持原始解析的支付方式
@@ -4205,18 +4205,18 @@ function LBK_buildClassificationMessageInternal(originalSubject, parsedData, cat
  */
 async function LBK_handleSubjectSelectionComplete(classificationResult, processId) {
   try {
-    const { subjectId, pendingData } = classificationResult;
+    const { categoryId, pendingData } = classificationResult;
     const userId = pendingData.userId;
 
-    LBK_logInfo(`處理科目選擇完成: subjectId=${subjectId}, pendingId=${pendingData.pendingId} [${processId}]`, "狀態機", userId, "LBK_handleSubjectSelectionComplete");
+    LBK_logInfo(`處理科目選擇完成: categoryId=${categoryId}, pendingId=${pendingData.pendingId} [${processId}]`, "狀態機", userId, "LBK_handleSubjectSelectionComplete");
 
     // 獲取科目詳細信息
     const subjectConfig = LBK_load0099SubjectConfig();
     const categoryMapping = LBK_buildCategoryMapping();
-    const selectedCategory = categoryMapping[subjectId];
+    const selectedCategory = categoryMapping[categoryId];
 
     if (!selectedCategory) {
-      throw new Error(`無效的科目ID: ${subjectId}`);
+      throw new Error(`無效的科目ID: ${categoryId}`);
     }
 
     // 更新Pending Record的stageData
@@ -4225,20 +4225,20 @@ async function LBK_handleSubjectSelectionComplete(classificationResult, processI
       pendingData.pendingId,
       {
         stageData: {
-          subjectSelected: true,
-          selectedSubject: {
-            subjectCode: subjectId,
-            subjectName: selectedCategory.categoryName,
+          categorySelected: true,
+          electedCategory: {
+            subjectCode: categoryId,
+            categoryName: selectedCategory.categoryName,
             // majorCode: selectedCategory.categoryId // majorCode removed
           }
         }
       },
-      PENDING_STATES.PENDING_SUBJECT, // 保持在PENDING_SUBJECT狀態
+      PENDING_STATES.PENDING_CATEGORY, // 保持在PENDING_CATEGORY狀態
       processId
     );
 
     // 建立同義詞關聯
-    await LBK_addSubjectSynonym(pendingData.subject, subjectId, selectedCategory.categoryName, userId, processId);
+    await LBK_addSubjectSynonym(pendingData.subject, categoryId, selectedCategory.categoryName, userId, processId);
 
     // 推進流程，檢查是否需要選擇錢包
     return await LBK_advancePendingFlow(userId, pendingData.pendingId, processId);
@@ -4395,12 +4395,12 @@ async function LBK_advancePendingFlow(userId, pendingId, processId) {
     const currentStage = pendingData.processingStage;
     const stageData = pendingData.stageData || {};
 
-    LBK_logInfo(`當前狀態: ${currentStage}, 科目已選: ${stageData.subjectSelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "狀態機", userId, functionName);
+    LBK_logInfo(`當前狀態: ${currentStage}, 科目已選: ${stageData.categorySelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "狀態機", userId, functionName);
 
     // 根據當前狀態決定下一步動作
-    if (currentStage === PENDING_STATES.PENDING_SUBJECT) {
+    if (currentStage === PENDING_STATES.PENDING_CATEGORY) {
       // 如果科目已選，檢查是否需要選擇錢包
-      if (stageData.subjectSelected) {
+      if (stageData.categorySelected) {
         // 檢查支付方式是否需要歧義消除
         // 更新調用：替換 LBK_parsePaymentMethod 為 LBK_validateWalletExists
         const parseResult3 = LBK_parseInputFormat(pendingData.originalInput, processId);
@@ -4542,7 +4542,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     const pendingData = doc.data();
     const stageData = pendingData.stageData || {};
 
-    LBK_logInfo(`階段四：開始完成Pending Record，科目已選: ${stageData.subjectSelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "記帳完成", userId, functionName);
+    LBK_logInfo(`階段四：開始完成Pending Record，科目已選: ${stageData.categorySelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "記帳完成", userId, functionName);
 
     // 階段三修復：構建最終記帳資料，優先使用已選擇的資訊，並驗證所有必要欄位
     const finalBookkeepingData = {
@@ -4554,20 +4554,20 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     // 階段一修復：強化科目資訊驗證，支援多種欄位名稱格式
     LBK_logInfo(`階段一修復：開始驗證科目資訊 - stageData: ${JSON.stringify(stageData)} [${processId}]`, "記帳完成", userId, functionName);
 
-    const selectedSubject = stageData.selectedSubject;
-    const subjectSelected = stageData.subjectSelected;
+    const electedCategory = stageData.electedCategory;
+    const categorySelected = stageData.categorySelected;
 
-    if (selectedSubject && subjectSelected) {
+    if (electedCategory && categorySelected) {
       // 階段一修復：支援多種科目欄位名稱格式，確保相容性
-      const subjectCode = selectedSubject.subjectCode || selectedSubject.categoryId;
-      const subjectName = selectedSubject.subjectName || selectedCategory.categoryName;
-      // const majorCode = selectedSubject.majorCode || selectedCategory.categoryId; // majorCode removed
+      const subjectCode = electedCategory.subjectCode || electedCategory.categoryId;
+      const categoryName = electedCategory.categoryName || selectedCategory.categoryName;
+      // const majorCode = electedCategory.majorCode || selectedCategory.categoryId; // majorCode removed
 
-      LBK_logInfo(`階段一修復：科目欄位提取結果 - subjectCode: ${subjectCode}, subjectName: ${subjectName} [${processId}]`, "記帳完成", userId, functionName);
+      LBK_logInfo(`階段一修復：科目欄位提取結果 - subjectCode: ${subjectCode}, categoryName: ${categoryName} [${processId}]`, "記帳完成", userId, functionName);
 
-      if (subjectCode && subjectName) {
+      if (subjectCode && categoryName) {
         finalBookkeepingData.subjectCode = subjectCode;
-        finalBookhandlingData.subjectName = subjectName;
+        finalBookhandlingData.categoryName = categoryName;
         // finalBookkeepingData.majorCode = majorCode; // majorCode removed
 
         // 根據科目代碼判斷收支類型，增加容錯處理
@@ -4575,16 +4575,16 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
         const isIncome = codeToCheck.startsWith('2');
         finalBookkeepingData.action = isIncome ? "收入" : "支出";
 
-        LBK_logInfo(`階段一修復：科目資料驗證完成: ${subjectName} (代碼: ${subjectCode}) [${processId}]`, "記帳完成", userId, functionName);
+        LBK_logInfo(`階段一修復：科目資料驗證完成: ${categoryName} (代碼: ${subjectCode}) [${processId}]`, "記帳完成", userId, functionName);
       } else {
         // 階段一修復：科目資料不完整時拋出詳細錯誤，便於調試
-        LBK_logError(`階段一修復：科目資料不完整詳細資訊 - selectedSubject: ${JSON.stringify(selectedSubject)}, 提取結果: subjectCode=${subjectCode}, subjectName=${subjectName} [${processId}]`, "記帳完成", userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", functionName);
-        throw new Error(`階段一修復：Pending Record 科目資料不完整: subjectCode=${subjectCode}, subjectName=${subjectName}`);
+        LBK_logError(`階段一修復：科目資料不完整詳細資訊 - electedCategory: ${JSON.stringify(electedCategory)}, 提取結果: subjectCode=${subjectCode}, categoryName=${categoryName} [${processId}]`, "記帳完成", userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", functionName);
+        throw new Error(`階段一修復：Pending Record 科目資料不完整: subjectCode=${subjectCode}, categoryName=${categoryName}`);
       }
     } else {
       // 階段一修復：提供詳細的調試資訊，便於排查問題
-      LBK_logError(`階段一修復：科目選擇狀態檢查失敗 - selectedSubject存在: ${!!selectedSubject}, subjectSelected: ${subjectSelected}, stageData完整內容: ${JSON.stringify(stageData)} [${processId}]`, "記帳完成", userId, "MISSING_SUBJECT_INFO", "科目資訊缺失", functionName);
-      throw new Error(`階段一修復：Pending Record 缺少科目資訊，selectedSubject: ${!!selectedSubject}, subjectSelected: ${subjectSelected} (違反0098規範)`);
+      LBK_logError(`階段一修復：科目選擇狀態檢查失敗 - electedCategory存在: ${!!electedCategory}, categorySelected: ${categorySelected}, stageData完整內容: ${JSON.stringify(stageData)} [${processId}]`, "記帳完成", userId, "MISSING_SUBJECT_INFO", "科目資訊缺失", functionName);
+      throw new Error(`階段一修復：Pending Record 缺少科目資訊，electedCategory: ${!!electedCategory}, categorySelected: ${categorySelected} (違反0098規範)`);
     }
 
     // 階段五修復：動態驗證並設置錢包資訊，移除硬編碼
@@ -4615,7 +4615,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     finalBookkeepingData.subject = finalBookkeepingData.subject || pendingData.parsedData?.subject || '記帳項目';
 
     // 階段三新增：記錄最終驗證結果
-    LBK_logInfo(`階段三：最終記帳資料驗證 - 金額: ${finalBookkeepingData.amount}, 科目: ${finalBookkeepingData.subjectName}, 支付方式: ${finalBookkeepingData.paymentMethod} [${processId}]`, "記帳完成", userId, functionName);
+    LBK_logInfo(`階段三：最終記帳資料驗證 - 金額: ${finalBookkeepingData.amount}, 科目: ${finalBookkeepingData.categoryName}, 支付方式: ${finalBookkeepingData.paymentMethod} [${processId}]`, "記帳完成", userId, functionName);
 
     // 階段四修復：直接進行記帳，跳過 LBK_executeBookkeeping 中的重複科目查詢
     const transactionId = Date.now().toString();
@@ -4655,11 +4655,11 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
         version: '1.9.0', // Updated version number
         pendingId: pendingId || 'unknown',
         // majorCode: finalBookkeepingData.majorCode || 'default', // majorCode removed
-        subjectName: finalBookkeepingData.subjectName || '未知科目',
+        categoryName: finalBookkeepingData.categoryName || '未知科目',
         completionSource: 'pending_record_stage4',
         dataValidation: {
           amountValidated: !isNaN(parseFloat(finalBookkeepingData.amount)),
-          subjectValidated: !!finalBookkeepingData.subjectName,
+          subjectValidated: !!finalBookkeepingData.categoryName,
           paymentMethodValidated: !!finalBookkeepingData.paymentMethod,
           // majorCodeValidated: !!finalBookkeepingData.majorCode // majorCode removed
         }
@@ -4667,7 +4667,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     };
 
     // 階段三新增：記帳前最終驗證日誌
-    LBK_logInfo(`階段三：Firestore記帳資料最終驗證 - ID: ${preparedData.id}, 金額: ${preparedData.amount}, 類型: ${preparedData.type}, 科目: ${preparedData.metadata.subjectName}, subjectCode: ${preparedData.categoryId} [${processId}]`, "記帳完成", userId, functionName);
+    LBK_logInfo(`階段三：Firestore記帳資料最終驗證 - ID: ${preparedData.id}, 金額: ${preparedData.amount}, 類型: ${preparedData.type}, 科目: ${preparedData.metadata.categoryName}, subjectCode: ${preparedData.categoryId} [${processId}]`, "記帳完成", userId, functionName);
 
     LBK_logInfo(`階段四：直接執行記帳儲存，跳過重複科目查詢 [${processId}]`, "記帳完成", userId, functionName);
 
@@ -4685,8 +4685,8 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       amount: preparedData.amount,
       type: preparedData.type,
       category: preparedData.categoryId || 'default',
-      subject: finalBookkeepingData.subjectName || preparedData.description || '記帳項目',
-      subjectName: finalBookkeepingData.subjectName || preparedData.description || '記帳項目',
+      subject: finalBookkeepingData.categoryName || preparedData.description || '記帳項目',
+      categoryName: finalBookkeepingData.categoryName || preparedData.description || '記帳項目',
       description: preparedData.description || '記帳項目',
       paymentMethod: preparedData.paymentMethod || '刷卡',
       date: preparedData.date,
@@ -4801,7 +4801,7 @@ async function LBK_initializePendingTransactionsSubcollection(userLedgerId, cont
       note: "Initial document to ensure pendingTransactions subcollection exists",
       configVersion: "0305",
       structure: {
-        stateTransitions: ["PENDING_SUBJECT", "PENDING_WALLET", "COMPLETED", "CANCELLED"],
+        stateTransitions: ["PENDING_CATEGORY", "PENDING_WALLET", "COMPLETED", "CANCELLED"],
         defaultExpirationMinutes: 30,
         autoCleanupEnabled: true
       }
@@ -4860,12 +4860,12 @@ async function LBK_advancePendingFlow(userId, pendingId, processId) {
     const currentStage = pendingData.processingStage;
     const stageData = pendingData.stageData || {};
 
-    LBK_logInfo(`當前狀態: ${currentStage}, 科目已選: ${stageData.subjectSelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "狀態機", userId, functionName);
+    LBK_logInfo(`當前狀態: ${currentStage}, 科目已選: ${stageData.categorySelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "狀態機", userId, functionName);
 
     // 根據當前狀態決定下一步動作
-    if (currentStage === PENDING_STATES.PENDING_SUBJECT) {
+    if (currentStage === PENDING_STATES.PENDING_CATEGORY) {
       // 如果科目已選，檢查是否需要選擇錢包
-      if (stageData.subjectSelected) {
+      if (stageData.categorySelected) {
         // 檢查支付方式是否需要歧義消除
         // 更新調用：替換 LBK_parsePaymentMethod 為 LBK_validateWalletExists
         const parseResult3 = LBK_parseInputFormat(pendingData.originalInput, processId);
@@ -5033,5 +5033,5 @@ module.exports = {
   // 版本資訊
   MODULE_VERSION: "1.9.2", // 階段一修復完成版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一修復完成：修復Pending Record科目資訊傳遞機制。1)修復LBK_updatePendingRecord函數，實現stageData深度合併更新，確保selectedSubject資訊不被覆蓋。2)修復LBK_completePendingRecord函數，強化科目資訊讀取邏輯，支援多種欄位名稱格式，增加詳細調試日誌。3)移除硬編碼預設值，嚴格遵守0098規範，科目資訊不完整時提供詳細錯誤資訊。4)確保科目歸類完成後的記帳流程能正確讀取並使用用戶選擇的科目資訊。修復範圍：解決用戶選擇科目「餐飲費用」但最終記帳顯示「其他支出」的核心問題。"
+  MODULE_UPDATE: "階段一修復完成：修復Pending Record科目資訊傳遞機制。1)修復LBK_updatePendingRecord函數，實現stageData深度合併更新，確保electedCategory資訊不被覆蓋。2)修復LBK_completePendingRecord函數，強化科目資訊讀取邏輯，支援多種欄位名稱格式，增加詳細調試日誌。3)移除硬編碼預設值，嚴格遵守0098規範，科目資訊不完整時提供詳細錯誤資訊。4)確保科目歸類完成後的記帳流程能正確讀取並使用用戶選擇的科目資訊。修復範圍：解決用戶選擇科目「餐飲費用」但最終記帳顯示「其他支出」的核心問題。"
 };
