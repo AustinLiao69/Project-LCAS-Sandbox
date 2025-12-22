@@ -1,0 +1,307 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/12/22 上午10:29:36
+📦 部署模式載入模組...
+✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理
+✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+⚠️ BK 模組未正確載入，跳過初始化
+⚠️ LBK 模組未正確載入，跳過初始化
+⚠️ SR 模組未正確載入，跳過初始化
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🎉 階段五完成：FS模組移除狀態確認
+✅ FS模組已完全移除，職責分散完成
+📋 Firebase操作現由以下專門模組處理:
+  - AM模組：帳號管理相關Firebase操作
+  - WCM模組：帳戶與科目管理相關Firebase操作
+  - BM模組：預算管理相關Firebase操作
+  - CM模組：協作管理相關Firebase操作
+  - 其他模組：直接使用firebase-config模組
+❌ BK模組載入失敗，無法檢查函數
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！
+📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore
+🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000
+⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能
+📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制
+🏥 健康檢查機制已優化：專注LINE服務監控
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構
+📦 API端點遷移完成統計：
+   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點
+   📱 保留LINE Webhook專用：5個核心端點
+   ✅ 完美職責分離：RESTful API ↔ LINE Webhook
+🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現
+📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性
+🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port 3000
+📡 基礎服務已就緒，正在背景載入完整功能...
+📦 載入WH模組...
+🔧 WCM模組v1.2.4 初始化：預設錢包欄位映射修復版
+🔄 循環依賴修復：移除AM模組直接引用
+💰 預設錢包建立強化：完整錯誤處理和批次處理邏輯
+✅ 函數導出驗證：WCM_createCategory = function
+✅ 函數導出驗證：WCM_createWallet = function
+✅ 函數導出驗證：WCM_load0099SubjectData = function
+✅ 函數導出驗證：WCM_loadDefaultConfigs = function
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🚀 WCM模組現已全面支援協作帳本路徑
+💎 預設錢包建立機制：強化配置驗證、錯誤處理和批次處理
+🔧 欄位映射修復：完整映射0302配置檔案所有欄位，包含synonyms支援
+📝 符合0070 DB schema：確保wallets子集合欄位完整性
+✨ 階段二修復完成，預設錢包欄位映射已完全符合配置檔案驅動
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+🔍 AM.js 模組開始載入...
+📋 AM.js 版本: v8.0.4
+📦 AM.js: 開始引入依賴模組...
+✅ AM.js: firebase-admin 引入成功
+✅ AM.js: axios 引入成功
+✅ AM.js: crypto 引入成功
+⚙️ AM.js: 開始定義AM_CONFIG配置物件...
+🔥 AM.js: 開始引入Firebase動態配置模組...
+✅ AM.js: Firebase動態配置模組引入成功
+🔧 AM.js: 初始化Firebase Admin SDK...
+✅ Firebase Admin SDK已初始化
+✅ AM.js: Firebase初始化完成，Firestore實例已取得
+📊 BM 預算管理模組載入中...
+✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能
+🤝 CM 協作管理模組初始化中...
+[2025-12-22T02:29:36.792Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組v2.4.0載入完成 - 階段一擴展：建立完整協作帳本子集合架構（members, transactions, wallets, budgets, categories）
+📤 AM.js: 開始導出模組函數...
+✅ AM.js: 所有函數定義完成，準備導出
+✅ AM模組8.0.3 DCN-0023職責重構完成！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 帳本結構初始化 (專注基礎結構)
+   └── 總計: 59個函數 (移除4個重複函數)
+🔧 DCN-0023職責重構: 完全移除與WCM重複功能
+🎯 職責邊界: AM專注帳號管理+帳本基礎結構，WCM負責科目和帳戶管理
+🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行科目和帳戶初始化
+📊 資料流: AM → WCM (科目+帳戶) → Firebase
+✨ v8.0.3重構成果: 移除重複函數，職責邊界清晰，避免功能衝突
+🎉 重構完成: AM模組功能精簡，與WCM模組職責劃分明確！
+🎯 AM.js 模組載入完成，59個函數已成功導出
+📅 SR 排程提醒模組初始化中...
+✅ 階段五完成：FS模組已移除，消息去重使用NodeCache
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.5.3 (2025-12-19) - 階段三完成：支援連續性Quick Reply處理，識別Pending Record相關事件
+WH模組環境變數檢查結果:
+  ✅ LINE_CHANNEL_SECRET: 已設定(32字符)
+  ✅ LINE_CHANNEL_ACCESS_TOKEN: 已設定(172字符)
+  ✅ Webhook_URL: 已設定(84字符)
+✅ 所有必要環境變數已正確設定
+✅ WH模組環境變數檢查完整
+✅ WH 模組載入成功
+✅ WH模組核心函數檢查通過
+🔄 延遲載入應用模組...
+✅ BK 模組載入成功
+✅ LBK 模組載入成功
+✅ DD 模組載入成功
+🔍 開始載入 AM 模組...
+✅ AM 模組載入成功
+✅ AM_createLineAccount函數檢查通過
+✅ AM模組版本: 8.0.3
+✅ SR 模組載入成功
+✅ 完整功能載入完成
+📋 DCN-0011 Phase 4 重構統計:
+   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)
+   🎯 Webhook端點保留: 5個 (LINE OA專用)
+   🏗️ 雙服務架構: 職責完全分離
+📅 已載入 0 個排程設定
+[2025-12-22T02:29:37.630Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+成功寫入 2 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [e6d69800] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [e6d69800]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [e6d69800] (INFO)
+開始非同步處理請求 [e6d69800]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [e6d69800] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [e6d69800] (INFO)
+處理消息事件: text [e6d69800]
+收到文本消息: "池上便當99999中信" [e6d69800]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "池上便當99999中信" [e6d69800] (INFO)
+開始AM用戶驗證流程 [e6d69800]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [e6d69800] (INFO)
+[2025-12-22T02:29:55.614Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [e6d69800]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [e6d69800]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [e6d69800] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 池上便當99999中信
+[2025-12-22T02:29:56.051Z] [INFO] [DL] 開始處理LINE OA請求 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T02:29:56.052Z] [DEBUG] [DL] 檢查統計查詢關鍵字: "池上便當99999中信" [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-22T02:29:56.052Z] [DEBUG] [DL] 解析用戶訊息: "池上便當99999中信" [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-22T02:29:56.052Z] [DEBUG] [DL] 階段一：開始解析格式: "池上便當99999中信" [e6d69800] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T02:29:56.052Z] [DEBUG] [DL] 階段一：檢測到銀行名稱: 中信 [e6d69800] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T02:29:56.052Z] [INFO] [DL] 階段一：解析結果: 科目="池上便當", 金額=99999, 支付方式="中信" [e6d69800] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-22T02:29:56.053Z] [DEBUG] [DL] 提取金額: "池上便當99999" [e6d69800] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-22T02:29:56.053Z] [DEBUG] [DL] 查詢科目代碼: "池上便當" [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.053Z] [INFO] [DL] Firestore連線初始化成功 [Code: INFO] [Location: LBK_initializeFirestore]
+[2025-12-22T02:29:56.053Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "池上便當" [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.187Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.188Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "生鮮雜貨"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.188Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "生活家用"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.188Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "交通費用"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.188Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "餐飲費用"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.188Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "娛樂消遣"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.189Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "運動嗜好"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.189Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "寵物生活"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.189Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "醫療費用"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.189Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "財務收入"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.189Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "財務支出"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.189Z] [DEBUG] [DL] 處理同義詞匹配: "池上便當"，科目: "其他"，同義詞數量: 0 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-22T02:29:56.189Z] [INFO] [DL] 需要新科目歸類: 池上便當 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parseUserMessage]
+[2025-12-22T02:29:56.189Z] [INFO] [DL] 觸發新科目歸類流程: 池上便當 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T02:29:56.189Z] [INFO] [DL] 觸發新科目歧義消除流程: 池上便當 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T02:29:56.316Z] [INFO] [DL] Pending Record 創建成功: 1766370596190 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_createPendingRecord]
+[2025-12-22T02:29:56.316Z] [INFO] [DL] 處理新科目歸類: 池上便當 [e6d69800] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleNewSubjectClassification]
+[2025-12-22T02:29:56.316Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-22T02:29:56.317Z] [INFO] [DL] v1.4.3 生成科目歸類選單和Quick Reply，共11個動態選項 (來源:0099.json) [Code: INFO] [Location: LBK_buildClassificationMessage]
+已儲存pending記帳資料到快取: WH_PENDING_Uae47d9d496e4596d70ed724a7d6e2948 [e6d69800]
+[WH 2.0.16 LOG] WH 2.5.1: 已儲存pending記帳資料，等待用戶選擇科目 [e6d69800] (INFO)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","pendingData"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"您的科目庫無此科目，請問「池上便當」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「池上便當...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=123
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (您的科目庫無此科目，請問「池上便當」屬於什麼科目？
+
+101...)
+WH_replyMessage: 開始回覆訊息: 您的科目庫無此科目，請問「池上便當」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 您的科目庫無此科目，請問「池上便當」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成，已回覆用戶 [e6d69800] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":123,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [e6d69800]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [e6d69800]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [e6d69800] (INFO)
+訊息處理結果: {"success":true,"message":"您的科目庫無此科目，請問「池上便當」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「池上便當」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"101 生鮮雜貨","data":"classify_101_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"101 生鮮雜貨"}},{"type":"action","action":{"type":"postback","label":"102 生活家用","data":"classify_102_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"102 生活家用"}},{"type":"action","action":{"type":"postback","label":"103 交通費用","data":"classify_103_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"103 交通費用"}},{"type":"action","action":{"type":"postback","label":"104 餐飲費用","data":"classify_104_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"104 餐飲費用"}},{"type":"action","action":{"type":"postback","label":"105 娛樂消遣","data":"classify_105_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"105 娛樂消遣"}},{"type":"action","action":{"type":"postback","label":"106 運動嗜好","data":"classify_106_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"106 運動嗜好"}},{"type":"action","action":{"type":"postback","label":"107 寵物生活","data":"classify_107_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"107 寵物生活"}},{"type":"action","action":{"type":"postback","label":"108 醫療費用","data":"classify_108_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"108 醫療費用"}},{"type":"action","action":{"type":"postback","label":"201 財務收入","data":"classify_201_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"201 財務收入"}},{"type":"action","action":{"type":"postback","label":"301 財務支出","data":"classify_301_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"301 財務支出"}},{"type":"action","action":{"type":"postback","label":"999 其他","data":"classify_999_{\"subject\":\"池上便當\",\"amount\":99999,\"rawAmount\":\"99999\",\"paymentMethod\":\"中信\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766370596190\"}","displayText":"999 其他"}}]},"moduleCode":"LBK","module":"LBK","processingTime":1762497773.021,"moduleVersion":"1.4.3","requiresUserSelection":true,"pendingData":{"subject":"池上便當","amount":99999,"rawAmount":"99999","paymentMethod":"中信","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":"2025-12-22T02:29:56.317Z","processId":"e6d69800","originalInput":"池上便當99999中信","stageData":{"selectedSubject":{},"subjectSelected":true}}} [e6d69800]
+非同步處理完成，已清理數據 [e6d69800]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [e6d69800] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [023aad68] (INFO)
+非回覆事件，使用非同步處理 [023aad68]
+開始非同步處理請求 [023aad68]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [023aad68] (INFO)
+WH v2.5.3: 收到postback事件: classify_104_{"subject":"池上便當","amount":99999,"rawAmount":"99999","paymentMethod":"中信","userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766370596190"}
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: classify_104_{"subject":"池上便當","amount":99999,"rawAmount":"99999","paymentMethod":"中信","userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766370596190"} [023aad68] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - classify_104_{"subject":"池上便當","amount":99999,"rawAmount":"99999","paymentMethod":"中信","userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766370596190"}
+[2025-12-22T02:30:01.855Z] [INFO] [DL] 開始處理LINE OA請求 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T02:30:01.855Z] [INFO] [DL] 檢測到科目歸類postback格式訊息 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T02:30:01.855Z] [INFO] [DL] 科目選擇完成，開始執行記帳: subjectId=104 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T02:30:01.856Z] [INFO] [DL] 處理科目歸類postback: subjectId=104 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T02:30:01.856Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-22T02:30:01.857Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-22T02:30:01.857Z] [DEBUG] [DL] 建立科目映射表，共11個選項 (來源:0099.json) [Code: DEBUG] [Location: LBK_buildCategoryMapping]
+[2025-12-22T02:30:01.857Z] [INFO] [DL] 科目歸類選擇: 餐飲費用 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T02:30:01.857Z] [INFO] [DL] 添加科目同義詞: 池上便當 → 餐飲費用 (ID: 104) [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-22T02:30:01.965Z] [INFO] [DL] 成功建立同義詞關聯: 池上便當 → 餐飲費用 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T02:30:02.089Z] [INFO] [DL] Pending Record 更新成功: 1766370596190 → PENDING_SUBJECT [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-22T02:30:02.089Z] [INFO] [DL] 階段一修復：Pending Record 科目資訊更新成功: 餐飲費用 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T02:30:02.089Z] [INFO] [DL] 階段二修復：科目選擇完成，檢查支付方式: 中信 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-22T02:30:02.089Z] [DEBUG] [DL] 階段二：嚴格驗證錢包存在: walletId="null", walletName="中信" [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-22T02:30:02.090Z] [DEBUG] [DL] 階段二：使用 walletName 嚴格查詢: "中信" [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-22T02:30:02.090Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "中信" [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:02.090Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "中信" [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:02.209Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:02.210Z] [DEBUG] [DL] 階段二：檢查同義詞: "中信"，錢包: "現金"，同義詞: [] [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:02.210Z] [DEBUG] [DL] 階段二：檢查同義詞: "中信"，錢包: "信用卡"，同義詞: [] [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:02.216Z] [DEBUG] [DL] 階段二：檢查同義詞: "中信"，錢包: "銀行"，同義詞: [] [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:02.221Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: "中信" [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:02.231Z] [INFO] [DL] 階段二：錢包未在 wallets 子集合中找到，觸發用戶確認: 中信 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_validateWalletExists]
+[2025-12-22T02:30:02.235Z] [INFO] [DL] 支付方式需要歧義消除: undefined，轉入PENDING_WALLET狀態 [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+成功寫入 54 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[2025-12-22T02:30:02.514Z] [INFO] [DL] Pending Record 更新成功: 1766370596190 → PENDING_WALLET [023aad68] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","classificationCompleted","nextStage"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"科目歸類完成！已選擇「餐飲費用」\n\n檢測到未知支付方式「中信」，請問這屬於何種支付方式：","responseMessage":"科目歸類完成！已選擇「餐飲費用」\n\n檢測到未知支付方式「中信」，請問這屬於何種支付方式：","quickReply":{"items":[{"type":"action","action":{"type":"...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=44
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「中信...)
+WH_replyMessage: 開始回覆訊息: 科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「中信」，請問這屬於何種支付方式：
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「中信」，請問這屬於何種支付方式： (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+成功寫入 1 條日誌到 Firestore
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [023aad68] (INFO)
+非同步處理完成，已清理數據 [023aad68]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [023aad68] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [72047e00] (INFO)
+非回覆事件，使用非同步處理 [72047e00]
+開始非同步處理請求 [72047e00]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [72047e00] (INFO)
+WH v2.5.3: 收到postback事件: wallet_type_credit_1766370596190
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: wallet_type_credit_1766370596190 [72047e00] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - wallet_type_credit_1766370596190
+[2025-12-22T02:30:06.694Z] [INFO] [DL] 開始處理LINE OA請求 [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T02:30:06.695Z] [INFO] [DL] 檢測到wallet類型選擇postback事件: wallet_type_credit_1766370596190 [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-22T02:30:06.695Z] [INFO] [DL] 處理錢包確認postback: wallet_type_credit_1766370596190 [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-22T02:30:06.695Z] [INFO] [DL] 處理支付方式類型選擇: type=credit, pendingId=1766370596190 [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-22T02:30:06.695Z] [INFO] [DL] 階段四：處理支付方式類型選擇: type=credit, pendingId=1766370596190 [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-22T02:30:06.809Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "信用卡" [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:06.809Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "信用卡" [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:06.931Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:06.932Z] [DEBUG] [DL] 階段二：檢查同義詞: "信用卡"，錢包: "現金"，同義詞: [] [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:06.932Z] [INFO] [DL] 階段二：找到精確錢包名稱匹配: "信用卡" → "信用卡" [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:06.932Z] [INFO] [DL] 階段二：返回錢包名稱精確匹配結果: 信用卡 [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-22T02:30:06.932Z] [INFO] [DL] 階段五：動態查詢成功匹配錢包: 信用卡 → 信用卡 [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-22T02:30:07.055Z] [INFO] [DL] Pending Record 更新成功: 1766370596190 → PENDING_WALLET [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-22T02:30:07.055Z] [DEBUG] [DL] 階段一：開始解析格式: "池上便當99999中信" [72047e00] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T02:30:07.055Z] [DEBUG] [DL] 階段一：檢測到銀行名稱: 中信 [72047e00] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-22T02:30:07.055Z] [INFO] [DL] 階段一：解析結果: 科目="池上便當", 金額=99999, 支付方式="中信" [72047e00] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-22T02:30:07.055Z] [DEBUG] [DL] 從輸入中提取支付方式: "池上便當99999中信" → "中信" [72047e00] [Code: DEBUG] [Location: LBK_extractPaymentMethodFromInput]
+[2025-12-22T02:30:07.056Z] [ERROR] [DL] 階段三：執行錢包同義詞更新失敗: ReferenceError: Cannot access 'targetWalletId' before initialization [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: EXECUTE_WALLET_SYNONYMS_ERROR] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-22T02:30:07.056Z] [WARNING] [DL] 階段三：執行wallet synonyms更新失敗: ReferenceError: Cannot access 'targetWalletId' before initialization [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: WARNING] [Location: LBK_handleWalletTypeSelection]
+[2025-12-22T02:30:07.162Z] [INFO] [DL] 階段四：開始完成Pending Record，科目已選: undefined, 錢包已選: true [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-22T02:30:07.162Z] [ERROR] [DL] 階段四：完成Pending Record失敗: Error: 階段一：Pending Record 缺少科目資訊，無法使用硬編碼預設值 (違反0098規範) [72047e00] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: PENDING_COMPLETE_ERROR] [Location: LBK_completePendingRecord]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","error","message","responseMessage","moduleCode","module"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"error":"Error: 階段一：Pending Record 缺少科目資訊，無法使用硬編碼預設值 (違反0098規範)","message":"記帳完成失敗，請稍後再試","responseMessage":"記帳完成失敗，請稍後再試","moduleCode":"LBK","module":"LBK"}...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=12
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (記帳完成失敗，請稍後再試...)
+WH_replyMessage: 開始回覆訊息: 記帳完成失敗，請稍後再試
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳完成失敗，請稍後再試 (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [72047e00] (INFO)
+非同步處理完成，已清理數據 [72047e00]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [72047e00] (INFO)
