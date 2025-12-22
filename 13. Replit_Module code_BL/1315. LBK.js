@@ -719,9 +719,9 @@ function LBK_extractAmount(text, processId) {
 
 /**
  * 05. 獲取科目代碼 - 優化匹配精準度
- * @version 2025-07-15-V1.0.1
- * @date 2025-07-15 19:10:00
- * @description 根據科目名稱查詢對應的科目代碼，強化匹配算法精準度
+ * @version 2025-12-22-V1.0.2
+ * @date 2025-12-22 17:30:00
+ * @description 根據科目名稱查詢對應的科目代碼，強化匹配算法精準度，修復同義詞匹配日誌
  */
 async function LBK_getSubjectCode(categoryName, userId, processId) {
   try {
@@ -788,11 +788,13 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
       // 將同義詞字串分割為陣列，即使為空字串也進行處理
       const synonyms = synonymsStr ? synonymsStr.split(",").map(s => s.trim()).filter(s => s.length > 0) : [];
 
-      // 記錄同義詞處理過程，即使為空也記錄
-      LBK_logDebug(`處理同義詞匹配: "${normalizedInput}"，科目: "${data.categoryName}"，同義詞數量: ${synonyms.length} [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+      // 記錄同義詞處理過程，包含實際同義詞內容
+      LBK_logDebug(`處理同義詞匹配: "${normalizedInput}"，科目: "${data.categoryName}"，同義詞數量: ${synonyms.length}，同義詞內容: [${synonyms.join(', ')}] [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
 
       for (const synonym of synonyms) {
         const synonymLower = synonym.toLowerCase();
+        LBK_logDebug(`比較同義詞: "${synonymLower}" vs "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+        
         if (synonymLower === normalizedInput) {
           synonymMatch = {
             categoryId: String(data.categoryId || data.parentId),
@@ -800,6 +802,7 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
             subCategoryId: String(data.subCategoryId || data.categoryId),
             name: String(data.name || data.subCategoryName || data.categoryName || '')
           };
+          LBK_logInfo(`找到精確同義詞匹配: "${normalizedInput}" → 同義詞:"${synonym}" → 科目:"${synonymMatch.name}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
           break;
         }
 
@@ -5055,7 +5058,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.9.3", // 階段一同義詞學習修復完成版本
+  MODULE_VERSION: "1.9.2", // 階段一同義詞匹配調試修復版本
   MODULE_NAME: "LBK",
   MODULE_UPDATE: "階段一同義詞學習修復完成：1)修復LBK_addSubjectSynonym函數Firebase寫入邏輯，使用事務確保科目同義詞正確寫入categories子集合，添加寫入驗證機制。2)修復LBK_executeWalletSynonymsUpdate函數變數初始化錯誤，解決targetWalletId變數提前使用問題，確保所有變數在使用前正確初始化。3)強化同義詞寫入的事務性操作和錯誤處理，確保同義詞學習機制能正常運作。4)添加詳細的調試日誌和驗證機制，便於追蹤同義詞寫入狀態。修復範圍：解決科目和錢包同義詞學習機制完全失效的問題，確保用戶歧義消除後的學習結果能正確保存並在後續辨識中生效。"
 };
