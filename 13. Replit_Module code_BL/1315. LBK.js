@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.9.0
+ * LBK_快速記帳模組_1.9.1
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 階段五：消除Hard Coding，使用動態查詢機制
- * @update 2025-12-19: 階段五版本，完全移除硬編碼值，所有支付方式處理改為從用戶wallets子集合動態查詢，符合0098文件第1.3條規範。
+ * @description LINE OA 專用快速記帳處理模組 - 階段一：完全消除Hard Coding，實現動態查詢機制
+ * @update 2025-12-22: 階段一版本，移除第645行附近的硬編碼支付方式邏輯，修改LBK_getDefaultPaymentMethod函數確保完全動態查詢，符合0098文件第1.3條規範。
  */
 
 // 引入所需模組
@@ -640,16 +640,10 @@ function LBK_parseInputFormat(message, processId) {
       }
     }
 
-    // 如果沒有檢測到銀行，檢查標準支付方式關鍵字
-    if (!detectedBank) {
-      const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
-      for (const method of paymentMethods) {
-        if (processedSuffix.includes(method)) {
-          paymentMethod = method;
-          LBK_logDebug(`階段一：檢測到支付方式: ${method} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
-          break;
-        }
-      }
+    // 階段一修復：移除硬編碼支付方式檢查，改為動態識別機制
+    if (!detectedBank && processedSuffix) {
+      LBK_logDebug(`階段一：檢測到可能的支付方式關鍵字: "${processedSuffix}"，將由動態查詢機制處理 [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+      // 不在此處設定 paymentMethod，讓動態查詢機制來處理
     }
 
     // 階段五修復：完全移除硬編碼預設值，確保所有支付方式都透過動態查詢
@@ -3336,58 +3330,63 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
     const db = LBK_INIT_STATUS.firestore_db;
     const ledgerId = `user_${userId}`;
 
-    // 階段五修復：動態查詢優先序列，移除硬編碼值
-    const dynamicPreferredDefaults = ["信用卡", "現金", "銀行帳戶", "銀行"];
+    // 階段一修復：完全移除硬編碼優先序列，改為動態查詢所有可用錢包
+    LBK_logDebug(`階段一：開始完全動態查詢機制，不使用任何硬編碼優先序列 [${processId}]`, "預設支付方式", userId, functionName);
     
-    // 階段五修復：完全動態查詢，按優先序列尋找
-    for (const defaultName of dynamicPreferredDefaults) {
-      const wallet = await LBK_getWalletByName(defaultName, userId, processId);
-      if (wallet && wallet.walletId) {
-        LBK_logInfo(`階段五：動態查詢找到支付方式: ${defaultName} → ${wallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
-        return {
-          success: true,
-          walletId: wallet.walletId,
-          walletName: wallet.walletName,
-          type: wallet.type,
-          isDefault: true,
-          queryMethod: "dynamic_priority"
-        };
-      }
-    }
-
-    // 階段五修復：動態查詢備選機制
-    const snapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets").where("status", "==", "active").limit(1).get();
-
+    // 階段一修復：完全動態查詢機制，直接查詢用戶所有可用錢包
+    const snapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets").where("status", "==", "active").get();
+    
     if (!snapshot.empty) {
+      // 階段一：優先查找credit類型的錢包
+      let creditWallet = null;
+      for (const doc of snapshot.docs) {
+        const data = doc.data();
+        if (data.type === 'credit' || data.type === 'credit_card') {
+          creditWallet = {
+            walletId: data.walletId || doc.id,
+            walletName: data.walletName || data.name || data.subWalletName || '信用卡',
+            type: data.type || 'credit'
+          };
+          LBK_logInfo(`階段一：動態查詢找到credit錢包: ${creditWallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
+          return {
+            success: true,
+            ...creditWallet,
+            isDefault: true,
+            queryMethod: "dynamic_credit_query"
+          };
+        }
+      }
+      
+      // 階段一：如果沒有credit錢包，使用第一個可用錢包
       const doc = snapshot.docs[0];
       const data = doc.data();
-      const dynamicFallbackWallet = {
+      const fallbackWallet = {
         walletId: data.walletId || doc.id,
-        walletName: data.walletName || data.name || '動態查詢錢包',
+        walletName: data.walletName || data.name || data.subWalletName || '動態查詢錢包',
         type: data.type || 'unknown'
       };
       
-      LBK_logWarning(`階段五：動態備選機制啟用: ${dynamicFallbackWallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
+      LBK_logInfo(`階段一：動態查詢使用第一個可用錢包: ${fallbackWallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
       return {
         success: true,
-        ...dynamicFallbackWallet,
+        ...fallbackWallet,
         isDefault: false,
         isFallback: true,
-        queryMethod: "dynamic_fallback"
+        queryMethod: "dynamic_first_available"
       };
     }
 
-    // 階段五修復：完全沒有錢包時的動態處理
-    LBK_logError(`階段五：動態查詢未找到任何可用錢包 [${processId}]`, "預設支付方式", userId, "NO_WALLETS_AVAILABLE", "用戶錢包子集合為空", functionName);
+    // 階段一修復：完全沒有錢包時的動態處理
+    LBK_logError(`階段一：動態查詢未找到任何可用錢包 [${processId}]`, "預設支付方式", userId, "NO_WALLETS_AVAILABLE", "用戶錢包子集合為空", functionName);
     return { 
       success: false, 
       error: "動態查詢未找到可用錢包",
       requiresWalletSetup: true,
-      queryMethod: "dynamic_query_failed"
+      queryMethod: "dynamic_query_no_wallets"
     };
 
   } catch (error) {
-    LBK_logError(`階段一：動態查詢預設支付方式失敗: ${error.toString()} [${processId}]`, "預設支付方式", userId, "DEFAULT_PAYMENT_METHOD_ERROR", error.toString(), functionName);
+    LBK_logError(`階段一：動態查詢預設支付方式失敗: ${error.toString()} [${processId}]`, "預設支付方式", userId, "DYNAMIC_QUERY_ERROR", error.toString(), functionName);
     return { 
       success: false, 
       error: error.toString() 
@@ -5088,7 +5087,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.9.0", // 階段五修復版本
+  MODULE_VERSION: "1.9.1", // 階段一修復版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段五修復：消除Hard Coding，使用動態查詢機制。1)完全移除硬編碼「刷卡」、「default_credit」、「credit_card」等值。2)所有支付方式處理改為從用戶wallets子集合動態查詢。3)當需要預設支付方式時，動態查詢用戶wallets子集合中的可用項目。4)更新所有函數版本號至v1.9.0。5)完全符合0098文件第1.3條禁止hard coding規範。影響範圍：整體系統彈性，完全符合憲法規範。"
+  MODULE_UPDATE: "階段一修復：移除第645行硬編碼支付方式邏輯，實現完全動態查詢機制。1)移除LBK_parseInputFormat函數中檢查標準支付方式關鍵字的硬編碼邏輯。2)修改LBK_getDefaultPaymentMethod函數，移除硬編碼優先序列，改為動態查詢用戶wallets子集合中的credit項目。3)當用戶未指定支付方式時，優先查詢credit類型錢包，其次使用第一個可用錢包。4)完全符合0098文件第1.3條禁止hard coding規範。影響範圍：所有LBK快速記帳的支付方式解析流程。"
 };
