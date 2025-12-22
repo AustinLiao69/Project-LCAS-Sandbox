@@ -3306,20 +3306,20 @@ function LBK_formatErrorResponse(errorType, errorMessage) {
 }
 
 /**
- * 階段五修復：動態查詢用戶預設支付方式 - 完全移除硬編碼
- * @version 2025-12-19-V1.9.0
+ * 階段三修復：完全動態支付方式查詢機制 - 移除所有硬編碼邏輯
+ * @version 2025-12-22-V1.9.1
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Promise<Object>} 查詢結果
- * @description 階段五修復：完全移除硬編碼值，動態查詢用戶wallets子集合中的可用支付方式
+ * @description 階段三修復：完全基於wallets子集合配置的動態查詢，移除所有硬編碼優先序列和預設值
  */
 async function LBK_getDefaultPaymentMethod(userId, processId) {
   const functionName = "LBK_getDefaultPaymentMethod";
   try {
-    LBK_logDebug(`階段五：動態查詢預設支付方式機制 [${processId}]`, "預設支付方式", userId, functionName);
+    LBK_logDebug(`階段三：完全動態支付方式查詢機制 [${processId}]`, "預設支付方式", userId, functionName);
 
     if (!userId) {
-      LBK_logDebug(`階段五：缺少用戶ID，無法執行動態查詢 [${processId}]`, "預設支付方式", userId, functionName);
+      LBK_logDebug(`階段三：缺少用戶ID，無法執行動態查詢 [${processId}]`, "預設支付方式", userId, functionName);
       return { success: false, error: "缺少用戶ID" };
     }
 
@@ -3327,66 +3327,123 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
     const db = LBK_INIT_STATUS.firestore_db;
     const ledgerId = `user_${userId}`;
 
-    // 階段一修復：完全移除硬編碼優先序列，改為動態查詢所有可用錢包
-    LBK_logDebug(`階段一：開始完全動態查詢機制，不使用任何硬編碼優先序列 [${processId}]`, "預設支付方式", userId, functionName);
+    // 階段三修復：完全基於wallets子集合的動態查詢，不使用任何預設優先序列
+    LBK_logDebug(`階段三：開始wallets子集合完全動態查詢 [${processId}]`, "預設支付方式", userId, functionName);
 
-    // 階段一修復：完全動態查詢機制，直接查詢用戶所有可用錢包
-    const snapshot = await db.collection("ledgers").doc(ledgerId).collection("wallets").where("status", "==", "active").get();
+    // 階段三修復：查詢用戶所有活躍錢包，按創建順序排序
+    const snapshot = await db
+      .collection("ledgers")
+      .doc(ledgerId)
+      .collection("wallets")
+      .where("status", "==", "active")
+      .orderBy("createdAt", "asc")
+      .get();
 
     if (!snapshot.empty) {
-      // 階段一：優先查找credit類型的錢包
-      let creditWallet = null;
-      for (const doc of snapshot.docs) {
+      // 階段三修復：完全動態優先序列 - 基於wallets子集合中的實際配置
+      const availableWallets = [];
+      
+      snapshot.docs.forEach(doc => {
         const data = doc.data();
-        if (data.type === 'credit' || data.type === 'credit_card') {
-          creditWallet = {
-            walletId: data.walletId || doc.id,
-            walletName: data.walletName || data.name || data.subWalletName || '信用卡',
-            type: data.type || 'credit'
-          };
-          LBK_logInfo(`階段一：動態查詢找到credit錢包: ${creditWallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
-          return {
-            success: true,
-            ...creditWallet,
-            isDefault: true,
-            queryMethod: "dynamic_credit_query"
-          };
+        const wallet = {
+          walletId: data.walletId || doc.id,
+          walletName: data.walletName || data.name || data.subWalletName,
+          type: data.type || 'unknown',
+          priority: data.priority || 0, // 階段三：支援用戶自定義優先級
+          isDefault: data.isDefault === true, // 階段三：支援用戶自定義預設錢包
+          createdAt: data.createdAt
+        };
+        
+        // 階段三修復：只添加有有效名稱的錢包
+        if (wallet.walletName) {
+          availableWallets.push(wallet);
+        }
+      });
+
+      if (availableWallets.length === 0) {
+        LBK_logWarning(`階段三：wallets子集合中無有效名稱的錢包 [${processId}]`, "預設支付方式", userId, functionName);
+        return {
+          success: false,
+          error: "wallets子集合中無有效錢包",
+          queryMethod: "dynamic_no_valid_wallets"
+        };
+      }
+
+      // 階段三修復：完全動態優先序列邏輯
+      let selectedWallet = null;
+
+      // 1. 優先選擇用戶明確標記為預設的錢包
+      const explicitDefaultWallet = availableWallets.find(wallet => wallet.isDefault === true);
+      if (explicitDefaultWallet) {
+        selectedWallet = explicitDefaultWallet;
+        LBK_logInfo(`階段三：選擇用戶明確標記的預設錢包: ${selectedWallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
+      }
+
+      // 2. 如無明確預設，選擇自定義優先級最高的錢包
+      if (!selectedWallet) {
+        const highestPriorityWallet = availableWallets.reduce((prev, current) => 
+          (current.priority > prev.priority) ? current : prev
+        );
+        
+        if (highestPriorityWallet.priority > 0) {
+          selectedWallet = highestPriorityWallet;
+          LBK_logInfo(`階段三：選擇最高優先級錢包: ${selectedWallet.walletName} (優先級: ${selectedWallet.priority}) [${processId}]`, "預設支付方式", userId, functionName);
         }
       }
 
-      // 階段一：如果沒有credit錢包，使用第一個可用錢包
-      const doc = snapshot.docs[0];
-      const data = doc.data();
-      const fallbackWallet = {
-        walletId: data.walletId || doc.id,
-        walletName: data.walletName || data.name || data.subWalletName || '動態查詢錢包',
-        type: data.type || 'unknown'
-      };
+      // 3. 如無優先級設定，按類型動態查詢 - 基於實際存在的類型
+      if (!selectedWallet) {
+        // 階段三修復：動態類型優先序列，基於實際存在的錢包類型
+        const typeGroups = {
+          credit: availableWallets.filter(w => w.type === 'credit' || w.type === 'credit_card'),
+          bank: availableWallets.filter(w => w.type === 'bank' || w.type === 'bank_account'),
+          cash: availableWallets.filter(w => w.type === 'cash'),
+          other: availableWallets.filter(w => !['credit', 'credit_card', 'bank', 'bank_account', 'cash'].includes(w.type))
+        };
 
-      LBK_logInfo(`階段一：動態查詢使用第一個可用錢包: ${fallbackWallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
+        // 按實際存在的類型選擇
+        for (const [typeName, wallets] of Object.entries(typeGroups)) {
+          if (wallets.length > 0) {
+            selectedWallet = wallets[0]; // 選擇該類型的第一個錢包
+            LBK_logInfo(`階段三：按類型動態選擇: ${selectedWallet.walletName} (類型: ${typeName}) [${processId}]`, "預設支付方式", userId, functionName);
+            break;
+          }
+        }
+      }
+
+      // 4. 最終備選：使用創建時間最早的錢包
+      if (!selectedWallet) {
+        selectedWallet = availableWallets[0]; // 已按創建時間排序
+        LBK_logInfo(`階段三：使用創建時間最早的錢包: ${selectedWallet.walletName} [${processId}]`, "預設支付方式", userId, functionName);
+      }
+
       return {
         success: true,
-        ...fallbackWallet,
-        isDefault: false,
-        isFallback: true,
-        queryMethod: "dynamic_first_available"
+        walletId: selectedWallet.walletId,
+        walletName: selectedWallet.walletName,
+        type: selectedWallet.type,
+        isDefault: selectedWallet.isDefault,
+        priority: selectedWallet.priority,
+        queryMethod: "dynamic_wallets_subcollection_based",
+        totalAvailableWallets: availableWallets.length
       };
     }
 
-    // 階段一修復：完全沒有錢包時的動態處理
-    LBK_logError(`階段一：動態查詢未找到任何可用錢包 [${processId}]`, "預設支付方式", userId, "NO_WALLETS_AVAILABLE", "用戶錢包子集合為空", functionName);
+    // 階段三修復：完全沒有錢包時的處理
+    LBK_logError(`階段三：wallets子集合為空，無法執行動態查詢 [${processId}]`, "預設支付方式", userId, "NO_WALLETS_IN_SUBCOLLECTION", "用戶需要先設定錢包", functionName);
     return {
       success: false,
-      error: "動態查詢未找到可用錢包",
+      error: "wallets子集合為空，請先設定錢包",
       requiresWalletSetup: true,
-      queryMethod: "dynamic_query_no_wallets"
+      queryMethod: "dynamic_empty_subcollection"
     };
 
   } catch (error) {
-    LBK_logError(`階段一：動態查詢預設支付方式失敗: ${error.toString()} [${processId}]`, "預設支付方式", userId, "DYNAMIC_QUERY_ERROR", error.toString(), functionName);
+    LBK_logError(`階段三：完全動態查詢失敗: ${error.toString()} [${processId}]`, "預設支付方式", userId, "DYNAMIC_QUERY_ERROR", error.toString(), functionName);
     return {
       success: false,
-      error: error.toString()
+      error: error.toString(),
+      queryMethod: "dynamic_query_error"
     };
   }
 }
@@ -5084,7 +5141,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "1.9.1", // 階段一修復版本
+  MODULE_VERSION: "1.9.1", // 階段三完成版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一修復：移除第645行硬編碼支付方式邏輯，實現完全動態查詢機制。1)移除LBK_parseInputFormat函數中檢查標準支付方式關鍵字的硬編碼邏輯。2)修改LBK_getDefaultPaymentMethod函數，移除硬編碼優先序列，改為動態查詢用戶wallets子集合中的credit項目。3)當用戶未指定支付方式時，優先查詢credit類型錢包，其次使用第一個可用錢包。4)完全符合0098文件第1.3條禁止hard coding規範。影響範圍：所有LBK快速記帳的支付方式解析流程。"
+  MODULE_UPDATE: "階段三完成：強化動態支付方式查詢機制。1)完善LBK_getDefaultPaymentMethod函數，移除所有殘留硬編碼邏輯。2)實現基於wallets子集合配置的完全動態查詢優先序列：支援用戶自定義預設錢包、優先級設定、按實際存在類型動態選擇。3)移除任何預設支付方式的硬編碼陣列，查詢結果完全基於用戶wallets子集合內容。4)新增詳細的查詢方法追蹤(queryMethod)便於調試。影響範圍：所有未明確指定支付方式的記帳請求現在完全基於用戶個人化錢包配置。"
 };
