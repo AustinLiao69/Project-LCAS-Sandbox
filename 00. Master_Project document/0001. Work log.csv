@@ -474,3 +474,4 @@ MM 	 DD 	 Description 	    Progress
 12	22	 將subject正名為category(僅限LINE模式相關模組)  	 Closed
 12	22	 修復無法識別已寫入synonyms的資料問題  	 Closed
 12	23	 導入科目歸類邏輯與支付方式歸類邏輯一次性互動方案  	 Ongoing
+12	23	 確認firestore寫入資料量超過上限問題  	 Ongoing
