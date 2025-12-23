@@ -576,9 +576,9 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
 
 /**
  * 03. 解析輸入格式 - 階段一修復版
- * @version 2025-12-19-V1.7.0
- * @date 2025-12-19 16:30:00
- * @description 階段一修復：添加「一銀」支援，移除硬編碼預設值，實現動態支付方式查詢
+ * @version 2025-12-23-V1.7.1
+ * @date 2025-12-23 13:50:00
+ * @description 階段一修復：確保「現金」等支付方式正確識別，移除硬編碼預設值，實現動態支付方式查詢
  */
 function LBK_parseInputFormat(message, processId) {
   LBK_logDebug(`階段一：開始格式解析: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
@@ -638,37 +638,43 @@ function LBK_parseInputFormat(message, processId) {
 
     processedSuffix = processedSuffix.replace(supportedUnits, '').trim();
 
-    // 階段一修復：增強的銀行名稱識別，添加「一銀」
-    const bankNames = [
-      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
-      "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
-      "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
-      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀" // 階段一修復：添加「一銀」
-    ];
-
-    // 檢查是否包含銀行名稱（優先級最高）
-    let detectedBank = null;
-    for (const bankName of bankNames) {
-      if (processedSuffix.includes(bankName)) {
-        detectedBank = bankName;
-        paymentMethod = bankName; // 直接使用銀行名稱作為支付方式
-        LBK_logDebug(`階段一：檢測到銀行名稱: ${bankName} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    // 階段一修復：首先檢查常見支付方式關鍵字（包含「現金」）
+    const commonPaymentMethods = ["現金", "刷卡", "轉帳", "行動支付"];
+    for (const method of commonPaymentMethods) {
+      if (processedSuffix.includes(method)) {
+        paymentMethod = method;
+        LBK_logDebug(`階段一：檢測到支付方式關鍵字: ${method} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
         break;
       }
     }
 
-    // 階段一：簡化處理，不在此處設定預設值
-    if (!detectedBank && processedSuffix) {
-      LBK_logDebug(`階段一：檢測到後綴: "${processedSuffix}"，但非銀行名稱 [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    // 階段一修復：如果未檢測到常見支付方式，再檢查銀行名稱
+    if (!paymentMethod) {
+      const bankNames = [
+        "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
+        "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
+        "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
+        "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀" // 階段一修復：添加「一銀」
+      ];
+
+      // 檢查是否包含銀行名稱
+      for (const bankName of bankNames) {
+        if (processedSuffix.includes(bankName)) {
+          paymentMethod = bankName; // 直接使用銀行名稱作為支付方式
+          LBK_logDebug(`階段一：檢測到銀行名稱: ${bankName} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+          break;
+        }
+      }
     }
 
-    // 階段一：移除硬編碼預設值邏輯
-    if (!paymentMethod) {
-      LBK_logDebug(`階段一：未檢測到明確支付方式，將使用預設值 [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    // 階段一：移除硬編碼預設值邏輯，確保返回用戶實際輸入
+    if (!paymentMethod && processedSuffix) {
+      LBK_logDebug(`階段一：檢測到後綴: "${processedSuffix}"，但非已知支付方式 [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+      // 移除預設值邏輯，保持 paymentMethod 為 null
     }
 
     // 階段一修復：確保科目名稱正確提取
-    // 例如：「滷味555555一銀」→ 科目「滷味」、金額「555555」、支付方式「一銀」
+    // 例如：「洗車5555現金」→ 科目「洗車」、金額「5555」、支付方式「現金」
     LBK_logInfo(`階段一：解析結果: 科目="${finalSubject}", 金額=${amount}, 支付方式="${paymentMethod || '未指定'}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
     return {
