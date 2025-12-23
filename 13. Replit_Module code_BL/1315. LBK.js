@@ -867,7 +867,6 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
         success: true,
         categoryId: bestMatch.categoryId,
         categoryName: bestMatch.categoryName
-        name: bestMatch.name
       };
     }
 
