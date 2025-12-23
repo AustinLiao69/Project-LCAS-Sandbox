@@ -17,7 +17,7 @@
       "balance": 0,
       "isDefault": true,
       "isActive": true,
-      "synonyms": ""
+      "synonyms": "現金"
     },
     {
       "walletId": "debit",
@@ -28,7 +28,7 @@
       "balance": 0,
       "isDefault": false,
       "isActive": true,
-      "synonyms": ""
+      "synonyms": "轉帳"
     },
     {
       "walletId": "credit",
