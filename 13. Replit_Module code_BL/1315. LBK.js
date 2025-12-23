@@ -4138,7 +4138,7 @@ function LBK_buildClassificationMessage(originalSubject, parsedData, processId) 
       // 使用備用的最小配置
       const fallbackCategories = [
         { categoryId: 104, categoryName: "餐飲費用" },
-        { categoryId: 999, categoryName: "不歸類" }
+        { categoryId: 999, categoryName: "其他" }
       ];
       return LBK_buildClassificationMessageInternal(originalSubject, parsedData, fallbackCategories, processId);
     }
