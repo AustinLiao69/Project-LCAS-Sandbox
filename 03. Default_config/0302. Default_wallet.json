@@ -21,7 +21,7 @@
     },
     {
       "walletId": "debit",
-      "walletName": "銀行",
+      "walletName": "銀行轉帳",
       "subWalletId": null,
       "subWalletName": null,
       "currency": "{{default_currency}}",
