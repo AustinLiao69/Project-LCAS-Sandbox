@@ -2407,21 +2407,20 @@ async function LBK_processConfirmedWallet(walletData, userId, processId) {
 }
 
 /**
- * 階段二：統一錯誤處理的支付方式解析 - 所有錯誤統一格式化
- * @version 2025-12-23-V2.1.0
+ * 階段二：優化支付方式專項處理 - 信任第一階段解析結果，動態查詢wallet配置
+ * @version 2025-12-23-V2.2.0
  * @param {string} messageText - 用戶輸入訊息
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Object} 支付方式解析結果
- * @description 階段二：確保所有錯誤都經由LBK_formatReplyMessage統一處理
+ * @description 階段二：建立階段間信任機制，優先使用第一階段解析結果，動態查詢0302配置
  */
 async function LBK_parsePaymentMethod(messageText, userId, processId) {
   const functionName = "LBK_parsePaymentMethod";
   try {
-    LBK_logDebug(`階段二：統一錯誤處理解析支付方式: "${messageText}" [${processId}]`, "支付方式解析", userId, functionName);
+    LBK_logDebug(`階段二：開始支付方式專項處理: "${messageText}" [${processId}]`, "支付方式解析", userId, functionName);
 
     if (!messageText || !userId) {
-      // 階段二：錯誤統一由調用方的LBK_formatReplyMessage處理
       return {
         success: false,
         systemError: true,
@@ -2430,10 +2429,9 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
       };
     }
 
-    // 使用 LBK_parseInputFormat 解析輸入
+    // 第一步：信任第一階段解析結果
     const parseResult = LBK_parseInputFormat(messageText, processId);
     if (!parseResult) {
-      // 階段二：錯誤統一由調用方的LBK_formatReplyMessage處理
       return {
         success: false,
         systemError: true,
@@ -2443,56 +2441,63 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
     }
 
     let paymentMethodName = parseResult.paymentMethod;
+    LBK_logInfo(`階段二：信任第一階段解析結果: "${paymentMethodName || '未檢測到'}" [${processId}]`, "支付方式解析", userId, functionName);
 
-    // 階段二：簡化邏輯，直接使用信用卡預設值
-    if (!paymentMethodName) {
-      LBK_logInfo(`階段二：未檢測到支付方式，使用預設值「信用卡」 [${processId}]`, "支付方式解析", userId, functionName);
+    // 第二步：優先使用第一階段解析結果進行wallet查詢
+    if (paymentMethodName) {
+      LBK_logDebug(`階段二：使用第一階段結果查詢wallet: "${paymentMethodName}" [${processId}]`, "支付方式解析", userId, functionName);
       
-      return {
-        success: true,
-        walletId: "default_credit_card",
-        walletName: "信用卡",
-        requiresWalletConfirmation: false,
-        isDefault: true
-      };
-    }
-
-    LBK_logDebug(`階段二：提取的支付方式名稱: "${paymentMethodName}" [${processId}]`, "支付方式解析", userId, functionName);
-
-    // 階段二：簡化驗證邏輯，只檢查是否為明確的銀行名稱
-    const bankNames = [
-      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
-      "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
-      "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
-      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀"
-    ];
-
-    // 檢查是否為銀行名稱
-    for (const bankName of bankNames) {
-      if (paymentMethodName.includes(bankName)) {
-        LBK_logInfo(`階段二：識別銀行名稱: "${bankName}" [${processId}]`, "支付方式解析", userId, functionName);
+      // 查詢wallet是否存在於用戶的wallets子集合中
+      const walletResult = await LBK_getWalletByName(paymentMethodName, userId, processId);
+      
+      if (walletResult && walletResult.walletId) {
+        LBK_logInfo(`階段二：成功匹配wallet: "${paymentMethodName}" → "${walletResult.walletName}" [${processId}]`, "支付方式解析", userId, functionName);
         return {
           success: true,
-          walletId: `bank_${bankName}`,
-          walletName: bankName,
-          requiresWalletConfirmation: false
+          walletId: walletResult.walletId,
+          walletName: walletResult.walletName,
+          requiresWalletConfirmation: false,
+          matchSource: "wallet_subcollection"
+        };
+      } else {
+        // 未在wallet子集合中找到，需要歧義消除
+        LBK_logInfo(`階段二：未在wallet子集合中找到"${paymentMethodName}"，觸發歧義消除 [${processId}]`, "支付方式解析", userId, functionName);
+        return {
+          success: false,
+          requiresWalletConfirmation: true,
+          walletName: paymentMethodName,
+          error: `支付方式"${paymentMethodName}"需要用戶確認`,
+          needsUserSelection: true
         };
       }
     }
 
-    // 階段二：其他情況直接使用信用卡
-    LBK_logInfo(`階段二：未識別的支付方式"${paymentMethodName}"，使用預設值「信用卡」 [${processId}]`, "支付方式解析", userId, functionName);
-    return {
-      success: true,
-      walletId: "default_credit_card", 
-      walletName: "信用卡",
-      requiresWalletConfirmation: false,
-      isDefault: true
-    };
+    // 第三步：用戶未提供支付方式時，動態查詢0302預設配置
+    LBK_logDebug(`階段二：用戶未提供支付方式，動態查詢0302預設配置 [${processId}]`, "支付方式解析", userId, functionName);
+    const defaultWalletResult = await LBK_getDefaultPaymentMethod(userId, processId);
+    
+    if (defaultWalletResult.success) {
+      LBK_logInfo(`階段二：使用0302預設配置: "${defaultWalletResult.walletName}" [${processId}]`, "支付方式解析", userId, functionName);
+      return {
+        success: true,
+        walletId: defaultWalletResult.walletId,
+        walletName: defaultWalletResult.walletName,
+        requiresWalletConfirmation: false,
+        isDefault: true,
+        matchSource: "default_config_0302"
+      };
+    } else {
+      // 系統錯誤：無法取得預設值
+      return {
+        success: false,
+        systemError: true,
+        error: "無法取得預設支付方式配置",
+        needsUnifiedFormatting: true
+      };
+    }
 
   } catch (error) {
-    LBK_logError(`階段二：解析支付方式失敗: ${error.toString()} [${processId}]`, "支付方式解析", userId, "PAYMENT_METHOD_PARSE_ERROR", error.toString(), functionName);
-    // 階段二：錯誤統一由調用方的LBK_formatReplyMessage處理
+    LBK_logError(`階段二：支付方式專項處理失敗: ${error.toString()} [${processId}]`, "支付方式解析", userId, "PAYMENT_METHOD_PARSE_ERROR", error.toString(), functionName);
     return {
       success: false,
       systemError: true,
@@ -3244,30 +3249,84 @@ function LBK_formatErrorResponse(errorType, errorMessage) {
 }
 
 /**
- * 階段二：統一錯誤處理的預設支付方式邏輯 - 直接返回信用卡
- * @version 2025-12-23-V2.1.0
+ * 階段二：動態讀取0302預設支付方式配置
+ * @version 2025-12-23-V2.2.0
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Promise<Object>} 預設支付方式結果
- * @description 階段二：移除複雜動態查詢，直接返回信用卡作為預設值，錯誤統一格式化
+ * @description 階段二：移除硬編碼，動態從0302.json讀取預設wallet配置
  */
 async function LBK_getDefaultPaymentMethod(userId, processId) {
   const functionName = "LBK_getDefaultPaymentMethod";
   try {
-    LBK_logInfo(`階段二：使用簡化預設邏輯，返回信用卡 [${processId}]`, "預設支付方式", userId, functionName);
+    LBK_logDebug(`階段二：動態讀取0302預設支付方式配置 [${processId}]`, "預設支付方式", userId, functionName);
 
-    return {
-      success: true,
-      walletId: "default_credit_card",
-      walletName: "信用卡",
-      type: "credit_card",
-      isDefault: true,
-      queryMethod: "simplified_default"
-    };
+    // 讀取0302配置文件
+    try {
+      const configPath = path.join(__dirname, '../03. Default_config/0302. Default_wallet.json');
+      
+      if (!fs.existsSync(configPath)) {
+        throw new Error(`0302配置文件不存在: ${configPath}`);
+      }
+
+      const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      
+      if (!configData.default_wallets || !Array.isArray(configData.default_wallets)) {
+        throw new Error("0302配置格式錯誤：缺少default_wallets陣列");
+      }
+
+      // 查找標記為isDefault=true的錢包
+      const defaultWallet = configData.default_wallets.find(wallet => wallet.isDefault === true && wallet.isActive === true);
+      
+      if (defaultWallet) {
+        LBK_logInfo(`階段二：從0302配置讀取到預設錢包: "${defaultWallet.walletName}" [${processId}]`, "預設支付方式", userId, functionName);
+        return {
+          success: true,
+          walletId: defaultWallet.walletId,
+          walletName: defaultWallet.walletName,
+          type: defaultWallet.type || "unknown",
+          isDefault: true,
+          queryMethod: "dynamic_0302_config",
+          configVersion: configData.version
+        };
+      }
+
+      // 如果沒有明確標記isDefault的，使用第一個active的錢包
+      const firstActiveWallet = configData.default_wallets.find(wallet => wallet.isActive === true);
+      
+      if (firstActiveWallet) {
+        LBK_logInfo(`階段二：使用0302配置中第一個活躍錢包: "${firstActiveWallet.walletName}" [${processId}]`, "預設支付方式", userId, functionName);
+        return {
+          success: true,
+          walletId: firstActiveWallet.walletId,
+          walletName: firstActiveWallet.walletName,
+          type: firstActiveWallet.type || "unknown",
+          isDefault: false,
+          queryMethod: "dynamic_0302_first_active",
+          configVersion: configData.version
+        };
+      }
+
+      throw new Error("0302配置中沒有可用的活躍錢包");
+
+    } catch (configError) {
+      LBK_logError(`階段二：讀取0302配置失敗: ${configError.toString()} [${processId}]`, "預設支付方式", userId, "CONFIG_READ_ERROR", configError.toString(), functionName);
+      
+      // 最後備選：使用硬編碼值作為系統安全網
+      LBK_logWarning(`階段二：0302配置讀取失敗，使用系統安全網: 現金 [${processId}]`, "預設支付方式", userId, functionName);
+      return {
+        success: true,
+        walletId: "fallback_cash",
+        walletName: "現金",
+        type: "cash",
+        isDefault: true,
+        queryMethod: "system_fallback",
+        fallbackReason: configError.toString()
+      };
+    }
 
   } catch (error) {
     LBK_logError(`階段二：取得預設支付方式失敗: ${error.toString()} [${processId}]`, "預設支付方式", userId, "DEFAULT_PAYMENT_ERROR", error.toString(), functionName);
-    // 階段二：錯誤統一由調用方的LBK_formatReplyMessage處理
     return {
       success: false,
       error: error.toString(),
