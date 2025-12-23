@@ -28,7 +28,7 @@
       "balance": 0,
       "isDefault": false,
       "isActive": true,
-      "synonyms": "轉帳"
+      "synonyms": "銀行轉帳"
     },
     {
       "walletId": "credit",
@@ -39,7 +39,7 @@
       "balance": 0,
       "isDefault": false,
       "isActive": true,
-      "synonyms": ""
+      "synonyms": "信用卡"
     }
   ]
 }
