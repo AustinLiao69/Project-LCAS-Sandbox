@@ -517,7 +517,7 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
     }
 
     // 驗證科目資料完整性
-    if (!subjectResult.subCode || !subjectResult.subName) {
+    if (!subjectResult.categoryId || !subjectResult.categoryName) {
       LBK_logError(`科目資料不完整: ${JSON.stringify(subjectResult)}`, "訊息解析", userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", "LBK_parseUserMessage");
       return {
         success: false,
@@ -538,9 +538,8 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
         amount: parseResult.amount,
         rawAmount: parseResult.rawAmount,
         paymentMethod: finalPaymentMethod,
-        subjectCode: subjectResult.subCategoryId, // Use subCategoryId for subjectCode
-        categoryName: subjectResult.name,        // Use name for categoryName
-        // categoryId: subjectResult.categoryId, // categoryId is the major category
+        categoryId: subjectResult.categoryId,
+        categoryName: subjectResult.categoryName,
         action: isIncome ? "收入" : "支出",
         userId: userId
       }
@@ -850,18 +849,14 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
       return {
         success: true,
         categoryId: exactMatch.categoryId,
-        categoryName: exactMatch.categoryName,
-        subCategoryId: exactMatch.subCategoryId,
-        name: exactMatch.name
+        categoryName: exactMatch.categoryName
       };
     }
     if (synonymMatch) {
       return {
         success: true,
         categoryId: synonymMatch.categoryId,
-        categoryName: synonymMatch.categoryName,
-        subCategoryId: synonymMatch.subCategoryId,
-        name: synonymMatch.name
+        categoryName: synonymMatch.categoryName
       };
     }
     if (partialMatches.length > 0) {
@@ -871,8 +866,7 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
       return {
         success: true,
         categoryId: bestMatch.categoryId,
-        categoryName: bestMatch.categoryName,
-        subCategoryId: bestMatch.subCategoryId,
+        categoryName: bestMatch.categoryName
         name: bestMatch.name
       };
     }
@@ -1127,7 +1121,7 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
       }
 
       // 驗證科目資料完整性
-      if (!subjectResult.subCategoryId || !subjectResult.name) { // Check for subCategoryId and name
+      if (!subjectResult.categoryId || !subjectResult.categoryName) {
         LBK_logError(`科目資料不完整: ${JSON.stringify(subjectResult)}`, "記帳執行", bookkeepingData.userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", "LBK_executeBookkeeping");
         return {
           success: false,
@@ -1144,9 +1138,8 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
       // 更新記帳資料，加入科目資訊和正確的支付方式
       const updatedBookkeepingData = {
         ...bookkeepingData,
-        subjectCode: subjectResult.subCategoryId, // Use subCategoryId for subjectCode
-        categoryName: subjectResult.name,        // Use name for categoryName
-        categoryId: subjectResult.categoryId,     // Use categoryId for categoryId
+        categoryId: subjectResult.categoryId,
+        categoryName: subjectResult.categoryName,
         action: isIncome ? "收入" : "支出",
         paymentMethod: finalPaymentMethod
       };
@@ -1183,10 +1176,10 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
         transactionId: bookkeepingId,
         amount: updatedBookkeepingData.amount,
         type: updatedBookkeepingData.action === "收入" ? "income" : "expense",
-        category: updatedBookkeepingData.subjectCode, // Use subjectCode as category
-        subject: updatedBookkeepingData.categoryName, // Use categoryName as subject
+        category: updatedBookkeepingData.categoryId,
+        subject: updatedBookkeepingData.categoryName,
         categoryName: updatedBookkeepingData.categoryName,
-        description: updatedBookkeepingData.subject, // Use original subject as description
+        description: updatedBookkeepingData.subject,
         paymentMethod: updatedBookkeepingData.paymentMethod,
         date: preparedData.date,
         timestamp: new Date().toISOString(),
@@ -1399,7 +1392,7 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
       amount: parseFloat(data.amount) || 0,
       type: data.action === "收入" ? "income" : "expense",
       description: data.subject || '',
-      categoryId: data.subjectCode || 'default', // Use subjectCode for categoryId
+      categoryId: data.categoryId || 'default',
       // 階段四修復：移除accountId欄位（不符合0070規範）
 
       // 時間欄位 - 0070標準格式
