@@ -816,7 +816,7 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
       for (const synonym of synonyms) {
         const synonymLower = synonym.toLowerCase();
         LBK_logDebug(`比較同義詞: "${synonymLower}" vs "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
-        
+
         if (synonymLower === normalizedInput) {
           synonymMatch = {
             categoryId: String(data.categoryId || data.parentId),
@@ -2446,10 +2446,10 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
     // 第二步：優先使用第一階段解析結果進行wallet查詢
     if (paymentMethodName) {
       LBK_logDebug(`階段二：使用第一階段結果查詢wallet: "${paymentMethodName}" [${processId}]`, "支付方式解析", userId, functionName);
-      
+
       // 查詢wallet是否存在於用戶的wallets子集合中
       const walletResult = await LBK_getWalletByName(paymentMethodName, userId, processId);
-      
+
       if (walletResult && walletResult.walletId) {
         LBK_logInfo(`階段二：成功匹配wallet: "${paymentMethodName}" → "${walletResult.walletName}" [${processId}]`, "支付方式解析", userId, functionName);
         return {
@@ -2475,7 +2475,7 @@ async function LBK_parsePaymentMethod(messageText, userId, processId) {
     // 第三步：用戶未提供支付方式時，動態查詢0302預設配置
     LBK_logDebug(`階段二：用戶未提供支付方式，動態查詢0302預設配置 [${processId}]`, "支付方式解析", userId, functionName);
     const defaultWalletResult = await LBK_getDefaultPaymentMethod(userId, processId);
-    
+
     if (defaultWalletResult.success) {
       LBK_logInfo(`階段二：使用0302預設配置: "${defaultWalletResult.walletName}" [${processId}]`, "支付方式解析", userId, functionName);
       return {
@@ -2752,20 +2752,8 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
       LBK_logInfo(`階段一修復：從原始輸入正確提取支付方式名稱: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
     } else {
       // 階段一修復：如果解析失敗，嘗試直接從輸入字串中識別銀行名稱
-      const bankNames = [
-        "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
-        "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
-        "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
-        "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀"
-      ];
-
-      for (const bankName of bankNames) {
-        if (originalInput.includes(bankName)) {
-          paymentMethodToLearn = bankName;
-          LBK_logInfo(`階段一修復：從輸入中直接識別銀行名稱: "${paymentMethodToLearn}" [${processId}]`, "錢包同義詞", userId, functionName);
-          break;
-        }
-      }
+      // 階段二修復：移除硬編碼銀行名稱列表，改為動態查詢機制
+      // 如果parseResult解析失敗，將跳過同義詞學習
     }
 
     // 階段一修復：如果仍無法識別，記錄警告但繼續處理
@@ -3264,20 +3252,20 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
     // 讀取0302配置文件
     try {
       const configPath = path.join(__dirname, '../03. Default_config/0302. Default_wallet.json');
-      
+
       if (!fs.existsSync(configPath)) {
         throw new Error(`0302配置文件不存在: ${configPath}`);
       }
 
       const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      
+
       if (!configData.default_wallets || !Array.isArray(configData.default_wallets)) {
         throw new Error("0302配置格式錯誤：缺少default_wallets陣列");
       }
 
       // 查找標記為isDefault=true的錢包
       const defaultWallet = configData.default_wallets.find(wallet => wallet.isDefault === true && wallet.isActive === true);
-      
+
       if (defaultWallet) {
         LBK_logInfo(`階段二：從0302配置讀取到預設錢包: "${defaultWallet.walletName}" [${processId}]`, "預設支付方式", userId, functionName);
         return {
@@ -3293,7 +3281,7 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
 
       // 如果沒有明確標記isDefault的，使用第一個active的錢包
       const firstActiveWallet = configData.default_wallets.find(wallet => wallet.isActive === true);
-      
+
       if (firstActiveWallet) {
         LBK_logInfo(`階段二：使用0302配置中第一個活躍錢包: "${firstActiveWallet.walletName}" [${processId}]`, "預設支付方式", userId, functionName);
         return {
@@ -3311,7 +3299,7 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
 
     } catch (configError) {
       LBK_logError(`階段二：讀取0302配置失敗: ${configError.toString()} [${processId}]`, "預設支付方式", userId, "CONFIG_READ_ERROR", configError.toString(), functionName);
-      
+
       // 最後備選：使用硬編碼值作為系統安全網
       LBK_logWarning(`階段二：0302配置讀取失敗，使用系統安全網: 信用卡 [${processId}]`, "預設支付方式", userId, functionName);
       return {
@@ -3335,7 +3323,7 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
 }
 
 /**
- * 階段二修正：根據支付方式名稱查詢錢包ID - 確保只匹配 wallets 子集合中的確實存在項目
+ * 階段二修正：根據支付方式名稱查詢錢包 - 確保只匹配 wallets 子集合中的確實存在項目
  * @version 2025-12-19-V1.6.0
  * @description 階段二修正：移除模糊匹配，只接受明確在 wallets 子集合 synonyms 中定義的支付方式
  */
@@ -4757,7 +4745,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
  * @param {object} context - 上下文資訊，包含 userId
  * @param {object} options - 選項，支援 createStructure 等
  * @returns {Promise<Object>} 初始化結果
- * @description 為用戶建立 pendingTransactions 子集合基礎結構，類似 WCM 模組的批量初始化機制
+ * @description 階段五：為用戶建立 pendingTransactions 子集合基礎結構，類似 WCM 模組的批量初始化機制
  */
 async function LBK_initializePendingTransactionsSubcollection(userLedgerId, context, options = {}) {
   const functionName = "LBK_initializePendingTransactionsSubcollection";
