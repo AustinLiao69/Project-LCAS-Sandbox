@@ -1,0 +1,86 @@
+~/workspace$ node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log('模組載入成功'); } catch(e) { console.error('模組載入失敗:', e.message); console.error('錯誤位置:', e.stack); }"
+✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+🔥 LBK模組: Firebase Admin 動態配置初始化完成
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+🔧 WCM模組v1.2.4 初始化：預設錢包欄位映射修復版
+🔄 循環依賴修復：移除AM模組直接引用
+💰 預設錢包建立強化：完整錯誤處理和批次處理邏輯
+✅ 函數導出驗證：WCM_createCategory = function
+✅ 函數導出驗證：WCM_createWallet = function
+✅ 函數導出驗證：WCM_load0099SubjectData = function
+✅ 函數導出驗證：WCM_loadDefaultConfigs = function
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🚀 WCM模組現已全面支援協作帳本路徑
+💎 預設錢包建立機制：強化配置驗證、錯誤處理和批次處理
+🔧 欄位映射修復：完整映射0302配置檔案所有欄位，包含synonyms支援
+📝 符合0070 DB schema：確保wallets子集合欄位完整性
+✨ 階段二修復完成，預設錢包欄位映射已完全符合配置檔案驅動
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+🔍 AM.js 模組開始載入...
+📋 AM.js 版本: v8.0.4
+📦 AM.js: 開始引入依賴模組...
+✅ AM.js: firebase-admin 引入成功
+✅ AM.js: axios 引入成功
+✅ AM.js: crypto 引入成功
+⚙️ AM.js: 開始定義AM_CONFIG配置物件...
+🔥 AM.js: 開始引入Firebase動態配置模組...
+✅ AM.js: Firebase動態配置模組引入成功
+🔧 AM.js: 初始化Firebase Admin SDK...
+✅ Firebase Admin SDK已初始化
+✅ AM.js: Firebase初始化完成，Firestore實例已取得
+📊 BM 預算管理模組載入中...
+✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能
+🤝 CM 協作管理模組初始化中...
+[2025-12-24T02:42:46.901Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組v2.4.0載入完成 - 階段一擴展：建立完整協作帳本子集合架構（members, transactions, wallets, budgets, categories）
+📤 AM.js: 開始導出模組函數...
+✅ AM.js: 所有函數定義完成，準備導出
+✅ AM模組8.0.3 DCN-0023職責重構完成！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 帳本結構初始化 (專注基礎結構)
+   └── 總計: 59個函數 (移除4個重複函數)
+🔧 DCN-0023職責重構: 完全移除與WCM重複功能
+🎯 職責邊界: AM專注帳號管理+帳本基礎結構，WCM負責科目和帳戶管理
+🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行科目和帳戶初始化
+📊 資料流: AM → WCM (科目+帳戶) → Firebase
+✨ v8.0.3重構成果: 移除重複函數，職責邊界清晰，避免功能衝突
+🎉 重構完成: AM模組功能精簡，與WCM模組職責劃分明確！
+🎯 AM.js 模組載入完成，59個函數已成功導出
+✅ 階段五完成：FS模組已移除，消息去重使用NodeCache
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.5.3 (2025-12-19) - 階段三完成：支援連續性Quick Reply處理，識別Pending Record相關事件
+WH模組環境變數檢查結果:
+  ✅ LINE_CHANNEL_SECRET: 已設定(32字符)
+  ✅ LINE_CHANNEL_ACCESS_TOKEN: 已設定(172字符)
+  ✅ Webhook_URL: 已設定(84字符)
+✅ 所有必要環境變數已正確設定
+✅ WH模組環境變數檢查完整
+📅 SR 排程提醒模組初始化中...
+模組載入失敗: LBK_parsePaymentMethod is not defined
+錯誤位置: ReferenceError: LBK_parsePaymentMethod is not defined
+    at Object.<anonymous> (/home/runner/workspace/13. Replit_Module code_BL/1315. LBK.js:4141:27)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at [eval]:1:7
+📅 已載入 0 個排程設定
+[2025-12-24T02:42:47.750Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+成功寫入 2 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+~/workspace$ 
