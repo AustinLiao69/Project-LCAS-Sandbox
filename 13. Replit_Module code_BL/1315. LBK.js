@@ -639,7 +639,7 @@ function LBK_parseInputFormat(message, processId) {
     processedSuffix = processedSuffix.replace(supportedUnits, '').trim();
 
     // 階段一修復：首先檢查常見支付方式關鍵字（包含「現金」）
-    const commonPaymentMethods = ["現金", "刷卡", "轉帳", "行動支付"];
+    const commonPaymentMethods = ["現金", "信用卡", "轉帳", "行動支付"];
     for (const method of commonPaymentMethods) {
       if (processedSuffix.includes(method)) {
         paymentMethod = method;
