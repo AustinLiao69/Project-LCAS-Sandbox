@@ -3313,12 +3313,11 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
       LBK_logError(`階段二：讀取0302配置失敗: ${configError.toString()} [${processId}]`, "預設支付方式", userId, "CONFIG_READ_ERROR", configError.toString(), functionName);
       
       // 最後備選：使用硬編碼值作為系統安全網
-      LBK_logWarning(`階段二：0302配置讀取失敗，使用系統安全網: 現金 [${processId}]`, "預設支付方式", userId, functionName);
+      LBK_logWarning(`階段二：0302配置讀取失敗，使用系統安全網: 信用卡 [${processId}]`, "預設支付方式", userId, functionName);
       return {
         success: true,
-        walletId: "fallback_cash",
-        walletName: "現金",
-        type: "cash",
+        walletId: "cash",
+        walletName: "信用卡",
         isDefault: true,
         queryMethod: "system_fallback",
         fallbackReason: configError.toString()
