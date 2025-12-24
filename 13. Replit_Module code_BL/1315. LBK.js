@@ -1559,17 +1559,17 @@ function LBK_removeAmountFromText(text, amount, paymentMethod, processId) {
     }
 
     // 階段二新增：移除常見的銀行名稱，確保「一銀」等被移除
-    const bankNames = [
+    const debitNames = [
       "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
       "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
       "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
       "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀" // 階段二重點：確保「一銀」被移除
     ];
 
-    for (const bankName of bankNames) {
-      if (result.includes(bankName)) {
-        result = result.replace(bankName, "").trim();
-        LBK_logDebug(`階段二：移除銀行名稱: "${bankName}" [${processId}]`, "備註處理", "", "LBK_removeAmountFromText");
+    for (const debitName of debitNames) {
+      if (result.includes(debitName)) {
+        result = result.replace(debitName, "").trim();
+        LBK_logDebug(`階段二：移除銀行名稱: "${debitName}" [${processId}]`, "備註處理", "", "LBK_removeAmountFromText");
         break; // 只移除第一個匹配的銀行名稱
       }
     }
@@ -2222,7 +2222,7 @@ async function LBK_handleWalletConfirmationPostback(postbackData, userId, proces
     if (postbackData.startsWith('wallet_type_')) {
       const parts = postbackData.split('_');
       if (parts.length >= 4) {
-        const walletType = parts[2]; // cash, bank, credit
+        const walletType = parts[2]; // cash, debit, credit
         const pendingId = parts[3];
 
         LBK_logInfo(`處理支付方式類型選擇: type=${walletType}, pendingId=${pendingId} [${processId}]`, "支付方式類型", userId, functionName);
@@ -2603,8 +2603,7 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
             label: '🏦 銀行帳戶',
             data: `wallet_yes_${JSON.stringify({
               walletName: '銀行帳戶',
-              walletId: 'dynamic_bank',
-              type: 'bank',
+              walletId: 'debit',
               originalInput: walletName,
               pendingId: parsedData.pendingId,
               dynamicQuery: true
@@ -2738,7 +2737,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
     // 階段一修復：根據錢包類型動態查詢目標錢包，確保變數正確初始化
     const walletTypeMapping = {
       'cash': ['現金', 'cash'],
-      'bank': ['銀行帳戶', '銀行', 'bank'],
+      'debit': ['銀行帳戶', '銀行'],
       'credit': ['信用卡', '信用', 'credit']
     };
 
@@ -2778,7 +2777,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
 
         // 階段一修復：類型匹配優先級
         if ((targetWalletType === 'cash' && (walletType === 'cash' || walletName.includes('現金'))) ||
-            (targetWalletType === 'bank' && (walletType === 'bank' || walletName.includes('銀行'))) ||
+            (targetWalletType === 'debit' && (walletType === 'debit' || walletName.includes('銀行'))) ||
             (targetWalletType === 'credit' && (walletType === 'credit_card' || walletName.includes('信用卡')))) {
           matchedWallet = {
             walletId: walletData.walletId || doc.id,
@@ -4216,7 +4215,7 @@ async function LBK_handleSubjectSelectionComplete(classificationResult, processI
  * @version 2025-12-19-V1.4.9
  * @param {string} userId - 用戶ID
  * @param {string} pendingId - Pending Record ID
- * @param {string} selectedWalletType - 用戶選擇的錢包類型 (cash, bank, credit)
+ * @param {string} selectedWalletType - 用戶選擇的錢包類型 (cash, debit, credit)
  * @param {string} processId - 處理ID
  * @returns {Object} 更新結果
  */
@@ -4238,7 +4237,7 @@ async function LBK_handleWalletTypeSelection(userId, pendingId, selectedWalletTy
     // 階段五修復：動態查詢對應的錢包
     const walletTypeMapping = {
       'cash': ['現金', 'cash'],
-      'bank': ['銀行帳戶', '銀行', 'bank'],
+      'debit': ['銀行帳戶', '銀行', 'debit'],
       'credit': ['信用卡', '信用', 'credit']
     };
 
@@ -4454,7 +4453,7 @@ function LBK_generateWalletSelectionQuickReply(pendingId) {
           action: {
             type: 'postback',
             label: '🏦 銀行帳戶',
-            data: `wallet_type_bank_${pendingId}`,
+            data: `wallet_type_debit_${pendingId}`,
             displayText: '選擇銀行帳戶'
           }        },
         {
