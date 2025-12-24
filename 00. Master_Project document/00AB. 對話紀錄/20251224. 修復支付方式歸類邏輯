@@ -6,6 +6,96 @@
 ------------------------------------------
 20251224. 修復支付方式歸類邏輯
 
+approved請進行階段一
+
+我已詳細分析了你的回饋，現在更新解決方案。讓我重新梳理根本原因並提出更精準的解決方案：
+A. 快速摘要（≤3句）
+•	問題1: 科目歸類流程中硬編碼使用「刷卡」而非預設的「信用卡」，導致觸發錢包歧義消除
+•	問題2: 配置讀取失敗時fallback到「現金」而非預設的「信用卡」，造成不同流程預設邏輯不一致
+•	根本原因: 0302配置檔案格式錯誤導致無法讀取，加上LBK模組中存在多處硬編碼和預設邏輯不統一
+
+B. Root causes（最多 6 條）
+1. 0302配置檔案格式錯誤
+•	證據: SyntaxError: Unexpected token '/', "/**\n* 0302"... is not valid JSON
+•	發生機率: 100%
+•	解決方案: 移除0302配置檔案中的JavaScript註釋，改為純JSON格式
+•	Insight: JSON格式不支援註釋，這是基本的格式規範問題
+=>ok
+
+
+2. LBK_handleClassificationPostback函數硬編碼「刷卡」
+•	證據: paymentMethodName = '刷卡'; // ← 這裡硬編碼了"刷卡"
+•	發生機率: 100%（科目歸類流程中paymentMethod為null時）
+•	解決方案: 將硬編碼「刷卡」改為「信用卡」
+•	Insight: 根據你的規則，用戶未輸入支付方式時應預設為「信用卡」，這個硬編碼是正確的，只是值錯了
+=>ok
+
+3. LBK_getDefaultPaymentMethod函數fallback邏輯錯誤
+•	證據: walletName: "現金", // ← fallback為現金
+•	發生機率: 100%（0302配置讀取失敗時）
+•	解決方案: 修改fallback為「信用卡」
+•	Insight: 這個fallback應該與業務規則一致，全部fallback到信用卡
+=>ok
+
+4. LBK_parseInputFormat函數中銀行名稱硬編碼列表
+•	證據: 銀行名稱陣列硬編碼了35個銀行名稱
+•	發生機率: 100%（當檢查支付方式時）
+•	解決方案: 刪除銀行名稱硬編碼列表，改為動態查詢wallets子集合synonyms
+•	Insight: 這些硬編碼違反了0098文件第1.3條禁止hard coding的規範，應該改為動態查詢機制
+=>ok
+
+5. 常見支付方式硬編碼列表
+•	證據: const commonPaymentMethods = ["現金", "信用卡", "轉帳", "行動支付"];
+•	發生機率: 100%（當解析支付方式時）
+•	解決方案: 刪除硬編碼列表，統一使用wallets子集合synonyms查詢
+•	Insight: 所有支付方式應該來自用戶的wallets配置，而非硬編碼
+=>ok
+
+6. 預設支付方式邏輯分散在多個函數中
+•	證據: LBK_handleClassificationPostback、LBK_getDefaultPaymentMethod、LBK_parseInputFormat都有各自的預設邏輯
+•	發生機率: 100%
+•	解決方案: 統一預設邏輯，全部使用「信用卡」作為預設值
+•	Insight: 分散的預設邏輯容易造成不一致，應該統一管理
+=>我沒有在解決方案中看到你對這點的提案
+
+
+解決方案分階段實施計畫
+階段一：修復0302配置檔案格式
+目標: 讓0302配置檔案能正常被JSON.parse解析
+修改檔案: 03. Default_config/0302. Default_wallet.json
+修改內容: 移除JavaScript註釋，確保JSON格式正確，並將isDefault設定給信用卡
+
+階段二：修復LBK模組預設邏輯統一
+目標: 統一所有流程使用「信用卡」作為預設支付方式
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+修改內容:
+1.	LBK_handleClassificationPostback: 硬編碼改為「信用卡」
+2.	LBK_getDefaultPaymentMethod: fallback改為「信用卡」
+3.	刪除LBK_parseInputFormat中的銀行名稱和常見支付方式硬編碼列表
+
+階段三：簡化支付方式處理邏輯
+目標: 實現「未輸入=信用卡，有輸入=查詢wallets synonyms」的簡單邏輯
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+修改內容: 簡化LBK_parseInputFormat邏輯，移除所有硬編碼檢查，只保留動態查詢
+Before/After行為差異:
+•	Before: 複雜的硬編碼檢查邏輯，多種預設值不一致
+•	After: 簡單統一的邏輯：未輸入=信用卡，有輸入=查詢synonyms
+
+階段四：
+•	解決方案:
+i.	建立統一的預設支付方式常數 const DEFAULT_PAYMENT_METHOD = '信用卡'
+ii.	所有函數都引用這個常數，不再各自硬編碼
+iii.	移除各函數中的個別預設邏輯，統一調用 LBK_getDefaultPaymentMethod
+•	Insight: 分散的預設邏輯容易造成不一致，應該統一管理。當預設值需要改變時，只需要修改一處即可，符合DRY原則
+
+
+關鍵Insight: 根據你的回饋，LBK模組確實有預設邏輯的硬編碼，這些硬編碼本身不違反規範（因為是業務規則），但值和實施方式需要統一。問題的核心是「刷卡」vs「信用卡」的不一致，以及多處硬編碼列表違反了動態查詢的原則。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
 我理解你的回饋，確實我漏了對第6點「預設支付方式邏輯分散在多個函數中」的具體提案。讓我補充完整的解決方案：
@@ -131,6 +221,13 @@ B. Root causes（最多 6 條）
 Before/After行為差異:
 •	Before: 複雜的硬編碼檢查邏輯，多種預設值不一致
 •	After: 簡單統一的邏輯：未輸入=信用卡，有輸入=查詢synonyms
+
+階段四：
+•	解決方案:
+i.	建立統一的預設支付方式常數 const DEFAULT_PAYMENT_METHOD = '信用卡'
+ii.	所有函數都引用這個常數，不再各自硬編碼
+iii.	移除各函數中的個別預設邏輯，統一調用 LBK_getDefaultPaymentMethod
+•	Insight: 分散的預設邏輯容易造成不一致，應該統一管理。當預設值需要改變時，只需要修改一處即可，符合DRY原則
 
 
 關鍵Insight: 根據你的回饋，LBK模組確實有預設邏輯的硬編碼，這些硬編碼本身不違反規範（因為是業務規則），但值和實施方式需要統一。問題的核心是「刷卡」vs「信用卡」的不一致，以及多處硬編碼列表違反了動態查詢的原則。
