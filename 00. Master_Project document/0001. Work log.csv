@@ -478,3 +478,5 @@ MM 	 DD 	 Description 	    Progress
 12	24	 修復支付方式歸類邏輯  	 Ongoing
 12	24	 修改0070文件  	 Ongoing
 12	24	 修改LBK過時資料欄位  	 Ongoing
+12	24	 以0070文件規範去檢視各模組之collection與subcollection  	 Ongoing
+12	24	 盤點各模組之資料庫資料欄位  	 Ongoing
