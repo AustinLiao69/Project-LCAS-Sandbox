@@ -1,0 +1,90 @@
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+A. 快速摘要（≤3句）
+•	問題1: 用戶輸入科目庫沒有的synonyms且未指定支付方式（如"豆漿1111"）時，系統觸發科目歸類後，錯誤地顯示"檢測到未知支付方式「刷卡」"而非預設的信用卡
+
+•	問題2: 用戶輸入已在科目庫的synonyms且未指定支付方式（如"豆花333"）時，系統預設為現金而非預設的信用卡
+
+•	根本原因: 0302配置檔案格式錯誤（包含JavaScript註釋導致JSON解析失敗）及預設支付方式邏輯不一致
+________________________________________
+B. Root causes（最多 6 條）
+1. 0302配置檔案格式錯誤
+•	證據:
+[2025-12-24T01:02:05.334Z] [ERROR] [DL] 階段二：讀取0302配置失敗: SyntaxError: Unexpected token '/', "/**\n* 0302"... is not valid JSON
+•	發生機率: 100%
+•	解決方案: 移除0302配置檔案中的JavaScript註釋，改為純JSON格式
+
+2. 預設支付方式邏輯硬編碼問題
+•	證據:
+// LBK_handleClassificationPostback函數中
+let paymentMethodName = pendingData.paymentMethod;
+if (!paymentMethodName || paymentMethodName === 'undefined') {
+  // 如果仍然為空，嘗試從 Pending Record 中的其他欄位獲取
+  if (!paymentMethodName && pendingData.parsedData?.paymentMethod) {
+    paymentMethodName = pendingData.parsedData.paymentMethod;
+  }
+  // 最後備選：使用預設值
+  if (!paymentMethodName) {
+    paymentMethodName = '刷卡';  // ← 這裡硬編碼了"刷卡"
+  }
+}
+•	發生機率: 100%（當科目歸類流程中paymentMethod為null時）
+•	解決方案: 移除硬編碼，改為動態讀取0302配置
+=>當科目歸類流程中paymentMethod為null時，是要預設為信用卡的。請將此邏輯hard coding在LBK模組中。我記得LBK有這個邏輯，請盤點並告訴我是哪個函數？
+
+
+3. 配置讀取失敗後的fallback邏輯不一致
+•	證據:
+// LBK_getDefaultPaymentMethod函數中
+LBK_logWarning(`階段二：0302配置讀取失敗，使用系統安全網: 現金 [${processId}]`);
+return {
+  success: true,
+  walletId: "fallback_cash",
+  walletName: "現金",  // ← fallback為現金
+};
+但用戶期望的預設值應該是信用卡
+•	發生機率: 100%（當0302配置讀取失敗時）
+•	解決方案: 修改fallback邏輯，使其與用戶預期一致
+
+
+4. 科目歸類流程與正常記帳流程的預設邏輯不統一
+•	證據:
+o	豆漿1111（科目歧義消除）→ 硬編碼"刷卡" → 觸發錢包歧義消除
+o	豆花333（直接記帳）→ 動態查詢0302 → fallback到現金
+•	發生機率: 100%
+•	解決方案: 統一兩個流程的預設支付方式獲取邏輯
+=>應該是要全部fallback到信用卡
+
+5. Pending Record中paymentMethod為null的處理邏輯缺陷
+•	證據:
+"pendingData":{"paymentMethod":null}  // ← null值未正確處理
+•	發生機率: 100%（當用戶未輸入支付方式時）
+•	解決方案: 在創建Pending Record時就應該填入正確的預設支付方式
+
+6. LBK_parseInputFormat函數返回null時的後續處理問題
+•	證據:
+// 階段一修復：如果仍然為空，再檢查銀行名稱
+if (!paymentMethod) {
+  // 階段一修復：如果都沒檢測到常見支付方式，再檢查銀行名稱
+}
+// 階段一：移除硬編碼預設值邏輯，確保返回用戶實際輸入
+if (!paymentMethod && processedSuffix) {
+  // 移除預設值邏輯，保持 paymentMethod 為 null
+}
+•	發生機率: 100%（當用戶未輸入支付方式時）
+•	解決方案: 在輸入解析階段就應該查詢並填入預設支付方式
+=>我看到LBK有這段代碼，這是hard coding嗎？規則很簡單，若user沒有輸入支付方式，就是預設信用卡，若user有輸入其它支付方式，則去檢查wallets子集合的synonyms有沒有該支付方式，若無則觸發支付方式歸類邏輯。
+以下這些hard coding請刪除
+
+ // 階段一修復：如果未檢測到常見支付方式，再檢查銀行名稱
+  if (!paymentMethod) {
+    const bankNames = [
+      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
+      "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
+      "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
+      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀" // 階段一修復：添加「一銀」
+    ];
+
