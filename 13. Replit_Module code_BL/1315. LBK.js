@@ -503,10 +503,10 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
     const amountResult = LBK_extractAmount(parseResult.subject + parseResult.amount, processId);
 
     // 識別科目
-    // 替換 LBK_identifySubject 調用為 LBK_getSubjectCode
-    const subjectResult = await LBK_getSubjectCode(parseResult.subject, userId, processId);
+    // 替換 LBK_identifySubject 調用為 LBK_getcategoryId
+    const subjectResult = await LBK_getcategoryId(parseResult.subject, userId, processId);
 
-    if (!subjectResult.success) { // 這裡應該是判斷 subjectResult 是否成功，而不是 LBK_getSubjectCode
+    if (!subjectResult.success) { // 這裡應該是判斷 subjectResult 是否成功，而不是 LBK_getcategoryId
       // 檢查是否需要新科目歸類
       if (subjectResult.requiresClassification) {
         LBK_logInfo(`需要新科目歸類: ${parseResult.subject}`, "訊息解析", userId, "LBK_parseUserMessage");
@@ -714,9 +714,9 @@ function LBK_extractAmount(text, processId) {
  * @date 2025-12-22 17:30:00
  * @description 根據科目名稱查詢對應的科目代碼，強化匹配算法精準度，修復同義詞匹配日誌
  */
-async function LBK_getSubjectCode(categoryName, userId, processId) {
+async function LBK_getcategoryId(categoryName, userId, processId) {
   try {
-    LBK_logDebug(`查詢科目代碼: "${categoryName}" [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
+    LBK_logDebug(`查詢科目代碼: "${categoryName}" [${processId}]`, "科目查詢", userId, "LBK_getcategoryId");
 
     if (!categoryName || !userId) {
       throw new Error("科目名稱或用戶ID為空");
@@ -729,22 +729,22 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
     const normalizedInput = String(categoryName).trim().toLowerCase();
 
     // 記錄同義詞匹配過程
-    LBK_logDebug(`開始同義詞匹配，輸入: "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+    LBK_logDebug(`開始同義詞匹配，輸入: "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getcategoryId");
 
     const snapshot = await db.collection("ledgers").doc(ledgerId).collection("categories").where("isActive", "==", true).get();
 
-    LBK_logDebug(`查詢categories集合結果: ${snapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
+    LBK_logDebug(`查詢categories集合結果: ${snapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getcategoryId");
 
     if (snapshot.empty) {
       // 嘗試查詢所有categories文檔（不限制isActive）
       const allSnapshot = await db.collection("ledgers").doc(ledgerId).collection("categories").get();
-      LBK_logDebug(`categories集合總數: ${allSnapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getSubjectCode");
+      LBK_logDebug(`categories集合總數: ${allSnapshot.size} 筆資料 [${processId}]`, "科目查詢", userId, "LBK_getcategoryId");
 
       if (!allSnapshot.empty) {
         // 列出所有文檔的基本信息用於調試
         allSnapshot.forEach(doc => {
           const data = doc.data();
-          LBK_logDebug(`文檔 ${doc.id}: categoryId=${data.categoryId}, categoryName=${data.categoryName}, name=${data.name}, isActive=${data.isActive}`, "科目查詢", userId, "LBK_getSubjectCode");
+          LBK_logDebug(`文檔 ${doc.id}: categoryId=${data.categoryId}, categoryName=${data.categoryName}, name=${data.name}, isActive=${data.isActive}`, "科目查詢", userId, "LBK_getcategoryId");
         });
       }
 
@@ -780,11 +780,11 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
       const synonyms = synonymsStr ? synonymsStr.split(",").map(s => s.trim()).filter(s => s.length > 0) : [];
 
       // 記錄同義詞處理過程，包含實際同義詞內容
-      LBK_logDebug(`處理同義詞匹配: "${normalizedInput}"，科目: "${data.categoryName}"，同義詞數量: ${synonyms.length}，同義詞內容: [${synonyms.join(', ')}] [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+      LBK_logDebug(`處理同義詞匹配: "${normalizedInput}"，科目: "${data.categoryName}"，同義詞數量: ${synonyms.length}，同義詞內容: [${synonyms.join(', ')}] [${processId}]`, "同義詞匹配", userId, "LBK_getcategoryId");
 
       for (const synonym of synonyms) {
         const synonymLower = synonym.toLowerCase();
-        LBK_logDebug(`比較同義詞: "${synonymLower}" vs "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+        LBK_logDebug(`比較同義詞: "${synonymLower}" vs "${normalizedInput}" [${processId}]`, "同義詞匹配", userId, "LBK_getcategoryId");
 
         if (synonymLower === normalizedInput) {
           synonymMatch = {
@@ -793,7 +793,7 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
             subCategoryId: String(data.subCategoryId || data.categoryId),
             name: String(data.name || data.subCategoryName || data.categoryName || '')
           };
-          LBK_logInfo(`找到精確同義詞匹配: "${normalizedInput}" → 同義詞:"${synonym}" → 科目:"${synonymMatch.name}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+          LBK_logInfo(`找到精確同義詞匹配: "${normalizedInput}" → 同義詞:"${synonym}" → 科目:"${synonymMatch.name}" [${processId}]`, "同義詞匹配", userId, "LBK_getcategoryId");
           break;
         }
 
@@ -806,7 +806,7 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
               subCategoryId: String(data.categoryId || ''),
               name: String(data.subCategoryName || data.categoryName || '')
             };
-            LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.name}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+            LBK_logDebug(`找到同義詞包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.name}" [${processId}]`, "同義詞匹配", userId, "LBK_getcategoryId");
           }
         }
 
@@ -819,7 +819,7 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
               subCategoryId: String(data.categoryId || ''),
               name: String(data.subCategoryName || data.categoryName || '')
             };
-            LBK_logDebug(`找到反向包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.name}" [${processId}]`, "同義詞匹配", userId, "LBK_getSubjectCode");
+            LBK_logDebug(`找到反向包含匹配: "${normalizedInput}" → "${synonymLower}" → "${synonymMatch.name}" [${processId}]`, "同義詞匹配", userId, "LBK_getcategoryId");
           }
         }
       }
@@ -871,7 +871,7 @@ async function LBK_getSubjectCode(categoryName, userId, processId) {
     };
 
   } catch (error) {
-    LBK_logError(`查詢科目代碼失敗: ${error.toString()} [${processId}]`, "科目查詢", userId, "SUBJECT_ERROR", error.toString(), "LBK_getSubjectCode");
+    LBK_logError(`查詢科目代碼失敗: ${error.toString()} [${processId}]`, "科目查詢", userId, "SUBJECT_ERROR", error.toString(), "LBK_getcategoryId");
 
     // 如果是查詢錯誤，也觸發科目歧義消除流程
     return {
@@ -1060,7 +1060,7 @@ async function LBK_getAllSubjects(userId, processId) {
       subjects.push({
         categoryId: data.categoryId || data.parentId, // Use categoryId as majorCode
         categoryName: data.categoryName || '',
-        subCategoryId: data.subCategoryId || data.categoryId, // Use subCategoryId for subCode
+        subCategoryId: data.subCategoryId || data.categoryId, 
         name: data.name || data.subCategoryName || data.categoryName || '', // Use name for subName
         synonyms: data.synonyms || ""
       });
@@ -1099,10 +1099,10 @@ async function LBK_executeBookkeeping(bookkeepingData, processId) {
       }
 
       // 識別科目
-      // 替換 LBK_identifySubject 調用為 LBK_getSubjectCode
-      const subjectResult = await LBK_getSubjectCode(bookkeepingData.subject, bookkeepingData.userId, processId);
+      // 替換 LBK_identifySubject 調用為 LBK_getcategoryId
+      const subjectResult = await LBK_getcategoryId(bookkeepingData.subject, bookkeepingData.userId, processId);
 
-      if (!subjectResult.success) { // 這裡應該是判斷 subjectResult 是否成功，而不是 LBK_getSubjectCode
+      if (!subjectResult.success) { // 這裡應該是判斷 subjectResult 是否成功，而不是 LBK_getcategoryId
         LBK_logError(`科目識別失敗: ${bookkeepingData.subject}`, "記帳執行", bookkeepingData.userId, "SUBJECT_NOT_FOUND", subjectResult.error || "科目不存在", "LBK_executeBookkeeping");
         return {
           success: false,
@@ -3570,10 +3570,10 @@ async function LBK_handleNewSubjectClassification(originalSubject, parsedData, i
       timestamp: new Date().toISOString(),
       processId: processId,
       originalInput: inputData.messageText,
-      // 階段四：將 subjectCode, categoryName, majorCode 存入 stageData
+      // 階段四：將 categoryId, categoryName, majorCode 存入 stageData
       stageData: {
         electedCategory: {
-          subjectCode: classificationResult.categoryId, // 來自LBK_buildClassificationMessage
+          categoryId: classificationResult.categoryId, // 來自LBK_buildClassificationMessage
           categoryName: classificationResult.categoryName, // 來自LBK_buildClassificationMessage
           // majorCode: classificationResult.categoryId // majorCode removed
         },
@@ -3657,7 +3657,7 @@ async function LBK_processUserSelection(selection, originalSubject, parsedData, 
         stageData: {
           categorySelected: true,
           electedCategory: {
-            subjectCode: newCategoryResult.categoryId,
+            categoryId: newCategoryResult.categoryId,
             categoryName: selectedCategory.categoryName,
             // majorCode: selectedCategory.categoryId // majorCode removed
           }
@@ -3670,7 +3670,7 @@ async function LBK_processUserSelection(selection, originalSubject, parsedData, 
     // 繼續完成記帳流程
     const updatedParsedData = {
       ...parsedData,
-      subjectCode: newCategoryResult.categoryId,
+      categoryId: newCategoryResult.categoryId,
       categoryName: selectedCategory.categoryName,
       // majorCode: selectedCategory.categoryId, // majorCode removed
       action: selectedCategory.type === "income" ? "收入" : "支出",
@@ -3775,17 +3775,17 @@ async function LBK_saveNewCategoryToFirestore(originalSubject, selectedCategory,
  */
 function LBK_load0099SubjectConfig() {
   try {
-    const subjectCodePath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
+    const categoryIdPath = path.join(__dirname, '../00. Master_Project document/0099. Subject_code.json');
 
-    if (!fs.existsSync(subjectCodePath)) {
-      LBK_logError(`0099.json檔案不存在: ${subjectCodePath}`, "科目配置", "", "CONFIG_FILE_MISSING", "", "LBK_load0099SubjectConfig");
+    if (!fs.existsSync(categoryIdPath)) {
+      LBK_logError(`0099.json檔案不存在: ${categoryIdPath}`, "科目配置", "", "CONFIG_FILE_MISSING", "", "LBK_load0099SubjectConfig");
       return null;
     }
 
-    const subjectCodeData = JSON.parse(fs.readFileSync(subjectCodePath, 'utf8'));
-    LBK_logDebug(`成功載入0099.json，共${subjectCodeData.length}筆科目資料`, "科目配置", "", "LBK_load0099SubjectConfig");
+    const categoryIdData = JSON.parse(fs.readFileSync(categoryIdPath, 'utf8'));
+    LBK_logDebug(`成功載入0099.json，共${categoryIdData.length}筆科目資料`, "科目配置", "", "LBK_load0099SubjectConfig");
 
-    return subjectCodeData;
+    return categoryIdData;
 
   } catch (error) {
     LBK_logError(`載入0099.json失敗: ${error.toString()}`, "科目配置", "", "CONFIG_LOAD_ERROR", error.toString(), "LBK_load0099SubjectConfig");
@@ -3800,9 +3800,9 @@ function LBK_load0099SubjectConfig() {
  */
 function LBK_getLineMainCategories() {
   try {
-    const subjectCodeData = LBK_load0099SubjectConfig();
+    const categoryIdData = LBK_load0099SubjectConfig();
 
-    if (!subjectCodeData) {
+    if (!categoryIdData) {
       LBK_logWarning(`無法載入0099配置，返回空陣列`, "科目配置", "", "LBK_getLineMainCategories");
       return [];
     }
@@ -3811,7 +3811,7 @@ function LBK_getLineMainCategories() {
     const uniqueCategories = new Map();
 
     // 從0099.json提取所有有效的主科目
-    subjectCodeData.forEach(item => {
+    categoryIdData.forEach(item => {
       if (item.categoryId && item.categoryName) {
         const key = `${item.categoryId}`;        if (!uniqueCategories.has(key)) {
           uniqueCategories.set(key, {
@@ -4012,7 +4012,7 @@ async function LBK_handleSubjectSelectionComplete(classificationResult, processI
         stageData: {
           categorySelected: true,
           electedCategory: {
-            subjectCode: categoryId,
+            categoryId: categoryId,
             categoryName: selectedCategory.categoryName,
             // majorCode: selectedCategory.categoryId // majorCode removed
           }
@@ -4243,27 +4243,27 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
 
     if (electedCategory && categorySelected) {
       // 階段一修復：支援多種科目欄位名稱格式，確保相容性
-      const subjectCode = electedCategory.subjectCode || electedCategory.categoryId;
+      const categoryId = electedCategory.categoryId || electedCategory.categoryId;
       const categoryName = electedCategory.categoryName || electedCategory.name;
       // const majorCode = electedCategory.majorCode || selectedCategory.categoryId; // majorCode removed
 
-      LBK_logInfo(`階段一修復：科目欄位提取結果 - subjectCode: ${subjectCode}, categoryName: ${categoryName} [${processId}]`, "記帳完成", userId, functionName);
+      LBK_logInfo(`階段一修復：科目欄位提取結果 - categoryId: ${categoryId}, categoryName: ${categoryName} [${processId}]`, "記帳完成", userId, functionName);
 
-      if (subjectCode && categoryName) {
-        finalBookkeepingData.subjectCode = subjectCode;
+      if (categoryId && categoryName) {
+        finalBookkeepingData.categoryId = categoryId;
         finalBookkeepingData.categoryName = categoryName;
         // finalBookkeepingData.majorCode = majorCode; // majorCode removed
 
         // 根據科目代碼判斷收支類型，增加容錯處理
-        const codeToCheck = String(subjectCode || '1'); // Use subjectCode as fallback
+        const codeToCheck = String(categoryId || '1'); // Use categoryId as fallback
         const isIncome = codeToCheck.startsWith('2');
         finalBookkeepingData.action = isIncome ? "收入" : "支出";
 
-        LBK_logInfo(`階段一修復：科目資料驗證完成: ${categoryName} (代碼: ${subjectCode}) [${processId}]`, "記帳完成", userId, functionName);
+        LBK_logInfo(`階段一修復：科目資料驗證完成: ${categoryName} (代碼: ${categoryId}) [${processId}]`, "記帳完成", userId, functionName);
       } else {
         // 階段一修復：科目資料不完整時拋出詳細錯誤，便於調試
-        LBK_logError(`階段一修復：科目資料不完整詳細資訊 - electedCategory: ${JSON.stringify(electedCategory)}, 提取結果: subjectCode=${subjectCode}, categoryName=${categoryName} [${processId}]`, "記帳完成", userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", functionName);
-        throw new Error(`階段一修復：Pending Record 科目資料不完整: subjectCode=${subjectCode}, categoryName=${categoryName}`);
+        LBK_logError(`階段一修復：科目資料不完整詳細資訊 - electedCategory: ${JSON.stringify(electedCategory)}, 提取結果: categoryId=${categoryId}, categoryName=${categoryName} [${processId}]`, "記帳完成", userId, "SUBJECT_DATA_INCOMPLETE", "科目資料缺少必要欄位", functionName);
+        throw new Error(`階段一修復：Pending Record 科目資料不完整: categoryId=${categoryId}, categoryName=${categoryName}`);
       }
     } else {
       // 階段一修復：提供詳細的調試資訊，便於排查問題
@@ -4312,7 +4312,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       amount: parseFloat(finalBookkeepingData.amount) || 0,
       type: (finalBookkeepingData.action === "收入") ? "income" : "expense",
       description: finalBookkeepingData.description || '記帳項目',
-      categoryId: finalBookkeepingData.subjectCode || 'default', // Use subjectCode for categoryId
+      categoryId: finalBookkeepingData.categoryId || 'default', // Use categoryId for categoryId
       // 階段四修復：移除accountId欄位（不符合0070規範）
 
       // 時間欄位 - 0070標準格式
@@ -4627,7 +4627,7 @@ module.exports = {
   LBK_parseUserMessage: LBK_parseUserMessage,
   LBK_parseInputFormat: LBK_parseInputFormat,
   LBK_extractAmount: LBK_extractAmount,
-  LBK_getSubjectCode: LBK_getSubjectCode, // Deprecated: LBK_identifySubject
+  LBK_getcategoryId: LBK_getcategoryId, // Deprecated: LBK_identifySubject
   LBK_fuzzyMatch: LBK_fuzzyMatch,
   LBK_getAllSubjects: LBK_getAllSubjects,
   LBK_executeBookkeeping: LBK_executeBookkeeping,
