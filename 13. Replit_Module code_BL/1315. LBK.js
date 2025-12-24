@@ -4637,14 +4637,10 @@ module.exports = {
   LBK_prepareBookkeepingData: LBK_prepareBookkeepingData,
   LBK_formatReplyMessage: LBK_formatReplyMessage,
   LBK_removeAmountFromText: LBK_removeAmountFromText,
-  LBK_validatePaymentMethod: LBK_validatePaymentMethod,
-  LBK_formatDateTime: LBK_formatDateTime,
   LBK_initialize: LBK_initialize,
   // 階段五新增：子集合初始化函數
   LBK_initializePendingTransactionsSubcollection: LBK_initializePendingTransactionsSubcollection,
   LBK_handleError: LBK_handleError,
-  LBK_processAmountInternal: LBK_processAmountInternal,
-  LBK_validateDataInternal: LBK_validateDataInternal,
   LBK_calculateStringSimilarity: LBK_calculateStringSimilarity,
 
   // 統計查詢函數 - v1.3.0新增
