@@ -575,13 +575,13 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
 }
 
 /**
- * 03. 解析輸入格式 - 階段一修復版
- * @version 2025-12-23-V1.7.1
- * @date 2025-12-23 13:50:00
- * @description 階段一修復：確保「現金」等支付方式正確識別，移除硬編碼預設值，實現動態支付方式查詢
+ * 03. 解析輸入格式 - 階段三簡化版
+ * @version 2025-12-24-V1.8.0
+ * @date 2025-12-24 14:00:00
+ * @description 階段三：簡化支付方式處理邏輯 - 未輸入=信用卡，有輸入=查詢wallets synonyms
  */
 function LBK_parseInputFormat(message, processId) {
-  LBK_logDebug(`階段一：開始格式解析: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+  LBK_logDebug(`階段三：開始簡化格式解析: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
   if (!message || message.trim() === "") {
     return null;
@@ -589,17 +589,16 @@ function LBK_parseInputFormat(message, processId) {
 
   message = message.trim();
 
-  // 階段一修復：檢測系統內部 postback 格式，直接返回 null
+  // 檢測系統內部 postback 格式，直接返回 null
   if (message.startsWith('classify_')) {
     LBK_logDebug(`檢測到系統內部postback格式，跳過解析: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
     return null;
   }
 
   try {
-    // 階段一修復：改用更精確的正則表達式，支援銀行名稱識別
-    // 匹配格式：科目名稱 + 數字金額 + 可選的支付方式/銀行名稱
-    const enhancedPattern = /^(.+?)(\d+)(.*)$/;
-    const match = message.match(enhancedPattern);
+    // 基本格式匹配：科目名稱 + 數字金額 + 可選的支付方式
+    const basicPattern = /^(.+?)(\d+)(.*)$/;
+    const match = message.match(basicPattern);
 
     if (!match) {
       LBK_logWarning(`無法匹配輸入格式: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
@@ -622,8 +621,8 @@ function LBK_parseInputFormat(message, processId) {
       return null;
     }
 
-    // 階段一修復：支付方式識別邏輯 - 移除硬編碼預設值
-    let paymentMethod = null; // 階段一修復：移除硬編碼「刷卡」預設值
+    // 階段三：簡化支付方式識別邏輯
+    let paymentMethod = null;
     let finalSubject = rawCategory;
     let processedSuffix = suffixPart;
 
@@ -638,50 +637,20 @@ function LBK_parseInputFormat(message, processId) {
 
     processedSuffix = processedSuffix.replace(supportedUnits, '').trim();
 
-    // 階段一修復：首先檢查常見支付方式關鍵字（包含「現金」）
-    const commonPaymentMethods = ["現金", "信用卡", "轉帳", "行動支付"];
-    for (const method of commonPaymentMethods) {
-      if (processedSuffix.includes(method)) {
-        paymentMethod = method;
-        LBK_logDebug(`階段一：檢測到支付方式關鍵字: ${method} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
-        break;
-      }
+    // 階段三：簡化邏輯 - 如果有後綴文字，就當作支付方式處理
+    if (processedSuffix && processedSuffix.length > 0) {
+      paymentMethod = processedSuffix;
+      LBK_logDebug(`階段三：提取支付方式: "${paymentMethod}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
     }
 
-    // 階段一修復：如果未檢測到常見支付方式，再檢查銀行名稱
-    if (!paymentMethod) {
-      const bankNames = [
-        "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
-        "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
-        "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
-        "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀" // 階段一修復：添加「一銀」
-      ];
-
-      // 檢查是否包含銀行名稱
-      for (const bankName of bankNames) {
-        if (processedSuffix.includes(bankName)) {
-          paymentMethod = bankName; // 直接使用銀行名稱作為支付方式
-          LBK_logDebug(`階段一：檢測到銀行名稱: ${bankName} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
-          break;
-        }
-      }
-    }
-
-    // 階段一：移除硬編碼預設值邏輯，確保返回用戶實際輸入
-    if (!paymentMethod && processedSuffix) {
-      LBK_logDebug(`階段一：檢測到後綴: "${processedSuffix}"，但非已知支付方式 [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
-      // 移除預設值邏輯，保持 paymentMethod 為 null
-    }
-
-    // 階段一修復：確保科目名稱正確提取
-    // 例如：「洗車5555現金」→ 科目「洗車」、金額「5555」、支付方式「現金」
-    LBK_logInfo(`階段一：解析結果: 科目="${finalSubject}", 金額=${amount}, 支付方式="${paymentMethod || '未指定'}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    // 階段三：移除所有硬編碼檢查，保持paymentMethod為用戶實際輸入或null
+    LBK_logInfo(`階段三：簡化解析結果: 科目="${finalSubject}", 金額=${amount}, 支付方式="${paymentMethod || '未指定'}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
     return {
       subject: finalSubject,
       amount: amount,
       rawAmount: rawAmount,
-      paymentMethod: paymentMethod // 可能為 null，將觸發動態查詢
+      paymentMethod: paymentMethod // null將觸發預設值查詢，有值將查詢synonyms
     };
 
   } catch (error) {
@@ -5020,7 +4989,7 @@ module.exports = {
   PENDING_STATES,
 
   // 版本資訊
-  MODULE_VERSION: "2.1.0", // 階段二：統一錯誤處理機制版本
+  MODULE_VERSION: "2.2.0", // 階段三：簡化支付方式處理邏輯版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段二統一錯誤處理完成：1)修正動態查詢失敗後的錯誤處理邏輯，確保所有錯誤都經由LBK_formatReplyMessage統一處理。2)各子函數錯誤不再自行處理，改為統一格式化輸出。3)增加needsUnifiedFormatting標記，確保錯誤訊息格式一致性。4)完善Pending Record創建失敗的錯誤處理。修復範圍：解決各子函數自行處理錯誤導致錯誤訊息格式不一致的問題，提升用戶體驗的一致性。在階段一簡化邏輯的基礎上，進一步統一錯誤處理流程。"
+  MODULE_UPDATE: "階段三簡化支付方式處理邏輯完成：1)大幅簡化LBK_parseInputFormat函數，移除所有硬編碼的銀行名稱和支付方式檢查邏輯。2)實現統一邏輯：未輸入支付方式=自動使用信用卡預設值，有輸入=查詢wallets子集合synonyms進行匹配。3)移除複雜的條件判斷分支，改為簡單的「有值/無值」二元判斷。4)保留基本的幣別單位處理和格式驗證。修復範圍：簡化支付方式識別邏輯，提高代碼可維護性，統一預設值處理機制。在階段二統一錯誤處理的基礎上，進一步簡化核心解析邏輯。"
 };
