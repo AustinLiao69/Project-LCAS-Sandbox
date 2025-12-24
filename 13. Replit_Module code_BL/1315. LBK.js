@@ -3089,11 +3089,11 @@ async function LBK_getDefaultPaymentMethod(userId, processId) {
     } catch (configError) {
       LBK_logError(`階段二：讀取0302配置失敗: ${configError.toString()} [${processId}]`, "預設支付方式", userId, "CONFIG_READ_ERROR", configError.toString(), functionName);
 
-      // 最後備選：使用硬編碼值作為系統安全網
-      LBK_logWarning(`階段二：0302配置讀取失敗，使用系統安全網: 信用卡 [${processId}]`, "預設支付方式", userId, functionName);
+      // 階段一修復：最後備選使用正確的 walletId 和統一的 fallback 值
+      LBK_logWarning(`階段一：0302配置讀取失敗，使用系統安全網: 信用卡 [${processId}]`, "預設支付方式", userId, functionName);
       return {
         success: true,
-        walletId: "cash",
+        walletId: "credit",
         walletName: "信用卡",
         isDefault: true,
         queryMethod: "system_fallback",
@@ -3332,9 +3332,16 @@ async function LBK_handleClassificationPostback(inputData, processId) {
         paymentMethodName = pendingData.parsedData.paymentMethod;
       }
 
-      // 最後備選：使用預設值
+      // 階段一修復：使用統一邏輯入口點，移除硬編碼
       if (!paymentMethodName) {
-        paymentMethodName = '信用卡';
+        const defaultPaymentResult = await LBK_getDefaultPaymentMethod(inputData.userId, processId);
+        if (defaultPaymentResult.success) {
+          paymentMethodName = defaultPaymentResult.walletName;
+          LBK_logInfo(`階段一：科目歧義消除完成後使用預設支付方式: ${paymentMethodName} [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
+        } else {
+          paymentMethodName = '信用卡'; // 系統安全網
+          LBK_logWarning(`階段一：預設支付方式查詢失敗，使用系統安全網: ${paymentMethodName} [${processId}]`, "支付方式檢查", inputData.userId, "LBK_handleClassificationPostback");
+        }
       }
     }
 
@@ -4274,16 +4281,16 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
 
       LBK_logInfo(`階段五：錢包資料驗證完成: ${walletName} (ID: ${walletId}) [${processId}]`, "記帳完成", userId, functionName);
     } else {
-      // 階段五修復：為缺少錢包選擇的情況動態查詢預設值
+      // 階段一修復：使用統一邏輯入口點，移除硬編碼fallback值
       const dynamicDefaultResult = await LBK_getDefaultPaymentMethod(userId, processId);
       if (dynamicDefaultResult.success) {
         finalBookkeepingData.paymentMethod = dynamicDefaultResult.walletName;
         finalBookkeepingData.walletId = dynamicDefaultResult.walletId;
-        LBK_logInfo(`階段五：動態查詢預設錢包成功: ${dynamicDefaultResult.walletName} [${processId}]`, "記帳完成", userId, functionName);
+        LBK_logInfo(`階段一：統一邏輯入口點查詢預設錢包成功: ${dynamicDefaultResult.walletName} [${processId}]`, "記帳完成", userId, functionName);
       } else {
-        finalBookkeepingData.paymentMethod = finalBookkeepingData.paymentMethod || '動態查詢失敗';
-        finalBookkeepingData.walletId = 'dynamic_fallback_wallet';
-        LBK_logWarning(`階段五：動態查詢預設錢包失敗，使用備選值 [${processId}]`, "記帳完成", userId, functionName);
+        finalBookkeepingData.paymentMethod = finalBookkeepingData.paymentMethod || '信用卡';
+        finalBookkeepingData.walletId = 'credit';
+        LBK_logWarning(`階段一：統一邏輯入口點查詢失敗，使用系統安全網: 信用卡 [${processId}]`, "記帳完成", userId, functionName);
       }
     }
 
@@ -4313,10 +4320,10 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       createdAt: admin.firestore.Timestamp.now(),
       updatedAt: admin.firestore.Timestamp.now(),
 
-      // 來源和用戶資訊 - 0070標準，增加容錯處理
+      // 來源和用戶資訊 - 0070標準，階段一修復：統一預設值
       source: 'pending_completion',
       userId: userId || '',
-      paymentMethod: finalBookkeepingData.paymentMethod || '刷卡',
+      paymentMethod: finalBookkeepingData.paymentMethod || '信用卡',
 
       // 記帳特定欄位 - 0070標準
       ledgerId: ledgerId || `user_${userId}`,
