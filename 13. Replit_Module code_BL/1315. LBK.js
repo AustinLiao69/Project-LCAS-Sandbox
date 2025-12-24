@@ -2600,15 +2600,15 @@ async function LBK_handleNewWallet(walletName, parsedData, inputData, processId)
           type: 'action',
           action: {
             type: 'postback',
-            label: '🏦 銀行帳戶',
+            label: '🏦 銀行轉帳',
             data: `wallet_yes_${JSON.stringify({
-              walletName: '銀行帳戶',
+              walletName: '銀行轉帳',
               walletId: 'debit',
               originalInput: walletName,
               pendingId: parsedData.pendingId,
               dynamicQuery: true
             })}`,
-            displayText: '選擇銀行帳戶'
+            displayText: '選擇銀行轉帳'
           }
         },
         {
@@ -2737,7 +2737,7 @@ async function LBK_executeWalletSynonymsUpdate(originalInput, targetWalletType, 
     // 階段一修復：根據錢包類型動態查詢目標錢包，確保變數正確初始化
     const walletTypeMapping = {
       'cash': ['現金', 'cash'],
-      'debit': ['銀行帳戶', '銀行'],
+      'debit': ['銀行轉帳', '銀行'],
       'credit': ['信用卡', '信用', 'credit']
     };
 
@@ -4237,7 +4237,7 @@ async function LBK_handleWalletTypeSelection(userId, pendingId, selectedWalletTy
     // 階段五修復：動態查詢對應的錢包
     const walletTypeMapping = {
       'cash': ['現金', 'cash'],
-      'debit': ['銀行帳戶', '銀行', 'debit'],
+      'debit': ['銀行轉帳', '銀行', 'debit'],
       'credit': ['信用卡', '信用', 'credit']
     };
 
@@ -4452,9 +4452,9 @@ function LBK_generateWalletSelectionQuickReply(pendingId) {
           type: 'action',
           action: {
             type: 'postback',
-            label: '🏦 銀行帳戶',
+            label: '🏦 銀行轉帳',
             data: `wallet_type_debit_${pendingId}`,
-            displayText: '選擇銀行帳戶'
+            displayText: '選擇銀行轉帳'
           }        },
         {
           type: 'action',
