@@ -81,38 +81,12 @@ Before/After行為差異:
 •	Before: 複雜的硬編碼檢查邏輯，多種預設值不一致
 •	After: 簡單統一的邏輯：未輸入=信用卡，有輸入=查詢synonyms
 
-階段四修正方案
-問題識別：
-雖然LBK模組已大幅改善，但仍有零散的硬編碼預設值，違反DRY原則。需要建立統一的預設支付方式常數機制。
-解決方案修正：
-1.	建立統一預設支付方式常數：
-// 在LBK.js頂部建立常數
-const DEFAULT_PAYMENT_METHOD = '信用卡';
-2.	統一所有硬編碼預設值引用：
-•	將 LBK_removeAmountFromText 中的 '刷卡' 改為引用常數
-•	確保所有函數優先調用 LBK_getDefaultPaymentMethod，失敗時才使用常數
-3.	建立預設值獲取統一入口：
-// 新增統一預設值獲取函數
-async function LBK_getUnifiedDefaultPaymentMethod(userId, processId) {
-  // 優先使用動態配置
-  const dynamicResult = await LBK_getDefaultPaymentMethod(userId, processId);
-  if (dynamicResult.success) {
-    return dynamicResult.walletName;
-  }
-  // 備選使用統一常數
-  return DEFAULT_PAYMENT_METHOD;
-}
-修正效益
-1.	統一管理：所有預設值統一管理，符合DRY原則
-2.	易於維護：修改預設值只需更改一處
-3.	向下相容：保持現有動態配置優先的邏輯
-4.	錯誤恢復：動態配置失敗時有統一備選方案
-具體需要修正的位置
-1.	LBK.js 第645行附近：LBK_removeAmountFromText 函數中的硬編碼 '刷卡'
-2.	LBK.js 各函數：確保都優先調用 LBK_getDefaultPaymentMethod
-3.	新增統一常數：在檔案頂部建立 DEFAULT_PAYMENT_METHOD 常數
-
-
+階段四：
+•	解決方案:
+i.	建立統一的預設支付方式常數 const DEFAULT_PAYMENT_METHOD = '信用卡'
+ii.	所有函數都引用這個常數，不再各自硬編碼
+iii.	移除各函數中的個別預設邏輯，統一調用 LBK_getDefaultPaymentMethod
+•	Insight: 分散的預設邏輯容易造成不一致，應該統一管理。當預設值需要改變時，只需要修改一處即可，符合DRY原則
 
 
 關鍵Insight: 根據你的回饋，LBK模組確實有預設邏輯的硬編碼，這些硬編碼本身不違反規範（因為是業務規則），但值和實施方式需要統一。問題的核心是「刷卡」vs「信用卡」的不一致，以及多處硬編碼列表違反了動態查詢的原則。
