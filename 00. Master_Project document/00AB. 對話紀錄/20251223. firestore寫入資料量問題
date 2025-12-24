@@ -63,7 +63,6 @@ o	豆花333（直接記帳）→ 動態查詢0302 → fallback到現金
 •	解決方案: 統一兩個流程的預設支付方式獲取邏輯
 =>應該是要全部fallback到信用卡
 
-
 5. Pending Record中paymentMethod為null的處理邏輯缺陷
 •	證據:
 "pendingData":{"paymentMethod":null}  // ← null值未正確處理
