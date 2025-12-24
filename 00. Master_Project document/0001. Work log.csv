@@ -477,3 +477,4 @@ MM 	 DD 	 Description 	    Progress
 12	23	 確認firestore寫入資料量超過上限問題  	 Ongoing
 12	24	 修復支付方式歸類邏輯  	 Ongoing
 12	24	 修改0070文件  	 Ongoing
+12	24	 修改LBK過時資料欄位  	 Ongoing
