@@ -433,35 +433,47 @@ MM 	 DD 	 Description 	    Progress
 11	27	 檢視collaboration帳本欄位與邏輯  	 Closed
 11	27	 Review 6503 新增0090關於7302新增功能  	 Closed
 11	27	 修改協作帳本資料結構  	 Ongoing
-12	09	 重構1315. LBK模組  	 Ongoing
-12	09	 修改0098，修正1311資料格式的條目  	 Ongoing
-12	10	 重構LBK：搬移LINE收支統計功能  	 Ongoing
-12	10	 修改WH  	 Ongoing
-12	11	 修改ASL  	 Ongoing
-12	11	 修改LINE記帳流程：WH->LBK->AM註冊並在firebase開一個帳戶及帳本後->在firebase記帳  	 Ongoing
-12	11	 重新設計firebase的user集合之資料欄位  	 Ongoing
+12	09	 重構1315. LBK模組  	 Closed
+12	09	 修改0098，修正1311資料格式的條目  	 Closed
+12	10	 重構LBK：搬移LINE收支統計功能  	 Closed
+12	10	 修改WH  	 Closed
+12	11	 修改ASL  	 Closed
+12	11	 修改LINE記帳流程：WH->LBK->AM註冊並在firebase開一個帳戶及帳本後->在firebase記帳  	 Closed
+12	11	 重新設計firebase的user集合之資料欄位  	 Closed
 12	11	 撰寫0070. DB schema文件  	 Closed
 12	12	 修改LINE記帳流程：WH->LBK->AM註冊並在firebase開一個帳戶及帳本後->在firebase記帳  	 Closed
 12	12	 研究導出firebase資料  	 Closed
 12	15	 部署本專案  	 Closed
 12	15	 思考在LINE快速記帳模式下，user輸入的帳目要如何匹配到科目(categories)  	 Closed
 12	15	 撰寫0071文件  	 Closed
-12	15	 remix Sophr-sandbox專案去實驗LINE訊息歸類科目功能  	 Ongoing
-12	15	 建立firebase資料庫的sandbox(如何建立資料結構?)  	 Ongoing
+12	15	 remix Sophr-sandbox專案去實驗LINE訊息歸類科目功能  	 Closed
+12	15	 建立firebase資料庫的sandbox(如何建立資料結構?)  	 Closed
 12	16	 建立replit sandbox  	 Closed
 12	16	 建立github sandbox  	 Closed
 12	16	 建立firebase sandbox  	 Closed
 12	16	 建立LINE OA sandbox  	 Closed
 12	16	 檢查AM, WCM有無模擬業務及回應  	 Ongoing
 12	16	 修復AM(用9601裡面的語法檢查器檢查)  	 Closed
-12	16	 建立LINE quick reply功能  	 Ongoing
-12	16	 執行DCN-0024  	 Ongoing
+12	16	 建立LINE quick reply功能  	 Closed
+12	16	 執行DCN-0024  	 Closed
 12	16	 設定ASL.js, index.js在PROD環境同時運行  	 Ongoing
 12	16	 設定ASL.js, index.js, ASL.dart在Sandbox環境同時運行  	 Ongoing
 12	17	 建立LINE quick reply功能：科目歸類  	 Closed
 12	17	 建立LINE quick reply功能：帳戶(wallets,支付方式)  	 Ongoing
-12	17	 檢視transactions的DB schema(paymentmethod跟wallet的連動)  	 Ongoing
-12	17	 研究Replit裡面sandbox改的代碼要如何push到PROD環境  	 Ongoing
-12	17	 研究memo quick reply功能  	 Ongoing
-12	17	 重整圖文選單：本日/本週/本月統計可以整合成一個按鈕"統計查詢"，然後顯示quick reply按鈕本日統計、本週統計、本月統計  	 Ongoing
-
+12	17	 修改transactions的DB schema(paymentmethod跟wallet的連動)  	 Closed
+12	17	 研究Replit裡面sandbox改的代碼要如何push到PROD環境(用git branch去控制?)  	 Closed
+12	17	 修改wallets子集合資料欄位  	 Closed
+12	18	 建立LINE quick reply功能：帳戶(wallets,支付方式)  	 Closed
+12	18	 研究如何讓LINE quick reply功能的科目歸類邏輯與支付方式歸類邏輯能讓user在一次互動中完成  	 Ongoing
+12	19	 建立Branch：20251218.科目與支付方式歸類邏輯一次性互動方案  	 Closed
+12	19	 整理9601與9602文件  	 Closed
+12	19	 修改0070文件  	 Ongoing
+12	19	 建立0305文件：pendingtransactions  	 Closed
+12	19	 導入科目歸類邏輯與支付方式歸類邏輯一次性互動方案  	 Ongoing
+12	22	 導入科目歸類邏輯與支付方式歸類邏輯一次性互動方案  	 Ongoing
+12	22	 將subject正名為category(僅限LINE模式相關模組)  	 Closed
+12	22	 修復無法識別已寫入synonyms的資料問題  	 Closed
+12	23	 導入科目歸類邏輯與支付方式歸類邏輯一次性互動方案  	 Ongoing
+12	23	 確認firestore寫入資料量超過上限問題  	 Ongoing
+12	24	 修復支付方式歸類邏輯  	 Ongoing
+12	24	 修改0070文件  	 Ongoing
