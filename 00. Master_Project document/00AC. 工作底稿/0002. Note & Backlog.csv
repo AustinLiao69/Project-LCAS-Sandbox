@@ -44,6 +44,7 @@ MM 	 DD 	 Description 	    Progress
 11	25	 擬定一個由firebase搬移到replit的計劃	 Open
 11	27	 要重新reivew 6503 test plan, 把P2的協作帳本重新測一次(CRUD)部分；而且要新增0090關於7302新增功能	 Open
 12	11	 index需修改跟各模組對應路徑	 Open
-12	11	 需釐清從LINE記帳(而沒有從app端註冊)的user的註冊流程。流程應是：使用者加入LINE OA後記第一筆帳時，WH->LBK->AM註冊並在firebase開一個帳戶及帳本後->在firebase記帳	 Open
+12	11	 需釐清從LINE記帳(而沒有從app端註冊)的user的註冊流程。流程應是：使用者加入LINE OA後記第一筆帳時，WH->LBK->AM註冊並在firebase開一個帳戶及帳本後->在firebase記帳	 Closed
 12	11	 若已在LINE記過帳的user到app如何註冊及綁定？	 Open
-12	17	 研究memo qucik reply功能	 Open
+12	17	 研究memo qucik reply功能	 Closed
+12	24	 若要編輯工作日誌或任何文件，請在main branch裡面做	 Critical
