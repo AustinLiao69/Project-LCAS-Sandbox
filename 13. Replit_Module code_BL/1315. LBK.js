@@ -1771,17 +1771,18 @@ function LBK_calculateStringSimilarity(str1, str2) {
  */
 
 /**
- * 檢查統計查詢關鍵字
- * @version 2025-12-19-V1.3.0
+ * 檢查統計查詢關鍵字 - 階段二：精確匹配邏輯
+ * @version 2025-12-26-V1.4.0
  * @param {string} messageText - 用戶輸入訊息
  * @param {string} userId - 用戶ID
  * @param {string} processId - 處理ID
  * @returns {Object} 檢查結果
+ * @description 階段二：實現完整關鍵字優先匹配，防止「本月統計」被「統計」覆蓋
  */
 async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
   const functionName = "LBK_checkStatisticsKeyword";
   try {
-    LBK_logDebug(`檢查統計查詢關鍵字: "${messageText}" [${processId}]`, "統計查詢", userId, functionName);
+    LBK_logDebug(`階段二：檢查統計查詢關鍵字: "${messageText}" [${processId}]`, "統計查詢", userId, functionName);
 
     if (!messageText || typeof messageText !== 'string') {
       return {
@@ -1792,32 +1793,77 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
 
     const normalizedText = messageText.trim().toLowerCase();
 
-    // 統計查詢關鍵字
+    // 階段二：優先匹配邏輯 - 先匹配最具體的關鍵字，再匹配通用關鍵字
     const statisticsKeywords = [
-      { keywords: ['統計', '報表', '分析'], type: 'general_statistics' },
-      { keywords: ['月統計', '月報表'], type: 'monthly_statistics' }
+      // 第一優先級：完整精確匹配（防止被通用關鍵字覆蓋）
+      { keywords: ['本日統計', '今日統計', '日統計'], type: 'daily_statistics', priority: 1 },
+      { keywords: ['本週統計', '本周統計', '週統計', '周統計'], type: 'weekly_statistics', priority: 1 },
+      { keywords: ['本月統計', '月統計'], type: 'monthly_statistics', priority: 1 },
+      
+      // 第二優先級：部分匹配（更具體的期間）
+      { keywords: ['今日', '本日'], type: 'daily_statistics', priority: 2 },
+      { keywords: ['本週', '本周', '這週', '這周'], type: 'weekly_statistics', priority: 2 },
+      { keywords: ['本月', '這個月'], type: 'monthly_statistics', priority: 2 },
+      
+      // 第三優先級：通用關鍵字（最後匹配，避免覆蓋具體關鍵字）
+      { keywords: ['統計', '報表', '分析'], type: 'general_statistics', priority: 3 }
     ];
 
+    // 階段二：按優先級排序，優先匹配最具體的關鍵字
+    statisticsKeywords.sort((a, b) => a.priority - b.priority);
+
+    let bestMatch = null;
+    let bestMatchPriority = Infinity;
+
     for (const keywordGroup of statisticsKeywords) {
+      // 如果已找到更高優先級的匹配，跳過低優先級的檢查
+      if (keywordGroup.priority > bestMatchPriority) {
+        continue;
+      }
+
       for (const keyword of keywordGroup.keywords) {
         if (normalizedText.includes(keyword)) {
-          LBK_logInfo(`檢測到統計查詢關鍵字: "${keyword}" → ${keywordGroup.type} [${processId}]`, "統計查詢", userId, functionName);
-          return {
-            isStatisticsRequest: true,
-            statisticsType: keywordGroup.type,
-            matchedKeyword: keyword
-          };
+          // 階段二：找到匹配時，檢查是否為更高優先級
+          if (keywordGroup.priority < bestMatchPriority) {
+            bestMatch = {
+              isStatisticsRequest: true,
+              statisticsType: keywordGroup.type,
+              matchedKeyword: keyword,
+              priority: keywordGroup.priority
+            };
+            bestMatchPriority = keywordGroup.priority;
+          } else if (keywordGroup.priority === bestMatchPriority) {
+            // 同優先級時，選擇關鍵字更長（更具體）的匹配
+            if (keyword.length > (bestMatch?.matchedKeyword?.length || 0)) {
+              bestMatch = {
+                isStatisticsRequest: true,
+                statisticsType: keywordGroup.type,
+                matchedKeyword: keyword,
+                priority: keywordGroup.priority
+              };
+            }
+          }
         }
       }
     }
 
+    if (bestMatch) {
+      LBK_logInfo(`階段二：精確匹配統計關鍵字: "${bestMatch.matchedKeyword}" → ${bestMatch.statisticsType} (優先級: ${bestMatch.priority}) [${processId}]`, "統計查詢", userId, functionName);
+      return {
+        isStatisticsRequest: bestMatch.isStatisticsRequest,
+        statisticsType: bestMatch.statisticsType,
+        matchedKeyword: bestMatch.matchedKeyword
+      };
+    }
+
+    LBK_logDebug(`階段二：未檢測到統計查詢關鍵字: "${normalizedText}" [${processId}]`, "統計查詢", userId, functionName);
     return {
       isStatisticsRequest: false,
       statisticsType: null
     };
 
   } catch (error) {
-    LBK_logError(`檢查統計查詢關鍵字失敗: ${error.toString()} [${processId}]`, "統計查詢", userId, "CHECK_STATISTICS_KEYWORD_ERROR", error.toString(), functionName);
+    LBK_logError(`階段二：檢查統計查詢關鍵字失敗: ${error.toString()} [${processId}]`, "統計查詢", userId, "CHECK_STATISTICS_KEYWORD_ERROR", error.toString(), functionName);
     return {
       isStatisticsRequest: false,
       statisticsType: null,
