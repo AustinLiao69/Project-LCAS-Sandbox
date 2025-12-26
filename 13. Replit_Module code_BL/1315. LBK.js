@@ -1,8 +1,8 @@
 /**
- * LBK_快速記帳模組_1.3.1
+ * LBK_快速記帳模組_1.4.0
  * @module LBK模組
- * @description LINE OA 專用快速記帳處理模組 - 階段三：修復統計路由邏輯，完善SR模組調用和降級機制
- * @update 2025-12-26: 階段三版本，修復LBK_handleStatisticsRequest函數中的SR模組調用邏輯，增加動態載入、錯誤處理和降級統計功能，確保統計請求能正確處理。
+ * @description LINE OA 專用快速記帳處理模組 - 階段四：修正Postback事件路由邏輯，防止統計postback進入記帳解析
+ * @update 2025-12-26: 階段四版本，在LBK_processQuickBookkeeping開始處新增統計postback檢查，直接轉發至SR模組處理，避免統計postback誤入記帳格式解析流程。
  */
 
 // 引入所需模組
@@ -188,6 +188,67 @@ async function LBK_processQuickBookkeeping(inputData) {
 
   try {
     LBK_logInfo(`開始處理LINE OA請求 [${processId}]`, "智慧路由", userId || "", "LBK_processQuickBookkeeping");
+
+    // 階段四：統計postback事件優先檢查 - 防止進入記帳解析流程
+    if (LBK_isStatisticsPostback(inputData.messageText)) {
+      LBK_logInfo(`檢測到統計postback事件，直接轉發至SR模組: ${inputData.messageText} [${processId}]`, "統計路由", userId, "LBK_processQuickBookkeeping");
+      
+      try {
+        // 動態載入SR模組
+        let srModule = null;
+        try {
+          srModule = require('./1305. SR.js');
+        } catch (srLoadError) {
+          LBK_logError(`SR模組載入失敗: ${srLoadError.message} [${processId}]`, "統計轉發", userId, "SR_LOAD_ERROR", srLoadError.toString(), "LBK_processQuickBookkeeping");
+          return LBK_handleStatisticsPostbackFallback(inputData.messageText, userId, processId);
+        }
+
+        // 檢查SR模組統計查詢函數
+        if (srModule && typeof srModule.SR_processStatisticsQuery === 'function') {
+          // 解析統計類型
+          const statisticsType = LBK_parseStatisticsType(inputData.messageText);
+          
+          const srResult = await srModule.SR_processStatisticsQuery({
+            ...inputData,
+            statisticsType: statisticsType,
+            processId: processId
+          });
+
+          LBK_logInfo(`SR模組統計處理完成: ${srResult.success ? '成功' : '失敗'} [${processId}]`, "統計轉發", userId, "LBK_processQuickBookkeeping");
+          
+          return {
+            ...srResult,
+            routedFrom: "LBK",
+            routedTo: "SR",
+            moduleVersion: "1.4.0"
+          };
+        } else {
+          // 向後相容：嘗試使用舊函數名稱
+          if (srModule && typeof srModule.SR_processQuickStatistics === 'function') {
+            const statisticsType = LBK_parseStatisticsType(inputData.messageText);
+            const srResult = await srModule.SR_processQuickStatistics({
+              ...inputData,
+              statisticsType: statisticsType,
+              processId: processId
+            });
+            
+            return {
+              ...srResult,
+              routedFrom: "LBK",
+              routedTo: "SR_legacy",
+              moduleVersion: "1.4.0"
+            };
+          }
+          
+          LBK_logError(`SR模組統計函數不可用 [${processId}]`, "統計轉發", userId, "SR_FUNCTION_UNAVAILABLE", "統計函數不存在", "LBK_processQuickBookkeeping");
+          return LBK_handleStatisticsPostbackFallback(inputData.messageText, userId, processId);
+        }
+        
+      } catch (srError) {
+        LBK_logError(`統計postback轉發至SR模組失敗: ${srError.message} [${processId}]`, "統計轉發", userId, "SR_FORWARD_ERROR", srError.toString(), "LBK_processQuickBookkeeping");
+        return LBK_handleStatisticsPostbackFallback(inputData.messageText, userId, processId);
+      }
+    }
 
     // v1.4.2 階段三：檢查是否為科目歸類postback事件
     if (inputData.eventType === 'classification_postback' && inputData.classificationData) {
@@ -2112,6 +2173,143 @@ function LBK_extractPaymentMethodFromInput(originalInput, processId) {
   } catch (error) {
     LBK_logError(`從輸入中提取支付方式失敗: ${error.toString()} [${processId}]`, "支付方式提取", "", "EXTRACT_PAYMENT_METHOD_ERROR", error.toString(), functionName);
     return null;
+  }
+}
+
+/**
+ * 檢測是否為統計postback事件
+ * @version 2025-12-26-V1.4.0
+ * @param {string} messageText - 訊息文字
+ * @returns {boolean} 是否為統計postback
+ * @description 階段四新增：檢測統計相關的postback事件，防止進入記帳解析流程
+ */
+function LBK_isStatisticsPostback(messageText) {
+  if (!messageText || typeof messageText !== 'string') {
+    return false;
+  }
+
+  const normalizedText = messageText.trim().toLowerCase();
+  
+  // 統計postback識別列表
+  const statisticsPostbacks = [
+    'daily_statistics',
+    'weekly_statistics', 
+    'monthly_statistics',
+    'yearly_statistics',
+    'general_statistics',
+    '本日統計',
+    '本週統計',
+    '本月統計',
+    '本年統計',
+    '今日統計',
+    '週統計',
+    '月統計',
+    '年統計'
+  ];
+
+  return statisticsPostbacks.some(postback => 
+    normalizedText === postback.toLowerCase() || 
+    normalizedText.includes(postback.toLowerCase())
+  );
+}
+
+/**
+ * 解析統計類型
+ * @version 2025-12-26-V1.4.0
+ * @param {string} messageText - 訊息文字
+ * @returns {string} 統計類型
+ * @description 階段四新增：從postback訊息中解析統計類型
+ */
+function LBK_parseStatisticsType(messageText) {
+  if (!messageText || typeof messageText !== 'string') {
+    return 'general_statistics';
+  }
+
+  const normalizedText = messageText.trim().toLowerCase();
+  
+  // 統計類型映射
+  const typeMapping = {
+    'daily_statistics': 'daily_statistics',
+    'weekly_statistics': 'weekly_statistics',
+    'monthly_statistics': 'monthly_statistics', 
+    'yearly_statistics': 'yearly_statistics',
+    'general_statistics': 'general_statistics',
+    '本日統計': 'daily_statistics',
+    '今日統計': 'daily_statistics',
+    '本週統計': 'weekly_statistics',
+    '週統計': 'weekly_statistics',
+    '本月統計': 'monthly_statistics',
+    '月統計': 'monthly_statistics',
+    '本年統計': 'yearly_statistics',
+    '年統計': 'yearly_statistics'
+  };
+
+  for (const [key, value] of Object.entries(typeMapping)) {
+    if (normalizedText === key.toLowerCase() || normalizedText.includes(key.toLowerCase())) {
+      return value;
+    }
+  }
+
+  return 'general_statistics';
+}
+
+/**
+ * 處理統計postback降級情況
+ * @version 2025-12-26-V1.4.0
+ * @param {string} messageText - 訊息文字
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Object} 降級處理結果
+ * @description 階段四新增：當SR模組不可用時的統計postback降級處理
+ */
+function LBK_handleStatisticsPostbackFallback(messageText, userId, processId) {
+  const functionName = "LBK_handleStatisticsPostbackFallback";
+  
+  try {
+    LBK_logWarning(`統計postback降級處理: ${messageText} [${processId}]`, "統計降級", userId, functionName);
+    
+    const statisticsType = LBK_parseStatisticsType(messageText);
+    const typeLabels = {
+      'daily_statistics': '本日',
+      'weekly_statistics': '本週',
+      'monthly_statistics': '本月',
+      'yearly_statistics': '本年',
+      'general_statistics': '統計'
+    };
+    
+    const periodLabel = typeLabels[statisticsType] || '統計';
+    
+    const fallbackMessage = `📊 ${periodLabel}統計查詢\n\n` +
+                           `統計查詢服務暫時不可用\n` +
+                           `請稍後再試或聯繫客服\n\n` +
+                           `造成不便，敬請見諒`;
+
+    return {
+      success: false,
+      message: fallbackMessage,
+      responseMessage: fallbackMessage,
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.4.0",
+      errorType: "SR_MODULE_UNAVAILABLE",
+      isFallback: true,
+      statisticsType: statisticsType
+    };
+
+  } catch (error) {
+    LBK_logError(`統計postback降級處理失敗: ${error.toString()} [${processId}]`, "統計降級", userId, "FALLBACK_ERROR", error.toString(), functionName);
+    
+    return {
+      success: false,
+      message: "統計查詢服務暫時不可用，請稍後再試",
+      responseMessage: "統計查詢服務暫時不可用，請稍後再試",
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "1.4.0",
+      errorType: "FALLBACK_ERROR"
+    };
   }
 }
 

@@ -1,8 +1,8 @@
 /**
- * SR_排程提醒模組_1.6.1
+ * SR_排程提醒模組_1.7.0
  * @module SR排程提醒模組
  * @description LCAS 2.0 排程提醒系統 - 智慧記帳自動化核心功能
- * @update 2025-12-26: 升級至v1.6.1，新增SR_processQuickStatistics函數，確保統計查詢功能完整導出
+ * @update 2025-12-26: 升級至v1.7.0，配合LBK模組階段四更新，強化統計postback事件處理能力
  */
 
 const admin = require('firebase-admin');
