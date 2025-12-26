@@ -5019,10 +5019,41 @@ function LBK_generateWalletSelectionQuickReply(pendingId) {
   }
 }
 
-
-
-
+/**
+ * 階段四：完成 Pending Record 記帳
+ * @version 2025-12-26-V3.1.0
+ * @param {string} userId - 用戶ID
+ * @param {string} pendingId - Pending Record ID
+ * @param {string} processId - 處理ID
+ * @returns {Promise<Object>} 記帳結果
+ */
+async function LBK_completePendingRecord(userId, pendingId, processId) {
+  const functionName = "LBK_completePendingRecord";
+  try {
+    const ledgerId = `user_${userId}`;
     
+    // 獲取 pending 資料
+    const pendingData = await LBK_getPendingRecord(userId, pendingId, processId);
+    if (!pendingData.success) {
+      throw new Error(`無法獲取 Pending Record: ${pendingData.error}`);
+    }
+    
+    // 從 memory session 獲取資料
+    const sessionData = LBK_CONFIG.MEMORY_SESSIONS?.get(pendingId) || {};
+    const stageData = sessionData.stageData || {};
+    const ambiguityData = sessionData.ambiguityResolution || {};
+    
+    // 構建最終記帳資料
+    const finalBookkeepingData = {
+      userId: userId,
+      ledgerId: ledgerId,
+      amount: sessionData.parsedData?.amount || pendingData.data?.parsedData?.amount || 0,
+      subject: sessionData.parsedData?.description || pendingData.data?.parsedData?.subject || '記帳項目',
+      categoryId: stageData.selectedCategory?.categoryId || stageData.electedCategory?.categoryId || 'default',
+      categoryName: stageData.selectedCategory?.categoryName || stageData.electedCategory?.categoryName || '記帳項目',
+      paymentMethod: stageData.selectedWallet?.walletName || stageData.walletName || '信用卡',
+      action: stageData.selectedCategory?.isIncome ? "收入" : "支出"
+    };
 
     // 階段三新增：驗證其他核心欄位，防止undefined值
     finalBookkeepingData.amount = parseFloat(finalBookkeepingData.amount) || 0;
