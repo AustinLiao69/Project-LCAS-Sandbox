@@ -4724,13 +4724,16 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     }
 
     const sessionData = sessionResult.data;
+    const pendingData = sessionData;
+    const ledgerId = `user_${userId}`;
+    const stageData = sessionData.stageData || {};
     const ambiguityData = sessionData.ambiguityData || {};
 
     LBK_logInfo(`階段四：開始完成Pending Record，科目已選: ${stageData.categorySelected}, 錢包已選: ${stageData.walletSelected} [${processId}]`, "記帳完成", userId, functionName);
 
     // 階段三修復：構建最終記帳資料，優先使用已選擇的資訊，並驗證所有必要欄位
     const finalBookkeepingData = {
-      ...pendingData.parsedData,
+      ...(pendingData.parsedData || {}),
       userId: userId,
       ledgerId: ledgerId
     };
