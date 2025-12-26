@@ -150,12 +150,12 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
       WCM_logInfo(`執行預設帳戶建立至帳本: ${ledgerId}`, "建立預設帳戶", walletData.userId, functionName);
 
       // 階段一優化：檢查是否已經建立過預設帳戶，避免重複建立
-      const pathInfo = WCM_resolveLedgerPath(ledgerId, 'wallets');
-      if (!pathInfo.success) {
-        return WCM_formatErrorResponse("PATH_RESOLVE_ERROR", `帳戶路徑解析失敗: ${pathInfo.error}`);
+      const walletPathInfo = WCM_resolveLedgerPath(ledgerId, 'wallets');
+      if (!walletPathInfo.success) {
+        return WCM_formatErrorResponse("PATH_RESOLVE_ERROR", `帳戶路徑解析失敗: ${walletPathInfo.error}`);
       }
 
-      const existingWalletsQuery = await db.collection(pathInfo.collectionPath)
+      const existingWalletsQuery = await db.collection(walletPathInfo.collectionPath)
         .where('userId', '==', walletData.userId)
         .where('dataSource', '==', '0302. Default_wallet.json')
         .limit(1)
@@ -166,7 +166,7 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
         WCM_logInfo(`✅ 預設帳戶已存在 (${existingCount}個)，跳過重複建立`, "建立預設帳戶", walletData.userId, functionName);
         
         // 查詢所有現有預設帳戶
-        const allExistingQuery = await db.collection(pathInfo.collectionPath)
+        const allExistingQuery = await db.collection(walletPathInfo.collectionPath)
           .where('userId', '==', walletData.userId)
           .where('dataSource', '==', '0302. Default_wallet.json')
           .get();
@@ -177,7 +177,7 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
           totalWallets: allExistingQuery.size,
           skippedWallets: 0,
           ledgerId: ledgerId,
-          collectionPath: pathInfo.collectionPath,
+          collectionPath: walletPathInfo.collectionPath,
           dataSource: '0302. Default_wallet.json',
           optimizationApplied: "stage_1_existence_check",
           writesAvoided: 20 // 預估避免的寫入次數
@@ -232,21 +232,21 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
       }
 
       // 解析帳本路徑
-      const pathInfo = WCM_resolveLedgerPath(ledgerId, 'wallets');
-      if (!pathInfo.success) {
-        const errorMsg = `解析帳本路徑失敗: ${pathInfo.error}`;
-        WCM_logError(errorMsg, "建立預設帳戶", walletData.userId, "PATH_RESOLVE_ERROR", pathInfo.error, functionName);
+      const defaultWalletPathInfo = WCM_resolveLedgerPath(ledgerId, 'wallets');
+      if (!defaultWalletPathInfo.success) {
+        const errorMsg = `解析帳本路徑失敗: ${defaultWalletPathInfo.error}`;
+        WCM_logError(errorMsg, "建立預設帳戶", walletData.userId, "PATH_RESOLVE_ERROR", defaultWalletPathInfo.error, functionName);
         
         return WCM_formatErrorResponse("PATH_RESOLVE_ERROR", 
-          `帳本路徑解析失敗: ${pathInfo.error}`, 
+          `帳本路徑解析失敗: ${defaultWalletPathInfo.error}`, 
           { 
             ledgerId: ledgerId,
             operationType: 'wallets',
-            pathError: pathInfo.error
+            pathError: defaultWalletPathInfo.error
           });
       }
 
-      const collectionPath = pathInfo.collectionPath;
+      const collectionPath = defaultWalletPathInfo.collectionPath;
       const batch = db.batch();
       const now = admin.firestore.Timestamp.now();
       const defaultCurrency = defaultConfigs.configs.currency?.currencies?.default || WCM_CONFIG.DEFAULT_CURRENCY;

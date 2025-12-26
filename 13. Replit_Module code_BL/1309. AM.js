@@ -1241,45 +1241,20 @@ async function AM_getUserDefaultLedger(UID) {
 
     const userData = userDoc.data();
 
-    // 階段一優化：檢查初始化狀態標記，避免重複初始化
-    if (userData.initializationComplete && userData.defaultLedgerId) {
+    // 檢查是否已有預設帳本
+    if (userData.defaultLedgerId) {
       // 驗證帳本是否仍然存在
       const ledgerDoc = await db.collection("ledgers").doc(userData.defaultLedgerId).get();
 
       if (ledgerDoc.exists) {
-        const ledgerData = ledgerDoc.data();
-        
-        // 檢查帳本是否已完整初始化
-        if (ledgerData.initializationComplete) {
-          console.log(`✅ ${functionName}: 用戶帳本已完整初始化，跳過重複初始化: ${userData.defaultLedgerId}`);
-          return {
-            success: true,
-            ledgerId: userData.defaultLedgerId,
-            ledgerExists: true,
-            alreadyInitialized: true,
-            initializationSkipped: true
-          };
-        }
+        console.log(`✅ ${functionName}: 找到用戶預設帳本: ${userData.defaultLedgerId}`);
+        return {
+          success: true,
+          ledgerId: userData.defaultLedgerId,
+          ledgerExists: true
+        };
       } else {
         console.log(`⚠️ ${functionName}: 預設帳本已不存在，將重新初始化`);
-      }
-    }
-
-    // 檢查是否已有預設帳本但未完整初始化
-    if (userData.defaultLedgerId) {
-      const ledgerDoc = await db.collection("ledgers").doc(userData.defaultLedgerId).get();
-
-      if (ledgerDoc.exists) {
-        const ledgerData = ledgerDoc.data();
-        if (ledgerData.initializationComplete) {
-          console.log(`✅ ${functionName}: 找到已初始化的用戶預設帳本: ${userData.defaultLedgerId}`);
-          return {
-            success: true,
-            ledgerId: userData.defaultLedgerId,
-            ledgerExists: true,
-            alreadyInitialized: true
-          };
-        }
       }
     }
 
@@ -1359,38 +1334,6 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     const userLedgerId = `${ledgerIdPrefix}${UID}`;
     console.log(`📝 ${functionName}: 準備建立帳本ID: ${userLedgerId}（符合1311.FS.js規範）`);
 
-    // 階段一優化：檢查用戶初始化狀態標記
-    const userDoc = await db.collection("users").doc(UID).get();
-    if (userDoc.exists) {
-      const userData = userDoc.data();
-      
-      // 檢查用戶級別的初始化完成狀態
-      if (userData.initializationComplete && userData.defaultLedgerId) {
-        const existingLedger = await db.collection("ledgers").doc(userData.defaultLedgerId).get();
-        if (existingLedger.exists) {
-          const ledgerData = existingLedger.data();
-          
-          if (ledgerData.initializationComplete) {
-            console.log(`✅ ${functionName}: 用戶 ${UID} 已完整初始化，避免重複寫入`);
-            return {
-              success: true,
-              userLedgerId: userData.defaultLedgerId,
-              subjectCount: ledgerData.subjectCount || 0,
-              walletCount: ledgerData.walletCount || 0,
-              initializationComplete: true,
-              message: "用戶帳本已完整初始化，跳過重複處理",
-              performance: {
-                executionTime: Date.now() - startTime,
-                stage: "user_initialization_check",
-                writesAvoided: 150 // 預估避免的寫入次數
-              },
-              optimizationApplied: "stage_1_duplicate_prevention"
-            };
-          }
-        }
-      }
-    }
-
     // 階段二優化：增強帳本存在性檢查
     const existingLedger = await db.collection("ledgers").doc(userLedgerId).get();
     if (existingLedger.exists) {
@@ -1399,18 +1342,6 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
       // 階段二優化：檢查帳本完整性
       if (ledgerData.initializationComplete) {
-        // 階段一優化：同步更新用戶初始化狀態
-        try {
-          await db.collection("users").doc(UID).update({
-            initializationComplete: true,
-            defaultLedgerId: userLedgerId,
-            updatedAt: admin.firestore.Timestamp.now()
-          });
-          console.log(`🔄 ${functionName}: 已同步用戶初始化狀態`);
-        } catch (updateError) {
-          console.warn(`⚠️ ${functionName}: 同步用戶狀態時出現警告: ${updateError.message}`);
-        }
-
         return {
           success: true,
           userLedgerId: userLedgerId,
@@ -1611,38 +1542,12 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     try {
       await ledgerRef.update({
         initializationComplete: true,
-        subjectCount: subjectCount,
-        walletCount: walletCount,
-        updatedAt: admin.firestore.Timestamp.now(),
-        initializationOptimization: {
-          stage1Applied: true,
-          optimizedAt: admin.firestore.Timestamp.now(),
-          version: "stage_1_duplicate_prevention"
-        }
+        updatedAt: admin.firestore.Timestamp.now()
       });
       console.log(`  - 帳本 ${userLedgerId} 初始化標誌更新為 true`);
     } catch (updateError) {
       console.error(`❌ 更新初始化標誌失敗:`, updateError);
       throw new Error(`更新初始化標誌失敗: ${updateError.message}`);
-    }
-
-    // 階段一優化：建立用戶級別的初始化標記機制
-    try {
-      await db.collection("users").doc(UID).update({
-        initializationComplete: true,
-        defaultLedgerId: userLedgerId,
-        initializationTimestamp: admin.firestore.Timestamp.now(),
-        initializationOptimization: {
-          stage1Applied: true,
-          duplicatePreventionEnabled: true,
-          version: "stage_1_duplicate_prevention"
-        },
-        updatedAt: admin.firestore.Timestamp.now()
-      });
-      console.log(`✅ ${functionName}: 用戶 ${UID} 初始化標記已建立，後續將跳過重複初始化`);
-    } catch (userUpdateError) {
-      console.warn(`⚠️ ${functionName}: 建立用戶初始化標記時出現警告: ${userUpdateError.message}`);
-      // 不拋出錯誤，避免影響主要初始化流程
     }
 
     // 清理範例文檔（可選，為了避免混淆用戶）
