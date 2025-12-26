@@ -79,14 +79,21 @@ try {
   }
 }
 
-// 1. 配置參數
+// 1. 配置參數 - 階段二：優化日誌記錄
 const WH_CONFIG = {
-  DEBUG: true,
+  DEBUG: process.env.NODE_ENV !== 'production',
   TEST_MODE: true, // 測試模式：跳過簽章驗證
-  LOG_MESSAGE_CONTENT: true, // 提前記錄訊息內容
+  LOG_MESSAGE_CONTENT: process.env.NODE_ENV !== 'production', // 正式環境不記錄訊息內容
   MESSAGE_DEDUPLICATION: true, // 啟用消息去重
   MESSAGE_RETENTION_HOURS: 24, // 消息ID保留時間(小時)
   ASYNC_PROCESSING: true, // 啟用異步處理（快速回應）
+  
+  // 階段二新增：記憶體追蹤
+  MEMORY_TRACKING: {
+    enabled: true,
+    maxEntries: 50,
+    trackingData: new Map() // 使用Map追蹤處理狀態
+  },
   FIRESTORE: {
     COLLECTION: "ledgers", // Firestore集合名稱
     LOG_SUBCOLLECTION: "log", // 日誌子集合名稱
@@ -1566,19 +1573,29 @@ async function WH_processEventAsync(event, requestId, userId) {
   }
 
   try {
-    // 記錄開始處理事件
-    WH_directLogWrite([
-      WH_formatDateTime(new Date()),
-      `WH 2.0.3: 開始處理事件: ${event.type} [${requestId}]`,
-      "事件處理",
-      userId,
-      "",
-      "WH",
-      "",
-      0,
-      "WH_processEventAsync",
-      "INFO",
-    ]);
+    // 階段二：僅在ERROR級別才寫入日誌，其他使用記憶體追蹤
+    if (process.env.NODE_ENV !== 'production') {
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.0.3: 開始處理事件: ${event.type} [${requestId}]`,
+        "事件處理",
+        userId,
+        "",
+        "WH",
+        "",
+        0,
+        "WH_processEventAsync",
+        "INFO",
+      ]);
+    } else {
+      // 正式環境：使用記憶體追蹤
+      WH_CONFIG.MEMORY_TRACKING.trackingData.set(requestId, {
+        eventType: event.type,
+        userId: userId,
+        startTime: Date.now(),
+        status: 'processing'
+      });
+    }
 
     // 確保設置了預處理的replyToken屬性
     if (!event.replyToken && event.type === "message") {
@@ -1632,18 +1649,21 @@ async function WH_processEventAsync(event, requestId, userId) {
           // 階段一：實施WH→AM→LBK直接轉發流程
           console.log(`開始AM用戶驗證流程 [${requestId}]`);
 
-          WH_directLogWrite([
-            WH_formatDateTime(new Date()),
-            `WH 階段一: 開始AM用戶驗證流程 [${requestId}]`,
-            "AM驗證",
-            userId,
-            "",
-            "WH",
-            "",
-            0,
-            "WH_processEventAsync",
-            "INFO",
-          ]);
+          // 階段二：AM驗證流程僅記錄關鍵節點
+          if (process.env.NODE_ENV !== 'production') {
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 階段一: 開始AM用戶驗證流程 [${requestId}]`,
+              "AM驗證",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO",
+            ]);
+          }
 
           // 步驟1：文字訊息處理前，安全調用 AM.AM_validateAccountExists
           let accountValidation;
@@ -1779,18 +1799,10 @@ async function WH_processEventAsync(event, requestId, userId) {
 
           console.log(`用戶帳本驗證通過: ${ledgerResult.ledgerId} [${requestId}]`);
 
-          WH_directLogWrite([
-            WH_formatDateTime(new Date()),
-            `WH 階段一: AM驗證完成，轉發至LBK處理記帳 [${requestId}]`,
-            "AM→LBK轉發",
-            userId,
-            "",
-            "WH",
-            "",
-            0,
-            "WH_processEventAsync",
-            "INFO",
-          ]);
+          // 階段二：轉發流程不再記錄中間狀態
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`AM驗證完成，轉發至LBK [${requestId}]`);
+          }
 
           // 步驟3：初始化完成後，轉發給 LBK 處理（包含科目歸類）
           const lbkInputData = {
@@ -1833,18 +1845,32 @@ async function WH_processEventAsync(event, requestId, userId) {
 
             await WH_replyMessage(event.replyToken, lbkResult, lbkResult.quickReply);
 
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 階段一: LBK處理完成，已回覆用戶 [${requestId}]`,
-              "記帳處理",
-              userId,
-              "",
-              "WH",
-              "",
-              0,
-              "WH_processEventAsync",
-              "INFO",
-            ]);
+            // 階段二：只記錄最終處理結果
+            if (lbkResult && !lbkResult.success) {
+              // 處理失敗時才寫入日誌
+              WH_directLogWrite([
+                WH_formatDateTime(new Date()),
+                `WH: LBK處理失敗 [${requestId}]: ${lbkResult.error || '未知錯誤'}`,
+                "記帳處理",
+                userId,
+                "LBK_PROCESS_ERROR",
+                "WH",
+                lbkResult.error || "",
+                0,
+                "WH_processEventAsync",
+                "ERROR",
+              ]);
+            } else if (process.env.NODE_ENV !== 'production') {
+              console.log(`LBK處理完成 [${requestId}]`);
+            }
+            
+            // 更新記憶體追蹤狀態
+            if (WH_CONFIG.MEMORY_TRACKING.trackingData.has(requestId)) {
+              const tracking = WH_CONFIG.MEMORY_TRACKING.trackingData.get(requestId);
+              tracking.status = 'completed';
+              tracking.endTime = Date.now();
+              tracking.success = lbkResult ? lbkResult.success : false;
+            }
           }
 
           // 記錄DD_distributeData處理結果預覽

@@ -226,24 +226,29 @@
       "maxExpirationMinutes": 120,
       "description": "預設30分鐘過期，最多可延長至120分鐘"
     },
-    "stateValidation": {
-      "PENDING_SUBJECT": {
-        "requiredFields": ["originalInput", "parsedData.amount"],
-        "optionalFields": ["parsedData.description", "parsedData.rawSubject", "parsedData.rawWallet"]
-      },
-      "PENDING_WALLET": {
-        "requiredFields": ["originalInput", "parsedData.amount", "resolvedData.subjectId"],
-        "optionalFields": ["parsedData.description", "parsedData.rawWallet", "walletSynonyms"]
-      },
-      "COMPLETED": {
-        "requiredFields": ["originalInput", "parsedData.amount", "resolvedData.subjectId", "resolvedData.walletId", "walletId"],
-        "optionalFields": ["walletSynonyms"]
-      }
+    "memoryProcessing": {
+      "enabled": true,
+      "maxMemorySessions": 1000,
+      "cleanupIntervalMinutes": 30,
+      "description": "階段三：歧義消除過程完全在記憶體中進行"
+    },
+    "stateManagement": {
+      "atomicOperations": true,
+      "allowedStates": ["memory_active", "completed"],
+      "skipIntermediateStates": true,
+      "description": "階段三：只記錄created和completed狀態"
+    },
+    "metadataOptimization": {
+      "separateCoreAndAuxiliary": true,
+      "batchWriteThreshold": 10,
+      "auxiliaryDataDelay": 300000,
+      "description": "階段三：元數據分為核心與輔助，批次寫入輔助資料"
     },
     "cleanup": {
       "autoCleanupExpired": true,
       "cleanupIntervalHours": 6,
-      "retentionDays": 7
+      "retentionDays": 7,
+      "memoryCleanupEnabled": true
     }
   },
 
