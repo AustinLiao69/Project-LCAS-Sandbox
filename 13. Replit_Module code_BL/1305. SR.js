@@ -1696,9 +1696,6 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
           SR_QUICK_REPLY_CONFIG.STATISTICS.TODAY,
           { label: '設定提醒', postbackData: 'setup_reminder' }
         ];
-
-        if (!hasPremiumAccess) {
-          options.push({ label: '升級會員', postbackData: 'upgrade_premium' });
         }
     }
 
@@ -2890,32 +2887,6 @@ async function SR_generateStatisticsQuickReply(userId, currentStatisticsType, pr
           label: '📈 本月統計',
           data: 'monthly_statistics',
           displayText: '本月統計'
-        }
-      });
-    }
-
-    // Premium用戶額外選項
-    if (hasPremiumAccess) {
-      if (currentStatisticsType !== 'yearly_statistics') {
-        quickReplyItems.push({
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '📋 本年統計',
-            data: 'yearly_statistics',
-            displayText: '本年統計'
-          }
-        });
-      }
-    } else {
-      // 免費用戶升級提示
-      quickReplyItems.push({
-        type: 'action',
-        action: {
-          type: 'postback',
-          label: '⭐ 升級會員',
-          data: 'upgrade_premium',
-          displayText: '升級會員'
         }
       });
     }
