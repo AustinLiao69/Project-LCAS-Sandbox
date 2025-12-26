@@ -5026,7 +5026,7 @@ function LBK_generateWalletSelectionQuickReply(pendingId) {
  * @param {string} userId - 用戶ID
  * @param {string} pendingId - Session ID
  * @param {string} processId - 處理ID
- * @returns {Object} 轉換結果
+ * @returns {Promise<Object>} 轉換結果
  * @description 階段一修復：修正狀態檢查邏輯，按0098規範執行狀態機轉換
  */
 async function LBK_completePendingRecord(userId, pendingId, processId) {
@@ -5150,15 +5150,21 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       LBK_logInfo(`階段五：錢包資料驗證完成: ${walletName} (ID: ${walletId}) [${processId}]`, "記帳完成", userId, functionName);
     } else {
       // 階段一修復：使用統一邏輯入口點，移除硬編碼fallback值
-      const dynamicDefaultResult = await LBK_getDefaultPaymentMethod(userId, processId);
-      if (dynamicDefaultResult.success) {
-        finalBookkeepingData.paymentMethod = dynamicDefaultResult.walletName;
-        finalBookkeepingData.walletId = dynamicDefaultResult.walletId;
-        LBK_logInfo(`階段一：統一邏輯入口點查詢預設錢包成功: ${dynamicDefaultResult.walletName} [${processId}]`, "記帳完成", userId, functionName);
-      } else {
+      try {
+        const dynamicDefaultResult = await LBK_getDefaultPaymentMethod(userId, processId);
+        if (dynamicDefaultResult.success) {
+          finalBookkeepingData.paymentMethod = dynamicDefaultResult.walletName;
+          finalBookkeepingData.walletId = dynamicDefaultResult.walletId;
+          LBK_logInfo(`階段一：統一邏輯入口點查詢預設錢包成功: ${dynamicDefaultResult.walletName} [${processId}]`, "記帳完成", userId, functionName);
+        } else {
+          finalBookkeepingData.paymentMethod = finalBookkeepingData.paymentMethod || '信用卡';
+          finalBookkeepingData.walletId = 'credit';
+          LBK_logWarning(`階段一：統一邏輯入口點查詢失敗，使用系統安全網: 信用卡 [${processId}]`, "記帳完成", userId, functionName);
+        }
+      } catch (error) {
         finalBookkeepingData.paymentMethod = finalBookkeepingData.paymentMethod || '信用卡';
         finalBookkeepingData.walletId = 'credit';
-        LBK_logWarning(`階段一：統一邏輯入口點查詢失敗，使用系統安全網: 信用卡 [${processId}]`, "記帳完成", userId, functionName);
+        LBK_logWarning(`階段一：預設支付方式查詢異常，使用系統安全網: 信用卡 [${processId}]`, "記帳完成", userId, functionName);
       }
     }
 
