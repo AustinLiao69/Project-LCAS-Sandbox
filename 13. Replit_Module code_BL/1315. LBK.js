@@ -3440,7 +3440,7 @@ if (!LBK_CONFIG.MEMORY_CLEANUP_TIMER) {
   }, 30 * 60 * 1000); // 每30分鐘清理一次
 }
 
-  }
+
 }
 
 /**
