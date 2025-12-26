@@ -72,7 +72,7 @@ const LBK_CONFIG = {
     MIN_AMOUNT_DIGITS: 3,
     MAX_REMARK_LENGTH: 20
   },
-  
+
   // 階段二保留：智能日誌控制
   SMART_LOGGING: {
     SUCCESS_LOGGING: process.env.NODE_ENV !== 'production',
@@ -80,23 +80,23 @@ const LBK_CONFIG = {
     MEMORY_CACHE: [],
     MAX_CACHE_SIZE: 100 // 階段三：增加記憶體快取大小
   },
-  
+
   // 階段三新增：記憶體Session管理
   MEMORY_SESSIONS: new Map(), // 記憶體Session快取
   MEMORY_SESSION_EXPIRY: 30 * 60 * 1000, // 30分鐘過期
   MEMORY_CLEANUP_TIMER: null, // 清理定時器
-  
+
   // 階段三新增：批次寫入配置
   AUXILIARY_WRITE_QUEUE: [], // 輔助資料寫入佇列
   AUXILIARY_TIMER: null, // 批次寫入定時器
   BATCH_WRITE_THRESHOLD: 10, // 批次寫入閾值
   BATCH_WRITE_INTERVAL: 5 * 60 * 1000, // 5分鐘批次間隔
-  
+
   // 階段三新增：原子性操作配置
   ATOMIC_OPERATIONS: true, // 啟用原子性操作
   SKIP_INTERMEDIATE_STATES: true, // 跳過中間狀態
   ONLY_FINAL_STATES: ['memory_active', 'completed'], // 只記錄最終狀態
-  
+
   // cache 配置
   CACHE_CONFIG: {
     stdTTL: 600,
@@ -128,7 +128,7 @@ function LBK_logDebug(message, category, userId, functionName) {
         userId: userId,
         functionName: functionName
       });
-      
+
       // 限制快取大小
       if (LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.length > LBK_CONFIG.SMART_LOGGING.MAX_CACHE_SIZE) {
         LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.shift();
@@ -489,7 +489,8 @@ async function LBK_processQuickBookkeeping(inputData) {
       module: "LBK",
       data: bookkeepingResult.data,
       processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.1.1"
+      moduleVersion: "1.9.2", // Updated module version
+      errorType: "SUCCESS" // Added success error type for clarity
     };
 
   } catch (error) {
@@ -509,7 +510,7 @@ async function LBK_processQuickBookkeeping(inputData) {
       moduleCode: "LBK",
       module: "LBK",
       processingTime: 0,
-      moduleVersion: "1.1.1",
+      moduleVersion: "1.9.2", // Updated module version
       errorType: "SYSTEM_ERROR"
     };
   }
@@ -1110,7 +1111,7 @@ async function LBK_getAllSubjects(userId, processId) {
       subjects.push({
         categoryId: data.categoryId || data.parentId, // Use categoryId as majorCode
         categoryName: data.categoryName || '',
-        subCategoryId: data.subCategoryId || data.categoryId, 
+        subCategoryId: data.subCategoryId || data.categoryId,
         name: data.name || data.subCategoryName || data.categoryName || '', // Use name for subName
         synonyms: data.synonyms || ""
       });
@@ -2884,7 +2885,7 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
   const functionName = "LBK_createPendingRecord";
   try {
     const pendingId = Date.now().toString();
-    
+
     // 階段三：創建記憶體Session，不寫入資料庫
     const memorySession = {
       pendingId: pendingId,
@@ -2918,7 +2919,7 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
     // 階段三：儲存到記憶體快取，不寫入Firestore
     LBK_CONFIG.MEMORY_SESSIONS = LBK_CONFIG.MEMORY_SESSIONS || new Map();
     LBK_CONFIG.MEMORY_SESSIONS.set(pendingId, memorySession);
-    
+
     // 階段三：記憶體快取大小限制
     if (LBK_CONFIG.MEMORY_SESSIONS.size > (LBK_CONFIG.SMART_LOGGING.MAX_CACHE_SIZE || 100)) {
       const oldestKey = LBK_CONFIG.MEMORY_SESSIONS.keys().next().value;
@@ -2959,25 +2960,24 @@ async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, 
   const functionName = "LBK_updatePendingRecord";
   try {
     // 階段三：從記憶體快取中獲取Session
-    const memorySession = LBK_CONFIG.MEMORY_SESSIONS?.get(pendingId);
-    
+    let memorySession = LBK_CONFIG.MEMORY_SESSIONS?.get(pendingId);
+
     if (!memorySession) {
       // 階段三：記憶體Session不存在，嘗試從Firestore查詢（向後相容）
       LBK_logWarning(`階段三：記憶體Session不存在，嘗試Firestore查詢: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
-      
+
       await LBK_initializeFirestore();
       const db = LBK_INIT_STATUS.firestore_db;
       const ledgerId = `user_${userId}`;
       const doc = await db.collection('ledgers').doc(ledgerId).collection('pendingTransactions').doc(pendingId).get();
-      
+
       if (!doc.exists) {
         throw new Error(`階段三：Session不存在於記憶體或Firestore: ${pendingId}`);
       }
-      
+
       // 將Firestore資料遷移到記憶體
-      const firestoreData = doc.data();
       memorySession = {
-        ...firestoreData,
+        ...doc.data(), // Use doc.data() to get the data
         status: 'migrated_to_memory',
         inMemory: true
       };
@@ -2986,11 +2986,20 @@ async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, 
 
     // 階段三：記憶體中更新Session
     if (updateData.stageData) {
-      memorySession.ambiguityData = {
-        ...memorySession.ambiguityData,
-        userSelection: updateData.stageData.electedCategory || updateData.stageData.selectedWallet,
-        resolved: !!(updateData.stageData.categorySelected || updateData.stageData.walletSelected)
+      memorySession.stageData = { // Directly assign stageData
+        ...(memorySession.stageData || {}), // Merge with existing stageData if any
+        ...updateData.stageData
       };
+      // Ensure stageData.electedCategory and stageData.selectedWallet are correctly merged
+      if (updateData.stageData.electedCategory) {
+        memorySession.stageData.electedCategory = updateData.stageData.electedCategory;
+      }
+      if (updateData.stageData.selectedWallet) {
+        memorySession.stageData.selectedWallet = updateData.stageData.selectedWallet;
+      }
+      // Ensure categorySelected and walletSelected are correctly set
+      memorySession.stageData.categorySelected = !!memorySession.stageData.electedCategory;
+      memorySession.stageData.walletSelected = !!memorySession.stageData.selectedWallet;
     }
 
     memorySession.currentStage = newState;
@@ -3013,7 +3022,8 @@ async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, 
       success: false,
       error: error.toString()
     };
-
+  }
+}
 
 /**
  * 階段三：排程輔助元數據批次寫入
@@ -3028,7 +3038,7 @@ function LBK_scheduleAuxiliaryDataWrite(transactionId, auxiliaryData, userId, pr
   try {
     // 階段三：將輔助資料加入批次佇列
     LBK_CONFIG.AUXILIARY_WRITE_QUEUE = LBK_CONFIG.AUXILIARY_WRITE_QUEUE || [];
-    
+
     const auxiliaryRecord = {
       transactionId: transactionId,
       data: auxiliaryData,
@@ -3037,16 +3047,16 @@ function LBK_scheduleAuxiliaryDataWrite(transactionId, auxiliaryData, userId, pr
       scheduledAt: Date.now(),
       retryCount: 0
     };
-    
+
     LBK_CONFIG.AUXILIARY_WRITE_QUEUE.push(auxiliaryRecord);
-    
+
     LBK_logDebug(`階段三：輔助元數據已排程批次寫入: ${transactionId} (佇列長度: ${LBK_CONFIG.AUXILIARY_WRITE_QUEUE.length}) [${processId}]`, "批次寫入", userId, "LBK_scheduleAuxiliaryDataWrite");
-    
+
     // 階段三：達到批次寫入閾值時執行
     if (LBK_CONFIG.AUXILIARY_WRITE_QUEUE.length >= (LBK_CONFIG.BATCH_WRITE_THRESHOLD || 10)) {
       LBK_processAuxiliaryDataBatch();
     }
-    
+
     // 階段三：定期處理佇列（防止積壓）
     if (!LBK_CONFIG.AUXILIARY_TIMER) {
       LBK_CONFIG.AUXILIARY_TIMER = setInterval(() => {
@@ -3055,7 +3065,7 @@ function LBK_scheduleAuxiliaryDataWrite(transactionId, auxiliaryData, userId, pr
         }
       }, 300000); // 5分鐘執行一次
     }
-    
+
   } catch (error) {
     LBK_logError(`階段三：排程輔助元數據寫入失敗: ${error.toString()} [${processId}]`, "批次寫入", userId, "SCHEDULE_AUXILIARY_ERROR", error.toString(), "LBK_scheduleAuxiliaryDataWrite");
   }
@@ -3072,16 +3082,16 @@ async function LBK_processAuxiliaryDataBatch() {
     if (!LBK_CONFIG.AUXILIARY_WRITE_QUEUE || LBK_CONFIG.AUXILIARY_WRITE_QUEUE.length === 0) {
       return;
     }
-    
+
     const batchSize = Math.min(LBK_CONFIG.AUXILIARY_WRITE_QUEUE.length, 10); // Firestore batch限制
     const currentBatch = LBK_CONFIG.AUXILIARY_WRITE_QUEUE.splice(0, batchSize);
-    
+
     LBK_logInfo(`階段三：開始批次處理輔助元數據: ${batchSize} 筆`, "批次寫入", "", functionName);
-    
+
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
     const batch = db.batch();
-    
+
     for (const record of currentBatch) {
       try {
         const auxiliaryDocRef = db
@@ -3089,26 +3099,26 @@ async function LBK_processAuxiliaryDataBatch() {
           .doc(`user_${record.userId}`)
           .collection('transactionMetadata')
           .doc(record.transactionId);
-          
+
         const auxiliaryDoc = {
           ...record.data,
           batchProcessedAt: admin.firestore.Timestamp.now(),
           batchId: Date.now().toString()
         };
-        
+
         batch.set(auxiliaryDocRef, auxiliaryDoc);
-        
+
       } catch (recordError) {
         LBK_logError(`階段三：批次處理單筆輔助資料失敗: ${record.transactionId}, ${recordError.toString()}`, "批次寫入", record.userId, "BATCH_RECORD_ERROR", recordError.toString(), functionName);
       }
     }
-    
+
     await batch.commit();
     LBK_logInfo(`階段三：批次寫入輔助元數據完成: ${batchSize} 筆`, "批次寫入", "", functionName);
-    
+
   } catch (error) {
     LBK_logError(`階段三：批次處理輔助元數據失敗: ${error.toString()}`, "批次寫入", "", "BATCH_PROCESS_ERROR", error.toString(), functionName);
-    
+
     // 階段三：失敗的批次重新排程（避免資料遺失）
     if (currentBatch) {
       currentBatch.forEach(record => {
@@ -3134,27 +3144,27 @@ function LBK_cleanupMemorySessions() {
     if (!LBK_CONFIG.MEMORY_SESSIONS) {
       return;
     }
-    
+
     const now = Date.now();
     const expiredSessions = [];
-    
+
     for (const [sessionId, session] of LBK_CONFIG.MEMORY_SESSIONS.entries()) {
       const sessionAge = now - (session.coreMetadata?.createdAt || session.lastUpdated || now);
-      
+
       // 階段三：30分鐘過期清理
       if (sessionAge > 30 * 60 * 1000) {
         expiredSessions.push(sessionId);
       }
     }
-    
+
     expiredSessions.forEach(sessionId => {
       LBK_CONFIG.MEMORY_SESSIONS.delete(sessionId);
     });
-    
+
     if (expiredSessions.length > 0) {
       LBK_logInfo(`階段三：記憶體Session清理完成: ${expiredSessions.length} 筆過期Session`, "記憶體管理", "", functionName);
     }
-    
+
   } catch (error) {
     LBK_logError(`階段三：記憶體Session清理失敗: ${error.toString()}`, "記憶體管理", "", "MEMORY_CLEANUP_ERROR", error.toString(), functionName);
   }
@@ -3184,7 +3194,7 @@ async function LBK_getPendingRecord(userId, pendingId, processId) {
   try {
     // 階段三：優先從記憶體快取獲取
     const memorySession = LBK_CONFIG.MEMORY_SESSIONS?.get(pendingId);
-    
+
     if (memorySession) {
       LBK_logDebug(`階段三：從記憶體獲取Session成功: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
       return {
@@ -3196,7 +3206,7 @@ async function LBK_getPendingRecord(userId, pendingId, processId) {
 
     // 階段三：記憶體中不存在，檢查Firestore（向後相容）
     LBK_logDebug(`階段三：記憶體中無Session，查詢Firestore: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
-    
+
     await LBK_initializeFirestore();
     const db = LBK_INIT_STATUS.firestore_db;
     const ledgerId = `user_${userId}`;
@@ -3210,7 +3220,7 @@ async function LBK_getPendingRecord(userId, pendingId, processId) {
     }
 
     const firestoreData = doc.data();
-    
+
     // 階段三：將Firestore資料快取到記憶體
     if (LBK_CONFIG.MEMORY_SESSIONS) {
       LBK_CONFIG.MEMORY_SESSIONS.set(pendingId, {
@@ -4540,20 +4550,20 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
       type: (finalBookkeepingData.action === "收入") ? "income" : "expense",
       description: finalBookkeepingData.description || '記帳項目',
       categoryId: finalBookkeepingData.categoryId || 'default',
-      
+
       // 時間欄位 - 0070標準格式
       date: now.format('YYYY-MM-DD'),
       createdAt: admin.firestore.Timestamp.now(),
-      
+
       // 來源和用戶資訊 - 0070標準
       source: 'memory_completion',
       userId: userId,
       paymentMethod: finalBookkeepingData.paymentMethod || '信用卡',
       ledgerId: ledgerId,
-      
+
       // 階段三：原子性狀態 - 直接設為completed
       status: 'completed',
-      
+
       // 階段三：核心元數據，只保留必要追溯資訊
       metadata: {
         module: 'LBK',
@@ -4580,7 +4590,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     };
 
     // 階段三新增：記帳前最終驗證日誌
-    LBK_logInfo(`階段三：Firestore記帳資料最終驗證 - ID: ${preparedData.id}, 金額: ${preparedData.amount}, 類型: ${preparedData.type}, 科目: ${preparedData.metadata.categoryName}, categoryId: ${preparedData.categoryId} [${processId}]`, "記帳完成", userId, functionName);
+    LBK_logInfo(`階段三：Firestore記帳資料最終驗證 - ID: ${coreTransactionData.id}, 金額: ${coreTransactionData.amount}, 類型: ${coreTransactionData.type}, 科目: ${coreTransactionData.metadata.categoryName}, categoryId: ${coreTransactionData.categoryId} [${processId}]`, "記帳完成", userId, functionName);
 
     LBK_logInfo(`階段四：直接執行記帳儲存，跳過重複科目查詢 [${processId}]`, "記帳完成", userId, functionName);
 
@@ -4598,17 +4608,17 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     const bookkeepingData = {
       id: transactionId,
       transactionId: transactionId,
-      amount: preparedData.amount,
-      type: preparedData.type,
-      category: preparedData.categoryId || 'default',
-      subject: finalBookkeepingData.categoryName || preparedData.description || '記帳項目',
-      categoryName: finalBookkeepingData.categoryName || preparedData.description || '記帳項目',
-      description: preparedData.description || '記帳項目',
-      paymentMethod: preparedData.paymentMethod || '刷卡',
-      date: preparedData.date,
+      amount: coreTransactionData.amount,
+      type: coreTransactionData.type,
+      category: coreTransactionData.categoryId || 'default',
+      subject: finalBookkeepingData.categoryName || coreTransactionData.description || '記帳項目',
+      categoryName: finalBookkeepingData.categoryName || coreTransactionData.description || '記帳項目',
+      description: coreTransactionData.description || '記帳項目',
+      paymentMethod: coreTransactionData.paymentMethod || '刷卡',
+      date: coreTransactionData.date,
       timestamp: new Date().toISOString(),
-      ledgerId: preparedData.ledgerId || `user_${userId}`,
-      remark: pendingData.parsedData?.subject || preparedData.description || '記帳項目',
+      ledgerId: coreTransactionData.ledgerId || `user_${userId}`,
+      remark: pendingData.parsedData?.subject || coreTransactionData.description || '記帳項目',
       // 階段三新增：額外驗證欄位
       // majorCode: finalBookkeepingData.majorCode || 'default', // majorCode removed
       validated: true
@@ -4880,7 +4890,7 @@ module.exports = {
   LBK_processConfirmedWallet: LBK_processConfirmedWallet,
 
   LBK_validateWalletExists: LBK_validateWalletExists,
-  LBK_handleNewWallet: LBK_handleNewWallet,
+  LBK_handleNewWallet: LBK_handleNewWallet, // Kept for backward compatibility, though now LBK_handleWalletConfirmationPostback is the primary handler
 
   // 新科目歸類函數 - v1.4.2增強（支援Quick Reply和postback處理）
   LBK_handleNewSubjectClassification: LBK_handleNewSubjectClassification,
