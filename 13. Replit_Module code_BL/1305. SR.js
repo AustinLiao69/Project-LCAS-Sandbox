@@ -1,8 +1,8 @@
 /**
- * SR_排程提醒模組_1.6.0
+ * SR_排程提醒模組_1.6.1
  * @module SR排程提醒模組
  * @description LCAS 2.0 排程提醒系統 - 智慧記帳自動化核心功能
- * @update 2025-07-22: 升級至v1.6.0，修復Object.is equality錯誤，強化返回值類型一致性和布爾值處理
+ * @update 2025-12-26: 升級至v1.6.1，新增SR_processQuickStatistics函數，確保統計查詢功能完整導出
  */
 
 const admin = require('firebase-admin');
@@ -2611,7 +2611,92 @@ async function SR_getDirectStatistics(userId, period) {
 }
 
 /**
- * 44. 模組初始化函數
+ * 44. 處理快速統計查詢 - LBK模組專用接口
+ * @version 2025-12-26-V1.6.1
+ * @date 2025-12-26 11:30:00
+ * @description 為LBK模組提供統一的統計查詢接口，支援多種統計類型
+ */
+async function SR_processQuickStatistics(inputData) {
+  const functionName = "SR_processQuickStatistics";
+  const processId = inputData.processId || Date.now().toString(36);
+  const userId = inputData.userId;
+
+  try {
+    SR_logInfo(`處理快速統計查詢: ${inputData.statisticsType || 'general'}`, "統計查詢", userId, "", "", functionName);
+
+    // 檢查統計功能權限
+    const permissionCheck = await SR_validatePremiumFeature(userId, 'BASIC_STATISTICS');
+    if (!permissionCheck.allowed) {
+      // 返回付費功能牆
+      return await SR_handlePaywallQuickReply(userId, 'blocked', { 
+        blockedFeature: '統計查詢',
+        reason: permissionCheck.reason 
+      });
+    }
+
+    // 根據統計類型處理
+    const statisticsType = inputData.statisticsType || 'general_statistics';
+    let period = 'daily';
+
+    switch (statisticsType) {
+      case 'monthly_statistics':
+        period = 'monthly';
+        break;
+      case 'yearly_statistics':
+        period = 'yearly';
+        break;
+      case 'expense_statistics':
+      case 'income_statistics':
+      case 'general_statistics':
+      default:
+        period = 'daily';
+        break;
+    }
+
+    // 獲取統計資料
+    const statsResult = await SR_getDirectStatistics(userId, period);
+
+    // 建立回覆訊息
+    const replyMessage = SR_buildStatisticsReplyMessage(period, statsResult?.success ? statsResult.data : null);
+
+    // 生成Quick Reply選項
+    const quickReplyButtons = await SR_generateQuickReplyOptions(userId, 'statistics');
+
+    SR_logInfo(`統計查詢完成: ${period}統計`, "統計查詢", userId, "", "", functionName);
+
+    return {
+      success: true,
+      message: replyMessage,
+      responseMessage: replyMessage,
+      quickReply: quickReplyButtons,
+      moduleCode: "SR",
+      module: "SR",
+      processingTime: (Date.now() - parseInt(processId, 36)) / 1000,
+      moduleVersion: "1.6.1",
+      statisticsHandled: true,
+      statisticsType: statisticsType,
+      period: period
+    };
+
+  } catch (error) {
+    SR_logError(`處理快速統計查詢失敗: ${error.message}`, "統計查詢", userId, "SR_QUICK_STATS_ERROR", error.toString(), functionName);
+
+    return {
+      success: false,
+      message: "統計查詢處理失敗，請稍後再試",
+      responseMessage: "統計查詢處理失敗，請稍後再試",
+      moduleCode: "SR",
+      module: "SR",
+      processingTime: 0,
+      moduleVersion: "1.6.1",
+      errorType: "SR_QUICK_STATS_ERROR",
+      statisticsHandled: false
+    };
+  }
+}
+
+/**
+ * 45. 模組初始化函數
  * @version 2025-01-09-V1.4.0
  * @date 2025-01-09 22:00:00
  * @description SR模組的初始化設定和啟動流程
@@ -2729,6 +2814,7 @@ module.exports = {
 
   // 新增統計查詢函數
   SR_getDirectStatistics,
+  SR_processQuickStatistics,
 
   // 常數與配置
   SR_CONFIG,
