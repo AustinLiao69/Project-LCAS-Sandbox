@@ -1546,12 +1546,13 @@ function LBK_prepareBookkeepingData(bookkeepingId, data, processId) {
 }
 
 /**
- * 13. 格式化回覆訊息
- * @version 2025-07-15-V1.0.6
- * @date 2025-07-15 16:45:00
- * @description 格式化成功或失敗的回覆訊息，統一所有錯誤格式為7行標準格式 - 修復語法錯誤
+ * 13. 格式化回覆訊息 - 階段三：統一錯誤處理標準
+ * @version 2025-12-27-V3.1.0
+ * @date 2025-12-27 09:30:00
+ * @description 階段三優化：統一錯誤訊息格式，確保符合0070規範，建立標準化錯誤處理機制
  */
 function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
+  const functionName = "LBK_formatReplyMessage";
   try {
     const currentDateTime = new Date().toLocaleString("zh-TW", {
       timeZone: "Asia/Taipei",
@@ -1562,92 +1563,287 @@ function LBK_formatReplyMessage(resultData, moduleCode, options = {}) {
       minute: "2-digit"
     });
 
-    // 檢查是否為成功的記帳結果 - 1301標準格式
-    if (resultData && resultData.id) {
-      // 從原始資料中提取用戶輸入的備註（去除金額後的部分）
-      const originalInput = options.originalInput || resultData.description;
-      const remark = LBK_removeAmountFromText(originalInput, resultData.amount, resultData.paymentMethod);
-
-      // 確保科目名稱正確顯示
-      const subjectDisplay = resultData.categoryName || resultData.subject || resultData.description || "未知科目";
-
-      let replyText = `記帳成功！\n` +
-             `金額：${resultData.amount}元 (${resultData.type === 'income' ? '收入' : '支出'})\n` +
-             `支付方式：${resultData.paymentMethod}\n` +
-             `時間：${currentDateTime}\n` +
-             `科目：${subjectDisplay}\n` +
-             `備註：${remark}\n` +
-             `收支ID：${resultData.id}`;
-      return replyText;
+    // 階段三：檢查是否為成功的記帳結果 - 0070標準格式
+    if (resultData && resultData.id && !options.forceError) {
+      return LBK_formatSuccessMessage(resultData, currentDateTime, options);
     } else {
-      // 處理錯誤情況 - 統一使用7行詳細格式
-      const errorMessage = options.error || "處理失敗";
-      const originalInput = options.originalInput || "";
-
-      // 嘗試從partialData提取資訊
-      let amount = "未知";
-      let paymentMethod = "未指定";
-      let subject = "未知科目";
-
-      if (options.partialData) {
-        amount = options.partialData.amount || "未知";
-        paymentMethod = options.partialData.paymentMethod || "未指定";
-        subject = options.partialData.subject || "未知科目";
-      } else {
-        // 即使沒有partialData，也嘗試從originalInput中提取資訊
-        if (originalInput) {
-          // 嘗試提取金額
-          const amountMatch = originalInput.match(/(\d+)/);
-          if (amountMatch) {
-            amount = amountMatch[1];
-          }
-
-          // 嘗試識別支付方式
-          const paymentMethods = ["現金", "刷卡", "行動支付", "轉帳"];
-          for (const method of paymentMethods) {
-            if (originalInput.includes(method)) {
-              paymentMethod = method;
-              break;
-            }
-          }
-
-          // 嘗試提取科目（移除數字和支付方式後的文字）
-          const subjectMatch = originalInput.replace(/\d+/g, '').replace(/(現金|刷卡|行動支付|轉帳|元|塊)/g, '').trim();
-          if (subjectMatch) {
-            subject = subjectMatch;
-          }
-        }
-      }
-
-      // 統一的6行錯誤格式（移除使用者類型）
-      return `記帳失敗！\n` +
-             `金額：${amount}元\n` +
-             `支付方式：${paymentMethod}\n` +
-             `時間：${currentDateTime}\n` +
-             `科目：${subject}\n` +
-             `備註：${originalInput}\n` +
-             `錯誤原因：${errorMessage}`;
+      return LBK_formatErrorMessage(options, currentDateTime, moduleCode);
     }
 
   } catch (error) {
-    // 即使格式化過程出錯，也要保持統一格式
-    const currentDateTime = new Date().toLocaleString("zh-TW", {
-      timeZone: "Asia/Taipei",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-
-    return `記帳失敗！\n` +
-           `金額：未知元\n` +
-           `支付方式：未指定\n` +
-           `時間：${currentDateTime}\n` +
-           `科目：未知科目\n` +
-           `備註：${options.originalInput || ''}\n` +
-           `錯誤原因：訊息格式化錯誤`;
+    LBK_logError(`階段三：格式化訊息失敗: ${error.toString()}`, "訊息格式化", "", "FORMAT_MESSAGE_ERROR", error.toString(), functionName);
+    return LBK_formatSystemErrorMessage(options, error);
   }
+}
+
+/**
+ * 階段三新增：格式化成功訊息 - 符合0070規範
+ * @version 2025-12-27-V3.1.0
+ */
+function LBK_formatSuccessMessage(resultData, currentDateTime, options) {
+  try {
+    // 階段三：從原始資料中提取用戶輸入的備註（0070標準處理）
+    const originalInput = options.originalInput || resultData.description || '';
+    const remark = LBK_removeAmountFromText(originalInput, resultData.amount, resultData.paymentMethod);
+
+    // 階段三：確保科目名稱符合0070規範顯示
+    const subjectDisplay = resultData.categoryName || resultData.subject || resultData.description || "系統科目";
+    
+    // 階段三：標準化金額顯示格式
+    const amountDisplay = typeof resultData.amount === 'number' ? 
+      resultData.amount.toLocaleString('zh-TW') : (resultData.amount || '0');
+
+    // 階段三：標準化收支類型顯示
+    const typeDisplay = resultData.type === 'income' ? '收入' : '支出';
+
+    // 階段三：0070規範成功訊息格式
+    return `✅ 記帳成功！\n` +
+           `💰 金額：${amountDisplay}元 (${typeDisplay})\n` +
+           `💳 支付方式：${resultData.paymentMethod || '預設支付方式'}\n` +
+           `📅 時間：${currentDateTime}\n` +
+           `📂 科目：${subjectDisplay}\n` +
+           `📝 備註：${remark || '無'}\n` +
+           `🔖 交易ID：${resultData.id}`;
+
+  } catch (error) {
+    LBK_logError(`階段三：格式化成功訊息失敗: ${error.toString()}`, "訊息格式化", "", "FORMAT_SUCCESS_ERROR", error.toString(), "LBK_formatSuccessMessage");
+    return `✅ 記帳完成\n交易ID：${resultData.id || '未知'}`;
+  }
+}
+
+/**
+ * 階段三新增：格式化錯誤訊息 - 統一錯誤處理標準
+ * @version 2025-12-27-V3.1.0
+ */
+function LBK_formatErrorMessage(options, currentDateTime, moduleCode) {
+  try {
+    // 階段三：錯誤訊息標準化處理
+    const errorInfo = LBK_extractErrorInfo(options);
+    const errorCode = LBK_generateErrorCode(options.errorType, moduleCode);
+    
+    // 階段三：根據錯誤類型使用不同的錯誤訊息模板
+    const errorTemplate = LBK_getErrorTemplate(options.errorType);
+    
+    // 階段三：0070規範錯誤訊息格式
+    return `❌ ${errorTemplate.title}\n` +
+           `💰 金額：${errorInfo.amount}元\n` +
+           `💳 支付方式：${errorInfo.paymentMethod}\n` +
+           `📅 時間：${currentDateTime}\n` +
+           `📂 科目：${errorInfo.subject}\n` +
+           `📝 輸入內容：${errorInfo.originalInput}\n` +
+           `⚠️ 錯誤原因：${errorInfo.errorMessage}\n` +
+           `🔧 錯誤代碼：${errorCode}`;
+
+  } catch (error) {
+    LBK_logError(`階段三：格式化錯誤訊息失敗: ${error.toString()}`, "訊息格式化", "", "FORMAT_ERROR_MESSAGE_ERROR", error.toString(), "LBK_formatErrorMessage");
+    return LBK_formatSystemErrorMessage(options, error);
+  }
+}
+
+/**
+ * 階段三新增：提取錯誤資訊 - 智能化資料提取
+ * @version 2025-12-27-V3.1.0
+ */
+function LBK_extractErrorInfo(options) {
+  try {
+    let amount = "未知";
+    let paymentMethod = "未指定";
+    let subject = "未知科目";
+    let originalInput = options.originalInput || "";
+    let errorMessage = options.error || "系統錯誤";
+
+    // 階段三：從partialData優先提取資訊
+    if (options.partialData) {
+      amount = options.partialData.amount || amount;
+      paymentMethod = options.partialData.paymentMethod || paymentMethod;
+      subject = options.partialData.subject || options.partialData.categoryName || subject;
+    }
+    
+    // 階段三：從原始輸入智能提取資訊
+    if (originalInput) {
+      const extractedInfo = LBK_intelligentExtraction(originalInput);
+      amount = extractedInfo.amount || amount;
+      paymentMethod = extractedInfo.paymentMethod || paymentMethod;
+      subject = extractedInfo.subject || subject;
+    }
+
+    // 階段三：錯誤訊息標準化處理
+    errorMessage = LBK_standardizeErrorMessage(errorMessage, options.errorType);
+
+    return {
+      amount: amount,
+      paymentMethod: paymentMethod,
+      subject: subject,
+      originalInput: originalInput || '無',
+      errorMessage: errorMessage
+    };
+
+  } catch (error) {
+    return {
+      amount: "未知",
+      paymentMethod: "未指定", 
+      subject: "未知科目",
+      originalInput: options.originalInput || "無",
+      errorMessage: options.error || "系統錯誤"
+    };
+  }
+}
+
+/**
+ * 階段三新增：智能提取原始輸入資訊
+ * @version 2025-12-27-V3.1.0
+ */
+function LBK_intelligentExtraction(originalInput) {
+  try {
+    const result = {
+      amount: null,
+      paymentMethod: null,
+      subject: null
+    };
+
+    // 提取金額
+    const amountMatch = originalInput.match(/(\d+)/);
+    if (amountMatch) {
+      result.amount = amountMatch[1];
+    }
+
+    // 階段三：擴展支付方式識別
+    const paymentMethods = [
+      "現金", "刷卡", "行動支付", "轉帳", "信用卡", "金融卡", 
+      "台新", "中信", "富邦", "國泰", "玉山", "台銀", "合庫",
+      "一銀", "華南", "彰銀", "兆豐", "永豐", "元大", "凱基"
+    ];
+    
+    for (const method of paymentMethods) {
+      if (originalInput.includes(method)) {
+        result.paymentMethod = method;
+        break;
+      }
+    }
+
+    // 階段三：改進科目提取邏輯
+    let subjectText = originalInput;
+    if (result.amount) {
+      subjectText = subjectText.replace(result.amount, '');
+    }
+    if (result.paymentMethod) {
+      subjectText = subjectText.replace(result.paymentMethod, '');
+    }
+    
+    // 移除常見單位和符號
+    subjectText = subjectText.replace(/(元|塊|NT|\$)/g, '').trim();
+    
+    if (subjectText && subjectText.length > 0) {
+      result.subject = subjectText;
+    }
+
+    return result;
+
+  } catch (error) {
+    LBK_logError(`階段三：智能提取失敗: ${error.toString()}`, "資料提取", "", "INTELLIGENT_EXTRACTION_ERROR", error.toString(), "LBK_intelligentExtraction");
+    return {
+      amount: null,
+      paymentMethod: null,
+      subject: null
+    };
+  }
+}
+
+/**
+ * 階段三新增：取得錯誤模板
+ * @version 2025-12-27-V3.1.0
+ */
+function LBK_getErrorTemplate(errorType) {
+  const templates = {
+    'PARSE_ERROR': {
+      title: '輸入格式錯誤',
+      category: 'FORMAT_ERROR'
+    },
+    'SUBJECT_NOT_FOUND': {
+      title: '科目識別失敗',
+      category: 'SUBJECT_ERROR'
+    },
+    'WALLET_VALIDATION_ERROR': {
+      title: '支付方式驗證失敗',
+      category: 'WALLET_ERROR'
+    },
+    'PENDING_RECORD_CREATION_FAILED': {
+      title: 'Pending Record 建立失敗',
+      category: 'SYSTEM_ERROR'
+    },
+    'BOOKKEEPING_ERROR': {
+      title: '記帳處理失敗',
+      category: 'PROCESS_ERROR'
+    },
+    'SYSTEM_ERROR': {
+      title: '系統處理錯誤',
+      category: 'SYSTEM_ERROR'
+    }
+  };
+
+  return templates[errorType] || {
+    title: '記帳處理失敗',
+    category: 'UNKNOWN_ERROR'
+  };
+}
+
+/**
+ * 階段三新增：生成標準錯誤代碼
+ * @version 2025-12-27-V3.1.0
+ */
+function LBK_generateErrorCode(errorType, moduleCode) {
+  const timestamp = Date.now().toString().slice(-6);
+  const typeCode = (errorType || 'UNKNOWN').split('_')[0].substring(0, 3).toUpperCase();
+  const module = (moduleCode || 'LBK').toUpperCase();
+  
+  return `${module}-${typeCode}-${timestamp}`;
+}
+
+/**
+ * 階段三新增：標準化錯誤訊息
+ * @version 2025-12-27-V3.1.0
+ */
+function LBK_standardizeErrorMessage(errorMessage, errorType) {
+  const standardMessages = {
+    'PARSE_ERROR': '無法識別輸入格式，請確認輸入內容包含科目和金額',
+    'SUBJECT_NOT_FOUND': '找不到對應的科目，請重新選擇或新增科目',
+    'WALLET_VALIDATION_ERROR': '支付方式不存在，請選擇有效的支付方式',
+    'PENDING_RECORD_CREATION_FAILED': '暫存記錄建立失敗，請重新嘗試',
+    'BOOKKEEPING_ERROR': '記帳過程發生錯誤，請檢查輸入內容',
+    'SYSTEM_ERROR': '系統暫時不可用，請稍後再試'
+  };
+
+  // 如果有標準訊息且原始錯誤訊息為通用錯誤，使用標準訊息
+  if (standardMessages[errorType] && 
+      (errorMessage === '系統錯誤' || errorMessage === '處理失敗' || errorMessage === '錯誤')) {
+    return standardMessages[errorType];
+  }
+
+  return errorMessage;
+}
+
+/**
+ * 階段三新增：系統錯誤訊息格式化
+ * @version 2025-12-27-V3.1.0
+ */
+function LBK_formatSystemErrorMessage(options, error) {
+  const currentDateTime = new Date().toLocaleString("zh-TW", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  return `❌ 系統錯誤\n` +
+         `💰 金額：未知元\n` +
+         `💳 支付方式：未指定\n` +
+         `📅 時間：${currentDateTime}\n` +
+         `📂 科目：未知科目\n` +
+         `📝 輸入內容：${options.originalInput || '無'}\n` +
+         `⚠️ 錯誤原因：訊息格式化失敗\n` +
+         `🔧 錯誤代碼：LBK-SYS-${Date.now().toString().slice(-6)}`;
 }
 
 /**
@@ -3539,23 +3735,113 @@ async function LBK_getPendingRecord(userId, pendingId, processId) {
 }
 
 /**
- * 格式化錯誤回覆
- * @version 2025-12-19-V1.4.9
+ * 格式化錯誤回覆 - 階段三：統一錯誤處理標準
+ * @version 2025-12-27-V3.1.0
  * @param {string} errorType - 錯誤類型
  * @param {string} errorMessage - 錯誤訊息
+ * @param {object} options - 額外選項
  * @returns {Object} 格式化的錯誤回覆
+ * @description 階段三優化：建立標準化錯誤回覆格式，符合0070規範
  */
-function LBK_formatErrorResponse(errorType, errorMessage) {
-  return {
-    success: false,
-    message: errorMessage || "系統錯誤，請稍後再試",
-    responseMessage: errorMessage || "系統錯誤，請稍後再試",
-    moduleCode: "LBK",
-    module: "LBK",
-    processingTime: 0,
-    moduleVersion: "1.4.9",
-    errorType: errorType
+function LBK_formatErrorResponse(errorType, errorMessage, options = {}) {
+  try {
+    // 階段三：標準化錯誤訊息處理
+    const standardizedMessage = LBK_standardizeErrorMessage(
+      errorMessage || "系統錯誤，請稍後再試", 
+      errorType
+    );
+
+    // 階段三：使用統一訊息格式化器
+    const formattedMessage = LBK_formatReplyMessage(null, "LBK", {
+      ...options,
+      error: standardizedMessage,
+      errorType: errorType,
+      forceError: true
+    });
+
+    // 階段三：生成標準錯誤代碼
+    const errorCode = LBK_generateErrorCode(errorType, "LBK");
+
+    return {
+      success: false,
+      message: formattedMessage,
+      responseMessage: formattedMessage,
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "3.1.0", // 階段三版本
+      errorType: errorType,
+      errorCode: errorCode,
+      timestamp: new Date().toISOString(),
+      // 階段三：新增錯誤分類和嚴重性
+      errorCategory: LBK_getErrorTemplate(errorType).category,
+      severity: LBK_getErrorSeverity(errorType),
+      // 階段三：添加用戶友好的建議
+      suggestion: LBK_getErrorSuggestion(errorType),
+      // 階段三：錯誤追蹤資訊
+      tracking: {
+        errorId: errorCode,
+        moduleVersion: "3.1.0",
+        processId: options.processId,
+        userId: options.userId
+      }
+    };
+
+  } catch (error) {
+    // 階段三：錯誤格式化失敗的備用處理
+    return {
+      success: false,
+      message: "系統錯誤，請稍後再試",
+      responseMessage: "系統錯誤，請稍後再試", 
+      moduleCode: "LBK",
+      module: "LBK",
+      processingTime: 0,
+      moduleVersion: "3.1.0",
+      errorType: "FORMAT_ERROR_RESPONSE_FAILED",
+      errorCode: `LBK-FMT-${Date.now().toString().slice(-6)}`,
+      originalError: errorMessage
+    };
+  }
+}
+
+/**
+ * 階段三新增：取得錯誤嚴重性等級
+ * @version 2025-12-27-V3.1.0
+ * @param {string} errorType - 錯誤類型
+ * @returns {string} 嚴重性等級
+ */
+function LBK_getErrorSeverity(errorType) {
+  const severityMap = {
+    'SYSTEM_ERROR': 'HIGH',
+    'FIRESTORE_ERROR': 'HIGH',
+    'VALIDATION_ERROR': 'MEDIUM',
+    'PARSE_ERROR': 'LOW',
+    'SUBJECT_NOT_FOUND': 'LOW',
+    'WALLET_VALIDATION_ERROR': 'MEDIUM',
+    'PENDING_RECORD_CREATION_FAILED': 'MEDIUM',
+    'BOOKKEEPING_ERROR': 'MEDIUM'
   };
+
+  return severityMap[errorType] || 'MEDIUM';
+}
+
+/**
+ * 階段三新增：取得錯誤建議
+ * @version 2025-12-27-V3.1.0
+ * @param {string} errorType - 錯誤類型
+ * @returns {string} 用戶建議
+ */
+function LBK_getErrorSuggestion(errorType) {
+  const suggestions = {
+    'PARSE_ERROR': '請檢查輸入格式，確保包含科目名稱和金額',
+    'SUBJECT_NOT_FOUND': '請從科目清單中選擇，或聯絡管理員新增科目',
+    'WALLET_VALIDATION_ERROR': '請選擇已設定的支付方式',
+    'PENDING_RECORD_CREATION_FAILED': '請重新嘗試，或聯絡技術支援',
+    'BOOKKEEPING_ERROR': '請檢查所有必填欄位是否完整',
+    'SYSTEM_ERROR': '請稍後再試，如持續發生請聯絡技術支援'
+  };
+
+  return suggestions[errorType] || '請重新嘗試，如問題持續請聯絡技術支援';
 }
 
 /**
@@ -5333,7 +5619,7 @@ async function LBK_advancePendingFlow(userId, pendingId, processId) {
   }
 }
 
-// 更新模組導出，添加新的初始化函數
+// 更新模組導出，添加階段三錯誤處理優化函數
 module.exports = {
   LBK_processQuickBookkeeping: LBK_processQuickBookkeeping,
   LBK_parseUserMessage: LBK_parseUserMessage,
@@ -5350,6 +5636,20 @@ module.exports = {
   LBK_formatReplyMessage: LBK_formatReplyMessage,
   LBK_removeAmountFromText: LBK_removeAmountFromText,
   LBK_initialize: LBK_initialize,
+  
+  // 階段三新增：錯誤處理優化函數
+  LBK_formatSuccessMessage: LBK_formatSuccessMessage,
+  LBK_formatErrorMessage: LBK_formatErrorMessage,
+  LBK_extractErrorInfo: LBK_extractErrorInfo,
+  LBK_intelligentExtraction: LBK_intelligentExtraction,
+  LBK_getErrorTemplate: LBK_getErrorTemplate,
+  LBK_generateErrorCode: LBK_generateErrorCode,
+  LBK_standardizeErrorMessage: LBK_standardizeErrorMessage,
+  LBK_formatSystemErrorMessage: LBK_formatSystemErrorMessage,
+  LBK_getErrorSeverity: LBK_getErrorSeverity,
+  LBK_getErrorSuggestion: LBK_getErrorSuggestion,
+  LBK_formatErrorResponse: LBK_formatErrorResponse,
+
   // 階段五新增：子集合初始化函數
   LBK_initializePendingTransactionsSubcollection: LBK_initializePendingTransactionsSubcollection,
   LBK_handleError: LBK_handleError,
@@ -5422,8 +5722,8 @@ module.exports = {
   // PENDING_STATES constants for the state machine
   PENDING_STATES,
 
-  // 版本資訊
-  MODULE_VERSION: "3.0.0", // 階段三：優化狀態管理版本
+  // 版本資訊 - 階段三更新
+  MODULE_VERSION: "3.1.0", // 階段三：錯誤處理優化版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段三優化狀態管理完成：1)PendingTransactions機制改善：歧義消除過程完全在記憶體中進行，只在用戶確定選擇時寫入最終結果，移除所有中間狀態寫入。2)Metadata記錄精簡：將元數據分為核心與輔助兩類，輔助資料改為批次寫入，核心交易只保留必要追溯資訊。3)事務狀態優化：處理狀態改為原子性操作，移除processing、validation等中間狀態，只記錄memory_active和completed狀態。預期效果：每筆記帳寫入量降至5-10筆，大幅減少Firestore寫入量60-80筆。"
+  MODULE_UPDATE: "階段三錯誤處理優化完成：1)統一錯誤訊息格式：建立標準化錯誤訊息模板，符合0070規範，包含錯誤代碼、嚴重性等級和用戶建議。2)智能錯誤資訊提取：改進從原始輸入中提取金額、支付方式和科目的算法，提供更精確的錯誤資訊。3)錯誤分類機制：建立錯誤類型分類和嚴重性等級系統，提供對應的用戶友好建議。4)向後相容性保證：維持現有API接口不變，確保不影響現有功能。預期效果：提升用戶體驗，減少因錯誤訊息不清楚導致的重複操作，改善錯誤排查效率。"
 };
