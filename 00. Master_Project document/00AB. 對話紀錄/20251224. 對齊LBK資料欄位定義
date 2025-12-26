@@ -1,0 +1,90 @@
+------------------------------------------
+20251224. 對齊LBK資料欄位名稱
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+------------------------------------------
+20251224. 對齊LBK資料欄位名稱
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據9909文件，作為資深SA，我將深入分析LBK模組與0070文件規範的差異問題。
+問題分析
+經過詳細檢查LBK模組（1315. LBK.js）與0070文件的DB schema規範，發現以下資料欄位命名和結構不一致的問題：
+
+1. 核心問題列表
+A. Pending Record 相關問題
+•	位置: ledgers/{ledgerId}/pendingTransactions
+•	問題: 使用了不符合0070規範的欄位名稱和結構
+B. 記帳資料結構問題
+•	位置: LBK_prepareBookkeepingData 函數
+•	問題: 生成的記帳資料格式與0070標準不一致
+C. 科目查詢欄位問題
+•	位置: LBK_getSubjectCode 和相關函數
+•	問題: 使用了過時的欄位名稱
+
+2. 詳細差異分析
+簡單概念解釋: 就像公司不同部門使用不同的表格格式，導致資料無法正確對接。LBK模組就像是一個部門使用了舊版表格格式，而0070文件是公司的新標準格式。
+具體欄位差異清單
+A. pendingTransactions 集合差異
+LBK模組目前使用的欄位 vs 0070規範欄位:
+1.	parsedData.subject → 應為 parsedData.rawCategory
+2.	缺少 ambiguityInfo 標準結構
+3.	stageData.electedCategory → 應為 stageData.selectedCategory
+4.	缺少標準的 metadata 結構
+5.	processingStage 值不符合0070定義的狀態機
+
+B. 記帳資料欄位差異
+LBK模組目前使用 vs 0070規範:
+1.	使用 subjectCode → 應為 categoryId
+2.	使用 majorCode → 0070已移除此欄位
+3.	缺少標準的 metadata 結構
+4.	缺少 ledgerId 欄位
+
+C. 科目查詢欄位差異
+LBK模組目前使用 vs 0070規範:
+1.	查詢時使用 subName → 應為 name
+2.	返回 majorCode → 0070已移除此欄位
+3.	使用 subCode → 應為 subCategoryId
+解決方案
+階段一：修復 pendingTransactions 欄位結構
+目標: 讓 Pending Record 符合0070標準
+修改內容:
+•	更新 LBK_createPendingRecord 函數的資料結構
+•	修正 ambiguityInfo 和 metadata 欄位格式
+•	統一狀態機定義
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+Before行為: 創建不符合0070規範的Pending Record
+After行為: 創建符合0070標準的Pending Record，具備正確的欄位結構
+階段二：修復記帳資料生成函數
+目標: 讓記帳資料完全符合0070標準
+修改內容:
+•	更新 LBK_prepareBookkeepingData 函數
+•	移除 majorCode 相關邏輯
+•	統一使用 categoryId 替代 subjectCode
+•	添加標準 metadata 結構
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+Before行為: 生成包含過時欄位的記帳資料
+After行為: 生成完全符合0070規範的記帳資料結構
+階段三：修復科目查詢相關函數
+目標: 讓科目查詢使用正確的欄位名稱
+修改內容:
+•	更新 LBK_getSubjectCode 函數的欄位映射
+•	修正 LBK_getAllSubjects 函數的欄位引用
+•	統一使用0070規範的欄位名稱
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+Before行為: 使用過時欄位名稱查詢和返回科目資料
+After行為: 使用0070標準欄位名稱，確保資料一致性
+實施計畫
+版本升級計畫:
+•	LBK模組版本：1.9.1 → 1.9.2
+•	相關函數版本：各自升一版
+測試驗證點:
+•	階段一完成後：驗證Pending Record創建和查詢功能
+•	階段二完成後：驗證記帳資料生成和儲存功能
+•	階段三完成後：驗證科目查詢和匹配功能
+風險控制:
+•	每階段修改範圍有限，降低影響風險
+•	保持向後相容性，避免破壞現有功能
+請Approve後，我將開始執行階段一的修復工作。
+

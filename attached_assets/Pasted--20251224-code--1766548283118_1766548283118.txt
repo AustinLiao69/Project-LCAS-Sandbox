@@ -1,0 +1,69 @@
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+基於您的分析和console log，我來梳理目前LBK對於用戶記帳時未輸入支付方式的函數處理邏輯決策樹：
+目前LBK未輸入支付方式的函數處理邏輯決策樹
+用戶輸入「漢堡2222」(無支付方式)
+│
+├─ 1. LBK_parseInputFormat() - 階段三簡化解析
+│   ├─ 匹配基本格式: /^(.+?)(\d+)(.*)$/
+│   ├─ 提取: rawCategory="漢堡", rawAmount="2222", suffixPart=""
+│   ├─ processedSuffix = "" (移除幣別後仍為空)
+│   └─ paymentMethod = null (因為processedSuffix為空)
+│   └─ ✅ 回傳: {subject:"漢堡", amount:2222, paymentMethod:null}
+│
+├─ 2. LBK_parsePaymentMethod() - 階段二支付方式專項處理
+│   ├─ 檢查 parseResult.paymentMethod = null
+│   ├─ paymentMethodName = null
+│   ├─ 判斷: 用戶未提供支付方式
+│   ├─ 調用 LBK_getDefaultPaymentMethod() 
+│   │   └─ 動態讀取0302配置 → walletName="信用卡", walletId="cash"
+=>是walletId="credit"而不是walletId="cash"
+
+
+│   └─ ✅ 回傳: {success:true, walletId:"cash", walletName:"信用卡", isDefault:true}
+=>是walletId="credit"而不是walletId="cash"
+
+│
+├─ 3. LBK_validateWalletExists() - 階段二嚴格錢包驗證
+│   ├─ 輸入: walletId="cash", walletName="信用卡"
+│   ├─ 查詢 wallets 子集合中的 active 錢包
+│   ├─ 找到錢包名稱="信用卡"的精確匹配
+│   └─ ✅ 回傳: {success:true, walletId:"credit", walletName:"信用卡"}
+│
+└─ 4. 🔥問題發生點：LBK_handleClassificationPostback()
+    ├─ 從 pendingData 取得 paymentMethod = "刷卡" ⚠️
+=>負責更新pendingData的是哪個函數?該函數是從哪裡取得paymentMethod = "刷卡"？
+
+    
+    ├─ 調用 LBK_validateWalletExists(userId, null, "刷卡") 
+    ├─ wallets子集合中找不到"刷卡"
+    ├─ requiresUserConfirmation = true
+    └─ ❌ 觸發支付方式歧義消除: "檢測到未知支付方式「刷卡」"
+核心問題分析
+問題根源定位：
+1.	數據污染點：在科目歸類postback處理時，系統從pendingData.paymentMethod中取得了"刷卡"，但這個值不是來自用戶實際輸入
+2.	邏輯斷層：第1-3步處理邏輯正確（null → 查詢預設 → 驗證成功），但第4步重新處理時使用了錯誤的數據源
+
+關鍵Insight
+設計缺陷根本原因：
+•	時序問題：階段三簡化邏輯在創建Pending Record時正確識別了null，但科目歸類完成後重新解析時，系統使用了不同的數據來源
+=>系統使用了哪個不同的數據來源？請指出是哪個函數？
+
+
+•	數據一致性問題：pendingData.paymentMethod中的"刷卡"可能來自：
+i.	舊版本的預設值設定
+ii.	Pending Record創建時的數據污染
+iii.	不同階段間的數據格式不統一
+=>系統使用了哪個不同的數據來源？請指出是哪個函數？
+
+
+核心矛盾：
+•	LBK_parseInputFormat正確返回null（表示未輸入）
+•	但後續流程中某個環節將null轉換為"刷卡"
+•	導致系統誤認為用戶輸入了"刷卡"並觸發歧義消除
+解決方向建議：
+1.	數據來源統一：科目歧義消除完成後，應該重新使用原始輸入進行支付方式解析，而非依賴Pending Record中可能已污染的數據
+2.	null值保護：確保null值在整個流程中保持一致，不被意外轉換為預設值字串
+3.	階段間數據隔離：每個處理階段都應該從原始輸入重新解析，而非依賴前一階段可能已修改的中間數據
