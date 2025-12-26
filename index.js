@@ -658,7 +658,7 @@ wss.on('connection', (ws, req) => {
 const heartbeatInterval = setInterval(() => {
   try {
     const heartbeatData = {
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
       service: 'LCAS_LINE_WEBHOOK_SERVICE',
       status: 'alive',
       uptime: Math.floor(process.uptime()),
