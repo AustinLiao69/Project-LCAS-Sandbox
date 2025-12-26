@@ -2041,7 +2041,7 @@ async function SR_shouldSkipExecution(reminderData) {
  */
 function SR_buildDailySummaryMessage(statsData) {
   if (!statsData) {
-    return `📊 今日財務摘要
+    return `📊 本日財務摘要
 
 暫無記帳數據
 
@@ -2053,13 +2053,13 @@ function SR_buildDailySummaryMessage(statsData) {
   const totalExpense = statsData.totalExpense || 0;
   const balance = totalIncome - totalExpense;
 
-  return `📊 今日財務摘要 (${moment().tz(TIMEZONE).format('MM/DD')})
+  return `📊 本日財務摘要 (${moment().tz(TIMEZONE).format('MM/DD')})
 
 💰 收入：${totalIncome}元
 💸 支出：${totalExpense}元
 📈 淨額：${balance >= 0 ? '+' : ''}${balance}元
 
-${balance >= 0 ? '✅ 今日收支平衡良好' : '⚠️ 今日支出大於收入'}
+${balance >= 0 ? '✅ 本日收支平衡良好' : '⚠️ 本日支出大於收入'}
 
 輸入「統計」查看詳細分析`;
 }
@@ -2100,7 +2100,7 @@ ${balance >= 0 ? '✅ 本月收支狀況良好' : '⚠️ 本月支出大於收�
  */
 function SR_buildStatisticsReplyMessage(period, statsData) {
   const periodNames = {
-    'today': '今日',
+    'today': '本日',
     'week': '本週', 
     'month': '本月'
   };
