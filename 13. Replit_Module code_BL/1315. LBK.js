@@ -2134,7 +2134,6 @@ async function LBK_provideFallbackStatistics(statisticsType, inputData, processI
             displayText: '本月統計'
           }
         },
-    };
 
     return {
       message: message,
