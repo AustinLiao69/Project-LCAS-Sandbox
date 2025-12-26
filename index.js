@@ -714,9 +714,9 @@ const heartbeatInterval = setInterval(() => {
       DL.DL_error('心跳檢查失敗', 'HEARTBEAT_ERROR', '', 'HEARTBEAT_FAILURE', error.toString(), 'index.js');
     }
   }
-}, 300000); // 5分鐘 = 300,000毫秒
+}, 60000); // 1分鐘 = 60,000毫秒
 
-console.log('💓 心跳機制已啟動 - 每5分鐘執行一次');
+console.log('💓 心跳機制已啟動 - 每1分鐘執行一次');
 
 // =============== 優雅關閉處理 ===============
 
