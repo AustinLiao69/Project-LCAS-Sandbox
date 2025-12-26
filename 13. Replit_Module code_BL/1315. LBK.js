@@ -5151,12 +5151,7 @@ async function LBK_completePendingRecord(userId, pendingId, processId) {
     } else {
       // 階段一修復：使用統一邏輯入口點，移除硬編碼fallback值
       try {
-        try {
-          const dynamicDefaultResult = await LBK_getDefaultPaymentMethod(userId, processId);
-          // 處理成功結果
-        } catch (error) {
-          // 處理錯誤情況
-        }
+        const dynamicDefaultResult = await LBK_getDefaultPaymentMethod(userId, processId);
         if (dynamicDefaultResult.success) {
           finalBookkeepingData.paymentMethod = dynamicDefaultResult.walletName;
           finalBookkeepingData.walletId = dynamicDefaultResult.walletId;
