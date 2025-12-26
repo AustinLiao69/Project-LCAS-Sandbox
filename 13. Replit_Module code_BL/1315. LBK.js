@@ -4868,7 +4868,6 @@ module.exports = {
   // 統計查詢函數 - v1.3.0新增
   LBK_checkStatisticsKeyword: LBK_checkStatisticsKeyword,
   LBK_handleStatisticsRequest: LBK_handleStatisticsRequest,
-  LBK_buildStatisticsQuickReply: LBK_buildStatisticsQuickReply,
   LBK_processDirectStatistics: LBK_processDirectStatistics,
   LBK_getDirectStatistics: LBK_getDirectStatistics,
   LBK_formatStatisticsMessage: LBK_formatStatisticsMessage,
