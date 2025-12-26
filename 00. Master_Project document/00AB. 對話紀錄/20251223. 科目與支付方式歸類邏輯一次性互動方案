@@ -19,18 +19,21 @@ A. 快速摘要（≤3句）
 •	錯誤處理不當：LBK模組返回的錯誤訊息格式不符合統一標準，導致用戶看到技術性錯誤而非友好提示。
 ________________________________________
 B. Root causes（最多 6 條）
+
 1. 同義詞學習功能完全失效
 證據：
 [2025-12-26T09:02:38.346Z] [WARNING] [DL] 無法匹配輸入格式: "中信" [42366a6b] [Code: WARNING] [Location: LBK_parseInputFormat]
 [2025-12-26T09:02:38.348Z] [WARNING] [DL] 階段一修復：無法從原始輸入中提取支付方式名稱: "中信"，跳過同義詞學習 [42366a6b]
 發生機率：100%
 解決方案：修復LBK_executeWalletSynonymsUpdate函數，確保能正確處理單獨的支付方式關鍵字（如"中信"、"富邦"）並更新到wallets子集合的synonyms欄位。
+
 2. Pending Record狀態檢查邏輯錯誤
 證據：
 [2025-12-26T09:02:38.357Z] [ERROR] [DL] 階段一修復：科目選擇狀態檢查失敗 - electedCategory存在: false, categorySelected: false
 [2025-12-26T09:02:38.358Z] [ERROR] [DL] 階段四：完成Pending Record失敗: Error: 階段一修復：Pending Record 缺少科目資訊，electedCategory: false, categorySelected: false (違反0098規範)
 發生機率：100%
 解決方案：修復LBK_completePendingRecord函數的狀態檢查邏輯，當processingStage為PENDING_WALLET且walletSelected為true時，應該直接進行記帳，不需要檢查科目狀態。
+
 3. 記憶體Session與Firestore資料不一致
 證據：
 [2025-12-26T09:02:35.505Z] [INFO] [DL] 階段三：記憶體Pending Session創建成功: 1766739755505 (不寫入Firestore)
