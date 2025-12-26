@@ -149,6 +149,41 @@ async function WCM_createWallet(ledgerId, walletData, options = {}) {
     if (options.createDefaultWallets) {
       WCM_logInfo(`執行預設帳戶建立至帳本: ${ledgerId}`, "建立預設帳戶", walletData.userId, functionName);
 
+      // 階段一優化：檢查是否已經建立過預設帳戶，避免重複建立
+      const pathInfo = WCM_resolveLedgerPath(ledgerId, 'wallets');
+      if (!pathInfo.success) {
+        return WCM_formatErrorResponse("PATH_RESOLVE_ERROR", `帳戶路徑解析失敗: ${pathInfo.error}`);
+      }
+
+      const existingWalletsQuery = await db.collection(pathInfo.collectionPath)
+        .where('userId', '==', walletData.userId)
+        .where('dataSource', '==', '0302. Default_wallet.json')
+        .limit(1)
+        .get();
+
+      if (!existingWalletsQuery.empty) {
+        const existingCount = existingWalletsQuery.size;
+        WCM_logInfo(`✅ 預設帳戶已存在 (${existingCount}個)，跳過重複建立`, "建立預設帳戶", walletData.userId, functionName);
+        
+        // 查詢所有現有預設帳戶
+        const allExistingQuery = await db.collection(pathInfo.collectionPath)
+          .where('userId', '==', walletData.userId)
+          .where('dataSource', '==', '0302. Default_wallet.json')
+          .get();
+        
+        return WCM_formatSuccessResponse({
+          defaultWalletsCreated: false,
+          alreadyExists: true,
+          totalWallets: allExistingQuery.size,
+          skippedWallets: 0,
+          ledgerId: ledgerId,
+          collectionPath: pathInfo.collectionPath,
+          dataSource: '0302. Default_wallet.json',
+          optimizationApplied: "stage_1_existence_check",
+          writesAvoided: 20 // 預估避免的寫入次數
+        }, `預設帳戶已存在 (共${allExistingQuery.size}個)，跳過重複建立`);
+      }
+
       // 載入0302預設錢包配置
       const defaultConfigs = WCM_loadDefaultConfigs();
       if (!defaultConfigs.success) {
@@ -566,6 +601,35 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
     if (options.batchLoad0099) {
       WCM_logInfo(`執行0099科目批量載入至帳本: ${ledgerId}`, "批量載入科目", categoryData.userId, functionName);
 
+      // 階段一優化：檢查是否已經批量載入過0099科目，避免重複載入
+      const collectionPath = `ledgers/${ledgerId}/categories`;
+      const existingCategoriesQuery = await db.collection(collectionPath)
+        .where('userId', '==', categoryData.userId)
+        .where('dataSource', '==', '0099. Subject_code.json')
+        .limit(1)
+        .get();
+
+      if (!existingCategoriesQuery.empty) {
+        // 查詢現有科目總數
+        const allExistingQuery = await db.collection(collectionPath)
+          .where('userId', '==', categoryData.userId)
+          .where('dataSource', '==', '0099. Subject_code.json')
+          .get();
+        
+        WCM_logInfo(`✅ 0099科目已批量載入 (${allExistingQuery.size}筆)，跳過重複載入`, "批量載入科目", categoryData.userId, functionName);
+        
+        return WCM_formatSuccessResponse({
+          batchLoaded: false,
+          alreadyExists: true,
+          totalCategories: allExistingQuery.size,
+          ledgerId: ledgerId,
+          collectionPath: collectionPath,
+          dataSource: '0099. Subject_code.json',
+          optimizationApplied: "stage_1_existence_check",
+          writesAvoided: 100 // 預估避免的寫入次數
+        }, `0099科目已存在 (共${allExistingQuery.size}筆)，跳過重複載入`);
+      }
+
       const subjectData = WCM_load0099SubjectData();
       if (!subjectData.success) {
         return WCM_formatErrorResponse("LOAD_0099_FAILED", "載入0099科目資料失敗", subjectData.error);
@@ -980,15 +1044,38 @@ function WCM_load0099SubjectData() {
   }
 }
 
+// 階段一優化：配置檔案共用引用機制
+let WCM_SHARED_CONFIGS = null;
+let WCM_CONFIG_VERSION = null;
+let WCM_CONFIG_LOAD_TIME = 0;
+
 /**
- * 09. 載入預設配置資料 (從AM模組移植)
- * @version 2025-12-18-V1.3.0
- * @description 從03. Default_config資料夾載入預設配置 - 修復空格目錄名稱路徑解析問題
+ * 09. 載入預設配置資料 (從AM模組移植) - 階段一優化版
+ * @version 2025-12-26-V1.4.0
+ * @description 從03. Default_config資料夾載入預設配置 - 階段一優化：建立共用引用機制，避免重複載入
  * @returns {Object} 載入結果
  */
 function WCM_loadDefaultConfigs() {
   const functionName = "WCM_loadDefaultConfigs";
   try {
+    // 階段一優化：檢查共用配置快取，避免重複載入
+    const currentTime = Date.now();
+    const cacheValidDuration = 5 * 60 * 1000; // 5分鐘快取
+    
+    if (WCM_SHARED_CONFIGS && 
+        WCM_CONFIG_LOAD_TIME && 
+        (currentTime - WCM_CONFIG_LOAD_TIME) < cacheValidDuration) {
+      WCM_logInfo(`✅ 使用快取的共用配置，避免重複載入 (版本: ${WCM_CONFIG_VERSION})`, "載入預設配置", "", functionName);
+      return {
+        success: true,
+        configs: WCM_SHARED_CONFIGS,
+        loadedConfigs: Object.keys(WCM_SHARED_CONFIGS),
+        configVersion: WCM_CONFIG_VERSION,
+        fromCache: true,
+        optimizationApplied: "stage_1_shared_config_cache"
+      };
+    }
+
     WCM_logInfo(`開始載入預設配置資料...`, "載入預設配置", "", functionName);
 
     // 使用多種路徑解析策略，確保處理包含空格的目錄名稱
@@ -1155,14 +1242,23 @@ function WCM_loadDefaultConfigs() {
     }
 
     const loadedConfigTypes = Object.keys(configs);
-    WCM_logInfo(`預設配置載入完成，成功載入: ${loadedConfigTypes.join(', ')}`, "載入預設配置", "", functionName);
+    
+    // 階段一優化：建立共用配置快取機制
+    WCM_SHARED_CONFIGS = configs;
+    WCM_CONFIG_VERSION = configs.system?.version || configs.wallets?.version || '1.0.0';
+    WCM_CONFIG_LOAD_TIME = Date.now();
+    
+    WCM_logInfo(`預設配置載入完成，已建立共用快取 (版本: ${WCM_CONFIG_VERSION}): ${loadedConfigTypes.join(', ')}`, "載入預設配置", "", functionName);
 
     return {
       success: true,
       configs: configs,
       loadedConfigs: loadedConfigTypes,
       configBasePath: validConfigBasePath,
-      walletCount: configs.wallets?.default_wallets?.length || 0
+      configVersion: WCM_CONFIG_VERSION,
+      walletCount: configs.wallets?.default_wallets?.length || 0,
+      optimizationApplied: "stage_1_shared_config_establishment",
+      cacheEstablished: true
     };
 
   } catch (error) {
@@ -1252,6 +1348,50 @@ function WCM_logError(message, category, userId, errorType, errorDetail, functio
   }
 }
 
+// =================== 階段一優化：配置快取管理函數 ===================
+
+/**
+ * 清除配置快取 - 階段一優化
+ * @version 2025-12-26-V1.0.0
+ * @description 手動清除共用配置快取，強制重新載入
+ */
+function WCM_clearConfigCache() {
+  const functionName = "WCM_clearConfigCache";
+  WCM_logInfo('清除共用配置快取', "配置快取管理", "", functionName);
+  
+  WCM_SHARED_CONFIGS = null;
+  WCM_CONFIG_VERSION = null;
+  WCM_CONFIG_LOAD_TIME = 0;
+  
+  return {
+    success: true,
+    message: "配置快取已清除",
+    optimizationApplied: "stage_1_cache_management"
+  };
+}
+
+/**
+ * 取得配置快取資訊 - 階段一優化
+ * @version 2025-12-26-V1.0.0
+ * @description 查詢當前配置快取狀態
+ */
+function WCM_getConfigCacheInfo() {
+  const currentTime = Date.now();
+  const cacheAge = WCM_CONFIG_LOAD_TIME ? (currentTime - WCM_CONFIG_LOAD_TIME) : 0;
+  
+  return {
+    success: true,
+    data: {
+      hasCachedConfig: !!WCM_SHARED_CONFIGS,
+      configVersion: WCM_CONFIG_VERSION,
+      cacheLoadTime: WCM_CONFIG_LOAD_TIME ? new Date(WCM_CONFIG_LOAD_TIME).toISOString() : null,
+      cacheAgeMs: cacheAge,
+      configTypes: WCM_SHARED_CONFIGS ? Object.keys(WCM_SHARED_CONFIGS) : []
+    },
+    optimizationApplied: "stage_1_cache_info"
+  };
+}
+
 // =================== 模組導出 ===================
 
 // 確保所有函數都被正確定義後再導出
@@ -1278,6 +1418,10 @@ module.exports = {
 
   // 路徑解析函數
   WCM_resolveLedgerPath,
+
+  // 階段一優化：配置快取管理函數
+  WCM_clearConfigCache,
+  WCM_getConfigCacheInfo,
 
   // 配置
   WCM_CONFIG,
